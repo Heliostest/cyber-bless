@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import path from 'node:path';
 import test from 'node:test';
 
 const require = createRequire(import.meta.url);
@@ -58,4 +59,47 @@ test('missing Android identity fails without inventing an application id', () =>
   const input = config();
   delete input.android.package;
   assert.throws(() => withBlessingWidgets(input), /android.package/);
+});
+
+test('read-only widgets remove the upstream APNs entitlement while preserving the shared group', async () => {
+  const upstream = require(path.join(path.dirname(require.resolve('expo-widgets/package.json')),
+    'plugin/build/ios/withPushNotifications.js')).default;
+  for (const enabled of [false, true]) {
+    const input = config();
+    input.plugins = [['expo-widgets', { enablePushNotifications: enabled }]];
+    // Expo runs entitlement mod actions in reverse plugin registration order.
+    const result = upstream(withBlessingWidgets(input), { enablePushNotifications: enabled });
+    const entitlements = (await result.mods.ios.entitlements({
+      ...result,
+      modResults: { 'com.apple.security.application-groups': ['group.com.helio.cyberbless.widgets'] },
+      modRequest: { platform: 'ios', modName: 'entitlements', introspect: true },
+    })).modResults;
+    assert.deepEqual(entitlements['com.apple.security.application-groups'], ['group.com.helio.cyberbless.widgets']);
+    assert.equal(entitlements['aps-environment'], enabled ? 'development' : undefined);
+  }
+});
+
+test('Android keeps a replacement widget intent for Linking after the process is restored', async () => {
+  const original = `package com.helio.cyberbless
+import com.facebook.react.ReactActivity
+class MainActivity : ReactActivity() {
+  override fun getMainComponentName(): String = "main"
+}
+`;
+  async function mainActivity(contents) {
+    const result = withBlessingWidgets(config());
+    assert.equal(typeof result.mods.android.mainActivity, 'function');
+    return (await result.mods.android.mainActivity({
+      ...result,
+      modResults: { language: 'kt', contents },
+      modRequest: { platform: 'android', modName: 'mainActivity', introspect: true },
+    })).modResults.contents;
+  }
+  const first = await mainActivity(original);
+  const second = await mainActivity(first);
+  assert.equal(second, first);
+  assert.match(first, /override fun onNewIntent\(intent: android\.content\.Intent\)/);
+  assert.ok(first.indexOf('setIntent(intent)') < first.indexOf('super.onNewIntent(intent)'));
+  assert.equal(first.match(/override fun onNewIntent/g).length, 1);
+  assert.match(first, /override fun getMainComponentName\(\): String = "main"/);
 });

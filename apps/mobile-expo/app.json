@@ -46,6 +46,7 @@
           "backgroundColor": "#cdf1e6"
         }
       ],
+      "./plugins/withBlessingWidgets.cjs",
       [
         "expo-widgets",
         {
@@ -66,8 +67,7 @@
             }
           ]
         }
-      ],
-      "./plugins/withBlessingWidgets.cjs"
+      ]
     ],
     "extra": {
       "eas": {

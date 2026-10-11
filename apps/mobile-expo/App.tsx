@@ -129,7 +129,9 @@ function Shell() {
         navigationRequest={navigationRequests[0]}
         onNavigationConsumed={onNavigationConsumed}
         dom={{
-          useExpoDOMWebView: false,
+          // Expo's native DOM WebView exposes the bridge before offline HTML runs.
+          // Development keeps the RN WebView and its delayed Metro bootstrap.
+          useExpoDOMWebView: !__DEV__,
           onMessage: __DEV__
             ? (event) => {
                 try {

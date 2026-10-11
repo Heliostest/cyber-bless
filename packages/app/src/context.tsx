@@ -25,6 +25,8 @@ export type Route = {
   daily?: string;
   /** A wish-type keepsake being used (许愿 or 还愿): its collectible id. */
   vessel?: string;
+  /** 小天地's 回看 or 仪式时光's 再次体验: a plain replay, collecting nothing. */
+  replay?: boolean;
 };
 export type AppContext = {
   state: State;

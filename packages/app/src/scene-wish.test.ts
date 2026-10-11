@@ -87,8 +87,10 @@ describe("a line written in a scene", () => {
     const launchReward = vi.fn();
     const announce = vi.fn();
     const entry = builtInScenes.find((e) => e.id === sceneId)!;
-    // Stable, like the provider's memoized library.
-    const library = { library: {}, ready: true } as never;
+    // Stable, like the provider's memoized library. An empty catalog: this
+    // harness walks its entry directly, and no scene can be the day's main
+    // walk, so a finished walk here settles nothing.
+    const library = { library: {}, ready: true, entries: [] } as never;
     function Harness() {
       const { state } = useSyncExternalStore(store.subscribe, store.getSnapshot);
       const value = {

@@ -421,6 +421,51 @@ describe("a wish-type keepsake spent on a wish (collectible.spend)", () => {
   });
 });
 
+describe("a vessel walk's held line (vessel.hold / vessel.clear)", () => {
+  const later = "2026-09-21T08:00:00.000Z";
+  const vessel = dailyCollectibleId("2026-09-20", "tanzaku-tanabata");
+  const hold = {
+    type: "vessel.hold",
+    id: vessel,
+    line: "希望家人平安",
+    at,
+  } as const;
+
+  it("holds and re-holds the line under the vessel, and the save restores", () => {
+    const s = reduce(createState(), hold);
+    expect(s.vesselDrafts).toEqual({ [vessel]: { line: "希望家人平安", at } });
+    const reheld = reduce(s, { ...hold, line: "另一句", at: later });
+    expect(reheld.vesselDrafts).toEqual({ [vessel]: { line: "另一句", at: later } });
+    expect(restore(JSON.stringify(s))).toEqual(s);
+  });
+
+  it("clears the line once the choice settles, and restores saves without any", () => {
+    const s = reduce(reduce(createState(), hold), {
+      type: "vessel.clear",
+      id: vessel,
+    });
+    expect(s.vesselDrafts).toEqual({});
+    // Clearing again settles nothing further.
+    expect(reduce(s, { type: "vessel.clear", id: vessel })).toBe(s);
+    expect(restore(JSON.stringify(createState())).vesselDrafts).toBeUndefined();
+  });
+
+  it("rejects a blank or oversized line, in a dispatch and in a save", () => {
+    expect(() => reduce(createState(), { ...hold, line: "  " })).toThrow();
+    expect(() =>
+      reduce(createState(), { ...hold, line: "愿".repeat(221) }),
+    ).toThrow();
+    expect(() =>
+      restore(
+        JSON.stringify({
+          ...createState(),
+          vesselDrafts: { [vessel]: { line: " ", at } },
+        }),
+      ),
+    ).toThrow();
+  });
+});
+
 describe("a ritual walked as its scene (ritual.scene)", () => {
   const later = "2026-09-21T08:00:00.000Z";
   const realized = () =>

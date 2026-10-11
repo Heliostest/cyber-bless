@@ -483,8 +483,9 @@ export function Me() {
  */
 export const HISTORY_SCENE_LINE = "场景体验";
 export function History() {
-  const { state, go } = useApp();
+  const { state } = useApp();
   const openRitual = useOpenRitual();
+  const openScene = useOpenScene();
   return (
     <>
       <PageHead eyebrow="你留给自己的每一分钟" title="仪式时光" />
@@ -494,7 +495,7 @@ export function History() {
             key={record.id}
             id={record.id}
             title={`${record.title}${record.favorite ? " · 已收藏" : ""}`}
-            onClick={() => go({ page: "scene", id: record.id, entry: record })}
+            onClick={() => openScene(record)}
           >
             <small>已完成 {record.progress} 步 · 再次打开</small>
           </SceneCard>

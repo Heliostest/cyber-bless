@@ -215,15 +215,17 @@ export type SceneVisit = {
 };
 /**
  * Opens a scene for a walk. A flagged visit (the daily set, a vessel use, a
- * 还愿, a replay) always starts the scene over; an unflagged one opens it as
- * it stands. No 2D fallback here: these ids come from the live catalog.
+ * 还愿, a replay) always starts the scene over; an unflagged one keeps its
+ * progress, so a finished scene starts over and a half-walked one continues
+ * (场景目录, 仪式时光): neither ever lands on the done row. No 2D fallback
+ * here: these ids come from the live catalog.
  */
 export function useOpenScene() {
   const { state, dispatch, go } = useApp();
   return (entry: CatalogEntry, visit?: SceneVisit) => {
     const progress =
       state.sceneRecords.find((r) => r.id === entry.id)?.progress ?? 0;
-    if (progress > 0 && visit)
+    if (progress > 0 && (visit || progress >= sceneSteps(entry)))
       dispatch({ type: "scene.progress", id: entry.id, progress: 0 });
     go({
       page: "scene",
@@ -378,6 +380,7 @@ export function SceneCard({
 export function SceneCatalog() {
   const { entries, library, stats, error, ready } = useSceneLibrary(),
     { go } = useApp();
+  const openScene = useOpenScene();
   const [query, setQuery] = useState(""),
     [limit, setLimit] = useState(24);
   const [statuses, setStatuses] = useState<Record<string, string>>({});
@@ -429,7 +432,7 @@ export function SceneCatalog() {
               id={entry.id}
               title={entry.title}
               disabled={!ready}
-              onClick={() => go({ page: "scene", id: entry.id, entry })}
+              onClick={() => openScene(entry)}
             >
               <span className="scene-status" data-status={status}>
                 {SCENE_STATUS_COPY[status]}

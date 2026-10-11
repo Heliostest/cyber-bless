@@ -12,6 +12,7 @@ import type {
 import {
   dailyCollectibleId,
   hasReturnRitual,
+  localDay,
   WISH_TITLE_MAX,
 } from "@wbr/core";
 import { WISH_WRITE_COPY } from "@wbr/gestures";
@@ -26,7 +27,13 @@ import { FeedbackControls } from "./feedback-controls";
 import { describeSceneLoadError } from "./scene-load-error";
 import { sceneWish } from "./scene-wish";
 import { SceneArt } from "./scene-icons";
-import { isWishScene, sceneRitual, sceneStage, sceneSteps } from "./scene-placement";
+import {
+  dailyPrimaryScene,
+  isWishScene,
+  sceneRitual,
+  sceneStage,
+  sceneSteps,
+} from "./scene-placement";
 import { rectOf } from "./reward-flight";
 
 function ProceduralScene({
@@ -154,6 +161,7 @@ function LoadedScene({
   wishId,
   daily,
   vessel,
+  replay,
   failed,
 }: {
   entry: CatalogEntry;
@@ -164,6 +172,8 @@ function LoadedScene({
   daily?: string;
   /** On a vessel visit: the wish-type keepsake being used. */
   vessel?: string;
+  /** On a plain replay (小天地's 回看, 仪式时光's 再次体验): settles nothing. */
+  replay?: boolean;
   failed(error?: unknown): void;
 }) {
   const {
@@ -177,22 +187,11 @@ function LoadedScene({
     announce,
     back,
   } = useApp();
+  const { entries } = useSceneLibrary();
   const record = state.sceneRecords.find((r) => r.id === entry.id);
   const progress = record?.progress ?? 0;
   const steps = sceneSteps(entry);
   const [instruction, setInstruction] = useState("轻敲木鱼，让心慢下来");
-  /** The wish this visit kept, as always: from a line saved on a plain walk. */
-  const [keptWish, setKeptWish] = useState<string>();
-  /** A vessel 许愿 walk holds its box line for the keep-or-not choice. */
-  const [heldWish, setHeldWish] = useState<string>();
-  /** The keep form's line, for a vessel scene with no wish box of its own. */
-  const [typedWish, setTypedWish] = useState("");
-  /** Whether this walk settled a daily keepsake / spent its vessel. */
-  const [dailyGranted, setDailyGranted] = useState(false);
-  const [vesselSpent, setVesselSpent] = useState(false);
-  const [discarded, setDiscarded] = useState(false);
-  const doneCta = useRef<HTMLButtonElement>(null);
-  const sticker = useRef<HTMLDivElement>(null);
   // A 还愿 visit: a wish still waiting on its 还愿. The vessel path may walk
   // any wish scene; the legacy free walk (no vessel) only a core ritual's.
   const ritual = sceneRitual(entry.id);
@@ -203,20 +202,48 @@ function LoadedScene({
     : undefined;
   // A vessel walk that is not a 还愿 is a 许愿: its line is held, not saved.
   const vesselMake = vessel && !returnWish;
+  // The held line of a 许愿 walk, kept in the save under the vessel, so the
+  // keep-or-discard choice (and the phrase) survive back, remount and reload.
+  const draft = vesselMake ? state.vesselDrafts?.[vessel] : undefined;
+  /** The wish this visit kept, as always: from a line saved on a plain walk. */
+  const [keptWish, setKeptWish] = useState<string>();
+  /** A vessel 许愿 walk holds its box line for the keep-or-not choice. */
+  const [heldWish, setHeldWish] = useState<string | undefined>(() => draft?.line);
+  /** The keep form's line, for a vessel scene with no wish box of its own. */
+  const [typedWish, setTypedWish] = useState(() => draft?.line ?? "");
+  /** Whether this walk settled a daily keepsake; a vessel is spent by the
+   * walk itself, so that one is read straight off the collectible. */
+  const [dailyGranted, setDailyGranted] = useState(false);
+  const [discarded, setDiscarded] = useState(false);
+  const vesselSpent =
+    !!vessel && state.collectibles.some((c) => c.id === vessel && !!c.spentAt);
+  const doneCta = useRef<HTMLButtonElement>(null);
+  const sticker = useRef<HTMLDivElement>(null);
   // One record per visit, however often the last step reports.
   const [visit] = useState(() => ({ id: uid(), startedAt: now() }));
   const checkpoint = (n: number) => {
     dispatch({ type: "scene.progress", id: entry.id, progress: n });
     if (n < steps) return;
-    // A daily-set walk settles its keepsake (and the day's merit) once.
-    if (daily) {
+    // A daily-set walk settles its keepsake (and the day's merit) once. So
+    // does an unflagged walk of 今日's main scene: finishing the day's walk
+    // from 场景目录 or 仪式时光 counts for today too. A vessel, 还愿, or
+    // 回看 visit never settles one.
+    const settleDay = daily
+      ? daily
+      : !vessel &&
+          !wishId &&
+          !replay &&
+          dailyPrimaryScene(entries, localDay())?.id === entry.id
+        ? localDay()
+        : undefined;
+    if (settleDay) {
       const granted = dispatch({
         type: "daily.scene",
         id: visit.id,
         sceneId: entry.id,
         title: entry.title,
         wishScene: isWishScene(entry.id),
-        day: daily,
+        day: settleDay,
         startedAt: visit.startedAt,
         at: now(),
       });
@@ -224,13 +251,12 @@ function LoadedScene({
     }
     // A vessel is spent by the walk itself, whichever way the line goes.
     if (vessel) {
-      const spent = dispatch({
+      dispatch({
         type: "collectible.spend",
         id: vessel,
         at: now(),
         ...(returnWish ? { wishId: returnWish.id } : {}),
       });
-      if (spent) setVesselSpent(true);
     } else if (ritual && returnWish) {
       // The legacy 还愿 walk: a session and a note, never merit or a keepsake.
       dispatch({
@@ -250,12 +276,16 @@ function LoadedScene({
     <FavoriteChip id={entry.id} favorite={!!record?.favorite} />
   );
   // The wish box, by path. A 许愿 vessel holds its line for the choice at
-  // done; a 还愿 vessel keeps nothing (its box says so itself); every other
-  // walk saves each line as its own new 心愿, as it always has.
+  // done — in the save, under the vessel, so the choice cannot be escaped
+  // into a lost phrase; a 还愿 vessel keeps nothing (its box says so itself);
+  // every other walk saves each line as its own new 心愿, as it always has.
   const saveWish = (text: string) => {
     if (vesselMake) {
       const line = text.trim();
-      if (line) setHeldWish(line);
+      if (line) {
+        setHeldWish(line);
+        dispatch({ type: "vessel.hold", id: vessel!, line, at: now() });
+      }
       return;
     }
     const wish = sceneWish(text, entry.id, uid(), now());
@@ -294,7 +324,15 @@ function LoadedScene({
       setKeptWish(wish.id);
       setHeldWish(undefined);
       setTypedWish("");
+      // The choice is settled: the save lets the line go.
+      if (vessel) dispatch({ type: "vessel.clear", id: vessel });
     }
+  };
+  /** The not-keep choice of a 许愿 vessel: the line goes, the moment stays. */
+  const discardHeld = () => {
+    setDiscarded(true);
+    announce(SCENE_DISCARDED_COPY);
+    if (vessel) dispatch({ type: "vessel.clear", id: vessel });
   };
   const client = useMemo<WoodfishContext["content"] | undefined>(
     () =>
@@ -427,10 +465,7 @@ function LoadedScene({
                     <button
                       type="button"
                       className="button secondary"
-                      onClick={() => {
-                        setDiscarded(true);
-                        announce(SCENE_DISCARDED_COPY);
-                      }}
+                      onClick={discardHeld}
                     >
                       {SCENE_DISCARD_CTA}
                     </button>
@@ -463,7 +498,20 @@ function LoadedScene({
                       id="scene-keep-line"
                       maxLength={WISH_TITLE_MAX}
                       value={typedWish}
-                      onChange={(e) => setTypedWish(e.target.value)}
+                      onChange={(e) => {
+                        setTypedWish(e.target.value);
+                        // The typed line is held like a boxed one, so it too
+                        // survives leaving; an emptied field holds nothing.
+                        const line = e.target.value.trim();
+                        if (line)
+                          dispatch({
+                            type: "vessel.hold",
+                            id: vessel!,
+                            line,
+                            at: now(),
+                          });
+                        else dispatch({ type: "vessel.clear", id: vessel! });
+                      }}
                       placeholder={WISH_WRITE_COPY.placeholder}
                     />
                     <button
@@ -477,10 +525,7 @@ function LoadedScene({
                   <button
                     type="button"
                     className="button secondary"
-                    onClick={() => {
-                      setDiscarded(true);
-                      announce(SCENE_DISCARDED_COPY);
-                    }}
+                    onClick={discardHeld}
                   >
                     {SCENE_DISCARD_CTA}
                   </button>
@@ -538,6 +583,7 @@ export function SceneExperience({
   wishId,
   daily,
   vessel,
+  replay,
 }: {
   entry?: CatalogEntry;
   /** Set when the scene is walked as a 还愿 ritual for this wish. */
@@ -546,6 +592,8 @@ export function SceneExperience({
   daily?: string;
   /** Set when a wish-type keepsake is being used: its collectible id. */
   vessel?: string;
+  /** Set on a plain replay (回看, 再次体验): it settles nothing. */
+  replay?: boolean;
 }) {
   const { library, ready } = useSceneLibrary(),
     { dispatch, back } = useApp();
@@ -643,6 +691,7 @@ export function SceneExperience({
             wishId={wishId}
             daily={daily}
             vessel={vessel}
+            replay={replay}
             failed={fail}
           />
         </>

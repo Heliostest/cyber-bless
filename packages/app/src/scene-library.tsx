@@ -199,10 +199,13 @@ export function useOpenRitual() {
       state.sceneRecords.find((r) => r.id === entry.id)?.progress ?? 0;
     if (progress > 0 && (wishId || progress >= sceneSteps(entry)))
       dispatch({ type: "scene.progress", id: entry.id, progress: 0 });
-    go({ page: "scene", id: entry.id, entry, wishId });
+    // 再次体验 is a replay — it never settles 今日's keepsake, even when the
+    // scene comes up as the day's main walk (a 还愿 walk never does either).
+    go({ page: "scene", id: entry.id, entry, wishId, replay: !wishId });
   };
 }
-/** What a walk is for; each flag makes it a fresh scene (progress to 0). */
+/** What a walk is for. The daily set resumes a half-walked scene; each other
+ * flag makes it a fresh scene (progress to 0). */
 export type SceneVisit = {
   /** 今日's daily set: the local day the keepsake is collected for. */
   daily?: string;
@@ -214,18 +217,34 @@ export type SceneVisit = {
   replay?: boolean;
 };
 /**
- * Opens a scene for a walk. A flagged visit (the daily set, a vessel use, a
- * 还愿, a replay) always starts the scene over; an unflagged one keeps its
- * progress, so a finished scene starts over and a half-walked one continues
- * (场景目录, 仪式时光): neither ever lands on the done row. No 2D fallback
- * here: these ids come from the live catalog.
+ * Opens a scene for a walk. 今日's daily set resumes a half-walked scene,
+ * like an unflagged entry (场景目录, 仪式时光): the walk is for today either
+ * way, so leaving from the card and coming back loses no steps; a finished
+ * scene still starts over. The other flags (a vessel use, a 还愿, a replay)
+ * always start the scene over — except a vessel already spent, which reopens
+ * on its waiting keep-or-discard choice instead of a new walk. No 2D
+ * fallback here: these ids come from the live catalog.
  */
 export function useOpenScene() {
   const { state, dispatch, go } = useApp();
   return (entry: CatalogEntry, visit?: SceneVisit) => {
     const progress =
       state.sceneRecords.find((r) => r.id === entry.id)?.progress ?? 0;
-    if (progress > 0 && (visit || progress >= sceneSteps(entry)))
+    const spentVessel =
+      !!visit?.vessel &&
+      state.collectibles.some((c) => c.id === visit.vessel && !!c.spentAt);
+    // A fresh vessel walk starts with a clean slate: a line held on an
+    // earlier, unfinished walk of this vessel is let go.
+    if (visit?.vessel && !spentVessel)
+      dispatch({ type: "vessel.clear", id: visit.vessel });
+    const fresh = !!visit && !visit.daily && !spentVessel;
+    // A spent vessel never resets: it reopens on its waiting choice, not on
+    // a new walk — even when the record stands done.
+    if (
+      progress > 0 &&
+      !spentVessel &&
+      (fresh || progress >= sceneSteps(entry))
+    )
       dispatch({ type: "scene.progress", id: entry.id, progress: 0 });
     go({
       page: "scene",
@@ -234,6 +253,7 @@ export function useOpenScene() {
       daily: visit?.daily,
       vessel: visit?.vessel,
       wishId: visit?.wishId,
+      replay: visit?.replay,
     });
   };
 }

@@ -10,7 +10,7 @@ import {
   useSceneLibrary,
 } from "./scene-library";
 import { SceneArt, SceneBadge } from "./scene-icons";
-import { usableVessels, VESSEL_COPY } from "./vessels";
+import { pendingVessels, usableVessels, VESSEL_COPY } from "./vessels";
 
 export function PageHead({
   eyebrow,
@@ -168,14 +168,17 @@ export function Wishes() {
   );
 }
 /**
- * 祈愿's picker: the usable 许愿小物, newest first. Picking one opens its
- * scene as a vessel visit, which spends it and keeps the line as a new wish.
+ * 祈愿's picker: the usable 许愿小物, newest first, each opening its scene as
+ * a vessel visit, which spends it and keeps the line as a new wish. A vessel
+ * already spent whose keep-or-discard choice still waits stays at the top:
+ * leaving the walk never takes the phrase with it.
  */
 function VesselPicker() {
   const { state, go } = useApp();
   const { entries } = useSceneLibrary();
   const openScene = useOpenScene();
-  const vessels = usableVessels(state, entries);
+  const vessels = usableVessels(state, entries),
+    pending = pendingVessels(state, entries);
   // It unfolds under a button at the page's foot: bring it into view.
   const picker = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -196,6 +199,27 @@ function VesselPicker() {
         {vessels.length > 0 && <span>{vessels.length} 个可用</span>}
       </div>
       <p className="quiet vessel-picker-blurb">{VESSEL_COPY.blurb}</p>
+      {pending.length > 0 && (
+        <div className="wish-practice-grid">
+          {pending.map((c) => {
+            const entry = entries.find((e) => e.id === c.sceneId);
+            if (!entry) return null;
+            return (
+              <button
+                key={c.id}
+                className="wish-practice-card vessel-card"
+                data-scene={entry.id}
+                onClick={() => openScene(entry, { vessel: c.id })}
+              >
+                <SceneBadge id={entry.id} />
+                <strong>{entry.title}</strong>
+                <small>{VESSEL_COPY.pending}</small>
+                <Icon name="arrow" />
+              </button>
+            );
+          })}
+        </div>
+      )}
       {vessels.length ? (
         <div className="wish-practice-grid">
           {vessels.map((c) => {
@@ -216,7 +240,7 @@ function VesselPicker() {
             );
           })}
         </div>
-      ) : (
+      ) : pending.length ? null : (
         <Empty
           title={VESSEL_COPY.emptyTitle}
           body={VESSEL_COPY.emptyBody}

@@ -76,6 +76,13 @@ export type Collectible = {
 /** The one keepsake a day's walk of a scene leaves in 小天地. */
 export const dailyCollectibleId = (day: string, sceneId: string) =>
   `daily:${day}:${sceneId}`;
+/**
+ * A 许愿 walk's held line, waiting on its keep-or-discard choice. Keyed by
+ * the vessel's collectible id in `State.vesselDrafts`, so the choice (and
+ * the phrase) survive leaving the page or the App; the choice itself —
+ * keep, discard, or a fresh walk of the vessel — clears it.
+ */
+export type VesselDraft = { line: string; at: string };
 export type SceneRecord = {
   id: string; title: string; engine: string; revision: string; manifestUrl: string;
   progress: number; favorite: boolean; lastOpened: string;
@@ -89,6 +96,9 @@ export type State = {
   collectibles: Collectible[];
   ledger: { id: string; amount: number; at: string }[];
   settings: { sound: boolean; haptics: boolean; reducedMotion: boolean };
+  /** Held lines of vessel 许愿 walks still waiting on their choice. Absent
+   * on saves from before it existed; empty once every choice is settled. */
+  vesselDrafts?: Record<string, VesselDraft>;
 };
 export type Action =
   | { type: "scene.visit"; entry: Pick<SceneRecord, "id" | "title" | "engine" | "revision" | "manifestUrl">; at: string }
@@ -158,6 +168,10 @@ export type Action =
    * the wish gets its note, so the wish can be fulfilled by ritual).
    */
   | { type: "collectible.spend"; id: string; wishId?: string; at: string }
+  /** A vessel 许愿 walk holds (or re-holds) its line, keyed by the vessel. */
+  | { type: "vessel.hold"; id: string; line: string; at: string }
+  /** The vessel's choice settled: the line was kept, or not. */
+  | { type: "vessel.clear"; id: string }
   | { type: "settings"; key: keyof State["settings"]; value: boolean };
 
 /** A fresh state; `settings` overrides defaults (e.g. the system's motion preference). */
@@ -455,6 +469,25 @@ export function reduce(s: State, a: Action): State {
         ),
       };
     }
+    case "vessel.hold": {
+      if (!id(a.id) || !str(a.line) || !date(a.at))
+        throw new Error("这次祈愿的记录无效");
+      const line = a.line.trim();
+      // As long as a title with its overrun intention could hold it.
+      if (!line || line.length > WISH_TITLE_MAX + WISH_INTENTION_MAX)
+        throw new Error("这次祈愿的记录无效");
+      return {
+        ...s,
+        vesselDrafts: { ...s.vesselDrafts, [a.id]: { line, at: a.at } },
+      };
+    }
+    case "vessel.clear": {
+      if (!id(a.id)) throw new Error("这次祈愿的记录无效");
+      if (!s.vesselDrafts?.[a.id]) return s;
+      const drafts = { ...s.vesselDrafts };
+      delete drafts[a.id];
+      return { ...s, vesselDrafts: drafts };
+    }
     case "settings":
       return { ...s, settings: { ...s.settings, [a.key]: a.value } };
   }
@@ -512,6 +545,13 @@ const list = (v: unknown, valid: (x: unknown) => boolean) =>
   Array.isArray(v) &&
   v.every(valid) &&
   new Set(v.map((x) => x.id)).size === v.length;
+/** A vessel walk's held line, keyed by the vessel's collectible id. */
+const draft = (v: unknown) =>
+  obj(v) &&
+  str(v.line) &&
+  v.line.trim().length > 0 &&
+  v.line.length <= WISH_TITLE_MAX + WISH_INTENTION_MAX &&
+  date(v.at);
 const session = (v: unknown) =>
   obj(v) &&
   id(v.id) &&
@@ -578,7 +618,11 @@ export function restore(
         Number.isInteger(l.amount) &&
         Number(l.amount) > 0 &&
         date(l.at),
-    );
+    ) &&
+    // Optional since it postdates the first saves: absent is simply none yet.
+    (v.vesselDrafts === undefined ||
+      (obj(v.vesselDrafts) &&
+        Object.entries(v.vesselDrafts).every(([key, d]) => id(key) && draft(d))));
   if (!valid) throw new Error("存档格式不受支持或已损坏，原数据已保留");
   const s = v as State;
   s.sceneRecords ??= [];

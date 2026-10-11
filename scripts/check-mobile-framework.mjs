@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +16,7 @@ const output = await mkdtemp(path.join(parent, 'verify-'));
 const cache = path.join(output, 'cache');
 await mkdir(cache);
 const assets = await prepareAppAssets();
+const covers = JSON.parse(await readFile(path.join(root, 'assets/widgets/today/manifest.json'), 'utf8'));
 const platforms = process.argv[2] ? [process.argv[2]] : ['android', 'ios'];
 if (platforms.some(platform => !['android', 'ios'].includes(platform))) throw Error('Expected android or ios');
 const results = {};
@@ -32,6 +34,18 @@ for (const platform of platforms) {
     child.on('exit', code => code === 0 ? resolve() : reject(Error(`Expo ${platform} failed: ${code}`)));
   });
   results[platform] = await validateMobileEmbed(target, assets);
+  if (platform === 'ios') {
+    const expected = covers.scenes.flatMap(scene => [scene.small, scene.medium]);
+    const generic = covers.scenes.find(scene => scene.id === 'woodfish');
+    expected.push({ ...generic.small, file: 'generic-small.png' }, { ...generic.medium, file: 'generic-medium.png' });
+    for (const cover of expected) {
+      const bytes = await readFile(path.join(target, 'assets/__assets/widgets/today', cover.file));
+      if (createHash('sha256').update(bytes).digest('hex') !== cover.sha256)
+        throw Error(`Embedded widget cover mismatch: ${cover.file}`);
+    }
+    results[platform].widgetCoverCount = expected.length;
+    console.log(`ios: ${expected.length} offline widget cover hashes verified.`);
+  }
   console.log(`${platform}: native/DOM HTML/JS/CSS and ${assets.length} offline asset hashes verified.`);
 }
 const evidence = path.join(root, 'artifacts/mobile-verification');

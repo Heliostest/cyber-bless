@@ -1,4 +1,5 @@
 import { reduce, restore, type Action, type State } from "@wbr/core";
+export { createProjectedStorage } from './projected-storage';
 /**
  * The one save: the whole State (keepsakes included) as JSON, written on every
  * dispatch. The web host keeps it in localStorage; the phone App keeps it in

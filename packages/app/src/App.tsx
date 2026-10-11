@@ -22,6 +22,8 @@ import { SceneLibraryProvider, SceneCatalog, CacheManager } from "./scene-librar
 import { SceneExperience } from "./scene-experience";
 import { followSystemReducedMotion, initialSettings } from "./reduced-motion";
 import { useLocalDay } from "./local-day";
+import { WidgetNavigation } from './widget-navigation';
+import type { WidgetNavigationRequest } from '@wbr/core/widgets';
 import { RewardFlightLayer } from "./reward-flight-layer";
 import {
   ARRIVAL_LINGER_MS,
@@ -37,12 +39,16 @@ export function BlessingApp({
   backRequest = 0,
   onCanGoBack,
   content,
+  navigationRequest,
+  onNavigationConsumed,
 }: {
   host: Host;
   active?: boolean;
   backRequest?: number;
   onCanGoBack?: (value: boolean) => void;
   content?: ContentEnvironment;
+  navigationRequest?: WidgetNavigationRequest;
+  onNavigationConsumed?: (requestId: number) => Promise<void>;
 }) {
   const store = useMemo(() => createStore(host, initialSettings), [host]);
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot);
@@ -331,7 +337,7 @@ export function BlessingApp({
   };
   const page =
     route.page === 'privacy' || route.page === 'support' ? <LegalInformation kind={route.page} /> :
-    route.page === "scenes" ? <SceneCatalog /> : route.page === "cache" ? <CacheManager /> : route.page === "scene" ? <SceneExperience entry={route.entry ?? state.sceneRecords.find(r => r.id === route.id)} wishId={route.wishId} daily={route.daily} vessel={route.vessel} /> : route.page === "today" ? (
+    route.page === "scenes" ? <SceneCatalog /> : route.page === "cache" ? <CacheManager /> : route.page === "scene" ? <SceneExperience entry={route.entry ?? state.sceneRecords.find(r => r.id === route.id)} wishId={route.wishId} daily={route.daily} vessel={route.vessel} replay={route.replay} /> : route.page === "today" ? (
       <Today key={day} day={day} />
     ) : route.page === "wishes" ? (
       <Wishes />
@@ -416,6 +422,7 @@ export function BlessingApp({
             <span>CYBER BLESS · A LITTLE EVERY DAY</span>
           </div>
           <div className="app-shell" data-page={route.page} ref={shell}>
+            <WidgetNavigation request={navigationRequest} route={route} saved={snapshot.status === 'saved'} busy={!!flight} onConsumed={onNavigationConsumed} />
             {!roots.includes(route.page) && (
               <header
                 className={`app-topbar${route.page === "complete" ? " completion-topbar" : ""}`}

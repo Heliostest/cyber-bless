@@ -4,6 +4,15 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "SHARP_IGNORE_GLOBAL_LIBVIPS": "1",
+        "EXPO_APPLE_TEAM_ID": "6PG2WW6L6N",
+        "EXPO_APPLE_TEAM_TYPE": "INDIVIDUAL"
+      }
+    },
     "preview": {
       "distribution": "internal",
       "android": {

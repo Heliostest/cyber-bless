@@ -246,6 +246,102 @@ describe("今日's daily set", () => {
     ui.unmount();
   });
 
+  it("keeps a half-walked 主仪式's steps when 今日 is left and re-entered", async () => {
+    const ui = await openApp(createState());
+    await ui.tap(ui.host.querySelector(`.daily-set-primary[data-scene="${sceneId}"]`)!);
+    expect(ui.sceneProgress()).toBe("已完成 0 / 3");
+    act(() => scene.context!.checkpoint!(1));
+    await settle();
+    await ui.tap(ui.host.querySelector(".back-button")!);
+    expect(ui.page()).toBe("today");
+    await ui.tap(ui.host.querySelector(`.daily-set-primary[data-scene="${sceneId}"]`)!);
+    // The daily set resumes its own half-walked scene, the same as an entry
+    // from 场景目录 would: the flag no longer silently zeroes the steps.
+    expect(ui.sceneProgress()).toBe("已完成 1 / 3");
+    expect(scene.context?.progress).toBe(1);
+    ui.unmount();
+  });
+
+  it("settles the day's keepsake when the 主仪式 is finished from 场景目录", async () => {
+    const ui = await openApp(createState());
+    await ui.tap(ui.host.querySelector(`.daily-set-primary[data-scene="${sceneId}"]`)!);
+    act(() => scene.context!.checkpoint!(1));
+    await settle();
+    await ui.tap(ui.host.querySelector(".back-button")!);
+    // The same scene, continued from 我的 › 场景目录 — no daily flag this time.
+    await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
+    await ui.tap(ui.button("场景目录", ".settings-card"));
+    await ui.tap(
+      ui.host.querySelector(`.scene-catalog .scene-card[data-scene="${sceneId}"]`)!,
+    );
+    expect(ui.sceneProgress()).toBe("已完成 1 / 3");
+    await ui.walk();
+    // The walk counts for today, whichever entry finished it (仪式时光's scene
+    // cards land here too: the same unflagged open).
+    expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
+      sceneDailyDoneCopy(entryOf(sceneId).title),
+    );
+    expect(ui.doneButtons()).toEqual([SCENE_DAILY_CTA]);
+    const saved = await ui.saved();
+    expect(saved.collectibles).toHaveLength(1);
+    expect(saved.collectibles[0]).toMatchObject({
+      id: dailyCollectibleId(WISH_DAY, sceneId),
+      sceneId,
+      wishScene: true,
+    });
+    expect(saved.ledger).toHaveLength(1);
+    expect(saved.ledger[0].amount).toBe(10);
+    // 收下它 flies the sticker into 小天地; 今日 knows the walk is collected.
+    await ui.tap(ui.button(SCENE_DAILY_CTA, ".scene-done-row"));
+    expect(ui.page()).toBe("world");
+    await ui.tap(ui.host.querySelector('[data-tab="today"]')!);
+    const card = ui.host.querySelector(`.daily-set-primary[data-scene="${sceneId}"]`)!;
+    expect(card.querySelector("small")!.textContent!.trim()).toBe("今天已收下");
+    ui.unmount();
+  });
+
+  it("settles the day only once when the 主仪式 is finished again from the catalog", async () => {
+    // Already collected today, and the record stands done.
+    const state = withRecords({ [sceneId]: 3 });
+    state.collectibles.push(keepsake(sceneId, WISH_DAY));
+    const ui = await openApp(state);
+    await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
+    await ui.tap(ui.button("场景目录", ".settings-card"));
+    await ui.tap(
+      ui.host.querySelector(`.scene-catalog .scene-card[data-scene="${sceneId}"]`)!,
+    );
+    expect(ui.sceneProgress()).toBe("已完成 0 / 3");
+    await ui.walk();
+    // A finished-again walk settles nothing further, and says so plainly.
+    expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
+      SCENE_DONE_COPY,
+    );
+    expect(ui.doneButtons()).toEqual([SCENE_DONE_CTA]);
+    const saved = await ui.saved();
+    expect(saved.collectibles).toHaveLength(1);
+    expect(saved.ledger).toHaveLength(0);
+    ui.unmount();
+  });
+
+  it("collects nothing when today's 主仪式 is walked again as a 回看", async () => {
+    // The day's main scene, kept from an earlier day, sits in today's picks.
+    const state = createState();
+    state.collectibles.push(keepsake(sceneId, "2026-09-30"));
+    const ui = await openApp(state);
+    await ui.tap(
+      ui.host.querySelector(`.daily-collected [data-scene="${sceneId}"]`)!,
+    );
+    expect(ui.host.querySelector(".scene-caption")).toBeNull();
+    await ui.walk();
+    expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
+      SCENE_DONE_COPY,
+    );
+    const saved = await ui.saved();
+    expect(saved.collectibles).toHaveLength(1);
+    expect(saved.ledger).toEqual([]);
+    ui.unmount();
+  });
+
   it("walks a pick from 小天地 again as a 回看: nothing collected, nothing spent", async () => {
     const kept = [
       keepsake("tanzaku-tanabata", "2026-09-30"),
@@ -332,6 +428,55 @@ describe("许愿 through a keepsake", () => {
     );
     saved = await ui.saved();
     expect(saved.wishes[0]).toMatchObject({ title: "面试顺利", status: "active" });
+    // Keeping the line settles the draft: the save lets it go.
+    expect(
+      saved.vesselDrafts?.[dailyCollectibleId("2026-10-05", "crane")],
+    ).toBeUndefined();
+    ui.unmount();
+  });
+
+  it("keeps the held line through a reload: the picker returns to the choice", async () => {
+    let ui = await openVessel("crane");
+    const vessel = dailyCollectibleId("2026-10-05", "crane");
+    act(() => scene.context!.saveWish!("面试顺利"));
+    await ui.walk();
+    expect(ui.host.querySelector(".scene-keep-line")?.textContent).toBe(
+      "「面试顺利」",
+    );
+    const spent = await ui.saved();
+    expect(spent.collectibles[0]).toMatchObject({ spentAt: expect.any(String) });
+    ui.unmount();
+
+    // A reload from the save: the spent keepsake still holds the line, and
+    // the 祈愿 picker lists it, so the choice can be returned to.
+    ui = await openApp(spent);
+    await ui.tap(ui.host.querySelector('[data-tab="wishes"]')!);
+    await ui.tap(ui.button(VESSEL_COPY.pray, ".app-content"));
+    const card = ui.host.querySelector(
+      `#vessel-picker .wish-practice-card[data-scene="crane"]`,
+    )!;
+    expect(card.querySelector("small")!.textContent).toBe(VESSEL_COPY.pending);
+    await ui.tap(card);
+    // The spent vessel reopens on the choice itself, not on a new walk.
+    expect(ui.page()).toBe("scene");
+    expect(ui.sceneProgress()).toBe("已完成 3 / 3");
+    expect(ui.host.querySelector(".scene-keep-line")?.textContent).toBe(
+      "「面试顺利」",
+    );
+    expect(ui.host.querySelector(".scene-keep-question")?.textContent).toBe(
+      SCENE_KEEP_QUESTION,
+    );
+    expect(ui.doneButtons()).toEqual([SCENE_KEEP_CTA, SCENE_DISCARD_CTA]);
+    let saved = await ui.saved();
+    expect(saved.collectibles[0]).toMatchObject({ spentAt: expect.any(String) });
+    expect(saved.vesselDrafts?.[vessel]).toMatchObject({ line: "面试顺利" });
+
+    // The choice still works after the reload, and settles the draft.
+    await ui.tap(ui.button(SCENE_KEEP_CTA, ".scene-done-row"));
+    expect(ui.doneButtons()).toEqual([SCENE_DONE_WISH_CTA]);
+    saved = await ui.saved();
+    expect(saved.wishes[0]).toMatchObject({ title: "面试顺利" });
+    expect(saved.vesselDrafts?.[vessel]).toBeUndefined();
     ui.unmount();
   });
 
@@ -346,6 +491,10 @@ describe("许愿 through a keepsake", () => {
     expect(ui.doneButtons()).toEqual([SCENE_DONE_CTA]);
     const saved = await ui.saved();
     expect(saved.wishes).toHaveLength(0);
+    // Not keeping it settles the draft too: nothing waits, nothing lingers.
+    expect(
+      saved.vesselDrafts?.[dailyCollectibleId("2026-10-05", "tanzaku-tanabata")],
+    ).toBeUndefined();
     expect(saved.collectibles[0]).toMatchObject({ spentAt: expect.any(String) });
     ui.unmount();
   });
@@ -568,6 +717,8 @@ describe("useOpenRitual", () => {
       id: "lantern",
       entry: entryOf("lantern"),
       wishId: undefined,
+      // 再次体验 is a replay: it never settles 今日's keepsake.
+      replay: true,
     });
     const half = opener(withRecords({ woodfish: 11 }));
     half.open("woodfish");
@@ -633,7 +784,7 @@ describe("useOpenScene", () => {
   }
   const reset = (id: string) => ({ type: "scene.progress", id, progress: 0 });
 
-  it("opens a scene as it stands, unless it is done; a flagged visit always starts over", () => {
+  it("opens a scene as it stands, unless it is done; the daily set resumes a half-walked scene", () => {
     const fresh = opener(createState());
     fresh.open(entryOf("lantern"));
     expect(fresh.dispatch).not.toHaveBeenCalled();
@@ -644,6 +795,7 @@ describe("useOpenScene", () => {
       daily: undefined,
       vessel: undefined,
       wishId: undefined,
+      replay: undefined,
     });
     // A half-walked scene, unflagged (场景目录, 仪式时光): continued as it stands.
     const half = opener(withRecords({ woodfish: 11 }));
@@ -653,13 +805,33 @@ describe("useOpenScene", () => {
     const done = opener(withRecords({ woodfish: 12 }));
     done.open(entryOf("woodfish"));
     expect(done.dispatch).toHaveBeenCalledWith(reset("woodfish"));
-    // Any flagged visit — daily, vessel, 还愿, 回看 — resets first.
+    // 今日's daily set resumes a half-walked scene — leaving the card and
+    // coming back loses no steps — and restarts a finished one, like an
+    // unflagged entry.
+    const dailyHalf = opener(withRecords({ crane: 1 }));
+    dailyHalf.open(entryOf("crane"), { daily: DAY });
+    expect(dailyHalf.dispatch).not.toHaveBeenCalled();
+    const dailyDone = opener(withRecords({ crane: 3 }));
+    dailyDone.open(entryOf("crane"), { daily: DAY });
+    expect(dailyDone.dispatch).toHaveBeenCalledWith(reset("crane"));
+    // Every other flag — vessel, 还愿, 回看 — still always starts over.
     const flagged = opener(withRecords({ crane: 1 }));
     flagged.open(entryOf("crane"), { vessel: "v1" });
     expect(flagged.dispatch).toHaveBeenCalledWith(reset("crane"));
     const walked = opener(withRecords({ crane: 3 }));
     walked.open(entryOf("crane"), { replay: true });
     expect(walked.dispatch).toHaveBeenCalledWith(reset("crane"));
+    // A vessel already spent reopens on its waiting keep-or-discard choice —
+    // even a done record stays put, rather than walking again.
+    const pending = {
+      ...withRecords({ crane: 3 }),
+      collectibles: [keepsake("crane", "2026-10-05", AT)],
+    };
+    const reopened = opener(pending);
+    reopened.open(entryOf("crane"), {
+      vessel: dailyCollectibleId("2026-10-05", "crane"),
+    });
+    expect(reopened.dispatch).not.toHaveBeenCalled();
   });
 
   it("passes the visit's flags on to the scene route", () => {
@@ -676,6 +848,7 @@ describe("useOpenScene", () => {
       daily: DAY,
       vessel: "v1",
       wishId: "w1",
+      replay: undefined,
     });
   });
 });

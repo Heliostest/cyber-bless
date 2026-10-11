@@ -73,16 +73,18 @@ it('does not consume a link when load failed, and continues after successful ret
   expect(ack).toHaveBeenCalledWith(4);
   ui.unmount();
 });
-it('acknowledges a rendered scene even while its incidental progress reset is still saving', async () => {
+it('acknowledges a rendered scene even while its completed progress reset is still saving', async () => {
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
   const entry = dailyPrimaryScene(builtInScenes, localDay())!;
   let state = reduce(createState(), { type: 'scene.visit', entry, at: new Date().toISOString() });
-  state = reduce(state, { type: 'scene.progress', id: entry.id, progress: 1 });
+  // Today's unfinished walk resumes; a completed walk restarts and saves its reset.
+  state = reduce(state, { type: 'scene.progress', id: entry.id, progress: entry.engine === 'woodfish@1' ? 12 : 3 });
   let release!: () => void;
   const ack = vi.fn(async () => {});
   const ui = renderUI(createElement(BlessingApp, { host: { read: async () => JSON.stringify(state), write: () => new Promise<void>(r => { release = r; }) }, navigationRequest: { requestId: 5 }, onNavigationConsumed: ack }));
   await settle();
   expect(ui.host.querySelector('[data-test-scene]')).not.toBeNull();
+  expect(ui.host.querySelector('.save-status')?.textContent).toBe('正在保存…');
   expect(ack).toHaveBeenCalledWith(5);
   clickOn(ui.host.querySelector('.back-button')!);
   release();

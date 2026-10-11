@@ -12,7 +12,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.helio.cyberbless",
       "appleTeamId": "6PG2WW6L6N",
-      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.helio.cyberbless",
@@ -24,7 +26,10 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
-      "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#cdf1e6" },
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#cdf1e6"
+      },
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -33,7 +38,36 @@
     "plugins": [
       "expo-asset",
       "expo-status-bar",
-      ["expo-splash-screen", { "image": "./assets/adaptive-icon.png", "imageWidth": 180, "backgroundColor": "#cdf1e6" }]
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/adaptive-icon.png",
+          "imageWidth": 180,
+          "backgroundColor": "#cdf1e6"
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "com.helio.cyberbless.widgets",
+          "groupIdentifier": "group.com.helio.cyberbless.widgets",
+          "widgets": [
+            {
+              "name": "BlessingToday",
+              "displayName": "今日仪式",
+              "description": "为今天留一点温柔",
+              "ios": {
+                "contentMarginsDisabled": true,
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "./plugins/withBlessingWidgets.cjs"
     ],
     "extra": {
       "eas": {

@@ -6,28 +6,8 @@ import {
 } from "@wbr/core";
 import type { CatalogEntry } from "@wbr/content/catalog";
 
-/**
- * Scenes that can come up on 今日's daily set as 祈福 (blessing) practices:
- * quiet listening, an entrance bow, a slow turn, a strike, a pour.
- */
-export const BLESSING_SCENE_IDS = [
-  "woodfish",
-  "furin-wind-chime",
-  "shinto-torii",
-  "tibetan-wheel",
-  "celtic-folk-spring",
-  "theravada-water",
-] as const;
-
-/** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
-export const WISH_SCENE_IDS = [
-  "tanzaku-tanabata",
-  "yeondeunghoe",
-  "crane",
-  "lantern",
-  "slavic-wreath",
-] as const;
-
+import { BLESSING_SCENE_IDS, WISH_SCENE_IDS } from '@wbr/core/daily-scenes';
+export { BLESSING_SCENE_IDS, WISH_SCENE_IDS, dailyPrimaryScene } from '@wbr/core/daily-scenes';
 /**
  * Scenes shown on the night stage (a navy sky and a moon) instead of the day
  * stage. The stage element carries it as data-stage, and the scene is told
@@ -111,26 +91,6 @@ const rotate = <T>(list: readonly T[], day: string) => {
   const n = dayNumber(day) % Math.max(list.length, 1);
   return [...list.slice(n), ...list.slice(0, n)];
 };
-
-/** Both pools, taking turns (祈福, 许愿, 祈福…) down the day's rotation. */
-const PRIMARY_ORDER = BLESSING_SCENE_IDS.flatMap((id, i) =>
-  i < WISH_SCENE_IDS.length ? [id, WISH_SCENE_IDS[i]] : [id],
-);
-
-/**
- * 今日's main walk: one placed scene a day, rotated by the day, so it stays
- * put all day and the next day mostly brings the other type. Only scenes the
- * catalog can open come up.
- */
-export function dailyPrimaryScene(
-  entries: CatalogEntry[],
-  day: string,
-): CatalogEntry | undefined {
-  const pool = PRIMARY_ORDER.map((id) => findSceneEntry(entries, id)).filter(
-    (e): e is CatalogEntry => !!e,
-  );
-  return rotate(pool, day)[0];
-}
 
 /**
  * 今日's picks from 小天地: up to three scenes the user already keeps (scene

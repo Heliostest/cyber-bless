@@ -1,0 +1,7 @@
+{
+  "platforms": ["android"],
+  "coreFeatures": ["compose"],
+  "android": {
+    "modules": ["com.helio.blessingwidgets.BlessingWidgetsModule"]
+  }
+}

@@ -12,6 +12,10 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
+import * as Linking from 'expo-linking';
+import { createProjectedStorage } from '@wbr/runtime';
+import { parseWidgetLink, type WidgetNavigationRequest } from '@wbr/core/widgets';
+import { synchronizeWidgets } from './widget-sync';
 import BlessingDom from "./BlessingDom";
 import {
   readContentHistory,
@@ -39,17 +43,36 @@ function Shell() {
   const [generation, setGeneration] = useState(0);
   const [failed, setFailed] = useState(false);
   const canGoBack = useRef(false);
-  const queue = useRef(Promise.resolve());
+  const [navigationRequests, setNavigationRequests] = useState<WidgetNavigationRequest[]>([]);
+  const nextRequest = useRef(0);
+  const [storage] = useState(() => createProjectedStorage({
+    read: () => AsyncStorage.getItem(SAVE_KEY),
+    write: (raw) => AsyncStorage.setItem(SAVE_KEY, raw),
+  }, synchronizeWidgets, () => console.warn('[Widgets] Cache update failed; retrying on the next foreground refresh.')));
   const readSave = useCallback(async () => {
-    await queue.current.catch(() => {});
-    return AsyncStorage.getItem(SAVE_KEY);
-  }, []);
+    return storage.read();
+  }, [storage]);
   const writeSave = useCallback((raw: string) => {
-    const pending = queue.current
-      .catch(() => {})
-      .then(() => AsyncStorage.setItem(SAVE_KEY, raw));
-    queue.current = pending;
-    return pending;
+    return storage.write(raw);
+  }, [storage]);
+  const onNavigationConsumed = useCallback(async (requestId: number) => {
+    setNavigationRequests(old => old.filter(request => request.requestId !== requestId));
+  }, []);
+  useEffect(() => {
+    let disposed = false;
+    let incoming = false;
+    let lastURL = '', lastAt = 0;
+    const accept = (url: string | null) => {
+      if (disposed || !url) return;
+      const parsed = parseWidgetLink(url);
+      if (!parsed || (url === lastURL && Date.now() - lastAt < 2000)) return;
+      lastURL = url; lastAt = Date.now();
+      const request = { ...parsed, requestId: ++nextRequest.current };
+      setNavigationRequests(old => old.length < 10 ? [...old, request] : [old[0], ...old.slice(-8), request]);
+    };
+    const links = Linking.addEventListener('url', ({ url }) => { incoming = true; accept(url); });
+    void Linking.getInitialURL().then(url => { if (!incoming) accept(url); }).catch(() => {});
+    return () => { disposed = true; links.remove(); };
   }, []);
   const haptic = useCallback(async () => {
     await Haptics.selectionAsync().catch(() => {});
@@ -60,18 +83,23 @@ function Shell() {
   useEffect(() => {
     const app = AppState.addEventListener("change", (next) => {
       setActive(next === "active");
-      if (next !== 'active') void queue.current.catch(() => {});
+      if (next === 'active') void storage.refreshProjection().catch(() => {});
+      else void storage.flushWrites().catch(() => {});
     });
     const back = BackHandler.addEventListener("hardwareBackPress", () => {
       if (!canGoBack.current) return false;
       setBackRequest((n) => n + 1);
       return true;
     });
+    const timer = setInterval(() => {
+      if (AppState.currentState === 'active') void storage.refreshProjection().catch(() => {});
+    }, 60000);
     return () => {
       app.remove();
       back.remove();
+      clearInterval(timer);
     };
-  }, []);
+  }, [storage]);
   const fail = () => {
     void resetSceneCacheSession().catch(() => {});
     canGoBack.current = false;
@@ -98,6 +126,8 @@ function Shell() {
         onCanGoBack={onCanGoBack}
         active={active}
         backRequest={backRequest}
+        navigationRequest={navigationRequests[0]}
+        onNavigationConsumed={onNavigationConsumed}
         dom={{
           useExpoDOMWebView: false,
           onMessage: __DEV__

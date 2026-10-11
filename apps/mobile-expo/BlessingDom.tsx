@@ -6,6 +6,7 @@ import {
   type NativeContentBridge,
 } from "@wbr/content/native-web";
 import "@wbr/app/style.css";
+import type { WidgetNavigationRequest } from '@wbr/core/widgets';
 export default function BlessingDom({
   readSave,
   writeSave,
@@ -23,6 +24,8 @@ export default function BlessingDom({
   maintainSceneCache,
   manifestUrl,
   catalogUrl,
+  navigationRequest,
+  onNavigationConsumed,
   dom: _dom,
 }: NativeContentBridge & {
   readSave(): Promise<string | null>;
@@ -33,6 +36,8 @@ export default function BlessingDom({
   backRequest: number;
   manifestUrl: string;
   catalogUrl: string;
+  navigationRequest?: WidgetNavigationRequest;
+  onNavigationConsumed(requestId: number): Promise<void>;
   dom?: import("expo/dom").DOMProps;
 }) {
   useEffect(() => {
@@ -92,6 +97,8 @@ export default function BlessingDom({
       active={active}
       backRequest={backRequest}
       onCanGoBack={onCanGoBack}
+      navigationRequest={navigationRequest}
+      onNavigationConsumed={onNavigationConsumed}
     />
   );
 }

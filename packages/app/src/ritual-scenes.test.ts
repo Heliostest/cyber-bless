@@ -505,6 +505,33 @@ describe("仪式时光", () => {
     expect(ui.sceneProgress()).toBe("已完成 0 / 3");
     ui.unmount();
   });
+
+  it("reopens a finished scene card from its first step", async () => {
+    const ui = await openApp(withRecords({ crane: 3 }));
+    await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
+    await ui.tap(ui.button("仪式时光", ".settings-card"));
+    await ui.tap(
+      ui.host.querySelector('.scene-catalog .scene-card[data-scene="crane"]')!,
+    );
+    expect(ui.page()).toBe("scene");
+    expect(ui.sceneProgress()).toBe("已完成 0 / 3");
+    ui.unmount();
+  });
+});
+
+describe("场景目录", () => {
+  it("reopens a finished scene from its first step, not its done row", async () => {
+    const ui = await openApp(withRecords({ crane: 3 }));
+    await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
+    await ui.tap(ui.button("场景目录", ".settings-card"));
+    await ui.tap(
+      ui.host.querySelector('.scene-catalog .scene-card[data-scene="crane"]')!,
+    );
+    expect(ui.page()).toBe("scene");
+    expect(ui.sceneTitle()).toBe(entryOf("crane").title);
+    expect(ui.sceneProgress()).toBe("已完成 0 / 3");
+    ui.unmount();
+  });
 });
 
 describe("useOpenRitual", () => {
@@ -606,7 +633,7 @@ describe("useOpenScene", () => {
   }
   const reset = (id: string) => ({ type: "scene.progress", id, progress: 0 });
 
-  it("opens a scene as it stands; a flagged visit always starts over", () => {
+  it("opens a scene as it stands, unless it is done; a flagged visit always starts over", () => {
     const fresh = opener(createState());
     fresh.open(entryOf("lantern"));
     expect(fresh.dispatch).not.toHaveBeenCalled();
@@ -618,14 +645,18 @@ describe("useOpenScene", () => {
       vessel: undefined,
       wishId: undefined,
     });
-    // A done scene, unflagged: opened as it stands.
+    // A half-walked scene, unflagged (场景目录, 仪式时光): continued as it stands.
+    const half = opener(withRecords({ woodfish: 11 }));
+    half.open(entryOf("woodfish"));
+    expect(half.dispatch).not.toHaveBeenCalled();
+    // A done scene, unflagged: restarted from its first step.
     const done = opener(withRecords({ woodfish: 12 }));
     done.open(entryOf("woodfish"));
-    expect(done.dispatch).not.toHaveBeenCalled();
+    expect(done.dispatch).toHaveBeenCalledWith(reset("woodfish"));
     // Any flagged visit — daily, vessel, 还愿, 回看 — resets first.
-    const half = opener(withRecords({ crane: 1 }));
-    half.open(entryOf("crane"), { vessel: "v1" });
-    expect(half.dispatch).toHaveBeenCalledWith(reset("crane"));
+    const flagged = opener(withRecords({ crane: 1 }));
+    flagged.open(entryOf("crane"), { vessel: "v1" });
+    expect(flagged.dispatch).toHaveBeenCalledWith(reset("crane"));
     const walked = opener(withRecords({ crane: 3 }));
     walked.open(entryOf("crane"), { replay: true });
     expect(walked.dispatch).toHaveBeenCalledWith(reset("crane"));

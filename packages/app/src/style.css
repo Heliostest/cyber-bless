@@ -4280,3 +4280,22 @@ button:hover:not(:disabled) {
 :root .legal-information h1 { font-size: 28px; margin: 16px 0; }
 :root .legal-information h2 { font-size: 19px; margin: 26px 0 10px; }
 :root .legal-information p { font-size: 15px; line-height: 1.8; margin: 12px 0; overflow-wrap: anywhere; }
+/* A widget warm start leaves editable pages and active visits mounted. */
+.widget-entry-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 16px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: #fbf3dc;
+  color: #4a2a12;
+  font-size: 14px;
+}
+.widget-entry-notice button {
+  flex-shrink: 0;
+  padding: 8px;
+  color: #064a43;
+  font-weight: 700;
+}

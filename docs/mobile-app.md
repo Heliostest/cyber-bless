@@ -55,7 +55,11 @@ Expo 官方 `expo install --check` 已通过。实际开发 HTML 仍存在原生
 
 ## 可重复运行的命令
 
-2026-10-11 Expo Go连接核验：LAN服务正常，但iPhone扫码时未出现手机打包请求；电脑存在Clash TUN等网络接口，不能仅凭此认定TUN为唯一原因。已改用本地服务的Cloudflare隧道，公网HTTPS的manifest、iOS原生主包、DOM HTML和DOM JS全部HTTP200，原生和DOM预编译通过；同一公网地址的普通HTTP请求被重置。此网络环境应把Expo Go隧道链接的`exp://`改为`exps://`，强制使用HTTPS。当前有效二维码与地址保存在本地artifacts/expo-go/current.json，隧道重启后需重新生成，不把临时域名用于商店支持URL。iPhone上的Expo Go需登录与电脑CLI相同的Expo账号（本轮cheblito）；手机实际打开仍待重扫确认。
+2026-10-11 Expo Go 连接核验：电脑上的服务、iOS 主包和 DOM 页面均正常，但此前改用 8083 时遗漏了防火墙端口核对。WLAN 属于 Private 网络，实际默认入站策略为 Block；Node.js 已有 Private/WLAN/LocalSubnet 的 TCP 8082 放行规则，8083 没有对应规则。已将本项目 LAN 服务切回 8082，保留现有规则；此前 8082 的旧隧道服务已停止。当前地址为 `exp://192.168.31.64:8082`，二维码及地址保存在本地 artifacts/expo-go/current.json，iOS 主包和 DOM 页面已预编译通过。用户重扫 8082 的二维码后已确认在 iPhone Expo Go 正常进入应用，服务端也观察到来自局域网手机的连接。该项确认开发预览可进入，后续核心操作和独立安装包仍按设备验收清单验证。
+
+这台电脑还有其他项目占用 8081，本项目 Wi-Fi 预览使用 `npm run mobile:go -- --port 8082 --clear`；存在 VPN 等多网卡时，在启动终端先设置 PowerShell 的 `$env:REACT_NATIVE_PACKAGER_HOSTNAME = '192.168.31.64'`，确保二维码使用当前 WLAN 地址。电脑和手机连接同一 Wi-Fi，并检查 iPhone Safari 的 `http://192.168.31.64:8082/status` 是否显示 `packager-status:running`。若 Safari 可访问而 Expo Go 不可访问，检查设置 → 隐私与安全性 → 本地网络中的 Expo Go 权限，以及 Expo Go 是否登录与电脑 CLI 相同的账号 cheblito。此 IP 和防火墙规则是本机当前环境，其他电脑需核对实际 Wi-Fi IP、端口和网络配置。
+
+曾验证 Cloudflare 隧道的 HTTPS manifest、主包和 DOM HTML/JS 全部 HTTP 200，普通 HTTP 请求却被重置，因此该环境需将隧道链接的 `exp://` 改为 `exps://`。后续复查发现旧临时域名已返回 HTTP 530，不能继续复用旧二维码；重建隧道后需重新核验并生成地址。不把临时域名用于商店支持 URL。[Expo 的 iOS 同账号要求](https://docs.expo.dev/troubleshooting/expo-go-sign-in-required/)和 [Apple 的本地网络权限说明](https://support.apple.com/en-us/102229)分别说明这两个设备端检查。
 
 在仓库根目录使用 Node >=22.18（本轮 Node 24.11.1 / npm 11.16.0）：
 
@@ -100,7 +104,7 @@ CI 对 push / PR 执行业务测试、Web 构建与移动验证。云构建/指�
 | 层次 | 本轮结果 |
 | --- | --- |
 | Web | 现有业务测试全部通过；TypeScript/Vite 生产构建通过。浏览器实际创建心愿、刷新保留、木鱼12次结算和收藏通过；真实截图已保存 |
-| Expo Go | 命令已配置；没有手机连接，未实际安装或扫描 Expo Go 验证 |
+| Expo Go | 2026-10-11 用户已在 iPhone 扫描 8082 的 LAN 二维码并确认正常进入应用；主包和 DOM 页面预编译通过。核心操作和持久化等完整设备验收仍待 |
 | 生产导出 | 移动类型检查、官方依赖检查、八个脚本边界测试及 iOS/Android 导出通过；原生主包、DOM HTML、所有 JS/CSS、动态块及九项资源长度/哈希验证通过 |
 | 云归档 | EAS 官方 build:inspect archive 实际输出，在干净目录 npm ci、准备资源、双平台生产导出通过；约10.6 MB压缩源码上传，不包含旧672 MB研究资料 |
 | 独立安装包 | 四种实际签名包下载并检查 ZIP CRC、原生/DOM/资源、iOS身份/profile/最低版本；Android身份、系统版本、权限和签名通过。没有真机安装验收 |

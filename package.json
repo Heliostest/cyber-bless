@@ -33,12 +33,17 @@
     "mobile:store:prepare": "node scripts/prepare-app-store.mjs",
     "mobile:testflight:prepare": "node scripts/prepare-testflight.mjs",
     "mobile:play:assets": "node scripts/prepare-play-assets.mjs",
-    "mobile:legal:prepare": "node scripts/prepare-legal-site.mjs"
+    "mobile:legal:prepare": "node scripts/prepare-legal-site.mjs",
+    "mobile:widgets:test": "npm run test -w @wbr/core -- src/widgets.test.ts && npm run test -w @wbr/runtime -- src/projected-storage.test.ts && npm run test -w @wbr/app -- src/widget-navigation.test.ts && node --test scripts/blessing-widgets-plugin.test.mjs scripts/blessing-widgets-native.test.mjs scripts/mobile-widgets-ios.test.mjs scripts/mobile-widget-images.test.mjs scripts/mobile-widget-previews.test.mjs",
+    "mobile:widgets:render": "node scripts/render-widget-previews.mjs",
+    "mobile:dev-client": "npm run start:dev-client -w @wbr/mobile --",
+    "mobile:android:debug": "node scripts/build-mobile-android-debug.mjs"
   },
   "engines": {
     "node": ">=22.18.0"
   },
   "devDependencies": {
+    "playwright": "1.62.1",
     "sharp": "^0.34.5"
   }
 }

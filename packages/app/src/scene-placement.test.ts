@@ -71,6 +71,15 @@ const entries: CatalogEntry[] = [
 ];
 
 describe("scene placement", () => {
+  it.each(["daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai"])("makes %s a playable wish keepsake with a distinct icon", id => {
+    const entry = builtInScenes.find(entry => entry.id === id)!;
+    expect(entry).toBeDefined();
+    expect(supportsScene(entry.engine)).toBe(true);
+    expect(isWishScene(id)).toBe(true);
+    expect(sceneSteps(entry)).toBe(3);
+    expect(hasSceneIcon(id)).toBe(true);
+    expect(entry.traditionSlug).toBe(id);
+  });
   it("splits blessing vs wish scene ids", () => {
     expect([...BLESSING_SCENE_IDS]).toEqual([
       "woodfish",
@@ -86,6 +95,7 @@ describe("scene placement", () => {
       "crane",
       "lantern",
       "slavic-wreath",
+      "daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai",
     ]);
     expect(isWishScene("tanzaku-tanabata")).toBe(true);
     expect(isWishScene("slavic-wreath")).toBe(true);
@@ -167,6 +177,15 @@ describe("今日's main walk", () => {
       .slice(1)
       .filter((id, i) => isWishScene(id) !== isWishScene(seen[i])).length;
     expect(turns).toBeGreaterThan(seen.length / 2);
+  });
+
+  it("includes each craft scene across the yearly daily rotation", () => {
+    const seen = new Set(Array.from({ length: 365 }, (_, i) => {
+      const day = new Date(Date.UTC(2026, 0, i + 1)).toISOString().slice(0, 10);
+      return dailyPrimaryScene(builtInScenes, day)?.id;
+    }));
+    for (const id of ["daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai"])
+      expect(seen).toContain(id);
   });
 
   it("skips scenes the catalog cannot open, without failing the day", () => {

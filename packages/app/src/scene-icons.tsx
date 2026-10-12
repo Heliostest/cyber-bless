@@ -42,6 +42,44 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'daruma-eye-painting': (
+    <>
+      <Part d="M8 31C6 19 11 6 24 5s19 14 17 26c-1 9-8 13-17 13S9 40 8 31Z" fill="#e86953">
+        <path d="M32 8c8 7 10 16 9 23-1 9-8 13-17 13 7-4 11-12 11-21 0-6-1-11-3-15Z" fill="#c94e3d" />
+      </Part>
+      <Part d="M12 18c4-3 20-3 24 0l-2 12c-6 4-14 4-20 0Z" fill="#fff1d5" />
+      <path d="m14 20 7-2m6 0 7 2m-18 9 5 1m6 0 5-1" stroke={INK} strokeWidth={2.3} />
+      <ellipse cx="19" cy="23" rx="3" ry="3.6" fill={INK} />
+      <ellipse cx="29" cy="23" rx="3" ry="3.6" fill="#fffaf0" stroke="#d5ad65" strokeWidth={1.5} />
+      <path d="m14 35 3 3m6-2v5m8-6-3 3" stroke="#ffd57f" strokeWidth={2.5} />
+    </>
+  ),
+  mizuhiki: (
+    <>
+      <Part d="M9 5h30v38H9Z" fill="#fff1d8"><path d="M9 5 24 18 39 5" fill="#f7dfb9" /></Part>
+      <Cord d="M9 24h30" color="#e89d78" />
+      <Cord d="M24 26C10 24 10 12 18 15c5 2 1 10 6 11 5-1 1-9 6-11 8-3 8 9-6 11Z" color="#d9af64" width={2.8} />
+      <Cord d="M24 26c-11 9-16-1-9-4 7-3 6 8 9 4 3 4 2-7 9-4 7 3 2 13-9 4Zm-3 1-7 9m13-9 7 9" color="#e77165" />
+    </>
+  ),
+  milagros: (
+    <>
+      <Part d="M7 9h34v35H7Z" fill="#cda67c"><path d="M11 13h26v26H11Z" fill="#f7e7c7" /></Part>
+      <circle cx="24" cy="17" r="2.5" fill="#d2ab64" stroke={INK} strokeWidth={1.4} />
+      <Part d="M24 37C5 25 19 17 24 25c5-8 19 0 0 12Z" fill="#e6bf79">
+        <path d="M16 26c-1-4 3-5 5-2" fill="none" stroke="#fff2c7" strokeWidth={2} />
+      </Part>
+    </>
+  ),
+  'phuang-malai': (
+    <>
+      <Part d="M11 22a13 13 0 1 1 26 0 13 13 0 1 1-26 0Zm7 0a6 6 0 1 0 12 0 6 6 0 1 0-12 0Z" fill="#fff3d6" evenodd />
+      {Array.from({ length: 12 }, (_, i) => { const a = i / 12 * Math.PI * 2; return <ellipse key={i} cx={24 + Math.cos(a) * 10} cy={22 + Math.sin(a) * 10} rx={2.5} ry={3.3} fill={i % 5 === 0 ? '#f6b4bb' : '#fff9e8'} stroke="#c7b28f" strokeWidth={0.9} transform={`rotate(${i * 30} ${24 + Math.cos(a) * 10} ${22 + Math.sin(a) * 10})`} /> })}
+      <Cord d="M20 34v9m8-9v9" color="#f4cc9c" width={3} />
+      <ellipse cx="20" cy="43" rx="3.5" ry="2.3" fill="#f6b4bb" stroke={INK} strokeWidth={1.2} />
+      <ellipse cx="28" cy="43" rx="3.5" ry="2.3" fill="#f6b4bb" stroke={INK} strokeWidth={1.2} />
+    </>
+  ),
   // 敲一敲木鱼: a round wooden fish drum on its cushion, the mallet leaning on it.
   woodfish: (
     <>

@@ -41,6 +41,9 @@ function ProceduralScene({
   progress,
   checkpoint,
   saveWish,
+  returning,
+  initialVariant,
+  onVariantChange,
   failed,
 }: {
   entry: CatalogEntry;
@@ -48,12 +51,15 @@ function ProceduralScene({
   checkpoint(n: number): void;
   /** Present unless this walk keeps nothing from its wish box. */
   saveWish?(text: string): void;
+  returning?: boolean;
+  initialVariant?: string;
+  onVariantChange?(variant: string): void;
   failed(error?: unknown): void;
 }) {
   const host = useRef<HTMLDivElement>(null),
     session = useRef<SceneSession<SceneController>>(null);
   const { active, state, prepareFeedback, haptic } = useApp();
-  const callbacks = { checkpoint, saveWish, failed, prepareFeedback, haptic };
+  const callbacks = { checkpoint, saveWish, failed, prepareFeedback, haptic, onVariantChange };
   const latest = useRef({ ...callbacks, state });
   latest.current = { ...callbacks, state };
   const stage = sceneStage(entry.id);
@@ -76,6 +82,9 @@ function ProceduralScene({
             }
           : {}),
         stage,
+        returning,
+        initialVariant,
+        onVariantChange: (variant: string) => latest.current.onVariantChange?.(variant),
       },
       load: () =>
         sceneEngines.load(
@@ -395,6 +404,9 @@ function LoadedScene({
           progress={progress}
           checkpoint={checkpoint}
           saveWish={vessel && returnWish ? undefined : saveWish}
+          returning={Boolean(returnWish)}
+          initialVariant={record?.variant}
+          onVariantChange={variant => dispatch({ type: "scene.variant", id: entry.id, variant })}
           failed={failed}
         />
       )}

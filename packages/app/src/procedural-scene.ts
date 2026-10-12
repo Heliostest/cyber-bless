@@ -12,6 +12,9 @@ export type ProceduralContext = {
   isSoundEnabled?(): boolean;
   /** Keeps a line from the scene's wish box as a new 心愿. */
   saveWish?(text: string): void;
+  returning?: boolean;
+  initialVariant?: string;
+  onVariantChange?(variant: string): void;
   /** The stage the App paints behind the canvas, so the scene lights for it. */
   stage?: "day" | "night";
 };
@@ -46,6 +49,9 @@ export async function proceduralEngine(
         haptic: context.haptic,
         isSoundEnabled: context.isSoundEnabled,
         saveWish: context.saveWish,
+        returning: context.returning,
+        initialVariant: context.initialVariant,
+        onVariantChange: context.onVariantChange,
         stage: context.stage,
       });
       const dispose = () => {
@@ -75,10 +81,18 @@ export async function proceduralEngine(
         frame = requestAnimationFrame(tick);
       }
       function setActive(value: boolean) {
+        if (disposed) return;
+        const wasActive = active;
         active = value;
         overlay.inert = !value;
         cancelAnimationFrame(frame);
         frame = 0;
+        // RAF stops while inactive; give the scene one zero-time update so
+        // its pending pointer ownership is cleared before a later resume.
+        if (wasActive && !value) {
+          try { instance.update(0); }
+          catch (error) { options.failed(error); }
+        }
         if (value && !disposed) {
           last = performance.now();
           frame = requestAnimationFrame(tick);

@@ -9,6 +9,10 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'daruma-eye-painting', title: '达摩点睛', traditionSlug: 'daruma-eye-painting', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
+  { id: 'mizuhiki', title: '水引结愿', traditionSlug: 'mizuhiki', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
+  { id: 'milagros', title: '留一枚感谢', traditionSlug: 'milagros', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
+  { id: 'phuang-malai', title: '串花寄意', traditionSlug: 'phuang-malai', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
   {
     id: 'celtic-folk-spring',
     title: '泉边一念',
@@ -93,6 +97,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'daruma-eye-painting', 'mizuhiki', 'milagros', 'phuang-malai',
   'celtic-folk-spring',
   'theravada-water',
   'tanzaku-tanabata',
@@ -113,6 +118,10 @@ export function isSceneImplemented(id: string): boolean {
 /** Dynamic-import implemented scenes; unknown ids throw. */
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
+    case 'daruma-eye-painting': return import('./daruma-eye-painting')
+    case 'mizuhiki': return import('./mizuhiki')
+    case 'milagros': return import('./milagros')
+    case 'phuang-malai': return import('./phuang-malai')
     case 'celtic-folk-spring':
       return import('./celtic-folk-spring')
     case 'theravada-water':

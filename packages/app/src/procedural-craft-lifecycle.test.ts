@@ -47,6 +47,10 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['omikuji', 1, 'omikuji-draw-stick', 'omikuji-draw-target'],
+  ['polish-blessing-basket', 1, 'basket-egg-body', 'basket-egg-nest'],
+  ['navruz-sumalak', 1, 'navruz-wooden-spoon-bowl', 'navruz-empty-bowl-basin'],
+  ['floating-lantern-loy-krathong', 0, 'krathong-flower-source', 'krathong-flower-seat'],
   ['omamori-cycle', 1, 'omamori-pouch-body-coral', 'omamori-clasp'],
   ['shrine-suzu-bell', 2, 'suzu-bell-body', 'suzu-bell-body'],
   ['st-brigids-cross', 1, 'brigid-cross-hit', 'brigid-hang-target'],

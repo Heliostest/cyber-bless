@@ -72,6 +72,15 @@ const entries: CatalogEntry[] = [
 
 describe("scene placement", () => {
   it.each([
+    ["omikuji", "omikuji", false], ["polish-blessing-basket", "polish-folk-catholic", true],
+    ["navruz-sumalak", "uzbek-folk", false], ["floating-lantern-loy-krathong", "floating-lantern-loy-krathong", true],
+  ] as const)("places %s in the enlarged native-safe catalog", (id, slug, wish) => {
+    const entry = builtInScenes.find(e => e.id === id)!;
+    expect(entry).toBeDefined(); expect(supportsScene(entry.engine)).toBe(true);
+    expect(hasSceneIcon(id)).toBe(true); expect(entry.traditionSlug).toBe(slug);
+    expect(isWishScene(id)).toBe(wish); expect(sceneSteps(entry)).toBe(3);
+  });
+  it.each([
     ["omamori-cycle", true, false], ["shrine-suzu-bell", false, false],
     ["st-brigids-cross", false, false], ["bokjori", false, false],
     ["ema-votive-plaque", true, false], ["clootie-well-rag", false, false],
@@ -101,6 +110,7 @@ describe("scene placement", () => {
       "theravada-water",
       "clootie-well-rag", "diya-oil-lamp",
       "shrine-suzu-bell", "st-brigids-cross", "bokjori",
+      "omikuji", "navruz-sumalak",
     ]);
     expect([...WISH_SCENE_IDS]).toEqual([
       "tanzaku-tanabata",
@@ -111,6 +121,7 @@ describe("scene placement", () => {
       "daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai",
       "ema-votive-plaque", "votive-candle-catholic",
       "omamori-cycle",
+      "polish-blessing-basket", "floating-lantern-loy-krathong",
     ]);
     expect(isWishScene("tanzaku-tanabata")).toBe(true);
     expect(isWishScene("slavic-wreath")).toBe(true);
@@ -199,7 +210,7 @@ describe("今日's main walk", () => {
       const day = new Date(Date.UTC(2026, 0, i + 1)).toISOString().slice(0, 10);
       return dailyPrimaryScene(builtInScenes, day)?.id;
     }));
-    for (const id of ["daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai", "ema-votive-plaque", "clootie-well-rag", "diya-oil-lamp", "votive-candle-catholic", "omamori-cycle", "shrine-suzu-bell", "st-brigids-cross", "bokjori"])
+    for (const { id } of builtInScenes)
       expect(seen).toContain(id);
   });
 

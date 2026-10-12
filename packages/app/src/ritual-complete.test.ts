@@ -248,6 +248,8 @@ describe("the settle beat (P0)", () => {
     );
     await settle();
     expect(pageOf(ui)).toBe("scenes");
+    clickOn(Array.from(ui.host.querySelectorAll('button')).find(b => b.textContent === '显示更多')!);
+    await settle();
     clickOn(ui.host.querySelector('.scene-card[data-scene="crane"]')!);
     await settle();
     expect(pageOf(ui)).toBe("scene");

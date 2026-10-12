@@ -16,6 +16,8 @@ export const BLESSING_SCENE_IDS = [
   "shrine-suzu-bell",
   "st-brigids-cross",
   "bokjori",
+  "omikuji",
+  "navruz-sumalak",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -32,6 +34,8 @@ export const WISH_SCENE_IDS = [
   "ema-votive-plaque",
   "votive-candle-catholic",
   "omamori-cycle",
+  "polish-blessing-basket",
+  "floating-lantern-loy-krathong",
 ] as const;
 
 
@@ -42,6 +46,26 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "omikuji", title: "签纸慢读", engine: "omikuji@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "omikuji",
+    narrative: "御神签见于日本神社与部分寺院，常以签筒抽取签棒，再领取纸签阅读，收纳和折系方式依各处规定而异，初诣时尤其常见。这里以摇筒、展纸和收进信封整理此刻思绪。纸上是产品原创的自省短句，本体验为改编致敬，不判吉凶，不复现真实签文，也不鼓励反复抽取求好运。",
+  },
+  {
+    id: "polish-blessing-basket", title: "一篮春食", engine: "polish-blessing-basket@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "polish-folk-catholic",
+    narrative: "波兰圣周六的食物篮习俗中，家庭以白布和枝叶装饰篮筐，放入彩蛋、面包等象征食物，再带到教堂接受圣职人员的祝福。这里借准备春食的家庭一刻，让面包和彩蛋各就其位，留一句对日用食粮的感谢。本体验为产品改编的节俗致敬，不模拟圣职祝福，也不代表当日正在过节。",
+  },
+  {
+    id: "navruz-sumalak", title: "春锅共煮", engine: "navruz-sumalak@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "uzbek-folk",
+    narrative: "苏玛拉克是乌兹别克诺鲁孜春分新年中邻里共煮、分享的麦芽食物，真实制作需要长时间照料，轮流搅拌连接着家庭与社区。这里用一口圆锅、木勺和陶碗，把缓搅、舀取、送向共食处改编为三段物品练习。这是产品致敬与节俗回看，不是真实烹饪教程，不模拟拜仪或承诺吉庆功效。",
+  },
+  {
+    id: "floating-lantern-loy-krathong", title: "叶舟寄意", engine: "floating-lantern-loy-krathong@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "floating-lantern-loy-krathong",
+    narrative: "泰国水灯节在一年一度的满月夜，人们将植物材料制成的小浮灯放入水面，寄托感谢与心愿。这里仅借泰国折叶水灯的形态，安放花朵、点烛、轻推叶舟，是产品改编的节俗致敬，与天灯、中元河灯和寺院供灯分开。现实漂放请选择可降解材料，遵守当地水域与清理规范。",
+  },
   {
     id: "omamori-cycle", title: "御守伴行", engine: "omamori-cycle@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "omamori-cycle",

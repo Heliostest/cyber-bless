@@ -75,6 +75,16 @@ it('uses a direct tap marker when it is also a drag destination, then restores t
   s.scene.remove(s.source); s.update()
   expect(s.host.querySelector('.scene-object-cues')!.childElementCount).toBe(0)
 })
+it('keeps a nearby drag destination visible while following closely spaced path points',()=>{
+  const s=mount(); s.target.position.x=.08; s.update()
+  const source=s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!
+  const target=s.host.querySelector<HTMLElement>('[data-cue-role="target"]')!
+  expect(Math.abs(Number(source.dataset.x)-Number(target.dataset.x))).toBeLessThan(24)
+  expect(target.hidden).toBe(false)
+  s.hit.dispatchEvent(new MouseEvent('pointerdown',{bubbles:true,clientX:170,clientY:220}))
+  s.source.position.copy(s.target.position); s.target.position.x+=.08; s.update()
+  expect(target.hidden).toBe(false)
+})
 it('keeps cue coordinates on the canvas when its positioned host has a border',()=>{
   const s=mount()
   s.host.getBoundingClientRect=()=>({left:5,top:15,width:330,height:410}) as DOMRect

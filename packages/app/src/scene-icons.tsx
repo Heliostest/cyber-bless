@@ -42,6 +42,42 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  omikuji: (
+    <>
+      <Part d="m9 15 10-5 10 5v26l-10 4-10-4Z" fill="#cead7c"><path d="m19 11 10 4v26l-10 4Z" fill="#b99567"/></Part>
+      <path d="M19 6v18m-6-8 6 3 6-3" stroke={INK} strokeWidth={2}/>
+      <Part d="M30 5h12v30H30Z" fill="#fff0d0"/><path d="M34 12h4m-4 5h4m-4 5h4" stroke="#ab8263" strokeWidth={1.8}/>
+    </>
+  ),
+  'polish-blessing-basket': (
+    <>
+      <Cord d="M10 28C8 2 39 2 38 28" color="#c8a36d" width={3}/>
+      <Part d="M5 26h38l-5 17H10Z" fill="#c4a276"/>
+      <Part d="m6 25 9-5 9 5 11-5 8 5-7 10-12-4-10 4Z" fill="#fff0d0"/>
+      <Part d="M10 26c-4-11 13-16 17-7l2 7Z" fill="#dbaf74"/>
+      <Part d="M29 25c-3-5 1-13 5-13s8 9 5 13Z" fill="#ca8f88"/>
+      <path d="M13 21l4-5m2 7 4-5m7 3h8M12 39h24m-19-4v8m8-8v8m8-8v8" stroke="#f7dfab" strokeWidth={1.7}/>
+    </>
+  ),
+  'navruz-sumalak': (
+    <>
+      <Cord d="M7 26C0 16 7 15 12 23m25 3c11-10 4-11-1-3" color="#777f72" width={2.5}/>
+      <Part d="M8 22h33c1 27-35 27-33 0Z" fill="#879082"><path d="M27 22h14c0 17-14 22-22 15 11 1 14-6 8-15Z" fill="#697768"/></Part>
+      <ellipse cx="24" cy="22" rx="16" ry="6" fill="#b97e55" stroke={INK} strokeWidth={2}/>
+      <path d="M15 23q8-6 17 0" stroke="#dbac71" strokeWidth={2} fill="none"/>
+      <Cord d="M24 23 35 4" color="#c9a172" width={3}/>
+    </>
+  ),
+  'floating-lantern-loy-krathong': (
+    <>
+      <path d="M5 41q8-4 16 0t21 0" stroke="#8ab5b0" fill="none" strokeWidth={2}/>
+      <Part d="m5 29 5-13 10 9 7-9 10 9 7-8-4 16q-16 11-35-4Z" fill="#92b786"/>
+      <Part d="m11 32 6-12 9 11 9-9 4 11q-14 9-28-1Z" fill="#abc394"/>
+      <Part d="M24 15h5v16h-5Z" fill="#fff1cb"/>
+      <Part d="M26 15c-7-3 0-9 0-12 1 4 7 10 0 12Z" fill="#ffd68a"/>
+      <circle cx="19" cy="30" r="5" fill="#f8e5bb"/><circle cx="19" cy="30" r="2" fill="#d3a25f"/>
+    </>
+  ),
   'omamori-cycle': (
     <>
       <Cord d="M19 13Q11 2 20 3l4 8 4-8q9-1 1 10" color="#e9d7aa"/>

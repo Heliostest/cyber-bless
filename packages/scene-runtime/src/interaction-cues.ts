@@ -140,7 +140,9 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
     update() {
       if (disposed) return
       const rect = canvas.getBoundingClientRect(), parentRect = host.getBoundingClientRect()
-      layer.style.left = `${rect.left - parentRect.left}px`; layer.style.top = `${rect.top - parentRect.top}px`
+      // Absolute children start at the host's padding box, after its border.
+      layer.style.left = `${rect.left - parentRect.left - host.clientLeft + host.scrollLeft}px`
+      layer.style.top = `${rect.top - parentRect.top - host.clientTop + host.scrollTop}px`
       layer.style.width = `${rect.width}px`; layer.style.height = `${rect.height}px`
       const candidates: { object: THREE.Object3D; cue: InteractionCue }[] = []
       scene.traverse(object => {

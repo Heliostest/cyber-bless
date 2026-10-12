@@ -42,6 +42,42 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'omamori-cycle': (
+    <>
+      <Cord d="M19 13Q11 2 20 3l4 8 4-8q9-1 1 10" color="#e9d7aa"/>
+      <Part d="M13 12h22l4 8v22H9V20Z" fill="#e6a5a0"><path d="M29 12h6l4 8v22h-8V20Z" fill="#c78183"/></Part>
+      <path d="M14 17h20M13 37h22" stroke="#fbe9b8" strokeWidth={2}/>
+      <path d="M24 23c-5-5-8 1-4 3-4 5 1 7 4 4 4 3 7-2 3-4 3-4-2-6-3-3Z" fill="#fff0c3"/>
+      <circle cx="24" cy="27" r="1.5" fill="#bc9c66"/>
+    </>
+  ),
+  'shrine-suzu-bell': (
+    <>
+      <Cord d="M24 3v27" color="#e2c68e" width={5}/>
+      <Part d="M12 18C8 5 19 3 24 3s16 2 12 15c-3 6-21 6-24 0Z" fill="#d8ad5e"><path d="M25 4q13 1 11 14c-2 4-9 5-12 5 4-5 5-12 1-19Z" fill="#b28b43"/></Part>
+      <path d="M16 17q8-5 16 0" stroke={INK} strokeWidth={2.2}/>
+      <Cord d="M24 24v12" color="#f0ddaa" width={5}/>
+      <Part d="M19 35h10l4 9H15Z" fill="#c89075"/>
+      <path d="M21 36v7m6-7v7" stroke="#fff0c6" strokeWidth={1.5}/>
+    </>
+  ),
+  'st-brigids-cross': (
+    <>
+      <Part d="M17 4h8v13h18v8H31v18h-8V31H5v-8h12Z" fill="#a2b576"/>
+      <path d="M19 5v19H6m37-6H24V5m5 38V24h14M5 29h19v14" stroke="#718b57" strokeWidth={2}/>
+      <Part d="M17 17h14v14H17Z" fill="#c2cb8b"><path d="M19 20h9v8h-7v-5h4" stroke="#72844f" fill="none" strokeWidth={2}/></Part>
+      <path d="M16 9h10M9 22v10m13 6h10m6-22v10" stroke="#dac8a0" strokeWidth={2.3}/>
+    </>
+  ),
+  bokjori: (
+    <>
+      <Cord d="M18 14q-3-12 6-11t6 11" color="#b89761" width={3}/>
+      <Part d="M9 18q15-12 30 0l3 14q-18 15-36 0Z" fill="#d5b775"><path d="M9 20q15 14 30 0l2 10q-16 10-34 0Z" fill="#b7945b"/></Part>
+      <path d="M13 16v20m7-23v26m8-26v26m7-22v20M8 23h33M8 29h32m-27 6h22" stroke="#efe0aa" strokeWidth={1.6}/>
+      <path d="M18 21h3m4 3h3m4-4h3" stroke="#fff1cc" strokeWidth={2.8} strokeLinecap="round"/>
+      <Cord d="M23 37v7m3-7v5" color="#c89075" width={2}/>
+    </>
+  ),
   'ema-votive-plaque': (
     <>
       <Cord d="M15 18Q24 0 33 18" color="#bd925d" />

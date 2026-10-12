@@ -13,6 +13,9 @@ export const BLESSING_SCENE_IDS = [
   "theravada-water",
   "clootie-well-rag",
   "diya-oil-lamp",
+  "shrine-suzu-bell",
+  "st-brigids-cross",
+  "bokjori",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -28,6 +31,7 @@ export const WISH_SCENE_IDS = [
   "phuang-malai",
   "ema-votive-plaque",
   "votive-candle-catholic",
+  "omamori-cycle",
 ] as const;
 
 
@@ -38,6 +42,26 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "omamori-cycle", title: "御守伴行", engine: "omamori-cycle@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "omamori-cycle",
+    narrative: "御守是日本神社和部分寺院授与的随身守护象征，常装于织锦小袋，佩持与返还都有各自的语境。这里以封闭小袋为灵感，邀请你选一只、挂到包上，或在回访时送回小箱。本体验为产品改编的致敬练习，不拆袋，不代表宗教授与，也不设真实到期提醒。",
+  },
+  {
+    id: "shrine-suzu-bell", title: "庭前一铃", engine: "shrine-suzu-bell@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "shrine-suzu-bell",
+    narrative: "神社铃绪是公开参拜空间中的铃绳，与夏日檐下的风铃属于不同器物。人们有铃时轻摇，收拾心神后再礼敬，各社做法可能不同。这里把摇绳、轻收与静候改编为三段物品练习。本体验是产品致敬，不模拟完整参拜，也不以铃响次数计算功效。",
+  },
+  {
+    id: "st-brigids-cross", title: "草编迎春", engine: "st-brigids-cross@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "st-brigids-cross",
+    narrative: "圣布里吉德十字是爱尔兰民俗与天主教家庭习俗中的草编挂饰，常与圣布里吉德节前夕相伴，用灯心草或麦秆编成，样式因地方而异。这里让四束草交织，再挂上原创门楣，是产品改编的手作致敬，不模拟圣水祝福，也不把编织说成护佑保证。",
+  },
+  {
+    id: "bokjori", title: "竹筛迎岁", engine: "bokjori@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "bokjori",
+    narrative: "福笊篱是韩国岁首民俗中的竹制淘米器，人们在新年购置并悬挂，把淘米留米的动作寄托为纳福心意。这里借竹筛与米盘的形态，让你纳入一小撮米，再挂到木墙上。本体验为产品改编的手作致敬，不代表当下正在过节，也不承诺吉凶或纳福效果。",
+  },
   {
     id: "ema-votive-plaque", title: "木牌记愿", engine: "ema-votive-plaque@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "ema-votive-plaque",
@@ -191,6 +215,9 @@ export function dailyPrimaryScene<T extends { id: string }>(entries: readonly T[
     [BLESSING_SCENE_IDS[i], WISH_SCENE_IDS[i]].filter((id): id is typeof BLESSING_SCENE_IDS[number] | typeof WISH_SCENE_IDS[number] => Boolean(id)),
   ).flat();
   const pool = order.map(id => entries.find(e => e.id === id)).filter((e): e is T => !!e);
-  const n = Array.from(day).reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return pool[n % Math.max(pool.length, 1)];
+  // An ordinal covers every entry even as the catalog grows. A date's digit
+  // sum has too few possible values and leaves new scenes unreachable.
+  const utc = Date.parse(`${day}T00:00:00Z`);
+  const n = Number.isFinite(utc) ? Math.floor(utc / 86_400_000) : Array.from(day).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return pool[((n % Math.max(pool.length, 1)) + pool.length) % Math.max(pool.length, 1)];
 }

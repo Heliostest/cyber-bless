@@ -71,6 +71,15 @@ const entries: CatalogEntry[] = [
 ];
 
 describe("scene placement", () => {
+  it.each([
+    ["ema-votive-plaque", true, false], ["clootie-well-rag", false, false],
+    ["diya-oil-lamp", false, true], ["votive-candle-catholic", true, true],
+  ] as const)("places %s with its own object icon, pool and stage", (id, wish, night) => {
+    const entry = builtInScenes.find(e => e.id === id)!;
+    expect(entry).toBeDefined(); expect(supportsScene(entry.engine)).toBe(true);
+    expect(hasSceneIcon(id)).toBe(true); expect(entry.traditionSlug).toBe(id);
+    expect(isWishScene(id)).toBe(wish); expect(sceneStage(id)).toBe(night ? "night" : "day");
+  });
   it.each(["daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai"])("makes %s a playable wish keepsake with a distinct icon", id => {
     const entry = builtInScenes.find(entry => entry.id === id)!;
     expect(entry).toBeDefined();
@@ -88,6 +97,7 @@ describe("scene placement", () => {
       "tibetan-wheel",
       "celtic-folk-spring",
       "theravada-water",
+      "clootie-well-rag", "diya-oil-lamp",
     ]);
     expect([...WISH_SCENE_IDS]).toEqual([
       "tanzaku-tanabata",
@@ -96,6 +106,7 @@ describe("scene placement", () => {
       "lantern",
       "slavic-wreath",
       "daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai",
+      "ema-votive-plaque", "votive-candle-catholic",
     ]);
     expect(isWishScene("tanzaku-tanabata")).toBe(true);
     expect(isWishScene("slavic-wreath")).toBe(true);
@@ -125,11 +136,11 @@ describe("scene placement", () => {
     expect(sceneSteps(ritualSceneEntry(builtInScenes, "lantern")!)).toBe(3);
   });
 
-  it("shows the lantern scenes on the night stage, every other scene by day", () => {
-    expect([...NIGHT_STAGE_SCENE_IDS]).toEqual(["lantern", "yeondeunghoe"]);
+  it("shows the light scenes on the night stage, every other scene by day", () => {
+    expect([...NIGHT_STAGE_SCENE_IDS]).toEqual(["lantern", "yeondeunghoe", "diya-oil-lamp", "votive-candle-catholic"]);
     for (const id of NIGHT_STAGE_SCENE_IDS) expect(sceneStage(id)).toBe("night");
     for (const id of [
-      ...BLESSING_SCENE_IDS,
+      ...BLESSING_SCENE_IDS.filter(id => sceneStage(id) !== 'night'),
       "crane",
       "tanzaku-tanabata",
       "slavic-wreath",
@@ -184,7 +195,7 @@ describe("今日's main walk", () => {
       const day = new Date(Date.UTC(2026, 0, i + 1)).toISOString().slice(0, 10);
       return dailyPrimaryScene(builtInScenes, day)?.id;
     }));
-    for (const id of ["daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai"])
+    for (const id of ["daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai", "ema-votive-plaque", "clootie-well-rag", "diya-oil-lamp", "votive-candle-catholic"])
       expect(seen).toContain(id);
   });
 

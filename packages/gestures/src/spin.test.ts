@@ -69,6 +69,20 @@ describe('createSpin', () => {
     expect(onRevolution).not.toHaveBeenCalled()
     g.dispose()
   })
+  it('keeps angle changes and release owned by the pointer that began the spin', () => {
+    const onAngle = vi.fn(), g = createSpin({ onAngle })
+    g.mount(el, {})
+    el.dispatchEvent(ptr('pointerdown', 150, 0))
+    el.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 2, clientX: 300 }))
+    el.dispatchEvent(new PointerEvent('pointermove', { pointerId: 2, clientX: 0 }))
+    el.dispatchEvent(new PointerEvent('pointerup', { pointerId: 2 }))
+    expect(onAngle).not.toHaveBeenCalled()
+    el.dispatchEvent(ptr('pointermove', 330, 0))
+    expect(onAngle).toHaveBeenCalledExactlyOnceWith(Math.PI)
+    el.dispatchEvent(ptr('pointercancel', 330, 0)); el.dispatchEvent(ptr('pointermove', 0, 0))
+    expect(onAngle).toHaveBeenCalledOnce()
+    g.dispose()
+  })
 
   it('ignores a swipe that starts off the object (startsOn)', () => {
     const onAngle = vi.fn()

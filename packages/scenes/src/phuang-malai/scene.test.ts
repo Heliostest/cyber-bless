@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext, SceneInstance } from '../contract'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 
 // Keep geometry, raycasting, UI and gestures real; jsdom has no WebGL.
 vi.mock('three', async (importOriginal) => {
@@ -112,6 +113,38 @@ afterEach(() => {
 })
 
 describe('Phuang Malai craft', () => {
+  it('cues only the current cluster, then the live ring for tying and placing', () => {
+    let active = true
+    const s = mount(0, { isActive: () => active })
+    const enabled = () => {
+      const cues: Array<{ object: THREE.Object3D; cue: InteractionCue }> = []
+      ;(built.scene as THREE.Scene).traverse(object => {
+        for (const cue of (object.userData.interactionCues as InteractionCue[] | undefined) ?? []) {
+          if (cue.enabled()) cues.push({ object, cue })
+        }
+      })
+      return cues
+    }
+    expect(enabled().map(({ object }) => object.name)).toEqual(['tray-flowers-0'])
+    expect(enabled()[0].cue.destination).toBe(s.obj('next-segment'))
+    active = false
+    expect(enabled()).toEqual([])
+    active = true
+    s.button.click()
+    expect(enabled()).toEqual([])
+    s.run()
+    expect(enabled().map(({ object }) => object.name)).toEqual(['tray-flowers-1'])
+    s.tap(); s.tap(); s.tap()
+    expect(enabled().map(({ object }) => object.name)).toEqual(['ring-flowers-0'])
+    expect(enabled()[0].cue.destination).toBe(s.obj('top-tie'))
+    s.tap()
+    expect(enabled()[0].cue.destination).toBe(s.obj('pedestal-top'))
+    swipe(s.hit, s.flowerPoint('ring-flowers-0'), s.project(s.obj('pedestal-top').getWorldPosition(new THREE.Vector3())))
+    s.run()
+    expect(enabled()).toEqual([])
+    expect(s.progress).toEqual([1, 2])
+  })
+
   it('places several clusters before checkpoint one, ties, then places without saving an untyped wish', () => {
     const s = mount()
     for (let i = 0; i < 3; i++) { s.tap(); expect(s.progress).toEqual([]) }

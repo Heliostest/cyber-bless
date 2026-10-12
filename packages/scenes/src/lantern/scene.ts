@@ -1,12 +1,13 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
+import { createObjectPointer } from '../object-pointer'
 import {
   addStageLights,
   CEL_STYLE,
-  claimObjectTouches,
   createLampHalo,
   createPointerRay,
   createSceneFeedback,
@@ -27,7 +28,7 @@ const COPY = {
   title: '月下一灯',
   hintLight: '点按灯笼，把它慢慢点亮（练习）。',
   hintWish: '可写一句心愿，或把木牌拖到灯下挂好。',
-  hintRest: '灯留在眼前，点按下方结束（练习，非法效）。',
+  hintRest: '木牌已挂在灯下，点按灯笼结束静看（练习，非法效）。',
   lightTap: '点亮灯笼',
   hangTap: '挂上愿望牌',
   restTap: '静看片刻',
@@ -64,7 +65,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
   let dragHandle: GestureHandle | null = null
   let wishHandle: GestureHandle | null = null
   let stopResize = () => {}
-  let stopClaim = () => {}
+  let objectPointer: ReturnType<typeof createObjectPointer> | null = null
   const fx = createSceneFeedback(ctx)
 
   const ui = createStepOverlay(
@@ -86,7 +87,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
     )
     actionBtn.hidden = step === 'done'
     wishSlot.hidden = step !== 'wish'
-    hitLayer.style.pointerEvents = step === 'light' || step === 'wish' ? 'auto' : 'none'
+    hitLayer.style.pointerEvents = step === 'light' || step === 'wish' || step === 'rest' ? 'auto' : 'none'
     if (step === 'light') {
       setHint(COPY.hintLight)
       setSafeText(actionBtn, COPY.lightTap, assertSafeCopy)
@@ -157,6 +158,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
   pivot.add(cord)
 
   const lantern = new THREE.Group()
+  lantern.name = 'lantern-body'
   lantern.position.y = LANTERN_Y - 2.22
   pivot.add(lantern)
 
@@ -236,7 +238,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
   const onPlaque = (x: number, y: number) => pointer.hits(x, y, [plaqueZone, board])
   /** Taps on the lantern, then drags of the plaque, are the scene's; elsewhere the page scrolls. */
   const onObject = (x: number, y: number) =>
-    step === 'light' ? pointer.hits(x, y, [lanternZone]) : onPlaque(x, y)
+    step === 'light' || step === 'rest' ? pointer.hits(x, y, [lanternZone]) : onPlaque(x, y)
   const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.3)
   const hitPoint = new THREE.Vector3()
   const dragTarget = plaqueHome.clone()
@@ -248,6 +250,22 @@ export function createLantern(ctx: SceneContext): SceneInstance {
   }
 
   const canAct = () => restoring || !ctx.isActive || ctx.isActive()
+  const canCue = () => started && !disposed && !restoring && canAct()
+  const removeCues = [
+    addInteractionCue(lanternZone, {
+      kind: 'tap', label: '点按点亮灯笼',
+      enabled: () => canCue() && step === 'light',
+    }),
+    addInteractionCue(board, {
+      kind: 'drag', label: '把木牌拖到灯下',
+      destination: () => lantern.localToWorld(new THREE.Vector3(0, -LANTERN_HALF_H - 0.05, 0)),
+      targetLabel: '灯下挂点', enabled: () => canCue() && step === 'wish' && litT >= 1,
+    }),
+    addInteractionCue(lanternZone, {
+      kind: 'tap', label: '点按灯笼结束静看',
+      enabled: () => canCue() && step === 'rest',
+    }),
+  ]
 
   const completeScene = () => {
     if (!canAct() || step === 'done') return
@@ -291,7 +309,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
   }
 
   const onActionTap = () => {
-    if (disposed) return
+    if (disposed || objectPointer?.isBusy()) return
     fx.prepare()
     if (step === 'light') goWish()
     else if (step === 'wish') goRest()
@@ -300,15 +318,18 @@ export function createLantern(ctx: SceneContext): SceneInstance {
 
   let downX = 0
   let downY = 0
-  const onHitDown = (e: PointerEvent) => {
+  let gestureOwned = false
+  const onHitDown = (x: number, y: number) => {
+    gestureOwned = true
+    dragHandle?.setEnabled(step === 'wish')
     fx.prepare()
-    downX = e.clientX
-    downY = e.clientY
-    if (step === 'wish' && onPlaque(e.clientX, e.clientY)) grabbed = true
+    downX = x
+    downY = y
+    if (step === 'wish') grabbed = true
   }
-  const onHitMove = (e: PointerEvent) => {
-    if (step !== 'wish' || !grabbed || e.buttons === 0) return
-    if (pointer.aim(e.clientX, e.clientY).ray.intersectPlane(dragPlane, hitPoint)) {
+  const onHitMove = (x: number, y: number) => {
+    if (step !== 'wish' || !grabbed) return
+    if (pointer.aim(x, y).ray.intersectPlane(dragPlane, hitPoint)) {
       dragTarget.set(
         THREE.MathUtils.clamp(hitPoint.x, -1, 1),
         THREE.MathUtils.clamp(hitPoint.y + 0.15, 0.3, 2.1),
@@ -316,21 +337,38 @@ export function createLantern(ctx: SceneContext): SceneInstance {
       )
     }
   }
-  const onHitUp = (e: PointerEvent) => {
-    if (step !== 'light') return
-    const moved = Math.hypot(e.clientX - downX, e.clientY - downY)
-    if (moved < 12 && pointer.hits(e.clientX, e.clientY, [lanternZone])) goWish()
+  const onHitUp = (x: number, y: number) => {
+    if (step !== 'light' && step !== 'rest') return
+    gestureOwned = false
+    const moved = Math.hypot(x - downX, y - downY)
+    if (moved >= 12 || !pointer.hits(x, y, [lanternZone])) return
+    if (step === 'light') goWish()
+    else completeScene()
+  }
+  const onHitCancel = () => {
+    grabbed = false
+    gestureOwned = false
+    dragHandle?.setEnabled(false)
+    if (step === 'wish') dragTarget.copy(plaqueHome)
   }
 
   const wireGestures = () => {
-    hitLayer.addEventListener('pointerdown', onHitDown)
-    stopClaim = claimObjectTouches(hitLayer, onObject)
+    objectPointer = createObjectPointer(hitLayer, {
+      isActive: canCue,
+      canStart: (x, y) => (step === 'light' || step === 'wish' || step === 'rest') && onObject(x, y),
+      onStart: onHitDown,
+      onMove: onHitMove,
+      onRelease: onHitUp,
+      onCancel: onHitCancel,
+    })
     dragHandle = gestures.createDrag({
-      startsOn: onPlaque,
+      startsOn: (x, y) => gestureOwned && onPlaque(x, y),
       hitTest: (x, y) => grabbed && pointer.hits(x, y, [lanternZone]),
       onDrop: (hit) => {
+        const valid = gestureOwned
+        gestureOwned = false
         if (step !== 'wish') return
-        if (hit) goRest()
+        if (valid && hit) goRest()
         else dragTarget.copy(plaqueHome)
         grabbed = false
       },
@@ -339,8 +377,6 @@ export function createLantern(ctx: SceneContext): SceneInstance {
     dragHandle.setEnabled(false)
     handles.push(dragHandle)
 
-    hitLayer.addEventListener('pointermove', onHitMove)
-    hitLayer.addEventListener('pointerup', onHitUp)
     actionBtn.addEventListener('click', onActionTap)
 
     wishHandle = gestures.createWishWrite({
@@ -377,6 +413,8 @@ export function createLantern(ctx: SceneContext): SceneInstance {
     },
     update(dt: number) {
       if (disposed || !started) return
+      if (!canAct()) objectPointer?.cancel()
+      dragHandle?.setEnabled(canAct() && gestureOwned && step === 'wish')
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
@@ -424,14 +462,12 @@ export function createLantern(ctx: SceneContext): SceneInstance {
       if (disposed) return
       disposed = true
       stopResize()
-      stopClaim()
-      hitLayer.removeEventListener('pointerdown', onHitDown)
-      hitLayer.removeEventListener('pointermove', onHitMove)
-      hitLayer.removeEventListener('pointerup', onHitUp)
+      objectPointer?.dispose()
       actionBtn.removeEventListener('click', onActionTap)
       for (const h of handles) h.dispose()
       handles.length = 0
       fx.dispose()
+      for (const removeCue of removeCues) removeCue()
       styleRenderer.dispose()
       renderer.dispose()
       renderer.forceContextLoss()

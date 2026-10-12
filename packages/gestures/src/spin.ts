@@ -12,19 +12,21 @@ export function createSpin(opts: SpinOpts): GestureHandle {
   let el: HTMLElement | null = null
   let enabled = true
   let tracking = false
+  let owner: number | undefined
   let lastX = 0
   let angle = 0
   let lastRev = 0
 
   const onDown = (e: PointerEvent) => {
-    if (!enabled || (opts.startsOn && !opts.startsOn(e.clientX, e.clientY))) return
+    if (!enabled || tracking || (opts.startsOn && !opts.startsOn(e.clientX, e.clientY))) return
     tracking = true
+    owner = e.pointerId
     lastX = e.clientX
     el?.setPointerCapture(e.pointerId)
   }
 
   const onMove = (e: PointerEvent) => {
-    if (!tracking || !enabled || !el) return
+    if (!tracking || !enabled || !el || e.pointerId !== owner) return
     const dx = e.clientX - lastX
     lastX = e.clientX
     const width = el.clientWidth || 1
@@ -39,8 +41,10 @@ export function createSpin(opts: SpinOpts): GestureHandle {
     }
   }
 
-  const onUp = () => {
+  const onUp = (e: PointerEvent) => {
+    if (e.pointerId !== owner) return
     tracking = false
+    owner = undefined
   }
 
   return {
@@ -60,10 +64,11 @@ export function createSpin(opts: SpinOpts): GestureHandle {
       el.removeEventListener('pointercancel', onUp)
       el = null
       tracking = false
+      owner = undefined
     },
     setEnabled(on) {
       enabled = on
-      if (!on) tracking = false
+      if (!on) { tracking = false; owner = undefined }
     },
   }
 }

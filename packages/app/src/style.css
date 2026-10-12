@@ -124,6 +124,7 @@
 }
 [data-scene="lantern"],
 [data-scene="daruma-eye-painting"],
+[data-scene="ema-votive-plaque"],
 [data-scene="theravada-water"] {
   --candy: var(--peach);
   --candy-hi: var(--peach-hi);
@@ -141,6 +142,7 @@
   --candy-ring: #b4dcf3;
 }
 [data-scene="slavic-wreath"],
+[data-scene="clootie-well-rag"],
 [data-scene="shinto-torii"] {
   --candy: var(--leaf);
   --candy-hi: var(--leaf-hi);
@@ -150,6 +152,7 @@
 }
 [data-scene="tibetan-wheel"],
 [data-scene="mizuhiki"],
+[data-scene="votive-candle-catholic"],
 [data-scene="celtic-folk-spring"] {
   --candy: var(--mint);
   --candy-hi: var(--mint-hi);
@@ -3103,27 +3106,24 @@ button:hover:not(:disabled) {
   animation: scene-fade-in 0.4s var(--ease);
 }
 
-/* The scene's action is a chunky mint press button. */
+/* Physical objects lead the scene; the button remains a keyboard fallback. */
 .scene-bow-tap {
   position: absolute;
   left: 50%;
   bottom: 116px;
   transform: translateX(-50%);
-  min-height: 48px;
-  padding: 8px 24px;
+  min-height: 44px;
+  padding: 6px 14px;
   border-radius: 999px;
-  border: 3px solid #d4f8f2;
-  background: linear-gradient(180deg, var(--mint-hi), var(--mint));
-  color: var(--mint-ink);
+  border: 1px solid #947a5859;
+  background: #fffcf280;
+  color: var(--ink-soft);
   font: inherit;
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow:
-    inset 0 3px 0 #ffffff8c,
-    0 5px 0 var(--mint-ledge),
-    0 8px 12px #0b5a5233;
+  box-shadow: none;
   transition:
     filter 0.15s var(--ease),
     box-shadow 0.15s var(--ease),
@@ -3132,14 +3132,14 @@ button:hover:not(:disabled) {
 }
 
 .scene-bow-tap:hover {
-  filter: brightness(1.04);
+  background: #fffcf2;
 }
+.scene-bow-tap::before { content: '辅助 · '; opacity: 0.7; font-weight: 500; }
+.scene-bow-tap:focus-visible { outline: 3px solid var(--mint-ink); outline-offset: 3px; }
 
 .scene-bow-tap:active {
-  transform: translateX(-50%) translateY(4px);
-  box-shadow:
-    inset 0 3px 0 #ffffff8c,
-    0 1px 0 var(--mint-ledge);
+  transform: translateX(-50%) translateY(1px);
+  background: var(--paper);
 }
 
 /* A step still under way (a crane fold): the button waits and taps are ignored. */
@@ -3832,16 +3832,16 @@ button:hover:not(:disabled) {
 .scene-craft-choices button {
   min-height: 44px;
   padding: 6px 12px;
-  border: 2px solid var(--rim);
+  border: 1px solid var(--rim);
   border-radius: 999px;
   background: var(--paper);
   color: var(--ink-soft);
-  font-weight: 800;
-  box-shadow: 0 0 0 1.5px var(--edge), 0 3px 0 #cbb99b;
+  font-weight: 600;
+  box-shadow: none;
 }
 .scene-craft-choices button[aria-pressed="true"] {
   background: var(--candy-tint);
-  box-shadow: 0 0 0 2px var(--candy-ring), 0 3px 0 var(--candy-ledge);
+  box-shadow: 0 0 0 1px var(--candy-ring);
 }
 .library-scene-stage .scene-step-dots {
   grid-area: dots;
@@ -3863,8 +3863,63 @@ button:hover:not(:disabled) {
   transform: none;
 }
 .library-scene-stage .scene-bow-tap:active {
-  transform: translateY(4px);
+  transform: translateY(1px);
 }
+
+/* Projected on real geometry, with no hit surface of their own. */
+.scene-object-cues {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+  contain: layout style;
+}
+.scene-object-cues * { pointer-events: none; }
+.scene-object-cue { position: absolute; width: 0; height: 0; color: #2c6459; }
+.scene-object-cue-ring {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  left: -19px;
+  top: -19px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #a9e4c5;
+  border-radius: 50%;
+  background: #fffcf2cc;
+  box-shadow: 0 0 0 3px #fffcf280, 0 2px 8px #42372024;
+  animation: scene-cue-breathe 2.4s ease-in-out infinite;
+}
+.scene-object-cue-ring svg { width: 21px; height: 21px; }
+.scene-object-cue[data-compact='true'] .scene-object-cue-ring { width: 24px; height: 24px; top: -12px; left: -12px; animation: none; }
+.scene-object-cue[data-compact='true'] .scene-object-cue-ring svg { width: 15px; height: 15px; }
+.scene-object-cue[data-compact='true'] .scene-object-cue-label { display: none; }
+.scene-object-cue-label {
+  position: absolute;
+  bottom: calc(28px + var(--cue-label-offset, 0px));
+  left: var(--cue-label-shift, 0px);
+  transform: translateX(-50%);
+  padding: 5px 10px;
+  border: 1px solid #d3c5a4;
+  border-radius: 12px;
+  background: #fffcf2f5;
+  box-shadow: 0 2px 5px #4237201f;
+  color: #53462f;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.scene-object-cue[data-label-side='below'] .scene-object-cue-label { bottom: auto; top: calc(28px + var(--cue-label-offset, 0px)); }
+.scene-object-cue[data-cue-role='target'] .scene-object-cue-ring { width: 30px; height: 30px; top: -15px; left: -15px; background: #a9e4c533; border-style: dashed; animation: none; }
+.scene-object-cue[data-cue-role='target'] .scene-object-cue-label { font-weight: 600; }
+.scene-object-cue[data-dragging='true'] { opacity: 0.25; }
+.scene-object-cue-path { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.scene-object-cue-path path { fill: none; stroke: #427b66; stroke-width: 2; stroke-dasharray: 4 5; stroke-linecap: round; opacity: 0.75; }
+.library-scene-stage:has(.scene-overlay-host[inert]) .scene-object-cues,
+.woodfish-object:disabled .scene-object-cues { visibility: hidden; }
+@keyframes scene-cue-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .scene-object-cue-ring { animation: none; } }
 /* The note under the wish box sits on the sand tray on every stage. */
 .library-scene-stage .scene-wish-slot .wish-write-meta {
   color: var(--ink-soft);
@@ -4023,6 +4078,7 @@ button:hover:not(:disabled) {
 .daily-set-preview > .library-scene-stage > .scene-overlay-host {
   display: none;
 }
+.daily-set-preview .scene-object-cues { display: none; }
 /* The scene kit's canvas and the woodfish's (which has no class). */
 .daily-set-preview-stage > canvas {
   display: block;

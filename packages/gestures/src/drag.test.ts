@@ -6,6 +6,21 @@ function ptr(type: string, x: number, y: number) {
 }
 
 describe('createDrag', () => {
+  it('cancels without dropping and only the owning pointer can release', () => {
+    const el = document.createElement('div'), onDrop = vi.fn()
+    const g = createDrag({ hitTest: () => true, onDrop })
+    g.mount(el, {})
+    el.dispatchEvent(ptr('pointerdown', 10, 10))
+    el.dispatchEvent(new PointerEvent('pointerup', { pointerId: 2, clientX: 110, clientY: 110 }))
+    expect(onDrop).not.toHaveBeenCalled()
+    el.dispatchEvent(ptr('pointercancel', 110, 110))
+    expect(onDrop).not.toHaveBeenCalled()
+    el.dispatchEvent(ptr('pointerup', 110, 110))
+    expect(onDrop).not.toHaveBeenCalled()
+    el.dispatchEvent(ptr('pointerdown', 10, 10)); el.dispatchEvent(ptr('pointerup', 110, 110))
+    expect(onDrop).toHaveBeenCalledOnce()
+    g.dispose()
+  })
   it('fires onDrop(true) when released over hit', () => {
     const el = document.createElement('div')
     document.body.appendChild(el)

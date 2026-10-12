@@ -92,6 +92,21 @@ describe('createTilt', () => {
     expect(onPour).not.toHaveBeenCalled()
     g.dispose()
   })
+  it('accepts movement only from the original pointer and cancels its hold', () => {
+    const onPour = vi.fn(), onAngle = vi.fn()
+    const g = createTilt({ pourAngleDeg: 30, holdMs: 200, onPour, onAngle })
+    g.mount(el, {})
+    el.dispatchEvent(ptr('pointerdown', 0, 200))
+    el.dispatchEvent(new PointerEvent('pointermove', { clientY: 80, pointerId: 2 }))
+    g.update(.3)
+    expect(onAngle).not.toHaveBeenCalled(); expect(onPour).not.toHaveBeenCalled()
+    el.dispatchEvent(new PointerEvent('pointerup', { pointerId: 2 }))
+    el.dispatchEvent(ptr('pointermove', 0, 80))
+    expect(onAngle).toHaveBeenCalledWith(120)
+    el.dispatchEvent(ptr('pointercancel', 0, 80)); g.update(.3)
+    expect(onPour).not.toHaveBeenCalled()
+    g.dispose()
+  })
 
   it('ignores a drag that starts off the object (startsOn)', () => {
     const onPour = vi.fn()

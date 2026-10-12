@@ -1,7 +1,9 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
+import { claimObjectTouches } from '../procedural-kit'
 
 type Step = 'gyro' | 'drag' | 'wishWrite' | 'done'
 
@@ -9,13 +11,17 @@ const STEP_ORDER: Step[] = ['gyro', 'drag', 'wishWrite']
 
 const COPY = {
   title: '泉边一念',
-  hintGyro: '手机向前倾、再竖起停驻片刻，或点按下方以鞠躬（练习）。',
-  hintDrag: '将信物拖向泉面后松开。',
-  hintWish: '写下短句后提交（练习，非法效）。',
+  hintGyro: '点按泉沿，俯身一礼；也可将手机向前倾、再竖起停驻片刻，或用辅助按钮（练习）。',
+  hintDrag: '按住信物，拖向泉面后松开。',
+  hintWish: '泉边静下来，在输入框写下短句后提交（练习，非法效）。',
   hintHolding: '停驻片刻…',
   bowTap: '点按以鞠躬',
+  dropTap: '放到泉面',
   done: '这一念已留下（练习结束）。',
   stepsAria: '步骤',
+  cueCarry: '拖动信物',
+  cueWater: '放到泉面',
+  cueBow: '点按泉沿一礼',
 } as const
 
 function setSafeText(
@@ -25,6 +31,7 @@ function setSafeText(
 ) {
   assertSafeCopy(text)
   el.textContent = text
+  if (el.classList.contains('scene-bow-tap')) el.setAttribute('aria-label', text)
 }
 
 export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
@@ -43,9 +50,14 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
   let dragHandle: GestureHandle | null = null
   let wishHandle: GestureHandle | null = null
   let resizeObserver: ResizeObserver | null = null
+  let stopClaim = () => {}
 
   overlay.replaceChildren()
-  overlay.classList.add('scene-overlay')
+  overlay.classList.add('scene-overlay', 'scene-overlay--stage')
+
+  const hitLayer = document.createElement('div')
+  hitLayer.className = 'scene-hit-layer'
+  hitLayer.setAttribute('aria-hidden', 'true')
 
   const titleEl = document.createElement('div')
   titleEl.className = 'scene-title'
@@ -69,7 +81,7 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
   const wishSlot = document.createElement('div')
   wishSlot.className = 'scene-wish-slot'
 
-  overlay.append(titleEl, dotsEl, hintEl, bowBtn, wishSlot)
+  overlay.append(hitLayer, titleEl, dotsEl, hintEl, bowBtn, wishSlot)
 
   const renderDots = () => {
     dotsEl.replaceChildren()
@@ -90,8 +102,10 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
 
   const syncOverlayForStep = () => {
     renderDots()
-    bowBtn.hidden = step !== 'gyro'
+    bowBtn.hidden = step === 'wishWrite' || step === 'done'
+    setSafeText(bowBtn, step === 'drag' ? COPY.dropTap : COPY.bowTap, assertSafeCopy)
     wishSlot.hidden = step !== 'wishWrite'
+    hitLayer.style.pointerEvents = step === 'gyro' || step === 'drag' ? 'auto' : 'none'
     if (step === 'gyro') setHint(COPY.hintGyro)
     else if (step === 'drag') setHint(COPY.hintDrag)
     else if (step === 'wishWrite') setHint(COPY.hintWish)
@@ -190,6 +204,27 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
   const pointerNdc = new THREE.Vector2()
   const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
   const hitPoint = new THREE.Vector3()
+  const waterLocalRay = new THREE.Ray()
+  const waterLocalHit = new THREE.Vector3()
+  const waterInverse = new THREE.Matrix4()
+  const waterLocalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)
+
+  const canAct = () => restoring || !ctx.isActive || ctx.isActive()
+  addInteractionCue(bank, {
+    kind: 'tap',
+    label: COPY.cueBow,
+    anchor: [0, -1.65, 0],
+    enabled: () => started && !disposed && !restoring && canAct() && step === 'gyro',
+  })
+
+  addInteractionCue(token, {
+    kind: 'drag',
+    label: COPY.cueCarry,
+    enabled: () => started && !disposed && !restoring &&
+      (!ctx.isActive || ctx.isActive()) && step === 'drag',
+    destination: water,
+    targetLabel: COPY.cueWater,
+  })
 
   const resize = () => {
     const parent = canvas.parentElement
@@ -210,8 +245,25 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
   const waterHitTest = (clientX: number, clientY: number) => {
     clientToNdc(clientX, clientY)
     raycaster.setFromCamera(pointerNdc, camera)
-    return raycaster.intersectObject(water, false).length > 0
+    water.updateWorldMatrix(true, false)
+    waterLocalRay.copy(raycaster.ray).applyMatrix4(waterInverse.copy(water.matrixWorld).invert())
+    // The CircleGeometry centre is shared by every fan triangle; a projected
+    // centre ray can fall through their numerical seams. Test the water disk.
+    const hit = waterLocalRay.intersectPlane(waterLocalPlane, waterLocalHit)
+    const radius = water.geometry.parameters.radius
+    return hit !== null && hit.x * hit.x + hit.y * hit.y <= radius * radius
   }
+
+  const hitsObject = (object: THREE.Object3D, clientX: number, clientY: number) => {
+    clientToNdc(clientX, clientY)
+    raycaster.setFromCamera(pointerNdc, camera)
+    object.updateWorldMatrix(true, false)
+    return raycaster.intersectObject(object, false).length > 0
+  }
+  const onToken = (x: number, y: number) => hitsObject(token, x, y)
+  const onBank = (x: number, y: number) => hitsObject(bank, x, y)
+  const onInteractiveObject = (x: number, y: number) => !disposed && canAct() &&
+    (step === 'gyro' ? onBank(x, y) : step === 'drag' && onToken(x, y))
 
   const moveTokenTo = (clientX: number, clientY: number) => {
     clientToNdc(clientX, clientY)
@@ -257,23 +309,49 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
     syncOverlayForStep()
   }
 
-  /** Visible tap fallback completes bow step (createGyro fallback only emits onBow). */
-  const onBowTapFallback = () => {
-    if (disposed || step !== 'gyro') return
-    goDrag()
+  /** Keyboard/tap fallback performs the same current physical object action. */
+  const onActionTap = () => {
+    if (disposed || !canAct()) return
+    if (step === 'gyro') goDrag()
+    else if (step === 'drag') goWish()
   }
 
+  let downX = 0
+  let downY = 0
+  let tappedBank = false
+  let bankPointerId: number | null = null
+  const onOverlayDown = (e: PointerEvent) => {
+    if (bankPointerId !== null) return
+    downX = e.clientX
+    downY = e.clientY
+    tappedBank = canAct() && step === 'gyro' && onBank(e.clientX, e.clientY)
+    bankPointerId = tappedBank ? e.pointerId : null
+    grabbed = canAct() && step === 'drag' && onToken(e.clientX, e.clientY)
+  }
   const onOverlayMove = (e: PointerEvent) => {
-    if (step !== 'drag' || e.buttons === 0) return
-    grabbed = true
+    if (!canAct() || step !== 'drag' || !grabbed || e.buttons === 0) return
     moveTokenTo(e.clientX, e.clientY)
   }
 
-  const onOverlayUp = () => {
+  const onOverlayUp = (e: PointerEvent) => {
+    if (bankPointerId !== null && e.pointerId !== bankPointerId) return
+    if (tappedBank && Math.hypot(e.clientX - downX, e.clientY - downY) < 12 &&
+      onBank(e.clientX, e.clientY)) onActionTap()
+    tappedBank = false
+    bankPointerId = null
+    grabbed = false
+  }
+  const onOverlayCancel = (e?: PointerEvent) => {
+    if (bankPointerId !== null && e && e.pointerId !== bankPointerId) return
+    tappedBank = false
+    bankPointerId = null
     grabbed = false
   }
 
   const wireGestures = () => {
+    hitLayer.addEventListener('pointerdown', onOverlayDown)
+    hitLayer.addEventListener('pointercancel', onOverlayCancel)
+    stopClaim = claimObjectTouches(hitLayer, onInteractiveObject)
     gyroHandle = gestures.createGyro({
       // Lean forward, come back near upright and hold: a deliberate move, so
       // a phone simply held to read (beta ≈ 45–90°) never ends the step.
@@ -292,24 +370,24 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
     gyroHandle.mount(overlay, {})
     handles.push(gyroHandle)
 
-    bowBtn.addEventListener('click', onBowTapFallback)
+    bowBtn.addEventListener('click', onActionTap)
 
     dragHandle = gestures.createDrag({
+      startsOn: (x, y) => canAct() && step === 'drag' && onToken(x, y),
       hitTest: waterHitTest,
       onDrop: (hit) => {
-        if (step !== 'drag') return
+        if (step !== 'drag' || !grabbed) return
         grabbed = false
         if (hit) goWish()
         else dragTarget.copy(tokenHome)
       },
     })
-    dragHandle.mount(overlay, {})
+    dragHandle.mount(hitLayer, {})
     dragHandle.setEnabled(false)
     handles.push(dragHandle)
 
-    overlay.addEventListener('pointermove', onOverlayMove)
-    overlay.addEventListener('pointerup', onOverlayUp)
-    overlay.addEventListener('pointercancel', onOverlayUp)
+    hitLayer.addEventListener('pointermove', onOverlayMove)
+    hitLayer.addEventListener('pointerup', onOverlayUp)
 
     wishHandle = gestures.createWishWrite({
       maxLen: 40,
@@ -347,6 +425,14 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
     },
     update(dt: number) {
       if (disposed || !started) return
+      if (!canAct()) {
+        onOverlayCancel()
+        gyroHandle?.setEnabled(false)
+        dragHandle?.setEnabled(false)
+        return
+      }
+      gyroHandle?.setEnabled(step === 'gyro')
+      dragHandle?.setEnabled(step === 'drag')
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
@@ -382,10 +468,12 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
       disposed = true
       resizeObserver?.disconnect()
       resizeObserver = null
-      bowBtn.removeEventListener('click', onBowTapFallback)
-      overlay.removeEventListener('pointermove', onOverlayMove)
-      overlay.removeEventListener('pointerup', onOverlayUp)
-      overlay.removeEventListener('pointercancel', onOverlayUp)
+      stopClaim()
+      bowBtn.removeEventListener('click', onActionTap)
+      hitLayer.removeEventListener('pointerdown', onOverlayDown)
+      hitLayer.removeEventListener('pointermove', onOverlayMove)
+      hitLayer.removeEventListener('pointerup', onOverlayUp)
+      hitLayer.removeEventListener('pointercancel', onOverlayCancel)
       for (const h of handles) h.dispose()
       handles.length = 0
       styleRenderer.dispose()
@@ -400,7 +488,7 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
       moteGeometry.dispose()
       moteMaterial.dispose()
       overlay.replaceChildren()
-      overlay.classList.remove('scene-overlay')
+      overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

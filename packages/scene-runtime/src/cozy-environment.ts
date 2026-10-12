@@ -4,8 +4,12 @@ import nature from "./nature-kit.data.json";
 
 declare const process: { env: { EXPO_BASE_URL?: string } };
 type Kind = "garden" | "courtyard" | "veranda" | "table" | "river";
-type Profile = { kind: Kind; floor: number; night?: boolean };
+type Profile = { kind: Kind; floor: number; night?: boolean; warmLight?: boolean };
 const profiles: Record<string, Profile> = {
+  'ema-votive-plaque': { kind: 'veranda', floor: -0.04 },
+  'clootie-well-rag': { kind: 'garden', floor: -0.04 },
+  'diya-oil-lamp': { kind: 'courtyard', floor: -0.04, night: true, warmLight: true },
+  'votive-candle-catholic': { kind: 'courtyard', floor: -0.04, night: true, warmLight: true },
   'daruma-eye-painting': { kind: 'veranda', floor: -0.04 },
   mizuhiki: { kind: 'veranda', floor: -0.04 },
   milagros: { kind: 'veranda', floor: -0.04 },
@@ -38,7 +42,7 @@ export function createCozyEnvironment(
 ) {
   const profile = profiles[id];
   if (!profile) return null;
-  const { kind, floor, night = false } = profile;
+  const { kind, floor, night = false, warmLight = false } = profile;
   const previous = {
     background: scene.background, fog: scene.fog, environment: scene.environment,
     intensity: scene.backgroundIntensity, blur: scene.backgroundBlurriness,
@@ -60,7 +64,7 @@ export function createCozyEnvironment(
   scene.fog = new THREE.Fog(horizon, night ? 7 : 9, night ? 24 : 28);
   scene.backgroundIntensity = night ? 0.065 : 0.42;
   scene.backgroundBlurriness = night ? 0.015 : 0.12;
-  scene.environmentIntensity = night ? 0.16 : 0.3;
+  scene.environmentIntensity = warmLight ? 0.25 : night ? 0.16 : 0.3;
   scene.backgroundRotation.set(0, 2.2, 0);
   scene.environmentRotation.copy(scene.backgroundRotation);
 
@@ -199,17 +203,17 @@ export function createCozyEnvironment(
         const first = !lights.has(object);
         if (first) lights.add(object);
         if (object instanceof THREE.AmbientLight) {
-          object.color.set(night ? 0xa8bddb : 0xfff3df);
-          object.intensity = night ? 0.24 : 0.22;
+          object.color.set(warmLight ? 0xffe0b9 : night ? 0xa8bddb : 0xfff3df);
+          object.intensity = warmLight ? 0.35 : night ? 0.24 : 0.22;
         } else if (object instanceof THREE.HemisphereLight) {
           object.color.set(night ? 0xaec9e1 : 0xfff5e7);
-          object.groundColor.set(night ? 0x536971 : 0xb4bd8d);
-          object.intensity = night ? 0.48 : 0.5;
+          object.groundColor.set(warmLight ? 0x988568 : night ? 0x536971 : 0xb4bd8d);
+          object.intensity = warmLight ? 0.6 : night ? 0.48 : 0.5;
         } else if (object instanceof THREE.DirectionalLight) {
           const key = !keySeen;
           keySeen = true;
-          object.color.set(night ? 0xd6e5fb : key ? 0xffe6bf : 0xfff2e4);
-          object.intensity = night ? (key ? 0.65 : 0.2) : (key ? 1.2 : 0.18);
+          object.color.set(warmLight && key ? 0xffd19a : night ? 0xd6e5fb : key ? 0xffe6bf : 0xfff2e4);
+          object.intensity = warmLight && key ? 1.15 : night ? (key ? 0.65 : 0.2) : (key ? 1.2 : 0.18);
           object.castShadow = key;
           if (key && first) {
             object.shadow.mapSize.set(1024, 1024);

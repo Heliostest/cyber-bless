@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext, SceneInstance } from '../contract'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 vi.mock('three', async importOriginal => {
   const actual = await importOriginal<typeof import('three')>()
   class WebGLRenderer {
@@ -55,6 +56,53 @@ function pointer(el: HTMLElement, type: string, [clientX, clientY]: [number, num
   el.dispatchEvent(event)
 }
 describe('milagros craft', () => {
+  it.each(['heart', 'hand', 'home', 'flower'])('lets the hinted tray item choose %s directly', variant => {
+    const index = ['heart', 'hand', 'home', 'flower'].indexOf(variant), onVariantChange = vi.fn()
+    const s = mount(0, { initialVariant: 'flower', onVariantChange })
+    const mesh = s.scene.getObjectByName(`milagros-symbol-${index}`)!
+    expect((mesh.userData.interactionCues as InteractionCue[]).filter(cue => cue.enabled())).toHaveLength(1)
+    const at = s.point(mesh.name)
+    pointer(s.hit, 'pointerdown', at); pointer(s.hit, 'pointerup', at)
+    expect(s.onProgress).toHaveBeenCalledExactlyOnceWith(1)
+    expect(onVariantChange).toHaveBeenCalledExactlyOnceWith(variant)
+  })
+  it('quietly completes a returning charm by tapping the hung symbol', () => {
+    let active = false
+    const s = mount(2, { returning: true, initialVariant: 'flower', isActive: () => active })
+    const at = s.point('milagros-symbol-3')
+    pointer(s.hit, 'pointerdown', at); pointer(s.hit, 'pointerup', at)
+    expect(s.complete).not.toHaveBeenCalled()
+    active = true
+    const cues = s.scene.getObjectByName('milagros-symbol-3')!.userData.interactionCues as InteractionCue[]
+    expect(cues.filter(cue => cue.enabled()).map(cue => cue.kind)).toEqual(['tap'])
+    pointer(s.hit, 'pointerdown', at); pointer(s.hit, 'pointerup', at)
+    expect(s.onProgress).toHaveBeenCalledExactlyOnceWith(3)
+    expect(s.complete).toHaveBeenCalledOnce()
+    expect(s.saveWish).not.toHaveBeenCalled()
+    pointer(s.hit, 'pointerdown', at); pointer(s.hit, 'pointerup', at)
+    expect(s.complete).toHaveBeenCalledOnce()
+  })
+
+  it.each([0, 1, 2, 3])('restores choice hints and the chosen action at checkpoint %i', checkpoint => {
+    let active = true
+    const s = mount(checkpoint, { initialVariant: 'flower', isActive: () => active })
+    const enabled = () => {
+      const cues: Array<{ object: THREE.Object3D; cue: InteractionCue }> = []
+      s.scene.traverse(object => {
+        for (const cue of (object.userData.interactionCues as InteractionCue[] | undefined) ?? []) {
+          if (cue.enabled()) cues.push({ object, cue })
+        }
+      })
+      return cues
+    }
+    expect(enabled().filter(({ cue }) => !cue.compact).map(({ object }) => object.name)).toEqual(checkpoint < 2 ? ['milagros-symbol-3'] : [])
+    if (checkpoint === 0) expect(enabled().map(({ object }) => object.name)).toEqual([0,1,2,3].map(i => `milagros-symbol-${i}`))
+    if (checkpoint < 2) expect(enabled()[0].cue.kind).toBe(checkpoint === 0 ? 'tap' : 'drag')
+    if (checkpoint === 1) expect(enabled()[0].cue.destination).toBe(s.scene.getObjectByName('milagros-pin-target'))
+    active = false
+    expect(enabled()).toEqual([])
+  })
+
   it('selects and hangs a charm, then saves its phrase and completes once', () => {
     const s = mount()
     s.action(); s.instance.update(1); s.action(); s.instance.update(1)

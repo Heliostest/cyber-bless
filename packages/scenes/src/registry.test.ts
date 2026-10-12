@@ -10,6 +10,7 @@ describe('sceneRegistry', () => {
 
   it('lists the pilot metas, the C-grade Design A scenes, then the product-original scenes', () => {
     expect(sceneRegistry.map((m) => m.id)).toEqual([
+      'ema-votive-plaque', 'clootie-well-rag', 'diya-oil-lamp', 'votive-candle-catholic',
       'daruma-eye-painting', 'mizuhiki', 'milagros', 'phuang-malai',
       'celtic-folk-spring',
       'shinto-torii',
@@ -93,6 +94,10 @@ describe('loadScene', () => {
   })
 
   it.each([
+    ['ema-votive-plaque', '木牌记愿', 'ema-votive-plaque'],
+    ['clootie-well-rag', '井边放下', 'clootie-well-rag'],
+    ['diya-oil-lamp', '灯旋一瞥', 'diya-oil-lamp'],
+    ['votive-candle-catholic', '留一盏烛光', 'votive-candle-catholic'],
     ['daruma-eye-painting', '达摩点睛', 'daruma-eye-painting'],
     ['mizuhiki', '水引结愿', 'mizuhiki'],
     ['milagros', '留一枚感谢', 'milagros'],

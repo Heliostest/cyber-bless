@@ -42,6 +42,41 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'ema-votive-plaque': (
+    <>
+      <Cord d="M15 18Q24 0 33 18" color="#bd925d" />
+      <Part d="M9 20 24 11 39 20v24H9Z" fill="#edc892">
+        <path d="m9 20 15-9 15 9v4l-15-8-15 8Z" fill="#d9ae74" />
+        <circle cx="16" cy="22" r="2" fill={INK}/><circle cx="32" cy="22" r="2" fill={INK}/>
+        <path d="M17 36q7-9 14-5m-7 6v-6" stroke="#83ae80" fill="none" strokeWidth={2}/>
+        <path d="M24 27c-7-6-10 1-5 4-5 6 2 9 5 4 5 5 9-2 4-5 4-5-2-8-4-3Z" fill="#df8d8b"/>
+        <circle cx="24" cy="31" r="2" fill="#ffeabd"/>
+      </Part>
+    </>
+  ),
+  'clootie-well-rag': (
+    <>
+      <Cord d="M13 44V5m0 14Q27 8 42 14" color="#ba9068" width={4}/>
+      <Part d="M25 14h10l-1 24-9 2 2-15Z" fill="#afd6cf"><path d="m28 18 1 17m3-17-1 17" stroke="#79aaa5" strokeWidth={1.3}/></Part>
+      <Part d="M3 35q8-7 18 0v8H3Z" fill="#c9c3ab"><ellipse cx="12" cy="35" rx="8" ry="3" fill="#90c5c6"/></Part>
+    </>
+  ),
+  'diya-oil-lamp': (
+    <>
+      <Part d="M5 27q13-13 35-8l4 9q-4 16-22 16T5 27Z" fill="#cc8260"><path d="M7 27q14-10 33-6l-4 10q-16 5-29-4Z" fill="#e9b65e"/></Part>
+      <Cord d="M23 30q8-2 12-8" color="#fff0b9" width={2.5}/>
+      <Part d="M35 23c-12-3-2-16-1-21 2 8 12 18 1 21Z" fill="#ffd77d"><path d="M35 21c-5-2-2-7 0-10 4 6 5 9 0 10Z" fill="#fff3c5"/></Part>
+    </>
+  ),
+  'votive-candle-catholic': (
+    <>
+      <Part d="M5 37h38v7H5Z" fill="#bcb49b"/>
+      <Part d="M18 15h12v26H18Z" fill="#ffe5a5"><path d="M18 18q3 6 5 0v11q4 5 5-2V15h-10Z" fill="#fff2cc"/></Part>
+      <path d="M24 12v7" stroke={INK} strokeWidth={1.8}/>
+      <Part d="M24 14c-10-3-1-10 0-13 1 4 9 10 0 13Z" fill="#ffd378"/>
+      <path d="M9 37V24m29 13V24" stroke="#8b9388" strokeWidth={4}/>
+    </>
+  ),
   'daruma-eye-painting': (
     <>
       <Part d="M8 31C6 19 11 6 24 5s19 14 17 26c-1 9-8 13-17 13S9 40 8 31Z" fill="#e86953">

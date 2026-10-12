@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import {
@@ -10,11 +11,11 @@ import {
 
 const COPY = {
   title: '串花寄意', stepsAria: '步骤',
-  string: '把托盘上亮起的一簇茉莉拖到花环的浅金标记处，也可点按串花。（手作练习）',
+  string: '把托盘上亮起的一簇茉莉拖到花环的浅金标记处。（手作练习）',
   stringing: '这一簇茉莉正轻轻落入花环…',
-  tie: '花环已串好。把花环向上轻拖到顶端绳结，或点按系好。',
+  tie: '花环已串好。拖住花朵，把花环向上轻拖到顶端绳结。',
   tying: '把小绳结轻轻收拢…',
-  place: '把花环捧放到奶油色小台上，写一句感谢；也可点按捧放并致谢。',
+  place: '拖住花朵，把花环捧放到奶油色小台上，再写一句感谢。',
   placed: '花环已放好。留一句谢谢，把心意送给你想感谢的人。',
   placing: '花环正轻轻落到小台上…',
   done: '花环与这句感谢一起留在这里。（致敬小品，练习结束）',
@@ -175,7 +176,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
 
   // Two already threaded arcs establish the craft; four loose clusters fill
   // the remaining segments one at a time. All use one shared bud geometry.
-  buildSegment(0, 'ring-flowers-0')
+  const firstRing = buildSegment(0, 'ring-flowers-0')
   buildSegment(2, 'ring-flowers-2')
   const clusters: Cluster[] = [1, 3, 4, 5].map((segment, i) => {
     const cluster = buildSegment(segment, `tray-flowers-${i}`)
@@ -273,6 +274,22 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   }
   const active = () => !disposed && started && (ctx.isActive?.() ?? true)
   const reduced = () => ctx.isReducedMotion?.() ?? false
+  const cueActive = () => active() && !motion && !completed && !placed && pointers.size <= 1
+  clusters.forEach((cluster, index) => addInteractionCue(cluster.flowers, {
+    kind: 'drag', label: '拖茉莉到花环', anchor: [0, 0, 0.095], priority: 2,
+    enabled: () => cueActive() && checkpoint === 0 && assembled === index,
+    destination: nextSegment, targetLabel: '花环空段',
+  }))
+  addInteractionCue(firstRing.flowers, {
+    kind: 'drag', label: '向上拖花环系结', anchor: [0, 0, 0.095], priority: 2,
+    enabled: () => cueActive() && checkpoint === 1,
+    destination: tie, targetLabel: '顶端绳结',
+  })
+  addInteractionCue(firstRing.flowers, {
+    kind: 'drag', label: '拖花环到小台', anchor: [0, 0, 0.095], priority: 2,
+    enabled: () => cueActive() && checkpoint === 2,
+    destination: top, targetLabel: '奶油色小台',
+  })
   const updateMatrices = () => { world.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const onFlowers = (x: number, y: number) => {
     if (!active() || motion || completed || placed) return false

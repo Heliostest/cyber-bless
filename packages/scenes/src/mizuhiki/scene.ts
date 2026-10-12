@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import {
@@ -11,8 +12,8 @@ import {
 const COPY = {
   title: '水引结愿',
   steps: '步骤',
-  loop: '从绳端光圈开始，沿金色提示绕环（装饰结练习，非完整礼法教程）。',
-  thread: '沿另一侧提示穿过交会处，向左轻拉收结，或点下方收紧。',
+  loop: '拖住绳端光圈，依次经过金色提示点绕环（装饰结练习，非完整礼法教程）。',
+  thread: '拖住绳端，沿另一侧的金色提示点穿过交会处，向左轻拉收结。',
   wish: '在纸封上留一句短愿，或静静放好这份心意。',
   done: '纸绳轻轻相连，心意已安放（工艺练习结束）。',
   loopAction: '绕出一个环',
@@ -246,6 +247,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   tip.add(tipRing)
   tip.add(new THREE.Mesh(new THREE.SphereGeometry(0.044, 12, 8), red))
   const tipTarget = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8), new THREE.MeshBasicMaterial({ visible: false }))
+  tipTarget.name = 'mizuhiki-cord-end-target'
   tip.add(tipTarget)
   const routeCurves = ROUTES.map(curve)
 
@@ -256,6 +258,16 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   let blockedMulti = false
   let drag: { id: number; step: number; next: number; t: number } | null = null
   let claimedPointer: number | null = null
+  // Each destination is the next ordered gate, so the cue cannot suggest an
+  // invalid shortcut from the cord end straight to the route's finish.
+  for (const [index, label] of ['拖绳端绕环', '拖绳端穿环'].entries()) {
+    addInteractionCue(tipTarget, {
+      kind: 'drag', label, priority: 2,
+      enabled: () => canAct() && checkpoint === index && !moving() && !blockedMulti,
+      destination: () => waypoints[Math.min(drag?.next ?? 1, ROUTES[index].length - 1)].getWorldPosition(new THREE.Vector3()),
+      targetLabel: '沿金点前进',
+    })
+  }
   const releaseCapture = () => {
     if (claimedPointer !== null) {
       try { hitLayer.releasePointerCapture?.(claimedPointer) } catch { /* Already released by the browser. */ }

@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext } from '../contract'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 
 // Keep the actual Three geometry/rays and DOM gestures; jsdom lacks a GPU.
 vi.mock('three', async (importOriginal) => {
@@ -102,6 +103,30 @@ function dot(s: Mounted) {
 }
 
 describe('mizuhiki craft state', () => {
+  it('keeps the cord destination on the next ordered gate and suppresses cues during animation and writing', () => {
+    const s = mount()
+    const tip = drawn.scene!.getObjectByName('mizuhiki-cord-end-target')!
+    const cues = tip?.userData.interactionCues as InteractionCue[] | undefined
+    expect(cues).toHaveLength(2)
+    const enabled = () => cues!.filter(cue => cue.enabled())
+    expect(enabled()).toHaveLength(1)
+    const target = enabled()[0].destination as () => THREE.Vector3
+    const firstGate = drawn.scene!.getObjectByName('mizuhiki-waypoint-1')!
+    expect(target().distanceTo(firstGate.getWorldPosition(new THREE.Vector3()))).toBeCloseTo(0)
+    const points = route(s)
+    pointer(s, 'pointerdown', points[0])
+    pointer(s, 'pointermove', points[1])
+    const nextGate = drawn.scene!.getObjectByName('mizuhiki-waypoint-2')!
+    expect(target().distanceTo(nextGate.getWorldPosition(new THREE.Vector3()))).toBeCloseTo(0)
+    pointer(s, 'pointercancel', points[1])
+    s.button.click()
+    expect(enabled()).toEqual([])
+    s.run()
+    expect(enabled()).toHaveLength(1)
+    s.button.click(); s.run()
+    expect(enabled()).toEqual([])
+  })
+
   it('reports exactly three integer checkpoints through the keyboard button fallback', () => {
     const s = mount()
     for (const n of [1, 2, 3]) {

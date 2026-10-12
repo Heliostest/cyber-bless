@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext, SceneInstance } from '../contract'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import * as mod from './index'
 
 // Only the GPU boundary is replaced: geometry, raycasts, UI and gestures are real.
@@ -86,6 +87,56 @@ function pointer(el: HTMLElement, type: string, [clientX, clientY]: [number, num
 }
 
 describe('Daruma eye painting', () => {
+  it('cues the blank returning eye and hides physical cues while paused, settling and complete', async () => {
+    let active = true
+    const s = await mount(0, { returning: true, isActive: () => active })
+    const enabled = () => {
+      const names: string[] = []
+      s.scene.traverse(object => {
+        if ((object.userData.interactionCues as InteractionCue[] | undefined)?.some(cue => cue.enabled())) names.push(object.name)
+      })
+      return names.sort()
+    }
+    expect(enabled()).toEqual(['daruma-brush-shaft', 'daruma-eye-target-second'])
+    active = false
+    expect(enabled()).toEqual([])
+    active = true
+    s.button.click()
+    expect(enabled()).toEqual(['daruma-shell'])
+    s.button.click()
+    expect(enabled()).toEqual(['daruma-shell'])
+    s.button.click()
+    expect(enabled()).toEqual([])
+    s.run(2)
+    expect(enabled()).toEqual([])
+  })
+
+  it('acknowledges the returning visit from a doll tap, respecting pause and avoiding another saved wish', async () => {
+    let active = false
+    const s = await mount(1, { returning: true, isActive: () => active, isReducedMotion: () => true })
+    const at = s.point('daruma-eye-target-second')
+    pointer(s.hit, 'pointerdown', at); pointer(s.hit, 'pointerup', at)
+    expect(s.progress).toEqual([])
+    active = true
+    pointer(s.hit, 'pointerdown', at); pointer(s.hit, 'pointerup', at)
+    expect(s.progress).toEqual([2])
+    expect(s.saveWish).not.toHaveBeenCalled()
+    expect(s.overlay.querySelector('input')).toBeNull()
+  })
+
+  it('can begin the real brush gesture at the visible cue anchor', async () => {
+    const s = await mount(0, { isReducedMotion: () => true })
+    const shaft = s.scene.getObjectByName('daruma-brush-shaft')!
+    const cue = (shaft.userData.interactionCues as InteractionCue[]).find(cue => cue.enabled())!
+    expect(cue.anchor).toBeDefined()
+    const p = shaft.localToWorld(new THREE.Vector3(...cue.anchor!)).project(s.camera)
+    const from: [number, number] = [(p.x + 1) * 180, (1 - p.y) * 180]
+    pointer(s.hit, 'pointerdown', from)
+    pointer(s.hit, 'pointermove', s.point('daruma-eye-target-first'))
+    pointer(s.hit, 'pointerup', s.point('daruma-eye-target-first'))
+    expect(s.progress).toEqual([1])
+  })
+
   it('paints only one eye, keeps a short wish once, and settles before completing', async () => {
     const s = await mount()
     expect(s.eye('daruma-pupil-first')).toBe(false)

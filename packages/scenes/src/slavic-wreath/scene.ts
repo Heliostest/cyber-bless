@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import {
@@ -25,13 +26,16 @@ const COPY = {
   title: '火边花环',
   hintWeave: '点按花环，把草茎与野花编成一圈（练习）。',
   hintWeaving: '草茎一圈圈交叠…',
-  hintPlace: '把花环向下拖到水面，或点按下方轻轻放下。',
-  hintDrift: '可写一句祝愿，或点按下方目送它漂远（练习，不以花环预测命运）。',
+  hintPlace: '按住花环向下拖到水面，轻轻放下；也可用辅助按钮。',
+  hintDrift: '目送花环漂远，可在输入框写一句祝愿，或用辅助按钮结束（练习，不以花环预测命运）。',
   weaveTap: '编一圈',
   placeTap: '放上水面',
   driftTap: '目送远去',
   done: '花环载着心意缓缓漂远（练习结束）。',
   stepsAria: '步骤',
+  cueWeave: '点按编花环',
+  cueCarry: '向下拖动花环',
+  cueWater: '放到水面',
 } as const
 
 const WEAVE_SECONDS = 2.4
@@ -362,6 +366,20 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
   }
 
   const canAct = () => restoring || !ctx.isActive || ctx.isActive()
+
+  addInteractionCue(wreathZone, {
+    kind: 'tap',
+    label: COPY.cueWeave,
+    enabled: () => started && !disposed && !restoring && canAct() &&
+      step === 'weave' && !weaving,
+  })
+  addInteractionCue(wreathZone, {
+    kind: 'drag',
+    label: COPY.cueCarry,
+    enabled: () => started && !disposed && !restoring && canAct() && step === 'place',
+    destination: () => world.localToWorld(WATER_POS.clone()),
+    targetLabel: COPY.cueWater,
+  })
 
   const completeScene = () => {
     if (!canAct() || step === 'done') return

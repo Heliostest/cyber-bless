@@ -1,7 +1,9 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
+import { claimObjectTouches } from '../procedural-kit'
 
 type Step = 'tilt' | 'drag' | 'anjali' | 'done'
 
@@ -9,13 +11,19 @@ const STEP_ORDER: Step[] = ['tilt', 'drag', 'anjali']
 
 const COPY = {
   title: '花水位一倾',
-  hintTilt: '上下拖动以倾注（练习）。',
-  hintDrag: '将花瓣拖向水面后松开。',
-  hintAnjali: '点按以合十（练习，非法效）。',
+  hintTilt: '按住水壶上下拖动，让清水注入水面（练习）。',
+  hintDrag: '按住花瓣，拖向水面后松开。',
+  hintAnjali: '点按水面，合十致意；也可用辅助按钮（练习，非法效）。',
   hintPouring: '倾注中…',
   anjaliTap: '点按以合十',
+  pourTap: '倾注清水',
+  dropTap: '放上花瓣',
   done: '这一倾已留下（练习结束）。',
   stepsAria: '步骤',
+  cueTilt: '上下拖动水壶',
+  cueCarry: '拖动花瓣',
+  cueWater: '放到水面',
+  cueAnjali: '点按水面合十',
 } as const
 
 function setSafeText(
@@ -25,6 +33,7 @@ function setSafeText(
 ) {
   assertSafeCopy(text)
   el.textContent = text
+  if (el.classList.contains('scene-bow-tap')) el.setAttribute('aria-label', text)
 }
 
 export function createTheravadaWater(ctx: SceneContext): SceneInstance {
@@ -38,14 +47,16 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
   let started = false
   let restoring = true
   let pourProgress = 0
+  let tilting = false
 
   const handles: GestureHandle[] = []
   let tiltHandle: GestureHandle | null = null
   let dragHandle: GestureHandle | null = null
   let resizeObserver: ResizeObserver | null = null
+  let stopClaim = () => {}
 
   overlay.replaceChildren()
-  overlay.classList.add('scene-overlay')
+  overlay.classList.add('scene-overlay', 'scene-overlay--stage')
 
   const hitLayer = document.createElement('div')
   hitLayer.className = 'scene-hit-layer'
@@ -91,9 +102,10 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
 
   const syncOverlayForStep = () => {
     renderDots()
-    anjaliBtn.hidden = step !== 'anjali'
+    anjaliBtn.hidden = step === 'done'
+    setSafeText(anjaliBtn, step === 'tilt' ? COPY.pourTap : step === 'drag' ? COPY.dropTap : COPY.anjaliTap, assertSafeCopy)
     hitLayer.style.pointerEvents =
-      step === 'tilt' || step === 'drag' ? 'auto' : 'none'
+      step === 'tilt' || step === 'drag' || step === 'anjali' ? 'auto' : 'none'
     if (step === 'tilt') setHint(COPY.hintTilt)
     else if (step === 'drag') setHint(COPY.hintDrag)
     else if (step === 'anjali') setHint(COPY.hintAnjali)
@@ -111,7 +123,8 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
   scene.fog = new THREE.FogExp2(bgColor.getHex(), 0.085)
 
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100)
-  const cameraHome = new THREE.Vector3(0, 2.4, 4.1)
+  const cameraBase = new THREE.Vector3(0, 2.4, 4.1)
+  const cameraHome = cameraBase.clone()
   camera.position.copy(cameraHome)
   const cameraLookAt = new THREE.Vector3(0, 0.25, 0)
   camera.lookAt(cameraLookAt)
@@ -246,6 +259,31 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
   const pointerNdc = new THREE.Vector2()
   const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.22)
   const hitPoint = new THREE.Vector3()
+  const waterLocalRay = new THREE.Ray()
+  const waterLocalHit = new THREE.Vector3()
+  const waterInverse = new THREE.Matrix4()
+  const waterLocalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)
+
+  const canShowCue = () => started && !disposed && !restoring &&
+    (!ctx.isActive || ctx.isActive())
+  const canAct = () => restoring || !ctx.isActive || ctx.isActive()
+  addInteractionCue(pitcherGroup, {
+    kind: 'rotate',
+    label: COPY.cueTilt,
+    enabled: () => canShowCue() && step === 'tilt' && !tilting,
+  })
+  addInteractionCue(petal, {
+    kind: 'drag',
+    label: COPY.cueCarry,
+    enabled: () => canShowCue() && step === 'drag',
+    destination: water,
+    targetLabel: COPY.cueWater,
+  })
+  addInteractionCue(water, {
+    kind: 'tap',
+    label: COPY.cueAnjali,
+    enabled: () => canShowCue() && step === 'anjali',
+  })
 
   const resize = () => {
     const parent = canvas.parentElement
@@ -255,6 +293,13 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
     styleRenderer.resize(w, h)
     camera.aspect = w / Math.max(h, 1)
     camera.updateProjectionMatrix()
+    // Pull back along the same view direction on portrait screens, keeping
+    // the pitcher and petal within the frame while preserving desktop views.
+    const distanceScale = camera.aspect < 1 ? 1.3 / camera.aspect : 1
+    cameraHome.copy(cameraBase).sub(cameraLookAt).multiplyScalar(distanceScale).add(cameraLookAt)
+    camera.position.copy(cameraHome)
+    camera.lookAt(cameraLookAt)
+    camera.updateMatrixWorld()
   }
 
   const clientToNdc = (clientX: number, clientY: number) => {
@@ -266,8 +311,26 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
   const waterHitTest = (clientX: number, clientY: number) => {
     clientToNdc(clientX, clientY)
     raycaster.setFromCamera(pointerNdc, camera)
-    return raycaster.intersectObject(water, false).length > 0
+    water.updateWorldMatrix(true, false)
+    waterLocalRay.copy(raycaster.ray).applyMatrix4(waterInverse.copy(water.matrixWorld).invert())
+    // Avoid numerical gaps at the water mesh's shared centre vertex.
+    const hit = waterLocalRay.intersectPlane(waterLocalPlane, waterLocalHit)
+    const radius = water.geometry.parameters.radius
+    return hit !== null && hit.x * hit.x + hit.y * hit.y <= radius * radius
   }
+
+  const hitsObject = (object: THREE.Object3D, clientX: number, clientY: number) => {
+    clientToNdc(clientX, clientY)
+    raycaster.setFromCamera(pointerNdc, camera)
+    object.updateWorldMatrix(true, true)
+    return raycaster.intersectObject(object, true).length > 0
+  }
+  const onPitcher = (x: number, y: number) => hitsObject(pitcherGroup, x, y)
+  const onPetal = (x: number, y: number) => hitsObject(petal, x, y)
+  const onOffering = (x: number, y: number) => waterHitTest(x, y) || hitsObject(basin, x, y)
+  const onInteractiveObject = (x: number, y: number) => !disposed && canAct() &&
+    (step === 'tilt' ? onPitcher(x, y) : step === 'drag' ? onPetal(x, y) :
+      step === 'anjali' && onOffering(x, y))
 
   const movePetalTo = (clientX: number, clientY: number) => {
     clientToNdc(clientX, clientY)
@@ -292,6 +355,7 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
     if (!restoring && ctx.isActive && !ctx.isActive()) return
     if (step !== 'tilt') return
     step = 'drag'
+    tilting = false
     tiltHandle?.setEnabled(false)
     pourProgress = 1
     streamMat.opacity = 0
@@ -313,27 +377,58 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
     syncOverlayForStep()
   }
 
-  const onAnjaliTap = () => {
-    if (disposed || step !== 'anjali') return
-    completeScene()
+  const onActionTap = () => {
+    if (disposed || !canAct()) return
+    if (step === 'tilt') goDrag()
+    else if (step === 'drag') goAnjali()
+    else if (step === 'anjali') completeScene()
   }
 
+  let downX = 0
+  let downY = 0
+  let tappedOffering = false
+  let offeringPointerId: number | null = null
+  const onHitDown = (e: PointerEvent) => {
+    if (offeringPointerId !== null) return
+    downX = e.clientX
+    downY = e.clientY
+    tilting = canAct() && step === 'tilt' && onPitcher(e.clientX, e.clientY)
+    grabbed = canAct() && step === 'drag' && onPetal(e.clientX, e.clientY)
+    tappedOffering = canAct() && step === 'anjali' && onOffering(e.clientX, e.clientY)
+    offeringPointerId = tappedOffering ? e.pointerId : null
+  }
   const onHitMove = (e: PointerEvent) => {
-    if (step !== 'drag' || e.buttons === 0) return
-    grabbed = true
+    if (!canAct() || step !== 'drag' || !grabbed || e.buttons === 0) return
     movePetalTo(e.clientX, e.clientY)
   }
 
-  const onHitUp = () => {
+  const onHitUp = (e: PointerEvent) => {
+    if (offeringPointerId !== null && e.pointerId !== offeringPointerId) return
+    if (tappedOffering && Math.hypot(e.clientX - downX, e.clientY - downY) < 12 &&
+      onOffering(e.clientX, e.clientY)) onActionTap()
+    tappedOffering = false
+    offeringPointerId = null
+    tilting = false
+    grabbed = false
+  }
+  const onHitCancel = (e?: PointerEvent) => {
+    if (offeringPointerId !== null && e && e.pointerId !== offeringPointerId) return
+    tappedOffering = false
+    offeringPointerId = null
+    tilting = false
     grabbed = false
   }
 
   const wireGestures = () => {
+    hitLayer.addEventListener('pointerdown', onHitDown)
+    hitLayer.addEventListener('pointercancel', onHitCancel)
+    stopClaim = claimObjectTouches(hitLayer, onInteractiveObject)
     tiltHandle = gestures.createTilt({
+      startsOn: (x, y) => canAct() && step === 'tilt' && onPitcher(x, y),
       pourAngleDeg: 40,
       holdMs: 280,
       onAngle: (deg) => {
-        if (step !== 'tilt') return
+        if (!canAct() || step !== 'tilt') return
         const t = Math.min(1, Math.abs(deg) / 40)
         pourProgress = t
         pitcherGroup.rotation.z = THREE.MathUtils.degToRad(Math.min(Math.abs(deg), 70) * Math.sign(deg || 1) * -0.7)
@@ -349,9 +444,10 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
     handles.push(tiltHandle)
 
     dragHandle = gestures.createDrag({
+      startsOn: (x, y) => canAct() && step === 'drag' && onPetal(x, y),
       hitTest: waterHitTest,
       onDrop: (hit) => {
-        if (step !== 'drag') return
+        if (step !== 'drag' || !grabbed) return
         grabbed = false
         if (hit) goAnjali()
         else dragTarget.copy(petalHome)
@@ -363,8 +459,7 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
 
     hitLayer.addEventListener('pointermove', onHitMove)
     hitLayer.addEventListener('pointerup', onHitUp)
-    hitLayer.addEventListener('pointercancel', onHitUp)
-    anjaliBtn.addEventListener('click', onAnjaliTap)
+    anjaliBtn.addEventListener('click', onActionTap)
   }
 
   syncOverlayForStep()
@@ -389,6 +484,14 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
     },
     update(dt: number) {
       if (disposed || !started) return
+      if (!canAct()) {
+        onHitCancel()
+        tiltHandle?.setEnabled(false)
+        dragHandle?.setEnabled(false)
+        return
+      }
+      tiltHandle?.setEnabled(step === 'tilt')
+      dragHandle?.setEnabled(step === 'drag')
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
@@ -447,10 +550,12 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
       disposed = true
       resizeObserver?.disconnect()
       resizeObserver = null
+      stopClaim()
+      hitLayer.removeEventListener('pointerdown', onHitDown)
       hitLayer.removeEventListener('pointermove', onHitMove)
       hitLayer.removeEventListener('pointerup', onHitUp)
-      hitLayer.removeEventListener('pointercancel', onHitUp)
-      anjaliBtn.removeEventListener('click', onAnjaliTap)
+      hitLayer.removeEventListener('pointercancel', onHitCancel)
+      anjaliBtn.removeEventListener('click', onActionTap)
       for (const h of handles) h.dispose()
       handles.length = 0
       styleRenderer.dispose()
@@ -471,7 +576,7 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
       moteGeometry.dispose()
       moteMaterial.dispose()
       overlay.replaceChildren()
-      overlay.classList.remove('scene-overlay')
+      overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

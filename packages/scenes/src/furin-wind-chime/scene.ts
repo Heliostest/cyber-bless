@@ -1,12 +1,13 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
+import { createObjectPointer } from '../object-pointer'
 import {
   addCelLights,
   CEL_STYLE,
-  claimObjectTouches,
   createSceneFeedback,
   createStepOverlay,
   createWarmStage,
@@ -20,9 +21,9 @@ const STEP_ORDER: Step[] = ['idle', 'ring', 'listen']
 
 const COPY = {
   title: '风铃一响',
-  hintIdle: '上下拖动以拂动风铃，或点按风铃（练习）。',
+  hintIdle: '点按玻璃铃身，或向上拖动纸条，让风铃轻响（练习）。',
   hintRing: '铃声轻响…',
-  hintListen: '静听余音，点按下方结束（练习，非法效）。',
+  hintListen: '静听余音，点按铃身结束聆听（练习，非法效）。',
   ringTap: '拂动风铃',
   listenTap: '静听片刻',
   done: '余音已散（练习结束）。',
@@ -54,7 +55,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   const handles: GestureHandle[] = []
   let tiltHandle: GestureHandle | null = null
   let resizeObserver: ResizeObserver | null = null
-  let stopClaim = () => {}
+  let objectPointer: ReturnType<typeof createObjectPointer> | null = null
   const fx = createSceneFeedback(ctx)
 
   const ui = createStepOverlay(
@@ -197,12 +198,15 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   const segGeo = new THREE.PlaneGeometry(0.14, 0.13)
   segGeo.translate(0, -0.065, 0)
   const ribbonJoints: THREE.Group[] = []
+  const ribbonSegments: THREE.Mesh[] = []
   let parent: THREE.Object3D = clapperPivot
   for (let i = 0; i < RIBBON_SEGMENTS; i++) {
     const joint = new THREE.Group()
     joint.position.y = i === 0 ? -0.42 : -0.13
     parent.add(joint)
-    joint.add(new THREE.Mesh(segGeo, ribbonMat))
+    const segment = new THREE.Mesh(segGeo, ribbonMat)
+    joint.add(segment)
+    ribbonSegments.push(segment)
     ribbonJoints.push(joint)
     parent = joint
   }
@@ -254,6 +258,19 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   }
 
   const canAct = () => restoring || !ctx.isActive || ctx.isActive()
+  const canCue = () => started && !disposed && !restoring && canAct() && step === 'idle'
+  const removeCues = [
+    addInteractionCue(bell, { kind: 'tap', label: '点按铃身', enabled: canCue, priority: 2 }),
+    addInteractionCue(ribbonSegments[1], {
+      kind: 'drag', label: '向上拂动纸条', anchor: [0, -0.065, 0],
+      destination: () => ribbonSegments[1].localToWorld(new THREE.Vector3(0, 0.5, 0)),
+      targetLabel: '向上轻拂', enabled: canCue, priority: 1,
+    }),
+    addInteractionCue(bell, {
+      kind: 'tap', label: '点按铃身结束聆听',
+      enabled: () => started && !disposed && !restoring && canAct() && step === 'listen',
+    }),
+  ]
 
   const completeScene = () => {
     if (!canAct() || step === 'done') return
@@ -287,7 +304,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   }
 
   const onActionTap = () => {
-    if (disposed) return
+    if (disposed || objectPointer?.isBusy()) return
     fx.prepare()
     if (step === 'idle') goRing()
     else if (step === 'listen') completeScene()
@@ -295,50 +312,56 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
 
   let downX = 0
   let downY = 0
-  const onHitDown = (e: PointerEvent) => {
+  let gestureOwned = false
+  const onHitDown = (x: number, y: number) => {
+    gestureOwned = true
+    tiltHandle?.setEnabled(step === 'idle')
     fx.prepare()
-    downX = e.clientX
-    downY = e.clientY
+    downX = x
+    downY = y
   }
   const onHitCancel = () => {
     dragSwing = 0
+    gestureOwned = false
+    tiltHandle?.setEnabled(false)
   }
-  const onHitUp = (e: PointerEvent) => {
+  const onHitUp = (x: number, y: number) => {
     dragSwing = 0
-    const moved = Math.hypot(e.clientX - downX, e.clientY - downY)
-    if (moved >= 12 || !bellHitTest(e.clientX, e.clientY)) return
+    gestureOwned = false
+    const moved = Math.hypot(x - downX, y - downY)
+    if (moved >= 12 || !bellHitTest(x, y)) return
     if (step === 'idle') goRing()
-    else if (step === 'listen' && canAct()) {
-      // Extra touch while listening: a softer ping, no progress change.
-      strike(0.5)
-      ping(true)
-    }
+    else if (step === 'listen') completeScene()
   }
 
   const wireGestures = () => {
     // Swings start on the bell; elsewhere a vertical swipe scrolls the page.
-    stopClaim = claimObjectTouches(hitLayer, bellHitTest)
+    objectPointer = createObjectPointer(hitLayer, {
+      isActive: () => started && !disposed && !restoring && canAct(),
+      canStart: (x, y) => (step === 'idle' || step === 'listen') && bellHitTest(x, y),
+      onStart: onHitDown,
+      onRelease: onHitUp,
+      onCancel: onHitCancel,
+    })
     tiltHandle = gestures.createTilt({
-      startsOn: bellHitTest,
+      startsOn: (x, y) => gestureOwned && bellHitTest(x, y),
       pourAngleDeg: SWING_TRIGGER_DEG,
       holdMs: 0,
       onAngle: (deg) => {
-        if (step !== 'idle') return
+        if (!gestureOwned || step !== 'idle') return
         dragSwing = THREE.MathUtils.degToRad(
           THREE.MathUtils.clamp(deg, -SWING_TRIGGER_DEG, SWING_TRIGGER_DEG) * 0.5,
         )
       },
       onPour: () => {
-        if (step !== 'idle') return
+        if (!gestureOwned || step !== 'idle') return
         goRing()
       },
     })
     tiltHandle.mount(hitLayer, {})
+    tiltHandle.setEnabled(false)
     handles.push(tiltHandle)
 
-    hitLayer.addEventListener('pointerdown', onHitDown)
-    hitLayer.addEventListener('pointerup', onHitUp)
-    hitLayer.addEventListener('pointercancel', onHitCancel)
     actionBtn.addEventListener('click', onActionTap)
   }
 
@@ -364,6 +387,8 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     },
     update(dt: number) {
       if (disposed || !started) return
+      if (!canAct()) objectPointer?.cancel()
+      tiltHandle?.setEnabled(canAct() && gestureOwned && step === 'idle')
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
@@ -412,14 +437,12 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
       disposed = true
       resizeObserver?.disconnect()
       resizeObserver = null
-      stopClaim()
-      hitLayer.removeEventListener('pointerdown', onHitDown)
-      hitLayer.removeEventListener('pointerup', onHitUp)
-      hitLayer.removeEventListener('pointercancel', onHitCancel)
+      objectPointer?.dispose()
       actionBtn.removeEventListener('click', onActionTap)
       for (const h of handles) h.dispose()
       handles.length = 0
       fx.dispose()
+      for (const removeCue of removeCues) removeCue()
       styleRenderer.dispose()
       renderer.dispose()
       renderer.forceContextLoss()

@@ -1,11 +1,12 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
+import { createObjectPointer } from '../object-pointer'
 import {
   addStageLights,
   CEL_STYLE,
-  claimObjectTouches,
   createLampHalo,
   createSceneFeedback,
   createStepOverlay,
@@ -22,7 +23,7 @@ const COPY = {
   title: '燃灯上浮',
   hintReady: '点按莲灯，或向上轻推（练习）。',
   hintRise: '莲灯缓缓上浮…',
-  hintRest: '灯光停在高处，点按下方结束（练习，非法效）。',
+  hintRest: '灯光停在高处，点按莲灯结束静看（练习，非法效）。',
   pushTap: '轻推莲灯',
   restTap: '静看片刻',
   done: '莲灯静静亮着（练习结束）。',
@@ -116,7 +117,7 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
   const handles: GestureHandle[] = []
   let pushHandle: GestureHandle | null = null
   let resizeObserver: ResizeObserver | null = null
-  let stopClaim = () => {}
+  let objectPointer: ReturnType<typeof createObjectPointer> | null = null
   const fx = createSceneFeedback(ctx)
 
   const ui = createStepOverlay(
@@ -134,7 +135,7 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
       STEP_ORDER.length,
     )
     actionBtn.hidden = step === 'rise' || step === 'done'
-    hitLayer.style.pointerEvents = step === 'ready' ? 'auto' : 'none'
+    hitLayer.style.pointerEvents = step === 'ready' || step === 'rest' ? 'auto' : 'none'
     if (step === 'ready') {
       setHint(COPY.hintReady)
       setSafeText(actionBtn, COPY.pushTap, assertSafeCopy)
@@ -242,6 +243,17 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
   }
 
   const canAct = () => restoring || !ctx.isActive || ctx.isActive()
+  const canCue = () => started && !disposed && !restoring && canAct()
+  const removeCues = [
+    addInteractionCue(tapZone, {
+      kind: 'tap', label: '点按轻推莲灯',
+      enabled: () => canCue() && step === 'ready',
+    }),
+    addInteractionCue(tapZone, {
+      kind: 'tap', label: '点按莲灯结束静看',
+      enabled: () => canCue() && step === 'rest',
+    }),
+  ]
 
   const completeScene = () => {
     if (!canAct() || step === 'done') return
@@ -281,7 +293,7 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
   }
 
   const onActionTap = () => {
-    if (disposed) return
+    if (disposed || objectPointer?.isBusy()) return
     fx.prepare()
     if (step === 'ready') goRise()
     else if (step === 'rest') completeScene()
@@ -289,35 +301,50 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
 
   let downX = 0
   let downY = 0
-  const onHitDown = (e: PointerEvent) => {
-    if (step === 'ready') fx.prepare()
-    downX = e.clientX
-    downY = e.clientY
+  let gestureOwned = false
+  const onHitDown = (x: number, y: number) => {
+    gestureOwned = true
+    pushHandle?.setEnabled(step === 'ready')
+    if (step === 'ready' || step === 'rest') fx.prepare()
+    downX = x
+    downY = y
   }
-  const onHitUp = (e: PointerEvent) => {
-    if (step !== 'ready') return
-    const moved = Math.hypot(e.clientX - downX, e.clientY - downY)
-    if (moved < 12 && lanternHitTest(e.clientX, e.clientY)) goRise()
+  const onHitUp = (x: number, y: number) => {
+    gestureOwned = false
+    if (step !== 'ready' && step !== 'rest') return
+    const moved = Math.hypot(x - downX, y - downY)
+    if (moved >= 12 || !lanternHitTest(x, y)) return
+    if (step === 'ready') goRise()
+    else completeScene()
+  }
+  const onHitCancel = () => {
+    gestureOwned = false
+    pushHandle?.setEnabled(false)
   }
 
   const wireGestures = () => {
     // Upward push: a vertical drag of ~40px that starts on the lantern;
     // elsewhere on the stage a swipe scrolls the page.
-    stopClaim = claimObjectTouches(hitLayer, lanternHitTest)
+    objectPointer = createObjectPointer(hitLayer, {
+      isActive: canCue,
+      canStart: (x, y) => (step === 'ready' || step === 'rest') && lanternHitTest(x, y),
+      onStart: onHitDown,
+      onRelease: onHitUp,
+      onCancel: onHitCancel,
+    })
     pushHandle = gestures.createTilt({
-      startsOn: lanternHitTest,
+      startsOn: (x, y) => gestureOwned && lanternHitTest(x, y),
       pourAngleDeg: 40,
       holdMs: 0,
       onPour: () => {
-        if (step !== 'ready') return
+        if (!gestureOwned || step !== 'ready') return
         goRise()
       },
     })
     pushHandle.mount(hitLayer, {})
+    pushHandle.setEnabled(false)
     handles.push(pushHandle)
 
-    hitLayer.addEventListener('pointerdown', onHitDown)
-    hitLayer.addEventListener('pointerup', onHitUp)
     actionBtn.addEventListener('click', onActionTap)
   }
 
@@ -348,6 +375,8 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
     },
     update(dt: number) {
       if (disposed || !started) return
+      if (!canAct()) objectPointer?.cancel()
+      pushHandle?.setEnabled(canAct() && gestureOwned && step === 'ready')
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
@@ -395,13 +424,12 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
       disposed = true
       resizeObserver?.disconnect()
       resizeObserver = null
-      stopClaim()
-      hitLayer.removeEventListener('pointerdown', onHitDown)
-      hitLayer.removeEventListener('pointerup', onHitUp)
+      objectPointer?.dispose()
       actionBtn.removeEventListener('click', onActionTap)
       for (const h of handles) h.dispose()
       handles.length = 0
       fx.dispose()
+      for (const removeCue of removeCues) removeCue()
       styleRenderer.dispose()
       renderer.dispose()
       renderer.forceContextLoss()

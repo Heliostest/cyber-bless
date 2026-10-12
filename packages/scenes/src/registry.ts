@@ -9,6 +9,10 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'omamori-cycle', title: '御守伴行', traditionSlug: 'omamori-cycle', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
+  { id: 'shrine-suzu-bell', title: '庭前一铃', traditionSlug: 'shrine-suzu-bell', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'st-brigids-cross', title: '草编迎春', traditionSlug: 'st-brigids-cross', grade: 'C', sensitivity: '中', gestures: ['drag'] },
+  { id: 'bokjori', title: '竹筛迎岁', traditionSlug: 'bokjori', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ema-votive-plaque', title: '木牌记愿', traditionSlug: 'ema-votive-plaque', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'clootie-well-rag', title: '井边放下', traditionSlug: 'clootie-well-rag', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'diya-oil-lamp', title: '灯旋一瞥', traditionSlug: 'diya-oil-lamp', grade: 'C', sensitivity: '中', gestures: ['drag', 'spin'] },
@@ -101,6 +105,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'omamori-cycle', 'shrine-suzu-bell', 'st-brigids-cross', 'bokjori',
   'ema-votive-plaque', 'clootie-well-rag', 'diya-oil-lamp', 'votive-candle-catholic',
   'daruma-eye-painting', 'mizuhiki', 'milagros', 'phuang-malai',
   'celtic-folk-spring',
@@ -123,6 +128,10 @@ export function isSceneImplemented(id: string): boolean {
 /** Dynamic-import implemented scenes; unknown ids throw. */
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
+    case 'omamori-cycle': return import('./omamori-cycle')
+    case 'shrine-suzu-bell': return import('./shrine-suzu-bell')
+    case 'st-brigids-cross': return import('./st-brigids-cross')
+    case 'bokjori': return import('./bokjori')
     case 'ema-votive-plaque': return import('./ema-votive-plaque')
     case 'clootie-well-rag': return import('./clootie-well-rag')
     case 'diya-oil-lamp': return import('./diya-oil-lamp')

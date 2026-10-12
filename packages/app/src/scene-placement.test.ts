@@ -72,6 +72,8 @@ const entries: CatalogEntry[] = [
 
 describe("scene placement", () => {
   it.each([
+    ["omamori-cycle", true, false], ["shrine-suzu-bell", false, false],
+    ["st-brigids-cross", false, false], ["bokjori", false, false],
     ["ema-votive-plaque", true, false], ["clootie-well-rag", false, false],
     ["diya-oil-lamp", false, true], ["votive-candle-catholic", true, true],
   ] as const)("places %s with its own object icon, pool and stage", (id, wish, night) => {
@@ -98,6 +100,7 @@ describe("scene placement", () => {
       "celtic-folk-spring",
       "theravada-water",
       "clootie-well-rag", "diya-oil-lamp",
+      "shrine-suzu-bell", "st-brigids-cross", "bokjori",
     ]);
     expect([...WISH_SCENE_IDS]).toEqual([
       "tanzaku-tanabata",
@@ -107,6 +110,7 @@ describe("scene placement", () => {
       "slavic-wreath",
       "daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai",
       "ema-votive-plaque", "votive-candle-catholic",
+      "omamori-cycle",
     ]);
     expect(isWishScene("tanzaku-tanabata")).toBe(true);
     expect(isWishScene("slavic-wreath")).toBe(true);
@@ -195,7 +199,7 @@ describe("今日's main walk", () => {
       const day = new Date(Date.UTC(2026, 0, i + 1)).toISOString().slice(0, 10);
       return dailyPrimaryScene(builtInScenes, day)?.id;
     }));
-    for (const id of ["daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai", "ema-votive-plaque", "clootie-well-rag", "diya-oil-lamp", "votive-candle-catholic"])
+    for (const id of ["daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai", "ema-votive-plaque", "clootie-well-rag", "diya-oil-lamp", "votive-candle-catholic", "omamori-cycle", "shrine-suzu-bell", "st-brigids-cross", "bokjori"])
       expect(seen).toContain(id);
   });
 

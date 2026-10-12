@@ -40,6 +40,7 @@ describe("RitualNarrativeBlurb", () => {
 describe("builtInScenes narratives", () => {
   it("covers the placed practices and craft scenes", () => {
     expect(withNarrative.map((e) => e.id).sort()).toEqual([
+      "bokjori",
       "clootie-well-rag",
       "crane",
       "daruma-eye-painting",
@@ -49,9 +50,12 @@ describe("builtInScenes narratives", () => {
       "lantern",
       "milagros",
       "mizuhiki",
+      "omamori-cycle",
       "phuang-malai",
       "shinto-torii",
+      "shrine-suzu-bell",
       "slavic-wreath",
+      "st-brigids-cross",
       "tanzaku-tanabata",
       "tibetan-wheel",
       "votive-candle-catholic",

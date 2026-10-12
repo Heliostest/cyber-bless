@@ -75,3 +75,12 @@ it('uses a direct tap marker when it is also a drag destination, then restores t
   s.scene.remove(s.source); s.update()
   expect(s.host.querySelector('.scene-object-cues')!.childElementCount).toBe(0)
 })
+it('keeps cue coordinates on the canvas when its positioned host has a border',()=>{
+  const s=mount()
+  s.host.getBoundingClientRect=()=>({left:5,top:15,width:330,height:410}) as DOMRect
+  Object.defineProperties(s.host,{clientLeft:{value:5},clientTop:{value:5}})
+  s.update()
+  const layer=s.host.querySelector<HTMLElement>('.scene-object-cues')!
+  expect(layer.style.left).toBe('0px');expect(layer.style.top).toBe('0px')
+  expect(Number(s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!.dataset.x)).toBeCloseTo(160)
+})

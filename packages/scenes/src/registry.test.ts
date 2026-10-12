@@ -10,6 +10,7 @@ describe('sceneRegistry', () => {
 
   it('lists the pilot metas, the C-grade Design A scenes, then the product-original scenes', () => {
     expect(sceneRegistry.map((m) => m.id)).toEqual([
+      'omamori-cycle', 'shrine-suzu-bell', 'st-brigids-cross', 'bokjori',
       'ema-votive-plaque', 'clootie-well-rag', 'diya-oil-lamp', 'votive-candle-catholic',
       'daruma-eye-painting', 'mizuhiki', 'milagros', 'phuang-malai',
       'celtic-folk-spring',
@@ -94,6 +95,10 @@ describe('loadScene', () => {
   })
 
   it.each([
+    ['omamori-cycle', '御守伴行', 'omamori-cycle'],
+    ['shrine-suzu-bell', '庭前一铃', 'shrine-suzu-bell'],
+    ['st-brigids-cross', '草编迎春', 'st-brigids-cross'],
+    ['bokjori', '竹筛迎岁', 'bokjori'],
     ['ema-votive-plaque', '木牌记愿', 'ema-votive-plaque'],
     ['clootie-well-rag', '井边放下', 'clootie-well-rag'],
     ['diya-oil-lamp', '灯旋一瞥', 'diya-oil-lamp'],

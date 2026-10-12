@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import {
   addStageLights, CEL_STYLE, claimObjectTouches, createPointerRay, createSceneFeedback,
@@ -12,7 +13,8 @@ const LABELS = ['心形', '手形', '小屋', '花形']
 const VARIANTS = ['heart', 'hand', 'home', 'flower']
 const COPY = {
   title: '留一枚感谢', choose: '选好这枚', hang: '挂上小符', leave: '留在这里',
-  hints: ['选一枚想留下的小符，再点「选好这枚」。', '把小符拖到木架的挂点，或点下方挂上。',
+  returning: '静看已经挂好的小符，再轻点它，把心意留在这里。',
+  hints: ['轻点托盘里想留下的小符。', '把小符拖到木架的挂点。',
     '留一句祝愿或感谢，也可以只把小符留在这里。', '小符已挂好，这份心意留在了这里。'],
 }
 
@@ -53,7 +55,7 @@ function charmShape(kind: number) {
 export function createMilagros(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, gestures, shared } = ctx
   const safe = shared.assertSafeCopy
-  for (const text of [COPY.title, COPY.choose, COPY.hang, COPY.leave, ...COPY.hints]) safe(text)
+  for (const text of [COPY.title, COPY.choose, COPY.hang, COPY.leave, COPY.returning, ...COPY.hints]) safe(text)
   let step = Math.max(0, Math.min(3, Math.floor(ctx.initialProgress ?? 0)))
   let selected = Math.max(0, VARIANTS.indexOf(ctx.initialVariant ?? 'heart'))
   let started = false, disposed = false, elapsed = 1, clock = 0
@@ -118,6 +120,23 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   }
   const held = new THREE.Vector3(0.62, 1.04, 0.62)
   const hung = new THREE.Vector3(0, 1.22, 0.18)
+  charmMeshes.forEach((mesh, index) => {
+    addInteractionCue(mesh, {
+      kind: 'tap', label: '轻点选择小符',
+      get priority() { return selected === index ? 2 : 1 },
+      get compact() { return selected !== index },
+      enabled: () => canAct() && !blocked && step === 0,
+    })
+    addInteractionCue(mesh, {
+      kind: 'drag', label: '拖小符到挂点', priority: 2,
+      enabled: () => canAct() && !blocked && selected === index && step === 1 && elapsed >= 1,
+      destination: pinTarget, targetLabel: '木架挂点',
+    })
+    addInteractionCue(mesh, {
+      kind: 'tap', label: '轻点小符静看', priority: 2,
+      enabled: () => canAct() && !blocked && selected === index && step === 2 && ctx.returning === true,
+    })
+  })
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: COPY.choose }, safe)
   const choices = document.createElement('div'); choices.className = 'scene-wish-slot'
   const row = document.createElement('div'); row.className = 'scene-craft-choices'; row.setAttribute('role', 'group'); row.setAttribute('aria-label', '选择小符')
@@ -135,7 +154,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   const ray = createPointerRay(canvas, camera)
   const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.62), point = new THREE.Vector3()
   const selectedHits = (x: number, y: number) => ray.hits(x, y, [charmMeshes[selected]])
-  const onObject = (x: number, y: number) => canAct() && (step === 0 ? ray.hits(x, y, charmMeshes) : step === 1 && selectedHits(x, y))
+  const onObject = (x: number, y: number) => canAct() && (step === 0 ? ray.hits(x, y, charmMeshes) : (step === 1 || step === 2 && ctx.returning === true) && selectedHits(x, y))
   const stopClaim = claimObjectTouches(ui.hitLayer, onObject)
   let unobserve = () => {}
   function select(index: number, remember = false) {
@@ -147,7 +166,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   function sync() {
     ui.renderDots(step, 3); choices.hidden = step !== 0; wish.hidden = step !== 2 || Boolean(ctx.returning)
     ui.actionBtn.hidden = step === 3
-    setSafeText(ui.hintEl, COPY.hints[step], safe)
+    setSafeText(ui.hintEl, step === 2 && ctx.returning ? COPY.returning : COPY.hints[step], safe)
     setSafeText(ui.actionBtn, step === 0 ? COPY.choose : step === 1 ? COPY.hang : COPY.leave, safe)
     guide.visible = step === 1
     writer.setEnabled(step === 2 && canAct() && !ctx.returning)
@@ -181,7 +200,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   }
   const resetDrag = () => { drag = null; if (step === 1) charmGroups[selected].position.copy(held) }
   const down = (event: PointerEvent) => {
-    if (!canAct() || (event.button ?? 0) !== 0 || step > 1) return
+    if (!canAct() || (event.button ?? 0) !== 0 || step > 1 && !(step === 2 && ctx.returning)) return
     pointers.add(event.pointerId)
     if (pointers.size > 1 || event.isPrimary === false) { blocked = true; resetDrag(); return }
     if (blocked || !onObject(event.clientX, event.clientY)) return
@@ -207,11 +226,12 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
     if (!previous || previous.id !== event.pointerId || multi || !canAct()) { resetDrag(); return }
     if (previous.stage === 0 && Math.hypot(event.clientX - previous.x, event.clientY - previous.y) < 9) choose()
     else if (previous.stage === 1 && ray.hits(event.clientX, event.clientY, [pinTarget])) hang()
+    else if (previous.stage === 2 && ctx.returning && Math.hypot(event.clientX - previous.x, event.clientY - previous.y) < 9 && selectedHits(event.clientX, event.clientY)) finish()
     else resetDrag()
   }
   const cancel = (event: PointerEvent) => { pointers.delete(event.pointerId); resetDrag(); if (!pointers.size) blocked = false }
   const otherDown = (event: PointerEvent) => {
-    if (!canAct() || step > 1 || (event.button ?? 0) !== 0) return
+    if (!canAct() || step > 1 && !(step === 2 && ctx.returning) || (event.button ?? 0) !== 0) return
     pointers.add(event.pointerId)
     if (pointers.size > 1 || event.isPrimary === false) { blocked = true; resetDrag() }
   }

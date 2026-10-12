@@ -12,19 +12,27 @@ export function createDrag(opts: DragOpts): GestureHandle {
   let el: HTMLElement | null = null
   let enabled = true
   let dragging = false
+  let owner: number | undefined
   const onDown = (e: PointerEvent) => {
-    if (!enabled || (opts.startsOn && !opts.startsOn(e.clientX, e.clientY))) return
+    if (!enabled || dragging || (opts.startsOn && !opts.startsOn(e.clientX, e.clientY))) return
     dragging = true
+    owner = e.pointerId
     el?.setPointerCapture(e.pointerId)
   }
   const onMove = (e: PointerEvent) => {
-    if (!dragging || !enabled) return
+    if (!dragging || !enabled || e.pointerId !== owner) return
     opts.onProgress?.(1)
   }
   const onUp = (e: PointerEvent) => {
-    if (!dragging) return
+    if (!dragging || e.pointerId !== owner) return
     dragging = false
+    owner = undefined
     opts.onDrop?.(opts.hitTest(e.clientX, e.clientY))
+  }
+  const onCancel = (e: PointerEvent) => {
+    if (e.pointerId !== owner) return
+    dragging = false
+    owner = undefined
   }
   return {
     mount(target) {
@@ -32,7 +40,7 @@ export function createDrag(opts: DragOpts): GestureHandle {
       el.addEventListener('pointerdown', onDown)
       el.addEventListener('pointermove', onMove)
       el.addEventListener('pointerup', onUp)
-      el.addEventListener('pointercancel', onUp)
+      el.addEventListener('pointercancel', onCancel)
     },
     update() {},
     dispose() {
@@ -40,12 +48,14 @@ export function createDrag(opts: DragOpts): GestureHandle {
       el.removeEventListener('pointerdown', onDown)
       el.removeEventListener('pointermove', onMove)
       el.removeEventListener('pointerup', onUp)
-      el.removeEventListener('pointercancel', onUp)
+      el.removeEventListener('pointercancel', onCancel)
       el = null
+      dragging = false
+      owner = undefined
     },
     setEnabled(on) {
       enabled = on
-      if (!on) dragging = false
+      if (!on) { dragging = false; owner = undefined }
     },
   }
 }

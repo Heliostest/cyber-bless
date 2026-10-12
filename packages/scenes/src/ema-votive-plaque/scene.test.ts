@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext, SceneInstance } from '../contract'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import * as mod from './index'
 
 // Keep real geometry, raycasts, DOM, gestures and pointer ownership; replace only GPU rendering.
@@ -67,6 +68,34 @@ function touch(el: HTMLElement, [clientX, clientY]: [number, number]) {
 }
 
 describe('ema plaque', () => {
+  it.each([0, 1, 2, 3])('restores the current physical cue at checkpoint %i without inviting writing or completed actions', at => {
+    let active = true
+    const s = mount(at, { isActive: () => active })
+    const body = s.scene.getObjectByName('ema-plaque-body')!
+    const cues = body.userData.interactionCues as InteractionCue[] | undefined
+    expect(cues).toHaveLength(3)
+    const enabled = () => cues!.filter(cue => cue.enabled())
+    expect(enabled().map(cue => cue.kind)).toEqual(at === 0 ? ['rotate'] : at === 2 ? ['drag'] : [])
+    if (at === 2) expect(enabled()[0].destination).toBe(s.scene.getObjectByName('ema-hang-target'))
+    active = false
+    expect(enabled()).toEqual([])
+  })
+
+  it('acknowledges a returning plaque with a real body tap and no new writing', () => {
+    let active = false
+    const s = mount(1, { returning: true, isActive: () => active, isReducedMotion: () => true })
+    const at = s.point('ema-plaque-body')
+    pointer(s.hit, 'pointerdown', at); pointer(s.hit, 'pointerup', at)
+    expect(s.progress).toEqual([])
+    active = true
+    const cues = s.scene.getObjectByName('ema-plaque-body')!.userData.interactionCues as InteractionCue[]
+    expect(cues.filter(cue => cue.enabled()).map(cue => cue.kind)).toEqual(['tap'])
+    pointer(s.hit, 'pointerdown', at); pointer(s.hit, 'pointerup', at)
+    expect(s.progress).toEqual([2])
+    expect(s.saveWish).not.toHaveBeenCalled()
+    expect(s.overlay.querySelector('input')).toBeNull()
+  })
+
   it('turns to the writing face, saves a trimmed wish once, and completes only after hanging', () => {
     const s = mount()
     s.button.click(); s.run()

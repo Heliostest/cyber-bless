@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import {
@@ -20,8 +21,8 @@ const STEP_ORDER: Step[] = ['pick', 'hang', 'wish']
 const COPY = {
   title: '短册系竹',
   hintPick: '点按或拖起地上的纸条（练习）。',
-  hintHang: '把纸条拖到竹枝上松开，或点按下方挂上。',
-  hintWish: '可写一句短句，或点按下方静看片刻（练习，非法效）。',
+  hintHang: '把纸条拖到竹枝的系结处，再松开。',
+  hintWish: '纸条挂好了。可写一句短句，再静看片刻（练习，非法效）。',
   pickTap: '拾起纸条',
   hangTap: '挂到竹枝上',
   wishTap: '静看片刻',
@@ -212,6 +213,15 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     // Narrow portrait screens: back the camera off so the bamboo fits.
     const portraitBoost = camera.aspect < 0.8 ? (0.8 - camera.aspect) * 3 : 0
     cameraHome.z = 4.4 + portraitBoost
+    if (camera.aspect < 1) {
+      // The loose strip is nearer the camera and farther right than the
+      // bamboo. Fit its rotated midpoint with 20px of room and the camera's
+      // idle drift, so the real pick cue remains on screen on small phones.
+      const safeX = Math.max(0.5, 1 - 40 / Math.max(w, 1))
+      const paperX = looseHome.x + 0.21 * Math.sin(0.5) + 0.1
+      const fitZ = looseHome.z + paperX / (Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect * safeX)
+      cameraHome.z = Math.max(cameraHome.z, fitZ)
+    }
     camera.updateProjectionMatrix()
   }
 
@@ -249,6 +259,19 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
   }
 
   const canAct = () => restoring || !ctx.isActive || ctx.isActive()
+  const canCue = () => started && !disposed && !restoring && canAct()
+  const removeCues = [
+    addInteractionCue(loose, {
+      kind: 'tap', label: '点按拾起纸条', anchor: [0, -0.21, 0],
+      enabled: () => canCue() && step === 'pick',
+    }),
+    addInteractionCue(loose, {
+      kind: 'drag', label: '拖到竹枝', anchor: [0, -0.21, 0],
+      destination: () => world.localToWorld(looseHangPos.clone()),
+      targetLabel: '竹枝系结处',
+      enabled: () => canCue() && step === 'hang',
+    }),
+  ]
 
   const completeScene = () => {
     if (!canAct() || step === 'done') return
@@ -440,6 +463,7 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
       for (const h of handles) h.dispose()
       handles.length = 0
       fx.dispose()
+      for (const removeCue of removeCues) removeCue()
       styleRenderer.dispose()
       renderer.dispose()
       renderer.forceContextLoss()

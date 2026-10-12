@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./render-style": "./src/render-style.ts",
     "./debug-render-style": "./src/debug-render-style.ts",
-    "./debug-styles": "./src/debug-styles.ts"
+    "./debug-styles": "./src/debug-styles.ts",
+    "./interaction-cues": "./src/interaction-cues.ts"
   },
   "dependencies": {
     "@wbr/content": "*",

@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext } from '../contract'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 
 // Only the GPU boundary is replaced; geometry, projection, rays and DOM input remain real.
 vi.mock('three', async (importOriginal) => {
@@ -104,6 +105,37 @@ function putBack(s: Mounted, end = 'pointerup') {
 function doneDots(s: Mounted) { return s.overlay.querySelectorAll('[data-state="done"]').length }
 
 describe('diya scene state', () => {
+  it('removes lit wick cues and follows the held lamp through rotate, return and completion', () => {
+    let active = true
+    const s = mount(0, { isActive: () => active })
+    const enabled = () => {
+      const cues: Array<{ object: THREE.Object3D; cue: InteractionCue }> = []
+      drawn.scene!.traverse(object => {
+        for (const cue of (object.userData.interactionCues as InteractionCue[] | undefined) ?? []) {
+          if (cue.enabled()) cues.push({ object, cue })
+        }
+      })
+      return cues
+    }
+    expect(enabled().map(({ object }) => object.name)).toEqual(['diya-wick-target-0', 'diya-wick-target-1', 'diya-wick-target-2'])
+    s.button.click()
+    expect(enabled().map(({ object }) => object.name)).toEqual(['diya-wick-target-1', 'diya-wick-target-2'])
+    s.button.click(); s.button.click()
+    expect(enabled().map(({ cue }) => cue.kind)).toEqual(['rotate'])
+    active = false
+    expect(enabled()).toEqual([])
+    active = true
+    s.button.click()
+    expect(enabled()).toEqual([])
+    s.run()
+    expect(enabled().map(({ cue }) => cue.kind)).toEqual(['drag'])
+    expect(enabled()[0].cue.destination).toBe(object('diya-plate-target'))
+    s.button.click()
+    expect(enabled()).toEqual([])
+    s.run()
+    expect(enabled()).toEqual([])
+  })
+
   it('offers the diya tradition as a separate drag and spin scene', () => {
     expect(meta).toMatchObject({ id: 'diya-oil-lamp', title: '灯旋一瞥', traditionSlug: 'diya-oil-lamp', grade: 'C', sensitivity: '中', gestures: ['drag', 'spin'] })
   })

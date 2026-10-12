@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import {
@@ -10,9 +11,9 @@ import {
 
 const COPY = {
   title: '井边放下', stepsAria: '步骤',
-  dip: '把这片纯棉布轻轻拖入井水，或点按浸布。（致敬小品）',
-  tie: '布片已浸湿。把它拖到低枝的浅金圈，或点按系好。',
-  release: '布片已系在低枝上。轻触布片再松手，或静静放下。',
+  dip: '把这片纯棉布轻轻拖入井水。（致敬小品）',
+  tie: '布片已浸湿。把它拖到低枝的浅金圈。',
+  release: '布片已系在低枝上。轻触布片再松手。',
   done: '布片留在枝头，静看这一刻。（练习结束）',
   dipping: '纯棉布轻轻展开，浸入清水…',
   tying: '把湿布绕过低枝，轻轻系好…',
@@ -230,6 +231,20 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   const ragHandle = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 8), hitMat)
   ragHandle.name = 'clootie-rag-handle'
   rag.add(ragHandle)
+  addInteractionCue(ragHandle, {
+    kind: 'drag', label: '拖棉布入井水', priority: 2,
+    enabled: () => active() && !motion && checkpoint === 0,
+    destination: water, targetLabel: '井水',
+  })
+  addInteractionCue(ragHandle, {
+    kind: 'drag', label: '拖湿布到低枝', priority: 2,
+    enabled: () => active() && !motion && checkpoint === 1,
+    destination: branchTarget, targetLabel: '低枝挂点',
+  })
+  addInteractionCue(ragHandle, {
+    kind: 'tap', label: '轻触布片再松手', priority: 2,
+    enabled: () => active() && !motion && checkpoint === 2,
+  })
   const knot = new THREE.Group()
   knot.name = 'clootie-cotton-knot'
   const knotGeo = new THREE.TorusGeometry(0.043, 0.015, 7, 24)

@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import {
@@ -11,10 +12,10 @@ import { createObjectPointer } from '../object-pointer'
 
 const COPY = {
   title: '木牌记愿', flip: '翻到背面', blank: '先留白', acknowledge: '留一份感谢', hang: '挂上木牌',
-  front: '从木牌上向左右轻拖，翻到背面；也可点下方翻面。（民俗工艺的产品改编）',
+  front: '拖住木牌，向左或向右轻拖翻到背面。（民俗工艺的产品改编）',
   write: '写下一句短愿，或先留白；只有点「写好了」才会保存。',
-  return: '静看走过的一段路，把感谢留在这块木牌上。',
-  ready: '把木牌拖到横梁中央的挂点，或点下方挂上。',
+  return: '静看走过的一段路，再轻点木牌，把感谢留在这里。',
+  ready: '把木牌拖到横梁中央的挂点。',
   hanging: '木牌轻轻落在横梁下…',
   done: '木牌已经挂好，心意留在了这里。（练习结束）',
 } as const
@@ -96,6 +97,19 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
     bevelSize: 0.012, bevelThickness: 0.012, bevelSegments: 3, curveSegments: 24, steps: 1 })
   bodyGeometry.translate(0, 0, -0.05)
   const body = add(bodyGeometry, wood, [0, 0, 0], plaque); body.name = 'ema-plaque-body'
+  addInteractionCue(body, {
+    kind: 'rotate', label: '左右拖木牌翻面', priority: 2,
+    enabled: () => canAct() && !hanging && turnT >= 1 && step === 0,
+  })
+  addInteractionCue(body, {
+    kind: 'drag', label: '拖木牌到挂点', priority: 2,
+    enabled: () => canAct() && !hanging && turnT >= 1 && step === 2,
+    destination: target, targetLabel: '横梁挂点',
+  })
+  addInteractionCue(body, {
+    kind: 'tap', label: '轻点木牌致谢', priority: 2,
+    enabled: () => canAct() && !hanging && turnT >= 1 && returning && step === 1,
+  })
   const rope = tube([[-0.32, 0.28, 0.076], [-0.33, 0.5, 0.08], [-0.12, 0.76, 0.015],
     [0, 0.8, 0], [0.12, 0.76, 0.015], [0.33, 0.5, 0.08], [0.32, 0.28, 0.076]], 0.018, ropeMat)
   rope.name = 'ema-rope'; plaque.add(rope)
@@ -146,7 +160,7 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
   }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: canAct,
-    canStart(x, y) { matrices(); return !hanging && (step === 0 || step === 2) && ray.hits(x, y, [body]) },
+    canStart(x, y) { matrices(); return !hanging && (step === 0 || step === 2 || returning && step === 1) && ray.hits(x, y, [body]) },
     onStart(x, y) {
       dragging = true; downX = x; downY = y; feedback.prepare()
       if (step === 2 && ray.aim(x, y).ray.intersectPlane(plane, point)) dragOffset.copy(plaque.position).sub(point)
@@ -163,6 +177,9 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
       dragging = false
       if (step === 0 && Math.abs(x - downX) >= Math.max(36, canvas.getBoundingClientRect().width * 0.14) && Math.abs(x - downX) > Math.abs(y - downY)) {
         flip(x < downX ? -1 : 1)
+      } else if (step === 1 && returning && Math.hypot(x - downX, y - downY) < 12) {
+        matrices()
+        if (ray.hits(x, y, [body])) leave(); else resetDrag()
       } else if (step === 2) {
         matrices()
         if (ray.hits(x, y, [target])) hang(); else resetDrag()
@@ -175,7 +192,7 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
     ui.actionBtn.disabled = hanging; ui.actionBtn.setAttribute('aria-disabled', String(hanging))
     wishSlot.hidden = step !== 1 || returning; guide.visible = step === 2 && !hanging
     writer?.setEnabled(step === 1 && !returning && canAct())
-    ui.hitLayer.style.pointerEvents = (step === 0 || step === 2) && !hanging ? 'auto' : 'none'
+    ui.hitLayer.style.pointerEvents = (step === 0 || step === 2 || returning && step === 1) && !hanging ? 'auto' : 'none'
     setSafeText(ui.hintEl, step === 0 ? COPY.front : step === 1 ? returning ? COPY.return : COPY.write : step === 2 ? hanging ? COPY.hanging : COPY.ready : COPY.done, safe)
     setSafeText(ui.actionBtn, step === 0 ? COPY.flip : step === 1 ? returning ? COPY.acknowledge : COPY.blank : COPY.hang, safe)
   }

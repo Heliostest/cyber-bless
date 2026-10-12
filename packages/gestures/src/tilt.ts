@@ -17,6 +17,7 @@ export function createTilt(opts: TiltOpts): GestureHandle {
   let el: HTMLElement | null = null
   let enabled = true
   let tracking = false
+  let owner: number | undefined
   let startY = 0
   let angle = 0
   let holdAccumMs = 0
@@ -46,8 +47,9 @@ export function createTilt(opts: TiltOpts): GestureHandle {
   }
 
   const onDown = (e: PointerEvent) => {
-    if (!enabled || (opts.startsOn && !opts.startsOn(e.clientX, e.clientY))) return
+    if (!enabled || tracking || (opts.startsOn && !opts.startsOn(e.clientX, e.clientY))) return
     tracking = true
+    owner = e.pointerId
     startY = e.clientY
     angle = 0
     holdAccumMs = 0
@@ -56,13 +58,14 @@ export function createTilt(opts: TiltOpts): GestureHandle {
   }
 
   const onMove = (e: PointerEvent) => {
-    if (!tracking || !enabled) return
+    if (!tracking || !enabled || e.pointerId !== owner) return
     applyAngle(e.clientY)
   }
 
-  const onUp = () => {
-    if (!tracking) return
+  const onUp = (e: PointerEvent) => {
+    if (!tracking || e.pointerId !== owner) return
     tracking = false
+    owner = undefined
     angle = 0
     holdAccumMs = 0
     // poured stays until next down (fresh gesture) — cleared on down
@@ -95,11 +98,13 @@ export function createTilt(opts: TiltOpts): GestureHandle {
       el.removeEventListener('pointercancel', onUp)
       el = null
       tracking = false
+      owner = undefined
     },
     setEnabled(on) {
       enabled = on
       if (!on) {
         tracking = false
+        owner = undefined
         holdAccumMs = 0
       }
     },

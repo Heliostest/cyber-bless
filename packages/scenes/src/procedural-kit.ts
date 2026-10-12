@@ -10,6 +10,7 @@ export function setSafeText(
 ) {
   assertSafeCopy(text)
   el.textContent = text
+  if (el.classList.contains('scene-bow-tap')) el.setAttribute('aria-label', text)
 }
 
 export type StepOverlay = {
@@ -52,6 +53,7 @@ export function createStepOverlay(
   const actionBtn = document.createElement('button')
   actionBtn.type = 'button'
   actionBtn.className = 'scene-bow-tap'
+  actionBtn.title = '辅助操作：也可以直接操作场景里的物品'
   setSafeText(actionBtn, copy.action, assertSafeCopy)
 
   overlay.append(hitLayer, titleEl, dotsEl, hintEl, actionBtn)

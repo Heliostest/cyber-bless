@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import {
@@ -27,14 +28,16 @@ const COPY = {
   title: '廊前轻转',
   hintReady: '转筒只沿顺时针转：从右向左轻滑，或点按转筒（练习）。',
   hintReverse: '反向推不动：转筒只沿顺时针方向转动，请从右向左轻滑。',
-  hintTurn: '转筒缓缓转着，可静看它慢下来，或点按下方让它停下。',
+  hintTurn: '转筒缓缓转着，静看它慢下来；稍候点按转筒可让它停下，也可用辅助按钮。',
   hintSettling: '转筒渐渐慢下来…',
-  hintStill: '转筒慢慢停下，点按下方或竖起手机稍停，静立片刻（练习，非法效）。',
+  hintStill: '点按停下的转筒，静立片刻；也可竖起手机稍停或用辅助按钮（练习，非法效）。',
   pushTap: '轻推一下',
   settleTap: '让它慢慢停下',
   stillTap: '静立片刻',
   done: '廊前安静下来（练习结束，不以转数计算）。',
   stepsAria: '步骤',
+  cueTurn: '从右向左转动',
+  cueStill: '点按转筒静立',
 } as const
 
 const DRUM_Y = 1.3
@@ -103,7 +106,7 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
       STEP_ORDER.length,
     )
     actionBtn.hidden = step === 'done'
-    hitLayer.style.pointerEvents = step === 'ready' || step === 'turn' ? 'auto' : 'none'
+    hitLayer.style.pointerEvents = step === 'done' ? 'none' : 'auto'
     // Just after the turn begins, and while the drum settles, the button waits.
     const waiting = step === 'turn' && (settling || turnT < SETTLE_AFTER_SECONDS)
     actionBtn.setAttribute('aria-disabled', String(waiting))
@@ -256,6 +259,17 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
 
   const canAct = () => restoring || !ctx.isActive || ctx.isActive()
 
+  addInteractionCue(drumZone, {
+    kind: 'rotate',
+    label: COPY.cueTurn,
+    enabled: () => started && !disposed && !restoring && canAct() && step === 'ready',
+  })
+  addInteractionCue(drumZone, {
+    kind: 'tap',
+    label: COPY.cueStill,
+    enabled: () => started && !disposed && !restoring && canAct() && step === 'still',
+  })
+
   const completeScene = () => {
     if (!canAct() || step === 'done') return
     step = 'done'
@@ -325,19 +339,37 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
 
   let downX = 0
   let downY = 0
+  let downOnDrum = false
+  let drumPointerId: number | null = null
   const onHitDown = (e: PointerEvent) => {
+    if (drumPointerId !== null) return
     fx.prepare()
     downX = e.clientX
     downY = e.clientY
+    downOnDrum = canAct() && onDrum(e.clientX, e.clientY)
+    drumPointerId = downOnDrum ? e.pointerId : null
     reverseAccum = 0
   }
   const onHitUp = (e: PointerEvent) => {
+    if (e.pointerId !== drumPointerId) return
     const moved = Math.hypot(e.clientX - downX, e.clientY - downY)
-    if (moved < 12 && onDrum(e.clientX, e.clientY)) push(TAP_PUSH)
+    if (downOnDrum && moved < 12 && onDrum(e.clientX, e.clientY)) {
+      if (step === 'ready') push(TAP_PUSH)
+      else if (step === 'turn') settle()
+      else if (step === 'still') completeScene()
+    }
+    downOnDrum = false
+    drumPointerId = null
+  }
+  const onHitCancel = (e?: PointerEvent) => {
+    if (drumPointerId !== null && e && e.pointerId !== drumPointerId) return
+    downOnDrum = false
+    drumPointerId = null
   }
 
   const wireGestures = () => {
     hitLayer.addEventListener('pointerdown', onHitDown)
+    hitLayer.addEventListener('pointercancel', onHitCancel)
     stopClaim = claimObjectTouches(hitLayer, onDrum)
     spinHandle = gestures.createSpin({
       startsOn: onDrum,
@@ -399,6 +431,14 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
     },
     update(dt: number) {
       if (disposed || !started) return
+      if (!canAct()) {
+        onHitCancel()
+        spinHandle?.setEnabled(false)
+        gyroHandle?.setEnabled(false)
+        return
+      }
+      spinHandle?.setEnabled(step === 'ready' || step === 'turn')
+      gyroHandle?.setEnabled(step === 'still')
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
@@ -440,6 +480,7 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
       stopClaim()
       hitLayer.removeEventListener('pointerdown', onHitDown)
       hitLayer.removeEventListener('pointerup', onHitUp)
+      hitLayer.removeEventListener('pointercancel', onHitCancel)
       actionBtn.removeEventListener('click', onActionTap)
       for (const h of handles) h.dispose()
       handles.length = 0

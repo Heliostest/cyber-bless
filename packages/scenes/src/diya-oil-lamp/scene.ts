@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import {
@@ -11,8 +12,8 @@ import {
 const COPY = {
   title: '灯旋一瞥', steps: '步骤',
   light: '依次点按棉芯，点亮三盏小灯；也可从一盏轻拖到另一盏。（致敬小品，非完整礼仪）',
-  spin: '捧住前方的小灯，沿浅金圆弧慢慢旋一圈，或点按下方轻旋。',
-  place: '把小灯轻轻放回盘上亮起的空位，或点按下方放回。',
+  spin: '拖住前方的小灯，沿浅金圆弧慢慢旋一圈。',
+  place: '把小灯轻轻拖回盘上亮起的空位。',
   done: '一点光，慢慢转。三盏小灯静静留在盘上。（练习结束）',
   lightAction: '点亮一盏', spinAction: '轻旋一圈', placeAction: '放回盘上',
   spinning: '小灯沿圆弧缓缓转过…', placing: '小灯正轻轻落回盘上…',
@@ -201,6 +202,19 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   plateTarget.name = 'diya-plate-target'
   plateTarget.position.copy(HOMES[2]).add(new THREE.Vector3(0, 0.12, 0))
   world.add(plateTarget)
+  lamps.forEach(lamp => addInteractionCue(lamp.target, {
+    kind: 'tap', label: '轻点棉芯点灯', priority: 2,
+    enabled: () => active() && !motion && checkpoint === 0 && !lamp.lit,
+  }))
+  addInteractionCue(heldTarget, {
+    kind: 'rotate', label: '沿圆弧旋一圈', priority: 2,
+    enabled: () => active() && !motion && checkpoint === 1,
+  })
+  addInteractionCue(heldTarget, {
+    kind: 'drag', label: '拖小灯回盘上', priority: 2,
+    enabled: () => active() && !motion && checkpoint === 2,
+    destination: plateTarget, targetLabel: '盘上空位',
+  })
   const orbitGuide = new THREE.Group()
   orbitGuide.name = 'diya-orbit-guide'
   world.add(orbitGuide)

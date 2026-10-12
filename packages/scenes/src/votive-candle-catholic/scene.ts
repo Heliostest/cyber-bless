@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { addStageLights, CEL_STYLE, createLampHalo, createPointerRay, createSceneFeedback,
@@ -8,15 +9,16 @@ import { addStageLights, CEL_STYLE, createLampHalo, createPointerRay, createScen
 
 const COPY = {
   title: '留一盏烛光',
-  hints: ['把前面的蜡烛拖到烛架空位，或点下方安放。（致敬练习）', '轻点自己的灯芯，或点下方点亮。',
+  hints: ['把前面的蜡烛拖到烛架空位。（致敬练习）', '轻点自己的灯芯，让烛光亮起。',
     '为想念的人留一句意向，也可以静看这一点光。', '烛光留在这里，陪这份心意静静亮着。'],
   actions: ['安放蜡烛', '点亮灯芯', '静看烛光'],
+  returning: '静看这一点光，再轻点自己的蜡烛，把想念留在这里。',
 }
 
 export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared, gestures } = ctx
   const safe = shared.assertSafeCopy
-  ;[COPY.title, ...COPY.hints, ...COPY.actions].forEach(safe)
+  ;[COPY.title, COPY.returning, ...COPY.hints, ...COPY.actions].forEach(safe)
   let step = Math.max(0, Math.min(3, Math.floor(ctx.initialProgress ?? 0)))
   let started = false, disposed = false, clock = 0, dragging = false
   const active = () => started && !disposed && (ctx.isActive?.() ?? true)
@@ -86,6 +88,19 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   wickTarget.name = 'votive-wick-target'
   const target = add(new THREE.SphereGeometry(.27, 16, 10), invisible, [.0, .95, .2])
   target.name = 'votive-placement-target'
+  addInteractionCue(heldTarget, {
+    kind: 'drag', label: '拖蜡烛到空位', priority: 2,
+    enabled: () => active() && step === 0,
+    destination: target, targetLabel: '烛架空位',
+  })
+  addInteractionCue(wickTarget, {
+    kind: 'tap', label: '轻点自己的灯芯', priority: 2,
+    enabled: () => active() && step === 1,
+  })
+  addInteractionCue(heldTarget, {
+    kind: 'tap', label: '轻点蜡烛静看', priority: 2,
+    enabled: () => active() && step === 2 && ctx.returning === true,
+  })
   const collar = add(new THREE.TorusGeometry(.15,.018,8,32), steel, [0,.795,.2]); collar.rotation.x = Math.PI/2
   const glow = new THREE.PointLight(0xffcc83, step >= 2 ? 1.6 : 0, 3, 2)
   glow.position.set(0, 1.91, .4); world.add(glow)
@@ -96,7 +111,7 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   const reset = () => { dragging = false; if (!step) main.group.position.copy(start) }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart(x,y) { matrices(); return step < 2 && ray.hits(x,y,[step ? wickTarget : heldTarget]) },
+    canStart(x,y) { matrices(); return (step < 2 || step === 2 && ctx.returning === true) && ray.hits(x,y,[step === 1 ? wickTarget : heldTarget]) },
     onStart() { dragging = true; feedback.prepare() },
     onMove(x,y) {
       if (step || !dragging) return
@@ -106,6 +121,7 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
       dragging = false; matrices()
       if (!step && ray.hits(x,y,[target])) advance()
       else if (step === 1 && ray.hits(x,y,[wickTarget])) advance()
+      else if (step === 2 && ctx.returning && ray.hits(x,y,[heldTarget])) finish()
       else reset()
     },
     onCancel: reset,
@@ -118,7 +134,7 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
     ui.renderDots(step,3); ui.actionBtn.hidden = step === 3
     wish.hidden = step !== 2 || Boolean(ctx.returning)
     writer.setEnabled(step === 2 && active() && !ctx.returning)
-    setSafeText(ui.hintEl,COPY.hints[step],safe)
+    setSafeText(ui.hintEl,step === 2 && ctx.returning ? COPY.returning : COPY.hints[step],safe)
     setSafeText(ui.actionBtn,COPY.actions[Math.min(step,2)],safe)
     main.flame.visible = main.halo.sprite.visible = step >= 2
     glow.intensity = step >= 2 ? 1.6 : 0

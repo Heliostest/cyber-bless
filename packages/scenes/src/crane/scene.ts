@@ -1,11 +1,12 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
+import { createObjectPointer } from '../object-pointer'
 import {
   addCelLights,
   CEL_STYLE,
-  claimObjectTouches,
   createPointerRay,
   createSceneFeedback,
   createStepOverlay,
@@ -33,8 +34,8 @@ const COPY = {
   folding3: '折起颈与尾…',
   fold3: '颈与尾折好了，再点按翻出鹤首、展开双翼。',
   folding4: '翻出鹤首，展开双翼…',
-  hintLift: '纸鹤折好了。向上拖起它，或点按下方托起。',
-  hintWish: '可写一句想送给自己或他人的话，或点按下方静看片刻（练习，非法效）。',
+  hintLift: '纸鹤折好了。把纸鹤向上拖起，再松开。',
+  hintWish: '纸鹤停在眼前。可写一句想送给自己或他人的话，再静看片刻（练习，非法效）。',
   foldTap: '折一下',
   liftTap: '托起纸鹤',
   wishTap: '静看片刻',
@@ -98,7 +99,7 @@ export function createCrane(ctx: SceneContext): SceneInstance {
   let dragHandle: GestureHandle | null = null
   let wishHandle: GestureHandle | null = null
   let stopResize = () => {}
-  let stopClaim = () => {}
+  let objectPointer: ReturnType<typeof createObjectPointer> | null = null
   const fx = createSceneFeedback(ctx)
 
   const ui = createStepOverlay(
@@ -225,6 +226,48 @@ export function createCrane(ctx: SceneContext): SceneInstance {
   }
 
   const canAct = () => restoring || !ctx.isActive || ctx.isActive()
+  const canCue = () => started && !disposed && !restoring && canAct()
+  // A face point near the visible paper edge, recalculated from the current
+  // folded mesh. A fixed flat-square point would float away as the bases fold.
+  const foldAnchor: [number, number, number] = [0, 0, 0]
+  const anchorPoint = new THREE.Vector3()
+  const anchorWorld = new THREE.Vector3()
+  const anchorScreen = new THREE.Vector3()
+  let anchorPose = ''
+  const refreshFoldAnchor = () => {
+    sheet.mesh.updateWorldMatrix(true, false)
+    const vertices = sheet.mesh.geometry.getAttribute('position')
+    const faceVertices = sheet.kinematics.render.faceTris * 3
+    const paperWorld = paper.getWorldPosition(new THREE.Vector3())
+    let best = -Infinity
+    for (let i = 0; i < faceVertices; i += 3) {
+      anchorPoint.set(
+        (vertices.getX(i) + vertices.getX(i + 1) + vertices.getX(i + 2)) / 3,
+        (vertices.getY(i) + vertices.getY(i + 1) + vertices.getY(i + 2)) / 3,
+        (vertices.getZ(i) + vertices.getZ(i + 1) + vertices.getZ(i + 2)) / 3,
+      )
+      anchorWorld.copy(anchorPoint).applyMatrix4(sheet.mesh.matrixWorld)
+      // Stay inside the same generous sphere used by onPaper, even for a
+      // long bird base whose tips extend beyond its action region.
+      if (anchorWorld.distanceToSquared(paperWorld) > 0.54 ** 2) continue
+      anchorScreen.copy(anchorWorld).project(camera)
+      const score = anchorScreen.x - Math.abs(anchorScreen.y) * 0.15
+      if (score <= best) continue
+      best = score
+      anchorPoint.toArray(foldAnchor)
+    }
+  }
+  const removeCues = [
+    addInteractionCue(sheet.mesh, {
+      kind: 'tap', label: '点按纸边折叠', anchor: foldAnchor,
+      enabled: () => canCue() && step === 'fold' && foldK >= 1 && form < FOLD_COUNT,
+    }),
+    addInteractionCue(tapZone, {
+      kind: 'drag', label: '向上托起纸鹤',
+      destination: () => world.localToWorld(new THREE.Vector3(0, LIFT_Y + 0.2, 0)),
+      targetLabel: '向上托起', enabled: () => canCue() && step === 'lift',
+    }),
+  ]
 
   const completeScene = () => {
     if (!canAct() || step === 'done') return
@@ -276,7 +319,7 @@ export function createCrane(ctx: SceneContext): SceneInstance {
   }
 
   const onActionTap = () => {
-    if (disposed) return
+    if (disposed || objectPointer?.isBusy()) return
     fx.prepare()
     if (step === 'fold') foldOnce()
     else if (step === 'lift') goWish()
@@ -284,15 +327,18 @@ export function createCrane(ctx: SceneContext): SceneInstance {
   }
 
   let downX = 0
-  const onHitDown = (e: PointerEvent) => {
+  let gestureOwned = false
+  const onHitDown = (x: number, y: number) => {
+    gestureOwned = true
+    dragHandle?.setEnabled(step === 'lift')
     fx.prepare()
-    downX = e.clientX
-    downY = e.clientY
-    if (step === 'lift' && onPaper(e.clientX, e.clientY)) grabbed = true
+    downX = x
+    downY = y
+    if (step === 'lift') grabbed = true
   }
-  const onHitMove = (e: PointerEvent) => {
-    if (step !== 'lift' || !grabbed || e.buttons === 0) return
-    if (pointer.aim(e.clientX, e.clientY).ray.intersectPlane(dragPlane, hitPoint)) {
+  const onHitMove = (x: number, y: number) => {
+    if (step !== 'lift' || !grabbed) return
+    if (pointer.aim(x, y).ray.intersectPlane(dragPlane, hitPoint)) {
       dragTarget.set(
         THREE.MathUtils.clamp(hitPoint.x, -0.8, 0.8),
         THREE.MathUtils.clamp(hitPoint.y, REST_Y - 0.2, LIFT_Y + 0.3),
@@ -300,25 +346,40 @@ export function createCrane(ctx: SceneContext): SceneInstance {
       )
     }
   }
-  const onHitUp = (e: PointerEvent) => {
+  const onHitUp = (x: number, y: number) => {
     grabbed = false
     if (step !== 'fold') return
-    const moved = Math.hypot(e.clientX - downX, e.clientY - downY)
-    if (moved < 12 && onPaper(e.clientX, e.clientY)) foldOnce()
+    gestureOwned = false
+    const moved = Math.hypot(x - downX, y - downY)
+    if (moved < 12 && onPaper(x, y)) foldOnce()
+  }
+  const onHitCancel = () => {
+    grabbed = false
+    gestureOwned = false
+    dragHandle?.setEnabled(false)
+    if (step === 'lift') dragTarget.set(0, REST_Y, 0)
   }
 
   const wireGestures = () => {
-    hitLayer.addEventListener('pointerdown', onHitDown)
-    stopClaim = claimObjectTouches(hitLayer, onPaper)
+    objectPointer = createObjectPointer(hitLayer, {
+      isActive: canCue,
+      canStart: (x, y) => ((step === 'fold' && foldK >= 1) || step === 'lift') && onPaper(x, y),
+      onStart: onHitDown,
+      onMove: onHitMove,
+      onRelease: onHitUp,
+      onCancel: onHitCancel,
+    })
     // Lift: a drag that starts on the crane and is released well above where
     // it began carries it up; a stray swipe elsewhere on the stage does not.
     dragHandle = gestures.createDrag({
-      startsOn: onPaper,
+      startsOn: (x, y) => gestureOwned && onPaper(x, y),
       hitTest: (_x, y) => downY - y > 40,
       onDrop: (hit) => {
+        const valid = gestureOwned
+        gestureOwned = false
         if (step !== 'lift') return
         grabbed = false
-        if (hit) goWish()
+        if (valid && hit) goWish()
         else dragTarget.set(0, REST_Y, 0)
       },
     })
@@ -326,9 +387,6 @@ export function createCrane(ctx: SceneContext): SceneInstance {
     dragHandle.setEnabled(false)
     handles.push(dragHandle)
 
-    hitLayer.addEventListener('pointermove', onHitMove)
-    hitLayer.addEventListener('pointerup', onHitUp)
-    hitLayer.addEventListener('pointercancel', onHitUp)
     actionBtn.addEventListener('click', onActionTap)
 
     wishHandle = gestures.createWishWrite({
@@ -365,6 +423,8 @@ export function createCrane(ctx: SceneContext): SceneInstance {
     },
     update(dt: number) {
       if (disposed || !started) return
+      if (!canAct()) objectPointer?.cancel()
+      dragHandle?.setEnabled(canAct() && gestureOwned && step === 'lift')
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
@@ -390,6 +450,10 @@ export function createCrane(ctx: SceneContext): SceneInstance {
       holder.quaternion.slerpQuaternions(from.q, to.q, e)
       holder.scale.setScalar(THREE.MathUtils.lerp(from.scale, to.scale, e))
       sheet.object.position.copy(centre.lerpVectors(from.centre, to.centre, e)).negate()
+      if (foldK >= 1 && key !== anchorPose) {
+        refreshFoldAnchor()
+        anchorPose = key
+      }
 
       // Lift: drag follows the pointer, then settles at the raised perch.
       if (step === 'lift') {
@@ -427,15 +491,12 @@ export function createCrane(ctx: SceneContext): SceneInstance {
       if (disposed) return
       disposed = true
       stopResize()
-      stopClaim()
-      hitLayer.removeEventListener('pointerdown', onHitDown)
-      hitLayer.removeEventListener('pointermove', onHitMove)
-      hitLayer.removeEventListener('pointerup', onHitUp)
-      hitLayer.removeEventListener('pointercancel', onHitUp)
+      objectPointer?.dispose()
       actionBtn.removeEventListener('click', onActionTap)
       for (const h of handles) h.dispose()
       handles.length = 0
       fx.dispose()
+      for (const removeCue of removeCues) removeCue()
       sheet.dispose()
       styleRenderer.dispose()
       renderer.dispose()

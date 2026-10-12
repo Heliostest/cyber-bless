@@ -6,6 +6,7 @@ import { animate, createTimeline } from "animejs";
 import { swingPose } from "./woodfish-motion";
 import { parseWoodfishModel } from "./woodfish-model";
 import { createDebugRenderStyle } from "@wbr/scene-runtime/debug-render-style";
+import { addInteractionCue } from "@wbr/scene-runtime/interaction-cues";
 
 type Options = WoodfishContext & SceneMountOptions;
 export const woodfishEngine: SceneEngine<WoodfishContext, WoodfishController> =
@@ -125,6 +126,10 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
     reportedReady = false;
   let angle = 0,
     view = "front";
+  addInteractionCue(bodyGroup, {
+    kind: "tap", label: "轻点木鱼", anchor: [0, 1.06, 0.7],
+    enabled: () => active && !disposed && loaded && view === "front" && !host.closest<HTMLButtonElement>(".woodfish-object")?.disabled,
+  });
   function mesh(
     geometry: THREE.BufferGeometry,
     material: THREE.Material,

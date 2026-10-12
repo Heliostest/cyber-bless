@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext } from '../contract'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 
 // jsdom has no GPU; keep the real geometry, raycaster and DOM input.
 vi.mock('three', async (importOriginal) => {
@@ -89,6 +90,18 @@ function dots(s: Mounted) { return s.overlay.querySelectorAll('[data-state="done
 function cloth() { return object('clootie-cotton-rag') as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial> }
 
 describe('clootie cloth checkpoints', () => {
+  it.each([0, 1, 2, 3])('restores the cloth gesture and destination for checkpoint %i and hides it when paused', checkpoint => {
+    let active = true
+    mount(checkpoint, { isActive: () => active })
+    const cues = object('clootie-rag-handle').userData.interactionCues as InteractionCue[] | undefined
+    expect(cues).toHaveLength(3)
+    const enabled = () => cues!.filter(cue => cue.enabled())
+    expect(enabled().map(cue => cue.kind)).toEqual(checkpoint < 2 ? ['drag'] : checkpoint === 2 ? ['tap'] : [])
+    if (checkpoint < 2) expect(enabled()[0].destination).toBe(object(checkpoint === 0 ? 'clootie-water-target' : 'clootie-branch-target'))
+    active = false
+    expect(enabled()).toEqual([])
+  })
+
   it('dips, ties and releases once through keyboard buttons without saving a wish', () => {
     const s = mount()
     for (const [idx, action] of ['浸一下布', '系到枝上', '松手静看'].entries()) {

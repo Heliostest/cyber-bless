@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import {
@@ -24,16 +25,18 @@ const STEP_ORDER: Step[] = ['approach', 'bow', 'ema']
 
 const COPY = {
   title: '庭前一礼',
-  hintApproach: '向上轻滑或点按鸟居，走到它跟前（练习）。',
+  hintApproach: '点按鸟居或在鸟居上向上轻滑，走到它跟前（练习）。',
   hintWalking: '缓步走近…',
-  hintBow: '在鸟居前停步，向下轻滑、竖起手机稍停，或点按下方，轻轻一礼（致敬，非真实参拜）。',
+  hintBow: '按住鸟居向下轻滑，轻轻一礼；也可竖起手机稍停或用辅助按钮（致敬，非真实参拜）。',
   hintBowing: '低头，再缓缓抬起…',
-  hintEma: '可在木牌上写一句话，或点按下方静立片刻（练习，非法效）。',
+  hintEma: '木牌旁停一停，在输入框写一句话，也可用辅助按钮静立片刻（练习，非法效）。',
   approachTap: '走到鸟居前',
   bowTap: '轻轻一礼',
   emaTap: '静立片刻',
   done: '庭前安静下来（练习结束，不替代真实参拜）。',
   stepsAria: '步骤',
+  cueApproach: '点按鸟居走近',
+  cueBow: '向下轻滑一礼',
 } as const
 
 const WALK_SECONDS = 1.8
@@ -249,6 +252,19 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
   }
 
   const canAct = () => restoring || !ctx.isActive || ctx.isActive()
+
+  addInteractionCue(toriiZone, {
+    kind: 'tap',
+    label: COPY.cueApproach,
+    enabled: () => started && !disposed && !restoring && canAct() &&
+      step === 'approach' && !walking,
+  })
+  addInteractionCue(toriiZone, {
+    kind: 'drag',
+    label: COPY.cueBow,
+    enabled: () => started && !disposed && !restoring && canAct() &&
+      step === 'bow' && !bowing,
+  })
 
   const completeScene = () => {
     if (!canAct() || step === 'done') return

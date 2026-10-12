@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext, SceneInstance } from '../contract'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 vi.mock('three', async original => {
   const actual = await original<typeof import('three')>()
   class WebGLRenderer { setPixelRatio() {} setClearColor() {} setSize() {} dispose() {} forceContextLoss() {} }
@@ -50,6 +51,24 @@ function pointer(el: HTMLElement, type: string, [clientX, clientY]: [number, num
   const e = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(e, { clientX, clientY, pointerId: id, button: 0, pointerType: 'touch' }); el.dispatchEvent(e)
 }
+it.each([0, 1, 2, 3])('restores only the candle placement or wick cue at checkpoint %i', at => {
+  let active = true
+  mount(at, { isActive: () => active })
+  const scene = rendered.scene as THREE.Scene
+  const enabled = () => {
+    const cues: Array<{ object: THREE.Object3D; cue: InteractionCue }> = []
+    scene.traverse(object => {
+      for (const cue of (object.userData.interactionCues as InteractionCue[] | undefined) ?? []) {
+        if (cue.enabled()) cues.push({ object, cue })
+      }
+    })
+    return cues
+  }
+  expect(enabled().map(({ object }) => object.name)).toEqual(at === 0 ? ['votive-held-target'] : at === 1 ? ['votive-wick-target'] : [])
+  if (at === 0) expect(enabled()[0].cue.destination).toBe(scene.getObjectByName('votive-placement-target'))
+  active = false
+  expect(enabled()).toEqual([])
+})
 it('places, lights and leaves one written intention exactly once', () => {
   const s = mount(); expect(s.button).not.toBeNull()
   s.button.click(); s.button.click(); s.write('愿朋友平安'); s.write('重复'); s.button.click()
@@ -62,7 +81,11 @@ it.each([0, 1, 2, 3])('restores %i without effects', n => {
   expect(Array.from(s.overlay.querySelectorAll<HTMLElement>('.scene-step-dot')).filter(d => d.dataset.state === 'done')).toHaveLength(n)
 })
 it('quiet completion and returning never save a default intention', () => {
-  const s = mount(2, { returning: true }); expect(s.button).not.toBeNull(); s.button.click()
+  const s = mount(2, { returning: true }); expect(s.button).not.toBeNull()
+  const cues = (rendered.scene as THREE.Scene).getObjectByName('votive-held-target')!.userData.interactionCues as InteractionCue[]
+  expect(cues.filter(cue => cue.enabled()).map(cue => cue.kind)).toEqual(['tap'])
+  pointer(s.hit, 'pointerdown', s.point('votive-held-target'))
+  pointer(s.hit, 'pointerup', s.point('votive-held-target'))
   expect(s.saveWish).not.toHaveBeenCalled(); expect(s.complete).toHaveBeenCalledOnce()
 })
 it('quiet viewing does not save an unfinished input draft', () => {

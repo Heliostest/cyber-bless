@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import {
@@ -19,9 +20,9 @@ const COPY = {
   wish: '暂留心意',
   hintWish: '写下一个短目标，或先把心意留在此刻。另一目仍然留白。',
   acknowledge: '静看片刻',
-  hintAcknowledge: '两目相对，静看自己走过的这段路。',
+  hintAcknowledge: '两目相对，静看自己走过的这段路，再轻点达摩留住这一刻。',
   settle: '轻放在木座上',
-  hintSettle: '把达摩轻轻向下拖到木座，或点按下方摆正。',
+  hintSettle: '把达摩轻轻向下拖到木座。',
   settling: '轻摆归位…',
   done: '达摩稳稳停在木座上，另一目留待日后。（练习结束）',
   doneReturn: '两目已点，达摩稳稳停在木座上。（练习结束）',
@@ -276,6 +277,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
   brush.rotation.z = -0.38
   world.add(brush)
   const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.039, 0.54, 14), wood)
+  shaft.name = 'daruma-brush-shaft'
   brush.add(shaft)
   const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.043, 0.035, 0.08, 14), darkWood)
   collar.position.y = 0.28
@@ -294,7 +296,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
   }
   const onDoll = (x: number, y: number) => hits(x, y, [shell])
   const onObject = (x: number, y: number) => canAct() && !settling && !blockedMulti && (
-    step === 0 ? hits(x, y, [shell, shaft, collar, bristles]) : step === 2 && onDoll(x, y)
+    step === 0 ? hits(x, y, [shell, shaft, collar, bristles]) : (step === 2 || returning && step === 1) && onDoll(x, y)
   )
   const onEye = (x: number, y: number) => hits(x, y, [eyes[returning ? 1 : 0]])
   const onStand = (x: number, y: number) => hits(x, y, [stand])
@@ -305,6 +307,27 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
   let downY = 0
   let dragLean = 0
 
+  const paintTarget = eyes[returning ? 1 : 0]
+  const canPaint = () => canAct() && !settling && !blockedMulti && step === 0
+  addInteractionCue(paintTarget, {
+    kind: 'tap', label: returning ? '轻点另一目' : '轻点空白眼圈', enabled: canPaint, priority: 2,
+  })
+  addInteractionCue(shaft, {
+    kind: 'drag', label: '拖毛笔到眼圈', anchor: [0, -0.18, 0], enabled: canPaint,
+    destination: paintTarget, targetLabel: '空白眼圈',
+  })
+  const settleAnchor = frontPoint(0, 0.78, 0.02)
+  addInteractionCue(shell, {
+    kind: 'drag', label: '拖达摩到木座',
+    anchor: [settleAnchor.x, settleAnchor.y, settleAnchor.z],
+    enabled: () => canAct() && !settling && !blockedMulti && step === 2,
+    destination: () => stand.localToWorld(new THREE.Vector3(0, 0.066, 0.42)), targetLabel: '木座', priority: 2,
+  })
+  addInteractionCue(shell, {
+    kind: 'tap', label: '轻点达摩静看', anchor: [settleAnchor.x, settleAnchor.y, settleAnchor.z], priority: 2,
+    enabled: () => canAct() && !settling && !blockedMulti && returning && step === 1,
+  })
+
   const syncOverlay = () => {
     ui.renderDots(step, 3)
     actionBtn.hidden = step === 3
@@ -312,7 +335,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     actionBtn.setAttribute('aria-disabled', String(settling))
     wishSlot.hidden = returning || step !== 1
     wishHandle?.setEnabled(step === 1 && !returning && canAct())
-    hitLayer.style.pointerEvents = (step === 0 || step === 2) && !settling ? 'auto' : 'none'
+    hitLayer.style.pointerEvents = (step === 0 || step === 2 || returning && step === 1) && !settling ? 'auto' : 'none'
     let text: string
     let action: string
     if (step === 0) {
@@ -447,6 +470,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     const currentStep = step
     cancelDrag()
     if (currentStep === 0 && onEye(e.clientX, e.clientY)) paintEye()
+    else if (currentStep === 1 && returning && onDoll(e.clientX, e.clientY)) leaveWish()
     else if (currentStep === 2 && onStand(e.clientX, e.clientY)) settle()
   }
   const onCancel = (e: PointerEvent) => {

@@ -1,0 +1,23 @@
+Environment assets used by 一日一念
+
+Kenney Nature Kit 2.1
+Created/distributed by Kenney (https://kenney.nl)
+Source: https://kenney.nl/assets/nature-kit
+License: Creative Commons Zero 1.0 Universal (CC0)
+https://creativecommons.org/publicdomain/zero/1.0/
+Free for personal, educational and commercial use; attribution appreciated.
+Selected source models: tree_oak.glb, tree_pineTallA.glb, plant_bush.glb,
+stone_smallA.glb, flower_yellowC.glb.
+Derived geometry: packages/scene-runtime/src/nature-kit.data.json.
+Changes: baked transforms, grounded origin, welded vertices/smooth normals,
+reduced numeric precision; runtime sage colours and matte materials.
+
+Poly Haven: Kloppenheim 06 (Pure Sky), Kloppenheim 02 (Pure Sky)
+Authors: Greg Zaal (original), Jarod Guest (sky edits)
+Sources:
+https://polyhaven.com/a/kloppenheim_06_puresky
+https://polyhaven.com/a/kloppenheim_02_puresky
+License: Creative Commons Zero 1.0 Universal (CC0)
+https://polyhaven.com/license
+Files: original 1K HDR downloads, renamed locally; no copyrighted game assets.
+Free for commercial use and redistribution; attribution appreciated.

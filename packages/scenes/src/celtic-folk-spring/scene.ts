@@ -109,9 +109,9 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
   scene.fog = new THREE.FogExp2(bgColor.getHex(), 0.09)
 
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100)
-  const cameraHome = new THREE.Vector3(0, 2.2, 3.9)
+  const cameraHome = new THREE.Vector3(0, 3.2, 5.7)
   camera.position.copy(cameraHome)
-  const cameraLookAt = new THREE.Vector3(0, 0.05, 0)
+  const cameraLookAt = new THREE.Vector3(0, 0.15, 0)
   camera.lookAt(cameraLookAt)
   const styleRenderer = createDebugRenderStyle(renderer, scene, camera, {
     id: ctx.sceneId ?? 'celtic-folk-spring', label: '泉边一念',
@@ -143,7 +143,7 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
 
   const bank = new THREE.Mesh(
     new THREE.RingGeometry(1.35, 2.1, 48),
-    new THREE.MeshStandardMaterial({ color: 0x394a3a, roughness: 0.95 }),
+    new THREE.MeshStandardMaterial({ color: 0x91a877, roughness: 0.95 }),
   )
   bank.rotation.x = -Math.PI / 2
   scene.add(bank)

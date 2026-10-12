@@ -41,7 +41,7 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
   const target = new THREE.Vector3(0.08, 0.02, 0);
   camera.position.set(0.9, 2.3, 6.5);
   camera.lookAt(target);
-  let selectedStyle: RenderStyleId = "original";
+  let selectedStyle: RenderStyleId = "toon-soft";
   // Anime cel rig: dominant upper-left lamp sets one clean light/shade split;
   // a lighter warm bounce keeps shade bands soft without flattening the cavity.
   scene.add(new THREE.HemisphereLight(0xfff0dc, 0x8c5f47, 1.55));
@@ -204,10 +204,10 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
           // material can still fall back to the last known good 3D pack.
           renderer.render(scene, camera);
           if (shaderFailed) throw Error("Scene shader failed");
-          styleRenderer.setStyle(pack.renderStyle);
+          styleRenderer.setStyle("toon-soft");
           styleRenderer.render();
           if (shaderFailed) throw Error("Scene shader failed");
-          selectedStyle = pack.renderStyle;
+          selectedStyle = "toon-soft";
           return { asset, decoded };
         } catch (error) {
           bodyGroup.remove(asset.body);

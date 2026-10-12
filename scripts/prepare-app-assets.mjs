@@ -14,6 +14,9 @@ export const assetFiles = [
   "fonts/nunito-latin-900-normal.woff2",
   "fonts/nunito-OFL.txt",
   "woodfish/bundled-v1/woodfish.glb",
+  "environments/kloppenheim-06-sky-1k.hdr",
+  "environments/kloppenheim-02-night-1k.hdr",
+  "environments/LICENSE.txt",
 ];
 export async function prepareAppAssets() {
   await prepareBundledContent();

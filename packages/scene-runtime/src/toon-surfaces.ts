@@ -8,24 +8,24 @@ import type { RenderStyleId } from "@wbr/content";
  */
 type ToonSurface = { color?: THREE.ColorRepresentation; simplifyMap?: boolean; aoIntensity?: number; outline?: boolean };
 type Lit = THREE.MeshStandardMaterial | THREE.MeshPhongMaterial | THREE.MeshLambertMaterial;
-type Adapted = [source: Lit, toon: THREE.MeshToonMaterial, keepColor: boolean];
-type Entry = { original: THREE.Material | THREE.Material[]; styled: THREE.Material | THREE.Material[]; owned: THREE.MeshToonMaterial[]; adapted: Adapted[] };
+type Painted = THREE.MeshToonMaterial | THREE.MeshStandardMaterial;
+type Adapted = [source: Lit, toon: Painted, keepColor: boolean];
+type Entry = { original: THREE.Material | THREE.Material[]; styled: THREE.Material | THREE.Material[]; owned: Painted[]; adapted: Adapted[] };
 
 export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
   // Standard Three.js gradient-map configuration, not a custom shader.
-  const values = style === "toon-ink" ? [85, 165, 235] : [105, 145, 180, 210, 240];
+  const values = [85, 165, 235];
   const gradient = new THREE.DataTexture(new Uint8Array(values), values.length, 1, THREE.RedFormat);
   gradient.minFilter = gradient.magFilter = THREE.NearestFilter;
   gradient.generateMipmaps = false;
   gradient.needsUpdate = true;
   const cache = new Map<THREE.Mesh, Entry>();
 
-  function adapt(source: THREE.Material, hint: ToonSurface, owned: THREE.MeshToonMaterial[], adapted: Adapted[]) {
+  function adapt(source: THREE.Material, hint: ToonSurface, owned: Painted[], adapted: Adapted[]) {
     if (!(source instanceof THREE.MeshStandardMaterial || source instanceof THREE.MeshPhongMaterial || source instanceof THREE.MeshLambertMaterial) || source.transparent) return source;
-    const toon = new THREE.MeshToonMaterial({
+    const painted = {
       color: hint.color ?? source.color,
       map: hint.simplifyMap ? null : source.map,
-      gradientMap: gradient,
       aoMap: source.aoMap,
       aoMapIntensity: hint.aoIntensity ?? Math.min(source.aoMapIntensity, 0.45),
       // Fine normal/bump detail makes stepped lighting noisy. Keep geometry shading.
@@ -51,7 +51,12 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
       displacementMap: source.displacementMap,
       displacementScale: source.displacementScale,
       displacementBias: source.displacementBias,
-    });
+    };
+    // Soft village materials keep continuous volume, diffuse sky reflection and
+    // contact shadows. The optional ink preset still uses the original cel bands.
+    const toon = style === "toon-soft"
+      ? new THREE.MeshStandardMaterial({ ...painted, roughness: 0.94, metalness: 0, envMapIntensity: 0.45 })
+      : new THREE.MeshToonMaterial({ ...painted, gradientMap: gradient });
     toon.name = `${source.name || "surface"} / ${style}`;
     owned.push(toon);
     adapted.push([source, toon, hint.color !== undefined]);
@@ -71,7 +76,7 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
           let entry = cache.get(object);
           if (!entry || entry.original !== object.material) {
             entry?.owned.forEach((material) => material.dispose());
-            const owned: THREE.MeshToonMaterial[] = [];
+            const owned: Painted[] = [];
             const adapted: Adapted[] = [];
             const hint: ToonSurface = object.userData.toonSurface ?? {};
             const original = object.material;

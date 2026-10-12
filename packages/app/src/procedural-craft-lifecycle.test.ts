@@ -4,6 +4,7 @@ import * as THREE from 'three'
 vi.mock('three', async (importOriginal) => {
   const actual = await importOriginal<typeof import('three')>()
   class WebGLRenderer {
+    shadowMap = { enabled: false, type: 0 }
     setClearColor() {} setPixelRatio() {} setSize() {} dispose() {} forceContextLoss() {}
   }
   return { ...actual, WebGLRenderer }
@@ -43,4 +44,32 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
   ctrl.setActive(true)
   pointer(hit, 'pointerup', pt)
   expect(checkpoint.mock.calls.map(([n]) => n)).toEqual([])
+})
+
+it.each([
+  ['ema-votive-plaque', 2, 'ema-plaque-body', 'ema-hang-target'],
+  ['clootie-well-rag', 0, 'clootie-rag-handle', 'clootie-water-target'],
+  ['diya-oil-lamp', 2, 'diya-held-target', 'diya-plate-target'],
+  ['votive-candle-catholic', 0, 'votive-held-target', 'votive-placement-target'],
+] as const)('cancels %s through host pause and accepts a fresh gesture', async (id, progress, source, target) => {
+  vi.stubGlobal('requestAnimationFrame', () => 1); vi.stubGlobal('cancelAnimationFrame', () => {})
+  vi.spyOn(HTMLCanvasElement.prototype, 'clientWidth', 'get').mockReturnValue(360)
+  vi.spyOn(HTMLCanvasElement.prototype, 'clientHeight', 'get').mockReturnValue(360)
+  vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 360, height: 360 } as DOMRect)
+  const host = document.createElement('div'); document.body.append(host)
+  const checkpoint = vi.fn(), engine = await proceduralEngine(id)
+  const ctrl = engine.create(host, { progress, sceneId: id, checkpoint, isSoundEnabled: () => false },
+    { active: true, reducedMotion: true, signal: new AbortController().signal, ready() {}, failed(error) { throw error } })
+  controllers.push(ctrl)
+  const hit = host.querySelector<HTMLElement>('.scene-hit-layer')!
+  hit.setPointerCapture = () => {}; hit.releasePointerCapture = () => {}
+  const point = (name: string) => {
+    rendered.scene!.updateMatrixWorld(true); rendered.camera!.updateMatrixWorld(true)
+    const p = rendered.scene!.getObjectByName(name)!.getWorldPosition(new THREE.Vector3()).project(rendered.camera!)
+    return [(p.x+1)*180, (1-p.y)*180]
+  }
+  pointer(hit,'pointerdown',point(source)); ctrl.setActive(false); ctrl.setActive(true)
+  pointer(hit,'pointerup',point(target)); expect(checkpoint).not.toHaveBeenCalled()
+  pointer(hit,'pointerdown',point(source)); pointer(hit,'pointermove',point(target)); pointer(hit,'pointerup',point(target))
+  expect(checkpoint).toHaveBeenCalledExactlyOnceWith(progress+1)
 })

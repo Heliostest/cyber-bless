@@ -9,6 +9,10 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'ema-votive-plaque', title: '木牌记愿', traditionSlug: 'ema-votive-plaque', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
+  { id: 'clootie-well-rag', title: '井边放下', traditionSlug: 'clootie-well-rag', grade: 'C', sensitivity: '中', gestures: ['drag'] },
+  { id: 'diya-oil-lamp', title: '灯旋一瞥', traditionSlug: 'diya-oil-lamp', grade: 'C', sensitivity: '中', gestures: ['drag', 'spin'] },
+  { id: 'votive-candle-catholic', title: '留一盏烛光', traditionSlug: 'votive-candle-catholic', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
   { id: 'daruma-eye-painting', title: '达摩点睛', traditionSlug: 'daruma-eye-painting', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'mizuhiki', title: '水引结愿', traditionSlug: 'mizuhiki', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'milagros', title: '留一枚感谢', traditionSlug: 'milagros', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
@@ -97,6 +101,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'ema-votive-plaque', 'clootie-well-rag', 'diya-oil-lamp', 'votive-candle-catholic',
   'daruma-eye-painting', 'mizuhiki', 'milagros', 'phuang-malai',
   'celtic-folk-spring',
   'theravada-water',
@@ -118,6 +123,10 @@ export function isSceneImplemented(id: string): boolean {
 /** Dynamic-import implemented scenes; unknown ids throw. */
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
+    case 'ema-votive-plaque': return import('./ema-votive-plaque')
+    case 'clootie-well-rag': return import('./clootie-well-rag')
+    case 'diya-oil-lamp': return import('./diya-oil-lamp')
+    case 'votive-candle-catholic': return import('./votive-candle-catholic')
     case 'daruma-eye-painting': return import('./daruma-eye-painting')
     case 'mizuhiki': return import('./mizuhiki')
     case 'milagros': return import('./milagros')

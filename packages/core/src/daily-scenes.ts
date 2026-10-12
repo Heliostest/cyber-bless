@@ -11,6 +11,8 @@ export const BLESSING_SCENE_IDS = [
   "tibetan-wheel",
   "celtic-folk-spring",
   "theravada-water",
+  "clootie-well-rag",
+  "diya-oil-lamp",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -24,6 +26,8 @@ export const WISH_SCENE_IDS = [
   "mizuhiki",
   "milagros",
   "phuang-malai",
+  "ema-votive-plaque",
+  "votive-candle-catholic",
 ] as const;
 
 
@@ -34,6 +38,26 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "ema-votive-plaque", title: "木牌记愿", engine: "ema-votive-plaque@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "ema-votive-plaque",
+    narrative: "绘马是日本神社与部分寺院常见的祈愿木牌，既可书写愿望，也可表达感谢。早期献马的习惯逐渐转为木牌图像，今日题材十分多样。这里用原创花叶装饰一块小牌，让你翻面、留字、悬挂，整理此刻心意。本体验为产品改编的致敬练习，不代表正式参拜，也不代替任何神社宣布回应。",
+  },
+  {
+    id: "clootie-well-rag", title: "井边放下", engine: "clootie-well-rag@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "clootie-well-rag",
+    narrative: "Clootie 布条圣井见于苏格兰等地的地方民俗，人们把小布片浸过井水，再系于附近树枝，寄托放下病苦的心意。现实井址需要养护，材料应小而可降解，以纯棉或羊毛为宜。这里借浸布与系枝做一段安静的致敬练习，布条仍留在眼前。本体验为产品改编，不承诺疗效，也不模拟疾病消退。",
+  },
+  {
+    id: "diya-oil-lamp", title: "灯旋一瞥", engine: "diya-oil-lamp@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "diya-oil-lamp",
+    narrative: "Diya 是南亚常见的油灯，陶或金属小盏盛油置芯，见于印度教家庭敬礼，也在排灯节的门槛与窗台连成灯火。点光与旋灯有各自的地方语境。这里以敞口陶盏为灵感，让你点亮一小排，托一盏缓缓绕圈，再放回盘上。本体验为产品改编的致敬练习，不模拟完整普迦，也不以灯数衡量功效。",
+  },
+  {
+    id: "votive-candle-catholic", title: "留一盏烛光", engine: "votive-candle-catholic@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "votive-candle-catholic",
+    narrative: "还愿烛是天主教民间虔诚中的可见记号，点烛可寄托祈求、代祷或感谢，人离开后光仍留在烛架。它从属于宗教生活中的礼仪，不能替代圣事。这里用原创石廊和一支蜡烛，邀请你安放、点亮并留下短意向。本体验为产品改编的致敬练习，不复制特定圣所，也不把烛光说成恩宠或疗效保证。",
+  },
   {
     id: "daruma-eye-painting", title: "达摩点睛", engine: "daruma-eye-painting@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "daruma-eye-painting",

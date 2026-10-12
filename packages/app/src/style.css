@@ -124,6 +124,7 @@
 }
 [data-scene="lantern"],
 [data-scene="daruma-eye-painting"],
+[data-scene="ema-votive-plaque"],
 [data-scene="theravada-water"] {
   --candy: var(--peach);
   --candy-hi: var(--peach-hi);
@@ -141,6 +142,7 @@
   --candy-ring: #b4dcf3;
 }
 [data-scene="slavic-wreath"],
+[data-scene="clootie-well-rag"],
 [data-scene="shinto-torii"] {
   --candy: var(--leaf);
   --candy-hi: var(--leaf-hi);
@@ -150,6 +152,7 @@
 }
 [data-scene="tibetan-wheel"],
 [data-scene="mizuhiki"],
+[data-scene="votive-candle-catholic"],
 [data-scene="celtic-folk-spring"] {
   --candy: var(--mint);
   --candy-hi: var(--mint-hi);

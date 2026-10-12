@@ -7,6 +7,7 @@ const out = path.resolve("artifacts/cozy-scenes", process.argv[2] || "after");
 await mkdir(out, { recursive: true });
 const ids = ["woodfish", "celtic-folk-spring", "theravada-water", "furin-wind-chime",
   "daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai",
+  "ema-votive-plaque", "clootie-well-rag", "diya-oil-lamp", "votive-candle-catholic",
   "shinto-torii", "tibetan-wheel", "tanzaku-tanabata", "crane", "slavic-wreath", "lantern", "yeondeunghoe"];
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });

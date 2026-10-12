@@ -3,6 +3,17 @@ import * as THREE from "three";
 import { createToonSurfaces } from "./toon-surfaces";
 
 describe("official toon material adaptation", () => {
+  it("keeps an explicit metal finish on a painted charm while preserving its source material", () => {
+    const original = new THREE.MeshStandardMaterial({ metalness: 0.55, roughness: 0.35 });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(), original);
+    mesh.userData.toonSurface = { metalness: 0.55, roughness: 0.35 };
+    const scene = new THREE.Scene(); scene.add(mesh);
+    const surfaces = createToonSurfaces("toon-soft"), frame = surfaces.apply(scene);
+    expect((mesh.material as THREE.MeshStandardMaterial).metalness).toBe(0.55);
+    expect((mesh.material as THREE.MeshStandardMaterial).roughness).toBe(0.35);
+    frame.restore(); surfaces.dispose();
+    expect(mesh.material).toBe(original);
+  });
   it("uses simplified painted surfaces only while drawing, without damaging PBR textures", () => {
     const color = new THREE.Texture(), normal = new THREE.Texture(), ao = new THREE.Texture();
     const original = new THREE.MeshStandardMaterial({ map: color, normalMap: normal, aoMap: ao });

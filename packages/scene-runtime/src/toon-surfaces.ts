@@ -6,7 +6,7 @@ import type { RenderStyleId } from "@wbr/content";
  * `outline: false` keeps a surface cel-shaded but out of the ink selection, so large
  * backdrops (ground, walls) do not merge every silhouette into one outlined shape.
  */
-type ToonSurface = { color?: THREE.ColorRepresentation; simplifyMap?: boolean; aoIntensity?: number; outline?: boolean };
+type ToonSurface = { color?: THREE.ColorRepresentation; simplifyMap?: boolean; aoIntensity?: number; outline?: boolean; metalness?: number; roughness?: number };
 type Lit = THREE.MeshStandardMaterial | THREE.MeshPhongMaterial | THREE.MeshLambertMaterial;
 type Painted = THREE.MeshToonMaterial | THREE.MeshStandardMaterial;
 type Adapted = [source: Lit, toon: Painted, keepColor: boolean];
@@ -55,7 +55,7 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
     // Soft village materials keep continuous volume, diffuse sky reflection and
     // contact shadows. The optional ink preset still uses the original cel bands.
     const toon = style === "toon-soft"
-      ? new THREE.MeshStandardMaterial({ ...painted, roughness: 0.94, metalness: 0, envMapIntensity: 0.45 })
+      ? new THREE.MeshStandardMaterial({ ...painted, roughness: hint.roughness ?? 0.94, metalness: hint.metalness ?? 0, envMapIntensity: 0.45 })
       : new THREE.MeshToonMaterial({ ...painted, gradientMap: gradient });
     toon.name = `${source.name || "surface"} / ${style}`;
     owned.push(toon);

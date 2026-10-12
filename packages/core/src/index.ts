@@ -86,6 +86,8 @@ export type VesselDraft = { line: string; at: string };
 export type SceneRecord = {
   id: string; title: string; engine: string; revision: string; manifestUrl: string;
   progress: number; favorite: boolean; lastOpened: string;
+  /** A durable cosmetic/object choice, independent of the integer progress. */
+  variant?: string;
 };
 export type State = {
   sceneRecords: SceneRecord[];
@@ -104,6 +106,7 @@ export type Action =
   | { type: "scene.visit"; entry: Pick<SceneRecord, "id" | "title" | "engine" | "revision" | "manifestUrl">; at: string }
   | { type: "scene.progress"; id: string; progress: number }
   | { type: "scene.favorite"; id: string; favorite: boolean }
+  | { type: "scene.variant"; id: string; variant: string }
   | {
       type: "wish.create";
       id: string;
@@ -215,6 +218,7 @@ export function reduce(s: State, a: Action): State {
       // A saved interaction belongs to an engine contract, not a visual revision.
       if (old && old.engine !== a.entry.engine) throw Error("此场景的玩法版本已变化，请从历史记录打开原版本");
       const record = { ...a.entry, progress: old?.progress ?? 0, favorite: old?.favorite ?? false, lastOpened: a.at };
+      if (old?.variant !== undefined) Object.assign(record, { variant: old.variant });
       if (!sceneRecord(record)) throw Error("场景记录无效");
       return { ...s, sceneRecords: [record, ...s.sceneRecords.filter(r => r.id !== a.entry.id)] };
     }
@@ -223,6 +227,9 @@ export function reduce(s: State, a: Action): State {
       return { ...s, sceneRecords: s.sceneRecords.map(r => r.id === a.id ? { ...r, progress: a.progress } : r) };
     case "scene.favorite":
       return { ...s, sceneRecords: s.sceneRecords.map(r => r.id === a.id ? { ...r, favorite: a.favorite } : r) };
+    case "scene.variant":
+      if (!sceneVariant(a.variant)) throw Error("场景选项无效");
+      return { ...s, sceneRecords: s.sceneRecords.map(r => r.id === a.id ? { ...r, variant: a.variant } : r) };
     case "wish.create":
       if (s.wishes.some((w) => w.id === a.id)) return s;
       if (a.intention.length > WISH_INTENTION_MAX)
@@ -561,7 +568,8 @@ const session = (v: unknown) =>
   Number(v.progress) <= rituals[v.ritual].steps &&
   date(v.startedAt) &&
   optionalId(v.wishId);
-const sceneRecord = (v: unknown) => obj(v) && id(v.id) && str(v.title) && v.title.length <= 100 && id(v.engine) && id(v.revision) && str(v.manifestUrl) && v.manifestUrl.length <= 2048 && Number.isSafeInteger(v.progress) && Number(v.progress) >= 0 && Number(v.progress) <= 1000000 && typeof v.favorite === "boolean" && date(v.lastOpened);
+const sceneVariant = (v: unknown) => typeof v === "string" && /^[a-z0-9-]{1,32}$/.test(v);
+const sceneRecord = (v: unknown) => obj(v) && id(v.id) && str(v.title) && v.title.length <= 100 && id(v.engine) && id(v.revision) && str(v.manifestUrl) && v.manifestUrl.length <= 2048 && Number.isSafeInteger(v.progress) && Number(v.progress) >= 0 && Number(v.progress) <= 1000000 && typeof v.favorite === "boolean" && date(v.lastOpened) && (v.variant === undefined || sceneVariant(v.variant));
 /** Restores a save; without one yet, starts fresh with `initialSettings`. */
 export function restore(
   raw: string | null,

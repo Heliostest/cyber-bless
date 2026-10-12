@@ -9,6 +9,22 @@ const entry = {
   manifestUrl: "https://cdn.test/spring-v1.json",
 };
 describe("durable scene records", () => {
+  it("keeps a selected object variant across progress, restore and reopening", () => {
+    let state = reduce(createState(), { type: "scene.visit", entry, at: "2026-10-12T00:00:00Z" });
+    state = reduce(state, { type: "scene.variant", id: entry.id, variant: "hand" });
+    state = reduce(state, { type: "scene.progress", id: entry.id, progress: 2 });
+    state = restore(JSON.stringify(state));
+    state = reduce(state, { type: "scene.visit", entry, at: "2026-10-13T00:00:00Z" });
+    expect(state.sceneRecords[0]).toMatchObject({ progress: 2, variant: "hand" });
+    expect(state.wishes).toHaveLength(0);
+  });
+  it("rejects invalid variants while accepting older records without one", () => {
+    const state = reduce(createState(), { type: "scene.visit", entry, at: "2026-10-12T00:00:00Z" });
+    expect(restore(JSON.stringify(state)).sceneRecords[0].variant).toBeUndefined();
+    expect(() => reduce(state, { type: "scene.variant", id: entry.id, variant: "../bad" })).toThrow();
+    state.sceneRecords[0].variant = "../bad";
+    expect(() => restore(JSON.stringify(state))).toThrow();
+  });
   it("preserves progress and favorites across repeat opens and a save restore", () => {
     let state = reduce(createState(), {
       type: "scene.visit",

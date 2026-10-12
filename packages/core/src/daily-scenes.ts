@@ -20,6 +20,10 @@ export const WISH_SCENE_IDS = [
   "crane",
   "lantern",
   "slavic-wreath",
+  "daruma-eye-painting",
+  "mizuhiki",
+  "milagros",
+  "phuang-malai",
 ] as const;
 
 
@@ -30,6 +34,26 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "daruma-eye-painting", title: "达摩点睛", engine: "daruma-eye-painting@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "daruma-eye-painting",
+    narrative: "达摩是不倒翁形的日本民俗祈愿工艺摆偶。常见习惯是先点上一目立愿，事成后再补另一目；左右顺序的说法会因地区与观看视角而异。这里借点睛与轻摆，给一个目标留出位置。本体验为产品改编的练习，不代表宗教加持，也不催促心愿实现。",
+  },
+  {
+    id: "mizuhiki", title: "水引结愿", engine: "mizuhiki@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "mizuhiki",
+    narrative: "水引是日本礼赠文化中的装饰纸绳工艺，细绳由和纸捻成，常用于礼金袋、礼盒和工艺结饰。配色与结形因赠答场合而异。这里将绕环、穿结与收紧改编为一段短手作练习，让一句祝愿落在礼笺上。本体验不作为完整工艺或礼法教程。",
+  },
+  {
+    id: "milagros", title: "留一枚感谢", engine: "milagros@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "milagros",
+    narrative: "Milagros 是拉丁美洲民间虔诚中常见的金属还愿小符，尤其见于墨西哥，可用于祈求与谢恩。形象的解释具有地方差异，并无统一的图解字典。这里以原创小符和木架承接一句心意，是产品改编的致敬练习，不复制特定圣地，也不承诺任何功效。",
+  },
+  {
+    id: "phuang-malai", title: "串花寄意", engine: "phuang-malai@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "phuang-malai",
+    narrative: "Phuang malai 是泰国鲜花串环，常以茉莉等花材组成环体与花穗，见于欢迎、感谢和礼敬的场合。这里以几簇奶油白花苞为灵感，让你逐段串成一环，再留下想说的话。本体验为产品改编的手作练习，聚焦心意，不模拟完整礼仪。",
+  },
   {
     id: "woodfish",
     title: "敲一敲木鱼",
@@ -139,7 +163,9 @@ export const builtInScenes: BuiltInSceneEntry[] = [
 ];
 
 export function dailyPrimaryScene<T extends { id: string }>(entries: readonly T[], day: string): T | undefined {
-  const order = BLESSING_SCENE_IDS.flatMap((id, i) => i < WISH_SCENE_IDS.length ? [id, WISH_SCENE_IDS[i]] : [id]);
+  const order = Array.from({ length: Math.max(BLESSING_SCENE_IDS.length, WISH_SCENE_IDS.length) }, (_, i) =>
+    [BLESSING_SCENE_IDS[i], WISH_SCENE_IDS[i]].filter((id): id is typeof BLESSING_SCENE_IDS[number] | typeof WISH_SCENE_IDS[number] => Boolean(id)),
+  ).flat();
   const pool = order.map(id => entries.find(e => e.id === id)).filter((e): e is T => !!e);
   const n = Array.from(day).reduce((sum, char) => sum + char.charCodeAt(0), 0);
   return pool[n % Math.max(pool.length, 1)];

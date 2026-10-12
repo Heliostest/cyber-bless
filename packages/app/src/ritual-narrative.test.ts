@@ -38,11 +38,15 @@ describe("RitualNarrativeBlurb", () => {
 });
 
 describe("builtInScenes narratives", () => {
-  it("covers the approved micro-rituals and the five new scenes", () => {
+  it("covers the placed practices and craft scenes", () => {
     expect(withNarrative.map((e) => e.id).sort()).toEqual([
       "crane",
+      "daruma-eye-painting",
       "furin-wind-chime",
       "lantern",
+      "milagros",
+      "mizuhiki",
+      "phuang-malai",
       "shinto-torii",
       "slavic-wreath",
       "tanzaku-tanabata",

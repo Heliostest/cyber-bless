@@ -144,3 +144,15 @@ it("tells the scene which stage the App paints behind its canvas", async () => {
   expect(fixture.context.stage).toBe("night");
   controller.dispose();
 });
+
+it("passes an explicit returning visit to the scene without creating a second wish", async () => {
+  vi.stubGlobal("requestAnimationFrame", () => 1);
+  vi.stubGlobal("cancelAnimationFrame", () => {});
+  const engine = await proceduralEngine("daruma-eye-painting");
+  const controller = engine.create(document.createElement("div"),
+    { progress: 0, sceneId: "daruma-eye-painting", checkpoint: () => {}, returning: true },
+    { active: true, reducedMotion: false, signal: new AbortController().signal, ready() {}, failed() {} });
+  expect(fixture.context.returning).toBe(true);
+  expect(fixture.context.saveWish).toBeUndefined();
+  controller.dispose();
+});

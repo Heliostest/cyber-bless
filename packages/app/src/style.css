@@ -114,7 +114,8 @@
   --candy-tint: var(--butter-tint);
   --candy-ring: #f2d98a;
 }
-[data-scene="crane"] {
+[data-scene="crane"],
+[data-scene="phuang-malai"] {
   --candy: var(--bubblegum);
   --candy-hi: var(--bubblegum-hi);
   --candy-ledge: var(--bubblegum-ledge);
@@ -122,6 +123,7 @@
   --candy-ring: #f7bfce;
 }
 [data-scene="lantern"],
+[data-scene="daruma-eye-painting"],
 [data-scene="theravada-water"] {
   --candy: var(--peach);
   --candy-hi: var(--peach-hi);
@@ -130,6 +132,7 @@
   --candy-ring: #f6c7b2;
 }
 [data-scene="tanzaku-tanabata"],
+[data-scene="milagros"],
 [data-scene="furin-wind-chime"] {
   --candy: var(--sky);
   --candy-hi: var(--sky-hi);
@@ -146,6 +149,7 @@
   --candy-ring: #bfe3ad;
 }
 [data-scene="tibetan-wheel"],
+[data-scene="mizuhiki"],
 [data-scene="celtic-folk-spring"] {
   --candy: var(--mint);
   --candy-hi: var(--mint-hi);
@@ -3817,6 +3821,27 @@ button:hover:not(:disabled) {
   width: auto;
   margin-top: 8px;
   transform: none;
+}
+.scene-craft-choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+.scene-craft-choices button {
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 2px solid var(--rim);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-weight: 800;
+  box-shadow: 0 0 0 1.5px var(--edge), 0 3px 0 #cbb99b;
+}
+.scene-craft-choices button[aria-pressed="true"] {
+  background: var(--candy-tint);
+  box-shadow: 0 0 0 2px var(--candy-ring), 0 3px 0 var(--candy-ledge);
 }
 .library-scene-stage .scene-step-dots {
   grid-area: dots;

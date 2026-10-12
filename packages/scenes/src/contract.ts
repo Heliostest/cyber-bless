@@ -18,6 +18,10 @@ export type SceneContext = {
    * hosts without wishes leave it out, and the box then says nothing is kept.
    */
   saveWish?(text: string): void
+  /** Explicit host-validated 还愿 visit; e.g. Daruma paints its second eye. */
+  returning?: boolean
+  initialVariant?: string
+  onVariantChange?(variant: string): void
   /**
    * The ground the host paints behind the transparent canvas. On 'night' (the
    * App's navy sky with a moon) a scene lights for the night; absent is day.

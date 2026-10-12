@@ -10,6 +10,7 @@ describe('sceneRegistry', () => {
 
   it('lists the pilot metas, the C-grade Design A scenes, then the product-original scenes', () => {
     expect(sceneRegistry.map((m) => m.id)).toEqual([
+      'daruma-eye-painting', 'mizuhiki', 'milagros', 'phuang-malai',
       'celtic-folk-spring',
       'shinto-torii',
       'theravada-water',
@@ -92,6 +93,10 @@ describe('loadScene', () => {
   })
 
   it.each([
+    ['daruma-eye-painting', '达摩点睛', 'daruma-eye-painting'],
+    ['mizuhiki', '水引结愿', 'mizuhiki'],
+    ['milagros', '留一枚感谢', 'milagros'],
+    ['phuang-malai', '串花寄意', 'phuang-malai'],
     ['tanzaku-tanabata', '短册系竹', 'shinto'],
     ['yeondeunghoe', '燃灯上浮', 'won-buddhism'],
     ['furin-wind-chime', '风铃一响', 'shinto'],

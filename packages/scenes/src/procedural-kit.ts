@@ -72,8 +72,8 @@ export function createStepOverlay(
   return { hitLayer, titleEl, dotsEl, hintEl, actionBtn, renderDots }
 }
 
-/** Default look for the C-grade scenes: anime 三渲二 (cel bands + ink outlines). */
-export const CEL_STYLE = 'toon-ink' as const
+/** Soft, painted village look: rounded volume and restrained contours. */
+export const CEL_STYLE = 'toon-soft' as const
 
 /**
  * Renderer + scene for the warm palette. Like the woodfish, the canvas clears

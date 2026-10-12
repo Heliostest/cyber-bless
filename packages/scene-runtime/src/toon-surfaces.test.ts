@@ -11,8 +11,10 @@ describe("official toon material adaptation", () => {
     const scene = new THREE.Scene(); scene.add(mesh);
     const surfaces = createToonSurfaces("toon-soft");
     const frame = surfaces.apply(scene);
-    const toon = mesh.material as unknown as THREE.MeshToonMaterial;
-    expect(toon.isMeshToonMaterial).toBe(true);
+    const toon = mesh.material as unknown as THREE.MeshStandardMaterial;
+    expect(toon.isMeshStandardMaterial).toBe(true);
+    expect(toon.roughness).toBeGreaterThan(0.8);
+    expect(toon.metalness).toBe(0);
     expect(toon.color.getHex()).toBe(0xb98655);
     expect(toon.map).toBeNull();
     expect(toon.normalMap).toBeNull();

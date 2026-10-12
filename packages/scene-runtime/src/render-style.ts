@@ -3,7 +3,7 @@ import { BlendFunction, EffectComposer, EffectPass, OutlineEffect, RenderPass, T
 import type { RenderStyleId } from "@wbr/content";
 import { createToonSurfaces } from "./toon-surfaces";
 
-/** Three.js MeshToonMaterial + pmndrs outlines. No application-authored GLSL. */
+/** Official matte/Toon materials + restrained pmndrs contours; no application-authored GLSL. */
 export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera) {
   let active: RenderStyleId = "original";
   let composer: EffectComposer | undefined;
@@ -36,7 +36,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
       blendFunction: BlendFunction.ALPHA,
       visibleEdgeColor: 0x584235,
       hiddenEdgeColor: 0x584235,
-      edgeStrength: active === "toon-ink" ? 1.8 : 0.65,
+      edgeStrength: active === "toon-ink" ? 1.8 : 0.18,
       resolutionScale: 1,
       xRay: false,
       multisampling: 2,

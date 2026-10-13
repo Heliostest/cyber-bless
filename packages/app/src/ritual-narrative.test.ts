@@ -41,13 +41,17 @@ describe("builtInScenes narratives", () => {
   it("covers the placed practices and craft scenes", () => {
     expect(withNarrative.map((e) => e.id).sort()).toEqual([
       "bokjori",
+      "chinese-incense",
       "clootie-well-rag",
       "crane",
+      "czech-pilgrim-journal",
       "daruma-eye-painting",
       "diya-oil-lamp",
       "ema-votive-plaque",
       "floating-lantern-loy-krathong",
       "furin-wind-chime",
+      "hongsheng-red-string",
+      "italian-ex-voto",
       "lantern",
       "milagros",
       "mizuhiki",

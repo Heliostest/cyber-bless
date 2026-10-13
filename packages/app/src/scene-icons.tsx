@@ -42,6 +42,40 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'chinese-incense': (
+    <>
+      <Cord d="M22 27V8m6 19V5" color="#b47f54" width={2}/>
+      <path d="M22 6q-6-3 0-5m6 1q5-3 0-5" fill="none" stroke="#b8b6a0" strokeWidth={1.7}/>
+      <Part d="M8 25h32c0 18-32 18-32 0Z" fill="#9db6ad"/>
+      <path d="M12 36v7m24-7v7m-12-5v6" stroke={INK} strokeWidth={3}/>
+      <path d="M12 26h24" stroke="#f6e3bd" strokeWidth={3}/>
+    </>
+  ),
+  'hongsheng-red-string': (
+    <>
+      <Part d="M18 5h12v29H18Z" fill="#d5b58d"/>
+      <Part d="M8 36h32v6H8Z" fill="#d5b58d"/>
+      <Cord d="M10 24c0-18 28-18 28 0S10 42 10 24Z" color="#c77872" width={3}/>
+      <Part d="M21 32h6v6h-6Z" fill="#e4c487"/>
+    </>
+  ),
+  'italian-ex-voto': (
+    <>
+      <Cord d="m12 44 9-38m6 0 9 38" color="#b89571" width={3}/>
+      <Part d="M7 10h34v28H7Z" fill="#f4dfb6"/>
+      <path d="M13 31q8-11 14-5t9-5" stroke="#a6bba6" strokeWidth={4} fill="none"/>
+      <Part d="M25 15h10v12H25Z" fill="#ebbd77"/>
+      <path d="M30 15v12m-5-6h10" stroke={INK} strokeWidth={1.5}/>
+    </>
+  ),
+  'czech-pilgrim-journal': (
+    <>
+      <Part d="M3 12q11-5 21 0 10-5 21 0v28q-11-4-21 0-10-4-21 0Z" fill="#78978a"/>
+      <Part d="M6 9q9-3 18 1 9-4 18-1v27q-9-3-18 1-9-4-18-1Z" fill="#f4e3bd"/>
+      <path d="M24 10v27m-14-8 5-8 5 7m9-10 4 4-4 8" fill="none" stroke="#92ab91" strokeWidth={2}/>
+      <path d="M36 10v30l-3-3-3 2V11" fill="#ce8e7c"/>
+    </>
+  ),
   omikuji: (
     <>
       <Part d="m9 15 10-5 10 5v26l-10 4-10-4Z" fill="#cead7c"><path d="m19 11 10 4v26l-10 4Z" fill="#b99567"/></Part>

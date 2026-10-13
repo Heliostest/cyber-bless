@@ -4,6 +4,8 @@ import { createCozyEnvironment } from "./cozy-environment";
 
 describe("a scene's surrounding world", () => {
   it.each([
+    ["chinese-incense", "courtyard"], ["hongsheng-red-string", "veranda"],
+    ["italian-ex-voto", "veranda"], ["czech-pilgrim-journal", "garden"],
     ["omikuji", "courtyard"], ["polish-blessing-basket", "veranda"],
     ["navruz-sumalak", "courtyard"], ["floating-lantern-loy-krathong", "river"],
   ])("grounds %s in its local environment and releases its sky", async (id, kind) => {

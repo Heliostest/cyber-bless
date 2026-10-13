@@ -10,6 +10,7 @@ describe('sceneRegistry', () => {
 
   it('lists the pilot metas, the C-grade Design A scenes, then the product-original scenes', () => {
     expect(sceneRegistry.map((m) => m.id)).toEqual([
+      'chinese-incense', 'hongsheng-red-string', 'italian-ex-voto', 'czech-pilgrim-journal',
       'omikuji', 'polish-blessing-basket', 'navruz-sumalak', 'floating-lantern-loy-krathong',
       'omamori-cycle', 'shrine-suzu-bell', 'st-brigids-cross', 'bokjori',
       'ema-votive-plaque', 'clootie-well-rag', 'diya-oil-lamp', 'votive-candle-catholic',
@@ -96,6 +97,10 @@ describe('loadScene', () => {
   })
 
   it.each([
+    ['chinese-incense', '炉前一炷', 'chinese-folk-and-confucian'],
+    ['hongsheng-red-string', '红绳自持', 'hongsheng-red-string'],
+    ['italian-ex-voto', '绘牌记谢', 'italian-ex-voto'],
+    ['czech-pilgrim-journal', '旅途一页', 'czech-moravian-folk'],
     ['omikuji', '签纸慢读', 'omikuji'],
     ['polish-blessing-basket', '一篮春食', 'polish-folk-catholic'],
     ['navruz-sumalak', '春锅共煮', 'uzbek-folk'],

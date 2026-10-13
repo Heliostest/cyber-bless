@@ -3,14 +3,17 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import assert from 'node:assert/strict'
 const base=process.env.WBR_URL||'http://127.0.0.1:5178/'
-const batch=process.env.WBR_BATCH||'seasonal'
-const out=path.resolve(`artifacts/${batch==='previous'?'next':'seasonal'}-four-scenes/browser`);await mkdir(out,{recursive:true})
-const allIds=batch==='previous'?['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori']:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong']
-const wishIds=['omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong']
+const batch=process.env.WBR_BATCH||'keepsake'
+const batches={previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
+assert.ok(batches[batch],`Unknown batch: ${batch}`)
+const out=path.resolve(`artifacts/${batch==='previous'?'next':batch}-four-scenes/browser`);await mkdir(out,{recursive:true})
+const allIds=batches[batch]
+const wishIds=['omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto']
 const ids=process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds,key='cyber-bless:personal:v1'
+const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const empty={version:1,sceneRecords:[],wishes:[],activeSession:null,sessions:[],collectibles:[],ledger:[],settings:{sound:false,haptics:false,reducedMotion:true}}
 const browser=await chromium.launch({headless:true}),results=[],errors=[],external=[]
-let captures=0
+let captures=0,keyboardActions=0
 async function pageAt(width=390,state=empty){
   const page=await browser.newPage({viewport:{width,height:width>500?900:844}});page.setDefaultTimeout(20000)
   page.on('pageerror',e=>errors.push(e.message))
@@ -38,11 +41,17 @@ async function shot(page,id,phase){
     return {text:el.textContent,inside:r.left>=box.left&&r.right<=box.right+1&&r.top>=box.top&&r.bottom<=box.bottom+1}
   }))
   for(const label of labels)assert.equal(label.inside,true,`${id}: ${label.text} outside canvas`)
+  if(id==='hongsheng-red-string')assert.equal(await page.evaluate(()=>{
+    const cards=document.querySelector('.red-string-context-layers').getBoundingClientRect()
+    return [...document.querySelectorAll('.scene-object-cue:not([hidden]):not([data-compact="true"]) .scene-object-cue-label')].some(el=>{
+      const r=el.getBoundingClientRect();return r.left<cards.right&&r.right>cards.left&&r.top<cards.bottom&&r.bottom>cards.top
+    })
+  }),false,'red-string cue obscures its cultural context')
 }
-async function action(page,count=1){for(let i=0;i<count;i++){const button=page.locator('.scene-bow-tap');await button.focus();await button.press('Enter');await page.waitForTimeout(100)}}
+async function action(page,count=1){for(let i=0;i<count;i++){const button=page.locator('.scene-bow-tap');await button.focus();await button.press(keyboardActions++%2?'Space':'Enter');await page.waitForTimeout(100)}}
 async function write(page,text){const input=page.locator('.scene-wish-slot input');await input.fill(text);await input.press('Enter')}
 async function reopen(page,id,n){await page.getByRole('button',{name:'返回',exact:true}).click();await open(page,id);assert.equal((await saved(page)).sceneRecords.find(r=>r.id===id).progress,n)}
-for(const width of process.env.WBR_RETURN_ONLY?[]:[390,320,1280])for(const id of ids){
+for(const width of process.env.WBR_RETURN_ONLY||process.env.WBR_PHYSICAL_ONLY?[]:widths)for(const id of ids){
   const page=await pageAt(width);await catalog(page);await open(page,id);await shot(page,id,`${width}-0`)
   await action(page,id==='st-brigids-cross'?4:1);await progress(page,id,1);if(width===390)await reopen(page,id,1)
   await shot(page,id,`${width}-1`);await action(page);await progress(page,id,2)
@@ -52,10 +61,15 @@ for(const width of process.env.WBR_RETURN_ONLY?[]:[390,320,1280])for(const id of
   await progress(page,id,3);await shot(page,id,`${width}-3`)
   const state=await saved(page);assert.equal(state.wishes.length,wishIds.includes(id)?1:0)
   assert.equal(await page.locator('[data-cue-role="source"]').count(),0)
+  // The catalog intentionally starts a fresh visit after completion; mounting it must not save again.
+  if(width===390){await reopen(page,id,0);assert.equal((await saved(page)).wishes.length,state.wishes.length);assert.equal((await saved(page)).collectibles.length,state.collectibles.length)}
   results.push({id,width,checkpoints:3,wishes:state.wishes.length});console.log(`${id} ${width}px: keyboard/restore/cues passed`);await page.close()
 }
 async function point(page,role='source',index=0){
   await page.locator('canvas').scrollIntoViewIfNeeded()
+  // A cancelled gesture resets meshes immediately; the host projects cues on its next render.
+  // Sample after that frame, including any ResizeObserver work caused by full-page capture.
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
   const cue=page.locator(`[data-cue-role="${role}"]:not([hidden])`).nth(index)
   await cue.locator('.scene-object-cue-ring').waitFor()
   return cue.evaluate(el=>{const r=el.parentElement.getBoundingClientRect();return[r.left+Number(el.dataset.x),r.top+Number(el.dataset.y)]})
@@ -65,18 +79,19 @@ async function drag(page){
   const from=await point(page),to=await point(page,'target');await page.mouse.move(...from);await page.mouse.down()
   await page.mouse.move(...to,{steps:18});await page.mouse.up();await page.waitForTimeout(150)
 }
-async function arc(page){
+async function arc(page,segments=8){
   await page.mouse.move(...await point(page));await page.mouse.down()
-  for(let i=0;i<8;i++){await page.mouse.move(...await point(page,'target'),{steps:8});await page.waitForTimeout(80)}
+  for(let i=0;i<segments;i++){await page.mouse.move(...await point(page,'target'),{steps:8});await page.waitForTimeout(80)}
   await page.mouse.up();await page.waitForTimeout(150)
 }
 async function physical(page,id,step){
   if(id==='navruz-sumalak'&&step===0)await arc(page)
+  else if(id==='hongsheng-red-string'&&step===0)await arc(page,12)
   else if((id==='omamori-cycle'&&step===0)||(id==='shrine-suzu-bell'&&step>0)||
     (id==='floating-lantern-loy-krathong'&&step===1)||(step===2&&!['omikuji','navruz-sumalak','floating-lantern-loy-krathong'].includes(id)))await tap(page)
   else for(let i=0;i<(id==='st-brigids-cross'&&step===0?4:1);i++)await drag(page)
 }
-for(const width of process.env.WBR_RETURN_ONLY?[]:[390,320,1280])for(const id of ids){
+for(const width of process.env.WBR_RETURN_ONLY?[]:widths)for(const id of ids){
   const page=await pageAt(width);await catalog(page);await open(page,id)
   const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,box.y+3]
   await page.mouse.move(...wrong);await page.mouse.down();await page.mouse.move(...from);await page.mouse.up()
@@ -90,7 +105,7 @@ for(const width of process.env.WBR_RETURN_ONLY?[]:[390,320,1280])for(const id of
   assert.equal((await saved(page)).wishes.length,0,'quiet physical finish saved an unsubmitted wish')
   results.push({id,width,directCueFlow:'passed',invalidGestures:'passed'});console.log(`${id} ${width}px: real displayed-object flow passed`);await page.close()
 }
-for(const id of ids.filter(id=>wishIds.includes(id))){
+for(const id of process.env.WBR_PHYSICAL_ONLY?[]:ids.filter(id=>wishIds.includes(id))){
   const at='2026-10-11T08:00:00.000Z',state={...empty,
     wishes:[{id:'return-wish',title:'走完一段路',intention:'从容向前',status:'realized',archived:false,createdAt:at,realizedAt:at,returnMethod:'ritual',sourceSceneId:id,notes:[]}],
     collectibles:[{id:'return-vessel',kind:'scene',sceneId:id,title:'心意小物',wishScene:true,at}]}

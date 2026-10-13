@@ -9,6 +9,8 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'fijian-woven-fan', title: '叶扇纳凉', traditionSlug: 'fijian-vanua', grade: 'C', sensitivity: '中', gestures: ['drag'] },
+  { id: 'amazigh-woven-rug', title: '织毯寄暖', traditionSlug: 'amazigh-berber', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
   { id: 'slovak-wire-bird', title: '铁线栖鸟', traditionSlug: 'slovak-folk', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'hungarian-embroidery-hoop', title: '花绣寄语', traditionSlug: 'hungarian-folk', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'andalusian-ceramic-tile', title: '釉彩映晴', traditionSlug: 'andalusian-folk', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
@@ -134,6 +136,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'fijian-woven-fan', 'amazigh-woven-rug',
   'slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart',
   'bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon',
   'barcelos-clay-rooster', 'finnish-birch-basket', 'croatian-licitar-heart', 'catalan-festival-giant',
@@ -164,6 +167,8 @@ export function isSceneImplemented(id: string): boolean {
 /** Dynamic-import implemented scenes; unknown ids throw. */
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
+    case 'fijian-woven-fan': return import('./fijian-woven-fan')
+    case 'amazigh-woven-rug': return import('./amazigh-woven-rug')
     case 'slovak-wire-bird': return import('./slovak-wire-bird')
     case 'hungarian-embroidery-hoop': return import('./hungarian-embroidery-hoop')
     case 'andalusian-ceramic-tile': return import('./andalusian-ceramic-tile')

@@ -47,6 +47,8 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['fijian-woven-fan', 0, 'fan-binding-grip', 'fan-neck-joint'],
+  ['amazigh-woven-rug', 0, 'rug-shuttle-grip', 'rug-weft-gap'],
   ['slovak-wire-bird', 0, 'wire-wing-grip', 'wire-shoulder-joint'],
   ['hungarian-embroidery-hoop', 0, 'hoop-spool-cap', 'hoop-linen', [.25, .017, .22]],
   ['andalusian-ceramic-tile', 0, 'tile-loose-grip', 'tile-empty-seat'],

@@ -41,6 +41,7 @@ describe("builtInScenes narratives", () => {
   it("covers the placed practices and craft scenes", () => {
     expect(withNarrative.map((e) => e.id).sort()).toEqual([
       "aland-votive-ship",
+      "amazigh-woven-rug",
       "andalusian-ceramic-tile",
       "bai-indigo-cloth",
       "barcelos-clay-rooster",
@@ -58,6 +59,7 @@ describe("builtInScenes narratives", () => {
       "daruma-eye-painting",
       "diya-oil-lamp",
       "ema-votive-plaque",
+      "fijian-woven-fan",
       "finnish-birch-basket",
       "floating-lantern-loy-krathong",
       "furin-wind-chime",

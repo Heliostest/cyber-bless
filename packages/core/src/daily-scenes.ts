@@ -28,7 +28,7 @@ export const BLESSING_SCENE_IDS = [
   "catalan-festival-giant",
   "ndebele-painted-house",
   "purepecha-copper-bowl",
-  "slovak-wire-bird", "sicilian-painted-cart",
+  "slovak-wire-bird", "sicilian-painted-cart", "fijian-woven-fan",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -57,7 +57,7 @@ export const WISH_SCENE_IDS = [
   "croatian-licitar-heart",
   "bai-indigo-cloth",
   "welsh-love-spoon",
-  "hungarian-embroidery-hoop", "andalusian-ceramic-tile",
+  "hungarian-embroidery-hoop", "andalusian-ceramic-tile", "amazigh-woven-rug",
 ] as const;
 
 
@@ -68,6 +68,16 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "fijian-woven-fan", title: "叶扇纳凉", engine: "fijian-woven-fan@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "fijian-vanua",
+    narrative: "斐济的编叶扇以露兜树叶材、骨架与木柄组成，交织和绑接显露日常手作对材料的认识，博物馆收藏保留着不同年代的制作经验。这里用原创叶扇，把收拢绑带、安放与静看改编为欣赏手工的练习。不复制具体馆藏纹样，不把编扇等同于迎宾仪式，也不承诺祈愿功效。",
+  },
+  {
+    id: "amazigh-woven-rug", title: "织毯寄暖", engine: "amazigh-woven-rug@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "amazigh-berber",
+    narrative: "摩洛哥阿马齐格羊毛织物在家庭与作坊中延续，地域材料和染色经验形成各具特点的配色，织毯记录着代际手作知识。这里用原创条纹与几何色块，把补齐织边、悬放与静看改编为寄托关怀的练习。不复制具体织品，不把图案解释为统一的护佑暗语，也不模拟圣陵或求雨仪式。",
+  },
   {
     id: "slovak-wire-bird", title: "铁线栖鸟", engine: "slovak-wire-bird@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "slovak-folk",

@@ -10,6 +10,7 @@ describe('sceneRegistry', () => {
 
   it('lists the pilot metas, the C-grade Design A scenes, then the product-original scenes', () => {
     expect(sceneRegistry.map((m) => m.id)).toEqual([
+      'fijian-woven-fan', 'amazigh-woven-rug',
       'slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart',
       'bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon',
       'barcelos-clay-rooster', 'finnish-birch-basket', 'croatian-licitar-heart', 'catalan-festival-giant',
@@ -102,6 +103,8 @@ describe('loadScene', () => {
   })
 
   it.each([
+    ['fijian-woven-fan', '叶扇纳凉', 'fijian-vanua'],
+    ['amazigh-woven-rug', '织毯寄暖', 'amazigh-berber'],
     ['slovak-wire-bird', '铁线栖鸟', 'slovak-folk'],
     ['hungarian-embroidery-hoop', '花绣寄语', 'hungarian-folk'],
     ['andalusian-ceramic-tile', '釉彩映晴', 'andalusian-folk'],

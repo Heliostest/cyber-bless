@@ -42,6 +42,19 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'fijian-woven-fan': (<>
+    <Part d="M21 29h6l-1 16h-4Z" fill="#ad8751"/>
+    <Part d="M24 3C19 9 5 11 7 22c1 9 10 12 17 11 7 1 16-2 17-11C43 11 29 9 24 3Z" fill="#d9bd7f"/>
+    <path d="m12 15 22 13M10 22l18 10M18 9l20 12M36 15 14 28m24-6L20 32M30 9 10 21" fill="none" stroke="#ad8751" strokeWidth={1}/>
+    <Cord d="M21 33h6m-6 3h6" color="#788b63" width={1.5}/>
+  </>),
+  'amazigh-woven-rug': (<>
+    <Part d="M9 7h30v33H9Z" fill="#e6d9bd"/>
+    <path d="M10 12h28v4H10Zm0 20h28v4H10Z" fill="#a95f4c"/>
+    <path d="m24 19 6 5-6 5-6-5Z" fill="#b78343"/>
+    <path d="M11 18h6v3h-6m26-3h-6v3h6M11 27h6v3h-6m26-3h-6v3h6" fill="#566e83"/>
+    <path d="M12 3v4m6-4v4m6-4v4m6-4v4m6-4v4M12 40v5m6-5v5m6-5v5m6-5v5m6-5v5" stroke="#ad8751" strokeWidth={2}/>
+  </>),
   'slovak-wire-bird': (<>
     <Cord d="M7 27 3 16l12 7c1-12 13-17 20-10l9 4-8 3c-1 16-19 22-29 7Z" color="#79746b" width={1.5}/>
     <Cord d="M14 25c6-14 20-4 11 5-7 7-16 1-11-5ZM20 35v7m8-9v9" color="#b68d61" width={1.5}/>

@@ -131,10 +131,16 @@ export function createPurepechaCopperBowl(ctx: SceneContext): SceneInstance {
     setSafeText(ui.actionBtn, checkpoint === 0 ? '轻拭铜碗' : checkpoint === 1 ? '移到软毡托座' : '轻点铜碗静看', safe)
     setSafeText(ui.hintEl, transition ? COPY.moving : checkpoint === 0 ? COPY.polish : checkpoint === 1 ? COPY.place : checkpoint === 2 ? COPY.rest : COPY.done, safe)
   }
-  function settle() { if (!active() || !transition) return; checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore(); sync(); ctx.onProgress?.(checkpoint); feedback.impact() }
+  function settle() { if (!active() || !transition) return; checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore(); sync(); ctx.onProgress?.(checkpoint); if (!active()) return; feedback.impact() }
   function advance() {
     if (!active() || pointer.isBusy() || transition || checkpoint === 3) return
-    if (checkpoint === 2) { checkpoint = 3; restore(); sync(); ctx.onProgress?.(3); feedback.impact(); overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })); return }
+    if (checkpoint === 2) {
+      checkpoint = 3; restore(); sync(); ctx.onProgress?.(3)
+      if (!active()) return
+      feedback.impact()
+      if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+      return
+    }
     transition = { step: checkpoint, time: 0, from: moving().position.clone() }; sync(); if (ctx.isReducedMotion?.()) settle()
   }
   const action = () => { if (!active() || pointer.isBusy() || transition || checkpoint === 3) return; feedback.prepare(); advance() }
@@ -159,7 +165,7 @@ export function createPurepechaCopperBowl(ctx: SceneContext): SceneInstance {
         } else { const e = ease(t); bowl.position.lerpVectors(transition.from, REST, e); if (!ctx.isReducedMotion?.()) bowl.position.y += Math.sin(e * Math.PI) * .17 }
         if (t === 1) settle()
       }
-      style.render()
+      if (active()) style.render()
     },
     dispose() { if (disposed) return; disposed = true; pointer.dispose(); stopResize(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }

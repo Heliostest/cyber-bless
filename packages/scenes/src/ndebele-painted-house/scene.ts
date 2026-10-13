@@ -128,14 +128,15 @@ export function createNdebelePaintedHouse(ctx: SceneContext): SceneInstance {
   function settle() {
     if (!active() || !transition) return
     checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore(); sync()
-    ctx.onProgress?.(checkpoint); feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .013 })
+    ctx.onProgress?.(checkpoint); if (!active()) return; feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .013 })
   }
   function advance() {
     if (!active() || pointer.isBusy() || transition || checkpoint === 3) return
     if (checkpoint === 2) {
       checkpoint = 3; restore(); sync(); ctx.onProgress?.(3)
+      if (!active()) return
       feedback.impact({ freqs: [392, 587.33], duration: .22, gain: .013 })
-      if (!disposed) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })); return
+      if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })); return
     }
     transition = { step: checkpoint, time: 0, from: moving().position.clone() }; sync(); if (ctx.isReducedMotion?.()) settle()
   }
@@ -156,7 +157,7 @@ export function createNdebelePaintedHouse(ctx: SceneContext): SceneInstance {
         if (!ctx.isReducedMotion?.()) moving().position.y += Math.sin(t * Math.PI) * .12
         if (transition.time === 1) settle()
       }
-      style.render()
+      if (active()) style.render()
     },
     dispose() { if (disposed) return; disposed = true; pointer.dispose(); stopResize(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }

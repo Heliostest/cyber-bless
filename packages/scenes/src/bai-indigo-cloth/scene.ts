@@ -182,13 +182,18 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
     setSafeText(ui.actionBtn, at === 0 ? COPY.rinseAction : at === 1 ? COPY.hangAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, motion ? COPY.moving : at === 0 ? COPY.rinse : at === 1 ? COPY.hang : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
-  function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); feedback.impact({ freqs: [392, 523.25], duration: .19, gain: .012, type: 'triangle' }) }
+  function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); if (!active()) return; feedback.impact({ freqs: [392, 523.25], duration: .19, gain: .012, type: 'triangle' }) }
   function begin() { if (!active() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || at !== 2) return
     at = 3; restore(); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()
     if (text.trim() && !returning) ctx.saveWish?.(text.trim())
-    ctx.onProgress?.(3); feedback.impact({ freqs: [392, 587.33], duration: .24, gain: .012 }); overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    // An accepted save and its checkpoint stay atomic across pause, but not disposal.
+    if (disposed) return
+    ctx.onProgress?.(3)
+    if (!active()) return
+    feedback.impact({ freqs: [392, 587.33], duration: .24, gain: .012 })
+    if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
   const action = () => { if (!active() || pointer.isBusy() || motion || at === 3) return; feedback.prepare(); if (at < 2) begin(); else finish() }
   const blur = () => { focused = false; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
@@ -214,7 +219,7 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
         else { cloth.position.lerpVectors(motion.from, HUNG, t); if (!reduced()) cloth.position.y += .10 * Math.sin(Math.PI * t) }
         if (motion.time === 1) settle()
       }
-      matrices(); style.render()
+      if (active()) { matrices(); style.render() }
     },
     dispose() { if (disposed) return; disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }

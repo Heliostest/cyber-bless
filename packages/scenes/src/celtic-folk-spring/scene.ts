@@ -213,7 +213,8 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
   addInteractionCue(bank, {
     kind: 'tap',
     label: COPY.cueBow,
-    anchor: [0, -1.65, 0],
+    // Stay inside a face: the x=0 radial seam can miss at some camera drift phases.
+    anchor: [.12, -1.65, 0],
     enabled: () => started && !disposed && !restoring && canAct() && step === 'gyro',
   })
 

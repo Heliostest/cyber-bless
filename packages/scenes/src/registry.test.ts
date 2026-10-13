@@ -10,6 +10,7 @@ describe('sceneRegistry', () => {
 
   it('lists the pilot metas, the C-grade Design A scenes, then the product-original scenes', () => {
     expect(sceneRegistry.map((m) => m.id)).toEqual([
+      'bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon',
       'barcelos-clay-rooster', 'finnish-birch-basket', 'croatian-licitar-heart', 'catalan-festival-giant',
       'sorbian-painted-egg', 'basque-sunflower', 'breton-banner', 'lithuanian-straw-garden',
       'dalarna-wooden-horse', 'aland-votive-ship', 'blang-tea', 'minangkabau-spinning-top',
@@ -100,6 +101,10 @@ describe('loadScene', () => {
   })
 
   it.each([
+    ['bai-indigo-cloth', '蓝白晾晴', 'bai-benzhu'],
+    ['ndebele-painted-house', '彩墙寄家', 'ndebele-traditional'],
+    ['purepecha-copper-bowl', '铜碗拾暖', 'purepecha'],
+    ['welsh-love-spoon', '木勺寄情', 'welsh-folk'],
     ['barcelos-clay-rooster', '陶鸡报晓', 'portuguese-romarias'],
     ['finnish-birch-basket', '桦篮拾光', 'finnish-karelian-folk'],
     ['croatian-licitar-heart', '彩心相赠', 'croatian-folk'],

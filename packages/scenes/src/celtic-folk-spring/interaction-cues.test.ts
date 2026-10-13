@@ -396,3 +396,17 @@ describe('physical action cues', () => {
     s.instance.dispose()
   })
 })
+
+// These camera phases previously projected the bank cue onto a radial triangle seam.
+it.each([36059, 92001])('accepts the visible bank cue after pause at camera time %i ms', async time => {
+  const clock = vi.spyOn(performance, 'now').mockReturnValue(time)
+  let active = true
+  const s = await mount('celtic-folk-spring', 0, { isActive: () => active })
+  try {
+    const point = s.sourcePoint()
+    s.pointer('pointerdown', point, 1); active = false; s.instance.update(0); active = true
+    s.pointer('pointerup', point, 1); expect(s.progress).not.toHaveBeenCalled()
+    s.pointer('pointerdown', point, 1); s.pointer('pointerup', point, 1)
+    expect(s.progress).toHaveBeenCalledExactlyOnceWith(1)
+  } finally { s.instance.dispose(); clock.mockRestore() }
+})

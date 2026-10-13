@@ -26,6 +26,8 @@ export const BLESSING_SCENE_IDS = [
   "lithuanian-straw-garden",
   "finnish-birch-basket",
   "catalan-festival-giant",
+  "ndebele-painted-house",
+  "purepecha-copper-bowl",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -52,6 +54,8 @@ export const WISH_SCENE_IDS = [
   "basque-sunflower",
   "barcelos-clay-rooster",
   "croatian-licitar-heart",
+  "bai-indigo-cloth",
+  "welsh-love-spoon",
 ] as const;
 
 
@@ -62,6 +66,26 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "bai-indigo-cloth", title: "蓝白晾晴", engine: "bai-indigo-cloth@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "bai-benzhu",
+    narrative: "大理周城等地的白族扎染，以扎结防染和反复染洗形成蓝白纹样，手艺在家庭与作坊之间延续。这里用原创布面、清水盆与晾架，把漂洗、晾起和静看改编为欣赏日常手工的练习。图案不复制特定匠人的作品，也不把扎染与本主祭祀混同，不承诺护佑效力。",
+  },
+  {
+    id: "ndebele-painted-house", title: "彩墙寄家", engine: "ndebele-painted-house@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "ndebele-traditional",
+    narrative: "南非恩德贝莱人的彩绘墙面，以几何构成和鲜明色彩表达家园记忆与文化认同，绘画经验在社区生活中传承。这里用原创小屋、彩片与木座，把添彩、安放和静看改编为欣赏公共艺术的练习。不复制艺术家作品或特定家族图案，不模拟成年礼与祖先仪式。",
+  },
+  {
+    id: "purepecha-copper-bowl", title: "铜碗拾暖", engine: "purepecha-copper-bowl@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "purepecha",
+    narrative: "墨西哥米却肯州圣克拉拉德尔科布雷延续着铜器锻制手艺，作坊与博物馆展示材料在反复加工中形成器物的过程。这里以原创铜碗、软垫与绒托，把轻拭、安放和静看改编为体会手作温度的练习。不把日常铜碗称作祭器，不复现亡者祭坛，也不许诺祈愿功效。",
+  },
+  {
+    id: "welsh-love-spoon", title: "木勺寄情", engine: "welsh-love-spoon@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "welsh-folk",
+    narrative: "威尔士爱勺是以木雕表达赠礼心意的民间工艺，装饰木勺在家庭与博物馆中留下不同年代的手作记忆。这里用原创凹勺面、镂空木柄与展托，把轻拭、安放和静看改编为传递关怀的练习。不复制特定匠人作品，不把纹样解释为统一暗语，也不模拟诗社或宗教仪式。",
+  },
   {
     id: "barcelos-clay-rooster", title: "陶鸡报晓", engine: "barcelos-clay-rooster@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "portuguese-romarias",

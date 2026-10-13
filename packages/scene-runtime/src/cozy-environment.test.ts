@@ -34,6 +34,10 @@ describe("a scene's surrounding world", () => {
   });
 
   it.each([
+    ["bai-indigo-cloth", "veranda"],
+    ["ndebele-painted-house", "courtyard"],
+    ["purepecha-copper-bowl", "veranda"],
+    ["welsh-love-spoon", "veranda"],
     ["barcelos-clay-rooster", "veranda"],
     ["finnish-birch-basket", "veranda"],
     ["croatian-licitar-heart", "courtyard"],

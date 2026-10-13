@@ -9,6 +9,10 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'bai-indigo-cloth', title: '蓝白晾晴', traditionSlug: 'bai-benzhu', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
+  { id: 'ndebele-painted-house', title: '彩墙寄家', traditionSlug: 'ndebele-traditional', grade: 'C', sensitivity: '中', gestures: ['drag'] },
+  { id: 'purepecha-copper-bowl', title: '铜碗拾暖', traditionSlug: 'purepecha', grade: 'C', sensitivity: '中', gestures: ['drag'] },
+  { id: 'welsh-love-spoon', title: '木勺寄情', traditionSlug: 'welsh-folk', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'barcelos-clay-rooster', title: '陶鸡报晓', traditionSlug: 'portuguese-romarias', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'finnish-birch-basket', title: '桦篮拾光', traditionSlug: 'finnish-karelian-folk', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'croatian-licitar-heart', title: '彩心相赠', traditionSlug: 'croatian-folk', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
@@ -125,6 +129,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon',
   'barcelos-clay-rooster', 'finnish-birch-basket', 'croatian-licitar-heart', 'catalan-festival-giant',
   'sorbian-painted-egg', 'basque-sunflower', 'breton-banner', 'lithuanian-straw-garden',
   'dalarna-wooden-horse', 'aland-votive-ship', 'blang-tea', 'minangkabau-spinning-top',
@@ -153,6 +158,10 @@ export function isSceneImplemented(id: string): boolean {
 /** Dynamic-import implemented scenes; unknown ids throw. */
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
+    case 'bai-indigo-cloth': return import('./bai-indigo-cloth')
+    case 'ndebele-painted-house': return import('./ndebele-painted-house')
+    case 'purepecha-copper-bowl': return import('./purepecha-copper-bowl')
+    case 'welsh-love-spoon': return import('./welsh-love-spoon')
     case 'barcelos-clay-rooster': return import('./barcelos-clay-rooster')
     case 'finnish-birch-basket': return import('./finnish-birch-basket')
     case 'croatian-licitar-heart': return import('./croatian-licitar-heart')

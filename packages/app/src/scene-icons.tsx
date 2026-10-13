@@ -42,6 +42,37 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'slovak-wire-bird': (<>
+    <Cord d="M7 27 3 16l12 7c1-12 13-17 20-10l9 4-8 3c-1 16-19 22-29 7Z" color="#79746b" width={1.5}/>
+    <Cord d="M14 25c6-14 20-4 11 5-7 7-16 1-11-5ZM20 35v7m8-9v9" color="#b68d61" width={1.5}/>
+    <circle cx="31" cy="16" r="1.5" fill={INK}/><Part d="M11 42h25v4H11Z" fill="#c5ad82"/>
+  </>),
+  'hungarian-embroidery-hoop': (<>
+    <circle cx="24" cy="26" r="18" fill="#efe5d0" stroke={INK} strokeWidth={5}/>
+    <circle cx="24" cy="26" r="18" fill="none" stroke="#c7a273" strokeWidth={2.5}/>
+    <Part d="M19 3h10v7H19Z" fill="#c7a273"/>
+    <path d="M24 37V20m0 11-9-7m9 2 8-7" fill="none" stroke="#678e77" strokeWidth={2}/>
+    <path d="M24 24c-15-5-7-18 0-9 7-9 15 4 0 9Z" fill="#bc6e78"/>
+    <path d="M21 31q-12 2-10-8 10-1 10 8m5-4q-1-10 10-9 2 9-10 9" fill="#8aa493"/>
+  </>),
+  'andalusian-ceramic-tile': (<>
+    <Part d="M4 4h40v40H4Z" fill="#aa815f"/><Part d="M8 8h32v32H8Z" fill="#f2efe0"/>
+    <path d="M18.7 8v32M29.3 8v32M8 18.7h32M8 29.3h32" stroke="#c4b9a0" strokeWidth={1.2}/>
+    {[13.3,24,34.7].flatMap(x => [13.3,24,34.7].map(y => <g key={`${x}-${y}`} transform={`translate(${x} ${y})`}>
+      <path d="M0-1q-5-5 0-5 5 0 0 5M0 1q5 5 0 5-5 0 0-5" fill="#416c9b"/>
+      <path d="M-1 0q-5 5-5 0 0-5 5 0M1 0q5-5 5 0 0 5-5 0" fill="#82b5b0"/>
+      <circle r="1.2" fill="#cea452"/>
+    </g>))}
+  </>),
+  'sicilian-painted-cart': (<>
+    <Part d="m8 11 30 4v16L8 27Z" fill="#d3aa61"/>
+    <path d="m11 15 24 4v5l-24-4Z" fill="#568e8b"/>
+    <Cord d="m32 29 12 6" color="#bd765d" width={2.5}/>
+    <circle cx="15" cy="34" r="10" fill="#d3aa61" stroke={INK} strokeWidth={2.2}/>
+    <circle cx="15" cy="34" r="7" fill="#efe5d0" stroke="#b86e51" strokeWidth={1.5}/>
+    <path d="M15 27v14m-7-7h14m-12-5 10 10m-10 0 10-10" stroke="#8c735a" strokeWidth={1.4}/>
+    <circle cx="15" cy="34" r="2.2" fill="#b86e51"/>
+  </>),
   'bai-indigo-cloth': (<>
     <Cord d="M6 9h36M9 9v34m30-34v34" color="#b9976a" width={2.5}/>
     <Part d="M13 8h22v28q-11-3-22 0Z" fill="#497f9e"/>

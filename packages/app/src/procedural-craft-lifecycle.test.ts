@@ -47,6 +47,10 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['slovak-wire-bird', 0, 'wire-wing-grip', 'wire-shoulder-joint'],
+  ['hungarian-embroidery-hoop', 0, 'hoop-spool-cap', 'hoop-linen', [.25, .017, .22]],
+  ['andalusian-ceramic-tile', 0, 'tile-loose-grip', 'tile-empty-seat'],
+  ['sicilian-painted-cart', 0, 'cart-wheel-hub', 'cart-axle-end'],
   ['bai-indigo-cloth', 0, 'indigo-bundle-body', 'indigo-rinse-water'],
   ['purepecha-copper-bowl', 0, 'copper-polishing-pad', 'copper-bowl-shell', [0, .43, .705]],
   ['welsh-love-spoon', 0, 'spoon-cloth-grip', 'spoon-bowl'],

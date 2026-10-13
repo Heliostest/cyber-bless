@@ -72,6 +72,8 @@ const entries: CatalogEntry[] = [
 
 describe("scene placement", () => {
   it.each([
+    ["slovak-wire-bird", "slovak-folk", false], ["hungarian-embroidery-hoop", "hungarian-folk", true],
+    ["andalusian-ceramic-tile", "andalusian-folk", true], ["sicilian-painted-cart", "sicilian-santa-rosalia", false],
     ["bai-indigo-cloth", "bai-benzhu", true], ["ndebele-painted-house", "ndebele-traditional", false],
     ["purepecha-copper-bowl", "purepecha", false], ["welsh-love-spoon", "welsh-folk", true],
     ["barcelos-clay-rooster", "portuguese-romarias", true], ["finnish-birch-basket", "finnish-karelian-folk", false],
@@ -126,6 +128,7 @@ describe("scene placement", () => {
       "breton-banner", "lithuanian-straw-garden",
       "finnish-birch-basket", "catalan-festival-giant",
       "ndebele-painted-house", "purepecha-copper-bowl",
+      "slovak-wire-bird", "sicilian-painted-cart",
     ]);
     expect([...WISH_SCENE_IDS]).toEqual([
       "tanzaku-tanabata",
@@ -142,6 +145,7 @@ describe("scene placement", () => {
       "sorbian-painted-egg", "basque-sunflower",
       "barcelos-clay-rooster", "croatian-licitar-heart",
       "bai-indigo-cloth", "welsh-love-spoon",
+      "hungarian-embroidery-hoop", "andalusian-ceramic-tile",
     ]);
     expect(isWishScene("tanzaku-tanabata")).toBe(true);
     expect(isWishScene("slavic-wreath")).toBe(true);

@@ -24,6 +24,8 @@ export const BLESSING_SCENE_IDS = [
   "blang-tea",
   "breton-banner",
   "lithuanian-straw-garden",
+  "finnish-birch-basket",
+  "catalan-festival-giant",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -48,6 +50,8 @@ export const WISH_SCENE_IDS = [
   "minangkabau-spinning-top",
   "sorbian-painted-egg",
   "basque-sunflower",
+  "barcelos-clay-rooster",
+  "croatian-licitar-heart",
 ] as const;
 
 
@@ -58,6 +62,26 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "barcelos-clay-rooster", title: "陶鸡报晓", engine: "barcelos-clay-rooster@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "portuguese-romarias",
+    narrative: "巴塞卢什的彩绘陶塑是葡萄牙米尼奥地区的民间工艺，公鸡造型在集市与陶艺作坊中广为人知。这里用原创陶鸡、画笔与木台，把添彩、安放和静看改编为欣赏手作的日常练习。图案不复制特定匠人的作品，也不把陶鸡当作灵验保证，不模拟真实朝圣或圣事。",
+  },
+  {
+    id: "finnish-birch-basket", title: "桦篮拾光", engine: "finnish-birch-basket@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "finnish-karelian-folk",
+    narrative: "芬兰东部曾用桦皮编织容器储放谷物、面粉与盐，条带交织的结构记录着人们对日常材料的认识。这里用原创小篮、弯提梁与木台，把接合、安放和静看改编为亲近手工的练习。关联民俗卡仅提供地区文化背景，不复现熊礼、咒语或宗教团体的仪式。",
+  },
+  {
+    id: "croatian-licitar-heart", title: "彩心相赠", engine: "croatian-licitar-heart@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "croatian-folk",
+    narrative: "克罗地亚北部的彩饰姜饼工艺常见心形饰物，红色底面、细致装饰与赠礼习惯连接着作坊、集市和地方节庆。这里用原创彩心、裱花工具与挂架，把添饰、悬挂和静看改编为表达心意的手作练习。不复制匠人图样，不模拟圣事或真实朝圣，也不承诺护佑效力。",
+  },
+  {
+    id: "catalan-festival-giant", title: "巨偶待游", engine: "catalan-festival-giant@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "catalan-folk",
+    narrative: "加泰罗尼亚的节庆巨偶常在街头巡游中与音乐相伴，地方协会持续传承制作、维护与展演的经验。这里以原创巨偶小模型、花章与圆台，把装饰、安放和静看改编为欣赏公共节庆工艺的练习。不复制具体历史巨偶，不扮演神职角色，也不模拟火跑或人体城堡。",
+  },
   {
     id: "sorbian-painted-egg", title: "彩蛋寄春", engine: "sorbian-painted-egg@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "sorbian-folk",

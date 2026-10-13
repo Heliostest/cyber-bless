@@ -4,6 +4,10 @@ import { createCozyEnvironment } from "./cozy-environment";
 
 describe("a scene's surrounding world", () => {
   it.each([
+    ["barcelos-clay-rooster", "veranda"],
+    ["finnish-birch-basket", "veranda"],
+    ["croatian-licitar-heart", "courtyard"],
+    ["catalan-festival-giant", "courtyard"],
     ["sorbian-painted-egg", "veranda"],
     ["basque-sunflower", "courtyard"],
     ["breton-banner", "courtyard"],

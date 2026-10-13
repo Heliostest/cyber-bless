@@ -50,3 +50,7 @@
 ## 工作区边界
 
 并行App Store发布文档、截图/上传脚本、内容权利资料、Notion法律页、商店配置、assets/README.md、package.json、legal-content.ts均保持原样并排除提交。精确清单见artifacts/workshop-owned-files.json；不会git add整个工作区。
+
+## 自动合并补记（2026-10-13）
+
+用户随后明确授权定时自动提交、合并、推送。workshop 提交 `5a169d1` 已通过合并前后各 1,982 项测试，于首次心跳合并为 `cdba0de4df41f7710faed7047148dc7c50f2d627` 并推送 origin/master；远端 SHA 已核对。合并树与本批已验收提交一致，62 个并行文件内容未变化。证据：`artifacts/automation-workshop-20261013/merge-report.json`。后续四个旧场景的回调生命周期修复与续接位置见 `2026-10-13-atelier-callback-lifecycle.md`。

@@ -41,8 +41,10 @@ describe("builtInScenes narratives", () => {
   it("covers the placed practices and craft scenes", () => {
     expect(withNarrative.map((e) => e.id).sort()).toEqual([
       "aland-votive-ship",
+      "basque-sunflower",
       "blang-tea",
       "bokjori",
+      "breton-banner",
       "chinese-incense",
       "clootie-well-rag",
       "crane",
@@ -56,6 +58,7 @@ describe("builtInScenes narratives", () => {
       "hongsheng-red-string",
       "italian-ex-voto",
       "lantern",
+      "lithuanian-straw-garden",
       "milagros",
       "minangkabau-spinning-top",
       "mizuhiki",
@@ -67,6 +70,7 @@ describe("builtInScenes narratives", () => {
       "shinto-torii",
       "shrine-suzu-bell",
       "slavic-wreath",
+      "sorbian-painted-egg",
       "st-brigids-cross",
       "tanzaku-tanabata",
       "tibetan-wheel",

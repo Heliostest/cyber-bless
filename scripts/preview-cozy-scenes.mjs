@@ -5,7 +5,7 @@ import path from "node:path";
 const base = process.env.WBR_URL || "http://127.0.0.1:5177/";
 const out = path.resolve("artifacts/cozy-scenes", process.argv[2] || "after");
 await mkdir(out, { recursive: true });
-const ids = ['dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top','chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal',"omikuji", "polish-blessing-basket", "navruz-sumalak", "floating-lantern-loy-krathong", "omamori-cycle", "shrine-suzu-bell", "st-brigids-cross", "bokjori", "woodfish", "celtic-folk-spring", "theravada-water", "furin-wind-chime",
+const ids = ['sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden','dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top','chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal',"omikuji", "polish-blessing-basket", "navruz-sumalak", "floating-lantern-loy-krathong", "omamori-cycle", "shrine-suzu-bell", "st-brigids-cross", "bokjori", "woodfish", "celtic-folk-spring", "theravada-water", "furin-wind-chime",
   "daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai",
   "ema-votive-plaque", "clootie-well-rag", "diya-oil-lamp", "votive-candle-catholic",
   "shinto-torii", "tibetan-wheel", "tanzaku-tanabata", "crane", "slavic-wreath", "lantern", "yeondeunghoe"];

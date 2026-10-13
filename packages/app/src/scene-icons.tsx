@@ -42,6 +42,30 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'sorbian-painted-egg': (<>
+    <Part d="M24 4C14 4 7 23 9 33c3 15 27 15 30 0C41 23 34 4 24 4Z" fill="#b87b66"/>
+    <path d="m14 24 10-8 10 8-10 8Z" fill="#efdfac" stroke={INK} strokeWidth={1.5}/>
+    <path d="M12 34q12 7 24 0" fill="none" stroke="#f3e4bb" strokeWidth={3}/>
+    <circle cx="24" cy="24" r="3" fill="#829b84"/>
+  </>),
+  'basque-sunflower': (<>
+    <Part d="m24 3 4 12 9-10-3 13 12-3-9 9 9 4-13 3 4 12-10-9-3 13-4-13-9 9 3-13-12-3 12-4-10-9 13 3-3-13 9 10Z" fill="#eee0b6"/>
+    <circle cx="24" cy="24" r="9" fill="#b69462" stroke={INK} strokeWidth={2}/>
+    <path d="m20 19 8 10m-10-5h12m-10 5 8-10" stroke="#dac18c" strokeWidth={1.5}/>
+  </>),
+  'breton-banner': (<>
+    <Cord d="M9 5v38m0-36h31" color="#b9976a" width={3}/>
+    <Part d="M13 9h24v28l-12-4-12 4Z" fill="#829b9d"/>
+    <circle cx="25" cy="19" r="5" fill="#efdfac"/>
+    <path d="M17 28q4-4 8 0t8 0" stroke="#efdfac" strokeWidth={2.4} fill="none"/>
+    <Part d="M3 42h15v4H3Z" fill="#b9976a"/>
+  </>),
+  'lithuanian-straw-garden': (<>
+    <Cord d="M24 2v6m0 29v5" color="#b9976a" width={1.5}/>
+    <path d="m24 8 16 15-16 15L8 23Zm0 0v30M8 23h32" fill="none" stroke={INK} strokeWidth={3.8}/>
+    <path d="m24 8 16 15-16 15L8 23Zm0 0v30M8 23h32" fill="none" stroke="#e4c783" strokeWidth={2}/>
+    <path d="m24 38 5 5-5 4-5-4Z" fill="none" stroke="#b9976a" strokeWidth={2}/>
+  </>),
   'dalarna-wooden-horse': (
     <>
       <Part d="M8 22q-3-7 6-7h13l3-12 5 5 3-4 1 9 7 5-3 5-8-3 2 12-1 12h-6l-1-11H17l-3 11H8l3-17Z" fill="#bd5e4d"/>

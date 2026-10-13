@@ -10,6 +10,7 @@ describe('sceneRegistry', () => {
 
   it('lists the pilot metas, the C-grade Design A scenes, then the product-original scenes', () => {
     expect(sceneRegistry.map((m) => m.id)).toEqual([
+      'sorbian-painted-egg', 'basque-sunflower', 'breton-banner', 'lithuanian-straw-garden',
       'dalarna-wooden-horse', 'aland-votive-ship', 'blang-tea', 'minangkabau-spinning-top',
       'chinese-incense', 'hongsheng-red-string', 'italian-ex-voto', 'czech-pilgrim-journal',
       'omikuji', 'polish-blessing-basket', 'navruz-sumalak', 'floating-lantern-loy-krathong',
@@ -98,6 +99,10 @@ describe('loadScene', () => {
   })
 
   it.each([
+    ['sorbian-painted-egg', '彩蛋寄春', 'sorbian-folk'],
+    ['basque-sunflower', '太阳花迎门', 'basque-folk'],
+    ['breton-banner', '节旗轻展', 'breton-pardons'],
+    ['lithuanian-straw-garden', '草穗悬园', 'baltic-folk'],
     ['dalarna-wooden-horse', '木马安放', 'dalecarlian-folk'],
     ['aland-votive-ship', '舟模寄谢', 'aland-folk'],
     ['blang-tea', '茶山一盏', 'blang-traditional'],

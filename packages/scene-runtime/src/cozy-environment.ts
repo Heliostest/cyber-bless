@@ -6,6 +6,10 @@ declare const process: { env: { EXPO_BASE_URL?: string } };
 type Kind = "garden" | "courtyard" | "veranda" | "table" | "river";
 type Profile = { kind: Kind; floor: number; night?: boolean; warmLight?: boolean };
 const profiles: Record<string, Profile> = {
+  'bai-indigo-cloth': { kind: 'veranda', floor: -0.04 },
+  'ndebele-painted-house': { kind: 'courtyard', floor: -0.04 },
+  'purepecha-copper-bowl': { kind: 'veranda', floor: -0.04 },
+  'welsh-love-spoon': { kind: 'veranda', floor: -0.04 },
   'barcelos-clay-rooster': { kind: 'veranda', floor: -0.04 },
   'finnish-birch-basket': { kind: 'veranda', floor: -0.04 },
   'croatian-licitar-heart': { kind: 'courtyard', floor: -0.04 },

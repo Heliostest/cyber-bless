@@ -42,6 +42,29 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'bai-indigo-cloth': (<>
+    <Cord d="M6 9h36M9 9v34m30-34v34" color="#b9976a" width={2.5}/>
+    <Part d="M13 8h22v28q-11-3-22 0Z" fill="#497f9e"/>
+    <path d="m24 13 6 7-6 7-6-7Zm-9 17h18" fill="none" stroke="#f3e8cc" strokeWidth={2.5}/>
+  </>),
+  'ndebele-painted-house': (<>
+    <Part d="M6 12h36v32H6Z" fill="#eadcc3"/>
+    <Part d="M17 28h14v16H17Z" fill="#80644d"/>
+    <path d="M8 22h32M12 25v14m24-14v14" stroke="#558d8c" strokeWidth={4}/>
+    <path d="m24 15 5 4-5 4-5-4Z" fill="#c77a51" stroke={INK} strokeWidth={1.5}/>
+    <path d="M9 40h7m16 0h7" stroke="#d3a955" strokeWidth={3}/>
+  </>),
+  'purepecha-copper-bowl': (<>
+    <Part d="M5 20c0 28 38 28 38 0Z" fill="#bc794f"/>
+    <ellipse cx="24" cy="20" rx="19" ry="9" fill="#ce9568" stroke={INK} strokeWidth={2.2}/>
+    <ellipse cx="24" cy="21" rx="14" ry="5" fill="#976245"/>
+    <path d="m12 30 3 2m4 2 3 1m8-2 3-2" stroke="#e9b27e" strokeWidth={2.2} strokeLinecap="round"/>
+  </>),
+  'welsh-love-spoon': (<>
+    <Part d="M21 27V18C8 5 16-3 24 6 32-3 40 5 27 18v9c12 7 8 18-3 18s-15-11-3-18Z M24 15c-8-7-5-10 0-4 5-6 8-3 0 4Z" fill="#c69050" evenodd/>
+    <ellipse cx="24" cy="35" rx="5" ry="6.5" fill="#a67547"/>
+    <path d="M27 30q6 8-2 11" fill="none" stroke="#e5bc80" strokeWidth={1.7}/>
+  </>),
   'barcelos-clay-rooster': (<>
     <Part d="M20 34C7 32 5 16 7 8c8 0 12 8 11 14l9-4V9l7-4 5 4-5 5v12c0 6-6 9-14 8Z" fill="#405e5a"/>
     <Part d="m28 8-1-6 4 2 3-3 3 5-3 4Z" fill="#c76b55"/>

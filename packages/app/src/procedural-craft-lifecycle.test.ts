@@ -47,6 +47,10 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['bai-indigo-cloth', 0, 'indigo-bundle-body', 'indigo-rinse-water'],
+  ['purepecha-copper-bowl', 0, 'copper-polishing-pad', 'copper-bowl-shell', [0, .43, .705]],
+  ['welsh-love-spoon', 0, 'spoon-cloth-grip', 'spoon-bowl'],
+  ['ndebele-painted-house', 0, 'house-color-panel', 'house-facade-slot'],
   ['barcelos-clay-rooster', 0, 'rooster-brush-grip', 'rooster-paint-surface'],
   ['finnish-birch-basket', 0, 'birch-handle-grip', 'birch-rim-grip'],
   ['croatian-licitar-heart', 0, 'licitar-icing-grip', 'licitar-heart-body'],
@@ -75,7 +79,7 @@ it.each([
   ['clootie-well-rag', 0, 'clootie-rag-handle', 'clootie-water-target'],
   ['diya-oil-lamp', 2, 'diya-held-target', 'diya-plate-target'],
   ['votive-candle-catholic', 0, 'votive-held-target', 'votive-placement-target'],
-] as const)('cancels %s through host pause and accepts a fresh gesture', async (id, progress, source, target) => {
+] as const)('cancels %s through host pause and accepts a fresh gesture', async (id, progress, source, target, targetAnchor: readonly number[] = [0, 0, 0]) => {
   vi.stubGlobal('requestAnimationFrame', () => 1); vi.stubGlobal('cancelAnimationFrame', () => {})
   vi.spyOn(HTMLCanvasElement.prototype, 'clientWidth', 'get').mockReturnValue(360)
   vi.spyOn(HTMLCanvasElement.prototype, 'clientHeight', 'get').mockReturnValue(360)
@@ -87,13 +91,13 @@ it.each([
   controllers.push(ctrl)
   const hit = host.querySelector<HTMLElement>('.scene-hit-layer')!
   hit.setPointerCapture = () => {}; hit.releasePointerCapture = () => {}
-  const point = (name: string) => {
+  const point = (name: string, anchor: readonly number[] = [0, 0, 0]) => {
     rendered.scene!.updateMatrixWorld(true); rendered.camera!.updateMatrixWorld(true)
-    const p = rendered.scene!.getObjectByName(name)!.getWorldPosition(new THREE.Vector3()).project(rendered.camera!)
+    const p = rendered.scene!.getObjectByName(name)!.localToWorld(new THREE.Vector3(anchor[0], anchor[1], anchor[2])).project(rendered.camera!)
     return [(p.x+1)*180, (1-p.y)*180]
   }
   pointer(hit,'pointerdown',point(source)); ctrl.setActive(false); ctrl.setActive(true)
-  pointer(hit,'pointerup',point(target)); expect(checkpoint).not.toHaveBeenCalled()
-  pointer(hit,'pointerdown',point(source)); pointer(hit,'pointermove',point(target)); pointer(hit,'pointerup',point(target))
+  pointer(hit,'pointerup',point(target, targetAnchor)); expect(checkpoint).not.toHaveBeenCalled()
+  pointer(hit,'pointerdown',point(source)); pointer(hit,'pointermove',point(target, targetAnchor)); pointer(hit,'pointerup',point(target, targetAnchor))
   expect(checkpoint).toHaveBeenCalledExactlyOnceWith(progress+1)
 })

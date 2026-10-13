@@ -9,6 +9,10 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'sorbian-painted-egg', title: '彩蛋寄春', traditionSlug: 'sorbian-folk', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
+  { id: 'basque-sunflower', title: '太阳花迎门', traditionSlug: 'basque-folk', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
+  { id: 'breton-banner', title: '节旗轻展', traditionSlug: 'breton-pardons', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'lithuanian-straw-garden', title: '草穗悬园', traditionSlug: 'baltic-folk', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'dalarna-wooden-horse', title: '木马安放', traditionSlug: 'dalecarlian-folk', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'aland-votive-ship', title: '舟模寄谢', traditionSlug: 'aland-folk', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
   { id: 'blang-tea', title: '茶山一盏', traditionSlug: 'blang-traditional', grade: 'C', sensitivity: '中', gestures: ['drag'] },
@@ -117,6 +121,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'sorbian-painted-egg', 'basque-sunflower', 'breton-banner', 'lithuanian-straw-garden',
   'dalarna-wooden-horse', 'aland-votive-ship', 'blang-tea', 'minangkabau-spinning-top',
   'chinese-incense', 'hongsheng-red-string', 'italian-ex-voto', 'czech-pilgrim-journal',
   'omikuji', 'polish-blessing-basket', 'navruz-sumalak', 'floating-lantern-loy-krathong',
@@ -143,6 +148,10 @@ export function isSceneImplemented(id: string): boolean {
 /** Dynamic-import implemented scenes; unknown ids throw. */
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
+    case 'sorbian-painted-egg': return import('./sorbian-painted-egg')
+    case 'basque-sunflower': return import('./basque-sunflower')
+    case 'breton-banner': return import('./breton-banner')
+    case 'lithuanian-straw-garden': return import('./lithuanian-straw-garden')
     case 'dalarna-wooden-horse': return import('./dalarna-wooden-horse')
     case 'aland-votive-ship': return import('./aland-votive-ship')
     case 'blang-tea': return import('./blang-tea')

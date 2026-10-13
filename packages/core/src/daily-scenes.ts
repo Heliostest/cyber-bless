@@ -22,6 +22,8 @@ export const BLESSING_SCENE_IDS = [
   "czech-pilgrim-journal",
   "dalarna-wooden-horse",
   "blang-tea",
+  "breton-banner",
+  "lithuanian-straw-garden",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -44,6 +46,8 @@ export const WISH_SCENE_IDS = [
   "italian-ex-voto",
   "aland-votive-ship",
   "minangkabau-spinning-top",
+  "sorbian-painted-egg",
+  "basque-sunflower",
 ] as const;
 
 
@@ -54,6 +58,26 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "sorbian-painted-egg", title: "彩蛋寄春", engine: "sorbian-painted-egg@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "sorbian-folk",
+    narrative: "索布族在卢萨蒂亚延续着彩蛋装饰等复活节家户习俗，染色与纹样技法在家庭、工匠和文化机构之间传承。这里用原创蛋形、画笔与蛋托，把描色、安放和静看改编为迎接春日的手作致敬练习。不复制特定工匠纹样，不模拟圣事、骑乘巡游，也不声称彩蛋具有护佑功效。",
+  },
+  {
+    id: "basque-sunflower", title: "太阳花迎门", engine: "basque-sunflower@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "basque-folk",
+    narrative: "太阳蓟在巴斯克民间传说中被称作太阳之花，门边悬挂的形象寄托家宅安宁，也成为地方文化符号。这里用原创纸木花饰，把合拢花心、悬起与静看改编为照料家门的手作致敬练习。不采集野生植物，不把民俗传说当作防护保证，也不模拟召唤或洞穴祭仪。",
+  },
+  {
+    id: "breton-banner", title: "节旗轻展", engine: "breton-banner@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "breton-pardons",
+    narrative: "布列塔尼地方朝圣与节庆中常见旗帜，图案与队伍承载堂区记忆、语言文化和社区联系。这里以原创布旗、木杆与展架，把轻展、立起和静看改编为欣赏公共节庆工艺的致敬练习。不复制真实圣旗，不替用户带领朝圣队伍，不模拟告解或弥撒，也不宣称获得赦免。",
+  },
+  {
+    id: "lithuanian-straw-garden", title: "草穗悬园", engine: "lithuanian-straw-garden@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "baltic-folk",
+    narrative: "立陶宛草编悬饰用谷物秸秆连接几何形体，常见双锥结构，在家庭节庆与当代居室中寄托和谐，也承载代际传承。这里用原创草穗小园，把接合、悬起和静看改编为欣赏手作的文化致敬练习。不把模型当作保护家宅的法器，不模拟婚礼、命运祈请或宗教团体仪式。",
+  },
   {
     id: "dalarna-wooden-horse", title: "木马安放", engine: "dalarna-wooden-horse@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "dalecarlian-folk",

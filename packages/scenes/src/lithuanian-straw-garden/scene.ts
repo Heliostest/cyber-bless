@@ -1,0 +1,154 @@
+import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import type { SceneContext, SceneInstance } from '../contract'
+import { createObjectPointer } from '../object-pointer'
+import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
+
+const COPY = {
+  title: '草穗悬园', assemble: '把桌前的小菱形接到草穗中央的连接珠，组成一座透光的小花园。',
+  suspend: '轻托顶部木珠，把草编悬饰移到右侧木架的挂点。让线条在光里舒展。',
+  rest: '轻点木珠静看。向立陶宛草编工艺致敬，把安宁留给平常的一天。',
+  moving: '草穗缓缓就位，棉线连起轻盈的形状…', done: '为手作留一处光，也为自己留一刻安静。（当代工艺致敬练习结束）',
+} as const
+const HOME = new THREE.Vector3(-.66, 1.88, 0), REST = new THREE.Vector3(.72, 2.12, 0)
+const PENDANT_HOME = new THREE.Vector3(-1.05, 1.02, .60), JOIN = new THREE.Vector3(0, -.84, 0)
+type Checkpoint = 0 | 1 | 2 | 3
+const ease = (t: number) => t * t * (3 - 2 * t)
+
+/** Original straw lattice; a contemporary craft pause, not a household rite. */
+export function createLithuanianStrawGarden(ctx: SceneContext): SceneInstance {
+  const { canvas, overlay, shared } = ctx, safe = shared.assertSafeCopy
+  Object.values(COPY).forEach(safe)
+  let started = false, disposed = false, focused = true, checkpoint: Checkpoint = 0, inactiveRendered = false
+  let dragging = false, maxTravel = 0, stopResize = () => {}
+  let transition: { step: 0 | 1; time: number; from: THREE.Vector3 } | null = null
+  const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
+  const feedback = createSceneFeedback(ctx)
+  const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: '接好小菱形' }, safe)
+  const { scene, renderer } = createWarmStage(canvas)
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
+  const camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
+  const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'lithuanian-straw-garden', label: COPY.title }); style.setStyle(CEL_STYLE)
+  const lights = addStageLights(scene, ctx.stage, { sky: 0xffefd8, ground: 0xb3b7a2, key: 0xffe7c0, rim: 0xd8e7d8, keyPosition: [-3, 5, 3], keyIntensity: 1.2, rimIntensity: .4 })
+  lights.key.castShadow = true; lights.key.shadow.mapSize.set(512, 512)
+  Object.assign(lights.key.shadow.camera, { left: -2, right: 2, top: 4, bottom: -1, near: .1, far: 12 })
+  lights.key.shadow.bias = -.0007; lights.key.shadow.normalBias = .022
+  const world = new THREE.Group(); world.name = 'straw-garden-workbench'; scene.add(world)
+  const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: .85 })
+  const straw = material(0xdabb78), pale = material(0xefdfac), oak = material(0xb9976a), walnut = material(0x8d7356), thread = material(0xf2e6c8), sage = material(0x829b84)
+  const add = (geometry: THREE.BufferGeometry, mat: THREE.Material, xyz: [number, number, number], name = '', parent: THREE.Object3D = world) => {
+    const mesh = new THREE.Mesh(geometry, mat); mesh.position.set(...xyz); mesh.name = name; mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
+  }
+  const box = (w: number, h: number, d: number, mat: THREE.Material, xyz: [number, number, number], name = '', parent: THREE.Object3D = world) => add(new RoundedBoxGeometry(w, h, d, 3, Math.min(.035, h / 3, d / 3)), mat, xyz, name, parent)
+  const bead = (r: number, xyz: [number, number, number], name: string, parent: THREE.Object3D, mat = walnut) => add(new THREE.SphereGeometry(r, 20, 14), mat, xyz, name, parent)
+  const stem = (a: THREE.Vector3, b: THREE.Vector3, radius: number, mat: THREE.Material, parent: THREE.Object3D, name = '') => {
+    const mesh = add(new THREE.CylinderGeometry(radius, radius, a.distanceTo(b), 8, 1, true), mat, [0, 0, 0], name, parent)
+    mesh.position.copy(a).add(b).multiplyScalar(.5); mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); return mesh
+  }
+  box(3.3, .12, 1.75, oak, [0, .66, 0], 'straw-table')
+  for (const x of [-1.36, 1.36]) for (const z of [-.6, .6]) box(.14, .6, .14, walnut, [x, .3, z])
+  const shadow = add(new THREE.PlaneGeometry(3.8, 2.5), new THREE.ShadowMaterial({ opacity: .12 }), [0, .004, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
+  // A low temporary jig supports the unfinished garden, and a taller stand receives it.
+  box(.55, .07, .50, walnut, [-1.36, .755, -.32])
+  box(.075, 1.80, .075, walnut, [-1.43, 1.62, -.10])
+  box(.81, .075, .075, walnut, [-1.06, 2.51, -.10])
+  stem(new THREE.Vector3(-.66, 2.51, -.1), new THREE.Vector3(-.66, 2.51, .12), .012, thread, world)
+  box(.62, .08, .60, walnut, [1.22, .76, -.3])
+  box(.095, 2.15, .095, oak, [1.42, 1.835, -.14])
+  box(.87, .095, .095, oak, [1.04, 2.90, -.14])
+  stem(new THREE.Vector3(.72, 2.89, -.14), new THREE.Vector3(.72, 2.89, .12), .04, walnut, world)
+  const peg = bead(.085, [.72, 2.89, .12], 'straw-display-peg', world, sage)
+  const mobile = new THREE.Group(); mobile.name = 'straw-mobile'; world.add(mobile)
+  const diamond = (parent: THREE.Object3D, radius: number, height: number, xyz: [number, number, number], name: string) => {
+    const group = new THREE.Group(); group.name = name; group.position.set(...xyz); parent.add(group)
+    const ring = [new THREE.Vector3(radius, 0, 0), new THREE.Vector3(0, 0, radius), new THREE.Vector3(-radius, 0, 0), new THREE.Vector3(0, 0, -radius)]
+    for (let i = 0; i < 4; i++) {
+      for (const y of [-height, height]) stem(new THREE.Vector3(0, y, 0), ring[i], .021, i % 2 ? straw : pale, group, `${name}-stalk`)
+      stem(ring[i], ring[(i + 1) % 4], .018, straw, group, `${name}-rim`)
+      bead(.03, [ring[i].x, 0, ring[i].z], '', group, pale)
+    }
+    return group
+  }
+  diamond(mobile, .48, .56, [0, 0, 0], 'straw-central-diamond')
+  for (const x of [-.48, .48]) {
+    stem(new THREE.Vector3(x, 0, 0), new THREE.Vector3(x, -.11, 0), .008, thread, mobile)
+    diamond(mobile, .15, .20, [x, -.31, 0], 'straw-side-diamond')
+  }
+  // The cream suspension loop and its wooden clasp remain actual visible geometry.
+  stem(new THREE.Vector3(0, .56, 0), new THREE.Vector3(0, .77, .12), .009, thread, mobile)
+  const lift = bead(.105, [0, .67, .12], 'straw-lift-bead', mobile, walnut)
+  const join = bead(.085, [0, -.56, .055], 'straw-join-bead', mobile, sage)
+  const pendant = diamond(world, .20, .28, [0, 0, 0], 'straw-pendant')
+  const grip = bead(.085, [0, 0, .20], 'straw-pendant-grip', pendant, sage)
+  const link = stem(new THREE.Vector3(0, -.56, 0), new THREE.Vector3(0, -.56, .055), .009, thread, mobile)
+  const cloth = box(.70, .012, .58, sage, [-1.05, .733, .55])
+  for (let i = 0; i < 5; i++) stem(new THREE.Vector3(.20 + i * .055, .74, .45), new THREE.Vector3(.45 + i * .055, .74, .63), .014, straw, world)
+  const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
+  const restore = () => {
+    mobile.position.copy(checkpoint >= 2 ? REST : HOME); mobile.rotation.set(0, 0, 0)
+    if (checkpoint >= 1) { mobile.add(pendant); pendant.position.copy(JOIN) } else { world.add(pendant); pendant.position.copy(PENDANT_HOME) }
+    link.visible = checkpoint >= 1; cloth.visible = true; matrices()
+  }
+  const enabled = (at: number) => () => active() && !transition && checkpoint === at
+  addInteractionCue(grip, { kind: 'drag', label: '接好小菱形', priority: 3, enabled: enabled(0), destination: join, targetLabel: '中央连接珠' })
+  addInteractionCue(lift, { kind: 'drag', label: '悬起草穗花园', priority: 3, enabled: enabled(1), destination: peg, targetLabel: '右侧木架挂点' })
+  addInteractionCue(lift, { kind: 'tap', label: '轻点木珠静看', priority: 3, enabled: enabled(2) })
+  const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
+  const moving = () => checkpoint === 0 ? pendant : mobile
+  const hitsVisible = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => {
+    const meshes: THREE.Object3D[] = []
+    scene.traverseVisible(object => {
+      if (!(object as THREE.Mesh).isMesh) return
+      for (let p: THREE.Object3D | null = object; p; p = p.parent) if (p === held) return
+      meshes.push(object)
+    })
+    return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object === target
+  }
+  const reset = () => { dragging = false; maxTravel = 0; if (!transition) restore() }
+  const pointer = createObjectPointer(ui.hitLayer, {
+    isActive: active,
+    canStart(x, y) { if (transition || checkpoint === 3) return false; matrices(); return hitsVisible(x, y, checkpoint === 0 ? grip : lift) },
+    onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare(); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), object.position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
+    onMove(x, y) { maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices() },
+    onRelease(x, y) {
+      maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
+      const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && hitsVisible(x, y, checkpoint === 0 ? join : peg, moving()) : maxTravel < 12 && hitsVisible(x, y, lift)
+      dragging = false; if (valid) advance(); else reset()
+    }, onCancel: reset,
+  })
+  const sync = () => {
+    ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !active() || !!transition || checkpoint === 3
+    ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = checkpoint < 3 && !transition ? 'auto' : 'none'
+    setSafeText(ui.actionBtn, checkpoint === 0 ? '接好小菱形' : checkpoint === 1 ? '悬起草穗花园' : '轻点木珠静看', safe)
+    setSafeText(ui.hintEl, transition ? COPY.moving : checkpoint === 0 ? COPY.assemble : checkpoint === 1 ? COPY.suspend : checkpoint === 2 ? COPY.rest : COPY.done, safe)
+  }
+  function settle() { if (!active() || !transition) return; checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore(); sync(); ctx.onProgress?.(checkpoint); feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .013 }) }
+  function advance() {
+    if (!active() || pointer.isBusy() || transition || checkpoint === 3) return
+    if (checkpoint === 2) { checkpoint = 3; restore(); sync(); ctx.onProgress?.(3); feedback.impact({ freqs: [392, 587.33], duration: .22, gain: .013 }); overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })); return }
+    transition = { step: checkpoint, time: 0, from: moving().position.clone() }; sync(); if (ctx.isReducedMotion?.()) settle()
+  }
+  const action = () => { if (!active() || pointer.isBusy() || transition || checkpoint === 3) return; feedback.prepare(); advance() }
+  const blur = () => { focused = false; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
+  const resize = () => { const aspect = sizeStage(canvas, renderer, style, camera), boost = portraitBoost(aspect, 8); camera.position.set(0, 3.4 + boost * .4, 5.6 + boost); camera.lookAt(0, 1.5, 0); matrices() }
+  restore(); sync()
+  return {
+    start() { if (started || disposed) return; started = true; const initial = ctx.initialProgress ?? 0; checkpoint = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint; restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() }); ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync() },
+    update(dt) {
+      if (!started || disposed) return
+      if (!active()) { pointer.cancel(); ui.actionBtn.disabled = true; ui.actionBtn.setAttribute('aria-disabled', 'true'); if (!inactiveRendered) { style.render(); inactiveRendered = true } return }
+      if (inactiveRendered) { inactiveRendered = false; sync() }
+      if (transition) {
+        const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0; transition.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, transition.time + delta / .75); const t = ease(transition.time)
+        const dest = transition.step === 0 ? mobile.localToWorld(JOIN.clone()) : REST
+        moving().position.lerpVectors(transition.from, dest, t)
+        if (!ctx.isReducedMotion?.()) moving().position.y += Math.sin(t * Math.PI) * .15
+        if (transition.time === 1) settle()
+      }
+      style.render()
+    },
+    dispose() { if (disposed) return; disposed = true; pointer.dispose(); stopResize(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+  }
+}

@@ -47,6 +47,10 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['barcelos-clay-rooster', 0, 'rooster-brush-grip', 'rooster-paint-surface'],
+  ['finnish-birch-basket', 0, 'birch-handle-grip', 'birch-rim-grip'],
+  ['croatian-licitar-heart', 0, 'licitar-icing-grip', 'licitar-heart-body'],
+  ['catalan-festival-giant', 0, 'giant-rosette-grip', 'giant-lapel'],
   ['basque-sunflower', 0, 'sunflower-center', 'sunflower-center-seat'],
   ['breton-banner', 0, 'banner-hem-tab', 'banner-crossbar-clip'],
   ['sorbian-painted-egg', 0, 'egg-brush-grip', 'egg-paint-surface'],

@@ -42,6 +42,36 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'barcelos-clay-rooster': (<>
+    <Part d="M20 34C7 32 5 16 7 8c8 0 12 8 11 14l9-4V9l7-4 5 4-5 5v12c0 6-6 9-14 8Z" fill="#405e5a"/>
+    <Part d="m28 8-1-6 4 2 3-3 3 5-3 4Z" fill="#c76b55"/>
+    <Part d="m34 12 10 3-10 4Z" fill="#e2bb74"/>
+    <circle cx="31" cy="12" r="1.4" fill={INK}/>
+    <path d="m21 25 5-4 4 5-5 4Z" fill="#f0dfb3"/>
+    <Cord d="M21 33v7m7-7v7" color="#c79454" width={2.5}/><Part d="M12 41h25v4H12Z" fill="#bc7057"/>
+  </>),
+  'finnish-birch-basket': (<>
+    <Cord d="M12 23C9-3 39-3 36 23" color="#c9a568" width={4}/>
+    <Part d="m6 21 5 22h26l5-22Z" fill="#d6b981"/>
+    <path d="m10 23 19 19m-8-19 17 17m-1-17L18 42m8-19L10 38m-2-8h32m-30 7h28" fill="none" stroke="#a6824f" strokeWidth={2.3}/>
+    <Part d="M5 18h38v6H5Z" fill="#eddaae"/>
+  </>),
+  'croatian-licitar-heart': (<>
+    <Cord d="M21 8C12-2 34-2 27 8" color="#829b84" width={2}/>
+    <Part d="M24 13C8-4-7 18 24 45 55 18 40-4 24 13Z" fill="#c75e53"/>
+    <path d="M24 19C12 5 2 20 24 38 46 20 36 5 24 19Z" fill="none" stroke="#f0dfb3" strokeWidth={2}/>
+    <ellipse cx="24" cy="25" rx="5" ry="6" fill="#b7d4cc" stroke="#e6c477" strokeWidth={2}/>
+  </>),
+  'catalan-festival-giant': (<>
+    <Part d="M19 21h10l9 22H10Z" fill="#bc7057"/>
+    <Part d="m18 20-6 12 4 2 5-10m9-4 6 12-4 2-5-10" fill="#608e89"/>
+    <Part d="M18 19h12v10H18Z" fill="#608e89"/>
+    <circle cx="24" cy="13" r="7" fill="#e3b895" stroke={INK} strokeWidth={1.8}/>
+    <Part d="M16 7h16v4H16Zm4-5h8v5h-8Z" fill="#d6ac60"/>
+    <circle cx="22" cy="13" r=".9" fill={INK}/><circle cx="26" cy="13" r=".9" fill={INK}/>
+    <circle cx="20" cy="23" r="2.5" fill="#f0dfb3"/><Part d="M7 43h34v3H7Z" fill="#b9976a"/>
+  </>),
+
   'sorbian-painted-egg': (<>
     <Part d="M24 4C14 4 7 23 9 33c3 15 27 15 30 0C41 23 34 4 24 4Z" fill="#b87b66"/>
     <path d="m14 24 10-8 10 8-10 8Z" fill="#efdfac" stroke={INK} strokeWidth={1.5}/>

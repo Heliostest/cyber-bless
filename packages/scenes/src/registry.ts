@@ -9,6 +9,10 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'barcelos-clay-rooster', title: '陶鸡报晓', traditionSlug: 'portuguese-romarias', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
+  { id: 'finnish-birch-basket', title: '桦篮拾光', traditionSlug: 'finnish-karelian-folk', grade: 'C', sensitivity: '中', gestures: ['drag'] },
+  { id: 'croatian-licitar-heart', title: '彩心相赠', traditionSlug: 'croatian-folk', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
+  { id: 'catalan-festival-giant', title: '巨偶待游', traditionSlug: 'catalan-folk', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'sorbian-painted-egg', title: '彩蛋寄春', traditionSlug: 'sorbian-folk', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'basque-sunflower', title: '太阳花迎门', traditionSlug: 'basque-folk', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'breton-banner', title: '节旗轻展', traditionSlug: 'breton-pardons', grade: 'C', sensitivity: '低', gestures: ['drag'] },
@@ -121,6 +125,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'barcelos-clay-rooster', 'finnish-birch-basket', 'croatian-licitar-heart', 'catalan-festival-giant',
   'sorbian-painted-egg', 'basque-sunflower', 'breton-banner', 'lithuanian-straw-garden',
   'dalarna-wooden-horse', 'aland-votive-ship', 'blang-tea', 'minangkabau-spinning-top',
   'chinese-incense', 'hongsheng-red-string', 'italian-ex-voto', 'czech-pilgrim-journal',
@@ -148,6 +153,10 @@ export function isSceneImplemented(id: string): boolean {
 /** Dynamic-import implemented scenes; unknown ids throw. */
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
+    case 'barcelos-clay-rooster': return import('./barcelos-clay-rooster')
+    case 'finnish-birch-basket': return import('./finnish-birch-basket')
+    case 'croatian-licitar-heart': return import('./croatian-licitar-heart')
+    case 'catalan-festival-giant': return import('./catalan-festival-giant')
     case 'sorbian-painted-egg': return import('./sorbian-painted-egg')
     case 'basque-sunflower': return import('./basque-sunflower')
     case 'breton-banner': return import('./breton-banner')

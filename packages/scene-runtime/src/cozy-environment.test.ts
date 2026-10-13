@@ -3,6 +3,36 @@ import * as THREE from "three";
 import { createCozyEnvironment } from "./cozy-environment";
 
 describe("a scene's surrounding world", () => {
+  it("keeps the daylight backdrop stable when the local lighting panorama arrives", async () => {
+    let resolve!: (texture: THREE.DataTexture) => void;
+    const scene = new THREE.Scene();
+    const world = createCozyEnvironment(scene, { id: "woodfish", loadSky: () => new Promise(done => { resolve = done; }) });
+    const backdrop = scene.background;
+    expect(backdrop).toBeInstanceOf(THREE.DataTexture);
+    const sky = new THREE.DataTexture();
+    resolve(sky); await world!.ready;
+    expect(scene.background).toBe(backdrop);
+    expect(scene.environment).toBe(sky);
+    world!.dispose();
+  });
+
+  it("releases its generated daylight backdrop even if the lighting panorama arrives after leaving", async () => {
+    let resolve!: (texture: THREE.DataTexture) => void;
+    const scene = new THREE.Scene();
+    const original = new THREE.Color(0x123456);
+    scene.background = original;
+    const world = createCozyEnvironment(scene, { id: "crane", loadSky: () => new Promise(done => { resolve = done; }) });
+    expect(scene.background).toBeInstanceOf(THREE.DataTexture);
+    const releasedBackdrop = vi.spyOn(scene.background as THREE.DataTexture, "dispose");
+    world!.dispose(); world!.dispose();
+    const sky = new THREE.DataTexture(), releasedSky = vi.spyOn(sky, "dispose");
+    resolve(sky); await world!.ready;
+    expect(releasedBackdrop).toHaveBeenCalledOnce();
+    expect(releasedSky).toHaveBeenCalledOnce();
+    expect(scene.background).toBe(original);
+    expect(scene.environment).toBeNull();
+  });
+
   it.each([
     ["barcelos-clay-rooster", "veranda"],
     ["finnish-birch-basket", "veranda"],
@@ -31,7 +61,7 @@ describe("a scene's surrounding world", () => {
       id: "celtic-folk-spring", loadSky: async () => { throw Error("offline"); },
     });
     await world!.ready;
-    expect(scene.background).toBeInstanceOf(THREE.Color);
+    expect(scene.background).toBeInstanceOf(THREE.DataTexture);
     expect(scene.children.some(object => object.name === "cozy-environment")).toBe(true);
     world!.dispose();
     expect(scene.children).toHaveLength(0);
@@ -69,7 +99,8 @@ describe("a scene's surrounding world", () => {
     scene.traverse(object => {
       if (object instanceof THREE.Mesh) object.geometry.addEventListener("dispose", geometryReleased);
     });
-    expect(scene.background).toBe(sky);
+    expect(scene.environment).toBe(sky);
+    expect(scene.background).not.toBe(sky);
     world!.dispose();
     const releasedCount = geometryReleased.mock.calls.length;
     world!.dispose();

@@ -42,6 +42,41 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'dalarna-wooden-horse': (
+    <>
+      <Part d="M8 22q-3-7 6-7h13l3-12 5 5 3-4 1 9 7 5-3 5-8-3 2 12-1 12h-6l-1-11H17l-3 11H8l3-17Z" fill="#bd5e4d"/>
+      <Part d="M15 17h12v12H15Z" fill="#eee2bd"/>
+      <path d="m18 20 3 5 3-5" stroke="#809c9c" strokeWidth={2.5} fill="none"/>
+      <circle cx="36" cy="14" r="1.4" fill={INK}/>
+    </>
+  ),
+  'aland-votive-ship': (
+    <>
+      <Part d="m4 30 7 11h27l7-11Z" fill="#b58c62"/>
+      <Cord d="M24 5v27" color="#a78862" width={2}/>
+      <Part d="M22 7 7 27h15Z" fill="#eee2bd"/>
+      <Part d="M27 10v17h14Z" fill="#d5d4b4"/>
+      <path d="M12 44h24m-20-5v5m16-5v5" stroke={INK} strokeWidth={2.5}/>
+    </>
+  ),
+  'blang-tea': (
+    <>
+      <Part d="M35 19q14-7 10 6-2 6-10 5" fill="#819d8d"/>
+      <Part d="M9 21q-1-8 8-10h12q10 2 9 14t-12 13h-7q-11-1-11-13l-6-9 8 5Z" fill="#819d8d"/>
+      <Part d="M12 11h19l-4-5h-10Z" fill="#a8b8a0"/>
+      <path d="M24 17q-11 5 0 13 7-8 0-13" fill="#d5dfb9"/>
+      <Part d="M32 35h13q-1 9-7 9t-6-9Z" fill="#eee2bd"/>
+    </>
+  ),
+  'minangkabau-spinning-top': (
+    <>
+      <Cord d="M24 4v11" color="#a68463" width={4}/>
+      <Part d="M9 23q1-12 15-12t15 12L24 43Z" fill="#bd7e57"/>
+      <path d="M12 24h24m-20 7h16" stroke="#eee2bd" strokeWidth={3}/>
+      <Cord d="M10 20q29-11 30 2t-8 12" color="#e2d5af" width={1.8}/>
+      <circle cx="32" cy="35" r="3.5" fill="#c6a467" stroke={INK} strokeWidth={1.8}/>
+    </>
+  ),
   'chinese-incense': (
     <>
       <Cord d="M22 27V8m6 19V5" color="#b47f54" width={2}/>

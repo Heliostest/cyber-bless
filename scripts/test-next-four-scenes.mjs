@@ -3,12 +3,12 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import assert from 'node:assert/strict'
 const base=process.env.WBR_URL||'http://127.0.0.1:5178/'
-const batch=process.env.WBR_BATCH||'keepsake'
-const batches={previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
+const batch=process.env.WBR_BATCH||'handcraft'
+const batches={handcraft:['dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top'],previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
 assert.ok(batches[batch],`Unknown batch: ${batch}`)
 const out=path.resolve(`artifacts/${batch==='previous'?'next':batch}-four-scenes/browser`);await mkdir(out,{recursive:true})
 const allIds=batches[batch]
-const wishIds=['omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto']
+const wishIds=['omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto','aland-votive-ship','minangkabau-spinning-top']
 const ids=process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds,key='cyber-bless:personal:v1'
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const empty={version:1,sceneRecords:[],wishes:[],activeSession:null,sessions:[],collectibles:[],ledger:[],settings:{sound:false,haptics:false,reducedMotion:true}}
@@ -41,12 +41,13 @@ async function shot(page,id,phase){
     return {text:el.textContent,inside:r.left>=box.left&&r.right<=box.right+1&&r.top>=box.top&&r.bottom<=box.bottom+1}
   }))
   for(const label of labels)assert.equal(label.inside,true,`${id}: ${label.text} outside canvas`)
-  if(id==='hongsheng-red-string')assert.equal(await page.evaluate(()=>{
-    const cards=document.querySelector('.red-string-context-layers').getBoundingClientRect()
+  const contextSelector={'hongsheng-red-string':'.red-string-context-layers','minangkabau-spinning-top':'.top-cultural-context'}[id]
+  if(contextSelector)assert.equal(await page.evaluate(({selector,gap})=>{
+    const cards=document.querySelector(selector).getBoundingClientRect()
     return [...document.querySelectorAll('.scene-object-cue:not([hidden]):not([data-compact="true"]) .scene-object-cue-label')].some(el=>{
-      const r=el.getBoundingClientRect();return r.left<cards.right&&r.right>cards.left&&r.top<cards.bottom&&r.bottom>cards.top
+      const r=el.getBoundingClientRect();return r.left<cards.right+gap&&r.right>cards.left-gap&&r.top<cards.bottom+gap&&r.bottom>cards.top-gap
     })
-  }),false,'red-string cue obscures its cultural context')
+  },{selector:contextSelector,gap:id==='minangkabau-spinning-top'?8:0}),false,`${id}: cue crowds its cultural context`)
 }
 async function action(page,count=1){for(let i=0;i<count;i++){const button=page.locator('.scene-bow-tap');await button.focus();await button.press(keyboardActions++%2?'Space':'Enter');await page.waitForTimeout(100)}}
 async function write(page,text){const input=page.locator('.scene-wish-slot input');await input.fill(text);await input.press('Enter')}
@@ -87,7 +88,7 @@ async function arc(page,segments=8){
 async function physical(page,id,step){
   if(id==='navruz-sumalak'&&step===0)await arc(page)
   else if(id==='hongsheng-red-string'&&step===0)await arc(page,12)
-  else if((id==='omamori-cycle'&&step===0)||(id==='shrine-suzu-bell'&&step>0)||
+  else if((id==='minangkabau-spinning-top'&&step===1)||(id==='omamori-cycle'&&step===0)||(id==='shrine-suzu-bell'&&step>0)||
     (id==='floating-lantern-loy-krathong'&&step===1)||(step===2&&!['omikuji','navruz-sumalak','floating-lantern-loy-krathong'].includes(id)))await tap(page)
   else for(let i=0;i<(id==='st-brigids-cross'&&step===0?4:1);i++)await drag(page)
 }

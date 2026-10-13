@@ -20,6 +20,8 @@ export const BLESSING_SCENE_IDS = [
   "navruz-sumalak",
   "chinese-incense",
   "czech-pilgrim-journal",
+  "dalarna-wooden-horse",
+  "blang-tea",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -40,6 +42,8 @@ export const WISH_SCENE_IDS = [
   "floating-lantern-loy-krathong",
   "hongsheng-red-string",
   "italian-ex-voto",
+  "aland-votive-ship",
+  "minangkabau-spinning-top",
 ] as const;
 
 
@@ -50,6 +54,26 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "dalarna-wooden-horse", title: "木马安放", engine: "dalarna-wooden-horse@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "dalecarlian-folk",
+    narrative: "达拉纳木马源自瑞典地方木雕工艺，后来成为广为人知的文化符号，造型与彩绘因工匠而异。这里用原创木马、软布与木座，把轻拭、安放和静看改编为照料手作的致敬练习。不复刻特定工匠作品，不把木马称为护身法器，也不模拟礼拜或承诺家宅平安。",
+  },
+  {
+    id: "aland-votive-ship", title: "舟模寄谢", engine: "aland-votive-ship@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "aland-folk",
+    narrative: "奥兰群岛的教堂船模与航海生活和感谢平安归来的心意相连，不同地方的献置背景并不相同。这里以原创木船、帆桅和船架组成当代手作小景，把立桅、安放和留句感谢改编为文化致敬。不替用户向真实教堂献船，不模拟圣事，也不把模型当作航行安全保证。",
+  },
+  {
+    id: "blang-tea", title: "茶山一盏", engine: "blang-tea@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "blang-traditional",
+    narrative: "景迈山的布朗族等社区长期维护林下茶园，茶树、森林与村落生活相互联系，也承载各自的祖先记忆。这里以原创陶壶、茶叶与小杯，把添叶、倒茶和静看改编为感谢山林的当代茶歇练习。不模拟茶祖祭仪、寨祭或供僧程序，不把这套茶具说成当地统一的仪式器物。",
+  },
+  {
+    id: "minangkabau-spinning-top", title: "归乡轻转", engine: "minangkabau-spinning-top@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "minangkabau-adat",
+    narrative: "米南加保文化中的外出与归乡，同母系大屋、亲属责任和家乡联系相伴，习俗法与伊斯兰传统也长期相互对话。这里用一枚原创木陀螺，让拉绳、轻转与停稳成为祝愿旅途从容的当代致敬练习。不声称这是米南专属古俗，不模拟浴礼、宗教职务或习俗法裁决。",
+  },
   {
     id: "chinese-incense", title: "炉前一炷", engine: "chinese-incense@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-folk-and-confucian",

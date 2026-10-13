@@ -40,11 +40,14 @@ describe("RitualNarrativeBlurb", () => {
 describe("builtInScenes narratives", () => {
   it("covers the placed practices and craft scenes", () => {
     expect(withNarrative.map((e) => e.id).sort()).toEqual([
+      "aland-votive-ship",
+      "blang-tea",
       "bokjori",
       "chinese-incense",
       "clootie-well-rag",
       "crane",
       "czech-pilgrim-journal",
+      "dalarna-wooden-horse",
       "daruma-eye-painting",
       "diya-oil-lamp",
       "ema-votive-plaque",
@@ -54,6 +57,7 @@ describe("builtInScenes narratives", () => {
       "italian-ex-voto",
       "lantern",
       "milagros",
+      "minangkabau-spinning-top",
       "mizuhiki",
       "navruz-sumalak",
       "omamori-cycle",

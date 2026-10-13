@@ -5,7 +5,7 @@ import path from "node:path";
 const base = process.env.WBR_URL || "http://127.0.0.1:5177/";
 const out = path.resolve("artifacts/cozy-scenes", process.argv[2] || "after");
 await mkdir(out, { recursive: true });
-const ids = ['bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon','barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant','sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden','dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top','chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal',"omikuji", "polish-blessing-basket", "navruz-sumalak", "floating-lantern-loy-krathong", "omamori-cycle", "shrine-suzu-bell", "st-brigids-cross", "bokjori", "woodfish", "celtic-folk-spring", "theravada-water", "furin-wind-chime",
+const ids = ['slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart','bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon','barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant','sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden','dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top','chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal',"omikuji", "polish-blessing-basket", "navruz-sumalak", "floating-lantern-loy-krathong", "omamori-cycle", "shrine-suzu-bell", "st-brigids-cross", "bokjori", "woodfish", "celtic-folk-spring", "theravada-water", "furin-wind-chime",
   "daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai",
   "ema-votive-plaque", "clootie-well-rag", "diya-oil-lamp", "votive-candle-catholic",
   "shinto-torii", "tibetan-wheel", "tanzaku-tanabata", "crane", "slavic-wreath", "lantern", "yeondeunghoe"];
@@ -56,7 +56,7 @@ await page.goto(base);
 await page.getByRole("button", { name: "我的", exact: true }).click();
 await page.getByRole("button", { name: "场景目录", exact: true }).click();
 for (const id of ids) {
-  if (!await page.locator(`.scene-card[data-scene="${id}"]`).count()) await page.getByRole('button', { name: '显示更多', exact: true }).click();
+  while (!await page.locator(`.scene-card[data-scene="${id}"]`).count()) await page.getByRole('button', { name: '显示更多', exact: true }).click();
   await page.locator(`.scene-card[data-scene="${id}"]`).click();
   await page.locator("canvas").first().waitFor();
   if (process.argv[2] !== "before") {
@@ -71,7 +71,7 @@ for (const id of ids) {
   }
 }
 await page.setViewportSize({ width: 1280, height: 900 });
-if (!await page.locator('.scene-card[data-scene="shinto-torii"]').count()) await page.getByRole('button', { name: '显示更多', exact: true }).click();
+while (!await page.locator('.scene-card[data-scene="shinto-torii"]').count()) await page.getByRole('button', { name: '显示更多', exact: true }).click();
 await page.locator('.scene-card[data-scene="shinto-torii"]').click();
 await page.waitForTimeout(1000);
 await page.screenshot({ path: path.join(out, "desktop.png"), fullPage: true });

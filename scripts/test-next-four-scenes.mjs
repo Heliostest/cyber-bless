@@ -3,12 +3,12 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import assert from 'node:assert/strict'
 const base=process.env.WBR_URL||'http://127.0.0.1:5178/'
-const batch=process.env.WBR_BATCH||'atelier'
-const batches={atelier:['bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon'],village:['barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant'],festival:['sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden'],handcraft:['dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top'],previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
+const batch=process.env.WBR_BATCH||'workshop'
+const batches={workshop:['slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart'],atelier:['bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon'],village:['barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant'],festival:['sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden'],handcraft:['dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top'],previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
 assert.ok(batches[batch],`Unknown batch: ${batch}`)
 const out=path.resolve(`artifacts/${batch==='previous'?'next':batch}-four-scenes/browser`);await mkdir(out,{recursive:true})
 const allIds=batches[batch]
-const wishIds=['bai-indigo-cloth','welsh-love-spoon','barcelos-clay-rooster','croatian-licitar-heart','sorbian-painted-egg','basque-sunflower','omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto','aland-votive-ship','minangkabau-spinning-top']
+const wishIds=['hungarian-embroidery-hoop','andalusian-ceramic-tile','bai-indigo-cloth','welsh-love-spoon','barcelos-clay-rooster','croatian-licitar-heart','sorbian-painted-egg','basque-sunflower','omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto','aland-votive-ship','minangkabau-spinning-top']
 const ids=process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds,key='cyber-bless:personal:v1'
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const empty={version:1,sceneRecords:[],wishes:[],activeSession:null,sessions:[],collectibles:[],ledger:[],settings:{sound:false,haptics:false,reducedMotion:true}}
@@ -23,7 +23,7 @@ async function pageAt(width=390,state=empty){
 }
 async function catalog(page){await page.getByRole('button',{name:'我的',exact:true}).click();await page.getByRole('button',{name:'场景目录',exact:true}).click()}
 async function open(page,id){
-  if(!await page.locator(`.scene-card[data-scene="${id}"]`).count())await page.getByRole('button',{name:'显示更多',exact:true}).click()
+  while(!await page.locator(`.scene-card[data-scene="${id}"]`).count())await page.getByRole('button',{name:'显示更多',exact:true}).click()
   await page.locator(`.scene-card[data-scene="${id}"]`).click();await page.locator('canvas[data-environment-ready="true"]').waitFor()
 }
 const saved=page=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)),key)

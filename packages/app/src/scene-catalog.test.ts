@@ -112,8 +112,11 @@ describe("场景目录 rows", () => {
   it("lead with the scene's drawn badge and end with a go-to chevron", async () => {
     const ui = renderCatalog();
     await settle();
-    clickOn(Array.from(ui.host.querySelectorAll('button')).find(b => b.textContent === '显示更多')!);
-    await settle();
+    for (let visible = 24; visible < builtInScenes.length; visible += 24) {
+      clickOn(Array.from(ui.host.querySelectorAll('button')).find(b => b.textContent === '显示更多')!);
+      await settle();
+      expect(ui.cards()).toBe(Math.min(visible + 24, builtInScenes.length));
+    }
     const cards = [...ui.host.querySelectorAll(".scene-card")];
     expect(cards.map((card) => card.getAttribute("data-scene"))).toEqual(
       builtInScenes.map((e) => e.id),
@@ -130,8 +133,11 @@ describe("场景目录 rows", () => {
   it("say where a built-in scene's content is with a short chip", async () => {
     const ui = renderCatalog();
     await settle();
-    clickOn(Array.from(ui.host.querySelectorAll('button')).find(b => b.textContent === '显示更多')!);
-    await settle();
+    for (let visible = 24; visible < builtInScenes.length; visible += 24) {
+      clickOn(Array.from(ui.host.querySelectorAll('button')).find(b => b.textContent === '显示更多')!);
+      await settle();
+      expect(ui.cards()).toBe(Math.min(visible + 24, builtInScenes.length));
+    }
     const chips = [...ui.host.querySelectorAll(".scene-card .scene-status")];
     expect(chips).toHaveLength(builtInScenes.length);
     for (const chip of chips) {

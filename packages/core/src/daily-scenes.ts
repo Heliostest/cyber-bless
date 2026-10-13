@@ -28,6 +28,7 @@ export const BLESSING_SCENE_IDS = [
   "catalan-festival-giant",
   "ndebele-painted-house",
   "purepecha-copper-bowl",
+  "slovak-wire-bird", "sicilian-painted-cart",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -56,6 +57,7 @@ export const WISH_SCENE_IDS = [
   "croatian-licitar-heart",
   "bai-indigo-cloth",
   "welsh-love-spoon",
+  "hungarian-embroidery-hoop", "andalusian-ceramic-tile",
 ] as const;
 
 
@@ -66,6 +68,27 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "slovak-wire-bird", title: "铁线栖鸟", engine: "slovak-wire-bird@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "slovak-folk",
+    narrative: "斯洛伐克的铁线工艺从修补和制作日用器具逐渐发展出装饰创作，弯折与缠接的技巧在匠人和工艺机构之间延续。这里用原创铁线小鸟，把接合翅膀、安放和静看改编为欣赏材料的手作练习。不复制具体工匠作品，也不把日常工艺与朝圣礼仪混同，不承诺护佑效力。",
+  },
+  {
+    id: "hungarian-embroidery-hoop", title: "花绣寄语", engine: "hungarian-embroidery-hoop@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "hungarian-folk",
+    narrative: "匈牙利的民间刺绣在地方社区与工艺教学中传承，花卉纹样和细密针脚记录着手作经验，各地风格各有差别。这里用原创花绣、线轴和木绷，把补绣、安放与静看改编为寄托关怀的练习。不复制特定绣品，不把图案解释为统一祝福暗语，也不模拟宗教礼仪。",
+  },
+  {
+    id: "andalusian-ceramic-tile", title: "釉彩映晴", engine: "andalusian-ceramic-tile@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "andalusian-folk",
+    narrative: "塞维利亚特里亚纳的陶艺传统，在旧作坊、窑炉遗迹与陶瓷展览中留下日常手工的记忆。这里用原创蓝白釉彩花砖和木框，把补齐、安放与静看改编为欣赏材料与图案的练习。纹样不复制具体工匠作品，不把花砖当作朝圣或圣事用具，也不承诺祈愿功效。",
+  },
+  {
+    id: "sicilian-painted-cart", title: "彩车迎晴", engine: "sicilian-painted-cart@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "sicilian-santa-rosalia",
+    narrative: "西西里彩绘木车曾服务日常运输，车轮雕刻和车身绘画后来成为地方工艺记忆的一部分，博物馆保留着不同匠人的作品。这里用原创小木车，把装轮、安放和静看改编为欣赏手作的练习。不复制具体车画，不把日用木车等同圣罗萨莉亚节的圣车，也不模拟圣骸巡游。",
+  },
+
   {
     id: "bai-indigo-cloth", title: "蓝白晾晴", engine: "bai-indigo-cloth@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "bai-benzhu",

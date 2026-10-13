@@ -41,6 +41,7 @@ describe("builtInScenes narratives", () => {
   it("covers the placed practices and craft scenes", () => {
     expect(withNarrative.map((e) => e.id).sort()).toEqual([
       "aland-votive-ship",
+      "andalusian-ceramic-tile",
       "bai-indigo-cloth",
       "barcelos-clay-rooster",
       "basque-sunflower",
@@ -61,6 +62,7 @@ describe("builtInScenes narratives", () => {
       "floating-lantern-loy-krathong",
       "furin-wind-chime",
       "hongsheng-red-string",
+      "hungarian-embroidery-hoop",
       "italian-ex-voto",
       "lantern",
       "lithuanian-straw-garden",
@@ -76,7 +78,9 @@ describe("builtInScenes narratives", () => {
       "purepecha-copper-bowl",
       "shinto-torii",
       "shrine-suzu-bell",
+      "sicilian-painted-cart",
       "slavic-wreath",
+      "slovak-wire-bird",
       "sorbian-painted-egg",
       "st-brigids-cross",
       "tanzaku-tanabata",

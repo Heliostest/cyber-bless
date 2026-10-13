@@ -9,6 +9,11 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'slovak-wire-bird', title: '铁线栖鸟', traditionSlug: 'slovak-folk', grade: 'C', sensitivity: '中', gestures: ['drag'] },
+  { id: 'hungarian-embroidery-hoop', title: '花绣寄语', traditionSlug: 'hungarian-folk', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
+  { id: 'andalusian-ceramic-tile', title: '釉彩映晴', traditionSlug: 'andalusian-folk', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
+  { id: 'sicilian-painted-cart', title: '彩车迎晴', traditionSlug: 'sicilian-santa-rosalia', grade: 'C', sensitivity: '中', gestures: ['drag'] },
+
   { id: 'bai-indigo-cloth', title: '蓝白晾晴', traditionSlug: 'bai-benzhu', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
   { id: 'ndebele-painted-house', title: '彩墙寄家', traditionSlug: 'ndebele-traditional', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'purepecha-copper-bowl', title: '铜碗拾暖', traditionSlug: 'purepecha', grade: 'C', sensitivity: '中', gestures: ['drag'] },
@@ -129,6 +134,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart',
   'bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon',
   'barcelos-clay-rooster', 'finnish-birch-basket', 'croatian-licitar-heart', 'catalan-festival-giant',
   'sorbian-painted-egg', 'basque-sunflower', 'breton-banner', 'lithuanian-straw-garden',
@@ -158,6 +164,11 @@ export function isSceneImplemented(id: string): boolean {
 /** Dynamic-import implemented scenes; unknown ids throw. */
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
+    case 'slovak-wire-bird': return import('./slovak-wire-bird')
+    case 'hungarian-embroidery-hoop': return import('./hungarian-embroidery-hoop')
+    case 'andalusian-ceramic-tile': return import('./andalusian-ceramic-tile')
+    case 'sicilian-painted-cart': return import('./sicilian-painted-cart')
+
     case 'bai-indigo-cloth': return import('./bai-indigo-cloth')
     case 'ndebele-painted-house': return import('./ndebele-painted-house')
     case 'purepecha-copper-bowl': return import('./purepecha-copper-bowl')

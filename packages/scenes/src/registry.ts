@@ -9,6 +9,14 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'dalarna-wooden-horse', title: '木马安放', traditionSlug: 'dalecarlian-folk', grade: 'C', sensitivity: '中', gestures: ['drag'] },
+  { id: 'aland-votive-ship', title: '舟模寄谢', traditionSlug: 'aland-folk', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
+  { id: 'blang-tea', title: '茶山一盏', traditionSlug: 'blang-traditional', grade: 'C', sensitivity: '中', gestures: ['drag'] },
+  { id: 'minangkabau-spinning-top', title: '归乡轻转', traditionSlug: 'minangkabau-adat', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
+  { id: 'chinese-incense', title: '炉前一炷', traditionSlug: 'chinese-folk-and-confucian', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'hongsheng-red-string', title: '红绳自持', traditionSlug: 'hongsheng-red-string', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
+  { id: 'italian-ex-voto', title: '绘牌记谢', traditionSlug: 'italian-ex-voto', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
+  { id: 'czech-pilgrim-journal', title: '旅途一页', traditionSlug: 'czech-moravian-folk', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'omikuji', title: '签纸慢读', traditionSlug: 'omikuji', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'polish-blessing-basket', title: '一篮春食', traditionSlug: 'polish-folk-catholic', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'navruz-sumalak', title: '春锅共煮', traditionSlug: 'uzbek-folk', grade: 'C', sensitivity: '中', gestures: ['drag'] },
@@ -109,6 +117,8 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'dalarna-wooden-horse', 'aland-votive-ship', 'blang-tea', 'minangkabau-spinning-top',
+  'chinese-incense', 'hongsheng-red-string', 'italian-ex-voto', 'czech-pilgrim-journal',
   'omikuji', 'polish-blessing-basket', 'navruz-sumalak', 'floating-lantern-loy-krathong',
   'omamori-cycle', 'shrine-suzu-bell', 'st-brigids-cross', 'bokjori',
   'ema-votive-plaque', 'clootie-well-rag', 'diya-oil-lamp', 'votive-candle-catholic',
@@ -133,6 +143,14 @@ export function isSceneImplemented(id: string): boolean {
 /** Dynamic-import implemented scenes; unknown ids throw. */
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
+    case 'dalarna-wooden-horse': return import('./dalarna-wooden-horse')
+    case 'aland-votive-ship': return import('./aland-votive-ship')
+    case 'blang-tea': return import('./blang-tea')
+    case 'minangkabau-spinning-top': return import('./minangkabau-spinning-top')
+    case 'chinese-incense': return import('./chinese-incense')
+    case 'hongsheng-red-string': return import('./hongsheng-red-string')
+    case 'italian-ex-voto': return import('./italian-ex-voto')
+    case 'czech-pilgrim-journal': return import('./czech-pilgrim-journal')
     case 'omikuji': return import('./omikuji')
     case 'polish-blessing-basket': return import('./polish-blessing-basket')
     case 'navruz-sumalak': return import('./navruz-sumalak')

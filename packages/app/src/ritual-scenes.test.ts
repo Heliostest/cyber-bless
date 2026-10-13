@@ -271,6 +271,9 @@ describe("今日's daily set", () => {
     // The same scene, continued from 我的 › 场景目录 — no daily flag this time.
     await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
     await ui.tap(ui.button("场景目录", ".settings-card"));
+    if (!ui.host.querySelector(`.scene-card[data-scene="${sceneId}"]`)) {
+      await ui.tap(ui.button("显示更多"));
+    }
     await ui.tap(
       ui.host.querySelector(`.scene-catalog .scene-card[data-scene="${sceneId}"]`)!,
     );
@@ -307,6 +310,9 @@ describe("今日's daily set", () => {
     const ui = await openApp(state);
     await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
     await ui.tap(ui.button("场景目录", ".settings-card"));
+    if (!ui.host.querySelector(`.scene-card[data-scene="${sceneId}"]`)) {
+      await ui.tap(ui.button("显示更多"));
+    }
     await ui.tap(
       ui.host.querySelector(`.scene-catalog .scene-card[data-scene="${sceneId}"]`)!,
     );

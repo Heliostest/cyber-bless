@@ -42,6 +42,75 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'dalarna-wooden-horse': (
+    <>
+      <Part d="M8 22q-3-7 6-7h13l3-12 5 5 3-4 1 9 7 5-3 5-8-3 2 12-1 12h-6l-1-11H17l-3 11H8l3-17Z" fill="#bd5e4d"/>
+      <Part d="M15 17h12v12H15Z" fill="#eee2bd"/>
+      <path d="m18 20 3 5 3-5" stroke="#809c9c" strokeWidth={2.5} fill="none"/>
+      <circle cx="36" cy="14" r="1.4" fill={INK}/>
+    </>
+  ),
+  'aland-votive-ship': (
+    <>
+      <Part d="m4 30 7 11h27l7-11Z" fill="#b58c62"/>
+      <Cord d="M24 5v27" color="#a78862" width={2}/>
+      <Part d="M22 7 7 27h15Z" fill="#eee2bd"/>
+      <Part d="M27 10v17h14Z" fill="#d5d4b4"/>
+      <path d="M12 44h24m-20-5v5m16-5v5" stroke={INK} strokeWidth={2.5}/>
+    </>
+  ),
+  'blang-tea': (
+    <>
+      <Part d="M35 19q14-7 10 6-2 6-10 5" fill="#819d8d"/>
+      <Part d="M9 21q-1-8 8-10h12q10 2 9 14t-12 13h-7q-11-1-11-13l-6-9 8 5Z" fill="#819d8d"/>
+      <Part d="M12 11h19l-4-5h-10Z" fill="#a8b8a0"/>
+      <path d="M24 17q-11 5 0 13 7-8 0-13" fill="#d5dfb9"/>
+      <Part d="M32 35h13q-1 9-7 9t-6-9Z" fill="#eee2bd"/>
+    </>
+  ),
+  'minangkabau-spinning-top': (
+    <>
+      <Cord d="M24 4v11" color="#a68463" width={4}/>
+      <Part d="M9 23q1-12 15-12t15 12L24 43Z" fill="#bd7e57"/>
+      <path d="M12 24h24m-20 7h16" stroke="#eee2bd" strokeWidth={3}/>
+      <Cord d="M10 20q29-11 30 2t-8 12" color="#e2d5af" width={1.8}/>
+      <circle cx="32" cy="35" r="3.5" fill="#c6a467" stroke={INK} strokeWidth={1.8}/>
+    </>
+  ),
+  'chinese-incense': (
+    <>
+      <Cord d="M22 27V8m6 19V5" color="#b47f54" width={2}/>
+      <path d="M22 6q-6-3 0-5m6 1q5-3 0-5" fill="none" stroke="#b8b6a0" strokeWidth={1.7}/>
+      <Part d="M8 25h32c0 18-32 18-32 0Z" fill="#9db6ad"/>
+      <path d="M12 36v7m24-7v7m-12-5v6" stroke={INK} strokeWidth={3}/>
+      <path d="M12 26h24" stroke="#f6e3bd" strokeWidth={3}/>
+    </>
+  ),
+  'hongsheng-red-string': (
+    <>
+      <Part d="M18 5h12v29H18Z" fill="#d5b58d"/>
+      <Part d="M8 36h32v6H8Z" fill="#d5b58d"/>
+      <Cord d="M10 24c0-18 28-18 28 0S10 42 10 24Z" color="#c77872" width={3}/>
+      <Part d="M21 32h6v6h-6Z" fill="#e4c487"/>
+    </>
+  ),
+  'italian-ex-voto': (
+    <>
+      <Cord d="m12 44 9-38m6 0 9 38" color="#b89571" width={3}/>
+      <Part d="M7 10h34v28H7Z" fill="#f4dfb6"/>
+      <path d="M13 31q8-11 14-5t9-5" stroke="#a6bba6" strokeWidth={4} fill="none"/>
+      <Part d="M25 15h10v12H25Z" fill="#ebbd77"/>
+      <path d="M30 15v12m-5-6h10" stroke={INK} strokeWidth={1.5}/>
+    </>
+  ),
+  'czech-pilgrim-journal': (
+    <>
+      <Part d="M3 12q11-5 21 0 10-5 21 0v28q-11-4-21 0-10-4-21 0Z" fill="#78978a"/>
+      <Part d="M6 9q9-3 18 1 9-4 18-1v27q-9-3-18 1-9-4-18-1Z" fill="#f4e3bd"/>
+      <path d="M24 10v27m-14-8 5-8 5 7m9-10 4 4-4 8" fill="none" stroke="#92ab91" strokeWidth={2}/>
+      <path d="M36 10v30l-3-3-3 2V11" fill="#ce8e7c"/>
+    </>
+  ),
   omikuji: (
     <>
       <Part d="m9 15 10-5 10 5v26l-10 4-10-4Z" fill="#cead7c"><path d="m19 11 10 4v26l-10 4Z" fill="#b99567"/></Part>

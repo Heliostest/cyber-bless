@@ -72,6 +72,10 @@ const entries: CatalogEntry[] = [
 
 describe("scene placement", () => {
   it.each([
+    ["dalarna-wooden-horse", "dalecarlian-folk", false], ["aland-votive-ship", "aland-folk", true],
+    ["blang-tea", "blang-traditional", false], ["minangkabau-spinning-top", "minangkabau-adat", true],
+    ["chinese-incense", "chinese-folk-and-confucian", false], ["hongsheng-red-string", "hongsheng-red-string", true],
+    ["italian-ex-voto", "italian-ex-voto", true], ["czech-pilgrim-journal", "czech-moravian-folk", false],
     ["omikuji", "omikuji", false], ["polish-blessing-basket", "polish-folk-catholic", true],
     ["navruz-sumalak", "uzbek-folk", false], ["floating-lantern-loy-krathong", "floating-lantern-loy-krathong", true],
   ] as const)("places %s in the enlarged native-safe catalog", (id, slug, wish) => {
@@ -111,6 +115,8 @@ describe("scene placement", () => {
       "clootie-well-rag", "diya-oil-lamp",
       "shrine-suzu-bell", "st-brigids-cross", "bokjori",
       "omikuji", "navruz-sumalak",
+      "chinese-incense", "czech-pilgrim-journal",
+      "dalarna-wooden-horse", "blang-tea",
     ]);
     expect([...WISH_SCENE_IDS]).toEqual([
       "tanzaku-tanabata",
@@ -122,6 +128,8 @@ describe("scene placement", () => {
       "ema-votive-plaque", "votive-candle-catholic",
       "omamori-cycle",
       "polish-blessing-basket", "floating-lantern-loy-krathong",
+      "hongsheng-red-string", "italian-ex-voto",
+      "aland-votive-ship", "minangkabau-spinning-top",
     ]);
     expect(isWishScene("tanzaku-tanabata")).toBe(true);
     expect(isWishScene("slavic-wreath")).toBe(true);

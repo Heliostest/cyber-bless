@@ -47,6 +47,14 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['dalarna-wooden-horse', 0, 'horse-polishing-cloth', 'horse-painted-saddle'],
+  ['aland-votive-ship', 0, 'ship-mast-grip', 'ship-mast-socket'],
+  ['blang-tea', 0, 'tea-scoop-grip', 'tea-pot-mouth'],
+  ['minangkabau-spinning-top', 0, 'top-pull-bead', 'top-pull-anchor'],
+  ['chinese-incense', 1, 'incense-paper-grip', 'incense-socket'],
+  ['hongsheng-red-string', 1, 'red-string-clasp-head', 'red-string-clasp-socket'],
+  ['italian-ex-voto', 0, 'exvoto-brush-tip', 'exvoto-route-origin'],
+  ['czech-pilgrim-journal', 0, 'journal-cover-corner', 'journal-cover-rest'],
   ['omikuji', 1, 'omikuji-draw-stick', 'omikuji-draw-target'],
   ['polish-blessing-basket', 1, 'basket-egg-body', 'basket-egg-nest'],
   ['navruz-sumalak', 1, 'navruz-wooden-spoon-bowl', 'navruz-empty-bowl-basin'],

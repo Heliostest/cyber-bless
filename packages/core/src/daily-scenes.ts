@@ -18,6 +18,10 @@ export const BLESSING_SCENE_IDS = [
   "bokjori",
   "omikuji",
   "navruz-sumalak",
+  "chinese-incense",
+  "czech-pilgrim-journal",
+  "dalarna-wooden-horse",
+  "blang-tea",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -36,6 +40,10 @@ export const WISH_SCENE_IDS = [
   "omamori-cycle",
   "polish-blessing-basket",
   "floating-lantern-loy-krathong",
+  "hongsheng-red-string",
+  "italian-ex-voto",
+  "aland-votive-ship",
+  "minangkabau-spinning-top",
 ] as const;
 
 
@@ -46,6 +54,46 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "dalarna-wooden-horse", title: "木马安放", engine: "dalarna-wooden-horse@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "dalecarlian-folk",
+    narrative: "达拉纳木马源自瑞典地方木雕工艺，后来成为广为人知的文化符号，造型与彩绘因工匠而异。这里用原创木马、软布与木座，把轻拭、安放和静看改编为照料手作的致敬练习。不复刻特定工匠作品，不把木马称为护身法器，也不模拟礼拜或承诺家宅平安。",
+  },
+  {
+    id: "aland-votive-ship", title: "舟模寄谢", engine: "aland-votive-ship@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "aland-folk",
+    narrative: "奥兰群岛的教堂船模与航海生活和感谢平安归来的心意相连，不同地方的献置背景并不相同。这里以原创木船、帆桅和船架组成当代手作小景，把立桅、安放和留句感谢改编为文化致敬。不替用户向真实教堂献船，不模拟圣事，也不把模型当作航行安全保证。",
+  },
+  {
+    id: "blang-tea", title: "茶山一盏", engine: "blang-tea@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "blang-traditional",
+    narrative: "景迈山的布朗族等社区长期维护林下茶园，茶树、森林与村落生活相互联系，也承载各自的祖先记忆。这里以原创陶壶、茶叶与小杯，把添叶、倒茶和静看改编为感谢山林的当代茶歇练习。不模拟茶祖祭仪、寨祭或供僧程序，不把这套茶具说成当地统一的仪式器物。",
+  },
+  {
+    id: "minangkabau-spinning-top", title: "归乡轻转", engine: "minangkabau-spinning-top@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "minangkabau-adat",
+    narrative: "米南加保文化中的外出与归乡，同母系大屋、亲属责任和家乡联系相伴，习俗法与伊斯兰传统也长期相互对话。这里用一枚原创木陀螺，让拉绳、轻转与停稳成为祝愿旅途从容的当代致敬练习。不声称这是米南专属古俗，不模拟浴礼、宗教职务或习俗法裁决。",
+  },
+  {
+    id: "chinese-incense", title: "炉前一炷", engine: "chinese-incense@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "chinese-folk-and-confucian",
+    narrative: "敬香见于汉人家庭与庙宇的公开礼俗，各地对香数、供物和礼敬姿态有不同习惯。这里以圆润香炉、炉盖与一炷香为灵感，借开盖、置香和静看收拾心神。本体验是产品改编的庭前致敬练习，不模拟宗祠祭祖或神职礼仪，不把烟缕视为回应，也不承诺愿望实现。",
+  },
+  {
+    id: "hongsheng-red-string", title: "红绳自持", engine: "hongsheng-red-string@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "hongsheng-red-string",
+    narrative: "文学典故中的月老赤绳来自姻缘故事，是连结的想象；当代习惯中的红绳佩戴则做法多样，不能由故事推导为统一古礼。这里取当代照看自己的心意，以收线架绕绳、合扣和静看做手作致敬。本体验为产品改编，不判断缘分、不强制配对，也不与其他传统护身线混称。",
+  },
+  {
+    id: "italian-ex-voto", title: "绘牌记谢", engine: "italian-ex-voto@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "italian-ex-voto",
+    narrative: "意大利民间绘牌还愿常以木板或釉陶图像记述危难后的感谢，属于天主教民间虔诚的可见表达，与金属小符和还愿烛形态不同。这里用原创归途与窗光图案，把执笔、绘色和留一句感谢改编为致敬练习。不复刻圣像，不替用户宣告神迹，也不代表向真实圣地献牌。",
+  },
+  {
+    id: "czech-pilgrim-journal", title: "旅途一页", engine: "czech-pilgrim-journal@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "czech-moravian-folk",
+    narrative: "摩拉维亚的霍斯廷与维莱赫拉德是捷克重要朝圣地，步行路线连接山丘、村落与圣所，旅行与信仰在此相遇。这里借旅人的片刻停歇，翻开一册原创山路手记、放入布书签并静看。这本现代手记是产品改编的文化致敬，不声称为历史仪轨，也不模拟弥撒、告解或真实朝圣完成。",
+  },
   {
     id: "omikuji", title: "签纸慢读", engine: "omikuji@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "omikuji",

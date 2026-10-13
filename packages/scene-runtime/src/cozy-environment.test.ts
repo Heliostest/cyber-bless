@@ -3,6 +3,16 @@ import * as THREE from "three";
 import { createCozyEnvironment } from "./cozy-environment";
 
 describe("a scene's surrounding world", () => {
+  it.each([
+    ["omikuji", "courtyard"], ["polish-blessing-basket", "veranda"],
+    ["navruz-sumalak", "courtyard"], ["floating-lantern-loy-krathong", "river"],
+  ])("grounds %s in its local environment and releases its sky", async (id, kind) => {
+    const scene = new THREE.Scene(), sky = new THREE.DataTexture(), released = vi.spyOn(sky, 'dispose');
+    const environment = createCozyEnvironment(scene, { id, loadSky: async () => sky });
+    expect(environment).not.toBeNull(); await environment!.ready;
+    expect(scene.getObjectByName('cozy-environment')!.userData.environment).toBe(kind);
+    environment!.dispose(); expect(released).toHaveBeenCalledOnce(); expect(scene.children).toHaveLength(0);
+  });
   it("keeps a usable world when its bundled sky cannot load", async () => {
     const scene = new THREE.Scene();
     const world = createCozyEnvironment(scene, {

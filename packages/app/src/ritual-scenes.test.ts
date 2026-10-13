@@ -673,6 +673,7 @@ describe("场景目录", () => {
     const ui = await openApp(withRecords({ crane: 3 }));
     await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
     await ui.tap(ui.button("场景目录", ".settings-card"));
+    await ui.tap(ui.button("显示更多"));
     await ui.tap(
       ui.host.querySelector('.scene-catalog .scene-card[data-scene="crane"]')!,
     );

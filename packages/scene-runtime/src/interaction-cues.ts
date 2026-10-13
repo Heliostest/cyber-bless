@@ -81,7 +81,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
     const sources = active.map(e => e.source)
     for (const entry of active) if (entry.target) {
       // One destination may also be a direct tap source (for example an eye).
-      entry.target.hidden = sources.some(source => Math.hypot(Number(source.dataset.x) - Number(entry.target!.dataset.x), Number(source.dataset.y) - Number(entry.target!.dataset.y)) < 24)
+      entry.target.hidden = active.some(other => other.cue.kind === 'tap' && Math.hypot(Number(other.source.dataset.x) - Number(entry.target!.dataset.x), Number(other.source.dataset.y) - Number(entry.target!.dataset.y)) < 24)
     }
     const nodes = [...sources.filter(source => source.dataset.compact !== 'true'), ...active.flatMap(e => e.target && !e.target.hidden ? [e.target] : [])]
     for (const node of nodes) {

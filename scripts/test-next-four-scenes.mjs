@@ -3,20 +3,26 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import assert from 'node:assert/strict'
 const base=process.env.WBR_URL||'http://127.0.0.1:5178/'
-const out=path.resolve('artifacts/next-four-scenes/browser');await mkdir(out,{recursive:true})
-const allIds=['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori']
+const batch=process.env.WBR_BATCH||'seasonal'
+const out=path.resolve(`artifacts/${batch==='previous'?'next':'seasonal'}-four-scenes/browser`);await mkdir(out,{recursive:true})
+const allIds=batch==='previous'?['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori']:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong']
+const wishIds=['omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong']
 const ids=process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds,key='cyber-bless:personal:v1'
 const empty={version:1,sceneRecords:[],wishes:[],activeSession:null,sessions:[],collectibles:[],ledger:[],settings:{sound:false,haptics:false,reducedMotion:true}}
-const browser=await chromium.launch({headless:true}),results=[],errors=[]
+const browser=await chromium.launch({headless:true}),results=[],errors=[],external=[]
 let captures=0
 async function pageAt(width=390,state=empty){
   const page=await browser.newPage({viewport:{width,height:width>500?900:844}});page.setDefaultTimeout(20000)
   page.on('pageerror',e=>errors.push(e.message))
+  page.on('request',r=>{if(!r.url().startsWith(new URL(base).origin)&&!/^(data:|blob:)/.test(r.url()))external.push(r.url())})
   await page.addInitScript(({key,state})=>{if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify(state))},{key,state})
   await page.goto(base);return page
 }
 async function catalog(page){await page.getByRole('button',{name:'我的',exact:true}).click();await page.getByRole('button',{name:'场景目录',exact:true}).click()}
-async function open(page,id){await page.locator(`.scene-card[data-scene="${id}"]`).click();await page.locator('canvas[data-environment-ready="true"]').waitFor()}
+async function open(page,id){
+  if(!await page.locator(`.scene-card[data-scene="${id}"]`).count())await page.getByRole('button',{name:'显示更多',exact:true}).click()
+  await page.locator(`.scene-card[data-scene="${id}"]`).click();await page.locator('canvas[data-environment-ready="true"]').waitFor()
+}
 const saved=page=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)),key)
 async function progress(page,id,n){
   try{await page.waitForFunction(({key,id,n})=>JSON.parse(localStorage.getItem(key)).sceneRecords.find(r=>r.id===id)?.progress===n,{key,id,n})}
@@ -42,9 +48,9 @@ for(const width of process.env.WBR_RETURN_ONLY?[]:[390,320,1280])for(const id of
   await shot(page,id,`${width}-1`);await action(page);await progress(page,id,2)
   if(width===390){await page.reload();await catalog(page);await open(page,id);assert.equal((await saved(page)).sceneRecords.find(r=>r.id===id).progress,2)}
   await shot(page,id,`${width}-2`)
-  if(id==='omamori-cycle')await write(page,'愿这一程温柔从容');else await action(page)
+  if(wishIds.includes(id))await write(page,'愿这一程温柔从容');else await action(page)
   await progress(page,id,3);await shot(page,id,`${width}-3`)
-  const state=await saved(page);assert.equal(state.wishes.length,id==='omamori-cycle'?1:0)
+  const state=await saved(page);assert.equal(state.wishes.length,wishIds.includes(id)?1:0)
   assert.equal(await page.locator('[data-cue-role="source"]').count(),0)
   results.push({id,width,checkpoints:3,wishes:state.wishes.length});console.log(`${id} ${width}px: keyboard/restore/cues passed`);await page.close()
 }
@@ -59,30 +65,45 @@ async function drag(page){
   const from=await point(page),to=await point(page,'target');await page.mouse.move(...from);await page.mouse.down()
   await page.mouse.move(...to,{steps:18});await page.mouse.up();await page.waitForTimeout(150)
 }
-for(const id of process.env.WBR_RETURN_ONLY?[]:ids){
-  const page=await pageAt();await catalog(page);await open(page,id)
-  if(id==='omamori-cycle')await tap(page)
-  else for(let i=0;i<(id==='st-brigids-cross'?4:1);i++)await drag(page)
-  await progress(page,id,1)
-  if(id==='shrine-suzu-bell')await tap(page);else await drag(page)
-  await progress(page,id,2);await tap(page);await progress(page,id,3)
+async function arc(page){
+  await page.mouse.move(...await point(page));await page.mouse.down()
+  for(let i=0;i<8;i++){await page.mouse.move(...await point(page,'target'),{steps:8});await page.waitForTimeout(80)}
+  await page.mouse.up();await page.waitForTimeout(150)
+}
+async function physical(page,id,step){
+  if(id==='navruz-sumalak'&&step===0)await arc(page)
+  else if((id==='omamori-cycle'&&step===0)||(id==='shrine-suzu-bell'&&step>0)||
+    (id==='floating-lantern-loy-krathong'&&step===1)||(step===2&&!['omikuji','navruz-sumalak','floating-lantern-loy-krathong'].includes(id)))await tap(page)
+  else for(let i=0;i<(id==='st-brigids-cross'&&step===0?4:1);i++)await drag(page)
+}
+for(const width of process.env.WBR_RETURN_ONLY?[]:[390,320,1280])for(const id of ids){
+  const page=await pageAt(width);await catalog(page);await open(page,id)
+  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,box.y+3]
+  await page.mouse.move(...wrong);await page.mouse.down();await page.mouse.move(...from);await page.mouse.up()
+  await page.mouse.move(...from);await page.mouse.down();await page.mouse.move(...wrong);await page.mouse.up()
+  assert.equal((await saved(page)).sceneRecords.find(r=>r.id===id)?.progress??0,0)
+  await shot(page,id,`${width}-object-0`)
+  for(let step=0;step<3;step++){
+    if(step===2&&wishIds.includes(id))await page.locator('.scene-wish-slot input').fill('这句尚未提交')
+    await physical(page,id,step);await progress(page,id,step+1);await shot(page,id,`${width}-object-${step+1}`)
+  }
   assert.equal((await saved(page)).wishes.length,0,'quiet physical finish saved an unsubmitted wish')
-  results.push({id,directCueFlow:'passed'});console.log(`${id}: real displayed-object flow passed`);await page.close()
+  results.push({id,width,directCueFlow:'passed',invalidGestures:'passed'});console.log(`${id} ${width}px: real displayed-object flow passed`);await page.close()
 }
-{
+for(const id of ids.filter(id=>wishIds.includes(id))){
   const at='2026-10-11T08:00:00.000Z',state={...empty,
-    wishes:[{id:'omamori-return',title:'走完一段路',intention:'从容向前',status:'realized',archived:false,createdAt:at,realizedAt:at,returnMethod:'ritual',sourceSceneId:'omamori-cycle',notes:[]}],
-    collectibles:[{id:'omamori-vessel',kind:'scene',sceneId:'omamori-cycle',title:'御守伴行',wishScene:true,at}]}
+    wishes:[{id:'return-wish',title:'走完一段路',intention:'从容向前',status:'realized',archived:false,createdAt:at,realizedAt:at,returnMethod:'ritual',sourceSceneId:id,notes:[]}],
+    collectibles:[{id:'return-vessel',kind:'scene',sceneId:id,title:'心意小物',wishScene:true,at}]}
   const page=await pageAt(390,state);await page.getByRole('button',{name:'心愿',exact:true}).click()
-  await page.locator('.wish-card[data-wish-id="omamori-return"]').click();await page.getByRole('button',{name:'来还个愿',exact:true}).click()
-  await page.locator('.vessel-card[data-scene="omamori-cycle"]').click();await page.locator('canvas[data-environment-ready="true"]').waitFor()
+  await page.locator('.wish-card[data-wish-id="return-wish"]').click();await page.getByRole('button',{name:'来还个愿',exact:true}).click()
+  await page.locator(`.vessel-card[data-scene="${id}"]`).click();await page.locator('canvas[data-environment-ready="true"]').waitFor()
   assert.equal(await page.locator('.scene-wish-slot input').count(),0)
-  await shot(page,'omamori-cycle','return-0');await tap(page);await progress(page,'omamori-cycle',1)
-  await drag(page);await progress(page,'omamori-cycle',2);await shot(page,'omamori-cycle','return-2')
-  await tap(page);await progress(page,'omamori-cycle',3)
+  await shot(page,id,'return-0')
+  for(let step=0;step<3;step++){await physical(page,id,step);await progress(page,id,step+1)}
+  await shot(page,id,'return-3')
   const value=await saved(page);assert.equal(value.wishes.length,1);assert.equal(value.wishes[0].notes.length,1);assert.ok(value.collectibles[0].spentAt);assert.equal(value.ledger.length,0)
-  results.push({id:'omamori-cycle',returning:'passed'});console.log('omamori: actual return entry spends one vessel and saves only a return note');await page.close()
+  results.push({id,returning:'passed'});console.log(`${id}: return entry spends one vessel and saves only a return note`);await page.close()
 }
-await browser.close();assert.deepEqual(errors,[])
-await writeFile(path.join(out,process.env.WBR_RETURN_ONLY?'return-report.json':'report.json'),JSON.stringify({results,errors},null,2))
-console.log(JSON.stringify({captures,flows:results.filter(r=>r.width).length,directCueFlows:results.filter(r=>r.directCueFlow).length,returning:results.some(r=>r.returning),errors,out}))
+await browser.close();assert.deepEqual(errors,[]);assert.deepEqual(external,[])
+await writeFile(path.join(out,process.env.WBR_RETURN_ONLY?'return-report.json':'report.json'),JSON.stringify({results,errors,external,captures},null,2))
+console.log(JSON.stringify({captures,flows:results.filter(r=>r.checkpoints).length,directCueFlows:results.filter(r=>r.directCueFlow).length,returning:results.filter(r=>r.returning).length,errors,external,out}))

@@ -5,7 +5,7 @@ import path from "node:path";
 const base = process.env.WBR_URL || "http://127.0.0.1:5177/";
 const out = path.resolve("artifacts/cozy-scenes", process.argv[2] || "after");
 await mkdir(out, { recursive: true });
-const ids = ["omamori-cycle", "shrine-suzu-bell", "st-brigids-cross", "bokjori", "woodfish", "celtic-folk-spring", "theravada-water", "furin-wind-chime",
+const ids = ["omikuji", "polish-blessing-basket", "navruz-sumalak", "floating-lantern-loy-krathong", "omamori-cycle", "shrine-suzu-bell", "st-brigids-cross", "bokjori", "woodfish", "celtic-folk-spring", "theravada-water", "furin-wind-chime",
   "daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai",
   "ema-votive-plaque", "clootie-well-rag", "diya-oil-lamp", "votive-candle-catholic",
   "shinto-torii", "tibetan-wheel", "tanzaku-tanabata", "crane", "slavic-wreath", "lantern", "yeondeunghoe"];
@@ -56,6 +56,7 @@ await page.goto(base);
 await page.getByRole("button", { name: "我的", exact: true }).click();
 await page.getByRole("button", { name: "场景目录", exact: true }).click();
 for (const id of ids) {
+  if (!await page.locator(`.scene-card[data-scene="${id}"]`).count()) await page.getByRole('button', { name: '显示更多', exact: true }).click();
   await page.locator(`.scene-card[data-scene="${id}"]`).click();
   await page.locator("canvas").first().waitFor();
   if (process.argv[2] !== "before") {

@@ -6,7 +6,7 @@ import assert from 'node:assert/strict'
 const base = process.env.WBR_URL || 'http://127.0.0.1:5178/'
 const out = path.resolve('artifacts/object-first-scenes/browser')
 await mkdir(out, { recursive: true })
-const allIds = ['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori','woodfish','celtic-folk-spring','theravada-water','furin-wind-chime',
+const allIds = ['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong','omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori','woodfish','celtic-folk-spring','theravada-water','furin-wind-chime',
   'daruma-eye-painting','mizuhiki','milagros','phuang-malai','ema-votive-plaque',
   'clootie-well-rag','diya-oil-lamp','votive-candle-catholic','shinto-torii',
   'tibetan-wheel','tanzaku-tanabata','crane','slavic-wreath','lantern','yeondeunghoe']
@@ -26,6 +26,7 @@ async function pageAt(width) {
   return page
 }
 async function open(page, id) {
+  if (!await page.locator(`.scene-card[data-scene="${id}"]`).count()) await page.getByRole('button', { name: '显示更多', exact: true }).click()
   await page.locator(`.scene-card[data-scene="${id}"]`).click()
   await page.locator('canvas[data-environment-ready="true"]').waitFor()
   await page.locator('.scene-object-cue[data-cue-role="source"] .scene-object-cue-ring').first().waitFor()

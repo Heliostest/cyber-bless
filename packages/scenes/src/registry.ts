@@ -9,6 +9,10 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'omikuji', title: '签纸慢读', traditionSlug: 'omikuji', grade: 'C', sensitivity: '中', gestures: ['drag'] },
+  { id: 'polish-blessing-basket', title: '一篮春食', traditionSlug: 'polish-folk-catholic', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
+  { id: 'navruz-sumalak', title: '春锅共煮', traditionSlug: 'uzbek-folk', grade: 'C', sensitivity: '中', gestures: ['drag'] },
+  { id: 'floating-lantern-loy-krathong', title: '叶舟寄意', traditionSlug: 'floating-lantern-loy-krathong', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
   { id: 'omamori-cycle', title: '御守伴行', traditionSlug: 'omamori-cycle', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
   { id: 'shrine-suzu-bell', title: '庭前一铃', traditionSlug: 'shrine-suzu-bell', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'st-brigids-cross', title: '草编迎春', traditionSlug: 'st-brigids-cross', grade: 'C', sensitivity: '中', gestures: ['drag'] },
@@ -105,6 +109,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'omikuji', 'polish-blessing-basket', 'navruz-sumalak', 'floating-lantern-loy-krathong',
   'omamori-cycle', 'shrine-suzu-bell', 'st-brigids-cross', 'bokjori',
   'ema-votive-plaque', 'clootie-well-rag', 'diya-oil-lamp', 'votive-candle-catholic',
   'daruma-eye-painting', 'mizuhiki', 'milagros', 'phuang-malai',
@@ -128,6 +133,10 @@ export function isSceneImplemented(id: string): boolean {
 /** Dynamic-import implemented scenes; unknown ids throw. */
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
+    case 'omikuji': return import('./omikuji')
+    case 'polish-blessing-basket': return import('./polish-blessing-basket')
+    case 'navruz-sumalak': return import('./navruz-sumalak')
+    case 'floating-lantern-loy-krathong': return import('./floating-lantern-loy-krathong')
     case 'omamori-cycle': return import('./omamori-cycle')
     case 'shrine-suzu-bell': return import('./shrine-suzu-bell')
     case 'st-brigids-cross': return import('./st-brigids-cross')

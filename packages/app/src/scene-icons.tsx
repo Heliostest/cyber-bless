@@ -42,6 +42,19 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'polish-paper-cut': (<>
+    <Part d="M7 5h34v38H7Z" fill="#efe6ce"/>
+    <Part d="M22 39V32L12 35 8 28 18 25 9 20 12 14 20 20 17 9 24 5 31 9 28 20 36 14 39 20 30 25 40 28 36 35 26 32V39Z M23 12h2v5h-2Z M13 29l6-1-4 3Z M29 28l6 1-2 2Z" fill="#376c68" evenodd/>
+    <path d="M24 22v12" fill="none" stroke="#a4c4b6" strokeWidth={1.2}/>
+  </>),
+  'uzbek-clay-bowl': (<>
+    <Part d="M21 33h6v10h-6Z" fill="#937452"/>
+    <ellipse cx={24} cy={34} rx={20} ry={5} fill="#b69a76" stroke={INK} strokeWidth={2}/>
+    <Part d="M9 15Q10 31 24 32Q38 31 39 15Z" fill="#ad785a"/>
+    <ellipse cx={24} cy={15} rx={15} ry={6} fill="#81563f" stroke={INK} strokeWidth={2}/>
+    <ellipse cx={24} cy={16} rx={11} ry={3.2} fill="#a57352"/>
+    <path d="M13 23q11 6 22 0M17 28q7 3 14 0" fill="none" stroke="#d6aa84" strokeWidth={1.3}/>
+  </>),
   'chinese-woodblock-print': (<>
     <Part d="M7 9h31v33H7Z" fill="#b59467"/>
     <Part d="M11 5h29v31H11Z" fill="#eee6cc"/>

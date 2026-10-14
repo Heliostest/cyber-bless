@@ -29,7 +29,7 @@ export const BLESSING_SCENE_IDS = [
   "ndebele-painted-house",
   "purepecha-copper-bowl",
   "slovak-wire-bird", "sicilian-painted-cart", "fijian-woven-fan",
-  "czech-bead-star",
+  "czech-bead-star", "uzbek-clay-bowl",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -59,7 +59,7 @@ export const WISH_SCENE_IDS = [
   "bai-indigo-cloth",
   "welsh-love-spoon",
   "hungarian-embroidery-hoop", "andalusian-ceramic-tile", "amazigh-woven-rug",
-  "chinese-woodblock-print",
+  "chinese-woodblock-print", "polish-paper-cut",
 ] as const;
 
 
@@ -70,6 +70,16 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "polish-paper-cut", title: "剪纸开花", engine: "polish-paper-cut@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "polish-folk-catholic",
+    narrative: "波兰剪纸用折叠和彩纸剪切形成对称或层叠的装饰，库尔皮耶等地发展出各有特点的花树纹样，手艺在家庭与文化机构中延续。这里以原创花叶，练习剪开最后一道边线、展开和静看。心愿只在明确提交后保存；不复制匠人作品，不模拟圣事或承诺护佑。",
+  },
+  {
+    id: "uzbek-clay-bowl", title: "陶轮慢成", engine: "uzbek-clay-bowl@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "uzbek-folk",
+    narrative: "乌兹别克斯坦陶艺以当地黏土制作储器、壶碗等日用品，手艺在家庭、作坊和教学中代代延续。这里用原创泥坯与陶轮，把启转、拉起器壁和静看改编为欣赏制坯的练习。结束时仍是未烧成的泥坯，不模拟完整窑烧，也不把日常器物当作祭器或承诺祈愿效力。",
+  },
   {
     id: "chinese-woodblock-print", title: "木版留春", engine: "chinese-woodblock-print@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-folk-and-confucian",

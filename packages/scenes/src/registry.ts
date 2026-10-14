@@ -9,6 +9,8 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'polish-paper-cut', title: '剪纸开花', traditionSlug: 'polish-folk-catholic', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
+  { id: 'uzbek-clay-bowl', title: '陶轮慢成', traditionSlug: 'uzbek-folk', grade: 'C', sensitivity: '低', gestures: ['drag', 'spin'] },
   { id: 'chinese-woodblock-print', title: '木版留春', traditionSlug: 'chinese-folk-and-confucian', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'czech-bead-star', title: '珠星映光', traditionSlug: 'czech-moravian-folk', grade: 'C', sensitivity: '低', gestures: ['drag', 'spin'] },
   { id: 'fijian-woven-fan', title: '叶扇纳凉', traditionSlug: 'fijian-vanua', grade: 'C', sensitivity: '中', gestures: ['drag'] },
@@ -138,6 +140,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'polish-paper-cut', 'uzbek-clay-bowl',
   'chinese-woodblock-print', 'czech-bead-star',
   'fijian-woven-fan', 'amazigh-woven-rug',
   'slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart',
@@ -170,6 +173,8 @@ export function isSceneImplemented(id: string): boolean {
 /** Dynamic-import implemented scenes; unknown ids throw. */
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
+    case 'polish-paper-cut': return import('./polish-paper-cut')
+    case 'uzbek-clay-bowl': return import('./uzbek-clay-bowl')
     case 'fijian-woven-fan': return import('./fijian-woven-fan')
     case 'chinese-woodblock-print': return import('./chinese-woodblock-print')
     case 'czech-bead-star': return import('./czech-bead-star')

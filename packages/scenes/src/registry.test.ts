@@ -10,6 +10,7 @@ describe('sceneRegistry', () => {
 
   it('lists the pilot metas, the C-grade Design A scenes, then the product-original scenes', () => {
     expect(sceneRegistry.map((m) => m.id)).toEqual([
+      'polish-paper-cut', 'uzbek-clay-bowl',
       'chinese-woodblock-print', 'czech-bead-star',
       'fijian-woven-fan', 'amazigh-woven-rug',
       'slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart',
@@ -105,6 +106,8 @@ describe('loadScene', () => {
 
   it.each([
     ['fijian-woven-fan', '叶扇纳凉', 'fijian-vanua'],
+    ['polish-paper-cut', '剪纸开花', 'polish-folk-catholic'],
+    ['uzbek-clay-bowl', '陶轮慢成', 'uzbek-folk'],
     ['chinese-woodblock-print', '木版留春', 'chinese-folk-and-confucian'],
     ['czech-bead-star', '珠星映光', 'czech-moravian-folk'],
     ['amazigh-woven-rug', '织毯寄暖', 'amazigh-berber'],

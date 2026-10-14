@@ -5,11 +5,11 @@ import assert from 'node:assert/strict'
 import { scenePointer } from './browser-scene-pointer.mjs'
 const base=process.env.WBR_URL||'http://127.0.0.1:5178/'
 const batch=process.env.WBR_BATCH||'workshop'
-const batches={printbead:['chinese-woodblock-print','czech-bead-star'],woven:['fijian-woven-fan','amazigh-woven-rug'],workshop:['slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart'],atelier:['bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon'],village:['barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant'],festival:['sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden'],handcraft:['dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top'],previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
+const batches={paperclay:['polish-paper-cut','uzbek-clay-bowl'],printbead:['chinese-woodblock-print','czech-bead-star'],woven:['fijian-woven-fan','amazigh-woven-rug'],workshop:['slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart'],atelier:['bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon'],village:['barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant'],festival:['sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden'],handcraft:['dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top'],previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
 assert.ok(batches[batch],`Unknown batch: ${batch}`)
 const out=path.resolve(process.env.WBR_OUT||(batch==='woven'?'artifacts/woven-pair-scenes/browser':`artifacts/${batch==='previous'?'next':batch}-four-scenes/browser`));await mkdir(out,{recursive:true})
 const allIds=batches[batch]
-const wishIds=['chinese-woodblock-print','amazigh-woven-rug','hungarian-embroidery-hoop','andalusian-ceramic-tile','bai-indigo-cloth','welsh-love-spoon','barcelos-clay-rooster','croatian-licitar-heart','sorbian-painted-egg','basque-sunflower','omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto','aland-votive-ship','minangkabau-spinning-top']
+const wishIds=['polish-paper-cut','chinese-woodblock-print','amazigh-woven-rug','hungarian-embroidery-hoop','andalusian-ceramic-tile','bai-indigo-cloth','welsh-love-spoon','barcelos-clay-rooster','croatian-licitar-heart','sorbian-painted-egg','basque-sunflower','omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto','aland-votive-ship','minangkabau-spinning-top']
 const ids=process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds,key='cyber-bless:personal:v1'
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const empty={version:1,sceneRecords:[],wishes:[],activeSession:null,sessions:[],collectibles:[],ledger:[],settings:{sound:false,haptics:false,reducedMotion:process.env.WBR_MOTION!=='1'}}
@@ -89,7 +89,17 @@ async function arc(page,segments=8){
   await page.mouse.up();await page.waitForTimeout(150)
 }
 async function physical(page,id,step){
-  if(id==='chinese-woodblock-print'&&step<2){
+  if(id==='polish-paper-cut'&&step<2){
+    const p=pointers.get(page),from=await point(page)
+    const to=step===0?[from[0],from[1]-64]:[from[0]-72,from[1]]
+    await p.down(from);await p.move(to,18);await p.up()
+  }
+  else if(id==='uzbek-clay-bowl'&&step<2){
+    const p=pointers.get(page),from=await point(page)
+    const to=step===0?[from[0]+70,from[1]]:[from[0],from[1]-70]
+    await p.down(from);await p.move(to,18);await p.up()
+  }
+  else if(id==='chinese-woodblock-print'&&step<2){
     const p=pointers.get(page),from=await point(page)
     if(step===0){
       const center=await point(page,'target'),sweep=Math.abs(center[0]-from[0])*.37
@@ -112,12 +122,13 @@ async function physical(page,id,step){
   else for(let i=0;i<(id==='st-brigids-cross'&&step===0?4:1);i++)await drag(page)
 }
 async function wrongCraftGesture(page,id,step){
-  if(!['chinese-woodblock-print','czech-bead-star'].includes(id)||step===2)return
+  if(!['chinese-woodblock-print','czech-bead-star','polish-paper-cut','uzbek-clay-bowl'].includes(id)||step===2)return
   const input=pointers.get(page),from=await point(page)
   await input.down(from);await input.up()
   assert.equal((await saved(page)).sceneRecords.find(r=>r.id===id)?.progress??0,step,'a tap must not substitute a craft gesture')
-  if(step===1){
-    const wrong=id==='chinese-woodblock-print'?[from[0],from[1]+35]:[from[0]-65,from[1]]
+  if(step===1||id==='uzbek-clay-bowl'||id==='polish-paper-cut'){
+    const wrong=id==='uzbek-clay-bowl'?(step===0?[from[0]-65,from[1]]:[from[0],from[1]+50]):
+      id==='polish-paper-cut'?(step===0?[from[0],from[1]+50]:[from[0]+65,from[1]]):id==='chinese-woodblock-print'?[from[0],from[1]+35]:[from[0]-65,from[1]]
     await input.down(from);await input.move(wrong);await input.up()
     assert.equal((await saved(page)).sceneRecords.find(r=>r.id===id)?.progress??0,step,'reverse gesture advanced')
     await page.locator('.scene-bow-tap:enabled').waitFor()

@@ -47,6 +47,12 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['polish-paper-cut', 0, 'paper-scissors-grip', 'paper-scissors-grip', [0, 0, 0], [0, 0, 0], [0, -64]],
+  ['polish-paper-cut', 1, 'paper-folded-half', 'paper-folded-half', [.84, .20, .016], [.84, .20, .016], [-72, 0]],
+  ['polish-paper-cut', 2, 'paper-fixed-half', 'paper-fixed-half', [.32, .59, .016], [.32, .59, .016]],
+  ['uzbek-clay-bowl', 0, 'clay-wheel-rim', 'clay-wheel-rim', [0, -.025, 1.079], [0, -.025, 1.079], [70, 0]],
+  ['uzbek-clay-bowl', 1, 'clay-body', 'clay-body', [0, .2675, .5172792206135786], [0, .2675, .5172792206135786], [0, -70]],
+  ['uzbek-clay-bowl', 2, 'clay-body', 'clay-body', [0, .5525, .6197334941505714], [0, .5525, .6197334941505714]],
   ['chinese-woodblock-print', 2, 'woodblock-print-face', 'woodblock-print-face'],
   ['czech-bead-star', 0, 'bead-strand-grip', 'bead-star-arm-joint'],
   ['fijian-woven-fan', 0, 'fan-binding-grip', 'fan-neck-joint'],
@@ -87,7 +93,7 @@ it.each([
   ['clootie-well-rag', 0, 'clootie-rag-handle', 'clootie-water-target'],
   ['diya-oil-lamp', 2, 'diya-held-target', 'diya-plate-target'],
   ['votive-candle-catholic', 0, 'votive-held-target', 'votive-placement-target'],
-] as const)('cancels %s through host pause and accepts a fresh gesture', async (id, progress, source, target, targetAnchor: readonly number[] = [0, 0, 0]) => {
+] as const)('cancels %s through host pause and accepts a fresh gesture', async (id, progress, source, target, targetAnchor: readonly number[] = [0, 0, 0], sourceAnchor: readonly number[] = [0, 0, 0], screenDelta?: readonly number[]) => {
   vi.stubGlobal('requestAnimationFrame', () => 1); vi.stubGlobal('cancelAnimationFrame', () => {})
   vi.spyOn(HTMLCanvasElement.prototype, 'clientWidth', 'get').mockReturnValue(360)
   vi.spyOn(HTMLCanvasElement.prototype, 'clientHeight', 'get').mockReturnValue(360)
@@ -104,8 +110,13 @@ it.each([
     const p = rendered.scene!.getObjectByName(name)!.localToWorld(new THREE.Vector3(anchor[0], anchor[1], anchor[2])).project(rendered.camera!)
     return [(p.x+1)*180, (1-p.y)*180]
   }
-  pointer(hit,'pointerdown',point(source)); ctrl.setActive(false); ctrl.setActive(true)
-  pointer(hit,'pointerup',point(target, targetAnchor)); expect(checkpoint).not.toHaveBeenCalled()
-  pointer(hit,'pointerdown',point(source)); pointer(hit,'pointermove',point(target, targetAnchor)); pointer(hit,'pointerup',point(target, targetAnchor))
+  const destination = (from: number[]) => screenDelta ? [from[0] + screenDelta[0], from[1] + screenDelta[1]] : point(target, targetAnchor)
+  const from = point(source, sourceAnchor), staleEnd = destination(from)
+  pointer(hit,'pointerdown',from)
+  if (screenDelta) pointer(hit,'pointermove',[from[0] + screenDelta[0] * .35, from[1] + screenDelta[1] * .35])
+  ctrl.setActive(false); ctrl.setActive(true)
+  pointer(hit,'pointerup',staleEnd); expect(checkpoint).not.toHaveBeenCalled()
+  const freshFrom = point(source, sourceAnchor), freshEnd = destination(freshFrom)
+  pointer(hit,'pointerdown',freshFrom); pointer(hit,'pointermove',freshEnd); pointer(hit,'pointerup',freshEnd)
   expect(checkpoint).toHaveBeenCalledExactlyOnceWith(progress+1)
 })

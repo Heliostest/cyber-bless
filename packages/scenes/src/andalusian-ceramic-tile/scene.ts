@@ -30,6 +30,12 @@ export function createAndalusianCeramicTile(ctx: SceneContext): SceneInstance {
   let motion: { step: 0 | 1; time: number; from: THREE.Vector3 } | null = null
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
   const reduced = () => ctx.isReducedMotion?.() ?? false
+  // Host callbacks may synchronously dispatch input or call update again.
+  let notifying = false
+  function notifyHost(callback: () => void) {
+    const previous = notifying; notifying = true
+    try { callback() } finally { notifying = previous }
+  }
   const feedback = createSceneFeedback(ctx)
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: COPY.decorateAction }, safe)
   ui.actionBtn.style.minWidth = '44px'; ui.actionBtn.style.minHeight = '44px'
@@ -114,9 +120,10 @@ export function createAndalusianCeramicTile(ctx: SceneContext): SceneInstance {
   const reset = () => { dragging = false; travel = 0; if (!motion) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart(x, y) { if (motion || at === 3) return false; matrices(); return visibleHit(x, y, at === 0 ? piece : panel) },
-    onStart(x, y) { feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
+    canStart(x, y) { if (notifying || motion || at === 3) return false; matrices(); return visibleHit(x, y, at === 0 ? piece : panel) },
+    onStart(x, y) { notifyHost(() => feedback.prepare()); down.set(x, y); travel = 0; dragging = at < 2; plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
     onMove(x, y) {
+      if (notifying) return
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
       moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .80, 2.3); matrices()
@@ -136,20 +143,20 @@ export function createAndalusianCeramicTile(ctx: SceneContext): SceneInstance {
     setSafeText(ui.actionBtn, at === 0 ? COPY.decorateAction : at === 1 ? COPY.hangAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, motion ? COPY.moving : at === 0 ? COPY.decorate : at === 1 ? COPY.hang : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
-  function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); if (disposed || !active()) return; feedback.impact({ freqs: [392, 523.25], duration: .19, gain: .012, type: 'triangle' }) }
-  function begin() { if (!active() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
+  function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); notifyHost(() => ctx.onProgress?.(at)); if (disposed || !active()) return; notifyHost(() => feedback.impact({ freqs: [392, 523.25], duration: .19, gain: .012, type: 'triangle' })) }
+  function begin() { if (notifying || !active() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
   function finish(text = '') {
-    if (!active() || pointer.isBusy() || motion || at !== 2) return
+    if (notifying || !active() || pointer.isBusy() || motion || at !== 2) return
     at = 3; restore(); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()
-    if (text.trim() && !returning) ctx.saveWish?.(text.trim())
+    if (text.trim() && !returning) notifyHost(() => ctx.saveWish?.(text.trim()))
     // An accepted save and its checkpoint are atomic across pause, but not disposal.
     if (disposed) return
-    ctx.onProgress?.(3)
+    notifyHost(() => ctx.onProgress?.(3))
     if (!active()) return
-    feedback.impact({ freqs: [392, 587.33], duration: .24, gain: .012 })
+    notifyHost(() => feedback.impact({ freqs: [392, 587.33], duration: .24, gain: .012 }))
     if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
-  const action = () => { if (!active() || pointer.isBusy() || motion || at === 3) return; feedback.prepare(); if (at < 2) begin(); else finish() }
+  const action = () => { if (notifying || !active() || pointer.isBusy() || motion || at === 3) return; notifyHost(() => feedback.prepare()); if (at < 2) begin(); else finish() }
   const blur = () => { focused = false; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => { const aspect = sizeStage(canvas, renderer, style, camera); camera.position.set(0, 3.1, 5.75 + portraitBoost(aspect, 7)); camera.lookAt(0, 1.22, 0); matrices() }
   restore(); sync()
@@ -159,7 +166,7 @@ export function createAndalusianCeramicTile(ctx: SceneContext): SceneInstance {
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
       restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
       if (!returning && at < 3) { writer = gestures.createWishWrite({ maxLen: 40, saves: ctx.saveWish !== undefined,
-        onSubmit: text => { if (!active() || pointer.isBusy() || motion || at !== 2 || !text.trim()) return; feedback.prepare(); finish(text) } }); writer.mount(wishSlot, {}) }
+        onSubmit: text => { if (notifying || !active() || pointer.isBusy() || motion || at !== 2 || !text.trim()) return; notifyHost(() => feedback.prepare()); finish(text) } }); writer.mount(wishSlot, {}) }
       ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {

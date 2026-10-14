@@ -25,6 +25,12 @@ export function createSicilianPaintedCart(ctx: SceneContext): SceneInstance {
   let dragging = false, maxTravel = 0, stopResize = () => {}
   let transition: { step: 0 | 1; time: number; from: THREE.Vector3 } | null = null
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
+  // Host callbacks may synchronously dispatch input or call update again.
+  let notifying = false
+  function notifyHost(callback: () => void) {
+    const previous = notifying; notifying = true
+    try { callback() } finally { notifying = previous }
+  }
   const feedback = createSceneFeedback(ctx)
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: '装上彩绘木轮' }, safe)
   Object.assign(ui.actionBtn.style, { minWidth: '44px', minHeight: '44px' })
@@ -134,9 +140,11 @@ export function createSicilianPaintedCart(ctx: SceneContext): SceneInstance {
   const reset = () => { dragging = false; maxTravel = 0; if (!transition) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart(x, y) { if (transition || checkpoint === 3) return false; matrices(); return hitsVisible(x, y, checkpoint === 0 ? hub : grip) },
-    onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare(); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), object.position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
-    onMove(x, y) { maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices() },
+    canStart(x, y) { if (notifying || transition || checkpoint === 3) return false; matrices(); return hitsVisible(x, y, checkpoint === 0 ? hub : grip) },
+    onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; notifyHost(() => feedback.prepare()); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), object.position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
+    onMove(x, y) {
+      if (notifying) return
+      maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices() },
     onRelease(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
       const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && hitsVisible(x, y, checkpoint === 0 ? axleEnd : mat, moving()) : maxTravel < 12 && hitsVisible(x, y, grip)
@@ -152,20 +160,20 @@ export function createSicilianPaintedCart(ctx: SceneContext): SceneInstance {
   function settle() {
     if (!active() || !transition) return
     checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore(); sync()
-    ctx.onProgress?.(checkpoint); if (disposed || !active()) return
-    feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .013 })
+    notifyHost(() => ctx.onProgress?.(checkpoint)); if (disposed || !active()) return
+    notifyHost(() => feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .013 }))
   }
   function advance() {
-    if (!active() || pointer.isBusy() || transition || checkpoint === 3) return
+    if (notifying || !active() || pointer.isBusy() || transition || checkpoint === 3) return
     if (checkpoint === 2) {
-      checkpoint = 3; restore(); sync(); ctx.onProgress?.(3)
+      checkpoint = 3; restore(); sync(); notifyHost(() => ctx.onProgress?.(3))
       if (!active()) return
-      feedback.impact({ freqs: [392, 587.33], duration: .22, gain: .013 })
+      notifyHost(() => feedback.impact({ freqs: [392, 587.33], duration: .22, gain: .013 }))
       if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })); return
     }
     transition = { step: checkpoint, time: 0, from: moving().position.clone() }; sync(); if (ctx.isReducedMotion?.()) settle()
   }
-  const action = () => { if (!active() || pointer.isBusy() || transition || checkpoint === 3) return; feedback.prepare(); advance() }
+  const action = () => { if (notifying || !active() || pointer.isBusy() || transition || checkpoint === 3) return; notifyHost(() => feedback.prepare()); advance() }
   const blur = () => { focused = false; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
     const aspect = sizeStage(canvas, renderer, style, camera), distance = Math.max(1, 1 / aspect)

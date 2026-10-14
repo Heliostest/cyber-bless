@@ -47,6 +47,8 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['chinese-woodblock-print', 2, 'woodblock-print-face', 'woodblock-print-face'],
+  ['czech-bead-star', 0, 'bead-strand-grip', 'bead-star-arm-joint'],
   ['fijian-woven-fan', 0, 'fan-binding-grip', 'fan-neck-joint'],
   ['amazigh-woven-rug', 0, 'rug-shuttle-grip', 'rug-weft-gap'],
   ['slovak-wire-bird', 0, 'wire-wing-grip', 'wire-shoulder-joint'],

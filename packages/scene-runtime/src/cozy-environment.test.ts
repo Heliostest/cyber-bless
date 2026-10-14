@@ -35,6 +35,8 @@ describe("a scene's surrounding world", () => {
 
   it.each([
     ["fijian-woven-fan", "veranda"],
+    ["chinese-woodblock-print", "veranda"],
+    ["czech-bead-star", "veranda"],
     ["amazigh-woven-rug", "courtyard"],
     ["slovak-wire-bird", "veranda"],
     ["hungarian-embroidery-hoop", "veranda"],

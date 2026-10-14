@@ -2,24 +2,27 @@ import { chromium } from 'playwright'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import assert from 'node:assert/strict'
+import { scenePointer } from './browser-scene-pointer.mjs'
 const base=process.env.WBR_URL||'http://127.0.0.1:5178/'
 const batch=process.env.WBR_BATCH||'workshop'
-const batches={woven:['fijian-woven-fan','amazigh-woven-rug'],workshop:['slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart'],atelier:['bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon'],village:['barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant'],festival:['sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden'],handcraft:['dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top'],previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
+const batches={printbead:['chinese-woodblock-print','czech-bead-star'],woven:['fijian-woven-fan','amazigh-woven-rug'],workshop:['slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart'],atelier:['bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon'],village:['barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant'],festival:['sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden'],handcraft:['dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top'],previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
 assert.ok(batches[batch],`Unknown batch: ${batch}`)
 const out=path.resolve(process.env.WBR_OUT||(batch==='woven'?'artifacts/woven-pair-scenes/browser':`artifacts/${batch==='previous'?'next':batch}-four-scenes/browser`));await mkdir(out,{recursive:true})
 const allIds=batches[batch]
-const wishIds=['amazigh-woven-rug','hungarian-embroidery-hoop','andalusian-ceramic-tile','bai-indigo-cloth','welsh-love-spoon','barcelos-clay-rooster','croatian-licitar-heart','sorbian-painted-egg','basque-sunflower','omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto','aland-votive-ship','minangkabau-spinning-top']
+const wishIds=['chinese-woodblock-print','amazigh-woven-rug','hungarian-embroidery-hoop','andalusian-ceramic-tile','bai-indigo-cloth','welsh-love-spoon','barcelos-clay-rooster','croatian-licitar-heart','sorbian-painted-egg','basque-sunflower','omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto','aland-votive-ship','minangkabau-spinning-top']
 const ids=process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds,key='cyber-bless:personal:v1'
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const empty={version:1,sceneRecords:[],wishes:[],activeSession:null,sessions:[],collectibles:[],ledger:[],settings:{sound:false,haptics:false,reducedMotion:process.env.WBR_MOTION!=='1'}}
 const browser=await chromium.launch({headless:true}),results=[],errors=[],external=[]
 let captures=0,keyboardActions=0
+const pointers=new WeakMap(), touchMode=process.env.WBR_TOUCH==='1'
 async function pageAt(width=390,state=empty){
-  const page=await browser.newPage({viewport:{width,height:width>500?900:844}});page.setDefaultTimeout(20000)
+  const page=await browser.newPage({viewport:{width,height:width>500?900:844},hasTouch:touchMode,isMobile:touchMode});page.setDefaultTimeout(20000)
   page.on('pageerror',e=>errors.push(e.message))
+  page.on('console',msg=>{if(msg.type()==='error')errors.push(msg.text())})
   page.on('request',r=>{if(!r.url().startsWith(new URL(base).origin)&&!/^(data:|blob:)/.test(r.url()))external.push(r.url())})
   await page.addInitScript(({key,state})=>{if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify(state))},{key,state})
-  await page.goto(base);return page
+  await page.goto(base);pointers.set(page,await scenePointer(page,touchMode));return page
 }
 async function catalog(page){await page.getByRole('button',{name:'我的',exact:true}).click();await page.getByRole('button',{name:'场景目录',exact:true}).click()}
 async function open(page,id){
@@ -75,10 +78,10 @@ async function point(page,role='source',index=0){
   await cue.locator('.scene-object-cue-ring').waitFor()
   return cue.evaluate(el=>{const r=el.parentElement.getBoundingClientRect();return[r.left+Number(el.dataset.x),r.top+Number(el.dataset.y)]})
 }
-async function tap(page){await page.mouse.click(...await point(page));await page.waitForTimeout(150)}
+async function tap(page){const p=pointers.get(page);await p.down(await point(page));await p.up();await page.waitForTimeout(150)}
 async function drag(page){
-  const from=await point(page),to=await point(page,'target');await page.mouse.move(...from);await page.mouse.down()
-  await page.mouse.move(...to,{steps:18});await page.mouse.up();await page.waitForTimeout(150)
+  const from=await point(page),to=await point(page,'target'),p=pointers.get(page);await p.down(from)
+  await p.move(to,18);await p.up();await page.waitForTimeout(150)
 }
 async function arc(page,segments=8){
   await page.mouse.move(...await point(page));await page.mouse.down()
@@ -86,20 +89,55 @@ async function arc(page,segments=8){
   await page.mouse.up();await page.waitForTimeout(150)
 }
 async function physical(page,id,step){
-  if(id==='navruz-sumalak'&&step===0)await arc(page)
+  if(id==='chinese-woodblock-print'&&step<2){
+    const p=pointers.get(page),from=await point(page)
+    if(step===0){
+      const center=await point(page,'target'),sweep=Math.abs(center[0]-from[0])*.37
+      await p.down(from);await p.move(center,18)
+      // Sweep the held rubbing pad across the real paper surface, not a drop.
+      for(const dx of [-sweep,sweep,-sweep,sweep,0])await p.move([center[0]+dx,center[1]],12)
+    }else{
+      await p.down(from);await p.move([from[0],from[1]-65],18)
+    }
+    await p.up()
+  }
+  else if(id==='czech-bead-star'&&step===1){
+    const p=pointers.get(page),from=await point(page)
+    await p.down(from);await p.move([from[0]+80,from[1]],18);await p.up()
+  }
+  else if(id==='navruz-sumalak'&&step===0)await arc(page)
   else if(id==='hongsheng-red-string'&&step===0)await arc(page,12)
   else if((id==='minangkabau-spinning-top'&&step===1)||(id==='omamori-cycle'&&step===0)||(id==='shrine-suzu-bell'&&step>0)||
     (id==='floating-lantern-loy-krathong'&&step===1)||(step===2&&!['omikuji','navruz-sumalak','floating-lantern-loy-krathong'].includes(id)))await tap(page)
   else for(let i=0;i<(id==='st-brigids-cross'&&step===0?4:1);i++)await drag(page)
 }
+async function wrongCraftGesture(page,id,step){
+  if(!['chinese-woodblock-print','czech-bead-star'].includes(id)||step===2)return
+  const input=pointers.get(page),from=await point(page)
+  await input.down(from);await input.up()
+  assert.equal((await saved(page)).sceneRecords.find(r=>r.id===id)?.progress??0,step,'a tap must not substitute a craft gesture')
+  if(step===1){
+    const wrong=id==='chinese-woodblock-print'?[from[0],from[1]+35]:[from[0]-65,from[1]]
+    await input.down(from);await input.move(wrong);await input.up()
+    assert.equal((await saved(page)).sceneRecords.find(r=>r.id===id)?.progress??0,step,'reverse gesture advanced')
+    await page.locator('.scene-bow-tap:enabled').waitFor()
+    const fresh=await point(page)
+    await input.down(fresh);await input.move([fresh[0]+15,fresh[1]-10]);await input.cancel()
+    assert.equal((await saved(page)).sceneRecords.find(r=>r.id===id)?.progress??0,step,'cancel advanced')
+    await page.locator('.scene-bow-tap:enabled').waitFor()
+  }
+}
 for(const width of process.env.WBR_RETURN_ONLY?[]:widths)for(const id of ids){
   const page=await pageAt(width);await catalog(page);await open(page,id)
   const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,box.y+3]
-  await page.mouse.move(...wrong);await page.mouse.down();await page.mouse.move(...from);await page.mouse.up()
-  await page.mouse.move(...from);await page.mouse.down();await page.mouse.move(...wrong);await page.mouse.up()
+  const input=pointers.get(page)
+  await input.down(wrong);await input.move(from);await input.up()
+  await input.down(from);await input.move(wrong);await input.up()
+  await input.down(from);await input.cancel()
   assert.equal((await saved(page)).sceneRecords.find(r=>r.id===id)?.progress??0,0)
   await shot(page,id,`${width}-object-0`)
   for(let step=0;step<3;step++){
+    await wrongCraftGesture(page,id,step)
     if(step===2&&wishIds.includes(id))await page.locator('.scene-wish-slot input').fill('这句尚未提交')
     await physical(page,id,step);await progress(page,id,step+1);await shot(page,id,`${width}-object-${step+1}`)
   }
@@ -121,5 +159,5 @@ for(const id of process.env.WBR_PHYSICAL_ONLY?[]:ids.filter(id=>wishIds.includes
   results.push({id,returning:'passed'});console.log(`${id}: return entry spends one vessel and saves only a return note`);await page.close()
 }
 await browser.close();assert.deepEqual(errors,[]);assert.deepEqual(external,[])
-await writeFile(path.join(out,process.env.WBR_RETURN_ONLY?'return-report.json':'report.json'),JSON.stringify({results,errors,external,captures},null,2))
+await writeFile(path.join(out,process.env.WBR_RETURN_ONLY?'return-report.json':'report.json'),JSON.stringify({results,errors,external,captures,input:touchMode?'native-touch':'mouse',motion:process.env.WBR_MOTION==='1'?'normal':'reduced'},null,2))
 console.log(JSON.stringify({captures,flows:results.filter(r=>r.checkpoints).length,directCueFlows:results.filter(r=>r.directCueFlow).length,returning:results.filter(r=>r.returning).length,errors,external,out}))

@@ -29,6 +29,7 @@ export const BLESSING_SCENE_IDS = [
   "ndebele-painted-house",
   "purepecha-copper-bowl",
   "slovak-wire-bird", "sicilian-painted-cart", "fijian-woven-fan",
+  "czech-bead-star",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -58,6 +59,7 @@ export const WISH_SCENE_IDS = [
   "bai-indigo-cloth",
   "welsh-love-spoon",
   "hungarian-embroidery-hoop", "andalusian-ceramic-tile", "amazigh-woven-rug",
+  "chinese-woodblock-print",
 ] as const;
 
 
@@ -68,6 +70,16 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "chinese-woodblock-print", title: "木版留春", engine: "chinese-woodblock-print@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "chinese-folk-and-confucian",
+    narrative: "中国雕版印刷以木版、纸墨和手工刷印传递文字与图像，刻版和刷印经验在作坊与传承教学中延续。这里用原创枝叶图案，把擦过纸背、揭纸显纹与静看改编为欣赏手艺的练习。心愿只在明确提交后保存。不复制经书、族谱或具体版画，也不把印纸等同祭祖礼仪。",
+  },
+  {
+    id: "czech-bead-star", title: "珠星映光", engine: "czech-bead-star@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "czech-moravian-folk",
+    narrative: "捷克北波希米亚的空心玻璃珠装饰工艺，以吹制、镀银、着色和穿线组装延续家庭与作坊的手艺，常见于圣诞树装饰。这里用原创珠星，把接入珠串、轻转观光与静看改编为欣赏材料的练习。不复制具体工匠作品，不把装饰制作等同宗教礼仪，也不赋予星形护佑承诺。",
+  },
   {
     id: "fijian-woven-fan", title: "叶扇纳凉", engine: "fijian-woven-fan@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "fijian-vanua",

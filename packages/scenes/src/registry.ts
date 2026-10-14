@@ -9,6 +9,8 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'chinese-woodblock-print', title: '木版留春', traditionSlug: 'chinese-folk-and-confucian', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
+  { id: 'czech-bead-star', title: '珠星映光', traditionSlug: 'czech-moravian-folk', grade: 'C', sensitivity: '低', gestures: ['drag', 'spin'] },
   { id: 'fijian-woven-fan', title: '叶扇纳凉', traditionSlug: 'fijian-vanua', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'amazigh-woven-rug', title: '织毯寄暖', traditionSlug: 'amazigh-berber', grade: 'C', sensitivity: '中', gestures: ['drag', 'wishWrite'] },
   { id: 'slovak-wire-bird', title: '铁线栖鸟', traditionSlug: 'slovak-folk', grade: 'C', sensitivity: '中', gestures: ['drag'] },
@@ -136,6 +138,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'chinese-woodblock-print', 'czech-bead-star',
   'fijian-woven-fan', 'amazigh-woven-rug',
   'slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart',
   'bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon',
@@ -168,6 +171,8 @@ export function isSceneImplemented(id: string): boolean {
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
     case 'fijian-woven-fan': return import('./fijian-woven-fan')
+    case 'chinese-woodblock-print': return import('./chinese-woodblock-print')
+    case 'czech-bead-star': return import('./czech-bead-star')
     case 'amazigh-woven-rug': return import('./amazigh-woven-rug')
     case 'slovak-wire-bird': return import('./slovak-wire-bird')
     case 'hungarian-embroidery-hoop': return import('./hungarian-embroidery-hoop')

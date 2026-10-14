@@ -42,6 +42,21 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'chinese-woodblock-print': (<>
+    <Part d="M7 9h31v33H7Z" fill="#b59467"/>
+    <Part d="M11 5h29v31H11Z" fill="#eee6cc"/>
+    <path d="M24 31V13m0 8-8-6m8 11 9-7" fill="none" stroke="#334c5b" strokeWidth={2}/>
+    <path d="M23 21q-11 0-9-9 9 0 9 9m3 4q0-10 10-9 0 9-10 9m-1-8q-6-7 1-10 6 5-1 10" fill="#59777b"/>
+    <Part d="m5 33 13 3-2 8-13-3Z" fill="#ad8751"/>
+    <path d="m5 39 10 2" stroke="#70513b" strokeWidth={2}/>
+  </>),
+  'czech-bead-star': (<>
+    <Cord d="M24 5v38M7 14l34 20M7 34l34-20" color="#b8b5a3" width={1}/>
+    {[ [24,9],[24,16],[24,32],[24,39],[11,16],[17,20],[31,28],[37,32],[11,32],[17,28],[31,20],[37,16] ].map(([x,y],i)=>
+      <g key={i}><circle cx={x} cy={y} r={3.7} fill={i%2 ? "#739daf" : "#dce8e8"} stroke={INK} strokeWidth={1.2}/><circle cx={x-.7} cy={y-.9} r={1} fill="#fff8e9"/></g>
+    )}
+    <circle cx="24" cy="24" r="4.4" fill="#c8b779" stroke={INK} strokeWidth={1.3}/>
+  </>),
   'fijian-woven-fan': (<>
     <Part d="M21 29h6l-1 16h-4Z" fill="#ad8751"/>
     <Part d="M24 3C19 9 5 11 7 22c1 9 10 12 17 11 7 1 16-2 17-11C43 11 29 9 24 3Z" fill="#d9bd7f"/>

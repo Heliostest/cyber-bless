@@ -40,21 +40,53 @@ vec2 wbrWaterSlope(vec2 p) {
 `
 
 const CAUSTIC_FRAGMENT = `
-// Curved focusing bands from three crossing waves, painted on the bed. This is
-// an artistic approximation, not a simulated refracted-light projection pass.
-float wbrCaustic(vec2 p) {
-  p *= wbrCausticScale * 1.65;
-  p += 0.66 * sin(p.yx * 0.72 + vec2(wbrWaterTime * 0.18, -wbrWaterTime * 0.15));
-  float a = sin(dot(p, vec2(1.1, 0.6)) + wbrWaterTime * 0.26);
-  float b = sin(dot(p, vec2(-0.7, 1.2)) - wbrWaterTime * 0.21);
-  float c = sin(dot(p, vec2(0.7, -1.4)) + wbrWaterTime * 0.17);
-  float xx = 1.65 * (0.63 * a + 0.21 * b + 0.12 * c);
-  float zz = 1.65 * (0.19 * a + 0.62 * b + 0.49 * c);
-  float xz = 1.65 * (0.34 * a - 0.36 * b - 0.25 * c);
-  float focus = abs((1.0 - xx) * (1.0 - zz) - xz * xz);
-  float filament = 1.0 - smoothstep(0.018, 0.16, focus);
-  float halo = 1.0 - smoothstep(0.08, 0.44, focus);
-  return filament * 0.6 + halo * 0.4;
+// Two warped cellular fields make the light network breathe, rather than slide
+// a rigid polygon grid across the bed. This remains an artistic approximation.
+vec2 wbrCellRandom(vec2 cell) {
+  return fract(sin(vec2(dot(cell, vec2(123.4, 253.7)),
+    dot(cell, vec2(371.9, 147.3)))) * 43713.73);
+}
+float wbrCellEdge(vec2 p, float phase) {
+  vec2 cell = floor(p), local = fract(p);
+  float nearest = 8.0, second = 8.0;
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2 offset = vec2(float(x), float(y));
+      vec2 seed = wbrCellRandom(cell + offset);
+      vec2 site = 0.5 + 0.34 * sin(seed * 6.283185 + phase * (0.7 + seed.yx * 0.3));
+      vec2 delta = offset + site - local;
+      float d = dot(delta, delta);
+      second = min(second, max(nearest, d));
+      nearest = min(nearest, d);
+    }
+  }
+  return sqrt(second) - sqrt(nearest);
+}
+float wbrLightFilament(float edge, float width) {
+  float aa = max(fwidth(edge), 0.001);
+  float core = 1.0 - smoothstep(max(0.0, width - aa), width + aa, edge);
+  float halo = exp(-edge * edge / (width * width * 16.0));
+  return core * 0.72 + halo * 0.28;
+}
+float wbrCaustic(vec2 world) {
+  vec2 p = world * wbrCausticScale * 0.70;
+  float t = wbrWaterTime * 0.32;
+  vec2 warp = vec2(sin(p.y * 1.13 + p.x * 0.37 + t),
+    sin(p.x * 1.27 - p.y * 0.29 - t * 0.83));
+  p += warp * 0.72;
+  p += 0.24 * vec2(sin(p.y * 2.41 - t * 0.71), sin(p.x * 2.17 + t * 0.62));
+  float edgeA = wbrCellEdge(p + vec2(t * 0.15, -t * 0.11), t);
+  vec2 crossed = mat2(0.8, -0.6, 0.6, 0.8) * p * 1.29 + vec2(7.2, 13.4);
+  float edgeB = wbrCellEdge(crossed + vec2(-t * 0.12, t * 0.09), -t * 0.79);
+  float focus = 0.5 + 0.5 * sin(p.x * 0.83 + p.y * 1.17 + sin(p.y * 0.71 - t) + t);
+  float first = wbrLightFilament(edgeA, mix(0.015, 0.035, focus));
+  float second = wbrLightFilament(edgeB, 0.018);
+  float light = first * mix(0.08, 1.05, focus * focus)
+    + second * (0.04 + smoothstep(0.6, 0.95, focus) * 0.13);
+  // Fade subpixel cells toward the horizon instead of making a busy white mesh.
+  float footprint = max(length(dFdx(p)), length(dFdy(p)));
+  float distanceFade = 1.0 - smoothstep(9.0, 24.0, length(cameraPosition - wbrWaterWorld));
+  return light * distanceFade * (1.0 - smoothstep(0.12, 0.42, footprint));
 }
 `
 
@@ -78,7 +110,7 @@ export function createStylizedWater<G extends THREE.BufferGeometry>(options: Sty
     roughness: 0.23,
     metalness: 0,
     ior: 1.333,
-    clearcoat: 0.65,
+    clearcoat: 0.42,
     clearcoatRoughness: 0.19,
     transparent: true,
     opacity: options.opacity ?? 0.48,
@@ -94,7 +126,7 @@ export function createStylizedWater<G extends THREE.BufferGeometry>(options: Sty
   })
 
   for (const [target, bed] of [[material, false], [bedMaterial, true]] as const) {
-    target.customProgramCacheKey = () => bed ? 'wbr-shallow-water-bed-v1' : 'wbr-shallow-water-v1'
+    target.customProgramCacheKey = () => bed ? 'wbr-voronoi-water-bed-v2' : 'wbr-shallow-water-v1'
     target.onBeforeCompile = shader => {
       Object.assign(shader.uniforms, uniforms)
       shader.vertexShader = WORLD_VERTEX + shader.vertexShader.replace('#include <begin_vertex>', `
@@ -109,11 +141,11 @@ export function createStylizedWater<G extends THREE.BufferGeometry>(options: Sty
           float waterCaustic = wbrCaustic(wbrWaterWorld.xz);
           float sand = sin(wbrWaterWorld.x * 19.0 + sin(wbrWaterWorld.z * 13.0))
             * sin(wbrWaterWorld.z * 17.0 + sin(wbrWaterWorld.x * 9.0));
-          diffuseColor.rgb *= 0.94 + sand * 0.045;
-          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.80, 0.87, 0.61), waterCaustic * 0.55);
+          diffuseColor.rgb *= vec3(0.68, 0.87, 0.84) * (0.94 + sand * 0.045);
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.86, 0.95, 0.76), waterCaustic * 0.48);
         `).replace('#include <emissivemap_fragment>', `
           #include <emissivemap_fragment>
-          totalEmissiveRadiance += vec3(0.38, 0.48, 0.24) * waterCaustic * 0.22;
+          totalEmissiveRadiance += vec3(0.38, 0.48, 0.32) * waterCaustic * 0.12;
         `)
       } else {
         shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `

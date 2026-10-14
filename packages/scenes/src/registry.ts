@@ -9,6 +9,8 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'faroese-wool-knit', title: '毛线织暖', traditionSlug: 'faroese-folk', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'niue-shell-necklace', title: '贝链留光', traditionSlug: 'niuean-traditional', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'polish-paper-cut', title: '剪纸开花', traditionSlug: 'polish-folk-catholic', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'uzbek-clay-bowl', title: '陶轮慢成', traditionSlug: 'uzbek-folk', grade: 'C', sensitivity: '低', gestures: ['drag', 'spin'] },
   { id: 'chinese-woodblock-print', title: '木版留春', traditionSlug: 'chinese-folk-and-confucian', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
@@ -141,6 +143,7 @@ export const sceneRegistry: SceneMeta[] = [
 
 const IMPLEMENTED = new Set([
   'polish-paper-cut', 'uzbek-clay-bowl',
+  'faroese-wool-knit', 'niue-shell-necklace',
   'chinese-woodblock-print', 'czech-bead-star',
   'fijian-woven-fan', 'amazigh-woven-rug',
   'slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart',
@@ -174,6 +177,8 @@ export function isSceneImplemented(id: string): boolean {
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
     case 'polish-paper-cut': return import('./polish-paper-cut')
+    case 'faroese-wool-knit': return import('./faroese-wool-knit')
+    case 'niue-shell-necklace': return import('./niue-shell-necklace')
     case 'uzbek-clay-bowl': return import('./uzbek-clay-bowl')
     case 'fijian-woven-fan': return import('./fijian-woven-fan')
     case 'chinese-woodblock-print': return import('./chinese-woodblock-print')

@@ -1,0 +1,44 @@
+# 毛线织暖
+
+以法罗群岛日常羊毛与编织文化为背景，展示一针普通下针的缩略过程：右针穿入末端旧圈，工作线绕针，抽出新圈，旧圈滑下。奶白与灰色条带、织片比例、木针和支架均为原创设计；这不是完整毛衣制作，也不声称针法专属于法罗群岛。`faroese-folk` 仅作应用的地区索引，C / 低是本应用的设计分级。场景属于公开手作欣赏与当代祝福体验，不提供心愿表单或效力承诺。
+
+织片置于有桌面、后撑和下托口的倾斜工作板上。90 个短 V 形线圈共享一个 `TubeGeometry`，相邻行以前后深度交错；奶白与灰色毛线保留真实孔隙，并以较密行距和较粗线径形成可辨认的织物。线团有立体绕线，工作线从线团连接到活动线圈。两支木针有锥形针尖、小支托和真实线圈关系。旧圈先越过左针尖再落下，已有织片不凭空增长。全部使用 Three 官方几何、粗糙材质和默认柔和 `CEL_STYLE`；细毛线及木针关闭轮廓以避免小屏黑线堆积。
+
+## 三个动作
+
+1. 从右侧木针实体开始，向屏幕左上方短拖后松手，右针进入末端旧圈。建议 `screenDelta: [-48, -36]`，总长 60 px。接受后的过渡演示工作线绕针。
+2. 从同一支右针开始，向屏幕右下方短拖后松手，把新线圈带出旧圈。建议 `screenDelta: [42, 46]`，总长约 62 px。接受后的过渡先让旧圈越过左针尖，再落入织片。
+3. 原位轻点织片静看；全程移动与松手距离都需小于 12 px。
+
+前两个动作需要真正的 `pointermove`。沿建议方向的位移须为 42–84 px，全程最长位移不超过 90 px，横向偏离不超过 18 px，逆行不超过 8 px，已走过路径的回拉不超过 9 px。大幅向屏幕边角拉动、错误起点、反向、短距离、只改变松手位置、多指和取消均不会完成。起点和静看终点均要求首先命中实际可见不透明实体。
+
+原生辅助按钮至少 44×44 px，通过浏览器原生 Enter / Space 激活，与物体手势完成相同步骤。已接受动作的过渡期间，按钮、物体输入与提示均禁用。减少动态立即得到同一结果。检查点 0–3 静默恢复，不报告额外进度或触发反馈。场景不调用 `saveWish`。
+
+## 稳定几何与宿主自动化锚点
+
+以下锚点都是具名网格的局部表面坐标；先 `localToWorld`，再投影到画布。工作板 `wool-sloping-board` 位于 `[0, 1.59, 0]`，X 旋转为 `-0.70` 弧度。
+
+| 检查点 | 实体名称 | 局部表面锚点 | screenDelta |
+| --- | --- | --- | --- |
+| 0 | `wool-right-needle-grip` | `[0, 0, 0.047]` | `[-48, -36]` |
+| 1 | `wool-right-needle-grip` | `[0, 0, 0.047]` | `[42, 46]` |
+| 2 | `wool-stitch-3-3` | `[0.046, 0.025, 0.202]` | `[0, 0]`，轻点 |
+
+其余可观察实体：`wool-workbench`、`wool-table`、`wool-board-backing`、`wool-board-support`、`wool-swatch`、`wool-left-needle`、`wool-left-needle-shaft`、`wool-right-needle`、`wool-right-needle-tip`、`wool-active-old-loop`、`wool-drawn-loop`、`wool-working-yarn`、`wool-yarnball-core`、`wool-yarnball-cup`。`wool-stitch-{row}-{column}` 使用 0–9 行、0–8 列。`wool-drawn-loop` 在检查点 2/3 可见。右针组的板内位置依次为 `[0.90, 0, 0.235]`、`[0.64, 0.20, 0.235]`、`[0.93, -0.15, 0.235]`；其角度保持不变。
+
+## 来源与边界
+
+- [Faroe Islands official portal — Wool Fashion](https://www.faroeislands.fo/arts-culture/wool-fashion)：当地羊毛与日常编织文化。
+- [Visit Faroe Islands — The Faroese Wool](https://visitfaroeislands.com/en/see-do/cultural-experiences/heim-experiences/the-faroese-wool)：自然毛色、羊毛与编织社群背景。
+- [V&A — How things are made: Knitting](https://www.vam.ac.uk/blog/museum-life/how-things-are-made-knitting)：互锁线圈构成编织材料的结构；未将法国编织器示例当成法罗传统。
+- [Craft Yarn Council — Instructor Handbook](https://www.craftyarncouncil.com/files/CIP/CYC_CIP_Knit_Program.pdf)：普通下针的穿入、绕线、抽出与退旧圈机制，仅作一般针法依据。
+
+沿用已批准计划的来源核对，不使用来源图片或复制匠人图案。绕线以过渡动画缩略表达，界面不声称提供完整编织教学。
+
+## 验证
+
+`npm run test -w @wbr/scenes -- src/faroese-wool-knit/scene.test.ts`
+
+45 个模块测试仅替换 GPU 边界，保留真实 Three 几何、射线、提示和输入控制器。覆盖三个指定画幅（284×390、350×408、1280×600）的所有可见主体顶点与提示首个不透明命中；线圈孔隙与密度、前后深度、针尖与旧圈关系、跨针尖退圈、已有织片不增生；正常/减少动态、恢复 0–3、各种无效手势、暂停/失焦/捕获丢失/销毁、宿主同步重入与反复暂停恢复、资源和捕获释放。红绿证据与自查位于 `artifacts/wool-shell-pair/wool-*`。
+
+最终生产构建、浏览器视觉、宿主与移动离线验证由根任务统一执行；模块测试结果不代表完整应用已通过。

@@ -30,6 +30,7 @@ export const BLESSING_SCENE_IDS = [
   "purepecha-copper-bowl",
   "slovak-wire-bird", "sicilian-painted-cart", "fijian-woven-fan",
   "czech-bead-star", "uzbek-clay-bowl",
+  "faroese-wool-knit",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -60,6 +61,7 @@ export const WISH_SCENE_IDS = [
   "welsh-love-spoon",
   "hungarian-embroidery-hoop", "andalusian-ceramic-tile", "amazigh-woven-rug",
   "chinese-woodblock-print", "polish-paper-cut",
+  "niue-shell-necklace",
 ] as const;
 
 
@@ -70,6 +72,16 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "faroese-wool-knit", title: "毛线织暖", engine: "faroese-wool-knit@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "faroese-folk",
+    narrative: "羊毛与编织长久陪伴法罗群岛的日常生活，自然毛色、代际手艺和今日的编织聚会延续着岛上的材料记忆。这里用原创双色织片，把穿针、带出线圈和静看改编为欣赏编织的练习。只演示一针的缩略过程，不复制匠人纹样，不把普通针法称作法罗独有仪式，也不承诺护佑。",
+  },
+  {
+    id: "niue-shell-necklace", title: "贝链留光", engine: "niue-shell-necklace@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "niuean-traditional",
+    narrative: "纽埃的黄螺贝链以细线串起小巧的黄色陆生螺壳，作为饰物与赠礼，承载岛民及海外社群的故乡记忆。这里用原创贝链，把穿入一枚备好的小壳、收拢与静看改编为欣赏手艺的练习。心愿只在明确提交后保存，不模拟采集、身体礼仪或授予身份，也不赋予贝链护佑效力。",
+  },
   {
     id: "polish-paper-cut", title: "剪纸开花", engine: "polish-paper-cut@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "polish-folk-catholic",

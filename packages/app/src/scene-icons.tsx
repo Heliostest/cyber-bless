@@ -42,6 +42,20 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'faroese-wool-knit': (<>
+    <Cord d="M6 7 39 24M42 6 14 29" color="#b9946a" width={2.4}/>
+    <Part d="M11 20h26v23H11Z" fill="#e7dfcd"/>
+    {[16,24,32].map(x => <path key={x} d={`M${x-3} 25l3 4 3-4m-6 7 3 4 3-4m-6 7 3 3 3-3`} fill="none" stroke="#8a8277" strokeWidth={2.2}/>)}
+    <circle cx={39} cy={35} r={6} fill="#c6bba6" stroke={INK} strokeWidth={1.5}/>
+    <path d="M35 31q8 3 8 7m-10-3q7 0 9 5" fill="none" stroke="#8a8277" strokeWidth={1.1}/>
+  </>),
+  'niue-shell-necklace': (<>
+    <Cord d="M16 8Q2 31 17 41Q26 47 36 37Q46 24 32 8" color="#d5c9a2" width={1.3}/>
+    {[[13,15],[10,24],[12,33],[19,40],[28,40],[36,33],[38,24],[35,15]].map(([x,y],i)=><g key={i} transform={`translate(${x} ${y}) rotate(${i*36})`}>
+      <path d="M-3 3Q-6-1-2-4Q3-7 5-1Q6 4 1 4Q-2 4-2 1Q-2-2 1-2Q3-2 2 1" fill="#edc45f" stroke={INK} strokeWidth={1.1}/>
+      <ellipse cx={2} cy={2.5} rx={1.5} ry={.9} fill="#9e743d"/>
+    </g>)}
+  </>),
   'polish-paper-cut': (<>
     <Part d="M7 5h34v38H7Z" fill="#efe6ce"/>
     <Part d="M22 39V32L12 35 8 28 18 25 9 20 12 14 20 20 17 9 24 5 31 9 28 20 36 14 39 20 30 25 40 28 36 35 26 32V39Z M23 12h2v5h-2Z M13 29l6-1-4 3Z M29 28l6 1-2 2Z" fill="#376c68" evenodd/>

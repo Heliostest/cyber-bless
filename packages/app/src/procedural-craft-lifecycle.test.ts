@@ -47,6 +47,12 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['faroese-wool-knit', 0, 'wool-right-needle-grip', 'wool-right-needle-grip', [0, 0, .047], [0, 0, .047], [-48, -36]],
+  ['faroese-wool-knit', 1, 'wool-right-needle-grip', 'wool-right-needle-grip', [0, 0, .047], [0, 0, .047], [42, 46]],
+  ['faroese-wool-knit', 2, 'wool-stitch-3-3', 'wool-stitch-3-3', [.046, .025, .202], [.046, .025, .202]],
+  ['niue-shell-necklace', 0, 'shell-last-body', 'shell-last-body', [.0125, 0, .07848191718467962], [.0125, 0, .07848191718467962], [-60, 0]],
+  ['niue-shell-necklace', 1, 'shell-cord-grip', 'shell-cord-grip', [0, 0, .018], [0, 0, .018], [0, -60]],
+  ['niue-shell-necklace', 2, 'shell-strand-24-body', 'shell-strand-24-body', [.0125, 0, .07848191718467962], [.0125, 0, .07848191718467962]],
   ['polish-paper-cut', 0, 'paper-scissors-grip', 'paper-scissors-grip', [0, 0, 0], [0, 0, 0], [0, -64]],
   ['polish-paper-cut', 1, 'paper-folded-half', 'paper-folded-half', [.84, .20, .016], [.84, .20, .016], [-72, 0]],
   ['polish-paper-cut', 2, 'paper-fixed-half', 'paper-fixed-half', [.32, .59, .016], [.32, .59, .016]],

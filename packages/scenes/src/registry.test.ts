@@ -10,6 +10,7 @@ describe('sceneRegistry', () => {
 
   it('lists the pilot metas, the C-grade Design A scenes, then the product-original scenes', () => {
     expect(sceneRegistry.map((m) => m.id)).toEqual([
+      'faroese-wool-knit', 'niue-shell-necklace',
       'polish-paper-cut', 'uzbek-clay-bowl',
       'chinese-woodblock-print', 'czech-bead-star',
       'fijian-woven-fan', 'amazigh-woven-rug',

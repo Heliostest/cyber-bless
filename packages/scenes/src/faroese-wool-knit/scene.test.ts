@@ -96,10 +96,10 @@ describe('one connected wool stitch on an original cream and grey swatch', () =>
   })
   it.each([false, true])('inserts the needle, draws a connected new loop through the old one and quietly finishes once, reduced=%s', reduced => {
     const s = mount(0, { isReducedMotion: () => reduced }), needle = s.scene.getObjectByName('wool-right-needle')!, oldLoop = s.scene.getObjectByName('wool-active-old-loop')!
-    const home = needle.position.clone(), oldHome = new THREE.Box3().setFromObject(oldLoop)
+    const home = needle.position.clone(), oldHome = new THREE.Box3().setFromBufferAttribute((oldLoop as THREE.Mesh).geometry.getAttribute('position') as THREE.BufferAttribute)
     step(s, 0); expect(s.progress).toEqual([1]); expect(needle.position.distanceTo(home)).toBeGreaterThan(.2)
     const inserted = needle.position.clone(); step(s, 1); expect(s.progress).toEqual([1, 2]); expect(needle.position.distanceTo(inserted)).toBeGreaterThan(.2)
-    expect(new THREE.Box3().setFromObject(oldLoop).max.y).toBeLessThan(oldHome.max.y)
+    expect(new THREE.Box3().setFromBufferAttribute((oldLoop as THREE.Mesh).geometry.getAttribute('position') as THREE.BufferAttribute).max.y).toBeLessThan(oldHome.max.y)
     expect(s.scene.getObjectByName('wool-drawn-loop')!.visible).toBe(true)
     step(s, 2); step(s, 2); s.button.click(); expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
@@ -118,7 +118,7 @@ describe('one connected wool stitch on an original cream and grey swatch', () =>
   })
   it.each([0, 1])('rejects wrong surfaces, release-only, short, reverse, cross-direction and backtracked gestures at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
-    for (const wrong of [[1, 1], s.point('wool-board-surface', [-1.45, -.9, .025])] as [number, number][]) { event(s.hit, 'pointerdown', wrong); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end) }
+    for (const wrong of [[1, 1], s.point('wool-table', [-1.7, .09, .9])] as [number, number][]) { event(s.hit, 'pointerdown', wrong); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end) }
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
     for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx], [dx * 3, dy / 3], [dx * 3, dy * 3], [3 - p[0], 3 - p[1]]]) drag(s, at, x, y)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .72, p[1] + dy * .72]); event(s.hit, 'pointerup', [p[0] + dx * .72, p[1] + dy * .72])
@@ -133,11 +133,12 @@ describe('one connected wool stitch on an original cream and grey swatch', () =>
     for (let i = at; i < 3; i++) s.button.click()
     expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.overlay.querySelector('form,input')).toBeNull()
   })
-  it.each([284, 350, 1280])('frames all visible vertices and first opaque cue surfaces at width %i', width => {
+  it.each([284, 350, 1280])('frames all subject vertices and first opaque cue surfaces at width %i', width => {
     for (const at of [0, 1, 2, 3]) {
       const s = mount(at, { isReducedMotion: () => true }, width); s.scene.updateMatrixWorld(true)
       s.scene.getObjectByName('wool-workbench')!.traverse(o => {
-        const m = o as THREE.Mesh; if (!m.geometry || m.name.includes('shadow')) return
+        // The broad tabletop intentionally continues beyond the photograph.
+        const m = o as THREE.Mesh; if (!m.geometry || m.name === 'wool-table') return
         for (let p: THREE.Object3D | null = o; p; p = p.parent) if (!p.visible) return
         const pos = m.geometry.getAttribute('position'), bounds = new THREE.Box3(), p = new THREE.Vector3()
         for (let i = 0; i < pos.count; i++) bounds.expandByPoint(p.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).project(s.camera))
@@ -179,12 +180,22 @@ describe('one connected wool stitch on an original cream and grey swatch', () =>
     expect(covered / (17 * 18)).toBeGreaterThan(.7)
     expect(covered / (17 * 18)).toBeLessThan(.99)
   })
-  it('supports the sloping board on the table and both needles above the swatch', () => {
-    const s = mount(), support = new THREE.Box3().setFromObject(s.scene.getObjectByName('wool-board-support')!), table = new THREE.Box3().setFromObject(s.scene.getObjectByName('wool-table')!)
-    expect(Math.abs(support.min.y - table.max.y)).toBeLessThan(.02)
-    const backing = s.scene.getObjectByName('wool-board-backing')!, contact = new THREE.Raycaster(new THREE.Vector3(0, support.max.y, -.67), new THREE.Vector3(0, 1, 0)).intersectObject(backing)[0]
-    expect(contact).toBeDefined(); expect(contact.distance).toBeLessThan(.04)
-    for (const name of ['wool-left-needle-rest', 'wool-right-needle-rest', 'wool-yarnball-cup']) expect(s.scene.getObjectByName(name)).toBeDefined()
+  it('lays the swatch, needle rests and yarn ball directly on a horizontal tabletop', () => {
+    for (const at of [0, 1, 2, 3]) {
+      const s = mount(at), table = s.scene.getObjectByName('wool-table')!
+      for (const name of ['wool-stitch-0-0', 'wool-stitch-9-8', 'wool-left-needle-rest', 'wool-right-needle-rest', 'wool-yarnball']) {
+        const bounds = new THREE.Box3().setFromObject(s.scene.getObjectByName(name)!), center = bounds.getCenter(new THREE.Vector3())
+        const contact = new THREE.Raycaster(new THREE.Vector3(center.x, bounds.min.y + .1, center.z), new THREE.Vector3(0, -1, 0)).intersectObject(table)[0]
+        expect(contact, name).toBeDefined(); expect(Math.abs(contact.point.y - bounds.min.y), name).toBeLessThan(.012)
+      }
+      const ball = new THREE.Box3().setFromObject(s.scene.getObjectByName('wool-yarnball')!), tabletop = new THREE.Box3().setFromObject(table)
+      expect(Math.abs(ball.min.y - tabletop.max.y)).toBeLessThan(.00001)
+      for (const side of ['left', 'right']) {
+        const needle = new THREE.Box3().setFromObject(s.scene.getObjectByName(`wool-${side}-needle-${side === 'left' ? 'shaft' : 'grip'}`)!), rest = new THREE.Box3().setFromObject(s.scene.getObjectByName(`wool-${side}-needle-rest`)!)
+        expect(Math.abs(needle.min.y - rest.max.y)).toBeLessThan(.012)
+      }
+      expect(s.scene.getObjectByName('wool-board-support')).toBeUndefined(); expect(s.scene.getObjectByName('wool-table-leg')).toBeUndefined()
+    }
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or a stale needle pose', kind => {
     for (const at of [0, 1]) {

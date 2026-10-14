@@ -153,4 +153,43 @@ describe("a scene's surrounding world", () => {
     await world!.ready;
     world!.dispose();
   });
+
+  it.each(["faroese-wool-knit", "shinto-torii"])("gives %s a dominant, consistent sun instead of evenly filling its shadows", async id => {
+    const scene = new THREE.Scene();
+    const ambient = new THREE.AmbientLight(), sky = new THREE.HemisphereLight();
+    const sun = new THREE.DirectionalLight(), fill = new THREE.DirectionalLight();
+    sun.position.set(3, 2, -4);
+    scene.add(ambient, sky, sun, fill);
+    const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
+    const renderer = { shadowMap: { enabled: false, type: THREE.PCFSoftShadowMap } } as THREE.WebGLRenderer;
+    world.prepare(renderer);
+    expect(sun.intensity).toBeGreaterThan(3 * (ambient.intensity + sky.intensity + fill.intensity));
+    expect(sun.position.x).toBeLessThan(-2);
+    expect(sun.position.y).toBeGreaterThan(sun.position.z);
+    expect(sun.position.z).toBeGreaterThan(0);
+    expect(sun.castShadow).toBe(true); expect(fill.castShadow).toBe(false);
+    expect(renderer.shadowMap.enabled).toBe(true);
+    const direction = sun.position.clone().normalize();
+    sun.position.set(-1, 1, -8); sun.intensity = .1;
+    world.prepare(renderer);
+    expect(sun.position.clone().normalize().distanceTo(direction)).toBeLessThan(.0001);
+    expect(sun.intensity).toBeGreaterThan(3 * (ambient.intensity + sky.intensity + fill.intensity));
+    await world.ready; world.dispose();
+  });
+
+  it.each(["diya-oil-lamp", "votive-candle-catholic", "lantern", "yeondeunghoe"])("preserves the night rig and animated flame in %s", async id => {
+    const scene = new THREE.Scene();
+    const key = new THREE.DirectionalLight(), lamp = new THREE.PointLight(0xffaa44, .73);
+    key.position.set(2, 4, -3);
+    scene.add(key, lamp);
+    const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
+    const renderer = { shadowMap: { enabled: false, type: THREE.PCFSoftShadowMap } } as THREE.WebGLRenderer;
+    world.prepare(renderer);
+    expect(key.position.toArray()).toEqual([2, 4, -3]);
+    expect(key.intensity).toBeLessThan(1.5);
+    expect(lamp.intensity).toBe(.73);
+    lamp.intensity = .26; world.prepare(renderer);
+    expect(lamp.intensity).toBe(.26);
+    await world.ready; world.dispose();
+  });
 });

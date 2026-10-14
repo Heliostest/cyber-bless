@@ -16,6 +16,10 @@ The soft preset preserves `MeshPhysicalMaterial` subclasses (including clearcoat
 
 ## Per-mesh direction
 
+Daylight environments use a high side sun, a clear blue sky, and restrained sky fill. The key light is stronger than the combined ambient, hemisphere, and secondary directional lights so that form and contact shadows remain readable. Daylight shadows use a 2048-pixel PCF map; night scenes retain their previous light directions, softer 1024-pixel shadows, and animated flame lights. The painted backdrop is separate from the HDR environment used by physical finishes.
+
+Craft staging should follow the object: knitting sits directly on a broad worktop, shell threading uses a shallow oval tray, and paper cutting uses a thin gridded mat. These three scenes use a close overhead camera instead of repeating a miniature four-legged table and raised display board. Functional supports, such as the pottery wheel, remain part of the craft.
+
 `mesh.userData.toonSurface` may contain:
 
 - `color`, `simplifyMap`, `aoIntensity`: existing painted-model controls; original maps are never modified or disposed by this adapter.
@@ -32,3 +36,5 @@ Open the Web app with `?debug=1`, enter a scene, then open **SHADER LAB**. Switc
 Before accepting a shared style change, compare a rounded diffuse object, flat paper/wood, a physical or metallic finish, and a lit night scene. Check the actual style label for fallback, source material restoration, transparent effects, interaction cues, mobile framing, and GPU cleanup on exit. Offline mobile export is a separate gate from device rendering; headless Chromium is not evidence of phone GPU performance.
 
 2026-10-14 evidence: `artifacts/toon-render-audit/`. The earlier soft preset became continuous matte PBR in commit `b5598b1` on 2026-10-12; the current adjustment restores soft cel form while preserving physical finishes and the smooth environment.
+
+The subsequent sunny daylight and work-surface comparison is in `artifacts/sunny-rendering/`, with the all-scene style and GPU audit in `artifacts/cozy-scenes/sunny-final/`.

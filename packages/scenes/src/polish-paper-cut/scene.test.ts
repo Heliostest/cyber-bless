@@ -137,11 +137,12 @@ describe('an original folded floral paper cut', () => {
     for (let i = at; i < 3; i++) s.button.click()
     expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled()
   })
-  it.each([284, 350, 1280])('keeps every visible vertex and opaque first-hit cue in view at width %i', width => {
+  it.each([284, 350, 1280])('keeps every subject vertex and opaque first-hit cue in view at width %i', width => {
     for (const at of [0, 1, 2, 3]) {
       const s = mount(at, { isReducedMotion: () => true }, width); s.scene.updateMatrixWorld(true)
       s.scene.getObjectByName('paper-workbench')!.traverse(o => {
-        const m = o as THREE.Mesh; if (!m.geometry || m.name.includes('shadow')) return
+        // Only the broad background tabletop is deliberately cropped.
+        const m = o as THREE.Mesh; if (!m.geometry || m.name === 'paper-wood-table') return
         for (let p: THREE.Object3D | null = o; p; p = p.parent) if (!p.visible) return
         const pos = m.geometry.getAttribute('position'), bounds = new THREE.Box3(), p = new THREE.Vector3()
         for (let i = 0; i < pos.count; i++) bounds.expandByPoint(p.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).project(s.camera))
@@ -175,12 +176,19 @@ describe('an original folded floral paper cut', () => {
     expect(solid.intersectObject(right, false).length).toBeGreaterThan(0)
     for (const name of ['paper-scissors-blade-left', 'paper-scissors-blade-right', 'paper-scissors-handle-left', 'paper-scissors-handle-right']) expect((s.scene.getObjectByName(name) as THREE.Mesh).geometry.getAttribute('position').count).toBeGreaterThan(24)
   })
-  it('rests the rear support on the table and meets the actual sloping board underside', () => {
-    const s = mount(), support = new THREE.Box3().setFromObject(s.scene.getObjectByName('paper-board-support')!), table = new THREE.Box3().setFromObject(s.scene.getObjectByName('paper-wood-table')!)
-    expect(Math.abs(support.min.y - table.max.y)).toBeLessThan(.02)
-    const backing = s.scene.getObjectByName('paper-board-backing')!
-    const contact = new THREE.Raycaster(new THREE.Vector3(0, support.max.y, -.67), new THREE.Vector3(0, 1, 0)).intersectObject(backing)[0]
-    expect(contact).toBeDefined(); expect(contact.distance).toBeLessThan(.04)
+  it('supports the flat mat, paper, offcut and scissors without a raised display board', () => {
+    for (const at of [0, 1, 2, 3]) {
+      const s = mount(at), mat = s.scene.getObjectByName('paper-cream-board')!, matBounds = new THREE.Box3().setFromObject(mat), table = new THREE.Box3().setFromObject(s.scene.getObjectByName('paper-wood-table')!)
+      expect(Math.abs(matBounds.min.y - table.max.y)).toBeLessThan(.001)
+      for (const name of ['paper-fixed-half', 'paper-offcut', 'paper-scissors']) {
+        const bounds = new THREE.Box3().setFromObject(s.scene.getObjectByName(name)!), center = bounds.getCenter(new THREE.Vector3())
+        const contact = new THREE.Raycaster(new THREE.Vector3(center.x, bounds.min.y + .1, center.z), new THREE.Vector3(0, -1, 0)).intersectObject(mat)[0]
+        expect(contact, name).toBeDefined(); expect(Math.abs(contact.point.y - bounds.min.y), name).toBeLessThan(.006)
+      }
+      const folded = new THREE.Box3().setFromObject(s.scene.getObjectByName('paper-folded-half')!), fixed = new THREE.Box3().setFromObject(s.scene.getObjectByName('paper-fixed-half')!)
+      expect(Math.abs(folded.min.y - (at < 2 ? fixed.max.y : matBounds.max.y))).toBeLessThan(.001)
+      expect(s.scene.getObjectByName('paper-board-support')).toBeUndefined(); expect(s.scene.getObjectByName('paper-table-leg')).toBeUndefined()
+    }
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress and resets the true craft pose', kind => {
     for (const at of [0, 1]) {

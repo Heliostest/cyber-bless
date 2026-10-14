@@ -4,7 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
+import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
   title: '毛线织暖', insert: '拿住右侧木针，向左上方短拖，让针尖穿入左针末端的线圈。',
@@ -43,7 +43,7 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'wool-workbench'; scene.add(world)
   const mat = (color: number, roughness = .9) => new THREE.MeshStandardMaterial({ color, roughness })
   const wood = mat(0xba956c), darkWood = mat(0x8d7053), needleWood = mat(0xc39254, .68), needleEnd = mat(0x956b40, .72)
-  const boardMat = mat(0xc8d3ca), boardEdge = mat(0xa8b7ab), cream = mat(0xeee3cc, .98), grey = mat(0x7b8982, .98), ballShade = mat(0xd8cbb4, .98)
+  const cream = mat(0xeee3cc, .98), grey = mat(0x7b8982, .98), ballShade = mat(0xd8cbb4, .98)
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: XYZ, parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
@@ -52,18 +52,10 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
     const mesh = add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(vectors(points)), segments, radius, 7, false), material, [0, 0, 0], parent)
     mesh.userData.toonSurface = { outline: false, roughness: .98 }; return mesh as THREE.Mesh<THREE.TubeGeometry>
   }
-  box('wool-table', [3.75, .13, 2.12], [0, .65, .06], wood)
-  for (const x of [-1.53, 1.53]) for (const z of [-.75, .87]) box('wool-table-leg', [.13, .58, .13], [x, .295, z], darkWood)
-  box('wool-table-apron', [3.25, .15, .08], [0, .52, .94], darkWood)
-  const shadow = add('wool-contact-shadow', new THREE.PlaneGeometry(3.95, 2.4), new THREE.ShadowMaterial({ opacity: .12 }), [0, .003, .08]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
-  const board = new THREE.Group(); board.name = 'wool-sloping-board'; board.position.set(0, 1.59, 0); board.rotation.x = -.70; world.add(board)
-  const backing = box('wool-board-backing', [3.37, 2.37, .09], [0, 0, -.055], boardEdge, board)
-  box('wool-board-surface', [3.32, 2.32, .06], [0, 0, -.003], boardMat, board)
-  board.updateWorldMatrix(true, true)
-  const supportBase = new THREE.Vector3(0, .719, -.67)
-  const supportHeight = new THREE.Raycaster(supportBase, new THREE.Vector3(0, 1, 0)).intersectObject(backing)[0]!.distance - .006
-  box('wool-board-support', [.20, supportHeight, .04], [0, supportBase.y + supportHeight / 2, supportBase.z], darkWood)
-  box('wool-board-foot', [2.72, .07, .11], [0, .758, .82], darkWood)
+  // The ordinary tabletop continues beyond the crop. The yarn itself is the
+  // subject; there is no separate display board or miniature furniture below it.
+  box('wool-table', [9, .18, 7], [0, .625, 0], wood)
+  const board = new THREE.Group(); board.name = 'wool-work-surface'; board.position.set(0, .688, 0); board.rotation.x = -Math.PI / 2; world.add(board)
 
   // Each open loop passes from the back of one course to the front of the next.
   // Short V-shaped front legs overlap the previous course; their smaller holes
@@ -71,7 +63,7 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
   // All 90 stitches share one geometry and two rough wool materials.
   const stitchPoints: XYZ[] = [[-.0925, -.06, .08], [-.025, -.10, .105], [-.020, -.055, .17], [-.046, .025, .17], [-.070, .09, .17], [-.053, .14, .11], [.053, .14, .11], [.070, .09, .17], [.046, .025, .17], [.020, -.055, .17], [.025, -.10, .105], [.0925, -.06, .08]]
   const stitchGeometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(vectors(stitchPoints)), 44, .032, 7, false)
-  const swatch = new THREE.Group(); swatch.name = 'wool-swatch'; board.add(swatch)
+  const swatch = new THREE.Group(); swatch.name = 'wool-swatch'; swatch.position.z = -.018; board.add(swatch)
   for (let row = 0; row < 10; row++) for (let column = 0; column < 9; column++) {
     const m = add(`wool-stitch-${row}-${column}`, stitchGeometry, row === 2 || row === 3 || row === 7 ? grey : cream, [-1.19 + column * .185, -.80 + row * .132, 0], swatch)
     m.userData.toonSurface = { outline: false, roughness: .98 }
@@ -91,7 +83,7 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
   for (let i = 0; i < 8; i++) tube(`wool-live-loop-${i}`, livePoints(-1.19 + i * .185), .032, cream, swatch, 34)
   const oldLoop = tube('wool-active-old-loop', livePoints(.25), .03, cream, swatch, 42)
 
-  // Needles are genuine tapered wooden solids, supported by small board rests.
+  // Small needle rests keep the tapered shafts above the knitted loops.
   const leftNeedle = new THREE.Group(); leftNeedle.name = 'wool-left-needle'; leftNeedle.position.set(-.62, .66, .215); leftNeedle.rotation.z = -Math.PI / 2; board.add(leftNeedle)
   add('wool-left-needle-shaft', new THREE.CylinderGeometry(.037, .037, 1.74, 14), needleWood, [0, 0, 0], leftNeedle)
   add('wool-left-needle-tip', new THREE.ConeGeometry(.037, .19, 14), needleWood, [0, .965, 0], leftNeedle)
@@ -105,8 +97,7 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
   const rightRest = box('wool-right-needle-rest', [.19, .13, .16], [1.17, -.33, .107], darkWood, board); rightRest.rotation.z = .70
   for (const n of [leftNeedle, needle]) n.traverse(o => { if ((o as THREE.Mesh).isMesh) o.userData.toonSurface = { outline: false, roughness: .68 } })
 
-  const cup = add('wool-yarnball-cup', new THREE.CylinderGeometry(.39, .34, .055, 36), wood, [1.02, -.70, .055], board); cup.rotation.x = Math.PI / 2
-  const ball = new THREE.Group(); ball.name = 'wool-yarnball'; ball.position.set(1.02, -.70, .36); board.add(ball)
+  const ball = new THREE.Group(); ball.name = 'wool-yarnball'; ball.position.set(1.02, -.70, 0); board.add(ball)
   const core = add('wool-yarnball-core', new THREE.SphereGeometry(.29, 28, 18), ballShade, [0, 0, 0], ball); core.userData.toonSurface = { outline: false, roughness: .98 }
   // One continuous winding in each of three directions makes a compact wound ball.
   for (let band = 0; band < 3; band++) {
@@ -119,6 +110,13 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
     }
     tube(`wool-yarnball-winding-${band}`, points, .014, band === 1 ? ballShade : cream, ball, 420)
   }
+  // Seat the actual lowest winding on the tabletop, without a hidden pedestal.
+  // In this horizontal work frame the tabletop is at local z = .027.
+  const ballBounds = new THREE.Box3()
+  for (const child of ball.children) {
+    const geometry = (child as THREE.Mesh).geometry; geometry.computeBoundingBox(); ballBounds.union(geometry.boundingBox!)
+  }
+  ball.position.z = .027 - ballBounds.min.z
   const working = tube('wool-working-yarn', [BALL_EXIT, [.79, -.10, .16], [.42, .45, .16], [.33, .59, .17]], .023, cream, board, 80)
   const drawnLoop = tube('wool-drawn-loop', [[.19, .40, .14], [.22, .60, .24], [.30, .60, .26], [.34, .40, .16]], .025, cream, board, 48)
   const updateTube = (mesh: THREE.Mesh<THREE.TubeGeometry>, points: XYZ[]) => {
@@ -129,7 +127,7 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
   const pose = (insert: number, pull: number, wrap: number, slip: number) => {
     insertAmount = insert; pullAmount = pull
     needle.position.lerpVectors(HOME, INSERTED, insert).lerp(DRAWN, pull)
-    // The small right rest follows the shaft along its shallow board groove.
+    // The small right rest follows the shaft across the work surface.
     rightRest.position.set(needle.position.x + .27, needle.position.y - .33, .107)
     const tip = new THREE.Vector3(-Math.sin(.70) * .49, Math.cos(.70) * .49, 0).add(needle.position)
     const wrapCenter = new THREE.Vector3(.33, .59, .17).lerp(tip, wrap)
@@ -211,7 +209,10 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
   }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
-  const resize = () => { const aspect = sizeStage(canvas, renderer, style, camera); camera.position.set(0, 4.1, 7.2 + portraitBoost(aspect, 7)); camera.lookAt(0, 1.19, 0); matrices() }
+  const resize = () => {
+    const aspect = sizeStage(canvas, renderer, style, camera), distance = Math.max(4.35, 4.95 / aspect)
+    camera.position.set(0, .80 + distance * .93, distance * .37); camera.lookAt(0, .80, 0); matrices()
+  }
   restore(); sync()
   return {
     start() {

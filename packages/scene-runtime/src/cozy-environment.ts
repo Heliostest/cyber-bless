@@ -71,10 +71,10 @@ type Part = { positions: number[]; normals: number[]; indices: number[]; color: 
 type NatureModel = { parts: Part[] };
 const models = nature as Record<string, NatureModel>;
 
-/** A quiet painted sky, independent of the photographic panorama used for lighting. */
+/** A clear painted sky, independent of the photographic panorama used for lighting. */
 function createDaylightBackdrop() {
   const width = 4, height = 64, pixels = new Uint8Array(width * height * 4);
-  const horizon = new THREE.Color(0xc0e0ec), zenith = new THREE.Color(0x86c4e2);
+  const horizon = new THREE.Color(0x9ed9f3), zenith = new THREE.Color(0x409ee0);
   const color = new THREE.Color(), rgb = { r: 0, g: 0, b: 0 };
   for (let y = 0; y < height; y++) {
     const elevation = Math.max(0, (y / (height - 1) - 0.25) / 0.75);
@@ -119,14 +119,14 @@ export function createCozyEnvironment(
   const propGeometries = new Map<string, THREE.BufferGeometry[]>();
   let disposed = false;
   let sky: THREE.DataTexture | undefined;
-  const horizon = night ? 0x415d73 : 0xc9e2d9;
+  const horizon = night ? 0x415d73 : 0xb8dce7;
   const backdrop = night ? undefined : createDaylightBackdrop();
   scene.background = backdrop ?? new THREE.Color(horizon);
   // Atmospheric perspective belongs to the far tree line, not the workbench.
   scene.fog = new THREE.Fog(horizon, night ? 7 : 18, night ? 24 : 55);
   scene.backgroundIntensity = night ? 0.065 : 1;
   scene.backgroundBlurriness = night ? 0.015 : 0;
-  scene.environmentIntensity = warmLight ? 0.25 : night ? 0.16 : 0.3;
+  scene.environmentIntensity = warmLight ? 0.25 : night ? 0.16 : 0.22;
   scene.backgroundRotation.set(0, 2.2, 0);
   scene.environmentRotation.copy(scene.backgroundRotation);
 
@@ -135,7 +135,7 @@ export function createCozyEnvironment(
     materials.add(material);
     return material;
   };
-  const grass = makeMaterial(night ? 0x718e82 : 0xb8d48a);
+  const grass = makeMaterial(night ? 0x718e82 : 0x90c65b);
   const sand = makeMaterial(night ? 0x9e9b83 : 0xecdfbd);
   const wood = makeMaterial(night ? 0xa78e70 : 0xd9b98c);
   const trim = makeMaterial(night ? 0x8c846e : 0xbfa07a);
@@ -156,7 +156,7 @@ export function createCozyEnvironment(
 
   if (!night) {
     // Two broad meadow silhouettes give depth without adding small visual detail.
-    const meadow = makeMaterial(0xb0ca88), distantMeadow = makeMaterial(0xbfd69d);
+    const meadow = makeMaterial(0x86b95c), distantMeadow = makeMaterial(0xa3cb7a);
     const left = addMesh(new THREE.SphereGeometry(1, 32, 12), meadow, kind === "river" ? -15 : -8, groundY - 1.0, -19);
     left.scale.set(12, 2.1, 6);
     const right = addMesh(new THREE.SphereGeometry(1, 32, 12), distantMeadow, kind === "river" ? 17 : 10, groundY - 1.3, -26);
@@ -218,7 +218,7 @@ export function createCozyEnvironment(
       const color = new THREE.Color().setRGB(part.color[0], part.color[1], part.color[2]);
       // Keep foliage green rather than cyan, with a restrained natural palette.
       if (name === "rock") color.lerp(new THREE.Color(night ? 0x91a9a4 : 0xc3c6aa), 0.72);
-      else if (color.g > color.r * 1.1) color.lerp(new THREE.Color(night ? 0x729988 : 0x81ad69), night ? 0.48 : 0.82);
+      else if (color.g > color.r * 1.1) color.lerp(new THREE.Color(night ? 0x729988 : 0x6fa84c), night ? 0.48 : 0.82);
       else if (name.startsWith("tree")) color.lerp(new THREE.Color(night ? 0xa78e70 : 0xb5906c), 0.65);
       const material = new THREE.MeshStandardMaterial({ color, roughness: 1 });
       materials.add(material);
@@ -271,7 +271,7 @@ export function createCozyEnvironment(
     prepare(renderer: THREE.WebGLRenderer) {
       let keySeen = false;
       renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.shadowMap.type = night ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
       scene.traverse(object => {
         if (object instanceof THREE.Mesh && !meshes.has(object)) {
           meshes.add(object);
@@ -285,23 +285,26 @@ export function createCozyEnvironment(
         if (first) lights.add(object);
         if (object instanceof THREE.AmbientLight) {
           object.color.set(warmLight ? 0xffe0b9 : night ? 0xa8bddb : 0xfff8ee);
-          object.intensity = warmLight ? 0.35 : night ? 0.24 : 0.28;
+          object.intensity = warmLight ? 0.35 : night ? 0.24 : 0.18;
         } else if (object instanceof THREE.HemisphereLight) {
-          object.color.set(night ? 0xaec9e1 : 0xeaf5ff);
-          object.groundColor.set(warmLight ? 0x988568 : night ? 0x536971 : 0xc5ca94);
-          object.intensity = warmLight ? 0.6 : night ? 0.48 : 0.65;
+          object.color.set(night ? 0xaec9e1 : 0xd8eeff);
+          object.groundColor.set(warmLight ? 0x988568 : night ? 0x536971 : 0xb9ad8b);
+          object.intensity = warmLight ? 0.6 : night ? 0.48 : 0.6;
         } else if (object instanceof THREE.DirectionalLight) {
           const key = !keySeen;
           keySeen = true;
-          object.color.set(warmLight && key ? 0xffd19a : night ? 0xd6e5fb : key ? 0xfff0d6 : 0xecf4ff);
-          object.intensity = warmLight && key ? 1.15 : night ? (key ? 0.65 : 0.2) : (key ? 1.35 : 0.22);
+          object.color.set(warmLight && key ? 0xffd19a : night ? 0xd6e5fb : key ? 0xfff4e5 : 0xecf4ff);
+          object.intensity = warmLight && key ? 1.15 : night ? (key ? 0.65 : 0.2) : (key ? 3.8 : 0.1);
+          // A common high side sun makes shapes and contact shadows legible.
+          // Keep authored night directions and animated point lights intact.
+          if (key && !night) object.position.set(-6, 9, 5);
           object.castShadow = key;
           if (key && first) {
-            object.shadow.mapSize.set(1024, 1024);
+            object.shadow.mapSize.set(night ? 1024 : 2048, night ? 1024 : 2048);
             Object.assign(object.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: 0.1, far: 35 });
             object.shadow.bias = -0.0003;
-            object.shadow.normalBias = 0.035;
-            object.shadow.radius = 4;
+            object.shadow.normalBias = night ? 0.035 : 0.015;
+            object.shadow.radius = night ? 4 : 1;
             object.shadow.camera.updateProjectionMatrix();
           }
         }

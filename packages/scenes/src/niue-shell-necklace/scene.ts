@@ -5,7 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
+import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
   title: '贝链留光', thread: '沿露出的细线，把上方已备好的最后一枚黄螺壳向左穿入贝链。',
@@ -44,7 +44,7 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
   Object.assign(lights.key.shadow.camera, { left: -3, right: 3, top: 4, bottom: -2, near: .1, far: 12 })
   const world = new THREE.Group(); world.name = 'shell-workbench'; scene.add(world)
   const mat = (color: number, roughness = .88, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness })
-  const wood = mat(0xb69a77), darkWood = mat(0x8b7358), trayMat = mat(0xb9ced1), trayEdge = mat(0x8fa9ad)
+  const wood = mat(0xb69a77), trayMat = mat(0xb9ced1), trayEdge = mat(0x8fa9ad)
   const shellMat = new THREE.MeshPhysicalMaterial({ color: 0xf2cf75, roughness: .59, metalness: 0, clearcoat: .13, clearcoatRoughness: .62, side: THREE.DoubleSide })
   const ivoryMat = new THREE.MeshPhysicalMaterial({ color: 0xf5dda0, roughness: .62, clearcoat: .10, clearcoatRoughness: .65, side: THREE.DoubleSide })
   const sutureMat = mat(0xba933e), cordMat = mat(0xf4ebce)
@@ -52,20 +52,21 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
   const box = (name: string, size: XYZ, p: XYZ, material: THREE.Material, parent: THREE.Object3D = world) => add(name, new RoundedBoxGeometry(...size, 3, Math.min(.035, ...size.map(n => n / 3))), material, p, parent)
-  box('shell-table', [3.68, .13, 2.12], [0, .65, .06], wood)
-  for (const x of [-1.48, 1.48]) for (const z of [-.75, .87]) box('shell-table-leg', [.13, .58, .13], [x, .295, z], darkWood)
-  box('shell-table-apron', [3.15, .15, .08], [0, .52, .94], darkWood)
-  const shadow = add('shell-contact-shadow', new THREE.PlaneGeometry(3.9, 2.4), new THREE.ShadowMaterial({ opacity: .12 }), [0, .003, .08]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
-  const tray = new THREE.Group(); tray.name = 'shell-tilted-tray'; tray.position.set(0, 1.61, 0); tray.rotation.x = -.70; world.add(tray)
-  const backing = box('shell-tray-backing', [3.36, 2.40, .10], [0, 0, -.055], trayEdge, tray)
-  box('shell-tray-face', [3.24, 2.28, .045], [0, 0, .014], trayMat, tray)
-  for (const x of [-1.63, 1.63]) box('shell-tray-side', [.08, 2.32, .12], [x, 0, .035], trayEdge, tray)
-  for (const y of [-1.15, 1.15]) box('shell-tray-rim', [3.27, .08, .12], [0, y, .035], trayEdge, tray)
-  tray.updateWorldMatrix(true, true)
-  const base = new THREE.Vector3(0, .719, -.65)
-  const height = new THREE.Raycaster(base, new THREE.Vector3(0, 1, 0)).intersectObject(backing)[0]!.distance - .006
-  box('shell-tray-support', [.20, height, .05], [0, base.y + height / 2, base.z], darkWood)
-  box('shell-tray-foot', [2.72, .07, .11], [0, .758, .82], darkWood)
+  box('shell-table', [9, .18, 7], [0, .625, 0], wood)
+  const tray = new THREE.Group(); tray.name = 'shell-shallow-tray'; tray.position.set(0, .780, 0); tray.rotation.x = -Math.PI / 2; world.add(tray)
+  const oval = (rx: number, ry: number, depth: number) => {
+    const shape = new THREE.Shape(); shape.absellipse(0, 0, rx, ry, 0, Math.PI * 2, false, 0)
+    return new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 64 })
+  }
+  // A low oval dish rests directly on the broad tabletop. Its floor keeps the
+  // existing shell contact height while the round lip frames the whole strand.
+  add('shell-tray-backing', oval(1.72, 1.34, .065), trayEdge, [0, 0, -.065], tray)
+  add('shell-tray-face', oval(1.66, 1.28, .0365), trayMat, [0, 0, 0], tray)
+  const rimPoints = Array.from({ length: 129 }, (_, i) => {
+    const a = i / 128 * Math.PI * 2; return new THREE.Vector3(Math.cos(a) * 1.69, Math.sin(a) * 1.31, .055)
+  })
+  const rim = add('shell-tray-rim', new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rimPoints), 128, .03, 8, true), trayEdge, [0, 0, 0], tray)
+  rim.userData.toonSurface = { outline: false }
 
   // Each original shell is a hollow, tapering 3.7-whorl surface. The annular
   // mouth and prepared apex perforation are real openings, with no end caps.
@@ -242,7 +243,10 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
   }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; if (at < 2) begin(); else finish() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
-  const resize = () => { const aspect = sizeStage(canvas, renderer, style, camera); camera.position.set(0, 4.1, 7.25 + portraitBoost(aspect, 7)); camera.lookAt(0, 1.19, 0); matrices() }
+  const resize = () => {
+    const aspect = sizeStage(canvas, renderer, style, camera), distance = Math.max(4.55, 5.4 / aspect)
+    camera.position.set(0, .82 + distance * .93, distance * .37); camera.lookAt(0, .82, 0); matrices()
+  }
   restore(); sync()
   return {
     start() {

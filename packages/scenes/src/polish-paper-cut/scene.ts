@@ -5,7 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
+import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
   title: '剪纸开花', cut: '拿住剪刀，沿右侧最后一道纸边向上剪开；松手，让边角料落下。',
@@ -16,8 +16,8 @@ const COPY = {
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 type XYZ = [number, number, number]
-const TOOL_HOME = new THREE.Vector3(.946, -.41, .092), TOOL_REST = new THREE.Vector3(1.32, -.61, .080)
-const SCRAP_HOME = new THREE.Vector3(1.058, .195, .040), SCRAP_REST = new THREE.Vector3(1.25, -.45, .050)
+const TOOL_HOME = new THREE.Vector3(.946, -.41, .045), TOOL_REST = new THREE.Vector3(1.32, -.61, .045)
+const SCRAP_HOME = new THREE.Vector3(1.058, .195, .0555), SCRAP_REST = new THREE.Vector3(1.25, -.45, .0555)
 const ease = (t: number) => t * t * (3 - 2 * t)
 
 /** A small original floral cutout, folded at its own stem; no artisan pattern is reproduced. */
@@ -45,25 +45,19 @@ export function createPolishPaperCut(ctx: SceneContext): SceneInstance {
   Object.assign(lights.key.shadow.camera, { left: -3, right: 3, top: 4, bottom: -2, near: .1, far: 12 })
   const world = new THREE.Group(); world.name = 'paper-workbench'; scene.add(world)
   const mat = (color: number, roughness = .88, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness })
-  const wood = mat(0xbb9973), darkWood = mat(0x947453), boardMat = mat(0xefe6ce), boardEdge = mat(0xd3c6a7)
+  const wood = mat(0xbb9973), boardMat = mat(0xefe6ce)
   const paperMat = mat(0x376c68), paperEdge = mat(0x2e5b57), silver = mat(0xaab6b4, .36, .62), handles = mat(0x53686b, .5, .32)
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material | THREE.Material[], p: XYZ, parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
   const box = (name: string, size: XYZ, p: XYZ, material: THREE.Material, parent: THREE.Object3D = world) => add(name, new RoundedBoxGeometry(...size, 3, Math.min(.028, ...size.map(n => n / 3))), material, p, parent)
-  box('paper-wood-table', [3.75, .13, 2.12], [0, .65, .06], wood)
-  for (const x of [-1.53, 1.53]) for (const z of [-.75, .87]) box('paper-table-leg', [.13, .58, .13], [x, .295, z], darkWood)
-  box('paper-table-apron', [3.25, .15, .08], [0, .52, .94], darkWood)
-  const shadow = add('paper-contact-shadow', new THREE.PlaneGeometry(3.95, 2.4), new THREE.ShadowMaterial({ opacity: .12 }), [0, .003, .08]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
-  const board = new THREE.Group(); board.name = 'paper-tilted-board-group'; board.position.set(0, 1.59, 0); board.rotation.x = -.70; world.add(board)
-  const backing = box('paper-board-backing', [3.37, 2.37, .09], [0, 0, -.055], boardEdge, board)
-  box('paper-cream-board', [3.32, 2.32, .06], [0, 0, -.003], boardMat, board)
-  // A wooden rear support and a lip keep the sloping work board visibly grounded.
-  board.updateWorldMatrix(true, true)
-  const supportBase = new THREE.Vector3(0, .719, -.67)
-  const supportHeight = new THREE.Raycaster(supportBase, new THREE.Vector3(0, 1, 0)).intersectObject(backing)[0]!.distance - .006
-  box('paper-board-support', [.20, supportHeight, .04], [0, supportBase.y + supportHeight / 2, supportBase.z], darkWood)
-  box('paper-board-foot', [2.72, .07, .11], [0, .758, .82], darkWood)
+  box('paper-wood-table', [9, .18, 7], [0, .625, 0], wood)
+  const board = new THREE.Group(); board.name = 'paper-cutting-mat-group'; board.position.set(0, .715, 0); board.rotation.x = -Math.PI / 2; world.add(board)
+  box('paper-cream-board', [3.44, 2.50, .040], [0, 0, .020], boardMat, board)
+  // A faint printed grid makes the thin, flat support read as a cutting mat.
+  const gridMat = new THREE.MeshStandardMaterial({ color: 0xb7b299, roughness: 1, transparent: true, opacity: .28 })
+  for (let x = -1.5; x <= 1.51; x += .25) add('paper-mat-grid', new THREE.PlaneGeometry(.004, 2.25), gridMat, [x, 0, .0403], board).castShadow = false
+  for (let y = -1; y <= 1.01; y += .25) add('paper-mat-grid', new THREE.PlaneGeometry(3.20, .004), gridMat, [0, y, .0403], board).castShadow = false
 
   // The asymmetric half is cut from a single shape. Mirroring around the stem
   // produces bilateral leaves; each aperture is a real hole through both faces.
@@ -208,7 +202,10 @@ export function createPolishPaperCut(ctx: SceneContext): SceneInstance {
   }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; if (at < 2) begin(); else finish() }
   const blur = () => { focused = false; lifecycleRevision++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
-  const resize = () => { const aspect = sizeStage(canvas, renderer, style, camera); camera.position.set(0, 4.1, 7.25 + portraitBoost(aspect, 7)); camera.lookAt(0, 1.19, 0); matrices() }
+  const resize = () => {
+    const aspect = sizeStage(canvas, renderer, style, camera), distance = Math.max(4.45, 5.4 / aspect)
+    camera.position.set(0, .78 + distance * .93, distance * .37); camera.lookAt(0, .78, 0); matrices()
+  }
   restore(); sync()
   return {
     start() {

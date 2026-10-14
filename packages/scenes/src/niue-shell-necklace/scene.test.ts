@@ -186,11 +186,18 @@ describe('an original prepared yellow land-shell necklace', () => {
     }
     expect(invalid).toEqual([])
   })
-  it('rests the tray support on the table and meets the tilted underside', () => {
-    const s = mount(), support = new THREE.Box3().setFromObject(s.scene.getObjectByName('shell-tray-support')!), table = new THREE.Box3().setFromObject(s.scene.getObjectByName('shell-table')!)
-    expect(Math.abs(support.min.y - table.max.y)).toBeLessThan(.02)
-    const contact = new THREE.Raycaster(new THREE.Vector3(0, support.max.y, -.65), new THREE.Vector3(0, 1, 0)).intersectObject(s.scene.getObjectByName('shell-tray-backing')!)[0]
-    expect(contact).toBeDefined(); expect(contact.distance).toBeLessThan(.04)
+  it('rests the shallow oval tray on the tabletop and every shell on its floor', () => {
+    for (const at of [0, 1, 2, 3]) {
+      const s = mount(at), backing = new THREE.Box3().setFromObject(s.scene.getObjectByName('shell-tray-backing')!), table = new THREE.Box3().setFromObject(s.scene.getObjectByName('shell-table')!)
+      expect(Math.abs(backing.min.y - table.max.y)).toBeLessThan(.001)
+      const face = s.scene.getObjectByName('shell-tray-face')!
+      for (const name of ['shell-last-body', ...Array.from({ length: 31 }, (_, i) => `shell-strand-${i}-body`)]) {
+        const bounds = new THREE.Box3().setFromObject(s.scene.getObjectByName(name)!), center = bounds.getCenter(new THREE.Vector3())
+        const contact = new THREE.Raycaster(new THREE.Vector3(center.x, bounds.min.y + .1, center.z), new THREE.Vector3(0, -1, 0)).intersectObject(face)[0]
+        expect(contact, name).toBeDefined(); expect(Math.abs(contact.point.y - bounds.min.y), name).toBeLessThan(.008)
+      }
+      expect(s.scene.getObjectByName('shell-tray-support')).toBeUndefined(); expect(s.scene.getObjectByName('shell-table-leg')).toBeUndefined()
+    }
   })
   it.each([0, 1])('rejects wrong surfaces, missing movement, short, reverse, diagonal and returned gestures at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(at === 0 ? 'shell-last-body' : 'shell-cord-grip', at === 0 ? [.0125, 0, .07848191718467962] : cordAnchor)
@@ -220,11 +227,12 @@ describe('an original prepared yellow land-shell necklace', () => {
     for (let i = at; i < 3; i++) { s.button.click(); s.run() }
     expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled()
   })
-  it.each([284, 350, 1280])('keeps every visible vertex and opaque first-hit cue in view at width %i', width => {
+  it.each([284, 350, 1280])('keeps every subject vertex and opaque first-hit cue in view at width %i', width => {
     for (const at of [0, 1, 2, 3]) {
       const s = mount(at, { isReducedMotion: () => true }, width); s.scene.updateMatrixWorld(true)
       s.scene.getObjectByName('shell-workbench')!.traverse(o => {
-        const m = o as THREE.Mesh; if (!m.geometry || m.name.includes('shadow')) return
+        // Only the broad background tabletop is deliberately cropped.
+        const m = o as THREE.Mesh; if (!m.geometry || m.name === 'shell-table') return
         for (let p: THREE.Object3D | null = o; p; p = p.parent) if (!p.visible) return
         const pos = m.geometry.getAttribute('position'), bounds = new THREE.Box3(), p = new THREE.Vector3()
         for (let i = 0; i < pos.count; i++) bounds.expandByPoint(p.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).project(s.camera))

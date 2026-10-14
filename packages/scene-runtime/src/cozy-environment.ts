@@ -1,9 +1,10 @@
 import * as THREE from "three";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import nature from "./nature-kit.data.json";
+import { gardenLayout, type GardenKind } from "./garden-layout";
 
 declare const process: { env: { EXPO_BASE_URL?: string } };
-type Kind = "garden" | "courtyard" | "veranda" | "table" | "river";
+type Kind = GardenKind;
 type Profile = { kind: Kind; floor: number; night?: boolean; warmLight?: boolean };
 const profiles: Record<string, Profile> = {
   'polish-paper-cut': { kind: 'veranda', floor: -0.04 },
@@ -117,6 +118,7 @@ export function createCozyEnvironment(
   const geometries = new Set<THREE.BufferGeometry>();
   const materials = new Set<THREE.Material>();
   const propGeometries = new Map<string, THREE.BufferGeometry[]>();
+  const instances: THREE.InstancedMesh[] = [];
   let disposed = false;
   let sky: THREE.DataTexture | undefined;
   const horizon = night ? 0x415d73 : 0xb8dce7;
@@ -195,9 +197,9 @@ export function createCozyEnvironment(
     path.scale.set(1.15, 0.86, 1);
   }
 
-  const prop = (name: string, x: number, z: number, scale: number, rotation = 0) => {
+  const propParts = (name: string) => {
     const model = models[name];
-    if (!model) return;
+    if (!model) throw new Error(`Missing bundled nature prop: ${name}`);
     let parts = propGeometries.get(name);
     if (!parts) {
       parts = model.parts.map(part => {
@@ -210,39 +212,67 @@ export function createCozyEnvironment(
       });
       propGeometries.set(name, parts);
     }
+    return parts;
+  };
+  const propMaterial = (name: string, part: Part) => {
+    const color = new THREE.Color().setRGB(part.color[0], part.color[1], part.color[2]);
+    if (name.startsWith("rock")) color.lerp(new THREE.Color(night ? 0x91a9a4 : 0xc3c6aa), 0.72);
+    else if (color.g > color.r * 1.1) color.lerp(new THREE.Color(night ? 0x729988 : 0x6fa84c), night ? 0.48 : 0.65);
+    else if (name.startsWith("tree")) color.lerp(new THREE.Color(night ? 0xa78e70 : 0xb5906c), 0.65);
+    const material = new THREE.MeshStandardMaterial({ color, roughness: 1 });
+    materials.add(material);
+    return material;
+  };
+  const prop = (name: string, x: number, z: number, scale: number, rotation = 0) => {
+    const parts = propParts(name);
     const group = new THREE.Group();
     group.position.set(x, groundY + 0.014, z);
     group.scale.setScalar(scale);
     group.rotation.y = rotation;
-    model.parts.forEach((part, index) => {
-      const color = new THREE.Color().setRGB(part.color[0], part.color[1], part.color[2]);
-      // Keep foliage green rather than cyan, with a restrained natural palette.
-      if (name === "rock") color.lerp(new THREE.Color(night ? 0x91a9a4 : 0xc3c6aa), 0.72);
-      else if (color.g > color.r * 1.1) color.lerp(new THREE.Color(night ? 0x729988 : 0x6fa84c), night ? 0.48 : 0.82);
-      else if (name.startsWith("tree")) color.lerp(new THREE.Color(night ? 0xa78e70 : 0xb5906c), 0.65);
-      const material = new THREE.MeshStandardMaterial({ color, roughness: 1 });
-      materials.add(material);
-      const mesh = new THREE.Mesh(parts![index], material);
+    models[name].parts.forEach((part, index) => {
+      const mesh = new THREE.Mesh(parts[index], propMaterial(name, part));
       mesh.userData.toonSurface = { outline: false, shading: "smooth" };
       mesh.castShadow = mesh.receiveShadow = true;
       group.add(mesh);
     });
     root.add(group);
   };
-  // Keep the central interaction area open; depth comes from a staggered tree line.
-  const trees: [number, number, number][] = [
-    [-6.8, -6.5, 2.4], [7.0, -7.5, 2.8], [-7.0, -8.8, 3.2],
-    [7.4, -10, 3.6], [-4.4, -11, 2.2], [4.6, -13, 2.5], [-10, -15, 4.1], [10.4, -16, 4.3],
-  ];
-  trees.forEach(([x, z, scale], index) => prop(index % 3 === 0 ? "tree-pine" : "tree-round", x, z, scale, index * 0.8));
-  for (const [x, z, scale] of [[-2.8, -2.3, 1.3], [3.0, -3.3, 1.1], [-5.2, -6.6, 1.8], [4, -7, 1.5]]) {
-    prop("bush", x, z, scale, x);
-  }
-  for (const [x, z, scale] of [[-2.2, -1.4, 0.7], [2.7, -2.0, 0.6], [-3.8, -4.0, 1.0], [3.5, -5.6, 0.9]]) {
-    prop("rock", x, z, scale, z);
-  }
-  for (let i = 0; i < 3; i++) {
-    prop("flowers", (i % 2 ? -1 : 1) * (3.0 + i * 0.35), -2.6 - i * 1.15, 0.65, i);
+  if (night) {
+    // Preserve the quiet night arrangement around the authored lamps.
+    const trees: [number, number, number][] = [
+      [-6.8, -6.5, 2.4], [7.0, -7.5, 2.8], [-7.0, -8.8, 3.2],
+      [7.4, -10, 3.6], [-4.4, -11, 2.2], [4.6, -13, 2.5], [-10, -15, 4.1], [10.4, -16, 4.3],
+    ];
+    trees.forEach(([x, z, scale], index) => prop(index % 3 === 0 ? "tree-pine" : "tree-round", x, z, scale, index * 0.8));
+    for (const [x, z, scale] of [[-2.8, -2.3, 1.3], [3.0, -3.3, 1.1], [-5.2, -6.6, 1.8], [4, -7, 1.5]]) {
+      prop("bush", x, z, scale, x);
+    }
+    for (const [x, z, scale] of [[-2.2, -1.4, 0.7], [2.7, -2.0, 0.6], [-3.8, -4.0, 1.0], [3.5, -5.6, 0.9]]) {
+      prop("rock", x, z, scale, z);
+    }
+    for (let i = 0; i < 3; i++) {
+      prop("flowers", (i % 2 ? -1 : 1) * (3.0 + i * 0.35), -2.6 - i * 1.15, 0.65, i);
+    }
+  } else {
+    const planting = new THREE.Group(); planting.name = "daylight-planting"; root.add(planting);
+    const layout = gardenLayout(kind, id), transform = new THREE.Object3D();
+    for (const name of new Set(layout.map(item => item.model))) {
+      const placements = layout.filter(item => item.model === name), parts = propParts(name);
+      models[name].parts.forEach((part, index) => {
+        const mesh = new THREE.InstancedMesh(parts[index], propMaterial(name, part), placements.length);
+        mesh.name = `nature-${name}`;
+        mesh.userData.toonSurface = { outline: false, shading: "smooth" };
+        mesh.castShadow = mesh.receiveShadow = true;
+        placements.forEach((item, i) => {
+          transform.position.set(item.x, groundY + .014 + (item.lift ?? 0), item.z);
+          transform.rotation.set(0, item.turn, 0); transform.scale.setScalar(item.scale); transform.updateMatrix();
+          mesh.setMatrixAt(i, transform.matrix);
+        });
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.computeBoundingSphere();
+        instances.push(mesh); planting.add(mesh);
+      });
+    }
   }
   if (id === "celtic-folk-spring") {
     for (let i = 0; i < 14; i++) {
@@ -314,6 +344,7 @@ export function createCozyEnvironment(
       if (disposed) return;
       disposed = true;
       root.removeFromParent();
+      instances.forEach(mesh => mesh.dispose());
       geometries.forEach(geometry => geometry.dispose());
       materials.forEach(material => material.dispose());
       backdrop?.dispose();

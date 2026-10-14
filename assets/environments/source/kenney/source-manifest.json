@@ -1,0 +1,98 @@
+{
+  "package": "Kenney Nature Kit",
+  "version": "2.1",
+  "source": "https://kenney.nl/assets/nature-kit",
+  "download": "https://kenney.nl/media/pages/assets/nature-kit/37ac38a37b-1677698939/kenney_nature-kit.zip",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "models": [
+    {
+      "key": "tree-round",
+      "file": "tree_oak.glb",
+      "normals": "smooth",
+      "sha256": "d7fd8773674928c50c11b66d12c636d49bdcc15a8b1c7fbb98e6f63a3439a3f3"
+    },
+    {
+      "key": "tree-pine",
+      "file": "tree_pineTallA.glb",
+      "normals": "smooth",
+      "sha256": "e0a56eb196d8a64ba86c7304d607136e17e6f9ad748dffcf86bd53b18b91b196"
+    },
+    {
+      "key": "bush",
+      "file": "plant_bush.glb",
+      "normals": "smooth",
+      "sha256": "ae7b1beb39e242b13f5f29e3ec23ef21034b814f82297b8aa00a9bf4e1b09590"
+    },
+    {
+      "key": "rock",
+      "file": "stone_smallA.glb",
+      "normals": "smooth",
+      "sha256": "b48e731e6c4b453e8e5e8caace6edc18da40bc09874d831b7914e840fc853ae4"
+    },
+    {
+      "key": "flowers",
+      "file": "flower_yellowC.glb",
+      "normals": "smooth",
+      "sha256": "4115c017390b3e157466a8719e9e2af6c5385505135e7012982b9410760ba9f3"
+    },
+    {
+      "key": "tree-slender",
+      "file": "tree_thin.glb",
+      "normals": "source",
+      "sha256": "f0f1f6861fe0446963d3be216cc628324f538bb0841bc9a8e14140313f64e2f3"
+    },
+    {
+      "key": "tree-branching",
+      "file": "tree_plateau.glb",
+      "normals": "source",
+      "sha256": "7f19e347ff28703dd9e5fcce89b920156e291fbdb19331a57cb31a95c73e1322"
+    },
+    {
+      "key": "grass",
+      "file": "grass.glb",
+      "normals": "source",
+      "sha256": "260e41d3e5f2472492ed7b475c5b92a30b13ce2bad408535b5ff50574d4575e7"
+    },
+    {
+      "key": "ground-leaves",
+      "file": "grass_leafsLarge.glb",
+      "normals": "source",
+      "sha256": "a68b9b3d9639afaeb4ace840d5a8e3f21ffc4e8afc1eab15566500fbb2bee3e3"
+    },
+    {
+      "key": "shore-leaves",
+      "file": "plant_flatTall.glb",
+      "normals": "source",
+      "sha256": "b192523736f32754788de4dc7a5dcf30a58322b260ec8969120c91432a10b633"
+    },
+    {
+      "key": "flowers-purple",
+      "file": "flower_purpleC.glb",
+      "normals": "source",
+      "sha256": "beb85b66766c9943a89a5ee27114d3befe22569db9a6f0b5f8366b687f9c1e42"
+    },
+    {
+      "key": "rock-flat",
+      "file": "stone_smallFlatB.glb",
+      "normals": "source",
+      "sha256": "1a0b6363f66a31372656e40f83c9d604325a8bb91a7de3697400b92b1cdf6fae"
+    },
+    {
+      "key": "bush-detailed",
+      "file": "plant_bushDetailed.glb",
+      "normals": "source",
+      "sha256": "2e0487020d68ccf664435db9d829c78ae00e6d2785ee3ec10b9f89cc70a10406"
+    }
+  ],
+  "retrievedOn": "2026-10-14",
+  "archive": {
+    "file": "kenney_nature-kit.zip",
+    "bytes": 10537521,
+    "sha256": "fa7974a0d342bfe63c38664ba9f8ec1a4aab8ea25f099bdc56870e33588c4d9d"
+  },
+  "originalLicense": {
+    "file": "LICENSE.kenney.txt",
+    "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d"
+  }
+}

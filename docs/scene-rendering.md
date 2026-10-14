@@ -38,3 +38,7 @@ Before accepting a shared style change, compare a rounded diffuse object, flat p
 2026-10-14 evidence: `artifacts/toon-render-audit/`. The earlier soft preset became continuous matte PBR in commit `b5598b1` on 2026-10-12; the current adjustment restores soft cel form while preserving physical finishes and the smooth environment.
 
 The subsequent sunny daylight and work-surface comparison is in `artifacts/sunny-rendering/`, with the all-scene style and GPU audit in `artifacts/cozy-scenes/sunny-final/`.
+
+The environment refinement in `artifacts/garden-polish/` uses a curated CC0 Kenney Nature Kit subset. `garden-layout.ts` supplies stable edge plantings for gardens, courtyards, verandas and riverbanks. Shared geometry and instanced batches keep repeated foliage inexpensive; instances have their own disposal path. Model bounds must stay outside the central interaction space. Asset provenance and the evaluated alternatives are recorded in `assets/environments/README.md` and `LICENSE.txt`.
+
+2026-10-14 garden validation: all 2,532 tests and the production build passed. `artifacts/cozy-scenes/garden-final/` records all 59 scenes using the soft style with no fallback, page errors or external asset requests; all 61 created WebGL contexts were released. Nine representative scenes passed layout checks at 320, 390 and 1280 pixels; four physical pointer flows completed. `artifacts/garden-polish/production/garden-audit.html` contains eight paired before/after captures.

@@ -3,6 +3,30 @@ import * as THREE from "three";
 import { createCozyEnvironment } from "./cozy-environment";
 
 describe("a scene's surrounding world", () => {
+  it.each(["shinto-torii", "celtic-folk-spring", "woodfish", "slavic-wreath"])("keeps the added garden clear of the interaction space and releases its instance buffers: %s", async id => {
+    const scene = new THREE.Scene();
+    const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
+    const planting = scene.getObjectByName("daylight-planting");
+    expect(planting).toBeDefined();
+    scene.updateMatrixWorld(true);
+    const protectedSpace = new THREE.Box3(new THREE.Vector3(-1.85, -.2, -1.2), new THREE.Vector3(1.85, 5.2, 2.2));
+    const batches: THREE.InstancedMesh[] = [], release = vi.fn();
+    planting!.traverse(object => {
+      if (!(object instanceof THREE.InstancedMesh)) return;
+      batches.push(object); object.addEventListener("dispose", release);
+      object.geometry.computeBoundingBox();
+      for (let i = 0; i < object.count; i++) {
+        const matrix = new THREE.Matrix4(); object.getMatrixAt(i, matrix); matrix.premultiply(object.matrixWorld);
+        const bounds = object.geometry.boundingBox!.clone().applyMatrix4(matrix);
+        expect(bounds.intersectsBox(protectedSpace), object.name).toBe(false);
+      }
+    });
+    expect(batches.length).toBeGreaterThan(0);
+    expect(batches.length).toBeLessThan(36);
+    await world.ready; world.dispose(); world.dispose();
+    expect(release).toHaveBeenCalledTimes(batches.length);
+  });
+
   it("keeps the daylight backdrop stable when the local lighting panorama arrives", async () => {
     let resolve!: (texture: THREE.DataTexture) => void;
     const scene = new THREE.Scene();

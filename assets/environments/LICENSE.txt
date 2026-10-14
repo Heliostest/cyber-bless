@@ -6,11 +6,28 @@ Source: https://kenney.nl/assets/nature-kit
 License: Creative Commons Zero 1.0 Universal (CC0)
 https://creativecommons.org/publicdomain/zero/1.0/
 Free for personal, educational and commercial use; attribution appreciated.
-Selected source models: tree_oak.glb, tree_pineTallA.glb, plant_bush.glb,
-stone_smallA.glb, flower_yellowC.glb.
+Original unmodified license: source/kenney/LICENSE.kenney.txt.
+Provenance: source/kenney/source-manifest.json records the official archive URL,
+archive SHA-256, original license SHA-256, and each selected GLB SHA-256.
+Selected source models:
+  tree_oak.glb -> tree-round
+  tree_pineTallA.glb -> tree-pine
+  plant_bush.glb -> bush
+  stone_smallA.glb -> rock
+  flower_yellowC.glb -> flowers
+  tree_thin.glb -> tree-slender
+  tree_plateau.glb -> tree-branching
+  grass.glb -> grass
+  grass_leafsLarge.glb -> ground-leaves
+  plant_flatTall.glb -> shore-leaves
+  flower_purpleC.glb -> flowers-purple
+  stone_smallFlatB.glb -> rock-flat
+  plant_bushDetailed.glb -> bush-detailed
 Derived geometry: packages/scene-runtime/src/nature-kit.data.json.
-Changes: baked transforms, grounded origin, welded vertices/smooth normals,
-reduced numeric precision; runtime sage colours and matte materials.
+Changes: baked transforms, grounded origins, and five-decimal numeric precision.
+The original five models retain their smooth welded normals. New models keep
+source normal discontinuities; identical position/normal pairs are deduplicated.
+Runtime scene materials may adjust the source base colours.
 
 Poly Haven: Kloppenheim 06 (Pure Sky), Kloppenheim 02 (Pure Sky)
 Authors: Greg Zaal (original), Jarod Guest (sky edits)

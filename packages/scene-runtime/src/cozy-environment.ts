@@ -142,7 +142,7 @@ export function createCozyEnvironment(
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     mesh.receiveShadow = true;
-    mesh.userData.toonSurface = { outline: false };
+    mesh.userData.toonSurface = { outline: false, shading: "smooth" };
     root.add(mesh);
     return mesh;
   };
@@ -221,7 +221,7 @@ export function createCozyEnvironment(
       const material = new THREE.MeshStandardMaterial({ color, roughness: 1 });
       materials.add(material);
       const mesh = new THREE.Mesh(parts![index], material);
-      mesh.userData.toonSurface = { outline: false };
+      mesh.userData.toonSurface = { outline: false, shading: "smooth" };
       mesh.castShadow = mesh.receiveShadow = true;
       group.add(mesh);
     });

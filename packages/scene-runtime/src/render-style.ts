@@ -36,7 +36,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
       blendFunction: BlendFunction.ALPHA,
       visibleEdgeColor: 0x584235,
       hiddenEdgeColor: 0x584235,
-      edgeStrength: active === "toon-ink" ? 1.8 : 0.18,
+      edgeStrength: active === "toon-ink" ? 1.8 : 0.45,
       resolutionScale: 1,
       xRay: false,
       multisampling: 2,

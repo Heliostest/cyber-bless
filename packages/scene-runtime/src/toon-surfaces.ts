@@ -6,7 +6,7 @@ import type { RenderStyleId } from "@wbr/content";
  * `outline: false` keeps a surface cel-shaded but out of the ink selection, so large
  * backdrops (ground, walls) do not merge every silhouette into one outlined shape.
  */
-type ToonSurface = { color?: THREE.ColorRepresentation; simplifyMap?: boolean; aoIntensity?: number; outline?: boolean; metalness?: number; roughness?: number };
+type ToonSurface = { color?: THREE.ColorRepresentation; simplifyMap?: boolean; aoIntensity?: number; outline?: boolean; metalness?: number; roughness?: number; shading?: "smooth" };
 type Lit = THREE.MeshStandardMaterial | THREE.MeshPhongMaterial | THREE.MeshLambertMaterial;
 type Painted = THREE.MeshToonMaterial | THREE.MeshStandardMaterial;
 type Adapted = [source: Lit, toon: Painted, keepColor: boolean];
@@ -14,23 +14,35 @@ type Entry = { original: THREE.Material | THREE.Material[]; styled: THREE.Materi
 
 export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
   // Standard Three.js gradient-map configuration, not a custom shader.
-  const values = [85, 165, 235];
+  const values = style === "toon-ink" ? [85, 165, 235] : Array.from({ length: 128 }, (_, i) => {
+    const x = i / 127, bands = [60, 110, 160, 204, 238];
+    let value = bands[0];
+    for (let j = 1; j < bands.length; j++) {
+      // Broad plateaus with short smooth joins: cel form without crawling hard edges.
+      const t = THREE.MathUtils.smoothstep(x, j / bands.length - 0.035, j / bands.length + 0.035);
+      value += (bands[j] - bands[j - 1]) * t;
+    }
+    return Math.round(value);
+  });
   const gradient = new THREE.DataTexture(new Uint8Array(values), values.length, 1, THREE.RedFormat);
-  gradient.minFilter = gradient.magFilter = THREE.NearestFilter;
+  gradient.minFilter = gradient.magFilter = style === "toon-ink" ? THREE.NearestFilter : THREE.LinearFilter;
   gradient.generateMipmaps = false;
   gradient.needsUpdate = true;
   const cache = new Map<THREE.Mesh, Entry>();
 
   function adapt(source: THREE.Material, hint: ToonSurface, owned: Painted[], adapted: Adapted[]) {
     if (!(source instanceof THREE.MeshStandardMaterial || source instanceof THREE.MeshPhongMaterial || source instanceof THREE.MeshLambertMaterial) || source.transparent) return source;
+    const pbr = source instanceof THREE.MeshStandardMaterial ? source : undefined;
+    const keepFinish = style === "toon-soft" && (source instanceof THREE.MeshPhysicalMaterial ||
+      (hint.metalness ?? pbr?.metalness ?? 0) >= 0.3 || (hint.roughness ?? pbr?.roughness ?? 1) <= 0.4);
     const painted = {
       color: hint.color ?? source.color,
       map: hint.simplifyMap ? null : source.map,
       aoMap: source.aoMap,
       aoMapIntensity: hint.aoIntensity ?? Math.min(source.aoMapIntensity, 0.45),
       // Fine normal/bump detail makes stepped lighting noisy. Keep geometry shading.
-      normalMap: null,
-      bumpMap: null,
+      normalMap: keepFinish && !hint.simplifyMap ? source.normalMap : null,
+      bumpMap: keepFinish && !hint.simplifyMap ? source.bumpMap : null,
       emissive: source.emissive,
       emissiveMap: source.emissiveMap,
       emissiveIntensity: source.emissiveIntensity,
@@ -52,11 +64,16 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
       displacementScale: source.displacementScale,
       displacementBias: source.displacementBias,
     };
-    // Soft village materials keep continuous volume, diffuse sky reflection and
-    // contact shadows. The optional ink preset still uses the original cel bands.
-    const toon = style === "toon-soft"
-      ? new THREE.MeshStandardMaterial({ ...painted, roughness: hint.roughness ?? 0.94, metalness: hint.metalness ?? 0, envMapIntensity: 0.45 })
-      : new THREE.MeshToonMaterial({ ...painted, gradientMap: gradient });
+    let toon: Painted;
+    if (keepFinish) {
+      // Preserve the original PBR subclass: glass beads and lacquer keep clearcoat,
+      // metalness and their authored texture maps instead of becoming matte plastic.
+      toon = pbr?.clone() ?? new THREE.MeshStandardMaterial();
+      toon.setValues({ ...painted, roughness: hint.roughness ?? pbr?.roughness ?? 0.35,
+        metalness: hint.metalness ?? pbr?.metalness ?? 0 });
+    } else if (style === "toon-soft" && hint.shading === "smooth") {
+      toon = new THREE.MeshStandardMaterial({ ...painted, roughness: 0.94, metalness: 0, envMapIntensity: 0.45 });
+    } else toon = new THREE.MeshToonMaterial({ ...painted, gradientMap: gradient });
     toon.name = `${source.name || "surface"} / ${style}`;
     owned.push(toon);
     adapted.push([source, toon, hint.color !== undefined]);

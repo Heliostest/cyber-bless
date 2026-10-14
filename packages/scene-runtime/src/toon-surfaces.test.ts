@@ -3,6 +3,47 @@ import * as THREE from "three";
 import { createToonSurfaces } from "./toon-surfaces";
 
 describe("official toon material adaptation", () => {
+  it.each([true, false])("preserves a glossy nonmetal glaze at the finish boundary (hint: %s)", (hinted) => {
+    const original = new THREE.MeshStandardMaterial({ color: 0x416c9b, roughness: hinted ? 0.32 : 0.4, metalness: 0 });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(), original);
+    if (hinted) mesh.userData.toonSurface = { roughness: 0.4 };
+    const scene = new THREE.Scene(); scene.add(mesh);
+    const surfaces = createToonSurfaces("toon-soft"), frame = surfaces.apply(scene);
+    const finish = mesh.material as THREE.MeshStandardMaterial;
+    expect(finish.isMeshStandardMaterial).toBe(true);
+    expect(finish.roughness).toBe(0.4);
+    expect(finish.metalness).toBe(0);
+    frame.restore(); surfaces.dispose();
+    expect(mesh.material).toBe(original);
+    expect(original.roughness).toBe(hinted ? 0.32 : 0.4);
+  });
+  it("keeps clearcoat and authored metal finishes in soft toon instead of flattening them", () => {
+    const original = new THREE.MeshPhysicalMaterial({ color: 0x739daf, roughness: 0.24, metalness: 0.46, clearcoat: 0.8, clearcoatRoughness: 0.13 });
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(), original);
+    const scene = new THREE.Scene(); scene.add(mesh);
+    const surfaces = createToonSurfaces("toon-soft"), frame = surfaces.apply(scene);
+    const finish = mesh.material as THREE.MeshPhysicalMaterial;
+    expect(finish.isMeshPhysicalMaterial).toBe(true);
+    expect(finish.clearcoat).toBe(0.8);
+    expect(finish.clearcoatRoughness).toBe(0.13);
+    expect(finish.roughness).toBe(0.24);
+    expect(finish.metalness).toBe(0.46);
+    expect(finish).not.toBe(original);
+    frame.restore(); surfaces.dispose();
+    expect(mesh.material).toBe(original);
+  });
+  it("uses soft cel lighting on the subject while leaving the backdrop smooth", () => {
+    const scene = new THREE.Scene();
+    const subject = new THREE.Mesh(new THREE.SphereGeometry(), new THREE.MeshStandardMaterial({ roughness: 0.8 }));
+    const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(), new THREE.MeshStandardMaterial({ roughness: 1 }));
+    backdrop.userData.toonSurface = { outline: false, shading: "smooth" };
+    scene.add(subject, backdrop);
+    const surfaces = createToonSurfaces("toon-soft"), frame = surfaces.apply(scene);
+    expect((subject.material as THREE.MeshToonMaterial).isMeshToonMaterial).toBe(true);
+    expect((backdrop.material as THREE.MeshStandardMaterial).isMeshStandardMaterial).toBe(true);
+    expect(frame.outlined).toEqual([subject]);
+    frame.restore(); surfaces.dispose();
+  });
   it("keeps an explicit metal finish on a painted charm while preserving its source material", () => {
     const original = new THREE.MeshStandardMaterial({ metalness: 0.55, roughness: 0.35 });
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(), original);
@@ -22,10 +63,9 @@ describe("official toon material adaptation", () => {
     const scene = new THREE.Scene(); scene.add(mesh);
     const surfaces = createToonSurfaces("toon-soft");
     const frame = surfaces.apply(scene);
-    const toon = mesh.material as unknown as THREE.MeshStandardMaterial;
-    expect(toon.isMeshStandardMaterial).toBe(true);
-    expect(toon.roughness).toBeGreaterThan(0.8);
-    expect(toon.metalness).toBe(0);
+    const toon = mesh.material as unknown as THREE.MeshToonMaterial;
+    expect(toon.isMeshToonMaterial).toBe(true);
+    expect(toon.gradientMap).toBeInstanceOf(THREE.DataTexture);
     expect(toon.color.getHex()).toBe(0xb98655);
     expect(toon.map).toBeNull();
     expect(toon.normalMap).toBeNull();

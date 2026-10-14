@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const base = process.env.WBR_URL || "http://127.0.0.1:5177/";
+const auditStyles = process.env.WBR_STYLE_AUDIT === "1", styles = [];
 const out = path.resolve("artifacts/cozy-scenes", process.argv[2] || "after");
 await mkdir(out, { recursive: true });
 const ids = ['polish-paper-cut', 'uzbek-clay-bowl','chinese-woodblock-print', 'czech-bead-star','fijian-woven-fan', 'amazigh-woven-rug','slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart','bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon','barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant','sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden','dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top','chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal',"omikuji", "polish-blessing-basket", "navruz-sumalak", "floating-lantern-loy-krathong", "omamori-cycle", "shrine-suzu-bell", "st-brigids-cross", "bokjori", "woodfish", "celtic-folk-spring", "theravada-water", "furin-wind-chime",
@@ -52,7 +53,9 @@ page.on("pageerror", error => errors.push(error.message));
 page.on("request", request => {
   if (!request.url().startsWith(base.replace(/\/$/, "")) && !request.url().startsWith("data:") && !request.url().startsWith(`blob:${new URL(base).origin}/`)) external.push(request.url());
 });
-await page.goto(base);
+const entry = new URL(base);
+if (auditStyles) entry.searchParams.set("debug", "1");
+await page.goto(entry.href);
 await page.getByRole("button", { name: "我的", exact: true }).click();
 await page.getByRole("button", { name: "场景目录", exact: true }).click();
 for (const id of ids) {
@@ -64,7 +67,16 @@ for (const id of ids) {
     if (id === "woodfish") await page.locator('.woodfish-visual[data-renderer="ready"]').waitFor({ timeout: 30000 });
   }
   await page.waitForTimeout(700);
-  await page.screenshot({ path: path.join(out, `${id}.png`), fullPage: true });
+  if (auditStyles) {
+    const toggle = page.getByRole('button', { name: 'SHADER LAB' });
+    if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+    const selected = await page.locator('.debug-overlay-presets [aria-pressed="true"] strong').innerText();
+    const actual = await page.locator('#debug-overlay-panel [role="status"]').innerText();
+    styles.push({ id, selected, actual });
+    if (!actual.startsWith(`正在使用${selected}`)) errors.push(`${id}: ${actual}`);
+  }
+  await page.screenshot({ path: path.join(out, `${id}.png`), fullPage: true,
+    ...(auditStyles ? { style: '.debug-overlay { visibility: hidden !important; }' } : {}) });
   await page.getByRole("button", { name: "返回", exact: true }).click();
   if (process.argv[2] !== "before") {
     await page.waitForFunction(() => window.environmentAudit.live === 0);
@@ -78,7 +90,7 @@ await page.screenshot({ path: path.join(out, "desktop.png"), fullPage: true });
 await page.getByRole("button", { name: "返回", exact: true }).click();
 await page.waitForFunction(() => window.environmentAudit.live === 0);
 const gpu = await page.evaluate(() => window.environmentAudit);
-await writeFile(path.join(out, "report.json"), JSON.stringify({ scenes: ids.length, errors, external, gpu }, null, 2));
+await writeFile(path.join(out, "report.json"), JSON.stringify({ scenes: ids.length, errors, external, gpu, ...(auditStyles ? { styles } : {}) }, null, 2));
 console.log(JSON.stringify({ scenes: ids.length, errors, external, gpu, out }));
 await browser.close();
 if (errors.length || external.length) process.exitCode = 1;

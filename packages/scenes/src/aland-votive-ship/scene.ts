@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -61,9 +62,7 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
     const m = add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 32, radius, 8, false), mat, [0, 0, 0], parent)
     m.userData.toonSurface = { outline: false }; return m
   }
-  box('ship-table-top', [3.45, .13, 1.8], [-.1, .68, 0], honey)
-  for (const x of [-1.48, 1.28]) for (const z of [-.65, .65]) box('ship-table-leg', [.13, .62, .13], [x, .31, z], dark)
-  for (const z of [-.69, .69]) box('ship-table-apron', [2.93, .16, .09], [-.1, .53, z], oak)
+  addCraftTable(world, { name: 'ship-table', topName: 'ship-table-top', width: 3.45, depth: 1.8, surfaceY: .745, thickness: .13, center: [-.1,0], support: 'trestle', finish: 'honey' })
   const shadow = add('ship-ground-shadow', new THREE.PlaneGeometry(4, 2.4), new THREE.ShadowMaterial({ opacity: .13 }), [0, .003, 0])
   shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
 

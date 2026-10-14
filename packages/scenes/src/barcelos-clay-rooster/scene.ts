@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -57,9 +58,7 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
     add(name, new THREE.LatheGeometry(profile.map(v => new THREE.Vector2(...v)), 64), mat, p, parent)
   const tube = (name: string, points: [number, number, number][], width: number, mat: THREE.Material, parent: THREE.Object3D) =>
     add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 32, width, 10, false), mat, [0, 0, 0], parent)
-  box('rooster-table-top', [3.65, .12, 1.88], [0, .68, 0])
-  for (const x of [-1.55, 1.55]) for (const z of [-.71, .71]) box('rooster-table-leg', [.14, .62, .14], [x, .31, z], dark)
-  for (const z of [-.73, .73]) box('rooster-table-apron', [3.13, .14, .09], [0, .55, z], dark)
+  addCraftTable(world, { name: 'rooster-table', topName: 'rooster-table-top', width: 3.65, depth: 1.88, surfaceY: .74, thickness: .12, center: [0,0], support: 'arched', finish: 'honey' })
   const shadow = add('rooster-ground-shadow', new THREE.PlaneGeometry(4.15, 2.65), new THREE.ShadowMaterial({ opacity: .13 }), [0, .003, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box('rooster-linen-rest', [1.18, .04, 1.00], [-.75, .76, -.06], linen)
   box('rooster-brush-rest', [.89, .04, .25], [-1.05, .76, .63], cream)

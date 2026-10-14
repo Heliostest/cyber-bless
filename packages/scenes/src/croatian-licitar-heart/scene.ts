@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -57,9 +58,7 @@ export function createCroatianLicitarHeart(ctx: SceneContext): SceneInstance {
     const mesh = add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, closed), Math.max(24, points.length * 2), radius, 8, closed), mat, [0, 0, 0], parent)
     mesh.userData.toonSurface = { outline: false }; return mesh
   }
-  box('licitar-table-top', [3.24, .12, 1.66], [0, .70, .04])
-  for (const x of [-1.37, 1.37]) for (const z of [-.57, .64]) box('licitar-table-leg', [.13, .64, .13], [x, .32, z], walnut)
-  for (const z of [-.62, .68]) box('licitar-table-apron', [2.85, .12, .08], [0, .58, z], walnut)
+  addCraftTable(world, { name: 'licitar-table', topName: 'licitar-table-top', width: 3.24, depth: 1.66, surfaceY: .76, thickness: .12, center: [0,.04], support: 'joined', finish: 'birch' })
   const ground = add('licitar-contact-shadow', new THREE.PlaneGeometry(3.8, 2.1), new THREE.ShadowMaterial({ opacity: .13 }), [0, .002, .1]); ground.rotation.x = -Math.PI / 2; ground.castShadow = false
   box('licitar-heart-rest', [1.26, .05, .42], [-.66, .785, .01], linen)
   box('licitar-heart-back-rest', [.32, .38, .065], [-.66, .98, -.19], walnut)

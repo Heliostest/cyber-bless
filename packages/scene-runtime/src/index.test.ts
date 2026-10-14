@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
+import { readSceneMotion } from "./scene-motion";
 import {
   createSceneRegistry,
   mountScene,
   type SceneMountOptions,
 } from "./index";
 function setup() {
+  const host = {} as HTMLDivElement;
   let changed: (() => void) | undefined;
   const visibility = {
     hidden: false,
@@ -31,6 +33,7 @@ function setup() {
   const ready = vi.fn(),
     failed = vi.fn();
   return {
+    host,
     visibility,
     controller,
     engine,
@@ -41,7 +44,7 @@ function setup() {
     subscribed: () => !!changed,
     mount: (load = async () => engine) =>
       mountScene({
-        host: {} as HTMLDivElement,
+        host,
         context: {},
         load,
         active: true,
@@ -53,6 +56,22 @@ function setup() {
   };
 }
 describe("scene lifecycle host", () => {
+  it("shares live pause and reduced-motion preferences with nested decorative renderers", async () => {
+    const s = setup(), other = setup();
+    const canvas = { parentElement: s.host } as HTMLElement;
+    const session = s.mount(), otherSession = other.mount();
+    await session.initialized;
+    expect(readSceneMotion(canvas)).toEqual({ active: true, reducedMotion: false });
+    session.setReducedMotion(true);
+    expect(readSceneMotion(canvas).reducedMotion).toBe(true);
+    expect(readSceneMotion(other.host).reducedMotion).toBe(false);
+    s.visibility.hidden = true; s.change();
+    expect(readSceneMotion(canvas).active).toBe(false);
+    s.visibility.hidden = false; session.setActive(false);
+    expect(readSceneMotion(canvas).active).toBe(false);
+    session.dispose(); otherSession.dispose();
+    expect(readSceneMotion(canvas)).toEqual({ active: true, reducedMotion: true });
+  });
   it("never creates an engine when a lazy import finishes after unmount", async () => {
     const s = setup();
     let resolve!: (value: typeof s.engine) => void;

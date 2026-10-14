@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -64,9 +65,7 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
     const mesh = add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 14, radius, 6, false), mat, [0, 0, 0], parent)
     mesh.userData.toonSurface = { outline: false }; return mesh
   }
-  box('hoop-table-top', [3.48, .12, 1.70], [0, .70, .04])
-  for (const x of [-1.50, 1.50]) for (const z of [-.57, .65]) box('hoop-table-leg', [.13, .64, .13], [x, .32, z], walnut)
-  box('hoop-table-apron', [3.05, .12, .075], [0, .58, .65], walnut)
+  addCraftTable(world, { name: 'hoop-table', topName: 'hoop-table-top', width: 3.48, depth: 1.70, surfaceY: .76, thickness: .12, center: [0,.04], support: 'joined', finish: 'birch' })
   const ground = add('hoop-contact-shadow', new THREE.PlaneGeometry(3.9, 2.1), new THREE.ShadowMaterial({ opacity: .13 }), [0, .002, .1]); ground.rotation.x = -Math.PI / 2; ground.castShadow = false
   box('hoop-home-pad', [1.06, .04, .43], [-.72, .78, .015], pad)
   box('hoop-home-back-rest', [.22, .50, .08], [-.72, 1.05, -.08], walnut)

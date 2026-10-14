@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -64,8 +65,7 @@ export function createPurepechaCopperBowl(ctx: SceneContext): SceneInstance {
   }
   const box = (w: number, h: number, d: number, mat: THREE.Material, xyz: [number, number, number], name = '', parent: THREE.Object3D = world) => add(new RoundedBoxGeometry(w, h, d, 3, Math.min(.025, h / 3, d / 3)), mat, xyz, name, parent)
   const disc = (r: number, h: number, mat: THREE.Material, xyz: [number, number, number], name: string) => add(new THREE.CylinderGeometry(r, r, h, 72), mat, xyz, name)
-  box(3.6, .12, 1.92, oak, [0, .66, 0], 'copper-table')
-  for (const x of [-1.48, 1.48]) for (const z of [-.68, .68]) box(.14, .6, .14, walnut, [x, .3, z], 'copper-table-leg')
+  addCraftTable(world, { name: 'copper-table', topName: 'copper-table', width: 3.6, depth: 1.92, surfaceY: .72, thickness: .12, center: [0,0], support: 'trestle', finish: 'chestnut' })
   const shadow = add(new THREE.PlaneGeometry(4.4, 2.7), new THREE.ShadowMaterial({ opacity: .12 }), [0, .004, 0], 'copper-ground-shadow'); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   disc(.60, .025, linen, [-.63, .7325, -.12], 'copper-work-felt')
   disc(.65, .12, walnut, [.94, .78, -.12], 'copper-display-wood')

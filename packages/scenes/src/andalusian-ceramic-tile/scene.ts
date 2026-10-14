@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -58,9 +59,7 @@ export function createAndalusianCeramicTile(ctx: SceneContext): SceneInstance {
   }
   const box = (name: string, size: [number, number, number], p: [number, number, number], mat: THREE.Material = oak, parent: THREE.Object3D = world) =>
     add(name, new RoundedBoxGeometry(...size, 3, Math.min(.015, ...size.map(v => v / 3))), mat, p, parent)
-  box('tile-table-top', [3.35, .12, 1.72], [0, .70, .04])
-  for (const x of [-1.43, 1.43]) for (const z of [-.59, .68]) box('tile-table-leg', [.13, .64, .13], [x, .32, z], walnut)
-  box('tile-table-apron', [2.94, .12, .075], [0, .58, .69], walnut)
+  addCraftTable(world, { name: 'tile-table', topName: 'tile-table-top', width: 3.35, depth: 1.72, surfaceY: .76, thickness: .12, center: [0,.04], support: 'arched', finish: 'honey' })
   const ground = add('tile-contact-shadow', new THREE.PlaneGeometry(3.9, 2.2), new THREE.ShadowMaterial({ opacity: .13 }), [0, .002, .1]); ground.rotation.x = -Math.PI / 2; ground.castShadow = false
   box('tile-home-pad', [1.27, .04, .48], [-.67, .78, -.02], linen)
   box('tile-home-back-rest', [.20, .44, .12], [-.67, 1.02, -.13], walnut)

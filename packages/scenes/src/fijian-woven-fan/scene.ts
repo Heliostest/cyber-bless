@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -56,9 +57,7 @@ export function createFijianWovenFan(ctx: SceneContext): SceneInstance {
     const mesh = add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)), closed, 'centripetal'), segments, radius, 6, closed), mat, [0, 0, 0], parent)
     mesh.userData.toonSurface = { outline: false }; return mesh
   }
-  box('fan-table', [3.58, .12, 1.64], [0, .70, .03])
-  for (const x of [-1.54, 1.54]) for (const z of [-.56, .63]) box('fan-table-leg', [.13, .64, .13], [x, .32, z], walnut)
-  box('fan-table-apron', [3.15, .13, .08], [0, .59, .67], walnut)
+  addCraftTable(world, { name: 'fan-table', topName: 'fan-table', width: 3.58, depth: 1.64, surfaceY: .76, thickness: .12, center: [0,.03], support: 'trestle', finish: 'honey' })
   const shadow = add('fan-contact-shadow', new THREE.PlaneGeometry(4, 2.2), new THREE.ShadowMaterial({ opacity: .12 }), [0, .003, .1]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box('fan-home-seat', [.67, .04, .45], [-.64, .78, 0], sage)
   box('fan-home-back-rest', [.17, .57, .09], [-.64, 1.085, -.088], walnut)

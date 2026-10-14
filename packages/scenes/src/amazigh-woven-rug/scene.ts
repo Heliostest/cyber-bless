@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -58,9 +59,7 @@ export function createAmazighWovenRug(ctx: SceneContext): SceneInstance {
     const mesh = add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 10, radius, 6, false), mat, [0, 0, 0], parent)
     mesh.userData.toonSurface = { outline: false }; return mesh
   }
-  box('rug-table-top', [3.26, .12, 1.52], [0, .68, .02])
-  for (const x of [-1.43, 1.43]) for (const z of [-.53, .56]) box('rug-table-leg', [.13, .62, .13], [x, .31, z], wood)
-  box('rug-table-apron', [2.87, .13, .065], [0, .565, .56], wood)
+  addCraftTable(world, { name: 'rug-table', topName: 'rug-table-top', width: 3.26, depth: 1.52, surfaceY: .74, thickness: .12, center: [0,.02], support: 'trestle', finish: 'chestnut' })
   const ground = add('rug-contact-shadow', new THREE.PlaneGeometry(3.7, 1.95), new THREE.ShadowMaterial({ opacity: .13 }), [0, .002, .02]); ground.rotation.x = -Math.PI / 2; ground.castShadow = false
   const stand = (prefix: string, x: number) => {
     const group = new THREE.Group(); group.name = `${prefix}-stand`; world.add(group)

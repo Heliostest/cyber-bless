@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -47,11 +48,7 @@ export function createFinnishBirchBasket(ctx: SceneContext): SceneInstance {
   const tube = (points: THREE.Vector3[], radius: number, mat: THREE.Material, parent: THREE.Object3D, closed = false, name = '') => add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, closed), points.length * 3, radius, 6, closed), mat, [0, 0, 0], name, parent)
 
   // A broad, braced working bench belongs to the veranda; every loose piece rests on it.
-  box(3.5, .14, 2.24, wood, [0, .65, 0], 'birch-bench-top')
-  for (const x of [-1.43, 1.43]) for (const z of [-.84, .84]) box(.18, .58, .18, endGrain, [x, .29, z])
-  for (const z of [-.84, .84]) box(3.0, .14, .12, endGrain, [0, .53, z])
-  for (const x of [-1.43, 1.43]) box(.12, .10, 1.8, endGrain, [x, .22, 0])
-  for (const z of [-.71, -.24, .24, .71]) box(3.42, .002, .011, endGrain, [0, .7205, z])
+  addCraftTable(world, { name: 'birch-bench', topName: 'birch-bench-top', width: 3.5, depth: 2.24, surfaceY: .72, thickness: .14, center: [0,0], support: 'arched', finish: 'birch' })
   const shadow = add(new THREE.PlaneGeometry(4, 3), new THREE.ShadowMaterial({ opacity: .12 }), [0, .004, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   // A small rear rail locates the work outdoors without crowding the craft silhouette.
   for (const x of [-1.68, 1.68]) box(.09, .75, .09, linen, [x, 1.095, -1.015])

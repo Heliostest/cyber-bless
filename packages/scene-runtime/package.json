@@ -8,7 +8,8 @@
     "./render-style": "./src/render-style.ts",
     "./debug-render-style": "./src/debug-render-style.ts",
     "./debug-styles": "./src/debug-styles.ts",
-    "./interaction-cues": "./src/interaction-cues.ts"
+    "./interaction-cues": "./src/interaction-cues.ts",
+    "./stylized-water": "./src/stylized-water.ts"
   },
   "dependencies": {
     "@wbr/content": "*",

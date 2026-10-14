@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -42,8 +43,7 @@ export function createNdebelePaintedHouse(ctx: SceneContext): SceneInstance {
     const mesh = new THREE.Mesh(geometry, mat); mesh.position.set(...xyz); mesh.name = name; mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
   const box = (w: number, h: number, d: number, mat: THREE.Material, xyz: [number, number, number], name: string, parent: THREE.Object3D = world, radius = .018) => add(new RoundedBoxGeometry(w, h, d, 3, Math.min(radius, h / 3, d / 3)), mat, xyz, name, parent)
-  box(4, .12, 2.05, oak, [0, .66, 0], 'house-table')
-  for (const x of [-1.7, 1.7]) for (const z of [-.73, .73]) box(.14, .6, .14, walnut, [x, .3, z], 'house-table-leg')
+  addCraftTable(world, { name: 'house-table', topName: 'house-table', width: 4, depth: 2.05, surfaceY: .72, thickness: .12, center: [0,0], support: 'arched', finish: 'honey' })
   const shadow = add(new THREE.PlaneGeometry(4.7, 2.8), new THREE.ShadowMaterial({ opacity: .12 }), [0, .004, 0], 'house-contact-shadow'); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box(1.76, .14, 1.27, walnut, [.95, .79, 0], 'house-plinth')
   const seat = box(1.70, .02, 1.20, cream, [.95, .87, 0], 'house-display-seat')

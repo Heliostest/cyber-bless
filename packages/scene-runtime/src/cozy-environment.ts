@@ -2,6 +2,9 @@ import * as THREE from "three";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import nature from "./nature-kit.data.json";
 import { gardenLayout, type GardenKind } from "./garden-layout";
+import { createStylizedMeadow } from "./stylized-meadow";
+import { createStylizedTrees } from "./stylized-trees";
+import { readSceneMotion } from "./scene-motion";
 
 declare const process: { env: { EXPO_BASE_URL?: string } };
 type Kind = GardenKind;
@@ -121,6 +124,9 @@ export function createCozyEnvironment(
   const instances: THREE.InstancedMesh[] = [];
   let disposed = false;
   let sky: THREE.DataTexture | undefined;
+  let meadow: ReturnType<typeof createStylizedMeadow> | undefined;
+  let treeCanopies: ReturnType<typeof createStylizedTrees> | undefined;
+  let windTime = 0, lastFrame = 0;
   const horizon = night ? 0x415d73 : 0xb8dce7;
   const backdrop = night ? undefined : createDaylightBackdrop();
   scene.background = backdrop ?? new THREE.Color(horizon);
@@ -153,8 +159,25 @@ export function createCozyEnvironment(
   const box = (w: number, h: number, d: number, material: THREE.Material, x: number, y: number, z: number) =>
     addMesh(new THREE.BoxGeometry(w, h, d), material, x, y, z);
   const groundY = kind === "table" ? floor - 0.14 : floor;
-  const ground = addMesh(new THREE.PlaneGeometry(100, 100), grass, 0, groundY, -12);
+  const spring = id === "celtic-folk-spring";
+  let groundGeometry: THREE.BufferGeometry = new THREE.PlaneGeometry(100, 100);
+  if (spring) {
+    groundGeometry.dispose();
+    const shape = new THREE.Shape();
+    shape.moveTo(-50, -38); shape.lineTo(50, -38); shape.lineTo(50, 62); shape.lineTo(-50, 62); shape.closePath();
+    const hole = new THREE.Path(); hole.absarc(0, 0, 1.36, 0, Math.PI * 2, true); shape.holes.push(hole);
+    groundGeometry = new THREE.ShapeGeometry(shape, 48);
+    const uv = groundGeometry.getAttribute("uv"), position = groundGeometry.getAttribute("position");
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, (position.getX(i) + 50) / 100, (position.getY(i) + 38) / 100);
+  }
+  const ground = addMesh(groundGeometry, grass, 0, kind === "river" ? groundY - .30 : groundY, spring ? 0 : -12);
+  ground.name = "meadow-ground";
   ground.rotation.x = -Math.PI / 2;
+
+  if (!night) {
+    meadow = createStylizedMeadow({ kind, floor: groundY, id });
+    root.add(meadow.mesh); grass.color.set(0xffffff); grass.map = meadow.groundMap;
+  }
 
   if (!night) {
     // Two broad meadow silhouettes give depth without adding small visual detail.
@@ -189,12 +212,20 @@ export function createCozyEnvironment(
     box(0.15, 0.68, 0.15, wood, -2.1, floor - 0.43, 1.25);
     box(0.15, 0.68, 0.15, wood, 2.1, floor - 0.43, 1.25);
   } else if (kind === "river") {
-    ground.material = makeMaterial(0x8cc3c2);
+    ground.material = makeMaterial(0xb3c39b);
     for (const x of [-5, 5]) box(5, 0.10, 46, grass, x, floor + 0.025, -13);
   } else {
-    const path = addMesh(new THREE.CircleGeometry(2.55, 48), sand, 0, floor + 0.008, 0);
+    let pathGeometry: THREE.BufferGeometry = new THREE.CircleGeometry(2.55, 48);
+    if (spring) {
+      pathGeometry.dispose();
+      const shape = new THREE.Shape(); shape.absellipse(0, 0, 2.55 * 1.15, 2.55 * .86, 0, Math.PI * 2, false, 0);
+      const hole = new THREE.Path(); hole.absarc(0, 0, 1.36, 0, Math.PI * 2, true); shape.holes.push(hole);
+      pathGeometry = new THREE.ShapeGeometry(shape, 48);
+    }
+    const path = addMesh(pathGeometry, sand, 0, floor + 0.008, 0);
+    path.name = "garden-path";
     path.rotation.x = -Math.PI / 2;
-    path.scale.set(1.15, 0.86, 1);
+    if (!spring) path.scale.set(1.15, 0.86, 1);
   }
 
   const propParts = (name: string) => {
@@ -256,7 +287,9 @@ export function createCozyEnvironment(
   } else {
     const planting = new THREE.Group(); planting.name = "daylight-planting"; root.add(planting);
     const layout = gardenLayout(kind, id), transform = new THREE.Object3D();
-    for (const name of new Set(layout.map(item => item.model))) {
+    treeCanopies = createStylizedTrees(layout.filter(item => item.model.startsWith("tree-")), groundY);
+    planting.add(treeCanopies.root);
+    for (const name of new Set(layout.filter(item => !item.model.startsWith("tree-")).map(item => item.model))) {
       const placements = layout.filter(item => item.model === name), parts = propParts(name);
       models[name].parts.forEach((part, index) => {
         const mesh = new THREE.InstancedMesh(parts[index], propMaterial(name, part), placements.length);
@@ -299,6 +332,12 @@ export function createCozyEnvironment(
   return {
     kind, ready,
     prepare(renderer: THREE.WebGLRenderer) {
+      const now = performance.now() * .001, motion = readSceneMotion(renderer.domElement);
+      if (motion.reducedMotion) windTime = 0;
+      else if (motion.active && lastFrame) windTime += Math.min(.05, Math.max(0, now - lastFrame));
+      lastFrame = now;
+      meadow?.update(windTime);
+      treeCanopies?.update(windTime, motion.reducedMotion);
       let keySeen = false;
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = night ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
@@ -344,6 +383,8 @@ export function createCozyEnvironment(
       if (disposed) return;
       disposed = true;
       root.removeFromParent();
+      meadow?.dispose();
+      treeCanopies?.dispose();
       instances.forEach(mesh => mesh.dispose());
       geometries.forEach(geometry => geometry.dispose());
       materials.forEach(material => material.dispose());

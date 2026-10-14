@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -68,9 +69,7 @@ export function createSlovakWireBird(ctx: SceneContext): SceneInstance {
     }
     return core
   }
-  box('wire-table', [3.75, .12, 1.76], [0, .70, .03])
-  for (const x of [-1.62, 1.62]) for (const z of [-.60, .65]) box('wire-table-leg', [.13, .64, .13], [x, .32, z], walnut)
-  box('wire-table-apron', [3.30, .12, .08], [0, .60, .70], walnut)
+  addCraftTable(world, { name: 'wire-table', topName: 'wire-table', width: 3.75, depth: 1.76, surfaceY: .76, thickness: .12, center: [0,.03], support: 'trestle', finish: 'chestnut' })
   const shadow = add('wire-contact-shadow', new THREE.PlaneGeometry(4.4, 2.5), new THREE.ShadowMaterial({ opacity: .12 }), [0, .004, .1]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box('wire-home-pad', [.95, .04, .55], [-.55, .78, .02], linen)
   box('wire-wing-pad', [.34, .04, .26], [-.60, .78, .72], linen)

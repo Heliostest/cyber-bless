@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -45,9 +46,7 @@ export function createDalarnaWoodenHorse(ctx: SceneContext): SceneInstance {
   }
   const box = (w: number, h: number, d: number, material: THREE.Material, xyz: [number, number, number], name = '', parent: THREE.Object3D = world) => add(new RoundedBoxGeometry(w, h, d, 3, Math.min(.035, h / 3, d / 3)), material, xyz, name, parent)
   const tube = (points: number[][], radius: number, material: THREE.Material, parent: THREE.Object3D = world) => add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p as [number, number, number]))), 24, radius, 7, false), material, [0, 0, 0], '', parent)
-  box(3.25, .12, 1.7, oak, [0, .66, 0], 'horse-table')
-  for (const x of [-1.35, 1.35]) for (const z of [-.6, .6]) box(.14, .6, .14, darkOak, [x, .3, z])
-  for (const z of [-.6, .6]) box(2.82, .13, .10, darkOak, [0, .55, z])
+  addCraftTable(world, { name: 'horse-table', topName: 'horse-table', width: 3.25, depth: 1.7, surfaceY: .72, thickness: .12, center: [0,0], support: 'arched', finish: 'birch' })
   const shadow = add(new THREE.PlaneGeometry(3.8, 2.5), new THREE.ShadowMaterial({ opacity: .12 }), [0, .004, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box(1.45, .10, .90, darkOak, [.72, .77, -.1], 'horse-plinth')
   const plinth = box(1.39, .022, .84, cream, [.72, .831, -.1], 'horse-plinth-inset')

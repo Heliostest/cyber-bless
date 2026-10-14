@@ -3,6 +3,17 @@ import * as THREE from "three";
 import { createCozyEnvironment } from "./cozy-environment";
 
 describe("a scene's surrounding world", () => {
+  it("leaves a real opening below the clear spring while keeping its bank solid", async () => {
+    const scene = new THREE.Scene();
+    const world = createCozyEnvironment(scene, { id: "celtic-folk-spring", loadSky: async () => new THREE.DataTexture() })!;
+    scene.updateMatrixWorld(true);
+    const ground = scene.getObjectByName("meadow-ground")!, path = scene.getObjectByName("garden-path")!;
+    const ray = new THREE.Raycaster(new THREE.Vector3(0, 5, 0), new THREE.Vector3(0, -1, 0));
+    expect(ray.intersectObjects([ground, path])).toHaveLength(0);
+    ray.ray.origin.x = 1.8;
+    expect(ray.intersectObjects([ground, path]).length).toBeGreaterThan(0);
+    await world.ready; world.dispose();
+  });
   it.each(["shinto-torii", "celtic-folk-spring", "woodfish", "slavic-wreath"])("keeps the added garden clear of the interaction space and releases its instance buffers: %s", async id => {
     const scene = new THREE.Scene();
     const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;

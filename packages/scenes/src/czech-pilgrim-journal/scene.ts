@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -51,9 +52,7 @@ export function createCzechPilgrimJournal(ctx: SceneContext): SceneInstance {
     const mesh = add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p as [number,number,number]))), 40, radius, 6, false), mat, [0, 0, 0], '', parent)
     mesh.userData.toonSurface = { outline: false }; return mesh
   }
-  box(3.15, .13, 1.9, oak, [0, .71, 0], 'journal-table-top')
-  for (const x of [-1.28, 1.28]) for (const z of [-.68, .68]) box(.14, .645, .14, edge, [x, .3225, z])
-  for (const z of [-.65,.65]) box(2.7,.16,.10,edge,[0,.57,z])
+  addCraftTable(world, { name: 'journal-table', topName: 'journal-table-top', width: 3.15, depth: 1.9, surfaceY: .775, thickness: .13, center: [0,0], support: 'joined', finish: 'honey' })
   const shadow = add(new THREE.PlaneGeometry(3.8, 2.6), new THREE.ShadowMaterial({ opacity: .12 }), [0,.005,0]); shadow.rotation.x=-Math.PI/2;shadow.castShadow=false
   box(2.90, .026, 1.62, leatherEdge, [0,.792,0], 'journal-reading-mat')
   // Stacked page edges, an actual hinge and a cloth-bound cover are independently modelled.

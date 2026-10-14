@@ -17,6 +17,8 @@ export const assetFiles = [
   "environments/kloppenheim-06-sky-1k.hdr",
   "environments/kloppenheim-02-night-1k.hdr",
   "environments/LICENSE.txt",
+  "environments/meadow/LICENSE.boona13.txt",
+  "environments/trees/source/License.txt",
 ];
 export async function prepareAppAssets() {
   await prepareBundledContent();

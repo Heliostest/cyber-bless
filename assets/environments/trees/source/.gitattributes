@@ -1,0 +1,3 @@
+# Preserve the original vendor notice and source buffers for SHA-256 validation.
+License.txt -text -diff
+*.bin -text

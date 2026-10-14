@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -47,8 +48,7 @@ export function createLithuanianStrawGarden(ctx: SceneContext): SceneInstance {
     const mesh = add(new THREE.CylinderGeometry(radius, radius, a.distanceTo(b), 8, 1, true), mat, [0, 0, 0], name, parent)
     mesh.position.copy(a).add(b).multiplyScalar(.5); mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); return mesh
   }
-  box(3.3, .12, 1.75, oak, [0, .66, 0], 'straw-table')
-  for (const x of [-1.36, 1.36]) for (const z of [-.6, .6]) box(.14, .6, .14, walnut, [x, .3, z])
+  addCraftTable(world, { name: 'straw-table', topName: 'straw-table', width: 3.3, depth: 1.75, surfaceY: .72, thickness: .12, center: [0,0], support: 'joined', finish: 'birch' })
   const shadow = add(new THREE.PlaneGeometry(3.8, 2.5), new THREE.ShadowMaterial({ opacity: .12 }), [0, .004, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   // A low temporary jig supports the unfinished garden, and a taller stand receives it.
   box(.55, .07, .50, walnut, [-1.36, .755, -.32])

@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -53,9 +54,7 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
     const mesh = add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), Math.max(8, points.length * 8), radius, 5, false), material, [0, 0, 0], parent)
     mesh.userData.toonSurface = { outline: false }; return mesh
   }
-  box('woodblock-table', [3.55, .13, 2.45], [0, .68, .08], wood)
-  for (const x of [-1.48, 1.48]) for (const z of [-.80, .97]) box('woodblock-table-leg', [.13, .61, .13], [x, .305, z], darkWood)
-  box('woodblock-table-apron', [3.08, .16, .09], [0, .53, 1.05], darkWood)
+  addCraftTable(world, { name: 'woodblock-table', topName: 'woodblock-table', width: 3.55, depth: 2.45, surfaceY: .745, thickness: .13, center: [0,.08], support: 'trestle', finish: 'chestnut' })
   const shadow = add('woodblock-contact-shadow', new THREE.PlaneGeometry(3.8, 2.75), new THREE.ShadowMaterial({ opacity: .13 }), [0, .003, .1]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box('woodblock-carved-block', [2.12, .14, 1.94], [.1, .824, .08], darkWood)
   box('woodblock-cut-field', [1.99, .035, 1.81], [.1, .906, .08], cutWood)

@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { createStylizedWater } from '@wbr/scene-runtime/stylized-water'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { claimObjectTouches } from '../procedural-kit'
@@ -139,18 +140,11 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
   rim.position.set(0, 1.1, 0)
   scene.add(ambient, hemi, key, rim)
 
-  const water = new THREE.Mesh(
-    new THREE.CircleGeometry(1.35, 48),
-    new THREE.MeshStandardMaterial({
-      color: 0x2a7f9f,
-      emissive: 0x0c3a4a,
-      emissiveIntensity: 0.4,
-      metalness: 0.25,
-      roughness: 0.3,
-      transparent: true,
-      opacity: 0.92,
-    }),
-  )
+  const waterEffect = createStylizedWater({
+    geometry: new THREE.CircleGeometry(1.35, 48),
+    radius: 1.35, depth: 0.20, color: 0x63c8c1, bedColor: 0xa9b78c,
+  })
+  const water = waterEffect.surface
   water.rotation.x = -Math.PI / 2
   water.position.y = 0.02
   scene.add(water)
@@ -438,9 +432,7 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
       const visualDt = reduced ? 0 : dt
-      water.position.y = 0.02 + Math.sin(t * 1.5) * 0.01
-      ;(water.material as THREE.MeshStandardMaterial).emissiveIntensity =
-        0.35 + Math.sin(t * 0.9) * 0.1
+      waterEffect.update(dt, reduced)
       motes.rotation.y += visualDt * 0.02
 
       const followRate = 1 - Math.exp(-dt * 14)
@@ -480,8 +472,7 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
       styleRenderer.dispose()
       renderer.dispose()
       renderer.forceContextLoss()
-      water.geometry.dispose()
-      ;(water.material as THREE.Material).dispose()
+      waterEffect.dispose()
       bank.geometry.dispose()
       ;(bank.material as THREE.Material).dispose()
       token.geometry.dispose()

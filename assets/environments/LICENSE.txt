@@ -38,3 +38,24 @@ License: Creative Commons Zero 1.0 Universal (CC0)
 https://polyhaven.com/license
 Files: original 1K HDR downloads, renamed locally; no copyrighted game assets.
 Free for commercial use and redistribution; attribution appreciated.
+
+Windswept meadow shader adaptation
+Source: https://github.com/boona13/threejs-grass-water-shaders
+Revision: 97fb7ea3135362dbb1ba80cdfa8fb27ec8d0b159
+Copyright (c) 2026 boona13; MIT License.
+The full original notice is included at meadow/LICENSE.boona13.txt.
+Adapted blade bending and root-to-tip lighting; simplified local field layout,
+shadow/fog/colour integration, and generated ground patches are project changes.
+
+KayKit Forest Nature Pack 1.0 — Kay Lousberg
+Creator: https://kaylousberg.itch.io/kaykit-forest
+License: Creative Commons Zero 1.0 Universal (CC0).
+Source trees: Tree_1_B_Color1 (round), Tree_1_C_Color1 (cluster).
+Original notice: trees/source/License.txt.
+Pinned mirror, file hashes and retrieval details: trees/source-manifest.json.
+Changes: baked transforms/gradient atlas to vertex colours; grounded and
+normalized each tree to unit height; separated wood/canopy batches for breeze.
+
+Timber furniture and shallow water are original project geometry/shaders.
+Evaluated external references are documented in furniture/PROVENANCE.md and
+water/README.md; those reference implementations/assets are not redistributed.

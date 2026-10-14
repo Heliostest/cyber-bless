@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -48,8 +49,7 @@ export function createCatalanFestivalGiant(ctx: SceneContext): SceneInstance {
     mesh.position.copy(a).add(b).multiplyScalar(.5); mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); return mesh
   }
   const disc = (r: number, h: number, xyz: [number, number, number], mat: THREE.Material, name = '', parent: THREE.Object3D = world) => add(new THREE.CylinderGeometry(r, r, h, 48), mat, xyz, name, parent)
-  box(3.5, .12, 1.85, oak, [0, .66, 0], 'giant-table')
-  for (const x of [-1.45, 1.45]) for (const z of [-.65, .65]) box(.14, .6, .14, walnut, [x, .3, z])
+  addCraftTable(world, { name: 'giant-table', topName: 'giant-table', width: 3.5, depth: 1.85, surfaceY: .72, thickness: .12, center: [0,0], support: 'trestle', finish: 'honey' })
   const shadow = add(new THREE.PlaneGeometry(4, 2.6), new THREE.ShadowMaterial({ opacity: .12 }), [0, .004, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   disc(.59, .12, [.79, .78, 0], walnut, 'giant-plinth')
   const peg = disc(.53, .02, [.79, .85, 0], cream, 'giant-display-seat')

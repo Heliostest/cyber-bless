@@ -1,0 +1,33 @@
+{
+  "creator": "Kay Lousberg",
+  "pack": "KayKit Forest Nature Pack 1.0",
+  "license": "CC0-1.0",
+  "creatorUrl": "https://kaylousberg.itch.io/kaykit-forest",
+  "retrieved": "2026-10-14",
+  "mirror": {
+    "repository": "https://github.com/GeorgeQLe/assets-kaykit-3d-environments",
+    "commit": "d5e6c73284e9385a389ac7181dec3d0dc9e9021d",
+    "directory": "assets/kaykit/forest-nature-pack-1.0/Assets/gltf/Color1",
+    "texture": "assets/kaykit/forest-nature-pack-1.0/Textures/forest_texture.png",
+    "license": "LICENSES/KayKit-CC0-License.txt"
+  },
+  "note": "Creator itch endpoint reset the local connection. Unmodified source files were retrieved from the pinned CC0 mirror of the Complete KayKit Collection v6. No claim that these exact variants belong to the free-tier archive.",
+  "models": [
+    {
+      "key": "round",
+      "file": "Tree_1_B_Color1.gltf"
+    },
+    {
+      "key": "cluster",
+      "file": "Tree_1_C_Color1.gltf"
+    }
+  ],
+  "hashes": {
+    "forest_texture.png": "4e116d40a273b72af075f2a1f1250fa6bc3330643aadef0c969a654c8cdc8549",
+    "License.txt": "9f02357d1a4fdd7c6ed69eac5f4bf2171e34971c89d60e905af10a8db6bcc6e5",
+    "Tree_1_B_Color1.bin": "dbd2bcde916c01ae82894593c22d88c4cf6961c712920c38a8ced7770468af4e",
+    "Tree_1_B_Color1.gltf": "03f4773b06adf252ac8ca0a9bfdc77f315c1f4036b6151796f110b4897e586c5",
+    "Tree_1_C_Color1.bin": "7a80013f7bdc85e84c4c02423452267a2db57005d9218b732c12ea5c130f39c7",
+    "Tree_1_C_Color1.gltf": "ffb1e44646cd8dbe9902dd31bf94e64e1a3de5523d1b1f819acdbef09b42d45f"
+  }
+}

@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -52,8 +53,7 @@ export function createSicilianPaintedCart(ctx: SceneContext): SceneInstance {
   const axle = (r: number, length: number, mat: THREE.Material, xyz: [number, number, number], name: string, parent: THREE.Object3D) => {
     const mesh = add(new THREE.CylinderGeometry(r, r, length, 32), mat, xyz, name, parent); mesh.rotation.x = Math.PI / 2; return mesh
   }
-  box(4.7, .12, 2.05, oak, [0, .66, 0], 'cart-table')
-  for (const x of [-2, 2]) for (const z of [-.73, .73]) box(.14, .6, .14, walnut, [x, .3, z], 'cart-table-leg')
+  addCraftTable(world, { name: 'cart-table', topName: 'cart-table', width: 4.7, depth: 2.05, surfaceY: .72, thickness: .12, center: [0,0], support: 'trestle', finish: 'honey' })
   const shadow = add(new THREE.PlaneGeometry(5.1, 2.7), new THREE.ShadowMaterial({ opacity: .12 }), [0, .004, 0], 'cart-contact-shadow'); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box(2.18, .14, 1.66, walnut, [1.05, .79, -.08], 'cart-display-plinth')
   const mat = box(2.12, .02, 1.60, cream, [1.05, .87, -.08], 'cart-display-mat')

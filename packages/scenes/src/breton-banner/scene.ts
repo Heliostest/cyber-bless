@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -44,9 +45,7 @@ export function createBretonBanner(ctx: SceneContext): SceneInstance {
     const mesh = new THREE.Mesh(geo, material); mesh.position.set(...xyz); mesh.name = name; mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
   const box = (w: number, h: number, d: number, material: THREE.Material, xyz: [number, number, number], name = '', parent: THREE.Object3D = world) => add(new RoundedBoxGeometry(w, h, d, 3, Math.min(.03, h / 3, d / 3)), material, xyz, name, parent)
-  box(3.1, .12, 1.6, wood, [0, .64, 0], 'banner-workbench')
-  for (const x of [-1.30, 1.30]) for (const z of [-.58, .58]) box(.14, .58, .14, endgrain, [x, .29, z])
-  for (const z of [-.58, .58]) box(2.7, .11, .10, endgrain, [0, .52, z])
+  addCraftTable(world, { name: 'banner-table', topName: 'banner-workbench', width: 3.1, depth: 1.6, surfaceY: .7, thickness: .12, center: [0,0], support: 'joined', finish: 'honey' })
   const shadow = add(new THREE.PlaneGeometry(3.7, 2.4), new THREE.ShadowMaterial({ opacity: .12 }), [0, .004, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   add(new THREE.CylinderGeometry(.43, .46, .10, 36), wood, [.84, .75, .23], 'banner-stand-base')
   const socket = add(new THREE.CylinderGeometry(.17, .17, .012, 32), socketMat, [.84, .814, .23], 'banner-stand-socket')

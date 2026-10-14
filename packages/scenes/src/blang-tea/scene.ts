@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -52,9 +53,7 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
     mesh.userData.toonSurface={outline:false};return mesh
   }
   const lathe = (profile:number[][],mat:THREE.Material,p:[number,number,number],name='',parent:THREE.Object3D=world) => add(new THREE.LatheGeometry(profile.map(([x,y])=>new THREE.Vector2(x,y)),48),mat,p,name,parent)
-  box(3.18,.13,1.93,wood,[0,.73,0],'tea-table-top')
-  for(const x of [-1.27,1.27])for(const z of [-.69,.69])box(.15,.665,.15,edge,[x,.3325,z])
-  for(const z of [-.65,.65])box(2.72,.13,.10,edge,[0,.59,z])
+  addCraftTable(world, { name: 'tea-table', topName: 'tea-table-top', width: 3.18, depth: 1.93, surfaceY: .795, thickness: .13, center: [0,0], support: 'arched', finish: 'chestnut' })
   box(2.95,.055,1.68,edge,[0,.8225,0],'tea-tray-base')
   box(2.83,.024,1.56,wood,[0,.862,0],'tea-tray-surface')
   for(const x of [-1.44,1.44])box(.055,.09,1.64,wood,[x,.875,0])

@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -56,9 +57,7 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
     add(name, new RoundedBoxGeometry(...size, 3, Math.min(.025, ...size.map(v => v / 3))), mat, p, parent)
   const lathe = (name: string, profile: [number, number][], mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) =>
     add(name, new THREE.LatheGeometry(profile.map(v => new THREE.Vector2(...v)), 64), mat, p, parent)
-  box('egg-table-top', [3.30, .12, 1.78], [0, .68, 0])
-  for (const x of [-1.39, 1.39]) for (const z of [-.64, .64]) box('egg-table-leg', [.13, .62, .13], [x, .31, z], dark)
-  for (const z of [-.67, .67]) box('egg-table-apron', [2.88, .12, .09], [0, .56, z], dark)
+  addCraftTable(world, { name: 'egg-table', topName: 'egg-table-top', width: 3.3, depth: 1.78, surfaceY: .74, thickness: .12, center: [0,0], support: 'joined', finish: 'birch' })
   const shadow = add('egg-ground-shadow', new THREE.PlaneGeometry(3.9, 2.5), new THREE.ShadowMaterial({ opacity: .13 }), [0, .003, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box('egg-linen-rest', [1.01, .04, .91], [-.48, .76, .08], sage)
   box('egg-brush-rest', [.85, .036, .24], [-1.02, .758, .56], cream)

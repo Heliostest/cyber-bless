@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { createStylizedWater } from '@wbr/scene-runtime/stylized-water'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
@@ -37,6 +38,14 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   Object.assign(lights.key.shadow.camera, { left: -2, right: 2, top: 3, bottom: -2, near: .1, far: 12 })
   lights.key.shadow.normalBias = .02
   const world = new THREE.Group(); world.name = 'krathong-waterfront'; scene.add(world)
+  const riverGeometry = new THREE.PlaneGeometry(5, 46, 1, 1)
+  riverGeometry.rotateX(-Math.PI / 2)
+  const waterEffect = createStylizedWater({
+    geometry: riverGeometry, normal: 'y', depth: .24,
+    color: 0x78c7c1, bedColor: 0xabb68f, opacity: .44, causticScale: 3.3,
+  })
+  waterEffect.surface.position.set(0, -.045, -13)
+  world.add(waterEffect.surface)
   const mat = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: .92 })
   const wood = mat(0xb39471), endgrain = mat(0xd4b992), green = [mat(0x6f9f72), mat(0x90b381), mat(0xa3ba85)]
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: THREE.Vector3, parent: THREE.Object3D = world) => {
@@ -172,6 +181,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
       if(!started||disposed)return
       if(!active()) { pointer.cancel(); writer?.setEnabled(false); ui.actionBtn.disabled=true; if(!inactiveRendered){style.render();inactiveRendered=true}return }
       inactiveRendered=false; ui.actionBtn.disabled=!!motion; writer?.setEnabled(step===2&&!motion&&!returning)
+      waterEffect.update(dt, reduced())
       if(motion) {
         motion.t=reduced()?1:Math.min(1,motion.t+(Number.isFinite(dt)?Math.max(0,dt):0)/.75)
         const t=motion.t,p=t*t*(3-2*t)
@@ -186,7 +196,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
       if(disposed)return
       disposed=true;pointer.dispose();stopResize();writer?.dispose();feedback.dispose()
       ui.actionBtn.removeEventListener('click',action);window.removeEventListener('blur',blur);window.removeEventListener('focus',focus)
-      style.dispose();disposeTree(world);Object.values(lights).forEach(l=>l.dispose());glow.dispose()
+      style.dispose();waterEffect.dispose();disposeTree(world);Object.values(lights).forEach(l=>l.dispose());glow.dispose()
       renderer.dispose();renderer.forceContextLoss();scene.clear();overlay.replaceChildren();overlay.classList.remove('scene-overlay','scene-overlay--stage')
     },
   }

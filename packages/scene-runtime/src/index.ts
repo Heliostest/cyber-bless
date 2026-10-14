@@ -1,3 +1,5 @@
+import { bindSceneMotion } from "./scene-motion";
+
 export type SceneSettings = { active: boolean; reducedMotion: boolean };
 export type SceneMountOptions = SceneSettings & {
   signal: AbortSignal;
@@ -55,12 +57,14 @@ export function mountScene<Context, Controller extends SceneController>(
   let stopped = false,
     reported = false;
   let controller: Controller | null = null;
+  const releaseMotion = bindSceneMotion(config.host, () => ({ active: active && !visibility.hidden, reducedMotion }));
   const unsubscribe = visibility.subscribe(() =>
     controller?.setActive(active && !visibility.hidden),
   );
   function dispose() {
     if (stopped) return;
     stopped = true;
+    releaseMotion();
     cancellation.abort();
     unsubscribe();
     const previous = controller;

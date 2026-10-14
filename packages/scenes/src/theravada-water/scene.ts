@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { createStylizedWater } from '@wbr/scene-runtime/stylized-water'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { claimObjectTouches } from '../procedural-kit'
@@ -153,18 +154,12 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
   basin.position.y = 0.1
   scene.add(basin)
 
-  const water = new THREE.Mesh(
-    new THREE.CircleGeometry(1.1, 48),
-    new THREE.MeshStandardMaterial({
-      color: 0x3a8aaa,
-      emissive: 0x123a4a,
-      emissiveIntensity: 0.4,
-      metalness: 0.25,
-      roughness: 0.3,
-      transparent: true,
-      opacity: 0.88,
-    }),
-  )
+  const waterEffect = createStylizedWater({
+    geometry: new THREE.CircleGeometry(1.1, 48),
+    radius: 1.1, depth: 0.16, color: 0x7acbc8, bedColor: 0xb9b18b,
+    opacity: 0.40, waveScale: 1.15, causticScale: 4.2,
+  })
+  const water = waterEffect.surface
   water.rotation.x = -Math.PI / 2
   water.position.y = 0.22
   scene.add(water)
@@ -496,9 +491,7 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
       const visualDt = reduced ? 0 : dt
-      water.position.y = 0.22 + Math.sin(t * 1.4) * 0.008
-      ;(water.material as THREE.MeshStandardMaterial).emissiveIntensity =
-        0.35 + Math.sin(t * 0.9) * 0.1
+      waterEffect.update(dt, reduced)
       motes.rotation.y += visualDt * 0.02
 
       if (step !== 'tilt') {
@@ -563,8 +556,7 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
       renderer.forceContextLoss()
       basin.geometry.dispose()
       ;(basin.material as THREE.Material).dispose()
-      water.geometry.dispose()
-      ;(water.material as THREE.Material).dispose()
+      waterEffect.dispose()
       pitcher.geometry.dispose()
       ;(pitcher.material as THREE.Material).dispose()
       spout.geometry.dispose()

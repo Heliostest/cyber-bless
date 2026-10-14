@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { createStylizedWater } from '@wbr/scene-runtime/stylized-water'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import {
@@ -153,39 +154,17 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group()
   scene.add(world)
 
-  // Slow river: flat-faceted swell whose sides and far end fade into the page.
+  // Keep the authored river and floating wreath on their shared slow swell.
   const waterGeo = new THREE.PlaneGeometry(RIVER_W, RIVER_L, 18, 56)
   waterGeo.rotateX(-Math.PI / 2)
   waterGeo.translate(0, 0, RIVER_Z)
   const waterPos = waterGeo.attributes.position
   const waterBase = Float32Array.from(waterPos.array as ArrayLike<number>)
-  const waterColors = new Float32Array(waterPos.count * 4)
-  const shallow = new THREE.Color(0xa8dade)
-  const deep = new THREE.Color(0x7ab4c6)
-  const c = new THREE.Color()
-  for (let i = 0; i < waterPos.count; i++) {
-    const x = waterPos.getX(i)
-    const z = waterPos.getZ(i)
-    const side = 1 - Math.pow(Math.abs(x) / (RIVER_W / 2), 3)
-    const near = THREE.MathUtils.clamp((z - (RIVER_Z + RIVER_L / 2)) / -1.2, 0, 1)
-    const far = THREE.MathUtils.clamp((z - (RIVER_Z - RIVER_L / 2)) / 10, 0, 1)
-    c.copy(shallow).lerp(deep, Math.abs(x) < 0.8 ? 0.6 : 0.2)
-    waterColors.set([c.r, c.g, c.b, Math.max(0, side) * near * far * 0.8], i * 4)
-  }
-  waterGeo.setAttribute('color', new THREE.BufferAttribute(waterColors, 4))
-  const water = new THREE.Mesh(
-    waterGeo,
-    new THREE.MeshStandardMaterial({
-      vertexColors: true,
-      transparent: true,
-      depthWrite: false,
-      roughness: 0.3,
-      metalness: 0.05,
-      flatShading: true,
-    }),
-  )
-  // Large backdrop: keep it out of the ink selection.
-  water.userData.toonSurface = { outline: false }
+  const waterEffect = createStylizedWater({
+    geometry: waterGeo, normal: 'y', depth: 0.24,
+    color: 0x76c8c2, bedColor: 0xa5b48a, opacity: 0.46, causticScale: 3.3,
+  })
+  const water = waterEffect.surface
   world.add(water)
 
   // Reeds along both banks.
@@ -519,6 +498,7 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
+      waterEffect.update(dt, reduced || !canAct())
 
       // Water swell (skipped entirely with reduced motion after the first frame).
       if (!reduced || dt === 0) {
@@ -605,6 +585,7 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
       styleRenderer.dispose()
       renderer.dispose()
       renderer.forceContextLoss()
+      waterEffect.dispose()
       disposeTree(world)
       overlay.replaceChildren()
       overlay.classList.remove('scene-overlay', 'scene-overlay--stage')

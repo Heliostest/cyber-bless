@@ -34,6 +34,7 @@ export const BLESSING_SCENE_IDS = [
   "weifang-paper-kite",
   "indonesian-angklung",
   "vietnamese-bamboo-dragonfly",
+  "venetian-glass-bead",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -68,6 +69,7 @@ export const WISH_SCENE_IDS = [
   "chinese-shadow-puppet",
   "turkish-ebru-paper",
   "korean-bojagi-wrap",
+  "peruvian-engraved-gourd",
 ] as const;
 
 
@@ -78,6 +80,16 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "peruvian-engraved-gourd", title: "葫芦刻光", engine: "peruvian-engraved-gourd@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "peruvian-mate-burilado",
+    narrative: "秘鲁曼塔罗河谷等地的匠人在干葫芦表面雕刻细线，记录农耕、动物与日常生活，手艺在家庭和作坊间延续。这里用原创叶片与山丘纹路，练习刻线、轻拭和静看，让暖色壳面显出层次。它是简化的工艺欣赏；个人心愿只在明确提交后保存。",
+  },
+  {
+    id: "venetian-glass-bead", title: "玻珠凝彩", engine: "venetian-glass-bead@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "italian-glass-beads",
+    narrative: "意大利玻璃珠工艺包含灯工成珠与玻璃管切磨等做法，匠人在作坊中传授对火、玻璃与装饰的掌握，珠饰也用于日常赠礼。这里以原创青绿玻珠和彩纹，练习旋绕、冷却后穿线与静看，感受光线透过玻璃的变化。动画省略退火等工序，是手艺欣赏而非完整制作教学。",
+  },
   {
     id: "korean-bojagi-wrap", title: "方巾裹礼", engine: "korean-bojagi-wrap@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "korean-bojagi",

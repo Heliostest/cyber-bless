@@ -72,6 +72,8 @@ describe("a scene's surrounding world", () => {
     ["fijian-woven-fan", "veranda"],
     ["polish-paper-cut", "veranda"],
     ["faroese-wool-knit", "veranda"],
+    ["peruvian-engraved-gourd", "garden"],
+    ["venetian-glass-bead", "veranda"],
     ["korean-bojagi-wrap", "veranda"],
     ["vietnamese-bamboo-dragonfly", "garden"],
     ["turkish-ebru-paper", "veranda"],

@@ -47,6 +47,12 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['peruvian-engraved-gourd', 0, 'gourd-shell', 'gourd-shell', [-.3295899491, 1.05, .7697097123], [-.3295899491, 1.05, .7697097123], [60, 0]],
+  ['peruvian-engraved-gourd', 1, 'gourd-shell', 'gourd-shell', [.2190522043, 1.55, .4549356620], [.2190522043, 1.55, .4549356620], [0, 60]],
+  ['peruvian-engraved-gourd', 2, 'gourd-shell', 'gourd-shell', [.1156681796, 1.25, .7614644589], [.1156681796, 1.25, .7614644589]],
+  ['venetian-glass-bead', 0, 'glass-mandrel-grip', 'glass-mandrel-grip', [0, .035, .055], [0, .035, .055], [0, -60]],
+  ['venetian-glass-bead', 1, 'glass-hero-bead', 'glass-hero-bead', [0, .20, .43], [0, .20, .43], [60, 0]],
+  ['venetian-glass-bead', 2, 'glass-hero-bead', 'glass-hero-bead', [0, .20, .43], [0, .20, .43]],
   ['korean-bojagi-wrap', 0, 'bojagi-near-corner', 'bojagi-near-corner', [0, .012, 0], [0, .012, 0], [0, -60]],
   ['korean-bojagi-wrap', 1, 'bojagi-band-right-tip', 'bojagi-band-right-tip', [0, .012, 0], [0, .012, 0], [60, 0]],
   ['korean-bojagi-wrap', 2, 'bojagi-cloth', 'bojagi-cloth', [.031098, .452587, .590862], [.031098, .452587, .590862]],

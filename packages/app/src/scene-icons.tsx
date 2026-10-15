@@ -42,6 +42,24 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'peruvian-engraved-gourd': (<>
+    <Cord d="M25 12q-4-5 0-8" color="#8e7950" width={3}/>
+    <Part d="M19 11q5-3 10 0l1 7q13 5 11 16-1 10-17 10S5 39 7 30q1-9 12-12Z" fill="#c98b48">
+      <path d="M30 19q11 17-6 25 16 0 17-10 2-10-11-15Z" fill="#a7673c"/>
+    </Part>
+    <path d="M10 30q7-8 15-1t13-1M12 36q12 7 25-1M18 33l3-5 2 7m6-5 4-4-1 8" fill="none" stroke="#f1d391" strokeWidth={1.5}/>
+    <path d="M15 22q-5 3-4 7" fill="none" stroke="#edd3a0" strokeWidth={2.2}/>
+  </>),
+  'venetian-glass-bead': (<>
+    <Cord d="M5 37q18 10 35-4" color="#d6b788" width={1.2}/>
+    <Part d="M14 11q14-8 23 4t-1 21q-14 9-23-4t1-21Z" fill="#75b9ad">
+      <path d="M32 12q10 18-7 27 9-1 14-8 4-13-7-19Z" fill="#4c958c"/>
+    </Part>
+    <path d="M15 14q15-1 21 16M12 24q15-2 19 14" fill="none" stroke="#e9bd78" strokeWidth={3}/>
+    <ellipse cx={17} cy={24} rx={3} ry={6} fill="#56877d" stroke={INK} strokeWidth={1.4}/>
+    <path d="M20 13q6-3 10 1" fill="none" stroke="#f1f6dd" strokeWidth={2.8}/>
+    <circle cx={9} cy={36} r={4} fill="#d79674" stroke={INK} strokeWidth={1.6}/>
+  </>),
   'korean-bojagi-wrap': (<>
     <Part d="M8 22 23 15 40 22 37 39 12 40Z" fill="#88a58a"/>
     <Part d="M8 22 25 29 23 15Z" fill="#e5c88c"/>

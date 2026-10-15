@@ -10,6 +10,7 @@ describe('sceneRegistry', () => {
 
   it('lists the pilot metas, the C-grade Design A scenes, then the product-original scenes', () => {
     expect(sceneRegistry.map((m) => m.id)).toEqual([
+      'peruvian-engraved-gourd', 'venetian-glass-bead',
       'korean-bojagi-wrap', 'vietnamese-bamboo-dragonfly',
       'turkish-ebru-paper', 'indonesian-angklung',
       'weifang-paper-kite', 'chinese-shadow-puppet',
@@ -109,6 +110,8 @@ describe('loadScene', () => {
   })
 
   it.each([
+    ['peruvian-engraved-gourd', '葫芦刻光', 'peruvian-mate-burilado'],
+    ['venetian-glass-bead', '玻珠凝彩', 'italian-glass-beads'],
     ['korean-bojagi-wrap', '方巾裹礼', 'korean-bojagi'],
     ['vietnamese-bamboo-dragonfly', '竹蜓点风', 'thach-xa-bamboo-dragonfly'],
     ['turkish-ebru-paper', '浮彩成笺', 'turkish-ebru'],

@@ -5,14 +5,16 @@ import assert from 'node:assert/strict'
 import { scenePointer } from './browser-scene-pointer.mjs'
 const base=process.env.WBR_URL||'http://127.0.0.1:5178/'
 const batch=process.env.WBR_BATCH||'workshop'
-const batches={bojagidragonfly:['korean-bojagi-wrap','vietnamese-bamboo-dragonfly'],ebruangklung:['turkish-ebru-paper','indonesian-angklung'],kiteshadow:['weifang-paper-kite','chinese-shadow-puppet'],woolshell:['faroese-wool-knit','niue-shell-necklace'],paperclay:['polish-paper-cut','uzbek-clay-bowl'],printbead:['chinese-woodblock-print','czech-bead-star'],woven:['fijian-woven-fan','amazigh-woven-rug'],workshop:['slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart'],atelier:['bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon'],village:['barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant'],festival:['sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden'],handcraft:['dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top'],previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
+const batches={gourdglass:['peruvian-engraved-gourd','venetian-glass-bead'],bojagidragonfly:['korean-bojagi-wrap','vietnamese-bamboo-dragonfly'],ebruangklung:['turkish-ebru-paper','indonesian-angklung'],kiteshadow:['weifang-paper-kite','chinese-shadow-puppet'],woolshell:['faroese-wool-knit','niue-shell-necklace'],paperclay:['polish-paper-cut','uzbek-clay-bowl'],printbead:['chinese-woodblock-print','czech-bead-star'],woven:['fijian-woven-fan','amazigh-woven-rug'],workshop:['slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart'],atelier:['bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon'],village:['barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant'],festival:['sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden'],handcraft:['dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top'],previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
 assert.ok(batches[batch],`Unknown batch: ${batch}`)
 const out=path.resolve(process.env.WBR_OUT||(batch==='woven'?'artifacts/woven-pair-scenes/browser':`artifacts/${batch==='previous'?'next':batch}-four-scenes/browser`));await mkdir(out,{recursive:true})
 const allIds=batches[batch]
-const wishIds=['korean-bojagi-wrap','turkish-ebru-paper','chinese-shadow-puppet','niue-shell-necklace','polish-paper-cut','chinese-woodblock-print','amazigh-woven-rug','hungarian-embroidery-hoop','andalusian-ceramic-tile','bai-indigo-cloth','welsh-love-spoon','barcelos-clay-rooster','croatian-licitar-heart','sorbian-painted-egg','basque-sunflower','omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto','aland-votive-ship','minangkabau-spinning-top']
+const wishIds=['peruvian-engraved-gourd','korean-bojagi-wrap','turkish-ebru-paper','chinese-shadow-puppet','niue-shell-necklace','polish-paper-cut','chinese-woodblock-print','amazigh-woven-rug','hungarian-embroidery-hoop','andalusian-ceramic-tile','bai-indigo-cloth','welsh-love-spoon','barcelos-clay-rooster','croatian-licitar-heart','sorbian-painted-egg','basque-sunflower','omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto','aland-votive-ship','minangkabau-spinning-top']
 const ids=process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds,key='cyber-bless:personal:v1'
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const craftDeltas={
+  'peruvian-engraved-gourd':[[60,0],[0,60]],
+  'venetian-glass-bead':[[0,-60],[60,0]],
   'korean-bojagi-wrap':[[0,-60],[60,0]],
   'vietnamese-bamboo-dragonfly':[[0,-60],[60,0]],
   'turkish-ebru-paper':[[60,0],[0,-60]],
@@ -138,7 +140,9 @@ async function physical(page,id,step){
 async function wrongCraftGesture(page,id,step){
   if(craftDeltas[id]&&step<2){
     const input=pointers.get(page),[dx,dy]=craftDeltas[id][step]
-    for(const kind of ['tap','reverse','short','backtrack','partial-return','reverse-first','cancel']){
+    const kinds=['tap','reverse','short','backtrack','partial-return','reverse-first','cancel']
+    if(['peruvian-engraved-gourd','venetian-glass-bead'].includes(id))kinds.push('zigzag')
+    for(const kind of kinds){
       const from=await point(page)
       await input.down(from)
       if(kind==='reverse')await input.move([from[0]-dx*.7,from[1]-dy*.7])
@@ -146,6 +150,9 @@ async function wrongCraftGesture(page,id,step){
       if(kind==='backtrack'){await input.move([from[0]+dx,from[1]+dy]);await input.move(from)}
       if(kind==='partial-return'){await input.move([from[0]+dx*1.25,from[1]+dy*1.25]);await input.move([from[0]+dx*.7,from[1]+dy*.7])}
       if(kind==='reverse-first'){await input.move([from[0]-dx*.65,from[1]-dy*.65]);await input.move([from[0]+dx,from[1]+dy])}
+      if(kind==='zigzag')for(const [along,cross] of [[12,16],[24,-16],[36,16],[48,-16],[60,0]]){
+        await input.move([from[0]+(dx*along-dy*cross)/60,from[1]+(dy*along+dx*cross)/60])
+      }
       if(kind==='cancel'){await input.move([from[0]+dx*.4,from[1]+dy*.4]);await input.cancel()}
       else await input.up()
       assert.equal(await page.locator('.scene-bow-tap').isEnabled(),true,`${id}: ${kind} started an accepted transition`)

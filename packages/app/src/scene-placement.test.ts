@@ -72,6 +72,7 @@ const entries: CatalogEntry[] = [
 
 describe("scene placement", () => {
   it.each([
+    ["peruvian-engraved-gourd", "peruvian-mate-burilado", true], ["venetian-glass-bead", "italian-glass-beads", false],
     ["korean-bojagi-wrap", "korean-bojagi", true], ["vietnamese-bamboo-dragonfly", "thach-xa-bamboo-dragonfly", false],
     ["turkish-ebru-paper", "turkish-ebru", true], ["indonesian-angklung", "indonesian-angklung", false],
     ["weifang-paper-kite", "chinese-folk-and-confucian", false], ["chinese-shadow-puppet", "chinese-folk-and-confucian", true],
@@ -142,6 +143,7 @@ describe("scene placement", () => {
       "weifang-paper-kite",
       "indonesian-angklung",
       "vietnamese-bamboo-dragonfly",
+      "venetian-glass-bead",
     ]);
     expect([...WISH_SCENE_IDS]).toEqual([
       "tanzaku-tanabata",
@@ -165,6 +167,7 @@ describe("scene placement", () => {
       "chinese-shadow-puppet",
       "turkish-ebru-paper",
       "korean-bojagi-wrap",
+      "peruvian-engraved-gourd",
     ]);
     expect(isWishScene("tanzaku-tanabata")).toBe(true);
     expect(isWishScene("slavic-wreath")).toBe(true);

@@ -9,6 +9,8 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'weifang-paper-kite', title: '纸鸢乘风', traditionSlug: 'chinese-folk-and-confucian', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'chinese-shadow-puppet', title: '影偶小戏', traditionSlug: 'chinese-folk-and-confucian', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'faroese-wool-knit', title: '毛线织暖', traditionSlug: 'faroese-folk', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'niue-shell-necklace', title: '贝链留光', traditionSlug: 'niuean-traditional', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'polish-paper-cut', title: '剪纸开花', traditionSlug: 'polish-folk-catholic', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
@@ -142,6 +144,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'weifang-paper-kite', 'chinese-shadow-puppet',
   'polish-paper-cut', 'uzbek-clay-bowl',
   'faroese-wool-knit', 'niue-shell-necklace',
   'chinese-woodblock-print', 'czech-bead-star',
@@ -176,6 +179,8 @@ export function isSceneImplemented(id: string): boolean {
 /** Dynamic-import implemented scenes; unknown ids throw. */
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
+    case 'weifang-paper-kite': return import('./weifang-paper-kite')
+    case 'chinese-shadow-puppet': return import('./chinese-shadow-puppet')
     case 'polish-paper-cut': return import('./polish-paper-cut')
     case 'faroese-wool-knit': return import('./faroese-wool-knit')
     case 'niue-shell-necklace': return import('./niue-shell-necklace')

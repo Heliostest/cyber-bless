@@ -1,0 +1,32 @@
+# 影偶小戏 / Chinese shadow puppet
+
+This is an original, contemporary public craft appreciation scene. Its small freestanding timber theatre contains a pierced paper bird, one wing hinge, two attached control rods, a visible lamp and a warm cloth screen. It is not a traditional character, complete performance, religious ceremony, or a claim of efficacy.
+
+## Source and interpretation
+
+[UNESCO, Chinese shadow puppetry, nomination 00421](https://ich.unesco.org/en/RL/chinese-shadow-puppetry-00421), checked 2026-10-15, describes colourful leather or paper figures, rod manipulation, movable joints and a backlit translucent cloth screen. Those broad craft features inform this original bird. No source images, music, recorded performance, traditional character design or third-party assets are copied. The Chinese regional index is a catalogue location, not a claim that all shadow puppetry is a religious practice.
+
+The backstage view deliberately shows the physical order lamp → puppet → cloth. The screen is rendered as a warm unlit textile gradient to keep its projection readable under the application's cel lighting. The shadow is a geometric point-light projection of the actual current source triangles, clipped to the cloth rectangle. Body and wing cutouts, hinge and rods all contribute to it. Its uniform warm-brown shadow colour is a readability choice; it does not simulate translucent leather colour transmission or a finite lamp's penumbra.
+
+## Interaction and checkpoints
+
+0. Lift the main rod with an upward drag.
+1. Move the wing rod right to rotate the jointed wing.
+2. Tap the bird to quietly observe, or explicitly submit an optional written wish.
+3. Completed pose.
+
+Checkpoints restore silently. Returning visits do not mount a wish writer. Drafts are never saved by observation, restore or return. A native 44px action button supports Enter/Space. The real object grips own the drag, including on touch, and cancellation restores the corresponding checkpoint pose. Accepted animation finishes before progress commits. Reduced motion settles at the same final pose.
+
+## Capture contract
+
+| Step | Mesh | Local cue anchor | Screen gesture |
+| --- | --- | --- | --- |
+| 0 | `shadow-main-grip` | `[0, 0, 0.075]` | `[0, -60]` |
+| 1 | `shadow-wing-grip` | `[0, 0, 0.075]` | `[60, 0]` |
+| 2 | `shadow-bird-body` | `[0.16, 0, 0.028]` | tap |
+
+At least 40px along-axis travel with actual move events is required; 60px reaches the authored pose. Cross-axis, reverse, backtracked, cancelled and second-pointer gestures do not advance. Cues target the nearest opaque rendered surface, not hidden planes.
+
+## Verification
+
+The scene tests use real Three geometry/raycasting and the actual wish writer, substituting only GPU rendering. They cover physical rod attachment, projection against independent lamp rays (including open holes), all-vertex portrait/desktop framing, nearest-surface cues, gesture rejection, pause/blur/capture loss, callback re-entry, atomic wish saving and exact-once resource disposal. Run `npm run test -w @wbr/scenes -- src/chinese-shadow-puppet/scene.test.ts` from the repository root.

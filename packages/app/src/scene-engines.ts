@@ -18,6 +18,8 @@ export interface WoodfishController extends SceneController {
 }
 export const sceneEngines = createSceneRegistry({
   "faroese-wool-knit@1": () => import("./procedural-scene").then(m => m.proceduralEngine("faroese-wool-knit")),
+  "weifang-paper-kite@1": () => import("./procedural-scene").then(m => m.proceduralEngine("weifang-paper-kite")),
+  "chinese-shadow-puppet@1": () => import("./procedural-scene").then(m => m.proceduralEngine("chinese-shadow-puppet")),
   "niue-shell-necklace@1": () => import("./procedural-scene").then(m => m.proceduralEngine("niue-shell-necklace")),
   "fijian-woven-fan@1": () => import("./procedural-scene").then(m => m.proceduralEngine("fijian-woven-fan")),
   "polish-paper-cut@1": () => import("./procedural-scene").then(m => m.proceduralEngine("polish-paper-cut")),

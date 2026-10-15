@@ -47,6 +47,12 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['chinese-shadow-puppet', 0, 'shadow-main-grip', 'shadow-main-grip', [0, 0, .075], [0, 0, .075], [0, -60]],
+  ['chinese-shadow-puppet', 1, 'shadow-wing-grip', 'shadow-wing-grip', [0, 0, .075], [0, 0, .075], [60, 0]],
+  ['chinese-shadow-puppet', 2, 'shadow-bird-body', 'shadow-bird-body', [.16, 0, .028], [.16, 0, .028]],
+  ['weifang-paper-kite', 0, 'kite-paper-right', 'kite-paper-right', [1.05, .34, .012], [1.05, .34, .012], [-48, -36]],
+  ['weifang-paper-kite', 1, 'kite-reel-grip', 'kite-reel-grip', [0, 0, .075], [0, 0, .075], [0, 60]],
+  ['weifang-paper-kite', 2, 'kite-body-paper', 'kite-body-paper', [.08, .22, .014], [.08, .22, .014]],
   ['faroese-wool-knit', 0, 'wool-right-needle-grip', 'wool-right-needle-grip', [0, 0, .047], [0, 0, .047], [-48, -36]],
   ['faroese-wool-knit', 1, 'wool-right-needle-grip', 'wool-right-needle-grip', [0, 0, .047], [0, 0, .047], [42, 46]],
   ['faroese-wool-knit', 2, 'wool-stitch-3-3', 'wool-stitch-3-3', [.046, .025, .202], [.046, .025, .202]],

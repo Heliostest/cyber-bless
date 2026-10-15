@@ -31,6 +31,7 @@ export const BLESSING_SCENE_IDS = [
   "slovak-wire-bird", "sicilian-painted-cart", "fijian-woven-fan",
   "czech-bead-star", "uzbek-clay-bowl",
   "faroese-wool-knit",
+  "weifang-paper-kite",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -62,6 +63,7 @@ export const WISH_SCENE_IDS = [
   "hungarian-embroidery-hoop", "andalusian-ceramic-tile", "amazigh-woven-rug",
   "chinese-woodblock-print", "polish-paper-cut",
   "niue-shell-necklace",
+  "chinese-shadow-puppet",
 ] as const;
 
 
@@ -72,6 +74,16 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "weifang-paper-kite", title: "纸鸢乘风", engine: "weifang-paper-kite@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "chinese-folk-and-confucian",
+    narrative: "潍坊风筝以竹骨、纸面和鲜明色彩形成轻巧的飞行器物，扎制、绘饰、糊面与放飞的经验在作坊和传承教学中延续。这里用原创燕形纸鸢，把合上纸翼、牵线试飞和静看改编为欣赏手艺的练习。竹骨与引线随物体相连，不复制匠人纹样，也不把放飞等同消灾礼仪。",
+  },
+  {
+    id: "chinese-shadow-puppet", title: "影偶小戏", engine: "chinese-shadow-puppet@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "chinese-folk-and-confucian",
+    narrative: "中国皮影戏以皮革或纸制成彩色影人，用操纵杆带动关节，在灯光与透光幕布之间演出，手艺与剧目由艺人和戏班传承。这里从幕后观看原创小鸟，练习提杆、展翅和静看影子。它是简化的影偶欣赏练习，不复刻传统角色；心愿只在明确提交后保存。",
+  },
   {
     id: "faroese-wool-knit", title: "毛线织暖", engine: "faroese-wool-knit@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "faroese-folk",

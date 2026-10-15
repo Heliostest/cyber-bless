@@ -72,6 +72,8 @@ describe("a scene's surrounding world", () => {
     ["fijian-woven-fan", "veranda"],
     ["polish-paper-cut", "veranda"],
     ["faroese-wool-knit", "veranda"],
+    ["weifang-paper-kite", "garden"],
+    ["chinese-shadow-puppet", "courtyard"],
     ["niue-shell-necklace", "veranda"],
     ["uzbek-clay-bowl", "veranda"],
     ["chinese-woodblock-print", "veranda"],
@@ -212,7 +214,7 @@ describe("a scene's surrounding world", () => {
     await world.ready; world.dispose();
   });
 
-  it.each(["diya-oil-lamp", "votive-candle-catholic", "lantern", "yeondeunghoe"])("preserves the night rig and animated flame in %s", async id => {
+  it.each(["diya-oil-lamp", "votive-candle-catholic", "lantern", "yeondeunghoe", "chinese-shadow-puppet"])("preserves the night rig and animated flame in %s", async id => {
     const scene = new THREE.Scene();
     const key = new THREE.DirectionalLight(), lamp = new THREE.PointLight(0xffaa44, .73);
     key.position.set(2, 4, -3);

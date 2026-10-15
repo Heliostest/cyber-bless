@@ -42,6 +42,22 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'weifang-paper-kite': (<>
+    <Cord d="M24 24Q19 31 32 37Q38 41 29 45" color="#e6d3ad" width={1}/>
+    <Part d="M24 7 28 13 43 5 37 23 28 22 31 32 24 27 17 32 20 22 11 23 5 5 20 13Z" fill="#65a8a0"/>
+    <path d="M24 7v20M6 7 24 18 42 7" fill="none" stroke="#f2d187" strokeWidth={2}/>
+    <Part d="M21 13q3-4 6 0v11l-3 3-3-3Z" fill="#d8785f"/>
+    <path d="M11 13l5 4m21-4-5 4" stroke="#f1d79c" strokeWidth={2}/>
+  </>),
+  'chinese-shadow-puppet': (<>
+    <Part d="M5 6h38v32H5Z" fill="#bd8762"/>
+    <Part d="M9 10h30v24H9Z" fill="#f3d89e"/>
+    <path d="M11 20 21 22Q23 12 30 16l6 3-6 2q-1 8-9 7Z" fill="#99754f" opacity={.4}/>
+    <Part d="M9 22 20 24Q22 15 28 19l6 3-6 2q-1 8-9 6Z" fill="#cf7954"/>
+    <Part d="M19 25 13 15 25 23 25 27Z" fill="#578f89"/>
+    <circle cx={24} cy={25} r={1.5} fill="#f3d89e"/><circle cx={27} cy={21} r={.8} fill={INK}/>
+    <Cord d="M20 30 18 44M15 21 10 42" color="#a67d50" width={1}/>
+  </>),
   'faroese-wool-knit': (<>
     <Cord d="M6 7 39 24M42 6 14 29" color="#b9946a" width={2.4}/>
     <Part d="M11 20h26v23H11Z" fill="#e7dfcd"/>

@@ -47,6 +47,12 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['turkish-ebru-paper', 0, 'ebru-comb-grip', 'ebru-comb-grip', [0, 0, .09], [0, 0, .09], [60, 0]],
+  ['turkish-ebru-paper', 1, 'ebru-paper-edge', 'ebru-paper-edge', [0, .021, -.05], [0, .021, -.05], [0, -60]],
+  ['turkish-ebru-paper', 2, 'ebru-paper-print', 'ebru-paper-print', [0, 1.6, .28], [0, 1.6, .28]],
+  ['indonesian-angklung', 0, 'angklung-frame-grip', 'angklung-frame-grip', [0, 0, .10], [0, 0, .10], [-60, 0]],
+  ['indonesian-angklung', 1, 'angklung-frame-grip', 'angklung-frame-grip', [0, 0, .10], [0, 0, .10], [60, 0]],
+  ['indonesian-angklung', 2, 'angklung-tube-long-body', 'angklung-tube-long-body', [0, .7, .19], [0, .7, .19]],
   ['chinese-shadow-puppet', 0, 'shadow-main-grip', 'shadow-main-grip', [0, 0, .075], [0, 0, .075], [0, -60]],
   ['chinese-shadow-puppet', 1, 'shadow-wing-grip', 'shadow-wing-grip', [0, 0, .075], [0, 0, .075], [60, 0]],
   ['chinese-shadow-puppet', 2, 'shadow-bird-body', 'shadow-bird-body', [.16, 0, .028], [.16, 0, .028]],

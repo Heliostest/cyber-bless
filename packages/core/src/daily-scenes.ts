@@ -32,6 +32,7 @@ export const BLESSING_SCENE_IDS = [
   "czech-bead-star", "uzbek-clay-bowl",
   "faroese-wool-knit",
   "weifang-paper-kite",
+  "indonesian-angklung",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -64,6 +65,7 @@ export const WISH_SCENE_IDS = [
   "chinese-woodblock-print", "polish-paper-cut",
   "niue-shell-necklace",
   "chinese-shadow-puppet",
+  "turkish-ebru-paper",
 ] as const;
 
 
@@ -74,6 +76,16 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "turkish-ebru-paper", title: "浮彩成笺", engine: "turkish-ebru-paper@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "turkish-ebru",
+    narrative: "土耳其水拓画把颜料铺在调制过的液面上，拨开彩纹后转印到纸张，常见于书籍装饰与手工艺术，并在作坊教学中延续。这里用原创青绿与珊瑚色纹路，练习梳纹、取纸与静看。它是简化的手艺欣赏，不代替完整技法教学；心愿只在明确提交后保存。",
+  },
+  {
+    id: "indonesian-angklung", title: "竹音轻摇", engine: "indonesian-angklung@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "indonesian-angklung",
+    narrative: "印度尼西亚昂格隆用藤条把竹管悬在竹架内，摇动时发出音响，一件乐器通常负责一个音或和弦，合奏依靠彼此配合，也走入学校与社区教学。这里用原创竹架，练习轻轻左摇、回摇与静听。短音由程序生成，只作器物欣赏，不复现庆典仪式或传统曲目。",
+  },
   {
     id: "weifang-paper-kite", title: "纸鸢乘风", engine: "weifang-paper-kite@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-folk-and-confucian",

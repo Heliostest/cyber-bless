@@ -42,6 +42,22 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'turkish-ebru-paper': (<>
+    <Part d="M5 12h38v28H5Z" fill="#b2916c"/>
+    <Part d="M9 9h30v27H9Z" fill="#f2e6c9"/>
+    <path d="M10 13q21 17 28 3M10 20q15-12 28 9M10 30q11-8 28 4" fill="none" stroke="#69a8a0" strokeWidth={4}/>
+    <path d="M10 17q13 15 28 5M10 33q17-17 28-5" fill="none" stroke="#d27f69" strokeWidth={2}/>
+    <Cord d="M32 5 22 25" color="#dbb87a" width={1.4}/>
+  </>),
+  'indonesian-angklung': (<>
+    <Cord d="M8 42V7h32v35M8 37h32" color="#c8ab6c" width={3}/>
+    <Cord d="M17 8v9M30 8v15" color="#877d4b" width={1}/>
+    <Part d="M13 16h8v19h-8Z" fill="#cdbb71"/>
+    <Part d="M26 22h8v13h-8Z" fill="#a7ad67"/>
+    <ellipse cx={17} cy={16} rx={4} ry={2} fill="#645b3b"/>
+    <ellipse cx={30} cy={22} rx={4} ry={2} fill="#645b3b"/>
+    <path d="M13 28h8m5 1h8M8 11h4m24 0h4" stroke="#7b8150" strokeWidth={1.4}/>
+  </>),
   'weifang-paper-kite': (<>
     <Cord d="M24 24Q19 31 32 37Q38 41 29 45" color="#e6d3ad" width={1}/>
     <Part d="M24 7 28 13 43 5 37 23 28 22 31 32 24 27 17 32 20 22 11 23 5 5 20 13Z" fill="#65a8a0"/>

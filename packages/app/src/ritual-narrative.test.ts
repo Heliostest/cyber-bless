@@ -77,6 +77,7 @@ describe("builtInScenes narratives", () => {
       "milagros",
       "minangkabau-spinning-top",
       "mizuhiki",
+      "mongolian-felt-ger",
       "navruz-sumalak",
       "ndebele-painted-house",
       "niue-shell-necklace",

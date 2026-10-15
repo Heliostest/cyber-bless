@@ -42,6 +42,12 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'mongolian-felt-ger': (<>
+    <Part d="M5 24L20 10h9l14 14v17H5Z" fill="#eee5cc"><path d="M29 11L43 24v17H31V24Z" fill="#d8ccb0"/></Part>
+    <path d="M5 25h38M6 32h36M20 11L12 24m17-13 7 13" stroke="#877053" strokeWidth={1.5} fill="none"/>
+    <Part d="M19 27h11v14H19Z" fill="#43818b"><path d="M22 30h5v8h-5Z" fill="#bc684c"/></Part>
+    <Part d="M19 9q5-4 11 0l-1 3H20Z" fill="#bd6946"/>
+  </>),
   'peruvian-engraved-gourd': (<>
     <Cord d="M25 12q-4-5 0-8" color="#8e7950" width={3}/>
     <Part d="M19 11q5-3 10 0l1 7q13 5 11 16-1 10-17 10S5 39 7 30q1-9 12-12Z" fill="#c98b48">

@@ -13,6 +13,7 @@ const wishIds=['peruvian-engraved-gourd','korean-bojagi-wrap','turkish-ebru-pape
 const ids=process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds,key='cyber-bless:personal:v1'
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const craftDeltas={
+  'mongolian-felt-ger':[[60,0],[0,-60],[0,60]],
   'peruvian-engraved-gourd':[[60,0],[0,60]],
   'venetian-glass-bead':[[0,-60],[60,0]],
   'korean-bojagi-wrap':[[0,-60],[60,0]],
@@ -101,7 +102,7 @@ async function arc(page,segments=8){
   await page.mouse.up();await page.waitForTimeout(150)
 }
 async function physical(page,id,step){
-  if(craftDeltas[id]&&step<2){
+  if(craftDeltas[id]?.[step]){
     const p=pointers.get(page),from=await point(page),[dx,dy]=craftDeltas[id][step]
     await p.down(from);await p.move([from[0]+dx,from[1]+dy],18);await p.up()
   }
@@ -138,10 +139,10 @@ async function physical(page,id,step){
   else for(let i=0;i<(id==='st-brigids-cross'&&step===0?4:1);i++)await drag(page)
 }
 async function wrongCraftGesture(page,id,step){
-  if(craftDeltas[id]&&step<2){
+  if(craftDeltas[id]?.[step]){
     const input=pointers.get(page),[dx,dy]=craftDeltas[id][step]
     const kinds=['tap','reverse','short','backtrack','partial-return','reverse-first','cancel']
-    if(['peruvian-engraved-gourd','venetian-glass-bead'].includes(id))kinds.push('zigzag')
+    if(['mongolian-felt-ger','peruvian-engraved-gourd','venetian-glass-bead'].includes(id))kinds.push('zigzag')
     for(const kind of kinds){
       const from=await point(page)
       await input.down(from)

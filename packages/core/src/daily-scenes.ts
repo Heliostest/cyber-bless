@@ -35,6 +35,7 @@ export const BLESSING_SCENE_IDS = [
   "indonesian-angklung",
   "vietnamese-bamboo-dragonfly",
   "venetian-glass-bead",
+  "mongolian-felt-ger",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -80,6 +81,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "mongolian-felt-ger", title: "毡屋向阳", engine: "mongolian-felt-ger@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "mongolian-ger-craft",
+    narrative: "蒙古包由可拆装的木格围壁、椽杆与顶圈构成，外覆毡与帆布，以绳带收束。木作、缝制和制毡的知识在家庭与匠人之间传承。这里用原创缩略模型，练习展开木格、支起屋顶和铺覆白毡，静看材料共同围成一处居所。它是当代工艺欣赏，省略实际搭建细节，不是建筑教学或传统仪式。",
+  },
   {
     id: "peruvian-engraved-gourd", title: "葫芦刻光", engine: "peruvian-engraved-gourd@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "peruvian-mate-burilado",

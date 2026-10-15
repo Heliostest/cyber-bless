@@ -47,6 +47,7 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['mongolian-felt-ger', 0, 'ger-lattice-grip', 'ger-lattice-grip', [0, .06, .042], [0, .06, .042], [60, 0]],
   ['peruvian-engraved-gourd', 0, 'gourd-shell', 'gourd-shell', [-.3295899491, 1.05, .7697097123], [-.3295899491, 1.05, .7697097123], [60, 0]],
   ['peruvian-engraved-gourd', 1, 'gourd-shell', 'gourd-shell', [.2190522043, 1.55, .4549356620], [.2190522043, 1.55, .4549356620], [0, 60]],
   ['peruvian-engraved-gourd', 2, 'gourd-shell', 'gourd-shell', [.1156681796, 1.25, .7614644589], [.1156681796, 1.25, .7614644589]],

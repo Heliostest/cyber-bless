@@ -10,6 +10,7 @@ describe('sceneRegistry', () => {
 
   it('lists the pilot metas, the C-grade Design A scenes, then the product-original scenes', () => {
     expect(sceneRegistry.map((m) => m.id)).toEqual([
+      'korean-bojagi-wrap', 'vietnamese-bamboo-dragonfly',
       'turkish-ebru-paper', 'indonesian-angklung',
       'weifang-paper-kite', 'chinese-shadow-puppet',
       'faroese-wool-knit', 'niue-shell-necklace',
@@ -108,6 +109,8 @@ describe('loadScene', () => {
   })
 
   it.each([
+    ['korean-bojagi-wrap', '方巾裹礼', 'korean-bojagi'],
+    ['vietnamese-bamboo-dragonfly', '竹蜓点风', 'thach-xa-bamboo-dragonfly'],
     ['turkish-ebru-paper', '浮彩成笺', 'turkish-ebru'],
     ['indonesian-angklung', '竹音轻摇', 'indonesian-angklung'],
     ['weifang-paper-kite', '纸鸢乘风', 'chinese-folk-and-confucian'],

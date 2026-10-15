@@ -10,6 +10,8 @@ declare const process: { env: { EXPO_BASE_URL?: string } };
 type Kind = GardenKind;
 type Profile = { kind: Kind; floor: number; night?: boolean; warmLight?: boolean };
 const profiles: Record<string, Profile> = {
+  'korean-bojagi-wrap': { kind: 'veranda', floor: -0.04 },
+  'vietnamese-bamboo-dragonfly': { kind: 'garden', floor: -0.04 },
   'turkish-ebru-paper': { kind: 'veranda', floor: -0.04 },
   'indonesian-angklung': { kind: 'veranda', floor: -0.04 },
   'weifang-paper-kite': { kind: 'garden', floor: -0.04 },

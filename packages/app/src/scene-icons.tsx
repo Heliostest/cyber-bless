@@ -42,6 +42,23 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'korean-bojagi-wrap': (<>
+    <Part d="M8 22 23 15 40 22 37 39 12 40Z" fill="#88a58a"/>
+    <Part d="M8 22 25 29 23 15Z" fill="#e5c88c"/>
+    <Part d="M25 29 40 22 37 39 25 40Z" fill="#d78e7c"/>
+    <path d="M12 31 25 35 38 29M19 19 18 26 16 39" stroke="#f6e9cc" fill="none" strokeWidth={1.3} strokeDasharray="2 2"/>
+    <Part d="M24 21Q9 8 14 7q9-2 12 13Q29 7 35 9q5 7-9 12Z" fill="#e8d6ab"/>
+    <Cord d="M24 22 20 29M26 22 31 27" color="#d78e7c" width={2}/>
+  </>),
+  'vietnamese-bamboo-dragonfly': (<>
+    <Part d="M17 41q7-5 14 0l3 4H14Z" fill="#b0b29b"/>
+    <Cord d="M24 42V23" color="#b89963" width={2}/>
+    <Part d="M23 21Q2 10 4 6q9-1 21 15Q37 5 44 7q1 7-19 16Z" fill="#7bb4a4"/>
+    <Part d="M24 23Q4 20 6 15q10 0 18 8Q36 12 42 16q-1 5-18 9Z" fill="#e2ad6a"/>
+    <Cord d="M24 19 29 36" color="#ca8067" width={2}/>
+    <circle cx={22} cy={20} r={2.4} fill="#e8cf8d" stroke={INK} strokeWidth={1.2}/>
+    <circle cx={26} cy={20} r={2.4} fill="#e8cf8d" stroke={INK} strokeWidth={1.2}/>
+  </>),
   'turkish-ebru-paper': (<>
     <Part d="M5 12h38v28H5Z" fill="#b2916c"/>
     <Part d="M9 9h30v27H9Z" fill="#f2e6c9"/>

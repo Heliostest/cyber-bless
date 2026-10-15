@@ -47,6 +47,12 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 })
 
 it.each([
+  ['korean-bojagi-wrap', 0, 'bojagi-near-corner', 'bojagi-near-corner', [0, .012, 0], [0, .012, 0], [0, -60]],
+  ['korean-bojagi-wrap', 1, 'bojagi-band-right-tip', 'bojagi-band-right-tip', [0, .012, 0], [0, .012, 0], [60, 0]],
+  ['korean-bojagi-wrap', 2, 'bojagi-cloth', 'bojagi-cloth', [.031098, .452587, .590862], [.031098, .452587, .590862]],
+  ['vietnamese-bamboo-dragonfly', 0, 'dragonfly-head', 'dragonfly-head', [0, .035, .13], [0, .035, .13], [0, -60]],
+  ['vietnamese-bamboo-dragonfly', 1, 'dragonfly-wing-front-right', 'dragonfly-wing-front-right', [1.18, -.14, .545], [1.18, -.14, .545], [60, 0]],
+  ['vietnamese-bamboo-dragonfly', 2, 'dragonfly-head', 'dragonfly-head', [0, .035, .13], [0, .035, .13]],
   ['turkish-ebru-paper', 0, 'ebru-comb-grip', 'ebru-comb-grip', [0, 0, .09], [0, 0, .09], [60, 0]],
   ['turkish-ebru-paper', 1, 'ebru-paper-edge', 'ebru-paper-edge', [0, .021, -.05], [0, .021, -.05], [0, -60]],
   ['turkish-ebru-paper', 2, 'ebru-paper-print', 'ebru-paper-print', [0, 1.6, .28], [0, 1.6, .28]],

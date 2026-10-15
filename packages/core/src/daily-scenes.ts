@@ -33,6 +33,7 @@ export const BLESSING_SCENE_IDS = [
   "faroese-wool-knit",
   "weifang-paper-kite",
   "indonesian-angklung",
+  "vietnamese-bamboo-dragonfly",
 ] as const;
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
@@ -66,6 +67,7 @@ export const WISH_SCENE_IDS = [
   "niue-shell-necklace",
   "chinese-shadow-puppet",
   "turkish-ebru-paper",
+  "korean-bojagi-wrap",
 ] as const;
 
 
@@ -76,6 +78,16 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "korean-bojagi-wrap", title: "方巾裹礼", engine: "korean-bojagi-wrap@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "korean-bojagi",
+    narrative: "韩国包袱布常用方形或长方形织物包裹、收纳与携带物品，拼接余布也是其中一种做法，材料和色彩各有变化。这里用原创拼色方巾，练习翻起布角、收紧系带，再静看包裹上的折线与针脚。它是简化的手艺欣赏；心愿是个人记录，只在明确提交后保存。",
+  },
+  {
+    id: "vietnamese-bamboo-dragonfly", title: "竹蜓点风", engine: "vietnamese-bamboo-dragonfly@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "thach-xa-bamboo-dragonfly",
+    narrative: "越南河内石舍的竹蜻蜓以竹片制成身体、翅膀与细尾，再涂上鲜明色彩，经过平衡调整后能停在指尖或笔尖，成为当地公开制作的手工玩具。这里用原创配色练习轻放、微推与静看，观察翅尖回稳和头部支点。它是器物欣赏，不复现宗教仪式，也不教授完整制作技法。",
+  },
   {
     id: "turkish-ebru-paper", title: "浮彩成笺", engine: "turkish-ebru-paper@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "turkish-ebru",

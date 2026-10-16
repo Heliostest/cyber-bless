@@ -36,6 +36,7 @@ export const BLESSING_SCENE_IDS = [
   "vietnamese-bamboo-dragonfly",
   "venetian-glass-bead",
   "malawi-sansi",
+  "indian-charkha",
   "german-nutcracker",
   "mexican-molinillo",
   "chinese-suanpan",
@@ -85,6 +86,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "indian-charkha", title: "棉线慢成", engine: "indian-charkha@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "indian-charkha-craft",
+    narrative: "印度手摇纺车以木轮、传动绳和金属纺锭，将棉纤维加捻成线。纺线时一手转轮，一手牵引，卷收前需要停下调整。它也与印度近代的本土纺织运动相连。这里用原创木架放慢拉纤、转轮、回送卷线三个动作。这是当代器物欣赏练习，纤维变化为示意，不代表完整纺线教学。",
+  },
   {
     id: "german-nutcracker", title: "木偶开果", engine: "german-nutcracker@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "erzgebirge-nutcracker-craft",

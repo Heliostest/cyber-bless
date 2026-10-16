@@ -42,6 +42,15 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'indian-charkha': (<>
+    <circle cx={31} cy={18} r={13} fill="none" stroke="#b77b42" strokeWidth={3}/>
+    <path d="M18 18h26M31 5v26M22 9l18 18M22 27 40 9" stroke="#c9955b" strokeWidth={2}/>
+    <path d="M31 18v22M8 40h34M11 28v12" stroke="#89552f" strokeWidth={3}/>
+    <path d="m31 5-21 19m0 5 22 2" stroke="#8b7151" fill="none"/>
+    <path d="M10 27h8" stroke="#727d80" strokeWidth={3}/>
+    <ellipse cx={8} cy={33} rx={6} ry={4} fill="#f3e8cf" stroke="#b9a990"/>
+    <circle cx={36} cy={17} r={2.5} fill="#89552f"/>
+  </>),
   'german-nutcracker': (<>
     <path d="M33 22h5l3 13" fill="none" stroke="#ae7c48" strokeWidth={4} strokeLinecap="round"/>
     <Part d="M15 24h18v15H15Z" fill="#527c69"/>

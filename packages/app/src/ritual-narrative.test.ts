@@ -71,6 +71,7 @@ describe("builtInScenes narratives", () => {
       "german-nutcracker",
       "hongsheng-red-string",
       "hungarian-embroidery-hoop",
+      "indian-charkha",
       "indonesian-angklung",
       "italian-ex-voto",
       "korean-bojagi-wrap",

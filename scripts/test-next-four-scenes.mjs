@@ -13,6 +13,7 @@ const wishIds=['peruvian-engraved-gourd','korean-bojagi-wrap','turkish-ebru-pape
 const ids=process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds,key='cyber-bless:personal:v1'
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const craftDeltas={
+  'chinese-suanpan':[[0,-60],[0,60],[0,-60]],
   'mongolian-felt-ger':[[60,0],[0,-60],[0,60]],
   'peruvian-engraved-gourd':[[60,0],[0,60]],
   'venetian-glass-bead':[[0,-60],[60,0]],
@@ -142,7 +143,7 @@ async function wrongCraftGesture(page,id,step){
   if(craftDeltas[id]?.[step]){
     const input=pointers.get(page),[dx,dy]=craftDeltas[id][step]
     const kinds=['tap','reverse','short','backtrack','partial-return','reverse-first','cancel']
-    if(['mongolian-felt-ger','peruvian-engraved-gourd','venetian-glass-bead'].includes(id))kinds.push('zigzag')
+    if(['chinese-suanpan','mongolian-felt-ger','peruvian-engraved-gourd','venetian-glass-bead'].includes(id))kinds.push('zigzag')
     for(const kind of kinds){
       const from=await point(page)
       await input.down(from)

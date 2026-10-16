@@ -9,6 +9,7 @@ import type { SceneModule } from './contract'
 export const PRODUCT_ORIGINAL = 'product-original'
 
 export const sceneRegistry: SceneMeta[] = [
+  { id: 'chinese-suanpan', title: '拨珠见数', traditionSlug: 'chinese-zhusuan', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mongolian-felt-ger', title: '毡屋向阳', traditionSlug: 'mongolian-ger-craft', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'peruvian-engraved-gourd', title: '葫芦刻光', traditionSlug: 'peruvian-mate-burilado', grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'] },
   { id: 'venetian-glass-bead', title: '玻珠凝彩', traditionSlug: 'italian-glass-beads', grade: 'C', sensitivity: '低', gestures: ['drag'] },
@@ -151,6 +152,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'chinese-suanpan',
   'mongolian-felt-ger',
   'peruvian-engraved-gourd', 'venetian-glass-bead',
   'korean-bojagi-wrap', 'vietnamese-bamboo-dragonfly',
@@ -190,6 +192,7 @@ export function isSceneImplemented(id: string): boolean {
 /** Dynamic-import implemented scenes; unknown ids throw. */
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
+    case 'chinese-suanpan': return import('./chinese-suanpan')
     case 'mongolian-felt-ger': return import('./mongolian-felt-ger')
     case 'peruvian-engraved-gourd': return import('./peruvian-engraved-gourd')
     case 'venetian-glass-bead': return import('./venetian-glass-bead')

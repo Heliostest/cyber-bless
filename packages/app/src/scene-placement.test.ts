@@ -72,6 +72,7 @@ const entries: CatalogEntry[] = [
 
 describe("scene placement", () => {
   it.each([
+    ["chinese-suanpan", "chinese-zhusuan", false],
     ["mongolian-felt-ger", "mongolian-ger-craft", false],
     ["peruvian-engraved-gourd", "peruvian-mate-burilado", true], ["venetian-glass-bead", "italian-glass-beads", false],
     ["korean-bojagi-wrap", "korean-bojagi", true], ["vietnamese-bamboo-dragonfly", "thach-xa-bamboo-dragonfly", false],
@@ -145,6 +146,7 @@ describe("scene placement", () => {
       "indonesian-angklung",
       "vietnamese-bamboo-dragonfly",
       "venetian-glass-bead",
+      "chinese-suanpan",
       "mongolian-felt-ger",
     ]);
     expect([...WISH_SCENE_IDS]).toEqual([

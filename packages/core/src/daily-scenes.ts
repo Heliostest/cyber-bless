@@ -35,6 +35,7 @@ export const BLESSING_SCENE_IDS = [
   "indonesian-angklung",
   "vietnamese-bamboo-dragonfly",
   "venetian-glass-bead",
+  "chinese-suanpan",
   "mongolian-felt-ger",
 ] as const;
 
@@ -81,6 +82,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "chinese-suanpan", title: "拨珠见数", engine: "chinese-suanpan@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "chinese-zhusuan",
+    narrative: "中国珠算通过沿算杆拨动算珠来计算，知识经口授和练习传承。这里采用上二下五的结构：同一档的上珠记五、下珠记一，靠近横梁的珠参与计数，向左一档数值增为十倍。原创七档缩略算盘带你依次拨出三、八、十八；这是当代数学文化欣赏，数字只是练习结果，不附会祈福寓意。",
+  },
   {
     id: "mongolian-felt-ger", title: "毡屋向阳", engine: "mongolian-felt-ger@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "mongolian-ger-craft",

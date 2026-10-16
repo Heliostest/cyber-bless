@@ -75,6 +75,7 @@ describe("builtInScenes narratives", () => {
       "korean-bojagi-wrap",
       "lantern",
       "lithuanian-straw-garden",
+      "malawi-sansi",
       "milagros",
       "minangkabau-spinning-top",
       "mizuhiki",

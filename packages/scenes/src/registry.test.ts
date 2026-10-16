@@ -10,6 +10,7 @@ describe('sceneRegistry', () => {
 
   it('lists the pilot metas, the C-grade Design A scenes, then the product-original scenes', () => {
     expect(sceneRegistry.map((m) => m.id)).toEqual([
+      'malawi-sansi',
       'chinese-suanpan',
       'mongolian-felt-ger',
       'peruvian-engraved-gourd', 'venetian-glass-bead',
@@ -112,6 +113,7 @@ describe('loadScene', () => {
   })
 
   it.each([
+    ['malawi-sansi', '铁舌轻鸣', 'mbira-sansi-craft'],
     ['chinese-suanpan', '拨珠见数', 'chinese-zhusuan'],
     ['mongolian-felt-ger', '毡屋向阳', 'mongolian-ger-craft'],
     ['peruvian-engraved-gourd', '葫芦刻光', 'peruvian-mate-burilado'],

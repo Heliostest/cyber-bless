@@ -35,6 +35,7 @@ export const BLESSING_SCENE_IDS = [
   "indonesian-angklung",
   "vietnamese-bamboo-dragonfly",
   "venetian-glass-bead",
+  "malawi-sansi",
   "chinese-suanpan",
   "mongolian-felt-ger",
 ] as const;
@@ -82,6 +83,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "malawi-sansi", title: "铁舌轻鸣", engine: "malawi-sansi@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "mbira-sansi-craft",
+    narrative: "在马拉维与津巴布韦，Mbira/Sansi 的制作和演奏通过家庭与教学传承。金属簧片固定于木板，用拇指或配合其他手指拨奏，有时配有共鸣器。各地名称、形制与音乐各有传统。这里是原创九键示意琴：按下、松手，观察簧片弯曲回弹。三个合成音是欣赏练习，不代表当地调律、传统曲目或仪式。",
+  },
   {
     id: "chinese-suanpan", title: "拨珠见数", engine: "chinese-suanpan@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-zhusuan",

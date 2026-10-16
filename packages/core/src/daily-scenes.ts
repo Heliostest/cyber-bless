@@ -36,6 +36,7 @@ export const BLESSING_SCENE_IDS = [
   "vietnamese-bamboo-dragonfly",
   "venetian-glass-bead",
   "malawi-sansi",
+  "german-nutcracker",
   "mexican-molinillo",
   "chinese-suanpan",
   "mongolian-felt-ger",
@@ -84,6 +85,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "german-nutcracker", title: "木偶开果", engine: "german-nutcracker@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "erzgebirge-nutcracker-craft",
+    narrative: "德国厄尔士山的木作传统中，车削和彩绘造就了各式胡桃夹子。背部杠杆带动下颌开合，口中可以容纳胡桃。今天许多木偶主要用于装饰。这里用原创木偶放慢抬杆、放果、压合三个动作，观察转轴的配合。这是当代机构欣赏练习，不代表馆藏复刻或真实摆件的使用指导。",
+  },
   {
     id: "mexican-molinillo", title: "木旋起沫", engine: "mexican-molinillo@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "molinillo-chocolate-craft",

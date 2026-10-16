@@ -73,6 +73,7 @@ const entries: CatalogEntry[] = [
 describe("scene placement", () => {
   it.each([
     ["malawi-sansi", "mbira-sansi-craft", false],
+    ["german-nutcracker", "erzgebirge-nutcracker-craft", false],
     ["mexican-molinillo", "molinillo-chocolate-craft", false],
     ["chinese-suanpan", "chinese-zhusuan", false],
     ["mongolian-felt-ger", "mongolian-ger-craft", false],
@@ -149,6 +150,7 @@ describe("scene placement", () => {
       "vietnamese-bamboo-dragonfly",
       "venetian-glass-bead",
       "malawi-sansi",
+      "german-nutcracker",
       "mexican-molinillo",
       "chinese-suanpan",
       "mongolian-felt-ger",

@@ -68,6 +68,7 @@ describe("builtInScenes narratives", () => {
       "finnish-birch-basket",
       "floating-lantern-loy-krathong",
       "furin-wind-chime",
+      "german-nutcracker",
       "hongsheng-red-string",
       "hungarian-embroidery-hoop",
       "indonesian-angklung",

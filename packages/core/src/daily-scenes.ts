@@ -36,6 +36,7 @@ export const BLESSING_SCENE_IDS = [
   "vietnamese-bamboo-dragonfly",
   "venetian-glass-bead",
   "malawi-sansi",
+  "mexican-molinillo",
   "chinese-suanpan",
   "mongolian-felt-ger",
 ] as const;
@@ -83,6 +84,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "mexican-molinillo", title: "木旋起沫", engine: "mexican-molinillo@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "molinillo-chocolate-craft",
+    narrative: "墨西哥的木制巧克力搅拌器有长柄、沟槽与松动木环。双掌相搓，使器头在饮品表面来回旋转，带入空气，浮起泡沫。这里以原创器形和陶杯，放慢浸入、右转、左转三个动作，观察材料与变化。这是当代简化欣赏练习，不代表特定地区的配方、器形或仪式。",
+  },
   {
     id: "malawi-sansi", title: "铁舌轻鸣", engine: "malawi-sansi@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "mbira-sansi-craft",

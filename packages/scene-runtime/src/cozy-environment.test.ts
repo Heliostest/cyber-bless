@@ -73,6 +73,7 @@ describe("a scene's surrounding world", () => {
     ["polish-paper-cut", "veranda"],
     ["faroese-wool-knit", "veranda"],
     ["malawi-sansi", "garden"],
+    ["mexican-molinillo", "garden"],
     ["chinese-suanpan", "garden"],
     ["mongolian-felt-ger", "garden"],
     ["peruvian-engraved-gourd", "garden"],

@@ -48,6 +48,7 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 
 it.each([
   ['malawi-sansi', 0, 'sansi-tine-4', 'sansi-tine-4', [0, .02, -.035], [0, .02, -.035], [0, 60]],
+  ['mexican-molinillo', 0, 'molinillo-handle', 'molinillo-handle', [0, .15, 0], [0, .15, 0], [0, 60]],
   ['chinese-suanpan', 0, 'abacus-lower-6-2', 'abacus-lower-6-2', [0, .11, 0], [0, .11, 0], [0, -60]],
   ['mongolian-felt-ger', 0, 'ger-lattice-grip', 'ger-lattice-grip', [0, .06, .042], [0, .06, .042], [60, 0]],
   ['peruvian-engraved-gourd', 0, 'gourd-shell', 'gourd-shell', [-.3295899491, 1.05, .7697097123], [-.3295899491, 1.05, .7697097123], [60, 0]],

@@ -76,6 +76,7 @@ describe("builtInScenes narratives", () => {
       "lantern",
       "lithuanian-straw-garden",
       "malawi-sansi",
+      "mexican-molinillo",
       "milagros",
       "minangkabau-spinning-top",
       "mizuhiki",

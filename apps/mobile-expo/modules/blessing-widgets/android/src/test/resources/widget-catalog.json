@@ -1,5 +1,10 @@
 [
   {
+    "id": "chinese-tangram",
+    "title": "七巧归方",
+    "category": "blessing"
+  },
+  {
     "id": "chinese-diabolo",
     "title": "空竹轻扬",
     "category": "blessing"

@@ -42,6 +42,12 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'chinese-tangram': (<>
+    <path d="M7 7h40L27 27Z" fill="#d77759"/><path d="M7 7v40l20-20Z" fill="#e2b955"/>
+    <path d="m47 47-20 0 20-20Z" fill="#58a397"/><path d="m27 27 10-10v20Z" fill="#74acc0"/>
+    <path d="m27 27 10 10-10 10-10-10Z" fill="#a18ab6"/><path d="m7 47 10-10 10 10Z" fill="#a4c6d1"/>
+    <path d="m47 7 0 20-10 10V17Z" fill="#c9878d"/><path d="M7 7h40v40H7Z" fill="none" stroke="#b18a54" strokeWidth={1.3}/>
+  </>),
   'chinese-diabolo': (<>
     <path d="M8 8v21m38-21v21" stroke="#a47743" strokeWidth={3.4} strokeLinecap="round"/>
     <path d="M8 9 25 39 46 9" fill="none" stroke="#d6b86f" strokeWidth={1.7}/>

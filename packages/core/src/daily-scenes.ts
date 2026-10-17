@@ -41,6 +41,7 @@ export const BLESSING_SCENE_IDS = [
   "russian-matryoshka",
   "korean-yutnori",
   "chinese-diabolo",
+  "chinese-tangram",
   "indian-charkha",
   "german-nutcracker",
   "mexican-molinillo",
@@ -91,6 +92,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "chinese-tangram", title: "七巧归方", engine: "chinese-tangram@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "chinese-tangram",
+    narrative: "七巧板是中国传统拼图，由五块大小不同的三角片、一块方片和一块斜方片组成。七块木片既能合成一个正方形，也能拼出许多不同轮廓。这里已有四片安放在浅木拼板上，再移入蓝色小三角片、转入紫色方片，最后合上玫瑰色斜方片。看颜色沿着拼缝相遇，让零散的一刻慢慢归整。",
+  },
   {
     id: "chinese-diabolo", title: "空竹轻扬", engine: "chinese-diabolo@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-diabolo",

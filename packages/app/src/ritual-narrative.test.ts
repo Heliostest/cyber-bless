@@ -54,6 +54,7 @@ describe("builtInScenes narratives", () => {
       "chinese-incense",
       "chinese-shadow-puppet",
       "chinese-suanpan",
+      "chinese-tangram",
       "chinese-woodblock-print",
       "clootie-well-rag",
       "crane",

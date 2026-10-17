@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "f0f473c089408a59a4309c8aa93d1b9a3b2d47e56d85744089b243e5603ffce7",
+  "revision": "a16b10851a341b13e8b502f10d35ced874c68f55b6ea86f18922a59bbe258930",
   "scenes": [
+    {
+      "id": "chinese-tangram",
+      "engine": "chinese-tangram@1",
+      "small": {
+        "file": "chinese-tangram-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "d592e85b08961616fa1c9455630447deebbc122911805b5a630a5e0f39d3cbbb",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "chinese-tangram-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "1850a56de8b28ae735f9f7352aa158e88857eff99d8e6d514971638f9f5de799",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "chinese-tangram-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "9be8b334f222b79c1981f2af6eb1d04beba2accba692167dc93fd20aa033da94",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "chinese-diabolo",
       "engine": "chinese-diabolo@1",

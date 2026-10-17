@@ -38,6 +38,7 @@ export const BLESSING_SCENE_IDS = [
   "malawi-sansi",
   "japanese-kendama",
   "japanese-koinobori",
+  "russian-matryoshka",
   "indian-charkha",
   "german-nutcracker",
   "mexican-molinillo",
@@ -88,6 +89,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "russian-matryoshka", title: "套娃相藏", engine: "russian-matryoshka@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "russian-matryoshka",
+    narrative: "俄罗斯套娃以大小相套的木偶著称，外层从腰间分开，里面容纳更小的一只。车制的圆润木身与彩绘相映，各地的颜色和花纹各有变化。这里提起原创花纹的外壳，把小娃收进空腔，再沿接缝合拢。让大与小相互容纳，把一份温暖留在手边。",
+  },
   {
     id: "japanese-koinobori", title: "鲤旗迎风", engine: "japanese-koinobori@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "japanese-koinobori",

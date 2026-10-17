@@ -49,6 +49,7 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 it.each([
   ['malawi-sansi', 0, 'sansi-tine-4', 'sansi-tine-4', [0, .02, -.035], [0, .02, -.035], [0, 60]],
   ['japanese-kendama', 0, 'kendama-handle', 'kendama-handle', [0, .5, .1], [0, .5, .1], [0, -60]],
+  ['russian-matryoshka', 0, 'matryoshka-upper-shell', 'matryoshka-upper', [.04, 2.17, .125], [.04, 2.17, .125], [0, -60]],
   ['japanese-koinobori', 0, 'koinobori-tail', 'koinobori-tail', [.26, .18, .02], [.26, .18, .02], [60, 0]],
   ['indian-charkha', 0, 'charkha-cotton', 'charkha-cotton', [0, .5, .4], [0, .5, .4], [-60, 0]],
   ['german-nutcracker', 0, 'nutcracker-lever', 'nutcracker-lever', [0, -.66, -1.03], [0, -.66, -1.03], [0, -60]],

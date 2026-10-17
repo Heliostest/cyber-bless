@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "e0849a6944eedf143cc913a558934359aa1ee554a272552b4634937118e1e195",
+  "revision": "348dff70523cff8d6e322615ec52a5a9e903c6741313a8bafb5a25e2617465ed",
   "scenes": [
+    {
+      "id": "russian-matryoshka",
+      "engine": "russian-matryoshka@1",
+      "small": {
+        "file": "russian-matryoshka-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "25d4828a29b9a6a9be3ef6d01557fdf59ee5b44f701792821ccac2498cd1e826",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "russian-matryoshka-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "066141d9cd57d958f3b8df4e8d793f0921ef3a0411e361a2502c547abfa519e8",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "russian-matryoshka-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "2c310892d32034ca69456118f338ee015254dc4916f6fb492c0025815782fd0a",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "japanese-koinobori",
       "engine": "japanese-koinobori@1",

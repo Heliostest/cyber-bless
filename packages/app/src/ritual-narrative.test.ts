@@ -95,6 +95,7 @@ describe("builtInScenes narratives", () => {
       "polish-blessing-basket",
       "polish-paper-cut",
       "purepecha-copper-bowl",
+      "russian-matryoshka",
       "shinto-torii",
       "shrine-suzu-bell",
       "sicilian-painted-cart",

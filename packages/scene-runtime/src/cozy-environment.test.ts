@@ -75,6 +75,7 @@ describe("a scene's surrounding world", () => {
     ["malawi-sansi", "garden"],
     ["japanese-kendama", "garden"],
     ["japanese-koinobori", "garden"],
+    ["russian-matryoshka", "garden"],
     ["indian-charkha", "garden"],
     ["german-nutcracker", "garden"],
     ["mexican-molinillo", "garden"],

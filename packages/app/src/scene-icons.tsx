@@ -42,6 +42,15 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'russian-matryoshka': (<>
+    <path d="M22 5c-8 0-10 9-8 14-5 5-8 11-8 20 0 8 31 8 31 0 0-9-3-15-8-20 3-5 1-14-7-14Z" fill="#368c91" stroke="#436e70" strokeWidth={1.3}/>
+    <path d="M14 19C8 1 34 0 29 19l-7 8Z" fill="#ca644b"/>
+    <ellipse cx={22} cy={14} rx={5.5} ry={6.5} fill="#f4d7a3"/><path d="M19 14h1m4 0h1m-5 4h3" stroke="#584941" strokeLinecap="round"/>
+    <ellipse cx={22} cy={35} rx={8} ry={9} fill="#f0ddb0"/><path d="M22 40V31m0 5-4-2m4 1 4-2" stroke="#689073"/><circle cx={22} cy={30} r={4} fill="#ca7155"/><circle cx={22} cy={30} r={1.5} fill="#e4b45e"/>
+    <path d="M8 26h27" stroke="#426d70"/>
+    <path d="M42 22c-5 0-6 6-4 9-4 3-5 7-5 11 0 5 17 5 17 0 0-4-2-8-5-11 2-3 2-9-3-9Z" fill="#8aad87" stroke="#608874"/>
+    <ellipse cx={42} cy={28} rx={3.6} ry={4.5} fill="#f4d7a3"/><circle cx={42} cy={39} r={3} fill="#e4b052"/>
+  </>),
   'japanese-koinobori': (<>
     <path d="M9 44V7" stroke="#aa8256" strokeWidth={3} strokeLinecap="round"/>
     <circle cx={9} cy={7} r={3} fill="#c4a161"/>

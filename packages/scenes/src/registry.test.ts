@@ -11,6 +11,7 @@ describe('sceneRegistry', () => {
   it('lists the pilot metas, the C-grade Design A scenes, then the product-original scenes', () => {
     expect(sceneRegistry.map((m) => m.id)).toEqual([
       'malawi-sansi',
+      'japanese-kendama',
       'indian-charkha',
       'german-nutcracker',
       'mexican-molinillo',
@@ -117,6 +118,7 @@ describe('loadScene', () => {
 
   it.each([
     ['malawi-sansi', '铁舌轻鸣', 'mbira-sansi-craft'],
+    ['japanese-kendama', '剑玉轻接', 'japanese-kendama-craft'],
     ['indian-charkha', '棉线慢成', 'indian-charkha-craft'],
     ['german-nutcracker', '木偶开果', 'erzgebirge-nutcracker-craft'],
     ['mexican-molinillo', '木旋起沫', 'molinillo-chocolate-craft'],

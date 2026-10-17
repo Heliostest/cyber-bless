@@ -74,6 +74,7 @@ describe("builtInScenes narratives", () => {
       "indian-charkha",
       "indonesian-angklung",
       "italian-ex-voto",
+      "japanese-kendama",
       "korean-bojagi-wrap",
       "lantern",
       "lithuanian-straw-garden",

@@ -36,6 +36,7 @@ export const BLESSING_SCENE_IDS = [
   "vietnamese-bamboo-dragonfly",
   "venetian-glass-bead",
   "malawi-sansi",
+  "japanese-kendama",
   "indian-charkha",
   "german-nutcracker",
   "mexican-molinillo",
@@ -86,6 +87,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "japanese-kendama", title: "剑玉轻接", engine: "japanese-kendama@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "japanese-kendama-craft",
+    narrative: "剑玉由木柄、大小承皿、尖端、球和绳线组成。在日本的剑玉玩法中，球可依次落入大皿、小皿，再让球孔接住尖端。抛起与轻接之间，方向和节奏同样重要。这里以原创木作和红球放慢三个动作，是带辅助的当代器物欣赏练习，不代表完整技法教学或段位认证。",
+  },
   {
     id: "indian-charkha", title: "棉线慢成", engine: "indian-charkha@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "indian-charkha-craft",

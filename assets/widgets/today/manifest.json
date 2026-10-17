@@ -1,7 +1,2183 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "7188ad8a8bd7c7ae6b7982010843362244dd05247b6dabad1461857a2281147a",
+  "revision": "e0849a6944eedf143cc913a558934359aa1ee554a272552b4634937118e1e195",
   "scenes": [
+    {
+      "id": "japanese-koinobori",
+      "engine": "japanese-koinobori@1",
+      "small": {
+        "file": "japanese-koinobori-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "d28bd2c8912de8f4070375233ecb9c1ca56f67ba9a4a11332e19c3ccc61dad18",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "japanese-koinobori-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "89df91d36f4d885e40ada2dabeb41fee23d629a88e77cb85596c74dce1853dc2",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "japanese-koinobori-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "52fe025914ee24cdca79dae5d233be941c922cba86021c6f5578e96e46e57d15",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "japanese-kendama",
+      "engine": "japanese-kendama@1",
+      "small": {
+        "file": "japanese-kendama-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "47cd47a1349e66c207f5793e5a9f18518ea1c3d21011f66ea6b066683e056422",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "japanese-kendama-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "07280bd7c7740512252e60b16d5cf76909e4d3ff0a1bfb7dfed998a7b3bb3438",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "japanese-kendama-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "26e915b31bc38aeaed89465415249abca4b1bf889a18a0101c627e9a457f06a1",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "indian-charkha",
+      "engine": "indian-charkha@1",
+      "small": {
+        "file": "indian-charkha-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "b10cef639c2e15d782a20b282e41c80090e56bd887d4f4e348dd9b2716a05fec",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "indian-charkha-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "03a161e3c0adf0ef0a33160b48d8a94364e14488bdbb932b57d05dcf412f1ea4",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "indian-charkha-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "9ed9e572ea3cb1635e8ea1c31bee8c340181a9d0cf38a594f2490d4f003e2789",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "german-nutcracker",
+      "engine": "german-nutcracker@1",
+      "small": {
+        "file": "german-nutcracker-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "f441d817885ba414c13b6bd4600c57bcfa5a16606082b30019db4cee0244e41e",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "german-nutcracker-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "cdd01eb5c0fa4df39db880dd67d87a1dacb1d56684019e1da46139f9415a869b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "german-nutcracker-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "730ca10f84108c38604ca5c43eee0e026410e78e5f15e784f23606bfce1523a0",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "mexican-molinillo",
+      "engine": "mexican-molinillo@1",
+      "small": {
+        "file": "mexican-molinillo-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "e42ef5b50f31dce42a86878d7e5e1991dd0d2f3e2b76ec634d61e77a3449fd24",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "mexican-molinillo-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "f3d52c8381f7e3d8f210832d9cd480354a1103af6549f657ccf7922efe84db5d",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "mexican-molinillo-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "6d38d51a93ca3663233147f6109153ece9a26c4d77a81a1a454166caba9bb669",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "malawi-sansi",
+      "engine": "malawi-sansi@1",
+      "small": {
+        "file": "malawi-sansi-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "f39d48d246edd85b6da5921045345c48cfff6258d2ea18540ec94ff87334458f",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "malawi-sansi-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "008a9c279cb45aee8b8ce788c90b168aed6e7c47b863d1a8055ae6dc4f9d8481",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "malawi-sansi-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "d7ad0e8fc6601490abc7bda5ec8418a6c1951159c97acf4b2d15e39b1871d076",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "chinese-suanpan",
+      "engine": "chinese-suanpan@1",
+      "small": {
+        "file": "chinese-suanpan-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "fe200d7e00fd2705b7dd4a2198089cfb106b9200143754dee073ca6bb8120b16",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "chinese-suanpan-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "636c40ce810a51e7dc5937b4856329014ed581d9f6e9d4b863f15290c534dece",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "chinese-suanpan-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "1e89133a06129575fdc0436f9183309cf99f7efd067b8fa5b6c10c58468a0215",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "mongolian-felt-ger",
+      "engine": "mongolian-felt-ger@1",
+      "small": {
+        "file": "mongolian-felt-ger-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "13b82c02df9243430d31c6654b19cfb463487a14add1660d9ea5a478d7d42cef",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "mongolian-felt-ger-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "28613b82c594b67e1950dbee0591e3454129d8910f40d0d7ce9e0270cb9e26b9",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "mongolian-felt-ger-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "e7f41d4e8fd64f6f6fac71363a346c0b1d006d510231497e8bbc22ee0a70a302",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "peruvian-engraved-gourd",
+      "engine": "peruvian-engraved-gourd@1",
+      "small": {
+        "file": "peruvian-engraved-gourd-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "e0221d2d1163d9c51b3168475a459c63097858b5a9343ca5fb32fbaac1e645bb",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "peruvian-engraved-gourd-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "1485f93490d1eed129afb2b709d4c7902756f8c59a422198a5ccc25768f9f4ba",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "peruvian-engraved-gourd-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "814f08857d04ca97bf90817084f808e6d8eeba309e5a1b0be0833d60d5f9dcad",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "venetian-glass-bead",
+      "engine": "venetian-glass-bead@1",
+      "small": {
+        "file": "venetian-glass-bead-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "fac9cf49849710387ed6473f14c911617178503c8feb2d26a04fd190b16541aa",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "venetian-glass-bead-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "35dec1a565564389c5b861d6cc55d1f314d769afc07c73c762c0a40ad80c9bb1",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "venetian-glass-bead-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "c0982590ae15a9de96c54850d0d9a283e6f45c3715b04204ae3fb0ba5b74ca7d",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "korean-bojagi-wrap",
+      "engine": "korean-bojagi-wrap@1",
+      "small": {
+        "file": "korean-bojagi-wrap-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "cf797b3bcd72a838a177304560331182f027b54c2c87ede781b70af30ae7cd81",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "korean-bojagi-wrap-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "52dea62827576fb9e2df752c4fadda39e5d14a280ef05006f658ff33aa32ccd3",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "korean-bojagi-wrap-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8ef5bf468a756a09f252dbd83da04e0ec38500fbe120a3ed53df0b3dd016acb2",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "vietnamese-bamboo-dragonfly",
+      "engine": "vietnamese-bamboo-dragonfly@1",
+      "small": {
+        "file": "vietnamese-bamboo-dragonfly-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "45133cfefa59c872166a0539f779aa3b8b7f57156918ff561380ec3223fffdcf",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "vietnamese-bamboo-dragonfly-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "6274163de516d411293733b2cda2f1ba774bc41edb2999409abd1cbb2a764382",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "vietnamese-bamboo-dragonfly-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "4de2ee93936ff84582155644de5fa89a9df5b06280d995bbe87f8f44f86931e1",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "turkish-ebru-paper",
+      "engine": "turkish-ebru-paper@1",
+      "small": {
+        "file": "turkish-ebru-paper-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "a53c3f897969ad300b8855cf2403f160262638d81f3f2701808318a4a1f364ce",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "turkish-ebru-paper-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "1dbd142bdbba625f46986a4ae5b87baf78eac94d3683b32c4aaacd7dae886037",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "turkish-ebru-paper-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "60e73c98b5ed4d093f261e043885dd1c2a9438b41a9a193e1d394bfc82b31899",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "indonesian-angklung",
+      "engine": "indonesian-angklung@1",
+      "small": {
+        "file": "indonesian-angklung-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "adabac68527899cd5db237c3ec77a5f030237cd6dbc0add889efdc2c600495f6",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "indonesian-angklung-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "fc629c722334cc08c657b1af2ce6e6a95b46dfbaf437542ab85d544ebead9d15",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "indonesian-angklung-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8a4b1ebe7990dd3e3cd66996fcf3ab2e5dc5924c0a05ac931fa7432709586c2a",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "weifang-paper-kite",
+      "engine": "weifang-paper-kite@1",
+      "small": {
+        "file": "weifang-paper-kite-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "10615d9e56ad2e12e0342fb5eaba873d6f94642614aedc83c1c3fe8232377461",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "weifang-paper-kite-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e0fd67ea12850cdb4310e799529b543975ea2cb08633f515cc7efc34a5ba8ce8",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "weifang-paper-kite-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "3119a7e7ba7db23123f568a453e7190c734ece4d888a80c7886cbde511931a3a",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "chinese-shadow-puppet",
+      "engine": "chinese-shadow-puppet@1",
+      "small": {
+        "file": "chinese-shadow-puppet-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "c1b3be43c3f038969f03b76f7dfac9cd9eeadd8ddcf7651386e523204e2f2f0e",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "chinese-shadow-puppet-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e8eb562a753ca5359e5a731029229479c2e94cf018f9a5732ade454b20ed1a8c",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "chinese-shadow-puppet-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "c8817cd0c1812aa59e60d54576e60c8b4dbbd4c4b09b0eb9061943d1acfdda5e",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "faroese-wool-knit",
+      "engine": "faroese-wool-knit@1",
+      "small": {
+        "file": "faroese-wool-knit-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "bf05f2a81d8641dfba26bf270687bfe5e7fce834ffeadfe3702215a78f0a6a92",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "faroese-wool-knit-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "6dab325209084328e0ad997b4449b21e627f4fc8cfc70ac56f650d1f09dde18b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "faroese-wool-knit-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "55289dc5bd072f285ddd99305db0cca79fcc2b57c7a0196bbf8556ea501193fe",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "niue-shell-necklace",
+      "engine": "niue-shell-necklace@1",
+      "small": {
+        "file": "niue-shell-necklace-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "947e790bc4a4ed0b3d13b2b393d5c39aa2da72597d19760b35787795fd714deb",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "niue-shell-necklace-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "2dc335993c8550145a982aa58994d42936466b7922b3ff640b8c776299d980db",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "niue-shell-necklace-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "e0ed6b498e4ff804b3f5ecd7d544731b3443f5293575593085b35914db481b0f",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "polish-paper-cut",
+      "engine": "polish-paper-cut@1",
+      "small": {
+        "file": "polish-paper-cut-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "901c64ced97f157b08bf365be9990eb53988ef3eac0edf77a153b627b6f43c1e",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "polish-paper-cut-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "628db64a233feb275de4870badaa07facd51106ed6e25eb263f08f6fea38177f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "polish-paper-cut-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "3ddaa94bbff513747b381a4fe0047bef3810f846a334ee121cf1e44d977b96dd",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "uzbek-clay-bowl",
+      "engine": "uzbek-clay-bowl@1",
+      "small": {
+        "file": "uzbek-clay-bowl-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "ad91034ed772092bb39bc4888bb300442c7c7844962deabb79dfcd7c42f354cb",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "uzbek-clay-bowl-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "cb6be3ef5fec2efb30931bcce07930677e54719a44d9a6771afc44a5d849d15b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "uzbek-clay-bowl-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "c3d26272121169c6cbfd748699050d006f6f3e5655f35b54f34da32bf1a1aeb7",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "chinese-woodblock-print",
+      "engine": "chinese-woodblock-print@1",
+      "small": {
+        "file": "chinese-woodblock-print-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "8927586b8ab692ac984cab647a1903bfb63752c848bec5e22dec7025e4480d0f",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "chinese-woodblock-print-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "4f1e6e119edaac0c57b7636b4cd7d692f5c2e2db9b07b7c88b9dd32bda1ffa6c",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "chinese-woodblock-print-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "bedb0fb8f500ca199b83f6b7dc41fd6ceee0dd0fc7fa8333ed2cb878a92058dc",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "czech-bead-star",
+      "engine": "czech-bead-star@1",
+      "small": {
+        "file": "czech-bead-star-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "2d61fd79dde8f7e41bda4f4cc37d01db59ff9dc4c7ba8a5724591371f80485b6",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "czech-bead-star-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "affe05b5577f997f7acacc7dc17581e216701f03670ed312103519ba14e3a831",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "czech-bead-star-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "2c99d0e702e12591f1f2dcfbf3881cb1ec08985fdbc5bca5cef29d6a63a454f6",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "fijian-woven-fan",
+      "engine": "fijian-woven-fan@1",
+      "small": {
+        "file": "fijian-woven-fan-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "35c428ce175121f863a3eba397282495c6f95d3996d1ad178845999e825fbe0f",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "fijian-woven-fan-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "719c713be02d150fe5d7f8ab82b9fce95156511825a63ffe32272d18a889259f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "fijian-woven-fan-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "c111eaefd1500b5c549a33863109695b919a81bf7b1b5752c8c26e596223970d",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "amazigh-woven-rug",
+      "engine": "amazigh-woven-rug@1",
+      "small": {
+        "file": "amazigh-woven-rug-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "ccc7a49aa825a49119bcb25e09b6ec17bfcae441a59c1004cd9305a8294ae9bc",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "amazigh-woven-rug-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "157209f3fcd45a75a90e018465a5cfb8b12a27147ea1be78e92667c733949d31",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "amazigh-woven-rug-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "c4e02211538ba62cba84ae41bc68b1bb6c698aa58a6863f77f97fe3c77f99a8c",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "slovak-wire-bird",
+      "engine": "slovak-wire-bird@1",
+      "small": {
+        "file": "slovak-wire-bird-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "a254971e6588a32bc5d6e157f582b2e01a3d25932a7bfdd49e165473b6163cef",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "slovak-wire-bird-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "a6de4c866e08988de28eb708d05f7e91828c3c3d467f48cd6ffd8538f21ba86c",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "slovak-wire-bird-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "9015343179bfff9039a4ebddf7325e7a91432dfe8b5d1eb794d9986b61da3892",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "hungarian-embroidery-hoop",
+      "engine": "hungarian-embroidery-hoop@1",
+      "small": {
+        "file": "hungarian-embroidery-hoop-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "02120679e4c3293e095ac940c12034258ff959cdd751b9327a6e936a1009e0b4",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "hungarian-embroidery-hoop-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "1fa42199f782bdebe8123a44b57e3d6a1e57336e7d0461805e7cf8594cbdfd60",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "hungarian-embroidery-hoop-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "9eb52593acedff6930cc4d69d82a5509c4efff33107a41370656823c905931e5",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "andalusian-ceramic-tile",
+      "engine": "andalusian-ceramic-tile@1",
+      "small": {
+        "file": "andalusian-ceramic-tile-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "53102bc03da50dcc1ab01a21e4e469bc37672513b0015ef49065d591ab848161",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "andalusian-ceramic-tile-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "353f34f5eecbaf6cf5995b884e6dc55b576df4d0383c9a32a1319ecccd143d2e",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "andalusian-ceramic-tile-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "e2f53aa8bade37bdcf042afc8bb7b399e13f6b782ccc7ce2661bd441b92d9030",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "sicilian-painted-cart",
+      "engine": "sicilian-painted-cart@1",
+      "small": {
+        "file": "sicilian-painted-cart-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "0d23c58cfe356a054fe8a29157372fefff1386223de6b5d27a9a57e358aae1a5",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "sicilian-painted-cart-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "a033bfa4667010937497f48dab9d9b8183c47d7eee8cc8c5897013f3fbee8ad3",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "sicilian-painted-cart-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "c8b495f5322dc45f1d76e0910624c75f6a1146fed1c9174257adacbe35b538e6",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "bai-indigo-cloth",
+      "engine": "bai-indigo-cloth@1",
+      "small": {
+        "file": "bai-indigo-cloth-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "13746e2a49bd05b9de95dc172701841912da4fca6141525bf79255e75af7a02c",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "bai-indigo-cloth-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "831f5f6d88fba5b5aa2d4ac9bfacc08424529660b82a631b64fdfe30f46907e2",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "bai-indigo-cloth-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "129cd2d0ac9c6ee9df17497192efba3866c8a831baa9cfcb525298fccad5be31",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "ndebele-painted-house",
+      "engine": "ndebele-painted-house@1",
+      "small": {
+        "file": "ndebele-painted-house-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "eb2f3dacc3e33b5958f508a506b90419417f0935cf6e1ebb5f1b0accde69fc34",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "ndebele-painted-house-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "ca64655e97bb35ee6b5d68af83959733d0f1dcf845da50649451bafb20317d8b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "ndebele-painted-house-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "7fd32f73eb48fabd636f715ee10f456abad7905ada6cc0c7b7a7c9ed600adad9",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "purepecha-copper-bowl",
+      "engine": "purepecha-copper-bowl@1",
+      "small": {
+        "file": "purepecha-copper-bowl-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "0068a519616682f2dd264e90395d3d5fbf3337e77fa8496c2ecfb093e136de94",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "purepecha-copper-bowl-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "1537320154186d9f3adcd198ba05ab2725908bb363fc737b5d4918112dabcedb",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "purepecha-copper-bowl-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "d8625b8d0bda76aa17b56856db315b725811a7fc2460ee5414088c406a3b977b",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "welsh-love-spoon",
+      "engine": "welsh-love-spoon@1",
+      "small": {
+        "file": "welsh-love-spoon-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "f5180596d7410fc3ab52c9f3687a23c77b4fd3962fde6742fecfd509116524d3",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "welsh-love-spoon-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "09f47d2fa57b23d58f0745352901a94c4a2778b97df057a107ec6d47d07b4ca9",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "welsh-love-spoon-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "6921d99a7715f359f28a1bc8256d634b0b45a518fb446455c5ba22b59fe8520d",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "barcelos-clay-rooster",
+      "engine": "barcelos-clay-rooster@1",
+      "small": {
+        "file": "barcelos-clay-rooster-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "721be9af10e6fa3582d2a9489a0e1911be77f4268fe0be1f38867e411fccd53c",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "barcelos-clay-rooster-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "1e5738d7bf0b78d83f1191d821b9b6a5e677cd68a4615292fb975d22f3885fef",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "barcelos-clay-rooster-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "6e1388cf94b9203b93dc332447bd097cc6acadb03d6812d2ccc77bd3247887f1",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "finnish-birch-basket",
+      "engine": "finnish-birch-basket@1",
+      "small": {
+        "file": "finnish-birch-basket-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "ee2dc4b087e9935b27749fbd6b82f169f0ec28b089bba13498ad3112b7b536d3",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "finnish-birch-basket-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "431d79d51d00bc70257839cf7768be865d0755b5704b6a537b593349b4477c63",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "finnish-birch-basket-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "d7824f69de54ee21c8d3380991d5366f3068ab8e5fc1bbf7331a1f9d2b3cd3df",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "croatian-licitar-heart",
+      "engine": "croatian-licitar-heart@1",
+      "small": {
+        "file": "croatian-licitar-heart-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "b13c435175c044c7b81be4d7a0b2a22ec6481ee3351172a538e2f107686f6521",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "croatian-licitar-heart-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "13255bc941bb08536742ebfa40876be28120a8f111b6364c9b7f07db2a6ee97d",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "croatian-licitar-heart-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "4b475db26c1c7ead98acf2b99277195eccbecfe6cd60df8eb33cae54668d1a21",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "catalan-festival-giant",
+      "engine": "catalan-festival-giant@1",
+      "small": {
+        "file": "catalan-festival-giant-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "8ac30d2573f8ccf3e840c6468fb5694afff5a5e33ce855207c8a3fc925113519",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "catalan-festival-giant-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "ff2cd1bc85d03435fea66cb87f930a65abfa36e54e3a8946aa983a9a41203803",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "catalan-festival-giant-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "fee446807509b50f87c984845bc3e090b7674e8433226b877882da86b5b19465",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "sorbian-painted-egg",
+      "engine": "sorbian-painted-egg@1",
+      "small": {
+        "file": "sorbian-painted-egg-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "175519360d6930644030188b6dce718f8a7f8896df21398092a3958fc36e3fee",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "sorbian-painted-egg-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "161ca486ffb63968831cee5f234ae44e97bca6ae97db733d7773da0a7ce7a2ca",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "sorbian-painted-egg-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "42bf5b59c4d8eca802afdea60e769bc682ce05bb8aabe58e99ffda2dfc8d93de",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "basque-sunflower",
+      "engine": "basque-sunflower@1",
+      "small": {
+        "file": "basque-sunflower-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "5bca9ae054bf7dfc1f4708e2f2b0d271b8badb924d391c7a5f94b5200f80407c",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "basque-sunflower-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "1a4e77a57b653f8f6f1377f26bbc7cbe17a179b934aa2f920c0631129b1e1f38",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "basque-sunflower-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "2aade1609169d1f7974caf5bd3b68373a8216d9442701336ddda0ac5e9db06f1",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "breton-banner",
+      "engine": "breton-banner@1",
+      "small": {
+        "file": "breton-banner-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "ef73d0349d6c604e8d1ce8f3e76268f1a43f1f094f953a59e5b75d715e020ac3",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "breton-banner-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "9e0b236fa76f5be3e84720c1126502094b4ccf130b4fedbd7b49c81823cf0fa5",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "breton-banner-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "40b93bd87cbc51b22524e074eb7e0f0460e086a53f02d6e5ff29601a52b31836",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "lithuanian-straw-garden",
+      "engine": "lithuanian-straw-garden@1",
+      "small": {
+        "file": "lithuanian-straw-garden-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "2a3fe4bad8335936f10b8d1aa03db62dcd46e35c451c426a2d0dd8b9cfe287a4",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "lithuanian-straw-garden-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "617780fdd2454ba8d43aa5d7e2a1dc96f38dd9bf64a75041e7b47ddac64d4d92",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "lithuanian-straw-garden-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "55d8371fa7132a2ba37ed3ff268b61916812defe9f8c16a693d9f922a28cffe4",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "dalarna-wooden-horse",
+      "engine": "dalarna-wooden-horse@1",
+      "small": {
+        "file": "dalarna-wooden-horse-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "49c105e8cd700bda736a91bdb0350feca5c5ee4ed74b0c8a1f28bac415021ad3",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "dalarna-wooden-horse-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "67f604c417220f8562a949a687b4cdd7c198fcfa6a4b1cddb61fcb6a3c5a625d",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "dalarna-wooden-horse-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "9b1fd5762edcaf99797ea6cbe1bcaef4930775ae5056f14a5002228533326d25",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "aland-votive-ship",
+      "engine": "aland-votive-ship@1",
+      "small": {
+        "file": "aland-votive-ship-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "44380ba7a9a1a77423e1eb310410d59372c26c51863fd87e94aa85dffd15a87f",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "aland-votive-ship-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "f3356f7cdcc418b2318badd2a468d30a39ad5e4458acea6d6fa57dfea0ec84bc",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "aland-votive-ship-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "937df16a6a7196d1f960a75e074da783f77df7086d6649b7ad744d5e6c76880a",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "blang-tea",
+      "engine": "blang-tea@1",
+      "small": {
+        "file": "blang-tea-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "20d2813c77fca7fb74a424671da0e9620d60181f38ecc104d4d3863ff4e6845a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "blang-tea-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "0c4fcd322bc88029283cf53667269e967c1222bf880ade7bd322094ec40a40a3",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "blang-tea-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "bb4cd0b7769a0e64b383575eae983477b65705cac6a63cf322edeb781ed5d3b4",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "minangkabau-spinning-top",
+      "engine": "minangkabau-spinning-top@1",
+      "small": {
+        "file": "minangkabau-spinning-top-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "83e4ffd6f6b79f780d97b86c047d31b8dc1d5ec750660edd2a2b363d654c1ff9",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "minangkabau-spinning-top-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "c882859e85f2196f9e8b6226bda8b6a917c90344fec238c89a380974e14c52b7",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "minangkabau-spinning-top-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "44570fd08e0333383573dad8a2187fc50836599bd82095ee517571814988e676",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "chinese-incense",
+      "engine": "chinese-incense@1",
+      "small": {
+        "file": "chinese-incense-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "6743df3efc99d2a1112779d19e428d9a4f63cb62e22fd0e4d9b12c702bfd92eb",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "chinese-incense-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "14ab37871713582aa3ab7ed84bc0b76354dee063b91ab62f703a6af5be4dd4f3",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "chinese-incense-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "4f531e43283151df23c911788b3bdbd337d6e890c95c8ba85fc000c379365d84",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "hongsheng-red-string",
+      "engine": "hongsheng-red-string@1",
+      "small": {
+        "file": "hongsheng-red-string-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "1817f7790cc0c6b9ee8bacf11e4d9d8f1b576e94b8ae9c64e74e4e8fff13949f",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "hongsheng-red-string-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "1621133f8d2d0b417faf9981d6c91ca2f500a65bac744f1c4dd5e227832f038f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "hongsheng-red-string-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "606d392f8351c30d486c1d7601399b79576e1b86728b931f13738abb33e6577d",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "italian-ex-voto",
+      "engine": "italian-ex-voto@1",
+      "small": {
+        "file": "italian-ex-voto-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "2893122c0f277311fc07b21ce295eb95c72f0490e451d9df9cf7f068a2bbe161",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "italian-ex-voto-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "24e4ffdf56ae92c3bf10aa2e9f3f72f4761168c9c0ac30a888fe57ec33dbb93f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "italian-ex-voto-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "21af22b253603a2a00342e7eaf171ccb3f98682484ab109c828eb5a8ede475d3",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "czech-pilgrim-journal",
+      "engine": "czech-pilgrim-journal@1",
+      "small": {
+        "file": "czech-pilgrim-journal-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "cc33042b9857a863e039eacb8993df04ebd2dedfd5eeb426826323506a9325a9",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "czech-pilgrim-journal-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "4093065a560bd63fe226554c65a0dd724e7c43fc65e0fa9ee21307a47abadb78",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "czech-pilgrim-journal-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "5caf25a3aee15829544594097aafef952939ae0624a85a9b13ec6446fd16fefc",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "omikuji",
+      "engine": "omikuji@1",
+      "small": {
+        "file": "omikuji-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "c0cb97e2c6248c4bff41fc5fb3c17508e7e839df6310c74896a9b2c328080169",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "omikuji-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "02fb08bbb91b44b5c70f799c21cbb0faaa1f0d3b458fe2edec91aad1161d92ac",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "omikuji-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "fd817ef1cdbe0ce9863750374d1173c84004c4c36c842b1f09de669fccec8291",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "polish-blessing-basket",
+      "engine": "polish-blessing-basket@1",
+      "small": {
+        "file": "polish-blessing-basket-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "67c25ec3691ac437b3c5e09592f22a50d64714b76f08dab9af3d29d4d90f0a8c",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "polish-blessing-basket-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "9b324e457a1f42a1a52d85c80705c25597e2fe9ccb3b434279d630ad7adf7e4c",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "polish-blessing-basket-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "9cd9fd49465a88e4feed7c0ebfbac968bdb48356e9e533e66feeff8bee46de90",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "navruz-sumalak",
+      "engine": "navruz-sumalak@1",
+      "small": {
+        "file": "navruz-sumalak-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "ef3cbcd9f862d59bd5e27afe62fef1f952801c789793c8059e9566def3191b40",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "navruz-sumalak-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "b8ddfff8b342758a8b5af2b1a659ef7c9d9ad537d820d05d5062f96823f26065",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "navruz-sumalak-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "ae70ffbefedbe25b03ce2f0d283ce33fa2ef16fc470e831d4f4238b7d0ee8be0",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "floating-lantern-loy-krathong",
+      "engine": "floating-lantern-loy-krathong@1",
+      "small": {
+        "file": "floating-lantern-loy-krathong-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "6d73d8be32045123e31dfb018f39c5a3489aad69da52c3076b1fc5848fb69704",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "floating-lantern-loy-krathong-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "67e2e316ccf2979dec9ef40e72e5c10edf056456ca446c928b30e511f2cb9a07",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "floating-lantern-loy-krathong-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "03ea13a93e6daf0f359ee5ac7c36d3360dbaece7991257398f2047a3aeb42b39",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "omamori-cycle",
+      "engine": "omamori-cycle@1",
+      "small": {
+        "file": "omamori-cycle-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "ed875485f0f5f2202099687510e1ef3a0e585ac5175e60e86a7c53af8820d445",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "omamori-cycle-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e424e46793767a29db5aa5a6438dd5915a9f010d0bf0e40b991e50f9f49e3546",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "omamori-cycle-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "4ff5a4afabd7b89ca802cb6f1772bb091c3d47662df01377b19c2dac4c5fee0a",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "shrine-suzu-bell",
+      "engine": "shrine-suzu-bell@1",
+      "small": {
+        "file": "shrine-suzu-bell-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "7fb552ce2f54c0099ff932c3bc869fba95825781529084520208199f37f794a5",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "shrine-suzu-bell-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "b1f505aecfe1c5632c250e8d723c47e585678bc02a31e6695d7f7cbb16794627",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "shrine-suzu-bell-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "d5940368812f0b26f6b3cf0a8858040dbbafdcbdee5eecdf2ddb0c88c6c3522f",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "st-brigids-cross",
+      "engine": "st-brigids-cross@1",
+      "small": {
+        "file": "st-brigids-cross-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "ba4e1828e041d8d36f439922fac7024e5cddcc1947459484d00c1245e91a285d",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "st-brigids-cross-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e9b875ec705b6aad7cccf28932afb481670de106fea2307d5fd58238c20d4432",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "st-brigids-cross-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "b90cfe501768f343088b34b2d2fb01540d46e9f1e4b0ce673bb001004ea2dc02",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "bokjori",
+      "engine": "bokjori@1",
+      "small": {
+        "file": "bokjori-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "dbe04172e2d297a44394757427fdbf5e2ce50f090c85f52edecdaf6f44ec5243",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "bokjori-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "cd038cbadb3379a7a49f369706639ec2e66a2a06e129c99c0fed61a476bea3f6",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "bokjori-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "d8fd840817e3c9d6f29c2d29c7901a6c61b01edc8dacb1376771f073b6bd64c1",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "ema-votive-plaque",
+      "engine": "ema-votive-plaque@1",
+      "small": {
+        "file": "ema-votive-plaque-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "101ebc385cf220078dcb1ec0eb06fd035c6d110c5e508560b088889faf68cbbc",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "ema-votive-plaque-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "1033441cddf9416319c5a2e2f2758283537cdc78f231250cf230022657a531f9",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "ema-votive-plaque-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "d4349114a3b9a3848f09cb2d296dcf9e681f4510362d606f1b7e02ca008799ea",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "clootie-well-rag",
+      "engine": "clootie-well-rag@1",
+      "small": {
+        "file": "clootie-well-rag-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "fafe5bd15ecb8a4a0cb0b8ca7ad16d148a56f883c8cec5ba3d21a2001a2bc874",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "clootie-well-rag-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "458780aafbf3e3ac7d1ce5ec9344e37f2dc30714d4c12edc170318964e2f55ee",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "clootie-well-rag-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "f1de086bd915243dfc5fa1e7284cb7b997a33327c72eaf8f4dd4670cf72823df",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "diya-oil-lamp",
+      "engine": "diya-oil-lamp@1",
+      "small": {
+        "file": "diya-oil-lamp-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "16ef9d228f72615bb124913c96c1b3bb6120942e133651b859a34a3f62e4e29f",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "diya-oil-lamp-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "23662274f69c024313d341d7a60585ebb215c3734c13161108fb51ca0d36e1ed",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "diya-oil-lamp-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "f9eef47a762bf5f472e6b4c3c02bb7ba9a035386ba607e8408d3fadb3e324b8f",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "votive-candle-catholic",
+      "engine": "votive-candle-catholic@1",
+      "small": {
+        "file": "votive-candle-catholic-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "e614eadbb0fee2aeaac89ccc75c2cb977d620d72ee2f565f58673599e947ae74",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "votive-candle-catholic-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "99b8dac32d8ace8cbe5ed24a2ba22dcf6dde2e74e28b7d918840c23db58a5ae8",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "votive-candle-catholic-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "d98a53670b9418056cca5cf5347430f24c2952ce77220c756b000aa82b100a33",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "daruma-eye-painting",
+      "engine": "daruma-eye-painting@1",
+      "small": {
+        "file": "daruma-eye-painting-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "4189705632234777dd299681c246e10053014d0d8d287ad490b168a992e27281",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "daruma-eye-painting-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "023bccffcb2f76e58fca22db370bf3aa8e1598333eba75b68e9a3cd34d74224f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "daruma-eye-painting-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "51b1d819862b2fd0c20e9d7d913aaf4eaf7d2c674f0501e0cad295a03409d1e2",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "mizuhiki",
+      "engine": "mizuhiki@1",
+      "small": {
+        "file": "mizuhiki-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "67108aed9573dc9e24f05b1a41e7686fac777aca52ce247b7c44449f04c6ddd9",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "mizuhiki-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "0135fc7bc285de28b7e0ed51d82a40a07b4fba9708ec656d6164c6f77d13fb64",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "mizuhiki-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "72b51ca9d0717bbb643eb63af5c6575fc7dc3d3ef028192a8d56fd03edc42a87",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "milagros",
+      "engine": "milagros@1",
+      "small": {
+        "file": "milagros-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "3c64c2aeee0022c11c1fa1d956d278e7a0d5bbf6fcfed94b2575960de04a1de5",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "milagros-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "cb56c80c514587da97cbb879156e36d80f714a7cd0bea13fd09261b09dbd7296",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "milagros-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "5685f090de9438b39dab21a1397508a1bc3a3890af0f1c952add4b5059efbf67",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "phuang-malai",
+      "engine": "phuang-malai@1",
+      "small": {
+        "file": "phuang-malai-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "c83b39dff3034851f9004c631fe76201048a9df7ec6e296f6b06630a19c31b58",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "phuang-malai-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "becbfb3a3985a1a1bcfca14883868654df872917b8e36d1619380c1c049fa958",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "phuang-malai-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "751ccf052c8ed3c33a50f515be38aff016ad6185d7786870d6eeca3d78e5c3f5",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "woodfish",
       "engine": "woodfish@1",
@@ -9,7 +2185,7 @@
         "file": "woodfish-small.png",
         "width": 600,
         "height": 600,
-        "sha256": "2a53369279c6d8269653e7adb21cfd5a3bcd4a42bc0c2f5ab352956b93cd2cda",
+        "sha256": "33f03840466ad9825af2609501f9c98caffd4350125d8965e7b3501fb13bc54e",
         "webgl": true,
         "canvasWidth": 600,
         "canvasHeight": 600,
@@ -19,10 +2195,20 @@
         "file": "woodfish-medium.png",
         "width": 1280,
         "height": 600,
-        "sha256": "f63e7e00260415f60ac70b9a11df3244992bc9f9c4698a47f39e523f9795abc1",
+        "sha256": "aa95ea245912b8fe1ad4f0247ff1100eb973e09caaedaa2d232f755103da4092",
         "webgl": true,
         "canvasWidth": 1280,
         "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "woodfish-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "215122a5d4f133a509436aadd758e7a394c210afb65f22ac43614ecf3691faa8",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
         "progress": 0
       }
     },
@@ -33,7 +2219,7 @@
         "file": "celtic-folk-spring-small.png",
         "width": 600,
         "height": 600,
-        "sha256": "73dc6fd7a62f92a984b3f97feac1db9de9d1ecc933d808fceb34e0feeca21f48",
+        "sha256": "a586f62a43303be88a54af3aa854af589eab275f419565a1832a94fcb2b425c4",
         "webgl": true,
         "canvasWidth": 600,
         "canvasHeight": 600,
@@ -43,10 +2229,20 @@
         "file": "celtic-folk-spring-medium.png",
         "width": 1280,
         "height": 600,
-        "sha256": "c966d8f3de4fff466a049fe519dec24607da43d2a52c97c33acdd3faeb1e4f15",
+        "sha256": "19a8473db203bfdf8c49ededff7b238a32a1a1070ad148c0eb1c2303f8e060ec",
         "webgl": true,
         "canvasWidth": 1280,
         "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "celtic-folk-spring-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "7f160425406b736af979a58acd0828579cff1c72320950afc9b3ab3d18bdd4a9",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
         "progress": 0
       }
     },
@@ -57,7 +2253,7 @@
         "file": "theravada-water-small.png",
         "width": 600,
         "height": 600,
-        "sha256": "b64e9f55e81e2cb9522541fe94f1081bd5d21bdf639583a08e380921e4404b4a",
+        "sha256": "328cc43b241c0b6688b8059a8d827668afb2fa3a703f60d2dc29cfc3c14d98b7",
         "webgl": true,
         "canvasWidth": 600,
         "canvasHeight": 600,
@@ -67,10 +2263,20 @@
         "file": "theravada-water-medium.png",
         "width": 1280,
         "height": 600,
-        "sha256": "9c1922f84394743d735be3504a841ff5dbd39c4c4ee0ad3002d6cb2b9d65641f",
+        "sha256": "a8adbe1826b2854229ba7d104e222571c62fcb4c4621c64be8c8c0f5c2f4516d",
         "webgl": true,
         "canvasWidth": 1280,
         "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "theravada-water-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "0af704f538161cd013f2cae78f2e516849573432a1aaddcbc9e412578274e34c",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
         "progress": 0
       }
     },
@@ -81,7 +2287,7 @@
         "file": "tanzaku-tanabata-small.png",
         "width": 600,
         "height": 600,
-        "sha256": "8a02a0b4951528e2de4bcd519d0fd4dddfc2c4d5b5a3b985be2c0cc6f2199bf3",
+        "sha256": "c5be713b43f4a9c28559d41c0c98cee15459c2a33e0d55e0ff2cbb23195289a7",
         "webgl": true,
         "canvasWidth": 600,
         "canvasHeight": 600,
@@ -91,10 +2297,20 @@
         "file": "tanzaku-tanabata-medium.png",
         "width": 1280,
         "height": 600,
-        "sha256": "c1bcb4ade05c239ef74e63bf368d8daab405b45a5cdcf287327b316cfb257544",
+        "sha256": "3a7e70871194f9d038edb3aa6ccea6ecf83541aee9fc734071bec5fbc121188e",
         "webgl": true,
         "canvasWidth": 1280,
         "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "tanzaku-tanabata-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "907d3b0f2e8f01396d3d7644b9b97097cbd462d4f633f6d7123d1f54fecca755",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
         "progress": 0
       }
     },
@@ -105,7 +2321,7 @@
         "file": "yeondeunghoe-small.png",
         "width": 600,
         "height": 600,
-        "sha256": "140f2aca2ecdb60e27b37ae7b263a2b5011792b3d4ff497ee53ba42ee8e76e84",
+        "sha256": "c378efde93915096efca8e2f3116246e4f2aac5b7c23f4de70910f9d9d9f7f14",
         "webgl": true,
         "canvasWidth": 600,
         "canvasHeight": 600,
@@ -115,10 +2331,20 @@
         "file": "yeondeunghoe-medium.png",
         "width": 1280,
         "height": 600,
-        "sha256": "a8c6d7047368c75fcf34c9dc1b8baaa774e69e95e624ee732da808db38132fa4",
+        "sha256": "1c9a1af9dd2cee37cdd680d8d7a7ccbdfd72456940ece08a4c06fad3299ac1e6",
         "webgl": true,
         "canvasWidth": 1280,
         "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "yeondeunghoe-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "82ea80ed439b536dee96c76655fd5e6e2b42c1d23e7508ea5f1fde5cac9c2297",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
         "progress": 0
       }
     },
@@ -129,7 +2355,7 @@
         "file": "furin-wind-chime-small.png",
         "width": 600,
         "height": 600,
-        "sha256": "0927859b243bcfd892d1e26ba3993a0bb45cae7fb4ec93d81dca1b6fd88603c9",
+        "sha256": "42120f739fbe2d219dfc614051e07a1d7eed0e7b4aee5e38da1efb67bc84c749",
         "webgl": true,
         "canvasWidth": 600,
         "canvasHeight": 600,
@@ -139,10 +2365,20 @@
         "file": "furin-wind-chime-medium.png",
         "width": 1280,
         "height": 600,
-        "sha256": "bde8f49a3f4444cf4103a64a86bfa2cc980c4449461fec59a35cacfa5b634aa4",
+        "sha256": "ce416b0c4b89a087ee41d2f901d44d754b835f74ab457b08b9c45b3cfab5037d",
         "webgl": true,
         "canvasWidth": 1280,
         "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "furin-wind-chime-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "6616a89850872677757f8389c81a7df4251123e669f8c172f563386b8932ec0b",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
         "progress": 0
       }
     },
@@ -153,7 +2389,7 @@
         "file": "shinto-torii-small.png",
         "width": 600,
         "height": 600,
-        "sha256": "b7c1cd527d71d7ded8080846b1ced3fc9dec021534a9dccda71416cee95ca44f",
+        "sha256": "56ddcfc6ef48e9cc878f555ab4e228ee4f4778e3c2064973b1d301ce09ea7799",
         "webgl": true,
         "canvasWidth": 600,
         "canvasHeight": 600,
@@ -163,10 +2399,20 @@
         "file": "shinto-torii-medium.png",
         "width": 1280,
         "height": 600,
-        "sha256": "512eb05a3850c79e5b49b59ad79781989100cfc0d1bf574db3de17a8181d7037",
+        "sha256": "fd7f7406110cc8f709af934d9e3316db0c65bd04d6e9e7a2e0ceb5451a62362f",
         "webgl": true,
         "canvasWidth": 1280,
         "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "shinto-torii-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "0fc344a7531fc8d24ec302f82b038fe99148db84e0ed6968119a023860f519ad",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
         "progress": 0
       }
     },
@@ -177,7 +2423,7 @@
         "file": "tibetan-wheel-small.png",
         "width": 600,
         "height": 600,
-        "sha256": "c98ae6c65723e70fbb6c99ffb9207c14725b75eb81662ecdb3afb106fe372fd5",
+        "sha256": "fb4703c7a281ddff96de90ee66a057964162c0ceb2c30c8e206d6a1d6e586c8b",
         "webgl": true,
         "canvasWidth": 600,
         "canvasHeight": 600,
@@ -187,10 +2433,20 @@
         "file": "tibetan-wheel-medium.png",
         "width": 1280,
         "height": 600,
-        "sha256": "de7de62b7adfe43c4a497c07cdeacabdc1ec16d4c563c04772f063eda77f5d65",
+        "sha256": "aa3e29a2925f2abfa986c191fd91c140b053e6e1c05ea714d7499896cdc41690",
         "webgl": true,
         "canvasWidth": 1280,
         "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "tibetan-wheel-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "69f9810dfa8cf3b468ebe87882c2fd20ae9bb99edcb3d9e964e4e7559e13d8e4",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
         "progress": 0
       }
     },
@@ -201,7 +2457,7 @@
         "file": "slavic-wreath-small.png",
         "width": 600,
         "height": 600,
-        "sha256": "5e108697c56e39c94f47e2a75a1e371bd32a7b81267a312865e72c47d7f8eb4a",
+        "sha256": "5193e5cf4f513ca425ae2d83884c7cf3744cc0a5e2362faa583b08826fc8862c",
         "webgl": true,
         "canvasWidth": 600,
         "canvasHeight": 600,
@@ -211,10 +2467,20 @@
         "file": "slavic-wreath-medium.png",
         "width": 1280,
         "height": 600,
-        "sha256": "55d8a51faf15c3c762773a905e40395c05d0c0b16485ceacb25cc0603b2fe1ae",
+        "sha256": "9fe9f46826be9487ded2a4dbddb2717d2a583821f00d166367636ead895d1c5e",
         "webgl": true,
         "canvasWidth": 1280,
         "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "slavic-wreath-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "9af0939fd912d9a22ab09fb33a6642c54e687c3c371362fb5482b11831afffe6",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
         "progress": 0
       }
     },
@@ -225,7 +2491,7 @@
         "file": "crane-small.png",
         "width": 600,
         "height": 600,
-        "sha256": "9eb1597b1cdffe311fd2ecab9cf8b470919045f4a4e2833bf0f33a4faa4f99ff",
+        "sha256": "530e72547c296b58cee890c94ff5908853a74dbeb487229b39f11447507a9111",
         "webgl": true,
         "canvasWidth": 600,
         "canvasHeight": 600,
@@ -235,10 +2501,20 @@
         "file": "crane-medium.png",
         "width": 1280,
         "height": 600,
-        "sha256": "87e9624a1e9f65b716644d1331dd17ee772b4b3b14a6da76f44d191f083df598",
+        "sha256": "ab7c0b841e6b1de622b50965e1441bec6aadd9803fab430752179e02fd6a1765",
         "webgl": true,
         "canvasWidth": 1280,
         "canvasHeight": 600,
+        "progress": 1
+      },
+      "large": {
+        "file": "crane-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "436102195125e7e20175458669bec78011a23c9b13e7a82f47804428f4b404ef",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
         "progress": 1
       }
     },
@@ -249,7 +2525,7 @@
         "file": "lantern-small.png",
         "width": 600,
         "height": 600,
-        "sha256": "07173f2dddbdf234fd48f092d6e6ea7c6d4a580056b6cb787df0c7dd73a52968",
+        "sha256": "51bbe48cc8e3bcbb369fb31e33a650bf9a6d9489ffc9def273793f2776d6eb9f",
         "webgl": true,
         "canvasWidth": 600,
         "canvasHeight": 600,
@@ -259,10 +2535,20 @@
         "file": "lantern-medium.png",
         "width": 1280,
         "height": 600,
-        "sha256": "a49a1d8afd482d39a77d24baebc9ecd99c6320d96cf3772ba9877f12bc705dde",
+        "sha256": "feac4b5416890c86c22791b793f745f4b8faa5649f30458399bbb298b300ede8",
         "webgl": true,
         "canvasWidth": 1280,
         "canvasHeight": 600,
+        "progress": 1
+      },
+      "large": {
+        "file": "lantern-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8c41a322955dacae0cbfc56fca6d6c167ebfb44d6d3c5d567e420ad7d215ecbe",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
         "progress": 1
       }
     }

@@ -5,6 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
+import { builtInScenes } from '../packages/core/src/daily-scenes.ts';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const require = createRequire(import.meta.url);
 const { transformSync } = require('@babel/core');
@@ -41,7 +42,7 @@ function setup({ gate = Promise.resolve(), failOnce = false } = {}) {
   }
   return { ...compile(path.join(root, 'apps/mobile-expo/widget-images.ts')), files, copies };
 }
-test('copies both sizes to versioned App Group paths before returning, then reuses them', async () => {
+test('copies all three sizes to versioned App Group paths before returning, then reuses them', async () => {
   let release;
   const context = setup({ gate: new Promise(resolve => { release = resolve; }) });
   let complete = false;
@@ -50,13 +51,14 @@ test('copies both sizes to versioned App Group paths before returning, then reus
   assert.equal(complete, false);
   release();
   const paths = await pending;
-  assert.equal(Object.keys(paths).length, 12);
-  assert.equal(context.copies.length, 24);
+  assert.deepEqual(Object.keys(paths).sort(), [...builtInScenes.map(scene => scene.id), 'generic'].sort());
+  assert.equal(context.copies.length, (builtInScenes.length + 1) * 3);
   assert.match(paths.crane.small, /^file:\/\/\/group\/ExpoWidgets\/covers-[a-f0-9]+\/crane-small.png$/);
   assert.ok(paths.crane.medium.endsWith('crane-medium.png'));
+  assert.ok(paths.crane.large.endsWith('crane-large.png'));
   assert.equal([...context.files.keys()].filter(uri => uri.endsWith('.tmp')).length, 0);
   await context.prepareWidgetImages('file:///group/ExpoWidgets');
-  assert.equal(context.copies.length, 24);
+  assert.equal(context.copies.length, (builtInScenes.length + 1) * 3);
 });
 test('a failed copy leaves no partial final image and allows the next refresh to retry', async () => {
   const context = setup({ failOnce: true });
@@ -64,5 +66,5 @@ test('a failed copy leaves no partial final image and allows the next refresh to
   assert.equal(context.files.size, 0);
   const paths = await context.prepareWidgetImages('file:///group/ExpoWidgets');
   assert.ok(context.files.has(paths.generic.small));
-  assert.equal(context.files.size, 24);
+  assert.equal(context.files.size, (builtInScenes.length + 1) * 3);
 });

@@ -8,12 +8,8 @@
   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
     android:layout_gravity="bottom" android:gravity="bottom" android:orientation="horizontal"
     android:padding="10dp">
-    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-      android:layout_weight="1" android:layout_marginEnd="6dp"
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
       android:text="@string/blessing_widget_generic_title" android:textSize="13sp"
-      android:textStyle="bold" android:textColor="#FFFEF7" android:maxLines="3" android:ellipsize="end" />
-    <TextView android:layout_width="70dp" android:layout_height="30dp" android:gravity="center"
-      android:background="@drawable/blessing_widget_launch_button" android:text="@string/blessing_widget_launch"
-      android:textSize="10sp" android:textStyle="bold" android:textColor="#183B2E" android:maxLines="1" />
+      android:textStyle="bold" android:textColor="#FFFEF7" android:maxLines="2" android:ellipsize="end" />
   </LinearLayout>
 </FrameLayout>

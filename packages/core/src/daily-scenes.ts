@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "valencian-folding-fan",
   "mexican-tortilla-press",
   "ghanaian-oware",
   "chinese-rattle-drum",
@@ -95,6 +96,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "valencian-folding-fan", title: "折扇轻风", engine: "valencian-folding-fan@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "valencian-folding-fan",
+    narrative: "西班牙瓦伦西亚的折扇工艺，以木骨构成可开合的骨架，再配上布面。阿尔代亚的折扇博物馆保留着这门工艺的物件与制作工具。这里用一把素色折扇，徐徐展扇，轻摇一下，再收至半开。沿着共同的铆轴，看木骨与折褶把阳光分成细细的层次。",
+  },
   {
     id: "mexican-tortilla-press", title: "木压成圆", engine: "mexican-tortilla-press@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "mexican-tortilla-press",

@@ -113,6 +113,7 @@ describe("builtInScenes narratives", () => {
       "tibetan-wheel",
       "turkish-ebru-paper",
       "uzbek-clay-bowl",
+      "valencian-folding-fan",
       "venetian-glass-bead",
       "vietnamese-bamboo-dragonfly",
       "votive-candle-catholic",

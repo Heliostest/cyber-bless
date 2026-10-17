@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "c0e95ba1a958b0f88506f0a5f71743c12f6c817aa4e935bb0ae241f20cb8fc96",
+  "revision": "1ad37d74bbd36904178dd7c03983b7afff180c4db8e017597df7f90508996239",
   "scenes": [
+    {
+      "id": "valencian-folding-fan",
+      "engine": "valencian-folding-fan@1",
+      "small": {
+        "file": "valencian-folding-fan-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "95d4b725b788ad83a2a66b62a17faf9b6888414393728aef8343fa04d0722226",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "valencian-folding-fan-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "7de4def8c08b5c68222702766a7289fa46cc9431c18c8595d7f5ba6c696bb99f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "valencian-folding-fan-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "5cd7f80822d2e732128f849c2e129555bd472a0b596364e573c02db178ffb42d",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "mexican-tortilla-press",
       "engine": "mexican-tortilla-press@1",

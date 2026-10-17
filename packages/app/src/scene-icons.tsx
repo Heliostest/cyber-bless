@@ -42,6 +42,12 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'valencian-folding-fan': (<>
+    <path d="M32 51L7 22Q32 3 57 22Z" fill="#e9aa86" stroke="#b28a56" strokeWidth="2" strokeLinejoin="round"/>
+    <path d="M10 25Q32 9 54 25" fill="none" stroke="#6fa9a1" strokeWidth="4"/>
+    <path d="M32 51L15 22M32 51L24 17M32 51V15M32 51L40 17M32 51L49 22" stroke="#b28a56" strokeWidth="1.5"/>
+    <circle cx="32" cy="51" r="4" fill="#b99b53" stroke="#8c743b"/>
+  </>),
   'mexican-tortilla-press': (<>
     <path d="M10 39H52V51H10Z M11 14L15 10L49 27L45 32Z" fill="#d6a96b" stroke="#a17446" strokeWidth="2" strokeLinejoin="round" />
     <ellipse cx="31" cy="39" rx="14" ry="4" fill="#eed79f"/>

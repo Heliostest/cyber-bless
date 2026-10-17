@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "mexican-tortilla-press",
   "ghanaian-oware",
   "chinese-rattle-drum",
   "indian-charkha",
@@ -94,6 +95,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "mexican-tortilla-press", title: "木压成圆", engine: "mexican-tortilla-press@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "mexican-tortilla-press",
+    narrative: "墨西哥玉米饼的制作常用手动压具，将玉米面团夹在两层薄衬片之间，再靠上下压板和长柄压展。木制与金属压具都有使用。这里先合板，再压下长柄，最后松柄开盖，看看圆团慢慢铺展成薄薄的生饼。保留尚未揭膜的模样，把片刻专注留给木纹与面团的变化。",
+  },
   {
     id: "ghanaian-oware", title: "木窝播籽", engine: "ghanaian-oware@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "ghanaian-oware",

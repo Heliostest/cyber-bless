@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "e12720cb964b7e5782740459f638b484c272c0547480dc2e65c4cb69f1b81802",
+  "revision": "c0e95ba1a958b0f88506f0a5f71743c12f6c817aa4e935bb0ae241f20cb8fc96",
   "scenes": [
+    {
+      "id": "mexican-tortilla-press",
+      "engine": "mexican-tortilla-press@1",
+      "small": {
+        "file": "mexican-tortilla-press-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "37fdda9b500bd562d11227ece6830e6558db1fdf573eef35042c36032d7ccea8",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "mexican-tortilla-press-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "3609adb89264bbb13f6a3c2f2ead16315e43dc65b92b2925308fd44208d2ee63",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "mexican-tortilla-press-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "fd080beeb324ed05982bb7e98bdd908471f68df24d61a267dc0ab2e7397aba6b",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "ghanaian-oware",
       "engine": "ghanaian-oware@1",

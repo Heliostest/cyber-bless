@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "1ad37d74bbd36904178dd7c03983b7afff180c4db8e017597df7f90508996239",
+  "revision": "431698aa3f959c2fe11d2b0e67552236eb26e8862ead18034cd8dec9781d63da",
   "scenes": [
+    {
+      "id": "puerto-rican-guiro",
+      "engine": "puerto-rican-guiro@1",
+      "small": {
+        "file": "puerto-rican-guiro-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "9f03cb680a3319681d508318bb83d98e0575cbe5636071dffcc07aec61086df3",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "puerto-rican-guiro-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "5494d0f3f39c27030cb1ab21e2ca731b043d50aa1c22bdd7c20b1c666ab1ddd1",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "puerto-rican-guiro-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "589d2af00e55c8626a6401cbb448651dc301bea2226d6e9f5608cc6e84cac458",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "valencian-folding-fan",
       "engine": "valencian-folding-fan@1",

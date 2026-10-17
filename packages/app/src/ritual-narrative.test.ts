@@ -100,6 +100,7 @@ describe("builtInScenes narratives", () => {
       "phuang-malai",
       "polish-blessing-basket",
       "polish-paper-cut",
+      "puerto-rican-guiro",
       "purepecha-copper-bowl",
       "russian-matryoshka",
       "shinto-torii",

@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "puerto-rican-guiro",
   "valencian-folding-fan",
   "mexican-tortilla-press",
   "ghanaian-oware",
@@ -96,6 +97,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "puerto-rican-guiro", title: "瓜棱轻奏", engine: "puerto-rican-guiro@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "puerto-rican-guiro",
+    narrative: "刮瓜是波多黎各及加勒比地区可见的节奏乐器，以中空瓜壳和横向刻棱构成发声的表面，常用木棒或刮具沿棱摩擦。这里用一只素色瓜壳，沿纹路轻轻下刮、回刮，再把木棒移开。看圆润的瓜身、细细的横棱与中空口沿，把一小段节拍留在阳光里。",
+  },
   {
     id: "valencian-folding-fan", title: "折扇轻风", engine: "valencian-folding-fan@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "valencian-folding-fan",

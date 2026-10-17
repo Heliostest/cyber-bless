@@ -42,6 +42,13 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'puerto-rican-guiro': (<>
+    <path d="M22 8Q31 7 31 14L37 38Q39 55 24 57Q10 56 12 40L17 14Q17 8 22 8Z" fill="#d5aa62" stroke="#98713e" strokeWidth="2"/>
+    <ellipse cx="24" cy="10" rx="6" ry="3" fill="#77633e" stroke="#f0ddb0" strokeWidth="2"/>
+    <path d="M16 24L33 24M15 29H34M14 34H35M13 39H36M13 44H36M15 49H34" stroke="#b98b47" strokeWidth="2"/>
+    <path d="M34 36L54 22" stroke="#b98b57" strokeWidth="5" strokeLinecap="round"/>
+    <path d="M46 27L56 20" stroke="#98713e" strokeWidth="8" strokeLinecap="round"/>
+  </>),
   'valencian-folding-fan': (<>
     <path d="M32 51L7 22Q32 3 57 22Z" fill="#e9aa86" stroke="#b28a56" strokeWidth="2" strokeLinejoin="round"/>
     <path d="M10 25Q32 9 54 25" fill="none" stroke="#6fa9a1" strokeWidth="4"/>

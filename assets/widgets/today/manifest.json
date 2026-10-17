@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "9f4c41a7658a0fc9a89d6a6a4cca1f603d21fa4ab39b2f13b2ac7a45263853eb",
+  "revision": "e12720cb964b7e5782740459f638b484c272c0547480dc2e65c4cb69f1b81802",
   "scenes": [
+    {
+      "id": "ghanaian-oware",
+      "engine": "ghanaian-oware@1",
+      "small": {
+        "file": "ghanaian-oware-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "7a475ff44c04c31f72adda9807a5b61e5236e7d323417b92ecfcce29fff2301d",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "ghanaian-oware-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "9ef1e980b327fbfd38e92434046a951ceed06d92287c2cc566b13b2544b24fa5",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "ghanaian-oware-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "70c2118f622ac3a52f1d49c82730bb792aa417c596b395decc2c5efe94f1fc34",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "chinese-rattle-drum",
       "engine": "chinese-rattle-drum@1",

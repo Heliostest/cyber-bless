@@ -17,6 +17,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-diabolo', title: '空竹轻扬', traditionSlug: 'chinese-diabolo', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'chinese-tangram', title: '七巧归方', traditionSlug: 'chinese-tangram', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'indian-charkha', title: '棉线慢成', traditionSlug: 'indian-charkha-craft', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'german-nutcracker', title: '木偶开果', traditionSlug: 'erzgebirge-nutcracker-craft', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-molinillo', title: '木旋起沫', traditionSlug: 'molinillo-chocolate-craft', grade: 'C', sensitivity: '低', gestures: ['drag'] },
@@ -169,6 +170,7 @@ const IMPLEMENTED = new Set([
   'korean-yutnori',
   'chinese-diabolo',
   'chinese-tangram',
+  'ghanaian-oware',
   'chinese-rattle-drum',
   'japanese-kendama',
   'indian-charkha',
@@ -220,6 +222,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'ghanaian-oware': return import('./ghanaian-oware')
     case 'chinese-rattle-drum': return import('./chinese-rattle-drum')
     case 'japanese-kendama': return import('./japanese-kendama')
     case 'indian-charkha': return import('./indian-charkha')

@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "ghanaian-oware",
   "chinese-rattle-drum",
   "indian-charkha",
   "german-nutcracker",
@@ -93,6 +94,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "ghanaian-oware", title: "木窝播籽", engine: "ghanaian-oware@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "ghanaian-oware",
+    narrative: "Oware 是加纳阿坎语社群使用的游戏名称，也流传于西非与加勒比地区。常见棋盘有两行、每行六个木窝，以种子般的小棋子逐窝播撒。这里从每窝四粒的开局提起一窝，绕过行端，再沿另一行逐粒落下；只呈现一手播籽。看四粒种子改变木窝中的疏密，把片刻留给耐心与相聚。",
+  },
   {
     id: "chinese-rattle-drum", title: "拨浪轻响", engine: "chinese-rattle-drum@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-rattle-drum",

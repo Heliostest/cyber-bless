@@ -72,6 +72,7 @@ describe("builtInScenes narratives", () => {
       "floating-lantern-loy-krathong",
       "furin-wind-chime",
       "german-nutcracker",
+      "ghanaian-oware",
       "hongsheng-red-string",
       "hungarian-embroidery-hoop",
       "indian-charkha",

@@ -50,6 +50,7 @@ describe("builtInScenes narratives", () => {
       "bokjori",
       "breton-banner",
       "catalan-festival-giant",
+      "chinese-diabolo",
       "chinese-incense",
       "chinese-shadow-puppet",
       "chinese-suanpan",

@@ -40,6 +40,7 @@ export const BLESSING_SCENE_IDS = [
   "japanese-koinobori",
   "russian-matryoshka",
   "korean-yutnori",
+  "chinese-diabolo",
   "indian-charkha",
   "german-nutcracker",
   "mexican-molinillo",
@@ -90,6 +91,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "chinese-diabolo", title: "空竹轻扬", engine: "chinese-diabolo@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "chinese-diabolo",
+    narrative: "空竹是中国传统游艺中的竹木玩具。双轮空竹的两端各有一个中空圆盘，以木轴相连；两根竹杆牵着细绳，带动木轴旋转。这里先提杆起转，再展绳轻抛、接回，最后缓缓收低。看双轮在绳间轻盈来回，把片刻专注留给眼前的竹木与阳光。",
+  },
   {
     id: "korean-yutnori", title: "木柶行棋", engine: "korean-yutnori@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "korean-yutnori",

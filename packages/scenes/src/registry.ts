@@ -14,6 +14,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'japanese-koinobori', title: '鲤旗迎风', traditionSlug: 'japanese-koinobori', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'russian-matryoshka', title: '套娃相藏', traditionSlug: 'russian-matryoshka', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'korean-yutnori', title: '木柶行棋', traditionSlug: 'korean-yutnori', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'chinese-diabolo', title: '空竹轻扬', traditionSlug: 'chinese-diabolo', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'indian-charkha', title: '棉线慢成', traditionSlug: 'indian-charkha-craft', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'german-nutcracker', title: '木偶开果', traditionSlug: 'erzgebirge-nutcracker-craft', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-molinillo', title: '木旋起沫', traditionSlug: 'molinillo-chocolate-craft', grade: 'C', sensitivity: '低', gestures: ['drag'] },
@@ -164,6 +165,7 @@ const IMPLEMENTED = new Set([
   'japanese-koinobori',
   'russian-matryoshka',
   'korean-yutnori',
+  'chinese-diabolo',
   'japanese-kendama',
   'indian-charkha',
   'german-nutcracker',
@@ -212,6 +214,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'japanese-koinobori': return import('./japanese-koinobori')
     case 'russian-matryoshka': return import('./russian-matryoshka')
     case 'korean-yutnori': return import('./korean-yutnori')
+    case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'japanese-kendama': return import('./japanese-kendama')
     case 'indian-charkha': return import('./indian-charkha')
     case 'german-nutcracker': return import('./german-nutcracker')

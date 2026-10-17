@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "6fc7b505c3946354640a5e01365f6a461207befe808a75bdf1d7a911c910dc10",
+  "revision": "f0f473c089408a59a4309c8aa93d1b9a3b2d47e56d85744089b243e5603ffce7",
   "scenes": [
+    {
+      "id": "chinese-diabolo",
+      "engine": "chinese-diabolo@1",
+      "small": {
+        "file": "chinese-diabolo-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "975159075125a8675cfc39451f6ee0b96a68425f6cffefc43267de4bc975a772",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "chinese-diabolo-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "ad57c63d14928ba047a588cfd4676bab7a088f8ae1c93b648f057bd4a5ad545a",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "chinese-diabolo-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "4d7cbcee76892f359fbd03b2ab74e8c005f1b50a968a7a312c76b74cae4650e8",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "korean-yutnori",
       "engine": "korean-yutnori@1",

@@ -74,6 +74,7 @@ describe("scene placement", () => {
   it.each([
     ["malawi-sansi", "mbira-sansi-craft", false],
     ["japanese-kendama", "japanese-kendama-craft", false],
+    ["japanese-koinobori", "japanese-koinobori", false],
     ["indian-charkha", "indian-charkha-craft", false],
     ["german-nutcracker", "erzgebirge-nutcracker-craft", false],
     ["mexican-molinillo", "molinillo-chocolate-craft", false],
@@ -153,6 +154,7 @@ describe("scene placement", () => {
       "venetian-glass-bead",
       "malawi-sansi",
       "japanese-kendama",
+      "japanese-koinobori",
       "indian-charkha",
       "german-nutcracker",
       "mexican-molinillo",

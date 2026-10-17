@@ -37,6 +37,7 @@ export const BLESSING_SCENE_IDS = [
   "venetian-glass-bead",
   "malawi-sansi",
   "japanese-kendama",
+  "japanese-koinobori",
   "indian-charkha",
   "german-nutcracker",
   "mexican-molinillo",
@@ -87,6 +88,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "japanese-koinobori", title: "鲤旗迎风", engine: "japanese-koinobori@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "japanese-koinobori",
+    narrative: "鲤鱼形的布旗是日本儿童节前后的春日风景，人们借它寄托对孩子成长的美好祝愿。鲤旗的颜色、数量和展示方式也在变化。这里展开一尾原创布鲤，牵绳升起，再把绳端挂稳，看它张口随风轻摆。这是简化的当代欣赏练习，不代表完整传统陈设或实际升挂教学。",
+  },
   {
     id: "japanese-kendama", title: "剑玉轻接", engine: "japanese-kendama@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "japanese-kendama-craft",

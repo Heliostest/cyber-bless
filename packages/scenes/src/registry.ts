@@ -11,6 +11,7 @@ export const PRODUCT_ORIGINAL = 'product-original'
 export const sceneRegistry: SceneMeta[] = [
   { id: 'malawi-sansi', title: '铁舌轻鸣', traditionSlug: 'mbira-sansi-craft', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'japanese-kendama', title: '剑玉轻接', traditionSlug: 'japanese-kendama-craft', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'japanese-koinobori', title: '鲤旗迎风', traditionSlug: 'japanese-koinobori', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'indian-charkha', title: '棉线慢成', traditionSlug: 'indian-charkha-craft', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'german-nutcracker', title: '木偶开果', traditionSlug: 'erzgebirge-nutcracker-craft', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-molinillo', title: '木旋起沫', traditionSlug: 'molinillo-chocolate-craft', grade: 'C', sensitivity: '低', gestures: ['drag'] },
@@ -158,6 +159,7 @@ export const sceneRegistry: SceneMeta[] = [
 
 const IMPLEMENTED = new Set([
   'malawi-sansi',
+  'japanese-koinobori',
   'japanese-kendama',
   'indian-charkha',
   'german-nutcracker',
@@ -203,6 +205,7 @@ export function isSceneImplemented(id: string): boolean {
 export async function loadScene(id: string): Promise<SceneModule> {
   switch (id) {
     case 'malawi-sansi': return import('./malawi-sansi')
+    case 'japanese-koinobori': return import('./japanese-koinobori')
     case 'japanese-kendama': return import('./japanese-kendama')
     case 'indian-charkha': return import('./indian-charkha')
     case 'german-nutcracker': return import('./german-nutcracker')

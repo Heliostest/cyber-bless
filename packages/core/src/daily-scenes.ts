@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "czech-wooden-ratchet",
   "puerto-rican-guiro",
   "valencian-folding-fan",
   "mexican-tortilla-press",
@@ -97,6 +98,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "czech-wooden-ratchet", title: "木齿轻转", engine: "czech-wooden-ratchet@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "czech-wooden-ratchet",
+    narrative: "捷克的春季民俗中可见木制棘轮响器，转动木框时，轮齿依次带过弹性的木舌，留下连续的轻响。这类响器也见于欧洲更广的地区。这里用一只素色木响器，沿握柄慢慢转过一圈，看浅色木舌随齿沿弯曲、回落，把木头的一小段节奏留在阳光里。",
+  },
   {
     id: "puerto-rican-guiro", title: "瓜棱轻奏", engine: "puerto-rican-guiro@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "puerto-rican-guiro",

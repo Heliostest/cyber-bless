@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "431698aa3f959c2fe11d2b0e67552236eb26e8862ead18034cd8dec9781d63da",
+  "revision": "90774725acf8980d93c74ba08bd5a140146959d166fbafd523c5ff026c3dee59",
   "scenes": [
+    {
+      "id": "czech-wooden-ratchet",
+      "engine": "czech-wooden-ratchet@1",
+      "small": {
+        "file": "czech-wooden-ratchet-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "98b205f133cb747739ab4b86503d50f3c056499c7524a561513c1a72bc081447",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "czech-wooden-ratchet-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "adf3df06d1f4a5877292a6b5f97ae21bf058db209ea338b75c850cf7cee0fb2f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "czech-wooden-ratchet-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "c6ff7dc93a826a3dc5f1d1a9e6a3a4acdf3f6ee70693072e488f3834d8710af6",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "puerto-rican-guiro",
       "engine": "puerto-rican-guiro@1",

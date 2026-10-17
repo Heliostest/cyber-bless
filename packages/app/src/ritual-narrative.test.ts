@@ -62,6 +62,7 @@ describe("builtInScenes narratives", () => {
       "croatian-licitar-heart",
       "czech-bead-star",
       "czech-pilgrim-journal",
+      "czech-wooden-ratchet",
       "dalarna-wooden-horse",
       "daruma-eye-painting",
       "diya-oil-lamp",

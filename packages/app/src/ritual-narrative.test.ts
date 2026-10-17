@@ -77,6 +77,7 @@ describe("builtInScenes narratives", () => {
       "japanese-kendama",
       "japanese-koinobori",
       "korean-bojagi-wrap",
+      "korean-yutnori",
       "lantern",
       "lithuanian-straw-garden",
       "malawi-sansi",

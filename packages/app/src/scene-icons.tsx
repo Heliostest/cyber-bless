@@ -42,6 +42,13 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'korean-yutnori': (<>
+    <path d="M7 5h40v31H7Z" fill="#d6e5dc" stroke="#618b7b" strokeWidth={1.3}/>
+    <path d="M13 10h28v21H13Zm0 0 28 21m0-21L13 31" fill="none" stroke="#287680" strokeWidth={1.2}/>
+    {[ [13,10],[27,10],[41,10],[13,20],[27,20],[41,20],[13,31],[27,31],[41,31] ].map(([cx,cy],i)=><circle key={i} cx={cx} cy={cy} r={2.4} fill="#f7e2b4" stroke="#287680"/>)}
+    <circle cx={41} cy={25} r={4} fill="#379cb2" stroke="#287680"/>
+    {[10,20,30,40].map((x,i)=><path key={i} d={`M${x} 40q3-3 6 0v10h-6Z`} fill={i%2?'#d6a15d':'#f2d197'} stroke="#a3693b" strokeWidth={1.1}/>)}
+  </>),
   'russian-matryoshka': (<>
     <path d="M22 5c-8 0-10 9-8 14-5 5-8 11-8 20 0 8 31 8 31 0 0-9-3-15-8-20 3-5 1-14-7-14Z" fill="#368c91" stroke="#436e70" strokeWidth={1.3}/>
     <path d="M14 19C8 1 34 0 29 19l-7 8Z" fill="#ca644b"/>

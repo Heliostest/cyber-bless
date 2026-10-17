@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "348dff70523cff8d6e322615ec52a5a9e903c6741313a8bafb5a25e2617465ed",
+  "revision": "6fc7b505c3946354640a5e01365f6a461207befe808a75bdf1d7a911c910dc10",
   "scenes": [
+    {
+      "id": "korean-yutnori",
+      "engine": "korean-yutnori@1",
+      "small": {
+        "file": "korean-yutnori-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "859a98315e0d5f457d0dedfd329d2222cb74e37475eb738c00210331530c9073",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "korean-yutnori-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "f972ec25205065ce72fc0d399e9abf8bbe39a86eff18c7c313396cecd6d36abe",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "korean-yutnori-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "c47d80392c323e4b61337267dcb38773fe34383a2c938d83391c1c923f7a1299",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "russian-matryoshka",
       "engine": "russian-matryoshka@1",

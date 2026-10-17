@@ -42,6 +42,11 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'chinese-rattle-drum': (<>
+    <path d="M27 30v18" stroke="#cc9a5d" strokeWidth={5} strokeLinecap="round"/><path d="M27 39v7" stroke="#3b8f89" strokeWidth={6} strokeLinecap="round"/>
+    <circle cx={27} cy={20} r={15} fill="#f1deb3" stroke="#ca7052" strokeWidth={3}/><circle cx={27} cy={20} r={6} fill="none" stroke="#3b8f89" strokeWidth={1.6}/>
+    <path d="M12 20 6 30m36-10 6 10" stroke="#b8a36f" strokeWidth={1.5}/><circle cx={6} cy={31} r={4} fill="#579bb5"/><circle cx={48} cy={31} r={4} fill="#d69b50"/>
+  </>),
   'chinese-tangram': (<>
     <path d="M7 7h40L27 27Z" fill="#d77759"/><path d="M7 7v40l20-20Z" fill="#e2b955"/>
     <path d="m47 47-20 0 20-20Z" fill="#58a397"/><path d="m27 27 10-10v20Z" fill="#74acc0"/>

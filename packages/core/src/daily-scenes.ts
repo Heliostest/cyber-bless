@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "chinese-rattle-drum",
   "indian-charkha",
   "german-nutcracker",
   "mexican-molinillo",
@@ -92,6 +93,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "chinese-rattle-drum", title: "拨浪轻响", engine: "chinese-rattle-drum@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "chinese-rattle-drum",
+    narrative: "拨浪鼓是一种带木柄的双面小鼓，两侧系着细绳与木珠。来回转动木柄，木珠便随绳绕向鼓面，发出连续的轻响。小巧的单鼓也作为民间玩具和招徕声响出现在日常生活里。这里向右转柄、向左回转，再慢慢收低，让两枚木珠垂回鼓旁。看浅木、鼓皮和细绳一起动起来，把清脆的一刻轻轻留住。",
+  },
   {
     id: "chinese-tangram", title: "七巧归方", engine: "chinese-tangram@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-tangram",

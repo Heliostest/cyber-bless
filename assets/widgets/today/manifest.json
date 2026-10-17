@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "a16b10851a341b13e8b502f10d35ced874c68f55b6ea86f18922a59bbe258930",
+  "revision": "9f4c41a7658a0fc9a89d6a6a4cca1f603d21fa4ab39b2f13b2ac7a45263853eb",
   "scenes": [
+    {
+      "id": "chinese-rattle-drum",
+      "engine": "chinese-rattle-drum@1",
+      "small": {
+        "file": "chinese-rattle-drum-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "8600f46e7152013c6f6fd9afdb3ccad4a2d5157c151c8815975a3cf2943ae2da",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "chinese-rattle-drum-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e04fbb58fe755ea402e8e1bfb2c1bbfb1ca0db21876186a6308aacda03e83b4d",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "chinese-rattle-drum-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "854c5f0a1c0e8f85e1a15ad072cff3ab3c2ca6c5c981dcdb2726a2f985430ebd",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "chinese-tangram",
       "engine": "chinese-tangram@1",

@@ -3,7 +3,7 @@ import { Directory, File } from 'expo-file-system';
 import { widgetPreviewAssets } from './widget-preview-assets';
 import manifest from '../../assets/widgets/today/manifest.json';
 
-export type WidgetCoverPaths = Record<string, { small: string; medium: string }>;
+export type WidgetCoverPaths = Record<string, { small: string; medium: string; large: string }>;
 const pending = new Map<string, Promise<WidgetCoverPaths>>();
 /** Images must exist in the App Group before any timeline can reference them. */
 export function prepareWidgetImages(group: string): Promise<WidgetCoverPaths> {
@@ -14,8 +14,8 @@ export function prepareWidgetImages(group: string): Promise<WidgetCoverPaths> {
     directory.create({ intermediates: true, idempotent: true });
     const paths: WidgetCoverPaths = {};
     for (const [id, sizes] of Object.entries(widgetPreviewAssets)) {
-      paths[id] = { small: '', medium: '' };
-      for (const size of ['small', 'medium'] as const) {
+      paths[id] = { small: '', medium: '', large: '' };
+      for (const size of ['small', 'medium', 'large'] as const) {
         const destination = new File(directory, `${id}-${size}.png`);
         if (!destination.exists || !destination.size) {
           const asset = await Asset.fromModule(sizes[size]).downloadAsync();

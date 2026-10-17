@@ -18,7 +18,7 @@ async function publish(snapshot: WidgetSnapshotV1) {
     const images = await prepareWidgetImages(widgetsDirectory);
     iosWidget.updateTimeline(widgetTimeline(snapshot, new Date()).map(entry => {
       const cover = images[entry.props.sceneId ?? 'generic'] ?? images.generic;
-      return { ...entry, props: { ...entry.props, previewSmall: cover.small, previewMedium: cover.medium } };
+      return { ...entry, props: { ...entry.props, previewSmall: cover.small, previewMedium: cover.medium, previewLarge: cover.large } };
     }));
   } else if (Platform.OS === 'android') {
     const native = requireOptionalNativeModule<{ publishSnapshot(raw: string): Promise<void> }>('BlessingWidgets');

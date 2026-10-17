@@ -61,7 +61,8 @@
                 "contentMarginsDisabled": true,
                 "supportedFamilies": [
                   "systemSmall",
-                  "systemMedium"
+                  "systemMedium",
+                  "systemLarge"
                 ]
               }
             }

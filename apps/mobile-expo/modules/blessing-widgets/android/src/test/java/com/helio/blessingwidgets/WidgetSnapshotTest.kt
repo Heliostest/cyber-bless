@@ -72,6 +72,8 @@ class WidgetSnapshotTest {
       Triple("crane", "折一只纸鹤", "wish"),
       Triple("lantern", "月下一灯", "wish"),
       Triple("slavic-wreath", "火边花环", "wish"),
+      Triple("japanese-koinobori", "鲤旗迎风", "blessing"),
+      Triple("peruvian-engraved-gourd", "葫芦刻光", "wish"),
     )
     for ((id, title, category) in approved) {
       val json = snapshot()
@@ -84,6 +86,25 @@ class WidgetSnapshotTest {
       val selected = WidgetSnapshot.parse(json.toString())?.select("2026-10-11")
       assertNotNull("Missing native whitelist metadata for $id", selected)
       assertEquals(id, selected!!.sceneId)
+    }
+  }
+
+  @Test fun nativeValidationAcceptsTheCompleteSharedPublicCatalog() {
+    val raw = javaClass.getResourceAsStream("/widget-catalog.json")!!.bufferedReader().use { it.readText() }
+    val catalog = JSONArray(raw)
+    assertEquals(catalog.length(), WidgetSnapshot.scenes.size)
+    for (index in 0 until catalog.length()) {
+      val scene = catalog.getJSONObject(index)
+      val id = scene.getString("id")
+      val json = snapshot()
+      val days = json.getJSONArray("days")
+      for (dayIndex in 0 until days.length()) {
+        val day = days.getJSONObject(dayIndex)
+        day.put("sceneId", id).put("artKey", id).put("title", scene.getString("title"))
+          .put("category", scene.getString("category"))
+          .put("deepLink", "cyber-bless://widget/today?v=1&day=${day.getString("day")}&scene=$id")
+      }
+      assertEquals(id, WidgetSnapshot.parse(json.toString())?.select("2026-10-11")?.sceneId)
     }
   }
 

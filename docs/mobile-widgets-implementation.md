@@ -1,5 +1,25 @@
 # 首版“今日仪式”小组件实现与本地验证
 
+## 2026-10-17：整卡进入与大尺寸
+
+- 所有尺寸移除右下角按钮，只在左下保留名称。iOS 根视图的 `widgetURL` 与 Android 根卡片的显式 Activity Intent 让整张卡片打开对应场景；已有链接校验、过期回退和编辑保护继续生效。
+- iOS 支持 `systemSmall`、`systemMedium`、`systemLarge`。Android 保留原 provider，支持水平和垂直调整，以约 140×140、300×140、300×300 dp 的响应布局对应 2×2、4×2、4×4；实际格数和可用面积由桌面启动器决定。
+- 大尺寸使用单独从真实 Three.js 场景渲染的 1200×1200 PNG，不裁用宽卡预览。现有 600×600 和 1280×600 预览也按当前目录重新生成。当前 75 个内置场景加公共兜底，各有三种尺寸，共 228 张图片。
+- `mobile:widgets:render` 同时生成 iOS 静态资源导入表与 Android 公共元数据／图片资源表，避免新增场景后原生白名单继续停留在旧目录。默认使用 SwiftShader；本地 Windows GPU 可通过 `$env:WBR_WIDGET_GPU='1'` 选择 D3D11。
+- iOS 图片桥等待三种尺寸全部复制完成后再发布时间线，离线导出校验覆盖三种尺寸的全部图片。Android 不同尺寸都使用同一套日期选择与深链。
+
+本轮本地验证：
+
+- 全量 `npm test`：3579 项通过。默认高并发运行时，`korean-bojagi-wrap` 的完整拖动路径用例触及 5 秒超时；该用例独立运行通过，限制 Vitest 为 4 个 worker 后全套通过，未修改场景代码或超时阈值。
+- `npm run mobile:widgets:test`：core 8 项、runtime 5 项、应用导航 5 项及 Node 专项 15 项通过。覆盖三种 iOS 布局、整卡深链、旧时间线的大图回退、图片复制屏障、75 个场景和公共兜底的三尺寸 PNG 哈希与两端字节一致性。
+- `$env:EXPO_OFFLINE='1'; npm run mobile:verify`：TypeScript、8 项移动打包检查、Android／iOS production JS 与 DOM 离线导出通过；核对 14 个应用离线素材和 iOS 全部 228 张小组件封面。在线版本检查提示 SDK 57 有新补丁，本轮按锁定 Expo 57.0.27 自带的 `bundledNativeModules.json` 校验，未升级依赖或改动锁文件。
+- 在原有隔离 Expo Android 项目中同步本轮模块源码，执行 `:blessing-widgets:compileDebugKotlin :blessing-widgets:testDebugUnitTest`：`BUILD SUCCESSFUL`，11 项 JUnit 测试通过，包含三尺寸选图、75 个公共场景的原生验证和原有缓存／日期边界测试。
+- Windows 本轮未运行 iOS 原生编译或真机桌面验收，未生成新版安装包。Android 新增高度调整能力与 iOS 新增系统尺寸都需要重建并安装原生包；安装后打开应用一次，再添加或调整组件。Android 长按已有组件调整至 4×4；iOS 在组件选择器选择大号。
+
+平台尺寸依据：[Glance 响应布局](https://developer.android.com/develop/ui/compose/glance/build-ui)、[Android provider 尺寸与调整属性](https://developer.android.com/develop/ui/compose/glance/create-app-widget)、[WidgetKit systemLarge](https://developer.apple.com/documentation/widgetkit/widgetfamily/systemlarge)。
+
+下面记录 2026-10-11 首版的实现和验证；尺寸与按钮行为以上述更新为准。本轮不进行云构建或发布。
+
 日期：2026-10-11。按 [实施评估](mobile-widgets.md) 的推荐方案实现，基线为 `0313ca98a90c496ada6e7472cabf42542c21ae3c`，工作分支为 `codex/today-widgets`。本轮完成源代码和可运行的本地检查；没有云构建、上传、证书／provisioning profile 操作或发布。
 
 ## 已实现的行为

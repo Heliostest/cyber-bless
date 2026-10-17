@@ -24,17 +24,13 @@ import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
-import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.ContentScale
-import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
-import androidx.glance.layout.height
 import androidx.glance.layout.padding
-import androidx.glance.layout.width
 import androidx.glance.semantics.contentDescription
 import androidx.glance.semantics.semantics
 import androidx.glance.text.FontWeight
@@ -46,7 +42,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class TodayRitualWidget : GlanceAppWidget() {
-  override val sizeMode = SizeMode.Responsive(setOf(DpSize(140.dp, 140.dp), DpSize(300.dp, 140.dp)))
+  override val sizeMode = SizeMode.Responsive(setOf(
+    DpSize(140.dp, 140.dp), DpSize(300.dp, 140.dp), DpSize(300.dp, 300.dp),
+  ))
   override val stateDefinition: GlanceStateDefinition<*>? = null
 
   override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -80,55 +78,30 @@ private fun activityIntent(context: Context, entry: WidgetDay?) = Intent(Intent.
 }
 
 private val coverTitle = ColorProvider(Color(0xFFFFFEF7))
-private val buttonInk = ColorProvider(Color(0xFF183B2E))
 
 @Composable
 private fun TodayCard(day: String, entry: WidgetDay?, intent: Intent) {
-  val wide = LocalSize.current.width >= 300.dp
+  val size = widgetCoverSize(LocalSize.current.width.value, LocalSize.current.height.value)
+  val large = size == WidgetCoverSize.LARGE
+  val compact = size == WidgetCoverSize.SMALL
   val title = entry?.title ?: WidgetSnapshot.GENERIC_TITLE
   val launch = actionStartActivity(intent)
   Box(
     modifier = GlanceModifier.fillMaxSize()
-      .background(ImageProvider(coverResource(entry?.artKey, wide)), contentScale = ContentScale.Crop)
+      .background(ImageProvider(WidgetCatalog.cover(entry?.artKey, size)), contentScale = ContentScale.Crop)
       .cornerRadius(20.dp).clickable(launch)
       .semantics { contentDescription = if (day.isEmpty()) title else "$day，$title" },
   ) {
     // Native drawable preserves text contrast without tinting the scene's central artwork.
     Box(modifier = GlanceModifier.fillMaxSize()
       .background(ImageProvider(R.drawable.blessing_widget_cover_scrim))) {}
-    Column(modifier = GlanceModifier.fillMaxSize().padding(if (wide) 14.dp else 10.dp)) {
+    Column(modifier = GlanceModifier.fillMaxSize().padding(if (large) 18.dp else if (compact) 10.dp else 14.dp)) {
       Spacer(GlanceModifier.defaultWeight())
-      Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-        Text(title, modifier = GlanceModifier.defaultWeight(),
-          style = TextStyle(color = coverTitle, fontSize = if (wide) 18.sp else 13.sp,
-            fontWeight = FontWeight.Bold), maxLines = if (wide) 2 else 3)
-        Spacer(GlanceModifier.width(if (wide) 12.dp else 6.dp))
-        Box(modifier = GlanceModifier.width(if (wide) 92.dp else 70.dp)
-          .height(if (wide) 34.dp else 30.dp)
-          .background(ImageProvider(R.drawable.blessing_widget_launch_button))
-          .clickable(launch).semantics { contentDescription = "进入仪式：$title" }
-          .padding(horizontal = 6.dp), contentAlignment = Alignment.Center) {
-          Text("进入仪式 ↗", style = TextStyle(color = buttonInk,
-            fontSize = if (wide) 12.sp else 10.sp, fontWeight = FontWeight.Bold), maxLines = 1)
-        }
-      }
+      Text(title, modifier = GlanceModifier.fillMaxWidth(),
+        style = TextStyle(color = coverTitle, fontSize = if (large) 22.sp else if (compact) 14.sp else 18.sp,
+          fontWeight = FontWeight.Bold), maxLines = 2)
     }
   }
-}
-
-private fun coverResource(key: String?, wide: Boolean): Int = when (key) {
-  "woodfish" -> if (wide) R.drawable.blessing_preview_woodfish_medium else R.drawable.blessing_preview_woodfish_small
-  "furin-wind-chime" -> if (wide) R.drawable.blessing_preview_furin_wind_chime_medium else R.drawable.blessing_preview_furin_wind_chime_small
-  "shinto-torii" -> if (wide) R.drawable.blessing_preview_shinto_torii_medium else R.drawable.blessing_preview_shinto_torii_small
-  "tibetan-wheel" -> if (wide) R.drawable.blessing_preview_tibetan_wheel_medium else R.drawable.blessing_preview_tibetan_wheel_small
-  "celtic-folk-spring" -> if (wide) R.drawable.blessing_preview_celtic_folk_spring_medium else R.drawable.blessing_preview_celtic_folk_spring_small
-  "theravada-water" -> if (wide) R.drawable.blessing_preview_theravada_water_medium else R.drawable.blessing_preview_theravada_water_small
-  "tanzaku-tanabata" -> if (wide) R.drawable.blessing_preview_tanzaku_tanabata_medium else R.drawable.blessing_preview_tanzaku_tanabata_small
-  "yeondeunghoe" -> if (wide) R.drawable.blessing_preview_yeondeunghoe_medium else R.drawable.blessing_preview_yeondeunghoe_small
-  "crane" -> if (wide) R.drawable.blessing_preview_crane_medium else R.drawable.blessing_preview_crane_small
-  "lantern" -> if (wide) R.drawable.blessing_preview_lantern_medium else R.drawable.blessing_preview_lantern_small
-  "slavic-wreath" -> if (wide) R.drawable.blessing_preview_slavic_wreath_medium else R.drawable.blessing_preview_slavic_wreath_small
-  else -> if (wide) R.drawable.blessing_preview_generic_medium else R.drawable.blessing_preview_generic_small
 }
 
 class TodayRitualWidgetReceiver : GlanceAppWidgetReceiver() {

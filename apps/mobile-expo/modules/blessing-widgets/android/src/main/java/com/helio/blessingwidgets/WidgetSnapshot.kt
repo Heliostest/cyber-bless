@@ -44,19 +44,7 @@ internal data class WidgetSnapshot(
     const val CATALOG_REVISION = "bundled-daily-v1"
     const val GENERIC_LINK = "cyber-bless://widget/today?v=1"
     const val GENERIC_TITLE = "打开一日一念，看看今天的仪式"
-    val scenes = mapOf(
-      "woodfish" to WidgetScene("敲一敲木鱼", "blessing"),
-      "furin-wind-chime" to WidgetScene("风铃一响", "blessing"),
-      "shinto-torii" to WidgetScene("庭前一礼", "blessing"),
-      "tibetan-wheel" to WidgetScene("廊前轻转", "blessing"),
-      "celtic-folk-spring" to WidgetScene("泉边一念", "blessing"),
-      "theravada-water" to WidgetScene("花水位一倾", "blessing"),
-      "tanzaku-tanabata" to WidgetScene("短册系竹", "wish"),
-      "yeondeunghoe" to WidgetScene("燃灯上浮", "wish"),
-      "crane" to WidgetScene("折一只纸鹤", "wish"),
-      "lantern" to WidgetScene("月下一灯", "wish"),
-      "slavic-wreath" to WidgetScene("火边花环", "wish"),
-    )
+    val scenes = WidgetCatalog.scenes
     private val rootKeys = setOf("schemaVersion", "sourceVersion", "sourceHash", "catalogRevision",
       "generatedAt", "timeZone", "validThroughDay", "days")
     private val dayKeys = setOf("day", "sceneId", "title", "category", "artKey", "collected", "deepLink")

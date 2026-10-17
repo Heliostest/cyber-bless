@@ -35,9 +35,9 @@ for (const platform of platforms) {
   });
   results[platform] = await validateMobileEmbed(target, assets);
   if (platform === 'ios') {
-    const expected = covers.scenes.flatMap(scene => [scene.small, scene.medium]);
+    const expected = covers.scenes.flatMap(scene => [scene.small, scene.medium, scene.large]);
     const generic = covers.scenes.find(scene => scene.id === 'woodfish');
-    expected.push({ ...generic.small, file: 'generic-small.png' }, { ...generic.medium, file: 'generic-medium.png' });
+    for (const size of ['small', 'medium', 'large']) expected.push({ ...generic[size], file: `generic-${size}.png` });
     for (const cover of expected) {
       const bytes = await readFile(path.join(target, 'assets/__assets/widgets/today', cover.file));
       if (createHash('sha256').update(bytes).digest('hex') !== cover.sha256)

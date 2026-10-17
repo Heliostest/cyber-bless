@@ -15,7 +15,7 @@ export type WidgetNavigationRequest = WidgetLinkRequest & { requestId: number };
 export type TodayWidgetProps = {
   day: string; title: string; subtitle: string; deepLink: string;
   sceneId?: string; collected: 'confirmed' | 'unknown';
-  previewSmall?: string; previewMedium?: string;
+  previewSmall?: string; previewMedium?: string; previewLarge?: string;
 };
 const ids = new Set(builtInScenes.map(e => e.id));
 export function widgetLink(day?: string, sceneId?: string): string {

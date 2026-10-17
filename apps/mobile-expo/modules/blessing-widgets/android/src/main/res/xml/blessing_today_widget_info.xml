@@ -5,7 +5,7 @@
   android:minResizeHeight="140dp"
   android:targetCellWidth="2"
   android:targetCellHeight="2"
-  android:resizeMode="horizontal"
+  android:resizeMode="horizontal|vertical"
   android:initialLayout="@layout/blessing_widget_placeholder"
   android:previewLayout="@layout/blessing_widget_placeholder"
   android:previewImage="@drawable/blessing_preview_generic_small"

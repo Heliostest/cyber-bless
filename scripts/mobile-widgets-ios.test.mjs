@@ -28,21 +28,24 @@ function render(props, family) {
 }
 test('the actual Expo Babel preset serializes a self-contained isolated widget function', () => {
   assert.equal(typeof serialized, 'string');
-  const props = { day: '2026-10-11', title: '折一只纸鹤', sceneId: 'crane', subtitle: '为今天，留一点温柔', deepLink: 'cyber-bless://widget/today?v=1&day=2026-10-11&scene=crane', previewSmall: 'file:///group/crane-small.png', previewMedium: 'file:///group/crane-medium.png' };
-  for (const family of ['systemSmall', 'systemMedium']) {
+  const props = { day: '2026-10-11', title: '折一只纸鹤', sceneId: 'crane', subtitle: '为今天，留一点温柔', deepLink: 'cyber-bless://widget/today?v=1&day=2026-10-11&scene=crane', previewSmall: 'file:///group/crane-small.png', previewMedium: 'file:///group/crane-medium.png', previewLarge: 'file:///group/crane-large.png' };
+  for (const [family, cover] of [['systemSmall', props.previewSmall], ['systemMedium', props.previewMedium], ['systemLarge', props.previewLarge]]) {
     const tree = render(props, family);
     const json = JSON.stringify(tree);
     assert.ok(json.includes(props.title));
     assert.ok(json.includes(props.day));
     assert.ok(json.includes(props.deepLink));
     assert.equal(tree.props.modifiers.filter(m => m.type === 'widgetURL').length, 1);
-    assert.ok(json.includes(family === 'systemSmall' ? props.previewSmall : props.previewMedium));
-    assert.ok(json.includes('进入仪式'));
+    assert.ok(json.includes(cover), `${family} must use its own cover`);
+    assert.ok(!json.includes('进入仪式'), 'the scene itself is the only tap target');
     const visit = node => !node || typeof node !== 'object' ? [] : [node, ...Object.values(node).flatMap(value => Array.isArray(value) ? value.flatMap(visit) : visit(value))];
     const links = visit(tree).filter(node => node.type === 'Link');
-    assert.equal(links.length, 1);
-    assert.equal(links[0].props.destination, props.deepLink);
+    assert.equal(links.length, 0);
+    assert.equal(tree.props.modifiers.find(m => m.type === 'widgetURL').args[0], props.deepLink);
   }
+  const legacy = JSON.stringify(render({ ...props, previewLarge: undefined }, 'systemLarge'));
+  assert.ok(legacy.includes(props.previewSmall), 'older timelines keep the square cover until the next refresh');
+  assert.ok(!legacy.includes(props.previewMedium));
   const fallback = JSON.stringify(render(undefined, 'systemSmall'));
   assert.ok(fallback.includes('今日仪式'));
   assert.ok(fallback.includes('cyber-bless://widget/today?v=1'));
@@ -81,7 +84,7 @@ test('an unavailable save registers the iOS layout and publishes a generic timel
     if (name === 'expo-widgets') return { widgetsDirectory: 'file:///group/ExpoWidgets', createWidget: (kind, layout) => { registered.push([kind, layout]); return { updateTimeline: timeline => timelines.push(timeline) }; } };
     if (name === './widget-images') return { prepareWidgetImages: async group => {
       assert.equal(group, 'file:///group/ExpoWidgets'); await imagesReady;
-      return { generic: { small: 'file:///group/generic-small.png', medium: 'file:///group/generic-medium.png' } };
+      return { generic: { small: 'file:///group/generic-small.png', medium: 'file:///group/generic-medium.png', large: 'file:///group/generic-large.png' } };
     } };
     if (name === './widgets/TodayWidget') return { TodayWidget: serialized };
     throw Error(`Unexpected native load: ${name}`);
@@ -95,8 +98,9 @@ test('an unavailable save registers the iOS layout and publishes a generic timel
   assert.deepEqual(registered, [['BlessingToday', serialized]]);
   assert.equal(timelines[0][0].props.deepLink, 'cyber-bless://widget/today?v=1');
   assert.equal(timelines[0][0].props.previewSmall, 'file:///group/generic-small.png');
+  assert.equal(timelines[0][0].props.previewLarge, 'file:///group/generic-large.png');
 });
-test('the official source generator preserves the two families and dedicated App Group across regeneration', async () => {
+test('the official source generator preserves all three families and dedicated App Group across regeneration', async () => {
   const pluginRoot = path.dirname(require.resolve('expo-widgets/package.json'));
   const withSource = require(path.join(pluginRoot, 'plugin/build/ios/withWidgetSourceFiles.js')).default;
   mkdirSync(path.join(root, 'artifacts'), { recursive: true });
@@ -111,6 +115,6 @@ test('the official source generator preserves the two families and dedicated App
   await run();
   assert.equal(readFileSync(path.join(target, 'BlessingToday.swift'), 'utf8'), first);
   assert.ok(first.includes('systemSmall') && first.includes('systemMedium'));
-  assert.ok(!first.includes('systemLarge'));
+  assert.ok(first.includes('systemLarge'));
   assert.ok(readFileSync(path.join(target, 'ExpoWidgetsTarget.entitlements'), 'utf8').includes(settings.groupIdentifier));
 });

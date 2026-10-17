@@ -13,7 +13,7 @@ const COPY = {
   quiet: '轻点玻珠静看：透亮的颜色、绕行的细带，还有穿过珠孔的一根绳。',
   cooling: '彩带绕过珠面，暖色慢慢淡下，玻珠安静凝彩……',
   threading: '玻珠缓缓离开杆端，细绳从珠孔中穿过……',
-  done: '愿日常留一点明亮。（当代玻珠欣赏练习结束）',
+  done: '愿日常留一点明亮。',
 } as const
 const GRIP: XYZ = [0, .035, .055], BEAD: XYZ = [0, .20, .43]
 const ease = (t: number) => t * t * (3 - 2 * t)

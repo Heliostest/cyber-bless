@@ -17,7 +17,7 @@ const COPY = {
   settling: '铃绳缓缓回到原处…',
   quiet: '铃已安静。轻点金色铃身，留一句无声的问安。',
   greeting: '停一停，把问安留在这一刻…',
-  done: '一声铃响，一份问安。（练习结束）',
+  done: '一声铃响，一份问安。',
   pullCue: '向下轻拉铃绳', target: '往下轻拉', settleCue: '轻点铃绳收好', greetCue: '轻点铃身问安',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3

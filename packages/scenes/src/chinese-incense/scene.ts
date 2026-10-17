@@ -15,7 +15,7 @@ const COPY = {
   incense: '握住暖色纸套，把一炷细香拖进炉内的小香孔。',
   quiet: '轻点茶托或炉身，静看一缕轻烟，留片刻安静。',
   movingLid: '炉盖轻轻落在陶托上…', movingIncense: '细香安稳落入香孔，纸套留在桌边…',
-  done: '让片刻安静留在炉前。（文化致敬练习结束）',
+  done: '让片刻安静留在炉前。',
 } as const
 const LID_HOME = new THREE.Vector3(.12, 1.44, -.22)
 const LID_REST = new THREE.Vector3(1.035, .635, .36)

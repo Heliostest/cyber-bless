@@ -11,9 +11,9 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 const COPY = {
   title: '归乡轻转', pull: '把木拉珠拖到木板右侧的浅色圆点，松开棉绳，让陀螺轻转。',
   settle: '轻点陀螺顶端的木帽，让这一程慢慢停稳。', quiet: '轻点木帽静看，或写一句归乡心意；只有点「写好了」才会保存。',
-  returning: '轻点木帽，回看这段旅途与家乡。', done: '带着问候出发，也为归乡留一份心意。（手势练习结束）', moving: '让木陀螺轻轻转动、停稳…',
+  returning: '轻点木帽，回看这段旅途与家乡。', done: '带着问候出发，也为归乡留一份心意。', moving: '让木陀螺轻轻转动、停稳…',
   pullAction: '拉绳轻转', settleAction: '轻点木帽停稳', quietAction: '轻点木帽静看',
-  context: '当代原创非宗教练习。借木陀螺寄托出发与归乡，致意米南加保大屋的家族与社区。',
+  context: '借木陀螺寄托出发与归乡，致意米南加保大屋的家族与社区。',
 } as const
 const HOME = new THREE.Vector3(.38, .34, .52), TARGET = new THREE.Vector3(1.08, .34, .52)
 const AXLE = new THREE.Vector3(-.42, .21, -.09)

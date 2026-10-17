@@ -17,7 +17,7 @@ const COPY = {
   return: '静看走过的一段路，再轻点木牌，把感谢留在这里。',
   ready: '把木牌拖到横梁中央的挂点。',
   hanging: '木牌轻轻落在横梁下…',
-  done: '木牌已经挂好，心意留在了这里。（练习结束）',
+  done: '木牌已经挂好，心意留在了这里。',
 } as const
 const HELD = new THREE.Vector3(0.35, 0.8, 0.62)
 const HUNG = new THREE.Vector3(0, 1.04, 0.05)

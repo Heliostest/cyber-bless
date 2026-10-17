@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import { assertSafeCopy } from '@wbr/shared'
 
-const HEADING = '练习结束'
-const SUB = '这是手势练习'
+const HEADING = '这一刻已留下'
+const SUB = '带着这份心意，继续今天的生活。'
 const BACK = '回廊'
 const RETRY = '再试一次'
 

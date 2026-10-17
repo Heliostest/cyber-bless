@@ -15,7 +15,7 @@ const COPY = {
   cradle: '握住甲板前侧的木把手，把舟模移到船架前端的暖色木扣。',
   quiet: '轻点舟模静看，或写一句感谢；只有点「写好了」才会保存。',
   returning: '轻点舟模，回看这一份感谢与归来的记忆。',
-  moving: '让木件稳稳落下…', done: '舟模稳稳安放，留一刻安静给归来的记忆。（文化致敬练习结束）',
+  moving: '让木件稳稳落下…', done: '舟模稳稳安放，留一刻安静给归来的记忆。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const HOME = new THREE.Vector3(-.12, 1, .38), SEATED = new THREE.Vector3(.42, 1.16, -.35)

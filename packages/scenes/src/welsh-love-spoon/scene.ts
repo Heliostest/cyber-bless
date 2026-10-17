@@ -15,7 +15,7 @@ const COPY = {
   hang: '握住木柄，把整只木勺送到右侧展托，让勺底轻轻落稳。',
   quiet: '轻点木勺静看，或写一句赠予在意之人的心意；点「写好了」才会保存。',
   returning: '轻点木勺，回看这份温暖的赠礼心意。', moving: '轻拭木纹，再让木勺稳稳落下…',
-  done: '木纹留住手作的温度。（当代手作致敬练习结束）',
+  done: '木纹留住手作的温度。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const REST = new THREE.Vector3(.78, .88, .02), CLOTH_HOME = new THREE.Vector3(-.85, .81, .62)

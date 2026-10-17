@@ -11,7 +11,7 @@ const COPY = {
   title: '巨偶待游', assemble: '把桌前的小花章别在衣襟上，为节庆巨偶添一枚自己的装饰。',
   suspend: '握住底座前的木把，将完整巨偶移到右侧圆台，站稳后静静欣赏。',
   rest: '轻点底座静看。把街头节庆的热闹，收进一件安静的小手作。',
-  moving: '小花章与巨偶缓缓就位…', done: '准备妥当，留一刻欣赏手作的耐心。（当代工艺致敬练习结束）',
+  moving: '小花章与巨偶缓缓就位…', done: '准备妥当，留一刻欣赏手作的耐心。',
 } as const
 const HOME = new THREE.Vector3(-.73, .72, 0), REST = new THREE.Vector3(.79, .86, 0)
 const ROSETTE_HOME = new THREE.Vector3(-1.27, .87, .65), JOIN = new THREE.Vector3(-.14, 1.29, .284)

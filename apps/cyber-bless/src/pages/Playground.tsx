@@ -36,26 +36,26 @@ function createGesture(
       return createDrag({
         hitTest: () => true,
         onProgress: () => status('拖拽中'),
-        onDrop: (hit) => status(hit ? '已放下（命中练习区）' : '已放下'),
+        onDrop: (hit) => status(hit ? '已放到目标位置' : '已放下'),
       })
     case 'tilt':
       return createTilt({
         onAngle: (deg) => status(`倾角 ${deg.toFixed(0)}°`),
-        onPour: () => status('倾倒触发（练习）'),
+        onPour: () => status('倾倒触发'),
       })
     case 'spin':
       return createSpin({
         onAngle: (rad) => status(`转角 ${(rad * (180 / Math.PI)).toFixed(0)}°`),
-        onRevolution: (n) => status(`完成第 ${n} 圈（练习）`),
+        onRevolution: (n) => status(`完成第 ${n} 圈`),
       })
     case 'gyro':
       return createGyro({
-        onBow: () => status('鞠躬触发（练习）'),
-        onHold: () => status('停驻触发（练习）'),
+        onBow: () => status('鞠躬触发'),
+        onHold: () => status('停驻触发'),
       })
     case 'wishWrite':
       return createWishWrite({
-        onSubmit: () => status('已提交练习短句'),
+        onSubmit: () => status('已提交短句'),
       })
   }
 }
@@ -71,7 +71,7 @@ function hintFor(name: GestureName): string {
     case 'gyro':
       return '点按画面以授权运动传感器（若需要）；或使用点按回退。'
     case 'wishWrite':
-      return '在输入框写下短句后提交（练习，非法效）。'
+      return '在输入框写下短句后提交。'
   }
 }
 

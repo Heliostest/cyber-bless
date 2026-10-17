@@ -117,9 +117,9 @@ describe("builtInScenes narratives", () => {
   });
 
   it.each(withNarrative.map((e) => [e.id, e.narrative!]))(
-    "%s frames itself as practice or homage",
+    "%s describes the scene without calling it an exercise",
     (_id, narrative) => {
-      expect(narrative).toMatch(/练习|致敬/);
+      expect(narrative).not.toContain("练习");
     },
   );
 

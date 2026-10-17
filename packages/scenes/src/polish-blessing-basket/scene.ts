@@ -17,7 +17,7 @@ const COPY = {
   quiet: '轻点食物篮静看，或写一句感谢；只有点「写好了」才会保存。',
   returning: '轻点食物篮，感谢日用食粮与准备这一餐的人。',
   placingBread: '圆面包轻轻落在衬布上…', placingEgg: '彩蛋在小窝里安稳落定…',
-  done: '让这一篮春食留住对日常的感谢。（练习结束）',
+  done: '让这一篮春食留住对日常的感谢。',
 } as const
 const BREAD_HOME = new THREE.Vector3(-0.91, 1.035, 0.45)
 const BREAD_REST = new THREE.Vector3(0.12, 1.395, 0.05)

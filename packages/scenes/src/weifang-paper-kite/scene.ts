@@ -14,7 +14,7 @@ const COPY = {
   fly: '拿住木线轮的横柄，向下短拖收紧牵线，让纸鸢迎风抬起。',
   quiet: '轻点纸鸢的浅色胸口，静看竹骨、纸翼与牵线在阳光里相连。',
   fitting: '纸翼沿着对称的竹骨轻轻贴合…', flying: '牵线绷起，纸鸢迎着微风抬升…',
-  done: '把轻盈留给今天。（当代风筝手作欣赏练习结束）',
+  done: '把轻盈留给今天。',
 } as const
 const PREPARED = new THREE.Vector3(.43, -.23, .13)
 const KNOT: XYZ = [0, -.16, .36]

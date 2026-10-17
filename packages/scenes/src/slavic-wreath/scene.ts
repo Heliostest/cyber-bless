@@ -25,14 +25,14 @@ const STEP_ORDER: Step[] = ['weave', 'place', 'drift']
 
 const COPY = {
   title: '火边花环',
-  hintWeave: '点按花环，把草茎与野花编成一圈（练习）。',
+  hintWeave: '点按花环，把草茎与野花编成一圈。',
   hintWeaving: '草茎一圈圈交叠…',
   hintPlace: '按住花环向下拖到水面，轻轻放下；也可用辅助按钮。',
-  hintDrift: '目送花环漂远，可在输入框写一句祝愿，或用辅助按钮结束（练习，不以花环预测命运）。',
+  hintDrift: '目送花环漂远，可在输入框写一句祝愿，或用辅助按钮结束。',
   weaveTap: '编一圈',
   placeTap: '放上水面',
   driftTap: '目送远去',
-  done: '花环载着心意缓缓漂远（练习结束）。',
+  done: '花环载着心意缓缓漂远。',
   stepsAria: '步骤',
   cueWeave: '点按编花环',
   cueCarry: '向下拖动花环',

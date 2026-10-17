@@ -5,8 +5,8 @@ describe('assertSafeCopy', () => {
   it('throws on 通关', () => {
     expect(() => assertSafeCopy('本关通关')).toThrow(/forbidden/i)
   })
-  it('allows 手势练习', () => {
-    expect(() => assertSafeCopy('这是手势练习')).not.toThrow()
+  it('allows 场景互动', () => {
+    expect(() => assertSafeCopy('这是场景互动')).not.toThrow()
   })
   it('lists known phrases', () => {
     expect(FORBIDDEN_SUCCESS_PHRASES).toEqual(

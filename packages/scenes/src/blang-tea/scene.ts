@@ -14,7 +14,7 @@ const COPY = {
   rest: '轻点茶杯，静看茶色。为山林与照料茶山的人留一刻感谢。',
   adding: '茶叶落入敞开的陶壶…',
   pouring: '壶嘴倾下，茶水流入杯中…',
-  done: '茶色安静下来，带着对茶山的珍惜继续前行。（练习结束）',
+  done: '茶色安静下来，带着对茶山的珍惜继续前行。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const SCOOP_HOME = new THREE.Vector3(-1.00, .901, .62)

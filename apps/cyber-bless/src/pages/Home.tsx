@@ -5,7 +5,7 @@ export function Home() {
   return (
     <main className="page">
       <h1>赛博祈福</h1>
-      <p className="muted">手势练习小品 · 非宗教真仪</p>
+      <p className="muted">以小小仪式，安放日常心意</p>
       <p className="disclaimer" role="note">
         {GLOBAL_DISCLAIMER}
       </p>

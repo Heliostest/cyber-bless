@@ -14,7 +14,7 @@ const COPY = {
   paint: '握住桌前画笔的木柄，把笔送到青蓝蛋壳。用原创纹样，致意索布人的彩蛋手艺。',
   place: '轻托彩蛋，把它移到右侧陶杯的浅色杯沿。让春日手作稳稳安放。',
   quiet: '轻点彩蛋静看，或写一句春日心愿；只有点「写好了」才会保存。', returning: '轻点彩蛋，回看这一点春意。', moving: '让笔触慢慢显现，让彩蛋稳稳落下…',
-  done: '一枚彩蛋，留住一点春意。（当代手作致敬练习结束）',
+  done: '一枚彩蛋，留住一点春意。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const HOME = new THREE.Vector3(-.48, .78, .08), SEATED = new THREE.Vector3(.87, .94, -.06)

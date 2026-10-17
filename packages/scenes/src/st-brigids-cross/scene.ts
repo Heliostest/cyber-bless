@@ -10,7 +10,7 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 const COPY = {
   title: '草编迎春', weave: '编入一束草', hang: '挂上草编', rest: '静看草编',
   hints: ['按住桌边草束，依次拖到折编点。四束草合成一只小十字（民俗手作致敬）。',
-    '把编好的草十字拖到门楣挂点。', '轻点挂着的草编，留一会儿安静。', '这段手作已留下（产品改编练习）。'],
+    '把编好的草十字拖到门楣挂点。', '轻点挂着的草编，留一会儿安静。', '这段手作已留下。'],
 } as const
 const HELD = new THREE.Vector3(-0.32, 1.04, 0.52)
 const CROSS_SCALE = 0.78

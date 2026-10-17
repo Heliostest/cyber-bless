@@ -13,7 +13,7 @@ const COPY = {
   place: '握住下方缠线的木杆，把旗子安放到右侧木座的圆孔里。海浪与太阳纹样均为原创。',
   rest: '轻触木杆或布面，静看展开的节旗。这是文化致敬，不是真实的 pardon 朝圣，也不赋予教会角色或赦罪效力。',
   opening: '布耳扣向横杆，折叠的布面缓缓展开……', placing: '木杆稳稳落入木座……',
-  done: '愿每一次相聚，都有人细心准备。（文化致敬练习结束）',
+  done: '愿每一次相聚，都有人细心准备。',
 } as const
 const HOME = new THREE.Vector3(-.78, .70, -.13), SEATED = new THREE.Vector3(.84, .82, .23)
 const LEFT = -.52, TOP = 1.78, FULL_WIDTH = 1.14, FOLDED_WIDTH = .24

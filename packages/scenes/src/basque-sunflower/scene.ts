@@ -15,7 +15,7 @@ const COPY = {
   quiet: '轻点花心静看，或写一句迎门心愿；只有点「写好了」才会保存。',
   returning: '轻点花心，回看这一份迎门的心意。',
   moving: '让纸木太阳花轻轻落稳…',
-  done: '太阳花已挂好，留一刻安静给归家的人。（文化致敬练习结束）',
+  done: '太阳花已挂好，留一刻安静给归家的人。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const HOME = new THREE.Vector3(-.59, 1.16, .37), HUNG = new THREE.Vector3(.78, 1.129, .07)

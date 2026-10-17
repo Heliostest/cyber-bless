@@ -12,7 +12,7 @@ Exactly three checkpoints:
 2. **把彩心挂上木钉** — drag the decorated heart body to the cream end of the stand peg. The entire heart settles with its ribbon's inner ceiling touching the shaft's top.
 3. **轻点彩心静看** — tap the actual heart to finish quietly, or explicitly submit a nonempty wish of up to 40 characters. Quiet completion removes the unsubmitted draft. Returning mode creates no writer and finishes by quiet tap.
 
-The hint copy calls this a craft homage. The final line is “一颗彩心，留下一份相赠的心意。（当代手作致敬练习结束）”. Native buttons invoke the same checkpoint transitions for keyboard access. The action button does not imply that an unwritten or unsubmitted wish has been saved.
+The hint copy calls this a craft homage. The final line is “一颗彩心，留下一份相赠的心意。”. Native buttons invoke the same checkpoint transitions for keyboard access. The action button does not imply that an unwritten or unsubmitted wish has been saved.
 
 ## Cultural context and research
 

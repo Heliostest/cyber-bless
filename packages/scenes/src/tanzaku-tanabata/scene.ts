@@ -20,13 +20,13 @@ const STEP_ORDER: Step[] = ['pick', 'hang', 'wish']
 
 const COPY = {
   title: '短册系竹',
-  hintPick: '点按或拖起地上的纸条（练习）。',
+  hintPick: '点按或拖起地上的纸条。',
   hintHang: '把纸条拖到竹枝的系结处，再松开。',
-  hintWish: '纸条挂好了。可写一句短句，再静看片刻（练习，非法效）。',
+  hintWish: '纸条挂好了。可写一句短句，再静看片刻。',
   pickTap: '拾起纸条',
   hangTap: '挂到竹枝上',
   wishTap: '静看片刻',
-  done: '纸条已随风轻摆（练习结束）。',
+  done: '纸条已随风轻摆。',
   stepsAria: '步骤',
 } as const
 

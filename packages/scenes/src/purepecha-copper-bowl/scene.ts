@@ -11,7 +11,7 @@ const COPY = {
   title: '铜碗拾暖', polish: '把桌前的软布移到铜碗外壁，轻轻擦亮一小片暖色。',
   place: '握住铜碗的外壁或卷边，移到右侧的软毡托座。',
   rest: '轻点铜碗静看，让目光沿着碗口与浅浅的锤纹停一会儿。',
-  moving: '软布与铜碗轻轻就位…', done: '铜色温润，留一刻欣赏手作的耐心。（当代工艺致敬练习结束）',
+  moving: '软布与铜碗轻轻就位…', done: '铜色温润，留一刻欣赏手作的耐心。',
 } as const
 const HOME = new THREE.Vector3(-.63, .745, -.12), REST = new THREE.Vector3(.94, .87, -.12)
 const PAD_HOME = new THREE.Vector3(-1.25, .74, .66), BOWL_ANCHOR: [number, number, number] = [0, .43, .705]

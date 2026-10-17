@@ -9,7 +9,7 @@ import { addStageLights, CEL_STYLE, createLampHalo, createPointerRay, createScen
 
 const COPY = {
   title: '留一盏烛光',
-  hints: ['把前面的蜡烛拖到烛架空位。（致敬练习）', '轻点自己的灯芯，让烛光亮起。',
+  hints: ['把前面的蜡烛拖到烛架空位。', '轻点自己的灯芯，让烛光亮起。',
     '为想念的人留一句意向，也可以静看这一点光。', '烛光留在这里，陪这份心意静静亮着。'],
   actions: ['安放蜡烛', '点亮灯芯', '静看烛光'],
   returning: '静看这一点光，再轻点自己的蜡烛，把想念留在这里。',

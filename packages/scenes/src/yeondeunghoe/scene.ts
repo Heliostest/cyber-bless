@@ -21,12 +21,12 @@ const STEP_ORDER: Step[] = ['ready', 'rise', 'rest']
 
 const COPY = {
   title: '燃灯上浮',
-  hintReady: '点按莲灯，或向上轻推（练习）。',
+  hintReady: '点按莲灯，或向上轻推。',
   hintRise: '莲灯缓缓上浮…',
-  hintRest: '灯光停在高处，点按莲灯结束静看（练习，非法效）。',
+  hintRest: '灯光停在高处，点按莲灯结束静看。',
   pushTap: '轻推莲灯',
   restTap: '静看片刻',
-  done: '莲灯静静亮着（练习结束）。',
+  done: '莲灯静静亮着。',
   stepsAria: '步骤',
 } as const
 

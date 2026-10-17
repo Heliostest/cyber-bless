@@ -24,8 +24,8 @@ const COPY = {
   settle: '轻放在木座上',
   hintSettle: '把达摩轻轻向下拖到木座。',
   settling: '轻摆归位…',
-  done: '达摩稳稳停在木座上，另一目留待日后。（练习结束）',
-  doneReturn: '两目已点，达摩稳稳停在木座上。（练习结束）',
+  done: '达摩稳稳停在木座上，另一目留待日后。',
+  doneReturn: '两目已点，达摩稳稳停在木座上。',
 } as const
 
 const HEIGHT = 1.72

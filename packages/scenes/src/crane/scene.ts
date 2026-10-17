@@ -26,7 +26,7 @@ const STEP_ORDER: Step[] = ['fold', 'lift', 'wish']
 
 const COPY = {
   title: '折一只纸鹤',
-  hintFold: '点按纸面折一下（按纸鹤传统折序简化的练习，非完整教程）。',
+  hintFold: '点按纸面折一下。',
   folding1: '收成方形底…',
   fold1: '方形底收好了，再点按继续。',
   folding2: '拉长成鸟形底…',
@@ -35,11 +35,11 @@ const COPY = {
   fold3: '颈与尾折好了，再点按翻出鹤首、展开双翼。',
   folding4: '翻出鹤首，展开双翼…',
   hintLift: '纸鹤折好了。把纸鹤向上拖起，再松开。',
-  hintWish: '纸鹤停在眼前。可写一句想送给自己或他人的话，再静看片刻（练习，非法效）。',
+  hintWish: '纸鹤停在眼前。可写一句想送给自己或他人的话，再静看片刻。',
   foldTap: '折一下',
   liftTap: '托起纸鹤',
   wishTap: '静看片刻',
-  done: '纸鹤静静停在眼前（练习结束）。',
+  done: '纸鹤静静停在眼前。',
   stepsAria: '步骤',
 } as const
 

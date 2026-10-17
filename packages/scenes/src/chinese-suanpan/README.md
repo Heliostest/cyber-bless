@@ -4,4 +4,4 @@
 
 每步支持对象命中后短拖，以及辅助按钮的 Enter/Space。0–3 整数进度静默恢复；完成只派发一次事件，不建立心愿。错误表面、反向、短拖、迂回、多点、取消、失焦与宿主暂停不会推进。沿用共享阳光花园与柔和三渲二，物件直接平放在地面。
 
-这是固定的当代数学文化欣赏练习，不是自由运算器或传统仪式。文化来源与原创范围见 content/traditions/chinese-zhusuan.md。运行证据位于 artifacts/chinese-suanpan，长期接续进度位于 artifacts/hourly-scenes/progress.md。
+这是固定的当代数学文化场景，不是自由运算器或传统仪式。文化来源与原创范围见 content/traditions/chinese-zhusuan.md。运行证据位于 artifacts/chinese-suanpan，长期接续进度位于 artifacts/hourly-scenes/progress.md。

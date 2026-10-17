@@ -4,4 +4,4 @@
 
 三步支持物件表面的实际命中以及辅助按钮 Enter/Space。取消、反向、过短、横移、迂回、多指、失焦和暂停不会误推进。0–3 进度静默恢复，减少动态效果直接落定，完成只派发一次事件，不创建心愿。共享阳光花园、柔和三渲二；木板平放，无额外小桌或展板。
 
-文化范围、可靠公开来源与原创部分见 content/traditions/mbira-sansi-craft.md。这是材料与声音的当代欣赏练习，不是仪式模拟或完整演奏教学。证据：artifacts/malawi-sansi；接续进度：artifacts/hourly-scenes/progress.md。
+文化范围、可靠公开来源与原创部分见 content/traditions/mbira-sansi-craft.md。这是材料与声音的当代互动场景，不是仪式模拟或完整演奏教学。证据：artifacts/malawi-sansi；接续进度：artifacts/hourly-scenes/progress.md。

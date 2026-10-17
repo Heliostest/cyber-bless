@@ -19,8 +19,8 @@ const COPY = {
   placing: '小袋轻轻落定…',
   wish: '轻点小袋静候，或留一句心意；只有点「写好了」才会保存。',
   gratitude: '轻点返还箱或小袋，谢谢走过的这一程。',
-  done: '让这份心意陪你同行。（练习结束）',
-  returned: '谢谢这一程，感谢已轻轻留下。（练习结束）',
+  done: '让这份心意陪你同行。',
+  returned: '谢谢这一程，感谢已轻轻留下。',
 } as const
 const VARIANTS = ['coral', 'sage', 'indigo'] as const
 const HELD = new THREE.Vector3(-0.62, 1.66, 0.56)

@@ -1,5 +1,5 @@
 export const GLOBAL_DISCLAIMER =
-  '本应用中的互动均为致敬小品与手势练习，不是宗教真仪、不是通关养成，也不产生任何功德或法效。'
+  '本应用以互动场景呈现器物、文化与日常心意，不替代真实宗教仪式，也不承诺宗教效力。'
 
 export const FORBIDDEN_SUCCESS_PHRASES = [
   '参拜成功',

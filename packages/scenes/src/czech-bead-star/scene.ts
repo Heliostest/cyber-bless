@@ -10,7 +10,7 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 const COPY = {
   title: '珠星映光', assemble: '拿起木托上的最后一串玻璃珠，接到星臂露出的银珠处。欣赏捷克北波希米亚的吹珠手艺。',
   rotate: '在珠星上向右横拖，慢慢转动，看银蓝珠面接住日光。', quiet: '轻点珠星静看，让这一刻停留。',
-  moving: '细线相连，珠光轻转…', done: '留一束清亮的光。（当代手工欣赏练习结束）',
+  moving: '细线相连，珠光轻转…', done: '留一束清亮的光。',
   assembleAction: '接上最后一串珠', rotateAction: '向右转动珠星', quietAction: '轻点珠星静看',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3

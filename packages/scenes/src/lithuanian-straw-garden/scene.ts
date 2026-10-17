@@ -11,7 +11,7 @@ const COPY = {
   title: '草穗悬园', assemble: '把桌前的小菱形接到草穗中央的连接珠，组成一座透光的小花园。',
   suspend: '轻托顶部木珠，把草编悬饰移到右侧木架的挂点。让线条在光里舒展。',
   rest: '轻点木珠静看。向立陶宛草编工艺致敬，把安宁留给平常的一天。',
-  moving: '草穗缓缓就位，棉线连起轻盈的形状…', done: '为手作留一处光，也为自己留一刻安静。（当代工艺致敬练习结束）',
+  moving: '草穗缓缓就位，棉线连起轻盈的形状…', done: '为手作留一处光，也为自己留一刻安静。',
 } as const
 const HOME = new THREE.Vector3(-.66, 1.88, 0), REST = new THREE.Vector3(.72, 2.12, 0)
 const PENDANT_HOME = new THREE.Vector3(-1.05, 1.02, .60), JOIN = new THREE.Vector3(0, -.84, 0)

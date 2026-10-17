@@ -15,7 +15,7 @@ const COPY = {
   hang: '握住木框下沿，把完整花砖送到右侧展托。',
   quiet: '轻点花砖静看，或写一句心意；点「写好了」才会保存。',
   returning: '轻点花砖，回看这份留在晴日里的心意。', moving: '让花砖轻轻落稳…',
-  done: '釉彩映着晴日，心意留在此刻。（当代手作致敬练习结束）',
+  done: '釉彩映着晴日，心意留在此刻。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const REST = new THREE.Vector3(.78, .88, -.02), PIECE_HOME = new THREE.Vector3(-1.04, .7875, .64)

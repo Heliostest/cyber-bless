@@ -26,13 +26,13 @@ const STEP_ORDER: Step[] = ['light', 'wish', 'rest']
 
 const COPY = {
   title: '月下一灯',
-  hintLight: '点按灯笼，把它慢慢点亮（练习）。',
+  hintLight: '点按灯笼，把它慢慢点亮。',
   hintWish: '可写一句心愿，或把木牌拖到灯下挂好。',
-  hintRest: '木牌已挂在灯下，点按灯笼结束静看（练习，非法效）。',
+  hintRest: '木牌已挂在灯下，点按灯笼结束静看。',
   lightTap: '点亮灯笼',
   hangTap: '挂上愿望牌',
   restTap: '静看片刻',
-  done: '灯光柔和地亮着（练习结束）。',
+  done: '灯光柔和地亮着。',
   stepsAria: '步骤',
 } as const
 

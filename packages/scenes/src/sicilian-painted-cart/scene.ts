@@ -11,7 +11,7 @@ const COPY = {
   title: '彩车迎晴', assemble: '握住桌前木轮的轮毂，拖到小车露出的车轴上。欣赏西西里日常彩绘木车的手艺。',
   display: '握住车厢前侧的木扶手，把整辆小车移到右侧展垫。',
   rest: '轻点小车扶手，静看轮辐与色彩。',
-  moving: '木轮与小车缓缓就位…', done: '留一刻欣赏轮雕与彩绘的耐心。（当代工艺致敬练习结束）',
+  moving: '木轮与小车缓缓就位…', done: '留一刻欣赏轮雕与彩绘的耐心。',
 } as const
 const HOME = new THREE.Vector3(-.65, .72, -.08), REST = new THREE.Vector3(.95, .88, -.08)
 const WHEEL_HOME = new THREE.Vector3(-1.76, 1.24, .85), JOIN = new THREE.Vector3(0, .5, .66)

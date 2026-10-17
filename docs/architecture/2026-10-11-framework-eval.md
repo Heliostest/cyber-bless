@@ -378,7 +378,7 @@ apps/mobile-expo (Expo 原生壳 → 'use dom' BlessingDom) ─┴─► @wbr/ap
 
 - [ ] 从 `docs/material-readiness/2026-10-04/` 中选"文字齐备"的切片。不齐备的，先补写物件材质、空间关系、过程变化和声画表现，并把结果记回对应的 batch。
 - [ ] `traditionSlug` 指向一个存在的 `content/traditions/<slug>.md`，或使用 `PRODUCT_ORIGINAL`。定好 grade 和 sensitivity；"中"敏感度需要额外评审。
-- [ ] 文案用"练习/致敬"的语气，并通过 `assertSafeCopy`。叙事可选，写的话控制在 80–120 汉字；产品原创的场景要写明"产品原创/改编"。
+- [ ] 文案直接描述文化背景、物件动作和眼前变化，并通过 `assertSafeCopy`。不把场景称作“练习”，不在提示或结束语附加“练习结束”等标签。叙事可选，写的话控制在 80–120 汉字；产品原创的场景要写明"产品原创/改编"。
 
 ### B. 交互设计
 

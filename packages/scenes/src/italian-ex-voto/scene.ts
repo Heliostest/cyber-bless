@@ -17,7 +17,7 @@ const COPY = {
   quiet: '轻点陶牌静看，或写一句感谢；只有点「写好了」才会保存。',
   returning: '轻点陶牌，回看这段归途和心中想感谢的人。',
   moving: '让这一笔轻轻落在陶牌上…',
-  done: '归途与窗光，记下一份日常感谢。（绘画练习结束）',
+  done: '归途与窗光，记下一份日常感谢。',
 } as const
 const HOME = new THREE.Vector3(-.97, .84, .50)
 const ORIGIN = new THREE.Vector3(-.44, 1.13, .225)

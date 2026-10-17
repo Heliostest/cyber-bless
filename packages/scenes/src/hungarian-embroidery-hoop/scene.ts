@@ -15,7 +15,7 @@ const COPY = {
   hang: '握住绣圈上方的小铜扣，把整幅线花送到右侧展托。',
   quiet: '轻点绣圈静看，或写一句心意；点「写好了」才会保存。',
   returning: '轻点绣圈，回看这份手作心意。', moving: '彩线慢慢铺开，手作稳稳落下…',
-  done: '线花留下一点春意。（当代手作欣赏练习结束）',
+  done: '线花留下一点春意。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const HOME = new THREE.Vector3(-.72, 1.535, .015), REST = new THREE.Vector3(.82, 1.615, .015), SPOOL_HOME = new THREE.Vector3(-.98, .99, .64)

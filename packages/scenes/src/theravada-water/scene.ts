@@ -12,14 +12,14 @@ const STEP_ORDER: Step[] = ['tilt', 'drag', 'anjali']
 
 const COPY = {
   title: '花水位一倾',
-  hintTilt: '按住水壶上下拖动，让清水注入水面（练习）。',
+  hintTilt: '按住水壶上下拖动，让清水注入水面。',
   hintDrag: '按住花瓣，拖向水面后松开。',
-  hintAnjali: '点按水面，合十致意；也可用辅助按钮（练习，非法效）。',
+  hintAnjali: '点按水面，合十致意；也可用辅助按钮。',
   hintPouring: '倾注中…',
   anjaliTap: '点按以合十',
   pourTap: '倾注清水',
   dropTap: '放上花瓣',
-  done: '这一倾已留下（练习结束）。',
+  done: '这一倾已留下。',
   stepsAria: '步骤',
   cueTilt: '上下拖动水壶',
   cueCarry: '拖动花瓣',

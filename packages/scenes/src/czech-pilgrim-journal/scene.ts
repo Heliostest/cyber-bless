@@ -14,7 +14,7 @@ const COPY = {
   rest: '轻点页上的叶形记号，愿旅人一路平安。这一页只供静看，不会保存文字。',
   opening: '封面缓缓翻开，纸上的山路露出来…',
   placing: '布书签在这一页停下…',
-  done: '停留片刻，再带着从容继续走。（练习结束）',
+  done: '停留片刻，再带着从容继续走。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const RIBBON_HOME = new THREE.Vector3(-.85, .838, .80)

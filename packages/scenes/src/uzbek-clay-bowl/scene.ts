@@ -10,7 +10,7 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 const COPY = {
   title: '陶轮慢成', turn: '在木轮前缘向右横拖，让轮上的刻记慢慢转动。欣赏乌兹别克斯坦的日用陶艺。',
   pull: '从湿泥外壁向上轻拉，慢慢提起碗壁，留住敞开的碗口。', quiet: '轻点泥碗静看。它仍是湿润、未上釉、未经烧制的泥坯。',
-  moving: '轮盘缓转，湿泥渐成…', done: '留一刻从容。（当代陶艺欣赏练习结束；泥坯尚未烧制）',
+  moving: '轮盘缓转，湿泥渐成…', done: '留一刻从容。泥坯尚未烧制。',
   turnAction: '向右转动木轮', pullAction: '向上提起碗壁', quietAction: '轻点泥碗静看',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3

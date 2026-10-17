@@ -14,7 +14,7 @@ const COPY = {
   weave: '拿起桌前木梭，送到织毯下缘的留白。以原创织纹，欣赏摩洛哥阿马齐格羊毛织作。',
   display: '握住织毯上方的木夹杆，把整幅织毯移到右侧展架。',
   quiet: '轻点织毯静看，或写一句心意；点「写好了」才会保存。', returning: '轻点织毯，回看这一份暖意。',
-  moving: '纬线收拢，织毯缓缓安放…', done: '留一份手作的暖意。（当代织作欣赏练习结束）',
+  moving: '纬线收拢，织毯缓缓安放…', done: '留一份手作的暖意。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const HOME = new THREE.Vector3(-.75, 1.63, .10), REST = new THREE.Vector3(.75, 1.63, .10)

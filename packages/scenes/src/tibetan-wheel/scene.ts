@@ -26,15 +26,15 @@ const STEP_ORDER: Step[] = ['ready', 'turn', 'still']
 
 const COPY = {
   title: '廊前轻转',
-  hintReady: '转筒只沿顺时针转：从右向左轻滑，或点按转筒（练习）。',
+  hintReady: '转筒只沿顺时针转：从右向左轻滑，或点按转筒。',
   hintReverse: '反向推不动：转筒只沿顺时针方向转动，请从右向左轻滑。',
   hintTurn: '转筒缓缓转着，静看它慢下来；稍候点按转筒可让它停下，也可用辅助按钮。',
   hintSettling: '转筒渐渐慢下来…',
-  hintStill: '点按停下的转筒，静立片刻；也可竖起手机稍停或用辅助按钮（练习，非法效）。',
+  hintStill: '点按停下的转筒，静立片刻；也可竖起手机稍停或用辅助按钮。',
   pushTap: '轻推一下',
   settleTap: '让它慢慢停下',
   stillTap: '静立片刻',
-  done: '廊前安静下来（练习结束，不以转数计算）。',
+  done: '廊前安静下来。',
   stepsAria: '步骤',
   cueTurn: '从右向左转动',
   cueStill: '点按转筒静立',

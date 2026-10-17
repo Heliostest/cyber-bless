@@ -518,7 +518,7 @@ button:hover:not(:disabled) {
   box-shadow: 0 0 0 2px #a9e5da;
   color: var(--mint-ink);
 }
-/* 今日's feature cards (今日随机仪式, 今日小练习) are centred compositions, the
+/* 今日's feature cards (今日随机仪式, 今日场景) are centred compositions, the
    tag on top included; list rows (the scene recommendation, the tiles) keep
    to the left. */
 .daily-card {
@@ -3263,7 +3263,7 @@ button:hover:not(:disabled) {
 /* The scene stage is a canvas over a HUD tray: the hint, the step dots, the
    action button and the wish box sit in the tray and never on the subject or
    a drag target. The canvas keeps one height; when the wish box opens, the
-   tray (and the stage) grows under it, so the hint and its 练习 note stay
+   tray (and the stage) grows under it, so the hint and its additional hint stay
    in view. Day stage: a clear sky fading to warm sand behind the canvas, so
    the cel-lit scenes keep the warm ground their lights were tuned for, and
    a pale subject's upper half (the crane's neck and wings, the furin's

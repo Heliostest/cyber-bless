@@ -15,7 +15,7 @@ const COPY = {
   hang: '轻托红心，把它送到右侧展架的木钉，让布带挂环稳稳挂好。',
   quiet: '轻点彩心静看，或写一句送给在意之人的心愿；只有点「写好了」才会保存。',
   returning: '轻点彩心，回看这份相赠的心意。', moving: '让糖霜成花，让挂环稳稳落下…',
-  done: '一颗彩心，留下一份相赠的心意。（当代手作致敬练习结束）',
+  done: '一颗彩心，留下一份相赠的心意。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const HUNG = new THREE.Vector3(.80, .96, .015), CONE_HOME = new THREE.Vector3(-.93, .937, .58)

@@ -12,13 +12,13 @@ const STEP_ORDER: Step[] = ['gyro', 'drag', 'wishWrite']
 
 const COPY = {
   title: '泉边一念',
-  hintGyro: '点按泉沿，俯身一礼；也可将手机向前倾、再竖起停驻片刻，或用辅助按钮（练习）。',
+  hintGyro: '点按泉沿，俯身一礼；也可将手机向前倾、再竖起停驻片刻，或用辅助按钮。',
   hintDrag: '按住信物，拖向泉面后松开。',
-  hintWish: '泉边静下来，在输入框写下短句后提交（练习，非法效）。',
+  hintWish: '泉边静下来，在输入框写下短句后提交。',
   hintHolding: '停驻片刻…',
   bowTap: '点按以鞠躬',
   dropTap: '放到泉面',
-  done: '这一念已留下（练习结束）。',
+  done: '这一念已留下。',
   stepsAria: '步骤',
   cueCarry: '拖动信物',
   cueWater: '放到泉面',

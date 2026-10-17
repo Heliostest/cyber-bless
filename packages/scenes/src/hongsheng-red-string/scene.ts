@@ -13,7 +13,7 @@ const COPY = {
   clasp: '把松开的扣头拖到绳环下方的合扣点，轻轻收拢。',
   quiet: '轻点红绳环静看，或写一句照看自己；只有点「写好了」才会保存。',
   returning: '轻点红绳环，回看这一段对自己的照顾。',
-  done: '心意相连，各自安好。把这一分照看留给自己。（练习结束）',
+  done: '心意相连，各自安好。把这一分照看留给自己。',
   moving: '红绳慢慢落稳…', windAction: '沿支架绕一圈', claspAction: '收拢合扣', quietAction: '轻点绳环静看',
   literary: '文学典故', literaryText: '月老赤绳的连结意象。',
   contemporary: '当代习惯', contemporaryText: '照看自己的手作改编。',

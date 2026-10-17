@@ -12,7 +12,7 @@ const COPY = {
   place: '轻托木马彩鞍，把它安放到右侧木座。四只木蹄稳稳落下。',
   rest: '轻点木马，静看这件手作。它是文化符号，不是护身法术。',
   polishing: '软布拂过木纹，彩鞍露出温润的光泽…', placing: '木马缓缓落上木座…',
-  done: '让手作陪伴平常的一天。（文化致敬练习结束）',
+  done: '让手作陪伴平常的一天。',
 } as const
 const HORSE_HOME = new THREE.Vector3(-.68, .72, -.1), HORSE_REST = new THREE.Vector3(.72, .842, -.1)
 const CLOTH_HOME = new THREE.Vector3(-1.12, .746, .58)

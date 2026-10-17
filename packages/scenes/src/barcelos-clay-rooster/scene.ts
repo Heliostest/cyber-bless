@@ -14,7 +14,7 @@ const COPY = {
   paint: '握住桌前画笔的木柄，送到陶鸡胸前，添上原创的叶芽纹样。',
   place: '轻托陶鸡，把它放到右侧圆形展台上。',
   quiet: '轻点陶鸡静看，或写一句心愿；点「写好了」才会保存。', returning: '轻点陶鸡，回看这一点日常暖意。',
-  moving: '笔纹慢慢显现，陶鸡稳稳落下…', done: '为手作留一处光，也为今天留一点暖意。（当代陶艺致敬练习结束）',
+  moving: '笔纹慢慢显现，陶鸡稳稳落下…', done: '为手作留一处光，也为今天留一点暖意。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const HOME = new THREE.Vector3(-.75, .78, -.06), SEATED = new THREE.Vector3(.77, .95, -.06)

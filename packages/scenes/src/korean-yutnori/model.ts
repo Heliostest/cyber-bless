@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 
+export type YutPoseOptions = { mask?: number; fromMask?: number; position?: number; steps?: number; repeat?: boolean }
+
 /** Original half-round wood, woven playing mat and29station cloth board. */
 export function createYutnoriModel() {
   const subject=new THREE.Group();subject.name='yut-subject'
@@ -58,19 +60,32 @@ export function createYutnoriModel() {
     for(const z of [-.28,.28])box(stick,`yut-stick-${i}-flat-mark-${z}`,.15,.002,.018,mark,0,-.067,z)
   }
   const bounds=new THREE.Box3()
-  const pose=(at:number,n:number)=>{
+  const pose=(at:number,n:number,options:YutPoseOptions={})=>{
     n=THREE.MathUtils.clamp(n,0,1)
+    const mask=options.mask??5,fromMask=options.fromMask??5,repeat=options.repeat??false
     const gather=at===0?n:1,roll=at===1?n:at>1?1:0
+    // The accepted result is sampled on release; preview motion must not reveal it.
+    const landing=THREE.MathUtils.smoothstep(roll,.2,1)
     sticks.forEach((stick,i)=>{
       const spread=(i-1.5)*.60,compact=(i-1.5)*.36
-      stick.position.set(THREE.MathUtils.lerp(THREE.MathUtils.lerp(spread,compact,gather),spread,roll),0,1.80)
-      stick.rotation.set(0,(i-1.5)*.045*roll,Math.PI*(i%2===0?3:2)*roll)
+      const flat=(mask>>i)&1,previousFlat=(fromMask>>i)&1
+      let x=THREE.MathUtils.lerp(THREE.MathUtils.lerp(spread,compact,gather),spread,roll)
+      let yaw=(i-1.5)*.045*roll,angle=Math.PI*(2*roll+flat*landing)
+      if(at===1&&repeat){
+        x=THREE.MathUtils.lerp(spread,compact,Math.sin(Math.PI*n))
+        yaw=(i-1.5)*.045
+        angle=Math.PI*(2+previousFlat+2*n+(flat-previousFlat)*landing)
+      }
+      stick.position.set(x,0,1.80)
+      stick.rotation.set(0,yaw,angle)
       stick.updateWorldMatrix(true,true);bounds.setFromObject(stick,true)
       const lift=at===0?.12*Math.sin(Math.PI*n):at===1?1.22*Math.sin(Math.PI*n):0
       stick.position.y=-bounds.min.y+Math.max(0,lift)
     })
-    const advance=at===2?n:at>2?1:0,part=(advance*2)%1
-    token.position.set(1.2,.088+.15*Math.sin(Math.PI*part),1-.96*advance)
+    const position=((Math.floor(options.position??0)%20)+20)%20,steps=Math.max(0,Math.floor(options.steps??2))
+    const advance=at===2?n*steps:at>2&&options.position===undefined?steps:0,segment=Math.floor(advance),part=advance-segment
+    const a=stations[(position+segment)%20]!,b=stations[(position+segment+1)%20]!
+    token.position.set(THREE.MathUtils.lerp(a[0],b[0],part),.088+.15*Math.sin(Math.PI*part),THREE.MathUtils.lerp(a[1],b[1],part))
     subject.updateMatrixWorld(true)
   }
   pose(0,0)

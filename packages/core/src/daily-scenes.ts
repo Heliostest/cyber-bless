@@ -99,7 +99,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "korean-yutnori", title: "木柶行棋", engine: "korean-yutnori@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "korean-yutnori",
-    narrative: "掷柶是韩国节日里亲友共玩的传统棋戏，以四根一面平、一面圆的木柶决定棋子步数，人们轮流投掷，沿棋盘前行。这里合拢木柶，抛起后看它们落下，再依两个平面朝上的结果移动两格。这是一段单次行棋的小景，让木声与相伴的轻松留在手边。",
+    narrative: "掷柶是韩国节日里亲友共玩的传统棋戏，以四根一面平、一面圆的木柶落面决定一至五步，人们轮流投掷，沿棋盘前行。这里合拢木柶，抛起后让一枚棋子按落面前行；可继续投掷，从当前位置接着走，想停时结束行棋，让木声与片刻轻松留在手边。",
   },
   {
     id: "russian-matryoshka", title: "套娃相藏", engine: "russian-matryoshka@1", revision: "bundled", manifestUrl: "",

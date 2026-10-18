@@ -3087,7 +3087,8 @@ button:hover:not(:disabled) {
   opacity: 0.55;
   cursor: progress;
 }
-.scene-diabolo-repeat {
+.scene-diabolo-repeat,
+.scene-yut-finish {
   position: absolute;
   left: 35%;
   bottom: 116px;
@@ -3103,6 +3104,9 @@ button:hover:not(:disabled) {
   white-space: nowrap;
   pointer-events: auto;
 }
+.scene-yut-finish { left: 14px; cursor: pointer; }
+.scene-yut-finish:focus-visible { outline: 3px solid var(--mint-ink); outline-offset: 3px; }
+.scene-yut-finish:disabled { opacity: 0.55; cursor: progress; }
 
 @keyframes scene-fade-in {
   from {
@@ -3857,14 +3861,16 @@ button:hover:not(:disabled) {
 .library-scene-stage .scene-bow-tap:active {
   transform: translateY(1px);
 }
-.library-scene-stage .scene-diabolo-repeat {
+.library-scene-stage .scene-diabolo-repeat,
+.library-scene-stage .scene-yut-finish {
   grid-area: action;
   grid-column: 2;
   justify-self: end;
   position: static;
   margin-top: 10px;
 }
-.library-scene-stage .scene-overlay-host:has(> .scene-diabolo-repeat:not([hidden])) {
+.library-scene-stage .scene-overlay-host:has(> .scene-diabolo-repeat:not([hidden])),
+.library-scene-stage .scene-overlay-host:has(> .scene-yut-finish:not([hidden])) {
   grid-template-columns: minmax(0, 1fr) auto auto;
   column-gap: 8px;
 }

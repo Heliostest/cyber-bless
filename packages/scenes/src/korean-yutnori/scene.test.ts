@@ -52,6 +52,7 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
     return [left + (p.x + 1) * width / 2, top + (1 - p.y) * height / 2]
   }
   const run = (seconds = 1.2) => { for (let t = 0; t < seconds; t += .025) instance.update(.025) }
+  vi.spyOn(Math, 'random').mockReturnValue(5 / 16)
   return { instance, scene, camera, host, overlay, hit, button, point, run, progress, saveWish, complete, haptic }
 }
 function event(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
@@ -66,7 +67,9 @@ function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, r
   for (let i = 1; i <= 8; i++) event(s.hit, 'pointermove', [p[0] + dx * i / 8, p[1] + dy * i / 8])
   event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); if (run) s.run()
 }
-function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) drag(s, at, ...delta(at), run) }
+function finish(s: ReturnType<typeof mount>) { s.overlay.querySelector<HTMLButtonElement>('.scene-yut-finish')?.click(); s.run() }
+// A terminal checkpoint now includes the user's separate end action.
+function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) { drag(s, at, ...delta(at), run); if (at === 2 && run) finish(s) } }
 function cues(s: ReturnType<typeof mount>) {
   const list: { object: THREE.Object3D; cue: InteractionCue }[] = []
   s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled()) list.push({ object, cue }) })
@@ -85,9 +88,48 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 
 
 describe('Korean yutnori single turn', () => {
-  it.each([false,true])('gathers four sticks, tosses them and moves a token once, reduced=%s', reduced => {
+  it.each([false, true])('uses each random face result, accumulates moves and waits for a manual finish, reduced=%s', reduced => {
+    const s = mount(0, { isReducedMotion: () => reduced })
+    step(s, 0)
+    vi.spyOn(Math, 'random').mockReturnValue(.5) // mask 8: one flat face, one space.
+    step(s, 1)
+    expect(s.overlay.querySelector('.scene-hint')!.textContent).toContain('1 格')
+    const flat = () => [0, 1, 2, 3].filter(i => new THREE.Vector3(0, -1, 0).applyQuaternion(s.scene.getObjectByName(`yut-stick-${i}`)!.quaternion).y > .9).length
+    expect(flat()).toBe(1)
+    drag(s, 2, 0, -60)
+    const token = s.scene.getObjectByName('yut-token')!, station = (n: number) => s.scene.getObjectByName(`yut-station-${n}`)!
+    expect(token.position.x).toBeCloseTo(station(1).position.x); expect(token.position.z).toBeCloseTo(station(1).position.z)
+    expect(s.progress).toEqual([1, 2]); expect(s.complete).not.toHaveBeenCalled()
+    const finish = s.overlay.querySelector<HTMLButtonElement>('.scene-yut-finish')!
+    expect(finish.hidden).toBe(false)
+    vi.mocked(Math.random).mockReturnValue(0) // all round: five spaces.
+    s.button.click(); s.run()
+    expect(flat()).toBe(0); expect(s.overlay.querySelector('.scene-hint')!.textContent).toContain('5 格')
+    expect(finish.hidden).toBe(true)
+    drag(s, 2, 0, -60)
+    expect(token.position.x).toBeCloseTo(station(6).position.x); expect(token.position.z).toBeCloseTo(station(6).position.z)
+    expect(s.progress).toEqual([1, 2]); expect(s.complete).not.toHaveBeenCalled()
+    finish.click(); s.run(); expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+    finish.click(); s.button.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it('restores both a pending throw result and a settled position without rerolling', () => {
+    let saved = ''
+    const s = mount(0, { isReducedMotion: () => true, onVariantChange: value => { saved = value } })
+    step(s, 0); vi.spyOn(Math, 'random').mockReturnValue(.5); step(s, 1)
+    const random = vi.mocked(Math.random); random.mockClear()
+    const pending = mount(2, { initialVariant: saved, isReducedMotion: () => true })
+    expect(pending.overlay.querySelector('.scene-hint')!.textContent).toContain('1 格')
+    expect(pending.progress).toEqual([])
+    drag(s, 2, 0, -60)
+    const resumed = mount(2, { initialVariant: saved, isReducedMotion: () => true })
+    const token = resumed.scene.getObjectByName('yut-token')!, station = resumed.scene.getObjectByName('yut-station-1')!
+    expect(token.position.x).toBeCloseTo(station.position.x); expect(token.position.z).toBeCloseTo(station.position.z)
+    expect(resumed.overlay.querySelector<HTMLButtonElement>('.scene-yut-finish')!.hidden).toBe(false)
+    expect(resumed.progress).toEqual([])
+  })
+  it.each([false,true])('gathers, tosses and moves before an explicit finish, reduced=%s', reduced => {
     const s=mount(0,{isReducedMotion:()=>reduced})
-    for(let i=0;i<3;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); expect(s.progress).toEqual([1,2,3].slice(0,i+1))}
+    for(let i=0;i<3;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); if(i===2){expect(s.progress).toEqual([1,2]);finish(s)} expect(s.progress).toEqual([1,2,3].slice(0,i+1))}
     s.button.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
   it('uses identical final subject transforms for ordinary, reduced motion and silently restored checkpoints', () => {
@@ -153,7 +195,7 @@ describe('Korean yutnori single turn', () => {
       event(s.hit, 'pointerdown', p)
       for (const [along, cross] of [[12, 16], [24, -16], [36, 16], [48, -16], [60, 0]]) event(s.hit, 'pointermove', [p[0]+delta(at)[0]*along/60-delta(at)[1]*cross/60,p[1]+delta(at)[1]*along/60+delta(at)[0]*cross/60])
       event(s.hit, 'pointerup', [p[0] + delta(at)[0], p[1] + delta(at)[1]])
-      s.run(); expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(at === 2)
+      s.run(); if(at===2){expect(s.progress).toEqual([]);finish(s)} expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(at === 2)
     }
   })
   it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {
@@ -162,6 +204,7 @@ describe('Korean yutnori single turn', () => {
       expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
       expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
       for (let i = at; i < 3; i++) s.button.click()
+      if (at < 3) finish(s)
       expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
     }
   })
@@ -207,6 +250,7 @@ describe('Korean yutnori single turn', () => {
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); check()
       event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); check(); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy])
       for (let i = 0; i < 40; i++) { s.instance.update(.025); check() }
+      if (at === 2) { expect(s.progress).toEqual([]); finish(s); check() }
       expect(s.progress).toEqual([at + 1]); s.instance.dispose()
     }
   })
@@ -215,7 +259,7 @@ describe('Korean yutnori single turn', () => {
     s.button.click(); for (const dt of [NaN, Infinity, -10, 100000]) s.instance.update(dt); expect(s.progress).toEqual([])
     active = false; const pivot = s.scene.getObjectByName(at === 2 ? 'yut-token' : 'yut-stick-0')!, pose = pivot.position.clone(), rotation = pivot.quaternion.clone(), frames = rendered.render.mock.calls.length
     s.run(2); expect(rendered.render.mock.calls.length).toBe(frames); expect(pivot.position.distanceTo(pose)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(s.progress).toEqual([])
-    active = true; s.run(); expect(s.progress).toEqual([at + 1])
+    active = true; s.run(); if(at===2)finish(s); expect(s.progress).toEqual([at + 1])
   })
   it.each([0, 1, 2])('rejects a target behind another opaque object at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
@@ -234,13 +278,13 @@ describe('Korean yutnori single turn', () => {
       let attack = () => {}, active = true; const s = mount(at, { isReducedMotion: () => true, isActive: () => active, prepareFeedback: () => attack() })
       attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
       for (let i = 0; i < 2; i++) { keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([]) }
-      attack = () => {}; keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      attack = () => {}; keyboard ? s.button.click() : step(s, at); if(keyboard&&at===2)finish(s); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
     }
   })
   it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('blocks synchronous %s step skipping and update reentry', callback => {
     let attack = () => {}; const seen: number[] = [], s = mount(0, { isReducedMotion: () => true, [callback]: () => attack(), onProgress: n => { seen.push(n); if (callback === 'onProgress') attack() } })
     attack = () => { s.button.click(); step(s, 0); step(s, 1); s.instance.update(100) }
-    s.button.click(); expect(seen).toEqual([1]); s.button.click(); expect(seen).toEqual([1, 2]); s.button.click(); expect(seen).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+    s.button.click(); expect(seen).toEqual([1]); s.button.click(); expect(seen).toEqual([1, 2]); s.button.click(); expect(seen).toEqual([1, 2]); finish(s); expect(seen).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
   })
   it.each([0,1,2])('rejects multitouch with an otherwise valid primary drag at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at))
@@ -256,8 +300,9 @@ describe('Korean yutnori single turn', () => {
   })
   it.each(['onProgress', 'haptic'] as const)('invalidates terminal completion after a synchronous %s pause/resume', callback => {
     let active = true, attack = () => {}; const s = mount(2, { isActive: () => active, [callback]: () => attack() })
+    drag(s, 2, 0, -60); s.haptic.mockClear()
     attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
-    step(s, 2); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.hidden).toBe(true)
+    finish(s); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.hidden).toBe(true)
     if (callback === 'onProgress') expect(s.haptic).not.toHaveBeenCalled()
   })
   it.each([NaN, Infinity, -9])('normalizes invalid restoration %s without reporting progress', initial => {

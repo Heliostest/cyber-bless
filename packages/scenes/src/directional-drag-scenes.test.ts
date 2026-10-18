@@ -73,6 +73,7 @@ it.each(DIRECTIONAL_SCENES)('%s accepts a full directional drag without a hidden
       pointer(layer, 'pointermove', x + direction.x * amount, y + direction.y * amount)
     if (cross) pointer(layer, 'pointermove', x + direction.x * distance - direction.y * cross, y + direction.y * distance + direction.x * cross)
     pointer(layer, 'pointerup', x + direction.x * release, y + direction.y * release)
+    if (id === 'korean-yutnori' && at === 2) overlay.querySelector<HTMLButtonElement>('.scene-yut-finish')!.click()
     expect(progress, `step ${at}, distance ${distance}, correction ${correction}`).toEqual([at + 1])
     instance.dispose(); host.remove()
   }
@@ -112,6 +113,7 @@ it.each(DIRECTIONAL_SCENES.flatMap(([id]) => [[id, false], [id, true]] as const)
     }
     pointer(layer, 'pointerup', endX, endY, type)
     for (let frame = 0; frame < 40; frame++) instance.update(.05)
+    if (id === 'korean-yutnori' && step === 2) overlay.querySelector<HTMLButtonElement>('.scene-yut-finish')!.click()
     expect(progress, `step ${step}`).toEqual([1, 2, 3].slice(0, step + 1))
   }
   expect(complete).toHaveBeenCalledOnce()

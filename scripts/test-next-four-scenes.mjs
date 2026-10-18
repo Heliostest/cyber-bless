@@ -85,6 +85,7 @@ for(const width of process.env.WBR_RETURN_ONLY||process.env.WBR_PHYSICAL_ONLY?[]
   if(width===390){await page.reload();await catalog(page);await open(page,id);assert.equal((await saved(page)).sceneRecords.find(r=>r.id===id).progress,2)}
   await shot(page,id,`${width}-2`)
   if(wishIds.includes(id))await write(page,'愿这一程温柔从容');else await action(page)
+  if(id==='korean-yutnori')await page.locator('.scene-yut-finish').click()
   await progress(page,id,3);await shot(page,id,`${width}-3`)
   const state=await saved(page);assert.equal(state.wishes.length,wishIds.includes(id)?1:0)
   assert.equal(await page.locator('[data-cue-role="source"]').count(),0)
@@ -115,6 +116,7 @@ async function physical(page,id,step){
   if(craftDeltas[id]?.[step]){
     const p=pointers.get(page),from=await point(page,'source',id==='chinese-diabolo'&&step===2?1:0),[dx,dy]=craftDeltas[id][step]
     await p.down(from);await p.move([from[0]+dx,from[1]+dy],18);await p.up()
+    if(id==='korean-yutnori'&&step===2)await page.locator('.scene-yut-finish').click()
   }
   else if(id==='polish-paper-cut'&&step<2){
     const p=pointers.get(page),from=await point(page)

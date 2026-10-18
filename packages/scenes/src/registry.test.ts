@@ -20,6 +20,7 @@ describe('sceneRegistry', () => {
       'chinese-rattle-drum',
       'ghanaian-oware',
       'mexican-tortilla-press',
+      'welsh-drop-spindle',
       'scottish-plunge-churn',
       'irish-bodhran',
       'french-coffee-mill',
@@ -253,3 +254,5 @@ it('loads the open hopper, rigid crank and sliding drawer coffee mill',async()=>
 it('loads the frame drum and double ended wooden tipper',async()=>{const m=await loadScene('irish-bodhran');expect(m.meta.id).toBe('irish-bodhran');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
 
 it('loads the Scottish plunge churn with sliding wooden dasher',async()=>{const m=await loadScene('scottish-plunge-churn');expect(m.meta.id).toBe('scottish-plunge-churn');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads the Welsh drop spindle with suspended wooden whorl',async()=>{const m=await loadScene('welsh-drop-spindle');expect(m.meta.id).toBe('welsh-drop-spindle');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})

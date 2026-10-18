@@ -23,6 +23,7 @@ export const sceneEngines = createSceneRegistry({
   "korean-yutnori@1": () => import("./procedural-scene").then(m => m.proceduralEngine("korean-yutnori")),
   "chinese-diabolo@1": () => import("./procedural-scene").then(m => m.proceduralEngine("chinese-diabolo")),
   "chinese-tangram@1": () => import("./procedural-scene").then(m => m.proceduralEngine("chinese-tangram")),
+  "welsh-drop-spindle@1": () => import("./procedural-scene").then(m => m.proceduralEngine("welsh-drop-spindle")),
   "scottish-plunge-churn@1": () => import("./procedural-scene").then(m => m.proceduralEngine("scottish-plunge-churn")),
   "irish-bodhran@1": () => import("./procedural-scene").then(m => m.proceduralEngine("irish-bodhran")),
   "french-coffee-mill@1": () => import("./procedural-scene").then(m => m.proceduralEngine("french-coffee-mill")),

@@ -132,6 +132,7 @@ describe("builtInScenes narratives", () => {
       "vietnamese-bamboo-dragonfly",
       "votive-candle-catholic",
       "weifang-paper-kite",
+      "welsh-drop-spindle",
       "welsh-love-spoon",
       "woodfish",
       "yeondeunghoe",

@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "welsh-drop-spindle",
   "scottish-plunge-churn",
   "irish-bodhran",
   "french-coffee-mill",
@@ -110,6 +111,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "welsh-drop-spindle", title: "悬锤纺线", engine: "welsh-drop-spindle@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "welsh-drop-spindle",
+    narrative: "威尔士的纺织展示中，悬锤纺线把木杆与有分量的纺轮连在线束下，转动使纤维相合。这里是一只原创简化纺锤：浅色木轮托着已绕好的纱团，上方留着一小束柔软羊毛。先轻旋木轮，再缓缓下放，最后提起停稳。日光沿着木纹和乳白线束移动，短短一段起落，让目光也慢下来。",
+  },
   {
     id: "scottish-plunge-churn", title: "木杆搅乳", engine: "scottish-plunge-churn@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "scottish-plunge-churn",

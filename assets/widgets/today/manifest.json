@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "1c827523b3cb72e2fa67a6361a7a0e6849b264799ca6313e3136668d1358aeba",
+  "revision": "99df93b8d6575b96bfb18c77e1651f97cada50bd5339efef82da0fa2a71352cd",
   "scenes": [
+    {
+      "id": "welsh-drop-spindle",
+      "engine": "welsh-drop-spindle@1",
+      "small": {
+        "file": "welsh-drop-spindle-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "917d8e468461413662fac20df7c4128f379ab5ca38e9b509f9d67addb952869a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "welsh-drop-spindle-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "12dc8507b7edb9b388dece243362e04bc14970730fa719cf4567653402dd049f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "welsh-drop-spindle-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "fbd8668a1fb9815cf74b845c6c98b879563968c9f80d6bb7ff242adf2ed572b3",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "scottish-plunge-churn",
       "engine": "scottish-plunge-churn@1",

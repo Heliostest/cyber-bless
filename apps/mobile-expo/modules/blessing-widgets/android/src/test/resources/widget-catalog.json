@@ -1,5 +1,10 @@
 [
   {
+    "id": "welsh-drop-spindle",
+    "title": "悬锤纺线",
+    "category": "blessing"
+  },
+  {
     "id": "scottish-plunge-churn",
     "title": "木杆搅乳",
     "category": "blessing"

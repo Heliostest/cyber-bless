@@ -11,6 +11,8 @@ export type InteractionCue = {
   priority?: number
   /** An adjacent point without a repeated instruction in the guide. */
   compact?: boolean
+  /** Keep enabled compact instrument keys outside the usual four-marker budget. */
+  keepVisible?: boolean
 }
 export function addInteractionCue(object: THREE.Object3D, cue: InteractionCue) {
   const cues = object.userData.interactionCues ??= []
@@ -169,7 +171,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
         for (const cue of cues) if (cue.enabled() && visible(object) && point(object, cue.anchor)) candidates.push({ object, cue })
       })
       candidates.sort((a, b) => (b.cue.priority ?? 0) - (a.cue.priority ?? 0))
-      const selected = [...candidates.filter(e => !e.cue.compact).slice(0, 3), ...candidates.filter(e => e.cue.compact).slice(0, 4)]
+      const selected = [...candidates.filter(e => !e.cue.compact).slice(0, 3), ...candidates.filter(e => e.cue.compact).filter((e,i) => i < 4 || e.cue.keepVisible)]
       const keep = new Set(selected.map(e => e.cue))
       for (const [cue, entry] of entries) if (!keep.has(cue)) { remove(entry); entries.delete(cue) }
       active = selected.map(({ object, cue }) => {

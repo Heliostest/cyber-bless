@@ -5,129 +5,131 @@ import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createChimeAudio, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
-import { createSansiModel } from './model'
-
-type Checkpoint = 0 | 1 | 2 | 3
-const ACTIONS = ['轻拨中央长簧片', '轻拨左侧簧片', '轻拨右侧簧片']
-const HINTS = [
-  '按住中央最长簧片的末端，向下短拖再松手。金属弯下后回弹，发出第一个音。',
-  '按住左侧提示处的簧片末端，向下短拖再松手，听第二个音。',
-  '按住右侧提示处的簧片末端，向下短拖再松手，让第三个音轻轻收尾。',
-  '三次拨奏结束，簧片回到原处。木板、金属与指尖，共同留下短短的回响。（原创音阶片段，非传统曲目；可在设置中开启音效。）',
-]
-const MOVING = ['中央长簧片回弹，余振渐息……', '左侧簧片回弹，余振渐息……', '右侧簧片回弹，余振渐息……']
-const NOTES = [261.63, 329.63, 392]
+import { createSansiModel, SANSI_KEYS } from './model'
 
 export function createMalawiSansi(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx, safe = shared.assertSafeCopy
-  ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
-  let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
-  let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number } | null = null
-  let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
-  const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
-  const callbackActive = () => active() && callbackVersion === lifecycleVersion
-  const audio = createChimeAudio()
-  const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => false })
-  const ui = createStepOverlay(overlay, { title: '铁舌轻鸣', stepsAria: '拨奏步骤', action: ACTIONS[0]! }, safe)
-  ui.actionBtn.style.minWidth = '44px'; ui.actionBtn.style.minHeight = '44px'
-  const { scene, renderer } = createWarmStage(canvas), camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
-  const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'malawi-sansi', label: '铁舌轻鸣' }); style.setStyle(CEL_STYLE)
-  const cueLayer = canvas.parentElement?.querySelector<HTMLElement>('.scene-object-cues')
-  const lights = addStageLights(scene, ctx.stage, { sky: 0xeaf4ed, ground: 0xa39c74, key: 0xffedca, rim: 0xd6f3ff, keyPosition: [-3, 5, 4], keyIntensity: 2.0, rimIntensity: .8 })
-  lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
-  Object.assign(lights.key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3, near: .1, far: 15 })
-  const model = createSansiModel(); scene.add(model.subject)
-  const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
-  const restore = () => pose(at, 0)
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: [0, 1], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
-  const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
-  const nearest = (x: number, y: number) => {
-    const meshes: THREE.Object3D[] = []
-    scene.traverseVisible(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; const materials = Array.isArray(m.material) ? m.material : [m.material]; if (materials.some(m => m.visible && (!m.transparent || m.opacity >= 1))) meshes.push(o) })
-    return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
-  }
-  const axes = (dx: number, dy: number) => [dy, dx]
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore() }
-  const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
-  const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
-  guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
-  const pointer = createObjectPointer(ui.hitLayer, {
-    isActive: inputActive,
-    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return nearest(x, y) === model.targets[at] },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
-    onMove(x, y) {
-      if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
-      pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
-      const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
-      maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
-      pose(at, THREE.MathUtils.clamp(along / 60, 0, 1))
-    },
-    onRelease(x, y) {
-      const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
-      const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
-      if (valid) advance(); else reset()
-    }, onCancel: reset,
+  let started=false,disposed=false,focused=true,suspended=false,notifying=false,controlsBusy=false,at=0,lifecycleVersion=0,callbackVersion=0
+  let stopResize=()=>{},candidate=-1,held=-1,amount=0,invalid=false,moved=false,along=0,pathTravel=0,maxCross=0,maxAlong=0,minAlong=0,backtrack=0
+  const motions:({time:number;force:number}|null)[]=Array(9).fill(null),values=Array<number>(9).fill(0)
+  const active=()=>started&&!disposed&&focused&&(ctx.isActive?.()??true),inputActive=()=>active()&&!notifying&&at<3
+  const callbackActive=()=>active()&&callbackVersion===lifecycleVersion
+  const audio=createChimeAudio(),feedback=createSceneFeedback({...ctx,isSoundEnabled:()=>false})
+  const ui=createStepOverlay(overlay,{title:'铁舌轻鸣',stepsAria:'自由演奏',action:'结束体验'},safe)
+  overlay.classList.add('scene-overlay--sansi');ui.dotsEl.hidden=true
+  ui.actionBtn.classList.add('scene-sansi-finish');ui.actionBtn.title='结束演奏'
+  const keyboard=document.createElement('div');keyboard.className='scene-sansi-keys';keyboard.setAttribute('role','group');keyboard.setAttribute('aria-label','铁舌音符，从左到右排列')
+  const noteButtons=SANSI_KEYS.map((note,key)=>{
+    const button=document.createElement('button');button.type='button';button.className='scene-sansi-key';button.dataset.key=String(key)
+    setSafeText(button,note.name,safe);button.setAttribute('aria-label','左起第'+(key+1)+'根，'+note.name);button.title='键盘 '+(key+1)
+    keyboard.append(button);return button
   })
-  const sync = () => {
-    if (cueLayer) cueLayer.hidden = !active()
-    ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
-    ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at]!, safe)
+  overlay.append(keyboard)
+  const {scene,renderer}=createWarmStage(canvas),camera=new THREE.PerspectiveCamera(40,1,.1,40)
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap
+  const style=createDebugRenderStyle(renderer,scene,camera,{id:ctx.sceneId??'malawi-sansi',label:'铁舌轻鸣'});style.setStyle(CEL_STYLE)
+  const cueLayer=canvas.parentElement?.querySelector<HTMLElement>('.scene-object-cues')
+  const lights=addStageLights(scene,ctx.stage,{sky:0xeaf4ed,ground:0xa39c74,key:0xffedca,rim:0xd6f3ff,keyPosition:[-3,5,4],keyIntensity:2,rimIntensity:.8})
+  lights.key.castShadow=true;lights.key.shadow.mapSize.set(1024,1024);lights.key.shadow.bias=-.0004;lights.key.shadow.normalBias=.008
+  Object.assign(lights.key.shadow.camera,{left:-3,right:3,top:3,bottom:-3,near:.1,far:15})
+  const model=createSansiModel();scene.add(model.subject)
+  const matrices=()=>{scene.updateMatrixWorld(true);camera.updateMatrixWorld(true)}
+  const paint=()=>{
+    for(let key=0;key<9;key++){
+      const motion=motions[key];values[key]=motion?motion.force*Math.exp(-5*motion.time)*Math.cos((8+key*.3)*Math.PI*motion.time):0
+      if(held===key)values[key]=amount
+      noteButtons[key]!.dataset.ringing=String(!!motion)
+    }
+    model.pose(values);matrices()
   }
-  function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
-  function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => { feedback.prepare(); if (callbackActive() && (ctx.isSoundEnabled?.() ?? true)) audio.unlock() }); return inputActive() && version === lifecycleVersion }
-  function settle() {
-    if (!inputActive() || !motion) return
-    at = (motion.step + 1) as Checkpoint; motion = null; restore()
-    withHostCallbacks(() => {
-      ctx.onProgress?.(at); if (!callbackActive()) return
-      feedback.impact()
-      if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+  const removeCues=model.targets.map((target,key)=>addInteractionCue(target,{kind:'tap',label:key===4?'点按或下拨铁舌，自由演奏':SANSI_KEYS[key]!.name,anchor:model.anchors[key],compact:key!==4,keepVisible:true,priority:3,enabled:()=>inputActive()}))
+  const ray=createPointerRay(canvas,camera),down=new THREE.Vector2(),previous=new THREE.Vector2()
+  const nearest=(x:number,y:number)=>{
+    const meshes:THREE.Object3D[]=[]
+    scene.traverseVisible(o=>{const m=o as THREE.Mesh;if(!m.isMesh)return;const materials=Array.isArray(m.material)?m.material:[m.material];if(materials.some(m=>m.visible&&(!m.transparent||m.opacity>=1)))meshes.push(o)})
+    return ray.aim(x,y).intersectObjects(meshes,false)[0]?.object
+  }
+  const reset=()=>{held=-1;amount=0;moved=invalid=false;pathTravel=maxCross=maxAlong=minAlong=backtrack=along=0;if(!disposed){paint();sync()}}
+  const guardedEvents=['pointerdown','pointermove','pointerup','pointercancel','lostpointercapture']
+  const guardCallbackInput=(event:Event)=>{if(notifying)event.stopImmediatePropagation()}
+  guardedEvents.forEach(type=>{window.addEventListener(type,guardCallbackInput,true);ui.hitLayer.addEventListener(type,guardCallbackInput,true)})
+  const pointer=createObjectPointer(ui.hitLayer,{
+    isActive:inputActive,
+    canStart(x,y){if(!Number.isFinite(x)||!Number.isFinite(y))return false;matrices();const hit=nearest(x,y);candidate=model.targets.findIndex(target=>target===hit);return candidate>=0},
+    onStart(x,y){const key=candidate;if(!prepareInput()){pointer.cancel();return};held=key;amount=0;down.set(x,y);previous.copy(down);moved=invalid=false;pathTravel=maxCross=maxAlong=minAlong=backtrack=along=0;sync()},
+    onMove(x,y){
+      if(!Number.isFinite(x)||!Number.isFinite(y)){invalid=true;return}
+      pathTravel+=Math.hypot(x-previous.x,y-previous.y);previous.set(x,y);along=y-down.y;moved=true
+      maxAlong=Math.max(maxAlong,along);minAlong=Math.min(minAlong,along);backtrack=Math.max(backtrack,maxAlong-along);maxCross=Math.max(maxCross,Math.abs(x-down.x))
+      amount=THREE.MathUtils.clamp(along/60,0,1);paint()
+    },
+    onRelease(x,y){
+      const key=held,end=y-down.y,cross=x-down.x,travel=pathTravel+Math.hypot(x-previous.x,y-previous.y)
+      const tap=Number.isFinite(x)&&Number.isFinite(y)&&travel<=8&&down.distanceTo(new THREE.Vector2(x,y))<=8
+      const drag=moved&&completesDirectionalDrag({along,end,maxAlong,minAlong,backtrack,maxCross,cross,travel})
+      const force=tap ? .65 : Math.max(.5,amount);const valid=!invalid&&key>=0&&(tap||drag)
+      held=-1;amount=0;if(valid)play(key,force);else reset()
+    },onCancel:reset,
+  })
+  function sync(){
+    const controlsActive=active()&&at<3;controlsBusy=pointer.isBusy()
+    if(cueLayer)cueLayer.hidden=!active()
+    ui.actionBtn.hidden=at===3;ui.actionBtn.disabled=!controlsActive||controlsBusy||at===0
+    ui.actionBtn.setAttribute('aria-disabled',String(ui.actionBtn.disabled));ui.hitLayer.style.pointerEvents=inputActive()?'auto':'none'
+    keyboard.hidden=at===3;noteButtons.forEach(button=>button.disabled=!controlsActive||controlsBusy)
+    setSafeText(ui.hintEl,at===3?'指尖停下，余音轻轻散去。': '点按或向下轻拨任意铁舌，试着奏出自己的旋律。键盘1–9也可演奏，想收尾时点「结束体验」。',safe)
+  }
+  function withHostCallbacks(work:()=>void){notifying=true;callbackVersion=lifecycleVersion;sync();try{work()}finally{notifying=false;if(!disposed)sync()}}
+  function prepareInput(unlock=true){const version=lifecycleVersion;withHostCallbacks(()=>{feedback.prepare();if(unlock&&callbackActive()&&(ctx.isSoundEnabled?.()??true))audio.unlock()});return inputActive()&&version===lifecycleVersion}
+  function play(key:number,force:number){
+    if(!inputActive()||pointer.isBusy())return
+    motions[key]=ctx.isReducedMotion?.()?null:{time:0,force};paint()
+    const changed=at<2;at=2
+    withHostCallbacks(()=>{
+      if(changed)ctx.onProgress?.(2);if(!callbackActive())return
+      const note=SANSI_KEYS[key]!
+      ctx.haptic?.(force>.8?'heavy':note.frequency<=349.23?'medium':'light');if(!callbackActive())return
+      if(ctx.isSoundEnabled?.()??true)audio.play({freqs:[note.frequency,note.frequency*2.01,note.frequency*4.9],duration:.8,gain:.03+force*.025,type:'sine'})
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount || 1 }; pose(at, motion.from); sync();
-    withHostCallbacks(() => { if (callbackActive() && (ctx.isSoundEnabled?.() ?? true)) audio.play({ freqs: [NOTES[at]!], duration: .65, gain: .045, type: 'sine' }) });
-    if (ctx.isReducedMotion?.()) settle() }
-  const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
-  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
-  const resize = () => {
-    const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0, .20, .02), direction = new THREE.Vector3(.12, 1.8, 1.5).normalize()
-    camera.position.copy(target).add(direction); camera.lookAt(target); camera.updateMatrixWorld(true)
-    const inverse = camera.quaternion.clone().invert(), tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), p = new THREE.Vector3(); let distance = 3.4
-    const saved = amount
-    for (const [step, n] of [[0, 0], [0, 1], [0, -.6], [1, 0], [1, 1], [1, -.6], [2, 0], [2, 1], [2, -.6], [3, 0]]) {
-      pose(step!, n!)
-      model.subject.traverse(o => { const m = o as THREE.Mesh; if (!m.geometry) return; const vertices = m.geometry.getAttribute('position')
-        for (let i = 0; i < vertices.count; i++) { p.fromBufferAttribute(vertices, i).applyMatrix4(m.matrixWorld).sub(target).applyQuaternion(inverse); distance = Math.max(distance, p.z + Math.abs(p.x) / (tangent * aspect * .86), p.z + Math.abs(p.y) / (tangent * .86)) }
-      })
-    }
-    pose(at, saved); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
+  const actions=noteButtons.map((button,key)=>{const action=()=>{if(inputActive()&&!pointer.isBusy()&&prepareInput())play(key,.65)};button.addEventListener('click',action);return action})
+  const keydown=(event:KeyboardEvent)=>{
+    const target=event.target instanceof Element?event.target:null
+    if(event.defaultPrevented||event.repeat||event.altKey||event.ctrlKey||event.metaKey||!inputActive()||target?.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"]'))return
+    const key=Number(event.key)-1;if(event.key.length!==1||key<0||key>=9||!Number.isInteger(key))return;event.preventDefault();actions[key]!()
   }
-  restore(); sync()
+  const finish=()=>{
+    if(!inputActive()||at===0||pointer.isBusy()||!prepareInput(false))return
+    at=3;motions.fill(null);held=-1;paint();audio.dispose()
+    withHostCallbacks(()=>{ctx.onProgress?.(3);if(!callbackActive())return;ctx.haptic?.('medium');if(callbackActive())overlay.dispatchEvent(new CustomEvent('scene:complete',{bubbles:true}))})
+  }
+  const blur=()=>{focused=false;lifecycleVersion++;pointer.cancel();sync()},focus=()=>{focused=true;if(!disposed)sync()}
+  const resize=()=>{
+    const aspect=sizeStage(canvas,renderer,style,camera),target=new THREE.Vector3(0,.20,.02),direction=new THREE.Vector3(.12,1.8,1.5).normalize()
+    camera.position.copy(target).add(direction);camera.lookAt(target);camera.updateMatrixWorld(true)
+    const inverse=camera.quaternion.clone().invert(),tangent=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),p=new THREE.Vector3();let distance=3.4
+    for(const amount of [0,1,-.6]){
+      model.pose(Array(9).fill(amount));matrices()
+      model.subject.traverse(o=>{const m=o as THREE.Mesh;if(!m.geometry)return;const vertices=m.geometry.getAttribute('position');for(let i=0;i<vertices.count;i++){p.fromBufferAttribute(vertices,i).applyMatrix4(m.matrixWorld).sub(target).applyQuaternion(inverse);distance=Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86))}})
+    }
+    paint();camera.position.copy(target).addScaledVector(direction,distance);camera.lookAt(target);matrices()
+  }
   return {
-    start() {
-      if (started || disposed) return
-      started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
-      restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
-      ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
+    start(){if(started||disposed)return;started=true;const initial=ctx.initialProgress??0;at=Number.isFinite(initial)?THREE.MathUtils.clamp(Math.floor(initial),0,3):0;resize();stopResize=observeCanvasResize(canvas,()=>{if(!disposed)resize()});ui.actionBtn.addEventListener('click',finish);window.addEventListener('keydown',keydown);window.addEventListener('blur',blur);window.addEventListener('focus',focus);sync()},
+    update(dt){
+      if(!started||disposed)return
+      if(!active()){lifecycleVersion++;pointer.cancel();if(!suspended){suspended=true;sync()};return}
+      if(notifying)return;if(suspended){suspended=false;sync()}
+      if(controlsBusy!==pointer.isBusy())sync()
+      const delta=Number.isFinite(dt)?THREE.MathUtils.clamp(dt,0,.05):0
+      if(motions.some(Boolean)){motions.forEach((motion,key)=>{if(!motion)return;motion.time+=delta/.65;if(motion.time>=1||ctx.isReducedMotion?.())motions[key]=null});paint()}
+      if(active()){matrices();style.render()}
     },
-    update(dt) {
-      if (!started || disposed) return
-      if (!active()) { lifecycleVersion++; pointer.cancel(); if (!suspended) { suspended = true; sync() }; return }
-      if (notifying) return
-      if (suspended) { suspended = false; sync() }
-      const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
-      if (motion) { motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85); pose(motion.step, motion.time === 1 ? 0 : motion.from * Math.exp(-5 * motion.time) * Math.cos(8 * Math.PI * motion.time)); if (motion.time === 1) settle() }
-      if (active()) { matrices(); style.render() }
-    },
-    dispose() {
-      if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); audio.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
-      guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.subject); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+    dispose(){
+      if(disposed)return;disposed=true;lifecycleVersion++;pointer.dispose();stopResize();feedback.dispose();audio.dispose();removeCues.forEach(remove=>remove())
+      ui.actionBtn.removeEventListener('click',finish);noteButtons.forEach((button,key)=>button.removeEventListener('click',actions[key]!));window.removeEventListener('keydown',keydown)
+      guardedEvents.forEach(type=>{window.removeEventListener(type,guardCallbackInput,true);ui.hitLayer.removeEventListener(type,guardCallbackInput,true)})
+      window.removeEventListener('blur',blur);window.removeEventListener('focus',focus);style.dispose();disposeTree(model.subject);Object.values(lights).forEach(light=>light.dispose());scene.clear();renderer.dispose();renderer.forceContextLoss();overlay.replaceChildren();overlay.classList.remove('scene-overlay','scene-overlay--stage','scene-overlay--sansi')
     },
   }
 }

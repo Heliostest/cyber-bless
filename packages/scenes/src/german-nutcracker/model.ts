@@ -78,5 +78,6 @@ export function createNutcrackerModel() {
     kernel.position.copy(new THREE.Vector3(0,.125,.49).applyAxisAngle(new THREE.Vector3(1,0,0),joint.rotation.x).add(joint.position));kernel.rotation.x=joint.rotation.x
   }
   pose(0,0)
-  return {subject,pose,targets:[lever,walnut,lever],anchors:[[0,-.66,-1.03],[0,.35,.6],[0,-.66,-1.03]] as XYZ[]}
+  return {subject,pose,targets:[lever,walnut,lever],anchors:[[0,-.66,-1.03],[0,.35,.6],[0,-.66,-1.03]] as XYZ[],
+    placement:{object:joint,anchor:[0,.19,.42] as XYZ,radius:.23}}
 }

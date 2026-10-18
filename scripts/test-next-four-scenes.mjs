@@ -11,6 +11,12 @@ const out=path.resolve(process.env.WBR_OUT||(batch==='woven'?'artifacts/woven-pa
 const allIds=batches[batch]
 const wishIds=['peruvian-engraved-gourd','korean-bojagi-wrap','turkish-ebru-paper','chinese-shadow-puppet','niue-shell-necklace','polish-paper-cut','chinese-woodblock-print','amazigh-woven-rug','hungarian-embroidery-hoop','andalusian-ceramic-tile','bai-indigo-cloth','welsh-love-spoon','barcelos-clay-rooster','croatian-licitar-heart','sorbian-painted-egg','basque-sunflower','omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto','aland-votive-ship','minangkabau-spinning-top']
 const ids=process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds,key='cyber-bless:personal:v1'
+// Free performance has no three-step finish; exercise its dedicated contract.
+if(ids.includes('malawi-sansi')){
+  process.env.WBR_URL??=base
+  await import('./verify-sansi-play.mjs')
+  ids.splice(ids.indexOf('malawi-sansi'),1)
+}
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const craftDeltas={
   'chinese-diabolo':[[0,-60],[-60,0],[0,60]],
@@ -21,7 +27,6 @@ const craftDeltas={
   'indian-charkha':[[-60,0],[60,0],[60,0]],
   'german-nutcracker':[[0,-60],[0,-60],[0,60]],
   'mexican-molinillo':[[0,60],[60,0],[-60,0]],
-  'malawi-sansi':[[0,60],[0,60],[0,60]],
   'chinese-suanpan':[[0,-60],[0,60],[0,-60]],
   'mongolian-felt-ger':[[60,0],[0,-60],[0,60]],
   'peruvian-engraved-gourd':[[60,0],[0,60]],

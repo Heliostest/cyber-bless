@@ -85,6 +85,40 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 
 
 describe('German nutcracker jaw and rear lever', () => {
+  it.each([320,390,1280])('also accepts releasing the walnut inside the open mouth at width %i',width=>{
+    for(const reduced of [false,true]){
+      const s=mount(1,{isReducedMotion:()=>reduced},width),p=s.point(targetName(1),anchor(1)),mouth=s.point('nutcracker-joint',[0,.19,.42])
+      event(s.hit,'pointerdown',p)
+      for(let i=1;i<=8;i++)event(s.hit,'pointermove',[p[0]+(mouth[0]-p[0])*i/8,p[1]+(mouth[1]-p[1])*i/8])
+      expect(s.progress).toEqual([])
+      event(s.hit,'pointerup',mouth);if(!reduced)expect(s.progress).toEqual([]);s.run()
+      expect(s.progress).toEqual([2]);expect(s.haptic).toHaveBeenCalledOnce();expect(s.complete).not.toHaveBeenCalled()
+      event(s.hit,'pointerup',mouth);s.run();expect(s.progress).toEqual([2]);s.instance.dispose()
+    }
+  })
+  it('accepts a curved placement and samples a mouth destination first delivered on release',()=>{
+    const s=mount(1,{isReducedMotion:()=>true}),p=s.point(targetName(1),anchor(1)),mouth=s.point('nutcracker-joint',[0,.19,.42])
+    event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+50,p[1]+15]);event(s.hit,'pointerup',mouth)
+    expect(s.progress).toEqual([2])
+  })
+  it('does not place a walnut merely passed over the mouth or released beside it',()=>{
+    const s=mount(1,{isReducedMotion:()=>true}),p=s.point(targetName(1),anchor(1)),mouth=s.point('nutcracker-joint',[0,.19,.42]),nut=s.scene.getObjectByName('nutcracker-walnut')!,home=nut.position.clone()
+    event(s.hit,'pointerdown',p);event(s.hit,'pointermove',mouth);expect(s.progress).toEqual([])
+    event(s.hit,'pointermove',[mouth[0]+70,mouth[1]]);event(s.hit,'pointerup',[mouth[0]+70,mouth[1]])
+    expect(s.progress).toEqual([]);expect(nut.position.distanceTo(home)).toBeLessThan(1e-8)
+    event(s.hit,'pointerdown',p);event(s.hit,'pointerup',mouth);expect(s.progress).toEqual([])
+  })
+  it.each(['nonfinite','cancel','multitouch'])('keeps the mouth drop guarded after %s input',kind=>{
+    const s=mount(1,{isReducedMotion:()=>true}),p=s.point(targetName(1),anchor(1)),mouth=s.point('nutcracker-joint',[0,.19,.42])
+    event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+10,p[1]-10])
+    if(kind==='nonfinite')event(s.hit,'pointermove',[NaN,p[1]])
+    if(kind==='cancel')event(s.hit,'pointercancel',p)
+    if(kind==='multitouch')event(s.hit,'pointerdown',[1,1],2)
+    event(s.hit,'pointermove',mouth);event(s.hit,'pointerup',mouth)
+    if(kind==='multitouch')event(s.hit,'pointerup',[1,1],2)
+    expect(s.progress).toEqual([])
+    event(s.hit,'pointerdown',p);event(s.hit,'pointermove',mouth);event(s.hit,'pointerup',mouth);expect(s.progress).toEqual([2])
+  })
   it.each([false,true])('opens the jaw, places a walnut, and presses it once, reduced=%s', reduced => {
     const s=mount(0,{isReducedMotion:()=>reduced})
     for(let i=0;i<3;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); expect(s.progress).toEqual([1,2,3].slice(0,i+1))}

@@ -1,6 +1,11 @@
 import * as THREE from 'three'
 
 type XYZ = [number, number, number]
+export const SANSI_KEYS = [
+  { name:'高音Do', frequency:523.25 }, { name:'La', frequency:440 }, { name:'Fa', frequency:349.23 },
+  { name:'Re', frequency:293.66 }, { name:'Do', frequency:261.63 }, { name:'Mi', frequency:329.63 },
+  { name:'So', frequency:392 }, { name:'Si', frequency:493.88 }, { name:'高音Re', frequency:587.33 },
+] as const
 /** Authored nine-key illustration, not a regional instrument replica or tuning chart. */
 export function createSansiModel() {
   const subject = new THREE.Group(); subject.name = 'sansi-subject'
@@ -43,10 +48,9 @@ export function createSansiModel() {
     for(const side of [-1,1])box(`sansi-rattle-leg-${i}-${side}`,[.022,.08,.045],brass,[x+side*.074,.235,1.07])
     const ring=add(`sansi-rattle-ring-${i}`,new THREE.TorusGeometry(.071,.013,8,24),steel,[x,.285,1.11]);ring.rotation.x=-Math.PI/2+.28;return ring
   })
-  const chosen=[4,2,6]
-  function pose(step:number, amount:number) {
+  function pose(deflections:readonly number[]) {
     for(let i=0;i<tines.length;i++){
-      const {mesh,original,end}=tines[i]!, d=i===chosen[step] ? .13*amount : 0, vertices=mesh.geometry.getAttribute('position') as THREE.BufferAttribute
+      const {mesh,original,end}=tines[i]!, d=.13*THREE.MathUtils.clamp(deflections[i]??0,-.6,1), vertices=mesh.geometry.getAttribute('position') as THREE.BufferAttribute
       mesh.position.y=.49-d
       for(let j=0;j<vertices.count;j++){
         const z=original[j*3+2]!, free=THREE.MathUtils.clamp((z+end+.575)/(end+.575),0,1)
@@ -54,8 +58,9 @@ export function createSansiModel() {
       }
       vertices.needsUpdate=true;mesh.geometry.computeVertexNormals();mesh.geometry.computeBoundingSphere();mesh.geometry.computeBoundingBox()
     }
+    const amount=deflections.reduce((loudest,n)=>Math.abs(n)>Math.abs(loudest)?n:loudest,0)
     rings.forEach((ring,i)=>{ring.rotation.x=-Math.PI/2+.28+amount*.16*(i?1:-1)})
   }
-  pose(0,0)
-  return {subject,pose,targets:chosen.map(i=>tines[i]!.mesh),anchors:[[0,.02,-.035],[0,.02,-.035],[0,.02,-.035]] as XYZ[]}
+  pose([])
+  return {subject,pose,targets:tines.map(tine=>tine.mesh),anchors:tines.map(()=>[0,.02,-.035] as XYZ)}
 }

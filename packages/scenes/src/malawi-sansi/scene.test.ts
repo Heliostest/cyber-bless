@@ -58,7 +58,7 @@ function event(el: HTMLElement, type: string, [clientX, clientY]: [number, numbe
   const e = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(e, { clientX, clientY, pointerId, pointerType: 'touch', button: 0 }); el.dispatchEvent(e)
 }
-const targetName = (at: number) => ['sansi-tine-4','sansi-tine-2','sansi-tine-6'][at]!
+const targetName = (at: number) => 'sansi-tine-'+at
 const anchor = (at: number): [number, number, number] => [[0,.02,-.035],[0,.02,-.035],[0,.02,-.035]][at] as [number,number,number]
 const delta = (at: number): [number, number] => [0,60]
 function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, run = true) {
@@ -84,238 +84,120 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 }
 
 
-describe('Sansi flexible metal tongues', () => {
-  it.each([false,true])('accepts three distinct plucks once, reduced=%s', reduced => {
-    const s=mount(0,{isReducedMotion:()=>reduced})
-    for(let i=0;i<3;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); expect(s.progress).toEqual([1,2,3].slice(0,i+1))}
-    s.button.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
+describe('Sansi free performance', () => {
+  const keys = (s: ReturnType<typeof mount>) => Array.from(s.overlay.querySelectorAll<HTMLButtonElement>('.scene-sansi-key'))
+  const tap = (s: ReturnType<typeof mount>, key: number) => { const p=s.point(targetName(key),anchor(0));event(s.hit,'pointerdown',p);event(s.hit,'pointerup',p) }
+  it('projects a separate playable marker for every tine',()=>{
+    const s=mount();expect(s.host.querySelectorAll('[data-cue-role="source"]')).toHaveLength(9)
+    tap(s,0);s.instance.update(.025);expect(s.host.querySelectorAll('[data-cue-role="source"]')).toHaveLength(9)
   })
-  it('bends each tongue at its free end while its clamped root stays fixed and cancel is silent',()=>{
-    for(const at of [0,1,2]){
-      const s=mount(at), tine=s.scene.getObjectByName(targetName(at)) as THREE.Mesh, p=s.point(targetName(at),anchor(at)), home=tine.position.clone()
-      const vertices=tine.geometry.getAttribute('position'), originals=Array.from(vertices.array)
-      event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0],p[1]+30])
-      expect(home.y-tine.position.y).toBeGreaterThan(.04);expect(tine.position.x).toBe(home.x);expect(tine.position.z).toBe(home.z);expect(s.progress).toEqual([])
-      let fixed=0,bent=0
-      for(let i=0;i<vertices.count;i++){
-        const beforeY=originals[i*3+1]!+home.y, nowY=vertices.getY(i)+tine.position.y
-        if(Math.abs(nowY-beforeY)<.000001)fixed++;else bent++
-      }
+  it.each([false,true])('plays every tine repeatedly in any order and completes only on manual finish, reduced=%s',reduced=>{
+    const s=mount(0,{isReducedMotion:()=>reduced}),order=[8,0,4,2,7,1,6,5,3,4,4]
+    for(const key of order)tap(s,key)
+    s.run(2);expect(s.progress).toEqual([2]);expect(s.haptic).toHaveBeenCalledTimes(order.length);expect(s.complete).not.toHaveBeenCalled()
+    expect(keys(s)).toHaveLength(9);expect(s.button.textContent).toBe('结束体验');expect(s.button.disabled).toBe(false)
+    s.button.click();s.run();s.button.click();tap(s,4)
+    expect(s.progress).toEqual([2,3]);expect(s.complete).toHaveBeenCalledOnce();expect(s.saveWish).not.toHaveBeenCalled();expect(cues(s)).toEqual([])
+  })
+  it('lets nine native note buttons and number keys play without a settling lock',()=>{
+    const s=mount();expect(s.button.disabled).toBe(true)
+    keys(s).forEach(button=>button.click());expect(s.haptic).toHaveBeenCalledTimes(9);expect(s.complete).not.toHaveBeenCalled()
+    for(const key of ['1','5','9'])keys(s)[0]!.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true}))
+    expect(s.haptic).toHaveBeenCalledTimes(12);expect(s.progress).toEqual([2])
+  })
+  it('accepts number shortcuts from the page and keeps a played button usable during feedback',()=>{
+    let duringFeedback=()=>{};const s=mount(0,{haptic:()=>duringFeedback()}),button=keys(s)[0]!,heard=vi.fn(),enabledAndFocused:boolean[]=[]
+    duringFeedback=()=>{heard();enabledAndFocused.push(!button.disabled&&document.activeElement===button)}
+    button.focus();button.click();expect(heard).toHaveBeenCalledOnce();expect(enabledAndFocused).toEqual([true])
+    duringFeedback=heard;document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'9',bubbles:true}));expect(heard).toHaveBeenCalledTimes(2)
+    const input=document.createElement('input');document.body.append(input);input.focus();input.dispatchEvent(new KeyboardEvent('keydown',{key:'1',bubbles:true}));expect(heard).toHaveBeenCalledTimes(2)
+  })
+  it('keeps independent tines ringing when the next note is plucked',()=>{
+    const s=mount(),a=s.scene.getObjectByName('sansi-tine-4')!,b=s.scene.getObjectByName('sansi-tine-0')!
+    tap(s,4);s.instance.update(.05);const ringing=a.position.y;expect(ringing).not.toBe(.49)
+    tap(s,0);expect(a.position.y).toBe(ringing);expect(b.position.y).not.toBe(.49);expect(s.haptic).toHaveBeenCalledTimes(2)
+  })
+  it('bends any free end while keeping its root fixed and cancels silently',()=>{
+    const s=mount()
+    for(let key=0;key<9;key++){
+      const tine=s.scene.getObjectByName(targetName(key)) as THREE.Mesh,p=s.point(targetName(key),anchor(0)),home=tine.position.clone(),v=tine.geometry.getAttribute('position'),rest=Array.from(v.array)
+      event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0],p[1]+30]);expect(home.y-tine.position.y).toBeGreaterThan(.04)
+      let fixed=0,bent=0;for(let j=0;j<v.count;j++){if(Math.abs(v.getY(j)+tine.position.y-rest[j*3+1]!-home.y)<1e-6)fixed++;else bent++}
       expect(fixed).toBeGreaterThan(0);expect(bent).toBeGreaterThan(0)
-      event(s.hit,'pointercancel',p);expect(tine.position.distanceTo(home)).toBeLessThan(.000001);expect(Array.from(vertices.array)).toEqual(originals)
-      step(s,at);expect(s.progress).toEqual([at+1]);expect(tine.position.distanceTo(home)).toBeLessThan(.000001);s.instance.dispose()
+      event(s.hit,'pointercancel',p);expect(tine.position.distanceTo(home)).toBeLessThan(1e-7);expect(Array.from(v.array)).toEqual(rest)
     }
+    expect(s.haptic).not.toHaveBeenCalled();expect(s.progress).toEqual([])
   })
-  it('has nine distinct metal tongues above one wooden board, with only the current free end cued',()=>{
-    for(const at of [0,1,2,3]){
-      const s=mount(at), tines:THREE.Mesh[]=[]
-      s.scene.traverse(o=>{if(/^sansi-tine-\d+$/.test(o.name))tines.push(o as THREE.Mesh)})
-      expect(tines).toHaveLength(9)
-      expect(new Set(tines.map(t=>t.position.x)).size).toBe(9)
-      const board=new THREE.Box3().setFromObject(s.scene.getObjectByName('sansi-soundboard')!)
-      expect(board.min.y).toBeCloseTo(-.03)
-      const bridge=new THREE.Box3().setFromObject(s.scene.getObjectByName('sansi-wooden-bridge')!), clamp=new THREE.Box3().setFromObject(s.scene.getObjectByName('sansi-brass-pressure-bar')!)
-      expect(bridge.max.y).toBeCloseTo(.4725);expect(clamp.min.y).toBeCloseTo(.5075);expect(bridge.min.y).toBeCloseTo(board.max.y)
-      for(const x of [-1.06,1.06]){
-        const pin=new THREE.Box3().setFromObject(s.scene.getObjectByName(`sansi-clamp-pin-${x}`)!), head=new THREE.Box3().setFromObject(s.scene.getObjectByName(`sansi-clamp-head-${x}`)!)
-        expect(pin.min.y).toBeLessThanOrEqual(board.max.y);expect(pin.intersectsBox(head)).toBe(true)
-      }
-      for(const tine of tines){expect(new THREE.Box3().setFromObject(tine).min.y).toBeGreaterThan(board.max.y);expect((tine.material as THREE.MeshStandardMaterial).metalness).toBeGreaterThan(.3)}
-      expect(cues(s).map(c=>c.object.name)).toEqual(at<3?[targetName(at)]:[]);s.instance.dispose()
-    }
+  it.each([0,1,2,3])('restores progress %i silently and retains manual completion',at=>{
+    const s=mount(at);s.run();expect(s.progress).toEqual([]);expect(s.haptic).not.toHaveBeenCalled();expect(s.complete).not.toHaveBeenCalled()
+    expect(cues(s)).toHaveLength(at===3?0:9)
+    if(at===3){expect(s.button.hidden).toBe(true);keys(s).forEach(b=>b.click());expect(s.haptic).not.toHaveBeenCalled()}
+    else {expect(s.button.disabled).toBe(at===0);tap(s,8);s.button.click();expect(s.complete).toHaveBeenCalledOnce()}
   })
-  it('uses identical final subject transforms for ordinary, reduced motion and silently restored checkpoints', () => {
-    for (const checkpoint of [1, 2, 3]) {
-      const normal = mount(), reduced = mount(0, { isReducedMotion: () => true }), restored = mount(checkpoint)
-      for (let at = 0; at < checkpoint; at++) { step(normal, at); step(reduced, at) }
-      normal.scene.updateMatrixWorld(true); reduced.scene.updateMatrixWorld(true); restored.scene.updateMatrixWorld(true)
-      normal.scene.getObjectByName('sansi-subject')!.traverse(o => {
-        for (const other of [reduced, restored]) { const m = other.scene.getObjectByName(o.name)!.matrixWorld; o.matrixWorld.elements.forEach((v, i) => expect(v, o.name).toBeCloseTo(m.elements[i], 9)) }
-      })
-      normal.instance.dispose(); reduced.instance.dispose(); restored.instance.dispose()
-    }
-  })
-  it('offers 44px native keyboard actions, physical input and no wish form or entry feedback', () => {
-    const s = mount(); expect(s.hit).not.toBeNull(); expect(s.button.type).toBe('button')
-    expect(s.button.style.minWidth).toBe('44px'); expect(s.button.style.minHeight).toBe('44px'); expect(s.overlay.querySelector('input,form')).toBeNull()
-    expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-    s.button.click(); expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([1])
-  })
-  it('plays distinct optional synthesized notes on valid release, never on held or cancelled input', () => {
-    const frequencies: number[] = [], peaks: number[] = []; let closed = 0, soundEnabled = false
+  it('plays a different metal tone for every key, with live sound and haptic settings',()=>{
+    const frequencies:number[]=[],peaks:number[]=[];let enabled=false,closed=0
     class AudioBoundary {
-      state = 'running'; currentTime = 0; destination = {}
-      close() { closed++; return Promise.resolve() }
-      createGain() { return { gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime(n: number) { if (n > .0001) peaks.push(n) } }, connect(next: unknown) { return next } } }
-      createOscillator() { return { type: 'sine', frequency: { setValueAtTime(n: number) { frequencies.push(n) } }, connect(g: { connect(next: unknown): unknown }) { return g }, start() {}, stop() {} } }
+      state='running';currentTime=0;destination={}
+      close(){closed++;return Promise.resolve()}
+      createGain(){return {gain:{value:0,setValueAtTime(){},exponentialRampToValueAtTime(n:number){if(n>.0001)peaks.push(n)}},connect(next:unknown){return next}}}
+      createOscillator(){return {type:'sine',frequency:{setValueAtTime(n:number){frequencies.push(n)}},connect(g:{connect(next:unknown):unknown}){return g},start(){},stop(){}}}
     }
-    vi.stubGlobal('AudioContext', AudioBoundary)
-    const s = mount(0, { isSoundEnabled: () => soundEnabled })
-    expect(frequencies).toEqual([]); step(s, 0); expect(frequencies).toEqual([])
-    soundEnabled = true; const p=s.point(targetName(1),anchor(1)); event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0],p[1]+30]);expect(frequencies).toEqual([]);event(s.hit,'pointercancel',p);expect(frequencies).toEqual([]);step(s, 1, false); expect(frequencies).toEqual([329.63]); s.run(); expect(frequencies).toEqual([329.63])
-    const returning = mount(2, { returning: true, isSoundEnabled: () => true }); returning.run(); expect(frequencies).toEqual([329.63])
-    step(s, 2); expect(frequencies).toEqual([329.63, 392]); expect(peaks).toEqual([.045, .045])
-    s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
+    vi.stubGlobal('AudioContext',AudioBoundary)
+    const s=mount(0,{isSoundEnabled:()=>enabled});tap(s,4);expect(frequencies).toEqual([]);enabled=true
+    keys(s).forEach(b=>b.click());expect(frequencies).toHaveLength(27);expect(new Set(frequencies.filter((_,i)=>i%3===0)).size).toBe(9)
+    expect(s.haptic).toHaveBeenCalledTimes(10);expect(new Set(s.haptic.mock.calls.map(c=>c[0])).size).toBeGreaterThan(1)
+    enabled=false;tap(s,2);expect(frequencies).toHaveLength(27);s.instance.dispose();s.instance.dispose();expect(closed).toBe(1)
   })
-  it.each([0, 1, 2])('rejects wrong surfaces, release-only, reverse, short, cross-axis and backtracked gestures at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
-    event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
-    for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx]]) drag(s, at, x, y)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .72, p[1] + dy * .72]); event(s.hit, 'pointerup', [p[0] + dx * .72, p[1] + dy * .72])
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
-    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
+  it.each(['pointercancel','lostpointercapture','blur','pause'])('cancels a held note without sound or progress on %s',kind=>{
+    let active=true;const s=mount(0,{isActive:()=>active}),p=s.point(targetName(4),anchor(0)),tine=s.scene.getObjectByName(targetName(4))!,home=tine.position.clone()
+    event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0],p[1]+30]);expect(s.button.disabled).toBe(true)
+    if(kind==='pause'){active=false;s.instance.update(.05)}else if(kind==='blur')window.dispatchEvent(new Event('blur'));else event(s.hit,kind,p)
+    event(s.hit,'pointerup',[p[0],p[1]+60]);expect(s.progress).toEqual([]);expect(s.haptic).not.toHaveBeenCalled();expect(tine.position.distanceTo(home)).toBeLessThan(1e-7)
+    if(kind==='blur')window.dispatchEvent(new Event('focus'));active=true;s.instance.update(.025);tap(s,4);expect(s.progress).toEqual([2])
   })
-  it.each([0, 1, 2])('checks terminal release coordinates for reverse, cross-axis and nonfinite displacement at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true })
-    for (const kind of ['back', 'cross', 'nan']) {
-      const p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
-      const end: [number, number] = kind === 'back' ? [p[0] + dx * .7, p[1] + dy * .7] : kind === 'cross' ? [p[0] + dx - dy, p[1] + dy + dx] : [NaN, p[1]]
-      event(s.hit, 'pointerup', end); expect(s.progress, kind).toEqual([])
+  it.each(['pointercancel','lostpointercapture','multitouch'])('restores all controls after %s without another canvas action',kind=>{
+    const s=mount(2),p=s.point(targetName(4),anchor(0))
+    event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0],p[1]+30]);expect(keys(s).every(b=>b.disabled)).toBe(true)
+    if(kind==='multitouch'){event(s.hit,'pointerdown',[1,1],2);event(s.hit,'pointerup',p);event(s.hit,'pointerup',[1,1],2)}else event(s.hit,kind,p)
+    s.instance.update(.025);expect(keys(s).every(b=>!b.disabled)).toBe(true);expect(s.button.disabled).toBe(false)
+    keys(s)[0]!.click();expect(s.haptic).toHaveBeenCalledOnce();s.button.click();expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it('rejects wrong surfaces, invalid drags and multiple pointers, then remains playable',()=>{
+    const s=mount(),p=s.point(targetName(4),anchor(0))
+    event(s.hit,'pointerdown',[1,1]);event(s.hit,'pointerup',p)
+    for(const bad of [[NaN,0],[50,0],[0,-60]]){event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+bad[0]!,p[1]+bad[1]!]);event(s.hit,'pointerup',[p[0]+bad[0]!,p[1]+bad[1]!])}
+    event(s.hit,'pointerdown',p);event(s.hit,'pointerdown',[1,1],2);event(s.hit,'pointerup',p);event(s.hit,'pointerup',[1,1],2)
+    expect(s.progress).toEqual([]);expect(s.haptic).not.toHaveBeenCalled();tap(s,4);expect(s.progress).toEqual([2])
+  })
+  it.each([284,350,1280])('keeps all nine real tines reachable and in frame at width %i',width=>{
+    const s=mount(0,{},width);expect(cues(s)).toHaveLength(9)
+    for(let key=0;key<9;key++){
+      const tine=s.scene.getObjectByName(targetName(key))!,p=tine.localToWorld(new THREE.Vector3(...anchor(0))),hit=first(s,p)
+      expect(hit.object?.name).toBe(tine.name);tap(s,key)
     }
-    step(s, at); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([0, 1, 2])('rejects a nonfinite move even when the final release is valid at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [NaN, p[1]])
-    event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run()
-    expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([false, true])('accepts a wobbly drag ending fully extended exactly once, reduced=%s', reduced => {
-    for (const at of [0, 1, 2]) {
-      const s = mount(at, { isReducedMotion: () => reduced }), p = s.point(targetName(at), anchor(at))
-      event(s.hit, 'pointerdown', p)
-      for (const [along, cross] of [[12, 16], [24, -16], [36, 16], [48, -16], [60, 0]]) event(s.hit, 'pointermove', [p[0] + cross, p[1] + along])
-      event(s.hit, 'pointerup', [p[0] + delta(at)[0], p[1] + delta(at)[1]])
-      s.run(); expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(at === 2)
+    for(let frame=0;frame<20;frame++){
+      s.instance.update(.05);s.scene.updateMatrixWorld(true);let extent=0
+      s.scene.getObjectByName('sansi-subject')!.traverse(o=>{const m=o as THREE.Mesh;if(!m.geometry)return;const p=m.geometry.getAttribute('position'),v=new THREE.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).applyMatrix4(m.matrixWorld).project(s.camera);extent=Math.max(extent,Math.abs(v.x),Math.abs(v.y))}})
+      expect(extent).toBeLessThan(.97)
     }
+    expect(s.complete).not.toHaveBeenCalled()
   })
-  it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {
-    for (const returning of [false, true]) {
-      const s = mount(at, { returning, isReducedMotion: () => true }); s.run()
-      expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
-      for (let i = at; i < 3; i++) s.button.click()
-      expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
-    }
+  it('freezes ringing while paused and skips visual motion with reduced motion',()=>{
+    let active=true;const s=mount(0,{isActive:()=>active}),tine=s.scene.getObjectByName(targetName(4)) as THREE.Mesh
+    tap(s,4);s.instance.update(.05);active=false;const before=Array.from(tine.geometry.getAttribute('position').array);s.run();expect(Array.from(tine.geometry.getAttribute('position').array)).toEqual(before)
+    const reduced=mount(0,{isReducedMotion:()=>true}),other=reduced.scene.getObjectByName(targetName(4)) as THREE.Mesh;tap(reduced,4);expect(other.position.y).toBe(.49);expect(reduced.haptic).toHaveBeenCalledOnce()
   })
-  it.each([284, 350, 1280])('frames every subject vertex and exposes the first reachable material cue at width %i', width => {
-    for (const at of [0, 1, 2, 3]) {
-      const s = mount(at, { isReducedMotion: () => true }, width); s.scene.updateMatrixWorld(true)
-      s.scene.getObjectByName('sansi-subject')!.traverse(o => {
-        const m = o as THREE.Mesh; if (!m.geometry) return
-        const pos = m.geometry.getAttribute('position'), bounds = new THREE.Box3(), p = new THREE.Vector3()
-        for (let i = 0; i < pos.count; i++) bounds.expandByPoint(p.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).project(s.camera))
-        expect(Math.max(Math.abs(bounds.min.x), Math.abs(bounds.max.x), Math.abs(bounds.min.y), Math.abs(bounds.max.y)), m.name).toBeLessThan(.97)
-      })
-      for (const { object, cue } of cues(s)) {
-        const hit = first(s, object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))))
-        expect(hit.object?.name, `first reachable material cue ${object.name}`).toBe(object.name); expect(Math.abs(hit.q.x)).toBeLessThan(.97); expect(Math.abs(hit.q.y)).toBeLessThan(.97)
-      }
-      if (at < 3) step(s, at); expect(s.progress).toEqual(at < 3 ? [at + 1] : []); s.instance.dispose()
-    }
+  it.each(['prepareFeedback','haptic','onProgress'] as const)('blocks reentrant note and finish requests from %s',callback=>{
+    let attack=()=>{};const s=mount(0,{[callback]:()=>attack()})
+    attack=()=>{keys(s)[0]!.click();s.button.click();s.instance.update(100)};tap(s,4)
+    expect(s.complete).not.toHaveBeenCalled();expect(s.progress.length).toBeLessThanOrEqual(1)
+    attack=()=>{};s.button.click();expect(s.complete).toHaveBeenCalledOnce()
   })
-  it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or stale position/rotation', kind => {
-    for (const at of [0, 1, 2]) {
-      let active = true; const s = mount(at, { isActive: () => active }), pivot = s.scene.getObjectByName(targetName(at))!, home = pivot.position.clone(), scale = pivot.scale.clone(), rotation = pivot.quaternion.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
-      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); const frames = rendered.render.mock.calls.length
-      expect(pivot.position.distanceTo(home) + pivot.scale.distanceTo(scale)).toBeGreaterThan(.04)
-      if (kind === 'pause') { active = false; s.instance.update(.05); s.instance.update(.05); expect(rendered.render.mock.calls.length).toBe(frames) }
-      else if (kind === 'blur') window.dispatchEvent(new Event('blur')); else event(s.hit, kind, p)
-      event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run(); expect(s.progress).toEqual([]); expect(pivot.position.distanceTo(home)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(pivot.scale.distanceTo(scale)).toBeLessThan(.00001)
-      if (kind === 'blur') window.dispatchEvent(new Event('focus')); active = true; s.instance.update(.025); step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
-    }
-  })
-  it.each([284, 350, 1280])('keeps all subject vertices in frame during each metal tongue deflection at width %i', width => {
-    for (const at of [0, 1, 2]) {
-      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
-      const check = () => {
-        s.scene.updateMatrixWorld(true); let extent = 0
-        s.scene.getObjectByName('sansi-subject')!.traverse(o => {
-          const m = o as THREE.Mesh; if (!m.geometry) return
-          const positions = m.geometry.getAttribute('position'), vertex = new THREE.Vector3()
-          for (let i = 0; i < positions.count; i++) { vertex.fromBufferAttribute(positions, i).applyMatrix4(m.matrixWorld).project(s.camera); extent = Math.max(extent, Math.abs(vertex.x), Math.abs(vertex.y)) }
-        })
-        expect(extent).toBeLessThan(.97)
-      }
-      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); check()
-      event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); check(); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy])
-      for (let i = 0; i < 40; i++) { s.instance.update(.025); check() }
-      expect(s.progress).toEqual([at + 1]); s.instance.dispose()
-    }
-  })
-  it.each([0, 1, 2])('freezes accepted motion and input while paused at %i', at => {
-    let active = true; const s = mount(at, { isActive: () => active }); step(s, at, false); expect(s.button.disabled).toBe(true); expect(s.hit.style.pointerEvents).toBe('none')
-    s.button.click(); for (const dt of [NaN, Infinity, -10, 100000]) s.instance.update(dt); expect(s.progress).toEqual([])
-    active = false; const pivot = s.scene.getObjectByName(targetName(at))!, pose = pivot.position.clone(), rotation = pivot.quaternion.clone(), frames = rendered.render.mock.calls.length
-    s.run(2); expect(rendered.render.mock.calls.length).toBe(frames); expect(pivot.position.distanceTo(pose)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(s.progress).toEqual([])
-    active = true; s.run(); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([0, 1, 2])('rejects a target behind another opaque object at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
-    blocker.position.lerpVectors(s.scene.getObjectByName(targetName(at))!.localToWorld(new THREE.Vector3(...anchor(at))), s.camera.position, .15)
-    blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker); s.scene.updateMatrixWorld(true); step(s, at); expect(s.progress).toEqual([])
-    blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose(); step(s, at); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([0, 1, 2])('preserves pointer ownership through prepareFeedback input on and outside the hit layer at %i', at => {
-    for (const outside of [false, true]) for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) {
-      let attack = () => {}; const s = mount(at, { isReducedMotion: () => true, prepareFeedback: () => attack() })
-      attack = () => event(outside ? document.body : s.hit, type, [1, 1]); step(s, at); expect(s.progress, `${outside} ${type}`).toEqual([at + 1]); s.instance.dispose()
-    }
-  })
-  it.each([0, 1, 2])('invalidates prepared pointer and keyboard input on every pause/resume boundary at %i', at => {
-    for (const keyboard of [false, true]) {
-      let attack = () => {}, active = true; const s = mount(at, { isReducedMotion: () => true, isActive: () => active, prepareFeedback: () => attack() })
-      attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
-      for (let i = 0; i < 2; i++) { keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([]) }
-      attack = () => {}; keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
-    }
-  })
-  it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('blocks synchronous %s step skipping and update reentry', callback => {
-    let attack = () => {}; const seen: number[] = [], s = mount(0, { isReducedMotion: () => true, [callback]: () => attack(), onProgress: n => { seen.push(n); if (callback === 'onProgress') attack() } })
-    attack = () => { s.button.click(); step(s, 0); step(s, 1); s.instance.update(100) }
-    s.button.click(); expect(seen).toEqual([1]); s.button.click(); expect(seen).toEqual([1, 2]); s.button.click(); expect(seen).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
-  })
-  it('rejects multitouch and drag backtracking', () => {
-    const s = mount(0, { isReducedMotion: () => true }), p = s.point(targetName(0), anchor(0))
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerdown', [1, 1], 2); event(s.hit, 'pointermove', [p[0], p[1] + 60]); event(s.hit, 'pointerup', [p[0], p[1] + 60]); event(s.hit, 'pointerup', [1, 1], 2)
-    expect(s.progress).toEqual([]); step(s, 0); step(s, 1)
-    const q = s.point(targetName(2), anchor(2)); event(s.hit, 'pointerdown', q); event(s.hit, 'pointermove', [q[0] + 18, q[1]]); event(s.hit, 'pointerup', q); expect(s.progress).toEqual([1, 2]); step(s, 2); expect(s.progress).toEqual([1, 2, 3])
-  })
-  it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('stops after %s pauses or disposes the scene', callback => {
-    for (const mode of ['pause', 'dispose']) {
-      let active = true, destroy = () => {}; const s = mount(0, { isReducedMotion: () => true, isActive: () => active, [callback]: () => { if (mode === 'pause') active = false; else destroy() } })
-      destroy = () => s.instance.dispose(); const frames = rendered.render.mock.calls.length; s.button.click(); s.instance.update(.1); s.button.click(); expect(rendered.render.mock.calls.length).toBe(frames)
-      if (mode === 'dispose') expect(s.overlay.childElementCount).toBe(0); s.instance.dispose()
-    }
-  })
-  it.each(['onProgress', 'haptic'] as const)('invalidates terminal completion after a synchronous %s pause/resume', callback => {
-    let active = true, attack = () => {}; const s = mount(2, { isActive: () => active, [callback]: () => attack() })
-    attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
-    step(s, 2); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.hidden).toBe(true)
-    if (callback === 'onProgress') expect(s.haptic).not.toHaveBeenCalled()
-  })
-  it.each([NaN, Infinity, -9])('normalizes invalid restoration %s without reporting progress', initial => {
-    const s = mount(initial, { isReducedMotion: () => true }); s.instance.start(); s.instance.update(NaN); expect(s.progress).toEqual([]); s.button.click(); expect(s.progress).toEqual([1])
-  })
-  it('removes all matching pointer callback guards exactly once', () => {
-    const added = vi.spyOn(EventTarget.prototype, 'addEventListener'), removed = vi.spyOn(EventTarget.prototype, 'removeEventListener'), windowAdded = vi.spyOn(window, 'addEventListener'), windowRemoved = vi.spyOn(window, 'removeEventListener'), s = mount()
-    const guards = added.mock.calls.filter(([type, , options], i) => added.mock.contexts[i] === s.hit && options === true && ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture'].includes(type))
-    expect(guards).toHaveLength(5); s.instance.dispose(); s.instance.dispose()
-    for (const [type, listener, options] of guards) {
-      expect(removed.mock.calls.filter(([t, l, o], i) => removed.mock.contexts[i] === s.hit && t === type && l === listener && o === options)).toHaveLength(1)
-      expect(windowAdded.mock.calls.filter(([t, l, o]) => t === type && l === listener && o === options)).toHaveLength(1)
-      expect(windowRemoved.mock.calls.filter(([t, l, o]) => t === type && l === listener && o === options)).toHaveLength(1)
-    }
-  })
-  it('releases capture, geometry, materials, cues and DOM once and rejects retained inputs after disposal', () => {
-    const s = mount(2), resources = new Set<THREE.BufferGeometry | THREE.Material | THREE.Texture>(), cued: THREE.Object3D[] = []
-    s.scene.traverse(o => { if (o.userData.interactionCues?.length) cued.push(o); const m = o as THREE.Mesh; if (m.geometry) resources.add(m.geometry); for (const mat of Array.isArray(m.material) ? m.material : m.material ? [m.material] : []) { resources.add(mat); const map = (mat as THREE.MeshStandardMaterial).map; if (map) resources.add(map) } })
-    const freed = new Map<unknown, number>(); resources.forEach(r => r.addEventListener('dispose', () => freed.set(r, (freed.get(r) ?? 0) + 1)))
-    const p = s.point(targetName(2), anchor(2)), release = vi.fn(); s.hit.releasePointerCapture = release; event(s.hit, 'pointerdown', p)
-    const renderer = rendered.renderer as THREE.WebGLRenderer, frames = rendered.render.mock.calls.length; s.instance.dispose(); s.instance.dispose(); s.button.click(); event(s.hit, 'pointerup', p); s.instance.start(); s.instance.update(10)
-    expect(release).toHaveBeenCalledExactlyOnceWith(1); expect(s.progress).toEqual([]); expect(s.saveWish).not.toHaveBeenCalled(); expect(rendered.render.mock.calls.length).toBe(frames)
-    expect(freed.size).toBe(resources.size); expect([...freed.values()].every(n => n === 1)).toBe(true); expect(renderer.dispose).toHaveBeenCalledOnce(); expect(renderer.forceContextLoss).toHaveBeenCalledOnce()
-    expect(s.overlay.childElementCount).toBe(0); expect(s.host.querySelector('.scene-object-cues')).toBeNull(); for (const o of cued) expect(o.userData.interactionCues).toEqual([])
+  it('releases all geometry, materials, cues and retained controls once',()=>{
+    const s=mount(),resources=new Set<THREE.BufferGeometry|THREE.Material>(),freed=new Map<unknown,number>()
+    s.scene.traverse(o=>{const m=o as THREE.Mesh;if(m.geometry)resources.add(m.geometry);for(const mat of Array.isArray(m.material)?m.material:m.material?[m.material]:[])resources.add(mat)})
+    resources.forEach(r=>r.addEventListener('dispose',()=>freed.set(r,(freed.get(r)??0)+1)))
+    const buttons=keys(s),renderer=rendered.renderer as THREE.WebGLRenderer;s.instance.dispose();s.instance.dispose();buttons.forEach(b=>b.click());s.button.click();s.instance.update(.05)
+    expect(freed.size).toBe(resources.size);expect([...freed.values()].every(n=>n===1)).toBe(true);expect(renderer.dispose).toHaveBeenCalledOnce();expect(s.overlay.childElementCount).toBe(0);expect(s.haptic).not.toHaveBeenCalled()
   })
 })

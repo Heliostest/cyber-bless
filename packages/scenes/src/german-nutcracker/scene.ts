@@ -8,10 +8,10 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 import { createNutcrackerModel } from './model'
 
 type Checkpoint = 0 | 1 | 2 | 3
-const ACTIONS = ['抬起背部杠杆', '向上放入胡桃', '压下背部杠杆']
+const ACTIONS = ['抬起背部杠杆', '放入胡桃', '压下背部杠杆']
 const HINTS = [
   '按住木偶背后的木杆，向上短拖。背杆抬起，下颌围绕转轴向下打开。',
-  '按住底座上的胡桃，向上短拖，把它轻轻送入张开的下颌。',
+  '按住底座上的胡桃，拖到张开的嘴里松手；也可向上短拖放入。',
   '按住背部木杆，向下短拖。下颌随之抬起，果壳分开，露出果仁。',
   '背杆与下颌围绕同一转轴开合，果壳分开，露出果仁。（当代机构欣赏示意；许多现代木偶仅作装饰，请勿据此试用真实摆件。）',
 ]
@@ -41,8 +41,15 @@ export function createGermanNutcracker(ctx: SceneContext): SceneInstance {
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
   const restore = () => pose(at, 0)
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: [0, i === 2 ? 1 : -1], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const mouthPoint = () => model.placement.object.localToWorld(new THREE.Vector3(...model.placement.anchor))
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: [0, i === 2 ? 1 : -1], label: ACTIONS[i]!, anchor: model.anchors[i], destination: i === 1 ? mouthPoint : undefined, targetLabel: i === 1 ? '张开的嘴' : undefined, priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
+  const overMouth = (x: number, y: number) => {
+    if (at !== 1 || !Number.isFinite(x) || !Number.isFinite(y)) return false
+    matrices()
+    // A release over the open jaw is an alternative to the original upward swipe.
+    return ray.aim(x,y).ray.distanceSqToPoint(mouthPoint()) <= model.placement.radius ** 2
+  }
   const nearest = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
     scene.traverseVisible(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; const materials = Array.isArray(m.material) ? m.material : [m.material]; if (materials.some(m => m.visible && (!m.transparent || m.opacity >= 1))) meshes.push(o) })
@@ -66,7 +73,7 @@ export function createGermanNutcracker(ctx: SceneContext): SceneInstance {
     },
     onRelease(x, y) {
       const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
-      const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
+      const valid = !invalid && moved && (completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel }) || overMouth(x,y))
       if (valid) advance(); else reset()
     }, onCancel: reset,
   })

@@ -34,7 +34,7 @@ function pointer(layer: HTMLElement, type: string, x: number, y: number, pointer
 // Exercise real scene hit tests, cue directions, poses and checkpoint callbacks.
 // Long drags and a small correction after full extension must be playable.
 const DIRECTIONAL_SCENES = [
-  ['malawi-sansi', 3], ['japanese-kendama', 3], ['chinese-diabolo', 3],
+  ['japanese-kendama', 3], ['chinese-diabolo', 3],
   ['korean-yutnori', 3], ['russian-matryoshka', 3], ['japanese-koinobori', 3],
   ['indian-charkha', 3], ['german-nutcracker', 3], ['mexican-molinillo', 3],
   ['chinese-suanpan', 3], ['mongolian-felt-ger', 3],

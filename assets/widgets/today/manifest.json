@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "50ad270aaf14921dbd97b5efb9b7001779ba4b45fcf9ab93543193c51eb34136",
+  "revision": "a7a90a30ffbf6fefb2d06b42b1288c093d7609bd1913167cfffe14e2b442d086",
   "scenes": [
+    {
+      "id": "finnish-kantele",
+      "engine": "finnish-kantele@1",
+      "small": {
+        "file": "finnish-kantele-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "ded1d044972490b631c6f55d7bd4e04cba70bdaa2122085e5391db2b56406ca5",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "finnish-kantele-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "b56b7c06831f17df75676ff596c1a80faee8a98f8e05d0417d0b4c02c4a942ff",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "finnish-kantele-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "4747a1d9ba9ae26fd71a8cb80b3c0814ee55cc92a0751f8b489b90351a1f14a9",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "estonian-village-swing",
       "engine": "estonian-village-swing@1",

@@ -42,6 +42,13 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'finnish-kantele': (<>
+    <path d="M8 18L55 14L55 49L21 51Z" fill="#d8b178" stroke="#9e734b" strokeWidth="3"/>
+    <circle cx="38" cy="47" r="2.5" fill="#815c3f"/>
+    <path d="M15 22L50 20M17 28L50 26M19 34L50 32M21 40L50 38M23 46L50 44" stroke="#7f9696" strokeWidth="1.5"/>
+    <path d="M50 18V47" stroke="#647f7d" strokeWidth="3"/>
+    <path d="M12 20L22 47" stroke="#a98258" strokeWidth="4" strokeDasharray="2 4"/>
+  </>),
   'estonian-village-swing': (<>
     <path d="M5 53L14 9L24 53M40 53L50 9L59 53" fill="none" stroke="#a98258" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
     <path d="M9 10H55" stroke="#bd925e" strokeWidth="6" strokeLinecap="round"/>

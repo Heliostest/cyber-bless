@@ -72,6 +72,7 @@ describe("builtInScenes narratives", () => {
       "faroese-wool-knit",
       "fijian-woven-fan",
       "finnish-birch-basket",
+      "finnish-kantele",
       "floating-lantern-loy-krathong",
       "french-petanque",
       "furin-wind-chime",

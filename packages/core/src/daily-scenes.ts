@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "finnish-kantele",
   "estonian-village-swing",
   "french-petanque",
   "english-hearth-bellows",
@@ -102,6 +103,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "finnish-kantele", title: "五弦轻拨", engine: "finnish-kantele@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "finnish-kantele",
+    narrative: "康特勒是芬兰音乐中的拨弦乐器家族，五弦木琴身与金属琴弦是其中一种形态。这里用一件原创简化小琴，轻拨长弦、中弦和短弦，看琴弦弯起、回振，再静静展平，让细光与木纹陪伴这一小段从容的节奏。",
+  },
   {
     id: "estonian-village-swing", title: "秋千轻荡", engine: "estonian-village-swing@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "estonian-village-swing",

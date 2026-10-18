@@ -20,6 +20,7 @@ describe('sceneRegistry', () => {
       'chinese-rattle-drum',
       'ghanaian-oware',
       'mexican-tortilla-press',
+      'japanese-wagasa',
       'spanish-castanets',
       'japanese-shishi-odoshi',
       'german-jumping-jack',
@@ -241,3 +242,5 @@ describe('loadScene', () => {
 it('loads the bamboo tipping water feature through the scene registry',async()=>{const m=await loadScene('japanese-shishi-odoshi');expect(m.meta.id).toBe('japanese-shishi-odoshi');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
 
 it('loads the cord-linked hollow castanets through the scene registry',async()=>{const m=await loadScene('spanish-castanets');expect(m.meta.id).toBe('spanish-castanets');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads the bamboo and folding paper wagasa through the scene registry',async()=>{const m=await loadScene('japanese-wagasa');expect(m.meta.id).toBe('japanese-wagasa');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})

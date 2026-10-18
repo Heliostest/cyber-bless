@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "japanese-wagasa",
   "spanish-castanets",
   "japanese-shishi-odoshi",
   "german-jumping-jack",
@@ -106,6 +107,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "japanese-wagasa", title: "纸伞舒晴", engine: "japanese-wagasa@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "japanese-wagasa",
+    narrative: "日本岐阜的和伞工艺以竹骨与和纸构成可收拢的伞面。这里是一柄原创纸伞小景：推起木环，撑杆带着竹骨舒展，轻转伞柄，让浅色的一面移过身旁，再沿折痕慢慢收拢。暖色纸面与竹骨在阳光里分出深浅，伞柄边的一点草影也静下来。",
+  },
   {
     id: "spanish-castanets", title: "木壳轻拍", engine: "spanish-castanets@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "spanish-castanets",

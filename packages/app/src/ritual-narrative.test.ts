@@ -87,6 +87,7 @@ describe("builtInScenes narratives", () => {
       "japanese-kendama",
       "japanese-koinobori",
       "japanese-shishi-odoshi",
+      "japanese-wagasa",
       "korean-bojagi-wrap",
       "korean-yutnori",
       "lantern",

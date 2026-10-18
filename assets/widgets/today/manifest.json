@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "8bdd8884b1641c886f8815fee7cd03790437ff5f0d98dffaeb074e2053e05b9f",
+  "revision": "80bbaae8b139c959f1840f84355de02a38633c691d5b107c3576110fbc857951",
   "scenes": [
+    {
+      "id": "japanese-wagasa",
+      "engine": "japanese-wagasa@1",
+      "small": {
+        "file": "japanese-wagasa-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "faae6a8840c74680559e1aafe74440f2c8754e37fdba3836b05bbdc1fc1ea719",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "japanese-wagasa-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "639ee4515a297cd9f3ac0d2c22cca6cbc2fbe5704a236127f6776e2078ae5794",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "japanese-wagasa-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "55e4c2e66b010d5e416ba3f0279dbf2619b57dc86085d3225c9ea9176eedf318",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "spanish-castanets",
       "engine": "spanish-castanets@1",

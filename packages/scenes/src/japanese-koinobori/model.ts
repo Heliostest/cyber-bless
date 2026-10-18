@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createKoinoboriPrint } from './cloth-print'
 
 type XYZ = [number, number, number]
 /** Original single-carp appreciation rig. Cloth and rope motion are illustrative. */
@@ -7,11 +8,13 @@ export function createKoinoboriModel() {
   const wood = new THREE.MeshStandardMaterial({ color: 0xc89a63, roughness: .82 })
   const metal = new THREE.MeshStandardMaterial({ color: 0xb1a175, metalness: .25, roughness: .55 })
   const ropeMat = new THREE.MeshStandardMaterial({ color: 0x796d50, roughness: .96 })
-  const teal = new THREE.MeshStandardMaterial({ color: 0x3f9292, roughness: .94, side: THREE.DoubleSide })
-  const cloth = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .95, side: THREE.DoubleSide })
+  const print = createKoinoboriPrint()
+  const cloth = new THREE.MeshStandardMaterial({ map: print, roughness: .94, side: THREE.DoubleSide })
+  cloth.addEventListener('dispose', () => print.dispose())
   const cream = new THREE.MeshStandardMaterial({ color: 0xf4e1ad, roughness: .92 })
   const dark = new THREE.MeshStandardMaterial({ color: 0x294a50, roughness: .85 })
   const vermilion = new THREE.MeshStandardMaterial({ color: 0xcd6b4d, roughness: .91 })
+  const gold = new THREE.MeshStandardMaterial({ color: 0xd6af60, roughness: .92, side: THREE.DoubleSide })
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: XYZ, parent: THREE.Object3D = subject) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
@@ -33,31 +36,37 @@ export function createKoinoboriModel() {
     const bridle = add('koinobori-bridle-' + i, new THREE.TubeGeometry(new THREE.LineCurve3(new THREE.Vector3(-.38, 0, 0), end), 1, .009, 6, false), ropeMat, [0, 0, 0], fish)
     bridle.userData.toonSurface = { outline: false }
   }
-  const rows = 48, columns = 48, positions = new Float32Array((rows + 1) * (columns + 1) * 3), colors = new Float32Array(positions.length), indices: number[] = []
-  const baseColor = new THREE.Color(0x4d9c9d), paleColor = new THREE.Color(0xf0dcab), shadeColor = new THREE.Color(0x347276), redColor = new THREE.Color(0xcc7253)
+  const rows = 48, columns = 48, positions = new Float32Array((rows + 1) * (columns + 1) * 3), uvs = new Float32Array((rows + 1) * (columns + 1) * 2), indices: number[] = []
   for (let i = 0; i <= rows; i++) for (let j = 0; j <= columns; j++) {
-    const u = i / rows, theta = j / columns * Math.PI * 2, stripe = Math.floor(j / columns * 8), x = (u * 7 + (stripe % 2) * .5) % 1, y = (j / columns * 8) % 1
-    const edge = Math.sqrt((x - .5) ** 2 * 4 + (y - .22) ** 2 * 1.4)
-    const color = u < .06 ? redColor : Math.cos(theta) < -.75 ? paleColor : u > .82 ? shadeColor : u > .24 && edge > .64 && edge < .86 ? paleColor : baseColor
-    color.toArray(colors, (i * (columns + 1) + j) * 3)
+    uvs.set([.9 * i / rows, j / columns], (i * (columns + 1) + j) * 2)
     if (i < rows && j < columns) { const a = i * (columns + 1) + j, b = a + columns + 1; indices.push(a, a + 1, b, b, a + 1, b + 1) }
   }
-  const bodyGeometry = new THREE.BufferGeometry(); bodyGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3)); bodyGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3)); bodyGeometry.setIndex(indices)
+  const bodyGeometry = new THREE.BufferGeometry(); bodyGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3)); bodyGeometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2)); bodyGeometry.setIndex(indices)
   add('koinobori-body', bodyGeometry, cloth, [0, 0, 0], fish)
   const tailGeometry = (front: boolean) => {
     const geometry = new THREE.BufferGeometry(), index: number[] = []
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9 * 25 * 3), 3))
+    const uv = new Float32Array(9 * 25 * 2)
+    for (let i = 0; i <= 8; i++) for (let j = 0; j <= 24; j++) uv.set([.9 + .1 * i / 8, front ? j / 48 : 1 - j / 48], (i * 25 + j) * 2)
+    geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2))
     for (let i = 0; i < 8; i++) for (let j = 0; j < 24; j++) { const a = i * 25 + j, b = a + 25; index.push(...(front ? [a, a + 1, b, b, a + 1, b + 1] : [a, b, a + 1, b, b + 1, a + 1])) }
     geometry.setIndex(index); return geometry
   }
-  const tail = add('koinobori-tail', tailGeometry(true), teal, [0, 0, 0], fish)
-  const rearTail = add('koinobori-tail-back', tailGeometry(false), teal, [0, 0, 0], fish)
+  const tail = add('koinobori-tail', tailGeometry(true), cloth, [0, 0, 0], fish)
+  const rearTail = add('koinobori-tail-back', tailGeometry(false), cloth, [0, 0, 0], fish)
   const tails = [tail, rearTail]
   const paint: { mesh: THREE.Mesh; source: Float32Array; side: number; offset: number }[] = []
-  cream.side = dark.side = THREE.DoubleSide
+  cream.side = dark.side = vermilion.side = THREE.DoubleSide
   for (const side of [-1, 1]) {
-    for (const [kind, radius, material, offset] of [['eye', .095, cream, .004], ['pupil', .055, dark, .006]] as const) {
-      const mesh = add('koinobori-' + kind + '-' + side, new THREE.CircleGeometry(radius, 32), material, [0, 0, 0], fish)
+    for (const [kind, geometry, material, offset] of [
+      ['eye', new THREE.RingGeometry(0, .12, 48, 4), cream, .004],
+      ['eye-rim', new THREE.RingGeometry(.096, .113, 48), vermilion, .005],
+      ['iris', new THREE.RingGeometry(0, .087, 48, 3), gold, .005],
+      ['pupil', new THREE.RingGeometry(0, .058, 48, 3), dark, .006],
+      ['eye-light', new THREE.RingGeometry(0, .016, 24, 2).translate(-.018, .021, 0), cream, .00615],
+    ] as const) {
+      const mesh = add('koinobori-' + kind + '-' + side, geometry, material, [0, 0, 0], fish)
+      mesh.userData.toonSurface = { outline: false }
       paint.push({ mesh, source: (mesh.geometry.getAttribute('position').array as Float32Array).slice(), side, offset })
     }
   }

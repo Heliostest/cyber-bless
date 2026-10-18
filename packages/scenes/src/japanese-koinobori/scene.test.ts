@@ -136,15 +136,22 @@ describe('Japanese koinobori unfurling and halyard', () => {
     expect(new THREE.Box3().setFromObject(s.scene.getObjectByName('koinobori-foot')!,true).min.y).toBeCloseTo(-.04)
     expect(toggle.position.distanceTo(slot.position.clone().add(new THREE.Vector3(0,.14,.12)))).toBeLessThan(1e-6)
   })
-  it('joins both tail root half-rings to the actual open cloth rim in every pose',()=>{
+  it('joins both tail root half-rings and their printed pattern to the open cloth rim in every pose',()=>{
     for(const at of [0,1,2,3]){
       const s=mount(at),body=s.scene.getObjectByName('koinobori-body') as THREE.Mesh,positions=body.geometry.getAttribute('position')
       for(const name of ['koinobori-tail','koinobori-tail-back']){
         const tail=s.scene.getObjectByName(name) as THREE.Mesh,v=tail.geometry.getAttribute('position')
         for(let i=0;i<v.count;i++)if(Math.abs(v.getX(i))<1e-7){
-          const q=tail.localToWorld(new THREE.Vector3().fromBufferAttribute(v,i));let distance=Infinity
-          for(let j=48*49;j<positions.count;j++)distance=Math.min(distance,q.distanceTo(body.localToWorld(new THREE.Vector3().fromBufferAttribute(positions,j))))
+          const q=tail.localToWorld(new THREE.Vector3().fromBufferAttribute(v,i));let distance=Infinity,nearest=0
+          for(let j=48*49;j<positions.count;j++){
+            const d=q.distanceTo(body.localToWorld(new THREE.Vector3().fromBufferAttribute(positions,j)))
+            if(d<distance){distance=d;nearest=j}
+          }
           expect(distance,`checkpoint${at}, ${name}, root${i}`).toBeLessThan(1e-5)
+          const a=body.geometry.getAttribute('uv'),b=tail.geometry.getAttribute('uv')
+          expect(b.getX(i)).toBeCloseTo(a.getX(nearest),6)
+          const wrap=Math.abs(b.getY(i)-a.getY(nearest))
+          expect(Math.min(wrap,Math.abs(1-wrap))).toBeLessThan(1e-6)
         }
       }
       s.instance.dispose()
@@ -181,7 +188,7 @@ describe('Japanese koinobori unfurling and halyard', () => {
   it('paints eyes and pupils against the curved cloth instead of floating above it',()=>{
     for(const at of [0,3]){
       const s=mount(at),body=s.scene.getObjectByName('koinobori-body')!
-      for(const side of [-1,1])for(const kind of ['eye','pupil']){
+      for(const side of [-1,1])for(const kind of ['eye','eye-rim','iris','pupil','eye-light']){
         const paint=s.scene.getObjectByName('koinobori-'+kind+'-'+side) as THREE.Mesh,v=paint.geometry.getAttribute('position')
         for(let i=0;i<v.count;i++){
           const point=paint.localToWorld(new THREE.Vector3().fromBufferAttribute(v,i)),ray=new THREE.Raycaster(point.clone().add(new THREE.Vector3(0,0,side*.001)),new THREE.Vector3(0,0,-side))
@@ -196,7 +203,7 @@ describe('Japanese koinobori unfurling and halyard', () => {
   it('keeps painted triangle interiors outside the curved fabric',()=>{
     for(const at of [0,3]){
       const s=mount(at),body=s.scene.getObjectByName('koinobori-body')!
-      for(const side of [-1,1])for(const kind of ['eye','pupil']){
+      for(const side of [-1,1])for(const kind of ['eye','eye-rim','iris','pupil','eye-light']){
         const paint=s.scene.getObjectByName('koinobori-'+kind+'-'+side) as THREE.Mesh,v=paint.geometry.getAttribute('position'),idx=paint.geometry.getIndex()!
         for(let i=0;i<idx.count;i+=3){
           const q=new THREE.Vector3();for(let j=0;j<3;j++)q.add(new THREE.Vector3().fromBufferAttribute(v,idx.getX(i+j)));q.divideScalar(3);paint.localToWorld(q)

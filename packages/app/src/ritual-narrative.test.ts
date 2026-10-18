@@ -68,6 +68,7 @@ describe("builtInScenes narratives", () => {
       "diya-oil-lamp",
       "ema-votive-plaque",
       "english-hearth-bellows",
+      "estonian-village-swing",
       "faroese-wool-knit",
       "fijian-woven-fan",
       "finnish-birch-basket",

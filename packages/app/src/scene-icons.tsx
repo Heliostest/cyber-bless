@@ -42,6 +42,13 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'estonian-village-swing': (<>
+    <path d="M5 53L14 9L24 53M40 53L50 9L59 53" fill="none" stroke="#a98258" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M9 10H55" stroke="#bd925e" strokeWidth="6" strokeLinecap="round"/>
+    <path d="M24 14L20 43M43 14L39 43" stroke="#c7a16c" strokeWidth="4"/>
+    <path d="M16 40L43 38L46 44L19 47Z" fill="#d6aa70" stroke="#986e45" strokeWidth="2"/>
+    <circle cx="24" cy="14" r="2.5" fill="#788b88"/><circle cx="43" cy="14" r="2.5" fill="#788b88"/>
+  </>),
   'french-petanque': (<>
     <ellipse cx="32" cy="46" rx="27" ry="9" fill="#d8c6a3"/>
     <circle cx="16" cy="24" r="5" fill="#d59b48" stroke="#aa783c" strokeWidth="2"/>

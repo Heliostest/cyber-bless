@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "estonian-village-swing",
   "french-petanque",
   "english-hearth-bellows",
   "mexican-metate",
@@ -101,6 +102,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "estonian-village-swing", title: "秋千轻荡", engine: "estonian-village-swing@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "estonian-village-swing",
+    narrative: "在爱沙尼亚的村落生活与季节聚会中，秋千常与相聚、歌声和春日户外时光相伴。木臂悬挂的木台是当地多种秋千形态中的一种。这里用一座原创木架秋千，轻轻推向前方、顺势回摆，再收回中央，看木纹与影子沿着一来一回的弧线移动，把片刻从容留在草地上。",
+  },
   {
     id: "french-petanque", title: "银球近靶", engine: "french-petanque@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "french-petanque",

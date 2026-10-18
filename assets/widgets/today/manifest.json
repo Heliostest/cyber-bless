@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "327c19de17dba4b7d87f84e7888f2e1dff208c62f7ee87690fb8fa4229fd6132",
+  "revision": "50ad270aaf14921dbd97b5efb9b7001779ba4b45fcf9ab93543193c51eb34136",
   "scenes": [
+    {
+      "id": "estonian-village-swing",
+      "engine": "estonian-village-swing@1",
+      "small": {
+        "file": "estonian-village-swing-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "2db31b2cb2ab939c5eb5857e38fc11640b1fef169a0907b51ba4f2237280f394",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "estonian-village-swing-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "6fc6a94f65410f95437d3d1ffa0b80ac4f204d5b0e90ffae6d66043fd90b7fc4",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "estonian-village-swing-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "43c14a61f2da78d8ea104198ff7827c77b295a64cdc87911d58a3bb0f409c735",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "french-petanque",
       "engine": "french-petanque@1",

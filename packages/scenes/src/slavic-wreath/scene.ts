@@ -417,14 +417,17 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
 
   let downX = 0
   let downY = 0
+  let interactionPointerId: number | null = null
   const onHitDown = (e: PointerEvent) => {
+    if (!canAct() || interactionPointerId !== null || !onWreath(e.clientX, e.clientY)) return
+    interactionPointerId = e.pointerId
     fx.prepare()
     downX = e.clientX
     downY = e.clientY
     if (step === 'place' && onWreath(e.clientX, e.clientY)) grabbed = true
   }
   const onHitMove = (e: PointerEvent) => {
-    if (step !== 'place' || !grabbed || e.buttons === 0) return
+    if (!canAct() || e.pointerId !== interactionPointerId || step !== 'place' || !grabbed || e.buttons === 0) return
     if (pointer.aim(e.clientX, e.clientY).ray.intersectPlane(dragPlane, hitPoint)) {
       dragTarget.set(
         THREE.MathUtils.clamp(hitPoint.x, -1, 1),
@@ -434,16 +437,26 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
     }
   }
   const onHitUp = (e: PointerEvent) => {
+    if (e.pointerId !== interactionPointerId) return
+    interactionPointerId = null
     if (step !== 'weave') return
     const moved = Math.hypot(e.clientX - downX, e.clientY - downY)
     if (moved < 12 && onWreath(e.clientX, e.clientY)) startWeave()
   }
+  const onHitCancel = (e?: PointerEvent) => {
+    if (e && e.pointerId !== interactionPointerId) return
+    interactionPointerId = null; grabbed = false; dragTarget.copy(HOLD_POS)
+  }
+  const onInputBlur = () => onHitCancel()
 
   const wireGestures = () => {
     hitLayer.addEventListener('pointerdown', onHitDown)
+    hitLayer.addEventListener('pointercancel', onHitCancel)
+    hitLayer.addEventListener('lostpointercapture', onHitCancel)
+    window.addEventListener('blur', onInputBlur)
     stopClaim = claimObjectTouches(hitLayer, onWreath)
     dragHandle = gestures.createDrag({
-      startsOn: onWreath,
+      startsOn: (x, y) => canAct() && onWreath(x, y),
       // Carried down toward the water (the river fills the lower screen).
       hitTest: (_x, y) => grabbed && y - downY > 40,
       onDrop: (hit) => {
@@ -495,6 +508,12 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
     },
     update(dt: number) {
       if (disposed || !started) return
+      if (!canAct()) {
+        onHitCancel()
+        dragHandle?.setEnabled(false)
+        return
+      }
+      dragHandle?.setEnabled(step === 'place')
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
@@ -578,6 +597,9 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
       hitLayer.removeEventListener('pointerdown', onHitDown)
       hitLayer.removeEventListener('pointermove', onHitMove)
       hitLayer.removeEventListener('pointerup', onHitUp)
+      hitLayer.removeEventListener('pointercancel', onHitCancel)
+      hitLayer.removeEventListener('lostpointercapture', onHitCancel)
+      window.removeEventListener('blur', onInputBlur)
       actionBtn.removeEventListener('click', onActionTap)
       for (const h of handles) h.dispose()
       handles.length = 0

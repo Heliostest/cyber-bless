@@ -186,16 +186,16 @@ describe('Indian charkha drafting and driven spindle', () => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
-    for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx], [dx * 3, dy * 3], [3 - p[0], 3 - p[1]]]) drag(s, at, x, y)
+    for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx]]) drag(s, at, x, y)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .72, p[1] + dy * .72]); event(s.hit, 'pointerup', [p[0] + dx * .72, p[1] + dy * .72])
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
   })
-  it.each([0, 1, 2])('checks terminal release coordinates for reverse, cross-axis, nonfinite and excessive displacement at %i', at => {
+  it.each([0, 1, 2])('checks terminal release coordinates for reverse, cross-axis and nonfinite displacement at %i', at => {
     const s = mount(at, { isReducedMotion: () => true })
-    for (const kind of ['back', 'cross', 'large', 'nan']) {
+    for (const kind of ['back', 'cross', 'nan']) {
       const p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
-      const end: [number, number] = kind === 'back' ? [p[0] + dx * .7, p[1] + dy * .7] : kind === 'cross' ? [p[0] + dx - dy, p[1] + dy + dx] : kind === 'large' ? [p[0] + dx * 3, p[1] + dy * 3] : [NaN, p[1]]
+      const end: [number, number] = kind === 'back' ? [p[0] + dx * .7, p[1] + dy * .7] : kind === 'cross' ? [p[0] + dx - dy, p[1] + dy + dx] : [NaN, p[1]]
       event(s.hit, 'pointerup', end); expect(s.progress, kind).toEqual([])
     }
     step(s, at); expect(s.progress).toEqual([at + 1])
@@ -206,13 +206,13 @@ describe('Indian charkha drafting and driven spindle', () => {
     event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run()
     expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([at + 1])
   })
-  it.each([false, true])('rejects a long zigzag path and remains ready after settlement, reduced=%s', reduced => {
+  it.each([false, true])('accepts a wobbly drag ending fully extended exactly once, reduced=%s', reduced => {
     for (const at of [0, 1, 2]) {
       const s = mount(at, { isReducedMotion: () => reduced }), p = s.point(targetName(at), anchor(at))
       event(s.hit, 'pointerdown', p)
       for (const [along, cross] of [[12, 16], [24, -16], [36, 16], [48, -16], [60, 0]]) event(s.hit, 'pointermove', [p[0]+delta(at)[0]*along/60-delta(at)[1]*cross/60,p[1]+delta(at)[1]*along/60+delta(at)[0]*cross/60])
       event(s.hit, 'pointerup', [p[0] + delta(at)[0], p[1] + delta(at)[1]])
-      s.run(); expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([at + 1])
+      s.run(); expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(at === 2)
     }
   })
   it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {

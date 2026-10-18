@@ -11,26 +11,7 @@ import {
 } from "./scene-library";
 import { SceneArt, SceneBadge } from "./scene-icons";
 import { pendingVessels, usableVessels, VESSEL_COPY } from "./vessels";
-
-export function PageHead({
-  eyebrow,
-  title,
-  children,
-}: {
-  eyebrow: string;
-  title: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <header className="page-heading">
-      <div>
-        <p className="eyebrow">{eyebrow}</p>
-        <h1>{title}</h1>
-      </div>
-      {children}
-    </header>
-  );
-}
+import { PageHead } from "./page-heading";
 export function Empty({
   title,
   body,
@@ -282,7 +263,7 @@ export function World() {
           className={`count-pill${bumped ? " pill-bump" : ""}`}
           key={bumped ? arrival!.key : "count"}
         >
-          {state.collectibles.length} 件珍藏
+          {state.collectibles.length} 件<span className="sr-only">珍藏</span>
         </span>
       </PageHead>
       <div className="room">
@@ -423,20 +404,12 @@ export function CollectionDetail({ id }: { id: string }) {
 export function Me() {
   const { state, dispatch, go, canHaptic } = useApp();
   const stats = [
-    [state.ledger.reduce((n, l) => n + l.amount, 0), "积攒功德"],
-    [state.sessions.length, "仪式时光"],
-    [state.wishes.filter((w) => w.status === "fulfilled").length, "如愿心事"],
+    [state.sessions.length + state.sceneRecords.length, "仪式记录"],
+    [state.collectibles.length, "小天地收藏"],
   ];
   return (
     <>
-      <PageHead eyebrow="照顾好自己，也是一种小功德" title="慢慢变好的我" />
-      <div className="profile">
-        <div className="avatar">
-          <Icon name="leaf" />
-        </div>
-        <h2>生活里的小小修行家</h2>
-        <p>不必满分，今天也很可爱。</p>
-      </div>
+      <PageHead title="我的" />
       <div className="stats">
         {stats.map(([n, label]) => (
           <div key={label}>
@@ -483,27 +456,12 @@ export function Me() {
             </label>
           ))}
       </div>
-      <div className="local-note">
-        <Icon name="lock" />
-        <div>
-          <strong>你的记录，留在你身边</strong>
-          <p>
-            目前仅保存在本机，尚未开启云同步。清除浏览器数据或卸载 App
-            会丢失记录。
-          </p>
-        </div>
-      </div>
-      <p className="footnote">
-        赛博祈福 · 给生活一点温柔
-        <br />
-        功德是趣味记录，心愿由自己慢慢实现。
-      </p>
     </>
   );
 }
 /**
  * 仪式时光's line for a ritual walked as its scene: it left a note on its
- * wish, and never merit or a keepsake.
+ * wish, without an extra keepsake.
  */
 export const HISTORY_SCENE_LINE = "场景体验";
 export function History() {
@@ -528,8 +486,7 @@ export function History() {
       {state.sessions.length ? (
         <ol className="timeline">
           {[...state.sessions].reverse().map((s) => {
-            // Only a 2D ritual settled with merit (and its keepsake).
-            const merit = state.ledger.find((l) => l.id === s.id);
+            const collected = state.collectibles.some(c => c.id === `ritual:${s.id}`);
             const wish = state.wishes.find((w) => w.id === s.wishId);
             return (
               <li key={s.id}>
@@ -538,8 +495,8 @@ export function History() {
                     name, which a 3D scene in the list above may share. */}
                 <h3>{ritualTitle[s.ritual]}</h3>
                 <p>
-                  {merit
-                    ? `功德 +${merit.amount} · 收藏了${rituals[s.ritual].object}`
+                  {collected
+                    ? `收藏了${rituals[s.ritual].object}`
                     : wish
                       ? `${HISTORY_SCENE_LINE} · 为「${wish.title}」记了一笔`
                       : HISTORY_SCENE_LINE}

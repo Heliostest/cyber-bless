@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { placementHit } from '../placement-hit'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -165,7 +166,7 @@ export function createBretonBanner(ctx: SceneContext): SceneInstance {
     },
     onRelease(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && firstVisible(x, y, checkpoint === 0 ? cloth : assembly) === (checkpoint === 0 ? clip : socket) : maxTravel < 12 && tappable(firstVisible(x, y))
+      const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && placementHit(canvas, camera, checkpoint === 0 ? tab : grip, x, y, (px, py) => firstVisible(px, py, checkpoint === 0 ? cloth : assembly) === (checkpoint === 0 ? clip : socket)) : maxTravel < 12 && tappable(firstVisible(x, y))
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,
   })

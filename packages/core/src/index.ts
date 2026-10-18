@@ -1,3 +1,8 @@
+import { builtInScenes } from './daily-scenes';
+import { openingCollectibleId, validOpeningSceneIds, validOpeningState, validOpeningDay, type OpeningState } from './opening';
+export { chooseOpeningScenes, openingCollectibleId, openingExclusions } from './opening';
+export type { OpeningState } from './opening';
+
 export const rituals = {
   woodfish: {
     name: "敲一敲木鱼",
@@ -90,12 +95,15 @@ export type SceneRecord = {
   variant?: string;
 };
 export type State = {
+  /** Absent on legacy saves. Only an empty host starts the first-play opening. */
+  opening?: OpeningState;
   sceneRecords: SceneRecord[];
   version: 1;
   wishes: Wish[];
   activeSession: Session | null;
   sessions: Session[];
   collectibles: Collectible[];
+  /** Legacy score data retained for save compatibility; new rituals do not add entries. */
   ledger: { id: string; amount: number; at: string }[];
   settings: { sound: boolean; haptics: boolean; reducedMotion: boolean };
   /** Held lines of vessel 许愿 walks still waiting on their choice. Absent
@@ -103,6 +111,9 @@ export type State = {
   vesselDrafts?: Record<string, VesselDraft>;
 };
 export type Action =
+  | { type: "opening.start"; sceneIds: [string, string, string] }
+  | { type: "opening.collect"; sceneId: string; at: string }
+  | { type: "opening.finish"; day: string; at: string }
   | { type: "scene.visit"; entry: Pick<SceneRecord, "id" | "title" | "engine" | "revision" | "manifestUrl">; at: string }
   | { type: "scene.progress"; id: string; progress: number }
   | { type: "scene.favorite"; id: string; favorite: boolean }
@@ -139,7 +150,7 @@ export type Action =
   | { type: "ritual.finish"; id: string; at: string }
   /**
    * A ritual walked as its 3D scene for a wish (还愿): one completed session
-   * and a note on the wish, at once. Never merit or a collectible (the
+   * and a note on the wish, at once. Never an extra collectible (the
    * scene red line), and any 2D session in progress is left alone.
    */
   | {
@@ -151,8 +162,8 @@ export type Action =
       at: string;
     }
   /**
-   * A scene walked on 今日's daily set: one keepsake in 小天地 and the day's
-   * merit, once per scene per day. Idempotent: a scene already collected
+   * A scene walked on 今日's daily set: one keepsake in 小天地,
+   * once per scene per day. Idempotent: a scene already collected
    * today (or a last step reported again) settles nothing.
    */
   | {
@@ -213,6 +224,35 @@ function ritualNote(sessionId: string, ritual: RitualId, at: string): Note {
 }
 export function reduce(s: State, a: Action): State {
   switch (a.type) {
+    case 'opening.start': {
+      if (s.opening?.status !== 'new') return s;
+      if (!validOpeningSceneIds(a.sceneIds)) throw Error('开场仪式组合无效');
+      return { ...s, opening: { status: 'active', sceneIds: [...a.sceneIds], completed: 0 } };
+    }
+    case 'opening.collect': {
+      const opening = s.opening;
+      if (!opening || opening.status === 'new') throw Error('开场体验尚未开始');
+      const index = opening.sceneIds.indexOf(a.sceneId);
+      if (index >= 0 && index < opening.completed) return s;
+      if (opening.status !== 'active' || opening.sceneIds[opening.completed] !== a.sceneId)
+        throw Error('请按顺序完成开场仪式');
+      const entry = builtInScenes.find(e => e.id === a.sceneId)!;
+      const record = s.sceneRecords.find(r => r.id === a.sceneId);
+      if (!record || record.engine !== entry.engine || record.progress < (entry.engine === 'woodfish@1' ? 12 : 3) || !date(a.at))
+        throw Error('先完成这场仪式，再收下小物');
+      return {
+        ...s,
+        opening: { ...opening, completed: opening.completed + 1 },
+        collectibles: [...s.collectibles, { id: openingCollectibleId(entry.id), kind: 'scene', sceneId: entry.id,
+          title: entry.title, wishScene: index === 2, at: a.at }],
+      };
+    }
+    case 'opening.finish': {
+      if (s.opening?.status === 'complete') return s;
+      if (s.opening?.status !== 'active' || s.opening.completed !== 3 || !validOpeningDay(a.day) || !date(a.at))
+        throw Error('请先完成三场开场仪式');
+      return { ...s, opening: { ...s.opening, status: 'complete', completed: 3, completedDay: a.day, completedAt: a.at } };
+    }
     case "scene.visit": {
       const old = s.sceneRecords.find(r => r.id === a.entry.id);
       // A saved interaction belongs to an engine contract, not a visual revision.
@@ -362,7 +402,6 @@ export function reduce(s: State, a: Action): State {
         ...next,
         activeSession: null,
         sessions: [...s.sessions, { ...r, completedAt: a.at }],
-        ledger: [...s.ledger, { id: r.id, amount: 10, at: a.at }],
         collectibles: [
           ...s.collectibles,
           {
@@ -428,7 +467,6 @@ export function reduce(s: State, a: Action): State {
         throw new Error("这次仪式的记录无效");
       return {
         ...s,
-        ledger: [...s.ledger, { id: a.id, amount: 10, at: a.at }],
         collectibles: [
           ...s.collectibles,
           {
@@ -575,12 +613,13 @@ export function restore(
   raw: string | null,
   initialSettings?: Partial<State["settings"]>,
 ): State {
-  if (raw === null) return createState(initialSettings);
+  if (raw === null) return { ...createState(initialSettings), opening: { status: 'new' } };
   const v: unknown = JSON.parse(raw);
   const settings = obj(v) ? v.settings : null;
   const valid =
     obj(v) &&
     v.version === 1 &&
+    (v.opening === undefined || validOpeningState(v.opening)) &&
     (v.sceneRecords === undefined || list(v.sceneRecords, sceneRecord)) &&
     obj(settings) &&
     ["sound", "haptics", "reducedMotion"].every(
@@ -634,6 +673,11 @@ export function restore(
   if (!valid) throw new Error("存档格式不受支持或已损坏，原数据已保留");
   const s = v as State;
   s.sceneRecords ??= [];
+  if (s.opening && s.opening.status !== 'new' &&
+      s.opening.sceneIds.slice(0, s.opening.completed).some((sceneId, i) =>
+        !s.collectibles.some(c => c.id === openingCollectibleId(sceneId) && c.kind === 'scene' &&
+          c.sceneId === sceneId && c.wishScene === (i === 2))))
+    throw new Error('开场体验的收藏记录不完整，原数据已保留');
   if (
     [
       ...s.sessions,

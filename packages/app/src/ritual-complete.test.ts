@@ -137,6 +137,13 @@ describe("the settle beat (P0)", () => {
       "它会住进你的小天地",
     );
     expect(ui.host.querySelector("[data-reward-sticker]")).not.toBeNull();
+    expect(ui.host.textContent).not.toContain('功德');
+    const share = [...ui.host.querySelectorAll('.completion button')].find(button => button.textContent?.includes('分享今日仪式'));
+    expect(share).toBeDefined();
+    clickOn(share!);
+    await settle();
+    expect(ui.host.querySelector<HTMLTextAreaElement>('#share-copy')?.value).toContain('今天折一份小小的期待');
+    expect(ui.host.querySelector<HTMLTextAreaElement>('#share-copy')?.value).not.toContain('功德');
 
     clickOn(primary[0]);
     // On 小天地: the sticker flew (instantly, jsdom has no Web Animations)

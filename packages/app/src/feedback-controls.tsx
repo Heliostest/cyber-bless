@@ -1,17 +1,14 @@
-import type { ReactNode } from "react";
 import { Icon } from "./art";
 import { useApp } from "./context";
 
 /**
- * 音效／震动 toggles shared by the ritual page and procedural scenes. 震动 is
- * left out where the host cannot vibrate (iOS browsers). `children` join the
- * same row (a scene's 收藏 chip), wrapping onto a centred line of their own
- * when the toggles fill it.
+ * Compact feedback controls in the scene header. The glyph and pressed state
+ * both reflect the saved setting; unsupported haptics stay out of the header.
  */
-export function FeedbackControls({ children }: { children?: ReactNode }) {
+export function FeedbackControls() {
   const { state, dispatch, canHaptic } = useApp();
   return (
-    <div className="feedback-controls">
+    <div className="feedback-controls" role="group" aria-label="体验反馈">
       {(
         [
           ["sound", "音效"],
@@ -20,20 +17,17 @@ export function FeedbackControls({ children }: { children?: ReactNode }) {
       )
         .filter(([key]) => key !== "haptics" || canHaptic)
         .map(([key, label]) => (
-          <label key={key}>
-            <Icon name={key} />
-            <span>{label}</span>
-            <input
-              className="switch"
-              type="checkbox"
-              checked={state.settings[key]}
-              onChange={(e) =>
-                dispatch({ type: "settings", key, value: e.target.checked })
-              }
-            />
-          </label>
+          <button
+            key={key}
+            type="button"
+            aria-label={label}
+            aria-pressed={state.settings[key]}
+            title={`${label}已${state.settings[key] ? "开启" : "关闭"}`}
+            onClick={() => dispatch({ type: "settings", key, value: !state.settings[key] })}
+          >
+            <Icon name={state.settings[key] ? key : `${key}-off`} />
+          </button>
         ))}
-      {children}
     </div>
   );
 }

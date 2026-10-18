@@ -8,16 +8,26 @@ import { clickOn, renderUI, settle, typeInto } from './dom-test-utils';
 
 vi.mock('./scene-experience', () => ({ SceneExperience: ({ entry, daily }: { entry: { id: string }; daily?: string }) => createElement('div', { 'data-test-scene': entry.id, 'data-test-day': daily }) }));
 afterEach(() => vi.restoreAllMocks());
+it('does not interrupt the first-play opening with a widget request', async () => {
+  const ack = vi.fn(async () => {});
+  const ui = renderUI(createElement(BlessingApp, { host: { read: async () => null, write: async () => {} },
+    navigationRequest: { requestId: 9 }, onNavigationConsumed: ack }));
+  await settle();
+  expect(ui.host.querySelector('.opening-page')).not.toBeNull();
+  expect(ui.host.querySelector('[data-test-scene]')).toBeNull();
+  expect(ack).not.toHaveBeenCalled();
+  ui.unmount();
+});
 it('waits for a valid loaded save, opens today through the scene route, and acknowledges after render', async () => {
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-  let release!: (raw: null) => void;
-  const read = vi.fn(() => new Promise<null>(resolve => { release = resolve; }));
+  let release!: (raw: string) => void;
+  const read = vi.fn(() => new Promise<string>(resolve => { release = resolve; }));
   const ack = vi.fn(async () => {});
   const props = { host: { read, write: async () => {} }, navigationRequest: { requestId: 1 }, onNavigationConsumed: ack };
   const ui = renderUI(createElement(BlessingApp, props));
   await settle();
   expect(ack).not.toHaveBeenCalled();
-  release(null);
+  release(JSON.stringify(createState()));
   await settle();
   expect(ui.host.querySelector('[data-test-scene]')?.getAttribute('data-test-scene')).toBe(dailyPrimaryScene(builtInScenes, localDay())!.id);
   expect(ui.host.querySelector('[data-test-day]')?.getAttribute('data-test-day')).toBe(localDay());
@@ -33,7 +43,7 @@ it('waits for a valid loaded save, opens today through the scene route, and ackn
 });
 it('keeps warm-start form text and defers navigation until the user leaves it', async () => {
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-  const host = { read: async () => null, write: async () => {} };
+  const host = { read: async () => JSON.stringify(createState()), write: async () => {} };
   const ack = vi.fn(async () => {});
   const ui = renderUI(createElement(BlessingApp, { host }));
   await settle();
@@ -55,7 +65,7 @@ it('keeps warm-start form text and defers navigation until the user leaves it', 
 it('falls back to Today for a stale link and never grants a reward', async () => {
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
   const write = vi.fn(async () => {}), ack = vi.fn(async () => {});
-  const ui = renderUI(createElement(BlessingApp, { host: { read: async () => null, write }, navigationRequest: { requestId: 3, day: '2020-01-01', sceneId: 'crane' }, onNavigationConsumed: ack }));
+  const ui = renderUI(createElement(BlessingApp, { host: { read: async () => JSON.stringify(createState()), write }, navigationRequest: { requestId: 3, day: '2020-01-01', sceneId: 'crane' }, onNavigationConsumed: ack }));
   await settle();
   expect(ui.host.querySelector('.today-page')).not.toBeNull();
   expect(ack).toHaveBeenCalledWith(3);
@@ -64,7 +74,7 @@ it('falls back to Today for a stale link and never grants a reward', async () =>
 });
 it('does not consume a link when load failed, and continues after successful retry', async () => {
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-  const read = vi.fn().mockRejectedValueOnce(Error('disk')).mockResolvedValue(null), ack = vi.fn(async () => {});
+  const read = vi.fn().mockRejectedValueOnce(Error('disk')).mockResolvedValue(JSON.stringify(createState())), ack = vi.fn(async () => {});
   const ui = renderUI(createElement(BlessingApp, { host: { read, write: async () => {} }, navigationRequest: { requestId: 4 }, onNavigationConsumed: ack }));
   await settle();
   expect(ack).not.toHaveBeenCalled();

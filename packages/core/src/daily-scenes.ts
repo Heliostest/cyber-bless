@@ -535,11 +535,11 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   },
 ];
 
-export function dailyPrimaryScene<T extends { id: string }>(entries: readonly T[], day: string): T | undefined {
+export function dailyPrimaryScene<T extends { id: string }>(entries: readonly T[], day: string, excluded: readonly string[] = []): T | undefined {
   const order = Array.from({ length: Math.max(BLESSING_SCENE_IDS.length, WISH_SCENE_IDS.length) }, (_, i) =>
     [BLESSING_SCENE_IDS[i], WISH_SCENE_IDS[i]].filter((id): id is typeof BLESSING_SCENE_IDS[number] | typeof WISH_SCENE_IDS[number] => Boolean(id)),
   ).flat();
-  const pool = order.map(id => entries.find(e => e.id === id)).filter((e): e is T => !!e);
+  const pool = order.filter(id => !excluded.includes(id)).map(id => entries.find(e => e.id === id)).filter((e): e is T => !!e);
   // An ordinal covers every entry even as the catalog grows. A date's digit
   // sum has too few possible values and leaves new scenes unreachable.
   const utc = Date.parse(`${day}T00:00:00Z`);

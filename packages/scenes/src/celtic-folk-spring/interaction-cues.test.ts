@@ -289,7 +289,7 @@ describe('physical action cues', () => {
     const [x, y] = s.sourcePoint()
     s.pointer('pointerdown', [x, y])
     s.pointer('pointermove', [x, y - 60])
-    expect(s.enabled()).toEqual([])
+    expect(s.enabled().map(({ cue }) => cue.kind)).toEqual(['drag'])
     s.instance.update(0.4)
     s.pointer('pointerup', [x, y - 60])
     expect(s.progress).toHaveBeenCalledExactlyOnceWith(1)

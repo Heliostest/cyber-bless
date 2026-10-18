@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 type XYZ = [number, number, number]
@@ -148,8 +149,8 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
   const restore = () => pose(at > 0 ? 1 : 0, at >= 2 ? 1 : 0)
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
-    addInteractionCue(rightSkin, { kind: 'drag', label: '向左上贴合纸翼', anchor: [1.05, .34, .012], priority: 3, enabled: enabled(0) }),
-    addInteractionCue(grip, { kind: 'drag', label: '向下轻拉木线轮', anchor: [0, 0, .075], priority: 3, enabled: enabled(1) }),
+    addInteractionCue(rightSkin, { kind: 'drag', direction: [-1, -1], label: '向左上贴合纸翼', anchor: [1.05, .34, .012], priority: 3, enabled: enabled(0) }),
+    addInteractionCue(grip, { kind: 'drag', direction: [0, 1], label: '向下轻拉木线轮', anchor: [0, 0, .075], priority: 3, enabled: enabled(1) }),
     addInteractionCue(body, { kind: 'tap', label: '轻点纸鸢静看', anchor: [.08, .22, .014], priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2()
@@ -183,7 +184,7 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
     },
     onRelease(x, y) {
       const dx = x - down.x, dy = y - down.y, dir = direction(), end = dx * dir.x + dy * dir.y
-      const valid = at < 2 ? dragging && moved && along >= 42 && end >= 42 && end <= 84 && maxTravel <= 90 && minAlong >= -8 && backtrack <= 9 && maxCross <= 18 && Math.abs(dx * dir.y - dy * dir.x) <= 18
+      const valid = at < 2 ? dragging && moved && completesDirectionalDrag({ along, end, maxAlong, minAlong, backtrack, maxCross, cross: dx * dir.y - dy * dir.x, travel: maxTravel }, 42)
         : maxTravel < 12 && Math.hypot(dx, dy) < 12 && belongs(nearestHit(x, y)?.object, body)
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,

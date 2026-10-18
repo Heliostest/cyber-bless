@@ -13,6 +13,7 @@ export function createDrag(opts: DragOpts): GestureHandle {
   let enabled = true
   let dragging = false
   let owner: number | undefined
+  const reset = () => { dragging = false; owner = undefined }
   const onDown = (e: PointerEvent) => {
     if (!enabled || dragging || (opts.startsOn && !opts.startsOn(e.clientX, e.clientY))) return
     dragging = true
@@ -25,14 +26,12 @@ export function createDrag(opts: DragOpts): GestureHandle {
   }
   const onUp = (e: PointerEvent) => {
     if (!dragging || e.pointerId !== owner) return
-    dragging = false
-    owner = undefined
+    reset()
     opts.onDrop?.(opts.hitTest(e.clientX, e.clientY))
   }
   const onCancel = (e: PointerEvent) => {
     if (e.pointerId !== owner) return
-    dragging = false
-    owner = undefined
+    reset()
   }
   return {
     mount(target) {
@@ -41,6 +40,8 @@ export function createDrag(opts: DragOpts): GestureHandle {
       el.addEventListener('pointermove', onMove)
       el.addEventListener('pointerup', onUp)
       el.addEventListener('pointercancel', onCancel)
+      el.addEventListener('lostpointercapture', onCancel)
+      window.addEventListener('blur', reset)
     },
     update() {},
     dispose() {
@@ -49,13 +50,14 @@ export function createDrag(opts: DragOpts): GestureHandle {
       el.removeEventListener('pointermove', onMove)
       el.removeEventListener('pointerup', onUp)
       el.removeEventListener('pointercancel', onCancel)
+      el.removeEventListener('lostpointercapture', onCancel)
+      window.removeEventListener('blur', reset)
       el = null
-      dragging = false
-      owner = undefined
+      reset()
     },
     setEnabled(on) {
       enabled = on
-      if (!on) { dragging = false; owner = undefined }
+      if (!on) reset()
     },
   }
 }

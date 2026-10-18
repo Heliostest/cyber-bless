@@ -366,10 +366,13 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
     downOnDrum = false
     drumPointerId = null
   }
+  const onInputBlur = () => onHitCancel()
 
   const wireGestures = () => {
     hitLayer.addEventListener('pointerdown', onHitDown)
     hitLayer.addEventListener('pointercancel', onHitCancel)
+    hitLayer.addEventListener('lostpointercapture', onHitCancel)
+    window.addEventListener('blur', onInputBlur)
     stopClaim = claimObjectTouches(hitLayer, onDrum)
     spinHandle = gestures.createSpin({
       startsOn: onDrum,
@@ -481,6 +484,8 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
       hitLayer.removeEventListener('pointerdown', onHitDown)
       hitLayer.removeEventListener('pointerup', onHitUp)
       hitLayer.removeEventListener('pointercancel', onHitCancel)
+      hitLayer.removeEventListener('lostpointercapture', onHitCancel)
+      window.removeEventListener('blur', onInputBlur)
       actionBtn.removeEventListener('click', onActionTap)
       for (const h of handles) h.dispose()
       handles.length = 0

@@ -84,6 +84,22 @@ describe('createSpin', () => {
     g.dispose()
   })
 
+  it.each(['blur', 'lostpointercapture'])('releases ownership on %s and accepts a fresh pointer', type => {
+    const onRevolution = vi.fn(), g = createSpin({ onRevolution }); g.mount(el, {})
+    el.dispatchEvent(ptr('pointerdown', 0, 0))
+    if (type === 'blur') window.dispatchEvent(new Event('blur'))
+    else el.dispatchEvent(ptr(type, 0, 0))
+    el.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 2, clientX: 0 }))
+    el.dispatchEvent(new PointerEvent('pointermove', { pointerId: 2, clientX: 360 }))
+    expect(onRevolution).toHaveBeenCalledExactlyOnceWith(1); g.dispose()
+  })
+  it('includes the last release position in a moving spin without spinning on cancellation', () => {
+    const onRevolution = vi.fn(), g = createSpin({ onRevolution }); g.mount(el, {})
+    el.dispatchEvent(ptr('pointerdown', 0, 0)); el.dispatchEvent(ptr('pointermove', 180, 0)); el.dispatchEvent(ptr('pointerup', 360, 0))
+    expect(onRevolution).toHaveBeenCalledExactlyOnceWith(1)
+    el.dispatchEvent(ptr('pointerdown', 360, 0)); el.dispatchEvent(ptr('pointermove', 450, 0)); el.dispatchEvent(ptr('pointercancel', 720, 0))
+    expect(onRevolution).toHaveBeenCalledOnce(); g.dispose()
+  })
   it('ignores a swipe that starts off the object (startsOn)', () => {
     const onAngle = vi.fn()
     const g = createSpin({ onAngle, startsOn: (x) => x >= 100 && x <= 200 })

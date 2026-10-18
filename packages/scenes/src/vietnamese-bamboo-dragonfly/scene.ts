@@ -3,6 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 type XYZ = [number, number, number]
@@ -140,8 +141,8 @@ export function createVietnameseBambooDragonfly(ctx: SceneContext): SceneInstanc
   const restore = () => { pose(0, at === 0 ? 0 : 1); shakeAmount = 0 }
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
-    addInteractionCue(head, { kind: 'drag', label: '拿住竹蜓头向上轻送', anchor: [0, .035, .13], priority: 3, enabled: enabled(0) }),
-    addInteractionCue(rightWing, { kind: 'drag', label: '轻推右侧竹翼后松手', anchor: [1.18, -.14, .545], priority: 3, enabled: enabled(1) }),
+    addInteractionCue(head, { kind: 'drag', direction: [0, -1], label: '拿住竹蜓头向上轻送', anchor: [0, .035, .13], priority: 3, enabled: enabled(0) }),
+    addInteractionCue(rightWing, { kind: 'drag', direction: [1, 0], label: '轻推右侧竹翼后松手', anchor: [1.18, -.14, .545], priority: 3, enabled: enabled(1) }),
     addInteractionCue(head, { kind: 'tap', label: '轻点竹蜓静观', anchor: [0, .035, .13], priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2()
@@ -174,7 +175,7 @@ export function createVietnameseBambooDragonfly(ctx: SceneContext): SceneInstanc
     },
     onRelease(x, y) {
       const dx = x - down.x, dy = y - down.y, end = at === 0 ? -dy : dx
-      const valid = Number.isFinite(x) && Number.isFinite(y) && (at < 2 ? dragging && moved && along >= 42 && end >= 42 && end <= 84 && maxTravel <= 90 && minAlong >= -8 && backtrack <= 9 && maxAlong - end <= 9 && maxCross <= 18 && Math.abs(at === 0 ? dx : dy) <= 18 && Math.hypot(dx, dy) <= 90
+      const valid = Number.isFinite(x) && Number.isFinite(y) && (at < 2 ? dragging && moved && completesDirectionalDrag({ along, end, maxAlong, minAlong, backtrack, maxCross, cross: at === 0 ? dx : dy, travel: maxTravel }, 42)
         : maxTravel < 12 && Math.hypot(dx, dy) < 12 && belongs(nearestHit(x, y)?.object, head))
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,

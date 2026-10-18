@@ -7,6 +7,7 @@ import { Empty } from "./pages";
 import { useOpenScene, useSceneLibrary } from "./scene-library";
 import { SceneBadge } from "./scene-icons";
 import { FULFILL_VESSEL_COPY, usableVessels } from "./vessels";
+import { PageHead } from "./page-heading";
 
 function ReturnChoices({
   value,
@@ -74,7 +75,7 @@ export function NewWish() {
   }
   return (
     <div className="new-wish-page">
-      <p className="page-subtitle">把期待，轻轻放在这里。</p>
+      <PageHead title="许个小心愿" eyebrow="把期待，轻轻放在这里。" />
       <Art kind="lantern" variant="wish" />
       <form onSubmit={submit}>
         <section className="form-card">
@@ -151,6 +152,7 @@ export function WishDetail({ id }: { id: string }) {
   const method = wish.returnMethod ?? "kindness";
   return (
     <div className="wish-detail-page">
+      <PageHead title="我的心愿" />
       <span
         className={`status-pill${wish.status === "fulfilled" ? " fulfilled" : ""}`}
       >
@@ -167,7 +169,7 @@ export function WishDetail({ id }: { id: string }) {
         kind={wish.status === "fulfilled" ? "badge" : "lantern"}
         variant={wish.status === "fulfilled" ? "default" : "wish-detail"}
       />
-      <h1 className="wish-title">{wish.title}</h1>
+      <h2 className="wish-title">{wish.title}</h2>
       <p className="wish-meta">
         <Icon name="lock" />
         {formatDate(wish.createdAt)}许下 · 仅自己可见
@@ -284,9 +286,9 @@ export function WishNote({ id }: { id: string }) {
       }}
       className="note-page"
     >
+      <PageHead title="记一笔" eyebrow="每一步，都值得记住。" />
       <Art kind="crane" />
-      <h1>每一步，都值得记住。</h1>
-      <p className="page-subtitle">关于「{wish.title}」</p>
+      <p className="note-context">关于「{wish.title}」</p>
       <section className="form-card">
         <div className="field-heading">
           <label htmlFor="wish-note">我也在为它努力</label>
@@ -367,8 +369,7 @@ export function FulfillWish({ id }: { id: string }) {
   }
   return (
     <div className="fulfill-page">
-      <h1>好消息，值得被记住。</h1>
-      <p className="page-subtitle">谢谢自己的努力，也谢谢遇到的善意。</p>
+      <PageHead title="来还个愿" eyebrow="谢谢自己的努力，也谢谢遇到的善意。" />
       <Art kind="lantern" variant="fulfill" />
       <form onSubmit={submit}>
         <section className="form-card fulfillment-card">

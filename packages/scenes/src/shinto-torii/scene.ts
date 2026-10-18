@@ -339,25 +339,38 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
 
   let downX = 0
   let downY = 0
+  let interactionPointerId: number | null = null
   const onHitDown = (e: PointerEvent) => {
+    if (!canAct() || interactionPointerId !== null || !onTorii(e.clientX, e.clientY)) return
+    interactionPointerId = e.pointerId
     fx.prepare()
     downX = e.clientX
     downY = e.clientY
   }
   const onHitUp = (e: PointerEvent) => {
+    if (e.pointerId !== interactionPointerId) return
+    interactionPointerId = null
     const moved = Math.hypot(e.clientX - downX, e.clientY - downY)
     if (moved < 12 && step === 'approach' && onTorii(e.clientX, e.clientY)) {
       startWalk()
     }
   }
+  const onHitCancel = (e?: PointerEvent) => {
+    if (e && e.pointerId !== interactionPointerId) return
+    interactionPointerId = null
+  }
+  const onInputBlur = () => onHitCancel()
 
   const wireGestures = () => {
     hitLayer.addEventListener('pointerdown', onHitDown)
+    hitLayer.addEventListener('pointercancel', onHitCancel)
+    hitLayer.addEventListener('lostpointercapture', onHitCancel)
+    window.addEventListener('blur', onInputBlur)
     stopClaim = claimObjectTouches(hitLayer, onTorii)
     // Swipe up = step forward; swipe down = lower the head. Either swipe must
     // start on the torii, so scrolling past the stage never walks or bows.
     dragHandle = gestures.createDrag({
-      startsOn: onTorii,
+      startsOn: (x, y) => canAct() && onTorii(x, y),
       hitTest: (_x, y) =>
         step === 'approach' ? downY - y > SWIPE_PX : step === 'bow' && y - downY > SWIPE_PX,
       onDrop: (hit) => {
@@ -418,6 +431,14 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
     },
     update(dt: number) {
       if (disposed || !started) return
+      if (!canAct()) {
+        onHitCancel()
+        dragHandle?.setEnabled(false)
+        gyroHandle?.setEnabled(false)
+        return
+      }
+      dragHandle?.setEnabled(step === 'approach' || step === 'bow')
+      gyroHandle?.setEnabled(step === 'bow' && !bowing)
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
@@ -465,6 +486,9 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
       stopClaim()
       hitLayer.removeEventListener('pointerdown', onHitDown)
       hitLayer.removeEventListener('pointerup', onHitUp)
+      hitLayer.removeEventListener('pointercancel', onHitCancel)
+      hitLayer.removeEventListener('lostpointercapture', onHitCancel)
+      window.removeEventListener('blur', onInputBlur)
       actionBtn.removeEventListener('click', onActionTap)
       for (const h of handles) h.dispose()
       handles.length = 0

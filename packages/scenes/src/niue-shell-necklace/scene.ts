@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -156,8 +157,8 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
   const restore = () => { threadAmount = at > 0 ? 1 : 0; gatherAmount = at >= 2 ? 1 : 0; setShape(); matrices() }
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
-    addInteractionCue(lastBody, { kind: 'drag', label: '向左穿入小螺壳', anchor: SHELL_ANCHOR, priority: 3, enabled: enabled(0) }),
-    addInteractionCue(grip, { kind: 'drag', label: '向上拉拢线端', anchor: [0, 0, .018], priority: 3, enabled: enabled(1) }),
+    addInteractionCue(lastBody, { kind: 'drag', direction: [-1, 0], label: '向左穿入小螺壳', anchor: SHELL_ANCHOR, priority: 3, enabled: enabled(0) }),
+    addInteractionCue(grip, { kind: 'drag', direction: [0, -1], label: '向上拉拢线端', anchor: [0, 0, .018], priority: 3, enabled: enabled(1) }),
     addInteractionCue(quietBody, { kind: 'tap', label: '轻点贝链静看', anchor: SHELL_ANCHOR, priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2()
@@ -202,7 +203,7 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
     onRelease(x, y) {
       matrices(); const dx = x - down.x, dy = y - down.y
       const along = at === 0 ? -dx : -dy, cross = at === 0 ? Math.abs(dy) : Math.abs(dx)
-      const valid = at < 2 ? dragging && moved >= 40 && along >= 40 && minAlong >= -10 && backtrack <= 12 && maxAlong - along <= 12 && maxCross <= Math.max(18, along * .4) && cross <= Math.max(18, along * .4)
+      const valid = at < 2 ? dragging && completesDirectionalDrag({ along: moved, end: along, maxAlong, minAlong, backtrack, maxCross, cross, travel: maxTravel })
         : maxTravel < 12 && Math.hypot(dx, dy) < 12 && (necklaceHit(x, y))
       dragging = false; if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,

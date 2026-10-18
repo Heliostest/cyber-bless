@@ -33,9 +33,12 @@ describe("personal ritual loop", () => {
     const done = { type: "ritual.finish", id: "tap-0", at } as const;
     const complete = reduce(ready, done);
     expect(reduce(complete, done)).toBe(complete);
-    expect(complete.ledger).toHaveLength(1);
-    expect(complete.ledger[0].amount).toBe(10);
+    expect(complete.ledger).toEqual([]);
     expect(complete.collectibles).toHaveLength(1);
+    const legacy = { ...complete, ledger: [{ id: 'old-score', amount: 10, at }] };
+    const restored = restore(JSON.stringify(legacy));
+    expect(restored.sessions).toEqual(complete.sessions);
+    expect(restored.collectibles).toEqual(complete.collectibles);
   });
   it("persists wish category and planned return method, while accepting older saves", () => {
     const s = reduce(createState(), {
@@ -169,7 +172,7 @@ describe("personal ritual loop", () => {
     s = reduce(s, finish);
     expect(s.sessions).toHaveLength(1);
     expect(s.collectibles).toHaveLength(1);
-    expect(s.ledger[0].amount).toBe(10);
+    expect(s.ledger).toEqual([]);
     expect(reduce(s, finish)).toBe(s);
   });
   it("does not silently replace an unfinished session", () => {
@@ -198,7 +201,7 @@ describe("personal ritual loop", () => {
     );
   });
   it("rejects corrupt or newer saves while empty storage gets a fresh state", () => {
-    expect(restore(null)).toEqual(createState());
+    expect(restore(null)).toEqual({ ...createState(), opening: { status: 'new' } });
     expect(() => restore("{bad")).toThrow();
     expect(() =>
       restore(JSON.stringify({ ...createState(), version: 20 })),
@@ -229,7 +232,7 @@ describe("the daily set (daily.scene)", () => {
     at,
   } as const;
 
-  it("grants the keepsake and the day's merit once per scene per day", () => {
+  it("grants only the keepsake once per scene per day", () => {
     const s = reduce(createState(), walk);
     expect(s.collectibles).toEqual([
       {
@@ -241,7 +244,7 @@ describe("the daily set (daily.scene)", () => {
         wishScene: true,
       },
     ]);
-    expect(s.ledger).toEqual([{ id: "visit-1", amount: 10, at }]);
+    expect(s.ledger).toEqual([]);
     // A re-fired last step, or a second walk of the same day, settles nothing.
     expect(reduce(s, walk)).toBe(s);
     expect(reduce(s, { ...walk, id: "visit-2", at: later })).toBe(s);
@@ -263,7 +266,7 @@ describe("the daily set (daily.scene)", () => {
       at: later,
     });
     expect(next.collectibles).toHaveLength(2);
-    expect(next.ledger).toHaveLength(2);
+    expect(next.ledger).toEqual([]);
   });
 
   it("rejects an invalid record, and an unspendable keepsake in a save", () => {
@@ -530,7 +533,7 @@ describe("a ritual walked as its scene (ritual.scene)", () => {
     for (let i = 0; i < 12; i++) s = reduce(s, { type: "ritual.step" });
     s = reduce(s, { type: "ritual.finish", id: "r2d", at: later });
     expect(s.sessions.map((r) => r.id)).toEqual(["scene-visit", "r2d"]);
-    expect(s.ledger.map((l) => l.id)).toEqual(["r2d"]);
+    expect(s.ledger).toEqual([]);
   });
 
   it("does not count a scene walked before the wish came true", () => {

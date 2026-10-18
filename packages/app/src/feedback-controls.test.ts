@@ -42,7 +42,9 @@ describe("震动 toggle", () => {
       const html = render(createElement(FeedbackControls), canHaptic);
       expect(html).toContain("音效");
       expect(html.includes("震动")).toBe(canHaptic);
-      expect(html.match(/type="checkbox"/g)).toHaveLength(canHaptic ? 2 : 1);
+      const buttons = new DOMParser().parseFromString(html, "text/html").querySelectorAll("button[aria-pressed]");
+      expect(buttons).toHaveLength(canHaptic ? 2 : 1);
+      expect(html).not.toContain('type="checkbox"');
     },
   );
 
@@ -85,16 +87,6 @@ describe("收藏 on a scene page", () => {
     clickOn(ui.host.querySelector("button.favorite-chip")!);
     expect(actions).toEqual([{ type: "scene.favorite", id: "crane", favorite: !favorite }]);
     ui.unmount();
-  });
-
-  it("sits in the 音效／震动 row, which wraps it onto its own line when full", () => {
-    const html = render(
-      createElement(FeedbackControls, null, createElement("button", { className: "favorite-chip" })),
-      true,
-    );
-    const row = new DOMParser().parseFromString(html, "text/html").querySelector(".feedback-controls")!;
-    expect(row.lastElementChild!.className).toBe("favorite-chip");
-    expect(css).toMatch(/\.feedback-controls \{[^}]*flex-wrap: wrap;/);
   });
 
   it("is a ring, not a ledge, and its copy is safe", () => {

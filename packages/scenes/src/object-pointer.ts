@@ -12,6 +12,7 @@ import { claimObjectTouches } from './procedural-kit'
 export function createObjectPointer(layer: HTMLElement, options: ObjectPointerOptions) {
   const pointers = new Set<number>()
   let owner: number | null = null, blocked = false, disposed = false
+  let moved = false, lastX = 0, lastY = 0, releasing = false
   const active = () => !disposed && options.isActive()
   const releaseCapture = (id: number) => {
     try { layer.releasePointerCapture?.(id) } catch { /* Optional in embedded browsers. */ }
@@ -33,23 +34,37 @@ export function createObjectPointer(layer: HTMLElement, options: ObjectPointerOp
     track(event)
     if (blocked || owner !== null || !options.canStart(event.clientX, event.clientY)) return
     owner = event.pointerId
+    moved = false; lastX = event.clientX; lastY = event.clientY
     try { layer.setPointerCapture?.(owner) } catch { /* Button fallback remains available. */ }
     options.onStart?.(event.clientX, event.clientY)
   }
   const move = (event: PointerEvent) => {
     if (!active()) { cancel(); return }
-    if (owner === event.pointerId && !blocked) options.onMove?.(event.clientX, event.clientY)
+    if (owner === event.pointerId && !blocked) {
+      moved ||= event.clientX !== lastX || event.clientY !== lastY
+      lastX = event.clientX; lastY = event.clientY
+      options.onMove?.(lastX, lastY)
+    }
   }
   const up = (event: PointerEvent) => {
-    const valid = active() && !blocked && owner === event.pointerId && pointers.size === 1
-    pointers.delete(event.pointerId)
-    if (owner === event.pointerId) {
-      if (valid) {
-        owner = null; releaseCapture(event.pointerId)
-        options.onRelease?.(event.clientX, event.clientY)
-      } else abandon()
-    }
-    if (!pointers.size) blocked = false
+    if (releasing) return
+    releasing = true
+    try {
+      const ownsRelease = () => active() && !blocked && owner === event.pointerId && pointers.size === 1
+      // Native input may deliver the destination only in pointerup. Update the
+      // held pose before testing the drop, but do not invent a drag for a tap.
+      if (ownsRelease() && moved && (event.clientX !== lastX || event.clientY !== lastY)) move(event)
+      // Sampling can synchronously pause, cancel or dispose the scene.
+      const valid = ownsRelease()
+      pointers.delete(event.pointerId)
+      if (owner === event.pointerId) {
+        if (valid) {
+          owner = null; releaseCapture(event.pointerId)
+          options.onRelease?.(event.clientX, event.clientY)
+        } else abandon()
+      }
+      if (!pointers.size) blocked = false
+    } finally { releasing = false }
   }
   const cancelled = (event: PointerEvent) => {
     if (owner === event.pointerId) abandon()

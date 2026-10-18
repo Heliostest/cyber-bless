@@ -1,9 +1,10 @@
-import { dailyCollectibleId, rituals } from "@wbr/core";
+import { dailyCollectibleId, rituals, openingExclusions } from "@wbr/core";
 import { Icon } from "./art";
 import { useApp } from "./context";
 import { DailyScenePreview } from "./daily-scene-preview";
 import { useOpenScene, useSceneLibrary } from "./scene-library";
 import { SceneBadge } from "./scene-icons";
+import { PageHead } from "./page-heading";
 import {
   DAILY_COLLECTED_COPY,
   DAILY_SET_COPY,
@@ -21,25 +22,18 @@ export function Today({ day }: { day: string }) {
   const { state, go } = useApp();
   const { entries } = useSceneLibrary();
   const openScene = useOpenScene();
-  const merit = state.ledger.reduce((n, l) => n + l.amount, 0);
-  const primary = dailyPrimaryScene(entries, day);
+  const primary = dailyPrimaryScene(entries, day, openingExclusions(state.opening, day));
   const picks = dailyCollectedPicks(entries, state.collectibles, day);
   const collected =
     !!primary &&
     state.collectibles.some((c) => c.id === dailyCollectibleId(day, primary.id));
   return (
     <div className="today-page">
-      <header className="home-heading">
-        <h1>今日功德</h1>
-        <button className="merit-pill" onClick={() => go({ page: "history" })}>
-          <Icon name="lotus" />
-          <span>
-            功德 <b>{merit}</b>
-          </span>
-          <Icon name="arrow" />
+      <PageHead title="今日仪式" eyebrow="今天，也给自己一点好运。">
+        <button className="round-button history-link" aria-label="仪式记录" title="仪式记录" onClick={() => go({ page: "history" })}>
+          <Icon name="clock" />
         </button>
-      </header>
-      <p className="lead">今天，也给自己一点好运。</p>
+      </PageHead>
       {/* The one way left onto the 2D ritual page: a session begun there
           before rituals opened as scenes still settles where it started. */}
       {state.activeSession && (
@@ -59,11 +53,7 @@ export function Today({ day }: { day: string }) {
       )}
       {primary && (
         <>
-          <section className="daily-set" aria-label={DAILY_SET_COPY.heading}>
-            <div className="section-heading">
-              <h2>{DAILY_SET_COPY.heading}</h2>
-            </div>
-            <p className="quiet daily-set-blurb">{DAILY_SET_COPY.sub}</p>
+          <section className="daily-set" aria-label="今日仪式卡片">
             <button
               className="daily-set-card daily-set-primary"
               data-scene={primary.id}

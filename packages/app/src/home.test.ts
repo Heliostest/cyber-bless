@@ -85,13 +85,15 @@ describe("今日's daily set", () => {
   it("is all the page holds: the day's walk, then picks from 小天地", () => {
     expect(
       [...doc.querySelector(".today-page")!.children].map((el) => el.className),
-    ).toEqual(["home-heading", "lead", "daily-set", "daily-set daily-collected"]);
+    ).toEqual(["page-heading", "daily-set", "daily-set daily-collected"]);
     expect(doc.querySelector(".wish-invitation")).toBeNull();
-    // The 功德 pill, the day's walk and the three picks are its only buttons.
+    expect(doc.querySelector('h1')?.textContent).toBe('今日仪式');
+    expect(doc.body.textContent).not.toContain('功德');
+    // History, the day's walk and the three picks are its only buttons.
     expect(
       [...doc.querySelectorAll("button")].map((b) => b.className),
     ).toEqual([
-      "merit-pill",
+      "round-button history-link",
       "daily-set-card daily-set-primary",
       "daily-set-card",
       "daily-set-card",
@@ -101,10 +103,9 @@ describe("今日's daily set", () => {
 
   it("leads with the day's one walk, checked once collected", () => {
     const section = main.closest("section")!;
-    expect(section.querySelector("h2")!.textContent).toBe(DAILY_SET_COPY.heading);
-    expect(section.querySelector(".daily-set-blurb")!.textContent).toBe(
-      DAILY_SET_COPY.sub,
-    );
+    expect(section.firstElementChild).toBe(main);
+    expect(section.querySelector("h2")).toBeNull();
+    expect(section.querySelector(".daily-set-blurb")).toBeNull();
     expect(main.getAttribute("data-scene")).toBe(primary.id);
     expect(main.querySelector("strong")!.textContent).toBe(primary.title);
     expect(main.querySelector("small")!.textContent).toBe(DAILY_SET_COPY.collected);

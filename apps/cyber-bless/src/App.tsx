@@ -6,8 +6,11 @@ import { DebugOverlay, debugEnabled } from "./DebugOverlay";
 
 const host = browserHost();
 const DevApp = lazy(() => import("./DevApp"));
+const OpeningPreview = import.meta.env.DEV ? lazy(() => import('./OpeningPreview')) : null;
 
 export function App() {
+  if (OpeningPreview && window.location.pathname === '/opening-preview')
+    return <Suspense fallback={<p>正在准备开场预览…</p>}><OpeningPreview /></Suspense>;
   if (window.location.pathname.startsWith("/dev"))
     return (
       <>

@@ -37,6 +37,18 @@ describe('createDrag', () => {
     g.dispose()
   })
 
+  it.each(['blur', 'lostpointercapture'])('cancels ownership on %s and permits a new pointer', type => {
+    const el = document.createElement('div'), onDrop = vi.fn()
+    const g = createDrag({ hitTest: () => true, onDrop }); g.mount(el, {})
+    el.dispatchEvent(ptr('pointerdown', 10, 10))
+    if (type === 'blur') window.dispatchEvent(new Event('blur'))
+    else el.dispatchEvent(ptr(type, 10, 10))
+    el.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 2, clientX: 10, clientY: 10 }))
+    el.dispatchEvent(new PointerEvent('pointerup', { pointerId: 2, clientX: 110, clientY: 110 }))
+    expect(onDrop).toHaveBeenCalledExactlyOnceWith(true)
+    g.dispose()
+  })
+
   it('only starts on the object when startsOn is given', () => {
     const el = document.createElement('div')
     document.body.appendChild(el)

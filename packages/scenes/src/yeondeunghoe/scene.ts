@@ -337,7 +337,7 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
       pourAngleDeg: 40,
       holdMs: 0,
       onPour: () => {
-        if (!gestureOwned || step !== 'ready') return
+        if (!canAct() || step !== 'ready') return
         goRise()
       },
     })

@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -145,8 +146,8 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const quietStitch = swatch.getObjectByName('wool-stitch-3-3')!
   const removeCues = [
-    addInteractionCue(grip, { kind: 'drag', label: '拿住木针，向左上穿入', anchor: [0, 0, .047], priority: 3, enabled: enabled(0) }),
-    addInteractionCue(grip, { kind: 'drag', label: '向右下抽出新线圈', anchor: [0, 0, .047], priority: 3, enabled: enabled(1) }),
+    addInteractionCue(grip, { kind: 'drag', direction: [-1, -1], label: '拿住木针，向左上穿入', anchor: [0, 0, .047], priority: 3, enabled: enabled(0) }),
+    addInteractionCue(grip, { kind: 'drag', direction: [1, 1], label: '向右下抽出新线圈', anchor: [0, 0, .047], priority: 3, enabled: enabled(1) }),
     addInteractionCue(quietStitch, { kind: 'tap', label: '轻点织片静看', anchor: [.046, .025, .202], priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2()
@@ -181,7 +182,7 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
     },
     onRelease(x, y) {
       const dx = x - down.x, dy = y - down.y, dir = direction(), end = dx * dir.x + dy * dir.y
-      const valid = at < 2 ? dragging && moved && along >= 42 && end >= 42 && end <= 84 && maxTravel <= 90 && minAlong >= -8 && backtrack <= 9 && maxCross <= 18 && Math.abs(dx * dir.y - dy * dir.x) <= 18
+      const valid = at < 2 ? dragging && moved && completesDirectionalDrag({ along, end, maxAlong, minAlong, backtrack, maxCross, cross: dx * dir.y - dy * dir.x, travel: maxTravel }, 42, at === 0 ? 60 : 62.29)
         : maxTravel < 12 && Math.hypot(dx, dy) < 12 && belongs(nearestHit(x, y)?.object, swatch)
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,

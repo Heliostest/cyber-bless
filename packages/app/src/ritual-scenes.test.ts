@@ -130,6 +130,7 @@ async function openApp(state: State) {
   let raw = JSON.stringify(state);
   const host = {
     read: async () => raw,
+    haptic: async () => {},
     write: async (next: string) => {
       raw = next;
     },
@@ -144,7 +145,7 @@ async function openApp(state: State) {
       return JSON.parse(raw) as State;
     },
     page: () => ui.host.querySelector<HTMLElement>(".app-shell")!.dataset.page,
-    sceneTitle: () => ui.host.querySelector(".scene-experience h1")?.textContent,
+    sceneTitle: () => ui.host.querySelector(".app-topbar .title-ribbon")?.textContent,
     sceneProgress: () => ui.host.querySelector(".scene-progress")?.textContent,
     doneButtons: () =>
       all(".scene-done-row button").map((b) => b.textContent),
@@ -188,6 +189,8 @@ describe("今日's daily set", () => {
     await ui.tap(card);
     expect(ui.page()).toBe("scene");
     expect(ui.sceneTitle()).toBe(entryOf(sceneId).title);
+    expect(ui.host.querySelector(".scene-experience h1")).toBeNull();
+    expect(ui.host.querySelector('.scene-progress')?.classList.contains('sr-only')).toBe(true);
     expect(ui.host.querySelector(".scene-caption")?.textContent).toBe(
       SCENE_DAILY_CAPTION,
     );
@@ -217,8 +220,27 @@ describe("今日's daily set", () => {
       sceneId,
       wishScene: true,
     });
-    expect(saved.ledger).toHaveLength(1);
-    expect(saved.ledger[0].amount).toBe(10);
+    expect(saved.ledger).toEqual([]);
+    ui.unmount();
+  });
+
+  it("toggles feedback from the scene header and preserves it when another scene opens", async () => {
+    const ui = await openApp(createState());
+    await ui.tap(ui.host.querySelector(`.daily-set-primary[data-scene="${sceneId}"]`)!);
+    const sound = ui.host.querySelector('.app-topbar button[aria-label="音效"]')!;
+    const haptics = ui.host.querySelector('.app-topbar button[aria-label="震动"]')!;
+    expect(sound).not.toBeNull();
+    expect(haptics).not.toBeNull();
+    const enabledIcon = sound.querySelector('svg')!.innerHTML;
+    await ui.tap(sound);
+    await ui.tap(haptics);
+    expect(sound.getAttribute('aria-pressed')).toBe('false');
+    expect(sound.querySelector('svg')!.innerHTML).not.toBe(enabledIcon);
+    expect(ui.host.querySelector('.scene-experience .feedback-controls')).toBeNull();
+    expect((await ui.saved()).settings).toMatchObject({ sound: false, haptics: false });
+    await ui.tap(ui.host.querySelector('.back-button')!);
+    await ui.tap(ui.host.querySelector(`.daily-set-primary[data-scene="${sceneId}"]`)!);
+    expect(ui.host.querySelector('.app-topbar button[aria-label="音效"]')!.getAttribute('aria-pressed')).toBe('false');
     ui.unmount();
   });
 
@@ -242,7 +264,7 @@ describe("今日's daily set", () => {
     expect(ui.doneButtons()).toEqual([SCENE_DONE_CTA]);
     const saved = await ui.saved();
     expect(saved.collectibles).toHaveLength(1);
-    expect(saved.ledger).toHaveLength(1);
+    expect(saved.ledger).toEqual([]);
     ui.unmount();
   });
 
@@ -294,8 +316,7 @@ describe("今日's daily set", () => {
       sceneId,
       wishScene: true,
     });
-    expect(saved.ledger).toHaveLength(1);
-    expect(saved.ledger[0].amount).toBe(10);
+    expect(saved.ledger).toEqual([]);
     // 收下它 flies the sticker into 小天地; 今日 knows the walk is collected.
     await ui.tap(ui.button(SCENE_DAILY_CTA, ".scene-done-row"));
     expect(ui.page()).toBe("world");
@@ -631,8 +652,8 @@ describe("小天地's 回看", () => {
 });
 
 describe("仪式时光", () => {
-  it("names merit only where a ritual settled with it, and 再次体验 opens the scene afresh", async () => {
-    // A 2D lantern settled with merit, then a crane walked as a scene for w1.
+  it("keeps collection and wish notes, and 再次体验 opens the scene afresh", async () => {
+    // A completed 2D lantern, then a crane walked as a scene for w1.
     let state: State = withRecords({ crane: 3 }, withRealizedWish());
     state = reduce(state, { type: "ritual.start", id: "r2d", ritual: "lantern", at: AT });
     for (let i = 0; i < 3; i++) state = reduce(state, { type: "ritual.step" });
@@ -647,6 +668,8 @@ describe("仪式时光", () => {
     });
     const ui = await openApp(state);
     await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
+    expect([...ui.host.querySelectorAll('.stats > div')].map(el => el.textContent)).toEqual(['3仪式记录', '1小天地收藏']);
+    expect(ui.host.textContent).not.toContain('功德');
     await ui.tap(ui.button("仪式时光", ".settings-card"));
     const lines = [...ui.host.querySelectorAll(".timeline li p")].map(
       (p) => p.textContent!,
@@ -654,7 +677,7 @@ describe("仪式时光", () => {
     // Newest first.
     expect(lines).toEqual([
       `${HISTORY_SCENE_LINE} · 为「面试顺利」记了一笔`,
-      "功德 +10 · 收藏了暖心灯",
+      "收藏了暖心灯",
     ]);
     expect(() => assertSafeCopy(lines[0])).not.toThrow();
 

@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -163,8 +164,8 @@ export function createChineseShadowPuppet(ctx: SceneContext): SceneInstance {
   const restore = () => { liftAmount = at > 0 ? 1 : 0; turnAmount = at >= 2 ? 1 : 0; setShape(); matrices() }
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
-    addInteractionCue(mainGrip, { kind: 'drag', label: '向上提起主杆', anchor: GRIP_ANCHOR, priority: 3, enabled: enabled(0) }),
-    addInteractionCue(wingGrip, { kind: 'drag', label: '向右移动翼杆', anchor: GRIP_ANCHOR, priority: 3, enabled: enabled(1) }),
+    addInteractionCue(mainGrip, { kind: 'drag', direction: [0, -1], label: '向上提起主杆', anchor: GRIP_ANCHOR, priority: 3, enabled: enabled(0) }),
+    addInteractionCue(wingGrip, { kind: 'drag', direction: [1, 0], label: '向右移动翼杆', anchor: GRIP_ANCHOR, priority: 3, enabled: enabled(1) }),
     addInteractionCue(body, { kind: 'tap', label: '轻点小鸟静看', anchor: QUIET_ANCHOR, priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2()
@@ -209,7 +210,7 @@ export function createChineseShadowPuppet(ctx: SceneContext): SceneInstance {
     onRelease(x, y) {
       matrices(); const dx = x - down.x, dy = y - down.y
       const along = at === 0 ? -dy : dx, cross = at === 0 ? Math.abs(dx) : Math.abs(dy)
-      const valid = at < 2 ? dragging && moved >= 40 && along >= 40 && minAlong >= -10 && backtrack <= 12 && maxAlong - along <= 12 && maxCross <= Math.max(18, along * .4) && cross <= Math.max(18, along * .4)
+      const valid = at < 2 ? dragging && completesDirectionalDrag({ along: moved, end: along, maxAlong, minAlong, backtrack, maxCross, cross, travel: maxTravel })
         : maxTravel < 12 && Math.hypot(dx, dy) < 12 && (birdHit(x, y))
       dragging = false; if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,

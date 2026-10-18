@@ -101,7 +101,7 @@ export function createUzbekClayBowl(ctx: SceneContext): SceneInstance {
   markEnd.rotation.y = .84
   const clay = add('clay-body', new THREE.LatheGeometry(clayProfile(0), SEGMENTS), clayMaterial, [0, .90, 0])
   clay.userData.toonSurface = { outline: false, roughness: .62, metalness: 0 }
-  const pullCue: InteractionCue = { kind: 'drag', label: COPY.pullAction, priority: 3, enabled: () => inputActive() && !transition && checkpoint === 1, anchor: [0, 0, 0] }
+  const pullCue: InteractionCue = { kind: 'drag', direction: [0, -1], label: COPY.pullAction, priority: 3, enabled: () => inputActive() && !transition && checkpoint === 1, anchor: [0, 0, 0] }
   const quietCue: InteractionCue = { kind: 'tap', label: COPY.quietAction, priority: 3, enabled: () => inputActive() && !transition && checkpoint === 2, anchor: [0, 0, 0] }
   const removeCues = [
     addInteractionCue(rim, { kind: 'rotate', label: COPY.turnAction, priority: 3, enabled: () => inputActive() && !transition && checkpoint === 0, anchor: [0, -.025, 1.079] }),
@@ -168,8 +168,8 @@ export function createUzbekClayBowl(ctx: SceneContext): SceneInstance {
     },
     onRelease(x, y) {
       const dx = x - down.x, dy = y - down.y
-      const valid = checkpoint === 0 ? dragging && moved && dx >= 45 && Math.abs(dy) <= Math.max(18, dx * .4) && crossTravel <= Math.max(22, dx * .5) && wheel.rotation.y >= .45
-        : checkpoint === 1 ? dragging && moved && -dy >= 45 && Math.abs(dx) <= Math.max(18, -dy * .4) && crossTravel <= Math.max(22, -dy * .5) && formed >= .5
+      const valid = checkpoint === 0 ? dragging && moved && dx >= 45 && Math.abs(dy) <= Math.max(18, dx * .4) && (wheel.rotation.y >= .95 || crossTravel <= Math.max(22, dx * .5)) && wheel.rotation.y >= .45
+        : checkpoint === 1 ? dragging && moved && -dy >= 45 && Math.abs(dx) <= Math.max(18, -dy * .4) && (formed >= 1 || crossTravel <= Math.max(22, -dy * .5)) && formed >= .5
           : checkpoint === 2 && maxTravel < 12 && Math.hypot(dx, dy) < 12 && visibleHit(x, y)?.object === clay
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,

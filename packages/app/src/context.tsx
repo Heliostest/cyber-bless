@@ -27,6 +27,8 @@ export type Route = {
   vessel?: string;
   /** 小天地's 回看 or 仪式时光's 再次体验: a plain replay, collecting nothing. */
   replay?: boolean;
+  /** A resumable first-play walk, collected in the persisted opening order. */
+  opening?: boolean;
 };
 export type AppContext = {
   state: State;

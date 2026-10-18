@@ -260,7 +260,7 @@ button:hover:not(:disabled) {
   box-shadow: 0 14px 60px #0b5a5226;
 }
 .app-content {
-  padding: 8px 18px 32px;
+  padding: 12px 18px 32px;
   animation: page-in 0.25s var(--ease);
 }
 /* The four tabs leave room under the floating dock. */
@@ -268,15 +268,24 @@ button:hover:not(:disabled) {
 .app-shell[data-page="wishes"] .app-content,
 .app-shell[data-page="world"] .app-content,
 .app-shell[data-page="me"] .app-content {
-  padding: 30px 18px 128px;
+  padding: 12px 18px 128px;
 }
 .app-topbar {
   height: 68px;
-  padding: 12px 18px 8px;
+  padding: 12px 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+}
+.page-topbar {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  pointer-events: none;
+}
+.page-topbar .back-button {
+  pointer-events: auto;
 }
 /* The page title is a swallowtail ribbon, as in the island Title: a front
    tilted back a touch, two notched tails behind it and a darker fold where
@@ -284,10 +293,10 @@ button:hover:not(:disabled) {
    7-8 character ritual titles fit down to 320px (see the 360px block), and
    anything longer ends in an ellipsis instead of folding into a two-line
    swallowtail. The ellipsis needs overflow: hidden, so the whole ribbon is
-   drawn inside the h2: the tails reach only into its side padding (the text
+   drawn inside the title: the tails reach only into its side padding (the text
    keeps all of its room), and the negative margin takes back the drop below
    the front, so the front stays level with the back button. */
-.app-topbar h2 {
+.title-ribbon {
   --reach: 0.6em; /* tails past the front's sides */
   --tuck: 0.9em; /* tails under the front: the width of a fold */
   --drop: 0.4em; /* tails and folds below the front */
@@ -305,8 +314,8 @@ button:hover:not(:disabled) {
   text-overflow: ellipsis;
   color: var(--mint-ink);
 }
-.app-topbar h2::before,
-.app-topbar h2::after {
+.title-ribbon::before,
+.title-ribbon::after {
   content: "";
   position: absolute;
   z-index: -1;
@@ -314,7 +323,7 @@ button:hover:not(:disabled) {
 /* The back: one swallowtail band, cut away between the folds from just
    behind the front's lower edge, so below the front only the tails and
    their folds show. A 0.6px ramp smooths each fold's diagonal. */
-.app-topbar h2::before {
+.title-ribbon::before {
   inset: 0.7em 0 0;
   background:
     linear-gradient(
@@ -346,7 +355,7 @@ button:hover:not(:disabled) {
 }
 /* The front, over the back and under the text. Longhands, not inset: the
    build spells inset out for Safari 14, but not one that holds var(). */
-.app-topbar h2::after {
+.title-ribbon::after {
   top: 0;
   right: var(--reach);
   bottom: var(--drop);
@@ -409,96 +418,177 @@ button:hover:not(:disabled) {
   display: none;
 }
 .page-heading {
+  margin-bottom: 16px;
+  text-align: center;
+}
+.page-heading-row {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-.page-heading .eyebrow {
-  color: var(--ink-soft);
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 4px;
+  justify-content: center;
+  min-height: 44px;
 }
 .page-heading h1 {
-  font-size: 28px;
-  text-shadow: 0 3px 0 #ffffffb3;
+  font-size: clamp(12px, calc((min(100vw, 430px) - 200px) / var(--ribbon-letters, 4)), 19px);
 }
-/* A side note in a heading (场景目录's count) is a flat chip. */
-.page-heading > p {
-  padding: 3px 12px 4px;
-  border: 2.5px solid var(--rim);
-  border-radius: 999px;
-  background: var(--paper);
-  box-shadow: 0 0 0 2px var(--edge);
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--ink-soft);
-  white-space: nowrap;
+.page-heading-actions {
+  position: absolute;
+  right: 0;
+  display: flex;
+  align-items: center;
 }
-.lead,
-.page-subtitle {
-  font-size: 16px;
+.page-heading-actions .count-pill {
+  display: block;
+  max-width: 68px;
+  padding-inline: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.page-tagline {
+  margin: 8px 0 0;
+  font-size: 13px;
   font-weight: 600;
   color: var(--ink-soft);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+.today-page > .page-heading {
+  margin-bottom: 12px;
+}
+.today-page > .daily-set {
+  margin: 0 0 16px;
+}
+.daily-collected > .section-heading {
+  margin: 0;
+}
+.history-link {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+/* First play stays in the same island, with one short lesson between walks. */
+.app-shell[data-opening] .app-content {
+  padding-bottom: 32px;
+}
+.opening-track {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+.opening-track li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  padding: 10px 5px;
+  border: 2px solid #ffffffa6;
+  border-radius: 18px;
+  background: #ffffff40;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 800;
+}
+.opening-track li[aria-current="step"],
+.opening-track li[data-complete="true"] {
+  background: var(--paper);
+  border-color: var(--rim);
+}
+.opening-track .scene-badge {
+  width: 48px;
+  height: 48px;
+}
+.opening-track .opening-step-mark {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+}
+.opening-track .opening-step-mark svg {
+  width: 15px;
+  height: 15px;
+  color: var(--mint-ink);
+}
+.opening-feature,
+.opening-summary {
+  padding: 18px;
+  border: 3px solid var(--rim);
+  border-radius: var(--radius-panel);
+  background: var(--paper);
+  box-shadow: var(--panel-shadow-static);
+  text-align: center;
+}
+.opening-step {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--mint-ink);
+}
+.opening-feature > .scene-art {
+  width: 128px;
+  height: 128px;
+  margin: 0 auto 12px;
+}
+.opening-feature h2 {
+  font-size: 22px;
+  font-weight: 900;
+}
+.opening-copy,
+.opening-summary > p {
+  margin: 10px 0 18px;
+  color: var(--ink-soft);
+  font-size: 14px;
   line-height: 1.7;
 }
-.home-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.opening-keepsakes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
-.home-heading h1 {
-  font-size: 32px;
-  font-weight: 900;
-  text-shadow: 0 3px 0 #ffffffb3;
-}
-.lead {
-  margin: 2px 0 16px;
-}
-/* A HUD counter: coin bubble, thick rim, ledge. */
-.merit-pill {
-  display: flex;
-  align-items: center;
+.opening-keepsakes > div {
+  display: grid;
+  justify-items: center;
+  align-content: start;
   gap: 6px;
-  background: var(--paper);
-  border: 3px solid var(--rim);
-  border-radius: 999px;
-  padding: 3px 12px 3px 3px;
+}
+.opening-keepsakes .scene-art {
+  width: 64px;
+  height: 64px;
+}
+.opening-keepsakes strong {
   font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+.opening-keepsakes small {
   color: var(--ink-soft);
-  box-shadow:
-    0 0 0 2px var(--edge),
-    0 5px 0 2px var(--ledge);
 }
-.merit-pill:active {
-  transform: translateY(3px);
-  box-shadow:
-    0 0 0 2px var(--edge),
-    0 2px 0 2px var(--ledge);
+.opening-guide {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin: 2px 0 10px;
+  border: 1px solid #ffffffb3;
+  border-radius: 14px;
+  background: #ffffff70;
+  color: var(--mint-ink);
+  font-size: 13px;
 }
-.merit-pill b {
-  font-size: 18px;
-  font-weight: 900;
-  color: var(--ink);
+.opening-guide > span {
+  white-space: nowrap;
+  font-weight: 800;
 }
-.merit-pill svg:first-child {
-  width: 32px;
-  height: 32px;
-  padding: 5px;
-  border-radius: 50%;
-  background: var(--butter);
-  color: #7a4a0c;
-  box-shadow: inset 0 -3px 0 var(--butter-ledge);
+.opening-guide > p {
+  margin: 0;
+  line-height: 1.5;
 }
-.merit-pill svg:last-child {
-  width: 12px;
-  height: 16px;
-  stroke-width: 2.6;
+.opening-reward .scene-art {
+  width: 96px;
+  height: 96px;
+  margin: 10px auto;
+}
+.opening-complete > .button {
+  margin-top: 12px;
 }
 .tag {
   display: inline-flex;
@@ -991,10 +1081,6 @@ button:hover:not(:disabled) {
   outline-offset: 2px;
   box-shadow: 0 3px 0 var(--mint-ledge);
 }
-.new-wish-page > .page-subtitle {
-  text-align: center;
-  margin: 0 0 3px;
-}
 .new-wish-page > .art {
   margin: 4px 0 18px;
 }
@@ -1151,9 +1237,6 @@ button:hover:not(:disabled) {
 .new-wish-page .primary {
   margin-top: 0;
 }
-.page-subtitle {
-  text-align: center;
-}
 .wish-detail-page {
   text-align: center;
 }
@@ -1307,18 +1390,6 @@ button:hover:not(:disabled) {
   padding: 10px;
   font-size: 13px;
 }
-.fulfill-page > h1 {
-  font-size: 28px;
-  margin-top: 1px;
-  text-align: center;
-  font-weight: 900;
-  letter-spacing: -0.3px;
-  text-shadow: 0 3px 0 #ffffffb3;
-}
-.fulfill-page > .page-subtitle {
-  font-size: 14px;
-  margin: 4px 0 6px;
-}
 .fulfill-page > .art {
   margin: 4px 0 18px;
 }
@@ -1417,11 +1488,6 @@ button:hover:not(:disabled) {
 .linked-ritual svg {
   width: 16px;
 }
-.note-page > h1 {
-  font-size: 25px;
-  text-align: center;
-  text-shadow: 0 3px 0 #ffffffb3;
-}
 .note-page .form-card {
   margin-top: 18px;
 }
@@ -1429,9 +1495,11 @@ button:hover:not(:disabled) {
   width: 160px;
   margin: 20px auto;
 }
-.note-page > .page-subtitle {
+.note-context {
   font-size: 13px;
   margin-top: 6px;
+  text-align: center;
+  color: var(--ink-soft);
 }
 .ritual-goal {
   text-align: center;
@@ -1659,44 +1727,57 @@ button:hover:not(:disabled) {
 }
 .feedback-controls {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-  margin: 22px 0 0;
-}
-.feedback-controls label {
-  display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 48px;
-  border: 3px solid var(--rim);
-  border-radius: 999px;
-  background: var(--paper);
-  padding: 5px 10px 5px 5px;
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--ink-soft);
-  cursor: pointer;
-  box-shadow:
-    0 0 0 2px var(--edge),
-    0 5px 0 2px var(--ledge);
-  transition:
-    transform 0.15s var(--ease),
-    box-shadow 0.15s var(--ease);
+  gap: 0;
+  margin: 0;
 }
-/* The whole pill toggles its switch, so it presses like a button. */
-.feedback-controls label:active {
-  transform: translateY(3px);
-  box-shadow:
-    0 0 0 2px var(--edge),
-    0 2px 0 2px var(--ledge);
+.feedback-controls button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--mint-ink);
+  cursor: pointer;
+  box-shadow: none;
+  transition: transform 0.16s var(--ease), color 0.16s var(--ease), background 0.16s var(--ease);
+}
+.feedback-controls button[aria-pressed="false"] {
+  color: var(--muted);
+}
+.feedback-controls button:hover,
+.feedback-controls button:focus-visible {
+  background: #ffffff66;
+}
+.feedback-controls button:active {
+  transform: scale(0.92);
 }
 .feedback-controls svg {
-  width: 32px;
-  height: 32px;
-  padding: 5px;
-  border-radius: 50%;
-  background: var(--sky-tint);
+  width: 19px;
+  height: 19px;
+}
+.scene-topbar {
+  padding-inline: 14px;
+}
+.scene-topbar .feedback-controls {
+  position: absolute;
+  right: 10px;
+}
+.scene-topbar .title-ribbon {
+  max-width: calc(100% - 164px);
+  padding: 6px 16px calc(8px + var(--drop));
+  font-size: clamp(12px, calc((min(100vw, 430px) - 224px) / var(--ribbon-letters, 4)), 19px);
+}
+.app-shell[data-page="scene"] .app-content {
+  padding-top: 4px;
+}
+.scene-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
 }
 /* 收藏 on a scene page: a heart toggle chip in the toggles' row. A ring, no
    ledge; while the scene is a favourite the heart fills and the chip takes
@@ -1799,16 +1880,6 @@ button:hover:not(:disabled) {
 .completion {
   text-align: center;
 }
-.completion > h1 {
-  font-size: 33px;
-  font-weight: 900;
-  line-height: 1.45;
-  text-shadow: 0 3px 0 #ffffffb3;
-}
-.completion > .page-subtitle {
-  font-size: 16px;
-  margin: 3px 0 0;
-}
 .celebration {
   position: relative;
   isolation: isolate;
@@ -1817,7 +1888,7 @@ button:hover:not(:disabled) {
 }
 /* The sunburst is its own layer behind the reward, faded by a radial mask so
    it dissolves on every side instead of ending in a box. A mask on
-   .celebration itself would fade the number, postcard and badge with it. */
+   .celebration itself would fade the postcard and badge with it. */
 .celebration::before {
   content: "";
   position: absolute;
@@ -1830,19 +1901,6 @@ button:hover:not(:disabled) {
   );
   mask-image: radial-gradient(closest-side, #000 70%, transparent);
   pointer-events: none;
-}
-.reward-number {
-  color: #a2471a;
-  font-size: 32px;
-  font-weight: 900;
-  transform: rotate(-5deg);
-  padding: 2px 0;
-  text-shadow: 0 3px 0 #ffffff;
-}
-.reward-number strong {
-  font-size: 60px;
-  font-weight: 900;
-  letter-spacing: -2px;
 }
 .celebration .art {
   position: relative;
@@ -1902,7 +1960,7 @@ button:hover:not(:disabled) {
 .completion .leaf-footer {
   margin-top: 13px;
 }
-/* The card enters in stages — number, postcard, badge, then the confirm —
+/* The card enters in stages — postcard, badge, then the confirm —
    instead of everything at once. */
 .completion > * {
   animation: completion-in 0.3s var(--ease) backwards;
@@ -1921,9 +1979,6 @@ button:hover:not(:disabled) {
 }
 .completion > .leaf-footer {
   animation-delay: 0.38s;
-}
-.completion .reward-number {
-  animation: completion-pop 0.32s 0.12s var(--ease) backwards;
 }
 .completion .title-badge {
   animation: completion-stamp 0.3s 0.3s var(--ease) backwards;
@@ -2416,44 +2471,11 @@ button:hover:not(:disabled) {
   color: var(--muted);
   margin-top: 5px;
 }
-.profile {
-  text-align: center;
-  padding: 8px 0 24px;
-}
-.avatar {
-  display: grid;
-  place-items: center;
-  width: 86px;
-  height: 86px;
-  border: 5px solid var(--rim);
-  border-radius: 50%;
-  background: radial-gradient(circle at 36% 30%, var(--leaf-hi), var(--leaf));
-  margin: 0 auto 16px;
-  /* A portrait, not a button: ring only. */
-  box-shadow: 0 0 0 3px var(--edge);
-  color: #24501a;
-}
-.avatar svg {
-  width: 38px;
-  height: 38px;
-  stroke-width: 2.2;
-}
-.profile h2 {
-  font-size: 22px;
-  font-weight: 900;
-  text-shadow: 0 3px 0 #ffffffb3;
-}
-.profile p {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink-soft);
-  margin-top: 6px;
-}
-/* Three candy counters instead of one ruled box. Read-only, so a ring and no
+/* Two candy counters instead of one ruled box. Read-only, so a ring and no
    ledge, like .count-pill: they must not pass for the tappable tiles. */
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 .stats > div {
@@ -2471,12 +2493,6 @@ button:hover:not(:disabled) {
   box-shadow:
     inset 0 3px 0 #ffffffd9,
     0 0 0 2px #f6c7b2;
-}
-.stats > div:nth-child(3) {
-  background: var(--sky-tint);
-  box-shadow:
-    inset 0 3px 0 #ffffffd9,
-    0 0 0 2px #b4dcf3;
 }
 .stats strong {
   display: block;
@@ -2497,7 +2513,7 @@ button:hover:not(:disabled) {
   border: 3px solid var(--rim);
   border-radius: var(--radius-panel);
   padding: 0 16px;
-  margin-top: 26px;
+  margin-top: 16px;
   box-shadow: var(--panel-shadow-static);
 }
 .settings-row {
@@ -2524,33 +2540,6 @@ button:hover:not(:disabled) {
   font-weight: 600;
   color: var(--muted);
   margin-top: 4px;
-}
-.local-note {
-  display: flex;
-  gap: 11px;
-  color: var(--ink-soft);
-  margin: 26px 2px 22px;
-}
-.local-note > svg {
-  width: 18px;
-}
-.local-note strong {
-  font-size: 13px;
-  font-weight: 800;
-}
-.local-note p {
-  font-size: 12px;
-  font-weight: 600;
-  margin-top: 5px;
-  line-height: 1.8;
-}
-.footnote {
-  text-align: center;
-  color: var(--ink-soft);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 2;
-  margin: 22px 0 0;
 }
 .timeline {
   list-style: none;
@@ -2739,20 +2728,6 @@ button:hover:not(:disabled) {
     transform: none;
   }
 }
-@keyframes completion-pop {
-  0% {
-    opacity: 0;
-    transform: rotate(-5deg) scale(0.6);
-  }
-  70% {
-    opacity: 1;
-    transform: rotate(-5deg) scale(1.08);
-  }
-  100% {
-    opacity: 1;
-    transform: rotate(-5deg);
-  }
-}
 @keyframes completion-stamp {
   from {
     opacity: 0;
@@ -2926,11 +2901,6 @@ button:hover:not(:disabled) {
   }
 }
 @media (max-width: 360px) {
-  /* 折一份小小的期待 (8 characters) on one ribbon line at 320px. */
-  .app-topbar h2 {
-    padding-inline: 20px;
-    font-size: 17px;
-  }
   .app-content {
     padding-left: 13px;
     padding-right: 13px;
@@ -2942,21 +2912,8 @@ button:hover:not(:disabled) {
     padding-left: 13px;
     padding-right: 13px;
   }
-  .home-heading h1 {
-    font-size: 27px;
-  }
-  .merit-pill {
-    padding: 2px 8px 2px 2px;
-    font-size: 12px;
-  }
-  .merit-pill b {
-    font-size: 15px;
-  }
   .daily-copy h2 {
     font-size: 23px;
-  }
-  .fulfill-page > h1 {
-    font-size: 25px;
   }
   .wish-title {
     font-size: 26px;
@@ -2972,15 +2929,9 @@ button:hover:not(:disabled) {
   .badge-preview strong {
     font-size: 12px;
   }
-  .feedback-controls {
-    gap: 8px;
-  }
-  .feedback-controls label {
-    padding: 5px 8px 5px 5px;
-    gap: 6px;
-  }
-  .completion > h1 {
-    font-size: 30px;
+  .scene-topbar .title-ribbon {
+    padding-inline: 8px;
+    font-size: clamp(12px, calc((min(100vw, 430px) - 224px) / var(--ribbon-letters, 4)), 19px);
   }
   .category-chips {
     gap: 6px;
@@ -3388,7 +3339,7 @@ button:hover:not(:disabled) {
   right: auto;
   left: 52%;
 }
-.library-scene-stage + .feedback-controls {
+.library-scene-stage + .scene-actions {
   margin-top: 18px;
 }
 /* 今日's scene recommendation is quiet: a small heading with the catalog link
@@ -3407,7 +3358,7 @@ button:hover:not(:disabled) {
 .scene-discovery .text-button {
   margin: -12px 0;
 }
-.cache-manager p {
+.cache-manager > p {
   line-height: 1.8;
 }
 .ritual-narrative {
@@ -3634,10 +3585,6 @@ button:hover:not(:disabled) {
   color: var(--mint-text);
   font-weight: 700;
 }
-.scene-experience h1 {
-  font-size: 26px;
-  text-shadow: 0 3px 0 #ffffffb3;
-}
 /* The scene page's own lines in the island body voice (ink-soft, 600, like
    .lead): a remote scene's caption under its title, the woodfish's
    instruction under its stage and the closing note. */
@@ -3801,7 +3748,7 @@ button:hover:not(:disabled) {
   bottom: auto;
   height: var(--canvas-h);
 }
-/* The page's h1 names the scene right above the stage. */
+/* The header names the scene once. */
 .library-scene-stage .scene-title {
   display: none;
 }
@@ -3858,9 +3805,33 @@ button:hover:not(:disabled) {
 }
 .library-scene-stage .scene-bow-tap {
   grid-area: action;
-  position: static;
+  grid-column: 3;
+  justify-self: end;
+  position: relative;
+  left: auto;
+  bottom: auto;
   margin-top: 10px;
   transform: none;
+  width: 44px;
+  max-width: 44px;
+  min-width: 44px;
+  padding-inline: 10px;
+  border: 0;
+  background: none;
+  overflow: hidden;
+  color: transparent;
+  font-size: 12px;
+}
+.library-scene-stage .scene-bow-tap::before {
+  content: '辅助';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.8;
 }
 .library-scene-stage .scene-bow-tap:active {
   transform: translateY(1px);
@@ -3875,51 +3846,130 @@ button:hover:not(:disabled) {
   contain: layout style;
 }
 .scene-object-cues * { pointer-events: none; }
-.scene-object-cue { position: absolute; width: 0; height: 0; color: #2c6459; }
+.scene-object-cue {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  transform: translate(-50%, -50%);
+}
+.scene-object-cue-dot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 1px #31483e66, 0 0 5px #ffffffa6;
+  animation: scene-cue-dot 2.4s ease-in-out var(--cue-delay, 0ms) infinite;
+}
 .scene-object-cue-ring {
   position: absolute;
-  width: 38px;
-  height: 38px;
-  left: -19px;
-  top: -19px;
-  display: grid;
-  place-items: center;
-  border: 2px solid #a9e4c5;
+  width: 26px;
+  height: 26px;
+  left: -10px;
+  top: -10px;
+  border: 1px solid #ffffffb3;
   border-radius: 50%;
-  background: #fffcf2cc;
-  box-shadow: 0 0 0 3px #fffcf280, 0 2px 8px #42372024;
-  animation: scene-cue-breathe 2.4s ease-in-out infinite;
+  background: #ffffff0a;
+  animation: scene-cue-ripple 2.4s cubic-bezier(0.4, 0, 0.2, 1) var(--cue-delay, 0ms) infinite;
 }
-.scene-object-cue-ring svg { width: 21px; height: 21px; }
-.scene-object-cue[data-compact='true'] .scene-object-cue-ring { width: 24px; height: 24px; top: -12px; left: -12px; animation: none; }
-.scene-object-cue[data-compact='true'] .scene-object-cue-ring svg { width: 15px; height: 15px; }
-.scene-object-cue[data-compact='true'] .scene-object-cue-label { display: none; }
-.scene-object-cue-label {
-  position: absolute;
-  bottom: calc(28px + var(--cue-label-offset, 0px));
-  left: var(--cue-label-shift, 0px);
-  transform: translateX(-50%);
-  padding: 5px 10px;
-  border: 1px solid #d3c5a4;
-  border-radius: 12px;
-  background: #fffcf2f5;
-  box-shadow: 0 2px 5px #4237201f;
-  color: #53462f;
-  font-size: 14px;
-  line-height: 1.35;
-  font-weight: 700;
-  white-space: nowrap;
+.scene-object-cue[data-compact='true'] .scene-object-cue-ring {
+  width: 18px;
+  height: 18px;
+  top: -6px;
+  left: -6px;
 }
-.scene-object-cue[data-label-side='below'] .scene-object-cue-label { bottom: auto; top: calc(28px + var(--cue-label-offset, 0px)); }
-.scene-object-cue[data-cue-role='target'] .scene-object-cue-ring { width: 30px; height: 30px; top: -15px; left: -15px; background: #a9e4c533; border-style: dashed; animation: none; }
-.scene-object-cue[data-cue-role='target'] .scene-object-cue-label { font-weight: 600; }
+.scene-object-cue[data-cue-role='target'] { opacity: 0.6; }
 .scene-object-cue[data-dragging='true'] { opacity: 0.25; }
-.scene-object-cue-path { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.scene-object-cue-path path { fill: none; stroke: #427b66; stroke-width: 2; stroke-dasharray: 4 5; stroke-linecap: round; opacity: 0.75; }
+.scene-cue-guides,
+.scene-cue-guides * { pointer-events: none; }
+.scene-cue-guides {
+  grid-area: hint;
+  align-self: center;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 14px;
+  min-width: 0;
+  margin-top: 12px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.scene-cue-guide {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+.scene-cue-text {
+  overflow-wrap: anywhere;
+  animation: scene-cue-copy 2.4s ease-in-out var(--cue-delay, 0ms) infinite;
+}
+.scene-cue-shelf:empty,
+.scene-cue-shelf:has(> .scene-cue-guides:empty),
+.scene-cue-shelf[hidden],
+.scene-cue-guides[hidden] { display: none; }
+.scene-cue-direction {
+  display: grid;
+  flex: 0 0 24px;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+}
+.scene-cue-direction svg { width: 18px; height: 18px; }
+.scene-cue-guide[data-kind='drag'] .scene-cue-direction svg {
+  transform: rotate(var(--cue-angle));
+}
+.scene-cue-guide[data-kind='drag'] .scene-cue-direction {
+  animation: scene-cue-swipe 2.4s cubic-bezier(0.4, 0, 0.2, 1) var(--cue-delay, 0ms) infinite;
+}
+.scene-cue-guide[data-kind='rotate'] .scene-cue-direction {
+  animation: scene-cue-turn 2.4s ease-in-out var(--cue-delay, 0ms) infinite;
+}
+.scene-cue-guide[data-kind='tap'] .scene-cue-direction {
+  animation: scene-cue-tap 2.4s ease-in-out var(--cue-delay, 0ms) infinite;
+}
+/* The short guide replaces the visual paragraph, which remains available to
+   assistive technology. Both occupy the shelf, never the subject's canvas. */
+.library-scene-stage:has(.scene-cue-guides:not([hidden]) > .scene-cue-guide:not([hidden])) {
+  --tray: max(112px, calc(var(--cue-guide-height, 24px) + 88px));
+}
+.scene-overlay-host:has(> .scene-cue-guides:not([hidden]) > .scene-cue-guide:not([hidden])) > .scene-hint {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
 .library-scene-stage:has(.scene-overlay-host[inert]) .scene-object-cues,
+.scene-overlay-host[inert] .scene-cue-guides,
 .woodfish-object:disabled .scene-object-cues { visibility: hidden; }
-@keyframes scene-cue-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
-@media (prefers-reduced-motion: reduce) { .scene-object-cue-ring { animation: none; } }
+@keyframes scene-cue-dot { 0%, 100% { opacity: 0.8; } 25% { opacity: 1; } 70% { opacity: 0.9; } }
+@keyframes scene-cue-copy { 0%, 100% { opacity: 0.65; } 18%, 40% { opacity: 1; } 75% { opacity: 0.65; } }
+@keyframes scene-cue-ripple {
+  0% { transform: scale(0.35); opacity: 0.25; }
+  18% { opacity: 0.65; }
+  75% { transform: scale(1.2); opacity: 0.12; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+@keyframes scene-cue-swipe {
+  0%, 100% { transform: translate(0, 0); opacity: 0.6; }
+  18% { opacity: 0.85; }
+  70%, 85% { transform: translate(var(--cue-dx), var(--cue-dy)); opacity: 0.45; }
+}
+@keyframes scene-cue-turn { 0%, 100% { transform: rotate(0); opacity: 0.4; } 60% { transform: rotate(65deg); opacity: 0.85; } 85% { transform: rotate(65deg); opacity: 0; } }
+@keyframes scene-cue-tap { 0%, 100% { transform: scale(1); opacity: 0.4; } 25% { transform: scale(0.85); opacity: 0.85; } 70% { transform: scale(1); opacity: 0.4; } }
+@media (prefers-reduced-motion: reduce) {
+  .scene-object-cue-ring,
+  .scene-object-cue-dot,
+  .scene-cue-text,
+  .scene-cue-guide .scene-cue-direction { animation: none; }
+}
 /* The note under the wish box sits on the sand tray on every stage. */
 .library-scene-stage .scene-wish-slot .wish-write-meta {
   color: var(--ink-soft);
@@ -4357,10 +4407,10 @@ button:hover:not(:disabled) {
 .wish-practice-detail .quiet {
   margin: 6px 0 0;
 }
-:root .legal-information { padding: 12px 0 28px; color: #064a43; }
-:root .legal-information h1 { font-size: 28px; margin: 16px 0; }
+:root .legal-information { padding: 0 0 28px; color: #064a43; }
 :root .legal-information h2 { font-size: 19px; margin: 26px 0 10px; }
-:root .legal-information p { font-size: 15px; line-height: 1.8; margin: 12px 0; overflow-wrap: anywhere; }
+:root .legal-information > p,
+:root .legal-information section p { font-size: 15px; line-height: 1.8; margin: 12px 0; overflow-wrap: anywhere; }
 /* A widget warm start leaves editable pages and active visits mounted. */
 .widget-entry-notice {
   display: flex;

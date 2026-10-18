@@ -3,6 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 type XYZ = [number, number, number]
@@ -147,8 +148,8 @@ export function createVenetianGlassBead(ctx: SceneContext): SceneInstance {
   const restore = () => { winding = at > 0 ? 1 : 0; transfer = lowering = at >= 2 ? 1 : 0; warmth = 0; setPose() }
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
-    addInteractionCue(grip, { kind: 'drag', label: '向上转动金属杆柄', anchor: GRIP, priority: 3, enabled: enabled(0) }),
-    addInteractionCue(bead, { kind: 'drag', label: '向右穿珠上绳', anchor: BEAD, priority: 3, enabled: enabled(1) }),
+    addInteractionCue(grip, { kind: 'drag', direction: [0, -1], label: '向上转动金属杆柄', anchor: GRIP, priority: 3, enabled: enabled(0) }),
+    addInteractionCue(bead, { kind: 'drag', direction: [1, 0], label: '向右穿珠上绳', anchor: BEAD, priority: 3, enabled: enabled(1) }),
     addInteractionCue(bead, { kind: 'tap', label: '轻点玻珠静观', anchor: BEAD, priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
@@ -185,7 +186,7 @@ export function createVenetianGlassBead(ctx: SceneContext): SceneInstance {
     onRelease(x, y) {
       const dx = x - down.x, dy = y - down.y, end = at === 0 ? -dy : dx
       const travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
-      const valid = !invalid && Number.isFinite(x) && Number.isFinite(y) && (at < 2 ? dragging && moved && along >= 40 && end >= 40 && end <= 84 && travel <= 90 && maxTravel <= 90 && minAlong >= -8 && backtrack <= 9 && maxAlong - end <= 9 && maxCross <= 18 && Math.abs(at === 0 ? dx : dy) <= 18 && Math.hypot(dx, dy) <= 90
+      const valid = !invalid && Number.isFinite(x) && Number.isFinite(y) && (at < 2 ? dragging && moved && completesDirectionalDrag({ along, end, maxAlong, minAlong, backtrack, maxCross, cross: at === 0 ? dx : dy, travel })
         : travel < 12 && maxTravel < 12 && Math.hypot(dx, dy) < 12 && nearestHit(x, y) === bead)
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,

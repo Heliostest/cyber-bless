@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -192,8 +193,8 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
   const restore = () => { foldAmount = at > 0 ? 1 : 0; tieAmount = at >= 2 ? 1 : 0; setShape() }
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
-    addInteractionCue(nearCorner, { kind: 'drag', label: '向上拢起布角', anchor: GRIP, priority: 3, enabled: enabled(0) }),
-    addInteractionCue(bandTip, { kind: 'drag', label: '向右轻拉系带', anchor: EDGE, priority: 3, enabled: enabled(1) }),
+    addInteractionCue(nearCorner, { kind: 'drag', direction: [0, -1], label: '向上拢起布角', anchor: GRIP, priority: 3, enabled: enabled(0) }),
+    addInteractionCue(bandTip, { kind: 'drag', direction: [1, 0], label: '向右轻拉系带', anchor: EDGE, priority: 3, enabled: enabled(1) }),
     addInteractionCue(cloth, { kind: 'tap', label: '轻点方巾静看', anchor: QUIET, priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2()
@@ -230,7 +231,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     onRelease(x, y) {
       matrices(); const dx = x - down.x, dy = y - down.y, along = at === 0 ? -dy : dx, cross = at === 0 ? Math.abs(dx) : Math.abs(dy)
       const valid = Number.isFinite(x) && Number.isFinite(y) && (at < 2
-        ? dragging && moved >= 40 && along >= 40 && along <= 84 && maxTravel <= 90 && minAlong >= -10 && backtrack <= 12 && maxAlong - along <= 12 && maxCross <= 18 && cross <= 18
+        ? dragging && completesDirectionalDrag({ along: moved, end: along, maxAlong, minAlong, backtrack, maxCross, cross, travel: maxTravel }, 40, 75)
         : maxTravel < 12 && Math.hypot(dx, dy) < 12 && nearestHit(x, y) === cloth)
       dragging = false; if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,

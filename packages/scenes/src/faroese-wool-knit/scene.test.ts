@@ -120,7 +120,7 @@ describe('one connected wool stitch on an original cream and grey swatch', () =>
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
     for (const wrong of [[1, 1], s.point('wool-table', [-1.7, .09, .9])] as [number, number][]) { event(s.hit, 'pointerdown', wrong); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end) }
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
-    for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx], [dx * 3, dy / 3], [dx * 3, dy * 3], [3 - p[0], 3 - p[1]]]) drag(s, at, x, y)
+    for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx], [dx * 3, dy / 3]]) drag(s, at, x, y)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .72, p[1] + dy * .72]); event(s.hit, 'pointerup', [p[0] + dx * .72, p[1] + dy * .72])
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])

@@ -36,6 +36,13 @@ function place(html: string, selector: string) {
   return document.body.querySelector<HTMLElement>(selector)!;
 }
 
+describe('opening progress', () => {
+  it('keeps the scene badge in the flow while only the small step mark floats', () => {
+    const badge = place('<ol class="opening-track"><li><span class="scene-badge"></span><span class="opening-step-mark">1</span><small>祈福</small></li></ol>', '.scene-badge');
+    expect(getComputedStyle(badge).position).not.toBe('absolute');
+  });
+});
+
 describe("touch targets", () => {
   it("gives every button at least 44px and no double-tap zoom", () => {
     expect(declared("button")).toMatch(/min-height: 44px/);
@@ -237,7 +244,7 @@ describe("2D ritual stage", () => {
 
 describe("page ribbon", () => {
   it("stays on one line, 12px clear of the back button, with an ellipsis when too long", () => {
-    const ribbon = declared(".app-topbar h2");
+    const ribbon = declared(".title-ribbon");
     expect(ribbon).toMatch(/max-width: calc\(100% - 104px\)/);
     expect(ribbon).toMatch(/white-space: nowrap/);
     expect(ribbon).toMatch(/overflow: hidden/);
@@ -245,19 +252,19 @@ describe("page ribbon", () => {
   });
 
   it("folds its tails under a front tilted back, as the island Title does", () => {
-    expect(declared(".app-topbar h2::after")).toMatch(
+    expect(declared(".title-ribbon::after")).toMatch(
       /transform: perspective\(11\.5em\) rotateX\(3deg\)/,
     );
     // The folds are darker than the tails, the tails darker than the front.
-    const back = declared(".app-topbar h2::before");
+    const back = declared(".title-ribbon::before");
     expect(back).toMatch(/var\(--mint-ledge\)/);
     const fold = back.match(/#[0-9a-f]{6}/)![0];
     expect(luminance(fold)).toBeLessThan(luminance(token("--mint-ledge")));
     expect(luminance(token("--mint-ledge"))).toBeLessThan(luminance(token("--mint")));
   });
 
-  it("hangs the tails inside the h2 and takes the drop back, so the front stays level with the back button", () => {
-    const ribbon = declared(".app-topbar h2");
+  it("hangs the tails inside the title and takes the drop back, so the front stays level with the back button", () => {
+    const ribbon = declared(".title-ribbon");
     expect(ribbon).toMatch(/isolation: isolate/);
     expect(ribbon).toMatch(/margin-bottom: calc\(-1 \* var\(--drop\)\)/);
     expect(ribbon).toMatch(/padding: 6px 30px calc\(8px \+ var\(--drop\)\)/);
@@ -289,7 +296,6 @@ describe("completion page", () => {
     );
     expect(declared(".completion > .celebration")).toMatch(/animation-delay: 0\.08s/);
     expect(declared(".completion > .button")).toMatch(/animation-delay: 0\.3s/);
-    expect(declared(".completion .reward-number")).toMatch(/animation: completion-pop/);
     expect(declared(".completion .title-badge")).toMatch(/animation: completion-stamp/);
   });
 

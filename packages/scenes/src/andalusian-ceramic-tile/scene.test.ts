@@ -266,7 +266,8 @@ describe('physical craft and owned resources', () => {
   })
   it('requires eight pixels of real travel and settles immediately when reduced motion is switched on', () => {
     let reduced = false; const s = mount(0, { isReducedMotion: () => reduced }), a = s.point('tile-loose-grip'), target = s.point('tile-empty-seat')
-    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', [a[0] + 7.9, a[1]]); event(s.hit, 'pointerup', target); s.run()
+    const short: [number, number] = [a[0] + 7.9, a[1]]
+    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', short); event(s.hit, 'pointerup', short); s.run()
     expect(s.progress).toEqual([])
     event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', [a[0] + 8, a[1]]); event(s.hit, 'pointerup', target); s.instance.update(.025)
     expect(s.progress).toEqual([]); reduced = true; s.instance.update(.025); expect(s.progress).toEqual([1])

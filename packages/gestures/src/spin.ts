@@ -16,11 +16,14 @@ export function createSpin(opts: SpinOpts): GestureHandle {
   let lastX = 0
   let angle = 0
   let lastRev = 0
+  let moved = false
+  const reset = () => { tracking = false; owner = undefined }
 
   const onDown = (e: PointerEvent) => {
     if (!enabled || tracking || (opts.startsOn && !opts.startsOn(e.clientX, e.clientY))) return
     tracking = true
     owner = e.pointerId
+    moved = false
     lastX = e.clientX
     el?.setPointerCapture(e.pointerId)
   }
@@ -28,10 +31,12 @@ export function createSpin(opts: SpinOpts): GestureHandle {
   const onMove = (e: PointerEvent) => {
     if (!tracking || !enabled || !el || e.pointerId !== owner) return
     const dx = e.clientX - lastX
+    moved ||= dx !== 0
     lastX = e.clientX
     const width = el.clientWidth || 1
     angle += (dx / width) * Math.PI * 2
     opts.onAngle?.(angle)
+    if (!enabled || !tracking || !el) return
     const rev = Math.floor(Math.abs(angle) / (Math.PI * 2))
     if (rev > lastRev) {
       for (let n = lastRev + 1; n <= rev; n++) {
@@ -43,9 +48,10 @@ export function createSpin(opts: SpinOpts): GestureHandle {
 
   const onUp = (e: PointerEvent) => {
     if (e.pointerId !== owner) return
-    tracking = false
-    owner = undefined
+    if (moved && e.clientX !== lastX) onMove(e)
+    if (e.pointerId === owner) reset()
   }
+  const onCancel = (e: PointerEvent) => { if (e.pointerId === owner) reset() }
 
   return {
     mount(target) {
@@ -53,7 +59,9 @@ export function createSpin(opts: SpinOpts): GestureHandle {
       el.addEventListener('pointerdown', onDown)
       el.addEventListener('pointermove', onMove)
       el.addEventListener('pointerup', onUp)
-      el.addEventListener('pointercancel', onUp)
+      el.addEventListener('pointercancel', onCancel)
+      el.addEventListener('lostpointercapture', onCancel)
+      window.addEventListener('blur', reset)
     },
     update() {},
     dispose() {
@@ -61,14 +69,15 @@ export function createSpin(opts: SpinOpts): GestureHandle {
       el.removeEventListener('pointerdown', onDown)
       el.removeEventListener('pointermove', onMove)
       el.removeEventListener('pointerup', onUp)
-      el.removeEventListener('pointercancel', onUp)
+      el.removeEventListener('pointercancel', onCancel)
+      el.removeEventListener('lostpointercapture', onCancel)
+      window.removeEventListener('blur', reset)
       el = null
-      tracking = false
-      owner = undefined
+      reset()
     },
     setEnabled(on) {
       enabled = on
-      if (!on) { tracking = false; owner = undefined }
+      if (!on) reset()
     },
   }
 }

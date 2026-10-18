@@ -14,6 +14,7 @@ import {
   hasReturnRitual,
   localDay,
   WISH_TITLE_MAX,
+  openingExclusions,
 } from "@wbr/core";
 import { WISH_WRITE_COPY } from "@wbr/gestures";
 import type { WoodfishContext } from "./scene-engines";
@@ -23,7 +24,6 @@ import { now, uid, useApp } from "./context";
 import { supportsScene, useSceneLibrary, woodfishPack } from "./scene-library";
 import { Woodfish } from "./woodfish";
 import { RitualNarrativeBlurb } from "./ritual-narrative";
-import { FeedbackControls } from "./feedback-controls";
 import { describeSceneLoadError } from "./scene-load-error";
 import { sceneWish } from "./scene-wish";
 import { SceneArt } from "./scene-icons";
@@ -35,6 +35,7 @@ import {
   sceneSteps,
 } from "./scene-placement";
 import { rectOf } from "./reward-flight";
+import { OpeningGuide, OpeningDone } from './opening';
 
 function ProceduralScene({
   entry,
@@ -171,6 +172,7 @@ function LoadedScene({
   daily,
   vessel,
   replay,
+  opening,
   failed,
 }: {
   entry: CatalogEntry;
@@ -183,6 +185,7 @@ function LoadedScene({
   vessel?: string;
   /** On a plain replay (小天地's 回看, 仪式时光's 再次体验): settles nothing. */
   replay?: boolean;
+  opening?: boolean;
   failed(error?: unknown): void;
 }) {
   const {
@@ -233,16 +236,16 @@ function LoadedScene({
   const checkpoint = (n: number) => {
     dispatch({ type: "scene.progress", id: entry.id, progress: n });
     if (n < steps) return;
-    // A daily-set walk settles its keepsake (and the day's merit) once. So
+    // A daily-set walk settles its keepsake once. So
     // does an unflagged walk of 今日's main scene: finishing the day's walk
     // from 场景目录 or 仪式时光 counts for today too. A vessel, 还愿, or
     // 回看 visit never settles one.
-    const settleDay = daily
+    const settleDay = opening ? undefined : daily
       ? daily
       : !vessel &&
           !wishId &&
           !replay &&
-          dailyPrimaryScene(entries, localDay())?.id === entry.id
+          dailyPrimaryScene(entries, localDay(), openingExclusions(state.opening, localDay()))?.id === entry.id
         ? localDay()
         : undefined;
     if (settleDay) {
@@ -267,7 +270,7 @@ function LoadedScene({
         ...(returnWish ? { wishId: returnWish.id } : {}),
       });
     } else if (ritual && returnWish) {
-      // The legacy 还愿 walk: a session and a note, never merit or a keepsake.
+      // The legacy 还愿 walk: a session and a note, without an extra keepsake.
       dispatch({
         type: "ritual.scene",
         id: visit.id,
@@ -372,7 +375,7 @@ function LoadedScene({
       {daily && (
         <p className="scene-caption">{SCENE_DAILY_CAPTION}</p>
       )}
-      <p className="scene-progress" role="status">
+      <p className={`scene-progress${entry.engine !== "woodfish@1" ? " sr-only" : ""}`} role="status">
         已完成 {progress} / {steps}
       </p>
       {entry.engine === "woodfish@1" ? (
@@ -412,7 +415,7 @@ function LoadedScene({
       )}
       {progress >= steps && (
         <div className="scene-done-row">
-          {returnedFor ? (
+          {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} /> : returnedFor ? (
             <>
               <p className="scene-done">{SCENE_RETURN_DONE_COPY}</p>
               {/* No flight: the note is on the wish already, and the ritual
@@ -572,21 +575,17 @@ function LoadedScene({
           {keptWish && (
             <>
               {WISH_WRITE_COPY.saved}
-              <button
+              {!opening && <button
                 className="text-button"
                 onClick={() => go({ page: "wish", id: keptWish })}
               >
                 去看看
-              </button>
+              </button>}
             </>
           )}
         </p>
       )}
-      {entry.engine !== "woodfish@1" ? (
-        <FeedbackControls>{favoriteChip}</FeedbackControls>
-      ) : (
-        <div className="feedback-controls">{favoriteChip}</div>
-      )}
+      <div className="scene-actions">{favoriteChip}</div>
     </>
   );
 }
@@ -596,6 +595,7 @@ export function SceneExperience({
   daily,
   vessel,
   replay,
+  opening,
 }: {
   entry?: CatalogEntry;
   /** Set when the scene is walked as a 还愿 ritual for this wish. */
@@ -606,6 +606,7 @@ export function SceneExperience({
   vessel?: string;
   /** Set on a plain replay (回看, 再次体验): it settles nothing. */
   replay?: boolean;
+  opening?: boolean;
 }) {
   const { library, ready } = useSceneLibrary(),
     { dispatch, back } = useApp();
@@ -673,8 +674,8 @@ export function SceneExperience({
   if (!entry) return <p role="alert">场景信息缺失，请返回目录重试。</p>;
   const failure = error ? describeSceneLoadError(error) : undefined;
   return (
-    <section className="scene-experience">
-      <h1>{entry.title}</h1>
+    <section className="scene-experience" aria-label={entry.title}>
+      {opening && <OpeningGuide sceneId={entry.id} />}
       <RitualNarrativeBlurb sceneId={entry.id} />
       {failure ? (
         <div className="scene-load-error" role="alert">
@@ -704,6 +705,7 @@ export function SceneExperience({
             daily={daily}
             vessel={vessel}
             replay={replay}
+            opening={opening}
             failed={fail}
           />
         </>

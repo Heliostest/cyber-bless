@@ -59,8 +59,6 @@ export function sceneRitual(id: string): RitualId | undefined {
 
 /** Copy for 今日's daily set: the day's one main walk. */
 export const DAILY_SET_COPY = {
-  heading: "今日随机仪式",
-  sub: "每天一场 · 完成后收进小天地",
   blessingNote: "祈福 · 完成后收进小天地",
   wishNote: "许愿 · 完成后可拿去许愿",
   collected: "今天已收下",

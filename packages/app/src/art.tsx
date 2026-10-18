@@ -137,10 +137,16 @@ export function Icon({ name }: { name: string }) {
       </>
     ),
     sound: <path d="M3 9h4l5-5v16l-5-5H3zM16 8q5 4 0 8M19 4q9 8 0 16" />,
+    "sound-off": <path d="M3 9h4l5-5v16l-5-5H3zM17 9l5 6M22 9l-5 6" />,
     haptics: (
       <>
         <rect x="8" y="3" width="8" height="18" rx="2" />
         <path d="M4 7v10M20 7v10" />
+      </>
+    ),
+    "haptics-off": (
+      <>
+        <path d="M8 4a2 2 0 0 1 2-1h4a2 2 0 0 1 2 2v7M16 17v2a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V9M3 3l18 18" />
       </>
     ),
     share: (

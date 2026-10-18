@@ -26,7 +26,7 @@
 | [core State／restore](../packages/core/src/index.ts) | 整份 JSON `version: 1`：`wishes`、`activeSession`、`sessions`、`collectibles`、`ledger`、`settings`、`sceneRecords`。旧 v1 缺少 sceneRecords 时补 `[]`；读取或校验失败保留原文。存档没有持久化的 revision 或跨进程事务协议。 |
 | [runtime 保存](../packages/runtime/src/index.ts)、原生 `writeSave` | 主键 `cyber-bless:personal:v1`。runtime 每次有效 dispatch 先更新内存，再串行写整份快照；native 再以 Promise 队列串行执行 AsyncStorage.setItem。最新 revision 的写入 resolve 后状态才为 `saved`；失败为 `save-error`。`flush()` 的队列已捕获错误，不能只等 flush 就认定成功。 |
 | [心愿](../packages/app/src/wishes.tsx)、[仪式](../packages/app/src/ritual.tsx)、[场景结算](../packages/app/src/scene-experience.tsx) | dispatch 返回“内存是否改变”，不代表已落盘；许愿后导航、收藏切换、完成动画可能先出现。小组件必须用实际已提交的 raw，不能在这些 UI 回调中取最新 state 就宣布已完成。 |
-| [页面／收藏](../packages/app/src/pages.tsx) | 心愿有 active／realized／fulfilled 及独立 archived；`sceneRecords.favorite` 是场景收藏开关，`collectibles` 是小天地珍藏，两者不同。今日已收下由 `daily:<day>:<sceneId>` 珍藏判断；一次 daily.scene 产生 10 功德，重复结算不再发放。 |
+| [页面／收藏](../packages/app/src/pages.tsx) | 心愿有 active／realized／fulfilled 及独立 archived；`sceneRecords.favorite` 是场景收藏开关，`collectibles` 是小天地珍藏，两者不同。今日已收下由 `daily:<day>:<sceneId>` 珍藏判断；一次 daily.scene 产生一个收藏小物，重复结算不再发放。 |
 | [路由](../packages/app/src/context.tsx)、共享 App | 自建 `Route[]` 内存栈，每次挂载初始为 today；没有 Expo Router、URL/hash 路由或持久化导航。打开 scheme 目前不能自动进入心愿／场景。场景打开还涉及 `daily`、`vessel`、`wishId` 与进度重置，须经过现有 `useOpenScene` 流程。 |
 | [日期](../packages/app/src/local-day.ts)、core `localDay` | 设备本地日期；DOM 在可见时、每分钟和 App 回前台时检查。应用关闭后这个计时器不执行，不能驱动桌面更新。 |
 
@@ -44,7 +44,7 @@
 
 首版 iOS 只声明 `systemSmall` 和 `systemMedium`；Android 提供约 2×2／4×2 的紧凑和宽卡，按 dp 可用空间响应式布局，网格占位不等于跨设备固定像素。小卡仅标题／图标／日期，宽卡增加寄语和状态。两尺寸都只有一个整卡入口，静态图片或原生图形，无音效、木鱼敲击、持续动画或直接写心愿。大尺寸、iPad extra-large、锁屏 accessory、Live Activities 和多入口配置不进入首版。
 
-默认不展示心愿正文、笔记、关联心愿名、累计功德或私人数量。若连“今日已收下”的行为状态也希望隐藏，可关掉该行，卡片仍有完整价值。预览图库只能使用通用文案。将来增加心愿卡时，要先解释桌面可被旁人看到，主动选择显露，支持立即隐藏和重建快照，且不把正文放进链接或日志。
+默认不展示心愿正文、笔记、关联心愿名、私人数量。若连“今日已收下”的行为状态也希望隐藏，可关掉该行，卡片仍有完整价值。预览图库只能使用通用文案。将来增加心愿卡时，要先解释桌面可被旁人看到，主动选择显露，支持立即隐藏和重建快照，且不把正文放进链接或日志。
 
 ## 最小共享快照与保存语义
 
@@ -210,7 +210,7 @@ Android 没有独立 widget 包名和签名，它随本应用 APK／AAB 分发�
 | 离线 | 无Metro、飞行模式、native app被杀仍显示已有widget；点击可离线打开11内置场景。远程场景候选不在首版；缺图片／缓存可读文字与通用入口。 |
 | 输入与路由 | 暖启动链接不丢未提交文本／还愿草稿；save-error保留页面和待消费请求；读档重试与WebView渲染进程恢复后继续处理。Android返回层级与原有弹窗返回不退化。 |
 | UI／无障碍 | 浅／深／iOS tinted／低亮，Android动态色与不同launcher padding；系统大字体、中文长标题、VoiceOver／TalkBack、触点和对比度通过。Web的WOFF2／CSS不会自动作用于原生widget，首版优先系统中文字体。 |
-| 核心产品 | 11场景今日推荐与首页完全一致；日收藏一场10功德且幂等；回看不领奖、许愿容器只消耗一次、归档／还愿／收藏无回归；当前Three.js首页预览、离线资源和法务入口继续通过原有verify。 |
+| 核心产品 | 11场景今日推荐与首页完全一致；每日场景收藏保持幂等；回看不领奖、许愿容器只消耗一次、归档／还愿／收藏无回归；当前Three.js首页预览、离线资源和法务入口继续通过原有verify。 |
 | 包和资料 | IPA确有已签名appex与正确AppGroup／构建号，APK／AAB有provider和资源且签名连续；原DOM打包／归档验证通过。商店说明和截图对应这个新包，不使用旧包或浏览器截图证明widget实机能力。 |
 
 实施验证使用现有 `npm run verify`、`mobile:archive:verify` 加新增的纯逻辑和native checks；生产导出后仍须实际native build和设备验收。本轮只有文档变化，没有重跑全量应用构建或业务测试。

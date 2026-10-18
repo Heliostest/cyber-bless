@@ -1,4 +1,5 @@
-import { restore, localDay, dailyCollectibleId } from './index';
+import { restore, localDay, dailyCollectibleId, openingExclusions } from './index';
+import { validOpeningSceneIds } from './opening';
 import { builtInScenes, dailyPrimaryScene, WISH_SCENE_IDS } from './daily-scenes';
 
 export const WIDGET_CATALOG_REVISION = 'bundled-daily-v1';
@@ -7,6 +8,8 @@ export type WidgetDay = {
   artKey: string; collected: 'confirmed' | 'unknown'; deepLink: string;
 };
 export type WidgetSnapshotV1 = {
+  /** Public scene IDs only; the first-day choice stays consistent with the app. */
+  opening?: { day: string; sceneIds: [string, string, string] };
   schemaVersion: 1; sourceVersion: 1; sourceHash: string; catalogRevision: string;
   generatedAt: string; timeZone: string; validThroughDay: string; days: WidgetDay[];
 };
@@ -40,8 +43,8 @@ export function parseWidgetLink(raw: string): WidgetLinkRequest | undefined {
     return { day, sceneId };
   } catch { return; }
 }
-export function resolveWidgetScene<T extends { id: string }>(request: WidgetLinkRequest, day: string, entries: readonly T[]): T | undefined {
-  const current = dailyPrimaryScene(entries, day);
+export function resolveWidgetScene<T extends { id: string }>(request: WidgetLinkRequest, day: string, entries: readonly T[], excluded: readonly string[] = []): T | undefined {
+  const current = dailyPrimaryScene(entries, day, excluded);
   if (request.day && request.day !== day) return;
   if (request.sceneId && request.sceneId !== current?.id) return;
   return current;
@@ -57,7 +60,7 @@ export function createWidgetSnapshot(raw: string | null | undefined, at: Date, s
   if (state) for (let i = 0; i < 7; i++) {
     const date = new Date(at.getFullYear(), at.getMonth(), at.getDate() + i, 12);
     const day = localDay(date);
-    const scene = dailyPrimaryScene(builtInScenes, day)!;
+    const scene = dailyPrimaryScene(builtInScenes, day, openingExclusions(state.opening, day))!;
     const category = (WISH_SCENE_IDS as readonly string[]).includes(scene.id) ? 'wish' : 'blessing';
     days.push({ day, sceneId: scene.id, title: scene.title, category, artKey: scene.id,
       collected: i === 0 && state.collectibles.some(c => c.id === dailyCollectibleId(day, scene.id) && c.sceneId === scene.id) ? 'confirmed' : 'unknown',
@@ -65,7 +68,10 @@ export function createWidgetSnapshot(raw: string | null | undefined, at: Date, s
   }
   let timeZone: string;
   try { timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { timeZone = ''; }
+  const opening = state?.opening?.status === 'complete'
+    ? { day: state.opening.completedDay, sceneIds: state.opening.sceneIds } : undefined;
   return { schemaVersion: 1, sourceVersion: 1, sourceHash, catalogRevision: WIDGET_CATALOG_REVISION,
+    ...(opening ? { opening } : {}),
     generatedAt: at.toISOString(), timeZone: timeZone || `UTC${-at.getTimezoneOffset()}`,
     validThroughDay: days.at(-1)?.day ?? localDay(at), days };
 }
@@ -76,7 +82,9 @@ export function selectWidgetDay(value: unknown, now: Date): WidgetDay | undefine
   if (day > snapshot.validThroughDay) return;
   const entry = snapshot.days.find(e => e && typeof e === 'object' && e.day === day);
   if (!entry) return;
-  const known = dailyPrimaryScene(builtInScenes, day);
+  if (snapshot.opening && (!isLocalDay(snapshot.opening.day) || !validOpeningSceneIds(snapshot.opening.sceneIds))) return;
+  const excluded = snapshot.opening?.day === day ? snapshot.opening.sceneIds : [];
+  const known = dailyPrimaryScene(builtInScenes, day, excluded);
   if (!known || entry.sceneId !== known.id || entry.title !== known.title || entry.artKey !== known.id || entry.deepLink !== widgetLink(day, known.id) || !['confirmed', 'unknown'].includes(entry.collected)) return;
   return entry;
 }

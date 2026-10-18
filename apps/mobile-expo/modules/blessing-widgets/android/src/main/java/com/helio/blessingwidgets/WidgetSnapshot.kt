@@ -54,7 +54,21 @@ internal data class WidgetSnapshot(
       val tokener = JSONTokener(raw)
       val root = tokener.nextValue() as? JSONObject ?: error("Invalid projection root")
       require(tokener.nextClean() == '\u0000')
-      require(root.keys().asSequence().toSet() == rootKeys)
+      val keys = root.keys().asSequence().toSet()
+      require(keys == rootKeys || keys == rootKeys + "opening")
+      if (root.has("opening")) {
+        val opening = root.getJSONObject("opening")
+        require(opening.keys().asSequence().toSet() == setOf("day", "sceneIds"))
+        require(WidgetDates.parseDay(opening.getString("day")) != null)
+        val entries = opening.getJSONArray("sceneIds")
+        require(entries.length() == 3)
+        val ids = (0 until entries.length()).map { entries.getString(it) }
+        require(ids.toSet().size == 3)
+        require(ids.take(2).all { scenes[it]?.category == "blessing" })
+        require(scenes[ids[2]]?.category == "wish")
+        // Android selects from the validated daily rows below. The optional
+        // JS selection context is validated here, then omitted by toJson().
+      }
       require(root.get("schemaVersion") == 1 && root.get("sourceVersion") == 1)
       require(root.getString("catalogRevision") == CATALOG_REVISION)
       val hash = root.getString("sourceHash")

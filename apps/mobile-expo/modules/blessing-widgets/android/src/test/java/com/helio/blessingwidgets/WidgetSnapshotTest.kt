@@ -9,6 +9,28 @@ import java.util.Locale
 import java.util.TimeZone
 
 class WidgetSnapshotTest {
+  @Test fun acceptsPublicOpeningMetadataAndKeepsTheValidatedDailyRows() {
+    val opening = JSONObject().put("day", "2026-10-11")
+      .put("sceneIds", JSONArray(listOf("furin-wind-chime", "shinto-torii", "crane")))
+    val parsed = WidgetSnapshot.parse(snapshot().put("opening", opening).toString())
+    assertNotNull("The completed opening must not prevent widget publication", parsed)
+    assertEquals("woodfish", parsed!!.select("2026-10-11")!!.sceneId)
+    assertEquals("woodfish", parsed.select("2026-10-12")!!.sceneId)
+    assertFalse(JSONObject(parsed.toJson()).has("opening"))
+    assertNotNull(WidgetSnapshot.parse(parsed.toJson()))
+  }
+
+  @Test fun rejectsPrivateOrMalformedOpeningMetadata() {
+    fun opening(ids: List<String>) = JSONObject().put("day", "2026-10-11").put("sceneIds", JSONArray(ids))
+    val valid = listOf("furin-wind-chime", "shinto-torii", "crane")
+    assertNull(WidgetSnapshot.parse(snapshot().put("opening", opening(valid).put("wish", "private")).toString()))
+    assertNull(WidgetSnapshot.parse(snapshot().put("opening", opening(valid).put("day", "2026-02-30")).toString()))
+    for (ids in listOf(listOf("unknown", "shinto-torii", "crane"),
+      listOf("woodfish", "woodfish", "crane"), listOf("woodfish", "shinto-torii", "furin-wind-chime"))) {
+      assertNull(WidgetSnapshot.parse(snapshot().put("opening", opening(ids)).toString()))
+    }
+  }
+
   private fun snapshot(): JSONObject {
     val days = JSONArray()
     for (offset in 11..17) {

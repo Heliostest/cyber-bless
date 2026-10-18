@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { placementHit } from '../placement-hit'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -131,7 +132,7 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
     },
     onRelease(x, y) {
       const moved = maxTravel; maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint === 0 ? dragging && moved > 8 && visibleHit(x, y, anchor, true) : maxTravel < 12 && visibleHit(x, y, cap)
+      const valid = checkpoint === 0 ? dragging && moved > 8 && placementHit(canvas, camera, bead, x, y, (px, py) => visibleHit(px, py, anchor, true)) : maxTravel < 12 && visibleHit(x, y, cap)
       dragging = false
       if (!valid) { resetDrag(); return }
       if (checkpoint < 2) begin(); else finish()

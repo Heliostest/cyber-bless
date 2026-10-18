@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { placementHit } from '../placement-hit'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -166,7 +167,7 @@ export function createBasqueSunflower(ctx: SceneContext): SceneInstance {
     onRelease(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y)); matrices()
       // Only the carried subtree is excluded; all external scene occluders remain authoritative.
-      const valid = at < 2 ? dragging && travel >= 8 && hitsVisible(x, y, at === 0 ? seat : peg, moving())
+      const valid = at < 2 ? dragging && travel >= 8 && placementHit(canvas, camera, center, x, y, (px, py) => hitsVisible(px, py, at === 0 ? seat : peg, moving()))
         : at === 2 && travel < 12 && hitsVisible(x, y, centerPiece)
       dragging = false; if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,

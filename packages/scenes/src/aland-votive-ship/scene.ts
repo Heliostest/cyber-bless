@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { placementHit } from '../placement-hit'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
@@ -142,11 +143,11 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
   addInteractionCue(handle, { kind: 'tap', label: '轻点舟模静看', priority: 3, enabled: cueActive(2) })
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3(), down = new THREE.Vector2()
   const reset = () => { dragging = false; travel = 0; if (!motion) restore() }
-  const visibleHit = (x: number, y: number, targets: THREE.Object3D[]) => {
+  const visibleHit = (x: number, y: number, targets: THREE.Object3D[], held?: THREE.Object3D) => {
     const meshes: THREE.Object3D[] = []
-    world.traverse(object => {
+    scene.traverse(object => {
       if (!(object as THREE.Mesh).isMesh) return
-      for (let p: THREE.Object3D | null = object; p; p = p.parent) if (!p.visible) return
+      for (let p: THREE.Object3D | null = object; p; p = p.parent) if (!p.visible || p === held || at === 1 && held === ship && p === mast) return
       if (((object as THREE.Mesh).material as THREE.Material).transparent) return
       meshes.push(object)
     })
@@ -174,9 +175,9 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
     onRelease(x, y) {
       // Test the fixed, visible destination before the carried object can obscure it.
       const moved = (at === 0 ? mast : ship).position.clone()
-      restore()
-      const valid = at < 2 ? dragging && travel > 8 && visibleHit(x, y, [at === 0 ? socket : cradleTarget])
+      const valid = at < 2 ? dragging && travel > 8 && placementHit(canvas, camera, at === 0 ? grip : handle, x, y, (px, py) => visibleHit(px, py, [at === 0 ? socket : cradleTarget], at === 0 ? mast : ship))
         : at === 2 && travel < 12 && visibleHit(x, y, finishTargets)
+      restore()
       dragging = false
       if (valid) { if (at < 2) begin(moved); else finish() } else reset()
     }, onCancel: reset,

@@ -348,13 +348,13 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
       pourAngleDeg: SWING_TRIGGER_DEG,
       holdMs: 0,
       onAngle: (deg) => {
-        if (!gestureOwned || step !== 'idle') return
+        if (!gestureOwned || !canAct() || step !== 'idle') return
         dragSwing = THREE.MathUtils.degToRad(
           THREE.MathUtils.clamp(deg, -SWING_TRIGGER_DEG, SWING_TRIGGER_DEG) * 0.5,
         )
       },
       onPour: () => {
-        if (!gestureOwned || step !== 'idle') return
+        if (!canAct() || step !== 'idle') return
         goRing()
       },
     })

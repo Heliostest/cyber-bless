@@ -87,6 +87,25 @@ describe('an original Czech hollow bead star', () => {
     tap(s); tap(s); s.button.click()
     expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
+  it.each([false, true])('accepts the fully turned star after a corrected vertical detour, reduced=%s', reduced => {
+    const s = mount(1, { isReducedMotion: () => reduced }), star = s.scene.getObjectByName('bead-star-body')!, a = s.point('bead-star-center')
+    pointer(s.hit, 'pointerdown', a)
+    for (const [dx, dy] of [[60, 0], [120, 60], [90, 0]]) pointer(s.hit, 'pointermove', [a[0] + dx, a[1] + dy])
+    expect(star.rotation.y).toBeCloseTo(.9); expect(s.progress).toEqual([])
+    pointer(s.hit, 'pointerup', [a[0] + 90, a[1]]); s.run()
+    expect(s.progress).toEqual([2]); expect(star.rotation.y).toBeCloseTo(.65)
+    tap(s); expect(s.progress).toEqual([2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it.each([false, true])('rejects wrong endpoints and cancellation after reaching the full turn, reduced=%s', reduced => {
+    for (const [dx, dy, end] of [[90, 60, 'pointerup'], [44, 0, 'pointerup'], [-90, 0, 'pointerup'], [90, 0, 'pointercancel']] as const) {
+      const s = mount(1, { isReducedMotion: () => reduced }), star = s.scene.getObjectByName('bead-star-body')!, a = s.point('bead-star-center')
+      pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', [a[0] + 120, a[1]])
+      expect(star.rotation.y).toBeGreaterThan(.65)
+      pointer(s.hit, 'pointermove', [a[0] + dx, a[1] + dy]); pointer(s.hit, end, [a[0] + dx, a[1] + dy]); s.run()
+      expect(s.progress).toEqual([]); expect(star.rotation.y).toBe(0)
+      rotate(s); expect(s.progress).toEqual([2]); s.instance.dispose()
+    }
+  })
   it.each([0, 1, 2, 3])('restores checkpoint %i silently and supports the same keyboard actions', at => {
     const s = mount(at, { isReducedMotion: () => true }); s.run()
     expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled()

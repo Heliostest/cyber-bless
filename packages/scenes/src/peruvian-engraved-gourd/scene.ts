@@ -4,6 +4,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 type XYZ = [number, number, number]
@@ -157,8 +158,8 @@ export function createPeruvianEngravedGourd(ctx: SceneContext): SceneInstance {
   const restore = () => { cutAmount = at > 0 ? 1 : 0; polishAmount = at >= 2 ? 1 : 0; setShape() }
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
-    addInteractionCue(shell, { kind: 'drag', label: '向右刻出纹带', anchor: ANCHORS[0], priority: 3, enabled: enabled(0) }),
-    addInteractionCue(shell, { kind: 'drag', label: '向下擦亮纹带', anchor: ANCHORS[1], priority: 3, enabled: enabled(1) }),
+    addInteractionCue(shell, { kind: 'drag', direction: [1, 0], label: '向右刻出纹带', anchor: ANCHORS[0], priority: 3, enabled: enabled(0) }),
+    addInteractionCue(shell, { kind: 'drag', direction: [0, 1], label: '向下擦亮纹带', anchor: ANCHORS[1], priority: 3, enabled: enabled(1) }),
     addInteractionCue(shell, { kind: 'tap', label: '轻点葫芦静看', anchor: ANCHORS[2], priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
@@ -195,7 +196,7 @@ export function createPeruvianEngravedGourd(ctx: SceneContext): SceneInstance {
     onRelease(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { reset(); return }
       const movedAlong = along; sample(x, y); matrices()
-      const valid = at < 2 ? dragging && moved && movedAlong >= 40 && along >= 40 && along <= 84 && pathTravel <= 90 && maxCross <= 18 && minAlong >= -8 && backtrack <= 10
+      const valid = at < 2 ? dragging && moved && completesDirectionalDrag({ along: movedAlong, end: along, maxAlong, minAlong, backtrack, maxCross, cross: at === 0 ? y - down.y : x - down.x, travel: pathTravel }, 40, 75)
         : pathTravel < 12 && nearestHit(x, y) === shell
       dragging = false; if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,

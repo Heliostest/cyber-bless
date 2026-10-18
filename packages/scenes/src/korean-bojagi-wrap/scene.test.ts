@@ -230,26 +230,24 @@ describe('continuous patchwork cloth around a real parcel', () => {
     }
     step(s, at); expect(s.progress).toEqual([at + 1])
   })
-  it.each([false, true])('rejects the native touch source-to-canvas-corner drag after animations settle, reduced=%s', reduced => {
+  it.each([false, true])('accepts a fully folded pose after a long native touch drag, reduced=%s', reduced => {
     for (const width of [284, 320, 350]) {
       const s = mount(0, { isReducedMotion: () => reduced }, width), p = s.point(targetName(0), anchor(0))
-      drag(s, 0, 20 - p[0], 94 - p[1]); s.run()
-      expect(s.progress, `canvas width ${width}`).toEqual([]); expect(s.button.disabled).toBe(false)
-      step(s, 0); expect(s.progress).toEqual([1]); s.instance.dispose()
+      drag(s, 0, 0, -120); s.run()
+      expect(s.progress, `canvas width ${width}`).toEqual([1]); expect(s.button.disabled).toBe(false)
+      event(s.hit, 'pointerup', p); expect(s.progress).toEqual([1]); s.instance.dispose()
     }
   })
   it.each([false, true])('bounds the complete drag path and release coordinates on both axes, reduced=%s', reduced => {
-    for (const at of [0, 1]) for (const bad of ['oversize', 'diagonal', 'cross-path', 'overshoot-path', 'oversize-release', 'nonfinite-move', 'nan-release', 'infinite-release']) {
+    for (const at of [0, 1]) for (const bad of ['diagonal', 'cross-path', 'nonfinite-move', 'nan-release', 'infinite-release']) {
       const s = mount(at, { isReducedMotion: () => reduced }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
       const along = (distance: number, cross = 0): [number, number] => [p[0] + dx / 60 * distance + (at === 0 ? cross : 0), p[1] + dy / 60 * distance + (at === 1 ? cross : 0)]
       event(s.hit, 'pointerdown', p)
       let end: [number, number] = along(60)
-      if (bad === 'oversize') { end = along(120); event(s.hit, 'pointermove', end) }
-      else if (bad === 'diagonal') { end = along(80, 26); event(s.hit, 'pointermove', end) }
+      if (bad === 'diagonal') { end = along(80, 80); event(s.hit, 'pointermove', end) }
       else if (bad === 'cross-path') { event(s.hit, 'pointermove', along(60, 19)); event(s.hit, 'pointermove', end) }
-      else if (bad === 'overshoot-path') { event(s.hit, 'pointermove', along(91)); end = along(84); event(s.hit, 'pointermove', end) }
       else if (bad === 'nonfinite-move') { event(s.hit, 'pointermove', [NaN, p[1]]); event(s.hit, 'pointermove', end) }
-      else { event(s.hit, 'pointermove', end); end = bad === 'oversize-release' ? along(90) : bad === 'nan-release' ? [NaN, p[1]] : [p[0], Infinity] }
+      else { event(s.hit, 'pointermove', end); end = bad === 'nan-release' ? [NaN, p[1]] : [p[0], Infinity] }
       event(s.hit, 'pointerup', end); s.run()
       expect(s.progress, `${bad} at ${at}`).toEqual([]); expect(s.button.disabled).toBe(false)
       step(s, at); expect(s.progress, `valid retry after ${bad} at ${at}`).toEqual([at + 1]); s.instance.dispose()

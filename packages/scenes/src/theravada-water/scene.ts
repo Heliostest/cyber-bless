@@ -382,46 +382,58 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
   let downX = 0
   let downY = 0
   let tappedOffering = false
-  let offeringPointerId: number | null = null
+  let interactionPointerId: number | null = null
+  const resetUnfinishedPour = () => {
+    if (step !== 'tilt') return
+    pourProgress = 0
+    pitcherGroup.rotation.z = 0
+    streamMat.opacity = 0
+    setHint(COPY.hintTilt)
+  }
   const onHitDown = (e: PointerEvent) => {
-    if (offeringPointerId !== null) return
+    if (interactionPointerId !== null) return
     downX = e.clientX
     downY = e.clientY
     tilting = canAct() && step === 'tilt' && onPitcher(e.clientX, e.clientY)
     grabbed = canAct() && step === 'drag' && onPetal(e.clientX, e.clientY)
     tappedOffering = canAct() && step === 'anjali' && onOffering(e.clientX, e.clientY)
-    offeringPointerId = tappedOffering ? e.pointerId : null
+    interactionPointerId = tappedOffering || tilting || grabbed ? e.pointerId : null
   }
   const onHitMove = (e: PointerEvent) => {
-    if (!canAct() || step !== 'drag' || !grabbed || e.buttons === 0) return
+    if (!canAct() || e.pointerId !== interactionPointerId || step !== 'drag' || !grabbed || e.buttons === 0) return
     movePetalTo(e.clientX, e.clientY)
   }
 
   const onHitUp = (e: PointerEvent) => {
-    if (offeringPointerId !== null && e.pointerId !== offeringPointerId) return
+    if (e.pointerId !== interactionPointerId) return
     if (tappedOffering && Math.hypot(e.clientX - downX, e.clientY - downY) < 12 &&
       onOffering(e.clientX, e.clientY)) onActionTap()
     tappedOffering = false
-    offeringPointerId = null
+    interactionPointerId = null
     tilting = false
     grabbed = false
+    resetUnfinishedPour()
   }
   const onHitCancel = (e?: PointerEvent) => {
-    if (offeringPointerId !== null && e && e.pointerId !== offeringPointerId) return
+    if (e && e.pointerId !== interactionPointerId) return
     tappedOffering = false
-    offeringPointerId = null
+    interactionPointerId = null
     tilting = false
     grabbed = false
+    resetUnfinishedPour()
   }
+  const onInputBlur = () => onHitCancel()
 
   const wireGestures = () => {
     hitLayer.addEventListener('pointerdown', onHitDown)
     hitLayer.addEventListener('pointercancel', onHitCancel)
+    hitLayer.addEventListener('lostpointercapture', onHitCancel)
+    window.addEventListener('blur', onInputBlur)
     stopClaim = claimObjectTouches(hitLayer, onInteractiveObject)
     tiltHandle = gestures.createTilt({
       startsOn: (x, y) => canAct() && step === 'tilt' && onPitcher(x, y),
       pourAngleDeg: 40,
-      holdMs: 280,
+      holdMs: 0,
       onAngle: (deg) => {
         if (!canAct() || step !== 'tilt') return
         const t = Math.min(1, Math.abs(deg) / 40)
@@ -548,6 +560,8 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
       hitLayer.removeEventListener('pointermove', onHitMove)
       hitLayer.removeEventListener('pointerup', onHitUp)
       hitLayer.removeEventListener('pointercancel', onHitCancel)
+      hitLayer.removeEventListener('lostpointercapture', onHitCancel)
+      window.removeEventListener('blur', onInputBlur)
       anjaliBtn.removeEventListener('click', onActionTap)
       for (const h of handles) h.dispose()
       handles.length = 0

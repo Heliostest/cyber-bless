@@ -20,6 +20,9 @@ import { ContentContext, type ContentEnvironment } from "./content";
 import { InvalidContentError } from "@wbr/content";
 import { SceneLibraryProvider, SceneCatalog, CacheManager } from "./scene-library";
 import { SceneExperience } from "./scene-experience";
+import { FeedbackControls } from "./feedback-controls";
+import { PageTitle } from "./page-heading";
+import { Opening } from "./opening";
 import { followSystemReducedMotion, initialSettings } from "./reduced-motion";
 import { useLocalDay } from "./local-day";
 import { WidgetNavigation } from './widget-navigation';
@@ -77,6 +80,7 @@ export function BlessingApp({
   const shell = useRef<HTMLDivElement>(null);
   const route = routes[routes.length - 1];
   const state = snapshot.state;
+  const openingActive = !!state?.opening && state.opening.status !== 'complete';
   const roots = ["today", "wishes", "world", "me"];
   const canBack = routes.length > 1 || route.page !== "today";
   function go(next: Route) {
@@ -284,17 +288,10 @@ export function BlessingApp({
           : roots.includes(route.page)
             ? route.page
             : "today";
-  // The ribbon names a page that has no title of its own: none on 完成页, nor
-  // on pages whose h1 already says it (场景目录, 资源缓存, 仪式时光). On the
-  // others it is a category word above the page's own heading.
+  // Scene titles share the page ribbon; their canvas has no second heading.
   const ribbon = (
     {
-      new: "许个小心愿",
-      wish: "我的心愿",
-      fulfill: "来还个愿",
-      note: "记一笔",
-      collection: "我的小收藏",
-      scene: "场景体验",
+      scene: (route.entry ?? state.sceneRecords.find(r => r.id === route.id))?.title,
       ritual:
         ritualTitle[
           state.activeSession?.ritual ??
@@ -337,8 +334,8 @@ export function BlessingApp({
   };
   const page =
     route.page === 'privacy' || route.page === 'support' ? <LegalInformation kind={route.page} /> :
-    route.page === "scenes" ? <SceneCatalog /> : route.page === "cache" ? <CacheManager /> : route.page === "scene" ? <SceneExperience entry={route.entry ?? state.sceneRecords.find(r => r.id === route.id)} wishId={route.wishId} daily={route.daily} vessel={route.vessel} replay={route.replay} /> : route.page === "today" ? (
-      <Today key={day} day={day} />
+    route.page === "scenes" ? <SceneCatalog /> : route.page === "cache" ? <CacheManager /> : route.page === "scene" ? <SceneExperience entry={route.entry ?? state.sceneRecords.find(r => r.id === route.id)} wishId={route.wishId} daily={route.daily} vessel={route.vessel} replay={route.replay} opening={route.opening} /> : route.page === "today" ? (
+      openingActive ? <Opening /> : <Today key={day} day={day} />
     ) : route.page === "wishes" ? (
       <Wishes />
     ) : route.page === "world" ? (
@@ -421,11 +418,11 @@ export function BlessingApp({
             </p>
             <span>CYBER BLESS · A LITTLE EVERY DAY</span>
           </div>
-          <div className="app-shell" data-page={route.page} ref={shell}>
+          <div className="app-shell" data-page={route.page} data-opening={openingActive ? '' : undefined} ref={shell}>
             <WidgetNavigation request={navigationRequest} route={route} saved={snapshot.status === 'saved'} busy={!!flight} onConsumed={onNavigationConsumed} />
             {!roots.includes(route.page) && (
               <header
-                className={`app-topbar${route.page === "complete" ? " completion-topbar" : ""}`}
+                className={`app-topbar${route.page === "complete" ? " completion-topbar" : ""}${route.page === "scene" || route.page === "ritual" ? " scene-topbar" : " page-topbar"}`}
               >
                 <button
                   className="back-button"
@@ -438,7 +435,8 @@ export function BlessingApp({
                 >
                   <Icon name={route.page === "complete" ? "close" : "back"} />
                 </button>
-                {ribbon && <h2>{ribbon}</h2>}
+                {ribbon && <PageTitle title={ribbon} />}
+                {(route.page === "scene" || route.page === "ritual") && <FeedbackControls />}
               </header>
             )}
             <span
@@ -481,7 +479,7 @@ export function BlessingApp({
                 onLand={onRewardLand}
               />
             )}
-            {roots.includes(route.page) && (
+            {roots.includes(route.page) && !openingActive && (
               <nav className="bottom-nav" aria-label="主导航">
                 {[
                   ["today", "今日"],

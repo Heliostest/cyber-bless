@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { localDay } from '@wbr/core';
+import { localDay, openingExclusions } from '@wbr/core';
 import { resolveWidgetScene, type WidgetNavigationRequest } from '@wbr/core/widgets';
 import { useApp, type Route } from './context';
 import { useOpenScene, useSceneLibrary } from './scene-library';
@@ -10,7 +10,8 @@ export function WidgetNavigation({ request, route, saved, busy, onConsumed }: {
   request?: WidgetNavigationRequest; route: Route; saved: boolean; busy: boolean;
   onConsumed?: (requestId: number) => Promise<void>;
 }) {
-  const { active, go } = useApp();
+  const { active, go, state } = useApp();
+  const openingActive = !!state.opening && state.opening.status !== 'complete';
   const { entries } = useSceneLibrary();
   const openScene = useOpenScene();
   const handled = useRef<number | undefined>(undefined);
@@ -18,7 +19,7 @@ export function WidgetNavigation({ request, route, saved, busy, onConsumed }: {
   const [retry, setRetry] = useState(0);
   const actions = useRef({ go, openScene, onConsumed });
   actions.current = { go, openScene, onConsumed };
-  const blocked = protectedPages.has(route.page) || busy;
+  const blocked = protectedPages.has(route.page) || busy || openingActive;
   useEffect(() => {
     if (!request || handled.current === request.requestId || !active) return;
     let disposed = false;
@@ -35,13 +36,14 @@ export function WidgetNavigation({ request, route, saved, busy, onConsumed }: {
       if (pending.sceneId ? route.page === 'scene' && route.id === pending.sceneId : route.page === 'today') acknowledge();
     } else if (saved && !blocked) {
       const day = localDay();
-      const entry = resolveWidgetScene(request, day, entries);
+      const entry = resolveWidgetScene(request, day, entries, openingExclusions(state.opening, day));
       target.current = { requestId: request.requestId, sceneId: entry?.id };
       if (entry) actions.current.openScene(entry, { daily: day });
       else actions.current.go({ page: 'today' });
     }
     return () => { disposed = true; if (timer) clearTimeout(timer); };
-  }, [request, route, saved, blocked, active, entries, retry]);
+  }, [request, route, saved, blocked, active, entries, retry, state.opening]);
+  if (openingActive) return null;
   if (!request || handled.current === request.requestId || target.current?.requestId === request.requestId || (saved && !blocked)) return null;
   return <div className="widget-entry-notice" role="status">
     <span>{saved ? '先完成当前页面，再打开今日仪式。' : '记录保存后，再打开今日仪式。'}</span>

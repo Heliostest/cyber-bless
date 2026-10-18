@@ -135,6 +135,7 @@ export function Woodfish({
     else onImpact();
   }
   return (
+    <>
     <button
       className="ritual-object woodfish-object"
       aria-label={disabled ? "仪式步骤已完成" : "轻敲木鱼"}
@@ -220,5 +221,7 @@ export function Woodfish({
         )}
       </span>
     </button>
+    <div className="scene-cue-shelf" aria-hidden="true" hidden={disabled || !active || status !== "ready"} />
+    </>
   );
 }

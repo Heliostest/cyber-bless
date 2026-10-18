@@ -20,6 +20,7 @@ import { contentIO, useContent } from "./content";
 import { useApp } from "./context";
 import { SceneBadge } from "./scene-icons";
 import { ritualSceneEntry, sceneSteps } from "./scene-placement";
+import { PageHead } from "./page-heading";
 
 export { builtInScenes, type BuiltInSceneEntry } from '@wbr/core/daily-scenes';
 import { builtInScenes } from '@wbr/core/daily-scenes';
@@ -95,6 +96,7 @@ export function useOpenRitual() {
 /** What a walk is for. The daily set resumes a half-walked scene; each other
  * flag makes it a fresh scene (progress to 0). */
 export type SceneVisit = {
+  opening?: boolean;
   /** 今日's daily set: the local day the keepsake is collected for. */
   daily?: string;
   /** A wish-type keepsake being used: its collectible id. */
@@ -125,12 +127,13 @@ export function useOpenScene() {
     // earlier, unfinished walk of this vessel is let go.
     if (visit?.vessel && !spentVessel)
       dispatch({ type: "vessel.clear", id: visit.vessel });
-    const fresh = !!visit && !visit.daily && !spentVessel;
+    const fresh = !!visit && !visit.daily && !visit.opening && !spentVessel;
     // A spent vessel never resets: it reopens on its waiting choice, not on
     // a new walk — even when the record stands done.
     if (
       progress > 0 &&
       !spentVessel &&
+      !visit?.opening &&
       (fresh || progress >= sceneSteps(entry))
     )
       dispatch({ type: "scene.progress", id: entry.id, progress: 0 });
@@ -142,6 +145,7 @@ export function useOpenScene() {
       vessel: visit?.vessel,
       wishId: visit?.wishId,
       replay: visit?.replay,
+      opening: visit?.opening,
     });
   };
 }
@@ -312,10 +316,7 @@ export function SceneCatalog() {
   }, [entries, query, limit, stats, library]);
   return (
     <>
-      <header className="page-heading">
-        <h1>场景目录</h1>
-        <p>{entries.length} 个场景 · 按需准备</p>
-      </header>
+      <PageHead title="场景目录" eyebrow={`${entries.length} 个场景 · 按需准备`} />
       {error && <p role="status">{error}</p>}
       <label className="scene-search">
         <span className="sr-only">{CATALOG_SEARCH_COPY.label}</span>
@@ -404,8 +405,7 @@ export function CacheManager() {
   }, []);
   return (
     <section className="cache-manager">
-      <h1>资源缓存</h1>
-      <p>所有场景共享容量；收藏不会永久保留离线资源。</p>
+      <PageHead title="资源缓存" eyebrow="所有场景共享容量；收藏不会永久保留离线资源。" />
       <strong className="cache-usage">
         {formatBytes(stats?.bytes ?? 0)} /{" "}
         {formatBytes(stats?.budget ?? CACHE_BUDGET)}

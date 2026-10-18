@@ -314,38 +314,41 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
   let downX = 0
   let downY = 0
   let tappedBank = false
-  let bankPointerId: number | null = null
+  let interactionPointerId: number | null = null
   const onOverlayDown = (e: PointerEvent) => {
-    if (bankPointerId !== null) return
+    if (interactionPointerId !== null) return
     downX = e.clientX
     downY = e.clientY
     tappedBank = canAct() && step === 'gyro' && onBank(e.clientX, e.clientY)
-    bankPointerId = tappedBank ? e.pointerId : null
     grabbed = canAct() && step === 'drag' && onToken(e.clientX, e.clientY)
+    interactionPointerId = tappedBank || grabbed ? e.pointerId : null
   }
   const onOverlayMove = (e: PointerEvent) => {
-    if (!canAct() || step !== 'drag' || !grabbed || e.buttons === 0) return
+    if (!canAct() || e.pointerId !== interactionPointerId || step !== 'drag' || !grabbed || e.buttons === 0) return
     moveTokenTo(e.clientX, e.clientY)
   }
 
   const onOverlayUp = (e: PointerEvent) => {
-    if (bankPointerId !== null && e.pointerId !== bankPointerId) return
+    if (e.pointerId !== interactionPointerId) return
     if (tappedBank && Math.hypot(e.clientX - downX, e.clientY - downY) < 12 &&
       onBank(e.clientX, e.clientY)) onActionTap()
     tappedBank = false
-    bankPointerId = null
+    interactionPointerId = null
     grabbed = false
   }
   const onOverlayCancel = (e?: PointerEvent) => {
-    if (bankPointerId !== null && e && e.pointerId !== bankPointerId) return
+    if (e && e.pointerId !== interactionPointerId) return
     tappedBank = false
-    bankPointerId = null
+    interactionPointerId = null
     grabbed = false
   }
+  const onInputBlur = () => onOverlayCancel()
 
   const wireGestures = () => {
     hitLayer.addEventListener('pointerdown', onOverlayDown)
     hitLayer.addEventListener('pointercancel', onOverlayCancel)
+    hitLayer.addEventListener('lostpointercapture', onOverlayCancel)
+    window.addEventListener('blur', onInputBlur)
     stopClaim = claimObjectTouches(hitLayer, onInteractiveObject)
     gyroHandle = gestures.createGyro({
       // Lean forward, come back near upright and hold: a deliberate move, so
@@ -467,6 +470,8 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
       hitLayer.removeEventListener('pointermove', onOverlayMove)
       hitLayer.removeEventListener('pointerup', onOverlayUp)
       hitLayer.removeEventListener('pointercancel', onOverlayCancel)
+      hitLayer.removeEventListener('lostpointercapture', onOverlayCancel)
+      window.removeEventListener('blur', onInputBlur)
       for (const h of handles) h.dispose()
       handles.length = 0
       styleRenderer.dispose()

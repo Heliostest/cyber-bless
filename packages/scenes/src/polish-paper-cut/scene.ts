@@ -114,8 +114,8 @@ export function createPolishPaperCut(ctx: SceneContext): SceneInstance {
   }
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
-    addInteractionCue(grip, { kind: 'drag', label: '拿剪刀，向上剪开', anchor: [0, 0, .024], priority: 3, enabled: enabled(0) }),
-    addInteractionCue(folded, { kind: 'drag', label: '拉住纸边，向左展开', anchor: [.84, .20, .016], priority: 3, enabled: enabled(1) }),
+    addInteractionCue(grip, { kind: 'drag', direction: [0, -1], label: '拿剪刀，向上剪开', anchor: [0, 0, .024], priority: 3, enabled: enabled(0) }),
+    addInteractionCue(folded, { kind: 'drag', direction: [-1, 0], label: '拉住纸边，向左展开', anchor: [.84, .20, .016], priority: 3, enabled: enabled(1) }),
     addInteractionCue(fixed, { kind: 'tap', label: '轻点剪纸静看', anchor: [.32, .59, .016], priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2()
@@ -160,8 +160,8 @@ export function createPolishPaperCut(ctx: SceneContext): SceneInstance {
     },
     onRelease(x, y) {
       matrices(); const dx = x - down.x, dy = y - down.y
-      const valid = at === 0 ? dragging && moved >= 42 && -dy >= 42 && maxCross <= Math.max(20, -dy * .55) && Math.abs(dx) <= Math.max(20, -dy * .55)
-        : at === 1 ? dragging && moved >= 48 && -dx >= 48 && maxCross <= Math.max(20, -dx * .45) && Math.abs(dy) <= Math.max(20, -dx * .45)
+      const valid = at === 0 ? dragging && moved >= 42 && -dy >= 42 && (moved >= 64 && -dy >= 64 || maxCross <= Math.max(20, -dy * .55)) && Math.abs(dx) <= Math.max(20, -dy * .55)
+        : at === 1 ? dragging && moved >= 48 && -dx >= 48 && (moved >= 72 && -dx >= 72 || maxCross <= Math.max(20, -dx * .45)) && Math.abs(dy) <= Math.max(20, -dx * .45)
           : maxTravel < 12 && Math.hypot(dx, dy) < 12 && (visibleHit(x, y, fixed) || visibleHit(x, y, folded))
       dragging = false; if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,

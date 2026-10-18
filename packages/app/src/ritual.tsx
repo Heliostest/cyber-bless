@@ -6,8 +6,8 @@ import { Empty } from "./pages";
 import { ritualTitle } from "./home";
 import { Woodfish } from "./woodfish";
 import { RitualNarrativeBlurb } from "./ritual-narrative";
-import { FeedbackControls } from "./feedback-controls";
 import { rectOf } from "./reward-flight";
+import { PageHead } from "./page-heading";
 
 /**
  * The 2D ritual page. Rituals open as their 3D scenes (useOpenRitual), so it
@@ -114,9 +114,9 @@ export function Ritual({
       <div className="ritual-stage">
         <div className="ritual-feedback" key={pulse}>
           <strong>
-            {ready ? "小美好 +1" : pulse ? "安心 +1" : "留一点好心情"}
+            {ready ? "仪式已完成" : pulse ? "已记下这一步" : "留一点好心情"}
           </strong>
-          <span>{pulse ? "烦恼 -1" : "烦恼，轻轻放下"}</span>
+          <span>烦恼，轻轻放下</span>
         </div>
         {kind === "woodfish" ? (
           <Woodfish
@@ -198,7 +198,6 @@ export function Ritual({
           </select>
         </div>
       )}
-      <FeedbackControls />
       {kind === "woodfish" && !ready && (
         <button
           className="woodfish-pause"
@@ -233,7 +232,6 @@ export function Complete({ id }: { id: string }) {
         onClick={() => go({ page: "today" })}
       />
     );
-  const earned = state.ledger.find((l) => l.id === r.id)?.amount ?? 0;
   const day = localDay(new Date(r.completedAt!));
   const today = state.sessions
     .filter((s) => localDay(new Date(s.completedAt!)) === day)
@@ -268,10 +266,10 @@ export function Complete({ id }: { id: string }) {
     go({ page: "world" });
   }
   async function share() {
-    const text = `今天${ritualTitle[r!.ritual]}，功德 +${earned}。把小仪式过成好心情。`;
+    const text = `今天${ritualTitle[r!.ritual]}。把小仪式过成好心情。`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: "今日功德", text });
+        await navigator.share({ title: "今日仪式", text });
         return;
       } catch (e) {
         if (e instanceof Error && e.name === "AbortError") return;
@@ -282,12 +280,8 @@ export function Complete({ id }: { id: string }) {
   }
   return (
     <div className="completion">
-      <h1>今日仪式完成</h1>
-      <p className="page-subtitle">今天的好心情，已到账。</p>
+      <PageHead title="今日仪式完成" eyebrow="今天的好心情，已到账。" />
       <div className="celebration">
-        <div className="reward-number">
-          功德 <strong>+{earned}</strong>
-        </div>
         <Art
           kind={r.ritual}
           variant={
@@ -339,7 +333,7 @@ export function Complete({ id }: { id: string }) {
       </button>
       <button className="button outline full" onClick={() => void share()}>
         <Icon name="share" />
-        分享今日功德
+        分享今日仪式
       </button>
       {shareText && (
         <div className="share-panel">

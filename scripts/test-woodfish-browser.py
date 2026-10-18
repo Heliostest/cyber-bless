@@ -58,7 +58,7 @@ with sync_playwright() as p:
     expect(page.get_by_role("heading",name="今日仪式完成")).to_be_visible()
     page.wait_for_function("JSON.parse(localStorage.getItem('cyber-bless:personal:v1')).sessions.length === 1")
     s=state()
-    assert len(s["ledger"])==1 and s["ledger"][0]["amount"]==10
+    assert s["ledger"] == []
     assert len(s["collectibles"])==1 and s["activeSession"] is None
     page.screenshot(path=str(out/"complete-mobile.png"),full_page=True)
     page.reload(wait_until="networkidle")

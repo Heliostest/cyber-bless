@@ -381,10 +381,13 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   const moveAlongGuide = (e: PointerEvent) => {
     if (!drag || e.pointerId !== drag.id || blockedMulti) return
     if (!canAct() || checkpoint !== drag.step || e.buttons === 0) { resetDrag(); return }
-    if (!pointer.aim(e.clientX, e.clientY).ray.intersectPlane(guidePlane, pointerPoint)) return
+    sampleGuide(e.clientX, e.clientY)
+  }
+  const sampleGuide = (x: number, y: number) => {
+    if (!drag || !pointer.aim(x, y).ray.intersectPlane(guidePlane, pointerPoint)) return
     const points = ROUTES[checkpoint]
     // Ordered gates reject direct end-to-end swipes and random drags, even
-    // near the path's self crossings. A missing move cannot be a release.
+    // near the path's self crossings.
     while (drag.next < points.length) {
       const p = points[drag.next]
       if (Math.hypot(pointerPoint.x - p[0], pointerPoint.z - p[2]) > 0.17) break
@@ -404,6 +407,9 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
       return
     }
     if (!current || e.pointerId !== current.id) return
+    // A browser may deliver the final gate only in pointerup. Previous gates
+    // must already have been followed, so release alone cannot skip the path.
+    if (current.next > 1 && canAct() && checkpoint === current.step) sampleGuide(e.clientX, e.clientY)
     const points = ROUTES[current.step]
     const end = points[points.length - 1]
     const point = pointer.aim(e.clientX, e.clientY).ray.intersectPlane(guidePlane, pointerPoint)

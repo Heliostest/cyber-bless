@@ -25,9 +25,36 @@ it('owns only a gesture starting on an object and releases it once', () => {
   event(s.layer, 'pointerdown'); expect(s.pointer.isBusy()).toBe(true)
   event(s.layer, 'pointermove', 1, 80); event(s.layer, 'pointerup', 1, 90); event(s.layer, 'pointerup')
   expect(s.start).toHaveBeenCalledExactlyOnceWith(50, 50)
-  expect(s.move).toHaveBeenCalledExactlyOnceWith(80, 50)
+  expect(s.move.mock.calls).toEqual([[80, 50], [90, 50]])
   expect(s.release).toHaveBeenCalledExactlyOnceWith(90, 50)
   expect(s.pointer.isBusy()).toBe(false)
+})
+it('samples a different release coordinate before committing a moved object, without duplicating the last sample', () => {
+  const s = mount(), calls: string[] = []
+  s.move.mockImplementation(x => calls.push(`move:${x}`))
+  s.release.mockImplementation(x => calls.push(`release:${x}`))
+  event(s.layer, 'pointerdown'); event(s.layer, 'pointermove', 1, 70); event(s.layer, 'pointerup', 1, 120)
+  expect(calls).toEqual(['move:70', 'move:120', 'release:120'])
+  calls.length = 0
+  event(s.layer, 'pointerdown'); event(s.layer, 'pointermove', 1, 120); event(s.layer, 'pointerup', 1, 120)
+  expect(calls).toEqual(['move:120', 'release:120'])
+})
+it('does not invent movement for an un-moved press and release', () => {
+  const s = mount(); event(s.layer, 'pointerdown'); event(s.layer, 'pointerup', 1, 120)
+  expect(s.move).not.toHaveBeenCalled()
+})
+it.each(['pause', 'cancel', 'dispose', 'second-finger'] as const)('does not commit when the terminal sample causes %s', kind => {
+  const s = mount()
+  s.move.mockImplementation(x => {
+    if (x !== 120) return
+    if (kind === 'pause') s.pause()
+    else if (kind === 'cancel') s.pointer.cancel()
+    else if (kind === 'dispose') s.pointer.dispose()
+    else event(document.body, 'pointerdown', 2)
+  })
+  event(s.layer, 'pointerdown'); event(s.layer, 'pointermove', 1, 70); event(s.layer, 'pointerup', 1, 120)
+  expect(s.release).not.toHaveBeenCalled(); expect(s.cancel).toHaveBeenCalledOnce()
+  event(document.body, 'pointerup', 2); expect(s.pointer.isBusy()).toBe(false)
 })
 it.each(['pointercancel', 'lostpointercapture'])('cancels %s without committing', type => {
   const s = mount(); event(s.layer, 'pointerdown'); event(s.layer, type); event(s.layer, 'pointerup')

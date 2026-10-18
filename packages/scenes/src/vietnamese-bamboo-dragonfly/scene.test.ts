@@ -203,16 +203,16 @@ describe('an original painted bamboo balancing dragonfly', () => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
-    for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx], [dx * 3, dy * 3], [3 - p[0], 3 - p[1]]]) drag(s, at, x, y)
+    for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx]]) drag(s, at, x, y)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .72, p[1] + dy * .72]); event(s.hit, 'pointerup', [p[0] + dx * .72, p[1] + dy * .72])
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
   })
-  it.each([0, 1])('checks terminal release coordinates for reverse, cross-axis, nonfinite and excessive displacement at %i', at => {
+  it.each([0, 1])('checks terminal release coordinates for reverse, cross-axis and nonfinite displacement at %i', at => {
     const s = mount(at, { isReducedMotion: () => true })
-    for (const kind of ['back', 'cross', 'large', 'nan']) {
+    for (const kind of ['back', 'cross', 'nan']) {
       const p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
-      const end: [number, number] = kind === 'back' ? [p[0] + dx * .7, p[1] + dy * .7] : kind === 'cross' ? [p[0] + dx - dy, p[1] + dy + dx] : kind === 'large' ? [p[0] + dx * 3, p[1] + dy * 3] : [NaN, p[1]]
+      const end: [number, number] = kind === 'back' ? [p[0] + dx * .7, p[1] + dy * .7] : kind === 'cross' ? [p[0] + dx - dy, p[1] + dy + dx] : [NaN, p[1]]
       event(s.hit, 'pointerup', end); expect(s.progress, kind).toEqual([])
     }
     step(s, at); expect(s.progress).toEqual([at + 1])

@@ -108,6 +108,23 @@ describe('createTilt', () => {
     g.dispose()
   })
 
+  it.each(['blur', 'lostpointercapture'])('cancels its hold on %s and permits a new pointer', type => {
+    const onPour = vi.fn(), g = createTilt({ pourAngleDeg: 30, holdMs: 200, onPour }); g.mount(el, {})
+    el.dispatchEvent(ptr('pointerdown', 0, 200)); el.dispatchEvent(ptr('pointermove', 0, 190))
+    if (type === 'blur') window.dispatchEvent(new Event('blur'))
+    else el.dispatchEvent(ptr(type, 0, 190))
+    g.update(.3); expect(onPour).not.toHaveBeenCalled()
+    el.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 2, clientY: 200 }))
+    el.dispatchEvent(new PointerEvent('pointermove', { pointerId: 2, clientY: 80 })); g.update(.3)
+    expect(onPour).toHaveBeenCalledOnce(); g.dispose()
+  })
+  it('samples the release of a real tilt but never pours from a canceled pointer', () => {
+    const onPour = vi.fn(), g = createTilt({ pourAngleDeg: 45, onPour }); g.mount(el, {})
+    el.dispatchEvent(ptr('pointerdown', 0, 200)); el.dispatchEvent(ptr('pointermove', 0, 180)); el.dispatchEvent(ptr('pointerup', 0, 130))
+    expect(onPour).toHaveBeenCalledOnce()
+    el.dispatchEvent(ptr('pointerdown', 0, 200)); el.dispatchEvent(ptr('pointermove', 0, 180)); el.dispatchEvent(ptr('pointercancel', 0, 130))
+    expect(onPour).toHaveBeenCalledOnce(); g.dispose()
+  })
   it('ignores a drag that starts off the object (startsOn)', () => {
     const onPour = vi.fn()
     const onAngle = vi.fn()

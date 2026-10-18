@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { placementHit } from '../placement-hit'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -172,8 +173,9 @@ export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
     },
     onRelease(x, y) {
       matrices(); const dx = x - down.x, dy = y - down.y
-      const valid = checkpoint === 0 ? dragging && maxTravel >= 8 && visibleHit(x, y, joint, loose)
-        : checkpoint === 1 ? dragging && dx >= 45 && Math.abs(dy) <= Math.max(18, dx * .42) && maxVertical <= Math.max(22, dx * .55) && star.rotation.y >= .45
+      const valid = checkpoint === 0 ? dragging && maxTravel >= 8 && placementHit(canvas, camera, grip, x, y, (px, py) => visibleHit(px, py, joint, loose))
+        : checkpoint === 1 ? dragging && dx >= 45 && Math.abs(dy) <= Math.max(18, dx * .42) && star.rotation.y >= .45
+          && (star.rotation.y >= FINAL_TURN || maxVertical <= Math.max(22, dx * .55))
           : checkpoint === 2 && maxTravel < 12 && Math.hypot(dx, dy) < 12 && visibleHit(x, y, star)
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,

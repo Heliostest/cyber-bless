@@ -5,8 +5,8 @@ import { addInteractionCue, createInteractionCues } from './interaction-cues'
 const handles: ReturnType<typeof createInteractionCues>[]=[]
 afterEach(()=>{ handles.splice(0).forEach(h=>h.dispose()); document.body.replaceChildren(); vi.restoreAllMocks() })
 function mount() {
-  const host=document.createElement('div'), canvas=document.createElement('canvas'), hit=document.createElement('div')
-  hit.className='scene-hit-layer'; host.append(canvas,hit); document.body.append(host)
+  const host=document.createElement('div'), canvas=document.createElement('canvas'), hit=document.createElement('div'), overlay=document.createElement('div')
+  overlay.className='scene-overlay-host'; hit.className='scene-hit-layer'; overlay.append(hit); host.append(canvas,overlay); document.body.append(host)
   Object.defineProperties(canvas,{clientWidth:{value:320},clientHeight:{value:400}})
   canvas.getBoundingClientRect=()=>({left:10,top:20,width:320,height:400}) as DOMRect
   const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(40,.8,.1,20)
@@ -22,10 +22,29 @@ function mount() {
 it('projects the actual source and target with passive labels',()=>{
   const s=mount(), source=s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!, target=s.host.querySelector<HTMLElement>('[data-cue-role="target"]')!
   expect(source).not.toBeNull(); expect(target).not.toBeNull()
-  expect(source.textContent).toContain('拖起小物'); expect(target.textContent).toContain('放到这里')
+  expect(source.textContent).toBe(''); expect(target.textContent).toBe('')
+  const guide=s.host.querySelector('.scene-overlay-host .scene-cue-guides')!
+  expect(guide.textContent).toContain('拖起小物'); expect(guide.textContent).toContain('放到这里')
   expect(Number(source.dataset.x)).toBeCloseTo(160); expect(Number(source.dataset.y)).toBeCloseTo(200)
   expect(Number(target.dataset.x)).toBeGreaterThan(160)
   expect(s.host.querySelector('.scene-object-cues')!.getAttribute('aria-hidden')).toBe('true')
+})
+it('shows direction in the separate guide and follows a moving destination without drawing across the object',()=>{
+  const s=mount()
+  const direction=s.host.querySelector<HTMLElement>('.scene-cue-direction')!
+  expect(direction.style.getPropertyValue('--cue-angle')).toBe('0deg')
+  s.target.position.set(0,.6,0); s.update()
+  expect(direction.style.getPropertyValue('--cue-angle')).toBe('-90deg')
+  expect(s.host.querySelector('.scene-object-cue-path')).toBeNull()
+})
+it('uses the separate shelf for a woodfish canvas without a procedural overlay',()=>{
+  const s=mount(), button=document.createElement('button'), shelf=document.createElement('div')
+  button.className='woodfish-object'; shelf.className='scene-cue-shelf'
+  s.host.querySelector('.scene-overlay-host')!.remove()
+  document.body.append(button,shelf); button.append(s.host); s.update()
+  expect(shelf.querySelector('.scene-cue-guides')?.textContent).toContain('拖起小物')
+  expect(button.querySelector('.scene-cue-guides')).toBeNull()
+  s.cues.dispose(); expect(shelf.childElementCount).toBe(0)
 })
 it('follows movement and hides completed or unavailable cues',()=>{
   const s=mount(); s.source.position.x=-.4; s.update()

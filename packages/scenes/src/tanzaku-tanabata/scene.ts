@@ -331,29 +331,34 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
 
   // Registered before the drag handle so a press on the strip picks it up and
   // the same pointer keeps dragging (drag's pointerdown sees it enabled).
+  let interactionPointerId: number | null = null
   const onHitDown = (e: PointerEvent) => {
-    if (step !== 'pick' && step !== 'hang') return
+    if (!canAct() || interactionPointerId !== null || (step !== 'pick' && step !== 'hang')) return
     fx.prepare()
     if (!onStrip(e.clientX, e.clientY)) return
+    interactionPointerId = e.pointerId
     if (step === 'pick') goHang()
     grabbed = true
     moveStripTo(e.clientX, e.clientY)
   }
 
   const onHitMove = (e: PointerEvent) => {
-    if (step !== 'hang' || !grabbed || e.buttons === 0) return
+    if (!canAct() || e.pointerId !== interactionPointerId || step !== 'hang' || !grabbed || e.buttons === 0) return
     moveStripTo(e.clientX, e.clientY)
   }
 
-  const onHitUp = () => {
+  const onHitUp = (e?: PointerEvent) => {
+    if (e && e.pointerId !== interactionPointerId) return
+    interactionPointerId = null
     grabbed = false
   }
+  const onInputBlur = () => onHitUp()
 
   const wireGestures = () => {
     hitLayer.addEventListener('pointerdown', onHitDown)
     stopClaim = claimObjectTouches(hitLayer, onStrip)
     dragHandle = gestures.createDrag({
-      startsOn: onStrip,
+      startsOn: (x, y) => canAct() && onStrip(x, y),
       hitTest: bambooHitTest,
       onDrop: (hit) => {
         if (step !== 'hang') return
@@ -368,6 +373,8 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     hitLayer.addEventListener('pointermove', onHitMove)
     hitLayer.addEventListener('pointerup', onHitUp)
     hitLayer.addEventListener('pointercancel', onHitUp)
+    hitLayer.addEventListener('lostpointercapture', onHitUp)
+    window.addEventListener('blur', onInputBlur)
     actionBtn.addEventListener('click', onActionTap)
 
     wishHandle = gestures.createWishWrite({
@@ -406,6 +413,12 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     },
     update(dt: number) {
       if (disposed || !started) return
+      if (!canAct()) {
+        onHitUp()
+        dragHandle?.setEnabled(false)
+        return
+      }
+      dragHandle?.setEnabled(step === 'hang')
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
@@ -459,6 +472,8 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
       hitLayer.removeEventListener('pointermove', onHitMove)
       hitLayer.removeEventListener('pointerup', onHitUp)
       hitLayer.removeEventListener('pointercancel', onHitUp)
+      hitLayer.removeEventListener('lostpointercapture', onHitUp)
+      window.removeEventListener('blur', onInputBlur)
       actionBtn.removeEventListener('click', onActionTap)
       for (const h of handles) h.dispose()
       handles.length = 0

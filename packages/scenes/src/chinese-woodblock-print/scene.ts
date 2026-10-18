@@ -130,7 +130,7 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
     addInteractionCue(grip, { kind: 'drag', label: '拿棕擦，左右刷纸', priority: 3, enabled: enabled(0), destination: back, targetLabel: '纸背左右刷过' }),
-    addInteractionCue(corner, { kind: 'drag', label: '捏纸角，向上揭开', priority: 3, enabled: enabled(1) }),
+    addInteractionCue(corner, { kind: 'drag', direction: [0, -1], label: '捏纸角，向上揭开', priority: 3, enabled: enabled(1) }),
     addInteractionCue(face, { kind: 'tap', label: '轻点印纸静看', anchor: [.60, .04252, -.35], priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -1.0), point = new THREE.Vector3()

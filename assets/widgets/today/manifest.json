@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "66ccd02697fe70267c78815267dde72923cb57ad81bfa4605e2cbc121aac119b",
+  "revision": "327c19de17dba4b7d87f84e7888f2e1dff208c62f7ee87690fb8fa4229fd6132",
   "scenes": [
+    {
+      "id": "french-petanque",
+      "engine": "french-petanque@1",
+      "small": {
+        "file": "french-petanque-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "fd8c6fccaa63616973668cbad7ac5eb9a1d1bf712feb7ea4113ba0ba9c014e0a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "french-petanque-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "b9cc7e4fd1b618d55acb665a1298754537f1955b229f09edbb66564b3f0c896b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "french-petanque-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "17ea788e295df3a6cbb76651f2a4d51b4f3cfc2cc22586c94d12a0040c2ea0c7",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "english-hearth-bellows",
       "engine": "english-hearth-bellows@1",

@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "french-petanque",
   "english-hearth-bellows",
   "mexican-metate",
   "czech-wooden-ratchet",
@@ -100,6 +101,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "french-petanque", title: "银球近靶", engine: "french-petanque@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "french-petanque",
+    narrative: "在法国拉西奥塔的 pétanque 语境中，圈线、小靶与金属球构成从容的投球片刻。球员站在圈内，把球送向小靶；这里取其中一段物件动作，用原创木靶与两枚素色银球，先送出木靶，再让球轻落、滚近。细细刻槽随着滚动转过，把阳光与眼前的距离留在砂地上。",
+  },
   {
     id: "english-hearth-bellows", title: "风囊轻送", engine: "english-hearth-bellows@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "english-hearth-bellows",

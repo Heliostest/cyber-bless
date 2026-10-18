@@ -1,5 +1,10 @@
 [
   {
+    "id": "french-petanque",
+    "title": "银球近靶",
+    "category": "blessing"
+  },
+  {
     "id": "english-hearth-bellows",
     "title": "风囊轻送",
     "category": "blessing"

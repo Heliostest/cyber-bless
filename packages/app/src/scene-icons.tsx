@@ -42,6 +42,12 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'french-coffee-mill': (<>
+    <path d="M12 33H51V58H12Z" fill="#b17b45" stroke="#765238" strokeWidth="2"/><path d="M18 42H45V55H18Z" fill="#d5b27b" stroke="#765238" strokeWidth="2"/>
+    <path d="M15 22H48L41 34H23Z" fill="#b7a26b" stroke="#7e9699" strokeWidth="2"/>
+    <path d="M31 25V14H50" fill="none" stroke="#7e9699" strokeWidth="4" strokeLinejoin="round"/><path d="M51 8V20" stroke="#577c67" strokeWidth="7" strokeLinecap="round"/>
+    <circle cx="31" cy="48" r="4" fill="#577c67"/>
+  </>),
   'japanese-wagasa': (<>
     <path d="M32 5L5 27Q32 43 59 27Z" fill="#d76b54" stroke="#9e5843" strokeWidth="2"/>
     <path d="M32 5L21 35L32 38L40 36Z" fill="#f5dfb8"/>

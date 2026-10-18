@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "80bbaae8b139c959f1840f84355de02a38633c691d5b107c3576110fbc857951",
+  "revision": "2cb18c91a06fe64abf05655006114d35b0242fbd1d4a3d519e95856d06720b21",
   "scenes": [
+    {
+      "id": "french-coffee-mill",
+      "engine": "french-coffee-mill@1",
+      "small": {
+        "file": "french-coffee-mill-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "b74cf39afb382a6b0069ea3479112dd6ebcd59aed1b7bcbd80b723aa80840b8e",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "french-coffee-mill-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "19308499d2c8b06a01cbbb3c7a6b0bb242f3e86349d70ddc0a884f8a69d96e09",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "french-coffee-mill-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8537b10cd96f6eb20fc2960df4e78d68f8e3f9fe6afba82c4b17d861cedc30c7",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "japanese-wagasa",
       "engine": "japanese-wagasa@1",

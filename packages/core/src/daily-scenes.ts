@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "french-coffee-mill",
   "japanese-wagasa",
   "spanish-castanets",
   "japanese-shishi-odoshi",
@@ -107,6 +108,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "french-coffee-mill", title: "手磨晨光", engine: "french-coffee-mill@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "french-coffee-mill",
+    narrative: "法国手摇咖啡磨的木盒、金属料斗和曲柄，连着一段日常咖啡时光。这里是一台原创木磨小景：轻转上方木柄，让钢轴行过半周，继续轻转使曲柄回到身前，再拉开小木屉。豆粒与细粉一粗一细，暖木色和微亮金属在日光里分出层次，屉底的一点褐色也安静下来。",
+  },
   {
     id: "japanese-wagasa", title: "纸伞舒晴", engine: "japanese-wagasa@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "japanese-wagasa",

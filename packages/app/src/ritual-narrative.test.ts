@@ -74,6 +74,7 @@ describe("builtInScenes narratives", () => {
       "finnish-birch-basket",
       "finnish-kantele",
       "floating-lantern-loy-krathong",
+      "french-coffee-mill",
       "french-petanque",
       "furin-wind-chime",
       "german-jumping-jack",

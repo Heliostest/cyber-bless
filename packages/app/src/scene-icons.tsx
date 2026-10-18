@@ -42,6 +42,12 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'spanish-castanets': (<>
+    <path d="M17 16Q11 5 22 9L41 9Q52 5 47 16" fill="none" stroke="#29665f" strokeWidth="3"/>
+    <ellipse cx="20" cy="40" rx="15" ry="18" fill="#8f5037" stroke="#d8b383" strokeWidth="3"/><ellipse cx="20" cy="31" rx="14" ry="18" fill="#b87945" stroke="#81482f" strokeWidth="2"/>
+    <ellipse cx="46" cy="41" rx="13" ry="16" fill="#8f5037" stroke="#d8b383" strokeWidth="3"/><ellipse cx="46" cy="32" rx="12" ry="16" fill="#c18b55" stroke="#81482f" strokeWidth="2"/>
+    <path d="M14 23Q19 18 25 23M41 24Q46 20 50 25" fill="none" stroke="#ddb88b" strokeWidth="2"/>
+  </>),
   'japanese-shishi-odoshi': (<>
     <ellipse cx="31" cy="49" rx="25" ry="10" fill="#a9d6cd" stroke="#8c9a98" strokeWidth="5"/>
     <path d="M27 46V22M37 46V22" stroke="#788342" strokeWidth="5"/>

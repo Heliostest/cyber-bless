@@ -117,6 +117,7 @@ describe("builtInScenes narratives", () => {
       "slavic-wreath",
       "slovak-wire-bird",
       "sorbian-painted-egg",
+      "spanish-castanets",
       "st-brigids-cross",
       "tanzaku-tanabata",
       "tibetan-wheel",

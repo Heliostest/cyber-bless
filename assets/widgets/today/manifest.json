@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "e5ada628dac7704f913464fb9b0f213840c1a20b1025545d6d7a8f005516166e",
+  "revision": "8bdd8884b1641c886f8815fee7cd03790437ff5f0d98dffaeb074e2053e05b9f",
   "scenes": [
+    {
+      "id": "spanish-castanets",
+      "engine": "spanish-castanets@1",
+      "small": {
+        "file": "spanish-castanets-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "716637a5b95b693e888f8141d68c2e181ed48314f0e26639dfdfc96531c639f2",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "spanish-castanets-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "a3b123df6cb8a2c7955af84260bd513a2e9f8e2ccea12c18b4372bf3891baec3",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "spanish-castanets-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8b43d997b1fc388fb94ccf10e460f6284e256dcc7735cb0ed50ac263a7572778",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "japanese-shishi-odoshi",
       "engine": "japanese-shishi-odoshi@1",

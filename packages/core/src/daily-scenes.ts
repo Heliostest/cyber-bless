@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "spanish-castanets",
   "japanese-shishi-odoshi",
   "german-jumping-jack",
   "finnish-kantele",
@@ -105,6 +106,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "spanish-castanets", title: "木壳轻拍", engine: "spanish-castanets@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "spanish-castanets",
+    narrative: "西班牙响板由绳系的凹面木壳相碰发声。这里是一组原创木壳小景，轻合左侧木壳，让右侧回应，再让两副一同轻拍。弧面的暖木色在阳光里分出深浅，松开的细绳与空腔留住片刻轻快，草尖的影子慢慢移过木边。",
+  },
   {
     id: "japanese-shishi-odoshi", title: "竹筒叩石", engine: "japanese-shishi-odoshi@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "japanese-shishi-odoshi",

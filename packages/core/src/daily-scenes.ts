@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "mexican-metate",
   "czech-wooden-ratchet",
   "puerto-rican-guiro",
   "valencian-folding-fan",
@@ -98,6 +99,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "mexican-metate", title: "石面磨香", engine: "mexican-metate@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "mexican-metate",
+    narrative: "墨西哥及中美洲的日常饮食文化中，石磨与长石杵相伴，用来磨细玉米等谷物。浅凹的石面承托粗粒，石杵沿着磨面来回推磨。这里用一方素色石磨，慢慢向前推磨、回磨，再把石杵收回后沿，看细浅的粉痕留在石面，把谷物的一小段节奏留在阳光里。",
+  },
   {
     id: "czech-wooden-ratchet", title: "木齿轻转", engine: "czech-wooden-ratchet@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "czech-wooden-ratchet",

@@ -16,6 +16,7 @@ const profiles: Record<string, Profile> = {
   'korean-yutnori': { kind: 'garden', floor: -0.04 },
   'chinese-diabolo': { kind: 'garden', floor: -0.04 },
   'chinese-tangram': { kind: 'garden', floor: -0.04 },
+  'mexican-metate': { kind: 'garden', floor: 0 },
   'czech-wooden-ratchet': { kind: 'garden', floor: 0 },
   'puerto-rican-guiro': { kind: 'garden', floor: 0 },
   'valencian-folding-fan': { kind: 'garden', floor: 0 },

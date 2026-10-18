@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "90774725acf8980d93c74ba08bd5a140146959d166fbafd523c5ff026c3dee59",
+  "revision": "b61c42d22fac0416653c5d83ef3a279159eebcccf44fd76f549a71e98609d9b3",
   "scenes": [
+    {
+      "id": "mexican-metate",
+      "engine": "mexican-metate@1",
+      "small": {
+        "file": "mexican-metate-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "6e1a727219fae86145c14e219b97a53e6f20c03449ccb534bf552d3f176a9126",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "mexican-metate-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "42aa44d11c82c2a40d73d14175aa46a82c4bd975db59e6ece95c55be7194d810",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "mexican-metate-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "4c39f315ab85b8b0dbe8ab6200ab3183ca017649e3f1ca622fd27eb376cbe3cc",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "czech-wooden-ratchet",
       "engine": "czech-wooden-ratchet@1",

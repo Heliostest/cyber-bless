@@ -42,6 +42,13 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'mexican-metate': (<>
+    <path d="M14 36L18 53M49 36L46 53M32 23V40" stroke="#686b64" strokeWidth="7" strokeLinecap="round"/>
+    <path d="M10 25Q31 30 54 25L51 40Q32 46 13 40Z" fill="#747a70" stroke="#535b54" strokeWidth="2"/>
+    <ellipse cx="32" cy="26" rx="22" ry="8" fill="#92978a"/>
+    <path d="M19 24L46 22" stroke="#dfbe72" strokeWidth="3" strokeLinecap="round"/>
+    <path d="M12 19L51 16" stroke="#686b64" strokeWidth="9" strokeLinecap="round"/>
+  </>),
   'czech-wooden-ratchet': (<>
     <path d="M19 37V8H29V37" fill="none" stroke="#d8b77e" strokeWidth="5" strokeLinejoin="round"/>
     <path d="M17 8H42" stroke="#9a7148" strokeWidth="7" strokeLinecap="round"/>

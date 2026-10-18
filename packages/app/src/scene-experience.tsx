@@ -142,7 +142,7 @@ export function FavoriteChip({ id, favorite }: { id: string; favorite: boolean }
   );
 }
 /** The closing line and the two exits shown when a scene's steps are done. */
-export const SCENE_DONE_COPY = "这次体验已经完成，记录已留下。";
+export const SCENE_DONE_COPY = "体验完成。";
 export const SCENE_DONE_WISH_CTA = "去心愿看看";
 export const SCENE_DONE_CTA = "完成";
 /** A 还愿 visit's closing line, and its one exit, back to 来还个愿. */

@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "a2ca186b1a6239f96574d1996a6f9344c112e00e8c86aff98290117950d61ada",
+  "revision": "1c827523b3cb72e2fa67a6361a7a0e6849b264799ca6313e3136668d1358aeba",
   "scenes": [
+    {
+      "id": "scottish-plunge-churn",
+      "engine": "scottish-plunge-churn@1",
+      "small": {
+        "file": "scottish-plunge-churn-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "ad001a057d40c08e0ef92d68ebf49f6b130474dfd8ea1012ce4a679b78c45369",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "scottish-plunge-churn-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "75a8e26a740466dab5a34f3febe918d0c3f255153bae3356d2ea6fdfd44a7880",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "scottish-plunge-churn-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "f1ce66827cadfc37a070ea4ffb0120db2fa23656de1e52f85691fb48693ea9eb",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "irish-bodhran",
       "engine": "irish-bodhran@1",

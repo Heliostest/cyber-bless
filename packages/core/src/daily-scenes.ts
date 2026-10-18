@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "scottish-plunge-churn",
   "irish-bodhran",
   "french-coffee-mill",
   "japanese-wagasa",
@@ -109,6 +110,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "scottish-plunge-churn", title: "木杆搅乳", engine: "scottish-plunge-churn@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "scottish-plunge-churn",
+    narrative: "在苏格兰泰里岛的乡村生活记录中，立式搅乳桶由木板围合，金属箍束住桶身，木杆穿过桶盖，带着搅头缓缓起落。这里是一只原创简化木桶：先让木杆落下，再提起回转，最后轻提木盖，让浅色奶油与桶内木纹露出一隙。日光落在木板上，金属箍留着安静的光泽，两下起落之后，让物件慢慢停稳。",
+  },
   {
     id: "irish-bodhran", title: "鼓面轻拍", engine: "irish-bodhran@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "irish-bodhran",

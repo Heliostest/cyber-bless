@@ -114,6 +114,7 @@ describe("builtInScenes narratives", () => {
       "puerto-rican-guiro",
       "purepecha-copper-bowl",
       "russian-matryoshka",
+      "scottish-plunge-churn",
       "shinto-torii",
       "shrine-suzu-bell",
       "sicilian-painted-cart",

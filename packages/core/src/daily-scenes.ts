@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "japanese-shishi-odoshi",
   "german-jumping-jack",
   "finnish-kantele",
   "estonian-village-swing",
@@ -104,6 +105,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "japanese-shishi-odoshi", title: "竹筒叩石", engine: "japanese-shishi-odoshi@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "japanese-shishi-odoshi",
+    narrative: "日本庭园的鹿威以竹筒蓄水、倾落和回叩石面形成声响。这里是一件原创竹水小景，挪近竹嘴引入一股清水，扶着竹筒轻倾，再让竹尾归石。水光沿斜口落进浅池，竹影与细小水纹留在明亮温暖的午后。",
+  },
   {
     id: "german-jumping-jack", title: "牵绳木偶", engine: "german-jumping-jack@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "german-jumping-jack",

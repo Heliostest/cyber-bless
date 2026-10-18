@@ -20,6 +20,7 @@ describe('sceneRegistry', () => {
       'chinese-rattle-drum',
       'ghanaian-oware',
       'mexican-tortilla-press',
+      'japanese-shishi-odoshi',
       'german-jumping-jack',
       'finnish-kantele',
       'estonian-village-swing',
@@ -235,3 +236,5 @@ describe('loadScene', () => {
     expect(isSceneImplemented('no-such-scene')).toBe(false)
   })
 })
+
+it('loads the bamboo tipping water feature through the scene registry',async()=>{const m=await loadScene('japanese-shishi-odoshi');expect(m.meta.id).toBe('japanese-shishi-odoshi');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})

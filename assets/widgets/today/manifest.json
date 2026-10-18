@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "be007eac8d93ea1d3aa48bc6e6870e26d297aaddeb257109b00d3376abeef958",
+  "revision": "e5ada628dac7704f913464fb9b0f213840c1a20b1025545d6d7a8f005516166e",
   "scenes": [
+    {
+      "id": "japanese-shishi-odoshi",
+      "engine": "japanese-shishi-odoshi@1",
+      "small": {
+        "file": "japanese-shishi-odoshi-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "9fe30fa9e5b3f1dbbc0a15623d5e9c00f3f778acbef740b719d9f8851327b675",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "japanese-shishi-odoshi-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "68775bf23fe6e2ae35f17d4f99d1d3a505478add465e195c83485dbcb9e99221",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "japanese-shishi-odoshi-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "cd96546e47f89d3d2c845828e76be4193a35a241376751f57558554066dc9708",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "german-jumping-jack",
       "engine": "german-jumping-jack@1",

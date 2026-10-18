@@ -2,6 +2,7 @@
 import { createElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { assertSafeCopy } from "@wbr/shared";
+import { isSceneVisibleInApp } from '@wbr/core/daily-scenes';
 import { Context, type AppContext } from "./context";
 import {
   builtInScenes,
@@ -13,8 +14,9 @@ import {
   sceneStatus,
 } from "./scene-library";
 import { clickOn, renderUI, settle, typeInto } from "./dom-test-utils";
+const visibleScenes = builtInScenes.filter(isSceneVisibleInApp);
 
-function renderCatalog() {
+function renderCatalog(entries = builtInScenes) {
   const ui = renderUI(
     createElement(
       Context.Provider,
@@ -23,7 +25,7 @@ function renderCatalog() {
         SceneLibraryContext.Provider,
         {
           value: {
-            entries: builtInScenes,
+            entries,
             library: { status: async () => "bundled" },
             stats: undefined,
             error: "",
@@ -46,6 +48,17 @@ function renderCatalog() {
 describe("场景目录 search", () => {
   afterEach(() => {
     document.body.replaceChildren();
+  });
+
+  it("hides the abacus even when a source or remote catalog still contains it", async () => {
+    expect(builtInScenes.some(e => e.id === 'chinese-suanpan')).toBe(true);
+    const abacus = builtInScenes.find(e => e.id === 'chinese-suanpan')!;
+    const ui = renderCatalog([...builtInScenes, { ...abacus, id: 'remote-abacus' }]);
+    await settle();
+    expect(ui.host.querySelector('[data-scene="chinese-suanpan"]')).toBeNull();
+    expect(ui.host.querySelector('[data-scene="remote-abacus"]')).toBeNull();
+    typeInto(ui.input, '拨珠见数');await settle();
+    expect(ui.cards()).toBe(0);ui.unmount();
   });
 
   it("says so gently when nothing matches, and clears back to every scene", async () => {
@@ -112,14 +125,14 @@ describe("场景目录 rows", () => {
   it("lead with the scene's drawn badge and end with a go-to chevron", async () => {
     const ui = renderCatalog();
     await settle();
-    for (let visible = 24; visible < builtInScenes.length; visible += 24) {
+    for (let visible = 24; visible < visibleScenes.length; visible += 24) {
       clickOn(Array.from(ui.host.querySelectorAll('button')).find(b => b.textContent === '显示更多')!);
       await settle();
-      expect(ui.cards()).toBe(Math.min(visible + 24, builtInScenes.length));
+      expect(ui.cards()).toBe(Math.min(visible + 24, visibleScenes.length));
     }
     const cards = [...ui.host.querySelectorAll(".scene-card")];
     expect(cards.map((card) => card.getAttribute("data-scene"))).toEqual(
-      builtInScenes.map((e) => e.id),
+      visibleScenes.map((e) => e.id),
     );
     for (const card of cards) {
       expect(
@@ -133,13 +146,13 @@ describe("场景目录 rows", () => {
   it("say where a built-in scene's content is with a short chip", async () => {
     const ui = renderCatalog();
     await settle();
-    for (let visible = 24; visible < builtInScenes.length; visible += 24) {
+    for (let visible = 24; visible < visibleScenes.length; visible += 24) {
       clickOn(Array.from(ui.host.querySelectorAll('button')).find(b => b.textContent === '显示更多')!);
       await settle();
-      expect(ui.cards()).toBe(Math.min(visible + 24, builtInScenes.length));
+      expect(ui.cards()).toBe(Math.min(visible + 24, visibleScenes.length));
     }
     const chips = [...ui.host.querySelectorAll(".scene-card .scene-status")];
-    expect(chips).toHaveLength(builtInScenes.length);
+    expect(chips).toHaveLength(visibleScenes.length);
     for (const chip of chips) {
       expect(chip.getAttribute("data-status")).toBe("bundled");
       expect(chip.textContent).toBe(SCENE_STATUS_COPY.bundled);

@@ -11,13 +11,13 @@ import {
 } from '../procedural-kit'
 
 const COPY = {
-  title: '一篮春食', breadAction: '放入圆面包', eggAction: '安放彩蛋', quietAction: '轻点静看',
-  bread: '拖圆面包到篮内衬布。波兰圣周六家庭准备的岁时回看，不模拟圣职祝福。',
-  egg: '把原创花点彩蛋拖进篮里的小蛋窝，和春枝放在一起。',
-  quiet: '轻点食物篮静看，或写一句感谢；只有点「写好了」才会保存。',
-  returning: '轻点食物篮，感谢日用食粮与准备这一餐的人。',
+  title: '一篮春食', breadAction: '放入圆面包', eggAction: '安放彩蛋', quietAction: '静看备好的篮子',
+  bread: '为波兰圣周六的复活节食物篮做准备，把圆面包拖到篮内衬布上。',
+  egg: '把花点彩蛋拖进篮里的小蛋窝，和春枝放在一起，继续备好食物篮。',
+  quiet: '食物篮已备好。轻点篮子静看，或写一句对食粮与备餐者的感谢后点「写好了」。',
+  returning: '轻点备好的复活节食物篮，感谢日用食粮与准备这一餐的人。',
   placingBread: '圆面包轻轻落在衬布上…', placingEgg: '彩蛋在小窝里安稳落定…',
-  done: '让这一篮春食留住对日常的感谢。',
+  done: '复活节食物篮的准备在此告一段落，留一份对食粮与家人的感谢。',
 } as const
 const BREAD_HOME = new THREE.Vector3(-0.91, 1.035, 0.45)
 const BREAD_REST = new THREE.Vector3(0.12, 1.395, 0.05)
@@ -228,7 +228,7 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
   const cueActive = (at: number) => () => active() && !placement && checkpoint === at
   addInteractionCue(breadBody, { kind: 'drag', label: '拖面包入篮', priority: 3, enabled: cueActive(0), destination: breadRest, targetLabel: '篮内衬布' })
   addInteractionCue(eggBody, { kind: 'drag', label: '拖彩蛋入窝', priority: 3, enabled: cueActive(1), destination: nest, targetLabel: '彩蛋蛋窝' })
-  addInteractionCue(medallion, { kind: 'tap', label: '轻点食物篮静看', priority: 3, enabled: cueActive(2) })
+  addInteractionCue(medallion, { kind: 'tap', label: '静看备好的食物篮', priority: 3, enabled: cueActive(2) })
   const ray = createPointerRay(canvas, camera), dragPlane = new THREE.Plane(), dragPoint = new THREE.Vector3(), dragOffset = new THREE.Vector3()
   const down = new THREE.Vector2()
   const resetDrag = () => { dragging = false; maxTravel = 0; if (!placement) restorePose() }

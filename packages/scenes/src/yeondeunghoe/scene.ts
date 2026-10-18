@@ -21,9 +21,9 @@ const STEP_ORDER: Step[] = ['ready', 'rise', 'rest']
 
 const COPY = {
   title: '燃灯上浮',
-  hintReady: '点按莲灯，或向上轻推。',
-  hintRise: '莲灯缓缓上浮…',
-  hintRest: '灯光停在高处，点按莲灯结束静看。',
+  hintReady: '带着燃灯会的祝愿静看莲灯。点按莲灯，或向上轻推。',
+  hintRise: '画面中的莲灯缓缓移向高处…',
+  hintRest: '莲灯移到高处，静看灯光；点按莲灯结束。',
   pushTap: '轻推莲灯',
   restTap: '静看片刻',
   done: '莲灯静静亮着。',

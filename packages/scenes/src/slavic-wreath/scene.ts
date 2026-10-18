@@ -25,14 +25,16 @@ const STEP_ORDER: Step[] = ['weave', 'place', 'drift']
 
 const COPY = {
   title: '火边花环',
-  hintWeave: '点按花环，把草茎与野花编成一圈。',
+  hintWeave: '看一段乌克兰 Kupala 仲夏习俗。点按花环，把草茎与野花编成一圈。',
   hintWeaving: '草茎一圈圈交叠…',
   hintPlace: '按住花环向下拖到水面，轻轻放下；也可用辅助按钮。',
-  hintDrift: '目送花环漂远，可在输入框写一句祝愿，或用辅助按钮结束。',
+  hintDrift: '目送仲夏花环漂远，可留一句此刻的感想，或点「目送远去」结束。',
   weaveTap: '编一圈',
   placeTap: '放上水面',
   driftTap: '目送远去',
-  done: '花环载着心意缓缓漂远。',
+  done: '仲夏花环在水面缓缓漂远。',
+  wishLabel: '留一句仲夏感想',
+  wishPlaceholder: '记下此刻的仲夏景象…',
   stepsAria: '步骤',
   cueWeave: '点按编花环',
   cueCarry: '向下拖动花环',
@@ -483,6 +485,8 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
       },
     })
     wishHandle.mount(wishSlot, {})
+    const input = wishSlot.querySelector('input')
+    if (input) { input.setAttribute('aria-label', COPY.wishLabel); input.placeholder = COPY.wishPlaceholder }
     wishHandle.setEnabled(false)
     handles.push(wishHandle)
   }

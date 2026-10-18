@@ -1,5 +1,5 @@
 import { builtInScenes } from './daily-scenes';
-import { openingCollectibleId, validOpeningSceneIds, validOpeningState, validOpeningDay, type OpeningState } from './opening';
+import { openingCollectibleId, replaceHiddenOpeningScenes, validOpeningSceneIds, validOpeningState, validOpeningDay, type OpeningState } from './opening';
 export { chooseOpeningScenes, openingCollectibleId, openingExclusions } from './opening';
 export type { OpeningState } from './opening';
 
@@ -686,5 +686,6 @@ export function restore(
     ].some((r) => r.wishId && !s.wishes.some((w) => w.id === r.wishId))
   )
     throw new Error("存档的心愿关联不完整，原数据已保留");
+  if (s.opening) s.opening = replaceHiddenOpeningScenes(s.opening);
   return s;
 }

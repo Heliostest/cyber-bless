@@ -7,6 +7,7 @@ import {
 } from "@wbr/core";
 import type { CatalogEntry } from "@wbr/content/catalog";
 import { assertSafeCopy } from "@wbr/shared";
+import { isSceneVisibleInApp } from '@wbr/core/daily-scenes';
 import { builtInScenes, supportsScene } from "./scene-library";
 import { hasSceneIcon } from "./scene-icons";
 import {
@@ -278,7 +279,7 @@ describe("今日's main walk", () => {
       const day = new Date(Date.UTC(2026, 0, i + 1)).toISOString().slice(0, 10);
       return dailyPrimaryScene(builtInScenes, day)?.id;
     }));
-    for (const { id } of builtInScenes)
+    for (const { id } of builtInScenes.filter(isSceneVisibleInApp))
       expect(seen).toContain(id);
   });
 
@@ -295,6 +296,12 @@ describe("今日's main walk", () => {
 
 describe("今日's picks from 小天地", () => {
   const all = placed.map((id) => keepsake(id));
+
+  it('keeps hidden scenes out of recommendations without deleting their old keepsakes', () => {
+    const kept = [keepsake('chinese-suanpan'), keepsake('woodfish')];
+    expect(ids(dailyCollectedPicks(builtInScenes, kept, '2026-10-19'))).toEqual(['woodfish']);
+    expect(kept).toHaveLength(2);
+  });
 
   it("offers three kept scenes a day: exactly one 许愿, two 祈福", () => {
     for (const day of days) {

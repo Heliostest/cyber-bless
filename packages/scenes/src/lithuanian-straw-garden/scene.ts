@@ -8,10 +8,11 @@ import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '草穗悬园', assemble: '把桌前的小菱形接到草穗中央的连接珠，组成一座透光的小花园。',
-  suspend: '轻托顶部木珠，把草编悬饰移到右侧木架的挂点。让线条在光里舒展。',
-  rest: '轻点木珠静看。向立陶宛草编工艺致敬，把安宁留给平常的一天。',
-  moving: '草穗缓缓就位，棉线连起轻盈的形状…', done: '为手作留一处光，也为自己留一刻安静。',
+  title: '草穗悬园', assemble: '把桌前的小菱形接到中央连接珠，接好草编花园的下部。',
+  suspend: '轻托顶部木珠，把草编花园移到右侧工坊木架的挂点。',
+  rest: '轻点木珠，静赏这种寄托家庭和睦祝愿的草编悬饰。',
+  returning: '轻点木珠，再看木架上草编花园的透光结构与家庭祝愿。',
+  assembling: '小菱形缓缓接向中央，棉线连起草秆…', suspending: '草编花园缓缓移向木架，挂线轻轻落稳…', done: '草编花园已在工坊木架上挂稳，静赏草秆与棉线的结构。',
 } as const
 const HOME = new THREE.Vector3(-.66, 1.88, 0), REST = new THREE.Vector3(.72, 2.12, 0)
 const PENDANT_HOME = new THREE.Vector3(-1.05, 1.02, .60), JOIN = new THREE.Vector3(0, -.84, 0)
@@ -93,8 +94,8 @@ export function createLithuanianStrawGarden(ctx: SceneContext): SceneInstance {
   }
   const enabled = (at: number) => () => active() && !transition && checkpoint === at
   addInteractionCue(grip, { kind: 'drag', label: '接好小菱形', priority: 3, enabled: enabled(0), destination: join, targetLabel: '中央连接珠' })
-  addInteractionCue(lift, { kind: 'drag', label: '悬起草穗花园', priority: 3, enabled: enabled(1), destination: peg, targetLabel: '右侧木架挂点' })
-  addInteractionCue(lift, { kind: 'tap', label: '轻点木珠静看', priority: 3, enabled: enabled(2) })
+  addInteractionCue(lift, { kind: 'drag', label: '挂上工坊木架', priority: 3, enabled: enabled(1), destination: peg, targetLabel: '工坊木架挂点' })
+  addInteractionCue(lift, { kind: 'tap', label: '轻点木珠细看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => checkpoint === 0 ? pendant : mobile
   const hitsVisible = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => {
@@ -121,8 +122,8 @@ export function createLithuanianStrawGarden(ctx: SceneContext): SceneInstance {
   const sync = () => {
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !active() || !!transition || checkpoint === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = checkpoint < 3 && !transition ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, checkpoint === 0 ? '接好小菱形' : checkpoint === 1 ? '悬起草穗花园' : '轻点木珠静看', safe)
-    setSafeText(ui.hintEl, transition ? COPY.moving : checkpoint === 0 ? COPY.assemble : checkpoint === 1 ? COPY.suspend : checkpoint === 2 ? COPY.rest : COPY.done, safe)
+    setSafeText(ui.actionBtn, checkpoint === 0 ? '接好小菱形' : checkpoint === 1 ? '挂上工坊木架' : '轻点木珠细看', safe)
+    setSafeText(ui.hintEl, transition ? transition.step === 0 ? COPY.assembling : COPY.suspending : checkpoint === 0 ? COPY.assemble : checkpoint === 1 ? COPY.suspend : checkpoint === 2 ? ctx.returning ? COPY.returning : COPY.rest : COPY.done, safe)
   }
   function settle() { if (!active() || !transition) return; checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore(); sync(); ctx.onProgress?.(checkpoint); feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .013 }) }
   function advance() {

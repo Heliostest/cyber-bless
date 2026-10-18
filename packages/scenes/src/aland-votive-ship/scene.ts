@@ -11,12 +11,12 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '舟模寄谢', mastAction: '立好桅杆', cradleAction: '把舟模放上船架', quietAction: '轻点舟模静看',
-  mast: '把桅杆下端的木握柄拖到船身的金色桅座。以原创舟模，致意群岛的航海记忆。',
+  title: '舟模寄谢', mastAction: '立好桅杆', cradleAction: '把舟模放上船架', quietAction: '轻点舟模细看',
+  mast: '握住桅杆下端的木握柄，拖到船身的金色桅座。',
   cradle: '握住甲板前侧的木把手，把舟模移到船架前端的暖色木扣。',
-  quiet: '轻点舟模静看，或写一句感谢；只有点「写好了」才会保存。',
-  returning: '轻点舟模，回看这一份感谢与归来的记忆。',
-  moving: '让木件稳稳落下…', done: '舟模稳稳安放，留一刻安静给归来的记忆。',
+  quiet: '轻点舟模，向海上平安归来的谢恩传统致意，或写一句自己的感谢后点「写好了」。',
+  returning: '轻点船架上的舟模，再看这份向海上谢恩传统致意的小景。',
+  masting: '桅杆缓缓落入桅座，帆与索具随之就位…', placing: '舟模缓缓移向船架，船腹落入承托…', done: '舟模已在船架上放稳，留一份对平安归来的珍惜与感谢。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const HOME = new THREE.Vector3(-.12, 1, .38), SEATED = new THREE.Vector3(.42, 1.16, -.35)
@@ -140,7 +140,7 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
   const cueActive = (step: number) => () => active() && !motion && at === step
   addInteractionCue(grip, { kind: 'drag', label: '握住桅杆下端', priority: 3, enabled: cueActive(0), destination: socket, targetLabel: '金色桅座' })
   addInteractionCue(handle, { kind: 'drag', label: '握住甲板木把手', priority: 3, enabled: cueActive(1), destination: cradleTarget, targetLabel: '船架前端木扣' })
-  addInteractionCue(handle, { kind: 'tap', label: '轻点舟模静看', priority: 3, enabled: cueActive(2) })
+  addInteractionCue(handle, { kind: 'tap', label: '轻点舟模细看', priority: 3, enabled: cueActive(2) })
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3(), down = new THREE.Vector2()
   const reset = () => { dragging = false; travel = 0; if (!motion) restore() }
   const visibleHit = (x: number, y: number, targets: THREE.Object3D[], held?: THREE.Object3D) => {
@@ -188,7 +188,7 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
     writer?.setEnabled(active() && !returning && at === 2 && !motion)
     ui.hitLayer.style.pointerEvents = !motion && at < 3 ? 'auto' : 'none'
     setSafeText(ui.actionBtn, at === 0 ? COPY.mastAction : at === 1 ? COPY.cradleAction : COPY.quietAction, safe)
-    setSafeText(ui.hintEl, motion ? COPY.moving : at === 0 ? COPY.mast : at === 1 ? COPY.cradle : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.masting : COPY.placing : at === 0 ? COPY.mast : at === 1 ? COPY.cradle : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
   function settle() {
     if (!active() || !motion) return

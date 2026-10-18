@@ -127,7 +127,7 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
   let angle = 0,
     view = "front";
   addInteractionCue(bodyGroup, {
-    kind: "tap", label: "轻点木鱼", anchor: [0, 1.06, 0.7],
+    kind: "tap", label: "轻点木鱼听声", anchor: [0, 1.06, 0.7],
     enabled: () => active && !disposed && loaded && view === "front" && !host.closest<HTMLButtonElement>(".woodfish-object")?.disabled,
   });
   function mesh(

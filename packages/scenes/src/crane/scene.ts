@@ -26,7 +26,7 @@ const STEP_ORDER: Step[] = ['fold', 'lift', 'wish']
 
 const COPY = {
   title: '折一只纸鹤',
-  hintFold: '点按纸面折一下。',
+  hintFold: '为和平折一只纸鹤。点按纸面开始折叠。',
   folding1: '收成方形底…',
   fold1: '方形底收好了，再点按继续。',
   folding2: '拉长成鸟形底…',
@@ -35,11 +35,13 @@ const COPY = {
   fold3: '颈与尾折好了，再点按翻出鹤首、展开双翼。',
   folding4: '翻出鹤首，展开双翼…',
   hintLift: '纸鹤折好了。把纸鹤向上拖起，再松开。',
-  hintWish: '纸鹤停在眼前。可写一句想送给自己或他人的话，再静看片刻。',
+  hintWish: '纸鹤停在眼前。可写一句和平祝愿，再静看片刻。',
   foldTap: '折一下',
   liftTap: '托起纸鹤',
   wishTap: '静看片刻',
-  done: '纸鹤静静停在眼前。',
+  done: '纸鹤已折好，愿世界和平。',
+  wishLabel: '留一句和平祝愿',
+  wishPlaceholder: '愿孩子们生活在和平之中…',
   stepsAria: '步骤',
 } as const
 
@@ -399,6 +401,8 @@ export function createCrane(ctx: SceneContext): SceneInstance {
       },
     })
     wishHandle.mount(wishSlot, {})
+    const input = wishSlot.querySelector('input')
+    if (input) { input.setAttribute('aria-label', COPY.wishLabel); input.placeholder = COPY.wishPlaceholder }
     wishHandle.setEnabled(false)
     handles.push(wishHandle)
   }

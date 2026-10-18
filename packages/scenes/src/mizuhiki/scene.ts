@@ -12,13 +12,13 @@ import {
 const COPY = {
   title: '水引结愿',
   steps: '步骤',
-  loop: '拖住绳端光圈，依次经过金色提示点绕环。',
+  loop: '为赠礼纸封系一份祝愿。拖住绳端光圈，依次经过金色提示点绕环。',
   thread: '拖住绳端，沿另一侧的金色提示点穿过交会处，向左轻拉收结。',
-  wish: '在纸封上留一句短愿，或静静放好这份心意。',
-  done: '纸绳轻轻相连，心意已安放。',
+  wish: '在纸封上写一句送给对方的祝愿，或静静放好这份赠礼心意。',
+  done: '水引结饰已系好，纸封上留着送给对方的祝愿。',
   loopAction: '绕出一个环',
   threadAction: '穿环并收紧',
-  wishAction: '静放这份心意',
+  wishAction: '静放赠礼心意',
   movingLoop: '纸绳沿环轻轻弯起…',
   movingThread: '两侧相接，慢慢收拢…',
 } as const
@@ -172,7 +172,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     lines.forEach((line, i) => wishInk.fillText(line.join(''), 384, 128 + (i - (lines.length - 1) / 2) * 57))
     wishMap.needsUpdate = true
   }
-  paintWish('心意')
+  paintWish('赠礼心意')
 
   const knot = new THREE.Group()
   knot.name = 'mizuhiki-interwoven-cords'
@@ -338,7 +338,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     // Lock before calling the host, including saveWish, to prevent re-entry.
     checkpoint = 3
     resetDrag()
-    paintWish(text || '心意已系好')
+    paintWish(text || '赠你祝愿')
     syncUI()
     feedback.impact({ freqs: [523.25, 784, 1046.5], duration: 0.5, gain: 0.05 })
     if (text) ctx.saveWish?.(text)
@@ -472,7 +472,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
       pose = Math.min(checkpoint, 2)
       motionTarget = pose
       settle = checkpoint === 3 ? 1 : 0
-      if (checkpoint === 3) paintWish('心意已系好')
+      if (checkpoint === 3) paintWish('赠你祝愿')
       poseCords()
       syncUI()
     },

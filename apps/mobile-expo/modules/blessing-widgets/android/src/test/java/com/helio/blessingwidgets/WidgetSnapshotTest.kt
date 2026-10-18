@@ -126,7 +126,8 @@ class WidgetSnapshotTest {
           .put("category", scene.getString("category"))
           .put("deepLink", "cyber-bless://widget/today?v=1&day=${day.getString("day")}&scene=$id")
       }
-      assertEquals(id, WidgetSnapshot.parse(json.toString())?.select("2026-10-11")?.sceneId)
+      if (id in WidgetCatalog.hiddenSceneIds) assertNull(WidgetSnapshot.parse(json.toString()))
+      else assertEquals(id, WidgetSnapshot.parse(json.toString())?.select("2026-10-11")?.sceneId)
     }
   }
 

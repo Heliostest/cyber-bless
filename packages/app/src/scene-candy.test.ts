@@ -6,6 +6,7 @@ import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeAll, describe, expect, it } from "vitest";
 import { createState, dailyCollectibleId, type State } from "@wbr/core";
+import { isSceneVisibleInApp } from '@wbr/core/daily-scenes';
 import { Context, type AppContext } from "./context";
 import { clickOn, renderUI } from "./dom-test-utils";
 import { Today } from "./home";
@@ -120,7 +121,9 @@ describe("scene candy", () => {
       [...today.querySelectorAll(".daily-set-card")].map((t) => t.getAttribute("data-scene")),
     ).toEqual([dailyPrimaryScene(builtInScenes, day)!, ...picks].map((e) => e.id));
     for (const id of WISH_SCENE_IDS) {
-      expect(wishes.querySelector(`.wish-practice-card[data-scene="${id}"] .scene-badge[data-scene="${id}"]`), id).not.toBeNull();
+      const badge = wishes.querySelector(`.wish-practice-card[data-scene="${id}"] .scene-badge[data-scene="${id}"]`);
+      if (builtInScenes.filter(isSceneVisibleInApp).some(e => e.id === id)) expect(badge, id).not.toBeNull();
+      else expect(badge, id).toBeNull();
     }
     // The day's 许愿 pick is the same candy on both surfaces: one id, one map.
     const shared = picks.find((e) => isWishScene(e.id))!.id;

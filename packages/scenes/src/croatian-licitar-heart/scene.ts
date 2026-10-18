@@ -10,12 +10,12 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '彩心相赠', decorateAction: '给红心添上糖霜', hangAction: '把彩心挂上木钉', quietAction: '轻点彩心静看',
-  decorate: '握住桌前裱花袋，把袋口送到红心。用原创糖霜花纹，致意克罗地亚 licitar 手艺。',
+  title: '彩心相赠', decorateAction: '给红心添上糖霜', hangAction: '把彩心挂上木钉', quietAction: '轻点彩心细看',
+  decorate: '握住桌前裱花袋，把袋口送到红心，为准备赠人的彩心添上糖霜花纹。',
   hang: '轻托红心，把它送到右侧展架的木钉，让布带挂环稳稳挂好。',
-  quiet: '轻点彩心静看，或写一句送给在意之人的心愿；只有点「写好了」才会保存。',
-  returning: '轻点彩心，回看这份相赠的心意。', moving: '让糖霜成花，让挂环稳稳落下…',
-  done: '一颗彩心，留下一份相赠的心意。',
+  quiet: '轻点彩心细看，或写一句给在意之人的祝愿后点「写好了」。',
+  returning: '轻点彩心，回看为在意之人准备的礼物。', decorating: '糖霜花纹慢慢显现在红心表面…', hanging: '彩心缓缓移向展架，布带挂环落在木钉上…',
+  done: '彩心已挂好，留一份准备赠人的爱意与祝愿。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const HUNG = new THREE.Vector3(.80, .96, .015), CONE_HOME = new THREE.Vector3(-.93, .937, .58)
@@ -130,7 +130,7 @@ export function createCroatianLicitarHeart(ctx: SceneContext): SceneInstance {
   const heartPoint = () => body.localToWorld(new THREE.Vector3(...HEART_ANCHOR))
   addInteractionCue(grip, { kind: 'drag', label: '握住裱花袋', priority: 3, enabled: enabled(0), destination: heartPoint, targetLabel: '红心表面' })
   addInteractionCue(body, { kind: 'drag', label: '轻托彩心', priority: 3, anchor: HEART_ANCHOR, enabled: enabled(1), destination: peg, targetLabel: '展架木钉' })
-  addInteractionCue(body, { kind: 'tap', label: '轻点彩心静看', priority: 3, anchor: HEART_ANCHOR, enabled: enabled(2) })
+  addInteractionCue(body, { kind: 'tap', label: '轻点彩心细看', priority: 3, anchor: HEART_ANCHOR, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => at === 0 ? cone : heart
   const belongsTo = (object: THREE.Object3D | undefined, target: THREE.Object3D) => { for (let p = object; p; p = p.parent ?? undefined) if (p === target) return true; return false }
@@ -169,7 +169,7 @@ export function createCroatianLicitarHeart(ctx: SceneContext): SceneInstance {
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = !motion && at < 3 ? 'auto' : 'none'
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(active() && !returning && at === 2 && !motion)
     setSafeText(ui.actionBtn, at === 0 ? COPY.decorateAction : at === 1 ? COPY.hangAction : COPY.quietAction, safe)
-    setSafeText(ui.hintEl, motion ? COPY.moving : at === 0 ? COPY.decorate : at === 1 ? COPY.hang : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.decorating : COPY.hanging : at === 0 ? COPY.decorate : at === 1 ? COPY.hang : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
   function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); feedback.impact({ freqs: [392, 523.25], duration: .19, gain: .012, type: 'triangle' }) }
   function begin() { if (!active() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }

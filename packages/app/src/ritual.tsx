@@ -96,7 +96,7 @@ export function Ritual({
     <div className={`ritual-page ritual-${kind}`}>
       {kind === "woodfish" && <RitualNarrativeBlurb sceneId="woodfish" />}
       <div className="ritual-goal">
-        今日目标{" "}
+        {kind === "woodfish" ? "本轮轻敲" : "今日目标"}{" "}
         <strong>
           {progress} / {meta.steps}
         </strong>
@@ -104,7 +104,7 @@ export function Ritual({
       <div
         className="progress-track"
         role="progressbar"
-        aria-label="仪式进度"
+        aria-label={kind === "woodfish" ? "轻敲进度" : "仪式进度"}
         aria-valuemin={0}
         aria-valuemax={meta.steps}
         aria-valuenow={progress}
@@ -114,9 +114,11 @@ export function Ritual({
       <div className="ritual-stage">
         <div className="ritual-feedback" key={pulse}>
           <strong>
-            {ready ? "仪式已完成" : pulse ? "已记下这一步" : "留一点好心情"}
+            {kind === "woodfish"
+              ? ready ? "本轮轻敲已结束" : pulse ? "已记下一次轻敲" : "听一声木鱼"
+              : ready ? "仪式已完成" : pulse ? "已记下这一步" : "留一点好心情"}
           </strong>
-          <span>烦恼，轻轻放下</span>
+          <span>{kind === "woodfish" ? "听木槌敲击与余音" : "烦恼，轻轻放下"}</span>
         </div>
         {kind === "woodfish" ? (
           <Woodfish
@@ -172,7 +174,7 @@ export function Ritual({
         {paused
           ? "停一会儿，也很好。"
           : ready
-            ? "这一刻，已经很好。"
+            ? kind === "woodfish" ? "十二次轻敲已记下，静听余音。" : "这一刻，已经很好。"
             : kind === "woodfish"
               ? instruction
               : meta.prompts[Math.min(progress, meta.prompts.length - 1)]}
@@ -266,10 +268,12 @@ export function Complete({ id }: { id: string }) {
     go({ page: "world" });
   }
   async function share() {
-    const text = `今天${ritualTitle[r!.ritual]}。把小仪式过成好心情。`;
+    const text = r!.ritual === "woodfish"
+      ? "今天轻敲木鱼，听一轮敲击与余音。"
+      : `今天${ritualTitle[r!.ritual]}。把小仪式过成好心情。`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: "今日仪式", text });
+        await navigator.share({ title: r!.ritual === "woodfish" ? "木鱼静听" : "今日仪式", text });
         return;
       } catch (e) {
         if (e instanceof Error && e.name === "AbortError") return;
@@ -280,7 +284,10 @@ export function Complete({ id }: { id: string }) {
   }
   return (
     <div className="completion">
-      <PageHead title="今日仪式完成" eyebrow="今天的好心情，已到账。" />
+      <PageHead
+        title={r.ritual === "woodfish" ? "本轮轻敲结束" : "今日仪式完成"}
+        eyebrow={r.ritual === "woodfish" ? "听过一轮敲击与余音。" : "今天的好心情，已到账。"}
+      />
       <div className="celebration">
         <Art
           kind={r.ritual}
@@ -333,7 +340,7 @@ export function Complete({ id }: { id: string }) {
       </button>
       <button className="button outline full" onClick={() => void share()}>
         <Icon name="share" />
-        分享今日仪式
+        {r.ritual === "woodfish" ? "分享这次静听" : "分享今日仪式"}
       </button>
       {shareText && (
         <div className="share-panel">

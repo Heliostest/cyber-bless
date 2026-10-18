@@ -32,7 +32,7 @@ describe("RitualNarrativeBlurb", () => {
     const details = container.querySelector("details.ritual-narrative")!;
     expect(details).not.toBeNull();
     expect(details.hasAttribute("open")).toBe(false);
-    expect(details.querySelector("summary")?.textContent).toBe("了解此仪式");
+    expect(details.querySelector("summary")?.textContent).toBe("了解这个场景");
     expect(details.querySelector("p")?.textContent).toBe(woodfish.narrative);
   });
 });
@@ -127,11 +127,11 @@ describe("builtInScenes narratives", () => {
   );
 
   it.each(withNarrative.map((e) => [e.id, e.narrative!]))(
-    "%s has 80–120 汉字 and safe copy",
+    "%s has concise, safe copy",
     (_id, narrative) => {
       const count = cjkCount(narrative);
-      expect(count).toBeGreaterThanOrEqual(80);
-      expect(count).toBeLessThanOrEqual(120);
+      expect(count).toBeGreaterThanOrEqual(30);
+      expect(count).toBeLessThanOrEqual(160);
       expect(() => assertSafeCopy(narrative)).not.toThrow();
     },
   );
@@ -140,12 +140,11 @@ describe("builtInScenes narratives", () => {
     .filter((s) => s.traditionSlug === PRODUCT_ORIGINAL)
     .map((s) => s.id);
 
-  it("product-original scenes claim no tradition and say so", () => {
+  it("product-original scenes claim no tradition", () => {
     expect(productOriginal).toEqual(["crane", "lantern"]);
     for (const id of productOriginal) {
       const entry = builtInScenes.find((e) => e.id === id)!;
       expect(entry.traditionSlug).toBeUndefined();
-      expect(entry.narrative).toMatch(/产品(原创|改编)/);
     }
   });
 

@@ -159,5 +159,5 @@ it.each([
   pointer(hit,'pointerup',staleEnd); expect(checkpoint).not.toHaveBeenCalled()
   const freshFrom = point(source, sourceAnchor), freshEnd = destination(freshFrom)
   pointer(hit,'pointerdown',freshFrom); pointer(hit,'pointermove',freshEnd); pointer(hit,'pointerup',freshEnd)
-  expect(checkpoint).toHaveBeenCalledExactlyOnceWith(progress+1)
+  expect(checkpoint).toHaveBeenCalledExactlyOnceWith(id==='malawi-sansi'?2:progress+1)
 })

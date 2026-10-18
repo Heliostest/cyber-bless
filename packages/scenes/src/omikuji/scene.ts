@@ -9,11 +9,11 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 
 const COPY = {
   title: '签纸慢读', steps: '步骤', shake: '轻摇签筒', draw: '抽出并展开', keep: '将纸签收好',
-  ready: '拖住木签筒，移到浅色倾斜位置，轻轻摇一摇。（民俗物件的产品改编）',
-  stick: '一根签棒露出来了。按住签棒向上抽，展开一张原创自省纸签。',
+  ready: '从御神签的抽签问意说起，留片刻自省。按住木签筒，拖到浅色倾斜位置，轻轻摇一摇。',
+  stick: '一根签棒露出来了。按住签棒向上抽，展开纸签，读一句原创的日常提醒。',
   reflection: '把今天能照顾的一件小事，慢慢做好。',
-  read: '原创自省提示：把今天能照顾的一件小事，慢慢做好。读过后，将纸签拖进信封。',
-  done: '纸签已收好。把今天能照顾的一件小事，慢慢做好。',
+  read: '这句原创提醒留给自己：把今天能照顾的一件小事，慢慢做好。读过后，将纸签拖进信封。',
+  done: '纸签已收好。把这句自省提醒，留给今天的一件小事。',
   shaking: '木筒轻轻摇动，留一点从容…', drawing: '慢慢抽出，展开一张纸签…', keeping: '把读过的纸签轻轻收好…',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3

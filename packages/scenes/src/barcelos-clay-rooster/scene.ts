@@ -10,11 +10,11 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
   createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '陶鸡报晓', paintAction: '给陶鸡添纹', placeAction: '把陶鸡放上展台', quietAction: '轻点陶鸡静看',
-  paint: '握住桌前画笔的木柄，送到陶鸡胸前，添上原创的叶芽纹样。',
+  title: '陶鸡报晓', paintAction: '给陶鸡添纹', placeAction: '把陶鸡放上展台', quietAction: '轻点陶鸡细看',
+  paint: '握住桌前画笔的木柄，送到陶鸡胸前，添上叶芽纹样。',
   place: '轻托陶鸡，把它放到右侧圆形展台上。',
-  quiet: '轻点陶鸡静看，或写一句心愿；点「写好了」才会保存。', returning: '轻点陶鸡，回看这一点日常暖意。',
-  moving: '笔纹慢慢显现，陶鸡稳稳落下…', done: '为手作留一处光，也为今天留一点暖意。',
+  quiet: '轻点陶鸡，细看这件寓意好运的陈设，或写一句祝愿后点「写好了」。', returning: '轻点陶鸡，回看这件带着好运寓意的陈设。',
+  painting: '叶芽彩纹慢慢显现在陶鸡胸前…', placing: '陶鸡连同陶土底座，缓缓落在展台上…', done: '陶鸡已在展台上放稳，静赏它的色彩与美好寓意。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const HOME = new THREE.Vector3(-.75, .78, -.06), SEATED = new THREE.Vector3(.77, .95, -.06)
@@ -156,7 +156,7 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
   const enabled = (step: number) => () => active() && !motion && at === step
   addInteractionCue(grip, { kind: 'drag', label: '握住画笔木柄', priority: 3, enabled: enabled(0), destination: paintSurface, targetLabel: '陶鸡胸前' })
   addInteractionCue(paintSurface, { kind: 'drag', label: '轻托陶鸡', priority: 3, enabled: enabled(1), destination: plinthTop, targetLabel: '圆形展台' })
-  addInteractionCue(paintSurface, { kind: 'tap', label: '轻点陶鸡静看', priority: 3, enabled: enabled(2) })
+  addInteractionCue(paintSurface, { kind: 'tap', label: '轻点陶鸡细看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => at === 0 ? brush : rooster
   const roosterTargets: THREE.Object3D[] = []; rooster.traverse(object => { if ((object as THREE.Mesh).isMesh) roosterTargets.push(object) })
@@ -194,7 +194,7 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = !motion && at < 3 ? 'auto' : 'none'
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(active() && !returning && at === 2 && !motion)
     setSafeText(ui.actionBtn, at === 0 ? COPY.paintAction : at === 1 ? COPY.placeAction : COPY.quietAction, safe)
-    setSafeText(ui.hintEl, motion ? COPY.moving : at === 0 ? COPY.paint : at === 1 ? COPY.place : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.painting : COPY.placing : at === 0 ? COPY.paint : at === 1 ? COPY.place : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
   function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); feedback.impact({ freqs: [440, 554.37], duration: .19, gain: .012, type: 'triangle' }) }
   function begin() { if (!active() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }

@@ -11,14 +11,14 @@ import {
 
 const COPY = {
   title: '竹筛迎岁', stepsAria: '步骤',
-  scoop: '拖竹筛到米盘，纳一小撮米。韩国岁首民俗的手作回看。',
-  hang: '竹筛里留着少许米。拖竹柄到墙上的木挂点。',
-  quiet: '竹筛已挂好。轻触竹筛，静看这一刻。',
-  done: '米粒留在竹筛里，迎新心意留在家中。',
-  scooping: '竹筛轻轻纳起一小撮米…',
+  scoop: '先试试笊篱舀米的炊具用途：把竹筛拖到米盘，舀起一小撮米。',
+  hang: '韩国岁首购挂福笊篱迎新。拖竹柄到墙上的木挂点，把这只竹笊篱挂起来。',
+  quiet: '福笊篱已挂好。轻触竹筛，静看岁首挂饰，把迎新的祝愿留在家中。',
+  done: '福笊篱挂在墙上，寄托新年的纳福心意。',
+  scooping: '竹笊篱轻轻舀起一小撮米…',
   hanging: '把竹筛挂到木挂点，慢慢松手…',
   settling: '竹筛安静地垂下…',
-  scoopAction: '纳一小撮米', hangAction: '挂到木挂点', quietAction: '轻触静看',
+  scoopAction: '试舀一小撮米', hangAction: '挂到木挂点', quietAction: '静看岁首挂饰',
 } as const
 
 type Checkpoint = 0 | 1 | 2 | 3
@@ -188,9 +188,9 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
   const { scoop, rice } = makeScoop(); world.add(scoop)
   const source = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }))
   source.name = 'bokjori-scoop-source'; scoop.add(source)
-  addInteractionCue(source, { kind: 'drag', label: '拖竹筛纳米', priority: 2, enabled: () => active() && !motion && checkpoint === 0, destination: grainTarget, targetLabel: '米盘' })
+  addInteractionCue(source, { kind: 'drag', label: '试用竹筛舀米', priority: 2, enabled: () => active() && !motion && checkpoint === 0, destination: grainTarget, targetLabel: '米盘' })
   addInteractionCue(source, { kind: 'drag', label: '拖竹柄到木挂点', priority: 2, enabled: () => active() && !motion && checkpoint === 1, destination: peg, targetLabel: '木挂点' })
-  addInteractionCue(source, { kind: 'tap', label: '轻触竹筛静看', priority: 2, enabled: () => active() && !motion && checkpoint === 2 })
+  addInteractionCue(source, { kind: 'tap', label: '静看岁首福笊篱', priority: 2, enabled: () => active() && !motion && checkpoint === 2 })
   const pickables: THREE.Object3D[] = []
   scoop.traverse(o => { if ((o as THREE.Mesh).isMesh) pickables.push(o) })
   const ray = createPointerRay(canvas, camera)

@@ -88,6 +88,8 @@ internal data class WidgetSnapshot(
         val day = json.getString("day")
         require(day == WidgetDates.addDays(generatedDay, index))
         val id = json.getString("sceneId")
+        // Retain source metadata for history, but never show retired App scenes from a stale snapshot.
+        require(id !in WidgetCatalog.hiddenSceneIds)
         val scene = scenes[id] ?: error("Unknown scene")
         require(json.getString("artKey") == id)
         require(json.getString("title") == scene.title && json.getString("category") == scene.category)

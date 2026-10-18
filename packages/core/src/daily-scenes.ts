@@ -4,6 +4,56 @@ type CatalogEntry = { id: string; title: string; engine: string; revision: strin
  * Scenes that can come up on 今日's daily set as 祈福 (blessing) practices:
  * quiet listening, an entrance bow, a slow turn, a strike, a pour.
  */
+/** App curation only: keep these engines, source entries and saved records reusable. */
+export const APP_HIDDEN_SCENE_IDS = [
+  "malawi-sansi",
+  "japanese-kendama",
+  "russian-matryoshka",
+  "korean-yutnori",
+  "chinese-diabolo",
+  "indian-charkha",
+  "german-nutcracker",
+  "mexican-molinillo",
+  "chinese-suanpan",
+  "mongolian-felt-ger",
+  "peruvian-engraved-gourd",
+  "venetian-glass-bead",
+  "vietnamese-bamboo-dragonfly",
+  "turkish-ebru-paper",
+  "indonesian-angklung",
+  "weifang-paper-kite",
+  "chinese-shadow-puppet",
+  "faroese-wool-knit",
+  "niue-shell-necklace",
+  "polish-paper-cut",
+  "uzbek-clay-bowl",
+  "chinese-woodblock-print",
+  "czech-bead-star",
+  "fijian-woven-fan",
+  "amazigh-woven-rug",
+  "slovak-wire-bird",
+  "hungarian-embroidery-hoop",
+  "andalusian-ceramic-tile",
+  "sicilian-painted-cart",
+  "bai-indigo-cloth",
+  "ndebele-painted-house",
+  "purepecha-copper-bowl",
+  "finnish-birch-basket",
+  "catalan-festival-giant",
+  "breton-banner",
+  "dalarna-wooden-horse",
+  "blang-tea",
+  "minangkabau-spinning-top",
+  "hongsheng-red-string",
+  "czech-pilgrim-journal",
+  "celtic-folk-spring",
+  "theravada-water",
+  "lantern"
+] as const;
+export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boolean {
+  return !APP_HIDDEN_SCENE_IDS.some(id => entry.id === id || entry.engine?.startsWith(`${id}@`));
+}
+
 export const BLESSING_SCENE_IDS = [
   "woodfish",
   "furin-wind-chime",
@@ -85,7 +135,7 @@ export const WISH_SCENE_IDS = [
 
 
 export type BuiltInSceneEntry = CatalogEntry & {
-  /** 一段 80–120 汉字：起源 + 历史脉络 + 基本意涵；自然描述文化背景与实际动作。缺省 → 隐藏折叠块。 */
+  /** 简短介绍文化背景、物件特点与实际动作。缺省 → 隐藏折叠块。 */
   narrative?: string;
   /** 指向 content/traditions/<slug>.md（单文件，非目录）；仅元数据，本期 app 不加载。产品原创场景（crane、lantern）省略。 */
   traditionSlug?: string;
@@ -159,7 +209,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "korean-bojagi-wrap", title: "方巾裹礼", engine: "korean-bojagi-wrap@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "korean-bojagi",
-    narrative: "韩国包袱布常用方形或长方形织物包裹、收纳与携带物品，拼接余布也是其中一种做法，材料和色彩各有变化。这里用原创拼色方巾，翻起布角、收紧系带，再静看包裹上的折线与针脚。它是简化的手艺欣赏；心愿是个人记录，只在明确提交后保存。",
+    narrative: "韩国的 bojagi 包袱布既用于包裹日常物品，也用于赠礼，寄托着把好运带给收礼人的心意。想着一位在意的人，拢起布角包住礼盒，收好系带，为对方准备一份祝愿。轻点包好的礼物细看，也可以留一句给收礼人的话。",
   },
   {
     id: "vietnamese-bamboo-dragonfly", title: "竹蜓点风", engine: "vietnamese-bamboo-dragonfly@1", revision: "bundled", manifestUrl: "",
@@ -265,12 +315,12 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "welsh-love-spoon", title: "木勺寄情", engine: "welsh-love-spoon@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "welsh-folk",
-    narrative: "威尔士爱勺是以木雕表达赠礼心意的民间工艺，装饰木勺在家庭与博物馆中留下不同年代的手作记忆。这里用原创凹勺面、镂空木柄与展托，依次轻拭、安放和静看，传递关怀。不复制特定匠人作品，不把纹样解释为统一暗语，也不模拟诗社或宗教仪式。",
+    narrative: "威尔士爱勺以雕刻木勺表达爱意，也常作婚礼、生日与周年纪念的赠礼。想着一位在意的人，轻拭凹勺面，再握住木柄将木勺安放到展托上，细看木纹与镂空雕饰，也可以为这份准备赠人的礼物留一句祝愿。",
   },
   {
     id: "barcelos-clay-rooster", title: "陶鸡报晓", engine: "barcelos-clay-rooster@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "portuguese-romarias",
-    narrative: "巴塞卢什的彩绘陶塑是葡萄牙米尼奥地区的民间工艺，公鸡造型在集市与陶艺作坊中广为人知。这里用原创陶鸡、画笔与木台，依次添彩、安放和静看，欣赏手作。图案不复制特定匠人的作品，也不把陶鸡当作灵验保证，不模拟真实朝圣或圣事。",
+    narrative: "巴塞卢什彩绘陶鸡是葡萄牙的地方工艺形象，在当地也有好运的寓意。拿起画笔，为这只陶鸡胸前添上叶芽纹样，再把它放到圆形展台上，欣赏陶土造型、明亮色彩与陈设所寄托的美好祝愿。",
   },
   {
     id: "finnish-birch-basket", title: "桦篮拾光", engine: "finnish-birch-basket@1", revision: "bundled", manifestUrl: "",
@@ -280,7 +330,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "croatian-licitar-heart", title: "彩心相赠", engine: "croatian-licitar-heart@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "croatian-folk",
-    narrative: "克罗地亚北部的彩饰姜饼工艺常见心形饰物，红色底面、细致装饰与赠礼习惯连接着作坊、集市和地方节庆。这里用原创彩心、裱花工具与挂架，依次添饰、悬挂和静看，表达心意。不复制匠人图样，不模拟圣事或真实朝圣，也不承诺护佑效力。",
+    narrative: "克罗地亚北部的 licitar 红心常作婚礼纪念，也是表达爱与情谊的礼物。用裱花袋给红心添上糖霜，再把布带挂环挂到展架木钉上，为在意的人准备一份彩心赠礼，也可以写下一句给对方的祝愿。",
   },
   {
     id: "catalan-festival-giant", title: "巨偶待游", engine: "catalan-festival-giant@1", revision: "bundled", manifestUrl: "",
@@ -290,7 +340,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "sorbian-painted-egg", title: "彩蛋寄春", engine: "sorbian-painted-egg@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "sorbian-folk",
-    narrative: "索布族在卢萨蒂亚延续着彩蛋装饰等复活节家户习俗，染色与纹样技法在家庭、工匠和文化机构之间传承。这里用原创蛋形、画笔与蛋托，依次描色、安放和静看，迎接春日。不复制特定工匠纹样，不模拟圣事、骑乘巡游，也不声称彩蛋具有护佑功效。",
+    narrative: "卢萨蒂亚索布族在复活节赠送彩蛋，向收礼人传达生命力与美好祝愿。用画笔给青蓝蛋壳添上花枝纹，将它安放在陶杯中，为在意的人准备一枚节日彩蛋，也可以留下一句复活节祝愿。",
   },
   {
     id: "basque-sunflower", title: "太阳花迎门", engine: "basque-sunflower@1", revision: "bundled", manifestUrl: "",
@@ -305,7 +355,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "lithuanian-straw-garden", title: "草穗悬园", engine: "lithuanian-straw-garden@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "baltic-folk",
-    narrative: "立陶宛草编悬饰用谷物秸秆连接几何形体，常见双锥结构，在家庭节庆与当代居室中寄托和谐，也承载代际传承。这里用原创草穗小园，依次接合、悬起和静看，欣赏手作。不把模型当作保护家宅的法器，不模拟婚礼、命运祈请或宗教团体仪式。",
+    narrative: "立陶宛的 Sodai 草编花园常悬于摇篮、婚桌或家庭桌上，寄托新生儿幸福、新婚者丰育与家人和睦的愿望。接好下部的小菱形，再把草编花园挂上工坊木架，在这里静赏这种承载家庭祝愿的悬饰与透光结构。",
   },
   {
     id: "dalarna-wooden-horse", title: "木马安放", engine: "dalarna-wooden-horse@1", revision: "bundled", manifestUrl: "",
@@ -315,7 +365,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "aland-votive-ship", title: "舟模寄谢", engine: "aland-votive-ship@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "aland-folk",
-    narrative: "奥兰群岛的教堂船模与航海生活和感谢平安归来的心意相连，不同地方的献置背景并不相同。这里以原创木船、帆桅和船架组成当代手作小景，把立桅、安放和留句感谢改编为文化致敬。不替用户向真实教堂献船，不模拟圣事，也不把模型当作航行安全保证。",
+    narrative: "奥兰群岛的教堂保存着舟模。献置舟模的海事传统，也有感谢航程平安、祈愿未来安航的心意。立好桅杆，把舟模安放在船架上，欣赏这段向海上谢恩传统致意的船模小景，也可以写下一句自己的感谢。",
   },
   {
     id: "blang-tea", title: "茶山一盏", engine: "blang-tea@1", revision: "bundled", manifestUrl: "",
@@ -330,7 +380,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "chinese-incense", title: "炉前一炷", engine: "chinese-incense@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-folk-and-confucian",
-    narrative: "敬香见于汉人家庭与庙宇的公开礼俗，各地对香数、供物和礼敬姿态有不同习惯。这里以圆润香炉、炉盖与一炷香为灵感，借开盖、置香和静看收拾心神。本体验以庭前礼敬为主题，不模拟宗祠祭祖或神职礼仪，不把烟缕视为回应，也不承诺愿望实现。",
+    narrative: "妈祖信俗中，人们在庙内或家中供献香烛，祈求平安与安康。这里欣赏香具安置的一小段：移开炉盖，把一炷细香安放入香孔，再静看轻烟，体会敬香祈安所寄托的心意。",
   },
   {
     id: "hongsheng-red-string", title: "红绳自持", engine: "hongsheng-red-string@1", revision: "bundled", manifestUrl: "",
@@ -340,7 +390,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "italian-ex-voto", title: "绘牌记谢", engine: "italian-ex-voto@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "italian-ex-voto",
-    narrative: "意大利民间绘牌还愿常以木板或釉陶图像记述危难后的感谢，属于天主教民间虔诚的可见表达，与金属小符和还愿烛形态不同。这里用原创归途与窗光图案，依次执笔、绘色和留一句感谢，致敬。不复刻圣像，不替用户宣告神迹，也不代表向真实圣地献牌。",
+    narrative: "意大利德鲁塔附近的天主教圣所，留存着信众委托陶工绘制的谢恩陶牌，记录蒙恩经历与对圣母的感谢。这里借这份以画记谢的传统，画一段归途，再描一线窗光。轻点陶牌静看，或写下自己感念的人与事，让这幅现代记谢小画留住一份感谢。",
   },
   {
     id: "czech-pilgrim-journal", title: "旅途一页", engine: "czech-pilgrim-journal@1", revision: "bundled", manifestUrl: "",
@@ -350,17 +400,17 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "omikuji", title: "签纸慢读", engine: "omikuji@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "omikuji",
-    narrative: "御神签见于日本神社与部分寺院，常以签筒抽取签棒，再领取纸签阅读，收纳和折系方式依各处规定而异，初诣时尤其常见。这里以摇筒、展纸和收进信封整理此刻思绪。纸上是产品原创的自省短句，本体验为改编致敬，不判吉凶，不复现真实签文，也不鼓励反复抽取求好运。",
+    narrative: "日本寺社的御神签用于抽签问意与问运，常见做法是摇筒抽出签棒，再按编号取得纸签；读后携回或折系的习惯因寺社而异。这里沿着摇筒、抽棒、展纸的动作，读一句原创的日常自省提醒，再将纸签收进信封。给自己一点时间，想想今天能照顾的一件小事。",
   },
   {
     id: "polish-blessing-basket", title: "一篮春食", engine: "polish-blessing-basket@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "polish-folk-catholic",
-    narrative: "波兰圣周六的食物篮习俗中，家庭以白布和枝叶装饰篮筐，放入彩蛋、面包等象征食物，再带到教堂接受圣职人员的祝福。这里借准备春食的家庭一刻，让面包和彩蛋各就其位，留一句对日用食粮的感谢。本体验为产品改编的节俗致敬，不模拟圣职祝福，也不代表当日正在过节。",
+    narrative: "波兰天主教家庭常在圣周六准备复活节食物篮，带到教堂参加食物祝福。这里停留在家中备篮的片段：把圆面包和彩蛋放进衬着白布的篮子，再静看备好的春食，或写一句感谢。准备这一篮食物，也想起日用食粮与为家人备餐的人。",
   },
   {
     id: "navruz-sumalak", title: "春锅共煮", engine: "navruz-sumalak@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "uzbek-folk",
-    narrative: "苏玛拉克是乌兹别克诺鲁孜春分新年中邻里共煮、分享的麦芽食物，真实制作需要长时间照料，轮流搅拌连接着家庭与社区。这里用一口圆锅、木勺和陶碗，依次缓搅、舀取，再送向共食处，感受共享食物的温暖。这是产品致敬与节俗回看，不是真实烹饪教程，不模拟拜仪或承诺吉庆功效。",
+    narrative: "诺鲁孜春日到来，乌兹别克的亲友邻里围着大锅共煮苏玛拉克，轮流搅动麦芽甜食，熟后分给大家。这里按住木勺，沿锅边缓缓搅动，再盛入陶碗，放到共食垫上。把春日的一份甜食留给邻里，在共煮与分享间迎接新岁。",
   },
   {
     id: "floating-lantern-loy-krathong", title: "叶舟寄意", engine: "floating-lantern-loy-krathong@1", revision: "bundled", manifestUrl: "",
@@ -385,7 +435,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "bokjori", title: "竹筛迎岁", engine: "bokjori@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "bokjori",
-    narrative: "福笊篱是韩国岁首民俗中的竹制淘米器，人们在新年购置并悬挂，把淘米留米的动作寄托为纳福心意。这里借竹筛与米盘的形态，让你纳入一小撮米，再挂到木墙上。本体验为产品改编的手作致敬，不代表当下正在过节，也不承诺吉凶或纳福效果。",
+    narrative: "韩国岁首有购置福笊篱、悬挂迎新的民俗，把淘米竹具寄予纳福的心意。先试试这件炊具舀米的用途，再把竹柄拖到墙上的木挂点，静看挂好的福笊篱。舀米让人认识器物，岁首购挂的习俗则承载迎新的祝愿。",
   },
   {
     id: "ema-votive-plaque", title: "木牌记愿", engine: "ema-votive-plaque@1", revision: "bundled", manifestUrl: "",
@@ -400,7 +450,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "diya-oil-lamp", title: "灯旋一瞥", engine: "diya-oil-lamp@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "diya-oil-lamp",
-    narrative: "Diya 是南亚常见的油灯，陶或金属小盏盛油置芯，见于印度教家庭敬礼，也在排灯节的门槛与窗台连成灯火。点光与旋灯有各自的地方语境。这里以敞口陶盏为灵感，让你点亮一小排，托一盏缓缓绕圈，再放回盘上。本体验为产品改编，不模拟完整普迦，也不以灯数衡量功效。",
+    narrative: "印度教献光礼中，灯光在神圣形象前移动，表达礼敬与祈祷。这里取材于献光所用的油灯与旋灯姿态：依次点亮三盏陶灯，让前方一盏沿浅金圆弧缓缓转过，再放回盘中。留一瞥灯盏与光，也认识这份手势的礼敬来处。",
   },
   {
     id: "votive-candle-catholic", title: "留一盏烛光", engine: "votive-candle-catholic@1", revision: "bundled", manifestUrl: "",
@@ -410,22 +460,22 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "daruma-eye-painting", title: "达摩点睛", engine: "daruma-eye-painting@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "daruma-eye-painting",
-    narrative: "达摩是不倒翁形的日本民俗祈愿工艺摆偶。常见习惯是先点上一目立愿，事成后再补另一目；左右顺序的说法会因地区与观看视角而异。这里借点睛与轻摆，给一个目标留出位置。本体验为产品改编，不代表宗教加持，也不催促心愿实现。",
+    narrative: "高崎达摩的点睛习惯，把立愿与谢恩分在两个时刻：先点一目，留下愿望；愿望实现，或平安度过一年后，再补另一目。轻点眼圈或拖动毛笔，写下一个愿望或短目标，再把达摩放回木座。另一目的留白，留待愿成或一年平安的谢恩时刻。",
   },
   {
     id: "mizuhiki", title: "水引结愿", engine: "mizuhiki@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "mizuhiki",
-    narrative: "水引是日本礼赠文化中的装饰纸绳工艺，细绳由和纸捻成，常用于礼金袋、礼盒和工艺结饰。配色与结形因赠答场合而异。这里依次绕环、穿结与收紧，感受纸绳相连的变化，让一句祝愿落在礼笺上。本体验不作为完整工艺或礼法教程。",
+    narrative: "日本水引以和纸细绳结饰礼金封与礼物，把赠答的心意郑重系好。这里为一只纸封绕环、穿环、收结，再写一句送给对方的祝愿，或静静放好。纸绳与纸封相衬，留住一份准备赠予他人的心意。",
   },
   {
     id: "milagros", title: "留一枚感谢", engine: "milagros@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "milagros",
-    narrative: "Milagros 是拉丁美洲民间虔诚中常见的金属还愿小符，尤其见于墨西哥，可用于祈求与谢恩。形象的解释具有地方差异，并无统一的图解字典。这里以原创小符和木架承接一句心意，是产品改编，不复制特定圣地，也不承诺任何功效。",
+    narrative: "在墨西哥的天主教奉献习俗中，milagros 金属小符寄托向圣者祈求帮助、护佑，或在蒙恩后表达谢意。小符的形状与个人经历相连，并无统一释义。选一枚小符，挂到眼前木架上，再留下自己的祈求或感谢。",
   },
   {
     id: "phuang-malai", title: "串花寄意", engine: "phuang-malai@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "phuang-malai",
-    narrative: "Phuang malai 是泰国鲜花串环，常以茉莉等花材组成环体与花穗，见于欢迎、感谢和礼敬的场合。这里以几簇奶油白花苞为灵感，让你逐段串成一环，再留下想说的话。本体验为产品改编，聚焦心意，不模拟完整礼仪。",
+    narrative: "在泰国，phuang malai 是鲜花串成的花环，可用来向敬重的长辈表达敬意与感谢；母亲节的茉莉花环也承载对母亲的谢意。将托盘中的茉莉逐簇串起，收好绳结，捧放在小台上，为想感谢的人留一句话。",
   },
   {
     id: "woodfish",
@@ -435,7 +485,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     manifestUrl: "",
     traditionSlug: "chinese-buddhism",
     narrative:
-      "木鱼是东亚佛教课诵与集众时常见的响器，圆型腹空，轻敲以应诵经节拍，禅寺中常与磬相配。鱼形无睑，常被理解为精勤醒觉，并与寺院晨昏的日常节律相连。在轻敲与余音之间，留一刻静心，感受器物的文化记忆，非宗教仪轨。",
+      "木鱼是佛教诵经礼忏中领节奏的法器，鱼形也寄托着警醒、精进的提醒。轻点眼前木鱼，听木槌敲击与余音相接；这一轮记录十二次轻敲，听声稍停。",
   },
   {
     id: "celtic-folk-spring",
@@ -471,7 +521,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     manifestUrl: "",
     traditionSlug: "won-buddhism",
     narrative:
-      "韩国燃灯会是佛诞前后点亮莲灯的节庆，二〇二〇年列入联合国教科文组织人类非物质文化遗产代表作名录。灯火象征光明与共同祝愿，如今也延伸为公众可自制莲灯参与的开放春日共庆。这里留下一句当下的心愿，与自己的日常相伴，不代表宗教仪轨。",
+      "韩国燃灯会在佛诞节期举行，人们制作、悬挂彩灯，持灯巡行，表达祝愿。点按眼前莲灯或向上轻推，看画面中的莲灯缓缓移向高处，再静看灯光。",
   },
   {
     id: "furin-wind-chime",
@@ -481,7 +531,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     manifestUrl: "",
     traditionSlug: "shinto",
     narrative:
-      "风铃是日本夏日常见的风物与工艺：江户玻璃或南部铁器的铃身下系纸短册，风过轻响，带来听觉上的清凉感。常述由古时悬于檐角的风铎演变而来，渐成民俗美学。这里让铃声随轻触响起，静听余音消散，不代表宗教仪轨。",
+      "日本奈良おふさ观音寺的夏季风铃祭承接当地祈求平安度夏的参拜习俗，寺方将境内铃声与祓厄、清凉联系在一起。轻拂眼前玻璃风铃的纸条，或点按铃身，带着平安的祝愿听一声轻响与余音。",
   },
   {
     id: "shinto-torii",
@@ -491,7 +541,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     manifestUrl: "",
     traditionSlug: "shinto",
     narrative:
-      "在日本神社，鸟居标示日常空间与神圣空间的边界，入内前的轻轻一礼表达敬意。不同神社的参拜礼节并不完全相同。这里以庭前停步、低头与安静致意为灵感，采用产品改编的动作与布景，不替代真实参拜，也不代表任何神社。",
+      "鸟居标示日本神社境内与日常空间的界线，入社前停步低头，是表达敬意的礼节。先走近鸟居，再轻轻一礼；在绘马架旁，可写下祈愿，让一块木牌留在架上，也可静立片刻。",
   },
   {
     id: "tibetan-wheel",
@@ -511,7 +561,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     manifestUrl: "",
     traditionSlug: "slavic-folk",
     narrative:
-      "乌克兰与波兰部分地区的仲夏习俗中，可以见到花环、歌唱、火光与水上放环，各地做法与节期有所不同。这里借这些公开的民俗意象，让一圈花叶载着祝愿缓缓漂远。本体验为产品改编，不代表所有斯拉夫传统，也不以花环预测命运。",
+      "乌克兰部分地区的 Kupala 仲夏习俗中，姑娘们把草花编成花环，放上水面，并从漂流情形占问婚恋。编好眼前花环，把它轻放到水面，静看它漂远；也可为这个仲夏片刻留一句感想。",
   },
   // Product-original practices: no traditionSlug, so no tradition is implied.
   // They share ids with the crane/lantern rituals, which open them (useOpenRitual).
@@ -522,7 +572,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     revision: "bundled",
     manifestUrl: "",
     narrative:
-      "纸鹤承载着手作与祝愿，也在战后的广岛成为和平的象征。这里以一张纸的折痕与展开为灵感，邀请你缓缓折出一只鹤，留下想送给自己或他人的话。本体验为产品改编，不代表特定宗教仪式，也不承诺心愿必然实现。",
+      "在广岛的和平纪念文化中，人们折叠并奉献纸鹤，纪念原爆中逝去的孩子，祈愿和平。点按纸面，逐步折出颈尾和双翼；把折好的纸鹤托到眼前，再留一句和平祝愿。",
   },
   {
     id: "lantern",
@@ -539,7 +589,7 @@ export function dailyPrimaryScene<T extends { id: string }>(entries: readonly T[
   const order = Array.from({ length: Math.max(BLESSING_SCENE_IDS.length, WISH_SCENE_IDS.length) }, (_, i) =>
     [BLESSING_SCENE_IDS[i], WISH_SCENE_IDS[i]].filter((id): id is typeof BLESSING_SCENE_IDS[number] | typeof WISH_SCENE_IDS[number] => Boolean(id)),
   ).flat();
-  const pool = order.filter(id => !excluded.includes(id)).map(id => entries.find(e => e.id === id)).filter((e): e is T => !!e);
+  const pool = order.filter(id => !excluded.includes(id)).map(id => entries.find(e => e.id === id)).filter((e): e is T => !!e && isSceneVisibleInApp(e));
   // An ordinal covers every entry even as the catalog grows. A date's digit
   // sum has too few possible values and leaves new scenes unreachable.
   const utc = Date.parse(`${day}T00:00:00Z`);

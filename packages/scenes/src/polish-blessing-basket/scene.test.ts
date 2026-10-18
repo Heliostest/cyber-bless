@@ -210,7 +210,7 @@ describe('Polish seasonal family basket', () => {
     for (const name of ['basket-weave', 'basket-cloth', 'basket-handle', 'basket-bread-scores', 'basket-egg-pattern', 'basket-spring-herbs']) expect(s.scene.getObjectByName(name), name).toBeDefined()
     expect(s.scene.getObjectByName('basket-weave')!.children.length).toBeGreaterThan(20)
     expect(s.scene.getObjectByName('basket-bread-scores')!.children.length).toBeGreaterThan(1)
-    expect(s.overlay.textContent).toContain('家庭准备'); expect(s.overlay.textContent).toContain('不模拟圣职祝福')
+    expect(s.overlay.querySelector('.scene-hint')?.textContent).toBe('为波兰圣周六的复活节食物篮做准备，把圆面包拖到篮内衬布上。')
   })
 
   it('fully releases geometry, materials, shadow targets, renderer, DOM and owned listeners once', () => {

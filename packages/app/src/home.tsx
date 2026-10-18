@@ -1,4 +1,5 @@
 import { dailyCollectibleId, rituals, openingExclusions } from "@wbr/core";
+import { isSceneVisibleInApp } from '@wbr/core/daily-scenes';
 import { Icon } from "./art";
 import { useApp } from "./context";
 import { DailyScenePreview } from "./daily-scene-preview";
@@ -36,7 +37,7 @@ export function Today({ day }: { day: string }) {
       </PageHead>
       {/* The one way left onto the 2D ritual page: a session begun there
           before rituals opened as scenes still settles where it started. */}
-      {state.activeSession && (
+      {state.activeSession && isSceneVisibleInApp({ id: state.activeSession.ritual }) && (
         <button
           className="resume-banner"
           onClick={() => go({ page: "ritual" })}

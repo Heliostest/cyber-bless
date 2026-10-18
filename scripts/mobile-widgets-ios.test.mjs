@@ -5,6 +5,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { APP_HIDDEN_SCENE_IDS } from '../packages/core/src/daily-scenes.ts';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const require = createRequire(import.meta.url);
 const { transformSync } = require('@babel/core');
@@ -49,6 +50,22 @@ test('the actual Expo Babel preset serializes a self-contained isolated widget f
   const fallback = JSON.stringify(render(undefined, 'systemSmall'));
   assert.ok(fallback.includes('今日仪式'));
   assert.ok(fallback.includes('cyber-bless://widget/today?v=1'));
+});
+
+test('retired App scenes cannot reappear from an old persisted iOS timeline', () => {
+  for (const id of APP_HIDDEN_SCENE_IDS) {
+  const stale = { day: '2026-10-19', sceneId: id, title: '已移出的场景', deepLink: `cyber-bless://widget/today?v=1&day=2026-10-19&scene=${id}`, previewSmall: 'file:///group/hidden-small.png', previewMedium: 'file:///group/hidden-medium.png', previewLarge: 'file:///group/hidden-large.png' };
+  for (const family of ['systemSmall', 'systemMedium', 'systemLarge']) {
+    for (const props of [stale, { ...stale, sceneId: undefined }]) {
+      const tree = render(props, family), json = JSON.stringify(tree);
+      assert.ok(!json.includes(stale.title));
+      assert.ok(!json.includes('hidden-'));
+      assert.ok(!json.includes(id));
+      assert.ok(json.includes('今日仪式'));
+      assert.equal(tree.props.modifiers.find(m => m.type === 'widgetURL').args[0], 'cyber-bless://widget/today?v=1');
+    }
+  }
+  }
 });
 test('the iOS publisher does not load unavailable widget or UI modules in Expo Go', async () => {
   const compiled = compile('apps/mobile-expo/widget-sync.ts');
@@ -107,7 +124,9 @@ test('the official source generator preserves all three families and dedicated A
   const output = mkdtempSync(path.join(root, 'artifacts/widget-ios-sources-'));
   const config = JSON.parse(readFileSync(path.join(root, 'apps/mobile-expo/app.json'), 'utf8')).expo;
   const settings = config.plugins.find(p => Array.isArray(p) && p[0] === 'expo-widgets')[1];
-  const generated = withSource(config, { ...settings, targetName: 'ExpoWidgetsTarget', onFilesGenerated: () => {} });
+  const withVisibility = require('../apps/mobile-expo/plugins/withWidgetSceneVisibility.cjs');
+  assert.ok(config.plugins.indexOf('./plugins/withWidgetSceneVisibility.cjs') < config.plugins.findIndex(p => Array.isArray(p) && p[0] === 'expo-widgets'));
+  const generated = withSource(withVisibility(config), { ...settings, targetName: 'ExpoWidgetsTarget', onFilesGenerated: () => {} });
   const run = () => generated.mods.ios.dangerous({ ...generated, modResults: {}, modRequest: { platform: 'ios', modName: 'dangerous', platformProjectRoot: output, projectRoot: path.join(root, 'apps/mobile-expo'), introspect: false } });
   await run();
   const target = path.join(output, 'ExpoWidgetsTarget');
@@ -116,5 +135,11 @@ test('the official source generator preserves all three families and dedicated A
   assert.equal(readFileSync(path.join(target, 'BlessingToday.swift'), 'utf8'), first);
   assert.ok(first.includes('systemSmall') && first.includes('systemMedium'));
   assert.ok(first.includes('systemLarge'));
+  assert.ok(first.includes(`let hiddenScenes: Set<String> = [${APP_HIDDEN_SCENE_IDS.map(id => JSON.stringify(id)).join(', ')}]`));
+  assert.ok(first.includes('hiddenScenes.contains(sceneId) || hiddenScenes.contains(linkedId)'));
+  assert.ok(first.includes('URLComponents(string: deepLink)'));
+  assert.ok(first.includes('} else {\n        WidgetsEntryView(entry: entry)'));
+  assert.ok(first.includes('Text("今日仪式")'));
+  assert.equal((first.match(/App scene curation/g) || []).length, 1);
   assert.ok(readFileSync(path.join(target, 'ExpoWidgetsTarget.entitlements'), 'utf8').includes(settings.groupIdentifier));
 });

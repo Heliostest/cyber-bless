@@ -788,12 +788,12 @@ describe("useOpenRitual", () => {
 
   it("opens the scene as it stands, unless it is done", () => {
     const fresh = opener(createState());
-    fresh.open("lantern");
+    fresh.open("crane");
     expect(fresh.dispatch).not.toHaveBeenCalled();
     expect(fresh.go).toHaveBeenCalledWith({
       page: "scene",
-      id: "lantern",
-      entry: entryOf("lantern"),
+      id: "crane",
+      entry: entryOf("crane"),
       wishId: undefined,
       // 再次体验 is a replay: it never settles 今日's keepsake.
       replay: true,
@@ -827,13 +827,18 @@ describe("useOpenRitual", () => {
       wishId: "w1",
     });
     const newer = opener(createState(), [
-      { ...entryOf("lantern"), engine: "lantern@9" },
+      { ...entryOf("crane"), engine: "crane@9" },
     ]);
-    newer.open("lantern");
+    newer.open("crane");
     expect(newer.go).toHaveBeenCalledWith(
-      expect.objectContaining({ page: "ritual", id: "lantern" }),
+      expect.objectContaining({ page: "ritual", id: "crane" }),
     );
     expect(newer.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('does not reopen a hidden legacy ritual through the 2D fallback', () => {
+    const hidden = opener(createState());hidden.open('lantern');
+    expect(hidden.go).not.toHaveBeenCalled();expect(hidden.dispatch).not.toHaveBeenCalled();
   });
 });
 
@@ -864,12 +869,12 @@ describe("useOpenScene", () => {
 
   it("opens a scene as it stands, unless it is done; the daily set resumes a half-walked scene", () => {
     const fresh = opener(createState());
-    fresh.open(entryOf("lantern"));
+    fresh.open(entryOf("crane"));
     expect(fresh.dispatch).not.toHaveBeenCalled();
     expect(fresh.go).toHaveBeenCalledWith({
       page: "scene",
-      id: "lantern",
-      entry: entryOf("lantern"),
+      id: "crane",
+      entry: entryOf("crane"),
       daily: undefined,
       vessel: undefined,
       wishId: undefined,

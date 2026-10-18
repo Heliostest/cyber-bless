@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { rituals, type Collectible } from "@wbr/core";
+import { isSceneVisibleInApp } from '@wbr/core/daily-scenes';
 import { Art, Icon } from "./art";
 import { formatDate, statusText, useApp } from "./context";
 import { ritualTitle } from "./home";
@@ -468,11 +469,12 @@ export function History() {
   const { state } = useApp();
   const openRitual = useOpenRitual();
   const openScene = useOpenScene();
+  const records = state.sceneRecords.filter(isSceneVisibleInApp);
   return (
     <>
       <PageHead eyebrow="你留给自己的每一分钟" title="仪式时光" />
       <div className="scene-catalog">
-        {state.sceneRecords.map((record) => (
+        {records.map((record) => (
           <SceneCard
             key={record.id}
             id={record.id}
@@ -501,13 +503,13 @@ export function History() {
                       ? `${HISTORY_SCENE_LINE} · 为「${wish.title}」记了一笔`
                       : HISTORY_SCENE_LINE}
                 </p>
-                <button className="text-button" onClick={() => openRitual(s.ritual)}>再次体验</button>
+                {isSceneVisibleInApp({ id: s.ritual }) && <button className="text-button" onClick={() => openRitual(s.ritual)}>再次体验</button>}
               </li>
             );
           })}
         </ol>
-      ) : state.sceneRecords.length ? null : (
-        <Empty title="故事才刚刚开始" body="完成的小仪式，会一一记在这里。" />
+      ) : records.length ? null : (
+        <Empty title={state.sceneRecords.length ? '暂无可回看的场景' : '故事才刚刚开始'} body="完成的小仪式，会一一记在这里。" />
       )}
     </>
   );

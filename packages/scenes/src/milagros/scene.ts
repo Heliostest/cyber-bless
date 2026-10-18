@@ -13,9 +13,10 @@ const LABELS = ['心形', '手形', '小屋', '花形']
 const VARIANTS = ['heart', 'hand', 'home', 'flower']
 const COPY = {
   title: '留一枚感谢', choose: '选好这枚', hang: '挂上小符', leave: '留在这里',
-  returning: '静看已经挂好的小符，再轻点它，把心意留在这里。',
-  hints: ['轻点托盘里想留下的小符。', '把小符拖到木架的挂点。',
-    '留一句祝愿或感谢，也可以只把小符留在这里。', '小符已挂好，这份心意留在了这里。'],
+  returning: '回看这枚小符与当时的祈求或谢意，再轻点它结束静看。',
+  hints: ['想一件要向圣者祈求或谢恩的事，轻点选一枚金属小符。', '把选好的小符拖到眼前木架的挂点。',
+    '可写下向圣者的祈求或谢意，也可静看小符，点「留在这里」。', '小符已挂在木架上，这一刻的祈求或谢意已留下。'],
+  wishLabel: '写下祈求或谢意', wishPlaceholder: '为一件事祈求，或为蒙恩道谢…',
 }
 
 function charmShape(kind: number) {
@@ -55,7 +56,7 @@ function charmShape(kind: number) {
 export function createMilagros(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, gestures, shared } = ctx
   const safe = shared.assertSafeCopy
-  for (const text of [COPY.title, COPY.choose, COPY.hang, COPY.leave, COPY.returning, ...COPY.hints]) safe(text)
+  for (const text of [COPY.title, COPY.choose, COPY.hang, COPY.leave, COPY.returning, COPY.wishLabel, COPY.wishPlaceholder, ...COPY.hints]) safe(text)
   let step = Math.max(0, Math.min(3, Math.floor(ctx.initialProgress ?? 0)))
   let selected = Math.max(0, VARIANTS.indexOf(ctx.initialVariant ?? 'heart'))
   let started = false, disposed = false, elapsed = 1, clock = 0
@@ -150,6 +151,8 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   const wish = document.createElement('div'); wish.className = 'scene-wish-slot'; overlay.append(wish)
   const writer = gestures.createWishWrite({ maxLen: 40, saves: Boolean(ctx.saveWish) && !ctx.returning, onSubmit: text => finish(text) })
   writer.mount(wish, {})
+  const input = wish.querySelector('input')
+  if (input) { input.setAttribute('aria-label', COPY.wishLabel); input.placeholder = COPY.wishPlaceholder }
   const feedback = createSceneFeedback(ctx)
   const ray = createPointerRay(canvas, camera)
   const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.62), point = new THREE.Vector3()

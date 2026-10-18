@@ -10,12 +10,12 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '木勺寄情', decorateAction: '轻拭木勺', hangAction: '把木勺安放在展托', quietAction: '轻点木勺静看',
-  decorate: '拿起桌前软布，轻拭木勺的凹面。以原创木雕，欣赏威尔士爱勺的赠礼手艺。',
-  hang: '握住木柄，把整只木勺送到右侧展托，让勺底轻轻落稳。',
-  quiet: '轻点木勺静看，或写一句赠予在意之人的心意；点「写好了」才会保存。',
-  returning: '轻点木勺，回看这份温暖的赠礼心意。', moving: '轻拭木纹，再让木勺稳稳落下…',
-  done: '木纹留住手作的温度。',
+  title: '木勺寄情', decorateAction: '轻拭木勺', hangAction: '把木勺安放在展托', quietAction: '轻点木勺细看',
+  decorate: '想着一位在意的人，拿起桌前软布，拖到木勺凹面，轻拭木纹。',
+  hang: '握住木柄，把准备赠人的木勺安放到右侧展托，让勺底轻轻落稳。',
+  quiet: '轻点木勺细看，或写一句给在意之人的祝愿后点「写好了」。',
+  returning: '轻点木勺，回看为在意之人准备的赠礼。', wiping: '软布轻拭勺面，木纹渐渐清晰…', placing: '木勺缓缓移向展托，勺底轻轻落稳…',
+  done: '木勺已安放在展托，留一份准备赠人的心意。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const REST = new THREE.Vector3(.78, .88, .02), CLOTH_HOME = new THREE.Vector3(-.85, .81, .62)
@@ -100,7 +100,7 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
   const bowlPoint = () => bowl.getWorldPosition(new THREE.Vector3())
   addInteractionCue(clothGrip, { kind: 'drag', label: '拿起软布', priority: 3, enabled: enabled(0), destination: bowl, targetLabel: '木勺凹面' })
   addInteractionCue(grip, { kind: 'drag', label: '握住木柄', priority: 3, enabled: enabled(1), destination: seat, targetLabel: '木勺展托' })
-  addInteractionCue(grip, { kind: 'tap', label: '轻点木勺静看', priority: 3, enabled: enabled(2) })
+  addInteractionCue(grip, { kind: 'tap', label: '轻点木勺细看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => at === 0 ? cloth : spoon
   const belongsTo = (object: THREE.Object3D | undefined, target: THREE.Object3D) => { for (let p = object; p; p = p.parent ?? undefined) if (p === target) return true; return false }
@@ -139,7 +139,7 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = !motion && at < 3 ? 'auto' : 'none'
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(active() && !returning && at === 2 && !motion)
     setSafeText(ui.actionBtn, at === 0 ? COPY.decorateAction : at === 1 ? COPY.hangAction : COPY.quietAction, safe)
-    setSafeText(ui.hintEl, motion ? COPY.moving : at === 0 ? COPY.decorate : at === 1 ? COPY.hang : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.wiping : COPY.placing : at === 0 ? COPY.decorate : at === 1 ? COPY.hang : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
   function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); if (!active()) return; feedback.impact({ freqs: [392, 523.25], duration: .19, gain: .012, type: 'triangle' }) }
   function begin() { if (!active() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }

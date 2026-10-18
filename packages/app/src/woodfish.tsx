@@ -138,7 +138,7 @@ export function Woodfish({
     <>
     <button
       className="ritual-object woodfish-object"
-      aria-label={disabled ? "仪式步骤已完成" : "轻敲木鱼"}
+      aria-label={disabled ? "本轮轻敲已结束" : "轻敲木鱼"}
       disabled={disabled || !active}
       aria-describedby="woodfish-instruction"
       onPointerDown={(event) => {

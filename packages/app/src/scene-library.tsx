@@ -23,7 +23,7 @@ import { ritualSceneEntry, sceneSteps } from "./scene-placement";
 import { PageHead } from "./page-heading";
 
 export { builtInScenes, type BuiltInSceneEntry } from '@wbr/core/daily-scenes';
-import { builtInScenes } from '@wbr/core/daily-scenes';
+import { builtInScenes, isSceneVisibleInApp } from '@wbr/core/daily-scenes';
 export const supportsScene = (engine: string) =>
   builtInScenes.some((e) => e.engine === engine);
 export function woodfishPack(manifest: SceneManifest): Pack {
@@ -67,7 +67,11 @@ type LibraryContext = {
 const Library = createContext<LibraryContext>(null!);
 /** What `SceneLibraryProvider` provides; tests stand in their own. */
 export { Library as SceneLibraryContext };
-export const useSceneLibrary = () => useContext(Library);
+export function useSceneLibrary() {
+  const value = useContext(Library);
+  const entries = useMemo(() => value.entries.filter(isSceneVisibleInApp), [value.entries]);
+  return { ...value, entries };
+}
 /**
  * Opens a core ritual as its 3D scene: 仪式时光's 再次体验 comes through here.
  * A scene keeps its progress, so a ritual whose scene is done starts over,
@@ -77,6 +81,7 @@ export function useOpenRitual() {
   const { state, dispatch, go } = useApp(),
     { entries } = useSceneLibrary();
   return (ritual: RitualId, wishId?: string) => {
+    if (!isSceneVisibleInApp({ id: ritual })) return;
     const entry = ritualSceneEntry(entries, ritual);
     if (!entry || !supportsScene(entry.engine)) {
       // TODO: every ritual ships a bundled scene, so this is only reached if
@@ -118,6 +123,7 @@ export type SceneVisit = {
 export function useOpenScene() {
   const { state, dispatch, go } = useApp();
   return (entry: CatalogEntry, visit?: SceneVisit) => {
+    if (!isSceneVisibleInApp(entry)) return;
     const progress =
       state.sceneRecords.find((r) => r.id === entry.id)?.progress ?? 0;
     const spentVessel =

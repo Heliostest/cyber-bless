@@ -25,15 +25,17 @@ const STEP_ORDER: Step[] = ['approach', 'bow', 'ema']
 
 const COPY = {
   title: '庭前一礼',
-  hintApproach: '点按鸟居或在鸟居上向上轻滑，走到它跟前。',
+  hintApproach: '鸟居标示神社入口。点按鸟居或向上轻滑，走到它跟前。',
   hintWalking: '缓步走近…',
-  hintBow: '按住鸟居向下轻滑，轻轻一礼；也可竖起手机稍停或用辅助按钮（致敬，非真实参拜）。',
+  hintBow: '入社前低头示敬。按住鸟居向下轻滑，也可竖起手机稍停，或点「轻轻一礼」。',
   hintBowing: '低头，再缓缓抬起…',
-  hintEma: '木牌旁停一停，在输入框写一句话，也可用辅助按钮静立片刻。',
+  hintEma: '可写下祈愿，让一块木牌留在绘马架上；也可点「静立片刻」结束。',
   approachTap: '走到鸟居前',
   bowTap: '轻轻一礼',
   emaTap: '静立片刻',
-  done: '庭前安静下来。',
+  done: '鸟居前的一礼已毕，留一刻敬意。',
+  wishLabel: '在绘马形木牌上留一句祈愿',
+  wishPlaceholder: '愿家人平安…',
   stepsAria: '步骤',
   cueApproach: '点按鸟居走近',
   cueBow: '向下轻滑一礼',
@@ -407,6 +409,8 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
       },
     })
     wishHandle.mount(wishSlot, {})
+    const input = wishSlot.querySelector('input')
+    if (input) { input.setAttribute('aria-label', COPY.wishLabel); input.placeholder = COPY.wishPlaceholder }
     wishHandle.setEnabled(false)
     handles.push(wishHandle)
   }

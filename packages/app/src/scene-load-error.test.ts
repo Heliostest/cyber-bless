@@ -80,7 +80,7 @@ describe("a scene that will not open", () => {
         },
         createElement(
           SceneLibraryContext.Provider,
-          { value: { library: { open }, ready: true } as never },
+          { value: { entries: [entry], library: { open }, ready: true } as never },
           createElement(SceneExperience, { entry }),
         ),
       ),

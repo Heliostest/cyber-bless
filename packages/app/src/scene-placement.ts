@@ -6,7 +6,7 @@ import {
 } from "@wbr/core";
 import type { CatalogEntry } from "@wbr/content/catalog";
 
-import { BLESSING_SCENE_IDS, WISH_SCENE_IDS } from '@wbr/core/daily-scenes';
+import { BLESSING_SCENE_IDS, WISH_SCENE_IDS, isSceneVisibleInApp } from '@wbr/core/daily-scenes';
 export { BLESSING_SCENE_IDS, WISH_SCENE_IDS, dailyPrimaryScene } from '@wbr/core/daily-scenes';
 /**
  * Scenes shown on the night stage (a navy sky and a moon) instead of the day
@@ -111,7 +111,7 @@ export function dailyCollectedPicks(
   const kept = [...ids]
     .sort()
     .map((id) => findSceneEntry(entries, id))
-    .filter((e): e is CatalogEntry => !!e);
+    .filter((e): e is CatalogEntry => !!e && isSceneVisibleInApp(e));
   const wish = rotate(kept.filter((e) => isWishScene(e.id)), day).slice(0, 1);
   const blessings = rotate(
     kept.filter((e) => !isWishScene(e.id)),

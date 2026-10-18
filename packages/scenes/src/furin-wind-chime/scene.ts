@@ -21,12 +21,12 @@ const STEP_ORDER: Step[] = ['idle', 'ring', 'listen']
 
 const COPY = {
   title: '风铃一响',
-  hintIdle: '点按玻璃铃身，或向上拖动纸条，让风铃轻响。',
+  hintIdle: '为平安度夏留一刻静听。点按玻璃铃身，或向上轻拂纸条。',
   hintRing: '铃声轻响…',
   hintListen: '静听余音，点按铃身结束聆听。',
   ringTap: '拂动风铃',
   listenTap: '静听片刻',
-  done: '余音已散。',
+  done: '余音已散，愿夏日平安。',
   stepsAria: '步骤',
 } as const
 

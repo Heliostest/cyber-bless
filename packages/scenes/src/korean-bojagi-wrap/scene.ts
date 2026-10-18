@@ -9,10 +9,10 @@ import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '方巾裹礼', fold: '捏住近处的布角，向上轻拢，让柔软方巾包住小盒。',
-  tighten: '握住右侧相连的系带，向右轻拉，让松松的结慢慢收拢。',
-  quiet: '轻点包好的方巾静看，或写一句心意；点「写好了」才会保存。',
-  returning: '轻点方巾，回看拼布与缝线留下的温度。', done: '用一方柔软布料，包好一份日常心意。',
+  title: '方巾裹礼', fold: '想着要收礼的人，捏住近处的布角向上轻拢，用方巾包住礼盒。',
+  tighten: '握住右侧相连的系带，向右轻拉，收好这份赠礼的布结。',
+  quiet: '轻点包好的礼物细看，或写一句给收礼人的祝愿后点「写好了」。',
+  returning: '轻点方巾，回看为收礼人包好的这份心意。', done: '礼盒已经包好，留一份给收礼人的美好祝愿。',
   folding: '布角绕过盒沿，柔软的拼布渐渐贴合…', tying: '相连的系带缓缓收紧，留下自然的小结…',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
@@ -195,7 +195,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
   const removeCues = [
     addInteractionCue(nearCorner, { kind: 'drag', direction: [0, -1], label: '向上拢起布角', anchor: GRIP, priority: 3, enabled: enabled(0) }),
     addInteractionCue(bandTip, { kind: 'drag', direction: [1, 0], label: '向右轻拉系带', anchor: EDGE, priority: 3, enabled: enabled(1) }),
-    addInteractionCue(cloth, { kind: 'tap', label: '轻点方巾静看', anchor: QUIET, priority: 3, enabled: enabled(2) }),
+    addInteractionCue(cloth, { kind: 'tap', label: '轻点包好的礼物', anchor: QUIET, priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2()
   const nearestHit = (x: number, y: number) => {
@@ -241,7 +241,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(inputActive() && !returning && at === 2 && !motion)
-    setSafeText(ui.actionBtn, at === 0 ? '向上拢起布角' : at === 1 ? '向右轻拉系带' : '轻点方巾静看', safe)
+    setSafeText(ui.actionBtn, at === 0 ? '向上拢起布角' : at === 1 ? '向右轻拉系带' : '轻点包好的礼物', safe)
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.folding : COPY.tying : at === 0 ? COPY.fold : at === 1 ? COPY.tighten : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }

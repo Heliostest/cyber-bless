@@ -10,11 +10,11 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '彩蛋寄春', paintAction: '给彩蛋添纹', placeAction: '把彩蛋放进陶杯', quietAction: '轻点彩蛋静看',
-  paint: '握住桌前画笔的木柄，把笔送到青蓝蛋壳。用原创纹样，致意索布人的彩蛋手艺。',
-  place: '轻托彩蛋，把它移到右侧陶杯的浅色杯沿。让春日手作稳稳安放。',
-  quiet: '轻点彩蛋静看，或写一句春日心愿；只有点「写好了」才会保存。', returning: '轻点彩蛋，回看这一点春意。', moving: '让笔触慢慢显现，让彩蛋稳稳落下…',
-  done: '一枚彩蛋，留住一点春意。',
+  title: '彩蛋寄春', paintAction: '给彩蛋添纹', placeAction: '把彩蛋放进陶杯', quietAction: '轻点彩蛋细看',
+  paint: '握住桌前画笔的木柄，把笔送到青蓝蛋壳上，为复活节赠礼添上花枝纹。',
+  place: '轻托彩蛋，把它移到右侧陶杯的浅色杯沿，先在杯中摆好。',
+  quiet: '想着要赠予的人，轻点彩蛋细看，或写一句复活节祝愿后点「写好了」。', returning: '轻点彩蛋，回看为在意之人准备的复活节赠礼。', painting: '花枝笔触慢慢显现在蛋壳上…', placing: '彩蛋缓缓移向陶杯，在杯中落稳…',
+  done: '彩蛋已在杯中放稳，留一份准备赠人的复活节祝愿。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const HOME = new THREE.Vector3(-.48, .78, .08), SEATED = new THREE.Vector3(.87, .94, -.06)
@@ -122,7 +122,7 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
   const enabled = (step: number) => () => active() && !motion && at === step
   addInteractionCue(grip, { kind: 'drag', label: '握住画笔木柄', priority: 3, enabled: enabled(0), destination: paintSurface, targetLabel: '青蓝蛋壳' })
   addInteractionCue(paintSurface, { kind: 'drag', label: '轻托彩蛋', priority: 3, enabled: enabled(1), destination: cupTarget, targetLabel: '陶杯浅色杯沿' })
-  addInteractionCue(paintSurface, { kind: 'tap', label: '轻点彩蛋静看', priority: 3, enabled: enabled(2) })
+  addInteractionCue(paintSurface, { kind: 'tap', label: '轻点彩蛋细看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => at === 0 ? brush : egg
   const eggTargets: THREE.Object3D[] = []; egg.traverse(object => { if ((object as THREE.Mesh).isMesh) eggTargets.push(object) })
@@ -160,7 +160,7 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = !motion && at < 3 ? 'auto' : 'none'
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(active() && !returning && at === 2 && !motion)
     setSafeText(ui.actionBtn, at === 0 ? COPY.paintAction : at === 1 ? COPY.placeAction : COPY.quietAction, safe)
-    setSafeText(ui.hintEl, motion ? COPY.moving : at === 0 ? COPY.paint : at === 1 ? COPY.place : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.painting : COPY.placing : at === 0 ? COPY.paint : at === 1 ? COPY.place : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
   function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); feedback.impact({ freqs: [440, 554.37], duration: .19, gain: .012, type: 'triangle' }) }
   function begin() { if (!active() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }

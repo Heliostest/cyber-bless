@@ -1,4 +1,4 @@
-import { BLESSING_SCENE_IDS, WISH_SCENE_IDS } from './daily-scenes';
+import { BLESSING_SCENE_IDS, WISH_SCENE_IDS, isSceneVisibleInApp } from './daily-scenes';
 
 export type OpeningState =
   | { status: 'new' }
@@ -33,7 +33,7 @@ export function validOpeningState(value: unknown): value is OpeningState {
 
 /** Random without replacement; the persisted result, rather than RNG, drives later visits. */
 export function chooseOpeningScenes(entries: readonly { id: string }[], random = Math.random): [string, string, string] {
-  const available = new Set(entries.map(e => e.id));
+  const available = new Set(entries.filter(isSceneVisibleInApp).map(e => e.id));
   const blessings = BLESSING_SCENE_IDS.filter(id => available.has(id));
   const wishes = WISH_SCENE_IDS.filter(id => available.has(id));
   if (blessings.length < 2 || !wishes.length) throw Error('开场仪式暂未准备好');
@@ -43,4 +43,18 @@ export function chooseOpeningScenes(entries: readonly { id: string }[], random =
     return pool.splice(index, 1)[0]!;
   };
   return [pick(blessings), pick(blessings), pick(wishes)];
+}
+
+/** Retire only pending steps; past keepsakes and the user's played progress remain intact. */
+export function replaceHiddenOpeningScenes(opening: OpeningState): OpeningState {
+  if (opening.status !== 'active') return opening;
+  const sceneIds: [string, string, string] = [...opening.sceneIds];
+  let changed = false;
+  for (let i = opening.completed; i < sceneIds.length; i++) {
+    if (isSceneVisibleInApp({ id: sceneIds[i] })) continue;
+    const pool = i < 2 ? BLESSING_SCENE_IDS : WISH_SCENE_IDS;
+    const replacement = pool.find(id => isSceneVisibleInApp({ id }) && !sceneIds.includes(id));
+    if (replacement) { sceneIds[i] = replacement; changed = true; }
+  }
+  return changed ? { ...opening, sceneIds } : opening;
 }

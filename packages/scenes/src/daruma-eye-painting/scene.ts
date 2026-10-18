@@ -13,19 +13,19 @@ import {
 const COPY = {
   title: '达摩点睛',
   stepsAria: '步骤',
-  paint: '点上一目',
-  paintReturn: '补上另一目',
-  hintPaint: '轻点空白眼圈，或把毛笔拖到眼圈。另一目留待日后回访。（民俗工艺的产品改编）',
-  hintReturn: '这一目已经留下目标。轻点另一目，或把毛笔拖到空白眼圈。（产品改编）',
+  paint: '点一目立愿',
+  paintReturn: '愿成或年终谢恩补目',
+  hintPaint: '轻点空白眼圈，或把毛笔拖到眼圈，立下一个愿。另一目留待愿成，或平安度过一年后谢恩时再补。',
+  hintReturn: '补目用于愿成，或平安度过一年后的谢恩。若已到这个时刻，轻点另一目，或把毛笔拖到空白眼圈。',
   wish: '暂留心意',
-  hintWish: '写下一个短目标，或先把心意留在此刻。另一目仍然留白。',
-  acknowledge: '静看片刻',
-  hintAcknowledge: '两目相对，静看自己走过的这段路，再轻点达摩留住这一刻。',
+  hintWish: '写下一个愿望或短目标，或先把心意留在此刻。另一目留白，陪你走向所愿。',
+  acknowledge: '静看并记谢',
+  hintAcknowledge: '两目相对，回看愿成或一年平安的谢意，再轻点达摩记下这一刻。',
   settle: '轻放在木座上',
   hintSettle: '把达摩轻轻向下拖到木座。',
   settling: '轻摆归位…',
-  done: '达摩稳稳停在木座上，另一目留待日后。',
-  doneReturn: '两目已点，达摩稳稳停在木座上。',
+  done: '达摩已归座。另一目留待愿成，或平安度过一年后谢恩时再补。',
+  doneReturn: '两目已点，达摩已归座。补目所纪念的，是愿成或平安一年的谢恩。',
 } as const
 
 const HEIGHT = 1.72
@@ -310,7 +310,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
   const paintTarget = eyes[returning ? 1 : 0]
   const canPaint = () => canAct() && !settling && !blockedMulti && step === 0
   addInteractionCue(paintTarget, {
-    kind: 'tap', label: returning ? '轻点另一目' : '轻点空白眼圈', enabled: canPaint, priority: 2,
+    kind: 'tap', label: returning ? '愿成或谢恩时补目' : '轻点一目立愿', enabled: canPaint, priority: 2,
   })
   addInteractionCue(shaft, {
     kind: 'drag', label: '拖毛笔到眼圈', anchor: [0, -0.18, 0], enabled: canPaint,
@@ -324,7 +324,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     destination: () => stand.localToWorld(new THREE.Vector3(0, 0.066, 0.42)), targetLabel: '木座', priority: 2,
   })
   addInteractionCue(shell, {
-    kind: 'tap', label: '轻点达摩静看', anchor: [settleAnchor.x, settleAnchor.y, settleAnchor.z], priority: 2,
+    kind: 'tap', label: '轻点达摩记谢', anchor: [settleAnchor.x, settleAnchor.y, settleAnchor.z], priority: 2,
     enabled: () => canAct() && !settling && !blockedMulti && returning && step === 1,
   })
 

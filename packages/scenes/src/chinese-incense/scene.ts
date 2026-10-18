@@ -10,12 +10,13 @@ import {
 } from '../procedural-kit'
 
 const COPY = {
-  title: '炉前一炷', lidAction: '移开炉盖', incenseAction: '安放一炷香', quietAction: '轻点茶托静看',
-  lid: '捏住圆盖钮，拖到右侧盖托。取意公开敬香的日常陈设，是文化致敬小品。',
+  title: '炉前一炷', lidAction: '移开炉盖', incenseAction: '安放一炷香', quietAction: '轻点茶托看烟',
+  lid: '捏住圆盖钮，拖到右侧盖托，露出炉内的香孔。',
   incense: '握住暖色纸套，把一炷细香拖进炉内的小香孔。',
-  quiet: '轻点茶托或炉身，静看一缕轻烟，留片刻安静。',
+  quiet: '轻点茶托或炉身，静看轻烟，体会妈祖信俗中敬香祈安的心意。',
+  returning: '轻点茶托或炉身，再看炉前轻烟，回想敬香祈安的心意。',
   movingLid: '炉盖轻轻落在陶托上…', movingIncense: '细香安稳落入香孔，纸套留在桌边…',
-  done: '让片刻安静留在炉前。',
+  done: '细香已安放，留一刻静赏，向敬香祈安的传统致意。',
 } as const
 const LID_HOME = new THREE.Vector3(.12, 1.44, -.22)
 const LID_REST = new THREE.Vector3(1.035, .635, .36)
@@ -171,7 +172,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   addInteractionCue(knob, { kind: 'drag', label: '拖圆钮移开炉盖', priority: 3, enabled: cueAt(0), destination: rest, targetLabel: '右侧盖托' })
   addInteractionCue(grip, { kind: 'drag', label: '握纸套安放细香', priority: 3, enabled: cueAt(1), destination: socket, targetLabel: '炉内香孔' })
   // The saucer's forward lip remains exposed below its teacup.
-  addInteractionCue(saucer, { kind: 'tap', label: '轻点茶托静看', anchor: [0, .019, .20], priority: 3, enabled: cueAt(2) })
+  addInteractionCue(saucer, { kind: 'tap', label: '轻点茶托看烟', anchor: [0, .019, .20], priority: 3, enabled: cueAt(2) })
   const quietObjects: THREE.Object3D[] = [saucer, body]
   cup.traverse(object => { if ((object as THREE.Mesh).isMesh) quietObjects.push(object) })
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(), dragPoint = new THREE.Vector3(), offset = new THREE.Vector3(), down = new THREE.Vector2()
@@ -213,7 +214,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
     ui.hitLayer.style.pointerEvents = checkpoint < 3 && !placement ? 'auto' : 'none'
     setSafeText(ui.actionBtn, checkpoint === 0 ? COPY.lidAction : checkpoint === 1 ? COPY.incenseAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, placement ? placement.step === 0 ? COPY.movingLid : COPY.movingIncense
-      : checkpoint === 0 ? COPY.lid : checkpoint === 1 ? COPY.incense : checkpoint === 2 ? COPY.quiet : COPY.done, safe)
+      : checkpoint === 0 ? COPY.lid : checkpoint === 1 ? COPY.incense : checkpoint === 2 ? ctx.returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
   function placed() {
     if (!active() || !placement) return

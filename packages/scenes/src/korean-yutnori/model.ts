@@ -37,7 +37,6 @@ export function createYutnoriModel() {
     const core=add(subject,`yut-station-center-${i}`,new THREE.CylinderGeometry(r*.63,r*.63,.002,24),ivory);core.position.set(x,.027,z);core.castShadow=false
   })
   const token=add(subject,'yut-token',new THREE.CylinderGeometry(.15,.165,.12,40),blue)
-  const dot=add(token,'yut-token-dot',new THREE.CylinderGeometry(.043,.043,.002,24),ivory);dot.position.y=.061
   const rim=add(token,'yut-token-rim',new THREE.TorusGeometry(.124,.007,6,40),ivory);rim.rotation.x=Math.PI/2;rim.position.y=.055
   const sticksGroup=new THREE.Group();sticksGroup.name='yut-sticks';subject.add(sticksGroup)
   const sticks:THREE.Group[]=[],shells:THREE.Mesh[]=[]

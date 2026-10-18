@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'chinese-steelyard', title: '移砣平衡', traditionSlug: 'chinese-steelyard', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'garden-croquet', title: '草坪过门', traditionSlug: 'garden-croquet', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'welsh-drop-spindle', title: '悬锤纺线', traditionSlug: 'welsh-drop-spindle', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'scottish-plunge-churn', title: '木杆搅乳', traditionSlug: 'scottish-plunge-churn', grade: 'C', sensitivity: '低', gestures: ['drag'] },
@@ -188,6 +189,7 @@ const IMPLEMENTED = new Set([
   'korean-yutnori',
   'chinese-diabolo',
   'chinese-tangram',
+  'chinese-steelyard',
   'garden-croquet',
   'welsh-drop-spindle',
   'scottish-plunge-churn',
@@ -258,6 +260,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'chinese-steelyard': return import('./chinese-steelyard')
     case 'garden-croquet': return import('./garden-croquet')
     case 'welsh-drop-spindle': return import('./welsh-drop-spindle')
     case 'scottish-plunge-churn': return import('./scottish-plunge-churn')

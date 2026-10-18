@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "801e11020f08edd3233db84572277bdab6755b4cea0997dc40432d78f7eadb66",
+  "revision": "ca6cb4ef3f41a4be6a99b31724c0c507437ff45b3a49796155b2b83610bdf6ef",
   "scenes": [
+    {
+      "id": "chinese-steelyard",
+      "engine": "chinese-steelyard@1",
+      "small": {
+        "file": "chinese-steelyard-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "80b6725341d609504ae3fe67b188e393a998212f8231b0b68213ffe5754a03ab",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "chinese-steelyard-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "8fd035eee5d3752344a9a37b435ff2e77c6425202dfca9af4ae6de1766c97352",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "chinese-steelyard-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "31ac7b335fc43d67b11f47e3a6fa46da15623e568799a10b09c45a51dbceae4d",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "garden-croquet",
       "engine": "garden-croquet@1",

@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "chinese-steelyard",
   "garden-croquet",
   "welsh-drop-spindle",
   "scottish-plunge-churn",
@@ -112,6 +113,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "chinese-steelyard", title: "移砣平衡", engine: "chinese-steelyard@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "chinese-steelyard",
+    narrative: "杆秤用提点支起秤杆，让配重沿杆移动，观察两端逐渐找平。木杆、金属秤砣与悬盘相伴，盘里放着一枚柑橘。先向右移砣，让木杆慢慢回到水平，再提起圆环，轻轻缓放。秤砣的吊绳保持垂直，果实安放在浅盘中，金属边缘在日光下泛起柔光。",
+  },
   {
     id: "garden-croquet", title: "草坪过门", engine: "garden-croquet@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "garden-croquet",

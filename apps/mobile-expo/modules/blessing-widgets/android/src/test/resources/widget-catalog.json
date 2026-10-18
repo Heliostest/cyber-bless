@@ -1,5 +1,10 @@
 [
   {
+    "id": "chinese-steelyard",
+    "title": "移砣平衡",
+    "category": "blessing"
+  },
+  {
     "id": "garden-croquet",
     "title": "草坪过门",
     "category": "blessing"

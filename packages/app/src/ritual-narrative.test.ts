@@ -84,6 +84,7 @@ describe("builtInScenes narratives", () => {
       "hungarian-embroidery-hoop",
       "indian-charkha",
       "indonesian-angklung",
+      "irish-bodhran",
       "italian-ex-voto",
       "japanese-kendama",
       "japanese-koinobori",

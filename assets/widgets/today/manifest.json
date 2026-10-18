@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "2cb18c91a06fe64abf05655006114d35b0242fbd1d4a3d519e95856d06720b21",
+  "revision": "a2ca186b1a6239f96574d1996a6f9344c112e00e8c86aff98290117950d61ada",
   "scenes": [
+    {
+      "id": "irish-bodhran",
+      "engine": "irish-bodhran@1",
+      "small": {
+        "file": "irish-bodhran-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "8534ebc53973b9691f34623b85e6564d7ed42086a33f7235675ec8d6506ae57a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "irish-bodhran-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "a35116871359bdc11bab9e95e7a71337f469ddc21e40682e24e04acb24305708",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "irish-bodhran-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "39a6d3441e2b3a96b87fa5bf10d5953593cbec25b9b8a2917550a081ae2ade4e",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "french-coffee-mill",
       "engine": "french-coffee-mill@1",

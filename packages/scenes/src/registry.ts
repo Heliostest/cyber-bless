@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'irish-bodhran', title: '鼓面轻拍', traditionSlug: 'irish-bodhran', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'french-coffee-mill', title: '手磨晨光', traditionSlug: 'french-coffee-mill', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'japanese-wagasa', title: '纸伞舒晴', traditionSlug: 'japanese-wagasa', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'spanish-castanets', title: '木壳轻拍', traditionSlug: 'spanish-castanets', grade: 'C', sensitivity: '低', gestures: ['drag'] },
@@ -184,6 +185,7 @@ const IMPLEMENTED = new Set([
   'korean-yutnori',
   'chinese-diabolo',
   'chinese-tangram',
+  'irish-bodhran',
   'french-coffee-mill',
   'japanese-wagasa',
   'spanish-castanets',
@@ -250,6 +252,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'irish-bodhran': return import('./irish-bodhran')
     case 'french-coffee-mill': return import('./french-coffee-mill')
     case 'japanese-wagasa': return import('./japanese-wagasa')
     case 'spanish-castanets': return import('./spanish-castanets')

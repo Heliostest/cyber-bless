@@ -20,6 +20,7 @@ describe('sceneRegistry', () => {
       'chinese-rattle-drum',
       'ghanaian-oware',
       'mexican-tortilla-press',
+      'irish-bodhran',
       'french-coffee-mill',
       'japanese-wagasa',
       'spanish-castanets',
@@ -247,3 +248,5 @@ it('loads the cord-linked hollow castanets through the scene registry',async()=>
 it('loads the bamboo and folding paper wagasa through the scene registry',async()=>{const m=await loadScene('japanese-wagasa');expect(m.meta.id).toBe('japanese-wagasa');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
 
 it('loads the open hopper, rigid crank and sliding drawer coffee mill',async()=>{const m=await loadScene('french-coffee-mill');expect(m.meta.id).toBe('french-coffee-mill');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads the frame drum and double ended wooden tipper',async()=>{const m=await loadScene('irish-bodhran');expect(m.meta.id).toBe('irish-bodhran');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})

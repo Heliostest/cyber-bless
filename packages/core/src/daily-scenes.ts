@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "irish-bodhran",
   "french-coffee-mill",
   "japanese-wagasa",
   "spanish-castanets",
@@ -108,6 +109,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "irish-bodhran", title: "鼓面轻拍", engine: "irish-bodhran@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "irish-bodhran",
+    narrative: "爱尔兰传统音乐里，Bodhrán 框鼓的浅色鼓面与圆木框，陪着舞曲和歌声起落。这里是一面原创框鼓小景：让双端木槌先以一端轻触鼓面，再换另一端相和，两下短短的回弹之后，轻转绿色鼓缘，让木槌随圆框安静停住。日光擦过暖木，圆形鼓面留着柔和的明暗，一来一回的节拍也缓缓落下。",
+  },
   {
     id: "french-coffee-mill", title: "手磨晨光", engine: "french-coffee-mill@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "french-coffee-mill",

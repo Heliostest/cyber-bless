@@ -42,6 +42,14 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'japanese-daruma-otoshi': (<>
+    <rect x="21" y="47" width="27" height="9" rx="4" fill="#d7b16b" stroke="#a7804e"/>
+    <rect x="15" y="36" width="27" height="10" rx="4" fill="#75b4a4" stroke="#508f80"/>
+    <rect x="15" y="26" width="27" height="10" rx="4" fill="#bd6757" stroke="#9c5044"/>
+    <path d="M16 24Q12 6 28 5Q44 6 41 24Z" fill="#bd6757" stroke="#9c5044"/>
+    <ellipse cx="28" cy="16" rx="9" ry="7" fill="#e9dfc6"/><path d="M24 15h1m6 0h1m-7 5h6" stroke="#574638" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M8 38V57" stroke="#b9966c" strokeWidth="4" strokeLinecap="round"/><rect x="2" y="32" width="13" height="8" rx="3" fill="#b9966c" stroke="#8e704c"/>
+  </>),
   'paper-pinwheel': (<>
     <path d="M32 30V58" stroke="#a18158" strokeWidth="5" strokeLinecap="round"/>
     <path d="M31 29L10 11Q39 5 34 28Z M33 31L54 49Q25 55 30 32Z" fill="#e5947a" stroke="#b36e58" strokeWidth="1"/>

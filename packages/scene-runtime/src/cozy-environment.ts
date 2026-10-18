@@ -16,6 +16,7 @@ const profiles: Record<string, Profile> = {
   'korean-yutnori': { kind: 'garden', floor: -0.04 },
   'chinese-diabolo': { kind: 'garden', floor: -0.04 },
   'chinese-tangram': { kind: 'garden', floor: -0.04 },
+  'japanese-daruma-otoshi': {kind:'garden',floor:0},
   'paper-pinwheel': {kind:'garden',floor:0},
   'chinese-steelyard': {kind:'garden',floor:0},
   'garden-croquet': { kind: 'garden', floor: -.04 },

@@ -88,6 +88,7 @@ describe("builtInScenes narratives", () => {
       "indonesian-angklung",
       "irish-bodhran",
       "italian-ex-voto",
+      "japanese-daruma-otoshi",
       "japanese-kendama",
       "japanese-koinobori",
       "japanese-shishi-odoshi",

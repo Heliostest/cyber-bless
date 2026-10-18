@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "japanese-daruma-otoshi",
   "paper-pinwheel",
   "chinese-steelyard",
   "garden-croquet",
@@ -114,6 +115,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id: "japanese-daruma-otoshi", title: "木槌落片", engine: "japanese-daruma-otoshi@1", revision: "bundled", manifestUrl: "", traditionSlug: "japanese-daruma-otoshi", narrative: "达摩落片是日本的木制叠片玩具：从底部敲出木片，同时让上方的叠片保持直立。Reading Museum记录了这种玩法，江户东京博物馆也收藏着名为「だるま落し」的玩具。这里把三片柔和色彩的木片叠在红色达摩下，先下移木槌对齐，敲出一片，看上层稳稳落下，再抬起木槌。圆润的木面与彩漆在阳光下留下清楚的色阶。" },
   { id: "paper-pinwheel", title: "纸翼转风", engine: "paper-pinwheel@1", revision: "bundled", manifestUrl: "", traditionSlug: "paper-pinwheel", narrative: "纸风车把弯折的纸翼装在细轴上，轻风或吹气会让它转起来。墨尔本的儿童玩具馆藏中，也保存着四翼、木柄和小珠组合的手工纸风车。这里用珊瑚红与青绿色纸翼围住圆心，先轻拨起转，再提起木柄，续转一小段，让纸翼慢慢停稳。阳光落在纸面与木柄上，折弯处露出柔和的色阶。" },
   {
     id: "chinese-steelyard", title: "移砣平衡", engine: "chinese-steelyard@1", revision: "bundled", manifestUrl: "",

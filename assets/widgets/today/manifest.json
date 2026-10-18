@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "9188b78d3238b9e6b894672a5beae2531fdd8fd0c8731d94f143314d1cc24b90",
+  "revision": "e119da249a3429f4b441c6f46d5306c42290eab3ff724f0a5b3800d743633525",
   "scenes": [
+    {
+      "id": "japanese-daruma-otoshi",
+      "engine": "japanese-daruma-otoshi@1",
+      "small": {
+        "file": "japanese-daruma-otoshi-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "da91addc2cc9583955d3b305b070821535b7437b186b2ba142f8aec10fb382c7",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "japanese-daruma-otoshi-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "edc4e69e4f303c86af35d22d4608cfb46121a9f4e6753c57d5d28fb8ab749697",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "japanese-daruma-otoshi-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "28a6701ace7d5d6b07ab19b117ecafe5caf876f30a7f0d0b1e82a1c12ad4dcfe",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "paper-pinwheel",
       "engine": "paper-pinwheel@1",

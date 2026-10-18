@@ -77,6 +77,7 @@ describe("builtInScenes narratives", () => {
       "french-coffee-mill",
       "french-petanque",
       "furin-wind-chime",
+      "garden-croquet",
       "german-jumping-jack",
       "german-nutcracker",
       "ghanaian-oware",

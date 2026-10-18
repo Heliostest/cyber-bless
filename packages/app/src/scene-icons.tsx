@@ -42,6 +42,13 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'garden-croquet': (<>
+    <path d="M43 49V25H57V49" fill="none" stroke="#9faba0" strokeWidth="5" strokeLinejoin="round"/>
+    <path d="M16 10V47" stroke="#765334" strokeWidth="4" strokeLinecap="round"/>
+    <path d="M7 43H25V53H7Z" fill="#bb8b52" stroke="#765334" strokeWidth="2"/>
+    <circle cx="35" cy="49" r="7" fill="#ce6651"/><path d="M29 47H41" stroke="#fff0cd" strokeWidth="3"/>
+    <path d="M5 57H59" stroke="#8fae57" strokeWidth="4" strokeLinecap="round"/>
+  </>),
   'welsh-drop-spindle': (<>
     <path d="M32 9V50" stroke="#b88746" strokeWidth="4" strokeLinecap="round"/>
     <path d="M32 8V16" stroke="#d8cbbb" strokeWidth="2"/>

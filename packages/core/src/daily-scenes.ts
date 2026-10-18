@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "garden-croquet",
   "welsh-drop-spindle",
   "scottish-plunge-churn",
   "irish-bodhran",
@@ -111,6 +112,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "garden-croquet", title: "草坪过门", engine: "garden-croquet@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "garden-croquet",
+    narrative: "在英国花园游戏的介绍中，槌球以木槌触球，让球沿草坪穿过一道道球门。这里是一处原创简化小景：木柄、圆槌头与带浅色条纹的彩球相对，白色球门立在绿意之间。先把木槌后移，再轻轻触球，看球穿门而过，最后沿草地再滚一小段。暖木和彩球留下短短的影子，动作停下，目光也慢慢安定。",
+  },
   {
     id: "welsh-drop-spindle", title: "悬锤纺线", engine: "welsh-drop-spindle@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "welsh-drop-spindle",

@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "99df93b8d6575b96bfb18c77e1651f97cada50bd5339efef82da0fa2a71352cd",
+  "revision": "801e11020f08edd3233db84572277bdab6755b4cea0997dc40432d78f7eadb66",
   "scenes": [
+    {
+      "id": "garden-croquet",
+      "engine": "garden-croquet@1",
+      "small": {
+        "file": "garden-croquet-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "bda74575622065745512614790b2e75b7baa86a151c7530c203fade8bc1f94f0",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "garden-croquet-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "47403fc82bf4268dc244e4caab0af0ee206927659004594647b665e95e8cce09",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "garden-croquet-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "e62251f54b88a911dae8745d8302a1929d80f31f1e69b84e3223ba3a8e246ec5",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "welsh-drop-spindle",
       "engine": "welsh-drop-spindle@1",

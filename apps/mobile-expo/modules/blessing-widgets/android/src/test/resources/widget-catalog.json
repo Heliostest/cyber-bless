@@ -1,5 +1,10 @@
 [
   {
+    "id": "german-jumping-jack",
+    "title": "牵绳木偶",
+    "category": "blessing"
+  },
+  {
     "id": "finnish-kantele",
     "title": "五弦轻拨",
     "category": "blessing"

@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'german-jumping-jack', title: '牵绳木偶', traditionSlug: 'german-jumping-jack', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'finnish-kantele', title: '五弦轻拨', traditionSlug: 'finnish-kantele', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'estonian-village-swing', title: '秋千轻荡', traditionSlug: 'estonian-village-swing', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'french-petanque', title: '银球近靶', traditionSlug: 'french-petanque', grade: 'C', sensitivity: '低', gestures: ['drag'] },
@@ -179,6 +180,7 @@ const IMPLEMENTED = new Set([
   'korean-yutnori',
   'chinese-diabolo',
   'chinese-tangram',
+  'german-jumping-jack',
   'finnish-kantele',
   'estonian-village-swing',
   'french-petanque',
@@ -240,6 +242,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'german-jumping-jack': return import('./german-jumping-jack')
     case 'finnish-kantele': return import('./finnish-kantele')
     case 'estonian-village-swing': return import('./estonian-village-swing')
     case 'french-petanque': return import('./french-petanque')

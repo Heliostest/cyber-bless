@@ -13,6 +13,7 @@ const wishIds=['peruvian-engraved-gourd','korean-bojagi-wrap','turkish-ebru-pape
 const ids=process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds,key='cyber-bless:personal:v1'
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const craftDeltas={
+  'german-jumping-jack':[[0,60],[0,60],[0,60]],
   'finnish-kantele':[[0,-60],[0,60],[0,-60]],
   'estonian-village-swing':[[0,-60],[0,60],[0,-60]],
   'french-petanque':[[0,-60],[0,-60],[0,-60]],
@@ -164,7 +165,7 @@ async function wrongCraftGesture(page,id,step){
   if(craftDeltas[id]?.[step]){
     const input=pointers.get(page),[dx,dy]=craftDeltas[id][step]
     const kinds=['tap','reverse','short','backtrack','partial-return','reverse-first','cancel']
-    if(['finnish-kantele','estonian-village-swing','french-petanque','english-hearth-bellows','mexican-metate','czech-wooden-ratchet','puerto-rican-guiro','valencian-folding-fan','mexican-tortilla-press','ghanaian-oware','chinese-rattle-drum','chinese-tangram','chinese-diabolo','korean-yutnori','russian-matryoshka','japanese-koinobori','japanese-kendama','indian-charkha','german-nutcracker','mexican-molinillo','malawi-sansi','chinese-suanpan','mongolian-felt-ger','peruvian-engraved-gourd','venetian-glass-bead'].includes(id))kinds.push('zigzag')
+    if(['german-jumping-jack','finnish-kantele','estonian-village-swing','french-petanque','english-hearth-bellows','mexican-metate','czech-wooden-ratchet','puerto-rican-guiro','valencian-folding-fan','mexican-tortilla-press','ghanaian-oware','chinese-rattle-drum','chinese-tangram','chinese-diabolo','korean-yutnori','russian-matryoshka','japanese-koinobori','japanese-kendama','indian-charkha','german-nutcracker','mexican-molinillo','malawi-sansi','chinese-suanpan','mongolian-felt-ger','peruvian-engraved-gourd','venetian-glass-bead'].includes(id))kinds.push('zigzag')
     for(const kind of kinds){
       const from=await point(page)
       await input.down(from)

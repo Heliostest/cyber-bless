@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "a7a90a30ffbf6fefb2d06b42b1288c093d7609bd1913167cfffe14e2b442d086",
+  "revision": "be007eac8d93ea1d3aa48bc6e6870e26d297aaddeb257109b00d3376abeef958",
   "scenes": [
+    {
+      "id": "german-jumping-jack",
+      "engine": "german-jumping-jack@1",
+      "small": {
+        "file": "german-jumping-jack-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "056ee1d3da3a0dc9d560044843f7ba10ee37dcd4c4d7686a95d5989045cb8444",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "german-jumping-jack-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "fc56bbf486951e0d09406c6e1a395ca8fe2191ebbb96d3f0ddaba04f97d9e141",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "german-jumping-jack-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "7867cdc12fe9231ed9eadaf442fd496a5f40413d425231d762ab91dd30883fe2",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "finnish-kantele",
       "engine": "finnish-kantele@1",

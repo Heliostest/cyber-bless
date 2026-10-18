@@ -42,6 +42,14 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'german-jumping-jack': (<>
+    <path d="M20 26L12 40M44 26L52 40M27 43L20 55M37 43L44 55" stroke="#537b97" strokeWidth="7" strokeLinecap="round"/>
+    <path d="M23 24H41L39 44H25Z" fill="#55a7a0" stroke="#3f7b76" strokeWidth="2"/>
+    <circle cx="32" cy="16" r="8" fill="#ecc999"/>
+    <path d="M23 11H41L37 3H27Z" fill="#d77d42"/>
+    <path d="M32 45V57" stroke="#b5986b" strokeWidth="2"/><circle cx="32" cy="59" r="3" fill="#d8b584"/>
+    <circle cx="29" cy="16" r="1" fill="#4d4a40"/><circle cx="35" cy="16" r="1" fill="#4d4a40"/>
+  </>),
   'finnish-kantele': (<>
     <path d="M8 18L55 14L55 49L21 51Z" fill="#d8b178" stroke="#9e734b" strokeWidth="3"/>
     <circle cx="38" cy="47" r="2.5" fill="#815c3f"/>

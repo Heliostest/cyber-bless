@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "german-jumping-jack",
   "finnish-kantele",
   "estonian-village-swing",
   "french-petanque",
@@ -103,6 +104,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "german-jumping-jack", title: "牵绳木偶", engine: "german-jumping-jack@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "german-jumping-jack",
+    narrative: "牵绳关节木偶Hampelmann用细绳连接木肢，柏林的馆藏记录了木片与彩绘的形态。这里是一件原创小木偶，轻牵木珠，看两臂与双腿慢慢舒展，松手后沿着细绳回到垂落的姿态，让片刻轻快留在树影与阳光里。",
+  },
   {
     id: "finnish-kantele", title: "五弦轻拨", engine: "finnish-kantele@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "finnish-kantele",

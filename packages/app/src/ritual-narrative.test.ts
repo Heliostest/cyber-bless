@@ -76,6 +76,7 @@ describe("builtInScenes narratives", () => {
       "floating-lantern-loy-krathong",
       "french-petanque",
       "furin-wind-chime",
+      "german-jumping-jack",
       "german-nutcracker",
       "ghanaian-oware",
       "hongsheng-red-string",

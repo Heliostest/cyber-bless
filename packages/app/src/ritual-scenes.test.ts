@@ -10,6 +10,7 @@ import {
   type State,
 } from "@wbr/core";
 import type { CatalogEntry } from "@wbr/content/catalog";
+import type { HapticStrength } from "@wbr/runtime";
 import { assertSafeCopy } from "@wbr/shared";
 import { BlessingApp } from "./App";
 import { Context, type AppContext } from "./context";
@@ -45,6 +46,7 @@ type Given = {
   progress?: number;
   checkpoint?(n: number): void;
   saveWish?(text: string): void;
+  haptic?(strength?: HapticStrength): void;
 };
 const scene = vi.hoisted(() => ({ context: undefined as Given | undefined }));
 vi.mock("@wbr/scene-runtime", async (importOriginal) => ({
@@ -130,7 +132,7 @@ async function openApp(state: State) {
   let raw = JSON.stringify(state);
   const host = {
     read: async () => raw,
-    haptic: async () => {},
+    haptic: vi.fn(async (_strength?: HapticStrength) => {}),
     write: async (next: string) => {
       raw = next;
     },
@@ -140,6 +142,7 @@ async function openApp(state: State) {
   const all = (selector: string) => [...ui.host.querySelectorAll(selector)];
   return {
     ...ui,
+    haptic: host.haptic,
     saved: async () => {
       await settle();
       return JSON.parse(raw) as State;
@@ -148,7 +151,7 @@ async function openApp(state: State) {
     sceneTitle: () => ui.host.querySelector(".app-topbar .title-ribbon")?.textContent,
     sceneProgress: () => ui.host.querySelector(".scene-progress")?.textContent,
     doneButtons: () =>
-      all(".scene-done-row button").map((b) => b.textContent),
+      all(".scene-done-row button:not(.favorite-chip)").map((b) => b.textContent),
     /** The first button whose text includes `text`. */
     button: (text: string, within = "") =>
       all(`${within} button`).find((b) => b.textContent?.includes(text))!,
@@ -194,12 +197,23 @@ describe("今日's daily set", () => {
     expect(ui.host.querySelector(".scene-caption")?.textContent).toBe(
       SCENE_DAILY_CAPTION,
     );
+    const favorite = ui.host.querySelector(".favorite-chip")!;
+    expect(favorite.getAttribute("aria-pressed")).toBe("false");
+    await ui.tap(favorite);
+    expect(favorite.getAttribute("aria-pressed")).toBe("true");
 
     await ui.walk();
     expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
       sceneDailyDoneCopy(entryOf(sceneId).title),
     );
     expect(ui.doneButtons()).toEqual([SCENE_DAILY_CTA]);
+    const collectedFavorite = ui.button(SCENE_DAILY_CTA, ".scene-completion-actions")
+      ?.parentElement?.querySelector(".favorite-chip");
+    expect(collectedFavorite).toBeTruthy();
+    expect(collectedFavorite?.getAttribute("aria-pressed")).toBe("true");
+    expect(ui.host.querySelectorAll(".favorite-chip")).toHaveLength(1);
+    await ui.tap(collectedFavorite!);
+    expect((await ui.saved()).sceneRecords.find(r => r.id === sceneId)?.favorite).toBe(false);
     expect(
       ui.host.querySelector("[data-reward-sticker] .scene-art"),
     ).not.toBeNull();
@@ -241,6 +255,27 @@ describe("今日's daily set", () => {
     await ui.tap(ui.host.querySelector('.back-button')!);
     await ui.tap(ui.host.querySelector(`.daily-set-primary[data-scene="${sceneId}"]`)!);
     expect(ui.host.querySelector('.app-topbar button[aria-label="音效"]')!.getAttribute('aria-pressed')).toBe('false');
+    ui.unmount();
+  });
+
+  it("forwards each scene impact strength and reads the haptics toggle live", async () => {
+    const ui = await openApp(createState());
+    await ui.tap(ui.host.querySelector(`.daily-set-primary[data-scene="${sceneId}"]`)!);
+    const haptics = ui.host.querySelector('.app-topbar button[aria-label="震动"]')!;
+    const haptic = scene.context!.haptic!;
+    for (const strength of ["light", "medium", "heavy"] as const) haptic(strength);
+    haptic();
+    expect(ui.haptic.mock.calls).toEqual([["light"], ["medium"], ["heavy"], [undefined]]);
+
+    await ui.tap(haptics);
+    ui.haptic.mockClear();
+    haptic("heavy");
+    haptic();
+    expect(ui.haptic).not.toHaveBeenCalled();
+
+    await ui.tap(haptics);
+    haptic("medium");
+    expect(ui.haptic).toHaveBeenCalledExactlyOnceWith("medium");
     ui.unmount();
   });
 
@@ -445,6 +480,7 @@ describe("许愿 through a keepsake", () => {
       SCENE_KEEP_QUESTION,
     );
     expect(ui.doneButtons()).toEqual([SCENE_KEEP_CTA, SCENE_DISCARD_CTA]);
+    expect(ui.host.querySelectorAll(".favorite-chip")).toHaveLength(1);
     // The keepsake is spent whichever way the line goes; no wish yet.
     let saved = await ui.saved();
     expect(saved.collectibles[0]).toMatchObject({ spentAt: expect.any(String) });
@@ -452,6 +488,8 @@ describe("许愿 through a keepsake", () => {
 
     await ui.tap(ui.button(SCENE_KEEP_CTA, ".scene-done-row"));
     expect(ui.doneButtons()).toEqual([SCENE_DONE_WISH_CTA]);
+    expect(ui.button(SCENE_DONE_WISH_CTA, ".scene-completion-actions")?.parentElement?.querySelector(".favorite-chip")).toBeTruthy();
+    expect(ui.host.querySelectorAll(".favorite-chip")).toHaveLength(1);
     await ui.tap(ui.button(SCENE_DONE_WISH_CTA, ".scene-done-row"));
     expect(ui.page()).toBe("wishes");
     expect(ui.host.querySelector(".wish-card strong")?.textContent).toBe(
@@ -520,6 +558,8 @@ describe("许愿 through a keepsake", () => {
       SCENE_DISCARDED_COPY,
     );
     expect(ui.doneButtons()).toEqual([SCENE_DONE_CTA]);
+    expect(ui.button(SCENE_DONE_CTA, ".scene-completion-actions")?.parentElement?.querySelector(".favorite-chip")).toBeTruthy();
+    expect(ui.host.querySelectorAll(".favorite-chip")).toHaveLength(1);
     const saved = await ui.saved();
     expect(saved.wishes).toHaveLength(0);
     // Not keeping it settles the draft too: nothing waits, nothing lingers.
@@ -574,6 +614,8 @@ describe("还愿 through a keepsake", () => {
       SCENE_RETURN_DONE_COPY,
     );
     expect(ui.doneButtons()).toEqual([SCENE_RETURN_CTA]);
+    expect(ui.button(SCENE_RETURN_CTA, ".scene-completion-actions")?.parentElement?.querySelector(".favorite-chip")).toBeTruthy();
+    expect(ui.host.querySelectorAll(".favorite-chip")).toHaveLength(1);
     let saved = await ui.saved();
     // The vessel path leaves no session: the spent keepsake is the record.
     expect(saved.sessions).toHaveLength(0);

@@ -13,7 +13,7 @@ import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import * as Linking from 'expo-linking';
-import { createProjectedStorage } from '@wbr/runtime';
+import { createProjectedStorage, type HapticStrength } from '@wbr/runtime';
 import { parseWidgetLink, type WidgetNavigationRequest } from '@wbr/core/widgets';
 import { synchronizeWidgets } from './widget-sync';
 import BlessingDom from "./BlessingDom";
@@ -74,8 +74,17 @@ function Shell() {
     void Linking.getInitialURL().then(url => { if (!incoming) accept(url); }).catch(() => {});
     return () => { disposed = true; links.remove(); };
   }, []);
-  const haptic = useCallback(async () => {
-    await Haptics.selectionAsync().catch(() => {});
+  const haptic = useCallback(async (strength?: HapticStrength) => {
+    if (!strength) {
+      await Haptics.selectionAsync().catch(() => {});
+      return;
+    }
+    const impacts = {
+      light: Haptics.ImpactFeedbackStyle.Light,
+      medium: Haptics.ImpactFeedbackStyle.Medium,
+      heavy: Haptics.ImpactFeedbackStyle.Heavy,
+    };
+    await Haptics.impactAsync(impacts[strength]).catch(() => {});
   }, []);
   const onCanGoBack = useCallback(async (value: boolean) => {
     canGoBack.current = value;

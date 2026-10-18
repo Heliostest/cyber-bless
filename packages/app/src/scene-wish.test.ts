@@ -12,6 +12,7 @@ import {
   SCENE_DONE_COPY,
   SCENE_DONE_CTA,
   SCENE_DONE_WISH_CTA,
+  SCENE_FAVORITE_LABEL,
 } from "./scene-experience";
 import { sceneWish } from "./scene-wish";
 import { clickOn, renderUI, settle } from "./dom-test-utils";
@@ -84,6 +85,7 @@ describe("a line written in a scene", () => {
     });
     await store.load();
     const go = vi.fn();
+    const back = vi.fn();
     const launchReward = vi.fn();
     const announce = vi.fn();
     const entry = builtInScenes.find((e) => e.id === sceneId)!;
@@ -96,7 +98,7 @@ describe("a line written in a scene", () => {
       const value = {
         state: state!,
         go,
-        back() {},
+        back,
         active: true,
         canHaptic: false,
         feedback() {},
@@ -138,6 +140,7 @@ describe("a line written in a scene", () => {
       ...ui,
       store,
       go,
+      back,
       launchReward,
       announce,
       writes,
@@ -183,7 +186,7 @@ describe("a line written in a scene", () => {
     expect(s.go).toHaveBeenCalledWith({ page: "wish", id: kept.id });
 
     // Saved on the device, for 心愿 to list.
-    await s.store.flush();
+    await act(async () => { await s.store.flush(); });
     expect(restore(s.writes.at(-1)!).wishes[0]).toMatchObject({
       id: kept.id,
       sourceSceneId: "crane",
@@ -222,6 +225,11 @@ describe("a line written in a scene", () => {
       (b) => b.textContent === SCENE_DONE_WISH_CTA,
     )!;
     expect(cta).toBeDefined();
+    expect(cta.parentElement?.classList.contains("scene-completion-actions")).toBe(true);
+    expect(cta.parentElement?.querySelector(".favorite-chip")?.textContent).toBe(SCENE_FAVORITE_LABEL);
+    expect(s.host.querySelectorAll(".favorite-chip")).toHaveLength(1);
+    // The saved confirmation remains after the closing actions.
+    expect(row.compareDocumentPosition(s.status()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     clickOn(cta);
     // The slip flies into the new wish's card, and 心愿 opens.
     expect(s.launchReward).toHaveBeenCalledWith(
@@ -247,6 +255,11 @@ describe("a line written in a scene", () => {
       (b) => b.textContent === SCENE_DONE_CTA,
     )!;
     expect(cta).toBeDefined();
+    expect(cta.parentElement?.classList.contains("scene-completion-actions")).toBe(true);
+    expect(cta.parentElement?.querySelector(".favorite-chip")?.textContent).toBe(SCENE_FAVORITE_LABEL);
+    expect(s.host.querySelectorAll(".favorite-chip")).toHaveLength(1);
+    clickOn(cta);
+    expect(s.back).toHaveBeenCalledOnce();
     expect(s.host.textContent).not.toContain("功德");
     const state = s.store.getSnapshot().state!;
     expect(state.collectibles).toHaveLength(0);

@@ -45,16 +45,16 @@ export function createDiaboloModel() {
   const cordGeometry = new THREE.CylinderGeometry(.012, .012, 1, 6)
   const segments = Array.from({ length: 32 }, (_, i) => add(subject, `diabolo-cord-${i}`, cordGeometry, cordMat))
   const points = Array.from({ length: 33 }, () => new THREE.Vector3()), axis = new THREE.Vector3(0, 1, 0), difference = new THREE.Vector3()
-  const pose = (at: number, n: number) => {
+  const pose = (at: number, n: number, repeat = false) => {
     n = THREE.MathUtils.clamp(n, 0, 1)
-    const pull = at === 0 ? n : 1, toss = at === 1 ? n : at > 1 ? 1 : 0, lower = at === 2 ? n : at > 2 ? 1 : 0
+    const pull = at === 0 ? n : 1, toss = repeat ? 1 : at === 1 ? n : at > 1 ? 1 : 0, lower = at === 2 ? n : at > 2 ? 1 : 0
     const flight = at === 1 ? Math.sin(Math.PI * n) : 0
     const span = 1.25 + .35 * flight
     const leftY = THREE.MathUtils.lerp(THREE.MathUtils.lerp(1.55, 1.68, toss), 1.30, lower)
     const rightY = THREE.MathUtils.lerp(THREE.MathUtils.lerp(1.55 + .35 * pull, 1.68, toss), 1.30, lower)
     sticks[0]!.stick.position.set(-span, leftY, 0); sticks[1]!.stick.position.set(span, rightY, 0)
     const baseline = THREE.MathUtils.lerp(THREE.MathUtils.lerp(.8 + .16 * pull, .85, toss), .65, lower)
-    rotor.position.set(0, baseline + 1.25 * flight, -.5); rotor.rotation.z = Math.PI * (2.6 * pull + 4 * toss + 1.1 * lower)
+    rotor.position.set(0, baseline + 1.25 * flight, -.5); rotor.rotation.z = Math.PI * (2.6 * pull + 4 * toss + (repeat ? 4 * n : 0) + 1.1 * lower)
     const ropeY = baseline + .20 * flight, radius = .091
     // Tangent segments meet a short lower arc around the axle. In flight that arc remains below the toy, ready to catch it.
     const leftAngle = Math.atan2(leftY - ropeY, -span) + Math.acos(radius / Math.hypot(span, leftY - ropeY))

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { chooseOpeningScenes, localDay } from '@wbr/core';
 import type { CatalogEntry } from '@wbr/content/catalog';
 import { builtInScenes, useOpenScene } from './scene-library';
@@ -71,14 +71,14 @@ export function OpeningGuide({ sceneId }: { sceneId: string }) {
   </aside>;
 }
 
-export function OpeningDone({ entry, keptWish }: { entry: CatalogEntry; keptWish: boolean }) {
+export function OpeningDone({ entry, keptWish, favorite }: { entry: CatalogEntry; keptWish: boolean; favorite?: ReactNode }) {
   const { dispatch, go } = useApp();
   return <div className="opening-complete">
     <p className="scene-done">这场完成了，把小物收好。</p>
     <div className="opening-reward"><SceneArt id={entry.id} /></div>
     {keptWish && <p className="quiet">心愿也已留在心愿页。</p>}
-    <button className="button primary" data-opening-collect onClick={() => {
+    <div className="scene-completion-actions"><button className="button primary" data-opening-collect onClick={() => {
       if (dispatch({ type: 'opening.collect', sceneId: entry.id, at: now() })) go({ page: 'today' });
-    }}>收下，继续<Icon name="arrow" /></button>
+    }}>收下，继续<Icon name="arrow" /></button>{favorite}</div>
   </div>;
 }

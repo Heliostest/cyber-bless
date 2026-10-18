@@ -1,0 +1,51 @@
+.scene-review-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 14px max(16px, calc((100vw - 1100px) / 2));
+  color: #244f45;
+  background: #fffaf0;
+  border-bottom: 2px solid #9fcabb;
+  box-shadow: 0 4px 14px #234e4514;
+}
+.scene-review-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-bottom: 10px;
+}
+.scene-review-heading strong { font-size: 17px; }
+.scene-review-heading > span { font-size: 14px; font-variant-numeric: tabular-nums; }
+.scene-review-heading a { margin-left: auto; color: #245c50; font-size: 13px; }
+.scene-review-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.scene-review-controls button,
+.scene-review-controls select {
+  min-height: 40px;
+  border: 1px solid #6d9d8f;
+  border-radius: 10px;
+  padding: 7px 12px;
+  background: #fffef9;
+  color: #244f45;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.scene-review-controls select { flex: 1; min-width: 180px; }
+.scene-review-controls button:disabled { opacity: .4; cursor: default; }
+.scene-review-controls button:not(:disabled):hover { background: #dcf4ea; }
+.scene-review-controls :focus-visible { outline: 3px solid #267662; outline-offset: 2px; }
+.scene-review-header p { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 8px 0 0; font-size: 12px; }
+.scene-review .bless-app { min-height: calc(100dvh - 150px); }
+@media (min-width: 1000px) {
+  .scene-review .app-shell { height: calc(100dvh - 206px); min-height: 420px; }
+}
+@media (max-width: 600px) {
+  .scene-review-header { padding: 10px 12px; }
+  .scene-review-heading { gap: 6px 10px; }
+  .scene-review-heading strong { font-size: 15px; }
+  .scene-review-heading > span { order: 3; width: 100%; }
+  .scene-review-controls { gap: 6px; }
+  .scene-review-controls select { order: -1; flex-basis: 100%; }
+  .scene-review-controls button { flex: 1; padding: 7px 5px; font-size: 12px; white-space: nowrap; }
+}

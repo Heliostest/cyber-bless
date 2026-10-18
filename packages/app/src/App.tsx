@@ -6,7 +6,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { createStore, type Host } from "@wbr/runtime";
+import { createStore, type Host, type HapticStrength } from "@wbr/runtime";
 import { rituals } from "@wbr/core";
 import { Context, type Route, type FulfillmentDraft } from "./context";
 import { Icon } from "./art";
@@ -44,6 +44,7 @@ export function BlessingApp({
   content,
   navigationRequest,
   onNavigationConsumed,
+  initialRoute,
 }: {
   host: Host;
   active?: boolean;
@@ -52,10 +53,12 @@ export function BlessingApp({
   content?: ContentEnvironment;
   navigationRequest?: WidgetNavigationRequest;
   onNavigationConsumed?: (requestId: number) => Promise<void>;
+  /** Initial entry for a host preview; subsequent navigation stays inside the App. */
+  initialRoute?: Route;
 }) {
   const store = useMemo(() => createStore(host, initialSettings), [host]);
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot);
-  const [routes, setRoutes] = useState<Route[]>([{ page: "today" }]);
+  const [routes, setRoutes] = useState<Route[]>(() => [initialRoute ?? { page: "today" }]);
   const [error, setError] = useState("");
   const [fulfillmentDrafts, setFulfillmentDrafts] = useState<
     Record<string, FulfillmentDraft>
@@ -214,9 +217,9 @@ export function BlessingApp({
       throw new InvalidContentError("Scene sound exceeds budget");
     return sound;
   }
-  function haptic() {
+  function haptic(strength?: HapticStrength) {
     if (store.getSnapshot().state?.settings.haptics)
-      void host.haptic?.().catch(() => {});
+      void host.haptic?.(strength).catch(() => {});
   }
   function feedback(sound?: AudioBuffer) {
     haptic();

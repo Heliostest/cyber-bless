@@ -587,7 +587,7 @@ button:hover:not(:disabled) {
   height: 96px;
   margin: 10px auto;
 }
-.opening-complete > .button {
+.opening-complete > .scene-completion-actions {
   margin-top: 12px;
 }
 .tag {
@@ -1779,39 +1779,28 @@ button:hover:not(:disabled) {
   justify-content: center;
   margin-top: 16px;
 }
-/* 收藏 on a scene page: a heart toggle chip in the toggles' row. A ring, no
-   ledge; while the scene is a favourite the heart fills and the chip takes
-   the pink tint (aria-pressed). The heart keeps 3:1 or more on both. */
+/* 收藏 shares the completion button's face and ledge, in a warm accent.
+   Its filled heart and rose face also reflect aria-pressed. */
 .favorite-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 48px;
-  padding: 5px 16px 5px 6px;
-  border: 3px solid var(--rim);
-  border-radius: 999px;
-  background: var(--paper);
-  box-shadow: 0 0 0 2px var(--edge);
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--ink-soft);
+  --ledge-color: var(--peach-ledge);
+  background: linear-gradient(180deg, var(--peach-hi), var(--peach));
+  border-color: #fff1e7;
+  color: var(--ink);
+  font-size: 16px;
+  white-space: nowrap;
 }
 .favorite-chip svg {
-  width: 32px;
-  height: 32px;
-  padding: 6px;
-  border-radius: 50%;
-  background: var(--bubblegum-tint);
-  color: #c24d6e;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
   stroke-width: 2.2;
 }
 .favorite-chip[aria-pressed="true"] {
-  background: var(--bubblegum-tint);
-  box-shadow: 0 0 0 2px #f7bfce;
-  color: var(--ink);
+  --ledge-color: var(--bubblegum-ledge);
+  background: linear-gradient(180deg, var(--bubblegum-hi), var(--bubblegum));
+  border-color: #ffe6ed;
 }
 .favorite-chip[aria-pressed="true"] svg {
-  background: #ffffffb3;
   fill: currentColor;
 }
 /* The island switch: a sunken track and a ringed handle, leaf green when on. */
@@ -3098,6 +3087,22 @@ button:hover:not(:disabled) {
   opacity: 0.55;
   cursor: progress;
 }
+.scene-diabolo-repeat {
+  position: absolute;
+  left: 35%;
+  bottom: 116px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid var(--mint-ledge);
+  border-radius: 999px;
+  background: var(--mint-tint);
+  color: var(--mint-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: auto;
+}
 
 @keyframes scene-fade-in {
   from {
@@ -3616,6 +3621,22 @@ button:hover:not(:disabled) {
 .scene-done-row .scene-done {
   margin: 0;
 }
+.scene-completion-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 0.65fr);
+  align-items: stretch;
+  gap: 10px;
+  width: min(360px, 100%);
+}
+.scene-completion-actions > .button {
+  width: 100%;
+  min-width: 0;
+  min-height: 52px;
+  padding: 10px 12px;
+  font-size: 16px;
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
 /* A 许愿 vessel's held line, quoted on paper, and the keep-or-not choice. */
 .scene-keep-line {
   max-width: 100%;
@@ -3835,6 +3856,26 @@ button:hover:not(:disabled) {
 }
 .library-scene-stage .scene-bow-tap:active {
   transform: translateY(1px);
+}
+.library-scene-stage .scene-diabolo-repeat {
+  grid-area: action;
+  grid-column: 2;
+  justify-self: end;
+  position: static;
+  margin-top: 10px;
+}
+.library-scene-stage .scene-overlay-host:has(> .scene-diabolo-repeat:not([hidden])) {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  column-gap: 8px;
+}
+.library-scene-stage .scene-diabolo-stop {
+  width: auto;
+  max-width: none;
+  padding-inline: 10px;
+  color: var(--ink-soft);
+}
+.library-scene-stage .scene-diabolo-stop::before {
+  content: none;
 }
 
 /* Projected on real geometry, with no hit surface of their own. */

@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import type { Action, State, ReturnMethod } from "@wbr/core";
 import type { CatalogEntry } from "@wbr/content/catalog";
+import type { HapticStrength } from "@wbr/runtime";
 import type { RewardFlight, RewardArrival } from "./reward-flight";
 export type FulfillmentDraft = { method: ReturnMethod; text: string };
 export type Route = {
@@ -36,8 +37,8 @@ export type AppContext = {
   dispatch(a: Action): boolean;
   back(): void;
   feedback(sound?: AudioBuffer): void;
-  /** Haptic tick only; respects the 震动 toggle. */
-  haptic(): void;
+  /** Haptic tick or scene impact; respects the 震动 toggle. */
+  haptic(strength?: HapticStrength): void;
   /** Whether the host can vibrate at all (not in iOS browsers); else no 震动 toggle. */
   canHaptic: boolean;
   decodeSound(bytes: ArrayBuffer): Promise<AudioBuffer>;

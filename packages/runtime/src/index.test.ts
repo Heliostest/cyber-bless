@@ -20,6 +20,16 @@ it("offers haptics only where the browser can vibrate", async () => {
   expect(browserHost().haptic).toBeUndefined();
 });
 
+it("maps scene impact strengths to increasingly longer browser pulses", async () => {
+  const vibrate = vi.fn(() => true);
+  vi.stubGlobal("navigator", { vibrate });
+  const host = browserHost();
+  for (const strength of ["light", "medium", "heavy"] as const)
+    await host.haptic!(strength);
+  await host.haptic!();
+  expect(vibrate.mock.calls).toEqual([[12], [24], [40], [12]]);
+});
+
 it("preserves corrupt data and blocks writes until it can load", async () => {
   const writes: string[] = [];
   const store = createStore({

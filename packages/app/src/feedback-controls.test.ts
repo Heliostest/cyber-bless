@@ -1,7 +1,4 @@
 // @vitest-environment jsdom
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -12,11 +9,6 @@ import { clickOn, renderUI } from "./dom-test-utils";
 import { FeedbackControls } from "./feedback-controls";
 import { Me } from "./pages";
 import { FavoriteChip, SCENE_FAVORITE_LABEL } from "./scene-experience";
-
-const css = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), "style.css"),
-  "utf8",
-);
 
 /** Renders `node` inside an App whose host can, or cannot, vibrate. */
 const render = (node: ReactNode, canHaptic: boolean) =>
@@ -70,7 +62,7 @@ describe("收藏 on a scene page", () => {
     );
 
   it.each([false, true])(
-    "is a heart toggle chip whose state is aria-pressed, not its name (favourite: %s)",
+    "is a heart toggle whose state is aria-pressed, not its name (favourite: %s)",
     (favorite) => {
       const ui = chip(favorite);
       const button = ui.host.querySelector("button.favorite-chip")!;
@@ -89,10 +81,7 @@ describe("收藏 on a scene page", () => {
     ui.unmount();
   });
 
-  it("is a ring, not a ledge, and its copy is safe", () => {
-    const rule = css.match(/\.favorite-chip \{[^}]*\}/)![0];
-    expect(rule).toMatch(/box-shadow: 0 0 0 2px/);
-    expect(rule).not.toMatch(/box-shadow:[^;]*0 [1-9]px 0/);
+  it("keeps its copy safe", () => {
     expect(() => assertSafeCopy(SCENE_FAVORITE_LABEL)).not.toThrow();
   });
 });

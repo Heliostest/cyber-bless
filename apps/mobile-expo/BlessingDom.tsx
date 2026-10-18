@@ -7,6 +7,7 @@ import {
 } from "@wbr/content/native-web";
 import "@wbr/app/style.css";
 import type { WidgetNavigationRequest } from '@wbr/core/widgets';
+import type { HapticStrength } from '@wbr/runtime';
 export default function BlessingDom({
   readSave,
   writeSave,
@@ -30,7 +31,7 @@ export default function BlessingDom({
 }: NativeContentBridge & {
   readSave(): Promise<string | null>;
   writeSave(raw: string): Promise<void>;
-  haptic(): Promise<void>;
+  haptic(strength?: HapticStrength): Promise<void>;
   onCanGoBack(value: boolean): Promise<void>;
   active: boolean;
   backRequest: number;
@@ -82,7 +83,7 @@ export default function BlessingDom({
     () => ({
       read: () => actions.readSave(),
       write: (raw: string) => actions.writeSave(raw),
-      haptic: () => actions.haptic(),
+      haptic: (strength?: HapticStrength) => actions.haptic(strength),
     }),
     [actions],
   );

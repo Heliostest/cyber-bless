@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   mountScene,
   type SceneSession,
@@ -74,7 +74,7 @@ function ProceduralScene({
         checkpoint: (n: number) => latest.current.checkpoint(n),
         sceneId: entry.id,
         prepareFeedback: () => latest.current.prepareFeedback(),
-        haptic: () => latest.current.haptic(),
+        haptic: (strength?: Parameters<typeof haptic>[0]) => latest.current.haptic(strength),
         isSoundEnabled: () => latest.current.state.settings.sound,
         // Absent on a walk that keeps nothing: the box then says so itself.
         ...(saveWish
@@ -124,7 +124,7 @@ function ProceduralScene({
 /** The scene page's favourite toggle. */
 export const SCENE_FAVORITE_LABEL = "收藏";
 /**
- * 收藏 as a heart toggle chip beside the 音效／震动 toggles. Its state is the
+ * 收藏 as a heart toggle beside the completion action. Its state is the
  * filled heart and aria-pressed, so its name stays the same either way.
  */
 export function FavoriteChip({ id, favorite }: { id: string; favorite: boolean }) {
@@ -132,7 +132,7 @@ export function FavoriteChip({ id, favorite }: { id: string; favorite: boolean }
   return (
     <button
       type="button"
-      className="favorite-chip"
+      className="button favorite-chip"
       aria-pressed={favorite}
       onClick={() => dispatch({ type: "scene.favorite", id, favorite: !favorite })}
     >
@@ -287,6 +287,14 @@ function LoadedScene({
   const favoriteChip = (
     <FavoriteChip id={entry.id} favorite={!!record?.favorite} />
   );
+  const completionActions = (completion: ReactNode) => (
+    <div className="scene-completion-actions">
+      {completion}
+      {favoriteChip}
+    </div>
+  );
+  const pendingVesselChoice = !opening && !returnedFor && !dailyGranted &&
+    vesselSpent && !discarded && !keptWish;
   // The wish box, by path. A 许愿 vessel holds its line for the choice at
   // done — in the save, under the vessel, so the choice cannot be escaped
   // into a lost phrase; a 还愿 vessel keeps nothing (its box says so itself);
@@ -415,18 +423,18 @@ function LoadedScene({
       )}
       {progress >= steps && (
         <div className="scene-done-row">
-          {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} /> : returnedFor ? (
+          {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} favorite={favoriteChip} /> : returnedFor ? (
             <>
               <p className="scene-done">{SCENE_RETURN_DONE_COPY}</p>
               {/* No flight: the note is on the wish already, and the ritual
                   shows as done on 来还个愿. */}
-              <button
+              {completionActions(<button
                 type="button"
                 className="button primary"
                 onClick={() => go({ page: "fulfill", id: returnedFor })}
               >
                 {SCENE_RETURN_CTA}
-              </button>
+              </button>)}
             </>
           ) : dailyGranted ? (
             <>
@@ -437,13 +445,13 @@ function LoadedScene({
                 </div>
                 <p className="reward-destination">{SCENE_DAILY_DESTINATION}</p>
               </div>
-              <button
+              {completionActions(<button
                 type="button"
                 className="button primary"
                 onClick={collectDaily}
               >
                 {SCENE_DAILY_CTA}
-              </button>
+              </button>)}
               {keptWish && (
                 <button
                   type="button"
@@ -460,9 +468,9 @@ function LoadedScene({
               {discarded ? (
                 <>
                   <p className="scene-done">{SCENE_DISCARDED_COPY}</p>
-                  <button type="button" className="button secondary" onClick={back}>
+                  {completionActions(<button type="button" className="button primary" onClick={back}>
                     {SCENE_DONE_CTA}
-                  </button>
+                  </button>)}
                 </>
               ) : heldWish ? (
                 <>
@@ -489,14 +497,14 @@ function LoadedScene({
               ) : keptWish ? (
                 <>
                   <p className="scene-done">{SCENE_VESSEL_DONE_COPY}</p>
-                  <button
+                  {completionActions(<button
                     type="button"
                     className="button primary"
                     ref={doneCta}
                     onClick={goSeeWish}
                   >
                     {SCENE_DONE_WISH_CTA}
-                  </button>
+                  </button>)}
                 </>
               ) : (
                 <>
@@ -550,21 +558,21 @@ function LoadedScene({
           ) : keptWish ? (
             <>
               <p className="scene-done">{SCENE_DONE_COPY}</p>
-              <button
+              {completionActions(<button
                 type="button"
                 className="button primary"
                 ref={doneCta}
                 onClick={goSeeWish}
               >
                 {SCENE_DONE_WISH_CTA}
-              </button>
+              </button>)}
             </>
           ) : (
             <>
               <p className="scene-done">{SCENE_DONE_COPY}</p>
-              <button type="button" className="button secondary" onClick={back}>
+              {completionActions(<button type="button" className="button primary" onClick={back}>
                 {SCENE_DONE_CTA}
-              </button>
+              </button>)}
             </>
           )}
         </div>
@@ -585,7 +593,9 @@ function LoadedScene({
           )}
         </p>
       )}
-      <div className="scene-actions">{favoriteChip}</div>
+      {(progress < steps || pendingVesselChoice) && (
+        <div className="scene-actions">{favoriteChip}</div>
+      )}
     </>
   );
 }

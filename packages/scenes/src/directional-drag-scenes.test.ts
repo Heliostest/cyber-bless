@@ -62,8 +62,8 @@ it.each(DIRECTIONAL_SCENES)('%s accepts a full directional drag without a hidden
     scene.traverse(object => {
       for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && (cue.direction || id === 'uzbek-clay-bowl' && cue.kind === 'rotate')) targets.push({ object, cue })
     })
-    expect(targets).toHaveLength(1)
-    const { object, cue } = targets[0]!, direction = new THREE.Vector2(...(cue.direction ?? [1, 0])).normalize()
+    expect(targets).toHaveLength(id === 'chinese-diabolo' && at === 2 ? 2 : 1)
+    const { object, cue } = (id === 'chinese-diabolo' && at === 2 ? targets.find(t => t.cue.direction?.[1] === 1) : targets[0])!, direction = new THREE.Vector2(...(cue.direction ?? [1, 0])).normalize()
     const point = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(camera)
     const x = (point.x + 1) * 195, y = (1 - point.y) * 204
     const layer = overlay.querySelector<HTMLElement>('.scene-hit-layer')!
@@ -99,8 +99,8 @@ it.each(DIRECTIONAL_SCENES.flatMap(([id]) => [[id, false], [id, true]] as const)
     scene.traverse(object => {
       for (const cue of object.userData.interactionCues ?? []) if (cue.enabled()) targets.push({ object, cue })
     })
-    expect(targets, `step ${step}`).toHaveLength(1)
-    const { object, cue } = targets[0]!
+    expect(targets, `step ${step}`).toHaveLength(id === 'chinese-diabolo' && step === 2 ? 2 : 1)
+    const { object, cue } = (id === 'chinese-diabolo' && step === 2 ? targets.find(t => t.cue.direction?.[1] === 1) : targets[0])!
     const point = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(camera)
     const x = (point.x + 1) * width / 2, y = (1 - point.y) * height / 2
     pointer(layer, 'pointerdown', x, y, type)

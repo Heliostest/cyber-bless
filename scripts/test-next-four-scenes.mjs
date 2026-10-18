@@ -113,7 +113,7 @@ async function arc(page,segments=8){
 }
 async function physical(page,id,step){
   if(craftDeltas[id]?.[step]){
-    const p=pointers.get(page),from=await point(page),[dx,dy]=craftDeltas[id][step]
+    const p=pointers.get(page),from=await point(page,'source',id==='chinese-diabolo'&&step===2?1:0),[dx,dy]=craftDeltas[id][step]
     await p.down(from);await p.move([from[0]+dx,from[1]+dy],18);await p.up()
   }
   else if(id==='polish-paper-cut'&&step<2){
@@ -154,7 +154,7 @@ async function wrongCraftGesture(page,id,step){
     const kinds=['tap','reverse','short','backtrack','partial-return','reverse-first','cancel']
     if(['chinese-diabolo','korean-yutnori','russian-matryoshka','japanese-koinobori','japanese-kendama','indian-charkha','german-nutcracker','mexican-molinillo','malawi-sansi','chinese-suanpan','mongolian-felt-ger','peruvian-engraved-gourd','venetian-glass-bead'].includes(id))kinds.push('zigzag')
     for(const kind of kinds){
-      const from=await point(page)
+      const from=await point(page,'source',id==='chinese-diabolo'&&step===2?1:0)
       await input.down(from)
       if(kind==='reverse')await input.move([from[0]-dx*.7,from[1]-dy*.7])
       if(kind==='short')await input.move([from[0]+dx*.15,from[1]+dy*.15])

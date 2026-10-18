@@ -85,6 +85,51 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 
 
 describe('Chinese hollow diabolo and handsticks', () => {
+  it.each([false, true])('can repeatedly toss after catching and completes only on an explicit stop, reduced=%s', reduced => {
+    const s = mount(0, { isReducedMotion: () => reduced })
+    step(s, 0); step(s, 1)
+    const again = s.overlay.querySelector<HTMLButtonElement>('.scene-diabolo-repeat')
+    expect(again).not.toBeNull(); expect(again!.hidden).toBe(false)
+    for (let n = 0; n < 3; n++) {
+      again!.click(); s.run()
+      expect(s.progress).toEqual([1, 2]); expect(s.complete).not.toHaveBeenCalled()
+      expect(again!.disabled).toBe(false)
+    }
+    // The real left stick can also launch another toss after the first catch.
+    drag(s, 1, -60, 0)
+    expect(s.progress).toEqual([1, 2]); expect(s.complete).not.toHaveBeenCalled()
+    step(s, 2)
+    expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+    expect(again!.hidden).toBe(true)
+    again!.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it('keeps the caught rotor spinning and gives stronger catch feedback on every toss', () => {
+    const s = mount(); step(s, 0); step(s, 1)
+    const rotor = s.scene.getObjectByName('diabolo-rotor')!, q = rotor.quaternion.clone()
+    s.run(.2); expect(rotor.quaternion.angleTo(q)).toBeGreaterThan(.5)
+    expect(s.haptic).toHaveBeenCalledWith('light')
+    expect(s.haptic).toHaveBeenCalledWith('medium')
+    expect(s.haptic).toHaveBeenCalledWith('heavy')
+    s.haptic.mockClear()
+    s.overlay.querySelector<HTMLButtonElement>('.scene-diabolo-repeat')!.click(); s.run()
+    expect(s.haptic.mock.calls.map(args => args[0])).toEqual(['medium', 'heavy'])
+    expect(s.progress).toEqual([1, 2])
+  })
+  it('keeps a held repeat-throw preview in place when the canvas resizes', () => {
+    let resize = () => {}
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(callback: () => void) { resize = callback }
+      observe() {} disconnect() {}
+    })
+    const s = mount(2), p = s.point(targetName(1), anchor(1))
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] - 30, p[1]])
+    const names = ['diabolo-rotor', 'diabolo-left-stick', 'diabolo-right-stick']
+    const positions = names.map(name => s.scene.getObjectByName(name)!.position.clone())
+    resize()
+    names.forEach((name, i) => expect(s.scene.getObjectByName(name)!.position.distanceTo(positions[i]!)).toBeLessThan(.000001))
+    expect(s.progress).toEqual([])
+    event(s.hit, 'pointercancel', p)
+  })
   it.each([0,1,2])('shows the assisted movement after a coalesced one-event drag at %i', at => {
     const s=mount(at),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at)
     event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx,p[1]+dy]);event(s.hit,'pointerup',[p[0]+dx,p[1]+dy])
@@ -100,10 +145,12 @@ describe('Chinese hollow diabolo and handsticks', () => {
     for(let i=0;i<3;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); expect(s.progress).toEqual([1,2,3].slice(0,i+1))}
     s.button.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
-  it('uses identical final subject transforms for ordinary, reduced motion and silently restored checkpoints', () => {
+  it('restores identical resting geometry, allowing live rotor spin until the final stop', () => {
     for (const checkpoint of [1, 2, 3]) {
       const normal = mount(), reduced = mount(0, { isReducedMotion: () => true }), restored = mount(checkpoint)
       for (let at = 0; at < checkpoint; at++) { step(normal, at); step(reduced, at) }
+      // Active spin phase varies; a fully stopped rotor still restores exactly.
+      if (checkpoint < 3) for (const s of [normal, reduced, restored]) s.scene.getObjectByName('diabolo-rotor')!.rotation.z = 0
       normal.scene.updateMatrixWorld(true); reduced.scene.updateMatrixWorld(true); restored.scene.updateMatrixWorld(true)
       normal.scene.getObjectByName('diabolo-subject')!.traverse(o => {
         for (const other of [reduced, restored]) { const m = other.scene.getObjectByName(o.name)!.matrixWorld; o.matrixWorld.elements.forEach((v, i) => expect(v, o.name).toBeCloseTo(m.elements[i], 9)) }
@@ -170,7 +217,7 @@ describe('Chinese hollow diabolo and handsticks', () => {
     for (const returning of [false, true]) {
       const s = mount(at, { returning, isReducedMotion: () => true }); s.run()
       expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
+      expect(cues(s).map(x => x.cue.kind)).toEqual(at === 2 ? ['drag', 'drag'] : at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
       for (let i = at; i < 3; i++) s.button.click()
       expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
     }

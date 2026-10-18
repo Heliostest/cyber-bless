@@ -10,8 +10,9 @@ export type Storage = {
   read(): Promise<string | null>;
   write(raw: string): Promise<void>;
 };
-/** `haptic` only where the host can vibrate; the App hides its 震动 toggle otherwise. */
-export type Host = Storage & { haptic?(): Promise<void> };
+export type HapticStrength = "light" | "medium" | "heavy";
+/** `haptic` only where the host can vibrate; no strength keeps the usual tick. */
+export type Host = Storage & { haptic?(strength?: HapticStrength): Promise<void> };
 type Snapshot = {
   state: State | null;
   status: "loading" | "load-error" | "saving" | "saved" | "save-error";
@@ -100,8 +101,9 @@ export function browserHost(): Host {
     write: async (raw) => localStorage.setItem(SAVE_KEY, raw),
     ...(canVibrate
       ? {
-          haptic: async () => {
-            navigator.vibrate(12);
+          haptic: async (strength?: HapticStrength) => {
+            const duration = { light: 12, medium: 24, heavy: 40 };
+            navigator.vibrate(strength ? duration[strength] : 12);
           },
         }
       : {}),

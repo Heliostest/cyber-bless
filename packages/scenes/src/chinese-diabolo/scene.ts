@@ -12,7 +12,7 @@ const ACTIONS = ['向上提杆起转', '向左展绳抛接', '向下收杆停转
 const HINTS = [
   '按住右侧竹杆的握柄向上短拖，让细绳带动空竹旋转。',
   '按住左侧握柄向左短拖，展开细绳，将空竹轻轻抛起再接住。',
-  '按住右侧握柄向下短拖，让空竹回到低处，缓缓停转。',
+  '接稳了！左杆向左拖可再抛一次；右杆向下拖，或点「收杆结束」完成体验。',
   '空竹稳稳托在绳上，竹木的色彩在阳光里安静下来。',
 ]
 const MOVING = ['提杆牵绳，双轮轻转……', '空竹轻轻飞起，再落回绳上……', '收低竹杆，让双轮慢慢停下……']
@@ -23,13 +23,17 @@ export function createChineseDiabolo(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; repeat: boolean; tugged: boolean } | null = null
+  let gestureStep: 0 | 1 | 2 = 0, spin = 0
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
-  const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
+  const feedback = createSceneFeedback({ ...ctx, haptic: () => ctx.haptic?.(at === 2 ? 'heavy' : 'medium'), isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
   const ui = createStepOverlay(overlay, { title: '空竹轻扬', stepsAria: '空竹步骤', action: ACTIONS[0]! }, safe)
   ui.actionBtn.style.minWidth = '44px'; ui.actionBtn.style.minHeight = '44px'
+  const repeatBtn = document.createElement('button')
+  repeatBtn.type = 'button'; repeatBtn.className = 'scene-diabolo-repeat'
+  setSafeText(repeatBtn, '再抛一次', safe); overlay.append(repeatBtn)
   const { scene, renderer } = createWarmStage(canvas), camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'chinese-diabolo', label: '空竹轻扬' }); style.setStyle(CEL_STYLE)
@@ -38,24 +42,39 @@ export function createChineseDiabolo(ctx: SceneContext): SceneInstance {
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3, near: .1, far: 15 })
   const model = createDiaboloModel(); scene.add(model.subject)
+  const rotor = model.subject.getObjectByName('diabolo-rotor')!
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
+  const pose = (step: number, n: number, repeat = false) => {
+    amount = n; model.pose(step, n, repeat)
+    // Keep the rotor spinning between throws; the final lowering unwinds to
+    // a whole turn so restored completed poses remain deterministic.
+    rotor.rotation.z += step === 2 ? spin + ((Math.PI * 2 - spin) % (Math.PI * 2)) * n : spin
+    matrices()
+  }
   const restore = () => pose(at, 0)
   const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: i === 1 ? [-1, 0] : [0, i === 2 ? 1 : -1], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  removeCues.push(addInteractionCue(model.targets[1]!, { kind: 'drag', direction: [-1, 0], label: ACTIONS[1]!, anchor: model.anchors[1], priority: 3, enabled: () => inputActive() && !motion && at === 2 }))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const nearest = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
     scene.traverseVisible(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; const materials = Array.isArray(m.material) ? m.material : [m.material]; if (materials.some(m => m.visible && (!m.transparent || m.opacity >= 1))) meshes.push(o) })
     return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
   }
-  const axes = (dx: number, dy: number) => at === 0 ? [-dy, dx] : at === 1 ? [-dx, dy] : [dy, dx]
+  const axes = (dx: number, dy: number) => gestureStep === 0 ? [-dy, dx] : gestureStep === 1 ? [-dx, dy] : [dy, dx]
   const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore() }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
-    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); const hit = nearest(x, y); return !!hit && (hit === model.roots[at] || model.roots[at]!.getObjectById(hit.id) === hit) },
+    canStart(x, y) {
+      if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false
+      matrices(); const hit = nearest(x, y)
+      if (!hit) return false
+      const steps = at === 2 ? [2, 1] as const : [at] as const
+      for (const step of steps) if (hit === model.roots[step] || model.roots[step]!.getObjectById(hit.id) === hit) { gestureStep = step; return true }
+      return false
+    },
     onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
@@ -63,33 +82,43 @@ export function createChineseDiabolo(ctx: SceneContext): SceneInstance {
       const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
       maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
       // Reserve the visible assisted sequence for release, even when a fast drag arrives in one event.
-      pose(at, THREE.MathUtils.clamp(along / 60, 0, 1) * .35)
+      pose(gestureStep, THREE.MathUtils.clamp(along / 60, 0, 1) * .35, at === 2 && gestureStep === 1)
     },
     onRelease(x, y) {
       const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
       const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
-      if (valid) advance(); else reset()
+      if (valid) advance(gestureStep); else reset()
     }, onCancel: reset,
   })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at]!, safe)
+    repeatBtn.hidden = at !== 2; repeatBtn.disabled = !inputActive() || !!motion
+    ui.actionBtn.classList.toggle('scene-diabolo-stop', at === 2)
+    setSafeText(ui.actionBtn, at === 2 ? '收杆结束' : ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at]!, safe)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
-    at = (motion.step + 1) as Checkpoint; motion = null; restore()
+    const next = Math.max(at, motion.step + 1) as Checkpoint, changed = next !== at
+    at = next; motion = null; if (at === 3) spin = 0; restore()
     withHostCallbacks(() => {
-      ctx.onProgress?.(at); if (!callbackActive()) return
+      if (changed) ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [523.25], duration: .09, gain: .003, type: 'sine' })
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(step: 0 | 1 | 2 = at as 0 | 1 | 2) {
+    if (!inputActive() || pointer.isBusy() || motion || at === 3) return
+    const repeat = at === 2 && step === 1
+    motion = { step, time: 0, from: amount, repeat, tugged: false }; sync()
+    if (step !== 2) withHostCallbacks(() => ctx.haptic?.(step === 0 ? 'light' : 'medium'))
+    if (inputActive() && motion && ctx.isReducedMotion?.()) settle()
+  }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
+  const repeatAction = () => { if (at !== 2 || !inputActive() || pointer.isBusy() || motion || !prepareInput()) return; advance(1) }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
     const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0, 1.30, -.3), direction = new THREE.Vector3(3.2, 2.8, 5).normalize()
@@ -102,7 +131,8 @@ export function createChineseDiabolo(ctx: SceneContext): SceneInstance {
         for (let i = 0; i < vertices.count; i++) { p.fromBufferAttribute(vertices, i).applyMatrix4(m.matrixWorld).sub(target).applyQuaternion(inverse); distance = Math.max(distance, p.z + Math.abs(p.x) / (tangent * aspect * .86), p.z + Math.abs(p.y) / (tangent * .86)) }
       })
     }
-    pose(at, saved); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
+    const held = pointer.isBusy(), step = motion?.step ?? (held ? gestureStep : at)
+    pose(step, saved, motion?.repeat ?? (held && at === 2 && gestureStep === 1)); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
   }
   restore(); sync()
   return {
@@ -110,7 +140,7 @@ export function createChineseDiabolo(ctx: SceneContext): SceneInstance {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
       restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
-      ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
+      ui.actionBtn.addEventListener('click', action); repeatBtn.addEventListener('click', repeatAction); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {
       if (!started || disposed) return
@@ -118,12 +148,19 @@ export function createChineseDiabolo(ctx: SceneContext): SceneInstance {
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
-      if (motion) { motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85); pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time))); if (motion.time === 1) settle() }
+      if (motion) {
+        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85)
+        pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time)), motion.repeat)
+        if (motion.step === 0 && !motion.tugged && motion.time >= .4 && motion.time < 1) { motion.tugged = true; withHostCallbacks(() => ctx.haptic?.('light')) }
+        if (inputActive() && motion?.time === 1) settle()
+      } else if ((at === 1 || at === 2) && !pointer.isBusy() && !ctx.isReducedMotion?.()) {
+        spin = (spin + delta * 12) % (Math.PI * 2); restore()
+      }
       if (active()) { matrices(); style.render() }
     },
     dispose() {
       if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action); repeatBtn.removeEventListener('click', repeatAction)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.subject); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

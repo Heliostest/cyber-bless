@@ -1,6 +1,6 @@
 import * as Gestures from "@wbr/gestures";
 import * as Shared from "@wbr/shared";
-import { loadScene } from "@wbr/scenes";
+import { loadScene, type SceneContext } from "@wbr/scenes";
 import type { SceneController, SceneEngine } from "@wbr/scene-runtime";
 export type ProceduralContext = {
   progress: number;
@@ -8,7 +8,7 @@ export type ProceduralContext = {
   sceneId: string;
   /** App feedback, read live so 音效/震动 toggles apply mid-scene. */
   prepareFeedback?(): void;
-  haptic?(): void;
+  haptic?: SceneContext["haptic"];
   isSoundEnabled?(): boolean;
   /** Keeps a line from the scene's wish box as a new 心愿. */
   saveWish?(text: string): void;

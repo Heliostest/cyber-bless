@@ -10,7 +10,7 @@ export type SceneContext = {
   /** Live App feedback settings; call `prepareFeedback` from a user gesture. */
   prepareFeedback?(): void
   /** Vibrates only when the App haptics toggle is on. */
-  haptic?(): void
+  haptic?(strength?: 'light' | 'medium' | 'heavy'): void
   isSoundEnabled?(): boolean
   /**
    * Keeps a line written in the scene's wish box as a new 心愿 (never an

@@ -99,8 +99,11 @@ it("forwards App sound/haptics feedback to the scene context", async () => {
   );
   fixture.context.prepareFeedback();
   fixture.context.haptic();
+  fixture.context.haptic("light");
+  fixture.context.haptic("medium");
+  fixture.context.haptic("heavy");
   expect(prepareFeedback).toHaveBeenCalledOnce();
-  expect(haptic).toHaveBeenCalledOnce();
+  expect(haptic.mock.calls).toEqual([[], ["light"], ["medium"], ["heavy"]]);
   expect(fixture.context.isSoundEnabled()).toBe(true);
   sound = false;
   expect(fixture.context.isSoundEnabled()).toBe(false);

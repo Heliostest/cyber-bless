@@ -5,7 +5,7 @@ import { createYeondeunghoe } from './scene'
 export const meta: SceneMeta = {
   id: 'yeondeunghoe',
   title: '燃灯上浮',
-  traditionSlug: 'won-buddhism',
+  traditionSlug: 'yeondeunghoe',
   grade: 'C',
   sensitivity: '低',
   gestures: ['drag'],

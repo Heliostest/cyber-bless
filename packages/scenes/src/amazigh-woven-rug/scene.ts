@@ -11,9 +11,9 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 
 const COPY = {
   title: '织毯寄暖', weaveAction: '收好最后一行纬线', displayAction: '把织毯安放在展架', quietAction: '轻点织毯静看',
-  weave: '拿起桌前木梭，送到织毯下缘的留白。以原创织纹，欣赏摩洛哥阿马齐格羊毛织作。',
+  weave: '拿起桌前木梭，送到织毯下缘的留白，收好最后一行纬线。',
   display: '握住织毯上方的木夹杆，把整幅织毯移到右侧展架。',
-  quiet: '轻点织毯静看，或写一句心意；点「写好了」才会保存。', returning: '轻点织毯，回看这一份暖意。',
+  quiet: '轻点织毯静看，或写一句心意后点「写好了」。', returning: '轻点织毯，回看这一份暖意。',
   moving: '纬线收拢，织毯缓缓安放…', done: '留一份手作的暖意。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3

@@ -1,6 +1,13 @@
 # 炉前一炷
 
-Original procedural still life for `chinese-folk-and-confucian`, grade C, low sensitivity. Category: 祈福. The experience does not write a wish or reproduce an ancestral or priest-led rite.
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/chinese-incense.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
+Original procedural still life for `chinese-incense`, grade C, low sensitivity. Category: 祈福. The experience does not write a wish or reproduce an ancestral or priest-led rite.
 
 ## Cultural scope and sources
 

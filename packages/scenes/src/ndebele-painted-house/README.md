@@ -1,5 +1,12 @@
 # 彩墙寄家 · Ndebele painted house
 
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/ndebele-wall-painting.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
 An original, public craft appreciation exercise inspired by southern South African Ndebele domestic wall art. This is a small workshop house model, not a representation of an occupied home, a sacred building, or an authentic ceremony. The user places an original color panel on a solid cream facade, carries the complete model to a display plinth, and quietly taps its base to finish. There is no wish form or wish persistence.
 
 ## Sources and visual boundaries
@@ -15,7 +22,7 @@ The design uses a low, thick-walled cream house, a genuinely recessed dark doorw
 
 ## Contract and geometry
 
-- Export: `createNdebelePaintedHouse`; module `create` alias. Metadata: `ndebele-painted-house`, `彩墙寄家`, tradition `ndebele-traditional`, C, 中, `['drag']`.
+- Export: `createNdebelePaintedHouse`; module `create` alias. Metadata: `ndebele-painted-house`, `彩墙寄家`, tradition `ndebele-wall-painting`, C, 中, `['drag']`.
 - Step 0: the actual teal mesh `house-color-panel`, in `house-paint-panel`, drags to the opaque `house-facade-slot` on the left wall. The doorway is an invalid destination. The attached panel's rear rests against the slot surface.
 - Step 1: the actual wooden `house-base-grip` drags the whole `house-miniature`, including every wall field and the attached panel, onto the solid `house-display-seat`.
 - Step 2: tap `house-base-grip` to complete once. Auxiliary native buttons use the same guarded advancement path.

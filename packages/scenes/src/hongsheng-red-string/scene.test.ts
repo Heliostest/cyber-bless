@@ -77,9 +77,9 @@ function frontHit(s: Mounted, point: Point) {
 }
 
 describe('red string self-care handwork', () => {
-  it('presents the separate literary and contemporary layers beside the original spool and upright holder', () => {
+  it('presents the winding and personal-note prompts beside the spool and upright holder', () => {
     const s = mount()
-    expect(s.overlay.textContent).toContain('文学典故'); expect(s.overlay.textContent).toContain('当代习惯')
+    expect(s.overlay.textContent).toContain('绕线成环'); expect(s.overlay.textContent).toContain('留句心意')
     expect(s.overlay.textContent).toContain('照看自己')
     expect(s.object('red-string-spool').children.length).toBeGreaterThan(2)
     expect(s.object('red-string-upright-holder').children.length).toBeGreaterThan(2)

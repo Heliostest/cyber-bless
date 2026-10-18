@@ -11,7 +11,7 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 const COPY = {
   title: '浮彩成笺', comb: '握住木梳柄，向右缓缓梳开彩纹；梳子移开后，白纸轻贴水面。',
   peel: '握住近处的纸边，向上轻揭，让浮彩随纸慢慢显现。',
-  quiet: '轻点彩纸静看，或写一句心意；点「写好了」才会保存。',
+  quiet: '轻点彩纸静看，或写一句心意后点「写好了」。',
   returning: '轻点彩纸，回看水与颜色留下的纹路。', done: '把一片流动的颜色留在纸上。',
   combing: '梳齿离开水面，白纸缓缓贴合浮彩…', peeling: '从近处纸边轻揭，接触水面的彩纹随纸升起…',
 } as const

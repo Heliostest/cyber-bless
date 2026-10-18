@@ -19,7 +19,7 @@ const COPY = {
   anjaliTap: '点按以合十',
   pourTap: '倾注清水',
   dropTap: '放上花瓣',
-  done: '这一倾已留下。',
+  done: '清水与花瓣相伴，留一刻安静。',
   stepsAria: '步骤',
   cueTilt: '上下拖动水壶',
   cueCarry: '拖动花瓣',

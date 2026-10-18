@@ -18,7 +18,7 @@ const render = (sceneId: string) =>
 const withNarrative = builtInScenes.filter((e) => e.narrative);
 
 describe("RitualNarrativeBlurb", () => {
-  it.each(["celtic-folk-spring", "theravada-water", "no-such-scene"])(
+  it.each(["no-such-scene"])(
     "renders nothing without a narrative (%s)",
     (id) => {
       expect(render(id)).toBe("");
@@ -50,6 +50,7 @@ describe("builtInScenes narratives", () => {
       "bokjori",
       "breton-banner",
       "catalan-festival-giant",
+      "celtic-folk-spring",
       "chinese-diabolo",
       "chinese-incense",
       "chinese-shadow-puppet",
@@ -106,6 +107,7 @@ describe("builtInScenes narratives", () => {
       "sorbian-painted-egg",
       "st-brigids-cross",
       "tanzaku-tanabata",
+      "theravada-water",
       "tibetan-wheel",
       "turkish-ebru-paper",
       "uzbek-clay-bowl",
@@ -141,7 +143,7 @@ describe("builtInScenes narratives", () => {
     .map((s) => s.id);
 
   it("product-original scenes claim no tradition", () => {
-    expect(productOriginal).toEqual(["crane", "lantern"]);
+    expect(productOriginal).toEqual(["minangkabau-spinning-top","hongsheng-red-string","czech-pilgrim-journal","celtic-folk-spring","theravada-water","lantern"]);
     for (const id of productOriginal) {
       const entry = builtInScenes.find((e) => e.id === id)!;
       expect(entry.traditionSlug).toBeUndefined();

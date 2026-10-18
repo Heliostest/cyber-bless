@@ -1,12 +1,19 @@
 # 珠星映光 · czech-bead-star
 
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/czech-glass-bead-ornaments.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
 原创当代手工欣赏场景，C 档、敏感度低，手势 `drag`、`spin`。三步为接上最后一串珠、向右拖转珠星看光泽、轻点静看。没有心愿输入框或 `saveWish` 调用，也不提供宗教礼仪、祝圣过程或灵验承诺。
 
 ## 资料与地区边界
 
 2026-10-14 核对 [UNESCO — Handmade production of Christmas tree decorations from blown glass beads，01559](https://ich.unesco.org/en/RL/handmade-production-of-christmas-tree-decorations-from-blown-glass-beads-01559) 的完整搜索索引正文与 [UNESCO 列入名录决定](https://ich.unesco.org/en/Decisions/15.COM/8.b.25)。资料记载：捷克北波希米亚的 Giant / Jizera 山区，以加热玻璃管吹制珠串，经镀银、着色和装饰后裁成短串或单珠，穿到铁线上组合成饰物。它是专门的玻璃工艺，2020 年列入代表作名录。
 
-`czech-moravian-folk` 仅作为应用现有的广义捷克地区索引；本场景不把该工艺说成摩拉维亚的天主教朝圣、圣事或该卡所述仪式。已阅读该本地地区卡，未使用卡片照片作为模型或贴图。内部 C/低分类不代表 UNESCO 对应用的认可或授权。
+当前采用 `czech-glass-bead-ornaments` 专卡，来源为北波希米亚空心玻珠工艺。已阅读该本地地区卡，未使用卡片照片作为模型或贴图。内部 C/低分类不代表 UNESCO 对应用的认可或授权。
 
 六角开放星体、银蓝配色、珠体比例、穿线路径、木托和交互均为原创简化；不复制任何现有工匠作品的装饰图样，不是完整的吹珠制作教程。仅从机构资料采用材料与连接方式。
 

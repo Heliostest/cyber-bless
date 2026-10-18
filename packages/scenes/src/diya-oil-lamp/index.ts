@@ -5,7 +5,7 @@ import { createDiyaOilLamp } from './scene'
 export const meta: SceneMeta = {
   id: 'diya-oil-lamp',
   title: '灯旋一瞥',
-  traditionSlug: 'diya-oil-lamp',
+  traditionSlug: "diya-oil-lamp",
   grade: 'C',
   sensitivity: '中',
   gestures: ['drag', 'spin'],

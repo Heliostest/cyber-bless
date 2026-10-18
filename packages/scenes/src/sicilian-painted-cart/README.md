@@ -1,8 +1,15 @@
 # 彩车迎晴 · Sicilian painted cart
 
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/sicilian-carretto-craft.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
 An original contemporary appreciation of everyday Sicilian **carretto** woodworking, wheel carving and painting. The miniature has an open cargo bed, a real through axle, two large twelve-spoke wheels, joined draw shafts and a small wooden display support. Its muted mustard, teal, coral and cream bars are original simple geometric decoration. No museum vehicle, artist's painting, narrative scene, sacred motif or identifiable composition is copied.
 
-This is **not** the holy **Carro Trionfale** used during Santa Rosalia's Festino. It contains no saint, shrine, relic, pilgrimage reenactment, liturgy, vow, efficacy claim or wish writer. The local tradition slug provides regional context; the activity is public everyday craft appreciation. The quiet courtyard background is owned by the host.
+This is **not** the holy **Carro Trionfale** used during Santa Rosalia's Festino. It contains no saint, shrine, relic, pilgrimage reenactment, liturgy, vow, efficacy claim or wish writer. The `sicilian-carretto-craft` source card documents everyday decorated carts. The quiet courtyard background is owned by the host.
 
 ## Sources and access record
 
@@ -18,7 +25,7 @@ No attempted source above was unavailable. The card's external Santa Rosalia lin
 ## Interaction and integration
 
 - ID `sicilian-painted-cart`; title `彩车迎晴`; grade `C`; sensitivity `中`; gestures `['drag']`.
-- `index.ts` exports `create`, `createSicilianPaintedCart`, and `meta`; the existing `SceneMeta` interface calls its regional key `traditionSlug: 'sicilian-santa-rosalia'`. The host catalog can use `traditionSlugs: ['sicilian-santa-rosalia']`.
+- `index.ts` exports `create`, `createSicilianPaintedCart`, and `meta`; the `SceneMeta` interface uses `traditionSlug: 'sicilian-carretto-craft'`.
 - Step 0: grip opaque **`cart-wheel-hub`** on group **`cart-detached-wheel`**, and drag onto opaque **`cart-axle-end`**.
 - Step 1: grip opaque **`cart-rail-grip`** on **`cart-miniature`**, and drag the full assembly onto opaque **`cart-display-mat`**.
 - Step 2: tap **`cart-rail-grip`** to quietly finish once. Native keyboard `click` buttons share the same guarded transitions and have a 44px minimum size.

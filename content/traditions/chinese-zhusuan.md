@@ -2,7 +2,7 @@
 
 ## 概览
 
-珠算使用框架内沿算杆滑动的算珠进行计算，知识通过口授、口诀和练习传承。中国珠算于 2013 年列入 UNESCO 非物质文化遗产代表作名录。上二下五式算盘每档两颗上珠、五颗下珠；同一档中上珠每颗记五，下珠每颗记一，拨向横梁的珠参与计数。以最右档为个位时，向左依次为十位、百位等。
+珠算使用框架内沿算杆滑动的算珠进行计算，这门知识在中国代代传承。中国珠算于 2013 年列入 UNESCO 非物质文化遗产代表作名录。上二下五式算盘每档两颗上珠、五颗下珠；同一档中上珠每颗记五，下珠每颗记一，拨向横梁的珠参与计数。以最右档为个位时，向左依次为十位、百位等。
 
 ## 本产品的场景呈现
 
@@ -18,6 +18,8 @@
 
 ## 参考来源
 
-- [UNESCO · Chinese Zhusuan](https://ich.unesco.org/en/RL/chinese-zhusuan-knowledge-and-practices-of-mathematical-calculation-through-the-abacus-00853)，2026-10-15 核对官方搜索索引正文；直达页遇到人工验证。用于珠算传承与 2013 年列入名录的概要。
-- [Smithsonian · Suan-p'an, or Chinese Abacus](https://www.si.edu/object/suan-pan-or-chinese-abacus%3Anmah_690528)，2026-10-15 核对馆藏搜索索引描述；直达页返回 404，NMAH 镜像返回 500。用于木框、竹杆、圆木珠、黄铜角件与上二下五的结构；未复制该馆藏的照片或尺寸。
-- [University of St Andrews · MacTutor: Chinese numerals](https://mathshistory.st-andrews.ac.uk/HistTopics/Chinese_numerals/)，2026-10-15 阅读全文，尤其末尾算盘的拨珠与计值段落。用于靠梁计数、上五下一、个位与十位关系。本场景不采用文中的年代起源推断。
+- [中国非物质文化遗产网 · 珠算（珠算文化）](https://www.ihchina.cn/project_details/15272.html)，2026-10-19 阅读国家非遗项目正文。用于算盘计数、中国文化关联与代际传承；不采用其中未经本轮独立史学核对的起源年代。
+- [中国文化和旅游部非遗司 · 中国珠算被正式列入教科文组织非遗名录](https://www.mct.gov.cn/whzx/bnsj/fwzwhycs/201312/t20131205_765184.html)，2013-12-05，2026-10-19 阅读公告。用于确认 2013 年 12 月 4 日列入名录。
+- [University of St Andrews · MacTutor: Chinese numerals](https://mathshistory.st-andrews.ac.uk/HistTopics/Chinese_numerals/)，2026-10-19 阅读末尾算盘的拨珠与计值段落。用于靠梁计数、上五下一、个位与十位关系。本场景不采用文中的年代起源推断。
+
+另保留访问记录：[UNESCO · Chinese Zhusuan](https://ich.unesco.org/en/RL/chinese-zhusuan-knowledge-and-practices-of-mathematical-calculation-through-the-abacus-00853) 于 2026-10-15 核对过官方搜索索引，2026-10-19 直达及替代入口仍遇人工验证；其中口授传承的表述未作为本轮已读正文依据。[Smithsonian · Suan-p'an, or Chinese Abacus](https://www.si.edu/object/suan-pan-or-chinese-abacus%3Anmah_690528) 曾用于馆藏索引核对，本轮对象页返回 404，未声称通读。场景的木框、竹杆、木珠与黄铜角件是原创材料选择，未复制该馆藏照片或尺寸。

@@ -8,9 +8,9 @@ import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '铁线栖鸟', assemble: '捏住桌前小翅膀的绕线结，把它接到鸟身肩部。欣赏斯洛伐克铁线工艺的弯折与连接。',
+  title: '铁线栖鸟', assemble: '捏住桌前小翅膀的绕线结，把它拖到鸟身肩部。',
   display: '握住鸟腹的绕线结，把整只小鸟移到右侧木栖座，让双足落稳。',
-  rest: '轻点小鸟，静看铁线之间的留白。这是一件原创的当代工艺致敬作品。',
+  rest: '轻点小鸟，静看铁线之间的留白。',
   moving: '铁线轻轻相接，小鸟缓缓落稳…', done: '愿日常也有一处安心停歇。',
 } as const
 const HOME = new THREE.Vector3(-.55, .80, 0), REST = new THREE.Vector3(.55, .96, 0)

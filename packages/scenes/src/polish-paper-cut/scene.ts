@@ -10,7 +10,7 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 const COPY = {
   title: '剪纸开花', cut: '拿住剪刀，沿右侧最后一道纸边向上剪开；松手，让边角料落下。',
   unfold: '拉住折纸右侧的纸边，向左慢慢展开，让两边的花叶相见。',
-  quiet: '轻点剪纸静看，或写一句心意；点「写好了」才会保存。',
+  quiet: '轻点剪纸静看，或写一句心意后点「写好了」。',
   returning: '轻点剪纸，回看这一朵纸上的花。', done: '留一朵纸花在日常。',
   cutting: '最后一道纸边剪开，边角料轻轻落下…', opening: '折痕展开，两边的花叶慢慢相见…',
 } as const

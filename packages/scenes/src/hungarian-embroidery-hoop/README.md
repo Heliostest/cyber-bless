@@ -1,5 +1,12 @@
 # 花绣寄语 — Hungarian embroidery hoop
 
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/hungarian-embroidery.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
 An original, contemporary craft appreciation scene. A wooden hoop holds warm linen and raised rose/teal thread flowers. The player carries a real thread spool to a blank cloth patch to add one floral flourish, moves the whole hoop onto a solid display cradle, then taps the hoop to quietly finish. At the last checkpoint only, an optional explicit wish submission can save one trimmed line of up to 40 characters. Quiet completion discards the draft; returning visits never mount a new writer.
 
 This is not a reconstruction of Matyó stitching instruction, an authentic community pattern, a sacred motif, or a simulated religious ritual. The five-petal flowers and branching composition were composed for this scene from procedural geometry; no artwork, artisan design, photo texture, or downloaded model is used. Spool movement is an accessible visual craft gesture, not an assertion that this is how embroidery is physically made.
@@ -15,7 +22,7 @@ Reviewed 2026-10-13:
 
 ## Module and physical anchors
 
-`createHungarianEmbroideryHoop` is exported from `scene.ts`; `index.ts` supplies `create`, default SceneModule, and metadata: `hungarian-embroidery-hoop`, `花绣寄语`, `traditionSlug: hungarian-folk`, grade C, sensitivity 低, gestures drag/wishWrite. The shared module schema uses singular `traditionSlug`.
+`createHungarianEmbroideryHoop` is exported from `scene.ts`; `index.ts` supplies `create`, default SceneModule, and metadata: `hungarian-embroidery-hoop`, `花绣寄语`, `traditionSlug: hungarian-embroidery`, grade C, sensitivity 低, gestures drag/wishWrite. The shared module schema uses singular `traditionSlug`.
 
 | Checkpoint | Source | Destination |
 | --- | --- | --- |

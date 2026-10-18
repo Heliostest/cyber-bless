@@ -10,11 +10,11 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '归乡轻转', pull: '把木拉珠拖到木板右侧的浅色圆点，松开棉绳，让陀螺轻转。',
-  settle: '轻点陀螺顶端的木帽，让这一程慢慢停稳。', quiet: '轻点木帽静看，或写一句归乡心意；只有点「写好了」才会保存。',
-  returning: '轻点木帽，回看这段旅途与家乡。', done: '带着问候出发，也为归乡留一份心意。', moving: '让木陀螺轻轻转动、停稳…',
+  title: '木陀轻转', pull: '把木拉珠拖到木板右侧的浅色圆点，松开棉绳，让陀螺轻转。',
+  settle: '轻点陀螺顶端的木帽，让转动慢慢停稳。', quiet: '轻点木帽静看，或写一句此刻的心意后点「写好了」。',
+  returning: '轻点木帽，静看木身与绳线。', done: '木陀螺已停稳，把片刻从容留给今天。', moving: '让木陀螺轻轻转动、停稳…',
   pullAction: '拉绳轻转', settleAction: '轻点木帽停稳', quietAction: '轻点木帽静看',
-  context: '借木陀螺寄托出发与归乡，致意米南加保大屋的家族与社区。',
+  context: '拉绳起转，轻点木帽停稳，静看木身与棉绳。',
 } as const
 const HOME = new THREE.Vector3(.38, .34, .52), TARGET = new THREE.Vector3(1.08, .34, .52)
 const AXLE = new THREE.Vector3(-.42, .21, -.09)
@@ -22,7 +22,7 @@ type Checkpoint = 0 | 1 | 2 | 3
 type Motion = { step: 0 | 1; time: number; from: THREE.Vector3 }
 const ease = (t: number) => t * t * (3 - 2 * t)
 
-/** Original contemporary departure/return tribute, not a reproduction of an adat ritual. */
+/** Original tabletop toy; the legacy module ID is retained for saved records. */
 export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, gestures, shared } = ctx, safe = shared.assertSafeCopy
   Object.values(COPY).forEach(safe)

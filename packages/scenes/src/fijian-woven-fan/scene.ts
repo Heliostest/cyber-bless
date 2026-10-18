@@ -9,9 +9,9 @@ import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '叶扇纳凉', assemble: '拿起桌前的收口绑带，接到木柄上端。欣赏斐济露兜树叶编扇的材料与手艺。',
+  title: '叶扇纳凉', assemble: '拿起桌前的收口绑带，接到木柄上端。',
   display: '握住木柄，把完整的叶扇移到右侧木展座，让扇柄落稳。',
-  rest: '轻点扇柄，静看编叶交错的纹理。这是一件原创的当代手工欣赏作品。',
+  rest: '轻点扇柄，静看编叶交错的纹理。',
   moving: '编叶轻轻合拢，木柄缓缓落稳…', done: '愿清凉与安宁留在日常。',
 } as const
 const HOME = new THREE.Vector3(-.64, .80, 0), REST = new THREE.Vector3(.69, .99, 0)

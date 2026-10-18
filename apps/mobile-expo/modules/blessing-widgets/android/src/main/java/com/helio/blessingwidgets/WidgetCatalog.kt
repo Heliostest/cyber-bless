@@ -50,7 +50,7 @@ internal object WidgetCatalog {
     "dalarna-wooden-horse" to WidgetScene("木马安放", "blessing"),
     "aland-votive-ship" to WidgetScene("舟模寄谢", "wish"),
     "blang-tea" to WidgetScene("茶山一盏", "blessing"),
-    "minangkabau-spinning-top" to WidgetScene("归乡轻转", "wish"),
+    "minangkabau-spinning-top" to WidgetScene("木陀轻转", "wish"),
     "chinese-incense" to WidgetScene("炉前一炷", "blessing"),
     "hongsheng-red-string" to WidgetScene("红绳自持", "wish"),
     "italian-ex-voto" to WidgetScene("绘牌记谢", "wish"),

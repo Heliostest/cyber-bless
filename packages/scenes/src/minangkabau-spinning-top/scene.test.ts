@@ -75,7 +75,7 @@ function enabled(s: ReturnType<typeof mount>) {
 }
 
 
-describe('Minangkabau original contemporary spinning-top tribute', () => {
+describe('original tabletop spinning-top toy', () => {
   // Removing nearest-surface validation must fail these tests: the intended
   // mesh still intersects the actual ray, but an opaque mesh is in front of it.
   function occlude(s: ReturnType<typeof mount>, name: string) {

@@ -11,9 +11,9 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 
 const COPY = {
   title: '花绣寄语', decorateAction: '添一朵线花', hangAction: '把绣圈安放在展托', quietAction: '轻点绣圈静看',
-  decorate: '拿起桌前线轴，送到亚麻布留白处。以原创花纹，欣赏匈牙利民间刺绣手艺。',
+  decorate: '拿起桌前线轴，送到亚麻布留白处，添上一朵线花。',
   hang: '握住绣圈上方的小铜扣，把整幅线花送到右侧展托。',
-  quiet: '轻点绣圈静看，或写一句心意；点「写好了」才会保存。',
+  quiet: '轻点绣圈静看，或写一句心意后点「写好了」。',
   returning: '轻点绣圈，回看这份手作心意。', moving: '彩线慢慢铺开，手作稳稳落下…',
   done: '线花留下一点春意。',
 } as const

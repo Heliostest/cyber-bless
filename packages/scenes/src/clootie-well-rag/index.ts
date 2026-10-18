@@ -5,7 +5,7 @@ import { createClootieWellRag } from './scene'
 export const meta: SceneMeta = {
   id: 'clootie-well-rag',
   title: '井边放下',
-  traditionSlug: 'clootie-well-rag',
+  traditionSlug: "clootie-well-rag",
   grade: 'C',
   sensitivity: '中',
   gestures: ['drag'],

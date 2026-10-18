@@ -11,12 +11,12 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 const COPY = {
   title: '红绳自持', wind: '从红绳端出发，沿支架上的浅色圆点顺序绕一圈。',
   clasp: '把松开的扣头拖到绳环下方的合扣点，轻轻收拢。',
-  quiet: '轻点红绳环静看，或写一句照看自己；只有点「写好了」才会保存。',
+  quiet: '轻点红绳环静看，或写一句照看自己的话后点「写好了」。',
   returning: '轻点红绳环，回看这一段对自己的照顾。',
   done: '心意相连，各自安好。把这一分照看留给自己。',
   moving: '红绳慢慢落稳…', windAction: '沿支架绕一圈', claspAction: '收拢合扣', quietAction: '轻点绳环静看',
-  literary: '文学典故', literaryText: '月老赤绳的连结意象。',
-  contemporary: '当代习惯', contemporaryText: '照看自己的手作改编。',
+  literary: '绕线成环', literaryText: '沿浅色圆点，慢慢绕好红绳。',
+  contemporary: '留句心意', contemporaryText: '把照看自己的心意系在红绳上。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 type Motion = { step: 0 | 1; time: number; guided: boolean; from: THREE.Vector3 }
@@ -27,7 +27,7 @@ const arcPoint = (t: number) => new THREE.Vector3(CENTER.x + Math.sin(t * Math.P
   CENTER.y - Math.cos(t * Math.PI * 2) * RADIUS, CENTER.z)
 const smooth = (t: number) => t * t * (3 - 2 * t)
 
-/** Contemporary self-care handwork, with literary provenance kept separate in the UI. */
+/** Personal red-cord handwork, without a traditional ritual provenance claim. */
 export function createHongshengRedString(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, gestures, shared } = ctx, safe = shared.assertSafeCopy
   Object.values(COPY).forEach(safe)

@@ -1,8 +1,15 @@
 # 釉彩映晴
 
-ID `andalusian-ceramic-tile`，导出 `createAndalusianCeramicTile`。C级、中敏感；`andalusian-folk` 地区卡索引。`drag`、`wishWrite`，三个检查点。
+## 2026-10-19 来源核查修正
 
-本地卡 `content/traditions/andalusian-folk.md` 及 JPG 已阅读/查看：照片是埃尔罗西奥途中骑马队伍，并非陶瓷工艺参考。场景是原创公共日常工艺欣赏，不复现该朝圣、圣像或圣事。地区文化索引不等于把花砖认定为宗教仪式用具。
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/andalusian-ceramic-tile.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
+ID `andalusian-ceramic-tile`，导出 `createAndalusianCeramicTile`。C级、中敏感；`andalusian-ceramic-tile` 地区卡索引。`drag`、`wishWrite`，三个检查点。
+
+本地卡 `content/traditions/andalusian-folk.md` 及 JPG 已阅读/查看：照片是埃尔罗西奥途中骑马队伍，并非陶瓷工艺参考。场景是原创公共日常工艺欣赏，不复现该朝圣、圣像或圣事。现采用特里亚纳陶瓷与花砖专卡，不以朝圣资料证明花砖工艺。
 
 2026-10-13 成功读取塞维利亚官方旅游机构的 [Triana Ceramic Center](https://visitasevilla.es/en/triana-ceramic-center/)：陶瓷中心保存原址窑炉、作坊关系及陶瓷展示，用于说明区域陶艺历史。只据此建立地域与工艺关联；花瓣形、九砖布局、木框和配色均为本项目原创，不复制馆藏或工匠图案。
 

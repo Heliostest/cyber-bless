@@ -1,6 +1,13 @@
 # 陶鸡报晓 · Barcelos clay rooster
 
-An original contemporary ceramic-workshop homage: decorate a rooster, move its integrated clay base onto a round display plinth, then quietly view it or explicitly submit a short wish. The scene belongs to the broad Portuguese cultural card (`portuguese-romarias`, grade C, low sensitivity) and the veranda environment. It does not reconstruct a romaria, invoke a saint, recreate a miracle narrative, or claim protection or religious effects.
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/barcelos-clay-rooster.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
+An original contemporary ceramic-workshop homage: decorate a rooster, move its integrated clay base onto a round display plinth, then quietly view it or explicitly submit a short wish. The scene uses the `barcelos-clay-rooster` craft card (grade C, low sensitivity) and the veranda environment. It does not reconstruct a romaria, invoke a saint, recreate a miracle narrative, or claim protection or religious effects.
 
 ## Source and scope
 

@@ -1,8 +1,15 @@
 # 蓝白晾晴 · Bai indigo cloth
 
-原创 C 级场景 `bai-indigo-cloth`，导出 `createBaiIndigoCloth`。关联卡片 `bai-benzhu`，手势 `drag` / `wishWrite`。卡片敏感度为中低；共享 `SceneMeta` 只支持低／中／高，因此模块采用中。
+## 2026-10-19 来源核查修正
 
-这是面向公众的当代扎染手作欣赏，不是本主祭仪，不宣称祈福效力。关联本主卡片只用于现有内容导航，不表示扎染工艺属于本主宗教仪式。共享宿主负责 veranda 背景；本模块只绘制布、盆、凳和木架。
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/bai-tie-dye.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
+原创 C 级场景 `bai-indigo-cloth`，导出 `createBaiIndigoCloth`。关联卡片 `bai-tie-dye`，手势 `drag` / `wishWrite`。卡片敏感度为中低；共享 `SceneMeta` 只支持低／中／高，因此模块采用中。
+
+这是面向公众的当代扎染手作欣赏，不是本主祭仪，不宣称祈福效力。文化来源采用白族扎染专卡。共享宿主负责 veranda 背景；本模块只绘制布、盆、凳和木架。
 
 ## 已阅读的资料
 

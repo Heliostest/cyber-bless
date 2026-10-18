@@ -1,6 +1,13 @@
 # 陶轮慢成 / Uzbek clay bowl
 
-`uzbek-clay-bowl` is a C / 低 contemporary craft appreciation scene, indexed under `uzbek-folk`. Its three checkpoints are a rightward wheel-rim drag, an upward exterior-wall pull, and a quiet tap. The native 44px action button offers equivalent Enter/Space access.
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/uzbek-ceramic-craft.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
+`uzbek-clay-bowl` is a C / 低 contemporary craft appreciation scene, indexed under `uzbek-ceramic-craft`. Its three checkpoints are a rightward wheel-rim drag, an upward exterior-wall pull, and a quiet tap. The native 44px action button offers equivalent Enter/Space access.
 
 The original bowl uses a closed lathed cross section with an open cavity, rounded lip, connected inner and outer walls, a 0.13-unit floor and geometric throwing grooves. Pulling rewrites that cross section from a squat vessel into a taller flared bowl; it never scales a solid primitive. A marked wooden wheel sits on a spindle, braces and a low wooden base. Warm damp-clay `#ad785a`, wood `#937452` and sand-toned lighting suit the host's transparent daytime veranda.
 

@@ -6,60 +6,49 @@
 
 ## 概述
 
-**波兰民间天主教祈福文化** 指在罗马天主教礼仪年与乡村节气中，广泛由平信徒家庭实践的公开祝福习俗；其中最负盛名者为圣周六 **święconka（圣篮／复活节食物祝福）**，以及夏末秋初的 **dożynki（多仁基／收获感恩节）**。波兰广播电台等公开记述：święconka 在波兰土地上的食物祝福传统可追溯至中世纪记载，当代几乎全国——无论虔敬程度——仍常见家庭将装有彩蛋、面包、香肠／火腿、盐、辣根、蛋糕与羔羊象征物的篮筐送至教堂，由神父以圣水祝福。梵蒂冈新闻网等介绍 dożynki：以谷物花环、新粮面包与果蔬献于祭台感恩，之后有音乐、舞蹈与共食；琴斯托霍瓦（Częstochowa）光明山（Jasna Góra）圣母朝圣地常迎来各地花环巡游。本条目聚焦已高度公开的民间—教会交叉祝福层，为教育概览；**不提供**可冒充圣事的弥撒／成圣体操作，亦不涉及任何民间巫术配方。
+**波兰民间天主教祝福文化** 中，圣周六的 **święconka（复活节食物篮祝福）** 是可直接核验的公开实践：家庭准备食物篮，带到教堂参加祝福。小波兰官方旅游机构介绍篮中食物与装饰，也明确指出地区差异；天主教堂区的实际活动公告则确认这种家庭与堂区相连的宗教背景。[小波兰地区：圣周六食物篮](https://ww.visitmalopolska.pl/en_GB/web/visitmalopolska/-/tradycyjny-koszyczek-wielkanocny-i-zwyczaje-wielkiej-soboty)、[Holy Trinity Parish：Święconka](https://holytrinityparish.ie/2026/03/swieconka-blessing-of-easter-baskets-2/)
 
-校验补充强调：保留 **święconka** 与 **dożynki**；并点名 **Jasna Góra（琴斯托霍瓦光明山）** 朝圣，以及复活节周一 **Śmigus-Dyngus（湿周一）** 泼水民俗公共层。
+夏末秋初的 **dożynki（收获感恩节）** 是另一类公开活动。光明山圣所新闻处的实录记载农民团体携收获花环参加感恩与弥撒，感谢田园收成并为来年劳动祈求祝福。[光明山：收获花环与感恩](https://news.jasnagora.pl/aktualno%C5%9Bci-2026/wie%C5%84ce-%C5%BCniwne-na-do%C5%BCynkach-jasnog%C3%B3rskich/)
 
 ## 核心观念（祈福 / 功德 / 祈祷如何被理解）
 
-祈福常被理解为：在教会年节中把日常食粮与农作收成交托天主，以圣水祝福与感恩弥撒求家庭健康、丰饶与和平。功德贴近：认真准备篮中象征食物、参与堂区与乡村收获感恩、支持农民劳动尊严，而非仅拍照打卡。访客的「福」体现为：把波兰天主教民间习俗视为活态信仰文化，并与泛斯拉夫前基督教条目区分，避免混为一谈。
+食物祝福与收获感恩把日用食粮、家庭和劳动置于天主教的祈祷生活中，具有真实的教会背景。准备篮筐和花环是家庭与社群参与的一部分，不能据此把“摆好食物”直接写成已完成祝福，也不能把波兰所有人的信仰程度或参与情况一概而论。
 
 ## 典型仪式
 
-### 1. Święconka 圣周六食物篮祝福（公共层）
-- **场合**：复活节前圣周六，城乡教堂；侨民社区亦普遍延续。
-- **主要步骤（概念层）**：公开记述——家庭装饰篮筐（白布、黄杨等）；内置彩蛋（pisanki）、面包、肉类、盐、辣根、糕点与羔羊象征；赴堂在主墓前祈祷，神父／执事以祝福祷词祝福食物并洒圣水。**止于公开堂区实践描述**。
-- **物品**：篮筐与象征食物外观（概念）。
-- **谁来举行**：堂区圣职与信友家庭；访客可旁观公共祝福并遵守礼仪安静。
+### 1. Święconka 圣周六食物祝福（公开层）
 
-### 2. Dożynki 收获感恩与 Jasna Góra 朝圣（公共层）
-- **场合**：收获结束后乡村／城镇庆典；**Jasna Góra Częstochowa** 光明山常迎来花环巡游与圣母朝圣。
-- **主要步骤（概念层）**：编织谷物花环；新粮烤面包；祭台感恩后节庆歌舞；朝圣地感恩献礼。**这是公开感恩文化，不是秘密农术**；不提供代祷操作教程。
-- **物品**：花环、面包、果蔬、圣地外观（概念）。
-- **谁来举行**：农民组织、堂区、地方政府与朝圣地。
+- **场合**：复活节前的圣周六；波兰及延续此习俗的侨民堂区。
+- **主要活动**：家庭准备食物篮，带到教堂参加祝福。
+- **物品**：面包、蛋、盐、肉类、辣根、糕点或羔羊象征物等，因地区与家庭而异；布巾和植物装饰也并非处处一致。
+- **谁来举行**：信友家庭与堂区；具体祝福安排依当地教会。
 
-### 3. Śmigus-Dyngus 湿周一泼水（公共文化层）
-- **场合**：复活节周一；城乡街头与家庭的泼水民俗。
-- **主要步骤（概念层）**：理解互相泼水／洒水作为复活节后公共欢庆民俗。**止于公共文化层**；尊重不愿参与者，勿骚扰。
-- **物品**：从略。
-- **谁来举行**：家庭与青年社群；访客礼让。
+### 2. Dożynki 与 Jasna Góra（公开实例）
 
+- **场合**：收获季的感恩活动；光明山举行收获感恩聚会。
+- **主要活动**：地方团体制作与展示谷物花环，参与感恩祈祷及弥撒。
+- **物品**：谷物及其他植物制成的花环，具体造型由社群制作。
+- **谁来举行**：农民团体、地方社群及教会组织者。
 
 ## 日常与节庆
 
-除圣周与 dożynki 外，尚有圣灰星期三、将临期等教会年节律；尊重弥撒中的安静、着装与摄影规定。优先教会与官方文化媒体的公开介绍，并与本库「斯拉夫民间信仰」条目的前基督教焦点区分阅读。
+święconka 与复活节相连，dożynki 与收获季相连，两者的物件与活动不宜拼成一套仪式。Śmigus-Dyngus 等其他复活节民俗应另按具体资料介绍，不能由食物篮资料推导。
 
 ## 注意与尊重
 
-**勿在成圣体或祝福进行中自拍直播。** 勿把 święconka 简化为「可在家自创的魔法食谱」。勿将波兰民间天主教与泛斯拉夫新异教实践混同推销。圣事操作仅由有资格圣职执行。
+保留其活态天主教意义，遵守教堂礼仪与摄影安排。不要把食物祝福写成魔法食谱，也不要把前基督教泛斯拉夫信仰直接当作当代 święconka 的程序说明。
 
 ## 手机互动适合度（Three.js 评估草稿）
 
-- **档位：** C 可做致敬小品（非真仪）
-- **敏感度：** 低
-- **判断：** 圣篮装饰与收获花环属高度公开的民俗—堂区实践，适合轻量致敬；弥撒成圣体与圣职祝福祷词不可操作化。取 C：原创场景互动，明确非圣事、非真祝福效力。
-- **若做成互动：** 场景互动示例——(1) 拖动将彩蛋、面包、盐等「象征卡片」放入致敬篮（标注「场景互动，非真圣篮」）；(2) 陀螺仪缓转观看麦田与花环说明卡；(3) 写下对「劳动者／日用粮」的一句感谢；(4) 点亮小灯象征感恩而非代替圣水礼。禁止模拟弥撒成圣体或「自任神父祝福通关」。
-- **红线：** 禁止模拟成圣体、告解、驱魔，或以 święconka／dożynki／弥撒真仪名称作胜负。
-- **评估状态：** 待后期统一评估
+- **档位：** C 可做食物篮致敬小品
+- **敏感度：** 中（教会节期与食物祝福）
+- **判断：** 面包与蛋放入篮中有明确器物关联；场景表现的是食物篮准备。
+- **若做成互动：** 将面包与蛋放入篮中，随后静看或写一句感谢。这些动作不代表执行了教会祝福；不额外拼入收获花环或把写短句称为波兰传统祷词。
+- **边界：** 不模拟圣职祝福完成或宣称食物因此蒙福，不以弥撒名称作胜负。
+- **评估状态：** 食物篮与光明山收获感恩背景已复核。
 
 ## 参考来源
 
-- https://www.polskieradio.pl/395/7784/artykul/3669724,poles-flock-to-churches-for-traditional-easter-food-blessing
-- https://www.vaticannews.va/en/world/news/2026-09/from-grain-to-bread-pope-reflects-on-poland-s-harvest-tradition.html
-- https://www.osvnews.com/a-basket-filled-with-faith-eastern-europe-easter-tradition-explained/
-
-- https://ich.unesco.org/en/RL/flower-carpets-tradition-for-corpus-christi-processions-01743
-
-- https://news.jasnagora.pl/aktualno%C3%B3ci/trwaj%C4%85-jasnog%C3%B3rskie-do%C5%BCynki-dzi%C4%99kczynienie-modlitw%C4%85-i-wie%C5%84cem-%C5%BCniwnym-utkane/
-
-- https://news.jasnagora.pl/aktualno%C3%B3ci-2026/drugi-szczyt-pielgrzymkowy-na-imieniny-do-maryi/
+- [小波兰官方旅游机构：Tradycyjny koszyczek wielkanocny i zwyczaje Wielkiej Soboty](https://ww.visitmalopolska.pl/en_GB/web/visitmalopolska/-/tradycyjny-koszyczek-wielkanocny-i-zwyczaje-wielkiej-soboty) — 已读正文；食物、装饰与地区差异。
+- [Holy Trinity Parish：Święconka – Blessing of Easter Baskets](https://holytrinityparish.ie/2026/03/swieconka-blessing-of-easter-baskets-2/) — 已读堂区公告；圣周六家庭食物篮在教堂接受祝福的实际安排。
+- [Jasna Góra 新闻处：Wieńce żniwne na Dożynkach Jasnogórskich](https://news.jasnagora.pl/aktualno%C5%9Bci-2026/wie%C5%84ce-%C5%BCniwne-na-do%C5%BCynkach-jasnog%C3%B3rskich/) — 已读正文；收获花环、感恩祈祷与教会背景。

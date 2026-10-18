@@ -9,7 +9,7 @@ import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '桦篮拾光', attach: '把台前弯曲的提柄装到篮沿。欣赏芬兰桦皮编织的日常手艺。',
+  title: '桦篮拾光', attach: '把台前弯曲的提柄拖到篮沿，装好提柄。',
   place: '提起编好的桦篮，放到右侧的灰绿垫上。', rest: '轻点篮沿，静看桦皮与谷粒的温柔色泽。',
   attaching: '提柄的两端稳稳扣入篮沿……', placing: '桦篮轻轻落在布垫上……', done: '把平常的一天，收进手作的温暖里。',
 } as const

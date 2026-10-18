@@ -18,5 +18,6 @@
 
 ## 参考来源
 
-- [越南旅游信息中心 · Thach Xa Bamboo Dragonfly Village](https://nongthon.vietnamtourism.gov.vn/thach-xa-bamboo-dragonfly-village-the-art-of-vietnamese-creativity-in-bamboo/?lang=en)，核对日期：2026-10-15。用于地点、竹片构造、彩绘与单点平衡的概要。
-- [河内文化与体育部门 · Unique Bamboo Dragonfly Made in Thach Xa](https://sovhtt.hanoi.gov.vn/en/unique-bamboo-dragonfly-made-thach-xa/)，核对日期：2026-10-15。用于公开手工玩具背景。未复制来源图片或视频。
+- [越南国家旅游局信息中心 · Làng chuồn chuồn tre Thạch Xá – Nét đẹp sáng tạo từ tre Việt（越文）](https://nongthon.vietnamtourism.gov.vn/lang-chuon-chuon-tre-thach-xa-net-dep-sang-tao-tu-tre-viet/)，2026-10-19 在网页读取超时后直接读取官方完整正文。用于地点、竹材选择、身体／翅膀／尾部的竹片构造、手工彩绘、单点平衡与公开工坊体验；正文提及指尖、笔尖等平衡位置，并注明石舍现属 Tây Phương。未复制图像或图案。
+- [越南旅游信息中心 · Thach Xa Bamboo Dragonfly Village（英文）](https://nongthon.vietnamtourism.gov.vn/thach-xa-bamboo-dragonfly-village-the-art-of-vietnamese-creativity-in-bamboo/?lang=en)，保留 2026-10-15 的概要核对记录；2026-10-19 重访超时，本轮采用已读的官方越文正文。
+- [河内文化与体育部门 · Unique Bamboo Dragonfly Made in Thach Xa](https://sovhtt.hanoi.gov.vn/en/unique-bamboo-dragonfly-made-thach-xa/)，保留 2026-10-15 的核对记录；2026-10-19 重访遇到 502／SSL 中断，未声称重新通读，也未复制来源图片或视频。

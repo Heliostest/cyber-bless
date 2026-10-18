@@ -9,7 +9,7 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 
 const COPY = {
   title: '茶山一盏',
-  leaf: '把装着茶叶的木茶匙拖入壶口。受布朗茶山生态启发的当代茶歇，非真实仪式。',
+  leaf: '把装着茶叶的木茶匙拖入壶口，添入茶叶。',
   pour: '握住壶把，朝杯内拖动，慢慢倒出一盏茶。',
   rest: '轻点茶杯，静看茶色。为山林与照料茶山的人留一刻感谢。',
   adding: '茶叶落入敞开的陶壶…',

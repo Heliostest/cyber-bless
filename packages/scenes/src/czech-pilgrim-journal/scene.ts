@@ -9,9 +9,9 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 
 const COPY = {
   title: '旅途一页',
-  open: '拖封面书角向左翻开。受摩拉维亚朝圣步道启发的现代手记，非真实朝圣仪轨。',
+  open: '握住封面书角，向左拖动，翻开山路手记。',
   ribbon: '把布书签拖入页边的黄铜夹口，为走过的一段路留一处标记。',
-  rest: '轻点页上的叶形记号，愿旅人一路平安。这一页只供静看，不会保存文字。',
+  rest: '轻点页上的叶形记号，静看山路与书签。',
   opening: '封面缓缓翻开，纸上的山路露出来…',
   placing: '布书签在这一页停下…',
   done: '停留片刻，再带着从容继续走。',

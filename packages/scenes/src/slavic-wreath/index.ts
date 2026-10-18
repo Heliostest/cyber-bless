@@ -5,7 +5,7 @@ import { createSlavicWreath } from './scene'
 export const meta: SceneMeta = {
   id: 'slavic-wreath',
   title: '火边花环',
-  traditionSlug: 'slavic-folk',
+  traditionSlug: "kupala-wreath",
   grade: 'C',
   sensitivity: '低',
   gestures: ['drag', 'wishWrite'],

@@ -8,9 +8,9 @@ import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '木马安放', polish: '拿起桌前的软布，轻拭木马侧面的彩鞍。以日常照料向达拉纳木雕工艺致敬。',
+  title: '木马安放', polish: '拿起桌前的软布，轻拭木马侧面的彩鞍。',
   place: '轻托木马彩鞍，把它安放到右侧木座。四只木蹄稳稳落下。',
-  rest: '轻点木马，静看这件手作。它是文化符号，不是护身法术。',
+  rest: '轻点木马，静看彩鞍与木纹。',
   polishing: '软布拂过木纹，彩鞍露出温润的光泽…', placing: '木马缓缓落上木座…',
   done: '让手作陪伴平常的一天。',
 } as const

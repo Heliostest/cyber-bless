@@ -11,7 +11,7 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 const COPY = {
   title: '木版留春', rub: '拿起左侧棕擦，在纸背左右刷过，让枝叶的墨色转印到纸上。',
   peel: '捏住右下纸角，向上慢慢揭起，看看纸上留下的枝叶。',
-  quiet: '轻点印纸静看，或写一句心意；点「写好了」才会保存。',
+  quiet: '轻点印纸静看，或写一句心意后点「写好了」。',
   returning: '轻点印纸，回看这一份春意。', done: '留一枝春意在日常。',
   moving: '棕擦刷过纸背，枝叶的墨色慢慢留下…', lifting: '纸角轻轻扬起，印出的枝叶显露出来…',
 } as const

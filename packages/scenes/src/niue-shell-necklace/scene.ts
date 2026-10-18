@@ -11,7 +11,7 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 const COPY = {
   title: '贝链留光', thread: '沿露出的细线，把上方已备好的最后一枚黄螺壳向左穿入贝链。',
   gather: '拉住上方的线端，向上轻拉，让贝链收成柔和的弧形。',
-  quiet: '轻点贝链静看，或写一句心意；点「写好了」才会保存。',
+  quiet: '轻点贝链静看，或写一句心意后点「写好了」。',
   returning: '轻点贝链，回看这串日常的暖黄。', done: '留一串暖黄在日常。',
   threading: '最后一枚小螺壳沿细线滑入…', gathering: '细线牵起，黄螺壳慢慢聚成弧形…',
 } as const

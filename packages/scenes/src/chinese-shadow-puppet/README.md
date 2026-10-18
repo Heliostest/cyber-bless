@@ -1,10 +1,17 @@
 # 影偶小戏 / Chinese shadow puppet
 
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/chinese-shadow-puppet.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
 This is an original, contemporary public craft appreciation scene. Its small freestanding timber theatre contains a pierced paper bird, one wing hinge, two attached control rods, a visible lamp and a warm cloth screen. It is not a traditional character, complete performance, religious ceremony, or a claim of efficacy.
 
 ## Source and interpretation
 
-[UNESCO, Chinese shadow puppetry, nomination 00421](https://ich.unesco.org/en/RL/chinese-shadow-puppetry-00421), checked 2026-10-15, describes colourful leather or paper figures, rod manipulation, movable joints and a backlit translucent cloth screen. Those broad craft features inform this original bird. No source images, music, recorded performance, traditional character design or third-party assets are copied. The Chinese regional index is a catalogue location, not a claim that all shadow puppetry is a religious practice.
+[UNESCO, Chinese shadow puppetry, nomination 00421](https://ich.unesco.org/en/RL/chinese-shadow-puppetry-00421), checked 2026-10-15, describes colourful leather or paper figures, rod manipulation, movable joints and a backlit translucent cloth screen. Those broad craft features inform this original bird. No source images, music, recorded performance, traditional character design or third-party assets are copied. The current source card is `chinese-shadow-puppet`, directly documenting the puppet craft and performance.
 
 The backstage view deliberately shows the physical order lamp → puppet → cloth. The screen is rendered as a warm unlit textile gradient to keep its projection readable under the application's cel lighting. The shadow is a geometric point-light projection of the actual current source triangles, clipped to the cloth rectangle. Body and wing cutouts, hinge and rods all contribute to it. Its uniform warm-brown shadow colour is a readability choice; it does not simulate translucent leather colour transmission or a finite lamp's penumbra.
 

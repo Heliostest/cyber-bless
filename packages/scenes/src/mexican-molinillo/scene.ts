@@ -8,10 +8,10 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 import { createMolinilloModel } from './model'
 
 type Checkpoint = 0 | 1 | 2 | 3
-const ACTIONS = ['向下浸入木头', '向右搓转木柄', '向左搓转木柄']
+const ACTIONS = ['向下浸入器头', '向右搓转木柄', '向左搓转木柄']
 const HINTS = [
   '按住木柄提示处，向下短拖，把有沟槽的器头轻轻浸到可可饮品表面。',
-  '按住木柄，向右短拖。想象双掌相搓，木柄转动，杯面渐渐浮起细泡。',
+  '按住木柄，向右短拖，让木柄转动，杯面渐渐浮起细泡。',
   '按住木柄，向左短拖，换向搓转。松动的木环随之转动，泡沫慢慢聚起。',
   '左右搓转结束，细泡浮在可可表面。木纹、陶釉与泡沫，在阳光下各有质感。',
 ]

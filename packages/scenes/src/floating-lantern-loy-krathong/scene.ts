@@ -9,7 +9,7 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const TITLE = '叶舟寄意'
-const HINTS = ['把花朵拖到折叶灯的花座。泰国水灯节的产品致敬。', '轻点烛芯，让叶舟亮起一点光。',
+const HINTS = ['把花朵拖到折叶灯的花座。', '轻点烛芯，让叶舟亮起一点光。',
   '拖叶舟到水面涟漪，或提交一句心意后送行。', '叶舟安静地漂在水面，心意留在这一刻。']
 const ACTIONS = ['安放花朵', '点亮烛芯', '轻推叶舟']
 const DOCK = new THREE.Vector3(-.31, .365, .62), WATER = new THREE.Vector3(.69, -.0425, -.42)
@@ -21,7 +21,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared, gestures } = ctx, safe = shared.assertSafeCopy
   const returning = ctx.returning === true
   const returnHint = '把叶舟拖向涟漪，以这一点光留下感谢。'
-  const note = '节俗回看 · 现实漂放请选可降解材料，遵守当地水域与清理规范。'
+  const note = '现实漂放请遵守当地水域与清理要求。'
   ;[TITLE, ...HINTS, ...ACTIONS, returnHint, note].forEach(safe)
   let started = false, disposed = false, focused = true, step = 0, motion: Motion | null = null
   let dragging = false, maxTravel = 0, inactiveRendered = false, stopResize = () => {}

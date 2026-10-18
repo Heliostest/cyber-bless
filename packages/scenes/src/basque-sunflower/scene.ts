@@ -11,9 +11,9 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 
 const COPY = {
   title: '太阳花迎门', assembleAction: '装好花心', hangAction: '把太阳花挂上门钉', quietAction: '轻点花心静看',
-  assemble: '把左下方的花心拖入尖瓣中央。这是纸木人造太阳蓟，不采摘野生植物。',
-  hang: '握住花心，拖到右侧门框上的木钉。护宅是巴斯克民俗传说中的寓意。',
-  quiet: '轻点花心静看，或写一句迎门心愿；只有点「写好了」才会保存。',
+  assemble: '把左下方的花心拖入尖瓣中央，拼好这朵纸木太阳花。',
+  hang: '握住花心，拖到右侧门框上的木钉。',
+  quiet: '轻点花心静看，或写一句迎门心愿后点「写好了」。',
   returning: '轻点花心，回看这一份迎门的心意。',
   moving: '让纸木太阳花轻轻落稳…',
   done: '太阳花已挂好，留一刻安静给归家的人。',

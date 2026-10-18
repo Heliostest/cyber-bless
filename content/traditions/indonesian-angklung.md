@@ -20,4 +20,5 @@
 
 ## 参考来源
 
-- [UNESCO · Indonesian Angklung](https://ich.unesco.org/en/RL/indonesian-angklung-00393)，核对日期：2026-10-15。来源用于结构与社会用途概要；未复制音乐、照片或影片。
+- [ICHCAP / ichLinks · Indonesian Angklung，EE00000088](https://ichlinks.com/archive/elements/elementsV.do?elementsUid=13829896117698900089&ichDomains=UD_05&mode=list&nation=ID&orderCd=E&page=12)，2026-10-19 阅读器物描述、传承、社群及名录年份栏。直接支持竹框／藤绑／竹管结构、摇动或敲框发声、单音或和弦、合奏协作、家庭与学校教学，以及 2010 年列入名录。该记录也提到地方仪式与哲学解释，但本场景不把这些内容当作动作功效或通用象征。
+- [UNESCO · Indonesian Angklung](https://ich.unesco.org/en/RL/indonesian-angklung-00393)，保留原核对记录：2026-10-15 曾用于结构与社会用途概要；2026-10-19 直达及替代入口仍遇人工验证。本轮以可读的 ICHCAP 记录补证，不声称重新通读；未复制音乐、照片或影片。

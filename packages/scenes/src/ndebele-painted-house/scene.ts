@@ -10,7 +10,7 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 const COPY = {
   title: '彩墙寄家', assemble: '把桌前的彩色小板放到左侧墙面的留白处，完成自己的几何配色。',
   display: '握住房屋底座前的木把，把彩绘小屋移到右侧展台。',
-  rest: '轻点底座，静看色彩与家屋的轮廓。向南非恩德贝莱家屋彩绘的创作者致意。',
+  rest: '轻点底座，静看色彩与家屋的轮廓。',
   moving: '小板与小屋缓缓就位…', done: '留一刻欣赏家屋艺术与手作的耐心。',
 } as const
 const HOME = new THREE.Vector3(-.85, .72, 0), REST = new THREE.Vector3(.95, .88, 0)

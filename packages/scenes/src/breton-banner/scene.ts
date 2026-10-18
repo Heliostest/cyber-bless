@@ -10,9 +10,9 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 
 const COPY = {
   title: '节旗轻展',
-  unfurl: '拖动布旗右上角的浅金布耳，扣到横杆右端。以当代制旗小品，向布列塔尼节庆的手作准备致意。',
-  place: '握住下方缠线的木杆，把旗子安放到右侧木座的圆孔里。海浪与太阳纹样均为原创。',
-  rest: '轻触木杆或布面，静看展开的节旗。这是文化致敬，不是真实的 pardon 朝圣，也不赋予教会角色或赦罪效力。',
+  unfurl: '拖动布旗右上角的浅金布耳，扣到横杆右端，让布面展开。',
+  place: '握住下方缠线的木杆，把旗子安放到右侧木座的圆孔里。',
+  rest: '轻触木杆或布面，静看海浪与太阳的纹样。',
   opening: '布耳扣向横杆，折叠的布面缓缓展开……', placing: '木杆稳稳落入木座……',
   done: '愿每一次相聚，都有人细心准备。',
 } as const

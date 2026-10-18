@@ -1,5 +1,12 @@
 # 茶山一盏
 
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/jingmai-tea-forest.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
 原创当代茶歇，借茶具欣赏布朗茶山生态；不是茶祖祭礼、村寨仪式或寺院供养程序。不提供心愿表单。
 
 文化核对：UNESCO World Heritage Centre, *Cultural Landscape of Old Tea Forests of the Jingmai Mountain in Pu’er*: https://whc.unesco.org/en/list/1665/ （2026-10-13 阅读）。该官方资料说明布朗族与傣族长期经营茶林，以及林下种茶、山地生态与社区管理的关系；它亦说明茶祖信仰的文化地位。本场景只取公开生态欣赏层，原创器型不声称是布朗族专属传统器物。

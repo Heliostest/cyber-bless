@@ -1,5 +1,12 @@
 # 铁线栖鸟 · Slovak wire bird
 
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/slovak-wire-craft.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
 An original contemporary craft appreciation exercise inspired by public Drotárstvo wire craft. A loose open-wire wing is joined to a bird's shoulder; the assembled bird is carried onto a wooden perch; a quiet tap finishes the scene. This is an original small sculpture and a public craft tribute, not a historical artifact reconstruction, a ceremony, or a claim of ritual efficacy. There is no wish writer or wish persistence.
 
 ## Sources and boundaries
@@ -17,7 +24,7 @@ The bird uses newly composed loops, ribs, a beak and tail, with small bound-wire
 ## Module and interaction contract
 
 - Export: `createSlovakWireBird`, also exported as module `create`.
-- Metadata: `slovak-wire-bird`, `铁线栖鸟`, `traditionSlug: 'slovak-folk'`, C, 中, `gestures: ['drag']`. The shared scene contract uses the singular tradition field; the root catalog owns its `traditionSlugs` array and blessing mode.
+- Metadata: `slovak-wire-bird`, `铁线栖鸟`, `traditionSlug: 'slovak-wire-craft'`, C, 中, `gestures: ['drag']`. The shared scene contract uses the singular tradition field; the root catalog owns its `traditionSlugs` array and blessing mode.
 - Step 0: real mesh `wire-wing-grip` in group `wire-loose-wing` drags to `wire-shoulder-joint`. The source is the opaque metal center of a small visibly wrapped wire root. There is no transparent or oversized proxy. Any visible physical mesh in the loose wing can also start the drag.
 - Step 1: real mesh `wire-bird-grip` drags the entire `wire-bird` group, including the attached wing, to `wire-perch-seat`. Other visible physical meshes in the bird are also draggable.
 - Step 2: tapping the actual bird completes once; the main cue remains on `wire-bird-grip`. Auxiliary native click buttons share the same guarded checkpoint path.

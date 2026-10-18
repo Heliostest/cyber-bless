@@ -1,5 +1,12 @@
 # 太阳花迎门
 
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/basque-eguzkilore.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
 Original procedural paper-and-wood sun-thistle ornament inspired by the public Basque Eguzkilore motif. Sixty-four narrow, pointed, pale paper blades radiate around an independently assembled wooden seed center. A flax loop hangs on a wooden peg in a small doorframe display; the ornament's wooden backing touches the door board. The separate center rests on a sage pad before assembly. All geometry is authored here; no runtime image, model, font or audio download is used.
 
 Reviewed `content/traditions/basque-folk.md` and its farmhouse-door JPG for cultural and visual context. The source image is not a texture and no specific jewelry, coupon illustration or protected decorative design is reproduced.

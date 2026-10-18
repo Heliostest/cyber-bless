@@ -3,7 +3,7 @@ import type { SceneContext, SceneModule } from '../contract'
 import { createBasqueSunflower } from './scene'
 
 export const meta: SceneMeta = {
-  id: 'basque-sunflower', title: '太阳花迎门', traditionSlug: 'basque-folk',
+  id: 'basque-sunflower', title: '太阳花迎门', traditionSlug: "basque-eguzkilore",
   grade: 'C', sensitivity: '低', gestures: ['drag', 'wishWrite'],
 }
 export function create(ctx: SceneContext) { return createBasqueSunflower(ctx) }

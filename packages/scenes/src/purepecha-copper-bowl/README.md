@@ -1,6 +1,13 @@
 # 铜碗拾暖 / Purepecha copper bowl
 
-An original contemporary workshop appreciation scene for public copper craft associated with Santa Clara del Cobre, Michoacán. It uses the broad `purepecha` cultural card, grade C, and the shared veranda environment. The card says sensitivity 低至中; the runtime accepts only 低/中/高, so this module conservatively uses 中. Gestures: `['drag']`. Entry point: `createPurepechaCopperBowl` (also exported as `create`).
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/santa-clara-copper-craft.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
+An original contemporary workshop appreciation scene for public copper craft associated with Santa Clara del Cobre, Michoacán. It uses the `santa-clara-copper-craft` source card, grade C, and the shared veranda environment. The card says sensitivity 低至中; the runtime accepts only 低/中/高, so this module conservatively uses 中. Gestures: `['drag']`. Entry point: `createPurepechaCopperBowl` (also exported as `create`).
 
 This is an invented small everyday bowl and a short appreciation exercise, not a ritual vessel, altar, memorial offering, cargo ceremony, afterlife practice, or reproduction of an identifiable artisan's work. No ritual efficacy, sacred motifs, community authority, or craft certification is claimed. The experience has no wish form and never calls `saveWish`.
 

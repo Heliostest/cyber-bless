@@ -18,5 +18,5 @@
 
 ## 参考来源
 
-- [UNESCO · Traditional craftsmanship of the Mongol Ger and its associated customs](https://ich.unesco.org/en/RL/traditional-craftsmanship-of-the-mongol-ger-and-its-associated-customs-00872)，2026-10-15 核对搜索索引正文；直达页遇到验证页面。用于框架、覆层、绳带及传承概要。
-- [ICHCAP / ichLinks Mongolia · Traditional craftsmanship of Mongol ger](https://mongolia.ichlinks.com/archive/elements/elementsV.do?contentsI18NCd=en-US&elementsUid=13829896140267001030)，2026-10-15 阅读正文。用于木格、顶圈、椽杆、双支柱与门的结构关系、家庭传承及 2013 年列入名录的信息。未复制照片、纹样或音频。
+- [蒙古国文化遗产国家中心 / ICHCAP ichLinks Mongolia · Traditional craftsmanship of Mongol ger](https://mongolia.ichlinks.com/archive/elements/elementsV.do?contentsI18NCd=en-US&elementsUid=13829896140267001030)，2026-10-19 阅读正文与名录年份栏。用于木格、顶圈、椽杆、双支柱与门的结构关系，制毡、缝制帆布、家庭协作与匠人指导传承，以及 2013 年列入名录的信息。未复制照片、纹样或音频。
+- [UNESCO · Traditional craftsmanship of the Mongol Ger and its associated customs](https://ich.unesco.org/en/RL/traditional-craftsmanship-of-the-mongol-ger-and-its-associated-customs-00872)，保留访问记录：2026-10-15 曾核对搜索索引，2026-10-19 直达页仍遇人工验证；本轮以可读的蒙古国文化遗产机构正文为主要依据，不声称通读该页。

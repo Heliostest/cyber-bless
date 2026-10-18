@@ -11,7 +11,7 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 const COPY = {
   title: '影偶小戏', lift: '握住下方主杆，向上轻提，让彩色小鸟的影子登上布幕。',
   turn: '握住右侧翼杆，向右轻移，让小鸟舒展开一片镂空翅膀。',
-  quiet: '轻点彩色小鸟静看，或写一句心意；点「写好了」才会保存。',
+  quiet: '轻点彩色小鸟静看，或写一句心意后点「写好了」。',
   returning: '轻点小鸟，回看布幕上这一刻的光影。', done: '留一幕温暖在日常。',
   lifting: '主杆轻提，小鸟和它的影子一同升起…', turning: '翼杆牵动关节，镂空翅膀慢慢舒展…',
 } as const

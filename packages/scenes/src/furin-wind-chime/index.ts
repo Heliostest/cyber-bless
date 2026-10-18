@@ -5,7 +5,7 @@ import { createFurinWindChime } from './scene'
 export const meta: SceneMeta = {
   id: 'furin-wind-chime',
   title: '风铃一响',
-  traditionSlug: 'shinto',
+  traditionSlug: "furin-wind-chime",
   grade: 'C',
   sensitivity: '低',
   gestures: ['tilt'],

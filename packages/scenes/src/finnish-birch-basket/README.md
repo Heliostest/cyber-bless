@@ -1,5 +1,12 @@
 # 桦篮拾光
 
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/finnish-birch-bark-craft.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
 Original, procedural Three.js still life for contemporary appreciation of Finnish birch-bark craft. A shallow, rounded rectangular basket has 56 thick diagonal strips, alternating over/under depth, an open interior, a curved detachable handle, grains, a hollow wooden scoop and bark offcuts on a braced veranda bench. Colors and geometry are original; no runtime images, external assets, copied maker pattern or wish writer.
 
 ## Read and visual reference access

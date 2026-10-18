@@ -8,7 +8,7 @@ import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '彩车迎晴', assemble: '握住桌前木轮的轮毂，拖到小车露出的车轴上。欣赏西西里日常彩绘木车的手艺。',
+  title: '彩车迎晴', assemble: '握住桌前木轮的轮毂，拖到小车露出的车轴上。',
   display: '握住车厢前侧的木扶手，把整辆小车移到右侧展垫。',
   rest: '轻点小车扶手，静看轮辐与色彩。',
   moving: '木轮与小车缓缓就位…', done: '留一刻欣赏轮雕与彩绘的耐心。',

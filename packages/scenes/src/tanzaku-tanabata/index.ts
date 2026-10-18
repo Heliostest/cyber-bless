@@ -5,7 +5,7 @@ import { createTanzakuTanabata } from './scene'
 export const meta: SceneMeta = {
   id: 'tanzaku-tanabata',
   title: '短册系竹',
-  traditionSlug: 'shinto',
+  traditionSlug: "tanzaku-tanabata",
   grade: 'C',
   sensitivity: '低',
   gestures: ['drag', 'wishWrite'],

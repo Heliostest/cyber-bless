@@ -11,9 +11,9 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 
 const COPY = {
   title: '釉彩映晴', decorateAction: '嵌入最后一块花砖', hangAction: '把花砖安放在展托', quietAction: '轻点花砖静看',
-  decorate: '拿起桌前花砖，补上中央空位。以原创釉彩图案，欣赏安达卢西亚的陶艺。',
+  decorate: '拿起桌前花砖，补上中央空位，让蓝白花纹相连。',
   hang: '握住木框下沿，把完整花砖送到右侧展托。',
-  quiet: '轻点花砖静看，或写一句心意；点「写好了」才会保存。',
+  quiet: '轻点花砖静看，或写一句心意后点「写好了」。',
   returning: '轻点花砖，回看这份留在晴日里的心意。', moving: '让花砖轻轻落稳…',
   done: '釉彩映着晴日，心意留在此刻。',
 } as const

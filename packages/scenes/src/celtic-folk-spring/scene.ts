@@ -18,7 +18,7 @@ const COPY = {
   hintHolding: '停驻片刻…',
   bowTap: '点按以鞠躬',
   dropTap: '放到泉面',
-  done: '这一念已留下。',
+  done: '泉边安静下来，留一刻从容。',
   stepsAria: '步骤',
   cueCarry: '拖动信物',
   cueWater: '放到泉面',

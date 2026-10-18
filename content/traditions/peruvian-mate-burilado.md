@@ -18,4 +18,5 @@
 
 ## 参考来源
 
-- [秘鲁文化部 · Mates burilados, un arte ancestral peruano](https://www.gob.pe/institucion/cultura/noticias/47357-mates-burilados-un-arte-ancestral-peruano)，核对日期：2026-10-15。用于材料、地区、家庭传承及生活题材的概要。未复制来源图片或具体作品。
+- [秘鲁外贸与旅游部 / CITE Sipán · Línea artesanal de mates burilados: Tecnología e innovación（2012，官方 PDF）](https://cdn.www.gob.pe/uploads/document/file/31579/22220_22_L_C3_ADnea_artesanal_de_mates_burilados_2012_.pdf20180706-19116-sf0cai.pdf)，2026-10-19 直接读取官方 PDF，核对 PDF 第 31–32、40–43、45、47 页（书内页码分别为 29–30、38–41、43、45）。田野调查记录葫芦材料、壳面刻制、家族学习、Cochas／Huancayo 作坊及生活、鸟兽、植物题材，并比较北海岸与曼塔罗地区不同加工流程。本场景的叶片、山丘和三步节奏不对应某位匠人的特定作品或完整工序；未复制图像。
+- [秘鲁文化部 · Mates burilados, un arte ancestral peruano](https://www.gob.pe/institucion/cultura/noticias/47357-mates-burilados-un-arte-ancestral-peruano)，保留原核对记录：2026-10-15 曾用于材料、地区及传承概要；2026-10-19 重访返回 HTTP 418。本轮以已读官方工艺调查 PDF 补证，不将该新闻的搜索索引写成重新通读。

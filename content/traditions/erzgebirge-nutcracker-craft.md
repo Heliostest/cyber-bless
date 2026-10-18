@@ -2,7 +2,7 @@
 
 ## 概览
 
-德国塞芬的木作传统与车削、玩具制作相关，塞芬玩具博物馆的馆藏介绍包括木制胡桃夹子。莱比锡城市历史博物馆记录的一件约 1957 年塞芬木制胡桃夹子具有背部杠杆与活动下颌；抬动杠杆可放入胡桃，胡须连接在活动下颌上。LVR 林德拉露天博物馆的器物说明也记载了背杆闭合口部的机构，并指出如今许多人物形胡桃夹子主要用于装饰。
+德国塞芬的木作传统与车削、玩具制作相关，塞芬玩具博物馆的馆藏介绍包括木制胡桃夹子。莱比锡城市历史博物馆记录的一件约 1957 年塞芬木制胡桃夹子具有背部杠杆与活动下颌；抬动杠杆可放入胡桃，胡须连接在活动下颌上。塞芬玩具博物馆也将胡桃夹子列入当地二十世纪以来的圣诞装饰展品。
 
 ## 本产品的场景呈现
 
@@ -18,6 +18,6 @@
 
 ## 参考来源
 
-- [莱比锡城市历史博物馆 · Nussknacker，Z0056134](https://www.stadtmuseum.leipzig.de/document/objekt/Z0056134)，2026-10-17 阅读馆藏记录。支持塞芬、车削木材、背杆、活动下颌与附着胡须；未复制照片、尺寸和配色。
-- [LVR 林德拉露天博物馆 · Nussknacker，dc00005490](https://alltagskulturen.lvr.de/en/objekte/nussknacker/DE-MUS-377513/lido/dc00005490)，2026-10-17 核对官方页面的搜索索引说明。支持背杆闭合机构与现代装饰用途；直接页面及短链接当时读取失败，未声称通读原页。
-- [塞芬玩具博物馆 · Spielzeug im Museum](https://spielzeugmuseum-seiffen.de/spielzeug_im_museum.cfm)，2026-10-17 阅读博物馆介绍。支持当地车削木作与玩具馆藏中胡桃夹子的关联；未采用起源年份或传说作为交互依据。
+- [莱比锡城市历史博物馆 · Nussknacker，Z0056134](https://www.stadtmuseum.leipzig.de/document/objekt/Z0056134)，2026-10-19 阅读馆藏记录。支持塞芬、车削木材、背杆、活动下颌与附着胡须；未复制照片、尺寸和配色。
+- [塞芬玩具博物馆 · Spielzeug im Museum](https://spielzeugmuseum-seiffen.de/spielzeug_im_museum.cfm)，2026-10-19 阅读博物馆介绍，尤其“Tradition und Zeitgeist”段落。支持当地车削木作、胡桃夹子与圣诞装饰展陈的关联；未采用起源年份或传说作为交互依据。
+- [LVR 林德拉露天博物馆 · Nussknacker，dc00005490](https://alltagskulturen.lvr.de/en/objekte/nussknacker/DE-MUS-377513/lido/dc00005490)，保留访问记录：2026-10-17 曾核对官方搜索索引，2026-10-19 直达页仍不可访问。本轮未读到正文，不将索引中的现代装饰用途概括作为独立依据。

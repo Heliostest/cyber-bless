@@ -1,5 +1,12 @@
 # 草穗悬园
 
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/lithuanian-straw-gardens.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
 Original hollow straw double-pyramid mobile with two side ornaments, a separate lower diamond, thread joins, visible wooden handling beads and two workshop supports. Assemble the lower piece, suspend the complete garden and pause quietly. No wish writer.
 
 Read `content/traditions/baltic-folk.md` and viewed its JPG (a Latvian midsummer torch photograph, not a straw garden); no source image is copied. The broad Baltic card supplies context only: this scene specifically concerns Lithuanian craft.

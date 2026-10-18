@@ -5,7 +5,7 @@ import { createPhuangMalai } from './scene'
 export const meta: SceneMeta = {
   id: 'phuang-malai',
   title: '串花寄意',
-  traditionSlug: 'phuang-malai',
+  traditionSlug: "phuang-malai",
   grade: 'C',
   sensitivity: '中',
   gestures: ['drag', 'wishWrite'],

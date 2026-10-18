@@ -10,11 +10,11 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 
 const COPY = {
   title: '蓝白晾晴', rinseAction: '将扎布送到漂洗盆', hangAction: '把蓝白布搭上晾杆', quietAction: '轻点布面静看',
-  rinse: '握住凳上的扎布，送到盆中，看看蓝白留纹。这是致意白族扎染的当代手作欣赏。',
+  rinse: '握住凳上的扎布，送到盆中，看看蓝白留纹。',
   hang: '握住盆前可见的布边，将蓝白布搭到右侧木晾杆。',
-  quiet: '轻点蓝白布静看，也可写一句心愿；只有点「写好了」才会保存。',
+  quiet: '轻点蓝白布静看，也可写一句心愿；点「写好了」保存。',
   returning: '轻点蓝白布，回看这份安静的心意。', moving: '将布放稳，慢慢展开…',
-  done: '蓝白之间，留一刻晴朗。（当代手作欣赏结束）',
+  done: '蓝白布已晾好，留一刻晴朗。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const BUNDLE_HOME = new THREE.Vector3(-1.03, .36, .89)

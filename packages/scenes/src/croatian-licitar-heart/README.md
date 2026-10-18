@@ -1,6 +1,13 @@
 # 彩心相赠 · Croatian licitar heart
 
-`croatian-licitar-heart` is an original, contemporary gift-making homage to northern Croatian licitar craft. It belongs to the broad `croatian-folk` tradition card (grade C, sensitivity 中), uses the courtyard environment, and supports the WISH flow. It does not reproduce a named craftsperson's decoration.
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/croatian-licitar.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
+`croatian-licitar-heart` is an original, contemporary gift-making homage to northern Croatian licitar craft. It uses the `croatian-licitar` craft card (grade C, sensitivity 中), uses the courtyard environment, and supports the WISH flow. It does not reproduce a named craftsperson's decoration.
 
 ## Product brief
 
@@ -16,7 +23,7 @@ The hint copy calls this a craft homage. The final line is “一颗彩心，留
 
 ## Cultural context and research
 
-The local source `content/traditions/croatian-folk.md` was read and its JPG viewed. The photo shows the large outdoor worship space at Marija Bistrica, with a congregation, church buildings and wooded hills. That card discusses Croatian Catholic pilgrimage and public festivities. This small gift-craft scene is a deliberate adjacent contemporary interpretation, not a reconstruction of the photographed Mass, an actual pilgrimage, the Eucharist, a priestly blessing, or a claim of protective efficacy.
+The local source `content/traditions/croatian-folk.md` was read and its JPG viewed. The photo shows the large outdoor worship space at Marija Bistrica, with a congregation, church buildings and wooded hills. That card discusses Croatian Catholic pilgrimage and public festivities. This small gift-craft scene is based on the dedicated licitar sources, not a reconstruction of the photographed Mass, an actual pilgrimage, the Eucharist, a priestly blessing, or a claim of protective efficacy.
 
 Primary references consulted on 2026-10-13:
 

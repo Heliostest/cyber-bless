@@ -5,7 +5,7 @@ import { createDarumaEyePainting } from './scene'
 export const meta: SceneMeta = {
   id: 'daruma-eye-painting',
   title: '达摩点睛',
-  traditionSlug: 'daruma-eye-painting',
+  traditionSlug: "daruma-eye-painting",
   grade: 'C',
   sensitivity: '低',
   gestures: ['drag', 'wishWrite'],

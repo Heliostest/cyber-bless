@@ -1,5 +1,12 @@
 # 织毯寄暖 — Amazigh wool-textile appreciation
 
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/moroccan-amazigh-textiles.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
 An original contemporary appreciation of wool weaving associated with Moroccan Amazigh communities. The player moves a real wooden shuttle to the lower unfinished row, carries the entire clamped rug onto a wooden display stand, then quietly taps it or explicitly submits an optional wish. This is a short visual craft gesture, not a reconstruction of a loom or a claim to teach traditional weaving.
 
 The rug uses warm ivory `#e6d9bd`, ochre `#b78343`, rust `#a95f4c` and muted indigo `#566e83`. Its simple stripes and offset rectangles are composed specifically for this scene. No museum pattern, protective symbol, image texture or downloaded model is copied. No universal meaning is assigned to the colors or marks. This is not a shrine visit, a Moussem or rain ceremony, a wedding textile, or a simulation of sacred practices.
@@ -14,7 +21,7 @@ The downloaded paper and rendered source figures remain research artifacts outsi
 
 ## Public module and exact object cues
 
-`scene.ts` exports `createAmazighWovenRug`; `index.ts` supplies `create`, default `SceneModule` and metadata: `amazigh-woven-rug`, `织毯寄暖`, `traditionSlug: amazigh-berber`, grade C, sensitivity 中, gestures `drag` / `wishWrite`.
+`scene.ts` exports `createAmazighWovenRug`; `index.ts` supplies `create`, default `SceneModule` and metadata: `amazigh-woven-rug`, `织毯寄暖`, `traditionSlug: moroccan-amazigh-textiles`, grade C, sensitivity 中, gestures `drag` / `wishWrite`.
 
 | Checkpoint | Source mesh / local offset | Destination mesh / local offset |
 | --- | --- | --- |

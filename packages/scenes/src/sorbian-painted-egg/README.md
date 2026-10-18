@@ -1,6 +1,13 @@
 ﻿# 彩蛋寄春 · sorbian-painted-egg
 
-C 档、低敏感度的当代手作致敬，关联 `sorbian-folk`；手势为 `drag` 与 `wishWrite`。由主应用配置 `veranda` 环境。
+## 2026-10-19 来源核查修正
+
+现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
+
+当前来源：`content/traditions/sorbian-easter-eggs.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+
+C 档、低敏感度的当代手作致敬，关联 `sorbian-easter-eggs`；手势为 `drag` 与 `wishWrite`。由主应用配置 `veranda` 环境。
 
 ## 文化依据与边界
 

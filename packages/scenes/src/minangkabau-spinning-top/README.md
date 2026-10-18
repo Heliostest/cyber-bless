@@ -1,11 +1,12 @@
-﻿# 归乡轻转
+﻿# 木陀轻转
 
-A contemporary original, nonreligious departure/return hand gesture exercise. The wooden top and cord choreography are original; they are not presented as an ancient or uniquely Minangkabau top design or ritual.
+An original tabletop wooden-top toy: pull the wooden bead to unwind the cord, tap the cap to slow the top, then quietly look or submit an optional line. It has no regional or ritual provenance assignment.
 
-## Cultural source checked
+## Provenance correction · 2026-10-19
 
-- [Traditional Settlement at Nagari Sijunjung, UNESCO World Heritage Centre](https://whc.unesco.org/en/tentativelists/6059/) — Indonesia's official tentative-list submission, 30 January 2015, checked 13 October 2026. The description places rumah gadang within living family/clan and community settings. The scene uses only that broad community context. This is a tentative-list entry, not an inscribed World Heritage property.
-- Local editorial brief: `content/traditions/minangkabau-adat.md`. Its proposed nonreligious departure hand gesture informed the tribute; its reference photograph was inspected for cultural context only and is not embedded in the product.
+- The former title and Minangkabau association combined the local editorial brief's suggested departure/return metaphor with an invented tabletop mechanism. [Traditional Settlement at Nagari Sijunjung](https://whc.unesco.org/en/tentativelists/6059/) describes settlement and matrilineal houses; it does not establish the top's mechanism or a homecoming meaning.
+- Official Indonesian documentation does record regional gasiang games. That fact alone does not establish this model's board-mounted pull-bead choreography or its former departure/return narrative. Evidence and reading limits are recorded in [the source review](../../../../docs/research/2026-10-19-yeondeunghoe-spinning-top.md).
+- The scene now uses `PRODUCT_ORIGINAL`; the app catalog has no `traditionSlug`. No other culture is substituted. `minangkabau-spinning-top`, `minangkabau-spinning-top@1` and the factory export keep their legacy names for record and engine compatibility.
 
 ## Pointer choreography
 

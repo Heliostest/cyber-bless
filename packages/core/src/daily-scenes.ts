@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "english-hearth-bellows",
   "mexican-metate",
   "czech-wooden-ratchet",
   "puerto-rican-guiro",
@@ -99,6 +100,11 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {
+    id: "english-hearth-bellows", title: "风囊轻送", engine: "english-hearth-bellows@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "english-hearth-bellows",
+    narrative: "英国壁炉用具的馆藏中，可以见到木叶、皮革与黄铜嘴组成的手持风箱。这类日常工具也见于其他地方：双柄分开时风囊展开，压合时从风嘴送出空气。这里用一只原创素色风箱，抬起木柄、慢慢压合，再轻轻松开，看皮革折边随着一呼一合舒展，把片刻安静留在阳光里。",
+  },
   {
     id: "mexican-metate", title: "石面磨香", engine: "mexican-metate@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "mexican-metate",

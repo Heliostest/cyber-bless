@@ -42,6 +42,12 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'english-hearth-bellows': (<>
+    <path d="M9 37L3 39L9 43L17 39" fill="#b79654" stroke="#816b40" strokeWidth="2"/>
+    <path d="M13 32Q32 20 45 34L58 30L60 36L46 41Q29 51 13 41Z" fill="#684b3d" stroke="#4f3b32" strokeWidth="2"/>
+    <path d="M14 28Q31 13 43 27L56 21L59 27L45 34Q29 43 14 34Z" fill="#d3a06c" stroke="#91664d" strokeWidth="2"/>
+    <path d="M18 36Q32 43 43 35M18 40Q30 47 43 39" fill="none" stroke="#af794d" strokeWidth="2"/>
+  </>),
   'mexican-metate': (<>
     <path d="M14 36L18 53M49 36L46 53M32 23V40" stroke="#686b64" strokeWidth="7" strokeLinecap="round"/>
     <path d="M10 25Q31 30 54 25L51 40Q32 46 13 40Z" fill="#747a70" stroke="#535b54" strokeWidth="2"/>

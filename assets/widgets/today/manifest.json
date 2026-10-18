@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "b61c42d22fac0416653c5d83ef3a279159eebcccf44fd76f549a71e98609d9b3",
+  "revision": "66ccd02697fe70267c78815267dde72923cb57ad81bfa4605e2cbc121aac119b",
   "scenes": [
+    {
+      "id": "english-hearth-bellows",
+      "engine": "english-hearth-bellows@1",
+      "small": {
+        "file": "english-hearth-bellows-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "7d807ae1dc10050d3f33d4c0d08707958c3a85aa3ef6c2911e2b454f38af6999",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "english-hearth-bellows-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "1a90e4b934a3cbf6bd4849d38dede8bd270e09c308ea0d15afb07f230f8227ed",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "english-hearth-bellows-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "5b4ca041f816fdefdab4606e401bd3206a3ab86fb402949dc25561acf1fdda73",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "mexican-metate",
       "engine": "mexican-metate@1",

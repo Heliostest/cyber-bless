@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'english-hearth-bellows', title: '风囊轻送', traditionSlug: 'english-hearth-bellows', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-metate', title: '石面磨香', traditionSlug: 'mexican-metate', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'czech-wooden-ratchet', title: '木齿轻转', traditionSlug: 'czech-wooden-ratchet', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'puerto-rican-guiro', title: '瓜棱轻奏', traditionSlug: 'puerto-rican-guiro', grade: 'C', sensitivity: '低', gestures: ['drag'] },
@@ -175,6 +176,7 @@ const IMPLEMENTED = new Set([
   'korean-yutnori',
   'chinese-diabolo',
   'chinese-tangram',
+  'english-hearth-bellows',
   'mexican-metate',
   'czech-wooden-ratchet',
   'puerto-rican-guiro',
@@ -232,6 +234,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'english-hearth-bellows': return import('./english-hearth-bellows')
     case 'mexican-metate': return import('./mexican-metate')
     case 'czech-wooden-ratchet': return import('./czech-wooden-ratchet')
     case 'puerto-rican-guiro': return import('./puerto-rican-guiro')

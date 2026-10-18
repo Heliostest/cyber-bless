@@ -67,6 +67,7 @@ describe("builtInScenes narratives", () => {
       "daruma-eye-painting",
       "diya-oil-lamp",
       "ema-votive-plaque",
+      "english-hearth-bellows",
       "faroese-wool-knit",
       "fijian-woven-fan",
       "finnish-birch-basket",

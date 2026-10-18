@@ -109,6 +109,7 @@ describe("builtInScenes narratives", () => {
       "niue-shell-necklace",
       "omamori-cycle",
       "omikuji",
+      "paper-pinwheel",
       "peruvian-engraved-gourd",
       "phuang-malai",
       "polish-blessing-basket",

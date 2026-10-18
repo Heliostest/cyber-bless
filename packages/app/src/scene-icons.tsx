@@ -42,6 +42,12 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'paper-pinwheel': (<>
+    <path d="M32 30V58" stroke="#a18158" strokeWidth="5" strokeLinecap="round"/>
+    <path d="M31 29L10 11Q39 5 34 28Z M33 31L54 49Q25 55 30 32Z" fill="#e5947a" stroke="#b36e58" strokeWidth="1"/>
+    <path d="M30 31L12 52Q5 24 28 28Z M34 29L52 8Q59 36 36 32Z" fill="#6bbcaf" stroke="#448d83" strokeWidth="1"/>
+    <circle cx="32" cy="30" r="5" fill="#e7c17d" stroke="#a18158"/>
+  </>),
   'chinese-steelyard': (<>
     <path d="M8 25L57 20" stroke="#956b40" strokeWidth="5" strokeLinecap="round"/>
     <circle cx="25" cy="17" r="6" fill="none" stroke="#bc995f" strokeWidth="3"/>

@@ -42,6 +42,7 @@ export const BLESSING_SCENE_IDS = [
   "korean-yutnori",
   "chinese-diabolo",
   "chinese-tangram",
+  "paper-pinwheel",
   "chinese-steelyard",
   "garden-croquet",
   "welsh-drop-spindle",
@@ -113,6 +114,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id: "paper-pinwheel", title: "纸翼转风", engine: "paper-pinwheel@1", revision: "bundled", manifestUrl: "", traditionSlug: "paper-pinwheel", narrative: "纸风车把弯折的纸翼装在细轴上，轻风或吹气会让它转起来。墨尔本的儿童玩具馆藏中，也保存着四翼、木柄和小珠组合的手工纸风车。这里用珊瑚红与青绿色纸翼围住圆心，先轻拨起转，再提起木柄，续转一小段，让纸翼慢慢停稳。阳光落在纸面与木柄上，折弯处露出柔和的色阶。" },
   {
     id: "chinese-steelyard", title: "移砣平衡", engine: "chinese-steelyard@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-steelyard",

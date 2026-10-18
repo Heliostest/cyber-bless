@@ -1,5 +1,10 @@
 [
   {
+    "id": "paper-pinwheel",
+    "title": "纸翼转风",
+    "category": "blessing"
+  },
+  {
     "id": "chinese-steelyard",
     "title": "移砣平衡",
     "category": "blessing"

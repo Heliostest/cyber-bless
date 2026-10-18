@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "ca6cb4ef3f41a4be6a99b31724c0c507437ff45b3a49796155b2b83610bdf6ef",
+  "revision": "9188b78d3238b9e6b894672a5beae2531fdd8fd0c8731d94f143314d1cc24b90",
   "scenes": [
+    {
+      "id": "paper-pinwheel",
+      "engine": "paper-pinwheel@1",
+      "small": {
+        "file": "paper-pinwheel-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "0a9ef59fa750bcb57e47d8216014287707910b277c5678921d2af752f1af0f95",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "paper-pinwheel-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e6bd66176406a46e02bbeecbd5c6120c1895714ea2a88069e90b2bb289549962",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "paper-pinwheel-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "47974cdb55e658d741513d2ab8f6d1899191882149b67f1a90c44d5e64e937e2",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "chinese-steelyard",
       "engine": "chinese-steelyard@1",

@@ -11,9 +11,9 @@ type Checkpoint = 0 | 1 | 2 | 3
 const ACTIONS = ['向右展开鱼尾', '向下牵绳升鲤', '向右收绳挂稳']
 const HINTS = [
   '按住鱼尾向右短拖，让收拢的布鲤慢慢展开。鱼口由绳扣连在立杆旁。',
-  '按住杆旁的木坠向下短拖，绳线绕过滑轮，让布鲤升向明亮天空。',
+  '按住杆旁的木坠向下短拖。布鲤越升越高，布身和鱼尾也越迎风飘动。',
   '按住木坠向右短拖，把绳端收进杆上的挂座，让布鲤留在风中。',
-  '布鲤张口，鱼尾随风轻摆。把对孩子成长的美好祝愿留在晴空下。',
+  '布鲤迎风起伏，鱼尾舒展摆动。把对孩子成长的美好祝愿留在晴空下。',
 ]
 const MOVING = ['布尾慢慢展开……', '牵下绳端，布鲤升起……', '绳端挂稳，布鲤迎风……']
 const ease = (t: number) => t * t * (3 - 2 * t)
@@ -40,7 +40,7 @@ export function createJapaneseKoinobori(ctx: SceneContext): SceneInstance {
   Object.assign(lights.key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3, near: .1, far: 15 })
   const model = createKoinoboriModel(); scene.add(model.subject)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
+  const pose = (step: number, n: number) => { amount = n; model.pose(step,n,ctx.isReducedMotion?.() ? 0 : breezeTime); matrices() }
   const restore = () => pose(at, 0)
   const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: i === 1 ? [0, 1] : [1, 0], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
@@ -96,12 +96,14 @@ export function createJapaneseKoinobori(ctx: SceneContext): SceneInstance {
     camera.position.copy(target).add(direction); camera.lookAt(target); camera.updateMatrixWorld(true)
     const inverse = camera.quaternion.clone().invert(), tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), p = new THREE.Vector3(); let distance = 3.4
     const saved = amount
-    for (const [step, n] of [0,1,2].flatMap(step=>Array.from({length:21},(_,i)=>[step,i/20])).concat([[3,0]])) {
-      pose(step!, n!)
+    const fit = () => {
       model.subject.traverse(o => { const m = o as THREE.Mesh; if (!m.geometry) return; const vertices = m.geometry.getAttribute('position')
         for (let i = 0; i < vertices.count; i++) { p.fromBufferAttribute(vertices, i).applyMatrix4(m.matrixWorld).sub(target).applyQuaternion(inverse); distance = Math.max(distance, p.z + Math.abs(p.x) / (tangent * aspect * .86), p.z + Math.abs(p.y) / (tangent * .86)) }
       })
     }
+    for (const [step, n] of [0,1,2].flatMap(step=>Array.from({length:21},(_,i)=>[step,i/20])).concat([[3,0]])) { pose(step!, n!); fit() }
+    // Include the stronger high-altitude breeze in the camera envelope.
+    for (let i = 0; i < 16; i++) { model.flutter(i * .5); matrices(); fit() }
     pose(at, saved); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
   }
   restore(); sync()
@@ -118,8 +120,10 @@ export function createJapaneseKoinobori(ctx: SceneContext): SceneInstance {
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
+      if (!ctx.isReducedMotion?.()) breezeTime += delta
       if (motion) { motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85); pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time))); if (motion.time === 1) settle() }
-      if (active()) { if (at === 3) { if (!ctx.isReducedMotion?.()) breezeTime += delta; model.flutter(ctx.isReducedMotion?.() ? 0 : breezeTime) }; matrices(); style.render() }
+      else model.flutter(ctx.isReducedMotion?.() ? 0 : breezeTime)
+      if (active()) { matrices(); style.render() }
     },
     dispose() {
       if (disposed) return

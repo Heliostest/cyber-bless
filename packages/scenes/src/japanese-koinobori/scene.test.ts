@@ -225,11 +225,34 @@ describe('Japanese koinobori unfurling and halyard', () => {
     const ray=new THREE.Raycaster(new THREE.Vector3(-1.05+.159,3,.10),new THREE.Vector3(0,0,-1))
     expect(ray.intersectObject(wheel).length).toBeGreaterThan(0)
   })
-  it('animates only the free cloth with stable buffers and respects reduced motion and pause',()=>{
-    let active=true;const s=mount(3,{isActive:()=>active}),body=s.scene.getObjectByName('koinobori-body') as THREE.Mesh,positions=body.geometry.getAttribute('position'),home=Array.from(positions.array),pole=s.scene.getObjectByName('koinobori-pole')!.matrixWorld.clone()
+  it.each([0,1,2,3])('animates only free cloth with stable buffers and respects reduced motion and pause at %i',at=>{
+    let active=true;const s=mount(at,{isActive:()=>active}),body=s.scene.getObjectByName('koinobori-body') as THREE.Mesh,positions=body.geometry.getAttribute('position'),home=Array.from(positions.array),pole=s.scene.getObjectByName('koinobori-pole')!.matrixWorld.clone()
     s.run(.4);expect(Array.from(positions.array)).not.toEqual(home);expect(body.geometry.getAttribute('position')).toBe(positions);expect(s.scene.getObjectByName('koinobori-pole')!.matrixWorld.equals(pole)).toBe(true)
     active=false;const paused=Array.from(positions.array);s.run();expect(Array.from(positions.array)).toEqual(paused)
-    const reduced=mount(3,{isReducedMotion:()=>true}),cloth=reduced.scene.getObjectByName('koinobori-body') as THREE.Mesh,rest=Array.from(cloth.geometry.getAttribute('position').array);reduced.run();expect(Array.from(cloth.geometry.getAttribute('position').array)).toEqual(rest)
+    const reduced=mount(at,{isReducedMotion:()=>true}),cloth=reduced.scene.getObjectByName('koinobori-body') as THREE.Mesh,rest=Array.from(cloth.geometry.getAttribute('position').array);reduced.run();expect(Array.from(cloth.geometry.getAttribute('position').array)).toEqual(rest)
+  })
+  it('keeps wind running during a held hoist and before the rope is secured',()=>{
+    const s=mount(1),body=s.scene.getObjectByName('koinobori-body') as THREE.Mesh,p=s.point(targetName(1),anchor(1))
+    event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0],p[1]+30])
+    const before=Array.from(body.geometry.getAttribute('position').array)
+    s.run(.4);expect(Array.from(body.geometry.getAttribute('position').array)).not.toEqual(before);expect(s.progress).toEqual([])
+    const current=Array.from(body.geometry.getAttribute('position').array)
+    event(s.hit,'pointermove',[p[0],p[1]+30]);expect(Array.from(body.geometry.getAttribute('position').array)).toEqual(current)
+    event(s.hit,'pointerup',[p[0],p[1]+60]);s.run();expect(s.progress).toEqual([2])
+    const raised=Array.from(body.geometry.getAttribute('position').array)
+    s.run(.4);expect(Array.from(body.geometry.getAttribute('position').array)).not.toEqual(raised);expect(s.complete).not.toHaveBeenCalled()
+  })
+  it.each([284,1280])('keeps the stronger raised breeze in frame throughout several cycles at width %i',width=>{
+    const s=mount(2,{},width),vertex=new THREE.Vector3()
+    for(let i=0;i<40;i++){
+      s.run(.2);s.scene.updateMatrixWorld(true);let extent=0
+      s.scene.getObjectByName('koinobori-fish')!.traverse(o=>{
+        const mesh=o as THREE.Mesh;if(!mesh.geometry)return
+        const positions=mesh.geometry.getAttribute('position')
+        for(let j=0;j<positions.count;j++){vertex.fromBufferAttribute(positions,j).applyMatrix4(mesh.matrixWorld).project(s.camera);extent=Math.max(extent,Math.abs(vertex.x),Math.abs(vertex.y))}
+      })
+      expect(extent).toBeLessThan(.97)
+    }
   })
   it('uses identical final subject transforms for ordinary, reduced motion and silently restored checkpoints', () => {
     for (const checkpoint of [1, 2, 3]) {

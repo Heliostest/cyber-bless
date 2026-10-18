@@ -72,14 +72,22 @@ export function createKoinoboriModel() {
   }
   const ropeGeometry = new THREE.TubeGeometry(new THREE.LineCurve3(new THREE.Vector3(), new THREE.Vector3(0, 1, 0)), 96, .011, 6, false)
   const rope = add('koinobori-halyard', ropeGeometry, ropeMat, [0, 0, 0]); rope.userData.toonSurface = { outline: false }
-  let length = 1.12, sag = .56, spread = .65
-  const wave = (u: number, time: number) => { const w = Math.max(0, (u - .25) / .75) ** 2; return [.05 * Math.sin(time * 1.6 - u * 6) * w, .045 * Math.sin(time * 1.4 - u * 7) * w] }
+  let length = 1.12, sag = .56, spread = .65, wind = .18
+  const wave = (u: number, time: number) => {
+    // Keep the painted head and mouth fixed; a travelling bend grows toward the free end.
+    const w = wind * Math.max(0, (u - .28) / .72) ** 1.6
+    return [w * (.18 * Math.sin(time * 2.5 - u * 7) + .035 * Math.sin(time * 4.3 - u * 11.5)),
+      w * (.22 * Math.sin(time * 2.1 - u * 6.5) + .035 * Math.sin(time * 3.6 - u * 11))]
+  }
   const radius = (u: number) => .32 * (1 - .55 * u) + .05 * Math.sin(u * Math.PI)
   function flutter(time: number) {
     const p = bodyGeometry.getAttribute('position') as THREE.BufferAttribute
-    for (let i = 0; i <= rows; i++) for (let j = 0; j <= columns; j++) {
-      const u = i / rows, theta = j / columns * Math.PI * 2, r = radius(u), [wy, wz] = wave(u, time)
-      p.setXYZ(i * (columns + 1) + j, length * u, -sag * u * u + r * Math.cos(theta) + wy!, r * Math.sin(theta) * (1 - (1 - spread) * Math.sin(u * Math.PI / 2)) + wz!)
+    for (let i = 0; i <= rows; i++) {
+      const u = i / rows, r = radius(u), [wy, wz] = wave(u, time)
+      for (let j = 0; j <= columns; j++) {
+        const theta = j / columns * Math.PI * 2
+        p.setXYZ(i * (columns + 1) + j, length * u, -sag * u * u + r * Math.cos(theta) + wy!, r * Math.sin(theta) * (1 - (1 - spread) * Math.sin(u * Math.PI / 2)) + wz!)
+      }
     }
     p.needsUpdate = true; bodyGeometry.computeVertexNormals(); bodyGeometry.computeBoundingBox(); bodyGeometry.computeBoundingSphere()
     tails.forEach((t, index) => {
@@ -87,14 +95,16 @@ export function createKoinoboriModel() {
       // Each root follows one half of the open elliptical rim, with matching angular samples.
       for (let i = 0; i <= 8; i++) for (let j = 0; j <= 24; j++) {
         const u = i / 8, theta = j * Math.PI / 24, h = Math.cos(theta)
-        v.setXYZ(i * 25 + j, (.20 + .16 * Math.abs(h)) * u, THREE.MathUtils.lerp(radius(1) * h, .30 * h, u) + wy!, (index === 0 ? 1 : -1) * radius(1) * spread * Math.sin(theta) * (1 - .8 * u) + wz!)
+        const flap = wind * u * u * h * (.08 * Math.sin(time * 4.1 - u * 2) + .035 * Math.sin(time * 2.6 + theta * 2))
+        v.setXYZ(i * 25 + j, (.20 + .16 * Math.abs(h)) * u, THREE.MathUtils.lerp(radius(1) * h, .30 * h, u) + wy! + flap * .45, (index === 0 ? 1 : -1) * radius(1) * spread * Math.sin(theta) * (1 - .8 * u) + wz! + flap)
       }
       v.needsUpdate = true; t.geometry.computeVertexNormals(); t.geometry.computeBoundingBox(); t.geometry.computeBoundingSphere()
     })
   }
-  function pose(step: number, amount: number) {
+  function pose(step: number, amount: number, time = 0) {
     const p = THREE.MathUtils.clamp(step + (step === 3 ? 0 : amount), 0, 3), unfurl = Math.min(1, p), lift = THREE.MathUtils.clamp(p - 1, 0, 1), secure = Math.max(0, p - 2)
     length = 1.12 + .78 * unfurl; sag = .56 * (1 - .65 * lift); spread = .65 + .35 * lift
+    wind = (.18 + .82 * lift * lift * (3 - 2 * lift)) * (.45 + .55 * unfurl)
     fish.position.set(-.50, 1.05 + 1.15 * lift, 0)
     const seating = THREE.MathUtils.smoothstep(secure, .22, .74)
     toggle.position.set(-1.30 + .25 * seating, 1.75 - 1.15 * lift - .04 * seating + .20 * Math.sin(Math.PI * secure), .12 + .13 * seating)
@@ -109,7 +119,7 @@ export function createKoinoboriModel() {
       }
       v.needsUpdate = true; mesh.geometry.computeVertexNormals(); mesh.geometry.computeBoundingBox(); mesh.geometry.computeBoundingSphere()
     })
-    flutter(0)
+    flutter(time)
     // One line passes over the real pulley. Its two ends move equal and opposite while hoisting.
     const from = new THREE.Vector3(-.88, fish.position.y, 0), top = new THREE.Vector3(-.88, 3, 0), end = toggle.position.clone().add(new THREE.Vector3(0, .10, 0))
     const descend = new THREE.CubicBezierCurve3(new THREE.Vector3(-1.22, 3, 0), new THREE.Vector3(-1.22, 2, .05), new THREE.Vector3(-1.30, end.y + .24, .12 + .20 * secure), end)

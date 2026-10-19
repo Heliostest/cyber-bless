@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "cd20eff68e12b6eb4efae2f5e544242698f9f34011ce7c0c9da70b363916d272",
+  "revision": "2fb4e0d9a2f7d371915edc8d6b6ab3a067f0a8975187d2e4f52cc3ef95d01a0f",
   "scenes": [
+    {
+      "id": "tibetan-water-bowls",
+      "engine": "tibetan-water-bowls@1",
+      "small": {
+        "file": "tibetan-water-bowls-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "58a852f48ae913f46d81225935c265d103dee76acb074e48ae64bed1e102017a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "tibetan-water-bowls-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "2a4c053c178aa2bdfb31b0d434a96abb5e41eb23b91c19eec74312e36b481c4e",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "tibetan-water-bowls-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "9fddac49621b907e19c0efcd09d1c0fd9769a72ce94b883686f58fd9bf4e01b2",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "greek-new-year-pomegranate",
       "engine": "greek-new-year-pomegranate@1",

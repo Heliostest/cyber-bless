@@ -133,6 +133,7 @@ describe("builtInScenes narratives", () => {
       "st-brigids-cross",
       "tanzaku-tanabata",
       "theravada-water",
+      "tibetan-water-bowls",
       "tibetan-wheel",
       "turkish-ebru-paper",
       "udo-undama",

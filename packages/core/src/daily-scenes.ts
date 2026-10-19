@@ -74,6 +74,7 @@ export const BLESSING_SCENE_IDS = [
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
 export const WISH_SCENE_IDS = [
+  "zeniarai-coin-washing",
   "udo-undama",
   "tanzaku-tanabata",
   "yeondeunghoe",
@@ -116,6 +117,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"zeniarai-coin-washing",title:"泉水净币",engine:"zeniarai-coin-washing@1",revision:"bundled",manifestUrl:"",traditionSlug:"zeniarai-coin-washing",narrative:"在日本镰仓的銭洗弁財天宇賀福神社，参访者清洗钱币，寄托对财福的祈愿。神社代表的访谈记述，参拜后把钱放入筛中，用柄杓浇水，再以手帕擦拭收回。眼前的硬币已放在浅筛里：向上短拖举起水勺，向左倾水，让泉水流过硬币；再把布巾向右短拖，拭去水珠。勺子回到泉边，硬币仍静放在筛中。" },
   { id:"udo-undama",title:"龟岩投愿",engine:"udo-undama@1",revision:"bundled",manifestUrl:"",traditionSlug:"udo-undama",narrative:"在日本宫崎的鵜户神宫，参访者把小小的陶土「运玉」投向海边龟岩背上的方形凹处，把愿望寄托在这一投。神宫记述，如今的运玉由黏土揉圆，压上「運」字，再轻烧制成。眼前先把陶玉从石边取起，对准岩上的凹处，向上短拖后松手。陶玉划出弧线，越过岩沿，落入凹处；海面的光纹仍在缓缓晃动。" },
   { id: "japanese-daruma-otoshi", title: "木槌落片", engine: "japanese-daruma-otoshi@1", revision: "bundled", manifestUrl: "", traditionSlug: "japanese-daruma-otoshi", narrative: "达摩落片是日本的木制叠片玩具：从底部敲出木片，同时让上方的叠片保持直立。Reading Museum记录了这种玩法，江户东京博物馆也收藏着名为「だるま落し」的玩具。这里把三片柔和色彩的木片叠在红色达摩下，先下移木槌对齐，敲出一片，看上层稳稳落下，再抬起木槌。圆润的木面与彩漆在阳光下留下清楚的色阶。" },
   { id: "paper-pinwheel", title: "纸翼转风", engine: "paper-pinwheel@1", revision: "bundled", manifestUrl: "", traditionSlug: "paper-pinwheel", narrative: "纸风车把弯折的纸翼装在细轴上，轻风或吹气会让它转起来。墨尔本的儿童玩具馆藏中，也保存着四翼、木柄和小珠组合的手工纸风车。这里用珊瑚红与青绿色纸翼围住圆心，先轻拨起转，再提起木柄，续转一小段，让纸翼慢慢停稳。阳光落在纸面与木柄上，折弯处露出柔和的色阶。" },

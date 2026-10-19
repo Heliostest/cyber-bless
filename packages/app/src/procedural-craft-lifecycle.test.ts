@@ -49,6 +49,7 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
 it.each([
   ['malawi-sansi', 0, 'sansi-tine-4', 'sansi-tine-4', [0, .02, -.035], [0, .02, -.035], [0, 60]],
   ['japanese-kendama', 0, 'kendama-handle', 'kendama-handle', [0, .5, .1], [0, .5, .1], [0, -60]],
+  ['zeniarai-coin-washing', 0, 'wash-handle', 'wash-ladle', [.85,.28,0], [0,.115,.188], [0,-60]],
   ['udo-undama', 0, 'undama-ball', 'undama-ball', [-1.05,.63,1], [0,0,0], [0,-60]],
   ['japanese-daruma-otoshi', 0, 'otoshi-mallet-handle', 'otoshi-mallet', [-.96,.68,.6], [0,0,.6], [0,60]],
   ['paper-pinwheel', 0, 'pinwheel-vane-0', 'pinwheel-rotor', [.556,1.9538,.107], [.556,.1038,.107], [60,0]],

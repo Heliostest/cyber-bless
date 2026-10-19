@@ -42,6 +42,7 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+ 'zeniarai-coin-washing': (<><ellipse cx="32" cy="43" rx="27" ry="15" fill="#b9b098" stroke="#827c68"/><ellipse cx="32" cy="37" rx="20" ry="9" fill="#86cacb" stroke="#639b9e"/><path d="m16 37 7 13h20l6-13Z" fill="#d6b67b" stroke="#a38656"/><path d="M22 42h21m-18-5 3 12m8-12-1 12" stroke="#a38656"/><ellipse cx="33" cy="40" rx="5" ry="2" fill="#ba9954"/><path d="M36 18 49 8" stroke="#b38c57" strokeWidth="5" strokeLinecap="round"/><ellipse cx="33" cy="22" rx="8" ry="5" fill="#d5b383" stroke="#a38656"/><path d="M30 28q-5 6 2 10" fill="none" stroke="#69b6c6" strokeWidth="3"/></>),
   'udo-undama': (<>
     <path d="M25 39 31 28 49 25 59 35 57 53 21 55Z" fill="#b6a58b" stroke="#82725d"/>
     <path d="m36 33 12-1 3 8-14 2Z" fill="#78644d" stroke="#82725d"/>

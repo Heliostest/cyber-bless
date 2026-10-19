@@ -79,6 +79,7 @@ describe("scene placement", () => {
     ["korean-yutnori", "korean-yutnori", false],
     ["chinese-diabolo", "chinese-diabolo", false],
     ["chinese-tangram", "chinese-tangram", false],
+    ["zeniarai-coin-washing", "zeniarai-coin-washing", true],
     ["udo-undama", "udo-undama", true],
     ["japanese-daruma-otoshi", "japanese-daruma-otoshi", false],
     ["paper-pinwheel", "paper-pinwheel", false],
@@ -217,6 +218,7 @@ describe("scene placement", () => {
       "mongolian-felt-ger",
     ]);
     expect([...WISH_SCENE_IDS]).toEqual([
+      "zeniarai-coin-washing",
       "udo-undama",
       "tanzaku-tanabata",
       "yeondeunghoe",

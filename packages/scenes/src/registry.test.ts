@@ -20,6 +20,7 @@ describe('sceneRegistry', () => {
       'chinese-rattle-drum',
       'ghanaian-oware',
       'mexican-tortilla-press',
+      'zeniarai-coin-washing',
       'udo-undama',
       'japanese-daruma-otoshi',
       'paper-pinwheel',
@@ -271,3 +272,5 @@ it('loads paper pinwheel with a real four vane rotor and wooden handle',async()=
 it('loads daruma otoshi with three wooden discs and a striking mallet',async()=>{const m=await loadScene('japanese-daruma-otoshi');expect(m.meta.id).toBe('japanese-daruma-otoshi');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
 
 it('loads the public Udo wishing practice with a real clay ball',async()=>{const m=await loadScene('udo-undama');expect(m.meta.id).toBe('udo-undama');expect(m.meta.traditionSlug).toBe('udo-undama');expect(m.create).toBeTypeOf('function')})
+
+it('loads the source-specific Zeniarai washing fragment',async()=>{const m=await loadScene('zeniarai-coin-washing');expect(m.meta.id).toBe('zeniarai-coin-washing');expect(m.meta.traditionSlug).toBe('zeniarai-coin-washing');expect(m.create).toBeTypeOf('function')})

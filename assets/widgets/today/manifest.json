@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "67294e67183f38720b91d2a52b3bf754eb3ccdfab8cf14af7d0551a12ff05b39",
+  "revision": "d8d37e087843d5cb286442b889c0cc14555474bcac9f8ae619fab331413282d1",
   "scenes": [
+    {
+      "id": "zeniarai-coin-washing",
+      "engine": "zeniarai-coin-washing@1",
+      "small": {
+        "file": "zeniarai-coin-washing-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "93fc1065f1d3879facfbbc47b35f8fa6b019ee1c4fabed19be2bd935ea9fd6e7",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "zeniarai-coin-washing-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "3c54321ca8cbb460660b9691e8ad935e0a92079069dc74ff282b5a67677ddc9a",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "zeniarai-coin-washing-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "7f695adafa86e1e855deb5a7dfa9a0efff6be9a21ac311505a9022393c2dbe1e",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "udo-undama",
       "engine": "udo-undama@1",

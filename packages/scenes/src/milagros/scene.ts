@@ -15,7 +15,7 @@ const COPY = {
   title: '留一枚感谢', choose: '选好这枚', hang: '挂上小符', leave: '留在这里',
   returning: '回看这枚小符与当时的祈求或谢意，再轻点它结束静看。',
   hints: ['想一件要向圣者祈求或谢恩的事，轻点选一枚金属小符。', '把选好的小符拖到眼前木架的挂点。',
-    '可写下向圣者的祈求或谢意，也可静看小符，点「留在这里」。', '小符已挂在木架上，这一刻的祈求或谢意已留下。'],
+    '把向圣者的祈求或谢意留在心里，静看小符，再点「留在这里」。', '小符已挂在木架上，这一刻的祈求或谢意已留下。'],
   wishLabel: '写下祈求或谢意', wishPlaceholder: '为一件事祈求，或为蒙恩道谢…',
 }
 
@@ -199,7 +199,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   const action = () => {
     if (!canAct() || blocked || drag || pointers.size) return
     feedback.prepare()
-    if (step === 0) choose(); else if (step === 1) hang(); else if (step === 2) finish(wish.querySelector('input')?.value ?? '')
+    if (step === 0) choose(); else if (step === 1) hang(); else if (step === 2) finish()
   }
   const resetDrag = () => { drag = null; if (step === 1) charmGroups[selected].position.copy(held) }
   const down = (event: PointerEvent) => {

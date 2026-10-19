@@ -29,7 +29,7 @@ const COPY = {
   hintWalking: '缓步走近…',
   hintBow: '入社前低头示敬。按住鸟居向下轻滑，也可竖起手机稍停，或点「轻轻一礼」。',
   hintBowing: '低头，再缓缓抬起…',
-  hintEma: '可写下祈愿，让一块木牌留在绘马架上；也可点「静立片刻」结束。',
+  hintEma: '带着心里的祈愿，在鸟居前静立片刻，再点「静立片刻」结束。',
   approachTap: '走到鸟居前',
   bowTap: '轻轻一礼',
   emaTap: '静立片刻',

@@ -18,6 +18,8 @@ export type SceneContext = {
    * hosts without wishes leave it out, and the box then says nothing is kept.
    */
   saveWish?(text: string): void
+  /** The host handles optional wish writing after the ritual actions finish. */
+  deferWishWriting?: boolean
   /** Explicit host-validated 还愿 visit; e.g. Daruma paints its second eye. */
   returning?: boolean
   initialVariant?: string

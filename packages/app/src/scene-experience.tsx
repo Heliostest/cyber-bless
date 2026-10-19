@@ -13,8 +13,8 @@ import {
   dailyCollectibleId,
   hasReturnRitual,
   localDay,
-  WISH_TITLE_MAX,
   openingExclusions,
+  sceneIntention,
 } from "@wbr/core";
 import { WISH_WRITE_COPY } from "@wbr/gestures";
 import type { WoodfishContext } from "./scene-engines";
@@ -36,6 +36,7 @@ import {
 } from "./scene-placement";
 import { rectOf } from "./reward-flight";
 import { OpeningGuide, OpeningDone } from './opening';
+import { OptionalSceneWish } from './optional-scene-wish';
 
 function ProceduralScene({
   entry,
@@ -84,6 +85,7 @@ function ProceduralScene({
           : {}),
         stage,
         returning,
+        deferWishWriting: true,
         initialVariant,
         onVariantChange: (variant: string) => latest.current.onVariantChange?.(variant),
       },
@@ -203,6 +205,7 @@ function LoadedScene({
   const record = state.sceneRecords.find((r) => r.id === entry.id);
   const progress = record?.progress ?? 0;
   const steps = sceneSteps(entry);
+  const intention = sceneIntention(entry.id);
   const [instruction, setInstruction] = useState("轻敲木鱼，让心慢下来");
   // A 还愿 visit: a wish still waiting on its 还愿. The vessel path may walk
   // any wish scene; the legacy free walk (no vessel) only a core ritual's.
@@ -212,6 +215,11 @@ function LoadedScene({
         (w) => w.id === wishId && w.status === "realized" && !w.archived,
       )
     : undefined;
+  const gratitudeAction = entry.id === "daruma-eye-painting"
+    ? "补好达摩的另一目，为已经实现的心愿表达感谢。"
+    : entry.id === "omamori-cycle"
+      ? "整理御守，把它放进返纳盒，表达这段陪伴中的感谢。"
+      : "回想愿望实现的经历与帮助过你的人，带着感谢完成眼前的动作。";
   // A vessel walk that is not a 还愿 is a 许愿: its line is held, not saved.
   const vesselMake = vessel && !returnWish;
   // The held line of a 许愿 walk, kept in the save under the vessel, so the
@@ -219,10 +227,9 @@ function LoadedScene({
   const draft = vesselMake ? state.vesselDrafts?.[vessel] : undefined;
   /** The wish this visit kept, as always: from a line saved on a plain walk. */
   const [keptWish, setKeptWish] = useState<string>();
+  const postWishSubmitted = useRef(false);
   /** A vessel 许愿 walk holds its box line for the keep-or-not choice. */
   const [heldWish, setHeldWish] = useState<string | undefined>(() => draft?.line);
-  /** The keep form's line, for a vessel scene with no wish box of its own. */
-  const [typedWish, setTypedWish] = useState(() => draft?.line ?? "");
   /** Whether this walk settled a daily keepsake; a vessel is spent by the
    * walk itself, so that one is read straight off the collectible. */
   const [dailyGranted, setDailyGranted] = useState(false);
@@ -294,7 +301,7 @@ function LoadedScene({
     </div>
   );
   const pendingVesselChoice = !opening && !returnedFor && !dailyGranted &&
-    vesselSpent && !discarded && !keptWish;
+    vesselSpent && !!heldWish && !discarded && !keptWish;
   // The wish box, by path. A 许愿 vessel holds its line for the choice at
   // done — in the save, under the vessel, so the choice cannot be escaped
   // into a lost phrase; a 还愿 vessel keeps nothing (its box says so itself);
@@ -337,13 +344,12 @@ function LoadedScene({
   };
   /** The keep choice of a 许愿 vessel: the held line becomes a new 心愿. */
   const keepHeld = () => {
-    const line = (heldWish ?? typedWish).trim();
+    const line = (heldWish ?? "").trim();
     if (!line) return;
     const wish = sceneWish(line, entry.id, uid(), now());
     if (wish && dispatch(wish)) {
       setKeptWish(wish.id);
       setHeldWish(undefined);
-      setTypedWish("");
       // The choice is settled: the save lets the line go.
       if (vessel) dispatch({ type: "vessel.clear", id: vessel });
     }
@@ -353,6 +359,16 @@ function LoadedScene({
     setDiscarded(true);
     announce(SCENE_DISCARDED_COPY);
     if (vessel) dispatch({ type: "vessel.clear", id: vessel });
+  };
+  const saveCompletedWish = (text: string) => {
+    if (!active || progress < steps || returnWish || keptWish || postWishSubmitted.current) return;
+    const wish = sceneWish(text, entry.id, uid(), now());
+    if (!wish || !dispatch(wish)) return;
+    postWishSubmitted.current = true;
+    setKeptWish(wish.id);
+    setHeldWish(undefined);
+    if (vessel) dispatch({ type: "vessel.clear", id: vessel });
+    announce(WISH_WRITE_COPY.saved);
   };
   const client = useMemo<WoodfishContext["content"] | undefined>(
     () =>
@@ -377,6 +393,10 @@ function LoadedScene({
   );
   return (
     <>
+      {intention && <aside className="scene-intention" data-kind={returnWish ? "gratitude" : intention.kind} aria-label="这一场的心意">
+        <strong>{returnWish ? "为已经实现的心愿还愿" : intention.label}</strong>
+        <p>{returnWish ? `为「${returnWish.title}」还愿。${gratitudeAction}` : intention.action}</p>
+      </aside>}
       {returnWish && (
         <p className="scene-caption">这一次，为「{returnWish.title}」还愿。</p>
       )}
@@ -509,49 +529,9 @@ function LoadedScene({
               ) : (
                 <>
                   <p className="scene-done">{SCENE_VESSEL_DONE_COPY}</p>
-                  <form
-                    className="scene-keep-form"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      keepHeld();
-                    }}
-                  >
-                    <label htmlFor="scene-keep-line">{WISH_WRITE_COPY.label}</label>
-                    <input
-                      id="scene-keep-line"
-                      maxLength={WISH_TITLE_MAX}
-                      value={typedWish}
-                      onChange={(e) => {
-                        setTypedWish(e.target.value);
-                        // The typed line is held like a boxed one, so it too
-                        // survives leaving; an emptied field holds nothing.
-                        const line = e.target.value.trim();
-                        if (line)
-                          dispatch({
-                            type: "vessel.hold",
-                            id: vessel!,
-                            line,
-                            at: now(),
-                          });
-                        else dispatch({ type: "vessel.clear", id: vessel! });
-                      }}
-                      placeholder={WISH_WRITE_COPY.placeholder}
-                    />
-                    <button
-                      type="submit"
-                      className="button primary"
-                      disabled={!typedWish.trim()}
-                    >
-                      {SCENE_KEEP_CTA}
-                    </button>
-                  </form>
-                  <button
-                    type="button"
-                    className="button secondary"
-                    onClick={discardHeld}
-                  >
-                    {SCENE_DISCARD_CTA}
-                  </button>
+                  {completionActions(<button type="button" className="button primary" onClick={back}>
+                    {SCENE_DONE_CTA}
+                  </button>)}
                 </>
               )}
             </>
@@ -576,6 +556,9 @@ function LoadedScene({
             </>
           )}
         </div>
+      )}
+      {progress >= steps && intention?.optionalWish && !returnWish && !keptWish && !heldWish && !discarded && (
+        <OptionalSceneWish active={active} onSubmit={saveCompletedWish} />
       )}
       {entry.engine !== "woodfish@1" && (
         // Present from the start (empty), so the confirmation is announced.

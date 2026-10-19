@@ -64,9 +64,12 @@ it.each([
   ['venetian-glass-bead', 0, 'glass-mandrel-grip', 'glass-mandrel-grip', [0, .035, .055], [0, .035, .055], [0, -60]],
   ['venetian-glass-bead', 1, 'glass-hero-bead', 'glass-hero-bead', [0, .20, .43], [0, .20, .43], [60, 0]],
   ['venetian-glass-bead', 2, 'glass-hero-bead', 'glass-hero-bead', [0, .20, .43], [0, .20, .43]],
-  ['korean-bojagi-wrap', 0, 'bojagi-near-corner', 'bojagi-near-corner', [0, .012, 0], [0, .012, 0], [0, -60]],
-  ['korean-bojagi-wrap', 1, 'bojagi-band-right-tip', 'bojagi-band-right-tip', [0, .012, 0], [0, .012, 0], [60, 0]],
-  ['korean-bojagi-wrap', 2, 'bojagi-cloth', 'bojagi-cloth', [.031098, .452587, .590862], [.031098, .452587, .590862]],
+  ['korean-bojagi-wrap', 0, 'bojagi-near-corner', 'bojagi-drop-0', [0, 0, 0], [0, .012, 0], undefined, 'bojagi-step-0'],
+  ['korean-bojagi-wrap', 0, 'bojagi-far-corner', 'bojagi-drop-1', [0, 0, 0], [0, .012, 0], undefined, 'bojagi-step-1'],
+  ['korean-bojagi-wrap', 0, 'bojagi-left-corner', 'bojagi-drop-2', [0, 0, 0], [0, .012, 0], undefined, 'bojagi-step-2'],
+  ['korean-bojagi-wrap', 0, 'bojagi-right-corner', 'bojagi-drop-3', [0, 0, 0], [0, .012, 0], undefined, 'bojagi-step-3'],
+  ['korean-bojagi-wrap', 1, 'bojagi-band-left-tip', 'bojagi-drop-4', [0, 0, 0], [0, .012, 0], undefined, 'bojagi-step-4'],
+  ['korean-bojagi-wrap', 1, 'bojagi-band-right-tip', 'bojagi-drop-5', [0, 0, 0], [0, .012, 0], undefined, 'bojagi-step-5'],
   ['vietnamese-bamboo-dragonfly', 0, 'dragonfly-head', 'dragonfly-head', [0, .035, .13], [0, .035, .13], [0, -60]],
   ['vietnamese-bamboo-dragonfly', 1, 'dragonfly-wing-front-right', 'dragonfly-wing-front-right', [1.18, -.14, .545], [1.18, -.14, .545], [60, 0]],
   ['vietnamese-bamboo-dragonfly', 2, 'dragonfly-head', 'dragonfly-head', [0, .035, .13], [0, .035, .13]],
@@ -134,14 +137,14 @@ it.each([
   ['clootie-well-rag', 0, 'clootie-rag-handle', 'clootie-water-target'],
   ['diya-oil-lamp', 2, 'diya-held-target', 'diya-plate-target'],
   ['votive-candle-catholic', 0, 'votive-held-target', 'votive-placement-target'],
-] as const)('cancels %s through host pause and accepts a fresh gesture', async (id, progress, source, target, targetAnchor: readonly number[] = [0, 0, 0], sourceAnchor: readonly number[] = [0, 0, 0], screenDelta?: readonly number[]) => {
+] as const)('cancels %s through host pause and accepts a fresh gesture', async (id, progress, source, target, targetAnchor: readonly number[] = [0, 0, 0], sourceAnchor: readonly number[] = [0, 0, 0], screenDelta?: readonly number[], initialVariant?: string) => {
   vi.stubGlobal('requestAnimationFrame', () => 1); vi.stubGlobal('cancelAnimationFrame', () => {})
   vi.spyOn(HTMLCanvasElement.prototype, 'clientWidth', 'get').mockReturnValue(360)
   vi.spyOn(HTMLCanvasElement.prototype, 'clientHeight', 'get').mockReturnValue(360)
   vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 360, height: 360 } as DOMRect)
   const host = document.createElement('div'); document.body.append(host)
-  const checkpoint = vi.fn(), engine = await proceduralEngine(id)
-  const ctrl = engine.create(host, { progress, sceneId: id, checkpoint, isSoundEnabled: () => false },
+  const checkpoint = vi.fn(), variant = vi.fn(), engine = await proceduralEngine(id)
+  const ctrl = engine.create(host, { progress, sceneId: id, checkpoint, initialVariant, onVariantChange: variant, isSoundEnabled: () => false },
     { active: true, reducedMotion: true, signal: new AbortController().signal, ready() {}, failed(error) { throw error } })
   controllers.push(ctrl)
   const hit = host.querySelector<HTMLElement>('.scene-hit-layer')!
@@ -156,8 +159,13 @@ it.each([
   pointer(hit,'pointerdown',from)
   if (screenDelta) pointer(hit,'pointermove',[from[0] + screenDelta[0] * .35, from[1] + screenDelta[1] * .35])
   ctrl.setActive(false); ctrl.setActive(true)
-  pointer(hit,'pointerup',staleEnd); expect(checkpoint).not.toHaveBeenCalled()
+  pointer(hit,'pointerup',staleEnd); expect(checkpoint).not.toHaveBeenCalled(); expect(variant).not.toHaveBeenCalled()
   const freshFrom = point(source, sourceAnchor), freshEnd = destination(freshFrom)
   pointer(hit,'pointerdown',freshFrom); pointer(hit,'pointermove',freshEnd); pointer(hit,'pointerup',freshEnd)
-  expect(checkpoint).toHaveBeenCalledExactlyOnceWith(id==='malawi-sansi'?2:progress+1)
+  if (id === 'korean-bojagi-wrap') {
+    const step = Number(initialVariant!.slice(-1))
+    expect(variant).toHaveBeenCalledExactlyOnceWith(`bojagi-step-${step + 1}`)
+    if (step === 3 || step === 5) expect(checkpoint).toHaveBeenCalledExactlyOnceWith(step === 3 ? 1 : 2)
+    else expect(checkpoint).not.toHaveBeenCalled()
+  } else expect(checkpoint).toHaveBeenCalledExactlyOnceWith(id==='malawi-sansi'?2:progress+1)
 })

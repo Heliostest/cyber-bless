@@ -10,7 +10,7 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 
 const TITLE = '叶舟寄意'
 const HINTS = ['把花朵拖到折叶灯的花座。', '轻点烛芯，让叶舟亮起一点光。',
-  '拖叶舟到水面涟漪，或提交一句心意后送行。', '叶舟安静地漂在水面，心意留在这一刻。']
+  '带着此刻的心意，把叶舟拖到水面涟漪。', '叶舟安静地漂在水面，心意留在这一刻。']
 const ACTIONS = ['安放花朵', '点亮烛芯', '轻推叶舟']
 const DOCK = new THREE.Vector3(-.31, .365, .62), WATER = new THREE.Vector3(.69, -.0425, -.42)
 const FLOWER = new THREE.Vector3(-1.02, .39, .58), SEAT = new THREE.Vector3(-.19, .20, .16)

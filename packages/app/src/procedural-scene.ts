@@ -12,6 +12,8 @@ export type ProceduralContext = {
   isSoundEnabled?(): boolean;
   /** Keeps a line from the scene's wish box as a new 心愿. */
   saveWish?(text: string): void;
+  /** The App offers its optional wish record after the scene is complete. */
+  deferWishWriting?: boolean;
   returning?: boolean;
   initialVariant?: string;
   onVariantChange?(variant: string): void;
@@ -38,7 +40,15 @@ export async function proceduralEngine(
       const instance = module.create({
         canvas,
         overlay,
-        gestures: Gestures,
+        gestures: context.deferWishWriting ? {
+          ...Gestures,
+          createWishWrite: () => ({
+            mount(target) { target.hidden = true; },
+            update() {},
+            setEnabled() {},
+            dispose() {},
+          }),
+        } : Gestures,
         shared: Shared,
         initialProgress: context.progress,
         onProgress: context.checkpoint,
@@ -49,6 +59,7 @@ export async function proceduralEngine(
         haptic: context.haptic,
         isSoundEnabled: context.isSoundEnabled,
         saveWish: context.saveWish,
+        deferWishWriting: context.deferWishWriting,
         returning: context.returning,
         initialVariant: context.initialVariant,
         onVariantChange: context.onVariantChange,

@@ -149,6 +149,26 @@ describe.each(STEPS)('$id object cues', ({ id, kinds }) => {
 })
 
 describe('physical action cues', () => {
+  it('finishes a quiet spring visit without writing or saving a draft', async () => {
+    const saveWish = vi.fn(), complete = vi.fn()
+    let active = false
+    const s = await mount('celtic-folk-spring', 2, { saveWish, isActive: () => active })
+    s.overlay.addEventListener('scene:complete', complete)
+    const button = s.overlay.querySelector<HTMLButtonElement>('.scene-bow-tap')!
+    const input = s.overlay.querySelector<HTMLInputElement>('input')!
+    input.value = '留作草稿'
+    expect(button.hidden).toBe(false)
+    expect(button.textContent).toBe('静看片刻')
+    button.click()
+    expect(s.progress).not.toHaveBeenCalled()
+    active = true
+    button.click(); button.click()
+    expect(s.progress).toHaveBeenCalledExactlyOnceWith(3)
+    expect(complete).toHaveBeenCalledOnce()
+    expect(saveWish).not.toHaveBeenCalled()
+    s.instance.dispose()
+  })
+
   it.each([
     ['celtic-folk-spring', 0, 1], ['celtic-folk-spring', 1, 2],
     ['theravada-water', 0, 1], ['theravada-water', 1, 2], ['theravada-water', 2, 3],

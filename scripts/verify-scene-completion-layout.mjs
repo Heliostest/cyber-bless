@@ -6,25 +6,39 @@ const out='artifacts/scene-completion-layout',results=[]
 await mkdir(out,{recursive:true})
 const browser=await chromium.launch({headless:true})
 try {
-  for(const [id,keepWish] of [['peruvian-engraved-gourd',false],['crane',true]]) {
+  for(const [id,keepWish] of [['omikuji',false],['crane',true]]) {
     const page=await browser.newPage({viewport:{width:390,height:1000}}),errors=[]
     page.on('pageerror',error=>errors.push(error.message))
-    await page.goto(`${process.env.WBR_URL||'http://127.0.0.1:5173'}/scene-review?scene=${id}`)
+    await page.addInitScript(()=>localStorage.setItem('cyber-bless:personal:v1',JSON.stringify({version:1,sceneRecords:[],wishes:[],activeSession:null,sessions:[],collectibles:[],ledger:[],settings:{sound:false,haptics:false,reducedMotion:true}})))
+    await page.goto(process.env.WBR_URL||'http://127.0.0.1:5173')
+    await page.getByRole('button',{name:'我的',exact:true}).click()
+    await page.getByRole('button',{name:'场景目录',exact:true}).click()
+    while(!await page.locator(`.scene-card[data-scene="${id}"]`).count())await page.getByRole('button',{name:'显示更多',exact:true}).click()
+    await page.locator(`.scene-card[data-scene="${id}"]`).click()
     await page.locator('.library-scene-stage[data-ready="true"]').waitFor()
     assert.equal(await page.locator('.ritual-narrative summary').innerText(),'了解这个仪式')
-    let written=false
+    const finish=async()=>{
     for(let action=0;action<18;action++) {
       await page.waitForFunction(()=>document.querySelector('.scene-done-row')||document.querySelector('.scene-bow-tap:not(:disabled)'))
       if(await page.locator('.scene-done-row').count())break
-      const input=page.locator('.scene-wish-slot input:not(:disabled)')
-      if(keepWish&&!written&&await input.count()&&await input.isVisible()) {
-        await input.fill('愿世界和平');await page.locator('.scene-wish-slot button[type="submit"]').click();written=true
-      } else await page.locator('.scene-bow-tap').press('Enter')
+      await page.locator('.scene-bow-tap').press('Enter')
       await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+    }
+    }
+    await finish()
+    if(!await page.locator('.scene-done-row--inline').count()) {
+      // A daily primary's first walk collects a keepsake; the repeated walk
+      // exercises the shared ordinary completion row after that collection.
+      await page.getByRole('button',{name:'返回',exact:true}).click()
+      await page.locator(`.scene-card[data-scene="${id}"]`).click()
+      await page.locator('.library-scene-stage[data-ready="true"]').waitFor()
+      await finish()
     }
     await page.locator('.scene-done-row--inline').waitFor()
     if(keepWish) {
-      assert.ok(written,'the real wish flow was used')
+      await page.locator('.scene-wish-invite').click()
+      await page.locator('.scene-post-wish input').fill('愿世界和平')
+      await page.locator('.scene-post-wish button[type="submit"]').click()
       assert.ok((await page.locator('.scene-completion-actions').innerText()).includes('去心愿看看'))
     }
     for(const width of [390,320,284,1280]) {

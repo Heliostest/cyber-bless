@@ -129,6 +129,24 @@ it("hands the scene the App's saveWish, so its wish box can keep a line", async 
   expect(saveWish).toHaveBeenCalledWith("愿家人平安");
   controller.dispose();
 });
+it("defers scene-owned text boxes without skipping the ritual or saving a draft", async () => {
+  vi.stubGlobal("requestAnimationFrame", () => 1);
+  vi.stubGlobal("cancelAnimationFrame", () => {});
+  const saveWish = vi.fn();
+  const engine = await proceduralEngine("crane");
+  const controller = engine.create(document.createElement("div"),
+    { progress: 0, sceneId: "crane", checkpoint: () => {}, saveWish, deferWishWriting: true },
+    { active: true, reducedMotion: false, signal: new AbortController().signal, ready() {}, failed() {} });
+  const slot = document.createElement("div");
+  const writer = fixture.context.gestures.createWishWrite({ onSubmit: saveWish });
+  writer.mount(slot, {});
+  writer.setEnabled(true);
+  writer.update(.05);
+  expect(slot.querySelector("input, form, button")).toBeNull();
+  expect(saveWish).not.toHaveBeenCalled();
+  writer.dispose();
+  controller.dispose();
+});
 it("tells the scene which stage the App paints behind its canvas", async () => {
   vi.stubGlobal("requestAnimationFrame", () => 1);
   vi.stubGlobal("cancelAnimationFrame", () => {});

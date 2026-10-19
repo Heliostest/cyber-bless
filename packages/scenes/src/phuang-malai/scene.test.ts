@@ -161,12 +161,12 @@ describe('Phuang Malai craft', () => {
     expect(s.complete).toHaveBeenCalledTimes(1)
   })
 
-  it('keeps a phrase typed before the final button once', () => {
+  it('finishes the final action without saving an unsubmitted draft', () => {
     const s = mount(2)
     const input = s.overlay.querySelector<HTMLInputElement>('.scene-wish-slot input')!
     input.value = '  谢谢你的照顾  '
     s.tap(); s.tap()
-    expect(s.saveWish).toHaveBeenCalledExactlyOnceWith('谢谢你的照顾')
+    expect(s.saveWish).not.toHaveBeenCalled()
     expect(s.progress).toEqual([3])
     expect(s.complete).toHaveBeenCalledTimes(1)
   })

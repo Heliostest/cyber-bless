@@ -124,8 +124,8 @@ export function useOpenScene() {
   const { state, dispatch, go } = useApp();
   return (entry: CatalogEntry, visit?: SceneVisit) => {
     if (!isSceneVisibleInApp(entry)) return;
-    const progress =
-      state.sceneRecords.find((r) => r.id === entry.id)?.progress ?? 0;
+    const record = state.sceneRecords.find((r) => r.id === entry.id);
+    const progress = record?.progress ?? 0;
     const spentVessel =
       !!visit?.vessel &&
       state.collectibles.some((c) => c.id === visit.vessel && !!c.spentAt);
@@ -134,13 +134,16 @@ export function useOpenScene() {
     if (visit?.vessel && !spentVessel)
       dispatch({ type: "vessel.clear", id: visit.vessel });
     const fresh = !!visit && !visit.daily && !visit.opening && !spentVessel;
+    const restart = !spentVessel && !visit?.opening && (fresh || progress >= sceneSteps(entry));
+    // Cloth folds subdivide legacy integer checkpoints. A new wrapping visit
+    // clears that subdivision even if no full checkpoint was reached yet.
+    if (restart && entry.id === "korean-bojagi-wrap" && record?.variant !== undefined)
+      dispatch({ type: "scene.variant", id: entry.id, variant: "bojagi-step-0" });
     // A spent vessel never resets: it reopens on its waiting choice, not on
     // a new walk — even when the record stands done.
     if (
       progress > 0 &&
-      !spentVessel &&
-      !visit?.opening &&
-      (fresh || progress >= sceneSteps(entry))
+      restart
     )
       dispatch({ type: "scene.progress", id: entry.id, progress: 0 });
     go({

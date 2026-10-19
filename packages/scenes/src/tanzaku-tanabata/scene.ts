@@ -22,7 +22,7 @@ const COPY = {
   title: '短册系竹',
   hintPick: '点按或拖起地上的纸条。',
   hintHang: '把纸条拖到竹枝的系结处，再松开。',
-  hintWish: '纸条挂好了。可写一句短句，再静看片刻。',
+  hintWish: '纸条挂好了。把短愿放在心里，再静看片刻。',
   pickTap: '拾起纸条',
   hangTap: '挂到竹枝上',
   wishTap: '静看片刻',

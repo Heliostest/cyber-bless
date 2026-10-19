@@ -115,6 +115,14 @@ describe('milagros craft', () => {
     expect(s.complete).toHaveBeenCalledOnce()
     s.instance.dispose()
   })
+  it('finishes the final action without saving an unsubmitted draft', () => {
+    const s = mount(2)
+    s.overlay.querySelector<HTMLInputElement>('input')!.value = '  谢谢一路陪伴  '
+    s.action(); s.action()
+    expect(s.onProgress).toHaveBeenCalledExactlyOnceWith(3)
+    expect(s.complete).toHaveBeenCalledOnce()
+    expect(s.saveWish).not.toHaveBeenCalled()
+  })
   it.each([1, 2, 3])('restores %i silently', progress => {
     const s = mount(progress)
     expect(s.onProgress).not.toHaveBeenCalled()

@@ -13,7 +13,7 @@ const COPY = {
   title: '陶鸡报晓', paintAction: '给陶鸡添纹', placeAction: '把陶鸡放上展台', quietAction: '轻点陶鸡细看',
   paint: '握住桌前画笔的木柄，送到陶鸡胸前，添上叶芽纹样。',
   place: '轻托陶鸡，把它放到右侧圆形展台上。',
-  quiet: '轻点陶鸡，细看这件寓意好运的陈设，或写一句祝愿后点「写好了」。', returning: '轻点陶鸡，回看这件带着好运寓意的陈设。',
+  quiet: '轻点陶鸡，带着此刻的祝愿，细看这件寓意好运的陈设。', returning: '轻点陶鸡，回看这件带着好运寓意的陈设。',
   painting: '叶芽彩纹慢慢显现在陶鸡胸前…', placing: '陶鸡连同陶土底座，缓缓落在展台上…', done: '陶鸡已在展台上放稳，静赏它的色彩与美好寓意。',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3

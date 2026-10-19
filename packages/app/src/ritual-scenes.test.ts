@@ -44,6 +44,7 @@ import { clickOn, renderUI, settle, typeInto } from "./dom-test-utils";
 // The 3D scenes are not under test: keep the context the last one was given.
 type Given = {
   progress?: number;
+  deferWishWriting?: boolean;
   checkpoint?(n: number): void;
   saveWish?(text: string): void;
   haptic?(strength?: HapticStrength): void;
@@ -576,8 +577,10 @@ describe("许愿 through a keepsake", () => {
     expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
       SCENE_VESSEL_DONE_COPY,
     );
-    typeInto(ui.host.querySelector("#scene-keep-line")!, "家人平安");
-    await ui.tap(ui.host.querySelector(".scene-keep-form button[type='submit']")!);
+    expect(ui.host.querySelector(".scene-post-wish input")).toBeNull();
+    await ui.tap(ui.host.querySelector(".scene-wish-invite")!);
+    typeInto(ui.host.querySelector(".scene-post-wish input")!, "家人平安");
+    await ui.tap(ui.host.querySelector(".scene-post-wish button[type='submit']")!);
     expect(ui.doneButtons()).toEqual([SCENE_DONE_WISH_CTA]);
     const saved = await ui.saved();
     expect(saved.wishes[0]).toMatchObject({ title: "家人平安" });
@@ -587,6 +590,21 @@ describe("许愿 through a keepsake", () => {
 });
 
 describe("还愿 through a keepsake", () => {
+  it.each([["daruma-eye-painting", "另一目"], ["omamori-cycle", "返纳盒"]])(
+    "shows gratitude and the returning action for %s", async (id, action) => {
+      const state = withRealizedWish();
+      state.collectibles.push(keepsake(id, "2026-10-05"));
+      const ui = await openApp(state);
+      await ui.tap(ui.host.querySelector('[data-tab="wishes"]')!);
+      await ui.tap(ui.host.querySelector('.wish-card[data-wish-id="w1"]')!);
+      await ui.tap(ui.button("来还个愿", ".wish-detail-page"));
+      await ui.tap(ui.host.querySelector(`.vessel-card[data-scene="${id}"]`)!);
+      const intention = ui.host.querySelector('.scene-intention[data-kind="gratitude"]');
+      expect(intention?.textContent ?? "").toContain("面试顺利");
+      expect(intention?.textContent ?? "").toContain(action);
+      expect(ui.host.querySelector(".scene-post-wish")).toBeNull();
+      ui.unmount();
+    });
   it("spends the keepsake for the wish: a note, no merit, the badge only", async () => {
     const state = withRecords({ crane: 2 }, withRealizedWish());
     state.collectibles.push(keepsake("crane", "2026-10-05"));
@@ -934,6 +952,22 @@ describe("useOpenScene", () => {
       replay: undefined,
     });
   });
+  it("resumes partial cloth folds but clears them when a new wrapping visit begins", () => {
+    const state = withRecords({ "korean-bojagi-wrap": 0 });
+    state.sceneRecords[0].variant = "bojagi-step-2";
+    const resumed = opener(state);
+    resumed.open(entryOf("korean-bojagi-wrap"), { daily: DAY });
+    expect(resumed.dispatch).not.toHaveBeenCalled();
+    const restarted = opener(state);
+    restarted.open(entryOf("korean-bojagi-wrap"), { replay: true });
+    expect(restarted.dispatch).toHaveBeenCalledWith({ type: "scene.variant", id: "korean-bojagi-wrap", variant: "bojagi-step-0" });
+    const doneState = withRecords({ "korean-bojagi-wrap": 3 });
+    doneState.sceneRecords[0].variant = "bojagi-step-7";
+    const done = opener(doneState);
+    done.open(entryOf("korean-bojagi-wrap"));
+    expect(done.dispatch).toHaveBeenCalledWith({ type: "scene.variant", id: "korean-bojagi-wrap", variant: "bojagi-step-0" });
+    expect(done.dispatch).toHaveBeenCalledWith(reset("korean-bojagi-wrap"));
+  });
 });
 
 describe("ritual scene copy", () => {
@@ -958,5 +992,88 @@ describe("ritual scene copy", () => {
       "回看这场仪式",
     ])
       expect(() => assertSafeCopy(text)).not.toThrow();
+  });
+});
+
+describe("optional wishes after the ritual", () => {
+  async function openCatalogScene(id: string) {
+    const ui = await openApp(createState());
+    await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
+    await ui.tap(ui.button("场景目录", ".settings-card"));
+    while (!ui.host.querySelector(`.scene-catalog .scene-card[data-scene="${id}"]`)) {
+      const more = ui.button("显示更多");
+      expect(more).toBeTruthy();
+      await ui.tap(more);
+    }
+    await ui.tap(ui.host.querySelector(`.scene-catalog .scene-card[data-scene="${id}"]`)!);
+    return ui;
+  }
+
+  it("shows the purpose during the actions and defers writing until the ritual is done", async () => {
+    const ui = await openCatalogScene("tanzaku-tanabata");
+    const intention = ui.host.querySelector('.scene-intention[data-kind="wish"]');
+    expect(intention?.textContent ?? "").toContain("短册");
+    expect(ui.host.querySelector(".scene-post-wish")).toBeNull();
+    expect(scene.context?.deferWishWriting).toBe(true);
+    await ui.walk();
+    expect(ui.host.querySelector(".scene-post-wish .scene-wish-invite")).not.toBeNull();
+    expect(ui.host.querySelector(".scene-post-wish input")).toBeNull();
+    expect((await ui.saved()).wishes).toEqual([]);
+    ui.unmount();
+  });
+
+  it("completes and leaves a wishing ritual without a written wish", async () => {
+    const ui = await openCatalogScene("tanzaku-tanabata");
+    await ui.walk();
+    const exit = ui.host.querySelector(".scene-completion-actions button.primary");
+    expect(exit).not.toBeNull();
+    await ui.tap(exit!);
+    expect(ui.page()).not.toBe("scene");
+    expect((await ui.saved()).wishes).toEqual([]);
+    ui.unmount();
+  });
+
+  it("saves one trimmed wish only after an explicit post-ritual submit", async () => {
+    const ui = await openCatalogScene("tanzaku-tanabata");
+    await ui.walk();
+    await ui.tap(ui.host.querySelector(".scene-wish-invite")!);
+    const input = ui.host.querySelector<HTMLInputElement>(".scene-post-wish input")!;
+    typeInto(input, "   ");
+    const form = input.form!;
+    act(() => form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
+    expect((await ui.saved()).wishes).toEqual([]);
+    typeInto(input, "  愿家人平安  ");
+    expect((await ui.saved()).wishes).toEqual([]);
+    await ui.tap(form.querySelector('button[type="submit"]')!);
+    expect((await ui.saved()).wishes).toMatchObject([{ title: "愿家人平安", sourceSceneId: "tanzaku-tanabata" }]);
+    act(() => form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
+    expect((await ui.saved()).wishes).toHaveLength(1);
+    expect(ui.host.querySelector(".scene-post-wish input")).toBeNull();
+    await ui.tap(ui.button(SCENE_DONE_WISH_CTA));
+    expect(ui.page()).toBe("wishes");
+    expect(ui.host.querySelector(".wish-card strong")?.textContent).toBe("愿家人平安");
+    ui.unmount();
+  });
+
+  it("lets an unfinished post-ritual draft go without saving it", async () => {
+    const ui = await openCatalogScene("korean-bojagi-wrap");
+    await ui.walk();
+    await ui.tap(ui.host.querySelector(".scene-wish-invite")!);
+    typeInto(ui.host.querySelector<HTMLInputElement>(".scene-post-wish input")!, "还没想好");
+    await ui.tap(ui.host.querySelector(".scene-post-wish .scene-wish-cancel")!);
+    expect(ui.host.querySelector(".scene-post-wish input")).toBeNull();
+    expect((await ui.saved()).wishes).toEqual([]);
+    await ui.tap(ui.host.querySelector(".scene-wish-invite")!);
+    expect(ui.host.querySelector<HTMLInputElement>(".scene-post-wish input")?.value).toBe("");
+    ui.unmount();
+  });
+
+  it("keeps reflection practices focused on their own action", async () => {
+    const ui = await openCatalogScene("omikuji");
+    expect(ui.host.querySelector('.scene-intention[data-kind="reflection"]')).not.toBeNull();
+    await ui.walk();
+    expect(ui.host.querySelector(".scene-post-wish")).toBeNull();
+    expect((await ui.saved()).wishes).toEqual([]);
+    ui.unmount();
   });
 });

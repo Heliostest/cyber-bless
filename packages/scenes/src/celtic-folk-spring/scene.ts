@@ -14,10 +14,11 @@ const COPY = {
   title: '泉边一念',
   hintGyro: '点按泉沿，俯身一礼；也可将手机向前倾、再竖起停驻片刻，或用辅助按钮。',
   hintDrag: '按住信物，拖向泉面后松开。',
-  hintWish: '泉边静下来，在输入框写下短句后提交。',
+  hintWish: '信物已放在泉面，静看片刻，再点「静看片刻」结束。',
   hintHolding: '停驻片刻…',
   bowTap: '点按以鞠躬',
   dropTap: '放到泉面',
+  restTap: '静看片刻',
   done: '泉边安静下来，留一刻从容。',
   stepsAria: '步骤',
   cueCarry: '拖动信物',
@@ -103,8 +104,8 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
 
   const syncOverlayForStep = () => {
     renderDots()
-    bowBtn.hidden = step === 'wishWrite' || step === 'done'
-    setSafeText(bowBtn, step === 'drag' ? COPY.dropTap : COPY.bowTap, assertSafeCopy)
+    bowBtn.hidden = step === 'done'
+    setSafeText(bowBtn, step === 'wishWrite' ? COPY.restTap : step === 'drag' ? COPY.dropTap : COPY.bowTap, assertSafeCopy)
     wishSlot.hidden = step !== 'wishWrite'
     hitLayer.style.pointerEvents = step === 'gyro' || step === 'drag' ? 'auto' : 'none'
     if (step === 'gyro') setHint(COPY.hintGyro)
@@ -309,6 +310,7 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
     if (disposed || !canAct()) return
     if (step === 'gyro') goDrag()
     else if (step === 'drag') goWish()
+    else if (step === 'wishWrite') completeScene()
   }
 
   let downX = 0

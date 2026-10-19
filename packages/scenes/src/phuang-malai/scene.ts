@@ -15,8 +15,8 @@ const COPY = {
   stringing: '这一簇茉莉正轻轻落入花环…',
   tie: '花环已串好。拖住花朵，把花环向上轻拖到顶端绳结。',
   tying: '把小绳结轻轻收拢…',
-  place: '拖住花朵，把花环捧放到奶油色小台上，可为敬重的人留一句感谢。',
-  placed: '花环已放好。可写一句谢谢，或点「留下致谢」静静致意。',
+  place: '拖住花朵，把花环捧放到奶油色小台上，想着你敬重的人。',
+  placed: '花环已放好。带着心里的感谢，点「留下致谢」静静致意。',
   placing: '花环正轻轻落到小台上…',
   done: '茉莉已串成一环，愿这份敬意与感谢传达给你惦念的人。',
   stringTap: '串上一簇', tieTap: '系好花环', placeTap: '捧放并致谢', thanksTap: '留下致谢',
@@ -406,12 +406,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
     fx.prepare()
     if (checkpoint === 0) placeCluster()
     else if (checkpoint === 1) closeTie()
-    else {
-      const input = wishSlot.querySelector<HTMLInputElement>('input')
-      const thanks = input?.value.trim()
-      if (thanks) submitThanks(thanks)
-      else placeGarland(undefined, true)
-    }
+    else placeGarland(undefined, true)
   }
   const releaseCapture = (id: number) => {
     try { if (hitLayer.hasPointerCapture?.(id)) hitLayer.releasePointerCapture(id) } catch { /* A canceled pointer already lost capture. */ }

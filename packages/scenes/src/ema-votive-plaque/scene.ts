@@ -13,7 +13,7 @@ import { createObjectPointer } from '../object-pointer'
 const COPY = {
   title: '木牌记愿', flip: '翻到背面', blank: '先留白', acknowledge: '留一份感谢', hang: '挂上木牌',
   front: '按住木牌，向左或向右轻拖，翻到背面。',
-  write: '写下一句短愿，或先留白后点「写好了」。',
+  write: '把短愿留在心里，点「先留白」，再把木牌挂好。',
   return: '静看走过的一段路，再轻点木牌，把感谢留在这里。',
   ready: '把木牌拖到横梁中央的挂点。',
   hanging: '木牌轻轻落在横梁下…',

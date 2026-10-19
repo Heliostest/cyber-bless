@@ -3,6 +3,8 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import assert from 'node:assert/strict'
 import { scenePointer } from './browser-scene-pointer.mjs'
+import { isSceneVisibleInApp } from '../packages/core/src/daily-scenes.ts'
+import { sceneIntention } from '../packages/core/src/scene-intentions.ts'
 const base=process.env.WBR_URL||'http://127.0.0.1:5178/'
 const batch=process.env.WBR_BATCH||'workshop'
 const batches={gourdglass:['peruvian-engraved-gourd','venetian-glass-bead'],bojagidragonfly:['korean-bojagi-wrap','vietnamese-bamboo-dragonfly'],ebruangklung:['turkish-ebru-paper','indonesian-angklung'],kiteshadow:['weifang-paper-kite','chinese-shadow-puppet'],woolshell:['faroese-wool-knit','niue-shell-necklace'],paperclay:['polish-paper-cut','uzbek-clay-bowl'],printbead:['chinese-woodblock-print','czech-bead-star'],woven:['fijian-woven-fan','amazigh-woven-rug'],workshop:['slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart'],atelier:['bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon'],village:['barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant'],festival:['sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden'],handcraft:['dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top'],previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
@@ -10,7 +12,13 @@ assert.ok(batches[batch],`Unknown batch: ${batch}`)
 const out=path.resolve(process.env.WBR_OUT||(batch==='woven'?'artifacts/woven-pair-scenes/browser':`artifacts/${batch==='previous'?'next':batch}-four-scenes/browser`));await mkdir(out,{recursive:true})
 const allIds=batches[batch]
 const wishIds=['peruvian-engraved-gourd','korean-bojagi-wrap','turkish-ebru-paper','chinese-shadow-puppet','niue-shell-necklace','polish-paper-cut','chinese-woodblock-print','amazigh-woven-rug','hungarian-embroidery-hoop','andalusian-ceramic-tile','bai-indigo-cloth','welsh-love-spoon','barcelos-clay-rooster','croatian-licitar-heart','sorbian-painted-egg','basque-sunflower','omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto','aland-votive-ship','minangkabau-spinning-top']
-const ids=process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds,key='cyber-bless:personal:v1'
+const ids=(process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds).filter(id=>isSceneVisibleInApp({id})),key='cyber-bless:personal:v1'
+// Bojagi has six spatial operations and a manual finish, with integer legacy checkpoints.
+if(ids.includes('korean-bojagi-wrap')){
+  process.env.WBR_URL??=base
+  await import('./verify-bojagi-drop.mjs')
+  ids.splice(ids.indexOf('korean-bojagi-wrap'),1)
+}
 // Free performance has no three-step finish; exercise its dedicated contract.
 if(ids.includes('malawi-sansi')){
   process.env.WBR_URL??=base
@@ -30,7 +38,6 @@ const craftDeltas={
   'chinese-suanpan':[[0,-60],[0,60],[0,-60]],
   'peruvian-engraved-gourd':[[60,0],[0,60]],
   'venetian-glass-bead':[[0,-60],[60,0]],
-  'korean-bojagi-wrap':[[0,-60],[60,0]],
   'vietnamese-bamboo-dragonfly':[[0,-60],[60,0]],
   'turkish-ebru-paper':[[60,0],[0,-60]],
   'indonesian-angklung':[[-60,0],[60,0]],
@@ -80,7 +87,7 @@ async function shot(page,id,phase){
   },{selector:contextSelector,gap:id==='minangkabau-spinning-top'?8:0}),false,`${id}: cue crowds its cultural context`)
 }
 async function action(page,count=1){for(let i=0;i<count;i++){const button=page.locator('.scene-bow-tap');await button.focus();await button.press(keyboardActions++%2?'Space':'Enter');await page.waitForTimeout(100)}}
-async function write(page,text){const input=page.locator('.scene-wish-slot input');await input.fill(text);await input.press('Enter')}
+async function write(page,text){await page.locator('.scene-wish-invite').click();const input=page.locator('.scene-post-wish input');await input.fill(text);await input.press('Enter')}
 async function reopen(page,id,n){await page.getByRole('button',{name:'返回',exact:true}).click();await open(page,id);assert.equal((await saved(page)).sceneRecords.find(r=>r.id===id).progress,n)}
 for(const width of process.env.WBR_RETURN_ONLY||process.env.WBR_PHYSICAL_ONLY?[]:widths)for(const id of ids){
   const page=await pageAt(width);await catalog(page);await open(page,id);await shot(page,id,`${width}-0`)
@@ -88,10 +95,12 @@ for(const width of process.env.WBR_RETURN_ONLY||process.env.WBR_PHYSICAL_ONLY?[]
   await shot(page,id,`${width}-1`);await action(page);await progress(page,id,2)
   if(width===390){await page.reload();await catalog(page);await open(page,id);assert.equal((await saved(page)).sceneRecords.find(r=>r.id===id).progress,2)}
   await shot(page,id,`${width}-2`)
-  if(wishIds.includes(id))await write(page,'愿这一程温柔从容');else await action(page)
+  await action(page)
   if(id==='korean-yutnori')await page.locator('.scene-yut-finish').click()
-  await progress(page,id,3);await shot(page,id,`${width}-3`)
-  const state=await saved(page);assert.equal(state.wishes.length,wishIds.includes(id)?1:0)
+  await progress(page,id,3)
+  if(sceneIntention(id)?.optionalWish)await write(page,'愿这一程温柔从容')
+  await shot(page,id,`${width}-3`)
+  const state=await saved(page);assert.equal(state.wishes.length,sceneIntention(id)?.optionalWish?1:0)
   assert.equal(await page.locator('[data-cue-role="source"]').count(),0)
   // The catalog intentionally starts a fresh visit after completion; mounting it must not save again.
   if(width===390){await reopen(page,id,0);assert.equal((await saved(page)).wishes.length,state.wishes.length);assert.equal((await saved(page)).collectibles.length,state.collectibles.length)}
@@ -207,7 +216,7 @@ for(const width of process.env.WBR_RETURN_ONLY?[]:widths)for(const id of ids){
   await shot(page,id,`${width}-object-0`)
   for(let step=0;step<3;step++){
     await wrongCraftGesture(page,id,step)
-    if(step===2&&wishIds.includes(id))await page.locator('.scene-wish-slot input').fill('这句尚未提交')
+    assert.equal(await page.locator('.scene-wish-slot input').count(),0,'writing must be deferred until the ritual is complete')
     await physical(page,id,step);await progress(page,id,step+1);await shot(page,id,`${width}-object-${step+1}`)
   }
   assert.equal((await saved(page)).wishes.length,0,'quiet physical finish saved an unsubmitted wish')

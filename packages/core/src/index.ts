@@ -2,6 +2,8 @@ import { builtInScenes } from './daily-scenes';
 import { openingCollectibleId, replaceHiddenOpeningScenes, validOpeningSceneIds, validOpeningState, validOpeningDay, type OpeningState } from './opening';
 export { chooseOpeningScenes, openingCollectibleId, openingExclusions } from './opening';
 export type { OpeningState } from './opening';
+export { sceneIntention } from './scene-intentions';
+export type { SceneIntention, SceneIntentionKind } from './scene-intentions';
 
 export const rituals = {
   woodfish: {

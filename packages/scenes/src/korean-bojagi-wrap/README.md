@@ -1,38 +1,48 @@
 # 方巾裹礼 / Korean bojagi wrapping cloth
 
-An original contemporary public craft study: a continuous coral, cream, sage and ochre patchwork cloth wraps a small rounded parcel on a simple woven floor mat. Visible seams, a perimeter hem, a reinforced near corner and four attached fabric bands make the cloth construction legible. This is an abbreviated craft appreciation, not a religious ritual or a complete lesson in a particular historical knot.
+场景 ID：`korean-bojagi-wrap`；本次核查：2026-10-19。方巾、礼赠的器物关联保留 `korean-bojagi`；原来的两次拉动改为六次独立空间操作，随后由用户手动结束。技术 ID 和 `@1` 引擎保持不变。
 
-## Sources and original interpretation
+实际呈现是原创珊瑚红、米白、鼠尾草绿与赭黄拼布，一张连续方巾围着一个圆角礼盒，四角带有原创缝接系带，置于织物垫上。六次操作依次是近角折过礼盒、远角覆上、左角收拢、右角收拢、系带交叉成松结、向外拉紧。四个布角覆盖盒顶亮起的区域、系带在盒顶交叠、布结随拉动收小后，分别松手才落定；必须从当前真实布角或带端抓起。停留、错位、直接放开、取消和多指都不代替操作。辅助按钮提供键盘操作。
 
-[LACMA, “Bojagi: The Korean Wrapping Cloth”](https://unframed.lacma.org/2014/01/02/bojagi-the-korean-wrapping-cloth), verified 2026-10-15, describes square or rectangular cloth wrappers used to carry, store and cover objects; patchwork uses fabric remnants, including silk, ramie and cotton. The [Smithsonian wrapping-cloth collection record](https://www.si.edu/object/wrapping-cloth-bojagi%3Anmnhanthropology_8343143), also verified 2026-10-15, documents an example with tying ribbons at its four corners.
+## 来源与支持范围
 
-The palette, patch arrangement, seams, geometry and quiet feedback are original. No museum photographs, inherited motifs, symbols, music or third-party assets are copied. The broad wrapping and attached-band construction informs the scene; the specific parcel and knot-like closure are a contemporary interpretation.
-
-## Physical actions
-
-0. Drag the near reinforced cloth corner upward. Three corners begin loosely gathered; the near corner bends over the box shoulder while its sewn band follows. The same indexed cloth mesh remains connected throughout.
-1. Pull the visible right band sideways. Its already-visible loose loop contracts while the attached tail curves over the parcel edge and sags beside the box.
-2. Tap the wrapped cloth to quietly observe, or explicitly submit an optional wish. The auxiliary action button also completes without saving a draft.
-3. Completed pose.
-
-The moving cloth uses an authored path with rounded shoulders, low-amplitude folds and clearance around the parcel. This is not a cloth physics, stretch, friction or knot-topology simulation. The bands are continuous procedural ribbons attached to actual cloth corners; there is no independent floating knot. The immutable procedural texture stays in cloth UV space and survives the host's cached soft-toon material adapter. Cloth casts a shadow and uses soft lighting without receiving shadow-map artifacts. Every mat strand opts out of ink outlines so hidden mat edges cannot appear through the cloth.
-
-## Capture contract
-
-| Checkpoint | Mesh | Local cue anchor | Screen gesture |
+| 主张 | 实际阅读的来源与段落 | 读取状态与日期 | 支持范围和边界 |
 | --- | --- | --- | --- |
-| 0 | `bojagi-near-corner` | `[0, 0.012, 0]` | `[0, -60]` |
-| 1 | `bojagi-band-right-tip` | `[0, 0.012, 0]` | `[60, 0]` |
-| 2 | `bojagi-cloth` | `[0.031098, 0.452587, 0.590862]` | tap |
+| Bojagi 用于包裹、携带、收纳和遮盖；包括方形、长方形和拼布形式 | Virginia Moon / LACMA, [Bojagi: The Korean Wrapping Cloth](https://unframed.lacma.org/2014/01/02/bojagi-the-korean-wrapping-cloth)，2014-01-02，正文第 18–20 行 | 2026-10-19 已读相关正文 | 支持包袱布与拼布器物关联，不证明本应用的配色、拼块、六步顺序或结的拓扑是传统规范。 |
+| 用 Bojagi 包裹赠礼可以表达赠礼人向收礼人送去好意与好运 | Seoul Tourism Organization, [Korean Gift-Wrapping, Bojagi](https://english.visitseoul.net/walking-tour/koreangiftwrappingbogaji/ENN033541)，2020-03-31 发布、2021-07-05 编辑，第 169–178 行 | 2026-10-19 已读相关正文 | 官方旅游介绍支持礼赠和祝福语境；当代工作坊段落不证明统一古代包法，不能据此命名当前结为蝶结或绣球结。 |
 
-Subject group: `bojagi-subject`. The cue on the near corner is a sewn reinforcement; the right cue is the same attached band’s thickened end. The quiet anchor sits on a final cloth-wall vertex. The parcel is `bojagi-parcel`; its rounded lid is `bojagi-parcel-lid`. The four ribbons are `bojagi-band-near`, `bojagi-band-far`, `bojagi-band-left` and `bojagi-band-right`.
+传统事实仅取上述有限范围；礼赠背景不被改写成纯粹装饰或无关的自省。六步动作、原创缝带和拼色、礼盒几何、空间提示、完成音效、触感、手动结束，以及结束后可选的一句话，都是本产品的简化与新增表达。没有证据支持固定六步传统规则，故不作该主张；不复制馆藏照片、继承纹样或特定匠人的结法。
 
-All subject vertices fit 284×390, 350×408 and 1280×600 canvases. Each cue is reachable as the first opaque rendered surface. A drag needs actual movement, a release 40–84px along its intended axis, a path within 90px of its start and at most 18px across the axis; a 60px gesture leaves a short settling movement. Wrong starts, short, oversized, reverse, diagonal, backtracked, cancelled, release-only, nonfinite and multitouch gestures do not advance. A native 44px action button supports keyboard operation.
+来源卡见 [korean-bojagi](../../../../content/traditions/korean-bojagi.md)，本轮研究记录见 [ritual intentions](../../../../docs/research/2026-10-19-ritual-intentions.md)。模块、注册表和宿主的同一来源绑定继续适用。本次没有新增节期、资格、数量、期限、起源或宗教效果主张。
 
-## Lifecycle and verification
+## 几何与交互
 
-Checkpoints 0–3 and returning visits restore silently. Progress commits after settling; normal and reduced motion end with identical geometry. Accepted transitions freeze during pause, while blur, cancel, capture loss and inactive partial input restore the checkpoint. Callback guards prevent synchronous step skipping and suppress stale feedback after pause/resume or blur/focus, including `prepareFeedback`, `onProgress`, haptic and explicit wish saving. Wishes save only on explicit trimmed submission; quiet observation and returning visits never save drafts.
+`bojagi-subject` 内的 `bojagi-cloth` 始终是一张有索引的连续布面；四角以共享顶点的角向权重分别弯折，不能靠替换整张模型跳过操作。`bojagi-near-corner`、`bojagi-far-corner`、`bojagi-left-corner`、`bojagi-right-corner` 是缝在同一布面上的加强片；四条 `bojagi-band-*` 从各自真实角部连续连接。最后两个可抓带端分别为 `bojagi-band-left-tip`、`bojagi-band-right-tip`。
 
-The 54 tests retain real Three geometry, raycasting, cues, the real wish form and the real soft-toon adapter; only GPU rendering is substituted. They verify cloth connectivity, attached ribbon endpoints, triangle samples outside the parcel, exact rounded-lid raycasts, sagging band tails, geometry reuse, first opaque cue hits, frame containment, lifecycle reentrancy and exactly-once cleanup of geometry, materials, the shared texture, listeners, cues and renderer.
+可抓范围包括加强片或带端本体，以及提示圆点 22px 内最前方可见的同一块布面或相连系带；空地、其他角部和遮挡物仍不响应。该范围只方便抓取，不决定完成。`bojagi-drop-0` 至 `bojagi-drop-3` 显示盒顶覆盖区域；`bojagi-drop-4` 提示把带端搭到另一条带上，`bojagi-drop-5` 只提供向外拉的参考方向，没有必须命中的终点。
 
-Run `npm run test -w @wbr/scenes -- src/korean-bojagi-wrap/scene.test.ts`. Root integration owns browser mouse/keyboard/native-touch validation and complete repository checks.
+三类完成条件分别读取实际变形后的几何：
+
+- 前四步：布角随指针在盒顶平面上移动，真实加强片至少 60% 的采样顶点落在对应的盒顶矩形内，且高度在盒顶范围。满足后显示「已覆盖，松手落定」，松手吸附到折好姿态。覆盖区域中的不同位置都可接受。
+- 第五步：拖动左侧带端时保持敞开的系带，不预先生成松结；两条实际渲染带面的中心采样在盒顶范围交叠，高度差在可搭合范围内，才显示「系带已交叠，松手成结」。松手后形成松结。
+- 第六步：右侧自由带尾随手，拉动相对于另一端的张力逐渐缩小结环；完成判定测量两条实际带面内弯处的宽度，达到收紧状态显示「布结已收紧，松手落定」。轻拉、回松或向内推不会完成，不要求拉到某个屏幕坐标。
+
+三类都要求实际移动、画布内有效终点及松手；松手时重新变形和核验，不能沿用上一个移动事件的就绪状态。落定时同步播放中等触感和短音，交叠的音色稍低，收紧时使用重触感和更低、更长的收束音。音效、震动遵守宿主实时开关；错误或撤回操作没有成功反馈。
+
+折布使用抬升过盒沿、圆肩和低幅褶皱的原创路径。松结向紧结收束时带尾仍自然下垂；四角落定后，镜头按折好的主体收近构图，织物垫作为底景不再撑大取景。这是可复核的程序化几何，不是布料物理或完整打结拓扑仿真。贴图固定在原布面 UV 上，保留可见接缝；织物垫关闭描边以免隐藏线条透出布面。
+
+## 存档与生命周期
+
+旧整数存档保持 0–3：`0` 为尚未折好，`1` 为四角已折、准备打结，`2` 为全部包好、等待手动完成，`3` 为已完成。新操作细分通过已有的 `initialVariant` / `onVariantChange` 保存为 `bojagi-step-0` 至 `bojagi-step-7`；每步先报告 variant，仅在第四、第六和最后手动结束时分别报告整数 1、2、3。缺失、错误或与整数检查点冲突的 variant 回到对应旧检查点；宿主在显式重新开始时重置 variant。没有分数进度，也没有更改旧存档校验规则。
+
+本场景不挂载或保存心愿输入。完成前只做裹礼；第六步后仍要点击「完成裹礼」，随后可选的一句话交给宿主统一处理。返回体验不会自动写入心愿。
+
+失焦、暂停、取消、捕获丢失、多指或无效坐标均撤销未提交手势；已经接受的落定动画在暂停时冻结，恢复后继续。宿主回调重入不能跳过步骤；跨越生命周期的回调不继续播放旧音效或震动。窗口尺寸变化保留正在操作和落定的实际布面，资源、指针监听、提示和纹理只释放一次。
+
+## 验证
+
+场景测试保留真实 Three 几何、射线、提示和软卡通材质，仅替代 GPU 渲染，覆盖多处盒顶覆盖、非覆盖拒绝、实际带面交叠、轻拉／回松拒绝、收紧、松手重新核验、四角与带端随手、整数与 variant 兼容、取消和生命周期、首个不透明命中、窄屏取景、连续布面、缝带连接、盒体穿插和清理。
+
+`npm run test -w @wbr/scenes -- src/korean-bojagi-wrap/scene.test.ts --maxWorkers=2`
+
+宿主暂停恢复夹具覆盖全部六个操作。`node scripts/verify-bojagi-drop.mjs` 使用现有 Vite 服务，顺序运行实际鼠标与 Chrome 原生触摸、窄屏及桌面、区域内偏离中心的覆盖、错位拒绝、持有不提前提交、六步后手动结束和截图；并观察实际 WebAudio 播放与震动调用是否遵守实时开关。本次复核结果见[覆盖与收结记录](../../../../docs/research/2026-10-19-bojagi-coverage.md)。技术测试证明实现与约定一致；上表的人工来源核查独立承担文化事实支持。

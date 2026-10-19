@@ -40,7 +40,7 @@ const DIRECTIONAL_SCENES = [
   ['indian-charkha', 3], ['german-nutcracker', 3], ['mexican-molinillo', 3],
   ['chinese-suanpan', 3],
   ['peruvian-engraved-gourd', 2], ['venetian-glass-bead', 2],
-  ['vietnamese-bamboo-dragonfly', 2], ['indonesian-angklung', 2],
+  ['vietnamese-bamboo-dragonfly', 1], ['indonesian-angklung', 2],
   ['weifang-paper-kite', 2], ['faroese-wool-knit', 2],
   ['turkish-ebru-paper', 2], ['chinese-shadow-puppet', 2], ['niue-shell-necklace', 2],
   ['polish-paper-cut', 2], ['uzbek-clay-bowl', 2],
@@ -95,6 +95,10 @@ it.each(DIRECTIONAL_SCENES.flatMap(([id]) => [[id, false], [id, true]] as const)
   layer.setPointerCapture = () => {}; layer.releasePointerCapture = () => {}
   const type = reduced ? 'mouse' : 'touch'
   for (let step = 0; step < 3; step++) {
+    if (id === 'vietnamese-bamboo-dragonfly' && step === 2) {
+      overlay.querySelector<HTMLButtonElement>('.scene-bow-tap')!.click()
+      expect(progress).toEqual([1, 2, 3]); continue
+    }
     const scene = rendered.scene!, camera = rendered.camera!
     scene.updateMatrixWorld(true); camera.updateMatrixWorld(true)
     const targets: { object: THREE.Object3D; cue: InteractionCue }[] = []

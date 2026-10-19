@@ -167,5 +167,9 @@ it.each([
     expect(variant).toHaveBeenCalledExactlyOnceWith(`bojagi-step-${step + 1}`)
     if (step === 3 || step === 5) expect(checkpoint).toHaveBeenCalledExactlyOnceWith(step === 3 ? 1 : 2)
     else expect(checkpoint).not.toHaveBeenCalled()
+  } else if (id === 'vietnamese-bamboo-dragonfly' && progress === 2) {
+    expect(checkpoint).not.toHaveBeenCalled()
+    host.querySelector<HTMLButtonElement>('.scene-bow-tap')!.click()
+    expect(checkpoint).toHaveBeenCalledExactlyOnceWith(3)
   } else expect(checkpoint).toHaveBeenCalledExactlyOnceWith(id==='malawi-sansi'?2:progress+1)
 })

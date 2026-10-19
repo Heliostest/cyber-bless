@@ -4,30 +4,32 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { completesDirectionalDrag } from '../directional-drag'
+import { createBalanceMotion } from './balance-motion'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 type XYZ = [number, number, number]
 type Checkpoint = 0 | 1 | 2 | 3
 const COPY = {
   title: '竹蜓点风', left: '拿住竹蜻蜓的头，向上轻送，让尖喙落在细枝顶端。',
-  right: '轻推右侧蓝绿色长翼，向右短拖后松手，看它围着一个接触点轻摆。',
-  quiet: '轻点竹蜻蜓的头，看看彩绘竹翼、细尾与枝尖之间的平衡。',
+  right: '轻点或拨动任意竹翼、头部、身体和尾巴，看它绕着枝尖回摆。',
+  quiet: '可以继续拨弄；不同位置和方向会带来不同的晃动。看够了，轻点「结束体验」。',
   settling: '竹翼轻轻回摆，幅度慢慢变小，尖喙停在枝尖的同一个点。',
   done: '愿今天留一点轻盈。',
 } as const
 const ease = (t: number) => t * t * (3 - 2 * t)
 
-/** Original contemporary Thach Xa public craft study; authored balance motion, not a physics simulation. */
+/** Original contemporary Thach Xa public craft study with a simplified damped balance. */
 export function createVietnameseBambooDragonfly(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx, safe = shared.assertSafeCopy
   Object.values(COPY).forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
-  let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}, shakeAmount = 0
-  let motion: { step: 0 | 1; time: number; from: number } | null = null
+  let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
+  let motion: { time: number; from: number } | null = null
   let dragging = false, moved = false, maxTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
-  const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
+  const feedback = createSceneFeedback({ ...ctx, haptic: undefined, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
+  const balance = createBalanceMotion()
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: '拿住竹蜓头向上轻送' }, safe)
   ui.actionBtn.style.minWidth = '44px'; ui.actionBtn.style.minHeight = '44px'
   const { scene, renderer } = createWarmStage(canvas)
@@ -124,28 +126,21 @@ export function createVietnameseBambooDragonfly(ctx: SceneContext): SceneInstanc
   let rightWing!: THREE.Mesh
   for (const side of [-1, 1]) { const front = wing(side, true); if (side > 0) rightWing = front; wing(side, false) }
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  let placement = 0, sway = 0
+  let placement = 0
   const setPose = () => {
-    pivot.position.set(0, 1.58 - .52 * (1 - placement), .10 + .35 * (1 - placement))
-    pivot.rotation.set(.035 * sway, -.23 * sway, -.075 * sway); matrices()
+    // Keep the chest and tail above the upright before moving back onto it.
+    pivot.position.set(-.28 * (1 - placement), 1.58 - .08 * (1 - placement), .10 + .95 * (1 - placement))
+    pivot.rotation.set(balance.angle.x, balance.angle.y, balance.angle.z); matrices()
   }
-  const pose = (step: 0 | 1, amount: number, settling = 0) => {
-    shakeAmount = amount
-    if (step === 0) { placement = amount; sway = 0 }
-    else {
-      placement = 1
-      sway = settling ? amount * Math.exp(-3.8 * settling) * Math.cos(settling * Math.PI * 4) * (1 - ease(settling)) : amount
-    }
-    setPose()
-  }
-  const restore = () => { pose(0, at === 0 ? 0 : 1); shakeAmount = 0 }
+  const restore = () => { balance.reset(); placement = at === 0 ? 0 : 1; setPose() }
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
     addInteractionCue(head, { kind: 'drag', direction: [0, -1], label: '拿住竹蜓头向上轻送', anchor: [0, .035, .13], priority: 3, enabled: enabled(0) }),
-    addInteractionCue(rightWing, { kind: 'drag', direction: [1, 0], label: '轻推右侧竹翼后松手', anchor: [1.18, -.14, .545], priority: 3, enabled: enabled(1) }),
-    addInteractionCue(head, { kind: 'tap', label: '轻点竹蜓静观', anchor: [0, .035, .13], priority: 3, enabled: enabled(2) }),
+    addInteractionCue(rightWing, { kind: 'drag', direction: [1, 0], label: '轻拨任意竹翼或身体，可反复拨弄', anchor: [1.18, -.14, .545], priority: 3, enabled: () => inputActive() && !motion && (at === 1 || at === 2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2()
+  const grabPoint = new THREE.Vector3(), grabWorld = new THREE.Vector3(), grabAngle = new THREE.Vector3(), dragOrigin = new THREE.Vector3(), grabVelocity = new THREE.Vector3(), hand = new THREE.Vector3(), grabPlane = new THREE.Plane(), lastPointer = new THREE.Vector2(), grabInverse = new THREE.Quaternion()
+  let lastMoveTime = 0
   const belongs = (object: THREE.Object3D | undefined, target: THREE.Object3D) => { for (let p = object; p; p = p.parent ?? undefined) if (p === target) return true; return false }
   const nearestHit = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
@@ -155,62 +150,107 @@ export function createVietnameseBambooDragonfly(ctx: SceneContext): SceneInstanc
     })
     return ray.aim(x, y).intersectObjects(meshes, false)[0]
   }
-  const reset = () => { dragging = moved = false; maxTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore() }
+  const reset = () => {
+    const held = dragging; dragging = moved = false; maxTravel = maxCross = maxAlong = minAlong = backtrack = along = 0
+    if (!motion && !disposed) {
+      if (at === 0) restore()
+      else if (held) { balance.angle.copy(grabAngle); balance.velocity.copy(grabVelocity); setPose() }
+    }
+  }
+  const dragBalance = (x: number, y: number) => {
+    if (lastPointer.distanceToSquared(new THREE.Vector2(x, y)) < .001) return
+    if (ray.aim(x, y).ray.intersectPlane(grabPlane, hand)) {
+      const now = performance.now(), displacement = hand.clone().sub(grabWorld).applyQuaternion(grabInverse)
+      if (ctx.isReducedMotion?.()) displacement.multiplyScalar(.25)
+      balance.drag(dragOrigin, grabPoint, displacement, THREE.MathUtils.clamp((now - lastMoveTime) / 1000, 1 / 120, .1))
+      lastMoveTime = now; lastPointer.set(x, y); setPose()
+    }
+  }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
-    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return belongs(nearestHit(x, y)?.object, at === 1 ? rightWing : head) },
+    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return belongs(nearestHit(x, y)?.object, at === 0 ? head : pivot) },
     onStart(x, y) {
       if (!prepareInput()) { pointer.cancel(); return }
-      down.set(x, y); dragging = at < 2; moved = false; maxTravel = maxCross = maxAlong = minAlong = backtrack = along = 0
+      down.set(x, y); dragging = true; moved = false; maxTravel = maxCross = maxAlong = minAlong = backtrack = along = 0
+      if (at > 0) {
+        const hit = nearestHit(x, y); if (!hit || !belongs(hit.object, pivot)) { pointer.cancel(); return }
+        grabWorld.copy(hit.point); grabPoint.copy(pivot.worldToLocal(hit.point.clone())); grabAngle.copy(balance.angle); grabVelocity.copy(balance.velocity)
+        dragOrigin.copy(balance.angle)
+        grabInverse.copy(pivot.quaternion).invert()
+        grabPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), grabWorld); lastPointer.set(x, y); lastMoveTime = performance.now()
+      }
     },
     onMove(x, y) {
-      if (!Number.isFinite(x) || !Number.isFinite(y)) return
+      if (!Number.isFinite(x) || !Number.isFinite(y)) { pointer.cancel(); return }
       const dx = x - down.x, dy = y - down.y
       along = at === 0 ? -dy : dx; maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along)
       maxTravel = Math.max(maxTravel, Math.hypot(dx, dy)); maxCross = Math.max(maxCross, Math.abs(at === 0 ? dx : dy)); moved ||= maxTravel > 0
-      if (dragging) pose(at as 0 | 1, THREE.MathUtils.clamp(along / 60, 0, 1))
+      if (dragging) { if (at === 0) { placement = THREE.MathUtils.clamp(along / 60, 0, 1); setPose() } else dragBalance(x, y) }
     },
     onRelease(x, y) {
       const dx = x - down.x, dy = y - down.y, end = at === 0 ? -dy : dx
-      const valid = Number.isFinite(x) && Number.isFinite(y) && (at < 2 ? dragging && moved && completesDirectionalDrag({ along, end, maxAlong, minAlong, backtrack, maxCross, cross: at === 0 ? dx : dy, travel: maxTravel }, 42)
-        : maxTravel < 12 && Math.hypot(dx, dy) < 12 && belongs(nearestHit(x, y)?.object, head))
-      dragging = false; if (valid) advance(); else reset()
+      const valid = Number.isFinite(x) && Number.isFinite(y) && dragging && (at === 0 ? moved && completesDirectionalDrag({ along, end, maxAlong, minAlong, backtrack, maxCross, cross: dx, travel: maxTravel }, 42) : true)
+      if (!valid) { reset(); return }
+      if (at > 0) {
+        dragBalance(x, y)
+        maxTravel = Math.max(maxTravel, Math.hypot(dx, dy))
+        if (maxTravel < 3) balance.impulse(grabPoint, new THREE.Vector3(0, -.9, 0).applyQuaternion(grabInverse))
+        else balance.velocity.multiplyScalar(Math.exp(-Math.max(0, (performance.now() - lastMoveTime) / 1000 - .1) * 12))
+        dragging = false; poke(); return
+      }
+      dragging = false; advance()
     }, onCancel: reset,
   })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, at === 0 ? '拿住竹蜓头向上轻送' : at === 1 ? '轻推右侧竹翼后松手' : '轻点竹蜓静观', safe)
+    setSafeText(ui.actionBtn, at === 0 ? '拿住竹蜓头向上轻送' : at === 1 ? '轻拨竹蜻蜓' : '结束体验', safe)
     setSafeText(ui.hintEl, motion ? COPY.settling : at === 0 ? COPY.left : at === 1 ? COPY.right : at === 2 ? COPY.quiet : COPY.done, safe)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   const sound = () => feedback.impact({ freqs: [659.25], duration: .11, gain: .003, type: 'sine' })
+  function poke() {
+    if (!inputActive() || motion || (at !== 1 && at !== 2)) return
+    if (ctx.isReducedMotion?.()) balance.reset()
+    withHostCallbacks(() => {
+      if (at === 1) { at = 2; ctx.onProgress?.(2) }
+      if (!callbackActive()) return
+      ctx.haptic?.(maxTravel > 20 ? 'medium' : 'light'); if (callbackActive()) sound()
+    })
+  }
   function settle() {
     if (!inputActive() || !motion) return
-    at = (motion.step + 1) as Checkpoint; motion = null; restore()
-    withHostCallbacks(() => { ctx.onProgress?.(at); if (callbackActive()) sound() })
+    at = 1; motion = null; restore()
+    withHostCallbacks(() => { ctx.onProgress?.(at); if (!callbackActive()) return; ctx.haptic?.('light'); if (callbackActive()) sound() })
   }
   function advance() {
     if (!inputActive() || pointer.isBusy() || motion || at === 3) return
     if (at === 2) {
-      at = 3; restore(); withHostCallbacks(() => { ctx.onProgress?.(3); if (!callbackActive()) return; sound(); if (callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })) }); return
+      at = 3; restore(); withHostCallbacks(() => { ctx.onProgress?.(3); if (!callbackActive()) return; ctx.haptic?.('light'); if (!callbackActive()) return; sound(); if (callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })) }); return
     }
-    motion = { step: at, time: 0, from: shakeAmount }; sync(); if (ctx.isReducedMotion?.()) settle()
+    if (at !== 0) return
+    motion = { time: 0, from: placement }; sync(); if (ctx.isReducedMotion?.()) settle()
   }
-  const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
+  const action = () => {
+    if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return
+    if (at === 1) { balance.impulse(new THREE.Vector3(1.18, -.14, .545), new THREE.Vector3(0, -.9, 0)); maxTravel = 0; poke() }
+    else advance()
+  }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
-    const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0, 1.04, -.12), direction = new THREE.Vector3(.04, .94, 1.25).normalize()
+    const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0, 1.08, .20), direction = new THREE.Vector3(.04, .94, 1.25).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target); camera.updateMatrixWorld(true)
-    const inverse = camera.quaternion.clone().invert(), tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), p = new THREE.Vector3(), saved: [number, number] = [placement, sway]; let distance = 3.9
-    // Fixed framing includes every subject vertex in the authored placement and sway poses.
-    for (const pose of [[0, 0], [.5, 0], [1, 0], [1, 1], [1, -.5]]) {
-      [placement, sway] = pose; setPose()
+    const inverse = camera.quaternion.clone().invert(), tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), p = new THREE.Vector3(), saved = { placement, angle: balance.angle.clone() }; let distance = 3.9
+    // Include simultaneous roll, pitch and yaw limits, not just one recorded sway.
+    const poses: [number, number, number, number][] = [[0, 0, 0, 0], [.5, 0, 0, 0]]
+    for (const x of [-.24, 0, .24]) for (const y of [-.34, 0, .34]) for (const z of [-.24, 0, .24]) poses.push([1, x, y, z])
+    for (const sample of poses) {
+      placement = sample[0]; balance.angle.set(sample[1], sample[2], sample[3]); setPose()
       subject.traverse(o => { const m = o as THREE.Mesh; if (!m.geometry) return
         const vertices = m.geometry.getAttribute('position')
         for (let i = 0; i < vertices.count; i++) {
@@ -219,7 +259,12 @@ export function createVietnameseBambooDragonfly(ctx: SceneContext): SceneInstanc
         }
       })
     }
-    [placement, sway] = saved; setPose(); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
+    placement = saved.placement; balance.angle.copy(saved.angle); setPose(); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
+    if (dragging && at > 0 && pointer.isBusy()) {
+      dragOrigin.copy(balance.angle); grabInverse.copy(pivot.quaternion).invert()
+      grabPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), pivot.localToWorld(grabPoint.clone()))
+      ray.aim(lastPointer.x, lastPointer.y).ray.intersectPlane(grabPlane, grabWorld)
+    }
   }
   restore(); sync()
   return {
@@ -237,11 +282,10 @@ export function createVietnameseBambooDragonfly(ctx: SceneContext): SceneInstanc
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       if (motion) {
         motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .95)
-        if (motion.step === 0) pose(0, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time)))
-        else if (motion.from > 0) pose(1, motion.from, motion.time)
-        else { const t = motion.time; pose(1, t < .22 ? ease(t / .22) : 1, t < .22 ? 0 : (t - .22) / .78) }
+        placement = THREE.MathUtils.lerp(motion.from, 1, ease(motion.time)); setPose()
         if (motion.time === 1) settle()
       }
+      if (!motion && at > 0 && at < 3 && !dragging) { balance.step(delta); setPose() }
       if (active()) { matrices(); style.render() }
     },
     dispose() {

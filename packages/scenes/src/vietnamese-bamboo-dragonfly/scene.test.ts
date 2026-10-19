@@ -35,7 +35,7 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
   const height = width === 1280 ? 600 : width === 284 ? 390 : 408, left = 17, top = 91
   const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
   host.append(canvas, overlay); document.body.append(host)
-  Object.defineProperties(canvas, { clientWidth: { value: width }, clientHeight: { value: height } })
+  Object.defineProperties(canvas, { clientWidth: { value: width, configurable: true }, clientHeight: { value: height, configurable: true } })
   canvas.getBoundingClientRect = () => ({ left, top, width, height }) as DOMRect
   const progress: number[] = [], saveWish = vi.fn(), complete = vi.fn(), haptic = vi.fn()
   overlay.addEventListener('scene:complete', complete)
@@ -69,7 +69,7 @@ function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, r
 }
 function step(s: ReturnType<typeof mount>, at: number, run = true) {
   if (at < 2) drag(s, at, ...delta(at), run)
-  else { const p = s.point(targetName(at), anchor(at)); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p) }
+  else s.button.click()
 }
 function cues(s: ReturnType<typeof mount>) {
   const list: { object: THREE.Object3D; cue: InteractionCue }[] = []
@@ -89,10 +89,101 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 
 
 describe('an original painted bamboo balancing dragonfly', () => {
+  it('keeps the upright clear of the dragonfly before and throughout placement', () => {
+    const s = mount(), start = new THREE.Vector3(-.045, .91, .065), end = new THREE.Vector3(0, 1.58, .10), direction = end.clone().sub(start)
+    const ray = new THREE.Raycaster(start, direction.clone().normalize(), .001, direction.length() - .002)
+    const p = s.point('dragonfly-head', headAnchor)
+    event(s.hit, 'pointerdown', p)
+    for (let i = 0; i <= 12; i++) {
+      if (i) event(s.hit, 'pointermove', [p[0], p[1] - 60 * i / 12])
+      s.scene.updateMatrixWorld(true)
+      expect(ray.intersectObject(s.scene.getObjectByName('dragonfly-balance-pivot')!, true), `placement ${i}/12`).toHaveLength(0)
+    }
+  })
+  it.each([
+    ['dragonfly-wing-front-left', [-1.18, -.14, .545]], ['dragonfly-wing-front-right', [1.18, -.14, .545]],
+    ['dragonfly-wing-rear-left', [-.9, -.10, -.05]], ['dragonfly-wing-rear-right', [.9, -.10, -.05]],
+    ['dragonfly-head', headAnchor], ['dragonfly-thorax', [0, .06, 0]], ['dragonfly-tail', [0, .20, -.95]],
+  ] as [string, [number, number, number]][])('allows repeated pokes on %s without auto-completing', (name, anchor) => {
+    const s = mount(1), pivot = s.scene.getObjectByName('dragonfly-balance-pivot')!
+    for (let n = 0; n < 3; n++) {
+      const p = s.point(name, anchor); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p); s.instance.update(.05)
+      expect(pivot.quaternion.angleTo(new THREE.Quaternion()), name).toBeGreaterThan(.001)
+      expect(s.complete).not.toHaveBeenCalled(); s.run(.15)
+    }
+    expect(s.progress).toEqual([2]); expect(s.haptic).toHaveBeenCalledTimes(3)
+    s.button.click(); expect(s.progress).toEqual([2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it('responds differently to opposite wings and decays over time while its beak stays fixed', () => {
+    const rotations: number[] = []
+    for (const side of [-1, 1]) {
+      const s = mount(1), pivot = s.scene.getObjectByName('dragonfly-balance-pivot')!, p = s.point(`dragonfly-wing-front-${side < 0 ? 'left' : 'right'}`, [side * 1.18, -.14, .545])
+      event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p); s.run(.1); rotations.push(pivot.rotation.z)
+      let peak = 0
+      for (let n = 0; n < 120; n++) {
+        s.instance.update(.025); peak = Math.max(peak, Math.abs(pivot.rotation.z))
+        expect(pivot.getWorldPosition(new THREE.Vector3()).distanceTo(s.scene.getObjectByName('dragonfly-support-tip')!.getWorldPosition(new THREE.Vector3()))).toBeLessThan(1e-8)
+      }
+      expect(peak).toBeGreaterThan(.02); s.run(60); expect(pivot.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(.001)
+    }
+    expect(rotations[0]! * rotations[1]!).toBeLessThan(0)
+  })
+  it('keeps the same released motion at 30, 60 and 120 frames per second', () => {
+    const poses: THREE.Quaternion[] = []
+    for (const fps of [30, 60, 120]) {
+      const s = mount(1), p = s.point('dragonfly-wing-front-right', wingAnchor)
+      event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p)
+      for (let n = 0; n < fps * 2; n++) s.instance.update(1 / fps)
+      poses.push(s.scene.getObjectByName('dragonfly-balance-pivot')!.quaternion.clone())
+    }
+    for (const pose of poses) expect(pose.angleTo(poses[0]!)).toBeLessThan(.001)
+  })
+  it.each(['pause', 'blur'])('freezes a released free wobble through %s and continues with its existing momentum', boundary => {
+    let active = true
+    const s = mount(1, { isActive: () => active }), p = s.point('dragonfly-wing-front-left', [-1.18, -.14, .545]), pivot = s.scene.getObjectByName('dragonfly-balance-pivot')!
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p); s.run(.15)
+    if (boundary === 'pause') active = false; else window.dispatchEvent(new Event('blur'))
+    const frozen = pivot.quaternion.clone(); s.run(2)
+    expect(pivot.quaternion.toArray()).toEqual(frozen.toArray()); expect(s.progress).toEqual([2])
+    if (boundary === 'pause') active = true; else window.dispatchEvent(new Event('focus'))
+    s.run(.15); expect(pivot.quaternion.angleTo(frozen)).toBeGreaterThan(.001)
+    expect(s.progress).toEqual([2]); expect(s.haptic).toHaveBeenCalledOnce(); expect(s.complete).not.toHaveBeenCalled()
+  })
+  it.each(['pointercancel', 'lostpointercapture', 'nan', 'multitouch'])('cancels a free poke on %s without feedback or advancement', boundary => {
+    const s = mount(1), p = s.point('dragonfly-tail', [0, .20, -.95]), pivot = s.scene.getObjectByName('dragonfly-balance-pivot')!, home = pivot.quaternion.clone()
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + 25, p[1] + 20])
+    if (boundary === 'nan') event(s.hit, 'pointerup', [NaN, p[1]])
+    else if (boundary === 'multitouch') { event(s.hit, 'pointerdown', [18, 92], 2); event(s.hit, 'pointerup', [18, 92], 2) }
+    else event(s.hit, boundary, p)
+    event(s.hit, 'pointerup', p); s.run()
+    expect(pivot.quaternion.angleTo(home)).toBeLessThan(1e-8); expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled()
+  })
+  it('keeps an active free drag and its later swing unchanged through resizing', () => {
+    let resize = () => {}
+    vi.stubGlobal('ResizeObserver', class { constructor(callback: () => void) { resize = callback } observe() {} disconnect() {} })
+    const s = mount(1), p = s.point('dragonfly-wing-rear-left', [-.9, -.10, -.05]), pivot = s.scene.getObjectByName('dragonfly-balance-pivot')!
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] - 35, p[1] + 25])
+    const held = pivot.quaternion.clone(); resize(); expect(pivot.quaternion.toArray()).toEqual(held.toArray())
+    event(s.hit, 'pointerup', [p[0] - 35, p[1] + 25]); s.run(.1); const moving = pivot.quaternion.clone(); resize()
+    expect(pivot.quaternion.toArray()).toEqual(moving.toArray()); s.run(.1); expect(pivot.quaternion.angleTo(moving)).toBeGreaterThan(.001)
+    expect(s.progress).toEqual([2])
+  })
+  it('rebases the held pointer when the canvas really changes size, without a jump on its next small move', () => {
+    let resize = () => {}
+    vi.stubGlobal('ResizeObserver', class { constructor(callback: () => void) { resize = callback } observe() {} disconnect() {} })
+    const s = mount(1), p = s.point('dragonfly-wing-front-left', [-1.18, -.14, .545]), pivot = s.scene.getObjectByName('dragonfly-balance-pivot')!
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + 20, p[1] - 10])
+    const held = pivot.quaternion.clone(), canvas = s.host.querySelector('canvas')!
+    Object.defineProperties(canvas, { clientWidth: { value: 680 }, clientHeight: { value: 500 } })
+    canvas.getBoundingClientRect = () => ({ left: 17, top: 91, width: 680, height: 500 }) as DOMRect
+    resize(); expect(pivot.quaternion.angleTo(held)).toBeLessThan(1e-7)
+    event(s.hit, 'pointermove', [p[0] + 21, p[1] - 9]); expect(pivot.quaternion.angleTo(held)).toBeLessThan(.025)
+    event(s.hit, 'pointercancel', p); expect(pivot.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(1e-8)
+  })
   it.each([false, true])('places, gently sways and quietly completes once, reduced=%s', reduced => {
     const s = mount(0, { isReducedMotion: () => reduced })
     step(s, 0, false); if (!reduced) expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([1])
-    step(s, 1, false); if (!reduced) expect(s.progress).toEqual([1]); s.run(); expect(s.progress).toEqual([1, 2])
+    step(s, 1, false); expect(s.progress).toEqual([1, 2]); s.run(); expect(s.progress).toEqual([1, 2])
     step(s, 2); step(s, 2); s.button.click(); expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
   it('models four slender swept painted wings, a narrow tail and a single beak contact above a rounded stone', () => {
@@ -128,7 +219,7 @@ describe('an original painted bamboo balancing dragonfly', () => {
     event(s.hit, 'pointermove', [p[0] + 30, p[1]]); check(); expect(Math.abs(pivot.rotation.y)).toBeGreaterThan(.04)
     event(s.hit, 'pointermove', [p[0] + 60, p[1]]); event(s.hit, 'pointerup', [p[0] + 60, p[1]])
     const rotations: number[] = []; for (let i = 0; i < 50; i++) { s.instance.update(.025); check(); rotations.push(pivot.rotation.y) }
-    expect(Math.min(...rotations)).toBeLessThan(-.01); expect(Math.max(...rotations)).toBeGreaterThan(.04); expect(pivot.rotation.y).toBeCloseTo(0, 9)
+    expect(Math.min(...rotations)).toBeLessThan(0); expect(Math.max(...rotations)).toBeGreaterThan(.04); s.run(60); expect(pivot.rotation.y).toBeCloseTo(0, 9)
     expect(s.progress).toEqual([2]); step(s, 2); check()
   })
   it('moves the prepared dragonfly continuously upward to the real tip and delays progress until it settles', () => {
@@ -170,7 +261,7 @@ describe('an original painted bamboo balancing dragonfly', () => {
     for (const checkpoint of [1, 2, 3]) {
       const normal = mount(), reduced = mount(0, { isReducedMotion: () => true }), restored = mount(checkpoint)
       for (let at = 0; at < checkpoint; at++) { step(normal, at); step(reduced, at) }
-      normal.scene.updateMatrixWorld(true); reduced.scene.updateMatrixWorld(true); restored.scene.updateMatrixWorld(true)
+      normal.run(60); normal.scene.updateMatrixWorld(true); reduced.scene.updateMatrixWorld(true); restored.scene.updateMatrixWorld(true)
       normal.scene.getObjectByName('dragonfly-subject')!.traverse(o => {
         for (const other of [reduced, restored]) { const m = other.scene.getObjectByName(o.name)!.matrixWorld; o.matrixWorld.elements.forEach((v, i) => expect(v, o.name).toBeCloseTo(m.elements[i], 9)) }
       })
@@ -183,7 +274,7 @@ describe('an original painted bamboo balancing dragonfly', () => {
     expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
     s.button.click(); expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([1])
   })
-  it('plays a quiet optional acceptance tone only after settlement and closes audio once', () => {
+  it('plays quiet optional tones on placement, each accepted poke and manual finish and closes audio once', () => {
     const frequencies: number[] = [], peaks: number[] = []; let closed = 0, soundEnabled = false
     class AudioBoundary {
       state = 'running'; currentTime = 0; destination = {}
@@ -194,12 +285,12 @@ describe('an original painted bamboo balancing dragonfly', () => {
     vi.stubGlobal('AudioContext', AudioBoundary)
     const s = mount(0, { isSoundEnabled: () => soundEnabled })
     expect(frequencies).toEqual([]); step(s, 0); expect(frequencies).toEqual([])
-    soundEnabled = true; step(s, 1, false); expect(frequencies).toEqual([]); s.run(); expect(frequencies).toEqual([659.25])
+    soundEnabled = true; step(s, 1, false); expect(frequencies).toEqual([659.25]); s.run(); expect(frequencies).toEqual([659.25])
     const returning = mount(2, { returning: true, isSoundEnabled: () => true }); returning.run(); expect(frequencies).toEqual([659.25])
     step(s, 2); expect(frequencies).toEqual([659.25, 659.25]); expect(peaks).toEqual([.003, .003])
     s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })
-  it.each([0, 1])('rejects wrong surfaces, release-only, reverse, short, cross-axis and backtracked gestures at %i', at => {
+  it.each([0])('rejects wrong surfaces, release-only, reverse, short, cross-axis and backtracked placement at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
@@ -208,7 +299,7 @@ describe('an original painted bamboo balancing dragonfly', () => {
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
   })
-  it.each([0, 1])('checks terminal release coordinates for reverse, cross-axis and nonfinite displacement at %i', at => {
+  it.each([0])('checks terminal placement release coordinates for reverse, cross-axis and nonfinite displacement at %i', at => {
     const s = mount(at, { isReducedMotion: () => true })
     for (const kind of ['back', 'cross', 'nan']) {
       const p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
@@ -221,7 +312,7 @@ describe('an original painted bamboo balancing dragonfly', () => {
     for (const returning of [false, true]) {
       const s = mount(at, { returning, isReducedMotion: () => true }); s.run()
       expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 2 ? ['drag'] : at === 2 ? ['tap'] : []); expect(s.button.hidden).toBe(at === 3)
+      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
       for (let i = at; i < 3; i++) s.button.click()
       expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
     }
@@ -271,14 +362,14 @@ describe('an original painted bamboo balancing dragonfly', () => {
       expect(s.progress).toEqual([at + 1]); s.instance.dispose()
     }
   })
-  it.each([0, 1])('freezes accepted motion and input while paused at %i', at => {
+  it.each([0])('freezes accepted placement and input while paused at %i', at => {
     let active = true; const s = mount(at, { isActive: () => active }); step(s, at, false); expect(s.button.disabled).toBe(true); expect(s.hit.style.pointerEvents).toBe('none')
     s.button.click(); for (const dt of [NaN, Infinity, -10, 100000]) s.instance.update(dt); expect(s.progress).toEqual([])
     active = false; const pivot = s.scene.getObjectByName('dragonfly-balance-pivot')!, pose = pivot.position.clone(), rotation = pivot.quaternion.clone(), frames = rendered.render.mock.calls.length
     s.run(2); expect(rendered.render.mock.calls.length).toBe(frames); expect(pivot.position.distanceTo(pose)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(s.progress).toEqual([])
     active = true; s.run(); expect(s.progress).toEqual([at + 1])
   })
-  it.each([0, 1, 2])('rejects a target behind another opaque object at %i', at => {
+  it.each([0, 1])('rejects a target behind another opaque object at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
     blocker.position.lerpVectors(s.scene.getObjectByName(targetName(at))!.localToWorld(new THREE.Vector3(...anchor(at))), s.camera.position, .15)
     blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker); s.scene.updateMatrixWorld(true); step(s, at); expect(s.progress).toEqual([])

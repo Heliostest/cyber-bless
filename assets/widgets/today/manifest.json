@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "cd20eff68e12b6eb4efae2f5e544242698f9f34011ce7c0c9da70b363916d272",
+  "revision": "9ce5130ebb4dd95442a9576b79ae4972eab7508ec95b68ab9c46e7700ed860ed",
   "scenes": [
+    {
+      "id": "thai-songkran-elders",
+      "engine": "thai-songkran-elders@1",
+      "small": {
+        "file": "thai-songkran-elders-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "7d2033fd37fe7f16ebf74d2fd153838b68ac976923942e57a8fac803b8babdbc",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "thai-songkran-elders-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "c924411261eea6cf2b7b1dc22f539b4fd00ea499b616b46a023a8fda2c5fdc1c",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "thai-songkran-elders-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "a0d024882e64ec08d478b87c333faf01ec239ef4ad637c0588034323ebadda39",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "greek-new-year-pomegranate",
       "engine": "greek-new-year-pomegranate@1",

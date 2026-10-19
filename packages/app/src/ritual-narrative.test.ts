@@ -132,6 +132,7 @@ describe("builtInScenes narratives", () => {
       "spanish-castanets",
       "st-brigids-cross",
       "tanzaku-tanabata",
+      "thai-songkran-elders",
       "theravada-water",
       "tibetan-wheel",
       "turkish-ebru-paper",

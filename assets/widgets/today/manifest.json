@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "cd20eff68e12b6eb4efae2f5e544242698f9f34011ce7c0c9da70b363916d272",
+  "revision": "f6dbdabbf25cd08a15ea2f3b174b2f821901bf42f7cd1fde121cba1757e3ed19",
   "scenes": [
+    {
+      "id": "fgs-buddha-bathing",
+      "engine": "fgs-buddha-bathing@1",
+      "small": {
+        "file": "fgs-buddha-bathing-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "76e4204cdaf73db999838ec4356d3dc36031ec68645a04915171fa531521eb91",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "fgs-buddha-bathing-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "11852b46a8840d5613e39fdabbc2172bf5e40d45e57c3489da65f5abac801df9",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "fgs-buddha-bathing-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "7850516109b22a6467ba34825d208ba8e32821e74f76a9dc619844b7302a5c92",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "greek-new-year-pomegranate",
       "engine": "greek-new-year-pomegranate@1",

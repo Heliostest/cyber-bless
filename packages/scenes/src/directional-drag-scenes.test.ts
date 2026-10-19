@@ -37,7 +37,7 @@ const DIRECTIONAL_SCENES = [
   ['japanese-kendama', 3], ['chinese-diabolo', 3],
   ['korean-yutnori', 3], ['russian-matryoshka', 3], ['japanese-koinobori', 3],
   ['indian-charkha', 3], ['german-nutcracker', 3], ['mexican-molinillo', 3],
-  ['chinese-suanpan', 3], ['mongolian-felt-ger', 3],
+  ['chinese-suanpan', 3],
   ['peruvian-engraved-gourd', 2], ['venetian-glass-bead', 2], ['korean-bojagi-wrap', 2],
   ['vietnamese-bamboo-dragonfly', 2], ['indonesian-angklung', 2],
   ['weifang-paper-kite', 2], ['faroese-wool-knit', 2],

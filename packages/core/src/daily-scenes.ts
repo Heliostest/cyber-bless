@@ -194,7 +194,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "mongolian-felt-ger", title: "毡屋向阳", engine: "mongolian-felt-ger@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "mongolian-ger-craft",
-    narrative: "蒙古包由可拆装的木格围壁、椽杆与顶圈构成，外覆毡与帆布，以绳带收束。木作、缝制和制毡的知识在家庭与匠人之间传承。展开木格、支起屋顶，再铺覆白毡，静看不同材料共同围成一处温暖居所。",
+    narrative: "蒙古包由可拆装的木格围壁、椽杆与顶圈构成，外覆毡与帆布，以绳带收束。木作、缝制和制毡的知识在家庭与匠人之间传承。把木格端头拖到展开位置，抬稳顶圈，再将白毡放到木架上；各步对准浅金轮廓后松手，看看不同材料如何组成一座毡屋。",
   },
   {
     id: "peruvian-engraved-gourd", title: "葫芦刻光", engine: "peruvian-engraved-gourd@1", revision: "bundled", manifestUrl: "",

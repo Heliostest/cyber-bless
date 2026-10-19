@@ -102,32 +102,58 @@ export function createGerModel() {
     for (let i = 0; i <= 24; i++) { const t = i / 24, r = .42 + .92 * t; points.push(new THREE.Vector3(Math.sin(angle) * r, 1.964 - .755 * t, Math.cos(angle) * r)) }
     add(`ger-roof-tie-${angle}`, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 24, .014, 8, false), ropeMat, [0, 0, 0], ropes)
   }
-  let lastExpand = -1, lastLift = -1
-  function pose(expand: number, lift: number, cover: number, checkpoint: number) {
+  const dropZones = new THREE.Group(); dropZones.name = 'ger-drop-zones'; subject.add(dropZones)
+  const guideMaterial = new THREE.MeshBasicMaterial({ color: 0xe9ae49, transparent: true, opacity: .24, depthWrite: false, side: THREE.DoubleSide })
+  const outlineMaterial = new THREE.MeshBasicMaterial({ color: 0xf7c96c, transparent: true, opacity: .8, depthWrite: false })
+  const latticeDrop = add('ger-lattice-drop', new THREE.CylinderGeometry(.095,.095,.40,16), guideMaterial, [.8,.66,.946], dropZones)
+  const crownDrop = add('ger-crown-drop', new THREE.TorusGeometry(.36,.016,8,64).rotateX(Math.PI/2), outlineMaterial, [0,1.94,0], dropZones)
+  const feltDrop = new THREE.Group(); feltDrop.name = 'ger-felt-drop'; dropZones.add(feltDrop)
+  for (const shell of [roofCloth,wallCloth]) {
+    const guide = add(`${shell.name}-drop`,shell.geometry.clone(),guideMaterial,[0,0,0],feltDrop)
+    guide.castShadow = guide.receiveShadow = false
+    guide.userData.toonSurface = { outline: false }
+  }
+  latticeDrop.userData.toonSurface = crownDrop.userData.toonSurface = { outline: false }
+  latticeDrop.castShadow = latticeDrop.receiveShadow = crownDrop.castShadow = crownDrop.receiveShadow = false
+  const placements = [
+    { object: latticeDrop, anchor: [0,.06,.042] as XYZ },
+    { object: crownDrop, anchor: [0,.045,.355] as XYZ },
+    { object: feltDrop, anchor: [.65,1.45,.78] as XYZ },
+  ]
+  let lastExpand = -1
+  function pose(expand: number, lift: number, cover: number, checkpoint: number, held?: THREE.Vector3) {
     if (expand !== lastExpand) {
       lastExpand = expand
       const sx = .45 + .55 * expand, sz = .77 + .23 * expand
       for (const { mesh, start, end, reverse } of slats) between(mesh,
         [Math.sin(start) * 1.24 * sx, reverse ? 1.15 : .055, Math.cos(start) * 1.24 * sz],
         [Math.sin(end) * 1.24 * sx, reverse ? .055 : 1.15, Math.cos(end) * 1.24 * sz], .018)
-      latticeGrip.position.set(.80 * sx, .66, .946 * sz)
     }
+    latticeGrip.position.set(.80 * (.45+.55*expand), .66, .946 * (.77+.23*expand))
+    if (checkpoint === 0 && held) latticeGrip.position.copy(held)
     latticeGrip.visible = checkpoint === 0
     roof.visible = checkpoint >= 1
-    if (lift !== lastLift) {
-      lastLift = lift; const height = 1.22 + .72 * lift; crown.position.y = height
-      for (const { angle, mesh } of rafters) between(mesh, [Math.sin(angle) * .36, height, Math.cos(angle) * .36], [Math.sin(angle) * 1.235, 1.15, Math.cos(angle) * 1.235], .022)
-      for (const { side, mesh } of columns) between(mesh, [side * .28, .045, .22], [side * .28, height - .02, .22], .033)
-      for (const { x, mesh } of crownBars) between(mesh, [x, height, -.338], [x, height, .338], .017)
-    }
+    crown.position.set(0,1.22+.72*lift,0)
+    if (checkpoint === 1 && held) crown.position.copy(held)
+    const {x:cx,y:height,z:cz} = crown.position
+    for (const { angle, mesh } of rafters) between(mesh, [cx+Math.sin(angle)*.36,height,cz+Math.cos(angle)*.36], [Math.sin(angle)*1.235,1.15,Math.cos(angle)*1.235], .022)
+    for (const { side, mesh } of columns) between(mesh, [side*.28,.045,.22], [cx+side*.28,height-.02,cz+.22], .033)
+    for (const { x, mesh } of crownBars) between(mesh, [cx+x,height,cz-.338], [cx+x,height,cz+.338], .017)
     wallCloth.visible = roofCloth.visible = cover > 0
     wallCloth.geometry.setDrawRange(0, Math.floor(cover * 96) * 24)
     roofCloth.geometry.setDrawRange(0, Math.floor(cover * 96) * 24)
     ropes.visible = cover >= 1
-    feltRoll.visible = checkpoint === 2 && cover < 1
+    feltRoll.position.set(0,2.13,.08)
+    if (checkpoint === 2 && held) feltRoll.position.copy(held)
+    feltRoll.visible = checkpoint === 2 && (!!held || cover < 1)
     feltRoll.scale.set(1, Math.max(.04, 1 - cover), Math.max(.04, 1 - cover))
+    placements.forEach(({object},i) => { object.visible = checkpoint === i })
   }
   pose(0, 0, 0, 0)
   // Materials share this one owned map; disposeTree deliberately does not own textures.
-  return { subject, pose, disposeTexture: () => weave.dispose(), targets: [latticeGrip, crown, feltRoll], anchors: [[0, .06, .042], [0, .045, .355], [0, .06, .10]] as XYZ[] }
+  const highlightDrop = (ready: boolean) => {
+    guideMaterial.color.set(ready ? 0x54ba8b : 0xe9ae49)
+    outlineMaterial.color.set(ready ? 0x68d3a2 : 0xf7c96c)
+  }
+  return { subject, pose, placements, highlightDrop, disposeTexture: () => weave.dispose(), targets: [latticeGrip, crown, feltRoll], anchors: [[0, .06, .042], [0, .045, .355], [0, .06, .10]] as XYZ[] }
 }

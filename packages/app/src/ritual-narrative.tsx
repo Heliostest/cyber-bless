@@ -5,7 +5,7 @@ export function RitualNarrativeBlurb({ sceneId }: { sceneId: string }) {
   if (!narrative) return null;
   return (
     <details className="ritual-narrative">
-      <summary>了解这个场景</summary>
+      <summary>了解这个仪式</summary>
       <p>{narrative}</p>
     </details>
   );

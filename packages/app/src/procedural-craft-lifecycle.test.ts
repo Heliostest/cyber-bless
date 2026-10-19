@@ -57,7 +57,7 @@ it.each([
   ['german-nutcracker', 0, 'nutcracker-lever', 'nutcracker-lever', [0, -.66, -1.03], [0, -.66, -1.03], [0, -60]],
   ['mexican-molinillo', 0, 'molinillo-handle', 'molinillo-handle', [0, .15, 0], [0, .15, 0], [0, 60]],
   ['chinese-suanpan', 0, 'abacus-lower-6-2', 'abacus-lower-6-2', [0, .11, 0], [0, .11, 0], [0, -60]],
-  ['mongolian-felt-ger', 0, 'ger-lattice-grip', 'ger-lattice-grip', [0, .06, .042], [0, .06, .042], [60, 0]],
+  ['mongolian-felt-ger', 0, 'ger-lattice-grip', 'ger-lattice-drop', [0, .06, .042], [0, .06, .042]],
   ['peruvian-engraved-gourd', 0, 'gourd-shell', 'gourd-shell', [-.3295899491, 1.05, .7697097123], [-.3295899491, 1.05, .7697097123], [60, 0]],
   ['peruvian-engraved-gourd', 1, 'gourd-shell', 'gourd-shell', [.2190522043, 1.55, .4549356620], [.2190522043, 1.55, .4549356620], [0, 60]],
   ['peruvian-engraved-gourd', 2, 'gourd-shell', 'gourd-shell', [.1156681796, 1.25, .7614644589], [.1156681796, 1.25, .7614644589]],

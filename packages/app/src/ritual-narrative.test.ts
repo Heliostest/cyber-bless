@@ -32,7 +32,7 @@ describe("RitualNarrativeBlurb", () => {
     const details = container.querySelector("details.ritual-narrative")!;
     expect(details).not.toBeNull();
     expect(details.hasAttribute("open")).toBe(false);
-    expect(details.querySelector("summary")?.textContent).toBe("了解这个场景");
+    expect(details.querySelector("summary")?.textContent).toBe("了解这个仪式");
     expect(details.querySelector("p")?.textContent).toBe(woodfish.narrative);
   });
 });

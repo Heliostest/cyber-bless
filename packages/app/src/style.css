@@ -3641,6 +3641,31 @@ button:hover:not(:disabled) {
   gap: 6px;
   overflow-wrap: anywhere;
 }
+/* Keep the short completion status beside the two actions, at the right edge. */
+.scene-done-row--inline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: min(440px, 100%);
+  margin-inline: auto;
+}
+.scene-done-row--inline > .scene-done {
+  grid-area: 1 / 2;
+  text-align: right;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.scene-done-row--inline > .scene-completion-actions {
+  grid-area: 1 / 1;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) minmax(76px, 0.7fr);
+  gap: 8px;
+}
+.scene-done-row--inline .scene-completion-actions > .button {
+  padding-inline: 8px;
+  font-size: 14px;
+}
 /* A 许愿 vessel's held line, quoted on paper, and the keep-or-not choice. */
 .scene-keep-line {
   max-width: 100%;

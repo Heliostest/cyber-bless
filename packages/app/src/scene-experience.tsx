@@ -422,7 +422,7 @@ function LoadedScene({
         />
       )}
       {progress >= steps && (
-        <div className="scene-done-row">
+        <div className={`scene-done-row${!opening && !returnedFor && !dailyGranted && !vesselSpent ? " scene-done-row--inline" : ""}`}>
           {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} favorite={favoriteChip} /> : returnedFor ? (
             <>
               <p className="scene-done">{SCENE_RETURN_DONE_COPY}</p>

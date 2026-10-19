@@ -28,7 +28,6 @@ const craftDeltas={
   'german-nutcracker':[[0,-60],[0,-60],[0,60]],
   'mexican-molinillo':[[0,60],[60,0],[-60,0]],
   'chinese-suanpan':[[0,-60],[0,60],[0,-60]],
-  'mongolian-felt-ger':[[60,0],[0,-60],[0,60]],
   'peruvian-engraved-gourd':[[60,0],[0,60]],
   'venetian-glass-bead':[[0,-60],[60,0]],
   'korean-bojagi-wrap':[[0,-60],[60,0]],
@@ -118,7 +117,8 @@ async function arc(page,segments=8){
   await page.mouse.up();await page.waitForTimeout(150)
 }
 async function physical(page,id,step){
-  if(craftDeltas[id]?.[step]){
+  if(id==='mongolian-felt-ger')await drag(page)
+  else if(craftDeltas[id]?.[step]){
     const p=pointers.get(page),from=await point(page,'source',id==='chinese-diabolo'&&step===2?1:0),[dx,dy]=craftDeltas[id][step]
     await p.down(from);await p.move([from[0]+dx,from[1]+dy],18);await p.up()
     if(id==='korean-yutnori'&&step===2)await page.locator('.scene-yut-finish').click()

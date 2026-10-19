@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'sumiyoshi-godairiki': {
+    kind: 'wish', label: '随三石寄托心愿', optionalWish: false,
+    action: '拾起五、大、力三颗字石，逐一放入御守袋，带着向神明祈愿的心意把它们收好。',
+  },
   'udo-undama': {
     kind: 'wish', label: '怀着心愿投出陶玉', optionalWish: true,
     action: '取起陶玉、对准龟岩的方形凹处，想着此刻的心愿，轻轻投出。',

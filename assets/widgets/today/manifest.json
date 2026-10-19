@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "6f474c195cc15d5b69703dca7b7dafa8173cdaabd21818ff9b8962cc03cf0ad0",
+  "revision": "664f3eb7b5e8e079ae8c2593582b8ada7fe68b3f7507b9e784f14a51546d8ca2",
   "scenes": [
+    {
+      "id": "bonfim-ribbon",
+      "engine": "bonfim-ribbon@1",
+      "small": {
+        "file": "bonfim-ribbon-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "19b9c85f995701d6c0ce100ad7f9da91c4f1e802028545ccd50ff13fe8ac2b5a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "bonfim-ribbon-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "a5525ff159bce5a65ca14ef322cc2f8a3485dce3c06177ca1d699163d7c7b420",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "bonfim-ribbon-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "a50b92efe4697b5c5e1367ee696407ee96115cf736360cf7d87eb92669da76ab",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "chinowa-kuguri",
       "engine": "chinowa-kuguri@1",

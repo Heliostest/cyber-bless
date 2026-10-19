@@ -10,6 +10,7 @@ declare const process: { env: { EXPO_BASE_URL?: string } };
 type Kind = GardenKind;
 type Profile = { kind: Kind; floor: number; night?: boolean; warmLight?: boolean; coastal?: boolean };
 const profiles: Record<string, Profile> = {
+  "bonfim-ribbon": {kind:"courtyard",floor:0},
   "chinowa-kuguri": {kind:"courtyard",floor:0},
   "zeniarai-coin-washing": {kind:"courtyard",floor:0},
   'udo-undama': {kind:'river',floor:-.04,coastal:true},

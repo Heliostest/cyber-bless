@@ -5,6 +5,7 @@ type CatalogEntry = { id: string; title: string; engine: string; revision: strin
  * quiet listening, an entrance bow, a slow turn, a strike, a pour.
  */
 export const BLESSING_SCENE_IDS = [
+  "bonfim-ribbon",
   "chinowa-kuguri",
   "woodfish",
   "furin-wind-chime",
@@ -118,6 +119,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"bonfim-ribbon",title:"栏前结愿",engine:"bonfim-ribbon@1",revision:"bundled",manifestUrl:"",traditionSlug:"bonfim-ribbon",narrative:"在巴西萨尔瓦多，人们把Bonfim彩带系在 Senhor do Bonfim 教堂的栏杆上，以三个结寄托心愿。市文旅介绍，每一结留一个愿望；教堂院长的采访也记述了栏前系带的信念。眼前的彩带已经绕栏，三个松结也已预成：向右短拖收紧第一结，再向左收紧第二结，最后向右收紧第三结。心愿留在心中，彩带轻垂在日光下。" },
   { id:"chinowa-kuguri",title:"茅环祈安",engine:"chinowa-kuguri@1",revision:"bundled",manifestUrl:"",traditionSlug:"chinowa-kuguri",narrative:"在日本东京葛西神社，夏越时的茅环由束起的茅草制成，固定在柱上。神社介绍，参访者从正面穿环，依次向左、向右、再向左绕行，寄托净祓与平安度夏的心意，随后前往本殿。眼前的茅环已立好：向左短拖，从环中穿过并向左绕回；再向右穿行绕回，最后再走一次左绕。三次绕行后，停在茅环前。" },
   { id:"zeniarai-coin-washing",title:"泉水净币",engine:"zeniarai-coin-washing@1",revision:"bundled",manifestUrl:"",traditionSlug:"zeniarai-coin-washing",narrative:"在日本镰仓的銭洗弁財天宇賀福神社，参访者清洗钱币，寄托对财福的祈愿。神社代表的访谈记述，参拜后把钱放入筛中，用柄杓浇水，再以手帕擦拭收回。眼前的硬币已放在浅筛里：向上短拖举起水勺，向左倾水，让泉水流过硬币；再把布巾向右短拖，拭去水珠。勺子回到泉边，硬币仍静放在筛中。" },
   { id:"udo-undama",title:"龟岩投愿",engine:"udo-undama@1",revision:"bundled",manifestUrl:"",traditionSlug:"udo-undama",narrative:"在日本宫崎的鵜户神宫，参访者把小小的陶土「运玉」投向海边龟岩背上的方形凹处，把愿望寄托在这一投。神宫记述，如今的运玉由黏土揉圆，压上「運」字，再轻烧制成。眼前先把陶玉从石边取起，对准岩上的凹处，向上短拖后松手。陶玉划出弧线，越过岩沿，落入凹处；海面的光纹仍在缓缓晃动。" },

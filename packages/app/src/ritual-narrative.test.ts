@@ -48,6 +48,7 @@ describe("builtInScenes narratives", () => {
       "basque-sunflower",
       "blang-tea",
       "bokjori",
+      "bonfim-ribbon",
       "breton-banner",
       "catalan-festival-giant",
       "chinese-diabolo",

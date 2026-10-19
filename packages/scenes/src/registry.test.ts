@@ -20,6 +20,7 @@ describe('sceneRegistry', () => {
       'chinese-rattle-drum',
       'ghanaian-oware',
       'mexican-tortilla-press',
+      'bonfim-ribbon',
       'chinowa-kuguri',
       'zeniarai-coin-washing',
       'udo-undama',
@@ -277,3 +278,5 @@ it('loads the public Udo wishing practice with a real clay ball',async()=>{const
 it('loads the source-specific Zeniarai washing fragment',async()=>{const m=await loadScene('zeniarai-coin-washing');expect(m.meta.id).toBe('zeniarai-coin-washing');expect(m.meta.traditionSlug).toBe('zeniarai-coin-washing');expect(m.create).toBeTypeOf('function')})
 
 it('loads the source-specific fixed Chinowa walking fragment',async()=>{const m=await loadScene('chinowa-kuguri');expect(m.meta.id).toBe('chinowa-kuguri');expect(m.meta.traditionSlug).toBe('chinowa-kuguri');expect(m.create).toBeTypeOf('function')})
+
+it('loads the three preformed Bonfim knots fragment',async()=>{const m=await loadScene('bonfim-ribbon');expect(m.meta.id).toBe('bonfim-ribbon');expect(m.meta.traditionSlug).toBe('bonfim-ribbon');expect(m.create).toBeTypeOf('function')})

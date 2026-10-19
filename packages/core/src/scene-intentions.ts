@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'tibetan-prayer-flags': {
+    kind: 'blessing', label: '为众生祈愿安康', optionalWish: false,
+    action: '把完整经幡挂到离地的高处，寄托愿众生受益安乐的心意。',
+  },
   'udo-undama': {
     kind: 'wish', label: '怀着心愿投出陶玉', optionalWish: true,
     action: '取起陶玉、对准龟岩的方形凹处，想着此刻的心愿，轻轻投出。',

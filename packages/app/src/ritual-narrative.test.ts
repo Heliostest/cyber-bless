@@ -123,6 +123,7 @@ describe("builtInScenes narratives", () => {
       "purepecha-copper-bowl",
       "russian-matryoshka",
       "scottish-plunge-churn",
+      "setsubun-mamemaki",
       "shinto-torii",
       "shrine-suzu-bell",
       "sicilian-painted-cart",

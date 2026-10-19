@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "cd20eff68e12b6eb4efae2f5e544242698f9f34011ce7c0c9da70b363916d272",
+  "revision": "0a63a96940e4769690dfdb15e4f5ae11663b17822ef02906b77d9def192ad18e",
   "scenes": [
+    {
+      "id": "romanian-martisor",
+      "engine": "romanian-martisor@1",
+      "small": {
+        "file": "romanian-martisor-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "8eb59120b891c0c2102c6cbcb46107f9f1bf76cb1af7db04d85c88460b22b1a6",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "romanian-martisor-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "591e7a9d51593c7235bdf285e99901d8f3b903805e5f11dafe62b391eab74818",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "romanian-martisor-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "1733c88cf18d4ec8fef882493d4eda687f23b59c87506227dbdd363b60b5db70",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "greek-new-year-pomegranate",
       "engine": "greek-new-year-pomegranate@1",

@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'lam-tsuen-wishing-tree': {
+    kind: 'wish', label: '把平安的心愿挂上树枝', optionalWish: false,
+    action: '写下平安，将宝牒与塑料橙系在一起，再抛挂到仿真许愿树的枝头。',
+  },
   'udo-undama': {
     kind: 'wish', label: '怀着心愿投出陶玉', optionalWish: true,
     action: '取起陶玉、对准龟岩的方形凹处，想着此刻的心愿，轻轻投出。',

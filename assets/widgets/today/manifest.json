@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "cd20eff68e12b6eb4efae2f5e544242698f9f34011ce7c0c9da70b363916d272",
+  "revision": "8d23f86bc52287551c6b0a75d95494ce3e4d88b1aeb6628adae7a619c48cd599",
   "scenes": [
+    {
+      "id": "lam-tsuen-wishing-tree",
+      "engine": "lam-tsuen-wishing-tree@1",
+      "small": {
+        "file": "lam-tsuen-wishing-tree-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "7147ce40d77c1a2151011d5f235bb46db6c3adbb751ff6b13ac7f237ad29f1f5",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "lam-tsuen-wishing-tree-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "b01b65ef6f543909b206f08a20289229ca2354b006e2e5a42156d470140c865f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "lam-tsuen-wishing-tree-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "86fd1f32cdca4f93ddc643d49405da0dbd1872a979df6b955a1e670a6f34e8d8",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "greek-new-year-pomegranate",
       "engine": "greek-new-year-pomegranate@1",

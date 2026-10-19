@@ -1,5 +1,10 @@
 [
   {
+    "id": "kagami-mochi-offering",
+    "title": "镜饼迎岁",
+    "category": "blessing"
+  },
+  {
     "id": "greek-new-year-pomegranate",
     "title": "破榴迎新",
     "category": "blessing"

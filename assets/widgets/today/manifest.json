@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "cd20eff68e12b6eb4efae2f5e544242698f9f34011ce7c0c9da70b363916d272",
+  "revision": "d6af663620eb59f7816cacc40f18d788b72730a24c8b73c8616ada3035ba1ccb",
   "scenes": [
+    {
+      "id": "kagami-mochi-offering",
+      "engine": "kagami-mochi-offering@1",
+      "small": {
+        "file": "kagami-mochi-offering-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "e28efe527b135ebb098c818a44db57630b1f2357d0ee3db6b9fe4bb8f00a2831",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "kagami-mochi-offering-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "2206fc9e768ffe5322ae4d68322fbff95f42211edf40d49cde96226d90b184dc",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "kagami-mochi-offering-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "88b69c20a1396e95afc312c0e5d9b2cbcf08f64a0ee7f98af1e84a25655964e1",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "greek-new-year-pomegranate",
       "engine": "greek-new-year-pomegranate@1",

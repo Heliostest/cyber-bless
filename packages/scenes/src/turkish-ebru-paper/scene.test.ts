@@ -102,6 +102,32 @@ function observeAudioHardware() {
 }
 
 describe('original floating pigment transferred to actual paper', () => {
+  it.each([284, 390, 1280])('can lift from the visible paper face across its width and depth at %ipx', width => {
+    for (const [x, z] of [[-1.25, .70], [1.25, .70], [-1.25, -.70], [1.25, -.70], [0, .65], [0, 0]]) {
+      const s = mount(1, {}, width), sheet = s.scene.getObjectByName('ebru-paper-blank') as THREE.Mesh
+      const location = new THREE.Vector3(x, .45, z), p = s.point(sheet.name, location.toArray() as [number, number, number])
+      expect(first(s, sheet.localToWorld(location)).object).toBe(sheet)
+      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + 8, p[1] - 30])
+      const positions = sheet.geometry.getAttribute('position')
+      expect(Math.max(...Array.from({ length: positions.count }, (_, i) => positions.getY(i)))).toBeGreaterThan(.9)
+      expect(s.progress).toEqual([])
+      event(s.hit, 'pointermove', [p[0] + 12, p[1] - 60]); event(s.hit, 'pointerup', [p[0] + 12, p[1] - 60]); s.run()
+      expect(s.progress).toEqual([2]); expect(s.haptic).toHaveBeenCalledOnce(); expect(s.complete).not.toHaveBeenCalled()
+      s.instance.dispose()
+    }
+  })
+  it('does not start peeling from the rim or through an object covering the paper', () => {
+    const s = mount(1, { isReducedMotion: () => true }), point = s.point('ebru-paper-blank', [0, .45, .70])
+    const rim = s.point('ebru-rim-end-1')
+    event(s.hit, 'pointerdown', rim); event(s.hit, 'pointermove', [rim[0], rim[1] - 60]); event(s.hit, 'pointerup', [rim[0], rim[1] - 60])
+    const blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
+    blocker.position.lerpVectors(new THREE.Vector3(0, .45, .70), s.camera.position, .15); blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker)
+    event(s.hit, 'pointerdown', point); event(s.hit, 'pointermove', [point[0], point[1] - 60]); event(s.hit, 'pointerup', [point[0], point[1] - 60])
+    expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled()
+    blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose()
+    event(s.hit, 'pointerdown', point); event(s.hit, 'pointermove', [point[0], point[1] - 60]); event(s.hit, 'pointerup', [point[0], point[1] - 60])
+    expect(s.progress).toEqual([2])
+  })
   it('starts with real floating pigment and blank paper without reporting progress', () => {
     const s = mount()
     expect(s.scene?.getObjectByName('ebru-floating-pattern')).toBeDefined()
@@ -145,11 +171,17 @@ describe('original floating pigment transferred to actual paper', () => {
   })
   it('peels from the front while the far part of the actual sheet remains in contact', () => {
     const s = mount(1), p = s.point(targetName(1), anchor(1)), sheet = s.scene.getObjectByName('ebru-paper-print') as THREE.Mesh
+    const cue = cues(s)[0]!.cue, original = [...cue.anchor!]
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0], p[1] - 30])
     const position = sheet.geometry.getAttribute('position'), uv = sheet.geometry.getAttribute('uv')
+    expect(cue.anchor![1]).toBeGreaterThan(.9)
+    expect(cue.anchor).not.toEqual(original)
     for (let i = 0; i < position.count; i++) {
       if (uv.getY(i) === 1) expect(position.getY(i)).toBeCloseTo(.45, 5)
       if (uv.getY(i) === 0) expect(position.getY(i)).toBeGreaterThan(.9)
+      if (uv.getX(i) === .5 && uv.getY(i) === .125) {
+        expect(new THREE.Vector3(...cue.anchor!).distanceTo(new THREE.Vector3().fromBufferAttribute(position, i))).toBeLessThan(1e-7)
+      }
     }
     expect(s.progress).toEqual([])
   })

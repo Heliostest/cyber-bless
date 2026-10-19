@@ -10,7 +10,7 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 
 const COPY = {
   title: '浮彩成笺', comb: '握住木梳柄，向右缓缓梳开彩纹；梳子移开后，白纸轻贴水面。',
-  peel: '握住近处的纸边，向上轻揭，让浮彩随纸慢慢显现。',
+  peel: '按住白纸任意位置，向上轻揭，让浮彩随纸慢慢显现。',
   quiet: '轻点彩纸静看，或写一句心意后点「写好了」。',
   returning: '轻点彩纸，回看水与颜色留下的纹路。', done: '把一片流动的颜色留在纸上。',
   combing: '梳齿离开水面，白纸缓缓贴合浮彩…', peeling: '从近处纸边轻揭，接触水面的彩纹随纸升起…',
@@ -18,7 +18,7 @@ const COPY = {
 type Checkpoint = 0 | 1 | 2 | 3
 type XYZ = [number, number, number]
 const ease = (t: number) => t * t * (3 - 2 * t)
-const GRIP: XYZ = [0, 0, .09], EDGE: XYZ = [0, .021, -.05], QUIET: XYZ = [0, 1.6, .28]
+const GRIP: XYZ = [0, 0, .09], QUIET: XYZ = [0, 1.6, .28]
 const W = 2.94, D = 1.9, WATER_Y = .45
 
 /** Original contemporary appreciation of pigment floating on liquid and transferring by contact. */
@@ -30,6 +30,7 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
   let motion: { step: 0 | 1; time: number; comb: number; peel: number } | null = null
   let dragging = false, maxTravel = 0, maxCross = 0, moved = 0, maxAlong = 0, minAlong = 0, backtrack = 0
   let combAmount = 0, contactAmount = 0, peelAmount = 0, patternAmount = -1
+  const peelAnchor: XYZ = [0, WATER_Y, D * (.5 - .125)]
   const returning = ctx.returning === true, active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
   const inputActive = () => active() && !notifying, reduced = () => ctx.isReducedMotion?.() ?? false
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
@@ -121,6 +122,7 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
       const p = sheetPoint(paperUV.getX(i), paperUV.getY(i)); paperPosition.setXYZ(i, p.x, p.y, p.z)
     }
     paperPosition.needsUpdate = true; paperGeometry.computeVertexNormals(); paperGeometry.computeBoundingBox(); paperGeometry.computeBoundingSphere()
+    sheetPoint(.5, .125).toArray(peelAnchor)
     paperEdge.position.copy(sheetPoint(.5, 0)); paperEdge.rotation.x = -peelAmount * Math.PI / 2
     // The host caches styled maps by material identity. Switch the physical
     // underside only after contact instead of mutating a cached map in place.
@@ -134,7 +136,7 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
     addInteractionCue(grip, { kind: 'drag', direction: [1, 0], label: '向右梳开彩纹', anchor: GRIP, priority: 3, enabled: enabled(0) }),
-    addInteractionCue(paperEdge, { kind: 'drag', direction: [0, -1], label: '向上轻揭纸边', anchor: EDGE, priority: 3, enabled: enabled(1) }),
+    addInteractionCue(blank, { kind: 'drag', direction: [0, -1], label: '按住白纸，向上轻揭', anchor: peelAnchor, priority: 3, enabled: enabled(1) }),
     addInteractionCue(print, { kind: 'tap', label: '轻点彩纸静看', anchor: QUIET, priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2()
@@ -154,7 +156,11 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
-    canStart(x, y) { if (motion || at === 3) return false; matrices(); return nearestHit(x, y) === target() },
+    canStart(x, y) {
+      if (motion || at === 3) return false
+      matrices(); const hit = nearestHit(x, y)
+      return at === 1 ? hit === blank || hit === print || hit === paperEdge : hit === target()
+    },
     onStart(x, y) {
       if (!prepareInput()) { pointer.cancel(); return }
       down.set(x, y); dragging = at < 2; maxTravel = maxCross = moved = maxAlong = minAlong = backtrack = 0
@@ -180,7 +186,7 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(inputActive() && !returning && at === 2 && !motion)
-    setSafeText(ui.actionBtn, at === 0 ? '向右梳开彩纹' : at === 1 ? '向上轻揭纸边' : '轻点彩纸静看', safe)
+    setSafeText(ui.actionBtn, at === 0 ? '向右梳开彩纹' : at === 1 ? '按住白纸，向上轻揭' : '轻点彩纸静看', safe)
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.combing : COPY.peeling : at === 0 ? COPY.comb : at === 1 ? COPY.peel : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }

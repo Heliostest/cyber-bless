@@ -79,6 +79,7 @@ describe("scene placement", () => {
     ["korean-yutnori", "korean-yutnori", false],
     ["chinese-diabolo", "chinese-diabolo", false],
     ["chinese-tangram", "chinese-tangram", false],
+    ["udo-undama", "udo-undama", true],
     ["japanese-daruma-otoshi", "japanese-daruma-otoshi", false],
     ["paper-pinwheel", "paper-pinwheel", false],
     ["chinese-steelyard", "chinese-steelyard", false],
@@ -216,6 +217,7 @@ describe("scene placement", () => {
       "mongolian-felt-ger",
     ]);
     expect([...WISH_SCENE_IDS]).toEqual([
+      "udo-undama",
       "tanzaku-tanabata",
       "yeondeunghoe",
       "crane",

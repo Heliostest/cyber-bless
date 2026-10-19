@@ -130,6 +130,7 @@ describe("builtInScenes narratives", () => {
       "tanzaku-tanabata",
       "tibetan-wheel",
       "turkish-ebru-paper",
+      "udo-undama",
       "uzbek-clay-bowl",
       "valencian-folding-fan",
       "venetian-glass-bead",

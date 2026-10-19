@@ -8,8 +8,9 @@ import { readSceneMotion } from "./scene-motion";
 
 declare const process: { env: { EXPO_BASE_URL?: string } };
 type Kind = GardenKind;
-type Profile = { kind: Kind; floor: number; night?: boolean; warmLight?: boolean };
+type Profile = { kind: Kind; floor: number; night?: boolean; warmLight?: boolean; coastal?: boolean };
 const profiles: Record<string, Profile> = {
+  'udo-undama': {kind:'river',floor:-.04,coastal:true},
   'malawi-sansi': { kind: 'garden', floor: -0.04 },
   'japanese-koinobori': { kind: 'garden', floor: -0.04 },
   'russian-matryoshka': { kind: 'garden', floor: -0.04 },
@@ -150,7 +151,7 @@ export function createCozyEnvironment(
 ) {
   const profile = profiles[id];
   if (!profile) return null;
-  const { kind, floor, night = false, warmLight = false } = profile;
+  const { kind, floor, night = false, warmLight = false, coastal = false } = profile;
   const previous = {
     background: scene.background, fog: scene.fog, environment: scene.environment,
     intensity: scene.backgroundIntensity, blur: scene.backgroundBlurriness,
@@ -217,12 +218,12 @@ export function createCozyEnvironment(
   ground.name = "meadow-ground";
   ground.rotation.x = -Math.PI / 2;
 
-  if (!night) {
+  if (!night && !coastal) {
     meadow = createStylizedMeadow({ kind, floor: groundY, id });
     root.add(meadow.mesh); grass.color.set(0xffffff); grass.map = meadow.groundMap;
   }
 
-  if (!night) {
+  if (!night && !coastal) {
     // Two broad meadow silhouettes give depth without adding small visual detail.
     const meadow = makeMaterial(0x86b95c), distantMeadow = makeMaterial(0xa3cb7a);
     const left = addMesh(new THREE.SphereGeometry(1, 32, 12), meadow, kind === "river" ? -15 : -8, groundY - 1.0, -19);
@@ -255,8 +256,8 @@ export function createCozyEnvironment(
     box(0.15, 0.68, 0.15, wood, -2.1, floor - 0.43, 1.25);
     box(0.15, 0.68, 0.15, wood, 2.1, floor - 0.43, 1.25);
   } else if (kind === "river") {
-    ground.material = makeMaterial(0xb3c39b);
-    for (const x of [-5, 5]) box(5, 0.10, 46, grass, x, floor + 0.025, -13);
+    ground.material = makeMaterial(coastal ? 0x9ab8ad : 0xb3c39b);
+    for (const x of coastal ? [] : [-5, 5]) box(5, 0.10, 46, grass, x, floor + 0.025, -13);
   } else {
     let pathGeometry: THREE.BufferGeometry = new THREE.CircleGeometry(2.55, 48);
     if (spring) {
@@ -327,7 +328,7 @@ export function createCozyEnvironment(
     for (let i = 0; i < 3; i++) {
       prop("flowers", (i % 2 ? -1 : 1) * (3.0 + i * 0.35), -2.6 - i * 1.15, 0.65, i);
     }
-  } else {
+  } else if (!coastal) {
     const planting = new THREE.Group(); planting.name = "daylight-planting"; root.add(planting);
     const layout = gardenLayout(kind, id), transform = new THREE.Object3D();
     treeCanopies = createStylizedTrees(layout.filter(item => item.model.startsWith("tree-")), groundY);

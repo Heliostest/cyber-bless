@@ -42,6 +42,14 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+  'udo-undama': (<>
+    <path d="M25 39 31 28 49 25 59 35 57 53 21 55Z" fill="#b6a58b" stroke="#82725d"/>
+    <path d="m36 33 12-1 3 8-14 2Z" fill="#78644d" stroke="#82725d"/>
+    <path d="M5 43 19 41 23 55 4 56Z" fill="#c7b69d" stroke="#96836c"/>
+    <path d="M18 18Q35 6 44 25" fill="none" stroke="#7cb7bf" strokeDasharray="3 4"/>
+    <circle cx="13" cy="28" r="8" fill="#cd915e" stroke="#915b3c"/>
+    <text x="13" y="31" textAnchor="middle" fontSize="8" fill="#77492f">運</text>
+  </>),
   'japanese-daruma-otoshi': (<>
     <rect x="21" y="47" width="27" height="9" rx="4" fill="#d7b16b" stroke="#a7804e"/>
     <rect x="15" y="36" width="27" height="10" rx="4" fill="#75b4a4" stroke="#508f80"/>

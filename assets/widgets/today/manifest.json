@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "e119da249a3429f4b441c6f46d5306c42290eab3ff724f0a5b3800d743633525",
+  "revision": "67294e67183f38720b91d2a52b3bf754eb3ccdfab8cf14af7d0551a12ff05b39",
   "scenes": [
+    {
+      "id": "udo-undama",
+      "engine": "udo-undama@1",
+      "small": {
+        "file": "udo-undama-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "1445e3ad1c51a17d21dfb4326ffdf92a4ca8d4b963f7b1dba1b802d398bcb413",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "udo-undama-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "3ac7f5907621f87390c0447f458e8d6f09dfd490eb12effd42a3d45ad1519c72",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "udo-undama-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "71c9e5d93672193c6591a61893178cb20037ceed3f017bdf9ee9b511f10d113c",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "japanese-daruma-otoshi",
       "engine": "japanese-daruma-otoshi@1",

@@ -247,3 +247,5 @@ describe("a scene's surrounding world", () => {
     await world.ready; world.dispose();
   });
 });
+
+it('keeps the undama coastal horizon free of a river garden and disposes it',async()=>{const s=new THREE.Scene(),env=createCozyEnvironment(s,{id:'udo-undama',loadSky:async()=>new THREE.DataTexture()});expect(env).not.toBeNull();await env!.ready;expect(s.getObjectByName('daylight-planting')).toBeUndefined();expect(s.getObjectByName('stylized-meadow')).toBeUndefined();env!.dispose();expect(s.children).toHaveLength(0)})

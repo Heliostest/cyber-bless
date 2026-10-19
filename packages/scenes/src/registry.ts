@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id:'bulgarian-survakane',title:'彩枝贺年',traditionSlug:'bulgarian-survakane',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'greek-new-year-pomegranate',title:'破榴迎新',traditionSlug:'greek-new-year-pomegranate',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'bonfim-ribbon',title:'栏前结愿',traditionSlug:'bonfim-ribbon',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'chinowa-kuguri',title:'茅环祈安',traditionSlug:'chinowa-kuguri',grade:'C',sensitivity:'低',gestures:['drag'] },
@@ -190,6 +191,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'bulgarian-survakane',
   'greek-new-year-pomegranate',
   'bonfim-ribbon',
   'chinowa-kuguri',
@@ -274,6 +276,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'bulgarian-survakane': return import('./bulgarian-survakane/index')
     case 'greek-new-year-pomegranate': return import('./greek-new-year-pomegranate/index')
     case 'bonfim-ribbon': return import('./bonfim-ribbon/index')
     case 'chinowa-kuguri': return import('./chinowa-kuguri/index')

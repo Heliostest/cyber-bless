@@ -44,6 +44,7 @@ describe("builtInScenes narratives", () => {
       "amazigh-woven-rug",
       "andalusian-ceramic-tile",
       "bai-indigo-cloth",
+      "balinese-canang-sari",
       "barcelos-clay-rooster",
       "basque-sunflower",
       "blang-tea",

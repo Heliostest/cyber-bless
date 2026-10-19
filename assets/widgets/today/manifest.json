@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "cd20eff68e12b6eb4efae2f5e544242698f9f34011ce7c0c9da70b363916d272",
+  "revision": "db3f149c13d653b42236291c3b2524f83bf8381bf9f780bab19335b25df12bce",
   "scenes": [
+    {
+      "id": "balinese-canang-sari",
+      "engine": "balinese-canang-sari@1",
+      "small": {
+        "file": "balinese-canang-sari-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "51143df31f1959129c5c00f47616e51c3a6287f6c25d5fef3d41c4f83be4a6c3",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "balinese-canang-sari-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "fe5d5e09622b91f74f4e1c7af6cdc5254fc46c31b67f839da115e17e7e6c4b31",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "balinese-canang-sari-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "06ac8c5c9c92087ef633181d6c43dcedee896b0d795c0a76e0ae736aca8c1aff",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "greek-new-year-pomegranate",
       "engine": "greek-new-year-pomegranate@1",

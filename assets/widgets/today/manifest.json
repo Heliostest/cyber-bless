@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "cd20eff68e12b6eb4efae2f5e544242698f9f34011ce7c0c9da70b363916d272",
+  "revision": "8e258ff717e86b9d82ce9444e79b7b83c85a539a918ac85d46509260d7831f85",
   "scenes": [
+    {
+      "id": "tibetan-khata-greeting",
+      "engine": "tibetan-khata-greeting@1",
+      "small": {
+        "file": "tibetan-khata-greeting-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "41f32b52a95679c761c7e98b51ed49d5d214bbf765f1848278496dd672247b27",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "tibetan-khata-greeting-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "24733779fec2f31625da99bd6d86170f6285ae7b3a2f3220d7a9d07332ba8fdc",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "tibetan-khata-greeting-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "ffad088df3f3c1200c4d4ee26d983cb727f72da3c431788aa00f44165c2990c1",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "greek-new-year-pomegranate",
       "engine": "greek-new-year-pomegranate@1",

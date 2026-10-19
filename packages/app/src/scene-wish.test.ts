@@ -220,7 +220,8 @@ describe("a line written in a scene", () => {
     });
     await settle();
     const row = s.host.querySelector(".scene-done-row")!;
-    expect(row.querySelector(".scene-done")?.textContent).toBe(SCENE_DONE_COPY);
+    expect(s.host.querySelector(".ritual-narrative-header .scene-complete-status")?.textContent).toBe(SCENE_DONE_COPY);
+    expect(row.textContent).not.toContain(SCENE_DONE_COPY);
     const cta = [...row.querySelectorAll("button")].find(
       (b) => b.textContent === SCENE_DONE_WISH_CTA,
     )!;

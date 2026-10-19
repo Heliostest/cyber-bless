@@ -73,6 +73,15 @@ try {
       assert.equal(after.vibrations.length, before.vibrations.length + Number(enabled), surfaces[n][0])
       assert.equal(after.sounds.length, before.sounds.length + Number(enabled), surfaces[n][0])
       assert.equal(await done(), 2); assert.equal(await page.locator('.scene-completion-actions').count(), 0)
+      if (n === 0) {
+        const finish = await page.getByRole('button', { name: '结束体验', exact: true }).evaluate(button => ({
+          color: getComputedStyle(button).color, prefix: getComputedStyle(button, '::before').content,
+          width: button.clientWidth, contentWidth: button.scrollWidth,
+        }))
+        assert.notEqual(finish.color, 'rgba(0, 0, 0, 0)', 'finish button text must be visibly painted')
+        assert.ok(!finish.prefix.includes('辅助'), 'finish must be labelled as an action, not an assist')
+        assert.ok(finish.width >= 80 && finish.contentWidth <= finish.width, 'finish label must fit without clipping')
+      }
       const state = await contact(); assert.ok(state.distance < 1e-7); if (!reduced) assert.ok(state.angle > 1e-5)
     }
     // Both directions are accepted from different real surfaces, while still swinging.
@@ -89,6 +98,27 @@ try {
     await shot('free-play')
     await page.getByRole('button', { name: '结束体验', exact: true }).click(); await page.locator('.scene-completion-actions').waitFor(); await shot('finished')
     assert.equal(await done(), 3); assert.equal(await page.locator('[data-cue-role="source"]').count(), 0)
+    const completionLayout = await page.evaluate(() => {
+      const header = document.querySelector('.ritual-narrative-header'), summary = header.querySelector('summary'), status = header.querySelector('[role="status"]')
+      const h = header.getBoundingClientRect(), s = summary.getBoundingClientRect(), c = status.getBoundingClientRect()
+      return {
+        copy: status.textContent, centreOffset: c.y + c.height / 2 - s.y - s.height / 2, rightOffset: h.right - c.right,
+        footerCopy: document.querySelector('.scene-done-row').textContent,
+        buttons: [...document.querySelectorAll('.scene-completion-actions > button')].map(button => {
+          const r = button.getBoundingClientRect()
+          return { top: r.top, height: r.height, font: getComputedStyle(button).fontSize }
+        }),
+      }
+    })
+    assert.equal(completionLayout.copy, '体验完成。'); assert.ok(Math.abs(completionLayout.centreOffset) < 1)
+    assert.ok(Math.abs(completionLayout.rightOffset) < 1); assert.ok(!completionLayout.footerCopy.includes('体验完成'))
+    assert.equal(completionLayout.buttons.length, 2)
+    assert.equal(completionLayout.buttons[0].top, completionLayout.buttons[1].top)
+    assert.ok(completionLayout.buttons.every(button => button.height === 52 && button.font === '16px'))
+    await page.locator('.ritual-narrative > summary').click()
+    const narrativeWidth = await page.locator('.ritual-narrative > p').evaluate(p => p.getBoundingClientRect().width - p.closest('.ritual-narrative-header').getBoundingClientRect().width)
+    assert.ok(Math.abs(narrativeWidth) < 1, 'expanded narrative retains the complete header width')
+    await shot('finished-open')
     const finalSignals = await signals(); assert.equal(finalSignals.vibrations.length, 10); assert.equal(finalSignals.sounds.length, 10)
     assert.ok(finalSignals.sounds.every(f => f === 659.25)); assert.deepEqual(errors, [])
     results.push({ width, input: touch ? 'native-touch' : 'mouse', motion: reduced ? 'reduced' : 'normal', surfaces: 7, freeDrags: 2, noAutoFinish: true, fixedBeak: true, cancel: true, liveSettings: true, ...finalSignals, errors })

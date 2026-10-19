@@ -143,7 +143,7 @@ export function FavoriteChip({ id, favorite }: { id: string; favorite: boolean }
     </button>
   );
 }
-/** The closing line and the two exits shown when a scene's steps are done. */
+/** The header status and exits shown when a scene's steps are done. */
 export const SCENE_DONE_COPY = "体验完成。";
 export const SCENE_DONE_WISH_CTA = "去心愿看看";
 export const SCENE_DONE_CTA = "完成";
@@ -442,7 +442,7 @@ function LoadedScene({
         />
       )}
       {progress >= steps && (
-        <div className={`scene-done-row${!opening && !returnedFor && !dailyGranted && !vesselSpent ? " scene-done-row--inline" : ""}`}>
+        <div className="scene-done-row">
           {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} favorite={favoriteChip} /> : returnedFor ? (
             <>
               <p className="scene-done">{SCENE_RETURN_DONE_COPY}</p>
@@ -537,7 +537,6 @@ function LoadedScene({
             </>
           ) : keptWish ? (
             <>
-              <p className="scene-done">{SCENE_DONE_COPY}</p>
               {completionActions(<button
                 type="button"
                 className="button primary"
@@ -549,7 +548,6 @@ function LoadedScene({
             </>
           ) : (
             <>
-              <p className="scene-done">{SCENE_DONE_COPY}</p>
               {completionActions(<button type="button" className="button primary" onClick={back}>
                 {SCENE_DONE_CTA}
               </button>)}
@@ -602,7 +600,7 @@ export function SceneExperience({
   opening?: boolean;
 }) {
   const { library, ready } = useSceneLibrary(),
-    { dispatch, back } = useApp();
+    { state, dispatch, back } = useApp();
   const [attempt, setAttempt] = useState(0),
     [progress, setProgress] = useState<SceneProgress>();
   const [loaded, setLoaded] = useState<{
@@ -666,10 +664,12 @@ export function SceneExperience({
   }, [entry, library, ready, attempt]);
   if (!entry) return <p role="alert">场景信息缺失，请返回目录重试。</p>;
   const failure = error ? describeSceneLoadError(error) : undefined;
+  const completed = loaded && !failure &&
+    (state.sceneRecords.find(record => record.id === entry.id)?.progress ?? 0) >= sceneSteps(entry);
   return (
     <section className="scene-experience" aria-label={entry.title}>
       {opening && <OpeningGuide sceneId={entry.id} />}
-      <RitualNarrativeBlurb sceneId={entry.id} />
+      <RitualNarrativeBlurb sceneId={entry.id} completion={completed ? SCENE_DONE_COPY : undefined} />
       {failure ? (
         <div className="scene-load-error" role="alert">
           <p>暂时无法打开。记录和进度已保留。</p>

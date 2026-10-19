@@ -294,7 +294,7 @@ describe("今日's daily set", () => {
     // A flagged visit starts the scene over.
     expect(ui.sceneProgress()).toBe("已完成 0 / 3");
     await ui.walk();
-    expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
+    expect(ui.host.querySelector(".scene-complete-status")?.textContent).toBe(
       SCENE_DONE_COPY,
     );
     expect(ui.doneButtons()).toEqual([SCENE_DONE_CTA]);
@@ -380,7 +380,7 @@ describe("今日's daily set", () => {
     expect(ui.sceneProgress()).toBe("已完成 0 / 3");
     await ui.walk();
     // A finished-again walk settles nothing further, and says so plainly.
-    expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
+    expect(ui.host.querySelector(".scene-complete-status")?.textContent).toBe(
       SCENE_DONE_COPY,
     );
     expect(ui.doneButtons()).toEqual([SCENE_DONE_CTA]);
@@ -400,7 +400,7 @@ describe("今日's daily set", () => {
     );
     expect(ui.host.querySelector(".scene-caption")).toBeNull();
     await ui.walk();
-    expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
+    expect(ui.host.querySelector(".scene-complete-status")?.textContent).toBe(
       SCENE_DONE_COPY,
     );
     const saved = await ui.saved();
@@ -428,7 +428,7 @@ describe("今日's daily set", () => {
     // Not the day's walk: no daily caption, and the plain done row.
     expect(ui.host.querySelector(".scene-caption")).toBeNull();
     await ui.walk();
-    expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
+    expect(ui.host.querySelector(".scene-complete-status")?.textContent).toBe(
       SCENE_DONE_COPY,
     );
     expect(ui.doneButtons()).toEqual([SCENE_DONE_CTA]);

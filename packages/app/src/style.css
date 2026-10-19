@@ -3391,6 +3391,30 @@ button:hover:not(:disabled) {
 .cache-manager > p {
   line-height: 1.8;
 }
+.ritual-narrative-header {
+  position: relative;
+  display: flow-root;
+}
+.ritual-narrative-header:has(.scene-complete-status) {
+  min-height: 52px;
+}
+.ritual-narrative-header:has(.scene-complete-status) summary {
+  padding-right: 84px;
+}
+.scene-complete-status {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: right;
+}
 .ritual-narrative {
   position: static;
   margin: 4px 0 12px;
@@ -3662,31 +3686,6 @@ button:hover:not(:disabled) {
   gap: 6px;
   overflow-wrap: anywhere;
 }
-/* Keep the short completion status beside the two actions, at the right edge. */
-.scene-done-row--inline {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  width: min(440px, 100%);
-  margin-inline: auto;
-}
-.scene-done-row--inline > .scene-done {
-  grid-area: 1 / 2;
-  text-align: right;
-  white-space: nowrap;
-  font-size: 13px;
-}
-.scene-done-row--inline > .scene-completion-actions {
-  grid-area: 1 / 1;
-  width: 100%;
-  grid-template-columns: minmax(0, 1fr) minmax(76px, 0.7fr);
-  gap: 8px;
-}
-.scene-done-row--inline .scene-completion-actions > .button {
-  padding-inline: 8px;
-  font-size: 14px;
-}
 /* A 许愿 vessel's held line, quoted on paper, and the keep-or-not choice. */
 .scene-keep-line {
   max-width: 100%;
@@ -3930,6 +3929,18 @@ button:hover:not(:disabled) {
 .library-scene-stage .scene-diabolo-stop::before {
   content: none;
 }
+.library-scene-stage .scene-bow-tap.scene-dragonfly-finish {
+  width: auto;
+  max-width: none;
+  padding-inline: 16px;
+  border: 1px solid var(--rim);
+  border-radius: 999px;
+  background: var(--mint-tint);
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 700;
+}
+.library-scene-stage .scene-dragonfly-finish::before { content: none; }
 
 .scene-sansi-keys {
   grid-area: keys;

@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'tamagushi-offering': {
+    kind: 'blessing', label: '向神明奉上祈愿', optionalWish: false,
+    action: '手持玉串转向，将家人平安的祈愿寄于枝叶，再向前供放。',
+  },
   'udo-undama': {
     kind: 'wish', label: '怀着心愿投出陶玉', optionalWish: true,
     action: '取起陶玉、对准龟岩的方形凹处，想着此刻的心愿，轻轻投出。',

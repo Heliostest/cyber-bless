@@ -131,6 +131,7 @@ describe("builtInScenes narratives", () => {
       "sorbian-painted-egg",
       "spanish-castanets",
       "st-brigids-cross",
+      "tamagushi-offering",
       "tanzaku-tanabata",
       "theravada-water",
       "tibetan-wheel",

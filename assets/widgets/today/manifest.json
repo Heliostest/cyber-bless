@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "cd20eff68e12b6eb4efae2f5e544242698f9f34011ce7c0c9da70b363916d272",
+  "revision": "8a64cd5d0965860a76b76a68cd62ee4e97946b63c76bc3d26f42d58aea80ad44",
   "scenes": [
+    {
+      "id": "mochigase-nagashibina",
+      "engine": "mochigase-nagashibina@1",
+      "small": {
+        "file": "mochigase-nagashibina-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "cda90f56c620a5999d9aa7094b6b278070a1f37d1cce2002caccce16c92bdd61",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "mochigase-nagashibina-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e780be2d789032d6e7cc0550359f25cb7ed95d398b0a434c16b2ee3d9db44055",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "mochigase-nagashibina-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "2871e84da40702674ac0671d290652bf63ce52b498b12b1167e0b111e7eafb85",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "greek-new-year-pomegranate",
       "engine": "greek-new-year-pomegranate@1",

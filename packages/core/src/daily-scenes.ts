@@ -81,6 +81,7 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "sternsinger-house-blessing",
   "greek-new-year-pomegranate",
   "bonfim-ribbon",
   "chinowa-kuguri",
@@ -196,6 +197,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"sternsinger-house-blessing",title:"门楣祝家",engine:"sternsinger-house-blessing@1",revision:"bundled",manifestUrl:"",traditionSlug:"sternsinger-house-blessing",narrative:"德国的 Sternsinger 在岁首逐户拜访，用粉笔在门上方写下基督教祝福，并为儿童援助项目募款。拿起粉笔，写下门楣上的年份与 C+M+B，寄托“愿基督祝福这所房屋”的心意。" },
   { id:"greek-new-year-pomegranate",title:"破榴迎新",engine:"greek-new-year-pomegranate@1",revision:"bundled",manifestUrl:"",traditionSlug:"greek-new-year-pomegranate",narrative:"在希腊一些家庭，元旦会在家门门槛摔开石榴，让红籽散开，寄托新年一家人的好运、丰足与幸福。眼前的完整石榴已备好：向上短拖拿起，向右移到门槛中央上方，再向下短拖后松手。果皮在石槛上破开，红籽弹落在日光里。" },
   { id:"bonfim-ribbon",title:"栏前结愿",engine:"bonfim-ribbon@1",revision:"bundled",manifestUrl:"",traditionSlug:"bonfim-ribbon",narrative:"在巴西萨尔瓦多，人们把Bonfim彩带系在 Senhor do Bonfim 教堂的栏杆上，以三个结寄托心愿。市文旅介绍，每一结留一个愿望；教堂院长的采访也记述了栏前系带的信念。眼前的彩带已经绕栏，三个松结也已预成：向右短拖收紧第一结，再向左收紧第二结，最后向右收紧第三结。心愿留在心中，彩带轻垂在日光下。" },
   { id:"chinowa-kuguri",title:"茅环祈安",engine:"chinowa-kuguri@1",revision:"bundled",manifestUrl:"",traditionSlug:"chinowa-kuguri",narrative:"在日本东京葛西神社，夏越时的茅环由束起的茅草制成，固定在柱上。神社介绍，参访者从正面穿环，依次向左、向右、再向左绕行，寄托净祓与平安度夏的心意，随后前往本殿。眼前的茅环已立好：向左短拖，从环中穿过并向左绕回；再向右穿行绕回，最后再走一次左绕。三次绕行后，停在茅环前。" },

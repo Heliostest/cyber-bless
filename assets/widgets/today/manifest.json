@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "cd20eff68e12b6eb4efae2f5e544242698f9f34011ce7c0c9da70b363916d272",
+  "revision": "d959a694fe35f5b2a48eb41e7b23818f8a3d65ed9deff15b844ba259723e107e",
   "scenes": [
+    {
+      "id": "sternsinger-house-blessing",
+      "engine": "sternsinger-house-blessing@1",
+      "small": {
+        "file": "sternsinger-house-blessing-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "a6b2eab9e46e0a8e58296f1c80c14255afcfab75dc69a49f1877befb89a46dfe",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "sternsinger-house-blessing-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "6599b1a8c615a0fcd97ec9ffd971761eaa2ace2078123f979515d8c74a2cff1e",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "sternsinger-house-blessing-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "5fee3f54487f56fe3d66624a1b9ff2b3c08e8547459af6700a85852820077d37",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "greek-new-year-pomegranate",
       "engine": "greek-new-year-pomegranate@1",

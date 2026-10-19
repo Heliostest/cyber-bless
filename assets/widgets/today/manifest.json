@@ -1,7 +1,993 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "f0f473c089408a59a4309c8aa93d1b9a3b2d47e56d85744089b243e5603ffce7",
+  "revision": "cd20eff68e12b6eb4efae2f5e544242698f9f34011ce7c0c9da70b363916d272",
   "scenes": [
+    {
+      "id": "greek-new-year-pomegranate",
+      "engine": "greek-new-year-pomegranate@1",
+      "small": {
+        "file": "greek-new-year-pomegranate-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "e85dab59d127ce3a4cec9dc7d9bcd89c1c6a6d9f7e38bfc939ae624105a6db5a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "greek-new-year-pomegranate-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "7336c5064365d79210b0d325e62c86b14fe91292371f86debf4980fac723148c",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "greek-new-year-pomegranate-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "ed8fff7c5869c0b76c5e6e64c0ca76aeb6fa7f6d6181baec79e2b266c7d4e4db",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "bonfim-ribbon",
+      "engine": "bonfim-ribbon@1",
+      "small": {
+        "file": "bonfim-ribbon-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "19b9c85f995701d6c0ce100ad7f9da91c4f1e802028545ccd50ff13fe8ac2b5a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "bonfim-ribbon-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "a5525ff159bce5a65ca14ef322cc2f8a3485dce3c06177ca1d699163d7c7b420",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "bonfim-ribbon-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "a50b92efe4697b5c5e1367ee696407ee96115cf736360cf7d87eb92669da76ab",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "chinowa-kuguri",
+      "engine": "chinowa-kuguri@1",
+      "small": {
+        "file": "chinowa-kuguri-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "dbb7dd8867340b382f6c9d8cf37e3b888c0a8cb0a773404afd0e18583a244047",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "chinowa-kuguri-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "6f05ad1ed252d85e213f8c91b386d20f006c688499a94f49e7ab4408484e5932",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "chinowa-kuguri-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "d358064d7acc8c26733813681f69cde9b9225cbaa63beb57d3b1bdacde9560fb",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "zeniarai-coin-washing",
+      "engine": "zeniarai-coin-washing@1",
+      "small": {
+        "file": "zeniarai-coin-washing-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "93fc1065f1d3879facfbbc47b35f8fa6b019ee1c4fabed19be2bd935ea9fd6e7",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "zeniarai-coin-washing-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "3c54321ca8cbb460660b9691e8ad935e0a92079069dc74ff282b5a67677ddc9a",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "zeniarai-coin-washing-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "7f695adafa86e1e855deb5a7dfa9a0efff6be9a21ac311505a9022393c2dbe1e",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "udo-undama",
+      "engine": "udo-undama@1",
+      "small": {
+        "file": "udo-undama-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "1445e3ad1c51a17d21dfb4326ffdf92a4ca8d4b963f7b1dba1b802d398bcb413",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "udo-undama-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "3ac7f5907621f87390c0447f458e8d6f09dfd490eb12effd42a3d45ad1519c72",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "udo-undama-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "71c9e5d93672193c6591a61893178cb20037ceed3f017bdf9ee9b511f10d113c",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "japanese-daruma-otoshi",
+      "engine": "japanese-daruma-otoshi@1",
+      "small": {
+        "file": "japanese-daruma-otoshi-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "da91addc2cc9583955d3b305b070821535b7437b186b2ba142f8aec10fb382c7",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "japanese-daruma-otoshi-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "edc4e69e4f303c86af35d22d4608cfb46121a9f4e6753c57d5d28fb8ab749697",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "japanese-daruma-otoshi-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "28a6701ace7d5d6b07ab19b117ecafe5caf876f30a7f0d0b1e82a1c12ad4dcfe",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "paper-pinwheel",
+      "engine": "paper-pinwheel@1",
+      "small": {
+        "file": "paper-pinwheel-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "0a9ef59fa750bcb57e47d8216014287707910b277c5678921d2af752f1af0f95",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "paper-pinwheel-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e6bd66176406a46e02bbeecbd5c6120c1895714ea2a88069e90b2bb289549962",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "paper-pinwheel-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "47974cdb55e658d741513d2ab8f6d1899191882149b67f1a90c44d5e64e937e2",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "chinese-steelyard",
+      "engine": "chinese-steelyard@1",
+      "small": {
+        "file": "chinese-steelyard-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "80b6725341d609504ae3fe67b188e393a998212f8231b0b68213ffe5754a03ab",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "chinese-steelyard-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "8fd035eee5d3752344a9a37b435ff2e77c6425202dfca9af4ae6de1766c97352",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "chinese-steelyard-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "31ac7b335fc43d67b11f47e3a6fa46da15623e568799a10b09c45a51dbceae4d",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "garden-croquet",
+      "engine": "garden-croquet@1",
+      "small": {
+        "file": "garden-croquet-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "bda74575622065745512614790b2e75b7baa86a151c7530c203fade8bc1f94f0",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "garden-croquet-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "47403fc82bf4268dc244e4caab0af0ee206927659004594647b665e95e8cce09",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "garden-croquet-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "e62251f54b88a911dae8745d8302a1929d80f31f1e69b84e3223ba3a8e246ec5",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "welsh-drop-spindle",
+      "engine": "welsh-drop-spindle@1",
+      "small": {
+        "file": "welsh-drop-spindle-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "917d8e468461413662fac20df7c4128f379ab5ca38e9b509f9d67addb952869a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "welsh-drop-spindle-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "12dc8507b7edb9b388dece243362e04bc14970730fa719cf4567653402dd049f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "welsh-drop-spindle-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "fbd8668a1fb9815cf74b845c6c98b879563968c9f80d6bb7ff242adf2ed572b3",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "scottish-plunge-churn",
+      "engine": "scottish-plunge-churn@1",
+      "small": {
+        "file": "scottish-plunge-churn-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "ad001a057d40c08e0ef92d68ebf49f6b130474dfd8ea1012ce4a679b78c45369",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "scottish-plunge-churn-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "75a8e26a740466dab5a34f3febe918d0c3f255153bae3356d2ea6fdfd44a7880",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "scottish-plunge-churn-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "f1ce66827cadfc37a070ea4ffb0120db2fa23656de1e52f85691fb48693ea9eb",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "irish-bodhran",
+      "engine": "irish-bodhran@1",
+      "small": {
+        "file": "irish-bodhran-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "8534ebc53973b9691f34623b85e6564d7ed42086a33f7235675ec8d6506ae57a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "irish-bodhran-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "a35116871359bdc11bab9e95e7a71337f469ddc21e40682e24e04acb24305708",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "irish-bodhran-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "39a6d3441e2b3a96b87fa5bf10d5953593cbec25b9b8a2917550a081ae2ade4e",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "french-coffee-mill",
+      "engine": "french-coffee-mill@1",
+      "small": {
+        "file": "french-coffee-mill-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "b74cf39afb382a6b0069ea3479112dd6ebcd59aed1b7bcbd80b723aa80840b8e",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "french-coffee-mill-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "19308499d2c8b06a01cbbb3c7a6b0bb242f3e86349d70ddc0a884f8a69d96e09",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "french-coffee-mill-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8537b10cd96f6eb20fc2960df4e78d68f8e3f9fe6afba82c4b17d861cedc30c7",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "japanese-wagasa",
+      "engine": "japanese-wagasa@1",
+      "small": {
+        "file": "japanese-wagasa-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "faae6a8840c74680559e1aafe74440f2c8754e37fdba3836b05bbdc1fc1ea719",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "japanese-wagasa-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "639ee4515a297cd9f3ac0d2c22cca6cbc2fbe5704a236127f6776e2078ae5794",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "japanese-wagasa-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "55e4c2e66b010d5e416ba3f0279dbf2619b57dc86085d3225c9ea9176eedf318",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "spanish-castanets",
+      "engine": "spanish-castanets@1",
+      "small": {
+        "file": "spanish-castanets-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "716637a5b95b693e888f8141d68c2e181ed48314f0e26639dfdfc96531c639f2",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "spanish-castanets-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "a3b123df6cb8a2c7955af84260bd513a2e9f8e2ccea12c18b4372bf3891baec3",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "spanish-castanets-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8b43d997b1fc388fb94ccf10e460f6284e256dcc7735cb0ed50ac263a7572778",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "japanese-shishi-odoshi",
+      "engine": "japanese-shishi-odoshi@1",
+      "small": {
+        "file": "japanese-shishi-odoshi-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "9fe30fa9e5b3f1dbbc0a15623d5e9c00f3f778acbef740b719d9f8851327b675",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "japanese-shishi-odoshi-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "68775bf23fe6e2ae35f17d4f99d1d3a505478add465e195c83485dbcb9e99221",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "japanese-shishi-odoshi-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "cd96546e47f89d3d2c845828e76be4193a35a241376751f57558554066dc9708",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "german-jumping-jack",
+      "engine": "german-jumping-jack@1",
+      "small": {
+        "file": "german-jumping-jack-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "056ee1d3da3a0dc9d560044843f7ba10ee37dcd4c4d7686a95d5989045cb8444",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "german-jumping-jack-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "fc56bbf486951e0d09406c6e1a395ca8fe2191ebbb96d3f0ddaba04f97d9e141",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "german-jumping-jack-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "7867cdc12fe9231ed9eadaf442fd496a5f40413d425231d762ab91dd30883fe2",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "finnish-kantele",
+      "engine": "finnish-kantele@1",
+      "small": {
+        "file": "finnish-kantele-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "ded1d044972490b631c6f55d7bd4e04cba70bdaa2122085e5391db2b56406ca5",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "finnish-kantele-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "b56b7c06831f17df75676ff596c1a80faee8a98f8e05d0417d0b4c02c4a942ff",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "finnish-kantele-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "4747a1d9ba9ae26fd71a8cb80b3c0814ee55cc92a0751f8b489b90351a1f14a9",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "estonian-village-swing",
+      "engine": "estonian-village-swing@1",
+      "small": {
+        "file": "estonian-village-swing-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "2db31b2cb2ab939c5eb5857e38fc11640b1fef169a0907b51ba4f2237280f394",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "estonian-village-swing-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "6fc6a94f65410f95437d3d1ffa0b80ac4f204d5b0e90ffae6d66043fd90b7fc4",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "estonian-village-swing-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "43c14a61f2da78d8ea104198ff7827c77b295a64cdc87911d58a3bb0f409c735",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "french-petanque",
+      "engine": "french-petanque@1",
+      "small": {
+        "file": "french-petanque-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "fd8c6fccaa63616973668cbad7ac5eb9a1d1bf712feb7ea4113ba0ba9c014e0a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "french-petanque-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "b9cc7e4fd1b618d55acb665a1298754537f1955b229f09edbb66564b3f0c896b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "french-petanque-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "17ea788e295df3a6cbb76651f2a4d51b4f3cfc2cc22586c94d12a0040c2ea0c7",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "english-hearth-bellows",
+      "engine": "english-hearth-bellows@1",
+      "small": {
+        "file": "english-hearth-bellows-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "7d807ae1dc10050d3f33d4c0d08707958c3a85aa3ef6c2911e2b454f38af6999",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "english-hearth-bellows-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "1a90e4b934a3cbf6bd4849d38dede8bd270e09c308ea0d15afb07f230f8227ed",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "english-hearth-bellows-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "5b4ca041f816fdefdab4606e401bd3206a3ab86fb402949dc25561acf1fdda73",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "mexican-metate",
+      "engine": "mexican-metate@1",
+      "small": {
+        "file": "mexican-metate-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "6e1a727219fae86145c14e219b97a53e6f20c03449ccb534bf552d3f176a9126",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "mexican-metate-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "42aa44d11c82c2a40d73d14175aa46a82c4bd975db59e6ece95c55be7194d810",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "mexican-metate-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "4c39f315ab85b8b0dbe8ab6200ab3183ca017649e3f1ca622fd27eb376cbe3cc",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "czech-wooden-ratchet",
+      "engine": "czech-wooden-ratchet@1",
+      "small": {
+        "file": "czech-wooden-ratchet-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "98b205f133cb747739ab4b86503d50f3c056499c7524a561513c1a72bc081447",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "czech-wooden-ratchet-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "adf3df06d1f4a5877292a6b5f97ae21bf058db209ea338b75c850cf7cee0fb2f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "czech-wooden-ratchet-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "c6ff7dc93a826a3dc5f1d1a9e6a3a4acdf3f6ee70693072e488f3834d8710af6",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "puerto-rican-guiro",
+      "engine": "puerto-rican-guiro@1",
+      "small": {
+        "file": "puerto-rican-guiro-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "9f03cb680a3319681d508318bb83d98e0575cbe5636071dffcc07aec61086df3",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "puerto-rican-guiro-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "5494d0f3f39c27030cb1ab21e2ca731b043d50aa1c22bdd7c20b1c666ab1ddd1",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "puerto-rican-guiro-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "589d2af00e55c8626a6401cbb448651dc301bea2226d6e9f5608cc6e84cac458",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "valencian-folding-fan",
+      "engine": "valencian-folding-fan@1",
+      "small": {
+        "file": "valencian-folding-fan-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "95d4b725b788ad83a2a66b62a17faf9b6888414393728aef8343fa04d0722226",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "valencian-folding-fan-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "7de4def8c08b5c68222702766a7289fa46cc9431c18c8595d7f5ba6c696bb99f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "valencian-folding-fan-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "5cd7f80822d2e732128f849c2e129555bd472a0b596364e573c02db178ffb42d",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "mexican-tortilla-press",
+      "engine": "mexican-tortilla-press@1",
+      "small": {
+        "file": "mexican-tortilla-press-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "37fdda9b500bd562d11227ece6830e6558db1fdf573eef35042c36032d7ccea8",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "mexican-tortilla-press-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "3609adb89264bbb13f6a3c2f2ead16315e43dc65b92b2925308fd44208d2ee63",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "mexican-tortilla-press-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "fd080beeb324ed05982bb7e98bdd908471f68df24d61a267dc0ab2e7397aba6b",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "ghanaian-oware",
+      "engine": "ghanaian-oware@1",
+      "small": {
+        "file": "ghanaian-oware-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "7a475ff44c04c31f72adda9807a5b61e5236e7d323417b92ecfcce29fff2301d",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "ghanaian-oware-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "9ef1e980b327fbfd38e92434046a951ceed06d92287c2cc566b13b2544b24fa5",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "ghanaian-oware-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "70c2118f622ac3a52f1d49c82730bb792aa417c596b395decc2c5efe94f1fc34",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "chinese-rattle-drum",
+      "engine": "chinese-rattle-drum@1",
+      "small": {
+        "file": "chinese-rattle-drum-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "8600f46e7152013c6f6fd9afdb3ccad4a2d5157c151c8815975a3cf2943ae2da",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "chinese-rattle-drum-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e04fbb58fe755ea402e8e1bfb2c1bbfb1ca0db21876186a6308aacda03e83b4d",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "chinese-rattle-drum-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "854c5f0a1c0e8f85e1a15ad072cff3ab3c2ca6c5c981dcdb2726a2f985430ebd",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "chinese-tangram",
+      "engine": "chinese-tangram@1",
+      "small": {
+        "file": "chinese-tangram-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "d592e85b08961616fa1c9455630447deebbc122911805b5a630a5e0f39d3cbbb",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "chinese-tangram-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "1850a56de8b28ae735f9f7352aa158e88857eff99d8e6d514971638f9f5de799",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "chinese-tangram-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "9be8b334f222b79c1981f2af6eb1d04beba2accba692167dc93fd20aa033da94",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "chinese-diabolo",
       "engine": "chinese-diabolo@1",

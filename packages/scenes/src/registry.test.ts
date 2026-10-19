@@ -16,6 +16,35 @@ describe('sceneRegistry', () => {
       'russian-matryoshka',
       'korean-yutnori',
       'chinese-diabolo',
+      'chinese-tangram',
+      'chinese-rattle-drum',
+      'ghanaian-oware',
+      'mexican-tortilla-press',
+      'greek-new-year-pomegranate',
+      'bonfim-ribbon',
+      'chinowa-kuguri',
+      'zeniarai-coin-washing',
+      'udo-undama',
+      'japanese-daruma-otoshi',
+      'paper-pinwheel',
+      'chinese-steelyard',
+      'garden-croquet',
+      'welsh-drop-spindle',
+      'scottish-plunge-churn',
+      'irish-bodhran',
+      'french-coffee-mill',
+      'japanese-wagasa',
+      'spanish-castanets',
+      'japanese-shishi-odoshi',
+      'german-jumping-jack',
+      'finnish-kantele',
+      'estonian-village-swing',
+      'french-petanque',
+      'english-hearth-bellows',
+      'mexican-metate',
+      'czech-wooden-ratchet',
+      'puerto-rican-guiro',
+      'valencian-folding-fan',
       'indian-charkha',
       'german-nutcracker',
       'mexican-molinillo',
@@ -127,6 +156,19 @@ describe('loadScene', () => {
     ['russian-matryoshka', '套娃相藏', 'russian-matryoshka'],
     ['korean-yutnori', '木柶行棋', 'korean-yutnori'],
     ['chinese-diabolo', '空竹轻扬', 'chinese-diabolo'],
+    ['chinese-tangram', '七巧归方', 'chinese-tangram'],
+    ['chinese-rattle-drum', '拨浪轻响', 'chinese-rattle-drum'],
+    ['ghanaian-oware', '木窝播籽', 'ghanaian-oware'],
+    ['mexican-tortilla-press', '木压成圆', 'mexican-tortilla-press'],
+    ['valencian-folding-fan', '折扇轻风', 'valencian-folding-fan'],
+    ['german-jumping-jack', '牵绳木偶', 'german-jumping-jack'],
+    ['finnish-kantele', '五弦轻拨', 'finnish-kantele'],
+    ['estonian-village-swing', '秋千轻荡', 'estonian-village-swing'],
+    ['french-petanque', '银球近靶', 'french-petanque'],
+    ['english-hearth-bellows', '风囊轻送', 'english-hearth-bellows'],
+    ['mexican-metate', '石面磨香', 'mexican-metate'],
+    ['czech-wooden-ratchet', '木齿轻转', 'czech-wooden-ratchet'],
+    ['puerto-rican-guiro', '瓜棱轻奏', 'puerto-rican-guiro'],
     ['indian-charkha', '棉线慢成', 'indian-charkha-craft'],
     ['german-nutcracker', '木偶开果', 'erzgebirge-nutcracker-craft'],
     ['mexican-molinillo', '木旋起沫', 'molinillo-chocolate-craft'],
@@ -209,3 +251,35 @@ describe('loadScene', () => {
     expect(isSceneImplemented('no-such-scene')).toBe(false)
   })
 })
+
+it('loads the bamboo tipping water feature through the scene registry',async()=>{const m=await loadScene('japanese-shishi-odoshi');expect(m.meta.id).toBe('japanese-shishi-odoshi');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads the cord-linked hollow castanets through the scene registry',async()=>{const m=await loadScene('spanish-castanets');expect(m.meta.id).toBe('spanish-castanets');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads the bamboo and folding paper wagasa through the scene registry',async()=>{const m=await loadScene('japanese-wagasa');expect(m.meta.id).toBe('japanese-wagasa');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads the open hopper, rigid crank and sliding drawer coffee mill',async()=>{const m=await loadScene('french-coffee-mill');expect(m.meta.id).toBe('french-coffee-mill');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads the frame drum and double ended wooden tipper',async()=>{const m=await loadScene('irish-bodhran');expect(m.meta.id).toBe('irish-bodhran');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads the Scottish plunge churn with sliding wooden dasher',async()=>{const m=await loadScene('scottish-plunge-churn');expect(m.meta.id).toBe('scottish-plunge-churn');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads the Welsh drop spindle with suspended wooden whorl',async()=>{const m=await loadScene('welsh-drop-spindle');expect(m.meta.id).toBe('welsh-drop-spindle');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads garden croquet with a real mallet and rolling ball',async()=>{const m=await loadScene('garden-croquet');expect(m.meta.id).toBe('garden-croquet');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads Chinese steelyard with real sliding weight and suspended pan',async()=>{const m=await loadScene('chinese-steelyard');expect(m.meta.id).toBe('chinese-steelyard');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads paper pinwheel with a real four vane rotor and wooden handle',async()=>{const m=await loadScene('paper-pinwheel');expect(m.meta.id).toBe('paper-pinwheel');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads daruma otoshi with three wooden discs and a striking mallet',async()=>{const m=await loadScene('japanese-daruma-otoshi');expect(m.meta.id).toBe('japanese-daruma-otoshi');expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+
+it('loads the public Udo wishing practice with a real clay ball',async()=>{const m=await loadScene('udo-undama');expect(m.meta.id).toBe('udo-undama');expect(m.meta.traditionSlug).toBe('udo-undama');expect(m.create).toBeTypeOf('function')})
+
+it('loads the source-specific Zeniarai washing fragment',async()=>{const m=await loadScene('zeniarai-coin-washing');expect(m.meta.id).toBe('zeniarai-coin-washing');expect(m.meta.traditionSlug).toBe('zeniarai-coin-washing');expect(m.create).toBeTypeOf('function')})
+
+it('loads the source-specific fixed Chinowa walking fragment',async()=>{const m=await loadScene('chinowa-kuguri');expect(m.meta.id).toBe('chinowa-kuguri');expect(m.meta.traditionSlug).toBe('chinowa-kuguri');expect(m.create).toBeTypeOf('function')})
+
+it('loads the three preformed Bonfim knots fragment',async()=>{const m=await loadScene('bonfim-ribbon');expect(m.meta.id).toBe('bonfim-ribbon');expect(m.meta.traditionSlug).toBe('bonfim-ribbon');expect(m.create).toBeTypeOf('function')})
+
+it('loads the Greek household New Year pomegranate fragment',async()=>{const m=await loadScene('greek-new-year-pomegranate');expect(m.meta.id).toBe('greek-new-year-pomegranate');expect(m.meta.traditionSlug).toBe('greek-new-year-pomegranate');expect(m.create).toBeTypeOf('function')})

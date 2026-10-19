@@ -15,6 +15,35 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'russian-matryoshka', title: '套娃相藏', traditionSlug: 'russian-matryoshka', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'korean-yutnori', title: '木柶行棋', traditionSlug: 'korean-yutnori', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'chinese-diabolo', title: '空竹轻扬', traditionSlug: 'chinese-diabolo', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'chinese-tangram', title: '七巧归方', traditionSlug: 'chinese-tangram', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id:'greek-new-year-pomegranate',title:'破榴迎新',traditionSlug:'greek-new-year-pomegranate',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'bonfim-ribbon',title:'栏前结愿',traditionSlug:'bonfim-ribbon',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'chinowa-kuguri',title:'茅环祈安',traditionSlug:'chinowa-kuguri',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'zeniarai-coin-washing',title:'泉水净币',traditionSlug:'zeniarai-coin-washing',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'udo-undama',title:'龟岩投愿',traditionSlug:'udo-undama',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id: 'japanese-daruma-otoshi', title: '木槌落片', traditionSlug: 'japanese-daruma-otoshi', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'paper-pinwheel', title: '纸翼转风', traditionSlug: 'paper-pinwheel', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'chinese-steelyard', title: '移砣平衡', traditionSlug: 'chinese-steelyard', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'garden-croquet', title: '草坪过门', traditionSlug: 'garden-croquet', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'welsh-drop-spindle', title: '悬锤纺线', traditionSlug: 'welsh-drop-spindle', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'scottish-plunge-churn', title: '木杆搅乳', traditionSlug: 'scottish-plunge-churn', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'irish-bodhran', title: '鼓面轻拍', traditionSlug: 'irish-bodhran', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'french-coffee-mill', title: '手磨晨光', traditionSlug: 'french-coffee-mill', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'japanese-wagasa', title: '纸伞舒晴', traditionSlug: 'japanese-wagasa', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'spanish-castanets', title: '木壳轻拍', traditionSlug: 'spanish-castanets', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'japanese-shishi-odoshi', title: '竹筒叩石', traditionSlug: 'japanese-shishi-odoshi', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'german-jumping-jack', title: '牵绳木偶', traditionSlug: 'german-jumping-jack', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'finnish-kantele', title: '五弦轻拨', traditionSlug: 'finnish-kantele', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'estonian-village-swing', title: '秋千轻荡', traditionSlug: 'estonian-village-swing', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'french-petanque', title: '银球近靶', traditionSlug: 'french-petanque', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'english-hearth-bellows', title: '风囊轻送', traditionSlug: 'english-hearth-bellows', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'mexican-metate', title: '石面磨香', traditionSlug: 'mexican-metate', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'czech-wooden-ratchet', title: '木齿轻转', traditionSlug: 'czech-wooden-ratchet', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'puerto-rican-guiro', title: '瓜棱轻奏', traditionSlug: 'puerto-rican-guiro', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id: 'valencian-folding-fan', title: '折扇轻风', traditionSlug: 'valencian-folding-fan', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'indian-charkha', title: '棉线慢成', traditionSlug: 'indian-charkha-craft', grade: 'C', sensitivity: '中', gestures: ['drag'] },
   { id: 'german-nutcracker', title: '木偶开果', traditionSlug: 'erzgebirge-nutcracker-craft', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-molinillo', title: '木旋起沫', traditionSlug: 'molinillo-chocolate-craft', grade: 'C', sensitivity: '低', gestures: ['drag'] },
@@ -161,11 +190,40 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'greek-new-year-pomegranate',
+  'bonfim-ribbon',
+  'chinowa-kuguri',
   'malawi-sansi',
   'japanese-koinobori',
   'russian-matryoshka',
   'korean-yutnori',
   'chinese-diabolo',
+  'chinese-tangram',
+  'zeniarai-coin-washing',
+  'udo-undama',
+  'japanese-daruma-otoshi',
+  'paper-pinwheel',
+  'chinese-steelyard',
+  'garden-croquet',
+  'welsh-drop-spindle',
+  'scottish-plunge-churn',
+  'irish-bodhran',
+  'french-coffee-mill',
+  'japanese-wagasa',
+  'spanish-castanets',
+  'japanese-shishi-odoshi',
+  'german-jumping-jack',
+  'finnish-kantele',
+  'estonian-village-swing',
+  'french-petanque',
+  'english-hearth-bellows',
+  'mexican-metate',
+  'czech-wooden-ratchet',
+  'puerto-rican-guiro',
+  'valencian-folding-fan',
+  'mexican-tortilla-press',
+  'ghanaian-oware',
+  'chinese-rattle-drum',
   'japanese-kendama',
   'indian-charkha',
   'german-nutcracker',
@@ -215,6 +273,35 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'russian-matryoshka': return import('./russian-matryoshka')
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
+    case 'chinese-tangram': return import('./chinese-tangram')
+    case 'greek-new-year-pomegranate': return import('./greek-new-year-pomegranate/index')
+    case 'bonfim-ribbon': return import('./bonfim-ribbon/index')
+    case 'chinowa-kuguri': return import('./chinowa-kuguri/index')
+    case 'zeniarai-coin-washing': return import('./zeniarai-coin-washing/index')
+    case 'udo-undama': return import('./udo-undama')
+    case 'japanese-daruma-otoshi': return import('./japanese-daruma-otoshi')
+    case 'paper-pinwheel': return import('./paper-pinwheel')
+    case 'chinese-steelyard': return import('./chinese-steelyard')
+    case 'garden-croquet': return import('./garden-croquet')
+    case 'welsh-drop-spindle': return import('./welsh-drop-spindle')
+    case 'scottish-plunge-churn': return import('./scottish-plunge-churn')
+    case 'irish-bodhran': return import('./irish-bodhran')
+    case 'french-coffee-mill': return import('./french-coffee-mill')
+    case 'japanese-wagasa': return import('./japanese-wagasa')
+    case 'spanish-castanets': return import('./spanish-castanets')
+    case 'japanese-shishi-odoshi': return import('./japanese-shishi-odoshi')
+    case 'german-jumping-jack': return import('./german-jumping-jack')
+    case 'finnish-kantele': return import('./finnish-kantele')
+    case 'estonian-village-swing': return import('./estonian-village-swing')
+    case 'french-petanque': return import('./french-petanque')
+    case 'english-hearth-bellows': return import('./english-hearth-bellows')
+    case 'mexican-metate': return import('./mexican-metate')
+    case 'czech-wooden-ratchet': return import('./czech-wooden-ratchet')
+    case 'puerto-rican-guiro': return import('./puerto-rican-guiro')
+    case 'valencian-folding-fan': return import('./valencian-folding-fan')
+    case 'mexican-tortilla-press': return import('./mexican-tortilla-press')
+    case 'ghanaian-oware': return import('./ghanaian-oware')
+    case 'chinese-rattle-drum': return import('./chinese-rattle-drum')
     case 'japanese-kendama': return import('./japanese-kendama')
     case 'indian-charkha': return import('./indian-charkha')
     case 'german-nutcracker': return import('./german-nutcracker')

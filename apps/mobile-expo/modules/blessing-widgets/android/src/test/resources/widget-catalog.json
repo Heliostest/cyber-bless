@@ -1,5 +1,150 @@
 [
   {
+    "id": "greek-new-year-pomegranate",
+    "title": "破榴迎新",
+    "category": "blessing"
+  },
+  {
+    "id": "bonfim-ribbon",
+    "title": "栏前结愿",
+    "category": "blessing"
+  },
+  {
+    "id": "chinowa-kuguri",
+    "title": "茅环祈安",
+    "category": "blessing"
+  },
+  {
+    "id": "zeniarai-coin-washing",
+    "title": "泉水净币",
+    "category": "wish"
+  },
+  {
+    "id": "udo-undama",
+    "title": "龟岩投愿",
+    "category": "wish"
+  },
+  {
+    "id": "japanese-daruma-otoshi",
+    "title": "木槌落片",
+    "category": "blessing"
+  },
+  {
+    "id": "paper-pinwheel",
+    "title": "纸翼转风",
+    "category": "blessing"
+  },
+  {
+    "id": "chinese-steelyard",
+    "title": "移砣平衡",
+    "category": "blessing"
+  },
+  {
+    "id": "garden-croquet",
+    "title": "草坪过门",
+    "category": "blessing"
+  },
+  {
+    "id": "welsh-drop-spindle",
+    "title": "悬锤纺线",
+    "category": "blessing"
+  },
+  {
+    "id": "scottish-plunge-churn",
+    "title": "木杆搅乳",
+    "category": "blessing"
+  },
+  {
+    "id": "irish-bodhran",
+    "title": "鼓面轻拍",
+    "category": "blessing"
+  },
+  {
+    "id": "french-coffee-mill",
+    "title": "手磨晨光",
+    "category": "blessing"
+  },
+  {
+    "id": "japanese-wagasa",
+    "title": "纸伞舒晴",
+    "category": "blessing"
+  },
+  {
+    "id": "spanish-castanets",
+    "title": "木壳轻拍",
+    "category": "blessing"
+  },
+  {
+    "id": "japanese-shishi-odoshi",
+    "title": "竹筒叩石",
+    "category": "blessing"
+  },
+  {
+    "id": "german-jumping-jack",
+    "title": "牵绳木偶",
+    "category": "blessing"
+  },
+  {
+    "id": "finnish-kantele",
+    "title": "五弦轻拨",
+    "category": "blessing"
+  },
+  {
+    "id": "estonian-village-swing",
+    "title": "秋千轻荡",
+    "category": "blessing"
+  },
+  {
+    "id": "french-petanque",
+    "title": "银球近靶",
+    "category": "blessing"
+  },
+  {
+    "id": "english-hearth-bellows",
+    "title": "风囊轻送",
+    "category": "blessing"
+  },
+  {
+    "id": "mexican-metate",
+    "title": "石面磨香",
+    "category": "blessing"
+  },
+  {
+    "id": "czech-wooden-ratchet",
+    "title": "木齿轻转",
+    "category": "blessing"
+  },
+  {
+    "id": "puerto-rican-guiro",
+    "title": "瓜棱轻奏",
+    "category": "blessing"
+  },
+  {
+    "id": "valencian-folding-fan",
+    "title": "折扇轻风",
+    "category": "blessing"
+  },
+  {
+    "id": "mexican-tortilla-press",
+    "title": "木压成圆",
+    "category": "blessing"
+  },
+  {
+    "id": "ghanaian-oware",
+    "title": "木窝播籽",
+    "category": "blessing"
+  },
+  {
+    "id": "chinese-rattle-drum",
+    "title": "拨浪轻响",
+    "category": "blessing"
+  },
+  {
+    "id": "chinese-tangram",
+    "title": "七巧归方",
+    "category": "blessing"
+  },
+  {
     "id": "chinese-diabolo",
     "title": "空竹轻扬",
     "category": "blessing"

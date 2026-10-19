@@ -4,6 +4,8 @@ import { chromium } from 'playwright';
 import { APP_HIDDEN_SCENE_IDS, builtInScenes, isSceneVisibleInApp } from '../packages/core/src/daily-scenes.ts';
 
 const base = process.env.WBR_URL || 'http://127.0.0.1:5173';
+// Source review is deliberately dev-only; production catalog checks may use a frozen build.
+const reviewBase = process.env.WBR_REVIEW_URL || base;
 const out = 'artifacts/blessing-audit';
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ headless: true });
@@ -20,7 +22,7 @@ try {
   while (await more.count()) await more.click();
   assert.equal(await page.locator('.scene-card[data-scene="chinese-suanpan"]').count(), 0);
   const visibleCount = await page.locator('.scene-card').count();
-  assert.equal(visibleCount, 35);
+  assert.equal(visibleCount, 40);
   assert.deepEqual((await page.locator('.scene-card').evaluateAll(nodes => nodes.map(el => el.dataset.scene))).sort(), builtInScenes.filter(isSceneVisibleInApp).map(e => e.id).sort());
   for (const id of APP_HIDDEN_SCENE_IDS) {
     await page.getByRole('searchbox', { name: '搜索场景' }).fill(builtInScenes.find(e => e.id === id).title);
@@ -33,7 +35,7 @@ try {
   await page.getByRole('searchbox', { name: '搜索场景' }).fill('鲤旗迎风');
   await page.locator('.scene-card[data-scene="japanese-koinobori"]').click();
   await page.locator('.library-scene-stage[data-ready="true"]').waitFor();
-  await page.goto(`${base}/scene-review?scene=chinese-suanpan`);
+  await page.goto(`${reviewBase.replace(/\/$/, '')}/scene-review?scene=chinese-suanpan`);
   await page.locator('.library-scene-stage[data-scene="chinese-suanpan"][data-ready="true"]').waitFor();
   assert.equal(await page.locator('select[aria-label="跳转场景"] option[value="chinese-suanpan"]').count(), 1);
   await page.screenshot({ path: `${out}/abacus-source-review-390.png`, fullPage: true });

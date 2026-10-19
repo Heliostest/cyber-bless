@@ -4,8 +4,9 @@ import { APP_HIDDEN_SCENE_IDS, BLESSING_SCENE_IDS, WISH_SCENE_IDS, builtInScenes
 import { createWidgetSnapshot, selectWidgetDay } from './widgets';
 
 describe('App scene availability', () => {
-  it('keeps exactly the 35 approved scenes visible and all 78 sources available', () => {
+  it('keeps exactly the 40 approved scenes visible and all 107 sources available', () => {
     const approved = [
+    "udo-undama", "zeniarai-coin-washing", "chinowa-kuguri", "bonfim-ribbon", "greek-new-year-pomegranate",
     "aland-votive-ship",
     "barcelos-clay-rooster",
     "basque-sunflower",
@@ -42,10 +43,10 @@ describe('App scene availability', () => {
     "woodfish",
     "yeondeunghoe"
 ];
-    expect(builtInScenes).toHaveLength(78);
-    expect(APP_HIDDEN_SCENE_IDS).toHaveLength(43);
-    expect(builtInScenes.filter(isSceneVisibleInApp).map(e => e.id).sort()).toEqual(approved);
-    expect(new Set(APP_HIDDEN_SCENE_IDS).size).toBe(43);
+    expect(builtInScenes).toHaveLength(107);
+    expect(APP_HIDDEN_SCENE_IDS).toHaveLength(67);
+    expect(builtInScenes.filter(isSceneVisibleInApp).map(e => e.id).sort()).toEqual(approved.sort());
+    expect(new Set(APP_HIDDEN_SCENE_IDS).size).toBe(67);
     for (const id of APP_HIDDEN_SCENE_IDS) {
       const source = builtInScenes.find(e => e.id === id)!;
       expect(source).toBeDefined();
@@ -82,7 +83,7 @@ describe('App scene availability', () => {
   });
 
   it('never assigns the hidden abacus to a new opening', () => {
-    const entries = builtInScenes.filter(e => ['woodfish', 'shinto-torii', 'chinese-suanpan', 'crane'].includes(e.id));
+    const entries = builtInScenes.filter(e => ['woodfish', 'shinto-torii', 'chinese-suanpan', 'crane' ].includes(e.id));
     for (const random of [0, .3, .7, .99]) {
       expect(chooseOpeningScenes(entries, () => random)).not.toContain('chinese-suanpan');
     }

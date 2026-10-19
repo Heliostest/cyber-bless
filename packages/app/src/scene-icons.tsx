@@ -42,6 +42,175 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+ 'greek-new-year-pomegranate': (<><path d="M6 56h52" stroke="#c7b796" strokeWidth="7"/><path d="m27 15-6-9 11 4 11-4-6 9" fill="#b83e45" stroke="#913541"/><path d="M31 15C9 10 7 42 21 48c8 4 22 2 27-8 7-15-3-26-17-25Z" fill="#c84c4d" stroke="#913541" strokeWidth="2"/><path d="M30 23c-8 4-12 15-3 20 11 6 22-2 17-13-3-8-8-10-14-7Z" fill="#f2d7a1"/>{[[30,28],[38,29],[27,35],[35,36],[30,41],[41,37]].map(([cx,cy],i)=><ellipse key={i} cx={cx} cy={cy} rx="2.5" ry="3" fill="#bb2850"/>)}<ellipse cx="51" cy="52" rx="3" ry="2" fill="#bb2850"/></>),
+ 'bonfim-ribbon': (<><path d="M12 3v58m20-58v58m20-58v58M8 11h48M8 53h48" fill="none" stroke="#477f7a" strokeWidth="4"/><path d="M29 16q-13-8-13 2t18 3l5 31m-5-31-8 31" fill="none" stroke="#e5bd60" strokeWidth="5"/><path d="M25 29q14-12 14 0t-14 0m0 10q14-12 14 0t-14 0m0 10q14-12 14 0t-14 0" fill="none" stroke="#f7db8d" strokeWidth="3"/></>),
+ 'chinowa-kuguri': (<><path d="M12 58V8m40 50V8" stroke="#a57b50" strokeWidth="5"/><path d="M7 58h10m30 0h10" stroke="#a57b50" strokeWidth="5" strokeLinecap="round"/><circle cx="32" cy="31" r="23" fill="none" stroke="#9eae55" strokeWidth="8"/><path d="m28 7 8 2M12 19l4 6m-5 16 5-5m12 18 8-1m16-12-5-6m5-16-5 5" stroke="#e1d298" strokeWidth="3"/><path d="M31 44q-12 4-11 11" fill="none" stroke="#5ba7a3" strokeWidth="3"/><path d="m17 52 3 5 5-4" fill="none" stroke="#5ba7a3" strokeWidth="3"/></>),
+ 'zeniarai-coin-washing': (<><ellipse cx="32" cy="43" rx="27" ry="15" fill="#b9b098" stroke="#827c68"/><ellipse cx="32" cy="37" rx="20" ry="9" fill="#86cacb" stroke="#639b9e"/><path d="m16 37 7 13h20l6-13Z" fill="#d6b67b" stroke="#a38656"/><path d="M22 42h21m-18-5 3 12m8-12-1 12" stroke="#a38656"/><ellipse cx="33" cy="40" rx="5" ry="2" fill="#ba9954"/><path d="M36 18 49 8" stroke="#b38c57" strokeWidth="5" strokeLinecap="round"/><ellipse cx="33" cy="22" rx="8" ry="5" fill="#d5b383" stroke="#a38656"/><path d="M30 28q-5 6 2 10" fill="none" stroke="#69b6c6" strokeWidth="3"/></>),
+  'udo-undama': (<>
+    <path d="M25 39 31 28 49 25 59 35 57 53 21 55Z" fill="#b6a58b" stroke="#82725d"/>
+    <path d="m36 33 12-1 3 8-14 2Z" fill="#78644d" stroke="#82725d"/>
+    <path d="M5 43 19 41 23 55 4 56Z" fill="#c7b69d" stroke="#96836c"/>
+    <path d="M18 18Q35 6 44 25" fill="none" stroke="#7cb7bf" strokeDasharray="3 4"/>
+    <circle cx="13" cy="28" r="8" fill="#cd915e" stroke="#915b3c"/>
+    <text x="13" y="31" textAnchor="middle" fontSize="8" fill="#77492f">運</text>
+  </>),
+  'japanese-daruma-otoshi': (<>
+    <rect x="21" y="47" width="27" height="9" rx="4" fill="#d7b16b" stroke="#a7804e"/>
+    <rect x="15" y="36" width="27" height="10" rx="4" fill="#75b4a4" stroke="#508f80"/>
+    <rect x="15" y="26" width="27" height="10" rx="4" fill="#bd6757" stroke="#9c5044"/>
+    <path d="M16 24Q12 6 28 5Q44 6 41 24Z" fill="#bd6757" stroke="#9c5044"/>
+    <ellipse cx="28" cy="16" rx="9" ry="7" fill="#e9dfc6"/><path d="M24 15h1m6 0h1m-7 5h6" stroke="#574638" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M8 38V57" stroke="#b9966c" strokeWidth="4" strokeLinecap="round"/><rect x="2" y="32" width="13" height="8" rx="3" fill="#b9966c" stroke="#8e704c"/>
+  </>),
+  'paper-pinwheel': (<>
+    <path d="M32 30V58" stroke="#a18158" strokeWidth="5" strokeLinecap="round"/>
+    <path d="M31 29L10 11Q39 5 34 28Z M33 31L54 49Q25 55 30 32Z" fill="#e5947a" stroke="#b36e58" strokeWidth="1"/>
+    <path d="M30 31L12 52Q5 24 28 28Z M34 29L52 8Q59 36 36 32Z" fill="#6bbcaf" stroke="#448d83" strokeWidth="1"/>
+    <circle cx="32" cy="30" r="5" fill="#e7c17d" stroke="#a18158"/>
+  </>),
+  'chinese-steelyard': (<>
+    <path d="M8 25L57 20" stroke="#956b40" strokeWidth="5" strokeLinecap="round"/>
+    <circle cx="25" cy="17" r="6" fill="none" stroke="#bc995f" strokeWidth="3"/>
+    <path d="M13 26L6 45H26L13 26M46 22V37" fill="none" stroke="#c9b98a" strokeWidth="2"/>
+    <path d="M5 45Q16 56 27 45Z" fill="#bc995f"/><path d="M42 37H50L54 49H38Z" fill="#8b6d4b"/>
+    <circle cx="16" cy="43" r="5" fill="#e5a64f"/>
+  </>),
+  'garden-croquet': (<>
+    <path d="M43 49V25H57V49" fill="none" stroke="#9faba0" strokeWidth="5" strokeLinejoin="round"/>
+    <path d="M16 10V47" stroke="#765334" strokeWidth="4" strokeLinecap="round"/>
+    <path d="M7 43H25V53H7Z" fill="#bb8b52" stroke="#765334" strokeWidth="2"/>
+    <circle cx="35" cy="49" r="7" fill="#ce6651"/><path d="M29 47H41" stroke="#fff0cd" strokeWidth="3"/>
+    <path d="M5 57H59" stroke="#8fae57" strokeWidth="4" strokeLinecap="round"/>
+  </>),
+  'welsh-drop-spindle': (<>
+    <path d="M32 9V50" stroke="#b88746" strokeWidth="4" strokeLinecap="round"/>
+    <path d="M32 8V16" stroke="#d8cbbb" strokeWidth="2"/>
+    <path d="M26 20Q32 16 38 20L36 34H28Z" fill="#eee6d5" stroke="#b9ad99" strokeWidth="2"/>
+    <ellipse cx="32" cy="41" rx="19" ry="6" fill="#c39452" stroke="#795735" strokeWidth="2"/>
+    <path d="M22 24H41M24 29H39" stroke="#d8cbbb" strokeWidth="2"/>
+    <circle cx="31" cy="7" r="5" fill="#eee6d5"/>
+  </>),
+  'scottish-plunge-churn': (<>
+    <path d="M21 24H43L47 56H17Z" fill="#b9905c" stroke="#725037" strokeWidth="2"/>
+    <path d="M21 33H43M19 47H45" stroke="#616d6a" strokeWidth="5"/>
+    <ellipse cx="32" cy="24" rx="12" ry="4" fill="#d2b582" stroke="#725037" strokeWidth="2"/>
+    <path d="M32 9V25" stroke="#d2b582" strokeWidth="4"/><path d="M32 6V12" stroke="#725037" strokeWidth="7" strokeLinecap="round"/>
+  </>),
+  'irish-bodhran': (<>
+    <ellipse cx="31" cy="35" rx="24" ry="25" fill="#af7d4a" stroke="#714b34" strokeWidth="2"/>
+    <ellipse cx="29" cy="33" rx="20" ry="22" fill="#ead4a4" stroke="#497363" strokeWidth="4"/>
+    <path d="M15 25L46 38" stroke="#cfaa74" strokeWidth="4" strokeLinecap="round"/>
+    <circle cx="14" cy="25" r="5" fill="#714b34"/><circle cx="47" cy="38" r="5" fill="#714b34"/>
+  </>),
+  'french-coffee-mill': (<>
+    <path d="M12 33H51V58H12Z" fill="#b17b45" stroke="#765238" strokeWidth="2"/><path d="M18 42H45V55H18Z" fill="#d5b27b" stroke="#765238" strokeWidth="2"/>
+    <path d="M15 22H48L41 34H23Z" fill="#b7a26b" stroke="#7e9699" strokeWidth="2"/>
+    <path d="M31 25V14H50" fill="none" stroke="#7e9699" strokeWidth="4" strokeLinejoin="round"/><path d="M51 8V20" stroke="#577c67" strokeWidth="7" strokeLinecap="round"/>
+    <circle cx="31" cy="48" r="4" fill="#577c67"/>
+  </>),
+  'japanese-wagasa': (<>
+    <path d="M32 5L5 27Q32 43 59 27Z" fill="#d76b54" stroke="#9e5843" strokeWidth="2"/>
+    <path d="M32 5L21 35L32 38L40 36Z" fill="#f5dfb8"/>
+    <path d="M32 5L13 31M32 5L25 36M32 5L46 33M32 5V57" fill="none" stroke="#b9874c" strokeWidth="2"/>
+    <path d="M32 48V58" stroke="#5f6e53" strokeWidth="5" strokeLinecap="round"/>
+  </>),
+  'spanish-castanets': (<>
+    <path d="M17 16Q11 5 22 9L41 9Q52 5 47 16" fill="none" stroke="#29665f" strokeWidth="3"/>
+    <ellipse cx="20" cy="40" rx="15" ry="18" fill="#8f5037" stroke="#d8b383" strokeWidth="3"/><ellipse cx="20" cy="31" rx="14" ry="18" fill="#b87945" stroke="#81482f" strokeWidth="2"/>
+    <ellipse cx="46" cy="41" rx="13" ry="16" fill="#8f5037" stroke="#d8b383" strokeWidth="3"/><ellipse cx="46" cy="32" rx="12" ry="16" fill="#c18b55" stroke="#81482f" strokeWidth="2"/>
+    <path d="M14 23Q19 18 25 23M41 24Q46 20 50 25" fill="none" stroke="#ddb88b" strokeWidth="2"/>
+  </>),
+  'japanese-shishi-odoshi': (<>
+    <ellipse cx="31" cy="49" rx="25" ry="10" fill="#a9d6cd" stroke="#8c9a98" strokeWidth="5"/>
+    <path d="M27 46V22M37 46V22" stroke="#788342" strokeWidth="5"/>
+    <path d="M12 27L49 17L51 24L14 34Z" fill="#b0b86d" stroke="#788342" strokeWidth="2"/>
+    <ellipse cx="49" cy="20" rx="3" ry="4" fill="#e5d9a2"/><path d="M49 26V40" stroke="#6fbfc3" strokeWidth="3"/>
+    <path d="M17 44Q9 37 6 46" fill="#8c9a98"/>
+  </>),
+  'german-jumping-jack': (<>
+    <path d="M20 26L12 40M44 26L52 40M27 43L20 55M37 43L44 55" stroke="#537b97" strokeWidth="7" strokeLinecap="round"/>
+    <path d="M23 24H41L39 44H25Z" fill="#55a7a0" stroke="#3f7b76" strokeWidth="2"/>
+    <circle cx="32" cy="16" r="8" fill="#ecc999"/>
+    <path d="M23 11H41L37 3H27Z" fill="#d77d42"/>
+    <path d="M32 45V57" stroke="#b5986b" strokeWidth="2"/><circle cx="32" cy="59" r="3" fill="#d8b584"/>
+    <circle cx="29" cy="16" r="1" fill="#4d4a40"/><circle cx="35" cy="16" r="1" fill="#4d4a40"/>
+  </>),
+  'finnish-kantele': (<>
+    <path d="M8 18L55 14L55 49L21 51Z" fill="#d8b178" stroke="#9e734b" strokeWidth="3"/>
+    <circle cx="38" cy="47" r="2.5" fill="#815c3f"/>
+    <path d="M15 22L50 20M17 28L50 26M19 34L50 32M21 40L50 38M23 46L50 44" stroke="#7f9696" strokeWidth="1.5"/>
+    <path d="M50 18V47" stroke="#647f7d" strokeWidth="3"/>
+    <path d="M12 20L22 47" stroke="#a98258" strokeWidth="4" strokeDasharray="2 4"/>
+  </>),
+  'estonian-village-swing': (<>
+    <path d="M5 53L14 9L24 53M40 53L50 9L59 53" fill="none" stroke="#a98258" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M9 10H55" stroke="#bd925e" strokeWidth="6" strokeLinecap="round"/>
+    <path d="M24 14L20 43M43 14L39 43" stroke="#c7a16c" strokeWidth="4"/>
+    <path d="M16 40L43 38L46 44L19 47Z" fill="#d6aa70" stroke="#986e45" strokeWidth="2"/>
+    <circle cx="24" cy="14" r="2.5" fill="#788b88"/><circle cx="43" cy="14" r="2.5" fill="#788b88"/>
+  </>),
+  'french-petanque': (<>
+    <ellipse cx="32" cy="46" rx="27" ry="9" fill="#d8c6a3"/>
+    <circle cx="16" cy="24" r="5" fill="#d59b48" stroke="#aa783c" strokeWidth="2"/>
+    <circle cx="24" cy="38" r="12" fill="#a5b4b0" stroke="#687f7b" strokeWidth="2"/>
+    <circle cx="46" cy="32" r="12" fill="#b9c7c0" stroke="#687f7b" strokeWidth="2"/>
+    <path d="M16 29Q25 35 20 49M21 27Q30 35 26 50M38 23Q47 29 43 43M44 20Q53 28 49 44" fill="none" stroke="#7a918c" strokeWidth="1.6"/>
+  </>),
+  'english-hearth-bellows': (<>
+    <path d="M9 37L3 39L9 43L17 39" fill="#b79654" stroke="#816b40" strokeWidth="2"/>
+    <path d="M13 32Q32 20 45 34L58 30L60 36L46 41Q29 51 13 41Z" fill="#684b3d" stroke="#4f3b32" strokeWidth="2"/>
+    <path d="M14 28Q31 13 43 27L56 21L59 27L45 34Q29 43 14 34Z" fill="#d3a06c" stroke="#91664d" strokeWidth="2"/>
+    <path d="M18 36Q32 43 43 35M18 40Q30 47 43 39" fill="none" stroke="#af794d" strokeWidth="2"/>
+  </>),
+  'mexican-metate': (<>
+    <path d="M14 36L18 53M49 36L46 53M32 23V40" stroke="#686b64" strokeWidth="7" strokeLinecap="round"/>
+    <path d="M10 25Q31 30 54 25L51 40Q32 46 13 40Z" fill="#747a70" stroke="#535b54" strokeWidth="2"/>
+    <ellipse cx="32" cy="26" rx="22" ry="8" fill="#92978a"/>
+    <path d="M19 24L46 22" stroke="#dfbe72" strokeWidth="3" strokeLinecap="round"/>
+    <path d="M12 19L51 16" stroke="#686b64" strokeWidth="9" strokeLinecap="round"/>
+  </>),
+  'czech-wooden-ratchet': (<>
+    <path d="M19 37V8H29V37" fill="none" stroke="#d8b77e" strokeWidth="5" strokeLinejoin="round"/>
+    <path d="M17 8H42" stroke="#9a7148" strokeWidth="7" strokeLinecap="round"/>
+    <path d="M37 10Q40 25 35 36" stroke="#efd8a2" strokeWidth="3" fill="none"/>
+    <path d="M21 27L26 30L31 27L33 32L39 32L37 38L41 42L35 45L35 51L28 49L24 53L20 47L14 47L16 41L12 37L18 34Z" fill="#9a7148" stroke="#71583b" strokeWidth="1.5"/>
+    <path d="M25 39L40 53" stroke="#d8b77e" strokeWidth="9" strokeLinecap="round"/>
+    <path d="M40 8H43" stroke="#8ab59a" strokeWidth="7"/>
+  </>),
+  'puerto-rican-guiro': (<>
+    <path d="M22 8Q31 7 31 14L37 38Q39 55 24 57Q10 56 12 40L17 14Q17 8 22 8Z" fill="#d5aa62" stroke="#98713e" strokeWidth="2"/>
+    <ellipse cx="24" cy="10" rx="6" ry="3" fill="#77633e" stroke="#f0ddb0" strokeWidth="2"/>
+    <path d="M16 24L33 24M15 29H34M14 34H35M13 39H36M13 44H36M15 49H34" stroke="#b98b47" strokeWidth="2"/>
+    <path d="M34 36L54 22" stroke="#b98b57" strokeWidth="5" strokeLinecap="round"/>
+    <path d="M46 27L56 20" stroke="#98713e" strokeWidth="8" strokeLinecap="round"/>
+  </>),
+  'valencian-folding-fan': (<>
+    <path d="M32 51L7 22Q32 3 57 22Z" fill="#e9aa86" stroke="#b28a56" strokeWidth="2" strokeLinejoin="round"/>
+    <path d="M10 25Q32 9 54 25" fill="none" stroke="#6fa9a1" strokeWidth="4"/>
+    <path d="M32 51L15 22M32 51L24 17M32 51V15M32 51L40 17M32 51L49 22" stroke="#b28a56" strokeWidth="1.5"/>
+    <circle cx="32" cy="51" r="4" fill="#b99b53" stroke="#8c743b"/>
+  </>),
+  'mexican-tortilla-press': (<>
+    <path d="M10 39H52V51H10Z M11 14L15 10L49 27L45 32Z" fill="#d6a96b" stroke="#a17446" strokeWidth="2" strokeLinejoin="round" />
+    <ellipse cx="31" cy="39" rx="14" ry="4" fill="#eed79f"/>
+    <path d="M48 40V22L28 8" fill="none" stroke="#69797b" strokeWidth="4" strokeLinecap="round"/>
+    <path d="M28 8L23 5" stroke="#408d87" strokeWidth="6" strokeLinecap="round"/>
+  </>),
+  'ghanaian-oware': (<>
+    <path d="M15 13H49a9 9 0 0 1 9 9V42a9 9 0 0 1-9 9H15a9 9 0 0 1-9-9V22a9 9 0 0 1 9-9Z" fill="#cc9b60" stroke="#9d683e" strokeWidth="2" />
+    {[0,1,2,3,4,5].map(i => <g key={i}>{[24,40].map(y => <g key={y}><ellipse cx={12+i*8} cy={y} rx="3.3" ry="5" fill="#9d683e"/><ellipse cx={12+i*8} cy={y} rx="1.6" ry="2.1" fill="#a5b4a8"/></g>)}</g>)}
+  </>),
+  'chinese-rattle-drum': (<>
+    <path d="M27 30v18" stroke="#cc9a5d" strokeWidth={5} strokeLinecap="round"/><path d="M27 39v7" stroke="#3b8f89" strokeWidth={6} strokeLinecap="round"/>
+    <circle cx={27} cy={20} r={15} fill="#f1deb3" stroke="#ca7052" strokeWidth={3}/><circle cx={27} cy={20} r={6} fill="none" stroke="#3b8f89" strokeWidth={1.6}/>
+    <path d="M12 20 6 30m36-10 6 10" stroke="#b8a36f" strokeWidth={1.5}/><circle cx={6} cy={31} r={4} fill="#579bb5"/><circle cx={48} cy={31} r={4} fill="#d69b50"/>
+  </>),
+  'chinese-tangram': (<>
+    <path d="M7 7h40L27 27Z" fill="#d77759"/><path d="M7 7v40l20-20Z" fill="#e2b955"/>
+    <path d="m47 47-20 0 20-20Z" fill="#58a397"/><path d="m27 27 10-10v20Z" fill="#74acc0"/>
+    <path d="m27 27 10 10-10 10-10-10Z" fill="#a18ab6"/><path d="m7 47 10-10 10 10Z" fill="#a4c6d1"/>
+    <path d="m47 7 0 20-10 10V17Z" fill="#c9878d"/><path d="M7 7h40v40H7Z" fill="none" stroke="#b18a54" strokeWidth={1.3}/>
+  </>),
   'chinese-diabolo': (<>
     <path d="M8 8v21m38-21v21" stroke="#a47743" strokeWidth={3.4} strokeLinecap="round"/>
     <path d="M8 9 25 39 46 9" fill="none" stroke="#d6b86f" strokeWidth={1.7}/>

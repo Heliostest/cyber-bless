@@ -5,7 +5,33 @@ type CatalogEntry = { id: string; title: string; engine: string; revision: strin
  * quiet listening, an entrance bow, a slow turn, a strike, a pour.
  */
 /** App curation only: keep these engines, source entries and saved records reusable. */
+// The 24 historical craft/toy/performance imports remain available for development and old saves.
+// See docs/research/2026-10-19-hourly-scene-integration.md; only five newly sourced practices join the App.
 export const APP_HIDDEN_SCENE_IDS = [
+  "japanese-daruma-otoshi",
+  "paper-pinwheel",
+  "chinese-steelyard",
+  "garden-croquet",
+  "welsh-drop-spindle",
+  "scottish-plunge-churn",
+  "irish-bodhran",
+  "french-coffee-mill",
+  "japanese-wagasa",
+  "spanish-castanets",
+  "japanese-shishi-odoshi",
+  "german-jumping-jack",
+  "finnish-kantele",
+  "estonian-village-swing",
+  "french-petanque",
+  "english-hearth-bellows",
+  "mexican-metate",
+  "czech-wooden-ratchet",
+  "puerto-rican-guiro",
+  "valencian-folding-fan",
+  "mexican-tortilla-press",
+  "ghanaian-oware",
+  "chinese-rattle-drum",
+  "chinese-tangram",
   "malawi-sansi",
   "japanese-kendama",
   "russian-matryoshka",
@@ -55,6 +81,9 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "greek-new-year-pomegranate",
+  "bonfim-ribbon",
+  "chinowa-kuguri",
   "woodfish",
   "furin-wind-chime",
   "shinto-torii",
@@ -91,6 +120,30 @@ export const BLESSING_SCENE_IDS = [
   "russian-matryoshka",
   "korean-yutnori",
   "chinese-diabolo",
+  "chinese-tangram",
+  "japanese-daruma-otoshi",
+  "paper-pinwheel",
+  "chinese-steelyard",
+  "garden-croquet",
+  "welsh-drop-spindle",
+  "scottish-plunge-churn",
+  "irish-bodhran",
+  "french-coffee-mill",
+  "japanese-wagasa",
+  "spanish-castanets",
+  "japanese-shishi-odoshi",
+  "german-jumping-jack",
+  "finnish-kantele",
+  "estonian-village-swing",
+  "french-petanque",
+  "english-hearth-bellows",
+  "mexican-metate",
+  "czech-wooden-ratchet",
+  "puerto-rican-guiro",
+  "valencian-folding-fan",
+  "mexican-tortilla-press",
+  "ghanaian-oware",
+  "chinese-rattle-drum",
   "indian-charkha",
   "german-nutcracker",
   "mexican-molinillo",
@@ -100,6 +153,8 @@ export const BLESSING_SCENE_IDS = [
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
 export const WISH_SCENE_IDS = [
+  "zeniarai-coin-washing",
+  "udo-undama",
   "tanzaku-tanabata",
   "yeondeunghoe",
   "crane",
@@ -141,6 +196,123 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"greek-new-year-pomegranate",title:"破榴迎新",engine:"greek-new-year-pomegranate@1",revision:"bundled",manifestUrl:"",traditionSlug:"greek-new-year-pomegranate",narrative:"在希腊一些家庭，元旦会在家门门槛摔开石榴，让红籽散开，寄托新年一家人的好运、丰足与幸福。眼前的完整石榴已备好：向上短拖拿起，向右移到门槛中央上方，再向下短拖后松手。果皮在石槛上破开，红籽弹落在日光里。" },
+  { id:"bonfim-ribbon",title:"栏前结愿",engine:"bonfim-ribbon@1",revision:"bundled",manifestUrl:"",traditionSlug:"bonfim-ribbon",narrative:"在巴西萨尔瓦多，人们把Bonfim彩带系在 Senhor do Bonfim 教堂的栏杆上，以三个结寄托心愿。市文旅介绍，每一结留一个愿望；教堂院长的采访也记述了栏前系带的信念。眼前的彩带已经绕栏，三个松结也已预成：向右短拖收紧第一结，再向左收紧第二结，最后向右收紧第三结。心愿留在心中，彩带轻垂在日光下。" },
+  { id:"chinowa-kuguri",title:"茅环祈安",engine:"chinowa-kuguri@1",revision:"bundled",manifestUrl:"",traditionSlug:"chinowa-kuguri",narrative:"在日本东京葛西神社，夏越时的茅环由束起的茅草制成，固定在柱上。神社介绍，参访者从正面穿环，依次向左、向右、再向左绕行，寄托净祓与平安度夏的心意，随后前往本殿。眼前的茅环已立好：向左短拖，从环中穿过并向左绕回；再向右穿行绕回，最后再走一次左绕。三次绕行后，停在茅环前。" },
+  { id:"zeniarai-coin-washing",title:"泉水净币",engine:"zeniarai-coin-washing@1",revision:"bundled",manifestUrl:"",traditionSlug:"zeniarai-coin-washing",narrative:"在日本镰仓的銭洗弁財天宇賀福神社，参访者清洗钱币，寄托对财福的祈愿。神社代表的访谈记述，参拜后把钱放入筛中，用柄杓浇水，再以手帕擦拭收回。眼前的硬币已放在浅筛里：向上短拖举起水勺，向左倾水，让泉水流过硬币；再把布巾向右短拖，拭去水珠。勺子回到泉边，硬币仍静放在筛中。" },
+  { id:"udo-undama",title:"龟岩投愿",engine:"udo-undama@1",revision:"bundled",manifestUrl:"",traditionSlug:"udo-undama",narrative:"在日本宫崎的鵜户神宫，参访者把小小的陶土「运玉」投向海边龟岩背上的方形凹处，把愿望寄托在这一投。神宫记述，如今的运玉由黏土揉圆，压上「運」字，再轻烧制成。眼前先把陶玉从石边取起，对准岩上的凹处，向上短拖后松手。陶玉划出弧线，越过岩沿，落入凹处；海面的光纹仍在缓缓晃动。" },
+  { id: "japanese-daruma-otoshi", title: "木槌落片", engine: "japanese-daruma-otoshi@1", revision: "bundled", manifestUrl: "", traditionSlug: "japanese-daruma-otoshi", narrative: "达摩落片是日本的木制叠片玩具：从底部敲出木片，同时让上方的叠片保持直立。Reading Museum记录了这种玩法，江户东京博物馆也收藏着名为「だるま落し」的玩具。这里把三片柔和色彩的木片叠在红色达摩下，先下移木槌对齐，敲出一片，看上层稳稳落下，再抬起木槌。圆润的木面与彩漆在阳光下留下清楚的色阶。" },
+  { id: "paper-pinwheel", title: "纸翼转风", engine: "paper-pinwheel@1", revision: "bundled", manifestUrl: "", traditionSlug: "paper-pinwheel", narrative: "纸风车把弯折的纸翼装在细轴上，轻风或吹气会让它转起来。墨尔本的儿童玩具馆藏中，也保存着四翼、木柄和小珠组合的手工纸风车。这里用珊瑚红与青绿色纸翼围住圆心，先轻拨起转，再提起木柄，续转一小段，让纸翼慢慢停稳。阳光落在纸面与木柄上，折弯处露出柔和的色阶。" },
+  {
+    id: "chinese-steelyard", title: "移砣平衡", engine: "chinese-steelyard@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "chinese-steelyard",
+    narrative: "杆秤用提点支起秤杆，让配重沿杆移动，观察两端逐渐找平。木杆、金属秤砣与悬盘相伴，盘里放着一枚柑橘。先向右移砣，让木杆慢慢回到水平，再提起圆环，轻轻缓放。秤砣的吊绳保持垂直，果实安放在浅盘中，金属边缘在日光下泛起柔光。",
+  },
+  {
+    id: "garden-croquet", title: "草坪过门", engine: "garden-croquet@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "garden-croquet",
+    narrative: "在英国花园游戏的介绍中，槌球以木槌触球，让球沿草坪穿过一道道球门。这里是一处原创简化小景：木柄、圆槌头与带浅色条纹的彩球相对，白色球门立在绿意之间。先把木槌后移，再轻轻触球，看球穿门而过，最后沿草地再滚一小段。暖木和彩球留下短短的影子，动作停下，目光也慢慢安定。",
+  },
+  {
+    id: "welsh-drop-spindle", title: "悬锤纺线", engine: "welsh-drop-spindle@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "welsh-drop-spindle",
+    narrative: "威尔士的纺织展示中，悬锤纺线把木杆与有分量的纺轮连在线束下，转动使纤维相合。这里是一只原创简化纺锤：浅色木轮托着已绕好的纱团，上方留着一小束柔软羊毛。先轻旋木轮，再缓缓下放，最后提起停稳。日光沿着木纹和乳白线束移动，短短一段起落，让目光也慢下来。",
+  },
+  {
+    id: "scottish-plunge-churn", title: "木杆搅乳", engine: "scottish-plunge-churn@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "scottish-plunge-churn",
+    narrative: "在苏格兰泰里岛的乡村生活记录中，立式搅乳桶由木板围合，金属箍束住桶身，木杆穿过桶盖，带着搅头缓缓起落。这里是一只原创简化木桶：先让木杆落下，再提起回转，最后轻提木盖，让浅色奶油与桶内木纹露出一隙。日光落在木板上，金属箍留着安静的光泽，两下起落之后，让物件慢慢停稳。",
+  },
+  {
+    id: "irish-bodhran", title: "鼓面轻拍", engine: "irish-bodhran@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "irish-bodhran",
+    narrative: "爱尔兰传统音乐里，Bodhrán 框鼓的浅色鼓面与圆木框，陪着舞曲和歌声起落。这里是一面原创框鼓小景：让双端木槌先以一端轻触鼓面，再换另一端相和，两下短短的回弹之后，轻转绿色鼓缘，让木槌随圆框安静停住。日光擦过暖木，圆形鼓面留着柔和的明暗，一来一回的节拍也缓缓落下。",
+  },
+  {
+    id: "french-coffee-mill", title: "手磨晨光", engine: "french-coffee-mill@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "french-coffee-mill",
+    narrative: "法国手摇咖啡磨的木盒、金属料斗和曲柄，连着一段日常咖啡时光。这里是一台原创木磨小景：轻转上方木柄，让钢轴行过半周，继续轻转使曲柄回到身前，再拉开小木屉。豆粒与细粉一粗一细，暖木色和微亮金属在日光里分出层次，屉底的一点褐色也安静下来。",
+  },
+  {
+    id: "japanese-wagasa", title: "纸伞舒晴", engine: "japanese-wagasa@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "japanese-wagasa",
+    narrative: "日本岐阜的和伞工艺以竹骨与和纸构成可收拢的伞面。这里是一柄原创纸伞小景：推起木环，撑杆带着竹骨舒展，轻转伞柄，让浅色的一面移过身旁，再沿折痕慢慢收拢。暖色纸面与竹骨在阳光里分出深浅，伞柄边的一点草影也静下来。",
+  },
+  {
+    id: "spanish-castanets", title: "木壳轻拍", engine: "spanish-castanets@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "spanish-castanets",
+    narrative: "西班牙响板由绳系的凹面木壳相碰发声。这里是一组原创木壳小景，轻合左侧木壳，让右侧回应，再让两副一同轻拍。弧面的暖木色在阳光里分出深浅，松开的细绳与空腔留住片刻轻快，草尖的影子慢慢移过木边。",
+  },
+  {
+    id: "japanese-shishi-odoshi", title: "竹筒叩石", engine: "japanese-shishi-odoshi@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "japanese-shishi-odoshi",
+    narrative: "日本庭园的鹿威以竹筒蓄水、倾落和回叩石面形成声响。这里是一件原创竹水小景，挪近竹嘴引入一股清水，扶着竹筒轻倾，再让竹尾归石。水光沿斜口落进浅池，竹影与细小水纹留在明亮温暖的午后。",
+  },
+  {
+    id: "german-jumping-jack", title: "牵绳木偶", engine: "german-jumping-jack@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "german-jumping-jack",
+    narrative: "牵绳关节木偶Hampelmann用细绳连接木肢，柏林的馆藏记录了木片与彩绘的形态。这里是一件原创小木偶，轻牵木珠，看两臂与双腿慢慢舒展，松手后沿着细绳回到垂落的姿态，让片刻轻快留在树影与阳光里。",
+  },
+  {
+    id: "finnish-kantele", title: "五弦轻拨", engine: "finnish-kantele@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "finnish-kantele",
+    narrative: "康特勒是芬兰音乐中的拨弦乐器家族，五弦木琴身与金属琴弦是其中一种形态。这里用一件原创简化小琴，轻拨长弦、中弦和短弦，看琴弦弯起、回振，再静静展平，让细光与木纹陪伴这一小段从容的节奏。",
+  },
+  {
+    id: "estonian-village-swing", title: "秋千轻荡", engine: "estonian-village-swing@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "estonian-village-swing",
+    narrative: "在爱沙尼亚的村落生活与季节聚会中，秋千常与相聚、歌声和春日户外时光相伴。木臂悬挂的木台是当地多种秋千形态中的一种。这里用一座原创木架秋千，轻轻推向前方、顺势回摆，再收回中央，看木纹与影子沿着一来一回的弧线移动，把片刻从容留在草地上。",
+  },
+  {
+    id: "french-petanque", title: "银球近靶", engine: "french-petanque@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "french-petanque",
+    narrative: "在法国拉西奥塔的 pétanque 语境中，圈线、小靶与金属球构成从容的投球片刻。球员站在圈内，把球送向小靶；这里取其中一段物件动作，用原创木靶与两枚素色银球，先送出木靶，再让球轻落、滚近。细细刻槽随着滚动转过，把阳光与眼前的距离留在砂地上。",
+  },
+  {
+    id: "english-hearth-bellows", title: "风囊轻送", engine: "english-hearth-bellows@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "english-hearth-bellows",
+    narrative: "英国壁炉用具的馆藏中，可以见到木叶、皮革与黄铜嘴组成的手持风箱。这类日常工具也见于其他地方：双柄分开时风囊展开，压合时从风嘴送出空气。这里用一只原创素色风箱，抬起木柄、慢慢压合，再轻轻松开，看皮革折边随着一呼一合舒展，把片刻安静留在阳光里。",
+  },
+  {
+    id: "mexican-metate", title: "石面磨香", engine: "mexican-metate@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "mexican-metate",
+    narrative: "墨西哥及中美洲的日常饮食文化中，石磨与长石杵相伴，用来磨细玉米等谷物。浅凹的石面承托粗粒，石杵沿着磨面来回推磨。这里用一方素色石磨，慢慢向前推磨、回磨，再把石杵收回后沿，看细浅的粉痕留在石面，把谷物的一小段节奏留在阳光里。",
+  },
+  {
+    id: "czech-wooden-ratchet", title: "木齿轻转", engine: "czech-wooden-ratchet@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "czech-wooden-ratchet",
+    narrative: "捷克的春季民俗中可见木制棘轮响器，转动木框时，轮齿依次带过弹性的木舌，留下连续的轻响。这类响器也见于欧洲更广的地区。这里用一只素色木响器，沿握柄慢慢转过一圈，看浅色木舌随齿沿弯曲、回落，把木头的一小段节奏留在阳光里。",
+  },
+  {
+    id: "puerto-rican-guiro", title: "瓜棱轻奏", engine: "puerto-rican-guiro@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "puerto-rican-guiro",
+    narrative: "刮瓜是波多黎各及加勒比地区可见的节奏乐器，以中空瓜壳和横向刻棱构成发声的表面，常用木棒或刮具沿棱摩擦。这里用一只素色瓜壳，沿纹路轻轻下刮、回刮，再把木棒移开。看圆润的瓜身、细细的横棱与中空口沿，把一小段节拍留在阳光里。",
+  },
+  {
+    id: "valencian-folding-fan", title: "折扇轻风", engine: "valencian-folding-fan@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "valencian-folding-fan",
+    narrative: "西班牙瓦伦西亚的折扇工艺，以木骨构成可开合的骨架，再配上布面。阿尔代亚的折扇博物馆保留着这门工艺的物件与制作工具。这里用一把素色折扇，徐徐展扇，轻摇一下，再收至半开。沿着共同的铆轴，看木骨与折褶把阳光分成细细的层次。",
+  },
+  {
+    id: "mexican-tortilla-press", title: "木压成圆", engine: "mexican-tortilla-press@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "mexican-tortilla-press",
+    narrative: "墨西哥玉米饼的制作常用手动压具，将玉米面团夹在两层薄衬片之间，再靠上下压板和长柄压展。木制与金属压具都有使用。这里先合板，再压下长柄，最后松柄开盖，看看圆团慢慢铺展成薄薄的生饼。保留尚未揭膜的模样，把片刻专注留给木纹与面团的变化。",
+  },
+  {
+    id: "ghanaian-oware", title: "木窝播籽", engine: "ghanaian-oware@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "ghanaian-oware",
+    narrative: "Oware 是加纳阿坎语社群使用的游戏名称，也流传于西非与加勒比地区。常见棋盘有两行、每行六个木窝，以种子般的小棋子逐窝播撒。这里从每窝四粒的开局提起一窝，绕过行端，再沿另一行逐粒落下；只呈现一手播籽。看四粒种子改变木窝中的疏密，把片刻留给耐心与相聚。",
+  },
+  {
+    id: "chinese-rattle-drum", title: "拨浪轻响", engine: "chinese-rattle-drum@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "chinese-rattle-drum",
+    narrative: "拨浪鼓是一种带木柄的双面小鼓，两侧系着细绳与木珠。来回转动木柄，木珠便随绳绕向鼓面，发出连续的轻响。小巧的单鼓也作为民间玩具和招徕声响出现在日常生活里。这里向右转柄、向左回转，再慢慢收低，让两枚木珠垂回鼓旁。看浅木、鼓皮和细绳一起动起来，把清脆的一刻轻轻留住。",
+  },
+  {
+    id: "chinese-tangram", title: "七巧归方", engine: "chinese-tangram@1", revision: "bundled", manifestUrl: "",
+    traditionSlug: "chinese-tangram",
+    narrative: "七巧板是中国传统拼图，由五块大小不同的三角片、一块方片和一块斜方片组成。七块木片既能合成一个正方形，也能拼出许多不同轮廓。这里已有四片安放在浅木拼板上，再移入蓝色小三角片、转入紫色方片，最后合上玫瑰色斜方片。看颜色沿着拼缝相遇，让零散的一刻慢慢归整。",
+  },
   {
     id: "chinese-diabolo", title: "空竹轻扬", engine: "chinese-diabolo@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-diabolo",

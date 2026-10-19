@@ -15,6 +15,27 @@ export type SceneIntention = Readonly<{
 // Reviewed against the current scene actions and their bounded cultural contexts.
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
+  // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'udo-undama': {
+    kind: 'wish', label: '怀着心愿投出陶玉', optionalWish: true,
+    action: '取起陶玉、对准龟岩的方形凹处，想着此刻的心愿，轻轻投出。',
+  },
+  'zeniarai-coin-washing': {
+    kind: 'wish', label: '寄托一份财福祈愿', optionalWish: true,
+    action: '举起柄杓、浇洗筛中的钱币，再用布巾拭水，寄托一份财福的心愿。',
+  },
+  'chinowa-kuguri': {
+    kind: 'blessing', label: '祈愿平安健康', optionalWish: false,
+    action: '穿过茅环，依次向左、向右、再向左绕行，带着平安健康的心意走回环前。',
+  },
+  'bonfim-ribbon': {
+    kind: 'wish', label: '把三个心愿系在彩带上', optionalWish: false,
+    action: '在栏前逐一收紧彩带的三个结，每收一结，在心中留一个愿望。',
+  },
+  'greek-new-year-pomegranate': {
+    kind: 'blessing', label: '为家人寄托新年祝愿', optionalWish: false,
+    action: '拿起石榴、移到门槛上方，向下落果，借破开的果实与散落红籽寄托新年好运和丰足。',
+  },
   'japanese-koinobori': {
     kind: 'blessing', label: '祝愿孩子健康成长', optionalWish: true,
     action: '展开布鲤、牵绳升起，把对孩子成长的祝愿留在迎风的鲤旗旁。',

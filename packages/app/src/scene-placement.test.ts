@@ -79,6 +79,7 @@ describe("scene placement", () => {
     ["korean-yutnori", "korean-yutnori", false],
     ["chinese-diabolo", "chinese-diabolo", false],
     ["chinese-tangram", "chinese-tangram", false],
+    ["greek-new-year-pomegranate", "greek-new-year-pomegranate", false],
     ["bonfim-ribbon", "bonfim-ribbon", false],
     ["chinowa-kuguri", "chinowa-kuguri", false],
     ["zeniarai-coin-washing", "zeniarai-coin-washing", true],
@@ -161,6 +162,7 @@ describe("scene placement", () => {
   });
   it("splits blessing vs wish scene ids", () => {
     expect([...BLESSING_SCENE_IDS]).toEqual([
+      "greek-new-year-pomegranate",
       "bonfim-ribbon",
       "chinowa-kuguri",
       "woodfish",

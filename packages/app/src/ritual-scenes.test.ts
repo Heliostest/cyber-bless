@@ -168,8 +168,8 @@ describe("今日's daily set", () => {
   // A day whose main walk is a 许愿 scene, walked by its three checkpoints;
   // the App reads the day off the clock, so the clock is set to it.
   const WISH_DAY = Array.from(
-    { length: 28 },
-    (_, i) => `2026-10-${String(i + 1).padStart(2, "0")}`,
+    { length: builtInScenes.length },
+    (_, i) => new Date(Date.UTC(2026, 9, i + 1)).toISOString().slice(0, 10),
   ).find((d) => isWishScene(dailyPrimaryScene(builtInScenes, d)!.id))!;
   const sceneId = dailyPrimaryScene(builtInScenes, WISH_DAY)!.id;
   beforeEach(() => {

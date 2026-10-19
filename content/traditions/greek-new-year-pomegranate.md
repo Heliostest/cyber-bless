@@ -1,0 +1,21 @@
+# 破榴迎新
+
+## 文化与器物／公开实践
+
+希腊一些家庭在元旦于家门门槛破开石榴，以散开的红籽寄托新一年家庭好运、丰足和幸福。希腊国家旅游组织记述的是进家门前于门槛破果；Greek News Agenda也直接说明元旦、门槛与家庭祝愿。两者按官方综述使用，不称为受访家庭的亲历记录。
+
+Theodora Miller在本人2026年1月19日发表的家庭亲历文字中，记述一家人用石榴迎新，向前门门槛用力落果，释放红籽，寄托健康、幸福与丰足。她所述的时刻和入门脚步属于这个家庭的版本；各家做法可以不同。
+
+## 本产品呈现
+
+完整石榴已备在门槛石面。向上短拖拿起，向右移到门槛上方，再向下短拖后松手。果实碰到石面以后果皮才破开，红籽从内部露出并弹落。拿取和对位拆分成前两个检查点，是产品操作节奏；文化关键动作仍是门槛破果寄愿。
+
+这里只呈现家门前破果的片段。门、石槛与果实造型为原创概括，果皮分片和红籽散落是对破果结果的简化呈现。
+
+## 来源
+
+- [Greek National Tourism Organisation：Christmas Holidays in Greece](https://www.visitgreece.gr/en/inspirations/christmas-holidays-in-greece)，页面未标日期；2026-10-19已读77–78行，支持家庭新年好运语境、元旦进家前门槛破果。婚礼等旁支不移入。
+- [Greek News Agenda：The Pomegranate: A Fruit Deeply Rooted in Greek Tradition](https://www.greeknewsagenda.gr/the-pomegranate-a-fruit-deeply-rooted-in-greek-tradition/)，Athanasia Santikou，2025-09-16；2026-10-19已读75–77行及94作者署名。只使用门槛破果、元旦、家庭好运丰足幸福；不将同页神话、丧礼和营养宣称混入。
+- [Theodora Miller：New Year Traditions](https://www.theodoramiller.com/blogs/curious-corner-blog/new-year-traditions)，2026-01-19；2026-10-19已读88–106行，关键90–94，106具名署名。以其家庭亲历身份使用，不因个人商业网站而否认亲历，也不把个人版本普遍化。
+
+Dartmouth相关索引正文读取超时，未作已读证据。逐项矩阵与访问状态见场景README及artifacts/greek-new-year-pomegranate/source-research.md、source-evidence.json。

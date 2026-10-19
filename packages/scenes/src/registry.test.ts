@@ -20,6 +20,7 @@ describe('sceneRegistry', () => {
       'chinese-rattle-drum',
       'ghanaian-oware',
       'mexican-tortilla-press',
+      'greek-new-year-pomegranate',
       'bonfim-ribbon',
       'chinowa-kuguri',
       'zeniarai-coin-washing',
@@ -280,3 +281,5 @@ it('loads the source-specific Zeniarai washing fragment',async()=>{const m=await
 it('loads the source-specific fixed Chinowa walking fragment',async()=>{const m=await loadScene('chinowa-kuguri');expect(m.meta.id).toBe('chinowa-kuguri');expect(m.meta.traditionSlug).toBe('chinowa-kuguri');expect(m.create).toBeTypeOf('function')})
 
 it('loads the three preformed Bonfim knots fragment',async()=>{const m=await loadScene('bonfim-ribbon');expect(m.meta.id).toBe('bonfim-ribbon');expect(m.meta.traditionSlug).toBe('bonfim-ribbon');expect(m.create).toBeTypeOf('function')})
+
+it('loads the Greek household New Year pomegranate fragment',async()=>{const m=await loadScene('greek-new-year-pomegranate');expect(m.meta.id).toBe('greek-new-year-pomegranate');expect(m.meta.traditionSlug).toBe('greek-new-year-pomegranate');expect(m.create).toBeTypeOf('function')})

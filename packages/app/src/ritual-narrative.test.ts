@@ -121,6 +121,7 @@ describe("builtInScenes narratives", () => {
       "polish-paper-cut",
       "puerto-rican-guiro",
       "purepecha-copper-bowl",
+      "rosh-hashanah-apple-honey",
       "russian-matryoshka",
       "scottish-plunge-churn",
       "shinto-torii",

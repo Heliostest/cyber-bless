@@ -79,6 +79,7 @@ describe("scene placement", () => {
     ["korean-yutnori", "korean-yutnori", false],
     ["chinese-diabolo", "chinese-diabolo", false],
     ["chinese-tangram", "chinese-tangram", false],
+    ["chinowa-kuguri", "chinowa-kuguri", false],
     ["zeniarai-coin-washing", "zeniarai-coin-washing", true],
     ["udo-undama", "udo-undama", true],
     ["japanese-daruma-otoshi", "japanese-daruma-otoshi", false],
@@ -159,6 +160,7 @@ describe("scene placement", () => {
   });
   it("splits blessing vs wish scene ids", () => {
     expect([...BLESSING_SCENE_IDS]).toEqual([
+      "chinowa-kuguri",
       "woodfish",
       "furin-wind-chime",
       "shinto-torii",

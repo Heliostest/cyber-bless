@@ -46,6 +46,19 @@ it('cancels a real Daruma gesture through production adapter pause/resume', asyn
   expect(checkpoint.mock.calls.map(([n]) => n)).toEqual([])
 })
 
+it.each([0,1,2])('cancels the real Chinowa walking view through production adapter pause/resume at %i',async at=>{
+  vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{})
+  vi.spyOn(HTMLCanvasElement.prototype,'clientWidth','get').mockReturnValue(360);vi.spyOn(HTMLCanvasElement.prototype,'clientHeight','get').mockReturnValue(408)
+  vi.spyOn(HTMLCanvasElement.prototype,'getBoundingClientRect').mockReturnValue({left:0,top:0,width:360,height:408} as DOMRect)
+  const host=document.createElement('div');document.body.append(host);const checkpoint=vi.fn(),engine=await proceduralEngine('chinowa-kuguri')
+  const ctrl=engine.create(host,{progress:at,sceneId:'chinowa-kuguri',checkpoint,isSoundEnabled:()=>false},{active:true,reducedMotion:true,signal:new AbortController().signal,ready(){},failed(e){throw e}});controllers.push(ctrl)
+  const scene=rendered.scene!,camera=rendered.camera!,hit=host.querySelector<HTMLElement>('.scene-hit-layer')!;hit.setPointerCapture=()=>{};hit.releasePointerCapture=()=>{}
+  const home=camera.position.clone(),homeQ=camera.quaternion.clone(),ring=scene.getObjectByName('chinowa-hoop')!,worldBefore=ring.matrixWorld.clone(),p=ring.localToWorld(new THREE.Vector3(0,1.38,.15)).project(camera),from=[(p.x+1)*180,(1-p.y)*204],dx=at===1?60:-60
+  pointer(hit,'pointerdown',from);pointer(hit,'pointermove',[from[0]!+dx*.5,from[1]!]);expect(camera.position.distanceTo(home)).toBeGreaterThan(.04);expect(ring.matrixWorld.elements).toEqual(worldBefore.elements)
+  ctrl.setActive(false);ctrl.setActive(true);pointer(hit,'pointerup',[from[0]!+dx,from[1]!]);expect(checkpoint).not.toHaveBeenCalled();expect(camera.position.distanceTo(home)).toBe(0);expect(camera.quaternion.toArray()).toEqual(homeQ.toArray())
+  pointer(hit,'pointerdown',from);pointer(hit,'pointermove',[from[0]!+dx,from[1]!]);pointer(hit,'pointerup',[from[0]!+dx,from[1]!]);expect(checkpoint.mock.calls.map(([n])=>n)).toEqual([at+1]);expect(camera.position.distanceTo(home)).toBe(0)
+})
+
 it.each([
   ['malawi-sansi', 0, 'sansi-tine-4', 'sansi-tine-4', [0, .02, -.035], [0, .02, -.035], [0, 60]],
   ['japanese-kendama', 0, 'kendama-handle', 'kendama-handle', [0, .5, .1], [0, .5, .1], [0, -60]],

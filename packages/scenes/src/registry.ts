@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id:'chinowa-kuguri',title:'茅环祈安',traditionSlug:'chinowa-kuguri',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'zeniarai-coin-washing',title:'泉水净币',traditionSlug:'zeniarai-coin-washing',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'udo-undama',title:'龟岩投愿',traditionSlug:'udo-undama',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id: 'japanese-daruma-otoshi', title: '木槌落片', traditionSlug: 'japanese-daruma-otoshi', grade: 'C', sensitivity: '低', gestures: ['drag'] },
@@ -187,6 +188,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'chinowa-kuguri',
   'malawi-sansi',
   'japanese-koinobori',
   'russian-matryoshka',
@@ -268,6 +270,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'chinowa-kuguri': return import('./chinowa-kuguri/index')
     case 'zeniarai-coin-washing': return import('./zeniarai-coin-washing/index')
     case 'udo-undama': return import('./udo-undama')
     case 'japanese-daruma-otoshi': return import('./japanese-daruma-otoshi')

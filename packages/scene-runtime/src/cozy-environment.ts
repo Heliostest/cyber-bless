@@ -10,6 +10,7 @@ declare const process: { env: { EXPO_BASE_URL?: string } };
 type Kind = GardenKind;
 type Profile = { kind: Kind; floor: number; night?: boolean; warmLight?: boolean; coastal?: boolean };
 const profiles: Record<string, Profile> = {
+  "chinowa-kuguri": {kind:"courtyard",floor:0},
   "zeniarai-coin-washing": {kind:"courtyard",floor:0},
   'udo-undama': {kind:'river',floor:-.04,coastal:true},
   'malawi-sansi': { kind: 'garden', floor: -0.04 },
@@ -331,7 +332,7 @@ export function createCozyEnvironment(
     }
   } else if (!coastal) {
     const planting = new THREE.Group(); planting.name = "daylight-planting"; root.add(planting);
-    const layout = gardenLayout(kind, id), transform = new THREE.Object3D();
+    const layout = gardenLayout(kind, id).filter(item => id !== "chinowa-kuguri" || Math.abs(item.x) > 7.8 || item.z < -5.5), transform = new THREE.Object3D();
     treeCanopies = createStylizedTrees(layout.filter(item => item.model.startsWith("tree-")), groundY);
     planting.add(treeCanopies.root);
     for (const name of new Set(layout.filter(item => !item.model.startsWith("tree-")).map(item => item.model))) {

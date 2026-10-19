@@ -58,6 +58,7 @@ describe("builtInScenes narratives", () => {
       "chinese-suanpan",
       "chinese-tangram",
       "chinese-woodblock-print",
+      "chinowa-kuguri",
       "clootie-well-rag",
       "crane",
       "croatian-licitar-heart",

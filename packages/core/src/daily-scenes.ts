@@ -5,6 +5,7 @@ type CatalogEntry = { id: string; title: string; engine: string; revision: strin
  * quiet listening, an entrance bow, a slow turn, a strike, a pour.
  */
 export const BLESSING_SCENE_IDS = [
+  "chinowa-kuguri",
   "woodfish",
   "furin-wind-chime",
   "shinto-torii",
@@ -117,6 +118,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"chinowa-kuguri",title:"茅环祈安",engine:"chinowa-kuguri@1",revision:"bundled",manifestUrl:"",traditionSlug:"chinowa-kuguri",narrative:"在日本东京葛西神社，夏越时的茅环由束起的茅草制成，固定在柱上。神社介绍，参访者从正面穿环，依次向左、向右、再向左绕行，寄托净祓与平安度夏的心意，随后前往本殿。眼前的茅环已立好：向左短拖，从环中穿过并向左绕回；再向右穿行绕回，最后再走一次左绕。三次绕行后，停在茅环前。" },
   { id:"zeniarai-coin-washing",title:"泉水净币",engine:"zeniarai-coin-washing@1",revision:"bundled",manifestUrl:"",traditionSlug:"zeniarai-coin-washing",narrative:"在日本镰仓的銭洗弁財天宇賀福神社，参访者清洗钱币，寄托对财福的祈愿。神社代表的访谈记述，参拜后把钱放入筛中，用柄杓浇水，再以手帕擦拭收回。眼前的硬币已放在浅筛里：向上短拖举起水勺，向左倾水，让泉水流过硬币；再把布巾向右短拖，拭去水珠。勺子回到泉边，硬币仍静放在筛中。" },
   { id:"udo-undama",title:"龟岩投愿",engine:"udo-undama@1",revision:"bundled",manifestUrl:"",traditionSlug:"udo-undama",narrative:"在日本宫崎的鵜户神宫，参访者把小小的陶土「运玉」投向海边龟岩背上的方形凹处，把愿望寄托在这一投。神宫记述，如今的运玉由黏土揉圆，压上「運」字，再轻烧制成。眼前先把陶玉从石边取起，对准岩上的凹处，向上短拖后松手。陶玉划出弧线，越过岩沿，落入凹处；海面的光纹仍在缓缓晃动。" },
   { id: "japanese-daruma-otoshi", title: "木槌落片", engine: "japanese-daruma-otoshi@1", revision: "bundled", manifestUrl: "", traditionSlug: "japanese-daruma-otoshi", narrative: "达摩落片是日本的木制叠片玩具：从底部敲出木片，同时让上方的叠片保持直立。Reading Museum记录了这种玩法，江户东京博物馆也收藏着名为「だるま落し」的玩具。这里把三片柔和色彩的木片叠在红色达摩下，先下移木槌对齐，敲出一片，看上层稳稳落下，再抬起木槌。圆润的木面与彩漆在阳光下留下清楚的色阶。" },

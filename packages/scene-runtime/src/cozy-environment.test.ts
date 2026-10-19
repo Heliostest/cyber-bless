@@ -249,3 +249,10 @@ describe("a scene's surrounding world", () => {
 });
 
 it('keeps the undama coastal horizon free of a river garden and disposes it',async()=>{const s=new THREE.Scene(),env=createCozyEnvironment(s,{id:'udo-undama',loadSky:async()=>new THREE.DataTexture()});expect(env).not.toBeNull();await env!.ready;expect(s.getObjectByName('daylight-planting')).toBeUndefined();expect(s.getObjectByName('stylized-meadow')).toBeUndefined();env!.dispose();expect(s.children).toHaveLength(0)})
+
+it('keeps the complete Chinowa walking corridor clear of surrounding solids',async()=>{
+ const scene=new THREE.Scene(),world=createCozyEnvironment(scene,{id:'chinowa-kuguri',loadSky:async()=>new THREE.DataTexture()});expect(world).not.toBeNull();scene.updateMatrixWorld(true)
+ const corridor=new THREE.Box3(new THREE.Vector3(-3.65,.05,-1.4),new THREE.Vector3(3.65,2.6,10)),planting=scene.getObjectByName('daylight-planting')!;expect(planting).toBeDefined()
+ planting.traverse(o=>{const m=o as THREE.InstancedMesh;if(!m.isInstancedMesh)return;m.geometry.computeBoundingBox();for(let i=0;i<m.count;i++){const matrix=new THREE.Matrix4();m.getMatrixAt(i,matrix);matrix.premultiply(m.matrixWorld);expect(m.geometry.boundingBox!.clone().applyMatrix4(matrix).intersectsBox(corridor),m.name).toBe(false)}})
+ await world!.ready;world!.dispose()
+})

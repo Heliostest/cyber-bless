@@ -80,6 +80,7 @@ describe("scene placement", () => {
     ["korean-yutnori", "korean-yutnori", false],
     ["chinese-diabolo", "chinese-diabolo", false],
     ["chinese-tangram", "chinese-tangram", false],
+    ["lam-tsuen-wishing-tree", "lam-tsuen-wishing-tree", true],
     ["kagami-mochi-offering", "kagami-mochi-offering", false],
     ["romanian-martisor", "romanian-martisor", false],
     ["sumiyoshi-godairiki", "sumiyoshi-godairiki", true],
@@ -230,6 +231,7 @@ describe("scene placement", () => {
       "mongolian-felt-ger",
     ]);
     expect([...WISH_SCENE_IDS]).toEqual([
+      "lam-tsuen-wishing-tree",
       "sumiyoshi-godairiki",
       "zeniarai-coin-washing",
       "udo-undama",

@@ -100,6 +100,7 @@ describe("builtInScenes narratives", () => {
       "kagami-mochi-offering",
       "korean-bojagi-wrap",
       "korean-yutnori",
+      "lam-tsuen-wishing-tree",
       "lantern",
       "lithuanian-straw-garden",
       "malawi-sansi",

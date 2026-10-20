@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id:'lam-tsuen-wishing-tree',title:'林村抛愿',traditionSlug:'lam-tsuen-wishing-tree',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'kagami-mochi-offering',title:'镜饼迎岁',traditionSlug:'kagami-mochi-offering',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'romanian-martisor',title:'红白寄春',traditionSlug:'romanian-martisor',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'sumiyoshi-godairiki',title:'三石寄愿',traditionSlug:'sumiyoshi-godairiki',grade:'C',sensitivity:'低',gestures:['drag'] },
@@ -193,6 +194,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'lam-tsuen-wishing-tree',
   'kagami-mochi-offering',
   'romanian-martisor',
   'sumiyoshi-godairiki',
@@ -280,6 +282,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'lam-tsuen-wishing-tree': return import('./lam-tsuen-wishing-tree/index')
     case 'kagami-mochi-offering': return import('./kagami-mochi-offering/index')
     case 'romanian-martisor': return import('./romanian-martisor/index')
     case 'sumiyoshi-godairiki': return import('./sumiyoshi-godairiki/index')

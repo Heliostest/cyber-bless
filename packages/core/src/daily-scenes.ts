@@ -155,6 +155,7 @@ export const BLESSING_SCENE_IDS = [
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
 export const WISH_SCENE_IDS = [
+  "lam-tsuen-wishing-tree",
   "sumiyoshi-godairiki",
   "zeniarai-coin-washing",
   "udo-undama",
@@ -199,6 +200,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"lam-tsuen-wishing-tree",title:"林村抛愿",engine:"lam-tsuen-wishing-tree@1",revision:"bundled",manifestUrl:"",traditionSlug:"lam-tsuen-wishing-tree",narrative:"香港林村的许愿习俗，把写有心愿的宝牒系上橙，抛挂枝头。如今仿真许愿树与塑料橙延续着这份心意。写下平安，将宝牒系好，再把纸橙抛向树枝，让心愿轻轻挂在枝间。" },
   { id:"kagami-mochi-offering",title:"镜饼迎岁",engine:"kagami-mochi-offering@1",revision:"bundled",manifestUrl:"",traditionSlug:"kagami-mochi-offering",narrative:"日本正月迎接年神时，会以镜饼作为供物：两层圆饼相叠，顶上放橙（だいだい），寄托家族代代兴盛的祝愿。把大圆饼安放在纸面中央，再叠上小圆饼，最后放上橙，备好这份迎新的供物。" },
   { id:"romanian-martisor",title:"红白寄春",engine:"romanian-martisor@1",revision:"bundled",manifestUrl:"",traditionSlug:"romanian-martisor",narrative:"罗马尼亚的 Mărțișor 春绳习俗中，红白相绞的细绳曾被佩戴，以寄托好运与健康；佩戴结束后，一些地方把它挂到开花的树枝上。眼前的春绳已解下：向上短拖提起，再向右将绳环套上花枝，最后向下轻放，让流苏垂在花下。" },
   { id:"sumiyoshi-godairiki",title:"三石寄愿",engine:"sumiyoshi-godairiki@1",revision:"bundled",manifestUrl:"",traditionSlug:"sumiyoshi-godairiki",narrative:"在大阪住吉大社的五所御前，人们寻找写有「五」「大」「力」的三颗小石，装入御守袋，寄托祈求神明护佑、实现心愿的信念。眼前的字石散在浅色小石之间：依次向右短拖，拾起五字石、大字石、力字石，让它们越过敞开的袋口，轻轻落入布袋。三石收好，心愿留在心中。" },

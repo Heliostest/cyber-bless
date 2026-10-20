@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "a06715a20538bdf9fa4538f7a0c36091d42b13e89139f7989705b4c6c570ca6c",
+  "revision": "799e3f9652fe9bbc15ff597e91c10a14b8d8efc4951875e34ec1a9ef8f55ac37",
   "scenes": [
+    {
+      "id": "mochigase-nagashibina",
+      "engine": "mochigase-nagashibina@1",
+      "small": {
+        "file": "mochigase-nagashibina-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "cda90f56c620a5999d9aa7094b6b278070a1f37d1cce2002caccce16c92bdd61",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "mochigase-nagashibina-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e780be2d789032d6e7cc0550359f25cb7ed95d398b0a434c16b2ee3d9db44055",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "mochigase-nagashibina-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "2871e84da40702674ac0671d290652bf63ce52b498b12b1167e0b111e7eafb85",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "greek-vasilopita",
       "engine": "greek-vasilopita@1",

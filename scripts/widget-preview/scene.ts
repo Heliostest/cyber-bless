@@ -29,7 +29,8 @@ const completedPreviewProgress: Record<string, number> = {
   "mongolian-ovoo": 3,
   "shichigosan-chitose-ame": 3,
   "tibetan-khata-greeting": 3,
-  "greek-vasilopita": 3
+  "greek-vasilopita": 3,
+  "mochigase-nagashibina": 3
 };
 const previewProgress = completedPreviewProgress[entry.id] ?? (entry.id === 'crane' || entry.id === 'lantern' ? 1 : 0);
 let controller: SceneController;

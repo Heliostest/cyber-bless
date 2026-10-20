@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'mochigase-nagashibina': {
+    kind: 'blessing', label: '祈愿无病息灾与平安成长', optionalWish: false,
+    action: '托起圆形草托，移向缓流，让纸雏随水漂去。',
+  },
   'greek-vasilopita': {
     kind: 'blessing', label: '把新年祝愿带给家人', optionalWish: false,
     action: '将切好的新年糕送到家人盘里，愿家人在新年里健康安好。',

@@ -38,6 +38,7 @@ it.each([0,1,2])('cancels the real Chinowa walking view through production adapt
 })
 
 it.each([
+  ['mochigase-nagashibina', 0, 'nagashibina-tray', 'nagashibina-tray', [0,.075,.37], [0,0,0], [0,-60]],
   ['greek-vasilopita', 0, 'vasilopita-grip', 'vasilopita-server-root', [0,0,.025], [0,0,0], [0,-60]],
   ['tibetan-khata-greeting', 0, 'khata-scarf', 'khata-scarf', [0,.025,0], [0,0,0], [0,-60]],
   ['shichigosan-chitose-ame', 0, 'chitose-grip', 'chitose-bag-root', [0,0,.025], [0,0,0], [0,-60]],

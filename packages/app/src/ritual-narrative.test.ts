@@ -114,6 +114,7 @@ describe("builtInScenes narratives", () => {
       "milagros",
       "minangkabau-spinning-top",
       "mizuhiki",
+      "mochigase-nagashibina",
       "mongolian-felt-ger",
       "mongolian-ovoo",
       "navruz-sumalak",

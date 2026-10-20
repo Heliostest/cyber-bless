@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "03677aa8724b3ed3d59e9a2f8e78000b0cf39539d7436af467f0abe67a8ebef7",
+  "revision": "e725fca27d3733aa0185826f5b1d463c7f3da5e98f2cb22de58b335360605608",
   "scenes": [
+    {
+      "id": "kagami-mochi-offering",
+      "engine": "kagami-mochi-offering@1",
+      "small": {
+        "file": "kagami-mochi-offering-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "e28efe527b135ebb098c818a44db57630b1f2357d0ee3db6b9fe4bb8f00a2831",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "kagami-mochi-offering-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "2206fc9e768ffe5322ae4d68322fbff95f42211edf40d49cde96226d90b184dc",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "kagami-mochi-offering-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "88b69c20a1396e95afc312c0e5d9b2cbcf08f64a0ee7f98af1e84a25655964e1",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "romanian-martisor",
       "engine": "romanian-martisor@1",

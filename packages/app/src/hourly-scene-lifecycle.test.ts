@@ -38,6 +38,7 @@ it.each([0,1,2])('cancels the real Chinowa walking view through production adapt
 })
 
 it.each([
+  ['kagami-mochi-offering', 0, 'kagami-large', 'kagami-root-0', [0,.18,0], [0,0,0], [0,-60]],
   ['romanian-martisor', 0, 'martisor-red-head', 'martisor-cord', [0,0,0], [0,0,0], [0,-60]],
   ['sumiyoshi-godairiki', 0, 'godairiki-stone-0', 'godairiki-stone-root-0', [0,0,0], [.15,.09,0], [60,0]],
   ['zeniarai-coin-washing', 0, 'wash-handle', 'wash-ladle', [.85,.28,0], [0,.115,.188], [0,-60]],

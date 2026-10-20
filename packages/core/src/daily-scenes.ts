@@ -81,6 +81,27 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "hiiragi-iwashi",
+  "tamagushi-offering",
+  "tibetan-water-bowls",
+  "kagami-biraki-sake",
+  "tibetan-prayer-flags",
+  "rosh-hashanah-apple-honey",
+  "thai-songkran-elders",
+  "kameido-usokae",
+  "persian-esfand",
+  "mochigase-nagashibina",
+  "greek-vasilopita",
+  "tibetan-khata-greeting",
+  "shichigosan-chitose-ame",
+  "mongolian-ovoo",
+  "fgs-buddha-bathing",
+  "balinese-canang-sari",
+  "bulgarian-survakane",
+  "setsubun-mamemaki",
+  "sternsinger-house-blessing",
+  "kagami-mochi-offering",
+  "romanian-martisor",
   "polish-oplatek-sharing",
   "greek-new-year-pomegranate",
   "bonfim-ribbon",
@@ -154,6 +175,8 @@ export const BLESSING_SCENE_IDS = [
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
 export const WISH_SCENE_IDS = [
+  "lam-tsuen-wishing-tree",
+  "sumiyoshi-godairiki",
   "zeniarai-coin-washing",
   "udo-undama",
   "tanzaku-tanabata",
@@ -197,6 +220,29 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"hiiragi-iwashi",title:"柊鰯守门",engine:"hiiragi-iwashi@1",revision:"bundled",manifestUrl:"",traditionSlug:"hiiragi-iwashi",narrative:"节分时，人们把烤鰯头插在带刺的柊枝上，放在入口，寄托驱邪避厄的心愿。拿起备好的柊枝，将烤鱼头与枝端插合，再安放到门边。" },
+  { id:"tamagushi-offering",title:"玉串奉愿",engine:"tamagushi-offering@1",revision:"bundled",manifestUrl:"",traditionSlug:"tamagushi-offering",narrative:"日本神社的祈祷中，参拜者会手持附有纸垂的榊枝，把祈愿寄于玉串，再将枝根朝向神前供放。眼前是奉玉串的一段：先顺时针转正，静心祈愿，再转动枝根，轻轻放到供案上。" },
+  { id:"tibetan-water-bowls",title:"清水七供",engine:"tibetan-water-bowls@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-water-bowls",narrative:"在藏传佛教的供水中，人们向佛与菩萨恭敬献上清水，并以利益众生为发心。佛像前的七只铜碗已经各留少量清水：提起水壶，从左到右依次添水，水面停在碗沿下方，再将水壶收回。" },
+  { id:"kagami-biraki-sake",title:"开樽祝愿",engine:"kagami-biraki-sake@1",revision:"bundled",manifestUrl:"",traditionSlug:"kagami-biraki-sake",narrative:"在日本清酒的镜开仪式中，人们用木槌叩开预先松好的樽盖，祝愿新的开始顺遂、健康与幸福。眼前的菰卷酒樽已经备好：拿起系着红白带的木槌，轻叩盖板接缝的一端，再把木槌收回樽旁。盖片分开，露出樽中的酒面。" },
+  { id:"tibetan-prayer-flags",title:"经幡迎风",engine:"tibetan-prayer-flags@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-prayer-flags",narrative:"藏传佛教的经幡印有经文或咒语，悬在户外随风轻扬，寄托愿众生受益、获得安乐的心意。这串五色咒语旗保持完整，蓝、白、红、绿、黄依次相连。抬起蓝旗一端，舒展旗串，再挂稳黄旗一端，让经幡在风中展开。" },
+  { id:"rosh-hashanah-apple-honey",title:"蘸蜜迎岁",engine:"rosh-hashanah-apple-honey@1",revision:"bundled",manifestUrl:"",traditionSlug:"rosh-hashanah-apple-honey",narrative:"在犹太新年的节庆餐食中，苹果蘸蜜与果实祝福、品尝和祷愿相伴，寄托向上帝祈求美好甜蜜新年的心意。眼前的苹果片已切好：拿起、蘸蜜，再提起放回餐盘，准备品尝。" },
+  { id:"thai-songkran-elders",title:"浇水敬老",engine:"thai-songkran-elders@1",revision:"bundled",manifestUrl:"",traditionSlug:"thai-songkran-elders",narrative:"宋干新年时，泰国家庭中的晚辈会把清水轻轻浇在长辈手上，表达敬意，祝愿长辈安康，也向他们求一份新岁祝福。眼前的清水已备好：捧起小碗，移到长辈手边，缓缓倾水，再将碗放回。" },
+  { id:"kameido-usokae",title:"木鷽迎福",engine:"kameido-usokae@1",revision:"bundled",manifestUrl:"",traditionSlug:"kameido-usokae",narrative:"在东京龟户天神社的鷽替神事中，人们返纳旧木鷽，领受新木鷽，祈愿凶事转吉。送还旧鸟，接过新鸟，再将它安放好，迎接新年。" },
+  { id:"persian-esfand",title:"熏籽祈安",engine:"persian-esfand@1",revision:"bundled",manifestUrl:"",traditionSlug:"persian-esfand",narrative:"在一些伊朗家庭里，长辈会把 Esfand 种子放在炉上的锅中加热，再挥动布巾散开烟气，寄托避开邪眼、护佑家人的心愿。眼前的小锅已经盛好种子：提起木柄，把锅移到炉上，待烟气升起后轻轻挥巾，愿家人平安、诸事顺遂。" },
+  { id:"mochigase-nagashibina",title:"纸雏祈安",engine:"mochigase-nagashibina@1",revision:"bundled",manifestUrl:"",traditionSlug:"mochigase-nagashibina",narrative:"在鸟取用瀬的流雏习俗中，一对纸雏随圆形草托漂向下游，寄托无病息灾与孩子成长的祈愿。托起纸雏与花枝，移向缓流，轻轻放入水中。" },
+  { id:"greek-vasilopita",title:"新岁分糕",engine:"greek-vasilopita@1",revision:"bundled",manifestUrl:"",traditionSlug:"greek-vasilopita",narrative:"在希腊东正教家庭的新年庆贺中，家人分食圣巴西尔糕 Vasilopita，寄托健康与幸福的祝愿。糕里藏着一枚硬币，收到含币一份的人被认为得到祝福。眼前的糕已经切好：用糕铲托起这一份，送到家人盘里，再取出切面中露出的硬币。" },
+  { id:"tibetan-khata-greeting",title:"白绢迎客",engine:"tibetan-khata-greeting@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-khata-greeting",narrative:"在藏族迎客礼俗中，献上哈达表达欢迎与美好祝愿。双手托起预先折好的白绢，递给来客，让心意随礼巾交到对方手中。" },
+  { id:"shichigosan-chitose-ame",title:"千岁赠糖",engine:"shichigosan-chitose-ame@1",revision:"bundled",manifestUrl:"",traditionSlug:"shichigosan-chitose-ame",narrative:"在日本七五三的成长庆贺中，父母将寄托长寿心意的千岁饴送给孩子。细长的红白糖装在长袋里，带着健康成长的祝愿。眼前是为孩子备好的糖袋：握住提手提起，递近，再轻轻放低，让孩子伸手接稳。" },
+  { id:"mongolian-ovoo",title:"敖包祈护",engine:"mongolian-ovoo@1",revision:"bundled",manifestUrl:"",traditionSlug:"mongolian-ovoo",narrative:"在蒙古的一些敖包礼敬中，人们顺时针绕行三圈，并向石堆添石，向山岳与湖泊祈求护佑。取起石子，随来访者绕行，再把它投入敖包。" },
+  { id:"fgs-buddha-bathing",title:"浴佛发愿",engine:"fgs-buddha-bathing@1",revision:"bundled",manifestUrl:"",traditionSlug:"fgs-buddha-bathing",narrative:"佛诞浴佛以香水灌沐太子像，表达礼敬与发愿。依佛光山的公开说明，这里向太子像的右肩、左肩、右肩依次倾下三杓水，发愿止恶、行善、度众生。握住杓柄，舀水提起，看水流落在肩上，再缓缓收回。" },
+  { id:"balinese-canang-sari",title:"叶盘献谢",engine:"balinese-canang-sari@1",revision:"bundled",manifestUrl:"",traditionSlug:"balinese-canang-sari",narrative:"Canang sari 是巴厘印度教徒日常献上的供品，用以向 Ida Sang Hyang Widhi Wasa 表达谢意。把白花放入盛着花材和食物的叶盘，托起叶盘，安放在田边的供奉台上。" },
+  { id:"bulgarian-survakane",title:"彩枝贺年",engine:"bulgarian-survakane@1",revision:"bundled",manifestUrl:"",traditionSlug:"bulgarian-survakane",narrative:"在保加利亚的新年贺年习俗 Survakane 中，孩子持装饰过的山茱萸枝，轻拍亲友背部，送上来年健康幸福的祝愿。眼前的彩枝缠着羊毛线和爆米花串：提起枝条，移到亲友背后，轻拍后收回，把新年问候送到身边的人。" },
+  { id:"setsubun-mamemaki",title:"节分撒豆",engine:"setsubun-mamemaki@1",revision:"bundled",manifestUrl:"",traditionSlug:"setsubun-mamemaki",narrative:"在日本节分时，家庭会用木枡盛炒黄豆，向屋外、屋内撒豆，以“鬼は外、福は内”寄托驱厄迎福、家人安康的心意。眼前木枡已备好：推开木扇，先向屋外撒豆，再向屋内轻撒，让祝愿随着豆子落在家中。" },
+  { id:"sternsinger-house-blessing",title:"门楣祝家",engine:"sternsinger-house-blessing@1",revision:"bundled",manifestUrl:"",traditionSlug:"sternsinger-house-blessing",narrative:"德国的 Sternsinger 在岁首逐户拜访，用粉笔在门上方写下基督教祝福，并为儿童援助项目募款。拿起粉笔，写下门楣上的年份与 C+M+B，寄托“愿基督祝福这所房屋”的心意。" },
+  { id:"lam-tsuen-wishing-tree",title:"林村抛愿",engine:"lam-tsuen-wishing-tree@1",revision:"bundled",manifestUrl:"",traditionSlug:"lam-tsuen-wishing-tree",narrative:"香港林村的许愿习俗，把写有心愿的宝牒系上橙，抛挂枝头。如今仿真许愿树与塑料橙延续着这份心意。写下平安，将宝牒系好，再把纸橙抛向树枝，让心愿轻轻挂在枝间。" },
+  { id:"kagami-mochi-offering",title:"镜饼迎岁",engine:"kagami-mochi-offering@1",revision:"bundled",manifestUrl:"",traditionSlug:"kagami-mochi-offering",narrative:"日本正月迎接年神时，会以镜饼作为供物：两层圆饼相叠，顶上放橙（だいだい），寄托家族代代兴盛的祝愿。把大圆饼安放在纸面中央，再叠上小圆饼，最后放上橙，备好这份迎新的供物。" },
+  { id:"romanian-martisor",title:"红白寄春",engine:"romanian-martisor@1",revision:"bundled",manifestUrl:"",traditionSlug:"romanian-martisor",narrative:"罗马尼亚的 Mărțișor 春绳习俗中，红白相绞的细绳曾被佩戴，以寄托好运与健康；佩戴结束后，一些地方把它挂到开花的树枝上。眼前的春绳已解下：向上短拖提起，再向右将绳环套上花枝，最后向下轻放，让流苏垂在花下。" },
+  { id:"sumiyoshi-godairiki",title:"三石寄愿",engine:"sumiyoshi-godairiki@1",revision:"bundled",manifestUrl:"",traditionSlug:"sumiyoshi-godairiki",narrative:"在大阪住吉大社的五所御前，人们寻找写有「五」「大」「力」的三颗小石，装入御守袋，寄托祈求神明护佑、实现心愿的信念。眼前的字石散在浅色小石之间：依次向右短拖，拾起五字石、大字石、力字石，让它们越过敞开的袋口，轻轻落入布袋。三石收好，心愿留在心中。" },
   { id:"polish-oplatek-sharing",title:"薄饼相祝",engine:"polish-oplatek-sharing@1",revision:"bundled",manifestUrl:"",traditionSlug:"polish-oplatek-sharing",narrative:"波兰家庭在平安夜分享 opłatek 薄饼，向亲人送上健康与平安的祝愿，也表达和解与关爱。眼前是家人间的一次分享：递出薄饼，轻分一角，把祝愿送给对方。" },
   { id:"greek-new-year-pomegranate",title:"破榴迎新",engine:"greek-new-year-pomegranate@1",revision:"bundled",manifestUrl:"",traditionSlug:"greek-new-year-pomegranate",narrative:"在希腊一些家庭，元旦会在家门门槛摔开石榴，让红籽散开，寄托新年一家人的好运、丰足与幸福。眼前的完整石榴已备好：向上短拖拿起，向右移到门槛中央上方，再向下短拖后松手。果皮在石槛上破开，红籽弹落在日光里。" },
   { id:"bonfim-ribbon",title:"栏前结愿",engine:"bonfim-ribbon@1",revision:"bundled",manifestUrl:"",traditionSlug:"bonfim-ribbon",narrative:"在巴西萨尔瓦多，人们把Bonfim彩带系在 Senhor do Bonfim 教堂的栏杆上，以三个结寄托心愿。市文旅介绍，每一结留一个愿望；教堂院长的采访也记述了栏前系带的信念。眼前的彩带已经绕栏，三个松结也已预成：向右短拖收紧第一结，再向左收紧第二结，最后向右收紧第三结。心愿留在心中，彩带轻垂在日光下。" },
@@ -758,10 +804,14 @@ export const builtInScenes: BuiltInSceneEntry[] = [
 ];
 
 export function dailyPrimaryScene<T extends { id: string }>(entries: readonly T[], day: string, excluded: readonly string[] = []): T | undefined {
-  const order = Array.from({ length: Math.max(BLESSING_SCENE_IDS.length, WISH_SCENE_IDS.length) }, (_, i) =>
-    [BLESSING_SCENE_IDS[i], WISH_SCENE_IDS[i]].filter((id): id is typeof BLESSING_SCENE_IDS[number] | typeof WISH_SCENE_IDS[number] => Boolean(id)),
+  // Filter each category before interleaving: unavailable scenes must not leave
+  // gaps that group all wishes together in a smaller catalog.
+  const available = (ids: readonly string[]) => ids.filter(id => !excluded.includes(id))
+    .map(id => entries.find(e => e.id === id)).filter((e): e is T => !!e && isSceneVisibleInApp(e));
+  const blessings = available(BLESSING_SCENE_IDS), wishes = available(WISH_SCENE_IDS);
+  const pool = Array.from({ length: Math.max(blessings.length, wishes.length) }, (_, i) =>
+    [blessings[i], wishes[i]].filter((entry): entry is T => !!entry),
   ).flat();
-  const pool = order.filter(id => !excluded.includes(id)).map(id => entries.find(e => e.id === id)).filter((e): e is T => !!e && isSceneVisibleInApp(e));
   // An ordinal covers every entry even as the catalog grows. A date's digit
   // sum has too few possible values and leaves new scenes unreachable.
   const utc = Date.parse(`${day}T00:00:00Z`);

@@ -11,7 +11,7 @@ const batches={gourdglass:['peruvian-engraved-gourd','venetian-glass-bead'],boja
 assert.ok(batches[batch],`Unknown batch: ${batch}`)
 const out=path.resolve(process.env.WBR_OUT||(batch==='woven'?'artifacts/woven-pair-scenes/browser':`artifacts/${batch==='previous'?'next':batch}-four-scenes/browser`));await mkdir(out,{recursive:true})
 const allIds=batches[batch]
-const wishIds=['peruvian-engraved-gourd','korean-bojagi-wrap','turkish-ebru-paper','chinese-shadow-puppet','niue-shell-necklace','polish-paper-cut','chinese-woodblock-print','amazigh-woven-rug','hungarian-embroidery-hoop','andalusian-ceramic-tile','bai-indigo-cloth','welsh-love-spoon','barcelos-clay-rooster','croatian-licitar-heart','sorbian-painted-egg','basque-sunflower','omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto','aland-votive-ship','minangkabau-spinning-top']
+const wishIds=['sumiyoshi-godairiki','peruvian-engraved-gourd','korean-bojagi-wrap','turkish-ebru-paper','chinese-shadow-puppet','niue-shell-necklace','polish-paper-cut','chinese-woodblock-print','amazigh-woven-rug','hungarian-embroidery-hoop','andalusian-ceramic-tile','bai-indigo-cloth','welsh-love-spoon','barcelos-clay-rooster','croatian-licitar-heart','sorbian-painted-egg','basque-sunflower','omamori-cycle','polish-blessing-basket','floating-lantern-loy-krathong','hongsheng-red-string','italian-ex-voto','aland-votive-ship','minangkabau-spinning-top']
 const ids=(process.env.WBR_SCENES?process.env.WBR_SCENES.split(','):allIds).filter(id=>isSceneVisibleInApp({id})),key='cyber-bless:personal:v1'
 // Bojagi has six spatial operations and a manual finish, with integer legacy checkpoints.
 if(ids.includes('korean-bojagi-wrap')){
@@ -27,6 +27,29 @@ if(ids.includes('malawi-sansi')){
 }
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const craftDeltas={
+  'hiiragi-iwashi': [[0,-60],[-60,0],[0,-60]],
+  'tamagushi-offering': [[60,0],[60,0],[0,-60]],
+  'tibetan-water-bowls': [[0,-60],[60,0],[0,60]],
+  'kagami-biraki-sake': [[0,-60],[0,60],[-60,0]],
+  'tibetan-prayer-flags': [[0,-60],[60,0],[0,-60]],
+  'rosh-hashanah-apple-honey': [[60,0],[0,60],[-60,0]],
+  'thai-songkran-elders': [[0,-60],[60,0],[0,60]],
+  'kameido-usokae': [[0,-60],[-60,0],[0,60]],
+  'persian-esfand': [[0,-60],[60,0],[0,60]],
+  'mochigase-nagashibina': [[0,-60],[60,0],[0,60]],
+  'greek-vasilopita': [[0,-60],[60,0],[0,60]],
+  'tibetan-khata-greeting': [[0,-60],[60,0],[60,0]],
+  'shichigosan-chitose-ame': [[0,-60],[60,0],[0,60]],
+  'mongolian-ovoo': [[-60,0],[-60,0],[-60,0]],
+  'fgs-buddha-bathing': [[0,-60],[0,-60],[0,-60]],
+  'balinese-canang-sari': [[60,0],[0,-60],[-60,0]],
+  'bulgarian-survakane': [[0,-60],[60,0],[0,-60]],
+  'setsubun-mamemaki': [[60,0],[0,-60],[0,60]],
+  'sternsinger-house-blessing': [[0,-60],[60,0],[0,60]],
+  'lam-tsuen-wishing-tree': [[60,0],[60,0],[0,-60]],
+  'kagami-mochi-offering': [[0,-60],[0,-60],[0,-60]],
+  'romanian-martisor': [[0,-60],[60,0],[0,60]],
+  'sumiyoshi-godairiki': [[60,0],[60,0],[60,0]],
   'polish-oplatek-sharing': [[0,-60],[60,0],[0,-60]],
   'greek-new-year-pomegranate': [[0,-60],[60,0],[0,60]],
   'bonfim-ribbon': [[60,0],[-60,0],[60,0]],
@@ -198,7 +221,7 @@ async function wrongCraftGesture(page,id,step){
   if(craftDeltas[id]?.[step]){
     const input=pointers.get(page),[dx,dy]=craftDeltas[id][step]
     const kinds=['tap','reverse','short','backtrack','partial-return','reverse-first','cancel']
-    if(['polish-oplatek-sharing','greek-new-year-pomegranate','bonfim-ribbon','chinowa-kuguri','zeniarai-coin-washing','udo-undama','japanese-daruma-otoshi','paper-pinwheel','chinese-steelyard','garden-croquet','welsh-drop-spindle','scottish-plunge-churn','irish-bodhran','french-coffee-mill','japanese-wagasa','spanish-castanets','japanese-shishi-odoshi','german-jumping-jack','finnish-kantele','estonian-village-swing','french-petanque','english-hearth-bellows','mexican-metate','czech-wooden-ratchet','puerto-rican-guiro','valencian-folding-fan','mexican-tortilla-press','ghanaian-oware','chinese-rattle-drum','chinese-tangram','chinese-diabolo','korean-yutnori','russian-matryoshka','japanese-koinobori','japanese-kendama','indian-charkha','german-nutcracker','mexican-molinillo','malawi-sansi','chinese-suanpan','mongolian-felt-ger','peruvian-engraved-gourd','venetian-glass-bead'].includes(id))kinds.push('zigzag')
+    if(["hiiragi-iwashi", "tamagushi-offering", "tibetan-water-bowls", "kagami-biraki-sake", "tibetan-prayer-flags", "rosh-hashanah-apple-honey", "thai-songkran-elders", "kameido-usokae", "persian-esfand", "mochigase-nagashibina", "greek-vasilopita", "tibetan-khata-greeting", "shichigosan-chitose-ame", "mongolian-ovoo", "fgs-buddha-bathing", "balinese-canang-sari", "bulgarian-survakane", "setsubun-mamemaki", "sternsinger-house-blessing", "lam-tsuen-wishing-tree", "kagami-mochi-offering", "romanian-martisor", "sumiyoshi-godairiki", "polish-oplatek-sharing", "greek-new-year-pomegranate", "bonfim-ribbon", "chinowa-kuguri", "zeniarai-coin-washing", "udo-undama", "japanese-daruma-otoshi", "paper-pinwheel", "chinese-steelyard", "garden-croquet", "welsh-drop-spindle", "scottish-plunge-churn", "irish-bodhran", "french-coffee-mill", "japanese-wagasa", "spanish-castanets", "japanese-shishi-odoshi", "german-jumping-jack", "finnish-kantele", "estonian-village-swing", "french-petanque", "english-hearth-bellows", "mexican-metate", "czech-wooden-ratchet", "puerto-rican-guiro", "valencian-folding-fan", "mexican-tortilla-press", "ghanaian-oware", "chinese-rattle-drum", "chinese-tangram", "chinese-diabolo", "korean-yutnori", "russian-matryoshka", "japanese-koinobori", "japanese-kendama", "indian-charkha", "german-nutcracker", "mexican-molinillo", "malawi-sansi", "chinese-suanpan", "mongolian-felt-ger", "peruvian-engraved-gourd", "venetian-glass-bead"].includes(id))kinds.push('zigzag')
     for(const kind of kinds){
       const from=await point(page,'source',id==='chinese-diabolo'&&step===2?1:0)
       await input.down(from)

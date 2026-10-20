@@ -19,6 +19,29 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id:'hiiragi-iwashi',title:'柊鰯守门',traditionSlug:'hiiragi-iwashi',grade:'C',sensitivity:'中',gestures:['drag'] },
+  { id:'tamagushi-offering',title:'玉串奉愿',traditionSlug:'tamagushi-offering',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'tibetan-water-bowls',title:'清水七供',traditionSlug:'tibetan-water-bowls',grade:'C',sensitivity:'中',gestures:['drag'] },
+  { id:'kagami-biraki-sake',title:'开樽祝愿',traditionSlug:'kagami-biraki-sake',grade:'C',sensitivity:'中',gestures:['drag'] },
+  { id:'tibetan-prayer-flags',title:'经幡迎风',traditionSlug:'tibetan-prayer-flags',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'rosh-hashanah-apple-honey',title:'蘸蜜迎岁',traditionSlug:'rosh-hashanah-apple-honey',grade:'C',sensitivity:'中',gestures:['drag'] },
+  { id:'thai-songkran-elders',title:'浇水敬老',traditionSlug:'thai-songkran-elders',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'kameido-usokae',title:'木鷽迎福',traditionSlug:'kameido-usokae',grade:'C',sensitivity:'中',gestures:['drag'] },
+  { id:'persian-esfand',title:'熏籽祈安',traditionSlug:'persian-esfand',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'mochigase-nagashibina',title:'纸雏祈安',traditionSlug:'mochigase-nagashibina',grade:'C',sensitivity:'中',gestures:['drag'] },
+  { id:'greek-vasilopita',title:'新岁分糕',traditionSlug:'greek-vasilopita',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'tibetan-khata-greeting',title:'白绢迎客',traditionSlug:'tibetan-khata-greeting',grade:'C',sensitivity:'中',gestures:['drag'] },
+  { id:'shichigosan-chitose-ame',title:'千岁赠糖',traditionSlug:'shichigosan-chitose-ame',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'mongolian-ovoo',title:'敖包祈护',traditionSlug:'mongolian-ovoo',grade:'C',sensitivity:'中',gestures:['drag'] },
+  { id:'fgs-buddha-bathing',title:'浴佛发愿',traditionSlug:'fgs-buddha-bathing',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'balinese-canang-sari',title:'叶盘献谢',traditionSlug:'balinese-canang-sari',grade:'C',sensitivity:'中',gestures:['drag'] },
+  { id:'bulgarian-survakane',title:'彩枝贺年',traditionSlug:'bulgarian-survakane',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'setsubun-mamemaki',title:'节分撒豆',traditionSlug:'setsubun-mamemaki',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'sternsinger-house-blessing',title:'门楣祝家',traditionSlug:'sternsinger-house-blessing',grade:'C',sensitivity:'中',gestures:['drag'] },
+  { id:'lam-tsuen-wishing-tree',title:'林村抛愿',traditionSlug:'lam-tsuen-wishing-tree',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'kagami-mochi-offering',title:'镜饼迎岁',traditionSlug:'kagami-mochi-offering',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'romanian-martisor',title:'红白寄春',traditionSlug:'romanian-martisor',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'sumiyoshi-godairiki',title:'三石寄愿',traditionSlug:'sumiyoshi-godairiki',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'polish-oplatek-sharing',title:'薄饼相祝',traditionSlug:'polish-oplatek-sharing',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'greek-new-year-pomegranate',title:'破榴迎新',traditionSlug:'greek-new-year-pomegranate',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'bonfim-ribbon',title:'栏前结愿',traditionSlug:'bonfim-ribbon',grade:'C',sensitivity:'低',gestures:['drag'] },
@@ -191,6 +214,29 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'hiiragi-iwashi',
+  'tamagushi-offering',
+  'tibetan-water-bowls',
+  'kagami-biraki-sake',
+  'tibetan-prayer-flags',
+  'rosh-hashanah-apple-honey',
+  'thai-songkran-elders',
+  'kameido-usokae',
+  'persian-esfand',
+  'mochigase-nagashibina',
+  'greek-vasilopita',
+  'tibetan-khata-greeting',
+  'shichigosan-chitose-ame',
+  'mongolian-ovoo',
+  'fgs-buddha-bathing',
+  'balinese-canang-sari',
+  'bulgarian-survakane',
+  'setsubun-mamemaki',
+  'sternsinger-house-blessing',
+  'lam-tsuen-wishing-tree',
+  'kagami-mochi-offering',
+  'romanian-martisor',
+  'sumiyoshi-godairiki',
   'polish-oplatek-sharing',
   'greek-new-year-pomegranate',
   'bonfim-ribbon',
@@ -276,6 +322,29 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'hiiragi-iwashi': return import('./hiiragi-iwashi/index')
+    case 'tamagushi-offering': return import('./tamagushi-offering/index')
+    case 'tibetan-water-bowls': return import('./tibetan-water-bowls/index')
+    case 'kagami-biraki-sake': return import('./kagami-biraki-sake/index')
+    case 'tibetan-prayer-flags': return import('./tibetan-prayer-flags/index')
+    case 'rosh-hashanah-apple-honey': return import('./rosh-hashanah-apple-honey/index')
+    case 'thai-songkran-elders': return import('./thai-songkran-elders/index')
+    case 'kameido-usokae': return import('./kameido-usokae/index')
+    case 'persian-esfand': return import('./persian-esfand/index')
+    case 'mochigase-nagashibina': return import('./mochigase-nagashibina/index')
+    case 'greek-vasilopita': return import('./greek-vasilopita/index')
+    case 'tibetan-khata-greeting': return import('./tibetan-khata-greeting/index')
+    case 'shichigosan-chitose-ame': return import('./shichigosan-chitose-ame/index')
+    case 'mongolian-ovoo': return import('./mongolian-ovoo/index')
+    case 'fgs-buddha-bathing': return import('./fgs-buddha-bathing/index')
+    case 'balinese-canang-sari': return import('./balinese-canang-sari/index')
+    case 'bulgarian-survakane': return import('./bulgarian-survakane/index')
+    case 'setsubun-mamemaki': return import('./setsubun-mamemaki/index')
+    case 'sternsinger-house-blessing': return import('./sternsinger-house-blessing/index')
+    case 'lam-tsuen-wishing-tree': return import('./lam-tsuen-wishing-tree/index')
+    case 'kagami-mochi-offering': return import('./kagami-mochi-offering/index')
+    case 'romanian-martisor': return import('./romanian-martisor/index')
+    case 'sumiyoshi-godairiki': return import('./sumiyoshi-godairiki/index')
     case 'polish-oplatek-sharing': return import('./polish-oplatek-sharing/index')
     case 'greek-new-year-pomegranate': return import('./greek-new-year-pomegranate/index')
     case 'bonfim-ribbon': return import('./bonfim-ribbon/index')

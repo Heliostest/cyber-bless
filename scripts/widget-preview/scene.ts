@@ -19,7 +19,29 @@ html,body{margin:0;padding:0;width:${width}px;height:${height}px;overflow:hidden
 #stage>canvas{display:block;position:absolute;inset:0;width:100%;height:100%;opacity:1}
 #stage>.scene-overlay-host{display:none!important}
 </style>`);
-const previewProgress = entry.id === 'polish-oplatek-sharing' ? 3 : entry.id === 'crane' || entry.id === 'lantern' ? 1 : 0;
+const completedPreviewProgress: Record<string, number> = {
+  "lam-tsuen-wishing-tree": 3,
+  "sternsinger-house-blessing": 3,
+  "setsubun-mamemaki": 3,
+  "bulgarian-survakane": 3,
+  "balinese-canang-sari": 3,
+  "fgs-buddha-bathing": 3,
+  "mongolian-ovoo": 3,
+  "shichigosan-chitose-ame": 3,
+  "tibetan-khata-greeting": 3,
+  "greek-vasilopita": 3,
+  "mochigase-nagashibina": 3,
+  "persian-esfand": 3,
+  "kameido-usokae": 3,
+  "thai-songkran-elders": 3,
+  "rosh-hashanah-apple-honey": 3,
+  "tibetan-prayer-flags": 3,
+  "kagami-biraki-sake": 3,
+  "tibetan-water-bowls": 3,
+  "tamagushi-offering": 3,
+  "hiiragi-iwashi": 3
+};
+const previewProgress = entry.id === 'polish-oplatek-sharing' ? 3 : completedPreviewProgress[entry.id] ?? (entry.id === 'crane' || entry.id === 'lantern' ? 1 : 0);
 let controller: SceneController;
 const options = { active: true, reducedMotion: true, signal: new AbortController().signal,
   ready: () => { (window as any).__widgetReady = true; },

@@ -1,0 +1,13 @@
+import {describe,it,expect} from 'vitest'
+import * as THREE from 'three'
+import {createUsokaeModel} from './model'
+import {disposeTree} from '../procedural-kit'
+const clean=(m:ReturnType<typeof createUsokaeModel>)=>{m.dispose();disposeTree(m.root)}
+describe('Kameido return and reception',()=>{
+ it('restores identical transforms at every checkpoint boundary',()=>{const m=createUsokaeModel();for(let n=0;n<3;n++){m.pose(n,1);const end=new Map<string,number[]>();m.root.traverse(o=>end.set(o.name,[...o.matrixWorld.elements]));m.pose(n+1,0);m.root.traverse(o=>o.matrixWorld.elements.forEach((v,i)=>expect(v,o.name).toBeCloseTo(end.get(o.name)![i]!,8)))}clean(m)})
+ it('keeps two distinct birds and only moves the currently handled bird',()=>{const m=createUsokaeModel();expect(m.roots).toEqual([m.old.g,m.fresh.g,m.fresh.g]);m.pose(0,0);const fixed=m.fresh.g.position.clone();for(let i=0;i<=100;i++){m.pose(0,i/100);expect(m.fresh.g.position.distanceTo(fixed)).toBe(0);expect(m.old.g.position.distanceTo(m.fresh.g.position)).toBeGreaterThan(.46)}m.pose(1,0);const returned=m.old.g.position.clone();for(let n=1;n<3;n++)for(let i=0;i<=100;i++){m.pose(n,i/100);expect(m.old.g.position.distanceTo(returned)).toBe(0);expect(m.old.g.position.distanceTo(m.fresh.g.position)).toBeGreaterThan(.46)}clean(m)})
+ it('seats old and new wood bases on their actual support surfaces at rest',()=>{const m=createUsokaeModel();m.pose(0,0);expect(m.old.g.position.y).toBeCloseTo(.09);expect(m.fresh.g.position.y).toBeCloseTo(.82);m.pose(3,0);expect(m.old.g.position.y).toBeCloseTo(.82);expect(m.fresh.g.position.y).toBeCloseTo(.09);expect(m.fresh.g.position.x).toBeCloseTo(m.base.position.x);expect(m.fresh.g.position.z).toBeCloseTo(m.base.position.z);clean(m)})
+ it('keeps wood grain and paint attached without mutating or reallocating the meshes',()=>{const m=createUsokaeModel(),before=new Map<string,{g:THREE.BufferGeometry,p:number[]}>();m.subject.traverse(o=>{const g=(o as THREE.Mesh).geometry;if(g)before.set(o.name,{g,p:Array.from(g.getAttribute('position').array)})});for(let n=0;n<4;n++){m.pose(n,.5);m.subject.traverse(o=>{const g=(o as THREE.Mesh).geometry;if(g){expect(g).toBe(before.get(o.name)!.g);expect(Array.from(g.getAttribute('position').array)).toEqual(before.get(o.name)!.p)}})}clean(m)})
+ it('lifts wood bases over the receiving ledge front before translating through it',()=>{const m=createUsokaeModel();for(let i=0;i<=300;i++){const t=i/300;for(const step of[0,1]){m.pose(step,t);const moving=step===0?m.old.g:m.fresh.g;if(moving.position.z<.01&&moving.position.z>-.85)expect(moving.position.y).toBeGreaterThanOrEqual(.82-1e-8)}}clean(m)})
+})
+

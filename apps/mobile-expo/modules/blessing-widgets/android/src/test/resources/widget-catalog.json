@@ -1,5 +1,120 @@
 [
   {
+    "id": "hiiragi-iwashi",
+    "title": "柊鰯守门",
+    "category": "blessing"
+  },
+  {
+    "id": "tamagushi-offering",
+    "title": "玉串奉愿",
+    "category": "blessing"
+  },
+  {
+    "id": "tibetan-water-bowls",
+    "title": "清水七供",
+    "category": "blessing"
+  },
+  {
+    "id": "kagami-biraki-sake",
+    "title": "开樽祝愿",
+    "category": "blessing"
+  },
+  {
+    "id": "tibetan-prayer-flags",
+    "title": "经幡迎风",
+    "category": "blessing"
+  },
+  {
+    "id": "rosh-hashanah-apple-honey",
+    "title": "蘸蜜迎岁",
+    "category": "blessing"
+  },
+  {
+    "id": "thai-songkran-elders",
+    "title": "浇水敬老",
+    "category": "blessing"
+  },
+  {
+    "id": "kameido-usokae",
+    "title": "木鷽迎福",
+    "category": "blessing"
+  },
+  {
+    "id": "persian-esfand",
+    "title": "熏籽祈安",
+    "category": "blessing"
+  },
+  {
+    "id": "mochigase-nagashibina",
+    "title": "纸雏祈安",
+    "category": "blessing"
+  },
+  {
+    "id": "greek-vasilopita",
+    "title": "新岁分糕",
+    "category": "blessing"
+  },
+  {
+    "id": "tibetan-khata-greeting",
+    "title": "白绢迎客",
+    "category": "blessing"
+  },
+  {
+    "id": "shichigosan-chitose-ame",
+    "title": "千岁赠糖",
+    "category": "blessing"
+  },
+  {
+    "id": "mongolian-ovoo",
+    "title": "敖包祈护",
+    "category": "blessing"
+  },
+  {
+    "id": "fgs-buddha-bathing",
+    "title": "浴佛发愿",
+    "category": "blessing"
+  },
+  {
+    "id": "balinese-canang-sari",
+    "title": "叶盘献谢",
+    "category": "blessing"
+  },
+  {
+    "id": "bulgarian-survakane",
+    "title": "彩枝贺年",
+    "category": "blessing"
+  },
+  {
+    "id": "setsubun-mamemaki",
+    "title": "节分撒豆",
+    "category": "blessing"
+  },
+  {
+    "id": "sternsinger-house-blessing",
+    "title": "门楣祝家",
+    "category": "blessing"
+  },
+  {
+    "id": "lam-tsuen-wishing-tree",
+    "title": "林村抛愿",
+    "category": "wish"
+  },
+  {
+    "id": "kagami-mochi-offering",
+    "title": "镜饼迎岁",
+    "category": "blessing"
+  },
+  {
+    "id": "romanian-martisor",
+    "title": "红白寄春",
+    "category": "blessing"
+  },
+  {
+    "id": "sumiyoshi-godairiki",
+    "title": "三石寄愿",
+    "category": "wish"
+  },
+  {
     "id": "polish-oplatek-sharing",
     "title": "薄饼相祝",
     "category": "blessing"

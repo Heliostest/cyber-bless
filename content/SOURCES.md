@@ -4183,3 +4183,20 @@
 - https://doi.org/10.33182/ks.v4i2.426
 - https://doi.org/10.1163/157338499X00056
 - https://www.yazda.org/final-report-of-investigation-into-cultural-heritage-destruction-during-the-islamic-state-s-genocide-against-the-yazidis
+
+
+## 白绢迎客 · 2026-10-20
+
+迎客献哈达的善愿赠礼；实际读取范围及产品编排见 content/traditions/tibetan-khata-greeting.md 与 docs/research/2026-10-20-tibetan-khata-greeting.md。
+
+- https://www.salisbury.edu/academic-offices/liberal-arts/cultural-affairs/monks-residency/offering-scarves.aspx
+- https://www.dalailama.com/news/2018/meeting-with-tibet-supporters-and-public-talk-in-vilnius
+- https://tnp.org/why-do-tibetans-give-white-scarves-or-kataks/
+
+
+## mongolian-ovoo · 敖包祈护
+
+- Kip G. Hutchins，University of Wisconsin–Madison，2020博士论文 On Wooden Horses，第五章纸129–130（PDF140–141）。
+- https://asset.library.wisc.edu/1711.dl/VUURGDUITIQNX84/R/file-c2529.pdf
+- 2026-10-20实际下载并读正文；支持石堆、顺时针三圈、地面取石添石及向山岳/湖泊祈护。网页相关页超时另记；不作为已读证据。
+- 产品边界与逐项来源见 content/traditions/mongolian-ovoo.md、docs/research/2026-10-20-mongolian-ovoo.md。

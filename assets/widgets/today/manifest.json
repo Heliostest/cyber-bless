@@ -1,7 +1,789 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "7e97225afa1df6fa049c227777ce604e0ca69d53392c34a14cc40132430a0a89",
+  "revision": "9e785d87c52b7fcd0c2864216cbb7f1ad1bee12f14f623ea427a51a2c086844c",
   "scenes": [
+    {
+      "id": "hiiragi-iwashi",
+      "engine": "hiiragi-iwashi@1",
+      "small": {
+        "file": "hiiragi-iwashi-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "22e1a0faba1a7dcd53692a2fa3356219e5c1a2a1e6c5743a9c114b33a212ae67",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "hiiragi-iwashi-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "932d3e88336a2b5e8da96f99c81bfbc76e6eaf034f851ec1027094db4ccd486b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "hiiragi-iwashi-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "6b4036777c4740a6bacaad06ff6db2f8ee185a33919efeb878d6966736bc7798",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "tamagushi-offering",
+      "engine": "tamagushi-offering@1",
+      "small": {
+        "file": "tamagushi-offering-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "bfc2974d74cefed93112ce8b7b8351c3e06cd324bfc6612c5b2a2e83817955ed",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "tamagushi-offering-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "8723187ca94d7399b74c147c96a4297758970939dd85f640408f4726a1df42e3",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "tamagushi-offering-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "64a5a485b28fa459e698a33465a545c8175e538094e78de16f602b237857557f",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "tibetan-water-bowls",
+      "engine": "tibetan-water-bowls@1",
+      "small": {
+        "file": "tibetan-water-bowls-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "58a852f48ae913f46d81225935c265d103dee76acb074e48ae64bed1e102017a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "tibetan-water-bowls-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "2a4c053c178aa2bdfb31b0d434a96abb5e41eb23b91c19eec74312e36b481c4e",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "tibetan-water-bowls-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "9fddac49621b907e19c0efcd09d1c0fd9769a72ce94b883686f58fd9bf4e01b2",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "kagami-biraki-sake",
+      "engine": "kagami-biraki-sake@1",
+      "small": {
+        "file": "kagami-biraki-sake-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "89691ea6ce25ba7386cebdba723825585992aa04c79b94b21c61311326fb2e2c",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "kagami-biraki-sake-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "c405d63a1b0457216a1e98869dd4daf2dccb7a979316132b0aa58b93aa808b3a",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "kagami-biraki-sake-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "285a08fd2b9900eaf5fa49868e590a8db6bef0b15b47efb73565dfc30a248616",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "tibetan-prayer-flags",
+      "engine": "tibetan-prayer-flags@1",
+      "small": {
+        "file": "tibetan-prayer-flags-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "0ce767646b28d8b9089ef5ab80261b4a59a578954b43cff69dcff358895358e8",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "tibetan-prayer-flags-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "3528c1abb593c416fdebb6d71c7691e7a475de25635cdcdb0fbbb19b09ca7e45",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "tibetan-prayer-flags-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "9bf35c4f9e81271e48c0c94daf55cbfbababf719987d207dc6791ba1447aaad0",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "rosh-hashanah-apple-honey",
+      "engine": "rosh-hashanah-apple-honey@1",
+      "small": {
+        "file": "rosh-hashanah-apple-honey-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "217ebaef6c96d1ea9e3560a7ae3245780a4c4892f5101d1fd20c9c4bbc305990",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "rosh-hashanah-apple-honey-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "aca9e2ef35842f8f972b51cc36f021dbbd6ed95b5a924f928be69b09e9a9e3fd",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "rosh-hashanah-apple-honey-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "4fdaa2b9d0e750ff9e754289f71bca3d3f6b9bcdbe39b83f38279dfcb04dc9cd",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "thai-songkran-elders",
+      "engine": "thai-songkran-elders@1",
+      "small": {
+        "file": "thai-songkran-elders-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "7d2033fd37fe7f16ebf74d2fd153838b68ac976923942e57a8fac803b8babdbc",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "thai-songkran-elders-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "c924411261eea6cf2b7b1dc22f539b4fd00ea499b616b46a023a8fda2c5fdc1c",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "thai-songkran-elders-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "a0d024882e64ec08d478b87c333faf01ec239ef4ad637c0588034323ebadda39",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "kameido-usokae",
+      "engine": "kameido-usokae@1",
+      "small": {
+        "file": "kameido-usokae-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "62cef38ae1596359a4a9401e2cfe8be1da5abbbc88d5ca6f0b5d819f4eee8d70",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "kameido-usokae-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "07430def7851abe47536f42cd7497ec9008aff93279227eb6acffc5814868dec",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "kameido-usokae-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8a225c6471d507034c5a1624672bc4c30790e9676fb273f8bb67aea60584b585",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "persian-esfand",
+      "engine": "persian-esfand@1",
+      "small": {
+        "file": "persian-esfand-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "d86644f0c27d5e3b26e59dcb81ad9c1913ef05dcaafe1ad6299f5f49f1f33d9e",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "persian-esfand-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "2635b4202e61a8ef02b2462e6711154b5c0fb1c8031b34db3bdcfe5c590fa34e",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "persian-esfand-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "6a8e8b01f91312c80e9e59a9e61f058ebdf1c31b2e5ea8ee543d5b579f0f7773",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "mochigase-nagashibina",
+      "engine": "mochigase-nagashibina@1",
+      "small": {
+        "file": "mochigase-nagashibina-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "cda90f56c620a5999d9aa7094b6b278070a1f37d1cce2002caccce16c92bdd61",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "mochigase-nagashibina-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e780be2d789032d6e7cc0550359f25cb7ed95d398b0a434c16b2ee3d9db44055",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "mochigase-nagashibina-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "2871e84da40702674ac0671d290652bf63ce52b498b12b1167e0b111e7eafb85",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "greek-vasilopita",
+      "engine": "greek-vasilopita@1",
+      "small": {
+        "file": "greek-vasilopita-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "483818aa5bd4abf18cc8f5190924af6ae5251e8d06299d41ea7b96c2a8a70b7a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "greek-vasilopita-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "61a6f87ef1c030c0778aa54fd4e89a41642bec297c66050ed83a24513b10d610",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "greek-vasilopita-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "695767c6cd6a1ce3daf2823655209f5836cef11ee7cf4aa8a9000324eebafb58",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "tibetan-khata-greeting",
+      "engine": "tibetan-khata-greeting@1",
+      "small": {
+        "file": "tibetan-khata-greeting-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "41f32b52a95679c761c7e98b51ed49d5d214bbf765f1848278496dd672247b27",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "tibetan-khata-greeting-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "24733779fec2f31625da99bd6d86170f6285ae7b3a2f3220d7a9d07332ba8fdc",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "tibetan-khata-greeting-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "ffad088df3f3c1200c4d4ee26d983cb727f72da3c431788aa00f44165c2990c1",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "shichigosan-chitose-ame",
+      "engine": "shichigosan-chitose-ame@1",
+      "small": {
+        "file": "shichigosan-chitose-ame-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "08217b9ea207aaf5cbd5ac4d9a4c2299a06a53a2b8b148787cab320121c830c8",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "shichigosan-chitose-ame-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "9644d3c9a4dbf06773e5b956eb6c1e1ad333aeaf45010165a21e543db3d1d65a",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "shichigosan-chitose-ame-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "952983f2ba9ab78183797bbc926c2d26f743bdffb823e4cf50b857bb45bfb6c9",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "mongolian-ovoo",
+      "engine": "mongolian-ovoo@1",
+      "small": {
+        "file": "mongolian-ovoo-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "b8a19f190d6178518bf81eeff735d54fcb8d3a0462a8ea12f81b1dc91d1a5da8",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "mongolian-ovoo-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e26ad19cd867daab18dda745fb3243ea9c87953425ab914bc9e8580118e56f77",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "mongolian-ovoo-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "67fab327640e8947be3c01b639d02f57fe0153245b43cebc3926c3512ec6b5bc",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "fgs-buddha-bathing",
+      "engine": "fgs-buddha-bathing@1",
+      "small": {
+        "file": "fgs-buddha-bathing-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "76e4204cdaf73db999838ec4356d3dc36031ec68645a04915171fa531521eb91",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "fgs-buddha-bathing-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "11852b46a8840d5613e39fdabbc2172bf5e40d45e57c3489da65f5abac801df9",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "fgs-buddha-bathing-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "7850516109b22a6467ba34825d208ba8e32821e74f76a9dc619844b7302a5c92",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "balinese-canang-sari",
+      "engine": "balinese-canang-sari@1",
+      "small": {
+        "file": "balinese-canang-sari-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "51143df31f1959129c5c00f47616e51c3a6287f6c25d5fef3d41c4f83be4a6c3",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "balinese-canang-sari-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "fe5d5e09622b91f74f4e1c7af6cdc5254fc46c31b67f839da115e17e7e6c4b31",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "balinese-canang-sari-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "06ac8c5c9c92087ef633181d6c43dcedee896b0d795c0a76e0ae736aca8c1aff",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "bulgarian-survakane",
+      "engine": "bulgarian-survakane@1",
+      "small": {
+        "file": "bulgarian-survakane-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "45f406b1a4e6da71db65f74dff2420551fe22c85802e8d4c6abfc24ef0b615e1",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "bulgarian-survakane-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "cd08e15c1fa608eb94dedfbf92dba2e6dda4fa74a75e5fd1856c103243731917",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "bulgarian-survakane-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8b570d6cfe6ab9b9f1a982e6636e158bf7d4db9d54d50ca0a7afc35713036de9",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "setsubun-mamemaki",
+      "engine": "setsubun-mamemaki@1",
+      "small": {
+        "file": "setsubun-mamemaki-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "c4cf03f5940ace91b074a94f86443796f29e28ab49c604108120fc35568619d1",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "setsubun-mamemaki-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "433b7c86b872adf3a8a8a803fa8004c111289b3828a798ae3e713ad5982ca51e",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "setsubun-mamemaki-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "2fe9b5ee71d9699ae830a1458a7178a2c1ae4910f3575b2013138df3d464b07a",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "sternsinger-house-blessing",
+      "engine": "sternsinger-house-blessing@1",
+      "small": {
+        "file": "sternsinger-house-blessing-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "a6b2eab9e46e0a8e58296f1c80c14255afcfab75dc69a49f1877befb89a46dfe",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "sternsinger-house-blessing-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "6599b1a8c615a0fcd97ec9ffd971761eaa2ace2078123f979515d8c74a2cff1e",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "sternsinger-house-blessing-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "5fee3f54487f56fe3d66624a1b9ff2b3c08e8547459af6700a85852820077d37",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "lam-tsuen-wishing-tree",
+      "engine": "lam-tsuen-wishing-tree@1",
+      "small": {
+        "file": "lam-tsuen-wishing-tree-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "7147ce40d77c1a2151011d5f235bb46db6c3adbb751ff6b13ac7f237ad29f1f5",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "lam-tsuen-wishing-tree-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "b01b65ef6f543909b206f08a20289229ca2354b006e2e5a42156d470140c865f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "lam-tsuen-wishing-tree-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "86fd1f32cdca4f93ddc643d49405da0dbd1872a979df6b955a1e670a6f34e8d8",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "kagami-mochi-offering",
+      "engine": "kagami-mochi-offering@1",
+      "small": {
+        "file": "kagami-mochi-offering-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "e28efe527b135ebb098c818a44db57630b1f2357d0ee3db6b9fe4bb8f00a2831",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "kagami-mochi-offering-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "2206fc9e768ffe5322ae4d68322fbff95f42211edf40d49cde96226d90b184dc",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "kagami-mochi-offering-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "88b69c20a1396e95afc312c0e5d9b2cbcf08f64a0ee7f98af1e84a25655964e1",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "romanian-martisor",
+      "engine": "romanian-martisor@1",
+      "small": {
+        "file": "romanian-martisor-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "8eb59120b891c0c2102c6cbcb46107f9f1bf76cb1af7db04d85c88460b22b1a6",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "romanian-martisor-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "591e7a9d51593c7235bdf285e99901d8f3b903805e5f11dafe62b391eab74818",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "romanian-martisor-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "1733c88cf18d4ec8fef882493d4eda687f23b59c87506227dbdd363b60b5db70",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
+    {
+      "id": "sumiyoshi-godairiki",
+      "engine": "sumiyoshi-godairiki@1",
+      "small": {
+        "file": "sumiyoshi-godairiki-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "c76df45d3597d089e553461ca514f6862025dad032beeb214e2668055d8fb15e",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "sumiyoshi-godairiki-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "a2b8ad5d56feef0ca0b95ea5f0d58170774565a427c55a727dad058820b33886",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "sumiyoshi-godairiki-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "7d118d87cbd85a283e07a0f0e2c753204936b57c19d52884c44c022cdb2ed7be",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "polish-oplatek-sharing",
       "engine": "polish-oplatek-sharing@1",

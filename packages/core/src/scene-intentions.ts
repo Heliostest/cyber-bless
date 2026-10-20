@@ -16,6 +16,98 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'hiiragi-iwashi': {
+    kind: 'blessing', label: '门边安放，寄托护家心意', optionalWish: false,
+    action: '拿起柊枝，插合烤鱼头，再安放门边。',
+  },
+  'tamagushi-offering': {
+    kind: 'blessing', label: '向神明奉上祈愿', optionalWish: false,
+    action: '手持玉串转向，将家人平安的祈愿寄于枝叶，再向前供放。',
+  },
+  'tibetan-water-bowls': {
+    kind: 'blessing', label: '供养清水，愿众生离苦', optionalWish: false,
+    action: '提起水壶，从左至右逐碗添水，再收回供台一侧。',
+  },
+  'kagami-biraki-sake': {
+    kind: 'blessing', label: '祝愿新开始健康幸福', optionalWish: false,
+    action: '取起木槌，轻叩预松盖缝，再收回樽旁。',
+  },
+  'tibetan-prayer-flags': {
+    kind: 'blessing', label: '为众生祈愿安康', optionalWish: false,
+    action: '把完整经幡挂到离地的高处，寄托愿众生受益安乐的心意。',
+  },
+  'rosh-hashanah-apple-honey': {
+    kind: 'blessing', label: '祈愿美好甜蜜的新年', optionalWish: false,
+    action: '拿起苹果片，蘸入蜂蜜，再提起回盘。',
+  },
+  'thai-songkran-elders': {
+    kind: 'blessing', label: '向长辈求一份新岁祝福', optionalWish: false,
+    action: '向长辈手上缓缓浇水，表达敬意，祝愿长辈安康。',
+  },
+  'kameido-usokae': {
+    kind: 'blessing', label: '祈愿凶事转吉，迎接新年', optionalWish: false,
+    action: '送还旧木鷽，接取新木鷽，将它安放好。',
+  },
+  'persian-esfand': {
+    kind: 'blessing', label: '为家人寄一份平安', optionalWish: false,
+    action: '让锅中的种子生烟，挥巾散开烟气，寄托家人平安的心愿。',
+  },
+  'mochigase-nagashibina': {
+    kind: 'blessing', label: '祈愿无病息灾与平安成长', optionalWish: false,
+    action: '托起圆形草托，移向缓流，让纸雏随水漂去。',
+  },
+  'greek-vasilopita': {
+    kind: 'blessing', label: '把新年祝愿带给家人', optionalWish: false,
+    action: '将切好的新年糕送到家人盘里，愿家人在新年里健康安好。',
+  },
+  'tibetan-khata-greeting': {
+    kind: 'blessing', label: '向来客送上幸福祝愿', optionalWish: false,
+    action: '双手托起白绢，递给来客，送上幸福祝愿。',
+  },
+  'shichigosan-chitose-ame': {
+    kind: 'blessing', label: '把成长祝愿送给孩子', optionalWish: false,
+    action: '提起千岁饴糖袋，递给眼前的孩子，愿孩子健康成长、长寿安好。',
+  },
+  'mongolian-ovoo': {
+    kind: 'blessing', label: '向山岳与湖泊祈求护佑', optionalWish: false,
+    action: '携石顺时针绕行三圈，向敖包添石。',
+  },
+  'fgs-buddha-bathing': {
+    kind: 'blessing', label: '浴佛发愿，愿众生离苦', optionalWish: false,
+    action: '提起水杓，向太子像右肩、左肩、右肩依次倾水，发愿止恶行善、度众生。',
+  },
+  'balinese-canang-sari': {
+    kind: 'blessing', label: '向神明献上感恩', optionalWish: false,
+    action: '放入白花，托起盛好供品的叶盘，轻放到田边供台上。',
+  },
+  'bulgarian-survakane': {
+    kind: 'blessing', label: '新年问候，祝亲友健康', optionalWish: false,
+    action: '提起彩枝，移到亲友背后，轻拍后收回，送上健康祝愿。',
+  },
+  'setsubun-mamemaki': {
+    kind: 'blessing', label: '迎福入家，祝家人安康', optionalWish: false,
+    action: '推开木扇，将木枡中的炒豆先撒向屋外，再轻撒到屋内。',
+  },
+  'sternsinger-house-blessing': {
+    kind: 'blessing', label: '愿基督祝福这所房屋', optionalWish: false,
+    action: '拿起粉笔，在门楣写下年份、星与 C+M+B，再把粉笔收好。',
+  },
+  'lam-tsuen-wishing-tree': {
+    kind: 'wish', label: '把平安的心愿挂上树枝', optionalWish: false,
+    action: '写下平安，将宝牒与塑料橙系在一起，再抛挂到仿真许愿树的枝头。',
+  },
+  'kagami-mochi-offering': {
+    kind: 'blessing', label: '寄一份代代兴盛的祝愿', optionalWish: false,
+    action: '叠好两层圆饼，顶上放橙，准备迎接年神的供物，寄托家族代代兴盛的祝愿。',
+  },
+  'romanian-martisor': {
+    kind: 'blessing', label: '留一份迎春的健康祝愿', optionalWish: false,
+    action: '提起已解下的红白春绳，将绳环套上开花的树枝，轻放流苏，寄托迎春的健康祝愿。',
+  },
+  'sumiyoshi-godairiki': {
+    kind: 'wish', label: '随三石寄托心愿', optionalWish: false,
+    action: '拾起五、大、力三颗字石，逐一放入御守袋，带着向神明祈愿的心意把它们收好。',
+  },
   'polish-oplatek-sharing': {
     kind: 'blessing', label: '向家人送上祝愿', optionalWish: false,
     action: '平安夜分一片薄饼，与家人互致健康平安的祝愿。',

@@ -4,10 +4,32 @@ import { APP_HIDDEN_SCENE_IDS, BLESSING_SCENE_IDS, WISH_SCENE_IDS, builtInScenes
 import { createWidgetSnapshot, selectWidgetDay } from './widgets';
 
 describe('App scene availability', () => {
-  it('keeps exactly the 41 approved scenes visible and all 108 sources available', () => {
+  it('keeps exactly the 64 approved scenes visible and all 131 sources available', () => {
     const approved = [
     "polish-oplatek-sharing",
-    "udo-undama", "zeniarai-coin-washing", "chinowa-kuguri", "bonfim-ribbon", "greek-new-year-pomegranate",
+    "tamagushi-offering",
+    "tibetan-water-bowls",
+    "kagami-biraki-sake",
+    "tibetan-prayer-flags",
+    "rosh-hashanah-apple-honey",
+    "thai-songkran-elders",
+    "kameido-usokae",
+    "persian-esfand",
+    "mochigase-nagashibina",
+    "greek-vasilopita",
+    "tibetan-khata-greeting",
+    "shichigosan-chitose-ame",
+    "mongolian-ovoo",
+    "fgs-buddha-bathing",
+    "balinese-canang-sari",
+    "bulgarian-survakane",
+    "setsubun-mamemaki",
+    "sternsinger-house-blessing",
+    "lam-tsuen-wishing-tree",
+    "kagami-mochi-offering",
+    "romanian-martisor",
+    "sumiyoshi-godairiki",
+    "udo-undama", "zeniarai-coin-washing", "chinowa-kuguri", "bonfim-ribbon", "greek-new-year-pomegranate", "hiiragi-iwashi",
     "aland-votive-ship",
     "barcelos-clay-rooster",
     "basque-sunflower",
@@ -44,7 +66,7 @@ describe('App scene availability', () => {
     "woodfish",
     "yeondeunghoe"
 ];
-    expect(builtInScenes).toHaveLength(108);
+    expect(builtInScenes).toHaveLength(131);
     expect(APP_HIDDEN_SCENE_IDS).toHaveLength(67);
     expect(builtInScenes.filter(isSceneVisibleInApp).map(e => e.id).sort()).toEqual(approved.sort());
     expect(new Set(APP_HIDDEN_SCENE_IDS).size).toBe(67);

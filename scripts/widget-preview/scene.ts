@@ -35,7 +35,8 @@ const completedPreviewProgress: Record<string, number> = {
   "kameido-usokae": 3,
   "thai-songkran-elders": 3,
   "rosh-hashanah-apple-honey": 3,
-  "tibetan-prayer-flags": 3
+  "tibetan-prayer-flags": 3,
+  "kagami-biraki-sake": 3
 };
 const previewProgress = completedPreviewProgress[entry.id] ?? (entry.id === 'crane' || entry.id === 'lantern' ? 1 : 0);
 let controller: SceneController;

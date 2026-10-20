@@ -101,6 +101,7 @@ describe("builtInScenes narratives", () => {
       "japanese-koinobori",
       "japanese-shishi-odoshi",
       "japanese-wagasa",
+      "kagami-biraki-sake",
       "kagami-mochi-offering",
       "kameido-usokae",
       "korean-bojagi-wrap",

@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "ee60f93924515120247e93d86c13005548551b225e7c172467e8d080e2e58168",
+  "revision": "fdfacc3dc307fca816a53fcef8c07209bc168f1bdca6b62bd3e0a66050e07c07",
   "scenes": [
+    {
+      "id": "kagami-biraki-sake",
+      "engine": "kagami-biraki-sake@1",
+      "small": {
+        "file": "kagami-biraki-sake-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "89691ea6ce25ba7386cebdba723825585992aa04c79b94b21c61311326fb2e2c",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "kagami-biraki-sake-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "c405d63a1b0457216a1e98869dd4daf2dccb7a979316132b0aa58b93aa808b3a",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "kagami-biraki-sake-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "285a08fd2b9900eaf5fa49868e590a8db6bef0b15b47efb73565dfc30a248616",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "tibetan-prayer-flags",
       "engine": "tibetan-prayer-flags@1",

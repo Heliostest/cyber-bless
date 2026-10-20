@@ -132,6 +132,7 @@ describe("builtInScenes narratives", () => {
       "puerto-rican-guiro",
       "purepecha-copper-bowl",
       "romanian-martisor",
+      "rosh-hashanah-apple-honey",
       "russian-matryoshka",
       "scottish-plunge-churn",
       "setsubun-mamemaki",

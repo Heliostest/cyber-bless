@@ -4,6 +4,7 @@ package com.helio.blessingwidgets
 internal object WidgetCatalog {
   val hiddenSceneIds = setOf("japanese-daruma-otoshi", "paper-pinwheel", "chinese-steelyard", "garden-croquet", "welsh-drop-spindle", "scottish-plunge-churn", "irish-bodhran", "french-coffee-mill", "japanese-wagasa", "spanish-castanets", "japanese-shishi-odoshi", "german-jumping-jack", "finnish-kantele", "estonian-village-swing", "french-petanque", "english-hearth-bellows", "mexican-metate", "czech-wooden-ratchet", "puerto-rican-guiro", "valencian-folding-fan", "mexican-tortilla-press", "ghanaian-oware", "chinese-rattle-drum", "chinese-tangram", "malawi-sansi", "japanese-kendama", "russian-matryoshka", "korean-yutnori", "chinese-diabolo", "indian-charkha", "german-nutcracker", "mexican-molinillo", "chinese-suanpan", "mongolian-felt-ger", "peruvian-engraved-gourd", "venetian-glass-bead", "vietnamese-bamboo-dragonfly", "turkish-ebru-paper", "indonesian-angklung", "weifang-paper-kite", "chinese-shadow-puppet", "faroese-wool-knit", "niue-shell-necklace", "polish-paper-cut", "uzbek-clay-bowl", "chinese-woodblock-print", "czech-bead-star", "fijian-woven-fan", "amazigh-woven-rug", "slovak-wire-bird", "hungarian-embroidery-hoop", "andalusian-ceramic-tile", "sicilian-painted-cart", "bai-indigo-cloth", "ndebele-painted-house", "purepecha-copper-bowl", "finnish-birch-basket", "catalan-festival-giant", "breton-banner", "dalarna-wooden-horse", "blang-tea", "minangkabau-spinning-top", "hongsheng-red-string", "czech-pilgrim-journal", "celtic-folk-spring", "theravada-water", "lantern")
   val scenes = mapOf(
+    "rosh-hashanah-apple-honey" to WidgetScene("蘸蜜迎岁", "blessing"),
     "thai-songkran-elders" to WidgetScene("浇水敬老", "blessing"),
     "kameido-usokae" to WidgetScene("木鷽迎福", "blessing"),
     "persian-esfand" to WidgetScene("熏籽祈安", "blessing"),
@@ -132,6 +133,7 @@ internal object WidgetCatalog {
 
   fun cover(key: String?, size: WidgetCoverSize): Int {
     val covers = when (key) {
+      "rosh-hashanah-apple-honey" -> intArrayOf(R.drawable.blessing_preview_rosh_hashanah_apple_honey_small, R.drawable.blessing_preview_rosh_hashanah_apple_honey_medium, R.drawable.blessing_preview_rosh_hashanah_apple_honey_large)
       "thai-songkran-elders" -> intArrayOf(R.drawable.blessing_preview_thai_songkran_elders_small, R.drawable.blessing_preview_thai_songkran_elders_medium, R.drawable.blessing_preview_thai_songkran_elders_large)
       "kameido-usokae" -> intArrayOf(R.drawable.blessing_preview_kameido_usokae_small, R.drawable.blessing_preview_kameido_usokae_medium, R.drawable.blessing_preview_kameido_usokae_large)
       "persian-esfand" -> intArrayOf(R.drawable.blessing_preview_persian_esfand_small, R.drawable.blessing_preview_persian_esfand_medium, R.drawable.blessing_preview_persian_esfand_large)

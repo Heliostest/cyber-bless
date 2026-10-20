@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "e1aa4c65db37e4f163c0192ba47e2c57b106d6ee08114072f02dd1aa03889ae9",
+  "revision": "8c1ed8ed6f071e006daf88d8f90d5a32b55bf41c71632a9621813eeeacf95024",
   "scenes": [
+    {
+      "id": "rosh-hashanah-apple-honey",
+      "engine": "rosh-hashanah-apple-honey@1",
+      "small": {
+        "file": "rosh-hashanah-apple-honey-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "217ebaef6c96d1ea9e3560a7ae3245780a4c4892f5101d1fd20c9c4bbc305990",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "rosh-hashanah-apple-honey-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "aca9e2ef35842f8f972b51cc36f021dbbd6ed95b5a924f928be69b09e9a9e3fd",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "rosh-hashanah-apple-honey-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "4fdaa2b9d0e750ff9e754289f71bca3d3f6b9bcdbe39b83f38279dfcb04dc9cd",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "thai-songkran-elders",
       "engine": "thai-songkran-elders@1",

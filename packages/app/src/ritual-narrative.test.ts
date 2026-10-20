@@ -147,6 +147,7 @@ describe("builtInScenes narratives", () => {
       "sternsinger-house-blessing",
       "sumiyoshi-godairiki",
       "tanzaku-tanabata",
+      "thai-songkran-elders",
       "theravada-water",
       "tibetan-khata-greeting",
       "tibetan-wheel",

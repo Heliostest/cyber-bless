@@ -38,6 +38,7 @@ it.each([0,1,2])('cancels the real Chinowa walking view through production adapt
 })
 
 it.each([
+  ['thai-songkran-elders', 0, 'songkran-bowl', 'songkran-cup-root', [0,0,0], [0,.018,0], [0,-60]],
   ['kameido-usokae', 0, 'old-wood-uso', 'old-wood-uso', [0,.82,.225], [0,0,0], [0,-60]],
   ['persian-esfand', 0, 'esfand-grip', 'esfand-pan-root', [0,.0375,0], [0,0,0], [0,-60]],
   ['mochigase-nagashibina', 0, 'nagashibina-tray', 'nagashibina-tray', [0,.075,.37], [0,0,0], [0,-60]],

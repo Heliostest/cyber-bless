@@ -80,6 +80,7 @@ describe("scene placement", () => {
     ["korean-yutnori", "korean-yutnori", false],
     ["chinese-diabolo", "chinese-diabolo", false],
     ["chinese-tangram", "chinese-tangram", false],
+    ["thai-songkran-elders", "thai-songkran-elders", false],
     ["kameido-usokae", "kameido-usokae", false],
     ["persian-esfand", "persian-esfand", false],
     ["mochigase-nagashibina", "mochigase-nagashibina", false],
@@ -179,6 +180,7 @@ describe("scene placement", () => {
   });
   it("splits blessing vs wish scene ids", () => {
     expect([...BLESSING_SCENE_IDS]).toEqual([
+      "thai-songkran-elders",
       "kameido-usokae",
       "persian-esfand",
       "mochigase-nagashibina",

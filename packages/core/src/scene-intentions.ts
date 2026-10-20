@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'mongolian-ovoo': {
+    kind: 'blessing', label: '向山岳与湖泊祈求护佑', optionalWish: false,
+    action: '携石顺时针绕行三圈，向敖包添石。',
+  },
   'fgs-buddha-bathing': {
     kind: 'blessing', label: '浴佛发愿，愿众生离苦', optionalWish: false,
     action: '提起水杓，向太子像右肩、左肩、右肩依次倾水，发愿止恶行善、度众生。',

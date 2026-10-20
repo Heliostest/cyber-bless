@@ -1,5 +1,10 @@
 [
   {
+    "id": "mongolian-ovoo",
+    "title": "敖包祈护",
+    "category": "blessing"
+  },
+  {
     "id": "fgs-buddha-bathing",
     "title": "浴佛发愿",
     "category": "blessing"

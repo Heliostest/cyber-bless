@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id:'mongolian-ovoo',title:'敖包祈护',traditionSlug:'mongolian-ovoo',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'fgs-buddha-bathing',title:'浴佛发愿',traditionSlug:'fgs-buddha-bathing',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'balinese-canang-sari',title:'叶盘献谢',traditionSlug:'balinese-canang-sari',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'bulgarian-survakane',title:'彩枝贺年',traditionSlug:'bulgarian-survakane',grade:'C',sensitivity:'低',gestures:['drag'] },
@@ -199,6 +200,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'mongolian-ovoo',
   'fgs-buddha-bathing',
   'balinese-canang-sari',
   'bulgarian-survakane',
@@ -292,6 +294,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'mongolian-ovoo': return import('./mongolian-ovoo/index')
     case 'fgs-buddha-bathing': return import('./fgs-buddha-bathing/index')
     case 'balinese-canang-sari': return import('./balinese-canang-sari/index')
     case 'bulgarian-survakane': return import('./bulgarian-survakane/index')

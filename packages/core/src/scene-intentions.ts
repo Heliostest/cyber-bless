@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'tibetan-khata-greeting': {
+    kind: 'blessing', label: '向来客送上幸福祝愿', optionalWish: false,
+    action: '双手托起白绢，递给来客，送上幸福祝愿。',
+  },
   'shichigosan-chitose-ame': {
     kind: 'blessing', label: '把成长祝愿送给孩子', optionalWish: false,
     action: '提起千岁饴糖袋，递给眼前的孩子，愿孩子健康成长、长寿安好。',

@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "934e6ced5629fea760978e25ec4d201caa73c26fb31e86c6bd42ef5968dbbe8a",
+  "revision": "23cf478c792d50b9f7d04cf72a38fe5d36850eb4488536a0af64e1afafba37a9",
   "scenes": [
+    {
+      "id": "tibetan-khata-greeting",
+      "engine": "tibetan-khata-greeting@1",
+      "small": {
+        "file": "tibetan-khata-greeting-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "41f32b52a95679c761c7e98b51ed49d5d214bbf765f1848278496dd672247b27",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "tibetan-khata-greeting-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "24733779fec2f31625da99bd6d86170f6285ae7b3a2f3220d7a9d07332ba8fdc",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "tibetan-khata-greeting-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "ffad088df3f3c1200c4d4ee26d983cb727f72da3c431788aa00f44165c2990c1",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "shichigosan-chitose-ame",
       "engine": "shichigosan-chitose-ame@1",

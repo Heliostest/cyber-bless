@@ -38,6 +38,7 @@ it.each([0,1,2])('cancels the real Chinowa walking view through production adapt
 })
 
 it.each([
+  ['tibetan-khata-greeting', 0, 'khata-scarf', 'khata-scarf', [0,.025,0], [0,0,0], [0,-60]],
   ['shichigosan-chitose-ame', 0, 'chitose-grip', 'chitose-bag-root', [0,0,.025], [0,0,0], [0,-60]],
   ['mongolian-ovoo', 0, 'ovoo-offering-0', 'ovoo-offering-0', [0,.05,.02], [0,0,0], [-60,0]],
   ['fgs-buddha-bathing', 0, 'bathing-grip', 'bathing-ladle-root', [0,0,.025], [0,0,0], [0,-60]],

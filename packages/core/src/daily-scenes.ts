@@ -81,6 +81,7 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "tibetan-khata-greeting",
   "shichigosan-chitose-ame",
   "mongolian-ovoo",
   "fgs-buddha-bathing",
@@ -207,6 +208,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"tibetan-khata-greeting",title:"白绢迎客",engine:"tibetan-khata-greeting@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-khata-greeting",narrative:"在藏族迎客礼俗中，献上哈达表达欢迎与美好祝愿。双手托起预先折好的白绢，递给来客，让心意随礼巾交到对方手中。" },
   { id:"shichigosan-chitose-ame",title:"千岁赠糖",engine:"shichigosan-chitose-ame@1",revision:"bundled",manifestUrl:"",traditionSlug:"shichigosan-chitose-ame",narrative:"在日本七五三的成长庆贺中，父母将寄托长寿心意的千岁饴送给孩子。细长的红白糖装在长袋里，带着健康成长的祝愿。眼前是为孩子备好的糖袋：握住提手提起，递近，再轻轻放低，让孩子伸手接稳。" },
   { id:"mongolian-ovoo",title:"敖包祈护",engine:"mongolian-ovoo@1",revision:"bundled",manifestUrl:"",traditionSlug:"mongolian-ovoo",narrative:"在蒙古的一些敖包礼敬中，人们顺时针绕行三圈，并向石堆添石，向山岳与湖泊祈求护佑。取起石子，随来访者绕行，再把它投入敖包。" },
   { id:"fgs-buddha-bathing",title:"浴佛发愿",engine:"fgs-buddha-bathing@1",revision:"bundled",manifestUrl:"",traditionSlug:"fgs-buddha-bathing",narrative:"佛诞浴佛以香水灌沐太子像，表达礼敬与发愿。依佛光山的公开说明，这里向太子像的右肩、左肩、右肩依次倾下三杓水，发愿止恶、行善、度众生。握住杓柄，舀水提起，看水流落在肩上，再缓缓收回。" },

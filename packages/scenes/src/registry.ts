@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id:'tibetan-khata-greeting',title:'白绢迎客',traditionSlug:'tibetan-khata-greeting',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'shichigosan-chitose-ame',title:'千岁赠糖',traditionSlug:'shichigosan-chitose-ame',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'mongolian-ovoo',title:'敖包祈护',traditionSlug:'mongolian-ovoo',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'fgs-buddha-bathing',title:'浴佛发愿',traditionSlug:'fgs-buddha-bathing',grade:'C',sensitivity:'低',gestures:['drag'] },
@@ -201,6 +202,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'tibetan-khata-greeting',
   'shichigosan-chitose-ame',
   'mongolian-ovoo',
   'fgs-buddha-bathing',
@@ -296,6 +298,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'tibetan-khata-greeting': return import('./tibetan-khata-greeting/index')
     case 'shichigosan-chitose-ame': return import('./shichigosan-chitose-ame/index')
     case 'mongolian-ovoo': return import('./mongolian-ovoo/index')
     case 'fgs-buddha-bathing': return import('./fgs-buddha-bathing/index')

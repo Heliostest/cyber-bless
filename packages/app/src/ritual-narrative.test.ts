@@ -144,6 +144,7 @@ describe("builtInScenes narratives", () => {
       "sumiyoshi-godairiki",
       "tanzaku-tanabata",
       "theravada-water",
+      "tibetan-khata-greeting",
       "tibetan-wheel",
       "turkish-ebru-paper",
       "udo-undama",

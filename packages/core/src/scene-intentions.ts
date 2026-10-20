@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'tibetan-prayer-flags': {
+    kind: 'blessing', label: '为众生祈愿安康', optionalWish: false,
+    action: '把完整经幡挂到离地的高处，寄托愿众生受益安乐的心意。',
+  },
   'rosh-hashanah-apple-honey': {
     kind: 'blessing', label: '祈愿美好甜蜜的新年', optionalWish: false,
     action: '拿起苹果片，蘸入蜂蜜，再提起回盘。',

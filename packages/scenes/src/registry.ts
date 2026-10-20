@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id:'tibetan-prayer-flags',title:'经幡迎风',traditionSlug:'tibetan-prayer-flags',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'rosh-hashanah-apple-honey',title:'蘸蜜迎岁',traditionSlug:'rosh-hashanah-apple-honey',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'thai-songkran-elders',title:'浇水敬老',traditionSlug:'thai-songkran-elders',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'kameido-usokae',title:'木鷽迎福',traditionSlug:'kameido-usokae',grade:'C',sensitivity:'中',gestures:['drag'] },
@@ -208,6 +209,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'tibetan-prayer-flags',
   'rosh-hashanah-apple-honey',
   'thai-songkran-elders',
   'kameido-usokae',
@@ -310,6 +312,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'tibetan-prayer-flags': return import('./tibetan-prayer-flags/index')
     case 'rosh-hashanah-apple-honey': return import('./rosh-hashanah-apple-honey/index')
     case 'thai-songkran-elders': return import('./thai-songkran-elders/index')
     case 'kameido-usokae': return import('./kameido-usokae/index')

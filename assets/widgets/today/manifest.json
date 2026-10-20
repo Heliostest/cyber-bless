@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "8c1ed8ed6f071e006daf88d8f90d5a32b55bf41c71632a9621813eeeacf95024",
+  "revision": "ee60f93924515120247e93d86c13005548551b225e7c172467e8d080e2e58168",
   "scenes": [
+    {
+      "id": "tibetan-prayer-flags",
+      "engine": "tibetan-prayer-flags@1",
+      "small": {
+        "file": "tibetan-prayer-flags-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "0ce767646b28d8b9089ef5ab80261b4a59a578954b43cff69dcff358895358e8",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "tibetan-prayer-flags-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "3528c1abb593c416fdebb6d71c7691e7a475de25635cdcdb0fbbb19b09ca7e45",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "tibetan-prayer-flags-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "9bf35c4f9e81271e48c0c94daf55cbfbababf719987d207dc6791ba1447aaad0",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "rosh-hashanah-apple-honey",
       "engine": "rosh-hashanah-apple-honey@1",

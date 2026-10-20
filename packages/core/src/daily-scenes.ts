@@ -81,6 +81,7 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "tibetan-prayer-flags",
   "rosh-hashanah-apple-honey",
   "thai-songkran-elders",
   "kameido-usokae",
@@ -214,6 +215,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"tibetan-prayer-flags",title:"经幡迎风",engine:"tibetan-prayer-flags@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-prayer-flags",narrative:"藏传佛教的经幡印有经文或咒语，悬在户外随风轻扬，寄托愿众生受益、获得安乐的心意。这串五色咒语旗保持完整，蓝、白、红、绿、黄依次相连。抬起蓝旗一端，舒展旗串，再挂稳黄旗一端，让经幡在风中展开。" },
   { id:"rosh-hashanah-apple-honey",title:"蘸蜜迎岁",engine:"rosh-hashanah-apple-honey@1",revision:"bundled",manifestUrl:"",traditionSlug:"rosh-hashanah-apple-honey",narrative:"在犹太新年的节庆餐食中，苹果蘸蜜与果实祝福、品尝和祷愿相伴，寄托向上帝祈求美好甜蜜新年的心意。眼前的苹果片已切好：拿起、蘸蜜，再提起放回餐盘，准备品尝。" },
   { id:"thai-songkran-elders",title:"浇水敬老",engine:"thai-songkran-elders@1",revision:"bundled",manifestUrl:"",traditionSlug:"thai-songkran-elders",narrative:"宋干新年时，泰国家庭中的晚辈会把清水轻轻浇在长辈手上，表达敬意，祝愿长辈安康，也向他们求一份新岁祝福。眼前的清水已备好：捧起小碗，移到长辈手边，缓缓倾水，再将碗放回。" },
   { id:"kameido-usokae",title:"木鷽迎福",engine:"kameido-usokae@1",revision:"bundled",manifestUrl:"",traditionSlug:"kameido-usokae",narrative:"在东京龟户天神社的鷽替神事中，人们返纳旧木鷽，领受新木鷽，祈愿凶事转吉。送还旧鸟，接过新鸟，再将它安放好，迎接新年。" },

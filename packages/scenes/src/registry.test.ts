@@ -20,6 +20,7 @@ describe('sceneRegistry', () => {
       'chinese-rattle-drum',
       'ghanaian-oware',
       'mexican-tortilla-press',
+      'tibetan-prayer-flags',
       'rosh-hashanah-apple-honey',
       'thai-songkran-elders',
       'kameido-usokae',

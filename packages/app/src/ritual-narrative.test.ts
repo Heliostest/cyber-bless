@@ -151,6 +151,7 @@ describe("builtInScenes narratives", () => {
       "thai-songkran-elders",
       "theravada-water",
       "tibetan-khata-greeting",
+      "tibetan-prayer-flags",
       "tibetan-wheel",
       "turkish-ebru-paper",
       "udo-undama",

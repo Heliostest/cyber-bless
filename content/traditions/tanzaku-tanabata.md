@@ -44,3 +44,20 @@
 - [Portland Japanese Garden — Tanabata Celebration Week 2026](https://japanesegarden.org/pjg-events/tanabata-celebration-week-at-portland-japanese-garden/2026/)：2026-10-19 已读，主办机构直接介绍色纸写愿和挂竹枝。
 
 旧稿曾引 [Highlighting Japan 2022年8月页](https://www.gov-online.go.jp/eng/publicity/book/hlj/html/202208/202208_07_en.html)及仙台旧移动版路径；本轮改用上列已读来源，不将旧链接访问状态当成正文核验。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`tanzaku-tanabata`；最终来源：`tanzaku-tanabata`。
+
+日本七夕，聚焦宫城仙台江户史料及短册学艺愿。
+
+本轮已读依据：
+
+- [仙台商工会议所 — Sendai Tanabata Festival: Decorations](https://www.sendaitanabata.com/english/pc/outline/decoration/)：Short paper strips及七饰说明8–15行；2026-10-20，`read`。
+- [仙台商工会议所 — Sendai Tanabata Festival: History](https://www.sendaitanabata.com/english/pc/outline/history/)：Edo Period、伊达政宗诗歌及1873笔记所载彩纸/竹枝段8–24行；2026-10-20，`read`。
+
+范围限制：不将七饰全部意义套给短册，英译史页明显错误近代年份未用。
+
+当前呈现：拾纸条、系竹枝、静看；宿主完成时可选文字。 书写在本产品为可选附记，未声称挂后写字是传统顺序。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#tanzaku-tanabata)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

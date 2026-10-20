@@ -22,3 +22,13 @@
 
 - [Web Japan · Kendama Basics and Tricks](https://web-japan.org/kidsweb/virtual/kendama/kendama04.html)，2026-10-17 阅读完整说明。支持大皿、小皿、尖端动作、连续转接、球孔方向及轻接的说明；页面图示注明日本剑玉协会。未复制照片、图案或文案，也未移植其完整身体姿势教学。
 - [日本剑玉协会 · 級・準初段の技](https://kendama.or.jp/tricks/basic_tricks/)，2026-10-17 阅读基础技巧表及说明。仅核对基础动作名称与存在，不采用认定次数、级位与竞技制度作为本产品奖励。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`japanese-kendama`；当前来源 slug 仍为 `japanese-kendama-craft`。本轮新增介绍的证据范围：剑玉结构、1876 教育报告、1919 日月球及 1975 协会等发展节点。
+
+- [Web Japan / Kids Web Japan — The History of Kendama](https://web-japan.org/kidsweb/virtual/kendama/kendama02.html)：结构与历史各段；网页正文已读；访问日期 2026-10-20。
+
+具体边界与缺口：不采全球起源争论；自动接球不是真实难度，三接不等于传统固定练法或竞技资格。 无新增依赖的失访来源。
+
+当前器物与动作：带绳木球、大小皿、尖端；三次自动辅助轻接。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#japanese-kendama)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

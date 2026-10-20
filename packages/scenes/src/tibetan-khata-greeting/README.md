@@ -7,3 +7,15 @@
 迎客献哈达及善愿、白丝质、预折双层和选定开口朝客见[专卡](../../../../content/traditions/tibetan-khata-greeting.md)与[研究记录](../../../../docs/research/2026-10-20-tibetan-khata-greeting.md)。双方托接、三短拖、2.5秒、服装与场地是产品编排，不称固定传统程序；选用一种开口朝向，不宣称唯一规矩。没有织文、咒语或八吉祥纹样。人物并非僧人，结果是礼巾交付，不声称宗教加持或现实效力。
 
 验证报告、真实鼠标和CDP触摸事件模拟截图、独立审阅见 `artifacts/tibetan-khata-greeting/validation.md`。模拟不代表真机测试。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`tibetan-khata-greeting`；最终来源：`tibetan-khata-greeting`。
+
+当前物件与动作：普通人物之间双手托起预折白绢并递交。
+
+文化说明范围：藏族及喜马拉雅迎送礼、真诚欢迎；不淡化礼巾亦有宗教用途。
+
+简化边界：无师长、颈上披挂、神圣图文或加持表现。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#tibetan-khata-greeting)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

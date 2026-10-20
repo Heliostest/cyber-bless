@@ -28,3 +28,15 @@ Step 1: `spoon-handle-grip` → `spoon-display-seat` (both origin).
 Step 2: tap `spoon-handle-grip`; other visible spoon surfaces also accepted.
 
 Only the first opaque scene hit counts; held descendants are excluded when checking a drop. Pointer ownership, cancellation, pause/blur, accepted animation freezing, checkpoint restore, explicit writing, reentry and disposal are covered with real geometry/raycast/form tests (GPU renderer mocked). Minimal-stub RED observed before implementation. Browser screenshots and integration evidence are recorded in the atelier plan.
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`welsh-love-spoon`；最终来源：`welsh-love-spoons`。
+
+当前物件与动作：布擦凹勺，持柄放展托，静看或留言。
+
+文化说明范围：威尔士1667有年款存世例、十八十九世纪求爱工艺及现代纪念礼。
+
+简化边界：擦拭展示为产品照料动作，无完整雕刻或固定赠勺仪式。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#welsh-love-spoon)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

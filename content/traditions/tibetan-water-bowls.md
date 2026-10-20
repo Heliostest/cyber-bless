@@ -23,3 +23,18 @@ Chokyi Gyaltsen Centre 刊载的 Lama Zopa Rinpoche 教导强调恭敬、菩提�
 
 [研究与去重记录](../../docs/research/2026-10-20-tibetan-water-bowls.md)
 
+## 2026-10-20 介绍扩充核查
+
+适用场景：`tibetan-water-bowls`；最终来源：`tibetan-water-bowls`。
+
+藏传佛教供养、恭敬、利益众生及1998公开教导。
+
+本轮已读依据：
+
+- [FPMT Chokyi Gyaltsen Centre / Lama Zopa Rinpoche — Making Water Bowls Offering](https://www.fpmt-cgc.org/resources/advice_from_rinpoche/nov2008.html)：1998讲授说明21–22行、How to do water offerings 55–67行、Dedications108–116行；2026-10-20，`read`。
+
+范围限制：七同形铜碗及左右顺序本轮LDC重访失效；仍是先前已核实当前场景的可观察设置，不新增其普遍规范主张。
+
+当前呈现：佛像高供台、七只铜碗已留少水，壶从左至右添至沿下再收回。 只描述现有七碗添水片段，未声称完成清洁、礼拜、念诵、回向与晚间收供。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#tibetan-water-bowls)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

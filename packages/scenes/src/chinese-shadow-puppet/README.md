@@ -37,3 +37,11 @@ At least 40px along-axis travel with actual move events is required; 60px reache
 ## Verification
 
 The scene tests use real Three geometry/raycasting and the actual wish writer, substituting only GPU rendering. They cover physical rod attachment, projection against independent lamp rays (including open holes), all-vertex portrait/desktop framing, nearest-surface cues, gesture rejection, pause/blur/capture loss, callback re-entry, atomic wish saving and exact-once resource disposal. Run `npm run test -w @wbr/scenes -- src/chinese-shadow-puppet/scene.test.ts` from the repository root.
+
+## 2026-10-20 当前介绍核查
+
+已按实际器物与用户提示扩充介绍。原创纸制彩鸟、单片关节翼、双操纵杆、灯与幕；提主杆→移翼杆→静看。
+
+核查重点：形成时代仍不确定；不能把海宁声腔、蚕花戏或任一传统角色套给原创小鸟。没有完整剧目、乐队和戏班表演。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#chinese-shadow-puppet)。

@@ -47,3 +47,13 @@
 - [BAPS Shri Swaminarayan Mandir, London — Diwali](https://londonmandir.baps.org/forthcoming-events/diwali-2015-2/)：2026-10-19 已读节庆说明，支持成排油灯及该社群的宗教解释；网页历史活动日期不作当前日程使用。
 
 旧稿另引 [Science Museum Group 对象 co123696](https://collection.sciencemuseumgroup.org.uk/objects/co123696)，描述 Lakshmi 与多盏灯造像。本次未取得可读正文，保留为待复核线索，不由它推导完整点灯或旋灯程序。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：密歇根坎顿 Hindu Temple 对自身 Aarati 的说明：灯盘在神像前顺时针移动、光代表知识/指引、驱不利影响信念。
+
+实际呈现：三盏陶灯、棉芯、托盘，无神像；点三灯→单灯沿金弧一圈→归盘。
+
+边界与缺口：仅有当代社群说明，不确定古代起源，也不代表所有印度教派；三灯数量和单灯圆轨非来源完整献光。SMG油灯429失访，未复用旧已读年代表述；不混作排灯节全流程。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#diya-oil-lamp)。

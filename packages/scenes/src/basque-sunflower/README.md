@@ -24,3 +24,11 @@ Stable support/group names: `sunflower-center-piece`, `sunflower-ornament`, `sun
 Pointer checks use the nearest visible hit across the entire scene. Only the held subtree is excluded for a drop, so external opaque objects still block both start and destination. Drags require at least 8px of travel; quiet taps require less than 12px, including displacement at release. Native button activation uses the same settlement paths. Accepted placement takes 0.7 seconds with a restrained lift; reduced motion settles immediately. Pause/blur freeze accepted placement and cancel unfinished gestures. Every checkpoint restores silently.
 
 Verification: 26 focused Vitest tests exercise real Three.js geometry and raycasting, cues and wish forms, replacing GPU calls only. Coverage includes 320/390/1280px first-hit visibility and ornament framing; complete physical drags; solid external occlusion at both drag steps; exact drag/tap thresholds; peg-loop and mount-backing contact; loose-center support; pause/blur/cancel/capture loss/multitouch; silent restoration of 0/1/2/3; explicit saving, quiet drafts and returning visits; attached-center motion; and idempotent GPU/geometry/material/shadow/DOM/listener cleanup. Root integration owns the full repository suite, build and native browser visual/keyboard checks.
+
+## 2026-10-20 当前介绍核查
+
+已按实际器物与用户提示扩充介绍。纸木太阳蓟花饰，装花心→挂门框木钉→静看/可选留言。
+
+核查重点：没有确定起始年代；馆述信念不是产品效力。纸木拼装不是采放真植物的固定传统，不据此重建 Mari 仪式。巴斯克政府原链接失败未采用。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#basque-sunflower)。

@@ -18,3 +18,13 @@
 
 - [Peugeot Saveurs：Brésil手摇咖啡磨资料](https://fr.peugeot-saveurs.com/en_fr/bresil-manual-coffee-mill-in-walnut-stained-beechwood-21-cm-8in.html)，2026-10-18成功读取，第147–148行核对木盒、木柄、敞口料斗、集粉抽屉等通用结构；未复制品牌图像或特有设计。
 - [Science Museum Group：Turned wooden coffee mill，A201170](https://collection.sciencemuseumgroup.org.uk/objects/co155349/turned-wooden-coffee-mill-of-which-only-bottom-section)，2026-10-18成功读取，第33–51、85–107行核对欧洲木铁咖啡磨和铁曲柄木柄记录；未复制受限图像。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：法国标致自述1840起咖啡磨制造，现售 Brésil 木盒曲柄磨的料斗、磨芯与抽屉结构。
+
+实际呈现：木盒、金属料斗、曲柄钢轴、抽屉与豆粉；两半周→开屉。
+
+边界与缺口：生产者1840沿革非咖啡磨发明时间；产品介绍作为自身制造证据，不当全法国史；原创模型与两半圈出粉非实物性能/完整研磨。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#french-coffee-mill)。

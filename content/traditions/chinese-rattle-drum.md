@@ -20,3 +20,13 @@
 
 - [Grinnell College Libraries：taogu](https://omeka-s.grinnell.edu/s/MusicalInstruments/item/1517)，2026-10-18 阅读完整条目；采用 Contextual Associations、Description、Player–Instrument Interface 和材料说明，区分小型单鼓与复鼓背景，核对结构及往返敲击方式。
 - [黄岩博物馆：最后三天，来看看时光里的玩具展](https://www.hybwg.com.cn/home/info/219)，2026-10-18 阅读检索页面提供的拨浪鼓展品说明摘录，交叉核对玩具结构与货郎招徕用途；直连页面未能打开，年代叙述未采用。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：台北故宫所藏南宋钱塘画家李嵩《市担婴戏》中的货郎摇鼓；货郎走村串巷、吟唱介绍杂货，儿童围拢。
+
+实际呈现：单个双面鼓、木柄、两根绳和木珠；右旋→左旋→收低，木珠交替击皮。
+
+边界与缺口：画作可证明南宋图像语境，不证明最初发明、现模型精确形制或古代礼乐身份。Grinnell 1517 页/接口超时、黄岩博物馆页超时，未称已读；新介绍不依赖这些失访源的玩具年代。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#chinese-rattle-drum)。

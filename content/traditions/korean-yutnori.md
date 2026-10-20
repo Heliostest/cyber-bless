@@ -22,3 +22,13 @@
 
 - [韩国国立民俗博物馆儿童博物馆 · 윷놀이](https://www.nfm.go.kr/kids/elecontents/view.do?topic=46)，2026-10-18 阅读条目，核对四根木柶、五种结果与步数、yut 和 mo 的额外投掷、轮流行棋及节日共玩背景。
 - [Leslie Burnham · Yut, A Traditional Korean Game（Ohio State University 网站所存教学资料）](https://bpb-us-w2.wpmucdn.com/u.osu.edu/dist/a/43197/files/2017/02/Burnham-Korea-1zj2mdp.pdf)，2026-10-18 阅读四页资料。第3页说明平圆落面与一至五步的对应，第4页展示方形外圈与对角线格点；未复制图像。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`korean-yutnori`；当前来源 slug 仍为 `korean-yutnori`。本轮新增介绍的证据范围：韩国新年至正月十五、四柶步数及重投、多年龄参与和过去胜方丰收信念。
+
+- [韩国国立民俗博物馆儿童博物馆 — 윷놀이（Yutnori）](https://www.nfm.go.kr/kids/elecontents/view.do?topic=46)：节期、器具、规则与丰收信念相关正文；直接 HTML 已读；访问日期 2026-10-20。
+
+具体边界与缺口：没有可靠起源年月；只一枚棋子，不含完整分队、拦截和胜负，不能把单次结果视作占断。 无新增依赖的失访来源。
+
+当前器物与动作：四根平圆木柶、路径棋盘、一枚蓝棋；重复投掷按点行进，手动结束。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#korean-yutnori)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

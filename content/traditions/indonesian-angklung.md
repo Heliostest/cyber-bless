@@ -22,3 +22,13 @@
 
 - [ICHCAP / ichLinks · Indonesian Angklung，EE00000088](https://ichlinks.com/archive/elements/elementsV.do?elementsUid=13829896117698900089&ichDomains=UD_05&mode=list&nation=ID&orderCd=E&page=12)，2026-10-19 阅读器物描述、传承、社群及名录年份栏；2026-10-20 重新阅读 Description 前两段，核对竹架／藤绑／竹管、摇框发声与八度配置。直接支持器物结构、摇动或敲框发声、单音或和弦、合奏协作、家庭与学校教学，以及 2010 年列入名录。该记录也提到地方仪式与哲学解释，但本场景不把这些内容当作动作功效或通用象征。
 - [UNESCO · Indonesian Angklung](https://ich.unesco.org/en/RL/indonesian-angklung-00393)，保留原核对记录：2026-10-15 曾用于结构与社会用途概要；2026-10-19 直达及替代入口仍遇人工验证，2026-10-20 直达仍返回人工验证及启用 JavaScript 提示。本轮以可读的 ICHCAP 记录补证，不声称重新通读；未复制音乐、照片或影片。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`indonesian-angklung`；当前来源 slug 仍为 `indonesian-angklung`。本轮新增介绍的证据范围：西爪哇/万丹、至少 1704 年记录、竹管发声与合奏、稻作仪式背景、1938 年音阶发展及学校传承。
+
+- [ICHCAP / ichLinks — Indonesian Angklung](https://ichlinks.com/archive/elements/elementsV.do?elementsUid=13829896117698900089&ichDomains=UD_05&mode=list&nation=ID&orderCd=E&page=12)：Address、Description、Transmission；网页正文已读；访问日期 2026-10-20。
+
+具体边界与缺口：不将 1704 当发明年，不模拟稻作仪式；声音为应用配音，单件自由摇奏不等于完整合奏。严格不用旧三步描述。 UNESCO 原页出现验证页，不作本轮已读证据；以 ichLinks 公开条目相关正文支持。
+
+当前器物与动作：竹架、藤束、竹管；自由反复摇动，首次保存进行中状态，手动结束。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#indonesian-angklung)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

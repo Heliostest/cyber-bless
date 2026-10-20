@@ -7,3 +7,11 @@
 `createKagamiBirakiModel` 提供中空木樽、编织菰层、封闭酒体、预松盖及木槌。轻叩发生在盖缝端部，盖片一直平置于樽沿；木槌先升起再移动，最后槌头接触地面。`pose` 保持三个检查点连续，普通动画、减少动画与进度恢复一致。程序纹理在dispose时单独释放。
 
 技术ID `kagami-biraki-sake`，引擎@1，来源同名专卡，C／中；blessing池、optionalWish=false。三短拖、方向、时长、配色、模型尺寸、盖片数量及庭园日景均为原创简化。测试、浏览器截图、原生触摸事件模拟和独立审阅存于 `artifacts/kagami-biraki-sake/`；触摸模拟不代表真机。
+
+## 2026-10-20 介绍扩充核查
+
+当前简介已补充地域、文化语境及有据的历史节点，保留来源 `kagami-biraki-sake`。核查范围：镜=圆盖、开前程的吉意、现代庆贺用途、神事供酒分享背景及江户运输保护菰。
+
+边界：无确切起源年；不采战国出征说。两片平移与收槌分镜不当作传统礼序，未表现饮用或完整神事。
+
+来源正文的完整链接、实际阅读位置、访问状态及产品简化见[B 组逐项记录](../../../../docs/research/2026-10-20-scene-narratives-b.md#kagami-biraki-sake)与[来源卡](../../../../content/traditions/kagami-biraki-sake.md)。本节不更改现有交互；用户介绍集中维护于 `packages/core/src/scene-narratives/b.ts`。

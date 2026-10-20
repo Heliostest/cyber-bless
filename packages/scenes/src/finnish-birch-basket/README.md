@@ -24,3 +24,11 @@ Read the National Museum of Finland's [Seedlip (kylvövakka), 1 June 2020](https
 All anchors are visible opaque mesh surfaces. Starts and releases use the first visible mesh; a drop excludes only the held subtree. Tests cover valid and invalid input, foreground obstruction, the 7/8 px drag boundary, tap travel, pointer ownership, mixed fingers, cancellation, lost capture, pause/blur, silent progress restoration at 0/1/2/3, reduced motion and idempotent disposal. Geometry tests project anchors at 320, 390 and 1280 px, verify the open interior and base/grain support, and sample actual rim vertices inside both attached handle feet. The flattened spare handle rests at the bench's 0.72 top; the basket rests at 0.72 initially and 0.755 on the mat.
 
 The no-op scaffold produced an observed RED behavioral assertion (`[]` rather than `[1, 2, 3]`) before implementation. A stronger physical-contact test also produced RED for the first handle width and was fixed by widening its arch. Final focused command: `npm run test -w @wbr/scenes -- src/finnish-birch-basket/scene.test.ts` — 27 tests pass. Tests preserve real Three.js geometry/raycasting and interaction cues, replacing the GPU renderer boundary only. Root integration owns the full suite, build, browser screenshots and mobile verification.
+
+## 2026-10-20 当前介绍核查
+
+已按实际器物与用户提示扩充介绍。长方桦皮交织篮、可拆弯柄、谷粒、木勺布垫；接柄→放垫→静看。
+
+核查重点：博物馆主图是西芬兰白杨板，不能称其为桦篮复刻；机械年代不是桦编起源；弯柄拼装与灰绿垫无祈愿程序。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#finnish-birch-basket)。

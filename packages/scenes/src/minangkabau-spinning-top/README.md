@@ -16,6 +16,10 @@ An original tabletop wooden-top toy: pull the wooden bead to unwind the cord, ta
 
 The auxiliary button runs the same acceptance and completion paths. Pointer starts and releases require the nearest visible opaque mesh to be the intended object; another opaque surface blocks the gesture. During a drop only the held bead and its moving cord are excluded. Progress is exactly 0 → 1 → 2 → 3. Reduced motion settles each accepted operation immediately, with no continuing spin or wobble. Pause and blur cancel unfinished input and freeze accepted animation.
 
+## 2026-10-20 介绍扩充
+
+“了解这个仪式”补充木陀、棉绳、木珠与起转、停下的关系，将短暂停留的意义留给体验者。文案在 [`scene-narratives/original.ts`](../../../core/src/scene-narratives/original.ts) 维护；没有新增米南加保、返乡或古老起源主张，来源分类仍为 `product-original`。实际呈现和边界见[本轮研究](../../../../docs/research/2026-10-20-scene-narratives-original.md#六个产品原创场景)。未改交互或结束条件。
+
 ## Validation
 
 `npm run test -w @wbr/scenes -- src/minangkabau-spinning-top/scene.test.ts`

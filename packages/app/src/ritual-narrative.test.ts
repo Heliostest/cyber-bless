@@ -33,7 +33,38 @@ describe("RitualNarrativeBlurb", () => {
     expect(details).not.toBeNull();
     expect(details.hasAttribute("open")).toBe(false);
     expect(details.querySelector("summary")?.textContent).toBe("了解这个仪式");
-    expect(details.querySelector("p")?.textContent).toBe(woodfish.narrative);
+    expect([...details.querySelectorAll(".ritual-narrative-body > p")].map(p => p.textContent).join("\n\n")).toBe(woodfish.narrative);
+  });
+
+  it("renders separate paragraphs in a named keyboard-scrollable reading region", () => {
+    const container = document.createElement("div");
+    container.innerHTML = render("woodfish");
+    const body = container.querySelector<HTMLElement>(".ritual-narrative-body")!;
+    expect(body.getAttribute("role")).toBe("region");
+    expect(body.getAttribute("aria-label")).toBe("敲一敲木鱼的介绍");
+    expect(body.tabIndex).toBe(0);
+    expect(body.querySelectorAll("p").length).toBeGreaterThan(1);
+  });
+
+  it("keeps completion outside the expandable reading region", () => {
+    const container = document.createElement("div");
+    container.innerHTML = renderToStaticMarkup(createElement(RitualNarrativeBlurb, {
+      sceneId: "woodfish", completion: "已完成",
+    }));
+    const status = container.querySelector('[role="status"]')!;
+    expect(status.textContent).toBe("已完成");
+    expect(status.parentElement?.className).toBe("ritual-narrative-header");
+    expect(status.closest("details")).toBeNull();
+    expect(container.querySelectorAll("button")).toHaveLength(0);
+  });
+
+  it("can show completion when there is no introduction", () => {
+    const container = document.createElement("div");
+    container.innerHTML = renderToStaticMarkup(createElement(RitualNarrativeBlurb, {
+      sceneId: "no-such-scene", completion: "已完成",
+    }));
+    expect(container.querySelector("details")).toBeNull();
+    expect(container.querySelector('[role="status"]')?.textContent).toBe("已完成");
   });
 });
 
@@ -182,11 +213,12 @@ describe("builtInScenes narratives", () => {
   );
 
   it.each(withNarrative.map((e) => [e.id, e.narrative!]))(
-    "%s has concise, safe copy",
+    "%s has bounded, safe reading copy",
     (_id, narrative) => {
       const count = cjkCount(narrative);
-      expect(count).toBeGreaterThanOrEqual(30);
-      expect(count).toBeLessThanOrEqual(160);
+      expect(count).toBeGreaterThanOrEqual(120);
+      expect(count).toBeLessThanOrEqual(600);
+      expect(narrative.split(/\n\s*\n/).filter((p) => p.trim()).length).toBeGreaterThanOrEqual(2);
       expect(() => assertSafeCopy(narrative)).not.toThrow();
     },
   );

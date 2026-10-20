@@ -50,3 +50,15 @@ All source and drop decisions use the first visible opaque scene mesh. Drops exc
 25 focused tests pass. Initial TDD RED was the real missing startup action against a minimal stub. A further physical-contact RED caught the initial pad orientation pushing its thickness toward the shell; the repaired positive tilt and contact point pass. Tests retain real Three geometry, raycasts, cues, pointer lifecycle and DOM; only WebGL/debug rendering is replaced at the renderer boundary. Covered: the three checkpoints, native action parity, no wish form, silent restoration, foreground blockers, invalid movement, cancellation of full groups, inactivity and reentrancy, camera-safe first-hit anchors at 320/390/1280 pixels, concavity and thickness, resting support, integral rim, polish contact and disposal.
 
 GPU appearance, shared registration, full-suite integration, browser screenshots and mobile builds remain with the parent integration task. This module does not edit shared environment assets.
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`purepecha-copper-bowl`；最终来源：`santa-clara-copper-craft`。
+
+当前物件与动作：软布擦铜碗、移到毡座、静看锤纹和卷边。
+
+文化说明范围：米却肯Santa Clara地方铜业与日用容器；非普雷佩查宗教仪式。
+
+简化边界：擦拭、毡座和铜色变化为欣赏片段，没有展示熔炼锤锻。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#purepecha-copper-bowl)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

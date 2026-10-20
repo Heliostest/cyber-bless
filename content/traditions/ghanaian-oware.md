@@ -19,3 +19,14 @@ Oware 是加纳阿坎语社群使用的游戏名称，常见两行六窝棋盘�
 
 - [The Open University：TESSA Ghana — Resource 3](https://www.open.edu/openlearncreate/mod/oucontent/view.php?id=154327&section=1.6)，2026-10-18 阅读完整规则，核对棋盘、棋子数量、开局与逐窝落子。
 - [The Oware Society：Information](https://www.oware.co.uk/information)，2026-10-18 阅读检索摘录及首次解析结果；之后直连超时，采用名称、常见棋盘与日常相聚背景，不采用年代叙述。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`ghanaian-oware`；当前来源 slug 仍为 `ghanaian-oware`。本轮新增介绍的证据范围：阿坎/阿散蒂社群、48 子开局、播撒、竞技及社交和玩法差异。
+
+- [The Open University — TESSA, Resource 3: Rules for playing Oware](https://www.open.edu/openlearncreate/mod/oucontent/view.php?id=154327&section=1.6)：规则正文；网页工具已读，直连 403 不算另一次成功；访问日期 2026-10-20。
+- [The Oware Society — Information](https://www.oware.co.uk/information)：About Oware、Abapa/Nam-nam 与社交段；直接 HTML 已读；访问日期 2026-10-20。
+
+具体边界与缺口：起源年代缺少可靠直接证明，不采用推广页的七千年说；当前不含捕获、对手或胜负。 无新增依赖的失访来源。
+
+当前器物与动作：两行六窝、每窝四粒；取一窝四粒，沿棋盘播下一手。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#ghanaian-oware)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

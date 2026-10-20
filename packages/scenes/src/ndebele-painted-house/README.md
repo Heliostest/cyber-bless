@@ -44,3 +44,11 @@ npm run test -w @wbr/scenes -- src/ndebele-painted-house/scene.test.ts
 The focused suite retains real Three.js geometry, raycasts, pointer ownership, and interaction cues; it substitutes WebGL rendering only. It covers both physical drags and final tap, foreground occlusion, invalid drops, doorway rejection, 320/390/1280 anchor visibility, wall depth and recessed doorway, support contact, panel attachment and group motion, full-group cancellation, silent restore, reentrant completion, and disposal.
 
 GPU/browser appearance and shared registry/catalog/mobile integration are verified by the integrating parent task. No shared environment, registry, dependencies, build outputs, or mobile assets are edited by this module author.
+
+## 2026-10-20 介绍扩充核查
+
+当前简介已补充地域、文化语境及有据的历史节点，保留来源 `ndebele-wall-painting`。核查范围：南非 Ndebele 女性家墙绘画、马兰古母祖传艺亲述和 1989 巴黎国际展览节点。
+
+边界：没有壁画起源年；不复制艺术家作品或声称色块有统一护佑含义。小板拼贴/模型是产品表达，不是真实绘壁方式。
+
+来源正文的完整链接、实际阅读位置、访问状态及产品简化见[B 组逐项记录](../../../../docs/research/2026-10-20-scene-narratives-b.md#ndebele-painted-house)与[来源卡](../../../../content/traditions/ndebele-wall-painting.md)。本节不更改现有交互；用户介绍集中维护于 `packages/core/src/scene-narratives/b.ts`。

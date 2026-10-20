@@ -18,3 +18,20 @@
 - [Canadian Institute of Ukrainian Studies — Kupalo festival](https://www.encyclopediaofukraine.com/display.asp?linkpath=pages%5CK%5CU%5CKupalofestival.htm)：已读学术机构百科正文，支持水上花环与命运占卜，但为机构综述，不充作田野原始记录。（2026-10-19，read-institutional-secondary）
 
 逐项核查见[全场景来源审阅](../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`slavic-wreath`；最终来源：`kupala-wreath`。
+
+乌克兰Kupala与圣若翰交织、真实婚恋占问；波兰仅比较。
+
+本轮已读依据：
+
+- [Canadian Institute of Ukrainian Studies / Mykola Mushynka — Kupalo festival, Encyclopedia of Ukraine](https://www.encyclopediaofukraine.com/display.asp?linkpath=pages%5CK%5CU%5CKupalofestival.htm)：正文34–48行，仲夏、基督教圣若翰、青年、花冠水流占问及文字记录；2026-10-20，`read`。
+- [Muzeum Wsi Radomskiej — Noc Świętojańska](https://muzeum-radom.pl/wydarzenia/noc-swietojanska/2609)：正文63–75行，Sobótki、未婚女性花环与婚恋占问；2026-10-20，`read`。
+
+范围限制：中古记载不确立花环动作始年，不概括全体斯拉夫人。
+
+当前呈现：点按编草花环、放水面、目送或附记。 本场漂流轨迹无占卜结果，未再现完整节庆。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#slavic-wreath)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

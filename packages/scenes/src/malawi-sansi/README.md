@@ -5,3 +5,11 @@
 首次演奏保存进度 2，此后无限演奏不重复推进；点击「结束体验」才保存进度 3 并派发一次完成事件。进度 1/2 的旧记录仍可继续演奏，恢复和进入均不自动发声。取消、反向、横移、多指、失焦和暂停不会误触发，空白处仍允许页面滚动。减少动态效果跳过视觉余振，保留用户启用的声音和震动。不创建心愿。共享阳光花园、柔和三渲二；木板平放，无额外小桌或展板。
 
 文化范围、可靠公开来源与原创部分见 content/traditions/mbira-sansi-craft.md。这是材料与声音的当代互动场景，不是仪式模拟或完整演奏教学。证据：artifacts/malawi-sansi；接续进度：artifacts/hourly-scenes/progress.md。
+
+## 2026-10-20 介绍扩充核查
+
+当前简介已补充地域、文化语境及有据的历史节点，保留来源 `mbira-sansi-craft`。核查范围：马拉维 Chewa 中南部及 ChiMang'anja/ChiNyanja 社群、实际制材、结构、长短音高和循环变奏。
+
+边界：起源年代、具体地方调律和本场 C 大调均无对应依据；不把九键视作唯一规格，也不从他国宗教用途推为此场礼仪。
+
+来源正文的完整链接、实际阅读位置、访问状态及产品简化见[B 组逐项记录](../../../../docs/research/2026-10-20-scene-narratives-b.md#malawi-sansi)与[来源卡](../../../../content/traditions/mbira-sansi-craft.md)。本节不更改现有交互；用户介绍集中维护于 `packages/core/src/scene-narratives/b.ts`。

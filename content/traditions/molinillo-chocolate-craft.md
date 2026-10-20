@@ -22,3 +22,14 @@ Molinillo 是用于搅拌巧克力饮品、形成泡沫的木制器具。UNAM �
 - [UNAM Revista Digital Universitaria · 同题论文页面](https://www.revista.unam.mx/ojs/index.php/rdu/article/view/332)，2026-10-19 阅读作者资料与摘要，交叉核对研究出处及墨西哥日常器具背景。
 - [The Met · Molinillo (chocolate stirrer)/rattle](https://www.metmuseum.org/art/collection/search/501933)，2026-10-19 阅读馆藏记录。用于器物名称、木材与墨西哥归属；不把馆藏乐器分类转换为本场景的仪式。未复制照片、尺寸或文字。
 - [El Colegio de México · Diccionario del español de México: molinillo](https://dem.colmex.mx/ver/molinillo)，保留访问记录：2026-10-17 曾核对条目，2026-10-19 重访超时；本轮以可读的 UNAM 原始研究支持结构与动作，不声称重新通读词典页。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`mexican-molinillo`；当前来源 slug 仍为 `molinillo-chocolate-craft`。本轮新增介绍的证据范围：墨西哥厨房用途、双掌转柄、靠近液面起泡原理和十九世纪晚期实物。
+
+- [UNAM Revista Digital Universitaria — Producción de espuma en el chocolate con el molinillo tradicional](https://revista.unam.mx/vol.15/num5/art37/art37.pdf)：2014-05-01，PDF 6–9 页设计差异、双掌、个人手法、液面起泡；公开 PDF 下载并提取阅读；访问日期 2026-10-20。
+- [The Metropolitan Museum of Art — Molinillo, 89.4.1367](https://www.metmuseum.org/art/collection/search/501933)：Mexico、late 19th century、wood 及物件说明；直接 HTML 已读；访问日期 2026-10-20。
+
+具体边界与缺口：不采用有争论的前西班牙起源断言；环数不代表统一地方类型，两次短拖泡沫为示意而非配方。 无新增依赖的失访来源。
+
+当前器物与动作：木柄、槽形器头、两个松环、陶杯可可；部分浸入、左右搓转。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#mexican-molinillo)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

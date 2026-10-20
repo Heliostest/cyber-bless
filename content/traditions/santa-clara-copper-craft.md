@@ -18,3 +18,20 @@
 - [墨西哥官方公报 / 米却肯州申报文本：Cobre Martillado de Santa Clara del Cobre](https://sidof.segob.gob.mx/notas/docFuente/5704188)：已读申报文本14–41行的器类/锻制/家庭与个人作坊说明。仅采工艺描述，不作地理标志法律权利结论。（2026-10-19，read）
 
 逐项核查见[全场景来源审阅](../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`purepecha-copper-bowl`；最终来源：`santa-clara-copper-craft`。
+
+米却肯Santa Clara地方铜业与日用容器；非普雷佩查宗教仪式。
+
+本轮已读依据：
+
+- [Instituto Nacional de Antropología e Historia — Santa Clara del Cobre](https://lugares.inah.gob.mx/es/node/4804)：正文56–78行，考古、殖民时期生产和当代作坊段；2026-10-20，`read`。
+- [Casa de las Artesanías de Michoacán — Concurso del Cobre Martillado reúne 387 piezas en Santa Clara del Cobre](https://iam.gob.mx/public/concurso-del-cobre-martillado-reune-387-piezas-en-santa-clara-del-cobre)：正文38–43行，铜器竞赛、获奖器类与展售；2026-10-20，`read`。
+
+范围限制：技术ID中的purepecha不据此扩大为全民族器物和信仰；无本碗祈福寓意。
+
+当前呈现：软布擦铜碗、移到毡座、静看锤纹和卷边。 擦拭、毡座和铜色变化为欣赏片段，没有展示熔炼锤锻。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#purepecha-copper-bowl)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

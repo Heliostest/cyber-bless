@@ -21,3 +21,19 @@ Union for Reform Judaism 的祝福页直接说明拿起苹果片、蘸入蜂蜜�
 - **Chabad.org／Rabbi Eliyahu Kitov**，*First Night of Rosh Hashanah*（节录 *The Book of Our Heritage*，Feldheim；译者Nachman Bulman、Dovid Landseman）：[正文](https://www.chabad.org/library/article_cdo/aid/4380/jewish/First-Night-of-Rosh-Hashanah.htm)。页面未标发布日期。2026-10-20主代理与独立审阅均实际阅读L262–263；作者／出版说明L291–293。支持节庆食物、拿取苹果片并蘸蜜、祝福、品尝与祈愿；其中食用和祈愿的先后用于记录资料差异。
 
 没有把403、搜索摘要或全文未读部分登记为已读。独立审阅另外读取的律法章节只登记于独立报告，不冒充主代理已读。逐项核对见[研究记录](../../docs/research/2026-10-20-rosh-hashanah-apple-honey.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`rosh-hashanah-apple-honey`；最终来源：`rosh-hashanah-apple-honey`。
+
+犹太新年宗教祝福、好甜新年祈求；中世纪法国记录为线索。
+
+本轮已读依据：
+
+- [Chabad.org / Rabbi Yehuda Shurpin — Why Do We Dip the Apple Into Honey on Rosh Hashanah?](https://www.chabad.org/library/article_cdo/aid/591014/jewish/Why-Do-We-Dip-the-Apple-Into-Honey-on-Rosh-Hashanah.htm)：正文260–271行及注释：新年餐食、祝福、甜蜜年祈愿、Simcha of Vitri记录；2026-10-20，`read`。
+
+范围限制：不是单一国家独有；不宣称确定起源或全体统一祷词顺序。
+
+当前呈现：苹果片拿起、蘸入实体蜜面、提起回盘。 苹果颜色、陶碟、回盘、白昼庭院为产品安排，未模拟食用。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#rosh-hashanah-apple-honey)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

@@ -46,3 +46,19 @@
 
 - https://www.jinjahoncho.or.jp/en/at-a-jinja/entering/
 - https://d-museum.kokugakuin.ac.jp/eos/detail/?id=9055
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`shrine-suzu-bell`；最终来源：`shrine-suzu-bell`。
+
+参拜金属铃及宗教清净语境。
+
+本轮已读依据：
+
+- [神社本厅 — Entering a Jinja](https://www.jinjahoncho.or.jp/en/at-a-jinja/entering/)：正文Entering、Purification及Paying Respects相关段9–56行；2026-10-20，`read`。
+
+范围限制：无本轮可靠起源年代，不称全国必有或统一次数。
+
+当前呈现：拉铃绳、松手、收回，听余音，可自愿文字。 不模拟完整二礼二拍一礼，也不以完成反馈表示获护佑。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#shrine-suzu-bell)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

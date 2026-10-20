@@ -43,3 +43,15 @@
 `npm run test -w @wbr/scenes -- src/polish-paper-cut/scene.test.ts`
 
 54 项测试仅替换 GPU 边界，保留真实 Three 几何、射线、提示和心愿组件。覆盖 284×390、350×408、1280×600 的全部可见主体顶点、首个不透明提示锚点、切割垫与纸/剪刀/边角料接触、镂空与厚度、正常和减少动态、0–3 恢复、真实手势、取消/失焦/暂停/销毁、同步宿主回调重入、瞬时暂停恢复、表单持久化和匹配清理。只有延伸出画面的背景木桌面不参与主体边界断言。布局截图位于 `artifacts/sunny-rendering/layout-*`。最终生产构建、移动验证与截图由根任务统一验证。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`polish-paper-cut`；最终来源：`polish-wycinanki`。
+
+当前物件与动作：剪最后纸边、向左展开对称花叶，静看或附短句。
+
+文化说明范围：十九世纪家庭装饰、Kurpie/Łowicz区别；普通工艺。
+
+简化边界：末道剪口、原创花枝和留言为产品节选。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#polish-paper-cut)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

@@ -52,3 +52,20 @@
 - [小波兰官方旅游机构：Tradycyjny koszyczek wielkanocny i zwyczaje Wielkiej Soboty](https://ww.visitmalopolska.pl/en_GB/web/visitmalopolska/-/tradycyjny-koszyczek-wielkanocny-i-zwyczaje-wielkiej-soboty) — 已读正文；食物、装饰与地区差异。
 - [Holy Trinity Parish：Święconka – Blessing of Easter Baskets](https://holytrinityparish.ie/2026/03/swieconka-blessing-of-easter-baskets-2/) — 已读堂区公告；圣周六家庭食物篮在教堂接受祝福的实际安排。
 - [Jasna Góra 新闻处：Wieńce żniwne na Dożynkach Jasnogórskich](https://news.jasnagora.pl/aktualno%C5%9Bci-2026/wie%C5%84ce-%C5%BCniwne-na-do%C5%BCynkach-jasnog%C3%B3rskich/) — 已读正文；收获花环、感恩祈祷与教会背景。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`polish-blessing-basket`；最终来源：`polish-folk-catholic`。
+
+保留波兰天主教、圣周六、教堂祝福及面包/蛋的基督教语境。
+
+本轮已读依据：
+
+- [Holy Trinity Parish — Święconka – Blessing of Easter Baskets](https://holytrinityparish.ie/2026/03/swieconka-blessing-of-easter-baskets-2/)：正文“On Holy Saturday”至邀请家庭携篮段；2026-10-20，`read`。
+- [Holy Trinity Parish — Swieconka: Polish Blessing of the Baskets](https://holytrinityparish.ie/download/swieconka-blessing-of-easter-baskets/)：PDF第1–3页：篮子、食物祝福、面包和彩蛋祷词及象征说明；2026-10-20，`read-direct-http`。
+
+范围限制：没有确证此习俗起始年份；仅述当代家庭与移民堂区实践。
+
+当前呈现：圆面包和彩蛋先后放入白布篮，完成后静看或自愿写感谢。 两件食物为节选，日景和感谢输入为产品；未模拟司铎祝福。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#polish-blessing-basket)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

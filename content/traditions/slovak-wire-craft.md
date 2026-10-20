@@ -17,3 +17,19 @@
 - [ÚĽUV — Juríková Dagmar](https://uluv.sk/en/producers/jurikova-dagmar-2/)：已读承传机构作者档案，含铁线工艺教学与数种鸟形作品；不复制该作者图样。（2026-10-19，read）
 
 逐项核查见[全场景来源审阅](../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`slovak-wire-bird`；最终来源：`slovak-wire-craft`。
+
+斯洛伐克修补业到家用品、玩具及1940/1960年代艺术变化。
+
+本轮已读依据：
+
+- [Považská galéria umenia v Žiline / Považské múzeum — Drotárstvo](https://www.pgu.sk/v%C3%BDstavy/drotarstvo/)：展览正文，修补业、家庭器物玩具、1940年代雕塑和1960年代线艺段；2026-10-20，`read-direct-http`。
+
+范围限制：不把鸟形写作护佑或统一民族象征；更早铁线工艺起源未定。
+
+当前呈现：铁线鸟接翅、落木栖座、静看。 线鸟形体、接一翼和木座为原创展示。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#slovak-wire-bird)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

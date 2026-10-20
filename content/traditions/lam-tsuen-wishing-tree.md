@@ -17,3 +17,13 @@
 三个页面未见明确发布日期。详见[核查记录](../../docs/research/2026-10-19-lam-tsuen-wishing-tree.md)。
 
 宿主的通用回访／还愿入口重走本场，仅作为应用内感谢记录；上述来源没有证明它是林村地方的还愿仪式。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`lam-tsuen-wishing-tree`；当前来源 slug 仍为 `lam-tsuen-wishing-tree`。本轮新增介绍的证据范围：香港林村放马莆、宝牒祈愿与抛挂；2005 事故及 2010 仿真树的明确变迁。
+
+- [香港记忆 / Hong Kong Memory — 农历正月初一：林村许愿树](https://www.hkmemory.hk/collections/local_festivals/festivals/lunar1/1_1/index.html)：林村许愿及 2005、2010 年变迁段；网页正文已读；访问日期 2026-10-20。
+
+具体边界与缺口：不编造最初起源年代或全港统一习惯；固定字样、绳结/轨迹与必挂稳为产品处理，不代表愿望应验。 无新增依赖的失访来源。
+
+当前器物与动作：仿真树、塑料橙、宝牒；示例平安字、系橙、抛挂。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#lam-tsuen-wishing-tree)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

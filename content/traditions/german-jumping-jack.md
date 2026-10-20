@@ -18,3 +18,13 @@ Hampelmann是牵绳关节玩具的一种称呼。柏林欧洲文化博物馆的�
 
 - [Staatliche Museen zu Berlin：Museum Europäischer Kulturen，ObjID531310](https://search.smb.museum/object/obj-531310?materials=bemalt.&page=800)，2026-10-18读取官方网页的搜索索引完整物件描述，核对彩绘木材、细绳与活动木肢。现场全文打开超时，因此不称作成功阅读全文；[馆方永久标识](https://id.smb.museum/object/531310)。不复制其人物、服装、配色、尺寸或图片。
 - [Mucem：Jouez avec les collections du Mucem，Animer des pantins](https://www.mucem.org/sites/default/files/2020-04/livret_pantins_v2.pdf)，2026-10-18成功读取13页PDF全文，尤其第5页64–94行的关节、分件和组装说明。仅作家族与活动关节语境，不复制其中的任何纸偶图样或印刷人物。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`german-jumping-jack`；当前来源 slug 仍为 `german-jumping-jack`。本轮新增介绍的证据范围：柏林馆藏约 1910 年的彩绘木片、活动头肢和牵绳机制；德语名称与馆藏语境。
+
+- [Staatliche Museen zu Berlin / Museum Europäischer Kulturen — Hampelmann; Harlekin](https://id.smb.museum/object/531310)：Datierung、Material/Technik 及 Objektbeschreibung 全文；直接 HTML 请求成功并已读；访问日期 2026-10-20。
+
+具体边界与缺口：馆藏年代不是发明年代；没有证据支持德国独创、节日资格或驱邪含义。模型不是该馆藏复刻。 Mucem 旧 PDF 链接本轮 404/读取失败，未登记为正文证据。
+
+当前器物与动作：原创彩绘关节木偶、牵绳与木珠；下牵舒展，松手回落。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#german-jumping-jack)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

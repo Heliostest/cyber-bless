@@ -42,3 +42,13 @@
 
 - [Forestry and Land Scotland：Munlochy Clootie Well](https://forestryandland.gov.scot/visit/destinations/munlochy-clootie-well) — 已读正文；支持浸布系树、求愈信念和材料要求。
 - [Heritage Council：Holy Wells of Ireland](https://www.heritagecouncil.ie/content/files/Holy-Wells-of-Ireland.pdf) — 已读 PDF；用于说明爱尔兰圣井的地方与节期差异，不作为 Munlochy 专属程序的证据。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：苏格兰曼洛希管理方记述 cloot、浸井系树及布朽病退信念；当代养护要求小片天然可降解材料。
+
+实际呈现：纯棉布、水井与低枝；浸水→系枝→松手，布变化不作病愈反馈。
+
+边界与缺口：未确定起源或连续传承年代；不设不可取回等统一禁忌，不把求愈改成纯心理疗愈。只对应本井址，其他圣井另查。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#clootie-well-rag)。

@@ -17,3 +17,13 @@ Museums Victoria的儿童民俗馆藏记录了一件在墨尔本制作的手工�
 ## 来源
 
 - [Museums Victoria：Toy Windmill – Paper](https://collections.museumsvictoria.com.au/items/254045)，2026-10-19（Asia/Shanghai）成功读取86行，25–29行核对手工玩具与四翼、木柄、销、珠及风力转动的一般事实，50行仅提供墨尔本馆藏语境。原创模型并非该藏品的尺寸或结构复刻。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`paper-pinwheel`；当前来源 slug 仍为 `paper-pinwheel`。本轮新增介绍的证据范围：1988 墨尔本手作馆藏、四翼针珠木筷结构、风驱及儿童常用材料的文化语境。
+
+- [Museums Victoria — Toy Windmill: Paper, 1988, SH 990308](https://collections.museumsvictoria.com.au/items/254045)：Summary、Physical Description、Place & Date Made；网页正文已读，直接请求曾 403；访问日期 2026-10-20。
+
+具体边界与缺口：不是澳大利亚独有或发明证据；本场配色/手拨代风是简化，没有统一吉祥用途。 无新增依赖的失访来源。
+
+当前器物与动作：原创双色四翼纸风车、轴珠与木柄；轻拨、提柄、续转。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#paper-pinwheel)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

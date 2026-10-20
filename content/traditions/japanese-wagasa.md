@@ -20,3 +20,13 @@
 
 - [传统工艺产业振兴协会：Gifu Japanese Umbrella](https://kougeihin.jp/en/craft/gifu-wagasa/)，2026-10-18成功读取，第26–50、74–77行核对材料、折纸与竹骨连接。
 - [日吉屋：How to Use and Care for Your Wagasa](https://shop.wagasa.com/en/blogs/wagasa/guide-wagasa)，2026-10-18成功读取，第109–141行核对推环、旋柄和收伞说明，保留与产品辅助动作的差异。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`japanese-wagasa`；当前来源 slug 仍为 `japanese-wagasa`。本轮新增介绍的证据范围：岐阜/长良川材料、江户武士副业、分工、日用和舞台用途及竹骨糊纸机制。
+
+- [Association for the Promotion of Traditional Craft Industries — Gifu Wagasa](https://kougeihin.jp/en/craft/gifu-wagasa/)：历史、Features、Production method；网页相关正文已读；访问日期 2026-10-20。
+
+具体边界与缺口：不认定本场纹样为某工坊，不添加伞的普遍祈福意义；原理示意不能替代制伞工序。 无新增依赖的失访来源。
+
+当前器物与动作：原创竹骨纸伞、木环和伞柄；推环展开、转柄、收拢。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#japanese-wagasa)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

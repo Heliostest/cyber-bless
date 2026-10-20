@@ -22,3 +22,19 @@
 
 - [土耳其文化与旅游部驻法文化信息处 · Ebru, l’art turc du papier marbré](https://turquietourisme.ktb.gov.tr/FR-133473/unesco.html)，2026-10-19 阅读页面中的 Ebru 专段。直接支持调制液面上的颜料、转印纸张、传统书籍装帧用途、师徒口授与实践传承，以及 2014 年列入名录的信息。页面另有其他遗产，未将其仪式混入水拓画。
 - [UNESCO · Ebru, Turkish art of marbling](https://ich.unesco.org/en/RL/ebru-turkish-art-of-marbling-00644)，保留原核对记录：2026-10-15 曾用于工艺概要；2026-10-19 直达及数字入口均遇人工验证。本轮以可读的土耳其文化主管部门正文补证，未声称重新通读；未复制图片、视频或纹样。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`turkish-ebru-paper`；最终来源：`turkish-ebru`。
+
+土耳其纸艺、书籍装饰、师徒经验与当代交流。
+
+本轮已读依据：
+
+- [土耳其文化旅游部驻法文化信息处 — Ebru, l’art turc du papier marbré](https://turquietourisme.ktb.gov.tr/FR-133473/unesco.html)：EBRU专节全部正文，缓存23–27行及对应后段；2026-10-20，`read-direct-http`。
+
+范围限制：缺乏本轮可靠的早期作品年代，未拿2014名录年当起源。
+
+当前呈现：梳具右移显彩纹、自动落纸、近边揭纸转印、静看。 预制液面与颜料、自动贴纸、即时固色和留言为产品，不是配方教学。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#turkish-ebru-paper)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

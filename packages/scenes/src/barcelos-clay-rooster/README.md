@@ -32,3 +32,11 @@ The clay base rests on the linen at first and directly on the display at the end
 `npm run test -w @wbr/scenes -- src/barcelos-clay-rooster/scene.test.ts`
 
 The focused suite uses actual Three.js geometry, raycasting, interaction cues and the real wish form; only the GPU rendering boundary is replaced. Coverage includes actual source/destination first hits and whole-rooster framing at 320, 390 and 1280 px, wrong input, occlusion, cancellation, pause, mixed contacts, silent restoration, explicit-only saving, support contacts, paint fit and resource cleanup. Root integration owns full-suite, production-browser and mobile verification.
+
+## 2026-10-20 当前介绍核查
+
+已按实际器物与用户提示扩充介绍。彩绘陶鸡、画笔和圆台；胸前添叶芽→移圆台→静看/可选留言。
+
+核查重点：陶器总体历史不能当公鸡造型同样古老；本轮撤回旧 UI 对当前陶鸡“寓意好运”的泛化，主代理同步将 quiet/returning/done 收窄到叶芽彩纹、彩绘陈设及手作纹样。胸前叶芽和台座无传统仪式依据。市政府公鸡页失访，地方市方“Retratos do Galo no Comércio Local”PDF仅检索可见、直读超时/连接重置，不作为好运寓意已读证据；保留工艺与地方标志关联。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#barcelos-clay-rooster)。

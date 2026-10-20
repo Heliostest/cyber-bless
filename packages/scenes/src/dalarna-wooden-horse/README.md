@@ -18,3 +18,11 @@ Physical input:
 3. `horse-painted-saddle`: quiet tap, no wish input or wish write.
 
 All cue targets are real opaque mesh surfaces. Model has four separate legs with verified support contact at the final plinth height. Pointer cancellation, mixed fingers, blur, host pause, reduced motion, silent checkpoint restoration and full resource disposal are tested with real geometry and raycasting; only the GPU boundary is replaced in jsdom. Browser tests use displayed cue positions and capture the running scene.
+
+## 2026-10-20 当前介绍核查
+
+已按实际器物与用户提示扩充介绍。彩鞍木马、软布、木座；轻拭→放座→静看。
+
+核查重点：1939为传播节点不是木马起源；不声称家屋护佑、统一纹样或保养三步传统。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#dalarna-wooden-horse)。

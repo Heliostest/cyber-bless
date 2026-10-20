@@ -52,3 +52,14 @@
 
 - https://www.gov-online.go.jp/eng/publicity/book/hlj/html/202003/202003_03_en.html
 - https://www.gov-online.go.jp/eng/publicity/book/hlj/html/202312/202312_05_en.html
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`mizuhiki`；当前来源 slug 仍为 `mizuhiki`。本轮新增介绍的证据范围：长野县饭田、江户元结到明治水引发展的工艺转变，以及连接人心与礼封用途。
+
+- [長野県 / 県立長野図書館 — 飯田水引](https://shinshu-dcommons.pref.nagano.lg.jp/others/01DD001H220003)：2010 年影像资料的資料解説全文；已读网页文字，未声称观看视频；访问日期 2026-10-20。
+- [田中宗吉商店 — 歴史と伝統](https://www.mizuhikisoukichi.jp/history/)：江户元结、明治转向祝仪袋金封及当代发展段；网页正文已读；访问日期 2026-10-20。
+
+具体边界与缺口：不使用失访政府文章中的千四百年起源故事；当前结形不指定为受规范的婚丧结式，不推统一颜色数目规则。 Highlighting Japan 2020 英文/日文旧网页与整刊 PDF 403；搜索全文不计已读，改用长野县和产地厂家正文。厂家早期起源传说及不一致的专利纪年不采用。
+
+当前器物与动作：和纸绳、赠礼纸封、简化环结；绕环、穿环收紧、可写祝愿。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#mizuhiki)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

@@ -3455,18 +3455,31 @@ button:hover:not(:disabled) {
 .ritual-narrative[open] > summary::before {
   transform: rotate(180deg);
 }
-.ritual-narrative > p {
+.ritual-narrative-body {
   max-height: 40vh;
+  max-height: 40dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  line-height: 1.8;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  line-height: 1.9;
   margin: 0;
-  padding: 12px 14px;
+  padding: 14px 16px;
   border: 3px solid var(--rim);
   border-radius: 20px;
   background: var(--paper);
   box-shadow: 0 0 0 2px var(--edge);
   color: var(--ink-soft);
+}
+.ritual-narrative-body > p {
+  margin: 0;
+}
+.ritual-narrative-body > p + p {
+  margin-top: 1em;
+}
+.ritual-narrative-body:focus-visible {
+  outline: 3px solid var(--mint-text);
+  outline-offset: 3px;
 }
 .scene-catalog {
   display: grid;

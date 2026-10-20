@@ -65,3 +65,15 @@ Follow-up callback regressions first reproduced an unwanted final render after p
 The integrating task's 320px viewport screenshot revealed that its actual 284×390 canvas clipped the loose wing; 350×408 was also too close to the edge. A vertex-projection regression reproduced left extents of -1.063 and -0.999 NDC. The loose wing and its pad, bird home and home pad, and entire display perch were moved inward without changing the camera or sculpture scale. At checkpoints 0, 1 and 2, every vertex of the bird and loose wing now stays inside ±0.92 NDC on both actual canvas sizes, while both drag anchors and the final tap remain the first visible raycast hits. The all-vertex guard covers the displayed beak as well as the detached wing.
 
 Actual GPU appearance and browser/mobile integration are left to the integrating parent task, which owns registry/catalog/background/build work. No shared files, dependencies, builds or mobile artifacts were modified by this module author.
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`slovak-wire-bird`；最终来源：`slovak-wire-craft`。
+
+当前物件与动作：铁线鸟接翅、落木栖座、静看。
+
+文化说明范围：斯洛伐克修补业到家用品、玩具及1940/1960年代艺术变化。
+
+简化边界：线鸟形体、接一翼和木座为原创展示。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#slovak-wire-bird)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

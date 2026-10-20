@@ -17,3 +17,13 @@
 - [Generalitat de Catalunya — Els Gegants, l'Arboç](https://patrimonifestiu.cultura.gencat.cat/Festes-i-elements-festius-catalogats-o-declarats/Festes-Majors/La-Festa-Major-de-l-Arboc/Els-gegants)：政府遗产清单记述特定地方巨偶及制作复制史。（2026-10-19，read）
 
 逐项核查见[全场景来源审阅](../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：西班牙加泰罗尼亚巨偶/音乐/舞蹈及协会传习；拉尔博斯1770书面记载、1827具名偶、1984复制偶。
+
+实际呈现：节庆巨偶小模型、花章、底座木把与圆台；别花→移模型→静看。
+
+边界与缺口：地方档案年代不等于全加泰罗尼亚起源；本模型不对应 Llúcia/Chabran 等具名角色；花章与桌上陈列非巡游程序。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#catalan-festival-giant)。

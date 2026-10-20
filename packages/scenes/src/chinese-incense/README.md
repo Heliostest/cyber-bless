@@ -31,3 +31,11 @@ All assets are generated locally in Three.js. No texture URLs, network runtime a
 `npm run test -w @wbr/scenes -- src/chinese-incense/scene.test.ts`
 
 GPU rendering alone is mocked in jsdom; scene geometry, raycasting, projected cues, object pointer ownership and native DOM actions are real. The tests cover placement, incorrect input, direct mobile coordinates, restoration, pause/focus/cancellation, mixed page pointers, frozen animations and disposal of all owned resources/listeners.
+
+## 2026-10-20 当前介绍核查
+
+已按实际器物与用户提示扩充介绍。三足陶炉、炉盖盖托、单支细香及纸套；开盖→插香孔→静烟，UI 当前明确妈祖语境。
+
+核查重点：旧卡一般香炉与祖先访谈不能单独证明妈祖，已补直接妈祖材料并撤回“未指定神明”描述。田野所述三炷/神位次序不移植为全国通则；当前一炷、盖托、纸套是产品选型。UNESCO 页面验证码、团标链接系统错误均未作为已读。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#chinese-incense)。

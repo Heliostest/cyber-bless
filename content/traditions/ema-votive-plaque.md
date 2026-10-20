@@ -46,3 +46,13 @@
 
 - https://d-museum.kokugakuin.ac.jp/eos/detail/?id=9608
 - https://www.jinjahoncho.or.jp/en/at-a-jinja/entering/
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：日本绘马用于神社寺院等祈愿感谢；马的奉献物背景、奈良时代遗址实物、室町后图像尺寸多样。
+
+实际呈现：花叶木牌、双孔绳、横梁；翻背→短愿/留白→挂，回访致谢。
+
+边界与缺口：奈良实物是已见年代非发明时刻；花叶图、翻面及同牌回访为产品，不给所有神社规定相同流程。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#ema-votive-plaque)。

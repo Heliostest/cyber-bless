@@ -20,3 +20,13 @@
 
 - [史密森学会国家人类学档案馆：MS 7177 Book of tangrams or puzzle designs](https://sirismm.si.edu/EADpdfs/NAA.MS7177.pdf)，2026-10-18 读取完整目录 PDF，第 1 页 Scope and Contents；核对七片、正方形与多种轮廓。
 - [Chinese Puzzles：Tangram Puzzle](https://chinesepuzzles.org/tangram-puzzle/)，2026-10-18 阅读全文，采用 Tangram Arrangements 部分核对七种片数、木质与不重叠规则；未采用其起源推断。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：五三角、一方、一平行四边形；1813图谱、19世纪初贸易出口及1817–1818欧美传播记录。
+
+实际呈现：七块几何板，四片已放，移小三角/方片/平行四边形合方。
+
+边界与缺口：使用收藏者对实物和图谱的原始研究，不能将宋代燕几与明蝶几推测写成已证实起源；配色和三片步骤原创。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#chinese-tangram)。

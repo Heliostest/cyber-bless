@@ -22,3 +22,13 @@
 - **日本政府广报在线**，*Highlighting Japan, April 2025*：[候选链接](https://www.gov-online.go.jp/hlj/en/april_2025/april_2025-07.html)。主代理打开返回InternalError，未读正文，未作为证据。搜索摘要亦不计已读。
 
 详细核查见[研究记录](../../docs/research/2026-10-20-kagami-biraki-sake.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`kagami-biraki-sake`；当前来源 slug 仍为 `kagami-biraki-sake`。本轮新增介绍的证据范围：镜=圆盖、开前程的吉意、现代庆贺用途、神事供酒分享背景及江户运输保护菰。
+
+- [月桂冠 — 鏡開きとは何ですか？](https://www.gekkeikan.co.jp/enjoy/qa/sake/sake06.html)：名称、神酒、菰卷历史、预松盖与轻叩接缝方法；网页正文已读；访问日期 2026-10-20。
+
+具体边界与缺口：无确切起源年；不采战国出征说。两片平移与收槌分镜不当作传统礼序，未表现饮用或完整神事。 无新增依赖的失访来源。
+
+当前器物与动作：菰卷酒樽、预松盖板、红白带木槌；取槌、叩缝端、收槌。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#kagami-biraki-sake)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

@@ -19,3 +19,13 @@
 - [Estonian Open Air Museum：Spring](https://evm.ee/about/folk-calendar/spring)，2026-10-18阅读全文76–79行，核对春日、复活节与村落秋千的季节语境。不复制其中的信仰、献赠、健康或祈福说法。
 - [Estonian Open Air Museum：Swing grounds](https://evm.ee/venue-hire/event-spaces/swing-grounds)，2026-10-18阅读全文57行，核对秋千场地与传统夏季聚会。没有复刻馆内某一实物或搬用活动时间、价格。
 - [Anu Vissel：Eestlaste kiigekultuur enne ja nüüd](https://www.folklore.ee/tagused/nr21/kiik.htm)，Mäetagused 21（2002），2026-10-18读取原始研究HTML117–133行，核对绳索/木臂形态、木台、横木、侧向支撑及区域差异。不搬用历史尺寸、档案照片或歌辞，不声称精确复原。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：爱沙尼亚露天博物馆复活节/秋千节说明，青年搭秋千、姑娘携礼答谢；当代博物馆秋千场仍办仲夏聚会。
+
+实际呈现：原创木架、双木臂悬台；推远→回摆→收稳。
+
+边界与缺口：没有最初起源或统一古代年代；当前台式秋千不是某村实物复原，单人短拖不演完整男女社交礼俗。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#estonian-village-swing)。

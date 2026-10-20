@@ -28,3 +28,19 @@ USC 民俗档案记录的一位波兰裔受访者描述：家人从对方薄饼�
 - [Mississippi Catholic：Carmelites remember their call as they honor foundress](https://www.mississippicatholic.com/2015/05/28/carmelites-remember-their-call-as-they-honor-foundress/)：2015-05-28，Dorothy Ashley 访谈；已读55–57行第8问。Sister Mary Joanne Kuzmic 回忆父母与孩子分享薄饼、为家人祈求上帝祝福，支持一个波兰裔天主教家庭的宗教语境，不外推全部家庭规则。
 
 上述页面正文已经实际阅读。Smithsonian 候选文章读取失败；Arkansas 配图超时；均不作为已读图像或证据。详细边界与核查清单见[研究记录](../../docs/research/2026-10-20-polish-oplatek-sharing.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`polish-oplatek-sharing`；最终来源：`polish-oplatek-sharing`。
+
+平安夜家庭祝愿、面粉水薄饼和和解有当代堂区自述。
+
+本轮已读依据：
+
+- [North Oxford Catholic Family of Parishes — Wigilia i Pasterka](https://nocfop.dol.ca/wigilia-i-pasterka)：Wigilia正文148–168行：第一颗星、祈祷、分享薄饼和祝愿；2026-10-20，`read`。
+
+范围限制：起源及最早年代未证实，不写千年源流。
+
+当前呈现：两位家人的手递出薄饼、分角、交接。 一对人的一次分饼，不是完整晚餐、圣餐或祈祷顺序。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#polish-oplatek-sharing)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

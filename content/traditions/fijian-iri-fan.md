@@ -18,3 +18,13 @@
 - [Auckland War Memorial Museum：Iri (Fan)，Google Arts & Culture馆方发布](https://artsandculture.google.com/asset/PgGAsAZ1GYOt6g)：已读馆方完整说明，voivoi/pandanus、titi框、spade叶面、劈木柄和额外绑叶；此页是馆方馆藏记录。（2026-10-19，read）
 
 逐项核查见[全场景来源审阅](../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：斐济19世纪编扇收藏与叶材日用；奥克兰 iri 馆藏叶条盘绕芦框、劈木柄夹叶绑固。
+
+实际呈现：露兜叶交织扇面、骨架、劈柄绑带；接绑带→放展座→静看。
+
+边界与缺口：19世纪是馆藏范围非编扇起源；原物盘绕与当前交织不同；不能由编扇推卡瓦礼或 sevusevu 要求；展座/静看是当代欣赏。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#fijian-woven-fan)。

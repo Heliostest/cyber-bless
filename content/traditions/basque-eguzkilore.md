@@ -17,3 +17,13 @@
 - [Museo Etnográfico de Orozko — Los pobladores de las Tierras Altas](https://www.orozkomuseoa.eus/los-pobladores-de-las-tierras-altas)：民族志馆解释牧人及农家门口太阳之花及其民俗寄寓。（2026-10-19，read）
 
 逐项核查见[全场景来源审阅](../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：西班牙巴斯克奥罗斯科高地牧人/农家门口 eguzkilore；太阳之花名称及保护家宅、抵御恶灵疾病雷暴的民俗信念。
+
+实际呈现：纸木太阳蓟花饰，装花心→挂门框木钉→静看/可选留言。
+
+边界与缺口：没有确定起始年代；馆述信念不是产品效力。纸木拼装不是采放真植物的固定传统，不据此重建 Mari 仪式。巴斯克政府原链接失败未采用。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#basque-sunflower)。

@@ -18,3 +18,13 @@
 
 - [Nara National Research Institute for Cultural Properties：Japanese Garden Dictionary，deer-scarer](https://www.nabunken.go.jp/org/bunka/jgd/pages/DeerScarer.html)，2026-10-18成功读取全文，第5行核对斜口、支点、蓄水、倾落与回叩石面。
 - [Kyoto City Official Guide：Shisen-do Temple](https://kyoto.travel/en/destinations/shisendo-temple/)，2026-10-18成功读取全文，第89–90行核对庭园中竹制跷筒的水与声响；未采用寺院形象、照片或宗教叙事。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`japanese-shishi-odoshi`；当前来源 slug 仍为 `japanese-shishi-odoshi`。本轮新增介绍的证据范围：鹿/野猪驱赶的农业用途及庭园陈设转换，重力倾倒回叩结构。
+
+- [奈良文化財研究所 — Japanese Garden Dictionary: Deer scarer](https://www.nabunken.go.jp/org/bunka/jgd/pages/DeerScarer.html)：Ono Kenkichi / Walter Edwards，2010，词条全文；网页已读；访问日期 2026-10-20。
+
+具体边界与缺口：无确切起源世纪；不附加禅修/驱邪意义；本场手扶三段并非真实自动循环的操作要求。 无新增依赖的失访来源。
+
+当前器物与动作：竹嘴、枢转竹筒、叩石与浅池；人为引水、倾筒、回叩。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#japanese-shishi-odoshi)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

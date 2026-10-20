@@ -21,3 +21,14 @@
 - [莱比锡城市历史博物馆 · Nussknacker，Z0056134](https://www.stadtmuseum.leipzig.de/document/objekt/Z0056134)，2026-10-19 阅读馆藏记录。支持塞芬、车削木材、背杆、活动下颌与附着胡须；未复制照片、尺寸和配色。
 - [塞芬玩具博物馆 · Spielzeug im Museum](https://spielzeugmuseum-seiffen.de/spielzeug_im_museum.cfm)，2026-10-19 阅读博物馆介绍，尤其“Tradition und Zeitgeist”段落。支持当地车削木作、胡桃夹子与圣诞装饰展陈的关联；未采用起源年份或传说作为交互依据。
 - [LVR 林德拉露天博物馆 · Nussknacker，dc00005490](https://alltagskulturen.lvr.de/en/objekte/nussknacker/DE-MUS-377513/lido/dc00005490)，保留访问记录：2026-10-17 曾核对官方搜索索引，2026-10-19 直达页仍不可访问。本轮未读到正文，不将索引中的现代装饰用途概括作为独立依据。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`german-nutcracker`；当前来源 slug 仍为 `erzgebirge-nutcracker-craft`。本轮新增介绍的证据范围：赛芬矿业向木作转变、十八世纪中叶玩具生产及约 1957 年具体胡桃夹子机制；圣诞陈设由馆藏主题支持。
+
+- [Erzgebirgisches Spielzeugmuseum Seiffen — Spielzeug im Museum](https://spielzeugmuseum-seiffen.de/spielzeug_im_museum.cfm)：VOM BERGMANN ZUM SPIELZEUGMACHER、1850–1920 家庭生产段；直接 HTML 已读；访问日期 2026-10-20。
+- [Stadtgeschichtliches Museum Leipzig — Nussknacker, Z0056134](https://www.stadtmuseum.leipzig.de/document/objekt/Z0056134)：约 1957 年、Seiffen、材质及背杆下颌说明；直接 HTML 已读；访问日期 2026-10-20。
+
+具体边界与缺口：不把单件年代当胡桃夹子起源；未给造型附加守护或驱邪寓意。 无新增依赖的失访来源。
+
+当前器物与动作：车削人物木偶、背杆、活动下颌、胡桃；抬杆、放果、压杆。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#german-nutcracker)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

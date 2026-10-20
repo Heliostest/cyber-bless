@@ -18,3 +18,13 @@
 
 - [The Metropolitan Museum of Art：Kantele，89.4.1005](https://www.metmuseum.org/art/collection/search/501615)，2026-10-18阅读全文36–44行，核对芬兰、木与金属材料、拨弦齐特琴分类。不搬用历史尺寸或照片，不声称复刻该件实物。
 - [Kantele Association：Kantele in English](https://www.kantele.net/kantele/in-english)，Eija Kankaanranta与Satu Sopanen撰文，2026-10-18阅读全文23–30、42行，核对五弦形态、木琴身与钢弦、拨弦语境及乐器家族差异。不复制宣传性的疗愈、魔法说法，不搬用乐曲、调式、照片或演奏者形象。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：芬兰康特勒协会说明5至39弦乐器家族、波罗的海近缘乐器、木体金属弦、音乐教育和当代多风格演出。
+
+实际呈现：原创五钢弦木琴、长中短三弦拨动回振，合成声音。
+
+边界与缺口：没有五弦琴最早年代；不采用神话发明或泛化疗愈。三次拨弦非传统曲目，音色非真实乐器录制。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#finnish-kantele)。

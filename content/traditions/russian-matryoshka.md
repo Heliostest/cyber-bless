@@ -23,3 +23,19 @@
 - [Museums Victoria · National Doll — Russian, Babushka](https://collections.museumsvictoria.com.au/items/251505)，2026-10-17 阅读藏品完整说明。核对木质、分合、嵌套及实心小娃结构；未使用照片。
 - [State Russian Museum · Polkhovsky Maidan, Matryoshkas](https://rusmuseumvrm.ru/data/collections/folk_art/oni-r_3260/?lang=en)，2026-10-17 阅读藏品完整说明。核对车制圆形、彩绘与花卉题材；不复刻其地区纹样。
 - [The Museum of Russian Art · A Thousand Nesting Dolls](https://tmora.org/2024/08/27/a-thousand-nesting-dolls/)，2026-10-17 阅读完整展览介绍。核对形态和题材的多样性，保留起源叙事的不确定性；不使用展览图像。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`russian-matryoshka`；最终来源：`russian-matryoshka`。
+
+1900展出、二十世纪生产及Semenov等地方差异。
+
+本轮已读依据：
+
+- [The Museum of Russian Art — A Thousand Nesting Dolls](https://tmora.org/2024/08/27/a-thousand-nesting-dolls/)：展览正文：起源传说、1900巴黎、革命前产业、苏联生产、1990年代及Semenov作品；2026-10-20，`read-direct-http`。
+
+范围限制：最早创作者与起源传说不确定；不把多子多福/母性当全部套娃固定意涵。
+
+当前呈现：提外壳、收小娃、合接缝；两只原创彩绘木偶。 只展示两个尺寸，配色图案及相套辅助为产品。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#russian-matryoshka)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

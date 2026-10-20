@@ -19,3 +19,19 @@
 
 - [大都会博物馆：Güiro，波多黎各，89.4.2758](https://www.metmuseum.org/art/collection/search/502789)，2026-10-18阅读全文，采用中空瓜壳、木材、横棱与木棒或梳状刮具的描述，不采用藏品图像或精确尺寸。
 - [史密森尼美国历史博物馆：Puerto Rican Guiro，nmah_602528](https://www.si.edu/object/puerto-rican-guiro%3Anmah_602528)，2026-10-18阅读检索解析记录，补充瓜壳、刻棱与刮棒的语境。直接页面返回404、美国历史博物馆页面返回500；仅作辅助语境，不作结构或精确历史依据。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`puerto-rican-guiro`；最终来源：`puerto-rican-guiro`。
+
+十九世纪波多黎各实物与加勒比节奏用途。
+
+本轮已读依据：
+
+- [The Metropolitan Museum of Art — Güiro, 89.4.2758](https://www.metmuseum.org/art/collection/search/502789)：器物说明及Object Details，3–44行；2026-10-20，`read`。
+
+范围限制：未确定更早起源与特定族群发明关系；不追加仪式信念。
+
+当前呈现：素色中空瓜壳横棱，木棒下刮、回刮、移开。 器物原创，声音合成、两次刮擦并非曲谱或演奏教学。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#puerto-rican-guiro)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

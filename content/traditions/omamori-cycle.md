@@ -42,3 +42,14 @@
 - https://d-museum.kokugakuin.ac.jp/eos/detail/id=9633
 - https://www.jinjahoncho.or.jp/en/at-a-jinja/entering/
 - [神社本庁 — お神札、お守り](https://www.jinjahoncho.or.jp/omairi/omamori/)：2026-10-19 已读正文；年末更新之外，明确允许佩持至愿望达成。上列国学院器物条目与本厅英文导览亦于本日复核。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`omamori-cycle`；当前来源 slug 仍为 `omamori-cycle`。本轮新增介绍的证据范围：随身护符神佛守护、与大神札差异、阴阳道/寺院/神社历史联系及更新非强制统一。
+
+- [國學院大學 / Okada Yoshiyuki — Shinsatsu, Mamorifuda](https://d-museum.kokugakuin.ac.jp/eos/detail/id=9633)：全文，神札/随身袋与历史联系；直接 HTML 已读；访问日期 2026-10-20。
+- [神社本庁 — お神札とお守り](https://www.jinjahoncho.or.jp/omairi/omamori/)：佩持及年末/愿望实现后更新段；直接 HTML 已读；访问日期 2026-10-20。
+
+具体边界与缺口：不规定一年到期或实际效力；返还木箱和循环为界面安排，不代办神社寺院正式返纳，袋样式无具体起源断言。 无新增依赖的失访来源。
+
+当前器物与动作：织锦式袋、挂绳、旅行包、返还木箱；选袋佩挂，可回访返还。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#omamori-cycle)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

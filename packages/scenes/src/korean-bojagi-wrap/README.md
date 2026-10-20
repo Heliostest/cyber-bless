@@ -46,3 +46,11 @@
 `npm run test -w @wbr/scenes -- src/korean-bojagi-wrap/scene.test.ts --maxWorkers=2`
 
 宿主暂停恢复夹具覆盖全部六个操作。`node scripts/verify-bojagi-drop.mjs` 使用现有 Vite 服务，顺序运行实际鼠标与 Chrome 原生触摸、窄屏及桌面、区域内偏离中心的覆盖、错位拒绝、持有不提前提交、六步后手动结束和截图；并观察实际 WebAudio 播放与震动调用是否遵守实时开关。本次复核结果见[覆盖与收结记录](../../../../docs/research/2026-10-19-bojagi-coverage.md)。技术测试证明实现与约定一致；上表的人工来源核查独立承担文化事实支持。
+
+## 2026-10-20 介绍扩充核查
+
+当前简介已补充地域、文化语境及有据的历史节点，保留来源 `korean-bojagi`。核查范围：韩国多阶层日用/赠礼、材质、现存多属朝鲜王朝 1392–1910、女性传承及当代赠好运说法。
+
+边界：存世年代不是最初起源；不把当前色块认定为特定拼布地域，不宣称本绳结是全国统一打法。
+
+来源正文的完整链接、实际阅读位置、访问状态及产品简化见[B 组逐项记录](../../../../docs/research/2026-10-20-scene-narratives-b.md#korean-bojagi-wrap)与[来源卡](../../../../content/traditions/korean-bojagi.md)。本节不更改现有交互；用户介绍集中维护于 `packages/core/src/scene-narratives/b.ts`。

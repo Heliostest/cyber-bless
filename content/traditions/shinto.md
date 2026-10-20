@@ -68,3 +68,19 @@
 - http://www2.kokugakuin.ac.jp/e-shinto/
 - https://doi.org/10.1093/acprof:oso/9780190621711.001.0001
 - https://doi.org/10.1093/jaarel/lfi115
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`shinto-torii`；最终来源：`shinto`。
+
+日本神社空间边界、敬神与当代入社礼节。
+
+本轮已读依据：
+
+- [神社本厅 — Entering a Jinja](https://www.jinjahoncho.or.jp/en/at-a-jinja/entering/)：正文Entering、Purification及Paying Respects相关段9–56行；2026-10-20，`read`。
+
+范围限制：未核实鸟居最早年代；不虚写远古起源。
+
+当前呈现：走近鸟居、低头、静立；宿主完成后可自愿附记。 宿主当前不是绘马挂牌流程；旧介绍的绘马叙述已从本轮正文移除。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#shinto-torii)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

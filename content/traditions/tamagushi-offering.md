@@ -25,3 +25,20 @@ sensitivity: 低
 - [神社本庁《玉串の意味》](https://www.jinjahoncho.or.jp/omairi/tamagushi/)：已读9–15、27行，支持亲手持奉、敬意与祈念意义；不据神话段落推定可考历史年代。
 
 逐项核对、差异与测试见 [研究记录](../../docs/research/2026-10-20-tamagushi-offering.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`tamagushi-offering`；最终来源：`tamagushi-offering`。
+
+神社祭典祈愿、神恩、枝物作为媒介，方向有公开作法依据。
+
+本轮已读依据：
+
+- [神社本厅 — 玉串の意味](https://www.jinjahoncho.or.jp/omairi/tamagushi/)：正文9–27行，玉串寓意、媒介及语源诸说；2026-10-20，`read`。
+- [神社本厅 — 参拝方法](https://www.jinjahoncho.or.jp/omairi/sanpai/)：玉串拝礼の作法74–97行；2026-10-20，`read`。
+
+范围限制：神话/词源诸说不确立历史始年。
+
+当前呈现：带纸垂榊枝顺时针转正、静心、再转枝根向前供案落置。 省略接受玉串、行进、完整礼拜与神职环节，不称全仪完成。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#tamagushi-offering)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

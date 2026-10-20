@@ -46,3 +46,14 @@
 - [Thailand Foundation — Thai Mother’s Day](https://thailandfoundation.or.th/th/thai-mothers-day/)：2026-10-19 已读，支持母亲节茉莉花环与感谢、敬爱。
 
 既有研究线索保留：[Cornell eCommons 资料](https://hdl.handle.net/1813/33431)本次未取得可读正文；[Asian Social Science DOI](https://doi.org/10.5539/ass.v13n7p131)本轮未全文复核。它们不能仅因涉及泰国或神屋，就替本卡的花艺史、车辆用法和具体操作背书。旧稿另将花博物馆英页列为缺口，本轮仍不作断代结论。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`phuang-malai`；当前来源 slug 仍为 `phuang-malai`。本轮新增介绍的证据范围：泰国 malai 迎宾尊敬，外交部 2019 标志语境；母亲节白茉莉的母爱含义及 1976 年八月十二日安排。
+
+- [Ministry of Foreign Affairs of Thailand — Thailand’s ASEAN Chairmanship 2019](https://www.mfa.go.th/en/content/5d5bd1fe15e39c3060027598)：2018-12-27，malai 代表欢迎与敬意段；直接 HTML 已读；访问日期 2026-10-20。
+- [Thailand Foundation — Thai Mother's Day](https://thailandfoundation.or.th/th/thai-mothers-day/)：历史日期、jasmine 与向母亲/母职照料者表达感谢段；直接 HTML 已读；访问日期 2026-10-20。
+
+具体边界与缺口：不以节日日期推花环起源，不把所有 malai 都定义成母亲节；未附加寺庙奉献/祈福用途，串数与结法为简化。 无新增依赖的失访来源。
+
+当前器物与动作：茉莉、花线、托盘和小台；串花、收结、捧放、可写谢意。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#phuang-malai)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

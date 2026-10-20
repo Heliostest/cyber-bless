@@ -14,3 +14,13 @@
 - [农林水产省 aff：季節と餅](https://www.maff.go.jp/j/pr/aff/2001/spe2_01.html)，2020年1月号，监修粕谷浩子；2026-10-19实际已读「鏡餅」段（L283–285），支持扁圆饼相叠作为供物，顶部正式用橙及其代代兴盛谐音。此段不单独证明年神对象或恰好两层。父与独立复核均已读。
 
 逐项核查及访问限制见[研究记录](../../docs/research/2026-10-19-kagami-mochi-offering.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`kagami-mochi-offering`；当前来源 slug 仍为 `kagami-mochi-offering`。本轮新增介绍的证据范围：年神供物、两层圆饼、だいだい谐音及家族兴盛；室町时期仅为来源所述追溯。
+
+- [日本農林水産省 — 鏡もちの由来と美味しく食べるコツ](https://www.maff.go.jp/j/keikaku/syokubunka/culture/wagohan/articles/2301/spe13_01.html)：同名小标题后供奉起源、年神、两层圆饼和顶部橙段；直接 HTML/网页正文已读；访问日期 2026-10-20。
+
+具体边界与缺口：未认定统一发明年或全国相同日期；不移用后续食用的健康祈愿作为放饼已实现的结果。 无新增依赖的失访来源。
+
+当前器物与动作：两层预制圆饼、橙、纸木承托；大饼、小饼、橙依次供置。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#kagami-mochi-offering)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

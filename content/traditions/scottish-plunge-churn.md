@@ -19,3 +19,19 @@
 - [An Iodhlann馆藏2012.84.1](https://www.aniodhlann.org.uk/object/2012-84-1/)，2026-10-18，从馆方分类页发现原链接并直接HTTP读取；只使用通用功能描述。
 - [An Iodhlann：The Plunge-Churn，Object62](https://www.aniodhlann.org.uk/wp-content/uploads/object-no.-62-plunge-churn.pdf)，2026-10-18直接HTTP200取得3页PDF并抽取文字，第1页核对桶形/箍/十字搅头/上下及略转，第1–2页核对提盖查看的口述记录。浏览工具打开PDF时遇到站点挑战，访问方式据实记录。无图片或口述引语复制。
 - [Dictionaries of the Scots Language：plunge](https://dsl.ac.uk/entry/snd/plunge)，2026-10-18成功读取，核对木杆往复运动。未采用年代或独有起源结论。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`scottish-plunge-churn`；最终来源：`scottish-plunge-churn`。
+
+泰里岛家庭乳业史、二十世纪中叶仍用与劳动用途。
+
+本轮已读依据：
+
+- [An Iodhlann / Dr John Holliday — The History of Tiree in 100 Objects: 62. The Plunge-Churn](https://www.aniodhlann.org.uk/wp-content/uploads/object-no.-62-plunge-churn.pdf)：PDF第1–3页，木桶构造、起落轻转、妇女儿童劳动、1950年代回忆与黄油储存；2026-10-20，`read`。
+
+范围限制：器型精确始年未定；不搬用史料中的巫术故事为当前用途。
+
+当前呈现：木杆下压、上提回转、轻提盖；木桶金属箍与静态乳面。 两次动作不制造黄油；结构与尺寸原创，不是制作教程。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#scottish-plunge-churn)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

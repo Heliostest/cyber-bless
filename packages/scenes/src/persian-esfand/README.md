@@ -9,3 +9,11 @@
 USC的具体家庭口述与Iranica学者综述直接对应文化范围。原创厨房短台、单炉盘、外观、预装21粒种子和三分段不是统一礼序。未模拟祷词、头顶绕圈或医疗/空气净化功效。
 
 详见[研究记录](../../../../docs/research/2026-10-20-persian-esfand.md)、[来源卡](../../../../content/traditions/persian-esfand.md)及`artifacts/persian-esfand/`验收证据。
+
+## 2026-10-20 介绍扩充核查
+
+当前简介已补充地域、文化语境及有据的历史节点，保留来源 `persian-esfand`。核查范围：Esfand 植物身份、波斯邪眼信念、早期文学记述；2021 年美国加州伊朗裔家庭祖母炉锅和挥巾口述。
+
+边界：口述仅一家庭，不外推全伊朗一致；不采学生反思中的文化独有性/医疗说法，未规定燃籽数或念词，也不承诺现实护佑。
+
+来源正文的完整链接、实际阅读位置、访问状态及产品简化见[B 组逐项记录](../../../../docs/research/2026-10-20-scene-narratives-b.md#persian-esfand)与[来源卡](../../../../content/traditions/persian-esfand.md)。本节不更改现有交互；用户介绍集中维护于 `packages/core/src/scene-narratives/b.ts`。

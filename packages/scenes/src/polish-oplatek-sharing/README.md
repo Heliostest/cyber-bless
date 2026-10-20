@@ -15,3 +15,15 @@
 晴朗柔和色阶由项目渲染器处理。不加载网络图像、字体或服务。小组件仅使用真实场景完成状态渲染的三种公共封面。
 
 验收证据保存在 `artifacts/polish-oplatek-sharing/`，含三宽全步骤、鼠标与CDP触摸模拟、自然动作视频、独立审阅、构建离线报告。CDP模拟不是真机测试。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`polish-oplatek-sharing`；最终来源：`polish-oplatek-sharing`。
+
+当前物件与动作：两位家人的手递出薄饼、分角、交接。
+
+文化说明范围：平安夜家庭祝愿、面粉水薄饼和和解有当代堂区自述。
+
+简化边界：一对人的一次分饼，不是完整晚餐、圣餐或祈祷顺序。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#polish-oplatek-sharing)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

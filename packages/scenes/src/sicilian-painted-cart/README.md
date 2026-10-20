@@ -58,3 +58,15 @@ npm run test -w @wbr/scenes -- src/sicilian-painted-cart/scene.test.ts
 Initial RED: a minimal lifecycle stub failed the public mount test with `expected null not to be null` for the missing visible assembly action. Then implemented the real scene. Current suite: **42 tests passing** using real Three.js geometry/raycast/cues and replacing only WebGL rendering. Includes complete direct gesture flow, foreground occlusion, 320/390/1280 anchor visibility, source and destination contact, spoke/paint/body support, whole-cart cancellation, blur/pause, mixed touch ownership, silent/invalid restoration, reduced motion, reentrancy, disposal during progress, resource and listener cleanup.
 
 Visual/callback repair RED reproduced five failures: terminal progress/feedback pause still dispatched completion, the settling update rendered once after callback pause, and the loose wheel exceeded framing bounds on both actual phone canvases. Camera distance now scales with the canvas aspect below 1, preserving its viewing angle. Every vertex of every cart and wheel mesh at checkpoints 0, 1 and 2 is tested within absolute NDC x/y <0.95 on the real **284×390** and **350×408** inner canvases. The completed shafts also remain in frame. Callback pause/disposal now prevents stale feedback, completion and the settling update's tail render; terminal progress remains 3 and resuming cannot replay completion. No geometry, poses or anchors changed in this repair. GPU appearance and host integration are validated by the root agent after registration.
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`sicilian-painted-cart`；最终来源：`sicilian-carretto-craft`。
+
+当前物件与动作：装木轮到车轴，整车移展垫，静看。
+
+文化说明范围：十九世纪运输农业与雕绘工艺；不是圣人节大型花车。
+
+简化边界：装轮和展示为缩略，不是制车全过程。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#sicilian-painted-cart)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

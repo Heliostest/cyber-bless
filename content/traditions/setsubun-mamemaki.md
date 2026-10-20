@@ -18,3 +18,19 @@ JNTO 网站刊载的节分介绍描述先向屋外撒豆、再向屋内撒豆。
 2. JNTO 网站 Partners Information，[Setsubun Festival in Japan](https://www.japan.travel/en/ca/news/setsubun-festival-in-japan/)，2022-02-03。2026-10-19已读L587仪式说明段（发布日期L582），支持先外后内、炒豆、呼喊与幸福健康愿望。按机构刊载合作信息综述使用，不称原始田野记录，不采用后续栉田神社细节。
 
 逐项核查与访问失败见 `docs/research/2026-10-19-setsubun-mamemaki.md`。旧卡及未实施提案完整归档于 `docs/research/2026-10-19-setsubun-card-history.md`，不作为当前事实证据。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`setsubun-mamemaki`；最终来源：`setsubun-mamemaki`。
+
+日本立春前节分、炒黄豆木枡、驱厄迎福的真实民俗语境。
+
+本轮已读依据：
+
+- [日本外务省 Web Japan / Kids Web Japan — Setsubun](https://web-japan.org/kidsweb/explore/calendar/february/setsubun.html)：正文38–48行，节分含义、masu、炒豆及驱厄祝愿；2026-10-20，`read`。
+
+范围限制：起源年代未核实，不写固定公历日、必吃数量或通用次数。
+
+当前呈现：推开木扇，木枡豆子向外再向内撒。 三步和粒数为画面简化，反馈不代表现实驱厄。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#setsubun-mamemaki)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

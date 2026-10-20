@@ -17,3 +17,13 @@
 - [Krapina-Zagorje County Tourist Board — Wooden toys and licitars](https://visitzagorje.hr/en/wooden-toys-licitari/)：已读HTTP正文，直接记录红色、白糖装饰、礼赠和Marija Bistrica展示教学。（2026-10-19，read）
 
 逐项核查见[全场景来源审阅](../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：克罗地亚北部姜饼工艺、蜂蜜蜡烛兼业、烤干彩饰；婚礼心形、姓名日期、小镜及代际传习。
+
+实际呈现：红色面团心、裱花袋糖霜、布带、展架木钉；装饰→悬挂→静看/可选留言。
+
+边界与缺口：中世纪欧洲修道院背景非克罗地亚本地精确起源；原创纹样/挂架/留言不是固定礼赠仪式；非现实食品教程。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#croatian-licitar-heart)。

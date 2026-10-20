@@ -18,3 +18,14 @@ Croquet England的花园槌球介绍说明，球在草地上由球槌击打，�
 
 - [Croquet England：Garden Croquet Guide](https://www.croquetengland.org.uk/garden-croquet-guide/)，2026-10-18成功读取171行，核对草地、球槌、球和球门的基本关系；不复制规则、尺寸或购物建议。
 - [National Trust：Sporting history in our collections](https://www.nationaltrust.org.uk/discover/history/art-collections/sporting-history-in-our-collections)，2026-10-18成功读取367行，槌球段落核对其花园与馆藏语境，不采用起源推断、日期或画作图像。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`garden-croquet`；当前来源 slug 仍为 `garden-croquet`。本轮新增介绍的证据范围：英国庭院游戏及十九世纪规则整理有据；1866 年是查斯尔顿规则整理事件，不是槌球发明年。
+
+- [Croquet England — Garden Croquet Guide](https://www.croquetengland.org.uk/garden-croquet-guide/)：Getting started / The lawn / The game；草坪与花园玩法正文，网页已读；访问日期 2026-10-20。
+- [National Trust — Sporting history in our collections](https://www.nationaltrust.org.uk/discover/history/art-collections/sporting-history-in-our-collections)：Croquet 段，1866 年查斯尔顿及 1928 年壁画；网页已读；访问日期 2026-10-20。
+
+具体边界与缺口：未确定全球起源和唯一标准规则；单球过门不是完整对局，也没有祈福或疗愈功效。 无新增依赖的失访来源。
+
+当前器物与动作：木柄圆槌、彩球、白色球门；后移槌、击球过门及继续滚动。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#garden-croquet)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

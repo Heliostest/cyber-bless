@@ -41,3 +41,13 @@
 
 - https://d-museum.kokugakuin.ac.jp/eos/detail/?id=9959
 - https://www.japan.travel/en/japan-magazine/2007_omikuji/
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`omikuji`；当前来源 slug 仍为 `omikuji`。本轮新增介绍的证据范围：日本神佛裁示/问运、历史纸签作宗教决定与现代编号棒对纸签形式。
+
+- [國學院大學 / Suzuki Kentaro — Mikuji](https://d-museum.kokugakuin.ac.jp/eos/detail/?id=9959)：全文，divination、旧纸签与现代签筒段；直接 HTML 已读；访问日期 2026-10-20。
+
+具体边界与缺口：没有可确认的统一起源日期；应用签文不是古签/经文/预测，收进信封是产品收尾，不能被视为传统必须流程。 无新增依赖的失访来源。
+
+当前器物与动作：签筒、编号签棒、签纸、信封；摇筒抽棒展纸、原创日常提醒、收封。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#omikuji)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

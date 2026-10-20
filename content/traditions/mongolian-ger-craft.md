@@ -22,3 +22,13 @@
 
 - [蒙古国文化遗产国家中心 / ICHCAP ichLinks Mongolia · Traditional craftsmanship of Mongol ger](https://mongolia.ichlinks.com/archive/elements/elementsV.do?contentsI18NCd=en-US&elementsUid=13829896140267001030)，2026-10-19 阅读正文与名录年份栏。用于木格、顶圈、椽杆、双支柱与门的结构关系，制毡、缝制帆布、家庭协作与匠人指导传承，以及 2013 年列入名录的信息。未复制照片、纹样或音频。
 - [UNESCO · Traditional craftsmanship of the Mongol Ger and its associated customs](https://ich.unesco.org/en/RL/traditional-craftsmanship-of-the-mongol-ger-and-its-associated-customs-00872)，保留访问记录：2026-10-15 曾核对搜索索引，2026-10-19 直达页仍遇人工验证；本轮以可读的蒙古国文化遗产机构正文为主要依据，不声称通读该页。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`mongolian-felt-ger`；当前来源 slug 仍为 `mongolian-ger-craft`。本轮新增介绍的证据范围：蒙古国前杭爱/乌兰巴托记录、结构、家庭协作和匠人/师徒传承。
+
+- [National Centre for Cultural Heritage of Mongolia / ichLinks — Traditional craftsmanship of the Mongol Ger and its associated customs](https://mongolia.ichlinks.com/archive/elements/elementsV.do?contentsI18NCd=en-US&elementsUid=13829896140267001030)：地域、Description、Value、Transmission；直接 HTML 已读；访问日期 2026-10-20。
+
+具体边界与缺口：没有可据的首次建造年代；不把 2013 申报年当起源，不加朝向祭祀含义。当前不是完整可住结构/搭建指南。 无新增依赖的失访来源。
+
+当前器物与动作：可展木格、顶圈/椽架、白毡；展格、稳圈、覆毡。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#mongolian-felt-ger)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

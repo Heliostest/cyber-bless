@@ -18,3 +18,20 @@
 
 - [西班牙文化部：Castañuelas，文化遗产词典](https://tesauros.cultura.gob.es/tesauros/bienesculturales/1011075.html?desplegar=&replegar=-949739981)，2026-10-18读取官方索引中的完整定义与范围注；规范页实时请求超时，未记为成功全文抓取。
 - [The Metropolitan Museum of Art：Castanets，2005.421a–c](https://www.metmuseum.org/art/collection/search/504450)，2026-10-18成功读取藏品页，第32–42行核对西班牙、硬木与碰击体鸣分类；未复制受限图像。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`spanish-castanets`；最终来源：`spanish-castanets`。
+
+西班牙二十世纪实物、舞蹈和游客器物，木壳空腔系绳。
+
+本轮已读依据：
+
+- [The Metropolitan Museum of Art — José Tárrega Peiró: Castanets](https://www.metmuseum.org/art/collection/search/504450)：Object Details，制作者、地点、日期、材质及分类；2026-10-20，`read`。
+- [Duke University Musical Instrument Collections — Castanets](https://sites.duke.edu/dumic/instruments/percussion/west-europe/castanets/)：Details及Description 470–482行；2026-10-20，`read`。
+
+范围限制：不采三千年前腓尼基起源；不称所有弗拉门戈必用或左右音高固定。
+
+当前呈现：无手的两副系绳凹木壳，左合、右合、一起合。 无真人指法，合拍和合成声音非具体曲式。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#spanish-castanets)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

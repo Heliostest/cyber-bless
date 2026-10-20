@@ -18,3 +18,13 @@ Ana Popova 在署名节俗介绍中描述孩子装饰 cornus 枝，轻拍人的�
 2. Institute for a Greater Europe，[The Institute Presents: Traditions of New Years 2020-21](https://www.institutegreatereurope.com/articles/the-institute-presents-traditions-of-new-years-2020-21)，2020-12-31。2026-10-19实际阅读“Bulgaria - Ana Popova”段末L100，支持拍背及来年健康幸福祝愿。按署名参与者口吻的节俗介绍使用，不称原始田野调查或全国统一规程。
 
 逐项核查和未能读取的材料见 `docs/research/2026-10-19-bulgarian-survakane.md`。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：保加利亚新年儿童持 survachka 拍背念健康幸福祝词；布尔加斯/斯特兰查材料象征与装饰差异。
+
+实际呈现：山茱萸枝、羊毛线爆米花装饰、坐着的亲友；提枝→移到背后→轻拍收回。
+
+边界与缺口：无确证统一起源；枝材信念按博物馆记述归属，不能承诺健康。孩子身体、完整祝词和拜年往来未展现；三短拖只是控制。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#bulgarian-survakane)。

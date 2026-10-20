@@ -8,3 +8,14 @@ ID与来源slug：tibetan-water-bowls；引擎 tibetan-water-bowls@1；grade C�
 
 验证与真实截图在 artifacts/tibetan-water-bowls。触摸是Chrome原生事件模拟，不是真机测试。只本地提交，合并推送另候用户要求。
 
+## 2026-10-20 介绍扩充核查
+
+适用场景：`tibetan-water-bowls`；最终来源：`tibetan-water-bowls`。
+
+当前物件与动作：佛像高供台、七只铜碗已留少水，壶从左至右添至沿下再收回。
+
+文化说明范围：藏传佛教供养、恭敬、利益众生及1998公开教导。
+
+简化边界：只描述现有七碗添水片段，未声称完成清洁、礼拜、念诵、回向与晚间收供。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#tibetan-water-bowls)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

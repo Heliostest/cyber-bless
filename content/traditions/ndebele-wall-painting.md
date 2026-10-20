@@ -17,3 +17,13 @@
 - [Iziko Museums：Then I Knew I Was Good at Painting — Esther Mahlangu retrospective](https://www.iziko.org.za/news/iziko-museums-of-south-africa-presentsthen-i-knew-i-was-good-at-painting-esthermahlangu-a-retrospective/)：已读馆方展览文本，含艺术家第一人称母/祖母学习经历，以及传统壁画/珠饰与当代创作分野。（2026-10-19，read）
 
 逐项核查见[全场景来源审阅](../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`ndebele-painted-house`；当前来源 slug 仍为 `ndebele-wall-painting`。本轮新增介绍的证据范围：南非 Ndebele 女性家墙绘画、马兰古母祖传艺亲述和 1989 巴黎国际展览节点。
+
+- [Iziko Museums of South Africa — Then I knew I was good at painting: Esther Mahlangu, a retrospective](https://www.iziko.org.za/news/iziko-museums-of-south-africa-presentsthen-i-knew-i-was-good-at-painting-esthermahlangu-a-retrospective/)：2024-01-17，艺术家学习亲述、家屋与 1989 展览段；直接 HTML 已读；访问日期 2026-10-20。
+
+具体边界与缺口：没有壁画起源年；不复制艺术家作品或声称色块有统一护佑含义。小板拼贴/模型是产品表达，不是真实绘壁方式。 无新增依赖的失访来源。
+
+当前器物与动作：原创几何色块家屋模型和展台；填色板、移屋展示。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#ndebele-painted-house)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

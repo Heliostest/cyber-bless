@@ -48,3 +48,11 @@ The icing arrangement, gift stand, rounded geometry and interaction sequence are
 Run `npm run test -w @wbr/scenes -- src/croatian-licitar-heart/scene.test.ts`.
 
 The tests replace GPU rendering only. Real Three.js geometry, matrices, raycasts, interaction cues, pointer ownership and the shared wish form remain active. They cover full object flow; explicit/empty/overlength/reentrant wish submission; unsaved quiet drafts; returning mode; wrong or blocked starts/drops; travel and tap thresholds; cancellation and owner/multitouch recovery; paused motion; silent restore and native action fallback; 320/390/1280 projected first-hit anchors; real heart thickness/bevel; support and loop/peg contact; every icing piece's surface contact; and single resource/listener/shadow/DOM cleanup. Integration build, full suite and browser/mobile visual review are handled by the parent task.
+
+## 2026-10-20 当前介绍核查
+
+已按实际器物与用户提示扩充介绍。红色面团心、裱花袋糖霜、布带、展架木钉；装饰→悬挂→静看/可选留言。
+
+核查重点：中世纪欧洲修道院背景非克罗地亚本地精确起源；原创纹样/挂架/留言不是固定礼赠仪式；非现实食品教程。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#croatian-licitar-heart)。

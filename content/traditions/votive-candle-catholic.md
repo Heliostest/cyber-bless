@@ -44,3 +44,20 @@
 
 - [Saint Patrick Catholic Church：Why Do Catholics Light Votive Candles?](https://www.saintpats.org/parish/catholics-light-votive-candles/) — 已读正文；烛光、基督、祈求与圣人代祷，以及离开后祈祷持续的象征。
 - [教廷：Directory on Popular Piety and the Liturgy](https://www.vatican.va/roman_curia/congregations/ccdds/documents/rc_con_ccdds_doc_20020513_vers-direttorio_en.html) — 已读相关原则；民间虔诚与礼仪的关系。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`votive-candle-catholic`；最终来源：`votive-candle-catholic`。
+
+天主教跨地域实践，以美国华盛顿州Tacoma堂区自述为具体例；基督之光和圣人代祷，献烛非只履行还愿。
+
+本轮已读依据：
+
+- [Saint Patrick Catholic Church & School — Why do Catholics Light Votive Candles?](https://www.saintpats.org/parish/catholics-light-votive-candles/)：A Symbol of Christ及The Light Is A Reminder to Stay Present to the Lord段；2026-10-20，`read-direct-http`。
+- [Saint Patrick Catholic Church — Contact Us](https://www.saintpats.org/parish/contact-us/)：Parish Center及Saint Patrick Catholic Church地址101–120行；2026-10-20，`read`。
+
+范围限制：不确立献烛起源国家/最早年代；美国华盛顿州Tacoma只是本轮直接材料中的当代堂区实例。
+
+当前呈现：安放蜡烛到石廊烛架、点芯、可写句子或静看。 此处文字输入与石廊场景为产品，未代替教会礼仪或保证祷告效果。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#votive-candle-catholic)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

@@ -17,3 +17,13 @@
 - [Visit Faroe Islands — The Importance of Faroese Wool](https://visitfaroeislands.com/en/see-do/cultural-experiences/heim-experiences/the-faroese-wool)：官方旅游门户直接说明自然毛色、织物历史和编织圈传承。（2026-10-19，read）
 
 逐项核查见[全场景来源审阅](../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：法罗群岛羊毛加工、衣物/当代设计产业，家校旅途中编织与定期女性编织圈。
+
+实际呈现：普通下针、木针、奶白灰条纹织片；穿旧圈→带新圈退旧圈→静看。
+
+边界与缺口：本轮使用当代官方生活文化说明，无针织起源年代；普通下针非当地独有，奶白灰纹无固定神圣/祈福意义。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#faroese-wool-knit)。

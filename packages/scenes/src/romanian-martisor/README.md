@@ -12,3 +12,15 @@
 
 来源与限制：[来源卡](../../../../content/traditions/romanian-martisor.md)、[逐项核查](../../../../docs/research/2026-10-19-romanian-martisor.md)。
 测试：model.test.ts检查所有移动网格顶点的离地/避枝/最终接触，scene.test.ts检查真实Three射线、生命周期、手势及320/390/1280对应画布。完整验证与实际浏览器证据见[验证记录](../../../../artifacts/romanian-martisor/validation.md)。触摸证据为浏览器CDP模拟，不声称真机测试。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`romanian-martisor`；最终来源：`romanian-martisor`。
+
+当前物件与动作：已取下红白绳环，提起、套花枝、轻放两流苏。
+
+文化说明范围：十九世纪文字线索及当代迎春/挂树实践，健康好运归为信念。
+
+简化边界：挂环路径和三拖为简化，不包含送礼与佩戴全过程。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#romanian-martisor)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

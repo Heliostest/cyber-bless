@@ -17,3 +17,14 @@ slug: persian-esfand
 - Mahmoud Omidsalar，Encyclopaedia Iranica，《ESFAND》，1998-12-15，更新2013-04-29。[官方PDF](https://www.iranicaonline.org/articles/esfand/?generate_pdf=1)，第1–2页相关正文，2026-10-20已读文字。支持植物身份与防护信念；不采用药用或疗效主张。
 
 访问差异、动作边界与验证见 [研究记录](../../docs/research/2026-10-20-persian-esfand.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`persian-esfand`；当前来源 slug 仍为 `persian-esfand`。本轮新增介绍的证据范围：Esfand 植物身份、波斯邪眼信念、早期文学记述；2021 年美国加州伊朗裔家庭祖母炉锅和挥巾口述。
+
+- [Encyclopaedia Iranica / Mahmoud Omidsalar — ESFAND](https://www.iranicaonline.org/articles/esfand/?generate_pdf=1)：1998-12-15 / 2013-04-29，PDF 1 页植物、2 页烟避害及古典文学段；PDF 正文已读；访问日期 2026-10-20。
+- [USC Digital Folklore Archives — BURNING ESPHAND](https://folklore.usc.edu/tag/jinx/page/2/)：2021-04-25 采集、2021-05-18 发布，MAIN PIECE 及 INFORMANT'S RELATIONSHIP；备用标签页完整正文已读；访问日期 2026-10-20。
+
+具体边界与缺口：口述仅一家庭，不外推全伊朗一致；不采学生反思中的文化独有性/医疗说法，未规定燃籽数或念词，也不承诺现实护佑。 USC 原 esphand 标签及独立文章超时/证书错误，备用 jinx 第 2 页成功；只是一份口述的同站副本，不当作两个独立来源。
+
+当前器物与动作：预装种子金属锅、木柄、炉盘、布巾；提锅移炉、挥巾散烟。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#persian-esfand)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

@@ -42,3 +42,19 @@
 
 - [爱尔兰国家博物馆：St Brigid's Day](https://source.museum.ie/en-IE/Collections-Research/Folklife-Collections/Folklife-Collections-List-%281%29/Religion-and-Calendar-Customs/St-Brigid-s-Day) — 已读馆藏部策展人 Clodagh Doyle 正文；节期、材料、形制、祷告、悬挂与赠送背景。URL 内的圆括号已编码，避免截断。
 - [Galway City Museum：St Bridget and St Bridget's Cross](https://galwaycitymuseum.ie/blog/st-bridget-and-st-bridgets-cross/) — 已读正文；节前夕制作、草编样式及住宅和畜棚悬挂。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`st-brigids-cross`；最终来源：`st-brigids-cross`。
+
+爱尔兰圣人节、家庭与牲畜保护信念、形态变化及1960年代传播。
+
+本轮已读依据：
+
+- [Galway City Museum / Brendan McGowan — St Bridget and St Bridget’s Cross](https://galwaycitymuseum.ie/blog/st-bridget-and-st-bridgets-cross/)：正文59–72行，节前编草、住房牲畜棚、地区形态、RTÉ段；2026-10-20，`read`。
+
+范围限制：不将圣人传奇当实证起源；四臂不代表所有地区。
+
+当前呈现：四束草送折点成四臂十字、挂门楣。 四束成形压缩真实编织，没有模拟祝圣。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#st-brigids-cross)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

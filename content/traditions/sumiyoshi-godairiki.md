@@ -18,3 +18,19 @@
 - [五所御前](https://www.sumiyoshitaisha.net/cn/)，住吉大社官网，无标示发布日期。2026-10-19 已读相关正文125–131行，补足普通散石间找字石、三石装袋携带。没有以创立传说推定此习俗年代。
 
 详细支持范围与核查清单见 [研究记录](../../docs/research/2026-10-19-sumiyoshi-godairiki.md)。英文页面本轮读取超时，未列作已读证据。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`sumiyoshi-godairiki`；最终来源：`sumiyoshi-godairiki`。
+
+大阪单一神社五所御前、五种力量与祈求/还纳语境。
+
+本轮已读依据：
+
+- [住吉大社 — 五大力石守について](https://sumiyoshitaisha.net/news/detail.php?seq=208)：正文54–59行，五所御前、五种力量、御守袋和还石；2026-10-20，`read`。
+
+范围限制：起源不明；不推广为日本所有神社习俗。
+
+当前呈现：五、大、力三字石逐一拾起落入布袋。 三次方向拖动、字石预置和袋形为产品，未模拟还纳或应验。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#sumiyoshi-godairiki)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

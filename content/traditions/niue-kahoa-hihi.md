@@ -18,3 +18,13 @@
 - [Te Papa：Hihi lei (shell necklace), FE012781](https://collections.tepapa.govt.nz/object/1372486)：已读item details，制作者Mokaline Makaia、2013、Niue、shell与饰物分类。（2026-10-19，read）
 
 逐项核查见[全场景来源审阅](../../docs/research/2026-10-19-scene-culture-audit.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`niue-shell-necklace`；当前来源 slug 仍为 `niue-kahoa-hihi`。本轮新增介绍的证据范围：纽埃陆螺材料、清理钻孔穿串、二十世纪初记录、舞蹈赠礼及新西兰侨社联系。
+
+- [Museum of New Zealand Te Papa Tongarewa / Salote Talagi — The beautiful kahoa hihi of Niue Island](https://blog.tepapa.govt.nz/2014/10/16/the-beautiful-kahoa-hihi-of-niue-island-niue-language-week-2014/)：2014-10-16，材料采制、早期记述、gift/dance/diaspora 段；直接 HTML 已读；访问日期 2026-10-20。
+
+具体边界与缺口：早期记述不等于发明日期；祖先故事不作史证，没有统一贝数/护符含义。本场尼龙式细线与弧形为简化。 无新增依赖的失访来源。
+
+当前器物与动作：黄色小陆螺壳、线、待串最后一壳；穿壳与拉拢。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#niue-shell-necklace)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

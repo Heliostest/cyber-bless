@@ -43,3 +43,15 @@ Normal accepted transitions take 0.75s and clamp each positive frame to 0.05s. R
 `npm run test -w @wbr/scenes -- src/uzbek-clay-bowl/scene.test.ts` uses real geometry, projection, opaque raycasting and object cues, mocking only the GPU renderer boundary. Coverage includes every visible vertex at 284×390, 350×408 and 1280×600; both motion modes; checkpoint restoration; gesture rejection; callback reentry; pause/cancel/blur/lost capture; unfired material continuity; and exact resource/listener release. RED and GREEN logs are in `artifacts/paper-clay-pair/clay-*.log`.
 
 Browser appearance approval belongs to the root integration's final production screenshots; module tests do not establish visual approval.
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`uzbek-clay-bowl`；最终来源：`uzbek-ceramic-craft`。
+
+当前物件与动作：木陶轮转动、提湿泥碗壁、停轮；无釉色与窑火。
+
+文化说明范围：乌兹别克日用陶器、十九世纪流派与泥坯后续工序。
+
+简化边界：自动拉壁几何、木轮外形和短时长是产品缩略。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#uzbek-clay-bowl)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

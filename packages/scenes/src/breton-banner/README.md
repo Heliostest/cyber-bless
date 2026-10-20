@@ -13,3 +13,11 @@ Physical sequence:
 Cues point to real visible meshes. Starts use the first visible mesh across the scene; drop checks exclude only the held subtree, preserving occlusion by all other objects. Drags require 8 px movement; quiet taps require less than 12 px maximum travel. The native action button follows the same checkpoints.
 
 Narrow tests use real Three.js geometry, raycasting and interaction cues, replacing only the GPU rendering boundary. They cover cloth deformation and fixed attachment, support contact, source/destination occlusion, 320/390/1280 px cue projection, cancellation, capture loss, multiple pointers, host pause, blur, reduced motion, silent restores for checkpoints 0–3 and idempotent resource disposal. The root task owns full-suite, build and browser visual validation. No external asset is requested at runtime.
+
+## 2026-10-20 当前介绍核查
+
+已按实际器物与用户提示扩充介绍。原创太阳海浪布旗、横杆布耳、旗杆展座；展开扣杆→入座→静看。
+
+核查重点：14世纪是文化部综述的发展背景，不是所有堂区同年创设。太阳海浪无统一宗教解释，桌上陈列不完成 pardon。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#breton-banner)。

@@ -39,3 +39,15 @@ Pause/blur cancel unfinished grabs and freeze released dynamics. Resize preserve
 Run `npm run test -w @wbr/scenes -- src/vietnamese-bamboo-dragonfly --maxWorkers=2`. Tests retain real Three geometry, rays, camera transforms and cues, replacing only GPU work and optional audio hardware. They cover placement clearance, all body surfaces, repeated/opposite responses, damping duration, fixed contact, manual finish, legacy restoration, real dimension changes, cancel/pause/reentry, framing and disposal.
 
 `node scripts/verify-dragonfly-balance.mjs` uses the running Vite server and actual scene-review App, mouse and native Chrome touch. It observes the real scene/camera through a test-time module response and seeds only the review host's reduced-motion setting; no production test API or mocked model is added. Results and source boundaries are recorded in [the interaction review](../../../../docs/research/2026-10-19-dragonfly-balance.md).
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`vietnamese-bamboo-dragonfly`；最终来源：`thach-xa-bamboo-dragonfly`。
+
+当前物件与动作：尖喙落枝尖，随后可重复轻推/拖不同部位，手动结束观察。
+
+文化说明范围：河内石舍今西芳、1990年代出现、竹材平衡工艺及生计。
+
+简化边界：模拟平衡、光色和枝座为产品，末步不限一次长翼推。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#vietnamese-bamboo-dragonfly)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

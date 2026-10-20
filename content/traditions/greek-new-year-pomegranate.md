@@ -19,3 +19,13 @@ Theodora Miller在本人2026年1月19日发表的家庭亲历文字中，记述�
 - [Theodora Miller：New Year Traditions](https://www.theodoramiller.com/blogs/curious-corner-blog/new-year-traditions)，2026-01-19；2026-10-19已读88–106行，关键90–94，106具名署名。以其家庭亲历身份使用，不因个人商业网站而否认亲历，也不把个人版本普遍化。
 
 Dartmouth相关索引正文读取超时，未作已读证据。逐项矩阵与访问状态见场景README及artifacts/greek-new-year-pomegranate/source-research.md、source-evidence.json。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`greek-new-year-pomegranate`；当前来源 slug 仍为 `greek-new-year-pomegranate`。本轮新增介绍的证据范围：希腊元旦门槛破石榴及好运、丰足、幸福的当代家庭习俗。
+
+- [Greek National Tourism Organisation / Visit Greece — Christmas Holidays in Greece](https://www.visitgreece.gr/en/inspirations/christmas-holidays-in-greece)：New Year 石榴门槛段；网页正文已读；访问日期 2026-10-20。
+
+具体边界与缺口：未证明统一的古代起源、抛摔次数、执礼者或籽数占断；固定轨迹和裂果效果为产品安排。 无新增依赖的失访来源。
+
+当前器物与动作：完整石榴、石门槛；取果、移至槛上、向下落果裂籽。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#greek-new-year-pomegranate)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

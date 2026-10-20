@@ -45,3 +45,13 @@ Troménie 是布列塔尼巡行传统的一部分；介绍具体地点、路程�
 ## 参考来源
 
 - [法国文化部：La Bretagne, terre des pardons](https://www.culture.gouv.fr/thematiques/patrimoine-culturel-immateriel/vivre-le-patrimoine-culturel-immateriel/reportages/la-bretagne-terre-des-pardons) — 已读正文；支持主保圣人节庆、弥撒与旗帜巡行、季节及社群筹办背景。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：法国布列塔尼 pardon 的天主教赦罪/朝圣、14世纪虔敬背景、后来社区歌舞；游行旗帜/十字/圣像与志愿者准备。
+
+实际呈现：原创太阳海浪布旗、横杆布耳、旗杆展座；展开扣杆→入座→静看。
+
+边界与缺口：14世纪是文化部综述的发展背景，不是所有堂区同年创设。太阳海浪无统一宗教解释，桌上陈列不完成 pardon。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#breton-banner)。

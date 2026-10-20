@@ -19,3 +19,13 @@
 - [ITMA：Percussion Instruments in Irish Music](https://www.itma.ie/galleries/percussion/)，2026-10-18成功读取，第149–155行核对音乐语境与手/木槌敲击；未复制图像或声音。
 - [ITMA：Musical Instrument Makers](https://www.itma.ie/galleries/power/)，2026-10-18成功读取，第141–145、195–202行核对当代制鼓语境、鼓框和鼓皮；未复制人物文字或照片。
 - [Bridget Drum Company：Single-Ended vs Double-Ended Bodhrán Tippers](https://bodhran.ca/single-ended-vs-double-ended-bodhran-tippers/)，2026-10-18成功读取，第31–48行核对双端木槌和中部枢转动作；仅取通用功能原理。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`irish-bodhran`；当前来源 slug 仍为 `irish-bodhran`。本轮新增介绍的证据范围：爱尔兰传统音乐、鼓槌/手/皮压等奏法与二十世纪后半叶使用扩展。
+
+- [Irish Traditional Music Archive — Percussion](https://www.itma.ie/galleries/percussion/)：Nicholas Carolan，2012-12-01，框鼓由日用容器至近半世纪音乐发展段；网页正文已读；访问日期 2026-10-20。
+
+具体边界与缺口：未证明史前起源或统一祭祀用途；双击和转框是当前分镜，不是传统曲式。 无新增依赖的失访来源。
+
+当前器物与动作：圆木框鼓、双端木槌；两端先后轻触，轻转鼓缘收尾。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#irish-bodhran)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

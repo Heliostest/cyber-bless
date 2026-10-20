@@ -18,3 +18,13 @@
 
 - [国立台湾历史博物馆：桿秤及秤錘組](https://collections.nmth.gov.tw/CollectionContent.aspx?RNO=2011.025.0235&a=132)，2026-10-18成功读取249行，核对木杆、提点与移动秤锤找平的一般功能。该件为挂钩式，不据此声称原件带盘。
 - [Science Museum Group：Chinese steelyard balance](https://collection.sciencemuseumgroup.org.uk/objects/co57930/chinese-steelyard-balance-19th-century)，2026-10-18成功读取111行，核对盘、配重与水平找平的关系；原件牙质秤杆不用于产品材质或复刻。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：中国19世纪馆藏杆秤有配重、盘、木盒与不同支点/量程，支持移动配重找平的称量关系。
+
+实际呈现：木杆、金属砣、垂直吊绳、柑橘浅盘、提环；移砣找平→提环→缓放。
+
+边界与缺口：馆藏象牙梁而当前木梁，未复制精确器物；19世纪是馆藏年代非发明时间。当前无校准读数和真实称量，不赋予公平祈愿等未经证实寓意。台湾馆藏 URL 失败未采用。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#chinese-steelyard)。

@@ -18,3 +18,13 @@
 - [Vanessa Brunt，Correio：Chamas de fé](https://blogs.correio24horas.com.br/emcantos/chamas-de-fe/)，2026-10-19父与研究实际读16–31、40–45相关正文；28–31为院长具名陈述，45说明其本人系在栏杆。不把采访中不同人的理解写成统一规则。
 
 详细矩阵、读取失败和产品边界见场景README及artifacts/bonfim-ribbon/source-research.md、source-evidence.json。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：巴西萨尔瓦多 Senhor do Bonfim 信仰、腕踝和教堂栏杆系带、三个结对应三个心愿；19世纪 medida 与20世纪中叶纪念带形态变化。
+
+实际呈现：彩带已绕栏且预成三个松结；右/左/右收紧；无输入心愿表单。
+
+边界与缺口：来源列1809首创又引更早1804记载，故只取19世纪前身、不下精确起源结论；不采用统一长度与颜色神灵通则；预成松结与交替拖动是简化。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#bonfim-ribbon)。

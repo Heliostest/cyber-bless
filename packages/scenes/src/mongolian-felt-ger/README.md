@@ -21,3 +21,11 @@
 - 首轮 `npm test` 在默认并发下的 14 个超时涉及 `directional-drag-scenes.test.ts`、`amazigh-woven-rug/scene.test.ts`、`japanese-koinobori/scene.test.ts`、`korean-bojagi-wrap/scene.test.ts`、`peruvian-engraved-gourd/scene.test.ts`、`russian-matryoshka/model.test.ts`、`russian-matryoshka/scene.test.ts`、`turkish-ebru-paper/scene.test.ts`，并伴随两条 worker RPC 超时；完整名称与输出见 `artifacts/mongolian-felt-ger-drop-tests.log`。复跑仅限制并发，使用默认超时，结果见 `artifacts/mongolian-felt-ger-drop-scenes.log`。
 - `scripts/verify-ger-drop.mjs` 以原生鼠标／CDP 触屏操作检查 390px 鼠标、320px 触屏和 1280px 鼠标。三种尺寸均走完三步，每步误放不推进、到位按住不结算、松手后推进，确认可见指引与目标高亮一致；页面无异常或横向溢出。报告与截图见 `artifacts/mongolian-felt-ger/drop/`。
 - 生产构建与独立代码审阅通过；审阅未发现 P1／P2。技术验证与上文文化来源核查分别完成。
+
+## 2026-10-20 介绍扩充核查
+
+当前简介已补充地域、文化语境及有据的历史节点，保留来源 `mongolian-ger-craft`。核查范围：蒙古国前杭爱/乌兰巴托记录、结构、家庭协作和匠人/师徒传承。
+
+边界：没有可据的首次建造年代；不把 2013 申报年当起源，不加朝向祭祀含义。当前不是完整可住结构/搭建指南。
+
+来源正文的完整链接、实际阅读位置、访问状态及产品简化见[B 组逐项记录](../../../../docs/research/2026-10-20-scene-narratives-b.md#mongolian-felt-ger)与[来源卡](../../../../content/traditions/mongolian-ger-craft.md)。本节不更改现有交互；用户介绍集中维护于 `packages/core/src/scene-narratives/b.ts`。

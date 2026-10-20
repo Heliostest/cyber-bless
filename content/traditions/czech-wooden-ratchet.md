@@ -20,3 +20,13 @@
 - [格林内尔学院乐器馆藏：ratchet](https://omeka-s.grinnell.edu/s/MusicalInstruments/item/975)，2026-10-18阅读全文。采用一般分类112.24中“轴兼握柄、外框可绕轴转动、木舌依次带过轮齿”及轮齿使木舌弯曲/回落的说明。页面所示Ludwig现代管弦乐型号为不同的金属V框，未复制其造型、图像或录音。
 - [捷克国家农业博物馆：Tajemství velikonočních symbolů](https://www.nzm.cz/pro-skoly/workshopy-a-tematicke-akce/tajemstvi-velikonocnich-symbolu-12-4)，2026-10-18阅读全文相关正文，核对řehtačka作为当地复活节民俗物件的语境，不采用活动日期或价格。
 - [美国国家捷克与斯洛伐克博物馆商店：Easter Ratchet Noise Maker](https://store.ncsml.org/product/mardi-gras-ratchet-noise-maker/)，2026-10-18仅阅读检索解析记录；直接页面404，仅辅助核对捷克/斯洛伐克木响器民俗语境，不作结构或图像依据。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：捷克杜布博物馆的圣周四至六停钟、响器召集礼拜、复活节习俗及多种馆藏形态。
+
+实际呈现：素色木框绕固定柄转动、齿轮拨弹性木舌；三段合一圈，合成反馈非录音。
+
+边界与缺口：未定捷克仪式起源；博物馆列举欧洲其他用途不等于捷克同一谱系。Grinnell975及API失败不记已读；结构按实际模型描述，不冒充馆藏复刻。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#czech-wooden-ratchet)。

@@ -19,3 +19,13 @@
 - [La Ciotat 官方旅游：La pétanque](https://www.destinationlaciotat.com/profiter/loisirs-en-plein-air/la-petanque/)，2026-10-18阅读全文14–27行，核对当地语境、圈内站立与送球动作；不据此作独占起源或精确年代声明。
 - [UFOLEP 全国 pétanque 委员会：正式规则](https://cns.ufolep.org/petanque/petanque_a/cms/index_public.php?ui_id_doc=1020900001&ui_id_site=1&us_action=show_note)，2026-10-18阅读全文55–108及168–205行，核对金属球、木制或认可合成材料小靶、圈线和依次投球。产品未复刻标准尺寸、重量、认证商标、赛制或完整规则。
 - [FIPJP 官方主页](https://www.fipjp.org/index.php/fr/?language_code=fr)，2026-10-18阅读全文99–101行，核对官方尚未决定2026赛规变更的说明，避免采信未经证实的年度改规则传言。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：法国拉西奥塔对儒勒·于格/欧内斯特·皮蒂奥的地方起源叙事，风湿限制助跑、双脚留圈与短距、1910首场正式赛。
+
+实际呈现：木靶、两金属球、砂地圈线；送靶→第一球→第二球，未计分。
+
+边界与缺口：以当地机构叙事归属，不把口述起源扩成所有滚球起源；现三抛没有队伍计分和完整规则，不称完整比赛。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#french-petanque)。

@@ -40,3 +40,15 @@ C 档、低敏感度的当代手作致敬，关联 `sorbian-easter-eggs`；手�
 `npm run test -w @wbr/scenes -- src/sorbian-painted-egg/scene.test.ts`
 
 27 项测试，真实 Three.js 几何、射线、提示及 wishWrite 控件，仅替换 GPU 渲染。涵盖动作顺序、外部遮挡的起点与落点、误触与轨迹门槛、取消 / 捕获丢失 / 多指 / 暂停 / 失焦、检查点 0–3 静默恢复、减少动态效果、显式心愿与回访、三种宽度的首个命中和完整构图、纹样贴面、布垫 / 陶杯承托，以及几何、材质、阴影、提示、监听器和渲染器的幂等释放。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`sorbian-painted-egg`；最终来源：`sorbian-easter-eggs`。
+
+当前物件与动作：画笔添原创花枝、彩蛋放陶杯、静看或祝愿。
+
+文化说明范围：德国卢萨蒂亚索布社群、教父母礼赠地域实例及生命力信念，真实技术多样。
+
+简化边界：画笔显纹不冒称热蜡多次染色教程，陶杯为展示。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#sorbian-painted-egg)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

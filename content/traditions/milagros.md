@@ -44,3 +44,13 @@ milagros 嵌在朝圣与民间还愿的实践中：许诺（manda）蒙恩后到
 
 - [Wake Forest 大学 Timothy S. Y. Lam 人类学博物馆 · Mexican Milagros](https://lammuseum.wfu.edu/2024/10/mexican-milagros/)，2026-10-19 阅读全文。用于金属材料、祈求与谢恩、manda、附短谢辞及图形没有统一解释的说明；本产品木架与文字界面不据此宣称是传统固定步骤。
 - [美国国家医学图书馆 · Everyday Miracles: Mexican Traditions](https://www.nlm.nih.gov/exhibition/exvotos/mexican.html)，2026-10-19 阅读展览说明。用于墨西哥绘画 ex-voto／retablo 的媒材、场景与谢辞，帮助区分绘板和金属小符；不将其当作小符制作证据。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`milagros`；当前来源 slug 仍为 `milagros`。本轮新增介绍的证据范围：墨西哥天主教奉献、祈求/谢恩、殖民传播与当地奉献实践相遇；个人解释不统一。
+
+- [Wake Forest University, Lam Museum of Anthropology — Mexican Milagros](https://lammuseum.wfu.edu/2024/10/mexican-milagros/)：2024-10-07，用途、manda、殖民背景、材料及个人释义正文；直接 HTML 已读；访问日期 2026-10-20。
+
+具体边界与缺口：不把原创四图案列为传统固定组合，木架不是圣所祭台，留言未实际送达宗教场所；精确起源年未定。 无新增依赖的失访来源。
+
+当前器物与动作：心/手/小屋/花形金属小符、木架；选择、挂起、可写祈求谢意。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#milagros)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

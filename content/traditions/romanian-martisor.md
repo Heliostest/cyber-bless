@@ -17,3 +17,20 @@
 - [康斯坦察民俗艺术博物馆：Mărțișorul, simbolul primăverii](https://www.muzeuetnocta.ro/martisorul-simbolul-primaverii-3/)，发布2026-03-01；2026-10-19已读第26–34行，支持果树枝及取下时间、处置方式的差异。
 
 逐项核查与访问限制见[研究记录](../../docs/research/2026-10-19-romanian-martisor.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`romanian-martisor`；最终来源：`romanian-martisor`。
+
+十九世纪文字线索及当代迎春/挂树实践，健康好运归为信念。
+
+本轮已读依据：
+
+- [罗马尼亚农民博物馆 / Irina Nicolau — Povestea mărțișorului](https://sitevechi.muzeultaranuluiroman.ro/history/povestea-martisorului-en.html)：正文红白绳、1800年记述、十九世纪民族志、佩戴差异段；2026-10-20，`read-direct-http`。
+- [Dimitrie Gusti National Village Museum — Primăvara în sat. Târg de Mărțișor](https://muzeul-satului.ro/events/primavara-in-sat-targ-de-martisor-3/)：正文143–148行，2026年春季集市与佩戴/树枝习俗段；2026-10-20，`read`。
+
+范围限制：没有统一期限、年龄、性别或红白唯一象征；未证实古代起源。
+
+当前呈现：已取下红白绳环，提起、套花枝、轻放两流苏。 挂环路径和三拖为简化，不包含送礼与佩戴全过程。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#romanian-martisor)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

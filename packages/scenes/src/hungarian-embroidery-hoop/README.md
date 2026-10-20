@@ -43,3 +43,11 @@ First meaningful RED: the public native-button lifecycle test failed with `expec
 Run `npm run test -w @wbr/scenes -- src/hungarian-embroidery-hoop/scene.test.ts` for 43 focused tests. Only GPU rendering is replaced: real Three meshes/raycasts, interaction cues and wish forms exercise lifecycle, valid/invalid object drops, opaque foreground blocking, travel thresholds, pointer ownership, multitouch, blur/pause/cancellation, motion resumption, silent restoration, reduced motion, explicit wishes, reentrancy, returning visits, physical contacts, connected decorations, 320/390/1280 framing and disposal. Root owns shared integration, browser visual review, full builds and mobile checks.
 
 Callback-disposal regression RED: seven added tests exposed feedback after progress-callback disposal, one extra settled frame rendered after disposal, progress after a saving callback closed the scene, completion after a feedback callback closed it, and feedback continuing after host deactivation. A follow-up RED caught a save callback that only paused the scene preventing accepted progress from reaching the host. Saving now checks disposal before notifying progress 3; a pause still allows this accepted progress commit, while actual disposal stops it. Progress and feedback callbacks then recheck activity, suppressing feedback/completion while paused. The final update render also checks activity. Completion state is committed before callbacks, so closing, pausing, resuming or reentering cannot duplicate wishes or progress.
+
+## 2026-10-20 介绍扩充核查
+
+当前简介已补充地域、文化语境及有据的历史节点，保留来源 `hungarian-embroidery`。核查范围：地区差异、织物种类、村落家庭生产与二十世纪初集市绣品交易。
+
+边界：不认定原创花样为 Matyó 或 Kalocsa，未移用玫瑰传说、护身意义；线轴拖动不等于传统针法。
+
+来源正文的完整链接、实际阅读位置、访问状态及产品简化见[B 组逐项记录](../../../../docs/research/2026-10-20-scene-narratives-b.md#hungarian-embroidery-hoop)与[来源卡](../../../../content/traditions/hungarian-embroidery.md)。本节不更改现有交互；用户介绍集中维护于 `packages/core/src/scene-narratives/b.ts`。

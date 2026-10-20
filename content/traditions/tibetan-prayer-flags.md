@@ -17,3 +17,19 @@
 - [FPMT：Resources on Holy Objects](https://fpmt.org/education/teachings/holy-objects/)，2026-10-20实际阅读 Prayer Flags 小节。支持印有咒语的五色布旗与水平串联形式；未读取的外链择日页不作证据。
 
 逐项核查及读取限制见[研究记录](../../docs/research/2026-10-20-tibetan-prayer-flags.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`tibetan-prayer-flags`；最终来源：`tibetan-prayer-flags`。
+
+藏传佛教经幡、众生利益、恭敬与无常。
+
+本轮已读依据：
+
+- [Tibetan Nuns Project — How to Hang and Dispose of Prayer Flags](https://tnp.org/how-to-hang-and-dispose-of-prayer-flags/)：正文18–40行，咒语、发心、户外悬挂、五色和褪色段；2026-10-20，`read`。
+
+范围限制：最早年代未定；五色对应依Tibetan Nuns Project正文39行（blue sky/space, white air/wind, red fire, green water, yellow earth），未概括所有旗型。
+
+当前呈现：五色咒语小旗串，抬蓝端、展开、抬黄端挂稳。 旗面罗马字分行、尺寸和三步为产品，未再现印制或完整悬挂仪式。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#tibetan-prayer-flags)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

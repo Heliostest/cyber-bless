@@ -19,3 +19,19 @@
 ## 参考来源
 
 - [UNESCO · The art of glass beads](https://ich.unesco.org/en/RL/01591)，2026-10-19 经数字入口成功读取完整正文。用于意大利的 a lume／da canna 分类、作坊传承、2020 年列入名录及特定活动与社会场合的赠礼用途；不将法国段落中的具体芯棒技术直接当作意大利全部工坊的统一操作。原长名称入口本轮遇到验证码；未复制图片或作品。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`venetian-glass-bead`；最终来源：`italian-glass-beads`。
+
+威尼斯十四世纪生产、不同技法、贸易与妇女劳动；不把赠礼作为本轮新增主张。
+
+本轮已读依据：
+
+- [Fondazione Musei Civici di Venezia / Museo del Vetro — Le perle veneziane](https://museovetro.visitmuve.it/it/il-museo/percorsi-e-collezioni/perle-veneziane/)：正文52–56行，十四世纪生产、玻璃管/灯工分类、十九世纪和穿珠妇女；2026-10-20，`read`。
+
+范围限制：灯工起源世纪在同馆不同页面有差异，正文不定为十六或十七世纪。
+
+当前呈现：青绿玻珠金属杆绕彩线，冷却示意后穿绳、静看。 未呈火焰退火等工序，配色与芯棒轨迹原创。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#venetian-glass-bead)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

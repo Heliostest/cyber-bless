@@ -17,3 +17,19 @@
 已检查主目录107项（包括隐藏项）、认领时共享116已验收ID、9个待合并场景和B会话敖包认领，没有千岁饴／七五三赠礼同题。旧神道总卡只有七五三泛述，不能代替本专卡证据。此处属于有明确收礼对象的祝愿赠礼，未把一般糖果、纸袋制作或神道背景本身当作祈福依据。
 
 实现见[场景README](../../packages/scenes/src/shichigosan-chitose-ame/README.md)与[研究记录](../../docs/research/2026-10-20-shichigosan-chitose-ame.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`shichigosan-chitose-ame`；最终来源：`shichigosan-chitose-ame`。
+
+江户关东传播、成长长寿、千岁糖赠礼。
+
+本轮已读依据：
+
+- [神奈川县 — 11月 霜月（文化介绍）](https://www.pref.kanagawa.jp/documents/79520/culture11.pdf)：PDF第2页16–79行，七五三与千岁饴段；2026-10-20，`read`。
+
+范围限制：不以某糖商传说确立发明年份，糖支数和袋纹不作规定。
+
+当前呈现：长纸袋、绳提手、红白包装长糖；家长提起递近放低，儿童接稳。 只模拟赠礼，不含神社参拜、吃糖或完整七五三。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#shichigosan-chitose-ame)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

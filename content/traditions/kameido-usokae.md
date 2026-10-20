@@ -27,3 +27,13 @@ sensitivity: 中
 
 首开神社首页超时、GO TOKYO图片超时，均未算已读；上述正文分别成功打开。[太宰府官方繁体活动页](https://www.dazaifutenmangu.or.jp/tw/art-and-events/events/usokae-festival/)L58–60亦已读，仅用于辨别不同做法，未借用它证明龟户程序。完整范围见[研究记录](../../docs/research/2026-10-20-kameido-usokae.md)。
 
+## 2026-10-20 介绍扩充核查
+
+适用场景：`kameido-usokae`；当前来源 slug 仍为 `kameido-usokae`。本轮新增介绍的证据范围：龟户特定神社、自 1820 年的活动记录、1 月 24/25 日、同音解释、返旧领新及天神信仰。
+
+- [亀戸天神社 — 年間の行事](https://kameidotenjin-sha.jp/events/)：1 月鷽替神事段；网页正文已读；访问日期 2026-10-20。
+- [東京観光財団 / GO TOKYO — うそかえ神事](https://www.gotokyo.org/jp/spot/ev178/index.html)：2026-02-02 更新，1820、返纳领受、天神信仰正文；网页已读；访问日期 2026-10-20。
+
+具体边界与缺口：1820 是龟户本社活动记录，不泛化为全国鷽替的起源；模型/容器/三拖不是统一仪轨，未承诺应验。 无新增依赖的失访来源。
+
+当前器物与动作：旧/新木鷽、返纳和领受位置；送旧、接新、安放。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#kameido-usokae)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

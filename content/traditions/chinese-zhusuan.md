@@ -23,3 +23,13 @@
 - [University of St Andrews · MacTutor: Chinese numerals](https://mathshistory.st-andrews.ac.uk/HistTopics/Chinese_numerals/)，2026-10-19 阅读末尾算盘的拨珠与计值段落。用于靠梁计数、上五下一、个位与十位关系。本场景不采用文中的年代起源推断。
 
 另保留访问记录：[UNESCO · Chinese Zhusuan](https://ich.unesco.org/en/RL/chinese-zhusuan-knowledge-and-practices-of-mathematical-calculation-through-the-abacus-00853) 于 2026-10-15 核对过官方搜索索引，2026-10-19 直达及替代入口仍遇人工验证；其中口授传承的表述未作为本轮已读正文依据。[Smithsonian · Suan-p'an, or Chinese Abacus](https://www.si.edu/object/suan-pan-or-chinese-abacus%3Anmah_690528) 曾用于馆藏索引核对，本轮对象页返回 404，未声称通读。场景的木框、竹杆、木珠与黄铜角件是原创材料选择，未复制该馆藏照片或尺寸。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：珠算工具、明代商业发展与程大位算书传播；上珠五下珠一、位值及进位关系。
+
+实际呈现：七档上二下五算盘；依次拨出3、8、18，靠梁计数。
+
+边界与缺口：各源对早期算盘起源表述不同，本次不用汉代/14世纪发明断言，只用明代传播阶段；固定数字和动作是教学示例。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#chinese-suanpan)。

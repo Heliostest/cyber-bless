@@ -25,3 +25,19 @@ Salisbury University 文化事务办公室在藏族僧人驻校项目的介绍�
 - **Tibetan Nuns Project — Why do Tibetans Give White Scarves or Kataks?**，2023-06-13：[正文](https://tnp.org/why-do-tibetans-give-white-scarves-or-kataks/)。2026-10-20 已读 L20–26、34–44、50–55。社区机构对迎客、长向双层、善待礼巾、穗边的直接说明；其商店特定长巾的织文、加持与双穗不泛化到本场。
 
 逐项核查与产品边界见 [研究记录](../../docs/research/2026-10-20-tibetan-khata-greeting.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`tibetan-khata-greeting`；最终来源：`tibetan-khata-greeting`。
+
+藏族及喜马拉雅迎送礼、真诚欢迎；不淡化礼巾亦有宗教用途。
+
+本轮已读依据：
+
+- [Tibetan Nuns Project — Why Do Tibetans Give White Scarves or Kataks?](https://tnp.org/why-do-tibetans-give-white-scarves-or-kataks/)：正文20–55行，地区、普通迎送礼与颜色、呈献段；2026-10-20，`read`。
+
+范围限制：无法确立始年，颜色与对象礼法有差别，不给全区域统一规定。
+
+当前呈现：普通人物之间双手托起预折白绢并递交。 无师长、颈上披挂、神圣图文或加持表现。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#tibetan-khata-greeting)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

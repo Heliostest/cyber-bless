@@ -46,3 +46,13 @@
 
 - [德鲁塔陶瓷博物馆：Santuario Madonna del Bagno](https://www.museoceramicadideruta.it/it/santuario-madonna-del-bagno_20.html) — 已读正文；支持当地陶工、釉陶还愿牌、信众委托与圣母敬礼背景。
 - [Science Museum Group：Votive earthenware plaque](https://collection.sciencemuseumgroup.org.uk/objects/co81737/votive-earthenware-plaque) — 馆藏补充线索；本次检索可见说明，但正文后续读取受限，不作为上述统一程序的证据。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`italian-ex-voto`；当前来源 slug 仍为 `italian-ex-voto`。本轮新增介绍的证据范围：卡萨利纳圣所十七世纪中叶敬礼及 1657 建筑起始，德鲁塔匠人受信众委托绘制蒙恩陶牌。
+
+- [Museo Regionale della Ceramica di Deruta — Santuario Madonna del Bagno](https://www.museoceramicadideruta.it/it/santuario-madonna-del-bagno_20.html)：圣所历史、1657/1658 建造、700 余陶牌与委托内容；网页正文已读；访问日期 2026-10-20。
+
+具体边界与缺口：圣所建造日期不等于全意大利 ex-voto 起源；眼前家景非圣所图像复刻，个人留言未实际献入圣所。 无新增依赖的失访来源。
+
+当前器物与动作：陶牌绘归途与窗光、静看或留言；现代感谢小画。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#italian-ex-voto)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

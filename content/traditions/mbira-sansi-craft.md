@@ -20,3 +20,13 @@
 
 - [UNESCO · Art of crafting and playing Mbira/Sansi](https://ich.unesco.org/en/RL/art-of-crafting-and-playing-mbirasanza-01541)，2026-10-16 阅读官方搜索索引中的完整概要；直达页返回人工验证。支持马拉维与津巴布韦的工艺、木板金属键、拨奏方式及传承说明。
 - [The Metropolitan Museum of Art · Zanze](https://www.metmuseum.org/art/collection/search/504845)，2026-10-16 阅读完整 HTML 的簧片乐器说明。仅用于自由端受压发声、振动长度与附加振响部件的一般原理，以及地区命名差异。该馆藏属于喀麦隆，**不作为马拉维乐器形制依据**。未复制图片、装饰、尺寸或馆藏布局。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`malawi-sansi`；当前来源 slug 仍为 `mbira-sansi-craft`。本轮新增介绍的证据范围：马拉维 Chewa 中南部及 ChiMang'anja/ChiNyanja 社群、实际制材、结构、长短音高和循环变奏。
+
+- [Malawi National Commission for UNESCO — Documentation of Intangible Cultural Heritage](https://www.malawinatcom.mw/documentation-of-intangible-cultural-heritage/)：2023-09-11，Nomination of Sansi Music Playing 全节（社群至循环音乐）；网页正文已读；访问日期 2026-10-20。
+
+具体边界与缺口：起源年代、具体地方调律和本场 C 大调均无对应依据；不把九键视作唯一规格，也不从他国宗教用途推为此场礼仪。 UNESCO 项目页及 45711-EN.pdf 返回验证页，未读正文，不能用搜索摘要补充家庭教学或年代。本轮改用马拉维直接记录。
+
+当前器物与动作：原创九键板琴、九根可拨金属舌片；自由连续拨奏与手动结束。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#malawi-sansi)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

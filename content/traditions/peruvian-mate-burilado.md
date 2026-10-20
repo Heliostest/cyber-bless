@@ -20,3 +20,13 @@
 
 - [秘鲁外贸与旅游部 / CITE Sipán · Línea artesanal de mates burilados: Tecnología e innovación（2012，官方 PDF）](https://cdn.www.gob.pe/uploads/document/file/31579/22220_22_L_C3_ADnea_artesanal_de_mates_burilados_2012_.pdf20180706-19116-sf0cai.pdf)，2026-10-19 直接读取官方 PDF，核对 PDF 第 31–32、40–43、45、47 页（书内页码分别为 29–30、38–41、43、45）。田野调查记录葫芦材料、壳面刻制、家族学习、Cochas／Huancayo 作坊及生活、鸟兽、植物题材，并比较北海岸与曼塔罗地区不同加工流程。本场景的叶片、山丘和三步节奏不对应某位匠人的特定作品或完整工序；未复制图像。
 - [秘鲁文化部 · Mates burilados, un arte ancestral peruano](https://www.gob.pe/institucion/cultura/noticias/47357-mates-burilados-un-arte-ancestral-peruano)，保留原核对记录：2026-10-15 曾用于材料、地区及传承概要；2026-10-19 重访返回 HTTP 418。本轮以已读官方工艺调查 PDF 补证，不将该新闻的搜索索引写成重新通读。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`peruvian-engraved-gourd`；当前来源 slug 仍为 `peruvian-mate-burilado`。本轮新增介绍的证据范围：曼塔罗/万塔地域、农耕畜牧节庆叙事、2014 家族采访与传承/技法差异。
+
+- [Ministerio de Cultura del Perú — Mates burilados, un arte ancestral peruano](https://www.gob.pe/institucion/cultura/noticias/47357-mates-burilados-un-arte-ancestral-peruano)：2014-02-06，地域及 Charles Alfaro Nuñez 家族采访全篇；直接 HTML 已读；访问日期 2026-10-20。
+
+具体边界与缺口：官方提及考古葫芦但本轮未独立核原发掘资料，不据此宣称今日工艺连续 3500 年；原创纹样不是特定村落传统构图。 旧记录写政府页 418；本轮直接请求 200 且已读正文，访问状态更新。2012 技术 PDF 已下载但未逐页复核，不作为本轮新增主张依据。
+
+当前器物与动作：干葫芦、刻刀、拭布；划叶片山丘、下拭。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#peruvian-engraved-gourd)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

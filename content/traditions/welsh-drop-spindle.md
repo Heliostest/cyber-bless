@@ -18,3 +18,20 @@ Cadw的《Sewing and braiding》第3页介绍了木杆与配重组成的悬锤�
 
 - [Cadw：Sewing and braiding](https://cadw.gov.wales/sites/default/files/2019-05/150923Tudorsewingbraiding.pdf)，2026-10-18成功读取28页PDF，第3页核对木杆、配重、旋转与悬挂下放。仅采用通用功能，不复制图片或引语。
 - [Amgueddfa Cymru：Introduction to Spinning](https://museum.wales/wool/whatson/12338/Introduction-to-Spinning-From-Fleece-to-Fabric-/)，2026-10-18成功读取，核对国家羊毛博物馆所展示的悬锤纺线；不将过去活动当作当前预订信息。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`welsh-drop-spindle`；最终来源：`welsh-drop-spindle`。
+
+威尔士教学与当代卡马森郡课程，纺织工具与历史劳动。
+
+本轮已读依据：
+
+- [Cadw — Sewing and braiding](https://cadw.gov.wales/sites/default/files/2019-05/150923Tudorsewingbraiding.pdf)：PDF第3页Drop spindle全页；2026-10-20，`read`。
+- [Amgueddfa Cymru / National Wool Museum — Introduction to Spinning: From Fleece to Fabric](https://museum.wales/wool/whatson/12338/Introduction-to-Spinning-From-Fleece-to-Fabric-/)：2026课程正文，羊毛处理、drop spindle、地点和讲师段；2026-10-20，`read-direct-http`。
+
+范围限制：不称威尔士发明，不把教材都铎背景推为起源。
+
+当前呈现：低位木纺轮与已绕纱团、静态毛束；旋转、下放、提回。 没有纤维持续牵伸或真正生出纱线，短动作不算完整纺线。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#welsh-drop-spindle)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

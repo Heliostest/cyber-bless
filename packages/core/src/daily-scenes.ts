@@ -1,3 +1,5 @@
+import { sceneNarratives } from "./scene-narratives/index.ts";
+
 /** Public bundled metadata; safe in native/extension code, without DOM imports. */
 type CatalogEntry = { id: string; title: string; engine: string; revision: string; manifestUrl: string };
 /**
@@ -214,485 +216,485 @@ export const WISH_SCENE_IDS = [
 
 
 export type BuiltInSceneEntry = CatalogEntry & {
-  /** 简短介绍文化背景、物件特点与实际动作。缺省 → 隐藏折叠块。 */
+  /** 已核查的文化背景、器物与当前体验；空行分段。缺省 → 隐藏折叠块。 */
   narrative?: string;
   /** 指向 content/traditions/<slug>.md（单文件，非目录）；仅元数据，本期 app 不加载。产品原创场景省略。 */
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
-  { id:"hiiragi-iwashi",title:"柊鰯守门",engine:"hiiragi-iwashi@1",revision:"bundled",manifestUrl:"",traditionSlug:"hiiragi-iwashi",narrative:"节分时，人们把烤鰯头插在带刺的柊枝上，放在入口，寄托驱邪避厄的心愿。拿起备好的柊枝，将烤鱼头与枝端插合，再安放到门边。" },
-  { id:"tamagushi-offering",title:"玉串奉愿",engine:"tamagushi-offering@1",revision:"bundled",manifestUrl:"",traditionSlug:"tamagushi-offering",narrative:"日本神社的祈祷中，参拜者会手持附有纸垂的榊枝，把祈愿寄于玉串，再将枝根朝向神前供放。眼前是奉玉串的一段：先顺时针转正，静心祈愿，再转动枝根，轻轻放到供案上。" },
-  { id:"tibetan-water-bowls",title:"清水七供",engine:"tibetan-water-bowls@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-water-bowls",narrative:"在藏传佛教的供水中，人们向佛与菩萨恭敬献上清水，并以利益众生为发心。佛像前的七只铜碗已经各留少量清水：提起水壶，从左到右依次添水，水面停在碗沿下方，再将水壶收回。" },
-  { id:"kagami-biraki-sake",title:"开樽祝愿",engine:"kagami-biraki-sake@1",revision:"bundled",manifestUrl:"",traditionSlug:"kagami-biraki-sake",narrative:"在日本清酒的镜开仪式中，人们用木槌叩开预先松好的樽盖，祝愿新的开始顺遂、健康与幸福。眼前的菰卷酒樽已经备好：拿起系着红白带的木槌，轻叩盖板接缝的一端，再把木槌收回樽旁。盖片分开，露出樽中的酒面。" },
-  { id:"tibetan-prayer-flags",title:"经幡迎风",engine:"tibetan-prayer-flags@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-prayer-flags",narrative:"藏传佛教的经幡印有经文或咒语，悬在户外随风轻扬，寄托愿众生受益、获得安乐的心意。这串五色咒语旗保持完整，蓝、白、红、绿、黄依次相连。抬起蓝旗一端，舒展旗串，再挂稳黄旗一端，让经幡在风中展开。" },
-  { id:"rosh-hashanah-apple-honey",title:"蘸蜜迎岁",engine:"rosh-hashanah-apple-honey@1",revision:"bundled",manifestUrl:"",traditionSlug:"rosh-hashanah-apple-honey",narrative:"在犹太新年的节庆餐食中，苹果蘸蜜与果实祝福、品尝和祷愿相伴，寄托向上帝祈求美好甜蜜新年的心意。眼前的苹果片已切好：拿起、蘸蜜，再提起放回餐盘，准备品尝。" },
-  { id:"thai-songkran-elders",title:"浇水敬老",engine:"thai-songkran-elders@1",revision:"bundled",manifestUrl:"",traditionSlug:"thai-songkran-elders",narrative:"宋干新年时，泰国家庭中的晚辈会把清水轻轻浇在长辈手上，表达敬意，祝愿长辈安康，也向他们求一份新岁祝福。眼前的清水已备好：捧起小碗，移到长辈手边，缓缓倾水，再将碗放回。" },
-  { id:"kameido-usokae",title:"木鷽迎福",engine:"kameido-usokae@1",revision:"bundled",manifestUrl:"",traditionSlug:"kameido-usokae",narrative:"在东京龟户天神社的鷽替神事中，人们返纳旧木鷽，领受新木鷽，祈愿凶事转吉。送还旧鸟，接过新鸟，再将它安放好，迎接新年。" },
-  { id:"persian-esfand",title:"熏籽祈安",engine:"persian-esfand@1",revision:"bundled",manifestUrl:"",traditionSlug:"persian-esfand",narrative:"在一些伊朗家庭里，长辈会把 Esfand 种子放在炉上的锅中加热，再挥动布巾散开烟气，寄托避开邪眼、护佑家人的心愿。眼前的小锅已经盛好种子：提起木柄，把锅移到炉上，待烟气升起后轻轻挥巾，愿家人平安、诸事顺遂。" },
-  { id:"mochigase-nagashibina",title:"纸雏祈安",engine:"mochigase-nagashibina@1",revision:"bundled",manifestUrl:"",traditionSlug:"mochigase-nagashibina",narrative:"在鸟取用瀬的流雏习俗中，一对纸雏随圆形草托漂向下游，寄托无病息灾与孩子成长的祈愿。托起纸雏与花枝，移向缓流，轻轻放入水中。" },
-  { id:"greek-vasilopita",title:"新岁分糕",engine:"greek-vasilopita@1",revision:"bundled",manifestUrl:"",traditionSlug:"greek-vasilopita",narrative:"在希腊东正教家庭的新年庆贺中，家人分食圣巴西尔糕 Vasilopita，寄托健康与幸福的祝愿。糕里藏着一枚硬币，收到含币一份的人被认为得到祝福。眼前的糕已经切好：用糕铲托起这一份，送到家人盘里，再取出切面中露出的硬币。" },
-  { id:"tibetan-khata-greeting",title:"白绢迎客",engine:"tibetan-khata-greeting@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-khata-greeting",narrative:"在藏族迎客礼俗中，献上哈达表达欢迎与美好祝愿。双手托起预先折好的白绢，递给来客，让心意随礼巾交到对方手中。" },
-  { id:"shichigosan-chitose-ame",title:"千岁赠糖",engine:"shichigosan-chitose-ame@1",revision:"bundled",manifestUrl:"",traditionSlug:"shichigosan-chitose-ame",narrative:"在日本七五三的成长庆贺中，父母将寄托长寿心意的千岁饴送给孩子。细长的红白糖装在长袋里，带着健康成长的祝愿。眼前是为孩子备好的糖袋：握住提手提起，递近，再轻轻放低，让孩子伸手接稳。" },
-  { id:"mongolian-ovoo",title:"敖包祈护",engine:"mongolian-ovoo@1",revision:"bundled",manifestUrl:"",traditionSlug:"mongolian-ovoo",narrative:"在蒙古的一些敖包礼敬中，人们顺时针绕行三圈，并向石堆添石，向山岳与湖泊祈求护佑。取起石子，随来访者绕行，再把它投入敖包。" },
-  { id:"fgs-buddha-bathing",title:"浴佛发愿",engine:"fgs-buddha-bathing@1",revision:"bundled",manifestUrl:"",traditionSlug:"fgs-buddha-bathing",narrative:"佛诞浴佛以香水灌沐太子像，表达礼敬与发愿。依佛光山的公开说明，这里向太子像的右肩、左肩、右肩依次倾下三杓水，发愿止恶、行善、度众生。握住杓柄，舀水提起，看水流落在肩上，再缓缓收回。" },
-  { id:"balinese-canang-sari",title:"叶盘献谢",engine:"balinese-canang-sari@1",revision:"bundled",manifestUrl:"",traditionSlug:"balinese-canang-sari",narrative:"Canang sari 是巴厘印度教徒日常献上的供品，用以向 Ida Sang Hyang Widhi Wasa 表达谢意。把白花放入盛着花材和食物的叶盘，托起叶盘，安放在田边的供奉台上。" },
-  { id:"bulgarian-survakane",title:"彩枝贺年",engine:"bulgarian-survakane@1",revision:"bundled",manifestUrl:"",traditionSlug:"bulgarian-survakane",narrative:"在保加利亚的新年贺年习俗 Survakane 中，孩子持装饰过的山茱萸枝，轻拍亲友背部，送上来年健康幸福的祝愿。眼前的彩枝缠着羊毛线和爆米花串：提起枝条，移到亲友背后，轻拍后收回，把新年问候送到身边的人。" },
-  { id:"setsubun-mamemaki",title:"节分撒豆",engine:"setsubun-mamemaki@1",revision:"bundled",manifestUrl:"",traditionSlug:"setsubun-mamemaki",narrative:"在日本节分时，家庭会用木枡盛炒黄豆，向屋外、屋内撒豆，以“鬼は外、福は内”寄托驱厄迎福、家人安康的心意。眼前木枡已备好：推开木扇，先向屋外撒豆，再向屋内轻撒，让祝愿随着豆子落在家中。" },
-  { id:"sternsinger-house-blessing",title:"门楣祝家",engine:"sternsinger-house-blessing@1",revision:"bundled",manifestUrl:"",traditionSlug:"sternsinger-house-blessing",narrative:"德国的 Sternsinger 在岁首逐户拜访，用粉笔在门上方写下基督教祝福，并为儿童援助项目募款。拿起粉笔，写下门楣上的年份与 C+M+B，寄托“愿基督祝福这所房屋”的心意。" },
-  { id:"lam-tsuen-wishing-tree",title:"林村抛愿",engine:"lam-tsuen-wishing-tree@1",revision:"bundled",manifestUrl:"",traditionSlug:"lam-tsuen-wishing-tree",narrative:"香港林村的许愿习俗，把写有心愿的宝牒系上橙，抛挂枝头。如今仿真许愿树与塑料橙延续着这份心意。写下平安，将宝牒系好，再把纸橙抛向树枝，让心愿轻轻挂在枝间。" },
-  { id:"kagami-mochi-offering",title:"镜饼迎岁",engine:"kagami-mochi-offering@1",revision:"bundled",manifestUrl:"",traditionSlug:"kagami-mochi-offering",narrative:"日本正月迎接年神时，会以镜饼作为供物：两层圆饼相叠，顶上放橙（だいだい），寄托家族代代兴盛的祝愿。把大圆饼安放在纸面中央，再叠上小圆饼，最后放上橙，备好这份迎新的供物。" },
-  { id:"romanian-martisor",title:"红白寄春",engine:"romanian-martisor@1",revision:"bundled",manifestUrl:"",traditionSlug:"romanian-martisor",narrative:"罗马尼亚的 Mărțișor 春绳习俗中，红白相绞的细绳曾被佩戴，以寄托好运与健康；佩戴结束后，一些地方把它挂到开花的树枝上。眼前的春绳已解下：向上短拖提起，再向右将绳环套上花枝，最后向下轻放，让流苏垂在花下。" },
-  { id:"sumiyoshi-godairiki",title:"三石寄愿",engine:"sumiyoshi-godairiki@1",revision:"bundled",manifestUrl:"",traditionSlug:"sumiyoshi-godairiki",narrative:"在大阪住吉大社的五所御前，人们寻找写有「五」「大」「力」的三颗小石，装入御守袋，寄托祈求神明护佑、实现心愿的信念。眼前的字石散在浅色小石之间：依次向右短拖，拾起五字石、大字石、力字石，让它们越过敞开的袋口，轻轻落入布袋。三石收好，心愿留在心中。" },
-  { id:"polish-oplatek-sharing",title:"薄饼相祝",engine:"polish-oplatek-sharing@1",revision:"bundled",manifestUrl:"",traditionSlug:"polish-oplatek-sharing",narrative:"波兰家庭在平安夜分享 opłatek 薄饼，向亲人送上健康与平安的祝愿，也表达和解与关爱。眼前是家人间的一次分享：递出薄饼，轻分一角，把祝愿送给对方。" },
-  { id:"greek-new-year-pomegranate",title:"破榴迎新",engine:"greek-new-year-pomegranate@1",revision:"bundled",manifestUrl:"",traditionSlug:"greek-new-year-pomegranate",narrative:"在希腊一些家庭，元旦会在家门门槛摔开石榴，让红籽散开，寄托新年一家人的好运、丰足与幸福。眼前的完整石榴已备好：向上短拖拿起，向右移到门槛中央上方，再向下短拖后松手。果皮在石槛上破开，红籽弹落在日光里。" },
-  { id:"bonfim-ribbon",title:"栏前结愿",engine:"bonfim-ribbon@1",revision:"bundled",manifestUrl:"",traditionSlug:"bonfim-ribbon",narrative:"在巴西萨尔瓦多，人们把Bonfim彩带系在 Senhor do Bonfim 教堂的栏杆上，以三个结寄托心愿。市文旅介绍，每一结留一个愿望；教堂院长的采访也记述了栏前系带的信念。眼前的彩带已经绕栏，三个松结也已预成：向右短拖收紧第一结，再向左收紧第二结，最后向右收紧第三结。心愿留在心中，彩带轻垂在日光下。" },
-  { id:"chinowa-kuguri",title:"茅环祈安",engine:"chinowa-kuguri@1",revision:"bundled",manifestUrl:"",traditionSlug:"chinowa-kuguri",narrative:"在日本东京葛西神社，夏越时的茅环由束起的茅草制成，固定在柱上。神社介绍，参访者从正面穿环，依次向左、向右、再向左绕行，寄托净祓与平安度夏的心意，随后前往本殿。眼前的茅环已立好：向左短拖，从环中穿过并向左绕回；再向右穿行绕回，最后再走一次左绕。三次绕行后，停在茅环前。" },
-  { id:"zeniarai-coin-washing",title:"泉水净币",engine:"zeniarai-coin-washing@1",revision:"bundled",manifestUrl:"",traditionSlug:"zeniarai-coin-washing",narrative:"在日本镰仓的銭洗弁財天宇賀福神社，参访者清洗钱币，寄托对财福的祈愿。神社代表的访谈记述，参拜后把钱放入筛中，用柄杓浇水，再以手帕擦拭收回。眼前的硬币已放在浅筛里：向上短拖举起水勺，向左倾水，让泉水流过硬币；再把布巾向右短拖，拭去水珠。勺子回到泉边，硬币仍静放在筛中。" },
-  { id:"udo-undama",title:"龟岩投愿",engine:"udo-undama@1",revision:"bundled",manifestUrl:"",traditionSlug:"udo-undama",narrative:"在日本宫崎的鵜户神宫，参访者把小小的陶土「运玉」投向海边龟岩背上的方形凹处，把愿望寄托在这一投。神宫记述，如今的运玉由黏土揉圆，压上「運」字，再轻烧制成。眼前先把陶玉从石边取起，对准岩上的凹处，向上短拖后松手。陶玉划出弧线，越过岩沿，落入凹处；海面的光纹仍在缓缓晃动。" },
-  { id: "japanese-daruma-otoshi", title: "木槌落片", engine: "japanese-daruma-otoshi@1", revision: "bundled", manifestUrl: "", traditionSlug: "japanese-daruma-otoshi", narrative: "达摩落片是日本的木制叠片玩具：从底部敲出木片，同时让上方的叠片保持直立。Reading Museum记录了这种玩法，江户东京博物馆也收藏着名为「だるま落し」的玩具。这里把三片柔和色彩的木片叠在红色达摩下，先下移木槌对齐，敲出一片，看上层稳稳落下，再抬起木槌。圆润的木面与彩漆在阳光下留下清楚的色阶。" },
-  { id: "paper-pinwheel", title: "纸翼转风", engine: "paper-pinwheel@1", revision: "bundled", manifestUrl: "", traditionSlug: "paper-pinwheel", narrative: "纸风车把弯折的纸翼装在细轴上，轻风或吹气会让它转起来。墨尔本的儿童玩具馆藏中，也保存着四翼、木柄和小珠组合的手工纸风车。这里用珊瑚红与青绿色纸翼围住圆心，先轻拨起转，再提起木柄，续转一小段，让纸翼慢慢停稳。阳光落在纸面与木柄上，折弯处露出柔和的色阶。" },
+  { id:"hiiragi-iwashi",title:"柊鰯守门",engine:"hiiragi-iwashi@1",revision:"bundled",manifestUrl:"",traditionSlug:"hiiragi-iwashi",narrative:sceneNarratives["hiiragi-iwashi"] },
+  { id:"tamagushi-offering",title:"玉串奉愿",engine:"tamagushi-offering@1",revision:"bundled",manifestUrl:"",traditionSlug:"tamagushi-offering",narrative:sceneNarratives["tamagushi-offering"] },
+  { id:"tibetan-water-bowls",title:"清水七供",engine:"tibetan-water-bowls@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-water-bowls",narrative:sceneNarratives["tibetan-water-bowls"] },
+  { id:"kagami-biraki-sake",title:"开樽祝愿",engine:"kagami-biraki-sake@1",revision:"bundled",manifestUrl:"",traditionSlug:"kagami-biraki-sake",narrative:sceneNarratives["kagami-biraki-sake"] },
+  { id:"tibetan-prayer-flags",title:"经幡迎风",engine:"tibetan-prayer-flags@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-prayer-flags",narrative:sceneNarratives["tibetan-prayer-flags"] },
+  { id:"rosh-hashanah-apple-honey",title:"蘸蜜迎岁",engine:"rosh-hashanah-apple-honey@1",revision:"bundled",manifestUrl:"",traditionSlug:"rosh-hashanah-apple-honey",narrative:sceneNarratives["rosh-hashanah-apple-honey"] },
+  { id:"thai-songkran-elders",title:"浇水敬老",engine:"thai-songkran-elders@1",revision:"bundled",manifestUrl:"",traditionSlug:"thai-songkran-elders",narrative:sceneNarratives["thai-songkran-elders"] },
+  { id:"kameido-usokae",title:"木鷽迎福",engine:"kameido-usokae@1",revision:"bundled",manifestUrl:"",traditionSlug:"kameido-usokae",narrative:sceneNarratives["kameido-usokae"] },
+  { id:"persian-esfand",title:"熏籽祈安",engine:"persian-esfand@1",revision:"bundled",manifestUrl:"",traditionSlug:"persian-esfand",narrative:sceneNarratives["persian-esfand"] },
+  { id:"mochigase-nagashibina",title:"纸雏祈安",engine:"mochigase-nagashibina@1",revision:"bundled",manifestUrl:"",traditionSlug:"mochigase-nagashibina",narrative:sceneNarratives["mochigase-nagashibina"] },
+  { id:"greek-vasilopita",title:"新岁分糕",engine:"greek-vasilopita@1",revision:"bundled",manifestUrl:"",traditionSlug:"greek-vasilopita",narrative:sceneNarratives["greek-vasilopita"] },
+  { id:"tibetan-khata-greeting",title:"白绢迎客",engine:"tibetan-khata-greeting@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-khata-greeting",narrative:sceneNarratives["tibetan-khata-greeting"] },
+  { id:"shichigosan-chitose-ame",title:"千岁赠糖",engine:"shichigosan-chitose-ame@1",revision:"bundled",manifestUrl:"",traditionSlug:"shichigosan-chitose-ame",narrative:sceneNarratives["shichigosan-chitose-ame"] },
+  { id:"mongolian-ovoo",title:"敖包祈护",engine:"mongolian-ovoo@1",revision:"bundled",manifestUrl:"",traditionSlug:"mongolian-ovoo",narrative:sceneNarratives["mongolian-ovoo"] },
+  { id:"fgs-buddha-bathing",title:"浴佛发愿",engine:"fgs-buddha-bathing@1",revision:"bundled",manifestUrl:"",traditionSlug:"fgs-buddha-bathing",narrative:sceneNarratives["fgs-buddha-bathing"] },
+  { id:"balinese-canang-sari",title:"叶盘献谢",engine:"balinese-canang-sari@1",revision:"bundled",manifestUrl:"",traditionSlug:"balinese-canang-sari",narrative:sceneNarratives["balinese-canang-sari"] },
+  { id:"bulgarian-survakane",title:"彩枝贺年",engine:"bulgarian-survakane@1",revision:"bundled",manifestUrl:"",traditionSlug:"bulgarian-survakane",narrative:sceneNarratives["bulgarian-survakane"] },
+  { id:"setsubun-mamemaki",title:"节分撒豆",engine:"setsubun-mamemaki@1",revision:"bundled",manifestUrl:"",traditionSlug:"setsubun-mamemaki",narrative:sceneNarratives["setsubun-mamemaki"] },
+  { id:"sternsinger-house-blessing",title:"门楣祝家",engine:"sternsinger-house-blessing@1",revision:"bundled",manifestUrl:"",traditionSlug:"sternsinger-house-blessing",narrative:sceneNarratives["sternsinger-house-blessing"] },
+  { id:"lam-tsuen-wishing-tree",title:"林村抛愿",engine:"lam-tsuen-wishing-tree@1",revision:"bundled",manifestUrl:"",traditionSlug:"lam-tsuen-wishing-tree",narrative:sceneNarratives["lam-tsuen-wishing-tree"] },
+  { id:"kagami-mochi-offering",title:"镜饼迎岁",engine:"kagami-mochi-offering@1",revision:"bundled",manifestUrl:"",traditionSlug:"kagami-mochi-offering",narrative:sceneNarratives["kagami-mochi-offering"] },
+  { id:"romanian-martisor",title:"红白寄春",engine:"romanian-martisor@1",revision:"bundled",manifestUrl:"",traditionSlug:"romanian-martisor",narrative:sceneNarratives["romanian-martisor"] },
+  { id:"sumiyoshi-godairiki",title:"三石寄愿",engine:"sumiyoshi-godairiki@1",revision:"bundled",manifestUrl:"",traditionSlug:"sumiyoshi-godairiki",narrative:sceneNarratives["sumiyoshi-godairiki"] },
+  { id:"polish-oplatek-sharing",title:"薄饼相祝",engine:"polish-oplatek-sharing@1",revision:"bundled",manifestUrl:"",traditionSlug:"polish-oplatek-sharing",narrative:sceneNarratives["polish-oplatek-sharing"] },
+  { id:"greek-new-year-pomegranate",title:"破榴迎新",engine:"greek-new-year-pomegranate@1",revision:"bundled",manifestUrl:"",traditionSlug:"greek-new-year-pomegranate",narrative:sceneNarratives["greek-new-year-pomegranate"] },
+  { id:"bonfim-ribbon",title:"栏前结愿",engine:"bonfim-ribbon@1",revision:"bundled",manifestUrl:"",traditionSlug:"bonfim-ribbon",narrative:sceneNarratives["bonfim-ribbon"] },
+  { id:"chinowa-kuguri",title:"茅环祈安",engine:"chinowa-kuguri@1",revision:"bundled",manifestUrl:"",traditionSlug:"chinowa-kuguri",narrative:sceneNarratives["chinowa-kuguri"] },
+  { id:"zeniarai-coin-washing",title:"泉水净币",engine:"zeniarai-coin-washing@1",revision:"bundled",manifestUrl:"",traditionSlug:"zeniarai-coin-washing",narrative:sceneNarratives["zeniarai-coin-washing"] },
+  { id:"udo-undama",title:"龟岩投愿",engine:"udo-undama@1",revision:"bundled",manifestUrl:"",traditionSlug:"udo-undama",narrative:sceneNarratives["udo-undama"] },
+  { id: "japanese-daruma-otoshi", title: "木槌落片", engine: "japanese-daruma-otoshi@1", revision: "bundled", manifestUrl: "", traditionSlug: "japanese-daruma-otoshi", narrative: sceneNarratives["japanese-daruma-otoshi"] },
+  { id: "paper-pinwheel", title: "纸翼转风", engine: "paper-pinwheel@1", revision: "bundled", manifestUrl: "", traditionSlug: "paper-pinwheel", narrative: sceneNarratives["paper-pinwheel"] },
   {
     id: "chinese-steelyard", title: "移砣平衡", engine: "chinese-steelyard@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-steelyard",
-    narrative: "杆秤用提点支起秤杆，让配重沿杆移动，观察两端逐渐找平。木杆、金属秤砣与悬盘相伴，盘里放着一枚柑橘。先向右移砣，让木杆慢慢回到水平，再提起圆环，轻轻缓放。秤砣的吊绳保持垂直，果实安放在浅盘中，金属边缘在日光下泛起柔光。",
+    narrative: sceneNarratives["chinese-steelyard"],
   },
   {
     id: "garden-croquet", title: "草坪过门", engine: "garden-croquet@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "garden-croquet",
-    narrative: "在英国花园游戏的介绍中，槌球以木槌触球，让球沿草坪穿过一道道球门。这里是一处原创简化小景：木柄、圆槌头与带浅色条纹的彩球相对，白色球门立在绿意之间。先把木槌后移，再轻轻触球，看球穿门而过，最后沿草地再滚一小段。暖木和彩球留下短短的影子，动作停下，目光也慢慢安定。",
+    narrative: sceneNarratives["garden-croquet"],
   },
   {
     id: "welsh-drop-spindle", title: "悬锤纺线", engine: "welsh-drop-spindle@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "welsh-drop-spindle",
-    narrative: "威尔士的纺织展示中，悬锤纺线把木杆与有分量的纺轮连在线束下，转动使纤维相合。这里是一只原创简化纺锤：浅色木轮托着已绕好的纱团，上方留着一小束柔软羊毛。先轻旋木轮，再缓缓下放，最后提起停稳。日光沿着木纹和乳白线束移动，短短一段起落，让目光也慢下来。",
+    narrative: sceneNarratives["welsh-drop-spindle"],
   },
   {
     id: "scottish-plunge-churn", title: "木杆搅乳", engine: "scottish-plunge-churn@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "scottish-plunge-churn",
-    narrative: "在苏格兰泰里岛的乡村生活记录中，立式搅乳桶由木板围合，金属箍束住桶身，木杆穿过桶盖，带着搅头缓缓起落。这里是一只原创简化木桶：先让木杆落下，再提起回转，最后轻提木盖，让浅色奶油与桶内木纹露出一隙。日光落在木板上，金属箍留着安静的光泽，两下起落之后，让物件慢慢停稳。",
+    narrative: sceneNarratives["scottish-plunge-churn"],
   },
   {
     id: "irish-bodhran", title: "鼓面轻拍", engine: "irish-bodhran@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "irish-bodhran",
-    narrative: "爱尔兰传统音乐里，Bodhrán 框鼓的浅色鼓面与圆木框，陪着舞曲和歌声起落。这里是一面原创框鼓小景：让双端木槌先以一端轻触鼓面，再换另一端相和，两下短短的回弹之后，轻转绿色鼓缘，让木槌随圆框安静停住。日光擦过暖木，圆形鼓面留着柔和的明暗，一来一回的节拍也缓缓落下。",
+    narrative: sceneNarratives["irish-bodhran"],
   },
   {
     id: "french-coffee-mill", title: "手磨晨光", engine: "french-coffee-mill@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "french-coffee-mill",
-    narrative: "法国手摇咖啡磨的木盒、金属料斗和曲柄，连着一段日常咖啡时光。这里是一台原创木磨小景：轻转上方木柄，让钢轴行过半周，继续轻转使曲柄回到身前，再拉开小木屉。豆粒与细粉一粗一细，暖木色和微亮金属在日光里分出层次，屉底的一点褐色也安静下来。",
+    narrative: sceneNarratives["french-coffee-mill"],
   },
   {
     id: "japanese-wagasa", title: "纸伞舒晴", engine: "japanese-wagasa@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "japanese-wagasa",
-    narrative: "日本岐阜的和伞工艺以竹骨与和纸构成可收拢的伞面。这里是一柄原创纸伞小景：推起木环，撑杆带着竹骨舒展，轻转伞柄，让浅色的一面移过身旁，再沿折痕慢慢收拢。暖色纸面与竹骨在阳光里分出深浅，伞柄边的一点草影也静下来。",
+    narrative: sceneNarratives["japanese-wagasa"],
   },
   {
     id: "spanish-castanets", title: "木壳轻拍", engine: "spanish-castanets@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "spanish-castanets",
-    narrative: "西班牙响板由绳系的凹面木壳相碰发声。这里是一组原创木壳小景，轻合左侧木壳，让右侧回应，再让两副一同轻拍。弧面的暖木色在阳光里分出深浅，松开的细绳与空腔留住片刻轻快，草尖的影子慢慢移过木边。",
+    narrative: sceneNarratives["spanish-castanets"],
   },
   {
     id: "japanese-shishi-odoshi", title: "竹筒叩石", engine: "japanese-shishi-odoshi@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "japanese-shishi-odoshi",
-    narrative: "日本庭园的鹿威以竹筒蓄水、倾落和回叩石面形成声响。这里是一件原创竹水小景，挪近竹嘴引入一股清水，扶着竹筒轻倾，再让竹尾归石。水光沿斜口落进浅池，竹影与细小水纹留在明亮温暖的午后。",
+    narrative: sceneNarratives["japanese-shishi-odoshi"],
   },
   {
     id: "german-jumping-jack", title: "牵绳木偶", engine: "german-jumping-jack@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "german-jumping-jack",
-    narrative: "牵绳关节木偶Hampelmann用细绳连接木肢，柏林的馆藏记录了木片与彩绘的形态。这里是一件原创小木偶，轻牵木珠，看两臂与双腿慢慢舒展，松手后沿着细绳回到垂落的姿态，让片刻轻快留在树影与阳光里。",
+    narrative: sceneNarratives["german-jumping-jack"],
   },
   {
     id: "finnish-kantele", title: "五弦轻拨", engine: "finnish-kantele@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "finnish-kantele",
-    narrative: "康特勒是芬兰音乐中的拨弦乐器家族，五弦木琴身与金属琴弦是其中一种形态。这里用一件原创简化小琴，轻拨长弦、中弦和短弦，看琴弦弯起、回振，再静静展平，让细光与木纹陪伴这一小段从容的节奏。",
+    narrative: sceneNarratives["finnish-kantele"],
   },
   {
     id: "estonian-village-swing", title: "秋千轻荡", engine: "estonian-village-swing@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "estonian-village-swing",
-    narrative: "在爱沙尼亚的村落生活与季节聚会中，秋千常与相聚、歌声和春日户外时光相伴。木臂悬挂的木台是当地多种秋千形态中的一种。这里用一座原创木架秋千，轻轻推向前方、顺势回摆，再收回中央，看木纹与影子沿着一来一回的弧线移动，把片刻从容留在草地上。",
+    narrative: sceneNarratives["estonian-village-swing"],
   },
   {
     id: "french-petanque", title: "银球近靶", engine: "french-petanque@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "french-petanque",
-    narrative: "在法国拉西奥塔的 pétanque 语境中，圈线、小靶与金属球构成从容的投球片刻。球员站在圈内，把球送向小靶；这里取其中一段物件动作，用原创木靶与两枚素色银球，先送出木靶，再让球轻落、滚近。细细刻槽随着滚动转过，把阳光与眼前的距离留在砂地上。",
+    narrative: sceneNarratives["french-petanque"],
   },
   {
     id: "english-hearth-bellows", title: "风囊轻送", engine: "english-hearth-bellows@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "english-hearth-bellows",
-    narrative: "英国壁炉用具的馆藏中，可以见到木叶、皮革与黄铜嘴组成的手持风箱。这类日常工具也见于其他地方：双柄分开时风囊展开，压合时从风嘴送出空气。这里用一只原创素色风箱，抬起木柄、慢慢压合，再轻轻松开，看皮革折边随着一呼一合舒展，把片刻安静留在阳光里。",
+    narrative: sceneNarratives["english-hearth-bellows"],
   },
   {
     id: "mexican-metate", title: "石面磨香", engine: "mexican-metate@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "mexican-metate",
-    narrative: "墨西哥及中美洲的日常饮食文化中，石磨与长石杵相伴，用来磨细玉米等谷物。浅凹的石面承托粗粒，石杵沿着磨面来回推磨。这里用一方素色石磨，慢慢向前推磨、回磨，再把石杵收回后沿，看细浅的粉痕留在石面，把谷物的一小段节奏留在阳光里。",
+    narrative: sceneNarratives["mexican-metate"],
   },
   {
     id: "czech-wooden-ratchet", title: "木齿轻转", engine: "czech-wooden-ratchet@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "czech-wooden-ratchet",
-    narrative: "捷克的春季民俗中可见木制棘轮响器，转动木框时，轮齿依次带过弹性的木舌，留下连续的轻响。这类响器也见于欧洲更广的地区。这里用一只素色木响器，沿握柄慢慢转过一圈，看浅色木舌随齿沿弯曲、回落，把木头的一小段节奏留在阳光里。",
+    narrative: sceneNarratives["czech-wooden-ratchet"],
   },
   {
     id: "puerto-rican-guiro", title: "瓜棱轻奏", engine: "puerto-rican-guiro@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "puerto-rican-guiro",
-    narrative: "刮瓜是波多黎各及加勒比地区可见的节奏乐器，以中空瓜壳和横向刻棱构成发声的表面，常用木棒或刮具沿棱摩擦。这里用一只素色瓜壳，沿纹路轻轻下刮、回刮，再把木棒移开。看圆润的瓜身、细细的横棱与中空口沿，把一小段节拍留在阳光里。",
+    narrative: sceneNarratives["puerto-rican-guiro"],
   },
   {
     id: "valencian-folding-fan", title: "折扇轻风", engine: "valencian-folding-fan@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "valencian-folding-fan",
-    narrative: "西班牙瓦伦西亚的折扇工艺，以木骨构成可开合的骨架，再配上布面。阿尔代亚的折扇博物馆保留着这门工艺的物件与制作工具。这里用一把素色折扇，徐徐展扇，轻摇一下，再收至半开。沿着共同的铆轴，看木骨与折褶把阳光分成细细的层次。",
+    narrative: sceneNarratives["valencian-folding-fan"],
   },
   {
     id: "mexican-tortilla-press", title: "木压成圆", engine: "mexican-tortilla-press@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "mexican-tortilla-press",
-    narrative: "墨西哥玉米饼的制作常用手动压具，将玉米面团夹在两层薄衬片之间，再靠上下压板和长柄压展。木制与金属压具都有使用。这里先合板，再压下长柄，最后松柄开盖，看看圆团慢慢铺展成薄薄的生饼。保留尚未揭膜的模样，把片刻专注留给木纹与面团的变化。",
+    narrative: sceneNarratives["mexican-tortilla-press"],
   },
   {
     id: "ghanaian-oware", title: "木窝播籽", engine: "ghanaian-oware@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "ghanaian-oware",
-    narrative: "Oware 是加纳阿坎语社群使用的游戏名称，也流传于西非与加勒比地区。常见棋盘有两行、每行六个木窝，以种子般的小棋子逐窝播撒。这里从每窝四粒的开局提起一窝，绕过行端，再沿另一行逐粒落下；只呈现一手播籽。看四粒种子改变木窝中的疏密，把片刻留给耐心与相聚。",
+    narrative: sceneNarratives["ghanaian-oware"],
   },
   {
     id: "chinese-rattle-drum", title: "拨浪轻响", engine: "chinese-rattle-drum@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-rattle-drum",
-    narrative: "拨浪鼓是一种带木柄的双面小鼓，两侧系着细绳与木珠。来回转动木柄，木珠便随绳绕向鼓面，发出连续的轻响。小巧的单鼓也作为民间玩具和招徕声响出现在日常生活里。这里向右转柄、向左回转，再慢慢收低，让两枚木珠垂回鼓旁。看浅木、鼓皮和细绳一起动起来，把清脆的一刻轻轻留住。",
+    narrative: sceneNarratives["chinese-rattle-drum"],
   },
   {
     id: "chinese-tangram", title: "七巧归方", engine: "chinese-tangram@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-tangram",
-    narrative: "七巧板是中国传统拼图，由五块大小不同的三角片、一块方片和一块斜方片组成。七块木片既能合成一个正方形，也能拼出许多不同轮廓。这里已有四片安放在浅木拼板上，再移入蓝色小三角片、转入紫色方片，最后合上玫瑰色斜方片。看颜色沿着拼缝相遇，让零散的一刻慢慢归整。",
+    narrative: sceneNarratives["chinese-tangram"],
   },
   {
     id: "chinese-diabolo", title: "空竹轻扬", engine: "chinese-diabolo@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-diabolo",
-    narrative: "空竹是中国传统游艺中的竹木玩具。双轮空竹两端各有一个中空圆盘，以木轴相连；两根竹杆牵着细绳，带动木轴旋转。提杆起转，再展绳轻抛、接回，可以反复抛接，想停时收低竹杆，让双轮缓缓停在绳上。",
+    narrative: sceneNarratives["chinese-diabolo"],
   },
   {
     id: "korean-yutnori", title: "木柶行棋", engine: "korean-yutnori@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "korean-yutnori",
-    narrative: "掷柶是韩国节日里亲友共玩的传统棋戏，以四根一面平、一面圆的木柶落面决定一至五步。合拢木柶、向上抛出，再让蓝色棋子按掷出的步数前行。可以从当前位置继续投掷，想停时点击「结束行棋」，留住相聚时的轻松。",
+    narrative: sceneNarratives["korean-yutnori"],
   },
   {
     id: "russian-matryoshka", title: "套娃相藏", engine: "russian-matryoshka@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "russian-matryoshka",
-    narrative: "俄罗斯套娃以大小相套的木偶著称，外层从腰间分开，里面容纳更小的一只。车制的圆润木身与彩绘相映，颜色和花纹各有变化。提起外壳，把小娃收进空腔，再沿接缝合拢，看大与小如何相互容纳。",
+    narrative: sceneNarratives["russian-matryoshka"],
   },
   {
     id: "japanese-koinobori", title: "鲤旗迎风", engine: "japanese-koinobori@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "japanese-koinobori",
-    narrative: "鲤鱼形布旗是日本儿童节前后的春日风景，人们借它寄托对孩子成长的美好祝愿。颜色、数量和展示方式也在变化。展开布鲤的鱼尾，牵绳升起，再把绳端挂稳，静看布身与鱼尾迎风轻摆。",
+    narrative: sceneNarratives["japanese-koinobori"],
   },
   {
     id: "japanese-kendama", title: "剑玉轻接", engine: "japanese-kendama@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "japanese-kendama-craft",
-    narrative: "剑玉由木柄、大小承皿、尖端、球和绳线组成。在日本的剑玉玩法中，球可以落入承皿，也可让球孔接住尖端。这里依次轻接大皿、小皿和尖端，接球会随动作自动完成，可以慢慢观察球孔方向与木柄翻转的配合。",
+    narrative: sceneNarratives["japanese-kendama"],
   },
   {
     id: "indian-charkha", title: "棉线慢成", engine: "indian-charkha@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "indian-charkha-craft",
-    narrative: "印度手摇纺车以木轮、传动绳和金属纺锭，将棉纤维加捻成线。纺线时一手转轮，一手牵引，卷收前需停下调整。它也与印度近代的本土纺织运动相连。依次拉纤、转轮、回送卷线，观察松散棉纤如何收成细线。",
+    narrative: sceneNarratives["indian-charkha"],
   },
   {
     id: "german-nutcracker", title: "木偶开果", engine: "german-nutcracker@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "erzgebirge-nutcracker-craft",
-    narrative: "德国厄尔士山的木作传统中，车削和彩绘造就了各式胡桃夹子。背部杠杆带动下颌开合，口中可以容纳胡桃；今天许多木偶主要用于装饰。抬杆打开下颌，把底座上的胡桃拖入口中，再压杆开果，观察背杆与下颌的配合。",
+    narrative: sceneNarratives["german-nutcracker"],
   },
   {
     id: "mexican-molinillo", title: "木旋起沫", engine: "mexican-molinillo@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "molinillo-chocolate-craft",
-    narrative: "墨西哥的木制巧克力搅拌器有长柄、沟槽与松动木环。双掌相搓，使器头在饮品表面来回旋转，带入空气，浮起泡沫。把器头轻轻浸入杯面，再向右、向左搓转木柄，观察木环转动和细泡聚起。",
+    narrative: sceneNarratives["mexican-molinillo"],
   },
   {
     id: "malawi-sansi", title: "铁舌轻鸣", engine: "malawi-sansi@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "mbira-sansi-craft",
-    narrative: "在马拉维与津巴布韦，Mbira/Sansi 的制作和演奏通过家庭与教学传承。金属簧片固定于木板，用拇指或配合其他手指拨奏，有时配有共鸣器。长短不同的铁舌，带来高低不同的声音。试着点按或轻拨这九根铁舌，让几个音轮流响起，也可以反复拨奏喜欢的音，慢慢找出自己的节奏。",
+    narrative: sceneNarratives["malawi-sansi"],
   },
   {
     id: "chinese-suanpan", title: "拨珠见数", engine: "chinese-suanpan@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-zhusuan",
-    narrative: "中国珠算通过沿算杆拨动算珠来计算，知识经口传身授代代传承。这里的算盘采用上二下五结构：同一档上珠记五、下珠记一，靠近横梁的珠参与计数，向左一档数值增为十倍。依次拨出三、八、十八，看个位与十位怎样组成一个数。",
+    narrative: sceneNarratives["chinese-suanpan"],
   },
   {
     id: "mongolian-felt-ger", title: "毡屋向阳", engine: "mongolian-felt-ger@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "mongolian-ger-craft",
-    narrative: "蒙古包由可拆装的木格围壁、椽杆与顶圈构成，外覆毡与帆布，以绳带收束。木作、缝制和制毡的知识在家庭与匠人之间传承。把木格端头拖到展开位置，抬稳顶圈，再将白毡放到木架上；各步对准浅金轮廓后松手，看看不同材料如何组成一座毡屋。",
+    narrative: sceneNarratives["mongolian-felt-ger"],
   },
   {
     id: "peruvian-engraved-gourd", title: "葫芦刻光", engine: "peruvian-engraved-gourd@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "peruvian-mate-burilado",
-    narrative: "秘鲁曼塔罗河谷等地的匠人在干葫芦表面雕刻细线，记录农耕、动物与日常生活，手艺在家庭和作坊间延续。在这枚葫芦上向右刻出叶片与山丘，再向下轻拭，看看暖色壳面上的线条如何逐渐清晰。",
+    narrative: sceneNarratives["peruvian-engraved-gourd"],
   },
   {
     id: "venetian-glass-bead", title: "玻珠凝彩", engine: "venetian-glass-bead@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "italian-glass-beads",
-    narrative: "意大利玻璃珠工艺包含灯工成珠与玻璃管切磨等做法，匠人在作坊中传授对火、玻璃与装饰的掌握，珠饰也用于赠礼。转动金属杆，让彩色细带绕上青绿玻珠；待色带凝定，再把玻珠移到细绳上，静看透光的颜色。",
+    narrative: sceneNarratives["venetian-glass-bead"],
   },
   {
     id: "korean-bojagi-wrap", title: "方巾裹礼", engine: "korean-bojagi-wrap@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "korean-bojagi",
-    narrative: "韩国的 bojagi 包袱布既用于包裹日常物品，也用于赠礼，寄托着把好运带给收礼人的心意。想着一位在意的人，拢起布角包住礼盒，收好系带，为对方准备一份祝愿。轻点包好的礼物细看，也可以留一句给收礼人的话。",
+    narrative: sceneNarratives["korean-bojagi-wrap"],
   },
   {
     id: "vietnamese-bamboo-dragonfly", title: "竹蜓点风", engine: "vietnamese-bamboo-dragonfly@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "thach-xa-bamboo-dragonfly",
-    narrative: "越南河内石舍的竹蜻蜓以竹片制成身体、翅膀与细尾，再涂上鲜明色彩。经过平衡调整，它能停在指尖或笔尖。把竹蜻蜓轻放到枝尖，再微推长翼，观察翅尖怎样回稳，以及尖喙与细枝之间的平衡。",
+    narrative: sceneNarratives["vietnamese-bamboo-dragonfly"],
   },
   {
     id: "turkish-ebru-paper", title: "浮彩成笺", engine: "turkish-ebru-paper@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "turkish-ebru",
-    narrative: "土耳其水拓画把颜料铺在调制过的液面上，拨开彩纹后转印到纸张，常见于书籍装饰与手工艺术，并在作坊教学中延续。向右梳开彩纹，让白纸轻贴水面，再从近处揭起纸边，看看流动的颜色如何留在纸上。",
+    narrative: sceneNarratives["turkish-ebru-paper"],
   },
   {
     id: "indonesian-angklung", title: "竹音轻摇", engine: "indonesian-angklung@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "indonesian-angklung",
-    narrative: "印度尼西亚昂格隆用藤条把竹管悬在竹架内，摇动时发出音响，一件乐器通常负责一个音或和弦。合奏依靠彼此配合，也走入学校与社区教学。按住竹架或竹管自由来回摇动，听竹音跟随手的节奏；想收尾时，轻点「结束体验」。",
+    narrative: sceneNarratives["indonesian-angklung"],
   },
   {
     id: "weifang-paper-kite", title: "纸鸢乘风", engine: "weifang-paper-kite@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "weifang-kite-craft",
-    narrative: "潍坊风筝以竹骨、纸面和鲜明色彩形成轻巧的飞行器物，扎制、绘饰、糊面与放飞的经验在作坊和传承教学中延续。合上燕形纸鸢的纸翼，牵紧引线，让它迎风抬起，静看竹骨、纸面与牵线怎样相连。",
+    narrative: sceneNarratives["weifang-paper-kite"],
   },
   {
     id: "chinese-shadow-puppet", title: "影偶小戏", engine: "chinese-shadow-puppet@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-shadow-puppet",
-    narrative: "中国皮影戏以皮革或纸制成彩色影人，用操纵杆带动关节，在灯光与透光幕布之间演出，手艺与剧目由艺人和戏班传承。这里从幕后观看一只小鸟：提起主杆，再移动翼杆，看彩色影偶与幕上影子一同展翅。",
+    narrative: sceneNarratives["chinese-shadow-puppet"],
   },
   {
     id: "faroese-wool-knit", title: "毛线织暖", engine: "faroese-wool-knit@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "faroese-wool-knitting",
-    narrative: "羊毛与编织长久陪伴法罗群岛的日常生活，自然毛色、代际手艺和今日的编织聚会延续着岛上的材料记忆。拿起木针，穿入旧线圈，再带出新圈，静看奶白与灰色织片上的一针，感受毛线相连的柔软。",
+    narrative: sceneNarratives["faroese-wool-knit"],
   },
   {
     id: "niue-shell-necklace", title: "贝链留光", engine: "niue-shell-necklace@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "niue-kahoa-hihi",
-    narrative: "纽埃的黄螺贝链以细线串起小巧的黄色陆生螺壳，作为饰物与赠礼，承载岛民及海外社群的故乡记忆。把备好的最后一枚小壳穿入细线，再向上拉拢线端，让黄螺壳聚成柔和弧形，静看这一串暖黄。",
+    narrative: sceneNarratives["niue-shell-necklace"],
   },
   {
     id: "polish-paper-cut", title: "剪纸开花", engine: "polish-paper-cut@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "polish-wycinanki",
-    narrative: "波兰剪纸用折叠和彩纸剪切形成对称或层叠的装饰，库尔皮耶等地发展出各有特点的花树纹样，手艺在家庭与文化机构中延续。剪开最后一道纸边，拉开折纸，让两边花叶相见，也可以留一句想说的话。",
+    narrative: sceneNarratives["polish-paper-cut"],
   },
   {
     id: "uzbek-clay-bowl", title: "陶轮慢成", engine: "uzbek-clay-bowl@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "uzbek-ceramic-craft",
-    narrative: "乌兹别克斯坦的陶艺制作碗、盘、壶等日用品，不同地区保留着各自的器形与装饰经验。转动木轮，沿湿泥外壁向上轻拉，慢慢提起碗壁。最后留在眼前的仍是湿润、未上釉、未经烧制的泥坯。",
+    narrative: sceneNarratives["uzbek-clay-bowl"],
   },
   {
     id: "chinese-woodblock-print", title: "木版留春", engine: "chinese-woodblock-print@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-woodblock-print",
-    narrative: "中国雕版印刷以木版、纸墨和手工刷印传递文字与图像，刻版和刷印经验在作坊与传承教学中延续。拿起棕擦，在纸背左右刷过，再从纸角慢慢揭起，看看枝叶墨色如何从木版转印到纸上。",
+    narrative: sceneNarratives["chinese-woodblock-print"],
   },
   {
     id: "czech-bead-star", title: "珠星映光", engine: "czech-bead-star@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "czech-glass-bead-ornaments",
-    narrative: "捷克北波希米亚的空心玻璃珠装饰工艺，以吹制、镀银、着色和穿线组装延续家庭与作坊的手艺，常见于圣诞树装饰。接上最后一串玻璃珠，再向右轻转珠星，观察银蓝珠面怎样接住日光。",
+    narrative: sceneNarratives["czech-bead-star"],
   },
   {
     id: "fijian-woven-fan", title: "叶扇纳凉", engine: "fijian-woven-fan@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "fijian-iri-fan",
-    narrative: "斐济的编叶扇以露兜树叶材、骨架与木柄组成，交织和绑接显露日常手作对材料的认识，博物馆收藏保留着不同年代的制作经验。接好木柄上端的收口绑带，把叶扇安放到展座，静看编叶交错的纹理。",
+    narrative: sceneNarratives["fijian-woven-fan"],
   },
   {
     id: "amazigh-woven-rug", title: "织毯寄暖", engine: "amazigh-woven-rug@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "moroccan-amazigh-textiles",
-    narrative: "摩洛哥阿马齐格羊毛织物在家庭与作坊中延续，地域材料和染色经验形成各具特点的配色，织毯记录着代际手作知识。用木梭收好最后一行纬线，再握住木夹杆，把织毯安放到展架，静看条纹与几何色块。",
+    narrative: sceneNarratives["amazigh-woven-rug"],
   },
   {
     id: "slovak-wire-bird", title: "铁线栖鸟", engine: "slovak-wire-bird@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "slovak-wire-craft",
-    narrative: "斯洛伐克的铁线工艺既用于日常器物，也发展出玩具与装饰雕塑，手工缠接的线条在匠人和工艺机构之间延续。把小翅膀接到鸟身肩部，再将小鸟放上木栖座，看看铁线绕结与线条之间的留白。",
+    narrative: sceneNarratives["slovak-wire-bird"],
   },
   {
     id: "hungarian-embroidery-hoop", title: "花绣寄语", engine: "hungarian-embroidery-hoop@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "hungarian-embroidery",
-    narrative: "匈牙利的民间刺绣在地方社区与工艺教学中传承，花卉纹样和细密针脚记录着手作经验，各地风格各有差别。把线轴送到亚麻布留白处，添出一朵线花，再将木绷安放在展托上，细看彩线与针脚。",
+    narrative: sceneNarratives["hungarian-embroidery-hoop"],
   },
   {
     id: "andalusian-ceramic-tile", title: "釉彩映晴", engine: "andalusian-ceramic-tile@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "andalusian-ceramic-tile",
-    narrative: "塞维利亚特里亚纳的陶艺传统，在旧作坊、窑炉遗迹与陶瓷展览中留下日常手工的记忆。补上蓝白釉彩花砖的中央空位，握住木框，将它安放在展托上，静看釉色、花纹与木框的搭配。",
+    narrative: sceneNarratives["andalusian-ceramic-tile"],
   },
   {
     id: "sicilian-painted-cart", title: "彩车迎晴", engine: "sicilian-painted-cart@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "sicilian-carretto-craft",
-    narrative: "西西里彩绘木车曾服务日常运输，车轮雕刻和车身绘画后来成为地方工艺记忆的一部分，博物馆保留着不同匠人的作品。握住轮毂装好木轮，再把小车移到展垫上，静看轮辐、雕纹与车身色彩。",
+    narrative: sceneNarratives["sicilian-painted-cart"],
   },
 
   {
     id: "bai-indigo-cloth", title: "蓝白晾晴", engine: "bai-indigo-cloth@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "bai-tie-dye",
-    narrative: "大理周城等地的白族扎染，以扎结防染和反复染洗形成蓝白纹样，手艺在家庭与作坊之间延续。把扎布送入清水盆，看蓝白留纹慢慢展开，再将布边搭上木晾杆，静看光线透过布面的变化。",
+    narrative: sceneNarratives["bai-indigo-cloth"],
   },
   {
     id: "ndebele-painted-house", title: "彩墙寄家", engine: "ndebele-painted-house@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "ndebele-wall-painting",
-    narrative: "南非恩德贝莱的家屋壁画以几何构成和鲜明色彩为人所知。艺术家埃丝特·马兰古回忆，她从母亲和祖母那里学习在家墙上作画。把彩色小板补入墙面的留白，再将小屋移上展台，静看几何配色与家屋轮廓。",
+    narrative: sceneNarratives["ndebele-painted-house"],
   },
   {
     id: "purepecha-copper-bowl", title: "铜碗拾暖", engine: "purepecha-copper-bowl@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "santa-clara-copper-craft",
-    narrative: "墨西哥米却肯州圣克拉拉德尔科布雷延续着铜器锻制手艺，家庭与作坊制作日用容器，也保存着地方工艺记忆。用软布轻拭这只铜碗，再将它安放到软毡托座，细看卷边、锤纹与温润的铜色。",
+    narrative: sceneNarratives["purepecha-copper-bowl"],
   },
   {
     id: "welsh-love-spoon", title: "木勺寄情", engine: "welsh-love-spoon@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "welsh-love-spoons",
-    narrative: "威尔士爱勺以雕刻木勺表达爱意，也常作婚礼、生日与周年纪念的赠礼。想着一位在意的人，轻拭凹勺面，再握住木柄将木勺安放到展托上，细看木纹与镂空雕饰，也可以为这份准备赠人的礼物留一句祝愿。",
+    narrative: sceneNarratives["welsh-love-spoon"],
   },
   {
     id: "barcelos-clay-rooster", title: "陶鸡报晓", engine: "barcelos-clay-rooster@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "barcelos-clay-rooster",
-    narrative: "巴塞卢什彩绘陶鸡是葡萄牙的地方工艺形象，在当地也有好运的寓意。拿起画笔，为这只陶鸡胸前添上叶芽纹样，再把它放到圆形展台上，欣赏陶土造型、明亮色彩与陈设所寄托的美好祝愿。",
+    narrative: sceneNarratives["barcelos-clay-rooster"],
   },
   {
     id: "finnish-birch-basket", title: "桦篮拾光", engine: "finnish-birch-basket@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "finnish-birch-bark-craft",
-    narrative: "芬兰东部曾用桦皮编织容器储放谷物、面粉与盐，条带交织的结构记录着人们对日常材料的认识。把弯曲的提柄装到篮沿，再提起小篮，安放到灰绿布垫上，静看桦皮纹理与篮中的谷粒。",
+    narrative: sceneNarratives["finnish-birch-basket"],
   },
   {
     id: "croatian-licitar-heart", title: "彩心相赠", engine: "croatian-licitar-heart@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "croatian-licitar",
-    narrative: "克罗地亚北部的 licitar 红心常作婚礼纪念，也是表达爱与情谊的礼物。用裱花袋给红心添上糖霜，再把布带挂环挂到展架木钉上，为在意的人准备一份彩心赠礼，也可以写下一句给对方的祝愿。",
+    narrative: sceneNarratives["croatian-licitar-heart"],
   },
   {
     id: "catalan-festival-giant", title: "巨偶待游", engine: "catalan-festival-giant@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "catalan-gegants",
-    narrative: "加泰罗尼亚的节庆巨偶常在街头巡游中与音乐相伴，地方协会持续传承制作、维护与展演的经验。为这件巨偶小模型别上花章，再握住底座前的木把，将它移到圆台上，欣赏衣饰与手作细节。",
+    narrative: sceneNarratives["catalan-festival-giant"],
   },
   {
     id: "sorbian-painted-egg", title: "彩蛋寄春", engine: "sorbian-painted-egg@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "sorbian-easter-eggs",
-    narrative: "卢萨蒂亚索布族在复活节赠送彩蛋，向收礼人传达生命力与美好祝愿。用画笔给青蓝蛋壳添上花枝纹，将它安放在陶杯中，为在意的人准备一枚节日彩蛋，也可以留下一句复活节祝愿。",
+    narrative: sceneNarratives["sorbian-painted-egg"],
   },
   {
     id: "basque-sunflower", title: "太阳花迎门", engine: "basque-sunflower@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "basque-eguzkilore",
-    narrative: "太阳蓟在巴斯克民间传说中被称作太阳之花，门边悬挂的形象寄托家宅安宁，也成为地方文化符号。这里的花饰由纸木做成：装好花心，再挂到门框木钉上，为归家的人留一份迎门心意。",
+    narrative: sceneNarratives["basque-sunflower"],
   },
   {
     id: "breton-banner", title: "节旗轻展", engine: "breton-banner@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "breton-pardons",
-    narrative: "布列塔尼的 pardon 朝圣队伍中常见旗帜，地方堂区与志愿者共同准备节庆。扣好横杆上的布耳，让海浪与太阳纹样展开，再将木杆安放到展座圆孔里，欣赏一面小旗怎样准备妥当。",
+    narrative: sceneNarratives["breton-banner"],
   },
   {
     id: "lithuanian-straw-garden", title: "草穗悬园", engine: "lithuanian-straw-garden@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "lithuanian-straw-gardens",
-    narrative: "立陶宛的 Sodai 草编花园常悬于摇篮、婚桌或家庭桌上，寄托新生儿幸福、新婚者丰育与家人和睦的愿望。接好下部的小菱形，再把草编花园挂上工坊木架，在这里静赏这种承载家庭祝愿的悬饰与透光结构。",
+    narrative: sceneNarratives["lithuanian-straw-garden"],
   },
   {
     id: "dalarna-wooden-horse", title: "木马安放", engine: "dalarna-wooden-horse@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "dalarna-wooden-horse",
-    narrative: "达拉纳木马源自瑞典地方木雕工艺，后来成为广为人知的文化符号，造型与彩绘因工匠而异。拿起软布，轻拭木马侧面的彩鞍，再将它放到木座上，细看圆润木身、彩绘与木纹，感受日常照料的温暖。",
+    narrative: sceneNarratives["dalarna-wooden-horse"],
   },
   {
     id: "aland-votive-ship", title: "舟模寄谢", engine: "aland-votive-ship@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "aland-votive-ship",
-    narrative: "奥兰群岛的教堂保存着舟模。献置舟模的海事传统，也有感谢航程平安、祈愿未来安航的心意。立好桅杆，把舟模安放在船架上，欣赏这段向海上谢恩传统致意的船模小景，也可以写下一句自己的感谢。",
+    narrative: sceneNarratives["aland-votive-ship"],
   },
   {
     id: "blang-tea", title: "茶山一盏", engine: "blang-tea@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "jingmai-tea-forest",
-    narrative: "景迈山的布朗族等社区长期维护林下茶园，茶树、森林与村落生活相互联系，也承载各自的祖先记忆。向壶中添叶，握住壶把倒出一盏茶，再轻点茶杯静看茶色，为山林与照料茶山的人留一刻感谢。",
+    narrative: sceneNarratives["blang-tea"],
   },
   {
     id: "minangkabau-spinning-top", title: "木陀轻转", engine: "minangkabau-spinning-top@1", revision: "bundled", manifestUrl: "",
-    narrative: "一枚木陀螺、一根棉绳，带来一段简单的桌上游玩。拉动木珠，让缠绕的棉绳松开，木陀螺随之轻转；轻点顶端木帽，看转动慢慢停稳。再静看圆润木身与绳线，也可以留一句此刻想说的话。",
+    narrative: sceneNarratives["minangkabau-spinning-top"],
   },
   {
     id: "chinese-incense", title: "炉前一炷", engine: "chinese-incense@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "chinese-incense",
-    narrative: "妈祖信俗中，人们在庙内或家中供献香烛，祈求平安与安康。这里欣赏香具安置的一小段：移开炉盖，把一炷细香安放入香孔，再静看轻烟，体会敬香祈安所寄托的心意。",
+    narrative: sceneNarratives["chinese-incense"],
   },
   {
     id: "hongsheng-red-string", title: "红绳自持", engine: "hongsheng-red-string@1", revision: "bundled", manifestUrl: "",
-    narrative: "沿支架绕好一圈红绳，把松开的扣头送到合扣点，让线端收成小环。看看红绳、线轴和小扣怎样相连，再写一句照看自己的话，也可以只静看这份亲手收拢的心意。",
+    narrative: sceneNarratives["hongsheng-red-string"],
   },
   {
     id: "italian-ex-voto", title: "绘牌记谢", engine: "italian-ex-voto@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "italian-ex-voto",
-    narrative: "意大利德鲁塔附近的天主教圣所，留存着信众委托陶工绘制的谢恩陶牌，记录蒙恩经历与对圣母的感谢。这里借这份以画记谢的传统，画一段归途，再描一线窗光。轻点陶牌静看，或写下自己感念的人与事，让这幅现代记谢小画留住一份感谢。",
+    narrative: sceneNarratives["italian-ex-voto"],
   },
   {
     id: "czech-pilgrim-journal", title: "旅途一页", engine: "czech-pilgrim-journal@1", revision: "bundled", manifestUrl: "",
-    narrative: "旅途中翻开一册手记，为走过的一段路留一处标记。握住封面书角，向左翻开，看看纸上的山路线条；再把布书签放入页边夹口，轻点叶形记号静看片刻，带着从容继续走。",
+    narrative: sceneNarratives["czech-pilgrim-journal"],
   },
   {
     id: "omikuji", title: "签纸慢读", engine: "omikuji@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "omikuji",
-    narrative: "日本寺社的御神签用于抽签问意与问运，常见做法是摇筒抽出签棒，再按编号取得纸签；读后携回或折系的习惯因寺社而异。这里沿着摇筒、抽棒、展纸的动作，读一句原创的日常自省提醒，再将纸签收进信封。给自己一点时间，想想今天能照顾的一件小事。",
+    narrative: sceneNarratives["omikuji"],
   },
   {
     id: "polish-blessing-basket", title: "一篮春食", engine: "polish-blessing-basket@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "polish-folk-catholic",
-    narrative: "波兰天主教家庭常在圣周六准备复活节食物篮，带到教堂参加食物祝福。这里停留在家中备篮的片段：把圆面包和彩蛋放进衬着白布的篮子，再静看备好的春食，或写一句感谢。准备这一篮食物，也想起日用食粮与为家人备餐的人。",
+    narrative: sceneNarratives["polish-blessing-basket"],
   },
   {
     id: "navruz-sumalak", title: "春锅共煮", engine: "navruz-sumalak@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "uzbek-sumalak-cooking",
-    narrative: "诺鲁孜春日到来，乌兹别克的亲友邻里围着大锅共煮苏玛拉克，轮流搅动麦芽甜食，熟后分给大家。这里按住木勺，沿锅边缓缓搅动，再盛入陶碗，放到共食垫上。把春日的一份甜食留给邻里，在共煮与分享间迎接新岁。",
+    narrative: sceneNarratives["navruz-sumalak"],
   },
   {
     id: "floating-lantern-loy-krathong", title: "叶舟寄意", engine: "floating-lantern-loy-krathong@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "floating-lantern-loy-krathong",
-    narrative: "泰国水灯节在一年一度的满月夜，人们将植物材料制成的小浮灯放入水面，寄托感谢与心愿。为折叶水灯安放花朵、点亮烛芯，再轻推叶舟，目送一点光漂在水面。现实漂放需遵守当地水域与清理要求。",
+    narrative: sceneNarratives["floating-lantern-loy-krathong"],
   },
   {
     id: "omamori-cycle", title: "御守伴行", engine: "omamori-cycle@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "omamori-cycle",
-    narrative: "御守是日本神社和部分寺院授与的随身守护象征，常装于织锦小袋，各处的佩持与返还习惯有所不同。选一只小袋，将绳环别到旅行包上，陪伴接下来的一程；回访时，也可以带着感谢送回木箱。",
+    narrative: sceneNarratives["omamori-cycle"],
   },
   {
     id: "shrine-suzu-bell", title: "庭前一铃", engine: "shrine-suzu-bell@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "shrine-suzu-bell",
-    narrative: "神社参拜空间中常见铃绳，人们轻摇铃绳、收拾心神后再礼敬，各社做法可能不同。粗绳带动的金属铃，与夏日檐下随风轻响的风铃各有用途。向下轻拉铃绳、松手，再收回铃绳，静听余音，留一句无声的问安。",
+    narrative: sceneNarratives["shrine-suzu-bell"],
   },
   {
     id: "st-brigids-cross", title: "草编迎春", engine: "st-brigids-cross@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "st-brigids-cross",
-    narrative: "圣布里吉德十字是爱尔兰民俗与天主教家庭习俗中的草编挂饰，常与圣布里吉德节前夕相伴，用灯心草或麦秆编成，样式因地方而异。依次把四束草送到折编点，让草束交织，再挂到门楣，静看手作留下的线条。",
+    narrative: sceneNarratives["st-brigids-cross"],
   },
   {
     id: "bokjori", title: "竹筛迎岁", engine: "bokjori@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "bokjori",
-    narrative: "韩国岁首有购置福笊篱、悬挂迎新的民俗，把淘米竹具寄予纳福的心意。先试试这件炊具舀米的用途，再把竹柄拖到墙上的木挂点，静看挂好的福笊篱。舀米让人认识器物，岁首购挂的习俗则承载迎新的祝愿。",
+    narrative: sceneNarratives["bokjori"],
   },
   {
     id: "ema-votive-plaque", title: "木牌记愿", engine: "ema-votive-plaque@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "ema-votive-plaque",
-    narrative: "绘马是日本神社与部分寺院常见的祈愿木牌，既可书写愿望，也可表达感谢，图像题材十分多样。把花叶木牌翻到背面，写一句短愿，也可以先留白；再将它挂到横梁下。日后回访时，也能在木牌前留一份感谢。",
+    narrative: sceneNarratives["ema-votive-plaque"],
   },
   {
     id: "clootie-well-rag", title: "井边放下", engine: "clootie-well-rag@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "clootie-well-rag",
-    narrative: "Clootie 布条圣井见于苏格兰等地的地方民俗，人们把小布片浸过井水，再系于附近树枝，寄托放下病苦的心意。将纯棉布浸润、系上低枝，再松手静看。若到访真实井址，请依当地养护要求，保护树木与水源。",
+    narrative: sceneNarratives["clootie-well-rag"],
   },
   {
     id: "diya-oil-lamp", title: "灯旋一瞥", engine: "diya-oil-lamp@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "diya-oil-lamp",
-    narrative: "印度教献光礼中，灯光在神圣形象前移动，表达礼敬与祈祷。这里取材于献光所用的油灯与旋灯姿态：依次点亮三盏陶灯，让前方一盏沿浅金圆弧缓缓转过，再放回盘中。留一瞥灯盏与光，也认识这份手势的礼敬来处。",
+    narrative: sceneNarratives["diya-oil-lamp"],
   },
   {
     id: "votive-candle-catholic", title: "留一盏烛光", engine: "votive-candle-catholic@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "votive-candle-catholic",
-    narrative: "还愿烛是天主教民间虔诚中的可见记号，点烛可寄托祈求、代祷或感谢，人离开后，光仍留在烛架。把一支蜡烛安放到石廊的烛架上，轻点灯芯，再为想念的人留一句话，或静看这一点光。",
+    narrative: sceneNarratives["votive-candle-catholic"],
   },
   {
     id: "daruma-eye-painting", title: "达摩点睛", engine: "daruma-eye-painting@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "daruma-eye-painting",
-    narrative: "高崎达摩的点睛习惯，把立愿与谢恩分在两个时刻：先点一目，留下愿望；愿望实现，或平安度过一年后，再补另一目。轻点眼圈或拖动毛笔，写下一个愿望或短目标，再把达摩放回木座。另一目的留白，留待愿成或一年平安的谢恩时刻。",
+    narrative: sceneNarratives["daruma-eye-painting"],
   },
   {
     id: "mizuhiki", title: "水引结愿", engine: "mizuhiki@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "mizuhiki",
-    narrative: "日本水引以和纸细绳结饰礼金封与礼物，把赠答的心意郑重系好。这里为一只纸封绕环、穿环、收结，再写一句送给对方的祝愿，或静静放好。纸绳与纸封相衬，留住一份准备赠予他人的心意。",
+    narrative: sceneNarratives["mizuhiki"],
   },
   {
     id: "milagros", title: "留一枚感谢", engine: "milagros@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "milagros",
-    narrative: "在墨西哥的天主教奉献习俗中，milagros 金属小符寄托向圣者祈求帮助、护佑，或在蒙恩后表达谢意。小符的形状与个人经历相连，并无统一释义。选一枚小符，挂到眼前木架上，再留下自己的祈求或感谢。",
+    narrative: sceneNarratives["milagros"],
   },
   {
     id: "phuang-malai", title: "串花寄意", engine: "phuang-malai@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "phuang-malai",
-    narrative: "在泰国，phuang malai 是鲜花串成的花环，可用来向敬重的长辈表达敬意与感谢；母亲节的茉莉花环也承载对母亲的谢意。将托盘中的茉莉逐簇串起，收好绳结，捧放在小台上，为想感谢的人留一句话。",
+    narrative: sceneNarratives["phuang-malai"],
   },
   {
     id: "woodfish",
@@ -702,7 +704,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     manifestUrl: "",
     traditionSlug: "chinese-buddhism",
     narrative:
-      "木鱼是佛教诵经礼忏中领节奏的法器，鱼形也寄托着警醒、精进的提醒。轻点眼前木鱼，听木槌敲击与余音相接；这一轮记录十二次轻敲，听声稍停。",
+      sceneNarratives["woodfish"],
   },
   {
     id: "celtic-folk-spring",
@@ -710,7 +712,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     engine: "celtic-folk-spring@1",
     revision: "bundled",
     manifestUrl: "",
-    narrative: "在一处安静的泉边，先停步一礼，再把信物轻放到水面。看涟漪从落点慢慢散开，光线掠过泉沿与石面；也可以写一句此刻想说的话，在水声间留一刻从容。",
+    narrative: sceneNarratives["celtic-folk-spring"],
   },
   {
     id: "theravada-water",
@@ -718,7 +720,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     engine: "theravada-water@1",
     revision: "bundled",
     manifestUrl: "",
-    narrative: "一壶清水缓缓倾注，花瓣随涟漪轻轻停在水面。按住水壶上下拖动，再将花瓣送到水面松手；最后合十致意，看清水与花瓣相伴，为自己留一刻安静。",
+    narrative: sceneNarratives["theravada-water"],
   },
   {
     id: "tanzaku-tanabata",
@@ -728,7 +730,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     manifestUrl: "",
     traditionSlug: "tanzaku-tanabata",
     narrative:
-      "日本七夕时，人们把愿望写在色纸短册上，系于笹竹；仙台七夕的装饰中，短册常寄托学业与书艺精进之愿。拾起纸条，挂到竹枝系结处，也可以写一句当下的心愿，静看短册随风轻摆。",
+      sceneNarratives["tanzaku-tanabata"],
   },
   {
     id: "yeondeunghoe",
@@ -738,7 +740,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     manifestUrl: "",
     traditionSlug: "yeondeunghoe",
     narrative:
-      "韩国燃灯会在佛诞节期举行，人们制作、悬挂彩灯，持灯巡行，表达祝愿。点按眼前莲灯或向上轻推，看画面中的莲灯缓缓移向高处，再静看灯光。",
+      sceneNarratives["yeondeunghoe"],
   },
   {
     id: "furin-wind-chime",
@@ -748,7 +750,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     manifestUrl: "",
     traditionSlug: "furin-wind-chime",
     narrative:
-      "日本奈良おふさ观音寺的夏季风铃祭承接当地祈求平安度夏的参拜习俗，寺方将境内铃声与祓厄、清凉联系在一起。轻拂眼前玻璃风铃的纸条，或点按铃身，带着平安的祝愿听一声轻响与余音。",
+      sceneNarratives["furin-wind-chime"],
   },
   {
     id: "shinto-torii",
@@ -758,7 +760,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     manifestUrl: "",
     traditionSlug: "shinto",
     narrative:
-      "鸟居标示日本神社境内与日常空间的界线，入社前停步低头，是表达敬意的礼节。先走近鸟居，再轻轻一礼；在绘马架旁，可写下祈愿，让一块木牌留在架上，也可静立片刻。",
+      sceneNarratives["shinto-torii"],
   },
   {
     id: "tibetan-wheel",
@@ -768,7 +770,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     manifestUrl: "",
     traditionSlug: "tibetan-buddhism",
     narrative:
-      "转经筒见于藏传佛教的日常实践，转动与祈愿、诵念相联系。廊前的固定式转筒沿顺时针方向转动：从右向左轻滑筒身，让它缓缓转起，再看它慢慢停下，静立片刻。",
+      sceneNarratives["tibetan-wheel"],
   },
   {
     id: "slavic-wreath",
@@ -778,10 +780,9 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     manifestUrl: "",
     traditionSlug: "kupala-wreath",
     narrative:
-      "乌克兰部分地区的 Kupala 仲夏习俗中，姑娘们把草花编成花环，放上水面，并从漂流情形占问婚恋。编好眼前花环，把它轻放到水面，静看它漂远；也可为这个仲夏片刻留一句感想。",
+      sceneNarratives["slavic-wreath"],
   },
-  // Product-original practices: no traditionSlug, so no tradition is implied.
-  // They share ids with the crane/lantern rituals, which open them (useOpenRitual).
+  // These entries also open from the matching crane/lantern rituals (useOpenRitual).
   {
     id: "crane",
     traditionSlug: "origami-crane-senbazuru",
@@ -790,7 +791,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     revision: "bundled",
     manifestUrl: "",
     narrative:
-      "在广岛的和平纪念文化中，人们折叠并奉献纸鹤，纪念原爆中逝去的孩子，祈愿和平。点按纸面，逐步折出颈尾和双翼；把折好的纸鹤托到眼前，再留一句和平祝愿。",
+      sceneNarratives["crane"],
   },
   {
     id: "lantern",
@@ -799,7 +800,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
     revision: "bundled",
     manifestUrl: "",
     narrative:
-      "竹骨撑起轻薄纸面，暖光透过灯身，为一句祝愿留出安静的位置。点亮眼前的纸灯，写一句心愿，也可以先留白，再把木牌挂到灯下。灯会留在眼前，陪你静看片刻，记住此刻的心意。",
+      sceneNarratives["lantern"],
   },
 ];
 

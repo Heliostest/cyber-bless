@@ -18,3 +18,19 @@
 - [ICH Courier / ICHCAP：A New Year Celebration Marked by Water Splashing: Songkran](https://ichcourier.unesco-ichcap.org/board.es?act=view&bid=A102&list_no=697&mid=a10501000000)，Volume 59，June 2024。2026-10-20实际读相关正文，尤其 During key festival days 段中的敬老浇水说明及家庭敬老图注；支持手、对象、健康兴盛与求来年祝福。按机构介绍使用，非具名受访者口述；图片未取得可视读取证据，不用图片证明具体器形。
 
 逐项对应、交叉参照及读取边界见 [来源核查](../../docs/research/2026-10-20-thai-songkran-elders.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`thai-songkran-elders`；最终来源：`thai-songkran-elders`。
+
+泰国家庭宋干、敬长求福；2016海外社群为当代锚点。
+
+本轮已读依据：
+
+- [泰国外交部 — Songkran/Thingyan celebrated in Riyadh](https://www.mfa.go.th/en/content/5d5bcfe115e39c306001c1c3?cate=5d5bcb4e15e39c3060006838)：正文162–168行，2016活动和Rod Nam Dum Hua说明；2026-10-20，`read`。
+
+范围限制：不套缅甸Thingyan细节，不写所有长辈60岁或单一起源。
+
+当前呈现：晚辈捧碗、移长者手边倾清水、放回。 普通衣着、碗形、庭院和三拖为产品；未完整呈现长者回应祝词。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#thai-songkran-elders)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

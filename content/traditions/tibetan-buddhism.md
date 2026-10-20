@@ -43,7 +43,7 @@
 
 灌顶、密续生起／圆满次第、某些护摩与迁识引导属于誓言限制内容，本档案仅作名目层介绍，不提供修习步骤。勿擅自拍摄天葬、闭关处或禁止摄影的殿堂。风马旗与玛尼石堆有神圣含义，不宜当作纯装饰随意丢弃或踏越。
 
-## 手机互动适合度（Three.js 评估草稿）
+## 手机互动适合度（历史设计草稿）
 
 - **档位：** C 可做致敬小品（非真仪）
 - **敏感度：** 中
@@ -55,7 +55,7 @@
 3. 拖拽挂起一面五色风马旗。
 4. 标题如「廊前轻转」，不宣称念满咒语通关。
 - **红线：** 禁止灌顶、生圆次第、天葬拍摄或苯／佛绕行方向混用误导；密续名不作胜负。
-- **评估状态：** 待后期统一评估
+- **评估状态：** 历史方案；当前 `tibetan-wheel` 只有固定转筒的顺时针转动与静立，不包含沿廊行走和挂旗。
 
 ## 参考来源
 
@@ -71,3 +71,19 @@
 - https://tibet.net/kunphenling-tibetan-community-holds-sacred-saga-dawa-observance-and-year-of-compassion-celebration-at-lho-khandro-sangphug/
 - https://doi.org/10.3390/rel17050552
 - https://dx.doi.org/10.4000/15h7c
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`tibetan-wheel`；最终来源：`tibetan-buddhism`。
+
+藏传佛教持咒利益众生，观音、寺院/朝圣与12–13世纪卷轴。
+
+本轮已读依据：
+
+- [Rubin Museum / Elena Pakhoutova — Prayer Wheel: Accumulating Merit Every Day](https://rubinmuseum.org/projecthimalayanart/essays/prayer-wheel/)：正文61–70行（动作、持咒、对象），图3图注74–76行：Roll of Mantras for a Prayer Wheel and Its Spindle; Tibet; ca. 12th–13th century; black ink on paper with metal spindle; Private collection；另读80–120行作形式和背景区分；2026-10-20，`read`。
+
+范围限制：图3是私人收藏经咒卷和金属轴的策展断代，不是本次测年，也不是转经筒发明年份；旋转经书库影响仅假说，未采用。
+
+当前呈现：固定转经筒沿顺时针转动，右向左滑动起转、减速停、静立。 不计转数抵换福报，不模拟真实诵念。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#tibetan-wheel)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

@@ -19,3 +19,13 @@ PHDI 文中特别区分供品材料与经过 puja 的宗教使用。本场未呈
 - [Indonesia Travel：5 Feel-Good Sustainable Tourism Ideas to Do in Bali](https://www.indonesia.travel/uk/en/travel-ideas/adventure/5-feel-good-sustainable-tourism-ideas-to-do-in-bali)，印尼旅游部门网站，未标发布日期；2026-10-19 UTC 已读 Canang Sari 制作段153–155行。只用于叶篮、槟榔材料和花材制作，不以旅游手作活动本身证明宗教关联。
 
 相关 Kemenag Buleleng 页面打开超时、直连失败，搜索结果不登记为已读。逐项支持与产品边界见 [研究记录](../../docs/research/2026-10-19-balinese-canang-sari.md)。
+
+## 2026-10-20 当前介绍核查
+
+当前可支持范围：印度尼西亚巴厘印度教日常献供；SAKA 所述家庭、寺庙、路口、田边供奉及向 Ida Sang Hyang Widhi Wasa 感谢祈安；PHDI 对诚意和材料方位的宗教解释。
+
+实际呈现：椰叶盘、porosan、食物与花材，白花补东侧→托盘→田边供奉台安放；未演出焚香、完整祈祷。
+
+边界与缺口：PHDI 的传说性创制人说法没有可用历史年代，介绍不写确切起源；动作只截取供盘安放，不能视作全部 puja。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#balinese-canang-sari)。

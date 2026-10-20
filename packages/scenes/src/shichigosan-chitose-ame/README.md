@@ -7,3 +7,15 @@ ID与来源slug：`shichigosan-chitose-ame`；引擎 `@1`。
 实际操作为提手向上、向右、向下短拖。按住时预览当步位移，合格释放后完成运动；最后一步等孩子双手接触提手才记录完成。真实袋内底面承托包装糖，提手接于袋面，最终双手接稳。错误方向、长拖、回折、空白起手和取消不提交，键盘提供等价入口，恢复与减少动画采用同一检查点。
 
 [来源范围](../../../../content/traditions/shichigosan-chitose-ame.md) · [研究核查](../../../../docs/research/2026-10-20-shichigosan-chitose-ame.md)。验证资料在 `artifacts/shichigosan-chitose-ame/`；触摸事件模拟不是设备测试。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`shichigosan-chitose-ame`；最终来源：`shichigosan-chitose-ame`。
+
+当前物件与动作：长纸袋、绳提手、红白包装长糖；家长提起递近放低，儿童接稳。
+
+文化说明范围：江户关东传播、成长长寿、千岁糖赠礼。
+
+简化边界：只模拟赠礼，不含神社参拜、吃糖或完整七五三。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#shichigosan-chitose-ame)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

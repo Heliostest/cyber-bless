@@ -20,3 +20,13 @@
 - [Masienda：The World's Best Tortilla Press](https://masienda.com/blogs/learn/best-tortilla-press)，2026-10-18 阅读完整文章，采用木制/金属压具类别及两层衬片、合板压柄、打开后保留生饼的操作事实，不采用营销评价或烹饪部分。
 - [King Arthur Baking：Tortillas de Maíz，Pati Jinich](https://www.kingarthurbaking.com/recipes/tortillas-de-maiz-corn-tortillas-recipe)，2026-10-18 阅读完整当前说明，交叉核对玉米面团、两层薄衬片与手动压展。
 - [Smithsonian NMAH：tortilla press，2016.0132.01](https://americanhistory.si.edu/ne/collections/object/nmah_1823087)，2026-10-18 阅读检索记录中的墨西哥产地、木/钢/清漆材料信息；直连失败，仅作物件类别补充，不作几何复刻依据。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`mexican-tortilla-press`；当前来源 slug 仍为 `mexican-tortilla-press`。本轮新增介绍的证据范围：当代墨西哥/瓦哈卡式压具的厨房用途、材料差异、衬片与压展机制。
+
+- [Masienda — The World's Best Tortilla Press](https://masienda.com/blogs/learn/best-tortilla-press)：2021-02-01，Oaxacan-style、不同材料、How do you use a tortilla press 全节；直接 HTML 已读，营销优越性主张未采用；访问日期 2026-10-20。
+
+具体边界与缺口：没有可靠发明年代；不把木型作为所有墨西哥家庭规格。不模拟完整 nixtamal 制备/揭膜/烙制，单次压合是简化。 无新增依赖的失访来源。
+
+当前器物与动作：木制上下压板、长柄、两层衬片、玉米面团；合板、加压、松柄开盖。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#mexican-tortilla-press)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

@@ -12,3 +12,19 @@
 
 - [FM yokohama：銭洗弁財天宇賀福神社 饭塚宏访谈（2025-01-18）](https://www.fmyokohama.jp/mamet/2025/01/post-256.html)，已读相关正文，参拜教学第13–27行；机构发表的神社代表第一手讲述。
 - [镰仓市观光协会：銭洗弁財天公开介绍](https://www.trip-kamakura.com/special/detail.php?id=20)，已读第55–88行。补充地点、筛具及地方信念的公开综述，不单独承担浇水流程或起源断言。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`zeniarai-coin-washing`；最终来源：`zeniarai-coin-washing`。
+
+镰仓具体神社财福信念及2025神社代表实践说明。
+
+本轮已读依据：
+
+- [FMヨコハマ / まめラボ — 鎌倉「銭洗弁財天宇賀福神社」访谈](https://www.fmyokohama.jp/mamet/2025/01/post-256.html)：正文神社代表飯塚弘史受访、祈愿和清洗方法段；2026-10-20，`read-direct-http`。
+
+范围限制：源赖朝传说和创立年未作本轮史实，不宣称洗钱增值。
+
+当前呈现：筛中硬币，提杓、倾泉水、布擦；币最终仍在筛里。 没有钱包收回动作；水流时长、币形、三拖为产品。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#zeniarai-coin-washing)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

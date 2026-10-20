@@ -7,3 +7,11 @@
 木柱鸟造型参考名古屋市博物馆写真2右侧龟户款，保留黑顶、红颊与墨脚纹，不使用太宰府卷翼或桜天神陶土款。器物、动作和场合的支持范围见[来源卡](../../../../content/traditions/kameido-usokae.md)与[研究](../../../../docs/research/2026-10-20-kameido-usokae.md)。短拖次数、方向、支撑台、木座与配色属于产品表达。
 
 明亮户外暖木与石材，单支撑和一个安放木座。引擎kameido-usokae@1，metadata C/中。正式祈愿目录、图标、意图提示、场景池与三尺寸原生小组件封面接入；本地验证见artifacts/kameido-usokae，不将CDP触摸模拟写成真机测试。
+
+## 2026-10-20 介绍扩充核查
+
+当前简介已补充地域、文化语境及有据的历史节点，保留来源 `kameido-usokae`。核查范围：龟户特定神社、自 1820 年的活动记录、1 月 24/25 日、同音解释、返旧领新及天神信仰。
+
+边界：1820 是龟户本社活动记录，不泛化为全国鷽替的起源；模型/容器/三拖不是统一仪轨，未承诺应验。
+
+来源正文的完整链接、实际阅读位置、访问状态及产品简化见[B 组逐项记录](../../../../docs/research/2026-10-20-scene-narratives-b.md#kameido-usokae)与[来源卡](../../../../content/traditions/kameido-usokae.md)。本节不更改现有交互；用户介绍集中维护于 `packages/core/src/scene-narratives/b.ts`。

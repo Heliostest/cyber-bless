@@ -18,3 +18,11 @@ Primary sources read 2026-10-13:
 - [Barcelona municipal civic centre — Barcelona Gegantera](https://ajuntament.barcelona.cat/ccivics/elsortidor/p/64785/barcelona-gegantera): public exhibition context and six centuries of documented local giants. Separate Cultura Popular detail and workshop PDF URLs failed direct fetch; they are not claimed as fully read.
 
 Physical anchors: `giant-rosette-grip` → `giant-lapel`; `giant-base-grip` → `giant-display-seat`; final tap `giant-base-grip`. `giant-rosette` reparents into `giant-figure` after the first step. Initial and final base/support contact, front-facing cloth geometry, visible first-hit rays, opaque occlusion, pointer cancellation/ownership, pause/focus, silent checkpoints and resource disposal are exercised with real Three.js geometry. GPU and browser verification belongs to the root batch.
+
+## 2026-10-20 当前介绍核查
+
+已按实际器物与用户提示扩充介绍。节庆巨偶小模型、花章、底座木把与圆台；别花→移模型→静看。
+
+核查重点：地方档案年代不等于全加泰罗尼亚起源；本模型不对应 Llúcia/Chabran 等具名角色；花章与桌上陈列非巡游程序。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#catalan-festival-giant)。

@@ -23,3 +23,13 @@
 - [Web Japan · May: Carp Streamers](https://web-japan.org/kidsweb/manga/0705/index.html)，2026-10-17 阅读完整说明。支持儿童节季节、布鲤形态、成长祝愿与展示变化；未复制漫画、照片或文案。
 - [Japan Society · Children’s Day: Kodomo No Hi](https://japansociety.org/events/childrens-day-2024/)，2026-10-17 阅读完整活动说明。支持面向所有孩子的节日文化活动与原创鲤旗制作；不移植活动素材或售票信息。
 - [Watanabe Koinobori · Official Site](https://watanabe-koinobori.jp/en)，2026-10-17 阅读完整英文说明。仅核对制作者对鲤旗形态及祝愿的公开表达；未复制工坊图案、品牌、比例或制作流程。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`japanese-koinobori`；当前来源 slug 仍为 `japanese-koinobori`。本轮新增介绍的证据范围：日本儿童节、江户时期的有限追溯、鲤鱼跃龙传说及男孩成长祝愿；颜色/家庭组合与住宅尺度的变化。
+
+- [Web Japan / Kids Web Japan — Koinobori](https://web-japan.org/kidsweb/manga/0705/index.html)：首段江户/儿童节/鲤鱼故事及颜色、阳台段；网页正文已读；访问日期 2026-10-20。
+
+具体边界与缺口：来源用据说追溯，介绍保留限定；不把中国传说当真实动物史，不固定颜色对每位家庭成员的含义。 无新增依赖的失访来源。
+
+当前器物与动作：中空鲤形布旗、升降绳、挂点；展开尾部、牵绳升旗、挂稳。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#japanese-koinobori)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

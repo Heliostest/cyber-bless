@@ -34,3 +34,15 @@ Each cue hits the nearest opaque rendered surface at 284×390, 350×408, and 128
 Checkpoints 0–3 and returning visits restore silently. Progress commits only after settling; reduced motion produces identical final geometry. Pauses freeze accepted transitions, while blur/cancel/lost capture discard partial input. Callback reentry is guarded, including input injected outside the hit layer and pause/resume boundaries during preparation. A callback lifecycle version also suppresses stale sound, haptic and completion continuations when the host synchronously pauses/resumes or blurs/refocuses. Quiet observation and returning visits never save wish drafts; explicit submission trims and saves once. A committed wish still reports progress atomically after a host pause, while stale feedback is suppressed. Both immutable underside materials, the shared texture, geometry, UI, cues, listeners, feedback, lights and renderer are disposed exactly once.
 
 Run `npm run test -w @wbr/scenes -- src/turkish-ebru-paper/scene.test.ts`. The tests retain real Three geometry, raycasting, interaction cues, the actual wish form, and an explicit real soft-toon adapter regression; only GPU rendering is substituted. They include six pickup points over three viewport sizes, following the grab before release, and rejecting the rim and an opaque blocker. `node scripts/verify-ebru-paper-pickup.mjs` checks the actual scene-review App with mouse and native Chrome touch on the running development server. See the [pickup repair record](../../../../docs/research/2026-10-19-ebru-paper-pickup.md) for the verification and source boundaries.
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`turkish-ebru-paper`；最终来源：`turkish-ebru`。
+
+当前物件与动作：梳具右移显彩纹、自动落纸、近边揭纸转印、静看。
+
+文化说明范围：土耳其纸艺、书籍装饰、师徒经验与当代交流。
+
+简化边界：预制液面与颜料、自动贴纸、即时固色和留言为产品，不是配方教学。
+
+完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#turkish-ebru-paper)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。

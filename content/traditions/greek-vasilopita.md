@@ -16,3 +16,13 @@
 - VisitGreece “St. Basil's Cake” https://www.visitgreece.gr/en/experiences/gastronomy/beverages/st-basils-cake 与 GreekFarms https://portal.greekfarms.gov.gr/en/new-years-cakes-throughout-greece/ ：初次仅取得页面入口，未获得相关正文，后续超时；不计作已读证据。
 
 核查与实现边界见 [研究记录](../../docs/research/2026-10-20-greek-vasilopita.md)。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`greek-vasilopita`；当前来源 slug 仍为 `greek-vasilopita`。本轮新增介绍的证据范围：教会自身当代实践：新年分食、藏币受祝福、甜面包/蛋糕差异及为贫困者留份的慈善语境。
+
+- [Holy Cross Greek Orthodox Church, Pittsburgh — Vasilopita](https://holycrosspgh.org/vasilopita)：名称、The Tradition 及家庭分享、含币份与穷人份相关段；直接 HTML 全文已读；访问日期 2026-10-20。
+
+具体边界与缺口：圣巴西尔起源故事为教会传述，不认定确切发明年；固定这一份有币不是随机占断，未表现完整分配礼序。 网页工具曾超时；直接请求返回正文并完成阅读，按成功通道记录。
+
+当前器物与动作：预切圆糕、糕铲、家人盘、固定含币份；托起、送盘、取币。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#greek-vasilopita)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

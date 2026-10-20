@@ -20,3 +20,14 @@ Charkha 是印度的手摇纺车。Powerhouse 博物馆的开放木架藏品记�
 
 - [Powerhouse · Charkha and spindles，2024/102/52](https://collection.powerhouse.com.au/object/754652)，2026-10-17 阅读完整记录。用于开放木架、横足、轮架、摇柄、金属锭及纺线与卷收须分开的说明。地域仅采用印度，不将记录中的推测产地变成确定事实。
 - [Powerhouse · Charkha (spinning wheel), India，2002/47/1](https://collection.powerhouse.com.au/object/11412)，2026-10-17 阅读完整记录。用于绳传动、锭轮及近代纺织运动背景。箱式双级结构与本场景的单级开放式结构有别；不沿用其年份、尺寸或精神功效引语。未复制馆藏照片、图案或描述文字。
+
+## 2026-10-20 介绍扩充核查
+
+适用场景：`indian-charkha`；当前来源 slug 仍为 `indian-charkha-craft`。本轮新增介绍的证据范围：实物结构与手工纺线原理；二十世纪初甘地、swadeshi/khadi 与抗殖民纺织背景。
+
+- [Powerhouse Collection — Charkha, 2024/102/52](https://collection.powerhouse.com.au/object/754652)：Christina Sumner 2024-02，器物说明、手法与历史说明；直接 HTML 已读；访问日期 2026-10-20。
+- [Powerhouse Collection — Portable spinning wheel / box charkha](https://collection.powerhouse.com.au/object/11412)：1960–1968 制作记录、甘地与本土纺织说明；直接 HTML 已读；访问日期 2026-10-20。
+
+具体边界与缺口：没有把馆藏制作时间当 charkha 起源；不附加转轮治愈心灵或固定礼序。三段动画不构成纺线教学。 无新增依赖的失访来源。
+
+当前器物与动作：敞开式木轮、传动绳、金属纺锭和棉纤；拉纤、摇轮、回送卷线。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#indian-charkha)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。

@@ -49,3 +49,11 @@ If preparation pauses the host, the initial pointer is explicitly cancelled even
 The initial meaningful RED was the inert public scene failing to produce checkpoint 1. Additional REDs caught narrow-canvas tabletop clipping, a support rail intersecting cloth, and rounded support surfaces whose bounds overlapped but whose actual faces did not contact.
 
 Run `npm run test -w @wbr/scenes -- src/amazigh-woven-rug/scene.test.ts`. The 67 tests use real Three geometry/raycasting, interaction cues and wish forms; only the GPU boundary is replaced. Coverage includes all visible vertices at checkpoints 0/1/2 in 284×390, 350×408 and 1280×600 canvases, physical contacts, actual first-hit cues, invalid input, occlusion, pointer ownership, touch cancellation, pause/resume, callback lifetime, normal-motion callback reentry, explicit wish preservation, silent restoration and complete resource/listener disposal. Nine added reentry regressions were observed failing before the callback lock was introduced; five pause-cleanup regressions then verified stale-pointer cancellation, fresh-pointer recovery at checkpoints 0/2 and immediate cue hiding. Shared integration and production browser/build/mobile verification are performed by the root task.
+
+## 2026-10-20 当前介绍核查
+
+已按实际器物与用户提示扩充介绍。羊毛条纹几何毯、木梭、夹杆和展架；补末行→整毯移架→静看/可选留言。
+
+核查重点：不能将文中婚礼披巾的特定保护解释移给普通毯；条纹配色、木夹和三步是产品安排。没有确证织毯统一起源。
+
+逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#amazigh-woven-rug)。

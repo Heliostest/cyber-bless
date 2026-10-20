@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "3a05b105b4caaaaf9948aff56f37e9b8638a78fe02acc6d185523b1cca58c83c",
+  "revision": "c6c4b7bdd85733bf6ac36a689b7ce7b10bd2f550afc37a2149196a11844b49b2",
   "scenes": [
+    {
+      "id": "setsubun-mamemaki",
+      "engine": "setsubun-mamemaki@1",
+      "small": {
+        "file": "setsubun-mamemaki-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "c4cf03f5940ace91b074a94f86443796f29e28ab49c604108120fc35568619d1",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "setsubun-mamemaki-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "433b7c86b872adf3a8a8a803fa8004c111289b3828a798ae3e713ad5982ca51e",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "setsubun-mamemaki-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "2fe9b5ee71d9699ae830a1458a7178a2c1ae4910f3575b2013138df3d464b07a",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "sternsinger-house-blessing",
       "engine": "sternsinger-house-blessing@1",

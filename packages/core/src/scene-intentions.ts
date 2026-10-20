@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'setsubun-mamemaki': {
+    kind: 'blessing', label: '迎福入家，祝家人安康', optionalWish: false,
+    action: '推开木扇，将木枡中的炒豆先撒向屋外，再轻撒到屋内。',
+  },
   'sternsinger-house-blessing': {
     kind: 'blessing', label: '愿基督祝福这所房屋', optionalWish: false,
     action: '拿起粉笔，在门楣写下年份、星与 C+M+B，再把粉笔收好。',

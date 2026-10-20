@@ -42,6 +42,7 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+ 'setsubun-mamemaki': (<><path d="M10 55V10h44v45M34 12v40M34 25h18M34 38h18" stroke="#ae7b4c" strokeWidth="4" fill="none"/><path d="M10 42h21v17H10z" fill="#d7ad73"/><ellipse cx="16" cy="42" rx="4" ry="3" fill="#d9b667"/><ellipse cx="25" cy="39" rx="4" ry="3" fill="#d9b667"/><ellipse cx="21" cy="27" rx="4" ry="3" fill="#d9b667"/></>),
  'sternsinger-house-blessing': (<><path d="M12 59V14h40v45" fill="#366c79" stroke="#c7ba9d" strokeWidth="5"/><path d="M16 18h32v10H16z" fill="#234955"/><path d="M20 20v6m-3-3h6m5-3h-3v6h3m4 0v-6l3 4 3-4v6m4-6v6h3v-3h-3m0-3h3v3" fill="none" stroke="#fff9df" strokeWidth="1.2"/><circle cx="44" cy="41" r="2" fill="#d7b363"/><path d="M24 55l10 2" stroke="#fff9df" strokeWidth="4" strokeLinecap="round"/></>),
  'lam-tsuen-wishing-tree': (<><path d="M17 56V19m0 15h34" stroke="#987456" strokeWidth="5" fill="none"/><path d="M9 24c-8-16 9-23 20-15 16-9 31 4 24 16" fill="#84a95f"/><path d="M38 42V30q0-6 5-6t5 6v11" stroke="#c54230" strokeWidth="2" fill="none"/><path d="M31 41h13v18H31z" fill="#d85243"/><circle cx="49" cy="45" r="6" fill="#f79831"/></>),
  'kagami-mochi-offering': (<><path d="M9 48h46v8H9z" fill="#b28a5f"/><ellipse cx="32" cy="43" rx="20" ry="10" fill="#f8ebcc" stroke="#b99f79"/><ellipse cx="32" cy="30" rx="14" ry="8" fill="#fff5de" stroke="#b99f79"/><circle cx="32" cy="16" r="8" fill="#ed982d"/><path d="M32 9c2-6 10-5 11-1-4 3-8 3-11 1" fill="#658253"/></>),

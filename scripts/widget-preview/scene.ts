@@ -20,7 +20,8 @@ html,body{margin:0;padding:0;width:${width}px;height:${height}px;overflow:hidden
 #stage>.scene-overlay-host{display:none!important}
 </style>`);
 const completedPreviewProgress: Record<string, number> = {
-  "lam-tsuen-wishing-tree": 3
+  "lam-tsuen-wishing-tree": 3,
+  "sternsinger-house-blessing": 3
 };
 const previewProgress = completedPreviewProgress[entry.id] ?? (entry.id === 'crane' || entry.id === 'lantern' ? 1 : 0);
 let controller: SceneController;

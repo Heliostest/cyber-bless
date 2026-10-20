@@ -38,6 +38,7 @@ it.each([0,1,2])('cancels the real Chinowa walking view through production adapt
 })
 
 it.each([
+  ['sternsinger-house-blessing', 0, 'sternsinger-chalk', 'sternsinger-chalk', [0,0,0], [0,.16,0], [0,-60]],
   ['lam-tsuen-wishing-tree', 0, 'lamtsuen-paper', 'lamtsuen-paper-root', [0,0,.007], [0,0,0], [60,0]],
   ['kagami-mochi-offering', 0, 'kagami-large', 'kagami-root-0', [0,.18,0], [0,0,0], [0,-60]],
   ['romanian-martisor', 0, 'martisor-red-head', 'martisor-cord', [0,0,0], [0,0,0], [0,-60]],

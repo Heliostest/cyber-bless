@@ -1,5 +1,10 @@
 [
   {
+    "id": "sternsinger-house-blessing",
+    "title": "门楣祝家",
+    "category": "blessing"
+  },
+  {
     "id": "lam-tsuen-wishing-tree",
     "title": "林村抛愿",
     "category": "wish"

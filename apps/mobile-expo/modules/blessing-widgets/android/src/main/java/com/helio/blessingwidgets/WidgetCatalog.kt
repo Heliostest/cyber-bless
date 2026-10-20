@@ -4,6 +4,7 @@ package com.helio.blessingwidgets
 internal object WidgetCatalog {
   val hiddenSceneIds = setOf("japanese-daruma-otoshi", "paper-pinwheel", "chinese-steelyard", "garden-croquet", "welsh-drop-spindle", "scottish-plunge-churn", "irish-bodhran", "french-coffee-mill", "japanese-wagasa", "spanish-castanets", "japanese-shishi-odoshi", "german-jumping-jack", "finnish-kantele", "estonian-village-swing", "french-petanque", "english-hearth-bellows", "mexican-metate", "czech-wooden-ratchet", "puerto-rican-guiro", "valencian-folding-fan", "mexican-tortilla-press", "ghanaian-oware", "chinese-rattle-drum", "chinese-tangram", "malawi-sansi", "japanese-kendama", "russian-matryoshka", "korean-yutnori", "chinese-diabolo", "indian-charkha", "german-nutcracker", "mexican-molinillo", "chinese-suanpan", "mongolian-felt-ger", "peruvian-engraved-gourd", "venetian-glass-bead", "vietnamese-bamboo-dragonfly", "turkish-ebru-paper", "indonesian-angklung", "weifang-paper-kite", "chinese-shadow-puppet", "faroese-wool-knit", "niue-shell-necklace", "polish-paper-cut", "uzbek-clay-bowl", "chinese-woodblock-print", "czech-bead-star", "fijian-woven-fan", "amazigh-woven-rug", "slovak-wire-bird", "hungarian-embroidery-hoop", "andalusian-ceramic-tile", "sicilian-painted-cart", "bai-indigo-cloth", "ndebele-painted-house", "purepecha-copper-bowl", "finnish-birch-basket", "catalan-festival-giant", "breton-banner", "dalarna-wooden-horse", "blang-tea", "minangkabau-spinning-top", "hongsheng-red-string", "czech-pilgrim-journal", "celtic-folk-spring", "theravada-water", "lantern")
   val scenes = mapOf(
+    "sternsinger-house-blessing" to WidgetScene("门楣祝家", "blessing"),
     "lam-tsuen-wishing-tree" to WidgetScene("林村抛愿", "wish"),
     "kagami-mochi-offering" to WidgetScene("镜饼迎岁", "blessing"),
     "romanian-martisor" to WidgetScene("红白寄春", "blessing"),
@@ -119,6 +120,7 @@ internal object WidgetCatalog {
 
   fun cover(key: String?, size: WidgetCoverSize): Int {
     val covers = when (key) {
+      "sternsinger-house-blessing" -> intArrayOf(R.drawable.blessing_preview_sternsinger_house_blessing_small, R.drawable.blessing_preview_sternsinger_house_blessing_medium, R.drawable.blessing_preview_sternsinger_house_blessing_large)
       "lam-tsuen-wishing-tree" -> intArrayOf(R.drawable.blessing_preview_lam_tsuen_wishing_tree_small, R.drawable.blessing_preview_lam_tsuen_wishing_tree_medium, R.drawable.blessing_preview_lam_tsuen_wishing_tree_large)
       "kagami-mochi-offering" -> intArrayOf(R.drawable.blessing_preview_kagami_mochi_offering_small, R.drawable.blessing_preview_kagami_mochi_offering_medium, R.drawable.blessing_preview_kagami_mochi_offering_large)
       "romanian-martisor" -> intArrayOf(R.drawable.blessing_preview_romanian_martisor_small, R.drawable.blessing_preview_romanian_martisor_medium, R.drawable.blessing_preview_romanian_martisor_large)

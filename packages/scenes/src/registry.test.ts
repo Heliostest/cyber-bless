@@ -20,6 +20,7 @@ describe('sceneRegistry', () => {
       'chinese-rattle-drum',
       'ghanaian-oware',
       'mexican-tortilla-press',
+      'sternsinger-house-blessing',
       'lam-tsuen-wishing-tree',
       'kagami-mochi-offering',
       'romanian-martisor',

@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "23cf478c792d50b9f7d04cf72a38fe5d36850eb4488536a0af64e1afafba37a9",
+  "revision": "a06715a20538bdf9fa4538f7a0c36091d42b13e89139f7989705b4c6c570ca6c",
   "scenes": [
+    {
+      "id": "greek-vasilopita",
+      "engine": "greek-vasilopita@1",
+      "small": {
+        "file": "greek-vasilopita-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "483818aa5bd4abf18cc8f5190924af6ae5251e8d06299d41ea7b96c2a8a70b7a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "greek-vasilopita-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "61a6f87ef1c030c0778aa54fd4e89a41642bec297c66050ed83a24513b10d610",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "greek-vasilopita-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "695767c6cd6a1ce3daf2823655209f5836cef11ee7cf4aa8a9000324eebafb58",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "tibetan-khata-greeting",
       "engine": "tibetan-khata-greeting@1",

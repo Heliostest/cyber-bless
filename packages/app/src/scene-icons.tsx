@@ -42,6 +42,7 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
 }
 
 const sceneIcons: Record<string, ReactNode> = {
+ 'greek-vasilopita': (<><ellipse cx="32" cy="48" rx="25" ry="9" fill="#e5e2ce" stroke="#65a09c" strokeWidth="2"/><path d="m13 33 17-17 21 17v12L30 53 13 45z" fill="#c78542"/><path d="m13 33 17-17 21 17-21 9z" fill="#fff0c5"/><path d="m30 42 21-9v12l-21 8z" fill="#e4b66d"/><ellipse cx="39" cy="43" rx="5" ry="3" fill="#e5be56" stroke="#a17b30" strokeWidth="1.5"/></>),
  'tibetan-khata-greeting': (<><path d="M13 15Q24 30 34 17L48 16l-5 36-8-2 2-25q-9 11-19 0l4 26-9 2z" fill="#fff4db" stroke="#8f9b8d" strokeWidth="2"/><path d="M14 48l1 8m3-9 1 8m18-8-1 8m5-7-1 8" stroke="#c4bda6" strokeWidth="2"/></>),
  'shichigosan-chitose-ame': (<><path d="M15 17h34v42H15z" fill="#f5e7be" stroke="#c99c6b" strokeWidth="2"/><path d="M24 20V8m15 12V8" stroke="#dd9392" strokeWidth="6" strokeLinecap="round"/><path d="M22 21c0-17 20-17 20 0" fill="none" stroke="#b75854" strokeWidth="3"/><path d="M17 49h30v8H17z" fill="#d77b76"/><path d="M32 31v13m-6-7h12m-10-4 8 8m-8 0 8-8" stroke="#ce7774" strokeWidth="5" strokeLinecap="round"/><circle cx="32" cy="37" r="3" fill="#fff4ce"/></>),
  'mongolian-ovoo': (<><path d="M10 53L19 39l10-15 11 7 13 22z" fill="#9aa9a2" stroke="#637f7c" strokeWidth="2"/><path d="M18 47h25M23 38h16M29 29h8" stroke="#d9d9bd" strokeWidth="3"/><path d="M32 10v20" stroke="#827357" strokeWidth="3"/><path d="M32 17l13 5-4 5-9-3z" fill="#74a4ba"/></>),

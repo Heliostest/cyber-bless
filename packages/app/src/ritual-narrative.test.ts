@@ -102,6 +102,7 @@ describe("builtInScenes narratives", () => {
       "japanese-shishi-odoshi",
       "japanese-wagasa",
       "kagami-mochi-offering",
+      "kameido-usokae",
       "korean-bojagi-wrap",
       "korean-yutnori",
       "lam-tsuen-wishing-tree",

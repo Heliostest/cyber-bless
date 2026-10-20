@@ -81,6 +81,7 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "kameido-usokae",
   "persian-esfand",
   "mochigase-nagashibina",
   "greek-vasilopita",
@@ -211,6 +212,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"kameido-usokae",title:"木鷽迎福",engine:"kameido-usokae@1",revision:"bundled",manifestUrl:"",traditionSlug:"kameido-usokae",narrative:"在东京龟户天神社的鷽替神事中，人们返纳旧木鷽，领受新木鷽，祈愿凶事转吉。送还旧鸟，接过新鸟，再将它安放好，迎接新年。" },
   { id:"persian-esfand",title:"熏籽祈安",engine:"persian-esfand@1",revision:"bundled",manifestUrl:"",traditionSlug:"persian-esfand",narrative:"在一些伊朗家庭里，长辈会把 Esfand 种子放在炉上的锅中加热，再挥动布巾散开烟气，寄托避开邪眼、护佑家人的心愿。眼前的小锅已经盛好种子：提起木柄，把锅移到炉上，待烟气升起后轻轻挥巾，愿家人平安、诸事顺遂。" },
   { id:"mochigase-nagashibina",title:"纸雏祈安",engine:"mochigase-nagashibina@1",revision:"bundled",manifestUrl:"",traditionSlug:"mochigase-nagashibina",narrative:"在鸟取用瀬的流雏习俗中，一对纸雏随圆形草托漂向下游，寄托无病息灾与孩子成长的祈愿。托起纸雏与花枝，移向缓流，轻轻放入水中。" },
   { id:"greek-vasilopita",title:"新岁分糕",engine:"greek-vasilopita@1",revision:"bundled",manifestUrl:"",traditionSlug:"greek-vasilopita",narrative:"在希腊东正教家庭的新年庆贺中，家人分食圣巴西尔糕 Vasilopita，寄托健康与幸福的祝愿。糕里藏着一枚硬币，收到含币一份的人被认为得到祝福。眼前的糕已经切好：用糕铲托起这一份，送到家人盘里，再取出切面中露出的硬币。" },

@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'kameido-usokae': {
+    kind: 'blessing', label: '祈愿凶事转吉，迎接新年', optionalWish: false,
+    action: '送还旧木鷽，接取新木鷽，将它安放好。',
+  },
   'persian-esfand': {
     kind: 'blessing', label: '为家人寄一份平安', optionalWish: false,
     action: '让锅中的种子生烟，挥巾散开烟气，寄托家人平安的心愿。',

@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "f9fda390c55be69a9d1bf649d0da6b71da52b00c6cd2e0c1759da6ca2946e52e",
+  "revision": "5af99b5e78ad92a756bccab6bb65c8fafde3067cf2aece40991e80e4092acf0c",
   "scenes": [
+    {
+      "id": "kameido-usokae",
+      "engine": "kameido-usokae@1",
+      "small": {
+        "file": "kameido-usokae-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "62cef38ae1596359a4a9401e2cfe8be1da5abbbc88d5ca6f0b5d819f4eee8d70",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "kameido-usokae-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "07430def7851abe47536f42cd7497ec9008aff93279227eb6acffc5814868dec",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "kameido-usokae-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8a225c6471d507034c5a1624672bc4c30790e9676fb273f8bb67aea60584b585",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "persian-esfand",
       "engine": "persian-esfand@1",

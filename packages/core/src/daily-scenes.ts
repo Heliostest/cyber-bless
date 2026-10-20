@@ -81,6 +81,7 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "balinese-canang-sari",
   "bulgarian-survakane",
   "setsubun-mamemaki",
   "sternsinger-house-blessing",
@@ -203,6 +204,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"balinese-canang-sari",title:"叶盘献谢",engine:"balinese-canang-sari@1",revision:"bundled",manifestUrl:"",traditionSlug:"balinese-canang-sari",narrative:"Canang sari 是巴厘印度教徒日常献上的供品，用以向 Ida Sang Hyang Widhi Wasa 表达谢意。把白花放入盛着花材和食物的叶盘，托起叶盘，安放在田边的供奉台上。" },
   { id:"bulgarian-survakane",title:"彩枝贺年",engine:"bulgarian-survakane@1",revision:"bundled",manifestUrl:"",traditionSlug:"bulgarian-survakane",narrative:"在保加利亚的新年贺年习俗 Survakane 中，孩子持装饰过的山茱萸枝，轻拍亲友背部，送上来年健康幸福的祝愿。眼前的彩枝缠着羊毛线和爆米花串：提起枝条，移到亲友背后，轻拍后收回，把新年问候送到身边的人。" },
   { id:"setsubun-mamemaki",title:"节分撒豆",engine:"setsubun-mamemaki@1",revision:"bundled",manifestUrl:"",traditionSlug:"setsubun-mamemaki",narrative:"在日本节分时，家庭会用木枡盛炒黄豆，向屋外、屋内撒豆，以“鬼は外、福は内”寄托驱厄迎福、家人安康的心意。眼前木枡已备好：推开木扇，先向屋外撒豆，再向屋内轻撒，让祝愿随着豆子落在家中。" },
   { id:"sternsinger-house-blessing",title:"门楣祝家",engine:"sternsinger-house-blessing@1",revision:"bundled",manifestUrl:"",traditionSlug:"sternsinger-house-blessing",narrative:"德国的 Sternsinger 在岁首逐户拜访，用粉笔在门上方写下基督教祝福，并为儿童援助项目募款。拿起粉笔，写下门楣上的年份与 C+M+B，寄托“愿基督祝福这所房屋”的心意。" },

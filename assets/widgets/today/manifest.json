@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "1b5b2e4988954ba754857af92d2a46cc31f73528f4e58ebd4f142e6e0104c449",
+  "revision": "cd29975d1df87cbce090ea5bac15d6a7bcc312c7a12f21b5102622e2bd30e6ce",
   "scenes": [
+    {
+      "id": "balinese-canang-sari",
+      "engine": "balinese-canang-sari@1",
+      "small": {
+        "file": "balinese-canang-sari-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "51143df31f1959129c5c00f47616e51c3a6287f6c25d5fef3d41c4f83be4a6c3",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "balinese-canang-sari-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "fe5d5e09622b91f74f4e1c7af6cdc5254fc46c31b67f839da115e17e7e6c4b31",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "balinese-canang-sari-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "06ac8c5c9c92087ef633181d6c43dcedee896b0d795c0a76e0ae736aca8c1aff",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "bulgarian-survakane",
       "engine": "bulgarian-survakane@1",

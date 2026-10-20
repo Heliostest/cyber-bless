@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id:'balinese-canang-sari',title:'叶盘献谢',traditionSlug:'balinese-canang-sari',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'bulgarian-survakane',title:'彩枝贺年',traditionSlug:'bulgarian-survakane',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'setsubun-mamemaki',title:'节分撒豆',traditionSlug:'setsubun-mamemaki',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'sternsinger-house-blessing',title:'门楣祝家',traditionSlug:'sternsinger-house-blessing',grade:'C',sensitivity:'中',gestures:['drag'] },
@@ -197,6 +198,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'balinese-canang-sari',
   'bulgarian-survakane',
   'setsubun-mamemaki',
   'sternsinger-house-blessing',
@@ -288,6 +290,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'balinese-canang-sari': return import('./balinese-canang-sari/index')
     case 'bulgarian-survakane': return import('./bulgarian-survakane/index')
     case 'setsubun-mamemaki': return import('./setsubun-mamemaki/index')
     case 'sternsinger-house-blessing': return import('./sternsinger-house-blessing/index')

@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'bulgarian-survakane': {
+    kind: 'blessing', label: '新年问候，祝亲友健康', optionalWish: false,
+    action: '提起彩枝，移到亲友背后，轻拍后收回，送上健康祝愿。',
+  },
   'setsubun-mamemaki': {
     kind: 'blessing', label: '迎福入家，祝家人安康', optionalWish: false,
     action: '推开木扇，将木枡中的炒豆先撒向屋外，再轻撒到屋内。',

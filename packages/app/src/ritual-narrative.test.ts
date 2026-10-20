@@ -50,6 +50,7 @@ describe("builtInScenes narratives", () => {
       "bokjori",
       "bonfim-ribbon",
       "breton-banner",
+      "bulgarian-survakane",
       "catalan-festival-giant",
       "celtic-folk-spring",
       "chinese-diabolo",

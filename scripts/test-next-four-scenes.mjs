@@ -27,6 +27,7 @@ if(ids.includes('malawi-sansi')){
 }
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const craftDeltas={
+  'bulgarian-survakane': [[0,-60],[60,0],[0,-60]],
   'setsubun-mamemaki': [[60,0],[0,-60],[0,60]],
   'sternsinger-house-blessing': [[0,-60],[60,0],[0,60]],
   'lam-tsuen-wishing-tree': [[60,0],[60,0],[0,-60]],
@@ -203,7 +204,7 @@ async function wrongCraftGesture(page,id,step){
   if(craftDeltas[id]?.[step]){
     const input=pointers.get(page),[dx,dy]=craftDeltas[id][step]
     const kinds=['tap','reverse','short','backtrack','partial-return','reverse-first','cancel']
-    if(['setsubun-mamemaki','sternsinlam-tsuen-wishinkaromanian-martisor','sumiyoshi-ge-tami-mochi-offeodair-housing','griki','gre-blessing','gree','greek-new-year-pomegranate','bonfim-ribbon','chinowa-kuguri','zeniarai-coin-washing','udo-undama','japanese-daruma-otoshi','paper-pinwheel','chinese-steelyard','garden-croquet','welsh-drop-spindle','scottish-plunge-churn','irish-bodhran','french-coffee-mill','japanese-wagasa','spanish-castanets','japanese-shishi-odoshi','german-jumping-jack','finnish-kantele','estonian-village-swing','french-petanque','english-hearth-bellows','mexican-metate','czech-wooden-ratchet','puerto-rican-guiro','valencian-folding-fan','mexican-tortilla-press','ghanaian-oware','chinese-rattle-drum','chinese-tangram','chinese-diabolo','korean-yutnori','russian-matryoshka','japanese-koinobori','japanese-kendama','indian-charkha','german-nutcracker','mexican-molinillo','malawi-sansi','chinese-suanpan','mongolian-felt-ger','peruvian-engraved-gourd','venetian-glass-bead'].includes(id))kinds.push('zigzag')
+    if(['bulsetsubun-mamemaki','sternsinlam-tsuen-wishinkaromanian-martisor','sumiyoshi-gae-tami-mochi-offeodairian-survakan-housing','griki','gre','gr-bleessing','gree','greek-new-year-pomegranate','bonfim-ribbon','chinowa-kuguri','zeniarai-coin-washing','udo-undama','japanese-daruma-otoshi','paper-pinwheel','chinese-steelyard','garden-croquet','welsh-drop-spindle','scottish-plunge-churn','irish-bodhran','french-coffee-mill','japanese-wagasa','spanish-castanets','japanese-shishi-odoshi','german-jumping-jack','finnish-kantele','estonian-village-swing','french-petanque','english-hearth-bellows','mexican-metate','czech-wooden-ratchet','puerto-rican-guiro','valencian-folding-fan','mexican-tortilla-press','ghanaian-oware','chinese-rattle-drum','chinese-tangram','chinese-diabolo','korean-yutnori','russian-matryoshka','japanese-koinobori','japanese-kendama','indian-charkha','german-nutcracker','mexican-molinillo','malawi-sansi','chinese-suanpan','mongolian-felt-ger','peruvian-engraved-gourd','venetian-glass-bead'].includes(id))kinds.push('zigzag')
     for(const kind of kinds){
       const from=await point(page,'source',id==='chinese-diabolo'&&step===2?1:0)
       await input.down(from)

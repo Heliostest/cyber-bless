@@ -80,6 +80,7 @@ describe("scene placement", () => {
     ["korean-yutnori", "korean-yutnori", false],
     ["chinese-diabolo", "chinese-diabolo", false],
     ["chinese-tangram", "chinese-tangram", false],
+    ["bulgarian-survakane", "bulgarian-survakane", false],
     ["setsubun-mamemaki", "setsubun-mamemaki", false],
     ["sternsinger-house-blessing", "sternsinger-house-blessing", false],
     ["lam-tsuen-wishing-tree", "lam-tsuen-wishing-tree", true],
@@ -169,6 +170,7 @@ describe("scene placement", () => {
   });
   it("splits blessing vs wish scene ids", () => {
     expect([...BLESSING_SCENE_IDS]).toEqual([
+      "bulgarian-survakane",
       "setsubun-mamemaki",
       "sternsinger-house-blessing",
       "kagami-mochi-offering",

@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "c6c4b7bdd85733bf6ac36a689b7ce7b10bd2f550afc37a2149196a11844b49b2",
+  "revision": "1b5b2e4988954ba754857af92d2a46cc31f73528f4e58ebd4f142e6e0104c449",
   "scenes": [
+    {
+      "id": "bulgarian-survakane",
+      "engine": "bulgarian-survakane@1",
+      "small": {
+        "file": "bulgarian-survakane-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "45f406b1a4e6da71db65f74dff2420551fe22c85802e8d4c6abfc24ef0b615e1",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "bulgarian-survakane-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "cd08e15c1fa608eb94dedfbf92dba2e6dda4fa74a75e5fd1856c103243731917",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "bulgarian-survakane-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8b570d6cfe6ab9b9f1a982e6636e158bf7d4db9d54d50ca0a7afc35713036de9",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "setsubun-mamemaki",
       "engine": "setsubun-mamemaki@1",

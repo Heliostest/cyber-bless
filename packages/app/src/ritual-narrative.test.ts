@@ -131,6 +131,7 @@ describe("builtInScenes narratives", () => {
       "russian-matryoshka",
       "scottish-plunge-churn",
       "setsubun-mamemaki",
+      "shichigosan-chitose-ame",
       "shinto-torii",
       "shrine-suzu-bell",
       "sicilian-painted-cart",

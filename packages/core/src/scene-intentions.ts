@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'tibetan-water-bowls': {
+    kind: 'blessing', label: '供养清水，愿众生离苦', optionalWish: false,
+    action: '提起水壶，从左至右逐碗添水，再收回供台一侧。',
+  },
   'kagami-biraki-sake': {
     kind: 'blessing', label: '祝愿新开始健康幸福', optionalWish: false,
     action: '取起木槌，轻叩预松盖缝，再收回樽旁。',

@@ -38,6 +38,7 @@ it.each([0,1,2])('cancels the real Chinowa walking view through production adapt
 })
 
 it.each([
+  ['tibetan-water-bowls', 0, 'water-jug', 'water-jug', [0,.28,.18], [0,0,0], [0,-60]],
   ['kagami-biraki-sake', 0, 'wooden-mallet', 'wooden-mallet', [0,.11,.04], [0,0,0], [0,-60]],
   ['tibetan-prayer-flags', 0, 'prayer-flags-blue', 'prayer-flags-blue', [0,0,.004], [0,0,.004], [0,-60]],
   ['rosh-hashanah-apple-honey', 0, 'apple-slice', 'apple-slice', [0,-.13,.06], [0,0,0], [60,0]],

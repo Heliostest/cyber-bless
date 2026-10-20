@@ -4,8 +4,9 @@ import { APP_HIDDEN_SCENE_IDS, BLESSING_SCENE_IDS, WISH_SCENE_IDS, builtInScenes
 import { createWidgetSnapshot, selectWidgetDay } from './widgets';
 
 describe('App scene availability', () => {
-  it('keeps exactly the 60 approved scenes visible and all 127 sources available', () => {
+  it('keeps exactly the 61 approved scenes visible and all 128 sources available', () => {
     const approved = [
+    "tibetan-water-bowls",
     "kagami-biraki-sake",
     "tibetan-prayer-flags",
     "rosh-hashanah-apple-honey",
@@ -63,7 +64,7 @@ describe('App scene availability', () => {
     "woodfish",
     "yeondeunghoe"
 ];
-    expect(builtInScenes).toHaveLength(127);
+    expect(builtInScenes).toHaveLength(128);
     expect(APP_HIDDEN_SCENE_IDS).toHaveLength(67);
     expect(builtInScenes.filter(isSceneVisibleInApp).map(e => e.id).sort()).toEqual(approved.sort());
     expect(new Set(APP_HIDDEN_SCENE_IDS).size).toBe(67);

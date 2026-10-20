@@ -153,6 +153,7 @@ describe("builtInScenes narratives", () => {
       "theravada-water",
       "tibetan-khata-greeting",
       "tibetan-prayer-flags",
+      "tibetan-water-bowls",
       "tibetan-wheel",
       "turkish-ebru-paper",
       "udo-undama",

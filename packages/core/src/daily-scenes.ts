@@ -81,6 +81,7 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "tibetan-water-bowls",
   "kagami-biraki-sake",
   "tibetan-prayer-flags",
   "rosh-hashanah-apple-honey",
@@ -216,6 +217,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"tibetan-water-bowls",title:"清水七供",engine:"tibetan-water-bowls@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-water-bowls",narrative:"在藏传佛教的供水中，人们向佛与菩萨恭敬献上清水，并以利益众生为发心。佛像前的七只铜碗已经各留少量清水：提起水壶，从左到右依次添水，水面停在碗沿下方，再将水壶收回。" },
   { id:"kagami-biraki-sake",title:"开樽祝愿",engine:"kagami-biraki-sake@1",revision:"bundled",manifestUrl:"",traditionSlug:"kagami-biraki-sake",narrative:"在日本清酒的镜开仪式中，人们用木槌叩开预先松好的樽盖，祝愿新的开始顺遂、健康与幸福。眼前的菰卷酒樽已经备好：拿起系着红白带的木槌，轻叩盖板接缝的一端，再把木槌收回樽旁。盖片分开，露出樽中的酒面。" },
   { id:"tibetan-prayer-flags",title:"经幡迎风",engine:"tibetan-prayer-flags@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-prayer-flags",narrative:"藏传佛教的经幡印有经文或咒语，悬在户外随风轻扬，寄托愿众生受益、获得安乐的心意。这串五色咒语旗保持完整，蓝、白、红、绿、黄依次相连。抬起蓝旗一端，舒展旗串，再挂稳黄旗一端，让经幡在风中展开。" },
   { id:"rosh-hashanah-apple-honey",title:"蘸蜜迎岁",engine:"rosh-hashanah-apple-honey@1",revision:"bundled",manifestUrl:"",traditionSlug:"rosh-hashanah-apple-honey",narrative:"在犹太新年的节庆餐食中，苹果蘸蜜与果实祝福、品尝和祷愿相伴，寄托向上帝祈求美好甜蜜新年的心意。眼前的苹果片已切好：拿起、蘸蜜，再提起放回餐盘，准备品尝。" },

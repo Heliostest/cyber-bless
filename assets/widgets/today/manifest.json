@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "fdfacc3dc307fca816a53fcef8c07209bc168f1bdca6b62bd3e0a66050e07c07",
+  "revision": "a995087bcfac57b85b30055ed99e65db695e20fbc5913f93d31127e1863a385b",
   "scenes": [
+    {
+      "id": "tibetan-water-bowls",
+      "engine": "tibetan-water-bowls@1",
+      "small": {
+        "file": "tibetan-water-bowls-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "58a852f48ae913f46d81225935c265d103dee76acb074e48ae64bed1e102017a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "tibetan-water-bowls-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "2a4c053c178aa2bdfb31b0d434a96abb5e41eb23b91c19eec74312e36b481c4e",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "tibetan-water-bowls-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "9fddac49621b907e19c0efcd09d1c0fd9769a72ce94b883686f58fd9bf4e01b2",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "kagami-biraki-sake",
       "engine": "kagami-biraki-sake@1",

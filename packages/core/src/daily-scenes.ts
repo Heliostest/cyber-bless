@@ -81,6 +81,7 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "persian-esfand",
   "mochigase-nagashibina",
   "greek-vasilopita",
   "tibetan-khata-greeting",
@@ -210,6 +211,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"persian-esfand",title:"熏籽祈安",engine:"persian-esfand@1",revision:"bundled",manifestUrl:"",traditionSlug:"persian-esfand",narrative:"在一些伊朗家庭里，长辈会把 Esfand 种子放在炉上的锅中加热，再挥动布巾散开烟气，寄托避开邪眼、护佑家人的心愿。眼前的小锅已经盛好种子：提起木柄，把锅移到炉上，待烟气升起后轻轻挥巾，愿家人平安、诸事顺遂。" },
   { id:"mochigase-nagashibina",title:"纸雏祈安",engine:"mochigase-nagashibina@1",revision:"bundled",manifestUrl:"",traditionSlug:"mochigase-nagashibina",narrative:"在鸟取用瀬的流雏习俗中，一对纸雏随圆形草托漂向下游，寄托无病息灾与孩子成长的祈愿。托起纸雏与花枝，移向缓流，轻轻放入水中。" },
   { id:"greek-vasilopita",title:"新岁分糕",engine:"greek-vasilopita@1",revision:"bundled",manifestUrl:"",traditionSlug:"greek-vasilopita",narrative:"在希腊东正教家庭的新年庆贺中，家人分食圣巴西尔糕 Vasilopita，寄托健康与幸福的祝愿。糕里藏着一枚硬币，收到含币一份的人被认为得到祝福。眼前的糕已经切好：用糕铲托起这一份，送到家人盘里，再取出切面中露出的硬币。" },
   { id:"tibetan-khata-greeting",title:"白绢迎客",engine:"tibetan-khata-greeting@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-khata-greeting",narrative:"在藏族迎客礼俗中，献上哈达表达欢迎与美好祝愿。双手托起预先折好的白绢，递给来客，让心意随礼巾交到对方手中。" },

@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "799e3f9652fe9bbc15ff597e91c10a14b8d8efc4951875e34ec1a9ef8f55ac37",
+  "revision": "f9fda390c55be69a9d1bf649d0da6b71da52b00c6cd2e0c1759da6ca2946e52e",
   "scenes": [
+    {
+      "id": "persian-esfand",
+      "engine": "persian-esfand@1",
+      "small": {
+        "file": "persian-esfand-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "d86644f0c27d5e3b26e59dcb81ad9c1913ef05dcaafe1ad6299f5f49f1f33d9e",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "persian-esfand-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "2635b4202e61a8ef02b2462e6711154b5c0fb1c8031b34db3bdcfe5c590fa34e",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "persian-esfand-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "6a8e8b01f91312c80e9e59a9e61f058ebdf1c31b2e5ea8ee543d5b579f0f7773",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "mochigase-nagashibina",
       "engine": "mochigase-nagashibina@1",

@@ -123,6 +123,7 @@ describe("builtInScenes narratives", () => {
       "omamori-cycle",
       "omikuji",
       "paper-pinwheel",
+      "persian-esfand",
       "peruvian-engraved-gourd",
       "phuang-malai",
       "polish-blessing-basket",

@@ -86,6 +86,7 @@ describe("builtInScenes narratives", () => {
       "german-nutcracker",
       "ghanaian-oware",
       "greek-new-year-pomegranate",
+      "hiiragi-iwashi",
       "hongsheng-red-string",
       "hungarian-embroidery-hoop",
       "indian-charkha",

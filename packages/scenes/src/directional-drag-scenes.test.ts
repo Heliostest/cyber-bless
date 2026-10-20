@@ -40,7 +40,7 @@ const DIRECTIONAL_SCENES = [
   ['indian-charkha', 3], ['german-nutcracker', 3], ['mexican-molinillo', 3],
   ['chinese-suanpan', 3],
   ['peruvian-engraved-gourd', 2], ['venetian-glass-bead', 2],
-  ['vietnamese-bamboo-dragonfly', 1], ['indonesian-angklung', 2],
+  ['vietnamese-bamboo-dragonfly', 1],
   ['weifang-paper-kite', 2], ['faroese-wool-knit', 2],
   ['turkish-ebru-paper', 2], ['chinese-shadow-puppet', 2], ['niue-shell-necklace', 2],
   ['polish-paper-cut', 2], ['uzbek-clay-bowl', 2],

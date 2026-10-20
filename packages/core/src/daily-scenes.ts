@@ -444,7 +444,7 @@ export const builtInScenes: BuiltInSceneEntry[] = [
   {
     id: "indonesian-angklung", title: "竹音轻摇", engine: "indonesian-angklung@1", revision: "bundled", manifestUrl: "",
     traditionSlug: "indonesian-angklung",
-    narrative: "印度尼西亚昂格隆用藤条把竹管悬在竹架内，摇动时发出音响，一件乐器通常负责一个音或和弦。合奏依靠彼此配合，也走入学校与社区教学。握住横柄，左摇再回摇，最后轻点长竹管静听，看看竹节、空腔与藤绑。",
+    narrative: "印度尼西亚昂格隆用藤条把竹管悬在竹架内，摇动时发出音响，一件乐器通常负责一个音或和弦。合奏依靠彼此配合，也走入学校与社区教学。按住竹架或竹管自由来回摇动，听竹音跟随手的节奏；想收尾时，轻点「结束体验」。",
   },
   {
     id: "weifang-paper-kite", title: "纸鸢乘风", engine: "weifang-paper-kite@1", revision: "bundled", manifestUrl: "",

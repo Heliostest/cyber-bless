@@ -70,7 +70,7 @@ function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, r
 }
 function step(s: ReturnType<typeof mount>, at: number, run = true) {
   if (at < 2) drag(s, at, ...delta(at), run)
-  else { const p = s.point(targetName(at), anchor(at)); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p) }
+  else s.overlay.querySelector<HTMLButtonElement>('.scene-angklung-finish')!.click()
 }
 function cues(s: ReturnType<typeof mount>) {
   const list: { object: THREE.Object3D; cue: InteractionCue }[] = []
@@ -88,48 +88,207 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
   return { q, object: ray.intersectObjects(meshes, false)[0]?.object }
 }
 
-describe('an original connected two-tube angklung', () => {
-  it.each([false, true])('settles two separately deliberate shake halves and quietly completes once, reduced=%s', reduced => {
-    const s = mount(0, { isReducedMotion: () => reduced }), frame = s.scene.getObjectByName('angklung-frame')!
-    step(s, 0, false); if (!reduced) expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([1]); expect(frame.position.x).toBeCloseTo(-.2, 6)
-    step(s, 1, false); if (!reduced) expect(s.progress).toEqual([1]); s.run(); expect(s.progress).toEqual([1, 2]); expect(frame.position.x).toBe(0)
-    step(s, 2); step(s, 2); s.button.click(); expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
+describe('freely shaking a connected two-tube angklung', () => {
+  function clock() { let now = 0; vi.spyOn(performance, 'now').mockImplementation(() => now); return (ms = 160) => { now += ms } }
+  function finish(s: ReturnType<typeof mount>) { return s.overlay.querySelector<HTMLButtonElement>('.scene-angklung-finish')! }
+  function move(s: ReturnType<typeof mount>, p: [number, number], x: number, y = 0) { event(s.hit, 'pointermove', [p[0] + x, p[1] + y]) }
+  it('plays repeatedly during one continuous grab and finishes only with the button', () => {
+    const tick = clock(), s = mount(), p = s.point('angklung-frame-grip', gripAnchor)
+    event(s.hit, 'pointerdown', p)
+    for (const x of [36, -36, 36, -36, 36, -36]) { tick(); move(s, p, x) }
+    expect(s.haptic).toHaveBeenCalledTimes(6); expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled()
+    event(s.hit, 'pointerup', [p[0] - 36, p[1]]); s.run(10)
+    expect(s.haptic).toHaveBeenCalledTimes(6); expect(s.complete).not.toHaveBeenCalled()
+    finish(s).click(); finish(s).click(); expect(s.progress).toEqual([2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+    expect(s.saveWish).not.toHaveBeenCalled()
   })
-  it.each([0, 1])('starts each keyboard half at its restored pose and reports only after the sway settles at %i', at => {
-    const s = mount(at), frame = s.scene.getObjectByName('angklung-frame')!, x = frame.position.x
-    s.button.click(); expect(frame.position.x).toBe(x); s.instance.update(.025)
-    expect(Math.abs(frame.position.x - x)).toBeGreaterThan(0); expect(Math.abs(frame.position.x - x)).toBeLessThan(.01); expect(s.progress).toEqual([])
-    s.run(); expect(s.progress).toEqual([at + 1]); expect(s.scene.getObjectByName('angklung-tube-long')!.rotation.z).toBe(0)
+  it.each(['angklung-frame-grip', 'angklung-tube-long-body', 'angklung-tube-short-body'])('accepts diagonal free movement from %s', name => {
+    const s = mount(), p = s.point(name, name.includes('grip') ? gripAnchor : quietAnchor)
+    event(s.hit, 'pointerdown', p); move(s, p, 36, -28)
+    expect(s.scene.getObjectByName('angklung-frame')!.position.length()).toBeGreaterThan(.05)
+    expect(s.progress).toEqual([2]); expect(s.haptic).toHaveBeenCalledOnce()
+    finish(s).click(); expect(s.complete).not.toHaveBeenCalled()
+    event(s.hit, 'pointerup', [p[0] + 36, p[1] - 28]); finish(s).click(); expect(s.complete).toHaveBeenCalledOnce()
   })
-  it('uses one quiet pitch and octave only after an accepted action, obeys live sound settings and closes audio once', () => {
-    const frequencies: number[] = [], peaks: number[] = []; let closed = 0, soundEnabled = false
+  it('stays quiet during a hold, tiny jitter, a tap and passive settling', () => {
+    const tick = clock(), s = mount(), p = s.point('angklung-frame-grip', gripAnchor)
+    event(s.hit, 'pointerdown', p); s.run(2)
+    for (let n = 0; n < 30; n++) { tick(); move(s, p, n % 2 ? -1 : 1) }
+    event(s.hit, 'pointerup', p); s.run(3)
+    expect(s.haptic).not.toHaveBeenCalled(); expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled()
+  })
+  it('bounds pose and feedback cadence, including held overtravel', () => {
+    const tick = clock(), s = mount(), p = s.point('angklung-frame-grip', gripAnchor)
+    event(s.hit, 'pointerdown', p); tick(); move(s, p, 200); expect(s.haptic).toHaveBeenCalledOnce()
+    tick(); move(s, p, 400); expect(s.haptic).toHaveBeenCalledOnce()
+    expect(s.scene.getObjectByName('angklung-frame')!.position.x).toBeCloseTo(.28, 8)
+    tick(20); move(s, p, -60); expect(s.haptic).toHaveBeenCalledTimes(2)
+    tick(20); move(s, p, 60); expect(s.haptic).toHaveBeenCalledTimes(2)
+    tick(120); move(s, p, -60); expect(s.haptic).toHaveBeenCalledTimes(3)
+  })
+  it('uses stronger haptics for a faster stroke', () => {
+    const tick = clock(), s = mount(), p = s.point('angklung-frame-grip', gripAnchor)
+    event(s.hit, 'pointerdown', p); tick(); move(s, p, 36)
+    tick(90); move(s, p, 34); tick(20); move(s, p, -36)
+    expect(s.haptic.mock.calls.map(call => call[0])).toEqual(['light', 'medium'])
+  })
+  it('plays its pitch and octave during motion, obeys live audio settings and closes once', () => {
+    const frequencies: number[] = [], gains: number[] = []; let closed = 0, enabled = false
     class AudioBoundary {
       state = 'running'; currentTime = 0; destination = {}
       close() { closed++; return Promise.resolve() }
-      createGain() { return { gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime(n: number) { if (n > .0001) peaks.push(n) } }, connect(next: unknown) { return next } } }
+      createGain() { return { gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime(n: number) { if (n > .0001) gains.push(n) } }, connect(next: unknown) { return next } } }
       createOscillator() { return { type: 'sine', frequency: { setValueAtTime(n: number) { frequencies.push(n) } }, connect(g: { connect(next: unknown): unknown }) { return g }, start() {}, stop() {} } }
     }
     vi.stubGlobal('AudioContext', AudioBoundary)
-    const s = mount(0, { isSoundEnabled: () => soundEnabled })
-    expect(frequencies).toEqual([]); step(s, 0); expect(frequencies).toEqual([])
-    soundEnabled = true; step(s, 1, false); expect(frequencies).toEqual([]); s.run(); expect(frequencies).toEqual([392, 784])
-    const returning = mount(2, { returning: true, isSoundEnabled: () => true }); returning.run(); expect(frequencies).toEqual([392, 784])
-    step(s, 2); expect(frequencies).toEqual([392, 784, 392, 784]); expect(peaks).toEqual([.005, .005])
-    s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
+    const tick = clock(), s = mount(0, { isSoundEnabled: () => enabled }), p = s.point('angklung-frame-grip', gripAnchor)
+    expect(frequencies).toEqual([]); event(s.hit, 'pointerdown', p); tick(); move(s, p, 36); expect(frequencies).toEqual([])
+    enabled = true; tick(); move(s, p, -36); expect(frequencies).toEqual([392, 784])
+    enabled = false; tick(); move(s, p, 36); expect(frequencies).toEqual([392, 784]); expect(s.haptic).toHaveBeenCalledTimes(3)
+    event(s.hit, 'pointerup', [p[0] + 36, p[1]]); s.run(3); expect(frequencies).toEqual([392, 784])
+    expect(gains.every(gain => gain <= .006)).toBe(true); s.instance.dispose(); s.instance.dispose(); expect(closed).toBe(1)
   })
-  it('uses identical final subject transforms for normal motion, reduced motion and silently restored checkpoints', () => {
-    for (const checkpoint of [1, 2, 3]) {
-      const normal = mount(), reduced = mount(0, { isReducedMotion: () => true }), restored = mount(checkpoint)
-      for (let at = 0; at < checkpoint; at++) { step(normal, at); step(reduced, at) }
-      normal.scene.updateMatrixWorld(true); reduced.scene.updateMatrixWorld(true); restored.scene.updateMatrixWorld(true)
-      normal.scene.getObjectByName('angklung-subject')!.traverse(o => {
-        for (const other of [reduced, restored]) {
-          const matrix = other.scene.getObjectByName(o.name)!.matrixWorld
-          o.matrixWorld.elements.forEach((value, i) => expect(value, o.name).toBeCloseTo(matrix.elements[i], 9))
-        }
-      })
-      normal.instance.dispose(); reduced.instance.dispose(); restored.instance.dispose()
+  it('offers repeated keyboard shakes and a separate finish action', () => {
+    const tick = clock(), s = mount()
+    expect(finish(s).disabled).toBe(true); expect(s.button.style.minHeight).toBe('44px'); expect(s.overlay.querySelector('input,form')).toBeNull()
+    s.button.click(); tick(); s.button.click(); tick(); s.button.click()
+    expect(s.haptic).toHaveBeenCalledTimes(3); expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled()
+    finish(s).click(); expect(s.progress).toEqual([2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it('limits repeated keyboard clicks to the same feedback cadence as pointer motion', () => {
+    const tick = clock(), s = mount()
+    for (let n = 0; n < 30; n++) { tick(20); s.button.click() }
+    expect(s.haptic.mock.calls.length).toBeGreaterThan(1); expect(s.haptic.mock.calls.length).toBeLessThanOrEqual(6)
+    expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled()
+  })
+  it('keeps reduced-motion beats and identical final transforms', () => {
+    const tick = clock(), normal = mount(), reduced = mount(0, { isReducedMotion: () => true })
+    for (const s of [normal, reduced]) {
+      const p = s.point('angklung-frame-grip', gripAnchor); event(s.hit, 'pointerdown', p)
+      tick(); move(s, p, 36); tick(); move(s, p, -36); event(s.hit, 'pointerup', [p[0] - 36, p[1]])
+      s.run(5); expect(s.haptic).toHaveBeenCalledTimes(2); expect(s.progress).toEqual([2])
     }
+    normal.scene.updateMatrixWorld(true); reduced.scene.updateMatrixWorld(true)
+    normal.scene.getObjectByName('angklung-subject')!.traverse(o => expect(o.matrixWorld.elements).toEqual(reduced.scene.getObjectByName(o.name)!.matrixWorld.elements))
+  })
+  it.each([false, true])('rebases a held gesture quietly when reduced motion changes from %s', initial => {
+    let reduced = initial; const tick = clock(), s = mount(0, { isReducedMotion: () => reduced }), p = s.point('angklung-frame-grip', gripAnchor)
+    event(s.hit, 'pointerdown', p); tick(); move(s, p, 36); expect(s.haptic).toHaveBeenCalledOnce()
+    reduced = !reduced; tick(); move(s, p, 37); expect(s.haptic).toHaveBeenCalledOnce()
+    tick(); move(s, p, 38); expect(s.haptic).toHaveBeenCalledOnce()
+    tick(); move(s, p, 73); expect(s.haptic).toHaveBeenCalledTimes(2)
+    event(s.hit, 'pointercancel', p); expect(s.scene.getObjectByName('angklung-frame')!.position.toArray()).toEqual([0, 0, 0])
+  })
+  it('stops released inertia immediately when reduced motion is enabled', () => {
+    let reduced = false; const tick = clock(), s = mount(0, { isReducedMotion: () => reduced }), p = s.point('angklung-frame-grip', gripAnchor)
+    event(s.hit, 'pointerdown', p); tick(); move(s, p, 36); event(s.hit, 'pointerup', [p[0] + 36, p[1]])
+    reduced = true; s.instance.update(.025)
+    expect(s.scene.getObjectByName('angklung-frame')!.position.toArray()).toEqual([0, 0, 0]); expect(s.haptic).toHaveBeenCalledOnce()
+  })
+  it('keeps released motion consistent across 30, 60 and 120fps without extra notes', () => {
+    const tick = clock(), states: number[][] = []
+    for (const fps of [30, 60, 120]) {
+      const s = mount(), p = s.point('angklung-frame-grip', gripAnchor); event(s.hit, 'pointerdown', p)
+      tick(); move(s, p, 36, 28); event(s.hit, 'pointerup', [p[0] + 36, p[1] + 28])
+      for (let n = 0; n < fps; n++) s.instance.update(1 / fps)
+      const frame = s.scene.getObjectByName('angklung-frame')!, tube = s.scene.getObjectByName('angklung-tube-long')!
+      states.push([frame.position.x, frame.position.y, tube.rotation.x, tube.rotation.z]); expect(s.haptic).toHaveBeenCalledOnce()
+    }
+    states.forEach(state => state.forEach((value, i) => expect(value).toBeCloseTo(states[0]![i]!, 5)))
+  })
+  it('keeps rattan endpoints and basal contact joined through free motion without allocating geometry', () => {
+    const tick = clock(), s = mount(), original = new Map<THREE.Mesh, THREE.BufferGeometry>()
+    for (const size of ['long', 'short']) for (const side of ['front', 'back']) {
+      const rope = s.scene.getObjectByName(`angklung-lashing-${size}-${side}`) as THREE.Mesh<THREE.TubeGeometry>; original.set(rope, rope.geometry)
+    }
+    const check = () => {
+      s.scene.updateMatrixWorld(true)
+      for (const size of ['long', 'short']) {
+        expect(s.scene.getObjectByName(`angklung-foot-${size}`)!.getWorldPosition(new THREE.Vector3()).distanceTo(s.scene.getObjectByName(`angklung-socket-${size}`)!.getWorldPosition(new THREE.Vector3()))).toBeLessThan(1e-8)
+        for (const side of ['front', 'back']) {
+          const rope = s.scene.getObjectByName(`angklung-lashing-${size}-${side}`) as THREE.Mesh<THREE.TubeGeometry>
+          for (const [t, end] of [[0, 'frame'], [1, 'tube']] as const) expect(rope.localToWorld(rope.geometry.parameters.path.getPoint(t)).distanceTo(s.scene.getObjectByName(`angklung-suspension-${size}-${end}-${side}`)!.getWorldPosition(new THREE.Vector3()))).toBeLessThan(1e-8)
+          expect(rope.geometry).toBe(original.get(rope))
+        }
+      }
+    }
+    const p = s.point('angklung-frame-grip', gripAnchor); event(s.hit, 'pointerdown', p)
+    for (const x of [36, -36, 36]) { tick(); move(s, p, x, -28); check() }
+    event(s.hit, 'pointerup', [p[0] + 36, p[1] - 28]); for (let n = 0; n < 80; n++) { s.instance.update(.025); check() }
+  })
+  it.each([0, 1, 2, 3])('restores legacy checkpoint %i silently on ordinary and returning visits', at => {
+    for (const returning of [false, true]) {
+      const s = mount(at, { returning }); s.run()
+      expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); expect(s.complete).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
+      expect(s.scene.getObjectByName('angklung-frame')!.position.toArray()).toEqual([0, 0, 0])
+      expect(cues(s).map(c => c.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(finish(s).hidden).toBe(at === 3)
+      if (at > 0 && at < 3) { finish(s).click(); expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce() }
+      s.instance.dispose()
+    }
+  })
+  it.each([284, 350, 1280])('keeps all vertices in frame at both movement extremes at %ipx', width => {
+    const tick = clock(), s = mount(0, {}, width), p = s.point('angklung-frame-grip', gripAnchor)
+    event(s.hit, 'pointerdown', p)
+    for (const [x, y] of [[-140, -140], [140, 140]]) {
+      tick(); move(s, p, x, y); s.scene.updateMatrixWorld(true)
+      s.scene.getObjectByName('angklung-subject')!.traverse(o => {
+        const mesh = o as THREE.Mesh; if (!mesh.geometry) return
+        const pos = mesh.geometry.getAttribute('position'), bounds = new THREE.Box3(), v = new THREE.Vector3()
+        for (let i = 0; i < pos.count; i++) bounds.expandByPoint(v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld).project(s.camera))
+        expect(Math.max(Math.abs(bounds.min.x), Math.abs(bounds.max.x), Math.abs(bounds.min.y), Math.abs(bounds.max.y)), o.name).toBeLessThan(.97)
+      })
+    }
+  })
+  it.each(['pause', 'blur', 'pointercancel', 'lostpointercapture'])('cancels an unplayed grab on %s and accepts the next gesture', boundary => {
+    let active = true; const tick = clock(), s = mount(0, { isActive: () => active }), p = s.point('angklung-frame-grip', gripAnchor)
+    event(s.hit, 'pointerdown', p); move(s, p, 6)
+    if (boundary === 'pause') { active = false; s.instance.update(.025) }
+    else if (boundary === 'blur') window.dispatchEvent(new Event('blur'))
+    else event(s.hit, boundary, p)
+    event(s.hit, 'pointerup', p); expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled()
+    expect(s.scene.getObjectByName('angklung-frame')!.position.toArray()).toEqual([0, 0, 0])
+    active = true; window.dispatchEvent(new Event('focus')); s.instance.update(0)
+    event(s.hit, 'pointerdown', p); tick(); move(s, p, 36); expect(s.progress).toEqual([2])
+  })
+  it('freezes released sway while paused and resumes without extra notes', () => {
+    let active = true; const tick = clock(), s = mount(0, { isActive: () => active }), p = s.point('angklung-frame-grip', gripAnchor)
+    event(s.hit, 'pointerdown', p); tick(); move(s, p, 36); event(s.hit, 'pointerup', [p[0] + 36, p[1]])
+    const frame = s.scene.getObjectByName('angklung-frame')!, before = frame.position.toArray(); active = false; s.run(2)
+    expect(frame.position.toArray()).toEqual(before); active = true; s.run(.2); expect(frame.position.toArray()).not.toEqual(before)
+    expect(s.haptic).toHaveBeenCalledOnce(); expect(s.complete).not.toHaveBeenCalled()
+  })
+  it('rejects empty space, release-only input and a target behind an opaque object', () => {
+    const s = mount(), p = s.point('angklung-frame-grip', gripAnchor)
+    event(s.hit, 'pointerdown', [1, 1]); move(s, p, 36); event(s.hit, 'pointerup', p)
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', [p[0] + 60, p[1]])
+    const blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
+    blocker.position.lerpVectors(s.scene.getObjectByName('angklung-frame-grip')!.getWorldPosition(new THREE.Vector3()), s.camera.position, .1); blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker)
+    event(s.hit, 'pointerdown', p); move(s, p, 36); event(s.hit, 'pointerup', p)
+    expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose()
+  })
+  it.each(['nan', 'multitouch'])('rejects %s during a grab', boundary => {
+    const s = mount(), p = s.point('angklung-frame-grip', gripAnchor); event(s.hit, 'pointerdown', p)
+    if (boundary === 'nan') event(s.hit, 'pointermove', [NaN, p[1]])
+    else event(s.hit, 'pointerdown', [1, 1], 2)
+    move(s, p, 36); event(s.hit, 'pointerup', p); event(s.hit, 'pointerup', p, 2)
+    expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled()
+  })
+  it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('blocks synchronous reentry from %s', callback => {
+    let attack = () => {}; const seen: number[] = [], s = mount(0, { [callback]: () => attack(), onProgress: n => { seen.push(n); if (callback === 'onProgress') attack() } })
+    attack = () => { s.button.click(); finish(s).click(); step(s, 0); s.instance.update(100) }
+    s.button.click(); expect(seen).toEqual([2]); expect(s.complete).not.toHaveBeenCalled()
+    finish(s).click(); expect(seen).toEqual([2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('stops stale work after %s pauses or disposes', callback => {
+    for (const mode of ['pause', 'dispose']) {
+      let active = true, destroy = () => {}; const s = mount(0, { isActive: () => active, [callback]: () => { if (mode === 'pause') active = false; else destroy() } })
+      destroy = () => s.instance.dispose(); const before = rendered.render.mock.calls.length
+      s.button.click(); s.instance.update(.1); finish(s)?.click(); expect(s.complete).not.toHaveBeenCalled(); expect(rendered.render.mock.calls.length).toBe(before)
+      s.instance.dispose()
+    }
+  })
+  it.each([NaN, Infinity, -9])('normalizes invalid restoration %s silently', at => {
+    const s = mount(at); expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); s.button.click(); expect(s.progress).toEqual([2])
   })
   it('models two different hollow, front-slotted tubes with opaque curved walls and open upper mouths', () => {
     const s = mount()
@@ -142,147 +301,6 @@ describe('an original connected two-tube angklung', () => {
       expect((body.material as THREE.MeshStandardMaterial).roughness).toBeGreaterThan(.7)
     }
     expect(s.scene.getObjectByName('angklung-table')).toBeUndefined()
-  })
-  it('keeps rattan suspension endpoints and basal contact joined while tubes lag and settle without allocating geometry', () => {
-    const s = mount(), original = new Map<THREE.Mesh, THREE.BufferGeometry>()
-    for (const size of ['long', 'short']) for (const side of ['front', 'back']) {
-      const rope = s.scene.getObjectByName(`angklung-lashing-${size}-${side}`) as THREE.Mesh<THREE.TubeGeometry>; original.set(rope, rope.geometry)
-    }
-    const check = () => {
-      s.scene.updateMatrixWorld(true)
-      for (const size of ['long', 'short']) {
-        const foot = s.scene.getObjectByName(`angklung-foot-${size}`)!, socket = s.scene.getObjectByName(`angklung-socket-${size}`)!
-        expect(foot.getWorldPosition(new THREE.Vector3()).distanceTo(socket.getWorldPosition(new THREE.Vector3()))).toBeLessThan(.00001)
-        for (const side of ['front', 'back']) {
-          const rope = s.scene.getObjectByName(`angklung-lashing-${size}-${side}`) as THREE.Mesh<THREE.TubeGeometry>
-          const a = s.scene.getObjectByName(`angklung-suspension-${size}-frame-${side}`)!, b = s.scene.getObjectByName(`angklung-suspension-${size}-tube-${side}`)!
-          expect(rope.localToWorld(rope.geometry.parameters.path.getPoint(0)).distanceTo(a.getWorldPosition(new THREE.Vector3()))).toBeLessThan(.00001)
-          expect(rope.localToWorld(rope.geometry.parameters.path.getPoint(1)).distanceTo(b.getWorldPosition(new THREE.Vector3()))).toBeLessThan(.00001)
-          expect(rope.geometry).toBe(original.get(rope))
-        }
-      }
-    }
-    check()
-    for (const at of [0, 1]) {
-      const p = s.point(targetName(at), anchor(at)), [dx] = delta(at)
-      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1]]); check()
-      const a = s.scene.getObjectByName('angklung-tube-long')!.rotation.z, b = s.scene.getObjectByName('angklung-tube-short')!.rotation.z
-      expect(Math.abs(a)).toBeGreaterThan(.03); expect(Math.abs(a - b)).toBeGreaterThan(.005)
-      event(s.hit, 'pointermove', [p[0] + dx, p[1]]); event(s.hit, 'pointerup', [p[0] + dx, p[1]])
-      for (let i = 0; i < 45; i++) { s.instance.update(.025); check() }
-      expect(s.scene.getObjectByName('angklung-tube-long')!.rotation.z).toBe(0)
-    }
-  })
-  it('exposes a native 44px action, physical object input and no wish form without entry progress', () => {
-    const s = mount()
-    expect(s.hit).not.toBeNull(); expect(s.button.type).toBe('button'); expect(s.button.style.minWidth).toBe('44px'); expect(s.button.style.minHeight).toBe('44px')
-    expect(s.overlay.querySelector('input,form')).toBeNull(); expect(s.progress).toEqual([]); expect(s.saveWish).not.toHaveBeenCalled()
-  })
-  it.each([0, 1])('moves the selected physical object during drag and restores cancelled input at %i', at => {
-    const s = mount(at), object = s.scene.getObjectByName('angklung-frame')!, home = object.position.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); expect(object.position.distanceTo(home)).toBeGreaterThan(.05); expect(s.progress).toEqual([])
-    event(s.hit, 'pointercancel', p); expect(object.position.distanceTo(home)).toBeLessThan(.00001)
-  })
-  it.each([0, 1])('rejects wrong surfaces, release-only, reverse, short, cross-axis and backtracked gestures at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
-    event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
-    for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx]]) drag(s, at, x, y)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .72, p[1] + dy * .72]); event(s.hit, 'pointerup', [p[0] + dx * .72, p[1] + dy * .72])
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
-    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([0, 1])('rejects backtracking carried only by pointerup and keeps the next deliberate gesture usable at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx] = delta(at)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1]])
-    event(s.hit, 'pointerup', [p[0] + dx * .7, p[1]])
-    expect(s.progress).toEqual([]); expect(s.scene.getObjectByName('angklung-frame')!.position.x).toBeCloseTo(at === 0 ? 0 : -.2, 9)
-    step(s, at); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([0, 1, 2, 3])('silently restores checkpoint %i on ordinary and returning visits', at => {
-    for (const returning of [false, true]) {
-      const s = mount(at, { returning, isReducedMotion: () => true }); s.run()
-      expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 2 ? ['drag'] : at === 2 ? ['tap'] : []); expect(s.button.hidden).toBe(at === 3)
-      expect(s.scene.getObjectByName('angklung-frame')!.position.x).toBeCloseTo(at === 1 ? -.2 : 0, 9)
-      for (let i = at; i < 3; i++) s.button.click()
-      expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
-    }
-  })
-  it.each([284, 350, 1280])('frames every subject vertex and exposes the first opaque cue at width %i', width => {
-    for (const at of [0, 1, 2, 3]) {
-      const s = mount(at, { isReducedMotion: () => true }, width); s.scene.updateMatrixWorld(true)
-      s.scene.getObjectByName('angklung-subject')!.traverse(o => {
-        const m = o as THREE.Mesh; if (!m.geometry) return
-        for (let p: THREE.Object3D | null = o; p; p = p.parent) if (!p.visible) return
-        const pos = m.geometry.getAttribute('position'), bounds = new THREE.Box3(), p = new THREE.Vector3()
-        for (let i = 0; i < pos.count; i++) bounds.expandByPoint(p.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).project(s.camera))
-        expect(Math.max(Math.abs(bounds.min.x), Math.abs(bounds.max.x), Math.abs(bounds.min.y), Math.abs(bounds.max.y)), m.name).toBeLessThan(.97)
-      })
-      for (const { object, cue } of cues(s)) {
-        const hit = first(s, object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))))
-        expect(hit.object?.name, `first opaque cue ${object.name}`).toBe(object.name); expect(Math.abs(hit.q.x)).toBeLessThan(.97); expect(Math.abs(hit.q.y)).toBeLessThan(.97)
-      }
-      if (at < 3) step(s, at); expect(s.progress).toEqual(at < 3 ? [at + 1] : []); s.instance.dispose()
-    }
-  })
-  it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or a stale object pose', kind => {
-    for (const at of [0, 1]) {
-      let active = true; const s = mount(at, { isActive: () => active }), needle = s.scene.getObjectByName('angklung-frame')!, home = needle.position.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
-      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); const frames = rendered.render.mock.calls.length
-      if (kind === 'pause') { active = false; s.instance.update(.05); s.instance.update(.05); expect(rendered.render.mock.calls.length).toBe(frames) }
-      else if (kind === 'blur') window.dispatchEvent(new Event('blur')); else event(s.hit, kind, p)
-      event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run(); expect(s.progress).toEqual([]); expect(needle.position.distanceTo(home)).toBeLessThan(.00001)
-      if (kind === 'blur') window.dispatchEvent(new Event('focus')); active = true; s.instance.update(.025); step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
-    }
-  })
-  it.each([0, 1])('disables input and freezes an accepted transition across pause at %i', at => {
-    let active = true; const s = mount(at, { isActive: () => active }); step(s, at, false); expect(s.button.disabled).toBe(true); expect(s.hit.style.pointerEvents).toBe('none')
-    s.button.click(); for (const dt of [NaN, Infinity, -10, 100000]) s.instance.update(dt); expect(s.progress).toEqual([])
-    active = false; const needle = s.scene.getObjectByName('angklung-frame')!, pose = needle.position.clone(), frames = rendered.render.mock.calls.length
-    s.run(2); expect(rendered.render.mock.calls.length).toBe(frames); expect(needle.position.distanceTo(pose)).toBeLessThan(.00001); expect(s.progress).toEqual([])
-    active = true; s.run(); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([0, 1, 2])('rejects a target behind another opaque object at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
-    blocker.position.lerpVectors(s.scene.getObjectByName(targetName(at))!.localToWorld(new THREE.Vector3(...anchor(at))), s.camera.position, .15)
-    blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker); s.scene.updateMatrixWorld(true); step(s, at); expect(s.progress).toEqual([])
-    blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose(); step(s, at); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([0, 1, 2])('preserves pointer ownership through prepareFeedback input on and outside the hit layer at %i', at => {
-    for (const outside of [false, true]) for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) {
-      let attack = () => {}; const s = mount(at, { isReducedMotion: () => true, prepareFeedback: () => attack() })
-      attack = () => event(outside ? document.body : s.hit, type, [1, 1]); step(s, at); expect(s.progress, `${outside} ${type}`).toEqual([at + 1]); s.instance.dispose()
-    }
-  })
-  it.each([0, 1, 2])('invalidates prepared pointer and keyboard input on every pause/resume boundary at %i', at => {
-    for (const keyboard of [false, true]) {
-      let attack = () => {}, active = true; const s = mount(at, { isReducedMotion: () => true, isActive: () => active, prepareFeedback: () => attack() })
-      attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
-      for (let i = 0; i < 2; i++) { keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([]) }
-      attack = () => {}; keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
-    }
-  })
-  it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('blocks synchronous %s step skipping and update reentry', callback => {
-    let attack = () => {}; const seen: number[] = [], s = mount(0, { isReducedMotion: () => true, [callback]: () => attack(), onProgress: n => { seen.push(n); if (callback === 'onProgress') attack() } })
-    attack = () => { s.button.click(); step(s, 0); step(s, 1); s.instance.update(100) }
-    s.button.click(); expect(seen).toEqual([1]); s.button.click(); expect(seen).toEqual([1, 2]); s.button.click(); expect(seen).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
-  })
-  it('rejects multitouch and tap backtracking', () => {
-    const s = mount(0, { isReducedMotion: () => true }), p = s.point(targetName(0), anchor(0))
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerdown', [1, 1], 2); event(s.hit, 'pointermove', [p[0] - 60, p[1]]); event(s.hit, 'pointerup', [p[0] - 60, p[1]]); event(s.hit, 'pointerup', [1, 1], 2)
-    expect(s.progress).toEqual([]); step(s, 0); step(s, 1)
-    const q = s.point(targetName(2), anchor(2)); event(s.hit, 'pointerdown', q); event(s.hit, 'pointermove', [q[0] + 18, q[1]]); event(s.hit, 'pointerup', q); expect(s.progress).toEqual([1, 2]); step(s, 2); expect(s.progress).toEqual([1, 2, 3])
-  })
-  it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('stops after %s pauses or disposes the scene', callback => {
-    for (const mode of ['pause', 'dispose']) {
-      let active = true, destroy = () => {}; const s = mount(0, { isReducedMotion: () => true, isActive: () => active, [callback]: () => { if (mode === 'pause') active = false; else destroy() } })
-      destroy = () => s.instance.dispose(); const frames = rendered.render.mock.calls.length; s.button.click(); s.instance.update(.1); s.button.click(); expect(rendered.render.mock.calls.length).toBe(frames)
-      if (mode === 'dispose') expect(s.overlay.childElementCount).toBe(0); s.instance.dispose()
-    }
-  })
-  it.each([NaN, Infinity, -9])('normalizes invalid restoration %s without reporting progress', initial => {
-    const s = mount(initial, { isReducedMotion: () => true }); s.instance.start(); s.instance.update(NaN); expect(s.progress).toEqual([]); s.button.click(); expect(s.progress).toEqual([1])
   })
   it('removes all matching pointer callback guards exactly once', () => {
     const added = vi.spyOn(EventTarget.prototype, 'addEventListener'), removed = vi.spyOn(EventTarget.prototype, 'removeEventListener'), windowAdded = vi.spyOn(window, 'addEventListener'), windowRemoved = vi.spyOn(window, 'removeEventListener'), s = mount()

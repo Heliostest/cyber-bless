@@ -8,7 +8,7 @@
 
 ## 本产品的场景呈现
 
-「竹音轻摇」呈现原创竹架、两根不同长度的中空竹管及其悬挂关系。左右轻摇完成一次器物欣赏场景，短音由程序生成。它不演奏传统曲目，不模拟收获、成年或其他仪式，也不声称演示完整演奏方法。
+「竹音轻摇」呈现原创竹架、两根不同长度的中空竹管及其悬挂关系。按住竹架或竹管可自由、反复摇动，程序短音和轻重震动随有效移动触发，最后手动结束。触摸范围、节奏阈值、合成声音、震动与结束按钮均为产品交互安排。它不演奏传统曲目，不模拟收获、成年或其他仪式，也不声称演示完整演奏方法。
 
 ## 手机互动适合度
 
@@ -20,5 +20,5 @@
 
 ## 参考来源
 
-- [ICHCAP / ichLinks · Indonesian Angklung，EE00000088](https://ichlinks.com/archive/elements/elementsV.do?elementsUid=13829896117698900089&ichDomains=UD_05&mode=list&nation=ID&orderCd=E&page=12)，2026-10-19 阅读器物描述、传承、社群及名录年份栏。直接支持竹框／藤绑／竹管结构、摇动或敲框发声、单音或和弦、合奏协作、家庭与学校教学，以及 2010 年列入名录。该记录也提到地方仪式与哲学解释，但本场景不把这些内容当作动作功效或通用象征。
-- [UNESCO · Indonesian Angklung](https://ich.unesco.org/en/RL/indonesian-angklung-00393)，保留原核对记录：2026-10-15 曾用于结构与社会用途概要；2026-10-19 直达及替代入口仍遇人工验证。本轮以可读的 ICHCAP 记录补证，不声称重新通读；未复制音乐、照片或影片。
+- [ICHCAP / ichLinks · Indonesian Angklung，EE00000088](https://ichlinks.com/archive/elements/elementsV.do?elementsUid=13829896117698900089&ichDomains=UD_05&mode=list&nation=ID&orderCd=E&page=12)，2026-10-19 阅读器物描述、传承、社群及名录年份栏；2026-10-20 重新阅读 Description 前两段，核对竹架／藤绑／竹管、摇框发声与八度配置。直接支持器物结构、摇动或敲框发声、单音或和弦、合奏协作、家庭与学校教学，以及 2010 年列入名录。该记录也提到地方仪式与哲学解释，但本场景不把这些内容当作动作功效或通用象征。
+- [UNESCO · Indonesian Angklung](https://ich.unesco.org/en/RL/indonesian-angklung-00393)，保留原核对记录：2026-10-15 曾用于结构与社会用途概要；2026-10-19 直达及替代入口仍遇人工验证，2026-10-20 直达仍返回人工验证及启用 JavaScript 提示。本轮以可读的 ICHCAP 记录补证，不声称重新通读；未复制音乐、照片或影片。

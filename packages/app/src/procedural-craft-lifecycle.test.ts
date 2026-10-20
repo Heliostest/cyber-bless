@@ -78,7 +78,7 @@ it.each([
   ['turkish-ebru-paper', 2, 'ebru-paper-print', 'ebru-paper-print', [0, 1.6, .28], [0, 1.6, .28]],
   ['indonesian-angklung', 0, 'angklung-frame-grip', 'angklung-frame-grip', [0, 0, .10], [0, 0, .10], [-60, 0]],
   ['indonesian-angklung', 1, 'angklung-frame-grip', 'angklung-frame-grip', [0, 0, .10], [0, 0, .10], [60, 0]],
-  ['indonesian-angklung', 2, 'angklung-tube-long-body', 'angklung-tube-long-body', [0, .7, .19], [0, .7, .19]],
+  ['indonesian-angklung', 2, 'angklung-tube-long-body', 'angklung-tube-long-body', [0, .7, .19], [0, .7, .19], [60, 0]],
   ['chinese-shadow-puppet', 0, 'shadow-main-grip', 'shadow-main-grip', [0, 0, .075], [0, 0, .075], [0, -60]],
   ['chinese-shadow-puppet', 1, 'shadow-wing-grip', 'shadow-wing-grip', [0, 0, .075], [0, 0, .075], [60, 0]],
   ['chinese-shadow-puppet', 2, 'shadow-bird-body', 'shadow-bird-body', [.16, 0, .028], [.16, 0, .028]],
@@ -157,7 +157,7 @@ it.each([
   const destination = (from: number[]) => screenDelta ? [from[0] + screenDelta[0], from[1] + screenDelta[1]] : point(target, targetAnchor)
   const from = point(source, sourceAnchor), staleEnd = destination(from)
   pointer(hit,'pointerdown',from)
-  if (screenDelta) pointer(hit,'pointermove',[from[0] + screenDelta[0] * .35, from[1] + screenDelta[1] * .35])
+  if (screenDelta) { const part = id === 'indonesian-angklung' ? .1 : .35; pointer(hit,'pointermove',[from[0] + screenDelta[0] * part, from[1] + screenDelta[1] * part]) }
   ctrl.setActive(false); ctrl.setActive(true)
   pointer(hit,'pointerup',staleEnd); expect(checkpoint).not.toHaveBeenCalled(); expect(variant).not.toHaveBeenCalled()
   const freshFrom = point(source, sourceAnchor), freshEnd = destination(freshFrom)
@@ -167,6 +167,9 @@ it.each([
     expect(variant).toHaveBeenCalledExactlyOnceWith(`bojagi-step-${step + 1}`)
     if (step === 3 || step === 5) expect(checkpoint).toHaveBeenCalledExactlyOnceWith(step === 3 ? 1 : 2)
     else expect(checkpoint).not.toHaveBeenCalled()
+  } else if (id === 'indonesian-angklung') {
+    if (progress < 2) expect(checkpoint).toHaveBeenCalledExactlyOnceWith(2)
+    else { expect(checkpoint).not.toHaveBeenCalled(); host.querySelector<HTMLButtonElement>('.scene-angklung-finish')!.click(); expect(checkpoint).toHaveBeenCalledExactlyOnceWith(3) }
   } else if (id === 'vietnamese-bamboo-dragonfly' && progress === 2) {
     expect(checkpoint).not.toHaveBeenCalled()
     host.querySelector<HTMLButtonElement>('.scene-bow-tap')!.click()

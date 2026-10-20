@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "25038ed34280b72c4f4d81c8ab32fe77e3271af109508ce0c84561abbdef5152",
+  "revision": "03677aa8724b3ed3d59e9a2f8e78000b0cf39539d7436af467f0abe67a8ebef7",
   "scenes": [
+    {
+      "id": "romanian-martisor",
+      "engine": "romanian-martisor@1",
+      "small": {
+        "file": "romanian-martisor-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "8eb59120b891c0c2102c6cbcb46107f9f1bf76cb1af7db04d85c88460b22b1a6",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "romanian-martisor-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "591e7a9d51593c7235bdf285e99901d8f3b903805e5f11dafe62b391eab74818",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "romanian-martisor-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "1733c88cf18d4ec8fef882493d4eda687f23b59c87506227dbdd363b60b5db70",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "sumiyoshi-godairiki",
       "engine": "sumiyoshi-godairiki@1",

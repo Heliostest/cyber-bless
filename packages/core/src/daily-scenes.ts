@@ -81,6 +81,7 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "romanian-martisor",
   "greek-new-year-pomegranate",
   "bonfim-ribbon",
   "chinowa-kuguri",
@@ -197,6 +198,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"romanian-martisor",title:"红白寄春",engine:"romanian-martisor@1",revision:"bundled",manifestUrl:"",traditionSlug:"romanian-martisor",narrative:"罗马尼亚的 Mărțișor 春绳习俗中，红白相绞的细绳曾被佩戴，以寄托好运与健康；佩戴结束后，一些地方把它挂到开花的树枝上。眼前的春绳已解下：向上短拖提起，再向右将绳环套上花枝，最后向下轻放，让流苏垂在花下。" },
   { id:"sumiyoshi-godairiki",title:"三石寄愿",engine:"sumiyoshi-godairiki@1",revision:"bundled",manifestUrl:"",traditionSlug:"sumiyoshi-godairiki",narrative:"在大阪住吉大社的五所御前，人们寻找写有「五」「大」「力」的三颗小石，装入御守袋，寄托祈求神明护佑、实现心愿的信念。眼前的字石散在浅色小石之间：依次向右短拖，拾起五字石、大字石、力字石，让它们越过敞开的袋口，轻轻落入布袋。三石收好，心愿留在心中。" },
   { id:"greek-new-year-pomegranate",title:"破榴迎新",engine:"greek-new-year-pomegranate@1",revision:"bundled",manifestUrl:"",traditionSlug:"greek-new-year-pomegranate",narrative:"在希腊一些家庭，元旦会在家门门槛摔开石榴，让红籽散开，寄托新年一家人的好运、丰足与幸福。眼前的完整石榴已备好：向上短拖拿起，向右移到门槛中央上方，再向下短拖后松手。果皮在石槛上破开，红籽弹落在日光里。" },
   { id:"bonfim-ribbon",title:"栏前结愿",engine:"bonfim-ribbon@1",revision:"bundled",manifestUrl:"",traditionSlug:"bonfim-ribbon",narrative:"在巴西萨尔瓦多，人们把Bonfim彩带系在 Senhor do Bonfim 教堂的栏杆上，以三个结寄托心愿。市文旅介绍，每一结留一个愿望；教堂院长的采访也记述了栏前系带的信念。眼前的彩带已经绕栏，三个松结也已预成：向右短拖收紧第一结，再向左收紧第二结，最后向右收紧第三结。心愿留在心中，彩带轻垂在日光下。" },

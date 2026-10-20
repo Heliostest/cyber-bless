@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'romanian-martisor': {
+    kind: 'blessing', label: '留一份迎春的健康祝愿', optionalWish: false,
+    action: '提起已解下的红白春绳，将绳环套上开花的树枝，轻放流苏，寄托迎春的健康祝愿。',
+  },
   'sumiyoshi-godairiki': {
     kind: 'wish', label: '随三石寄托心愿', optionalWish: false,
     action: '拾起五、大、力三颗字石，逐一放入御守袋，带着向神明祈愿的心意把它们收好。',

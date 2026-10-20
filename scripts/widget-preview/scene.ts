@@ -19,7 +19,8 @@ html,body{margin:0;padding:0;width:${width}px;height:${height}px;overflow:hidden
 #stage>canvas{display:block;position:absolute;inset:0;width:100%;height:100%;opacity:1}
 #stage>.scene-overlay-host{display:none!important}
 </style>`);
-const previewProgress = entry.id === 'crane' || entry.id === 'lantern' ? 1 : 0;
+const completedPreviewProgress: Record<string, number> = {};
+const previewProgress = completedPreviewProgress[entry.id] ?? (entry.id === 'crane' || entry.id === 'lantern' ? 1 : 0);
 let controller: SceneController;
 const options = { active: true, reducedMotion: true, signal: new AbortController().signal,
   ready: () => { (window as any).__widgetReady = true; },

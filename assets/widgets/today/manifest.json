@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "cd20eff68e12b6eb4efae2f5e544242698f9f34011ce7c0c9da70b363916d272",
+  "revision": "25038ed34280b72c4f4d81c8ab32fe77e3271af109508ce0c84561abbdef5152",
   "scenes": [
+    {
+      "id": "sumiyoshi-godairiki",
+      "engine": "sumiyoshi-godairiki@1",
+      "small": {
+        "file": "sumiyoshi-godairiki-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "c76df45d3597d089e553461ca514f6862025dad032beeb214e2668055d8fb15e",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "sumiyoshi-godairiki-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "a2b8ad5d56feef0ca0b95ea5f0d58170774565a427c55a727dad058820b33886",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "sumiyoshi-godairiki-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "7d118d87cbd85a283e07a0f0e2c753204936b57c19d52884c44c022cdb2ed7be",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "greek-new-year-pomegranate",
       "engine": "greek-new-year-pomegranate@1",

@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "2253e3918cb8cc115d94728a029b037d813113e45603d43f651f917edaba6f9e",
+  "revision": "9cc114d6a3334c066b7e205702955ee097ad549613facf097daee565f3592fa2",
   "scenes": [
+    {
+      "id": "hiiragi-iwashi",
+      "engine": "hiiragi-iwashi@1",
+      "small": {
+        "file": "hiiragi-iwashi-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "22e1a0faba1a7dcd53692a2fa3356219e5c1a2a1e6c5743a9c114b33a212ae67",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "hiiragi-iwashi-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "932d3e88336a2b5e8da96f99c81bfbc76e6eaf034f851ec1027094db4ccd486b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "hiiragi-iwashi-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "6b4036777c4740a6bacaad06ff6db2f8ee185a33919efeb878d6966736bc7798",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "tamagushi-offering",
       "engine": "tamagushi-offering@1",

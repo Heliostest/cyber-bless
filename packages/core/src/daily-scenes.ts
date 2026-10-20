@@ -81,6 +81,7 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "hiiragi-iwashi",
   "tamagushi-offering",
   "tibetan-water-bowls",
   "kagami-biraki-sake",
@@ -218,6 +219,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"hiiragi-iwashi",title:"柊鰯守门",engine:"hiiragi-iwashi@1",revision:"bundled",manifestUrl:"",traditionSlug:"hiiragi-iwashi",narrative:"节分时，人们把烤鰯头插在带刺的柊枝上，放在入口，寄托驱邪避厄的心愿。拿起备好的柊枝，将烤鱼头与枝端插合，再安放到门边。" },
   { id:"tamagushi-offering",title:"玉串奉愿",engine:"tamagushi-offering@1",revision:"bundled",manifestUrl:"",traditionSlug:"tamagushi-offering",narrative:"日本神社的祈祷中，参拜者会手持附有纸垂的榊枝，把祈愿寄于玉串，再将枝根朝向神前供放。眼前是奉玉串的一段：先顺时针转正，静心祈愿，再转动枝根，轻轻放到供案上。" },
   { id:"tibetan-water-bowls",title:"清水七供",engine:"tibetan-water-bowls@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-water-bowls",narrative:"在藏传佛教的供水中，人们向佛与菩萨恭敬献上清水，并以利益众生为发心。佛像前的七只铜碗已经各留少量清水：提起水壶，从左到右依次添水，水面停在碗沿下方，再将水壶收回。" },
   { id:"kagami-biraki-sake",title:"开樽祝愿",engine:"kagami-biraki-sake@1",revision:"bundled",manifestUrl:"",traditionSlug:"kagami-biraki-sake",narrative:"在日本清酒的镜开仪式中，人们用木槌叩开预先松好的樽盖，祝愿新的开始顺遂、健康与幸福。眼前的菰卷酒樽已经备好：拿起系着红白带的木槌，轻叩盖板接缝的一端，再把木槌收回樽旁。盖片分开，露出樽中的酒面。" },

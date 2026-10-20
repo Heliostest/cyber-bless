@@ -90,6 +90,7 @@ describe("builtInScenes narratives", () => {
       "ghanaian-oware",
       "greek-new-year-pomegranate",
       "greek-vasilopita",
+      "hiiragi-iwashi",
       "hongsheng-red-string",
       "hungarian-embroidery-hoop",
       "indian-charkha",

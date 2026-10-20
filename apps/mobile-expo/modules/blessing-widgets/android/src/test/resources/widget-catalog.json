@@ -1,5 +1,10 @@
 [
   {
+    "id": "tamagushi-offering",
+    "title": "玉串奉愿",
+    "category": "blessing"
+  },
+  {
     "id": "tibetan-water-bowls",
     "title": "清水七供",
     "category": "blessing"

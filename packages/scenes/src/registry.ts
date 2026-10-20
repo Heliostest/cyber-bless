@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  { id:'tamagushi-offering',title:'玉串奉愿',traditionSlug:'tamagushi-offering',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'tibetan-water-bowls',title:'清水七供',traditionSlug:'tibetan-water-bowls',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'kagami-biraki-sake',title:'开樽祝愿',traditionSlug:'kagami-biraki-sake',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'tibetan-prayer-flags',title:'经幡迎风',traditionSlug:'tibetan-prayer-flags',grade:'C',sensitivity:'低',gestures:['drag'] },
@@ -211,6 +212,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'tamagushi-offering',
   'tibetan-water-bowls',
   'kagami-biraki-sake',
   'tibetan-prayer-flags',
@@ -316,6 +318,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'tamagushi-offering': return import('./tamagushi-offering/index')
     case 'tibetan-water-bowls': return import('./tibetan-water-bowls/index')
     case 'kagami-biraki-sake': return import('./kagami-biraki-sake/index')
     case 'tibetan-prayer-flags': return import('./tibetan-prayer-flags/index')

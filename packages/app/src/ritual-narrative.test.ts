@@ -148,6 +148,7 @@ describe("builtInScenes narratives", () => {
       "st-brigids-cross",
       "sternsinger-house-blessing",
       "sumiyoshi-godairiki",
+      "tamagushi-offering",
       "tanzaku-tanabata",
       "thai-songkran-elders",
       "theravada-water",

@@ -4,6 +4,7 @@ package com.helio.blessingwidgets
 internal object WidgetCatalog {
   val hiddenSceneIds = setOf("japanese-daruma-otoshi", "paper-pinwheel", "chinese-steelyard", "garden-croquet", "welsh-drop-spindle", "scottish-plunge-churn", "irish-bodhran", "french-coffee-mill", "japanese-wagasa", "spanish-castanets", "japanese-shishi-odoshi", "german-jumping-jack", "finnish-kantele", "estonian-village-swing", "french-petanque", "english-hearth-bellows", "mexican-metate", "czech-wooden-ratchet", "puerto-rican-guiro", "valencian-folding-fan", "mexican-tortilla-press", "ghanaian-oware", "chinese-rattle-drum", "chinese-tangram", "malawi-sansi", "japanese-kendama", "russian-matryoshka", "korean-yutnori", "chinese-diabolo", "indian-charkha", "german-nutcracker", "mexican-molinillo", "chinese-suanpan", "mongolian-felt-ger", "peruvian-engraved-gourd", "venetian-glass-bead", "vietnamese-bamboo-dragonfly", "turkish-ebru-paper", "indonesian-angklung", "weifang-paper-kite", "chinese-shadow-puppet", "faroese-wool-knit", "niue-shell-necklace", "polish-paper-cut", "uzbek-clay-bowl", "chinese-woodblock-print", "czech-bead-star", "fijian-woven-fan", "amazigh-woven-rug", "slovak-wire-bird", "hungarian-embroidery-hoop", "andalusian-ceramic-tile", "sicilian-painted-cart", "bai-indigo-cloth", "ndebele-painted-house", "purepecha-copper-bowl", "finnish-birch-basket", "catalan-festival-giant", "breton-banner", "dalarna-wooden-horse", "blang-tea", "minangkabau-spinning-top", "hongsheng-red-string", "czech-pilgrim-journal", "celtic-folk-spring", "theravada-water", "lantern")
   val scenes = mapOf(
+    "tamagushi-offering" to WidgetScene("玉串奉愿", "blessing"),
     "tibetan-water-bowls" to WidgetScene("清水七供", "blessing"),
     "kagami-biraki-sake" to WidgetScene("开樽祝愿", "blessing"),
     "tibetan-prayer-flags" to WidgetScene("经幡迎风", "blessing"),
@@ -136,6 +137,7 @@ internal object WidgetCatalog {
 
   fun cover(key: String?, size: WidgetCoverSize): Int {
     val covers = when (key) {
+      "tamagushi-offering" -> intArrayOf(R.drawable.blessing_preview_tamagushi_offering_small, R.drawable.blessing_preview_tamagushi_offering_medium, R.drawable.blessing_preview_tamagushi_offering_large)
       "tibetan-water-bowls" -> intArrayOf(R.drawable.blessing_preview_tibetan_water_bowls_small, R.drawable.blessing_preview_tibetan_water_bowls_medium, R.drawable.blessing_preview_tibetan_water_bowls_large)
       "kagami-biraki-sake" -> intArrayOf(R.drawable.blessing_preview_kagami_biraki_sake_small, R.drawable.blessing_preview_kagami_biraki_sake_medium, R.drawable.blessing_preview_kagami_biraki_sake_large)
       "tibetan-prayer-flags" -> intArrayOf(R.drawable.blessing_preview_tibetan_prayer_flags_small, R.drawable.blessing_preview_tibetan_prayer_flags_medium, R.drawable.blessing_preview_tibetan_prayer_flags_large)

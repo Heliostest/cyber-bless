@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "a995087bcfac57b85b30055ed99e65db695e20fbc5913f93d31127e1863a385b",
+  "revision": "2253e3918cb8cc115d94728a029b037d813113e45603d43f651f917edaba6f9e",
   "scenes": [
+    {
+      "id": "tamagushi-offering",
+      "engine": "tamagushi-offering@1",
+      "small": {
+        "file": "tamagushi-offering-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "bfc2974d74cefed93112ce8b7b8351c3e06cd324bfc6612c5b2a2e83817955ed",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "tamagushi-offering-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "8723187ca94d7399b74c147c96a4297758970939dd85f640408f4726a1df42e3",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "tamagushi-offering-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "64a5a485b28fa459e698a33465a545c8175e538094e78de16f602b237857557f",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "tibetan-water-bowls",
       "engine": "tibetan-water-bowls@1",

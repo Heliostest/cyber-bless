@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'fgs-buddha-bathing': {
+    kind: 'blessing', label: '浴佛发愿，愿众生离苦', optionalWish: false,
+    action: '提起水杓，向太子像右肩、左肩、右肩依次倾水，发愿止恶行善、度众生。',
+  },
   'balinese-canang-sari': {
     kind: 'blessing', label: '向神明献上感恩', optionalWish: false,
     action: '放入白花，托起盛好供品的叶盘，轻放到田边供台上。',

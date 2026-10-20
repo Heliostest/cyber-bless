@@ -76,6 +76,7 @@ describe("builtInScenes narratives", () => {
       "english-hearth-bellows",
       "estonian-village-swing",
       "faroese-wool-knit",
+      "fgs-buddha-bathing",
       "fijian-woven-fan",
       "finnish-birch-basket",
       "finnish-kantele",

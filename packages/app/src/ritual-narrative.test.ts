@@ -118,6 +118,7 @@ describe("builtInScenes narratives", () => {
       "peruvian-engraved-gourd",
       "phuang-malai",
       "polish-blessing-basket",
+      "polish-oplatek-sharing",
       "polish-paper-cut",
       "puerto-rican-guiro",
       "purepecha-copper-bowl",

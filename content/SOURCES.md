@@ -10,6 +10,7 @@
 
 ## 中国与东亚
 
+- https://kitanotenmangu.or.jp/story/北野天満宮と牛/ （2026-10-23 已读“神のお使い”“撫牛”相关正文；仅支持卧牛石像、神使与抚头祈学问的有限对应，详见 `traditions/kitano-nadeushi.md`。）
 - https://www.britannica.com/topic/Qingming-Festival
 - https://kids.britannica.com/students/article/ancestor-worship/272853
 - https://www.britannica.com/topic/Buddhism/Popular-religious-practices

@@ -16,6 +16,7 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'kitano-nadeushi': { kind: 'blessing', label: '抚额寄愿，愿学业顺遂', optionalWish: false, action: '抬手靠近卧牛额面，轻抚牛额，再收回手掌。' },
   'hiiragi-iwashi': {
     kind: 'blessing', label: '门边安放，寄托护家心意', optionalWish: false,
     action: '拿起柊枝，插合烤鱼头，再安放门边。',

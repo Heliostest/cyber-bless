@@ -135,7 +135,7 @@
 83. [不丹竹巴噶举／宁玛佛教与策秋节祈福](content/traditions/bhutanese-drukpa.md)
 84. [沙捞越伊班传统信仰与加威节祈福](content/traditions/iban-sarawak.md)
 85. [米南加保习俗法与伊斯兰祈福传统](content/traditions/minangkabau-adat.md)
-86. [老挝上座部佛教与灵魂召唤／皮灵祈福](content/traditions/lao-baci-phi.md)
+86. [老挝 Baci／Sou Khuan 系腕祝福](content/traditions/lao-baci-phi.md)
 87. [马龙派天主教会祈福与圣事传统](content/traditions/maronite-church.md)
 88. [帕米尔伊斯玛仪派祈福传统](content/traditions/pamiri-ismaili.md)
 89. [那加传统信仰与祖先礼仪概观](content/traditions/naga-traditional.md)

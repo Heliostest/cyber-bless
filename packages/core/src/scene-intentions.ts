@@ -16,6 +16,7 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'lao-baci-wrist': { kind: 'blessing', label: '为归来的亲友系线祝安', optionalWish: false, action: '拿起白棉线，绕在腕上，轻轻收结，送上平安祝愿。' },
   'hiiragi-iwashi': {
     kind: 'blessing', label: '门边安放，寄托护家心意', optionalWish: false,
     action: '拿起柊枝，插合烤鱼头，再安放门边。',

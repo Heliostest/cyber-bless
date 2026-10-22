@@ -4937,16 +4937,16 @@
   {
     "id": "lao-baci-phi",
     "slug": "lao-baci-phi",
-    "title": "老挝上座部佛教与灵魂召唤／皮灵祈福（Lao Baci / Phi）",
+    "title": "老挝 Baci／Sou Khuan 系腕祝福",
     "grade": "C",
-    "region": "老挝",
-    "lat": 18.0,
-    "lon": 102.475,
-    "year_start": 1300,
+    "region": "老挝琅勃拉邦",
+    "lat": 19.89,
+    "lon": 102.135,
+    "year_start": 2004,
     "year_end": null,
     "date_basis": "ethnographic",
-    "date_note": "老挝礼仪约1300年起有民族志／地方记载可见于时间轴；传统或更早；当代仍实践",
-    "confidence": "medium",
+    "date_note": "2004年UNESCO合作研究记录Baci系腕祝福；此为所核查出版物年份，不表示仪式起源或首次出现",
+    "confidence": "high",
     "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/lao-baci-phi.md"
   },
   {

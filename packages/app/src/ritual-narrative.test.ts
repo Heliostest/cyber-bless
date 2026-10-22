@@ -140,6 +140,7 @@ describe("builtInScenes narratives", () => {
       "korean-yutnori",
       "lam-tsuen-wishing-tree",
       "lantern",
+      "lao-baci-wrist",
       "lithuanian-straw-garden",
       "malawi-sansi",
       "mexican-metate",

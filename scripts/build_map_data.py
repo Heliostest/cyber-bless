@@ -328,7 +328,6 @@ RULES: list[tuple[str, float, float, str, int, str, str]] = [
     ("tujia", 29.0, 109.5, "湘鄂渝黔土家", 1500, "ethnographic", "medium"),
     ("buyei", 25.5, 106.0, "黔南布依", 1500, "ethnographic", "medium"),
     ("she-", 27.0, 119.0, "闽浙畲族", 1500, "ethnographic", "medium"),
-    ("lao-baci", 17.9, 102.6, "老挝", 1300, "ethnographic", "medium"),
     # Indonesia / Philippines
     ("acehnese", 5.5, 95.3, "亚齐", 1500, "ethnographic", "medium"),
     ("ambonese", -3.7, 128.2, "安汶", 1600, "ethnographic", "medium"),

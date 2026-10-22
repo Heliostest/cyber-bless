@@ -29,7 +29,7 @@ describe('App scene availability', () => {
     "kagami-mochi-offering",
     "romanian-martisor",
     "sumiyoshi-godairiki",
-    "udo-undama", "zeniarai-coin-washing", "chinowa-kuguri", "bonfim-ribbon", "greek-new-year-pomegranate", "hiiragi-iwashi",
+    "lao-baci-wrist", "udo-undama", "zeniarai-coin-washing", "chinowa-kuguri", "bonfim-ribbon", "greek-new-year-pomegranate", "hiiragi-iwashi",
     "aland-votive-ship",
     "barcelos-clay-rooster",
     "basque-sunflower",
@@ -66,7 +66,7 @@ describe('App scene availability', () => {
     "woodfish",
     "yeondeunghoe"
 ];
-    expect(builtInScenes).toHaveLength(131);
+    expect(builtInScenes).toHaveLength(132);
     expect(APP_HIDDEN_SCENE_IDS).toHaveLength(67);
     expect(builtInScenes.filter(isSceneVisibleInApp).map(e => e.id).sort()).toEqual(approved.sort());
     expect(new Set(APP_HIDDEN_SCENE_IDS).size).toBe(67);

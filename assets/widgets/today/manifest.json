@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "9e785d87c52b7fcd0c2864216cbb7f1ad1bee12f14f623ea427a51a2c086844c",
+  "revision": "bc04173a6e7ec86963fb53bbf77af0cc20a49c503eaed83d5cbdd3f1ad7f2e07",
   "scenes": [
+    {
+      "id": "lao-baci-wrist",
+      "engine": "lao-baci-wrist@1",
+      "small": {
+        "file": "lao-baci-wrist-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "1b4ec5db22fb4f182c4c1a5907a6561fe0ba90d9d6ebb43a4c7b9ecfdb9add2f",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "lao-baci-wrist-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "36aa496cfd7db5683db1e5f33eabce08cbcf627c659447a33bbc3ff63169bd91",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "lao-baci-wrist-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "cd65dcd6fb0002b2f8bc447a53ba7e13e25ba896414b494a66a07e19c31784ba",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "hiiragi-iwashi",
       "engine": "hiiragi-iwashi@1",

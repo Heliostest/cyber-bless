@@ -3,6 +3,24 @@ import * as THREE from "three";
 import { createCozyEnvironment } from "./cozy-environment";
 
 describe("a scene's surrounding world", () => {
+  it("softens daylight in gouache and restores the existing rig on switching back", async () => {
+    const scene = new THREE.Scene();
+    const sun = new THREE.DirectionalLight(), ambient = new THREE.AmbientLight(), sky = new THREE.HemisphereLight();
+    const lamp = new THREE.PointLight(0xffaa44, .7);
+    scene.add(sun, ambient, sky, lamp);
+    const world = createCozyEnvironment(scene, { id: "dalarna-wooden-horse", loadSky: async () => new THREE.DataTexture() })!;
+    const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
+    world.prepare(renderer);
+    const original = { sun: sun.intensity, ambient: ambient.intensity, sky: sky.intensity };
+    world.prepare(renderer, "gouache");
+    expect(sun.intensity).toBeLessThan(original.sun);
+    expect(sky.intensity).toBeGreaterThan(original.sky);
+    expect(renderer.shadowMap.type).toBe(THREE.PCFSoftShadowMap);
+    expect(lamp.intensity).toBe(.7);
+    world.prepare(renderer, "toon-soft");
+    expect({ sun: sun.intensity, ambient: ambient.intensity, sky: sky.intensity }).toEqual(original);
+    await world.ready; world.dispose();
+  });
   it("leaves a real opening below the clear spring while keeping its bank solid", async () => {
     const scene = new THREE.Scene();
     const world = createCozyEnvironment(scene, { id: "celtic-folk-spring", loadSky: async () => new THREE.DataTexture() })!;

@@ -1,11 +1,12 @@
 import { Icon } from "./art";
 import { useApp } from "./context";
+import { VisualStyleControl } from "./visual-style-menu";
 
 /**
  * Compact feedback controls in the scene header. The glyph and pressed state
  * both reflect the saved setting; unsupported haptics stay out of the header.
  */
-export function FeedbackControls() {
+export function FeedbackControls({ sceneId }: { sceneId?: string } = {}) {
   const { state, dispatch, canHaptic } = useApp();
   return (
     <div className="feedback-controls" role="group" aria-label="体验反馈">
@@ -28,6 +29,7 @@ export function FeedbackControls() {
             <Icon name={state.settings[key] ? key : `${key}-off`} />
           </button>
         ))}
+      <VisualStyleControl key={sceneId} sceneId={sceneId} />
     </div>
   );
 }

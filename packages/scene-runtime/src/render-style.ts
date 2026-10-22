@@ -2,13 +2,25 @@ import * as THREE from "three";
 import { BlendFunction, EffectComposer, EffectPass, OutlineEffect, RenderPass, ToneMappingEffect, ToneMappingMode } from "postprocessing";
 import type { RenderStyleId } from "@wbr/content";
 import { createToonSurfaces } from "./toon-surfaces";
+import { createGouacheEffect } from "./gouache-effect";
+import { createMoebiusEffect } from "./moebius-effect";
+import { MoebiusNormals } from "./moebius-normals";
+import { createHalftoneEffect } from "./halftone-effect";
+import { PixelArtPass } from "./pixel-art-pass";
+import { normalizeStyleParameters, type RenderStyleParameters } from "./render-style-parameters";
+import { AdjustableOutlineEffect } from "./adjustable-outline-effect";
 
-/** Official matte/Toon materials + restrained pmndrs contours; no application-authored GLSL. */
+/** Shared material styling, color treatment and restrained contours. */
 export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera) {
   let active: RenderStyleId = "original";
   let composer: EffectComposer | undefined;
   let outline: OutlineEffect | undefined;
+  let normals: MoebiusNormals | undefined;
   let surfaces: ReturnType<typeof createToonSurfaces> | undefined;
+  let halftone: ReturnType<typeof createHalftoneEffect> | undefined;
+  let pixels: PixelArtPass | undefined;
+  let moebius: ReturnType<typeof createMoebiusEffect> | undefined;
+  let parameters = normalizeStyleParameters(undefined);
   let width = renderer.getSize(new THREE.Vector2()).width;
   let height = renderer.getSize(new THREE.Vector2()).height;
 
@@ -18,7 +30,11 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
     surfaces?.dispose();
     composer = undefined;
     outline = undefined;
+    normals = undefined;
     surfaces = undefined;
+    halftone = undefined;
+    pixels = undefined;
+    moebius = undefined;
   }
 
   function setStyle(id: RenderStyleId) {
@@ -29,21 +45,49 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
 
   function prepare() {
     if (composer || active === "original") return;
-    surfaces = createToonSurfaces(active);
     composer = new EffectComposer(renderer, { frameBufferType: THREE.HalfFloatType, multisampling: 2 });
+    if (active === "pixel-art") {
+      pixels = new PixelArtPass(scene,camera);
+      composer.addPass(pixels);
+      composer.addPass(new EffectPass(camera,new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC })));
+      composer.setSize(width,height);
+      return;
+    }
     composer.addPass(new RenderPass(scene, camera));
-    outline = new OutlineEffect(scene, camera, {
+    if (active === "halftone") {
+      halftone = createHalftoneEffect(renderer.getPixelRatio());
+      composer.addPass(new EffectPass(camera,new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC })));
+      composer.addPass(new EffectPass(camera,halftone));
+      composer.setSize(width,height);
+      return;
+    }
+    surfaces = createToonSurfaces(active);
+    if (active === "moebius") {
+      normals = new MoebiusNormals(scene, camera);
+      composer.addPass(normals);
+      composer.addPass(new EffectPass(camera, new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC })));
+      moebius = createMoebiusEffect(normals.target.texture, normals.target.depthTexture!, renderer.getPixelRatio());
+      composer.addPass(new EffectPass(camera, moebius));
+      composer.setSize(width, height);
+      return;
+    }
+    const Outline = active === "toon-outline" ? AdjustableOutlineEffect : OutlineEffect;
+    outline = new Outline(scene, camera, {
       blendFunction: BlendFunction.ALPHA,
-      visibleEdgeColor: 0x584235,
-      hiddenEdgeColor: 0x584235,
-      edgeStrength: active === "toon-ink" ? 1.8 : 0.45,
+      visibleEdgeColor: active === "toon-outline" ? 0x252832 : active === "gouache" ? 0x53616a : 0x584235,
+      hiddenEdgeColor: active === "toon-outline" ? 0x252832 : active === "gouache" ? 0x53616a : 0x584235,
+      edgeStrength: active === "toon-outline" ? 3.0 : active === "toon-ink" ? 1.8 : active === "gouache" ? 0.22 : 0.45,
       resolutionScale: 1,
       xRay: false,
       multisampling: 2,
     });
     const tone = new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC });
     // Tone-map before compositing ink, so dark lines are not blown out by exposure.
-    composer.addPass(new EffectPass(camera, tone, outline));
+    if (active === "gouache") {
+      composer.addPass(new EffectPass(camera, tone));
+      // Separate pass: the brush samples the tone-mapped image, not HDR input.
+      composer.addPass(new EffectPass(camera, createGouacheEffect(), outline));
+    } else composer.addPass(new EffectPass(camera, tone, outline));
     composer.setSize(width, height);
   }
 
@@ -80,8 +124,24 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
       renderer.toneMapping = THREE.NoToneMapping;
       renderer.debug.onShaderError = () => { failed = true; };
       prepare();
-      frame = surfaces!.apply(scene);
-      outline!.selection.set(frame.outlined);
+      if (active === "toon-outline") {
+        surfaces?.setColorLevels(parameters.toonLevels);
+        outline!.uniforms.get("lineWidth")!.value = parameters.toonWidth;
+      }
+      frame = surfaces?.apply(scene);
+      if (frame) { outline?.selection.set(frame.outlined); normals?.selection.set(frame.outlined); }
+      if (halftone) {
+        halftone.uniforms.get("pixelRatio")!.value = renderer.getPixelRatio();
+        halftone.uniforms.get("pitch")!.value = parameters.halftoneSize;
+        halftone.uniforms.get("strength")!.value = parameters.halftoneStrength;
+      }
+      if (pixels) pixels.pixelSize = parameters.pixelSize;
+      if (moebius) {
+        moebius.uniforms.get("pixelRatio")!.value = renderer.getPixelRatio();
+        moebius.uniforms.get("lineWidth")!.value = parameters.moebiusWidth;
+        moebius.uniforms.get("colorLevels")!.value = parameters.moebiusLevels;
+        moebius.uniforms.get("hatchStrength")!.value = parameters.hatchStrength;
+      }
       renderer.autoClear = false;
       composer!.render();
     } catch {
@@ -107,5 +167,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
     }
   }
 
-  return { setStyle, getStyle: () => active, resize, render, dispose: release };
+  return { setStyle, getStyle: () => active,
+    setParameters(patch: Partial<RenderStyleParameters>) { parameters = normalizeStyleParameters(patch, parameters); },
+    resize, render, dispose: release };
 }

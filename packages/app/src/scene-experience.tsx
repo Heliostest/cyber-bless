@@ -37,6 +37,7 @@ import {
 import { rectOf } from "./reward-flight";
 import { OpeningGuide, OpeningDone } from './opening';
 import { OptionalSceneWish } from './optional-scene-wish';
+import { useSceneVisualPreference } from "./scene-visual-preference";
 
 function ProceduralScene({
   entry,
@@ -61,6 +62,9 @@ function ProceduralScene({
   const host = useRef<HTMLDivElement>(null),
     session = useRef<SceneSession<SceneController>>(null);
   const { active, state, prepareFeedback, haptic } = useApp();
+  useSceneVisualPreference(entry.id, () => {
+    session.current?.setActive(false); session.current?.setActive(active);
+  }, host);
   const callbacks = { checkpoint, saveWish, failed, prepareFeedback, haptic, onVariantChange };
   const latest = useRef({ ...callbacks, state });
   latest.current = { ...callbacks, state };

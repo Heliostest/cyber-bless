@@ -21,6 +21,7 @@ import { InvalidContentError } from "@wbr/content";
 import { SceneLibraryProvider, SceneCatalog, CacheManager } from "./scene-library";
 import { SceneExperience } from "./scene-experience";
 import { FeedbackControls } from "./feedback-controls";
+import { dismissVisualStyleMenu } from "./visual-style-menu";
 import { PageTitle } from "./page-heading";
 import { Opening } from "./opening";
 import { followSystemReducedMotion, initialSettings } from "./reduced-motion";
@@ -109,6 +110,7 @@ export function BlessingApp({
     window.scrollTo?.(0, 0);
   }
   function back() {
+    if (dismissVisualStyleMenu(shell.current)) return;
     setError("");
     setRoutes((old) =>
       old.length > 1 ? old.slice(0, -1) : [{ page: "today" }],
@@ -439,7 +441,8 @@ export function BlessingApp({
                   <Icon name={route.page === "complete" ? "close" : "back"} />
                 </button>
                 {ribbon && <PageTitle title={ribbon} />}
-                {(route.page === "scene" || route.page === "ritual") && <FeedbackControls />}
+                {(route.page === "scene" || route.page === "ritual") && <FeedbackControls
+                  sceneId={route.page === "scene" ? route.entry?.id ?? route.id : state.activeSession?.ritual ?? route.id ?? "woodfish"} />}
               </header>
             )}
             <span

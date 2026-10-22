@@ -9,6 +9,7 @@ import {
 import { pressOutcome } from "./woodfish-input";
 import { useContent, woodfishContent } from "./content";
 import { useApp } from "./context";
+import { useSceneVisualPreference } from "./scene-visual-preference";
 
 export function Woodfish({
   pulse,
@@ -40,6 +41,10 @@ export function Woodfish({
 }) {
   const host = useRef<HTMLDivElement>(null);
   const scene = useRef<SceneSession<WoodfishController> | null>(null);
+  useSceneVisualPreference(sceneId ?? "woodfish", () => {
+    gesture.current = null; suppressClick.current = true;
+    scene.current?.setActive(false); scene.current?.setActive(active);
+  }, host);
   const environment = useContent();
   const { decodeSound } = useApp();
   const latest = useRef({ active, reducedMotion, onImpact });

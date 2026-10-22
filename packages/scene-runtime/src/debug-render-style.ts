@@ -23,16 +23,17 @@ export function createDebugRenderStyle(
       }
     });
   }
-  const registration = debugStyles.register(id, label, (selected) => {
+  const registration = debugStyles.register(id, label, (selected, parameters) => {
     style.setStyle(selected);
+    style.setParameters(parameters);
     invalidate();
-  });
+  }, renderer.domElement.closest?.(".app-shell") ?? undefined);
   if (environment) registration.setDefault("toon-soft");
   return {
     setStyle: registration.setDefault,
     resize: style.resize,
     render() {
-      environment?.prepare(renderer);
+      environment?.prepare(renderer, style.getStyle());
       style.render();
       cues.update();
       registration.report(style.getStyle());

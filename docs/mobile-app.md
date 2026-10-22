@@ -26,6 +26,8 @@ Expo 官方 `expo install --check` 已通过。实际开发 HTML 仍存在原生
 
 ## 持久化与资源
 
+2026-10-23：仪式页的音效、震动旁新增“视觉风格”，通过共用 App 菜单实时切换与微调。设置按仪式存入个人存档的可选 `visualStyles`，经既有 AsyncStorage bridge 保存；默认仍为柔和卡通。它不依赖开发 Shader Lab，也不放开原本隐藏的场景。App 作用域、后台保存、实际离线导出证据及真机待验项见[视觉风格接入评估](research/2026-10-23-app-visual-style.md)。
+
 本应用保存键为 `cyber-bless:personal:v1`；场景缓存元数据使用 `wbr:scene-content:v1:`。Native AsyncStorage 和浏览器 localStorage 各自独立。同一平台更新沿用既有键和 schema v1；旧 v1 存档缺少 sceneRecords 时补空数组。读取失败、JSON 损坏、格式不支持或心愿关联不完整时保留原始记录，禁用未载入状态下的操作，不以空白存档覆盖。写入按队列串行执行，原生写入确认后才显示保存成功；失败有重试。当前没有浏览器到 App 或跨设备导入、开发者账号与云同步。
 
 `scripts/prepare-app-assets.mjs` 是 Web、Expo 本地启动与 `eas-build-post-install` 共用的资源准备入口。两个 public 目录均为生成目录，不能存放手工创作文件。该脚本生成内容清单，复制九个离线文件，并写入长度和 SHA-256 清单 `wbr-assets.json`：两张产品 UI 图片、Noto Sans SC、三个 Nunito 字体、两份 OFL 许可证，以及内嵌贴图的 `woodfish/bundled-v1/woodfish.glb`。木鱼约 1.68 MiB；旧 Blender 源模型和考据图片不上传。其他程序化场景和音效编译进 JS；当前没有外部模型、字体或音频必需下载。

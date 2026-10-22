@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Context, type AppContext } from "./context";
 import { Woodfish } from "./woodfish";
 import { renderUI, settle } from "./dom-test-utils";
+import { createState } from "@wbr/core";
 
 // The 3D scene itself is not under test: a ready session whose mallet strikes.
 const fake = vi.hoisted(() => ({ strike: () => {} }));
@@ -49,7 +50,7 @@ async function renderWoodfish() {
   const ui = renderUI(
     createElement(
       Context.Provider,
-      { value: { decodeSound: vi.fn() } as unknown as AppContext },
+      { value: { state: createState(), decodeSound: vi.fn() } as unknown as AppContext },
       createElement(Woodfish, {
         pulse: 0,
         active: true,

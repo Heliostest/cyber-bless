@@ -18,7 +18,7 @@ export const DEFAULT_PARAMETERS = {
   settleMs: 140,
 };
 export type Asset = { path: string; bytes: number; sha256: string };
-export type RenderStyleId = "original" | "toon-ink" | "toon-soft";
+export type RenderStyleId = "original" | "toon-ink" | "toon-soft" | "gouache" | "moebius" | "toon-outline" | "halftone" | "pixel-art";
 export type Pack = {
   schemaVersion: 1;
   sceneId: "woodfish";
@@ -33,7 +33,7 @@ export type Pack = {
 };
 export function parseRenderStyle(value: unknown): RenderStyleId {
   if (value === undefined) return "original";
-  if (value === "original" || value === "toon-ink" || value === "toon-soft")
+  if (value === "original" || value === "toon-ink" || value === "toon-soft" || value === "gouache" || value === "moebius" || value === "toon-outline" || value === "halftone" || value === "pixel-art")
     return value;
   throw Error("Unsupported render style");
 }

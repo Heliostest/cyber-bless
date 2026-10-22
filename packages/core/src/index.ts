@@ -1,4 +1,5 @@
 import { builtInScenes } from './daily-scenes';
+import { isVisualSceneId, isVisualStyle, normalizeStyleParameters, restoreVisualStyles, type VisualStylePreference, type VisualPreferenceInput } from "./visual-style";
 import { openingCollectibleId, replaceHiddenOpeningScenes, validOpeningSceneIds, validOpeningState, validOpeningDay, type OpeningState } from './opening';
 export { chooseOpeningScenes, openingCollectibleId, openingExclusions } from './opening';
 export type { OpeningState } from './opening';
@@ -108,11 +109,14 @@ export type State = {
   /** Legacy score data retained for save compatibility; new rituals do not add entries. */
   ledger: { id: string; amount: number; at: string }[];
   settings: { sound: boolean; haptics: boolean; reducedMotion: boolean };
+  /** Optional on old saves; each ritual keeps its own cosmetic preference. */
+  visualStyles?: Record<string, VisualStylePreference>;
   /** Held lines of vessel 许愿 walks still waiting on their choice. Absent
    * on saves from before it existed; empty once every choice is settled. */
   vesselDrafts?: Record<string, VesselDraft>;
 };
 export type Action =
+  | ({ type: "scene.visual"; id: string } & ({ style: null } | VisualPreferenceInput))
   | { type: "opening.start"; sceneIds: [string, string, string] }
   | { type: "opening.collect"; sceneId: string; at: string }
   | { type: "opening.finish"; day: string; at: string }
@@ -537,6 +541,20 @@ export function reduce(s: State, a: Action): State {
     }
     case "settings":
       return { ...s, settings: { ...s.settings, [a.key]: a.value } };
+    case "scene.visual": {
+      if (!isVisualSceneId(a.id) || (a.style !== null && !isVisualStyle(a.style))) throw Error("这个视觉风格暂不可用");
+      const visualStyles = { ...s.visualStyles };
+      if (a.style === null) {
+        if (!visualStyles[a.id]) return s;
+        delete visualStyles[a.id];
+      } else {
+        const previous = visualStyles[a.id];
+        const preference = { style: a.style, parameters: normalizeStyleParameters(a.parameters, previous?.parameters) };
+        if (JSON.stringify(previous) === JSON.stringify(preference)) return s;
+        visualStyles[a.id] = preference;
+      }
+      return { ...s, visualStyles };
+    }
   }
 }
 export function localDay(date = new Date()): string {
@@ -674,6 +692,7 @@ export function restore(
         Object.entries(v.vesselDrafts).every(([key, d]) => id(key) && draft(d))));
   if (!valid) throw new Error("存档格式不受支持或已损坏，原数据已保留");
   const s = v as State;
+  if (s.visualStyles !== undefined) s.visualStyles = restoreVisualStyles(s.visualStyles);
   s.sceneRecords ??= [];
   if (s.opening && s.opening.status !== 'new' &&
       s.opening.sceneIds.slice(0, s.opening.completed).some((sceneId, i) =>

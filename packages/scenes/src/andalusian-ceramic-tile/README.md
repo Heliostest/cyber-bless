@@ -28,3 +28,11 @@ ID `andalusian-ceramic-tile`，导出 `createAndalusianCeramicTile`。C级、中
 核查重点：历史窑炉年代不是当地陶瓷起源；蓝白图案和装框陈列无特定祈愿寓意，补装花砖不得写成绘制釉色。
 
 逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#andalusian-ceramic-tile)。
+
+## 2026-10-22 共享渲染更新
+
+保留可选水粉插画：柔和明暗、轻笔触与细轮廓；默认仍为柔和卡通，需在 Shader Lab 手动选择水粉。器物造型、纹样与材料身份、动作、完成条件、介绍及来源绑定均未改变；这是产品美术表达，不是传统风格主张。已读技术参考、既有文化核查索引与验证见[共享渲染记录](../../../../docs/research/2026-10-22-gouache-rendering.md)。
+
+## 2026-10-22 Moebius 可选预览
+
+Shader Lab 加入 Moebius 手绘漫画，可手动切换细墨线、色块与暗部排线。默认仍为柔和卡通，器物、纹样、材料身份、动作、介绍与文化来源保持。技术参考、产品表达边界和验证见[Moebius 渲染记录](../../../../docs/research/2026-10-22-moebius-rendering.md)。

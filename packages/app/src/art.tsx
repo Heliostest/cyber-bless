@@ -137,6 +137,7 @@ export function Icon({ name }: { name: string }) {
       </>
     ),
     sound: <path d="M3 9h4l5-5v16l-5-5H3zM16 8q5 4 0 8M19 4q9 8 0 16" />,
+    visual: <><path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1.5-3.3 1.4 1.4 0 0 1 1.1-2.3H17A4 4 0 0 0 21 11a9 9 0 0 0-9-8Z" /><circle cx="7" cy="11" r=".8" /><circle cx="10" cy="7" r=".8" /><circle cx="15" cy="7" r=".8" /><circle cx="17" cy="11" r=".8" /></>,
     "sound-off": <path d="M3 9h4l5-5v16l-5-5H3zM17 9l5 6M22 9l-5 6" />,
     haptics: (
       <>

@@ -55,3 +55,7 @@ Browser appearance approval belongs to the root integration's final production s
 简化边界：自动拉壁几何、木轮外形和短时长是产品缩略。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#uzbek-clay-bowl)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+## 2026-10-22 共享渲染更新
+
+保留可选水粉插画：柔和明暗、轻笔触与细轮廓；默认仍为柔和卡通，需在 Shader Lab 手动选择水粉。器物造型、纹样与材料身份、动作、完成条件、介绍及来源绑定均未改变；这是产品美术表达，不是传统风格主张。已读技术参考、既有文化核查索引与验证见[共享渲染记录](../../../../docs/research/2026-10-22-gouache-rendering.md)。

@@ -40,3 +40,7 @@ The focused suite uses actual Three.js geometry, raycasting, interaction cues an
 核查重点：陶器总体历史不能当公鸡造型同样古老；本轮撤回旧 UI 对当前陶鸡“寓意好运”的泛化，主代理同步将 quiet/returning/done 收窄到叶芽彩纹、彩绘陈设及手作纹样。胸前叶芽和台座无传统仪式依据。市政府公鸡页失访，地方市方“Retratos do Galo no Comércio Local”PDF仅检索可见、直读超时/连接重置，不作为好运寓意已读证据；保留工艺与地方标志关联。
 
 逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#barcelos-clay-rooster)。
+
+## 2026-10-23 可选视觉风格
+
+正式 App 在仪式音效／震动旁加入视觉风格菜单，按当前仪式保存可选滤镜与参数，默认仍为柔和卡通。器形、材料身份、纹样、动作、介绍和文化来源保持；这是用户可逆的产品显示偏好。实际入口、保存、交互与桌面／手机视口验证见 [App 视觉风格记录](../../../../docs/research/2026-10-23-app-visual-style.md)。

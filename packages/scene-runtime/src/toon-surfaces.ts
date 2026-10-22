@@ -14,7 +14,8 @@ type Entry = { original: THREE.Material | THREE.Material[]; styled: THREE.Materi
 
 export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
   // Standard Three.js gradient-map configuration, not a custom shader.
-  const values = style === "toon-ink" ? [85, 165, 235] : Array.from({ length: 128 }, (_, i) => {
+  const crisp = style === "toon-ink" || style === "toon-outline";
+  const values = style === "toon-outline" ? [55, 145, 245] : style === "toon-ink" ? [85, 165, 235] : Array.from({ length: 128 }, (_, i) => {
     const x = i / 127, bands = [60, 110, 160, 204, 238];
     let value = bands[0];
     for (let j = 1; j < bands.length; j++) {
@@ -25,15 +26,16 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
     return Math.round(value);
   });
   const gradient = new THREE.DataTexture(new Uint8Array(values), values.length, 1, THREE.RedFormat);
-  gradient.minFilter = gradient.magFilter = style === "toon-ink" ? THREE.NearestFilter : THREE.LinearFilter;
+  gradient.minFilter = gradient.magFilter = crisp ? THREE.NearestFilter : THREE.LinearFilter;
   gradient.generateMipmaps = false;
   gradient.needsUpdate = true;
   const cache = new Map<THREE.Mesh, Entry>();
+  let colorLevels = 3;
 
   function adapt(source: THREE.Material, hint: ToonSurface, owned: Painted[], adapted: Adapted[]) {
     if (!(source instanceof THREE.MeshStandardMaterial || source instanceof THREE.MeshPhongMaterial || source instanceof THREE.MeshLambertMaterial) || source.transparent) return source;
     const pbr = source instanceof THREE.MeshStandardMaterial ? source : undefined;
-    const keepFinish = style === "toon-soft" && (source instanceof THREE.MeshPhysicalMaterial ||
+    const keepFinish = style !== "toon-ink" && (source instanceof THREE.MeshPhysicalMaterial ||
       (hint.metalness ?? pbr?.metalness ?? 0) >= 0.3 || (hint.roughness ?? pbr?.roughness ?? 1) <= 0.4);
     const painted = {
       color: hint.color ?? source.color,
@@ -71,7 +73,7 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
       toon = pbr?.clone() ?? new THREE.MeshStandardMaterial();
       toon.setValues({ ...painted, roughness: hint.roughness ?? pbr?.roughness ?? 0.35,
         metalness: hint.metalness ?? pbr?.metalness ?? 0 });
-    } else if (style === "toon-soft" && hint.shading === "smooth") {
+    } else if (style === "gouache" || (style === "toon-soft" && hint.shading === "smooth")) {
       toon = new THREE.MeshStandardMaterial({ ...painted, roughness: 0.94, metalness: 0, envMapIntensity: 0.45 });
     } else toon = new THREE.MeshToonMaterial({ ...painted, gradientMap: gradient });
     toon.name = `${source.name || "surface"} / ${style}`;
@@ -81,6 +83,21 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
   }
 
   return {
+    setColorLevels(value: number) {
+      if (style !== "toon-outline" || !Number.isFinite(value)) return;
+      const count = THREE.MathUtils.clamp(Math.round(value), 2, 8);
+      if (count === colorLevels) return;
+      colorLevels = count;
+      const bands = [55, 145, 245];
+      const data = Uint8Array.from({ length: count }, (_, i) => {
+        const position = i / (count-1)*2, low = Math.min(Math.floor(position), 1);
+        return Math.round(THREE.MathUtils.lerp(bands[low], bands[low+1], position-low));
+      });
+      // Reupload the same map at its new dimensions; cached materials keep it.
+      gradient.dispose();
+      gradient.image = { data, width: count, height: 1 };
+      gradient.needsUpdate = true;
+    },
     apply(scene: THREE.Scene) {
       const live = new Set<THREE.Mesh>();
       const swaps: [THREE.Mesh, Entry][] = [];

@@ -3,6 +3,54 @@ import * as THREE from "three";
 import { createToonSurfaces } from "./toon-surfaces";
 
 describe("official toon material adaptation", () => {
+  it("updates outline shade counts while retaining the cached material, texture identity and authored map", () => {
+    const map = new THREE.Texture(), source = new THREE.MeshStandardMaterial({ map, roughness: .8 });
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(), source), scene = new THREE.Scene(); scene.add(mesh);
+    const surfaces = createToonSurfaces("toon-outline"), first = surfaces.apply(scene);
+    const painted = mesh.material as THREE.MeshToonMaterial, gradient = painted.gradientMap!;
+    first.restore();
+    surfaces.setColorLevels(6);
+    const next = surfaces.apply(scene);
+    expect(mesh.material).toBe(painted); expect(painted.gradientMap).toBe(gradient);
+    expect(gradient.image.width).toBe(6); expect(new Set(gradient.image.data).size).toBe(6);
+    expect(painted.map).toBe(map);
+    next.restore(); surfaces.setColorLevels(3);
+    expect([...gradient.image.data]).toEqual([55, 145, 245]);
+    expect(mesh.material).toBe(source); surfaces.dispose(); source.dispose(); map.dispose(); mesh.geometry.dispose();
+  });
+  it("uses three crisp shade bands in cartoon outlines while retaining the authored map", () => {
+    const map = new THREE.Texture();
+    const original = new THREE.MeshStandardMaterial({ color: 0xbd5e4d, roughness: .8, map });
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(), original);
+    const scene = new THREE.Scene(); scene.add(mesh);
+    const surfaces = createToonSurfaces("toon-outline"), frame = surfaces.apply(scene);
+    const painted = mesh.material as THREE.MeshToonMaterial;
+    expect(painted.isMeshToonMaterial).toBe(true);
+    expect(painted.gradientMap!.image.width).toBe(3);
+    expect(painted.gradientMap!.magFilter).toBe(THREE.NearestFilter);
+    expect(painted.map).toBe(map);
+    frame.restore(); surfaces.dispose();
+    expect(mesh.material).toBe(original);
+  });
+  it("keeps painted markings and a continuous matte volume in gouache, with source colors animated intact", () => {
+    const map = new THREE.Texture();
+    const original = new THREE.MeshStandardMaterial({ color: 0xbd5e4d, map, roughness: 0.8 });
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(), original);
+    const scene = new THREE.Scene(); scene.add(mesh);
+    const surfaces = createToonSurfaces("gouache");
+    const frame = surfaces.apply(scene);
+    const painted = mesh.material as THREE.MeshStandardMaterial;
+    expect(painted.isMeshStandardMaterial).toBe(true);
+    expect(painted.map).toBe(map);
+    expect(painted.roughness).toBeGreaterThan(0.9);
+    frame.restore();
+    original.color.set(0x416c9b);
+    const next = surfaces.apply(scene);
+    expect(painted.color.getHex()).toBe(0x416c9b);
+    next.restore(); surfaces.dispose();
+    expect(mesh.material).toBe(original);
+    expect(original.map).toBe(map);
+  });
   it.each([true, false])("preserves a glossy nonmetal glaze at the finish boundary (hint: %s)", (hinted) => {
     const original = new THREE.MeshStandardMaterial({ color: 0x416c9b, roughness: hinted ? 0.32 : 0.4, metalness: 0 });
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(), original);
@@ -17,11 +65,11 @@ describe("official toon material adaptation", () => {
     expect(mesh.material).toBe(original);
     expect(original.roughness).toBe(hinted ? 0.32 : 0.4);
   });
-  it("keeps clearcoat and authored metal finishes in soft toon instead of flattening them", () => {
+  it.each(["toon-soft", "gouache", "moebius", "toon-outline"] as const)("keeps clearcoat and authored metal finishes in %s instead of flattening them", style => {
     const original = new THREE.MeshPhysicalMaterial({ color: 0x739daf, roughness: 0.24, metalness: 0.46, clearcoat: 0.8, clearcoatRoughness: 0.13 });
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(), original);
     const scene = new THREE.Scene(); scene.add(mesh);
-    const surfaces = createToonSurfaces("toon-soft"), frame = surfaces.apply(scene);
+    const surfaces = createToonSurfaces(style), frame = surfaces.apply(scene);
     const finish = mesh.material as THREE.MeshPhysicalMaterial;
     expect(finish.isMeshPhysicalMaterial).toBe(true);
     expect(finish.clearcoat).toBe(0.8);

@@ -1,5 +1,7 @@
 # Scene render styles
 
+The production App exposes **视觉风格** beside sound/haptics on supported ritual pages. Preferences and parameters persist per ritual through the normal web/native host save; defaults remain unchanged. The existing live registry scopes production owners and renderers to each App shell, while keeping browser debug overrides separate. No second scene or canvas is created. See [App integration and validation](research/2026-10-23-app-visual-style.md).
+
 All procedural scenes use the shared renderer in `packages/scene-runtime/src/render-style.ts`. The default `CEL_STYLE` is `toon-soft`; the cozy environment also selects that default. `packages/app/src/render-style.ts` is a re-export, not a second renderer.
 
 ## Presets
@@ -31,7 +33,11 @@ Materials are temporarily swapped only while rendering, cached per mesh and rest
 
 ## Compare and verify
 
-Open the Web app with `?debug=1`, enter a scene, then open **SHADER LAB**. Switching among the three presets affects the same canvas. Overrides are local to the browser and active only in debug mode; **恢复内容默认** clears an override.
+Open the Web app with `?debug=1`, enter a scene, then open **SHADER LAB**. Switching among the registered presets affects the same canvas. Overrides are local to the browser and active only in debug mode; **恢复内容默认** clears an override.
+
+Optional `halftone` exposes dot size (2–16 CSS px) and strength (0–1); `pixel-art` exposes pixel size (1–12 CSS px). Defaults remain 4 / 0.58 / 3. Controls apply live without rebuilding the composer, and pixel targets resize only when necessary. Validated parameters persist per scene in a separate debug storage key, preserving the existing preset format and content defaults. See [Shader Lab controls](debug-overlay.md) and [implementation review](research/2026-10-22-halftone-pixel-rendering.md).
+
+`moebius` additionally exposes line sampling width (0.25–3 CSS px, default 0.85), luminance levels (2–12, default 8), and hatching strength (0–1, default 0.5). `toon-outline` exposes relative mask-sampling width (0.5–4×, default 1) and diffuse shade bands (2–8, default 3). Its 1× path preserves the original pmndrs edge texture; other widths sample the existing depth-tested mask, with the stock visible/hidden classification. Band changes reupload the same gradient texture and retain cached material references. These controls update existing resources and preserve all content defaults.
 
 Before accepting a shared style change, compare a rounded diffuse object, flat paper/wood, a physical or metallic finish, and a lit night scene. Check the actual style label for fallback, source material restoration, transparent effects, interaction cues, mobile framing, and GPU cleanup on exit. Offline mobile export is a separate gate from device rendering; headless Chromium is not evidence of phone GPU performance.
 

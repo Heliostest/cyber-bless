@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import type { RenderStyleId } from "@wbr/content";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import nature from "./nature-kit.data.json";
 import { gardenLayout, type GardenKind } from "./garden-layout";
@@ -403,7 +404,8 @@ export function createCozyEnvironment(
   const meshes = new WeakSet<THREE.Mesh>();
   return {
     kind, ready,
-    prepare(renderer: THREE.WebGLRenderer) {
+    prepare(renderer: THREE.WebGLRenderer, style: RenderStyleId = "toon-soft") {
+      const paintedDay = style === "gouache" && !night;
       const now = performance.now() * .001, motion = readSceneMotion(renderer.domElement);
       if (motion.reducedMotion) windTime = 0;
       else if (motion.active && lastFrame) windTime += Math.min(.05, Math.max(0, now - lastFrame));
@@ -412,7 +414,7 @@ export function createCozyEnvironment(
       treeCanopies?.update(windTime, motion.reducedMotion);
       let keySeen = false;
       renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = night ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+      renderer.shadowMap.type = night || paintedDay ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
       scene.traverse(object => {
         if (object instanceof THREE.Mesh && !meshes.has(object)) {
           meshes.add(object);
@@ -426,16 +428,16 @@ export function createCozyEnvironment(
         if (first) lights.add(object);
         if (object instanceof THREE.AmbientLight) {
           object.color.set(warmLight ? 0xffe0b9 : night ? 0xa8bddb : 0xfff8ee);
-          object.intensity = warmLight ? 0.35 : night ? 0.24 : 0.18;
+          object.intensity = warmLight ? 0.35 : night ? 0.24 : paintedDay ? 0.26 : 0.18;
         } else if (object instanceof THREE.HemisphereLight) {
           object.color.set(night ? 0xaec9e1 : 0xd8eeff);
           object.groundColor.set(warmLight ? 0x988568 : night ? 0x536971 : 0xb9ad8b);
-          object.intensity = warmLight ? 0.6 : night ? 0.48 : 0.6;
+          object.intensity = warmLight ? 0.6 : night ? 0.48 : paintedDay ? 1.0 : 0.6;
         } else if (object instanceof THREE.DirectionalLight) {
           const key = !keySeen;
           keySeen = true;
           object.color.set(warmLight && key ? 0xffd19a : night ? 0xd6e5fb : key ? 0xfff4e5 : 0xecf4ff);
-          object.intensity = warmLight && key ? 1.15 : night ? (key ? 0.65 : 0.2) : (key ? 3.8 : 0.1);
+          object.intensity = warmLight && key ? 1.15 : night ? (key ? 0.65 : 0.2) : (key ? (paintedDay ? 2.9 : 3.8) : 0.1);
           // A common high side sun makes shapes and contact shadows legible.
           // Keep authored night directions and animated point lights intact.
           if (key && !night) object.position.set(-6, 9, 5);

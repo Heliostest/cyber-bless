@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "9e785d87c52b7fcd0c2864216cbb7f1ad1bee12f14f623ea427a51a2c086844c",
+  "revision": "c0da07aa25c35e63ee89aaec6a0c51749faad1b1cb1eb4e99bcca45964874197",
   "scenes": [
+    {
+      "id": "yusheng-lohei",
+      "engine": "yusheng-lohei@1",
+      "small": {
+        "file": "yusheng-lohei-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "44e3f49705050def30d0465c936671ce0453dcb5e9924d63c5949149bb823738",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "yusheng-lohei-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "14ed93454c6607ccea91d31dc8a1d3a13576a5404c103ba22431593340a2ec63",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "yusheng-lohei-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "ec55f29a78da962ed48276fc41e7df4aae80175f0dfbbd72bf6b72f7b2c8a66b",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
+      }
+    },
     {
       "id": "hiiragi-iwashi",
       "engine": "hiiragi-iwashi@1",

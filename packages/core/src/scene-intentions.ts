@@ -16,6 +16,10 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'yusheng-lohei': {
+    kind: 'blessing', label: '相聚捞起，祝愿新年丰足顺遂', optionalWish: false,
+    action: '将筷尖探入鱼生，和同桌一起捞起、落回盘中，互道新年祝愿。',
+  },
   'hiiragi-iwashi': {
     kind: 'blessing', label: '门边安放，寄托护家心意', optionalWish: false,
     action: '拿起柊枝，插合烤鱼头，再安放门边。',

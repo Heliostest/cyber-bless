@@ -85,6 +85,7 @@ describe("scene placement", () => {
     ["tibetan-water-bowls", "tibetan-water-bowls", false],
     ["kagami-biraki-sake", "kagami-biraki-sake", false],
     ["tibetan-prayer-flags", "tibetan-prayer-flags", false],
+    ["yusheng-lohei", "yusheng-lohei", false],
     ["rosh-hashanah-apple-honey", "rosh-hashanah-apple-honey", false],
     ["thai-songkran-elders", "thai-songkran-elders", false],
     ["kameido-usokae", "kameido-usokae", false],
@@ -187,6 +188,7 @@ describe("scene placement", () => {
   });
   it("splits blessing vs wish scene ids", () => {
     expect([...BLESSING_SCENE_IDS]).toEqual([
+      "yusheng-lohei",
       "hiiragi-iwashi",
       "tamagushi-offering",
       "tibetan-water-bowls",

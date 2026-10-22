@@ -4200,3 +4200,7 @@
 - https://asset.library.wisc.edu/1711.dl/VUURGDUITIQNX84/R/file-c2529.pdf
 - 2026-10-20实际下载并读正文；支持石堆、顺时针三圈、地面取石添石及向山岳/湖泊祈护。网页相关页超时另记；不作为已读证据。
 - 产品边界与逐项来源见 content/traditions/mongolian-ovoo.md、docs/research/2026-10-20-mongolian-ovoo.md。
+
+## 鱼生捞起（2026-10-23）
+
+新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。

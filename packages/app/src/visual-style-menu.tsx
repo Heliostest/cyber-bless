@@ -137,8 +137,8 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
 
   return <div className={`visual-style-backdrop${previewing ? " is-previewing" : ""}`} ref={backdrop} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="visual-style-menu" role="dialog" aria-modal="true" aria-label="视觉风格" ref={panel}>
-      <header className="visual-style-heading" hidden={previewing}><div><h2>视觉风格</h2><p>为「{scene.label}」选一种喜欢的画面</p></div>
-        <button type="button" aria-label="关闭视觉风格" onClick={onClose}><Icon name="close" /></button></header>
+      <header className="visual-style-heading" hidden={previewing}><div><h2><span className="visual-style-emblem" aria-hidden="true"><Icon name="visual" /></span>视觉风格</h2><p>为「{scene.label}」选一种喜欢的画面</p></div>
+        <button type="button" className="round-button" aria-label="关闭视觉风格" onClick={onClose}><Icon name="close" /></button></header>
       <div className="visual-style-body" hidden={previewing}>
         <div className="visual-style-grid" role="group" aria-label="选择视觉风格" hidden={tuning && controls.length > 0}>
           {order.map(id => {
@@ -161,7 +161,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
                 onChange={event => apply({ style: selected, parameters: normalizeStyleParameters({ [control.key]: Number(event.target.value) }, current.current?.parameters) }, true)} />
             </div>;
           })}
-          <button type="button" className="visual-style-reset-parameters" onClick={() => {
+          <button type="button" className="small-button visual-style-reset-parameters" onClick={() => {
             const next = { ...parameters };
             for (const control of controls) next[control.key] = DEFAULT_STYLE_PARAMETERS[control.key];
             apply({ style: selected, parameters: next });
@@ -169,9 +169,9 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
         </details>}
         <p className="visual-style-status" role="status">{scene.actual !== selected ? `这个效果暂时无法显示，已使用${actualLabel}。` : "只记住这个仪式的选择，随时可以更换。"}</p>
       </div>
-      <footer><button type="button" onClick={() => apply(null)} disabled={choice === null} hidden={previewing}>恢复默认</button>
-        <button type="button" aria-pressed={previewing} onClick={() => setPreviewing(value => !value)}>{previewing ? "继续调整" : "看画面"}</button>
-        <button type="button" className="visual-style-done" onClick={onClose}>完成</button></footer>
+      <footer><button type="button" className="button outline" onClick={() => apply(null)} disabled={choice === null} hidden={previewing}>恢复默认</button>
+        <button type="button" className="button secondary" aria-pressed={previewing} onClick={() => setPreviewing(value => !value)}>{previewing ? "继续调整" : "看画面"}</button>
+        <button type="button" className="button primary visual-style-done" onClick={onClose}>完成</button></footer>
     </section>
   </div>;
 }

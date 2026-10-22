@@ -16,6 +16,7 @@ export type SceneIntention = Readonly<{
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
+  'finnish-virpominen': { kind: 'blessing', label: '挥枝相祝，愿健康顺遂', optionalWish: false, action: '挥柳枝送祝愿，递给主人，收下篮中谢礼。' },
   'hiiragi-iwashi': {
     kind: 'blessing', label: '门边安放，寄托护家心意', optionalWish: false,
     action: '拿起柊枝，插合烤鱼头，再安放门边。',

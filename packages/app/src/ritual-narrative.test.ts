@@ -111,6 +111,7 @@ describe("builtInScenes narratives", () => {
       "fijian-woven-fan",
       "finnish-birch-basket",
       "finnish-kantele",
+      "finnish-virpominen",
       "floating-lantern-loy-krathong",
       "french-coffee-mill",
       "french-petanque",

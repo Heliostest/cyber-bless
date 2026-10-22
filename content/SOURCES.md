@@ -4,6 +4,7 @@
 
 ## 通识与机构
 
+- https://finland.fi/life-society/why-finnish-children-dress-up-as-witches-at-easter/ （2026-10-23已读当代埃斯波邻里挥柳枝祝福与入篮答谢现场报道；版本差异另见 `traditions/finnish-virpominen.md`。）
 - https://creativecommons.org/licenses/by/4.0/legalcode.txt
 - https://www.britannica.com/
 - https://ich.unesco.org/

@@ -83,6 +83,7 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "finnish-virpominen",
   "hiiragi-iwashi",
   "tamagushi-offering",
   "tibetan-water-bowls",
@@ -222,6 +223,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"finnish-virpominen",title:"柳枝祝春",engine:"finnish-virpominen@1",revision:"bundled",manifestUrl:"",traditionSlug:"finnish-virpominen",narrative:sceneNarratives["finnish-virpominen"] },
   { id:"hiiragi-iwashi",title:"柊鰯守门",engine:"hiiragi-iwashi@1",revision:"bundled",manifestUrl:"",traditionSlug:"hiiragi-iwashi",narrative:sceneNarratives["hiiragi-iwashi"] },
   { id:"tamagushi-offering",title:"玉串奉愿",engine:"tamagushi-offering@1",revision:"bundled",manifestUrl:"",traditionSlug:"tamagushi-offering",narrative:sceneNarratives["tamagushi-offering"] },
   { id:"tibetan-water-bowls",title:"清水七供",engine:"tibetan-water-bowls@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-water-bowls",narrative:sceneNarratives["tibetan-water-bowls"] },

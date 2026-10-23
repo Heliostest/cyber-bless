@@ -13,7 +13,7 @@ export { BLESSING_SCENE_IDS, WISH_SCENE_IDS, dailyPrimaryScene } from '@wbr/core
  * stage. The stage element carries it as data-stage, and the scene is told
  * through its context, so its lights match the sky behind it.
  */
-export const NIGHT_STAGE_SCENE_IDS = ["lantern", "yeondeunghoe", "diya-oil-lamp", "votive-candle-catholic", "chinese-shadow-puppet"] as const;
+export const NIGHT_STAGE_SCENE_IDS = ["lantern", "yeondeunghoe", "diya-oil-lamp", "votive-candle-catholic", "chinese-shadow-puppet", "brat-bride-cloth"] as const;
 
 export type BlessingSceneId = (typeof BLESSING_SCENE_IDS)[number];
 export type WishSceneId = (typeof WISH_SCENE_IDS)[number];

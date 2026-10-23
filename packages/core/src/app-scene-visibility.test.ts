@@ -7,6 +7,7 @@ describe('App scene availability', () => {
   it('keeps exactly the 67 approved scenes visible and all 134 sources available', () => {
     const approved = [
     "nanakusa-gayu",
+    "brat-bride-cloth",
     "alasita-miniature-house",
     "yusheng-lohei",
     "kitano-nadeushi",

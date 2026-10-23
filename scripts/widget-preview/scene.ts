@@ -21,6 +21,7 @@ html,body{margin:0;padding:0;width:${width}px;height:${height}px;overflow:hidden
 </style>`);
 const completedPreviewProgress: Record<string, number> = {
   "nanakusa-gayu": 3,
+  "brat-bride-cloth": 3,
   "alasita-miniature-house": 3,
   "kitano-nadeushi": 3,
   "finnish-virpominen": 3,

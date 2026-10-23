@@ -81,6 +81,7 @@ describe("scene placement", () => {
     ["chinese-diabolo", "chinese-diabolo", false],
     ["chinese-tangram", "chinese-tangram", false],
     ["nanakusa-gayu", "nanakusa-gayu", false],
+    ["brat-bride-cloth", "brat-bride-cloth", false],
     ["alasita-miniature-house", "aymara", true],
     ["kitano-nadeushi", "kitano-nadeushi", false],
     ["lao-baci-wrist", "lao-baci-phi", false],
@@ -198,6 +199,7 @@ describe("scene placement", () => {
   it("splits blessing vs wish scene ids", () => {
     expect([...BLESSING_SCENE_IDS]).toEqual([
       "nanakusa-gayu",
+      "brat-bride-cloth",
       "yusheng-lohei",
       "kitano-nadeushi",
       "lao-baci-wrist",
@@ -347,7 +349,7 @@ describe("scene placement", () => {
   });
 
   it("shows the light scenes on the night stage, every other scene by day", () => {
-    expect([...NIGHT_STAGE_SCENE_IDS]).toEqual(["lantern", "yeondeunghoe", "diya-oil-lamp", "votive-candle-catholic", "chinese-shadow-puppet"]);
+    expect([...NIGHT_STAGE_SCENE_IDS]).toEqual(["lantern", "yeondeunghoe", "diya-oil-lamp", "votive-candle-catholic", "chinese-shadow-puppet", "brat-bride-cloth"]);
     for (const id of NIGHT_STAGE_SCENE_IDS) expect(sceneStage(id)).toBe("night");
     for (const id of [
       ...BLESSING_SCENE_IDS.filter(id => sceneStage(id) !== 'night'),

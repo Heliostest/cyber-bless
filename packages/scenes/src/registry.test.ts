@@ -21,6 +21,7 @@ describe('sceneRegistry', () => {
       'ghanaian-oware',
       'mexican-tortilla-press',
       'nanakusa-gayu',
+      'brat-bride-cloth',
       'alasita-miniature-house',
       'yusheng-lohei',
       'kitano-nadeushi',

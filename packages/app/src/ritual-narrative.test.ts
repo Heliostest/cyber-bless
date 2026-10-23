@@ -142,6 +142,7 @@ describe("builtInScenes narratives", () => {
       "korean-bojagi-wrap",
       "korean-yutnori",
       "lam-tsuen-wishing-tree",
+      "lanna-sand-pagoda",
       "lantern",
       "lao-baci-wrist",
       "lithuanian-straw-garden",

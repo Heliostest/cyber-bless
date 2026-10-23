@@ -27,6 +27,7 @@ const completedPreviewProgress: Record<string, number> = {
   "sternsinger-house-blessing": 3,
   "setsubun-mamemaki": 3,
   "bulgarian-survakane": 3,
+  "lanna-sand-pagoda": 3,
   "balinese-canang-sari": 3,
   "fgs-buddha-bathing": 3,
   "mongolian-ovoo": 3,

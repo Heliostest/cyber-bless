@@ -23,6 +23,7 @@ internal object WidgetCatalog {
     "fgs-buddha-bathing" to WidgetScene("浴佛发愿", "blessing"),
     "balinese-canang-sari" to WidgetScene("叶盘献谢", "blessing"),
     "bulgarian-survakane" to WidgetScene("彩枝贺年", "blessing"),
+    "lanna-sand-pagoda" to WidgetScene("沙塔献幡", "blessing"),
     "setsubun-mamemaki" to WidgetScene("节分撒豆", "blessing"),
     "sternsinger-house-blessing" to WidgetScene("门楣祝家", "blessing"),
     "lam-tsuen-wishing-tree" to WidgetScene("林村抛愿", "wish"),
@@ -160,6 +161,7 @@ internal object WidgetCatalog {
       "fgs-buddha-bathing" -> intArrayOf(R.drawable.blessing_preview_fgs_buddha_bathing_small, R.drawable.blessing_preview_fgs_buddha_bathing_medium, R.drawable.blessing_preview_fgs_buddha_bathing_large)
       "balinese-canang-sari" -> intArrayOf(R.drawable.blessing_preview_balinese_canang_sari_small, R.drawable.blessing_preview_balinese_canang_sari_medium, R.drawable.blessing_preview_balinese_canang_sari_large)
       "bulgarian-survakane" -> intArrayOf(R.drawable.blessing_preview_bulgarian_survakane_small, R.drawable.blessing_preview_bulgarian_survakane_medium, R.drawable.blessing_preview_bulgarian_survakane_large)
+      "lanna-sand-pagoda" -> intArrayOf(R.drawable.blessing_preview_lanna_sand_pagoda_small, R.drawable.blessing_preview_lanna_sand_pagoda_medium, R.drawable.blessing_preview_lanna_sand_pagoda_large)
       "setsubun-mamemaki" -> intArrayOf(R.drawable.blessing_preview_setsubun_mamemaki_small, R.drawable.blessing_preview_setsubun_mamemaki_medium, R.drawable.blessing_preview_setsubun_mamemaki_large)
       "sternsinger-house-blessing" -> intArrayOf(R.drawable.blessing_preview_sternsinger_house_blessing_small, R.drawable.blessing_preview_sternsinger_house_blessing_medium, R.drawable.blessing_preview_sternsinger_house_blessing_large)
       "lam-tsuen-wishing-tree" -> intArrayOf(R.drawable.blessing_preview_lam_tsuen_wishing_tree_small, R.drawable.blessing_preview_lam_tsuen_wishing_tree_medium, R.drawable.blessing_preview_lam_tsuen_wishing_tree_large)

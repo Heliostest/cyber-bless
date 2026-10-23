@@ -43,6 +43,7 @@ describe('sceneRegistry', () => {
       'fgs-buddha-bathing',
       'balinese-canang-sari',
       'bulgarian-survakane',
+      'lanna-sand-pagoda',
       'setsubun-mamemaki',
       'sternsinger-house-blessing',
       'lam-tsuen-wishing-tree',

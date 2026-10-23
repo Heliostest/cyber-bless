@@ -89,6 +89,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
     kind: 'blessing', label: '向神明献上感恩', optionalWish: false,
     action: '放入白花，托起盛好供品的叶盘，轻放到田边供台上。',
   },
+  'lanna-sand-pagoda': {kind:'blessing',label:'留一份新年修福的心意',optionalWish:false,action:'提起纸竹长幡，移到已堆好的沙塔旁，将竹杆插稳，留一份兰纳新年修福的心意。'},
   'bulgarian-survakane': {
     kind: 'blessing', label: '新年问候，祝亲友健康', optionalWish: false,
     action: '提起彩枝，移到亲友背后，轻拍后收回，送上健康祝愿。',

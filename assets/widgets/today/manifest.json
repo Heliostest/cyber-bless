@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "1c8436f0a42934d182c571476fd33d48c76278ae95bb27908f5b9bf50909d60b",
+  "revision": "ac031f6416eb08ae1e4ef723ef3d39d029a6ad889ea9642eda190185aca0329f",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -4654,6 +4654,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "b336f48e1a15e9602046ff03de4a4c317ef91eac69f7452f1bc6e1e7bf3328ba",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "lanna-sand-pagoda",
+      "engine": "lanna-sand-pagoda@1",
+      "small": {
+        "file": "lanna-sand-pagoda-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "3c675943d683365b3b24bbae9cc0b48c53c05a356bc20d925db7178230a03210",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "lanna-sand-pagoda-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "051ce5d789594623a3df90f548d0e290dbedf867da9e31fc67afadc27c6bfd51",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "lanna-sand-pagoda-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8805ec8a760521b52b536228f317e88a66cdf79674481dbc58d3750fc8e55ccc",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

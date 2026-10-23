@@ -46,6 +46,7 @@ export const sceneEngines = createSceneRegistry({
   "fgs-buddha-bathing@1": () => import("./procedural-scene").then(m => m.proceduralEngine("fgs-buddha-bathing")),
   "balinese-canang-sari@1": () => import("./procedural-scene").then(m => m.proceduralEngine("balinese-canang-sari")),
   "bulgarian-survakane@1": () => import("./procedural-scene").then(m => m.proceduralEngine("bulgarian-survakane")),
+  "lanna-sand-pagoda@1": () => import("./procedural-scene").then(m => m.proceduralEngine("lanna-sand-pagoda")),
   "setsubun-mamemaki@1": () => import("./procedural-scene").then(m => m.proceduralEngine("setsubun-mamemaki")),
   "sternsinger-house-blessing@1": () => import("./procedural-scene").then(m => m.proceduralEngine("sternsinger-house-blessing")),
   "lam-tsuen-wishing-tree@1": () => import("./procedural-scene").then(m => m.proceduralEngine("lam-tsuen-wishing-tree")),

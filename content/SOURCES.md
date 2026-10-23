@@ -4214,3 +4214,8 @@
 - https://blogs.glowscotland.org.uk/glowblogs/scranblog/2015/12/28/new-year-hogmanay/ （首次相关正文已读，后来JS验证/403；2015-12-28）
 - https://www.siefhome.org/downloads/wg/ry/RY12%282021%29-Regulating%20customs.pdf （McEntire原始研究相关页已读，非全卷通读；2021）
 各来源支持范围及读取者区别见 `content/traditions/scottish-first-footing.md` 与对应研究记录。
+## 沙塔献幡 · 2026-10-23
+- https://thailandfoundation.or.th/pi-mai-mueang-songkran-festival-of-northern-thailand/
+- https://www.thailand.go.th/public/issue-focus-detail/001_02_250?hl=en
+- https://radionan.prd.go.th/th/content/category/detail/id/6/iid/381310
+- 三条相关正文已实际阅读；支持范围、日期与产品边界见 content/traditions/lanna-sand-pagoda.md 及 docs/research/2026-10-23-lanna-sand-pagoda.md。

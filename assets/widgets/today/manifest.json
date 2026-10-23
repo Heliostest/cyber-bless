@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "7548c179a1fe19da2079ce3fdac45a28a06248e2f90ddcd3625aed1b21a1f49e",
+  "revision": "30fb37ac80613053baee2531052f1e9de1e1c2619c0bd129935beb75a3a762a4",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -4552,6 +4552,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "78bcad9544485fe13657dc6df0131f763010fa88863bfb9463a8d6b9b7c5f813",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "lao-baci-wrist",
+      "engine": "lao-baci-wrist@1",
+      "small": {
+        "file": "lao-baci-wrist-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "1b4ec5db22fb4f182c4c1a5907a6561fe0ba90d9d6ebb43a4c7b9ecfdb9add2f",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "lao-baci-wrist-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "36aa496cfd7db5683db1e5f33eabce08cbcf627c659447a33bbc3ff63169bd91",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "lao-baci-wrist-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "cd65dcd6fb0002b2f8bc447a53ba7e13e25ba896414b494a66a07e19c31784ba",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

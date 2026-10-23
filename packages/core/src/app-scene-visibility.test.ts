@@ -32,7 +32,7 @@ describe('App scene availability', () => {
     "kagami-mochi-offering",
     "romanian-martisor",
     "sumiyoshi-godairiki",
-    "udo-undama", "zeniarai-coin-washing", "chinowa-kuguri", "bonfim-ribbon", "greek-new-year-pomegranate", "hiiragi-iwashi",
+    "lao-baci-wrist", "udo-undama", "zeniarai-coin-washing", "chinowa-kuguri", "bonfim-ribbon", "greek-new-year-pomegranate", "hiiragi-iwashi",
     "aland-votive-ship",
     "barcelos-clay-rooster",
     "basque-sunflower",

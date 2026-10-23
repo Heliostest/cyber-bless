@@ -23,6 +23,7 @@ describe('sceneRegistry', () => {
       'alasita-miniature-house',
       'yusheng-lohei',
       'kitano-nadeushi',
+      'lao-baci-wrist',
       'hiiragi-iwashi',
       'tamagushi-offering',
       'tibetan-water-bowls',

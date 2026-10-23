@@ -43,6 +43,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id:'balinese-canang-sari',title:'叶盘献谢',traditionSlug:'balinese-canang-sari',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'bulgarian-survakane',title:'彩枝贺年',traditionSlug:'bulgarian-survakane',grade:'C',sensitivity:'低',gestures:['drag'] },
   {id:'lanna-sand-pagoda',title:'沙塔献幡',traditionSlug:'lanna-sand-pagoda',grade:'C',sensitivity:'中',gestures:['drag']},
+  {id:'chinese-fu-paper',title:'贴福迎春',traditionSlug:'chinese-fu-paper',grade:'C',sensitivity:'低',gestures:['drag']},
   { id:'setsubun-mamemaki',title:'节分撒豆',traditionSlug:'setsubun-mamemaki',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'sternsinger-house-blessing',title:'门楣祝家',traditionSlug:'sternsinger-house-blessing',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'lam-tsuen-wishing-tree',title:'林村抛愿',traditionSlug:'lam-tsuen-wishing-tree',grade:'C',sensitivity:'低',gestures:['drag'] },
@@ -245,6 +246,7 @@ const IMPLEMENTED = new Set([
   'balinese-canang-sari',
   'bulgarian-survakane',
   'lanna-sand-pagoda',
+  'chinese-fu-paper',
   'setsubun-mamemaki',
   'sternsinger-house-blessing',
   'lam-tsuen-wishing-tree',
@@ -360,6 +362,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'balinese-canang-sari': return import('./balinese-canang-sari/index')
     case 'bulgarian-survakane': return import('./bulgarian-survakane/index')
     case 'lanna-sand-pagoda': return import('./lanna-sand-pagoda/index')
+    case 'chinese-fu-paper': return import('./chinese-fu-paper/index')
     case 'setsubun-mamemaki': return import('./setsubun-mamemaki/index')
     case 'sternsinger-house-blessing': return import('./sternsinger-house-blessing/index')
     case 'lam-tsuen-wishing-tree': return import('./lam-tsuen-wishing-tree/index')

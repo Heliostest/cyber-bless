@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "ac031f6416eb08ae1e4ef723ef3d39d029a6ad889ea9642eda190185aca0329f",
+  "revision": "baef836be8663719ecbb67102ca514b89d9b4bd8bbd8255414b5ee2566d1c436",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -4688,6 +4688,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "8805ec8a760521b52b536228f317e88a66cdf79674481dbc58d3750fc8e55ccc",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "chinese-fu-paper",
+      "engine": "chinese-fu-paper@1",
+      "small": {
+        "file": "chinese-fu-paper-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "fa2294fcbb4c81d9d96edd8555ebcaf792628e440d095df7ba8c0e26b04db8a9",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "chinese-fu-paper-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "73b19c209e3915e9e7c3e60c790b0038c02676ed96cecbd6353c9da95196c152",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "chinese-fu-paper-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "03ef0996a850f0f09686a7a40bf87140f73835d53d59b7f4c7852d95c3688a3c",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

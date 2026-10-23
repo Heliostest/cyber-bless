@@ -4219,3 +4219,9 @@
 - https://www.thailand.go.th/public/issue-focus-detail/001_02_250?hl=en
 - https://radionan.prd.go.th/th/content/category/detail/id/6/iid/381310
 - 三条相关正文已实际阅读；支持范围、日期与产品边界见 content/traditions/lanna-sand-pagoda.md 及 docs/research/2026-10-23-lanna-sand-pagoda.md。
+## 贴福迎春 · 2026-10-23
+- https://dict.th.gov.tw/detailPage.aspx?Ca=200&ID=2465
+- https://english.shanghai.gov.cn/en-KeyDatesAndCustoms/20260121/d5fabdb61d484e0cad772a56fe343c38.html
+- https://www.confuciusinstitute.ac.uk/welcoming-good-fortune-at-chinese-new-year/
+- https://www.pgm.org.cn/pgm/bjhf/201808/4d921cde05694a01927e909881a93860.shtml
+- 四条对应正文已实际阅读；正文定位、读取状态、朝向差异和产品边界见 content/traditions/chinese-fu-paper.md 及 docs/research/2026-10-23-chinese-fu-paper.md。

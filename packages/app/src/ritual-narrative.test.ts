@@ -87,6 +87,7 @@ describe("builtInScenes narratives", () => {
       "catalan-festival-giant",
       "celtic-folk-spring",
       "chinese-diabolo",
+      "chinese-fu-paper",
       "chinese-incense",
       "chinese-rattle-drum",
       "chinese-shadow-puppet",

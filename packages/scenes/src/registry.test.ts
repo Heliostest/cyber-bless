@@ -44,6 +44,7 @@ describe('sceneRegistry', () => {
       'balinese-canang-sari',
       'bulgarian-survakane',
       'lanna-sand-pagoda',
+      'chinese-fu-paper',
       'setsubun-mamemaki',
       'sternsinger-house-blessing',
       'lam-tsuen-wishing-tree',
@@ -316,3 +317,4 @@ it('loads the three preformed Bonfim knots fragment',async()=>{const m=await loa
 it('loads the Greek household New Year pomegranate fragment',async()=>{const m=await loadScene('greek-new-year-pomegranate');expect(m.meta.id).toBe('greek-new-year-pomegranate');expect(m.meta.traditionSlug).toBe('greek-new-year-pomegranate');expect(m.create).toBeTypeOf('function')})
 
 it('loads the midnight household coal gift',async()=>{const m=await loadScene('scottish-first-footing');expect(m.meta).toMatchObject({id:'scottish-first-footing',title:'煤火迎年',traditionSlug:'scottish-first-footing',grade:'C',sensitivity:'低'});expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
+it('loads a source-specific Fu paper door blessing',async()=>{const m=await loadScene('chinese-fu-paper');expect(m.meta).toEqual(sceneRegistry.find(s=>s.id==='chinese-fu-paper'));expect(m.meta.title).toBe('贴福迎春');expect(m.meta.traditionSlug).toBe('chinese-fu-paper');expect(m.create).toBeTypeOf('function')})

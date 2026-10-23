@@ -10,6 +10,8 @@ internal object WidgetCatalog {
     "japanese-kadomatsu" to WidgetScene("门松迎岁", "blessing"),
     "pucara-rooftop-bulls" to WidgetScene("陶牛护家", "blessing"),
     "chinese-longevity-lock" to WidgetScene("银锁寄安", "blessing"),
+    "uchide-wishing-mallet" to WidgetScene("振槌寄愿", "blessing"),
+    "mezuzah-doorpost" to WidgetScene("门柱祈安", "blessing"),
     "alasita-miniature-house" to WidgetScene("微屋寄愿", "wish"),
     "yusheng-lohei" to WidgetScene("鱼生捞起", "blessing"),
     "kitano-nadeushi" to WidgetScene("抚牛寄愿", "blessing"),
@@ -167,6 +169,8 @@ internal object WidgetCatalog {
       "japanese-kadomatsu" -> intArrayOf(R.drawable.blessing_preview_japanese_kadomatsu_small, R.drawable.blessing_preview_japanese_kadomatsu_medium, R.drawable.blessing_preview_japanese_kadomatsu_large)
       "pucara-rooftop-bulls" -> intArrayOf(R.drawable.blessing_preview_pucara_rooftop_bulls_small, R.drawable.blessing_preview_pucara_rooftop_bulls_medium, R.drawable.blessing_preview_pucara_rooftop_bulls_large)
       "chinese-longevity-lock" -> intArrayOf(R.drawable.blessing_preview_chinese_longevity_lock_small, R.drawable.blessing_preview_chinese_longevity_lock_medium, R.drawable.blessing_preview_chinese_longevity_lock_large)
+      "uchide-wishing-mallet" -> intArrayOf(R.drawable.blessing_preview_uchide_wishing_mallet_small, R.drawable.blessing_preview_uchide_wishing_mallet_medium, R.drawable.blessing_preview_uchide_wishing_mallet_large)
+      "mezuzah-doorpost" -> intArrayOf(R.drawable.blessing_preview_mezuzah_doorpost_small, R.drawable.blessing_preview_mezuzah_doorpost_medium, R.drawable.blessing_preview_mezuzah_doorpost_large)
       "alasita-miniature-house" -> intArrayOf(R.drawable.blessing_preview_alasita_miniature_house_small, R.drawable.blessing_preview_alasita_miniature_house_medium, R.drawable.blessing_preview_alasita_miniature_house_large)
       "yusheng-lohei" -> intArrayOf(R.drawable.blessing_preview_yusheng_lohei_small, R.drawable.blessing_preview_yusheng_lohei_medium, R.drawable.blessing_preview_yusheng_lohei_large)
       "kitano-nadeushi" -> intArrayOf(R.drawable.blessing_preview_kitano_nadeushi_small, R.drawable.blessing_preview_kitano_nadeushi_medium, R.drawable.blessing_preview_kitano_nadeushi_large)

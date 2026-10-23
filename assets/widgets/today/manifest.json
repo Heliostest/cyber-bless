@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "71583cb17d9b47781983199730796881591ef4900d78282ebae5e2af54476c2c",
+  "revision": "cbc7c3d9975ef6fc5b0a24d2c63f70f88f286f577ef0f996b7323949f8b8bb55",
   "scenes": [
     {
       "id": "nanakusa-gayu",
@@ -200,6 +200,74 @@
         "width": 1200,
         "height": 1200,
         "sha256": "610c81625af68455958142f5703f791d49e9a522a4d5754b8473f3551d6267fd",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "uchide-wishing-mallet",
+      "engine": "uchide-wishing-mallet@1",
+      "small": {
+        "file": "uchide-wishing-mallet-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "8f74039c9051fc48c3674e82737414ebab3d9a3e4d578d466675b4efcfc80d38",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "uchide-wishing-mallet-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "30c799eee2b568230a4bdd25e5b5025a8dc3d13e8b547e27b257c0729d3c9efb",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "uchide-wishing-mallet-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "f06127987cddfe76c0d6d0654fc3cc1b1f30e1b266563ede858745c763850e47",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "mezuzah-doorpost",
+      "engine": "mezuzah-doorpost@1",
+      "small": {
+        "file": "mezuzah-doorpost-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "e91655b3200f49243b864e642fa5d528c08c77113c8674b2e1f4e020de4c7027",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "mezuzah-doorpost-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e7e74131bc12de5b8cf9f68009df3c7553951e5baf476c5d0faf657f4215435b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "mezuzah-doorpost-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "12498155171519f60a18ae7a903d32f3cafc14bbe0866b4e259e77d8672aff99",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,
@@ -5202,40 +5270,6 @@
         "canvasWidth": 1200,
         "canvasHeight": 1200,
         "progress": 1
-      }
-    },
-    {
-      "id": "uchide-wishing-mallet",
-      "engine": "uchide-wishing-mallet@1",
-      "small": {
-        "file": "uchide-wishing-mallet-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "8f74039c9051fc48c3674e82737414ebab3d9a3e4d578d466675b4efcfc80d38",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "uchide-wishing-mallet-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "30c799eee2b568230a4bdd25e5b5025a8dc3d13e8b547e27b257c0729d3c9efb",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "uchide-wishing-mallet-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "f06127987cddfe76c0d6d0654fc3cc1b1f30e1b266563ede858745c763850e47",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
       }
     }
   ]

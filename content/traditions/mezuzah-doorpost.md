@@ -1,0 +1,27 @@
+# 门柱经卷：家庭门口的诫命与祈安
+
+## 器物与公开实践
+
+Mezuzah 的核心是由书吏手写经文的皮纸卷，护盒用于容纳和保护卷轴。Union for Reform Judaism（URJ）介绍它作为犹太家庭身份与承诺的标志，并提醒居住者将家视为神圣的地方；安装礼以祝福开始，再固定到入门者右侧门柱上段。该机构同时说明，阿什肯纳兹犹太人通常让盒顶向室内倾斜，一些塞法迪犹太人则竖直安放，不能把倾角说成全体犹太人的统一规则。
+
+Chabad.org 将门柱经卷解释为在日常出入中记念上帝与托拉的提醒，并记述其护佑住户的信念。这里如实保留宗教诫命与家庭身份，不将它改称普通装饰或泛化护符；护佑属于该机构所述信仰，不是数字模型能够实现的保护。
+
+## 本产品呈现
+
+`mezuzah-doorpost`／门柱祈安呈现装有已备经卷的闭合护盒，不打开护盒或绘制虚构经文。原创蓝绿色盒面、铜色边饰、顶部单字 shin（ש）、左侧准备托与住宅门框均为产品造型；不复刻机构图片、馆藏或特定书吏作品。
+
+三个输入依次向上提起水平护盒、向右移近完整住宅门框右柱朝门洞的侧面，并调为上端向屋内倾斜、向下输入使护盒微落定位并让预备安装胶背贴近门柱，仍在门柱上三分之一。双面安装胶有来源依据；三段切分、输入方向、插值路径、具体角度、颜色、托架、动画时长和完成反馈是产品安排，不能解释为传统三步。选择倾斜形态时保留社群差异；右柱与高度以从门外入内的视角表现，盒背固定在右门柱朝门洞的侧面，上端向屋内倾斜。
+
+这是器物安放片段，不是完整宗教安装礼：不模拟诵读、经卷书写、敲钉或亲吻，不声称完成现实 mitzvah。完成只确认画面护盒贴稳，此刻对家人平安的祝愿不构成传统规定或现实效力承诺。
+
+## 来源与实际读取状态
+
+核查日2026-10-24。根代理与研究代理均已读下列相关正文。行号对应本轮网页解析快照；未查看或复制来源图片，没有以搜索摘要代替正文。四页均未见可确认的网页发布日期。
+
+- **URJ／ReformJudaism.org**：[What is a Mezuzah? Why And How do we Use it?](https://reformjudaism.org/beliefs-practices/lifecycle-rituals/what-mezuzah-why-and-how-do-we-use-it)，无可见个人署名。正文L18–33：经卷与护盒、家庭身份与神圣提醒、安装前祝福、右侧上段固定及阿什肯纳兹／部分塞法迪的倾角差异。不支持统一倾角、数字三步或所有人的护宅效力。
+- **Chabad.org**：[What Is a Mezuzah? — The Scroll on the Doorpost](https://www.chabad.org/library/article_cdo/aid/256915/jewish/What-Is-a-Mezuzah.htm)，无可见个人署名。正文L254–320，主要使用L254／261／266–268的经卷、书吏与shin说明，L289–293的宗教提醒和护佑信念，L320的护盒创作说明。不采用文中长寿、富足或检查期限为本场景主张。
+- **Chabad.org／Dovid Zaklikowski 编纂**：[Affixing the Mezuzah](https://www.chabad.org/library/article_cdo/aid/225414/jewish/Affixing-the-Mezuzah.htm)，文末注明依据Rabbi Aaron Wolf等材料。正文L260–285：L269要求永久固定并允许双面安装胶；L274–281说明安装前祝福。有关参与者、节日及门型的条件不在数字体验中转化为资格或日历关卡。
+
+- **Chabad.org／Dovid Zaklikowski 编纂**：[Mezuzah Placement — Where on the Doorpost Do I Place the Mezuzah?](https://www.chabad.org/library/article_cdo/aid/225405/jewish/Mezuzah-Placement.htm)。2026-10-24根代理与研究代理已读相关正文L262–288：位置、上段高度及门柱内侧安放；L281–285把无法放在门柱内侧时的替代位置列为特殊情形。本场景采用右门柱朝门洞的侧面，不以例外为街面正前方安放背书。未见可确认的网页发布日期，来源图片未看。
+
+使用本专卡，不借无对应正文的泛犹太教卡。见[逐项研究](../../docs/research/2026-10-24-mezuzah-doorpost.md)与[场景README](../../packages/scenes/src/mezuzah-doorpost/README.md)。

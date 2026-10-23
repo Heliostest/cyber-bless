@@ -20,6 +20,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id:'alasita-miniature-house',title:'微屋寄愿',traditionSlug:'aymara',grade:'C',sensitivity:'中',gestures:['drag'] },
+  { id:'yusheng-lohei',title:'鱼生捞起',traditionSlug:'yusheng-lohei',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'hiiragi-iwashi',title:'柊鰯守门',traditionSlug:'hiiragi-iwashi',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'tamagushi-offering',title:'玉串奉愿',traditionSlug:'tamagushi-offering',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'tibetan-water-bowls',title:'清水七供',traditionSlug:'tibetan-water-bowls',grade:'C',sensitivity:'中',gestures:['drag'] },
@@ -216,6 +217,7 @@ export const sceneRegistry: SceneMeta[] = [
 
 const IMPLEMENTED = new Set([
   'alasita-miniature-house',
+  'yusheng-lohei',
   'hiiragi-iwashi',
   'tamagushi-offering',
   'tibetan-water-bowls',
@@ -325,6 +327,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
     case 'alasita-miniature-house': return import('./alasita-miniature-house/index')
+    case 'yusheng-lohei': return import('./yusheng-lohei/index')
     case 'hiiragi-iwashi': return import('./hiiragi-iwashi/index')
     case 'tamagushi-offering': return import('./tamagushi-offering/index')
     case 'tibetan-water-bowls': return import('./tibetan-water-bowls/index')

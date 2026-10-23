@@ -37,3 +37,7 @@
 当前呈现：尖喙落枝尖，随后可重复轻推/拖不同部位，手动结束观察。 模拟平衡、光色和枝座为产品，末步不限一次长翼推。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#vietnamese-bamboo-dragonfly)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+## 2026-10-23 产品操作容错
+
+适用场景：`vietnamese-bamboo-dragonfly`。本应用使用的共享方向判定放宽了小幅纠正和合理斜拖；原有动作与文化主张不变。距离与容错规则属于产品界面安排，不是传统要求。本次没有新登记外部来源为已读；详见[操作修正记录](../../docs/research/2026-10-23-scene-interaction-fixes.md)。

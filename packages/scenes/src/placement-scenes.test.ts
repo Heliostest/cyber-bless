@@ -81,6 +81,24 @@ function operate(s: Awaited<ReturnType<typeof mount>>, mode: 'center' | 'sparse'
   }
   pointer(s.layer, 'pointerup', b); s.run()
 }
+it.each(['andalusian-ceramic-tile', 'bai-indigo-cloth', 'croatian-licitar-heart', 'hungarian-embroidery-hoop'])(
+  '%s previews a valid drop, clears canceled readiness and accepts a fresh placement', async id => {
+    for (const at of [0, 1]) {
+      const s = await mount(id, 390, at), { object, cue } = s.cues()[0]!
+      const from = s.source(object, cue), to = destination(s, cue)
+      pointer(s.layer, 'pointerdown', from); pointer(s.layer, 'pointermove', to)
+      expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady, `step ${at}`).toBe('true')
+      expect(s.progress).toEqual([])
+      pointer(s.layer, 'pointercancel', to)
+      expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
+      expect(s.progress).toEqual([])
+      pointer(s.layer, 'pointerdown', from); pointer(s.layer, 'pointermove', to); pointer(s.layer, 'pointerup', to); s.run()
+      expect(s.progress).toEqual([at + 1])
+      expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
+      s.instance.dispose()
+    }
+  },
+)
 it.each(placements)('%s completes from the scene cues at touch and mouse viewport sizes', async id => {
   for (const width of [390, 1280]) {
     const s = await mount(id, width)
@@ -92,6 +110,36 @@ it.each(placements)('%s completes from the scene cues at touch and mouse viewpor
     expect(s.complete).toHaveBeenCalledOnce(); s.instance.dispose()
   }
 })
+
+it.each(['andalusian-ceramic-tile', 'bai-indigo-cloth', 'croatian-licitar-heart', 'hungarian-embroidery-hoop'])(
+  '%s cannot use an aligned grip to bypass a foreground object under the fingertip', async id => {
+    const at = id === 'hungarian-embroidery-hoop' ? 0 : 1, s = await mount(id, 390, at)
+    const entry = s.cues()[0]!, from = s.source(entry.object, entry.cue), target = destination(s, entry.cue)
+    let end: Point = [from[0] + 12, from[1]]
+    pointer(s.layer, 'pointerdown', end); end = [end[0] + 2, end[1]]; pointer(s.layer, 'pointermove', end)
+    for (let i = 0; i < 8; i++) {
+      const grip = s.source(entry.object, entry.cue)
+      end = [end[0] + target[0] - grip[0], end[1] + target[1] - grip[1]]
+      pointer(s.layer, 'pointermove', end)
+    }
+    const aligned = s.source(entry.object, entry.cue)
+    expect(Math.hypot(aligned[0] - target[0], aligned[1] - target[1])).toBeLessThan(1)
+    const ray = new THREE.Raycaster()
+    ray.setFromCamera(new THREE.Vector2((end[0] - 17) / 390 * 2 - 1, 1 - (end[1] - 89) / 408 * 2), s.camera)
+    const d = entry.cue.destination!, world = typeof d === 'function' ? d() : d.getWorldPosition(new THREE.Vector3())
+    const blocker = new THREE.Mesh(new THREE.PlaneGeometry(.04, .04), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
+    blocker.position.copy(ray.ray.at(s.camera.getWorldPosition(new THREE.Vector3()).distanceTo(world) * .7, new THREE.Vector3()))
+    blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker); s.scene.updateMatrixWorld(true)
+    try {
+      expect(ray.intersectObject(blocker)).toHaveLength(1)
+      pointer(s.layer, 'pointerup', end); s.run()
+      expect(s.progress).toEqual([])
+      expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
+    } finally {
+      blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose(); s.instance.dispose()
+    }
+  },
+)
 
 const complexPlacements = ['hongsheng-red-string', 'italian-ex-voto', 'navruz-sumalak', 'diya-oil-lamp', 'daruma-eye-painting', 'mizuhiki', 'milagros', 'phuang-malai', 'chinese-woodblock-print'] as const
 it.each([...placements, ...complexPlacements])('%s restores its physical source after canceled input in every interactive checkpoint', async id => {

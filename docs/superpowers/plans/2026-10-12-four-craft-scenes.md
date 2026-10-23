@@ -1,5 +1,7 @@
 # Four Craft Scenes Implementation Plan
 
+Historical update (2026-10-23): the empty-canvas scrolling requirement below is superseded by the approved [canvas touch ownership rule](../../research/2026-10-23-scene-touch-scroll.md). Canvas gestures stay with the scene; page scrolling remains available outside the canvas.
+
 > **For agentic workers:** Use superpowers:executing-plans for integration, and superpowers:dispatching-parallel-agents for the independent scene folders. One fresh review checks the completed branch.
 
 **Goal:** Ship four independently playable scenes with recognizable craft objects and the existing cozy environment.

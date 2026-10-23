@@ -36,10 +36,9 @@ vi.mock('@wbr/scene-runtime/debug-render-style', () => ({
 import { create } from './index'
 
 const instances: SceneInstance[] = []
-function mount(initialProgress = 0, extra: Partial<SceneContext> = {}, width = 390) {
+function mount(initialProgress = 0, extra: Partial<SceneContext> = {}, width = 390, height = 560) {
   const canvas = document.createElement('canvas')
   const overlay = document.createElement('div')
-  const height = 560
   Object.defineProperties(canvas, {
     clientWidth: { value: width }, clientHeight: { value: height },
   })
@@ -377,4 +376,47 @@ describe('Phuang Malai craft', () => {
     expect(s.saveWish).not.toHaveBeenCalled()
     expect(s.complete).not.toHaveBeenCalled()
   })
+})
+
+describe('flower placement in screen space',()=>{
+  it('accepts a sixteen pixel correction beside the visible marker at every cluster',()=>{
+    const s=mount(0,{isReducedMotion:()=>true});
+    for(let n=0;n<4;n++){
+      const a=s.flowerPoint(`tray-flowers-${n}`),b=s.target(),near:Point=[b[0]+16,b[1]];
+      pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointermove',near);
+      expect(s.overlay.textContent).toContain('可以松手');
+      pointer(s.hit,'pointerup',near);s.run();
+    }
+    expect(s.progress).toEqual([1]);
+  });
+});
+
+it.each([390,1280])('keeps each physical cluster drop playable at %ipx by 408px',width=>{
+  const s=mount(0,{isReducedMotion:()=>true},width,408);
+  for(let n=0;n<4;n++){
+    const a=s.flowerPoint(`tray-flowers-${n}`),b=s.target();
+    pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointermove',b);
+
+    expect(s.overlay.textContent,`cluster ${n}`).toContain('可以松手');
+    pointer(s.hit,'pointerup',b);s.run();
+  }
+  expect(s.progress).toEqual([1]);
+});
+
+it.each(['pointercancel', 'blur', 'pause'])('clears flower readiness after %s and keeps the current cluster', reason => {
+  let active = true
+  const s = mount(0, { isActive: () => active, isReducedMotion: () => true })
+  const from = s.flowerPoint('tray-flowers-0'), target = s.target(), home = s.obj('cluster-0').position.clone()
+  pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
+  pointer(s.hit, 'pointermove', [1, 1])
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
+  pointer(s.hit, 'pointermove', target)
+  if (reason === 'blur') window.dispatchEvent(new Event('blur'))
+  else if (reason === 'pause') { active = false; s.run(.05) }
+  else pointer(s.hit, 'pointercancel', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
+  pointer(s.hit, 'pointerup', target); s.run()
+  expect(s.obj('cluster-0').position.equals(home)).toBe(true)
+  expect(s.progress).toEqual([])
 })

@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "a97c6ca93bacc66d0bca254c56117e2c59818280a5c5cbb3a9d0be65035f90d8",
+  "revision": "86a522de7e51430e2d551af9161b48b144046e72a0c8e30a338f7c48c21a75eb",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -34,6 +34,40 @@
         "canvasWidth": 1200,
         "canvasHeight": 1200,
         "progress": 3
+      }
+    },
+    {
+      "id": "yusheng-lohei",
+      "engine": "yusheng-lohei@1",
+      "small": {
+        "file": "yusheng-lohei-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "44e3f49705050def30d0465c936671ce0453dcb5e9924d63c5949149bb823738",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "medium": {
+        "file": "yusheng-lohei-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "14ed93454c6607ccea91d31dc8a1d3a13576a5404c103ba22431593340a2ec63",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 0
+      },
+      "large": {
+        "file": "yusheng-lohei-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "ec55f29a78da962ed48276fc41e7df4aae80175f0dfbbd72bf6b72f7b2c8a66b",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 0
       }
     },
     {

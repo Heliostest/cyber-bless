@@ -38,3 +38,9 @@ Chokyi Gyaltsen Centre 刊载的 Lama Zopa Rinpoche 教导强调恭敬、菩提�
 当前呈现：佛像高供台、七只铜碗已留少水，壶从左至右添至沿下再收回。 只描述现有七碗添水片段，未声称完成清洁、礼拜、念诵、回向与晚间收供。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#tibetan-water-bowls)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+## 2026-10-23 产品操作容错
+
+适用场景：`tibetan-water-bowls`。本应用调整触屏方向提示、长拖与小幅纠正的识别，并提示何时可松手。原有器物、动作顺序与文化主张不变；这些距离、方向图标与容错规则是产品界面安排，不是传统要求。
+
+本次没有新增文化事实，也未重新登记外部来源为已读。具体实现、产品边界与验证见[操作修正记录](../../docs/research/2026-10-23-scene-interaction-fixes.md)。

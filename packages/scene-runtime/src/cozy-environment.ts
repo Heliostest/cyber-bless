@@ -12,6 +12,7 @@ type Kind = GardenKind;
 type Profile = { kind: Kind; floor: number; night?: boolean; warmLight?: boolean; coastal?: boolean };
 const profiles: Record<string, Profile> = {
   "alasita-miniature-house": {kind:"courtyard",floor:0},
+  "yusheng-lohei": {kind:"garden",floor:-.12},
   "hiiragi-iwashi": {kind:"garden",floor:-.012},
   "tamagushi-offering": {kind:"courtyard",floor:0},
   "tibetan-water-bowls": {kind:"garden",floor:-.02},

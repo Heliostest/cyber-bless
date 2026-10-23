@@ -32,7 +32,7 @@ Checkpoints restore silently. Returning visits do not mount a wish writer. Draft
 | 1 | `shadow-wing-grip` | `[0, 0, 0.075]` | `[60, 0]` |
 | 2 | `shadow-bird-body` | `[0.16, 0, 0.028]` | tap |
 
-At least 40px along-axis travel with actual move events is required; 60px reaches the authored pose. Cross-axis, reverse, backtracked, cancelled and second-pointer gestures do not advance. Cues target the nearest opaque rendered surface, not hidden planes.
+At least 40px along-axis travel with actual move events is required; 60px reaches the authored pose. Pure cross-axis, clear reverse, returned-to-start, cancelled and second-pointer gestures do not advance. Longer same-direction drags, gentle diagonals and 10–20px corrections remain valid. Cues target the nearest opaque rendered surface, not hidden planes.
 
 ## Verification
 
@@ -45,3 +45,8 @@ The scene tests use real Three geometry/raycasting and the actual wish writer, s
 核查重点：形成时代仍不确定；不能把海宁声腔、蚕花戏或任一传统角色套给原创小鸟。没有完整剧目、乐队和戏班表演。
 
 逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#chinese-shadow-puppet)。
+
+
+## 2026-10-23 共享方向容错
+
+共享方向判定支持同向长拖、合理斜拖与10–20px的小幅纠正，到位后继续同向拖不会丢失成功资格；明显反向、退回起点、取消及多指仍不提交。保留本模块的真实起点、动作与主动结束／留言流程。仅调整产品技术容错，未改变器物、文化主张、动作顺序、来源归属、技术 ID 或存档。验证与文化影响边界见[本轮修复记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。

@@ -108,7 +108,9 @@ describe("今日's daily set badges", () => {
   it("labels cards with words only: no emoji or symbol glyphs", () => {
     const note = (entry: { id: string }, copy: { wishNote: string; blessingNote: string }) =>
       isWishScene(entry.id) ? copy.wishNote : copy.blessingNote;
-    expect(cards.map((card) => card.textContent)).toEqual([
+    // SVG artwork can contain aria-hidden lettering, such as 運 on a wish ball.
+    // Check the card's label fields separately from that decorative artwork.
+    expect(cards.map((card) => `${card.querySelector(":scope > strong")!.textContent}${card.querySelector(":scope > small")!.textContent}`)).toEqual([
       `${primary.title}${note(primary, DAILY_SET_COPY)}`,
       ...picks.map((entry) => `${entry.title}${note(entry, DAILY_COLLECTED_COPY)}`),
     ]);

@@ -438,9 +438,18 @@ describe("scene overlay", () => {
     expect(declared(".library-scene-stage .scene-title")).toMatch(/display: none/);
   });
 
-  it("styles the scene kit's island-stage overlay: scroll from empty stage, the wish note in ink", () => {
+  it("keeps all island-canvas touches with the scene, including empty space", () => {
     // createStepOverlay (packages/scenes procedural-kit) adds scene-overlay--stage.
-    expect(declared(".scene-overlay--stage .scene-hit-layer")).toMatch(/touch-action: manipulation/);
+    expect(declared(".scene-overlay--stage .scene-hit-layer")).toMatch(/touch-action: none/);
+    expect(declared(".library-scene-stage .scene-canvas")).toMatch(/touch-action: none/);
+    // The shelf contains normal buttons, instructions and wish input. It must
+    // not inherit the canvas's scrolling restriction through an ancestor.
+    for (const selector of [".library-scene-stage", ".library-scene-stage .scene-overlay-host", ".library-scene-stage .scene-wish-slot"]) {
+      expect(declared(selector)).not.toMatch(/touch-action: none/);
+    }
+  });
+
+  it("keeps the island-stage wish note in ink", () => {
     expect(declared(".scene-overlay--stage .scene-wish-slot .wish-write-meta")).toMatch(
       /color: var\(--ink-soft\)/,
     );

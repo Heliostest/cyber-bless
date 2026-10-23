@@ -202,6 +202,7 @@ describe("builtInScenes narratives", () => {
       "welsh-love-spoon",
       "woodfish",
       "yeondeunghoe",
+      "yusheng-lohei",
       "zeniarai-coin-washing",
     ]);
   });

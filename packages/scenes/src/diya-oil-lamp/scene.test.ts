@@ -329,3 +329,45 @@ describe('diya shape and lifecycle', () => {
     expect(drawn.scene!.children).toHaveLength(0)
   })
 })
+
+describe('continuous lamp orbit tolerance',()=>{
+  it.each([12,16,24,60].flatMap(count=>[0,.5].map(phase=>[count,phase])))('accepts %i orbit samples with phase %s',(count,phase)=>{
+    const s=mount(1,{isReducedMotion:()=>true})
+    const at=(t:number,r=.60):Point=>{const a=Math.PI/2+t*Math.PI*2,p=new THREE.Vector3(Math.cos(a)*r,.84,Math.sin(a)*r).project(drawn.camera!);return[(p.x+1)*195,(1-p.y)*260]}
+    pointer(s,'pointerdown',project(s,object('diya-held-target')))
+    for(let i=phase?0:1;i+phase<count;i++)pointer(s,'pointermove',at((i+phase)/count))
+    pointer(s,'pointermove',at(1))
+    expect(s.overlay.querySelector('.scene-hint')?.getAttribute('data-progress')).toBe('true')
+    pointer(s,'pointerup',at(1));expect(s.progress).toEqual([2])
+    expect(s.overlay.querySelector('.scene-hint')?.hasAttribute('data-progress')).toBe(false)
+  })
+  it('continues a circle after a short outward correction and small reversal',()=>{
+    const s=mount(1,{isReducedMotion:()=>true})
+    const at=(t:number,r=.60):Point=>{const a=Math.PI/2+t*Math.PI*2,p=new THREE.Vector3(Math.cos(a)*r,.84,Math.sin(a)*r).project(drawn.camera!);return[(p.x+1)*195,(1-p.y)*260]}
+    pointer(s,'pointerdown',project(s,object('diya-held-target')))
+    for(let i=1;i<=16;i++){
+      if(i===8){pointer(s,'pointermove',at(7/16,.81));pointer(s,'pointermove',at(6.7/16))}
+      pointer(s,'pointermove',at(i/16))
+    }
+    pointer(s,'pointerup',at(1));expect(s.progress).toEqual([2])
+  })
+})
+
+
+  it('cancels a completed orbit on blur and requires fresh focused input',()=>{
+    const s=mount(1,{isReducedMotion:()=>true}),r=route(s)
+    pointer(s,'pointerdown',project(s,object('diya-held-target')));r.forEach(p=>pointer(s,'pointermove',p))
+    window.dispatchEvent(new Event('blur'));window.dispatchEvent(new Event('focus'))
+    pointer(s,'pointerup',r.at(-1)!);expect(s.progress).toEqual([])
+    window.dispatchEvent(new Event('blur'));circle(s);expect(s.progress).toEqual([])
+    window.dispatchEvent(new Event('focus'));circle(s);expect(s.progress).toEqual([2])
+  })
+
+
+it('does not start the lamp orbit through a nearer opaque surface',()=>{
+ const s=mount(1,{isReducedMotion:()=>true}),a=object('diya-held-target').getWorldPosition(new THREE.Vector3())
+ const block=new THREE.Mesh(new THREE.PlaneGeometry(1.2,1.2),new THREE.MeshBasicMaterial({side:THREE.DoubleSide}))
+ block.position.lerpVectors(a,drawn.camera!.position,.3);block.quaternion.copy(drawn.camera!.quaternion);drawn.scene!.add(block)
+ circle(s);expect(s.progress).toEqual([])
+ block.removeFromParent();block.geometry.dispose();block.material.dispose();circle(s);expect(s.progress).toEqual([2])
+})

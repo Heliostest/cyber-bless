@@ -48,7 +48,7 @@ const DIRECTIONAL_SCENES = [
 
 it.each(DIRECTIONAL_SCENES)('%s accepts a full directional drag without a hidden maximum distance', async (id, steps) => {
   const module = await loadScene(id)
-  for (let at = 0; at < steps; at++) for (const [distance, correction, release, cross = 0] of [[120, 0, 120], [180, 0, 180], [60, 12, 60], [60, 0, 180], [20, 0, 120], [120, 30, 90], [120, 0, 90, 60]]) {
+  for (let at = 0; at < steps; at++) for (const [distance, correction, release, cross = 0] of [[120, 0, 120], [180, 0, 180], [60, 12, 60], [70, 20, 50], [60, 0, 180], [20, 0, 120], [120, 30, 90], [120, 0, 90, 60]]) {
     const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
     host.append(canvas, overlay); document.body.append(host)
     Object.defineProperties(canvas, { clientWidth: { value: 390 }, clientHeight: { value: 408 } })
@@ -78,7 +78,7 @@ it.each(DIRECTIONAL_SCENES)('%s accepts a full directional drag without a hidden
     expect(progress, `step ${at}, distance ${distance}, correction ${correction}`).toEqual([at + 1])
     instance.dispose(); host.remove()
   }
-})
+}, 30000)
 
 it.each(DIRECTIONAL_SCENES.flatMap(([id]) => [[id, false], [id, true]] as const))('%s completes every physical step in sequence, reduced=%s', async (id, reduced) => {
   const module = await loadScene(id), width = reduced ? 320 : 390, height = 408

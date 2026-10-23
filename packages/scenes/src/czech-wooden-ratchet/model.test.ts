@@ -7,7 +7,12 @@ const pointToSegment=(p:THREE.Vector2,a:THREE.Vector2,b:THREE.Vector2)=>{const v
 describe('real wooden cog and free-frame tongue',()=>{
  it('has11teeth, realgear/bearing/washerholes and clearance around the fixed axle',()=>{
   const m=createRatchetModel();expect(m.polygon).toHaveLength(33);expect(m.cheeks).toHaveLength(2)
-  for(const mesh of [m.gear,...m.cheeks])expect((mesh.geometry.parameters.shapes as THREE.Shape).holes).toHaveLength(1)
+  for(const mesh of [m.gear,...m.cheeks]){
+   expect(mesh.geometry).toBeInstanceOf(THREE.ExtrudeGeometry)
+   if(!(mesh.geometry instanceof THREE.ExtrudeGeometry))throw new Error('Expected an extruded ratchet part')
+   const shapes=mesh.geometry.parameters.shapes,shapeList=Array.isArray(shapes)?shapes:[shapes]
+   expect(shapeList).toHaveLength(1);expect(shapeList[0]!.holes).toHaveLength(1)
+  }
   expect(m.halfGearDepth).toBe(.11);expect(m.cheeks[0]!.position.z).toBe(-.20);expect(m.cheeks[1]!.position.z).toBe(.20)
   expect(m.cheekDepth/2+m.halfGearDepth).toBeLessThan(.20)
   for(const washer of m.washers)expect(washer.geometry.type).toBe('ExtrudeGeometry');disposeTree(m.subject)
@@ -37,7 +42,8 @@ describe('real wooden cog and free-frame tongue',()=>{
   const m=createRatchetModel(),matrices=[m.gear,m.handle,m.axle].map(o=>o.matrixWorld.elements.slice())
   m.pose(0,.5);expect(m.frame.rotation.z).toBeCloseTo(-Math.PI/3,12)
   for(const [i,o]of[m.gear,m.handle,m.axle].entries())expect(o.matrixWorld.elements).toEqual(matrices[i])
-  expect(m.spring.geometry.attributes.position!.version).toBeGreaterThan(0);disposeTree(m.subject)
+  const position=m.spring.geometry.attributes.position!
+  expect(position instanceof THREE.InterleavedBufferAttribute?position.data.version:position.version).toBeGreaterThan(0);disposeTree(m.subject)
  })
  it('has exact checkpoint meshes and returns home without accumulated rotations',()=>{
   const m=createRatchetModel(),snap=()=>[m.frame.rotation.z,...m.spring.geometry.attributes.position!.array]

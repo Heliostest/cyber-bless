@@ -39,11 +39,11 @@ afterEach(() => {
 
 describe('createStepOverlay', () => {
   it('marks its overlay as an island-stage one, the class the App styles it by', () => {
-    // packages/app/src/style.css keys page scroll from empty stage areas and
-    // the wish note's ink on scene-overlay--stage.
+    // packages/app/src/style.css keys canvas gesture ownership and the wish
+    // note's ink on scene-overlay--stage.
     const overlay = document.createElement('div')
     createStepOverlay(overlay, { title: 't', stepsAria: 's', action: 'a' }, () => {})
-    expect([...overlay.classList]).toEqual(['scene-overlay', 'scene-overlay--stage'])
+    expect(Array.from(overlay.classList)).toEqual(['scene-overlay', 'scene-overlay--stage'])
   })
 })
 
@@ -162,7 +162,7 @@ describe('claimObjectTouches', () => {
     return e.defaultPrevented
   }
 
-  it('keeps only touches that start on the object from scrolling the page', () => {
+  it('prevents default only for object starts in the legacy touch fallback', () => {
     const el = document.createElement('div')
     const stop = claimObjectTouches(el, (x) => x < 50)
     expect(touchStart(el, 10, 10)).toBe(true)

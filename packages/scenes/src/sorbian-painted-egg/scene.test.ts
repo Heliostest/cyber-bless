@@ -1,4 +1,4 @@
-﻿// @vitest-environment jsdom
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
@@ -80,7 +80,6 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
   })
   return { q, object: ray.intersectObjects(visible, false)[0]?.object }
 }
-
 
 describe('Sorbian contemporary painted egg', () => {
   it('paints the shell, seats the egg in its cup and finishes once without saving a wish', () => {
@@ -276,4 +275,31 @@ describe('physical craft and owned resources', () => {
     const capture = (o: boolean | EventListenerOptions | undefined) => typeof o === 'boolean' ? o : o?.capture ?? false
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), type).toBe(true)
   })
+})
+
+describe('whole visible cup opening',()=>{
+  it('accepts the left cream cup rim rather than only the tiny front mark',()=>{
+    const s=mount(1,{isReducedMotion:()=>true}),a=s.point('egg-paint-surface'),b=s.point('egg-cup-cream-rim',[-.29,0,0]);
+    event(s.hit,'pointerdown',a);event(s.hit,'pointermove',b);
+    expect(s.overlay.textContent).toContain('可以松手');
+    event(s.hit,'pointerup',b);s.run();expect(s.progress).toEqual([2]);
+  });
+});
+
+it.each(['pointercancel', 'blur', 'pause'])('clears the ready drop after %s without completing it', reason => {
+  let active = true
+  const s = mount(1, { isActive: () => active, isReducedMotion: () => true })
+  const from = s.point('egg-paint-surface'), target = s.point('egg-cup-target')
+  event(s.hit, 'pointerdown', from); event(s.hit, 'pointermove', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
+  event(s.hit, 'pointermove', [1, 1])
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
+  event(s.hit, 'pointermove', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
+  if (reason === 'blur') window.dispatchEvent(new Event('blur'))
+  else if (reason === 'pause') { active = false; s.run(.05) }
+  else event(s.hit, 'pointercancel', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
+  event(s.hit, 'pointerup', target); s.run()
+  expect(s.progress).toEqual([])
 })

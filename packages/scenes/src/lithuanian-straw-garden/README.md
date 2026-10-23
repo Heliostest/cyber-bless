@@ -6,7 +6,6 @@
 
 当前来源：`content/traditions/lithuanian-straw-gardens.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
 
-
 Original hollow straw double-pyramid mobile with two side ornaments, a separate lower diamond, thread joins, visible wooden handling beads and two workshop supports. Assemble the lower piece, suspend the complete garden and pause quietly. No wish writer.
 
 Read `content/traditions/baltic-folk.md` and viewed its JPG (a Latvian midsummer torch photograph, not a straw garden); no source image is copied. The broad Baltic card supplies context only: this scene specifically concerns Lithuanian craft.
@@ -32,3 +31,11 @@ Real whole-scene rays reject foreground occluders; drops exclude only the held p
 边界：未定最初年代；不以遗产入选年作起源。不把工坊木架当传统礼仪空间，木珠/接法是产品设计。
 
 来源正文的完整链接、实际阅读位置、访问状态及产品简化见[B 组逐项记录](../../../../docs/research/2026-10-20-scene-narratives-b.md#lithuanian-straw-garden)与[来源卡](../../../../content/traditions/lithuanian-straw-gardens.md)。本节不更改现有交互；用户介绍集中维护于 `packages/core/src/scene-narratives/b.ts`。
+
+## 2026-10-23 产品交互容错
+
+下部小菱形的可见草编与木珠都可拿取，连接珠、顶部木珠和木架挂点采用屏幕邻近容差。
+
+可见目标周边最多扩展 22 CSS px，触摸与鼠标共用判定；画布外、远处空白及更近的不相关实物遮挡仍不接纳。进入有效落区显示「可以松手，轻轻落稳」，离开或取消、失焦、暂停时清除提示；有效释放后用已有动画落稳，保留原有步骤与存档。
+
+这些是产品操作容错与反馈，不增加传统步骤、数量或寓意；文化关联沿用上方已核查范围。变更与验证见[本轮交互修正记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。

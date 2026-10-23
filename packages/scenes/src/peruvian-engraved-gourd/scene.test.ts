@@ -234,14 +234,24 @@ describe('hand engraved gourd with surface cutting and polishing', () => {
       else if (bad === 'reverse') { end = point(-60); event(s.hit, 'pointermove', end) }
       else if (bad === 'cross') { end = point(0, 60); event(s.hit, 'pointermove', end) }
       else if (bad === 'release-only') { /* a pointerup jump cannot cut */ }
-      else if (bad === 'terminal-reversal') { event(s.hit, 'pointermove', point(60)); end = point(44) }
-      else if (bad === 'terminal-cross') { event(s.hit, 'pointermove', end); end = point(60, 19) }
-      else if (bad === 'path-cross') { event(s.hit, 'pointermove', point(30, 19)); event(s.hit, 'pointermove', end) }
+      else if (bad === 'terminal-reversal') { event(s.hit, 'pointermove', point(60)); end = point(20) }
+      else if (bad === 'terminal-cross') { event(s.hit, 'pointermove', end); end = point(60, 60) }
+      else if (bad === 'path-cross') { event(s.hit, 'pointermove', point(30, 60)); event(s.hit, 'pointermove', end) }
       else if (bad === 'path-travel') { for (const [a, c] of [[12, 16], [24, -16], [36, 16], [48, -16], [60, 0]]) event(s.hit, 'pointermove', point(a, c)) }
       else if (bad === 'nan-move') { event(s.hit, 'pointermove', [NaN, p[1]]); event(s.hit, 'pointermove', end) }
       else { event(s.hit, 'pointermove', end); end = [p[0], Infinity] }
       event(s.hit, 'pointerup', end); s.run(); expect(s.progress, `${bad} at ${at}`).toEqual([]); expect(s.button.disabled).toBe(false)
       step(s, at); expect(s.progress, `retry ${bad} at ${at}`).toEqual([at + 1]); s.instance.dispose()
+    }
+  })
+  it.each([false, true])('accepts a small correction, gentle diagonal and recovered finger wobble, reduced=%s', reduced => {
+    for (const at of [0, 1]) for (const path of [[[60, 0], [44, 0]], [[30, 9], [60, 19]], [[30, 19], [60, 0]]]) {
+      const s = mount(at, { isReducedMotion: () => reduced }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+      const point = (along: number, cross: number): [number, number] => [p[0] + dx / 60 * along + (at ? cross : 0), p[1] + dy / 60 * along + (at ? 0 : cross)]
+      event(s.hit, 'pointerdown', p)
+      for (const [along, cross] of path) event(s.hit, 'pointermove', point(along!, cross!))
+      event(s.hit, 'pointerup', point(path.at(-1)![0]!, path.at(-1)![1]!)); s.run()
+      expect(s.progress).toEqual([at + 1]); s.instance.dispose()
     }
   })
   it.each(['pause', 'blur', 'pointercancel', 'lostpointercapture', 'multitouch'])('restores the uncommitted shell and tool on %s', kind => {

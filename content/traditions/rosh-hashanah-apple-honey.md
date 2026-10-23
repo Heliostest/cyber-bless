@@ -37,3 +37,9 @@ Union for Reform Judaism 的祝福页直接说明拿起苹果片、蘸入蜂蜜�
 当前呈现：苹果片拿起、蘸入实体蜜面、提起回盘。 苹果颜色、陶碟、回盘、白昼庭院为产品安排，未模拟食用。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#rosh-hashanah-apple-honey)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+## 2026-10-23 产品操作容错
+
+适用场景：`rosh-hashanah-apple-honey`。本应用调整触屏方向提示、长拖与小幅纠正的识别，并提示何时可松手。原有器物、动作顺序与文化主张不变；这些距离、方向图标与容错规则是产品界面安排，不是传统要求。
+
+本次没有新增文化事实，也未重新登记外部来源为已读。具体实现、产品边界与验证见[操作修正记录](../../docs/research/2026-10-23-scene-interaction-fixes.md)。

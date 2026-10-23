@@ -20,3 +20,8 @@
 边界：未证明统一的古代起源、抛摔次数、执礼者或籽数占断；固定轨迹和裂果效果为产品安排。
 
 来源正文的完整链接、实际阅读位置、访问状态及产品简化见[B 组逐项记录](../../../../docs/research/2026-10-20-scene-narratives-b.md#greek-new-year-pomegranate)与[来源卡](../../../../content/traditions/greek-new-year-pomegranate.md)。本节不更改现有交互；用户介绍集中维护于 `packages/core/src/scene-narratives/b.ts`。
+
+
+## 2026-10-23 操作容错
+
+箭头与方向判定共用动作方向配置；正确方向支持短拖、长拖、合理斜拖及小幅纠正，达到条件时显示可以松手。明显反向、回到起点、取消和多指仍不推进。仅调整产品输入容错与完成提示，未改变器物、文化主张、三步动作顺序、来源归属、技术 ID 或存档。核查与验证见[本轮修复记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。

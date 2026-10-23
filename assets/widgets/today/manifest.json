@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "86a522de7e51430e2d551af9161b48b144046e72a0c8e30a338f7c48c21a75eb",
+  "revision": "3bc55e4e32f209c225831e5184b5bd46e87c4a3c67c21c5caf5ee273ab3f3d83",
   "scenes": [
+    {
+      "id": "japanese-kadomatsu",
+      "engine": "japanese-kadomatsu@1",
+      "small": {
+        "file": "japanese-kadomatsu-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "1857bfa18a8d4df71fb566c37b0dce3de74956df4eafd894a910ea0ac09cd822",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "japanese-kadomatsu-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "17aac5024632dac3a0f11bda2876703ec9eeedc65b6b54ced055f6de3a328c8e",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "japanese-kadomatsu-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "78d5b998f5cb1850976dfe0abda3b63bb77e16f68c58c52094b5a6ca96ba1164",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "alasita-miniature-house",
       "engine": "alasita-miniature-house@1",

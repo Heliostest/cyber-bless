@@ -4208,3 +4208,7 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 门松迎岁（2026-10-23）
+
+门口成对松竹门松作为迎接年神的标识，见[专卡](traditions/japanese-kadomatsu.md)及[研究](../docs/research/2026-10-23-japanese-kadomatsu.md)。已读兵库/北海道神社厅与地主神社相关正文，JNTO正文支持所选三竹松枝造型；具体草束、托盘、三段动作属产品安排，不以安放完成表示神明已降临或祈福生效。

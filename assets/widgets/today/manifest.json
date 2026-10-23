@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "86a522de7e51430e2d551af9161b48b144046e72a0c8e30a338f7c48c21a75eb",
+  "revision": "931e42d022d3da5c55a7bcf6e03c42f43a48c88d6aab38248e4367c458e7171b",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -642,6 +642,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "8b570d6cfe6ab9b9f1a982e6636e158bf7d4db9d54d50ca0a7afc35713036de9",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "neapolitan-cornicello",
+      "engine": "neapolitan-cornicello@1",
+      "small": {
+        "file": "neapolitan-cornicello-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "c5cc50fe0009a344c032cebe19b5e02860a59d3420374455db84078b2002dc69",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "neapolitan-cornicello-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "5a1fb1fc7dc2ed31c575ca147b6be023786b16a0ad91c7e68052c80a649a5a6c",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "neapolitan-cornicello-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "47a8420cdd1dde31c36407933213c43995874cd84f9845efd84da28cc18af54a",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

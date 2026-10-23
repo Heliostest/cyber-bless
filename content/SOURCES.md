@@ -4208,3 +4208,12 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 红角赠福 · 2026-10-23
+
+- https://collection.sciencemuseumgroup.org.uk/objects/co108078/amulet-resembling-twisted-horn
+- https://catalogo.beniculturali.it/detail/DemoEthnoAnthropologicalHeritage/1500623730
+- https://sabap.na.it/elenco-ragionato-dei-principali-beni-di-interesse-demoetnoantropologico-della-citta-di-napoli/
+- https://www.uldericopinfildi.it/en/corni-2/
+
+读取状态及范围见专卡/研究；真实护佑与赠礼语境保留，礼盒/纸卡/三步/实心平底为产品。ICCD实现者已读，独立者本次访问失败；不把它记为双方已读，不复刻来源照片。

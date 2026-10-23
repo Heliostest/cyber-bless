@@ -154,6 +154,7 @@ describe("builtInScenes narratives", () => {
       "mongolian-ovoo",
       "navruz-sumalak",
       "ndebele-painted-house",
+      "neapolitan-cornicello",
       "niue-shell-necklace",
       "omamori-cycle",
       "omikuji",

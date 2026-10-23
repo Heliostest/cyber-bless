@@ -10873,5 +10873,20 @@
     "date_note": "祖尼礼仪民族志记载；当代仍实践",
     "confidence": "medium",
     "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/zuni-ashiwi.md"
+  },
+  {
+    "id": "neapolitan-cornicello",
+    "slug": "neapolitan-cornicello",
+    "title": "那不勒斯角形护符赠礼",
+    "grade": "C",
+    "region": "意大利那不勒斯（代表点）",
+    "lat": 40.8518,
+    "lon": 14.2681,
+    "year_start": 1860,
+    "year_end": null,
+    "date_basis": "documented",
+    "date_note": "1860为Science Museum馆藏A666106年代下界，非习俗起源；那不勒斯坐标为代表点，非本场礼盒实景。",
+    "confidence": "medium",
+    "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/neapolitan-cornicello.md"
   }
 ]

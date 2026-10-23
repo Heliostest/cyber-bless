@@ -85,6 +85,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
     kind: 'blessing', label: '向神明献上感恩', optionalWish: false,
     action: '放入白花，托起盛好供品的叶盘，轻放到田边供台上。',
   },
+  'neapolitan-cornicello': {kind:'blessing',label:'备一份红角赠礼，寄托平安好愿',optionalWish:false,action:'将角形护符与祝愿卡放进礼盒，寄托所赠之人平安顺遂的愿望。'},
   'bulgarian-survakane': {
     kind: 'blessing', label: '新年问候，祝亲友健康', optionalWish: false,
     action: '提起彩枝，移到亲友背后，轻拍后收回，送上健康祝愿。',

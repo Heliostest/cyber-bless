@@ -4208,3 +4208,7 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 七草祈安（2026-10-23）
+
+农林水产省[人日与七草粥海报](https://www.maff.go.jp/hokuriku/safe/shokuiku/attach/pdf/poster_7-20.pdf)、[aff2017年12月正文](https://www.maff.go.jp/j/pr/aff/1712/characterinformation.html)；访问状态、料理参照与产品边界见[来源卡](traditions/nanakusa-gayu.md)与[核查记录](../docs/research/2026-10-23-nanakusa-gayu.md)。

@@ -152,6 +152,7 @@ describe("builtInScenes narratives", () => {
       "mochigase-nagashibina",
       "mongolian-felt-ger",
       "mongolian-ovoo",
+      "nanakusa-gayu",
       "navruz-sumalak",
       "ndebele-painted-house",
       "niue-shell-necklace",

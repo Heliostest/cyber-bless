@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "86a522de7e51430e2d551af9161b48b144046e72a0c8e30a338f7c48c21a75eb",
+  "revision": "3533960125cd48d3bc3a495364aee8a850587ddb3dbe61440a2075a6e9dc63f1",
   "scenes": [
+    {
+      "id": "nanakusa-gayu",
+      "engine": "nanakusa-gayu@1",
+      "small": {
+        "file": "nanakusa-gayu-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "f923e694da893537a2bf22ab1aa95c7a79557a71e1f76e19b124776a2606f404",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "nanakusa-gayu-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "d31b308caf8c81cf3088d84c75f220f94e965a9f5914c2ac42bd4cb2de95f36b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "nanakusa-gayu-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "4f1f6960f0760e70a45f5476ab676dde0e3925b7450524c7366475490290f6ac",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "alasita-miniature-house",
       "engine": "alasita-miniature-house@1",

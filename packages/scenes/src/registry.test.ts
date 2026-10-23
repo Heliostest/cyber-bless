@@ -25,6 +25,7 @@ describe('sceneRegistry', () => {
       'korean-sotdae',
       'japanese-kadomatsu',
       'pucara-rooftop-bulls',
+      'chinese-longevity-lock',
       'alasita-miniature-house',
       'yusheng-lohei',
       'kitano-nadeushi',

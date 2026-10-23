@@ -32,6 +32,7 @@ const craftDeltas={
   'korean-sotdae': [[0,-60],[0,-60],[0,60]],
   'japanese-kadomatsu': [[0,-60],[60,0],[0,60]],
   'pucara-rooftop-bulls': [[0,-60],[0,-60],[0,60]],
+  'chinese-longevity-lock': [[0,-60],[60,0],[0,60]],
   'alasita-miniature-house': [[0,-60],[60,0],[0,60]],
   'yusheng-lohei': [[0,60],[0,-60],[0,60]],
   'kitano-nadeushi': [[0,-60],[60,0],[0,60]],
@@ -287,6 +288,7 @@ for(const width of process.env.WBR_RETURN_ONLY?[]:widths)for(const id of ids){
   const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,id==='korean-sotdae'?from[1]:box.y+3]
   const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,id==='japanese-kadomatsu'?from[1]:box.y+3]
   const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,id==='pucara-rooftop-bulls'?from[1]:box.y+3]
+  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,id==='chinese-longevity-lock'?from[1]:box.y+3]
   const input=pointers.get(page)
   await input.down(wrong);await input.move(from);await input.up()
   await input.down(from);await input.move(wrong);await input.up()

@@ -4275,3 +4275,5 @@ Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](
 - https://www.spain.info/en/discover-spain/new-years-eve-spain/
 - https://www.esmadrid.com/en/whats-on/new-years-eve-party-puerta-sol
 实际读取状态和支持范围见专卡与研究。真实传统是午夜随钟吃十二颗葡萄；本场只备盘，三盘/四颗分组与器形钟面均产品安排，无吞吃/报时/应验保证，不复刻来源图片。
+## 银锁寄安（2026-10-23）
+长命锁作为祈平安福寿的项饰，见[专卡](traditions/chinese-longevity-lock.md)及[研究](../docs/research/2026-10-23-chinese-longevity-lock.md)。已读Powerhouse及文化部典藏正文；独立研究读NPM陈慧霞2025.3正文。银锁与橘棉绳、花坠为有据物类特征的原创组合；真实信仰保留，礼匣及三段动作明确为产品安排，不保证护佑生效。

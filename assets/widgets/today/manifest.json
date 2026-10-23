@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "86a522de7e51430e2d551af9161b48b144046e72a0c8e30a338f7c48c21a75eb",
+  "revision": "504412524329fbea8f56f3b68a1b4950fb68de56536fa6ad30a10ef2da49b11f",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -642,6 +642,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "8b570d6cfe6ab9b9f1a982e6636e158bf7d4db9d54d50ca0a7afc35713036de9",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "vietnamese-five-fruit-tray",
+      "engine": "vietnamese-five-fruit-tray@1",
+      "small": {
+        "file": "vietnamese-five-fruit-tray-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "7e5cc4829f5d2e60418b0bde320aaa248835e666eb8791f80e189bc28f12b59d",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "vietnamese-five-fruit-tray-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "fbd51293865263560fc49e4a566b8b834dabc907c620e619d109bed715f49b2f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "vietnamese-five-fruit-tray-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "36014214fcb310b61f12713c7d6d929df9392eb8c1f1f15bf5d05675a60aa899",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

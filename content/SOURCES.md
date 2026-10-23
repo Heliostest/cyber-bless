@@ -4208,3 +4208,11 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 五果迎春 · 2026-10-23
+
+- https://en.baochinhphu.vn/traditional-foods-offering-to-ancestors-on-tet-festival-11140429.htm
+- https://en.vietnamplus.vn/tet-fruit-tray-indispensible-part-of-vietnamese-culture-post146190.vnp
+- https://en.vietnamplus.vn/arranging-five-fruit-tray-during-lunar-new-year-celebration--a-vietnamese-tradition/279358.vnp
+
+实现者与独立审阅者实际读三条相关正文，机构文化综述按综述使用；日期/定位/产品布局差异见专卡与研究。VNAT13636只有空索引未记正文，来源照片未读，不称复刻。

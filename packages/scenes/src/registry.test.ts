@@ -39,6 +39,7 @@ describe('sceneRegistry', () => {
       'fgs-buddha-bathing',
       'balinese-canang-sari',
       'bulgarian-survakane',
+      'vietnamese-five-fruit-tray',
       'setsubun-mamemaki',
       'sternsinger-house-blessing',
       'lam-tsuen-wishing-tree',
@@ -309,3 +310,5 @@ it('loads the source-specific fixed Chinowa walking fragment',async()=>{const m=
 it('loads the three preformed Bonfim knots fragment',async()=>{const m=await loadScene('bonfim-ribbon');expect(m.meta.id).toBe('bonfim-ribbon');expect(m.meta.traditionSlug).toBe('bonfim-ribbon');expect(m.create).toBeTypeOf('function')})
 
 it('loads the Greek household New Year pomegranate fragment',async()=>{const m=await loadScene('greek-new-year-pomegranate');expect(m.meta.id).toBe('greek-new-year-pomegranate');expect(m.meta.traditionSlug).toBe('greek-new-year-pomegranate');expect(m.create).toBeTypeOf('function')})
+
+describe('Tet fruit preparation registration',()=>{it('loads the dedicated fruit source and scene factory',async()=>{expect(sceneRegistry.find(m=>m.id==='vietnamese-five-fruit-tray')).toMatchObject({title:'五果迎春',traditionSlug:'vietnamese-five-fruit-tray',grade:'C',gestures:['drag']});expect((await loadScene('vietnamese-five-fruit-tray')).create).toBeTypeOf('function')})})

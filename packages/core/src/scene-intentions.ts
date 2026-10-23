@@ -85,6 +85,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
     kind: 'blessing', label: '向神明献上感恩', optionalWish: false,
     action: '放入白花，托起盛好供品的叶盘，轻放到田边供台上。',
   },
+  'vietnamese-five-fruit-tray': {kind:'blessing',label:'为新岁备一盘平安丰足',optionalWish:false,action:'依次安放橙、青苹果和梨，为春节祭祖备好果盘，留一份新岁平安的心愿。'},
   'bulgarian-survakane': {
     kind: 'blessing', label: '新年问候，祝亲友健康', optionalWish: false,
     action: '提起彩枝，移到亲友背后，轻拍后收回，送上健康祝愿。',

@@ -196,6 +196,7 @@ describe("builtInScenes narratives", () => {
       "valencian-folding-fan",
       "venetian-glass-bead",
       "vietnamese-bamboo-dragonfly",
+      "vietnamese-five-fruit-tray",
       "votive-candle-catholic",
       "weifang-paper-kite",
       "welsh-drop-spindle",

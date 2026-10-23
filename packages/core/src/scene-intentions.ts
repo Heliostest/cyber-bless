@@ -19,6 +19,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
   'nanakusa-gayu': {kind:'blessing',label:'为自己与家人祈一份安康',action:'轻拌七草，舀起温粥，再盛进碗中。',optionalWish:false},
   'brat-bride-cloth': {kind:'blessing',label:'为牵挂的人寄一份平安',action:'提起方布，移到窗外，再轻轻铺好。',optionalWish:false},
   'korean-sotdae': {kind:'blessing',label:'为家园寄一份平安',action:'托起木制鸟竿，扶正后安放稳妥。',optionalWish:false},
+  'japanese-kadomatsu': {kind:'blessing',label:'为新岁寄一份平安',action:'提起备好的门松，移到门边，再轻轻放稳。',optionalWish:false},
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
   'alasita-miniature-house': { kind:'wish',label:'寄一份安居的心愿',optionalWish:false,action:'提起、转看微型小屋，再将这份愿景安放好。' },
   'yusheng-lohei': {

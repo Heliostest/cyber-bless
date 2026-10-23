@@ -9,6 +9,7 @@ describe('App scene availability', () => {
     "nanakusa-gayu",
     "brat-bride-cloth",
     "korean-sotdae",
+    "japanese-kadomatsu",
     "alasita-miniature-house",
     "yusheng-lohei",
     "kitano-nadeushi",

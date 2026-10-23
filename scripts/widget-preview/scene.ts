@@ -23,6 +23,7 @@ const completedPreviewProgress: Record<string, number> = {
   "nanakusa-gayu": 3,
   "brat-bride-cloth": 3,
   "korean-sotdae": 3,
+  "japanese-kadomatsu": 3,
   "alasita-miniature-house": 3,
   "kitano-nadeushi": 3,
   "finnish-virpominen": 3,

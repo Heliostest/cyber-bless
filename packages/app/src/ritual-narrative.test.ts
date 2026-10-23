@@ -135,6 +135,7 @@ describe("builtInScenes narratives", () => {
       "italian-ex-voto",
       "japanese-daruma-otoshi",
       "japanese-hamaya",
+      "japanese-kadomatsu",
       "japanese-kendama",
       "japanese-koinobori",
       "japanese-shishi-odoshi",

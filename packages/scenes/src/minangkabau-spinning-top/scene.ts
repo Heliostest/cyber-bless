@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
 import { placementHit } from '../placement-hit'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
@@ -100,6 +101,7 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
   addInteractionCue(bead, { kind: 'drag', label: '拉动木珠松开棉绳', priority: 3, enabled: cueActive(0), destination: anchor, targetLabel: '木板浅色圆点' })
   addInteractionCue(cap, { kind: 'tap', label: '轻点木帽停稳', priority: 3, enabled: cueActive(1) })
   addInteractionCue(cap, { kind: 'tap', label: '轻点木帽静看', priority: 3, enabled: cueActive(2) })
+  const touchTarget = createTouchTarget(canvas, camera, scene)
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -HOME.y)
   const point = new THREE.Vector3(), offset = new THREE.Vector3(), down = new THREE.Vector2()
   // A target must be the nearest visible opaque surface. Only the held bead
@@ -118,7 +120,7 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
   const resetDrag = () => { dragging = false; maxTravel = 0; if (!motion) restorePose() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart(x, y) { if (motion || checkpoint === 3) return false; matrices(); return visibleHit(x, y, checkpoint === 0 ? bead : cap) },
+    canStart(x, y) { if (motion || checkpoint === 3) return false; matrices(); return touchTarget.hit(x, y, checkpoint === 0 ? bead : cap) },
     onStart(x, y) {
       down.set(x, y); maxTravel = 0; dragging = checkpoint === 0; feedback.prepare()
       if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(bead.position).sub(point)

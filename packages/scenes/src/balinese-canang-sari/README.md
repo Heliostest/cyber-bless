@@ -1,5 +1,11 @@
 # 叶盘献谢 · balinese-canang-sari
 
+## 2026-10-24 交互审阅
+
+已按实际器物、步骤、可持续性与触屏验收逐项审阅。保留有实际用途的阶段，不因总数是三而增删传统动作；本轮手势容错与放手采样属于产品输入安排。器物身份、文化归属与传统主张没有增加。
+
+逐场发现、处理、来源边界与验证见[本轮 C 组记录](../../../../docs/research/2026-10-24-scene-interaction-review-c.md#逐场记录)。
+
 巴厘印度教 Canang sari 日常献供片段，向 Ida Sang Hyang Widhi Wasa 表达谢意。文化关联见[专用来源卡](../../../../content/traditions/balinese-canang-sari.md)与[逐项研究](../../../../docs/research/2026-10-19-balinese-canang-sari.md)。
 
 场景采用所引 PHDI 文章的完整叶盘配置，包含 ceper、porosan、甘蔗、香蕉、小糕、sampiyan、四色花与中央班兰；米、钱币及未点燃的香另有 SAKA 支持。世界坐标 +X 为东、+Z 为南，移动时不旋转叶盘，保持所采用的配置。

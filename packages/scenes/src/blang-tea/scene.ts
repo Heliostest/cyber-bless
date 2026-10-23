@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -109,11 +110,8 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
   const ray=createPointerRay(canvas,camera),down=new THREE.Vector2(),plane=new THREE.Plane(),point=new THREE.Vector3(),offset=new THREE.Vector3()
   const source=()=>checkpoint===0?grip:checkpoint===1?handle:touch
   // Only opaque visible surfaces qualify; a held object may cross its receptacle.
-  const hitsVisible=(x:number,y:number,target:THREE.Object3D,held?:THREE.Object3D)=>{
-    const meshes:THREE.Object3D[]=[]
-    scene.traverseVisible(o=>{if(!(o as THREE.Mesh).isMesh)return;for(let p:THREE.Object3D|null=o;p;p=p.parent)if(p===held)return;meshes.push(o)})
-    return ray.aim(x,y).intersectObjects(meshes,false)[0]?.object===target
-  }
+  const touchTarget = createTouchTarget(canvas, camera, scene)
+  const hitsVisible = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => touchTarget.hit(x, y, target, { ignore: held })
   const reset=()=>{dragging=false;maxTravel=0;if(!transition)restorePose()}
   const previewPour=(t:number)=>{pot.position.copy(POT_HOME).add(new THREE.Vector3(.718*t,.50*t,.43*t));pot.rotation.z=-t*.60;matrices()}
   const pointer=createObjectPointer(ui.hitLayer,{

@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -102,17 +103,8 @@ export function createPurepechaCopperBowl(ctx: SceneContext): SceneInstance {
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => checkpoint === 0 ? pad : bowl
   const belongsTo = (object: THREE.Object3D, parent: THREE.Object3D) => { for (let p: THREE.Object3D | null = object; p; p = p.parent) if (p === parent) return true; return false }
-  const hitsVisible = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => {
-    const meshes: THREE.Object3D[] = []
-    scene.traverseVisible(object => {
-      if (!(object as THREE.Mesh).isMesh || (held && belongsTo(object, held))) return
-      const materials = (object as THREE.Mesh).material, all = Array.isArray(materials) ? materials : [materials]
-      if (all.every(mat => !mat.visible || (mat.transparent && mat.opacity < .5))) return
-      meshes.push(object)
-    })
-    const hit = ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
-    return !!hit && belongsTo(hit, target)
-  }
+  const touchTarget = createTouchTarget(canvas, camera, scene)
+  const hitsVisible = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => touchTarget.hit(x, y, target, { ignore: held })
   const reset = () => { dragging = false; maxTravel = 0; if (!transition) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,

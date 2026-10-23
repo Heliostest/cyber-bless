@@ -28,6 +28,7 @@ export function Ritual({
   const [wishId, setWishId] = useState(linkedWishId ?? "");
   const [pulse, setPulse] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [ending, setEnding] = useState(false);
   const [view, setView] = useState("front");
   const [instruction, setInstruction] =
     useState("轻点木鱼敲一下；按住拖动，木槌会跟着移动。");
@@ -36,9 +37,10 @@ export function Ritual({
     r?.ritual ?? (id === "crane" || id === "lantern" ? id : "woodfish");
   const meta = rituals[kind];
   const progress = r?.progress ?? 0;
+  const woodfishTotal = r?.strikes ?? progress;
   const ready = progress >= meta.steps;
   function step() {
-    if (!active || paused || document.hidden || ready) return false;
+    if (!active || paused || document.hidden || ending || (ready && kind !== 'woodfish')) return false;
     if (
       dispatch({
         type: "ritual.strike",
@@ -61,12 +63,10 @@ export function Ritual({
       go({ page: "complete", id: r.id });
     }
   }
-  // The last strike settles the session by itself: hold a short beat — the
-  // woodfish waits for its mallet to rest — then commit and open the reward
-  // card. No second confirm; finish() is idempotent, so a 12/12 session left
-  // unsettled settles the same way the moment this page opens.
+  // Finite rituals settle at their last step. The woodfish keeps sounding
+  // until the user chooses to finish, then waits for the mallet to rest.
   useEffect(() => {
-    if (!ready || !r) return;
+    if (!ready || !r || (kind === 'woodfish' && !ending)) return;
     let settled = false;
     let timer = 0;
     const settle = () => {
@@ -91,14 +91,14 @@ export function Ritual({
       window.clearTimeout(timer);
     };
     // r?.id, not r: each strike replaces the session object.
-  }, [ready, r?.id, kind, whenIdleRef]);
+  }, [ready, r?.id, kind, whenIdleRef, ending]);
   return (
     <div className={`ritual-page ritual-${kind}`}>
       {kind === "woodfish" && <RitualNarrativeBlurb sceneId="woodfish" />}
       <div className="ritual-goal">
         {kind === "woodfish" ? "本轮轻敲" : "今日目标"}{" "}
         <strong>
-          {progress} / {meta.steps}
+          {kind === 'woodfish' ? `已敲 ${woodfishTotal} 次 · 至少 ${meta.steps} 次` : `${progress} / ${meta.steps}`}
         </strong>
       </div>
       <div
@@ -115,7 +115,7 @@ export function Ritual({
         <div className="ritual-feedback" key={pulse}>
           <strong>
             {kind === "woodfish"
-              ? ready ? "本轮轻敲已结束" : pulse ? "已记下一次轻敲" : "听一声木鱼"
+              ? ending ? "本轮轻敲已结束" : ready ? "可以继续轻敲" : pulse ? "已记下一次轻敲" : "听一声木鱼"
               : ready ? "仪式已完成" : pulse ? "已记下这一步" : "留一点好心情"}
           </strong>
           <span>{kind === "woodfish" ? "听木槌敲击与余音" : "烦恼，轻轻放下"}</span>
@@ -126,7 +126,7 @@ export function Ritual({
             active={active && !paused}
             reducedMotion={state.settings.reducedMotion}
             view={view}
-            disabled={ready}
+            disabled={ending}
             onStrike={step}
             onImpact={feedback}
             onInstruction={setInstruction}
@@ -163,7 +163,7 @@ export function Ritual({
             </select>
           </label>
         )}
-      <div className="ritual-counter">{String(progress).padStart(3, "0")}</div>
+      <div className="ritual-counter">{String(kind === 'woodfish' ? woodfishTotal : progress).padStart(3, "0")}</div>
       <p
         className="tap-instruction"
         id={kind === "woodfish" ? "woodfish-instruction" : undefined}
@@ -174,7 +174,7 @@ export function Ritual({
         {paused
           ? "停一会儿，也很好。"
           : ready
-            ? kind === "woodfish" ? "十二次轻敲已记下，静听余音。" : "这一刻，已经很好。"
+            ? kind === "woodfish" ? ending ? "轻敲已记下，静听余音。" : "可以继续轻敲，想收尾时点「结束仪式」。" : "这一刻，已经很好。"
             : kind === "woodfish"
               ? instruction
               : meta.prompts[Math.min(progress, meta.prompts.length - 1)]}
@@ -200,7 +200,12 @@ export function Ritual({
           </select>
         </div>
       )}
-      {kind === "woodfish" && !ready && (
+      {kind === 'woodfish' && ready && !ending && <button
+        type="button" className="button primary scene-woodfish-finish"
+        disabled={!active || paused}
+        onClick={() => { if (active && !paused) setEnding(true); }}
+      >结束仪式</button>}
+      {kind === "woodfish" && !ending && (
         <button
           className="woodfish-pause"
           onClick={() => {

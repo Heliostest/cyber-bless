@@ -129,7 +129,7 @@ describe('visible object input and recoverable progress', () => {
     const s = mount(0, { isReducedMotion: () => true })
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointerup', s.point('tile-frame-grip'))
     drag(s, 'tile-display-seat', 'tile-frame-grip'); expect(s.progress).toEqual([])
-    const p = s.point('tile-loose-grip'); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', s.point('tile-frame-grip')); expect(s.progress).toEqual([])
+    const p = s.point('tile-loose-grip'); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p); expect(s.progress).toEqual([])
     const home = s.scene.getObjectByName('tile-center-piece')!.position.clone()
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [1, 1]); event(s.hit, 'pointerup', [1, 1])
     expect(s.scene.getObjectByName('tile-center-piece')!.position.equals(home)).toBe(true); expect(s.progress).toEqual([])

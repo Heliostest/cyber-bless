@@ -209,6 +209,8 @@ function LoadedScene({
   const record = state.sceneRecords.find((r) => r.id === entry.id);
   const progress = record?.progress ?? 0;
   const steps = sceneSteps(entry);
+  const woodfishStrikes = record?.strikes ?? progress;
+  const woodfishFinished = progress >= steps;
   const intention = sceneIntention(entry.id);
   const [instruction, setInstruction] = useState("轻敲木鱼，让心慢下来");
   // A 还愿 visit: a wish still waiting on its 还愿. The vessel path may walk
@@ -244,8 +246,8 @@ function LoadedScene({
   const sticker = useRef<HTMLDivElement>(null);
   // One record per visit, however often the last step reports.
   const [visit] = useState(() => ({ id: uid(), startedAt: now() }));
-  const checkpoint = (n: number) => {
-    dispatch({ type: "scene.progress", id: entry.id, progress: n });
+  const checkpoint = (n: number, strikes?: number) => {
+    dispatch({ type: "scene.progress", id: entry.id, progress: n, ...(strikes === undefined ? {} : { strikes }) });
     if (n < steps) return;
     // A daily-set walk settles its keepsake once. So
     // does an unflagged walk of 今日's main scene: finishing the day's walk
@@ -408,21 +410,25 @@ function LoadedScene({
         <p className="scene-caption">{SCENE_DAILY_CAPTION}</p>
       )}
       <p className={`scene-progress${entry.engine !== "woodfish@1" ? " sr-only" : ""}`} role="status">
-        已完成 {progress} / {steps}
+        {entry.engine === 'woodfish@1' && !woodfishFinished
+          ? `已轻敲 ${woodfishStrikes} 次 · 至少 ${steps} 次后可结束`
+          : `已完成 ${progress} / ${steps}`}
       </p>
       {entry.engine === "woodfish@1" ? (
         <>
           <Woodfish
             sceneId={entry.id}
             contentClient={client}
-            pulse={progress}
+            pulse={woodfishStrikes}
             active={active}
             reducedMotion={state.settings.reducedMotion}
             view="front"
-            disabled={progress >= steps}
+            disabled={woodfishFinished}
             onStrike={() => {
+              if (!active || woodfishFinished) return false;
               prepareFeedback();
-              checkpoint(Math.min(steps, progress + 1));
+              // The final checkpoint belongs to the user's finish action.
+              checkpoint(Math.min(steps - 1, woodfishStrikes + 1), woodfishStrikes + 1);
               return true;
             }}
             onImpact={feedback}
@@ -430,8 +436,14 @@ function LoadedScene({
             onFailure={lease ? failed : undefined}
           />
           <p id="woodfish-instruction" className="scene-instruction">
-            {instruction}
+            {woodfishStrikes >= steps && !woodfishFinished ? '可以继续轻敲，想收尾时点「结束仪式」。' : instruction}
           </p>
+          {woodfishStrikes >= steps && !woodfishFinished && <button
+            type="button"
+            className="button primary scene-woodfish-finish"
+            disabled={!active}
+            onClick={() => { if (active && !woodfishFinished) checkpoint(steps); }}
+          >结束仪式</button>}
         </>
       ) : (
         <ProceduralScene

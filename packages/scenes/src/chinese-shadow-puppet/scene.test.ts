@@ -167,7 +167,7 @@ describe('an original articulated shadow bird in its theatre', () => {
     const end: [number, number] = at === 0 ? [p[0], p[1] - 60] : [p[0] + 60, p[1]]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
     const board = s.point('shadow-cloth', [1.3, .7, 0]); event(s.hit, 'pointerdown', board); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
+    event(s.hit, 'pointerup', end)
     for (const [dx, dy] of at === 0 ? [[0, -8], [0, 60], [-60, 0], [90, -60]] : [[8, 0], [-60, 0], [0, 60], [60, 90]]) drag(s, at, dx, dy)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); at === 0 ? lift(s) : turn(s); expect(s.progress).toEqual([at + 1])

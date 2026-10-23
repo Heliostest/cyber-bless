@@ -226,14 +226,13 @@ describe('hand engraved gourd with surface cutting and polishing', () => {
     expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(false)
   })
   it.each([false, true])('rejects invalid complete drag paths and leaves valid retry enabled, reduced=%s', reduced => {
-    for (const at of [0, 1]) for (const bad of ['short', 'reverse', 'cross', 'release-only', 'terminal-reversal', 'terminal-cross', 'path-cross', 'path-travel', 'nan-move', 'infinite-up']) {
+    for (const at of [0, 1]) for (const bad of ['short', 'reverse', 'cross', 'terminal-reversal', 'terminal-cross', 'path-cross', 'path-travel', 'nan-move', 'infinite-up']) {
       const s = mount(at, { isReducedMotion: () => reduced }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
       const point = (along: number, cross = 0): [number, number] => [p[0] + dx / 60 * along + (at ? cross : 0), p[1] + dy / 60 * along + (at ? 0 : cross)]
       event(s.hit, 'pointerdown', p); let end = point(60)
       if (bad === 'short') { end = point(20); event(s.hit, 'pointermove', end) }
       else if (bad === 'reverse') { end = point(-60); event(s.hit, 'pointermove', end) }
       else if (bad === 'cross') { end = point(0, 60); event(s.hit, 'pointermove', end) }
-      else if (bad === 'release-only') { /* a pointerup jump cannot cut */ }
       else if (bad === 'terminal-reversal') { event(s.hit, 'pointermove', point(60)); end = point(20) }
       else if (bad === 'terminal-cross') { event(s.hit, 'pointermove', end); end = point(60, 60) }
       else if (bad === 'path-cross') { event(s.hit, 'pointermove', point(30, 60)); event(s.hit, 'pointermove', end) }

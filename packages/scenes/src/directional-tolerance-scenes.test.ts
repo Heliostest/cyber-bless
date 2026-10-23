@@ -32,20 +32,24 @@ const SCENES = [
   ['estonian-village-swing', 'UDU'], ['fgs-buddha-bathing', 'UUU'], ['finnish-kantele', 'UDU'],
   ['french-coffee-mill', 'LRD'], ['french-petanque', 'UUU'], ['garden-croquet', 'LRR'],
   ['german-jumping-jack', 'DDD'], ['ghanaian-oware', 'URL'], ['greek-new-year-pomegranate', 'URD'],
-  ['greek-vasilopita', 'URD'], ['hiiragi-iwashi', 'ULU'], ['irish-bodhran', 'DUR'],
+  ['greek-vasilopita', 'URD'], ['hiiragi-iwashi', 'ULU'], ['irish-bodhran', 'DUD'],
   ['japanese-daruma-otoshi', 'DRU'], ['japanese-shishi-odoshi', 'LDD'], ['japanese-wagasa', 'URD'],
   ['kagami-biraki-sake', 'UDL'], ['kagami-mochi-offering', 'UUU'], ['kameido-usokae', 'ULD'],
   ['lam-tsuen-wishing-tree', 'RRU'], ['mexican-metate', 'DUU'], ['mexican-tortilla-press', 'DDU'],
   ['mochigase-nagashibina', 'URD'], ['mongolian-ovoo', 'LLL'], ['paper-pinwheel', 'RUR'],
-  ['persian-esfand', 'URD'], ['polish-oplatek-sharing', 'URU'], ['puerto-rican-guiro', 'DUR'],
+  ['persian-esfand', 'URD'], ['polish-oplatek-sharing', 'URU'], ['puerto-rican-guiro', 'DUD'],
   ['romanian-martisor', 'URD'], ['rosh-hashanah-apple-honey', 'RDL'], ['scottish-plunge-churn', 'DUU'],
   ['setsubun-mamemaki', 'RUD'], ['shichigosan-chitose-ame', 'URD'], ['spanish-castanets', 'DDD'],
   ['sternsinger-house-blessing', 'URD'], ['sumiyoshi-godairiki', 'RRR'], ['tamagushi-offering', 'RRU'],
   ['thai-songkran-elders', 'URD'], ['tibetan-khata-greeting', 'URR'], ['tibetan-prayer-flags', 'URU'],
-  ['tibetan-water-bowls', 'URD'], ['udo-undama', 'URU'], ['valencian-folding-fan', 'RLL'],
+  ['tibetan-water-bowls', 'URRRRRRRD'], ['udo-undama', 'URU'], ['valencian-folding-fan', 'RLL'],
   ['welsh-drop-spindle', 'RDU'], ['zeniarai-coin-washing', 'ULR'],
 ] as const
 const DIRECTIONS: Record<string, [number, number]> = { R: [1, 0], L: [-1, 0], U: [0, -1], D: [0, 1] }
+const practiceThree = new Set(['finnish-kantele', 'irish-bodhran', 'chinese-rattle-drum'])
+const repeatable = new Set([...practiceThree, 'czech-wooden-ratchet', 'estonian-village-swing', 'german-jumping-jack', 'puerto-rican-guiro', 'spanish-castanets'])
+const checkpoints = (id: string, count: number) => practiceThree.has(id) ? [1, 1, 2].slice(0, count)
+  : repeatable.has(id) ? [1, 2].slice(0, count) : Array.from({ length: count }, (_, i) => i + 1)
 type Point = [number, number]
 const instances = new Set<SceneInstance>()
 afterEach(() => { instances.forEach(instance => instance.dispose()); instances.clear(); document.body.replaceChildren() })
@@ -91,29 +95,33 @@ const PATHS: [number, number][][] = [
   [[60, 0], [50, 0]], [[60, 0], [40, 0]], [[30, 15], [60, 30]],
   [[20, 16], [40, -16], [60, 0]],
 ]
-it.each(SCENES)('%s follows its arrows through all three steps with long drags, corrections and gentle diagonals', async (id, steps) => {
+it.each(SCENES)('%s follows its actual steps with long drags, corrections and gentle diagonals', async (id, steps) => {
   for (const width of [320, 390]) for (const path of PATHS) {
     const s = await mount(id, width)
-    for (let at = 0; at < 3; at++) {
+    for (let at = 0; at < steps.length; at++) {
       const direction = DIRECTIONS[steps[at]!]!, a = s.source(direction)
       pointer(s.layer, 'pointerdown', a)
       for (const [along, cross] of path) pointer(s.layer, 'pointermove', point(a, direction, along, cross))
       expect(s.hint.dataset.ready, `step ${at}, ${width}px, ${JSON.stringify(path)}`).toBe('true')
       expect(s.hint.textContent).toContain('松手')
       pointer(s.layer, 'pointerup', point(a, direction, ...path.at(-1)!)); s.run()
-      expect(s.progress, `step ${at}, ${width}px, ${JSON.stringify(path)}`).toEqual([1, 2, 3].slice(0, at + 1))
+      expect(s.progress, `step ${at}, ${width}px, ${JSON.stringify(path)}`).toEqual(checkpoints(id, at + 1))
       expect(s.hint.dataset.ready).not.toBe('true')
+    }
+    if (repeatable.has(id)) {
+      expect(s.complete).not.toHaveBeenCalled()
+      const finish = s.overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!
+      expect(finish.hidden).toBe(false); finish.click(); s.run()
     }
     expect(s.complete).toHaveBeenCalledOnce(); s.dispose()
   }
 }, 30000)
 it.each(SCENES)('%s keeps reverse, returned-to-start, canceled and multitouch input incomplete', async (id, steps) => {
-  for (let at = 0; at < 3; at++) {
+  for (let at = 0; at < steps.length; at++) {
     const s = await mount(id, 390, at), direction = DIRECTIONS[steps[at]!]!
-    for (const mode of ['reverse', 'cross', 'return', 'cancel', 'multi', 'release-only', 'nonfinite']) {
+    for (const mode of ['reverse', 'cross', 'return', 'cancel', 'multi', 'orphan-release', 'nonfinite']) {
       const a = s.source(direction), b = point(a, direction, 60)
-      pointer(s.layer, 'pointerdown', a)
-      if (mode !== 'release-only') pointer(s.layer, 'pointermove', b)
+      if (mode !== 'orphan-release') { pointer(s.layer, 'pointerdown', a); pointer(s.layer, 'pointermove', b) }
       if (mode === 'nonfinite') pointer(s.layer, 'pointermove', [NaN, a[1]])
       if (mode === 'cancel') pointer(s.layer, 'pointercancel', b)
       if (mode === 'multi') pointer(s.layer, 'pointerdown', b, 2)
@@ -125,6 +133,6 @@ it.each(SCENES)('%s keeps reverse, returned-to-start, canceled and multitouch in
     const a = s.source(direction)
     pointer(s.layer, 'pointerdown', a); pointer(s.layer, 'pointermove', point(a, direction, 20))
     pointer(s.layer, 'pointerup', point(a, direction, 120)); s.run()
-    expect(s.progress).toEqual([at + 1]); s.dispose()
+    expect(s.progress).toEqual(practiceThree.has(id) ? [at === 2 ? 2 : 1] : repeatable.has(id) && at === 2 ? [] : [at + 1]); s.dispose()
   }
 }, 30000)

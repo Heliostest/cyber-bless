@@ -3,6 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
 import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -153,6 +154,7 @@ export function createVenetianGlassBead(ctx: SceneContext): SceneInstance {
     addInteractionCue(bead, { kind: 'tap', label: '轻点玻珠静观', anchor: BEAD, priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
+  const touch = createTouchTarget(canvas, camera, scene)
   const nearestHit = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
     scene.traverseVisible(o => { const mesh = o as THREE.Mesh; if (!mesh.isMesh) return
@@ -170,7 +172,7 @@ export function createVenetianGlassBead(ctx: SceneContext): SceneInstance {
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
-    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return nearestHit(x, y) === target() },
+    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return nearestHit(x, y) === target() || touch.hit(x, y, target()) },
     onStart(x, y) {
       if (!prepareInput()) { pointer.cancel(); return }
       down.set(x, y); previous.copy(down); dragging = at < 2; moved = invalid = false; maxTravel = pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0

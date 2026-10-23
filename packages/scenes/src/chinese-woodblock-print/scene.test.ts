@@ -158,7 +158,7 @@ describe('a rubbing and peeling woodblock print', () => {
     expect(s.progress).toEqual([]); rub(s); expect(s.progress).toEqual([1])
     const c = s.point('woodblock-paper-corner')
     for (const end of [[c[0], c[1]+65], [c[0]+70, c[1]], [c[0], c[1]-8]] as [number,number][]) { event(s.hit, 'pointerdown', c); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end) }
-    event(s.hit, 'pointerdown', c); event(s.hit, 'pointerup', [c[0], c[1]-65])
+    event(s.hit, 'pointerup', [c[0], c[1]-65])
     expect(s.progress).toEqual([1]); peel(s); expect(s.progress).toEqual([1, 2])
     const p=s.point('woodblock-print-face'); event(s.hit,'pointerdown',p); event(s.hit,'pointermove',[p[0]+16,p[1]]); event(s.hit,'pointerup',p); expect(s.progress).toEqual([1, 2])
   })

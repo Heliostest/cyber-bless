@@ -32,7 +32,7 @@ Checkpoints restore silently. Returning visits do not mount a wish writer. Draft
 | 1 | `shadow-wing-grip` | `[0, 0, 0.075]` | `[60, 0]` |
 | 2 | `shadow-bird-body` | `[0.16, 0, 0.028]` | tap |
 
-At least 40px along-axis travel with actual move events is required; 60px reaches the authored pose. Pure cross-axis, clear reverse, returned-to-start, cancelled and second-pointer gestures do not advance. Longer same-direction drags, gentle diagonals and 10–20px corrections remain valid. Cues target the nearest opaque rendered surface, not hidden planes.
+At least 40px along-axis travel is required; 60px reaches the authored pose. A valid owned pointerdown may finish at a displaced pointerup even when the browser omitted move events. Pure cross-axis, clear reverse, returned-to-start, cancelled and second-pointer gestures do not advance. Longer same-direction drags, gentle diagonals and 10–20px corrections remain valid. Cues target the nearest opaque rendered surface, not hidden planes.
 
 ## Verification
 

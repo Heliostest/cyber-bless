@@ -3,6 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
 import { placementHit } from '../placement-hit'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createGerModel } from './model'
@@ -46,6 +47,7 @@ export function createMongolianFeltGer(ctx: SceneContext): SceneInstance {
   const dropPoint = (step: number = at) => model.placements[step]!.object.localToWorld(new THREE.Vector3(...model.placements[step]!.anchor))
   const dropCues = model.targets.map((_,i) => ({ kind: 'drag' as const, destination: () => dropPoint(i), label: DRAG_LABELS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const removeCues = model.targets.map((target,i) => addInteractionCue(target!,dropCues[i]!))
+  const touch = createTouchTarget(canvas, camera, scene)
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), from = new THREE.Vector2(), to = new THREE.Vector2()
   const plane = new THREE.Plane(), dragPoint = new THREE.Vector3(), offset = new THREE.Vector3(), held = new THREE.Vector3()
   const project = (p: THREE.Vector3) => {
@@ -73,7 +75,7 @@ export function createMongolianFeltGer(ctx: SceneContext): SceneInstance {
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
-    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return nearest(x, y) === model.targets[at] },
+    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x, y, model.targets[at]!) },
     onStart(x, y) {
       if (!prepareInput()) { pointer.cancel(); return }
       down.set(x,y); moved=invalid=false; dragging=true

@@ -149,6 +149,12 @@ describe.each(STEPS)('$id object cues', ({ id, kinds }) => {
 })
 
 describe('physical action cues', () => {
+  const finishWheel = (s: Awaited<ReturnType<typeof mount>>, id: string) => {
+    if (id !== 'tibetan-wheel') return
+    expect(s.progress).not.toHaveBeenCalled()
+    s.overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!.click()
+    for (let i = 0; i < 60; i++) s.instance.update(.05)
+  }
   it('finishes a quiet spring visit without writing or saving a draft', async () => {
     const saveWish = vi.fn(), complete = vi.fn()
     let active = false
@@ -218,6 +224,7 @@ describe('physical action cues', () => {
     const point = s.sourcePoint()
     s.pointer('pointerdown', point)
     s.pointer('pointerup', point)
+    finishWheel(s, id)
     expect(s.progress).toHaveBeenCalledExactlyOnceWith(next)
     s.instance.dispose()
   })
@@ -233,6 +240,7 @@ describe('physical action cues', () => {
     s.pointer('pointerup', point, 2)
     expect(s.progress).not.toHaveBeenCalled()
     s.pointer('pointerup', point, 1)
+    finishWheel(s, id)
     expect(s.progress).toHaveBeenCalledExactlyOnceWith(next)
     s.instance.dispose()
   })
@@ -253,6 +261,7 @@ describe('physical action cues', () => {
     expect(s.progress).not.toHaveBeenCalled()
     s.pointer('pointerdown', point, 1)
     s.pointer('pointerup', point, 1)
+    finishWheel(s, id)
     expect(s.progress).toHaveBeenCalledExactlyOnceWith(next)
     s.instance.dispose()
   })
@@ -363,7 +372,7 @@ describe('physical action cues', () => {
     expect(s.overlay.classList.contains('scene-overlay--stage')).toBe(false)
   })
 
-  it('lets a tap on the moving wheel ask it to settle after its double-tap gate', async () => {
+  it('lets a tap on the moving wheel keep it turning until explicit finish', async () => {
     const s = await mount('tibetan-wheel')
     const point = s.sourcePoint()
     s.pointer('pointerdown', point)
@@ -375,7 +384,10 @@ describe('physical action cues', () => {
     s.pointer('pointerdown', point)
     s.pointer('pointerup', point)
     s.instance.update(1.5)
-    expect(s.progress.mock.calls).toEqual([[1], [2]])
+    expect(s.progress.mock.calls).toEqual([[1]])
+    s.overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!.click()
+    for (let i = 0; i < 60; i++) s.instance.update(.05)
+    expect(s.progress.mock.calls).toEqual([[1], [3]])
     s.instance.dispose()
   })
 

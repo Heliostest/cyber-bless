@@ -4,6 +4,9 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
+import { createDropFeedback } from '../drop-feedback'
+import { placementHit } from '../placement-hit'
 import {
   addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage,
@@ -176,10 +179,14 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   const quietObjects: THREE.Object3D[] = [saucer, body]
   cup.traverse(object => { if ((object as THREE.Mesh).isMesh) quietObjects.push(object) })
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(), dragPoint = new THREE.Vector3(), offset = new THREE.Vector3(), down = new THREE.Vector2()
-  const resetDrag = () => { dragging = false; maxTravel = 0; if (!placement) pose() }
+  const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
+  const placementReady = (x: number, y: number) => checkpoint < 2 && maxTravel >= 8
+    && !touch.occluded(x, y, checkpoint === 0 ? rest : socket, { ignore: checkpoint === 0 ? lid : [stick, paper] })
+    && placementHit(canvas, camera, source(), x, y, (px, py) => touch.hit(px, py, checkpoint === 0 ? rest : socket, { ignore: checkpoint === 0 ? lid : [stick, paper] }))
+  const resetDrag = () => { dropFeedback.clear(); dragging = false; maxTravel = 0; if (!placement) pose() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart(x, y) { matrices(); return !placement && checkpoint < 3 && ray.hits(x, y, checkpoint === 2 ? quietObjects : [source()]) },
+    canStart(x, y) { matrices(); return !placement && checkpoint < 3 && touch.hit(x, y, checkpoint === 2 ? quietObjects : [source()]) },
     onStart(x, y) {
       down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare()
       if (dragging) {
@@ -195,19 +202,20 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
         carried().position.x = THREE.MathUtils.clamp(carried().position.x, -1.25, 1.25)
         carried().position.y = THREE.MathUtils.clamp(carried().position.y, .61, 1.65)
         if (checkpoint === 1) paper.position.copy(stick.position)
-        matrices()
+        matrices(); dropFeedback.setReady(placementReady(x, y))
       }
     },
     onRelease(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint < 2 ? dragging && ray.hits(x, y, [checkpoint === 0 ? rest : socket])
-        : checkpoint === 2 && maxTravel < 12 && ray.hits(x, y, quietObjects)
-      dragging = false
+      const valid = checkpoint < 2 ? dragging && placementReady(x, y)
+        : checkpoint === 2 && maxTravel < 12 && touch.hit(x, y, quietObjects)
+      dropFeedback.clear(); dragging = false
       if (valid) { if (checkpoint < 2) beginPlacement(); else finish() } else resetDrag()
     },
     onCancel: resetDrag,
   })
   function sync() {
+    dropFeedback.clear()
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3
     ui.actionBtn.disabled = !active() || !!placement || checkpoint === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled))
@@ -272,7 +280,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
     },
     dispose() {
       if (disposed) return
-      disposed = true; pointer.dispose(); stopResize(); feedback.dispose()
+      disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose())
       scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')

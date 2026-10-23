@@ -12,8 +12,8 @@ const ACTIONS = ['左壳轻合', '右壳回应', '双壳同拍']
 const HINTS = [
  '按住左侧上方的木壳向下短拖，让两片凹壳轻轻相碰，再松开。',
  '按住右侧上方的木壳向下短拖，让另一副响板回应一声。',
- '再轻按左侧木壳向下短拖，两副木壳一起轻合，随后慢慢张开。',
- '木壳轻轻张开，细绳留住两片弧面，三次轻拍散在明亮的草地边。',
+ '可以继续向下轻拖左侧木壳，让两副一同轻拍；想收尾时点「结束仪式」。',
+ '木壳轻轻张开，细绳留住两片弧面，节拍留在明亮的草地边。',
 ]
 const MOVING = ['左侧木壳轻合，再沿细绳张开……', '右侧木壳回应一声，慢慢松开……', '两副木壳一同轻合，再慢慢张开……']
 const ease = (t: number) => t * t * (3 - 2 * t)
@@ -23,13 +23,15 @@ export function createSpanishCastanets(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; finishing?: boolean } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
   const ui = createStepOverlay(overlay, { title: '木壳轻拍', stepsAria: '响板步骤', action: ACTIONS[0]! }, safe)
   ui.actionBtn.style.minWidth = '44px'; ui.actionBtn.style.minHeight = '44px'
+  const finishButton = document.createElement('button'); finishButton.type = 'button'; finishButton.className = 'scene-castanets-finish scene-bow-tap scene-continuous-finish'
+  setSafeText(finishButton, '结束仪式', safe); overlay.append(finishButton)
   const { scene, renderer } = createWarmStage(canvas), camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'spanish-castanets', label: '木壳轻拍' }); style.setStyle(CEL_STYLE)
@@ -77,6 +79,8 @@ export function createSpanishCastanets(ctx: SceneContext): SceneInstance {
     if (motion || at === 3) delete ui.hintEl.dataset.ready
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
+    finishButton.hidden = at !== 2; finishButton.disabled = !inputActive() || !!motion
+    finishButton.setAttribute('aria-disabled', String(finishButton.disabled))
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
     setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at]!, safe)
   }
@@ -84,12 +88,18 @@ export function createSpanishCastanets(ctx: SceneContext): SceneInstance {
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
-    at = (motion.step + 1) as Checkpoint; motion = null; restore()
+    const played = motion.step, changed = at < 2 || motion.finishing
+    at = (motion.finishing ? 3 : Math.min(2, motion.step + 1)) as Checkpoint; motion = null; restore()
     withHostCallbacks(() => {
-      ctx.onProgress?.(at); if (!callbackActive()) return
-      feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
+      if (changed) ctx.onProgress?.(at); if (!callbackActive()) return
+      feedback.impact({ freqs: [[329.63,392,440][played] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
+  }
+  const finish = () => {
+    if (!inputActive() || pointer.isBusy() || motion || at !== 2 || !prepareInput()) return
+    motion = { step: 2, time: 0, from: 0, finishing: true }; sync()
+    if (ctx.isReducedMotion?.()) settle()
   }
   function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
@@ -113,7 +123,7 @@ export function createSpanishCastanets(ctx: SceneContext): SceneInstance {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
       restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
-      ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
+      ui.actionBtn.addEventListener('click', action); finishButton.addEventListener('click', finish); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {
       if (!started || disposed) return
@@ -131,6 +141,7 @@ export function createSpanishCastanets(ctx: SceneContext): SceneInstance {
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      finishButton.removeEventListener('click', finish)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.subject); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

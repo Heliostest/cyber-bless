@@ -183,11 +183,11 @@ describe('contemporary miniature Ger assembly', () => {
     step(s, 2); expect(frequencies).toEqual([523.25, 523.25]); expect(peaks).toEqual([.003, .003])
     s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })
-  it.each([0, 1, 2])('rejects wrong pickup surfaces, taps, unsampled moves and abandoned drops at %i', at => {
+  it.each([0, 1, 2])('rejects wrong pickup surfaces, taps, orphan releases and abandoned drops at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), end=destination(s,at)
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
+    event(s.hit, 'pointerup', end)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
   })
@@ -344,3 +344,9 @@ describe('contemporary miniature Ger assembly', () => {
     expect(s.overlay.childElementCount).toBe(0); expect(s.host.querySelector('.scene-object-cues')).toBeNull(); for (const o of cued) expect(o.userData.interactionCues).toEqual([])
   })
 })
+
+it.each([0, 1, 2])('accepts a deliberate release when the browser coalesces all move events, phase=%i', at => {
+  const s = mount(at, { isReducedMotion: () => true }); const p = s.point(targetName(at), anchor(at)); const end = destination(s, at);
+  event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end);
+  expect(s.progress).toEqual([at + 1]);
+});

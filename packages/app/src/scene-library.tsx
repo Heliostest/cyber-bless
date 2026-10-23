@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { RitualId } from "@wbr/core";
+import { sceneProgress, type RitualId } from "@wbr/core";
 import { CACHE_BUDGET, parsePack, type Pack } from "@wbr/content";
 import {
   createSceneLibrary,
@@ -89,8 +89,8 @@ export function useOpenRitual() {
       go({ page: "ritual", id: ritual, wishId });
       return;
     }
-    const progress =
-      state.sceneRecords.find((r) => r.id === entry.id)?.progress ?? 0;
+    const record = state.sceneRecords.find((r) => r.id === entry.id);
+    const progress = record ? sceneProgress(record) : 0;
     if (progress > 0 && (wishId || progress >= sceneSteps(entry)))
       dispatch({ type: "scene.progress", id: entry.id, progress: 0 });
     // 再次体验 is a replay — it never settles 今日's keepsake, even when the
@@ -125,7 +125,7 @@ export function useOpenScene() {
   return (entry: CatalogEntry, visit?: SceneVisit) => {
     if (!isSceneVisibleInApp(entry)) return;
     const record = state.sceneRecords.find((r) => r.id === entry.id);
-    const progress = record?.progress ?? 0;
+    const progress = record ? sceneProgress(record) : 0;
     const spentVessel =
       !!visit?.vessel &&
       state.collectibles.some((c) => c.id === visit.vessel && !!c.spentAt);

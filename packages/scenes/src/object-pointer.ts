@@ -53,7 +53,8 @@ export function createObjectPointer(layer: HTMLElement, options: ObjectPointerOp
       const ownsRelease = () => active() && !blocked && owner === event.pointerId && pointers.size === 1
       // Native input may deliver the destination only in pointerup. Update the
       // held pose before testing the drop, but do not invent a drag for a tap.
-      if (ownsRelease() && moved && (event.clientX !== lastX || event.clientY !== lastY)) move(event)
+      if (ownsRelease() && (moved || Math.hypot(event.clientX - lastX, event.clientY - lastY) >= 8)
+        && (event.clientX !== lastX || event.clientY !== lastY)) move(event)
       // Sampling can synchronously pause, cancel or dispose the scene.
       const valid = ownsRelease()
       pointers.delete(event.pointerId)

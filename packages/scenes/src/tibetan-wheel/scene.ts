@@ -28,16 +28,16 @@ const COPY = {
   title: '廊前轻转',
   hintReady: '转筒只沿顺时针转：从右向左轻滑，或点按转筒。',
   hintReverse: '反向推不动：转筒只沿顺时针方向转动，请从右向左轻滑。',
-  hintTurn: '转筒缓缓转着，静看它慢下来；稍候点按转筒可让它停下，也可用辅助按钮。',
+  hintTurn: '可以继续从右向左轻滑或点按转筒；想收尾时点「结束仪式」。',
   hintSettling: '转筒渐渐慢下来…',
-  hintStill: '点按停下的转筒，静立片刻；也可竖起手机稍停或用辅助按钮。',
+  hintStill: '转筒停稳了。可以点按或从右向左轻滑继续转动，也可点「结束仪式」。',
   pushTap: '轻推一下',
   settleTap: '让它慢慢停下',
   stillTap: '静立片刻',
   done: '廊前安静下来。',
   stepsAria: '步骤',
   cueTurn: '从右向左转动',
-  cueStill: '点按转筒静立',
+  cueStill: '点按继续转动',
 } as const
 
 const DRUM_Y = 1.3
@@ -82,10 +82,11 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
   /** Seconds since the turn began, and whether the drum was asked to stop. */
   let turnT = 0
   let settling = false
+  let finishRequested = false
+  let reachedStill = false
 
   const handles: GestureHandle[] = []
   let spinHandle: GestureHandle | null = null
-  let gyroHandle: GestureHandle | null = null
   let stopResize = () => {}
   let stopClaim = () => {}
   const fx = createSceneFeedback(ctx)
@@ -96,6 +97,8 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
     assertSafeCopy,
   )
   const { hitLayer, hintEl, actionBtn } = ui
+  const finishButton = document.createElement('button'); finishButton.type = 'button'; finishButton.className = 'scene-wheel-finish scene-bow-tap scene-continuous-finish'
+  setSafeText(finishButton, '结束仪式', assertSafeCopy); overlay.append(finishButton)
   actionBtn.dataset.gyroFallback = ''
 
   const setHint = (text: string) => setSafeText(hintEl, text, assertSafeCopy)
@@ -106,9 +109,13 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
       STEP_ORDER.length,
     )
     actionBtn.hidden = step === 'done'
+    finishButton.hidden = step === 'ready' || step === 'done'
+    finishButton.disabled = !canAct() || settling
+    finishButton.setAttribute('aria-disabled', String(finishButton.disabled))
     hitLayer.style.pointerEvents = step === 'done' ? 'none' : 'auto'
     // Just after the turn begins, and while the drum settles, the button waits.
-    const waiting = step === 'turn' && (settling || turnT < SETTLE_AFTER_SECONDS)
+    const waiting = settling
+    actionBtn.disabled = waiting || !canAct()
     actionBtn.setAttribute('aria-disabled', String(waiting))
     const refused = reverseHintT > 0
     if (step === 'ready') {
@@ -116,10 +123,10 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
       setSafeText(actionBtn, COPY.pushTap, assertSafeCopy)
     } else if (step === 'turn') {
       setHint(settling ? COPY.hintSettling : refused ? COPY.hintReverse : COPY.hintTurn)
-      setSafeText(actionBtn, COPY.settleTap, assertSafeCopy)
+      setSafeText(actionBtn, COPY.pushTap, assertSafeCopy)
     } else if (step === 'still') {
       setHint(COPY.hintStill)
-      setSafeText(actionBtn, COPY.stillTap, assertSafeCopy)
+      setSafeText(actionBtn, COPY.pushTap, assertSafeCopy)
     } else setHint(COPY.done)
   }
 
@@ -274,10 +281,9 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
     if (!canAct() || step === 'done') return
     step = 'done'
     spinHandle?.setEnabled(false)
-    gyroHandle?.setEnabled(false)
     if (!restoring) ctx.onProgress?.(3)
     syncOverlayForStep()
-    overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    if (!restoring) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
 
   const goStill = () => {
@@ -285,20 +291,21 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
     step = 'still'
     settling = false
     reverseHintT = 0
-    spinHandle?.setEnabled(false)
-    gyroHandle?.setEnabled(true)
-    if (!restoring) ctx.onProgress?.(2)
+    spinHandle?.setEnabled(true)
+    if (!restoring && !reachedStill) ctx.onProgress?.(2)
     else speed = 0
+    reachedStill = true
     syncOverlayForStep()
   }
 
   const goTurn = () => {
-    if (!canAct() || step !== 'ready') return
+    if (!canAct() || (step !== 'ready' && step !== 'still')) return
+    const firstTurn = step === 'ready'
     step = 'turn'
     turnT = 0
     reverseHintT = 0
-    if (!restoring) ctx.onProgress?.(1)
-    else speed = TAP_PUSH // resumed mid-turn: let it coast down again
+    if (!restoring && firstTurn) ctx.onProgress?.(1)
+    else if (restoring) speed = TAP_PUSH // resumed mid-turn: let it coast down again
     syncOverlayForStep()
   }
 
@@ -307,7 +314,7 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
    * A push the right way also answers a refused one, so its hint goes.
    */
   const push = (amount: number) => {
-    if (!canAct() || (step !== 'ready' && step !== 'turn') || settling || amount <= 0) return
+    if (!canAct() || step === 'done' || settling || amount <= 0) return
     const before = speed
     speed = Math.min(MAX_SPEED, speed + amount)
     if (before < START_SPEED && speed >= START_SPEED) {
@@ -317,13 +324,16 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
     }
     const refused = reverseHintT > 0
     reverseHintT = 0
-    if (step === 'ready' && speed >= START_SPEED) goTurn()
+    if ((step === 'ready' || step === 'still') && speed >= START_SPEED) goTurn()
     else if (refused) syncOverlayForStep()
   }
 
   /** While it turns, the button lets the drum slow to rest; then the still step begins. */
   const settle = () => {
-    if (!canAct() || step !== 'turn' || settling || turnT < SETTLE_AFTER_SECONDS) return
+    if (!canAct() || step === 'ready' || step === 'done' || settling) return
+    if (drumPointerId !== null) return
+    finishRequested = true
+    if (step === 'still') { completeScene(); return }
     settling = true
     reverseHintT = 0
     syncOverlayForStep()
@@ -332,9 +342,7 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
   const onActionTap = () => {
     if (disposed) return
     fx.prepare()
-    if (step === 'ready') push(TAP_PUSH)
-    else if (step === 'turn') settle()
-    else if (step === 'still') completeScene()
+    if (step !== 'done') push(TAP_PUSH)
   }
 
   let downX = 0
@@ -354,9 +362,7 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
     if (e.pointerId !== drumPointerId) return
     const moved = Math.hypot(e.clientX - downX, e.clientY - downY)
     if (downOnDrum && moved < 12 && onDrum(e.clientX, e.clientY)) {
-      if (step === 'ready') push(TAP_PUSH)
-      else if (step === 'turn') settle()
-      else if (step === 'still') completeScene()
+      if (step !== 'done') push(TAP_PUSH)
     }
     downOnDrum = false
     drumPointerId = null
@@ -400,18 +406,7 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
     handles.push(spinHandle)
     hitLayer.addEventListener('pointerup', onHitUp)
     actionBtn.addEventListener('click', onActionTap)
-
-    gyroHandle = gestures.createGyro({
-      bowBetaDeg: 60,
-      holdMs: 600,
-      fallbackTapSelector: '[data-gyro-fallback]',
-      onHold: () => {
-        if (step === 'still') completeScene()
-      },
-    })
-    gyroHandle.mount(overlay, {})
-    gyroHandle.setEnabled(false)
-    handles.push(gyroHandle)
+    finishButton.addEventListener('click', settle)
   }
 
   syncOverlayForStep()
@@ -437,11 +432,9 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
       if (!canAct()) {
         onHitCancel()
         spinHandle?.setEnabled(false)
-        gyroHandle?.setEnabled(false)
         return
       }
-      spinHandle?.setEnabled(step === 'ready' || step === 'turn')
-      gyroHandle?.setEnabled(step === 'still')
+      spinHandle?.setEnabled(step !== 'done' && !settling)
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
@@ -454,7 +447,7 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
       if (step === 'turn') {
         const early = turnT < SETTLE_AFTER_SECONDS
         turnT += dt
-        if (speed < STILL_SPEED) goStill()
+        if (speed < STILL_SPEED) { if (finishRequested) completeScene(); else goStill() }
         else if (early && turnT >= SETTLE_AFTER_SECONDS) syncOverlayForStep()
       }
       if (reverseHintT > 0) {
@@ -487,6 +480,7 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
       hitLayer.removeEventListener('lostpointercapture', onHitCancel)
       window.removeEventListener('blur', onInputBlur)
       actionBtn.removeEventListener('click', onActionTap)
+      finishButton.removeEventListener('click', settle)
       for (const h of handles) h.dispose()
       handles.length = 0
       fx.dispose()

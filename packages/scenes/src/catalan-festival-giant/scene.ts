@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -113,15 +114,8 @@ export function createCatalanFestivalGiant(ctx: SceneContext): SceneInstance {
   addInteractionCue(lift, { kind: 'tap', label: '轻点底座静看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => checkpoint === 0 ? rosette : figure
-  const hitsVisible = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => {
-    const meshes: THREE.Object3D[] = []
-    scene.traverseVisible(object => {
-      if (!(object as THREE.Mesh).isMesh) return
-      for (let p: THREE.Object3D | null = object; p; p = p.parent) if (p === held) return
-      meshes.push(object)
-    })
-    return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object === target
-  }
+  const touchTarget = createTouchTarget(canvas, camera, scene)
+  const hitsVisible = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => touchTarget.hit(x, y, target, { ignore: held })
   const reset = () => { dragging = false; maxTravel = 0; if (!transition) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,

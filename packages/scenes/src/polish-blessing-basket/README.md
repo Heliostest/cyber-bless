@@ -1,5 +1,9 @@
 # 一篮春食 · polish-blessing-basket
 
+## 2026-10-24 触摸容错
+
+篮内衬布与蛋窝采用真实可见表面附近22 CSS px内的放手容差，实际握点对齐也接受偏心持握，到位显示可以松手。面包和彩蛋拾取仍精确区分，其他前景物仍阻挡。保留备篮片段与来源，不新增教会祝福或吃食动作。[逐场审阅与验证](../../../../docs/research/2026-10-24-scene-interaction-review-a.md)。
+
 ## 2026-10-20 介绍扩充核查
 
 适用场景：`polish-blessing-basket`；最终来源：`polish-folk-catholic`。

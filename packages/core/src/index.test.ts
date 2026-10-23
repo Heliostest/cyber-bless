@@ -27,8 +27,9 @@ describe("personal ritual loop", () => {
         at,
       });
     }
-    expect(s.activeSession).toMatchObject({ id: "tap-0", progress: 12 });
-    expect(reduce(s, { type: "ritual.step" })).toBe(s);
+    expect(s.activeSession).toMatchObject({ id: "tap-0", progress: 12, strikes: 40 });
+    s = reduce(s, { type: "ritual.step" });
+    expect(s.activeSession).toMatchObject({ progress: 12, strikes: 41 });
     const ready = restore(JSON.stringify(s));
     const done = { type: "ritual.finish", id: "tap-0", at } as const;
     const complete = reduce(ready, done);

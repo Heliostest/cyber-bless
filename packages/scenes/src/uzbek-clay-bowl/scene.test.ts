@@ -155,7 +155,7 @@ describe('a damp unfired clay bowl', () => {
     // Aim at an exposed surface: the support's origin is hidden behind the wheel.
     const wrong = at ? s.point('clay-wheel-rim', [-Math.sin(.9) * 1.079, -.025, Math.cos(.9) * 1.079]) : s.point('clay-body', [0, .2675, .517279])
     pointer(s.hit, 'pointerdown', wrong); pointer(s.hit, 'pointermove', q); pointer(s.hit, 'pointerup', q)
-    pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointerup', q)
+    pointer(s.hit, 'pointerup', q)
     for (const [dx, dy] of at ? [[0, 0], [0, -12], [0, 70], [70, 0], [70, -50]] : [[0, 0], [12, 0], [-70, 0], [0, 70], [50, 70]]) drag(s, at, dx, dy)
     pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointermove', q); pointer(s.hit, 'pointermove', p); pointer(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); drag(s, at); expect(s.progress).toEqual([at + 1])

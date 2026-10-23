@@ -97,7 +97,7 @@ describe('Italian ex voto original ceramic painting', () => {
     expect(s.scene.getObjectByName('exvoto-brush')!.position.equals(original)).toBe(true)
     drag(s, 'exvoto-brush-tip', 'exvoto-route-origin')
     const start = s.point('exvoto-brush-tip'), end = s.point('exvoto-window-end')
-    pointer(s.hit, 'pointerdown', start); pointer(s.hit, 'pointerup', end); expect(s.progress).toEqual([1])
+    pointer(s.hit, 'pointerdown', start); pointer(s.hit, 'pointerup', start); expect(s.progress).toEqual([1])
     pointer(s.hit, 'pointerdown', start); pointer(s.hit, 'pointermove', [start[0] + 100, start[1] + 80]); pointer(s.hit, 'pointermove', end); pointer(s.hit, 'pointerup', end)
     expect(s.progress).toEqual([1])
     pointer(s.hit, 'pointerdown', end); pointer(s.hit, 'pointermove', start); pointer(s.hit, 'pointerup', start)
@@ -227,6 +227,10 @@ describe('Italian ex voto original ceramic painting', () => {
 })
 
 describe('continuous window stroke tolerance',()=>{
+  it('accepts a straight window stroke delivered as down and up without intermediate samples',()=>{
+    const s=mount(1,{isReducedMotion:()=>true}),from=s.point('exvoto-brush-tip'),to=s.point('exvoto-window-end')
+    pointer(s.hit,'pointerdown',from);pointer(s.hit,'pointerup',to);expect(s.progress).toEqual([2])
+  })
   it.each([1,2,12,16,24,60])('accepts a correct stroke delivered in %i move samples',count=>{
     const s=mount(1,{isReducedMotion:()=>true}),from=s.point('exvoto-brush-tip'),to=s.point('exvoto-window-end')
     pointer(s.hit,'pointerdown',from)

@@ -106,7 +106,16 @@ describe('German nutcracker jaw and rear lever', () => {
     event(s.hit,'pointerdown',p);event(s.hit,'pointermove',mouth);expect(s.progress).toEqual([])
     event(s.hit,'pointermove',[mouth[0]+70,mouth[1]]);event(s.hit,'pointerup',[mouth[0]+70,mouth[1]])
     expect(s.progress).toEqual([]);expect(nut.position.distanceTo(home)).toBeLessThan(1e-8)
-    event(s.hit,'pointerdown',p);event(s.hit,'pointerup',mouth);expect(s.progress).toEqual([])
+    event(s.hit,'pointerdown',p);event(s.hit,'pointerup',p);expect(s.progress).toEqual([])
+  })
+  it.each([false, true])('accepts an owned down/up-only walnut placement, reduced=%s', reduced => {
+    const s = mount(1, { isReducedMotion: () => reduced }), start = s.point(targetName(1), anchor(1))
+    const mouth = s.point('nutcracker-joint', [0, .19, .42])
+    event(s.hit, 'pointerup', mouth); expect(s.progress).toEqual([])
+    event(s.hit, 'pointerdown', start); event(s.hit, 'pointerup', start); expect(s.progress).toEqual([])
+    event(s.hit, 'pointerdown', start); event(s.hit, 'pointerup', mouth)
+    if (!reduced) expect(s.progress).toEqual([])
+    s.run(); expect(s.progress).toEqual([2]); expect(s.haptic).toHaveBeenCalledOnce(); expect(s.complete).not.toHaveBeenCalled()
   })
   it.each(['nonfinite','cancel','multitouch'])('keeps the mouth drop guarded after %s input',kind=>{
     const s=mount(1,{isReducedMotion:()=>true}),p=s.point(targetName(1),anchor(1)),mouth=s.point('nutcracker-joint',[0,.19,.42])
@@ -194,10 +203,10 @@ describe('German nutcracker jaw and rear lever', () => {
     step(s, 2); expect(frequencies).toEqual([523.25, 523.25]); expect(peaks).toEqual([.003, .003])
     s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })
-  it.each([0, 1, 2])('rejects wrong surfaces, release-only, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
+  it.each([0, 1, 2])('rejects wrong surfaces, orphan release, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
+    event(s.hit, 'pointerup', end)
     for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx]]) drag(s, at, x, y)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)

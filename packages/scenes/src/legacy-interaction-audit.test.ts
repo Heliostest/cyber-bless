@@ -101,7 +101,8 @@ async function mount(id: string, initialProgress = 0, reduced = false, width = 3
   }
   const action = (at: number) => {
     if (at === 2) {
-      if (['theravada-water', 'tibetan-wheel', 'yeondeunghoe', 'furin-wind-chime', 'lantern'].includes(id)) tap('tap')
+      if (id === 'tibetan-wheel') { overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!.click(); run(3) }
+      else if (['theravada-water', 'yeondeunghoe', 'furin-wind-chime', 'lantern'].includes(id)) tap('tap')
       else wish()
       return
     }
@@ -288,7 +289,7 @@ it.each(IDS)('%s restores a completed ritual without replaying checkpoints', asy
   s.run(2)
   expect(s.progress).toEqual([])
   expect(s.cues()).toEqual([])
-  expect(s.complete).toHaveBeenCalledTimes(1)
+  expect(s.complete).toHaveBeenCalledTimes(id === 'tibetan-wheel' ? 0 : 1)
 })
 
 it.each(['theravada-water', 'tibetan-wheel', 'furin-wind-chime', 'yeondeunghoe']
@@ -309,6 +310,8 @@ it.each(['theravada-water', 'tibetan-wheel', 'furin-wind-chime', 'yeondeunghoe']
       s.run(15)
       const point = s.source('tap')
       s.pointer('pointerdown', point, 2); s.pointer('pointerup', point, 2)
+      expect(s.progress).toEqual([1, 2])
+      s.overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!.click(); s.run(3)
       expect(s.progress).toEqual([1, 2, 3])
     }
   },

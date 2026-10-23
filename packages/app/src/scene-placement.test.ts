@@ -186,7 +186,7 @@ describe("scene placement", () => {
     const entry = builtInScenes.find(e => e.id === id)!;
     expect(entry).toBeDefined(); expect(supportsScene(entry.engine)).toBe(true);
     expect(hasSceneIcon(id)).toBe(true); expect(entry.traditionSlug).toBe(slug);
-    expect(isWishScene(id)).toBe(wish); expect(sceneSteps(entry)).toBe(3);
+    expect(isWishScene(id)).toBe(wish); expect(sceneSteps(entry)).toBe(id === 'tibetan-water-bowls' ? 9 : 3);
   });
   it.each([
     ["omamori-cycle", true, false], ["shrine-suzu-bell", false, false],

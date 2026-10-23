@@ -193,7 +193,7 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
     },
     onRelease(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = Number.isFinite(x) && Number.isFinite(y) && (checkpoint === 0 ? dragging && maxTravel > 8 && ray.hits(x, y, [routeOrigin])
+      const valid = Number.isFinite(x) && Number.isFinite(y) && (checkpoint === 0 ? dragging && maxTravel > 8 && touch.hit(x, y, routeOrigin, { ignore: brush })
         : checkpoint === 1 ? dragging && traceMoved && windowReady(x, y)
         : checkpoint === 2 && maxTravel < 12 && ray.hits(x, y, finishPickables))
       dragging = false

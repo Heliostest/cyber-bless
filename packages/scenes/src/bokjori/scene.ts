@@ -3,6 +3,9 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
+import { createDropFeedback } from '../drop-feedback'
+import { placementHit } from '../placement-hit'
 import {
   addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback,
   createStepOverlay, createWarmStage, disposeTree, observeCanvasResize,
@@ -196,8 +199,13 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
   const ray = createPointerRay(canvas, camera)
   const dragPlane = new THREE.Plane(), dragPoint = new THREE.Vector3(), dragOffset = new THREE.Vector3()
   const pointerStart = new THREE.Vector2()
+  const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(hintEl, assertSafeCopy)
+  const placementReady = (x: number, y: number) => checkpoint < 2
+    && !touch.occluded(x, y, checkpoint === 0 ? [grainTarget, grains] : [peg, pegCap], { ignore: scoop })
+    && placementHit(canvas, camera, source, x, y, (px, py) => touch.hit(px, py, checkpoint === 0 ? [grainTarget, grains] : [peg, pegCap], { ignore: scoop }))
   const home = () => checkpoint === 0 ? READY : checkpoint === 1 ? LOADED : HUNG
   const syncUI = () => {
+    dropFeedback.clear()
     ui.renderDots(checkpoint, 3)
     actionBtn.hidden = checkpoint === 3; actionBtn.disabled = !!motion || checkpoint === 3
     setSafeText(actionBtn, [COPY.scoopAction, COPY.hangAction, COPY.quietAction, COPY.quietAction][checkpoint], assertSafeCopy)
@@ -226,7 +234,7 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
   }
   const pointer = createObjectPointer(hitLayer, {
     isActive: active,
-    canStart(x, y) { return !motion && checkpoint < 3 && ray.hits(x, y, pickables) },
+    canStart(x, y) { return !motion && checkpoint < 3 && touch.hit(x, y, scoop) },
     onStart(x, y) {
       dragging = true; pointerStart.set(x, y); feedback.prepare()
       dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), scoop.position)
@@ -238,16 +246,16 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
         scoop.position.copy(dragPoint).add(dragOffset)
         scoop.position.x = THREE.MathUtils.clamp(scoop.position.x, -1.1, 1.1)
         scoop.position.y = THREE.MathUtils.clamp(scoop.position.y, 0.52, 1.22)
-        world.updateMatrixWorld(true)
+        world.updateMatrixWorld(true); dropFeedback.setReady(placementReady(x, y))
       }
     },
     onRelease(x, y) {
       const quietTap = checkpoint !== 2 || Math.hypot(x - pointerStart.x, y - pointerStart.y) < 12
-      const valid = dragging && active() && !motion && quietTap && ray.hits(x, y, checkpoint === 0 ? [grainTarget] : checkpoint === 1 ? [peg, pegCap] : pickables)
-      dragging = false
+      const valid = dragging && active() && !motion && quietTap && (checkpoint < 2 ? placementReady(x, y) : touch.hit(x, y, scoop))
+      dropFeedback.clear(); dragging = false
       if (valid) begin(); else restorePose()
     },
-    onCancel() { dragging = false; if (!motion) restorePose() },
+    onCancel() { dropFeedback.clear(); dragging = false; if (!motion) restorePose() },
   })
   const onAction = () => {
     if (!active() || motion || pointer.isBusy() || checkpoint === 3) return
@@ -294,7 +302,7 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
     },
     dispose() {
       if (disposed) return
-      disposed = true; pointer.dispose(); stopResize(); actionBtn.removeEventListener('click', onAction)
+      disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); actionBtn.removeEventListener('click', onAction)
       feedback.dispose(); styleRenderer.dispose(); disposeTree(scene); grains.dispose()
       Object.values(lights).forEach(light => light.dispose())
       renderer.dispose(); renderer.forceContextLoss(); scene.clear(); overlay.replaceChildren()

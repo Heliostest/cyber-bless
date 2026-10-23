@@ -5,6 +5,9 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
+import { createDropFeedback } from '../drop-feedback'
+import { placementHit } from '../placement-hit'
 import {
   addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage,
@@ -231,12 +234,16 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
   addInteractionCue(medallion, { kind: 'tap', label: '静看备好的食物篮', priority: 3, enabled: cueActive(2) })
   const ray = createPointerRay(canvas, camera), dragPlane = new THREE.Plane(), dragPoint = new THREE.Vector3(), dragOffset = new THREE.Vector3()
   const down = new THREE.Vector2()
-  const resetDrag = () => { dragging = false; maxTravel = 0; if (!placement) restorePose() }
+  const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
+  const placementReady = (x: number, y: number) => checkpoint < 2 && maxTravel >= 8
+    && !touch.occluded(x, y, checkpoint === 0 ? breadRest : nest, { ignore: movingFood() })
+    && placementHit(canvas, camera, source(), x, y, (px, py) => touch.hit(px, py, checkpoint === 0 ? breadRest : nest, { ignore: movingFood() }))
+  const resetDrag = () => { dropFeedback.clear(); dragging = false; maxTravel = 0; if (!placement) restorePose() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) {
       if (placement || checkpoint === 3) return false
-      matrices(); return ray.hits(x, y, checkpoint === 2 ? finishPickables : [source()])
+      matrices(); return checkpoint === 2 ? touch.hit(x, y, finishPickables) : ray.hits(x, y, [source()])
     },
     onStart(x, y) {
       down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare()
@@ -252,19 +259,20 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
         movingFood().position.copy(dragPoint).add(dragOffset)
         movingFood().position.x = THREE.MathUtils.clamp(movingFood().position.x, -1.22, 1.18)
         movingFood().position.y = THREE.MathUtils.clamp(movingFood().position.y, 0.86, 1.95)
-        matrices()
+        matrices(); dropFeedback.setReady(placementReady(x, y))
       }
     },
     onRelease(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint < 2 ? dragging && ray.hits(x, y, [checkpoint === 0 ? breadRest : nest])
-        : checkpoint === 2 && maxTravel < 12 && ray.hits(x, y, finishPickables)
-      dragging = false
+      const valid = checkpoint < 2 ? dragging && placementReady(x, y)
+        : checkpoint === 2 && maxTravel < 12 && touch.hit(x, y, finishPickables)
+      dropFeedback.clear(); dragging = false
       if (valid) { if (checkpoint < 2) beginPlacement(); else finish() } else resetDrag()
     },
     onCancel: resetDrag,
   })
   const sync = () => {
+    dropFeedback.clear()
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3
     ui.actionBtn.disabled = !active() || !!placement || checkpoint === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled))
@@ -342,7 +350,7 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     },
     dispose() {
       if (disposed) return
-      disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose()
+      disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', onAction); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose())
       scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')

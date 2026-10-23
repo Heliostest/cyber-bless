@@ -1,5 +1,11 @@
 # 三石寄愿 / sumiyoshi-godairiki
 
+## 2026-10-24 交互审阅
+
+已按实际器物、步骤、可持续性与触屏验收逐项审阅。保留有实际用途的阶段，不因总数是三而增删传统动作；本轮手势容错与放手采样属于产品输入安排。器物身份、文化归属与传统主张没有增加。
+
+逐场发现、处理、来源边界与验证见[本轮 C 组记录](../../../../docs/research/2026-10-24-scene-interaction-review-c.md#逐场记录)。
+
 核查日期：2026-10-19。基线：master `9f63e316b5208378eb79b13265987bac13cd9100`；独立分支 `codex/sumiyoshi-godairiki`。验收状态见本工作区 `artifacts/sumiyoshi-godairiki/report.md` 与共享 hourly-scenes/progress.md，未通过完整验收不计新增数量。
 
 ## 呈现与动作

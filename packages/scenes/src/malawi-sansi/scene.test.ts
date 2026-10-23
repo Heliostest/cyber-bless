@@ -95,7 +95,7 @@ describe('Sansi free performance', () => {
     const s=mount(0,{isReducedMotion:()=>reduced}),order=[8,0,4,2,7,1,6,5,3,4,4]
     for(const key of order)tap(s,key)
     s.run(2);expect(s.progress).toEqual([2]);expect(s.haptic).toHaveBeenCalledTimes(order.length);expect(s.complete).not.toHaveBeenCalled()
-    expect(keys(s)).toHaveLength(9);expect(s.button.textContent).toBe('结束体验');expect(s.button.disabled).toBe(false)
+    expect(keys(s)).toHaveLength(9);expect(s.button.textContent).toBe('结束仪式');expect(s.button.disabled).toBe(false)
     s.button.click();s.run();s.button.click();tap(s,4)
     expect(s.progress).toEqual([2,3]);expect(s.complete).toHaveBeenCalledOnce();expect(s.saveWish).not.toHaveBeenCalled();expect(cues(s)).toEqual([])
   })

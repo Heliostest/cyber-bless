@@ -87,13 +87,14 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 describe('Chinese toy rattle drum', () => {
   it.each([false,true])('turns the handle both ways then settles two bead beaters, reduced=%s', reduced => {
     const s=mount(0,{isReducedMotion:()=>reduced})
-    for(let i=0;i<3;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); expect(s.progress).toEqual([1,2,3].slice(0,i+1))}
-    s.button.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
+    for(let i=0;i<3;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); expect(s.progress).toEqual([1,1,2].slice(0,i+1))}
+    s.overlay.querySelector<HTMLButtonElement>('.scene-finish-ritual')!.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
   it('uses identical final subject transforms for ordinary, reduced motion and silently restored checkpoints', () => {
     for (const checkpoint of [1, 2, 3]) {
       const normal = mount(), reduced = mount(0, { isReducedMotion: () => true }), restored = mount(checkpoint)
       for (let at = 0; at < checkpoint; at++) { step(normal, at); step(reduced, at) }
+      if (checkpoint === 3) for (const current of [normal, reduced]) { current.overlay.querySelector<HTMLButtonElement>('.scene-finish-ritual')!.click(); current.run() }
       normal.scene.updateMatrixWorld(true); reduced.scene.updateMatrixWorld(true); restored.scene.updateMatrixWorld(true)
       normal.scene.getObjectByName('rattle-drum-subject')!.traverse(o => {
         for (const other of [reduced, restored]) { const m = other.scene.getObjectByName(o.name)!.matrixWorld; o.matrixWorld.elements.forEach((v, i) => expect(v, o.name).toBeCloseTo(m.elements[i], 9)) }
@@ -123,14 +124,14 @@ describe('Chinese toy rattle drum', () => {
     step(s, 2); expect(frequencies).toEqual([523.25, 523.25]); expect(peaks).toEqual([.003, .003])
     s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })
-  it.each([0, 1, 2])('rejects wrong surfaces, release-only, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
+  it.each([0, 1, 2])('rejects wrong surfaces, orphan release, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
+    event(s.hit, 'pointerup', end)
     for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx], [-dx * 3, -dy * 3]]) drag(s, at, x, y)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
-    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
+    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at === 2 ? 2 : 1])
   })
   it.each([0, 1, 2])('checks terminal release coordinates for withdrawn, cross-axis and nonfinite input at %i', at => {
     const s = mount(at, { isReducedMotion: () => true })
@@ -139,21 +140,21 @@ describe('Chinese toy rattle drum', () => {
       const end: [number, number] = kind === 'back' ? [p[0] + dx * .25, p[1] + dy * .25] : kind === 'cross' ? [p[0] + dx - dy, p[1] + dy + dx] : [NaN, p[1]]
       event(s.hit, 'pointerup', end); expect(s.progress, kind).toEqual([])
     }
-    step(s, at); expect(s.progress).toEqual([at + 1])
+    step(s, at); expect(s.progress).toEqual([at === 2 ? 2 : 1])
   })
   it.each([0, 1, 2])('accepts a continued same-direction release and an eighteen pixel correction at %i', at => {
     for (const factor of [3, .7]) {
       const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
       event(s.hit, 'pointerup', [p[0] + dx * factor, p[1] + dy * factor])
-      expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      expect(s.progress).toEqual([at === 2 ? 2 : 1]); s.instance.dispose()
     }
   })
   it.each([0, 1, 2])('rejects a nonfinite move even when the final release is valid at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [NaN, p[1]])
     event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run()
-    expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([at + 1])
+    expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([at === 2 ? 2 : 1])
   })
   it.each([false, true])('accepts a gentle zigzag path and remains ready after settlement, reduced=%s', reduced => {
     for (const at of [0, 1, 2]) {
@@ -161,7 +162,7 @@ describe('Chinese toy rattle drum', () => {
       event(s.hit, 'pointerdown', p)
       for (const [along, cross] of [[12, 16], [24, -16], [36, 16], [48, -16], [60, 0]]) event(s.hit, 'pointermove', [p[0]+delta(at)[0]*along/60-delta(at)[1]*cross/60,p[1]+delta(at)[1]*along/60+delta(at)[0]*cross/60])
       event(s.hit, 'pointerup', [p[0] + delta(at)[0], p[1] + delta(at)[1]])
-      s.run(); expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(at === 2)
+      s.run(); expect(s.progress).toEqual([at === 2 ? 2 : 1]); expect(s.button.disabled).toBe(false)
     }
   })
   it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {
@@ -170,7 +171,8 @@ describe('Chinese toy rattle drum', () => {
       expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
       expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
       for (let i = at; i < 3; i++) s.button.click()
-      expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
+      if (at < 3) s.overlay.querySelector<HTMLButtonElement>('.scene-finish-ritual')!.click()
+      expect(s.progress).toEqual([1, 1, 2].slice(at).concat(at < 3 ? [3] : [])); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
     }
   })
   it.each([284, 350, 1280])('frames every subject vertex and exposes the first reachable material cue at width %i', width => {
@@ -186,7 +188,7 @@ describe('Chinese toy rattle drum', () => {
         const hit = first(s, object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))))
         expect(hit.object?.name, `first reachable material cue ${object.name}`).toBe(object.name); expect(Math.abs(hit.q.x)).toBeLessThan(.97); expect(Math.abs(hit.q.y)).toBeLessThan(.97)
       }
-      if (at < 3) step(s, at); expect(s.progress).toEqual(at < 3 ? [at + 1] : []); s.instance.dispose()
+      if (at < 3) step(s, at); expect(s.progress).toEqual(at < 3 ? [at === 2 ? 2 : 1] : []); s.instance.dispose()
     }
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or stale position/rotation', kind => {
@@ -197,7 +199,7 @@ describe('Chinese toy rattle drum', () => {
       if (kind === 'pause') { active = false; s.instance.update(.05); s.instance.update(.05); expect(rendered.render.mock.calls.length).toBe(frames) }
       else if (kind === 'blur') window.dispatchEvent(new Event('blur')); else event(s.hit, kind, p)
       event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run(); expect(s.progress).toEqual([]); expect(pivot.position.distanceTo(home)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(pivot.scale.distanceTo(scale)).toBeLessThan(.00001)
-      if (kind === 'blur') window.dispatchEvent(new Event('focus')); active = true; s.instance.update(.025); step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      if (kind === 'blur') window.dispatchEvent(new Event('focus')); active = true; s.instance.update(.025); step(s, at); expect(s.progress).toEqual([at === 2 ? 2 : 1]); s.instance.dispose()
     }
   })
   it.each([284, 350, 1280])('keeps all subject vertices in frame during each reciprocal drum turning and lowering at width %i', width => {
@@ -215,7 +217,7 @@ describe('Chinese toy rattle drum', () => {
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); check()
       event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); check(); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy])
       for (let i = 0; i < 40; i++) { s.instance.update(.025); check() }
-      expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      expect(s.progress).toEqual([at === 2 ? 2 : 1]); s.instance.dispose()
     }
   })
   it.each([0, 1, 2])('freezes accepted motion and input while paused at %i', at => {
@@ -223,18 +225,18 @@ describe('Chinese toy rattle drum', () => {
     s.button.click(); for (const dt of [NaN, Infinity, -10, 100000]) s.instance.update(dt); expect(s.progress).toEqual([])
     active = false; const pivot = s.scene.getObjectByName('rattle-drum-instrument')!, pose = pivot.position.clone(), rotation = pivot.quaternion.clone(), frames = rendered.render.mock.calls.length
     s.run(2); expect(rendered.render.mock.calls.length).toBe(frames); expect(pivot.position.distanceTo(pose)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(s.progress).toEqual([])
-    active = true; s.run(); expect(s.progress).toEqual([at + 1])
+    active = true; s.run(); expect(s.progress).toEqual([at === 2 ? 2 : 1])
   })
   it.each([0, 1, 2])('rejects a target behind another opaque object at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
     blocker.position.lerpVectors(s.scene.getObjectByName(targetName(at))!.localToWorld(new THREE.Vector3(...anchor(at))), s.camera.position, .15)
     blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker); s.scene.updateMatrixWorld(true); step(s, at); expect(s.progress).toEqual([])
-    blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose(); step(s, at); expect(s.progress).toEqual([at + 1])
+    blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose(); step(s, at); expect(s.progress).toEqual([at === 2 ? 2 : 1])
   })
   it.each([0, 1, 2])('preserves pointer ownership through prepareFeedback input on and outside the hit layer at %i', at => {
     for (const outside of [false, true]) for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) {
       let attack = () => {}; const s = mount(at, { isReducedMotion: () => true, prepareFeedback: () => attack() })
-      attack = () => event(outside ? document.body : s.hit, type, [1, 1]); step(s, at); expect(s.progress, `${outside} ${type}`).toEqual([at + 1]); s.instance.dispose()
+      attack = () => event(outside ? document.body : s.hit, type, [1, 1]); step(s, at); expect(s.progress, `${outside} ${type}`).toEqual([at === 2 ? 2 : 1]); s.instance.dispose()
     }
   })
   it.each([0, 1, 2])('invalidates prepared pointer and keyboard input on every pause/resume boundary at %i', at => {
@@ -242,18 +244,18 @@ describe('Chinese toy rattle drum', () => {
       let attack = () => {}, active = true; const s = mount(at, { isReducedMotion: () => true, isActive: () => active, prepareFeedback: () => attack() })
       attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
       for (let i = 0; i < 2; i++) { keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([]) }
-      attack = () => {}; keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      attack = () => {}; keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([at === 2 ? 2 : 1]); s.instance.dispose()
     }
   })
   it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('blocks synchronous %s step skipping and update reentry', callback => {
     let attack = () => {}; const seen: number[] = [], s = mount(0, { isReducedMotion: () => true, [callback]: () => attack(), onProgress: n => { seen.push(n); if (callback === 'onProgress') attack() } })
     attack = () => { s.button.click(); step(s, 0); step(s, 1); s.instance.update(100) }
-    s.button.click(); expect(seen).toEqual([1]); s.button.click(); expect(seen).toEqual([1, 2]); s.button.click(); expect(seen).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+    s.button.click(); expect(seen).toEqual([1]); s.button.click(); expect(seen).toEqual([1, 1]); s.button.click(); expect(seen).toEqual([1, 1, 2]); expect(s.complete).not.toHaveBeenCalled(); s.overlay.querySelector<HTMLButtonElement>('.scene-finish-ritual')!.click(); expect(seen).toEqual([1, 1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
   })
   it.each([0,1,2])('rejects multitouch with an otherwise valid primary drag at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at))
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointerdown', [1, 1], 2); event(s.hit, 'pointermove', [p[0]+delta(at)[0], p[1]+delta(at)[1]]); event(s.hit, 'pointerup', [p[0]+delta(at)[0], p[1]+delta(at)[1]]); event(s.hit, 'pointerup', [1, 1], 2)
-    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at+1])
+    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at === 2 ? 2 : 1])
   })
   it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('stops after %s pauses or disposes the scene', callback => {
     for (const mode of ['pause', 'dispose']) {
@@ -265,7 +267,7 @@ describe('Chinese toy rattle drum', () => {
   it.each(['onProgress', 'haptic'] as const)('invalidates terminal completion after a synchronous %s pause/resume', callback => {
     let active = true, attack = () => {}; const s = mount(2, { isActive: () => active, [callback]: () => attack() })
     attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
-    step(s, 2); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.hidden).toBe(true)
+    s.overlay.querySelector<HTMLButtonElement>('.scene-finish-ritual')!.click(); s.run(); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.hidden).toBe(true)
     if (callback === 'onProgress') expect(s.haptic).not.toHaveBeenCalled()
   })
   it.each([NaN, Infinity, -9])('normalizes invalid restoration %s without reporting progress', initial => {
@@ -292,3 +294,74 @@ describe('Chinese toy rattle drum', () => {
     expect(s.overlay.childElementCount).toBe(0); expect(s.host.querySelector('.scene-object-cues')).toBeNull(); for (const o of cued) expect(o.userData.interactionCues).toEqual([])
   })
 })
+
+it.each([false, true])('keeps playing after the minimum and finishes only by explicit choice, reduced=%s', reduced => {
+  const s = mount(0, { isReducedMotion: () => reduced });
+  const finish = () => s.overlay.querySelector<HTMLButtonElement>('.scene-finish-ritual')!;
+  expect(finish().textContent).toBe('结束仪式');
+  expect(s.overlay.querySelector('.scene-hint')?.textContent).not.toContain('????');
+  expect(finish()?.hidden ?? true).toBe(true);
+  for (let i = 0; i < 3; i++) { s.button.click(); s.run(); }
+  expect(s.complete).not.toHaveBeenCalled(); expect(s.progress).toEqual([1, 1, 2]);
+  expect(finish().hidden).toBe(false); expect(s.button.hidden).toBe(false);
+  for (let i = 0; i < 5; i++) { s.button.click(); s.run(); }
+  expect(s.complete).not.toHaveBeenCalled(); expect(s.progress).not.toContain(3);
+  finish().click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.progress.at(-1)).toBe(3);
+  finish().click(); s.overlay.querySelector<HTMLButtonElement>('.scene-finish-ritual')!.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce();
+});
+
+it('restores minimum readiness and completed visits without emitting callbacks', () => {
+  for (const at of [2, 3]) {
+    const s = mount(at); const finish = s.overlay.querySelector<HTMLButtonElement>('.scene-finish-ritual')!;
+    expect(finish).not.toBeNull(); expect(finish.hidden).toBe(at === 3);
+    expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled();
+    if (at === 2) { finish.click(); s.run(); expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce(); }
+  }
+});
+
+it.each([0, 1, 2])('accepts a deliberate release when the browser coalesces all move events, phase=%i', at => {
+  const s = mount(at, { isReducedMotion: () => true }); const p = s.point(targetName(at), anchor(at)); const [dx, dy] = delta(at);
+  event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]);
+  expect(s.progress).toEqual([at === 2 ? 2 : 1]); expect(s.complete).not.toHaveBeenCalled();
+});
+
+it.each(['cancel', 'reverse'])('keeps manual finishing available after a %s gesture once the minimum is restored', kind => {
+  const s = mount(2, { isReducedMotion: () => true }), finish = s.overlay.querySelector<HTMLButtonElement>('.scene-finish-ritual')!;
+  const p = s.point(targetName(2), anchor(2)), [dx, dy] = delta(2);
+  expect(finish.disabled).toBe(false);
+  event(s.hit, 'pointerdown', p); expect(finish.disabled).toBe(true);
+  event(s.hit, 'pointermove', [p[0] - dx, p[1] - dy]);
+  event(s.hit, kind === 'cancel' ? 'pointercancel' : 'pointerup', [p[0] - dx, p[1] - dy]);
+  s.instance.update(.025);
+  expect(s.progress).toEqual([]); expect(finish.disabled).toBe(false);
+  finish.click(); expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce();
+});
+
+it('lowers the drum smoothly after manual finish and commits only when it settles', () => {
+  const s = mount(2), instrument = s.scene.getObjectByName('rattle-drum-instrument')!, finish = s.overlay.querySelector<HTMLButtonElement>('.scene-finish-ritual')!;
+  const before = instrument.position.y;
+  finish.click();
+  expect(instrument.position.y).toBe(before); expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled();
+  expect(s.button.disabled).toBe(true); expect(finish.disabled).toBe(true); expect(s.hit.style.pointerEvents).toBe('none');
+  finish.click(); s.button.click(); s.run(.2);
+  expect(instrument.position.y).toBeLessThan(before); expect(instrument.position.y).toBeGreaterThan(-.12); expect(s.progress).toEqual([]);
+  s.run(); expect(instrument.position.y).toBeCloseTo(-.12, 9); expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce();
+});
+
+it('freezes a finishing drum lowering on pause and never completes after disposal', () => {
+  let active = true; const s = mount(2, { isActive: () => active }), instrument = s.scene.getObjectByName('rattle-drum-instrument')!;
+  s.overlay.querySelector<HTMLButtonElement>('.scene-finish-ritual')!.click(); s.run(.2); const height = instrument.position.y;
+  active = false; s.run(2); expect(instrument.position.y).toBe(height); expect(s.progress).toEqual([]);
+  active = true; s.run(); expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce();
+  const disposed = mount(2); disposed.overlay.querySelector<HTMLButtonElement>('.scene-finish-ritual')!.click(); disposed.run(.2);
+  disposed.instance.dispose(); disposed.run(2); expect(disposed.progress).toEqual([]); expect(disposed.complete).not.toHaveBeenCalled();
+});
+
+it.each([0, 1, 2])('preserves every starting transform when closing from play phase %i', extra => {
+  const s = mount(); for (let i = 0; i < 3 + extra; i++) { s.button.click(); s.run(); }
+  const subject = s.scene.getObjectByName('rattle-drum-subject')!, before = new Map<THREE.Object3D, number[]>();
+  s.scene.updateMatrixWorld(true); subject.traverse(o => before.set(o, [...o.matrixWorld.elements]));
+  s.overlay.querySelector<HTMLButtonElement>('.scene-finish-ritual')!.click(); s.instance.update(0);
+  for (const [object, elements] of before) object.matrixWorld.elements.forEach((value, i) => expect(value, object.name).toBeCloseTo(elements[i]!, 9));
+  expect(s.progress).not.toContain(3); expect(s.complete).not.toHaveBeenCalled();
+});

@@ -171,13 +171,25 @@ describe("the settle beat (P0)", () => {
     ui.unmount();
   });
 
-  it("settles a 12/12 woodfish left unsettled when the page opens, once the mallet rests", async () => {
+  it("keeps a 12/12 woodfish open until explicit finish, then waits for its mallet", async () => {
     let rest!: () => void;
     scene.idle = new Promise<void>((resolve) => {
       rest = resolve;
     });
     const ui = await openApp(withSession("woodfish", 12));
     await openRitual(ui);
+    let object = ui.host.querySelector<HTMLButtonElement>('.woodfish-object')!;
+    expect(object.disabled).toBe(false);
+    clickOn(object); clickOn(object);
+    act(() => { vi.advanceTimersByTime(10000); });
+    expect(pageOf(ui)).toBe('ritual');
+    clickOn(ui.host.querySelector('.back-button')!); await settle();
+    await openRitual(ui);
+    object = ui.host.querySelector<HTMLButtonElement>('.woodfish-object')!;
+    expect(ui.host.querySelector('.ritual-counter')?.textContent).toBe('014');
+    const finish = [...ui.host.querySelectorAll('button')].find(b => b.textContent === '结束仪式')!;
+    clickOn(finish);
+    expect(object.disabled).toBe(true);
     // Waiting for the mallet: nothing settles before it rests…
     act(() => {
       vi.advanceTimersByTime(2500);
@@ -208,6 +220,7 @@ describe("the settle beat (P0)", () => {
     scene.idle = new Promise(() => {});
     const ui = await openApp(withSession("woodfish", 12));
     await openRitual(ui);
+    clickOn([...ui.host.querySelectorAll('button')].find(b => b.textContent === '结束仪式')!);
     act(() => {
       vi.advanceTimersByTime(2999);
     });

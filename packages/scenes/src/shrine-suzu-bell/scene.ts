@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
 import {
   addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage,
@@ -141,6 +142,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
     enabled: () => active() && !motion && checkpoint === 2,
   })
 
+  const touchTarget = createTouchTarget(canvas, camera, scene)
   const ray = createPointerRay(canvas, camera)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const sources = () => checkpoint < 2 ? ropeMeshes : [body, ...lowerLobes]
@@ -188,7 +190,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart(x, y) { matrices(); return !motion && checkpoint < 3 && ray.hits(x, y, sources()) },
+    canStart(x, y) { matrices(); return !motion && checkpoint < 3 && touchTarget.hit(x, y, sources()) },
     onStart(x, y) { downX = x; downY = y; feedback.prepare() },
     onMove(x, y) {
       if (checkpoint === 0 && !reduced()) pose(THREE.MathUtils.clamp((y - downY) / 90, 0, 1), THREE.MathUtils.clamp((x - downX) / 900, -0.025, 0.025))
@@ -196,7 +198,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
     onRelease(x, y) {
       const dx = x - downX, dy = y - downY
       matrices()
-      const valid = checkpoint === 0 ? dy >= 45 && dy > Math.abs(dx) * 1.1 : Math.hypot(dx, dy) < 12 && ray.hits(x, y, sources())
+      const valid = checkpoint === 0 ? dy >= 45 && dy > Math.abs(dx) * 1.1 : Math.hypot(dx, dy) < 12 && touchTarget.hit(x, y, sources())
       if (valid) perform()
       else restorePose()
     },

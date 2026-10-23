@@ -118,12 +118,12 @@ describe('an original folded floral paper cut', () => {
     const u = mount(1), h = u.scene.getObjectByName('paper-fold-hinge')!, a = u.point('paper-folded-half', foldAnchor)
     event(u.hit, 'pointerdown', a); event(u.hit, 'pointermove', [a[0] - 30, a[1]]); expect(h.rotation.y).toBeLessThan(-.8); expect(h.rotation.y).toBeGreaterThan(-2); expect(u.progress).toEqual([])
   })
-  it.each([0, 1])('rejects wrong surfaces, missing movement, short, reverse, diagonal and returned gestures at %i', at => {
+  it.each([0, 1])('rejects wrong surfaces, orphan release, short, reverse, diagonal and returned gestures at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(at === 0 ? 'paper-scissors-grip' : 'paper-folded-half', at === 0 ? [0, 0, .024] : foldAnchor)
     const end: [number, number] = at === 0 ? [p[0], p[1] - 64] : [p[0] - 72, p[1]]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
     const board = s.point('paper-cream-board', [-1, .6, .055]); event(s.hit, 'pointerdown', board); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
+    event(s.hit, 'pointerup', end)
     for (const [dx, dy] of at === 0 ? [[0, -8], [0, 65], [65, 0], [90, -64]] : [[-8, 0], [70, 0], [0, -70], [-72, 90]]) drag(s, at, dx, dy)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); at === 0 ? cut(s) : unfold(s); expect(s.progress).toEqual([at + 1])
@@ -256,10 +256,10 @@ describe('an original folded floral paper cut', () => {
     for (let i = 0; i < 2; i++) { s.write('保留草稿'); expect(s.progress).toEqual([]); expect(s.saveWish).not.toHaveBeenCalled() }
     attack = () => {}; s.write('保留草稿'); expect(s.progress).toEqual([3]); expect(s.saveWish).toHaveBeenCalledExactlyOnceWith('保留草稿')
   })
-  it('requires the folded outer edge rather than an arbitrary solid point inside the paper', () => {
+  it('unfolds from a clearly visible point on the folded paper', () => {
     const s = mount(1, { isReducedMotion: () => true }), p = s.point('paper-folded-half', [.1, 0, .016])
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] - 72, p[1]]); event(s.hit, 'pointerup', [p[0] - 72, p[1]]); s.run()
-    expect(s.progress).toEqual([]); unfold(s); expect(s.progress).toEqual([2])
+    expect(s.progress).toEqual([2])
   })
   it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('blocks synchronous %s step skipping and update reentry', callback => {
     let attack = () => {}; const seen: number[] = [], s = mount(0, { isReducedMotion: () => true, [callback]: () => attack(), onProgress: n => { seen.push(n); if (callback === 'onProgress') attack() } })

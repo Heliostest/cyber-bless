@@ -52,22 +52,22 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
     const p = scene.getObjectByName(name)!.localToWorld(new THREE.Vector3(...anchor)).project(camera)
     return [left + (p.x + 1) * width / 2, top + (1 - p.y) * height / 2]
   }
-  const run = (seconds = 7.5) => { for (let t = 0; t < seconds; t += .025) instance.update(.025) }
+  const run = (seconds = 1.5) => { for (let t = 0; t < seconds; t += .025) instance.update(.025) }
   return { instance, scene, camera, host, overlay, hit, button, point, run, progress, saveWish, complete, haptic }
 }
 function event(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
   const e = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(e, { clientX, clientY, pointerId, pointerType: 'touch', button: 0 }); el.dispatchEvent(e)
 }
-const targetName = (at: number) => ['water-jug','water-jug','water-jug'][at]!
+const targetName = (_at: number) => 'water-jug'
 const anchor = (at: number): [number, number, number] => [0,.28,.18]
-const delta = (at: number): [number, number] => [[0,-60],[60,0],[0,60]][at] as [number,number]
+const delta = (at: number): [number, number] => at === 0 ? [0,-60] : at === 8 ? [0,60] : [60,0]
 function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, run = true) {
   const p = s.point(targetName(at), anchor(at)); event(s.hit, 'pointerdown', p)
   for (let i = 1; i <= 8; i++) event(s.hit, 'pointermove', [p[0] + dx * i / 8, p[1] + dy * i / 8])
   event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); if (run) s.run()
 }
-function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) drag(s, at, ...delta(at), run) }
+function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 9) drag(s, at, ...delta(at), run) }
 function cues(s: ReturnType<typeof mount>) {
   const list: { object: THREE.Object3D; cue: InteractionCue }[] = []
   s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled()) list.push({ object, cue }) })
@@ -86,8 +86,24 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 
 
 describe('Seven water bowl offering', () => {
+  it('accepts sparse touch events and fills only the selected bowl at each checkpoint', () => {
+    const s=mount(0,{isReducedMotion:()=>true})
+    for(let at=0;at<9;at++){
+      const p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at)
+      event(s.hit,'pointerdown',p);event(s.hit,'pointerup',[p[0]+dx,p[1]+dy])
+      expect(s.progress).toEqual(Array.from({length:at+1},(_,i)=>i+1))
+      for(let bowl=0;bowl<7;bowl++){
+        const water=s.scene.getObjectByName('offering-water-'+bowl) as THREE.Mesh
+        water.geometry.computeBoundingBox()
+        const level=water.position.y+water.geometry.boundingBox!.max.y
+        expect(level).toBeCloseTo(at>=bowl+1?1.16:1.065,6)
+      }
+      expect(s.complete.mock.calls.length).toBe(at===8?1:0)
+    }
+  })
+
   it('points every drag guide along the accepted screen gesture',()=>{
-    for(const at of[0,1,2]){const s=mount(at);expect(cues(s).map(x=>x.cue.direction)).toEqual([delta(at).map(n=>n/60)]);s.instance.dispose()}
+    for(const at of[0,1,4,7,8]){const s=mount(at);expect(cues(s).map(x=>x.cue.direction)).toEqual([delta(at).map(n=>n/60)]);s.instance.dispose()}
   })
   it('uses water bowl offering identity for the visible title, accessible steps and default style registration',()=>{
     const s=mount()
@@ -97,11 +113,11 @@ describe('Seven water bowl offering', () => {
   })
   it.each([false,true])('lifts the jug, fills each bowl left to right and returns the jug, reduced=%s', reduced => {
     const s=mount(0,{isReducedMotion:()=>reduced})
-    for(let i=0;i<3;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); expect(s.progress).toEqual([1,2,3].slice(0,i+1))}
+    for(let i=0;i<9;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); expect(s.progress).toEqual(Array.from({length:9},(_,i)=>i+1).slice(0,i+1))}
     s.button.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
   it('uses identical final subject transforms for ordinary, reduced motion and silently restored checkpoints', () => {
-    for (const checkpoint of [1, 2, 3]) {
+    for (const checkpoint of Array.from({length:9},(_,i)=>i+1)) {
       const normal = mount(), reduced = mount(0, { isReducedMotion: () => true }), restored = mount(checkpoint)
       for (let at = 0; at < checkpoint; at++) { step(normal, at); step(reduced, at) }
       normal.scene.updateMatrixWorld(true); reduced.scene.updateMatrixWorld(true); restored.scene.updateMatrixWorld(true)
@@ -138,16 +154,16 @@ describe('Seven water bowl offering', () => {
     step(s, 2); expect(frequencies).toEqual([392, 440]); expect(peaks).toEqual([.003, .003])
     s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })
-  it.each([0, 1, 2])('rejects wrong surfaces, release-only, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
+  it.each([0, 1, 4, 7, 8])('rejects wrong surfaces, orphan release, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
+    event(s.hit, 'pointerup', end)
     for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx], [-dx * 3, -dy * 3]]) drag(s, at, x, y)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
   })
-  it.each([0, 1, 2])('checks terminal release coordinates for withdrawn, cross-axis and nonfinite input at %i', at => {
+  it.each([0, 1, 4, 7, 8])('checks terminal release coordinates for withdrawn, cross-axis and nonfinite input at %i', at => {
     const s = mount(at, { isReducedMotion: () => true })
     for (const kind of ['back', 'cross', 'nan']) {
       const p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
@@ -156,7 +172,7 @@ describe('Seven water bowl offering', () => {
     }
     step(s, at); expect(s.progress).toEqual([at + 1])
   })
-  it.each([0, 1, 2])('accepts a continued same-direction release and an eighteen pixel correction at %i', at => {
+  it.each([0, 1, 4, 7, 8])('accepts a continued same-direction release and an eighteen pixel correction at %i', at => {
     for (const factor of [3, .7]) {
       const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
@@ -164,32 +180,32 @@ describe('Seven water bowl offering', () => {
       expect(s.progress).toEqual([at + 1]); s.instance.dispose()
     }
   })
-  it.each([0, 1, 2])('rejects a nonfinite move even when the final release is valid at %i', at => {
+  it.each([0, 1, 4, 7, 8])('rejects a nonfinite move even when the final release is valid at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [NaN, p[1]])
     event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run()
     expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([at + 1])
   })
   it.each([false, true])('accepts a gentle zigzag path and remains ready after settlement, reduced=%s', reduced => {
-    for (const at of [0, 1, 2]) {
+    for (const at of [0, 1, 4, 7, 8]) {
       const s = mount(at, { isReducedMotion: () => reduced }), p = s.point(targetName(at), anchor(at))
       event(s.hit, 'pointerdown', p)
       for (const [along, cross] of [[12, 16], [24, -16], [36, 16], [48, -16], [60, 0]]) event(s.hit, 'pointermove', [p[0]+delta(at)[0]*along/60-delta(at)[1]*cross/60,p[1]+delta(at)[1]*along/60+delta(at)[0]*cross/60])
       event(s.hit, 'pointerup', [p[0] + delta(at)[0], p[1] + delta(at)[1]])
-      s.run(); expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(at === 2)
+      s.run(); expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(at === 8)
     }
   })
-  it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {
+  it.each(Array.from({length:10},(_,i)=>i))('silently restores ordinary and returning checkpoint %i', at => {
     for (const returning of [false, true]) {
       const s = mount(at, { returning, isReducedMotion: () => true }); s.run()
       expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
-      for (let i = at; i < 3; i++) s.button.click()
-      expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
+      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 9 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 9)
+      for (let i = at; i < 9; i++) s.button.click()
+      expect(s.progress).toEqual(Array.from({length:9},(_,i)=>i+1).filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
     }
   })
   it.each([284, 350, 1280])('frames every subject vertex and exposes the first reachable material cue at width %i', width => {
-    for (const at of [0, 1, 2, 3]) {
+    for (const at of Array.from({length:10},(_,i)=>i)) {
       const s = mount(at, { isReducedMotion: () => true }, width); s.scene.updateMatrixWorld(true)
       s.scene.getObjectByName('water-bowls-subject')!.traverse(o => {
         const m = o as THREE.Mesh; if (!m.geometry) return
@@ -201,11 +217,11 @@ describe('Seven water bowl offering', () => {
         const hit = first(s, object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))))
         expect(hit.object && (object === hit.object || object.getObjectById(hit.object.id) === hit.object), `first reachable material cue ${object.name}`).toBe(true); expect(Math.abs(hit.q.x)).toBeLessThan(.97); expect(Math.abs(hit.q.y)).toBeLessThan(.97)
       }
-      if (at < 3) step(s, at); expect(s.progress).toEqual(at < 3 ? [at + 1] : []); s.instance.dispose()
+      if (at < 9) step(s, at); expect(s.progress).toEqual(at < 9 ? [at + 1] : []); s.instance.dispose()
     }
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or stale position/rotation', kind => {
-    for (const at of [0, 1, 2]) {
+    for (const at of [0, 1, 4, 7, 8]) {
       let active = true; const s = mount(at, { isActive: () => active }), pivot = s.scene.getObjectByName(targetName(at))!, home = pivot.position.clone(), scale = pivot.scale.clone(), rotation = pivot.quaternion.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
       // Sample a small held displacement of the jug before release.
       const fraction=.5
@@ -218,7 +234,7 @@ describe('Seven water bowl offering', () => {
     }
   })
   it.each([284, 350, 1280])('keeps all subject vertices in frame during each three jug paths at width %i', width => {
-    for (const at of [0, 1, 2]) {
+    for (const at of [0, 1, 4, 7, 8]) {
       const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
       const check = () => {
         s.scene.updateMatrixWorld(true); let extent = 0
@@ -231,30 +247,30 @@ describe('Seven water bowl offering', () => {
       }
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); check()
       event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); check(); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy])
-      for (let i = 0; i < 300; i++) { s.instance.update(.025); check() }
+      for (let i = 0; i < 900; i++) { s.instance.update(.025); check() }
       expect(s.progress).toEqual([at + 1]); s.instance.dispose()
     }
   })
-  it.each([0, 1, 2])('freezes accepted motion and input while paused at %i', at => {
+  it.each([0, 1, 4, 7, 8])('freezes accepted motion and input while paused at %i', at => {
     let active = true; const s = mount(at, { isActive: () => active }); step(s, at, false); expect(s.button.disabled).toBe(true); expect(s.hit.style.pointerEvents).toBe('none')
     s.button.click(); for (const dt of [NaN, Infinity, -10, 100000]) s.instance.update(dt); expect(s.progress).toEqual([])
     active = false; const pivot = s.scene.getObjectByName(targetName(at))!, pose = pivot.position.clone(), rotation = pivot.quaternion.clone(), frames = rendered.render.mock.calls.length
     s.run(2); expect(rendered.render.mock.calls.length).toBe(frames); expect(pivot.position.distanceTo(pose)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(s.progress).toEqual([])
     active = true; s.run(); expect(s.progress).toEqual([at + 1])
   })
-  it.each([0, 1, 2])('rejects a target behind another opaque object at %i', at => {
+  it.each([0, 1, 4, 7, 8])('rejects a target behind another opaque object at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
     blocker.position.lerpVectors(s.scene.getObjectByName(targetName(at))!.localToWorld(new THREE.Vector3(...anchor(at))), s.camera.position, .15)
     blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker); s.scene.updateMatrixWorld(true); step(s, at); expect(s.progress).toEqual([])
     blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose(); step(s, at); expect(s.progress).toEqual([at + 1])
   })
-  it.each([0, 1, 2])('preserves pointer ownership through prepareFeedback input on and outside the hit layer at %i', at => {
+  it.each([0, 1, 4, 7, 8])('preserves pointer ownership through prepareFeedback input on and outside the hit layer at %i', at => {
     for (const outside of [false, true]) for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) {
       let attack = () => {}; const s = mount(at, { isReducedMotion: () => true, prepareFeedback: () => attack() })
       attack = () => event(outside ? document.body : s.hit, type, [1, 1]); step(s, at); expect(s.progress, `${outside} ${type}`).toEqual([at + 1]); s.instance.dispose()
     }
   })
-  it.each([0, 1, 2])('invalidates prepared pointer and keyboard input on every pause/resume boundary at %i', at => {
+  it.each([0, 1, 4, 7, 8])('invalidates prepared pointer and keyboard input on every pause/resume boundary at %i', at => {
     for (const keyboard of [false, true]) {
       let attack = () => {}, active = true; const s = mount(at, { isReducedMotion: () => true, isActive: () => active, prepareFeedback: () => attack() })
       attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
@@ -265,9 +281,9 @@ describe('Seven water bowl offering', () => {
   it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('blocks synchronous %s step skipping and update reentry', callback => {
     let attack = () => {}; const seen: number[] = [], s = mount(0, { isReducedMotion: () => true, [callback]: () => attack(), onProgress: n => { seen.push(n); if (callback === 'onProgress') attack() } })
     attack = () => { s.button.click(); step(s, 0); step(s, 1); s.instance.update(100) }
-    s.button.click(); expect(seen).toEqual([1]); s.button.click(); expect(seen).toEqual([1, 2]); s.button.click(); expect(seen).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+    for(let i=0;i<9;i++){s.button.click();expect(seen).toEqual(Array.from({length:i+1},(_,j)=>j+1))}; expect(s.complete).toHaveBeenCalledOnce()
   })
-  it.each([0,1,2])('rejects multitouch with an otherwise valid primary drag at %i', at => {
+  it.each([0,1,4,7,8])('rejects multitouch with an otherwise valid primary drag at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at))
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointerdown', [1, 1], 2); event(s.hit, 'pointermove', [p[0]+delta(at)[0], p[1]+delta(at)[1]]); event(s.hit, 'pointerup', [p[0]+delta(at)[0], p[1]+delta(at)[1]]); event(s.hit, 'pointerup', [1, 1], 2)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at+1])
@@ -280,9 +296,9 @@ describe('Seven water bowl offering', () => {
     }
   })
   it.each(['onProgress', 'haptic'] as const)('invalidates terminal completion after a synchronous %s pause/resume', callback => {
-    let active = true, attack = () => {}; const s = mount(2, { isActive: () => active, [callback]: () => attack() })
+    let active = true, attack = () => {}; const s = mount(8, { isActive: () => active, [callback]: () => attack() })
     attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
-    step(s, 2); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.hidden).toBe(true)
+    step(s, 8); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.hidden).toBe(true)
     if (callback === 'onProgress') expect(s.haptic).not.toHaveBeenCalled()
   })
   it.each([NaN, Infinity, -9])('normalizes invalid restoration %s without reporting progress', initial => {

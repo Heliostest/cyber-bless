@@ -295,12 +295,25 @@ describe('physical cloth and owned resources', () => {
     const s = mount(0, { isReducedMotion: () => true }), start = s.point('indigo-bundle-body'), target = s.point('indigo-rinse-water')
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', target); event(s.hit, 'pointerup', target)
     drag(s, 'indigo-drying-rail', 'indigo-rinse-water'); expect(s.progress).toEqual([])
-    event(s.hit, 'pointerdown', start); event(s.hit, 'pointerup', target); expect(s.progress).toEqual([])
+    event(s.hit, 'pointerdown', start); event(s.hit, 'pointerup', start); expect(s.progress).toEqual([])
     drag(s, 'indigo-bundle-body', 'indigo-drying-rail'); expect(s.progress).toEqual([])
     drag(s); drag(s, 'indigo-cloth-body', 'indigo-rinse-water'); expect(s.progress).toEqual([1])
     drag(s, 'indigo-cloth-body', 'indigo-drying-rail'); const p = s.point('indigo-cloth-body')
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + 12, p[1]]); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([1, 2]); tap(s); expect(s.progress).toEqual([1, 2, 3])
+  })
+  it.each([0, 1])('accepts a cloth placement with only owned down/up samples at checkpoint %i', at => {
+    for (const reduced of [false, true]) {
+      const s = mount(at, { isReducedMotion: () => reduced })
+      const start = s.point(at === 0 ? 'indigo-bundle-body' : 'indigo-cloth-body')
+      const target = s.point(at === 0 ? 'indigo-rinse-water' : 'indigo-drying-rail')
+      event(s.hit, 'pointerup', target); expect(s.progress).toEqual([])
+      event(s.hit, 'pointerdown', start); event(s.hit, 'pointerup', start); expect(s.progress).toEqual([])
+      event(s.hit, 'pointerdown', start); event(s.hit, 'pointerup', target)
+      if (!reduced) expect(s.progress).toEqual([])
+      s.run(); expect(s.progress).toEqual([at + 1]); expect(s.haptic).toHaveBeenCalledOnce()
+      s.instance.dispose()
+    }
   })
   it('allows the visible knot and carries every attached tie during cancellation', () => {
     const s = mount(), group = s.scene.getObjectByName('indigo-tied-cloth')!, knot = s.scene.getObjectByName('indigo-bundle-knot')!

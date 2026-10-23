@@ -92,7 +92,7 @@ describe('Åland original wooden sailing model', () => {
     const s = mount(0, { isReducedMotion: () => true })
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointerup', s.point('ship-mast-socket'))
     drag(s, 'ship-deck-handle'); expect(s.progress).toEqual([])
-    const p = s.point('ship-mast-grip'); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', s.point('ship-mast-socket')); expect(s.progress).toEqual([])
+    const p = s.point('ship-mast-grip'); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p); expect(s.progress).toEqual([])
     const mast = s.scene.getObjectByName('ship-mast-assembly')!, home = mast.position.clone()
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [1, 1]); event(s.hit, 'pointerup', [1, 1])
     expect(mast.position.equals(home)).toBe(true); expect(s.progress).toEqual([])

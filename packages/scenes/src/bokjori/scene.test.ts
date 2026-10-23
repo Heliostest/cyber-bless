@@ -78,6 +78,13 @@ function drag(s: Mounted, destination: string, finish = 'pointerup') {
 function cues() { return object('bokjori-scoop-source').userData.interactionCues as InteractionCue[] }
 
 describe('bokjori bamboo scoop practice', () => {
+  it('accepts a fingertip near the small visible peg and shows when the scoop can be released', () => {
+    const s = mount(1, { isReducedMotion: () => true }), from = project(s, object('bokjori-scoop-source')), peg = project(s, object('bokjori-wall-peg'))
+    const drop: Point = [peg[0] + 10, peg[1]]
+    pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', drop)
+    expect(s.overlay.querySelector<HTMLElement>('.scene-hint')?.dataset.dropReady).toBe('true')
+    pointer(s.hit, 'pointerup', drop); expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled()
+  })
   it('collects rice, hangs the scoop and quietly completes once with the auxiliary actions', () => {
     const s = mount()
     expect(s.button).not.toBeNull()

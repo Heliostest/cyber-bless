@@ -5,6 +5,9 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
+import { createDropFeedback } from '../drop-feedback'
+import { placementHit } from '../placement-hit'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
@@ -160,18 +163,12 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => at === 0 ? brush : rooster
   const roosterTargets: THREE.Object3D[] = []; rooster.traverse(object => { if ((object as THREE.Mesh).isMesh) roosterTargets.push(object) })
-  const visibleHit = (x: number, y: number, targets: THREE.Object3D[], held?: THREE.Object3D) => {
-    const meshes: THREE.Object3D[] = []
-    scene.traverseVisible(object => {
-      if (!(object as THREE.Mesh).isMesh) return
-      for (let parent: THREE.Object3D | null = object; parent; parent = parent.parent) if (parent === held) return
-      const materials = (object as THREE.Mesh).material, list = Array.isArray(materials) ? materials : [materials]
-      if (!list.some(mat => mat.visible && (!mat.transparent || mat.opacity >= 1))) return
-      meshes.push(object)
-    })
-    return targets.includes(ray.aim(x, y).intersectObjects(meshes, false)[0]?.object)
-  }
-  const reset = () => { dragging = false; travel = 0; if (!motion) restore() }
+  const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
+  const visibleHit = (x: number, y: number, targets: THREE.Object3D[], held?: THREE.Object3D) => touch.hit(x, y, targets, { ignore: held })
+  const placementReady = (x: number, y: number) => at < 2 && travel >= 8
+    && !touch.occluded(x, y, at === 0 ? rooster : [plinthTop, plinthEdge], { ignore: moving() })
+    && placementHit(canvas, camera, at === 0 ? tip : paintSurface, x, y, (px, py) => visibleHit(px, py, at === 0 ? roosterTargets : [plinthTop, plinthEdge], moving()))
+  const reset = () => { dropFeedback.clear(); dragging = false; travel = 0; if (!motion) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (motion || at === 3) return false; matrices(); return visibleHit(x, y, at === 0 ? [grip] : roosterTargets) },
@@ -179,17 +176,18 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
     onMove(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
-      moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .78, 2.0); matrices()
+      moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .78, 2.0); matrices(); dropFeedback.setReady(placementReady(x, y))
     },
     onRelease(x, y) {
       matrices()
-      const valid = at < 2 ? dragging && travel >= 8 && visibleHit(x, y, at === 0 ? roosterTargets : [plinthTop, plinthEdge], moving())
+      const valid = at < 2 ? dragging && placementReady(x, y)
         : at === 2 && travel < 12 && Math.hypot(x - down.x, y - down.y) < 12 && visibleHit(x, y, roosterTargets)
-      dragging = false
+      dropFeedback.clear(); dragging = false
       if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
   })
   const sync = () => {
+    dropFeedback.clear()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !active() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = !motion && at < 3 ? 'auto' : 'none'
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(active() && !returning && at === 2 && !motion)
@@ -236,6 +234,6 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
       }
       matrices(); style.render()
     },
-    dispose() { if (disposed) return; disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() { if (disposed) return; disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }
 }

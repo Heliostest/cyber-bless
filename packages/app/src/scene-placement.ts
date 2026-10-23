@@ -1,6 +1,7 @@
 import {
   dailyCollectibleId,
   rituals,
+  sceneStepCount,
   type Collectible,
   type RitualId,
 } from "@wbr/core";
@@ -37,9 +38,8 @@ export function findSceneEntry(
   return entries.find((e) => e.id === id);
 }
 
-/** Checkpoints a scene reports: woodfish strikes, or the three steps of a procedural scene. */
-export const sceneSteps = (entry: CatalogEntry) =>
-  entry.engine === "woodfish@1" ? 12 : 3;
+/** The actual checkpoints reported by each scene. */
+export const sceneSteps = sceneStepCount;
 
 /**
  * The 3D scene a core ritual opens. Each ritual (woodfish, crane, lantern)

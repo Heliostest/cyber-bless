@@ -18,7 +18,7 @@ The placement anchor is local to the head and verified as the nearest opaque ray
 | --- | --- | --- | --- |
 | 0: place on twig | `dragonfly-head` | `[0, .035, .13]` | `[0, -60]` px |
 | 1: first poke | any visible dragonfly mesh | actual ray hit | tap or drag in any direction |
-| 2: continue freely, then manually finish | any visible dragonfly mesh | actual ray hit | repeated taps/drags; `结束体验` button |
+| 2: continue freely, then manually finish | any visible dragonfly mesh | actual ray hit | repeated taps/drags; `结束仪式` button |
 
 The previous prepared pivot `[0, 1.06, .45]` put the thorax through the support. The revised prepared pivot `[-.28, 1.50, 1.05]` keeps the body above the upright and visibly beside it before moving back onto the twig tip `[0, 1.58, .10]`. Actual support-axis intersections are checked at thirteen placement samples. The real tapered beak vertex and `dragonfly-beak-contact` marker both occupy local zero in `dragonfly-balance-pivot`. Only this group's rotation changes after placement, preserving exact beak contact. Ordinary and reduced motion have identical settled transforms.
 
@@ -30,9 +30,9 @@ This is a small-angle model, not full rigid-body contact/friction simulation. Th
 
 ## Lifecycle and verification
 
-Checkpoint compatibility remains 0–3: unplaced, placed, freely playable after the first poke, manually finished. The first accepted poke reports 2 once; subsequent pokes never advance or complete. Restored 1 and 2 remain playable without entry feedback. A keyboard button places, offers a poke, then becomes `结束体验`. Placement retains directional validation; free play accepts all directions. Invalid coordinates, cancel, occluders and multi-touch cannot submit a gesture. Each accepted poke has quiet optional sound and light haptics, with medium haptics on longer flicks; both obey live host switches.
+Checkpoint compatibility remains 0–3: unplaced, placed, freely playable after the first poke, manually finished. The first accepted poke reports 2 once; subsequent pokes never advance or complete. Restored 1 and 2 remain playable without entry feedback. A keyboard button places, offers a poke, then becomes `结束仪式`. Placement retains directional validation; free play accepts all directions. Invalid coordinates, cancel, occluders and multi-touch cannot submit a gesture. Each accepted poke has quiet optional sound and light haptics, with medium haptics on longer flicks; both obey live host switches.
 
-At checkpoint 2, the button uses `scene-dragonfly-finish` to show its complete `结束体验` label in the lower-right tray. This overrides the host's small `辅助` fallback appearance; its title also reflects the finish action. The browser check verifies that the label is painted, fits without clipping and is not covered by the fallback pseudo-element before clicking it.
+At checkpoint 2, the button uses `scene-dragonfly-finish` to show its complete `结束仪式` label in the lower-right tray. This overrides the host's small `辅助` fallback appearance; its title also reflects the finish action. The browser check verifies that the label is painted, fits without clipping and is not covered by the fallback pseudo-element before clicking it.
 
 Pause/blur cancel unfinished grabs and freeze released dynamics. Resize preserves held pose and free momentum, rebasing the hand plane and drag origin after real dimension changes while retaining the original cancellation snapshot. Fixed framing samples every combination of bounded pitch, roll and yaw. Lifecycle revisions protect synchronous feedback/progress reentry. Geometry, materials, input, cues, audio and DOM are disposed once.
 

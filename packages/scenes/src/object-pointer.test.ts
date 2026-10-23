@@ -39,9 +39,13 @@ it('samples a different release coordinate before committing a moved object, wit
   event(s.layer, 'pointerdown'); event(s.layer, 'pointermove', 1, 120); event(s.layer, 'pointerup', 1, 120)
   expect(calls).toEqual(['move:120', 'release:120'])
 })
-it('does not invent movement for an un-moved press and release', () => {
-  const s = mount(); event(s.layer, 'pointerdown'); event(s.layer, 'pointerup', 1, 120)
+it('keeps a small tap still but samples a deliberate drag delivered only at release', () => {
+  const s = mount(); event(s.layer, 'pointerdown'); event(s.layer, 'pointerup', 1, 54)
   expect(s.move).not.toHaveBeenCalled()
+  s.release.mockClear()
+  event(s.layer, 'pointerdown'); event(s.layer, 'pointerup', 1, 120)
+  expect(s.move).toHaveBeenCalledExactlyOnceWith(120, 50)
+  expect(s.release).toHaveBeenCalledExactlyOnceWith(120, 50)
 })
 it.each(['pause', 'cancel', 'dispose', 'second-finger'] as const)('does not commit when the terminal sample causes %s', kind => {
   const s = mount()

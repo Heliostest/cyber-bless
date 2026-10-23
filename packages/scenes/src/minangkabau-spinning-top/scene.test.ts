@@ -127,7 +127,7 @@ describe('original tabletop spinning-top toy', () => {
     expect(bead.position.distanceTo(home)).toBeGreaterThan(.3); expect(new THREE.Box3().setFromObject(cord).equals(bounds)).toBe(false)
     pointer(s.hit, 'pointerup', [1, 1]); expect(bead.position.equals(home)).toBe(true)
     expect(new THREE.Box3().setFromObject(cord).equals(bounds)).toBe(true); expect(s.progress).toEqual([])
-    pointer(s.hit, 'pointerdown', s.point('top-pull-bead')); pointer(s.hit, 'pointerup', s.point('top-pull-anchor')); expect(s.progress).toEqual([])
+    pointer(s.hit, 'pointerup', s.point('top-pull-anchor')); expect(s.progress).toEqual([])
     drag(s, 'top-pull-bead', 'top-pull-anchor'); expect(s.progress).toEqual([1])
     const p = s.point('top-cap'); pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointermove', [p[0] + 60, p[1]]); pointer(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([1]); tap(s); expect(s.progress).toEqual([1, 2])

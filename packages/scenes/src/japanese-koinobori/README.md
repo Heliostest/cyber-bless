@@ -1,5 +1,11 @@
 # 鲤旗迎风
 
+## 2026-10-24 交互审阅
+
+已按实际器物、步骤、可持续性与触屏验收逐项审阅。保留有实际用途的阶段，不因总数是三而增删传统动作；本轮手势容错与放手采样属于产品输入安排。器物身份、文化归属与传统主张没有增加。
+
+逐场发现、处理、来源边界与验证见[本轮 C 组记录](../../../../docs/research/2026-10-24-scene-interaction-review-c.md#逐场记录)。
+
 `japanese-koinobori` is an original single-carp appreciation scene inspired by public Children's Day decorations and craft activities. References and boundaries are in `content/traditions/japanese-koinobori.md`.
 
 Three actual object drags unfold the cloth tail to the right, pull the wooden halyard toggle downward to raise the carp, and slide the toggle right into a cleat. A real open cloth tube, original scale colors, paired tail flaps, mouth bridles, pulley and grounded pole form the scene. The free halyard end descends by the same distance that the carp rises. A continuous breeze bends the free cloth and flicks the tail, growing smoothly with actual hoisting height before the rope is secured. Dragging and settlement preserve wind phase; reduced motion, focus and pauses remain respected. No extra display furniture or invisible hit proxy.

@@ -4029,6 +4029,28 @@ button:hover:not(:disabled) {
 .library-scene-stage .scene-bow-tap:active {
   transform: translateY(1px);
 }
+/* A repeatable instrument keeps its helper beside an explicit finish action. */
+.library-scene-stage .scene-overlay-host:has(> .scene-continuous-finish:not([hidden])) {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  column-gap: 8px;
+}
+.library-scene-stage .scene-bow-tap.scene-continuous-finish {
+  grid-area: action;
+  grid-column: 2;
+  justify-self: end;
+  position: relative;
+  width: auto;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: none;
+  padding-inline: 12px;
+  color: var(--ink-soft);
+  border: 1px solid var(--rim);
+  border-radius: 999px;
+  background: var(--paper);
+}
+.library-scene-stage .scene-bow-tap.scene-continuous-finish::before { content: none; }
+.scene-woodfish-finish { display: block; margin: 12px auto; min-height: 44px; }
 .library-scene-stage .scene-diabolo-repeat,
 .library-scene-stage .scene-yut-finish,
 .library-scene-stage .scene-angklung-finish {

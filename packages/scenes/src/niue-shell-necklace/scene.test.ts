@@ -199,12 +199,12 @@ describe('an original prepared yellow land-shell necklace', () => {
       expect(s.scene.getObjectByName('shell-tray-support')).toBeUndefined(); expect(s.scene.getObjectByName('shell-table-leg')).toBeUndefined()
     }
   })
-  it.each([0, 1])('rejects wrong surfaces, missing movement, short, reverse, diagonal and returned gestures at %i', at => {
+  it.each([0, 1])('rejects wrong surfaces, orphan release, short, reverse, diagonal and returned gestures at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(at === 0 ? 'shell-last-body' : 'shell-cord-grip', at === 0 ? [.0125, 0, .07848191718467962] : cordAnchor)
     const end: [number, number] = at === 0 ? [p[0] - 60, p[1]] : [p[0], p[1] - 60]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
     const board = s.point('shell-tray-face', [-1, .6, .055]); event(s.hit, 'pointerdown', board); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
+    event(s.hit, 'pointerup', end)
     for (const [dx, dy] of at === 0 ? [[-8, 0], [60, 0], [0, 60], [-60, 90]] : [[0, -8], [0, 60], [-60, 0], [90, -60]]) drag(s, at, dx, dy)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); at === 0 ? thread(s) : gather(s); expect(s.progress).toEqual([at + 1])

@@ -762,6 +762,49 @@ describe("仪式时光", () => {
 });
 
 describe("场景目录", () => {
+  it('waits for all nine bowl checkpoints rather than completing at the third one', async () => {
+    const ui = await openApp(createState());
+    await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
+    await ui.tap(ui.button('场景目录', '.settings-card'));
+    while (!ui.host.querySelector('.scene-card[data-scene="tibetan-water-bowls"]')) await ui.tap(ui.button('显示更多'));
+    await ui.tap(ui.host.querySelector('.scene-card[data-scene="tibetan-water-bowls"]')!);
+    for (let n = 1; n <= 8; n++) {
+      act(() => scene.context!.checkpoint!(n));
+      expect(ui.sceneProgress()).toBe(`已完成 ${n} / 9`);
+      expect(ui.host.querySelector('.scene-done-row')).toBeNull();
+    }
+    act(() => scene.context!.checkpoint!(9));
+    expect(ui.host.querySelector('.scene-done-row')).not.toBeNull();
+    expect((await ui.saved()).sceneRecords.find(r => r.id === 'tibetan-water-bowls')).toMatchObject({ progress: 9, steps: 9 });
+    ui.unmount();
+  });
+  it('lets woodfish keep sounding after twelve strikes and completes only on explicit finish', async () => {
+    const ui = await openApp(createState());
+    await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
+    await ui.tap(ui.button('场景目录', '.settings-card'));
+    while (!ui.host.querySelector('.scene-card[data-scene="woodfish"]')) await ui.tap(ui.button('显示更多'));
+    await ui.tap(ui.host.querySelector('.scene-card[data-scene="woodfish"]')!);
+    const woodfish = ui.host.querySelector<HTMLButtonElement>('.woodfish-object')!;
+    for (let i = 0; i < 11; i++) await ui.tap(woodfish);
+    expect(ui.button('结束仪式')).toBeUndefined();
+    await ui.tap(woodfish);
+    expect(woodfish.disabled).toBe(false);
+    expect(ui.button('结束仪式')).toBeDefined();
+    expect(ui.host.querySelector('.scene-done-row')).toBeNull();
+    for (let i = 0; i < 4; i++) await ui.tap(woodfish);
+    expect(ui.host.querySelector('.scene-progress')?.textContent).toContain('16');
+    expect((await ui.saved()).sceneRecords.find(r => r.id === 'woodfish')!.progress).toBeLessThan(12);
+    await ui.tap(ui.host.querySelector('.back-button')!);
+    while (!ui.host.querySelector('.scene-card[data-scene="woodfish"]')) await ui.tap(ui.button('显示更多'));
+    await ui.tap(ui.host.querySelector('.scene-card[data-scene="woodfish"]')!);
+    expect(ui.host.querySelector('.scene-progress')?.textContent).toContain('16');
+    expect(ui.button('结束仪式')).toBeDefined();
+    await ui.tap(ui.button('结束仪式'));
+    expect(ui.host.querySelector<HTMLButtonElement>('.woodfish-object')!.disabled).toBe(true);
+    expect(ui.host.querySelector('.scene-done-row')).not.toBeNull();
+    expect((await ui.saved()).sceneRecords.find(r => r.id === 'woodfish')!.progress).toBe(12);
+    ui.unmount();
+  });
   it("reopens a finished scene from its first step, not its done row", async () => {
     const ui = await openApp(withRecords({ crane: 3 }));
     await ui.tap(ui.host.querySelector('[data-tab="me"]')!);

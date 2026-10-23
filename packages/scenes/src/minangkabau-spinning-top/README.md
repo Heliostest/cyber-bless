@@ -1,5 +1,11 @@
 ﻿# 木陀轻转
 
+## 2026-10-24 交互审阅
+
+已按实际器物、步骤、可持续性与触屏验收逐项审阅。保留有实际用途的阶段，不因总数是三而增删传统动作；本轮手势容错与放手采样属于产品输入安排。器物身份、文化归属与传统主张没有增加。
+
+逐场发现、处理、来源边界与验证见[本轮 C 组记录](../../../../docs/research/2026-10-24-scene-interaction-review-c.md#逐场记录)。
+
 An original tabletop wooden-top toy: pull the wooden bead to unwind the cord, tap the cap to slow the top, then quietly look or submit an optional line. It has no regional or ritual provenance assignment.
 
 ## Provenance correction · 2026-10-19

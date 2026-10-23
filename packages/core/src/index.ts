@@ -1,4 +1,6 @@
 import { builtInScenes } from './daily-scenes';
+import { sceneProgress, sceneStepCount } from './scene-steps';
+export { sceneProgress, sceneStepCount } from './scene-steps';
 import { isVisualSceneId, isVisualStyle, normalizeStyleParameters, restoreVisualStyles, type VisualStylePreference, type VisualPreferenceInput } from "./visual-style";
 import { openingCollectibleId, replaceHiddenOpeningScenes, validOpeningSceneIds, validOpeningState, validOpeningDay, type OpeningState } from './opening';
 export { chooseOpeningScenes, openingCollectibleId, openingExclusions } from './opening';
@@ -64,6 +66,8 @@ export type Session = {
   id: string;
   ritual: RitualId;
   progress: number;
+  /** Woodfish's actual strikes, independent of its minimum completion target. */
+  strikes?: number;
   startedAt: string;
   wishId?: string;
   completedAt?: string;
@@ -94,6 +98,10 @@ export type VesselDraft = { line: string; at: string };
 export type SceneRecord = {
   id: string; title: string; engine: string; revision: string; manifestUrl: string;
   progress: number; favorite: boolean; lastOpened: string;
+  /** Checkpoint scale; absent in legacy three-stage saves. */
+  steps?: number;
+  /** Actual woodfish strikes, including practice beyond the minimum. */
+  strikes?: number;
   /** A durable cosmetic/object choice, independent of the integer progress. */
   variant?: string;
 };
@@ -121,7 +129,7 @@ export type Action =
   | { type: "opening.collect"; sceneId: string; at: string }
   | { type: "opening.finish"; day: string; at: string }
   | { type: "scene.visit"; entry: Pick<SceneRecord, "id" | "title" | "engine" | "revision" | "manifestUrl">; at: string }
-  | { type: "scene.progress"; id: string; progress: number }
+  | { type: "scene.progress"; id: string; progress: number; strikes?: number }
   | { type: "scene.favorite"; id: string; favorite: boolean }
   | { type: "scene.variant"; id: string; variant: string }
   | {
@@ -244,7 +252,7 @@ export function reduce(s: State, a: Action): State {
         throw Error('请按顺序完成开场仪式');
       const entry = builtInScenes.find(e => e.id === a.sceneId)!;
       const record = s.sceneRecords.find(r => r.id === a.sceneId);
-      if (!record || record.engine !== entry.engine || record.progress < (entry.engine === 'woodfish@1' ? 12 : 3) || !date(a.at))
+      if (!record || record.engine !== entry.engine || sceneProgress(record) < sceneStepCount(entry) || !date(a.at))
         throw Error('先完成这场仪式，再收下小物');
       return {
         ...s,
@@ -263,14 +271,18 @@ export function reduce(s: State, a: Action): State {
       const old = s.sceneRecords.find(r => r.id === a.entry.id);
       // A saved interaction belongs to an engine contract, not a visual revision.
       if (old && old.engine !== a.entry.engine) throw Error("此场景的玩法版本已变化，请从历史记录打开原版本");
-      const record = { ...a.entry, progress: old?.progress ?? 0, favorite: old?.favorite ?? false, lastOpened: a.at };
+      const record = { ...a.entry, progress: old ? sceneProgress(old) : 0, steps: sceneStepCount(a.entry), favorite: old?.favorite ?? false, lastOpened: a.at };
       if (old?.variant !== undefined) Object.assign(record, { variant: old.variant });
+      if (old?.strikes !== undefined) Object.assign(record, { strikes: old.strikes });
       if (!sceneRecord(record)) throw Error("场景记录无效");
       return { ...s, sceneRecords: [record, ...s.sceneRecords.filter(r => r.id !== a.entry.id)] };
     }
     case "scene.progress":
       if (!Number.isSafeInteger(a.progress) || a.progress < 0 || a.progress > 1000000) throw Error("场景进度无效");
-      return { ...s, sceneRecords: s.sceneRecords.map(r => r.id === a.id ? { ...r, progress: a.progress } : r) };
+      if (!validStrikes(a.strikes) || (a.strikes !== undefined && a.strikes < a.progress)) throw Error("轻敲次数无效");
+      return { ...s, sceneRecords: s.sceneRecords.map(r => r.id === a.id ? { ...r, progress: a.progress, steps: sceneStepCount(r),
+        ...(r.engine === 'woodfish@1' && (a.strikes !== undefined || r.strikes !== undefined)
+          ? { strikes: a.progress === 0 ? 0 : a.strikes ?? r.strikes } : {}) } : r) };
     case "scene.favorite":
       return { ...s, sceneRecords: s.sceneRecords.map(r => r.id === a.id ? { ...r, favorite: a.favorite } : r) };
     case "scene.variant":
@@ -382,12 +394,13 @@ export function reduce(s: State, a: Action): State {
     case "ritual.step": {
       if (!s.activeSession) return s;
       const r = s.activeSession;
-      if (r.progress >= rituals[r.ritual].steps) return s;
+      if (r.progress >= rituals[r.ritual].steps && r.ritual !== 'woodfish') return s;
       return {
         ...s,
         activeSession: {
           ...r,
           progress: Math.min(rituals[r.ritual].steps, r.progress + 1),
+          ...(r.ritual === 'woodfish' ? { strikes: Math.min(1000000, (r.strikes ?? r.progress) + 1) } : {}),
         },
       };
     }
@@ -624,10 +637,12 @@ const session = (v: unknown) =>
   Number.isInteger(v.progress) &&
   Number(v.progress) >= 0 &&
   Number(v.progress) <= rituals[v.ritual].steps &&
+  validStrikes(v.strikes) &&
   date(v.startedAt) &&
   optionalId(v.wishId);
 const sceneVariant = (v: unknown) => typeof v === "string" && /^[a-z0-9-]{1,32}$/.test(v);
-const sceneRecord = (v: unknown) => obj(v) && id(v.id) && str(v.title) && v.title.length <= 100 && id(v.engine) && id(v.revision) && str(v.manifestUrl) && v.manifestUrl.length <= 2048 && Number.isSafeInteger(v.progress) && Number(v.progress) >= 0 && Number(v.progress) <= 1000000 && typeof v.favorite === "boolean" && date(v.lastOpened) && (v.variant === undefined || sceneVariant(v.variant));
+const validStrikes = (v: unknown) => v === undefined || (Number.isSafeInteger(v) && Number(v) >= 0 && Number(v) <= 1000000);
+const sceneRecord = (v: unknown) => obj(v) && id(v.id) && str(v.title) && v.title.length <= 100 && id(v.engine) && id(v.revision) && str(v.manifestUrl) && v.manifestUrl.length <= 2048 && Number.isSafeInteger(v.progress) && Number(v.progress) >= 0 && Number(v.progress) <= 1000000 && validStrikes(v.strikes) && (v.steps === undefined || (Number.isSafeInteger(v.steps) && Number(v.steps) > 0 && Number(v.steps) <= 1000000)) && typeof v.favorite === "boolean" && date(v.lastOpened) && (v.variant === undefined || sceneVariant(v.variant));
 /** Restores a save; without one yet, starts fresh with `initialSettings`. */
 export function restore(
   raw: string | null,
@@ -694,6 +709,8 @@ export function restore(
   const s = v as State;
   if (s.visualStyles !== undefined) s.visualStyles = restoreVisualStyles(s.visualStyles);
   s.sceneRecords ??= [];
+  s.sceneRecords = s.sceneRecords.map(r => r.id === 'tibetan-water-bowls' && r.engine === 'tibetan-water-bowls@1'
+    ? { ...r, progress: sceneProgress(r), steps: sceneStepCount(r) } : r);
   if (s.opening && s.opening.status !== 'new' &&
       s.opening.sceneIds.slice(0, s.opening.completed).some((sceneId, i) =>
         !s.collectibles.some(c => c.id === openingCollectibleId(sceneId) && c.kind === 'scene' &&

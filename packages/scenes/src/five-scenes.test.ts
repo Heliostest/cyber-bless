@@ -144,7 +144,8 @@ describe.each(SCRIPTS)('$id scene', ({ id, taps, gap = 0.1 }) => {
     expect(s.overlay.querySelector('.scene-title')?.textContent).toBe(s.mod.meta.title)
     for (let checkpoint = 1; checkpoint <= 3; checkpoint++) {
       for (let i = 0; i < taps[checkpoint - 1]; i++) {
-        s.tap()
+        if (id === 'tibetan-wheel' && checkpoint === 3) s.overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!.click()
+        else s.tap()
         s.run(gap)
       }
       s.runUntil(checkpoint)
@@ -174,7 +175,7 @@ describe.each(SCRIPTS)('$id scene', ({ id, taps, gap = 0.1 }) => {
     const s = await mount(id, 3)
     s.run(0.5)
     expect(s.progress).toEqual([])
-    expect(s.complete).toHaveBeenCalledTimes(1)
+    expect(s.complete).toHaveBeenCalledTimes(id === 'tibetan-wheel' ? 0 : 1)
     s.instance.dispose()
   })
 
@@ -311,7 +312,7 @@ describe('tibetan-wheel drag direction', () => {
 })
 
 describe('tibetan-wheel turning', () => {
-  it('lets the button settle the turning drum; a double tap does not stop it at once', async () => {
+  it('keeps pushes available and settles only through the explicit finish control', async () => {
     const s = await mount('tibetan-wheel')
     const label = () => s.button.textContent
     const pushLabel = label()
@@ -319,32 +320,35 @@ describe('tibetan-wheel turning', () => {
     s.tap() // the second tap of a quick double tap
     s.run(0.1)
     expect(s.progress).toEqual([1])
-    expect(label()).not.toBe(pushLabel)
-    expect(s.button.getAttribute('aria-disabled')).toBe('true')
+    expect(label()).toBe(pushLabel)
+    expect(s.button.disabled).toBe(false)
     s.run(1)
     expect(s.button.getAttribute('aria-disabled')).toBe('false')
-    // Still turning: the extra tap neither pushed nor stopped it.
+    // More pushes remain available without completing the scene.
     expect(s.progress).toEqual([1])
     s.tap()
-    expect(s.button.getAttribute('aria-disabled')).toBe('true')
-    // It comes to rest well before the ~5 s it coasts on its own.
+    expect(s.button.disabled).toBe(false)
+    s.overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!.click()
+    expect(s.button.disabled).toBe(true)
     s.run(1.5)
-    expect(s.progress).toEqual([1, 2])
-    expect(s.button.getAttribute('aria-disabled')).toBe('false')
-    s.tap()
-    expect(s.progress).toEqual([1, 2, 3])
+    expect(s.progress).toEqual([1, 3])
+    expect(s.complete).toHaveBeenCalledOnce()
     s.instance.dispose()
   })
 
-  it('no longer keeps the drum turning when the button is tapped every 1.5 s', async () => {
+  it('allows repeated pushes and allows another push after natural rest', async () => {
     const s = await mount('tibetan-wheel')
     s.tap()
-    // Each tap used to push it on; 18 s of this stayed at the first step.
+    // Repeated pushes keep the same session open.
     for (let i = 0; i < 2; i++) {
       s.run(1.5)
       if (s.progress.length === 1) s.tap()
     }
+    expect(s.progress).toEqual([1])
+    s.run(15)
     expect(s.progress).toEqual([1, 2])
+    s.tap(); s.run(.1)
+    expect(s.progress).toEqual([1, 2]); expect(s.complete).not.toHaveBeenCalled()
     s.instance.dispose()
   })
 })
@@ -463,7 +467,8 @@ describe('device motion', () => {
     expect(s.progress).toHaveLength(motionStep)
     expect(requestPermission).not.toHaveBeenCalled()
     // At the motion step its own button still does the step, without asking.
-    s.tap()
+    if (id === 'tibetan-wheel') s.overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!.click()
+    else s.tap()
     s.run(3)
     expect(s.progress).toHaveLength(motionStep + 1)
     expect(requestPermission).not.toHaveBeenCalled()

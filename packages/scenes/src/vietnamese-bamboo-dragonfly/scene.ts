@@ -12,7 +12,7 @@ type Checkpoint = 0 | 1 | 2 | 3
 const COPY = {
   title: '竹蜓点风', left: '拿住竹蜻蜓的头，向上轻送，让尖喙落在细枝顶端。',
   right: '轻点或拨动任意竹翼、头部、身体和尾巴，看它绕着枝尖回摆。',
-  quiet: '可以继续拨弄；不同位置和方向会带来不同的晃动。看够了，轻点「结束体验」。',
+  quiet: '可以继续拨弄；不同位置和方向会带来不同的晃动。看够了，轻点「结束仪式」。',
   settling: '竹翼轻轻回摆，幅度慢慢变小，尖喙停在枝尖的同一个点。',
   done: '愿今天留一点轻盈。',
 } as const
@@ -208,9 +208,9 @@ export function createVietnameseBambooDragonfly(ctx: SceneContext): SceneInstanc
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.classList.toggle('scene-dragonfly-finish', at === 2)
-    ui.actionBtn.title = at === 2 ? '结束体验' : '辅助操作：也可以直接操作场景里的物品'
+    ui.actionBtn.title = at === 2 ? '结束仪式' : '辅助操作：也可以直接操作场景里的物品'
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, at === 0 ? '拿住竹蜓头向上轻送' : at === 1 ? '轻拨竹蜻蜓' : '结束体验', safe)
+    setSafeText(ui.actionBtn, at === 0 ? '拿住竹蜓头向上轻送' : at === 1 ? '轻拨竹蜻蜓' : '结束仪式', safe)
     setSafeText(ui.hintEl, motion ? COPY.settling : at === 0 ? COPY.left : at === 1 ? COPY.right : at === 2 ? COPY.quiet : COPY.done, safe)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }

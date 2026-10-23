@@ -1,5 +1,9 @@
 # 留一盏烛光 · votive-candle-catholic
 
+## 2026-10-24 交互审阅
+
+已核对实际步骤、持续观看与手机输入。保留有意义的制作/安放/静看阶段，不因总数为三增添无据传统动作；逐场验收发现和处理见[本轮 C 组记录](../../../../docs/research/2026-10-24-scene-interaction-review-c.md#逐场记录)。本轮没有新增文化主张，技术 ID 与来源归属保持。
+
 ## 2026-10-20 介绍扩充核查
 
 适用场景：`votive-candle-catholic`；最终来源：`votive-candle-catholic`。

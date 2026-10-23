@@ -8,11 +8,11 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 import { createGuiroModel } from './model'
 
 type Checkpoint = 0 | 1 | 2 | 3
-const ACTIONS = ['向下沿棱轻刮', '向上回刮瓜棱', '向右移开木棒']
+const ACTIONS = ['向下沿棱轻刮', '向上回刮瓜棱', '再刮一段节拍']
 const HINTS = [
   '按住右侧木刮棒的圆柄向下短拖，让棒尖沿瓜壳的横棱缓缓下行。',
   '按住木棒圆柄向上短拖，让棒尖沿着同一排瓜棱回到上方。',
-  '按住木棒圆柄向右短拖，把刮棒轻轻移开，让纹路留在阳光里。',
+  '可以继续向下轻拖木棒圆柄，沿瓜棱来回轻刮；想收尾时点「结束仪式」。',
   '木棒停在瓜壳一旁，横棱与中空的口沿仍然清楚。把一小段节拍留在片刻里。',
 ]
 const MOVING = ['棒尖沿瓜棱缓缓下行……', '木棒沿着纹路向上回行……', '木棒轻轻移开，瓜棱接住阳光……']
@@ -23,13 +23,15 @@ export function createPuertoRicanGuiro(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; finishing?: boolean } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
   const ui = createStepOverlay(overlay, { title: '瓜棱轻奏', stepsAria: '刮瓜步骤', action: ACTIONS[0]! }, safe)
   ui.actionBtn.style.minWidth = '44px'; ui.actionBtn.style.minHeight = '44px'
+  const finishButton = document.createElement('button'); finishButton.type = 'button'; finishButton.className = 'scene-guiro-finish scene-bow-tap scene-continuous-finish'
+  setSafeText(finishButton, '结束仪式', safe); overlay.append(finishButton)
   const { scene, renderer } = createWarmStage(canvas), camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'puerto-rican-guiro', label: '瓜棱轻奏' }); style.setStyle(CEL_STYLE)
@@ -39,9 +41,15 @@ export function createPuertoRicanGuiro(ctx: SceneContext): SceneInstance {
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
   const model = createGuiroModel(); scene.add(model.subject)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
+  const pose = (step: number, n: number) => {
+    amount = n
+    // A repeat traverses the same down/up contact paths and returns to the top.
+    if (step === 2 && !motion?.finishing) model.pose(n <= .5 ? 0 : 1, n <= .5 ? n * 2 : (n - .5) * 2)
+    else model.pose(step,n)
+    matrices()
+  }
   const restore = () => pose(at, 0)
-  const directions: [number, number][] = [[0,1],[0,-1],[1,0]]
+  const directions: [number, number][] = [[0,1],[0,-1],[0,1]]
   const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: directions[i], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const nearest = (x: number, y: number) => {
@@ -76,19 +84,27 @@ export function createPuertoRicanGuiro(ctx: SceneContext): SceneInstance {
     if (motion || at === 3) delete ui.hintEl.dataset.ready
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
+    finishButton.hidden = at !== 2; finishButton.disabled = !inputActive() || !!motion
+    finishButton.setAttribute('aria-disabled', String(finishButton.disabled))
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at]!, safe)
+    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, motion ? motion.step === 2 && !motion.finishing ? '木棒沿瓜棱来回轻刮……' : MOVING[motion.step]! : HINTS[at]!, safe)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
-    at = (motion.step + 1) as Checkpoint; motion = null; restore()
+    const changed = at < 2 || motion.finishing
+    at = (motion.finishing ? 3 : Math.min(2, motion.step + 1)) as Checkpoint; motion = null; restore()
     withHostCallbacks(() => {
-      ctx.onProgress?.(at); if (!callbackActive()) return
+      if (changed) ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [523.25], duration: .09, gain: .003, type: 'sine' })
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
+  }
+  const finish = () => {
+    if (!inputActive() || pointer.isBusy() || motion || at !== 2 || !prepareInput()) return
+    motion = { step: 2, time: 0, from: 0, finishing: true }; sync()
+    if (ctx.isReducedMotion?.()) settle()
   }
   function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
@@ -112,7 +128,7 @@ export function createPuertoRicanGuiro(ctx: SceneContext): SceneInstance {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
       restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
-      ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
+      ui.actionBtn.addEventListener('click', action); finishButton.addEventListener('click', finish); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {
       if (!started || disposed) return
@@ -126,6 +142,7 @@ export function createPuertoRicanGuiro(ctx: SceneContext): SceneInstance {
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      finishButton.removeEventListener('click', finish)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.subject); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

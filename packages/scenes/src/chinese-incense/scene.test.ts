@@ -70,6 +70,17 @@ function cues(s: ReturnType<typeof mount>) {
 }
 
 describe('炉前一炷: an open household incense tribute', () => {
+  it('accepts sparse touch placement and clears the ready hint after a paper sleeve drag', () => {
+    const s = mount(1, { isReducedMotion: () => true }), grip = s.point('incense-paper-grip'), socket = s.point('incense-socket')
+    pointer(s.hit, 'pointerdown', [grip[0] + 6, grip[1]])
+    pointer(s.hit, 'pointermove', socket)
+    expect(s.overlay.querySelector<HTMLElement>('.scene-hint')?.dataset.dropReady).toBe('true')
+    pointer(s.hit, 'pointerup', socket); expect(s.progress).toEqual([2])
+    expect(s.overlay.querySelector<HTMLElement>('.scene-hint')?.dataset.dropReady).toBeUndefined()
+    const sparse = mount(1, { isReducedMotion: () => true })
+    pointer(sparse.hit, 'pointerdown', sparse.point('incense-paper-grip')); pointer(sparse.hit, 'pointerup', sparse.point('incense-socket'))
+    expect(sparse.progress).toEqual([2])
+  })
   it('moves the actual lid by its knob onto the rest, seats the stick in the visible socket, then quietly finishes', () => {
     const s = mount(0, { isReducedMotion: () => true })
     drag(s, 'incense-lid-knob', 'incense-lid-rest'); expect(s.progress).toEqual([1])

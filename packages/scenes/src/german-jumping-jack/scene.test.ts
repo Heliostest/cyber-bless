@@ -53,7 +53,7 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
     return [left + (p.x + 1) * width / 2, top + (1 - p.y) * height / 2]
   }
   const run = (seconds = 1.2) => { for (let t = 0; t < seconds; t += .025) instance.update(.025) }
-  return { instance, scene, camera, host, overlay, hit, button, point, run, progress, saveWish, complete, haptic }
+  return { instance, scene, camera, host, overlay, hit, button, finish: overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!, point, run, progress, saveWish, complete, haptic }
 }
 function event(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
   const e = new Event(type, { bubbles: true, cancelable: true })
@@ -91,13 +91,25 @@ describe('German-context original string-linked jumping jack', () => {
     for(let i=1;i<=8;i++)event(s.hit,'pointermove',[p[0],p[1]+px!*i/8])
     let previous=pivot.rotation.z;event(s.hit,'pointerup',[p[0],p[1]+px!]);expect(pivot.rotation.z).toBe(previous)
     for(let i=0;i<7;i++){s.instance.update(.025);expect(pivot.rotation.z).toBeLessThanOrEqual(previous+1e-12);previous=pivot.rotation.z;expect(s.progress).toEqual([])}
-    s.run();expect(s.progress).toEqual([at!+1]);expect(pivot.rotation.z).toBe(.12)
+    s.run();expect(s.progress).toEqual(at === 2 ? [] : [at!+1]);expect(pivot.rotation.z).toBe(.12)
   })
   it.each([0,1,2])('continues rigid limb rotation after an ordinary60px release at%i',at=>{
     const s=mount(at),pivot=s.scene.getObjectByName('jack-arm-pivot-1')!,neutral=pivot.quaternion.clone()
     step(s,at,false);const held=pivot.quaternion.clone();expect(held.angleTo(neutral)).toBeGreaterThan(.3);expect(s.progress).toEqual([])
     s.run(.2);expect(pivot.quaternion.angleTo(held)).toBeGreaterThan(.02);expect(pivot.quaternion.angleTo(neutral)).toBeGreaterThan(.05);expect(s.progress).toEqual([])
-    s.run();expect(s.progress).toEqual([at+1]);expect(pivot.quaternion.angleTo(neutral)).toBeLessThan(1e-7)
+    s.run();expect(s.progress).toEqual(at === 2 ? [] : [at+1]);expect(pivot.quaternion.angleTo(neutral)).toBeLessThan(1e-7)
+  })
+  it('keeps playing after a full round and completes only through the explicit finish button', () => {
+    const s=mount(0,{isReducedMotion:()=>true})
+    expect(s.finish.hidden).toBe(true)
+    for(let round=0;round<4;round++)for(let at=0;at<3;at++){
+      step(s,at);expect(s.progress).toEqual(at===0&&round===0?[1]:[1,2]);expect(s.complete).not.toHaveBeenCalled()
+      if(round===0&&at<2)expect(s.finish.hidden).toBe(true)
+    }
+    expect(s.finish.hidden).toBe(false)
+    const p=s.point(targetName(0),anchor(0));event(s.hit,'pointerdown',p);event(s.hit,'pointercancel',p);s.instance.update(.025);expect(s.finish.disabled).toBe(false)
+    drag(s,0,-delta(0)[0],-delta(0)[1]);expect(s.finish.disabled).toBe(false)
+    s.finish.click();s.finish.click();expect(s.progress).toEqual([1,2,3]);expect(s.complete).toHaveBeenCalledOnce()
   })
   it('uses jumping jack identity for the visible title, accessible steps and default style registration',()=>{
     const s=mount()
@@ -107,13 +119,13 @@ describe('German-context original string-linked jumping jack', () => {
   })
   it.each([false,true])('pulls the actual wooden bead through three coupled limb movements, reduced=%s', reduced => {
     const s=mount(0,{isReducedMotion:()=>reduced})
-    for(let i=0;i<3;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); expect(s.progress).toEqual([1,2,3].slice(0,i+1))}
-    s.button.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
+    for(let i=0;i<3;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); expect(s.progress).toEqual([1,2].slice(0,i+1))}
+    s.finish.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
   it('uses identical final subject transforms for ordinary, reduced motion and silently restored checkpoints', () => {
     for (const checkpoint of [1, 2, 3]) {
       const normal = mount(), reduced = mount(0, { isReducedMotion: () => true }), restored = mount(checkpoint)
-      for (let at = 0; at < checkpoint; at++) { step(normal, at); step(reduced, at) }
+      for (let at = 0; at < checkpoint; at++) { step(normal, at); step(reduced, at) }; if(checkpoint===3){normal.finish.click();reduced.finish.click()}
       normal.scene.updateMatrixWorld(true); reduced.scene.updateMatrixWorld(true); restored.scene.updateMatrixWorld(true)
       normal.scene.getObjectByName('jack-subject')!.traverse(o => {
         for (const other of [reduced, restored]) {
@@ -148,14 +160,14 @@ describe('German-context original string-linked jumping jack', () => {
     step(s, 2); expect(frequencies).toEqual([392, 440]); expect(peaks).toEqual([.003, .003])
     s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })
-  it.each([0, 1, 2])('rejects wrong surfaces, release-only, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
+  it.each([0, 1, 2])('rejects wrong surfaces, orphan release, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
+    event(s.hit, 'pointerup', end)
     for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx], [-dx * 3, -dy * 3]]) drag(s, at, x, y)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
-    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
+    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual(at === 2 ? [] : [at + 1])
   })
   it.each([0, 1, 2])('checks terminal release coordinates for withdrawn, cross-axis and nonfinite input at %i', at => {
     const s = mount(at, { isReducedMotion: () => true })
@@ -164,21 +176,21 @@ describe('German-context original string-linked jumping jack', () => {
       const end: [number, number] = kind === 'back' ? [p[0] + dx * .25, p[1] + dy * .25] : kind === 'cross' ? [p[0] + dx - dy, p[1] + dy + dx] : [NaN, p[1]]
       event(s.hit, 'pointerup', end); expect(s.progress, kind).toEqual([])
     }
-    step(s, at); expect(s.progress).toEqual([at + 1])
+    step(s, at); expect(s.progress).toEqual(at === 2 ? [] : [at + 1])
   })
   it.each([0, 1, 2])('accepts a continued same-direction release and an eighteen pixel correction at %i', at => {
     for (const factor of [3, .7]) {
       const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
       event(s.hit, 'pointerup', [p[0] + dx * factor, p[1] + dy * factor])
-      expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      expect(s.progress).toEqual(at === 2 ? [] : [at + 1]); s.instance.dispose()
     }
   })
   it.each([0, 1, 2])('rejects a nonfinite move even when the final release is valid at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [NaN, p[1]])
     event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run()
-    expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([at + 1])
+    expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual(at === 2 ? [] : [at + 1])
   })
   it.each([false, true])('accepts a gentle zigzag path and remains ready after settlement, reduced=%s', reduced => {
     for (const at of [0, 1, 2]) {
@@ -186,7 +198,7 @@ describe('German-context original string-linked jumping jack', () => {
       event(s.hit, 'pointerdown', p)
       for (const [along, cross] of [[12, 16], [24, -16], [36, 16], [48, -16], [60, 0]]) event(s.hit, 'pointermove', [p[0]+delta(at)[0]*along/60-delta(at)[1]*cross/60,p[1]+delta(at)[1]*along/60+delta(at)[0]*cross/60])
       event(s.hit, 'pointerup', [p[0] + delta(at)[0], p[1] + delta(at)[1]])
-      s.run(); expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(at === 2)
+      s.run(); expect(s.progress).toEqual(at === 2 ? [] : [at + 1]); expect(s.button.disabled).toBe(false)
     }
   })
   it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {
@@ -194,7 +206,7 @@ describe('German-context original string-linked jumping jack', () => {
       const s = mount(at, { returning, isReducedMotion: () => true }); s.run()
       expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
       expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
-      for (let i = at; i < 3; i++) s.button.click()
+      for (let i = at; i < 3; i++) s.button.click(); if(at<3)s.finish.click()
       expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
     }
   })
@@ -211,7 +223,7 @@ describe('German-context original string-linked jumping jack', () => {
         const hit = first(s, object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))))
         expect(hit.object?.name, `first reachable material cue ${object.name}`).toBe(object.name); expect(Math.abs(hit.q.x)).toBeLessThan(.97); expect(Math.abs(hit.q.y)).toBeLessThan(.97)
       }
-      if (at < 3) step(s, at); expect(s.progress).toEqual(at < 3 ? [at + 1] : []); s.instance.dispose()
+      if (at < 3) step(s, at); expect(s.progress).toEqual(at < 2 ? [at + 1] : []); s.instance.dispose()
     }
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or stale position/rotation', kind => {
@@ -224,7 +236,7 @@ describe('German-context original string-linked jumping jack', () => {
       if (kind === 'pause') { active = false; s.instance.update(.05); s.instance.update(.05); expect(rendered.render.mock.calls.length).toBe(frames) }
       else if (kind === 'blur') window.dispatchEvent(new Event('blur')); else event(s.hit, kind, p)
       event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run(); expect(s.progress).toEqual([]); expect(pivot.position.distanceTo(home)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(pivot.scale.distanceTo(scale)).toBeLessThan(.00001)
-      if (kind === 'blur') window.dispatchEvent(new Event('focus')); active = true; s.instance.update(.025); step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      if (kind === 'blur') window.dispatchEvent(new Event('focus')); active = true; s.instance.update(.025); step(s, at); expect(s.progress).toEqual(at === 2 ? [] : [at + 1]); s.instance.dispose()
     }
   })
   it.each([284, 350, 1280])('keeps all subject vertices in frame during each three articulated limb paths at width %i', width => {
@@ -242,7 +254,7 @@ describe('German-context original string-linked jumping jack', () => {
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); check()
       event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); check(); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy])
       for (let i = 0; i < 40; i++) { s.instance.update(.025); check() }
-      expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      expect(s.progress).toEqual(at === 2 ? [] : [at + 1]); s.instance.dispose()
     }
   })
   it.each([0, 1, 2])('freezes accepted motion and input while paused at %i', at => {
@@ -250,18 +262,18 @@ describe('German-context original string-linked jumping jack', () => {
     s.button.click(); for (const dt of [NaN, Infinity, -10, 100000]) s.instance.update(dt); expect(s.progress).toEqual([])
     active = false; const pivot = s.scene.getObjectByName('jack-arm-pivot-1')!, pose = pivot.position.clone(), rotation = pivot.quaternion.clone(), frames = rendered.render.mock.calls.length
     s.run(2); expect(rendered.render.mock.calls.length).toBe(frames); expect(pivot.position.distanceTo(pose)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(s.progress).toEqual([])
-    active = true; s.run(); expect(s.progress).toEqual([at + 1])
+    active = true; s.run(); expect(s.progress).toEqual(at === 2 ? [] : [at + 1])
   })
   it.each([0, 1, 2])('rejects a target behind another opaque object at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
     blocker.position.lerpVectors(s.scene.getObjectByName(targetName(at))!.localToWorld(new THREE.Vector3(...anchor(at))), s.camera.position, .15)
     blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker); s.scene.updateMatrixWorld(true); step(s, at); expect(s.progress).toEqual([])
-    blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose(); step(s, at); expect(s.progress).toEqual([at + 1])
+    blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose(); step(s, at); expect(s.progress).toEqual(at === 2 ? [] : [at + 1])
   })
   it.each([0, 1, 2])('preserves pointer ownership through prepareFeedback input on and outside the hit layer at %i', at => {
     for (const outside of [false, true]) for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) {
       let attack = () => {}; const s = mount(at, { isReducedMotion: () => true, prepareFeedback: () => attack() })
-      attack = () => event(outside ? document.body : s.hit, type, [1, 1]); step(s, at); expect(s.progress, `${outside} ${type}`).toEqual([at + 1]); s.instance.dispose()
+      attack = () => event(outside ? document.body : s.hit, type, [1, 1]); step(s, at); expect(s.progress, `${outside} ${type}`).toEqual(at === 2 ? [] : [at + 1]); s.instance.dispose()
     }
   })
   it.each([0, 1, 2])('invalidates prepared pointer and keyboard input on every pause/resume boundary at %i', at => {
@@ -269,18 +281,18 @@ describe('German-context original string-linked jumping jack', () => {
       let attack = () => {}, active = true; const s = mount(at, { isReducedMotion: () => true, isActive: () => active, prepareFeedback: () => attack() })
       attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
       for (let i = 0; i < 2; i++) { keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([]) }
-      attack = () => {}; keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      attack = () => {}; keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual(at === 2 ? [] : [at + 1]); s.instance.dispose()
     }
   })
   it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('blocks synchronous %s step skipping and update reentry', callback => {
     let attack = () => {}; const seen: number[] = [], s = mount(0, { isReducedMotion: () => true, [callback]: () => attack(), onProgress: n => { seen.push(n); if (callback === 'onProgress') attack() } })
     attack = () => { s.button.click(); step(s, 0); step(s, 1); s.instance.update(100) }
-    s.button.click(); expect(seen).toEqual([1]); s.button.click(); expect(seen).toEqual([1, 2]); s.button.click(); expect(seen).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+    s.button.click(); expect(seen).toEqual([1]); s.button.click(); expect(seen).toEqual([1, 2]); s.button.click(); expect(seen).toEqual([1, 2]); s.finish.click(); expect(seen).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
   })
   it.each([0,1,2])('rejects multitouch with an otherwise valid primary drag at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at))
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointerdown', [1, 1], 2); event(s.hit, 'pointermove', [p[0]+delta(at)[0], p[1]+delta(at)[1]]); event(s.hit, 'pointerup', [p[0]+delta(at)[0], p[1]+delta(at)[1]]); event(s.hit, 'pointerup', [1, 1], 2)
-    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at+1])
+    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual(at === 2 ? [] : [at+1])
   })
   it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('stops after %s pauses or disposes the scene', callback => {
     for (const mode of ['pause', 'dispose']) {
@@ -292,7 +304,7 @@ describe('German-context original string-linked jumping jack', () => {
   it.each(['onProgress', 'haptic'] as const)('invalidates terminal completion after a synchronous %s pause/resume', callback => {
     let active = true, attack = () => {}; const s = mount(2, { isActive: () => active, [callback]: () => attack() })
     attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
-    step(s, 2); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.hidden).toBe(true)
+    step(s, 2); s.haptic.mockClear(); s.finish.click(); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.hidden).toBe(true)
     if (callback === 'onProgress') expect(s.haptic).not.toHaveBeenCalled()
   })
   it.each([NaN, Infinity, -9])('normalizes invalid restoration %s without reporting progress', initial => {

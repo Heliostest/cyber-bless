@@ -15,7 +15,7 @@ export function createMalawiSansi(ctx: SceneContext): SceneInstance {
   const active=()=>started&&!disposed&&focused&&(ctx.isActive?.()??true),inputActive=()=>active()&&!notifying&&at<3
   const callbackActive=()=>active()&&callbackVersion===lifecycleVersion
   const audio=createChimeAudio(),feedback=createSceneFeedback({...ctx,isSoundEnabled:()=>false})
-  const ui=createStepOverlay(overlay,{title:'铁舌轻鸣',stepsAria:'自由演奏',action:'结束体验'},safe)
+  const ui=createStepOverlay(overlay,{title:'铁舌轻鸣',stepsAria:'自由演奏',action:'结束仪式'},safe)
   overlay.classList.add('scene-overlay--sansi');ui.dotsEl.hidden=true
   ui.actionBtn.classList.add('scene-sansi-finish');ui.actionBtn.title='结束演奏'
   const keyboard=document.createElement('div');keyboard.className='scene-sansi-keys';keyboard.setAttribute('role','group');keyboard.setAttribute('aria-label','铁舌音符，从左到右排列')
@@ -74,10 +74,10 @@ export function createMalawiSansi(ctx: SceneContext): SceneInstance {
   function sync(){
     const controlsActive=active()&&at<3;controlsBusy=pointer.isBusy()
     if(cueLayer)cueLayer.hidden=!active()
-    ui.actionBtn.hidden=at===3;ui.actionBtn.disabled=!controlsActive||controlsBusy||at===0
+    ui.actionBtn.hidden=at===0||at===3;ui.actionBtn.disabled=!controlsActive||controlsBusy||at===0
     ui.actionBtn.setAttribute('aria-disabled',String(ui.actionBtn.disabled));ui.hitLayer.style.pointerEvents=inputActive()?'auto':'none'
     keyboard.hidden=at===3;noteButtons.forEach(button=>button.disabled=!controlsActive||controlsBusy)
-    setSafeText(ui.hintEl,at===3?'指尖停下，余音轻轻散去。': '点按或向下轻拨任意铁舌，试着奏出自己的旋律。键盘1–9也可演奏，想收尾时点「结束体验」。',safe)
+    setSafeText(ui.hintEl,at===3?'指尖停下，余音轻轻散去。': '点按或向下轻拨任意铁舌，试着奏出自己的旋律。键盘1–9也可演奏，想收尾时点「结束仪式」。',safe)
   }
   function withHostCallbacks(work:()=>void){notifying=true;callbackVersion=lifecycleVersion;sync();try{work()}finally{notifying=false;if(!disposed)sync()}}
   function prepareInput(unlock=true){const version=lifecycleVersion;withHostCallbacks(()=>{feedback.prepare();if(unlock&&callbackActive()&&(ctx.isSoundEnabled?.()??true))audio.unlock()});return inputActive()&&version===lifecycleVersion}

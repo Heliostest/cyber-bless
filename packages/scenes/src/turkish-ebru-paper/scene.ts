@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
 import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -140,6 +141,7 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
     addInteractionCue(print, { kind: 'tap', label: '轻点彩纸静看', anchor: QUIET, priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2()
+  const touch = createTouchTarget(canvas, camera, scene)
   const nearestHit = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
     scene.traverseVisible(object => {
@@ -159,7 +161,7 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
     canStart(x, y) {
       if (motion || at === 3) return false
       matrices(); const hit = nearestHit(x, y)
-      return at === 1 ? hit === blank || hit === print || hit === paperEdge : hit === target()
+      return at === 1 ? touch.hit(x, y, [blank, print, paperEdge]) : touch.hit(x, y, target())
     },
     onStart(x, y) {
       if (!prepareInput()) { pointer.cancel(); return }

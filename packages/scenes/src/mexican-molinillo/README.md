@@ -1,5 +1,11 @@
 # 木旋起沫
 
+## 2026-10-24 交互审阅
+
+已按实际器物、步骤、可持续性与触屏验收逐项审阅。保留有实际用途的阶段，不因总数是三而增删传统动作；本轮手势容错与放手采样属于产品输入安排。器物身份、文化归属与传统主张没有增加。
+
+逐场发现、处理、来源边界与验证见[本轮 C 组记录](../../../../docs/research/2026-10-24-scene-interaction-review-c.md#逐场记录)。
+
 `mexican-molinillo` / `molinillo-chocolate-craft` is an original wooden chocolate-whisk appreciation scene. The source rationale and cultural boundaries are in `content/traditions/molinillo-chocolate-craft.md`.
 
 Three direct-material gestures: lower the handle 60 screen pixels, roll right 60 pixels, then left 60 pixels. The fluted head straddles the opaque chocolate surface; two loose rings rest on their collars and rotate with a lag relative to the shaft. Illustrative foam grows inside the cup. The cup remains fixed. No furniture, wish form, copied media, custom shaders, recipe, regional replica, or efficacy claim.

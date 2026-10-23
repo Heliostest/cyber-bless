@@ -35,7 +35,7 @@ export function createKoreanYutnori(ctx: SceneContext): SceneInstance {
   ui.actionBtn.style.minWidth = '44px'; ui.actionBtn.style.minHeight = '44px'
   const finishBtn = document.createElement('button')
   finishBtn.type = 'button'; finishBtn.className = 'scene-yut-finish'
-  setSafeText(finishBtn, '结束行棋', safe); overlay.append(finishBtn)
+  setSafeText(finishBtn, '结束仪式', safe); overlay.append(finishBtn)
   const { scene, renderer } = createWarmStage(canvas), camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'korean-yutnori', label: '木柶行棋' }); style.setStyle(CEL_STYLE)
@@ -95,7 +95,7 @@ export function createKoreanYutnori(ctx: SceneContext): SceneInstance {
       : motion ? motion.step === 2 ? `棋子沿外圈前行 ${steps} 格……` : MOVING[motion.step]!
       : at === 0 ? HINTS[0]!
       : play.phase === 'move' ? `第 ${play.turns} 掷 · ${RESULT_NAMES[flats]}：${flats === 0 ? '四根圆面朝上' : `${flats} 根平面朝上`}，前行 ${steps} 格。按住蓝色棋子向上短拖。`
-      : play.phase === 'again' ? `本次已前行 ${steps} 格，累计掷了 ${play.turns} 次。再抛木柶继续，或点「结束行棋」。`
+      : play.phase === 'again' ? `本次已前行 ${steps} 格，累计掷了 ${play.turns} 次。再抛木柶继续，或点「结束仪式」。`
       : HINTS[1]!
     setSafeText(ui.actionBtn, play.phase === 'again' && at < 3 ? '再掷一次' : ACTIONS[actionStep()]!, safe)
     setSafeText(ui.hintEl, hint, safe)

@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -119,17 +120,8 @@ export function createSlovakWireBird(ctx: SceneContext): SceneInstance {
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => checkpoint === 0 ? wing : bird
   const belongsTo = (object: THREE.Object3D | undefined, target: THREE.Object3D) => { for (let p = object; p; p = p.parent ?? undefined) if (p === target) return true; return false }
-  const visibleHit = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => {
-    const meshes: THREE.Object3D[] = []
-    scene.traverseVisible(object => {
-      const mesh = object as THREE.Mesh
-      if (!mesh.isMesh || (held && belongsTo(object, held))) return
-      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
-      if (!materials.some(mat => mat.visible && (!mat.transparent || mat.opacity >= 1))) return
-      meshes.push(object)
-    })
-    return belongsTo(ray.aim(x, y).intersectObjects(meshes, false)[0]?.object, target)
-  }
+  const touchTarget = createTouchTarget(canvas, camera, scene)
+  const visibleHit = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => touchTarget.hit(x, y, target, { ignore: held })
   const reset = () => { dragging = false; maxTravel = 0; if (!transition) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,

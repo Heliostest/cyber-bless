@@ -22,6 +22,7 @@ export function createGermanJumpingJack(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx, safe = shared.assertSafeCopy
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
+  let phase = 0, readyToFinish = false, controlsBusy = false
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
   let motion: { step: 0 | 1 | 2; time: number; from: number } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
@@ -30,6 +31,8 @@ export function createGermanJumpingJack(ctx: SceneContext): SceneInstance {
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
   const ui = createStepOverlay(overlay, { title: '牵绳木偶', stepsAria: '牵绳步骤', action: ACTIONS[0]! }, safe)
   ui.actionBtn.style.minWidth = '44px'; ui.actionBtn.style.minHeight = '44px'
+  const finishBtn = document.createElement('button'); finishBtn.type = 'button'; finishBtn.className = 'scene-bow-tap scene-continuous-finish'
+  setSafeText(finishBtn, '结束仪式', safe); overlay.append(finishBtn)
   const { scene, renderer } = createWarmStage(canvas), camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'german-jumping-jack', label: '牵绳木偶' }); style.setStyle(CEL_STYLE)
@@ -40,23 +43,23 @@ export function createGermanJumpingJack(ctx: SceneContext): SceneInstance {
   const model = createJumpingJackModel(); scene.add(model.subject)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
-  const restore = () => pose(at, 0)
+  const restore = () => pose(at === 3 ? 3 : phase, 0)
   const directions: [number, number][] = [[0,1],[0,1],[0,1]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: directions[i], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: directions[i], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at < 3 && phase === i }))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const nearest = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
     scene.traverseVisible(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; const materials = Array.isArray(m.material) ? m.material : [m.material]; if (materials.some(m => m.visible && (!m.transparent || m.opacity >= 1))) meshes.push(o) })
     return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
   }
-  const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
+  const axes = (dx: number, dy: number) => directionalAxes(directions[phase]!, dx, dy)
+  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[phase]!, safe); if (!disposed) sync() }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
-    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); const hit = nearest(x, y); return !!hit && (hit === model.roots[at] || model.roots[at]!.getObjectById(hit.id) === hit) },
+    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); const hit = nearest(x, y); return !!hit && (hit === model.roots[phase] || model.roots[phase]!.getObjectById(hit.id) === hit) },
     onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
@@ -64,7 +67,7 @@ export function createGermanJumpingJack(ctx: SceneContext): SceneInstance {
       const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
       maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
       // A held pull rotates four rigid limbs through length-conserving cords; release returns gently to rest.
-      pose(at, THREE.MathUtils.clamp(along / 60, 0, 1) * .6)
+      pose(phase, THREE.MathUtils.clamp(along / 60, 0, 1) * .6)
       updateDirectionalDragHint(ui.hintEl, !invalid && completesDirectionalDrag({ along, end: along, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel: pathTravel }), HINTS[at]!, safe)
     },
     onRelease(x, y) {
@@ -74,25 +77,33 @@ export function createGermanJumpingJack(ctx: SceneContext): SceneInstance {
     }, onCancel: reset,
   })
   const sync = () => {
+    controlsBusy = pointer.isBusy()
     if (motion || at === 3) delete ui.hintEl.dataset.ready
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at]!, safe)
+    setSafeText(ui.actionBtn, ACTIONS[phase]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : at === 3 ? HINTS[3]! : readyToFinish ? HINTS[phase]! + ' 可以继续操作，想收尾时点「结束仪式」。' : HINTS[phase]!, safe)
+    finishBtn.hidden = !readyToFinish || at === 3; finishBtn.disabled = !inputActive() || !!motion || controlsBusy || at === 3; finishBtn.setAttribute('aria-disabled', String(finishBtn.disabled))
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
-    at = (motion.step + 1) as Checkpoint; motion = null; restore()
+    const settledStep = motion.step, previousProgress = at
+    readyToFinish ||= settledStep === 2; phase = (settledStep + 1) % 3
+    at = Math.max(at, Math.min(2, settledStep + 1)) as Checkpoint; motion = null; restore()
     withHostCallbacks(() => {
-      ctx.onProgress?.(at); if (!callbackActive()) return
-      feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
-      if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+      if (at !== previousProgress) ctx.onProgress?.(at); if (!callbackActive()) return
+      feedback.impact({ freqs: [[329.63,392,440][settledStep] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: phase as 0 | 1 | 2, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
+  const finish = () => {
+    if (!inputActive() || !readyToFinish || pointer.isBusy() || motion || at === 3 || !prepareInput()) return
+    at = 3; restore()
+    withHostCallbacks(() => { ctx.onProgress?.(3); if (!callbackActive()) return; ctx.haptic?.('medium'); if (callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })) })
+  }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
     const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0, 1.85, 0), direction = new THREE.Vector3(1.7, 1.9, 6.6).normalize()
@@ -105,20 +116,22 @@ export function createGermanJumpingJack(ctx: SceneContext): SceneInstance {
         for (let i = 0; i < vertices.count; i++) { p.fromBufferAttribute(vertices, i).applyMatrix4(m.matrixWorld).sub(target).applyQuaternion(inverse); distance = Math.max(distance, p.z + Math.abs(p.x) / (tangent * aspect * .86), p.z + Math.abs(p.y) / (tangent * .86)) }
       })
     }
-    pose(at, saved); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
+    pose(at === 3 ? 3 : phase, saved); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
   }
   restore(); sync()
   return {
     start() {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
+      phase = Math.min(at, 2); readyToFinish = false
       restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
-      ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
+      ui.actionBtn.addEventListener('click', action); finishBtn.addEventListener('click', finish); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {
       if (!started || disposed) return
       if (!active()) { lifecycleVersion++; pointer.cancel(); if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
+      if (controlsBusy !== pointer.isBusy()) sync()
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       if (motion) {
@@ -133,7 +146,7 @@ export function createGermanJumpingJack(ctx: SceneContext): SceneInstance {
     },
     dispose() {
       if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action); finishBtn.removeEventListener('click', finish)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.subject); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

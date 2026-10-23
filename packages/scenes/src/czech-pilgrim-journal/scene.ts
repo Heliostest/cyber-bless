@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -96,11 +97,12 @@ export function createCzechPilgrimJournal(ctx: SceneContext): SceneInstance {
   addInteractionCue(grip,{kind:'drag',label:'放入布书签',priority:3,enabled:enabled(1),destination:slot,targetLabel:'页边夹口'})
   addInteractionCue(seal,{kind:'tap',label:'轻点这一页',priority:3,enabled:enabled(2)})
   const source=()=>checkpoint===0?corner:checkpoint===1?grip:seal
+  const touchTarget=createTouchTarget(canvas,camera,scene)
   const ray=createPointerRay(canvas,camera),down=new THREE.Vector2(),plane=new THREE.Plane(),point=new THREE.Vector3(),offset=new THREE.Vector3()
   const reset=()=>{dragging=false;maxTravel=0;if(!transition)restorePose()}
   const pointer=createObjectPointer(ui.hitLayer,{
     isActive:active,
-    canStart(x,y){if(transition||checkpoint===3)return false;matrices();return ray.hits(x,y,[source()])},
+    canStart(x,y){if(transition||checkpoint===3)return false;matrices();return touchTarget.hit(x,y,source())},
     onStart(x,y){down.set(x,y);maxTravel=0;dragging=checkpoint<2;feedback.prepare();plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),ribbon.position);if(ray.aim(x,y).ray.intersectPlane(plane,point))offset.copy(ribbon.position).sub(point)},
     onMove(x,y){
       maxTravel=Math.max(maxTravel,Math.hypot(x-down.x,y-down.y))
@@ -113,7 +115,7 @@ export function createCzechPilgrimJournal(ctx: SceneContext): SceneInstance {
     },
     onRelease(x,y){
       maxTravel=Math.max(maxTravel,Math.hypot(x-down.x,y-down.y));matrices()
-      const valid=checkpoint<2?dragging&&maxTravel>=8&&ray.hits(x,y,[checkpoint===0?coverRest:slot]):maxTravel<12&&ray.hits(x,y,[seal])
+      const valid=checkpoint<2?dragging&&maxTravel>=8&&touchTarget.hit(x,y,checkpoint===0?coverRest:slot,{ignore:checkpoint===0?hinge:ribbon}):maxTravel<12&&touchTarget.hit(x,y,seal)
       dragging=false;if(valid)advance();else reset()
     },onCancel:reset,
   })

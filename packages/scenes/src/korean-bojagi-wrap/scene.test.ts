@@ -137,9 +137,14 @@ describe('six spatial cloth operations', () => {
     s.button.click(); expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
     s.button.click(); event(s.hit, 'pointerup', [0, 0]); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
+  it.each([0, 1, 2, 3, 4, 5])('accepts a correctly picked up operation with only down and up samples %i', stage => {
+    const s = mount(stage, { isReducedMotion: () => true }), { from, to } = points(s)
+    event(s.hit, 'pointerdown', from); event(s.hit, 'pointerup', to)
+    expect(s.variants).toEqual([`bojagi-step-${stage + 1}`])
+  })
   it.each([0, 1, 2, 3, 4, 5])('only accepts a moved, correctly picked up and released operation %i', stage => {
     const s = mount(stage, { isReducedMotion: () => true }), { from, to } = points(s), wrong: [number, number] = stage === 5 ? [from[0] - (to[0] - from[0]) * .5, from[1] - (to[1] - from[1]) * .5] : [from[0] + 80, from[1] + 70]
-    event(s.hit, 'pointerup', to); event(s.hit, 'pointerdown', from); event(s.hit, 'pointerup', to)
+    event(s.hit, 'pointerup', to)
     move(s, from, wrong); event(s.hit, 'pointerup', wrong)
     move(s, from, to); event(s.hit, 'pointermove', from); event(s.hit, 'pointerup', from)
     move(s, [18, 92], to); event(s.hit, 'pointerup', to)

@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
@@ -129,7 +130,8 @@ export function createPolishPaperCut(ctx: SceneContext): SceneInstance {
     })
     return ray.aim(x, y).intersectObjects(meshes, false)[0]
   }
-  const visibleHit = (x: number, y: number, target: THREE.Object3D) => belongsTo(nearestHit(x, y)?.object, target)
+  const touch = createTouchTarget(canvas, camera, scene)
+  const visibleHit = (x: number, y: number, target: THREE.Object3D) => touch.hit(x, y, target)
   const reset = () => { dragging = false; maxTravel = maxCross = moved = 0; if (!motion && !disposed) restore() }
   // Guard before the pointer controller: its inactive move path would otherwise
   // cancel the original owner during synchronous prepareFeedback reentry.
@@ -141,10 +143,7 @@ export function createPolishPaperCut(ctx: SceneContext): SceneInstance {
     canStart(x, y) {
       if (motion || at === 3) return false; matrices()
       if (at !== 1) return at === 0 ? visibleHit(x, y, scissors) : visibleHit(x, y, fixed) || visibleHit(x, y, folded)
-      const hit = nearestHit(x, y)
-      if (hit?.object !== folded) return false
-      const contact = folded.worldToLocal(hit.point.clone())
-      return contact.x >= .72 && contact.y >= -.10 && contact.y <= .45
+      return visibleHit(x, y, folded)
     },
     onStart(x, y) {
       if (!prepareInput()) { pointer.cancel(); return }

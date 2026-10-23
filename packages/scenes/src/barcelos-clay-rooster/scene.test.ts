@@ -83,6 +83,11 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 
 
 describe('Barcelos contemporary ceramic workshop', () => {
+  it.each([320, 390])('accepts sparse source-to-body touch placement at width %i', width => {
+    const s = mount(0, { isReducedMotion: () => true }, width)
+    event(s.hit, 'pointerdown', s.point('rooster-brush-grip')); event(s.hit, 'pointerup', s.point('rooster-paint-surface'))
+    expect(s.progress).toEqual([1]); expect(s.complete).not.toHaveBeenCalled()
+  })
   it('paints the rooster, seats its clay base on the display and finishes once without saving a wish', () => {
     const s = mount(0, { isReducedMotion: () => true })
     drag(s); expect(s.progress).toEqual([1])
@@ -121,7 +126,7 @@ describe('visible object input and recoverable progress', () => {
     const s = mount(0, { isReducedMotion: () => true })
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointerup', s.point('rooster-paint-surface'))
     drag(s, 'rooster-plinth-top', 'rooster-paint-surface'); expect(s.progress).toEqual([])
-    const p = s.point('rooster-brush-grip'); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', s.point('rooster-paint-surface')); expect(s.progress).toEqual([])
+    const p = s.point('rooster-brush-grip'); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p); expect(s.progress).toEqual([])
     const home = s.scene.getObjectByName('rooster-brush')!.position.clone()
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [1, 1]); event(s.hit, 'pointerup', [1, 1])
     expect(s.scene.getObjectByName('rooster-brush')!.position.equals(home)).toBe(true); expect(s.progress).toEqual([])

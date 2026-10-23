@@ -221,7 +221,7 @@ describe('freely shaking a connected two-tube angklung', () => {
       const s = mount(at, { returning }); s.run()
       expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); expect(s.complete).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
       expect(s.scene.getObjectByName('angklung-frame')!.position.toArray()).toEqual([0, 0, 0])
-      expect(cues(s).map(c => c.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(finish(s).hidden).toBe(at === 3)
+      expect(cues(s).map(c => c.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(finish(s).hidden).toBe(at === 0 || at === 3)
       if (at > 0 && at < 3) { finish(s).click(); expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce() }
       s.instance.dispose()
     }
@@ -257,10 +257,10 @@ describe('freely shaking a connected two-tube angklung', () => {
     expect(frame.position.toArray()).toEqual(before); active = true; s.run(.2); expect(frame.position.toArray()).not.toEqual(before)
     expect(s.haptic).toHaveBeenCalledOnce(); expect(s.complete).not.toHaveBeenCalled()
   })
-  it('rejects empty space, release-only input and a target behind an opaque object', () => {
+  it('rejects empty space, orphan release input and a target behind an opaque object', () => {
     const s = mount(), p = s.point('angklung-frame-grip', gripAnchor)
     event(s.hit, 'pointerdown', [1, 1]); move(s, p, 36); event(s.hit, 'pointerup', p)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', [p[0] + 60, p[1]])
+    event(s.hit, 'pointerup', [p[0] + 60, p[1]])
     const blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
     blocker.position.lerpVectors(s.scene.getObjectByName('angklung-frame-grip')!.getWorldPosition(new THREE.Vector3()), s.camera.position, .1); blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker)
     event(s.hit, 'pointerdown', p); move(s, p, 36); event(s.hit, 'pointerup', p)

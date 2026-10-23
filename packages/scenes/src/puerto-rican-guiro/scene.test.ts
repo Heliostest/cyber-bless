@@ -61,13 +61,14 @@ function event(el: HTMLElement, type: string, [clientX, clientY]: [number, numbe
 }
 const targetName = (at: number) => ['guiro-scraper-grip','guiro-scraper-grip','guiro-scraper-grip'][at]!
 const anchor = (at: number): [number, number, number] => [[0,.12,.065],[0,.12,.065],[0,.12,.065]][at] as [number,number,number]
-const delta = (at: number): [number, number] => at === 0 ? [0,60] : at === 1 ? [0,-60] : [60,0]
+const delta = (at: number): [number, number] => at === 1 ? [0,-60] : [0,60]
 function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, run = true) {
   const p = s.point(targetName(at), anchor(at)); event(s.hit, 'pointerdown', p)
   for (let i = 1; i <= 8; i++) event(s.hit, 'pointermove', [p[0] + dx * i / 8, p[1] + dy * i / 8])
   event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); if (run) s.run()
 }
-function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) drag(s, at, ...delta(at), run) }
+function finish(s: ReturnType<typeof mount>) { return s.overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')! }
+function step(s: ReturnType<typeof mount>, at: number, run = true) { if (at === 2) { finish(s).click(); if (run) s.run() } else if (at < 2) drag(s, at, ...delta(at), run) }
 function cues(s: ReturnType<typeof mount>) {
   const list: { object: THREE.Object3D; cue: InteractionCue }[] = []
   s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled()) list.push({ object, cue }) })
@@ -86,6 +87,16 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 
 
 describe('Puerto Rican gourd scraper', () => {
+  it.each([false, true])('keeps every extra play interactive until explicit finish, reduced=%s', reduced => {
+    const s = mount(0, { isReducedMotion: () => reduced })
+    expect(finish(s).hidden).toBe(true)
+    s.button.click(); s.run(); expect(s.progress).toEqual([1]); expect(finish(s).hidden).toBe(true)
+    s.button.click(); s.run(); expect(s.progress).toEqual([1, 2]); expect(finish(s).hidden).toBe(false)
+    for (let i = 0; i < 8; i++) { s.button.click(); s.run() }
+    expect(s.progress).toEqual([1, 2]); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.disabled).toBe(false)
+    finish(s).click(); s.run(); finish(s).click(); expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+
   it.each([284,350,1280])('looks through the actual open mouth into the cavity at width %i',width=>{
     const s=mount(0,{},width),shell=s.scene.getObjectByName('guiro-hollow-shell')!,mouth=s.scene.getObjectByName('guiro-held-body')!.localToWorld(new THREE.Vector3(0,3.2,0))
     const ray=new THREE.Raycaster(s.camera.position,mouth.clone().sub(s.camera.position).normalize()),hit=ray.intersectObject(shell,false)[0]!
@@ -142,10 +153,10 @@ describe('Puerto Rican gourd scraper', () => {
     step(s, 2); expect(frequencies).toEqual([523.25, 523.25]); expect(peaks).toEqual([.003, .003])
     s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })
-  it.each([0, 1, 2])('rejects wrong surfaces, release-only, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
+  it.each([0, 1, 2])('rejects wrong surfaces, orphan release, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
+    event(s.hit, 'pointerup', end)
     for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx], [-dx * 3, -dy * 3]]) drag(s, at, x, y)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
@@ -165,7 +176,7 @@ describe('Puerto Rican gourd scraper', () => {
       const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
       event(s.hit, 'pointerup', [p[0] + dx * factor, p[1] + dy * factor])
-      expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      expect(s.progress).toEqual(at < 2 ? [at + 1] : []); if (at === 2) { expect(s.complete).not.toHaveBeenCalled(); finish(s).click(); expect(s.progress).toEqual([3]) }; s.instance.dispose()
     }
   })
   it.each([0, 1, 2])('rejects a nonfinite move even when the final release is valid at %i', at => {
@@ -180,7 +191,7 @@ describe('Puerto Rican gourd scraper', () => {
       event(s.hit, 'pointerdown', p)
       for (const [along, cross] of [[12, 16], [24, -16], [36, 16], [48, -16], [60, 0]]) event(s.hit, 'pointermove', [p[0]+delta(at)[0]*along/60-delta(at)[1]*cross/60,p[1]+delta(at)[1]*along/60+delta(at)[0]*cross/60])
       event(s.hit, 'pointerup', [p[0] + delta(at)[0], p[1] + delta(at)[1]])
-      s.run(); expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(at === 2)
+      s.run(); expect(s.progress).toEqual(at < 2 ? [at + 1] : []); expect(s.button.disabled).toBe(false)
     }
   })
   it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {
@@ -188,7 +199,7 @@ describe('Puerto Rican gourd scraper', () => {
       const s = mount(at, { returning, isReducedMotion: () => true }); s.run()
       expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
       expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
-      for (let i = at; i < 3; i++) s.button.click()
+      for (let i = at; i < 3; i++) { if (i === 2) finish(s).click(); else s.button.click() }
       expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
     }
   })
@@ -236,7 +247,7 @@ describe('Puerto Rican gourd scraper', () => {
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); check()
       event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); check(); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy])
       for (let i = 0; i < 40; i++) { s.instance.update(.025); check() }
-      expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      expect(s.progress).toEqual(at < 2 ? [at + 1] : []); if (at === 2) { finish(s).click(); s.run(); expect(s.progress).toEqual([3]) }; s.instance.dispose()
     }
   })
   it.each([0, 1, 2])('freezes accepted motion and input while paused at %i', at => {
@@ -246,7 +257,7 @@ describe('Puerto Rican gourd scraper', () => {
     s.run(2); expect(rendered.render.mock.calls.length).toBe(frames); expect(pivot.position.distanceTo(pose)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(s.progress).toEqual([])
     active = true; s.run(); expect(s.progress).toEqual([at + 1])
   })
-  it.each([0, 1, 2])('rejects a target behind another opaque object at %i', at => {
+  it.each([0, 1])('rejects a target behind another opaque object at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
     blocker.position.lerpVectors(s.scene.getObjectByName(targetName(at))!.localToWorld(new THREE.Vector3(...anchor(at))), s.camera.position, .15)
     blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker); s.scene.updateMatrixWorld(true); step(s, at); expect(s.progress).toEqual([])
@@ -262,14 +273,14 @@ describe('Puerto Rican gourd scraper', () => {
     for (const keyboard of [false, true]) {
       let attack = () => {}, active = true; const s = mount(at, { isReducedMotion: () => true, isActive: () => active, prepareFeedback: () => attack() })
       attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
-      for (let i = 0; i < 2; i++) { keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([]) }
-      attack = () => {}; keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      for (let i = 0; i < 2; i++) { keyboard ? (at === 2 ? finish(s).click() : s.button.click()) : step(s, at); expect(s.progress).toEqual([]) }
+      attack = () => {}; keyboard ? (at === 2 ? finish(s).click() : s.button.click()) : step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
     }
   })
   it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('blocks synchronous %s step skipping and update reentry', callback => {
     let attack = () => {}; const seen: number[] = [], s = mount(0, { isReducedMotion: () => true, [callback]: () => attack(), onProgress: n => { seen.push(n); if (callback === 'onProgress') attack() } })
     attack = () => { s.button.click(); step(s, 0); step(s, 1); s.instance.update(100) }
-    s.button.click(); expect(seen).toEqual([1]); s.button.click(); expect(seen).toEqual([1, 2]); s.button.click(); expect(seen).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+    s.button.click(); expect(seen).toEqual([1]); s.button.click(); expect(seen).toEqual([1, 2]); finish(s).click(); expect(seen).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
   })
   it.each([0,1,2])('rejects multitouch with an otherwise valid primary drag at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at))

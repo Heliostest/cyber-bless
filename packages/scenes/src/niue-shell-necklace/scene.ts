@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
 import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -163,6 +164,7 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2()
   const belongsTo = (object: THREE.Object3D | undefined, target: THREE.Object3D) => { for (let p = object; p; p = p.parent ?? undefined) if (p === target) return true; return false }
+  const touch = createTouchTarget(canvas, camera, scene)
   const nearestHit = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
     scene.traverseVisible(object => {
@@ -172,8 +174,8 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
     })
     return ray.aim(x, y).intersectObjects(meshes, false)[0]
   }
-  const visibleHit = (x: number, y: number, target: THREE.Object3D) => belongsTo(nearestHit(x, y)?.object, target)
-  const necklaceHit = (x: number, y: number) => { const hit = nearestHit(x, y)?.object; return belongsTo(hit, last) || shells.some(shell => belongsTo(hit, shell)) }
+  const visibleHit = (x: number, y: number, target: THREE.Object3D) => touch.hit(x, y, target)
+  const necklaceHit = (x: number, y: number) => touch.hit(x, y, [last, ...shells])
   const reset = () => { dragging = false; maxTravel = maxCross = moved = maxAlong = minAlong = backtrack = 0; if (!motion && !disposed) restore() }
   // Guard before the pointer controller: its inactive move path would otherwise
   // cancel the original owner during synchronous prepareFeedback reentry.

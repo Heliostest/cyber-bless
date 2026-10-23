@@ -10,7 +10,7 @@ type XYZ = [number, number, number]
 type Checkpoint = 0 | 1 | 2 | 3
 const COPY = {
   title: '竹音轻摇', play: '按住竹架或竹管来回摇动，让竹音跟着手的节奏响起。',
-  quiet: '可以继续自由摇动，轻重快慢由你决定；想收尾时点「结束体验」。',
+  quiet: '可以继续自由摇动，轻重快慢由你决定；想收尾时点「结束仪式」。',
   done: '把轻柔留给今天。',
 } as const
 
@@ -31,8 +31,8 @@ export function createIndonesianAngklung(ctx: SceneContext): SceneInstance {
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '自由摇动', action: '轻摇一下' }, safe)
   ui.actionBtn.style.minWidth = '44px'; ui.actionBtn.style.minHeight = '44px'
   ui.dotsEl.hidden = true
-  const finishButton = document.createElement('button'); finishButton.type = 'button'; finishButton.className = 'scene-angklung-finish'
-  setSafeText(finishButton, '结束体验', safe); overlay.append(finishButton)
+  const finishButton = document.createElement('button'); finishButton.type = 'button'; finishButton.className = 'scene-angklung-finish scene-bow-tap scene-continuous-finish'
+  setSafeText(finishButton, '结束仪式', safe); overlay.append(finishButton)
   const { scene, renderer } = createWarmStage(canvas)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
@@ -226,7 +226,7 @@ export function createIndonesianAngklung(ctx: SceneContext): SceneInstance {
   })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
-    controlsBusy = pointer.isBusy(); ui.renderDots(at, 3); ui.actionBtn.hidden = finishButton.hidden = at === 3
+    controlsBusy = pointer.isBusy(); ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; finishButton.hidden = at === 0 || at === 3
     ui.actionBtn.disabled = !inputActive() || controlsBusy || at === 3
     finishButton.disabled = !inputActive() || controlsBusy || at === 0 || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); finishButton.setAttribute('aria-disabled', String(finishButton.disabled))

@@ -38,3 +38,7 @@
 当前呈现：梳具右移显彩纹、自动落纸、近边揭纸转印、静看。 预制液面与颜料、自动贴纸、即时固色和留言为产品，不是配方教学。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#turkish-ebru-paper)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+## 2026-10-23 产品操作容错
+
+适用场景：`turkish-ebru-paper`。本应用使用的共享方向判定放宽了小幅纠正和合理斜拖；原有动作与文化主张不变。距离与容错规则属于产品界面安排，不是传统要求。本次没有新登记外部来源为已读；详见[操作修正记录](../../docs/research/2026-10-23-scene-interaction-fixes.md)。

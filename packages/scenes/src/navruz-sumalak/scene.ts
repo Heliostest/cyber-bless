@@ -4,6 +4,8 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPathSweep } from '../path-sweep'
+import { createTouchTarget } from '../touch-target'
 import {
   addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage,
@@ -32,7 +34,7 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx
   Object.values(COPY).forEach(shared.assertSafeCopy)
   let started = false, disposed = false, focused = true, completed = false, checkpoint: Checkpoint = 0
-  let motion: Motion | null = null, dragging = false, arcInvalid = false, nextBead = 1, stopResize = () => {}
+  let motion: Motion | null = null, dragging = false, nextBead = 1, stopResize = () => {}
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
   const reduced = () => ctx.isReducedMotion?.() ?? false
   const feedback = createSceneFeedback(ctx)
@@ -125,7 +127,7 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
   tube(Array.from({ length: 41 }, (_, i) => arcPoint(i / 40)), .01, cream, guides, 'navruz-curved-stir-path').userData.toonSurface = { outline: false }
   const beads = Array.from({ length: 8 }, (_, i) => {
     const p = arcPoint((i + 1) / 8)
-    return add(new THREE.SphereGeometry(.072, 12, 8), cream, [p.x, p.y, p.z], guides, `navruz-stir-bead-${i + 1}`)
+    return add(new THREE.SphereGeometry(.072, 12, 8), cream.clone(), [p.x, p.y, p.z], guides, `navruz-stir-bead-${i + 1}`)
   })
   const canCue = () => active() && !motion
   addInteractionCue(head, { kind: 'drag', label: '沿圆点缓搅', enabled: () => canCue() && checkpoint === 0,
@@ -133,8 +135,13 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
   addInteractionCue(head, { kind: 'drag', label: '拖木勺盛入陶碗', enabled: () => canCue() && checkpoint === 1, destination: basin, targetLabel: '空陶碗' })
   addInteractionCue(food, { kind: 'drag', label: '把陶碗留给邻里', enabled: () => canCue() && checkpoint === 2, destination: sharingMat, targetLabel: '共食垫' })
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(), dragPoint = new THREE.Vector3(), offset = new THREE.Vector3()
+  const touch = createTouchTarget(canvas, camera, scene)
+  const stirPath = createPathSweep(Array.from({ length: 9 }, (_, i) => { const p = arcPoint(i / 8); return [p.x, p.z] as const }), .09)
+  const stirReady = (x: number, y: number) => stirPath.progress === 1 && touch.hit(x, y, beads[7]!, { ignore: spoon })
   const carried = () => checkpoint === 2 ? bowl : spoon
   function pose() {
+    stirPath.reset(); nextBead = 1
+    beads.forEach(bead => (bead.material as THREE.MeshStandardMaterial).color.setHex(0xf1dec2))
     spoon.position.copy(checkpoint === 0 ? arcPoint(0) : checkpoint === 1 ? arcPoint(1) : PARKED)
     spoon.rotation.set(0, 0, checkpoint >= 2 ? -.2 : 0)
     spoonFood.visible = checkpoint === 1
@@ -145,6 +152,7 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
     world.updateMatrixWorld(true)
   }
   function sync() {
+    delete ui.hintEl.dataset.progress
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !active() || !!motion || checkpoint === 3
     setSafeText(ui.actionBtn, [COPY.stirAction, COPY.serveAction, COPY.shareAction, COPY.shareAction][checkpoint], shared.assertSafeCopy)
     setSafeText(ui.hintEl, motion ? COPY.moving : [COPY.stir, COPY.serve, COPY.share, COPY.done][checkpoint], shared.assertSafeCopy)
@@ -161,19 +169,19 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
     if (reduced()) finish(); else sync()
   }
   function moveOnArc(x: number, y: number) {
-    if (arcInvalid || !ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) { arcInvalid = true; return }
-    const radius = Math.hypot(dragPoint.x - POT_X, dragPoint.z - POT_Z)
-    if (Math.abs(radius - ARC_RADIUS) > .15 || dragPoint.z < POT_Z - .11) { arcInvalid = true; return }
+    if (!ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) return
+    stirPath.sample([dragPoint.x, dragPoint.z]); nextBead = stirPath.next
     spoon.position.copy(dragPoint)
-    // Every bead must be touched in order; the final endpoint alone cannot skip the arc.
-    if (nextBead <= 8 && ray.hits(x, y, [beads[nextBead - 1]])) nextBead++
+    beads.forEach((bead, i) => (bead.material as THREE.MeshStandardMaterial).color.setHex(i < nextBead - 1 ? 0x79ac82 : 0xf1dec2))
+    ui.hintEl.dataset.progress = 'true'
+    setSafeText(ui.hintEl, stirReady(x, y) ? '弧线已搅完，松手即可。' : stirPath.progress === 1 ? '弧线已搅完，回到最后一处圆点附近松手。' : '已沿弧线前进 ' + Math.round(stirPath.progress * 100) + '%，继续经过下一处浅色圆点。', shared.assertSafeCopy)
     world.updateMatrixWorld(true)
   }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart: (x, y) => !motion && checkpoint < 3 && ray.hits(x, y, checkpoint === 2 ? [food] : checkpoint === 0 ? [head] : [head, hollow, handle]),
+    canStart: (x, y) => !motion && checkpoint < 3 && touch.hit(x, y, checkpoint === 2 ? [food] : checkpoint === 0 ? [head, hollow] : [head, hollow, handle]),
     onStart(x, y) {
-      dragging = true; arcInvalid = false; nextBead = 1; feedback.prepare()
+      dragging = true; stirPath.reset(); nextBead = 1; feedback.prepare()
       if (checkpoint === 0) plane.set(new THREE.Vector3(0, 1, 0), -ARC_Y)
       else {
         plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), carried().position)
@@ -191,13 +199,13 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
       }
     },
     onRelease(x, y) {
-      const valid = dragging && active() && !motion && (checkpoint === 0
-        ? !arcInvalid && nextBead === 9 && ray.hits(x, y, [beads[7]])
+      const valid = Number.isFinite(x) && Number.isFinite(y) && dragging && active() && !motion && (checkpoint === 0
+        ? stirReady(x, y)
         : ray.hits(x, y, [checkpoint === 1 ? basin : sharingMat]))
       dragging = false
-      if (valid) begin(true); else { nextBead = 1; pose() }
+      if (valid) begin(true); else { pose(); sync() }
     },
-    onCancel() { dragging = false; nextBead = 1; arcInvalid = false; if (!motion) pose() },
+    onCancel() { dragging = false; if (!motion) { pose(); sync() } },
   })
   const blur = () => { focused = false; pointer.cancel(); sync() }
   const focus = () => { focused = true; if (!disposed) sync() }

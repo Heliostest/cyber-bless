@@ -125,13 +125,13 @@ function block(s: ReturnType<typeof mount>, name: string) {
 }
 
 describe('visible object input and recoverable progress', () => {
-  it.each([1, 2])('requires the actual heart body rather than its ribbon at checkpoint %i', at => {
+  it.each([1, 2])('accepts the attached ribbon as part of the heart at checkpoint %i', at => {
     const s = mount(at, { isReducedMotion: () => true })
     const ribbon = s.scene.getObjectByName('licitar-ribbon-loop')!, anchor: [number, number, number] = [.115, 1.23, .015]
     expect(first(s, ribbon.localToWorld(new THREE.Vector3(...anchor))).object?.name).toBe('licitar-ribbon-loop')
     const a = s.point('licitar-ribbon-loop', anchor), b = at === 1 ? s.point('licitar-stand-peg-cap') : a
     event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b); event(s.hit, 'pointerup', b); s.run()
-    expect(s.progress).toEqual([])
+    expect(s.progress).toEqual([at + 1])
   })
   it('rejects empty space, wrong objects, missing travel, wrong drops and wandering quiet taps', () => {
     const s = mount(0, { isReducedMotion: () => true })

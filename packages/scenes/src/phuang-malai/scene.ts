@@ -3,6 +3,8 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
+import { createTouchTarget, insideCanvas } from '../touch-target'
+import { createDropFeedback } from '../drop-feedback'
 import {
   addStageLights, CEL_STYLE, claimObjectTouches, createPointerRay,
   createSceneFeedback, createStepOverlay, createWarmStage, disposeTree,
@@ -54,6 +56,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   Object.values(COPY).forEach(assertSafeCopy)
   let disposed = false
   let started = false
+  let focused = true
   let checkpoint = 0
   let assembled = 0
   let tied = 0
@@ -71,6 +74,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
     title: COPY.title, stepsAria: COPY.stepsAria, action: COPY.stringTap,
   }, assertSafeCopy)
   const { hitLayer, hintEl, actionBtn } = ui
+  const dropFeedback = createDropFeedback(hintEl, assertSafeCopy)
   const wishSlot = document.createElement('div')
   wishSlot.className = 'scene-wish-slot'
   overlay.append(wishSlot)
@@ -263,8 +267,9 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   world.add(tray)
 
   const ray = createPointerRay(canvas, camera)
+  const touch = createTouchTarget(canvas, camera, scene)
   const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -HELD.z)
-  const point = new THREE.Vector3()
+  const point = new THREE.Vector3(), grabOffset = new THREE.Vector3()
   const ringFlowers = () => {
     const meshes: THREE.Object3D[] = []
     garland.traverse((object) => {
@@ -272,7 +277,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
     })
     return meshes
   }
-  const active = () => !disposed && started && (ctx.isActive?.() ?? true)
+  const active = () => !disposed && started && focused && (ctx.isActive?.() ?? true)
   const reduced = () => ctx.isReducedMotion?.() ?? false
   const cueActive = () => active() && !motion && !completed && !placed && pointers.size <= 1
   clusters.forEach((cluster, index) => addInteractionCue(cluster.flowers, {
@@ -294,22 +299,19 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   const onFlowers = (x: number, y: number) => {
     if (!active() || motion || completed || placed) return false
     updateMatrices()
-    return ray.hits(x, y, checkpoint === 0 ? [clusters[assembled].flowers] : ringFlowers())
+    return touch.hit(x, y, checkpoint === 0 ? [clusters[assembled].flowers] : ringFlowers())
   }
   const nearNextSegment = (x: number, y: number) => {
     updateMatrices()
-    if (!ray.aim(x, y).ray.intersectPlane(plane, point)) return false
-    const destination = nextSegment.getWorldPosition(new THREE.Vector3())
-    return point.distanceTo(destination) < 0.155
+    return touch.hit(x, y, nextSegment, { ignore: clusters[assembled].group })
   }
   const onPedestal = (x: number, y: number) => {
     updateMatrices()
-    return ray.hits(x, y, [top])
+    return touch.hit(x, y, top, { ignore: garland })
   }
   const nearTie = (x: number, y: number) => {
     updateMatrices()
-    if (!ray.aim(x, y).ray.intersectPlane(plane, point)) return false
-    return point.distanceTo(tie.getWorldPosition(new THREE.Vector3())) < 0.19
+    return touch.hit(x, y, tie)
   }
 
   const sync = () => {
@@ -414,6 +416,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   const cancelDrag = () => {
     const abandoned = drag
     drag = null
+    dropFeedback.clear()
     if (!abandoned) return
     if (abandoned.kind === 'cluster' && checkpoint === 0) {
       const cluster = clusters[assembled]
@@ -428,38 +431,48 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
     if (event.isPrimary === false || event.button !== 0 || !onFlowers(event.clientX, event.clientY)) return
     pointers.add(event.pointerId)
     drag = { id: event.pointerId, kind: checkpoint === 0 ? 'cluster' : checkpoint === 1 ? 'tie' : 'garland', x: event.clientX, y: event.clientY }
+    const held = checkpoint === 0 ? clusters[assembled].group : garland
+    // Move flowers in a camera-facing plane through the visible marker. Drop
+    // readiness is measured in screen space, so depth never shrinks its area.
+    const origin = checkpoint === 0 ? nextSegment.getWorldPosition(new THREE.Vector3()) : held.getWorldPosition(new THREE.Vector3())
+    plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), origin)
+    if (ray.aim(event.clientX, event.clientY).ray.intersectPlane(plane, point)) grabOffset.copy(held.getWorldPosition(new THREE.Vector3())).sub(point)
     fx.prepare()
     event.preventDefault()
     try { hitLayer.setPointerCapture(event.pointerId) } catch { /* Older embedded browsers can still use the button. */ }
   }
+  const readyAt = (x: number, y: number) => !!drag && insideCanvas(canvas, x, y)
+    && (drag.kind === 'cluster' ? nearNextSegment(x, y) : Math.hypot(x - drag.x, y - drag.y) > 12 && (drag.kind === 'tie' ? nearTie(x, y) : onPedestal(x, y)))
+  const moveTo = (x: number, y: number) => {
+    if (!drag) return
+    if (drag.kind === 'tie') { dropFeedback.setReady(readyAt(x, y)); return }
+    updateMatrices()
+    if (!ray.aim(x, y).ray.intersectPlane(plane, point)) return
+    point.add(grabOffset)
+    if (drag.kind === 'cluster') {
+      clusters[assembled].group.position.copy(garland.worldToLocal(point))
+    } else {
+      garland.position.set(THREE.MathUtils.clamp(point.x, -0.6, 0.6), THREE.MathUtils.clamp(point.y, 0.85, 1.65), point.z)
+    }
+    updateMatrices(); dropFeedback.setReady(readyAt(x, y))
+  }
   const onMove = (event: PointerEvent) => {
     if (!drag) return
     if (drag.id !== event.pointerId || !active() || event.buttons === 0) { cancelDrag(); return }
-    if (drag.kind === 'tie') return
-    updateMatrices()
-    if (!ray.aim(event.clientX, event.clientY).ray.intersectPlane(plane, point)) return
-    if (drag.kind === 'cluster') {
-      clusters[assembled].group.position.set(
-        THREE.MathUtils.clamp(point.x, -0.8, 0.8),
-        THREE.MathUtils.clamp(point.y, 0.25, 2.05) - HELD.y, 0.11,
-      )
-    } else {
-      garland.position.set(THREE.MathUtils.clamp(point.x, -0.6, 0.6), THREE.MathUtils.clamp(point.y, 0.85, 1.65), HELD.z)
-    }
+    moveTo(event.clientX, event.clientY)
   }
   const onUp = (event: PointerEvent) => {
     const ending = drag
     if (!ending || ending.id !== event.pointerId || pointers.size !== 1 || !active()) {
       cancelDrag(); pointers.delete(event.pointerId); return
     }
-    const distance = Math.hypot(event.clientX - ending.x, event.clientY - ending.y)
-    const hit = ending.kind === 'cluster' ? nearNextSegment(event.clientX, event.clientY)
-      : ending.kind === 'tie' ? distance > 12 && nearTie(event.clientX, event.clientY)
-      : distance > 12 && onPedestal(event.clientX, event.clientY)
+    moveTo(event.clientX, event.clientY)
+    const hit = readyAt(event.clientX, event.clientY)
     // Clear ownership before release: lostpointercapture must not cancel a
     // successfully released gesture or the animation it starts.
     if (hit) {
       drag = null
+      dropFeedback.clear()
       pointers.delete(event.pointerId)
       releaseCapture(event.pointerId)
       if (ending.kind === 'cluster') placeCluster()
@@ -482,6 +495,8 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
     if (!hitLayer.contains(event.target as Node) && drag?.id === event.pointerId) cancelDrag()
     pointers.delete(event.pointerId)
   }
+  const onBlur = () => { focused = false; cancelDrag(); pointers.clear(); sync() }
+  const onFocus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
     const aspect = sizeStage(canvas, renderer, styleRenderer, camera)
     cameraHome.z = 3.35 + portraitBoost(aspect, 3.1)
@@ -531,6 +546,8 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
       window.addEventListener('pointerdown', onOtherDown, true)
       window.addEventListener('pointerup', onWindowEnd)
       window.addEventListener('pointercancel', onWindowEnd)
+      window.addEventListener('blur', onBlur)
+      window.addEventListener('focus', onFocus)
       actionBtn.addEventListener('click', onAction)
       sync()
     },
@@ -572,6 +589,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
       if (disposed) return
       disposed = true
       cancelDrag()
+      dropFeedback.dispose()
       pointers.clear()
       motion = null
       stopResize()
@@ -584,6 +602,8 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
       window.removeEventListener('pointerdown', onOtherDown, true)
       window.removeEventListener('pointerup', onWindowEnd)
       window.removeEventListener('pointercancel', onWindowEnd)
+      window.removeEventListener('blur', onBlur)
+      window.removeEventListener('focus', onFocus)
       actionBtn.removeEventListener('click', onAction)
       wishHandle?.dispose()
       wishHandle = null

@@ -6,7 +6,6 @@
 
 当前来源：`content/traditions/welsh-love-spoons.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
 
-
 Original procedural carved-wood gift scene. Three checkpoints: drag the real folded cloth onto the concave bowl; carry the complete spoon by its carved handle to the felt seat; tap the spoon quietly or explicitly submit an optional 40-character wish. Quiet completion discards drafts. Returning suppresses the writer. No promise of ritual efficacy.
 
 ## Sources and scope
@@ -40,3 +39,11 @@ Only the first opaque scene hit counts; held descendants are excluded when check
 简化边界：擦拭展示为产品照料动作，无完整雕刻或固定赠勺仪式。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#welsh-love-spoon)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+## 2026-10-23 产品交互容错
+
+可拿软布和木勺的可见表面；安放时既接纳手指落在展托，也接纳勺底已经对准展托，避免持柄时手指高于展托而回退。
+
+可见目标周边最多扩展 22 CSS px，触摸与鼠标共用判定；画布外、远处空白及更近的不相关实物遮挡仍不接纳。进入有效落区显示「可以松手，轻轻落稳」，离开或取消、失焦、暂停时清除提示；有效释放后用已有动画落稳，保留原有步骤与存档。
+
+这些是产品操作容错与反馈，不增加传统步骤、数量或寓意；文化关联沿用上方已核查范围。变更与验证见[本轮交互修正记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。

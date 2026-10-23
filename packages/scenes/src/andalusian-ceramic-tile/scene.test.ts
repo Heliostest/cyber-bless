@@ -133,7 +133,7 @@ describe('visible object input and recoverable progress', () => {
     const home = s.scene.getObjectByName('tile-center-piece')!.position.clone()
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [1, 1]); event(s.hit, 'pointerup', [1, 1])
     expect(s.scene.getObjectByName('tile-center-piece')!.position.equals(home)).toBe(true); expect(s.progress).toEqual([])
-    drag(s); drag(s, 'tile-home-pad', 'tile-display-seat'); expect(s.progress).toEqual([1])
+    drag(s); drag(s, 'tile-table-leg', 'tile-display-seat'); expect(s.progress).toEqual([1])
     drag(s, 'tile-frame-grip', 'tile-table-leg'); expect(s.progress).toEqual([1])
     drag(s, 'tile-frame-grip', 'tile-display-seat'); const a = s.point('tile-frame-grip')
     event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', [a[0] + 12, a[1]]); event(s.hit, 'pointermove', a); event(s.hit, 'pointerup', a)

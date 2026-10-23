@@ -5,6 +5,8 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPathSweep } from '../path-sweep'
+import { createTouchTarget } from '../touch-target'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -32,7 +34,7 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, gestures, shared } = ctx, safe = shared.assertSafeCopy
   Object.values(COPY).forEach(safe)
   let started = false, disposed = false, focused = true, inactiveRendered = false, checkpoint: Checkpoint = 0
-  let motion: Motion | null = null, dragging = false, nextBead = 1, arcInvalid = false, maxTravel = 0
+  let motion: Motion | null = null, dragging = false, nextBead = 1, maxTravel = 0
   let writer: GestureHandle | null = null, stopResize = () => {}
   const returning = ctx.returning === true
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
@@ -93,7 +95,7 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
   const feed = tube([new THREE.Vector3(-.75, .42, .23), new THREE.Vector3(-.66, .24, .43), new THREE.Vector3(-.32, .215, .49), new THREE.Vector3(.03, .29, .40), arcPoint(0)], .031, red, world, 'red-string-feed')
   const guides = new THREE.Group(); guides.name = 'red-string-winding-guides'; world.add(guides)
   tube(Array.from({ length: 97 }, (_, i) => arcPoint(i / 96)), .012, cream, guides, 'red-string-guide-track')
-  const beads = Array.from({ length: 12 }, (_, i) => add(new THREE.SphereGeometry(.057, 14, 10), cream, arcPoint((i + 1) / 12), guides, `red-string-guide-${i + 1}`))
+  const beads = Array.from({ length: 12 }, (_, i) => add(new THREE.SphereGeometry(.057, 14, 10), cream.clone(), arcPoint((i + 1) / 12), guides, `red-string-guide-${i + 1}`))
   const ring = new THREE.Group(); ring.name = 'red-string-bracelet'; world.add(ring)
   const strands = Array.from({ length: 12 }, (_, i) => {
     const mid = (i + .5) / 12, origin = arcPoint(mid)
@@ -129,6 +131,7 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
     claspHead.position.copy(CLASP_HOME); updateTail(); matrices()
   }
   function sync() {
+    delete ui.hintEl.dataset.progress
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !active() || !!motion || checkpoint === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled))
     wishSlot.hidden = returning || checkpoint !== 2; writer?.setEnabled(active() && checkpoint === 2 && !returning && !motion)
@@ -136,12 +139,15 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl, motion ? COPY.moving : [COPY.wind, COPY.clasp, returning ? COPY.returning : COPY.quiet, COPY.done][checkpoint], safe)
   }
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(), dragPoint = new THREE.Vector3(), offset = new THREE.Vector3(), down = new THREE.Vector2()
-  const resetDrag = () => { dragging = false; arcInvalid = false; nextBead = 1; maxTravel = 0; if (!motion) pose() }
+  const touch = createTouchTarget(canvas, camera, scene)
+  const windPath = createPathSweep(Array.from({ length: 13 }, (_, i) => { const p = arcPoint(i / 12); return [p.x, p.y] as const }), .075)
+  const windReady = (x: number, y: number) => windPath.progress === 1 && touch.hit(x, y, beads[11]!, { ignore: tip })
+  const resetDrag = () => { dragging = false; windPath.reset(); nextBead = 1; maxTravel = 0; beads.forEach(bead => (bead.material as THREE.MeshStandardMaterial).color.setHex(0xf2dfbb)); if (!motion) { pose(); sync() } }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart(x, y) { matrices(); return !motion && checkpoint < 3 && ray.hits(x, y, checkpoint === 0 ? [tip] : checkpoint === 1 ? [claspHead] : strands) },
+    canStart(x, y) { matrices(); return !motion && checkpoint < 3 && touch.hit(x, y, checkpoint === 0 ? [tip] : checkpoint === 1 ? [claspHead] : strands) },
     onStart(x, y) {
-      dragging = true; arcInvalid = false; nextBead = 1; maxTravel = 0; down.set(x, y); feedback.prepare()
+      dragging = true; windPath.reset(); nextBead = 1; maxTravel = 0; down.set(x, y); feedback.prepare()
       if (checkpoint === 0) plane.set(new THREE.Vector3(0, 0, 1), -CENTER.z)
       else if (checkpoint === 1) {
         plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), claspHead.position)
@@ -152,10 +158,12 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
       if (!dragging) return
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y))
       if (checkpoint === 0) {
-        if (arcInvalid || !ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) { arcInvalid = true; return }
-        const radius = Math.hypot(dragPoint.x - CENTER.x, dragPoint.y - CENTER.y)
-        if (Math.abs(radius - RADIUS) > .13) { arcInvalid = true; return }
-        if (nextBead <= 12 && ray.hits(x, y, [beads[nextBead - 1]])) { nextBead++; winding((nextBead - 1) / 12) }
+        if (!ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) return
+        windPath.sample([dragPoint.x, dragPoint.y]); nextBead = windPath.next
+        winding(windPath.progress)
+        beads.forEach((bead, i) => (bead.material as THREE.MeshStandardMaterial).color.setHex(i < nextBead - 1 ? 0x79ac82 : 0xf2dfbb))
+        ui.hintEl.dataset.progress = 'true'
+        setSafeText(ui.hintEl, windReady(x, y) ? '红绳已绕好，松手即可。' : windPath.progress === 1 ? '红绳已绕好，回到最后一处圆点附近松手。' : '已绕好 ' + Math.round(windPath.progress * 100) + '%，沿浅色圆点继续。', safe)
         tip.position.copy(dragPoint); matrices()
       } else if (checkpoint === 1 && ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) {
         claspHead.position.copy(dragPoint).add(offset)
@@ -165,7 +173,7 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
     },
     onRelease(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = dragging && !motion && (checkpoint === 0 ? !arcInvalid && nextBead === 13 && ray.hits(x, y, [beads[11]])
+      const valid = Number.isFinite(x) && Number.isFinite(y) && dragging && !motion && (checkpoint === 0 ? windReady(x, y)
         : checkpoint === 1 ? ray.hits(x, y, [claspSocket]) : checkpoint === 2 && maxTravel < 12 && ray.hits(x, y, strands))
       dragging = false
       if (valid) { if (checkpoint < 2) begin(true); else finish() } else resetDrag()

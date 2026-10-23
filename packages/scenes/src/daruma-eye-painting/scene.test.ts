@@ -185,7 +185,7 @@ describe('Daruma eye painting', () => {
     expect(s.complete).not.toHaveBeenCalled()
     expect(s.eye('daruma-pupil-first')).toBe(at >= 1)
     expect(s.eye('daruma-pupil-second')).toBe(false)
-    const dots = [...s.overlay.querySelectorAll<HTMLElement>('.scene-step-dot')]
+    const dots = Array.from(s.overlay.querySelectorAll<HTMLElement>('.scene-step-dot'))
     expect(dots.filter((dot) => dot.dataset.state === 'done')).toHaveLength(at)
   })
 

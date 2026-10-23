@@ -3,6 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createNagashibinaModel } from './model'
 
@@ -35,16 +36,16 @@ export function createMochigaseNagashibina(ctx: SceneContext): SceneInstance {
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
   const restore = () => pose(at, 0)
-  const directions: [number,number][] = [[0,-1],[1,0],[0,1]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', label: ACTIONS[i]!, anchor: model.anchors[i], direction: directions[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const directions: [number, number][] = [[0,-1],[1,0],[0,1]]
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: directions[i], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const nearest = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
     scene.traverseVisible(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; const materials = Array.isArray(m.material) ? m.material : [m.material]; if (materials.some(m => m.visible && (!m.transparent || m.opacity >= 1))) meshes.push(o) })
     return ray.aim(x, y).intersectObjects(meshes, false)[0]
   }
-  const axes = (dx: number, dy: number) => [dx*directions[at]![0]+dy*directions[at]![1],-dx*directions[at]![1]+dy*directions[at]![0]]
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore() }
+  const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
+  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
@@ -59,14 +60,16 @@ export function createMochigaseNagashibina(ctx: SceneContext): SceneInstance {
       maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
       // Held movement previews the current object; cancellation restores all contents.
       pose(at, THREE.MathUtils.clamp(along / 60, 0, 1) * .20)
+      updateDirectionalDragHint(ui.hintEl, !invalid && completesDirectionalDrag({ along, end: along, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel: pathTravel }), HINTS[at]!, safe)
     },
     onRelease(x, y) {
       const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
-      const valid = !invalid && Number.isFinite(x) && Number.isFinite(y) && moved && along >= 40 && end! >= 40 && end! <= 84 && travel <= 90 && minAlong >= -8 && backtrack <= 9 && maxAlong - end! <= 9 && maxCross <= 18 && Math.abs(cross!) <= 18
+      const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
       if (valid) advance(); else reset()
     }, onCancel: reset,
   })
   const sync = () => {
+    if (motion || at === 3) delete ui.hintEl.dataset.ready
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'

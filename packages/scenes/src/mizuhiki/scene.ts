@@ -2,6 +2,8 @@ import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
+import { createPathSweep } from '../path-sweep'
+import { createTouchTarget } from '../touch-target'
 import type { SceneContext, SceneInstance } from '../contract'
 import {
   addStageLights, CEL_STYLE, claimObjectTouches, createPointerRay,
@@ -83,14 +85,14 @@ function paperPolygon(points: readonly (readonly [number, number])[], y: number,
 export function createMizuhiki(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, gestures, shared } = ctx
   Object.values(COPY).forEach(shared.assertSafeCopy)
-  let started = false, disposed = false
+  let started = false, disposed = false, focused = true, suspended = false
   let checkpoint: Checkpoint = 0
   let pose = 0, motionFrom = 0, motionTarget = 0, motionT = 1
   let settle = 0, sparkle = 0
   let stopResize = () => {}, stopClaim = () => {}
   let wishHandle: GestureHandle | null = null
   const feedback = createSceneFeedback(ctx)
-  const canAct = () => started && !disposed && (ctx.isActive?.() ?? true)
+  const canAct = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
   const moving = () => motionT < 1
 
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: COPY.steps, action: COPY.loopAction }, shared.assertSafeCopy)
@@ -250,8 +252,10 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   tipTarget.name = 'mizuhiki-cord-end-target'
   tip.add(tipTarget)
   const routeCurves = ROUTES.map(curve)
+  const routeSweeps = ROUTES.map(points => createPathSweep(points.map(p => [p[0], p[2]] as const), .17))
 
   const pointer = createPointerRay(canvas, camera)
+  const touch = createTouchTarget(canvas, camera, scene)
   const guidePlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.31)
   const pointerPoint = new THREE.Vector3()
   const pressed = new Set<number>()
@@ -279,10 +283,13 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     tip.updateMatrixWorld(true)
   }
   const resetDrag = () => {
+    delete hintEl.dataset.progress
     drag = null
+    routeSweeps.forEach(path => path.reset())
     releaseCapture()
     if (!moving()) pose = Math.min(checkpoint, 2)
     showTip()
+    if (!disposed && !moving()) setSafeText(hintEl, [COPY.loop, COPY.thread, COPY.wish, COPY.done][checkpoint]!, shared.assertSafeCopy)
   }
   const updateGuide = () => {
     guide.visible = tip.visible = checkpoint < 2 && !moving()
@@ -301,12 +308,14 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     world.updateMatrixWorld(true)
   }
   const syncUI = () => {
+    delete hintEl.dataset.progress
     ui.renderDots(checkpoint, 3)
     actionBtn.hidden = checkpoint === 3
-    actionBtn.setAttribute('aria-disabled', String(moving()))
+    actionBtn.disabled = !canAct() || moving()
+    actionBtn.setAttribute('aria-disabled', String(actionBtn.disabled))
     wishSlot.hidden = checkpoint !== 2
-    hitLayer.style.pointerEvents = checkpoint < 2 ? 'auto' : 'none'
-    wishHandle?.setEnabled(checkpoint === 2)
+    hitLayer.style.pointerEvents = canAct() && checkpoint < 2 ? 'auto' : 'none'
+    wishHandle?.setEnabled(canAct() && checkpoint === 2)
     const hints = [COPY.loop, COPY.thread, COPY.wish, COPY.done]
     const actions = [COPY.loopAction, COPY.threadAction, COPY.wishAction]
     setSafeText(hintEl, moving() ? checkpoint === 0 ? COPY.movingLoop : COPY.movingThread : hints[checkpoint], shared.assertSafeCopy)
@@ -350,7 +359,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     if (!canAct() || checkpoint >= 2 || moving() || blockedMulti) return false
     scene.updateMatrixWorld(true)
     camera.updateMatrixWorld(true)
-    return pointer.hits(x, y, [tipTarget])
+    return touch.hit(x, y, tip)
   }
   // Track the whole pointer stream: a second finger on the page or action
   // button must cancel a cord drag just as a second finger on the canvas does.
@@ -373,6 +382,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     if (pressed.size > 1) { blockedMulti = true; resetDrag(); return }
     if (e.button !== undefined && e.button !== 0) return
     if (!onObject(e.clientX, e.clientY)) return
+    routeSweeps[checkpoint]!.reset()
     drag = { id: e.pointerId, step: checkpoint, next: 1, t: 0 }
     claimedPointer = e.pointerId
     try { hitLayer.setPointerCapture?.(e.pointerId) } catch { /* Optional on synthetic/unsupported pointers. */ }
@@ -385,16 +395,11 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   }
   const sampleGuide = (x: number, y: number) => {
     if (!drag || !pointer.aim(x, y).ray.intersectPlane(guidePlane, pointerPoint)) return
-    const points = ROUTES[checkpoint]
-    // Ordered gates reject direct end-to-end swipes and random drags, even
-    // near the path's self crossings.
-    while (drag.next < points.length) {
-      const p = points[drag.next]
-      if (Math.hypot(pointerPoint.x - p[0], pointerPoint.z - p[2]) > 0.17) break
-      drag.next += 1
-    }
-    drag.t = (drag.next - 1) / (points.length - 1)
+    const path = routeSweeps[checkpoint]!
+    path.sample([pointerPoint.x, pointerPoint.z]); drag.next = path.next; drag.t = path.progress
     pose = checkpoint + drag.t * 0.76
+    hintEl.dataset.progress = 'true'
+    setSafeText(hintEl, path.complete([pointerPoint.x, pointerPoint.z], .19) ? '这一段已绕好，松手即可。' : '已沿金点前进 ' + Math.round(path.progress * 100) + '%，继续到下一处提示。', shared.assertSafeCopy)
     showTip(drag.t)
     poseCords()
   }
@@ -410,10 +415,8 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     // A browser may deliver the final gate only in pointerup. Previous gates
     // must already have been followed, so release alone cannot skip the path.
     if (current.next > 1 && canAct() && checkpoint === current.step) sampleGuide(e.clientX, e.clientY)
-    const points = ROUTES[current.step]
-    const end = points[points.length - 1]
     const point = pointer.aim(e.clientX, e.clientY).ray.intersectPlane(guidePlane, pointerPoint)
-    const valid = canAct() && current.next === points.length && point !== null && Math.hypot(pointerPoint.x - end[0], pointerPoint.z - end[2]) <= 0.19
+    const valid = canAct() && point !== null && routeSweeps[current.step]!.complete([pointerPoint.x, pointerPoint.z], .19)
     drag = null
     releaseCapture()
     if (valid) workCord()
@@ -433,6 +436,8 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     if (checkpoint < 2) workCord()
     else complete()
   }
+  const blur = () => { focused = false; resetDrag(); pressed.clear(); blockedMulti = false; poseCords(); syncUI() }
+  const focus = () => { focused = true; if (!disposed) syncUI() }
   const resize = () => {
     const aspect = sizeStage(canvas, renderer, styleRenderer, camera)
     cameraHome.z = 3.8 + portraitBoost(aspect, 4)
@@ -459,6 +464,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
       hitLayer.addEventListener('pointercancel', onCancel)
       hitLayer.addEventListener('lostpointercapture', onLostCapture)
       actionBtn.addEventListener('click', onAction)
+      window.addEventListener('blur', blur); window.addEventListener('focus', focus)
       wishHandle = gestures.createWishWrite({ maxLen: 40, saves: ctx.saveWish !== undefined, onSubmit: (text) => {
         if (!canAct() || checkpoint !== 2) return
         feedback.prepare()
@@ -478,12 +484,15 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (disposed || !started) return
-      if (!(ctx.isActive?.() ?? true)) {
+      if (!canAct()) {
+        suspended = true
         resetDrag()
         poseCords()
+        syncUI()
         styleRenderer.render()
         return
       }
+      if (suspended) { suspended = false; syncUI() }
       wishHandle?.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
       if (moving()) {
@@ -517,6 +526,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
       hitLayer.removeEventListener('pointercancel', onCancel)
       hitLayer.removeEventListener('lostpointercapture', onLostCapture)
       actionBtn.removeEventListener('click', onAction)
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       wishHandle?.dispose()
       wishHandle = null
       feedback.dispose()

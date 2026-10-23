@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import {createPrayerFlagsModel} from './model'
 describe('Complete mantra prayer flag string',()=>{
  it('retains five opaque cloths, the documented colour order and readable mantra syllables',()=>{
-  const m=createPrayerFlagsModel();expect(m.flags.map(f=>f.userData.mantra)).toEqual(['OM','MA','NI','PAD ME','HUM']);expect(m.flags.map(f=>f.material.color.getHex())).toEqual([0x5079be,0xf6f0dd,0xd76054,0x659e76,0xe9c257]);expect(m.flags.every(f=>!f.material.transparent&&f.material.map?.isDataTexture)).toBe(true)
+  const m=createPrayerFlagsModel();expect(m.flags.map(f=>f.userData.mantra)).toEqual(['OM','MA','NI','PAD ME','HUM']);expect(m.flags.map(f=>f.material.color.getHex())).toEqual([0x5079be,0xf6f0dd,0xd76054,0x659e76,0xe9c257]);expect(m.flags.every(f=>!f.material.transparent&&f.material.map instanceof THREE.DataTexture)).toBe(true)
   expect(m.targets).toEqual([m.flags[0],m.flags[4],m.flags[4]])
  })
  it('keeps a constant-length connected rope and all cloth above ground along all three paths',()=>{

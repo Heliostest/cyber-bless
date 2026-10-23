@@ -104,15 +104,15 @@ describe('red string self-care handwork', () => {
     view.update(); expect(s.host.querySelectorAll('.scene-object-cue')).toHaveLength(0); view.dispose()
     expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
-  it('rejects a shortcut, skipped targets, reversed winding and departure from the holder', () => {
+  it('rejects a shortcut, a large chord, reversed winding and an off-holder endpoint jump', () => {
     const s = mount()
-    for (const sequence of [[12], [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]]) {
+    for (const sequence of [[12], [1, 5, 6, 7, 8, 9, 10, 11, 12], [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]]) {
       pointer(s.hit, 'pointerdown', s.point('red-string-tip'))
       sequence.forEach(i => pointer(s.hit, 'pointermove', s.point(`red-string-guide-${i}`)))
       pointer(s.hit, 'pointerup', s.point('red-string-guide-12')); s.run(); expect(s.progress).toEqual([])
     }
     pointer(s.hit, 'pointerdown', s.point('red-string-tip')); pointer(s.hit, 'pointermove', [1, 1])
-    for (let i = 1; i <= 12; i++) pointer(s.hit, 'pointermove', s.point(`red-string-guide-${i}`))
+    pointer(s.hit, 'pointermove', s.point('red-string-guide-12'))
     pointer(s.hit, 'pointerup', s.point('red-string-guide-12')); s.run(); expect(s.progress).toEqual([])
     wind(s); expect(s.progress).toEqual([1])
   })
@@ -224,4 +224,39 @@ describe('red string self-care handwork', () => {
     for (const call of added.mock.calls.filter(([t]) => t.startsWith('pointer') || t === 'blur' || t === 'focus')) expect(removed.mock.calls.some(r => r[0] === call[0] && r[1] === call[1] && r[2] === call[2])).toBe(true)
     s.button.click(); s.instance.update(5); expect(s.progress).toEqual([]); expect(s.overlay.childElementCount).toBe(0); expect(s.scene.children).toHaveLength(0)
   })
+})
+
+describe('continuous winding path tolerance',()=>{
+  it.each([12,16,24,60].flatMap(count=>[0,.5].map(phase=>[count,phase])))('accepts %i circle samples with phase %s',(count,phase)=>{
+    const s=mount(0,{isReducedMotion:()=>true})
+    const at=(t:number,r=.64):Point=>{const p=new THREE.Vector3(.3+Math.sin(t*Math.PI*2)*r,1.15-Math.cos(t*Math.PI*2)*r,.31).project(s.camera);return[17+(p.x+1)*s.width/2,91+(1-p.y)*s.height/2]}
+    pointer(s.hit,'pointerdown',s.point('red-string-tip'))
+    for(let i=phase?0:1;i+phase<count;i++)pointer(s.hit,'pointermove',at((i+phase)/count))
+    pointer(s.hit,'pointermove',at(1))
+    expect(s.overlay.querySelector('.scene-hint')?.getAttribute('data-progress')).toBe('true')
+    pointer(s.hit,'pointerup',at(1));expect(s.progress).toEqual([1])
+    expect(s.overlay.querySelector('.scene-hint')?.hasAttribute('data-progress')).toBe(false)
+  })
+  it('retains winding after a short excursion returns to the groove',()=>{
+    const s=mount(0,{isReducedMotion:()=>true});pointer(s.hit,'pointerdown',s.point('red-string-tip'))
+    for(let i=1;i<=12;i++){
+      if(i===6){const p=new THREE.Vector3(.3,1.99,.31).project(s.camera);pointer(s.hit,'pointermove',[17+(p.x+1)*s.width/2,91+(1-p.y)*s.height/2])}
+      pointer(s.hit,'pointermove',s.point(`red-string-guide-${i}`))
+    }
+    pointer(s.hit,'pointerup',s.point('red-string-guide-12'));expect(s.progress).toEqual([1])
+  })
+})
+
+
+it('allows a nearby finger to pick up the visible red cord end',()=>{
+ const s=mount(0,{isReducedMotion:()=>true}),a=s.point('red-string-tip')
+ pointer(s.hit,'pointerdown',[a[0]+18,a[1]+10])
+ for(let i=1;i<=12;i++)pointer(s.hit,'pointermove',s.point(`red-string-guide-${i}`))
+ pointer(s.hit,'pointerup',s.point('red-string-guide-12'));expect(s.progress).toEqual([1])
+})
+
+it('accepts a nearby release after covering the entire winding path',()=>{
+ const s=mount(0,{isReducedMotion:()=>true});pointer(s.hit,'pointerdown',s.point('red-string-tip'))
+ for(let i=1;i<=12;i++)pointer(s.hit,'pointermove',s.point(`red-string-guide-${i}`))
+ const end=s.point('red-string-guide-12');pointer(s.hit,'pointerup',[end[0]+18,end[1]]);expect(s.progress).toEqual([1])
 })

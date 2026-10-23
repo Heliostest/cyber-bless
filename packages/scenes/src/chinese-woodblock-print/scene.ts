@@ -144,7 +144,14 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
     })
     return belongsTo(ray.aim(x, y).intersectObjects(meshes, false)[0]?.object, target)
   }
-  const reset = () => { dragging = false; travel = rubTravel = upward = 0; minRubX = Infinity; maxRubX = -Infinity; lastContact = null; if (!motion) restore() }
+  let acceptedRub = 0, acceptedMinX = Infinity, acceptedMaxX = -Infinity
+  const rubComplete = () => rubTravel + 1e-6 >= .75 && maxRubX - minRubX + 1e-6 >= .45
+  const reset = () => {
+    dragging = false; travel = upward = 0; lastContact = null
+    rubTravel = acceptedRub; minRubX = acceptedMinX; maxRubX = acceptedMaxX
+    if (!motion) restore()
+    if (started && !disposed) sync()
+  }
   // Ignore synchronous pointer input from host callbacks before it can reach
   // the controller's inactive-cancel path and discard the original pointer.
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
@@ -153,7 +160,7 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3) return false; matrices(); return visibleHit(x, y, at === 0 ? pad : at === 1 ? corner : paper) },
-    onStart(x, y) { callbackBoundary(() => feedback.prepare()); if (!inputActive()) { pointer.cancel(); return }; down.set(x, y); dragging = at < 2; travel = rubTravel = upward = 0; minRubX = Infinity; maxRubX = -Infinity; lastContact = null },
+    onStart(x, y) { callbackBoundary(() => feedback.prepare()); if (!inputActive()) { pointer.cancel(); return }; down.set(x, y); dragging = at < 2; travel = upward = 0; lastContact = null },
     onMove(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if (at === 0 && dragging) {
@@ -164,22 +171,36 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
         }
       } else if (at === 1 && dragging) { upward = Math.max(0, down.y - y); bend(THREE.MathUtils.clamp(upward / 64, 0, 1)) }
       matrices()
+      if (at === 0) sync()
     },
     onRelease(x, y) {
       matrices()
-      const valid = at === 0 ? dragging && travel >= 8 && rubTravel >= .75 && maxRubX - minRubX >= .45 && visibleHit(x, y, paper, pad)
+      const valid = at === 0 ? dragging && travel >= 8 && rubComplete() && visibleHit(x, y, paper, pad)
         : at === 1 ? dragging && upward >= 42 && down.y - y >= 42 && Math.abs(x - down.x) < Math.max(70, upward * .8)
           : travel < 12 && Math.hypot(x - down.x, y - down.y) < 12 && visibleHit(x, y, paper)
+      // A released contact stroke stays on the paper. Cancellation or a drop
+      // away from it discards this stroke, preserving earlier accepted work.
+      if (at === 0 && dragging && travel >= 8 && visibleHit(x, y, paper, pad)) {
+        acceptedRub = rubTravel; acceptedMinX = minRubX; acceptedMaxX = maxRubX
+      }
       dragging = false; if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
   })
   const sync = () => {
+    delete ui.hintEl.dataset.progress
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(inputActive() && !returning && at === 2 && !motion)
     setSafeText(ui.actionBtn, at === 0 ? '用棕擦刷印纸背' : at === 1 ? '揭开印纸' : '轻点印纸静看', safe)
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.moving : COPY.lifting : at === 0 ? COPY.rub : at === 1 ? COPY.peel : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    if (at === 0 && !motion && rubTravel > 0) {
+      ui.hintEl.dataset.progress = 'true'
+      const coverage = Math.min(99, Math.floor(100 * Math.min(1, rubTravel / .75, Math.max(0, maxRubX - minRubX) / .45)))
+      setSafeText(ui.hintEl, rubComplete()
+        ? lastContact ? '刷印已到位，可以松手揭纸。' : '刷印已覆盖，请把棕擦移回纸面。'
+        : `刷印 ${coverage}%，抬手后也可以接着擦。`, safe)
+    }
   }
   function callbackBoundary(work: () => void) { locked = true; sync(); try { work() } finally { locked = false; if (!disposed) sync() } }
   function settle() {

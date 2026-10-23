@@ -51,3 +51,7 @@ Callback-disposal regression RED: seven added tests exposed feedback after progr
 边界：不认定原创花样为 Matyó 或 Kalocsa，未移用玫瑰传说、护身意义；线轴拖动不等于传统针法。
 
 来源正文的完整链接、实际阅读位置、访问状态及产品简化见[B 组逐项记录](../../../../docs/research/2026-10-20-scene-narratives-b.md#hungarian-embroidery-hoop)与[来源卡](../../../../content/traditions/hungarian-embroidery.md)。本节不更改现有交互；用户介绍集中维护于 `packages/core/src/scene-narratives/b.ts`。
+
+## 2026-10-23 操作容错
+
+近距离拾取与落点增加最多22 CSS px的触控容差，保留前景遮挡和画布边界。指针或物件握点对齐均可安放；有效时显示可以松手，释放后落稳。取消、暂停或失焦会清除到位提示。以上属于产品输入与反馈修正，不新增传统规则；详见[操作修正记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。

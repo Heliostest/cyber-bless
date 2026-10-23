@@ -6,7 +6,6 @@
 
 当前来源：`content/traditions/sicilian-carretto-craft.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
 
-
 An original contemporary appreciation of everyday Sicilian **carretto** woodworking, wheel carving and painting. The miniature has an open cargo bed, a real through axle, two large twelve-spoke wheels, joined draw shafts and a small wooden display support. Its muted mustard, teal, coral and cream bars are original simple geometric decoration. No museum vehicle, artist's painting, narrative scene, sacred motif or identifiable composition is copied.
 
 This is **not** the holy **Carro Trionfale** used during Santa Rosalia's Festino. It contains no saint, shrine, relic, pilgrimage reenactment, liturgy, vow, efficacy claim or wish writer. The `sicilian-carretto-craft` source card documents everyday decorated carts. The quiet courtyard background is owned by the host.
@@ -70,3 +69,11 @@ Visual/callback repair RED reproduced five failures: terminal progress/feedback 
 简化边界：装轮和展示为缩略，不是制车全过程。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#sicilian-painted-cart)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+## 2026-10-23 产品交互容错
+
+木轮的轮辐和轮缘都可拿取；轮毂、扶手与车轴采用有限的屏幕邻近容差。
+
+可见目标周边最多扩展 22 CSS px，触摸与鼠标共用判定；画布外、远处空白及更近的不相关实物遮挡仍不接纳。进入有效落区显示「可以松手，轻轻落稳」，离开或取消、失焦、暂停时清除提示；有效释放后用已有动画落稳，保留原有步骤与存档。
+
+这些是产品操作容错与反馈，不增加传统步骤、数量或寓意；文化关联沿用上方已核查范围。变更与验证见[本轮交互修正记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。

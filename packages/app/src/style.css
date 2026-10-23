@@ -4166,6 +4166,18 @@ button:hover:not(:disabled) {
 }
 .scene-object-cue[data-cue-role='target'] { opacity: 0.6; }
 .scene-object-cue[data-dragging='true'] { opacity: 0.25; }
+.library-scene-stage:has(.scene-hint[data-drop-ready='true']) .scene-object-cue[data-cue-role='target'],
+.library-scene-stage:has(.scene-hint[data-ready='true']) .scene-object-cue[data-cue-role='source'] {
+  opacity: 1;
+}
+.library-scene-stage:has(.scene-hint[data-drop-ready='true']) .scene-object-cue[data-cue-role='target'] .scene-object-cue-ring,
+.library-scene-stage:has(.scene-hint[data-ready='true']) .scene-object-cue[data-cue-role='source'] .scene-object-cue-ring {
+  animation: none;
+  border: 2px solid var(--mint-ink);
+  background: #8ee3bf55;
+  outline: 3px solid #ffffffaa;
+  outline-offset: 3px;
+}
 .scene-cue-guides,
 .scene-cue-guides * { pointer-events: none; }
 .scene-cue-guides {
@@ -4231,6 +4243,20 @@ button:hover:not(:disabled) {
   padding: 0;
   overflow: hidden;
   clip-path: inset(50%);
+}
+/* Show the changing completion state in the guide's existing shelf row, so
+   feedback is visible without resizing or moving the canvas under a finger. */
+.scene-overlay-host:has(> .scene-cue-guides:not([hidden]) > .scene-cue-guide:not([hidden])) > .scene-hint:is([data-ready='true'], [data-drop-ready='true'], [data-progress='true']) {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 12px 0 0;
+  padding: 0 4px;
+  overflow: visible;
+  clip-path: none;
+}
+.scene-overlay-host:has(> .scene-hint:is([data-ready='true'], [data-drop-ready='true'], [data-progress='true'])) > .scene-cue-guides {
+  visibility: hidden;
 }
 .library-scene-stage:has(.scene-overlay-host[inert]) .scene-object-cues,
 .scene-overlay-host[inert] .scene-cue-guides,

@@ -331,3 +331,35 @@ describe('a painted cart lifecycle', () => {
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), type).toBe(true)
   })
 })
+
+describe('forgiving visible cart controls',()=>{
+  it('grabs a wheel spoke and previews the nearby axle drop',()=>{
+    const s=mount(0,{isReducedMotion:()=>true}),a=s.point('cart-detached-wheel-spoke-0'),b=s.point('cart-axle-end');
+    const near:[number,number]=[b[0]+14,b[1]];
+    pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointermove',near);
+    expect(s.overlay.textContent).toContain('可以松手');
+    pointer(s.hit,'pointerup',near);s.run();expect(s.progress).toEqual([1]);
+  });
+  it('can grab within eighteen pixels of the narrow rail without accepting distant space',()=>{
+    const s=mount(1,{isReducedMotion:()=>true}),a=s.point('cart-rail-grip'),b=s.point('cart-display-mat');
+    pointer(s.hit,'pointerdown',[a[0],a[1]-18]);pointer(s.hit,'pointermove',b);pointer(s.hit,'pointerup',b);s.run();expect(s.progress).toEqual([2]);
+  });
+});
+
+it.each(['pointercancel', 'blur', 'pause'])('clears the ready drop after %s without completing it', reason => {
+  let active = true
+  const s = mount(0, { isActive: () => active, isReducedMotion: () => true })
+  const from = s.point('cart-wheel-hub'), target = s.point('cart-axle-end')
+  pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
+  pointer(s.hit, 'pointermove', [1, 1])
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
+  pointer(s.hit, 'pointermove', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
+  if (reason === 'blur') window.dispatchEvent(new Event('blur'))
+  else if (reason === 'pause') { active = false; s.run(.05) }
+  else pointer(s.hit, 'pointercancel', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
+  pointer(s.hit, 'pointerup', target); s.run()
+  expect(s.progress).toEqual([])
+})

@@ -1,4 +1,4 @@
-﻿// @vitest-environment jsdom
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
@@ -224,4 +224,40 @@ describe('Italian ex voto original ceramic painting', () => {
     const capture = (o: boolean | EventListenerOptions | undefined) => typeof o === 'boolean' ? o : o?.capture ?? false
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), type).toBe(true)
   })
+})
+
+describe('continuous window stroke tolerance',()=>{
+  it.each([1,2,12,16,24,60])('accepts a correct stroke delivered in %i move samples',count=>{
+    const s=mount(1,{isReducedMotion:()=>true}),from=s.point('exvoto-brush-tip'),to=s.point('exvoto-window-end')
+    pointer(s.hit,'pointerdown',from)
+    for(let i=1;i<=count;i++)pointer(s.hit,'pointermove',[from[0]+(to[0]-from[0])*i/count,from[1]+(to[1]-from[1])*i/count])
+    expect(s.overlay.querySelector('.scene-hint')?.getAttribute('data-progress')).toBe('true')
+    pointer(s.hit,'pointerup',to);expect(s.progress).toEqual([2])
+    expect(s.overlay.querySelector('.scene-hint')?.hasAttribute('data-progress')).toBe(false)
+  })
+  it('allows a brief off-line correction before finishing the same stroke',()=>{
+    const s=mount(1,{isReducedMotion:()=>true}),from=s.point('exvoto-brush-tip'),to=s.point('exvoto-window-end')
+    const mid:[number,number]=[from[0]+(to[0]-from[0])*.35,from[1]+(to[1]-from[1])*.35]
+    pointer(s.hit,'pointerdown',from);pointer(s.hit,'pointermove',mid);pointer(s.hit,'pointermove',[mid[0]+16,mid[1]+12])
+    pointer(s.hit,'pointermove',mid);pointer(s.hit,'pointermove',to);pointer(s.hit,'pointerup',to);expect(s.progress).toEqual([2])
+  })
+})
+
+
+it('allows a nearby finger to pick up the visible brush tip and draw the window line',()=>{
+ const s=mount(1,{isReducedMotion:()=>true}),a=s.point('exvoto-brush-tip'),b=s.point('exvoto-window-end')
+ pointer(s.hit,'pointerdown',[a[0]+18,a[1]+10]);pointer(s.hit,'pointermove',b);pointer(s.hit,'pointerup',b);expect(s.progress).toEqual([2])
+})
+it('keeps a fully drawn window line visible while the accepted brush settles',()=>{
+ const s=mount(1),a=s.point('exvoto-brush-tip'),b=s.point('exvoto-window-end'),pigment=s.scene.getObjectByName('exvoto-painted-window-light')!
+ pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointermove',b)
+ const size=new THREE.Box3().setFromObject(pigment).getSize(new THREE.Vector3())
+ pointer(s.hit,'pointerup',b);s.instance.update(.025)
+ expect(new THREE.Box3().setFromObject(pigment).getSize(new THREE.Vector3()).distanceTo(size)).toBeLessThan(.001)
+ s.run();expect(s.progress).toEqual([2])
+})
+
+it('accepts a nearby release after covering the window stroke',()=>{
+ const s=mount(1,{isReducedMotion:()=>true}),a=s.point('exvoto-brush-tip'),b=s.point('exvoto-window-end')
+ pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointermove',b);pointer(s.hit,'pointerup',[b[0]+18,b[1]]);expect(s.progress).toEqual([2])
 })

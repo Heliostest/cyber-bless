@@ -1,11 +1,10 @@
-﻿# 彩蛋寄春 · sorbian-painted-egg
+# 彩蛋寄春 · sorbian-painted-egg
 
 ## 2026-10-19 来源核查修正
 
 现关联改为直接对应器物、工艺或节庆行为的专卡。原地区或宗教总卡不足以单独证明本场景的文化来源；具体证据及产品动作边界见下方审阅记录。
 
 当前来源：`content/traditions/sorbian-easter-eggs.md`。核查依据与原关联的问题见[全场景来源审阅](../../../../docs/research/2026-10-19-scene-culture-audit.md)。
-
 
 C 档、低敏感度的当代手作致敬，关联 `sorbian-easter-eggs`；手势为 `drag` 与 `wishWrite`。由主应用配置 `veranda` 环境。
 
@@ -52,3 +51,11 @@ C 档、低敏感度的当代手作致敬，关联 `sorbian-easter-eggs`；手�
 简化边界：画笔显纹不冒称热蜡多次染色教程，陶杯为展示。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#sorbian-painted-egg)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+## 2026-10-23 产品交互容错
+
+接受完整浅色杯沿与杯口邻近区域，不再仅接受杯前的小标记；画笔和蛋壳的可见表面可拿取。
+
+可见目标周边最多扩展 22 CSS px，触摸与鼠标共用判定；画布外、远处空白及更近的不相关实物遮挡仍不接纳。进入有效落区显示「可以松手，轻轻落稳」，离开或取消、失焦、暂停时清除提示；有效释放后用已有动画落稳，保留原有步骤与存档。
+
+这些是产品操作容错与反馈，不增加传统步骤、数量或寓意；文化关联沿用上方已核查范围。变更与验证见[本轮交互修正记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。

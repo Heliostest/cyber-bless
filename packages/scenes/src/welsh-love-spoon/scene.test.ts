@@ -1,4 +1,4 @@
-﻿// @vitest-environment jsdom
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
@@ -80,7 +80,6 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
   })
   return { q, object: ray.intersectObjects(visible, false)[0]?.object }
 }
-
 
 describe('Welsh contemporary carved love spoon', () => {
   it('polishes the bowl, places the spoon and finishes once without saving a wish', () => {
@@ -251,7 +250,11 @@ describe('physical craft and owned resources', () => {
       const centerHit = ray.intersectObject(bowl, false)[0]; expect(centerHit).toBeDefined()
       expect(bounds.max.z - centerHit.point.z).toBeGreaterThan(.15)
       const handle = s.scene.getObjectByName('spoon-carved-handle') as THREE.Mesh
-      expect((handle.geometry as THREE.ExtrudeGeometry).parameters.shapes.holes).toHaveLength(1)
+      expect(handle.geometry).toBeInstanceOf(THREE.ExtrudeGeometry)
+      if (!(handle.geometry instanceof THREE.ExtrudeGeometry)) throw new Error('Expected an extruded spoon handle')
+      const shapes = handle.geometry.parameters.shapes, shapeList = Array.isArray(shapes) ? shapes : [shapes]
+      expect(shapeList).toHaveLength(1)
+      expect(shapeList[0]!.holes).toHaveLength(1)
       ray.set(handle.localToWorld(new THREE.Vector3(0, 1.72, 1)), new THREE.Vector3(0, 0, -1))
       expect(ray.intersectObject(handle, false)).toHaveLength(0)
       const stand = new THREE.Box3().setFromObject(s.scene.getObjectByName('spoon-stand-base')!)
@@ -301,4 +304,35 @@ describe('physical craft and owned resources', () => {
     const capture = (o: boolean | EventListenerOptions | undefined) => typeof o === 'boolean' ? o : o?.capture ?? false
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), type).toBe(true)
   })
+})
+
+describe('forgiving visible placement', () => {
+  it.each(['touch','mouse'])('accepts a spoon whose bottom is seated while its %s grip stays above the stand', pointerType => {
+    const s=mount(1,{isReducedMotion:()=>true}), spoon=s.scene.getObjectByName('spoon-body')!;
+    const project=(p:THREE.Vector3):[number,number]=>{s.scene.updateMatrixWorld(true);p.project(s.camera);return [17+(p.x+1)*195,91+(1-p.y)*280]};
+    const send=(type:string,p:[number,number])=>{const e=new Event(type,{bubbles:true});Object.assign(e,{clientX:p[0],clientY:p[1],pointerId:1,pointerType,button:0,buttons:type==='pointerup'?0:1});s.hit.dispatchEvent(e)};
+    const a=s.point('spoon-handle-grip'), destination=project(new THREE.Vector3(.78,.88,.02));let end=a;
+    send('pointerdown',a);
+    for(let n=0;n<8;n++){const p=project(spoon.getWorldPosition(new THREE.Vector3()));end=[end[0]+destination[0]-p[0],end[1]+destination[1]-p[1]];send('pointermove',end)}
+    expect(s.overlay.textContent).toContain('可以松手');
+    send('pointerup',end);s.run();expect(s.progress).toEqual([2]);
+  });
+});
+
+it.each(['pointercancel', 'blur', 'pause'])('clears the ready drop after %s without completing it', reason => {
+  let active = true
+  const s = mount(1, { isActive: () => active, isReducedMotion: () => true })
+  const from = s.point('spoon-handle-grip'), target = s.point('spoon-display-seat')
+  event(s.hit, 'pointerdown', from); event(s.hit, 'pointermove', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
+  event(s.hit, 'pointermove', [1, 1])
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
+  event(s.hit, 'pointermove', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
+  if (reason === 'blur') window.dispatchEvent(new Event('blur'))
+  else if (reason === 'pause') { active = false; s.run(.05) }
+  else event(s.hit, 'pointercancel', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
+  event(s.hit, 'pointerup', target); s.run()
+  expect(s.progress).toEqual([])
 })

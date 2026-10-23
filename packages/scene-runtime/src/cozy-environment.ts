@@ -15,6 +15,7 @@ const profiles: Record<string, Profile> = {
   "brat-bride-cloth": {kind:"courtyard",floor:0,night:true,warmLight:true},
   "korean-sotdae": {kind:"courtyard",floor:0},
   "japanese-kadomatsu": {kind:"courtyard",floor:0},
+  "pucara-rooftop-bulls": {kind:"courtyard",floor:0},
   "alasita-miniature-house": {kind:"courtyard",floor:0},
   "yusheng-lohei": {kind:"garden",floor:-.12},
   "kitano-nadeushi": {kind:"garden",floor:-.012},

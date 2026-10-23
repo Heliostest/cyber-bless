@@ -24,6 +24,7 @@ describe('sceneRegistry', () => {
       'brat-bride-cloth',
       'korean-sotdae',
       'japanese-kadomatsu',
+      'pucara-rooftop-bulls',
       'alasita-miniature-house',
       'yusheng-lohei',
       'kitano-nadeushi',

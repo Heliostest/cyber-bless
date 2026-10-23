@@ -42,6 +42,7 @@ it.each([
   ['brat-bride-cloth', 0, 'brat-cloth', 'brat-cloth', [0,.03,0], [0,0,0], [0,-60]],
   ['korean-sotdae', 0, 'sotdae-pole', 'sotdae-pole', [0,.80,.02], [0,0,0], [0,-60]],
   ['japanese-kadomatsu', 0, 'kadomatsu-right', 'kadomatsu-right', [0,.34,.30], [0,0,0], [0,-60]],
+  ['pucara-rooftop-bulls', 0, 'pucara-carrier', 'pucara-carrier', [.65,.04,.525], [0,0,0], [0,-60]],
   ['alasita-miniature-house', 0, 'wish-house', 'wish-house', [.28,.35,.52], [0,0,0], [0,-60]],
   ['kitano-nadeushi', 0, 'visitor-hand', 'visitor-hand', [0,0,0], [0,0,0], [0,-60]],
   ['lao-baci-wrist', 0, 'baci-thread', 'baci-thread', [0,0,0], [0,.394,.16], [0,-60]],

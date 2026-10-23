@@ -176,6 +176,7 @@ describe("builtInScenes narratives", () => {
       "polish-blessing-basket",
       "polish-oplatek-sharing",
       "polish-paper-cut",
+      "pucara-rooftop-bulls",
       "puerto-rican-guiro",
       "purepecha-copper-bowl",
       "romanian-martisor",

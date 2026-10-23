@@ -4245,3 +4245,8 @@ Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](
 实现者与独立审阅者均已实际读四条相关正文；正文定位与支持边界见专卡及研究记录，未声称看过来源图片。
 ## 鸟竿祈安（2026-10-23）
 韩国솟대木鸟长竿与村落护佑、向天祈愿背景见[专卡](traditions/korean-sotdae.md)。已读韩国邮政博物馆与国立民俗博物馆儿童馆正文；独立研究另读NFM《民俗消息》2025年3月及国语院辞书。托架、承孔和三段动作属产品安排，安放不等于村祭或祝圣完成。访问状态见[研究](../docs/research/2026-10-23-korean-sotdae.md)。
+## 五果迎春 · 2026-10-23
+- https://en.baochinhphu.vn/traditional-foods-offering-to-ancestors-on-tet-festival-11140429.htm
+- https://en.vietnamplus.vn/tet-fruit-tray-indispensible-part-of-vietnamese-culture-post146190.vnp
+- https://en.vietnamplus.vn/arranging-five-fruit-tray-during-lunar-new-year-celebration--a-vietnamese-tradition/279358.vnp
+实现者与独立审阅者实际读三条相关正文，机构文化综述按综述使用；日期/定位/产品布局差异见专卡与研究。VNAT13636只有空索引未记正文，来源照片未读，不称复刻。

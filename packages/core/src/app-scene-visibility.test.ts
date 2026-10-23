@@ -35,6 +35,7 @@ describe('App scene availability', () => {
     "chinese-fu-paper",
     "turkish-nazar-bead",
     "japanese-hamaya",
+    "vietnamese-five-fruit-tray",
     "setsubun-mamemaki",
     "sternsinger-house-blessing",
     "lam-tsuen-wishing-tree",

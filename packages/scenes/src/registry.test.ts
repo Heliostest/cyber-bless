@@ -50,6 +50,7 @@ describe('sceneRegistry', () => {
       'chinese-fu-paper',
       'turkish-nazar-bead',
       'japanese-hamaya',
+      'vietnamese-five-fruit-tray',
       'setsubun-mamemaki',
       'sternsinger-house-blessing',
       'lam-tsuen-wishing-tree',
@@ -325,3 +326,4 @@ it('loads the midnight household coal gift',async()=>{const m=await loadScene('s
 it('loads a source-specific Fu paper door blessing',async()=>{const m=await loadScene('chinese-fu-paper');expect(m.meta).toEqual(sceneRegistry.find(s=>s.id==='chinese-fu-paper'));expect(m.meta.title).toBe('贴福迎春');expect(m.meta.traditionSlug).toBe('chinese-fu-paper');expect(m.create).toBeTypeOf('function')})
 it('loads a source-specific glass nazar protective charm',async()=>{const m=await loadScene('turkish-nazar-bead');expect(m.meta).toEqual(sceneRegistry.find(s=>s.id==='turkish-nazar-bead'));expect(m.meta.title).toBe('蓝珠祈安');expect(m.meta.traditionSlug).toBe('turkish-nazar-bead');expect(m.create).toBeTypeOf('function')})
 describe('japanese hamaya registration',()=>{it('registers the dedicated arrow source and factory',async()=>{expect(sceneRegistry.find(m=>m.id==='japanese-hamaya')).toMatchObject({title:'饰矢祈安',traditionSlug:'japanese-hamaya',grade:'C',gestures:['drag']});expect((await loadScene('japanese-hamaya')).create).toBeTypeOf('function')})})
+describe('Tet fruit preparation registration',()=>{it('loads the dedicated fruit source and scene factory',async()=>{expect(sceneRegistry.find(m=>m.id==='vietnamese-five-fruit-tray')).toMatchObject({title:'五果迎春',traditionSlug:'vietnamese-five-fruit-tray',grade:'C',gestures:['drag']});expect((await loadScene('vietnamese-five-fruit-tray')).create).toBeTypeOf('function')})})

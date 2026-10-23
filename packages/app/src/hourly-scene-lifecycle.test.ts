@@ -68,6 +68,7 @@ it.each([
   ['chinese-fu-paper',0,'fu-paper','fu-paper',[0,0,.012],[0,0,0],[0,-60]],
   ['turkish-nazar-bead',0,'nazar-charm','nazar-charm',[0,-.04,.11],[0,0,0],[0,-60]],
   ['japanese-hamaya',0,'hamaya-arrow','hamaya-arrow',[.85,.10,.025],[.85,.10,.025],[0,-60]],
+  ['vietnamese-five-fruit-tray',0,'prepared-fruit-orange','prepared-fruit-orange',[0,.27,.18],[0,.27,.18],[60,0]],
   ['setsubun-mamemaki', 0, 'beans-door', 'beans-door-root', [.20,-.12,.04], [0,0,0], [60,0]],
   ['sternsinger-house-blessing', 0, 'sternsinger-chalk', 'sternsinger-chalk', [0,0,0], [0,.16,0], [0,-60]],
   ['lam-tsuen-wishing-tree', 0, 'lamtsuen-paper', 'lamtsuen-paper-root', [0,0,.007], [0,0,0], [60,0]],

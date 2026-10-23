@@ -10948,5 +10948,20 @@
     "date_note": "2025为田无神社公告实际发布日期，非习俗起源年；坐标为该社现代文献代表点，不称应用木架为实景或此处为起源。",
     "confidence": "medium",
     "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/japanese-hamaya.md"
+  },
+  {
+    "id": "vietnamese-five-fruit-tray",
+    "slug": "vietnamese-five-fruit-tray",
+    "title": "越南Tết五果盘准备",
+    "grade": "C",
+    "region": "越南河内（文献代表点）",
+    "lat": 21.028,
+    "lon": 105.854,
+    "year_start": 2019,
+    "year_end": null,
+    "date_basis": "documented",
+    "date_note": "2019为VNA五果盘说明实际发布日期，非习俗起源；河内为该文化报道现代文献代表点，不指应用原创木盘实景或起源。",
+    "confidence": "medium",
+    "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/vietnamese-five-fruit-tray.md"
   }
 ]

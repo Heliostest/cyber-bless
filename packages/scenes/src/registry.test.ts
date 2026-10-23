@@ -39,6 +39,7 @@ describe('sceneRegistry', () => {
       'fgs-buddha-bathing',
       'balinese-canang-sari',
       'bulgarian-survakane',
+      'chinese-ruyi-scepter',
       'setsubun-mamemaki',
       'sternsinger-house-blessing',
       'lam-tsuen-wishing-tree',
@@ -309,3 +310,5 @@ it('loads the source-specific fixed Chinowa walking fragment',async()=>{const m=
 it('loads the three preformed Bonfim knots fragment',async()=>{const m=await loadScene('bonfim-ribbon');expect(m.meta.id).toBe('bonfim-ribbon');expect(m.meta.traditionSlug).toBe('bonfim-ribbon');expect(m.create).toBeTypeOf('function')})
 
 it('loads the Greek household New Year pomegranate fragment',async()=>{const m=await loadScene('greek-new-year-pomegranate');expect(m.meta.id).toBe('greek-new-year-pomegranate');expect(m.meta.traditionSlug).toBe('greek-new-year-pomegranate');expect(m.create).toBeTypeOf('function')})
+
+describe('Chinese ruyi module',()=>{it('loads the same blessing identity exposed in the registry',async()=>{expect(isSceneImplemented('chinese-ruyi-scepter')).toBe(true);const m=await loadScene('chinese-ruyi-scepter');expect(m.meta.id).toBe('chinese-ruyi-scepter');expect(m.meta.traditionSlug).toBe('chinese-ruyi-scepter');expect(m.meta.title).toBe('如意寄愿');expect(m.create).toBeTypeOf('function')})})

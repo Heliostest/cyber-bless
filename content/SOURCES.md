@@ -4208,3 +4208,12 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 如意寄愿 · 2026-10-23
+
+- https://www.metmuseum.org/art/collection/search/40703
+- https://www.metmuseum.org/art/collection/search/850414
+- https://www.metmuseum.org/art/collection/search/44263
+- https://emuseum.aberdeencity.gov.uk/objects/31078/ruyi-or-jui-sceptre-on-stand
+
+三条Met对应正文实现者与独立者均已读；Aberdeen根已读，独立超时/错误页，状态分列。器物、吉祥祝愿和产品陈设差异见专卡与研究，不称特定馆藏复刻。

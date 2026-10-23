@@ -1,0 +1,20 @@
+# 中国如意与吉祥祝愿
+
+## 文化与器物／公开实践
+
+馆藏说明将中国如意与如愿、吉祥护符、礼赠祝愿和陈设联系在一起，云头是所述如意的一种形制；材质有差异，玉如意有直接馆藏实例。这里保留真实吉祥寄愿背景，不改写成原本只作装饰，也不把信念写成产品功效。
+
+## 本产品呈现
+
+眼前为原创青玉色云头曲柄如意的陈设片段，从左侧准备双托抬起、移近右侧木座、放稳。单件封闭实体轮廓、具体颜色与尺寸、软垫双托木座、庭院石台、三次上/右/下短拖、顺序/时长/声音/反馈和结语是产品安排。没有铭文、宗教符号、丝穗、开光或完整仪轨，不复制某件馆藏；不规定祝愿必须三次，不作现实应验承诺。
+
+## 证据与访问范围
+
+| 对应主张 | 来源与定位 | 实际访问 | 范围与限制 |
+| --- | --- | --- | --- |
+| 名称与如愿、祝愿礼赠、支架或器皿陈设；此件为掐丝珐琅铜，不作为玉材证据。 | [Ruyi Scepter／The Metropolitan Museum of Art](https://www.metmuseum.org/art/collection/search/40703)；L11及L39–47；网页未见发布日期；所载器物18–19世纪 | 实现者与独立者2026-10-23均实际读相关正文 | 不外推统一尺寸、步骤、期限、资格、起源或现实效验。 |
+| 云头、如愿及招福护符背景；铜合金实例，不复制其铭文或指定宗教操作。 | [Ruyi scepter, attributed to Hu Wenming／The Metropolitan Museum of Art](https://www.metmuseum.org/art/collection/search/850414)；L14–15、L41–52；网页未见发布日期；所载器物17世纪 | 实现者与独立者2026-10-23均实际读相关正文 | 不外推统一尺寸、步骤、期限、资格、起源或现实效验。 |
+| 中国清中期玉如意，材质Jade(nephrite)；只支持玉如意实例，不证明本场颜色、尺寸或一切如意同材。 | [Ornament (ruyi),02.18.446／The Metropolitan Museum of Art](https://www.metmuseum.org/art/collection/search/44263)；L44–53；网页未见发布日期；所载器物18世纪 | 实现者与独立者2026-10-23均实际读相关正文 | 不外推统一尺寸、步骤、期限、资格、起源或现实效验。 |
+| 记录玉、木、丝及祝愿礼赠和陈设；双托具体形状不从馆藏反推。 | [Ruyi or Ju-I Sceptre On Stand,ABDMS024896／Aberdeen Art Gallery and Museums](https://emuseum.aberdeencity.gov.uk/objects/31078/ruyi-or-jui-sceptre-on-stand)；根提取L79–91、L117；网页未见发布日期；所载器物1821–1850 | 根2026-10-23实际读对应正文；独立两次web超时，HTTP200错误页，不记已读正文 | 不外推统一尺寸、步骤、期限、资格、起源或现实效验。 |
+
+来源是馆方器物记录与策展解释，不冒称田野原件或普遍仪式规则。只读相关正文，不把搜索摘要、超时或错误页登记为已读。来源照片未取得可核对像素，不声称按图复刻；没有下载或使用馆藏图像。见[研究记录](../../docs/research/2026-10-23-chinese-ruyi-scepter.md)与[场景README](../../packages/scenes/src/chinese-ruyi-scepter/README.md)。

@@ -85,6 +85,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
     kind: 'blessing', label: '向神明献上感恩', optionalWish: false,
     action: '放入白花，托起盛好供品的叶盘，轻放到田边供台上。',
   },
+  'chinese-ruyi-scepter': {kind:'blessing',label:'安放如意，寄一份顺遂好愿',optionalWish:false,action:'抬起如意，移近木座，轻轻放稳，寄一份顺遂与如愿的祝福。'},
   'bulgarian-survakane': {
     kind: 'blessing', label: '新年问候，祝亲友健康', optionalWish: false,
     action: '提起彩枝，移到亲友背后，轻拍后收回，送上健康祝愿。',

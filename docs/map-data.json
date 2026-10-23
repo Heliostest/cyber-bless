@@ -10873,5 +10873,20 @@
     "date_note": "祖尼礼仪民族志记载；当代仍实践",
     "confidence": "medium",
     "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/zuni-ashiwi.md"
+  },
+  {
+    "id": "chinese-ruyi-scepter",
+    "slug": "chinese-ruyi-scepter",
+    "title": "中国如意与吉祥祝愿",
+    "grade": "C",
+    "region": "中国（馆藏文化归属代表点）",
+    "lat": 34.3,
+    "lon": 108.9,
+    "year_start": 1700,
+    "year_end": 1799,
+    "date_basis": "object-date",
+    "date_note": "年代仅指Met02.18.446所标18世纪玉如意，不指习俗起源；坐标为中国文化归属地图代理，不指馆藏现址或本场原创木座实景。",
+    "confidence": "medium",
+    "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/chinese-ruyi-scepter.md"
   }
 ]

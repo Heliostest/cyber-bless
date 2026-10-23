@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "86a522de7e51430e2d551af9161b48b144046e72a0c8e30a338f7c48c21a75eb",
+  "revision": "4be2bd80fcf2ad9f91e752230732405b40798b9e21ae25f89c09b7d78a381bc6",
   "scenes": [
+    {
+      "id": "pucara-rooftop-bulls",
+      "engine": "pucara-rooftop-bulls@1",
+      "small": {
+        "file": "pucara-rooftop-bulls-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "78f9142552bbd1703f8eccc6eba10746d1e6115210c0af0be53ff93a226554ab",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "pucara-rooftop-bulls-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "6ce718ea5a54256afb034a98274c330200c9cb81852720e49fad88a60196c2b4",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "pucara-rooftop-bulls-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "7bf6d1bdd975a1421b240541a154cd310770a58c037a54c9dc92e29905f1e523",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "alasita-miniature-house",
       "engine": "alasita-miniature-house@1",

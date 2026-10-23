@@ -4208,3 +4208,7 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 陶牛护家（2026-10-23）
+
+成对Toritos de Pucará陶牛屋顶陈设、护家与丰足信念，见[专卡](traditions/pucara-rooftop-bulls.md)及[研究](../docs/research/2026-10-23-pucara-rooftop-bulls.md)。已读MINCETUR登记4652及MNCP博物馆正文，PROMPERÚ综述补充器形；保留仪式容器及宗教背景，木板、承台和三段动作明确为产品安排，不保证现实护佑。

@@ -28,6 +28,7 @@ const profiles: Record<string, Profile> = {
   "fgs-buddha-bathing": {kind:"courtyard",floor:-.065},
   "balinese-canang-sari": {kind:"courtyard",floor:-.065},
   "bulgarian-survakane": {kind:"courtyard",floor:-.065},
+  "lanna-sand-pagoda": {kind:"courtyard",floor:-.08},
   "setsubun-mamemaki": {kind:"courtyard",floor:-.065},
   "sternsinger-house-blessing": {kind:"courtyard",floor:-.065},
   "lam-tsuen-wishing-tree": {kind:"courtyard",floor:-.065},

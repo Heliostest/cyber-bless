@@ -4200,3 +4200,10 @@
 - https://asset.library.wisc.edu/1711.dl/VUURGDUITIQNX84/R/file-c2529.pdf
 - 2026-10-20实际下载并读正文；支持石堆、顺时针三圈、地面取石添石及向山岳/湖泊祈护。网页相关页超时另记；不作为已读证据。
 - 产品边界与逐项来源见 content/traditions/mongolian-ovoo.md、docs/research/2026-10-20-mongolian-ovoo.md。
+
+## 沙塔献幡 · 2026-10-23
+
+- https://thailandfoundation.or.th/pi-mai-mueang-songkran-festival-of-northern-thailand/
+- https://www.thailand.go.th/public/issue-focus-detail/001_02_250?hl=en
+- https://radionan.prd.go.th/th/content/category/detail/id/6/iid/381310
+- 三条相关正文已实际阅读；支持范围、日期与产品边界见 content/traditions/lanna-sand-pagoda.md 及 docs/research/2026-10-23-lanna-sand-pagoda.md。

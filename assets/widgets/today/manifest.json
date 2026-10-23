@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "9e785d87c52b7fcd0c2864216cbb7f1ad1bee12f14f623ea427a51a2c086844c",
+  "revision": "51a3625becc830aad8e1eaa28adc88b703db2fe0f5f999e88b3f4087d24f799d",
   "scenes": [
     {
       "id": "hiiragi-iwashi",
@@ -574,6 +574,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "8b570d6cfe6ab9b9f1a982e6636e158bf7d4db9d54d50ca0a7afc35713036de9",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "lanna-sand-pagoda",
+      "engine": "lanna-sand-pagoda@1",
+      "small": {
+        "file": "lanna-sand-pagoda-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "3c675943d683365b3b24bbae9cc0b48c53c05a356bc20d925db7178230a03210",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "lanna-sand-pagoda-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "051ce5d789594623a3df90f548d0e290dbedf867da9e31fc67afadc27c6bfd51",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "lanna-sand-pagoda-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8805ec8a760521b52b536228f317e88a66cdf79674481dbc58d3750fc8e55ccc",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

@@ -4208,3 +4208,11 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 贴福迎春 · 2026-10-23
+
+- https://dict.th.gov.tw/detailPage.aspx?Ca=200&ID=2465
+- https://english.shanghai.gov.cn/en-KeyDatesAndCustoms/20260121/d5fabdb61d484e0cad772a56fe343c38.html
+- https://www.confuciusinstitute.ac.uk/welcoming-good-fortune-at-chinese-new-year/
+- https://www.pgm.org.cn/pgm/bjhf/201808/4d921cde05694a01927e909881a93860.shtml
+- 四条对应正文已实际阅读；正文定位、读取状态、朝向差异和产品边界见 content/traditions/chinese-fu-paper.md 及 docs/research/2026-10-23-chinese-fu-paper.md。

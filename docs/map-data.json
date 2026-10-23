@@ -10873,5 +10873,20 @@
     "date_note": "祖尼礼仪民族志记载；当代仍实践",
     "confidence": "medium",
     "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/zuni-ashiwi.md"
+  },
+  {
+    "id": "chinese-fu-paper",
+    "slug": "chinese-fu-paper",
+    "title": "春节门上贴福",
+    "grade": "C",
+    "region": "中国（春节贴福公开习俗）",
+    "lat": 31.23,
+    "lon": 121.47,
+    "year_start": 2026,
+    "year_end": null,
+    "date_basis": "documented",
+    "date_note": "2026为本次核查年，不是起源年或依据URL猜测的发表年。坐标为上海市代表点，对应所用公开习俗介绍，不指向应用木门、特定传承地或起源。",
+    "confidence": "medium",
+    "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/chinese-fu-paper.md"
   }
 ]

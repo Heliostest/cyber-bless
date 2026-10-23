@@ -39,6 +39,7 @@ describe('sceneRegistry', () => {
       'fgs-buddha-bathing',
       'balinese-canang-sari',
       'bulgarian-survakane',
+      'chinese-fu-paper',
       'setsubun-mamemaki',
       'sternsinger-house-blessing',
       'lam-tsuen-wishing-tree',
@@ -309,3 +310,5 @@ it('loads the source-specific fixed Chinowa walking fragment',async()=>{const m=
 it('loads the three preformed Bonfim knots fragment',async()=>{const m=await loadScene('bonfim-ribbon');expect(m.meta.id).toBe('bonfim-ribbon');expect(m.meta.traditionSlug).toBe('bonfim-ribbon');expect(m.create).toBeTypeOf('function')})
 
 it('loads the Greek household New Year pomegranate fragment',async()=>{const m=await loadScene('greek-new-year-pomegranate');expect(m.meta.id).toBe('greek-new-year-pomegranate');expect(m.meta.traditionSlug).toBe('greek-new-year-pomegranate');expect(m.create).toBeTypeOf('function')})
+
+it('loads a source-specific Fu paper door blessing',async()=>{const m=await loadScene('chinese-fu-paper');expect(m.meta).toEqual(sceneRegistry.find(s=>s.id==='chinese-fu-paper'));expect(m.meta.title).toBe('贴福迎春');expect(m.meta.traditionSlug).toBe('chinese-fu-paper');expect(m.create).toBeTypeOf('function')})

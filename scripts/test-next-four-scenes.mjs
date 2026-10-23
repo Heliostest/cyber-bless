@@ -46,6 +46,7 @@ const craftDeltas={
   'fgs-buddha-bathing': [[0,-60],[0,-60],[0,-60]],
   'balinese-canang-sari': [[60,0],[0,-60],[-60,0]],
   'bulgarian-survakane': [[0,-60],[60,0],[0,-60]],
+  'horseshoe-doorway-luck': [[60,0],[60,0],[60,0]],
   'setsubun-mamemaki': [[60,0],[0,-60],[0,60]],
   'sternsinger-house-blessing': [[0,-60],[60,0],[0,60]],
   'lam-tsuen-wishing-tree': [[60,0],[60,0],[0,-60]],

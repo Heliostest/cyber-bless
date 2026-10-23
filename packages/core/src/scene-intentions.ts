@@ -85,6 +85,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
     kind: 'blessing', label: '向神明献上感恩', optionalWish: false,
     action: '放入白花，托起盛好供品的叶盘，轻放到田边供台上。',
   },
+  'horseshoe-doorway-luck': {kind:'blessing',label:'悬一份护家好愿，盼进出平安',optionalWish:false,action:'依次将三枚蹄铁悬到小门架上，寄托家宅安好的愿望。'},
   'bulgarian-survakane': {
     kind: 'blessing', label: '新年问候，祝亲友健康', optionalWish: false,
     action: '提起彩枝，移到亲友背后，轻拍后收回，送上健康祝愿。',

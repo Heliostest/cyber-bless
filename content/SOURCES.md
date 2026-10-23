@@ -4208,3 +4208,10 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 蹄铁护家 · 2026-10-23
+
+- https://www.horniman.ac.uk/story/magic-charms-and-amulets/
+- https://journeys.dartmouth.edu/folklorearchive/2020/06/03/hang-an-upturned-horseshoe-over-your-doorway-to-bring-good-luck/
+
+实际相关正文已读，访问方式、支持范围及文化主张逐项见专卡与研究。保留铁蹄铁护宅/好运的民俗信念；向上悬门的说法限所引肯塔基家庭口述，不泛化全球规则或起源。三枚、四孔、固定柱、小门架及三右拖均产品设计，不是现实钉装、完整仪式或效验保证，未使用来源图片。

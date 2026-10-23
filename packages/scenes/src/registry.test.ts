@@ -39,6 +39,7 @@ describe('sceneRegistry', () => {
       'fgs-buddha-bathing',
       'balinese-canang-sari',
       'bulgarian-survakane',
+      'horseshoe-doorway-luck',
       'setsubun-mamemaki',
       'sternsinger-house-blessing',
       'lam-tsuen-wishing-tree',

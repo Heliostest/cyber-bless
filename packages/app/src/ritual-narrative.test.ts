@@ -124,6 +124,7 @@ describe("builtInScenes narratives", () => {
       "greek-vasilopita",
       "hiiragi-iwashi",
       "hongsheng-red-string",
+      "horseshoe-doorway-luck",
       "hungarian-embroidery-hoop",
       "indian-charkha",
       "indonesian-angklung",

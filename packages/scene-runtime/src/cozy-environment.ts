@@ -16,6 +16,7 @@ const profiles: Record<string, Profile> = {
   "kitano-nadeushi": {kind:"garden",floor:-.012},
   "lao-baci-wrist": {kind:"courtyard",floor:-.055},
   "finnish-virpominen": {kind:"courtyard",floor:0},
+  "scottish-first-footing": {kind:"courtyard",floor:-.12,night:true,warmLight:true},
   "hiiragi-iwashi": {kind:"garden",floor:-.012},
   "tamagushi-offering": {kind:"courtyard",floor:0},
   "tibetan-water-bowls": {kind:"garden",floor:-.02},

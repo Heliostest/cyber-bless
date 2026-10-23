@@ -10,6 +10,7 @@ describe('App scene availability', () => {
     "yusheng-lohei",
     "kitano-nadeushi",
     "finnish-virpominen",
+    "scottish-first-footing",
     "polish-oplatek-sharing",
     "tamagushi-offering",
     "tibetan-water-bowls",

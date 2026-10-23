@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "a5a4fa91b785476e82999f1cf20ac04e1d506a3bc245b3e27e46249017859a69",
+  "revision": "1c8436f0a42934d182c571476fd33d48c76278ae95bb27908f5b9bf50909d60b",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -4620,6 +4620,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "bb76a7361b725689e0b15ceeaaf58d97093e1ca61cab8883b8691096ccc92409",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "scottish-first-footing",
+      "engine": "scottish-first-footing@1",
+      "small": {
+        "file": "scottish-first-footing-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "a3ac8de884de3ecdf4ced1455c509496fbb40e230ce23553b8391fd14bfbdb1a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "scottish-first-footing-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "8f293dc92c4580efac83830cc756282ae53efb83b6febf918325312c59a934b1",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "scottish-first-footing-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "b336f48e1a15e9602046ff03de4a4c317ef91eac69f7452f1bc6e1e7bf3328ba",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

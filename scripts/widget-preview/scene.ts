@@ -43,6 +43,7 @@ const completedPreviewProgress: Record<string, number> = {
   "tibetan-water-bowls": 3,
   "tamagushi-offering": 3,
   "lao-baci-wrist": 3,
+  "scottish-first-footing": 3,
   "hiiragi-iwashi": 3
 };
 const previewProgress = entry.id === 'polish-oplatek-sharing' ? 3 : completedPreviewProgress[entry.id] ?? (entry.id === 'crane' || entry.id === 'lantern' ? 1 : 0);

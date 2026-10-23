@@ -32,6 +32,7 @@ const craftDeltas={
   'kitano-nadeushi': [[0,-60],[60,0],[0,60]],
   'lao-baci-wrist': [[0,-60],[60,0],[0,-60]],
   'finnish-virpominen': [[60,0],[60,0],[-60,0]],
+  'scottish-first-footing': [[0,-60],[0,-60],[-60,0]],
   'hiiragi-iwashi': [[0,-60],[-60,0],[0,-60]],
   'tamagushi-offering': [[60,0],[60,0],[0,-60]],
   'tibetan-water-bowls': [[0,-60],[60,0],[0,60]],

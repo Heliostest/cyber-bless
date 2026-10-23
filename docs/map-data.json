@@ -7980,6 +7980,21 @@
     "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/scanian-folk.md"
   },
   {
+    "id": "scottish-first-footing",
+    "slug": "scottish-first-footing",
+    "title": "苏格兰 First-footing 携煤新年祝福",
+    "grade": "C",
+    "region": "苏格兰（区域展示定位）",
+    "lat": 56.8,
+    "lon": -4.2,
+    "year_start": 2020,
+    "year_end": null,
+    "date_basis": "attestation",
+    "date_note": "2020仅为本轮已读NTS公开说明的出版年份，非习俗起源；坐标为区域展示代理，非发源地",
+    "confidence": "medium",
+    "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/scottish-first-footing.md"
+  },
+  {
     "id": "scottish-folk",
     "slug": "scottish-folk",
     "title": "苏格兰民间基督教与圣岛—圣井祈福（Scottish）",

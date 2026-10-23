@@ -172,6 +172,7 @@ describe("builtInScenes narratives", () => {
       "romanian-martisor",
       "rosh-hashanah-apple-honey",
       "russian-matryoshka",
+      "scottish-first-footing",
       "scottish-plunge-churn",
       "setsubun-mamemaki",
       "shichigosan-chitose-ame",

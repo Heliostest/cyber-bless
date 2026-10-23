@@ -4207,5 +4207,10 @@
 - 产品边界与逐项来源见 content/traditions/mongolian-ovoo.md、docs/research/2026-10-20-mongolian-ovoo.md。
 
 ## 鱼生捞起（2026-10-23）
-
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+## 2026-10-23：First-footing 携煤祝福
+- https://www.ncm.org.uk/news/what-is-first-footing/ （相关正文已读；2022-01-02）
+- https://www.nts.org.uk/stories/hogmanay-in-the-highlands （首次相关正文已读，后来403；2020-12-22）
+- https://blogs.glowscotland.org.uk/glowblogs/scranblog/2015/12/28/new-year-hogmanay/ （首次相关正文已读，后来JS验证/403；2015-12-28）
+- https://www.siefhome.org/downloads/wg/ry/RY12%282021%29-Regulating%20customs.pdf （McEntire原始研究相关页已读，非全卷通读；2021）
+各来源支持范围及读取者区别见 `content/traditions/scottish-first-footing.md` 与对应研究记录。

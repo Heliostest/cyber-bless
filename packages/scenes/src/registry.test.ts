@@ -25,6 +25,7 @@ describe('sceneRegistry', () => {
       'kitano-nadeushi',
       'lao-baci-wrist',
       'finnish-virpominen',
+      'scottish-first-footing',
       'hiiragi-iwashi',
       'tamagushi-offering',
       'tibetan-water-bowls',
@@ -312,3 +313,5 @@ it('loads the source-specific fixed Chinowa walking fragment',async()=>{const m=
 it('loads the three preformed Bonfim knots fragment',async()=>{const m=await loadScene('bonfim-ribbon');expect(m.meta.id).toBe('bonfim-ribbon');expect(m.meta.traditionSlug).toBe('bonfim-ribbon');expect(m.create).toBeTypeOf('function')})
 
 it('loads the Greek household New Year pomegranate fragment',async()=>{const m=await loadScene('greek-new-year-pomegranate');expect(m.meta.id).toBe('greek-new-year-pomegranate');expect(m.meta.traditionSlug).toBe('greek-new-year-pomegranate');expect(m.create).toBeTypeOf('function')})
+
+it('loads the midnight household coal gift',async()=>{const m=await loadScene('scottish-first-footing');expect(m.meta).toMatchObject({id:'scottish-first-footing',title:'煤火迎年',traditionSlug:'scottish-first-footing',grade:'C',sensitivity:'低'});expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})

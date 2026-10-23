@@ -25,6 +25,7 @@ export const sceneRegistry: SceneMeta[] = [
   {id:'japanese-kadomatsu',title:'门松迎岁',traditionSlug:'japanese-kadomatsu',grade:'C',sensitivity:'中',gestures:['drag']},
   {id:'pucara-rooftop-bulls',title:'陶牛护家',traditionSlug:'pucara-rooftop-bulls',grade:'C',sensitivity:'中',gestures:['drag']},
   {id:'chinese-longevity-lock',title:'银锁寄安',traditionSlug:'chinese-longevity-lock',grade:'C',sensitivity:'中',gestures:['drag']},
+  {id:'uchide-wishing-mallet',title:'振槌寄愿',traditionSlug:'uchide-wishing-mallet',grade:'C',sensitivity:'中',gestures:['drag']},
   { id:'alasita-miniature-house',title:'微屋寄愿',traditionSlug:'aymara',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'yusheng-lohei',title:'鱼生捞起',traditionSlug:'yusheng-lohei',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'kitano-nadeushi',title:'抚牛寄愿',traditionSlug:'kitano-nadeushi',grade:'C',sensitivity:'中',gestures:['drag'] },
@@ -242,6 +243,7 @@ const IMPLEMENTED = new Set([
   'japanese-kadomatsu',
   'pucara-rooftop-bulls',
   'chinese-longevity-lock',
+  'uchide-wishing-mallet',
   'alasita-miniature-house',
   'yusheng-lohei',
   'kitano-nadeushi',
@@ -372,6 +374,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'japanese-kadomatsu': return import('./japanese-kadomatsu/index')
     case 'pucara-rooftop-bulls': return import('./pucara-rooftop-bulls/index')
     case 'chinese-longevity-lock': return import('./chinese-longevity-lock/index')
+    case 'uchide-wishing-mallet': return import('./uchide-wishing-mallet/index')
     case 'alasita-miniature-house': return import('./alasita-miniature-house/index')
     case 'yusheng-lohei': return import('./yusheng-lohei/index')
     case 'kitano-nadeushi': return import('./kitano-nadeushi/index')

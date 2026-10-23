@@ -4281,3 +4281,5 @@ Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](
 - https://www.horniman.ac.uk/story/magic-charms-and-amulets/
 - https://journeys.dartmouth.edu/folklorearchive/2020/06/03/hang-an-upturned-horseshoe-over-your-doorway-to-bring-good-luck/
 实际相关正文已读，访问方式、支持范围及文化主张逐项见专卡与研究。保留铁蹄铁护宅/好运的民俗信念；向上悬门的说法限所引肯塔基家庭口述，不泛化全球规则或起源。三枚、四孔、固定柱、小门架及三右拖均产品设计，不是现实钉装、完整仪式或效验保证，未使用来源图片。
+## 振槌寄愿（2026-10-23）
+打出小槌的摇槌寄愿片段，见[专卡](traditions/uchide-wishing-mallet.md)及[研究](../docs/research/2026-10-23-uchide-wishing-mallet.md)。实际读射水神社2019-02-04活动正文及西野神社宝尽纹样说明，区分当代活动与传说信念。木漆造型、绳穗、双托与三手势属产品安排，非击打／撒豆／完整节分祭，不保证现实愿望成真。

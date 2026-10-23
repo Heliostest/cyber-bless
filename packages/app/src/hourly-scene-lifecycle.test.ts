@@ -44,6 +44,7 @@ it.each([
   ['japanese-kadomatsu', 0, 'kadomatsu-right', 'kadomatsu-right', [0,.34,.30], [0,0,0], [0,-60]],
   ['pucara-rooftop-bulls', 0, 'pucara-carrier', 'pucara-carrier', [.65,.04,.525], [0,0,0], [0,-60]],
   ['chinese-longevity-lock', 0, 'longevity-carrier', 'longevity-carrier', [-.4,.04,1.05], [0,0,0], [0,-60]],
+  ['uchide-wishing-mallet', 0, 'uchide-mallet', 'uchide-mallet', [0,.425,-.2], [0,0,0], [0,-60]],
   ['alasita-miniature-house', 0, 'wish-house', 'wish-house', [.28,.35,.52], [0,0,0], [0,-60]],
   ['kitano-nadeushi', 0, 'visitor-hand', 'visitor-hand', [0,0,0], [0,0,0], [0,-60]],
   ['lao-baci-wrist', 0, 'baci-thread', 'baci-thread', [0,0,0], [0,.394,.16], [0,-60]],

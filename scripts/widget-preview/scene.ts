@@ -26,6 +26,7 @@ const completedPreviewProgress: Record<string, number> = {
   "japanese-kadomatsu": 3,
   "pucara-rooftop-bulls": 3,
   "chinese-longevity-lock": 3,
+  "uchide-wishing-mallet": 3,
   "alasita-miniature-house": 3,
   "kitano-nadeushi": 3,
   "finnish-virpominen": 3,

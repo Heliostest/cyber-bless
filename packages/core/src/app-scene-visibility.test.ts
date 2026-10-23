@@ -12,6 +12,7 @@ describe('App scene availability', () => {
     "japanese-kadomatsu",
     "pucara-rooftop-bulls",
     "chinese-longevity-lock",
+    "uchide-wishing-mallet",
     "alasita-miniature-house",
     "yusheng-lohei",
     "kitano-nadeushi",

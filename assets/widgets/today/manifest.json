@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "7cb6ad179f5b408b27eafa3e82c145d8977d4f97412a0fadef44ad538b25df5a",
+  "revision": "71583cb17d9b47781983199730796881591ef4900d78282ebae5e2af54476c2c",
   "scenes": [
     {
       "id": "nanakusa-gayu",
@@ -5202,6 +5202,40 @@
         "canvasWidth": 1200,
         "canvasHeight": 1200,
         "progress": 1
+      }
+    },
+    {
+      "id": "uchide-wishing-mallet",
+      "engine": "uchide-wishing-mallet@1",
+      "small": {
+        "file": "uchide-wishing-mallet-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "8f74039c9051fc48c3674e82737414ebab3d9a3e4d578d466675b4efcfc80d38",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "uchide-wishing-mallet-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "30c799eee2b568230a4bdd25e5b5025a8dc3d13e8b547e27b257c0729d3c9efb",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "uchide-wishing-mallet-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "f06127987cddfe76c0d6d0654fc3cc1b1f30e1b266563ede858745c763850e47",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
       }
     }
   ]

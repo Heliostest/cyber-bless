@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import {describe,it,expect} from 'vitest'
 import * as THREE from 'three'
 import type {createFirstFootingModel} from './model'

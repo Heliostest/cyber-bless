@@ -58,6 +58,7 @@ const profiles: Record<string, Profile> = {
   "sumiyoshi-godairiki": {kind:"courtyard",floor:-.075},
   "polish-oplatek-sharing": {kind:"courtyard",floor:0},
   "greek-new-year-pomegranate": {kind:"courtyard",floor:0},
+  "hindu-coconut-offering": {kind:"courtyard",floor:0},
   "bonfim-ribbon": {kind:"courtyard",floor:0},
   "chinowa-kuguri": {kind:"courtyard",floor:0},
   "zeniarai-coin-washing": {kind:"courtyard",floor:0},

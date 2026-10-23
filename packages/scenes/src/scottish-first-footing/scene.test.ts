@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
@@ -154,7 +155,8 @@ describe('First-footing household coal gift', () => {
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', end)
     for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx], [3 - p[0], 3 - p[1]]]) drag(s, at, x, y)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .72, p[1] + dy * .72]); event(s.hit, 'pointerup', [p[0] + dx * .72, p[1] + dy * .72])
+    // Withdrawing 60px to 30px exceeds the 24px correction tolerance and falls below the 40px finish threshold.
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .5, p[1] + dy * .5]); event(s.hit, 'pointerup', [p[0] + dx * .5, p[1] + dy * .5])
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
   })
@@ -162,7 +164,8 @@ describe('First-footing household coal gift', () => {
     const s = mount(at, { isReducedMotion: () => true })
     for (const kind of ['back', 'cross', 'nan']) {
       const p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
-      const end: [number, number] = kind === 'back' ? [p[0] + dx * .7, p[1] + dy * .7] : kind === 'cross' ? [p[0] + dx - dy, p[1] + dy + dx] : [NaN, p[1]]
+      // The release also withdraws 60px to 30px, beyond the 24px tolerance and below the 40px finish threshold.
+      const end: [number, number] = kind === 'back' ? [p[0] + dx * .5, p[1] + dy * .5] : kind === 'cross' ? [p[0] + dx - dy, p[1] + dy + dx] : [NaN, p[1]]
       event(s.hit, 'pointerup', end); expect(s.progress, kind).toEqual([])
     }
     step(s, at); expect(s.progress).toEqual([at + 1])

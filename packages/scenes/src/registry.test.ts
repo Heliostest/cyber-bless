@@ -67,6 +67,7 @@ describe('sceneRegistry', () => {
       'sumiyoshi-godairiki',
       'polish-oplatek-sharing',
       'greek-new-year-pomegranate',
+      'hindu-coconut-offering',
       'bonfim-ribbon',
       'chinowa-kuguri',
       'zeniarai-coin-washing',
@@ -337,3 +338,5 @@ describe('japanese hamaya registration',()=>{it('registers the dedicated arrow s
 describe('Tet fruit preparation registration',()=>{it('loads the dedicated fruit source and scene factory',async()=>{expect(sceneRegistry.find(m=>m.id==='vietnamese-five-fruit-tray')).toMatchObject({title:'五果迎春',traditionSlug:'vietnamese-five-fruit-tray',grade:'C',gestures:['drag']});expect((await loadScene('vietnamese-five-fruit-tray')).create).toBeTypeOf('function')})})
 describe('Chinese ruyi module',()=>{it('loads the same blessing identity exposed in the registry',async()=>{expect(isSceneImplemented('chinese-ruyi-scepter')).toBe(true);const m=await loadScene('chinese-ruyi-scepter');expect(m.meta.id).toBe('chinese-ruyi-scepter');expect(m.meta.traditionSlug).toBe('chinese-ruyi-scepter');expect(m.meta.title).toBe('如意寄愿');expect(m.create).toBeTypeOf('function')})})
 describe('Kumade blessing module',()=>{it('loads the same supported blessing identity as its catalog entry',async()=>{expect(isSceneImplemented('japanese-kumade')).toBe(true);const m=await loadScene('japanese-kumade');expect(m.meta.id).toBe('japanese-kumade');expect(m.meta.traditionSlug).toBe('japanese-kumade');expect(m.meta.title).toBe('熊手纳福');expect(m.create).toBeTypeOf('function')})})
+
+it('loads the coconut offering with the same sourced identity as the catalog',async()=>{expect(isSceneImplemented('hindu-coconut-offering')).toBe(true);const m=await loadScene('hindu-coconut-offering');expect(m.meta).toEqual(sceneRegistry.find(s=>s.id==='hindu-coconut-offering'));expect(m.meta).toMatchObject({title:'椰果献愿',traditionSlug:'hindu-coconut-offering',grade:'C',sensitivity:'中',gestures:['drag']});expect(m.create).toBeTypeOf('function')})

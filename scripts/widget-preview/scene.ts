@@ -20,6 +20,7 @@ html,body{margin:0;padding:0;width:${width}px;height:${height}px;overflow:hidden
 #stage>.scene-overlay-host{display:none!important}
 </style>`);
 const completedPreviewProgress: Record<string, number> = {
+  "hindu-coconut-offering": 3,
   "nanakusa-gayu": 3,
   "brat-bride-cloth": 3,
   "korean-sotdae": 3,

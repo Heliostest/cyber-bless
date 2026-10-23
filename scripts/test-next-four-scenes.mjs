@@ -74,6 +74,7 @@ const craftDeltas={
   'sumiyoshi-godairiki': [[60,0],[60,0],[60,0]],
   'polish-oplatek-sharing': [[0,-60],[60,0],[0,-60]],
   'greek-new-year-pomegranate': [[0,-60],[60,0],[0,60]],
+  'hindu-coconut-offering': [[0,-60],[60,0],[0,60]],
   'bonfim-ribbon': [[60,0],[-60,0],[60,0]],
   'chinowa-kuguri': [[-60,0],[60,0],[-60,0]],
   'zeniarai-coin-washing': [[0,-60],[-60,0],[60,0]],
@@ -122,7 +123,7 @@ const craftDeltas={
   'niue-shell-necklace':[[-60,0],[0,-60]],
 }
 const empty={version:1,sceneRecords:[],wishes:[],activeSession:null,sessions:[],collectibles:[],ledger:[],settings:{sound:false,haptics:false,reducedMotion:process.env.WBR_MOTION!=='1'}}
-const browser=await chromium.launch({headless:true}),results=[],errors=[],external=[]
+const browser=await chromium.launch({ headless: true, ...(process.env.WBR_CHROME ? { executablePath: process.env.WBR_CHROME } : {}) }),results=[],errors=[],external=[]
 let captures=0,keyboardActions=0
 const pointers=new WeakMap(), touchMode=process.env.WBR_TOUCH==='1'
 async function pageAt(width=390,state=empty){
@@ -285,11 +286,8 @@ async function wrongCraftGesture(page,id,step){
 for(const width of process.env.WBR_RETURN_ONLY?[]:widths)for(const id of ids){
   const page=await pageAt(width);await catalog(page);await open(page,id)
   // On narrow canvases the upper-left corner can be a valid extended upward drag.
-  // Sotdae's explicit invalid path stays horizontal, outside its upward acceptance cone.
-  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,id==='korean-sotdae'?from[1]:box.y+3]
-  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,id==='japanese-kadomatsu'?from[1]:box.y+3]
-  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,id==='pucara-rooftop-bulls'?from[1]:box.y+3]
-  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,id==='chinese-longevity-lock'?from[1]:box.y+3]
+  // These upward first steps need a horizontal invalid path outside the acceptance cone.
+  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,['korean-sotdae','japanese-kadomatsu','pucara-rooftop-bulls','chinese-longevity-lock','hindu-coconut-offering'].includes(id)?from[1]:box.y+3]
   const input=pointers.get(page)
   await input.down(wrong);await input.move(from);await input.up()
   await input.down(from);await input.move(wrong);await input.up()

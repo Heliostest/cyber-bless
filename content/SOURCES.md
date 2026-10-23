@@ -4281,3 +4281,6 @@ Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](
 - https://www.horniman.ac.uk/story/magic-charms-and-amulets/
 - https://journeys.dartmouth.edu/folklorearchive/2020/06/03/hang-an-upturned-horseshoe-over-your-doorway-to-bring-good-luck/
 实际相关正文已读，访问方式、支持范围及文化主张逐项见专卡与研究。保留铁蹄铁护宅/好运的民俗信念；向上悬门的说法限所引肯塔基家庭口述，不泛化全球规则或起源。三枚、四孔、固定柱、小门架及三右拖均产品设计，不是现实钉装、完整仪式或效验保证，未使用来源图片。
+
+## 椰果献愿 · 2026-10-23（验收延至10月24日）
+印度教椰果供献与为重要开端祈求祝福，见[专卡](traditions/hindu-coconut-offering.md)与[研究](../docs/research/2026-10-23-hindu-coconut-offering.md)。实际已读 Sri Ganesha Temple Plano 的供品／新开端／象头神／击石破壳相关正文，以及 Kauai Hindu Monastery 柱雕的椰树说明；保留宗教礼敬语境。单个去纤维褐壳椰果、固定两半、石盘及上／右／下三段为产品安排，无现实效验保证，未使用来源图片。

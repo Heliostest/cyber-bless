@@ -5,6 +5,31 @@
     "category": "blessing"
   },
   {
+    "id": "brat-bride-cloth",
+    "title": "窗布祈护",
+    "category": "blessing"
+  },
+  {
+    "id": "korean-sotdae",
+    "title": "鸟竿祈安",
+    "category": "blessing"
+  },
+  {
+    "id": "japanese-kadomatsu",
+    "title": "门松迎岁",
+    "category": "blessing"
+  },
+  {
+    "id": "pucara-rooftop-bulls",
+    "title": "陶牛护家",
+    "category": "blessing"
+  },
+  {
+    "id": "chinese-longevity-lock",
+    "title": "银锁寄安",
+    "category": "blessing"
+  },
+  {
     "id": "alasita-miniature-house",
     "title": "微屋寄愿",
     "category": "wish"
@@ -12,6 +37,26 @@
   {
     "id": "yusheng-lohei",
     "title": "鱼生捞起",
+    "category": "blessing"
+  },
+  {
+    "id": "kitano-nadeushi",
+    "title": "抚牛寄愿",
+    "category": "blessing"
+  },
+  {
+    "id": "lao-baci-wrist",
+    "title": "白线祝归",
+    "category": "blessing"
+  },
+  {
+    "id": "finnish-virpominen",
+    "title": "柳枝祝春",
+    "category": "blessing"
+  },
+  {
+    "id": "scottish-first-footing",
+    "title": "煤火迎年",
     "category": "blessing"
   },
   {
@@ -105,6 +150,51 @@
     "category": "blessing"
   },
   {
+    "id": "chinese-fu-paper",
+    "title": "贴福迎春",
+    "category": "blessing"
+  },
+  {
+    "id": "turkish-nazar-bead",
+    "title": "蓝珠祈安",
+    "category": "blessing"
+  },
+  {
+    "id": "japanese-hamaya",
+    "title": "饰矢祈安",
+    "category": "blessing"
+  },
+  {
+    "id": "vietnamese-five-fruit-tray",
+    "title": "五果迎春",
+    "category": "blessing"
+  },
+  {
+    "id": "chinese-ruyi-scepter",
+    "title": "如意寄愿",
+    "category": "blessing"
+  },
+  {
+    "id": "japanese-kumade",
+    "title": "熊手纳福",
+    "category": "blessing"
+  },
+  {
+    "id": "neapolitan-cornicello",
+    "title": "红角赠福",
+    "category": "blessing"
+  },
+  {
+    "id": "spanish-twelve-grapes",
+    "title": "葡萄迎岁",
+    "category": "blessing"
+  },
+  {
+    "id": "horseshoe-doorway-luck",
+    "title": "蹄铁护家",
+    "category": "blessing"
+  },
+  {
     "id": "setsubun-mamemaki",
     "title": "节分撒豆",
     "category": "blessing"
@@ -142,6 +232,11 @@
   {
     "id": "greek-new-year-pomegranate",
     "title": "破榴迎新",
+    "category": "blessing"
+  },
+  {
+    "id": "hindu-coconut-offering",
+    "title": "椰果献愿",
     "category": "blessing"
   },
   {

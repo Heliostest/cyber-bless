@@ -32,7 +32,7 @@ describe("a scene's surrounding world", () => {
     expect(ray.intersectObjects([ground, path]).length).toBeGreaterThan(0);
     await world.ready; world.dispose();
   });
-  it.each(["shinto-torii", "celtic-folk-spring", "woodfish", "slavic-wreath", "zeniarai-coin-washing"])("keeps the added garden clear of the interaction space and releases its instance buffers: %s", async id => {
+  it.each(["shinto-torii", "celtic-folk-spring", "woodfish", "slavic-wreath", "zeniarai-coin-washing", "hindu-coconut-offering"])("keeps the added garden clear of the interaction space and releases its instance buffers: %s", async id => {
     const scene = new THREE.Scene();
     const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
     const planting = scene.getObjectByName("daylight-planting");

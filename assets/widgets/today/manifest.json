@@ -1,7 +1,211 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "f6bc13ff92bd97a5f6db72bc54809a9eae36d0401c66ebda356de0d93c9516e8",
+  "revision": "99d06b12161fb796dcf99d284dd393a072c7eb4b6fb439957ff17ab63027e7b2",
   "scenes": [
+    {
+      "id": "nanakusa-gayu",
+      "engine": "nanakusa-gayu@1",
+      "small": {
+        "file": "nanakusa-gayu-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "f923e694da893537a2bf22ab1aa95c7a79557a71e1f76e19b124776a2606f404",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "nanakusa-gayu-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "d31b308caf8c81cf3088d84c75f220f94e965a9f5914c2ac42bd4cb2de95f36b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "nanakusa-gayu-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "4f1f6960f0760e70a45f5476ab676dde0e3925b7450524c7366475490290f6ac",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "brat-bride-cloth",
+      "engine": "brat-bride-cloth@1",
+      "small": {
+        "file": "brat-bride-cloth-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "824b808906ec7902cdd8f093f3ae95f07a06c21ccd0f2c4580fa5b73b5d1e431",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "brat-bride-cloth-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "bcd7e902aa95ea93a0542edc5461dac269fb87369afa5ebd95f0f5b9c0597f4b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "brat-bride-cloth-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "93c2994519d0a968ebcb26222f14c187896949ee978882800bba31a22da40f8e",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "korean-sotdae",
+      "engine": "korean-sotdae@1",
+      "small": {
+        "file": "korean-sotdae-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "d161317d84aa43fe3a7fe30249d25e7973551fa66565c7b6228ce8f4bff20fdc",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "korean-sotdae-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "08da58e63b0fa75ceb0baeafe4069f3f89438bb55ac952487f58e5041056c77b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "korean-sotdae-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "dd6e67214f1bf21ed15c58feda85b03cfeb257950936bb5aa6770e243cf12c2b",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "japanese-kadomatsu",
+      "engine": "japanese-kadomatsu@1",
+      "small": {
+        "file": "japanese-kadomatsu-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "1857bfa18a8d4df71fb566c37b0dce3de74956df4eafd894a910ea0ac09cd822",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "japanese-kadomatsu-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "17aac5024632dac3a0f11bda2876703ec9eeedc65b6b54ced055f6de3a328c8e",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "japanese-kadomatsu-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "78d5b998f5cb1850976dfe0abda3b63bb77e16f68c58c52094b5a6ca96ba1164",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "pucara-rooftop-bulls",
+      "engine": "pucara-rooftop-bulls@1",
+      "small": {
+        "file": "pucara-rooftop-bulls-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "78f9142552bbd1703f8eccc6eba10746d1e6115210c0af0be53ff93a226554ab",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "pucara-rooftop-bulls-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "6ce718ea5a54256afb034a98274c330200c9cb81852720e49fad88a60196c2b4",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "pucara-rooftop-bulls-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "7bf6d1bdd975a1421b240541a154cd310770a58c037a54c9dc92e29905f1e523",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "chinese-longevity-lock",
+      "engine": "chinese-longevity-lock@1",
+      "small": {
+        "file": "chinese-longevity-lock-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "fef4e245bc290c51add409b0e5b1e5dfddabbfe7c625f1d01a93cdd8081f01c0",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "chinese-longevity-lock-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "52ea4d0c0ab6e89663aee97d57133db7182cfb417f6caf9ad5816f5b8d2c93c6",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "chinese-longevity-lock-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "610c81625af68455958142f5703f791d49e9a522a4d5754b8473f3551d6267fd",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "alasita-miniature-house",
       "engine": "alasita-miniature-house@1",
@@ -68,6 +272,142 @@
         "canvasWidth": 1200,
         "canvasHeight": 1200,
         "progress": 0
+      }
+    },
+    {
+      "id": "kitano-nadeushi",
+      "engine": "kitano-nadeushi@1",
+      "small": {
+        "file": "kitano-nadeushi-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "a637a7fd43a8f9565f2314fc22972ece0b47b2581db96824f7fc47e343fd3b65",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "kitano-nadeushi-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "35a896c3a0d3902094244fac7ae60e9d5d422aea645e96ee45268d7e17552633",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "kitano-nadeushi-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "78bcad9544485fe13657dc6df0131f763010fa88863bfb9463a8d6b9b7c5f813",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "lao-baci-wrist",
+      "engine": "lao-baci-wrist@1",
+      "small": {
+        "file": "lao-baci-wrist-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "1b4ec5db22fb4f182c4c1a5907a6561fe0ba90d9d6ebb43a4c7b9ecfdb9add2f",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "lao-baci-wrist-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "36aa496cfd7db5683db1e5f33eabce08cbcf627c659447a33bbc3ff63169bd91",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "lao-baci-wrist-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "cd65dcd6fb0002b2f8bc447a53ba7e13e25ba896414b494a66a07e19c31784ba",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "finnish-virpominen",
+      "engine": "finnish-virpominen@1",
+      "small": {
+        "file": "finnish-virpominen-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "1313112a39dd869fef05304082fa44e6841f9eb05c380ff8cc4a8e2d621d26f7",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "finnish-virpominen-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "8d70bc41714f8ae2af16d5430e836909bd5f2075cf237a9abf03941bd2371302",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "finnish-virpominen-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "bb76a7361b725689e0b15ceeaaf58d97093e1ca61cab8883b8691096ccc92409",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "scottish-first-footing",
+      "engine": "scottish-first-footing@1",
+      "small": {
+        "file": "scottish-first-footing-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "a3ac8de884de3ecdf4ced1455c509496fbb40e230ce23553b8391fd14bfbdb1a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "scottish-first-footing-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "8f293dc92c4580efac83830cc756282ae53efb83b6febf918325312c59a934b1",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "scottish-first-footing-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "b336f48e1a15e9602046ff03de4a4c317ef91eac69f7452f1bc6e1e7bf3328ba",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
       }
     },
     {
@@ -649,6 +989,346 @@
       }
     },
     {
+      "id": "lanna-sand-pagoda",
+      "engine": "lanna-sand-pagoda@1",
+      "small": {
+        "file": "lanna-sand-pagoda-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "3c675943d683365b3b24bbae9cc0b48c53c05a356bc20d925db7178230a03210",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "lanna-sand-pagoda-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "051ce5d789594623a3df90f548d0e290dbedf867da9e31fc67afadc27c6bfd51",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "lanna-sand-pagoda-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8805ec8a760521b52b536228f317e88a66cdf79674481dbc58d3750fc8e55ccc",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "chinese-fu-paper",
+      "engine": "chinese-fu-paper@1",
+      "small": {
+        "file": "chinese-fu-paper-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "fa2294fcbb4c81d9d96edd8555ebcaf792628e440d095df7ba8c0e26b04db8a9",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "chinese-fu-paper-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "73b19c209e3915e9e7c3e60c790b0038c02676ed96cecbd6353c9da95196c152",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "chinese-fu-paper-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "03ef0996a850f0f09686a7a40bf87140f73835d53d59b7f4c7852d95c3688a3c",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "turkish-nazar-bead",
+      "engine": "turkish-nazar-bead@1",
+      "small": {
+        "file": "turkish-nazar-bead-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "88bd99417ee0cab21bdea7ea7aae3038853e1662fc0728edd78729117c9b1079",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "turkish-nazar-bead-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "8787b0caa96b2342f8635bec7bfe44709c985cbf26390bf0d103acd3aa3b2833",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "turkish-nazar-bead-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "630fef7a826dfce46068dc24c492b7c91cba4601c29f83372173a7bba8ac1c9f",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "japanese-hamaya",
+      "engine": "japanese-hamaya@1",
+      "small": {
+        "file": "japanese-hamaya-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "be5a75df981cac5b479117da51ab65758c6d27264773c821434280c87461d813",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "japanese-hamaya-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "de8b8666d0ae96a73d8cb07ef33af017e7b5933fbe207810d32979987ce709b5",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "japanese-hamaya-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "6f457a7464de5013c6f59288387440552448d6fb032732df0fe17a39f71b342c",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "vietnamese-five-fruit-tray",
+      "engine": "vietnamese-five-fruit-tray@1",
+      "small": {
+        "file": "vietnamese-five-fruit-tray-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "7e5cc4829f5d2e60418b0bde320aaa248835e666eb8791f80e189bc28f12b59d",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "vietnamese-five-fruit-tray-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "fbd51293865263560fc49e4a566b8b834dabc907c620e619d109bed715f49b2f",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "vietnamese-five-fruit-tray-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "36014214fcb310b61f12713c7d6d929df9392eb8c1f1f15bf5d05675a60aa899",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "chinese-ruyi-scepter",
+      "engine": "chinese-ruyi-scepter@1",
+      "small": {
+        "file": "chinese-ruyi-scepter-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "6cc0a1ff0c13a3ce005738f15c34bd468a39ebca890906e94527d1de38b64143",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "chinese-ruyi-scepter-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "258ac8fabce254b5e40fdf47ae602f646aa73a5b64f2d902794c9be852ee86b9",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "chinese-ruyi-scepter-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "5fd021a7276c5e408c5032d59eff3f35fb16c7a9890b1d3d94e7a745f278d30d",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "japanese-kumade",
+      "engine": "japanese-kumade@1",
+      "small": {
+        "file": "japanese-kumade-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "b35b53c82b88572ece2b2326bcb4e8f6bc2a2a209f638e50eb17a67bfcd8088f",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "japanese-kumade-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "320b4d3ab8a68598c50d2b7f26162324041588d6ad3bf3f7ab8b279ec7b21332",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "japanese-kumade-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "ad6a86217140eee98671d6d418504dae91ffa3f33575d430ed1459cc07f33a88",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "neapolitan-cornicello",
+      "engine": "neapolitan-cornicello@1",
+      "small": {
+        "file": "neapolitan-cornicello-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "c5cc50fe0009a344c032cebe19b5e02860a59d3420374455db84078b2002dc69",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "neapolitan-cornicello-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "5a1fb1fc7dc2ed31c575ca147b6be023786b16a0ad91c7e68052c80a649a5a6c",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "neapolitan-cornicello-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "47a8420cdd1dde31c36407933213c43995874cd84f9845efd84da28cc18af54a",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "spanish-twelve-grapes",
+      "engine": "spanish-twelve-grapes@1",
+      "small": {
+        "file": "spanish-twelve-grapes-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "e915d3234642e77e76645f48f42a64d3c3ba216b7ae0e1b43bf59f448ac3d04c",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "spanish-twelve-grapes-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "3cb415af8d145afba9778047ad8cd6ce786110ee449ee120bcf4eb65061e24c4",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "spanish-twelve-grapes-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "21d95b661cfe7be877862df592593799332c6d1cb38d994092b464e05a6cb453",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "horseshoe-doorway-luck",
+      "engine": "horseshoe-doorway-luck@1",
+      "small": {
+        "file": "horseshoe-doorway-luck-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "6c7d06ac1edc17f490eb612df42631297a0a1b7cb91297cabfb5e1456e537ca7",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "horseshoe-doorway-luck-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e83456face92f11c35dc667faa35e0985ec8382cb819cd5d6e41c4ff50e0cf92",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "horseshoe-doorway-luck-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "55406c5b16f59ecf0929a5457cd54533054f2822a63f4ff8a44a585b300ff001",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
       "id": "setsubun-mamemaki",
       "engine": "setsubun-mamemaki@1",
       "small": {
@@ -918,6 +1598,40 @@
         "canvasWidth": 1200,
         "canvasHeight": 1200,
         "progress": 0
+      }
+    },
+    {
+      "id": "hindu-coconut-offering",
+      "engine": "hindu-coconut-offering@1",
+      "small": {
+        "file": "hindu-coconut-offering-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "25164b080585da5b3359d07f394bd1574410e89ba251feed8e08f08c43eea948",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "hindu-coconut-offering-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "d7db071a518b05cb2427a56e0e4b9e08e614da81a6dd1bf4ef2abf705a8eafeb",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "hindu-coconut-offering-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "eb078da7ef281f37cb49595f274894195f11e93e62374c268a740bb153558747",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
       }
     },
     {
@@ -4522,686 +5236,6 @@
         "canvasWidth": 1200,
         "canvasHeight": 1200,
         "progress": 1
-      }
-    },
-    {
-      "id": "kitano-nadeushi",
-      "engine": "kitano-nadeushi@1",
-      "small": {
-        "file": "kitano-nadeushi-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "a637a7fd43a8f9565f2314fc22972ece0b47b2581db96824f7fc47e343fd3b65",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "kitano-nadeushi-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "35a896c3a0d3902094244fac7ae60e9d5d422aea645e96ee45268d7e17552633",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "kitano-nadeushi-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "78bcad9544485fe13657dc6df0131f763010fa88863bfb9463a8d6b9b7c5f813",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "lao-baci-wrist",
-      "engine": "lao-baci-wrist@1",
-      "small": {
-        "file": "lao-baci-wrist-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "1b4ec5db22fb4f182c4c1a5907a6561fe0ba90d9d6ebb43a4c7b9ecfdb9add2f",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "lao-baci-wrist-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "36aa496cfd7db5683db1e5f33eabce08cbcf627c659447a33bbc3ff63169bd91",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "lao-baci-wrist-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "cd65dcd6fb0002b2f8bc447a53ba7e13e25ba896414b494a66a07e19c31784ba",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "finnish-virpominen",
-      "engine": "finnish-virpominen@1",
-      "small": {
-        "file": "finnish-virpominen-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "1313112a39dd869fef05304082fa44e6841f9eb05c380ff8cc4a8e2d621d26f7",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "finnish-virpominen-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "8d70bc41714f8ae2af16d5430e836909bd5f2075cf237a9abf03941bd2371302",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "finnish-virpominen-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "bb76a7361b725689e0b15ceeaaf58d97093e1ca61cab8883b8691096ccc92409",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "scottish-first-footing",
-      "engine": "scottish-first-footing@1",
-      "small": {
-        "file": "scottish-first-footing-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "a3ac8de884de3ecdf4ced1455c509496fbb40e230ce23553b8391fd14bfbdb1a",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "scottish-first-footing-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "8f293dc92c4580efac83830cc756282ae53efb83b6febf918325312c59a934b1",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "scottish-first-footing-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "b336f48e1a15e9602046ff03de4a4c317ef91eac69f7452f1bc6e1e7bf3328ba",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "lanna-sand-pagoda",
-      "engine": "lanna-sand-pagoda@1",
-      "small": {
-        "file": "lanna-sand-pagoda-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "3c675943d683365b3b24bbae9cc0b48c53c05a356bc20d925db7178230a03210",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "lanna-sand-pagoda-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "051ce5d789594623a3df90f548d0e290dbedf867da9e31fc67afadc27c6bfd51",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "lanna-sand-pagoda-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "8805ec8a760521b52b536228f317e88a66cdf79674481dbc58d3750fc8e55ccc",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "chinese-fu-paper",
-      "engine": "chinese-fu-paper@1",
-      "small": {
-        "file": "chinese-fu-paper-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "fa2294fcbb4c81d9d96edd8555ebcaf792628e440d095df7ba8c0e26b04db8a9",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "chinese-fu-paper-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "73b19c209e3915e9e7c3e60c790b0038c02676ed96cecbd6353c9da95196c152",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "chinese-fu-paper-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "03ef0996a850f0f09686a7a40bf87140f73835d53d59b7f4c7852d95c3688a3c",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "nanakusa-gayu",
-      "engine": "nanakusa-gayu@1",
-      "small": {
-        "file": "nanakusa-gayu-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "f923e694da893537a2bf22ab1aa95c7a79557a71e1f76e19b124776a2606f404",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "nanakusa-gayu-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "d31b308caf8c81cf3088d84c75f220f94e965a9f5914c2ac42bd4cb2de95f36b",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "nanakusa-gayu-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "4f1f6960f0760e70a45f5476ab676dde0e3925b7450524c7366475490290f6ac",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "turkish-nazar-bead",
-      "engine": "turkish-nazar-bead@1",
-      "small": {
-        "file": "turkish-nazar-bead-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "88bd99417ee0cab21bdea7ea7aae3038853e1662fc0728edd78729117c9b1079",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "turkish-nazar-bead-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "8787b0caa96b2342f8635bec7bfe44709c985cbf26390bf0d103acd3aa3b2833",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "turkish-nazar-bead-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "630fef7a826dfce46068dc24c492b7c91cba4601c29f83372173a7bba8ac1c9f",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "brat-bride-cloth",
-      "engine": "brat-bride-cloth@1",
-      "small": {
-        "file": "brat-bride-cloth-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "824b808906ec7902cdd8f093f3ae95f07a06c21ccd0f2c4580fa5b73b5d1e431",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "brat-bride-cloth-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "bcd7e902aa95ea93a0542edc5461dac269fb87369afa5ebd95f0f5b9c0597f4b",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "brat-bride-cloth-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "93c2994519d0a968ebcb26222f14c187896949ee978882800bba31a22da40f8e",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "japanese-hamaya",
-      "engine": "japanese-hamaya@1",
-      "small": {
-        "file": "japanese-hamaya-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "be5a75df981cac5b479117da51ab65758c6d27264773c821434280c87461d813",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "japanese-hamaya-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "de8b8666d0ae96a73d8cb07ef33af017e7b5933fbe207810d32979987ce709b5",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "japanese-hamaya-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "6f457a7464de5013c6f59288387440552448d6fb032732df0fe17a39f71b342c",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "korean-sotdae",
-      "engine": "korean-sotdae@1",
-      "small": {
-        "file": "korean-sotdae-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "d161317d84aa43fe3a7fe30249d25e7973551fa66565c7b6228ce8f4bff20fdc",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "korean-sotdae-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "08da58e63b0fa75ceb0baeafe4069f3f89438bb55ac952487f58e5041056c77b",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "korean-sotdae-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "dd6e67214f1bf21ed15c58feda85b03cfeb257950936bb5aa6770e243cf12c2b",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "vietnamese-five-fruit-tray",
-      "engine": "vietnamese-five-fruit-tray@1",
-      "small": {
-        "file": "vietnamese-five-fruit-tray-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "7e5cc4829f5d2e60418b0bde320aaa248835e666eb8791f80e189bc28f12b59d",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "vietnamese-five-fruit-tray-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "fbd51293865263560fc49e4a566b8b834dabc907c620e619d109bed715f49b2f",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "vietnamese-five-fruit-tray-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "36014214fcb310b61f12713c7d6d929df9392eb8c1f1f15bf5d05675a60aa899",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "chinese-ruyi-scepter",
-      "engine": "chinese-ruyi-scepter@1",
-      "small": {
-        "file": "chinese-ruyi-scepter-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "6cc0a1ff0c13a3ce005738f15c34bd468a39ebca890906e94527d1de38b64143",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "chinese-ruyi-scepter-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "258ac8fabce254b5e40fdf47ae602f646aa73a5b64f2d902794c9be852ee86b9",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "chinese-ruyi-scepter-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "5fd021a7276c5e408c5032d59eff3f35fb16c7a9890b1d3d94e7a745f278d30d",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "japanese-kadomatsu",
-      "engine": "japanese-kadomatsu@1",
-      "small": {
-        "file": "japanese-kadomatsu-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "1857bfa18a8d4df71fb566c37b0dce3de74956df4eafd894a910ea0ac09cd822",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "japanese-kadomatsu-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "17aac5024632dac3a0f11bda2876703ec9eeedc65b6b54ced055f6de3a328c8e",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "japanese-kadomatsu-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "78d5b998f5cb1850976dfe0abda3b63bb77e16f68c58c52094b5a6ca96ba1164",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "japanese-kumade",
-      "engine": "japanese-kumade@1",
-      "small": {
-        "file": "japanese-kumade-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "b35b53c82b88572ece2b2326bcb4e8f6bc2a2a209f638e50eb17a67bfcd8088f",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "japanese-kumade-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "320b4d3ab8a68598c50d2b7f26162324041588d6ad3bf3f7ab8b279ec7b21332",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "japanese-kumade-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "ad6a86217140eee98671d6d418504dae91ffa3f33575d430ed1459cc07f33a88",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "pucara-rooftop-bulls",
-      "engine": "pucara-rooftop-bulls@1",
-      "small": {
-        "file": "pucara-rooftop-bulls-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "78f9142552bbd1703f8eccc6eba10746d1e6115210c0af0be53ff93a226554ab",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "pucara-rooftop-bulls-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "6ce718ea5a54256afb034a98274c330200c9cb81852720e49fad88a60196c2b4",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "pucara-rooftop-bulls-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "7bf6d1bdd975a1421b240541a154cd310770a58c037a54c9dc92e29905f1e523",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "neapolitan-cornicello",
-      "engine": "neapolitan-cornicello@1",
-      "small": {
-        "file": "neapolitan-cornicello-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "c5cc50fe0009a344c032cebe19b5e02860a59d3420374455db84078b2002dc69",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "neapolitan-cornicello-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "5a1fb1fc7dc2ed31c575ca147b6be023786b16a0ad91c7e68052c80a649a5a6c",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "neapolitan-cornicello-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "47a8420cdd1dde31c36407933213c43995874cd84f9845efd84da28cc18af54a",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "spanish-twelve-grapes",
-      "engine": "spanish-twelve-grapes@1",
-      "small": {
-        "file": "spanish-twelve-grapes-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "e915d3234642e77e76645f48f42a64d3c3ba216b7ae0e1b43bf59f448ac3d04c",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "spanish-twelve-grapes-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "3cb415af8d145afba9778047ad8cd6ce786110ee449ee120bcf4eb65061e24c4",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "spanish-twelve-grapes-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "21d95b661cfe7be877862df592593799332c6d1cb38d994092b464e05a6cb453",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "chinese-longevity-lock",
-      "engine": "chinese-longevity-lock@1",
-      "small": {
-        "file": "chinese-longevity-lock-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "fef4e245bc290c51add409b0e5b1e5dfddabbfe7c625f1d01a93cdd8081f01c0",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "chinese-longevity-lock-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "52ea4d0c0ab6e89663aee97d57133db7182cfb417f6caf9ad5816f5b8d2c93c6",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "chinese-longevity-lock-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "610c81625af68455958142f5703f791d49e9a522a4d5754b8473f3551d6267fd",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
-      }
-    },
-    {
-      "id": "horseshoe-doorway-luck",
-      "engine": "horseshoe-doorway-luck@1",
-      "small": {
-        "file": "horseshoe-doorway-luck-small.png",
-        "width": 600,
-        "height": 600,
-        "sha256": "6c7d06ac1edc17f490eb612df42631297a0a1b7cb91297cabfb5e1456e537ca7",
-        "webgl": true,
-        "canvasWidth": 600,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "medium": {
-        "file": "horseshoe-doorway-luck-medium.png",
-        "width": 1280,
-        "height": 600,
-        "sha256": "e83456face92f11c35dc667faa35e0985ec8382cb819cd5d6e41c4ff50e0cf92",
-        "webgl": true,
-        "canvasWidth": 1280,
-        "canvasHeight": 600,
-        "progress": 3
-      },
-      "large": {
-        "file": "horseshoe-doorway-luck-large.png",
-        "width": 1200,
-        "height": 1200,
-        "sha256": "55406c5b16f59ecf0929a5457cd54533054f2822a63f4ff8a44a585b300ff001",
-        "webgl": true,
-        "canvasWidth": 1200,
-        "canvasHeight": 1200,
-        "progress": 3
       }
     }
   ]

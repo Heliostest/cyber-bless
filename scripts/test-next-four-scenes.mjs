@@ -27,6 +27,7 @@ if(ids.includes('malawi-sansi')){
 }
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const craftDeltas={
+  'nanakusa-gayu': [[-60,0],[0,-60],[0,60]],
   'alasita-miniature-house': [[0,-60],[60,0],[0,60]],
   'yusheng-lohei': [[0,60],[0,-60],[0,60]],
   'kitano-nadeushi': [[0,-60],[60,0],[0,60]],

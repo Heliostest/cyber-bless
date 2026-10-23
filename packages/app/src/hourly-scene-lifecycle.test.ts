@@ -38,6 +38,7 @@ it.each([0,1,2])('cancels the real Chinowa walking view through production adapt
 })
 
 it.each([
+  ['nanakusa-gayu', 0, 'serving-ladle', 'serving-ladle', [0,.42,.72], [0,0,0], [-60,0]],
   ['alasita-miniature-house', 0, 'wish-house', 'wish-house', [.28,.35,.52], [0,0,0], [0,-60]],
   ['kitano-nadeushi', 0, 'visitor-hand', 'visitor-hand', [0,0,0], [0,0,0], [0,-60]],
   ['lao-baci-wrist', 0, 'baci-thread', 'baci-thread', [0,0,0], [0,.394,.16], [0,-60]],

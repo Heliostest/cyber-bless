@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  {id:'nanakusa-gayu',title:'七草祈安',traditionSlug:'nanakusa-gayu',grade:'C',sensitivity:'低',gestures:['drag']},
   { id:'alasita-miniature-house',title:'微屋寄愿',traditionSlug:'aymara',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'yusheng-lohei',title:'鱼生捞起',traditionSlug:'yusheng-lohei',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'kitano-nadeushi',title:'抚牛寄愿',traditionSlug:'kitano-nadeushi',grade:'C',sensitivity:'中',gestures:['drag'] },
@@ -222,6 +223,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'nanakusa-gayu',
   'alasita-miniature-house',
   'yusheng-lohei',
   'kitano-nadeushi',
@@ -338,6 +340,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'nanakusa-gayu': return import('./nanakusa-gayu/index')
     case 'alasita-miniature-house': return import('./alasita-miniature-house/index')
     case 'yusheng-lohei': return import('./yusheng-lohei/index')
     case 'kitano-nadeushi': return import('./kitano-nadeushi/index')

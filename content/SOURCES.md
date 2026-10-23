@@ -4225,3 +4225,5 @@
 - https://www.confuciusinstitute.ac.uk/welcoming-good-fortune-at-chinese-new-year/
 - https://www.pgm.org.cn/pgm/bjhf/201808/4d921cde05694a01927e909881a93860.shtml
 - 四条对应正文已实际阅读；正文定位、读取状态、朝向差异和产品边界见 content/traditions/chinese-fu-paper.md 及 docs/research/2026-10-23-chinese-fu-paper.md。
+## 七草祈安（2026-10-23）
+农林水产省[人日与七草粥海报](https://www.maff.go.jp/hokuriku/safe/shokuiku/attach/pdf/poster_7-20.pdf)、[aff2017年12月正文](https://www.maff.go.jp/j/pr/aff/1712/characterinformation.html)；访问状态、料理参照与产品边界见[来源卡](traditions/nanakusa-gayu.md)与[核查记录](../docs/research/2026-10-23-nanakusa-gayu.md)。

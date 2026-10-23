@@ -80,6 +80,7 @@ describe("scene placement", () => {
     ["korean-yutnori", "korean-yutnori", false],
     ["chinese-diabolo", "chinese-diabolo", false],
     ["chinese-tangram", "chinese-tangram", false],
+    ["nanakusa-gayu", "nanakusa-gayu", false],
     ["alasita-miniature-house", "aymara", true],
     ["kitano-nadeushi", "kitano-nadeushi", false],
     ["lao-baci-wrist", "lao-baci-phi", false],
@@ -195,6 +196,7 @@ describe("scene placement", () => {
   });
   it("splits blessing vs wish scene ids", () => {
     expect([...BLESSING_SCENE_IDS]).toEqual([
+      "nanakusa-gayu",
       "yusheng-lohei",
       "kitano-nadeushi",
       "lao-baci-wrist",

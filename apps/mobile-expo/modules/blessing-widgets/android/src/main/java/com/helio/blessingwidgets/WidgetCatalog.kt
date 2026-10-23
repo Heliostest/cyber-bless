@@ -4,6 +4,7 @@ package com.helio.blessingwidgets
 internal object WidgetCatalog {
   val hiddenSceneIds = setOf("japanese-daruma-otoshi", "paper-pinwheel", "chinese-steelyard", "garden-croquet", "welsh-drop-spindle", "scottish-plunge-churn", "irish-bodhran", "french-coffee-mill", "japanese-wagasa", "spanish-castanets", "japanese-shishi-odoshi", "german-jumping-jack", "finnish-kantele", "estonian-village-swing", "french-petanque", "english-hearth-bellows", "mexican-metate", "czech-wooden-ratchet", "puerto-rican-guiro", "valencian-folding-fan", "mexican-tortilla-press", "ghanaian-oware", "chinese-rattle-drum", "chinese-tangram", "malawi-sansi", "japanese-kendama", "russian-matryoshka", "korean-yutnori", "chinese-diabolo", "indian-charkha", "german-nutcracker", "mexican-molinillo", "chinese-suanpan", "mongolian-felt-ger", "peruvian-engraved-gourd", "venetian-glass-bead", "vietnamese-bamboo-dragonfly", "turkish-ebru-paper", "indonesian-angklung", "weifang-paper-kite", "chinese-shadow-puppet", "faroese-wool-knit", "niue-shell-necklace", "polish-paper-cut", "uzbek-clay-bowl", "chinese-woodblock-print", "czech-bead-star", "fijian-woven-fan", "amazigh-woven-rug", "slovak-wire-bird", "hungarian-embroidery-hoop", "andalusian-ceramic-tile", "sicilian-painted-cart", "bai-indigo-cloth", "ndebele-painted-house", "purepecha-copper-bowl", "finnish-birch-basket", "catalan-festival-giant", "breton-banner", "dalarna-wooden-horse", "blang-tea", "minangkabau-spinning-top", "hongsheng-red-string", "czech-pilgrim-journal", "celtic-folk-spring", "theravada-water", "lantern")
   val scenes = mapOf(
+    "nanakusa-gayu" to WidgetScene("七草祈安", "blessing"),
     "alasita-miniature-house" to WidgetScene("微屋寄愿", "wish"),
     "yusheng-lohei" to WidgetScene("鱼生捞起", "blessing"),
     "hiiragi-iwashi" to WidgetScene("柊鰯守门", "blessing"),
@@ -142,6 +143,7 @@ internal object WidgetCatalog {
 
   fun cover(key: String?, size: WidgetCoverSize): Int {
     val covers = when (key) {
+      "nanakusa-gayu" -> intArrayOf(R.drawable.blessing_preview_nanakusa_gayu_small, R.drawable.blessing_preview_nanakusa_gayu_medium, R.drawable.blessing_preview_nanakusa_gayu_large)
       "alasita-miniature-house" -> intArrayOf(R.drawable.blessing_preview_alasita_miniature_house_small, R.drawable.blessing_preview_alasita_miniature_house_medium, R.drawable.blessing_preview_alasita_miniature_house_large)
       "yusheng-lohei" -> intArrayOf(R.drawable.blessing_preview_yusheng_lohei_small, R.drawable.blessing_preview_yusheng_lohei_medium, R.drawable.blessing_preview_yusheng_lohei_large)
       "hiiragi-iwashi" -> intArrayOf(R.drawable.blessing_preview_hiiragi_iwashi_small, R.drawable.blessing_preview_hiiragi_iwashi_medium, R.drawable.blessing_preview_hiiragi_iwashi_large)

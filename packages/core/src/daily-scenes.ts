@@ -83,6 +83,7 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "nanakusa-gayu",
   "yusheng-lohei",
   "kitano-nadeushi",
   "lao-baci-wrist",
@@ -230,6 +231,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"nanakusa-gayu",title:"七草祈安",engine:"nanakusa-gayu@1",revision:"bundled",manifestUrl:"",traditionSlug:"nanakusa-gayu",narrative:sceneNarratives["nanakusa-gayu"] },
   { id:"alasita-miniature-house",title:"微屋寄愿",engine:"alasita-miniature-house@1",revision:"bundled",manifestUrl:"",traditionSlug:"aymara",narrative:sceneNarratives["alasita-miniature-house"] },
   { id:"yusheng-lohei",title:"鱼生捞起",engine:"yusheng-lohei@1",revision:"bundled",manifestUrl:"",traditionSlug:"yusheng-lohei",narrative:sceneNarratives["yusheng-lohei"] },
   { id:"kitano-nadeushi",title:"抚牛寄愿",engine:"kitano-nadeushi@1",revision:"bundled",manifestUrl:"",traditionSlug:"kitano-nadeushi",narrative:sceneNarratives["kitano-nadeushi"] },

@@ -4208,3 +4208,7 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 鸟竿祈安（2026-10-23）
+
+韩国솟대木鸟长竿与村落护佑、向天祈愿背景见[专卡](traditions/korean-sotdae.md)。已读韩国邮政博物馆与国立民俗博物馆儿童馆正文；独立研究另读NFM《民俗消息》2025年3月及国语院辞书。托架、承孔和三段动作属产品安排，安放不等于村祭或祝圣完成。访问状态见[研究](../docs/research/2026-10-23-korean-sotdae.md)。

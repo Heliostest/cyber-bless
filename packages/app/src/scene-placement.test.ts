@@ -80,6 +80,7 @@ describe("scene placement", () => {
     ["korean-yutnori", "korean-yutnori", false],
     ["chinese-diabolo", "chinese-diabolo", false],
     ["chinese-tangram", "chinese-tangram", false],
+    ["korean-sotdae", "korean-sotdae", false],
     ["alasita-miniature-house", "aymara", true],
     ["hiiragi-iwashi", "hiiragi-iwashi", false],
     ["tamagushi-offering", "tamagushi-offering", false],
@@ -189,6 +190,7 @@ describe("scene placement", () => {
   });
   it("splits blessing vs wish scene ids", () => {
     expect([...BLESSING_SCENE_IDS]).toEqual([
+      "korean-sotdae",
       "yusheng-lohei",
       "hiiragi-iwashi",
       "tamagushi-offering",

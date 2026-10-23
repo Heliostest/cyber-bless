@@ -138,6 +138,7 @@ describe("builtInScenes narratives", () => {
       "kagami-mochi-offering",
       "kameido-usokae",
       "korean-bojagi-wrap",
+      "korean-sotdae",
       "korean-yutnori",
       "lam-tsuen-wishing-tree",
       "lantern",

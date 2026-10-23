@@ -1,6 +1,94 @@
 # 一日一念商店发布记录
 
+2026-10-13 19:30 更新：首发体验后买断已经授权，原生计费协调、验证、购买/恢复桥接与页面正在 `codex/mobile-paid-unlock` 托管工作目录实施，尚未合入主工作目录。已创建本应用非消耗型商品6822274692（com.helio.cyberbless.full_unlock），版本88375b0a-5ef9-4857-9fde-6d8664b0ce88及简体中文名称/描述已保存并读回；价格、销售范围和审核截图尚未填写。DSA已按授权填写联系资料，但仍待邮箱验证码；付费协议供审阅，未签署。最新实现和验证见 [mobile-paid-unlock.md](mobile-paid-unlock.md)，旧免费包不能作为买断验收包。没有新付费版本构建、上传或提审。
+
+最新核查：2026-10-13 18:52（北京时间）。本应用名称、副标题、描述、关键词、类别、年龄问卷、审核联系人、免费定价、175地区选择、40张iPhone截图及Notion隐私/支持URL已保存。开发者确认两张UI图片可用于发行后，内容版权字段已实际保存为 USES_THIRD_PARTY_CONTENT，并通过独立读取确认；完整声明见 [内容版权](../store/ios/content-rights.zh-Hans.md)，可重复执行 `npm run mobile:store:content-rights`，保存回执为 store/ios/content-rights-status.json。
+
+用户恢复页面访问并确认Apple最终法律承诺后，已实际点击App Privacy最终“发布”。点击响应曾超时，未重复点击；恢复浏览器绑定并重新加载后，页面明确显示“3 分钟前由力 何发布”，内容为“未收集数据”，政策URL为本应用Notion公开页。已发布证据为 artifacts/store-evidence/app-privacy-published-20261013.jpg，安全状态记录为 store/ios/compliance-status.json；UI只显示相对时间，没有编造精确发布时刻。URL保存脚本的回执现明确使用ByThisRun字段，避免后续重填URL时误报隐私问卷未发布。
+
+开发者已确认首发加入“体验后买断”，此前纯个人爱好、无商业化目的的DSA判断已更新，现按经营者方向准备。开发者已明确授权将Apple账号现有邮寄地址、此前提供的审核电话及共用邮箱用于欧盟公开展示。已填写并进入Apple邮箱验证码页面，验证码已发送，仍待用户完成邮箱/电话验证及后续证明；尚未宣称DSA完成。仅向Apple授权表单输入联系资料，不把地址/电话写入仓库或Notion。账号商务页免费App协议有效，付费App协议仍为“新”，没有签署该协议或输入银行、税务资料。
+
+当前线上商店资料与旧生产包仍为免费、无内购；首发加入永久买断已经确认，隔离工作目录正在实施，免费体验门槛和基础价格仍待用户选择。永久解锁对应非消耗型IAP，需要购买、恢复购买、原生沙盒测试和正确的审核资料；限时试用须另按Apple 3.1.1准备，不把普通计时器当作已符合规则。App Privacy已发布与正式App Review未提交是两个独立状态。依据见[内购类型](https://developer.apple.com/help/app-store-connect/reference/in-app-purchases-and-subscriptions/in-app-purchase-types/)、[审核规则3.1.1](https://developer.apple.com/app-store/review/guidelines/)。
+
+正式版本仍为PREPARE_FOR_SUBMISSION、MANUAL，正式reviewSubmissions为空，版本尚未关联构建；Apple只有旧1.0.0(4)。最新代码、截图与生产包的一致性仍须完成验证及新构建。各地区的适用性与办理路径另见 [地区要求](store-region-requirements.md)；当前175地区选择未因此修改。下方逐时段记录属于历史核查，不应把较早的空字段结果当作最新状态。
+
 记录日期：2026-10-10，以下时间均为北京时间（UTC+8）。已配置并验证；四种构建完成；iOS 上传完成且 Apple 处理成功；**外部 TestFlight 审核未提交、正式 App Review 未提交、Google Play 未上传、未公开上架**。iOS 已保存手动发布，Android 仅授权推进 internal。
+
+## 2026-10-13 提审材料复核
+
+14:38 通过本应用的 App Store Connect 官方 API 重新核查：1.0.0 仍为 PREPARE_FOR_SUBMISSION、MANUAL；正式 reviewSubmissions 为空。名称、副标题、描述、关键词、生活分类、年龄问卷已经保存；八个 iPhone 截图组各五张，40项全部 COMPLETE。本次只读核查，没有上传、关联构建或提交审核。
+
+| 项目 | 本次核查结果与剩余材料 |
+| --- | --- |
+| 审核联系人 | 姓、名、邮箱、电话四项均为空；须提供本应用真实联系人与国际格式电话 |
+| 隐私与支持 | privacyPolicyUrl、supportUrl 均为空；需要公开支持/反馈邮箱和可匿名访问的两个页面。现有站点配置仍为 private；本次匿名访问 /privacy/、/support/ 返回403/Cloudflare，不能确认审核员能访问 |
+| 版权与内容权利 | copyright、contentRightsDeclaration 均为空；须确认发行主体及 assets/reference-ui/wishes.png、rituals.png 的商业发行权 |
+| 正式构建 | 版本未关联 build；Apple 只存在 1.0.0(4)，processingState=VALID，最低iOS16.4。该包不含最近新增场景、小组件和法务补充；需以最终发布内容重新验证、构建、上传并关联，截图和审核步骤同时更新 |
+| 审核说明 | 现有备注仍含“不存在服务器账号、用户分享或云同步”，与主动系统分享功能不一致；本地修正版已准备，联系人补齐后保存，并按最终页面重新核对操作步骤 |
+| App Privacy 发布 | 10月10日核查为“未收集数据”草稿；本次浏览器桥接连接失败，未重新确认最终发布状态。必须基于最终包重新审计并确认发布，不能把保存草稿当作发布 |
+| 价格、供应地区、地区声明与协议 | 本次价格明细/availability API 返回404，无法据此认定已配置或缺失；浏览器尚不可用。需要确认免费或具体定价、首发地区；在控制台核实适用的DSA、地区资质和当前协议提示 |
+| 外部 TestFlight | Beta Review 联系人同样四项为空；betaAppLocalizations为空，没有反馈邮箱资料；build4 没有 Beta Review submission。外部测试资料和正式 App Review 分别完成，不把其中一个提交当作另一个 |
+
+Apple要求先提供必填资料、选择正确构建，然后“添加以供审核”并继续“提交以供审核”，见[正式提交步骤](https://developer.apple.com/help/app-store-connect/manage-submissions-to-app-review/submit-an-app)。隐私政策URL对所有App必填，隐私答案保存后还需发布，见[App Privacy](https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy/)。DSA经营者身份需按账号/应用真实情况核查，不能由是否免费推断，见[Apple地区合规说明](https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-trader-requirements/)。
+
+安全核查摘要保存在 artifacts/mobile-verification/review-readiness-20261013.json，仅记录联系人字段是否存在，不保存联系人值或凭据。当前尚没有正式提交ID、审核结果或公开上架记录；保留手动发布。
+
+## 2026-10-13 复用 ThumbNote 的发行信息
+
+用户明确授权“看看thumbnote中的信息是怎么填写的，照搬就行了”。通过同一Apple Team的官方API核对 ThumbNote（Apple ID6758052904，com.thumbrain.thumbnotes）真实商店记录；参考源码只读，未修改参考App或其商店记录。该记录当前版本1.0为REJECTED，不应把它当作已经完成审核的模板。
+
+14:51 实际保存到一日一念自己的记录（Apple ID6821271597，com.helio.cyberbless），14:52再次读回验证：
+
+| 复用项 | 已保存并验证的本应用值 |
+| --- | --- |
+| 版权发行信息 | Copyright (c) 2026 He Li |
+| 定价 | 免费；美国为基础地区，175个地区的实际价格均为0 |
+| 供应地区选择 | 与参考一致，175个地区选中；availableInNewTerritories=true |
+| 正式发布方式 | MANUAL保持不变，版本仍PREPARE_FOR_SUBMISSION；未提交审核、未公开上架 |
+
+本应用配置摘要与地区列表保存在 store/ios/release-settings.json。它记录本应用身份和已核实的发行设置，reference中的ThumbNote身份仅用于来源记录，不供本应用构建或上传绑定。API客户端增加了Apple当前正式使用的/v2/路径支持，地区读取和保存使用/v2/appAvailabilities；其余/v1/流程保持兼容。
+
+ThumbNote的正式审核联系人四项、Beta审核联系人四项都为空，betaAppLocalizations也为空；没有可复制的审核电话或反馈邮箱。已集中请求本应用联系人姓名、邮箱、国际格式电话和可公开的支持/反馈邮箱；不能把Expo提交配置里的Apple登录邮箱直接当作公开支持邮箱。
+
+参考App的支持和隐私URL均为ThumbNotes的Notion页面。此次页面正文未能读取，未确认其适用于一日一念，因此没有覆盖本应用自己的支持/隐私URL和披露；原已准备的本应用页面仍待补邮箱并完成公开访问核验。参考声明DOES_NOT_USE_THIRD_PARTY_CONTENT也未复制：本应用两张UI参考图的商业发行事实须独立核对。
+
+地区选中只表示分发意向，不表示已获当地销售资格。源App及一日一念的德国等欧盟地区均返回TRADER_STATUS_NOT_PROVIDED，地区经营者资料仍待补齐；中国大陆、越南等适用资质也未由本次复制确认。正式App Review及外部TestFlight均未提交。
+
+执行与独立读回摘要为 artifacts/mobile-verification/thumbnote-publisher-applied.json、thumbnote-publisher-readback.json。此前14:38核查中“版权、价格、地区待定”的部分已由本节更新；联系人、隐私发布、产品素材权利、最终新构建及资料一致性仍未完成。
+
+## 2026-10-13 联系人与 Notion 页面准备
+
+用户确认正式审核与公开支持/反馈共用 heliosthu@163.com，并提供 He Li 的国际格式审核电话。15:21已实际保存并读回核对本应用的正式 App Review 联系人、Beta Review 联系人、两处审核说明和中文 TestFlight 反馈邮箱；联系人姓名为He Li，电话仅提交给Apple，不保存在仓库、页面或状态摘要中。中文betaAppLocalization ID为00abd1ab-e16a-411e-a47a-b5d04ca9d217。
+
+此前联系人空值导致无法保存审核备注的问题已解除。新说明按当前源码的今日场景、心愿加号、小天地、我的隐私/支持入口编写，删除了“不存在用户分享”的错误披露；它面向待构建的新版本，不能把旧build4当作已经包含新流程和小组件的包。没有提交App Review、Beta Review或邀请测试者。
+
+公开邮箱已加入 packages/app/src/legal-content.ts；生效日期改为2026-10-13。App内离线隐私/支持、已有静态站点生成文件以及Notion待创建页面使用同一正文。隐私补充桌面小组件仅使用本机缓存、不展示心愿全文的说明，支持步骤与当前今日场景入口一致。
+
+两份Notion正文为 store/notion/privacy.zh-Hans.md、support.zh-Hans.md；来源可通过 `npm run mobile:legal:notion` 重建。store/notion/pages.json记录本应用身份及创建/公开访问状态；Notion尚未安装连接，pageId和publicUrl均为空，不能声称页面已创建或把本地文件当作商店URL。已请求用户安装并连接Notion、授权存放页面的工作区；连接后先检查同名页面避免重复，再创建、核验正文和匿名访问，最后填本应用privacyPolicyUrl、supportUrl及TestFlight隐私URL。
+
+更新联系人使用 `npm run mobile:store:contact`，由标准输入接收一行JSON（contactFirstName、contactLastName、contactEmail、contactPhone）。避免把电话写入已跟踪文件、公开文档或CI日志；脚本拒绝缺失字段/无效国际电话，对Windows输入BOM和格式错误做处理，错误信息不输出联系人原文。此次读取确认与状态摘要为 artifacts/mobile-verification/app-store-contact-status.json，只保存ID和字段完成状态。
+
+15:23本地检查确认两份页面和静态HTML含公开邮箱、无审核电话或发布准备占位；无效联系人输入不会打印原文，Windows双BOM输入可进入字段校验。检查结果为 artifacts/mobile-verification/contact-and-legal-checks.json。首次Web构建与移动类型检查因另一会话正在编写的bai-indigo-cloth场景缺少返回值而失败；该会话随后补全代码，复查 `npm run build`、`npm run typecheck -w @wbr/mobile` 均通过，本轮未修改该场景。最终完整发布验证仍需在新功能和页面地址落实后执行。
+
+Notion公开页面创建完成后需确认公开发布状态和实际对外URL，匿名访问应能看到正确正文和联系邮箱；工作区内编辑链接不能代替公开链接。当前官方发布入口见[Notion公开页面说明](https://www.notion.com/help/public-pages-and-web-publishing)。本次结束前再次查询连接状态仍为未安装，未创建远程Notion页面，商店两个URL仍待填入。
+
+## 2026-10-13 Notion 公开发布与商店 URL 保存完成
+
+用户完成Notion插件连接，并在Codex内置浏览器登录Chelio Helio的工作空间后，已实际创建、公开发布两份本应用页面。Notion页ID分别为隐私3f8b5fdf-16fd-8107-82ff-cfc4590d8b42、支持3f8b5fdf-16fd-8140-83a1-d4d5db26c704，未覆盖ThumbNotes旧页面。完整正文及已确认的公开邮箱均读回核对；生效日期显示为固定2026-10-13，审核电话未进入页面。没有发邀请或扩大工作区成员权限。
+
+| 用途 | 已发布并保存的公开链接 |
+| --- | --- |
+| App Store 隐私政策 | https://alive-resonance-9ba.notion.site/3f8b5fdf16fd810782ffcfc4590d8b42 |
+| App Store 技术支持 | https://alive-resonance-9ba.notion.site/3f8b5fdf16fd814083a1d4d5db26c704 |
+| TestFlight 隐私政策 | 与本应用上述隐私链接一致 |
+
+Notion发布面板显示公开域名/页面路径、“取消发布”和“查看网站”；公开Site查看器显示完整正文和邮箱，没有登录拦截。两个URL的不带Cookie HTTP请求均返回200；HTTP响应为Notion前端壳，实际正文由公开Site浏览器页面核验。web文本抓取工具未能读取Notion页面，没有将该工具失败误判为页面私有，也没有宣称完成独立无Cookie浏览器会话的测试。
+
+16:48:28（北京时间，2026-10-13T08:48:28.454Z）通过本应用Apple API实际保存并逐项读回验证：appInfoLocalization 7c6b226e-457e-4aab-8b9c-3a043c590412的privacyPolicyUrl、versionLocalization b2c0e7de-2fdd-40e3-b1f2-dfa5adb96f2e的supportUrl、betaAppLocalization 00abd1ab-e16a-411e-a47a-b5d04ca9d217的privacyPolicyUrl。目标App仍为6821271597、com.helio.cyberbless，版本1.0.0；没有关联或替换构建、发布App Privacy答案、提交App Review或Beta Review。
+
+页面身份、公开状态及URL保存在store/notion/pages.json；Apple实际保存摘要为store/notion/app-store-link-status.json。重复保存同一已核验的链接使用 `npm run mobile:store:legal`，脚本先检查本应用身份、页面ID、公开访问和正文核验标记，然后只更新这三个URL字段，不触发审核或上架。公开截图保存在 artifacts/store-evidence/notion-privacy-public-20261013.jpg、notion-support-public-20261013.jpg。
+
+此前“Notion未连接、页面未创建、URL待填写”的记录已由本节更新为完成。正式提审仍需完成最终新构建与截图一致性、App Privacy答案最终发布、素材权利和适用地区资格核对。iOS仍保留手动公开发布。
 
 2026-10-11 已整合 origin/master 的 588e30a，包含 PR #20 的三入口场景、PR #21 的今日日常集合／心愿祈愿容器选择，以及 PR #22 的今日主仪式／已收藏三选一祈愿。移动发布修改已保留，包括新场景参数和离线法务入口。本记录下面的 iOS4／Android3 安装包均在这些产品改动之前生成，尚未包含 #20、#21、#22；后续需重新构建安装包，并同步更新截图和审核说明。源码合并与生产导出不会更新现有 TestFlight 或 Android 安装包。
 
@@ -41,7 +129,7 @@ App Store 草稿 version ID `84ab28c1-b40b-4d0c-ade2-d3e02d2eaf62`，状态 PREP
 | 名称/副标题 | 一日一念 / 心愿记录与轻松日常仪式，已保存 |
 | 分类 | 生活（LIFESTYLE），已保存 |
 | 描述/关键词/推广文本 | store/ios/zh-Hans.json，已保存到本应用草稿 |
-| 截图 | 五张1206×2622 PNG，无alpha；官方API上传并处理COMPLETE |
+| 截图 | 2026-10-13 补齐八个 iPhone 组，每组五张、共40张无alpha PNG；全部官方API处理COMPLETE，重复运行验证无重复资源；详见 iphone-screenshots.md |
 | 年龄问卷 | store/ios/age-rating.json，已保存；因含日常放松/自我照顾主题，healthOrWellnessTopics=true；没有医疗建议、赌注、广告、聊天或公开UGC |
 | 商店当前分级 | UI显示9+（172个地区）、越南12+，韩国全部；低于OS26的旧分级全球4+（区域有例外）。API旧字段FOUR_PLUS不能代替当前UI的9+ |
 | 登录 | 不需要，已选；无需审核账号 |
@@ -53,7 +141,9 @@ App Store 草稿 version ID `84ab28c1-b40b-4d0c-ade2-d3e02d2eaf62`，状态 PREP
 | 正式构建关联 | 尚未关联，待最终法务内容重建、处理和完整摘要核对后选择对应Apple build |
 | 发布方式 | MANUAL已保存；不自动公开发布 |
 
-截图来自本项目生产Web界面的Chrome浏览器移动视口，使用CDP截图生成实际像素，包含今日、心愿、木鱼交互、小天地、离线隐私页。示例心愿为本轮测试文字，没有真机或模拟器状态栏。未使用Historia截图，也没有拼接或假设备框。源文件保存在 store/screenshots/ios/zh-Hans，上传清单在 store/ios/zh-Hans.json。API截图集ID `c57bd4cf-09fa-40f0-81c8-55c596eac4cc`，类型APP_IPHONE_61，五项COMPLETE。Apple现行要求必需的Dynamic Island medium显示尺寸包含1206×2622，见[官方规格](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/)。后续真机安全区验收后，可替换为原生实际截图。
+原五张截图来自本项目生产Web界面的Chrome浏览器移动视口，使用CDP截图生成实际像素，包含今日、心愿、木鱼交互、小天地、离线隐私页。示例心愿为测试文字，没有真机或模拟器状态栏。未使用Historia截图，也没有拼接或假设备框。源文件保存在 store/screenshots/ios/zh-Hans。原API截图集ID `c57bd4cf-09fa-40f0-81c8-55c596eac4cc`、类型APP_IPHONE_61的五项及原资源ID保持不变。
+
+2026-10-13 新增其余七个 iPhone API 组各五张，共新增35张，总计八组40张；全部达到COMPLETE。新增素材来自2026-10-10生产源码归档的实际Web页面，在Edge中按不同视口重新截取；已检查图片格式、长度、哈希及缩略总览。追加的是同一旧版页面系列，当前新场景/小组件功能仍需与最终新构建同步更新后再提审。规格、像素和来源清单为store/ios/screenshot-sizes.json、store/screenshots/ios-sizes-manifest.json，八组Apple资源ID与状态保存在store/ios/screenshot-upload-state.json；[捕获和重复上传说明](iphone-screenshots.md)记录了具体尺寸、边界和命令。Apple当前Dynamic Island medium接受1206×2622，见[官方规格](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/)。Duo暂不在当前API类型中，未上传尺寸不匹配的图片；后续真机安全区验收后可按实际发布版本更新截图。
 
 审核操作：冷启动 → 今日/许个愿 → 输入保存 → 木鱼轻敲12次 → 收藏 → 心愿/小天地查记录 → 退出重开 → 我的隐私与帮助。仪式是娱乐、创意与日常放松，不承诺实现愿望、宗教效力或健康改善。仪式文字可以由用户主动系统分享或复制；没有开发者分享服务器。当前商店已有旧备注含“不存在用户分享”的不准确句子，修正版已准备，必须在正式提审前替换；联系人为空时API和网页保存均被必填校验拒绝。
 

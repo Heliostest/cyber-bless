@@ -1,0 +1,12 @@
+{
+  "appId": "6821271597",
+  "bundleIdentifier": "com.helio.cyberbless",
+  "productId": "com.helio.cyberbless.full_unlock",
+  "name": "一日一念永久解锁",
+  "inAppPurchaseType": "NON_CONSUMABLE",
+  "reviewNote": "一次性非消耗型购买，永久解锁本应用完整体验。入口为‘我的 → 购买与恢复’，提供原生商店购买和恢复购买；无自有账号、订阅或外部支付。首发体验范围和最终审核步骤将在版本提交前补齐。",
+  "basePrice": null,
+  "freeExperiencePolicy": null,
+  "firstReleaseConfirmed": true,
+  "localizations": [{ "locale": "zh-Hans", "name": "一日一念永久解锁", "description": "永久解锁完整体验，一次购买，没有订阅。" }]
+}

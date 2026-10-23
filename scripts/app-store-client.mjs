@@ -13,14 +13,22 @@ export async function getOwnAppStoreClient() {
   const token = `${payload}.${sign('sha256', Buffer.from(payload), { key: key.keyP8, dsaEncoding: 'ieee-p1363' }).toString('base64url')}`;
   const sdkFetch = easSdk('Fetch.js').default;
   const fetch = async (url, options) => {
-    try { return await sdkFetch(url, options); }
+    try {
+      // ASC's official API is reachable directly while the EAS proxy transport can
+      // time out. Select one transport before sending; never retry a mutation.
+      const target = new URL(url);
+      if (target.protocol === 'https:' && target.hostname === 'api.appstoreconnect.apple.com')
+        return await globalThis.fetch(url, { method: options?.method, headers: options?.headers,
+          body: options?.body, redirect: 'error', signal: AbortSignal.timeout(options?.timeout ?? 45000) });
+      return await sdkFetch(url, options);
+    }
     catch (error) {
       if (error.response) return error.response;
       throw Error('App Store Connect network request failed; no credentials logged');
     }
   };
   async function request(path, options = {}) {
-    if (!path.startsWith('/v1/')) throw Error('Only official App Store Connect API paths are supported');
+    if (!/^\/v[12]\//.test(path)) throw Error('Only official App Store Connect API paths are supported');
     const response = await fetch(`https://api.appstoreconnect.apple.com${path}`, { method: options.method ?? 'GET', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, ...(options.body ? { body: JSON.stringify(options.body) } : {}), timeout: 45000 });
     if (response.status === 204) return {};
     const body = await response.json();

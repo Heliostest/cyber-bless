@@ -1,5 +1,7 @@
 # 一日一念移动应用
 
+2026-10-13 首发范围已改为“体验后永久买断”。新增实现、SDK 补丁版本、真实验证与待确认项见 [mobile-paid-unlock.md](mobile-paid-unlock.md)。当前买断实现仍在隔离工作目录，尚未完成体验门槛、真实购买测试和新构建；下列10月10日构建记录属于旧免费包。
+
 2026-10-10 已实际完成独立 EAS 配置、生产导出、干净云归档验证和四种云构建。iOS 商店包已上传并由 Apple 处理成功；正式 App Review、外部 Beta Review 和 Play internal 尚未提交，具体状态见 [store-release.md](store-release.md)。参考 Historia 仓库只读，未修改或复用其应用身份。
 
 ## 架构与运行时
@@ -30,11 +32,11 @@ Expo 官方 `expo install --check` 已通过。实际开发 HTML 仍存在原生
 
 本应用保存键为 `cyber-bless:personal:v1`；场景缓存元数据使用 `wbr:scene-content:v1:`。Native AsyncStorage 和浏览器 localStorage 各自独立。同一平台更新沿用既有键和 schema v1；旧 v1 存档缺少 sceneRecords 时补空数组。读取失败、JSON 损坏、格式不支持或心愿关联不完整时保留原始记录，禁用未载入状态下的操作，不以空白存档覆盖。写入按队列串行执行，原生写入确认后才显示保存成功；失败有重试。当前没有浏览器到 App 或跨设备导入、开发者账号与云同步。
 
-`scripts/prepare-app-assets.mjs` 是 Web、Expo 本地启动与 `eas-build-post-install` 共用的资源准备入口。两个 public 目录均为生成目录，不能存放手工创作文件。该脚本生成内容清单，复制九个离线文件，并写入长度和 SHA-256 清单 `wbr-assets.json`：两张产品 UI 图片、Noto Sans SC、三个 Nunito 字体、两份 OFL 许可证，以及内嵌贴图的 `woodfish/bundled-v1/woodfish.glb`。木鱼约 1.68 MiB；旧 Blender 源模型和考据图片不上传。其他程序化场景和音效编译进 JS；当前没有外部模型、字体或音频必需下载。
+`scripts/prepare-app-assets.mjs` 是 Web、Expo 本地启动与 `eas-build-post-install` 共用的资源准备入口。两个 public 目录均为生成目录，不能存放手工创作文件。该脚本生成内容清单，复制12个离线文件，并写入长度和 SHA-256 清单 `wbr-assets.json`：两张产品 UI 图片、Noto Sans SC、三个 Nunito 字体、两份 OFL 许可证、内嵌贴图的 `woodfish/bundled-v1/woodfish.glb`、两份环境HDR及其许可证。木鱼约 1.68 MiB；旧 Blender 源模型和考据图片不上传。其他程序化场景和音效编译进 JS；当前没有外部模型、字体或音频必需下载。
 
 资源 URL 在 Web 与 Expo DOM 中共用解析方式。`EXPO_PUBLIC_SCENE_CATALOG_URL` 和 `EXPO_PUBLIC_SCENE_MANIFEST_URL` 是可选线上功能；本轮 preview/production 未配置它们。以后开启时，未下载的线上场景需要网络，HTTPS 下载后按清单验证和缓存，并须重新审计服务端日志及隐私披露。浏览器第一次访问依赖 Web 服务器；本项目没有把浏览器预览验收当作离线 App 验收。
 
-“我的”提供离线可读隐私与帮助入口。共享法务源为 `packages/app/src/legal-content.ts`，`mobile:legal:prepare` 从同一源生成支持/隐私站点。公开支持邮箱尚未提供，当前部署是私有审阅稿，不可作为已完成的商店 URL。两张用户提供的 UI 图的商业发行权尚待确认，详情见 assets/README.md。
+“我的”提供离线可读隐私与帮助入口。共享法务源为 `packages/app/src/legal-content.ts`，`mobile:legal:prepare` 从同一源生成支持/隐私站点。公开支持邮箱已确认使用heliosthu@163.com，本应用Notion隐私及支持页已公开并保存到App Store Connect，详情见store-release.md。两张UI图已获开发者明确商业发行权确认，见assets/README.md。
 
 ## 独立应用身份与凭据
 

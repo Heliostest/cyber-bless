@@ -37,6 +37,8 @@ assets/*
 !assets/reference-ui/**
 !assets/fonts
 !assets/fonts/**
+!assets/environments
+!assets/environments/**
 !assets/widgets
 !assets/widgets/**
 !assets/woodfish

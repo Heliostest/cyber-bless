@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "appId": "6821271597",
+  "bundleIdentifier": "com.helio.cyberbless",
+  "provider": "Notion",
+  "status": "public_urls_saved_to_apple",
+  "publicSupportEmail": "heliosthu@163.com",
+  "publisher": "He Li",
+  "pages": [
+    {
+      "kind": "privacy",
+      "title": "一日一念 · 隐私政策",
+      "source": "store/notion/privacy.zh-Hans.md",
+      "pageId": "3f8b5fdf-16fd-8107-82ff-cfc4590d8b42",
+      "workspaceUrl": "https://app.notion.com/p/3f8b5fdf16fd810782ffcfc4590d8b42",
+      "contentReadbackVerified": true,
+      "publicUrl": "https://alive-resonance-9ba.notion.site/3f8b5fdf16fd810782ffcfc4590d8b42",
+      "publishedStateVerified": true,
+      "anonymousHttpStatus": 200,
+      "publicRenderVerified": true,
+      "anonymousAccessVerified": true
+    },
+    {
+      "kind": "support",
+      "title": "一日一念 · 技术支持",
+      "source": "store/notion/support.zh-Hans.md",
+      "pageId": "3f8b5fdf-16fd-8140-83a1-d4d5db26c704",
+      "workspaceUrl": "https://app.notion.com/p/3f8b5fdf16fd814083a1d4d5db26c704",
+      "contentReadbackVerified": true,
+      "publicUrl": "https://alive-resonance-9ba.notion.site/3f8b5fdf16fd814083a1d4d5db26c704",
+      "publishedStateVerified": true,
+      "anonymousHttpStatus": 200,
+      "publicRenderVerified": true,
+      "anonymousAccessVerified": true
+    }
+  ],
+  "appStoreSavedAt": "2026-10-13T08:48:28.454Z"
+}

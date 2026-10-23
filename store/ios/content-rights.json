@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "appId": "6821271597",
+  "bundleIdentifier": "com.helio.cyberbless",
+  "contentRightsDeclaration": "USES_THIRD_PARTY_CONTENT",
+  "copyright": "Copyright (c) 2026 He Li",
+  "developerConfirmation": {
+    "date": "2026-10-13",
+    "referenceImagesMayBeDistributed": true,
+    "source": "Developer confirmed the two supplied UI images were self-made or generated for this project and may be used for distribution."
+  },
+  "statement": "一日一念由个人开发者 He Li 制作。开发者确认，两张随包 UI 图片 wishes.png 和 rituals.png 为自行制作或为本项目生成，可用于本应用发行。应用使用的 Noto Sans SC 与 Nunito 字体遵循 SIL Open Font License 1.1；Kenney Nature Kit 模型与 Poly Haven 天空素材遵循 CC0 许可，相关许可证及来源记录随资源保留。第三方素材的权利归其原权利人或按相应许可处理，本应用不声称独占这些素材。设计研究目录中的第三方参考照片不作为运行时素材打入应用。",
+  "sources": [
+    "assets/README.md",
+    "assets/fonts/OFL.txt",
+    "assets/fonts/nunito-OFL.txt",
+    "assets/environments/LICENSE.txt"
+  ],
+  "confirmedImages": [
+    { "file": "wishes.png", "bytes": 1690431, "sha256": "087b518fd04fa959cb11e00a1cfcb9d7e8a3914ee7e24c7acb00f2fabc825076" },
+    { "file": "rituals.png", "bytes": 1680555, "sha256": "c0fcfe0a3d7d9eaf99717b7fd08dc47c4796b83b4289b970ebc999495e6fef69" }
+  ],
+  "dsaDeveloperFacts": {
+    "date": "2026-10-13",
+    "individualDeveloper": true,
+    "currentVersionFree": true,
+    "advertising": false,
+    "currentVersionInAppPurchases": false,
+    "consideringPaidPermanentUnlock": true,
+    "source": "Developer clarified plans for payment after about ten minutes or a defined number of rounds; the earlier purely non-commercial assessment is superseded.",
+    "intendedAppSpecificDeclaration": "TRADER",
+    "savedToApple": false,
+    "firstReleasePaymentScopeConfirmed": true
+  }
+}

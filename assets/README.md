@@ -25,7 +25,7 @@ python -m fontTools.subset NotoSansSC.ttf --output-file=noto-sans-sc.woff2 --fla
 
 `packages/app/src/assets.ts` 的 `fontStyles` 以 `font-family: 'Nunito'` 声明这三个字重，`unicode-range: U+0000-00FF`、`font-display: swap`，排在 `--font-round` 字体栈首位；中文和其他字符照常落到后面的系统圆体，最后是 Blessing Sans。界面用到的其他字重按浏览器的字重匹配取最近一档（400 → 500、600 → 700、800 → 900），`font-synthesis: none` 不会伪造粗体。
 
-Web 和 Expo 启动/构建前由 `scripts/prepare-app-assets.mjs` 复制实际使用的九个图片、字体、许可证和模型文件到各自生成的 public 目录，`EXPO_BASE_URL` 解析嵌入资源位置。基础资源无需外部网络。`npm run mobile:verify` 校验两端导出资源与源文件的长度和 SHA-256。两张用户提供的 UI 图片用于当前产品；商业发行权仍须由提供者确认，字体 OFL 许可证已经随包保存。
+Web 和 Expo 启动/构建前由 `scripts/prepare-app-assets.mjs` 按实际资源清单复制图片、字体、许可证和模型文件到各自生成的 public 目录，`EXPO_BASE_URL` 解析嵌入资源位置。基础资源无需外部网络。`npm run mobile:verify` 校验两端导出资源与源文件的长度和 SHA-256。2026-10-13，开发者确认两张 UI 图片为自行制作或为本项目用 AI 生成，可以用于本应用发行；该确认不表示取得第三方开源素材的独占权利。声明及 Apple 保存记录见 `store/ios/content-rights.json`、`store/ios/content-rights-status.json`；字体 OFL 许可证和环境素材 CC0 来源记录继续保留。
 
 ## 当前 Blender 木鱼（2026-09-21）
 

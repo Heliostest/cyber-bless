@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-10-13T09:33:18.780Z",
+  "appId": "6821271597",
+  "bundleIdentifier": "com.helio.cyberbless",
+  "contentRightsDeclaration": "USES_THIRD_PARTY_CONTENT",
+  "verified": true,
+  "developerConfirmationDate": "2026-10-13",
+  "imageEvidence": [
+    {
+      "file": "wishes.png",
+      "bytes": 1690431,
+      "sha256": "087b518fd04fa959cb11e00a1cfcb9d7e8a3914ee7e24c7acb00f2fabc825076"
+    },
+    {
+      "file": "rituals.png",
+      "bytes": 1680555,
+      "sha256": "c0fcfe0a3d7d9eaf99717b7fd08dc47c4796b83b4289b970ebc999495e6fef69"
+    }
+  ],
+  "appReviewSubmittedByThisRun": false,
+  "privacyResponsesPublishedByThisRun": false,
+  "dsaSavedByThisRun": false
+}

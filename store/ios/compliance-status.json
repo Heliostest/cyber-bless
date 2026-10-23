@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-13T11:34:13Z",
+  "appId": "6821271597",
+  "bundleIdentifier": "com.helio.cyberbless",
+  "privacy": {
+    "responsesPublished": true,
+    "verificationRecordedAt": "2026-10-13T10:00:47Z",
+    "answer": "DATA_NOT_COLLECTED",
+    "source": "App Store Connect browser UI after reload",
+    "publishedLabel": "3 分钟前由力 何发布",
+    "privacyPolicyUrl": "https://alive-resonance-9ba.notion.site/3f8b5fdf16fd810782ffcfc4590d8b42",
+    "developerConfirmedFinalCommitment": true,
+    "exactPublishedAt": null,
+    "evidence": "artifacts/store-evidence/app-privacy-published-20261013.jpg"
+  },
+  "dsa": {
+    "intendedAppDeclaration": "TRADER",
+    "saved": false,
+    "state": "EMAIL_VERIFICATION_REQUIRED",
+    "publicContactUseAuthorized": true,
+    "firstReleasePaidUnlockConfirmed": true,
+    "consideringPaidPermanentUnlock": true,
+    "contactFormPrepared": true,
+    "contactDataEntered": true,
+    "verificationCompleted": false,
+    "evidence": "artifacts/store-evidence/dsa-email-verification-20261013.jpg",
+    "reason": "Developer authorized public use of current Apple postal address and supplied review phone/email. Contact form advanced successfully; Apple sent an email code and requires user verification. No completed trader verification or saved declaration is claimed."
+  },
+  "freeAppAgreement": {
+    "uiStatus": "有效",
+    "effectiveDatesDisplayed": "2026年10月9日 - 2027年4月7日"
+  },
+  "paidAppAgreement": {
+    "lastUIStatus": "新",
+    "termsOpenedForReview": true,
+    "acceptedByThisRun": false,
+    "actionTimeConfirmationPending": true,
+    "bankAndTaxInformationVerified": false,
+    "evidence": "artifacts/store-evidence/paid-agreement-confirmation-20261013.jpg"
+  },
+  "paidFirstRelease": {
+    "scopeConfirmed": true,
+    "freeExperiencePolicyConfirmed": false,
+    "basePriceConfirmed": false,
+    "productId": "com.helio.cyberbless.full_unlock",
+    "ascProductId": "6822274692",
+    "ascDraftVersionId": "88375b0a-5ef9-4857-9fde-6d8664b0ce88",
+    "nativeBillingPlumbingImplemented": true,
+    "accessGateCompleted": false,
+    "realSandboxPurchasesVerified": false,
+    "newSignedBuildCreated": false,
+    "finalBillingPrivacyAuditCompleted": false,
+    "evidence": "artifacts/store-evidence/iap-localization-saved-20261013.jpg"
+  },
+  "reviewSubmittedByThisRun": false,
+  "publiclyReleasedByThisRun": false
+}

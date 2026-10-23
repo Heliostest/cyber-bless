@@ -19,3 +19,8 @@ apps/mobile-expo/android/
 apps/mobile-expo/public/
 apps/cyber-bless/public/
 design/woodfish/*.blend[0-9]
+
+# Generated iPhone screenshot variants and capture manifest.
+# Keep original screenshots, capture configuration, scripts, and release receipts.
+/store/screenshots/ios/zh-Hans/iphone-*/*.png
+/store/screenshots/ios-sizes-manifest.json

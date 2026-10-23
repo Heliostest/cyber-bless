@@ -840,6 +840,10 @@
 - [银锁寄安](content/traditions/chinese-longevity-lock.md)
 - [蹄铁护家](content/traditions/horseshoe-doorway-luck.md)
 
+### 补充集成来源（2026-10-24）
+
+- [振槌寄愿](content/traditions/uchide-wishing-mallet.md)
+
 ### 比较
 
 749. [比较总览](content/traditions/comparative-overview.md)

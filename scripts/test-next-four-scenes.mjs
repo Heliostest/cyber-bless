@@ -27,13 +27,13 @@ if(ids.includes('malawi-sansi')){
 }
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const craftDeltas={
+  'uchide-wishing-mallet': [[0,-60],[60,0],[0,60]],
   'nanakusa-gayu': [[-60,0],[0,-60],[0,60]],
   'brat-bride-cloth': [[0,-60],[0,-60],[0,60]],
   'korean-sotdae': [[0,-60],[0,-60],[0,60]],
   'japanese-kadomatsu': [[0,-60],[60,0],[0,60]],
   'pucara-rooftop-bulls': [[0,-60],[0,-60],[0,60]],
   'chinese-longevity-lock': [[0,-60],[60,0],[0,60]],
-  'uchide-wishing-mallet': [[0,-60],[60,0],[0,60]],
   'alasita-miniature-house': [[0,-60],[60,0],[0,60]],
   'yusheng-lohei': [[0,60],[0,-60],[0,60]],
   'kitano-nadeushi': [[0,-60],[60,0],[0,60]],
@@ -288,7 +288,6 @@ for(const width of process.env.WBR_RETURN_ONLY?[]:widths)for(const id of ids){
   // On narrow canvases the upper-left corner can be a valid extended upward drag.
   // Sotdae's explicit invalid path stays horizontal, outside its upward acceptance cone.
   const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,['korean-sotdae','japanese-kadomatsu','pucara-rooftop-bulls','chinese-longevity-lock'].includes(id)?from[1]:box.y+3]
-  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,id==='uchide-wishing-mallet'?from[1]:box.y+3]
   const input=pointers.get(page)
   await input.down(wrong);await input.move(from);await input.up()
   await input.down(from);await input.move(wrong);await input.up()

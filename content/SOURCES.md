@@ -4208,3 +4208,7 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 振槌寄愿（2026-10-23）
+
+打出小槌的摇槌寄愿片段，见[专卡](traditions/uchide-wishing-mallet.md)及[研究](../docs/research/2026-10-23-uchide-wishing-mallet.md)。实际读射水神社2019-02-04活动正文及西野神社宝尽纹样说明，区分当代活动与传说信念。木漆造型、绳穗、双托与三手势属产品安排，非击打／撒豆／完整节分祭，不保证现实愿望成真。

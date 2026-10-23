@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "86a522de7e51430e2d551af9161b48b144046e72a0c8e30a338f7c48c21a75eb",
+  "revision": "570d8fb9300e8665a47fdd4f77ff314d1a0d09ee8320660b3f817f3c0bf03650",
   "scenes": [
+    {
+      "id": "uchide-wishing-mallet",
+      "engine": "uchide-wishing-mallet@1",
+      "small": {
+        "file": "uchide-wishing-mallet-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "8f74039c9051fc48c3674e82737414ebab3d9a3e4d578d466675b4efcfc80d38",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "uchide-wishing-mallet-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "30c799eee2b568230a4bdd25e5b5025a8dc3d13e8b547e27b257c0729d3c9efb",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "uchide-wishing-mallet-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "f06127987cddfe76c0d6d0654fc3cc1b1f30e1b266563ede858745c763850e47",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "alasita-miniature-house",
       "engine": "alasita-miniature-house@1",

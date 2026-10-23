@@ -83,6 +83,7 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 }
 
 export const BLESSING_SCENE_IDS = [
+  "uchide-wishing-mallet",
   "yusheng-lohei",
   "hiiragi-iwashi",
   "tamagushi-offering",
@@ -224,6 +225,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  {id:"uchide-wishing-mallet",title:"振槌寄愿",engine:"uchide-wishing-mallet@1",revision:"bundled",manifestUrl:"",traditionSlug:"uchide-wishing-mallet",narrative:sceneNarratives["uchide-wishing-mallet"]},
   { id:"alasita-miniature-house",title:"微屋寄愿",engine:"alasita-miniature-house@1",revision:"bundled",manifestUrl:"",traditionSlug:"aymara",narrative:sceneNarratives["alasita-miniature-house"] },
   { id:"yusheng-lohei",title:"鱼生捞起",engine:"yusheng-lohei@1",revision:"bundled",manifestUrl:"",traditionSlug:"yusheng-lohei",narrative:sceneNarratives["yusheng-lohei"] },
   { id:"hiiragi-iwashi",title:"柊鰯守门",engine:"hiiragi-iwashi@1",revision:"bundled",manifestUrl:"",traditionSlug:"hiiragi-iwashi",narrative:sceneNarratives["hiiragi-iwashi"] },

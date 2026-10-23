@@ -20,6 +20,7 @@ describe('sceneRegistry', () => {
       'chinese-rattle-drum',
       'ghanaian-oware',
       'mexican-tortilla-press',
+      'uchide-wishing-mallet',
       'alasita-miniature-house',
       'yusheng-lohei',
       'hiiragi-iwashi',

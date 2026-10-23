@@ -15,6 +15,7 @@ export type SceneIntention = Readonly<{
 // Reviewed against the current scene actions and their bounded cultural contexts.
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
+  'uchide-wishing-mallet': {kind:'blessing',label:'为心愿寄一份祝福',action:'托起小槌，轻轻摇动寄愿，再放回木托。',optionalWish:false},
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
   'alasita-miniature-house': { kind:'wish',label:'寄一份安居的心愿',optionalWish:false,action:'提起、转看微型小屋，再将这份愿景安放好。' },
   'yusheng-lohei': {

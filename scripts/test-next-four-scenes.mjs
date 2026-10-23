@@ -27,6 +27,7 @@ if(ids.includes('malawi-sansi')){
 }
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const craftDeltas={
+  'uchide-wishing-mallet': [[0,-60],[60,0],[0,60]],
   'alasita-miniature-house': [[0,-60],[60,0],[0,60]],
   'yusheng-lohei': [[0,60],[0,-60],[0,60]],
   'hiiragi-iwashi': [[0,-60],[-60,0],[0,-60]],
@@ -261,7 +262,7 @@ async function wrongCraftGesture(page,id,step){
 }
 for(const width of process.env.WBR_RETURN_ONLY?[]:widths)for(const id of ids){
   const page=await pageAt(width);await catalog(page);await open(page,id)
-  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,box.y+3]
+  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,id==='uchide-wishing-mallet'?from[1]:box.y+3]
   const input=pointers.get(page)
   await input.down(wrong);await input.move(from);await input.up()
   await input.down(from);await input.move(wrong);await input.up()

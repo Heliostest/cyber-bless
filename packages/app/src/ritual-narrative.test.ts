@@ -191,6 +191,7 @@ describe("builtInScenes narratives", () => {
       "tibetan-water-bowls",
       "tibetan-wheel",
       "turkish-ebru-paper",
+      "uchide-wishing-mallet",
       "udo-undama",
       "uzbek-clay-bowl",
       "valencian-folding-fan",

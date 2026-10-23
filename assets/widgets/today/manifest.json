@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "86a522de7e51430e2d551af9161b48b144046e72a0c8e30a338f7c48c21a75eb",
+  "revision": "d97f7d901b5d9b696e94e91d6b8d4c7513579cc77450623e61507266f9f484ee",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -642,6 +642,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "8b570d6cfe6ab9b9f1a982e6636e158bf7d4db9d54d50ca0a7afc35713036de9",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "japanese-hamaya",
+      "engine": "japanese-hamaya@1",
+      "small": {
+        "file": "japanese-hamaya-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "be5a75df981cac5b479117da51ab65758c6d27264773c821434280c87461d813",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "japanese-hamaya-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "de8b8666d0ae96a73d8cb07ef33af017e7b5933fbe207810d32979987ce709b5",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "japanese-hamaya-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "6f457a7464de5013c6f59288387440552448d6fb032732df0fe17a39f71b342c",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

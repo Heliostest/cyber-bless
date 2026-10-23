@@ -4208,3 +4208,12 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 饰矢祈安 · 2026-10-23
+
+- https://www.jinjahoncho.or.jp/omairi/hamaya_kumade/
+- https://www.tanashijinja.or.jp/info/info/11850.html
+- https://samukawajinjya.jp/en/worship/charms.html
+- https://www.meijijingu.or.jp/faq/?ca=1
+
+实现者与独立审阅者均已实际读四条相关正文；正文定位与支持边界见专卡及研究记录，未声称看过来源图片。

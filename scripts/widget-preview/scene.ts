@@ -30,6 +30,7 @@ const completedPreviewProgress: Record<string, number> = {
   "bulgarian-survakane": 3,
   "lanna-sand-pagoda": 3,
   "chinese-fu-paper": 3,
+  "turkish-nazar-bead": 3,
   "balinese-canang-sari": 3,
   "fgs-buddha-bathing": 3,
   "mongolian-ovoo": 3,

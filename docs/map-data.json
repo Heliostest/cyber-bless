@@ -10918,5 +10918,20 @@
     "date_note": "2026为本次核查年，不是起源年或依据URL猜测的发表年。坐标为上海市代表点，对应所用公开习俗介绍，不指向应用木门、特定传承地或起源。",
     "confidence": "medium",
     "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/chinese-fu-paper.md"
+  },
+  {
+    "id": "turkish-nazar-bead",
+    "slug": "turkish-nazar-bead",
+    "title": "土耳其蓝玻璃护眼珠",
+    "grade": "C",
+    "region": "土耳其伊兹密尔地区",
+    "lat": 38.42,
+    "lon": 27.14,
+    "year_start": 2014,
+    "year_end": null,
+    "date_basis": "documented",
+    "date_note": "2014为所用İzmir省文化旅游局博物馆指南出版页标示年份，不是护眼珠起源年。坐标为伊兹密尔现代代表点，对应该指南和当代制作介绍，不指向应用原创木架或传统起源。",
+    "confidence": "medium",
+    "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/turkish-nazar-bead.md"
   }
 ]

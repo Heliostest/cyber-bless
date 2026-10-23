@@ -37,6 +37,7 @@ const profiles: Record<string, Profile> = {
   "bulgarian-survakane": {kind:"courtyard",floor:-.065},
   "lanna-sand-pagoda": {kind:"courtyard",floor:-.08},
   "chinese-fu-paper": {kind:"courtyard",floor:-.10},
+  "turkish-nazar-bead": {kind:"courtyard",floor:-.10},
   "setsubun-mamemaki": {kind:"courtyard",floor:-.065},
   "sternsinger-house-blessing": {kind:"courtyard",floor:-.065},
   "lam-tsuen-wishing-tree": {kind:"courtyard",floor:-.065},

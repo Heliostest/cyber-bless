@@ -825,6 +825,8 @@
 
 750. [春节门上贴福](content/traditions/chinese-fu-paper.md)
 
+750. [土耳其蓝玻璃护眼珠](content/traditions/turkish-nazar-bead.md)
+
 ## 赛博祈福 App（开发中）
 
 ### 产品研究草稿
@@ -854,3 +856,4 @@ npm run dev          # 根脚本 → cyber-bless（已带 --host）
 
 - 沙塔献幡 `lanna-sand-pagoda`：兰纳新年寺院沙塔旁插置纸竹长幡的修福片段；[场景说明](packages/scenes/src/lanna-sand-pagoda/README.md)、[来源核查](docs/research/2026-10-23-lanna-sand-pagoda.md)。
 - 贴福迎春 `chinese-fu-paper`：春节门上贴福迎纳家宅祝福的短片段；[场景说明](packages/scenes/src/chinese-fu-paper/README.md)、[来源核查](docs/research/2026-10-23-chinese-fu-paper.md)。
+- 蓝珠祈安 `turkish-nazar-bead`：蓝玻璃护眼珠安放于可见处、寄托日常避厄护佑心意的片段；[场景说明](packages/scenes/src/turkish-nazar-bead/README.md)、[来源核查](docs/research/2026-10-23-turkish-nazar-bead.md)。

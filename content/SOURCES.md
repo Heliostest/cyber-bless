@@ -4227,3 +4227,11 @@
 - 四条对应正文已实际阅读；正文定位、读取状态、朝向差异和产品边界见 content/traditions/chinese-fu-paper.md 及 docs/research/2026-10-23-chinese-fu-paper.md。
 ## 七草祈安（2026-10-23）
 农林水产省[人日与七草粥海报](https://www.maff.go.jp/hokuriku/safe/shokuiku/attach/pdf/poster_7-20.pdf)、[aff2017年12月正文](https://www.maff.go.jp/j/pr/aff/1712/characterinformation.html)；访问状态、料理参照与产品边界见[来源卡](traditions/nanakusa-gayu.md)与[核查记录](../docs/research/2026-10-23-nanakusa-gayu.md)。
+## 蓝珠祈安 · 2026-10-23
+- https://www.ktb.gov.tr/EN-98728/traditional-arts-using-glass.html
+- https://www.unesco-centerbg.org/en/2021/09/29/craftsmanship-practices-and-beliefs-of-nazar-boncugu-evil-eye-charms/
+- https://izmir.ktb.gov.tr/Eklenti/59076,izmir-muze-ve-orenyerleri-ingpdf.pdf?0=
+- https://kultur.org.tr/en/handicrafts-evil-eye-western-anatolia-izmir/
+- https://izmir.ktb.gov.tr/EN-240859/evil-eye-bead.html
+- 对应相关正文已实际阅读；PDF仅登记已读出版页与印刷34–35文字，图版截图跳转失败未登记已看。访问差异、机构身份及产品边界见 content/traditions/turkish-nazar-bead.md 和 docs/research/2026-10-23-turkish-nazar-bead.md。
+- 对应黑／浅蓝／白／深蓝圈和悬孔的已读馆藏正文：https://search.smb.museum/object/obj-3415491 ，https://museum.wales/collections/online/object/34cb0407-3c6f-3531-a138-498593068c0a/ 。两页实现者与独立者均已读，不能从馆藏取得地或尺寸推起源／独占。

@@ -55,6 +55,7 @@ describe('sceneRegistry', () => {
       'vietnamese-five-fruit-tray',
       'chinese-ruyi-scepter',
       'japanese-kumade',
+      'neapolitan-cornicello',
       'setsubun-mamemaki',
       'sternsinger-house-blessing',
       'lam-tsuen-wishing-tree',

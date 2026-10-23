@@ -46,6 +46,7 @@ const profiles: Record<string, Profile> = {
   "vietnamese-five-fruit-tray": {kind:"courtyard",floor:-.10},
   "chinese-ruyi-scepter": {kind:"courtyard",floor:-.10},
   "japanese-kumade": {kind:"courtyard",floor:-.10},
+  "neapolitan-cornicello": {kind:"courtyard",floor:-.12},
   "setsubun-mamemaki": {kind:"courtyard",floor:-.065},
   "sternsinger-house-blessing": {kind:"courtyard",floor:-.065},
   "lam-tsuen-wishing-tree": {kind:"courtyard",floor:-.065},

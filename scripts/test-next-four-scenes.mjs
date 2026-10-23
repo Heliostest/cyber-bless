@@ -62,6 +62,7 @@ const craftDeltas={
   'vietnamese-five-fruit-tray': [[60,0],[60,0],[60,0]],
   'chinese-ruyi-scepter': [[0,-60],[60,0],[0,60]],
   'japanese-kumade': [[60,0],[60,0],[60,0]],
+  'neapolitan-cornicello': [[60,0],[-60,0],[0,60]],
   'setsubun-mamemaki': [[60,0],[0,-60],[0,60]],
   'sternsinger-house-blessing': [[0,-60],[60,0],[0,60]],
   'lam-tsuen-wishing-tree': [[60,0],[60,0],[0,-60]],

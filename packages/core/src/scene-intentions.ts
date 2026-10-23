@@ -101,6 +101,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
   'vietnamese-five-fruit-tray': {kind:'blessing',label:'为新岁备一盘平安丰足',optionalWish:false,action:'依次安放橙、青苹果和梨，为春节祭祖备好果盘，留一份新岁平安的心愿。'},
   'chinese-ruyi-scepter': {kind:'blessing',label:'安放如意，寄一份顺遂好愿',optionalWish:false,action:'抬起如意，移近木座，轻轻放稳，寄一份顺遂与如愿的祝福。'},
   'japanese-kumade': {kind:'blessing',label:'装点熊手，寄一份招福好愿',optionalWish:false,action:'依次安放三枚金色饰片，装点熊手，寄托招福与事业顺遂的愿望。'},
+  'neapolitan-cornicello': {kind:'blessing',label:'备一份红角赠礼，寄托平安好愿',optionalWish:false,action:'将角形护符与祝愿卡放进礼盒，寄托所赠之人平安顺遂的愿望。'},
   'bulgarian-survakane': {
     kind: 'blessing', label: '新年问候，祝亲友健康', optionalWish: false,
     action: '提起彩枝，移到亲友背后，轻拍后收回，送上健康祝愿。',

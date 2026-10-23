@@ -4265,3 +4265,9 @@ Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](
 实现者与独立者实际读对应正文，支持范围、读取状态和产品三饰差异见专卡与研究。JFC只读封面，末页未取得，不作小判证据；不称馆藏或神社授与品复刻。
 ## 陶牛护家（2026-10-23）
 成对Toritos de Pucará陶牛屋顶陈设、护家与丰足信念，见[专卡](traditions/pucara-rooftop-bulls.md)及[研究](../docs/research/2026-10-23-pucara-rooftop-bulls.md)。已读MINCETUR登记4652及MNCP博物馆正文，PROMPERÚ综述补充器形；保留仪式容器及宗教背景，木板、承台和三段动作明确为产品安排，不保证现实护佑。
+## 红角赠福 · 2026-10-23
+- https://collection.sciencemuseumgroup.org.uk/objects/co108078/amulet-resembling-twisted-horn
+- https://catalogo.beniculturali.it/detail/DemoEthnoAnthropologicalHeritage/1500623730
+- https://sabap.na.it/elenco-ragionato-dei-principali-beni-di-interesse-demoetnoantropologico-della-citta-di-napoli/
+- https://www.uldericopinfildi.it/en/corni-2/
+读取状态及范围见专卡/研究；真实护佑与赠礼语境保留，礼盒/纸卡/三步/实心平底为产品。ICCD实现者已读，独立者本次访问失败；不把它记为双方已读，不复刻来源照片。

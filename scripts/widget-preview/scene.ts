@@ -40,6 +40,7 @@ const completedPreviewProgress: Record<string, number> = {
   "chinese-ruyi-scepter": 3,
   "japanese-kumade": 3,
   "neapolitan-cornicello": 3,
+  "spanish-twelve-grapes": 3,
   "balinese-canang-sari": 3,
   "fgs-buddha-bathing": 3,
   "mongolian-ovoo": 3,

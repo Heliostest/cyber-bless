@@ -59,6 +59,7 @@ export const sceneEngines = createSceneRegistry({
   "chinese-ruyi-scepter@1": () => import("./procedural-scene").then(m => m.proceduralEngine("chinese-ruyi-scepter")),
   "japanese-kumade@1": () => import("./procedural-scene").then(m => m.proceduralEngine("japanese-kumade")),
   "neapolitan-cornicello@1": () => import("./procedural-scene").then(m => m.proceduralEngine("neapolitan-cornicello")),
+  "spanish-twelve-grapes@1": () => import("./procedural-scene").then(m => m.proceduralEngine("spanish-twelve-grapes")),
   "setsubun-mamemaki@1": () => import("./procedural-scene").then(m => m.proceduralEngine("setsubun-mamemaki")),
   "sternsinger-house-blessing@1": () => import("./procedural-scene").then(m => m.proceduralEngine("sternsinger-house-blessing")),
   "lam-tsuen-wishing-tree@1": () => import("./procedural-scene").then(m => m.proceduralEngine("lam-tsuen-wishing-tree")),

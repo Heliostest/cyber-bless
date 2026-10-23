@@ -821,6 +821,7 @@
 750. [中国如意与吉祥祝愿](content/traditions/chinese-ruyi-scepter.md)
 750. [日本熊手与招福陈设](content/traditions/japanese-kumade.md)
 750. [那不勒斯角形护符赠礼](content/traditions/neapolitan-cornicello.md)
+750. [西班牙十二葡萄迎岁](content/traditions/spanish-twelve-grapes.md)
 
 ### 比较
 
@@ -868,3 +869,4 @@ npm run dev          # 根脚本 → cyber-bless（已带 --host）
 - 如意寄愿 chinese-ruyi-scepter：云头如意陈设与顺遂好愿；[场景说明](packages/scenes/src/chinese-ruyi-scepter/README.md)、[来源核查](docs/research/2026-10-23-chinese-ruyi-scepter.md)。
 - 熊手纳福 japanese-kumade：装饰熊手与招福好愿；[场景说明](packages/scenes/src/japanese-kumade/README.md)、[来源核查](docs/research/2026-10-23-japanese-kumade.md)。
 - 红角赠福 neapolitan-cornicello：角形护符赠礼与平安好愿；[场景说明](packages/scenes/src/neapolitan-cornicello/README.md)、[来源核查](docs/research/2026-10-23-neapolitan-cornicello.md)。
+- 葡萄迎岁 spanish-twelve-grapes：十二葡萄备盘与新年好愿；[场景说明](packages/scenes/src/spanish-twelve-grapes/README.md)、[来源核查](docs/research/2026-10-23-spanish-twelve-grapes.md)。

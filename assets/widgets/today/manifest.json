@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "7e4c51245a842b85dd52f2fe0fc369b6d9eec9bd5b0d0a3309e61e53d4aa9c68",
+  "revision": "e9a31efd1da9e50af959442f10ac753ce1646bf9125ad56bfa3843cec1a05894",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -5096,6 +5096,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "47a8420cdd1dde31c36407933213c43995874cd84f9845efd84da28cc18af54a",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "spanish-twelve-grapes",
+      "engine": "spanish-twelve-grapes@1",
+      "small": {
+        "file": "spanish-twelve-grapes-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "e915d3234642e77e76645f48f42a64d3c3ba216b7ae0e1b43bf59f448ac3d04c",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "spanish-twelve-grapes-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "3cb415af8d145afba9778047ad8cd6ce786110ee449ee120bcf4eb65061e24c4",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "spanish-twelve-grapes-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "21d95b661cfe7be877862df592593799332c6d1cb38d994092b464e05a6cb453",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

@@ -4271,3 +4271,7 @@ Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](
 - https://sabap.na.it/elenco-ragionato-dei-principali-beni-di-interesse-demoetnoantropologico-della-citta-di-napoli/
 - https://www.uldericopinfildi.it/en/corni-2/
 读取状态及范围见专卡/研究；真实护佑与赠礼语境保留，礼盒/纸卡/三步/实心平底为产品。ICCD实现者已读，独立者本次访问失败；不把它记为双方已读，不复刻来源照片。
+## 葡萄迎岁 · 2026-10-23
+- https://www.spain.info/en/discover-spain/new-years-eve-spain/
+- https://www.esmadrid.com/en/whats-on/new-years-eve-party-puerta-sol
+实际读取状态和支持范围见专卡与研究。真实传统是午夜随钟吃十二颗葡萄；本场只备盘，三盘/四颗分组与器形钟面均产品安排，无吞吃/报时/应验保证，不复刻来源图片。

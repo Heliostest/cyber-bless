@@ -4237,3 +4237,9 @@
 - 对应黑／浅蓝／白／深蓝圈和悬孔的已读馆藏正文：https://search.smb.museum/object/obj-3415491 ，https://museum.wales/collections/online/object/34cb0407-3c6f-3531-a138-498593068c0a/ 。两页实现者与独立者均已读，不能从馆藏取得地或尺寸推起源／独占。
 ## 窗布祈护（2026-10-23）
 Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](traditions/brat-bride-cloth.md)。已读国家博物馆策展正文与Dúchas PDF第6–7页；Schools地方网页转录为独立研究实际读取，主代理安全验证失败分别记录。访问状态与产品边界见[研究](../docs/research/2026-10-23-brat-bride-cloth.md)。
+## 饰矢祈安 · 2026-10-23
+- https://www.jinjahoncho.or.jp/omairi/hamaya_kumade/
+- https://www.tanashijinja.or.jp/info/info/11850.html
+- https://samukawajinjya.jp/en/worship/charms.html
+- https://www.meijijingu.or.jp/faq/?ca=1
+实现者与独立审阅者均已实际读四条相关正文；正文定位与支持边界见专卡及研究记录，未声称看过来源图片。

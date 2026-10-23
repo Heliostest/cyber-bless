@@ -94,6 +94,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
   'lanna-sand-pagoda': {kind:'blessing',label:'留一份新年修福的心意',optionalWish:false,action:'提起纸竹长幡，移到已堆好的沙塔旁，将竹杆插稳，留一份兰纳新年修福的心意。'},
   'chinese-fu-paper': {kind:'blessing',label:'留一份新年纳福的心意',optionalWish:false,action:'提起现成的福字纸，移到家门前，轻轻贴稳，留一份迎春纳福的心意。'},
   'turkish-nazar-bead': {kind:'blessing',label:'留一份避厄护佑的心意',optionalWish:false,action:'提起备好的护眼珠，移向木架，让挂环落稳，留一份避厄护佑的心意。'},
+  'japanese-hamaya': {kind:'blessing',label:'留一份家内平安的心意',optionalWish:false,action:'提起备好的饰矢，移向后方木托，轻轻落稳，留一份家内平安的心意。'},
   'bulgarian-survakane': {
     kind: 'blessing', label: '新年问候，祝亲友健康', optionalWish: false,
     action: '提起彩枝，移到亲友背后，轻拍后收回，送上健康祝愿。',

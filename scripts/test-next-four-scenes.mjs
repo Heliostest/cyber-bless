@@ -55,6 +55,7 @@ const craftDeltas={
   'lanna-sand-pagoda': [[0,-60],[60,0],[0,60]],
   'chinese-fu-paper': [[0,-60],[60,0],[0,-60]],
   'turkish-nazar-bead': [[0,-60],[60,0],[0,60]],
+  'japanese-hamaya': [[0,-60],[60,0],[0,60]],
   'setsubun-mamemaki': [[60,0],[0,-60],[0,60]],
   'sternsinger-house-blessing': [[0,-60],[60,0],[0,60]],
   'lam-tsuen-wishing-tree': [[60,0],[60,0],[0,-60]],

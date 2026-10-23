@@ -47,6 +47,7 @@ export const sceneRegistry: SceneMeta[] = [
   {id:'lanna-sand-pagoda',title:'沙塔献幡',traditionSlug:'lanna-sand-pagoda',grade:'C',sensitivity:'中',gestures:['drag']},
   {id:'chinese-fu-paper',title:'贴福迎春',traditionSlug:'chinese-fu-paper',grade:'C',sensitivity:'低',gestures:['drag']},
   {id:'turkish-nazar-bead',title:'蓝珠祈安',traditionSlug:'turkish-nazar-bead',grade:'C',sensitivity:'低',gestures:['drag']},
+  {id:'japanese-hamaya',title:'饰矢祈安',traditionSlug:'japanese-hamaya',grade:'C',sensitivity:'低',gestures:['drag']},
   { id:'setsubun-mamemaki',title:'节分撒豆',traditionSlug:'setsubun-mamemaki',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'sternsinger-house-blessing',title:'门楣祝家',traditionSlug:'sternsinger-house-blessing',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'lam-tsuen-wishing-tree',title:'林村抛愿',traditionSlug:'lam-tsuen-wishing-tree',grade:'C',sensitivity:'低',gestures:['drag'] },
@@ -253,6 +254,7 @@ const IMPLEMENTED = new Set([
   'lanna-sand-pagoda',
   'chinese-fu-paper',
   'turkish-nazar-bead',
+  'japanese-hamaya',
   'setsubun-mamemaki',
   'sternsinger-house-blessing',
   'lam-tsuen-wishing-tree',
@@ -372,6 +374,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'lanna-sand-pagoda': return import('./lanna-sand-pagoda/index')
     case 'chinese-fu-paper': return import('./chinese-fu-paper/index')
     case 'turkish-nazar-bead': return import('./turkish-nazar-bead/index')
+    case 'japanese-hamaya': return import('./japanese-hamaya/index')
     case 'setsubun-mamemaki': return import('./setsubun-mamemaki/index')
     case 'sternsinger-house-blessing': return import('./sternsinger-house-blessing/index')
     case 'lam-tsuen-wishing-tree': return import('./lam-tsuen-wishing-tree/index')

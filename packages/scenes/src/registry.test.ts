@@ -48,6 +48,7 @@ describe('sceneRegistry', () => {
       'lanna-sand-pagoda',
       'chinese-fu-paper',
       'turkish-nazar-bead',
+      'japanese-hamaya',
       'setsubun-mamemaki',
       'sternsinger-house-blessing',
       'lam-tsuen-wishing-tree',
@@ -322,3 +323,4 @@ it('loads the Greek household New Year pomegranate fragment',async()=>{const m=a
 it('loads the midnight household coal gift',async()=>{const m=await loadScene('scottish-first-footing');expect(m.meta).toMatchObject({id:'scottish-first-footing',title:'煤火迎年',traditionSlug:'scottish-first-footing',grade:'C',sensitivity:'低'});expect(m.meta.gestures).toEqual(['drag']);expect(m.create).toBeTypeOf('function')})
 it('loads a source-specific Fu paper door blessing',async()=>{const m=await loadScene('chinese-fu-paper');expect(m.meta).toEqual(sceneRegistry.find(s=>s.id==='chinese-fu-paper'));expect(m.meta.title).toBe('贴福迎春');expect(m.meta.traditionSlug).toBe('chinese-fu-paper');expect(m.create).toBeTypeOf('function')})
 it('loads a source-specific glass nazar protective charm',async()=>{const m=await loadScene('turkish-nazar-bead');expect(m.meta).toEqual(sceneRegistry.find(s=>s.id==='turkish-nazar-bead'));expect(m.meta.title).toBe('蓝珠祈安');expect(m.meta.traditionSlug).toBe('turkish-nazar-bead');expect(m.create).toBeTypeOf('function')})
+describe('japanese hamaya registration',()=>{it('registers the dedicated arrow source and factory',async()=>{expect(sceneRegistry.find(m=>m.id==='japanese-hamaya')).toMatchObject({title:'饰矢祈安',traditionSlug:'japanese-hamaya',grade:'C',gestures:['drag']});expect((await loadScene('japanese-hamaya')).create).toBeTypeOf('function')})})

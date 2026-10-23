@@ -10933,5 +10933,20 @@
     "date_note": "2014为所用İzmir省文化旅游局博物馆指南出版页标示年份，不是护眼珠起源年。坐标为伊兹密尔现代代表点，对应该指南和当代制作介绍，不指向应用原创木架或传统起源。",
     "confidence": "medium",
     "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/turkish-nazar-bead.md"
+  },
+  {
+    "id": "japanese-hamaya",
+    "slug": "japanese-hamaya",
+    "title": "日本破魔矢陈设",
+    "grade": "C",
+    "region": "日本西东京市（文献代表点）",
+    "lat": 35.733,
+    "lon": 139.548,
+    "year_start": 2025,
+    "year_end": null,
+    "date_basis": "documented",
+    "date_note": "2025为田无神社公告实际发布日期，非习俗起源年；坐标为该社现代文献代表点，不称应用木架为实景或此处为起源。",
+    "confidence": "medium",
+    "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/japanese-hamaya.md"
   }
 ]

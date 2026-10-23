@@ -1,5 +1,7 @@
 # 物品交互优先
 
+历史方案更新（2026-10-23）：本文的“画布空白处仍能滚动页面”已由用户批准的[画布触控分区规则](../../research/2026-10-23-scene-touch-scroll.md)替代；当前画布内全部保留给场景手势，画布外正常滚动。下文保留原设计记录。
+
 用户明确要求现在执行：场景中的物品是主要操作入口，能点和能拖的物品有明显提示，底部动作按钮弱化为辅助。沿用现有 19 场景，保留键盘/按钮与书写入口。
 
 共享 `@wbr/scene-runtime/interaction-cues`：`addInteractionCue(object, {kind: 'tap'|'drag'|'rotate', label, enabled:()=>boolean, anchor?:[x,y,z], destination?:THREE.Object3D|(()=>THREE.Vector3), targetLabel?:string, priority?:number})`。各模块在真实可操作物体上登记提示，函数依据步骤/动作中/暂停/完成实时启闭。提示不调用任何游戏动作。

@@ -3894,10 +3894,10 @@ button:hover:not(:disabled) {
 
 /* C-grade scenes: transparent canvas over the island stage (like the woodfish).
    The scene kit's createStepOverlay marks their overlay scene-overlay--stage. */
-/* The page scrolls from empty stage areas; a touch that starts on the scene's
-   object is claimed in JS (claimObjectTouches), so its gestures still work. */
+/* The entire canvas owns gestures, including a near miss beside an object.
+   The shelf and page outside this hit layer keep their normal scrolling. */
 .scene-overlay--stage .scene-hit-layer {
-  touch-action: manipulation;
+  touch-action: none;
 }
 /* On the island stage (the App's sand tray, day or night) the note under the
    wish box is ink on paper. */
@@ -3914,6 +3914,7 @@ button:hover:not(:disabled) {
    a rim along its top edge. */
 .library-scene-stage .scene-canvas {
   height: var(--canvas-h);
+  touch-action: none;
 }
 .library-scene-stage .scene-overlay-host {
   display: grid;

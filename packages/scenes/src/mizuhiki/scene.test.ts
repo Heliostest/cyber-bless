@@ -212,7 +212,7 @@ describe('mizuhiki object gestures', () => {
     expect(s.progress).toEqual([1, 2, 3])
   })
 
-  it('leaves empty space scrollable and rejects a random drag, even from the cord end', () => {
+  it('rejects off-object starts and random shortcuts, even from the cord end', () => {
     const s = mount()
     const points = route(s)
     const touch = (p: Point) => {
@@ -221,6 +221,7 @@ describe('mizuhiki object gestures', () => {
       s.hit.dispatchEvent(e)
       return e.defaultPrevented
     }
+    // This legacy JS guard claims the cord; the App CSS reserves all canvas touches.
     expect(touch([5, 5])).toBe(false)
     expect(touch(points[0])).toBe(true)
     pointer(s, 'pointerdown', [5, 5])

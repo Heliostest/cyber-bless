@@ -816,24 +816,36 @@
 747. [Diya 油灯](content/traditions/diya-oil-lamp.md)
 748. [Clootie 布条圣井](content/traditions/clootie-well-rag.md)
 
-750. [破魔矢（hamaya）](content/traditions/japanese-hamaya.md)
-750. [越南Tết五果盘](content/traditions/vietnamese-five-fruit-tray.md)
-750. [中国如意与吉祥祝愿](content/traditions/chinese-ruyi-scepter.md)
-750. [日本熊手与招福陈设](content/traditions/japanese-kumade.md)
-750. [那不勒斯角形护符赠礼](content/traditions/neapolitan-cornicello.md)
-750. [西班牙十二葡萄迎岁](content/traditions/spanish-twelve-grapes.md)
-751. [蹄铁护家](content/traditions/horseshoe-doorway-luck.md)
+
+### 新增场景来源（2026-10-23 集成）
+
+- [抚牛寄愿](content/traditions/kitano-nadeushi.md)
+- [白线祝归](content/traditions/lao-baci-phi.md)
+- [柳枝祝春](content/traditions/finnish-virpominen.md)
+- [煤火迎年](content/traditions/scottish-first-footing.md)
+- [沙塔献幡](content/traditions/lanna-sand-pagoda.md)
+- [贴福迎春](content/traditions/chinese-fu-paper.md)
+- [七草祈安](content/traditions/nanakusa-gayu.md)
+- [蓝珠祈安](content/traditions/turkish-nazar-bead.md)
+- [窗布祈护](content/traditions/brat-bride-cloth.md)
+- [饰矢祈安](content/traditions/japanese-hamaya.md)
+- [鸟竿祈安](content/traditions/korean-sotdae.md)
+- [五果迎春](content/traditions/vietnamese-five-fruit-tray.md)
+- [如意寄愿](content/traditions/chinese-ruyi-scepter.md)
+- [门松迎岁](content/traditions/japanese-kadomatsu.md)
+- [熊手纳福](content/traditions/japanese-kumade.md)
+- [陶牛护家](content/traditions/pucara-rooftop-bulls.md)
+- [红角赠福](content/traditions/neapolitan-cornicello.md)
+- [葡萄迎岁](content/traditions/spanish-twelve-grapes.md)
+- [银锁寄安](content/traditions/chinese-longevity-lock.md)
+- [蹄铁护家](content/traditions/horseshoe-doorway-luck.md)
 
 ### 比较
 
 749. [比较总览](content/traditions/comparative-overview.md)
-750. [兰纳新年沙塔与长幡](content/traditions/lanna-sand-pagoda.md)
 
-750. [苏格兰 First-footing 携煤新年祝福](content/traditions/scottish-first-footing.md)
 
-750. [春节门上贴福](content/traditions/chinese-fu-paper.md)
 
-750. [土耳其蓝玻璃护眼珠](content/traditions/turkish-nazar-bead.md)
 
 ## 赛博祈福 App（开发中）
 

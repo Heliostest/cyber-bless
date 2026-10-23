@@ -71,6 +71,7 @@ it.each([
   ['japanese-hamaya',0,'hamaya-arrow','hamaya-arrow',[.85,.10,.025],[.85,.10,.025],[0,-60]],
   ['vietnamese-five-fruit-tray',0,'prepared-fruit-orange','prepared-fruit-orange',[0,.27,.18],[0,.27,.18],[60,0]],
   ['chinese-ruyi-scepter',0,'ruyi-scepter','ruyi-scepter',[-.94,.13,0],[-.94,.13,0],[0,-60]],
+  ['japanese-kumade',0,'kumade-tag-0','kumade-tag-0',[0,0,.035],[0,0,.035],[60,0]],
   ['setsubun-mamemaki', 0, 'beans-door', 'beans-door-root', [.20,-.12,.04], [0,0,0], [60,0]],
   ['sternsinger-house-blessing', 0, 'sternsinger-chalk', 'sternsinger-chalk', [0,0,0], [0,.16,0], [0,-60]],
   ['lam-tsuen-wishing-tree', 0, 'lamtsuen-paper', 'lamtsuen-paper-root', [0,0,.007], [0,0,0], [60,0]],

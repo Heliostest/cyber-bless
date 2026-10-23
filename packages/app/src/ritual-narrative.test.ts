@@ -138,6 +138,7 @@ describe("builtInScenes narratives", () => {
       "japanese-kadomatsu",
       "japanese-kendama",
       "japanese-koinobori",
+      "japanese-kumade",
       "japanese-shishi-odoshi",
       "japanese-wagasa",
       "kagami-biraki-sake",

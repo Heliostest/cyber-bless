@@ -10978,5 +10978,20 @@
     "date_note": "年代仅指Met02.18.446所标18世纪玉如意，不指习俗起源；坐标为中国文化归属地图代理，不指馆藏现址或本场原创木座实景。",
     "confidence": "medium",
     "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/chinese-ruyi-scepter.md"
+  },
+  {
+    "id": "japanese-kumade",
+    "slug": "japanese-kumade",
+    "title": "日本熊手与招福陈设",
+    "grade": "C",
+    "region": "日本东京练马（采访代表点）",
+    "lat": 35.737,
+    "lon": 139.654,
+    "year_start": 2019,
+    "year_end": null,
+    "date_basis": "documented",
+    "date_note": "2019为练马机构竹熊手采访发表年，不是熊手起源；坐标为报道地区代表点，不指本场原创木座或统一习俗范围。",
+    "confidence": "medium",
+    "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/japanese-kumade.md"
   }
 ]

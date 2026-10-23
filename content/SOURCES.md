@@ -4258,3 +4258,8 @@ Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](
 三条Met对应正文实现者与独立者均已读；Aberdeen根已读，独立超时/错误页，状态分列。器物、吉祥祝愿和产品陈设差异见专卡与研究，不称特定馆藏复刻。
 ## 门松迎岁（2026-10-23）
 门口成对松竹门松作为迎接年神的标识，见[专卡](traditions/japanese-kadomatsu.md)及[研究](../docs/research/2026-10-23-japanese-kadomatsu.md)。已读兵库/北海道神社厅与地主神社相关正文，JNTO正文支持所选三竹松枝造型；具体草束、托盘、三段动作属产品安排，不以安放完成表示神明已降临或祈福生效。
+## 熊手纳福 · 2026-10-23
+- https://www.niigatahakusanjinja.or.jp/amulets/oshogatsu.html
+- https://www.nerimakanko.jp/review/detail.php?article_id=SPE0000073
+- https://www.city.taito.lg.jp/event/kanko/torinoithi.html
+实现者与独立者实际读对应正文，支持范围、读取状态和产品三饰差异见专卡与研究。JFC只读封面，末页未取得，不作小判证据；不称馆藏或神社授与品复刻。

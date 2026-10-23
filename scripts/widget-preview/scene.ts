@@ -37,6 +37,7 @@ const completedPreviewProgress: Record<string, number> = {
   "japanese-hamaya": 3,
   "vietnamese-five-fruit-tray": 3,
   "chinese-ruyi-scepter": 3,
+  "japanese-kumade": 3,
   "balinese-canang-sari": 3,
   "fgs-buddha-bathing": 3,
   "mongolian-ovoo": 3,

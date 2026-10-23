@@ -52,6 +52,7 @@ export const sceneRegistry: SceneMeta[] = [
   {id:'japanese-hamaya',title:'饰矢祈安',traditionSlug:'japanese-hamaya',grade:'C',sensitivity:'低',gestures:['drag']},
   {id:'vietnamese-five-fruit-tray',title:'五果迎春',traditionSlug:'vietnamese-five-fruit-tray',grade:'C',sensitivity:'低',gestures:['drag']},
   {id:'chinese-ruyi-scepter',title:'如意寄愿',traditionSlug:'chinese-ruyi-scepter',grade:'C',sensitivity:'低',gestures:['drag']},
+  {id:'japanese-kumade',title:'熊手纳福',traditionSlug:'japanese-kumade',grade:'C',sensitivity:'低',gestures:['drag']},
   { id:'setsubun-mamemaki',title:'节分撒豆',traditionSlug:'setsubun-mamemaki',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'sternsinger-house-blessing',title:'门楣祝家',traditionSlug:'sternsinger-house-blessing',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'lam-tsuen-wishing-tree',title:'林村抛愿',traditionSlug:'lam-tsuen-wishing-tree',grade:'C',sensitivity:'低',gestures:['drag'] },
@@ -263,6 +264,7 @@ const IMPLEMENTED = new Set([
   'japanese-hamaya',
   'vietnamese-five-fruit-tray',
   'chinese-ruyi-scepter',
+  'japanese-kumade',
   'setsubun-mamemaki',
   'sternsinger-house-blessing',
   'lam-tsuen-wishing-tree',
@@ -387,6 +389,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'japanese-hamaya': return import('./japanese-hamaya/index')
     case 'vietnamese-five-fruit-tray': return import('./vietnamese-five-fruit-tray/index')
     case 'chinese-ruyi-scepter': return import('./chinese-ruyi-scepter/index')
+    case 'japanese-kumade': return import('./japanese-kumade/index')
     case 'setsubun-mamemaki': return import('./setsubun-mamemaki/index')
     case 'sternsinger-house-blessing': return import('./sternsinger-house-blessing/index')
     case 'lam-tsuen-wishing-tree': return import('./lam-tsuen-wishing-tree/index')

@@ -819,6 +819,7 @@
 750. [破魔矢（hamaya）](content/traditions/japanese-hamaya.md)
 750. [越南Tết五果盘](content/traditions/vietnamese-five-fruit-tray.md)
 750. [中国如意与吉祥祝愿](content/traditions/chinese-ruyi-scepter.md)
+750. [日本熊手与招福陈设](content/traditions/japanese-kumade.md)
 
 ### 比较
 
@@ -864,3 +865,4 @@ npm run dev          # 根脚本 → cyber-bless（已带 --host）
 - 饰矢祈安 japanese-hamaya：备好饰矢的安放与家内平安的心愿；[场景说明](packages/scenes/src/japanese-hamaya/README.md)、[来源核查](docs/research/2026-10-23-japanese-hamaya.md)。
 - 五果迎春 vietnamese-five-fruit-tray：果盘准备、祭祖感恩与新岁平安愿望；[场景说明](packages/scenes/src/vietnamese-five-fruit-tray/README.md)、[来源核查](docs/research/2026-10-23-vietnamese-five-fruit-tray.md)。
 - 如意寄愿 chinese-ruyi-scepter：云头如意陈设与顺遂好愿；[场景说明](packages/scenes/src/chinese-ruyi-scepter/README.md)、[来源核查](docs/research/2026-10-23-chinese-ruyi-scepter.md)。
+- 熊手纳福 japanese-kumade：装饰熊手与招福好愿；[场景说明](packages/scenes/src/japanese-kumade/README.md)、[来源核查](docs/research/2026-10-23-japanese-kumade.md)。

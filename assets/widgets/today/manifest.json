@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "86a522de7e51430e2d551af9161b48b144046e72a0c8e30a338f7c48c21a75eb",
+  "revision": "faae39d6a7f0be7dd74291125a48e49e3cabeaffdc5200e7788207d21dc7d3a4",
   "scenes": [
+    {
+      "id": "chinese-longevity-lock",
+      "engine": "chinese-longevity-lock@1",
+      "small": {
+        "file": "chinese-longevity-lock-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "fef4e245bc290c51add409b0e5b1e5dfddabbfe7c625f1d01a93cdd8081f01c0",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "chinese-longevity-lock-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "52ea4d0c0ab6e89663aee97d57133db7182cfb417f6caf9ad5816f5b8d2c93c6",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "chinese-longevity-lock-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "610c81625af68455958142f5703f791d49e9a522a4d5754b8473f3551d6267fd",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "alasita-miniature-house",
       "engine": "alasita-miniature-house@1",

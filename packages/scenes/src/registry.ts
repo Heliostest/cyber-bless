@@ -19,6 +19,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id: 'chinese-rattle-drum', title: '拨浪轻响', traditionSlug: 'chinese-rattle-drum', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'ghanaian-oware', title: '木窝播籽', traditionSlug: 'ghanaian-oware', grade: 'C', sensitivity: '低', gestures: ['drag'] },
   { id: 'mexican-tortilla-press', title: '木压成圆', traditionSlug: 'mexican-tortilla-press', grade: 'C', sensitivity: '低', gestures: ['drag'] },
+  {id:'chinese-longevity-lock',title:'银锁寄安',traditionSlug:'chinese-longevity-lock',grade:'C',sensitivity:'中',gestures:['drag']},
   { id:'alasita-miniature-house',title:'微屋寄愿',traditionSlug:'aymara',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'yusheng-lohei',title:'鱼生捞起',traditionSlug:'yusheng-lohei',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'hiiragi-iwashi',title:'柊鰯守门',traditionSlug:'hiiragi-iwashi',grade:'C',sensitivity:'中',gestures:['drag'] },
@@ -216,6 +217,7 @@ export const sceneRegistry: SceneMeta[] = [
 ]
 
 const IMPLEMENTED = new Set([
+  'chinese-longevity-lock',
   'alasita-miniature-house',
   'yusheng-lohei',
   'hiiragi-iwashi',
@@ -326,6 +328,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'korean-yutnori': return import('./korean-yutnori')
     case 'chinese-diabolo': return import('./chinese-diabolo')
     case 'chinese-tangram': return import('./chinese-tangram')
+    case 'chinese-longevity-lock': return import('./chinese-longevity-lock/index')
     case 'alasita-miniature-house': return import('./alasita-miniature-house/index')
     case 'yusheng-lohei': return import('./yusheng-lohei/index')
     case 'hiiragi-iwashi': return import('./hiiragi-iwashi/index')

@@ -88,6 +88,7 @@ describe("builtInScenes narratives", () => {
       "celtic-folk-spring",
       "chinese-diabolo",
       "chinese-incense",
+      "chinese-longevity-lock",
       "chinese-rattle-drum",
       "chinese-shadow-puppet",
       "chinese-steelyard",

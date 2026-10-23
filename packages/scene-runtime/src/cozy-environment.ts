@@ -18,6 +18,7 @@ const profiles: Record<string, Profile> = {
   "pucara-rooftop-bulls": {kind:"courtyard",floor:0},
   "chinese-longevity-lock": {kind:"courtyard",floor:0},
   "uchide-wishing-mallet": {kind:"courtyard",floor:0},
+  "ukrainian-didukh": {kind:"courtyard",floor:-.15,warmLight:true},
   "alasita-miniature-house": {kind:"courtyard",floor:0},
   "yusheng-lohei": {kind:"garden",floor:-.12},
   "kitano-nadeushi": {kind:"garden",floor:-.012},

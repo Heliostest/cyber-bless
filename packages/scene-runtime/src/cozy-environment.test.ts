@@ -3,6 +3,17 @@ import * as THREE from "three";
 import { createCozyEnvironment } from "./cozy-environment";
 
 describe("a scene's surrounding world", () => {
+  it("keeps courtyard ground below the Didukh cutaway floor instead of painting over it", async () => {
+    const scene=new THREE.Scene()
+    const world=createCozyEnvironment(scene,{id:"ukrainian-didukh",loadSky:async()=>new THREE.DataTexture()})!
+    scene.updateMatrixWorld(true)
+    const ray=new THREE.Raycaster(new THREE.Vector3(.55,1,-.08),new THREE.Vector3(0,-1,0))
+    const hits=ray.intersectObject(scene.getObjectByName("cozy-environment")!,true)
+    expect(hits.length).toBeGreaterThan(0)
+    expect(Math.max(...hits.map(hit=>hit.point.y))).toBeLessThan(-.12)
+    await world.ready;world.dispose()
+  })
+
   it("softens daylight in gouache and restores the existing rig on switching back", async () => {
     const scene = new THREE.Scene();
     const sun = new THREE.DirectionalLight(), ambient = new THREE.AmbientLight(), sky = new THREE.HemisphereLight();
@@ -88,6 +99,7 @@ describe("a scene's surrounding world", () => {
 
   it.each([
     ["yusheng-lohei", "garden"],
+    ["ukrainian-didukh", "courtyard"],
     ["fijian-woven-fan", "veranda"],
     ["polish-paper-cut", "veranda"],
     ["faroese-wool-knit", "veranda"],

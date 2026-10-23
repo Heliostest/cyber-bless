@@ -212,6 +212,7 @@ describe("builtInScenes narratives", () => {
       "turkish-nazar-bead",
       "uchide-wishing-mallet",
       "udo-undama",
+      "ukrainian-didukh",
       "uzbek-clay-bowl",
       "valencian-folding-fan",
       "venetian-glass-bead",

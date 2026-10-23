@@ -27,6 +27,7 @@ describe('sceneRegistry', () => {
       'pucara-rooftop-bulls',
       'chinese-longevity-lock',
       'uchide-wishing-mallet',
+      'sri-lankan-bodhi-puja',
       'alasita-miniature-house',
       'yusheng-lohei',
       'kitano-nadeushi',

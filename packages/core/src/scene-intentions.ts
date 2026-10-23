@@ -23,6 +23,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
   'pucara-rooftop-bulls': {kind:'blessing',label:'为家人寄一份平安',action:'托起一对陶牛，移向屋脊，再稳稳安放。',optionalWish:false},
   'chinese-longevity-lock': {kind:'blessing',label:'为孩子寄一份平安',action:'托起备好的银锁，移入礼匣，再轻轻落稳。',optionalWish:false},
   'uchide-wishing-mallet': {kind:'blessing',label:'为心愿寄一份祝福',action:'托起小槌，轻轻摇动寄愿，再放回木托。',optionalWish:false},
+  'sri-lankan-bodhi-puja': {kind:'blessing',label:'为牵挂的人寄一份平安',action:'提起水壶，移近菩提树根，缓缓倾水供养。',optionalWish:false},
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
   'alasita-miniature-house': { kind:'wish',label:'寄一份安居的心愿',optionalWish:false,action:'提起、转看微型小屋，再将这份愿景安放好。' },
   'yusheng-lohei': {

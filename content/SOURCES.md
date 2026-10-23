@@ -4243,3 +4243,5 @@ Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](
 - https://samukawajinjya.jp/en/worship/charms.html
 - https://www.meijijingu.or.jp/faq/?ca=1
 实现者与独立审阅者均已实际读四条相关正文；正文定位与支持边界见专卡及研究记录，未声称看过来源图片。
+## 鸟竿祈安（2026-10-23）
+韩国솟대木鸟长竿与村落护佑、向天祈愿背景见[专卡](traditions/korean-sotdae.md)。已读韩国邮政博物馆与国立民俗博物馆儿童馆正文；独立研究另读NFM《民俗消息》2025年3月及国语院辞书。托架、承孔和三段动作属产品安排，安放不等于村祭或祝圣完成。访问状态见[研究](../docs/research/2026-10-23-korean-sotdae.md)。

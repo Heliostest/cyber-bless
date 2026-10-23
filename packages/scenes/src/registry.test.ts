@@ -22,6 +22,7 @@ describe('sceneRegistry', () => {
       'mexican-tortilla-press',
       'nanakusa-gayu',
       'brat-bride-cloth',
+      'korean-sotdae',
       'alasita-miniature-house',
       'yusheng-lohei',
       'kitano-nadeushi',

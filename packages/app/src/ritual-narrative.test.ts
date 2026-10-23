@@ -143,6 +143,7 @@ describe("builtInScenes narratives", () => {
       "kameido-usokae",
       "kitano-nadeushi",
       "korean-bojagi-wrap",
+      "korean-sotdae",
       "korean-yutnori",
       "lam-tsuen-wishing-tree",
       "lanna-sand-pagoda",

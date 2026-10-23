@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "e6cfddb19175af4dad5b6b4c355654b3768f777fdde9d42581a6e73c49a0da05",
+  "revision": "13aa44643a9dce156f8fbe6cbd22ba3e4339699c5a4bc8bf000347d44166bdfc",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -4858,6 +4858,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "6f457a7464de5013c6f59288387440552448d6fb032732df0fe17a39f71b342c",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "korean-sotdae",
+      "engine": "korean-sotdae@1",
+      "small": {
+        "file": "korean-sotdae-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "d161317d84aa43fe3a7fe30249d25e7973551fa66565c7b6228ce8f4bff20fdc",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "korean-sotdae-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "08da58e63b0fa75ceb0baeafe4069f3f89438bb55ac952487f58e5041056c77b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "korean-sotdae-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "dd6e67214f1bf21ed15c58feda85b03cfeb257950936bb5aa6770e243cf12c2b",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

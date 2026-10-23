@@ -18,6 +18,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
   'scottish-first-footing': {kind:'blessing',label:'携煤入户，祝家宅温暖安康',optionalWish:false,action:'作为新年午夜后的首位来客，拿起带来的煤礼，携过门槛，送进主人炉火。'},
   'nanakusa-gayu': {kind:'blessing',label:'为自己与家人祈一份安康',action:'轻拌七草，舀起温粥，再盛进碗中。',optionalWish:false},
   'brat-bride-cloth': {kind:'blessing',label:'为牵挂的人寄一份平安',action:'提起方布，移到窗外，再轻轻铺好。',optionalWish:false},
+  'korean-sotdae': {kind:'blessing',label:'为家园寄一份平安',action:'托起木制鸟竿，扶正后安放稳妥。',optionalWish:false},
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
   'alasita-miniature-house': { kind:'wish',label:'寄一份安居的心愿',optionalWish:false,action:'提起、转看微型小屋，再将这份愿景安放好。' },
   'yusheng-lohei': {

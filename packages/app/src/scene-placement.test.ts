@@ -82,6 +82,7 @@ describe("scene placement", () => {
     ["chinese-tangram", "chinese-tangram", false],
     ["nanakusa-gayu", "nanakusa-gayu", false],
     ["brat-bride-cloth", "brat-bride-cloth", false],
+    ["korean-sotdae", "korean-sotdae", false],
     ["alasita-miniature-house", "aymara", true],
     ["kitano-nadeushi", "kitano-nadeushi", false],
     ["lao-baci-wrist", "lao-baci-phi", false],
@@ -201,6 +202,7 @@ describe("scene placement", () => {
     expect([...BLESSING_SCENE_IDS]).toEqual([
       "nanakusa-gayu",
       "brat-bride-cloth",
+      "korean-sotdae",
       "yusheng-lohei",
       "kitano-nadeushi",
       "lao-baci-wrist",

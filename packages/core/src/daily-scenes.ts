@@ -177,6 +177,7 @@ export const BLESSING_SCENE_IDS = [
 
 /** Scenes that can come up on 今日's daily set as 许愿 (wish-making) practices. */
 export const WISH_SCENE_IDS = [
+  "alasita-miniature-house",
   "lam-tsuen-wishing-tree",
   "sumiyoshi-godairiki",
   "zeniarai-coin-washing",
@@ -222,6 +223,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
   traditionSlug?: string;
 };
 export const builtInScenes: BuiltInSceneEntry[] = [
+  { id:"alasita-miniature-house",title:"微屋寄愿",engine:"alasita-miniature-house@1",revision:"bundled",manifestUrl:"",traditionSlug:"aymara",narrative:sceneNarratives["alasita-miniature-house"] },
   { id:"hiiragi-iwashi",title:"柊鰯守门",engine:"hiiragi-iwashi@1",revision:"bundled",manifestUrl:"",traditionSlug:"hiiragi-iwashi",narrative:sceneNarratives["hiiragi-iwashi"] },
   { id:"tamagushi-offering",title:"玉串奉愿",engine:"tamagushi-offering@1",revision:"bundled",manifestUrl:"",traditionSlug:"tamagushi-offering",narrative:sceneNarratives["tamagushi-offering"] },
   { id:"tibetan-water-bowls",title:"清水七供",engine:"tibetan-water-bowls@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-water-bowls",narrative:sceneNarratives["tibetan-water-bowls"] },

@@ -72,6 +72,7 @@ describe("builtInScenes narratives", () => {
   it("covers the placed practices and craft scenes", () => {
     expect(withNarrative.map((e) => e.id).sort()).toEqual([
       "aland-votive-ship",
+      "alasita-miniature-house",
       "amazigh-woven-rug",
       "andalusian-ceramic-tile",
       "bai-indigo-cloth",

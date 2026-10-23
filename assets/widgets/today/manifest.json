@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "9e785d87c52b7fcd0c2864216cbb7f1ad1bee12f14f623ea427a51a2c086844c",
+  "revision": "a97c6ca93bacc66d0bca254c56117e2c59818280a5c5cbb3a9d0be65035f90d8",
   "scenes": [
+    {
+      "id": "alasita-miniature-house",
+      "engine": "alasita-miniature-house@1",
+      "small": {
+        "file": "alasita-miniature-house-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "11cfc368d53191490438dd5c3ba58779540ff903d4fe7a2a45ff8ad199b2da67",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "alasita-miniature-house-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e9a25267ca27fae66fe1bed0e35b072029831749a4d68817ce8fac4799da112b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "alasita-miniature-house-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "8f9c1f19e2277727c0575026f126f9a11b421c03d6241147bd5e2cd7c54445c5",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "hiiragi-iwashi",
       "engine": "hiiragi-iwashi@1",

@@ -38,6 +38,7 @@ it.each([0,1,2])('cancels the real Chinowa walking view through production adapt
 })
 
 it.each([
+  ['alasita-miniature-house', 0, 'wish-house', 'wish-house', [.28,.35,.52], [0,0,0], [0,-60]],
   ['hiiragi-iwashi', 0, 'holly-twig', 'holly-twig', [.20,.65,.02], [0,0,0], [0,-60]],
   ['tamagushi-offering', 0, 'tamagushi-leaf-0', 'tamagushi-branch', [0,0,0], [0,.015,0], [60,0]],
   ['tibetan-water-bowls', 0, 'water-jug', 'water-jug', [0,.28,.18], [0,0,0], [0,-60]],

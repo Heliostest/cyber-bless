@@ -42,6 +42,8 @@
 
 ## 手机互动适合度（Three.js 评估草稿）
 
+> 以下是历史设计评估，不是传统事实或文化许可。2026-10-23新增`alasita-miniature-house`依据下方新读证据，只呈现现成愿望器物的提起、转看、安放，模块C档，不主持或模拟宗教仪式。旧B档氛围方案保留作设计历史，不作为当前动作说明。
+
 - **档位：** B 仅氛围或图文场景
 - **敏感度：** 中
 - **判断：** **仅氛围／无用户主持。** Alasita 市集与高原景观适合可旋转图文场景；真 mesita 焚烧、牲礼与私人法术不可互动化。取 B：氛围与说明卡，不以「完成献供」为胜负。Ekeko／Alasita 可作氛围；Yatiri 主持 Mesita，用户仅观礼；ch’alla 为 CONCEPT。
@@ -50,6 +52,18 @@
 - **评估状态：** 待后期统一评估
 
 ## 参考来源
+
+### 2026-10-23：Alasita微型房屋场景补充
+
+UNESCO多媒体网页正文记述获取与Ekeko信仰相关的微型物，以及随后由安第斯仪式人士祝圣或天主教神父祝福。MUSEF的*Alasitas. Donde crecen las illas*正文直接列出城市illas包含微型房屋，并保留ch'alla与圣水背景。
+
+本产品以原创小屋寄托对家的愿景，提起、转看、放到软垫是产品分镜。房型、哑光涂色、台面、软垫、数量和动画不是传统规格；安放不等于祝圣完成，没有房产/财富效验承诺。回访与用户记录属于宿主机制。没有复制馆藏、人物或民族纹样。[研究与访问状态](../../docs/research/2026-10-23-alasita-miniature-house.md)、[实际场景README](../../packages/scenes/src/alasita-miniature-house/README.md)对应当前实现；本卡其他议题不为本场背书。
+
+- [UNESCO档案网页](https://www.unesco.org/archives/multimedia/document-4663)：2026-10-23实际读L59–61及90–108；页面列2015年玻利维亚文化旅游部影片，未声称观看影片。
+- [MUSEF策展正文](https://musef.gob.bo/musef-exposiciones-temporales-sucre)：2026-10-23实际读L221–225，展览标注2017开幕；非www及独立研究www版本已读，首次www超时另记。不据此规定房屋材质或形制。
+- ICH主条目/PDF验证码、La Paz旅游/市议会超时未记已读；以下旧参考列表不代表本次重读了其他主题正文。
+
+### 既有主题参考
 
 - https://www.britannica.com/topic/Aymara
 - https://www.encyclopedia.com/history/latin-america-and-caribbean/mesoamerican-indigenous-peoples/aymara

@@ -169,3 +169,30 @@ describe('a geometric straw garden suspended by hand', () => {
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), type).toBe(true)
   })
 })
+
+describe('small straw beads with bounded screen tolerance',()=>{
+  it('can grab beside the pendant bead and join beside the small destination',()=>{
+    const s=mount(0,{isReducedMotion:()=>true}),a=s.point('straw-pendant-grip'),b=s.point('straw-join-bead'),end:[number,number]=[b[0]+16,b[1]];
+    pointer(s.hit,'pointerdown',[a[0]+16,a[1]]);pointer(s.hit,'pointermove',end);
+    expect(s.overlay.textContent).toContain('可以松手');
+    pointer(s.hit,'pointerup',end);s.run();expect(s.progress).toEqual([1]);
+  });
+});
+
+it.each(['pointercancel', 'blur', 'pause'])('clears the ready drop after %s without completing it', reason => {
+  let active = true
+  const s = mount(0, { isActive: () => active, isReducedMotion: () => true })
+  const from = s.point('straw-pendant-grip'), target = s.point('straw-join-bead')
+  pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
+  pointer(s.hit, 'pointermove', [1, 1])
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
+  pointer(s.hit, 'pointermove', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
+  if (reason === 'blur') window.dispatchEvent(new Event('blur'))
+  else if (reason === 'pause') { active = false; s.run(.05) }
+  else pointer(s.hit, 'pointercancel', target)
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
+  pointer(s.hit, 'pointerup', target); s.run()
+  expect(s.progress).toEqual([])
+})

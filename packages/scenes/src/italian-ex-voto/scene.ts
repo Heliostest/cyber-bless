@@ -5,6 +5,8 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPathSweep } from '../path-sweep'
+import { createTouchTarget } from '../touch-target'
 import {
   addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage,
@@ -33,7 +35,7 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
   Object.values(COPY).forEach(safe)
   let started = false, disposed = false, focused = true, checkpoint: Checkpoint = 0
   let motion: Motion | null = null, dragging = false, maxTravel = 0, inactiveRendered = false
-  let traceInvalid = false, traceMax = 0, traceSamples = 0
+  let traceMoved = false
   let writer: GestureHandle | null = null, stopResize = () => {}
   const returning = ctx.returning === true
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
@@ -145,7 +147,7 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
   const restorePose = () => {
     brush.position.copy(checkpoint === 1 ? WINDOW_START : HOME)
     route.children.forEach(child => { child.visible = checkpoint >= 1 }); routePencil.visible = checkpoint === 0
-    windowLight.visible = checkpoint >= 2; traceGuide.visible = checkpoint === 1; windowEnd.visible = checkpoint === 1
+    windowLight.visible = checkpoint >= 2; windowLight.geometry.setDrawRange(0, Infinity); traceGuide.visible = checkpoint === 1; windowEnd.visible = checkpoint === 1
     routeOrigin.visible = checkpoint === 0; matrices()
   }
   const cueActive = (at: number) => () => active() && !motion && checkpoint === at
@@ -155,23 +157,25 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
   const finishPickables: THREE.Object3D[] = [plaque]
   painted.traverse(object => { if ((object as THREE.Mesh).isMesh) finishPickables.push(object) })
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
-  const down = new THREE.Vector2(), line = WINDOW_END.clone().sub(WINDOW_START), lineLengthSq = line.lengthSq()
-  const resetDrag = () => { dragging = false; maxTravel = 0; traceInvalid = false; traceMax = 0; traceSamples = 0; if (!motion) restorePose() }
+  const touch = createTouchTarget(canvas, camera, scene)
+  const down = new THREE.Vector2()
+  const windowPath = createPathSweep(Array.from({ length: 5 }, (_, i) => { const p = WINDOW_START.clone().lerp(WINDOW_END, i / 4); return [p.x, p.y] as const }), .055)
+  const windowReady = (x: number, y: number) => windowPath.progress === 1 && touch.hit(x, y, windowEnd, { ignore: [brush, windowLight] })
+  const resetDrag = () => { dragging = false; maxTravel = 0; traceMoved = false; windowPath.reset(); if (!motion) { restorePose(); sync() } }
   const traceAt = (x: number, y: number) => {
-    if (traceInvalid || !ray.aim(x, y).ray.intersectPlane(plane, point)) { traceInvalid = true; return }
-    const t = point.clone().sub(WINDOW_START).dot(line) / lineLengthSq
-    const distance = point.distanceTo(WINDOW_START.clone().addScaledVector(line, t))
-    if (distance > .09 || t < -.14 || t > 1.18 || t < traceMax - .16) { traceInvalid = true; return }
-    // A jump straight to the end is not a painted stroke: accept modest directional samples only.
-    if (t - traceMax > .42) { traceInvalid = true; return }
-    if (t > traceMax + .025) traceSamples++
-    traceMax = Math.max(traceMax, t); brush.position.copy(point); matrices()
+    if (!ray.aim(x, y).ray.intersectPlane(plane, point)) return
+    traceMoved = true; windowPath.sample([point.x, point.y]); brush.position.copy(point)
+    windowLight.visible = true
+    windowLight.geometry.setDrawRange(0, Math.floor(windowLight.geometry.index!.count * windowPath.progress / 3) * 3)
+    ui.hintEl.dataset.progress = 'true'
+    setSafeText(ui.hintEl, windowReady(x, y) ? '窗光已描好，松手即可。' : windowPath.progress === 1 ? '窗光已描好，回到暖色点附近松手。' : '已描好 ' + Math.round(windowPath.progress * 100) + '%，沿细线继续到暖色点。', safe)
+    matrices()
   }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart(x, y) { if (motion || checkpoint === 3) return false; matrices(); return ray.hits(x, y, checkpoint === 2 ? finishPickables : [tip]) },
+    canStart(x, y) { if (motion || checkpoint === 3) return false; matrices(); return touch.hit(x, y, checkpoint === 2 ? finishPickables : [tip]) },
     onStart(x, y) {
-      down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; traceInvalid = false; traceMax = 0; traceSamples = 0; feedback.prepare()
+      down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; traceMoved = false; windowPath.reset(); feedback.prepare()
       if (checkpoint === 1) plane.set(new THREE.Vector3(0, 0, 1), -WINDOW_START.z)
       else if (checkpoint === 0) {
         plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), brush.position)
@@ -189,15 +193,16 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
     },
     onRelease(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint === 0 ? dragging && maxTravel > 8 && ray.hits(x, y, [routeOrigin])
-        : checkpoint === 1 ? dragging && !traceInvalid && traceSamples >= 3 && traceMax >= .86 && ray.hits(x, y, [windowEnd])
-        : checkpoint === 2 && maxTravel < 12 && ray.hits(x, y, finishPickables)
+      const valid = Number.isFinite(x) && Number.isFinite(y) && (checkpoint === 0 ? dragging && maxTravel > 8 && ray.hits(x, y, [routeOrigin])
+        : checkpoint === 1 ? dragging && traceMoved && windowReady(x, y)
+        : checkpoint === 2 && maxTravel < 12 && ray.hits(x, y, finishPickables))
       dragging = false
       if (valid) { if (checkpoint < 2) begin(true); else finish() } else resetDrag()
     },
     onCancel: resetDrag,
   })
   const sync = () => {
+    delete ui.hintEl.dataset.progress
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !active() || !!motion || checkpoint === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); wishSlot.hidden = returning || checkpoint !== 2
     writer?.setEnabled(active() && !returning && checkpoint === 2 && !motion)
@@ -262,8 +267,9 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
           route.children.forEach((child, i) => { child.visible = i / route.children.length <= (t - .32) / .68 })
         } else {
           brush.position.lerpVectors(motion.guided ? motion.from : WINDOW_START, WINDOW_END, t)
-          windowLight.visible = true; windowLight.scale.set(t, t, 1)
-          windowLight.position.set(WINDOW_START.x * (1 - t), WINDOW_START.y * (1 - t), 0)
+          const drawn = motion.guided ? 1 : t
+          windowLight.visible = true; windowLight.scale.set(drawn, drawn, 1)
+          windowLight.position.set(WINDOW_START.x * (1 - drawn), WINDOW_START.y * (1 - drawn), 0)
         }
         if (motion.time === 1) { windowLight.scale.set(1, 1, 1); windowLight.position.set(0, 0, 0); settled() }
       }

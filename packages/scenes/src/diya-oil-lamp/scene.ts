@@ -3,6 +3,8 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPathSweep } from '../path-sweep'
+import { createTouchTarget } from '../touch-target'
 import {
   addStageLights, CEL_STYLE, createLampHalo, createPointerRay, createSceneFeedback,
   createStepOverlay, createWarmStage, disposeTree, observeCanvasResize,
@@ -25,7 +27,7 @@ const HELD = new THREE.Vector3(0, 0.72, ORBIT_RADIUS)
 const HOMES = [new THREE.Vector3(-0.44, 0.105, -0.29), new THREE.Vector3(0.44, 0.105, -0.29), new THREE.Vector3(0, 0.105, 0.36)]
 const smooth = (t: number) => t * t * (3 - 2 * t)
 type Checkpoint = 0 | 1 | 2 | 3
-type Drag = { kind: 'light'; visited: Set<number> } | { kind: 'spin'; angle: number; direction: number; covered: number; valid: boolean } | { kind: 'place' }
+type Drag = { kind: 'light'; visited: Set<number> } | { kind: 'spin' } | { kind: 'place' }
 type Motion = { kind: 'spin' | 'place'; elapsed: number; from: THREE.Vector3 }
 
 /** A spouted plan outline; the open cross-section is constructed separately. */
@@ -81,10 +83,10 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx
   const { assertSafeCopy } = shared
   Object.values(COPY).forEach(assertSafeCopy)
-  let started = false, disposed = false, checkpoint: Checkpoint = 0
+  let started = false, disposed = false, focused = true, suspended = false, checkpoint: Checkpoint = 0
   let drag: Drag | null = null, motion: Motion | null = null
   let clock = 0, stopResize = () => {}
-  const active = () => started && !disposed && (ctx.isActive?.() ?? true)
+  const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
   const feedback = createSceneFeedback(ctx)
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: COPY.steps, action: COPY.lightAction }, assertSafeCopy)
   const { hitLayer, hintEl, actionBtn } = ui
@@ -191,7 +193,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
     halo.sprite.name = `diya-halo-${i}`
     halo.sprite.position.set(0, 0.32, 0.40)
     group.add(halo.sprite)
-    return { group, target, flame, glow, halo, lit: false, glowT: 0 }
+    return { group, target, wick, tip, flame, glow, halo, lit: false, glowT: 0 }
   })
   const heldLamp = lamps[2]
   const heldTarget = new THREE.Mesh(new THREE.SphereGeometry(0.30, 16, 10), hidden)
@@ -223,7 +225,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   const orbitPoints = Array.from({ length: 17 }, (_, i) => {
     const a = ORBIT_START + i / 16 * Math.PI * 2
     const point = new THREE.Vector3(Math.cos(a) * ORBIT_RADIUS, ORBIT_Y, Math.sin(a) * ORBIT_RADIUS)
-    const waypoint = new THREE.Mesh(waypointGeometry, guideMat)
+    const waypoint = new THREE.Mesh(waypointGeometry, guideMat.clone())
     waypoint.name = `diya-orbit-waypoint-${i}`
     waypoint.position.copy(point)
     orbitGuide.add(waypoint)
@@ -239,27 +241,33 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   returnGuide.rotation.x = -Math.PI / 2
   world.add(returnGuide)
 
+  const orbitSweeps = [1, -1].map(direction => createPathSweep(Array.from({ length: 17 }, (_, i) => { const a = ORBIT_START + direction * i / 16 * Math.PI * 2; return [Math.cos(a) * ORBIT_RADIUS, Math.sin(a) * ORBIT_RADIUS] as const }), .12))
   const ray = createPointerRay(canvas, camera)
+  const touch = createTouchTarget(canvas, camera, scene)
   const orbitPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -ORBIT_Y)
   const placePlane = new THREE.Plane(), point = new THREE.Vector3()
   const updateMatrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const wickAt = (x: number, y: number) => {
     updateMatrices()
-    return lamps.findIndex((lamp) => ray.hits(x, y, [lamp.target]))
+    return lamps.findIndex((lamp) => touch.hit(x, y, [lamp.wick, lamp.tip]))
   }
   const syncUI = () => {
+    delete hintEl.dataset.progress
     ui.renderDots(checkpoint, 3)
     actionBtn.hidden = checkpoint === 3
-    actionBtn.setAttribute('aria-disabled', String(motion !== null))
+    actionBtn.disabled = !active() || motion !== null
+    actionBtn.setAttribute('aria-disabled', String(actionBtn.disabled))
     const hints = [COPY.light, COPY.spin, COPY.place, COPY.done]
     setSafeText(hintEl, motion ? motion.kind === 'spin' ? COPY.spinning : COPY.placing : hints[checkpoint], assertSafeCopy)
     if (checkpoint < 3) setSafeText(actionBtn, [COPY.lightAction, COPY.spinAction, COPY.placeAction][checkpoint], assertSafeCopy)
     orbitGuide.visible = checkpoint === 1 && motion === null
     returnGuide.visible = checkpoint === 2 && motion === null
-    hitLayer.style.pointerEvents = checkpoint === 3 ? 'none' : 'auto'
+    hitLayer.style.pointerEvents = active() && checkpoint < 3 ? 'auto' : 'none'
     updateMatrices()
   }
   const restorePose = () => {
+    orbitSweeps.forEach(path => path.reset())
+    orbitGuide.children.forEach(object => { if ((object as THREE.Mesh).isMesh) ((object as THREE.Mesh).material as THREE.MeshBasicMaterial).color.setHex(0xe7bd73) })
     if (!motion) heldLamp.group.position.copy(checkpoint === 1 || checkpoint === 2 ? HELD : HOMES[2])
     heldLamp.group.rotation.y = 0
     updateMatrices()
@@ -294,18 +302,18 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
     if (ctx.isReducedMotion?.()) advance(kind === 'spin' ? 2 : 3)
     else syncUI()
   }
-  const cancelDrag = () => { drag = null; restorePose() }
+  const cancelDrag = () => { drag = null; restorePose(); syncUI() }
   const pointer = createObjectPointer(hitLayer, {
     isActive: active,
     canStart(x, y) {
       if (!active() || motion || checkpoint === 3) return false
       updateMatrices()
-      return checkpoint === 0 ? wickAt(x, y) >= 0 : ray.hits(x, y, [heldTarget])
+      return checkpoint === 0 ? wickAt(x, y) >= 0 : touch.hit(x, y, heldLamp.group)
     },
     onStart(x, y) {
       feedback.prepare()
       if (checkpoint === 0) drag = { kind: 'light', visited: new Set([wickAt(x, y)]) }
-      else if (checkpoint === 1) drag = { kind: 'spin', angle: ORBIT_START, direction: 0, covered: 0, valid: true }
+      else if (checkpoint === 1) { orbitSweeps.forEach(path => path.reset()); drag = { kind: 'spin' } }
       else {
         drag = { kind: 'place' }
         const normal = camera.getWorldDirection(new THREE.Vector3())
@@ -318,15 +326,17 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
         const i = wickAt(x, y)
         if (i >= 0) drag.visited.add(i)
       } else if (drag.kind === 'spin') {
-        if (!ray.aim(x, y).ray.intersectPlane(orbitPlane, point)) { drag.valid = false; return }
-        const radius = Math.hypot(point.x, point.z), angle = Math.atan2(point.z, point.x)
-        const delta = Math.atan2(Math.sin(angle - drag.angle), Math.cos(angle - drag.angle))
-        // Net angular travel, bounded increments and a radial band reject swipes,
-        // jumps across the circle and short back-and-forth accumulation.
-        if (Math.abs(radius - ORBIT_RADIUS) > 0.18 || Math.abs(delta) > 0.75) { drag.valid = false; return }
-        if (!drag.direction && Math.abs(delta) > 0.015) drag.direction = Math.sign(delta)
-        drag.covered = Math.max(0, drag.covered + delta * drag.direction)
-        drag.angle = angle
+        if (!ray.aim(x, y).ray.intersectPlane(orbitPlane, point)) return
+        const angle = Math.atan2(point.z, point.x)
+        orbitSweeps.forEach(path => path.sample([point.x, point.z]))
+        const direction = orbitSweeps[0]!.progress >= orbitSweeps[1]!.progress ? 0 : 1, path = orbitSweeps[direction]!
+        orbitGuide.children.forEach((object, i) => {
+          if (!(object as THREE.Mesh).isMesh) return
+          const gate = direction === 0 ? i : 16 - i
+          ;((object as THREE.Mesh).material as THREE.MeshBasicMaterial).color.setHex(gate < path.next ? 0x79ac82 : 0xe7bd73)
+        })
+        hintEl.dataset.progress = 'true'
+        setSafeText(hintEl, path.complete() ? '圆弧已走完，松手即可。' : '已沿圆弧行进 ' + Math.round(path.progress * 100) + '%，沿浅金圆弧继续。', assertSafeCopy)
         heldLamp.group.position.set(Math.cos(angle) * ORBIT_RADIUS, HELD.y, Math.sin(angle) * ORBIT_RADIUS)
         heldLamp.group.rotation.y = ORBIT_START - angle
         updateMatrices()
@@ -345,14 +355,15 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
         restorePose()
       } else if (current.kind === 'spin') {
         const end = ray.aim(x, y).ray.intersectPlane(orbitPlane, point)
-        const closed = end && Math.hypot(point.x, point.z - ORBIT_RADIUS) < 0.21
-        if (current.valid && current.covered >= Math.PI * 1.83 && closed) advance(2)
+        const closed = end && orbitSweeps.some(path => path.complete([point.x, point.z]))
+        if (closed) advance(2)
         else restorePose()
       } else {
         updateMatrices()
         if (ray.hits(x, y, [plateTarget])) beginMotion('place')
         else restorePose()
       }
+      syncUI()
     },
     onCancel: cancelDrag,
   })
@@ -362,6 +373,8 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
     if (checkpoint === 0) light([lamps.findIndex((lamp) => !lamp.lit)])
     else beginMotion(checkpoint === 1 ? 'spin' : 'place')
   }
+  const blur = () => { focused = false; pointer.cancel(); syncUI() }
+  const focus = () => { focused = true; if (!disposed) syncUI() }
   const resize = () => {
     const aspect = sizeStage(canvas, renderer, styleRenderer, camera)
     camera.position.set(0, 2.8, 3.55 + portraitBoost(aspect, 2.5))
@@ -376,6 +389,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
       resize()
       stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
       actionBtn.addEventListener('click', onAction)
+      window.addEventListener('blur', blur); window.addEventListener('focus', focus)
       const initial = ctx.initialProgress ?? 0
       checkpoint = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
       lamps.forEach((lamp) => {
@@ -387,7 +401,8 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
-      if (!active()) { pointer.cancel(); styleRenderer.render(); return }
+      if (!active()) { suspended = true; pointer.cancel(); syncUI(); styleRenderer.render(); return }
+      if (suspended) { suspended = false; syncUI() }
       const reduced = ctx.isReducedMotion?.() ?? false
       const elapsed = Number.isFinite(dt) ? Math.max(0, dt) : 0
       clock += elapsed
@@ -418,6 +433,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
       motion = null
       stopResize()
       actionBtn.removeEventListener('click', onAction)
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       feedback.dispose()
       styleRenderer.dispose()
       scene.traverse((o) => { if (o instanceof THREE.Light) o.dispose() })

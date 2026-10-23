@@ -4,11 +4,13 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
+import { createDropFeedback } from '../drop-feedback'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
-  title: '彩车迎晴', assemble: '握住桌前木轮的轮毂，拖到小车露出的车轴上。',
+  title: '彩车迎晴', assemble: '拿住桌前木轮，拖到小车露出的车轴上。',
   display: '握住车厢前侧的木扶手，把整辆小车移到右侧展垫。',
   rest: '轻点小车扶手，静看轮辐与色彩。',
   moving: '木轮与小车缓缓就位…', done: '留一刻欣赏轮雕与彩绘的耐心。',
@@ -125,30 +127,27 @@ export function createSicilianPaintedCart(ctx: SceneContext): SceneInstance {
   addInteractionCue(grip, { kind: 'tap', label: '轻点扶手静看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => checkpoint === 0 ? looseWheel : cart
-  const hitsVisible = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => {
-    const meshes: THREE.Object3D[] = []
-    scene.traverseVisible(object => {
-      const mesh = object as THREE.Mesh
-      if (!mesh.isMesh) return
-      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
-      if (materials.every(mat => mat.transparent && mat.opacity < .5)) return
-      for (let p: THREE.Object3D | null = object; p; p = p.parent) if (p === held) return
-      meshes.push(object)
-    })
-    return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object === target
+  const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
+  const acceptsDrop = (x: number, y: number) => {
+    if (!insideCanvas(canvas, x, y)) return false
+    const target = checkpoint === 0 ? axleEnd : mat, ignore = moving()
+    if (touch.hit(x, y, target, { ignore })) return true
+    if (touch.occluded(x, y, target, { ignore })) return false
+    const contact = projectTouchPoint(canvas, camera, checkpoint === 0 ? hub : grip)
+    return !!contact && touch.hit(contact.x, contact.y, target, { ignore })
   }
-  const reset = () => { dragging = false; maxTravel = 0; if (!transition) restore() }
+  const reset = () => { dragging = false; maxTravel = 0; dropFeedback.clear(); if (!transition) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart(x, y) { if (notifying || transition || checkpoint === 3) return false; matrices(); return hitsVisible(x, y, checkpoint === 0 ? hub : grip) },
+    canStart(x, y) { if (notifying || transition || checkpoint === 3) return false; matrices(); return touch.hit(x, y, checkpoint === 0 ? looseWheel : grip) },
     onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; notifyHost(() => feedback.prepare()); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), object.position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
     onMove(x, y) {
       if (notifying) return
-      maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices() },
+      maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices(); dropFeedback.setReady(dragging && maxTravel >= 8 && acceptsDrop(x, y)) },
     onRelease(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && hitsVisible(x, y, checkpoint === 0 ? axleEnd : mat, moving()) : maxTravel < 12 && hitsVisible(x, y, grip)
-      dragging = false; if (valid) advance(); else reset()
+      const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && acceptsDrop(x, y) : maxTravel < 12 && touch.hit(x, y, grip)
+      dragging = false; dropFeedback.clear(); if (valid) advance(); else reset()
     }, onCancel: reset,
   })
   const sync = () => {
@@ -196,6 +195,6 @@ export function createSicilianPaintedCart(ctx: SceneContext): SceneInstance {
       }
       if (active()) style.render()
     },
-    dispose() { if (disposed) return; disposed = true; pointer.dispose(); stopResize(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() { if (disposed) return; disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }
 }

@@ -1,10 +1,12 @@
-﻿import * as THREE from 'three'
+import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
+import { createDropFeedback } from '../drop-feedback'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
@@ -125,33 +127,32 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
   addInteractionCue(paintSurface, { kind: 'tap', label: '轻点彩蛋细看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => at === 0 ? brush : egg
-  const eggTargets: THREE.Object3D[] = []; egg.traverse(object => { if ((object as THREE.Mesh).isMesh) eggTargets.push(object) })
-  const visibleHit = (x: number, y: number, targets: THREE.Object3D[], held?: THREE.Object3D) => {
-    const meshes: THREE.Object3D[] = []
-    scene.traverseVisible(object => {
-      if (!(object as THREE.Mesh).isMesh) return
-      for (let parent: THREE.Object3D | null = object; parent; parent = parent.parent) if (parent === held) return
-      const materials = (object as THREE.Mesh).material, list = Array.isArray(materials) ? materials : [materials]
-      if (!list.some(mat => mat.visible && (!mat.transparent || mat.opacity >= 1))) return
-      meshes.push(object)
-    })
-    return targets.includes(ray.aim(x, y).intersectObjects(meshes, false)[0]?.object)
+  const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
+  const acceptsDrop = (x: number, y: number) => {
+    if (!insideCanvas(canvas, x, y)) return false
+    const targets = at === 0 ? [paintSurface, shell] : [cupTarget, rim], ignore = moving()
+    if (touch.hit(x, y, targets, { ignore })) return true
+    if (touch.occluded(x, y, targets, { ignore })) return false
+    const contact = projectTouchPoint(canvas, camera, at === 0 ? tip : egg)
+    return !!contact && touch.hit(contact.x, contact.y, targets, { ignore })
   }
-  const reset = () => { dragging = false; travel = 0; if (!motion) restore() }
+  const reset = () => { dragging = false; travel = 0; dropFeedback.clear(); if (!motion) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart(x, y) { if (motion || at === 3) return false; matrices(); return visibleHit(x, y, at === 0 ? [grip] : eggTargets) },
+    canStart(x, y) { if (motion || at === 3) return false; matrices(); return touch.hit(x, y, at === 0 ? brush : egg) },
     onStart(x, y) { feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
     onMove(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
       moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .78, 2.0); matrices()
+      dropFeedback.setReady(travel >= 8 && acceptsDrop(x, y))
     },
     onRelease(x, y) {
       matrices()
-      const valid = at < 2 ? dragging && travel >= 8 && visibleHit(x, y, at === 0 ? [paintSurface, shell] : [cupTarget], moving())
-        : at === 2 && travel < 12 && Math.hypot(x - down.x, y - down.y) < 12 && visibleHit(x, y, eggTargets)
+      const valid = at < 2 ? dragging && travel >= 8 && acceptsDrop(x, y)
+        : at === 2 && travel < 12 && Math.hypot(x - down.x, y - down.y) < 12 && touch.hit(x, y, egg)
       dragging = false
+      dropFeedback.clear()
       if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
   })
@@ -195,6 +196,6 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
       }
       matrices(); style.render()
     },
-    dispose() { if (disposed) return; disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() { if (disposed) return; disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }
 }

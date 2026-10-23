@@ -34,3 +34,7 @@
 当前呈现：贴合预裁燕形纸翼、拉线轮起飞、静看。 燕形配色结构原创，合翼及自动抬升不是完整扎绘糊放。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#weifang-paper-kite)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+## 2026-10-23 产品操作容错
+
+适用场景：`weifang-paper-kite`。本应用使用的共享方向判定放宽了小幅纠正和合理斜拖；原有动作与文化主张不变。距离与容错规则属于产品界面安排，不是传统要求。本次没有新登记外部来源为已读；详见[操作修正记录](../../docs/research/2026-10-23-scene-interaction-fixes.md)。

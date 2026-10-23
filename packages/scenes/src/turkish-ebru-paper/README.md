@@ -27,7 +27,7 @@ The prepared paper curl, comb flow, and peel are authored geometric approximatio
 
 The mesh vertices of the sheet are deformed in subject coordinates; its final quiet anchor therefore uses the raised sheet coordinates. Subject group: `ebru-subject`. Floating pigment: `ebru-floating-pattern`. Blank paper top: `ebru-paper-blank`. Paper underside: `ebru-paper-print`. Moving tool: `ebru-comb`.
 
-Each cue hits the nearest opaque rendered surface at 284×390, 350×408, and 1280×600. The peel cue is inset onto exposed paper, away from the front rim. Pickup accepts either rendered paper face or the existing small paper-edge mesh, rather than only the .82-unit central edge strip. It does not add invisible geometry or reach through the tray rim or another opaque object. A deliberate drag needs actual movement and at least 40px along the intended axis; 60px reaches the authored pose. Wrong starts, short, reverse, cross-axis, backtracked, cancelled and multitouch inputs do not advance. A native 44px action button supports Enter/Space.
+Each cue hits the nearest opaque rendered surface at 284×390, 350×408, and 1280×600. The peel cue is inset onto exposed paper, away from the front rim. Pickup accepts either rendered paper face or the existing small paper-edge mesh, rather than only the .82-unit central edge strip. It does not add invisible geometry or reach through the tray rim or another opaque object. A deliberate drag needs actual movement and at least 40px along the intended axis; 60px reaches the authored pose. Wrong starts, too-short drags, clear reverse, pure cross-axis, returned-to-start, cancelled and multitouch inputs do not advance. Longer same-direction drags, gentle diagonals and 10–20px corrections remain valid. A native 44px action button supports Enter/Space.
 
 ## Lifecycle and verification
 
@@ -46,3 +46,8 @@ Run `npm run test -w @wbr/scenes -- src/turkish-ebru-paper/scene.test.ts`. The t
 简化边界：预制液面与颜料、自动贴纸、即时固色和留言为产品，不是配方教学。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#turkish-ebru-paper)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+
+## 2026-10-23 共享方向容错
+
+共享方向判定支持同向长拖、合理斜拖与10–20px的小幅纠正，到位后继续同向拖不会丢失成功资格；明显反向、退回起点、取消及多指仍不提交。保留本模块的真实起点、动作与主动结束／留言流程。仅调整产品技术容错，未改变器物、文化主张、动作顺序、来源归属、技术 ID 或存档。验证与文化影响边界见[本轮修复记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。

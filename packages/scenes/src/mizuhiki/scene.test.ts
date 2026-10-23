@@ -168,6 +168,7 @@ describe('mizuhiki craft state', () => {
     follow(s)
     expect(s.progress).toEqual([])
     active = true
+    s.run(.05)
     s.button.click()
     s.run()
     expect(s.progress).toEqual([1])
@@ -324,4 +325,51 @@ describe('mizuhiki object gestures', () => {
     expect(s.progress).toEqual([])
     expect(s.overlay.childElementCount).toBe(0)
   })
+})
+
+describe('continuous cord path tolerance',()=>{
+  it.each([12,16,24,60].flatMap(count=>[0,.5].map(phase=>[count,phase])))('accepts %i curve samples with phase %s',(count,phase)=>{
+    const s=mount(0,{isReducedMotion:()=>true})
+    for(let stage=0;stage<2;stage++){
+      const guide=drawn.scene!.getObjectByName('mizuhiki-path-guide')!
+      const marks=guide.children.filter(o=>o.visible&&o.name.startsWith('mizuhiki-waypoint-'))
+      const curve=new THREE.CatmullRomCurve3(marks.map(o=>o.getWorldPosition(new THREE.Vector3())),false,'centripetal')
+      const screen=(t:number):Point=>{const p=curve.getPoint(t).project(drawn.camera!);return[(p.x+1)*195,(1-p.y)*260]}
+      pointer(s,'pointerdown',screen(0))
+      for(let i=phase?0:1;i+phase<count;i++)pointer(s,'pointermove',screen((i+phase)/count))
+      pointer(s,'pointermove',screen(1))
+      expect(s.overlay.querySelector('.scene-hint')?.getAttribute('data-progress')).toBe('true')
+      pointer(s,'pointerup',screen(1));expect(s.progress).toEqual(stage===0?[1]:[1,2])
+      expect(s.overlay.querySelector('.scene-hint')?.hasAttribute('data-progress')).toBe(false)
+    }
+  })
+  it('sweeps a gate between samples instead of requiring an event inside it',()=>{
+    const s=mount(0,{isReducedMotion:()=>true}),guide=drawn.scene!.getObjectByName('mizuhiki-path-guide')!
+    const marks=guide.children.filter(o=>o.visible&&o.name.startsWith('mizuhiki-waypoint-'))
+    const p0=marks[0].getWorldPosition(new THREE.Vector3()),p1=marks[1].getWorldPosition(new THREE.Vector3()),p2=marks[2].getWorldPosition(new THREE.Vector3())
+    const screen=(p:THREE.Vector3):Point=>{const q=p.clone().project(drawn.camera!);return[(q.x+1)*195,(1-q.y)*260]}
+    const r=route(s);pointer(s,'pointerdown',r[0])
+    pointer(s,'pointermove',screen(p1.clone().add(p0.clone().sub(p1).normalize().multiplyScalar(.18))))
+    pointer(s,'pointermove',screen(p1.clone().add(p2.clone().sub(p1).normalize().multiplyScalar(.18))))
+    r.slice(2).forEach(p=>pointer(s,'pointermove',p));pointer(s,'pointerup',r.at(-1)!);expect(s.progress).toEqual([1])
+  })
+})
+
+
+  it('cancels a completed cord path on blur and requires fresh focused input',()=>{
+    const s=mount(0,{isReducedMotion:()=>true}),r=route(s)
+    pointer(s,'pointerdown',r[0]);r.slice(1).forEach(p=>pointer(s,'pointermove',p))
+    window.dispatchEvent(new Event('blur'));window.dispatchEvent(new Event('focus'))
+    pointer(s,'pointerup',r.at(-1)!);expect(s.progress).toEqual([])
+    window.dispatchEvent(new Event('blur'));follow(s);expect(s.progress).toEqual([])
+    window.dispatchEvent(new Event('focus'));follow(s);expect(s.progress).toEqual([1])
+  })
+
+
+it('does not start the cord through a nearer opaque surface',()=>{
+ const s=mount(0,{isReducedMotion:()=>true}),a=drawn.scene!.getObjectByName('mizuhiki-cord-end-target')!.getWorldPosition(new THREE.Vector3())
+ const block=new THREE.Mesh(new THREE.PlaneGeometry(.8,.8),new THREE.MeshBasicMaterial({side:THREE.DoubleSide}))
+ block.position.lerpVectors(a,drawn.camera!.position,.12);block.quaternion.copy(drawn.camera!.quaternion);drawn.scene!.add(block)
+ follow(s);expect(s.progress).toEqual([])
+ block.removeFromParent();block.geometry.dispose();block.material.dispose();follow(s);expect(s.progress).toEqual([1])
 })

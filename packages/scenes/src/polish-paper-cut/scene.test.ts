@@ -305,10 +305,10 @@ describe('an original folded floral paper cut', () => {
   it('removes all pointer callback guards exactly once', () => {
     const added = vi.spyOn(EventTarget.prototype, 'addEventListener'), removed = vi.spyOn(EventTarget.prototype, 'removeEventListener')
     const windowAdded = vi.spyOn(window, 'addEventListener'), windowRemoved = vi.spyOn(window, 'removeEventListener'), s = mount()
-    const guards = added.mock.calls.filter(([type, , options], i) => added.mock.instances[i] === s.hit && options === true && ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture'].includes(type))
+    const guards = added.mock.calls.filter(([type, , options], i) => added.mock.contexts[i] === s.hit && options === true && ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture'].includes(type))
     expect(guards).toHaveLength(5); s.instance.dispose(); s.instance.dispose()
     for (const [type, listener, options] of guards) {
-      expect(removed.mock.calls.filter(([t, l, o], i) => removed.mock.instances[i] === s.hit && t === type && l === listener && o === options)).toHaveLength(1)
+      expect(removed.mock.calls.filter(([t, l, o], i) => removed.mock.contexts[i] === s.hit && t === type && l === listener && o === options)).toHaveLength(1)
       expect(windowAdded.mock.calls.filter(([t, l, o]) => t === type && l === listener && o === options)).toHaveLength(1)
       expect(windowRemoved.mock.calls.filter(([t, l, o]) => t === type && l === listener && o === options)).toHaveLength(1)
     }

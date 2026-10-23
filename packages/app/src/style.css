@@ -258,6 +258,15 @@ button:hover:not(:disabled) {
   position: relative;
   background: var(--dots), var(--island);
   box-shadow: 0 14px 60px #0b5a5226;
+  /* Repeated taps and long presses are app gestures, not text selection. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.app-shell :is(input, textarea, [contenteditable="true"], [contenteditable=""], .legal-information) {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 .app-content {
   padding: 12px 18px 32px;
@@ -1772,7 +1781,9 @@ button:hover:not(:disabled) {
 }
 .scene-topbar {
   --title-side-space: 94px;
-  padding-inline: 14px;
+  --topbar-padding: 14px;
+  container-type: inline-size;
+  padding-inline: var(--topbar-padding);
 }
 .scene-topbar .feedback-controls {
   position: absolute;
@@ -1780,13 +1791,17 @@ button:hover:not(:disabled) {
 }
 .scene-topbar .title-ribbon {
   /* Reserve the same space on both sides, even with three controls. */
+  --ribbon-width: min(170px, calc(100cqw + 2 * var(--topbar-padding) - 2 * var(--title-side-space)));
+  --ribbon-padding: clamp(6px, calc((100cqw + 2 * var(--topbar-padding) - 320px) / 8 + 6px), 18px);
+  --reach: min(0.6em, calc(var(--ribbon-padding) - 2px));
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+  width: var(--ribbon-width);
   max-width: calc(100% - 2 * var(--title-side-space));
-  padding: 6px 6px calc(8px + var(--drop));
+  padding: 6px var(--ribbon-padding) calc(8px + var(--drop));
   letter-spacing: normal;
-  font-size: clamp(12px, calc((min(100vw, 430px) - 2 * var(--title-side-space) - 12px) / var(--ribbon-letters, 4)), 19px);
+  font-size: clamp(12px, calc((var(--ribbon-width) - 2 * var(--ribbon-padding)) / var(--ribbon-letters, 4)), 19px);
 }
 .scene-topbar:has(button[aria-label="震动"]):has(button[aria-label="视觉风格"]) {
   --title-side-space: 130px;
@@ -4151,6 +4166,18 @@ button:hover:not(:disabled) {
 }
 .scene-object-cue[data-cue-role='target'] { opacity: 0.6; }
 .scene-object-cue[data-dragging='true'] { opacity: 0.25; }
+.library-scene-stage:has(.scene-hint[data-drop-ready='true']) .scene-object-cue[data-cue-role='target'],
+.library-scene-stage:has(.scene-hint[data-ready='true']) .scene-object-cue[data-cue-role='source'] {
+  opacity: 1;
+}
+.library-scene-stage:has(.scene-hint[data-drop-ready='true']) .scene-object-cue[data-cue-role='target'] .scene-object-cue-ring,
+.library-scene-stage:has(.scene-hint[data-ready='true']) .scene-object-cue[data-cue-role='source'] .scene-object-cue-ring {
+  animation: none;
+  border: 2px solid var(--mint-ink);
+  background: #8ee3bf55;
+  outline: 3px solid #ffffffaa;
+  outline-offset: 3px;
+}
 .scene-cue-guides,
 .scene-cue-guides * { pointer-events: none; }
 .scene-cue-guides {
@@ -4216,6 +4243,20 @@ button:hover:not(:disabled) {
   padding: 0;
   overflow: hidden;
   clip-path: inset(50%);
+}
+/* Show the changing completion state in the guide's existing shelf row, so
+   feedback is visible without resizing or moving the canvas under a finger. */
+.scene-overlay-host:has(> .scene-cue-guides:not([hidden]) > .scene-cue-guide:not([hidden])) > .scene-hint:is([data-ready='true'], [data-drop-ready='true'], [data-progress='true']) {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 12px 0 0;
+  padding: 0 4px;
+  overflow: visible;
+  clip-path: none;
+}
+.scene-overlay-host:has(> .scene-hint:is([data-ready='true'], [data-drop-ready='true'], [data-progress='true'])) > .scene-cue-guides {
+  visibility: hidden;
 }
 .library-scene-stage:has(.scene-overlay-host[inert]) .scene-object-cues,
 .scene-overlay-host[inert] .scene-cue-guides,

@@ -43,7 +43,7 @@ describe('createStepOverlay', () => {
     // the wish note's ink on scene-overlay--stage.
     const overlay = document.createElement('div')
     createStepOverlay(overlay, { title: 't', stepsAria: 's', action: 'a' }, () => {})
-    expect([...overlay.classList]).toEqual(['scene-overlay', 'scene-overlay--stage'])
+    expect(Array.from(overlay.classList)).toEqual(['scene-overlay', 'scene-overlay--stage'])
   })
 })
 

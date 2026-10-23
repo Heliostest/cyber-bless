@@ -56,3 +56,7 @@ The tests replace GPU rendering only. Real Three.js geometry, matrices, raycasts
 核查重点：中世纪欧洲修道院背景非克罗地亚本地精确起源；原创纹样/挂架/留言不是固定礼赠仪式；非现实食品教程。
 
 逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#croatian-licitar-heart)。
+
+## 2026-10-23 操作容错
+
+近距离拾取与落点增加最多22 CSS px的触控容差，保留前景遮挡和画布边界。指针或物件握点对齐均可安放；有效时显示可以松手，释放后落稳。取消、暂停或失焦会清除到位提示。彩心的相连挂带也可用于托起和轻点。以上属于产品输入与反馈修正，不新增传统规则；详见[操作修正记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。

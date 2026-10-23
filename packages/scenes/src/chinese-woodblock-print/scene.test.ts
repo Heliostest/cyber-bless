@@ -92,6 +92,54 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 
 
 describe('a rubbing and peeling woodblock print', () => {
+  it('asks to return to the paper instead of announcing an invalid off-paper release', () => {
+    const s = mount(0, { isReducedMotion: () => true })
+    event(s.hit, 'pointerdown', s.point('woodblock-rubbing-grip'))
+    for (const x of [-.55, 0, .55]) event(s.hit, 'pointermove', s.point('woodblock-paper-back', [x, 0, 0]))
+    expect(s.overlay.querySelector('.scene-hint')!.textContent).toContain('可以松手')
+    event(s.hit, 'pointermove', [1, 1])
+    expect(s.overlay.querySelector('.scene-hint')!.textContent).not.toContain('可以松手')
+    event(s.hit, 'pointerup', [1, 1]); s.run()
+    expect(s.progress).toEqual([])
+  })
+  it('does not announce a rounded-up incomplete rub as ready to release', () => {
+    const s = mount(0, { isReducedMotion: () => true })
+    event(s.hit, 'pointerdown', s.point('woodblock-rubbing-grip'))
+    for (const x of [-.3744, 0, .3744]) event(s.hit, 'pointermove', s.point('woodblock-paper-back', [x, 0, 0]))
+    const hint = s.overlay.querySelector('.scene-hint')!
+    expect(hint.textContent).toContain('99%')
+    expect(hint.textContent).not.toContain('可以松手')
+    event(s.hit, 'pointerup', s.point('woodblock-paper-back', [.3744, 0, 0])); s.run()
+    expect(s.progress).toEqual([])
+    expect(hint.textContent).toContain('99%')
+  })
+  it('keeps paper rubbing across separate short strokes and shows the accumulated coverage', () => {
+    const s = mount(0, { isReducedMotion: () => true })
+    const stroke = (xs: number[]) => {
+      event(s.hit, 'pointerdown', s.point('woodblock-rubbing-grip'))
+      for (const x of xs) event(s.hit, 'pointermove', s.point('woodblock-paper-back', [x, 0, 0]))
+      event(s.hit, 'pointerup', s.point('woodblock-paper-back', [xs.at(-1)!, 0, 0])); s.run()
+    }
+    stroke([-.55, -.35, -.15])
+    expect(s.progress).toEqual([])
+    expect(s.overlay.querySelector('.scene-hint')!.textContent).toMatch(/刷印.*\d+%/)
+    stroke([.15, .35, .55])
+    expect(s.progress).toEqual([1])
+    expect(s.scene.getObjectByName('woodblock-print-face')!.visible).toBe(true)
+  })
+  it('discards a canceled rubbing stroke without removing previously accepted paper coverage', () => {
+    const s = mount(0, { isReducedMotion: () => true })
+    const start = () => event(s.hit, 'pointerdown', s.point('woodblock-rubbing-grip'))
+    const move = (x: number) => event(s.hit, 'pointermove', s.point('woodblock-paper-back', [x, 0, 0]))
+    const end = (type: string, x: number) => event(s.hit, type, s.point('woodblock-paper-back', [x, 0, 0]))
+    start(); [-.55, -.35, -.15].forEach(move); end('pointerup', -.15)
+    const coverage = s.overlay.querySelector('.scene-hint')!.textContent
+    start(); [.15, .35, .55].forEach(move); end('pointercancel', .55)
+    expect(s.progress).toEqual([])
+    expect(s.overlay.querySelector('.scene-hint')!.textContent).toBe(coverage)
+    start(); [.15, .35, .55].forEach(move); end('pointerup', .55); s.run()
+    expect(s.progress).toEqual([1])
+  })
   it.each([false, true])('transfers an original print by real rubbing and paper lift, reduced=%s', reduced => {
     const s = mount(0, { isReducedMotion: () => reduced })
     const paper = s.scene.getObjectByName('woodblock-paper')!, face = s.scene.getObjectByName('woodblock-print-face')!
@@ -171,9 +219,9 @@ describe('a rubbing and peeling woodblock print', () => {
   })
   it('removes each callback pointer guard on disposal',()=>{
     const added=vi.spyOn(EventTarget.prototype,'addEventListener'), removed=vi.spyOn(EventTarget.prototype,'removeEventListener'),s=mount()
-    const guards=added.mock.calls.filter(([type,,options],index)=>added.mock.instances[index]===s.hit && options===true && ['pointerdown','pointermove','pointerup','pointercancel','lostpointercapture'].includes(type))
+    const guards=added.mock.calls.filter(([type,,options],index)=>added.mock.contexts[index]===s.hit && options===true && ['pointerdown','pointermove','pointerup','pointercancel','lostpointercapture'].includes(type))
     expect(guards).toHaveLength(5);s.instance.dispose();s.instance.dispose()
-    for(const [type,listener,options] of guards) expect(removed.mock.calls.filter(([t,l,o],index)=>removed.mock.instances[index]===s.hit&&t===type&&l===listener&&o===options)).toHaveLength(1)
+    for(const [type,listener,options] of guards) expect(removed.mock.calls.filter(([t,l,o],index)=>removed.mock.contexts[index]===s.hit&&t===type&&l===listener&&o===options)).toHaveLength(1)
   })
   it.each(['prepareFeedback','haptic','onProgress'] as const)('stops rendering when the host pauses in %s', callback=>{
     let active=true;const s=mount(0,{isReducedMotion:()=>true,isActive:()=>active,[callback]:()=>{active=false}}), frames=rendered.render.mock.calls.length;s.button.click();s.instance.update(.05);s.instance.update(.05);expect(rendered.render.mock.calls.length).toBe(frames)

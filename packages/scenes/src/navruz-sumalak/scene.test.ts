@@ -126,16 +126,16 @@ describe('Navruz shared Sumalak practice', () => {
     expect(s.complete).toHaveBeenCalledOnce()
   })
 
-  it('requires the visible arc: a straight shortcut, skipped bead, reverse path or departure cannot stir', () => {
+  it('requires the visible arc instead of a straight shortcut, large chord or reversed path', () => {
     const s = mount()
-    for (const sequence of [[8], [1, 3, 4, 5, 6, 7, 8], [8, 7, 6, 5, 4, 3, 2, 1]]) {
+    for (const sequence of [[8], [1, 5, 6, 7, 8], [8, 7, 6, 5, 4, 3, 2, 1]]) {
       pointer(s.hit, 'pointerdown', project(s, object('navruz-wooden-spoon-bowl')))
       sequence.forEach(i => pointer(s.hit, 'pointermove', project(s, object(`navruz-stir-bead-${i}`))))
       pointer(s.hit, 'pointerup', project(s, object('navruz-stir-bead-8'))); s.run(); expect(s.progress).toEqual([])
     }
     pointer(s.hit, 'pointerdown', project(s, object('navruz-wooden-spoon-bowl')))
     pointer(s.hit, 'pointermove', [3, 3])
-    for (let i = 1; i <= 8; i++) pointer(s.hit, 'pointermove', project(s, object(`navruz-stir-bead-${i}`)))
+    pointer(s.hit, 'pointermove', project(s, object('navruz-stir-bead-8')))
     pointer(s.hit, 'pointerup', project(s, object('navruz-stir-bead-8'))); s.run(); expect(s.progress).toEqual([])
     stir(s); expect(s.progress).toEqual([1])
   })
@@ -294,4 +294,40 @@ describe('Navruz shared Sumalak practice', () => {
     s.button.click(); s.instance.update(5); expect(s.progress).toEqual([])
     expect(s.overlay.childElementCount).toBe(0); expect(drawn.scene!.children).toHaveLength(0)
   })
+})
+
+describe('continuous stir path tolerance', () => {
+  it.each([12,16,24,60].flatMap(count=>[0,.5].map(phase=>[count,phase])))('accepts %i arc samples with phase %s',(count,phase)=>{
+    const s=mount(0,{isReducedMotion:()=>true})
+    const at=(t:number,r=.62):Point=>{const p=new THREE.Vector3(-.45+Math.cos(Math.PI*(1-t))*r,1.09,-.14+Math.sin(Math.PI*(1-t))*r).project(drawn.camera!);return[(p.x+1)*s.canvas.clientWidth/2,(1-p.y)*260]}
+    pointer(s.hit,'pointerdown',project(s,object('navruz-wooden-spoon-bowl')))
+    for(let i=phase?0:1;i+phase<count;i++)pointer(s.hit,'pointermove',at((i+phase)/count))
+    pointer(s.hit,'pointermove',at(1))
+    expect(s.overlay.querySelector('.scene-hint')?.getAttribute('data-progress')).toBe('true')
+    pointer(s.hit,'pointerup',at(1));expect(s.progress).toEqual([1])
+    expect(s.overlay.querySelector('.scene-hint')?.hasAttribute('data-progress')).toBe(false)
+  })
+  it('retains the covered arc after a brief radial correction',()=>{
+    const s=mount(0,{isReducedMotion:()=>true})
+    pointer(s.hit,'pointerdown',project(s,object('navruz-wooden-spoon-bowl')))
+    for(let i=1;i<=8;i++){
+      if(i===4){const p=new THREE.Vector3(-.45,1.09,.68).project(drawn.camera!);pointer(s.hit,'pointermove',[(p.x+1)*195,(1-p.y)*260])}
+      pointer(s.hit,'pointermove',project(s,object(`navruz-stir-bead-${i}`)))
+    }
+    pointer(s.hit,'pointerup',project(s,object('navruz-stir-bead-8')));expect(s.progress).toEqual([1])
+  })
+})
+
+
+it('allows a nearby finger to pick up the visible spoon head before following the arc',()=>{
+ const s=mount(0,{isReducedMotion:()=>true}),a=project(s,object('navruz-wooden-spoon-bowl'))
+ pointer(s.hit,'pointerdown',[a[0]+20,a[1]])
+ for(let i=1;i<=8;i++)pointer(s.hit,'pointermove',project(s,object(`navruz-stir-bead-${i}`)))
+ pointer(s.hit,'pointerup',project(s,object('navruz-stir-bead-8')));expect(s.progress).toEqual([1])
+})
+
+it('accepts a nearby release after covering the entire stir path',()=>{
+ const s=mount(0,{isReducedMotion:()=>true});pointer(s.hit,'pointerdown',project(s,object('navruz-wooden-spoon-bowl')))
+ for(let i=1;i<=8;i++)pointer(s.hit,'pointermove',project(s,object(`navruz-stir-bead-${i}`)))
+ const end=project(s,object('navruz-stir-bead-8'));pointer(s.hit,'pointerup',[end[0],end[1]-18]);expect(s.progress).toEqual([1])
 })

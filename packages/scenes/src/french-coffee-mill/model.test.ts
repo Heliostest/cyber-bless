@@ -4,7 +4,11 @@ import {createCoffeeMillModel} from './model'
 import {disposeTree} from '../procedural-kit'
 const world=(o:THREE.Object3D,p=new THREE.Vector3())=>o.localToWorld(p.clone())
 const meshes=(o:THREE.Object3D)=>{const a:THREE.Mesh[]=[];o.traverse(v=>{if((v as THREE.Mesh).isMesh)a.push(v as THREE.Mesh)});return a}
-const bounds=(m:THREE.Mesh)=>new THREE.Box3().setFromBufferAttribute(m.geometry.attributes.position!).applyMatrix4(m.matrixWorld)
+const bounds=(m:THREE.Mesh)=>{
+ const box=new THREE.Box3(),position=m.geometry.attributes.position!,point=new THREE.Vector3()
+ for(let i=0;i<position.count;i++)box.expandByPoint(point.fromBufferAttribute(position,i))
+ return box.applyMatrix4(m.matrixWorld)
+}
 it('joins all cabinet walls to the top underside without coplanar overlapping face strips',()=>{
  const m=createCoffeeMillModel(),items=meshes(m.subject),top=items.filter(o=>o.name.startsWith('coffee-top-')),walls=items.filter(o=>/^coffee-case-(side-|back$|front-upper$)/.test(o.name))
  const underside=Math.min(...top.map(o=>bounds(o).min.y));expect(walls).toHaveLength(4)

@@ -5,6 +5,8 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
+import { createDropFeedback } from '../drop-feedback'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
@@ -33,6 +35,7 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
   const reduced = () => ctx.isReducedMotion?.() ?? false
   const feedback = createSceneFeedback(ctx)
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: COPY.decorateAction }, safe)
+  const dropFeedback = createDropFeedback(ui.hintEl, safe)
   ui.actionBtn.style.minWidth = '44px'; ui.actionBtn.style.minHeight = '44px'
   const wishSlot = document.createElement('div'); wishSlot.className = 'scene-wish-slot'; overlay.append(wishSlot)
   const { scene, renderer } = createWarmStage(canvas)
@@ -102,6 +105,7 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
   addInteractionCue(grip, { kind: 'drag', label: '握住木柄', priority: 3, enabled: enabled(1), destination: seat, targetLabel: '木勺展托' })
   addInteractionCue(grip, { kind: 'tap', label: '轻点木勺细看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
+  const touch = createTouchTarget(canvas, camera, scene)
   const moving = () => at === 0 ? cloth : spoon
   const belongsTo = (object: THREE.Object3D | undefined, target: THREE.Object3D) => { for (let p = object; p; p = p.parent ?? undefined) if (p === target) return true; return false }
   const visibleHit = (x: number, y: number, targets: THREE.Object3D | THREE.Object3D[], held?: THREE.Object3D) => {
@@ -116,21 +120,33 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
     const first = ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
     return (Array.isArray(targets) ? targets : [targets]).some(target => belongsTo(first, target))
   }
-  const reset = () => { dragging = false; travel = 0; if (!motion) restore() }
+  const acceptsDrop = (x: number, y: number) => {
+    if (!insideCanvas(canvas, x, y)) return false
+    const target = at === 0 ? bowl : seat, ignore = moving()
+    if (visibleHit(x, y, target, ignore) || touch.hit(x, y, target, { ignore })) return true
+    if (touch.occluded(x, y, target, { ignore })) return false
+    // The user holds the handle above the stand. Accept the spoon's bottom
+    // touching the seat even though that fingertip is well above the seat.
+    const contact = projectTouchPoint(canvas, camera, at === 0 ? clothGrip : spoon)
+    return !!contact && touch.hit(contact.x, contact.y, target, { ignore })
+  }
+  const reset = () => { dragging = false; travel = 0; dropFeedback.clear(); if (!motion) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart(x, y) { if (motion || at === 3) return false; matrices(); return visibleHit(x, y, at === 0 ? clothGrip : [bowl, handle, grip, polished]) },
+    canStart(x, y) { if (motion || at === 3) return false; matrices(); return touch.hit(x, y, at === 0 ? cloth : spoon) },
     onStart(x, y) { feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
     onMove(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
       moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .80, 2.3); matrices()
+      dropFeedback.setReady(travel >= 8 && acceptsDrop(x, y))
     },
     onRelease(x, y) {
       matrices()
-      const valid = at < 2 ? dragging && travel >= 8 && visibleHit(x, y, at === 0 ? bowl : seat, moving())
-        : at === 2 && travel < 12 && Math.hypot(x - down.x, y - down.y) < 12 && visibleHit(x, y, [bowl, handle, grip, polished])
+      const valid = at < 2 ? dragging && travel >= 8 && acceptsDrop(x, y)
+        : at === 2 && travel < 12 && Math.hypot(x - down.x, y - down.y) < 12 && touch.hit(x, y, spoon)
       dragging = false
+      dropFeedback.clear()
       if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
   })
@@ -184,6 +200,6 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
       }
       if (active()) { matrices(); style.render() }
     },
-    dispose() { if (disposed) return; disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() { if (disposed) return; disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }
 }

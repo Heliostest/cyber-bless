@@ -36,3 +36,7 @@ ID `andalusian-ceramic-tile`，导出 `createAndalusianCeramicTile`。C级、中
 ## 2026-10-22 Moebius 可选预览
 
 Shader Lab 加入 Moebius 手绘漫画，可手动切换细墨线、色块与暗部排线。默认仍为柔和卡通，器物、纹样、材料身份、动作、介绍与文化来源保持。技术参考、产品表达边界和验证见[Moebius 渲染记录](../../../../docs/research/2026-10-22-moebius-rendering.md)。
+
+## 2026-10-23 操作容错
+
+近距离拾取与落点增加最多22 CSS px的触控容差，保留前景遮挡和画布边界。指针或物件握点对齐均可安放；有效时显示可以松手，释放后落稳。取消、暂停或失焦会清除到位提示。以上属于产品输入与反馈修正，不新增传统规则；详见[操作修正记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。

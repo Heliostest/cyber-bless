@@ -19,3 +19,8 @@ ID与来源slug：tibetan-water-bowls；引擎 tibetan-water-bowls@1；grade C�
 简化边界：只描述现有七碗添水片段，未声称完成清洁、礼拜、念诵、回向与晚间收供。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#tibetan-water-bowls)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+
+## 2026-10-23 操作容错
+
+箭头与方向判定共用动作方向配置；正确方向支持短拖、长拖、合理斜拖及小幅纠正，达到条件时显示可以松手。明显反向、回到起点、取消和多指仍不推进。仅调整产品输入容错与完成提示，未改变器物、文化主张、三步动作顺序、来源归属、技术 ID 或存档。核查与验证见[本轮修复记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。

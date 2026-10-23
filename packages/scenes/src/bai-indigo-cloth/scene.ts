@@ -5,6 +5,9 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
+import { createDropFeedback } from '../drop-feedback'
+import { placementHit } from '../placement-hit'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -144,38 +147,32 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   addInteractionCue(body, { kind: 'tap', label: '轻点布面静看', priority: 3, anchor: CLOTH_ANCHOR, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => at === 0 ? bundle : cloth
-  const belongsTo = (object: THREE.Object3D | undefined, target: THREE.Object3D) => { for (let p = object; p; p = p.parent ?? undefined) if (p === target) return true; return false }
-  const visibleHit = (x: number, y: number, targets: THREE.Object3D | THREE.Object3D[], held?: THREE.Object3D) => {
-    const meshes: THREE.Object3D[] = []
-    scene.traverseVisible(object => {
-      const mesh = object as THREE.Mesh
-      if (!mesh.isMesh || (held && belongsTo(object, held))) return
-      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
-      if (!materials.some(mat => mat.visible && (!mat.transparent || mat.opacity >= 1))) return
-      meshes.push(object)
-    })
-    const first = ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
-    return (Array.isArray(targets) ? targets : [targets]).some(target => belongsTo(first, target))
-  }
-  const reset = () => { dragging = false; travel = 0; if (!motion) restore() }
+  const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
+  const visibleHit = (x: number, y: number, targets: THREE.Object3D | THREE.Object3D[], held?: THREE.Object3D) => touch.hit(x, y, targets, { ignore: held })
+  const placementReady = (x: number, y: number) => at < 2 && travel >= 8
+    && !touch.occluded(x, y, at === 0 ? water : rail, { ignore: moving() })
+    && placementHit(canvas, camera, at === 0 ? tiedBody : body, x, y, (px, py) => visibleHit(px, py, at === 0 ? water : rail, moving()), at === 0 ? [0, 0, 0] : CLOTH_ANCHOR)
+  const reset = () => { dropFeedback.clear(); dragging = false; travel = 0; if (!motion) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (motion || at === 3) return false; matrices(); return visibleHit(x, y, at === 0 ? bundle : body) },
-    onStart(x, y) { feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
+    onStart(x, y) { dropFeedback.clear(); feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
     onMove(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
       moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .22, 2.4); matrices()
+      dropFeedback.setReady(dragging && placementReady(x, y))
     },
     onRelease(x, y) {
       matrices()
-      const valid = at < 2 ? dragging && travel >= 8 && visibleHit(x, y, at === 0 ? water : rail, moving())
+      const valid = at < 2 ? dragging && placementReady(x, y)
         : at === 2 && travel < 12 - 1e-6 && Math.hypot(x - down.x, y - down.y) < 12 - 1e-6 && visibleHit(x, y, body)
-      dragging = false
+      dropFeedback.clear(); dragging = false
       if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
   })
   const sync = () => {
+    dropFeedback.clear()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !active() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = !motion && at < 3 ? 'auto' : 'none'
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(active() && !returning && at === 2 && !motion)
@@ -221,6 +218,6 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
       }
       if (active()) { matrices(); style.render() }
     },
-    dispose() { if (disposed) return; disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() { if (disposed) return; disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }
 }

@@ -820,6 +820,8 @@
 
 749. [比较总览](content/traditions/comparative-overview.md)
 
+750. [土耳其蓝玻璃护眼珠](content/traditions/turkish-nazar-bead.md)
+
 ## 赛博祈福 App（开发中）
 
 ### 产品研究草稿
@@ -846,3 +848,5 @@ npm run dev          # 根脚本 → cyber-bless（已带 --host）
 2. 用上面的 `npm run dev`（Vite `server.host: true` / `--host`）启动。
 3. 终端会打印 `Network` 地址，如 `http://192.168.x.x:5173`；手机浏览器打开该 URL。
 4. 陀螺仪权限：多数浏览器要求 **HTTPS** 或 **localhost**。纯 HTTP LAN 上 `gyro` 可能不可用——场景内有点按降级；真机测陀螺仪可用本机隧道（如 `vite` + HTTPS 代理）或 USB 调试映射到 localhost。
+
+- 蓝珠祈安 `turkish-nazar-bead`：蓝玻璃护眼珠安放于可见处、寄托日常避厄护佑心意的片段；[场景说明](packages/scenes/src/turkish-nazar-bead/README.md)、[来源核查](docs/research/2026-10-23-turkish-nazar-bead.md)。

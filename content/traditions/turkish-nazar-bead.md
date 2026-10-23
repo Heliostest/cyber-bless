@@ -1,0 +1,33 @@
+# 土耳其蓝玻璃护眼珠（Nazar boncuğu）
+
+## 文化与器物／公开实践
+
+Nazar boncuğu 是眼形玻璃护符，土耳其文化与旅游部介绍了人们相信它能避开恶眼，并放在容易看见的位置的做法。[1] 东南欧非遗区域中心将玻璃珠工艺、使用与护佑信念联系起来；该页说的是土耳其国家非遗名录，不是UNESCO世界列名。[2]
+
+柏林欧洲文化博物馆的馆藏说明描述了黑点、浅蓝圈、白圈及深蓝外缘，并提醒护佑解释受到地方与宗教背景影响，有些使用者祈求的是神圣保护。[3] 威尔士国家博物馆记录了带悬孔的扁圆玻璃珠，并明确这种护符跨多个国家使用。[4] 这里保留避恶眼的护佑信念，不改写成原本只有装饰意义，也不将其统一定义为某一宗教教义或土耳其独有。
+
+## 本产品呈现
+
+一枚备好的蓝玻璃珠，用同一闭合网格呈现白、浅蓝和深色眼心，顶部有真实穿孔。原创刚性细金属挂环穿过孔，玻璃珠先立在小陶托上，再随挂环整体提起，移到侧立木架，最后让挂环落在横轴上悬稳。结尾祝愿用户与所爱者平安顺遂，不保证护符能改变现实结果。
+
+尺寸、曲面与比例、单枚数量、金属挂环及接触方式、陶托、木架横轴、石台庭院、三次短拖与方向、轨迹／时长、按钮、提示音、结束语及存档回访都是产品设计，不是传统要求。不模拟熔制玻璃、制珠、诵词、祝圣或完整宗教仪序，不复制某件馆藏。没有愿望输入，也不把未写愿望的完成记录说成传统。
+
+## 对应已读证据与访问状态
+
+1. 土耳其文化与旅游部，[Traditional Arts Using Glass](https://www.ktb.gov.tr/EN-98728/traditional-arts-using-glass.html)。2026-10-23核查正文L54–56。玻璃护眼珠及避恶眼的信念，置于容易看见的地方。不证明本场三拖、金属挂环、横轴架、统一礼法或现实功效。读取状态：实现者与独立审阅者均已读相关正文。日期：未见明确发布日期。
+
+2. 联合国教科文组织支持的东南欧非物质文化遗产区域中心，[Craftsmanship, Practices and Beliefs of Nazar Boncuğu (Evil Eye Charms)](https://www.unesco-centerbg.org/en/2021/09/29/craftsmanship-practices-and-beliefs-of-nazar-boncugu-evil-eye-charms/)。2026-10-23核查正文L44–49，尤其L46–47。手工玻璃眼形珠、护佑信念、配饰或装饰用途；正文指土耳其国家ICH名录。不是UNESCO世界列名；不采用起源、传播路线或婚礼等完整规程。读取状态：实现者首读正文成功、再次请求超时；独立者网页超时后普通HTTP200已实际读相关正文。日期：相关可见正文未见明确日期，不按URL推发表日。
+
+3. 柏林国家博物馆群／欧洲文化博物馆，[Nazar-Amulett, Nazar boncuk，N (50 H) 309/2023](https://search.smb.museum/object/obj-3415491)。2026-10-23核查馆藏说明L48–51、材料/尺寸L30–43。常见黑点—浅蓝—白—深蓝圈的玻璃眼形；护佑解释受地方和宗教理解影响，有时祈求神圣保护。收购地柏林/约2023使用及整件尺寸不能当土耳其独有、起源或本场原型；不把对象说成统一伊斯兰教义。读取状态：实现者与独立审阅者均已读相关馆藏正文。日期：正文明确最后更新29.07.2026；不是起源时间。
+
+4. Amgueddfa Cymru – Museum Wales，[Evil eye charm，11.24.30 B](https://museum.wales/collections/online/object/34cb0407-3c6f-3531-a138-498593068c0a/)。2026-10-23核查馆藏描述L65–91，核心L67。玻璃扁圆形护符与悬孔；nazar跨多个国家使用。该件含黄圈、尺寸与收藏号不套给本场蓝圈方案；本场不复刻该件，不写文化独占。读取状态：实现者与独立审阅者均已读相关馆藏正文。日期：未见明确发布日期。
+
+5. İzmir Provincial Directorate of Culture and Tourism，[İzmir Centre Museums and Ruins，Ethnography Museum](https://izmir.ktb.gov.tr/Eklenti/59076,izmir-muze-ve-orenyerleri-ingpdf.pdf?0=)。2026-10-23核查PDF P1出版页；PDF P33–34（印刷34–35），L419–436。正文2014出版标识；蓝玻璃、白黄或白蓝内圈、护自己与所爱者的信念。只读出版与对应说明文字，非100页通读；图版截图因签名跳转500失败，未登记已看；不采用“仅有这些村”推全国现状。读取状态：实现者已实际读提取正文；独立者PDF跳转/下载超时，未独立读到正文。日期：出版页标示2014，非习俗起源年。
+
+6. Kültürel Araştırmalar Vakfı（文化研究基金会），[Handicrafts / Evil Eye / Western Anatolia – Izmir](https://kultur.org.tr/en/handicrafts-evil-eye-western-anatolia-izmir/)。2026-10-23核查项目正文L23–25。蓝白玻璃护眼珠、避恶眼寓意与Nazarköy当代制作。署名机构的调研项目简介，不等于所有田野记录已读；不按无年份27 Apr或页脚版权猜文章日期。读取状态：实现者已读相关正文；独立者未取得相关正文，未登记独立已读。日期：未见明确文章年份。
+
+7. İzmir Provincial Directorate of Culture and Tourism，[Evil Eye Bead](https://izmir.ktb.gov.tr/EN-240859/evil-eye-bead.html)。2026-10-23核查正文L81–85。彩玻璃眼形护佑背景与伊兹密尔当代制作介绍。不采用早期起源/传播路线、种类表为本场规程；页脚2026和旁栏新闻不是本文发表日期。读取状态：实现者已读相关正文；独立者请求失败未读，未登记独立已读。日期：未见明确文章发表日期。
+
+此外实现者读到[oriGIn单页资料](https://www.origin-gi.com/wp-content/uploads/2017/02/2017-02-07-17-07-19.pdf)，它自称引自2016年土耳其政府／专利机构／WIPO目录，记有同心色圈和悬挂用途。这里只作为转录性补充，不冒称已读原目录原件；核心物类、悬孔、配色与护佑背景已有上列直接正文支持。
+
+[逐项研究记录](../../docs/research/2026-10-23-turkish-nazar-bead.md)；[场景README](../../packages/scenes/src/turkish-nazar-bead/README.md)。

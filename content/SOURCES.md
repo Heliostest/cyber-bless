@@ -4208,3 +4208,14 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 蓝珠祈安 · 2026-10-23
+
+- https://www.ktb.gov.tr/EN-98728/traditional-arts-using-glass.html
+- https://www.unesco-centerbg.org/en/2021/09/29/craftsmanship-practices-and-beliefs-of-nazar-boncugu-evil-eye-charms/
+- https://izmir.ktb.gov.tr/Eklenti/59076,izmir-muze-ve-orenyerleri-ingpdf.pdf?0=
+- https://kultur.org.tr/en/handicrafts-evil-eye-western-anatolia-izmir/
+- https://izmir.ktb.gov.tr/EN-240859/evil-eye-bead.html
+- 对应相关正文已实际阅读；PDF仅登记已读出版页与印刷34–35文字，图版截图跳转失败未登记已看。访问差异、机构身份及产品边界见 content/traditions/turkish-nazar-bead.md 和 docs/research/2026-10-23-turkish-nazar-bead.md。
+
+- 对应黑／浅蓝／白／深蓝圈和悬孔的已读馆藏正文：https://search.smb.museum/object/obj-3415491 ，https://museum.wales/collections/online/object/34cb0407-3c6f-3531-a138-498593068c0a/ 。两页实现者与独立者均已读，不能从馆藏取得地或尺寸推起源／独占。

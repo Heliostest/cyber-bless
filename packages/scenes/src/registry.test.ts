@@ -39,6 +39,7 @@ describe('sceneRegistry', () => {
       'fgs-buddha-bathing',
       'balinese-canang-sari',
       'bulgarian-survakane',
+      'turkish-nazar-bead',
       'setsubun-mamemaki',
       'sternsinger-house-blessing',
       'lam-tsuen-wishing-tree',
@@ -309,3 +310,5 @@ it('loads the source-specific fixed Chinowa walking fragment',async()=>{const m=
 it('loads the three preformed Bonfim knots fragment',async()=>{const m=await loadScene('bonfim-ribbon');expect(m.meta.id).toBe('bonfim-ribbon');expect(m.meta.traditionSlug).toBe('bonfim-ribbon');expect(m.create).toBeTypeOf('function')})
 
 it('loads the Greek household New Year pomegranate fragment',async()=>{const m=await loadScene('greek-new-year-pomegranate');expect(m.meta.id).toBe('greek-new-year-pomegranate');expect(m.meta.traditionSlug).toBe('greek-new-year-pomegranate');expect(m.create).toBeTypeOf('function')})
+
+it('loads a source-specific glass nazar protective charm',async()=>{const m=await loadScene('turkish-nazar-bead');expect(m.meta).toEqual(sceneRegistry.find(s=>s.id==='turkish-nazar-bead'));expect(m.meta.title).toBe('蓝珠祈安');expect(m.meta.traditionSlug).toBe('turkish-nazar-bead');expect(m.create).toBeTypeOf('function')})

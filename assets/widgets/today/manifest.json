@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "86a522de7e51430e2d551af9161b48b144046e72a0c8e30a338f7c48c21a75eb",
+  "revision": "17c4653bf4ddd15642e7d7e564c5403709dac1d5544c1479e116a39df529d3eb",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -642,6 +642,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "8b570d6cfe6ab9b9f1a982e6636e158bf7d4db9d54d50ca0a7afc35713036de9",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "turkish-nazar-bead",
+      "engine": "turkish-nazar-bead@1",
+      "small": {
+        "file": "turkish-nazar-bead-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "88bd99417ee0cab21bdea7ea7aae3038853e1662fc0728edd78729117c9b1079",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "turkish-nazar-bead-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "8787b0caa96b2342f8635bec7bfe44709c985cbf26390bf0d103acd3aa3b2833",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "turkish-nazar-bead-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "630fef7a826dfce46068dc24c492b7c91cba4601c29f83372173a7bba8ac1c9f",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

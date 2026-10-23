@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "86a522de7e51430e2d551af9161b48b144046e72a0c8e30a338f7c48c21a75eb",
+  "revision": "c538afe0a6cc084fd5b575b5fe8012ad49f8b986d9fc52352d22cf399b9c4d63",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -642,6 +642,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "8b570d6cfe6ab9b9f1a982e6636e158bf7d4db9d54d50ca0a7afc35713036de9",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "japanese-kumade",
+      "engine": "japanese-kumade@1",
+      "small": {
+        "file": "japanese-kumade-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "b35b53c82b88572ece2b2326bcb4e8f6bc2a2a209f638e50eb17a67bfcd8088f",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "japanese-kumade-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "320b4d3ab8a68598c50d2b7f26162324041588d6ad3bf3f7ab8b279ec7b21332",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "japanese-kumade-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "ad6a86217140eee98671d6d418504dae91ffa3f33575d430ed1459cc07f33a88",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

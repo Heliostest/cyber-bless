@@ -4208,3 +4208,10 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 葡萄迎岁 · 2026-10-23
+
+- https://www.spain.info/en/discover-spain/new-years-eve-spain/
+- https://www.esmadrid.com/en/whats-on/new-years-eve-party-puerta-sol
+
+实际读取状态和支持范围见专卡与研究。真实传统是午夜随钟吃十二颗葡萄；本场只备盘，三盘/四颗分组与器形钟面均产品安排，无吞吃/报时/应验保证，不复刻来源图片。

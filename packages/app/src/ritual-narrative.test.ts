@@ -179,6 +179,7 @@ describe("builtInScenes narratives", () => {
       "slovak-wire-bird",
       "sorbian-painted-egg",
       "spanish-castanets",
+      "spanish-twelve-grapes",
       "st-brigids-cross",
       "sternsinger-house-blessing",
       "sumiyoshi-godairiki",

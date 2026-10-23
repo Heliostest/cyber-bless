@@ -85,6 +85,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
     kind: 'blessing', label: '向神明献上感恩', optionalWish: false,
     action: '放入白花，托起盛好供品的叶盘，轻放到田边供台上。',
   },
+  'spanish-twelve-grapes': {kind:'blessing',label:'备好十二颗葡萄，迎一份新年好愿',optionalWish:false,action:'依次将三盘葡萄安放到餐台，共十二颗，寄托新年顺遂的愿望。'},
   'bulgarian-survakane': {
     kind: 'blessing', label: '新年问候，祝亲友健康', optionalWish: false,
     action: '提起彩枝，移到亲友背后，轻拍后收回，送上健康祝愿。',

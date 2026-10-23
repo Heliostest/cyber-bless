@@ -816,6 +816,8 @@
 747. [Diya 油灯](content/traditions/diya-oil-lamp.md)
 748. [Clootie 布条圣井](content/traditions/clootie-well-rag.md)
 
+750. [西班牙十二葡萄迎岁](content/traditions/spanish-twelve-grapes.md)
+
 ### 比较
 
 749. [比较总览](content/traditions/comparative-overview.md)
@@ -846,3 +848,5 @@ npm run dev          # 根脚本 → cyber-bless（已带 --host）
 2. 用上面的 `npm run dev`（Vite `server.host: true` / `--host`）启动。
 3. 终端会打印 `Network` 地址，如 `http://192.168.x.x:5173`；手机浏览器打开该 URL。
 4. 陀螺仪权限：多数浏览器要求 **HTTPS** 或 **localhost**。纯 HTTP LAN 上 `gyro` 可能不可用——场景内有点按降级；真机测陀螺仪可用本机隧道（如 `vite` + HTTPS 代理）或 USB 调试映射到 localhost。
+
+- 葡萄迎岁 spanish-twelve-grapes：十二葡萄备盘与新年好愿；[场景说明](packages/scenes/src/spanish-twelve-grapes/README.md)、[来源核查](docs/research/2026-10-23-spanish-twelve-grapes.md)。

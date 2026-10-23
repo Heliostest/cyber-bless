@@ -51,6 +51,7 @@ describe('sceneRegistry', () => {
       'turkish-nazar-bead',
       'japanese-hamaya',
       'vietnamese-five-fruit-tray',
+      'chinese-ruyi-scepter',
       'setsubun-mamemaki',
       'sternsinger-house-blessing',
       'lam-tsuen-wishing-tree',
@@ -327,3 +328,4 @@ it('loads a source-specific Fu paper door blessing',async()=>{const m=await load
 it('loads a source-specific glass nazar protective charm',async()=>{const m=await loadScene('turkish-nazar-bead');expect(m.meta).toEqual(sceneRegistry.find(s=>s.id==='turkish-nazar-bead'));expect(m.meta.title).toBe('蓝珠祈安');expect(m.meta.traditionSlug).toBe('turkish-nazar-bead');expect(m.create).toBeTypeOf('function')})
 describe('japanese hamaya registration',()=>{it('registers the dedicated arrow source and factory',async()=>{expect(sceneRegistry.find(m=>m.id==='japanese-hamaya')).toMatchObject({title:'饰矢祈安',traditionSlug:'japanese-hamaya',grade:'C',gestures:['drag']});expect((await loadScene('japanese-hamaya')).create).toBeTypeOf('function')})})
 describe('Tet fruit preparation registration',()=>{it('loads the dedicated fruit source and scene factory',async()=>{expect(sceneRegistry.find(m=>m.id==='vietnamese-five-fruit-tray')).toMatchObject({title:'五果迎春',traditionSlug:'vietnamese-five-fruit-tray',grade:'C',gestures:['drag']});expect((await loadScene('vietnamese-five-fruit-tray')).create).toBeTypeOf('function')})})
+describe('Chinese ruyi module',()=>{it('loads the same blessing identity exposed in the registry',async()=>{expect(isSceneImplemented('chinese-ruyi-scepter')).toBe(true);const m=await loadScene('chinese-ruyi-scepter');expect(m.meta.id).toBe('chinese-ruyi-scepter');expect(m.meta.traditionSlug).toBe('chinese-ruyi-scepter');expect(m.meta.title).toBe('如意寄愿');expect(m.create).toBeTypeOf('function')})})

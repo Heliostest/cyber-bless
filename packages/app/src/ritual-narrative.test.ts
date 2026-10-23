@@ -91,6 +91,7 @@ describe("builtInScenes narratives", () => {
       "chinese-fu-paper",
       "chinese-incense",
       "chinese-rattle-drum",
+      "chinese-ruyi-scepter",
       "chinese-shadow-puppet",
       "chinese-steelyard",
       "chinese-suanpan",

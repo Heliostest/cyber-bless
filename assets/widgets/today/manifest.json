@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "2f83184375cd433b93fde853107985daf86a4ee575d6836b661570f18773cb56",
+  "revision": "aecf58a63b3481d3ab25036170df33e47485375450c43976c41aa21be3307b2c",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -4926,6 +4926,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "36014214fcb310b61f12713c7d6d929df9392eb8c1f1f15bf5d05675a60aa899",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "chinese-ruyi-scepter",
+      "engine": "chinese-ruyi-scepter@1",
+      "small": {
+        "file": "chinese-ruyi-scepter-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "6cc0a1ff0c13a3ce005738f15c34bd468a39ebca890906e94527d1de38b64143",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "chinese-ruyi-scepter-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "258ac8fabce254b5e40fdf47ae602f646aa73a5b64f2d902794c9be852ee86b9",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "chinese-ruyi-scepter-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "5fd021a7276c5e408c5032d59eff3f35fb16c7a9890b1d3d94e7a745f278d30d",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

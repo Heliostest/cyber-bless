@@ -4250,3 +4250,9 @@ Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](
 - https://en.vietnamplus.vn/tet-fruit-tray-indispensible-part-of-vietnamese-culture-post146190.vnp
 - https://en.vietnamplus.vn/arranging-five-fruit-tray-during-lunar-new-year-celebration--a-vietnamese-tradition/279358.vnp
 实现者与独立审阅者实际读三条相关正文，机构文化综述按综述使用；日期/定位/产品布局差异见专卡与研究。VNAT13636只有空索引未记正文，来源照片未读，不称复刻。
+## 如意寄愿 · 2026-10-23
+- https://www.metmuseum.org/art/collection/search/40703
+- https://www.metmuseum.org/art/collection/search/850414
+- https://www.metmuseum.org/art/collection/search/44263
+- https://emuseum.aberdeencity.gov.uk/objects/31078/ruyi-or-jui-sceptre-on-stand
+三条Met对应正文实现者与独立者均已读；Aberdeen根已读，独立超时/错误页，状态分列。器物、吉祥祝愿和产品陈设差异见专卡与研究，不称特定馆藏复刻。

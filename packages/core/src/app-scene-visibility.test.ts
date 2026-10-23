@@ -9,6 +9,7 @@ describe('App scene availability', () => {
     "alasita-miniature-house",
     "yusheng-lohei",
     "kitano-nadeushi",
+    "finnish-virpominen",
     "polish-oplatek-sharing",
     "tamagushi-offering",
     "tibetan-water-bowls",

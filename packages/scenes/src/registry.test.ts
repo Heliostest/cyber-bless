@@ -24,6 +24,7 @@ describe('sceneRegistry', () => {
       'yusheng-lohei',
       'kitano-nadeushi',
       'lao-baci-wrist',
+      'finnish-virpominen',
       'hiiragi-iwashi',
       'tamagushi-offering',
       'tibetan-water-bowls',

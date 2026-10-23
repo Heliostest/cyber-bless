@@ -23,6 +23,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
   },
   'kitano-nadeushi': { kind: 'blessing', label: '抚额寄愿，愿学业顺遂', optionalWish: false, action: '抬手靠近卧牛额面，轻抚牛额，再收回手掌。' },
   'lao-baci-wrist': { kind: 'blessing', label: '为归来的亲友系线祝安', optionalWish: false, action: '拿起白棉线，绕在腕上，轻轻收结，送上平安祝愿。' },
+  'finnish-virpominen': { kind: 'blessing', label: '挥枝相祝，愿健康顺遂', optionalWish: false, action: '挥柳枝送祝愿，递给主人，收下篮中谢礼。' },
   'hiiragi-iwashi': {
     kind: 'blessing', label: '门边安放，寄托护家心意', optionalWish: false,
     action: '拿起柊枝，插合烤鱼头，再安放门边。',

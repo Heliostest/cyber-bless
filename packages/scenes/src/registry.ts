@@ -23,6 +23,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id:'yusheng-lohei',title:'鱼生捞起',traditionSlug:'yusheng-lohei',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'kitano-nadeushi',title:'抚牛寄愿',traditionSlug:'kitano-nadeushi',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'lao-baci-wrist',title:'白线祝归',traditionSlug:'lao-baci-phi',grade:'C',sensitivity:'中',gestures:['drag'] },
+  { id:'finnish-virpominen',title:'柳枝祝春',traditionSlug:'finnish-virpominen',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'hiiragi-iwashi',title:'柊鰯守门',traditionSlug:'hiiragi-iwashi',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'tamagushi-offering',title:'玉串奉愿',traditionSlug:'tamagushi-offering',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'tibetan-water-bowls',title:'清水七供',traditionSlug:'tibetan-water-bowls',grade:'C',sensitivity:'中',gestures:['drag'] },
@@ -222,6 +223,7 @@ const IMPLEMENTED = new Set([
   'yusheng-lohei',
   'kitano-nadeushi',
   'lao-baci-wrist',
+  'finnish-virpominen',
   'hiiragi-iwashi',
   'tamagushi-offering',
   'tibetan-water-bowls',
@@ -334,6 +336,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'yusheng-lohei': return import('./yusheng-lohei/index')
     case 'kitano-nadeushi': return import('./kitano-nadeushi/index')
     case 'lao-baci-wrist': return import('./lao-baci-wrist/index')
+    case 'finnish-virpominen': return import('./finnish-virpominen/index')
     case 'hiiragi-iwashi': return import('./hiiragi-iwashi/index')
     case 'tamagushi-offering': return import('./tamagushi-offering/index')
     case 'tibetan-water-bowls': return import('./tibetan-water-bowls/index')

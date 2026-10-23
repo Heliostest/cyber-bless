@@ -7,7 +7,7 @@
 ## 通识与机构
 
 - Alasita微型房屋：复用[aymara的Alasita专段](traditions/aymara.md)；2026-10-23已读[UNESCO档案网页](https://www.unesco.org/archives/multimedia/document-4663)、[MUSEF策展](https://musef.gob.bo/musef-exposiciones-temporales-sucre)。获取愿望器物与原创三段分镜分别记录，详见[核查](../docs/research/2026-10-23-alasita-miniature-house.md)。
-
+- https://finland.fi/life-society/why-finnish-children-dress-up-as-witches-at-easter/ （2026-10-23已读当代埃斯波邻里挥柳枝祝福与入篮答谢现场报道；版本差异另见 `traditions/finnish-virpominen.md`。）
 - https://creativecommons.org/licenses/by/4.0/legalcode.txt
 - https://www.britannica.com/
 - https://ich.unesco.org/

@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "30fb37ac80613053baee2531052f1e9de1e1c2619c0bd129935beb75a3a762a4",
+  "revision": "a5a4fa91b785476e82999f1cf20ac04e1d506a3bc245b3e27e46249017859a69",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -4586,6 +4586,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "cd65dcd6fb0002b2f8bc447a53ba7e13e25ba896414b494a66a07e19c31784ba",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "finnish-virpominen",
+      "engine": "finnish-virpominen@1",
+      "small": {
+        "file": "finnish-virpominen-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "1313112a39dd869fef05304082fa44e6841f9eb05c380ff8cc4a8e2d621d26f7",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "finnish-virpominen-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "8d70bc41714f8ae2af16d5430e836909bd5f2075cf237a9abf03941bd2371302",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "finnish-virpominen-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "bb76a7361b725689e0b15ceeaaf58d97093e1ca61cab8883b8691096ccc92409",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

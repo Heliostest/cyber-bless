@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "269e7f01e60bb2d146e064ae179391657c18259588733a6ae65e4801b5ba0290",
+  "revision": "f6bc13ff92bd97a5f6db72bc54809a9eae36d0401c66ebda356de0d93c9516e8",
   "scenes": [
     {
       "id": "alasita-miniature-house",
@@ -5164,6 +5164,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "610c81625af68455958142f5703f791d49e9a522a4d5754b8473f3551d6267fd",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "horseshoe-doorway-luck",
+      "engine": "horseshoe-doorway-luck@1",
+      "small": {
+        "file": "horseshoe-doorway-luck-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "6c7d06ac1edc17f490eb612df42631297a0a1b7cb91297cabfb5e1456e537ca7",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "horseshoe-doorway-luck-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "e83456face92f11c35dc667faa35e0985ec8382cb819cd5d6e41c4ff50e0cf92",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "horseshoe-doorway-luck-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "55406c5b16f59ecf0929a5457cd54533054f2822a63f4ff8a44a585b300ff001",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

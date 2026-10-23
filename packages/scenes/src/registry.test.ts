@@ -58,6 +58,7 @@ describe('sceneRegistry', () => {
       'japanese-kumade',
       'neapolitan-cornicello',
       'spanish-twelve-grapes',
+      'horseshoe-doorway-luck',
       'setsubun-mamemaki',
       'sternsinger-house-blessing',
       'lam-tsuen-wishing-tree',

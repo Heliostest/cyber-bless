@@ -65,6 +65,7 @@ const craftDeltas={
   'japanese-kumade': [[60,0],[60,0],[60,0]],
   'neapolitan-cornicello': [[60,0],[-60,0],[0,60]],
   'spanish-twelve-grapes': [[60,0],[60,0],[60,0]],
+  'horseshoe-doorway-luck': [[60,0],[60,0],[60,0]],
   'setsubun-mamemaki': [[60,0],[0,-60],[0,60]],
   'sternsinger-house-blessing': [[0,-60],[60,0],[0,60]],
   'lam-tsuen-wishing-tree': [[60,0],[60,0],[0,-60]],

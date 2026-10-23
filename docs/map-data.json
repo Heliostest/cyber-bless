@@ -11023,5 +11023,20 @@
     "date_note": "2026为本次官方资料更新记录年，非习俗起源；太阳门坐标为代表点，非本场庭院实景。",
     "confidence": "medium",
     "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/spanish-twelve-grapes.md"
+  },
+  {
+    "id": "horseshoe-doorway-luck",
+    "slug": "horseshoe-doorway-luck",
+    "title": "蹄铁护家",
+    "grade": "C",
+    "region": "美国肯塔基州（2020家庭口述代表点）",
+    "lat": 37.5,
+    "lon": -85.5,
+    "year_start": 2020,
+    "year_end": null,
+    "date_basis": "documented",
+    "date_note": "2020为Dartmouth一家庭口述采集与发布年，非习俗起源；州内坐标仅代表记录地域，不表示发源点、访谈地点或本场门架实景。",
+    "confidence": "medium",
+    "github_url": "https://github.com/Heliostest/world-blessing-rituals/blob/master/content/traditions/horseshoe-doorway-luck.md"
   }
 ]

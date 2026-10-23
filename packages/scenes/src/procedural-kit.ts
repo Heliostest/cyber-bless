@@ -350,10 +350,10 @@ export function createPointerRay(canvas: HTMLCanvasElement, camera: THREE.Camera
 }
 
 /**
- * Lets the page scroll from the empty parts of the stage: the stage overlay's
- * hit layer allows panning (touch-action: manipulation), and only a touch
- * that starts where `onObject` is true is kept from scrolling, so taps and
- * drags on the object stay with the scene. Returns a remover.
+ * Legacy touch-event guard for touches that start on an object. The host's
+ * canvas and hit layer use touch-action: none to reserve the entire canvas
+ * for scene gestures, independently of this hit test. Page scrolling remains
+ * available outside that surface. Returns a remover.
  */
 export function claimObjectTouches(
   hitLayer: HTMLElement,

@@ -153,12 +153,13 @@ describe('shrine suzu object actions', () => {
     expect(s.complete).toHaveBeenCalledOnce()
   })
 
-  it('lets empty canvas scroll and rejects off-rope starts, upward, sideways and short pulls', () => {
+  it('rejects off-rope starts, upward, sideways and short pulls', () => {
     const s = mount()
     const touch = (p: Point) => {
       const e = new Event('touchstart', { cancelable: true })
       Object.assign(e, { changedTouches: [{ clientX: p[0], clientY: p[1] }] }); s.hit.dispatchEvent(e); return e.defaultPrevented
     }
+    // Canvas scrolling is controlled by the host CSS, separately from this hit test.
     expect(touch([3, 3])).toBe(false); expect(touch(s.point('suzu-rope-grip'))).toBe(true)
     pointer(s.hit, 'pointerdown', [3, 3]); pointer(s.hit, 'pointerup', s.point('suzu-pull-target'))
     pull(s, 'pointerup', [0, -80]); pull(s, 'pointerup', [90, 50]); pull(s, 'pointerup', [0, 44])

@@ -4208,3 +4208,7 @@
 ## 鱼生捞起（2026-10-23）
 
 新加坡农历新年聚餐共同捞鱼生并互致新年祝愿，采用同名专卡 `yusheng-lohei`。已读 SCCC 李国樑中英文正文、NLB BiblioAsia 大盘/筷子捞拌说明与 NUS NERI 自身活动记录；NHB Roots 两页为机器人验证，不计已读。详见 [来源卡](traditions/yusheng-lohei.md)与[研究](../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 窗布祈护（2026-10-23）
+
+Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](traditions/brat-bride-cloth.md)。已读国家博物馆策展正文与Dúchas PDF第6–7页；Schools地方网页转录为独立研究实际读取，主代理安全验证失败分别记录。访问状态与产品边界见[研究](../docs/research/2026-10-23-brat-bride-cloth.md)。

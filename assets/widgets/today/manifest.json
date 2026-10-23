@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "86a522de7e51430e2d551af9161b48b144046e72a0c8e30a338f7c48c21a75eb",
+  "revision": "bfd3196ef30f40ab7a13971bbe2ea48b1f9bb234539a0cbc237471aea46c43bd",
   "scenes": [
+    {
+      "id": "brat-bride-cloth",
+      "engine": "brat-bride-cloth@1",
+      "small": {
+        "file": "brat-bride-cloth-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "824b808906ec7902cdd8f093f3ae95f07a06c21ccd0f2c4580fa5b73b5d1e431",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "brat-bride-cloth-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "bcd7e902aa95ea93a0542edc5461dac269fb87369afa5ebd95f0f5b9c0597f4b",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "brat-bride-cloth-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "93c2994519d0a968ebcb26222f14c187896949ee978882800bba31a22da40f8e",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "alasita-miniature-house",
       "engine": "alasita-miniature-house@1",

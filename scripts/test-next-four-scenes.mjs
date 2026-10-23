@@ -27,6 +27,7 @@ if(ids.includes('malawi-sansi')){
 }
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const craftDeltas={
+  'scottish-first-footing': [[0,-60],[0,-60],[-60,0]],
   'hiiragi-iwashi': [[0,-60],[-60,0],[0,-60]],
   'tamagushi-offering': [[60,0],[60,0],[0,-60]],
   'tibetan-water-bowls': [[0,-60],[60,0],[0,60]],

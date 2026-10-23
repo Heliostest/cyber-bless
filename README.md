@@ -818,6 +818,8 @@
 
 749. [比较总览](content/traditions/comparative-overview.md)
 
+750. [苏格兰 First-footing 携煤新年祝福](content/traditions/scottish-first-footing.md)
+
 ## 赛博祈福 App（开发中）
 
 ### 产品研究草稿

@@ -4200,3 +4200,12 @@
 - https://asset.library.wisc.edu/1711.dl/VUURGDUITIQNX84/R/file-c2529.pdf
 - 2026-10-20实际下载并读正文；支持石堆、顺时针三圈、地面取石添石及向山岳/湖泊祈护。网页相关页超时另记；不作为已读证据。
 - 产品边界与逐项来源见 content/traditions/mongolian-ovoo.md、docs/research/2026-10-20-mongolian-ovoo.md。
+
+## 2026-10-23：First-footing 携煤祝福
+
+- https://www.ncm.org.uk/news/what-is-first-footing/ （相关正文已读；2022-01-02）
+- https://www.nts.org.uk/stories/hogmanay-in-the-highlands （首次相关正文已读，后来403；2020-12-22）
+- https://blogs.glowscotland.org.uk/glowblogs/scranblog/2015/12/28/new-year-hogmanay/ （首次相关正文已读，后来JS验证/403；2015-12-28）
+- https://www.siefhome.org/downloads/wg/ry/RY12%282021%29-Regulating%20customs.pdf （McEntire原始研究相关页已读，非全卷通读；2021）
+
+各来源支持范围及读取者区别见 `content/traditions/scottish-first-footing.md` 与对应研究记录。

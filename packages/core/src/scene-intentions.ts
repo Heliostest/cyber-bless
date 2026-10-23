@@ -15,6 +15,7 @@ export type SceneIntention = Readonly<{
 // Reviewed against the current scene actions and their bounded cultural contexts.
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
+  'scottish-first-footing': {kind:'blessing',label:'携煤入户，祝家宅温暖安康',optionalWish:false,action:'作为新年午夜后的首位来客，拿起带来的煤礼，携过门槛，送进主人炉火。'},
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
   'hiiragi-iwashi': {
     kind: 'blessing', label: '门边安放，寄托护家心意', optionalWish: false,

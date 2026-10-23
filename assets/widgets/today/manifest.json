@@ -1,7 +1,41 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "9e785d87c52b7fcd0c2864216cbb7f1ad1bee12f14f623ea427a51a2c086844c",
+  "revision": "4379414d9400912b7dce986971e0889a14d27358dd3564631d9acafe365adacc",
   "scenes": [
+    {
+      "id": "scottish-first-footing",
+      "engine": "scottish-first-footing@1",
+      "small": {
+        "file": "scottish-first-footing-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "a3ac8de884de3ecdf4ced1455c509496fbb40e230ce23553b8391fd14bfbdb1a",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "scottish-first-footing-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "8f293dc92c4580efac83830cc756282ae53efb83b6febf918325312c59a934b1",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "scottish-first-footing-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "b336f48e1a15e9602046ff03de4a4c317ef91eac69f7452f1bc6e1e7bf3328ba",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
     {
       "id": "hiiragi-iwashi",
       "engine": "hiiragi-iwashi@1",

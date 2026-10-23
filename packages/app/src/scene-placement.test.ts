@@ -81,6 +81,7 @@ describe("scene placement", () => {
     ["chinese-diabolo", "chinese-diabolo", false],
     ["chinese-tangram", "chinese-tangram", false],
     ["alasita-miniature-house", "aymara", true],
+    ["kitano-nadeushi", "kitano-nadeushi", false],
     ["hiiragi-iwashi", "hiiragi-iwashi", false],
     ["tamagushi-offering", "tamagushi-offering", false],
     ["tibetan-water-bowls", "tibetan-water-bowls", false],
@@ -190,6 +191,7 @@ describe("scene placement", () => {
   it("splits blessing vs wish scene ids", () => {
     expect([...BLESSING_SCENE_IDS]).toEqual([
       "yusheng-lohei",
+      "kitano-nadeushi",
       "hiiragi-iwashi",
       "tamagushi-offering",
       "tibetan-water-bowls",

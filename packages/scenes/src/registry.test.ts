@@ -22,6 +22,7 @@ describe('sceneRegistry', () => {
       'mexican-tortilla-press',
       'alasita-miniature-house',
       'yusheng-lohei',
+      'kitano-nadeushi',
       'hiiragi-iwashi',
       'tamagushi-offering',
       'tibetan-water-bowls',

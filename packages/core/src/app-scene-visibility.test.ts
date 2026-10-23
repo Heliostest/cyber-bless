@@ -8,6 +8,7 @@ describe('App scene availability', () => {
     const approved = [
     "alasita-miniature-house",
     "yusheng-lohei",
+    "kitano-nadeushi",
     "polish-oplatek-sharing",
     "tamagushi-offering",
     "tibetan-water-bowls",

@@ -21,6 +21,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
     kind: 'blessing', label: '相聚捞起，祝愿新年丰足顺遂', optionalWish: false,
     action: '将筷尖探入鱼生，和同桌一起捞起、落回盘中，互道新年祝愿。',
   },
+  'kitano-nadeushi': { kind: 'blessing', label: '抚额寄愿，愿学业顺遂', optionalWish: false, action: '抬手靠近卧牛额面，轻抚牛额，再收回手掌。' },
   'hiiragi-iwashi': {
     kind: 'blessing', label: '门边安放，寄托护家心意', optionalWish: false,
     action: '拿起柊枝，插合烤鱼头，再安放门边。',

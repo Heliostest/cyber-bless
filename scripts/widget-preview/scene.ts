@@ -21,6 +21,7 @@ html,body{margin:0;padding:0;width:${width}px;height:${height}px;overflow:hidden
 </style>`);
 const completedPreviewProgress: Record<string, number> = {
   "alasita-miniature-house": 3,
+  "kitano-nadeushi": 3,
   "lam-tsuen-wishing-tree": 3,
   "sternsinger-house-blessing": 3,
   "setsubun-mamemaki": 3,

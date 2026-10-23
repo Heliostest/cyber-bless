@@ -84,6 +84,7 @@ export function isSceneVisibleInApp(entry: { id: string; engine?: string }): boo
 
 export const BLESSING_SCENE_IDS = [
   "yusheng-lohei",
+  "kitano-nadeushi",
   "hiiragi-iwashi",
   "tamagushi-offering",
   "tibetan-water-bowls",
@@ -226,6 +227,7 @@ export type BuiltInSceneEntry = CatalogEntry & {
 export const builtInScenes: BuiltInSceneEntry[] = [
   { id:"alasita-miniature-house",title:"微屋寄愿",engine:"alasita-miniature-house@1",revision:"bundled",manifestUrl:"",traditionSlug:"aymara",narrative:sceneNarratives["alasita-miniature-house"] },
   { id:"yusheng-lohei",title:"鱼生捞起",engine:"yusheng-lohei@1",revision:"bundled",manifestUrl:"",traditionSlug:"yusheng-lohei",narrative:sceneNarratives["yusheng-lohei"] },
+  { id:"kitano-nadeushi",title:"抚牛寄愿",engine:"kitano-nadeushi@1",revision:"bundled",manifestUrl:"",traditionSlug:"kitano-nadeushi",narrative:sceneNarratives["kitano-nadeushi"] },
   { id:"hiiragi-iwashi",title:"柊鰯守门",engine:"hiiragi-iwashi@1",revision:"bundled",manifestUrl:"",traditionSlug:"hiiragi-iwashi",narrative:sceneNarratives["hiiragi-iwashi"] },
   { id:"tamagushi-offering",title:"玉串奉愿",engine:"tamagushi-offering@1",revision:"bundled",manifestUrl:"",traditionSlug:"tamagushi-offering",narrative:sceneNarratives["tamagushi-offering"] },
   { id:"tibetan-water-bowls",title:"清水七供",engine:"tibetan-water-bowls@1",revision:"bundled",manifestUrl:"",traditionSlug:"tibetan-water-bowls",narrative:sceneNarratives["tibetan-water-bowls"] },

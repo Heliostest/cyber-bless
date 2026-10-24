@@ -30,6 +30,8 @@ export type Route = {
   replay?: boolean;
   /** A resumable first-play walk, collected in the persisted opening order. */
   opening?: boolean;
+  /** Transient feedback for a session just finished here; never persisted. */
+  revealReward?: boolean;
 };
 export type AppContext = {
   state: State;

@@ -1,14 +1,17 @@
 // @vitest-environment jsdom
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createElement } from "react";
+import { act, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createState } from "@wbr/core";
 import { assertSafeCopy } from "@wbr/shared";
 import { PRODUCT_ORIGINAL, sceneRegistry } from "@wbr/scenes";
 import { RitualNarrativeBlurb } from "./ritual-narrative";
 import { builtInScenes } from "./scene-library";
+import { Context, type AppContext } from "./context";
+import { clickOn, renderUI } from "./dom-test-utils";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const cjkCount = (s: string) =>
@@ -16,6 +19,20 @@ const cjkCount = (s: string) =>
 const render = (sceneId: string) =>
   renderToStaticMarkup(createElement(RitualNarrativeBlurb, { sceneId }));
 const withNarrative = builtInScenes.filter((e) => e.narrative);
+const mounted: ReturnType<typeof renderUI>[] = [];
+afterEach(() => {
+  mounted.splice(0).forEach(ui => ui.unmount());
+  vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals();
+});
+function mount(completion?: string, reducedMotion?: boolean) {
+  const component = createElement(RitualNarrativeBlurb, { sceneId: "woodfish", completion });
+  const ui = renderUI(reducedMotion === undefined ? component : createElement(Context.Provider, {
+    value: { state: { ...createState(), settings: { ...createState().settings, reducedMotion } } } as AppContext,
+  }, component));
+  const result = { ...ui, button: ui.host.querySelector<HTMLButtonElement>(".ritual-narrative-toggle")! };
+  mounted.push(result);
+  return result;
+}
 
 describe("RitualNarrativeBlurb", () => {
   it.each(["no-such-scene"])(
@@ -25,15 +42,17 @@ describe("RitualNarrativeBlurb", () => {
     },
   );
 
-  it("renders a collapsed details block with the narrative", () => {
+  it("renders a collapsed accessible trigger with the complete narrative", () => {
     const woodfish = builtInScenes.find((e) => e.id === "woodfish")!;
     const container = document.createElement("div");
     container.innerHTML = render("woodfish");
-    const details = container.querySelector("details.ritual-narrative")!;
-    expect(details).not.toBeNull();
-    expect(details.hasAttribute("open")).toBe(false);
-    expect(details.querySelector("summary")?.textContent).toBe("了解这个仪式");
-    expect([...details.querySelectorAll(".ritual-narrative-body > p")].map(p => p.textContent).join("\n\n")).toBe(woodfish.narrative);
+    const button = container.querySelector<HTMLButtonElement>(".ritual-narrative-toggle")!;
+    expect(button).not.toBeNull(); expect(button.type).toBe("button");
+    expect(button.textContent).toBe("了解这个仪式");
+    expect(button.getAttribute("aria-expanded")).toBe("false");
+    expect(button.getAttribute("aria-haspopup")).toBe("dialog");
+    expect(container.querySelector("details")).toBeNull();
+    expect([...container.querySelectorAll(".ritual-narrative-body p")].map(p => p.textContent).join("\n\n")).toBe(woodfish.narrative);
   });
 
   it("renders separate paragraphs in a named keyboard-scrollable reading region", () => {
@@ -43,6 +62,7 @@ describe("RitualNarrativeBlurb", () => {
     expect(body.getAttribute("role")).toBe("region");
     expect(body.getAttribute("aria-label")).toBe("敲一敲木鱼的介绍");
     expect(body.tabIndex).toBe(0);
+    expect(body.getAttribute("aria-hidden")).toBe("true");
     expect(body.querySelectorAll("p").length).toBeGreaterThan(1);
   });
 
@@ -55,7 +75,7 @@ describe("RitualNarrativeBlurb", () => {
     expect(status.textContent).toBe("已完成");
     expect(status.parentElement?.className).toBe("ritual-narrative-header");
     expect(status.closest("details")).toBeNull();
-    expect(container.querySelectorAll("button")).toHaveLength(0);
+    expect(container.querySelectorAll("button")).toHaveLength(1);
   });
 
   it("can show completion when there is no introduction", () => {
@@ -65,6 +85,118 @@ describe("RitualNarrativeBlurb", () => {
     }));
     expect(container.querySelector("details")).toBeNull();
     expect(container.querySelector('[role="status"]')?.textContent).toBe("已完成");
+  });
+
+  it("opens a foreground dialog, focuses its reading region and restores focus on Escape", () => {
+    const ui = mount("已完成"); ui.button.focus(); clickOn(ui.button);
+    const dialog = ui.host.querySelector<HTMLElement>('[role="dialog"]')!;
+    const body = ui.host.querySelector<HTMLElement>(".ritual-narrative-body")!;
+    expect(dialog).not.toBeNull(); expect(dialog.getAttribute("aria-modal")).toBe("true");
+    expect(dialog.getAttribute("aria-label")).toBe("敲一敲木鱼的介绍");
+    expect(ui.button.getAttribute("aria-expanded")).toBe("true");
+    expect(ui.button.getAttribute("aria-controls")).toBe(body.id);
+    expect(document.activeElement).toBe(body);
+    expect(body.getAttribute("aria-hidden")).toBe("false");
+    expect(ui.host.querySelector('[role="status"]')?.textContent).toBe("已完成");
+    expect(ui.host.querySelector('[role="status"]')?.closest('[role="dialog"]')).toBeNull();
+    act(() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })));
+    expect(ui.button.getAttribute("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(ui.button);
+    expect(body.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("dismisses outside clicks before they reach the scene or an underlying control", () => {
+    const ui = mount(); clickOn(ui.button);
+    const underneath = document.createElement("button"), sceneDown = vi.fn(), sceneClick = vi.fn();
+    underneath.addEventListener("pointerdown", sceneDown); underneath.addEventListener("click", sceneClick); document.body.append(underneath);
+    act(() => underneath.dispatchEvent(new Event("pointerdown", { bubbles: true, cancelable: true })));
+    clickOn(underneath);
+    expect(sceneDown).not.toHaveBeenCalled(); expect(sceneClick).not.toHaveBeenCalled();
+    expect(ui.button.getAttribute("aria-expanded")).toBe("false");
+    underneath.remove();
+  });
+
+  it("keeps one anchored shell through rapid open/close reversals without moving completion", () => {
+    vi.useFakeTimers(); const ui = mount("已完成"), shell = ui.host.querySelector(".ritual-narrative")!;
+    const status = ui.host.querySelector('[role="status"]')!, header = status.parentElement;
+    clickOn(ui.button); act(() => vi.advanceTimersByTime(140)); clickOn(ui.button);
+    expect(ui.host.querySelector(".ritual-narrative")).toBe(shell);
+    act(() => vi.advanceTimersByTime(140)); clickOn(ui.button);
+    act(() => vi.advanceTimersByTime(500));
+    expect(ui.button.getAttribute("aria-expanded")).toBe("true");
+    expect(ui.host.querySelector(".ritual-narrative")).toBe(shell);
+    expect(status.parentElement).toBe(header); expect(status.textContent).toBe("已完成");
+    clickOn(ui.button); act(() => vi.advanceTimersByTime(500));
+    expect(ui.host.querySelector(".ritual-narrative-backdrop")).toBeNull();
+  });
+
+  it("confines a long introduction to the space below its fixed corner on a short screen", () => {
+    vi.stubGlobal("innerHeight", 420); vi.stubGlobal("innerWidth", 390);
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function () {
+      const height = this.classList.contains("ritual-narrative-copy") ? 900 : 44;
+      const width = this.classList.contains("ritual-narrative-toggle") ? 178 : 354;
+      return { left: 18, top: 118, right: 18 + width, bottom: 118 + height, width, height, x: 18, y: 118, toJSON() {} };
+    });
+    const ui = mount(); clickOn(ui.button);
+    const shell = ui.host.querySelector<HTMLElement>(".ritual-narrative")!;
+    const height = Number.parseFloat(shell.style.getPropertyValue("--ritual-narrative-expanded-height"));
+    expect(height).toBeGreaterThan(80); expect(height).toBeLessThanOrEqual(290);
+    expect(shell.style.transform).toBe("");
+    expect(ui.host.querySelector(".ritual-narrative-body .ritual-narrative-copy")).not.toBeNull();
+  });
+
+  it("keeps keyboard focus inside the open shell and releases scroll locking on unmount", () => {
+    const originalOverflow = document.body.style.overflow;
+    const ui = mount(); clickOn(ui.button); const body = ui.host.querySelector<HTMLElement>(".ritual-narrative-body")!;
+    expect(document.body.style.overflow).toBe("hidden");
+    act(() => body.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true })));
+    expect(document.activeElement).toBe(ui.button);
+    act(() => ui.button.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true })));
+    expect(document.activeElement).toBe(body);
+    ui.unmount(); mounted.splice(mounted.indexOf(ui), 1);
+    expect(document.body.style.overflow).toBe(originalOverflow);
+  });
+
+  it("does not reclaim a parent scroll lock after the parent releases it before child unmount", () => {
+    const originalOverflow = document.body.style.overflow, originalPadding = document.body.style.paddingRight;
+    vi.stubGlobal("innerWidth", 390);
+    vi.spyOn(document.documentElement, "clientWidth", "get").mockReturnValue(375);
+    document.body.style.overflow = "hidden"; document.body.style.paddingRight = "7px";
+    const ui = mount();
+    try {
+      clickOn(ui.button);
+      expect(document.body.style.overflow).toBe("hidden");
+      expect(document.body.style.paddingRight).toBe("7px");
+      // A parent viewport hook cleans up before this still-present child.
+      document.body.style.overflow = "auto";
+      ui.unmount(); mounted.splice(mounted.indexOf(ui), 1);
+      expect(document.body.style.overflow).toBe("auto");
+      expect(document.body.style.paddingRight).toBe("7px");
+    } finally {
+      if (mounted.includes(ui)) { ui.unmount(); mounted.splice(mounted.indexOf(ui), 1); }
+      document.body.style.overflow = originalOverflow; document.body.style.paddingRight = originalPadding;
+    }
+  });
+
+  it("honors both the App setting and live system reduced-motion changes without requiring context for SSR", () => {
+    let changed: (() => void) | undefined;
+    const query = { matches: false, addEventListener: (_: string, handler: () => void) => { changed = handler; }, removeEventListener: vi.fn() };
+    vi.stubGlobal("matchMedia", vi.fn(() => query));
+    const ui = mount(undefined, true); clickOn(ui.button);
+    expect(ui.host.querySelector(".ritual-narrative")?.getAttribute("data-reduced-motion")).toBe("true");
+    ui.unmount(); mounted.splice(mounted.indexOf(ui), 1);
+    const system = mount(); clickOn(system.button);
+    act(() => { query.matches = true; changed?.(); });
+    expect(system.host.querySelector(".ritual-narrative")?.getAttribute("data-reduced-motion")).toBe("true");
+    expect(() => render("woodfish")).not.toThrow();
+  });
+
+  it("uses symmetric size transitions with a fixed radius and independently scrollable text", () => {
+    const css = readFileSync(join(repoRoot, "packages/app/src/ritual-narrative.css"), "utf8");
+    expect(css).toMatch(/420ms/); expect(css).toMatch(/cubic-bezier\(0\.42,\s*0,\s*0\.58,\s*1\)/);
+    expect(css).toMatch(/border-radius:\s*var\(--ritual-narrative-radius\)/);
+    expect(css).toMatch(/overflow-y:\s*auto/); expect(css).toMatch(/prefers-reduced-motion:\s*reduce/);
+    expect(css).not.toMatch(/scale\(/);
   });
 });
 

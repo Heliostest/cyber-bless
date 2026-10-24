@@ -51,8 +51,14 @@ it('teaches three real walks, permits an empty wish, then opens a home with thre
     expect(ui.host.querySelector('.scene-done-row')).toBeNull();
     await ui.walk();
     const collect = ui.host.querySelector('[data-opening-collect]')!;
+    expect(collect.textContent).toBe('收下');
     expect(collect.parentElement?.classList.contains('scene-completion-actions')).toBe(true);
     expect(collect.parentElement?.querySelector('.favorite-chip')).not.toBeNull();
+    expect(collect.previousElementSibling?.classList.contains('favorite-chip')).toBe(true);
+    if (index === 2) {
+      expect(collect.nextElementSibling?.textContent).toBe('祈愿');
+      expect(collect.nextElementSibling?.classList.contains('scene-wish-invite')).toBe(true);
+    }
     expect(ui.host.querySelectorAll('.favorite-chip')).toHaveLength(1);
     await ui.tap('[data-opening-collect]');
     expect(ui.state().collectibles).toHaveLength(index + 1);

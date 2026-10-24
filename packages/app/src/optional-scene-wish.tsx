@@ -3,15 +3,15 @@ import { WISH_TITLE_MAX } from "@wbr/core";
 import { WISH_WRITE_COPY } from "@wbr/gestures";
 
 /** Recording a wish is a separate choice after completing the ritual. */
-export function OptionalSceneWish({ active, onSubmit }: {
+export function OptionalSceneWish({ active, onSubmit, onClose }: {
   active: boolean;
   onSubmit(line: string): void;
+  onClose(): void;
 }) {
-  const [open, setOpen] = useState(false);
   const [line, setLine] = useState("");
   const inputId = useId();
   return <div className="scene-post-wish">
-    {open ? <form onSubmit={event => {
+    <form onSubmit={event => {
       event.preventDefault();
       const text = line.trim();
       if (active && text && text.length <= WISH_TITLE_MAX) onSubmit(text);
@@ -24,9 +24,8 @@ export function OptionalSceneWish({ active, onSubmit }: {
       <div className="scene-post-wish-actions">
         <button type="submit" className="button primary" disabled={!active || !line.trim()}>{WISH_WRITE_COPY.submit}</button>
         <button type="button" className="text-button scene-wish-cancel" disabled={!active}
-          onClick={() => { setLine(""); setOpen(false); }}>暂不记录</button>
+          onClick={onClose}>暂不记录</button>
       </div>
-    </form> : <button type="button" className="text-button scene-wish-invite" disabled={!active}
-      onClick={() => setOpen(true)}>记下心愿（可选）</button>}
+    </form>
   </div>;
 }

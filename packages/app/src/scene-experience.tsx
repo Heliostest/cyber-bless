@@ -38,6 +38,7 @@ import { rectOf } from "./reward-flight";
 import { OpeningGuide, OpeningDone } from './opening';
 import { OptionalSceneWish } from './optional-scene-wish';
 import { useSceneVisualPreference } from "./scene-visual-preference";
+import { SceneRewardReveal } from "./scene-reward-reveal";
 
 function ProceduralScene({
   entry,
@@ -157,7 +158,7 @@ export const SCENE_RETURN_CTA = "继续还愿 · 留下这份心情";
 /** A daily-set walk's closing moment: the keepsake settles, then flies home. */
 export const sceneDailyDoneCopy = (title: string) =>
   `今日的「${title}」已经完成，小物已放进小天地。`;
-export const SCENE_DAILY_CTA = "收下它";
+export const SCENE_DAILY_CTA = "收下";
 /** A vessel walk for a new wish: the held line gets an explicit choice. */
 export const SCENE_VESSEL_DONE_COPY = "这场许愿小仪式已经完成。";
 export const SCENE_KEEP_QUESTION = "刚才写下的话，要留下来吗？";
@@ -233,12 +234,15 @@ function LoadedScene({
   const draft = vesselMake ? state.vesselDrafts?.[vessel] : undefined;
   /** The wish this visit kept, as always: from a line saved on a plain walk. */
   const [keptWish, setKeptWish] = useState<string>();
+  const [wishWriting, setWishWriting] = useState(false);
   const postWishSubmitted = useRef(false);
   /** A vessel 许愿 walk holds its box line for the keep-or-not choice. */
   const [heldWish, setHeldWish] = useState<string | undefined>(() => draft?.line);
   /** Whether this walk settled a daily keepsake; a vessel is spent by the
    * walk itself, so that one is read straight off the collectible. */
   const [dailyGranted, setDailyGranted] = useState(false);
+  const [rewardRevealed, setRewardRevealed] = useState(false);
+  const revealedThisWalk = useRef(false);
   const [discarded, setDiscarded] = useState(false);
   const vesselSpent =
     !!vessel && state.collectibles.some((c) => c.id === vessel && !!c.spentAt);
@@ -247,8 +251,12 @@ function LoadedScene({
   // One record per visit, however often the last step reports.
   const [visit] = useState(() => ({ id: uid(), startedAt: now() }));
   const checkpoint = (n: number, strikes?: number) => {
-    dispatch({ type: "scene.progress", id: entry.id, progress: n, ...(strikes === undefined ? {} : { strikes }) });
+    const advanced = dispatch({ type: "scene.progress", id: entry.id, progress: n, ...(strikes === undefined ? {} : { strikes }) });
     if (n < steps) return;
+    if (advanced && progress < steps && !revealedThisWalk.current) {
+      revealedThisWalk.current = true;
+      setRewardRevealed(true);
+    }
     // A daily-set walk settles its keepsake once. So
     // does an unflagged walk of 今日's main scene: finishing the day's walk
     // from 场景目录 or 仪式时光 counts for today too. A vessel, 还愿, or
@@ -300,10 +308,16 @@ function LoadedScene({
   const favoriteChip = (
     <FavoriteChip id={entry.id} favorite={!!record?.favorite} />
   );
+  const canRecordWish = progress >= steps && !!intention?.optionalWish &&
+    !returnWish && !keptWish && !heldWish && !discarded;
+  const prayerButton = canRecordWish ? <button type="button"
+    className="button secondary scene-wish-invite" disabled={!active}
+    aria-expanded={wishWriting} onClick={() => setWishWriting(true)}>祈愿</button> : null;
   const completionActions = (completion: ReactNode) => (
     <div className="scene-completion-actions">
-      {completion}
       {favoriteChip}
+      {completion}
+      {prayerButton}
     </div>
   );
   const pendingVesselChoice = !opening && !returnedFor && !dailyGranted &&
@@ -367,7 +381,7 @@ function LoadedScene({
     if (vessel) dispatch({ type: "vessel.clear", id: vessel });
   };
   const saveCompletedWish = (text: string) => {
-    if (!active || progress < steps || returnWish || keptWish || postWishSubmitted.current) return;
+    if (!active || !canRecordWish || postWishSubmitted.current) return;
     const wish = sceneWish(text, entry.id, uid(), now());
     if (!wish || !dispatch(wish)) return;
     postWishSubmitted.current = true;
@@ -399,6 +413,7 @@ function LoadedScene({
   );
   return (
     <>
+      {rewardRevealed && <SceneRewardReveal sceneId={entry.id} reducedMotion={state.settings.reducedMotion} />}
       {intention && <aside className="scene-intention" data-kind={returnWish ? "gratitude" : intention.kind} aria-label="这一场的心意">
         <strong>{returnWish ? "为已经实现的心愿还愿" : intention.label}</strong>
         <p>{returnWish ? `为「${returnWish.title}」还愿。${gratitudeAction}` : intention.action}</p>
@@ -459,7 +474,7 @@ function LoadedScene({
       )}
       {progress >= steps && (
         <div className="scene-done-row">
-          {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} favorite={favoriteChip} /> : returnedFor ? (
+          {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} favorite={favoriteChip} prayer={prayerButton} /> : returnedFor ? (
             <>
               <p className="scene-done">{SCENE_RETURN_DONE_COPY}</p>
               {/* No flight: the note is on the wish already, and the ritual
@@ -571,8 +586,8 @@ function LoadedScene({
           )}
         </div>
       )}
-      {progress >= steps && intention?.optionalWish && !returnWish && !keptWish && !heldWish && !discarded && (
-        <OptionalSceneWish active={active} onSubmit={saveCompletedWish} />
+      {canRecordWish && wishWriting && (
+        <OptionalSceneWish active={active} onSubmit={saveCompletedWish} onClose={() => setWishWriting(false)} />
       )}
       {entry.engine !== "woodfish@1" && (
         // Present from the start (empty), so the confirmation is announced.

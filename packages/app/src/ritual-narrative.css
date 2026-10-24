@@ -1,0 +1,127 @@
+/* One box: only its right and bottom edges travel. The top-left quarter
+   circle keeps the same centre and radius throughout both directions. */
+.ritual-narrative-header {
+  position: relative;
+  display: flow-root;
+  min-height: 48px;
+  padding: 0;
+}
+.ritual-narrative-header[data-narrative-present] { z-index: 1000; }
+.ritual-narrative-anchor { position: relative; height: 48px; }
+.ritual-narrative-backdrop { position: fixed; inset: 0; z-index: 0; background: transparent; touch-action: none; }
+.ritual-narrative {
+  --ritual-narrative-radius: 22px;
+  --ritual-narrative-duration: 420ms;
+  --ritual-narrative-easing: cubic-bezier(0.42, 0, 0.58, 1);
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: var(--ritual-narrative-closed-width, max-content);
+  height: 48px;
+  margin: 0;
+  overflow: hidden;
+  border: 2px solid var(--rim);
+  border-radius: var(--ritual-narrative-radius);
+  background: var(--mint-tint);
+  box-shadow: inset 0 2px 0 #ffffffb3, 0 0 0 1px var(--edge);
+  transition-property: width, height, background-color, box-shadow;
+  transition-duration: var(--ritual-narrative-duration);
+  transition-timing-function: var(--ritual-narrative-easing);
+}
+.ritual-narrative[data-open="true"] {
+  width: var(--ritual-narrative-expanded-width);
+  height: var(--ritual-narrative-expanded-height);
+  background: var(--paper);
+  box-shadow: inset 0 2px 0 #ffffffb3, 0 0 0 1px var(--edge), 0 18px 44px -12px #174b4a59;
+}
+.ritual-narrative-toggle, .ritual-narrative-toggle:hover, .ritual-narrative-toggle:active {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  min-height: 44px;
+  padding: 8px 12px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--mint-text);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: pointer;
+  transform: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.ritual-narrative-chevron {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #a9e5da;
+  border-radius: 50%;
+  background: var(--mint-tint) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a5f58' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / 14px no-repeat;
+  transition: rotate var(--ritual-narrative-duration) var(--ritual-narrative-easing);
+}
+.ritual-narrative[data-open="true"] .ritual-narrative-chevron { rotate: 180deg; }
+.ritual-narrative-body {
+  box-sizing: border-box;
+  position: absolute;
+  top: 44px;
+  left: 0;
+  width: calc(var(--ritual-narrative-expanded-width, 354px) - 4px);
+  height: calc(var(--ritual-narrative-expanded-height, 400px) - 48px);
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding: 14px 16px 18px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+  text-align: start;
+  opacity: 0;
+  pointer-events: none;
+  -webkit-user-select: text;
+  user-select: text;
+  transition: opacity var(--ritual-narrative-duration) var(--ritual-narrative-easing);
+}
+.ritual-narrative[data-open="true"] .ritual-narrative-body { opacity: 1; pointer-events: auto; }
+.ritual-narrative-copy > p { margin: 0; }
+.ritual-narrative-copy > p + p { margin-top: 1em; }
+.ritual-narrative-toggle:focus-visible { outline: 3px solid var(--mint-text); outline-offset: -5px; }
+.ritual-narrative-body:focus-visible { outline: 2px solid var(--mint-text); outline-offset: -4px; }
+.scene-complete-status {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: right;
+  pointer-events: none;
+}
+.ritual-narrative-header[data-narrative-present] > .scene-complete-status { visibility: hidden; }
+.ritual-narrative[data-reduced-motion="true"], .ritual-narrative[data-reduced-motion="true"] *,
+.reduce-motion .ritual-narrative, .reduce-motion .ritual-narrative * { transition-duration: 0ms; }
+@media (prefers-reduced-motion: reduce) {
+  .ritual-narrative, .ritual-narrative * { transition-duration: 0ms; }
+}

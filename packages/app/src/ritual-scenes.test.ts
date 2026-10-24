@@ -152,7 +152,7 @@ async function openApp(state: State) {
     sceneTitle: () => ui.host.querySelector(".app-topbar .title-ribbon")?.textContent,
     sceneProgress: () => ui.host.querySelector(".scene-progress")?.textContent,
     doneButtons: () =>
-      all(".scene-done-row button:not(.favorite-chip)").map((b) => b.textContent),
+      all(".scene-done-row button:not(.favorite-chip):not(.scene-wish-invite)").map((b) => b.textContent),
     /** The first button whose text includes `text`. */
     button: (text: string, within = "") =>
       all(`${within} button`).find((b) => b.textContent?.includes(text))!,
@@ -183,6 +183,28 @@ describe("今日's daily set", () => {
   });
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it("reveals the completed scene once per walk, without replaying a restored completion", async () => {
+    const ui = await openApp(createState());
+    await ui.tap(ui.host.querySelector(`.daily-set-primary[data-scene="${sceneId}"]`)!);
+    expect(ui.host.querySelector(".scene-reward-reveal")).toBeNull();
+    await ui.walk();
+    expect(ui.host.querySelectorAll(".scene-reward-reveal")).toHaveLength(1);
+    act(() => scene.context!.checkpoint!(3));
+    await settle();
+    expect(ui.host.querySelectorAll(".scene-reward-reveal")).toHaveLength(1);
+    const saved = await ui.saved();
+    ui.unmount();
+
+    const restored = renderUI(createElement(BlessingApp, {
+      host: { read: async () => JSON.stringify(saved), write: async () => {} },
+      initialRoute: { page: "scene", entry: entryOf(sceneId), id: sceneId },
+    }));
+    await settle();
+    expect(restored.host.querySelector(".scene-done-row")).not.toBeNull();
+    expect(restored.host.querySelector(".scene-reward-reveal")).toBeNull();
+    restored.unmount();
   });
 
   it("collects the day's keepsake once: a walk, a sticker, a flight to 小天地", async () => {
@@ -1059,7 +1081,11 @@ describe("optional wishes after the ritual", () => {
     expect(ui.host.querySelector(".scene-post-wish")).toBeNull();
     expect(scene.context?.deferWishWriting).toBe(true);
     await ui.walk();
-    expect(ui.host.querySelector(".scene-post-wish .scene-wish-invite")).not.toBeNull();
+    const actions = ui.host.querySelector(".scene-completion-actions")!;
+    expect(actions.children[0].classList.contains("favorite-chip")).toBe(true);
+    expect(actions.children[1].classList.contains("primary")).toBe(true);
+    expect(actions.children[2].textContent).toBe("祈愿");
+    expect(actions.children[2].classList.contains("scene-wish-invite")).toBe(true);
     expect(ui.host.querySelector(".scene-post-wish input")).toBeNull();
     expect((await ui.saved()).wishes).toEqual([]);
     ui.unmount();

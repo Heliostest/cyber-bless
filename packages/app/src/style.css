@@ -1,4 +1,6 @@
 @charset "UTF-8";
+@import "./ritual-narrative.css";
+@import "./scene-reward-reveal.css";
 /*
  * Cozy-island shell, the App's UI. Tokens and patterns are ported from
  * animal-island-ui: mint primary, candy accents, chunky press buttons on a
@@ -583,18 +585,9 @@ button:hover:not(:disabled) {
   color: var(--mint-ink);
   font-size: 13px;
 }
-.opening-guide > span {
-  white-space: nowrap;
-  font-weight: 800;
-}
 .opening-guide > p {
   margin: 0;
   line-height: 1.5;
-}
-.opening-reward .scene-art {
-  width: 96px;
-  height: 96px;
-  margin: 10px auto;
 }
 .opening-complete > .scene-completion-actions {
   margin-top: 12px;
@@ -3499,95 +3492,6 @@ button:hover:not(:disabled) {
 .cache-manager > p {
   line-height: 1.8;
 }
-.ritual-narrative-header {
-  position: relative;
-  display: flow-root;
-}
-.ritual-narrative-header:has(.scene-complete-status) {
-  min-height: 52px;
-}
-.ritual-narrative-header:has(.scene-complete-status) summary {
-  padding-right: 84px;
-}
-.scene-complete-status {
-  position: absolute;
-  top: 4px;
-  right: 0;
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  text-align: right;
-}
-.ritual-narrative {
-  position: static;
-  margin: 4px 0 12px;
-}
-.ritual-narrative > summary {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  list-style: none;
-  font-weight: 800;
-  color: var(--mint-text);
-}
-.ritual-narrative > summary::-webkit-details-marker {
-  display: none;
-}
-/* A disclosure, not a link: a down chevron on a flat mint-tint disc with a
-   rim and a ring, no ledge, so it never passes for the ledged "go to"
-   chevrons on list rows. It flips up while the story is open. */
-.ritual-narrative > summary::before {
-  content: "";
-  box-sizing: border-box;
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  border: 2px solid var(--rim);
-  border-radius: 50%;
-  background-color: var(--mint-tint);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a5f58' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-position: center;
-  background-size: 14px;
-  background-repeat: no-repeat;
-  box-shadow: 0 0 0 2px #a9e5da;
-  transition: transform 0.2s var(--ease);
-}
-.ritual-narrative[open] > summary::before {
-  transform: rotate(180deg);
-}
-.ritual-narrative-body {
-  max-height: 40vh;
-  max-height: 40dvh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  overflow-wrap: anywhere;
-  font-size: 15px;
-  line-height: 1.9;
-  margin: 0;
-  padding: 14px 16px;
-  border: 3px solid var(--rim);
-  border-radius: 20px;
-  background: var(--paper);
-  box-shadow: 0 0 0 2px var(--edge);
-  color: var(--ink-soft);
-}
-.ritual-narrative-body > p {
-  margin: 0;
-}
-.ritual-narrative-body > p + p {
-  margin-top: 1em;
-}
-.ritual-narrative-body:focus-visible {
-  outline: 3px solid var(--mint-text);
-  outline-offset: 3px;
-}
 .scene-catalog {
   display: grid;
   gap: 14px;
@@ -3793,7 +3697,7 @@ button:hover:not(:disabled) {
 }
 .scene-completion-actions {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(96px, 0.65fr);
+  grid-template-columns: minmax(80px, 0.65fr) minmax(0, 1fr);
   align-items: stretch;
   gap: 10px;
   width: min(360px, 100%);
@@ -3806,6 +3710,14 @@ button:hover:not(:disabled) {
   font-size: 16px;
   gap: 6px;
   overflow-wrap: anywhere;
+}
+.scene-completion-actions:has(> .scene-wish-invite) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.scene-completion-actions:has(> .scene-wish-invite) > .button {
+  padding-inline: 6px;
+  font-size: 15px;
+  gap: 4px;
 }
 /* A 许愿 vessel's held line, quoted on paper, and the keep-or-not choice. */
 .scene-keep-line {
@@ -4764,4 +4676,158 @@ button:hover:not(:disabled) {
   padding: 8px;
   color: #064a43;
   font-weight: 700;
+}
+
+/* A ritual is one phone screen. The artwork takes the space left by its
+   controls; a new step, completion or a keyboard never grows the document. */
+.bless-app:has(.app-shell[data-immersive]) { min-height: 0; }
+.app-shell[data-immersive] {
+  display: flex;
+  flex-direction: column;
+  height: var(--scene-viewport-height, 100dvh);
+  min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+.app-shell[data-immersive] > .app-topbar,
+.app-shell[data-immersive] > .error-banner { flex-shrink: 0; }
+.app-shell[data-immersive] > .app-content {
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: 4px 18px max(12px, env(safe-area-inset-bottom));
+  animation: none;
+}
+.app-shell[data-immersive] .scene-experience,
+.app-shell[data-immersive] .ritual-page,
+.app-shell[data-immersive] .completion {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+.app-shell[data-immersive] .scene-experience > :not(.library-scene-stage, .woodfish-object),
+.app-shell[data-immersive] .ritual-page > :not(.ritual-stage),
+.app-shell[data-immersive] .completion > :not(.celebration) { flex-shrink: 0; }
+.app-shell[data-immersive] .scene-experience > .library-scene-stage {
+  --canvas-h: max(0px, calc(100% - var(--tray) - var(--wish-box)));
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+}
+.app-shell[data-immersive] .scene-experience > .woodfish-object {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+}
+.app-shell[data-immersive] .woodfish-visual { height: 100%; aspect-ratio: auto; }
+.app-shell[data-immersive] .scene-intention { margin: 0; padding: 7px 12px; }
+.app-shell[data-immersive] .scene-intention strong { font-size: 13px; }
+.app-shell[data-immersive] .scene-intention p { margin: 2px 0 0; font-size: 12px; line-height: 1.5; }
+.app-shell[data-immersive] .scene-caption { margin: 0; font-size: 12px; line-height: 1.5; }
+.app-shell[data-immersive] .scene-progress { align-self: center; margin: 0; font-size: 13px; }
+.app-shell[data-immersive] .scene-instruction { margin: 0; font-size: 14px; line-height: 1.5; }
+.app-shell[data-immersive] .scene-actions { margin: 0; }
+.app-shell[data-immersive] .scene-actions .button,
+.app-shell[data-immersive] .scene-completion-actions > .button { min-height: 44px; padding-block: 6px; }
+.app-shell[data-immersive] .scene-woodfish-finish { margin: 0 auto; min-height: 44px; }
+.app-shell[data-immersive] .scene-done-row { gap: 8px; margin: 0; }
+.app-shell[data-immersive] .scene-done { font-size: 13px; line-height: 1.5; }
+.app-shell[data-immersive] .scene-wish-saved:empty { display: none; }
+.app-shell[data-immersive] .scene-wish-saved { font-size: 13px; line-height: 1.5; }
+.app-shell[data-immersive] .scene-experience:has(.scene-done-row) > .scene-intention,
+.app-shell[data-immersive] .scene-experience:has(.scene-done-row) > .scene-caption { display: none; }
+.app-shell[data-immersive] .scene-done-row .reward-slot {
+  flex-direction: row;
+  gap: 10px;
+  margin: 0;
+}
+.app-shell[data-immersive] .reward-destination,
+.app-shell[data-immersive] .reward-wish-note { margin: 0; font-size: 12px; }
+.app-shell[data-immersive] .scene-done-row .reward-sticker { padding: 3px; }
+.app-shell[data-immersive] .scene-done-row .reward-sticker .scene-art { width: 40px; height: 40px; }
+.app-shell[data-immersive] .scene-keep-line { max-height: 64px; overflow: auto; overscroll-behavior: contain; font-size: 13px; padding: 6px 12px; }
+.app-shell[data-immersive] .scene-keep-question { margin: 0; font-size: 13px; }
+.app-shell[data-immersive] .scene-post-wish { margin: 0 auto; text-align: center; }
+/* Writing happens above the stage instead of pushing it below the screen. */
+.app-shell[data-immersive] .scene-post-wish:has(form) {
+  position: absolute;
+  inset: auto 0 0;
+  width: 100%;
+  z-index: 12;
+  padding: 8px 2px 2px;
+  text-align: left;
+}
+.app-shell[data-immersive] .scene-post-wish form {
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 3px solid var(--rim);
+  border-radius: 22px;
+  box-shadow: 0 0 0 2px var(--edge), 0 -12px 28px #143c3926;
+}
+.app-shell[data-immersive] .opening-guide { margin: 0; padding-block: 6px; font-size: 12px; }
+.app-shell[data-immersive] .opening-complete { width: 100%; text-align: center; }
+.app-shell[data-immersive] .opening-complete > .scene-completion-actions { margin: 8px auto 0; }
+.app-shell[data-immersive] .scene-download,
+.app-shell[data-immersive] .scene-load-error { margin: auto 0; max-height: 100%; overflow-y: auto; overscroll-behavior: contain; }
+.app-shell[data-immersive] .library-scene-stage .scene-step-dots { gap: 6px; padding-inline: 6px; }
+.app-shell[data-immersive] .scene-step-dot { flex-shrink: 0; }
+/* Legacy sessions still opened from a saved 2D ritual share the same budget. */
+.app-shell[data-immersive] .ritual-goal { margin: 0; font-size: 13px; }
+.app-shell[data-immersive] .ritual-goal strong { font-size: 16px; }
+.app-shell[data-immersive] .progress-track { flex-shrink: 0; height: 14px; margin-bottom: 0; }
+.app-shell[data-immersive] .ritual-stage { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; }
+.app-shell[data-immersive] .ritual-stage .ritual-object { flex: 1 1 0; min-height: 0; }
+.app-shell[data-immersive] .ritual-stage .ritual-object > span,
+.app-shell[data-immersive] .ritual-stage .ritual-object .art { max-height: 100%; }
+.app-shell[data-immersive] .ritual-feedback { flex-shrink: 0; height: 64px; padding-top: 6px; }
+.app-shell[data-immersive] .ritual-feedback strong { font-size: 22px; }
+.app-shell[data-immersive] .ritual-feedback span { margin-top: 4px; font-size: 15px; }
+.app-shell[data-immersive] .ritual-counter { margin: 0; font-size: 32px; }
+.app-shell[data-immersive] .tap-instruction { margin: 0; font-size: 14px; line-height: 1.5; }
+.app-shell[data-immersive] .woodfish-pause { margin: 0 auto; }
+.app-shell[data-immersive] .ritual-link { margin: 0; padding-block: 4px; }
+.app-shell[data-immersive] .ritual-footer { display: none; }
+.app-shell[data-immersive] .completion { gap: 10px; }
+.app-shell[data-immersive] .completion .page-heading { margin: 0; }
+.app-shell[data-immersive] .celebration { flex: 1 1 0; min-height: 0; margin: 0; padding: 0; display: flex; justify-content: center; }
+.app-shell[data-immersive] .celebration .art { height: 100%; width: auto; max-width: 100%; margin: 0; object-fit: contain; }
+.app-shell[data-immersive] .title-badge { position: absolute; bottom: 6px; padding: 8px 14px; font-size: 14px; }
+.app-shell[data-immersive] .completion > .reward-slot { flex-direction: row; justify-content: center; flex-wrap: wrap; margin: 0; }
+.app-shell[data-immersive] .completion .reward-sticker { padding: 3px; }
+.app-shell[data-immersive] .completion .reward-sticker .art { width: 40px; height: 40px; }
+.app-shell[data-immersive] .completion-stats { margin: 0; padding: 8px 0; }
+.app-shell[data-immersive] .completion-stats strong { font-size: 24px; }
+.app-shell[data-immersive] .completion > .button { margin: 0; min-height: 44px; padding-block: 6px; }
+.app-shell[data-immersive] .completion .leaf-footer { margin: 0; font-size: 12px; }
+.app-shell[data-immersive] .share-panel { position: absolute; z-index: 12; bottom: 0; width: 100%; max-height: 80%; overflow-y: auto; }
+@media (min-width: 1000px) {
+  .app-shell[data-immersive] { height: calc(var(--scene-viewport-height, 100dvh) - 56px); }
+}
+@media (max-width: 360px) {
+  .app-shell[data-immersive] > .app-content { padding-inline: 13px; }
+}
+@media (max-height: 650px) {
+  .app-shell[data-immersive] .scene-experience,
+  .app-shell[data-immersive] .ritual-page { gap: 6px; }
+  .app-shell[data-immersive] > .app-topbar { height: 56px; padding-block: 6px; }
+  .app-shell[data-immersive] .scene-intention { padding-block: 5px; }
+  .app-shell[data-immersive] .ritual-feedback { height: 50px; }
+  .app-shell[data-immersive] .ritual-feedback strong { font-size: 18px; }
+  .app-shell[data-immersive] .ritual-counter { font-size: 26px; }
+}
+@media (max-height: 450px) {
+  /* In landscape or above a keyboard, keep the instrument touchable first. */
+  .app-shell[data-immersive] .scene-intention,
+  .app-shell[data-immersive] .scene-caption,
+  .app-shell[data-immersive] .ritual-feedback,
+  .app-shell[data-immersive] .ritual-counter { display: none; }
+  .app-shell[data-immersive] .ritual-stage { min-height: 60px; }
+  .app-shell[data-immersive] .ritual-stage .woodfish-object { min-height: 44px; }
 }

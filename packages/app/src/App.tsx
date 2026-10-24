@@ -29,6 +29,7 @@ import { useLocalDay } from "./local-day";
 import { WidgetNavigation } from './widget-navigation';
 import type { WidgetNavigationRequest } from '@wbr/core/widgets';
 import { RewardFlightLayer } from "./reward-flight-layer";
+import { useSceneViewport } from "./scene-viewport";
 import {
   ARRIVAL_LINGER_MS,
   rectOf,
@@ -84,6 +85,8 @@ export function BlessingApp({
   const shell = useRef<HTMLDivElement>(null);
   const route = routes[routes.length - 1];
   const state = snapshot.state;
+  const immersive = !!state && ["scene", "ritual", "complete"].includes(route.page);
+  useSceneViewport(shell, immersive);
   const openingActive = !!state?.opening && state.opening.status !== 'complete';
   const roots = ["today", "wishes", "world", "me"];
   const canBack = routes.length > 1 || route.page !== "today";
@@ -362,7 +365,7 @@ export function BlessingApp({
         whenIdleRef={woodfishIdle}
       />
     ) : route.page === "complete" ? (
-      <Complete id={route.id!} />
+      <Complete id={route.id!} revealReward={route.revealReward} />
     ) : route.page === "collection" ? (
       <CollectionDetail id={route.id!} />
     ) : (
@@ -423,7 +426,7 @@ export function BlessingApp({
             </p>
             <span>CYBER BLESS · A LITTLE EVERY DAY</span>
           </div>
-          <div className="app-shell" data-page={route.page} data-opening={openingActive ? '' : undefined} ref={shell}>
+          <div className="app-shell" data-page={route.page} data-immersive={immersive ? '' : undefined} data-opening={openingActive ? '' : undefined} ref={shell}>
             <WidgetNavigation request={navigationRequest} route={route} saved={snapshot.status === 'saved'} busy={!!flight} onConsumed={onNavigationConsumed} />
             {!roots.includes(route.page) && (
               <header

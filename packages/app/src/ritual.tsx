@@ -8,6 +8,7 @@ import { Woodfish } from "./woodfish";
 import { RitualNarrativeBlurb } from "./ritual-narrative";
 import { rectOf } from "./reward-flight";
 import { PageHead } from "./page-heading";
+import { SceneRewardReveal } from "./scene-reward-reveal";
 
 /**
  * The 2D ritual page. Rituals open as their 3D scenes (useOpenRitual), so it
@@ -60,7 +61,7 @@ export function Ritual({
   function finish() {
     if (r && dispatch({ type: "ritual.finish", id: r.id, at: now() })) {
       feedback();
-      go({ page: "complete", id: r.id });
+      go({ page: "complete", id: r.id, revealReward: true });
     }
   }
   // Finite rituals settle at their last step. The woodfish keeps sounding
@@ -224,7 +225,7 @@ export function Ritual({
     </div>
   );
 }
-export function Complete({ id }: { id: string }) {
+export function Complete({ id, revealReward }: { id: string; revealReward?: boolean }) {
   const { state, go, launchReward } = useApp();
   const [shareText, setShareText] = useState("");
   const [copied, setCopied] = useState(false);
@@ -289,6 +290,7 @@ export function Complete({ id }: { id: string }) {
   }
   return (
     <div className="completion">
+      {revealReward && <SceneRewardReveal sceneId={r.ritual} reducedMotion={state.settings.reducedMotion} />}
       <PageHead
         title={r.ritual === "woodfish" ? "本轮轻敲结束" : "今日仪式完成"}
         eyebrow={r.ritual === "woodfish" ? "听过一轮敲击与余音。" : "今天的好心情，已到账。"}

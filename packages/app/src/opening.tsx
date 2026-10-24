@@ -65,20 +65,18 @@ export function OpeningGuide({ sceneId }: { sceneId: string }) {
   const index = opening.sceneIds.indexOf(sceneId);
   if (index < 0) return null;
   return <aside className="opening-guide" data-step={index + 1} aria-label={`开场第 ${index + 1} 场`}>
-    <span>初见 {index + 1} / 3</span><p>{index === 0 && sceneId === 'woodfish'
+    <p>{index === 0 && sceneId === 'woodfish'
       ? '轻敲木鱼，听听回响；右上角可开关声音。'
       : lessons[index].guide}</p>
   </aside>;
 }
 
-export function OpeningDone({ entry, keptWish, favorite }: { entry: CatalogEntry; keptWish: boolean; favorite?: ReactNode }) {
+export function OpeningDone({ entry, keptWish, favorite, prayer }: { entry: CatalogEntry; keptWish: boolean; favorite?: ReactNode; prayer?: ReactNode }) {
   const { dispatch, go } = useApp();
   return <div className="opening-complete">
-    <p className="scene-done">这场完成了，把小物收好。</p>
-    <div className="opening-reward"><SceneArt id={entry.id} /></div>
     {keptWish && <p className="quiet">心愿也已留在心愿页。</p>}
-    <div className="scene-completion-actions"><button className="button primary" data-opening-collect onClick={() => {
+    <div className="scene-completion-actions">{favorite}<button className="button primary" data-opening-collect onClick={() => {
       if (dispatch({ type: 'opening.collect', sceneId: entry.id, at: now() })) go({ page: 'today' });
-    }}>收下，继续<Icon name="arrow" /></button>{favorite}</div>
+    }}>收下</button>{prayer}</div>
   </div>;
 }

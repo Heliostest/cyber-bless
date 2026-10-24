@@ -108,6 +108,22 @@ const spoken = (ui: { host: HTMLElement }) =>
   ui.host.querySelector("p[role='status']")?.textContent ?? "";
 
 describe("the settle beat (P0)", () => {
+  it("reveals a new legacy completion but not a restored completion page", async () => {
+    const ui = await openApp(withSession("crane", 3));
+    await openRitual(ui);
+    await settleRitual(ui, 1);
+    expect(ui.host.querySelector(".scene-reward-reveal[data-scene='crane']")).not.toBeNull();
+    ui.unmount();
+    const completed = reduce(withSession("crane", 4), { type: "ritual.finish", id: "s1", at: AT });
+    const restored = renderUI(createElement(BlessingApp, {
+      host: { read: async () => JSON.stringify(completed), write: async () => {} },
+      initialRoute: { page: "complete", id: "s1" },
+    }));
+    await settle();
+    expect(restored.host.querySelector(".completion")).not.toBeNull();
+    expect(restored.host.querySelector(".scene-reward-reveal")).toBeNull();
+    restored.unmount();
+  });
   it("settles the last strike by itself: no 完成仪式 button, one card, one of each leftover", async () => {
     const ui = await openApp(withSession("crane", 3));
     await openRitual(ui);

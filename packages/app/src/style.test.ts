@@ -7,7 +7,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 const css = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), "style.css"),
   "utf8",
-);
+).replace(/@import "\.\/([^\"]+)";/g, (_import, file: string) =>
+  readFileSync(join(dirname(fileURLToPath(import.meta.url)), file), "utf8"));
 let rules: CSSStyleRule[] = [];
 // jsdom's cascade ignores selector specificity (the last declaration wins), so
 // these checks only assert values a browser resolves the same way.
@@ -374,16 +375,17 @@ describe("reward flight", () => {
 });
 
 describe("了解此仪式 disclosure", () => {
-  it("is a flat down chevron that flips open, not a ledged go-to chevron", () => {
-    const closed = declared(".ritual-narrative > summary::before");
+  it("keeps one rounded shell and reverses the same width/height transition", () => {
+    const shell = declared(".ritual-narrative");
+    expect(shell).toMatch(/--ritual-narrative-radius: 22px/);
+    expect(shell).toMatch(/border-radius: var\(--ritual-narrative-radius\)/);
+    expect(shell).toMatch(/--ritual-narrative-duration: 420ms/);
+    expect(shell).toMatch(/transition-property: width, height/);
+    expect(shell).not.toMatch(/transition-property:[^;]*transform/);
+    const closed = declared(".ritual-narrative-chevron");
     expect(closed).toMatch(/m6 9 6 6 6-6/);
-    expect(closed).not.toMatch(/m9 5 7 7-7 7/);
     expect(closed).not.toMatch(/ledge/);
-    // Ring only: every shadow sits flat (no y offset), unlike a ledge.
-    expect(closed).toMatch(/box-shadow: 0(px)? 0(px)? 0(px)? 2px/);
-    expect(declared(".ritual-narrative[open] > summary::before")).toMatch(
-      /rotate\(180deg\)/,
-    );
+    expect(declared('.ritual-narrative[data-open="true"] .ritual-narrative-chevron')).toMatch(/rotate: 180deg/);
   });
 });
 

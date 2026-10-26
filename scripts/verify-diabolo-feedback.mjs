@@ -25,6 +25,16 @@ try {
     await page.goto(`${base}/scene-review?scene=chinese-diabolo`);
     await page.locator('.library-scene-stage[data-ready="true"]').waitFor();
     const pointer = await scenePointer(page, touch);
+    const setFeedbackMenu = async open => {
+      const gear = page.locator('button[aria-label="仪式设置"]');
+      if (await gear.getAttribute('aria-expanded') !== String(open)) await gear.click();
+      await gear.evaluate(async button => {
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        await Promise.all(button.closest('.feedback-controls').getAnimations({ subtree: true }).map(animation => animation.finished.catch(() => {})));
+        await new Promise(resolve => requestAnimationFrame(resolve));
+      });
+      if (!open) await page.locator('.feedback-controls-anchor[data-feedback-present]').waitFor({ state: 'detached' });
+    };
     const progress = async n => {
       try {
         await page.waitForFunction(n => document.querySelector('.scene-progress')?.textContent?.replace(/\s/g, '') === `已完成${n}/3`, n, { timeout: 10000 });
@@ -68,7 +78,9 @@ try {
     assert.ok(haptics.includes(12) && haptics.includes(24));
     assert.equal(haptics.filter(ms => ms === 40).length, 4, 'Each catch produces one heavy impact');
     await page.screenshot({ path: `${out}/repeat-${width}.png`, fullPage: true });
+    await setFeedbackMenu(true);
     await page.getByRole('button', { name: '震动', exact: true }).click();
+    await setFeedbackMenu(false);
     const count = await page.evaluate(() => window.reviewHaptics.length);
     await page.locator('.scene-diabolo-repeat').click();
     await page.locator('.scene-diabolo-repeat:enabled').waitFor();

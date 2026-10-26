@@ -36,6 +36,16 @@ try {
     await page.locator('.library-scene-stage[data-ready="true"]').waitFor()
     const input = await scenePointer(page, touch)
     const signals = () => page.evaluate(() => ({ ticks: [...window.__angklungTicks], sounds: [...window.__angklungSounds] }))
+    const setFeedbackMenu = async open => {
+      const gear = page.locator('button[aria-label="仪式设置"]')
+      if (await gear.getAttribute('aria-expanded') !== String(open)) await gear.click()
+      await gear.evaluate(async button => {
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+        await Promise.all(button.closest('.feedback-controls').getAnimations({ subtree: true }).map(animation => animation.finished.catch(() => {})))
+        await new Promise(resolve => requestAnimationFrame(resolve))
+      })
+      if (!open) await page.locator('.feedback-controls-anchor[data-feedback-present]').waitFor({ state: 'detached' })
+    }
     const point = async (name, anchor) => {
       await page.locator('.scene-hit-layer').scrollIntoViewIfNeeded()
       return page.evaluate(({ name, anchor }) => {
@@ -68,11 +78,15 @@ try {
       await input.down(from); await input.move([from[0] + 32, from[1] - 24], 4); await input.up()
       assert.ok((await signals()).ticks.length > before.ticks.length); assert.equal(await page.locator('.scene-completion-actions').count(), 0)
     }
+    await setFeedbackMenu(true)
     await page.getByRole('button', { name: '震动', exact: true }).click(); await page.getByRole('button', { name: '音效', exact: true }).click()
+    await setFeedbackMenu(false)
     const from = await point('angklung-frame-grip', [0, 0, .10]), beforeMuted = await signals()
     await input.down(from); await input.move([from[0] - 36, from[1]], 4); await input.up()
     assert.deepEqual(await signals(), beforeMuted)
+    await setFeedbackMenu(true)
     await page.getByRole('button', { name: '震动', exact: true }).click(); await page.getByRole('button', { name: '音效', exact: true }).click()
+    await setFeedbackMenu(false)
     const afterMute = await point('angklung-frame-grip', [0, 0, .10])
     await input.down(afterMute); await input.move([afterMute[0] + 36, afterMute[1]], 4); await input.up()
     assert.ok((await signals()).ticks.length > beforeMuted.ticks.length)

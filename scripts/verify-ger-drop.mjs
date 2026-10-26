@@ -13,7 +13,19 @@ try {
     page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(20000)
     await page.goto(`${base}/scene-review?scene=mongolian-felt-ger`)
     await page.locator('.library-scene-stage[data-ready="true"]').waitFor()
+    const setFeedbackMenu=async open=>{
+      const gear=page.locator('button[aria-label="仪式设置"]')
+      if(await gear.getAttribute('aria-expanded')!==String(open))await gear.click()
+      await gear.evaluate(async button=>{
+        await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))
+        await Promise.all(button.closest('.feedback-controls').getAnimations({subtree:true}).map(animation=>animation.finished.catch(()=>{})))
+        await new Promise(resolve=>requestAnimationFrame(resolve))
+      })
+      if(!open)await page.locator('.feedback-controls-anchor[data-feedback-present]').waitFor({state:'detached'})
+    }
+    await setFeedbackMenu(true)
     if(await page.getByRole('button',{name:'音效',exact:true}).getAttribute('aria-pressed')==='true') await page.getByRole('button',{name:'音效',exact:true}).click()
+    await setFeedbackMenu(false)
     const input=await scenePointer(page,touch),done=()=>page.locator('.scene-step-dot[data-state="done"]').count()
     const point=async role=>{
       await page.locator('.scene-hit-layer').scrollIntoViewIfNeeded()

@@ -33,8 +33,20 @@ try {
     while (!await page.locator('.scene-card[data-scene="korean-bojagi-wrap"]').count()) await page.getByRole('button', { name: '显示更多', exact: true }).click()
     await page.locator('.scene-card[data-scene="korean-bojagi-wrap"]').click()
     await page.locator('.library-scene-stage[data-ready="true"]').waitFor()
+    const setFeedbackMenu = async open => {
+      const gear = page.locator('button[aria-label="仪式设置"]')
+      if (await gear.getAttribute('aria-expanded') !== String(open)) await gear.click()
+      await gear.evaluate(async button => {
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+        await Promise.all(button.closest('.feedback-controls').getAnimations({ subtree: true }).map(animation => animation.finished.catch(() => {})))
+        await new Promise(resolve => requestAnimationFrame(resolve))
+      })
+      if (!open) await page.locator('.feedback-controls-anchor[data-feedback-present]').waitFor({ state: 'detached' })
+    }
+    await setFeedbackMenu(true)
     const sound = page.getByRole('button', { name: '音效', exact: true })
     if (await sound.count() && (await sound.getAttribute('aria-pressed') === 'true') !== withAudio) await sound.click()
+    await setFeedbackMenu(false)
     const input = await scenePointer(page, touch), done = () => page.locator('.scene-step-dot[data-state="done"]').count()
     const point = async role => {
       await page.locator('.scene-hit-layer').scrollIntoViewIfNeeded()
@@ -50,8 +62,10 @@ try {
     await shot('start')
     assert.equal(await page.locator('.scene-wish-slot input').count(), 0)
     for (let step = 0; step < 6; step++) {
+      if ((touch || withAudio) && (step === 1 || step === 2)) await setFeedbackMenu(true)
       if (touch && (step === 1 || step === 2)) await page.getByRole('button', { name: '震动', exact: true }).click()
       if (withAudio && (step === 1 || step === 2)) await sound.click()
+      if ((touch || withAudio) && (step === 1 || step === 2)) await setFeedbackMenu(false)
       const from = await point('source'), to = await point('target'), rect = await page.locator('.scene-hit-layer').boundingBox()
       for (const p of [from, to]) assert.ok(p[0] >= rect.x && p[0] <= rect.x + rect.width && p[1] >= rect.y && p[1] <= rect.y + rect.height, `operation ${step} cue inside canvas`)
       await input.down(from); await input.move([rect.x + 5, rect.y + rect.height - 5], 2); await input.up()

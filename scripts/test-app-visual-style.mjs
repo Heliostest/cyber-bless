@@ -24,12 +24,26 @@ try {
   });
   const saved = () => page.evaluate(() => JSON.parse(localStorage.getItem("cyber-bless:personal:v1")));
   const frames = () => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  async function setFeedbackMenu(open) {
+    const gear = page.locator('button[aria-label="仪式设置"]');
+    if (await gear.getAttribute("aria-expanded") !== String(open)) await gear.click();
+    await gear.evaluate(async button => {
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await Promise.all(button.closest(".feedback-controls").getAnimations({ subtree: true }).map(animation => animation.finished.catch(() => {})));
+      await new Promise(resolve => requestAnimationFrame(resolve));
+    });
+    if (!open) await page.locator(".feedback-controls-anchor[data-feedback-present]").waitFor({ state: "detached" });
+  }
+  async function openVisualStyle() {
+    await setFeedbackMenu(true);
+    await page.getByRole("button", { name: "视觉风格", exact: true }).click();
+  }
   async function open(id) {
     await page.locator('.bottom-nav button[data-tab="world"]').click();
     await page.locator(`.collection-card[data-collectible-id="probe-${id}"]`).click();
     await page.getByRole("button", { name: /回看这场仪式/ }).click();
     await page.locator('canvas[data-environment-ready="true"]').waitFor();
-    await page.getByRole("button", { name: "视觉风格", exact: true }).waitFor();
+    await page.locator('button[aria-label="仪式设置"]').waitFor();
     await page.evaluate(() => { window.__visualCanvas = document.querySelector('canvas[data-environment]'); });
   }
   const menu = () => page.getByRole("dialog", { name: "视觉风格", exact: true });
@@ -37,7 +51,7 @@ try {
   await open("rooster");
   await page.screenshot({ path: new URL("entry-390.png", output).pathname.replace(/^\/([A-Za-z]:)/, "$1") });
   const hint = await page.locator(".scene-hint").innerText();
-  await page.getByRole("button", { name: "视觉风格", exact: true }).click();
+  await openVisualStyle();
   assert.equal(await menu().locator('button[data-style="toon-soft"]').getAttribute("aria-pressed"), "true");
   const styles = ["original", "gouache", "moebius", "toon-outline", "halftone", "pixel-art", "toon-ink", "toon-soft"];
   for (const style of styles) {
@@ -56,7 +70,7 @@ try {
   assert.equal(await menu().count(), 0);
   assert.equal(await page.getByRole("button", { name: "视觉风格", exact: true }).evaluate(button => document.activeElement === button), true);
   assert.equal(await page.locator(".scene-hint").innerText(), hint, "opening/tuning advanced progress");
-  await page.getByRole("button", { name: "视觉风格", exact: true }).click();
+  await openVisualStyle();
   await menu().locator("summary").click();
   await menu().getByRole("button", { name: "看画面", exact: true }).click();
   assert.equal(await page.evaluate(() => window.__visualCanvas === document.querySelector('canvas[data-environment]')), true);
@@ -69,16 +83,18 @@ try {
     await page.screenshot({ path: new URL(`menu-${width}x${height}.png`, output).pathname.replace(/^\/([A-Za-z]:)/, "$1") });
   }
   await menu().getByRole("button", { name: "完成", exact: true }).click();
+  await setFeedbackMenu(false);
   await page.getByRole("button", { name: "返回", exact: true }).click();
   await page.getByRole("button", { name: "返回", exact: true }).click();
   await open("crane");
-  await page.getByRole("button", { name: "视觉风格", exact: true }).click();
+  await openVisualStyle();
   assert.equal(await menu().locator('[data-style="toon-soft"]').getAttribute("aria-pressed"), "true", "rooster setting affected crane");
   await menu().locator('[data-style="pixel-art"]').click(); await menu().locator("summary").click();
   await menu().getByRole("slider").fill("6");
   await menu().getByRole("button", { name: "完成", exact: true }).click();
+  await setFeedbackMenu(false);
   await page.reload(); await open("rooster");
-  await page.getByRole("button", { name: "视觉风格", exact: true }).click();
+  await openVisualStyle();
   assert.equal(await menu().locator('[data-style="moebius"]').getAttribute("aria-pressed"), "true");
   await menu().locator("summary").click();
   assert.equal(await menu().getByRole("slider", { name: "排线强度", exact: true }).inputValue(), "0.3");
@@ -87,6 +103,7 @@ try {
   await menu().getByRole("button", { name: "恢复默认", exact: true }).click(); await frames();
   assert.equal(await menu().locator('[data-style="toon-soft"]').getAttribute("aria-pressed"), "true");
   await menu().getByRole("button", { name: "完成", exact: true }).click();
+  await setFeedbackMenu(false);
   const before = await page.locator(".scene-hint").innerText();
   await page.locator(".scene-bow-tap").click();
   await page.waitForFunction(text => document.querySelector(".scene-hint")?.textContent !== text, before);

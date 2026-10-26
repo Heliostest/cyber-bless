@@ -43,6 +43,16 @@ try {
     await page.locator('.library-scene-stage[data-ready="true"]').waitFor()
     const input = await scenePointer(page, touch), done = () => page.locator('.scene-step-dot[data-state="done"]').count()
     const frame = () => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+    const setFeedbackMenu = async open => {
+      const gear = page.locator('button[aria-label="仪式设置"]')
+      if (await gear.getAttribute('aria-expanded') !== String(open)) await gear.click()
+      await gear.evaluate(async button => {
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+        await Promise.all(button.closest('.feedback-controls').getAnimations({ subtree: true }).map(animation => animation.finished.catch(() => {})))
+        await new Promise(resolve => requestAnimationFrame(resolve))
+      })
+      if (!open) await page.locator('.feedback-controls-anchor[data-feedback-present]').waitFor({ state: 'detached' })
+    }
     const point = async (name, anchor) => {
       await page.locator('.scene-hit-layer').scrollIntoViewIfNeeded(); await frame()
       return page.evaluate(({ name, anchor }) => {
@@ -66,7 +76,11 @@ try {
     await input.up(); await page.waitForFunction(() => document.querySelectorAll('.scene-step-dot[data-state="done"]').length === 1)
     await shot('placed'); assert.ok((await contact()).distance < 1e-7)
     for (let n = 0; n < surfaces.length; n++) {
-      if (n === 2 || n === 3) { await page.getByRole('button', { name: '震动', exact: true }).click(); await page.getByRole('button', { name: '音效', exact: true }).click() }
+      if (n === 2 || n === 3) {
+        await setFeedbackMenu(true)
+        await page.getByRole('button', { name: '震动', exact: true }).click(); await page.getByRole('button', { name: '音效', exact: true }).click()
+        await setFeedbackMenu(false)
+      }
       const before = await signals(), p = await point(...surfaces[n])
       await input.down(p); await input.up(); await frame()
       const after = await signals(), enabled = n !== 2

@@ -20,7 +20,7 @@ import { ContentContext, type ContentEnvironment } from "./content";
 import { InvalidContentError } from "@wbr/content";
 import { SceneLibraryProvider, SceneCatalog, CacheManager } from "./scene-library";
 import { SceneExperience } from "./scene-experience";
-import { FeedbackControls } from "./feedback-controls";
+import { FeedbackControls, dismissFeedbackMenu } from "./feedback-controls";
 import { dismissVisualStyleMenu } from "./visual-style-menu";
 import { PageTitle } from "./page-heading";
 import { Opening } from "./opening";
@@ -114,6 +114,7 @@ export function BlessingApp({
   }
   function back() {
     if (dismissVisualStyleMenu(shell.current)) return;
+    if (dismissFeedbackMenu(shell.current)) return;
     setError("");
     setRoutes((old) =>
       old.length > 1 ? old.slice(0, -1) : [{ page: "today" }],

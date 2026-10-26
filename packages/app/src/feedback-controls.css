@@ -1,0 +1,103 @@
+/* The same 24px corner remains anchored while only the lower edge moves. */
+.feedback-controls-anchor {
+  position: relative;
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+}
+.feedback-controls-anchor[data-feedback-present] { z-index: 1100; }
+.feedback-controls {
+  --feedback-option-count: 1;
+  --feedback-duration: 420ms;
+  --feedback-easing: cubic-bezier(0.42, 0, 0.58, 1);
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 52px;
+  height: 52px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--rim);
+  border-radius: 24px;
+  background: linear-gradient(180deg, var(--paper), var(--sand));
+  box-shadow: inset 0 2px 0 #ffffffd9, 0 0 0 2px var(--edge), 0 4px 0 2px var(--ledge);
+  transition-property: height, background-color, box-shadow;
+  transition-duration: var(--feedback-duration);
+  transition-timing-function: var(--feedback-easing);
+}
+.feedback-controls[data-haptics],
+.feedback-controls:has(.visual-style-anchor > button) { --feedback-option-count: 2; }
+.feedback-controls[data-haptics]:has(.visual-style-anchor > button) { --feedback-option-count: 3; }
+.feedback-controls[data-open="true"] {
+  height: calc(52px + 48px * var(--feedback-option-count));
+  background-color: var(--paper);
+  box-shadow: inset 0 2px 0 #ffffffd9, 0 0 0 2px var(--edge), 0 4px 0 2px var(--ledge), 0 18px 32px -12px #174b4a59;
+}
+.feedback-controls button {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--mint-ink);
+  box-shadow: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 150ms ease-in-out, background-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
+}
+.feedback-controls button[aria-pressed="false"] { color: var(--muted); }
+.feedback-controls button:hover, .feedback-controls button:focus-visible { background: var(--mint-tint); }
+.feedback-controls button:active {
+  transform: none;
+  background: var(--mint-tint);
+  box-shadow: inset 0 2px 0 #17a09326;
+}
+.feedback-controls button:focus-visible { outline: 2px solid var(--mint-text); outline-offset: -3px; }
+.feedback-controls .feedback-controls-trigger {
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  min-height: 48px;
+  color: var(--mint-ink);
+  border-radius: 21px;
+}
+.feedback-controls-trigger svg { transition: translate 150ms ease-in-out; }
+.feedback-controls .feedback-controls-trigger[aria-pressed="true"] {
+  color: var(--mint-text);
+  background: var(--mint-tint);
+  box-shadow: inset 0 3px 5px #174b4a26, inset 0 -1px 0 #ffffffb3;
+}
+.feedback-controls-trigger[aria-pressed="true"] svg { translate: 0 1px; }
+.feedback-controls-options {
+  box-sizing: border-box;
+  position: absolute;
+  top: 48px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 48px;
+  padding: 0 2px 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--feedback-duration) var(--feedback-easing);
+}
+.feedback-controls[data-open="true"] .feedback-controls-options { opacity: 1; pointer-events: auto; }
+.feedback-controls svg { width: 20px; height: 20px; stroke-width: 2.3; }
+.feedback-controls .feedback-controls-trigger svg { width: 22px; height: 22px; }
+.feedback-controls[data-reduced-motion="true"], .feedback-controls[data-reduced-motion="true"] *,
+.reduce-motion .feedback-controls, .reduce-motion .feedback-controls * { transition-duration: 0ms; }
+@media (prefers-reduced-motion: reduce) {
+  .feedback-controls, .feedback-controls * { transition-duration: 0ms; }
+}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import {
   visualStyleOptions, styleParameterControls, DEFAULT_STYLE_PARAMETERS, normalizeStyleParameters,
@@ -16,29 +16,43 @@ export function dismissVisualStyleMenu(scope?: HTMLElement | null) {
 const order: VisualStyleId[] = ["toon-soft", "original", "gouache", "moebius", "toon-outline", "halftone", "pixel-art", "toon-ink"];
 const emptyScenes: DebugScene[] = [];
 const openMenus: HTMLElement[] = [];
-let scrollLocks = 0, originalBodyOverflow = "";
+let scrollLocks = 0, originalBodyOverflow = "", ownsBodyScroll = false;
 function lockBodyScroll() {
-  if (scrollLocks++ === 0) { originalBodyOverflow = document.body.style.overflow; document.body.style.overflow = "hidden"; }
-  return () => { if (--scrollLocks === 0) document.body.style.overflow = originalBodyOverflow; };
+  if (scrollLocks++ === 0) {
+    originalBodyOverflow = document.body.style.overflow;
+    ownsBodyScroll = originalBodyOverflow !== "hidden";
+    if (ownsBodyScroll) document.body.style.overflow = "hidden";
+  }
+  return () => { if (--scrollLocks === 0 && ownsBodyScroll) document.body.style.overflow = originalBodyOverflow; };
 }
 
-export function VisualStyleControl({ sceneId }: { sceneId?: string }) {
+export function VisualStyleControl({ sceneId, onOpenChange }: { sceneId?: string; onOpenChange?(open: boolean): void }) {
   const scenes = useSyncExternalStore(sceneStyles.subscribe, sceneStyles.getSnapshot, () => emptyScenes);
   const [scope, setScope] = useState<HTMLElement>();
   const scene = scenes.find(item => item.id === sceneId && item.scope === scope);
   const anchor = useRef<HTMLSpanElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const [target, setTarget] = useState<HTMLElement | null>(null);
+  const notify = useRef(onOpenChange);
+  notify.current = onOpenChange;
+  useEffect(() => () => notify.current?.(false), []);
   useEffect(() => { setScope(anchor.current?.closest<HTMLElement>(".app-shell") ?? undefined); }, []);
+  useLayoutEffect(() => {
+    if (scene || !target) return;
+    // Losing the renderer removes the portal without unmounting this control.
+    notify.current?.(false); setTarget(null);
+  }, [scene, target]);
   return <span className="visual-style-anchor" ref={anchor}>{scene && <>
     <button type="button" aria-label="视觉风格" title="视觉风格" aria-haspopup="dialog"
       aria-expanded={!!target} onClick={() => {
         sceneStyles.cancelInput(scene.id, scene.scope);
         sceneStyles.clearDebugOverride(scene.id);
+        // The portal focuses itself on mount; its parent must yield capture first.
+        notify.current?.(true);
         setTarget(trigger.current?.closest<HTMLElement>(".app-shell") ?? document.body);
       }} ref={trigger}><Icon name="visual" /></button>
     {target && createPortal(<VisualStyleMenu scene={scene} shell={target} trigger={trigger.current}
-      onClose={() => setTarget(null)} />, target)}
+      onClose={() => { notify.current?.(false); setTarget(null); }} />, target)}
   </>}</span>;
 }
 

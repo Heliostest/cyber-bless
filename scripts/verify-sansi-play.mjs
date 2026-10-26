@@ -36,6 +36,16 @@ try {
     await open();
     const record = () => page.evaluate(key => JSON.parse(localStorage.getItem(key)).sceneRecords.find(e => e.id === 'malawi-sansi'), saveKey);
     const pointer = await scenePointer(page, touch), finish = page.getByRole('button', { name: '结束体验', exact: true });
+    const setFeedbackMenu = async open => {
+      const gear = page.locator('button[aria-label="仪式设置"]');
+      if (await gear.getAttribute('aria-expanded') !== String(open)) await gear.click();
+      await gear.evaluate(async button => {
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        await Promise.all(button.closest('.feedback-controls').getAnimations({ subtree: true }).map(animation => animation.finished.catch(() => {})));
+        await new Promise(resolve => requestAnimationFrame(resolve));
+      });
+      if (!open) await page.locator('.feedback-controls-anchor[data-feedback-present]').waitFor({ state: 'detached' });
+    };
     assert.equal(await finish.isEnabled(), false);
     assert.equal(await page.locator('.scene-sansi-key').count(), 9);
     if (width === 1280) {
@@ -70,10 +80,14 @@ try {
     assert.equal(bounds, true, 'All playing and finish controls fit below the canvas');
     await page.screenshot({ path: `${out}/playing-${width}.png`, fullPage: true });
     if (width === 390) {
+      await setFeedbackMenu(true);
       await page.getByRole('button', { name: '音效', exact: true }).click();
+      await setFeedbackMenu(false);
       await page.locator('.scene-sansi-key').nth(4).click();
       assert.equal(await page.evaluate(() => window.sansiNotes.length), 27, 'Sound toggle applies to the next note');
+      await setFeedbackMenu(true);
       await page.getByRole('button', { name: '震动', exact: true }).click();
+      await setFeedbackMenu(false);
       const count = await page.evaluate(() => window.sansiHaptics.length);
       await page.locator('.scene-sansi-key').nth(1).click();
       assert.equal(await page.evaluate(() => window.sansiHaptics.length), count, 'Haptic toggle applies to the next note');

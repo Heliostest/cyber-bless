@@ -264,6 +264,7 @@ describe("今日's daily set", () => {
   it("toggles feedback from the scene header and preserves it when another scene opens", async () => {
     const ui = await openApp(createState());
     await ui.tap(ui.host.querySelector(`.daily-set-primary[data-scene="${sceneId}"]`)!);
+    await ui.tap(ui.host.querySelector('button[aria-label="仪式设置"]')!);
     const sound = ui.host.querySelector('.app-topbar button[aria-label="音效"]')!;
     const haptics = ui.host.querySelector('.app-topbar button[aria-label="震动"]')!;
     expect(sound).not.toBeNull();
@@ -275,6 +276,12 @@ describe("今日's daily set", () => {
     expect(sound.querySelector('svg')!.innerHTML).not.toBe(enabledIcon);
     expect(ui.host.querySelector('.scene-experience .feedback-controls')).toBeNull();
     expect((await ui.saved()).settings).toMatchObject({ sound: false, haptics: false });
+    await ui.tap(ui.host.querySelector('button[aria-label="仪式设置"]')!);
+    act(() => {
+      const ended = new Event('transitionend', { bubbles: true });
+      Object.defineProperty(ended, 'propertyName', { value: 'height' });
+      ui.host.querySelector('.feedback-controls')!.dispatchEvent(ended);
+    });
     await ui.tap(ui.host.querySelector('.back-button')!);
     await ui.tap(ui.host.querySelector(`.daily-set-primary[data-scene="${sceneId}"]`)!);
     expect(ui.host.querySelector('.app-topbar button[aria-label="音效"]')!.getAttribute('aria-pressed')).toBe('false');
@@ -284,6 +291,7 @@ describe("今日's daily set", () => {
   it("forwards each scene impact strength and reads the haptics toggle live", async () => {
     const ui = await openApp(createState());
     await ui.tap(ui.host.querySelector(`.daily-set-primary[data-scene="${sceneId}"]`)!);
+    await ui.tap(ui.host.querySelector('button[aria-label="仪式设置"]')!);
     const haptics = ui.host.querySelector('.app-topbar button[aria-label="震动"]')!;
     const haptic = scene.context!.haptic!;
     for (const strength of ["light", "medium", "heavy"] as const) haptic(strength);

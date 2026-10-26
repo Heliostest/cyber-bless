@@ -17,3 +17,8 @@
 3. 泰国公关厅南府电台，[Wat Suan Tan宋干节活动报道](https://radionan.prd.go.th/th/content/category/detail/id/6/iid/381310)，2025-04-13。2026-10-23根实际读L48–53／独立L55，正文列出 ปักตุง（插幡）、ทานเจดีย์ทราย（献沙塔）、进寺修福。仅当年当地活动，不能把清单读作固定礼序。
 
 文化部 `https://qrcode.culture.go.th/pdfbook/songkran.pdf` 两方均402，不记已读。详细核查与其他访问限制见[研究记录](../../docs/research/2026-10-23-lanna-sand-pagoda.md)。
+
+
+### lanna-sand-pagoda：2026-10-26 产品操作更新
+
+整纸幡连竹杆提起、移塔旁、杆尖到沙座插点自动完成。 物件跟手、目标容差、自动吸附与提示标记是应用的输入安排，不是来源规定的传统步骤。沿用本卡既有事实与阅读状态，本轮没有新增文化主张或将外部资料登记为重新读过。实际实现与验证边界见[C 组记录](../../docs/research/2026-10-26-spatial-placement-audit-c.md)。

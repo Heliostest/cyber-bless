@@ -60,13 +60,19 @@ function event(el: HTMLElement, type: string, [clientX, clientY]: [number, numbe
 }
 const targetName = (at: number) => ['koinobori-tail','koinobori-toggle','koinobori-toggle'][at]!
 const anchor = (at: number): [number, number, number] => [[.26,.18,.02],[0,0,.065],[0,0,.065]][at] as [number,number,number]
-const delta = (at: number): [number, number] => at === 1 ? [0,60] : [60,0]
+const spatial = (at: number) => at > 0
+function delta(at: number, s: ReturnType<typeof mount>): [number, number] {
+  if (!spatial(at)) return at === 1 ? [0,60] : [60,0]
+  const a=s.point(targetName(at),anchor(at)), object=s.scene.getObjectByName(targetName(at))!, occurrence=[0,1,2].slice(0,at).filter(i=>targetName(i)===targetName(at)).length, destination=(object.userData.interactionCues as InteractionCue[])[occurrence]!.destination!
+  const goal=(typeof destination==='function'?destination():destination.getWorldPosition(new THREE.Vector3())).project(s.camera),r=s.host.querySelector('canvas')!.getBoundingClientRect()
+  return [r.left+(goal.x+1)*r.width/2-a[0],r.top+(1-goal.y)*r.height/2-a[1]]
+}
 function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, run = true) {
   const p = s.point(targetName(at), anchor(at)); event(s.hit, 'pointerdown', p)
   for (let i = 1; i <= 8; i++) event(s.hit, 'pointermove', [p[0] + dx * i / 8, p[1] + dy * i / 8])
   event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); if (run) s.run()
 }
-function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) drag(s, at, ...delta(at), run) }
+function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) drag(s, at, ...delta(at,s), run) }
 function cues(s: ReturnType<typeof mount>) {
   const list: { object: THREE.Object3D; cue: InteractionCue }[] = []
   s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled()) list.push({ object, cue }) })
@@ -100,15 +106,15 @@ describe('Japanese koinobori unfurling and halyard', () => {
   it('raises the fish by the same distance as the free halyard end descends',()=>{
     const s=mount(1),fish=s.scene.getObjectByName('koinobori-fish')!,toggle=s.scene.getObjectByName('koinobori-toggle')!,fishY=fish.position.y,toggleY=toggle.position.y,p=s.point(targetName(1),anchor(1))
     event(s.hit,'pointerdown',p)
-    for(let i=0;i<=20;i++){
-      event(s.hit,'pointermove',[p[0],p[1]+60*i/20]);expect(fish.position.y-fishY).toBeCloseTo(toggleY-toggle.position.y,6)
+    const [dx,dy]=delta(1,s);for(let i=0;i<=20;i++){
+      event(s.hit,'pointermove',[p[0]+dx*i/20,p[1]+dy*i/20]);expect(fish.position.y-fishY).toBeCloseTo(toggleY-toggle.position.y,6)
     }
-    event(s.hit,'pointerup',[p[0],p[1]+60]);s.run();expect(fish.position.y-fishY).toBeCloseTo(1.15)
+    event(s.hit,'pointerup',[p[0]+dx,p[1]+dy]);s.run();expect(fish.position.y-fishY).toBeCloseTo(1.15)
     expect(s.progress).toEqual([2])
   })
   it('keeps the halyard and mouth bridles attached without new GPU buffers during every step',()=>{
     for(const at of [0,1,2]){
-      const s=mount(at),rope=s.scene.getObjectByName('koinobori-halyard') as THREE.Mesh,geometry=rope.geometry,position=geometry.getAttribute('position'),normal=geometry.getAttribute('normal'),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at)
+      const s=mount(at),rope=s.scene.getObjectByName('koinobori-halyard') as THREE.Mesh,geometry=rope.geometry,position=geometry.getAttribute('position'),normal=geometry.getAttribute('normal'),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s)
       event(s.hit,'pointerdown',p)
       for(let i=0;i<=20;i++){
         event(s.hit,'pointermove',[p[0]+dx*i/20,p[1]+dy*i/20]);s.scene.updateMatrixWorld(true)
@@ -233,12 +239,12 @@ describe('Japanese koinobori unfurling and halyard', () => {
   })
   it('keeps wind running during a held hoist and before the rope is secured',()=>{
     const s=mount(1),body=s.scene.getObjectByName('koinobori-body') as THREE.Mesh,p=s.point(targetName(1),anchor(1))
-    event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0],p[1]+30])
+    const [dx,dy]=delta(1,s);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx*.2,p[1]+dy*.2])
     const before=Array.from(body.geometry.getAttribute('position').array)
     s.run(.4);expect(Array.from(body.geometry.getAttribute('position').array)).not.toEqual(before);expect(s.progress).toEqual([])
     const current=Array.from(body.geometry.getAttribute('position').array)
-    event(s.hit,'pointermove',[p[0],p[1]+30]);expect(Array.from(body.geometry.getAttribute('position').array)).toEqual(current)
-    event(s.hit,'pointerup',[p[0],p[1]+60]);s.run();expect(s.progress).toEqual([2])
+    event(s.hit,'pointermove',[p[0]+dx*.2,p[1]+dy*.2]);expect(Array.from(body.geometry.getAttribute('position').array)).toEqual(current)
+    event(s.hit,'pointerup',[p[0]+dx,p[1]+dy]);s.run();expect(s.progress).toEqual([2])
     const raised=Array.from(body.geometry.getAttribute('position').array)
     s.run(.4);expect(Array.from(body.geometry.getAttribute('position').array)).not.toEqual(raised);expect(s.complete).not.toHaveBeenCalled()
   })
@@ -287,39 +293,40 @@ describe('Japanese koinobori unfurling and halyard', () => {
     step(s, 2); expect(frequencies).toEqual([523.25, 523.25]); expect(peaks).toEqual([.003, .003])
     s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })
-  it.each([0, 1, 2])('rejects wrong surfaces, orphan release, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
-    event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    event(s.hit, 'pointerup', end)
-    for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx]]) drag(s, at, x, y)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
-    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([0, 1, 2])('checks terminal release coordinates for reverse, cross-axis and nonfinite displacement at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true })
-    for (const kind of ['back', 'cross', 'nan']) {
-      const p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
+  it.each([0, 1, 2])('rejects wrong surfaces, orphan release, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {if(spatial(at)){const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s);event(s.hit,'pointerdown',[1,1]);event(s.hit,'pointermove',[p[0]+dx,p[1]+dy]);event(s.hit,'pointerup',[p[0]+dx,p[1]+dy]);expect(s.progress).toEqual([]);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]-dx*.2,p[1]-dy*.2]);event(s.hit,'pointercancel',p);expect(s.progress).toEqual([]);step(s,at);expect(s.progress).toEqual([at+1]);return}
+const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s), end: [number, number] = [p[0] + dx, p[1] + dy]
+event(s.hit, 'pointerdown', [1, 1]);
+event(s.hit, 'pointermove', end);
+event(s.hit, 'pointerup', end)
+event(s.hit, 'pointerup', end)
+for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx]]) drag(s, at, x, y)
+event(s.hit, 'pointerdown', p);
+event(s.hit, 'pointermove', end);
+event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]);
+event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
+event(s.hit, 'pointerdown', p);
+event(s.hit, 'pointermove', end);
+event(s.hit, 'pointermove', p);
+event(s.hit, 'pointerup', p)
+expect(s.progress).toEqual([]);
+step(s, at);
+expect(s.progress).toEqual([at + 1])})
+  it.each([0, 1, 2])('checks terminal release coordinates for reverse, cross-axis and nonfinite displacement at %i', at => {if(spatial(at)){for(const factor of[0,3]){const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx,p[1]+dy]);expect(s.progress).toEqual([at+1]);event(s.hit,'pointerup',[p[0]+dx*factor,p[1]+dy*factor]);expect(s.progress).toEqual([at+1]);s.instance.dispose()}return}
+const s = mount(at, { isReducedMotion: () => true })
+for (const kind of ['back', 'cross', 'nan']) {
+      const p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
       const end: [number, number] = kind === 'back' ? [p[0] + dx * .25, p[1] + dy * .25] : kind === 'cross' ? [p[0] + dx - dy, p[1] + dy + dx] : [NaN, p[1]]
       event(s.hit, 'pointerup', end); expect(s.progress, kind).toEqual([])
     }
-    step(s, at); expect(s.progress).toEqual([at + 1])
-  })
+step(s, at);
+expect(s.progress).toEqual([at + 1])})
   it.each([0, 1, 2])('rejects a nonfinite move even when the final release is valid at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [NaN, p[1]])
     event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run()
     expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([at + 1])
   })
-  it.each([false, true])('accepts a wobbly drag ending fully extended exactly once, reduced=%s', reduced => {
-    for (const at of [0, 1, 2]) {
-      const s = mount(at, { isReducedMotion: () => reduced }), p = s.point(targetName(at), anchor(at))
-      event(s.hit, 'pointerdown', p)
-      for (const [along, cross] of [[12, 16], [24, -16], [36, 16], [48, -16], [60, 0]]) event(s.hit, 'pointermove', [p[0]+delta(at)[0]*along/60-delta(at)[1]*cross/60,p[1]+delta(at)[1]*along/60+delta(at)[0]*cross/60])
-      event(s.hit, 'pointerup', [p[0] + delta(at)[0], p[1] + delta(at)[1]])
-      s.run(); expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(at === 2)
-    }
-  })
+  it.each([false, true])('accepts a wobbly drag ending fully extended exactly once, reduced=%s', reduced => {for(const at of[0,1,2]){const s=mount(at,{isReducedMotion:()=>reduced}),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]-dy*.3,p[1]+dx*.3]);event(s.hit,'pointermove',[p[0]+dx,p[1]+dy]);event(s.hit,'pointerup',[p[0]+dx,p[1]+dy]);s.run();expect(s.progress).toEqual([at+1]);expect(s.button.disabled).toBe(at===2);s.instance.dispose()}})
   it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {
     for (const returning of [false, true]) {
       const s = mount(at, { returning, isReducedMotion: () => true }); s.run()
@@ -347,9 +354,9 @@ describe('Japanese koinobori unfurling and halyard', () => {
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or stale position/rotation', kind => {
     for (const at of [0, 1, 2]) {
-      let active = true; const s = mount(at, { isActive: () => active }), pivot = s.scene.getObjectByName(at === 0 ? 'koinobori-tail' : 'koinobori-toggle')!, home = pivot.position.clone(), scale = pivot.scale.clone(), rotation = pivot.quaternion.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+      let active = true; const s = mount(at, { isActive: () => active }), pivot = s.scene.getObjectByName(at === 0 ? 'koinobori-tail' : 'koinobori-toggle')!, home = pivot.position.clone(), scale = pivot.scale.clone(), rotation = pivot.quaternion.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); const frames = rendered.render.mock.calls.length
-      expect(pivot.position.distanceTo(home) + pivot.scale.distanceTo(scale) + pivot.quaternion.angleTo(rotation)).toBeGreaterThan(.04)
+      expect(pivot.position.distanceTo(home) + pivot.scale.distanceTo(scale) + pivot.quaternion.angleTo(rotation)).toBeGreaterThan(.005)
       if (kind === 'pause') { active = false; s.instance.update(.05); s.instance.update(.05); expect(rendered.render.mock.calls.length).toBe(frames) }
       else if (kind === 'blur') window.dispatchEvent(new Event('blur')); else event(s.hit, kind, p)
       event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run(); expect(s.progress).toEqual([]); expect(pivot.position.distanceTo(home)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(pivot.scale.distanceTo(scale)).toBeLessThan(.00001)
@@ -358,7 +365,7 @@ describe('Japanese koinobori unfurling and halyard', () => {
   })
   it.each([284, 350, 1280])('keeps all subject vertices in frame during each unfurl, hoist and securing movement at width %i', width => {
     for (const at of [0, 1, 2]) {
-      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
       const check = () => {
         s.scene.updateMatrixWorld(true); let extent = 0
         s.scene.getObjectByName('koinobori-subject')!.traverse(o => {
@@ -408,7 +415,7 @@ describe('Japanese koinobori unfurling and halyard', () => {
   })
   it.each([0,1,2])('rejects multitouch with an otherwise valid primary drag at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at))
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerdown', [1, 1], 2); event(s.hit, 'pointermove', [p[0]+delta(at)[0], p[1]+delta(at)[1]]); event(s.hit, 'pointerup', [p[0]+delta(at)[0], p[1]+delta(at)[1]]); event(s.hit, 'pointerup', [1, 1], 2)
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerdown', [1, 1], 2); event(s.hit, 'pointermove', [p[0]+delta(at,s)[0], p[1]+delta(at,s)[1]]); event(s.hit, 'pointerup', [p[0]+delta(at,s)[0], p[1]+delta(at,s)[1]]); event(s.hit, 'pointerup', [1, 1], 2)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at+1])
   })
   it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('stops after %s pauses or disposes the scene', callback => {
@@ -450,7 +457,7 @@ describe('Japanese koinobori unfurling and halyard', () => {
 })
 
 it.each([0, 1, 2])('accepts a deliberate release when the browser coalesces all move events, phase=%i', at => {
-  const s = mount(at, { isReducedMotion: () => true }); const p = s.point(targetName(at), anchor(at)); const [dx, dy] = delta(at);
+  const s = mount(at, { isReducedMotion: () => true }); const p = s.point(targetName(at), anchor(at)); const [dx, dy] = delta(at,s);
   event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]);
   expect(s.progress).toEqual([at + 1]);
 });

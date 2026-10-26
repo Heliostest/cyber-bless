@@ -5,9 +5,8 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
 import { createDropFeedback } from '../drop-feedback'
-import { placementHit } from '../placement-hit'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
@@ -47,6 +46,13 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
   const { scene, renderer } = createWarmStage(canvas)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
+
+  const projectedGuide = (goal: THREE.Vector3, grip: THREE.Vector3, contact: THREE.Vector3) => {
+    camera.updateMatrixWorld(true)
+    const g=goal.project(camera),a=grip.project(camera),b=contact.project(camera)
+    g.x+=a.x-b.x;g.y+=a.y-b.y
+    return g.unproject(camera)
+  }
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'hungarian-embroidery-hoop', label: COPY.title }); style.setStyle(CEL_STYLE)
   const lights = addStageLights(scene, ctx.stage, { sky: 0xf3e9d4, ground: 0xaba596, key: 0xffefdc, rim: 0xd4e7eb,
     keyPosition: [-3, 5, 4], keyIntensity: 1.25, rimIntensity: .42 })
@@ -136,30 +142,43 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
   const enabled = (step: number) => () => active() && !motion && at === step
   const stitchPoint = () => hoop.localToWorld(new THREE.Vector3(.25, -.22, .017))
   addInteractionCue(spoolGrip, { kind: 'drag', label: '拿起线轴', priority: 3, enabled: enabled(0), destination: stitchPoint, targetLabel: '亚麻布留白' })
-  addInteractionCue(grip, { kind: 'drag', label: '握住绣圈铜扣', priority: 3, enabled: enabled(1), destination: seat, targetLabel: '绣圈展托' })
+  addInteractionCue(grip, { kind: 'drag', label: '握住绣圈铜扣', priority: 3, enabled: enabled(1), destination: () => projectedGuide(seat.getWorldPosition(new THREE.Vector3()),grip.getWorldPosition(new THREE.Vector3()),hoop.localToWorld(new THREE.Vector3(0,-.735,0))), targetLabel: '绣圈展托' })
   addInteractionCue(grip, { kind: 'tap', label: '轻点绣圈静看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => at === 0 ? spool : hoop
   const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
   const visibleHit = (x: number, y: number, targets: THREE.Object3D | THREE.Object3D[], held?: THREE.Object3D) => touch.hit(x, y, targets, { ignore: held })
-  const placementReady = (x: number, y: number) => at < 2 && travel >= 8
-    && !touch.occluded(x, y, at === 0 ? cloth : seat, { ignore: moving() })
-    && placementHit(canvas, camera, at === 0 ? spoolGrip : grip, x, y, (px, py) => visibleHit(px, py, at === 0 ? cloth : seat, moving()), [0, 0, 0])
+  let arrivalRadius=22
+  const arrivalPoint = () => {
+    const q=(at===0?stitchPoint():seat.getWorldPosition(new THREE.Vector3())).project(camera),r=canvas.getBoundingClientRect()
+    return {x:r.left+(q.x+1)*r.width/2,y:r.top+(1-q.y)*r.height/2}
+  }
+  const measureArrival = () => {
+    const a=projectTouchPoint(canvas,camera,at===0?spoolGrip:hoop,at===0?[0,0,0]:[0,-.735,0]),b=arrivalPoint()
+    arrivalRadius=a?Math.min(22,Math.hypot(a.x-b.x,a.y-b.y)*.42):0
+  }
+  const automaticReady = (x: number, y: number) => {
+    if (at >= 2 || !insideCanvas(canvas, x, y)) return false
+    const contact = projectTouchPoint(canvas, camera, at === 0 ? spoolGrip : hoop, at === 0 ? [0,0,0] : [0,-.735,0])
+    const goal=arrivalPoint()
+    return !!contact && !touch.occluded(x,y,at===0?cloth:seat,{ignore:moving()}) && Math.hypot(contact.x-goal.x,contact.y-goal.y)<=arrivalRadius && touch.hit(contact.x, contact.y, at === 0 ? cloth : seat, { ignore: moving() })
+  }
   const reset = () => { dropFeedback.clear(); dragging = false; travel = 0; if (!motion) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (notifying || motion || at === 3) return false; matrices(); return visibleHit(x, y, at === 0 ? spool : hoop) },
-    onStart(x, y) { dropFeedback.clear(); notifyHost(() => feedback.prepare()); down.set(x, y); travel = 0; dragging = at < 2; plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
+    onStart(x, y) { dropFeedback.clear(); notifyHost(() => feedback.prepare()); down.set(x, y); travel = 0; dragging = at < 2; if(at<2)measureArrival(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
     onMove(x, y) {
       if (notifying) return
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
       moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .80, 2.3); matrices()
-      dropFeedback.setReady(dragging && placementReady(x, y))
+      dropFeedback.setReady(dragging && automaticReady(x, y))
+    if (dragging && automaticReady(x, y) && pointer.finish()) { dragging = false; dropFeedback.clear(); begin(true) }
     },
     onRelease(x, y) {
       matrices()
-      const valid = at < 2 ? dragging && placementReady(x, y)
+      const valid = at < 2 ? dragging && automaticReady(x, y)
         : at === 2 && travel < 12 && Math.hypot(x - down.x, y - down.y) < 12 && visibleHit(x, y, hoop)
       dropFeedback.clear(); dragging = false
       if (valid) { if (at < 2) begin(); else finish() } else reset()
@@ -180,7 +199,7 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
     if (!active()) return
     notifyHost(() => feedback.impact({ freqs: [392, 523.25], duration: .19, gain: .012, type: 'triangle' }))
   }
-  function begin() { if (notifying || !active() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
+  function begin(placed = false) { if (notifying || !active() || (pointer.isBusy() && !placed) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
   function finish(text = '') {
     if (notifying || !active() || pointer.isBusy() || motion || at !== 2) return
     at = 3; restore(); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()

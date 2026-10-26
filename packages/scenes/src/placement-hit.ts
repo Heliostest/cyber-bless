@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
-/** Keep a drop on the visible destination valid when the grip, rather than the
- * fingertip that picked it off-center, is visibly aligned with that destination. */
+/** A carried object's contact anchor owns arrival. The fingertip can be offset
+ * from it, and reaching the target with that fingertip alone is not placement. */
 export function placementHit(
   canvas: HTMLCanvasElement,
   camera: THREE.Camera,
@@ -11,11 +11,10 @@ export function placementHit(
   hit: (x: number, y: number) => boolean,
   anchor: [number, number, number] = [0, 0, 0],
 ) {
-  if (hit(x, y)) return true
   // Captured release outside the stage is an abandoned drop; a clamped object
   // or a ray that missed the drag plane can otherwise retain a stale valid pose.
   const rect = canvas.getBoundingClientRect()
-  if (x < rect.left || x > rect.left + rect.width || y < rect.top || y > rect.top + rect.height) return false
+  if (!Number.isFinite(x) || !Number.isFinite(y) || x < rect.left || x > rect.left + rect.width || y < rect.top || y > rect.top + rect.height) return false
   grip.updateWorldMatrix(true, false); camera.updateWorldMatrix(true, false)
   const point = grip.localToWorld(new THREE.Vector3(...anchor)).project(camera)
   if (!Number.isFinite(point.x) || !Number.isFinite(point.y) || Math.abs(point.z) > 1) return false

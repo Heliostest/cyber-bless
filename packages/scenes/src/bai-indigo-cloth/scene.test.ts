@@ -55,6 +55,8 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
   return { instance, scene, camera, host, overlay, hit, button, point, run, write, progress, saveWish, complete, haptic }
 }
 function event(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
+  if (type === 'pointerdown') pendingStarts.set(el, [clientX,clientY] as [number, number])
+
   const e = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(e, { clientX, clientY, pointerId, pointerType: 'touch', button: 0 }); el.dispatchEvent(e)
 }
@@ -137,8 +139,8 @@ describe('visible object input and recoverable progress', () => {
   it.each([0, 1])('rejects drops behind external opaque geometry at checkpoint %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), source = at === 0 ? 'indigo-bundle-body' : 'indigo-cloth-body', target = at === 0 ? 'indigo-rinse-water' : 'indigo-drying-rail'
     const a = s.point(source), b = s.point(target)
-    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b)
-    const clear = block(s, target); event(s.hit, 'pointerup', b); s.run()
+    const clear = block(s, target); event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b)
+     event(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([]); clear(); drag(s, source, target); expect(s.progress).toEqual([at + 1])
   })
   it.each([0, 1, 2, 3])('restores checkpoint %i silently and retains native button access', at => {
@@ -160,7 +162,7 @@ describe('visible object input and recoverable progress', () => {
       let active = true; const s = mount(at, { isActive: () => active, isReducedMotion: () => true })
       const source = at === 0 ? 'indigo-bundle-body' : 'indigo-cloth-body', target = at === 0 ? 'indigo-rinse-water' : 'indigo-drying-rail'
       const object = s.scene.getObjectByName(at === 0 ? 'indigo-tied-cloth' : 'indigo-open-cloth')!, home = object.position.clone(), end = s.point(target)
-      event(s.hit, 'pointerdown', s.point(source)); event(s.hit, 'pointermove', end)
+      event(s.hit, 'pointerdown', s.point(source)); event(s.hit, 'pointermove', pendingPoint(s.hit, end))
       expect(object.position.equals(home)).toBe(false)
       if (kind === 'blur') window.dispatchEvent(new Event('blur'))
       else if (kind === 'pause') { active = false; s.run() }
@@ -322,9 +324,11 @@ describe('physical cloth and owned resources', () => {
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', target); expect(group.position.equals(home)).toBe(false)
     event(s.hit, 'pointercancel', target); expect(group.position.equals(home)).toBe(true)
     group.children.forEach((o, i) => expect(o.position.equals(positions[i])).toBe(true)); expect(s.progress).toEqual([])
-    drag(s, 'indigo-bundle-knot'); expect(s.progress).toEqual([1])
+    const center = s.point('indigo-bundle-body'), knotDrop: [number, number] = [target[0] + p[0] - center[0], target[1] + p[1] - center[1]]
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', knotDrop); s.run(); expect(s.progress).toEqual([1])
+    event(s.hit, 'pointerup', knotDrop); expect(s.progress).toEqual([1])
   })
-  it('requires eight pixels of real travel and settles immediately when reduced motion is switched on', () => {
+  it('rejects a short movement outside the destination and settles immediately when reduced motion is switched on', () => {
     let reduced = false; const s = mount(0, { isReducedMotion: () => reduced }), a = s.point('indigo-bundle-body'), target = s.point('indigo-rinse-water')
     const short: [number, number] = [a[0] + 7.9, a[1]]
     event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', short); event(s.hit, 'pointerup', short); s.run()
@@ -356,3 +360,10 @@ describe('physical cloth and owned resources', () => {
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), type).toBe(true)
   })
 })
+
+// Cancellation happens before arrival; a completed placement already owns its result.
+const pendingStarts = new WeakMap<HTMLElement, [number, number]>()
+function pendingPoint(layer: HTMLElement, point: [number, number]): [number, number] {
+ const start = pendingStarts.get(layer) ?? point
+ return [start[0]+(point[0]-start[0])*.20,start[1]+(point[1]-start[1])*.20]
+}

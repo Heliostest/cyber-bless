@@ -83,3 +83,10 @@ Actual GPU appearance and browser/mobile integration are left to the integrating
 简化边界：线鸟形体、接一翼和木座为原创展示。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../../../docs/research/2026-10-20-scene-narratives-c.md#slovak-wire-bird)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+
+## 2026-10-26 空间跟手与到位完成
+
+松翅接头到肩部、整鸟双足到栖座自动落稳；开放铁线空隙与已接翅联动保留。
+
+这是产品输入与落稳机制调整；器物、文化语境、原先后与来源身份沿用已有核查，不新增传统步骤或效力主张。抓取偏移、单指归属、取消复原、暂停冻结与辅助按钮保留。已到位提交的指针尾事件不会再推动下一步；尚未到位取消会复原。最终逐场结论与验证范围见[C 组落地记录](../../../../docs/research/2026-10-26-spatial-placement-audit-c.md)。

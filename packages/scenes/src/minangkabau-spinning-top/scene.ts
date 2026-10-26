@@ -5,7 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
 import { placementHit } from '../placement-hit'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
@@ -117,6 +117,10 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
     })
     return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object === target
   }
+  const automaticReady = (x: number, y: number) => {
+    const contact = projectTouchPoint(canvas, camera, bead)
+    return checkpoint === 0 && insideCanvas(canvas, x, y) && !!contact && !touchTarget.occluded(x,y,anchor,{ignore:[bead, cord]}) && touchTarget.hit(contact.x, contact.y, anchor, { ignore: [bead, cord] })
+  }
   const resetDrag = () => { dragging = false; maxTravel = 0; if (!motion) restorePose() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
@@ -130,11 +134,12 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
       if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) {
         bead.position.copy(point).add(offset); bead.position.x = THREE.MathUtils.clamp(bead.position.x, -.03, 1.27)
         bead.position.z = THREE.MathUtils.clamp(bead.position.z, .3, .67); updateCord(); matrices()
+        if (automaticReady(x, y) && pointer.finish()) { dragging = false; begin(true) }
       }
     },
     onRelease(x, y) {
       const moved = maxTravel; maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint === 0 ? dragging && moved > 8 && placementHit(canvas, camera, bead, x, y, (px, py) => visibleHit(px, py, anchor, true)) : maxTravel < 12 && visibleHit(x, y, cap)
+      const valid = checkpoint === 0 ? dragging && automaticReady(x, y) : maxTravel < 12 && visibleHit(x, y, cap)
       dragging = false
       if (!valid) { resetDrag(); return }
       if (checkpoint < 2) begin(); else finish()
@@ -153,8 +158,8 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
     checkpoint = (motion.step + 1) as Checkpoint; motion = null; restorePose(); sync(); ctx.onProgress?.(checkpoint)
     feedback.impact({ freqs: [392, 587.33], duration: .22, gain: .015, type: 'triangle' })
   }
-  function begin() {
-    if (!active() || pointer.isBusy() || motion || checkpoint >= 2) return
+  function begin(placed = false) {
+    if (!active() || (pointer.isBusy() && !placed) || motion || checkpoint >= 2) return
     motion = { step: checkpoint as 0 | 1, time: 0, from: bead.position.clone() }; sync()
     if (reduced()) settled()
   }

@@ -82,6 +82,16 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 }
 
 
+function beforeArrival(s: ReturnType<typeof mount>, goal: [number, number]): [number, number] {
+  let selected: { object: THREE.Object3D; cue: InteractionCue } | undefined
+  s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.kind === 'drag' && cue.destination) selected = { object, cue } })
+  if (!selected) return goal
+  const { object, cue } = selected, canvas = s.overlay.parentElement!.querySelector('canvas')!, rect = canvas.getBoundingClientRect()
+  const source = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(s.camera)
+  const x = rect.left + (source.x + 1) * rect.width / 2, y = rect.top + (1 - source.y) * rect.height / 2
+  return [Math.max(rect.left + 2, x - 48), Math.max(rect.top + 2, y - 48)]
+}
+
 describe('Andalusian contemporary ceramic panel', () => {
   it('fits the center tile, places the panel and finishes once without saving a wish', () => {
     const s = mount(0, { isReducedMotion: () => true })
@@ -150,7 +160,7 @@ describe('visible object input and recoverable progress', () => {
   it.each([0, 1])('rejects drops behind external opaque geometry at checkpoint %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), source = at === 0 ? 'tile-loose-grip' : 'tile-frame-grip', target = at === 0 ? 'tile-empty-seat' : 'tile-display-seat'
     const a = s.point(source), b = s.point(target)
-    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b)
+    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', beforeArrival(s, b))
     const clear = block(s, target); event(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([]); clear(); drag(s, source, target); expect(s.progress).toEqual([at + 1])
   })
@@ -173,7 +183,7 @@ describe('visible object input and recoverable progress', () => {
       let active = true; const s = mount(at, { isActive: () => active, isReducedMotion: () => true })
       const source = at === 0 ? 'tile-loose-grip' : 'tile-frame-grip', target = at === 0 ? 'tile-empty-seat' : 'tile-display-seat'
       const object = s.scene.getObjectByName(at === 0 ? 'tile-center-piece' : 'tile-panel')!, home = object.position.clone(), end = s.point(target)
-      event(s.hit, 'pointerdown', s.point(source)); event(s.hit, 'pointermove', end)
+      event(s.hit, 'pointerdown', s.point(source)); event(s.hit, 'pointermove', beforeArrival(s, end))
       expect(object.position.equals(home)).toBe(false)
       if (kind === 'blur') window.dispatchEvent(new Event('blur'))
       else if (kind === 'pause') { active = false; s.run() }
@@ -258,7 +268,7 @@ describe('physical craft and owned resources', () => {
     const s = mount(1), panel = s.scene.getObjectByName('tile-panel')!, detail = s.scene.getObjectByName('tile-center-piece')!
     const original = new THREE.Box3().setFromObject(detail), grip = s.scene.getObjectByName('tile-frame-grip')!
     expect(detail.parent).toBe(panel); expect(grip.parent).toBe(panel)
-    event(s.hit, 'pointerdown', s.point(grip.name)); event(s.hit, 'pointermove', s.point('tile-display-seat'))
+    event(s.hit, 'pointerdown', s.point(grip.name)); event(s.hit, 'pointermove', beforeArrival(s, s.point('tile-display-seat')))
     expect(new THREE.Box3().setFromObject(detail).min.equals(original.min)).toBe(false)
     event(s.hit, 'pointercancel', s.point('tile-display-seat'))
     expect(new THREE.Box3().setFromObject(detail).min.distanceTo(original.min)).toBeLessThan(.00001)

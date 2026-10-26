@@ -152,8 +152,14 @@ export function createFinnishBirchBasket(ctx: SceneContext): SceneInstance {
   }
   const handleGrip = handle.getObjectByName('birch-handle-grip')!
   const enabled = (at: number) => () => active() && !transition && checkpoint === at
+  const seatGripGoal = () => {
+    matrices()
+    const goal = displayMat.getWorldPosition(new THREE.Vector3()).project(camera), grip = rimGrip.getWorldPosition(new THREE.Vector3()).project(camera), bottom = basket.getWorldPosition(new THREE.Vector3()).project(camera)
+    goal.x += grip.x - bottom.x; goal.y += grip.y - bottom.y
+    return goal.unproject(camera)
+  }
   addInteractionCue(handleGrip, { kind: 'drag', label: '装好提柄', priority: 3, enabled: enabled(0), destination: rimGrip, targetLabel: '桦篮前沿' })
-  addInteractionCue(rimGrip, { kind: 'drag', label: '安放桦篮', priority: 3, enabled: enabled(1), destination: displayMat, targetLabel: '灰绿布垫' })
+  addInteractionCue(rimGrip, { kind: 'drag', label: '安放桦篮', priority: 3, enabled: enabled(1), destination: seatGripGoal, targetLabel: '篮底落在灰绿布垫' })
   addInteractionCue(rimGrip, { kind: 'tap', label: '轻点桦篮静看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => checkpoint === 0 ? handle : basket
@@ -170,11 +176,13 @@ export function createFinnishBirchBasket(ctx: SceneContext): SceneInstance {
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (transition || checkpoint === 3) return false; matrices(); return hitsVisible(x, y, checkpoint === 0 ? handleGrip : rimGrip) },
-    onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare(); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), object.position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
-    onMove(x, y) { maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices() },
+    onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare(); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (checkpoint === 0 ? handleGrip : rimGrip).getWorldPosition(new THREE.Vector3())); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
+    onMove(x, y) { maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices();
+      if (dragging && checkpoint < 2 && maxTravel > 0 && placementHit(canvas, camera, checkpoint === 0 ? handleGrip : basket, x, y, (px, py) => hitsVisible(px, py, checkpoint === 0 ? rimGrip : displayMat, moving())) && pointer.finish()) { dragging = false; advance(true) }
+    },
     onRelease(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && placementHit(canvas, camera, checkpoint === 0 ? handleGrip : rimGrip, x, y, (px, py) => hitsVisible(px, py, checkpoint === 0 ? rimGrip : displayMat, moving())) : maxTravel < 12 && hitsVisible(x, y, rimGrip)
+      const valid = checkpoint < 2 ? dragging && maxTravel > 0 && placementHit(canvas, camera, checkpoint === 0 ? handleGrip : basket, x, y, (px, py) => hitsVisible(px, py, checkpoint === 0 ? rimGrip : displayMat, moving())) : maxTravel < 12 && hitsVisible(x, y, rimGrip)
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,
   })
@@ -185,8 +193,8 @@ export function createFinnishBirchBasket(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl, transition ? transition.step === 0 ? COPY.attaching : COPY.placing : checkpoint === 0 ? COPY.attach : checkpoint === 1 ? COPY.place : checkpoint === 2 ? COPY.rest : COPY.done, safe)
   }
   function settle() { if (!active() || !transition) return; checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore(); sync(); ctx.onProgress?.(checkpoint); feedback.impact({ freqs: [349.23, 440], duration: .15, gain: .011 }) }
-  function advance() {
-    if (!active() || pointer.isBusy() || transition || checkpoint === 3) return
+  function advance(arrived = false) {
+    if (!active() || (pointer.isBusy() && !arrived) || transition || checkpoint === 3) return
     if (checkpoint === 2) { checkpoint = 3; restore(); sync(); ctx.onProgress?.(3); feedback.impact({ freqs: [349.23, 523.25], duration: .21, gain: .012 }); overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })); return }
     transition = { step: checkpoint, time: 0, from: moving().position.clone(), rotation: moving().quaternion.clone() }; sync(); if (ctx.isReducedMotion?.()) settle()
   }

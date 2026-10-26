@@ -4,7 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -99,6 +99,10 @@ export function createCzechPilgrimJournal(ctx: SceneContext): SceneInstance {
   const source=()=>checkpoint===0?corner:checkpoint===1?grip:seal
   const touchTarget=createTouchTarget(canvas,camera,scene)
   const ray=createPointerRay(canvas,camera),down=new THREE.Vector2(),plane=new THREE.Plane(),point=new THREE.Vector3(),offset=new THREE.Vector3()
+  const automaticReady = (x: number, y: number) => {
+    const contact=projectTouchPoint(canvas,camera,grip)
+    return checkpoint===1 && insideCanvas(canvas,x,y) && !!contact && !touchTarget.occluded(x,y,slot,{ignore:ribbon}) && touchTarget.hit(contact.x,contact.y,slot,{ignore:ribbon})
+  }
   const reset=()=>{dragging=false;maxTravel=0;if(!transition)restorePose()}
   const pointer=createObjectPointer(ui.hitLayer,{
     isActive:active,
@@ -112,10 +116,11 @@ export function createCzechPilgrimJournal(ctx: SceneContext): SceneInstance {
         hinge.rotation.z=THREE.MathUtils.clamp((down.x-x)/Math.max(1,down.x-targetX),0,1)*Math.PI
       }else if(ray.aim(x,y).ray.intersectPlane(plane,point))ribbon.position.copy(point).add(offset)
       matrices()
+      if(automaticReady(x,y)&&pointer.finish()){dragging=false;advance(true)}
     },
     onRelease(x,y){
       maxTravel=Math.max(maxTravel,Math.hypot(x-down.x,y-down.y));matrices()
-      const valid=checkpoint<2?dragging&&maxTravel>=8&&touchTarget.hit(x,y,checkpoint===0?coverRest:slot,{ignore:checkpoint===0?hinge:ribbon}):maxTravel<12&&touchTarget.hit(x,y,seal)
+      const valid=checkpoint<2?dragging&&(checkpoint===1?automaticReady(x,y):maxTravel>=8&&touchTarget.hit(x,y,coverRest,{ignore:hinge})):maxTravel<12&&touchTarget.hit(x,y,seal)
       dragging=false;if(valid)advance();else reset()
     },onCancel:reset,
   })
@@ -126,8 +131,8 @@ export function createCzechPilgrimJournal(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl,transition?transition.step===0?COPY.opening:COPY.placing:checkpoint===0?COPY.open:checkpoint===1?COPY.ribbon:checkpoint===2?COPY.rest:COPY.done,safe)
   }
   function settled(){if(!active()||!transition)return;checkpoint=(transition.step+1) as Checkpoint;transition=null;restorePose();sync();ctx.onProgress?.(checkpoint);feedback.impact({freqs:[392,523.25],duration:.18,gain:.014})}
-  function advance(){
-    if(!active()||pointer.isBusy()||transition||checkpoint===3)return
+  function advance(placed=false){
+    if(!active()||(pointer.isBusy()&&!placed)||transition||checkpoint===3)return
     if(checkpoint===2){checkpoint=3;restorePose();sync();ctx.onProgress?.(3);feedback.impact({freqs:[392,587.33],duration:.23,gain:.014});overlay.dispatchEvent(new CustomEvent('scene:complete',{bubbles:true}));return}
     transition={step:checkpoint,time:0,angle:hinge.rotation.z,from:ribbon.position.clone(),ribbonAngle:ribbon.rotation.y};sync();if(ctx.isReducedMotion?.())settled()
   }

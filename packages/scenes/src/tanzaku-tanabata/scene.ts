@@ -21,7 +21,7 @@ const STEP_ORDER: Step[] = ['pick', 'hang', 'wish']
 const COPY = {
   title: '短册系竹',
   hintPick: '点按或拖起地上的纸条。',
-  hintHang: '把纸条拖到竹枝的系结处，再松开。',
+  hintHang: '握住纸条，挪到竹枝的系结范围，便会轻轻挂好。',
   hintWish: '纸条挂好了。把短愿放在心里，再静看片刻。',
   pickTap: '拾起纸条',
   hangTap: '挂到竹枝上',
@@ -202,6 +202,9 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
   const pointerNdc = new THREE.Vector2()
   const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.6)
   const hitPoint = new THREE.Vector3()
+  const dragOffset = new THREE.Vector3()
+  const grabHome = new THREE.Vector3()
+  const grabRotation = new THREE.Quaternion()
 
   const resize = () => {
     const parent = canvas.parentElement
@@ -243,18 +246,20 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
   }
 
   const bambooHitTest = (clientX: number, clientY: number) => {
-    raycastAt(clientX, clientY)
-    return raycaster.intersectObject(hangZone, false).length > 0
+    const rect = canvas.getBoundingClientRect()
+    if (clientX < rect.left || clientX > rect.left + rect.width || clientY < rect.top || clientY > rect.top + rect.height) return false
+    const actual = loose.getWorldPosition(new THREE.Vector3()).project(camera)
+    const target = world.localToWorld(looseHangPos.clone()).project(camera)
+    return Math.hypot((actual.x - target.x) * rect.width / 2, (actual.y - target.y) * rect.height / 2) <= 22
   }
 
   const moveStripTo = (clientX: number, clientY: number) => {
     raycastAt(clientX, clientY)
     if (raycaster.ray.intersectPlane(dragPlane, hitPoint)) {
-      dragTarget.set(
-        THREE.MathUtils.clamp(hitPoint.x, -1.6, 1.6),
-        THREE.MathUtils.clamp(hitPoint.y + 0.2, 0.3, 2.8),
-        0.6,
-      )
+      dragTarget.copy(hitPoint).add(dragOffset); world.worldToLocal(dragTarget)
+      loose.position.copy(dragTarget)
+      pickZone.position.set(loose.position.x, loose.position.y - .2, loose.position.z)
+      world.updateMatrixWorld(true)
     }
   }
 
@@ -267,7 +272,7 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     }),
     addInteractionCue(loose, {
       kind: 'drag', label: '拖到竹枝', anchor: [0, -0.21, 0],
-      destination: () => world.localToWorld(looseHangPos.clone()),
+      destination: () => world.localToWorld(looseHangPos.clone().add(new THREE.Vector3(0, -.21, 0))),
       targetLabel: '竹枝系结处',
       enabled: () => canCue() && step === 'hang',
     }),
@@ -322,7 +327,7 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
   }
 
   const onActionTap = () => {
-    if (disposed) return
+    if (disposed || interactionPointerId !== null) return
     fx.prepare()
     if (step === 'pick') goHang()
     else if (step === 'hang') goWish()
@@ -339,16 +344,28 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     interactionPointerId = e.pointerId
     if (step === 'pick') goHang()
     grabbed = true
+    grabHome.copy(loose.position)
+    grabRotation.copy(loose.quaternion)
+    const origin = loose.getWorldPosition(new THREE.Vector3())
+    dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), loose.localToWorld(new THREE.Vector3(0, -.21, 0)))
+    raycastAt(e.clientX, e.clientY)
+    if (raycaster.ray.intersectPlane(dragPlane, hitPoint)) dragOffset.copy(origin).sub(hitPoint)
     moveStripTo(e.clientX, e.clientY)
   }
 
   const onHitMove = (e: PointerEvent) => {
     if (!canAct() || e.pointerId !== interactionPointerId || step !== 'hang' || !grabbed || e.buttons === 0) return
     moveStripTo(e.clientX, e.clientY)
+    if (bambooHitTest(e.clientX, e.clientY)) goWish()
   }
 
   const onHitUp = (e?: PointerEvent) => {
     if (e && e.pointerId !== interactionPointerId) return
+    if (step === 'hang' && grabbed) {
+      loose.position.copy(grabHome); loose.quaternion.copy(grabRotation); dragTarget.copy(grabHome)
+      pickZone.position.set(loose.position.x, loose.position.y - .2, loose.position.z)
+      world.updateMatrixWorld(true)
+    }
     interactionPointerId = null
     grabbed = false
   }
@@ -359,7 +376,7 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     stopClaim = claimObjectTouches(hitLayer, onStrip)
     dragHandle = gestures.createDrag({
       startsOn: (x, y) => canAct() && onStrip(x, y),
-      hitTest: bambooHitTest,
+      hitTest: (x, y) => { moveStripTo(x, y); return bambooHitTest(x, y) },
       onDrop: (hit) => {
         if (step !== 'hang') return
         grabbed = false
@@ -444,7 +461,7 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
       } else {
         looseMat.emissiveIntensity = 0.15 + Math.sin(t * 2.4) * 0.1
       }
-      const scaleTarget = grabbed ? 1.2 : 1
+      const scaleTarget = 1
       loose.scale.setScalar(
         THREE.MathUtils.lerp(loose.scale.x, scaleTarget, 1 - Math.exp(-dt * 12)),
       )

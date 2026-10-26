@@ -69,7 +69,14 @@ function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, r
 }
 function finish(s: ReturnType<typeof mount>) { s.overlay.querySelector<HTMLButtonElement>('.scene-yut-finish')?.click(); s.run() }
 // A terminal checkpoint now includes the user's separate end action.
-function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) { drag(s, at, ...delta(at), run); if (at === 2 && run) finish(s) } }
+function targetDelta(s: ReturnType<typeof mount>, at: number): [number, number] {
+  const entry = cues(s).find(entry => entry.cue.destination)
+  if (!entry) return delta(at)
+  const d = entry.cue.destination!, world = typeof d === 'function' ? d() : d.getWorldPosition(new THREE.Vector3())
+  const p = world.project(s.camera), r = s.host.querySelector('canvas')!.getBoundingClientRect(), a = s.point(targetName(at), anchor(at))
+  return [r.left + (p.x + 1) * r.width / 2 - a[0], r.top + (1 - p.y) * r.height / 2 - a[1]]
+}
+function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) { drag(s, at, ...targetDelta(s,at), run); if (at === 2 && run) finish(s) } }
 function cues(s: ReturnType<typeof mount>) {
   const list: { object: THREE.Object3D; cue: InteractionCue }[] = []
   s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled()) list.push({ object, cue }) })
@@ -96,7 +103,7 @@ describe('Korean yutnori single turn', () => {
     expect(s.overlay.querySelector('.scene-hint')!.textContent).toContain('1 格')
     const flat = () => [0, 1, 2, 3].filter(i => new THREE.Vector3(0, -1, 0).applyQuaternion(s.scene.getObjectByName(`yut-stick-${i}`)!.quaternion).y > .9).length
     expect(flat()).toBe(1)
-    drag(s, 2, 0, -60)
+    drag(s, 2, ...targetDelta(s,2))
     const token = s.scene.getObjectByName('yut-token')!, station = (n: number) => s.scene.getObjectByName(`yut-station-${n}`)!
     expect(token.position.x).toBeCloseTo(station(1).position.x); expect(token.position.z).toBeCloseTo(station(1).position.z)
     expect(s.progress).toEqual([1, 2]); expect(s.complete).not.toHaveBeenCalled()
@@ -106,7 +113,7 @@ describe('Korean yutnori single turn', () => {
     s.button.click(); s.run()
     expect(flat()).toBe(0); expect(s.overlay.querySelector('.scene-hint')!.textContent).toContain('5 格')
     expect(finish.hidden).toBe(true)
-    drag(s, 2, 0, -60)
+    drag(s, 2, ...targetDelta(s,2))
     expect(token.position.x).toBeCloseTo(station(6).position.x); expect(token.position.z).toBeCloseTo(station(6).position.z)
     expect(s.progress).toEqual([1, 2]); expect(s.complete).not.toHaveBeenCalled()
     finish.click(); s.run(); expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
@@ -120,7 +127,7 @@ describe('Korean yutnori single turn', () => {
     const pending = mount(2, { initialVariant: saved, isReducedMotion: () => true })
     expect(pending.overlay.querySelector('.scene-hint')!.textContent).toContain('1 格')
     expect(pending.progress).toEqual([])
-    drag(s, 2, 0, -60)
+    drag(s, 2, ...targetDelta(s,2))
     const resumed = mount(2, { initialVariant: saved, isReducedMotion: () => true })
     const token = resumed.scene.getObjectByName('yut-token')!, station = resumed.scene.getObjectByName('yut-station-1')!
     expect(token.position.x).toBeCloseTo(station.position.x); expect(token.position.z).toBeCloseTo(station.position.z)
@@ -237,7 +244,7 @@ describe('Korean yutnori single turn', () => {
   })
   it.each([284, 350, 1280])('keeps all subject vertices in frame during each gathering, throwing and token movement at width %i', width => {
     for (const at of [0, 1, 2]) {
-      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = targetDelta(s,at)
       const check = () => {
         s.scene.updateMatrixWorld(true); let extent = 0
         s.scene.getObjectByName('yut-subject')!.traverse(o => {

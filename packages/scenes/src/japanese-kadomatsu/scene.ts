@@ -3,6 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPosePlacement } from '../pose-placement'
 import { createTouchTarget } from '../touch-target'
 import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
@@ -10,7 +11,7 @@ import { createKadomatsuModel } from './model'
 
 type Checkpoint = 0 | 1 | 2 | 3
 const ACTIONS = ['提起门松', '移向门边', '落稳迎岁']
-const HINTS = ['按住草束向上拖，轻轻提起门松。','按住草束向右拖，将门松移到门边。','按住草束向下拖，让门松稳稳落地。','门前松竹已摆好，愿新岁平安顺遂。']
+const HINTS = ['拿住草束，把门松提到提示的位置。','拿住草束，把门松移到门边的提示位置。','托住草束，把门松放到门边石面，到位会自动落稳。','门前松竹已摆好，愿新岁平安顺遂。']
 const MOVING = ['松竹从木托上缓缓提起……','门松轻移，与另一侧相望……','草束轻轻落地，门前松竹成对……']
 const ease = (t: number) => t * t * (3 - 2 * t)
 
@@ -19,7 +20,7 @@ export function createKadomatsu(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; arrived?: boolean } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
@@ -34,34 +35,31 @@ export function createKadomatsu(ctx: SceneContext): SceneInstance {
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
   const model = createKadomatsuModel(); scene.add(model.root)
+  const placement = createPosePlacement(canvas, camera, model, scene)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
   const restore = () => pose(at, 0)
   const directions: [number, number][] = [[0,-1],[1,0],[0,1]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: directions[i], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', destination: () => placement.destination(i), targetLabel: '当前安放位置', label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
+  const reset = () => { placement.cancel(); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x,y,model.roots[at]!) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; placement.begin(at,x,y) },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
-      pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
-      const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
-      maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
-      // Held movement previews the current object; cancellation restores all contents.
-      pose(at, THREE.MathUtils.clamp(along / 60, 0, 1) * .20)
-      updateDirectionalDragHint(ui.hintEl, !invalid && completesDirectionalDrag({ along, end: along, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel: pathTravel }), HINTS[at]!, safe)
+      if (!invalid && placement.move(x,y) && pointer.finish()) { placement.capture(); advance(true) };
+
     },
     onRelease(x, y) {
       const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
-      const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
-      if (valid) advance(); else reset()
+      const valid = !invalid && placement.move(x,y)
+      if (valid) { placement.capture(); advance(true) } else reset()
     }, onCancel: reset,
   })
   const sync = () => {
@@ -82,7 +80,7 @@ export function createKadomatsu(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: at, time: 0, from: amount, arrived: placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
@@ -108,9 +106,9 @@ export function createKadomatsu(ctx: SceneContext): SceneInstance {
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       if (motion) {
-        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / 2.5)
+        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.arrived ? .32 : 2.5))
         const eased=ease(motion.time)
-        pose(motion.step, motion.from+(1-motion.from)*eased); if (motion.time === 1) settle()
+        pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); if (motion.time === 1) settle()
       }
       if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },

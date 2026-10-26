@@ -27,7 +27,7 @@ The continuous chest/neck/head mesh, three arched tail feathers, scalloped comb,
 2. Drag the rooster's actual body/base onto the solid `rooster-plinth-top` or clay plinth edge. `barcelos-rooster` is the held assembly, including its attached legs and `rooster-clay-base`.
 3. Tap the actual rooster to finish quietly, discarding any unsubmitted draft. Alternatively, submit the real optional wish form, limited to 40 characters. Returning visits do not mount a writer.
 
-The named source and destination meshes are visible surfaces; there are no oversized invisible colliders. Occlusion uses the first opaque hit across the entire scene, excluding only the held assembly for drop testing. Cues do not intercept input. Drag requires at least 8 px of recorded movement; quiet tap requires less than 12 px of maximum travel. The native auxiliary button uses the same guarded transitions.
+The named source and destination meshes are visible surfaces; there are no oversized invisible colliders. Occlusion uses the first opaque hit across the entire scene, excluding only the held assembly for drop testing. Cues do not intercept input. A carried object settles automatically on reaching its target; quiet tap requires less than 12 px of maximum travel. The native auxiliary button uses the same guarded transitions.
 
 The clay base rests on the linen at first and directly on the display at the end. Both legs intersect the continuous chest and the base. Body paint follows the same curved surface with a paint-thin offset; tail strokes rest on the sculpted feather fronts. Pointer cancellation, lost capture, blur, pause and multiple contacts abandon pending drags. Pause freezes accepted motion. Checkpoints 0–3 restore silently. Disposal releases owned inputs, cues, geometry, materials, shadow maps, feedback and renderer resources.
 
@@ -48,3 +48,8 @@ The focused suite uses actual Three.js geometry, raycasting, interaction cues an
 ## 2026-10-23 可选视觉风格
 
 正式 App 在仪式音效／震动旁加入视觉风格菜单，按当前仪式保存可选滤镜与参数，默认仍为柔和卡通。器形、材料身份、纹样、动作、介绍和文化来源保持；这是用户可逆的产品显示偏好。实际入口、保存、交互与桌面／手机视口验证见 [App 视觉风格记录](../../../../docs/research/2026-10-23-app-visual-style.md)。
+
+
+## 2026-10-26 当前跟手安放
+
+本轮的物件搬运步骤改为拿住真实物件跟随手指，移到当前提示范围即自动落稳。不再以固定方向、最短拖距或必须松手判断摆放成功。同一根手指的后续移动与释放不操作下一步；取消只撤回尚未接受的拿取。键盘辅助、减少动画、旧检查点和原有文化语境保留。此前段落中关于这些搬运步骤的短拖、20%预览和松手才接受描述为旧实现，以本节为当前机制。屏幕落区、吸附和短程落稳是产品输入安排，不新增传统礼序、次数或功效。[逐步审阅和本轮验证](../../../../docs/research/2026-10-26-spatial-placement-audit-a.md)。

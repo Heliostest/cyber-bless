@@ -28,3 +28,8 @@
 边界与缺口：19世纪是馆藏范围非编扇起源；原物盘绕与当前交织不同；不能由编扇推卡瓦礼或 sevusevu 要求；展座/静看是当代欣赏。
 
 逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#fijian-woven-fan)。
+
+
+## 2026-10-26 产品输入记录
+
+适用场景：`fijian-woven-fan`。当前搬运验收与技术验证见[跟手摆放逐场审阅 A 组](../../docs/research/2026-10-26-spatial-placement-audit-a.md)。未更改上述文化与器物／公开实践、来源身份或宗教语境。

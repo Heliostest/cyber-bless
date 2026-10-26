@@ -70,9 +70,9 @@ export function createHiiragiModel(){
  const mouth=ball('fish-mouth',.277,.057,0,.036,.009,.087,dark,head)
  const nose=ball('fish-snout',.288,.080,0,.035,.025,.068,roast,head)
  const rest=new THREE.Vector3(-.65,.180,-.55),held=new THREE.Vector3(-.55,.35,.40),seat=new THREE.Vector3(.83,.88,-.50),headRest=new THREE.Vector3(.65,.155,.48),joined=new THREE.Vector3(0,.90,0),restAngle=Math.acos(.008/.8875)
- const setHeadJoined=()=>{head.quaternion.copy(twig.quaternion);head.position.copy(joined).applyQuaternion(twig.quaternion).add(twig.position)}
+ const setHeadJoined=()=>{twig.add(head);head.quaternion.identity();head.position.copy(joined)}
  const pose=(step:number,n:number)=>{
-  const t=THREE.MathUtils.clamp(n,0,1);twig.position.copy(rest);twig.rotation.set(restAngle,0,0);head.position.copy(headRest);head.quaternion.identity()
+  const t=THREE.MathUtils.clamp(n,0,1);root.add(head);twig.position.copy(rest);twig.rotation.set(restAngle,0,0);head.position.copy(headRest);head.quaternion.identity()
   if(step===0){
    if(t<.3)twig.position.y=THREE.MathUtils.lerp(rest.y,.72,smooth(t/.3))
    else if(t<.75){const q=smooth((t-.3)/.45);twig.position.set(THREE.MathUtils.lerp(rest.x,held.x,q),.72,THREE.MathUtils.lerp(rest.z,held.z,q));twig.rotation.x=restAngle*(1-q)}

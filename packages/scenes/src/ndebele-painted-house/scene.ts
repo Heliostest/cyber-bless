@@ -100,16 +100,17 @@ export function createNdebelePaintedHouse(ctx: SceneContext): SceneInstance {
   const moving = () => checkpoint === 0 ? panel : house
   const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
   const hitsVisible = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => touch.hit(x, y, target, { ignore: held })
-  const placementReady = (x: number, y: number) => checkpoint < 2 && maxTravel >= 8
+  const placementReady = (x: number, y: number) => checkpoint < 2
     && !touch.occluded(x, y, checkpoint === 0 ? slot : seat, { ignore: moving() })
     && placementHit(canvas, camera, checkpoint === 0 ? colorPanel : grip, x, y, (px, py) => hitsVisible(px, py, checkpoint === 0 ? slot : seat, moving()))
   const reset = () => { dropFeedback.clear(); dragging = false; maxTravel = 0; if (!transition) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (transition || checkpoint === 3) return false; matrices(); return hitsVisible(x, y, checkpoint === 0 ? colorPanel : grip) },
-    onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare(); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), object.position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
-    onMove(x, y) { maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices(); dropFeedback.setReady(placementReady(x, y)) },
+    onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare(); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (checkpoint===0?colorPanel:grip).getWorldPosition(new THREE.Vector3())); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
+    onMove(x, y) { maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices(); dropFeedback.setReady(placementReady(x, y)); if (checkpoint < 2 && placementReady(x,y) && pointer.finish()) { dragging = false; dropFeedback.clear(); advance(true) } },
     onRelease(x, y) {
+      if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset)
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
       const valid = checkpoint < 2 ? dragging && placementReady(x, y) : maxTravel < 12 && hitsVisible(x, y, grip)
       dropFeedback.clear(); dragging = false; if (valid) advance(); else reset()
@@ -127,8 +128,8 @@ export function createNdebelePaintedHouse(ctx: SceneContext): SceneInstance {
     checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore(); sync()
     ctx.onProgress?.(checkpoint); if (!active()) return; feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .013 })
   }
-  function advance() {
-    if (!active() || pointer.isBusy() || transition || checkpoint === 3) return
+  function advance(placed = false) {
+    if (!active() || (pointer.isBusy() && !placed) || transition || checkpoint === 3) return
     if (checkpoint === 2) {
       checkpoint = 3; restore(); sync(); ctx.onProgress?.(3)
       if (!active()) return

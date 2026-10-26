@@ -69,3 +69,8 @@
 当前呈现：圆面包和彩蛋先后放入白布篮，完成后静看或自愿写感谢。 两件食物为节选，日景和感谢输入为产品；未模拟司铎祝福。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#polish-blessing-basket)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+
+## 2026-10-26 产品输入记录
+
+适用场景：`polish-blessing-basket`。当前搬运验收与技术验证见[跟手摆放逐场审阅 A 组](../../docs/research/2026-10-26-spatial-placement-audit-a.md)。未更改上述文化与器物／公开实践、来源身份或宗教语境。

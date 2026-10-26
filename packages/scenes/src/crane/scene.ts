@@ -4,6 +4,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPosePlacement } from '../pose-placement'
 import {
   addCelLights,
   CEL_STYLE,
@@ -34,7 +35,7 @@ const COPY = {
   folding3: '折起颈与尾…',
   fold3: '颈与尾折好了，再点按翻出鹤首、展开双翼。',
   folding4: '翻出鹤首，展开双翼…',
-  hintLift: '纸鹤折好了。把纸鹤向上拖起，再松开。',
+  hintLift: '纸鹤折好了。把整只纸鹤托到上方提示标记处。',
   hintWish: '纸鹤停在眼前。把和平的祝愿留在心里，再静看片刻。',
   foldTap: '折一下',
   liftTap: '托起纸鹤',
@@ -174,7 +175,7 @@ export function createCrane(ctx: SceneContext): SceneInstance {
   const sheet = createOrigamiSheet()
   // `paper` carries the lift; `holder` turns and scales the sheet for each form;
   // `sheet.object` is shifted so the folded paper sits on the holder's origin.
-  const paper = new THREE.Group()
+  const paper = new THREE.Group(); paper.name='crane-held-paper'
   paper.position.set(0, REST_Y, 0)
   world.add(paper)
   const holder = new THREE.Group()
@@ -213,6 +214,8 @@ export function createCrane(ctx: SceneContext): SceneInstance {
     new THREE.MeshBasicMaterial({ visible: false }),
   )
   paper.add(tapZone)
+  const placement=createPosePlacement(canvas,camera,{roots:[paper],targets:[paper],anchors:[[0,0,0]],pose(_step,n){paper.position.set(0,THREE.MathUtils.lerp(REST_Y,LIFT_Y,n),0);paper.updateWorldMatrix(true,true)}},scene)
+  const liftFrom=new THREE.Vector3(0,REST_Y,0)
 
   const pointer = createPointerRay(canvas, camera)
   /** Taps and drags that start on the paper are the scene's; elsewhere the page scrolls. */
@@ -266,7 +269,7 @@ export function createCrane(ctx: SceneContext): SceneInstance {
     }),
     addInteractionCue(tapZone, {
       kind: 'drag', label: '向上托起纸鹤',
-      destination: () => world.localToWorld(new THREE.Vector3(0, LIFT_Y + 0.2, 0)),
+      destination: () => placement.destination(0),
       targetLabel: '向上托起', enabled: () => canCue() && step === 'lift',
     }),
   ]
@@ -283,6 +286,7 @@ export function createCrane(ctx: SceneContext): SceneInstance {
 
   const goWish = () => {
     if (!canAct() || step !== 'lift') return
+    liftFrom.copy(paper.position);liftT=0
     step = 'wish'
     grabbed = false
     dragHandle?.setEnabled(false)
@@ -336,17 +340,12 @@ export function createCrane(ctx: SceneContext): SceneInstance {
     fx.prepare()
     downX = x
     downY = y
-    if (step === 'lift') grabbed = true
+    if (step === 'lift') {grabbed = true;if(!placement.begin(0,x,y))objectPointer?.cancel()}
   }
   const onHitMove = (x: number, y: number) => {
     if (step !== 'lift' || !grabbed) return
-    if (pointer.aim(x, y).ray.intersectPlane(dragPlane, hitPoint)) {
-      dragTarget.set(
-        THREE.MathUtils.clamp(hitPoint.x, -0.8, 0.8),
-        THREE.MathUtils.clamp(hitPoint.y, REST_Y - 0.2, LIFT_Y + 0.3),
-        0,
-      )
-    }
+    const ready=placement.move(x,y);dragTarget.copy(paper.position)
+    if(ready && objectPointer?.finish()){placement.capture();gestureOwned=false;grabbed=false;goWish()}
   }
   const onHitUp = (x: number, y: number) => {
     grabbed = false
@@ -356,6 +355,7 @@ export function createCrane(ctx: SceneContext): SceneInstance {
     if (moved < 12 && onPaper(x, y)) foldOnce()
   }
   const onHitCancel = () => {
+    placement.cancel()
     grabbed = false
     gestureOwned = false
     dragHandle?.setEnabled(false)
@@ -375,7 +375,7 @@ export function createCrane(ctx: SceneContext): SceneInstance {
     // it began carries it up; a stray swipe elsewhere on the stage does not.
     dragHandle = gestures.createDrag({
       startsOn: (x, y) => gestureOwned && onPaper(x, y),
-      hitTest: (_x, y) => downY - y > 40,
+      hitTest: (x, y) => placement.move(x,y),
       onDrop: (hit) => {
         const valid = gestureOwned
         gestureOwned = false
@@ -466,7 +466,7 @@ export function createCrane(ctx: SceneContext): SceneInstance {
       } else if (step === 'wish' || step === 'done') {
         liftT = reduced ? 1 : Math.min(1, liftT + dt / 1.2)
         const lift = liftT * liftT * (3 - 2 * liftT)
-        paper.position.set(0, THREE.MathUtils.lerp(REST_Y, LIFT_Y, lift) + Math.sin(t * 1.4) * 0.03, 0)
+        paper.position.lerpVectors(liftFrom,new THREE.Vector3(0,LIFT_Y,0),lift);paper.position.y+=Math.sin(t*1.4)*.03*lift
       } else {
         paper.position.set(0, REST_Y + Math.sin(t * 1.1) * 0.015, 0)
       }

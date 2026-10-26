@@ -1,3 +1,4 @@
+import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -88,8 +89,14 @@ export function createDalarnaWoodenHorse(ctx: SceneContext): SceneInstance {
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restore = () => { horse.position.copy(checkpoint >= 2 ? HORSE_REST : HORSE_HOME); cloth.position.copy(CLOTH_HOME); cream.roughness = checkpoint >= 1 ? .60 : .9; matrices() }
   const enabled = (at: number) => () => active() && !transition && checkpoint === at
+  const seatGripGoal = () => {
+    matrices()
+    const goal = plinth.getWorldPosition(new THREE.Vector3()).project(camera), grip = saddle.getWorldPosition(new THREE.Vector3()).project(camera), foot = horse.getWorldPosition(new THREE.Vector3()).project(camera)
+    goal.x += grip.x - foot.x; goal.y += grip.y - foot.y
+    return goal.unproject(camera)
+  }
   addInteractionCue(cloth, { kind: 'drag', label: '轻拭木马彩鞍', priority: 3, enabled: enabled(0), destination: saddle, targetLabel: '彩鞍侧面' })
-  addInteractionCue(saddle, { kind: 'drag', label: '安放木马', priority: 3, enabled: enabled(1), destination: plinth, targetLabel: '右侧木座' })
+  addInteractionCue(saddle, { kind: 'drag', label: '安放木马', priority: 3, enabled: enabled(1), destination: seatGripGoal, targetLabel: '四蹄落在右侧木座' })
   addInteractionCue(saddle, { kind: 'tap', label: '轻点木马静看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => checkpoint === 0 ? cloth : horse
@@ -103,14 +110,18 @@ export function createDalarnaWoodenHorse(ctx: SceneContext): SceneInstance {
     return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object === target
   }
   const reset = () => { dragging = false; maxTravel = 0; if (!transition) restore() }
+  const placementReady = (x: number, y: number) => checkpoint < 2 && maxTravel > 0
+    && placementHit(canvas, camera, checkpoint === 0 ? cloth : horse, x, y, (px, py) => hitsVisible(px, py, checkpoint === 0 ? saddle : plinth, moving()))
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (transition || checkpoint === 3) return false; matrices(); return hitsVisible(x, y, checkpoint === 0 ? cloth : saddle) },
-    onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare(); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), object.position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
-    onMove(x, y) { maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices() },
+    onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare(); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (checkpoint === 0 ? cloth : saddle).getWorldPosition(new THREE.Vector3())); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
+    onMove(x, y) { maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices();
+      if (dragging && placementReady(x, y) && pointer.finish()) { dragging = false; advance(true) }
+    },
     onRelease(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && hitsVisible(x, y, checkpoint === 0 ? saddle : plinth, moving()) : maxTravel < 12 && hitsVisible(x, y, saddle)
+      const valid = checkpoint < 2 ? dragging && placementReady(x, y) : maxTravel < 12 && hitsVisible(x, y, saddle)
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,
   })
@@ -121,8 +132,8 @@ export function createDalarnaWoodenHorse(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl, transition ? transition.step === 0 ? COPY.polishing : COPY.placing : checkpoint === 0 ? COPY.polish : checkpoint === 1 ? COPY.place : checkpoint === 2 ? COPY.rest : COPY.done, safe)
   }
   function settle() { if (!active() || !transition) return; checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore(); sync(); ctx.onProgress?.(checkpoint); feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .013 }) }
-  function advance() {
-    if (!active() || pointer.isBusy() || transition || checkpoint === 3) return
+  function advance(arrived = false) {
+    if (!active() || (pointer.isBusy() && !arrived) || transition || checkpoint === 3) return
     if (checkpoint === 2) { checkpoint = 3; restore(); sync(); ctx.onProgress?.(3); feedback.impact({ freqs: [392, 587.33], duration: .22, gain: .013 }); overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })); return }
     transition = { step: checkpoint, time: 0, from: moving().position.clone() }; sync(); if (ctx.isReducedMotion?.()) settle()
   }

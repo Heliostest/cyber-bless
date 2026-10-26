@@ -12,6 +12,9 @@
 
 木板、低架、双坡小屋、贴合屋面的承台、尺寸、三次拖动、方向、路径、速度、音效、结束与回访均为本次产品安排，不称固定传统顺序、期限或完整仪式。没有十字架、供物、祭司、神明显现或写愿表单。完成仅表示眼前陈设已安放；“愿家中平安，日子丰足”是此刻的祝愿。
 
+
+2026-10-26 当前输入：搬运步骤采用拿取后跟随手指、进入当前目标范围自动落稳。落区容差、吸附和短程落稳是产品机制，不新增文化事实或传统要求；旧来源读取状态未改变。
+
 ## 来源与实际读取范围
 
 核查日期2026-10-23。以下为本轮实际访问状态，行号仅指当轮解析快照，不是永久页码。没有查看或复制来源图片、视频或社交媒体嵌入。
@@ -22,3 +25,8 @@
 - [PROMPERÚ／peru.travel：《Toritos de Pucará, symbols of protection and prosperity》](https://www.peru.travel/stories/toritos-de-pucara-simbols-protection-prosperity)：根代理实读标题、作者peru.travel、日期2026-08-05及L15、21–29相关正文。支持屋顶／入口的成对陈设与保护、丰足愿望，属于旅游综述；不将其文化历史相邻叙述作为牛器物起源证据。
 
 文化部《El toro de Pupuja》PDF返回Anubis拒绝页面，未读正文；另一Geoportal馆藏PDF只成功取得出版信息及导论，未读到陶牛专节。政府新闻及市政页418、Canal IPe页403；这些状态、旅游摘要与未显示的图片均不登记为已读器物证据。详见[逐项研究](../../docs/research/2026-10-23-pucara-rooftop-bulls.md)与[场景README](../../packages/scenes/src/pucara-rooftop-bulls/README.md)。使用本专卡，不借一般秘鲁或宗教总卡作地区索引。
+
+
+## 2026-10-26 产品输入记录
+
+适用场景：`pucara-rooftop-bulls`。当前搬运验收与技术验证见[跟手摆放逐场审阅 A 组](../../docs/research/2026-10-26-spatial-placement-audit-a.md)。未更改上述文化与器物／公开实践、来源身份或宗教语境。

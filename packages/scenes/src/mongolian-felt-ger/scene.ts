@@ -49,6 +49,7 @@ export function createMongolianFeltGer(ctx: SceneContext): SceneInstance {
   const removeCues = model.targets.map((target,i) => addInteractionCue(target!,dropCues[i]!))
   const touch = createTouchTarget(canvas, camera, scene)
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), from = new THREE.Vector2(), to = new THREE.Vector2()
+  let arrivalRadius = 0
   const plane = new THREE.Plane(), dragPoint = new THREE.Vector3(), offset = new THREE.Vector3(), held = new THREE.Vector3()
   const project = (p: THREE.Vector3) => {
     const rect = canvas.getBoundingClientRect(), q = p.clone().project(camera)
@@ -84,6 +85,7 @@ export function createMongolianFeltGer(ctx: SceneContext): SceneInstance {
       if (!ray.aim(x,y).ray.intersectPlane(plane,dragPoint)) { invalid=true; return }
       offset.copy(held).sub(dragPoint)
       from.copy(project(target.localToWorld(new THREE.Vector3(...model.anchors[at]!)))); to.copy(project(dropPoint()))
+      arrivalRadius = Math.min(22, from.distanceTo(to) * .42)
     },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
@@ -93,12 +95,13 @@ export function createMongolianFeltGer(ctx: SceneContext): SceneInstance {
       // This only previews the linked frame/cloth. Acceptance uses the spatial drop below.
       const path=to.clone().sub(from), fraction=new THREE.Vector2(x-down.x,y-down.y).dot(path)/Math.max(path.lengthSq(),1)
       pose(at,THREE.MathUtils.clamp(fraction,0,at===2?.8:1),held)
-      const ready=!invalid && insideStage(x,y) && placementHit(canvas,camera,model.targets[at]!,x,y,overDrop,model.anchors[at])
+      const ready=!invalid && insideStage(x,y) && project(model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!))).distanceTo(to)<=arrivalRadius && placementHit(canvas,camera,model.targets[at]!,x,y,overDrop,model.anchors[at])
       model.highlightDrop(ready);dropCues[at]!.label=ready?READY[at]!:DRAG_LABELS[at]!
       setSafeText(ui.hintEl,ready?READY[at]!:HINTS[at]!,safe)
+      if(ready && pointer.finish()){dragging=false;advance(true)}
     },
     onRelease(x, y) {
-      const valid = dragging && !invalid && moved && insideStage(x,y) && placementHit(canvas,camera,model.targets[at]!,x,y,overDrop,model.anchors[at])
+      const valid = dragging && !invalid && moved && insideStage(x,y) && project(model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!))).distanceTo(to)<=arrivalRadius && placementHit(canvas,camera,model.targets[at]!,x,y,overDrop,model.anchors[at])
       dragging=false
       if (valid) advance(true); else reset()
     }, onCancel: reset,
@@ -121,7 +124,7 @@ export function createMongolianFeltGer(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance(dropped = false) { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount, heldFrom: dropped ? model.targets[at]!.position.clone() : undefined }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(dropped = false) { if (!inputActive() || (pointer.isBusy() && !dropped) || motion || at === 3) return; motion = { step: at, time: 0, from: amount, heldFrom: dropped ? model.targets[at]!.position.clone() : undefined }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {

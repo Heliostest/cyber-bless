@@ -5,7 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { createPathSweep } from '../path-sweep'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
 import {
   addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage,
@@ -42,6 +42,13 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
   const { renderer, scene } = createWarmStage(canvas)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
+
+  const projectedGuide = (goal: THREE.Vector3, grip: THREE.Vector3, contact: THREE.Vector3) => {
+    camera.updateMatrixWorld(true)
+    const g=goal.project(camera),a=grip.project(camera),b=contact.project(camera)
+    g.x+=a.x-b.x;g.y+=a.y-b.y
+    return g.unproject(camera)
+  }
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'navruz-sumalak', label: COPY.title })
   style.setStyle(CEL_STYLE)
   const lights = addStageLights(scene, ctx.stage, { sky: 0xffefdb, ground: 0xb9b298, key: 0xffe7ca, rim: 0xd6e5dc,
@@ -133,12 +140,17 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
   addInteractionCue(head, { kind: 'drag', label: '沿圆点缓搅', enabled: () => canCue() && checkpoint === 0,
     destination: () => beads[Math.min(nextBead - 1, 7)].getWorldPosition(new THREE.Vector3()), targetLabel: '沿弧线到这里' })
   addInteractionCue(head, { kind: 'drag', label: '拖木勺盛入陶碗', enabled: () => canCue() && checkpoint === 1, destination: basin, targetLabel: '空陶碗' })
-  addInteractionCue(food, { kind: 'drag', label: '把陶碗留给邻里', enabled: () => canCue() && checkpoint === 2, destination: sharingMat, targetLabel: '共食垫' })
+  addInteractionCue(food, { kind: 'drag', label: '把陶碗留给邻里', enabled: () => canCue() && checkpoint === 2, destination: () => projectedGuide(sharingMat.getWorldPosition(new THREE.Vector3()),food.getWorldPosition(new THREE.Vector3()),bowl.getWorldPosition(new THREE.Vector3())), targetLabel: '共食垫' })
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(), dragPoint = new THREE.Vector3(), offset = new THREE.Vector3()
   const touch = createTouchTarget(canvas, camera, scene)
   const stirPath = createPathSweep(Array.from({ length: 9 }, (_, i) => { const p = arcPoint(i / 8); return [p.x, p.z] as const }), .09)
   const stirReady = (x: number, y: number) => stirPath.progress === 1 && touch.hit(x, y, beads[7]!, { ignore: spoon })
   const carried = () => checkpoint === 2 ? bowl : spoon
+  const automaticReady = (x: number, y: number) => {
+    if (checkpoint<1 || checkpoint>2 || !insideCanvas(canvas,x,y)) return false
+    const contact=projectTouchPoint(canvas,camera,checkpoint===1?head:bowl)
+    return !!contact && !touch.occluded(x,y,checkpoint===1?basin:sharingMat,{ignore:carried()}) && touch.hit(contact.x,contact.y,checkpoint===1?basin:sharingMat,{ignore:carried()})
+  }
   function pose() {
     stirPath.reset(); nextBead = 1
     beads.forEach(bead => (bead.material as THREE.MeshStandardMaterial).color.setHex(0xf1dec2))
@@ -196,12 +208,13 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
         carried().position.x = THREE.MathUtils.clamp(carried().position.x, -1.4, 1.4)
         carried().position.y = THREE.MathUtils.clamp(carried().position.y, .0045, 1.65)
         world.updateMatrixWorld(true)
+        if(automaticReady(x,y)&&pointer.finish()){dragging=false;begin(true)}
       }
     },
     onRelease(x, y) {
       const valid = Number.isFinite(x) && Number.isFinite(y) && dragging && active() && !motion && (checkpoint === 0
         ? stirReady(x, y)
-        : ray.hits(x, y, [checkpoint === 1 ? basin : sharingMat]))
+        : automaticReady(x,y))
       dragging = false
       if (valid) begin(true); else { pose(); sync() }
     },

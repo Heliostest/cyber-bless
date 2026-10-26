@@ -27,3 +27,8 @@
 具体边界与缺口：没有壁画起源年；不复制艺术家作品或声称色块有统一护佑含义。小板拼贴/模型是产品表达，不是真实绘壁方式。 无新增依赖的失访来源。
 
 当前器物与动作：原创几何色块家屋模型和展台；填色板、移屋展示。 短时画面和输入步骤只描述本场呈现，不反向证明传统。逐项研究见[B 组核查记录](../../docs/research/2026-10-20-scene-narratives-b.md#ndebele-painted-house)；用户介绍统一维护于 `packages/core/src/scene-narratives/b.ts`。
+
+
+## 2026-10-26 产品输入记录
+
+适用场景：`ndebele-painted-house`。当前搬运验收与技术验证见[跟手摆放逐场审阅 A 组](../../docs/research/2026-10-26-spatial-placement-audit-a.md)。未更改上述文化与器物／公开实践、来源身份或宗教语境。

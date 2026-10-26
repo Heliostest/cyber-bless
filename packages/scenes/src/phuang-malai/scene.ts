@@ -3,7 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
-import { createTouchTarget, insideCanvas } from '../touch-target'
+import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
 import { createDropFeedback } from '../drop-feedback'
 import {
   addStageLights, CEL_STYLE, claimObjectTouches, createPointerRay,
@@ -288,14 +288,18 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   addInteractionCue(firstRing.flowers, {
     kind: 'drag', label: '向上拖花环系结', anchor: [0, 0, 0.095], priority: 2,
     enabled: () => cueActive() && checkpoint === 1,
-    destination: tie, targetLabel: '顶端绳结',
+    destination: () => drag?.kind==='tie'?tieGoal.clone():tie.getWorldPosition(new THREE.Vector3()), targetLabel: '顶端绳结',
   })
   addInteractionCue(firstRing.flowers, {
     kind: 'drag', label: '拖花环到小台', anchor: [0, 0, 0.095], priority: 2,
     enabled: () => cueActive() && checkpoint === 2,
-    destination: top, targetLabel: '奶油色小台',
+    destination: () => offsetGuide(REST.clone(),firstRing.flowers.localToWorld(new THREE.Vector3(0,0,.095)),garland.getWorldPosition(new THREE.Vector3())), targetLabel: '奶油色小台',
   })
   const updateMatrices = () => { world.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
+  const tieGoal=new THREE.Vector3()
+  let arrivalRadius=22
+  const project=(point:THREE.Vector3)=>{const q=point.project(camera),r=canvas.getBoundingClientRect();return new THREE.Vector2(r.left+(q.x+1)*r.width/2,r.top+(1-q.y)*r.height/2)}
+  const offsetGuide=(goal:THREE.Vector3,grip:THREE.Vector3,contact:THREE.Vector3)=>{const g=goal.project(camera),a=grip.project(camera),b=contact.project(camera);g.x+=a.x-b.x;g.y+=a.y-b.y;return g.unproject(camera)}
   const onFlowers = (x: number, y: number) => {
     if (!active() || motion || completed || placed) return false
     updateMatrices()
@@ -363,6 +367,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
       assembled++
       if (assembled === CLUSTERS) checkpointReached(1)
     } else if (ended.kind === 'tie') {
+      garland.position.copy(HELD)
       tied = 1
       setTie()
       checkpointReached(2)
@@ -423,7 +428,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
       cluster.group.position.copy(cluster.home)
       cluster.group.rotation.z = cluster.trayRotation
       cluster.group.scale.setScalar(0.52)
-    } else if (abandoned.kind === 'garland') garland.position.copy(HELD)
+    } else garland.position.copy(HELD)
     releaseCapture(abandoned.id)
   }
   const onDown = (event: PointerEvent) => {
@@ -434,18 +439,32 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
     const held = checkpoint === 0 ? clusters[assembled].group : garland
     // Move flowers in a camera-facing plane through the visible marker. Drop
     // readiness is measured in screen space, so depth never shrinks its area.
-    const origin = checkpoint === 0 ? nextSegment.getWorldPosition(new THREE.Vector3()) : held.getWorldPosition(new THREE.Vector3())
+    const origin = checkpoint === 0 ? clusters[assembled].flowers.localToWorld(new THREE.Vector3(0,0,.095)) : firstRing.flowers.localToWorld(new THREE.Vector3(0,0,.095))
     plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), origin)
     if (ray.aim(event.clientX, event.clientY).ray.intersectPlane(plane, point)) grabOffset.copy(held.getWorldPosition(new THREE.Vector3())).sub(point)
+    tieGoal.copy(tie.getWorldPosition(new THREE.Vector3()))
+    const from=project(held.getWorldPosition(new THREE.Vector3())),goal=project(checkpoint===0?nextSegment.getWorldPosition(new THREE.Vector3()):checkpoint===1?tieGoal.clone():REST.clone())
+    arrivalRadius=Math.min(22,from.distanceTo(goal)*.42)
     fx.prepare()
     event.preventDefault()
     try { hitLayer.setPointerCapture(event.pointerId) } catch { /* Older embedded browsers can still use the button. */ }
   }
-  const readyAt = (x: number, y: number) => !!drag && insideCanvas(canvas, x, y)
-    && (drag.kind === 'cluster' ? nearNextSegment(x, y) : Math.hypot(x - drag.x, y - drag.y) > 12 && (drag.kind === 'tie' ? nearTie(x, y) : onPedestal(x, y)))
+  const readyAt = (x: number, y: number) => {
+    if(!drag || !insideCanvas(canvas,x,y))return false
+    if(drag.kind==='cluster'){
+      const contact=projectTouchPoint(canvas,camera,clusters[assembled].flowers,[0,0,.095]),goal=project(nextSegment.getWorldPosition(new THREE.Vector3()))
+      return !!contact && Math.hypot(contact.x-goal.x,contact.y-goal.y)<=arrivalRadius && touch.hit(contact.x,contact.y,nextSegment,{ignore:clusters[assembled].group})
+    }
+    const contact=drag.kind==='tie'?firstRing.flowers.localToWorld(new THREE.Vector3(0,0,.095)):garland.getWorldPosition(new THREE.Vector3()),goal=drag.kind==='tie'?tieGoal.clone():REST.clone()
+    return project(contact).distanceTo(project(goal))<=arrivalRadius
+  }
+  const acceptHeld = () => {
+    if(!drag)return
+    const ending=drag;drag=null;dropFeedback.clear();releaseCapture(ending.id)
+    if(ending.kind==='cluster')placeCluster();else if(ending.kind==='tie')closeTie();else placeGarland()
+  }
   const moveTo = (x: number, y: number) => {
     if (!drag) return
-    if (drag.kind === 'tie') { dropFeedback.setReady(readyAt(x, y)); return }
     updateMatrices()
     if (!ray.aim(x, y).ray.intersectPlane(plane, point)) return
     point.add(grabOffset)
@@ -460,6 +479,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
     if (!drag) return
     if (drag.id !== event.pointerId || !active() || event.buttons === 0) { cancelDrag(); return }
     moveTo(event.clientX, event.clientY)
+    if(readyAt(event.clientX,event.clientY))acceptHeld()
   }
   const onUp = (event: PointerEvent) => {
     const ending = drag
@@ -569,6 +589,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
           cluster.group.scale.setScalar(THREE.MathUtils.lerp(motion.scale, 1, ease))
           cluster.group.rotation.z = THREE.MathUtils.lerp(motion.rotation, 0, ease)
         } else if (motion.kind === 'tie') {
+          garland.position.lerpVectors(motion.from,HELD,ease)
           tied = ease
           setTie()
         } else {

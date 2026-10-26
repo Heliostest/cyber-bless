@@ -180,7 +180,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   cup.traverse(object => { if ((object as THREE.Mesh).isMesh) quietObjects.push(object) })
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(), dragPoint = new THREE.Vector3(), offset = new THREE.Vector3(), down = new THREE.Vector2()
   const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
-  const placementReady = (x: number, y: number) => checkpoint < 2 && maxTravel >= 8
+  const placementReady = (x: number, y: number) => checkpoint < 2
     && !touch.occluded(x, y, checkpoint === 0 ? rest : socket, { ignore: checkpoint === 0 ? lid : [stick, paper] })
     && placementHit(canvas, camera, source(), x, y, (px, py) => touch.hit(px, py, checkpoint === 0 ? rest : socket, { ignore: checkpoint === 0 ? lid : [stick, paper] }))
   const resetDrag = () => { dropFeedback.clear(); dragging = false; maxTravel = 0; if (!placement) pose() }
@@ -190,7 +190,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
     onStart(x, y) {
       down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare()
       if (dragging) {
-        plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), carried().position)
+        plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), source().getWorldPosition(new THREE.Vector3()))
         if (ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) offset.copy(carried().position).sub(dragPoint)
       }
     },
@@ -204,8 +204,15 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
         if (checkpoint === 1) paper.position.copy(stick.position)
         matrices(); dropFeedback.setReady(placementReady(x, y))
       }
+      if (checkpoint < 2 && placementReady(x,y) && pointer.finish()) { dragging = false; dropFeedback.clear(); beginPlacement(true) }
     },
     onRelease(x, y) {
+      if (dragging && checkpoint < 2 && ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) {
+        carried().position.copy(dragPoint).add(offset)
+        carried().position.x = THREE.MathUtils.clamp(carried().position.x, -1.25, 1.25)
+        carried().position.y = THREE.MathUtils.clamp(carried().position.y, .61, 1.65)
+        if (checkpoint === 1) paper.position.copy(stick.position)
+      }
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
       const valid = checkpoint < 2 ? dragging && placementReady(x, y)
         : checkpoint === 2 && maxTravel < 12 && touch.hit(x, y, quietObjects)
@@ -229,8 +236,8 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
     checkpoint = (placement.step + 1) as Checkpoint; placement = null; pose(); sync(); ctx.onProgress?.(checkpoint)
     feedback.impact({ freqs: checkpoint === 1 ? [330, 495] : [392, 587.33], duration: .20, gain: .014, type: 'triangle' })
   }
-  function beginPlacement() {
-    if (!active() || pointer.isBusy() || placement || checkpoint >= 2) return
+  function beginPlacement(arrived = false) {
+    if (!active() || (pointer.isBusy() && !arrived) || placement || checkpoint >= 2) return
     placement = { step: checkpoint as 0 | 1, time: 0, from: carried().position.clone(), paperFrom: paper.position.clone() }
     dragging = false; sync(); if (reduced()) placed()
   }

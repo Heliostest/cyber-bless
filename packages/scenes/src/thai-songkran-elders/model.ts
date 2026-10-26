@@ -112,5 +112,5 @@ export function createSongkranModel(){
   root.updateMatrixWorld(true)
  }
  pose(0,0)
- return{root,elder,head,hands,bench,basin,pad,cup,bowl,water,caught,stream,runoff,lipFlow,handFlow,streamStart,streamEnd,runoffStart,runoffEnd,home,lifted,ready,pose,tick:(_dt:number)=>{},targets:[bowl,bowl,bowl],roots:[cup,cup,cup],anchors:[V(0,.018,0),V(0,.018,0),V(0,.018,0)]}
+ return{refreshHeldWater:()=>{root.updateMatrixWorld(true);liquid(0);root.updateMatrixWorld(true)},root,elder,head,hands,bench,basin,pad,cup,bowl,water,caught,stream,runoff,lipFlow,handFlow,streamStart,streamEnd,runoffStart,runoffEnd,home,lifted,ready,pose,tick:(_dt:number)=>{},targets:[bowl,bowl,bowl],roots:[cup,cup,cup],anchors:[V(0,.018,0),V(0,.018,0),V(0,.018,0)]}
 }

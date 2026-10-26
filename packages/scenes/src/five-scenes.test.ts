@@ -20,13 +20,13 @@ vi.mock('three', async (importOriginal) => {
   return { ...actual, WebGLRenderer }
 })
 /** Every scene graph handed to the render pass, newest last. */
-const built = vi.hoisted(() => ({ scenes: [] as unknown[] }))
+const built = vi.hoisted(() => ({ scenes: [] as unknown[], cameras: [] as unknown[] }))
 vi.mock('@wbr/scene-runtime/debug-render-style', () => ({
   createDebugRenderStyle: (
     _renderer: unknown,
     scene: { updateMatrixWorld(): void },
     camera: { updateMatrixWorld(): void },
-  ) => (built.scenes.push(scene), {
+  ) => (built.scenes.push(scene), built.cameras.push(camera), {
     setStyle: vi.fn(),
     resize: vi.fn(),
     // Like a real render, bring world matrices up to date so pointer rays hit
@@ -225,11 +225,11 @@ describe('crane folds', () => {
     s.run(1) // the last fold takes 2.3 s
     expect(s.progress).toEqual([])
     expect(activeDot(s)).toBe(0)
-    expect(hint(s)).not.toContain('向上拖起')
+    expect(hint(s)).not.toContain('把整只纸鹤托到')
     s.run(1.5)
     expect(s.progress).toEqual([1])
     expect(activeDot(s)).toBe(1)
-    expect(hint(s)).toContain('向上拖起')
+    expect(hint(s)).toContain('把整只纸鹤托到')
     s.instance.dispose()
   })
 
@@ -369,12 +369,27 @@ const SWIPES: { id: string; at: number; stray: [Point, Point]; onObject: [Point,
 ]
 
 describe.each(SWIPES)('$id swipe', ({ id, at, stray, onObject, reports }) => {
+  const shownPath = (): [Point, Point] => {
+    if (id !== 'tanzaku-tanabata') return onObject
+    const scene = built.scenes.at(-1) as THREE.Scene, camera = built.cameras.at(-1) as THREE.Camera
+    let path: [Point, Point] | undefined
+    scene.updateMatrixWorld(true); camera.updateMatrixWorld(true)
+    scene.traverse(object => {
+      for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.destination) {
+        const project = (value: THREE.Vector3): Point => { const p = value.project(camera); return [(p.x + 1) * STAGE / 2, (1 - p.y) * STAGE / 2] }
+        path = [project(object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0])))),
+          project(typeof cue.destination === 'function' ? cue.destination() : cue.destination.getWorldPosition(new THREE.Vector3()))]
+      }
+    })
+    expect(path, 'the hanging guide advertises a real destination').toBeDefined()
+    return path!
+  }
   it('leaves a swipe that starts off the object to the page', async () => {
     const s = await mount(id, at)
     const hit = layOut(s)
     const hint = s.overlay.querySelector('.scene-hint')?.textContent
     expect(claimsTouch(hit, stray[0])).toBe(false)
-    swipe(hit, ...stray)
+    swipe(hit, stray[0], id === 'tanzaku-tanabata' ? shownPath()[1] : stray[1])
     s.run(3)
     expect(s.progress).toEqual([])
     expect(s.overlay.querySelector('.scene-hint')?.textContent).toBe(hint)
@@ -384,8 +399,9 @@ describe.each(SWIPES)('$id swipe', ({ id, at, stray, onObject, reports }) => {
   it('moves on for the same swipe started on the object', async () => {
     const s = await mount(id, at)
     const hit = layOut(s)
-    expect(claimsTouch(hit, onObject[0])).toBe(true)
-    swipe(hit, ...onObject)
+    const path = shownPath()
+    expect(claimsTouch(hit, path[0])).toBe(true)
+    swipe(hit, ...path)
     s.runUntil(1)
     expect(s.progress).toEqual([reports])
     s.instance.dispose()

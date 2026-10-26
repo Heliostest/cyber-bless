@@ -60,8 +60,19 @@ function pointer(el: HTMLElement, type: string, [clientX, clientY]: [number, num
 function tap(s: ReturnType<typeof mount>) {
   const p = s.point('journal-page-seal'); pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointerup', p)
 }
+
+function dropPoint(s: ReturnType<typeof mount>, source: string, target: string): [number,number] {
+ const pairs=[["journal-ribbon-grip","journal-ribbon-slot"]];if(!pairs.some(pair=>pair[0]===source&&pair[1]===target))return s.point(target)
+ const list: {object:THREE.Object3D;cue:InteractionCue}[]=[];s.scene.traverse(object=>{for(const cue of object.userData.interactionCues??[])if(cue.enabled()&&cue.kind==='drag')list.push({object,cue})})
+ const c=list[0];if(!c?.cue.destination)return s.point(target)
+ const r=s.host.querySelector('canvas')!.getBoundingClientRect(), project=(p:THREE.Vector3):[number,number]=>{const q=p.project(s.camera);return[r.left+(q.x+1)*r.width/2,r.top+(1-q.y)*r.height/2]}
+ const d=c.cue.destination,a=project(c.object.localToWorld(new THREE.Vector3(...(c.cue.anchor??[0,0,0])))),b=project(typeof d==='function'?d():d.getWorldPosition(new THREE.Vector3())),p=s.point(source)
+ return[p[0]+b[0]-a[0],p[1]+b[1]-a[1]]
+}
+function beforeArrival(a: readonly number[], b: readonly number[]): [number,number] {return[a[0]+(b[0]-a[0])*.2,a[1]+(b[1]-a[1])*.2]}
+
 function drag(s: ReturnType<typeof mount>, name: string, target: string) {
-  const a = s.point(name), b = s.point(target)
+  const a = s.point(name), b = dropPoint(s, name, target)
   pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b); pointer(s.hit, 'pointerup', b); s.run()
 }
 function enabled(s: ReturnType<typeof mount>) {

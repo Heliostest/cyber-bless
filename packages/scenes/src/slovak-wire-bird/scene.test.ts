@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
 import * as Shared from '@wbr/shared'
 import * as Gestures from '@wbr/gestures'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import * as mod from './index'
 
@@ -54,8 +55,19 @@ function pointer(el: HTMLElement, type: string, [clientX, clientY]: [number, num
   const event = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(event, { clientX, clientY, pointerId, pointerType: 'touch', button: 0, buttons: type === 'pointerup' ? 0 : 1 }); el.dispatchEvent(event)
 }
+
+function dropPoint(s: ReturnType<typeof mount>, source: string, target: string): [number,number] {
+ const pairs=[["wire-wing-grip","wire-shoulder-joint"],["wire-bird-grip","wire-perch-seat"]];if(!pairs.some(pair=>pair[0]===source&&pair[1]===target))return s.point(target)
+ const list: {object:THREE.Object3D;cue:InteractionCue}[]=[];s.scene.traverse(object=>{for(const cue of object.userData.interactionCues??[])if(cue.enabled()&&cue.kind==='drag')list.push({object,cue})})
+ const c=list[0];if(!c?.cue.destination)return s.point(target)
+ const r=s.host.querySelector('canvas')!.getBoundingClientRect(), project=(p:THREE.Vector3):[number,number]=>{const q=p.project(s.camera);return[r.left+(q.x+1)*r.width/2,r.top+(1-q.y)*r.height/2]}
+ const d=c.cue.destination,a=project(c.object.localToWorld(new THREE.Vector3(...(c.cue.anchor??[0,0,0])))),b=project(typeof d==='function'?d():d.getWorldPosition(new THREE.Vector3())),p=s.point(source)
+ return[p[0]+b[0]-a[0],p[1]+b[1]-a[1]]
+}
+function beforeArrival(a: readonly number[], b: readonly number[]): [number,number] {return[a[0]+(b[0]-a[0])*.2,a[1]+(b[1]-a[1])*.2]}
+
 function drag(s: ReturnType<typeof mount>, source: string, target: string) {
-  const a = s.point(source), b = s.point(target)
+  const a = s.point(source), b = dropPoint(s, source, target)
   pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b); pointer(s.hit, 'pointerup', b); s.run()
 }
 function tap(s: ReturnType<typeof mount>) { const p = s.point('wire-bird-grip'); pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointerup', p) }
@@ -104,9 +116,9 @@ describe('an original open-wire bird', () => {
   })
   it.each([0, 1])('rejects a drop hidden behind another object at step %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), source = at === 0 ? 'wire-wing-grip' : 'wire-bird-grip', target = at === 0 ? 'wire-shoulder-joint' : 'wire-perch-seat'
-    const a = s.point(source), b = s.point(target)
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b)
-    const clear = block(s, target); pointer(s.hit, 'pointerup', b); s.run()
+    const a = s.point(source), b = dropPoint(s, source, target)
+    pointer(s.hit, 'pointerdown', a); const clear = block(s, target); pointer(s.hit, 'pointermove', b)
+    pointer(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([]); clear(); drag(s, source, target); expect(s.progress).toEqual([at + 1])
   })
   it.each([0, 1, 2, 3])('restores checkpoint %i silently and shares its native action path', at => {
@@ -119,7 +131,7 @@ describe('an original open-wire bird', () => {
   it.each(['pointercancel', 'lostpointercapture'])('discards a wire wing drag on %s', event => {
     const s = mount(0, { isReducedMotion: () => true }), initial = s.scene.getObjectByName('wire-loose-wing')!.position.clone()
     const a = s.point('wire-wing-grip'), b = s.point('wire-shoulder-joint')
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b); pointer(s.hit, event, b); pointer(s.hit, 'pointerup', b)
+    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', beforeArrival(a,b)); pointer(s.hit, event, b); pointer(s.hit, 'pointerup', b)
     expect(s.progress).toEqual([]); expect(s.scene.getObjectByName('wire-loose-wing')!.position.equals(initial)).toBe(true)
     drag(s, 'wire-wing-grip', 'wire-shoulder-joint'); expect(s.progress).toEqual([1])
   })
@@ -134,7 +146,7 @@ describe('an original open-wire bird', () => {
   it('cancels pending input on host pause and freezes accepted motion while blurred', () => {
     let active = true
     const s = mount(0, { isActive: () => active }), a = s.point('wire-wing-grip'), b = s.point('wire-shoulder-joint')
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b); active = false; s.run(); active = true; pointer(s.hit, 'pointerup', b); s.run()
+    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', beforeArrival(a,b)); active = false; s.run(); active = true; pointer(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([])
     s.button.click(); s.run(.1); const pose = s.scene.getObjectByName('wire-loose-wing')!.position.clone()
     window.dispatchEvent(new Event('blur')); s.run(2)
@@ -254,7 +266,7 @@ describe('an original open-wire bird', () => {
     const bird = s.scene.getObjectByName('wire-bird')!, wing = s.scene.getObjectByName('wire-loose-wing')!
     const origin = bird.position.clone(), wingOrigin = wing.getWorldPosition(new THREE.Vector3())
     const a = s.point('wire-bird-grip'), b = s.point('wire-perch-seat')
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b)
+    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', beforeArrival(a,b))
     expect(bird.position.distanceTo(origin)).toBeGreaterThan(.1)
     if (event === 'blur') window.dispatchEvent(new Event('blur'))
     else if (event === 'pause') { active = false; s.run() }

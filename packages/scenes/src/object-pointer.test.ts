@@ -16,7 +16,7 @@ function mount() {
   const pointer = createObjectPointer(layer, { isActive: () => active, canStart: x => x > 20,
     onStart: start, onMove: move, onRelease: release, onCancel: cancel })
   handles.push(pointer)
-  return { layer, pointer, start, move, release, cancel, pause: () => { active = false } }
+  return { layer, pointer, start, move, release, cancel, pause: () => { active = false }, resume: () => { active = true } }
 }
 it('owns only a gesture starting on an object and releases it once', () => {
   const s = mount()
@@ -29,6 +29,62 @@ it('owns only a gesture starting on an object and releases it once', () => {
   expect(s.release).toHaveBeenCalledExactlyOnceWith(90, 50)
   expect(s.pointer.isBusy()).toBe(false)
 })
+it('finishes an arrived object once and blocks new input until its physical finger lifts', () => {
+  const s = mount()
+  event(s.layer, 'pointerdown'); event(s.layer, 'pointermove', 1, 80)
+  expect(s.pointer.finish()).toBe(true)
+  expect(s.pointer.finish()).toBe(false)
+  expect(s.cancel).not.toHaveBeenCalled(); expect(s.release).not.toHaveBeenCalled()
+  expect(s.pointer.isBusy()).toBe(true)
+  event(s.layer, 'lostpointercapture')
+  expect(s.pointer.isBusy()).toBe(true)
+  event(s.layer, 'pointerdown', 2); event(s.layer, 'pointermove', 2, 100)
+  expect(s.start).toHaveBeenCalledOnce()
+  event(s.layer, 'pointerup', 1); expect(s.pointer.isBusy()).toBe(true)
+  event(s.layer, 'pointerup', 2); expect(s.pointer.isBusy()).toBe(false)
+  event(s.layer, 'pointerdown', 3); event(s.layer, 'pointerup', 3)
+  expect(s.release).toHaveBeenCalledOnce()
+})
+it.each(['cancel', 'inactive-move'] as const)('keeps an arrived finger occupied through pause and %s until its real release', kind => {
+  const s = mount(), button = document.createElement('button'), action = vi.fn()
+  document.body.append(button)
+  button.addEventListener('click', () => { if (!s.pointer.isBusy()) action() })
+  event(s.layer, 'pointerdown'); expect(s.pointer.finish()).toBe(true)
+  s.pause()
+  if (kind === 'cancel') s.pointer.cancel()
+  else event(s.layer, 'pointermove', 1, 90)
+  s.resume()
+  expect(s.pointer.isBusy()).toBe(true)
+  button.click(); expect(action).not.toHaveBeenCalled()
+  event(button, 'pointerdown', 2); event(button, 'pointerup', 2); button.click()
+  expect(action).not.toHaveBeenCalled(); expect(s.pointer.isBusy()).toBe(true)
+  event(document.body, 'pointerup', 1)
+  expect(s.pointer.isBusy()).toBe(false)
+  button.click(); expect(action).toHaveBeenCalledOnce()
+  expect(s.cancel).not.toHaveBeenCalled(); expect(s.release).not.toHaveBeenCalled()
+})
+it.each(['pointercancel', 'blur', 'dispose'] as const)('clears an arrived finger on actual %s without requiring another release', kind => {
+  const s = mount(); event(s.layer, 'pointerdown'); expect(s.pointer.finish()).toBe(true)
+  if (kind === 'pointercancel') event(document.body, 'pointercancel')
+  else if (kind === 'blur') window.dispatchEvent(new Event('blur'))
+  else s.pointer.dispose()
+  expect(s.pointer.isBusy()).toBe(false)
+  if (kind !== 'dispose') {
+    event(s.layer, 'pointerdown', 2); event(s.layer, 'pointerup', 2)
+    expect(s.release).toHaveBeenCalledOnce()
+  }
+})
+it('keeps other held fingers blocked if the arrived finger ends during a pause', () => {
+  const s = mount(); event(s.layer, 'pointerdown'); expect(s.pointer.finish()).toBe(true)
+  event(document.body, 'pointerdown', 2)
+  s.pause(); s.pointer.cancel(); event(document.body, 'pointerup', 1)
+  expect(s.pointer.isBusy()).toBe(true)
+  event(s.layer, 'pointermove', 2, 90); s.pointer.cancel(); s.resume()
+  expect(s.pointer.isBusy()).toBe(true)
+  event(document.body, 'pointerup', 2); expect(s.pointer.isBusy()).toBe(false)
+  event(s.layer, 'pointerdown', 3); event(s.layer, 'pointerup', 3)
+  expect(s.release).toHaveBeenCalledOnce()
+})
 it('samples a different release coordinate before committing a moved object, without duplicating the last sample', () => {
   const s = mount(), calls: string[] = []
   s.move.mockImplementation(x => calls.push(`move:${x}`))
@@ -39,13 +95,22 @@ it('samples a different release coordinate before committing a moved object, wit
   event(s.layer, 'pointerdown'); event(s.layer, 'pointermove', 1, 120); event(s.layer, 'pointerup', 1, 120)
   expect(calls).toEqual(['move:120', 'release:120'])
 })
-it('keeps a small tap still but samples a deliberate drag delivered only at release', () => {
-  const s = mount(); event(s.layer, 'pointerdown'); event(s.layer, 'pointerup', 1, 54)
+it('keeps an unchanged tap still and samples even a nearby target delivered only at release', () => {
+  const s = mount(); event(s.layer, 'pointerdown'); event(s.layer, 'pointerup', 1, 50)
   expect(s.move).not.toHaveBeenCalled()
   s.release.mockClear()
+  event(s.layer, 'pointerdown'); event(s.layer, 'pointerup', 1, 54)
+  expect(s.move).toHaveBeenCalledExactlyOnceWith(54, 50)
+  expect(s.release).toHaveBeenCalledExactlyOnceWith(54, 50)
+  s.move.mockClear(); s.release.mockClear()
   event(s.layer, 'pointerdown'); event(s.layer, 'pointerup', 1, 120)
   expect(s.move).toHaveBeenCalledExactlyOnceWith(120, 50)
   expect(s.release).toHaveBeenCalledExactlyOnceWith(120, 50)
+})
+it.each([NaN, Infinity])('abandons a nonfinite terminal sample %s without releasing a stale pose', x => {
+  const s = mount(); event(s.layer, 'pointerdown'); event(s.layer, 'pointerup', 1, x)
+  expect(s.release).not.toHaveBeenCalled(); expect(s.cancel).toHaveBeenCalledOnce()
+  expect(s.pointer.isBusy()).toBe(false)
 })
 it.each(['pause', 'cancel', 'dispose', 'second-finger'] as const)('does not commit when the terminal sample causes %s', kind => {
   const s = mount()

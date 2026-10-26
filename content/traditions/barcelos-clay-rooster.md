@@ -27,3 +27,8 @@
 边界与缺口：陶器总体历史不能当公鸡造型同样古老；本轮撤回旧 UI 对当前陶鸡“寓意好运”的泛化，主代理同步将 quiet/returning/done 收窄到叶芽彩纹、彩绘陈设及手作纹样。胸前叶芽和台座无传统仪式依据。市政府公鸡页失访，地方市方“Retratos do Galo no Comércio Local”PDF仅检索可见、直读超时/连接重置，不作为好运寓意已读证据；保留工艺与地方标志关联。
 
 逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../docs/research/2026-10-20-scene-narratives-a.md#barcelos-clay-rooster)。
+
+
+## 2026-10-26 产品输入记录
+
+适用场景：`barcelos-clay-rooster`。当前搬运验收与技术验证见[跟手摆放逐场审阅 A 组](../../docs/research/2026-10-26-spatial-placement-audit-a.md)。未更改上述文化与器物／公开实践、来源身份或宗教语境。

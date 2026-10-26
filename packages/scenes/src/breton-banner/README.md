@@ -10,7 +10,7 @@ Physical sequence:
 2. `banner-staff-grip` → `banner-stand-socket`: move the full staff and cloth assembly into the visible recessed wooden stand. The bottom of the pole contacts the socket floor; both the initial pole and stand base rest on the workbench.
 3. Tap the staff or cloth for a quiet finish. No wish form or wish write.
 
-Cues point to real visible meshes. Starts use the first visible mesh across the scene; drop checks exclude only the held subtree, preserving occlusion by all other objects. Drags require 8 px movement; quiet taps require less than 12 px maximum travel. The native action button follows the same checkpoints.
+Cues point to real visible meshes. Starts use the first visible mesh across the scene; drop checks exclude only the held subtree, preserving occlusion by all other objects. The cloth tab and staff settle on reaching their targets; quiet taps require less than 12 px maximum travel. The native action button follows the same checkpoints.
 
 Narrow tests use real Three.js geometry, raycasting and interaction cues, replacing only the GPU rendering boundary. They cover cloth deformation and fixed attachment, support contact, source/destination occlusion, 320/390/1280 px cue projection, cancellation, capture loss, multiple pointers, host pause, blur, reduced motion, silent restores for checkpoints 0–3 and idempotent resource disposal. The root task owns full-suite, build and browser visual validation. No external asset is requested at runtime.
 
@@ -21,3 +21,8 @@ Narrow tests use real Three.js geometry, raycasting and interaction cues, replac
 核查重点：14世纪是文化部综述的发展背景，不是所有堂区同年创设。太阳海浪无统一宗教解释，桌上陈列不完成 pardon。
 
 逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#breton-banner)。
+
+
+## 2026-10-26 当前跟手安放
+
+本轮的物件搬运步骤改为拿住真实物件跟随手指，移到当前提示范围即自动落稳。不再以固定方向、最短拖距或必须松手判断摆放成功。同一根手指的后续移动与释放不操作下一步；取消只撤回尚未接受的拿取。键盘辅助、减少动画、旧检查点和原有文化语境保留。此前段落中关于这些搬运步骤的短拖、20%预览和松手才接受描述为旧实现，以本节为当前机制。屏幕落区、吸附和短程落稳是产品输入安排，不新增传统礼序、次数或功效。[逐步审阅和本轮验证](../../../../docs/research/2026-10-26-spatial-placement-audit-a.md)。

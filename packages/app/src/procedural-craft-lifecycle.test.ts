@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 vi.mock('three', async (importOriginal) => {
   const actual = await importOriginal<typeof import('three')>()
   class WebGLRenderer {
@@ -154,13 +155,42 @@ it.each([
     const p = rendered.scene!.getObjectByName(name)!.localToWorld(new THREE.Vector3(anchor[0], anchor[1], anchor[2])).project(rendered.camera!)
     return [(p.x+1)*180, (1-p.y)*180]
   }
-  const destination = (from: number[]) => screenDelta ? [from[0] + screenDelta[0], from[1] + screenDelta[1]] : point(target, targetAnchor)
-  const from = point(source, sourceAnchor), staleEnd = destination(from)
+  const input = () => {
+    const cues: { object: THREE.Object3D; cue: InteractionCue }[] = []
+    rendered.scene!.traverse(object => {
+      for (const cue of object.userData.interactionCues ?? []) {
+        if (cue.enabled() && cue.kind === 'drag' && cue.destination) cues.push({ object, cue })
+      }
+    })
+    const current = cues.find(({ object }) => object.name === source) ?? (cues.length === 1 ? cues[0] : undefined)
+    if (current) {
+      const project = (world: THREE.Vector3) => {
+        const p = world.project(rendered.camera!)
+        return [(p.x + 1) * 180, (1 - p.y) * 180]
+      }
+      rendered.scene!.updateMatrixWorld(true); rendered.camera!.updateMatrixWorld(true)
+      const destination = current.cue.destination!
+      return {
+        from: point(current.object.name, current.cue.anchor ?? [0, 0, 0]),
+        end: project(typeof destination === 'function' ? destination() : destination.getWorldPosition(new THREE.Vector3())),
+        spatial: true,
+      }
+    }
+    const from = point(source, sourceAnchor)
+    return { from, end: screenDelta ? [from[0] + screenDelta[0], from[1] + screenDelta[1]] : point(target, targetAnchor), spatial: false }
+  }
+  const { from, end: staleEnd, spatial } = input()
   pointer(hit,'pointerdown',from)
-  if (screenDelta) { const part = id === 'indonesian-angklung' ? .1 : .35; pointer(hit,'pointermove',[from[0] + screenDelta[0] * part, from[1] + screenDelta[1] * part]) }
+  // Work-face tools can rest within their contact margin. For those pickups,
+  // pause before their first move rather than entering an accepted stroke.
+  if (screenDelta) {
+    const part = spatial || id === 'indonesian-angklung' ? .1 : .35
+    pointer(hit,'pointermove',[from[0] + (staleEnd[0] - from[0]) * part, from[1] + (staleEnd[1] - from[1]) * part])
+  }
+  expect(checkpoint).not.toHaveBeenCalled(); expect(variant).not.toHaveBeenCalled()
   ctrl.setActive(false); ctrl.setActive(true)
   pointer(hit,'pointerup',staleEnd); expect(checkpoint).not.toHaveBeenCalled(); expect(variant).not.toHaveBeenCalled()
-  const freshFrom = point(source, sourceAnchor), freshEnd = destination(freshFrom)
+  const { from: freshFrom, end: freshEnd } = input()
   pointer(hit,'pointerdown',freshFrom); pointer(hit,'pointermove',freshEnd); pointer(hit,'pointerup',freshEnd)
   if (id === 'korean-bojagi-wrap') {
     const step = Number(initialVariant!.slice(-1))

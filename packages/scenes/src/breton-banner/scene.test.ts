@@ -76,6 +76,16 @@ function enabledCues(s: ReturnType<typeof mount>) {
   return list
 }
 
+function beforeArrival(s: ReturnType<typeof mount>, goal: [number, number]): [number, number] {
+  let selected: { object: THREE.Object3D; cue: InteractionCue } | undefined
+  s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.kind === 'drag' && cue.destination) selected = { object, cue } })
+  if (!selected) return goal
+  const { object, cue } = selected, canvas = s.overlay.parentElement!.querySelector('canvas')!, rect = canvas.getBoundingClientRect()
+  const source = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(s.camera)
+  const x = rect.left + (source.x + 1) * rect.width / 2, y = rect.top + (1 - source.y) * rect.height / 2
+  return [Math.max(rect.left + 2, x - 48), Math.max(rect.top + 2, y - 48)]
+}
+
 describe('an original contemporary cloth banner', () => {
   it('unfurls the pleated cloth, seats the staff and finishes once without a wish', () => {
     const s = mount(0, { isReducedMotion: () => true }), folded = clothWidth(s)
@@ -105,7 +115,7 @@ describe('an original contemporary cloth banner', () => {
   it.each([0, 1])('rejects a destination hidden by a non-held mesh at step %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), source = at === 0 ? 'banner-hem-tab' : 'banner-staff-grip', target = at === 0 ? 'banner-crossbar-clip' : 'banner-stand-socket'
     const a = s.point(source), b = s.point(target)
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b)
+    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', beforeArrival(s, b))
     const clear = block(s, target); pointer(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([]); clear(); drag(s, source, target); expect(s.progress).toEqual([at + 1])
   })
@@ -123,8 +133,8 @@ describe('an original contemporary cloth banner', () => {
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('restores an unfinished unfurl on %s', kind => {
     let active = true; const s = mount(0, { isReducedMotion: () => true, isActive: () => active }), initial = clothWidth(s)
     const a = s.point('banner-hem-tab'), b = s.point('banner-crossbar-clip')
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b)
-    expect(clothWidth(s)).toBeGreaterThan(initial)
+    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', [a[0] + (b[0] - a[0]) * .25, a[1] + (b[1] - a[1]) * .25])
+    expect(clothWidth(s)).toBeGreaterThan(initial); expect(s.progress).toEqual([])
     if (kind === 'blur') window.dispatchEvent(new Event('blur'))
     else if (kind === 'pause') { active = false; s.run() }
     else pointer(s.hit, kind, b)

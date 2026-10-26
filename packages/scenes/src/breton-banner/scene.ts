@@ -152,7 +152,7 @@ export function createBretonBanner(ctx: SceneContext): SceneInstance {
     onStart(x, y) {
       down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare()
       const origin = checkpoint === 0 ? tab.getWorldPosition(new THREE.Vector3()) : assembly.position
-      plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), origin)
+      plane.setFromNormalAndCoplanarPoint(checkpoint===0?new THREE.Vector3(0,0,1):camera.getWorldDirection(new THREE.Vector3()), checkpoint===0?origin:grip.getWorldPosition(new THREE.Vector3()))
       if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(origin).sub(point)
     },
     onMove(x, y) {
@@ -163,10 +163,16 @@ export function createBretonBanner(ctx: SceneContext): SceneInstance {
         else assembly.position.copy(point)
       }
       matrices()
+      if (checkpoint < 2 && placementHit(canvas, camera, checkpoint === 0 ? tab : grip, x, y, (px, py) => firstVisible(px, py, checkpoint === 0 ? cloth : assembly) === (checkpoint === 0 ? clip : socket)) && pointer.finish()) { dragging = false; advance(true) }
     },
     onRelease(x, y) {
+      if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) {
+        point.add(offset)
+        if (checkpoint === 0) { assembly.worldToLocal(point); deform((point.x - LEFT - FOLDED_WIDTH) / (FULL_WIDTH - FOLDED_WIDTH), THREE.MathUtils.clamp(point.y - TOP, -.28, .28)) }
+        else assembly.position.copy(point)
+      }
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && placementHit(canvas, camera, checkpoint === 0 ? tab : grip, x, y, (px, py) => firstVisible(px, py, checkpoint === 0 ? cloth : assembly) === (checkpoint === 0 ? clip : socket)) : maxTravel < 12 && tappable(firstVisible(x, y))
+      const valid = checkpoint < 2 ? dragging && placementHit(canvas, camera, checkpoint === 0 ? tab : grip, x, y, (px, py) => firstVisible(px, py, checkpoint === 0 ? cloth : assembly) === (checkpoint === 0 ? clip : socket)) : maxTravel < 12 && tappable(firstVisible(x, y))
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,
   })
@@ -180,8 +186,8 @@ export function createBretonBanner(ctx: SceneContext): SceneInstance {
     if (!active() || !transition) return
     checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore(); sync(); ctx.onProgress?.(checkpoint); feedback.impact({ freqs: [349.23, 523.25], duration: .16, gain: .009 })
   }
-  function advance() {
-    if (!active() || pointer.isBusy() || transition || checkpoint === 3) return
+  function advance(placed = false) {
+    if (!active() || (pointer.isBusy() && !placed) || transition || checkpoint === 3) return
     if (checkpoint === 2) { checkpoint = 3; restore(); sync(); ctx.onProgress?.(3); feedback.impact({ freqs: [349.23, 523.25], duration: .20, gain: .009 }); overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })); return }
     transition = { step: checkpoint, time: 0, from: assembly.position.clone(), open, lift }; sync(); if (ctx.isReducedMotion?.()) settle()
   }

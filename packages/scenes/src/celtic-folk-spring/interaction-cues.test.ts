@@ -205,7 +205,7 @@ describe('physical action cues', () => {
         s.pointer('pointermove', destination)
         s.pointer('pointerup', destination)
         expect(s.dragChecks.starts, `${id} source at ${time} ms`).toEqual([true])
-        expect(s.dragChecks.drops, `${id} water at ${time} ms`).toEqual([true])
+        expect(s.dragChecks.drops, `${id} auto arrival does not wait for recognizer drop at ${time} ms`).toEqual([])
         expect(s.progress.mock.calls, `${id} progress at ${time} ms`).toEqual([[2]])
         s.instance.dispose()
       }
@@ -303,7 +303,7 @@ describe('physical action cues', () => {
     s.pointer('pointermove', destination)
     s.pointer('pointerup', destination)
     expect(s.dragChecks.starts).toEqual([false, true])
-    expect(s.dragChecks.drops).toEqual([true])
+    expect(s.dragChecks.drops).toEqual([])
     expect(s.progress).toHaveBeenCalledExactlyOnceWith(2)
     s.instance.dispose()
   })
@@ -338,9 +338,10 @@ describe('physical action cues', () => {
 
   it.each(['celtic-folk-spring', 'theravada-water'])('%s cancels a carried token without placing it', async (id) => {
     const s = await mount(id, 1)
-    s.pointer('pointerdown', s.sourcePoint())
-    s.pointer('pointermove', s.destinationPoint())
-    s.pointer('pointercancel', s.destinationPoint())
+    const from=s.sourcePoint(), to=s.destinationPoint()
+    s.pointer('pointerdown', from)
+    s.pointer('pointermove', [from[0]+12,from[1]+12])
+    s.pointer('pointercancel', to)
     expect(s.progress).not.toHaveBeenCalled()
     expect(s.enabled().map(({ cue }) => cue.kind)).toEqual(['drag'])
     s.instance.dispose()

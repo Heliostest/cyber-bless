@@ -123,8 +123,8 @@ describe('original tabletop spinning-top toy', () => {
     const home = bead.position.clone(), bounds = new THREE.Box3().setFromObject(cord)
     pointer(s.hit, 'pointerdown', [1, 1]); pointer(s.hit, 'pointerup', s.point('top-pull-anchor'))
     drag(s, 'top-cap', 'top-pull-anchor'); expect(s.progress).toEqual([])
-    pointer(s.hit, 'pointerdown', s.point('top-pull-bead')); pointer(s.hit, 'pointermove', s.point('top-pull-anchor'))
-    expect(bead.position.distanceTo(home)).toBeGreaterThan(.3); expect(new THREE.Box3().setFromObject(cord).equals(bounds)).toBe(false)
+    pointer(s.hit, 'pointerdown', s.point('top-pull-bead')); pointer(s.hit, 'pointermove', midway(s.point('top-pull-bead'),s.point('top-pull-anchor')))
+    expect(bead.position.distanceTo(home)).toBeGreaterThan(.03); expect(new THREE.Box3().setFromObject(cord).equals(bounds)).toBe(false)
     pointer(s.hit, 'pointerup', [1, 1]); expect(bead.position.equals(home)).toBe(true)
     expect(new THREE.Box3().setFromObject(cord).equals(bounds)).toBe(true); expect(s.progress).toEqual([])
     pointer(s.hit, 'pointerup', s.point('top-pull-anchor')); expect(s.progress).toEqual([])
@@ -155,7 +155,7 @@ describe('original tabletop spinning-top toy', () => {
   })
   it.each(['pointercancel', 'lostpointercapture'])('restores unfinished pulls after %s', event => {
     const s = mount(0, { isReducedMotion: () => true }), bead = s.scene.getObjectByName('top-pull-bead')!, home = bead.position.clone(), target = s.point('top-pull-anchor')
-    pointer(s.hit, 'pointerdown', s.point('top-pull-bead')); pointer(s.hit, 'pointermove', target); pointer(s.hit, event, target); pointer(s.hit, 'pointerup', target)
+    pointer(s.hit, 'pointerdown', s.point('top-pull-bead')); pointer(s.hit, 'pointermove', midway(s.point('top-pull-bead'),target)); pointer(s.hit, event, target); pointer(s.hit, 'pointerup', target)
     expect(bead.position.equals(home)).toBe(true); expect(s.progress).toEqual([])
     drag(s, 'top-pull-bead', 'top-pull-anchor'); expect(s.progress).toEqual([1])
   })
@@ -178,7 +178,7 @@ describe('original tabletop spinning-top toy', () => {
   })
   it('cancels unfinished input and freezes accepted motion and axle rotation while paused', () => {
     let active = true; const s = mount(0, { isActive: () => active }), target = s.point('top-pull-anchor')
-    pointer(s.hit, 'pointerdown', s.point('top-pull-bead')); pointer(s.hit, 'pointermove', target)
+    pointer(s.hit, 'pointerdown', s.point('top-pull-bead')); pointer(s.hit, 'pointermove', midway(s.point('top-pull-bead'),target))
     active = false; s.run(); active = true; pointer(s.hit, 'pointerup', target); s.run(); expect(s.progress).toEqual([])
     s.button.click(); s.run(.1); const top = s.scene.getObjectByName('top-rotor')!, bead = s.scene.getObjectByName('top-pull-bead')!, pose = bead.position.clone(), rotation = top.rotation.clone()
     active = false; s.run(2); expect(bead.position.equals(pose)).toBe(true); expect(top.rotation.equals(rotation)).toBe(true); expect(s.progress).toEqual([])
@@ -234,3 +234,5 @@ describe('original tabletop spinning-top toy', () => {
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), type).toBe(true)
   })
 })
+
+function midway(a:readonly number[],b:readonly number[]):[number,number]{return[a[0]+(b[0]-a[0])*.2,a[1]+(b[1]-a[1])*.2]}

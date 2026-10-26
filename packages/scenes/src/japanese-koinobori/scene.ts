@@ -3,7 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas } from '../touch-target'
 import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createKoinoboriModel } from './model'
@@ -12,8 +12,8 @@ type Checkpoint = 0 | 1 | 2 | 3
 const ACTIONS = ['向右展开鱼尾', '向下牵绳升鲤', '向右收绳挂稳']
 const HINTS = [
   '按住鱼尾向右短拖，让收拢的布鲤慢慢展开。鱼口由绳扣连在立杆旁。',
-  '按住杆旁的木坠向下短拖。布鲤越升越高，布身和鱼尾也越迎风飘动。',
-  '按住木坠向右短拖，把绳端收进杆上的挂座，让布鲤留在风中。',
+  '握住杆旁木坠，沿绳端拉到下方提示标记。布鲤随之升高，布身和鱼尾迎风飘动。',
+  '握住木坠，移到杆上的挂座标记，靠近后挂稳，让布鲤留在风中。',
   '布鲤迎风起伏，鱼尾舒展摆动。把对孩子成长的美好祝愿留在晴空下。',
 ]
 const MOVING = ['布尾慢慢展开……', '牵下绳端，布鲤升起……', '绳端挂稳，布鲤迎风……']
@@ -43,7 +43,22 @@ export function createJapaneseKoinobori(ctx: SceneContext): SceneInstance {
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n,ctx.isReducedMotion?.() ? 0 : breezeTime); matrices() }
   const restore = () => pose(at, 0)
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: i === 1 ? [0, 1] : [1, 0], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const isSpatialStep=(step:number)=>step > 0
+  const limitPoints=model.targets.map((target,i)=>{model.pose(i,1);return target!.localToWorld(new THREE.Vector3(...model.anchors[i]!))})
+  model.pose(0,0)
+  const railStart=new THREE.Vector2(),railPath=new THREE.Vector2()
+  let railRadius=0
+  const screenPoint=(point:THREE.Vector3)=>{const p=point.project(camera),r=canvas.getBoundingClientRect();return new THREE.Vector2(r.left+(p.x+1)*r.width/2,r.top+(1-p.y)*r.height/2)}
+  const prepareRail=(x:number,y:number)=>{const a=screenPoint(model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!))),b=screenPoint(limitPoints[at]!.clone());railStart.set(x,y);railPath.copy(b).sub(a);railRadius=Math.min(22,railPath.length()*.42)}
+  const moveRail=(x:number,y:number)=>{
+    if(!insideCanvas(canvas,x,y))return false
+    const n=THREE.MathUtils.clamp(new THREE.Vector2(x,y).sub(railStart).dot(railPath)/Math.max(railPath.lengthSq(),1e-9),0,1)
+    pose(at,n)
+    const contact=screenPoint(model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!))),goal=screenPoint(limitPoints[at]!.clone())
+    return n>0 && contact.distanceTo(goal)<=railRadius && !touch.occluded(x,y,model.targets[at]!,{ignore:model.subject})
+  }
+
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(isSpatialStep(i)?{destination:()=>limitPoints[i]!.clone(),targetLabel:'绳坠安放位置'}:{direction:i === 1 ? [0, 1] : [1, 0]}), label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const axes = (dx: number, dy: number) => at === 1 ? [dy, dx] : [dx, dy]
   const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore() }
@@ -53,15 +68,17 @@ export function createJapaneseKoinobori(ctx: SceneContext): SceneInstance {
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x, y, model.targets[at]!) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if(isSpatialStep(at))prepareRail(x,y) },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
+      if(isSpatialStep(at)){if(!invalid && moveRail(x,y) && pointer.finish())advance(true);return}
       pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
       const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
       maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
       pose(at, THREE.MathUtils.clamp(along / 60, 0, 1))
     },
     onRelease(x, y) {
+      if(isSpatialStep(at)){if(!invalid && moveRail(x,y))advance();else reset();return}
       const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
       const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
       if (valid) advance(); else reset()
@@ -84,7 +101,7 @@ export function createJapaneseKoinobori(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(accepted=false) { if (!inputActive() || (pointer.isBusy() && !accepted) || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {

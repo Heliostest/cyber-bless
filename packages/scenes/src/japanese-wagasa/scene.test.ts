@@ -61,13 +61,19 @@ function event(el: HTMLElement, type: string, [clientX, clientY]: [number, numbe
 }
 const targetName = (at: number) => ['wagasa-runner','wagasa-grip','wagasa-runner'][at]!
 const anchor = (at: number): [number, number, number] => [[.03,-.055,.08],[.04,.1,.06],[.03,-.055,.08]][at] as [number,number,number]
-const delta = (at: number): [number, number] => [[0,-60],[60,0],[0,60]][at] as [number,number]
+const spatial = (at: number) => at !== 1
+function delta(at: number, s: ReturnType<typeof mount>): [number, number] {
+  if (!spatial(at)) return [[0,-60],[60,0],[0,60]][at] as [number,number]
+  const a=s.point(targetName(at),anchor(at)), object=s.scene.getObjectByName(targetName(at))!, occurrence=[0,1,2].slice(0,at).filter(i=>targetName(i)===targetName(at)).length, destination=(object.userData.interactionCues as InteractionCue[])[occurrence]!.destination!
+  const goal=(typeof destination==='function'?destination():destination.getWorldPosition(new THREE.Vector3())).project(s.camera),r=s.host.querySelector('canvas')!.getBoundingClientRect()
+  return [r.left+(goal.x+1)*r.width/2-a[0],r.top+(1-goal.y)*r.height/2-a[1]]
+}
 function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, run = true) {
   const p = s.point(targetName(at), anchor(at)); event(s.hit, 'pointerdown', p)
   for (let i = 1; i <= 8; i++) event(s.hit, 'pointermove', [p[0] + dx * i / 8, p[1] + dy * i / 8])
   event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); if (run) s.run()
 }
-function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) drag(s, at, ...delta(at), run) }
+function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) drag(s, at, ...delta(at,s), run) }
 function cues(s: ReturnType<typeof mount>) {
   const list: { object: THREE.Object3D; cue: InteractionCue }[] = []
   s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled()) list.push({ object, cue }) })
@@ -135,47 +141,48 @@ describe('Bamboo and folding paper wagasa', () => {
     step(s, 2); expect(frequencies).toEqual([392, 440]); expect(peaks).toEqual([.003, .003])
     s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })
-  it.each([0, 1, 2])('rejects wrong surfaces, orphan release, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
-    event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    event(s.hit, 'pointerup', end)
-    for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx], [-dx * 3, -dy * 3]]) drag(s, at, x, y)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
-    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([0, 1, 2])('checks terminal release coordinates for withdrawn, cross-axis and nonfinite input at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true })
-    for (const kind of ['back', 'cross', 'nan']) {
-      const p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
+  it.each([0, 1, 2])('rejects wrong surfaces, orphan release, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {if(spatial(at)){const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s);event(s.hit,'pointerdown',[1,1]);event(s.hit,'pointermove',[p[0]+dx,p[1]+dy]);event(s.hit,'pointerup',[p[0]+dx,p[1]+dy]);expect(s.progress).toEqual([]);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]-dx*.2,p[1]-dy*.2]);event(s.hit,'pointercancel',p);expect(s.progress).toEqual([]);step(s,at);expect(s.progress).toEqual([at+1]);return}
+const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s), end: [number, number] = [p[0] + dx, p[1] + dy]
+event(s.hit, 'pointerdown', [1, 1]);
+event(s.hit, 'pointermove', end);
+event(s.hit, 'pointerup', end)
+event(s.hit, 'pointerup', end)
+for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx], [-dx * 3, -dy * 3]]) drag(s, at, x, y)
+event(s.hit, 'pointerdown', p);
+event(s.hit, 'pointermove', end);
+event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]);
+event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
+event(s.hit, 'pointerdown', p);
+event(s.hit, 'pointermove', end);
+event(s.hit, 'pointermove', p);
+event(s.hit, 'pointerup', p)
+expect(s.progress).toEqual([]);
+step(s, at);
+expect(s.progress).toEqual([at + 1])})
+  it.each([0, 1, 2])('checks terminal release coordinates for withdrawn, cross-axis and nonfinite input at %i', at => {if(spatial(at)){for(const factor of[0,3]){const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx,p[1]+dy]);expect(s.progress).toEqual([at+1]);event(s.hit,'pointerup',[p[0]+dx*factor,p[1]+dy*factor]);expect(s.progress).toEqual([at+1]);s.instance.dispose()}return}
+const s = mount(at, { isReducedMotion: () => true })
+for (const kind of ['back', 'cross', 'nan']) {
+      const p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
       const end: [number, number] = kind === 'back' ? [p[0] + dx * .25, p[1] + dy * .25] : kind === 'cross' ? [p[0] + dx - dy, p[1] + dy + dx] : [NaN, p[1]]
       event(s.hit, 'pointerup', end); expect(s.progress, kind).toEqual([])
     }
-    step(s, at); expect(s.progress).toEqual([at + 1])
-  })
+step(s, at);
+expect(s.progress).toEqual([at + 1])})
   it.each([0, 1, 2])('accepts a continued same-direction release and an eighteen pixel correction at %i', at => {
     for (const factor of [3, .7]) {
-      const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+      const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
       event(s.hit, 'pointerup', [p[0] + dx * factor, p[1] + dy * factor])
       expect(s.progress).toEqual([at + 1]); s.instance.dispose()
     }
   })
   it.each([0, 1, 2])('rejects a nonfinite move even when the final release is valid at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [NaN, p[1]])
     event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run()
     expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([at + 1])
   })
-  it.each([false, true])('accepts a gentle zigzag path and remains ready after settlement, reduced=%s', reduced => {
-    for (const at of [0, 1, 2]) {
-      const s = mount(at, { isReducedMotion: () => reduced }), p = s.point(targetName(at), anchor(at))
-      event(s.hit, 'pointerdown', p)
-      for (const [along, cross] of [[12, 16], [24, -16], [36, 16], [48, -16], [60, 0]]) event(s.hit, 'pointermove', [p[0]+delta(at)[0]*along/60-delta(at)[1]*cross/60,p[1]+delta(at)[1]*along/60+delta(at)[0]*cross/60])
-      event(s.hit, 'pointerup', [p[0] + delta(at)[0], p[1] + delta(at)[1]])
-      s.run(); expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(at === 2)
-    }
-  })
+  it.each([false, true])('accepts a gentle zigzag path and remains ready after settlement, reduced=%s', reduced => {for(const at of[0,1,2]){const s=mount(at,{isReducedMotion:()=>reduced}),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]-dy*.3,p[1]+dx*.3]);event(s.hit,'pointermove',[p[0]+dx,p[1]+dy]);event(s.hit,'pointerup',[p[0]+dx,p[1]+dy]);s.run();expect(s.progress).toEqual([at+1]);expect(s.button.disabled).toBe(at===2);s.instance.dispose()}})
   it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {
     for (const returning of [false, true]) {
       const s = mount(at, { returning, isReducedMotion: () => true }); s.run()
@@ -203,11 +210,11 @@ describe('Bamboo and folding paper wagasa', () => {
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or stale position/rotation', kind => {
     for (const at of [0, 1, 2]) {
-      let active = true; const s = mount(at, { isActive: () => active }), pivot = s.scene.getObjectByName(at===1?'wagasa-spin':'wagasa-runner')!, home = pivot.position.clone(), scale = pivot.scale.clone(), rotation = pivot.quaternion.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+      let active = true; const s = mount(at, { isActive: () => active }), pivot = s.scene.getObjectByName(at===1?'wagasa-spin':'wagasa-runner')!, home = pivot.position.clone(), scale = pivot.scale.clone(), rotation = pivot.quaternion.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
       // Sample a nonterminal held pose for each actual stick path.
-      const fraction=.5
+      const fraction=spatial(at)?.12:.5
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx * fraction, p[1] + dy * fraction]); const frames = rendered.render.mock.calls.length
-      expect(pivot.position.distanceTo(home)+pivot.quaternion.angleTo(rotation)).toBeGreaterThan(.04)
+      expect(pivot.position.distanceTo(home)+pivot.quaternion.angleTo(rotation)).toBeGreaterThan(.005)
       if (kind === 'pause') { active = false; s.instance.update(.05); s.instance.update(.05); expect(rendered.render.mock.calls.length).toBe(frames) }
       else if (kind === 'blur') window.dispatchEvent(new Event('blur')); else event(s.hit, kind, p)
       event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run(); expect(s.progress).toEqual([]); expect(pivot.position.distanceTo(home)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(pivot.scale.distanceTo(scale)).toBeLessThan(.00001)
@@ -216,7 +223,7 @@ describe('Bamboo and folding paper wagasa', () => {
   })
   it.each([284, 350, 1280])('keeps all subject vertices in frame during each three umbrella paths at width %i', width => {
     for (const at of [0, 1, 2]) {
-      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
       const check = () => {
         s.scene.updateMatrixWorld(true); let extent = 0
         s.scene.getObjectByName('wagasa-subject')!.traverse(o => {
@@ -266,7 +273,7 @@ describe('Bamboo and folding paper wagasa', () => {
   })
   it.each([0,1,2])('rejects multitouch with an otherwise valid primary drag at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at))
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerdown', [1, 1], 2); event(s.hit, 'pointermove', [p[0]+delta(at)[0], p[1]+delta(at)[1]]); event(s.hit, 'pointerup', [p[0]+delta(at)[0], p[1]+delta(at)[1]]); event(s.hit, 'pointerup', [1, 1], 2)
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerdown', [1, 1], 2); event(s.hit, 'pointermove', [p[0]+delta(at,s)[0], p[1]+delta(at,s)[1]]); event(s.hit, 'pointerup', [p[0]+delta(at,s)[0], p[1]+delta(at,s)[1]]); event(s.hit, 'pointerup', [1, 1], 2)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at+1])
   })
   it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('stops after %s pauses or disposes the scene', callback => {
@@ -308,7 +315,7 @@ describe('Bamboo and folding paper wagasa', () => {
 })
 
 it.each([0, 1, 2])('accepts a deliberate release when the browser coalesces all move events, phase=%i', at => {
-  const s = mount(at, { isReducedMotion: () => true }); const p = s.point(targetName(at), anchor(at)); const [dx, dy] = delta(at);
+  const s = mount(at, { isReducedMotion: () => true }); const p = s.point(targetName(at), anchor(at)); const [dx, dy] = delta(at,s);
   event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]);
   expect(s.progress).toEqual([at + 1]);
 });

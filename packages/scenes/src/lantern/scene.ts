@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPosePlacement } from '../pose-placement'
 import {
   addStageLights,
   CEL_STYLE,
@@ -242,6 +243,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
   const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.3)
   const hitPoint = new THREE.Vector3()
   const dragTarget = plaqueHome.clone()
+  const carried=createPosePlacement(canvas,camera,{pose(_step,n){plaque.position.lerpVectors(plaqueHome,plaqueHung,n);world.updateMatrixWorld(true)},roots:[plaque],targets:[board]},scene)
   const hangPos = new THREE.Vector3()
 
   const resize = () => {
@@ -258,7 +260,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
     }),
     addInteractionCue(board, {
       kind: 'drag', label: '把木牌拖到灯下',
-      destination: () => lantern.localToWorld(new THREE.Vector3(0, -LANTERN_HALF_H - 0.05, 0)),
+      destination: () => carried.destination(0),
       targetLabel: '灯下挂点', enabled: () => canCue() && step === 'wish' && litT >= 1,
     }),
     addInteractionCue(lanternZone, {
@@ -325,19 +327,19 @@ export function createLantern(ctx: SceneContext): SceneInstance {
     fx.prepare()
     downX = x
     downY = y
-    if (step === 'wish') grabbed = true
+    if (step === 'wish') { grabbed = true; carried.begin(0,x,y) }
   }
   const onHitMove = (x: number, y: number) => {
     if (step !== 'wish' || !grabbed) return
-    if (pointer.aim(x, y).ray.intersectPlane(dragPlane, hitPoint)) {
-      dragTarget.set(
-        THREE.MathUtils.clamp(hitPoint.x, -1, 1),
-        THREE.MathUtils.clamp(hitPoint.y + 0.15, 0.3, 2.1),
-        0.3,
-      )
-    }
+    const ready=carried.move(x,y); dragTarget.copy(plaque.position)
+    if (ready && objectPointer?.finish()) { grabbed=false; gestureOwned=false; goRest() }
   }
   const onHitUp = (x: number, y: number) => {
+    if(step==='wish'&&grabbed) {
+      const ready=carried.move(x,y);dragTarget.copy(plaque.position);grabbed=false;gestureOwned=false
+      if(ready)goRest();else{carried.cancel();dragTarget.copy(plaqueHome)}
+      return
+    }
     if (step !== 'light' && step !== 'rest') return
     gestureOwned = false
     const moved = Math.hypot(x - downX, y - downY)
@@ -346,6 +348,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
     else completeScene()
   }
   const onHitCancel = () => {
+    carried.cancel()
     grabbed = false
     gestureOwned = false
     dragHandle?.setEnabled(false)
@@ -363,7 +366,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
     })
     dragHandle = gestures.createDrag({
       startsOn: (x, y) => gestureOwned && onPlaque(x, y),
-      hitTest: (x, y) => grabbed && pointer.hits(x, y, [lanternZone]),
+      hitTest: (x, y) => grabbed && carried.ready(x,y),
       onDrop: (hit) => {
         const valid = gestureOwned
         gestureOwned = false

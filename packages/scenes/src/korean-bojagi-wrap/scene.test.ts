@@ -85,7 +85,7 @@ describe('six spatial cloth operations', () => {
     const s = mount(stage, { isReducedMotion: () => true }, 1280), { from, to } = points(s)
     const covered = worldPoint(s, [stage === 3 ? -.20 : .20, .85, stage === 1 ? -.16 : .16])
     expect(Math.hypot(covered[0] - to[0], covered[1] - to[1])).toBeGreaterThan(22)
-    move(s, from, covered); expect(s.variants).toEqual([]); event(s.hit, 'pointerup', covered)
+    move(s, from, covered); expect(s.variants).toEqual([`bojagi-step-${stage + 1}`]); event(s.hit, 'pointerup', covered)
     expect(s.variants).toEqual([`bojagi-step-${stage + 1}`])
   })
   it('rejects a nearby screen point when the actual cloth corner is outside the parcel coverage', () => {
@@ -143,15 +143,21 @@ describe('six spatial cloth operations', () => {
     expect(s.variants).toEqual([`bojagi-step-${stage + 1}`])
   })
   it.each([0, 1, 2, 3, 4, 5])('only accepts a moved, correctly picked up and released operation %i', stage => {
-    const s = mount(stage, { isReducedMotion: () => true }), { from, to } = points(s), wrong: [number, number] = stage === 5 ? [from[0] - (to[0] - from[0]) * .5, from[1] - (to[1] - from[1]) * .5] : [from[0] + 80, from[1] + 70]
+    const s = mount(stage, { isReducedMotion: () => true }), { from, to } = points(s), wrong: [number, number] = [from[0] - (to[0] - from[0]) * .5, from[1] - (to[1] - from[1]) * .5]
     event(s.hit, 'pointerup', to)
     move(s, from, wrong); event(s.hit, 'pointerup', wrong)
-    move(s, from, to); event(s.hit, 'pointermove', from); event(s.hit, 'pointerup', from)
+    move(s, from, wrong); event(s.hit, 'pointermove', from); event(s.hit, 'pointerup', from)
     move(s, [18, 92], to); event(s.hit, 'pointerup', to)
     expect(s.variants).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); drop(s); expect(s.variants).toEqual([`bojagi-step-${stage + 1}`])
   })
-  it.each([0, 1, 2, 3, 4, 5])('rechecks geometry at release rather than keeping stale readiness at operation %i', stage => {
+  it.each([0, 1, 2, 3, 4])('commits valid coverage while held and consumes the later return and release at operation %i', stage => {
     const s = mount(stage, { isReducedMotion: () => true }), { from, to } = points(s)
+    move(s, from, to); expect(s.variants).toEqual([`bojagi-step-${stage + 1}`])
+    event(s.hit, 'pointermove', from); event(s.hit, 'pointerup', from); s.run()
+    expect(s.variants).toEqual([`bojagi-step-${stage + 1}`]); expect(s.haptic).toHaveBeenCalledOnce()
+  })
+  it('rechecks the actual knot tension at release instead of retaining stale readiness', () => {
+    const stage = 5, s = mount(stage, { isReducedMotion: () => true }), { from, to } = points(s)
     move(s, from, to); event(s.hit, 'pointerup', from)
     expect(s.variants).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); drop(s); expect(s.variants).toEqual([`bojagi-step-${stage + 1}`])
   })
@@ -168,11 +174,13 @@ describe('six spatial cloth operations', () => {
     }
     expect(width(closed)).toBeGreaterThan(width(open) * 1.25)
   })
-  it.each([0, 1, 2, 3, 4, 5])('moves the actual grip under the pointer before releasing operation %i', stage => {
-    const s = mount(stage), { from, to } = points(s), item = cue(s); move(s, from, to)
+  it.each([0, 1, 2, 3, 4, 5])('moves the actual grip under the pointer before arrival at operation %i', stage => {
+    const s = mount(stage), { from, to } = points(s), item = cue(s)
+    const partial: [number, number] = [from[0] + (to[0] - from[0]) * .25, from[1] + (to[1] - from[1]) * .25]
+    move(s, from, partial)
     expect(s.variants).toEqual([]); const grip = s.point(item.object.name, item.cue.anchor)
-    expect(Math.hypot(grip[0] - to[0], grip[1] - to[1])).toBeLessThan(8); s.instance.update(0)
-    expect(s.host.querySelector('.scene-cue-guide')?.textContent).toContain('松手')
+    expect(Math.hypot(grip[0] - partial[0], grip[1] - partial[1])).toBeLessThan(8); s.instance.update(0)
+    event(s.hit, 'pointermove', to)
     event(s.hit, 'pointerup', to); expect(s.button.disabled).toBe(true); s.run(); expect(s.variants).toEqual([`bojagi-step-${stage + 1}`])
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause', 'multitouch'])('restores partial cloth and bands on %s', boundary => {
@@ -233,7 +241,9 @@ describe('six spatial cloth operations', () => {
   it.each([false, true])('preserves the manipulated cloth and band geometry on resize, settling=%s', settling => {
     let resize = () => {}
     vi.stubGlobal('ResizeObserver', class { constructor(callback: () => void) { resize = callback } observe() {} disconnect() {} })
-    const s = mount(), { from, to } = points(s); move(s, from, to)
+    const s = mount(), { from, to } = points(s)
+    const partial: [number, number] = [from[0] + (to[0] - from[0]) * .25, from[1] + (to[1] - from[1]) * .25]
+    move(s, from, settling ? to : partial)
     if (settling) { event(s.hit, 'pointerup', to); s.instance.update(.025) }
     const cloth = positions(s), band = positions(s, 'bojagi-band-near')
     resize(); expect(positions(s)).toEqual(cloth); expect(positions(s, 'bojagi-band-near')).toEqual(band); expect(s.variants).toEqual([])

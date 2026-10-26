@@ -19,3 +19,8 @@ Dúchas机构教学PDF第6–7页，以及Schools’ Collection卷0654第92页�
 - [Dúchas Schools’ Collection：St Brigid’s Eve](https://www.duchas.ie/en/cbes/4428163/4383124/4447405?Route=stories)，卷0654第92页，Cluain Fhiadh (B.)／Clonea, Waterford，网页列讲述者Patrick Cusack。独立研究已读卷页、相关完整转录与讲述者metadata；根代理无参数URL重试为Security verification，没有将根代理记作已读该条。引用的是网页转录，双方均未校对手写扫描像素。末段的圣井绕行不拼进本场留布流程。
 
 [逐项核查](../../docs/research/2026-10-23-brat-bride-cloth.md)与[场景README](../../packages/scenes/src/brat-bride-cloth/README.md)对应实际实现；不借爱尔兰、凯尔特或十字卡作地区索引。
+
+
+### brat-bride-cloth：2026-10-26 产品操作更新
+
+整片双层布依次提起、移出窗外、铺窗台，保持抓取偏移，到位自动铺好。 物件跟手、目标容差、自动吸附与提示标记是应用的输入安排，不是来源规定的传统步骤。沿用本卡既有事实与阅读状态，本轮没有新增文化主张或将外部资料登记为重新读过。实际实现与验证边界见[C 组记录](../../docs/research/2026-10-26-spatial-placement-audit-c.md)。

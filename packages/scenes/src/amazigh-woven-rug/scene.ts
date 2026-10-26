@@ -5,7 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
@@ -122,6 +122,11 @@ export function createAmazighWovenRug(ctx: SceneContext): SceneInstance {
   const belongsTo = (object: THREE.Object3D | undefined, target: THREE.Object3D) => { for (let p = object; p; p = p.parent ?? undefined) if (p === target) return true; return false }
   const touchTarget = createTouchTarget(canvas, camera, scene)
   const visibleHit = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => touchTarget.hit(x, y, target, { ignore: held })
+  const automaticReady = (x: number, y: number) => {
+    if (at >= 2 || !insideCanvas(canvas, x, y)) return false
+    const contact = projectTouchPoint(canvas, camera, at === 0 ? shuttleGrip : grip, [0,0,0])
+    return !!contact && !touchTarget.occluded(x,y,at === 0 ? gap : seat,{ignore:moving()}) && touchTarget.hit(contact.x, contact.y, at === 0 ? gap : seat, { ignore: moving() })
+  }
   const reset = () => { dragging = false; travel = 0; if (!motion) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
@@ -136,10 +141,11 @@ export function createAmazighWovenRug(ctx: SceneContext): SceneInstance {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
       moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.25, 1.25); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .80, 2.3); matrices()
+    if (dragging && automaticReady(x, y) && pointer.finish()) { dragging = false; begin(true) }
     },
     onRelease(x, y) {
       matrices()
-      const valid = at < 2 ? dragging && travel >= 8 && visibleHit(x, y, at === 0 ? gap : seat, moving())
+      const valid = at < 2 ? dragging && automaticReady(x, y)
         : at === 2 && travel < 12 && Math.hypot(x - down.x, y - down.y) < 12 && visibleHit(x, y, rug)
       dragging = false
       if (valid) { if (at < 2) begin(); else finish() } else reset()
@@ -168,7 +174,7 @@ export function createAmazighWovenRug(ctx: SceneContext): SceneInstance {
       feedback.impact({ freqs: [349.23, 523.25], duration: .17, gain: .011, type: 'triangle' })
     })
   }
-  function begin() { if (!inputActive() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
+  function begin(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
   function finish(text = '') {
     if (!inputActive() || pointer.isBusy() || motion || at !== 2) return
     callbackBoundary(() => {

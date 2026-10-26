@@ -13,7 +13,7 @@ const STEP_ORDER: Step[] = ['gyro', 'drag', 'wishWrite']
 const COPY = {
   title: '泉边一念',
   hintGyro: '点按泉沿，俯身一礼；也可将手机向前倾、再竖起停驻片刻，或用辅助按钮。',
-  hintDrag: '按住信物，拖向泉面后松开。',
+  hintDrag: '拿住信物，移到泉面范围里，到位会自动放下。',
   hintWish: '信物已放在泉面，静看片刻，再点「静看片刻」结束。',
   hintHolding: '停驻片刻…',
   bowTap: '点按以鞠躬',
@@ -261,11 +261,12 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
   const onInteractiveObject = (x: number, y: number) => !disposed && canAct() &&
     (step === 'gyro' ? onBank(x, y) : step === 'drag' && onToken(x, y))
 
+  const grabOffset = new THREE.Vector3()
   const moveTokenTo = (clientX: number, clientY: number) => {
     clientToNdc(clientX, clientY)
     raycaster.setFromCamera(pointerNdc, camera)
     if (raycaster.ray.intersectPlane(dragPlane, hitPoint)) {
-      dragTarget.set(hitPoint.x, 0.2, hitPoint.z)
+      dragTarget.copy(hitPoint).add(grabOffset)
     }
   }
 
@@ -307,7 +308,7 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
 
   /** Keyboard/tap fallback performs the same current physical object action. */
   const onActionTap = () => {
-    if (disposed || !canAct()) return
+    if (disposed || !canAct() || interactionPointerId !== null) return
     if (step === 'gyro') goDrag()
     else if (step === 'drag') goWish()
     else if (step === 'wishWrite') completeScene()
@@ -323,26 +324,41 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
     downY = e.clientY
     tappedBank = canAct() && step === 'gyro' && onBank(e.clientX, e.clientY)
     grabbed = canAct() && step === 'drag' && onToken(e.clientX, e.clientY)
+    if(grabbed) {
+      dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),token.getWorldPosition(new THREE.Vector3()))
+      clientToNdc(e.clientX,e.clientY);raycaster.setFromCamera(pointerNdc,camera)
+      if(raycaster.ray.intersectPlane(dragPlane,hitPoint))grabOffset.copy(token.position).sub(hitPoint)
+    }
     interactionPointerId = tappedBank || grabbed ? e.pointerId : null
+  }
+  const carriedReady = (x:number,y:number) => {
+    const rect=canvas.getBoundingClientRect()
+    if(!grabbed||!canAct()||!Number.isFinite(x)||!Number.isFinite(y)||x<rect.left||x>rect.left+rect.width||y<rect.top||y>rect.top+rect.height)return false
+    moveTokenTo(x,y);token.position.copy(dragTarget);scene.updateMatrixWorld(true);camera.updateMatrixWorld(true)
+    const contact=token.getWorldPosition(new THREE.Vector3()).project(camera)
+    return waterHitTest(rect.left+(contact.x+1)*rect.width/2,rect.top+(1-contact.y)*rect.height/2)
   }
   const onOverlayMove = (e: PointerEvent) => {
     if (!canAct() || e.pointerId !== interactionPointerId || step !== 'drag' || !grabbed || e.buttons === 0) return
-    moveTokenTo(e.clientX, e.clientY)
+    if(carriedReady(e.clientX,e.clientY))goWish()
   }
 
   const onOverlayUp = (e: PointerEvent) => {
     if (e.pointerId !== interactionPointerId) return
-    if (tappedBank && Math.hypot(e.clientX - downX, e.clientY - downY) < 12 &&
-      onBank(e.clientX, e.clientY)) onActionTap()
+    const tap=tappedBank && Math.hypot(e.clientX-downX,e.clientY-downY)<12 && onBank(e.clientX,e.clientY)
+    interactionPointerId=null
+    if(tap)onActionTap()
     tappedBank = false
     interactionPointerId = null
     grabbed = false
+    if(step==='drag'){dragTarget.copy(tokenHome);token.position.copy(tokenHome)}
   }
   const onOverlayCancel = (e?: PointerEvent) => {
     if (e && e.pointerId !== interactionPointerId) return
     tappedBank = false
     interactionPointerId = null
     grabbed = false
+    if(step==='drag'){dragTarget.copy(tokenHome);token.position.copy(tokenHome)}
   }
   const onInputBlur = () => onOverlayCancel()
 
@@ -374,12 +390,12 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
 
     dragHandle = gestures.createDrag({
       startsOn: (x, y) => canAct() && step === 'drag' && onToken(x, y),
-      hitTest: waterHitTest,
+      hitTest: carriedReady,
       onDrop: (hit) => {
         if (step !== 'drag' || !grabbed) return
         grabbed = false
         if (hit) goWish()
-        else dragTarget.copy(tokenHome)
+        else { dragTarget.copy(tokenHome);token.position.copy(tokenHome) }
       },
     })
     dragHandle.mount(hitLayer, {})

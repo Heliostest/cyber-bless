@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { placementHit } from '../placement-hit'
 import { createPathSweep } from '../path-sweep'
 import { createTouchTarget } from '../touch-target'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
@@ -169,12 +170,18 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
         claspHead.position.copy(dragPoint).add(offset)
         claspHead.position.x = THREE.MathUtils.clamp(claspHead.position.x, -1.3, 1.3)
         claspHead.position.y = THREE.MathUtils.clamp(claspHead.position.y, .25, 1.9); updateTail(); matrices()
+        if (maxTravel > 0 && !touch.occluded(x,y,claspSocket,{ignore:claspHead}) && placementHit(canvas,camera,claspHead,x,y,(px,py)=>touch.hit(px,py,claspSocket,{ignore:claspHead})) && pointer.finish()) { dragging = false; begin(true,true) }
       }
     },
     onRelease(x, y) {
+      if (dragging && checkpoint === 1 && ray.aim(x,y).ray.intersectPlane(plane,dragPoint)) {
+        claspHead.position.copy(dragPoint).add(offset)
+        claspHead.position.x = THREE.MathUtils.clamp(claspHead.position.x, -1.3, 1.3)
+        claspHead.position.y = THREE.MathUtils.clamp(claspHead.position.y, .25, 1.9); updateTail()
+      }
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
       const valid = Number.isFinite(x) && Number.isFinite(y) && dragging && !motion && (checkpoint === 0 ? windReady(x, y)
-        : checkpoint === 1 ? ray.hits(x, y, [claspSocket]) : checkpoint === 2 && maxTravel < 12 && ray.hits(x, y, strands))
+        : checkpoint === 1 ? maxTravel > 0 && !touch.occluded(x,y,claspSocket,{ignore:claspHead}) && placementHit(canvas,camera,claspHead,x,y,(px,py)=>touch.hit(px,py,claspSocket,{ignore:claspHead})) : checkpoint === 2 && maxTravel < 12 && ray.hits(x, y, strands))
       dragging = false
       if (valid) { if (checkpoint < 2) begin(true); else finish() } else resetDrag()
     },
@@ -185,8 +192,8 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
     checkpoint = (motion.step + 1) as Checkpoint; motion = null; nextBead = 1; pose(); sync()
     ctx.onProgress?.(checkpoint); feedback.impact({ freqs: [330, 495], duration: .22, gain: .017, type: 'triangle' })
   }
-  function begin(guided = false) {
-    if (!active() || pointer.isBusy() || motion || checkpoint >= 2) return
+  function begin(guided = false, placed = false) {
+    if (!active() || (pointer.isBusy() && !placed) || motion || checkpoint >= 2) return
     motion = { step: checkpoint as 0 | 1, time: 0, guided, from: (checkpoint === 0 ? tip : claspHead).position.clone() }
     dragging = false; sync(); if (reduced()) settled()
   }

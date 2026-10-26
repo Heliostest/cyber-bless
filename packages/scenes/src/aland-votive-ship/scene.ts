@@ -162,7 +162,7 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
     onStart(x, y) {
       feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2
       const moving = at === 0 ? mast : ship
-      plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving.position)
+      plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (at===0?grip:handle).getWorldPosition(new THREE.Vector3()))
       if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving.position).sub(point)
     },
     onMove(x, y) {
@@ -171,11 +171,18 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
       const moving = at === 0 ? mast : ship; moving.position.copy(point).add(offset)
       moving.position.x = THREE.MathUtils.clamp(moving.position.x, -1.6, 1.4); moving.position.y = THREE.MathUtils.clamp(moving.position.y, .80, 2.0)
       if (at === 1) seatMast(); matrices()
+      if (at < 2 && placementHit(canvas, camera, at === 0 ? grip : handle, x, y, (px,py) => visibleHit(px,py,[at === 0 ? socket : cradleTarget],at === 0 ? mast : ship)) && pointer.finish()) { dragging = false; begin((at === 0 ? mast : ship).position.clone(),true) }
     },
     onRelease(x, y) {
+      travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
+      if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) {
+        const moving = at === 0 ? mast : ship; moving.position.copy(point).add(offset)
+        moving.position.x = THREE.MathUtils.clamp(moving.position.x, -1.6, 1.4); moving.position.y = THREE.MathUtils.clamp(moving.position.y, .80, 2.0)
+        if (at === 1) seatMast(); matrices()
+      }
       // Test the fixed, visible destination before the carried object can obscure it.
       const moved = (at === 0 ? mast : ship).position.clone()
-      const valid = at < 2 ? dragging && travel > 8 && placementHit(canvas, camera, at === 0 ? grip : handle, x, y, (px, py) => visibleHit(px, py, [at === 0 ? socket : cradleTarget], at === 0 ? mast : ship))
+      const valid = at < 2 ? dragging && placementHit(canvas, camera, at === 0 ? grip : handle, x, y, (px, py) => visibleHit(px, py, [at === 0 ? socket : cradleTarget], at === 0 ? mast : ship))
         : at === 2 && travel < 12 && visibleHit(x, y, finishTargets)
       restore()
       dragging = false
@@ -195,8 +202,8 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
     at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at)
     feedback.impact({ freqs: [392, 493.88], duration: .19, gain: .012, type: 'triangle' })
   }
-  function begin(from?: THREE.Vector3) {
-    if (!active() || pointer.isBusy() || motion || at >= 2) return
+  function begin(from?: THREE.Vector3, placed = false) {
+    if (!active() || (pointer.isBusy() && !placed) || motion || at >= 2) return
     motion = { step: at as 0 | 1, time: 0, from: from?.clone() ?? (at === 0 ? mast : ship).position.clone() }
     sync(); if (reduced()) settle()
   }

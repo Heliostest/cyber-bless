@@ -52,7 +52,7 @@ function mount(initialProgress = 0, extra: Partial<SceneContext> = {}, width = 3
   if (hit) { hit.setPointerCapture = vi.fn(); hit.releasePointerCapture = vi.fn() }
   const run = (seconds = 1.6) => { for (let t = 0; t < seconds; t += 0.05) instance.update(0.05) }
   run(0.05)
-  return { host, canvas, overlay, instance, hit, button, progress, saveWish, complete, haptic, run }
+  return { scene: drawn.scene!, camera: drawn.camera!, host, canvas, overlay, instance, hit, button, progress, saveWish, complete, haptic, run }
 }
 type Mounted = ReturnType<typeof mount>
 type Point = [number, number]
@@ -73,16 +73,26 @@ function pointer(target: EventTarget, type: string, [x, y]: Point, pointerId = 1
 }
 function drag(s: Mounted, destination: string, finish = 'pointerup') {
   const from = project(s, object('bokjori-scoop-source')), to = project(s, object(destination))
-  pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', to); pointer(s.hit, finish, to); s.run()
+  pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', finish === 'pointerup' ? to : beforeArrival(s, to)); pointer(s.hit, finish, to); s.run()
 }
 function cues() { return object('bokjori-scoop-source').userData.interactionCues as InteractionCue[] }
 
+function beforeArrival(s: ReturnType<typeof mount>, goal: [number, number]): [number, number] {
+  let selected: { object: THREE.Object3D; cue: InteractionCue } | undefined
+  s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.kind === 'drag' && cue.destination) selected = { object, cue } })
+  if (!selected) return goal
+  const { object, cue } = selected, canvas = s.overlay.parentElement!.querySelector('canvas')!, rect = canvas.getBoundingClientRect()
+  const source = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(s.camera)
+  const x = rect.left + (source.x + 1) * rect.width / 2, y = rect.top + (1 - source.y) * rect.height / 2
+  return [Math.max(rect.left + 2, x - 48), Math.max(rect.top + 2, y - 48)]
+}
+
 describe('bokjori bamboo scoop practice', () => {
-  it('accepts a fingertip near the small visible peg and shows when the scoop can be released', () => {
+  it('accepts a fingertip near the small visible peg and automatically seats the scoop before release', () => {
     const s = mount(1, { isReducedMotion: () => true }), from = project(s, object('bokjori-scoop-source')), peg = project(s, object('bokjori-wall-peg'))
     const drop: Point = [peg[0] + 10, peg[1]]
     pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', drop)
-    expect(s.overlay.querySelector<HTMLElement>('.scene-hint')?.dataset.dropReady).toBe('true')
+    expect(s.progress).toEqual([2])
     pointer(s.hit, 'pointerup', drop); expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled()
   })
   it('collects rice, hangs the scoop and quietly completes once with the auxiliary actions', () => {
@@ -201,7 +211,7 @@ describe('bokjori bamboo scoop practice', () => {
   it.each(['pointercancel', 'lostpointercapture', 'blur'])('cancels %s and requires a fresh scoop gesture', finish => {
     const s = mount()
     const source = project(s, object('bokjori-scoop-source')), to = project(s, object('bokjori-grain-target'))
-    pointer(s.hit, 'pointerdown', source); pointer(s.hit, 'pointermove', to)
+    pointer(s.hit, 'pointerdown', source); pointer(s.hit, 'pointermove', beforeArrival(s, to))
     if (finish === 'blur') window.dispatchEvent(new Event('blur'))
     else pointer(s.hit, finish, to)
     pointer(s.hit, 'pointerup', to); s.run()
@@ -241,7 +251,7 @@ describe('bokjori bamboo scoop practice', () => {
   it('cancels across pause and ignores an old release after resume', () => {
     let active = true
     const s = mount(0, { isActive: () => active }), source = project(s, object('bokjori-scoop-source')), to = project(s, object('bokjori-grain-target'))
-    pointer(s.hit, 'pointerdown', source); pointer(s.hit, 'pointermove', to)
+    pointer(s.hit, 'pointerdown', source); pointer(s.hit, 'pointermove', beforeArrival(s, to))
     active = false; s.run(); s.button.click(); expect(cues().filter(c => c.enabled())).toEqual([])
     active = true; pointer(s.hit, 'pointerup', to); s.run(); expect(s.progress).toEqual([])
     drag(s, 'bokjori-grain-target'); expect(s.progress).toEqual([1])

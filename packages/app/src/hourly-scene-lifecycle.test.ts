@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 vi.mock('three', async (importOriginal) => {
   const actual = await importOriginal<typeof import('three')>()
   class WebGLRenderer {
@@ -128,13 +129,38 @@ it.each([
     const p = rendered.scene!.getObjectByName(name)!.localToWorld(new THREE.Vector3(anchor[0], anchor[1], anchor[2])).project(rendered.camera!)
     return [(p.x+1)*180, (1-p.y)*180]
   }
-  const destination = (from: number[]) => screenDelta ? [from[0] + screenDelta[0], from[1] + screenDelta[1]] : point(target, targetAnchor)
-  const from = point(source, sourceAnchor), staleEnd = destination(from)
+  const gesture = () => {
+    rendered.scene!.updateMatrixWorld(true); rendered.camera!.updateMatrixWorld(true)
+    const entries: { object: THREE.Object3D; cue: InteractionCue }[] = []
+    rendered.scene!.traverse(object => {
+      for (const cue of (object.userData.interactionCues ?? []) as InteractionCue[])
+        if (cue.enabled() && cue.destination) entries.push({ object, cue })
+    })
+    const current = entries.sort((a,b) => (b.cue.priority ?? 0) - (a.cue.priority ?? 0))[0]
+    if (current) {
+      const { object, cue } = current
+      const from = point(object.name, cue.anchor ?? [0,0,0])
+      const world = typeof cue.destination === 'function' ? cue.destination() : cue.destination!.getWorldPosition(new THREE.Vector3())
+      const p = world.project(rendered.camera!), to = [(p.x+1)*180,(1-p.y)*180]
+      return { from, to, spatial: true }
+    }
+    // Physical paths, rotation, body movement and performance keep their
+    // existing directional gesture when no actual destination is displayed.
+    const from = point(source, sourceAnchor)
+    return { from, to: screenDelta ? [from[0]+screenDelta[0],from[1]+screenDelta[1]] : point(target,targetAnchor), spatial: false }
+  }
+  const { from, to: staleEnd, spatial } = gesture()
   pointer(hit,'pointerdown',from)
-  if (screenDelta) pointer(hit,'pointermove',[from[0] + screenDelta[0] * .35, from[1] + screenDelta[1] * .35])
+  if (spatial) {
+    const dx=staleEnd[0]-from[0],dy=staleEnd[1]-from[1],length=Math.max(1,Math.hypot(dx,dy))
+    // Pause an unfinished grab. Reaching a destination is already an accepted
+    // operation, so cancelling after arrival would test a different contract.
+    pointer(hit,'pointermove',[from[0]-dx/length*25,from[1]-dy/length*25])
+  } else if (screenDelta) pointer(hit,'pointermove',[from[0]+screenDelta[0]*.35,from[1]+screenDelta[1]*.35])
+  expect(checkpoint).not.toHaveBeenCalled(); expect(variant).not.toHaveBeenCalled()
   ctrl.setActive(false); ctrl.setActive(true)
   pointer(hit,'pointerup',staleEnd); expect(checkpoint).not.toHaveBeenCalled(); expect(variant).not.toHaveBeenCalled()
-  const freshFrom = point(source, sourceAnchor), freshEnd = destination(freshFrom)
+  const { from: freshFrom, to: freshEnd } = gesture()
   pointer(hit,'pointerdown',freshFrom); pointer(hit,'pointermove',freshEnd); pointer(hit,'pointerup',freshEnd)
   if (id === 'korean-bojagi-wrap') {
     const step = Number(initialVariant!.slice(-1))

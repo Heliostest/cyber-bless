@@ -69,12 +69,22 @@ function cues(s: ReturnType<typeof mount>) {
   return result
 }
 
+function beforeArrival(s: ReturnType<typeof mount>, goal: [number, number]): [number, number] {
+  let selected: { object: THREE.Object3D; cue: InteractionCue } | undefined
+  s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.kind === 'drag' && cue.destination) selected = { object, cue } })
+  if (!selected) return goal
+  const { object, cue } = selected, canvas = s.overlay.parentElement!.querySelector('canvas')!, rect = canvas.getBoundingClientRect()
+  const source = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(s.camera)
+  const x = rect.left + (source.x + 1) * rect.width / 2, y = rect.top + (1 - source.y) * rect.height / 2
+  return [Math.max(rect.left + 2, x - 48), Math.max(rect.top + 2, y - 48)]
+}
+
 describe('炉前一炷: an open household incense tribute', () => {
   it('accepts sparse touch placement and clears the ready hint after a paper sleeve drag', () => {
     const s = mount(1, { isReducedMotion: () => true }), grip = s.point('incense-paper-grip'), socket = s.point('incense-socket')
     pointer(s.hit, 'pointerdown', [grip[0] + 6, grip[1]])
     pointer(s.hit, 'pointermove', socket)
-    expect(s.overlay.querySelector<HTMLElement>('.scene-hint')?.dataset.dropReady).toBe('true')
+    expect(s.progress).toEqual([2])
     pointer(s.hit, 'pointerup', socket); expect(s.progress).toEqual([2])
     expect(s.overlay.querySelector<HTMLElement>('.scene-hint')?.dataset.dropReady).toBeUndefined()
     const sparse = mount(1, { isReducedMotion: () => true })
@@ -132,7 +142,7 @@ describe('炉前一炷: an open household incense tribute', () => {
   it.each(['pointercancel', 'lostpointercapture'])('restores the moved object after %s and accepts a fresh drag', event => {
     const s = mount(1, { isReducedMotion: () => true }), source = s.point('incense-paper-grip'), target = s.point('incense-socket')
     const original = s.scene.getObjectByName('incense-stick')!.position.clone()
-    pointer(s.hit, 'pointerdown', source); pointer(s.hit, 'pointermove', target); pointer(s.hit, event, target); pointer(s.hit, 'pointerup', target)
+    pointer(s.hit, 'pointerdown', source); pointer(s.hit, 'pointermove', beforeArrival(s, target)); pointer(s.hit, event, target); pointer(s.hit, 'pointerup', target)
     expect(s.progress).toEqual([]); expect(s.scene.getObjectByName('incense-stick')!.position.equals(original)).toBe(true)
     drag(s, 'incense-paper-grip', 'incense-socket'); expect(s.progress).toEqual([2])
   })
@@ -150,7 +160,7 @@ describe('炉前一炷: an open household incense tribute', () => {
     let active = true
     const s = mount(1, { isActive: () => active, isReducedMotion: () => true })
     const source = s.point('incense-paper-grip'), target = s.point('incense-socket')
-    pointer(s.hit, 'pointerdown', source); pointer(s.hit, 'pointermove', target)
+    pointer(s.hit, 'pointerdown', source); pointer(s.hit, 'pointermove', beforeArrival(s, target))
     active = false; s.run(); expect(cues(s)).toEqual([]); expect(s.button.disabled).toBe(true)
     active = true; pointer(s.hit, 'pointerup', target); expect(s.progress).toEqual([])
     s.run(.025); drag(s, 'incense-paper-grip', 'incense-socket'); expect(s.progress).toEqual([2])

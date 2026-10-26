@@ -58,8 +58,19 @@ function event(el: HTMLElement, type: string, [clientX, clientY]: [number, numbe
   const e = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(e, { clientX, clientY, pointerId, pointerType: 'touch', button: 0 }); el.dispatchEvent(e)
 }
+
+function dropPoint(s: ReturnType<typeof mount>, source: string, target: string): [number,number] {
+ const pairs=[["spoon-cloth-grip","spoon-bowl"],["spoon-handle-grip","spoon-display-seat"]];if(!pairs.some(pair=>pair[0]===source&&pair[1]===target))return s.point(target)
+ const list: {object:THREE.Object3D;cue:InteractionCue}[]=[];s.scene.traverse(object=>{for(const cue of object.userData.interactionCues??[])if(cue.enabled()&&cue.kind==='drag')list.push({object,cue})})
+ const c=list[0];if(!c?.cue.destination)return s.point(target)
+ const r=s.host.querySelector('canvas')!.getBoundingClientRect(), project=(p:THREE.Vector3):[number,number]=>{const q=p.project(s.camera);return[r.left+(q.x+1)*r.width/2,r.top+(1-q.y)*r.height/2]}
+ const d=c.cue.destination,a=project(c.object.localToWorld(new THREE.Vector3(...(c.cue.anchor??[0,0,0])))),b=project(typeof d==='function'?d():d.getWorldPosition(new THREE.Vector3())),p=s.point(source)
+ return[p[0]+b[0]-a[0],p[1]+b[1]-a[1]]
+}
+function beforeArrival(a: readonly number[], b: readonly number[]): [number,number] {return[a[0]+(b[0]-a[0])*.2,a[1]+(b[1]-a[1])*.2]}
+
 function drag(s: ReturnType<typeof mount>, source = 'spoon-cloth-grip', target = 'spoon-bowl') {
-  const a = s.point(source), b = s.point(target)
+  const a = s.point(source), b = dropPoint(s, source, target)
   event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b); event(s.hit, 'pointerup', b); s.run()
 }
 function tap(s: ReturnType<typeof mount>) { const p = s.point('spoon-handle-grip'); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p) }
@@ -148,9 +159,9 @@ describe('visible object input and recoverable progress', () => {
   })
   it.each([0, 1])('rejects drops behind external opaque geometry at checkpoint %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), source = at === 0 ? 'spoon-cloth-grip' : 'spoon-handle-grip', target = at === 0 ? 'spoon-bowl' : 'spoon-display-seat'
-    const a = s.point(source), b = s.point(target)
-    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b)
-    const clear = block(s, target); event(s.hit, 'pointerup', b); s.run()
+    const a = s.point(source), b = dropPoint(s, source, target)
+    event(s.hit, 'pointerdown', a); const clear = block(s, target); event(s.hit, 'pointermove', b)
+    event(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([]); clear(); drag(s, source, target); expect(s.progress).toEqual([at + 1])
   })
   it.each([0, 1, 2, 3])('restores checkpoint %i silently and retains native button access', at => {
@@ -172,7 +183,7 @@ describe('visible object input and recoverable progress', () => {
       let active = true; const s = mount(at, { isActive: () => active, isReducedMotion: () => true })
       const source = at === 0 ? 'spoon-cloth-grip' : 'spoon-handle-grip', target = at === 0 ? 'spoon-bowl' : 'spoon-display-seat'
       const object = s.scene.getObjectByName(at === 0 ? 'spoon-polishing-cloth' : 'spoon-body')!, home = object.position.clone(), end = s.point(target)
-      event(s.hit, 'pointerdown', s.point(source)); event(s.hit, 'pointermove', end)
+      event(s.hit, 'pointerdown', s.point(source)); event(s.hit, 'pointermove', beforeArrival(s.point(source),end))
       expect(object.position.equals(home)).toBe(false)
       if (kind === 'blur') window.dispatchEvent(new Event('blur'))
       else if (kind === 'pause') { active = false; s.run() }
@@ -224,7 +235,7 @@ describe('visible object input and recoverable progress', () => {
           expect(target.object?.name).toBe(cue.destination.name); expect(Math.abs(target.q.x)).toBeLessThan(.95); expect(Math.abs(target.q.y)).toBeLessThan(.95)
         } else if (cue.destination) {
           const target = first(s, cue.destination())
-          expect(target.object?.name).toBe('spoon-handle-grip'); expect(Math.abs(target.q.x)).toBeLessThan(.95); expect(Math.abs(target.q.y)).toBeLessThan(.95)
+          expect(Math.abs(target.q.x)).toBeLessThan(.95); expect(Math.abs(target.q.y)).toBeLessThan(.95)
         }
       }
       for (const name of ['spoon-handle-grip', 'spoon-polishing-cloth', 'spoon-display-stand', 'spoon-table-leg']) {
@@ -314,25 +325,9 @@ describe('forgiving visible placement', () => {
     const a=s.point('spoon-handle-grip'), destination=project(new THREE.Vector3(.78,.88,.02));let end=a;
     send('pointerdown',a);
     for(let n=0;n<8;n++){const p=project(spoon.getWorldPosition(new THREE.Vector3()));end=[end[0]+destination[0]-p[0],end[1]+destination[1]-p[1]];send('pointermove',end)}
-    expect(s.overlay.textContent).toContain('可以松手');
+    s.run();expect(s.progress).toEqual([2]);
     send('pointerup',end);s.run();expect(s.progress).toEqual([2]);
   });
 });
 
-it.each(['pointercancel', 'blur', 'pause'])('clears the ready drop after %s without completing it', reason => {
-  let active = true
-  const s = mount(1, { isActive: () => active, isReducedMotion: () => true })
-  const from = s.point('spoon-handle-grip'), target = s.point('spoon-display-seat')
-  event(s.hit, 'pointerdown', from); event(s.hit, 'pointermove', target)
-  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
-  event(s.hit, 'pointermove', [1, 1])
-  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
-  event(s.hit, 'pointermove', target)
-  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
-  if (reason === 'blur') window.dispatchEvent(new Event('blur'))
-  else if (reason === 'pause') { active = false; s.run(.05) }
-  else event(s.hit, 'pointercancel', target)
-  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
-  event(s.hit, 'pointerup', target); s.run()
-  expect(s.progress).toEqual([])
-})
+it.each(['pointercancel', 'blur', 'pause'])('clears the ready drop after %s without completing it', reason => {let active=true;const s=mount(1,{isActive:()=>active,isReducedMotion:()=>true}),from=s.point('spoon-handle-grip'),target=beforeArrival(from,s.point('spoon-display-seat'));event(s.hit,'pointerdown',from);event(s.hit,'pointermove',target);expect(s.progress).toEqual([]);if(reason==='blur')window.dispatchEvent(new Event('blur'));else if(reason==='pause'){active=false;s.run(.05)}else event(s.hit,'pointercancel',target);event(s.hit,'pointerup',target);s.run();expect(s.progress).toEqual([])})

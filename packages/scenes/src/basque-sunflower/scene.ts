@@ -156,18 +156,19 @@ export function createBasqueSunflower(ctx: SceneContext): SceneInstance {
     canStart(x, y) { if (motion || at === 3) return false; matrices(); return hitsVisible(x, y, centerPiece) },
     onStart(x, y) {
       down.set(x, y); travel = 0; dragging = at < 2; feedback.prepare()
-      plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position)
+      plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), center.getWorldPosition(new THREE.Vector3()))
       if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point)
     },
     onMove(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset)
-      matrices()
+      matrices();
+      if (dragging && at < 2 && travel > 0 && placementHit(canvas, camera, center, x, y, (px, py) => hitsVisible(px, py, at === 0 ? seat : peg, moving())) && pointer.finish()) { dragging = false; begin(true) }
     },
     onRelease(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y)); matrices()
       // Only the carried subtree is excluded; all external scene occluders remain authoritative.
-      const valid = at < 2 ? dragging && travel >= 8 && placementHit(canvas, camera, center, x, y, (px, py) => hitsVisible(px, py, at === 0 ? seat : peg, moving()))
+      const valid = at < 2 ? dragging && travel > 0 && placementHit(canvas, camera, center, x, y, (px, py) => hitsVisible(px, py, at === 0 ? seat : peg, moving()))
         : at === 2 && travel < 12 && hitsVisible(x, y, centerPiece)
       dragging = false; if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
@@ -184,8 +185,8 @@ export function createBasqueSunflower(ctx: SceneContext): SceneInstance {
     at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at)
     feedback.impact({ freqs: [349.23, 440], duration: .17, gain: .012, type: 'triangle' })
   }
-  function begin() {
-    if (!active() || pointer.isBusy() || motion || at >= 2) return
+  function begin(arrived = false) {
+    if (!active() || (pointer.isBusy() && !arrived) || motion || at >= 2) return
     motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle()
   }
   function finish(text = '') {

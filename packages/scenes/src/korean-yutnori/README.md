@@ -2,7 +2,7 @@
 
 `korean-yutnori` is an original single-piece free-play scene based on public museum/educational descriptions of yutnori. Cultural sources and scope are in `content/traditions/korean-yutnori.md`.
 
-Object drags gather four half-round wooden sticks, toss them, then move one blue token according to their visible landing faces. Each toss randomly samples the four faces: one to four flat faces up mean one to four steps; no flat faces up means five steps. The token follows adjacent stations around the 20-station outer loop, retaining its location between rounds and wrapping around the loop. After moving, the user may toss again or choose “结束仪式” to finish. The cloth board has 29 distinct stations and lies on a low woven playing mat. Stick bodies have real closed geometry, flat and curved faces, distinct end grain and original short marks. Every stick remains grounded at rest and clears its neighbors during flight.
+Object drags gather four half-round wooden sticks, toss them, then move one blue token according to their visible landing faces. Each toss randomly samples the four faces: one to four flat faces up mean one to four steps; no flat faces up means five steps. The token stays on the board plane and follows the held pointer to the indicated destination. That destination counts the rolled steps around the 20-station outer loop, retaining position between rounds and wrapping around the loop. Arrival settles automatically; remaining finger motion cannot start another turn. After moving, the user may toss again or choose “结束仪式” to finish. The cloth board has 29 distinct stations and lies on a low woven playing mat. Stick bodies have real closed geometry, flat and curved faces, distinct end grain and original short marks. Every stick remains grounded at rest and clears its neighbors during flight.
 
 This assisted free play allows another toss after every result. Traditional multiplayer yutnori grants an extra throw for yut or mo; this scene has no opponents, stacking, capture, shortcuts or victory condition. Random sampling does not model physical tossing or historical result probabilities. The set is an original design, with no divination or efficacy claim. No table, board stand, wish form or entry sound. Optional quiet settlement tone. Silent restoration, real material hit testing, callback/pointer ownership, cancellation, keyboard equivalence and disposal follow the accepted scene lifecycle. Evidence is retained in `artifacts/korean-yutnori/`.
 
@@ -18,3 +18,7 @@ This assisted free play allows another toss after every result. Traditional mult
 ## 2026-10-23 共享方向容错
 
 共享方向判定支持同向长拖、合理斜拖与10–20px的小幅纠正，到位后继续同向拖不会丢失成功资格；明显反向、退回起点、取消及多指仍不提交。保留本模块的真实起点、动作与主动结束／留言流程。仅调整产品技术容错，未改变器物、文化主张、动作顺序、来源归属、技术 ID 或存档。验证与文化影响边界见[本轮修复记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。
+
+## 2026-10-26 棋子跟手到本轮落点
+
+合拢与抛柶保留动作约束；仅将行棋从固定向上拖距改为棋子到达本次掷数对应的外圈格点。每次新结果重建目标，保留随机结果、累计位置、继续投掷、主动结束和旧variant存档。沿用既有规则来源，不新增传统游戏规则或概率主张；吸附和触屏容错是产品机制。验证见[空间交互审阅](../../../../docs/research/2026-10-26-spatial-placement-review.md)。

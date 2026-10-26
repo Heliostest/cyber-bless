@@ -3,7 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas } from '../touch-target'
 import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createMolinilloModel } from './model'
@@ -11,7 +11,7 @@ import { createMolinilloModel } from './model'
 type Checkpoint = 0 | 1 | 2 | 3
 const ACTIONS = ['向下浸入器头', '向右搓转木柄', '向左搓转木柄']
 const HINTS = [
-  '按住木柄提示处，向下短拖，把有沟槽的器头轻轻浸到可可饮品表面。',
+  '握住木柄，沿杯轴移到提示标记，让有沟槽的器头轻轻浸入可可饮品。',
   '按住木柄，向右短拖，让木柄转动，杯面渐渐浮起细泡。',
   '按住木柄，向左短拖，换向搓转。松动的木环随之转动，泡沫慢慢聚起。',
   '左右搓转结束，细泡浮在可可表面。木纹、陶釉与泡沫，在阳光下各有质感。',
@@ -42,7 +42,22 @@ export function createMexicanMolinillo(ctx: SceneContext): SceneInstance {
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
   const restore = () => pose(at, 0)
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: i === 0 ? [0, 1] : [i === 1 ? 1 : -1, 0], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const isSpatialStep=(step:number)=>step === 0
+  const limitPoints=model.targets.map((target,i)=>{model.pose(i,1);return target!.localToWorld(new THREE.Vector3(...model.anchors[i]!))})
+  model.pose(0,0)
+  const railStart=new THREE.Vector2(),railPath=new THREE.Vector2()
+  let railRadius=0
+  const screenPoint=(point:THREE.Vector3)=>{const p=point.project(camera),r=canvas.getBoundingClientRect();return new THREE.Vector2(r.left+(p.x+1)*r.width/2,r.top+(1-p.y)*r.height/2)}
+  const prepareRail=(x:number,y:number)=>{const a=screenPoint(model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!))),b=screenPoint(limitPoints[at]!.clone());railStart.set(x,y);railPath.copy(b).sub(a);railRadius=Math.min(22,railPath.length()*.42)}
+  const moveRail=(x:number,y:number)=>{
+    if(!insideCanvas(canvas,x,y))return false
+    const n=THREE.MathUtils.clamp(new THREE.Vector2(x,y).sub(railStart).dot(railPath)/Math.max(railPath.lengthSq(),1e-9),0,1)
+    pose(at,n)
+    const contact=screenPoint(model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!))),goal=screenPoint(limitPoints[at]!.clone())
+    return n>0 && contact.distanceTo(goal)<=railRadius && !touch.occluded(x,y,model.targets[at]!,{ignore:model.subject})
+  }
+
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(isSpatialStep(i)?{destination:()=>limitPoints[i]!.clone(),targetLabel:'器头浸入位置'}:{direction:i === 0 ? [0, 1] : [i === 1 ? 1 : -1, 0]}), label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const axes = (dx: number, dy: number) => at === 0 ? [dy, dx] : at === 1 ? [dx, dy] : [-dx, dy]
   const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore() }
@@ -52,15 +67,17 @@ export function createMexicanMolinillo(ctx: SceneContext): SceneInstance {
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x, y, model.targets[at]!) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if(isSpatialStep(at))prepareRail(x,y) },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
+      if(isSpatialStep(at)){if(!invalid && moveRail(x,y) && pointer.finish())advance(true);return}
       pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
       const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
       maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
       pose(at, THREE.MathUtils.clamp(along / 60, 0, 1))
     },
     onRelease(x, y) {
+      if(isSpatialStep(at)){if(!invalid && moveRail(x,y))advance();else reset();return}
       const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
       const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
       if (valid) advance(); else reset()
@@ -83,7 +100,7 @@ export function createMexicanMolinillo(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(accepted=false) { if (!inputActive() || (pointer.isBusy() && !accepted) || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {

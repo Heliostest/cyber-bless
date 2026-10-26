@@ -27,7 +27,7 @@ const COPY = {
   title: '火边花环',
   hintWeave: '看一段乌克兰 Kupala 仲夏习俗。点按花环，把草茎与野花编成一圈。',
   hintWeaving: '草茎一圈圈交叠…',
-  hintPlace: '按住花环向下拖到水面，轻轻放下；也可用辅助按钮。',
+  hintPlace: '握住花环，挪到水面的提示范围，便会轻轻落下；也可用辅助按钮。',
   hintDrift: '把此刻的心意留在心里，目送仲夏花环漂远，再点「目送远去」结束。',
   weaveTap: '编一圈',
   placeTap: '放上水面',
@@ -37,7 +37,7 @@ const COPY = {
   wishPlaceholder: '记下此刻的仲夏景象…',
   stepsAria: '步骤',
   cueWeave: '点按编花环',
-  cueCarry: '向下拖动花环',
+  cueCarry: '把花环挪到水面',
   cueWater: '放到水面',
 } as const
 
@@ -340,6 +340,19 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
   const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -HOLD_POS.z)
   const hitPoint = new THREE.Vector3()
   const dragTarget = HOLD_POS.clone()
+  const dragOffset = new THREE.Vector3(), placeFrom = HOLD_POS.clone()
+  const moveHeldWreath = (x: number, y: number) => {
+    if (!grabbed || !Number.isFinite(x) || !Number.isFinite(y)) return false
+    if (!pointer.aim(x, y).ray.intersectPlane(dragPlane, hitPoint)) return false
+    dragTarget.copy(hitPoint).add(dragOffset)
+    world.worldToLocal(dragTarget)
+    wreath.position.copy(dragTarget); wreathZone.position.copy(dragTarget)
+    world.updateMatrixWorld(true)
+    const rect = canvas.getBoundingClientRect(), actual = wreath.getWorldPosition(new THREE.Vector3()).project(camera)
+    const target = world.localToWorld(WATER_POS.clone()).project(camera)
+    return x >= rect.left && x <= rect.left + rect.width && y >= rect.top && y <= rect.top + rect.height
+      && Math.hypot((actual.x - target.x) * rect.width / 2, (actual.y - target.y) * rect.height / 2) <= 22
+  }
 
   const resize = () => {
     const aspect = sizeStage(canvas, renderer, styleRenderer, camera)
@@ -374,6 +387,7 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
 
   const goDrift = () => {
     if (!canAct() || step !== 'place') return
+    placeFrom.copy(wreath.position)
     step = 'drift'
     grabbed = false
     dragHandle?.setEnabled(false)
@@ -410,7 +424,7 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
   }
 
   const onActionTap = () => {
-    if (disposed) return
+    if (disposed || interactionPointerId !== null) return
     fx.prepare()
     if (step === 'weave') startWeave()
     else if (step === 'place') goDrift()
@@ -426,17 +440,16 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
     fx.prepare()
     downX = e.clientX
     downY = e.clientY
-    if (step === 'place' && onWreath(e.clientX, e.clientY)) grabbed = true
+    if (step === 'place' && onWreath(e.clientX, e.clientY)) {
+      grabbed = true
+      const origin = wreath.getWorldPosition(new THREE.Vector3())
+      dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), origin)
+      if (pointer.aim(e.clientX, e.clientY).ray.intersectPlane(dragPlane, hitPoint)) dragOffset.copy(origin).sub(hitPoint)
+    }
   }
   const onHitMove = (e: PointerEvent) => {
     if (!canAct() || e.pointerId !== interactionPointerId || step !== 'place' || !grabbed || e.buttons === 0) return
-    if (pointer.aim(e.clientX, e.clientY).ray.intersectPlane(dragPlane, hitPoint)) {
-      dragTarget.set(
-        THREE.MathUtils.clamp(hitPoint.x, -1, 1),
-        THREE.MathUtils.clamp(hitPoint.y, 0.2, 1.3),
-        HOLD_POS.z,
-      )
-    }
+    if (moveHeldWreath(e.clientX, e.clientY)) goDrift()
   }
   const onHitUp = (e: PointerEvent) => {
     if (e.pointerId !== interactionPointerId) return
@@ -448,6 +461,7 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
   const onHitCancel = (e?: PointerEvent) => {
     if (e && e.pointerId !== interactionPointerId) return
     interactionPointerId = null; grabbed = false; dragTarget.copy(HOLD_POS)
+    if (step === 'place') { wreath.position.copy(HOLD_POS); wreathZone.position.copy(HOLD_POS); world.updateMatrixWorld(true) }
   }
   const onInputBlur = () => onHitCancel()
 
@@ -459,8 +473,7 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
     stopClaim = claimObjectTouches(hitLayer, onWreath)
     dragHandle = gestures.createDrag({
       startsOn: (x, y) => canAct() && onWreath(x, y),
-      // Carried down toward the water (the river fills the lower screen).
-      hitTest: (_x, y) => grabbed && y - downY > 40,
+      hitTest: moveHeldWreath,
       onDrop: (hit) => {
         if (step !== 'place') return
         if (hit) goDrift()
@@ -558,9 +571,9 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
         const x = WATER_POS.x + Math.sin(drift * 0.6) * 0.25
         const floatY = waveHeight(x, z, t) + 0.02
         wreath.position.set(
-          THREE.MathUtils.lerp(HOLD_POS.x, x, e),
-          THREE.MathUtils.lerp(HOLD_POS.y, floatY, e),
-          THREE.MathUtils.lerp(HOLD_POS.z, z, e),
+          THREE.MathUtils.lerp(placeFrom.x, x, e),
+          THREE.MathUtils.lerp(placeFrom.y, floatY, e),
+          THREE.MathUtils.lerp(placeFrom.z, z, e),
         )
         wreath.rotation.x = THREE.MathUtils.lerp(0.45, Math.sin(t * 1.2) * 0.05, e)
         wreath.rotation.y += reduced ? 0 : dt * 0.12

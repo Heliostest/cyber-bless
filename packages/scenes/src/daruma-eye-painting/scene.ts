@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
+import { createPosePlacement } from '../pose-placement'
 import {
   addStageLights, CEL_STYLE, claimObjectTouches, createPointerRay, createSceneFeedback,
   createStepOverlay, createWarmStage, disposeTree, observeCanvasResize,
@@ -126,6 +127,13 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
 
   const { scene, renderer } = createWarmStage(canvas)
   const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 40)
+
+  const projectedGuide = (goal: THREE.Vector3, grip: THREE.Vector3, contact: THREE.Vector3) => {
+    camera.updateMatrixWorld(true)
+    const g=goal.project(camera),a=grip.project(camera),b=contact.project(camera)
+    g.x+=a.x-b.x;g.y+=a.y-b.y
+    return g.unproject(camera)
+  }
   const cameraHome = new THREE.Vector3(0, 1.45, 3.45)
   const cameraLookAt = new THREE.Vector3(0, 0.97, 0)
   camera.position.copy(cameraHome)
@@ -288,6 +296,11 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
   const brushTip = new THREE.Vector3(0, 0.48, 0).applyEuler(brush.rotation)
   const brushTarget = brushHome.clone()
 
+  const placement = createPosePlacement(canvas,camera,{
+    roots:[doll],targets:[doll],anchors:[[0,0,0]],
+    pose(_step,n){doll.position.set(0,THREE.MathUtils.lerp(HELD_Y,REST_Y,n),0);world.updateMatrixWorld(true)},
+  },scene)
+  doll.position.set(0,REST_Y,0)
   const pointer = createPointerRay(canvas, camera)
   const updateMatrices = () => { scene.updateMatrixWorld(); camera.updateMatrixWorld() }
   const hits = (x: number, y: number, objects: THREE.Object3D[]) => {
@@ -321,7 +334,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     kind: 'drag', label: '拖达摩到木座',
     anchor: [settleAnchor.x, settleAnchor.y, settleAnchor.z],
     enabled: () => canAct() && !settling && !blockedMulti && step === 2,
-    destination: () => stand.localToWorld(new THREE.Vector3(0, 0.066, 0.42)), targetLabel: '木座', priority: 2,
+    destination: () => projectedGuide(placement.destination(0),shell.localToWorld(new THREE.Vector3(settleAnchor.x,settleAnchor.y,settleAnchor.z)),doll.getWorldPosition(new THREE.Vector3())), targetLabel: '木座', priority: 2,
   })
   addInteractionCue(shell, {
     kind: 'tap', label: '轻点达摩记谢', anchor: [settleAnchor.x, settleAnchor.y, settleAnchor.z], priority: 2,
@@ -360,6 +373,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     // Releasing capture can emit lostpointercapture synchronously.
     dragId = null
     dragLean = 0
+    if (!settling) { placement.cancel(); if(step===2)doll.position.set(0,HELD_Y,0) }
     brushTarget.copy(brushHome)
     if (claimed !== null) {
       try { hitLayer.releasePointerCapture(claimed) } catch { /* capture may have already ended */ }
@@ -394,7 +408,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     step = 3
     settling = false
     wobble = wobbleVelocity = 0
-    doll.position.y = REST_Y
+    doll.position.set(0,REST_Y,0)
     doll.rotation.z = 0
     ctx.onProgress?.(3)
     fx.impact({ freqs: [392, 587.33], duration: 0.3, gain: 0.025 })
@@ -445,6 +459,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     if (!onObject(e.clientX, e.clientY)) return
     dragId = e.pointerId
     downY = e.clientY
+    if(step===2 && !placement.begin(0,e.clientX,e.clientY)){cancelDrag();return}
     fx.prepare()
     try { hitLayer.setPointerCapture(e.pointerId) } catch { /* optional on synthetic surfaces */ }
   }
@@ -458,7 +473,9 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
         brushTarget.x = THREE.MathUtils.clamp(brushTarget.x, -1, 1.15)
         brushTarget.y = THREE.MathUtils.clamp(brushTarget.y, 0.2, 1.7)
       }
-    } else if (step === 2) dragLean = THREE.MathUtils.clamp((downY - e.clientY) * 0.0015, -0.1, 0.1)
+    } else if (step === 2 && placement.move(e.clientX,e.clientY)) {
+      placement.capture(); settle()
+    }
   }
   const onUp = (e: PointerEvent) => {
     const valid = dragId === e.pointerId && pointers.size === 1 && !blockedMulti && canAct()
@@ -468,10 +485,12 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
       return
     }
     const currentStep = step
+    const arrived = currentStep===2 && placement.move(e.clientX,e.clientY)
+    if(arrived){placement.capture();settle();return}
     cancelDrag()
     if (currentStep === 0 && onEye(e.clientX, e.clientY)) paintEye()
     else if (currentStep === 1 && returning && onDoll(e.clientX, e.clientY)) leaveWish()
-    else if (currentStep === 2 && onStand(e.clientX, e.clientY)) settle()
+
   }
   const onCancel = (e: PointerEvent) => {
     forgetPointer(e.pointerId)
@@ -557,8 +576,9 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
         settleK = quiet ? 1 : Math.min(1, settleK + delta / 0.95)
         const eased = settleK * settleK * (3 - 2 * settleK)
         doll.position.y = THREE.MathUtils.lerp(HELD_Y, REST_Y, eased)
+        placement.settle(eased)
         if (settleK >= 1) complete()
-      } else {
+      } else if (!(step===2 && dragId!==null)) {
         const targetY = step === 2 ? HELD_Y : REST_Y
         doll.position.y = THREE.MathUtils.lerp(doll.position.y, targetY, quiet ? 1 : 1 - Math.exp(-delta * 10))
       }

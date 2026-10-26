@@ -5,7 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas } from '../touch-target'
 import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -156,10 +156,18 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
   const setThread = (amount: number) => { threadAmount = amount; setShape() }
   const setGather = (amount: number) => { gatherAmount = amount; setShape() }
   const restore = () => { threadAmount = at > 0 ? 1 : 0; gatherAmount = at >= 2 ? 1 : 0; setShape(); matrices() }
+
+  const spatialTargets=[lastBody,grip],spatialAnchors:XYZ[]=[SHELL_ANCHOR,[0,0,.018]]
+  const spatialGoals=spatialTargets.map((target,i)=>{threadAmount=1;gatherAmount=i===1?1:0;setShape();return target.localToWorld(new THREE.Vector3(...spatialAnchors[i]!))});threadAmount=gatherAmount=0;setShape()
+  const railStart=new THREE.Vector2(),railPath=new THREE.Vector2();let railRadius=0,spatialInvalid=false
+  const project=(p:THREE.Vector3)=>{const q=p.project(camera),r=canvas.getBoundingClientRect();return new THREE.Vector2(r.left+(q.x+1)*r.width/2,r.top+(1-q.y)*r.height/2)}
+  const prepareRail=(x:number,y:number)=>{spatialInvalid=false;const from=project(spatialTargets[at]!.localToWorld(new THREE.Vector3(...spatialAnchors[at]!))),goal=project(spatialGoals[at]!.clone());railStart.set(x,y);railPath.copy(goal).sub(from);railRadius=Math.min(22,railPath.length()*.42)}
+  const moveRail=(x:number,y:number)=>{if(spatialInvalid||!insideCanvas(canvas,x,y))return false;const n=THREE.MathUtils.clamp(new THREE.Vector2(x,y).sub(railStart).dot(railPath)/Math.max(railPath.lengthSq(),1e-9),0,1);if(at===0)setThread(n);else setGather(n);matrices();return n>0&&project(spatialTargets[at]!.localToWorld(new THREE.Vector3(...spatialAnchors[at]!))).distanceTo(project(spatialGoals[at]!.clone()))<=railRadius&&!touch.occluded(x,y,spatialTargets[at]!,{ignore:world})}
+
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
-    addInteractionCue(lastBody, { kind: 'drag', direction: [-1, 0], label: '向左穿入小螺壳', anchor: SHELL_ANCHOR, priority: 3, enabled: enabled(0) }),
-    addInteractionCue(grip, { kind: 'drag', direction: [0, -1], label: '向上拉拢线端', anchor: [0, 0, .018], priority: 3, enabled: enabled(1) }),
+    addInteractionCue(lastBody, { kind: 'drag', destination:()=>spatialGoals[0]!.clone(),targetLabel:'串末穿孔位置', label: '向左穿入小螺壳', anchor: SHELL_ANCHOR, priority: 3, enabled: enabled(0) }),
+    addInteractionCue(grip, { kind: 'drag', destination:()=>spatialGoals[1]!.clone(),targetLabel:'线端收拢位置', label: '向上拉拢线端', anchor: [0, 0, .018], priority: 3, enabled: enabled(1) }),
     addInteractionCue(quietBody, { kind: 'tap', label: '轻点贝链静看', anchor: SHELL_ANCHOR, priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2()
@@ -190,24 +198,22 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
     },
     onStart(x, y) {
       if (!prepareInput()) { pointer.cancel(); return }
-      down.set(x, y); dragging = at < 2; maxTravel = maxCross = moved = maxAlong = minAlong = backtrack = 0
+      down.set(x, y); dragging = at < 2; maxTravel = maxCross = moved = maxAlong = minAlong = backtrack = 0;if(at<2)prepareRail(x,y)
     },
     onMove(x, y) {
-      if (!Number.isFinite(x) || !Number.isFinite(y)) return
+      if (!Number.isFinite(x) || !Number.isFinite(y)){spatialInvalid=true;return}
+      if(dragging&&at<2){if(moveRail(x,y)&&pointer.finish()){dragging=false;begin(true)};return}
       const dx = x - down.x, dy = y - down.y
       maxTravel = Math.max(maxTravel, Math.hypot(dx, dy)); maxCross = Math.max(maxCross, Math.abs(at === 0 ? dy : dx))
       moved = at === 0 ? -dx : -dy
       maxAlong = Math.max(maxAlong, moved); minAlong = Math.min(minAlong, moved); backtrack = Math.max(backtrack, maxAlong - moved)
-      if (dragging && at === 0) setThread(THREE.MathUtils.clamp(moved / 60, 0, 1))
-      else if (dragging && at === 1) setGather(THREE.MathUtils.clamp(moved / 60, 0, 1))
       matrices()
     },
     onRelease(x, y) {
+      if(at<2){const valid=dragging&&moveRail(x,y);dragging=false;if(valid)begin();else reset();return}
       matrices(); const dx = x - down.x, dy = y - down.y
-      const along = at === 0 ? -dx : -dy, cross = at === 0 ? Math.abs(dy) : Math.abs(dx)
-      const valid = at < 2 ? dragging && completesDirectionalDrag({ along: moved, end: along, maxAlong, minAlong, backtrack, maxCross, cross, travel: maxTravel })
-        : maxTravel < 12 && Math.hypot(dx, dy) < 12 && (necklaceHit(x, y))
-      dragging = false; if (valid) { if (at < 2) begin(); else finish() } else reset()
+      const valid = !spatialInvalid && maxTravel < 12 && Math.hypot(dx, dy) < 12 && necklaceHit(x,y)
+      dragging=false;if(valid)finish();else reset()
     }, onCancel: reset,
   })
   const sync = () => {
@@ -229,8 +235,8 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
     at = (motion.step + 1) as Checkpoint; motion = null; restore()
     withHostCallbacks(() => { ctx.onProgress?.(at); if (active()) feedback.impact({ freqs: [392, 523.25], duration: .13, gain: .008, type: 'triangle' }) })
   }
-  function begin() {
-    if (!inputActive() || pointer.isBusy() || motion || at >= 2) return
+  function begin(accepted=false) {
+    if (!inputActive() || (pointer.isBusy() && !accepted) || motion || at >= 2) return
     motion = { step: at as 0 | 1, time: 0, thread: threadAmount, gather: gatherAmount }; sync(); if (reduced()) settle()
   }
   function finish(text = '') {

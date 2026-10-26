@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPosePlacement } from '../pose-placement'
 import { addStageLights, CEL_STYLE, createLampHalo, createPointerRay, createSceneFeedback,
   createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -24,6 +25,13 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   const active = () => started && !disposed && (ctx.isActive?.() ?? true)
   const { renderer, scene } = createWarmStage(canvas)
   const camera = new THREE.PerspectiveCamera(40, 1, .1, 60)
+
+  const projectedGuide = (goal: THREE.Vector3, grip: THREE.Vector3, contact: THREE.Vector3) => {
+    camera.updateMatrixWorld(true)
+    const g=goal.project(camera),a=grip.project(camera),b=contact.project(camera)
+    g.x+=a.x-b.x;g.y+=a.y-b.y
+    return g.unproject(camera)
+  }
   const home = new THREE.Vector3(0, 1.55, 4.8), look = new THREE.Vector3(0, 1.05, 0)
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'votive-candle-catholic', label: COPY.title })
   style.setStyle(CEL_STYLE)
@@ -91,7 +99,7 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   addInteractionCue(heldTarget, {
     kind: 'drag', label: '拖蜡烛到空位', priority: 2,
     enabled: () => active() && step === 0,
-    destination: target, targetLabel: '烛架空位',
+    destination: () => projectedGuide(placement.destination(0),heldTarget.getWorldPosition(new THREE.Vector3()),main.group.getWorldPosition(new THREE.Vector3())), targetLabel: '烛架空位',
   })
   addInteractionCue(wickTarget, {
     kind: 'tap', label: '轻点自己的灯芯', priority: 2,
@@ -107,19 +115,24 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: COPY.actions[0] }, safe)
   const wish = document.createElement('div'); wish.className = 'scene-wish-slot'; overlay.append(wish)
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(new THREE.Vector3(0,0,1), -.65), point = new THREE.Vector3()
+  const placement = createPosePlacement(canvas,camera,{
+    roots:[main.group],targets:[main.group],anchors:[[0,0,0]],
+    pose(_step,n){main.group.position.lerpVectors(start,placed,n);world.updateMatrixWorld(true)},
+  },scene)
+  main.group.position.copy(step ? placed : start)
   const matrices = () => { world.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const reset = () => { dragging = false; if (!step) main.group.position.copy(start) }
+  const reset = () => { placement.cancel(); dragging = false; if (!step) main.group.position.copy(start) }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x,y) { matrices(); return (step < 2 || step === 2 && ctx.returning === true) && ray.hits(x,y,[step === 1 ? wickTarget : heldTarget]) },
-    onStart() { dragging = true; feedback.prepare() },
+    onStart(x,y) { dragging = true; feedback.prepare(); if(step===0 && !placement.begin(0,x,y))pointer.cancel() },
     onMove(x,y) {
       if (step || !dragging) return
-      if (ray.aim(x,y).ray.intersectPlane(plane,point)) main.group.position.set(THREE.MathUtils.clamp(point.x,-1,1), THREE.MathUtils.clamp(point.y-.5,.15,1.1), .65)
+      if (placement.move(x,y) && pointer.finish()) { dragging=false; placement.capture(); advance(true) }
     },
     onRelease(x,y) {
       dragging = false; matrices()
-      if (!step && ray.hits(x,y,[target])) advance()
+      if (!step && placement.move(x,y)) { placement.capture(); advance() }
       else if (step === 1 && ray.hits(x,y,[wickTarget])) advance()
       else if (step === 2 && ctx.returning && ray.hits(x,y,[heldTarget])) finish()
       else reset()
@@ -139,8 +152,8 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
     main.flame.visible = main.halo.sprite.visible = step >= 2
     glow.intensity = step >= 2 ? 1.6 : 0
   }
-  function advance() {
-    if (!active() || pointer.isBusy() || step > 1) return
+  function advance(placedInput=false) {
+    if (!active() || (pointer.isBusy() && !placedInput) || step > 1) return
     step++; main.group.position.copy(placed); sync(); ctx.onProgress?.(step)
     feedback.impact({ freqs: step === 1 ? [392,587] : [523,784], duration: .3, gain: .03 })
   }

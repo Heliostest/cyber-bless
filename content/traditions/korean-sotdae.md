@@ -22,3 +22,8 @@
 - [国立国语院韩国语基础辞典：솟대](https://krdict.korean.go.kr/kor/dicSearch/SearchView?ParaWordNo=64477)，独立研究实际读L21–46，定义L29及例句L33–46。支持顶有木鸟、村口长竿与守护象征语义；辞书例句不等于某村完整祭典现场记录。
 
 [逐项核查](../../docs/research/2026-10-23-korean-sotdae.md)与[场景README](../../packages/scenes/src/korean-sotdae/README.md)对应实际呈现，不借韩国宗教或普通木工总卡作地区索引。
+
+
+### korean-sotdae：2026-10-26 产品操作更新
+
+整竿连木鸟提起与插孔跟手到位；中段扶正旋转保留，竿脚对承孔自动插稳。 物件跟手、目标容差、自动吸附与提示标记是应用的输入安排，不是来源规定的传统步骤。沿用本卡既有事实与阅读状态，本轮没有新增文化主张或将外部资料登记为重新读过。实际实现与验证边界见[C 组记录](../../docs/research/2026-10-26-spatial-placement-audit-c.md)。

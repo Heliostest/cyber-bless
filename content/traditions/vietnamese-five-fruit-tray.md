@@ -19,3 +19,10 @@
 | 祭祖感恩背景及祈求新岁平安、健康、丰足；不同地区选果、寓意有差异。 | [Arranging five-fruit tray during Lunar New Year celebration – a Vietnamese tradition／VietnamPlus（VNA）](https://en.vietnamplus.vn/arranging-five-fruit-tray-during-lunar-new-year-celebration--a-vietnamese-tradition/279358.vnp)；相关段落“showing respect and gratitude to ancestors and praying for a year of peace, good health, and prosperous business”（实现者网页提取L38，独立提取L35）；2024-02-08 | 实现者与独立者2026-10-23均实际读相关正文 | 不泛化东亚全部信念或具体果种统一寓意，不采用健康营养段、起源、期限、资格和应验承诺。 |
 
 VNAT的https://vietnamtourism.gov.vn/en/post/13636只返回单行空索引，根实现者与独立者均未取得相关正文，不作已读证据；搜索摘要不补记正文。来源照片本次未读像素，采用原创几何，不称照片复刻。完整对应与差异见[研究记录](../../docs/research/2026-10-23-vietnamese-five-fruit-tray.md)与[场景README](../../packages/scenes/src/vietnamese-five-fruit-tray/README.md)。
+
+
+## 2026-10-26 本产品输入更新
+
+适用场景：`vietnamese-five-fruit-tray`。分别拿起橙、青苹果和梨，送到朱红果盘中各自的空处；到位后放低，已摆水果与其他果物继续保留。操作 0、1、2 的物件锚点或实际布面覆盖进入接收范围后自动接续短落定；方向和固定拖距不再充当这些摆放动作的成功条件。此处只描述本应用当前输入，较早产品呈现中的摆放松手验收已经更新。
+
+原有器物、动作顺序与文化支持范围保持；接受区、自动落定、触摸所有权及辅助按钮是产品设计，不是新增传统要求。本轮未新增文化事实，未把既有卡片或技术测试作为传统证据，也未重新登记外部链接为已读。已有证据的正文段落、访问状态和限制沿用本卡及其链接的逐项研究；本次产品同步与技术验证见[B 组记录](../../docs/research/2026-10-26-spatial-placement-audit-b.md)。

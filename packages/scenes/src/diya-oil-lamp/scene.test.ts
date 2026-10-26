@@ -98,7 +98,7 @@ function circle(s: Mounted, end = 'pointerup') {
 function putBack(s: Mounted, end = 'pointerup') {
   const start = project(s, object('diya-held-target')), destination = project(s, object('diya-plate-target'))
   pointer(s, 'pointerdown', start)
-  pointer(s, 'pointermove', destination)
+  pointer(s, 'pointermove', end === 'pointerup' ? destination : [start[0]-35,start[1]-35])
   pointer(s, end, destination)
   s.run()
 }

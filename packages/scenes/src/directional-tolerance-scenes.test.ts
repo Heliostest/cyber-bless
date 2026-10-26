@@ -78,13 +78,21 @@ async function mount(id: string, width: number, initialProgress = 0, reduced = t
     scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled()) entries.push({ object, cue }) })
     expect(entries).toHaveLength(1)
     const { object, cue } = entries[0]!
-    expect(cue.direction, 'the arrow must match the action direction').toEqual(direction)
+    if (!cue.destination) expect(cue.direction, 'the arrow must match the action direction').toEqual(direction)
     const p = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(camera)
     return [(p.x + 1) * width / 2, (1 - p.y) * height / 2] as Point
   }
+  const destination = (): Point | null => {
+    let goal: THREE.Vector3 | null = null
+    scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.destination)
+      goal = typeof cue.destination === 'function' ? cue.destination() : cue.destination.getWorldPosition(new THREE.Vector3()) })
+    if (!goal) return null
+    const p = (goal as THREE.Vector3).project(camera)
+    return [(p.x + 1) * width / 2, (1 - p.y) * height / 2]
+  }
   const run = () => { for (let frame = 0; frame < 100; frame++) instance.update(.05) }
   const dispose = () => { instance.dispose(); instances.delete(instance); host.remove() }
-  return { layer, hint, overlay, progress, complete, source, run, dispose }
+  return { layer, hint, overlay, progress, complete, source, destination, run, dispose }
 }
 function point(start: Point, direction: Point, along: number, cross = 0): Point {
   return [start[0] + direction[0] * along - direction[1] * cross, start[1] + direction[1] * along + direction[0] * cross]
@@ -95,16 +103,27 @@ const PATHS: [number, number][][] = [
   [[60, 0], [50, 0]], [[60, 0], [40, 0]], [[30, 15], [60, 30]],
   [[20, 16], [40, -16], [60, 0]],
 ]
-it.each(SCENES)('%s follows its actual steps with long drags, corrections and gentle diagonals', async (id, steps) => {
+it.each(SCENES)('%s follows its actual spatial targets or constrained motion with corrections', async (id, steps) => {
   for (const width of [320, 390]) for (const path of PATHS) {
     const s = await mount(id, width)
     for (let at = 0; at < steps.length; at++) {
-      const direction = DIRECTIONS[steps[at]!]!, a = s.source(direction)
+      const direction = DIRECTIONS[steps[at]!]!, a = s.source(direction), goal = s.destination()
       pointer(s.layer, 'pointerdown', a)
-      for (const [along, cross] of path) pointer(s.layer, 'pointermove', point(a, direction, along, cross))
-      expect(s.hint.dataset.ready, `step ${at}, ${width}px, ${JSON.stringify(path)}`).toBe('true')
-      expect(s.hint.textContent).toContain('松手')
-      pointer(s.layer, 'pointerup', point(a, direction, ...path.at(-1)!)); s.run()
+      if (goal) {
+        // The target, rather than the old instructed vector, now owns success.
+        const dx = goal[0] - a[0], dy = goal[1] - a[1], length = Math.hypot(dx, dy) || 1
+        for (const [along, cross] of path) pointer(s.layer, 'pointermove',
+          [a[0] + dx * along / 600 - dy / length * cross * .2, a[1] + dy * along / 600 + dx / length * cross * .2])
+        pointer(s.layer, 'pointermove', goal); s.run()
+        expect(s.progress, 'arrives before the physical finger lifts').toEqual(checkpoints(id, at + 1))
+        pointer(s.layer, 'pointerup', goal)
+      } else {
+        for (const [along, cross] of path) pointer(s.layer, 'pointermove', point(a, direction, along, cross))
+        expect(s.hint.dataset.ready, `step ${at}, ${width}px, ${JSON.stringify(path)}`).toBe('true')
+        expect(s.hint.textContent).toContain('松手')
+        pointer(s.layer, 'pointerup', point(a, direction, ...path.at(-1)!))
+      }
+      s.run()
       expect(s.progress, `step ${at}, ${width}px, ${JSON.stringify(path)}`).toEqual(checkpoints(id, at + 1))
       expect(s.hint.dataset.ready).not.toBe('true')
     }
@@ -120,19 +139,22 @@ it.each(SCENES)('%s keeps reverse, returned-to-start, canceled and multitouch in
   for (let at = 0; at < steps.length; at++) {
     const s = await mount(id, 390, at), direction = DIRECTIONS[steps[at]!]!
     for (const mode of ['reverse', 'cross', 'return', 'cancel', 'multi', 'orphan-release', 'nonfinite']) {
-      const a = s.source(direction), b = point(a, direction, 60)
+      const a = s.source(direction), goal = s.destination()
+      const away: Point = goal ? [a[0] - (goal[0] - a[0]) * .2, a[1] - (goal[1] - a[1]) * .2] : point(a, direction, 60)
+      const b = goal ? away : point(a, direction, 60)
       if (mode !== 'orphan-release') { pointer(s.layer, 'pointerdown', a); pointer(s.layer, 'pointermove', b) }
       if (mode === 'nonfinite') pointer(s.layer, 'pointermove', [NaN, a[1]])
       if (mode === 'cancel') pointer(s.layer, 'pointercancel', b)
       if (mode === 'multi') pointer(s.layer, 'pointerdown', b, 2)
-      const end = mode === 'reverse' ? point(a, direction, -60) : mode === 'cross' ? point(a, direction, 0, 60) : mode === 'return' ? a : b
+      const end = goal ? mode === 'return' ? a : b
+        : mode === 'reverse' ? point(a, direction, -60) : mode === 'cross' ? point(a, direction, 0, 60) : mode === 'return' ? a : b
       pointer(s.layer, 'pointerup', end)
       if (mode === 'multi') pointer(s.layer, 'pointerup', b, 2)
       s.run(); expect(s.progress, `${at}: ${mode}`).toEqual([]); expect(s.hint.dataset.ready).not.toBe('true')
     }
-    const a = s.source(direction)
-    pointer(s.layer, 'pointerdown', a); pointer(s.layer, 'pointermove', point(a, direction, 20))
-    pointer(s.layer, 'pointerup', point(a, direction, 120)); s.run()
+    const a = s.source(direction), goal = s.destination()
+    pointer(s.layer, 'pointerdown', a); pointer(s.layer, 'pointermove', goal ?? point(a, direction, 20))
+    pointer(s.layer, 'pointerup', goal ?? point(a, direction, 120)); s.run()
     expect(s.progress).toEqual(practiceThree.has(id) ? [at === 2 ? 2 : 1] : repeatable.has(id) && at === 2 ? [] : [at + 1]); s.dispose()
   }
 }, 30000)

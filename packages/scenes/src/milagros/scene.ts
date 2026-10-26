@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { placementHit } from '../placement-hit'
 import type { SceneContext, SceneInstance } from '../contract'
 import {
   addStageLights, CEL_STYLE, claimObjectTouches, createPointerRay, createSceneFeedback,
@@ -156,6 +157,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   const feedback = createSceneFeedback(ctx)
   const ray = createPointerRay(canvas, camera)
   const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.62), point = new THREE.Vector3()
+  const dragOffset = new THREE.Vector3()
   const selectedHits = (x: number, y: number) => ray.hits(x, y, [charmMeshes[selected]])
   const onObject = (x: number, y: number) => canAct() && (step === 0 ? ray.hits(x, y, charmMeshes) : (step === 1 || step === 2 && ctx.returning === true) && selectedHits(x, y))
   const stopClaim = claimObjectTouches(ui.hitLayer, onObject)
@@ -212,23 +214,34 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
       if (hit) select(hit.object.userData.choice, true)
     }
     feedback.prepare(); drag = { id: event.pointerId, stage: step, x: event.clientX, y: event.clientY }
+    if (step === 1) {
+      const group = charmGroups[selected], origin = group.getWorldPosition(new THREE.Vector3())
+      plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), charmMeshes[selected].getWorldPosition(new THREE.Vector3()))
+      if (ray.aim(event.clientX, event.clientY).ray.intersectPlane(plane, point)) dragOffset.copy(origin).sub(point)
+    }
     try { ui.hitLayer.setPointerCapture?.(event.pointerId) } catch { /* Capture may be absent in an embedded surface. */ }
   }
   const move = (event: PointerEvent) => {
     if (!canAct()) { resetDrag(); return }
     if (!drag || blocked || drag.id !== event.pointerId || drag.stage !== 1) return
     if (ray.aim(event.clientX, event.clientY).ray.intersectPlane(plane, point)) {
-      charmGroups[selected].position.set(THREE.MathUtils.clamp(point.x, -1.1, 1.1), THREE.MathUtils.clamp(point.y, 0.5, 1.95), held.z)
+      point.add(dragOffset); world.worldToLocal(point); charmGroups[selected].position.copy(point)
+      world.updateMatrixWorld(true)
+      if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) > 0
+        && placementHit(canvas, camera, charmMeshes[selected], event.clientX, event.clientY, (x, y) => ray.hits(x, y, [pinTarget]))) hang()
     }
   }
   const up = (event: PointerEvent) => {
     const previous = drag, multi = blocked
+    // A sparse native stream can carry its only destination sample in up.
+    // Move and test the same physical anchor before releasing its ownership.
+    if (previous?.stage === 1 && previous.id === event.pointerId && !multi && canAct()) move(event)
     pointers.delete(event.pointerId)
     if (previous?.id === event.pointerId) drag = null
     if (pointers.size === 0) blocked = false
     if (!previous || previous.id !== event.pointerId || multi || !canAct()) { resetDrag(); return }
     if (previous.stage === 0 && Math.hypot(event.clientX - previous.x, event.clientY - previous.y) < 9) choose()
-    else if (previous.stage === 1 && ray.hits(event.clientX, event.clientY, [pinTarget])) hang()
+    else if (previous.stage === 1) { if (step === 1) resetDrag() }
     else if (previous.stage === 2 && ctx.returning && Math.hypot(event.clientX - previous.x, event.clientY - previous.y) < 9 && selectedHits(event.clientX, event.clientY)) finish()
     else resetDrag()
   }

@@ -30,7 +30,7 @@ This is a small-angle model, not full rigid-body contact/friction simulation. Th
 
 ## Lifecycle and verification
 
-Checkpoint compatibility remains 0–3: unplaced, placed, freely playable after the first poke, manually finished. The first accepted poke reports 2 once; subsequent pokes never advance or complete. Restored 1 and 2 remain playable without entry feedback. A keyboard button places, offers a poke, then becomes `结束仪式`. Placement retains directional validation; free play accepts all directions. Invalid coordinates, cancel, occluders and multi-touch cannot submit a gesture. Each accepted poke has quiet optional sound and light haptics, with medium haptics on longer flicks; both obey live host switches.
+Checkpoint compatibility remains 0–3: unplaced, placed, freely playable after the first poke, manually finished. The first accepted poke reports 2 once; subsequent pokes never advance or complete. Restored 1 and 2 remain playable without entry feedback. A keyboard button places, offers a poke, then becomes `结束仪式`. Placement follows the held head and automatically accepts the beak's support target; free play accepts all directions. Invalid coordinates, cancel, occluders and multi-touch cannot submit a gesture. Each accepted poke has quiet optional sound and light haptics, with medium haptics on longer flicks; both obey live host switches.
 
 At checkpoint 2, the button uses `scene-dragonfly-finish` to show its complete `结束仪式` label in the lower-right tray. This overrides the host's small `辅助` fallback appearance; its title also reflects the finish action. The browser check verifies that the label is painted, fits without clipping and is not covered by the fallback pseudo-element before clicking it.
 
@@ -56,3 +56,8 @@ Run `npm run test -w @wbr/scenes -- src/vietnamese-bamboo-dragonfly --maxWorkers
 ## 2026-10-23 共享方向容错
 
 共享方向判定支持同向长拖、合理斜拖与10–20px的小幅纠正，到位后继续同向拖不会丢失成功资格；明显反向、退回起点、取消及多指仍不提交。保留本模块的真实起点、动作与主动结束／留言流程。仅调整产品技术容错，未改变器物、文化主张、动作顺序、来源归属、技术 ID 或存档。验证与文化影响边界见[本轮修复记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。
+
+
+## 2026-10-26 当前跟手安放
+
+本轮只将第一次喙尖上枝改为跟手到目标自动落稳；其他旋转、描线、抚触或结束动作保留原语义。不再以固定方向、最短拖距或必须松手判断摆放成功。同一根手指的后续移动与释放不操作下一步；取消只撤回尚未接受的拿取。键盘辅助、减少动画、旧检查点和原有文化语境保留。此前段落中关于这些搬运步骤的短拖、20%预览和松手才接受描述为旧实现，以本节为当前机制。屏幕落区、吸附和短程落稳是产品输入安排，不新增传统礼序、次数或功效。[逐步审阅和本轮验证](../../../../docs/research/2026-10-26-spatial-placement-audit-a.md)。

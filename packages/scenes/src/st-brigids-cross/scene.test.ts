@@ -47,7 +47,7 @@ function mount(step = 0, width = 360, height = 360) {
     const event = new Event(type, { bubbles: true, cancelable: true }); Object.assign(event, { clientX: at[0], clientY: at[1], pointerId: id, button: 0, isPrimary: id === 1 })
     el.dispatchEvent(event)
   }
-  const drag = () => { fire('pointerdown', source()); fire('pointermove', target()); fire('pointerup', target()); instance.update(0) }
+  const drag = () => { const from=source(), to=target(); fire('pointerdown', from); fire('pointermove', to); fire('pointerup', to); instance.update(0) }
   const button = () => overlay.querySelector<HTMLButtonElement>('.scene-bow-tap')!.click()
   return { instance, scene, camera, overlay, hit, progress, saveWish, complete, cues, source, target, fire, drag, button, pause: () => { active = false; instance.update(0) }, resume: () => { active = true; instance.update(0) } }
 }
@@ -78,7 +78,7 @@ it('rejects empty-stage starts and drops outside the current weave point', () =>
 })
 it.each(['pointercancel','lostpointercapture'])('does not advance after %s and allows a fresh gesture', type => {
   const s=mount(1), from=s.source(), to=s.target()
-  s.fire('pointerdown',from); s.fire('pointermove',to); s.fire(type,to); s.fire('pointerup',to)
+  s.fire('pointerdown',from); s.fire('pointermove',[from[0]+(to[0]-from[0])*.2,from[1]+(to[1]-from[1])*.2]); s.fire(type,to); s.fire('pointerup',to)
   expect(s.progress).not.toHaveBeenCalled(); s.drag(); expect(s.progress).toHaveBeenCalledExactlyOnceWith(2)
 })
 it('keeps a second finger and paused presses from completing a quiet tap', () => {

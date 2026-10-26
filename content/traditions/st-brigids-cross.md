@@ -58,3 +58,8 @@
 当前呈现：四束草送折点成四臂十字、挂门楣。 四束成形压缩真实编织，没有模拟祝圣。
 
 完整来源、访问状态、年代限定和不能外推的范围见[本轮逐项核查](../../docs/research/2026-10-20-scene-narratives-c.md#st-brigids-cross)。用户介绍集中维护于 `packages/core/src/scene-narratives/c.ts`，此处不复制正文。
+
+
+## 2026-10-26 产品输入记录
+
+适用场景：`st-brigids-cross`。当前搬运验收与技术验证见[跟手摆放逐场审阅 A 组](../../docs/research/2026-10-26-spatial-placement-audit-a.md)。未更改上述文化与器物／公开实践、来源身份或宗教语境。

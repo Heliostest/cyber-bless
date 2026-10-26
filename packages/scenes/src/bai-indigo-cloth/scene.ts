@@ -149,19 +149,23 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   const moving = () => at === 0 ? bundle : cloth
   const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
   const visibleHit = (x: number, y: number, targets: THREE.Object3D | THREE.Object3D[], held?: THREE.Object3D) => touch.hit(x, y, targets, { ignore: held })
-  const placementReady = (x: number, y: number) => at < 2 && travel >= 8
-    && !touch.occluded(x, y, at === 0 ? water : rail, { ignore: moving() })
+  const placementReady = (x: number, y: number) => at < 2 && travel > 0
+    // A higher grab on the tied knot can overlap the basin or its rest while
+    // the cloth's contact anchor reaches the water. They are one destination
+    // assembly; unrelated foreground objects still block the carried cloth.
+    && !touch.occluded(x, y, at === 0 ? [water, basin, scene.getObjectByName('indigo-rinse-rest')!] : rail, { ignore: moving() })
     && placementHit(canvas, camera, at === 0 ? tiedBody : body, x, y, (px, py) => visibleHit(px, py, at === 0 ? water : rail, moving()), at === 0 ? [0, 0, 0] : CLOTH_ANCHOR)
   const reset = () => { dropFeedback.clear(); dragging = false; travel = 0; if (!motion) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (motion || at === 3) return false; matrices(); return visibleHit(x, y, at === 0 ? bundle : body) },
-    onStart(x, y) { dropFeedback.clear(); feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
+    onStart(x, y) { dropFeedback.clear(); feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (at === 0 ? tiedBody : body).localToWorld(new THREE.Vector3(...(at === 0 ? [0,0,0] : CLOTH_ANCHOR)))); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
     onMove(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
       moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .22, 2.4); matrices()
       dropFeedback.setReady(dragging && placementReady(x, y))
+          if (dragging && at < 2 && placementReady(x, y) && pointer.finish()) { dragging = false; begin(true) }
     },
     onRelease(x, y) {
       matrices()
@@ -180,7 +184,7 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl, motion ? COPY.moving : at === 0 ? COPY.rinse : at === 1 ? COPY.hang : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
   function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); if (!active()) return; feedback.impact({ freqs: [392, 523.25], duration: .19, gain: .012, type: 'triangle' }) }
-  function begin() { if (!active() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
+  function begin(arrived = false) { if (!active() || (pointer.isBusy() && !arrived) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || at !== 2) return
     at = 3; restore(); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()

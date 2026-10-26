@@ -59,8 +59,14 @@ function event(el: HTMLElement, type: string, [clientX, clientY]: [number, numbe
   Object.assign(e, { clientX, clientY, pointerId, pointerType: 'touch', button: 0 }); el.dispatchEvent(e)
 }
 function drag(s: ReturnType<typeof mount>, source = 'licitar-icing-grip', target = 'licitar-heart-body') {
-  const a = s.point(source), b = s.point(target)
+  const a = s.point(source), b = goalPoint(s, target)
   event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b); event(s.hit, 'pointerup', b); s.run()
+}
+function goalPoint(s: ReturnType<typeof mount>, name: string): [number, number] {
+  const cue=cues(s)[0]?.cue
+  if(name !== 'licitar-stand-peg-cap' || typeof cue?.destination !== 'function') return s.point(name)
+  const rect=s.host.querySelector('canvas')!.getBoundingClientRect(), p=cue.destination().project(s.camera)
+  return [rect.left+(p.x+1)*rect.width/2,rect.top+(1-p.y)*rect.height/2]
 }
 function tap(s: ReturnType<typeof mount>) { const p = s.point('licitar-heart-body'); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p) }
 function cues(s: ReturnType<typeof mount>) {
@@ -81,6 +87,16 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
   return { q, object: ray.intersectObjects(visible, false)[0]?.object }
 }
 
+
+function beforeArrival(s: ReturnType<typeof mount>, goal: [number, number]): [number, number] {
+  let selected: { object: THREE.Object3D; cue: InteractionCue } | undefined
+  s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.kind === 'drag' && cue.destination) selected = { object, cue } })
+  if (!selected) return goal
+  const { object, cue } = selected, canvas = s.overlay.parentElement!.querySelector('canvas')!, rect = canvas.getBoundingClientRect()
+  const source = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(s.camera)
+  const x = rect.left + (source.x + 1) * rect.width / 2, y = rect.top + (1 - source.y) * rect.height / 2
+  return [Math.max(rect.left + 2, x - 48), Math.max(rect.top + 2, y - 48)]
+}
 
 describe('Croatian contemporary licitar heart', () => {
   it('pipes the heart, hangs its ribbon and finishes once without saving a wish', () => {
@@ -117,7 +133,7 @@ describe('an optional explicit gift wish', () => {
 })
 
 function block(s: ReturnType<typeof mount>, name: string) {
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(.55, .55), new THREE.MeshBasicMaterial({ color: 0x775533, side: THREE.DoubleSide }))
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), new THREE.MeshBasicMaterial({ color: 0x775533, side: THREE.DoubleSide }))
   s.scene.updateMatrixWorld(true)
   mesh.position.lerpVectors(s.scene.getObjectByName(name)!.getWorldPosition(new THREE.Vector3()), s.camera.position, .18)
   mesh.quaternion.copy(s.camera.quaternion); s.scene.add(mesh); s.scene.updateMatrixWorld(true)
@@ -129,7 +145,7 @@ describe('visible object input and recoverable progress', () => {
     const s = mount(at, { isReducedMotion: () => true })
     const ribbon = s.scene.getObjectByName('licitar-ribbon-loop')!, anchor: [number, number, number] = [.115, 1.23, .015]
     expect(first(s, ribbon.localToWorld(new THREE.Vector3(...anchor))).object?.name).toBe('licitar-ribbon-loop')
-    const a = s.point('licitar-ribbon-loop', anchor), b = at === 1 ? s.point('licitar-stand-peg-cap') : a
+    const a = s.point('licitar-ribbon-loop', anchor), grip=s.point('licitar-heart-body',[.20,-.10,.158]), goal=goalPoint(s,'licitar-stand-peg-cap'), b: [number,number] = at === 1 ? [a[0]+goal[0]-grip[0],a[1]+goal[1]-grip[1]] : a
     event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b); event(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([at + 1])
   })
@@ -158,7 +174,7 @@ describe('visible object input and recoverable progress', () => {
   it.each([0, 1])('rejects drops behind external opaque geometry at checkpoint %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), source = at === 0 ? 'licitar-icing-grip' : 'licitar-heart-body', target = at === 0 ? 'licitar-heart-body' : 'licitar-stand-peg-cap'
     const a = s.point(source), b = s.point(target)
-    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b)
+    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', beforeArrival(s, b))
     const clear = block(s, target); event(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([]); clear(); drag(s, source, target); expect(s.progress).toEqual([at + 1])
   })
@@ -180,8 +196,8 @@ describe('visible object input and recoverable progress', () => {
     for (const at of [0, 1]) {
       let active = true; const s = mount(at, { isActive: () => active, isReducedMotion: () => true })
       const source = at === 0 ? 'licitar-icing-grip' : 'licitar-heart-body', target = at === 0 ? 'licitar-heart-body' : 'licitar-stand-peg-cap'
-      const object = s.scene.getObjectByName(at === 0 ? 'licitar-icing-cone' : 'licitar-heart')!, home = object.position.clone(), end = s.point(target)
-      event(s.hit, 'pointerdown', s.point(source)); event(s.hit, 'pointermove', end)
+      const object = s.scene.getObjectByName(at === 0 ? 'licitar-icing-cone' : 'licitar-heart')!, home = object.position.clone(), end = goalPoint(s, target)
+      event(s.hit, 'pointerdown', s.point(source)); event(s.hit, 'pointermove', beforeArrival(s, end))
       expect(object.position.equals(home)).toBe(false)
       if (kind === 'blur') window.dispatchEvent(new Event('blur'))
       else if (kind === 'pause') { active = false; s.run() }
@@ -232,7 +248,11 @@ describe('visible object input and recoverable progress', () => {
           const target = first(s, cue.destination.getWorldPosition(new THREE.Vector3()))
           expect(target.object?.name).toBe(cue.destination.name); expect(Math.abs(target.q.x)).toBeLessThan(.95); expect(Math.abs(target.q.y)).toBeLessThan(.95)
         } else if (cue.destination) {
-          const target = first(s, cue.destination())
+          const goal = cue.destination().clone()
+          // A carried body's destination is its final grip, above the current
+          // table position. Check its real final surface after it has hung.
+          if (at === 1) { s.button.click(); s.run() }
+          const target = first(s, goal)
           expect(target.object?.name).toBe('licitar-heart-body'); expect(Math.abs(target.q.x)).toBeLessThan(.95); expect(Math.abs(target.q.y)).toBeLessThan(.95)
         }
       }
@@ -282,12 +302,12 @@ describe('physical craft and owned resources', () => {
     })
     expect(count).toBeGreaterThan(200)
   })
-  it('requires eight pixels of real travel and settles immediately when reduced motion is switched on', () => {
+  it('rejects an unfinished placement and settles an accepted target when reduced motion is switched on', () => {
     let reduced = false; const s = mount(0, { isReducedMotion: () => reduced }), a = s.point('licitar-icing-grip'), target = s.point('licitar-heart-body')
     const short: [number, number] = [a[0] + 7.9, a[1]]
     event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', short); event(s.hit, 'pointerup', short); s.run()
     expect(s.progress).toEqual([])
-    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', [a[0] + 8, a[1]]); event(s.hit, 'pointerup', target); s.instance.update(.025)
+    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', target); event(s.hit, 'pointerup', target); s.instance.update(.025)
     expect(s.progress).toEqual([]); reduced = true; s.instance.update(.025); expect(s.progress).toEqual([1])
     expect(s.scene.getObjectByName('licitar-original-icing')!.visible).toBe(true)
   })

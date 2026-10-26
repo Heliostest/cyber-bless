@@ -81,6 +81,16 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
   return { q, object: ray.intersectObjects(visible, false)[0]?.object }
 }
 
+function beforeArrival(s: ReturnType<typeof mount>, goal: [number, number]): [number, number] {
+  let selected: { object: THREE.Object3D; cue: InteractionCue } | undefined
+  s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.kind === 'drag' && cue.destination) selected = { object, cue } })
+  if (!selected) return goal
+  const { object, cue } = selected, canvas = s.overlay.parentElement!.querySelector('canvas')!, rect = canvas.getBoundingClientRect()
+  const source = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(s.camera)
+  const x = rect.left + (source.x + 1) * rect.width / 2, y = rect.top + (1 - source.y) * rect.height / 2
+  return [Math.max(rect.left + 2, x - 48), Math.max(rect.top + 2, y - 48)]
+}
+
 describe('Åland original wooden sailing model', () => {
   it('requires the mast grip, then the deck handle, then one quiet tap', () => {
     const s = mount(0, { isReducedMotion: () => true })
@@ -130,7 +140,7 @@ describe('Åland original wooden sailing model', () => {
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('abandons unfinished physical movement on %s', kind => {
     let active = true; const s = mount(1, { isActive: () => active, isReducedMotion: () => true })
     const ship = s.scene.getObjectByName('ship-model')!, home = ship.position.clone(), end = s.point('ship-cradle-target')
-    event(s.hit, 'pointerdown', s.point('ship-deck-handle')); event(s.hit, 'pointermove', end)
+    event(s.hit, 'pointerdown', s.point('ship-deck-handle')); event(s.hit, 'pointermove', beforeArrival(s, end))
     if (kind === 'blur') window.dispatchEvent(new Event('blur'))
     else if (kind === 'pause') { active = false; s.run() }
     else event(s.hit, kind, end)

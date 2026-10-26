@@ -235,7 +235,7 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
   const ray = createPointerRay(canvas, camera), dragPlane = new THREE.Plane(), dragPoint = new THREE.Vector3(), dragOffset = new THREE.Vector3()
   const down = new THREE.Vector2()
   const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
-  const placementReady = (x: number, y: number) => checkpoint < 2 && maxTravel >= 8
+  const placementReady = (x: number, y: number) => checkpoint < 2
     && !touch.occluded(x, y, checkpoint === 0 ? breadRest : nest, { ignore: movingFood() })
     && placementHit(canvas, camera, source(), x, y, (px, py) => touch.hit(px, py, checkpoint === 0 ? breadRest : nest, { ignore: movingFood() }))
   const resetDrag = () => { dropFeedback.clear(); dragging = false; maxTravel = 0; if (!placement) restorePose() }
@@ -261,8 +261,14 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
         movingFood().position.y = THREE.MathUtils.clamp(movingFood().position.y, 0.86, 1.95)
         matrices(); dropFeedback.setReady(placementReady(x, y))
       }
+      if (checkpoint < 2 && placementReady(x,y) && pointer.finish()) { dragging = false; dropFeedback.clear(); beginPlacement(true) }
     },
     onRelease(x, y) {
+      if (dragging && checkpoint < 2 && ray.aim(x, y).ray.intersectPlane(dragPlane, dragPoint)) {
+        movingFood().position.copy(dragPoint).add(dragOffset)
+        movingFood().position.x = THREE.MathUtils.clamp(movingFood().position.x, -1.22, 1.18)
+        movingFood().position.y = THREE.MathUtils.clamp(movingFood().position.y, .86, 1.95)
+      }
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
       const valid = checkpoint < 2 ? dragging && placementReady(x, y)
         : checkpoint === 2 && maxTravel < 12 && touch.hit(x, y, finishPickables)
@@ -289,8 +295,8 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     ctx.onProgress?.(checkpoint)
     feedback.impact({ freqs: checkpoint === 1 ? [392, 493.88] : [440, 659.25], duration: 0.2, gain: 0.017, type: 'triangle' })
   }
-  function beginPlacement() {
-    if (!active() || pointer.isBusy() || placement || checkpoint >= 2) return
+  function beginPlacement(arrived = false) {
+    if (!active() || (pointer.isBusy() && !arrived) || placement || checkpoint >= 2) return
     placement = { step: checkpoint as 0 | 1, time: 0, from: movingFood().position.clone() }; dragging = false; sync()
     if (reduced()) placed()
   }

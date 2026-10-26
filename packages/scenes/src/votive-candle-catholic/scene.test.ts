@@ -45,7 +45,7 @@ function mount(at = 0, extra: Partial<SceneContext> = {}) {
     const input = overlay.querySelector<HTMLInputElement>('input')!
     input.value = text; input.form!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
   }
-  return { overlay, instance, button, hit, point, write, onProgress, saveWish, complete, pause: () => { active = false } }
+  return { canvas, overlay, instance, button, hit, point, write, onProgress, saveWish, complete, pause: () => { active = false } }
 }
 function pointer(el: HTMLElement, type: string, [clientX, clientY]: [number, number], id = 1) {
   const e = new Event(type, { bubbles: true, cancelable: true })
@@ -65,7 +65,7 @@ it.each([0, 1, 2, 3])('restores only the candle placement or wick cue at checkpo
     return cues
   }
   expect(enabled().map(({ object }) => object.name)).toEqual(at === 0 ? ['votive-held-target'] : at === 1 ? ['votive-wick-target'] : [])
-  if (at === 0) expect(enabled()[0].cue.destination).toBe(scene.getObjectByName('votive-placement-target'))
+  if (at === 0) expect(typeof enabled()[0].cue.destination).toBe('function')
   active = false
   expect(enabled()).toEqual([])
 })
@@ -100,7 +100,7 @@ it('uses real object rays for placement and lighting and rejects cancellation', 
   pointer(s.hit, 'pointercancel', s.point('votive-placement-target'))
   expect(s.onProgress).not.toHaveBeenCalled()
   pointer(s.hit, 'pointerdown', s.point('votive-held-target'))
-  pointer(s.hit, 'pointermove', s.point('votive-placement-target'))
+  const cue=(rendered.scene as THREE.Scene).getObjectByName('votive-held-target')!.userData.interactionCues[0] as InteractionCue,d=cue.destination!,g=(typeof d==='function'?d():d.getWorldPosition(new THREE.Vector3())).project(rendered.camera as THREE.Camera),r=s.canvas.getBoundingClientRect(),goal:[number,number]=[r.left+(g.x+1)*r.width/2,r.top+(1-g.y)*r.height/2];pointer(s.hit, 'pointermove', goal)
   pointer(s.hit, 'pointerup', s.point('votive-placement-target'))
   expect(s.onProgress).toHaveBeenCalledExactlyOnceWith(1)
   pointer(s.hit, 'pointerdown', s.point('votive-wick-target'))

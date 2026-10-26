@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { placementHit } from '../placement-hit'
 import { createPathSweep } from '../path-sweep'
 import { createTouchTarget } from '../touch-target'
 import {
@@ -178,7 +179,7 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
       down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; traceMoved = false; windowPath.reset(); feedback.prepare()
       if (checkpoint === 1) plane.set(new THREE.Vector3(0, 0, 1), -WINDOW_START.z)
       else if (checkpoint === 0) {
-        plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), brush.position)
+        plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), tip.getWorldPosition(new THREE.Vector3()))
         if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(brush.position).sub(point)
       }
     },
@@ -189,11 +190,16 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
       else if (ray.aim(x, y).ray.intersectPlane(plane, point)) {
         brush.position.copy(point).add(offset); brush.position.x = THREE.MathUtils.clamp(brush.position.x, -1.35, 1.1)
         brush.position.y = THREE.MathUtils.clamp(brush.position.y, .76, 2.3); matrices()
+        if (maxTravel > 0 && !touch.occluded(x,y,routeOrigin,{ignore:brush}) && placementHit(canvas,camera,tip,x,y,(px,py)=>touch.hit(px,py,routeOrigin,{ignore:brush})) && pointer.finish()) { dragging = false; begin(true,true) }
       }
     },
     onRelease(x, y) {
+      if (dragging && checkpoint === 0 && ray.aim(x,y).ray.intersectPlane(plane,point)) {
+        brush.position.copy(point).add(offset); brush.position.x = THREE.MathUtils.clamp(brush.position.x, -1.35, 1.1)
+        brush.position.y = THREE.MathUtils.clamp(brush.position.y, .76, 2.3)
+      }
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = Number.isFinite(x) && Number.isFinite(y) && (checkpoint === 0 ? dragging && maxTravel > 8 && touch.hit(x, y, routeOrigin, { ignore: brush })
+      const valid = Number.isFinite(x) && Number.isFinite(y) && (checkpoint === 0 ? dragging && maxTravel > 0 && !touch.occluded(x,y,routeOrigin,{ignore:brush}) && placementHit(canvas,camera,tip,x,y,(px,py)=>touch.hit(px,py,routeOrigin,{ignore:brush}))
         : checkpoint === 1 ? dragging && traceMoved && windowReady(x, y)
         : checkpoint === 2 && maxTravel < 12 && ray.hits(x, y, finishPickables))
       dragging = false
@@ -216,8 +222,8 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
     checkpoint = (motion.step + 1) as Checkpoint; motion = null; restorePose(); sync(); ctx.onProgress?.(checkpoint)
     feedback.impact({ freqs: checkpoint === 1 ? [392, 493.88] : [440, 659.25], duration: .22, gain: .017, type: 'triangle' })
   }
-  function begin(guided = false) {
-    if (!active() || pointer.isBusy() || motion || checkpoint >= 2) return
+  function begin(guided = false, placed = false) {
+    if (!active() || (pointer.isBusy() && !placed) || motion || checkpoint >= 2) return
     motion = { step: checkpoint as 0 | 1, time: 0, from: brush.position.clone(), guided }; dragging = false; sync()
     if (reduced()) settled()
   }

@@ -3,7 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas } from '../touch-target'
 import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createPrayerFlagsModel } from './model'
@@ -11,9 +11,9 @@ import { createPrayerFlagsModel } from './model'
 type Checkpoint = 0 | 1 | 2 | 3
 const ACTIONS = ['抬起蓝旗一端', '展开完整旗串', '挂稳黄旗一端']
 const HINTS = [
- '按住蓝旗向上短拖，将这一端挂到高处。',
- '按住黄旗向右短拖，舒展开完整的五色旗串。',
- '按住黄旗向上短拖，把另一端也挂稳。',
+ '托住蓝旗一端，将绳环移到左侧高处的提示标记，靠近后挂稳。',
+ '托住黄旗一端，将绳环移到右侧支点的提示标记，舒展完整的五色旗串。',
+ '托住黄旗一端，将绳环移到右侧高处的提示标记，把另一端也挂稳。',
  '五色经幡在风中轻扬。愿一切众生安康。',
 ]
 
@@ -43,8 +43,16 @@ export function createPrayerFlags(ctx: SceneContext): SceneInstance {
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
   const restore = () => pose(at, 0)
+  const loopFor=(step:number)=>model.loops[step===0?0:1]!
+  const loopGoals=model.targets.map((_,i)=>{model.pose(i,1);return loopFor(i).getWorldPosition(new THREE.Vector3())});model.pose(0,0)
+  const project=(point:THREE.Vector3)=>{const p=point.project(camera),r=canvas.getBoundingClientRect();return new THREE.Vector2(r.left+(p.x+1)*r.width/2,r.top+(1-p.y)*r.height/2)}
+  const guide=(step:number)=>{const goal=loopGoals[step]!.clone().project(camera),source=model.targets[step]!.localToWorld(model.anchors[step]!.clone()).project(camera),contact=loopFor(step).getWorldPosition(new THREE.Vector3()).project(camera);goal.x+=source.x-contact.x;goal.y+=source.y-contact.y;return goal.unproject(camera)}
+  const railStart=new THREE.Vector2(),railPath=new THREE.Vector2();let railRadius=0
+  const prepareRail=(x:number,y:number)=>{const from=project(loopFor(at).getWorldPosition(new THREE.Vector3())),goal=project(loopGoals[at]!.clone());railStart.set(x,y);railPath.copy(goal).sub(from);railRadius=Math.min(22,railPath.length()*.42)}
+  const moveRail=(x:number,y:number)=>{if(!insideCanvas(canvas,x,y))return false;const n=THREE.MathUtils.clamp(new THREE.Vector2(x,y).sub(railStart).dot(railPath)/Math.max(railPath.lengthSq(),1e-9),0,1);pose(at,n);return n>0&&project(loopFor(at).getWorldPosition(new THREE.Vector3())).distanceTo(project(loopGoals[at]!.clone()))<=railRadius&&!touch.occluded(x,y,model.targets[at]!,{ignore:model.root})}
+
   const directions: [number, number][] = [[0,-1],[1,0],[0,-1]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: directions[i], label: ACTIONS[i]!, anchor: model.anchors[i]!.toArray(), priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', destination:()=>guide(i),targetLabel:'绳环挂点', label: ACTIONS[i]!, anchor: model.anchors[i]!.toArray(), priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
   const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
@@ -54,21 +62,9 @@ export function createPrayerFlags(ctx: SceneContext): SceneInstance {
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x, y, model.roots[at]!) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
-    onMove(x, y) {
-      if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
-      pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
-      const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
-      maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
-      // Held input previews the current motion; valid release completes the placement.
-      pose(at, THREE.MathUtils.clamp(along / 60, 0, 1) * .20)
-      updateDirectionalDragHint(ui.hintEl, !invalid && completesDirectionalDrag({ along, end: along, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel: pathTravel }), HINTS[at]!, safe)
-    },
-    onRelease(x, y) {
-      const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
-      const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
-      if (valid) advance(); else reset()
-    }, onCancel: reset,
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0;prepareRail(x,y) },
+    onMove(x,y){if(!Number.isFinite(x)||!Number.isFinite(y)){invalid=true;return}if(!invalid&&moveRail(x,y)&&pointer.finish())advance(true)},
+    onRelease(x,y){if(!invalid&&moveRail(x,y))advance();else reset()    }, onCancel: reset,
   })
   const sync = () => {
     if (motion || at === 3) delete ui.hintEl.dataset.ready
@@ -88,7 +84,7 @@ export function createPrayerFlags(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(accepted=false) { if (!inputActive() || (pointer.isBusy() && !accepted) || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {

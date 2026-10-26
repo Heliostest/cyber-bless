@@ -3,18 +3,14 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPosePlacement } from '../pose-placement'
 import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createTangramModel } from './model'
 
 type Checkpoint = 0 | 1 | 2 | 3
 const ACTIONS = ['向左合入三角片', '向上转入方片', '向右转入斜方片']
-const HINTS = [
-  '按住右侧蓝色小三角片向左短拖，让它合入方形的空隙。',
-  '按住前方紫色方片向上短拖，轻转一个角，接上相邻的木片。',
-  '按住左侧玫瑰色斜方片向右短拖，转入最后一处空隙。',
-  '七块木片合成一方，细细的拼缝留住每一块的颜色。',
-]
+const HINTS = ["握住蓝色小三角片，挪到方形里对应的空隙。","握住紫色方片，挪到对应空隙，木片会轻转归位。","握住玫瑰色斜方片，挪到最后的空隙，轻轻落稳。","七块木片合成一方，细细的拼缝留住每一块的颜色。"]
 const MOVING = ['小三角片轻轻合入……', '方片转过一个角，缓缓落下……', '斜方片转入，七巧归方……']
 const ease = (t: number) => t * t * (3 - 2 * t)
 
@@ -23,7 +19,7 @@ export function createChineseTangram(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
@@ -38,11 +34,12 @@ export function createChineseTangram(ctx: SceneContext): SceneInstance {
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3, near: .1, far: 15 })
   const model = createTangramModel(); scene.add(model.subject)
+  const placement = createPosePlacement(canvas, camera, model, scene), spatialSteps = new Set([0,1,2])
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
   const restore = () => pose(at, 0)
   const directions: [number, number][] = [[-1,0],[0,-1],[1,0]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: directions[i], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(spatialSteps.has(i) ? { destination: () => placement.destination(i), targetLabel: '挪到这里' } : { direction: directions[i] }), label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const nearest = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
@@ -50,16 +47,17 @@ export function createChineseTangram(ctx: SceneContext): SceneInstance {
     return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
   }
   const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
+  const reset = () => { placement.cancel(); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); const hit = nearest(x, y); return !!hit && (hit === model.roots[at] || model.roots[at]!.getObjectById(hit.id) === hit) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (spatialSteps.has(at) && !placement.begin(at, x, y)) pointer.cancel() },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
+      if (spatialSteps.has(at)) { if (!invalid && placement.move(x, y) && pointer.finish()) { placement.capture(); advance(true) }; return }
       pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
       const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
       maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
@@ -67,6 +65,7 @@ export function createChineseTangram(ctx: SceneContext): SceneInstance {
       updateDirectionalDragHint(ui.hintEl, !invalid && completesDirectionalDrag({ along, end: along, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel: pathTravel }), HINTS[at]!, safe)
     },
     onRelease(x, y) {
+      if (spatialSteps.has(at)) { if (!invalid && placement.move(x, y)) { placement.capture(); advance(true) } else reset(); return }
       const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
       const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
       if (valid) advance(); else reset()
@@ -83,14 +82,14 @@ export function createChineseTangram(ctx: SceneContext): SceneInstance {
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
-    at = (motion.step + 1) as Checkpoint; motion = null; restore()
+    placement.settle(1); placement.cancel(); at = (motion.step + 1) as Checkpoint; motion = null; restore()
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [523.25], duration: .09, gain: .003, type: 'sine' })
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: at, time: 0, from: amount, placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
@@ -120,7 +119,7 @@ export function createChineseTangram(ctx: SceneContext): SceneInstance {
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
-      if (motion) { motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85); pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time))); if (motion.time === 1) settle() }
+      if (motion) { motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.placed ? .28 : .85)); pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time))); placement.settle(ease(motion.time)); matrices(); if (motion.time === 1) settle() }
       if (active()) { matrices(); style.render() }
     },
     dispose() {

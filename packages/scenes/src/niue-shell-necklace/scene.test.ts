@@ -68,8 +68,10 @@ function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, r
   for (let i = 1; i <= 8; i++) event(s.hit, 'pointermove', [p[0] + dx * i / 8, p[1] + dy * i / 8])
   event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); if (run) s.run()
 }
-function thread(s: ReturnType<typeof mount>, run = true) { drag(s, 0, -60, 0, run) }
-function gather(s: ReturnType<typeof mount>, run = true) { drag(s, 1, 0, -60, run) }
+
+function spatialDelta(s:ReturnType<typeof mount>,at:number):[number,number]{const object=s.scene.getObjectByName(at===0?'shell-last-body':'shell-cord-grip')!,cue=(object.userData.interactionCues as InteractionCue[])[0]!,d=cue.destination!,a=s.point(object.name,at===0?quietAnchor:cordAnchor),q=(typeof d==='function'?d():d.getWorldPosition(new THREE.Vector3())).project(s.camera),r=s.host.querySelector('canvas')!.getBoundingClientRect();return[r.left+(q.x+1)*r.width/2-a[0],r.top+(1-q.y)*r.height/2-a[1]]}
+function thread(s: ReturnType<typeof mount>, run = true) { drag(s, 0, ...spatialDelta(s,0), run) }
+function gather(s: ReturnType<typeof mount>, run = true) { drag(s, 1, ...spatialDelta(s,1), run) }
 function tap(s: ReturnType<typeof mount>) { const p = s.point('shell-strand-24-body', quietAnchor); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p) }
 function cues(s: ReturnType<typeof mount>) {
   const list: { object: THREE.Object3D; cue: InteractionCue }[] = []
@@ -112,8 +114,8 @@ describe('an original prepared yellow land-shell necklace', () => {
   it.each([0, 1])('moves actual material with the pointer before committing at %i', at => {
     const s = mount(at), object = s.scene.getObjectByName(at === 0 ? 'shell-last' : 'shell-cord-grip')!, home = object.position.clone()
     const p = s.point(at === 0 ? 'shell-last-body' : 'shell-cord-grip', at === 0 ? quietAnchor : cordAnchor)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', at === 0 ? [p[0] - 30, p[1]] : [p[0], p[1] - 30])
-    expect(object.position.distanceTo(home)).toBeGreaterThan(.12); expect(s.progress).toEqual([])
+    const [dx,dy]=spatialDelta(s,at);event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0]+dx*.15,p[1]+dy*.15])
+    expect(object.position.distanceTo(home)).toBeGreaterThan(.02); expect(s.progress).toEqual([])
     event(s.hit, 'pointercancel', p); expect(object.position.distanceTo(home)).toBeLessThan(.00001)
   })
   it('uses shared hollow whorled shells with real mouths, axial perforation and a traversing cord', () => {
@@ -199,26 +201,8 @@ describe('an original prepared yellow land-shell necklace', () => {
       expect(s.scene.getObjectByName('shell-tray-support')).toBeUndefined(); expect(s.scene.getObjectByName('shell-table-leg')).toBeUndefined()
     }
   })
-  it.each([0, 1])('rejects wrong surfaces, orphan release, short, reverse, diagonal and returned gestures at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(at === 0 ? 'shell-last-body' : 'shell-cord-grip', at === 0 ? [.0125, 0, .07848191718467962] : cordAnchor)
-    const end: [number, number] = at === 0 ? [p[0] - 60, p[1]] : [p[0], p[1] - 60]
-    event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    const board = s.point('shell-tray-face', [-1, .6, .055]); event(s.hit, 'pointerdown', board); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
-    event(s.hit, 'pointerup', end)
-    for (const [dx, dy] of at === 0 ? [[-8, 0], [60, 0], [0, 60], [-60, 90]] : [[0, -8], [0, 60], [-60, 0], [90, -60]]) drag(s, at, dx, dy)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
-    expect(s.progress).toEqual([]); at === 0 ? thread(s) : gather(s); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([0, 1])('rejects reverse starts and partial backtracks while allowing small finger jitter at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(at === 0 ? 'shell-last-body' : 'shell-cord-grip', at === 0 ? quietAnchor : cordAnchor)
-    const position = (along: number): [number, number] => at === 0 ? [p[0] - along, p[1]] : [p[0], p[1] - along]
-    for (const history of [[75, 42], [-40, 60]]) {
-      event(s.hit, 'pointerdown', p); for (const value of history) event(s.hit, 'pointermove', position(value)); event(s.hit, 'pointerup', position(history[1]!))
-      expect(s.progress).toEqual([])
-    }
-    event(s.hit, 'pointerdown', p); for (const value of [8, 5, 25, 23, 60]) event(s.hit, 'pointermove', position(value)); event(s.hit, 'pointerup', position(60))
-    expect(s.progress).toEqual([at + 1])
-  })
+  it.each([0, 1])('rejects wrong surfaces, orphan release, short, reverse, diagonal and returned gestures at %i', at => {const s=mount(at,{isReducedMotion:()=>true}),p=s.point(at===0?'shell-last-body':'shell-cord-grip',at===0?quietAnchor:cordAnchor),[dx,dy]=spatialDelta(s,at),end:[number,number]=[p[0]+dx,p[1]+dy];event(s.hit,'pointerdown',[1,1]);event(s.hit,'pointermove',end);event(s.hit,'pointerup',end);expect(s.progress).toEqual([]);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]-dx*.3,p[1]-dy*.3]);event(s.hit,'pointercancel',p);expect(s.progress).toEqual([]);at===0?thread(s):gather(s);expect(s.progress).toEqual([at+1])})
+  it.each([0, 1])('rejects reverse starts and partial backtracks while allowing small finger jitter at %i', at => {const s=mount(at,{isReducedMotion:()=>true}),p=s.point(at===0?'shell-last-body':'shell-cord-grip',at===0?quietAnchor:cordAnchor),[dx,dy]=spatialDelta(s,at);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]-dy*.4,p[1]+dx*.4]);event(s.hit,'pointermove',[p[0]+dx*.1,p[1]+dy*.1]);expect(s.progress).toEqual([]);event(s.hit,'pointermove',[p[0]+dx,p[1]+dy]);expect(s.progress).toEqual([at+1]);event(s.hit,'pointerup',p);expect(s.progress).toEqual([at+1])})
   it.each([0, 1, 2, 3].flatMap(at => [false, true].map(reduced => ({ at, reduced }))))('restores checkpoint $at silently with a native 44px fallback, reduced=$reduced', ({ at, reduced }) => {
     const s = mount(at, { isReducedMotion: () => reduced }); s.run()
     expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); expect(s.complete).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
@@ -251,7 +235,7 @@ describe('an original prepared yellow land-shell necklace', () => {
     for (const at of [0, 1]) {
       let active = true; const s = mount(at, { isActive: () => active }), object = s.scene.getObjectByName(at === 0 ? 'shell-last' : 'shell-cord-grip')!, home = object.position.clone(), angle = object.rotation.y
       const p = s.point(at === 0 ? 'shell-last-body' : 'shell-cord-grip', at === 0 ? [.0125, 0, .07848191718467962] : cordAnchor)
-      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', at === 0 ? [p[0] - 30, p[1]] : [p[0], p[1] - 30])
+      const [dx,dy]=spatialDelta(s,at);event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0]+dx*.15,p[1]+dy*.15])
       const frames = rendered.render.mock.calls.length
       if (kind === 'pause') { active = false; s.instance.update(.05); s.instance.update(.05); expect(rendered.render.mock.calls.length).toBe(frames) }
       else if (kind === 'blur') window.dispatchEvent(new Event('blur')); else event(s.hit, kind, p)

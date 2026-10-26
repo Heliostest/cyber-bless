@@ -18,3 +18,10 @@ Dartmouth Folklore Archive 的 Jack Walker 条目《Hang an upturned horseshoe o
 2. [Hang an upturned horseshoe over your doorway to bring good luck — Dartmouth Folklore Archive](https://journeys.dartmouth.edu/folklorearchive/2020/06/03/hang-an-upturned-horseshoe-over-your-doorway-to-bring-good-luck/)，Jack Walker，2020-06-03。2026-10-23根审web首次502，随后直接HTTP200抓取同URL HTML，实际读Informant Data、Contextual Data、Item与Transcript相关正文并保存审阅快照。独立审web超时后实际读该HTML正文，不能写成独立web读取成功；未听音频，不复制无关私人住址。
 
 更细的主张支持、缺口和验证记录见[研究](../../docs/research/2026-10-23-horseshoe-doorway-luck.md)与[场景说明](../../packages/scenes/src/horseshoe-doorway-luck/README.md)。
+
+
+## 2026-10-26 本产品输入更新
+
+适用场景：`horseshoe-doorway-luck`。分别拿起三枚蹄铁，送到门梁各自挂点范围；到位后短落定，让上孔与双柱穿接并承托。操作 0、1、2 的物件锚点或实际布面覆盖进入接收范围后自动接续短落定；方向和固定拖距不再充当这些摆放动作的成功条件。此处只描述本应用当前输入，较早产品呈现中的摆放松手验收已经更新。
+
+原有器物、动作顺序与文化支持范围保持；接受区、自动落定、触摸所有权及辅助按钮是产品设计，不是新增传统要求。本轮未新增文化事实，未把既有卡片或技术测试作为传统证据，也未重新登记外部链接为已读。已有证据的正文段落、访问状态和限制沿用本卡及其链接的逐项研究；本次产品同步与技术验证见[B 组记录](../../docs/research/2026-10-26-spatial-placement-audit-b.md)。

@@ -3,7 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas } from '../touch-target'
 import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createWagasaModel } from './model'
@@ -11,9 +11,9 @@ import { createWagasaModel } from './model'
 type Checkpoint = 0 | 1 | 2 | 3
 const ACTIONS = ['推环展伞', '轻旋伞柄', '收伞留影']
 const HINTS = [
- '按住伞轴上的木环向上短拖，撑杆带着竹骨展开，纸面舒成一圈暖色。',
+ '沿伞轴把木环推到上方提示标记，撑杆带竹骨展开，纸面舒成一圈暖色。',
  '按住下端伞柄向右短拖，轻轻转动纸伞，让浅色伞面转向身旁。',
- '按住木环向下短拖，竹骨缓缓收拢，纸面沿折痕合在一起。',
+ '沿伞轴把木环移到下方提示标记，竹骨缓缓收拢，纸面沿折痕合在一起。',
  '纸伞收拢，竹骨与纸褶相依，浅色的一面留住阳光里的轻影。',
 ]
 const MOVING = ['木环升起，竹骨与纸面一起舒展……', '伞柄轻转，暖色纸面在阳光里换一个方向……', '木环降下，纸面沿着竹骨慢慢收拢……']
@@ -42,8 +42,23 @@ export function createJapaneseWagasa(ctx: SceneContext): SceneInstance {
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
   const restore = () => pose(at, 0)
+  const isSpatialStep=(step:number)=>step !== 1
+  const limitPoints=model.targets.map((target,i)=>{model.pose(i,1);return target!.localToWorld(new THREE.Vector3(...model.anchors[i]!))})
+  model.pose(0,0)
+  const railStart=new THREE.Vector2(),railPath=new THREE.Vector2()
+  let railRadius=0
+  const screenPoint=(point:THREE.Vector3)=>{const p=point.project(camera),r=canvas.getBoundingClientRect();return new THREE.Vector2(r.left+(p.x+1)*r.width/2,r.top+(1-p.y)*r.height/2)}
+  const prepareRail=(x:number,y:number)=>{const a=screenPoint(model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!))),b=screenPoint(limitPoints[at]!.clone());railStart.set(x,y);railPath.copy(b).sub(a);railRadius=Math.min(22,railPath.length()*.42)}
+  const moveRail=(x:number,y:number)=>{
+    if(!insideCanvas(canvas,x,y))return false
+    const n=THREE.MathUtils.clamp(new THREE.Vector2(x,y).sub(railStart).dot(railPath)/Math.max(railPath.lengthSq(),1e-9),0,1)
+    pose(at,n)
+    const contact=screenPoint(model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!))),goal=screenPoint(limitPoints[at]!.clone())
+    return n>0 && contact.distanceTo(goal)<=railRadius && !touch.occluded(x,y,model.targets[at]!,{ignore:model.subject})
+  }
+
   const directions: [number, number][] = [[0,-1],[1,0],[0,1]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: directions[i], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(isSpatialStep(i)?{destination:()=>limitPoints[i]!.clone(),targetLabel:'伞环限位'}:{direction:directions[i]}), label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
   const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
@@ -53,9 +68,10 @@ export function createJapaneseWagasa(ctx: SceneContext): SceneInstance {
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x, y, model.roots[at]!) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if(isSpatialStep(at))prepareRail(x,y) },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
+      if(isSpatialStep(at)){if(!invalid && moveRail(x,y) && pointer.finish())advance(true);return}
       pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
       const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
       maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
@@ -64,6 +80,7 @@ export function createJapaneseWagasa(ctx: SceneContext): SceneInstance {
       updateDirectionalDragHint(ui.hintEl, !invalid && completesDirectionalDrag({ along, end: along, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel: pathTravel }), HINTS[at]!, safe)
     },
     onRelease(x, y) {
+      if(isSpatialStep(at)){if(!invalid && moveRail(x,y))advance();else reset();return}
       const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
       const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
       if (valid) advance(); else reset()
@@ -87,7 +104,7 @@ export function createJapaneseWagasa(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(accepted=false) { if (!inputActive() || (pointer.isBusy() && !accepted) || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {

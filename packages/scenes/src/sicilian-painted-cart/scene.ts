@@ -131,7 +131,6 @@ export function createSicilianPaintedCart(ctx: SceneContext): SceneInstance {
   const acceptsDrop = (x: number, y: number) => {
     if (!insideCanvas(canvas, x, y)) return false
     const target = checkpoint === 0 ? axleEnd : mat, ignore = moving()
-    if (touch.hit(x, y, target, { ignore })) return true
     if (touch.occluded(x, y, target, { ignore })) return false
     const contact = projectTouchPoint(canvas, camera, checkpoint === 0 ? hub : grip)
     return !!contact && touch.hit(contact.x, contact.y, target, { ignore })
@@ -140,13 +139,15 @@ export function createSicilianPaintedCart(ctx: SceneContext): SceneInstance {
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (notifying || transition || checkpoint === 3) return false; matrices(); return touch.hit(x, y, checkpoint === 0 ? looseWheel : grip) },
-    onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; notifyHost(() => feedback.prepare()); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), object.position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
+    onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; notifyHost(() => feedback.prepare()); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (checkpoint===0?hub:grip).getWorldPosition(new THREE.Vector3())); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
     onMove(x, y) {
       if (notifying) return
-      maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices(); dropFeedback.setReady(dragging && maxTravel >= 8 && acceptsDrop(x, y)) },
+      maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices(); dropFeedback.setReady(dragging && acceptsDrop(x, y)); if (checkpoint < 2 && acceptsDrop(x,y) && pointer.finish()) { dragging = false; dropFeedback.clear(); advance(true) } },
     onRelease(x, y) {
-      maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && acceptsDrop(x, y) : maxTravel < 12 && touch.hit(x, y, grip)
+      maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y))
+      if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset)
+      matrices()
+      const valid = checkpoint < 2 ? dragging && acceptsDrop(x, y) : maxTravel < 12 && touch.hit(x, y, grip)
       dragging = false; dropFeedback.clear(); if (valid) advance(); else reset()
     }, onCancel: reset,
   })
@@ -162,8 +163,8 @@ export function createSicilianPaintedCart(ctx: SceneContext): SceneInstance {
     notifyHost(() => ctx.onProgress?.(checkpoint)); if (disposed || !active()) return
     notifyHost(() => feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .013 }))
   }
-  function advance() {
-    if (notifying || !active() || pointer.isBusy() || transition || checkpoint === 3) return
+  function advance(placed = false) {
+    if (notifying || !active() || (pointer.isBusy() && !placed) || transition || checkpoint === 3) return
     if (checkpoint === 2) {
       checkpoint = 3; restore(); sync(); notifyHost(() => ctx.onProgress?.(3))
       if (!active()) return

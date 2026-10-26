@@ -3,7 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas } from '../touch-target'
 import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -147,10 +147,17 @@ export function createVenetianGlassBead(ctx: SceneContext): SceneInstance {
   }
   const pose = (step: 0 | 1, amount: number) => { if (step === 0) { winding = amount; warmth = amount } else { transfer = amount; lowering = 0 }; setPose() }
   const restore = () => { winding = at > 0 ? 1 : 0; transfer = lowering = at >= 2 ? 1 : 0; warmth = 0; setPose() }
+
+  transfer=1;lowering=0;setPose();const transferGoal=bead.localToWorld(new THREE.Vector3(...BEAD));transfer=0;setPose()
+  const railStart=new THREE.Vector2(),railPath=new THREE.Vector2();let railRadius=0
+  const project=(p:THREE.Vector3)=>{const q=p.project(camera),r=canvas.getBoundingClientRect();return new THREE.Vector2(r.left+(q.x+1)*r.width/2,r.top+(1-q.y)*r.height/2)}
+  const prepareRail=(x:number,y:number)=>{const from=project(bead.localToWorld(new THREE.Vector3(...BEAD))),goal=project(transferGoal.clone());railStart.set(x,y);railPath.copy(goal).sub(from);railRadius=Math.min(22,railPath.length()*.42)}
+  const moveRail=(x:number,y:number)=>{if(invalid||!insideCanvas(canvas,x,y))return false;const n=THREE.MathUtils.clamp(new THREE.Vector2(x,y).sub(railStart).dot(railPath)/Math.max(railPath.lengthSq(),1e-9),0,1);pose(1,n);return n>0&&project(bead.localToWorld(new THREE.Vector3(...BEAD))).distanceTo(project(transferGoal.clone()))<=railRadius&&!touch.occluded(x,y,bead,{ignore:subject})}
+
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
     addInteractionCue(grip, { kind: 'drag', direction: [0, -1], label: '向上转动金属杆柄', anchor: GRIP, priority: 3, enabled: enabled(0) }),
-    addInteractionCue(bead, { kind: 'drag', direction: [1, 0], label: '向右穿珠上绳', anchor: BEAD, priority: 3, enabled: enabled(1) }),
+    addInteractionCue(bead, { kind: 'drag', destination:()=>transferGoal.clone(),targetLabel:'玻珠穿绳位置', label: '穿珠上绳', anchor: BEAD, priority: 3, enabled: enabled(1) }),
     addInteractionCue(bead, { kind: 'tap', label: '轻点玻珠静观', anchor: BEAD, priority: 3, enabled: enabled(2) }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
@@ -175,10 +182,11 @@ export function createVenetianGlassBead(ctx: SceneContext): SceneInstance {
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return nearestHit(x, y) === target() || touch.hit(x, y, target()) },
     onStart(x, y) {
       if (!prepareInput()) { pointer.cancel(); return }
-      down.set(x, y); previous.copy(down); dragging = at < 2; moved = invalid = false; maxTravel = pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0
+      down.set(x, y); previous.copy(down); dragging = at < 2; moved = invalid = false; maxTravel = pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0;if(at===1)prepareRail(x,y)
     },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
+      if(at===1){if(moveRail(x,y)&&pointer.finish()){dragging=false;advance(true)};return}
       pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
       const dx = x - down.x, dy = y - down.y
       along = at === 0 ? -dy : dx; maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along)
@@ -186,6 +194,7 @@ export function createVenetianGlassBead(ctx: SceneContext): SceneInstance {
       if (dragging) pose(at as 0 | 1, THREE.MathUtils.clamp(along / 60, 0, 1))
     },
     onRelease(x, y) {
+      if(at===1){const valid=dragging&&moveRail(x,y);dragging=false;if(valid)advance();else reset();return}
       const dx = x - down.x, dy = y - down.y, end = at === 0 ? -dy : dx
       const travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
       const valid = !invalid && Number.isFinite(x) && Number.isFinite(y) && (at < 2 ? dragging && moved && completesDirectionalDrag({ along, end, maxAlong, minAlong, backtrack, maxCross, cross: at === 0 ? dx : dy, travel })
@@ -208,8 +217,8 @@ export function createVenetianGlassBead(ctx: SceneContext): SceneInstance {
     at = (motion.step + 1) as Checkpoint; motion = null; restore()
     withHostCallbacks(() => { ctx.onProgress?.(at); if (callbackActive()) sound() })
   }
-  function advance() {
-    if (!inputActive() || pointer.isBusy() || motion || at === 3) return
+  function advance(accepted=false) {
+    if (!inputActive() || (pointer.isBusy() && !accepted) || motion || at === 3) return
     if (at === 2) {
       at = 3; restore(); withHostCallbacks(() => { ctx.onProgress?.(3); if (!callbackActive()) return; sound(); if (callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })) }); return
     }

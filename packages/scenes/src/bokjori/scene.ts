@@ -19,7 +19,7 @@ const COPY = {
   quiet: '福笊篱已挂好。轻触竹筛，静看岁首挂饰，把迎新的祝愿留在家中。',
   done: '福笊篱挂在墙上，寄托新年的纳福心意。',
   scooping: '竹笊篱轻轻舀起一小撮米…',
-  hanging: '把竹筛挂到木挂点，慢慢松手…',
+  hanging: '竹筛正轻轻落在木挂点上…',
   settling: '竹筛安静地垂下…',
   scoopAction: '试舀一小撮米', hangAction: '挂到木挂点', quietAction: '静看岁首挂饰',
 } as const
@@ -237,7 +237,7 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
     canStart(x, y) { return !motion && checkpoint < 3 && touch.hit(x, y, scoop) },
     onStart(x, y) {
       dragging = true; pointerStart.set(x, y); feedback.prepare()
-      dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), scoop.position)
+      dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), source.getWorldPosition(new THREE.Vector3()))
       if (ray.aim(x, y).ray.intersectPlane(dragPlane, dragPoint)) dragOffset.copy(scoop.position).sub(dragPoint)
     },
     onMove(x, y) {
@@ -248,8 +248,15 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
         scoop.position.y = THREE.MathUtils.clamp(scoop.position.y, 0.52, 1.22)
         world.updateMatrixWorld(true); dropFeedback.setReady(placementReady(x, y))
       }
+      if (checkpoint < 2 && placementReady(x,y) && pointer.finish()) { dragging = false; dropFeedback.clear(); begin() }
     },
     onRelease(x, y) {
+      if (dragging && checkpoint < 2 && ray.aim(x, y).ray.intersectPlane(dragPlane, dragPoint)) {
+        scoop.position.copy(dragPoint).add(dragOffset)
+        scoop.position.x = THREE.MathUtils.clamp(scoop.position.x, -1.1, 1.1)
+        scoop.position.y = THREE.MathUtils.clamp(scoop.position.y, .52, 1.22)
+        world.updateMatrixWorld(true)
+      }
       const quietTap = checkpoint !== 2 || Math.hypot(x - pointerStart.x, y - pointerStart.y) < 12
       const valid = dragging && active() && !motion && quietTap && (checkpoint < 2 ? placementReady(x, y) : touch.hit(x, y, scoop))
       dropFeedback.clear(); dragging = false

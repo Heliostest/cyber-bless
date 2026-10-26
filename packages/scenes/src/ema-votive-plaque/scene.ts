@@ -1,3 +1,4 @@
+import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -158,6 +159,8 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
     if (!hanging && step < 3) { plaque.position.copy(HELD); plaque.rotation.y = angleTarget }
     plaque.rotation.z = 0
   }
+  const placementReady = (x: number, y: number) => step === 2 && Math.hypot(x - downX, y - downY) > 0
+    && placementHit(canvas, camera, body, x, y, (px, py) => ray.hits(px, py, [target]))
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: canAct,
     canStart(x, y) { matrices(); return !hanging && (step === 0 || step === 2 || returning && step === 1) && ray.hits(x, y, [body]) },
@@ -172,6 +175,7 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
         point.add(dragOffset)
         plaque.position.set(THREE.MathUtils.clamp(point.x, -1.1, 1.1), THREE.MathUtils.clamp(point.y, 0.4, 2.15), HELD.z)
       }
+      if (dragging && placementReady(x, y) && pointer.finish()) { dragging = false; hang(true) }
     },
     onRelease(x, y) {
       dragging = false
@@ -182,7 +186,7 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
         if (ray.hits(x, y, [body])) leave(); else resetDrag()
       } else if (step === 2) {
         matrices()
-        if (ray.hits(x, y, [target])) hang(); else resetDrag()
+        if (placementReady(x, y)) hang(); else resetDrag()
       } else resetDrag()
     },
     onCancel: resetDrag,
@@ -221,8 +225,8 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
     feedback.impact({ freqs: [392, 587.33], duration: 0.28, gain: 0.025 })
     overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
-  function hang() {
-    if (!canAct() || pointer.isBusy() || step !== 2 || hanging) return
+  function hang(arrived = false) {
+    if (!canAct() || (pointer.isBusy() && !arrived) || step !== 2 || hanging) return
     dragging = false; hanging = true; hangT = 0; hangFrom.copy(plaque.position)
     sync()
     if (reduced()) complete()

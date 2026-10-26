@@ -62,7 +62,7 @@ function wind(s: Mounted, finish = 'pointerup') {
 }
 function clasp(s: Mounted, target = 'red-string-clasp-socket', finish = 'pointerup') {
   const from = s.point('red-string-clasp-head'), to = s.point(target)
-  pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', to); pointer(s.hit, finish, to); s.run()
+  pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', finish === 'pointerup' ? to : beforeArrival(s, to)); pointer(s.hit, finish, to); s.run()
 }
 function tap(s: Mounted) { const p = s.point('red-string-quiet-strand'); pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointerup', p); s.run() }
 function cues(s: Mounted) { const out: InteractionCue[] = []; s.scene.traverse(o => out.push(...(o.userData.interactionCues ?? []))); return out.filter(c => c.enabled()) }
@@ -74,6 +74,16 @@ function frontHit(s: Mounted, point: Point) {
     const material = (hit.object as THREE.Mesh).material as THREE.Material
     return material && material.visible && material.opacity > .1
   })?.object
+}
+
+function beforeArrival(s: ReturnType<typeof mount>, goal: [number, number]): [number, number] {
+  let selected: { object: THREE.Object3D; cue: InteractionCue } | undefined
+  s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.kind === 'drag' && cue.destination) selected = { object, cue } })
+  if (!selected) return goal
+  const { object, cue } = selected, canvas = s.overlay.parentElement!.querySelector('canvas')!, rect = canvas.getBoundingClientRect()
+  const source = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(s.camera)
+  const x = rect.left + (source.x + 1) * rect.width / 2, y = rect.top + (1 - source.y) * rect.height / 2
+  return [Math.max(rect.left + 2, x - 48), Math.max(rect.top + 2, y - 48)]
 }
 
 describe('red string self-care handwork', () => {

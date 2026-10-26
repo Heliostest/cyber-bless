@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPosePlacement } from '../pose-placement'
 import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -11,7 +12,7 @@ type XYZ = [number, number, number]
 type XY = [number, number]
 type Checkpoint = 0 | 1 | 2 | 3
 const COPY = {
-  title: '纸鸢乘风', fit: '拿住右边备好的纸翼，向左上方短拖，让纸面贴合竹骨。',
+  title: '纸鸢乘风', fit: '拿住右边备好的纸翼，移到竹骨上的提示位置，到位会自动贴合。',
   fly: '拿住木线轮的横柄，向下短拖收紧牵线，让纸鸢迎风抬起。',
   quiet: '轻点纸鸢的浅色胸口，静看竹骨、纸翼与牵线在阳光里相连。',
   fitting: '纸翼沿着对称的竹骨轻轻贴合…', flying: '牵线绷起，纸鸢迎着微风抬升…',
@@ -32,7 +33,7 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
   let dragging = false, moved = false, maxTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => active() && (ctx.isSoundEnabled?.() ?? true) })
-  const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: '向左上贴合纸翼' }, safe)
+  const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: '把纸翼贴合竹骨' }, safe)
   ui.actionBtn.style.minWidth = '44px'; ui.actionBtn.style.minHeight = '44px'
   const { scene, renderer } = createWarmStage(canvas)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -146,10 +147,11 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
     reel.position.set(.94, .53 - lift * .17, .48)
     updateLine()
   }
+  const carried = createPosePlacement(canvas,camera,{pose(_step,n){pose(n,0)},roots:[prepared],targets:[rightSkin],anchors:[[1.05,.34,.012]]},scene)
   const restore = () => pose(at > 0 ? 1 : 0, at >= 2 ? 1 : 0)
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
-    addInteractionCue(rightSkin, { kind: 'drag', direction: [-1, -1], label: '向左上贴合纸翼', anchor: [1.05, .34, .012], priority: 3, enabled: enabled(0) }),
+    addInteractionCue(rightSkin, { kind: 'drag', destination: () => carried.destination(0), targetLabel: '竹骨贴面', label: '拿住纸翼，贴近竹骨', anchor: [1.05, .34, .012], priority: 3, enabled: enabled(0) }),
     addInteractionCue(grip, { kind: 'drag', direction: [0, 1], label: '向下轻拉木线轮', anchor: [0, 0, .075], priority: 3, enabled: enabled(1) }),
     addInteractionCue(body, { kind: 'tap', label: '轻点纸鸢静看', anchor: [.08, .22, .014], priority: 3, enabled: enabled(2) }),
   ]
@@ -164,7 +166,7 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
     return ray.aim(x, y).intersectObjects(meshes, false)[0]
   }
   const direction = () => at === 0 ? new THREE.Vector2(-.8, -.6) : new THREE.Vector2(0, 1)
-  const reset = () => { dragging = moved = false; maxTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed && at < 2) restore() }
+  const reset = () => { carried.cancel(); dragging = moved = false; maxTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed && at < 2) restore() }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
@@ -173,27 +175,28 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
     canStart(x, y) { if (motion || at === 3) return false; matrices(); const hit = nearestHit(x, y); return belongs(hit?.object, at === 0 ? prepared : at === 1 ? reel : body) },
     onStart(x, y) {
       if (!prepareInput()) { pointer.cancel(); return }
-      down.set(x, y); dragging = at < 2; moved = false; maxTravel = maxCross = maxAlong = minAlong = backtrack = along = 0
+      down.set(x, y); dragging = at < 2; moved = false; maxTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (at===0) carried.begin(0,x,y)
     },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) return
+      if (at===0) { if (carried.move(x,y) && pointer.finish()) { carried.capture(); dragging=false; advance(true) }; return }
       const dx = x - down.x, dy = y - down.y, dir = direction()
       along = dx * dir.x + dy * dir.y; maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along)
       maxTravel = Math.max(maxTravel, Math.hypot(dx, dy)); maxCross = Math.max(maxCross, Math.abs(dx * dir.y - dy * dir.x)); moved ||= maxTravel > 0
-      if (dragging) { const amount = THREE.MathUtils.clamp(along / 60, 0, 1); at === 0 ? pose(amount, 0) : pose(1, amount) }
+      if (dragging) { const amount = THREE.MathUtils.clamp(along / 60, 0, 1); pose(1, amount) }
     },
     onRelease(x, y) {
       const dx = x - down.x, dy = y - down.y, dir = direction(), end = dx * dir.x + dy * dir.y
-      const valid = at < 2 ? dragging && moved && completesDirectionalDrag({ along, end, maxAlong, minAlong, backtrack, maxCross, cross: dx * dir.y - dy * dir.x, travel: maxTravel }, 42)
+      const valid = at === 0 ? dragging && carried.move(x,y) : at < 2 ? dragging && moved && completesDirectionalDrag({ along, end, maxAlong, minAlong, backtrack, maxCross, cross: dx * dir.y - dy * dir.x, travel: maxTravel }, 42)
         : maxTravel < 12 && Math.hypot(dx, dy) < 12 && belongs(nearestHit(x, y)?.object, body)
-      dragging = false; if (valid) advance(); else reset()
+      dragging = false; if (valid) { if (at===0) carried.capture(); advance(true) } else reset()
     }, onCancel: reset,
   })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, at === 0 ? '向左上贴合纸翼' : at === 1 ? '向下轻拉木线轮' : '轻点纸鸢静看', safe)
+    setSafeText(ui.actionBtn, at === 0 ? '把纸翼贴合竹骨' : at === 1 ? '向下轻拉木线轮' : '轻点纸鸢静看', safe)
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.fitting : COPY.flying : at === 0 ? COPY.fit : at === 1 ? COPY.fly : at === 2 ? COPY.quiet : COPY.done, safe)
   }
   function withHostCallbacks(work: () => void) { notifying = true; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
@@ -203,8 +206,8 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
     at = (motion.step + 1) as Checkpoint; motion = null; restore()
     withHostCallbacks(() => { ctx.onProgress?.(at); if (active()) feedback.impact({ freqs: [293.66, 440], duration: .12, gain: .006, type: 'sine' }) })
   }
-  function advance() {
-    if (!inputActive() || pointer.isBusy() || motion || at === 3) return
+  function advance(placed = false) {
+    if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return
     if (at === 2) {
       at = 3; restore(); withHostCallbacks(() => { ctx.onProgress?.(3); if (!active()) return; feedback.impact({ freqs: [293.66, 392], duration: .18, gain: .006 }); if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })) }); return
     }
@@ -232,7 +235,7 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       if (motion) {
         motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .82)
-        const amount = THREE.MathUtils.lerp(motion.from, 1, ease(motion.time)); motion.step === 0 ? pose(amount, 0) : pose(1, amount)
+        const amount = THREE.MathUtils.lerp(motion.from, 1, ease(motion.time)); motion.step === 0 ? pose(amount, 0) : pose(1, amount); if (motion.step===0) carried.settle(ease(motion.time))
         if (motion.time === 1) settle()
       } else if (at >= 2 && !pointer.isBusy()) {
         if (ctx.isReducedMotion?.()) { if (kite.rotation.z !== 0 || kite.rotation.y !== 0) restore() }

@@ -61,14 +61,20 @@ const headAnchor: [number, number, number] = [0, .035, .13]
 const wingAnchor: [number, number, number] = [1.18, -.14, .545]
 const targetName = (at: number) => at === 1 ? 'dragonfly-wing-front-right' : 'dragonfly-head'
 const anchor = (at: number): [number, number, number] => at === 1 ? wingAnchor : headAnchor
-const delta = (at: number): [number, number] => at === 0 ? [0, -60] : [60, 0]
+const originalDelta = (at: number): [number, number] => at === 0 ? [0, -60] : [60, 0]
+function delta(at: number,s: ReturnType<typeof mount>): [number,number] {
+  const cue=cues(s)[0]?.cue
+  if(at!==0 || typeof cue?.destination !== 'function') return originalDelta(at)
+  const rect=s.host.querySelector('canvas')!.getBoundingClientRect(), goal=cue.destination().project(s.camera), source=s.point(targetName(at),anchor(at))
+  return [rect.left+(goal.x+1)*rect.width/2-source[0],rect.top+(1-goal.y)*rect.height/2-source[1]]
+}
 function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, run = true) {
   const p = s.point(targetName(at), anchor(at)); event(s.hit, 'pointerdown', p)
   for (let i = 1; i <= 8; i++) event(s.hit, 'pointermove', [p[0] + dx * i / 8, p[1] + dy * i / 8])
   event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); if (run) s.run()
 }
 function step(s: ReturnType<typeof mount>, at: number, run = true) {
-  if (at < 2) drag(s, at, ...delta(at), run)
+  if (at < 2) drag(s, at, ...delta(at,s), run)
   else s.button.click()
 }
 function cues(s: ReturnType<typeof mount>) {
@@ -92,10 +98,9 @@ describe('an original painted bamboo balancing dragonfly', () => {
   it('keeps the upright clear of the dragonfly before and throughout placement', () => {
     const s = mount(), start = new THREE.Vector3(-.045, .91, .065), end = new THREE.Vector3(0, 1.58, .10), direction = end.clone().sub(start)
     const ray = new THREE.Raycaster(start, direction.clone().normalize(), .001, direction.length() - .002)
-    const p = s.point('dragonfly-head', headAnchor)
-    event(s.hit, 'pointerdown', p)
+    s.button.click()
     for (let i = 0; i <= 12; i++) {
-      if (i) event(s.hit, 'pointermove', [p[0], p[1] - 60 * i / 12])
+      if(i)s.instance.update(.05)
       s.scene.updateMatrixWorld(true)
       expect(ray.intersectObject(s.scene.getObjectByName('dragonfly-balance-pivot')!, true), `placement ${i}/12`).toHaveLength(0)
     }
@@ -222,11 +227,13 @@ describe('an original painted bamboo balancing dragonfly', () => {
     expect(Math.min(...rotations)).toBeLessThan(0); expect(Math.max(...rotations)).toBeGreaterThan(.04); s.run(60); expect(pivot.rotation.y).toBeCloseTo(0, 9)
     expect(s.progress).toEqual([2]); step(s, 2); check()
   })
-  it('moves the prepared dragonfly continuously upward to the real tip and delays progress until it settles', () => {
+  it('follows the held head on the camera plane and delays progress until it settles on the real tip', () => {
     const s = mount(), pivot = s.scene.getObjectByName('dragonfly-balance-pivot')!, initial = pivot.position.clone()
-    const p = s.point(targetName(0), anchor(0)); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0], p[1] - 30])
-    expect(pivot.position.y).toBeGreaterThan(initial.y); expect(pivot.position.y).toBeLessThan(1.58); expect(s.progress).toEqual([])
-    event(s.hit, 'pointermove', [p[0], p[1] - 60]); const before = pivot.position.clone(); event(s.hit, 'pointerup', [p[0], p[1] - 60])
+    const p = s.point(targetName(0), anchor(0)),[dx,dy]=delta(0,s); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0]+dx*.25,p[1]+dy*.25])
+    const held = s.point(targetName(0), anchor(0))
+    expect(held[0]).toBeCloseTo(p[0]+dx*.25, 5); expect(held[1]).toBeCloseTo(p[1]+dy*.25, 5)
+    expect(pivot.position.distanceTo(initial)).toBeGreaterThan(.001); expect(s.progress).toEqual([])
+    event(s.hit, 'pointermove', [p[0]+dx,p[1]+dy]); const before = pivot.position.clone(); event(s.hit, 'pointerup', [p[0]+dx,p[1]+dy])
     expect(pivot.position.distanceTo(before)).toBeLessThan(.000001); expect(s.progress).toEqual([])
     s.run(); expect(pivot.position.distanceTo(new THREE.Vector3(0, 1.58, .10))).toBeLessThan(.000001); expect(s.progress).toEqual([1])
   })
@@ -291,18 +298,18 @@ describe('an original painted bamboo balancing dragonfly', () => {
     s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })
   it.each([0])('rejects wrong surfaces, orphan release, reverse, short, cross-axis and backtracked placement at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
+    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s), end: [number, number] = [p[0] + dx, p[1] + dy]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
     event(s.hit, 'pointerup', end)
     for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx]]) drag(s, at, x, y)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', at===0 ? [p[0]+dx*.25,p[1]+dy*.25] : end); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', at===0 ? [p[0]+dx*.25,p[1]+dy*.25] : end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
   })
   it.each([0])('checks terminal placement release coordinates for reverse, cross-axis and nonfinite displacement at %i', at => {
     const s = mount(at, { isReducedMotion: () => true })
     for (const kind of ['back', 'cross', 'nan']) {
-      const p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
+      const p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx*.25, p[1] + dy*.25])
       const end: [number, number] = kind === 'back' ? [p[0] + dx * .25, p[1] + dy * .25] : kind === 'cross' ? [p[0] + dx - dy, p[1] + dy + dx] : [NaN, p[1]]
       event(s.hit, 'pointerup', end); expect(s.progress, kind).toEqual([])
     }
@@ -335,8 +342,8 @@ describe('an original painted bamboo balancing dragonfly', () => {
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or stale position/rotation', kind => {
     for (const at of [0, 1]) {
-      let active = true; const s = mount(at, { isActive: () => active }), pivot = s.scene.getObjectByName('dragonfly-balance-pivot')!, home = pivot.position.clone(), rotation = pivot.quaternion.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
-      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); const frames = rendered.render.mock.calls.length
+      let active = true; const s = mount(at, { isActive: () => active }), pivot = s.scene.getObjectByName('dragonfly-balance-pivot')!, home = pivot.position.clone(), rotation = pivot.quaternion.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
+      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx * (at===0 ? .25 : .5), p[1] + dy * (at===0 ? .25 : .5)]); const frames = rendered.render.mock.calls.length
       expect(pivot.position.distanceTo(home) + pivot.quaternion.angleTo(rotation)).toBeGreaterThan(.04)
       if (kind === 'pause') { active = false; s.instance.update(.05); s.instance.update(.05); expect(rendered.render.mock.calls.length).toBe(frames) }
       else if (kind === 'blur') window.dispatchEvent(new Event('blur')); else event(s.hit, kind, p)
@@ -346,7 +353,7 @@ describe('an original painted bamboo balancing dragonfly', () => {
   })
   it.each([284, 350, 1280])('keeps all subject vertices in frame during placement and every sway sample at width %i', width => {
     for (const at of [0, 1]) {
-      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
       const check = () => {
         s.scene.updateMatrixWorld(true); let extent = 0
         s.scene.getObjectByName('dragonfly-subject')!.traverse(o => {

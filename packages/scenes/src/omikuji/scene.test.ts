@@ -62,6 +62,8 @@ function project(s: Mounted, obj: THREE.Object3D): Point {
   return [(p.x + 1) * s.canvas.clientWidth / 2, (1 - p.y) * 260]
 }
 function pointer(target: EventTarget, type: string, [x, y]: Point, pointerId = 1, extra: Record<string, unknown> = {}) {
+  if (type === 'pointerdown') pendingStarts.set(target, [x,y] as [number, number])
+
   const e = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(e, { clientX: x, clientY: y, pointerId, pointerType: 'touch', button: 0, buttons: type === 'pointerup' ? 0 : 1, ...extra })
   target.dispatchEvent(e)
@@ -70,7 +72,7 @@ const sources = ['omikuji-box-body', 'omikuji-draw-stick', 'omikuji-paper-middle
 const targets = ['omikuji-tilt-target', 'omikuji-draw-target', 'omikuji-envelope-pocket']
 function drag(s: Mounted, step: number, finish = 'pointerup') {
   const from = project(s, object(sources[step])), to = project(s, object(targets[step]))
-  pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', to); pointer(s.hit, finish, to); s.run()
+  pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', finish === 'pointerup' ? to : pendingPoint(s.hit, to)); pointer(s.hit, finish, to); s.run()
 }
 function enabledCues() {
   const cues: { object: THREE.Object3D; cue: InteractionCue }[] = []
@@ -168,14 +170,15 @@ describe('omikuji original reflection practice', () => {
   })
 
   it.each(['omikuji-paper-top', 'omikuji-paper-bottom'])('lets the reader hold the real %s section to tuck the sheet', name => {
-    const s = mount(2), from = project(s, object(name)), to = project(s, object(targets[2]))
+    const s = mount(2), from = project(s, object(name)), center = project(s, object(sources[2])), target = project(s, object(targets[2]))
+    const to: Point = [target[0] + from[0] - center[0], target[1] + from[1] - center[1]]
     pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', to); pointer(s.hit, 'pointerup', to); s.run()
     expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
   })
 
   it.each(['pointercancel', 'lostpointercapture', 'blur'])('cancels %s and restores the held object', finish => {
     const s = mount(), source = project(s, object(sources[0])), to = project(s, object(targets[0]))
-    pointer(s.hit, 'pointerdown', source); pointer(s.hit, 'pointermove', to)
+    pointer(s.hit, 'pointerdown', source); pointer(s.hit, 'pointermove', pendingPoint(s.hit, to))
     if (finish === 'blur') window.dispatchEvent(new Event('blur')); else pointer(s.hit, finish, to)
     pointer(s.hit, 'pointerup', to); s.run()
     expect(s.progress).toEqual([]); expect(project(s, object(sources[0]))).toEqual(source)
@@ -194,7 +197,7 @@ describe('omikuji original reflection practice', () => {
     pointer(s.hit, 'pointerdown', source)
     if (order === 'outside-second') pointer(document.body, 'pointerdown', [3, 3], 2)
     if (order === 'object-second') pointer(s.hit, 'pointerdown', source, 2)
-    s.button.click(); pointer(s.hit, 'pointermove', to); pointer(s.hit, 'pointerup', to)
+    s.button.click(); pointer(s.hit, 'pointermove', pendingPoint(s.hit, to)); pointer(s.hit, 'pointerup', to)
     pointer(document.body, 'pointerup', [3, 3], 2); s.run()
     expect(s.progress).toEqual([]); drag(s, 0); expect(s.progress).toEqual([1])
   })
@@ -211,7 +214,7 @@ describe('omikuji original reflection practice', () => {
   it('hides cues, clears the held pointer on pause and requires a fresh gesture', () => {
     let active = true
     const s = mount(1, { isActive: () => active }), source = project(s, object(sources[1])), to = project(s, object(targets[1]))
-    pointer(s.hit, 'pointerdown', source); pointer(s.hit, 'pointermove', to)
+    pointer(s.hit, 'pointerdown', source); pointer(s.hit, 'pointermove', pendingPoint(s.hit, to))
     active = false; s.run(); s.button.click(); expect(enabledCues()).toEqual([])
     active = true; pointer(s.hit, 'pointerup', to); s.run(); expect(s.progress).toEqual([])
     drag(s, 1); expect(s.progress).toEqual([2])
@@ -230,7 +233,7 @@ describe('omikuji original reflection practice', () => {
     const s = mount(1), from = project(s, object(sources[1])), to = project(s, object(targets[1]))
     const view = createInteractionCues(s.canvas, drawn.scene!, drawn.camera!)
     view.update(); expect(s.host.querySelectorAll('.scene-object-cue')).toHaveLength(2)
-    pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', to)
+    pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', pendingPoint(s.hit, to))
     window.dispatchEvent(new Event('blur'))
     expect(enabledCues()).toEqual([]); expect(s.button.disabled).toBe(true)
     view.update(); expect(s.host.querySelectorAll('.scene-object-cue')).toHaveLength(0)
@@ -310,3 +313,10 @@ describe('omikuji original reflection practice', () => {
     expect(s.progress).toEqual([]); expect(s.overlay.childElementCount).toBe(0); expect(drawn.scene!.children).toHaveLength(0)
   })
 })
+
+// Cancellation happens before arrival; a completed placement already owns its result.
+const pendingStarts = new WeakMap<EventTarget, [number, number]>()
+function pendingPoint(layer: EventTarget, point: [number, number]): [number, number] {
+ const start = pendingStarts.get(layer) ?? point
+ return [start[0]+(point[0]-start[0])*.20,start[1]+(point[1]-start[1])*.20]
+}

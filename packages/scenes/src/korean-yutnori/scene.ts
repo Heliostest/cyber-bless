@@ -1,19 +1,20 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue, type InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPosePlacement } from '../pose-placement'
 import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createYutnoriModel } from './model'
 import { encodeYutPlay, moveYut, restoreYutPlay, throwYut, yutSteps, type YutPlay } from './play'
 
 type Checkpoint = 0 | 1 | 2 | 3
-const ACTIONS = ['向右合拢木柶', '向上抛出木柶', '向上移动棋子']
+const ACTIONS = ['向右合拢木柶', '向上抛出木柶', '移动棋子到本次落点']
 const HINTS = [
   '按住席前左侧的木柶向右短拖，把四根木柶合拢。',
   '按住合拢的木柶向上短拖，看它们翻转后落在席上。',
-  '按住蓝色棋子向上短拖，按本次掷出的步数沿外圈前行。',
+  '拿住蓝色棋子，移到本次掷数对应的外圈标记处，到位后会自动落稳。',
   '木柶静静落在席上，棋子停在本次落点。留住相聚时的轻松。',
 ]
 const MOVING = ['四根木柶靠拢……', '木柶轻轻翻转，落回席上……', '棋子沿外圈前行……']
@@ -26,7 +27,8 @@ export function createKoreanYutnori(ctx: SceneContext): SceneInstance {
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
   let play = restoreYutPlay(undefined, 0)
-  let motion: { step: 0 | 1 | 2; time: number; from: number; next: YutPlay; repeat: boolean } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; next: YutPlay; repeat: boolean; placed: boolean } | null = null
+  let tokenPlacement: ReturnType<typeof createPosePlacement> | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
@@ -52,7 +54,18 @@ export function createKoreanYutnori(ctx: SceneContext): SceneInstance {
     matrices()
   }
   const restore = () => pose(at === 0 ? 0 : at === 3 || play.phase === 'again' ? 3 : actionStep(), 0)
-  const cueSpecs = model.targets.map((_, i) => ({ kind: 'drag' as const, direction: (i === 0 ? [1, 0] : [0, -1]) as [number, number], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at < 3 && actionStep() === i }))
+  const rebuildTokenPlacement = () => {
+    tokenPlacement?.cancel(); tokenPlacement = null
+    if (at >= 3 || play.phase !== 'move') return
+    tokenPlacement = createPosePlacement(canvas, camera, {
+      roots: [model.roots[2]!], targets: [model.targets[2]!], anchors: [model.anchors[2]!],
+      pose(_step, n) { model.pose(2, n, { ...play, steps: yutSteps(play.mask) }); matrices() },
+    }, scene, { planeNormal: new THREE.Vector3(0, 1, 0) })
+    restore()
+  }
+  const cueSpecs: InteractionCue[] = model.targets.map((_, i) => ({ kind: 'drag',
+    ...(i === 2 ? { destination: () => tokenPlacement!.destination(0), targetLabel: '本次掷数的落点' } : { direction: (i === 0 ? [1, 0] : [0, -1]) as [number, number] }),
+    label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at < 3 && actionStep() === i }))
   const removeCues = model.targets.map((target, i) => addInteractionCue(target!, cueSpecs[i]!))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const nearest = (x: number, y: number) => {
@@ -61,16 +74,17 @@ export function createKoreanYutnori(ctx: SceneContext): SceneInstance {
     return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
   }
   const axes = (dx: number, dy: number) => actionStep() === 0 ? [dx, dy] : [-dy, dx]
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore() }
+  const reset = () => { tokenPlacement?.cancel(); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore() }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); const hit = nearest(x, y), root = model.roots[actionStep()]!; return !!hit && (hit === root || root.getObjectById(hit.id) === hit) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (actionStep() === 2 && !tokenPlacement?.begin(0, x, y)) pointer.cancel() },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
+      if (actionStep() === 2) { if (!invalid && tokenPlacement?.move(x, y) && pointer.finish()) { tokenPlacement.capture(); advance(true) }; return }
       pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
       const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
       maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
@@ -78,6 +92,7 @@ export function createKoreanYutnori(ctx: SceneContext): SceneInstance {
       pose(step, THREE.MathUtils.clamp(along / 60, 0, 1) * (step === 1 ? .2 : 1))
     },
     onRelease(x, y) {
+      if (actionStep() === 2) { if (!invalid && tokenPlacement?.move(x, y)) { tokenPlacement.capture(); advance(true) } else reset(); return }
       const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
       const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
       if (valid) advance(); else reset()
@@ -90,11 +105,11 @@ export function createKoreanYutnori(ctx: SceneContext): SceneInstance {
     finishBtn.hidden = at === 3 || play.phase !== 'again'
     finishBtn.disabled = !inputActive() || !!motion
     const steps = yutSteps(play.mask), flats = play.mask.toString(2).replace(/0/g, '').length
-    cueSpecs[2]!.label = `向上前行 ${steps} 格`
+    cueSpecs[2]!.label = `移到前行 ${steps} 格的落点`
     const hint = at === 3 ? `已完成 ${play.turns} 次抛掷。${HINTS[3]}`
       : motion ? motion.step === 2 ? `棋子沿外圈前行 ${steps} 格……` : MOVING[motion.step]!
       : at === 0 ? HINTS[0]!
-      : play.phase === 'move' ? `第 ${play.turns} 掷 · ${RESULT_NAMES[flats]}：${flats === 0 ? '四根圆面朝上' : `${flats} 根平面朝上`}，前行 ${steps} 格。按住蓝色棋子向上短拖。`
+      : play.phase === 'move' ? `第 ${play.turns} 掷 · ${RESULT_NAMES[flats]}：${flats === 0 ? '四根圆面朝上' : `${flats} 根平面朝上`}，前行 ${steps} 格。拿住蓝色棋子，移到本次标记的落点。`
       : play.phase === 'again' ? `本次已前行 ${steps} 格，累计掷了 ${play.turns} 次。再抛木柶继续，或点「结束仪式」。`
       : HINTS[1]!
     setSafeText(ui.actionBtn, play.phase === 'again' && at < 3 ? '再掷一次' : ACTIONS[actionStep()]!, safe)
@@ -105,17 +120,17 @@ export function createKoreanYutnori(ctx: SceneContext): SceneInstance {
   function settle() {
     if (!inputActive() || !motion) return
     const step = motion.step, next = (step === 0 ? 1 : 2) as Checkpoint, changed = next !== at
-    play = motion.next; at = next; motion = null; restore()
+    tokenPlacement?.cancel(); play = motion.next; at = next; motion = null; restore(); rebuildTokenPlacement()
     withHostCallbacks(() => {
       ctx.onVariantChange?.(encodeYutPlay(play)); if (!callbackActive()) return
       if (changed) ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [523.25], duration: .09, gain: .003, type: 'sine' })
     })
   }
-  function advance() {
-    if (!inputActive() || pointer.isBusy() || motion || at === 3) return
+  function advance(placed = false) {
+    if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return
     const step = actionStep(), next = step === 1 ? throwYut(play) : step === 2 ? moveYut(play) : play
-    motion = { step, time: 0, from: amount, next, repeat: play.phase === 'again' }; sync()
+    motion = { step, time: 0, from: amount, next, repeat: play.phase === 'again', placed }; sync()
     if (ctx.isReducedMotion?.()) settle()
   }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
@@ -149,7 +164,7 @@ export function createKoreanYutnori(ctx: SceneContext): SceneInstance {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
       play = restoreYutPlay(at === 0 ? undefined : ctx.initialVariant, at)
-      restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
+      restore(); rebuildTokenPlacement(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
       ui.actionBtn.addEventListener('click', action); finishBtn.addEventListener('click', finish); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {
@@ -158,7 +173,7 @@ export function createKoreanYutnori(ctx: SceneContext): SceneInstance {
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
-      if (motion) { motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85); pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time))); if (motion.time === 1) settle() }
+      if (motion) { motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.placed ? .3 : .85)); pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time))); if (motion.placed) tokenPlacement?.settle(ease(motion.time)); if (motion.time === 1) settle() }
       if (active()) { matrices(); style.render() }
     },
     dispose() {

@@ -4,7 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -36,6 +36,13 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
   const { scene, renderer } = createWarmStage(canvas)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
+
+  const projectedGuide = (goal: THREE.Vector3, grip: THREE.Vector3, contact: THREE.Vector3) => {
+    camera.updateMatrixWorld(true)
+    const g=goal.project(camera),a=grip.project(camera),b=contact.project(camera)
+    g.x+=a.x-b.x;g.y+=a.y-b.y
+    return g.unproject(camera)
+  }
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'blang-tea', label: COPY.title }); style.setStyle(CEL_STYLE)
   const lights = addStageLights(scene, ctx.stage, { sky: 0xfff2d7, ground: 0xb5bea4, key: 0xffe2ba, rim: 0xd0e0d4, keyPosition: [-3, 5, 3], keyIntensity: 1.3, rimIntensity: .5 })
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(512, 512)
@@ -105,28 +112,33 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
   }
   const enabled=(at:number)=>()=>active()&&!transition&&checkpoint===at
   addInteractionCue(grip,{kind:'drag',label:'添入茶叶',enabled:enabled(0),destination:mouth,targetLabel:'敞开的壶口',priority:3})
-  addInteractionCue(handle,{kind:'drag',label:'握壶把倒茶',enabled:enabled(1),destination:cupInterior,targetLabel:'倒入杯内',priority:3})
+  addInteractionCue(handle,{kind:'drag',label:'握壶把倒茶',enabled:enabled(1),destination:()=>projectedGuide(cupInterior.getWorldPosition(new THREE.Vector3()),handle.getWorldPosition(new THREE.Vector3()),pot.localToWorld(new THREE.Vector3(1.24,.37,0))),targetLabel:'倒入杯内',priority:3})
   addInteractionCue(touch,{kind:'tap',label:'轻点茶杯静看',enabled:enabled(2),priority:3})
   const ray=createPointerRay(canvas,camera),down=new THREE.Vector2(),plane=new THREE.Plane(),point=new THREE.Vector3(),offset=new THREE.Vector3()
   const source=()=>checkpoint===0?grip:checkpoint===1?handle:touch
   // Only opaque visible surfaces qualify; a held object may cross its receptacle.
   const touchTarget = createTouchTarget(canvas, camera, scene)
   const hitsVisible = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => touchTarget.hit(x, y, target, { ignore: held })
+  const automaticReady = (x: number, y: number) => {
+    const contact = projectTouchPoint(canvas, camera, checkpoint === 0 ? grip : pot, checkpoint === 0 ? [0,0,0] : [1.24,.37,0])
+    return checkpoint < 2 && insideCanvas(canvas,x,y) && !!contact && !touchTarget.occluded(x,y,checkpoint === 0 ? mouth : cupInterior,{ignore:checkpoint === 0 ? scoop : pot}) && touchTarget.hit(contact.x,contact.y,checkpoint === 0 ? mouth : cupInterior,{ignore:checkpoint === 0 ? scoop : pot})
+  }
   const reset=()=>{dragging=false;maxTravel=0;if(!transition)restorePose()}
   const previewPour=(t:number)=>{pot.position.copy(POT_HOME).add(new THREE.Vector3(.718*t,.50*t,.43*t));pot.rotation.z=-t*.60;matrices()}
   const pointer=createObjectPointer(ui.hitLayer,{
     isActive:active,
     canStart(x,y){if(transition||checkpoint===3)return false;matrices();return hitsVisible(x,y,source())},
-    onStart(x,y){down.set(x,y);maxTravel=0;dragging=checkpoint<2;feedback.prepare();plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),scoop.position);if(ray.aim(x,y).ray.intersectPlane(plane,point))offset.copy(scoop.position).sub(point)},
+    onStart(x,y){down.set(x,y);maxTravel=0;dragging=checkpoint<2;feedback.prepare();plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),checkpoint===0?scoop.position:pot.position);if(ray.aim(x,y).ray.intersectPlane(plane,point))offset.copy(checkpoint===0?scoop.position:pot.position).sub(point)},
     onMove(x,y){
       maxTravel=Math.max(maxTravel,Math.hypot(x-down.x,y-down.y));if(!dragging)return
       if(checkpoint===0){if(ray.aim(x,y).ray.intersectPlane(plane,point))scoop.position.copy(point).add(offset)}
-      else {const target=cupInterior.getWorldPosition(new THREE.Vector3()).project(camera),rect=canvas.getBoundingClientRect(),targetX=rect.left+(target.x+1)*rect.width/2;previewPour(THREE.MathUtils.clamp((x-down.x)/Math.max(1,targetX-down.x),0,1))}
+      else if(ray.aim(x,y).ray.intersectPlane(plane,point))pot.position.copy(point).add(offset)
       matrices()
+      if(automaticReady(x,y)&&pointer.finish()){dragging=false;advance(true)}
     },
     onRelease(x,y){
       maxTravel=Math.max(maxTravel,Math.hypot(x-down.x,y-down.y));matrices()
-      const valid=checkpoint<2?dragging&&maxTravel>=8&&hitsVisible(x,y,checkpoint===0?mouth:cupInterior,checkpoint===0?scoop:pot):maxTravel<12&&hitsVisible(x,y,touch)
+      const valid=checkpoint<2?dragging&&automaticReady(x,y):maxTravel<12&&hitsVisible(x,y,touch)
       dragging=false;if(valid)advance();else reset()
     },onCancel:reset,
   })
@@ -140,10 +152,10 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
     if(!active()||!transition)return
     checkpoint=(transition.step+1) as Checkpoint;transition=null;restorePose();sync();ctx.onProgress?.(checkpoint);feedback.impact({freqs:[392,523.25],duration:.17,gain:.012})
   }
-  function advance(){
-    if(!active()||pointer.isBusy()||transition||checkpoint===3)return
+  function advance(placed=false){
+    if(!active()||(pointer.isBusy()&&!placed)||transition||checkpoint===3)return
     if(checkpoint===2){checkpoint=3;restorePose();sync();ctx.onProgress?.(3);feedback.impact({freqs:[392,587.33],duration:.2,gain:.012});overlay.dispatchEvent(new CustomEvent('scene:complete',{bubbles:true}));return}
-    transition={step:checkpoint,time:0,from:scoop.position.clone()};pot.position.copy(POT_HOME);pot.rotation.z=0;sync();if(ctx.isReducedMotion?.())settled()
+    transition={step:checkpoint,time:0,from:(checkpoint===0?scoop:pot).position.clone()};sync();if(ctx.isReducedMotion?.())settled()
   }
   const action=()=>{if(!active()||pointer.isBusy()||transition||checkpoint===3)return;feedback.prepare();advance()}
   const blur=()=>{focused=false;pointer.cancel();sync()},focus=()=>{focused=true;if(!disposed)sync()}
@@ -166,7 +178,7 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
         }else {
           // Lift/tilt, hold the pour, then return the pot to its tray.
           const amount=t<.22?smooth(t/.22):t>.78?1-smooth((t-.78)/.22):1
-          previewPour(amount);stream.visible=t>=.22&&t<.78;liquid.visible=t>=.22;liquid.scale.y=Math.max(.15,smooth(THREE.MathUtils.clamp((t-.22)/.56,0,1)))
+          previewPour(amount);if(t<.22)pot.position.lerpVectors(transition.from,POT_HOME.clone().add(new THREE.Vector3(.718,.50,.43)),smooth(t/.22));matrices();stream.visible=t>=.22&&t<.78;liquid.visible=t>=.22;liquid.scale.y=Math.max(.15,smooth(THREE.MathUtils.clamp((t-.22)/.56,0,1)))
           streamStart.set(1.24,.37,0).applyMatrix4(pot.matrixWorld);direction.copy(streamStart).sub(streamEnd);stream.position.copy(streamStart).add(streamEnd).multiplyScalar(.5);stream.scale.y=direction.length();stream.quaternion.setFromUnitVectors(up,direction.normalize())
         }
         if(t===1)settled()

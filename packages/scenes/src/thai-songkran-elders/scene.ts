@@ -3,6 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPosePlacement } from '../pose-placement'
 import { createTouchTarget } from '../touch-target'
 import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
@@ -11,8 +12,8 @@ import { createSongkranModel } from './model'
 type Checkpoint = 0 | 1 | 2 | 3
 const ACTIONS = ['捧起清水碗', '移到长辈手边', '缓缓浇水']
 const HINTS = [
- '按住小碗向上短拖，捧起备好的清水。',
- '按住小碗向右短拖，移到长辈双手上方。',
+ '捧起小碗，移到上方提示标记处，带起备好的清水。',
+ '捧住小碗，移到长辈双手上方的提示标记处。',
  '按住小碗向下短拖，轻轻倾水，再将碗放回。',
  '清水轻落在长辈手上。愿长辈安康，新岁顺遂。',
 ]
@@ -24,7 +25,7 @@ export function createSongkran(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean; heldPosition?: THREE.Vector3; heldQuaternion?: THREE.Quaternion } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
@@ -42,20 +43,24 @@ export function createSongkran(ctx: SceneContext): SceneInstance {
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
   const restore = () => pose(at, 0)
+  const placementRoots=model.roots,placementAnchors=model.anchors.map(a=>a.toArray() as [number,number,number])
+  const isPlacementStep=(step:number)=>step<2
+  const placement=createPosePlacement(canvas,camera,{pose:model.pose,roots:placementRoots,targets:model.targets,anchors:placementAnchors},scene)
   const directions: [number, number][] = [[0,-1],[1,0],[0,1]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: directions[i], label: ACTIONS[i]!, anchor: model.anchors[i]!.toArray(), priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(isPlacementStep(i) ? {destination:()=>placement.destination(i),targetLabel:'水碗准备位置'} : {direction:directions[i]}), label: ACTIONS[i]!, anchor: model.anchors[i]!.toArray(), priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
+  const reset = () => { placement.cancel(); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x, y, model.roots[at]!) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 ; if(isPlacementStep(at) && !placement.begin(at,x,y))pointer.cancel(); },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
+      if(isPlacementStep(at)){const ready=placement.move(x,y);model.refreshHeldWater();if(!invalid && ready && pointer.finish()){placement.capture();advance(true)};return}
       pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
       const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
       maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
@@ -64,6 +69,7 @@ export function createSongkran(ctx: SceneContext): SceneInstance {
       updateDirectionalDragHint(ui.hintEl, !invalid && completesDirectionalDrag({ along, end: along, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel: pathTravel }), HINTS[at]!, safe)
     },
     onRelease(x, y) {
+      if(isPlacementStep(at)){if(!invalid && placement.move(x,y)){placement.capture();advance()}else reset();return}
       const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
       const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
       if (valid) advance(); else reset()
@@ -87,7 +93,7 @@ export function createSongkran(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(placed=false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: at, time: 0, from: amount,placed,heldPosition:placed?placementRoots[at]!.position.clone():undefined,heldQuaternion:placed?placementRoots[at]!.quaternion.clone():undefined }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
@@ -118,9 +124,9 @@ export function createSongkran(ctx: SceneContext): SceneInstance {
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       if (motion) {
-        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85)
+        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.placed?.32:.85))
         const eased=ease(motion.time)
-        pose(motion.step, motion.from+(1-motion.from)*eased); if (motion.time === 1) settle()
+        pose(motion.step, motion.from+(1-motion.from)*eased); if(motion.placed && isPlacementStep(motion.step)){placement.settle(eased);model.refreshHeldWater()} if (motion.time === 1) settle()
       }
       if (active()) { if (!ctx.isReducedMotion?.()) model.tick(delta); matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },

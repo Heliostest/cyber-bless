@@ -158,17 +158,19 @@ export function createFijianWovenFan(ctx: SceneContext): SceneInstance {
     onStart(x, y) {
       withHostCallbacks(() => feedback.prepare()); if (!active()) { pointer.cancel(); return }
       down.set(x, y); maxTravel = 0; dragging = checkpoint < 2
-      plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position)
+      plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (checkpoint===0?bindingGrip:grip).getWorldPosition(new THREE.Vector3()))
       if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point)
     },
     onMove(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y))
       if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset)
       matrices()
+      if (checkpoint < 2 && placementHit(canvas, camera, checkpoint === 0 ? bindingGrip : grip, x, y, (px, py) => visibleHit(px, py, checkpoint === 0 ? joint : seat, moving())) && pointer.finish()) { dragging = false; advance(true) }
     },
     onRelease(x, y) {
+      if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset)
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && placementHit(canvas, camera, checkpoint === 0 ? bindingGrip : grip, x, y, (px, py) => visibleHit(px, py, checkpoint === 0 ? joint : seat, moving()))
+      const valid = checkpoint < 2 ? dragging && placementHit(canvas, camera, checkpoint === 0 ? bindingGrip : grip, x, y, (px, py) => visibleHit(px, py, checkpoint === 0 ? joint : seat, moving()))
         : maxTravel < 12 && visibleHit(x, y, fan)
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,
@@ -194,8 +196,8 @@ export function createFijianWovenFan(ctx: SceneContext): SceneInstance {
       if (active()) feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .012, type: 'triangle' })
     })
   }
-  function advance() {
-    if (!active() || notifying || pointer.isBusy() || transition || checkpoint === 3) return
+  function advance(placed = false) {
+    if (!active() || notifying || (pointer.isBusy() && !placed) || transition || checkpoint === 3) return
     if (checkpoint === 2) {
       checkpoint = 3; restore()
       withHostCallbacks(() => {

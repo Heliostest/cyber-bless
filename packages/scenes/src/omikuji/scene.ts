@@ -1,3 +1,4 @@
+import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -158,6 +159,8 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
   const carried = () => checkpoint === 0 ? box : checkpoint === 1 ? stick : paper
   const source = () => checkpoint === 0 ? body : checkpoint === 1 ? stick : middle
   const destination = () => checkpoint === 0 ? tiltTarget : checkpoint === 1 ? drawTarget : pocket
+  const placementReady = (x: number, y: number) => travel > 0
+    && placementHit(canvas, camera, source(), x, y, (px, py) => ray.hits(px, py, [destination()]))
   const matrix = () => { world.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const sync = () => {
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !active() || !!motion || checkpoint === 3
@@ -184,7 +187,7 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
       completed = true; overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     }
   }
-  const begin = () => {
+  const begin = (_arrived = false) => {
     if (!active() || motion || checkpoint === 3) return
     motion = { step: checkpoint, time: 0, from: carried().position.clone(), rotation: carried().rotation.clone() }
     dragging = false; tiltTarget.visible = drawTarget.visible = false
@@ -211,10 +214,11 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
         }
         matrix()
       }
+      if (dragging && placementReady(x, y) && pointer.finish()) { dragging = false; begin(true) }
     },
     onRelease(x, y) {
       travel = Math.max(travel, Math.hypot(x - start.x, y - start.y)); matrix()
-      const valid = dragging && active() && !motion && travel >= 18 && ray.hits(x, y, [destination()])
+      const valid = dragging && active() && !motion && placementReady(x, y)
       dragging = false
       if (valid) begin(); else restore()
     },

@@ -57,6 +57,8 @@ function mount(initialProgress = 0, extra: Partial<SceneContext> = {}) {
   return { instance, scene, camera, hit, button, overlay, progress, saveWish, complete, point, run, write }
 }
 function pointer(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
+  if (type === 'pointerdown') pendingStarts.set(el, [clientX,clientY] as [number, number])
+
   const event = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(event, { clientX, clientY, pointerId, pointerType: 'touch', button: 0, buttons: type === 'pointerup' ? 0 : 1 })
   el.dispatchEvent(event)
@@ -173,7 +175,7 @@ describe('ema plaque', () => {
   it.each(['pointercancel', 'lostpointercapture'])('abandons %s before accepting a fresh drag', cancel => {
     const s = mount(2, { isReducedMotion: () => true })
     const start = s.point('ema-plaque-body'), target = s.point('ema-hang-target')
-    pointer(s.hit, 'pointerdown', start); pointer(s.hit, 'pointermove', target); pointer(s.hit, cancel, target)
+    pointer(s.hit, 'pointerdown', start); pointer(s.hit, 'pointermove', pendingPoint(s.hit, target)); pointer(s.hit, cancel, target)
     pointer(s.hit, 'pointerup', target)
     expect(s.progress).toEqual([])
     pointer(s.hit, 'pointerdown', start, 2); pointer(s.hit, 'pointermove', target, 2); pointer(s.hit, 'pointerup', target, 2)
@@ -204,7 +206,7 @@ describe('ema plaque', () => {
     let active = true
     const s = mount(0, { isActive: () => active, isReducedMotion: () => true })
     const start = s.point('ema-plaque-body'), end: [number, number] = [start[0] + 100, start[1]]
-    pointer(s.hit, 'pointerdown', start); pointer(s.hit, 'pointermove', end)
+    pointer(s.hit, 'pointerdown', start); pointer(s.hit, 'pointermove', pendingPoint(s.hit, end))
     active = false; s.run(0.1); active = true; pointer(s.hit, 'pointerup', end)
     expect(s.progress).toEqual([])
     s.button.click(); active = false; s.run(0.1)
@@ -262,3 +264,10 @@ describe('ema plaque', () => {
     expect(freed).toEqual([1, 1])
   })
 })
+
+// Cancellation happens before arrival; a completed placement already owns its result.
+const pendingStarts = new WeakMap<HTMLElement, [number, number]>()
+function pendingPoint(layer: HTMLElement, point: [number, number]): [number, number] {
+ const start = pendingStarts.get(layer) ?? point
+ return [start[0]+(point[0]-start[0])*.20,start[1]+(point[1]-start[1])*.20]
+}

@@ -4,7 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -41,6 +41,13 @@ export function createSlovakWireBird(ctx: SceneContext): SceneInstance {
   const { scene, renderer } = createWarmStage(canvas)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
+
+  const projectedGuide = (goal: THREE.Vector3, grip: THREE.Vector3, contact: THREE.Vector3) => {
+    camera.updateMatrixWorld(true)
+    const g=goal.project(camera),a=grip.project(camera),b=contact.project(camera)
+    g.x+=a.x-b.x;g.y+=a.y-b.y
+    return g.unproject(camera)
+  }
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'slovak-wire-bird', label: COPY.title }); style.setStyle(CEL_STYLE)
   const lights = addStageLights(scene, ctx.stage, { sky: 0xf4eee0, ground: 0xb1b4a3, key: 0xffedcf, rim: 0xd9e8e9,
     keyPosition: [-3, 5, 4], keyIntensity: 1.25, rimIntensity: .48 })
@@ -115,13 +122,18 @@ export function createSlovakWireBird(ctx: SceneContext): SceneInstance {
   }
   const enabled = (at: number) => () => active() && !transition && checkpoint === at
   addInteractionCue(wingGrip, { kind: 'drag', label: '接好小翅膀', priority: 3, enabled: enabled(0), destination: joint, targetLabel: '鸟身肩部' })
-  addInteractionCue(grip, { kind: 'drag', label: '把小鸟放上栖座', priority: 3, enabled: enabled(1), destination: seat, targetLabel: '木栖座' })
+  addInteractionCue(grip, { kind: 'drag', label: '把小鸟放上栖座', priority: 3, enabled: enabled(1), destination: () => projectedGuide(seat.getWorldPosition(new THREE.Vector3()),grip.getWorldPosition(new THREE.Vector3()),bird.getWorldPosition(new THREE.Vector3())), targetLabel: '木栖座' })
   addInteractionCue(grip, { kind: 'tap', label: '轻点小鸟静看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => checkpoint === 0 ? wing : bird
   const belongsTo = (object: THREE.Object3D | undefined, target: THREE.Object3D) => { for (let p = object; p; p = p.parent ?? undefined) if (p === target) return true; return false }
   const touchTarget = createTouchTarget(canvas, camera, scene)
   const visibleHit = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => touchTarget.hit(x, y, target, { ignore: held })
+  const automaticReady = (x: number, y: number) => {
+    if (checkpoint >= 2 || !insideCanvas(canvas, x, y)) return false
+    const contact = projectTouchPoint(canvas, camera, checkpoint === 0 ? wingGrip : bird, [0,0,0])
+    return !!contact && !touchTarget.occluded(x,y,checkpoint === 0 ? joint : seat,{ignore:moving()}) && touchTarget.hit(contact.x, contact.y, checkpoint === 0 ? joint : seat, { ignore: moving() })
+  }
   const reset = () => { dragging = false; maxTravel = 0; if (!transition) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
@@ -136,10 +148,11 @@ export function createSlovakWireBird(ctx: SceneContext): SceneInstance {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y))
       if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset)
       matrices()
+    if (dragging && automaticReady(x, y) && pointer.finish()) { dragging = false; advance(true) }
     },
     onRelease(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && visibleHit(x, y, checkpoint === 0 ? joint : seat, moving())
+      const valid = checkpoint < 2 ? dragging && automaticReady(x, y)
         : maxTravel < 12 && visibleHit(x, y, bird)
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,
@@ -157,8 +170,8 @@ export function createSlovakWireBird(ctx: SceneContext): SceneInstance {
     if (!active()) return
     notifyHost(() => feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .012, type: 'triangle' }))
   }
-  function advance() {
-    if (notifying || !active() || pointer.isBusy() || transition || checkpoint === 3) return
+  function advance(placed = false) {
+    if (notifying || !active() || (pointer.isBusy() && !placed) || transition || checkpoint === 3) return
     if (checkpoint === 2) {
       checkpoint = 3; restore(); sync(); notifyHost(() => ctx.onProgress?.(3))
       if (!active()) return

@@ -366,7 +366,7 @@ describe('Daruma eye painting', () => {
     const doll = s.point('daruma-eye-target-first')
     const stand = s.point('daruma-stand')
     pointer(s.hit, 'pointerdown', doll)
-    pointer(s.hit, 'pointermove', stand)
+    pointer(s.hit, 'pointermove', [doll[0]+(stand[0]-doll[0])*.15,doll[1]+(stand[1]-doll[1])*.15])
     pointer(s.hit, 'pointercancel', stand)
     s.run(2)
     expect(s.progress).toEqual([])
@@ -385,7 +385,7 @@ describe('Daruma eye painting', () => {
   it('settles a doll dragged onto its stand after the wish step', async () => {
     const s = await mount(2)
     const doll = s.point('daruma-eye-target-first')
-    const stand = s.point('daruma-stand')
+    const shell=s.scene.getObjectByName('daruma-shell')!,cue=(shell.userData.interactionCues as InteractionCue[]).find(c=>c.enabled())!,d=cue.destination!,q=(typeof d==='function'?d():d.getWorldPosition(new THREE.Vector3())).project(s.camera),a=shell.localToWorld(new THREE.Vector3(...(cue.anchor??[0,0,0]))).project(s.camera),stand:[number,number]=[doll[0]+(q.x-a.x)*180,doll[1]-(q.y-a.y)*180]
     pointer(s.hit, 'pointerdown', doll)
     pointer(s.hit, 'pointermove', stand)
     pointer(s.hit, 'pointerup', stand)

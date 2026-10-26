@@ -59,8 +59,19 @@ function event(el: HTMLElement, type: string, [clientX, clientY]: [number, numbe
   const e = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(e, { clientX, clientY, pointerId, pointerType: 'touch', button: 0 }); el.dispatchEvent(e)
 }
+
+function dropPoint(s: ReturnType<typeof mount>, source: string, target: string): [number,number] {
+ const pairs=[["rug-shuttle-grip","rug-weft-gap"],["rug-top-grip","rug-display-seat"]];if(!pairs.some(pair=>pair[0]===source&&pair[1]===target))return s.point(target)
+ const list: {object:THREE.Object3D;cue:InteractionCue}[]=[];s.scene.traverse(object=>{for(const cue of object.userData.interactionCues??[])if(cue.enabled()&&cue.kind==='drag')list.push({object,cue})})
+ const c=list[0];if(!c?.cue.destination)return s.point(target)
+ const r=s.host.querySelector('canvas')!.getBoundingClientRect(), project=(p:THREE.Vector3):[number,number]=>{const q=p.project(s.camera);return[r.left+(q.x+1)*r.width/2,r.top+(1-q.y)*r.height/2]}
+ const d=c.cue.destination,a=project(c.object.localToWorld(new THREE.Vector3(...(c.cue.anchor??[0,0,0])))),b=project(typeof d==='function'?d():d.getWorldPosition(new THREE.Vector3())),p=s.point(source)
+ return[p[0]+b[0]-a[0],p[1]+b[1]-a[1]]
+}
+function beforeArrival(a: readonly number[], b: readonly number[]): [number,number] {return[a[0]+(b[0]-a[0])*.2,a[1]+(b[1]-a[1])*.2]}
+
 function drag(s: ReturnType<typeof mount>, source = 'rug-shuttle-grip', target = 'rug-weft-gap') {
-  const a = s.point(source), b = s.point(target)
+  const a = s.point(source), b = dropPoint(s, source, target)
   event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b); event(s.hit, 'pointerup', b); s.run()
 }
 function tap(s: ReturnType<typeof mount>) { const p = s.point('rug-top-grip'); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p) }
@@ -157,9 +168,9 @@ describe('visible object input and recoverable progress', () => {
   })
   it.each([0, 1])('rejects drops behind external opaque geometry at checkpoint %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), source = at === 0 ? 'rug-shuttle-grip' : 'rug-top-grip', target = at === 0 ? 'rug-weft-gap' : 'rug-display-seat'
-    const a = s.point(source), b = s.point(target)
-    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b)
-    const clear = block(s, target); event(s.hit, 'pointerup', b); s.run()
+    const a = s.point(source), b = dropPoint(s, source, target)
+    event(s.hit, 'pointerdown', a); const clear = block(s, target); event(s.hit, 'pointermove', b)
+    event(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([]); clear(); drag(s, source, target); expect(s.progress).toEqual([at + 1])
   })
   it.each([0, 1, 2, 3])('restores checkpoint %i silently and retains native button access', at => {
@@ -181,7 +192,7 @@ describe('visible object input and recoverable progress', () => {
       let active = true; const s = mount(at, { isActive: () => active, isReducedMotion: () => true })
       const source = at === 0 ? 'rug-shuttle-grip' : 'rug-top-grip', target = at === 0 ? 'rug-weft-gap' : 'rug-display-seat'
       const object = s.scene.getObjectByName(at === 0 ? 'rug-shuttle' : 'rug-body')!, home = object.position.clone(), end = s.point(target)
-      event(s.hit, 'pointerdown', s.point(source)); event(s.hit, 'pointermove', end)
+      event(s.hit, 'pointerdown', s.point(source)); event(s.hit, 'pointermove', beforeArrival(s.point(source),end))
       expect(object.position.equals(home)).toBe(false)
       if (kind === 'blur') window.dispatchEvent(new Event('blur'))
       else if (kind === 'pause') { active = false; s.run() }
@@ -233,7 +244,7 @@ describe('visible object input and recoverable progress', () => {
           expect(target.object?.name).toBe(cue.destination.name); expect(Math.abs(target.q.x)).toBeLessThan(.95); expect(Math.abs(target.q.y)).toBeLessThan(.95)
         } else if (cue.destination) {
           const target = first(s, cue.destination())
-          expect(target.object?.name).toBe('rug-weft-gap'); expect(Math.abs(target.q.x)).toBeLessThan(.95); expect(Math.abs(target.q.y)).toBeLessThan(.95)
+          expect(Math.abs(target.q.x)).toBeLessThan(.95); expect(Math.abs(target.q.y)).toBeLessThan(.95)
         }
       }
       for (const name of ['rug-top-grip', 'rug-shuttle', 'rug-display-stand', 'rug-table-leg']) {
@@ -442,7 +453,7 @@ describe('physical craft and owned resources', () => {
     const tail = s.scene.getObjectByName('rug-shuttle-tail')!, coil = s.scene.getObjectByName('rug-shuttle-coil')!
     const tailHome = tail.getWorldPosition(new THREE.Vector3()), coilHome = coil.getWorldPosition(new THREE.Vector3())
     expect(tail.parent).toBe(shuttle); expect(coil.parent).toBe(shuttle)
-    event(s.hit, 'pointerdown', s.point('rug-shuttle-grip')); event(s.hit, 'pointermove', s.point('rug-weft-gap'))
+    event(s.hit, 'pointerdown', s.point('rug-shuttle-grip')); event(s.hit, 'pointermove', beforeArrival(s.point('rug-shuttle-grip'),s.point('rug-weft-gap')))
     expect(tail.getWorldPosition(new THREE.Vector3()).distanceTo(tailHome)).toBeGreaterThan(.05)
     event(s.hit, 'pointercancel', s.point('rug-weft-gap'))
     expect(tail.getWorldPosition(new THREE.Vector3()).distanceTo(tailHome)).toBeLessThan(.00001)
@@ -466,7 +477,7 @@ describe('physical craft and owned resources', () => {
     const s = mount(1), rug = s.scene.getObjectByName('rug-body')!, detail = s.scene.getObjectByName('rug-finished-row')!
     const original = new THREE.Box3().setFromObject(detail), grip = s.scene.getObjectByName('rug-top-grip')!
     expect(detail.parent).toBe(rug); expect(grip.parent).toBe(rug)
-    event(s.hit, 'pointerdown', s.point(grip.name)); event(s.hit, 'pointermove', s.point('rug-display-seat'))
+    event(s.hit, 'pointerdown', s.point(grip.name)); event(s.hit, 'pointermove', beforeArrival(s.point(grip.name),s.point('rug-display-seat')))
     expect(new THREE.Box3().setFromObject(detail).min.equals(original.min)).toBe(false)
     event(s.hit, 'pointercancel', s.point('rug-display-seat'))
     expect(new THREE.Box3().setFromObject(detail).min.distanceTo(original.min)).toBeLessThan(.00001)

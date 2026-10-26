@@ -68,7 +68,7 @@ function stir(s: Mounted, finish = 'pointerup') {
 }
 function drag(s: Mounted, source: string, destination: string, finish = 'pointerup') {
   const from = project(s, object(source)), to = project(s, object(destination))
-  pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', to); pointer(s.hit, finish, to); s.run()
+  pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', finish==='pointerup'?to:[from[0]+(to[0]-from[0])*.15,from[1]+(to[1]-from[1])*.15]); pointer(s.hit, finish, to); s.run()
 }
 function allCues() {
   const cues: InteractionCue[] = []

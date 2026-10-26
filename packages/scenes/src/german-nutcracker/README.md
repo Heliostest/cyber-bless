@@ -1,5 +1,13 @@
 # 木偶开果
 
+## 当前操作（2026-10-26）
+
+开口后将胡桃跟手送到木偶口中范围；抬杠杆与压杠杆仍保持下颌和杠杆的转轴联动。
+
+操作 1 在持有移动中按真实物件锚点或布面覆盖核对目标，到位即接续落定，不再以指定方向、固定拖距或松手作为摆放成功条件。未到位的取消恢复当前检查点；已经接受的同次触摸不能操作下一步。辅助按钮、减弱动态、暂停恢复和旧整数／variant 存档保持。
+
+本次只更新产品输入及对应提示，器物、材料、动作顺序、文化含义与来源身份保持；没有新增传统规则。下方较早记录中关于方向、固定拖距和摆放松手验收的说明属于历史实现，当前输入以本节为准。具体逐场边界、来源状态与验证见[本轮 B 组记录](../../../../docs/research/2026-10-26-spatial-placement-audit-b.md)。
+
 `german-nutcracker` / `erzgebirge-nutcracker-craft` is an original wooden figure for appreciating a rear-lever nutcracker mechanism. Source rationale and cultural boundaries: `content/traditions/erzgebirge-nutcracker-craft.md`.
 
 Three direct-material drags: raise the rear lever 60 screen pixels, place the walnut, then lower the lever 60 pixels. Walnut placement accepts either the original upward swipe or a drag released over the open mouth, with a small tolerance around the jaw's actual nut seat. The mouth has a projected destination cue; release, pointer ownership and cancellation remain required. The lower jaw and lever share one axle; the beard is attached to the moving jaw. A clear curved path places the nut in the open mouth. Two capped shell halves separate to reveal a kernel. The plinth supports both boots and the resting walnut. No invisible hit proxies, furniture, wish form, copied media, textures or custom shaders.

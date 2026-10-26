@@ -46,7 +46,7 @@ const DIRECTIONAL_SCENES = [
   ['polish-paper-cut', 2], ['uzbek-clay-bowl', 2],
 ] as const
 
-it.each(DIRECTIONAL_SCENES)('%s accepts a full directional drag without a hidden maximum distance', async (id, steps) => {
+it.each(DIRECTIONAL_SCENES)('%s accepts its displayed destination or a full constrained drag', async (id, steps) => {
   const module = await loadScene(id)
   for (let at = 0; at < steps; at++) for (const [distance, correction, release, cross = 0] of [[120, 0, 120], [180, 0, 180], [60, 12, 60], [70, 20, 50], [60, 0, 180], [20, 0, 120], [120, 30, 90], [120, 0, 90, 60]]) {
     const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
@@ -61,19 +61,26 @@ it.each(DIRECTIONAL_SCENES)('%s accepts a full directional drag without a hidden
     scene.updateMatrixWorld(true); camera.updateMatrixWorld(true)
     const targets: { object: THREE.Object3D; cue: InteractionCue }[] = []
     scene.traverse(object => {
-      for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && (cue.direction || id === 'uzbek-clay-bowl' && cue.kind === 'rotate')) targets.push({ object, cue })
+      for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && (cue.destination || cue.direction || id === 'uzbek-clay-bowl' && cue.kind === 'rotate')) targets.push({ object, cue })
     })
     expect(targets).toHaveLength(id === 'chinese-diabolo' && at === 2 ? 2 : 1)
     const { object, cue } = (id === 'chinese-diabolo' && at === 2 ? targets.find(t => t.cue.direction?.[1] === 1) : targets[0])!, direction = new THREE.Vector2(...(cue.direction ?? [1, 0])).normalize()
     const point = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(camera)
     const x = (point.x + 1) * 195, y = (1 - point.y) * 204
+    const goal = cue.destination ? (typeof cue.destination === 'function' ? cue.destination() : cue.destination.getWorldPosition(new THREE.Vector3())).project(camera) : null
     const layer = overlay.querySelector<HTMLElement>('.scene-hit-layer')!
     layer.setPointerCapture = () => {}; layer.releasePointerCapture = () => {}
     pointer(layer, 'pointerdown', x, y)
-    for (const amount of [distance / 2, distance, distance - correction, distance])
-      pointer(layer, 'pointermove', x + direction.x * amount, y + direction.y * amount)
-    if (cross) pointer(layer, 'pointermove', x + direction.x * distance - direction.y * cross, y + direction.y * distance + direction.x * cross)
-    pointer(layer, 'pointerup', x + direction.x * release, y + direction.y * release)
+    if (goal) {
+      pointer(layer, 'pointermove', x, y + 12)
+      pointer(layer, 'pointermove', (goal.x + 1) * 195, (1 - goal.y) * 204)
+      pointer(layer, 'pointerup', (goal.x + 1) * 195, (1 - goal.y) * 204)
+    } else {
+      for (const amount of [distance / 2, distance, distance - correction, distance])
+        pointer(layer, 'pointermove', x + direction.x * amount, y + direction.y * amount)
+      if (cross) pointer(layer, 'pointermove', x + direction.x * distance - direction.y * cross, y + direction.y * distance + direction.x * cross)
+      pointer(layer, 'pointerup', x + direction.x * release, y + direction.y * release)
+    }
     if (id === 'korean-yutnori' && at === 2) overlay.querySelector<HTMLButtonElement>('.scene-yut-finish')!.click()
     expect(progress, `step ${at}, distance ${distance}, correction ${correction}`).toEqual([at + 1])
     instance.dispose(); host.remove()
@@ -112,9 +119,15 @@ it.each(DIRECTIONAL_SCENES.flatMap(([id]) => [[id, false], [id, true]] as const)
     pointer(layer, 'pointerdown', x, y, type)
     let endX = x, endY = y
     if (cue.kind !== 'tap') {
-      const direction = new THREE.Vector2(...(cue.direction ?? [1, 0])).normalize()
-      for (const amount of [30, 60, 120]) pointer(layer, 'pointermove', x + direction.x * amount, y + direction.y * amount, type)
-      endX += direction.x * 120; endY += direction.y * 120
+      if (cue.destination) {
+        const goal = (typeof cue.destination === 'function' ? cue.destination() : cue.destination.getWorldPosition(new THREE.Vector3())).project(camera)
+        endX = (goal.x + 1) * width / 2; endY = (1 - goal.y) * height / 2
+        pointer(layer, 'pointermove', endX, endY, type)
+      } else {
+        const direction = new THREE.Vector2(...(cue.direction ?? [1, 0])).normalize()
+        for (const amount of [30, 60, 120]) pointer(layer, 'pointermove', x + direction.x * amount, y + direction.y * amount, type)
+        endX += direction.x * 120; endY += direction.y * 120
+      }
     }
     pointer(layer, 'pointerup', endX, endY, type)
     for (let frame = 0; frame < 40; frame++) instance.update(.05)

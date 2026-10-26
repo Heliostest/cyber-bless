@@ -13,7 +13,7 @@ const STEP_ORDER: Step[] = ['tilt', 'drag', 'anjali']
 const COPY = {
   title: '花水位一倾',
   hintTilt: '按住水壶上下拖动，让清水注入水面。',
-  hintDrag: '按住花瓣，拖向水面后松开。',
+  hintDrag: '拿住花瓣，移到水面范围里，到位会自动放下。',
   hintAnjali: '点按水面，合十致意；也可用辅助按钮。',
   hintPouring: '倾注中…',
   anjaliTap: '点按以合十',
@@ -327,11 +327,12 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
     (step === 'tilt' ? onPitcher(x, y) : step === 'drag' ? onPetal(x, y) :
       step === 'anjali' && onOffering(x, y))
 
+  const grabOffset = new THREE.Vector3()
   const movePetalTo = (clientX: number, clientY: number) => {
     clientToNdc(clientX, clientY)
     raycaster.setFromCamera(pointerNdc, camera)
     if (raycaster.ray.intersectPlane(dragPlane, hitPoint)) {
-      dragTarget.set(hitPoint.x, 0.35, hitPoint.z)
+      dragTarget.copy(hitPoint).add(grabOffset)
     }
   }
 
@@ -373,7 +374,7 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
   }
 
   const onActionTap = () => {
-    if (disposed || !canAct()) return
+    if (disposed || !canAct() || interactionPointerId !== null) return
     if (step === 'tilt') goDrag()
     else if (step === 'drag') goAnjali()
     else if (step === 'anjali') completeScene()
@@ -396,23 +397,37 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
     downY = e.clientY
     tilting = canAct() && step === 'tilt' && onPitcher(e.clientX, e.clientY)
     grabbed = canAct() && step === 'drag' && onPetal(e.clientX, e.clientY)
+    if(grabbed) {
+      dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),petal.getWorldPosition(new THREE.Vector3()))
+      clientToNdc(e.clientX,e.clientY);raycaster.setFromCamera(pointerNdc,camera)
+      if(raycaster.ray.intersectPlane(dragPlane,hitPoint))grabOffset.copy(petal.position).sub(hitPoint)
+    }
     tappedOffering = canAct() && step === 'anjali' && onOffering(e.clientX, e.clientY)
     interactionPointerId = tappedOffering || tilting || grabbed ? e.pointerId : null
   }
+  const carriedReady = (x:number,y:number) => {
+    const rect=canvas.getBoundingClientRect()
+    if(!grabbed||!canAct()||!Number.isFinite(x)||!Number.isFinite(y)||x<rect.left||x>rect.left+rect.width||y<rect.top||y>rect.top+rect.height)return false
+    movePetalTo(x,y);petal.position.copy(dragTarget);scene.updateMatrixWorld(true);camera.updateMatrixWorld(true)
+    const contact=petal.getWorldPosition(new THREE.Vector3()).project(camera)
+    return waterHitTest(rect.left+(contact.x+1)*rect.width/2,rect.top+(1-contact.y)*rect.height/2)
+  }
   const onHitMove = (e: PointerEvent) => {
     if (!canAct() || e.pointerId !== interactionPointerId || step !== 'drag' || !grabbed || e.buttons === 0) return
-    movePetalTo(e.clientX, e.clientY)
+    if(carriedReady(e.clientX,e.clientY))goAnjali()
   }
 
   const onHitUp = (e: PointerEvent) => {
     if (e.pointerId !== interactionPointerId) return
-    if (tappedOffering && Math.hypot(e.clientX - downX, e.clientY - downY) < 12 &&
-      onOffering(e.clientX, e.clientY)) onActionTap()
+    const tap=tappedOffering && Math.hypot(e.clientX-downX,e.clientY-downY)<12 && onOffering(e.clientX,e.clientY)
+    interactionPointerId=null
+    if(tap)onActionTap()
     tappedOffering = false
     interactionPointerId = null
     tilting = false
     grabbed = false
     resetUnfinishedPour()
+    if(step==='drag'){dragTarget.copy(petalHome);petal.position.copy(petalHome)}
   }
   const onHitCancel = (e?: PointerEvent) => {
     if (e && e.pointerId !== interactionPointerId) return
@@ -421,6 +436,7 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
     tilting = false
     grabbed = false
     resetUnfinishedPour()
+    if(step==='drag'){dragTarget.copy(petalHome);petal.position.copy(petalHome)}
   }
   const onInputBlur = () => onHitCancel()
 
@@ -452,12 +468,12 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
 
     dragHandle = gestures.createDrag({
       startsOn: (x, y) => canAct() && step === 'drag' && onPetal(x, y),
-      hitTest: waterHitTest,
+      hitTest: carriedReady,
       onDrop: (hit) => {
         if (step !== 'drag' || !grabbed) return
         grabbed = false
         if (hit) goAnjali()
-        else dragTarget.copy(petalHome)
+        else { dragTarget.copy(petalHome);petal.position.copy(petalHome) }
       },
     })
     dragHandle.mount(hitLayer, {})

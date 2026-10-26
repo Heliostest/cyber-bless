@@ -3,16 +3,15 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createSuanpanModel } from './model'
 
 type Checkpoint = 0 | 1 | 2 | 3
 const ACTIONS = ['向上拨三颗下珠', '向下拨一颗上珠', '向上拨十位下珠']
 const HINTS = [
-  '当前 0。拿住最右档从横梁向下数的第三颗下珠，向上短拖，让三颗下珠一起靠梁。',
-  '当前 3。拿住最右档靠近横梁的上珠，向下短拖。每颗上珠记五，五加三就是八。',
-  '当前 8。拿住右起第二档最靠近横梁的下珠，向上短拖，在十位加一。',
+  '当前 0。拿住最右档从横梁向下数的第三颗下珠，沿竹杆移到横梁旁，三颗下珠会一起靠梁。',
+  '当前 3。拿住最右档靠近横梁的上珠，沿竹杆移到横梁旁。每颗上珠记五，五加三就是八。',
+  '当前 8。拿住右起第二档最靠近横梁的下珠，移到横梁旁，在十位加一。',
   '当前 18：十位一颗下珠，个位一颗上珠和三颗下珠靠梁。十八已拨好。',
 ]
 const MOVING = ['三颗下珠沿竹杆靠近横梁……', '一颗上珠向横梁滑来……', '十位的一颗下珠靠梁……']
@@ -23,8 +22,8 @@ export function createChineseSuanpan(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number } | null = null
-  let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
+  let motion: { step: 0 | 1 | 2; time: number; from: number; placed: boolean } | null = null
+  let amount = 0, moved = false, invalid = false
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
@@ -41,33 +40,46 @@ export function createChineseSuanpan(ctx: SceneContext): SceneInstance {
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step > 0 ? 1 : n, step > 1 ? 1 : step === 1 ? n : 0, step === 2 ? n : step > 2 ? 1 : 0); matrices() }
   const restore = () => pose(at, 0)
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: [0, i === 1 ? 1 : -1], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
-  const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
+  const goals = model.targets.map((target, i) => { pose(i, 1); return target.localToWorld(new THREE.Vector3(...model.anchors[i]!)) }); restore()
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', destination: () => goals[i]!.clone(), targetLabel: '沿杆靠梁', label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), rail = new THREE.Vector2()
+  const screen = (point: THREE.Vector3) => { const p = point.clone().project(camera), r = canvas.getBoundingClientRect(); return new THREE.Vector2(r.left + (p.x + 1) * r.width / 2, r.top + (1 - p.y) * r.height / 2) }
   const nearest = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
     scene.traverseVisible(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; const materials = Array.isArray(m.material) ? m.material : [m.material]; if (materials.some(m => m.visible && (!m.transparent || m.opacity >= 1))) meshes.push(o) })
     return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
   }
-  const axes = (dx: number, dy: number) => at === 1 ? [dy, dx] : [-dy, dx]
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore() }
+  const reset = () => { moved = invalid = false; if (!motion && !disposed) restore() }
+  const slide = (x: number, y: number) => {
+    if (invalid || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false
+    const r = canvas.getBoundingClientRect()
+    if (x < r.left || x > r.left + r.width || y < r.top || y > r.top + r.height) return false
+    moved ||= x !== down.x || y !== down.y
+    const n = new THREE.Vector2(x - down.x, y - down.y).dot(rail) / rail.lengthSq()
+    pose(at, THREE.MathUtils.clamp(n, 0, 1))
+    // The bead remains attached to its rod; acceptance reads its real beam-side
+    // position, rather than the length or direction history of the finger path.
+    const contact = model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!))
+    return moved && contact.distanceTo(goals[at]!) <= .03
+  }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return nearest(x, y) === model.targets[at] },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
+    onStart(x, y) {
+      if (!prepareInput()) { pointer.cancel(); return }
+      down.set(x, y); moved = invalid = false
+      const source = model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!))
+      rail.copy(screen(goals[at]!)).sub(screen(source))
+    },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
-      pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
-      const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
-      maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
-      pose(at, THREE.MathUtils.clamp(along / 60, 0, 1))
+      if (slide(x, y) && pointer.finish()) advance(true)
     },
     onRelease(x, y) {
-      const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
-      const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
-      if (valid) advance(); else reset()
+      if (slide(x, y)) advance(true); else reset()
     }, onCancel: reset,
   })
   const sync = () => {
@@ -87,7 +99,7 @@ export function createChineseSuanpan(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: at, time: 0, from: amount, placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
@@ -117,7 +129,7 @@ export function createChineseSuanpan(ctx: SceneContext): SceneInstance {
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
-      if (motion) { motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85); pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time))); if (motion.time === 1) settle() }
+      if (motion) { motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.placed ? .2 : .85)); pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time))); if (motion.time === 1) settle() }
       if (active()) { matrices(); style.render() }
     },
     dispose() {

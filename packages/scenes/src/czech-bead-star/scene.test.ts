@@ -52,6 +52,8 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 350, height = 
   return { instance, scene, camera, overlay, host, hit, button, point, run, progress, saveWish, complete, haptic }
 }
 function pointer(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
+  if (type === 'pointerdown') pendingStarts.set(el, [clientX,clientY] as [number, number])
+
   const event = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(event, { clientX, clientY, pointerId, pointerType: 'touch', button: 0, buttons: type === 'pointerup' ? 0 : 1 }); el.dispatchEvent(event)
 }
@@ -194,7 +196,7 @@ describe('an original Czech hollow bead star', () => {
   it('rejects an obscured destination and restores the full loose strand', () => {
     const s = mount(0, { isReducedMotion: () => true }), strand = s.scene.getObjectByName('bead-loose-strand')!, home = strand.position.clone()
     const a = s.point('bead-strand-grip'), b = s.point('bead-star-arm-joint')
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b); const clear = block(s, 'bead-star-arm-joint'); pointer(s.hit, 'pointerup', b); s.run()
+    const clear = block(s, 'bead-star-arm-joint'); pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b);  pointer(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([]); expect(strand.position.equals(home)).toBe(true); clear(); assemble(s); expect(s.progress).toEqual([1])
   })
   it('rejects wrong drops, no movement, reversed/vertical turns and travel that comes back', () => {
@@ -213,7 +215,7 @@ describe('an original Czech hollow bead star', () => {
       let active = true
       const s = mount(at, { isReducedMotion: () => true, isActive: () => active }), group = s.scene.getObjectByName(at ? 'bead-star-body' : 'bead-loose-strand')!, pose = group.matrixWorld.clone()
       const p = s.point(at ? 'bead-star-center' : 'bead-strand-grip'), q: [number, number] = at ? [p[0] + 80, p[1]] : s.point('bead-star-arm-joint')
-      pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointermove', q)
+      pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointermove', pendingPoint(s.hit, q))
       if (event === 'blur') window.dispatchEvent(new Event('blur'))
       else if (event === 'pause') { active = false; s.run() }
       else if (event === 'multitouch') pointer(document.body, 'pointerdown', [1, 1], 2)
@@ -291,3 +293,10 @@ describe('an original Czech hollow bead star', () => {
     for (const [type, listener, options] of registrations) expect(removed.mock.calls.some(([t, l, opt]) => t === type && l === listener && capture(opt) === capture(options))).toBe(true)
   })
 })
+
+// Cancellation happens before arrival; a completed placement already owns its result.
+const pendingStarts = new WeakMap<HTMLElement, [number, number]>()
+function pendingPoint(layer: HTMLElement, point: [number, number]): [number, number] {
+ const start = pendingStarts.get(layer) ?? point
+ return [start[0]+(point[0]-start[0])*.20,start[1]+(point[1]-start[1])*.20]
+}

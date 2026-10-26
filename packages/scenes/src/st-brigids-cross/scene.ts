@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { placementHit } from '../placement-hit'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -119,7 +120,7 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
     canStart:(x,y)=>!settling&&step<3&&ray.hits(x,y,[step===0?looseHit:crossHit]),
     onStart(x,y) {
       dragging=true; pressX=x; pressY=y; feedback.prepare()
-      const object=carried(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),object.position)
+      const object=carried(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),(step===0?looseHit:crossHit).getWorldPosition(new THREE.Vector3()))
       if(ray.aim(x,y).ray.intersectPlane(plane,dragPoint)) offset.copy(object.position).sub(dragPoint)
     },
     onMove(x,y) {
@@ -129,10 +130,16 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
         carried().position.x=THREE.MathUtils.clamp(carried().position.x,-1.15,1.15)
         carried().position.y=THREE.MathUtils.clamp(carried().position.y,.4,2.12)
         world.updateMatrixWorld(true)
+        if ((x!==pressX||y!==pressY) && placementHit(canvas,camera,step===0?looseHit:crossHit,x,y,(px,py)=>ray.hits(px,py,[step===0?weaveTarget:hangTarget])) && pointer.finish()) { dragging=false; advance() }
       }
     },
     onRelease(x,y) {
-      const valid=dragging&&(step===2?Math.hypot(x-pressX,y-pressY)<12&&ray.hits(x,y,[crossHit]):ray.hits(x,y,[step===0?weaveTarget:hangTarget]))
+      if(dragging&&step<2&&ray.aim(x,y).ray.intersectPlane(plane,dragPoint)) {
+        carried().position.copy(dragPoint).add(offset)
+        carried().position.x=THREE.MathUtils.clamp(carried().position.x,-1.15,1.15)
+        carried().position.y=THREE.MathUtils.clamp(carried().position.y,.4,2.12);world.updateMatrixWorld(true)
+      }
+      const valid=dragging&&(step===2?Math.hypot(x-pressX,y-pressY)<12&&ray.hits(x,y,[crossHit]):(x!==pressX||y!==pressY)&&placementHit(canvas,camera,step===0?looseHit:crossHit,x,y,(px,py)=>ray.hits(px,py,[step===0?weaveTarget:hangTarget])))
       dragging=false
       if(valid) advance(); else pose()
     },

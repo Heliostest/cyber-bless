@@ -4,7 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -116,15 +116,21 @@ export function createCatalanFestivalGiant(ctx: SceneContext): SceneInstance {
   const moving = () => checkpoint === 0 ? rosette : figure
   const touchTarget = createTouchTarget(canvas, camera, scene)
   const hitsVisible = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => touchTarget.hit(x, y, target, { ignore: held })
+  const automaticReady = (x: number, y: number) => {
+    if (checkpoint >= 2 || !insideCanvas(canvas, x, y)) return false
+    const contact = projectTouchPoint(canvas, camera, checkpoint === 0 ? grip : lift, [0,0,0])
+    return !!contact && !touchTarget.occluded(x,y,checkpoint === 0 ? join : peg,{ignore:moving()}) && touchTarget.hit(contact.x, contact.y, checkpoint === 0 ? join : peg, { ignore: moving() })
+  }
   const reset = () => { dragging = false; maxTravel = 0; if (!transition) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (transition || checkpoint === 3) return false; matrices(); return hitsVisible(x, y, checkpoint === 0 ? grip : lift) },
     onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare(); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), object.position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
-    onMove(x, y) { maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices() },
+    onMove(x, y) { maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices(); if (dragging && automaticReady(x, y) && pointer.finish()) { dragging = false; advance(true) }
+    },
     onRelease(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && hitsVisible(x, y, checkpoint === 0 ? join : peg, moving()) : maxTravel < 12 && hitsVisible(x, y, lift)
+      const valid = checkpoint < 2 ? dragging && automaticReady(x, y) : maxTravel < 12 && hitsVisible(x, y, lift)
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,
   })
@@ -135,8 +141,8 @@ export function createCatalanFestivalGiant(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl, transition ? COPY.moving : checkpoint === 0 ? COPY.assemble : checkpoint === 1 ? COPY.suspend : checkpoint === 2 ? COPY.rest : COPY.done, safe)
   }
   function settle() { if (!active() || !transition) return; checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore(); sync(); ctx.onProgress?.(checkpoint); feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .013 }) }
-  function advance() {
-    if (!active() || pointer.isBusy() || transition || checkpoint === 3) return
+  function advance(placed = false) {
+    if (!active() || (pointer.isBusy() && !placed) || transition || checkpoint === 3) return
     if (checkpoint === 2) { checkpoint = 3; restore(); sync(); ctx.onProgress?.(3); feedback.impact({ freqs: [392, 587.33], duration: .22, gain: .013 }); overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })); return }
     transition = { step: checkpoint, time: 0, from: moving().position.clone() }; sync(); if (ctx.isReducedMotion?.()) settle()
   }

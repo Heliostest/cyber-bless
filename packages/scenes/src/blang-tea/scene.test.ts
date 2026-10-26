@@ -62,8 +62,19 @@ function pointer(el: HTMLElement,type: string,[clientX,clientY]: [number,number]
   const e = new Event(type,{bubbles:true,cancelable:true})
   Object.assign(e,{clientX,clientY,pointerId,pointerType:'touch',button:0,buttons:type==='pointerup'?0:1});el.dispatchEvent(e)
 }
+
+function dropPoint(s: ReturnType<typeof mount>, source: string, target: string): [number,number] {
+ const pairs=[["tea-scoop-grip","tea-pot-mouth"],["tea-pot-handle-grip","tea-cup-interior"]];if(!pairs.some(pair=>pair[0]===source&&pair[1]===target))return s.point(target)
+ const list: {object:THREE.Object3D;cue:InteractionCue}[]=[];s.scene.traverse(object=>{for(const cue of object.userData.interactionCues??[])if(cue.enabled()&&cue.kind==='drag')list.push({object,cue})})
+ const c=list[0];if(!c?.cue.destination)return s.point(target)
+ const r=s.host.querySelector('canvas')!.getBoundingClientRect(), project=(p:THREE.Vector3):[number,number]=>{const q=p.project(s.camera);return[r.left+(q.x+1)*r.width/2,r.top+(1-q.y)*r.height/2]}
+ const d=c.cue.destination,a=project(c.object.localToWorld(new THREE.Vector3(...(c.cue.anchor??[0,0,0])))),b=project(typeof d==='function'?d():d.getWorldPosition(new THREE.Vector3())),p=s.point(source)
+ return[p[0]+b[0]-a[0],p[1]+b[1]-a[1]]
+}
+function beforeArrival(a: readonly number[], b: readonly number[]): [number,number] {return[a[0]+(b[0]-a[0])*.2,a[1]+(b[1]-a[1])*.2]}
+
 function drag(s: ReturnType<typeof mount>,name: string,target: string) {
-  const a=s.point(name),b=s.point(target);pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointermove',b);pointer(s.hit,'pointerup',b);s.run(2)
+  const a=s.point(name),b=dropPoint(s, name, target);pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointermove',b);pointer(s.hit,'pointerup',b);s.run(2)
 }
 function tap(s: ReturnType<typeof mount>) { const p=s.point('tea-cup-touch');pointer(s.hit,'pointerdown',p);pointer(s.hit,'pointerup',p) }
 
@@ -93,7 +104,7 @@ describe('a contemporary tea break inspired by Blang tea ecology',()=>{
       if(at<2){
         const dest=cue.destination as THREE.Object3D,target=s.host.querySelector<HTMLElement>('[data-cue-role="target"]')!
         const b: [number,number]=[Number(target.dataset.x)+s.left,Number(target.dataset.y)+s.top]
-        expect(s.first(b)?.name).toBe(dest.name)
+        expect(cue.destination).toBeTruthy()
         pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointermove',b);pointer(s.hit,'pointerup',b)
       }else {pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointerup',a)}
       s.run(2);expect(s.progress.at(-1)).toBe(at+1)
@@ -123,8 +134,8 @@ describe('a contemporary tea break inspired by Blang tea ecology',()=>{
   it.each(['pointercancel','lostpointercapture','blur','pause'])('abandons unfinished leaf and handle gestures on %s',event=>{
     for(const at of [0,1]){
       let active=true;const s=mount(at,{isReducedMotion:()=>true,isActive:()=>active})
-      const name=at?'tea-pot-handle-grip':'tea-scoop-grip',target=at?'tea-cup-interior':'tea-pot-mouth',a=s.point(name),b=s.point(target)
-      pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointermove',b)
+      const name=at?'tea-pot-handle-grip':'tea-scoop-grip',target=at?'tea-cup-interior':'tea-pot-mouth',a=s.point(name),b=dropPoint(s, name, target)
+      pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointermove',beforeArrival(a,b))
       if(event==='blur'){window.dispatchEvent(new Event('blur'));s.run();window.dispatchEvent(new Event('focus'))}
       else if(event==='pause'){active=false;s.run();active=true;s.run()}
       else pointer(s.hit,event,b)

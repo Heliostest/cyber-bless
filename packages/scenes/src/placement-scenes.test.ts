@@ -42,7 +42,7 @@ const placements = [
   'omikuji', 'polish-blessing-basket', 'floating-lantern-loy-krathong', 'omamori-cycle', 'shrine-suzu-bell',
   'st-brigids-cross', 'bokjori', 'ema-votive-plaque', 'clootie-well-rag', 'votive-candle-catholic',
 ] as const
-async function mount(id: string, width = 390, initialProgress = 0) {
+async function mount(id: string, width = 390, initialProgress = 0, reduced = true) {
   const module = await loadScene(id), height = 408, left = 17, top = 89
   const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
   host.append(canvas, overlay); document.body.append(host)
@@ -51,7 +51,7 @@ async function mount(id: string, width = 390, initialProgress = 0) {
   const progress: number[] = [], complete = vi.fn()
   overlay.addEventListener('scene:complete', complete)
   const instance = module.create({ canvas, overlay, gestures: Gestures, shared: Shared, initialProgress,
-    onProgress: n => progress.push(n), returning: true, isReducedMotion: () => true, isSoundEnabled: () => false })
+    onProgress: n => progress.push(n), returning: true, isReducedMotion: () => reduced, isSoundEnabled: () => false })
   instances.push(instance); instance.start()
   const run = () => { for (let i = 0; i < 100; i++) instance.update(.05) }
   run()
@@ -82,18 +82,19 @@ function operate(s: Awaited<ReturnType<typeof mount>>, mode: 'center' | 'sparse'
   pointer(s.layer, 'pointerup', b); s.run()
 }
 it.each(['andalusian-ceramic-tile', 'bai-indigo-cloth', 'croatian-licitar-heart', 'hungarian-embroidery-hoop'])(
-  '%s previews a valid drop, clears canceled readiness and accepts a fresh placement', async id => {
+  '%s cancels before arrival and automatically accepts a fresh placement at its target', async id => {
     for (const at of [0, 1]) {
       const s = await mount(id, 390, at), { object, cue } = s.cues()[0]!
       const from = s.source(object, cue), to = destination(s, cue)
-      pointer(s.layer, 'pointerdown', from); pointer(s.layer, 'pointermove', to)
-      expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady, `step ${at}`).toBe('true')
+      const away: Point = [from[0] - (to[0] - from[0]) * .2, from[1] - (to[1] - from[1]) * .2]
+      pointer(s.layer, 'pointerdown', from); pointer(s.layer, 'pointermove', away)
       expect(s.progress).toEqual([])
-      pointer(s.layer, 'pointercancel', to)
+      pointer(s.layer, 'pointercancel', away)
       expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
       expect(s.progress).toEqual([])
-      pointer(s.layer, 'pointerdown', from); pointer(s.layer, 'pointermove', to); pointer(s.layer, 'pointerup', to); s.run()
+      pointer(s.layer, 'pointerdown', from); pointer(s.layer, 'pointermove', to); s.run()
       expect(s.progress).toEqual([at + 1])
+      pointer(s.layer, 'pointerup', to); s.run(); expect(s.progress).toEqual([at + 1])
       expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
       s.instance.dispose()
     }
@@ -115,15 +116,9 @@ it.each(['andalusian-ceramic-tile', 'bai-indigo-cloth', 'croatian-licitar-heart'
   '%s cannot use an aligned grip to bypass a foreground object under the fingertip', async id => {
     const at = id === 'hungarian-embroidery-hoop' ? 0 : 1, s = await mount(id, 390, at)
     const entry = s.cues()[0]!, from = s.source(entry.object, entry.cue), target = destination(s, entry.cue)
-    let end: Point = [from[0] + 12, from[1]]
-    pointer(s.layer, 'pointerdown', end); end = [end[0] + 2, end[1]]; pointer(s.layer, 'pointermove', end)
-    for (let i = 0; i < 8; i++) {
-      const grip = s.source(entry.object, entry.cue)
-      end = [end[0] + target[0] - grip[0], end[1] + target[1] - grip[1]]
-      pointer(s.layer, 'pointermove', end)
-    }
-    const aligned = s.source(entry.object, entry.cue)
-    expect(Math.hypot(aligned[0] - target[0], aligned[1] - target[1])).toBeLessThan(1)
+    const end: Point = [target[0] + 12, target[1]]
+    pointer(s.layer, 'pointerdown', [from[0] + 12, from[1]])
+    expect(s.layer.setPointerCapture, 'the blocked test actually picks up the source').toHaveBeenCalledOnce()
     const ray = new THREE.Raycaster()
     ray.setFromCamera(new THREE.Vector2((end[0] - 17) / 390 * 2 - 1, 1 - (end[1] - 89) / 408 * 2), s.camera)
     const d = entry.cue.destination!, world = typeof d === 'function' ? d() : d.getWorldPosition(new THREE.Vector3())
@@ -132,6 +127,7 @@ it.each(['andalusian-ceramic-tile', 'bai-indigo-cloth', 'croatian-licitar-heart'
     blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker); s.scene.updateMatrixWorld(true)
     try {
       expect(ray.intersectObject(blocker)).toHaveLength(1)
+      pointer(s.layer, 'pointermove', end)
       pointer(s.layer, 'pointerup', end); s.run()
       expect(s.progress).toEqual([])
       expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
@@ -156,7 +152,8 @@ it.each([...placements, ...complexPlacements])('%s restores its physical source 
     const b = cue.destination ? destination(s, cue) : [a[0] + 60, a[1] + 20] as Point
     pointer(s.layer, 'pointerdown', a)
     expect(s.layer.setPointerCapture, `${id} ${at} must actually claim the source`).toHaveBeenCalled()
-    pointer(s.layer, 'pointermove', b); pointer(s.layer, event, b); pointer(s.layer, 'pointerup', b); s.run()
+    const away: Point = cue.destination ? [a[0] - (b[0] - a[0]) * .2, a[1] - (b[1] - a[1]) * .2] : [a[0] + 12, a[1]]
+    pointer(s.layer, 'pointermove', away); pointer(s.layer, event, away); pointer(s.layer, 'pointerup', away); s.run()
     expect(s.progress, `${id} ${at} must not accept ${event}`).toEqual([])
     const after = s.source(object, cue)
     expect(Math.hypot(after[0] - before[0], after[1] - before[1]), `${id} ${at} must restore ${event}`).toBeLessThan(.01)
@@ -166,11 +163,12 @@ it.each([...placements, ...complexPlacements])('%s restores its physical source 
 
 it.each(['czech-bead-star', 'fijian-woven-fan', 'finnish-birch-basket', 'basque-sunflower', 'aland-votive-ship', 'minangkabau-spinning-top', 'breton-banner'])('%s keeps placement destinations occluded by other solid objects invalid', async id => {
   const s = await mount(id), entry = s.cues()[0]!, a = s.source(entry.object, entry.cue), b = destination(s, entry.cue)
-  pointer(s.layer, 'pointerdown', a); pointer(s.layer, 'pointermove', b)
+  pointer(s.layer, 'pointerdown', a)
   const d = entry.cue.destination!, target = typeof d === 'function' ? d() : d.getWorldPosition(new THREE.Vector3())
   const blocker = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
   blocker.position.lerpVectors(target, s.camera.getWorldPosition(new THREE.Vector3()), .25); blocker.quaternion.copy(s.camera.quaternion)
   s.scene.add(blocker); s.scene.updateMatrixWorld(true)
+  pointer(s.layer, 'pointermove', b)
   pointer(s.layer, 'pointerup', b); s.run()
   expect(s.progress).toEqual([])
   blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose()
@@ -233,7 +231,19 @@ it.each(complexPlacements)('%s completes its full physical path at touch and mou
           const entry = s.cues()[0]!, flowers = entry.object as THREE.InstancedMesh, matrix = new THREE.Matrix4()
           flowers.getMatrixAt(0, matrix); s.scene.updateMatrixWorld(true)
           const a = s.project(new THREE.Vector3().setFromMatrixPosition(matrix).applyMatrix4(flowers.matrixWorld))
-          stroke(a, [destination(s, entry.cue)])
+          if (at < 2) {
+            // Pick a visible bud off-centre, but align the cluster's contact
+            // anchor rather than that fingertip with the empty ring segment.
+            const goal = destination(s, entry.cue)
+            let end = a
+            pointer(s.layer, 'pointerdown', a)
+            for (let n = 0; n < 5 && entry.cue.enabled(); n++) {
+              const contact = s.source(entry.object, entry.cue)
+              end = [end[0] + goal[0] - contact[0], end[1] + goal[1] - contact[1]]
+              pointer(s.layer, 'pointermove', end)
+            }
+            pointer(s.layer, 'pointerup', end); s.run()
+          } else stroke(a, [destination(s, entry.cue)])
         }
       } else if (id === 'chinese-woodblock-print' && at === 0) {
         stroke(point('woodblock-rubbing-grip'), [-.55, 0, .55, 0, -.55, 0, .55].map(x => point('woodblock-paper-back', [x, 0, 0])))
@@ -249,7 +259,7 @@ it.each(complexPlacements)('%s completes its full physical path at touch and mou
 it.each(placements.filter(id => !['omamori-cycle', 'shrine-suzu-bell', 'ema-votive-plaque', 'czech-pilgrim-journal', 'votive-candle-catholic'].includes(id)))('%s accepts a visibly aligned grip after an off-center pick', async id => {
   let exercised = 0
   for (const width of [390, 1280]) for (const at of [0, 1, 2]) {
-    const s = await mount(id, width, at), entry = s.cues()[0]!
+    const s = await mount(id, width, at, false), entry = s.cues()[0]!
     if (!entry.cue.destination || at === 1 && ['blang-tea', 'hungarian-embroidery-hoop', 'welsh-love-spoon', 'barcelos-clay-rooster', 'sorbian-painted-egg', 'omikuji'].includes(id) || at === 0 && ['chinese-incense', 'bokjori'].includes(id)) { s.instance.dispose(); continue }
     const { object, cue } = entry, a = s.source(object, cue), target = destination(s, cue)
     let end: Point | undefined
@@ -263,6 +273,7 @@ it.each(placements.filter(id => !['omamori-cycle', 'shrine-suzu-bell', 'ema-voti
       if (Math.hypot(moved[0] - a[0], moved[1] - a[1]) > .5) {
         end = [start[0] + 2, start[1]]
         for (let n = 0; n < 5; n++) {
+          if (vi.mocked(s.layer.releasePointerCapture).mock.calls.length) break
           const p = s.source(object, cue)
           end = [end[0] + target[0] - p[0], end[1] + target[1] - p[1]]
           pointer(s.layer, 'pointermove', end)
@@ -272,8 +283,8 @@ it.each(placements.filter(id => !['omamori-cycle', 'shrine-suzu-bell', 'ema-voti
       pointer(s.layer, 'pointercancel', start)
     }
     expect(end, `${id} ${at} must offer an off-center source`).toBeDefined()
-    const aligned = s.source(object, cue)
-    expect(Math.hypot(aligned[0] - target[0], aligned[1] - target[1]), `${id} ${at} grip must reach target`).toBeLessThan(id === 'breton-banner' ? 3 : 1)
+    s.run()
+    if (!(id === 'st-brigids-cross' && at === 0)) expect(s.progress, 'the held object arrives before pointerup').toEqual([at + 1])
     pointer(s.layer, 'pointerup', end!); s.run()
     if (id === 'st-brigids-cross' && at === 0) for (let i = 0; i < 3; i++) operate(s)
     expect(s.progress, `${id} step ${at}, ${width}, aligned grip`).toEqual([at + 1])

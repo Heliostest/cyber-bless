@@ -41,6 +41,13 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
   const { scene, renderer } = createWarmStage(canvas)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
+
+  const projectedGuide = (goal: THREE.Vector3, grip: THREE.Vector3, contact: THREE.Vector3) => {
+    camera.updateMatrixWorld(true)
+    const g=goal.project(camera),a=grip.project(camera),b=contact.project(camera)
+    g.x+=a.x-b.x;g.y+=a.y-b.y
+    return g.unproject(camera)
+  }
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'welsh-love-spoon', label: COPY.title }); style.setStyle(CEL_STYLE)
   const lights = addStageLights(scene, ctx.stage, { sky: 0xf3e9d4, ground: 0xaba596, key: 0xffefdc, rim: 0xd4e7eb,
     keyPosition: [-3, 5, 4], keyIntensity: 1.25, rimIntensity: .42 })
@@ -102,7 +109,7 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
   const enabled = (step: number) => () => active() && !motion && at === step
   const bowlPoint = () => bowl.getWorldPosition(new THREE.Vector3())
   addInteractionCue(clothGrip, { kind: 'drag', label: '拿起软布', priority: 3, enabled: enabled(0), destination: bowl, targetLabel: '木勺凹面' })
-  addInteractionCue(grip, { kind: 'drag', label: '握住木柄', priority: 3, enabled: enabled(1), destination: seat, targetLabel: '木勺展托' })
+  addInteractionCue(grip, { kind: 'drag', label: '握住木柄', priority: 3, enabled: enabled(1), destination: () => projectedGuide(seat.getWorldPosition(new THREE.Vector3()),grip.getWorldPosition(new THREE.Vector3()),spoon.getWorldPosition(new THREE.Vector3())), targetLabel: '木勺展托' })
   addInteractionCue(grip, { kind: 'tap', label: '轻点木勺细看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const touch = createTouchTarget(canvas, camera, scene)
@@ -120,15 +127,10 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
     const first = ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
     return (Array.isArray(targets) ? targets : [targets]).some(target => belongsTo(first, target))
   }
-  const acceptsDrop = (x: number, y: number) => {
-    if (!insideCanvas(canvas, x, y)) return false
-    const target = at === 0 ? bowl : seat, ignore = moving()
-    if (visibleHit(x, y, target, ignore) || touch.hit(x, y, target, { ignore })) return true
-    if (touch.occluded(x, y, target, { ignore })) return false
-    // The user holds the handle above the stand. Accept the spoon's bottom
-    // touching the seat even though that fingertip is well above the seat.
-    const contact = projectTouchPoint(canvas, camera, at === 0 ? clothGrip : spoon)
-    return !!contact && touch.hit(contact.x, contact.y, target, { ignore })
+  const automaticReady = (x: number, y: number) => {
+    if (at >= 2 || !insideCanvas(canvas, x, y)) return false
+    const contact = projectTouchPoint(canvas, camera, at === 0 ? clothGrip : spoon, [0,0,0])
+    return !!contact && !touch.occluded(x,y,at === 0 ? bowl : seat,{ignore:moving()}) && touch.hit(contact.x, contact.y, at === 0 ? bowl : seat, { ignore: moving() })
   }
   const reset = () => { dragging = false; travel = 0; dropFeedback.clear(); if (!motion) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
@@ -139,11 +141,12 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
       moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .80, 2.3); matrices()
-      dropFeedback.setReady(travel >= 8 && acceptsDrop(x, y))
+      dropFeedback.setReady(dragging && automaticReady(x, y))
+    if (dragging && automaticReady(x, y) && pointer.finish()) { dragging = false; dropFeedback.clear(); begin(true) }
     },
     onRelease(x, y) {
       matrices()
-      const valid = at < 2 ? dragging && travel >= 8 && acceptsDrop(x, y)
+      const valid = at < 2 ? dragging && automaticReady(x, y)
         : at === 2 && travel < 12 && Math.hypot(x - down.x, y - down.y) < 12 && touch.hit(x, y, spoon)
       dragging = false
       dropFeedback.clear()
@@ -158,7 +161,7 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.wiping : COPY.placing : at === 0 ? COPY.decorate : at === 1 ? COPY.hang : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
   function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); if (!active()) return; feedback.impact({ freqs: [392, 523.25], duration: .19, gain: .012, type: 'triangle' }) }
-  function begin() { if (!active() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
+  function begin(placed = false) { if (!active() || (pointer.isBusy() && !placed) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || at !== 2) return
     at = 3; restore(); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()

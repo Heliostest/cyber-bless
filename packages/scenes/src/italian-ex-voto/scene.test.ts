@@ -81,6 +81,16 @@ function trace(s: ReturnType<typeof mount>) {
   pointer(s.hit, 'pointerup', to); s.run()
 }
 
+function beforeArrival(s: ReturnType<typeof mount>, goal: [number, number]): [number, number] {
+  let selected: { object: THREE.Object3D; cue: InteractionCue } | undefined
+  s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.kind === 'drag' && cue.destination) selected = { object, cue } })
+  if (!selected) return goal
+  const { object, cue } = selected, canvas = s.overlay.parentElement!.querySelector('canvas')!, rect = canvas.getBoundingClientRect()
+  const source = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(s.camera)
+  const x = rect.left + (source.x + 1) * rect.width / 2, y = rect.top + (1 - source.y) * rect.height / 2
+  return [Math.max(rect.left + 2, x - 48), Math.max(rect.top + 2, y - 48)]
+}
+
 describe('Italian ex voto original ceramic painting', () => {
   it('paints a path from the actual brush, traces window light and quietly taps the ceramic', () => {
     const s = mount(0, { isReducedMotion: () => true })
@@ -134,7 +144,7 @@ describe('Italian ex voto original ceramic painting', () => {
   it.each(['pointercancel', 'lostpointercapture'])('cancels and restores the actual brush after %s', event => {
     const s = mount(1, { isReducedMotion: () => true }), from = s.point('exvoto-brush-tip'), to = s.point('exvoto-window-end')
     const original = s.scene.getObjectByName('exvoto-brush')!.position.clone()
-    pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', to); pointer(s.hit, event, to); pointer(s.hit, 'pointerup', to)
+    pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', beforeArrival(s, to)); pointer(s.hit, event, to); pointer(s.hit, 'pointerup', to)
     expect(s.progress).toEqual([]); expect(s.scene.getObjectByName('exvoto-brush')!.position.equals(original)).toBe(true)
     trace(s); expect(s.progress).toEqual([2])
   })
@@ -159,7 +169,7 @@ describe('Italian ex voto original ceramic painting', () => {
   it('cancels unfinished input on pause and freezes an in-flight paint action', () => {
     let active = true
     const s = mount(0, { isActive: () => active }), from = s.point('exvoto-brush-tip'), to = s.point('exvoto-route-origin')
-    pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', to)
+    pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', beforeArrival(s, to))
     active = false; s.run(); active = true; pointer(s.hit, 'pointerup', to); s.run(); expect(s.progress).toEqual([])
     s.button.click(); s.run(.1); const p = s.scene.getObjectByName('exvoto-brush')!.position.clone()
     active = false; s.run(2); expect(s.scene.getObjectByName('exvoto-brush')!.position.equals(p)).toBe(true); expect(s.progress).toEqual([])

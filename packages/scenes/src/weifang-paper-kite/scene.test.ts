@@ -62,14 +62,20 @@ const gripAnchor: [number, number, number] = [1.05, .34, .012]
 const quietAnchor: [number, number, number] = [.08, .22, .014]
 const targetName = (at: number) => at === 0 ? 'kite-paper-right' : at === 1 ? 'kite-reel-grip' : 'kite-body-paper'
 const anchor = (at: number): [number, number, number] => at === 0 ? gripAnchor : at === 1 ? [0, 0, .075] : quietAnchor
-const delta = (at: number): [number, number] => at === 0 ? [-48, -36] : [0, 60]
+const originalDelta = (at: number): [number, number] => at === 0 ? [-48, -36] : [0, 60]
+function delta(at: number,s: ReturnType<typeof mount>): [number,number] {
+  const cue=cues(s)[0]?.cue
+  if(at!==0 || typeof cue?.destination !== 'function') return originalDelta(at)
+  const rect=s.host.querySelector('canvas')!.getBoundingClientRect(), goal=cue.destination().project(s.camera), source=s.point(targetName(at),anchor(at))
+  return [rect.left+(goal.x+1)*rect.width/2-source[0],rect.top+(1-goal.y)*rect.height/2-source[1]]
+}
 function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, run = true) {
   const p = s.point(targetName(at), anchor(at)); event(s.hit, 'pointerdown', p)
   for (let i = 1; i <= 8; i++) event(s.hit, 'pointermove', [p[0] + dx * i / 8, p[1] + dy * i / 8])
   event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); if (run) s.run()
 }
 function step(s: ReturnType<typeof mount>, at: number, run = true) {
-  if (at < 2) drag(s, at, ...delta(at), run)
+  if (at < 2) drag(s, at, ...delta(at,s), run)
   else { const p = s.point(targetName(at), anchor(at)); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p) }
 }
 function cues(s: ReturnType<typeof mount>) {
@@ -102,17 +108,17 @@ describe('an original connected paper swallow kite', () => {
     step(s, 2); step(s, 2); s.button.click(); expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
   it.each([0, 1])('moves the selected physical object during drag and restores cancelled input at %i', at => {
-    const s = mount(at), object = s.scene.getObjectByName(at === 0 ? 'kite-prepared-wing' : 'kite-reel')!, home = object.position.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); expect(object.position.distanceTo(home)).toBeGreaterThan(.05); expect(s.progress).toEqual([])
+    const s = mount(at), object = s.scene.getObjectByName(at === 0 ? 'kite-prepared-wing' : 'kite-reel')!, home = object.position.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx * (at===0 ? .25 : .5), p[1] + dy * (at===0 ? .25 : .5)]); expect(object.position.distanceTo(home)).toBeGreaterThan(.05); expect(s.progress).toEqual([])
     event(s.hit, 'pointercancel', p); expect(object.position.distanceTo(home)).toBeLessThan(.00001)
   })
   it.each([0, 1])('rejects wrong surfaces, orphan release, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
+    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s), end: [number, number] = [p[0] + dx, p[1] + dy]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
     event(s.hit, 'pointerup', end)
     for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx]]) drag(s, at, x, y)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', at===0 ? [p[0]+dx*.25,p[1]+dy*.25] : end); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', at===0 ? [p[0]+dx*.25,p[1]+dy*.25] : end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
   })
   it.each([0, 1, 2, 3])('silently restores checkpoint %i on ordinary and returning visits', at => {
@@ -184,8 +190,8 @@ describe('an original connected paper swallow kite', () => {
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or a stale object pose', kind => {
     for (const at of [0, 1]) {
-      let active = true; const s = mount(at, { isActive: () => active }), needle = s.scene.getObjectByName(at === 0 ? 'kite-prepared-wing' : 'kite-reel')!, home = needle.position.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
-      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); const frames = rendered.render.mock.calls.length
+      let active = true; const s = mount(at, { isActive: () => active }), needle = s.scene.getObjectByName(at === 0 ? 'kite-prepared-wing' : 'kite-reel')!, home = needle.position.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
+      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx * (at===0 ? .25 : .5), p[1] + dy * (at===0 ? .25 : .5)]); const frames = rendered.render.mock.calls.length
       if (kind === 'pause') { active = false; s.instance.update(.05); s.instance.update(.05); expect(rendered.render.mock.calls.length).toBe(frames) }
       else if (kind === 'blur') window.dispatchEvent(new Event('blur')); else event(s.hit, kind, p)
       event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run(); expect(s.progress).toEqual([]); expect(needle.position.distanceTo(home)).toBeLessThan(.00001)

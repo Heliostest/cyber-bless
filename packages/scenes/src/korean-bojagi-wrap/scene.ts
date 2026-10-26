@@ -13,9 +13,9 @@ const COPY = {
   settling: '布料顺着盒沿落下，褶皱慢慢安定…',
 } as const
 const LABELS = ['折过近角', '覆上远角', '收拢左角', '收拢右角', '交叉打松结', '拉紧布结']
-const HINTS = ['捏住近处布角，覆盖盒顶亮起的区域，松手后落定。', '拿起远处布角，覆到盒顶亮起的区域，松手后落定。', '拢起左边布角，覆盖盒顶亮起的区域，松手后落定。', '拢起右边布角，覆盖盒顶亮起的区域，松手后落定。', '把左侧系带搭过右侧系带，在盒顶交叠后松手，留成松结。', '握住右侧带端向外拉，看着布结逐渐收小；提示收紧后松手。']
-const READY = ['已覆盖，松手落定', '已覆盖，松手落定', '已覆盖，松手落定', '已覆盖，松手落定', '系带已交叠，松手成结', '布结已收紧，松手落定']
-const DESTINATIONS = ['覆盖亮起区域后松手', '覆盖亮起区域后松手', '覆盖亮起区域后松手', '覆盖亮起区域后松手', '搭过右侧系带后松手', '向外拉至布结收紧']
+const HINTS = ['捏住近处布角，覆盖盒顶亮起的区域，到位后自然落定。', '拿起远处布角，覆到盒顶亮起的区域，到位后自然落定。', '拢起左边布角，覆盖盒顶亮起的区域，到位后自然落定。', '拢起右边布角，覆盖盒顶亮起的区域，到位后自然落定。', '把左侧系带搭过右侧系带，在盒顶交叠后自然留成松结。', '握住右侧带端向外拉，看着布结逐渐收小；提示收紧后松手。']
+const READY = ['已覆盖，正在落定', '已覆盖，正在落定', '已覆盖，正在落定', '已覆盖，正在落定', '系带已交叠，正在成结', '布结已收紧，松手落定']
+const DESTINATIONS = ['覆盖亮起区域', '覆盖亮起区域', '覆盖亮起区域', '覆盖亮起区域', '搭过右侧系带', '向外拉至布结收紧']
 type XYZ = [number, number, number]
 const ease = (t: number) => t * t * (3 - 2 * t)
 const GRIP: XYZ = [0, .012, 0]
@@ -328,6 +328,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; pointer.cancel(); return }
       moved ||= Math.hypot(x - down.x, y - down.y) > 2
       showReadiness(moveShape(x, y) && moved && !invalid && inside(x, y) && readyToRelease())
+          if (at < 5 && moved && !invalid && inside(x, y) && readyToRelease() && pointer.finish()) { dragging = false; begin(true) }
     },
     onRelease(x, y) {
       const valid = dragging && moved && !invalid && Number.isFinite(x) && Number.isFinite(y) && inside(x, y) && moveShape(x, y) && readyToRelease()
@@ -360,8 +361,8 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
       feedback.impact({ freqs: step === 5 ? [294, 392] : step === 4 ? [329.63, 440] : [392, 523.25], duration: step === 5 ? .19 : step === 4 ? .14 : .10, gain: .009, type: 'sine' })
     })
   }
-  function begin() {
-    if (!inputActive() || pointer.isBusy() || motion || at >= 6) return
+  function begin(arrived = false) {
+    if (!inputActive() || (pointer.isBusy() && !arrived) || motion || at >= 6) return
     const amount = at < 4 ? amounts[at]! : at === 4 ? looseAmount : tieAmount
     motion = { step: at, time: 0, amount, offset: heldOffset.clone() }; sync(); if (reduced()) settle()
   }

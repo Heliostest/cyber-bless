@@ -1,3 +1,4 @@
+import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -130,20 +131,22 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
     ctx.onProgress?.(step); feedback.impact({freqs:step===3?[392,587]:[440,660],duration:.25,gain:.02})
     if (step === 3) overlay.dispatchEvent(new CustomEvent('scene:complete',{bubbles:true}))
   }
-  function begin(text = '') {
-    if (!ready() || step === 3 || pointer.isBusy()) return
+  function begin(text = '', arrived = false) {
+    if (!ready() || step === 3 || (pointer.isBusy() && !arrived)) return
     const line = text.trim(); if (line.length > 40) return
     dragging = false; motion = {step,t:0,from:(step===0?flower:boat).position.clone(),text:returning?'':line}
     feedback.prepare(); sync(); if (reduced()) settled()
   }
   const trackTravel = (x:number,y:number) => { maxTravel = Math.max(maxTravel,Math.hypot(x-down.x,y-down.y)) }
+  const placementReady = (x: number, y: number) => step !== 1 && maxTravel > 0
+    && placementHit(canvas, camera, step === 0 ? flowerSource : boatSource, x, y, (px, py) => ray.hits(px, py, [step === 0 ? flowerSeat : waterTarget]))
   const pointer = createObjectPointer(ui.hitLayer,{
     isActive:active,
     canStart(x,y) { matrices(); return ready() && step<3 && ray.hits(x,y,step===1?[wickSource,candle]:[step===0?flowerSource:boatSource]) },
     onStart(x,y) {
       dragging=true; maxTravel=0; down.set(x,y); feedback.prepare()
       const item = step===0?flower:boat
-      plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),item.position)
+      plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),(step === 0 ? flowerSource : boatSource).getWorldPosition(new THREE.Vector3()))
       if (ray.aim(x,y).ray.intersectPlane(plane,point)) offset.copy(item.position).sub(point)
     },
     onMove(x,y) {
@@ -153,10 +156,11 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
         if(step===2) flower.position.copy(boat.localToWorld(SEAT.clone()).add(new THREE.Vector3(0,.017,0)))
         matrices()
       }
+      if (dragging && placementReady(x, y) && pointer.finish()) { dragging = false; begin('', true) }
     },
     onRelease(x,y) {
       trackTravel(x,y); matrices()
-      const valid=dragging && (step!==1 || maxTravel<12) && ray.hits(x,y,step===1?[wickSource,candle]:[step===0?flowerSeat:waterTarget])
+      const valid=dragging && (step===1 ? maxTravel<12 && ray.hits(x,y,[wickSource,candle]) : placementReady(x,y))
       dragging=false; if(valid)begin(); else resetPose()
     },
     onCancel() { dragging=false; if(!motion)resetPose() },

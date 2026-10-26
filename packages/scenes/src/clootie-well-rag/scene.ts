@@ -1,3 +1,4 @@
+import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
@@ -319,20 +320,24 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
       overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     }
   }
-  const begin = () => {
+  const begin = (_arrived = false) => {
     if (!active() || motion || checkpoint === 3) return
     motion = { step: checkpoint, time: 0, from: rag.position.clone() }
     dragging = false
     if (reduced()) finish()
     else syncUI()
   }
+  const dragStart = new THREE.Vector2()
+  const placementReady = (x: number, y: number) => checkpoint < 2 && Math.hypot(x - dragStart.x, y - dragStart.y) > 0
+    && placementHit(canvas, camera, ragHandle, x, y, (px, py) => ray.hits(px, py, [checkpoint === 0 ? water : branchTarget]))
   const pointer = createObjectPointer(hitLayer, {
     isActive: active,
     canStart(x, y) { return !motion && checkpoint < 3 && ray.hits(x, y, [ragHandle, cloth]) },
     onStart(x, y) {
       dragging = true
+      dragStart.set(x, y)
       feedback.prepare()
-      dragOrigin.copy(rag.position)
+      dragOrigin.copy(ragHandle.getWorldPosition(new THREE.Vector3()))
       dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), rag.position)
       if (ray.aim(x, y).ray.intersectPlane(dragPlane, dragPoint)) dragOffset.copy(rag.position).sub(dragPoint)
     },
@@ -345,9 +350,10 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
         dragBend = THREE.MathUtils.clamp(rag.position.x - dragOrigin.x, -0.8, 0.8)
         poseCloth()
       }
+      if (dragging && placementReady(x, y) && pointer.finish()) { dragging = false; begin(true) }
     },
     onRelease(x, y) {
-      const valid = dragging && active() && !motion && (checkpoint === 2 || ray.hits(x, y, [checkpoint === 0 ? water : branchTarget]))
+      const valid = dragging && active() && !motion && (checkpoint === 2 || placementReady(x, y))
       dragging = false
       if (valid) begin()
       else restorePose()

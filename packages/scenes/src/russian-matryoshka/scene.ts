@@ -3,6 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPosePlacement } from '../pose-placement'
 import { createTouchTarget } from '../touch-target'
 import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
@@ -10,12 +11,7 @@ import { createMatryoshkaModel } from './model'
 
 type Checkpoint = 0 | 1 | 2 | 3
 const ACTIONS = ['向上提开外壳', '向左收进小娃', '向上提壳合拢']
-const HINTS = [
-  '按住大套娃的上半身向上短拖，提开木壳，露出浅色内壁。',
-  '按住右侧的小娃向左短拖，让它越过口沿，稳稳落入大套娃。',
-  '按住左侧的上半身向上短拖，提起木壳，对齐后合回原位。',
-  '小娃收在大娃里面，木壳轻轻合拢。把这一刻的温暖好好收藏。',
-]
+const HINTS = ["拿起大套娃的上半身，移到左侧的提示标记处。","拿起右侧小娃，移到大套娃口沿上方，靠近后会轻轻收好。","拿起左侧上半身，移回大套娃接缝处，靠近后会自动合拢。","小娃收在大娃里面，木壳轻轻合拢。把这一刻的温暖好好收藏。"]
 const MOVING = ['木壳轻轻提起……', '小娃越过口沿，落入木壳……', '对齐接缝，木壳缓缓合拢……']
 const ease = (t: number) => t * t * (3 - 2 * t)
 
@@ -42,28 +38,27 @@ export function createRussianMatryoshka(ctx: SceneContext): SceneInstance {
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
   const restore = () => pose(at, 0)
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: i === 1 ? [-1, 0] : [0, -1], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const placement = createPosePlacement(canvas, camera, model, scene, {
+    // Arrive above the opening; the already-authored nesting endpoint is hidden inside the lower shell.
+    destination: (step, goal) => step === 1 ? goal.add(new THREE.Vector3(0, 1.10, 0)) : goal,
+  })
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', destination: () => placement.destination(i), targetLabel: '靠近后自动放好', label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const axes = (dx: number, dy: number) => at === 1 ? [-dx, dy] : [-dy, dx]
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore() }
+  const reset = () => { placement.cancel(); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore() }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x, y, model.roots[at]!) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 ; if (!placement.begin(at, x, y)) pointer.cancel() },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
-      pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
-      const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
-      maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
-      pose(at, THREE.MathUtils.clamp(along / 60, 0, 1))
+      if (!invalid && placement.move(x, y) && pointer.finish()) { placement.capture(); advance(true) }
     },
     onRelease(x, y) {
-      const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
-      const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
-      if (valid) advance(); else reset()
+      if (!invalid && placement.move(x, y)) { placement.capture(); advance() } else reset()
     }, onCancel: reset,
   })
   const sync = () => {
@@ -83,7 +78,7 @@ export function createRussianMatryoshka(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
@@ -113,7 +108,7 @@ export function createRussianMatryoshka(ctx: SceneContext): SceneInstance {
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
-      if (motion) { motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85); pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time))); if (motion.time === 1) settle() }
+      if (motion) { motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85); pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time))); placement.settle(ease(motion.time)); if (motion.time === 1) settle() }
       if (active()) { matrices(); style.render() }
     },
     dispose() {

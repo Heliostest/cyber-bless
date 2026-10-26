@@ -75,6 +75,8 @@ function project(s: Mounted, obj: THREE.Object3D): Point {
   return [(p.x + 1) * s.canvas.clientWidth / 2, (1 - p.y) * s.canvas.clientHeight / 2]
 }
 function pointer(target: EventTarget, type: string, [x, y]: Point, pointerId = 1) {
+  if (type === 'pointerdown') pendingStarts.set(target, [x,y] as [number, number])
+
   const e = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(e, { clientX: x, clientY: y, pointerId, pointerType: 'touch', button: 0, buttons: type === 'pointerup' || type === 'pointercancel' ? 0 : 1 })
   target.dispatchEvent(e)
@@ -82,7 +84,7 @@ function pointer(target: EventTarget, type: string, [x, y]: Point, pointerId = 1
 function drag(s: Mounted, destination: string, finish = 'pointerup') {
   const from = project(s, object('clootie-rag-handle')), to = project(s, object(destination))
   pointer(s.hit, 'pointerdown', from)
-  pointer(s.hit, 'pointermove', to)
+  pointer(s.hit, 'pointermove', finish === 'pointerup' ? to : pendingPoint(s.hit, to))
   pointer(s.hit, finish, to)
   s.run()
 }
@@ -179,7 +181,7 @@ describe('clootie cloth checkpoints', () => {
     active = true
     const from = project(s, object('clootie-rag-handle')), to = project(s, object('clootie-water-target'))
     pointer(s.hit, 'pointerdown', from)
-    pointer(s.hit, 'pointermove', to)
+    pointer(s.hit, 'pointermove', pendingPoint(s.hit, to))
     active = false
     s.run(0.1)
     active = true
@@ -352,3 +354,10 @@ describe('clootie real object gestures', () => {
     expect(s.overlay.childElementCount).toBe(0)
   })
 })
+
+// Cancellation happens before arrival; a completed placement already owns its result.
+const pendingStarts = new WeakMap<EventTarget, [number, number]>()
+function pendingPoint(layer: EventTarget, point: [number, number]): [number, number] {
+ const start = pendingStarts.get(layer) ?? point
+ return [start[0]+(point[0]-start[0])*.20,start[1]+(point[1]-start[1])*.20]
+}

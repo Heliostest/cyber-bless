@@ -5,6 +5,7 @@ import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPosePlacement } from '../pose-placement'
 import { createTouchTarget } from '../touch-target'
 import { createDropFeedback } from '../drop-feedback'
 import { placementHit } from '../placement-hit'
@@ -156,29 +157,36 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
   const tip = add('rooster-brush-tip', new THREE.ConeGeometry(.045, .17, 16), green, [.385, 0, 0], brush); tip.rotation.z = -Math.PI / 2
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restore = () => { rooster.position.copy(at >= 2 ? SEATED : HOME); brush.position.copy(BRUSH_HOME); motif.visible = at >= 1; matrices() }
+  const carry=createPosePlacement(canvas,camera,{pose(_step,n){rooster.position.lerpVectors(HOME,SEATED,n);matrices()},roots:[rooster],targets:[paintSurface]},scene)
   const enabled = (step: number) => () => active() && !motion && at === step
   addInteractionCue(grip, { kind: 'drag', label: '握住画笔木柄', priority: 3, enabled: enabled(0), destination: paintSurface, targetLabel: '陶鸡胸前' })
-  addInteractionCue(paintSurface, { kind: 'drag', label: '轻托陶鸡', priority: 3, enabled: enabled(1), destination: plinthTop, targetLabel: '圆形展台' })
+  addInteractionCue(paintSurface, { kind: 'drag', label: '轻托陶鸡', priority: 3, enabled: enabled(1), destination: () => carry.destination(0), targetLabel: '圆形展台' })
   addInteractionCue(paintSurface, { kind: 'tap', label: '轻点陶鸡细看', priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => at === 0 ? brush : rooster
   const roosterTargets: THREE.Object3D[] = []; rooster.traverse(object => { if ((object as THREE.Mesh).isMesh) roosterTargets.push(object) })
   const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
   const visibleHit = (x: number, y: number, targets: THREE.Object3D[], held?: THREE.Object3D) => touch.hit(x, y, targets, { ignore: held })
-  const placementReady = (x: number, y: number) => at < 2 && travel >= 8
+  const placementReady = (x: number, y: number) => at === 1 ? carry.move(x,y) : at < 2
     && !touch.occluded(x, y, at === 0 ? rooster : [plinthTop, plinthEdge], { ignore: moving() })
     && placementHit(canvas, camera, at === 0 ? tip : paintSurface, x, y, (px, py) => visibleHit(px, py, at === 0 ? roosterTargets : [plinthTop, plinthEdge], moving()))
-  const reset = () => { dropFeedback.clear(); dragging = false; travel = 0; if (!motion) restore() }
+  const reset = () => { carry.cancel(); dropFeedback.clear(); dragging = false; travel = 0; if (!motion) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (motion || at === 3) return false; matrices(); return visibleHit(x, y, at === 0 ? [grip] : roosterTargets) },
-    onStart(x, y) { feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
+    onStart(x, y) { feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; if(at===1)carry.begin(0,x,y); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (at===0?grip:paintSurface).getWorldPosition(new THREE.Vector3())); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
     onMove(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
+      if(at===1&&dragging){ if(carry.move(x,y)&&pointer.finish()){carry.capture();dragging=false;begin(true)};return }
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
       moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .78, 2.0); matrices(); dropFeedback.setReady(placementReady(x, y))
+      if (at < 2 && placementReady(x,y) && pointer.finish()) { dragging = false; dropFeedback.clear(); begin(true) }
     },
     onRelease(x, y) {
+      travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
+      if (dragging && at === 0 && ray.aim(x, y).ray.intersectPlane(plane, point)) {
+        moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .78, 2.0)
+      }
       matrices()
       const valid = at < 2 ? dragging && placementReady(x, y)
         : at === 2 && travel < 12 && Math.hypot(x - down.x, y - down.y) < 12 && visibleHit(x, y, roosterTargets)
@@ -195,7 +203,7 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.painting : COPY.placing : at === 0 ? COPY.paint : at === 1 ? COPY.place : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
   function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); feedback.impact({ freqs: [440, 554.37], duration: .19, gain: .012, type: 'triangle' }) }
-  function begin() { if (!active() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
+  function begin(placed = false) { if (!active() || (pointer.isBusy() && !placed) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || at !== 2) return
     at = 3

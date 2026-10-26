@@ -36,7 +36,7 @@ The icing arrangement, gift stand, rounded geometry and interaction sequence are
 ## Input, anchors and lifecycle
 
 - Whole-scene nearest opaque intersections determine pickup, release and tap. External opaque objects block interaction. Drop tests exclude only the held object's own subtree; there are no invisible target colliders.
-- At least 8 px of owned-pointer movement is required for each drag. Quiet tapping must stay below 12 px. Ribbon-only touches, empty space, wrong objects, wrong drops and multi-pointer gestures do not advance.
+- Each carried object settles automatically when its contact anchor reaches the current target. Quiet tapping must stay below 12 px. Empty space, wrong objects, wrong drops and multi-pointer gestures do not advance; the attached ribbon remains part of the heart for picking it up.
 - Cancellation, lost capture, blur and host pause restore unfinished drags. Accepted animation freezes on pause/blur. Reduced motion settles immediately. Silent restore supports checkpoints 0/1/2/3, and completion/disposal are idempotent.
 - `licitar-icing-grip`, local `[0, 0, 0]`: visible bag pickup.
 - `licitar-heart-body`, local `[0.20, -0.10, 0.158]`: red front surface used by decoration destination, body pickup and quiet tap. The mesh origin is at heart-local y = 0.55.
@@ -60,3 +60,8 @@ The tests replace GPU rendering only. Real Three.js geometry, matrices, raycasts
 ## 2026-10-23 操作容错
 
 近距离拾取与落点增加最多22 CSS px的触控容差，保留前景遮挡和画布边界。指针或物件握点对齐均可安放；有效时显示可以松手，释放后落稳。取消、暂停或失焦会清除到位提示。彩心的相连挂带也可用于托起和轻点。以上属于产品输入与反馈修正，不新增传统规则；详见[操作修正记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。
+
+
+## 2026-10-26 当前跟手安放
+
+本轮的物件搬运步骤改为拿住真实物件跟随手指，移到当前提示范围即自动落稳。不再以固定方向、最短拖距或必须松手判断摆放成功。同一根手指的后续移动与释放不操作下一步；取消只撤回尚未接受的拿取。键盘辅助、减少动画、旧检查点和原有文化语境保留。此前段落中关于这些搬运步骤的短拖、20%预览和松手才接受描述为旧实现，以本节为当前机制。屏幕落区、吸附和短程落稳是产品输入安排，不新增传统礼序、次数或功效。[逐步审阅和本轮验证](../../../../docs/research/2026-10-26-spatial-placement-audit-a.md)。

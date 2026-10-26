@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import * as Shared from '@wbr/shared'
 import * as Gestures from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import * as mod from './index'
 
 const rendered = vi.hoisted(() => ({ scene: null as unknown, camera: null as unknown, renderer: null as unknown }))
@@ -51,12 +52,20 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
   return { instance, scene, camera, overlay, host, hit, button, point, run, progress, saveWish, complete, haptic }
 }
 function pointer(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
+  if (type === 'pointerdown') pendingStarts.set(el, [clientX,clientY] as [number, number])
+
   const event = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(event, { clientX, clientY, pointerId, pointerType: 'touch', button: 0, buttons: type === 'pointerup' ? 0 : 1 }); el.dispatchEvent(event)
 }
 function drag(s: ReturnType<typeof mount>, source: string, target: string) {
-  const a = s.point(source), b = s.point(target)
+  const a = s.point(source), b = destinationPoint(s, source, target)
   pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b); pointer(s.hit, 'pointerup', b); s.run()
+}
+function destinationPoint(s: ReturnType<typeof mount>, source: string, target: string): [number, number] {
+  const cue = (s.scene.getObjectByName(source)!.userData.interactionCues as InteractionCue[] | undefined)?.find(c => c.enabled() && c.kind === 'drag' && c.destination)
+  if (!cue || typeof cue.destination !== 'function') return s.point(target)
+  const p = cue.destination().project(s.camera), r = s.host.querySelector('canvas')!.getBoundingClientRect()
+  return [r.left+(p.x+1)*r.width/2,r.top+(1-p.y)*r.height/2]
 }
 function tap(s: ReturnType<typeof mount>) { const p = s.point('birch-rim-grip'); pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointerup', p) }
 function block(s: ReturnType<typeof mount>, name: string) {
@@ -92,17 +101,22 @@ describe('a woven birch basket kept as everyday craft', () => {
   it('ignores a non-owner release and can recover after cancellation', () => {
     const s = mount(0, { isReducedMotion: () => true }), a = s.point('birch-handle-grip')
     const b = s.point('birch-rim-grip')
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b); pointer(s.hit, 'pointerup', b, 9)
+    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', pendingPoint(s.hit, b)); pointer(s.hit, 'pointerup', b, 9)
     expect(s.progress).toEqual([])
     pointer(s.hit, 'pointercancel', b); drag(s, 'birch-handle-grip', 'birch-rim-grip')
     expect(s.progress).toEqual([1])
   })
-  it.each([{ pixels: 7, progress: [] }, { pixels: 8, progress: [2] }])('requires eight pixels even over a valid nearby destination: $pixels', ({ pixels, progress }) => {
+  it.each([{ pixels: 0, progress: [] }, { pixels: 2, progress: [2] }, { pixels: 7, progress: [2] }])('accepts a nearby destination after nonzero travel: $pixels', ({ pixels, progress }) => {
     const s = mount(1, { isReducedMotion: () => true }), a = s.point('birch-rim-grip'), b: [number, number] = [a[0] + pixels, a[1]]
     pointer(s.hit, 'pointerdown', a)
-    const ray = new THREE.Raycaster(); ray.setFromCamera(new THREE.Vector2((b[0] - 17) / 390 * 2 - 1, 1 - (b[1] - 89) / 390 * 2), s.camera)
-    const p = ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -.755), new THREE.Vector3())!
     const mat = s.scene.getObjectByName('birch-display-mat')!, basket = s.scene.getObjectByName('birch-basket')!
+    const ray = new THREE.Raycaster(), ndc = (q: [number,number]) => new THREE.Vector2((q[0]-17)/390*2-1,1-(q[1]-89)/390*2)
+    const grip = s.scene.getObjectByName('birch-rim-grip')!.getWorldPosition(new THREE.Vector3()), plane = new THREE.Plane().setFromNormalAndCoplanarPoint(s.camera.getWorldDirection(new THREE.Vector3()),grip)
+    ray.setFromCamera(ndc(a),s.camera); const from = ray.ray.intersectPlane(plane,new THREE.Vector3())!
+    ray.setFromCamera(ndc(b),s.camera); const to = ray.ray.intersectPlane(plane,new THREE.Vector3())!
+    const bottom = basket.getWorldPosition(new THREE.Vector3()).add(to.sub(from)).project(s.camera)
+    ray.setFromCamera(new THREE.Vector2(bottom.x,bottom.y),s.camera)
+    const p = ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),-.755),new THREE.Vector3())!
     mat.position.set(p.x, .7375, p.z); s.scene.updateMatrixWorld(true)
     const visible: THREE.Object3D[] = []
     s.scene.traverseVisible(object => {
@@ -152,9 +166,9 @@ describe('a woven birch basket kept as everyday craft', () => {
   })
   it.each([0, 1])('rejects a drop hidden behind another object at step %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), source = at === 0 ? 'birch-handle-grip' : 'birch-rim-grip', target = at === 0 ? 'birch-rim-grip' : 'birch-display-mat'
-    const a = s.point(source), b = s.point(target)
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b)
-    const clear = block(s, target); pointer(s.hit, 'pointerup', b); s.run()
+    const a = s.point(source), b = destinationPoint(s, source, target)
+    const clear = block(s, target); pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b)
+     pointer(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([]); clear(); drag(s, source, target); expect(s.progress).toEqual([at + 1])
   })
   it.each([0, 1, 2, 3])('restores checkpoint %i silently and shares its native action path', at => {
@@ -167,7 +181,7 @@ describe('a woven birch basket kept as everyday craft', () => {
   it.each(['pointercancel', 'lostpointercapture'])('discards a handle drag on %s', event => {
     const s = mount(0, { isReducedMotion: () => true }), initial = s.scene.getObjectByName('birch-handle')!.position.clone()
     const a = s.point('birch-handle-grip'), b = s.point('birch-rim-grip')
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b); pointer(s.hit, event, b); pointer(s.hit, 'pointerup', b)
+    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', pendingPoint(s.hit, b)); pointer(s.hit, event, b); pointer(s.hit, 'pointerup', b)
     expect(s.progress).toEqual([]); expect(s.scene.getObjectByName('birch-handle')!.position.equals(initial)).toBe(true)
     drag(s, 'birch-handle-grip', 'birch-rim-grip'); expect(s.progress).toEqual([1])
   })
@@ -182,7 +196,7 @@ describe('a woven birch basket kept as everyday craft', () => {
   it('cancels pending input on host pause and freezes accepted motion while blurred', () => {
     let active = true
     const s = mount(0, { isActive: () => active }), a = s.point('birch-handle-grip'), b = s.point('birch-rim-grip')
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b); active = false; s.run(); active = true; pointer(s.hit, 'pointerup', b); s.run()
+    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', pendingPoint(s.hit, b)); active = false; s.run(); active = true; pointer(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([])
     s.button.click(); s.run(.1); const pose = s.scene.getObjectByName('birch-handle')!.position.clone()
     window.dispatchEvent(new Event('blur')); s.run(2)
@@ -218,3 +232,10 @@ describe('a woven birch basket kept as everyday craft', () => {
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), type).toBe(true)
   })
 })
+
+// Cancellation happens before arrival; a completed placement already owns its result.
+const pendingStarts = new WeakMap<HTMLElement, [number, number]>()
+function pendingPoint(layer: HTMLElement, point: [number, number]): [number, number] {
+ const start = pendingStarts.get(layer) ?? point
+ return [start[0]+(point[0]-start[0])*.20,start[1]+(point[1]-start[1])*.20]
+}

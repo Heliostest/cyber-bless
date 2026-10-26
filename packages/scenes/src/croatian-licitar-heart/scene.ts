@@ -8,6 +8,7 @@ import { createObjectPointer } from '../object-pointer'
 import { createTouchTarget } from '../touch-target'
 import { createDropFeedback } from '../drop-feedback'
 import { placementHit } from '../placement-hit'
+import { createPosePlacement } from '../pose-placement'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
@@ -129,30 +130,36 @@ export function createCroatianLicitarHeart(ctx: SceneContext): SceneInstance {
 
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restore = () => { heart.position.copy(at >= 2 ? HUNG : home); cone.position.copy(CONE_HOME); motif.visible = at >= 1; matrices() }
+  const carry=createPosePlacement(canvas,camera,{pose(_step,n){heart.position.lerpVectors(home,HUNG,n);matrices()},roots:[heart],targets:[body],anchors:[HEART_ANCHOR]},scene)
   const enabled = (step: number) => () => active() && !motion && at === step
   const heartPoint = () => body.localToWorld(new THREE.Vector3(...HEART_ANCHOR))
   addInteractionCue(grip, { kind: 'drag', label: '握住裱花袋', priority: 3, enabled: enabled(0), destination: heartPoint, targetLabel: '红心表面' })
-  addInteractionCue(body, { kind: 'drag', label: '轻托彩心', priority: 3, anchor: HEART_ANCHOR, enabled: enabled(1), destination: peg, targetLabel: '展架木钉' })
+  addInteractionCue(body, { kind: 'drag', label: '轻托彩心', priority: 3, anchor: HEART_ANCHOR, enabled: enabled(1), destination: () => carry.destination(0), targetLabel: '展架木钉' })
   addInteractionCue(body, { kind: 'tap', label: '轻点彩心细看', priority: 3, anchor: HEART_ANCHOR, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => at === 0 ? cone : heart
   const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
   const visibleHit = (x: number, y: number, targets: THREE.Object3D | THREE.Object3D[], held?: THREE.Object3D) => touch.hit(x, y, targets, { ignore: held })
-  const placementReady = (x: number, y: number) => at < 2 && travel >= 8
+  const placementReady = (x: number, y: number) => at === 1 ? carry.move(x,y) : at === 0
     && !touch.occluded(x, y, at === 0 ? body : peg, { ignore: moving() })
     && placementHit(canvas, camera, at === 0 ? grip : body, x, y, (px, py) => visibleHit(px, py, at === 0 ? body : peg, moving()), at === 0 ? [0, 0, 0] : HEART_ANCHOR)
-  const reset = () => { dropFeedback.clear(); dragging = false; travel = 0; if (!motion) restore() }
+  const reset = () => { carry.cancel(); dropFeedback.clear(); dragging = false; travel = 0; if (!motion) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (motion || at === 3) return false; matrices(); return visibleHit(x, y, at === 0 ? grip : heart) },
-    onStart(x, y) { dropFeedback.clear(); feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
+    onStart(x, y) { dropFeedback.clear(); feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; if(at===1)carry.begin(0,x,y); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), moving().position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
     onMove(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
-      moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .80, 2.3); matrices()
-      dropFeedback.setReady(dragging && placementReady(x, y))
+      if(at===1)carry.move(x,y); else moving().position.copy(point).add(offset); if(at===0){moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .80, 2.3)}; matrices()
+      dropFeedback.setReady(placementReady(x, y))
+      if (at < 2 && placementReady(x,y) && pointer.finish()) { dragging = false; dropFeedback.clear(); begin(true) }
     },
     onRelease(x, y) {
+      travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
+      if (dragging && at === 0 && ray.aim(x, y).ray.intersectPlane(plane, point)) {
+        moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .80, 2.3)
+      }
       matrices()
       const valid = at < 2 ? dragging && placementReady(x, y)
         : at === 2 && travel < 12 && Math.hypot(x - down.x, y - down.y) < 12 && visibleHit(x, y, heart)
@@ -169,7 +176,7 @@ export function createCroatianLicitarHeart(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.decorating : COPY.hanging : at === 0 ? COPY.decorate : at === 1 ? COPY.hang : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
   }
   function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); feedback.impact({ freqs: [392, 523.25], duration: .19, gain: .012, type: 'triangle' }) }
-  function begin() { if (!active() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
+  function begin(placed = false) { if (!active() || (pointer.isBusy() && !placed) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || at !== 2) return
     at = 3; restore(); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()

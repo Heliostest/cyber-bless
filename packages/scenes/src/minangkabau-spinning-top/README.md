@@ -31,3 +31,10 @@ The auxiliary button runs the same acceptance and completion paths. Pointer star
 `npm run test -w @wbr/scenes -- src/minangkabau-spinning-top/scene.test.ts`
 
 The 25 tests preserve real Three geometry, whole-scene occlusion raycasts and projected DOM cues, mocking only GPU rendering. They exercise 320/390/1280px framing, pointer ownership, invalid start/drop, cancellation, pause/blur, explicit wishes, silent restore, reduced motion and disposal. Six added regressions first failed on a real opaque occluder in front of the source or release target, then passed with nearest-surface validation. Root handles application integration, full-suite/build/mobile and actual browser review.
+
+
+## 2026-10-26 空间跟手与到位完成
+
+木拉珠与棉绳联动到板上锚点自动拉绳起转；点帽停转与静看保留。
+
+这是产品输入与落稳机制调整；器物、文化语境、原先后与来源身份沿用已有核查，不新增传统步骤或效力主张。抓取偏移、单指归属、取消复原、暂停冻结与辅助按钮保留。已到位提交的指针尾事件不会再推动下一步；尚未到位取消会复原。最终逐场结论与验证范围见[C 组落地记录](../../../../docs/research/2026-10-26-spatial-placement-audit-c.md)。

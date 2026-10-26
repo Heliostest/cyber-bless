@@ -56,3 +56,8 @@ GPU/browser appearance and shared registry/catalog/mobile integration are verifi
 边界：没有壁画起源年；不复制艺术家作品或声称色块有统一护佑含义。小板拼贴/模型是产品表达，不是真实绘壁方式。
 
 来源正文的完整链接、实际阅读位置、访问状态及产品简化见[B 组逐项记录](../../../../docs/research/2026-10-20-scene-narratives-b.md#ndebele-painted-house)与[来源卡](../../../../content/traditions/ndebele-wall-painting.md)。本节不更改现有交互；用户介绍集中维护于 `packages/core/src/scene-narratives/b.ts`。
+
+
+## 2026-10-26 当前跟手安放
+
+本轮的物件搬运步骤改为拿住真实物件跟随手指，移到当前提示范围即自动落稳。不再以固定方向、最短拖距或必须松手判断摆放成功。同一根手指的后续移动与释放不操作下一步；取消只撤回尚未接受的拿取。键盘辅助、减少动画、旧检查点和原有文化语境保留。此前段落中关于这些搬运步骤的短拖、20%预览和松手才接受描述为旧实现，以本节为当前机制。屏幕落区、吸附和短程落稳是产品输入安排，不新增传统礼序、次数或功效。[逐步审阅和本轮验证](../../../../docs/research/2026-10-26-spatial-placement-audit-a.md)。

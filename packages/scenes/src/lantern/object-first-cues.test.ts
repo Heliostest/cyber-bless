@@ -222,7 +222,7 @@ it('crane abandons a cancelled upward paper drag without lifting', async () => {
   const y1 = (1 - destination.y) * 150
   pointerAt(s, 'pointerdown', x0, y0)
   const move = new Event('pointermove')
-  Object.assign(move, { clientX: x1, clientY: y1, pointerId: 1, buttons: 1 })
+  Object.assign(move, { clientX: x0 + 12, clientY: y0 + 12, pointerId: 1, buttons: 1 })
   s.hit.dispatchEvent(move)
   pointerAt(s, 'pointercancel', x1, y1)
   pointerAt(s, 'pointerup', x1, y1)
@@ -265,16 +265,19 @@ it('tanabata keeps the original desktop camera distance', async () => {
   s.instance.dispose()
 })
 
-it('lantern plaque drag points to the lantern bottom as it sways', async () => {
+it('lantern plaque drag points to its supported final body position', async () => {
   const s = await mount('lantern', 1)
   const cue = s.enabled()[0]
   expect(cue.options.kind).toBe('drag')
   const destination = cue.options.destination as () => THREE.Vector3
-  const lantern = s.scene.getObjectByName('lantern-body')!
-  expect(destination()).toEqual(lantern.localToWorld(new THREE.Vector3(0, -0.39, 0)))
+  const goal=destination().clone()
+  const boardOffset = cue.object.position.clone().applyQuaternion(cue.object.parent!.quaternion)
+  expect(goal.x).toBeCloseTo(boardOffset.x)
+  expect(goal.z).toBeCloseTo(boardOffset.z)
+  expect(goal.y).toBeLessThan(s.scene.getObjectByName('lantern-body')!.getWorldPosition(new THREE.Vector3()).y)
   s.tap()
   s.run(0.4)
-  expect(destination()).toEqual(lantern.localToWorld(new THREE.Vector3(0, -0.39, 0)))
+  expect(destination()).toEqual(goal)
   expect(s.enabled()).toHaveLength(1)
   expect(s.enabled()[0].options.kind).toBe('tap')
   s.tap()
@@ -375,7 +378,7 @@ it.each(['crane', 'lantern'])('%s abandons its generic drag recognizer across pa
   const x1 = (target.x + 1) * 150
   const y1 = (1 - target.y) * 150
   pointerAt(s, 'pointerdown', x0, y0)
-  pointerAt(s, 'pointermove', x1, y1)
+  pointerAt(s, 'pointermove', x0+(x1-x0)*.2, y0+(y1-y0)*.2)
   active = false
   s.instance.update(0)
   active = true

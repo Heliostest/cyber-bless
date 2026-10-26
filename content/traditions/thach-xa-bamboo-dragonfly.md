@@ -41,3 +41,8 @@
 ## 2026-10-23 产品操作容错
 
 适用场景：`vietnamese-bamboo-dragonfly`。本应用使用的共享方向判定放宽了小幅纠正和合理斜拖；原有动作与文化主张不变。距离与容错规则属于产品界面安排，不是传统要求。本次没有新登记外部来源为已读；详见[操作修正记录](../../docs/research/2026-10-23-scene-interaction-fixes.md)。
+
+
+## 2026-10-26 产品输入记录
+
+适用场景：`vietnamese-bamboo-dragonfly`。当前搬运验收与技术验证见[跟手摆放逐场审阅 A 组](../../docs/research/2026-10-26-spatial-placement-audit-a.md)。未更改上述文化与器物／公开实践、来源身份或宗教语境。

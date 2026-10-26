@@ -66,7 +66,15 @@ function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, r
   for (let i = 1; i <= 8; i++) event(s.hit, 'pointermove', [p[0] + dx * i / 8, p[1] + dy * i / 8])
   event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); if (run) s.run()
 }
-function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) drag(s, at, ...delta(at), run) }
+function targetDelta(s: ReturnType<typeof mount>, at: number): [number, number] {
+  const entry = cues(s).find(entry => entry.cue.destination)
+  if (!entry) return delta(at)
+  const d = entry.cue.destination!, world = typeof d === 'function' ? d() : d.getWorldPosition(new THREE.Vector3())
+  const p = world.project(s.camera), r = s.host.querySelector('canvas')!.getBoundingClientRect()
+  const a = s.point(targetName(at), anchor(at))
+  return [r.left + (p.x + 1) * r.width / 2 - a[0], r.top + (1 - p.y) * r.height / 2 - a[1]]
+}
+function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) drag(s, at, ...targetDelta(s,at), run) }
 function cues(s: ReturnType<typeof mount>) {
   const list: { object: THREE.Object3D; cue: InteractionCue }[] = []
   s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled()) list.push({ object, cue }) })
@@ -92,7 +100,7 @@ describe('Chinese suanpan bead arithmetic', () => {
   })
   it('moves only the intended beads along their own rods, restores cancellation and displays 3, 8, 18',()=>{
     for(const at of [0,1,2]){
-      const s=mount(at), bead=s.scene.getObjectByName(targetName(at))!, p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at),before=bead.position.clone()
+      const s=mount(at), bead=s.scene.getObjectByName(targetName(at))!, p=s.point(targetName(at),anchor(at)),[dx,dy]=targetDelta(s,at),before=bead.position.clone()
       event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx/2,p[1]+dy/2])
       expect(Math.abs(bead.position.z-before.z)).toBeGreaterThan(.1);expect(bead.position.x).toBe(before.x);expect(bead.position.y).toBe(before.y);expect(s.progress).toEqual([])
       event(s.hit,'pointercancel',p);expect(bead.position.distanceTo(before)).toBeLessThan(.000001);step(s,at);expect(s.progress).toEqual([at+1])
@@ -151,20 +159,20 @@ describe('Chinese suanpan bead arithmetic', () => {
     step(s, 2); expect(frequencies).toEqual([523.25, 523.25]); expect(peaks).toEqual([.003, .003])
     s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })
-  it.each([0, 1, 2])('rejects wrong surfaces, orphan release, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
+  it.each([0, 1, 2])('rejects wrong surfaces, orphan release and withdrawn movement before the bead reaches the beam at %i', at => {
+    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = targetDelta(s,at), end: [number, number] = [p[0] + dx, p[1] + dy]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
     event(s.hit, 'pointerup', end)
     for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx]]) drag(s, at, x, y)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx * .5, p[1] + dy * .5]); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx * .5, p[1] + dy * .5]); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
   })
   it.each([0, 1, 2])('checks terminal release coordinates for reverse, cross-axis and nonfinite displacement at %i', at => {
     const s = mount(at, { isReducedMotion: () => true })
     for (const kind of ['back', 'cross', 'nan']) {
-      const p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
-      const end: [number, number] = kind === 'back' ? [p[0] + dx * .25, p[1] + dy * .25] : kind === 'cross' ? [p[0] + dx - dy, p[1] + dy + dx] : [NaN, p[1]]
+      const p = s.point(targetName(at), anchor(at)), [dx, dy] = targetDelta(s,at); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx * .5, p[1] + dy * .5])
+      const end: [number, number] = kind === 'back' ? [p[0] + dx * .25, p[1] + dy * .25] : kind === 'cross' ? [p[0] - dy, p[1] + dx] : [NaN, p[1]]
       event(s.hit, 'pointerup', end); expect(s.progress, kind).toEqual([])
     }
     step(s, at); expect(s.progress).toEqual([at + 1])
@@ -177,10 +185,10 @@ describe('Chinese suanpan bead arithmetic', () => {
   })
   it.each([false, true])('accepts a wobbly drag ending fully extended exactly once, reduced=%s', reduced => {
     for (const at of [0, 1, 2]) {
-      const s = mount(at, { isReducedMotion: () => reduced }), p = s.point(targetName(at), anchor(at))
+      const s = mount(at, { isReducedMotion: () => reduced }), p = s.point(targetName(at), anchor(at)), [dx,dy] = targetDelta(s,at), length = Math.hypot(dx,dy)
       event(s.hit, 'pointerdown', p)
-      for (const [along, cross] of [[12, 16], [24, -16], [36, 16], [48, -16], [60, 0]]) event(s.hit, 'pointermove', [p[0] + cross, p[1] + along * (at === 1 ? 1 : -1)])
-      event(s.hit, 'pointerup', [p[0] + delta(at)[0], p[1] + delta(at)[1]])
+      for (const [along, cross] of [[.2, 16], [.4, -16], [.6, 16], [.8, -16], [1, 0]]) event(s.hit, 'pointermove', [p[0] + dx * along - dy / length * cross, p[1] + dy * along + dx / length * cross])
+      event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy])
       s.run(); expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(at === 2)
     }
   })
@@ -211,7 +219,7 @@ describe('Chinese suanpan bead arithmetic', () => {
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or stale position/rotation', kind => {
     for (const at of [0, 1, 2]) {
-      let active = true; const s = mount(at, { isActive: () => active }), pivot = s.scene.getObjectByName(targetName(at))!, home = pivot.position.clone(), scale = pivot.scale.clone(), rotation = pivot.quaternion.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+      let active = true; const s = mount(at, { isActive: () => active }), pivot = s.scene.getObjectByName(targetName(at))!, home = pivot.position.clone(), scale = pivot.scale.clone(), rotation = pivot.quaternion.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = targetDelta(s,at)
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); const frames = rendered.render.mock.calls.length
       expect(pivot.position.distanceTo(home) + pivot.scale.distanceTo(scale)).toBeGreaterThan(.04)
       if (kind === 'pause') { active = false; s.instance.update(.05); s.instance.update(.05); expect(rendered.render.mock.calls.length).toBe(frames) }
@@ -222,7 +230,7 @@ describe('Chinese suanpan bead arithmetic', () => {
   })
   it.each([284, 350, 1280])('keeps all subject vertices in frame during each bead movement at width %i', width => {
     for (const at of [0, 1, 2]) {
-      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = targetDelta(s,at)
       const check = () => {
         s.scene.updateMatrixWorld(true); let extent = 0
         s.scene.getObjectByName('abacus-subject')!.traverse(o => {

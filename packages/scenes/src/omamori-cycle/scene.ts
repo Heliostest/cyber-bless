@@ -9,6 +9,8 @@ import {
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage,
 } from '../procedural-kit'
 import { createObjectPointer } from '../object-pointer'
+import { placementHit } from '../placement-hit'
+import { createTouchTarget } from '../touch-target'
 
 const COPY = {
   title: '御守伴行', choose: '选一只小袋', carry: '别在包上', thank: '留一份感谢', quiet: '静候片刻', returnBag: '送到返还箱',
@@ -154,6 +156,10 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
 
   const destination = returning ? RETURNED : HUNG
   const matrices = () => { scene.updateMatrixWorld(); camera.updateMatrixWorld() }
+  const touch = createTouchTarget(canvas,camera,scene)
+  const placementReady = (x:number,y:number) => Math.hypot(x-downX,y-downY)>0
+    && !touch.occluded(x,y,returning?returnSlot:clasp,{ignore:pouches[selected].root})
+    && placementHit(canvas,camera,pouches[selected].body,x,y,(px,py)=>touch.hit(px,py,returning?returnSlot:clasp,{ignore:pouches[selected].root}),[0,0,.1])
   const physicalLayout = () => {
     pouches.forEach(({ root }, i) => {
       const isSelected = i === selected && step > 0
@@ -177,19 +183,25 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
       matrices(); downX = x; downY = y; feedback.prepare()
       startIndex = step === 0 ? pouches.findIndex(p => p.body === objectAt(x, y, pouches.map(p => p.body))) : selected
       dragging = step === 1
+      if(dragging)plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),pouches[selected].body.localToWorld(new THREE.Vector3(0,0,.1)))
       if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) dragOffset.copy(pouches[selected].root.position).sub(point)
     },
     onMove(x, y) {
       if (!dragging || step !== 1) return
       if (ray.aim(x, y).ray.intersectPlane(plane, point)) {
         point.add(dragOffset)
-        pouches[selected].root.position.set(THREE.MathUtils.clamp(point.x, -1.35, 1.35), THREE.MathUtils.clamp(point.y, 0.8, 1.9), HELD.z)
+        pouches[selected].root.position.copy(point);pouches[selected].root.position.x=THREE.MathUtils.clamp(point.x,-1.35,1.35);pouches[selected].root.position.y=THREE.MathUtils.clamp(point.y,.8,1.9)
+        matrices(); if (placementReady(x,y) && pointer.finish()) { dragging = false; startIndex = -1; place(true) }
       }
     },
     onRelease(x, y) {
+      if (dragging && step === 1 && ray.aim(x,y).ray.intersectPlane(plane,point)) {
+        point.add(dragOffset)
+        pouches[selected].root.position.copy(point);pouches[selected].root.position.x=THREE.MathUtils.clamp(point.x,-1.35,1.35);pouches[selected].root.position.y=THREE.MathUtils.clamp(point.y,.8,1.9)
+      }
       const index = startIndex; dragging = false; startIndex = -1; matrices()
       if (step === 0 && index >= 0 && Math.hypot(x - downX, y - downY) < 12 && ray.hits(x, y, [pouches[index].body])) choose(index)
-      else if (step === 1 && ray.hits(x, y, [returning ? returnSlot : clasp])) place()
+      else if (step === 1 && placementReady(x,y)) place()
       else if (step === 2 && Math.hypot(x - downX, y - downY) < 12 && ray.hits(x, y, returning ? [pouches[selected].body, boxBody] : [pouches[selected].body])) finish()
       else resetDrag()
     },
@@ -215,8 +227,8 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
     step = 2; placing = false; clock = 0; physicalLayout(); sync(); ctx.onProgress?.(2)
     feedback.impact({ freqs: [659.25], duration: 0.17, gain: 0.016 })
   }
-  function place() {
-    if (!canAct() || pointer.isBusy() || step !== 1 || placing) return
+  function place(arrived = false) {
+    if (!canAct() || (pointer.isBusy() && !arrived) || step !== 1 || placing) return
     placing = true; dragging = false; placeT = 0; placeFrom.copy(pouches[selected].root.position); sync()
     if (reduced()) placed()
   }

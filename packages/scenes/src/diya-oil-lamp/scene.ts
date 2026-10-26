@@ -3,6 +3,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { placementHit } from '../placement-hit'
 import { createPathSweep } from '../path-sweep'
 import { createTouchTarget } from '../touch-target'
 import {
@@ -245,7 +246,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   const ray = createPointerRay(canvas, camera)
   const touch = createTouchTarget(canvas, camera, scene)
   const orbitPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -ORBIT_Y)
-  const placePlane = new THREE.Plane(), point = new THREE.Vector3()
+  const placePlane = new THREE.Plane(), point = new THREE.Vector3(), placeOffset = new THREE.Vector3(), placeDown = new THREE.Vector2()
   const updateMatrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const wickAt = (x: number, y: number) => {
     updateMatrices()
@@ -316,8 +317,10 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
       else if (checkpoint === 1) { orbitSweeps.forEach(path => path.reset()); drag = { kind: 'spin' } }
       else {
         drag = { kind: 'place' }
+        placeDown.set(x,y)
         const normal = camera.getWorldDirection(new THREE.Vector3())
         placePlane.setFromNormalAndCoplanarPoint(normal, heldTarget.getWorldPosition(new THREE.Vector3()))
+        if(ray.aim(x,y).ray.intersectPlane(placePlane,point))placeOffset.copy(heldLamp.group.position).sub(point)
       }
     },
     onMove(x, y) {
@@ -341,9 +344,10 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
         heldLamp.group.rotation.y = ORBIT_START - angle
         updateMatrices()
       } else if (ray.aim(x, y).ray.intersectPlane(placePlane, point)) {
-        heldLamp.group.position.copy(point)
-        heldLamp.group.position.y = Math.max(0.10, heldLamp.group.position.y - 0.12)
+        heldLamp.group.position.copy(point).add(placeOffset)
+        heldLamp.group.position.y = Math.max(0.10, heldLamp.group.position.y)
         updateMatrices()
+        if ((x!==placeDown.x||y!==placeDown.y) && placementHit(canvas,camera,heldTarget,x,y,(px,py)=>ray.hits(px,py,[plateTarget])) && pointer.finish()) { drag=null; beginMotion('place') }
       }
     },
     onRelease(x, y) {
@@ -359,8 +363,12 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
         if (closed) advance(2)
         else restorePose()
       } else {
+        if(ray.aim(x,y).ray.intersectPlane(placePlane,point)) {
+          heldLamp.group.position.copy(point).add(placeOffset)
+          heldLamp.group.position.y=Math.max(.10,heldLamp.group.position.y)
+        }
         updateMatrices()
-        if (ray.hits(x, y, [plateTarget])) beginMotion('place')
+        if ((x!==placeDown.x||y!==placeDown.y) && placementHit(canvas,camera,heldTarget,x,y,(px,py)=>ray.hits(px,py,[plateTarget]))) beginMotion('place')
         else restorePose()
       }
       syncUI()

@@ -3,15 +3,15 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
+import { createPosePlacement } from '../pose-placement'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createWaterBowlsModel } from './model'
 
 const TOTAL_STEPS = 9
 const ACTIONS = ['提起水壶', ...Array.from({ length: 7 }, (_, i) => `为第${i + 1}碗添水`), '收回水壶']
-const HINTS = ['按住水壶向上短拖，拿到左边第一只供碗上方。',
-  ...Array.from({ length: 7 }, (_, i) => `按住水壶向右短拖，为左起第${i + 1}只供碗添水，留出碗沿。${i < 6 ? '这一碗添好后，再继续下一碗。' : '七碗添好后，再收回水壶。'}`),
-  '向下短拖，把水壶放回供台一侧。','七碗清水齐整安放，愿这份供养承载利益众生的心意。']
+const HINTS = ['拿住水壶，提到左边第一只供碗上方的标记处。',
+  ...Array.from({ length: 7 }, (_, i) => `拿住水壶，移到左起第${i + 1}只供碗上方的标记处，到位后会为这一碗添水，留出碗沿。${i < 6 ? '这一碗添好后，再继续下一碗。' : '七碗添好后，再收回水壶。'}`),
+  '拿住水壶，放回供台一侧的标记处。','七碗清水齐整安放，愿这份供养承载利益众生的心意。']
 const MOVING = ['提起盛着清水的水壶……', ...Array.from({ length: 7 }, (_, i) => `细水落入第${i + 1}只供碗，留出碗沿……`), '水壶回到供台一侧……']
 const ease = (t: number) => t * t * (3 - 2 * t)
 
@@ -20,8 +20,8 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: number; time: number; from: number } | null = null
-  let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
+  let motion: { step: number; time: number; from: number; placed: boolean } | null = null
+  let amount = 0, invalid = false
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
@@ -39,36 +39,34 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
   const phase = (step: number) => step === 0 ? 0 : step < 8 ? 1 : step === 8 ? 2 : 3
   const pose = (step: number, n: number) => { amount = n; model.pose(phase(step), phase(step) === 1 ? (step - 1 + n) / 7 : n); matrices() }
   const restore = () => pose(at, 0)
-  const directions: [number, number][] = [[0,-1], ...Array.from({ length: 7 }, (): [number, number] => [1,0]), [0,1]]
-  const removeCues = ACTIONS.map((label, i) => addInteractionCue(model.targets[phase(i)]!, { kind: 'drag', direction: directions[i], label, anchor: model.anchors[phase(i)], priority: 3, enabled: () => inputActive() && !motion && at === i }))
-  const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
+  // Each pouring target is the current bowl's prepared tilt, before its water
+  // starts flowing. pose(step,1) has already advanced to the following bowl.
+  const placement = createPosePlacement(canvas, camera, {
+    roots: ACTIONS.map(() => model.jug), targets: ACTIONS.map(() => model.jug),
+    anchors: ACTIONS.map(() => model.anchors[0]!),
+    pose(step, n) { pose(step, phase(step) === 1 ? .12 * n : n) },
+  }, scene)
+  const removeCues = ACTIONS.map((label, i) => addInteractionCue(model.jug, { kind: 'drag', destination: () => placement.destination(i), targetLabel: i > 0 && i < 8 ? `第${i}碗上方` : '水壶落位处', label, anchor: model.anchors[0], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const ray = createPointerRay(canvas, camera)
   const nearest = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
     scene.traverseVisible(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; const materials = Array.isArray(m.material) ? m.material : [m.material]; if (materials.some(m => m.visible && (!m.transparent || m.opacity >= 1))) meshes.push(o) })
     return ray.aim(x, y).intersectObjects(meshes, false)[0]
   }
-  const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
+  const reset = () => { placement.cancel(); invalid = false; if (!motion && !disposed) restore() }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === TOTAL_STEPS || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); const hit = nearest(x, y); const target = model.roots[phase(at)]!; return !!hit && (hit.object === target || target.getObjectById(hit.object.id) === hit.object) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; invalid = false; if (!placement.begin(at, x, y)) pointer.cancel() },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
-      pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
-      const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
-      maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
-      // Held movement previews the current object; cancellation restores all contents.
-      pose(at, THREE.MathUtils.clamp(along / 60, 0, 1) * .20)
-      updateDirectionalDragHint(ui.hintEl, !invalid && completesDirectionalDrag({ along, end: along, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel: pathTravel }), HINTS[at]!, safe)
+      if (!invalid && placement.move(x, y) && pointer.finish()) { placement.capture(); advance(true) }
     },
     onRelease(x, y) {
-      const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
-      const valid = !invalid && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
-      if (valid) advance(); else reset()
+      if (!invalid && placement.move(x, y)) { placement.capture(); advance(true) } else reset()
     }, onCancel: reset,
   })
   const sync = () => {
@@ -82,14 +80,14 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
-    at = motion.step + 1; motion = null; restore()
+    placement.cancel(); at = motion.step + 1; motion = null; restore()
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
       if (at === TOTAL_STEPS && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === TOTAL_STEPS) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === TOTAL_STEPS) return; motion = { step: at, time: 0, from: amount, placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === TOTAL_STEPS || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
@@ -115,9 +113,14 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       if (motion) {
-        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (phase(motion.step) === 1 ? 1 : 1.2))
-        const eased=ease(motion.time)
-        pose(motion.step, motion.from+(1-motion.from)*eased); if (motion.time === 1) settle()
+        const pouring = phase(motion.step) === 1
+        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (pouring ? 1 : motion.placed ? .35 : 1.2))
+        const eased = ease(motion.time)
+        if (motion.placed && pouring) {
+          if (motion.time <= .2) { const entering = ease(motion.time / .2); pose(motion.step, .12 * entering); placement.settle(entering) }
+          else { placement.settle(1); pose(motion.step, .12 + .88 * ease((motion.time - .2) / .8)) }
+        } else { pose(motion.step, motion.from + (1 - motion.from) * eased); placement.settle(eased) }
+        if (motion.time === 1) settle()
       }
       if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },

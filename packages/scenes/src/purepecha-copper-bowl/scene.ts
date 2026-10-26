@@ -4,7 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { createTouchTarget } from '../touch-target'
+import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -52,6 +52,13 @@ export function createPurepechaCopperBowl(ctx: SceneContext): SceneInstance {
   const { scene, renderer } = createWarmStage(canvas)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const camera = new THREE.PerspectiveCamera(39, 1, .1, 40)
+
+  const projectedGuide = (goal: THREE.Vector3, grip: THREE.Vector3, contact: THREE.Vector3) => {
+    camera.updateMatrixWorld(true)
+    const g=goal.project(camera),a=grip.project(camera),b=contact.project(camera)
+    g.x+=a.x-b.x;g.y+=a.y-b.y
+    return g.unproject(camera)
+  }
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'purepecha-copper-bowl', label: COPY.title }); style.setStyle(CEL_STYLE)
   const lights = addStageLights(scene, ctx.stage, { sky: 0xfff2de, ground: 0xb4b29c, key: 0xffe9ca, rim: 0xe7eef0, keyPosition: [-3, 5, 3], keyIntensity: 1.25, rimIntensity: .45 })
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(512, 512)
@@ -98,22 +105,28 @@ export function createPurepechaCopperBowl(ctx: SceneContext): SceneInstance {
   }
   const enabled = (at: number) => () => active() && !transition && checkpoint === at
   addInteractionCue(padBody, { kind: 'drag', label: '轻拭铜碗', priority: 3, enabled: enabled(0), destination: () => bowl.localToWorld(new THREE.Vector3(...BOWL_ANCHOR)), targetLabel: '铜碗外壁' })
-  addInteractionCue(shell, { kind: 'drag', label: '移到软毡托座', anchor: BOWL_ANCHOR, priority: 3, enabled: enabled(1), destination: cradle, targetLabel: '右侧软毡' })
+  addInteractionCue(shell, { kind: 'drag', label: '移到软毡托座', anchor: BOWL_ANCHOR, priority: 3, enabled: enabled(1), destination: () => projectedGuide(cradle.getWorldPosition(new THREE.Vector3()),shell.localToWorld(new THREE.Vector3(...BOWL_ANCHOR)),bowl.getWorldPosition(new THREE.Vector3())), targetLabel: '右侧软毡' })
   addInteractionCue(shell, { kind: 'tap', label: '轻点铜碗静看', anchor: BOWL_ANCHOR, priority: 3, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const moving = () => checkpoint === 0 ? pad : bowl
   const belongsTo = (object: THREE.Object3D, parent: THREE.Object3D) => { for (let p: THREE.Object3D | null = object; p; p = p.parent) if (p === parent) return true; return false }
   const touchTarget = createTouchTarget(canvas, camera, scene)
   const hitsVisible = (x: number, y: number, target: THREE.Object3D, held?: THREE.Object3D) => touchTarget.hit(x, y, target, { ignore: held })
+  const automaticReady = (x: number, y: number) => {
+    if (checkpoint >= 2 || !insideCanvas(canvas, x, y)) return false
+    const contact = projectTouchPoint(canvas, camera, checkpoint === 0 ? padBody : bowl, [0,0,0])
+    return !!contact && !touchTarget.occluded(x,y,checkpoint === 0 ? shell : cradle,{ignore:moving()}) && touchTarget.hit(contact.x, contact.y, checkpoint === 0 ? shell : cradle, { ignore: moving() })
+  }
   const reset = () => { dragging = false; maxTravel = 0; if (!transition) restore() }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (transition || checkpoint === 3) return false; matrices(); return hitsVisible(x, y, checkpoint === 0 ? pad : bowl) },
     onStart(x, y) { down.set(x, y); maxTravel = 0; dragging = checkpoint < 2; feedback.prepare(); const object = moving(); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), object.position); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(object.position).sub(point) },
-    onMove(x, y) { maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices() },
+    onMove(x, y) { maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) moving().position.copy(point).add(offset); matrices(); if (dragging && automaticReady(x, y) && pointer.finish()) { dragging = false; advance(true) }
+    },
     onRelease(x, y) {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
-      const valid = checkpoint < 2 ? dragging && maxTravel >= 8 && hitsVisible(x, y, checkpoint === 0 ? bowl : cradle, moving()) : maxTravel < 12 && hitsVisible(x, y, bowl)
+      const valid = checkpoint < 2 ? dragging && automaticReady(x, y) : maxTravel < 12 && hitsVisible(x, y, bowl)
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,
   })
@@ -124,8 +137,8 @@ export function createPurepechaCopperBowl(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl, transition ? COPY.moving : checkpoint === 0 ? COPY.polish : checkpoint === 1 ? COPY.place : checkpoint === 2 ? COPY.rest : COPY.done, safe)
   }
   function settle() { if (!active() || !transition) return; checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore(); sync(); ctx.onProgress?.(checkpoint); if (!active()) return; feedback.impact() }
-  function advance() {
-    if (!active() || pointer.isBusy() || transition || checkpoint === 3) return
+  function advance(placed = false) {
+    if (!active() || (pointer.isBusy() && !placed) || transition || checkpoint === 3) return
     if (checkpoint === 2) {
       checkpoint = 3; restore(); sync(); ctx.onProgress?.(3)
       if (!active()) return

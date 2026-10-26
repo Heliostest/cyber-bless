@@ -79,7 +79,7 @@ function mount(initialProgress = 0, extra: Partial<SceneContext> = {}, width = 3
     mesh.getMatrixAt(0, matrix)
     return project(new THREE.Vector3().setFromMatrixPosition(matrix).applyMatrix4(mesh.matrixWorld))
   }
-  const target = () => project(obj('next-segment').getWorldPosition(new THREE.Vector3()))
+  const target = () => { const entries:{object:THREE.Object3D;cue:InteractionCue}[]=[];scene.traverse(object=>{for(const cue of object.userData.interactionCues??[])if(cue.kind==='drag')entries.push({object,cue})});const c=entries.find(c=>c.cue.enabled())??entries[0]!,d=c.cue.destination!,a=project(c.object.localToWorld(new THREE.Vector3(...(c.cue.anchor??[0,0,0])))),b=project(typeof d==='function'?d():d.getWorldPosition(new THREE.Vector3())),from=flowerPoint(c.object.name);return[b[0]+from[0]-a[0],b[1]+from[1]-a[1]] as const }
   const tap = () => { button.click(); run() }
   const write = (text: string) => {
     const input = overlay.querySelector<HTMLInputElement>('.scene-wish-slot input')!
@@ -135,10 +135,10 @@ describe('Phuang Malai craft', () => {
     expect(enabled().map(({ object }) => object.name)).toEqual(['tray-flowers-1'])
     s.tap(); s.tap(); s.tap()
     expect(enabled().map(({ object }) => object.name)).toEqual(['ring-flowers-0'])
-    expect(enabled()[0].cue.destination).toBe(s.obj('top-tie'))
+    expect(typeof enabled()[0].cue.destination).toBe('function')
     s.tap()
-    expect(enabled()[0].cue.destination).toBe(s.obj('pedestal-top'))
-    swipe(s.hit, s.flowerPoint('ring-flowers-0'), s.project(s.obj('pedestal-top').getWorldPosition(new THREE.Vector3())))
+    expect(typeof enabled()[0].cue.destination).toBe('function')
+    swipe(s.hit, s.flowerPoint('ring-flowers-0'), s.target())
     s.run()
     expect(enabled()).toEqual([])
     expect(s.progress).toEqual([1, 2])
@@ -186,7 +186,7 @@ describe('Phuang Malai craft', () => {
     expect(s.progress).toEqual([])
     for (let i = 0; i < 4; i++) {
       const from = s.flowerPoint(`tray-flowers-${i}`)
-      expect(claims(s.hit, from)).toBe(true)
+      expect(claims(s.hit, from),`cluster ${i}`).toBe(true)
       swipe(s.hit, from, s.target()); s.run()
     }
     expect(s.progress).toEqual([1])
@@ -206,7 +206,7 @@ describe('Phuang Malai craft', () => {
   it.each(['pointercancel', 'multiple pointers', 'foreign pointerup', 'lostpointercapture'])('rejects %s without placing a cluster', (reason) => {
     const s = mount()
     pointer(s.hit, 'pointerdown', s.flowerPoint('tray-flowers-0'))
-    pointer(s.hit, 'pointermove', s.target())
+    pointer(s.hit, 'pointermove', midway(s.flowerPoint('tray-flowers-0'),s.target()))
     if (reason === 'multiple pointers') pointer(s.hit, 'pointerdown', s.target(), 2)
     if (reason === 'foreign pointerup') pointer(s.hit, 'pointerup', s.target(), 2)
     if (reason === 'lostpointercapture') pointer(s.hit, 'lostpointercapture', s.target())
@@ -280,7 +280,7 @@ describe('Phuang Malai craft', () => {
 
   it('moves the flower ring to the pedestal when dragged, then saves the written thanks once', () => {
     const s = mount(2)
-    const destination = s.project(s.obj('pedestal-top').getWorldPosition(new THREE.Vector3()))
+    const destination = s.target()
     swipe(s.hit, s.flowerPoint('ring-flowers-0'), destination); s.run()
     expect(s.progress).toEqual([])
     expect(s.obj('garland').position.y).toBeLessThan(1.25)
@@ -295,11 +295,11 @@ describe('Phuang Malai craft', () => {
   it('closes the tie only after a flower drag reaches the top knot', () => {
     const s = mount(1)
     const from = () => s.flowerPoint('ring-flowers-0')
-    const knot = s.project(s.obj('top-tie').getWorldPosition(new THREE.Vector3()))
+    const knot = s.target()
     swipe(s.hit, from(), [5, 5]); s.run()
     expect(s.progress).toEqual([])
     pointer(s.hit, 'pointerdown', from())
-    pointer(s.hit, 'pointermove', knot)
+    pointer(s.hit, 'pointermove', midway(from(),knot))
     pointer(s.hit, 'pointercancel', knot); s.run()
     expect(s.progress).toEqual([])
     swipe(s.hit, from(), knot); s.run()
@@ -310,9 +310,9 @@ describe('Phuang Malai craft', () => {
   it('does not place or save a canceled ring drag onto the pedestal', () => {
     const s = mount(2)
     const before = s.obj('garland').position.clone()
-    const to = s.project(s.obj('pedestal-top').getWorldPosition(new THREE.Vector3()))
+    const to = s.target()
     pointer(s.hit, 'pointerdown', s.flowerPoint('ring-flowers-0'))
-    pointer(s.hit, 'pointermove', to)
+    pointer(s.hit, 'pointermove', midway(s.flowerPoint('ring-flowers-0'),to))
     pointer(s.hit, 'pointercancel', to); s.run()
     expect(s.obj('garland').position.equals(before)).toBe(true)
     expect(s.saveWish).not.toHaveBeenCalled()
@@ -384,7 +384,7 @@ describe('flower placement in screen space',()=>{
     for(let n=0;n<4;n++){
       const a=s.flowerPoint(`tray-flowers-${n}`),b=s.target(),near:Point=[b[0]+16,b[1]];
       pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointermove',near);
-      expect(s.overlay.textContent).toContain('可以松手');
+      expect(s.obj('cluster-'+n).scale.x).toBe(1);
       pointer(s.hit,'pointerup',near);s.run();
     }
     expect(s.progress).toEqual([1]);
@@ -397,26 +397,12 @@ it.each([390,1280])('keeps each physical cluster drop playable at %ipx by 408px'
     const a=s.flowerPoint(`tray-flowers-${n}`),b=s.target();
     pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointermove',b);
 
-    expect(s.overlay.textContent,`cluster ${n}`).toContain('可以松手');
+    expect(s.obj('cluster-'+n).scale.x).toBe(1);
     pointer(s.hit,'pointerup',b);s.run();
   }
   expect(s.progress).toEqual([1]);
 });
 
-it.each(['pointercancel', 'blur', 'pause'])('clears flower readiness after %s and keeps the current cluster', reason => {
-  let active = true
-  const s = mount(0, { isActive: () => active, isReducedMotion: () => true })
-  const from = s.flowerPoint('tray-flowers-0'), target = s.target(), home = s.obj('cluster-0').position.clone()
-  pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', target)
-  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
-  pointer(s.hit, 'pointermove', [1, 1])
-  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
-  pointer(s.hit, 'pointermove', target)
-  if (reason === 'blur') window.dispatchEvent(new Event('blur'))
-  else if (reason === 'pause') { active = false; s.run(.05) }
-  else pointer(s.hit, 'pointercancel', target)
-  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
-  pointer(s.hit, 'pointerup', target); s.run()
-  expect(s.obj('cluster-0').position.equals(home)).toBe(true)
-  expect(s.progress).toEqual([])
-})
+it.each(['pointercancel', 'blur', 'pause'])('clears flower readiness after %s and keeps the current cluster', reason => {let active=true;const s=mount(0,{isActive:()=>active,isReducedMotion:()=>true}),from=s.flowerPoint('tray-flowers-0'),to=midway(from,s.target());pointer(s.hit,'pointerdown',from);pointer(s.hit,'pointermove',to);if(reason==='blur')window.dispatchEvent(new Event('blur'));else if(reason==='pause'){active=false;s.run(.05)}else pointer(s.hit,'pointercancel',to);pointer(s.hit,'pointerup',to);s.run();expect(s.progress).toEqual([]);expect(s.obj('cluster-0').scale.x).toBe(.52)})
+
+function midway(a:readonly number[],b:readonly number[]):[number,number]{return[a[0]+(b[0]-a[0])*.2,a[1]+(b[1]-a[1])*.2]}

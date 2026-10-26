@@ -67,7 +67,15 @@ function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, r
   for (let i = 1; i <= 8; i++) event(s.hit, 'pointermove', [p[0] + dx * i / 8, p[1] + dy * i / 8])
   event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); if (run) s.run()
 }
-function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 9) drag(s, at, ...delta(at), run) }
+function targetDelta(s: ReturnType<typeof mount>, at: number): [number, number] {
+  const entry = cues(s).find(entry => entry.cue.destination)
+  if (!entry) return delta(at)
+  const d = entry.cue.destination!, world = typeof d === 'function' ? d() : d.getWorldPosition(new THREE.Vector3())
+  const p = world.project(s.camera), r = s.host.querySelector('canvas')!.getBoundingClientRect()
+  const a = s.point(targetName(at), anchor(at))
+  return [r.left + (p.x + 1) * r.width / 2 - a[0], r.top + (1 - p.y) * r.height / 2 - a[1]]
+}
+function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 9) drag(s, at, ...targetDelta(s,at), run) }
 function cues(s: ReturnType<typeof mount>) {
   const list: { object: THREE.Object3D; cue: InteractionCue }[] = []
   s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled()) list.push({ object, cue }) })
@@ -89,7 +97,7 @@ describe('Seven water bowl offering', () => {
   it('accepts sparse touch events and fills only the selected bowl at each checkpoint', () => {
     const s=mount(0,{isReducedMotion:()=>true})
     for(let at=0;at<9;at++){
-      const p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at)
+      const p=s.point(targetName(at),anchor(at)),[dx,dy]=targetDelta(s,at)
       event(s.hit,'pointerdown',p);event(s.hit,'pointerup',[p[0]+dx,p[1]+dy])
       expect(s.progress).toEqual(Array.from({length:at+1},(_,i)=>i+1))
       for(let bowl=0;bowl<7;bowl++){
@@ -102,8 +110,8 @@ describe('Seven water bowl offering', () => {
     }
   })
 
-  it('points every drag guide along the accepted screen gesture',()=>{
-    for(const at of[0,1,4,7,8]){const s=mount(at);expect(cues(s).map(x=>x.cue.direction)).toEqual([delta(at).map(n=>n/60)]);s.instance.dispose()}
+  it('shows the current placement destination instead of a fixed screen direction',()=>{
+    for(const at of[0,1,4,7,8]){const s=mount(at), cue=cues(s)[0]!.cue;expect(cue.direction).toBeUndefined();expect(cue.destination).toBeDefined();expect(targetDelta(s,at).every(Number.isFinite)).toBe(true);s.instance.dispose()}
   })
   it('uses water bowl offering identity for the visible title, accessible steps and default style registration',()=>{
     const s=mount()
@@ -174,7 +182,7 @@ describe('Seven water bowl offering', () => {
   })
   it.each([0, 1, 4, 7, 8])('accepts a continued same-direction release and an eighteen pixel correction at %i', at => {
     for (const factor of [3, .7]) {
-      const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+      const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = targetDelta(s,at)
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
       event(s.hit, 'pointerup', [p[0] + dx * factor, p[1] + dy * factor])
       expect(s.progress).toEqual([at + 1]); s.instance.dispose()
@@ -188,10 +196,10 @@ describe('Seven water bowl offering', () => {
   })
   it.each([false, true])('accepts a gentle zigzag path and remains ready after settlement, reduced=%s', reduced => {
     for (const at of [0, 1, 4, 7, 8]) {
-      const s = mount(at, { isReducedMotion: () => reduced }), p = s.point(targetName(at), anchor(at))
+      const s = mount(at, { isReducedMotion: () => reduced }), p = s.point(targetName(at), anchor(at)), [dx,dy]=targetDelta(s,at), length=Math.hypot(dx,dy)
       event(s.hit, 'pointerdown', p)
-      for (const [along, cross] of [[12, 16], [24, -16], [36, 16], [48, -16], [60, 0]]) event(s.hit, 'pointermove', [p[0]+delta(at)[0]*along/60-delta(at)[1]*cross/60,p[1]+delta(at)[1]*along/60+delta(at)[0]*cross/60])
-      event(s.hit, 'pointerup', [p[0] + delta(at)[0], p[1] + delta(at)[1]])
+      for (const [along, cross] of [[.2, 16], [.4, -16], [.6, 16], [.8, -16], [1, 0]]) event(s.hit, 'pointermove', [p[0]+dx*along-dy/length*cross,p[1]+dy*along+dx/length*cross])
+      event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy])
       s.run(); expect(s.progress).toEqual([at + 1]); expect(s.button.disabled).toBe(at === 8)
     }
   })
@@ -235,7 +243,7 @@ describe('Seven water bowl offering', () => {
   })
   it.each([284, 350, 1280])('keeps all subject vertices in frame during each three jug paths at width %i', width => {
     for (const at of [0, 1, 4, 7, 8]) {
-      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at)
+      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = targetDelta(s,at)
       const check = () => {
         s.scene.updateMatrixWorld(true); let extent = 0
         s.scene.getObjectByName('water-bowls-subject')!.traverse(o => {

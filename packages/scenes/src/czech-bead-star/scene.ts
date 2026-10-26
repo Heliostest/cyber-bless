@@ -159,7 +159,7 @@ export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
     onStart(x, y) {
       withHostCallbacks(() => feedback.prepare()); if (!active()) { pointer.cancel(); return }
       down.set(x, y); maxTravel = maxVertical = 0; dragging = checkpoint < 2
-      plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), loose.position)
+      plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), grip.getWorldPosition(new THREE.Vector3()))
       if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(loose.position).sub(point)
     },
     onMove(x, y) {
@@ -169,11 +169,12 @@ export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
       if (checkpoint === 0 && ray.aim(x, y).ray.intersectPlane(plane, point)) {
         loose.position.copy(point).add(offset); loose.position.x = THREE.MathUtils.clamp(loose.position.x, -1.20, 1.20); loose.position.y = THREE.MathUtils.clamp(loose.position.y, .424, 2.85)
       } else if (checkpoint === 1) star.rotation.y = THREE.MathUtils.clamp(dx * .010, -.95, .95)
-      matrices()
+      matrices();
+      if (dragging && checkpoint === 0 && maxTravel > 0 && placementHit(canvas, camera, grip, x, y, (px, py) => visibleHit(px, py, joint, loose)) && pointer.finish()) { dragging = false; advance(true) }
     },
     onRelease(x, y) {
       matrices(); const dx = x - down.x, dy = y - down.y
-      const valid = checkpoint === 0 ? dragging && maxTravel >= 8 && placementHit(canvas, camera, grip, x, y, (px, py) => visibleHit(px, py, joint, loose))
+      const valid = checkpoint === 0 ? dragging && maxTravel > 0 && placementHit(canvas, camera, grip, x, y, (px, py) => visibleHit(px, py, joint, loose))
         : checkpoint === 1 ? dragging && dx >= 45 && Math.abs(dy) <= Math.max(18, dx * .42) && star.rotation.y >= .45
           && (star.rotation.y >= FINAL_TURN || maxVertical <= Math.max(22, dx * .55))
           : checkpoint === 2 && maxTravel < 12 && Math.hypot(dx, dy) < 12 && visibleHit(x, y, star)
@@ -200,8 +201,8 @@ export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
       if (active()) feedback.impact({ freqs: [523.25, 783.99], duration: .14, gain: .009, type: 'triangle' })
     })
   }
-  function advance() {
-    if (!inputActive() || pointer.isBusy() || transition || returningTurn || checkpoint === 3) return
+  function advance(arrived = false) {
+    if (!inputActive() || (pointer.isBusy() && !arrived) || transition || returningTurn || checkpoint === 3) return
     if (checkpoint === 2) {
       checkpoint = 3; restore()
       withHostCallbacks(() => {

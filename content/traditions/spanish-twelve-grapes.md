@@ -16,3 +16,8 @@
 | 马德里太阳门广场的十二幸运葡萄与十二声钟；仅作为对应地方综述，不采用1909起源说、all households、饮酒、活动容量或时刻表。 | [New Year’s Eve at Puerta del Sol／Madrid官方旅游网站](https://www.esmadrid.com/en/whats-on/new-years-eve-party-puerta-sol)，L79–83；Last updated原样为01/06/2026，不推测日期格式。 | 实现者web读相关正文；独立者web超时后直接HTTP成功实际读HTML相关正文，非摘要。 |
 
 [完整核查记录](../../docs/research/2026-10-23-spanish-twelve-grapes.md)。
+
+
+### spanish-twelve-grapes：2026-10-26 产品操作更新
+
+三盘各四颗依次完整跟手到各自餐台落区，盘底到位自动落稳，总数与独立目标保留。 物件跟手、目标容差、自动吸附与提示标记是应用的输入安排，不是来源规定的传统步骤。沿用本卡既有事实与阅读状态，本轮没有新增文化主张或将外部资料登记为重新读过。实际实现与验证边界见[C 组记录](../../docs/research/2026-10-26-spatial-placement-audit-c.md)。

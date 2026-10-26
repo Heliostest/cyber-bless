@@ -59,8 +59,14 @@ function event(el: HTMLElement, type: string, [clientX, clientY]: [number, numbe
   Object.assign(e, { clientX, clientY, pointerId, pointerType: 'touch', button: 0 }); el.dispatchEvent(e)
 }
 function drag(s: ReturnType<typeof mount>, source = 'egg-brush-grip', target = 'egg-paint-surface') {
-  const a = s.point(source), b = s.point(target)
+  const a = s.point(source), b = goalPoint(s, target)
   event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b); event(s.hit, 'pointerup', b); s.run()
+}
+function goalPoint(s: ReturnType<typeof mount>, name: string): [number, number] {
+  const cue=cues(s)[0]?.cue
+  if(name !== 'egg-cup-target' || typeof cue?.destination !== 'function') return s.point(name)
+  const rect=s.host.querySelector('canvas')!.getBoundingClientRect(), p=cue.destination().project(s.camera)
+  return [rect.left+(p.x+1)*rect.width/2,rect.top+(1-p.y)*rect.height/2]
 }
 function tap(s: ReturnType<typeof mount>) { const p = s.point('egg-paint-surface'); event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p) }
 function cues(s: ReturnType<typeof mount>) {
@@ -79,6 +85,16 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
     visible.push(object)
   })
   return { q, object: ray.intersectObjects(visible, false)[0]?.object }
+}
+
+function beforeArrival(s: ReturnType<typeof mount>, goal: [number, number]): [number, number] {
+  let selected: { object: THREE.Object3D; cue: InteractionCue } | undefined
+  s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.kind === 'drag' && cue.destination) selected = { object, cue } })
+  if (!selected) return goal
+  const { object, cue } = selected, canvas = s.overlay.parentElement!.querySelector('canvas')!, rect = canvas.getBoundingClientRect()
+  const source = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(s.camera)
+  const x = rect.left + (source.x + 1) * rect.width / 2, y = rect.top + (1 - source.y) * rect.height / 2
+  return [Math.max(rect.left + 2, x - 48), Math.max(rect.top + 2, y - 48)]
 }
 
 describe('Sorbian contemporary painted egg', () => {
@@ -107,9 +123,9 @@ describe('an optional explicit spring wish', () => {
 })
 
 function block(s: ReturnType<typeof mount>, name: string) {
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(.55, .55), new THREE.MeshBasicMaterial({ color: 0x775533, side: THREE.DoubleSide }))
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), new THREE.MeshBasicMaterial({ color: 0x775533, side: THREE.DoubleSide }))
   s.scene.updateMatrixWorld(true)
-  mesh.position.lerpVectors(s.scene.getObjectByName(name)!.getWorldPosition(new THREE.Vector3()), s.camera.position, .18)
+  mesh.position.lerpVectors(s.scene.getObjectByName(name)!.getWorldPosition(new THREE.Vector3()), s.camera.position, .5)
   mesh.quaternion.copy(s.camera.quaternion); s.scene.add(mesh); s.scene.updateMatrixWorld(true)
   return () => { mesh.removeFromParent(); mesh.geometry.dispose(); mesh.material.dispose() }
 }
@@ -140,7 +156,7 @@ describe('visible object input and recoverable progress', () => {
   it.each([0, 1])('rejects drops behind external opaque geometry at checkpoint %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), source = at === 0 ? 'egg-brush-grip' : 'egg-paint-surface', target = at === 0 ? 'egg-paint-surface' : 'egg-cup-target'
     const a = s.point(source), b = s.point(target)
-    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b)
+    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', beforeArrival(s, b))
     const clear = block(s, target); event(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([]); clear(); drag(s, source, target); expect(s.progress).toEqual([at + 1])
   })
@@ -160,8 +176,8 @@ describe('visible object input and recoverable progress', () => {
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('returns an unfinished drag to its support on %s', kind => {
     let active = true; const s = mount(1, { isActive: () => active, isReducedMotion: () => true })
-    const egg = s.scene.getObjectByName('sorbian-painted-egg')!, home = egg.position.clone(), end = s.point('egg-cup-target')
-    event(s.hit, 'pointerdown', s.point('egg-paint-surface')); event(s.hit, 'pointermove', end)
+    const egg = s.scene.getObjectByName('sorbian-painted-egg')!, home = egg.position.clone(), end = goalPoint(s, 'egg-cup-target')
+    event(s.hit, 'pointerdown', s.point('egg-paint-surface')); event(s.hit, 'pointermove', beforeArrival(s, end))
     if (kind === 'blur') window.dispatchEvent(new Event('blur'))
     else if (kind === 'pause') { active = false; s.run() }
     else event(s.hit, kind, end)
@@ -244,12 +260,12 @@ describe('physical craft and owned resources', () => {
     })
     expect(samples).toBeGreaterThan(100)
   })
-  it('requires eight pixels of real travel and settles immediately when reduced motion is switched on', () => {
+  it('rejects an unfinished placement and settles an accepted target when reduced motion is switched on', () => {
     let reduced = false; const s = mount(0, { isReducedMotion: () => reduced }), a = s.point('egg-brush-grip'), target = s.point('egg-paint-surface')
     const short: [number, number] = [a[0] + 7.9, a[1]]
     event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', short); event(s.hit, 'pointerup', short); s.run()
     expect(s.progress).toEqual([])
-    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', [a[0] + 8, a[1]]); event(s.hit, 'pointerup', target); s.instance.update(.025)
+    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', target); event(s.hit, 'pointerup', target); s.instance.update(.025)
     expect(s.progress).toEqual([]); reduced = true; s.instance.update(.025); expect(s.progress).toEqual([1])
     expect(s.scene.getObjectByName('egg-invented-motif')!.visible).toBe(true)
   })
@@ -278,28 +294,28 @@ describe('physical craft and owned resources', () => {
 })
 
 describe('whole visible cup opening',()=>{
-  it('accepts the left cream cup rim rather than only the tiny front mark',()=>{
-    const s=mount(1,{isReducedMotion:()=>true}),a=s.point('egg-paint-surface'),b=s.point('egg-cup-cream-rim',[-.29,0,0]);
+  it('automatically seats the egg with its body aligned above the cup',()=>{
+    const s=mount(1,{isReducedMotion:()=>true}),a=s.point('egg-paint-surface'),goal=goalPoint(s,'egg-cup-target'),b:[number,number]=[goal[0]-14,goal[1]];
     event(s.hit,'pointerdown',a);event(s.hit,'pointermove',b);
-    expect(s.overlay.textContent).toContain('可以松手');
+    expect(s.progress).toEqual([2]);
     event(s.hit,'pointerup',b);s.run();expect(s.progress).toEqual([2]);
   });
 });
 
-it.each(['pointercancel', 'blur', 'pause'])('clears the ready drop after %s without completing it', reason => {
+it.each(['pointercancel', 'blur', 'pause'])('keeps an automatically accepted drop after %s and ignores held-pointer tails', reason => {
   let active = true
   const s = mount(1, { isActive: () => active, isReducedMotion: () => true })
-  const from = s.point('egg-paint-surface'), target = s.point('egg-cup-target')
+  const from = s.point('egg-paint-surface'), target = goalPoint(s, 'egg-cup-target')
   event(s.hit, 'pointerdown', from); event(s.hit, 'pointermove', target)
-  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
   event(s.hit, 'pointermove', [1, 1])
   expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
   event(s.hit, 'pointermove', target)
-  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBe('true')
+  expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
   if (reason === 'blur') window.dispatchEvent(new Event('blur'))
   else if (reason === 'pause') { active = false; s.run(.05) }
   else event(s.hit, 'pointercancel', target)
   expect(s.overlay.querySelector<HTMLElement>('.scene-hint')!.dataset.dropReady).toBeUndefined()
   event(s.hit, 'pointerup', target); s.run()
-  expect(s.progress).toEqual([])
+  expect(s.progress).toEqual([2])
 })

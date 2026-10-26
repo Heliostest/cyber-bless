@@ -1,6 +1,7 @@
 ﻿// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import * as Shared from '@wbr/shared'
 import * as Gestures from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -67,6 +68,16 @@ function block(s: ReturnType<typeof mount>, name: string) {
   return () => { mesh.removeFromParent(); mesh.geometry.dispose(); mesh.material.dispose() }
 }
 
+function beforeArrival(s: ReturnType<typeof mount>, goal: [number, number]): [number, number] {
+  let selected: { object: THREE.Object3D; cue: InteractionCue } | undefined
+  s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.kind === 'drag' && cue.destination) selected = { object, cue } })
+  if (!selected) return goal
+  const { object, cue } = selected, canvas = s.overlay.parentElement!.querySelector('canvas')!, rect = canvas.getBoundingClientRect()
+  const source = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(s.camera)
+  const x = rect.left + (source.x + 1) * rect.width / 2, y = rect.top + (1 - source.y) * rect.height / 2
+  return [Math.max(rect.left + 2, x - 48), Math.max(rect.top + 2, y - 48)]
+}
+
 describe('an original painted miniature house', () => {
   it('offers a visible assembly action without persisting a checkpoint on mount', () => {
     const s = mount(); expect(s.button).not.toBeNull(); expect(s.button.textContent).toBeTruthy(); expect(s.progress).toEqual([])
@@ -105,7 +116,7 @@ describe('an original painted miniature house', () => {
   it.each([0, 1])('rejects a drop hidden behind another object at step %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), source = at === 0 ? 'house-color-panel' : 'house-base-grip', target = at === 0 ? 'house-facade-slot' : 'house-display-seat'
     const a = s.point(source), b = s.point(target)
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b)
+    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', beforeArrival(s, b))
     const clear = block(s, target); pointer(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([]); clear(); drag(s, source, target); expect(s.progress).toEqual([at + 1])
   })
@@ -119,7 +130,7 @@ describe('an original painted miniature house', () => {
   it.each(['pointercancel', 'lostpointercapture'])('discards a colored panel drag on %s', event => {
     const s = mount(0, { isReducedMotion: () => true }), initial = s.scene.getObjectByName('house-paint-panel')!.position.clone()
     const a = s.point('house-color-panel'), b = s.point('house-facade-slot')
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b); pointer(s.hit, event, b); pointer(s.hit, 'pointerup', b)
+    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', beforeArrival(s, b)); pointer(s.hit, event, b); pointer(s.hit, 'pointerup', b)
     expect(s.progress).toEqual([]); expect(s.scene.getObjectByName('house-paint-panel')!.position.equals(initial)).toBe(true)
     drag(s, 'house-color-panel', 'house-facade-slot'); expect(s.progress).toEqual([1])
   })
@@ -134,7 +145,7 @@ describe('an original painted miniature house', () => {
   it('cancels pending input on host pause and freezes accepted motion while blurred', () => {
     let active = true
     const s = mount(0, { isActive: () => active }), a = s.point('house-color-panel'), b = s.point('house-facade-slot')
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b); active = false; s.run(); active = true; pointer(s.hit, 'pointerup', b); s.run()
+    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', beforeArrival(s, b)); active = false; s.run(); active = true; pointer(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([])
     s.button.click(); s.run(.1); const pose = s.scene.getObjectByName('house-paint-panel')!.position.clone()
     window.dispatchEvent(new Event('blur')); s.run(2)
@@ -193,7 +204,7 @@ describe('an original painted miniature house', () => {
     const house = s.scene.getObjectByName('house-miniature')!, panel = s.scene.getObjectByName('house-paint-panel')!
     const origin = house.position.clone(), panelOrigin = panel.getWorldPosition(new THREE.Vector3())
     const a = s.point('house-base-grip'), b = s.point('house-display-seat')
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b)
+    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', beforeArrival(s, b))
     expect(house.position.distanceTo(origin)).toBeGreaterThan(.1)
     if (event === 'blur') window.dispatchEvent(new Event('blur'))
     else if (event === 'pause') { active = false; s.run() }

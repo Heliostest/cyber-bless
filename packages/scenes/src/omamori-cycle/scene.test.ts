@@ -69,6 +69,16 @@ function enabled(s: ReturnType<typeof mount>) {
   return result
 }
 
+function beforeArrival(s: ReturnType<typeof mount>, goal: [number, number]): [number, number] {
+  let selected: { object: THREE.Object3D; cue: InteractionCue } | undefined
+  s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.kind === 'drag' && cue.destination) selected = { object, cue } })
+  if (!selected) return goal
+  const { object, cue } = selected, canvas = s.overlay.parentElement!.querySelector('canvas')!, rect = canvas.getBoundingClientRect()
+  const source = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(s.camera)
+  const x = rect.left + (source.x + 1) * rect.width / 2, y = rect.top + (1 - source.y) * rect.height / 2
+  return [Math.max(rect.left + 2, x - 48), Math.max(rect.top + 2, y - 48)]
+}
+
 describe('omamori companion', () => {
   it('provides the complete auxiliary selection, placement and quiet acknowledgment flow', () => {
     const s = mount(0, { isReducedMotion: () => true })
@@ -164,7 +174,7 @@ describe('omamori companion', () => {
   it.each(['pointercancel', 'lostpointercapture'])('abandons %s and requires a fresh owned drag', cancel => {
     const s = mount(1, { isReducedMotion: () => true })
     const from = s.point('omamori-pouch-body-coral'), to = s.point('omamori-clasp')
-    pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', to); pointer(s.hit, cancel, to); pointer(s.hit, 'pointerup', to)
+    pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', beforeArrival(s, to)); pointer(s.hit, cancel, to); pointer(s.hit, 'pointerup', to)
     expect(s.progress).toEqual([])
     drag(s, 'omamori-pouch-body-coral', 'omamori-clasp'); expect(s.progress).toEqual([2])
   })
@@ -200,7 +210,7 @@ describe('omamori companion', () => {
     let active = true
     const s = mount(1, { isActive: () => active, isReducedMotion: () => true })
     const from = s.point('omamori-pouch-body-coral'), to = s.point('omamori-clasp')
-    pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', to)
+    pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', beforeArrival(s, to))
     active = false; s.run(); expect(enabled(s)).toEqual([])
     active = true; pointer(s.hit, 'pointerup', to); expect(s.progress).toEqual([])
     s.button.click(); active = false; s.run(); s.write('慢慢来'); s.button.click()

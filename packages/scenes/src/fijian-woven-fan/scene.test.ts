@@ -1,6 +1,7 @@
 ﻿// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
+import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import * as Shared from '@wbr/shared'
 import * as Gestures from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -65,6 +66,16 @@ function block(s: ReturnType<typeof mount>, name: string) {
   mesh.position.lerpVectors(s.scene.getObjectByName(name)!.getWorldPosition(new THREE.Vector3()), s.camera.position, .15)
   mesh.quaternion.copy(s.camera.quaternion); s.scene.add(mesh); s.scene.updateMatrixWorld(true)
   return () => { mesh.removeFromParent(); mesh.geometry.dispose(); mesh.material.dispose() }
+}
+
+function beforeArrival(s: ReturnType<typeof mount>, goal: [number, number]): [number, number] {
+  let selected: { object: THREE.Object3D; cue: InteractionCue } | undefined
+  s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled() && cue.kind === 'drag' && cue.destination) selected = { object, cue } })
+  if (!selected) return goal
+  const { object, cue } = selected, canvas = s.overlay.parentElement!.querySelector('canvas')!, rect = canvas.getBoundingClientRect()
+  const source = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(s.camera)
+  const x = rect.left + (source.x + 1) * rect.width / 2, y = rect.top + (1 - source.y) * rect.height / 2
+  return [Math.max(rect.left + 2, x - 48), Math.max(rect.top + 2, y - 48)]
 }
 
 describe('an original woven pandanus fan', () => {
@@ -169,7 +180,7 @@ describe('an original woven pandanus fan', () => {
   it.each([0, 1])('rejects an occluded drop at checkpoint %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), source = at ? 'fan-handle-grip' : 'fan-binding-grip', target = at ? 'fan-display-seat' : 'fan-neck-joint'
     const a = s.point(source), b = s.point(target)
-    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b)
+    pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', beforeArrival(s, b))
     const clear = block(s, target); pointer(s.hit, 'pointerup', b); s.run()
     expect(s.progress).toEqual([]); clear(); drag(s, source, target); expect(s.progress).toEqual([at + 1])
   })
@@ -187,7 +198,7 @@ describe('an original woven pandanus fan', () => {
       const s = mount(at, { isReducedMotion: () => true, isActive: () => active }), positions = new Map<THREE.Object3D, THREE.Vector3>()
       s.scene.getObjectByName(at ? 'fan-body' : 'fan-loose-binding')!.traverse(o => positions.set(o, o.getWorldPosition(new THREE.Vector3())))
       const a = s.point(at ? 'fan-handle-grip' : 'fan-binding-grip'), b = s.point(at ? 'fan-display-seat' : 'fan-neck-joint')
-      pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b)
+      pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', beforeArrival(s, b))
       if (event === 'blur') window.dispatchEvent(new Event('blur'))
       else if (event === 'pause') { active = false; s.run() }
       else if (event === 'multitouch') pointer(document.body, 'pointerdown', [1, 1], 2)

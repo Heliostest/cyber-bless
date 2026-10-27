@@ -43,6 +43,13 @@ export function normalizeStyleParameters(value: unknown, base = DEFAULT_STYLE_PA
 export type VisualStyleId = typeof visualStyleOptions[number]["id"];
 export type VisualStylePreference = { style: VisualStyleId; parameters: RenderStyleParameters };
 export type VisualPreferenceInput = { style: VisualStyleId; parameters?: Partial<RenderStyleParameters> };
+/** Local overrides take priority; unopened rituals also inherit the shared choice. */
+export function getSceneVisualPreference(state: {
+  visualStyles?: Record<string, VisualStylePreference>;
+  globalVisualStyle?: VisualStylePreference;
+}, id: string): VisualStylePreference | undefined {
+  return state.visualStyles?.[id] ?? state.globalVisualStyle;
+}
 export const isVisualStyle = (value: unknown): value is VisualStyleId => visualStyleOptions.some(option => option.id === value);
 export const isVisualSceneId = (value: string) => /^[a-zA-Z0-9][a-zA-Z0-9._@-]{0,95}$/.test(value) && !["__proto__", "constructor", "prototype"].includes(value);
 

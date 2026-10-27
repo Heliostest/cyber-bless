@@ -1,7 +1,7 @@
 import { builtInScenes } from './daily-scenes';
 import { sceneProgress, sceneStepCount } from './scene-steps';
 export { sceneProgress, sceneStepCount } from './scene-steps';
-import { isVisualSceneId, isVisualStyle, normalizeStyleParameters, restoreVisualStyles, type VisualStylePreference, type VisualPreferenceInput } from "./visual-style";
+import { isVisualSceneId, isVisualStyle, normalizeStyleParameters, normalizeVisualPreference, restoreVisualStyles, type VisualStylePreference, type VisualPreferenceInput } from "./visual-style";
 import { openingCollectibleId, replaceHiddenOpeningScenes, validOpeningSceneIds, validOpeningState, validOpeningDay, type OpeningState } from './opening';
 export { chooseOpeningScenes, openingCollectibleId, openingExclusions } from './opening';
 export type { OpeningState } from './opening';
@@ -117,14 +117,17 @@ export type State = {
   /** Legacy score data retained for save compatibility; new rituals do not add entries. */
   ledger: { id: string; amount: number; at: string }[];
   settings: { sound: boolean; haptics: boolean; reducedMotion: boolean };
-  /** Optional on old saves; each ritual keeps its own cosmetic preference. */
+  /** Optional on old saves; individual rituals can override the shared choice. */
   visualStyles?: Record<string, VisualStylePreference>;
+  /** A shared cosmetic preference, including rituals not yet opened. */
+  globalVisualStyle?: VisualStylePreference;
   /** Held lines of vessel 许愿 walks still waiting on their choice. Absent
    * on saves from before it existed; empty once every choice is settled. */
   vesselDrafts?: Record<string, VesselDraft>;
 };
 export type Action =
   | ({ type: "scene.visual"; id: string } & ({ style: null } | VisualPreferenceInput))
+  | ({ type: "scene.visual.all" } & ({ style: null } | VisualPreferenceInput))
   | { type: "opening.start"; sceneIds: [string, string, string] }
   | { type: "opening.collect"; sceneId: string; at: string }
   | { type: "opening.finish"; day: string; at: string }
@@ -554,6 +557,19 @@ export function reduce(s: State, a: Action): State {
     }
     case "settings":
       return { ...s, settings: { ...s.settings, [a.key]: a.value } };
+    case "scene.visual.all": {
+      if (a.style !== null && !isVisualStyle(a.style)) throw Error("这个视觉风格暂不可用");
+      const hasOverrides = Object.keys(s.visualStyles ?? {}).length > 0;
+      if (a.style === null) {
+        if (!s.globalVisualStyle && !hasOverrides) return s;
+        const next = { ...s, visualStyles: {} };
+        delete next.globalVisualStyle;
+        return next;
+      }
+      const preference = { style: a.style, parameters: normalizeStyleParameters(a.parameters, s.globalVisualStyle?.parameters) };
+      if (!hasOverrides && JSON.stringify(s.globalVisualStyle) === JSON.stringify(preference)) return s;
+      return { ...s, globalVisualStyle: preference, visualStyles: {} };
+    }
     case "scene.visual": {
       if (!isVisualSceneId(a.id) || (a.style !== null && !isVisualStyle(a.style))) throw Error("这个视觉风格暂不可用");
       const visualStyles = { ...s.visualStyles };
@@ -708,6 +724,11 @@ export function restore(
   if (!valid) throw new Error("存档格式不受支持或已损坏，原数据已保留");
   const s = v as State;
   if (s.visualStyles !== undefined) s.visualStyles = restoreVisualStyles(s.visualStyles);
+  if (s.globalVisualStyle !== undefined) {
+    const preference = normalizeVisualPreference(s.globalVisualStyle);
+    if (preference) s.globalVisualStyle = preference;
+    else delete s.globalVisualStyle;
+  }
   s.sceneRecords ??= [];
   s.sceneRecords = s.sceneRecords.map(r => r.id === 'tibetan-water-bowls' && r.engine === 'tibetan-water-bowls@1'
     ? { ...r, progress: sceneProgress(r), steps: sceneStepCount(r) } : r);

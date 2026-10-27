@@ -110,6 +110,8 @@ describe("App visual style menu", () => {
     expect(dialog).not.toBeNull();
     clickOn(dialog.querySelector('[data-style="pixel-art"]')!);
     expect(rendered.at(-1)).toBe("pixel-art");
+    expect(actions).toHaveLength(0);
+    clickOn(dialog.querySelector('.visual-style-scope-current')!);
     expect(actions).toContainEqual(expect.objectContaining({ type: "scene.visual", id: "menu-test", style: "pixel-art" }));
     const details = dialog.querySelector("details")!; details.open = true;
     const slider = dialog.querySelector<HTMLInputElement>('input[type="range"]')!;

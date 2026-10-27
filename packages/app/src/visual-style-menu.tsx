@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import {
-  visualStyleOptions, styleParameterControls, DEFAULT_STYLE_PARAMETERS, normalizeStyleParameters,
+  visualStyleOptions, styleParameterControls, DEFAULT_STYLE_PARAMETERS, normalizeStyleParameters, getSceneVisualPreference,
   type VisualStylePreference, type VisualStyleId,
 } from "@wbr/core/visual-style";
 import { sceneStyles, type DebugScene } from "@wbr/scene-runtime/debug-styles";
@@ -15,6 +15,8 @@ export function dismissVisualStyleMenu(scope?: HTMLElement | null) {
 }
 const order: VisualStyleId[] = ["toon-soft", "original", "gouache", "moebius", "toon-outline", "halftone", "pixel-art", "toon-ink"];
 const emptyScenes: DebugScene[] = [];
+type ApplyScope = "current" | "all";
+type Confirmation = { value: VisualStylePreference | null; trigger: HTMLElement };
 const openMenus: HTMLElement[] = [];
 let scrollLocks = 0, originalBodyOverflow = "", ownsBodyScroll = false;
 function lockBodyScroll() {
@@ -60,13 +62,17 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
   scene: DebugScene; shell: HTMLElement; trigger: HTMLButtonElement | null; onClose(): void;
 }) {
   const { state, dispatch, active } = useApp();
-  const [choice, setChoice] = useState<VisualStylePreference | null>(state.visualStyles?.[scene.id] ?? null);
+  const [choice, setChoice] = useState<VisualStylePreference | null>(getSceneVisualPreference(state, scene.id) ?? null);
   const [tuning, setTuning] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+  const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
+  const [appliedScope, setAppliedScope] = useState<ApplyScope>("current");
+  const confirming = useRef(confirmation); confirming.current = confirmation;
+  const focusReturn = useRef<HTMLElement | null>(null);
   const current = useRef(choice), latestDispatch = useRef(dispatch);
   latestDispatch.current = dispatch;
   const preview = useRef<ReturnType<typeof sceneStyles.connectUserPreference> | null>(null);
-  const pending = useRef<{ value: VisualStylePreference | null } | null>(null);
+  const pending = useRef<{ value: VisualStylePreference | null; scope: ApplyScope } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const panel = useRef<HTMLElement>(null), backdrop = useRef<HTMLDivElement>(null);
   const selected = choice?.style ?? scene.defaultStyle;
@@ -77,16 +83,46 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
   function flush() {
     clearTimeout(timer.current);
     const next = pending.current; pending.current = null;
-    if (next) latestDispatch.current({ type: "scene.visual", id: scene.id,
-      ...(next.value ? next.value : { style: null }) });
+    if (next) {
+      if (next.scope === "all") latestDispatch.current({ type: "scene.visual.all", ...(next.value ?? { style: null }) });
+      else latestDispatch.current({ type: "scene.visual", id: scene.id, ...(next.value ?? { style: null }) });
+    }
   }
-  function apply(value: VisualStylePreference | null, deferred = false) {
+  function apply(value: VisualStylePreference | null, deferred = false, scope = appliedScope) {
     if (value?.style !== current.current?.style) setTuning(false);
     current.current = value; setChoice(value); preview.current?.update(value);
-    pending.current = { value }; clearTimeout(timer.current);
+    pending.current = { value, scope }; clearTimeout(timer.current);
     if (deferred) timer.current = setTimeout(flush, 180);
     else flush();
   }
+  function requestChoice(value: VisualStylePreference | null, trigger: HTMLElement) {
+    flush(); setTuning(false); setChoice(value); preview.current?.update(value);
+    setConfirmation({ value, trigger });
+  }
+  function cancelConfirmation() {
+    const next = confirming.current;
+    if (!next) return;
+    focusReturn.current = next.trigger;
+    setChoice(current.current); preview.current?.update(current.current);
+    setConfirmation(null);
+  }
+  function confirmChoice(scope: ApplyScope) {
+    if (!confirmation) return;
+    // A local reset must bypass the global preference and restore this content default.
+    const value = confirmation.value ?? (scope === "current" && state.globalVisualStyle
+      ? { style: scene.defaultStyle, parameters: { ...DEFAULT_STYLE_PARAMETERS } } : null);
+    focusReturn.current = confirmation.trigger;
+    setConfirmation(null); setAppliedScope(scope); apply(value, false, scope);
+  }
+  useLayoutEffect(() => {
+    if (confirmation) panel.current?.querySelector<HTMLButtonElement>(".visual-style-scope-current")?.focus();
+    else if (focusReturn.current) {
+      const target = focusReturn.current;
+      if (target.isConnected && !target.matches(":disabled") && !target.closest("[hidden]")) target.focus();
+      else panel.current?.querySelector<HTMLButtonElement>('button[aria-label="关闭视觉风格"]')?.focus();
+      focusReturn.current = null;
+    }
+  }, [confirmation]);
 
   useEffect(() => {
     const connection = sceneStyles.connectUserPreference(scene.id, current.current, undefined, scene.scope);
@@ -120,7 +156,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
       .filter(item => !item.closest('[hidden]') && (!item.closest('details:not([open])') || item.tagName === "SUMMARY"));
     const keydown = (event: KeyboardEvent) => {
       if (openMenus.at(-1) !== element) return;
-      if (event.key === "Escape") { event.preventDefault(); onClose(); }
+      if (event.key === "Escape") { event.preventDefault(); if (confirming.current) cancelConfirmation(); else onClose(); }
       if (event.key === "Tab") {
         const all = focusables(), first = all[0], last = all.at(-1);
         if (event.shiftKey && (document.activeElement === first || !element.contains(document.activeElement))) { event.preventDefault(); last?.focus(); }
@@ -130,7 +166,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
     const dismiss = (event: Event) => {
       const scope = (event as CustomEvent<HTMLElement | null>).detail;
       if (scope && scope !== shell) return;
-      event.preventDefault(); onClose();
+      event.preventDefault(); if (confirming.current) cancelConfirmation(); else onClose();
     };
     document.addEventListener("keydown", keydown); document.addEventListener(dismissEvent, dismiss);
     element.querySelector<HTMLButtonElement>('button[aria-label="关闭视觉风格"]')?.focus();
@@ -149,8 +185,11 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
     };
   }, [shell]);
 
-  return <div className={`visual-style-backdrop${previewing ? " is-previewing" : ""}`} ref={backdrop} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
-    <section className="visual-style-menu" role="dialog" aria-modal="true" aria-label="视觉风格" ref={panel}>
+  return <div className={`visual-style-backdrop${previewing ? " is-previewing" : ""}`} ref={backdrop} onClick={event => {
+    if (event.target === event.currentTarget) { if (confirmation) cancelConfirmation(); else onClose(); }
+  }}>
+    <section className="visual-style-menu" role="dialog" aria-modal="true" aria-label={confirmation ? "应用视觉风格" : "视觉风格"} ref={panel}>
+      <div hidden={!!confirmation} className="visual-style-editor">
       <header className="visual-style-heading" hidden={previewing}><div><h2><span className="visual-style-emblem" aria-hidden="true"><Icon name="visual" /></span>视觉风格</h2><p>为「{scene.label}」选一种喜欢的画面</p></div>
         <button type="button" className="round-button" aria-label="关闭视觉风格" onClick={onClose}><Icon name="close" /></button></header>
       <div className="visual-style-body" hidden={previewing}>
@@ -158,7 +197,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
           {order.map(id => {
             const option = visualStyleOptions.find(item => item.id === id)!;
             return <button key={id} data-style={id} type="button" aria-pressed={id === selected}
-              onClick={() => apply({ style: id, parameters: current.current?.parameters ?? { ...scene.parameters } })}>
+              onClick={event => requestChoice({ style: id, parameters: current.current?.parameters ?? { ...scene.parameters } }, event.currentTarget)}>
               <span className={`visual-style-swatch visual-style-swatch-${id}`} aria-hidden="true" />
               <span><strong>{option.label}</strong><small>{id === scene.defaultStyle ? "默认画面" : option.detail}</small></span>
               <span className="visual-style-check" aria-hidden="true">{id === selected ? "✓" : ""}</span>
@@ -181,11 +220,26 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
             apply({ style: selected, parameters: next });
           }}>重置参数</button>
         </details>}
-        <p className="visual-style-status" role="status">{scene.actual !== selected ? `这个效果暂时无法显示，已使用${actualLabel}。` : "只记住这个仪式的选择，随时可以更换。"}</p>
+        <p className="visual-style-status" role="status">{scene.actual !== selected ? `这个效果暂时无法显示，已使用${actualLabel}。`
+          : appliedScope === "all" ? "已统一全部仪式，继续微调也会应用到全部。" : "微调仅修改当前仪式；选择风格时可统一全部仪式。"}</p>
       </div>
-      <footer><button type="button" className="button outline" onClick={() => apply(null)} disabled={choice === null} hidden={previewing}>恢复默认</button>
+      <footer><button type="button" className="button outline" onClick={event => requestChoice(null, event.currentTarget)}
+        disabled={choice === null && !state.globalVisualStyle && !Object.keys(state.visualStyles ?? {}).length} hidden={previewing}>恢复默认</button>
         <button type="button" className="button secondary" aria-pressed={previewing} onClick={() => setPreviewing(value => !value)}>{previewing ? "继续调整" : "看画面"}</button>
         <button type="button" className="button primary visual-style-done" onClick={onClose}>完成</button></footer>
+      </div>
+      {confirmation && <div className="visual-style-scope">
+        <h2>{confirmation.value ? "应用到哪些仪式？" : "恢复哪些仪式？"}</h2>
+        <p>{confirmation.value
+          ? `当前风格：${visualStyleOptions.find(option => option.id === confirmation.value?.style)?.label}`
+          : "恢复各自的默认画面。"}</p>
+        <p className="visual-style-scope-note">{confirmation.value ? "全部应用会覆盖单独设置。" : "全部恢复会清除单独设置。"}</p>
+        <div className="visual-style-scope-actions">
+          <button type="button" className="button secondary visual-style-scope-current" onClick={() => confirmChoice("current")}>仅当前仪式</button>
+          <button type="button" className="button primary" onClick={() => confirmChoice("all")}>应用到全部仪式</button>
+          <button type="button" className="text-button visual-style-scope-cancel" onClick={cancelConfirmation}>取消</button>
+        </div>
+      </div>}
     </section>
   </div>;
 }

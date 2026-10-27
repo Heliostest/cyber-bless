@@ -223,6 +223,7 @@ describe("scene settings menu", () => {
     expect(dialog).not.toBeNull();
     expect(document.activeElement).toBe(dialog.querySelector('button[aria-label="关闭视觉风格"]'));
     clickOn(dialog.querySelector('[data-style="pixel-art"]')!);
+    clickOn(dialog.querySelector('.visual-style-scope-current')!);
     expect(ui.actions.at(-1)).toEqual(expect.objectContaining({ type: "scene.visual", style: "pixel-art" }));
     key("Tab"); expect(dialog.contains(document.activeElement)).toBe(true);
     key("Escape"); expect(ui.scope.querySelector('[role="dialog"][aria-label="视觉风格"]')).toBeNull();

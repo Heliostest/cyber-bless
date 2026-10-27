@@ -1,5 +1,7 @@
 # Cyber-Bless App Implementation Plan
 
+命名更新（2026-10-27）：当前工程与仓库名为 `cyber-bless`（英文 Cyber Bless，中文一日一念）；下文旧名保留为历史记录，执行以当前 README 和源码配置为准。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Turn `world-blessing-rituals` into a monorepo with research content under `content/`, a mobile PWA shell `apps/cyber-bless`, shared gesture modules, and two wired pilot Three.js scenes (泉边一念 + 花水位一倾), proving the gesture library before the remaining three pilots.

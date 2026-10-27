@@ -119,7 +119,7 @@ const input = path.join(android, 'app/build/outputs/apk/debug/app-debug.apk');
 const bytes = await readFile(input);
 const output = path.join(root, 'artifacts/android-debug');
 await mkdir(output, { recursive: true });
-const apk = path.join(output, 'world-blessing-rituals-debug.apk');
+const apk = path.join(output, 'cyber-bless-debug.apk');
 await writeFile(apk, bytes);
 await writeFile(path.join(output, 'latest.json'), JSON.stringify({ at: new Date().toISOString(), apk, source: app, gradle: version,
   gradleDistribution: distribution, cppStaging: env.WBR_ANDROID_CXX, ninja: env.WBR_ANDROID_NINJA,

@@ -23,7 +23,7 @@ npm run mobile:android:debug -- --prepared --widget-qa --test
 
 需已安装 Android SDK、API 36、Build-Tools 36.0.0、NDK 27.1.12297006，并设置 `ANDROID_HOME` 和 `JAVA_HOME`（Gradle 9.3.1 需要 JDK 17 或更高版本）。脚本优先复用 wrapper 缓存中的同版本 Gradle，否则通过生成 wrapper 安装；也可设置 `WBR_GRADLE_HOME` 指向实际 Gradle 9.3.1 安装目录。首次运行会下载原生依赖。
 
-产物为 `artifacts/android-debug/world-blessing-rituals-debug.apk`，旁边 `latest.json` 记录源码副本、Gradle 路径、生成时间、字节数与 SHA-256。此包使用标准 debug 签名，applicationId 为 `com.helio.cyberbless`，支持 Android 7.0/API 24 以上的 arm64-v8a 和 x86_64 设备。
+当前脚本产物为 `artifacts/android-debug/cyber-bless-debug.apk`，旁边 `latest.json` 记录源码副本、Gradle 路径、生成时间、字节数与 SHA-256。此包使用标准 debug 签名，applicationId 为 `com.helio.cyberbless`，支持 Android 7.0/API 24 以上的 arm64-v8a 和 x86_64 设备。
 
 `--widget-qa` 在隔离副本的 Android autolinking 中排除 `expo-dev-client`、`expo-dev-launcher`、`expo-dev-menu`，生成普通 React Native debug APK。Expo Dev Client 的外部 ACTION_VIEW 冷启动会先进入开发启动器；普通 debug host 可直接保留仪式链接并加载场景。主项目的 dependencies 和配置没有因此改变。不加该参数仍可生成标准 Expo Dev Client debug APK；本次也保留了 `world-blessing-rituals-dev-client-debug.apk`。`--test` 同时运行小组件原生单元测试。
 
@@ -33,7 +33,7 @@ npm run mobile:android:debug -- --prepared --widget-qa --test
 $env:NODE_OPTIONS='--dns-result-order=ipv4first'
 $env:CI='1'
 npm run mobile:dev-client -- --port 8083 --host localhost
-adb install -r artifacts/android-debug/world-blessing-rituals-debug.apk
+adb install -r artifacts/android-debug/cyber-bless-debug.apk
 adb reverse tcp:8083 tcp:8083
 adb shell am start -n com.helio.cyberbless/.MainActivity
 ```

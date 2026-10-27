@@ -4,7 +4,7 @@
 
 ## 场景来源与文化关联
 
-涉及新增或修改场景时，按[核查规范](https://github.com/Heliostest/world-blessing-rituals/blob/master/docs/scene-provenance.md)（`docs/scene-provenance.md`）填写；其他改动注明“不涉及场景”。
+涉及新增或修改场景时，按[核查规范](https://github.com/Heliostest/cyber-bless/blob/master/docs/scene-provenance.md)（`docs/scene-provenance.md`）填写；其他改动注明“不涉及场景”。
 
 - 核查记录／来源卡／场景 README：
 - 受影响的文化主张、直接证据及读取状态；纯技术修改说明文化主张未变并引用既有记录：

@@ -145,10 +145,8 @@ describe("the settle beat (P0)", () => {
     ];
     expect(primary).toHaveLength(1);
     expect(primary[0].textContent).toBe("收下千纸鹤");
-    expect(ui.host.querySelector(".reward-destination")?.textContent).toBe(
-      "它会住进你的小天地",
-    );
-    expect(ui.host.querySelector("[data-reward-sticker]")).not.toBeNull();
+    expect(ui.host.querySelector(".reward-destination, [data-reward-sticker], .celebration, .page-heading")).toBeNull();
+    expect(ui.host.querySelectorAll(".scene-reward-reveal")).toHaveLength(1);
     expect(ui.host.textContent).not.toContain('功德');
     const share = [...ui.host.querySelectorAll('.completion button')].find(button => button.textContent?.includes('分享今日仪式'));
     expect(share).toBeDefined();

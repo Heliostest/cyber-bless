@@ -41,7 +41,8 @@ function Cord({ d, color, width = 2 }: { d: string; color: string; width?: numbe
   );
 }
 
-const sceneIcons: Record<string, ReactNode> = {
+// These illustrations were drawn on a 64-unit canvas, unlike the earlier set.
+const sceneIcons64: Record<string, ReactNode> = {
  'nanakusa-gayu': (<><path d="M6 32h35l-5 21H12z" fill="#48695e" stroke="#38524a" strokeWidth="2"/><ellipse cx="23" cy="32" rx="18" ry="7" fill="#f2ead0" stroke="#48695e" strokeWidth="3"/><path d="m13 31 4-2m6 4 5-3m2 5 5-3" stroke="#547d48" strokeWidth="3"/><path d="m42 17 12 21" stroke="#b47c46" strokeWidth="4"/><ellipse cx="39" cy="16" rx="7" ry="4" fill="#b47c46"/><path d="M39 43h20l-4 12H43z" fill="#679c98"/><ellipse cx="49" cy="43" rx="10" ry="4" fill="#f2ead0"/></>),
  'brat-bride-cloth': (<><path d="M8 8h48v45H8z" fill="#aaa6b1"/><path d="M15 15h34v29H15z" fill="#35435f" stroke="#80584d" strokeWidth="4"/><path d="M32 15v29M15 29h34" stroke="#80584d" strokeWidth="3"/><path d="M5 43h54v8H5z" fill="#aaa6b1"/><path d="M18 45h28l4 12H14z" fill="#477d84" stroke="#b6c7bd" strokeWidth="3"/></>),
  'korean-sotdae': (<><path d="M12 56h40v5H12z" fill="#b49d70"/><path d="M30 22h5v34h-5z" fill="#976345"/><path d="M19 24c-7-5-6-13 3-12l14 3 3-9c1-5 8-5 10 0l1 4 10 2v4H48c-3 12-15 16-29 8z" fill="#c59b68"/><circle cx="45" cy="8" r="1.5" fill="#382d24"/><path d="M22 18q6 8 15 1" fill="none" stroke="#ad8054" strokeWidth="3"/></>),
@@ -247,6 +248,9 @@ const sceneIcons: Record<string, ReactNode> = {
     <path d="M15 13H49a9 9 0 0 1 9 9V42a9 9 0 0 1-9 9H15a9 9 0 0 1-9-9V22a9 9 0 0 1 9-9Z" fill="#cc9b60" stroke="#9d683e" strokeWidth="2" />
     {[0,1,2,3,4,5].map(i => <g key={i}>{[24,40].map(y => <g key={y}><ellipse cx={12+i*8} cy={y} rx="3.3" ry="5" fill="#9d683e"/><ellipse cx={12+i*8} cy={y} rx="1.6" ry="2.1" fill="#a5b4a8"/></g>)}</g>)}
   </>),
+};
+
+const sceneIcons48: Record<string, ReactNode> = {
   'chinese-rattle-drum': (<>
     <path d="M27 30v18" stroke="#cc9a5d" strokeWidth={5} strokeLinecap="round"/><path d="M27 39v7" stroke="#3b8f89" strokeWidth={6} strokeLinecap="round"/>
     <circle cx={27} cy={20} r={15} fill="#f1deb3" stroke="#ca7052" strokeWidth={3}/><circle cx={27} cy={20} r={6} fill="none" stroke="#3b8f89" strokeWidth={1.6}/>
@@ -995,6 +999,15 @@ const sceneIcons: Record<string, ReactNode> = {
   ),
 };
 
+const sceneIcons: Record<string, ReactNode> = { ...sceneIcons64, ...sceneIcons48 };
+
+// A few earlier drawings extend beyond their nominal canvas. Keep their
+// complete strokes visible without changing the framing of the other icons.
+const extendedViewBoxes: Record<string, string> = {
+  'chinese-rattle-drum': '-2 -2 58 58',
+  'chinese-incense': '0 -6 48 54',
+};
+
 /** Whether a scene has its own drawn icon. */
 export function hasSceneIcon(id: string): boolean {
   return id in sceneIcons;
@@ -1007,7 +1020,7 @@ export function SceneIcon({ id }: { id: string }) {
   return (
     <svg
       className="scene-icon"
-      viewBox="0 0 48 48"
+      viewBox={extendedViewBoxes[id] ?? (id in sceneIcons64 ? '-2 -2 68 68' : '-3 -3 54 54')}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"

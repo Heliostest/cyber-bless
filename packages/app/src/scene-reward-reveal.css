@@ -24,10 +24,17 @@
 }
 .scene-reward-reveal__item {
   position: relative;
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
+  padding: 12px;
+  border: 4px solid var(--rim, #fffdf7);
+  border-radius: var(--radius-panel, 28px);
+  background-color: var(--candy-tint, var(--slot, #f9f1e1));
+  box-shadow: inset 0 3px 0 #ffffffd9,
+    0 0 0 2px var(--candy, var(--edge, #ecdcb8)),
+    var(--soft-drop, 0 6px 14px -4px #0b5a5233);
   opacity: 0;
-  filter: drop-shadow(0 8px 7px #76552b24);
   will-change: transform, opacity;
 }
 .scene-reward-reveal__item > .scene-art {

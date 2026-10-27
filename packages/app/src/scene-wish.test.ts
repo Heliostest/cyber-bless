@@ -9,7 +9,6 @@ import { Context, type AppContext } from "./context";
 import { builtInScenes, SceneLibraryContext } from "./scene-library";
 import {
   SceneExperience,
-  SCENE_DONE_COPY,
   SCENE_DONE_CTA,
   SCENE_DONE_WISH_CTA,
   SCENE_FAVORITE_LABEL,
@@ -220,8 +219,8 @@ describe("a line written in a scene", () => {
     });
     await settle();
     const row = s.host.querySelector(".scene-done-row")!;
-    expect(s.host.querySelector(".ritual-narrative-header .scene-complete-status")?.textContent).toBe(SCENE_DONE_COPY);
-    expect(row.textContent).not.toContain(SCENE_DONE_COPY);
+    expect(s.host.querySelector(".scene-complete-status")).toBeNull();
+    expect(row.querySelector(".scene-done")).toBeNull();
     const cta = [...row.querySelectorAll("button")].find(
       (b) => b.textContent === SCENE_DONE_WISH_CTA,
     )!;
@@ -270,8 +269,8 @@ describe("a line written in a scene", () => {
 });
 
 describe("scene exit copy", () => {
-  it("keeps the closing line and both CTAs safe", () => {
-    for (const text of [SCENE_DONE_COPY, SCENE_DONE_WISH_CTA, SCENE_DONE_CTA])
+  it("keeps both completion CTAs safe", () => {
+    for (const text of [SCENE_DONE_WISH_CTA, SCENE_DONE_CTA])
       expect(() => assertSafeCopy(text)).not.toThrow();
   });
 });

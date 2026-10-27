@@ -38,7 +38,11 @@ describe("completed scene keepsake reveal", () => {
       const ui = mount("puerto-rican-guiro", reduced), reveal = ui.reveal()!;
       expect(getComputedStyle(reveal).position).toBe("absolute");
       for (const el of [reveal, ...reveal.querySelectorAll("*")]) expect(getComputedStyle(el).pointerEvents).toBe("none");
-      expect(getComputedStyle(reveal.querySelector(".scene-reward-reveal__item")!).opacity).toBe(reduced ? "1" : "0");
+      const item = getComputedStyle(reveal.querySelector(".scene-reward-reveal__item")!);
+      expect(item.opacity).toBe(reduced ? "1" : "0");
+      expect(item.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+      expect(item.borderRadius).toBe("var(--radius-panel, 28px)");
+      expect(item.boxSizing).toBe("border-box");
     } finally { style.remove(); }
   });
 

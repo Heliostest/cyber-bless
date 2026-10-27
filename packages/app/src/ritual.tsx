@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { localDay, rituals, sceneIntention, type RitualId } from "@wbr/core";
-import { Art, Icon } from "./art";
+import { Icon } from "./art";
 import { now, uid, useApp } from "./context";
 import { Empty } from "./pages";
 import { ritualTitle } from "./home";
 import { Woodfish } from "./woodfish";
 import { RitualNarrativeBlurb } from "./ritual-narrative";
-import { rectOf } from "./reward-flight";
-import { PageHead } from "./page-heading";
+import { rewardOriginOf } from "./reward-flight";
 import { SceneRewardReveal } from "./scene-reward-reveal";
 import { LegacySceneRitual } from "./legacy-scene-ritual";
 import { sceneSteps } from "./scene-placement";
@@ -198,7 +197,7 @@ export function Complete({ id, revealReward }: { id: string; revealReward?: bool
   const { state, go, launchReward } = useApp();
   const [shareText, setShareText] = useState("");
   const [copied, setCopied] = useState(false);
-  const sticker = useRef<HTMLDivElement>(null);
+  const collectCta = useRef<HTMLButtonElement>(null);
   const r = state.sessions.find((s) => s.id === id);
   if (!r)
     return (
@@ -229,12 +228,12 @@ export function Complete({ id, revealReward }: { id: string; revealReward?: bool
   const activeWish = state.wishes.find(
     (w) => w.id === r.wishId && w.status === "active" && !w.archived,
   );
-  // The one confirm: measure the sticker, hand its rect to the flight,
+  // The one confirm: measure the button, hand its rect to the flight,
   // then navigate. go() scrolls, so the rect must come first.
   function collect() {
     launchReward({
       kind: r!.ritual,
-      from: rectOf(sticker.current),
+      from: rewardOriginOf(collectCta.current),
       collectibleId: `ritual:${r!.id}`,
       wishId: activeWish?.id,
       tab: "world",
@@ -260,37 +259,8 @@ export function Complete({ id, revealReward }: { id: string; revealReward?: bool
   return (
     <div className="completion">
       {revealReward && <SceneRewardReveal sceneId={r.ritual} reducedMotion={state.settings.reducedMotion} />}
-      <PageHead
-        title={r.ritual === "woodfish" ? "本轮轻敲结束" : "今日仪式完成"}
-        eyebrow={r.ritual === "woodfish" ? "听过一轮敲击与余音。" : "今天的好心情，已到账。"}
-      />
-      <div className="celebration">
-        <Art
-          kind={r.ritual}
-          variant={
-            r.ritual === "woodfish"
-              ? "complete"
-              : r.ritual === "lantern"
-                ? "fulfill"
-                : "default"
-          }
-        />
-        {r.ritual !== "woodfish" && (
-          <span className="title-badge">
-            {r.ritual === "crane" ? "小小心愿收藏家" : "温暖微光守护者"}
-          </span>
-        )}
-      </div>
-      {!wish && (
-        <div className="reward-slot">
-          <div className="reward-sticker" data-reward-sticker ref={sticker}>
-            <Art kind={r.ritual} small />
-          </div>
-          <p className="reward-destination">它会住进你的小天地</p>
-          {activeWish && (
-            <p className="reward-wish-note">也为「{activeWish.title}」记了一笔</p>
-          )}
-        </div>
+      {!wish && activeWish && (
+        <p className="reward-wish-note">也为「{activeWish.title}」记了一笔</p>
       )}
       <div className="completion-stats">
         <div>
@@ -310,6 +280,8 @@ export function Complete({ id, revealReward }: { id: string; revealReward?: bool
       </div>
       <button
         className="button primary full"
+        data-reward-origin={!wish || undefined}
+        ref={collectCta}
         onClick={wish ? () => go({ page: "fulfill", id: wish.id }) : collect}
       >
         {wish ? "继续还愿 · 留下这份心情" : `收下${rituals[r.ritual].object}`}

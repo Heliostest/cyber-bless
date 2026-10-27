@@ -6,9 +6,21 @@ import { RewardFlightLayer } from "./reward-flight-layer";
 import {
   flightKeyframes,
   resolveTarget,
+  rewardOriginOf,
   shouldReduceMotion,
   type RewardFlight,
 } from "./reward-flight";
+
+describe("rewardOriginOf", () => {
+  it("keeps the flying item square and small at the center of a full-width button", () => {
+    const button = document.createElement("button");
+    button.getBoundingClientRect = () => new DOMRect(20, 600, 350, 44);
+    expect(rewardOriginOf(button)).toEqual({ x: 173, y: 600, width: 44, height: 44 });
+    button.getBoundingClientRect = () => new DOMRect(20, 600, 350, 80);
+    expect(rewardOriginOf(button)).toEqual({ x: 169, y: 614, width: 52, height: 52 });
+    expect(rewardOriginOf(null)).toEqual({ x: 0, y: 0, width: 0, height: 0 });
+  });
+});
 
 describe("flightKeyframes", () => {
   const plan = flightKeyframes(

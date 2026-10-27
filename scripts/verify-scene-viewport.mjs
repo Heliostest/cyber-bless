@@ -317,12 +317,26 @@ async function completionRow(page, label, optionalWish) {
 
 async function completion(page, id, prefix, optionalWish) {
   const snapshots = [await layout(page, `${id}-completed`)]
+  assert.equal(await page.locator('.scene-complete-status, .scene-done, .reward-slot, [data-reward-sticker]').count(), 0, 'completion uses the fading keepsake without duplicate copy or a static sticker')
   const controls = await completionRow(page, `${id} completion actions`, optionalWish)
   await screenshot(page, `${prefix}-completed`)
   const reward = page.locator(`.scene-reward-reveal[data-scene="${id}"]`)
   // The component is decorative and must not capture the completion controls.
   const rewardSeen = await reward.count() > 0
   assert.equal(rewardSeen, true, 'the first completion transition shows its decorative keepsake')
+  const plate = await reward.locator('.scene-reward-reveal__item').evaluate(element => {
+    const style = getComputedStyle(element), probe = document.createElement('span')
+    probe.style.backgroundColor = 'var(--candy-tint, var(--slot))'
+    element.append(probe)
+    const tint = getComputedStyle(probe).backgroundColor
+    probe.remove()
+    return { background: style.backgroundColor, radius: style.borderRadius, border: style.borderTopWidth, shadow: style.boxShadow, tint }
+  })
+  assert.equal(plate.background, plate.tint, 'the keepsake uses its scene candy tint as an opaque backplate')
+  assert.ok(plate.background.startsWith('rgb('), 'the candy tint stays opaque')
+  assert.equal(plate.radius, '28px', 'the keepsake uses the island panel corners')
+  assert.equal(plate.border, '4px', 'the keepsake has a chunky white rim')
+  assert.ok(plate.shadow.includes('inset'), 'the keepsake has the island inner highlight')
   await page.evaluate(() => {
     const result = { samples: [], done: false }
     window.__sceneViewportReward = result
@@ -337,6 +351,8 @@ async function completion(page, id, prefix, optionalWish) {
     }
     sample()
   })
+  await page.waitForFunction(() => document.querySelector('.scene-reward-reveal')?.dataset.phase === 'hold')
+  await screenshot(page, `${prefix}-reward-hold`)
   let wishControls, rowAfterCancel, rowAfterSave
   if (optionalWish) {
     const invite = page.locator('.scene-wish-invite')

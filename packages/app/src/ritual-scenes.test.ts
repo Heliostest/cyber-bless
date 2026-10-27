@@ -20,16 +20,12 @@ import {
   SCENE_DAILY_CTA,
   SCENE_DISCARD_CTA,
   SCENE_DISCARDED_COPY,
-  SCENE_DONE_COPY,
   SCENE_DONE_CTA,
   SCENE_DONE_WISH_CTA,
   SCENE_KEEP_CTA,
   SCENE_KEEP_QUESTION,
   SCENE_RETURN_CTA,
-  SCENE_RETURN_DONE_COPY,
-  SCENE_VESSEL_DONE_COPY,
   sceneDailyAnnounce,
-  sceneDailyDoneCopy,
 } from "./scene-experience";
 import {
   SceneLibraryContext,
@@ -207,7 +203,7 @@ describe("今日's daily set", () => {
     restored.unmount();
   });
 
-  it("collects the day's keepsake once: a walk, a sticker, a flight to 小天地", async () => {
+  it("collects the day's keepsake once: a walk, a fading reveal, a flight to 小天地", async () => {
     const ui = await openApp(createState());
     const card = ui.host.querySelector(
       `.daily-set-primary[data-scene="${sceneId}"]`,
@@ -226,9 +222,8 @@ describe("今日's daily set", () => {
     expect(favorite.getAttribute("aria-pressed")).toBe("true");
 
     await ui.walk();
-    expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
-      sceneDailyDoneCopy(entryOf(sceneId).title),
-    );
+    expect(ui.host.querySelector(".scene-done, .scene-complete-status")).toBeNull();
+    expect(ui.host.querySelector(".reward-destination")).toBeNull();
     expect(ui.doneButtons()).toEqual([SCENE_DAILY_CTA]);
     const collectedFavorite = ui.button(SCENE_DAILY_CTA, ".scene-completion-actions")
       ?.parentElement?.querySelector(".favorite-chip");
@@ -237,9 +232,8 @@ describe("今日's daily set", () => {
     expect(ui.host.querySelectorAll(".favorite-chip")).toHaveLength(1);
     await ui.tap(collectedFavorite!);
     expect((await ui.saved()).sceneRecords.find(r => r.id === sceneId)?.favorite).toBe(false);
-    expect(
-      ui.host.querySelector("[data-reward-sticker] .scene-art"),
-    ).not.toBeNull();
+    expect(ui.host.querySelector("[data-reward-sticker]")).toBeNull();
+    expect(ui.host.querySelectorAll(".scene-reward-reveal")).toHaveLength(1);
 
     await ui.tap(ui.button(SCENE_DAILY_CTA, ".scene-done-row"));
     expect(ui.page()).toBe("world");
@@ -324,9 +318,7 @@ describe("今日's daily set", () => {
     // A flagged visit starts the scene over.
     expect(ui.sceneProgress()).toBe("已完成 0 / 3");
     await ui.walk();
-    expect(ui.host.querySelector(".scene-complete-status")?.textContent).toBe(
-      SCENE_DONE_COPY,
-    );
+    expect(ui.host.querySelector(".scene-complete-status")).toBeNull();
     expect(ui.doneButtons()).toEqual([SCENE_DONE_CTA]);
     const saved = await ui.saved();
     expect(saved.collectibles).toHaveLength(1);
@@ -371,9 +363,7 @@ describe("今日's daily set", () => {
     await ui.walk();
     // The walk counts for today, whichever entry finished it (仪式时光's scene
     // cards land here too: the same unflagged open).
-    expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
-      sceneDailyDoneCopy(entryOf(sceneId).title),
-    );
+    expect(ui.host.querySelector(".scene-done")).toBeNull();
     expect(ui.doneButtons()).toEqual([SCENE_DAILY_CTA]);
     const saved = await ui.saved();
     expect(saved.collectibles).toHaveLength(1);
@@ -409,10 +399,8 @@ describe("今日's daily set", () => {
     );
     expect(ui.sceneProgress()).toBe("已完成 0 / 3");
     await ui.walk();
-    // A finished-again walk settles nothing further, and says so plainly.
-    expect(ui.host.querySelector(".scene-complete-status")?.textContent).toBe(
-      SCENE_DONE_COPY,
-    );
+    // A finished-again walk settles nothing further and keeps its exit.
+    expect(ui.host.querySelector(".scene-complete-status")).toBeNull();
     expect(ui.doneButtons()).toEqual([SCENE_DONE_CTA]);
     const saved = await ui.saved();
     expect(saved.collectibles).toHaveLength(1);
@@ -430,9 +418,7 @@ describe("今日's daily set", () => {
     );
     expect(ui.host.querySelector(".scene-caption")).toBeNull();
     await ui.walk();
-    expect(ui.host.querySelector(".scene-complete-status")?.textContent).toBe(
-      SCENE_DONE_COPY,
-    );
+    expect(ui.host.querySelector(".scene-complete-status")).toBeNull();
     const saved = await ui.saved();
     expect(saved.collectibles).toHaveLength(1);
     expect(saved.ledger).toEqual([]);
@@ -458,9 +444,7 @@ describe("今日's daily set", () => {
     // Not the day's walk: no daily caption, and the plain done row.
     expect(ui.host.querySelector(".scene-caption")).toBeNull();
     await ui.walk();
-    expect(ui.host.querySelector(".scene-complete-status")?.textContent).toBe(
-      SCENE_DONE_COPY,
-    );
+    expect(ui.host.querySelector(".scene-complete-status")).toBeNull();
     expect(ui.doneButtons()).toEqual([SCENE_DONE_CTA]);
     const saved = await ui.saved();
     expect(saved.collectibles).toEqual(kept);
@@ -501,9 +485,7 @@ describe("许愿 through a keepsake", () => {
     const ui = await openVessel("crane");
     act(() => scene.context!.saveWish!("面试顺利"));
     await ui.walk();
-    expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
-      SCENE_VESSEL_DONE_COPY,
-    );
+    expect(ui.host.querySelector(".scene-done")).toBeNull();
     expect(ui.host.querySelector(".scene-keep-line")?.textContent).toBe(
       "「面试顺利」",
     );
@@ -604,9 +586,7 @@ describe("许愿 through a keepsake", () => {
   it("offers its own line for a scene with no wish box", async () => {
     const ui = await openVessel("yeondeunghoe");
     await ui.walk();
-    expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
-      SCENE_VESSEL_DONE_COPY,
-    );
+    expect(ui.host.querySelector(".scene-done")).toBeNull();
     expect(ui.host.querySelector(".scene-post-wish input")).toBeNull();
     await ui.tap(ui.host.querySelector(".scene-wish-invite")!);
     typeInto(ui.host.querySelector(".scene-post-wish input")!, "家人平安");
@@ -658,9 +638,7 @@ describe("还愿 through a keepsake", () => {
     expect(scene.context?.saveWish).toBeUndefined();
 
     await ui.walk();
-    expect(ui.host.querySelector(".scene-done")?.textContent).toBe(
-      SCENE_RETURN_DONE_COPY,
-    );
+    expect(ui.host.querySelector(".scene-done")).toBeNull();
     expect(ui.doneButtons()).toEqual([SCENE_RETURN_CTA]);
     expect(ui.button(SCENE_RETURN_CTA, ".scene-completion-actions")?.parentElement?.querySelector(".favorite-chip")).toBeTruthy();
     expect(ui.host.querySelectorAll(".favorite-chip")).toHaveLength(1);
@@ -1048,16 +1026,13 @@ describe("useOpenScene", () => {
 describe("ritual scene copy", () => {
   it("keeps the daily, vessel and 还愿 lines safe", () => {
     for (const text of [
-      SCENE_RETURN_DONE_COPY,
       SCENE_RETURN_CTA,
-      SCENE_VESSEL_DONE_COPY,
       SCENE_KEEP_QUESTION,
       SCENE_KEEP_CTA,
       SCENE_DISCARD_CTA,
       SCENE_DISCARDED_COPY,
       SCENE_DAILY_CTA,
       SCENE_DAILY_CAPTION,
-      sceneDailyDoneCopy("短册系竹"),
       sceneDailyAnnounce("短册系竹"),
       ...Object.values(VESSEL_COPY),
       FULFILL_VESSEL_COPY.pick,

@@ -15,6 +15,7 @@ App 的正式界面（PR #16 `a216ae9` 起）：薄荷波点页面、沙色 HUD 
   - 组件：顶栏标题改为燕尾飘带，和参考库的 Title 一样：正面微微后仰，两条燕尾藏在后面、垂得低一点，转折处是深一号的折角；整条飘带画在标题自己的框里，文字可用的宽度不变，仍只占一行（审计 P2-21）；分段筛选；小岛开关（凹槽轨道，开启为叶绿）；圆角方形勾选单选框；小天地改成岛屋（黄油色竖条纹墙纸、天窗、木地板、圆地毯）；墙纸用暖色而不是页面的薄荷波点，房间才像室内，而不是页面上挖的洞（审计 P2-17）。
   - 字体：圆体字体栈 `Nunito, Varela Round, M PLUS Rounded 1c, Yuanti SC, HarmonyOS Sans SC, PingFang SC, Blessing Sans…`。Nunito 的拉丁子集（500 / 700 / 900，三个共约 48KB，`unicode-range: U+0000-00FF`）随 App 打包，数字和拉丁字母在所有设备上都是圆体；中文照常落到后面的系统字体（审计 P2-20，来源和授权见 `assets/README.md`）。没有网络字体。
 - `packages/app/src/scene-experience.tsx`：场景舞台加了属性 `data-scene={entry.id}` 和 `data-stage`（`day` / `night`，由 `scene-placement.ts` 的 `NIGHT_STAGE_SCENE_IDS` 决定），作为样式钩子；`stage` 也经场景 context 传给场景，让布光和舞台一致（审计 P1-5）。
+- 完成浮现小物：底板沿用场景徽章的纯色 `--candy-tint` 与 `--candy` 描边，配 4px 软白边、28px 面板圆角、内高光及 `--soft-drop` 柔影。底板停留时不透明，作为不可交互的道具展示不带按压台阶；沿用现有 4 秒浮现、停留和淡出。
 - `apps/cyber-bless/index.html`：`theme-color` 改为薄荷 `#cdf1e6`。
 - 没有改动的部分：业务逻辑、路由、四个 tab、全部中文文案、`assertSafeCopy`，以及所有 Three.js 场景代码（几何、纸鹤折叠运动学、灯光、相机）。
 

@@ -8,7 +8,7 @@ import { clickOn, renderUI } from "./dom-test-utils";
 import { Today } from "./home";
 import { Wishes } from "./pages";
 import { SceneLibraryContext, builtInScenes } from "./scene-library";
-import { SceneBadge, hasSceneIcon } from "./scene-icons";
+import { SceneArt, SceneBadge, SceneIcon, hasSceneIcon } from "./scene-icons";
 import {
   BLESSING_SCENE_IDS,
   DAILY_COLLECTED_COPY,
@@ -241,5 +241,59 @@ describe("scene badges", () => {
     expect(badge.getAttribute("aria-hidden")).toBe("true");
     expect(badge.querySelector("svg path")).not.toBeNull();
     expect(badge.querySelector(".scene-icon")).toBeNull();
+  });
+});
+
+function viewport(id: string, component = SceneIcon) {
+  const markup = renderToStaticMarkup(createElement(component, { id }));
+  const value = markup.match(/viewBox="([^"]+)"/)?.[1];
+  expect(value).toBeDefined();
+  return value!.split(/\s+/).map(Number);
+}
+
+function expectContains(id: string, bounds: number[]) {
+  const [x, y, width, height] = viewport(id);
+  expect(x).toBeLessThanOrEqual(bounds[0]);
+  expect(y).toBeLessThanOrEqual(bounds[1]);
+  expect(x + width).toBeGreaterThanOrEqual(bounds[2]);
+  expect(y + height).toBeGreaterThanOrEqual(bounds[3]);
+}
+
+describe("scene icon framing", () => {
+  it.each(["nanakusa-gayu", "korean-sotdae", "puerto-rican-guiro", "ghanaian-oware"])(
+    "contains the 64-unit artwork with stroke breathing room for %s",
+    id => expectContains(id, [-2, -2, 66, 66]),
+  );
+
+  it.each(["woodfish", "crane", "lantern", "german-nutcracker"])(
+    "keeps the 48-unit artwork on its smaller padded canvas for %s",
+    id => expect(viewport(id)).toEqual([-3, -3, 54, 54]),
+  );
+
+  it.each([
+    ["chinese-rattle-drum", [2, 3.5, 52, 50.5]],
+    ["korean-yutnori", [6.35, 4.35, 47.65, 50.55]],
+    ["russian-matryoshka", [5.35, 1, 50.5, 46]],
+    ["japanese-koinobori", [6, 4, 48.6, 45.5]],
+    ["chinese-incense", [6.9, -3.85, 41.1, 45.5]],
+    ["theravada-water", [0, -0.1, 48, 48]],
+    ["shrine-suzu-bell", [0, -0.6, 48, 48]],
+  ] as const)("contains the extended strokes for %s", (id, bounds) => {
+    expectContains(id, [...bounds]);
+  });
+
+  it("uses the same viewport in the reveal illustration and scene badges", () => {
+    for (const id of ["korean-sotdae", "woodfish", "chinese-incense"]) {
+      expect(viewport(id, SceneArt)).toEqual(viewport(id));
+      expect(viewport(id, SceneBadge)).toEqual(viewport(id));
+    }
+  });
+
+  it("keeps both canvas groups available and unknown scenes on their leaf fallback", () => {
+    expect(hasSceneIcon("nanakusa-gayu")).toBe(true);
+    expect(hasSceneIcon("woodfish")).toBe(true);
+    expect(hasSceneIcon("unknown-scene")).toBe(false);
+    expect(renderToStaticMarkup(createElement(SceneIcon, { id: "unknown-scene" }))).toBe("");
+    expect(renderToStaticMarkup(createElement(SceneArt, { id: "unknown-scene" }))).toContain('viewBox="0 0 24 24"');
   });
 });

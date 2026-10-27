@@ -26,7 +26,6 @@ import { Woodfish } from "./woodfish";
 import { RitualNarrativeBlurb } from "./ritual-narrative";
 import { SceneLoadFailure } from "./scene-load-failure";
 import { sceneWish } from "./scene-wish";
-import { SceneArt } from "./scene-icons";
 import {
   dailyPrimaryScene,
   isWishScene,
@@ -34,7 +33,7 @@ import {
   sceneStage,
   sceneSteps,
 } from "./scene-placement";
-import { rectOf } from "./reward-flight";
+import { rectOf, rewardOriginOf } from "./reward-flight";
 import { OpeningGuide, OpeningDone } from './opening';
 import { OptionalSceneWish } from './optional-scene-wish';
 import { useSceneVisualPreference } from "./scene-visual-preference";
@@ -148,28 +147,21 @@ export function FavoriteChip({ id, favorite }: { id: string; favorite: boolean }
     </button>
   );
 }
-/** The header status and exits shown when a scene's steps are done. */
-export const SCENE_DONE_COPY = "体验完成。";
+/** The exits shown when a scene's steps are done. */
 export const SCENE_DONE_WISH_CTA = "去心愿看看";
 export const SCENE_DONE_CTA = "完成";
-/** A 还愿 visit's closing line, and its one exit, back to 来还个愿. */
-export const SCENE_RETURN_DONE_COPY = "还愿小仪式已完成，也为这个心愿记了一笔。";
+/** A 还愿 visit's exit, back to 来还个愿. */
 export const SCENE_RETURN_CTA = "继续还愿 · 留下这份心情";
 /** A daily-set walk's closing moment: the keepsake settles, then flies home. */
-export const sceneDailyDoneCopy = (title: string) =>
-  `今日的「${title}」已经完成，小物已放进小天地。`;
 export const SCENE_DAILY_CTA = "收下";
 /** A vessel walk for a new wish: the held line gets an explicit choice. */
-export const SCENE_VESSEL_DONE_COPY = "这场许愿小仪式已经完成。";
 export const SCENE_KEEP_QUESTION = "刚才写下的话，要留下来吗？";
 export const SCENE_KEEP_CTA = "留下它";
 export const SCENE_DISCARD_CTA = "不留下";
 export const SCENE_DISCARDED_COPY = "没有保存，只留此刻的心情。";
-/** Where the daily keepsake says it is going, on the done row. */
-export const SCENE_DAILY_DESTINATION = "它会住进你的小天地";
 /** The caption while a daily-set scene is being walked. */
 export const SCENE_DAILY_CAPTION = "今日随机仪式 · 完成后收进小天地";
-/** The wish box label reused by the keep form (for box-less scenes). */
+/** Announced when the daily keepsake lands. */
 export const sceneDailyAnnounce = (title: string) => `${title}已放进小天地`;
 
 function LoadedScene({
@@ -247,7 +239,7 @@ function LoadedScene({
   const vesselSpent =
     !!vessel && state.collectibles.some((c) => c.id === vessel && !!c.spentAt);
   const doneCta = useRef<HTMLButtonElement>(null);
-  const sticker = useRef<HTMLDivElement>(null);
+  const collectCta = useRef<HTMLButtonElement>(null);
   // One record per visit, however often the last step reports.
   const [visit] = useState(() => ({ id: uid(), startedAt: now() }));
   const checkpoint = (n: number, strikes?: number) => {
@@ -350,12 +342,12 @@ function LoadedScene({
     });
     go({ page: "wishes" });
   };
-  /** A daily walk's 收下它: the sticker flies into its new 小天地 slot. */
+  /** A daily walk's 收下: the keepsake flies from the button into 小天地. */
   const collectDaily = () => {
     launchReward({
       kind: "scene",
       sceneId: entry.id,
-      from: rectOf(sticker.current),
+      from: rewardOriginOf(collectCta.current),
       collectibleId: dailyCollectibleId(daily!, entry.id),
       tab: "world",
       announce: sceneDailyAnnounce(entry.title),
@@ -468,7 +460,6 @@ function LoadedScene({
         <div className="scene-done-row">
           {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} favorite={favoriteChip} prayer={prayerButton} /> : returnedFor ? (
             <>
-              <p className="scene-done">{SCENE_RETURN_DONE_COPY}</p>
               {/* No flight: the note is on the wish already, and the ritual
                   shows as done on 来还个愿. */}
               {completionActions(<button
@@ -481,16 +472,10 @@ function LoadedScene({
             </>
           ) : dailyGranted ? (
             <>
-              <p className="scene-done">{sceneDailyDoneCopy(entry.title)}</p>
-              <div className="reward-slot">
-                <div className="reward-sticker" data-reward-sticker ref={sticker}>
-                  <SceneArt id={entry.id} />
-                </div>
-                <p className="reward-destination">{SCENE_DAILY_DESTINATION}</p>
-              </div>
               {completionActions(<button
                 type="button"
                 className="button primary"
+                ref={collectCta}
                 onClick={collectDaily}
               >
                 {SCENE_DAILY_CTA}
@@ -517,7 +502,6 @@ function LoadedScene({
                 </>
               ) : heldWish ? (
                 <>
-                  <p className="scene-done">{SCENE_VESSEL_DONE_COPY}</p>
                   <p className="scene-keep-line">「{heldWish}」</p>
                   <p className="scene-keep-question">{SCENE_KEEP_QUESTION}</p>
                   <div className="scene-keep-choice">
@@ -539,7 +523,6 @@ function LoadedScene({
                 </>
               ) : keptWish ? (
                 <>
-                  <p className="scene-done">{SCENE_VESSEL_DONE_COPY}</p>
                   {completionActions(<button
                     type="button"
                     className="button primary"
@@ -551,7 +534,6 @@ function LoadedScene({
                 </>
               ) : (
                 <>
-                  <p className="scene-done">{SCENE_VESSEL_DONE_COPY}</p>
                   {completionActions(<button type="button" className="button primary" onClick={back}>
                     {SCENE_DONE_CTA}
                   </button>)}
@@ -623,7 +605,7 @@ export function SceneExperience({
   opening?: boolean;
 }) {
   const { library, ready } = useSceneLibrary(),
-    { state, dispatch, back } = useApp();
+    { dispatch, back } = useApp();
   const [attempt, setAttempt] = useState(0),
     [progress, setProgress] = useState<SceneProgress>();
   const [loaded, setLoaded] = useState<{
@@ -686,12 +668,10 @@ export function SceneExperience({
     };
   }, [entry, library, ready, attempt]);
   if (!entry) return <p role="alert">场景信息缺失，请返回目录重试。</p>;
-  const completed = loaded && !error &&
-    (state.sceneRecords.find(record => record.id === entry.id)?.progress ?? 0) >= sceneSteps(entry);
   return (
     <section className="scene-experience" aria-label={entry.title}>
       {opening && <OpeningGuide sceneId={entry.id} />}
-      <RitualNarrativeBlurb sceneId={entry.id} completion={completed ? SCENE_DONE_COPY : undefined} />
+      <RitualNarrativeBlurb sceneId={entry.id} />
       {error ? (
         <SceneLoadFailure message={error} onRetry={() => setAttempt(n => n + 1)} />
       ) : loaded ? (

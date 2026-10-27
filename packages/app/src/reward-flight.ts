@@ -45,6 +45,18 @@ export function rectOf(el: Element | null | undefined): Rect {
   };
 }
 
+/** A small square centered on a control, rather than the control's full box. */
+export function rewardOriginOf(el: Element | null | undefined): Rect {
+  const box = rectOf(el);
+  const size = Math.min(52, box.width, box.height);
+  return {
+    x: box.x + (box.width - size) / 2,
+    y: box.y + (box.height - size) / 2,
+    width: size,
+    height: size,
+  };
+}
+
 /**
  * Whether motion should be skipped: the in-app 减少动态效果 toggle or the
  * system's own preference. The CSS kill switch cannot see Web Animations.

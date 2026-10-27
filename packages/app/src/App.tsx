@@ -32,7 +32,7 @@ import { RewardFlightLayer } from "./reward-flight-layer";
 import { useSceneViewport } from "./scene-viewport";
 import {
   ARRIVAL_LINGER_MS,
-  rectOf,
+  rewardOriginOf,
   shouldReduceMotion,
   type RewardFlight,
   type RewardArrival,
@@ -155,7 +155,7 @@ export function BlessingApp({
     if (session)
       launchReward({
         kind: session.ritual,
-        from: rectOf(document.querySelector("[data-reward-sticker]")),
+        from: rewardOriginOf(shell.current?.querySelector("[data-reward-origin]")),
         tab: "world",
         announce: `${rituals[session.ritual].object}已放进小天地`,
       });

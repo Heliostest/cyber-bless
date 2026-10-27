@@ -1,7 +1,8 @@
+import { bindSceneAttribute, bindSceneText, sceneProductCopy, sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import { placementHit } from '../placement-hit'
 import type { SceneContext, SceneInstance } from '../contract'
 import {
@@ -141,10 +142,10 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   })
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: COPY.choose }, safe)
   const choices = document.createElement('div'); choices.className = 'scene-wish-slot'
-  const row = document.createElement('div'); row.className = 'scene-craft-choices'; row.setAttribute('role', 'group'); row.setAttribute('aria-label', '选择小符')
+  const row = document.createElement('div'); row.className = 'scene-craft-choices'; row.setAttribute('role', 'group'); bindSceneAttribute(row, 'aria-label', '选择小符')
   const buttons = LABELS.map((label, i) => {
-    const button = document.createElement('button'); button.type = 'button'; button.textContent = label
-    button.setAttribute('aria-label', `选择${label}小符`)
+    const button = document.createElement('button'); button.type = 'button'; bindSceneText(button, label)
+    bindSceneAttribute(button, 'aria-label', sceneTemplate("选择{p0}小符", { p0: sceneProductCopy(label) }))
     button.addEventListener('click', () => { if (canAct() && step === 0 && !blocked && !drag && !pointers.size) select(i, true) })
     row.append(button); return button
   })
@@ -153,7 +154,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   const writer = gestures.createWishWrite({ maxLen: 40, saves: Boolean(ctx.saveWish) && !ctx.returning, onSubmit: text => finish(text) })
   writer.mount(wish, {})
   const input = wish.querySelector('input')
-  if (input) { input.setAttribute('aria-label', COPY.wishLabel); input.placeholder = COPY.wishPlaceholder }
+  if (input) { bindSceneAttribute(input, 'aria-label', COPY.wishLabel); bindSceneAttribute(input, "placeholder", COPY.wishPlaceholder) }
   const feedback = createSceneFeedback(ctx)
   const ray = createPointerRay(canvas, camera)
   const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.62), point = new THREE.Vector3()

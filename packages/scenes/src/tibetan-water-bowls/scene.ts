@@ -1,6 +1,7 @@
+import { sceneProductCopy, sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { createPosePlacement } from '../pose-placement'
@@ -8,16 +9,18 @@ import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, creat
 import { createWaterBowlsModel } from './model'
 
 const TOTAL_STEPS = 9
-const ACTIONS = ['提起水壶', ...Array.from({ length: 7 }, (_, i) => `为第${i + 1}碗添水`), '收回水壶']
-const HINTS = ['拿住水壶，提到左边第一只供碗上方的标记处。',
-  ...Array.from({ length: 7 }, (_, i) => `拿住水壶，移到左起第${i + 1}只供碗上方的标记处，到位后会为这一碗添水，留出碗沿。${i < 6 ? '这一碗添好后，再继续下一碗。' : '七碗添好后，再收回水壶。'}`),
-  '拿住水壶，放回供台一侧的标记处。','七碗清水齐整安放，愿这份供养承载利益众生的心意。']
-const MOVING = ['提起盛着清水的水壶……', ...Array.from({ length: 7 }, (_, i) => `细水落入第${i + 1}只供碗，留出碗沿……`), '水壶回到供台一侧……']
+// Build a template when it is used; cached modules outlive the bounded composition registry.
+const actionCopy = (i: number) => i === 0 ? '提起水壶' : i < 8 ? sceneTemplate("为第{p0}碗添水", { p0: i }) : '收回水壶'
+const hintCopy = (i: number) => i === 0 ? '拿住水壶，提到左边第一只供碗上方的标记处。' : i < 8
+  ? sceneTemplate("拿住水壶，移到左起第{p0}只供碗上方的标记处，到位后会为这一碗添水，留出碗沿。{p1}", { p0: i, p1: sceneProductCopy(i < 7 ? '这一碗添好后，再继续下一碗。' : '七碗添好后，再收回水壶。') })
+  : i === 8 ? '拿住水壶，放回供台一侧的标记处。' : '七碗清水齐整安放，愿这份供养承载利益众生的心意。'
+const movingCopy = (i: number) => i === 0 ? '提起盛着清水的水壶……' : i < 8 ? sceneTemplate("细水落入第{p0}只供碗，留出碗沿……", { p0: i }) : '水壶回到供台一侧……'
 const ease = (t: number) => t * t * (3 - 2 * t)
 
 export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx, safe = shared.assertSafeCopy
-  ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
+  const ACTIONS = Array.from({ length: TOTAL_STEPS }, (_, i) => actionCopy(i))
+  ;[...ACTIONS, ...Array.from({ length: TOTAL_STEPS + 1 }, (_, i) => hintCopy(i)), ...Array.from({ length: TOTAL_STEPS }, (_, i) => movingCopy(i))].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
   let motion: { step: number; time: number; from: number; placed: boolean } | null = null
@@ -46,7 +49,7 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
     anchors: ACTIONS.map(() => model.anchors[0]!),
     pose(step, n) { pose(step, phase(step) === 1 ? .12 * n : n) },
   }, scene)
-  const removeCues = ACTIONS.map((label, i) => addInteractionCue(model.jug, { kind: 'drag', destination: () => placement.destination(i), targetLabel: i > 0 && i < 8 ? `第${i}碗上方` : '水壶落位处', label, anchor: model.anchors[0], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const removeCues = ACTIONS.map((label, i) => addInteractionCue(model.jug, { kind: 'drag', destination: () => placement.destination(i), targetLabel: i > 0 && i < 8 ? sceneTemplate("第{p0}碗上方", { p0: i }) : '水壶落位处', label, anchor: model.anchors[0], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const ray = createPointerRay(canvas, camera)
   const nearest = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
@@ -74,7 +77,7 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, TOTAL_STEPS); ui.actionBtn.hidden = at === TOTAL_STEPS; ui.actionBtn.disabled = !inputActive() || !!motion || at === TOTAL_STEPS
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < TOTAL_STEPS ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, TOTAL_STEPS - 1)]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at]!, safe)
+    setSafeText(ui.actionBtn, actionCopy(Math.min(at, TOTAL_STEPS - 1)), safe); setSafeText(ui.hintEl, motion ? movingCopy(motion.step) : hintCopy(at), safe)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }

@@ -1,6 +1,7 @@
+import { sceneProductCopy, sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue, type InteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue, type InteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { createPosePlacement } from '../pose-placement'
@@ -105,12 +106,12 @@ export function createKoreanYutnori(ctx: SceneContext): SceneInstance {
     finishBtn.hidden = at === 3 || play.phase !== 'again'
     finishBtn.disabled = !inputActive() || !!motion
     const steps = yutSteps(play.mask), flats = play.mask.toString(2).replace(/0/g, '').length
-    cueSpecs[2]!.label = `移到前行 ${steps} 格的落点`
-    const hint = at === 3 ? `已完成 ${play.turns} 次抛掷。${HINTS[3]}`
-      : motion ? motion.step === 2 ? `棋子沿外圈前行 ${steps} 格……` : MOVING[motion.step]!
+    cueSpecs[2]!.label = sceneTemplate("移到前行 {p0} 格的落点", { p0: steps })
+    const hint = at === 3 ? sceneTemplate("已完成 {p0} 次抛掷。{p1}", { p0: play.turns, p1: sceneProductCopy(HINTS[3]!) })
+      : motion ? motion.step === 2 ? sceneTemplate("棋子沿外圈前行 {p0} 格……", { p0: steps }) : MOVING[motion.step]!
       : at === 0 ? HINTS[0]!
-      : play.phase === 'move' ? `第 ${play.turns} 掷 · ${RESULT_NAMES[flats]}：${flats === 0 ? '四根圆面朝上' : `${flats} 根平面朝上`}，前行 ${steps} 格。拿住蓝色棋子，移到本次标记的落点。`
-      : play.phase === 'again' ? `本次已前行 ${steps} 格，累计掷了 ${play.turns} 次。再抛木柶继续，或点「结束仪式」。`
+      : play.phase === 'move' ? sceneTemplate("第 {p0} 掷 · {p1}：{p2}，前行 {p3} 格。拿住蓝色棋子，移到本次标记的落点。", { p0: play.turns, p1: RESULT_NAMES[flats], p2: sceneProductCopy(flats === 0 ? '四根圆面朝上' : sceneTemplate("{p0} 根平面朝上", { p0: flats })), p3: steps })
+      : play.phase === 'again' ? sceneTemplate("本次已前行 {p0} 格，累计掷了 {p1} 次。再抛木柶继续，或点「结束仪式」。", { p0: steps, p1: play.turns })
       : HINTS[1]!
     setSafeText(ui.actionBtn, play.phase === 'again' && at < 3 ? '再掷一次' : ACTIONS[actionStep()]!, safe)
     setSafeText(ui.hintEl, hint, safe)

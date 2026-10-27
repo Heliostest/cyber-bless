@@ -1,0 +1,25 @@
+{
+  "name": "@wbr/i18n",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./locales": "./src/locales.ts",
+    "./catalogs": "./src/catalogs.ts",
+    "./text": "./src/text.ts",
+    "./errors": "./src/errors.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.7"
+  },
+  "dependencies": {
+    "@formatjs/intl": "6.1.4",
+    "unicode-segmenter": "0.17.3"
+  }
+}

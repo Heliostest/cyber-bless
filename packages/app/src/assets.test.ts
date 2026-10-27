@@ -15,8 +15,8 @@ describe("bundled fonts", () => {
       "900",
     ]);
     for (const face of nunito) {
-      // Latin only: CJK falls through to the rounded system faces, then Blessing Sans.
-      expect(face).toMatch(/unicode-range:U\+0000-00FF;/);
+      // Let the bundled font provide its punctuation and Extended Latin glyphs.
+      expect(face).not.toMatch(/unicode-range:U\+0000-00FF;/);
       expect(face).toMatch(/font-display:swap;/);
     }
   });

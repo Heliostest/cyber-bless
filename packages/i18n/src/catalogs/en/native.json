@@ -1,0 +1,11 @@
+{
+  "native.app.name": "One Day, One Thought",
+  "native.failure.message": "The view could not open. Your saved records are still on this device.",
+  "native.failure.retry": "Open again",
+  "native.widget.name": "Today's ritual",
+  "native.widget.description": "A little kindness for today",
+  "native.widget.resizeDescription": "Tap the card to open today's scene. Resize to 2×2, 4×2 or 4×4.",
+  "native.widget.invitation": "Open One Day, One Thought for today's ritual",
+  "native.widget.subtitle": "A little kindness for today",
+  "native.widget.accessibility": "{date}, {title}"
+}

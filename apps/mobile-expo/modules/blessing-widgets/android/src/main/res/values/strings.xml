@@ -1,5 +1,5 @@
 <resources>
-  <string name="blessing_widget_name">今日仪式</string>
-  <string name="blessing_widget_description">轻触卡片进入今日场景，可调整为 2×2、4×2 或 4×4。</string>
-  <string name="blessing_widget_generic_title">打开一日一念，看看今天的仪式</string>
+  <string name="blessing_widget_name">Today\'s ritual</string>
+  <string name="blessing_widget_description">Tap the card to open today\'s scene. Resize to 2×2, 4×2 or 4×4.</string>
+  <string name="blessing_widget_generic_title">Open One Day, One Thought for today\'s ritual</string>
 </resources>

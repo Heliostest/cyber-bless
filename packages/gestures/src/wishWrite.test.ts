@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createWishWrite, WISH_WRITE_COPY } from './wishWrite'
+import { configureLocale } from '@wbr/i18n'
 
 describe('createWishWrite', () => {
   let el: HTMLElement
@@ -10,6 +11,7 @@ describe('createWishWrite', () => {
   })
 
   afterEach(() => {
+    configureLocale('zh-Hans')
     el.remove()
   })
 
@@ -69,7 +71,7 @@ describe('createWishWrite', () => {
     input.value = '愿家人平安'
     input.dispatchEvent(new Event('input', { bubbles: true }))
     expect(meta.textContent).toContain('5/40')
-    expect(input.maxLength).toBe(40)
+    expect(input.maxLength).toBeGreaterThan(40)
     g.dispose()
   })
 
@@ -145,6 +147,21 @@ describe('createWishWrite', () => {
     input.value = '平安'
     el.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
     expect(onSubmit).not.toHaveBeenCalled()
+    g.dispose()
+  })
+
+  it('counts emoji and combining accents as graphemes and preserves an IME draft through switching', () => {
+    configureLocale('zh-Hans')
+    const onSubmit = vi.fn(), g = createWishWrite({ maxLen: 2, onSubmit })
+    g.mount(el, {})
+    const input = el.querySelector('input')!, form = el.querySelector('form')!
+    input.value = '👩🏽‍💻e\u0301'; input.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(el.querySelector('.wish-write-meta')?.textContent).toContain('2/2')
+    input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
+    configureLocale('en'); expect(input.value).toBe('👩🏽‍💻e\u0301')
+    form.dispatchEvent(new Event('submit', { cancelable: true })); expect(onSubmit).not.toHaveBeenCalled()
+    input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }))
+    form.dispatchEvent(new Event('submit', { cancelable: true })); expect(onSubmit).toHaveBeenCalledWith('👩🏽‍💻e\u0301')
     g.dispose()
   })
 })

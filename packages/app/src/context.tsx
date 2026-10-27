@@ -61,10 +61,7 @@ export const uid = () =>
   globalThis.crypto?.randomUUID?.() ??
   `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 export const now = () => new Date().toISOString();
-export const formatDate = (at: string) =>
-  new Intl.DateTimeFormat("zh-CN", { month: "long", day: "numeric" }).format(
-    new Date(at),
-  );
+export { formatDate } from '@wbr/i18n';
 export const statusText = {
   active: "慢慢发生",
   realized: "已经实现",

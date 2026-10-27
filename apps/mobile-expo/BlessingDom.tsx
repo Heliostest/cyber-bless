@@ -8,12 +8,16 @@ import {
 import "@wbr/app/style.css";
 import type { WidgetNavigationRequest } from '@wbr/core/widgets';
 import type { HapticStrength } from '@wbr/runtime';
+import type { LocalePreference } from '@wbr/i18n/locales';
 export default function BlessingDom({
   readSave,
   writeSave,
   haptic,
   onCanGoBack,
   active,
+  preferredLanguages,
+  localePreference,
+  systemHour12,
   backRequest,
   readContentHistory,
   readSceneAsset,
@@ -34,6 +38,9 @@ export default function BlessingDom({
   haptic(strength?: HapticStrength): Promise<void>;
   onCanGoBack(value: boolean): Promise<void>;
   active: boolean;
+  preferredLanguages: string[];
+  localePreference: LocalePreference;
+  systemHour12?: boolean;
   backRequest: number;
   manifestUrl: string;
   catalogUrl: string;
@@ -87,15 +94,19 @@ export default function BlessingDom({
     }),
     [actions],
   );
+  // The native shell already read this same save before mounting the WebView.
+  Object.assign(host, { initialLocalePreference: localePreference });
   return (
     <BlessingApp
       host={host}
+      systemHour12={systemHour12}
       content={{
         io: contentIO,
         manifestUrl: manifestUrl || undefined,
         catalogUrl: catalogUrl || undefined,
       }}
       active={active}
+      systemLocales={preferredLanguages}
       backRequest={backRequest}
       onCanGoBack={onCanGoBack}
       navigationRequest={navigationRequest}

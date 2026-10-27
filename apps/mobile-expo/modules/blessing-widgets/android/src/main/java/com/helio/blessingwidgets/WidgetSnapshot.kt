@@ -24,17 +24,25 @@ internal data class WidgetScene(val title: String, val category: String)
 internal data class WidgetSnapshot(
   val sourceHash: String, val generatedAt: String, val timeZone: String,
   val validThroughDay: String, val days: List<WidgetDay>,
+  val schemaVersion: Int = 1, val localePreference: String = "system",
+  val opening: JSONObject? = null,
 ) {
   fun select(localDay: String): WidgetDay? =
     if (localDay > validThroughDay) null else days.firstOrNull { it.day == localDay }
 
   /** Serialize only the validated projection, never the original JS JSON or extra fields. */
-  fun toJson(): String = JSONObject().put("schemaVersion", 1).put("sourceVersion", 1)
+  fun toJson(): String = JSONObject().put("schemaVersion", schemaVersion).put("sourceVersion", 1)
     .put("sourceHash", sourceHash).put("catalogRevision", CATALOG_REVISION)
     .put("generatedAt", generatedAt).put("timeZone", timeZone)
-    .put("validThroughDay", validThroughDay).put("days", JSONArray().also { result ->
+    .put("validThroughDay", validThroughDay).apply {
+      if (schemaVersion == 2) {
+        put("localePreference", localePreference)
+        put("copyRevision", WidgetLocalization.COPY_REVISION)
+      }
+      if (opening != null && schemaVersion == 2) put("opening", opening)
+    }.put("days", JSONArray().also { result ->
       days.forEach { value -> result.put(JSONObject()
-        .put("day", value.day).put("sceneId", value.sceneId).put("title", value.title)
+        .put("day", value.day).put("sceneId", value.sceneId).apply { if (schemaVersion == 1) put("title", value.title) }
         .put("category", value.category).put("artKey", value.artKey)
         .put("collected", value.collected).put("deepLink", value.deepLink)) }
     }).toString()
@@ -43,7 +51,6 @@ internal data class WidgetSnapshot(
     const val MAX_BYTES = 32 * 1024
     const val CATALOG_REVISION = "bundled-daily-v1"
     const val GENERIC_LINK = "cyber-bless://widget/today?v=1"
-    const val GENERIC_TITLE = "打开一日一念，看看今天的仪式"
     val scenes = WidgetCatalog.scenes
     private val rootKeys = setOf("schemaVersion", "sourceVersion", "sourceHash", "catalogRevision",
       "generatedAt", "timeZone", "validThroughDay", "days")
@@ -55,7 +62,15 @@ internal data class WidgetSnapshot(
       val root = tokener.nextValue() as? JSONObject ?: error("Invalid projection root")
       require(tokener.nextClean() == '\u0000')
       val keys = root.keys().asSequence().toSet()
-      require(keys == rootKeys || keys == rootKeys + "opening")
+      val version = root.get("schemaVersion")
+      require(version == 1 || version == 2)
+      val expectedKeys = rootKeys + if (version == 2) setOf("localePreference", "copyRevision") else emptySet()
+      require(keys == expectedKeys || keys == expectedKeys + "opening")
+      val preference = if (version == 2) root.getString("localePreference") else "system"
+      require(preference == "system" || preference in WidgetLocalization.supported)
+      if (version == 2) require(root.getString("copyRevision") == WidgetLocalization.COPY_REVISION)
+      var openingDay = ""
+      var openingIds = emptyList<String>()
       if (root.has("opening")) {
         val opening = root.getJSONObject("opening")
         require(opening.keys().asSequence().toSet() == setOf("day", "sceneIds"))
@@ -66,10 +81,12 @@ internal data class WidgetSnapshot(
         require(ids.toSet().size == 3)
         require(ids.take(2).all { scenes[it]?.category == "blessing" })
         require(scenes[ids[2]]?.category == "wish")
+        openingDay = opening.getString("day")
+        openingIds = ids
         // Android selects from the validated daily rows below. The optional
         // JS selection context is validated here, then omitted by toJson().
       }
-      require(root.get("schemaVersion") == 1 && root.get("sourceVersion") == 1)
+      require(root.get("sourceVersion") == 1)
       require(root.getString("catalogRevision") == CATALOG_REVISION)
       val hash = root.getString("sourceHash")
       require(hash.matches(Regex("[0-9a-f]{64}")))
@@ -84,7 +101,7 @@ internal data class WidgetSnapshot(
       require(entries.length() == 0 || entries.length() == 7)
       val days = (0 until entries.length()).map { index ->
         val json = entries.getJSONObject(index)
-        require(json.keys().asSequence().toSet() == dayKeys)
+        require(json.keys().asSequence().toSet() == if (version == 2) dayKeys - "title" else dayKeys)
         val day = json.getString("day")
         require(day == WidgetDates.addDays(generatedDay, index))
         val id = json.getString("sceneId")
@@ -92,7 +109,8 @@ internal data class WidgetSnapshot(
         require(id !in WidgetCatalog.hiddenSceneIds)
         val scene = scenes[id] ?: error("Unknown scene")
         require(json.getString("artKey") == id)
-        require(json.getString("title") == scene.title && json.getString("category") == scene.category)
+        require((version == 2 || json.getString("title") == scene.title) && json.getString("category") == scene.category)
+        if (version == 2) require(id == WidgetLocalization.dailyScene(day, if (day == openingDay) openingIds else emptyList()))
         val collected = json.getString("collected")
         require(collected == "unknown" || (index == 0 && collected == "confirmed"))
         val result = WidgetDay(day, id, scene.title, scene.category, id, collected)
@@ -100,7 +118,8 @@ internal data class WidgetSnapshot(
         result
       }
       require(validThrough == (days.lastOrNull()?.day ?: generatedDay))
-      WidgetSnapshot(hash, generatedAt, timeZone, validThrough, days)
+      WidgetSnapshot(hash, generatedAt, timeZone, validThrough, days, version as Int, preference,
+        if (root.has("opening")) root.getJSONObject("opening") else null)
     } catch (_: Exception) {
       null
     }

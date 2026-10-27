@@ -21,7 +21,7 @@
 .scene-review-controls { display: flex; flex-wrap: wrap; gap: 8px; }
 .scene-review-controls button,
 .scene-review-controls select {
-  min-height: 40px;
+  min-height: 44px;
   border: 1px solid #6d9d8f;
   border-radius: 10px;
   padding: 7px 12px;
@@ -31,7 +31,7 @@
   font-size: 14px;
   cursor: pointer;
 }
-.scene-review-controls select { flex: 1; min-width: 180px; }
+.scene-review-controls select { flex: 1; min-inline-size: 0; max-inline-size: 100%; }
 .scene-review-controls button:disabled { opacity: .4; cursor: default; }
 .scene-review-controls button:not(:disabled):hover { background: #dcf4ea; }
 .scene-review-controls :focus-visible { outline: 3px solid #267662; outline-offset: 2px; }
@@ -47,5 +47,5 @@
   .scene-review-heading > span { order: 3; width: 100%; }
   .scene-review-controls { gap: 6px; }
   .scene-review-controls select { order: -1; flex-basis: 100%; }
-  .scene-review-controls button { flex: 1; padding: 7px 5px; font-size: 12px; white-space: nowrap; }
+  .scene-review-controls button { flex: 1; padding: 7px 5px; font-size: 14px; white-space: normal; }
 }

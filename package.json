@@ -6,9 +6,9 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w @wbr/cyber-bless --",
-    "build": "npm run build -w @wbr/cyber-bless",
-    "test": "npm run test -w @wbr/core && npm run test -w @wbr/runtime && npm run test -w @wbr/app && npm run test -w @wbr/gestures && npm run test -w @wbr/shared && npm run test -w @wbr/scenes && npm run test -w @wbr/content && npm run test -w @wbr/scene-runtime && node scripts/check-woodfish-assets.mjs",
+    "dev": "npm run i18n:compile && npm run dev -w @wbr/cyber-bless --",
+    "build": "npm run i18n:verify && npm run build -w @wbr/cyber-bless",
+    "test": "npm run i18n:test && npm run test -w @wbr/core && npm run test -w @wbr/runtime && npm run test -w @wbr/app && npm run test -w @wbr/gestures && npm run test -w @wbr/shared && npm run test -w @wbr/scenes && npm run test -w @wbr/content && npm run test -w @wbr/scene-runtime && node scripts/check-woodfish-assets.mjs",
     "mobile:start": "npm run start -w @wbr/mobile --",
     "mobile:remote": "npm run start -w @wbr/mobile -- --tunnel",
     "mobile:android": "npm run android -w @wbr/mobile",
@@ -43,12 +43,23 @@
     "mobile:widgets:test": "npm run test -w @wbr/core -- src/widgets.test.ts && npm run test -w @wbr/runtime -- src/projected-storage.test.ts && npm run test -w @wbr/app -- src/widget-navigation.test.ts && node --test scripts/blessing-widgets-plugin.test.mjs scripts/blessing-widgets-native.test.mjs scripts/mobile-widgets-ios.test.mjs scripts/mobile-widget-images.test.mjs scripts/mobile-widget-previews.test.mjs",
     "mobile:widgets:render": "node scripts/render-widget-previews.mjs",
     "mobile:dev-client": "npm run start:dev-client -w @wbr/mobile --",
-    "mobile:android:debug": "node scripts/build-mobile-android-debug.mjs"
+    "mobile:android:debug": "node scripts/build-mobile-android-debug.mjs",
+    "i18n:extract": "node scripts/i18n-extract.mjs --check",
+    "i18n:check": "node scripts/i18n-check.mjs --review",
+    "i18n:compile": "node scripts/i18n-compile.mjs",
+    "i18n:generate-native": "node scripts/generate-widget-localization.mjs",
+    "i18n:pseudo": "node scripts/i18n-compile.mjs --pseudo",
+    "i18n:record-review": "node scripts/i18n-review.mjs --record",
+    "i18n:test": "npm run test -w @wbr/i18n && node --test scripts/i18n-catalogs.test.mjs scripts/i18n-extract.test.mjs",
+    "i18n:verify": "npm run i18n:extract && npm run i18n:check && node scripts/i18n-compile.mjs --check && node scripts/generate-widget-localization.mjs --check && npm run typecheck -w @wbr/i18n",
+    "i18n:verify-layout": "node scripts/verify-i18n-layout.mjs"
   },
   "engines": {
     "node": ">=22.18.0"
   },
   "devDependencies": {
+    "@formatjs/cli": "6.16.35",
+    "opencc-js": "1.4.2",
     "playwright": "1.62.1",
     "sharp": "^0.34.5"
   }

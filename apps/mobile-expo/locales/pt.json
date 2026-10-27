@@ -1,0 +1,9 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Um dia, um pensamento",
+    "CFBundleName": "Um dia, um pensamento"
+  },
+  "android": {
+    "app_name": "Um dia, um pensamento"
+  }
+}

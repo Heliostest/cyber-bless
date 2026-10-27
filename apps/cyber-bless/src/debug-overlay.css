@@ -16,7 +16,7 @@
 .debug-overlay-swatch-toon-outline { border: 3px solid #252832; background: linear-gradient(135deg, #f6c77c 0 45%, #cd8d52 45% 72%, #714e41 72%); }
 .debug-overlay-swatch-halftone { background: radial-gradient(circle, #d45f79 1px, transparent 1.5px) 0 0/5px 5px, radial-gradient(circle, #55a8ae 1px, #f6e5b4 1.5px) 2px 2px/5px 5px; }
 .debug-overlay-swatch-pixel-art { background: conic-gradient(#689487 25%, #e4c79b 0 50%, #bd715f 0 75%, #f3dfb4 0) 0 0/12px 12px; border-radius: 2px; }
-.debug-overlay button, .debug-overlay select { font: inherit; cursor: pointer; }
+.debug-overlay button, .debug-overlay select { font: inherit; cursor: pointer; min-block-size: 44px; max-inline-size: 100%; white-space: normal; }
 .debug-overlay button:focus-visible, .debug-overlay select:focus-visible { outline: 2px solid #dcb878; outline-offset: 3px; }
 .debug-overlay-toggle {
   pointer-events: auto;
@@ -29,9 +29,9 @@
   padding: 9px 12px;
   background: #232722;
   color: #eed6a4;
-  font-family: Consolas, monospace !important;
-  font-size: 11px !important;
-  letter-spacing: 1px;
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: normal;
   box-shadow: 0 4px 16px #0002;
 }
 .debug-overlay-panel {
@@ -45,17 +45,17 @@
   background: #232722f5;
   box-shadow: 0 12px 40px #0004;
 }
-.debug-overlay-panel header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-weight: 600; }
+.debug-overlay-panel header { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; margin-bottom: 18px; font-weight: 600; }
 .debug-overlay-panel header small { color: #adae97; font: 10px Consolas, monospace; letter-spacing: 1px; }
 .debug-overlay-label { display: block; color: #b7b9a6; font-size: 11px; margin-bottom: 6px; }
 .debug-overlay select { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #5b6052; background: #30352e; color: #eee8dc; }
 .debug-overlay-parameters { min-width: 0; margin: 14px 0 0; padding: 10px 12px; border: 1px solid #626754; border-radius: 7px; }
 .debug-overlay-parameters legend { padding: 0 5px; color: #e6cf9d; font-size: 11px; }
 .debug-overlay-parameter + .debug-overlay-parameter { margin-top: 9px; }
-.debug-overlay-parameter > div { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.debug-overlay-parameter > div { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 10px; }
 .debug-overlay-parameter label { color: #dedbcc; font-size: 12px; }
 .debug-overlay-parameter output { color: #e6cf9d; font: 12px Consolas, monospace; font-variant-numeric: tabular-nums; }
-.debug-overlay-parameter input { display: block; width: 100%; height: 28px; margin: 2px 0 0; accent-color: #d1b580; cursor: pointer; touch-action: pan-y; }
+.debug-overlay-parameter input { display: block; width: 100%; height: 44px; margin: 2px 0 0; accent-color: #d1b580; cursor: pointer; touch-action: pan-y; }
 .debug-overlay-parameter input:focus-visible { outline: 2px solid #dcb878; outline-offset: 2px; }
 .debug-overlay-parameter-reset { display: block; margin: 5px 0 0 auto; padding: 4px 8px; border: 1px solid #626754; border-radius: 5px; color: #c6cab7; background: transparent; font-size: 11px !important; }
 .debug-overlay-presets { display: grid; gap: 7px; margin-top: 14px; }
@@ -63,6 +63,7 @@
 .debug-overlay-presets button:hover { background: #373e33; }
 .debug-overlay-presets button[aria-pressed="true"] { border-color: #d1b580; background: #414333; }
 .debug-overlay-presets strong { display: block; font-size: 12px; font-weight: 600; }
+.debug-overlay-presets button > span:not(.debug-overlay-swatch) { min-inline-size: 0; hyphens: auto; }
 .debug-overlay-presets small { display: block; color: #b6b9a7; font-size: 10px; margin-top: 2px; }
 .debug-overlay-presets em { margin-left: auto; font: 10px Consolas, monospace; color: #9d9f89; }
 .debug-overlay-swatch { flex: 0 0 28px; width: 28px; height: 28px; border-radius: 50%; }
@@ -81,9 +82,15 @@
   .debug-overlay-panel { margin: 0 0 8px; padding: 12px; max-height: calc(100dvh - 80px - env(safe-area-inset-bottom)); }
   .debug-overlay-panel header, .debug-overlay-panel footer { display: none; }
   .debug-overlay-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .debug-overlay-presets { grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+  .debug-overlay-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
   .debug-overlay-presets button { flex-direction: column; gap: 5px; padding: 8px 3px; text-align: center; }
   .debug-overlay-presets small, .debug-overlay-presets em { display: none; }
   .debug-overlay-presets strong { font-size: 11px; }
   .debug-overlay-status { margin: 10px 0 8px; }
+}
+
+/* Legacy tools have a scrolling page rather than the App's viewport shell. */
+body:has(.app-nav) .debug-overlay {
+  position: relative; inset: auto; margin: 12px; width: calc(100% - 24px);
+  display: flex; flex-direction: column;
 }

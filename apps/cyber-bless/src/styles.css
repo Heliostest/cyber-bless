@@ -38,6 +38,12 @@ a:hover {
   z-index: 10;
 }
 
+.app-nav a, .gesture-links a { display: inline-flex; align-items: center; min-block-size: 44px; }
+.page, .scene-complete { overflow-wrap: break-word; hyphens: auto; }
+.page code { overflow-wrap: anywhere; }
+.scene-title { max-inline-size: calc(100% - 24px); }
+.scene-complete-actions .btn { min-block-size: 44px; white-space: normal; }
+
 .page {
   padding: 16px;
   max-width: 640px;
@@ -451,3 +457,12 @@ a.gallery-card-link:hover {
 .scene-complete-actions .btn {
   margin-top: 0;
 }
+
+/* The legacy developer adapter shares the measured scene shelf. At large text
+   sizes its page scrolls; the canvas keeps its own usable interaction area. */
+.scene-page { height: auto; min-height: calc(100dvh - 48px); overflow: visible; touch-action: pan-y; padding: 12px; }
+.scene-page .scene-topbar { position: static; flex-wrap: wrap; gap: 8px; margin-block-end: 12px; }
+.scene-page .scene-topbar h1 { flex: 1 1 100%; min-inline-size: 0; margin: 0; font-size: 20px; line-height: 1.3; hyphens: auto; }
+.scene-page .scene-topbar a { display: inline-flex; min-block-size: 44px; align-items: center; }
+.scene-page .scene-stage.library-scene-stage { position: relative; inset: auto; width: 100%; min-height: 0; }
+.scene-page .library-scene-stage .scene-title { display: none; }

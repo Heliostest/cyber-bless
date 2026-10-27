@@ -11,12 +11,9 @@
  * token → island token map: docs/design/island-shell.md.
  */
 :root {
-  /* Nunito's latin subset is bundled (fontStyles in assets.ts, U+0000-00FF),
-     so digits and Latin are rounded on every device. CJK falls through to
-     the first installed rounded system face, then the bundled Blessing Sans. */
-  --font-round: "Nunito", "Varela Round", "M PLUS Rounded 1c", "Yuanti SC",
-    "HarmonyOS Sans SC", "HarmonyOS Sans", "PingFang SC", "Blessing Sans",
-    "Microsoft YaHei", system-ui, sans-serif;
+  /* Latin punctuation uses the bundled font's actual coverage. System fonts
+     complete combining marks; regional CJK stacks below never borrow SC glyphs. */
+  --font-round: "Nunito", ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif;
   font-family: var(--font-round);
   color: var(--ink);
   background:
@@ -221,7 +218,7 @@ h1 {
   font-size: 30px;
   line-height: 1.4;
   font-weight: 900;
-  letter-spacing: 0.02em;
+  letter-spacing: normal;
 }
 h2 {
   font-size: 18px;
@@ -281,10 +278,10 @@ button:hover:not(:disabled) {
 .app-shell[data-page="wishes"] .app-content,
 .app-shell[data-page="world"] .app-content,
 .app-shell[data-page="me"] .app-content {
-  padding: 12px 18px 128px;
+  padding: 12px 18px calc(var(--app-dock-space, 128px) + env(safe-area-inset-bottom));
 }
 .app-topbar {
-  height: 68px;
+  min-height: 68px;
   padding: 12px 18px;
   display: flex;
   align-items: center;
@@ -300,15 +297,8 @@ button:hover:not(:disabled) {
 .page-topbar .back-button {
   pointer-events: auto;
 }
-/* The page title is a swallowtail ribbon, as in the island Title: a front
-   tilted back a touch, two notched tails behind it and a darker fold where
-   each tail tucks under. Always one line, 12px clear of the back button: the
-   7-8 character ritual titles fit down to 320px (see the 360px block), and
-   anything longer ends in an ellipsis instead of folding into a two-line
-   swallowtail. The ellipsis needs overflow: hidden, so the whole ribbon is
-   drawn inside the title: the tails reach only into its side padding (the text
-   keeps all of its room), and the negative margin takes back the drop below
-   the front, so the front stays level with the back button. */
+/* The swallowtail grows with its complete translated title. Its side space
+   keeps navigation controls clear without making longer languages smaller. */
 .title-ribbon {
   --reach: 0.6em; /* tails past the front's sides */
   --tuck: 0.9em; /* tails under the front: the width of a fold */
@@ -322,9 +312,10 @@ button:hover:not(:disabled) {
   font-weight: 900;
   line-height: 1.4;
   text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  min-inline-size: 0;
   color: var(--mint-ink);
 }
 .title-ribbon::before,
@@ -440,22 +431,28 @@ button:hover:not(:disabled) {
   align-items: center;
   justify-content: center;
   min-height: 44px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 .page-heading h1 {
-  font-size: clamp(12px, calc((min(100vw, 430px) - 200px) / var(--ribbon-letters, 4)), 19px);
+  font-size: 19px;
 }
 .page-heading-actions {
-  position: absolute;
-  right: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
+  min-inline-size: 0;
+  max-inline-size: 100%;
 }
+.page-heading-row:has(.page-heading-actions) .title-ribbon { max-width: 100%; }
 .page-heading-actions .count-pill {
   display: block;
-  max-width: 68px;
+  max-width: 100%;
   padding-inline: 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.5;
 }
 .page-tagline {
   margin: 8px 0 0;
@@ -826,7 +823,7 @@ button:hover:not(:disabled) {
   position: fixed;
   bottom: max(10px, env(safe-area-inset-bottom));
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 4px;
   width: calc(min(100%, 430px) - 24px);
   margin-left: 12px;
@@ -857,7 +854,11 @@ button:hover:not(:disabled) {
   color: var(--muted);
   font-size: 12px;
   font-weight: 800;
+  min-inline-size: 0;
+  overflow-wrap: break-word;
+  line-height: 1.4;
 }
+.bottom-nav button > span { max-inline-size: 100%; text-align: center; }
 .bottom-nav button:nth-child(2) {
   --tab: var(--bubblegum);
   --tab-hi: var(--bubblegum-hi);
@@ -1587,6 +1588,7 @@ button:hover:not(:disabled) {
   --topbar-padding: 14px;
   container-type: inline-size;
   padding-inline: var(--topbar-padding);
+  height: auto;
 }
 .scene-topbar .feedback-controls-anchor {
   position: absolute;
@@ -1596,17 +1598,14 @@ button:hover:not(:disabled) {
 .scene-topbar:has([data-feedback-present]) { z-index: 1100; }
 .scene-topbar .title-ribbon {
   /* Reserve the same space for the back button and the collapsed gear. */
-  --ribbon-width: min(170px, calc(100cqw + 2 * var(--topbar-padding) - 2 * var(--title-side-space)));
   --ribbon-padding: clamp(6px, calc((100cqw + 2 * var(--topbar-padding) - 320px) / 8 + 6px), 18px);
   --reach: min(0.6em, calc(var(--ribbon-padding) - 2px));
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: var(--ribbon-width);
-  max-width: calc(100% - 2 * var(--title-side-space));
+  position: relative;
+  width: auto;
+  max-width: calc(100% - 2 * (var(--title-side-space) - var(--topbar-padding)));
   padding: 6px var(--ribbon-padding) calc(8px + var(--drop));
   letter-spacing: normal;
-  font-size: clamp(12px, calc((var(--ribbon-width) - 2 * var(--ribbon-padding)) / var(--ribbon-letters, 4)), 19px);
+  font-size: 19px;
 }
 .visual-style-backdrop {
   position: fixed;
@@ -1947,6 +1946,9 @@ button:hover:not(:disabled) {
   stroke-width: 2.8;
 }
 .count-pill {
+  /* Keep the absolutely positioned spoken label inside the clipped counter,
+     even when its full translated text is wider than the visible pill. */
+  position: relative;
   font-size: 12px;
   font-weight: 800;
   color: var(--ink-soft);
@@ -2358,7 +2360,10 @@ button:hover:not(:disabled) {
   font-size: 13px;
   font-weight: 800;
   margin-top: 6px;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
+.scene-card strong { min-inline-size: 0; overflow-wrap: break-word; hyphens: auto; }
 .collection-card small {
   font-size: 12px;
   font-weight: 600;
@@ -2975,7 +2980,7 @@ button:hover:not(:disabled) {
 .scene-bow-tap:hover {
   background: #fffcf2;
 }
-.scene-bow-tap::before { content: '辅助 · '; opacity: 0.7; font-weight: 500; }
+.scene-bow-tap::before { content: none; }
 .scene-bow-tap:focus-visible { outline: 3px solid var(--mint-ink); outline-offset: 3px; }
 
 .scene-bow-tap:active {
@@ -3711,27 +3716,21 @@ button:hover:not(:disabled) {
   bottom: auto;
   margin-top: 10px;
   transform: none;
-  width: 44px;
-  max-width: 44px;
+  width: auto;
+  max-width: 100%;
   min-width: 44px;
   padding-inline: 10px;
   border: 0;
   background: none;
-  overflow: hidden;
-  color: transparent;
+  overflow-wrap: break-word;
+  color: var(--ink-soft);
   font-size: 12px;
 }
 .library-scene-stage .scene-bow-tap::before {
-  content: '辅助';
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: var(--ink-soft);
-  font-size: 12px;
-  font-weight: 500;
-  opacity: 0.8;
+  content: none;
 }
+.scene-helper-label { font-weight: 600; }
+.scene-helper-action { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .library-scene-stage .scene-bow-tap:active {
   transform: translateY(1px);
 }
@@ -4580,7 +4579,7 @@ button:hover:not(:disabled) {
   .scene-topbar .feedback-controls-anchor { top: 2px; }
   .app-shell[data-immersive] .scene-experience,
   .app-shell[data-immersive] .ritual-page { gap: 6px; }
-  .app-shell[data-immersive] > .app-topbar { height: 56px; padding-block: 6px; }
+  .app-shell[data-immersive] > .app-topbar { min-height: 56px; padding-block: 6px; }
   .app-shell[data-immersive] .scene-intention { padding-block: 5px; }
 }
 @media (max-height: 450px) {
@@ -4590,3 +4589,100 @@ button:hover:not(:disabled) {
   .app-shell[data-immersive] .ritual-feedback,
   .app-shell[data-immersive] .ritual-counter { display: none; }
 }
+
+/* Regional system faces are available offline on the corresponding platforms.
+   A missing face falls back to the platform's language-aware sans-serif, never
+   to the bundled Simplified Chinese font for another CJK writing system. */
+:lang(zh-Hans), :lang(zh-CN), :lang(zh-SG) {
+  --font-round: "Nunito", "Yuanti SC", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", "Blessing Sans", system-ui, sans-serif;
+  font-family: var(--font-round);
+  line-break: strict;
+}
+:lang(zh-Hant), :lang(zh-TW), :lang(zh-HK), :lang(zh-MO) {
+  --font-round: "Nunito", "PingFang TC", "Hiragino Sans CNS", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+  font-family: var(--font-round);
+  line-break: strict;
+}
+:lang(ja) {
+  --font-round: "Nunito", "Hiragino Maru Gothic ProN", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, "Noto Sans JP", system-ui, sans-serif;
+  font-family: var(--font-round);
+  line-break: strict;
+}
+:lang(ko) {
+  --font-round: "Nunito", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  font-family: var(--font-round);
+  word-break: keep-all;
+}
+:lang(en), :lang(es), :lang(pt), :lang(fr) {
+  --font-round: "Nunito", ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-round);
+  line-break: auto;
+  word-break: normal;
+}
+.button, .filter-row button, .settings-row, .section-heading > *, .field-heading > * {
+  min-inline-size: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+.settings-row > span, .choice-row > span { min-inline-size: 0; }
+.language-setting { display: grid; gap: 10px; align-items: start; }
+.language-setting select {
+  inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; min-height: 44px;
+  padding: 8px 12px; border: 2px solid var(--field-edge); border-radius: 14px;
+  background: var(--paper); color: var(--ink); font: inherit; font-size: 16px;
+}
+.filter-row button { padding: 6px; line-height: 1.4; }
+.wish-meta, .section-heading, .field-heading { flex-wrap: wrap; }
+.scene-completion-actions:has(> .scene-wish-invite) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 105px), 1fr)); }
+
+/* The outer viewport still tracks the keyboard. When text and controls would
+   consume the minimum interaction surface, the content becomes the scroller. */
+.app-shell[data-immersive][data-layout-scroll] > .app-content {
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-gutter: stable;
+}
+.app-shell[data-immersive][data-layout-scroll] :is(.scene-experience, .ritual-page, .completion) {
+  min-height: 100%;
+  height: auto;
+}
+.app-shell[data-immersive][data-layout-scroll] :is(.scene-experience, .ritual-page) > .library-scene-stage {
+  --canvas-h: var(--scene-min-canvas, 224px);
+  flex: 0 0 var(--scene-min-stage, 382px);
+  height: var(--scene-min-stage, 382px);
+  min-height: var(--scene-min-stage, 382px);
+}
+.app-shell[data-immersive][data-layout-scroll] .celebration {
+  min-height: var(--scene-min-canvas, 224px);
+  flex: 0 0 var(--scene-min-canvas, 224px);
+}
+.app-shell[data-immersive] .scene-post-wish:has(form) { max-height: 100%; }
+.app-shell[data-immersive] .scene-post-wish form { max-height: inherit; }
+.app-shell[data-large-text] .collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* A Latin caption reads horizontally. Keep it in normal flow below the room's
+   fixed decorative shelf so expanded copy has space without covering objects. */
+.room:lang(en), .room:lang(es), .room:lang(pt), .room:lang(fr), .app-shell[data-large-text] .room {
+  height: auto;
+  min-height: 300px;
+  padding-block: 250px 14px;
+}
+.room:lang(en) .room-caption, .room:lang(es) .room-caption, .room:lang(pt) .room-caption,
+.room:lang(fr) .room-caption, .app-shell[data-large-text] .room-caption {
+  position: relative;
+  inset: auto;
+  writing-mode: horizontal-tb;
+  margin-inline: 14px;
+  padding: 8px 12px;
+  letter-spacing: normal;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  text-align: center;
+}
+.room:lang(en) .room-shelf, .room:lang(es) .room-shelf, .room:lang(pt) .room-shelf,
+.room:lang(fr) .room-shelf, .app-shell[data-large-text] .room-shelf { top: 150px; bottom: auto; }
+.scene-written-wish-reading { max-inline-size: 100%; padding: 10px 14px; border-radius: 14px; background: var(--paper); color: var(--ink); }
+.scene-written-wish-reading summary { min-height: 44px; cursor: pointer; line-height: 1.6; }
+.scene-written-wish-reading p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }

@@ -4,12 +4,12 @@
   "private": true,
   "main": "index.ts",
   "scripts": {
-    "assets:prepare": "node ../../scripts/prepare-app-assets.mjs",
+    "assets:prepare": "node ../../scripts/i18n-compile.mjs && node ../../scripts/prepare-app-assets.mjs",
     "prestart": "npm run assets:prepare",
     "preandroid": "npm run assets:prepare",
     "preios": "npm run assets:prepare",
     "preweb": "npm run assets:prepare",
-    "eas-build-post-install": "npm run assets:prepare",
+    "eas-build-post-install": "npm --prefix ../.. run i18n:verify && npm run assets:prepare",
     "start": "expo start --go",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -32,6 +32,7 @@
     "expo-file-system": "~57.0.7",
     "expo-haptics": "~57.0.3",
     "expo-linking": "~57.0.13",
+    "expo-localization": "57.0.2",
     "expo-splash-screen": "~57.0.10",
     "expo-status-bar": "~57.0.1",
     "expo-widgets": "~57.0.23",
@@ -40,7 +41,8 @@
     "react-native": "0.86.3",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-web": "^0.21.2",
-    "react-native-webview": "13.16.1"
+    "react-native-webview": "13.16.1",
+    "@wbr/i18n": "*"
   },
   "devDependencies": {
     "@expo/ngrok": "npm:expo-cloudflared@^4.2.2",

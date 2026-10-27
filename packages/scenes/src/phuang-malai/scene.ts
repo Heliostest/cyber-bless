@@ -1,6 +1,7 @@
+import { bindSceneAttribute } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
@@ -554,8 +555,8 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
       wishHandle.mount(wishSlot, {})
       const input = wishSlot.querySelector('input')
       if (input) {
-        input.setAttribute('aria-label', COPY.thanksLabel)
-        input.placeholder = COPY.thanksPlaceholder
+        bindSceneAttribute(input, 'aria-label', COPY.thanksLabel)
+        bindSceneAttribute(input, "placeholder", COPY.thanksPlaceholder)
       }
       stopClaim = claimObjectTouches(hitLayer, onFlowers)
       hitLayer.addEventListener('pointerdown', onDown)

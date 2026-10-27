@@ -1,8 +1,10 @@
+import { bindSceneAttribute } from '../scene-localization'
+import { graphemeLength } from '@wbr/i18n'
 import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import { createStylizedWater } from '@wbr/scene-runtime/stylized-water'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
@@ -108,7 +110,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   addInteractionCue(boatSource,{kind:'drag',label:'轻推叶舟入水',priority:2,enabled:()=>ready()&&step===2,destination:waterTarget,targetLabel:'水面涟漪'})
   const ui = createStepOverlay(overlay,{title:TITLE,stepsAria:'步骤',action:ACTIONS[0]},safe)
   const wishSlot = document.createElement('div'); wishSlot.className = 'scene-wish-slot'; overlay.append(wishSlot)
-  ui.titleEl.title = note
+  bindSceneAttribute(ui.titleEl, "title", note)
   let writer: ReturnType<typeof gestures.createWishWrite> | undefined
   const ray = createPointerRay(canvas,camera), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3(), down = new THREE.Vector2()
   const matrices = () => { world.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
@@ -133,7 +135,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   }
   function begin(text = '', arrived = false) {
     if (!ready() || step === 3 || (pointer.isBusy() && !arrived)) return
-    const line = text.trim(); if (line.length > 40) return
+    const line = text.trim(); if (graphemeLength(line) > 40) return
     dragging = false; motion = {step,t:0,from:(step===0?flower:boat).position.clone(),text:returning?'':line}
     feedback.prepare(); sync(); if (reduced()) settled()
   }

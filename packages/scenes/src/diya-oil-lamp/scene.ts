@@ -1,6 +1,7 @@
+import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { placementHit } from '../placement-hit'
@@ -339,7 +340,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
           ;((object as THREE.Mesh).material as THREE.MeshBasicMaterial).color.setHex(gate < path.next ? 0x79ac82 : 0xe7bd73)
         })
         hintEl.dataset.progress = 'true'
-        setSafeText(hintEl, path.complete() ? '圆弧已走完，松手即可。' : '已沿圆弧行进 ' + Math.round(path.progress * 100) + '%，沿浅金圆弧继续。', assertSafeCopy)
+        setSafeText(hintEl, path.complete() ? '圆弧已走完，松手即可。' : sceneTemplate("已沿圆弧行进 {p0}%，沿浅金圆弧继续。", { p0: Math.round(path.progress * 100) }), assertSafeCopy)
         heldLamp.group.position.set(Math.cos(angle) * ORBIT_RADIUS, HELD.y, Math.sin(angle) * ORBIT_RADIUS)
         heldLamp.group.rotation.y = ORBIT_START - angle
         updateMatrices()

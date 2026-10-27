@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import { chromium } from 'playwright';
 import { APP_HIDDEN_SCENE_IDS, builtInScenes, WISH_SCENE_IDS } from '../packages/core/src/daily-scenes.ts';
 import { prepareAppAssets } from './prepare-app-assets.mjs';
+import { widgetLocalizationOutputs } from './generate-widget-localization.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, 'assets/widgets/today');
@@ -79,6 +80,11 @@ try {
   await writeFile(path.join(testResources, 'widget-catalog.json'), JSON.stringify(builtInScenes.map(scene => ({
     id: scene.id, title: scene.title, category: WISH_SCENE_IDS.includes(scene.id) ? 'wish' : 'blessing',
   })), null, 2) + '\n');
+  for (const [relative, contents] of widgetLocalizationOutputs()) {
+    const file = path.join(root, relative);
+    await mkdir(path.dirname(file), { recursive: true });
+    await writeFile(file, contents);
+  }
 } finally {
   await browser?.close();
   await server.close();

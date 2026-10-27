@@ -8,7 +8,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@wbr/core": "*"
+    "@wbr/core": "*",
+    "@wbr/i18n": "*"
   },
   "scripts": {
     "test": "vitest run"

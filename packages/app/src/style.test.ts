@@ -243,12 +243,13 @@ describe("2D ritual stage", () => {
 });
 
 describe("page ribbon", () => {
-  it("stays on one line, 12px clear of the back button, with an ellipsis when too long", () => {
+  it("keeps navigation clear while allowing the full translated title to wrap", () => {
     const ribbon = declared(".title-ribbon");
     expect(ribbon).toMatch(/max-width: calc\(100% - 104px\)/);
-    expect(ribbon).toMatch(/white-space: nowrap/);
-    expect(ribbon).toMatch(/overflow: hidden/);
-    expect(ribbon).toMatch(/text-overflow: ellipsis/);
+    expect(ribbon).toMatch(/white-space: normal/);
+    expect(ribbon).not.toMatch(/overflow: hidden/);
+    expect(ribbon).not.toMatch(/text-overflow: ellipsis/);
+    expect(css).not.toContain("--ribbon-letters");
   });
 
   it("folds its tails under a front tilted back, as the island Title does", () => {
@@ -287,7 +288,7 @@ describe("completion page", () => {
       `<header class="app-topbar completion-topbar"><button class="back-button"></button></header>`,
       "header",
     );
-    expect(getComputedStyle(bar).height).toBe("68px");
+    expect(getComputedStyle(bar).minHeight).toBe("68px");
   });
 
   it("enters in stages, not all at once, with the confirm last", () => {

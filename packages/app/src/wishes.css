@@ -43,7 +43,8 @@
   align-self: center;
   font-size: 15px;
   line-height: 1.5;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 .wish-ritual-picker .wish-practice-card small {
   align-self: center;
@@ -94,3 +95,11 @@
 .wish-rack-item[data-rack-status="used"] .scene-icon { filter: saturate(0.35); opacity: 0.75; }
 .wish-rack-item:active .wish-rack-charm { transform: translateY(3px); }
 .reduce-motion .wish-rack-charm { transition: none; }
+.wish-rack-heading { flex-wrap: wrap; }
+.wish-rack-heading > * { min-inline-size: 0; }
+.wish-rack-item strong { overflow-wrap: break-word; hyphens: auto; }
+.wish-rack-status { max-inline-size: 100%; overflow-wrap: break-word; }
+.app-shell[data-large-text] .wish-rack-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 360px) {
+  .wish-rack-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

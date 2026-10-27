@@ -55,6 +55,11 @@ function mount(initialProgress = 0, extra: Partial<SceneContext> = {}, width = 3
   return { host, canvas, overlay, instance, hit, button, progress, saveWish, complete, haptic, run }
 }
 type Mounted = ReturnType<typeof mount>
+it('keeps a forty-grapheme emoji wish without a hidden UTF-16 rejection', () => {
+  const s = mount(2), text = '👩🏽‍💻'.repeat(40)
+  submit(s, text)
+  expect(s.saveWish).toHaveBeenCalledExactlyOnceWith(text)
+})
 type Point = [number, number]
 function object(name: string) {
   const obj = drawn.scene?.getObjectByName(name)

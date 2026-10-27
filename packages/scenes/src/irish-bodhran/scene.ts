@@ -1,6 +1,7 @@
+import { sceneJoin, sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { createTouchTarget } from '../touch-target'
@@ -87,7 +88,7 @@ export function createIrishBodhran(ctx: SceneContext): SceneInstance {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(Math.min(acceptedActions, 3), 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); finishBtn.hidden = at === 3 || acceptedActions < 3; finishBtn.disabled = !inputActive() || pointer.isBusy() || !!motion || at === 3; finishBtn.setAttribute('aria-disabled', String(finishBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, closing ? FINISHING : motion ? MOVING[motion.step]! : at === 3 ? HINTS[3]! : HINTS[at]! + (acceptedActions < 3 ? ` 先完成至少3次操作（${acceptedActions}/3），之后还可以继续。` : ' 可以继续操作，想停下时点「结束仪式」。'), safe)
+    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, closing ? FINISHING : motion ? MOVING[motion.step]! : at === 3 ? HINTS[3]! : sceneJoin(HINTS[at]!, (acceptedActions < 3 ? sceneTemplate(" 先完成至少3次操作（{p0}/3），之后还可以继续。", { p0: acceptedActions }) : ' 可以继续操作，想停下时点「结束仪式」。')), safe)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }

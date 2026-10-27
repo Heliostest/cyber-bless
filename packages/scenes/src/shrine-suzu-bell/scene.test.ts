@@ -108,7 +108,7 @@ describe('shrine suzu object actions', () => {
   it('uses the same three actions from the auxiliary button and rings only once', () => {
     const s = mount()
     for (const label of ['向下轻拉铃绳', '轻收铃绳', '轻点铃身问安']) {
-      expect(s.button.textContent).toBe(label)
+      expect(s.button.getAttribute('aria-label')).toBe(label)
       s.button.click(); s.button.click(); s.run()
     }
     expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()

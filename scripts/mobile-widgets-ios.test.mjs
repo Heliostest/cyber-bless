@@ -7,12 +7,13 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { APP_HIDDEN_SCENE_IDS } from '../packages/core/src/daily-scenes.ts';
 const root = fileURLToPath(new URL('../', import.meta.url));
+const widgetCopy = JSON.parse(readFileSync(path.join(root, 'apps/mobile-expo/widget-copy.generated.json'), 'utf8'));
 const require = createRequire(import.meta.url);
 const { transformSync } = require('@babel/core');
-function compile(relative) {
+function compile(relative, platform = 'ios') {
   const filename = path.join(root, relative);
   return transformSync(readFileSync(filename, 'utf8'), { filename, babelrc: false, configFile: false,
-    presets: [require.resolve('babel-preset-expo')], caller: { name: 'metro', platform: 'ios', isDev: false, isServer: false, bundler: 'metro', supportsStaticESM: false } }).code;
+    presets: [require.resolve('babel-preset-expo')], caller: { name: 'metro', platform, isDev: false, isServer: false, bundler: 'metro', supportsStaticESM: false } }).code;
 }
 const component = compile('apps/mobile-expo/widgets/TodayWidget.tsx');
 const module = { exports: {} };
@@ -29,11 +30,12 @@ function render(props, family) {
 }
 test('the actual Expo Babel preset serializes a self-contained isolated widget function', () => {
   assert.equal(typeof serialized, 'string');
-  const props = { day: '2026-10-11', title: '折一只纸鹤', sceneId: 'crane', subtitle: '为今天，留一点温柔', deepLink: 'cyber-bless://widget/today?v=1&day=2026-10-11&scene=crane', previewSmall: 'file:///group/crane-small.png', previewMedium: 'file:///group/crane-medium.png', previewLarge: 'file:///group/crane-large.png' };
+  const props = { day: '2026-10-11', title: 'PRIVATE_STALE_TITLE', sceneId: 'crane', resolvedLocale: 'en', deepLink: 'cyber-bless://widget/today?v=1&day=2026-10-11&scene=crane', previewSmall: 'file:///group/crane-small.png', previewMedium: 'file:///group/crane-medium.png', previewLarge: 'file:///group/crane-large.png' };
   for (const [family, cover] of [['systemSmall', props.previewSmall], ['systemMedium', props.previewMedium], ['systemLarge', props.previewLarge]]) {
     const tree = render(props, family);
     const json = JSON.stringify(tree);
-    assert.ok(json.includes(props.title));
+    assert.ok(!json.includes(props.title), 'old timeline text is never trusted');
+    assert.ok(json.includes(widgetCopy.titles.en.crane || widgetCopy.native.en['native.widget.name']));
     assert.ok(json.includes(props.day));
     assert.ok(json.includes(props.deepLink));
     assert.equal(tree.props.modifiers.filter(m => m.type === 'widgetURL').length, 1);
@@ -48,7 +50,7 @@ test('the actual Expo Babel preset serializes a self-contained isolated widget f
   assert.ok(legacy.includes(props.previewSmall), 'older timelines keep the square cover until the next refresh');
   assert.ok(!legacy.includes(props.previewMedium));
   const fallback = JSON.stringify(render(undefined, 'systemSmall'));
-  assert.ok(fallback.includes('今日仪式'));
+  assert.ok(fallback.includes(widgetCopy.native.en['native.widget.name']));
   assert.ok(fallback.includes('cyber-bless://widget/today?v=1'));
 });
 
@@ -61,10 +63,20 @@ test('retired App scenes cannot reappear from an old persisted iOS timeline', ()
       assert.ok(!json.includes(stale.title));
       assert.ok(!json.includes('hidden-'));
       assert.ok(!json.includes(id));
-      assert.ok(json.includes('今日仪式'));
+      assert.ok(json.includes(widgetCopy.native.en['native.widget.name']));
       assert.equal(tree.props.modifiers.find(m => m.type === 'widgetURL').args[0], 'cyber-bless://widget/today?v=1');
     }
   }
+  }
+});
+test('the isolated renderer selects every bundled language by native locale without trusting private strings', () => {
+  for (const locale of ['zh-Hans', 'zh-Hant', 'en', 'ja', 'ko', 'es', 'pt', 'fr']) {
+    const props = { day: '2026-10-11', localizedDay: 'PUBLIC_DATE', sceneId: 'crane', resolvedLocale: locale,
+      localePreference: 'system', title: 'PRIVATE_TITLE', subtitle: 'PRIVATE_NOTE', deepLink: 'cyber-bless://widget/today?v=1&day=2026-10-11&scene=crane' };
+    const output = JSON.stringify(render(props, 'systemMedium'));
+    assert.ok(output.includes(widgetCopy.titles[locale].crane || widgetCopy.native[locale]['native.widget.name']));
+    assert.ok(output.includes('PUBLIC_DATE'));
+    assert.ok(!output.includes('PRIVATE_'));
   }
 });
 test('the iOS publisher does not load unavailable widget or UI modules in Expo Go', async () => {
@@ -75,6 +87,8 @@ test('the iOS publisher does not load unavailable widget or UI modules in Expo G
     if (name.startsWith('@babel/runtime/')) return require(name);
     if (name === 'react-native') return { Platform: { OS: 'ios' } };
     if (name === 'expo') return { requireOptionalNativeModule: () => null };
+    if (name === 'expo-localization') return { getLocales: () => [{ languageTag: 'en-US' }] };
+    if (name === '@wbr/i18n/locales') return { resolveLocale: () => ({ locale: 'en' }) };
     if (name === '@wbr/content') return { createSHA256: () => ({ update: () => ({ digest: () => new Uint8Array(32) }) }) };
     if (name === '@wbr/core/widgets') return { createWidgetSnapshot: () => ({ catalogRevision: 'bundled-daily-v1', timeZone: 'Asia/Shanghai', validThroughDay: '2026-10-17', days: [] }) };
     throw Error(`Unexpected native load: ${name}`);
@@ -93,6 +107,8 @@ test('an unavailable save registers the iOS layout and publishes a generic timel
     if (name.startsWith('@babel/runtime/')) return require(name);
     if (name === 'react-native') return { Platform: { OS: 'ios' } };
     if (name === 'expo') return { requireOptionalNativeModule: () => ({ Widget: {} }) };
+    if (name === 'expo-localization') return { getLocales: () => [{ languageTag: 'en-US' }] };
+    if (name === '@wbr/i18n/locales') return { resolveLocale: () => ({ locale: 'en' }) };
     if (name === '@wbr/content') return { createSHA256: () => ({ update: () => ({ digest: () => new Uint8Array(32) }) }) };
     if (name === '@wbr/core/widgets') return {
       createWidgetSnapshot: raw => { assert.equal(raw, undefined); return { catalogRevision: 'bundled-daily-v1', timeZone: 'Asia/Shanghai', validThroughDay: '2026-10-11', days: [] }; },
@@ -138,8 +154,41 @@ test('the official source generator preserves all three families and dedicated A
   assert.ok(first.includes(`let hiddenScenes: Set<String> = [${APP_HIDDEN_SCENE_IDS.map(id => JSON.stringify(id)).join(', ')}]`));
   assert.ok(first.includes('hiddenScenes.contains(sceneId) || hiddenScenes.contains(linkedId)'));
   assert.ok(first.includes('URLComponents(string: deepLink)'));
-  assert.ok(first.includes('} else {\n        WidgetsEntryView(entry: entry)'));
-  assert.ok(first.includes('Text("今日仪式")'));
+  assert.ok(first.includes('BlessingLocalizedEntryView(entry: entry)'));
+  assert.ok(first.includes('evaluateLayout(layout: layout, props: props, environment: widgetEnvironment)'));
+  assert.ok(first.includes('Text(verbatim: BlessingWidgetCopy.text'));
   assert.equal((first.match(/App scene curation/g) || []).length, 1);
   assert.ok(readFileSync(path.join(target, 'ExpoWidgetsTarget.entitlements'), 'utf8').includes(settings.groupIdentifier));
+  const info = readFileSync(path.join(target, 'Info.plist'), 'utf8');
+  for (const locale of ['zh-Hans', 'zh-Hant', 'en', 'ja', 'ko', 'es', 'pt', 'fr']) assert.ok(info.includes(`<string>${locale}</string>`));
+});
+
+test('a followed system language change republishes unchanged public data, while manual language stays fixed', async () => {
+  const compiled = compile('apps/mobile-expo/widget-sync.ts', 'android');
+  const instance = { exports: {} }, publications = [];
+  let systemLanguage = 'en', preference = 'system';
+  const mock = name => {
+    if (name.startsWith('@babel/runtime/')) return require(name);
+    if (name === 'react-native') return { Platform: { OS: 'android' } };
+    if (name === 'expo') return { requireOptionalNativeModule: () => ({ publishSnapshot: async raw => publications.push(raw) }) };
+    if (name === 'expo-localization') return { getLocales: () => [{ languageTag: systemLanguage }] };
+    if (name === '@wbr/i18n/locales') return { resolveLocale: pref => ({ locale: pref === 'system' ? systemLanguage : pref }) };
+    if (name === '@wbr/content') return { createSHA256: () => ({ update: () => ({ digest: () => new Uint8Array(32) }) }) };
+    if (name === '@wbr/core/widgets') return { createWidgetSnapshot: () => ({ localePreference: preference,
+      copyRevision: 'copy-v2', catalogRevision: 'daily-v1', timeZone: 'UTC', validThroughDay: '2026-10-27', days: [] }) };
+    throw Error(`Unexpected native load: ${name}`);
+  };
+  vm.runInNewContext(compiled, { module: instance, exports: instance.exports, require: mock });
+  await instance.exports.synchronizeWidgets(null);
+  await instance.exports.synchronizeWidgets(null);
+  assert.equal(publications.length, 1);
+  systemLanguage = 'ja';
+  await instance.exports.synchronizeWidgets(null);
+  assert.equal(publications.length, 2);
+  preference = 'fr';
+  await instance.exports.synchronizeWidgets(null);
+  assert.equal(publications.length, 3);
+  systemLanguage = 'ko';
+  await instance.exports.synchronizeWidgets(null);
+  assert.equal(publications.length, 3);
 });

@@ -30,7 +30,7 @@ describe('read-only daily widget projection', () => {
     expect(snapshot.days[0].collected).toBe('confirmed');
     expect(snapshot.days[1].collected).toBe('unknown');
     // The SDK57 gallery reads the first timeline props as a preview.
-    expect(widgetTimeline(snapshot, at)[0].props.subtitle).toBe('为今天，留一点温柔');
+    expect(widgetTimeline(snapshot, at)[0].props.localePreference).toBe('system');
   });
   it('keeps a corrupt or unsupported main save out of the cache', () => {
     for (const raw of ['{bad', '{"version":999}', '{}']) {
@@ -43,7 +43,7 @@ describe('read-only daily widget projection', () => {
     const snapshot = createWidgetSnapshot(null, at, hash);
     expect(selectWidgetDay(snapshot, new Date(2026, 9, 17))?.day).toBe('2026-10-17');
     expect(selectWidgetDay(snapshot, new Date(2026, 9, 18))).toBeUndefined();
-    expect(selectWidgetDay({ ...snapshot, schemaVersion: 2 }, at)).toBeUndefined();
+    expect(selectWidgetDay({ ...snapshot, schemaVersion: 999 }, at)).toBeUndefined();
     expect(selectWidgetDay({ ...snapshot, days: [{ ...snapshot.days[0], title: 'SECRET' }] }, at)).toBeUndefined();
   });
   it('schedules local calendar midnights, including a generic eighth day', () => {
@@ -61,6 +61,25 @@ describe('read-only daily widget projection', () => {
     for (const days of [[null], [42], [{ day: '2026-10-11' }]]) {
       expect(selectWidgetDay({ ...snapshot, days }, at)).toBeUndefined();
     }
+  });
+  it('publishes v2 public IDs with language preference and rejects private fields or unknown copy', () => {
+    const state = createState();
+    (state.settings as { locale?: string }).locale = 'ja';
+    const snapshot = createWidgetSnapshot(JSON.stringify(state), at, hash);
+    expect(snapshot.schemaVersion).toBe(2);
+    expect(snapshot.localePreference).toBe('ja');
+    expect(snapshot.days[0]).not.toHaveProperty('title');
+    expect(selectWidgetDay({ ...snapshot, copyRevision: 'stale' }, at)).toBeUndefined();
+    expect(selectWidgetDay({ ...snapshot, notes: 'SECRET' }, at)).toBeUndefined();
+    expect(selectWidgetDay({ ...snapshot, localePreference: 'xx' }, at)).toBeUndefined();
+    expect(selectWidgetDay({ ...snapshot, days: snapshot.days.map((d, i) => i === 1 ? { ...d, collected: 'confirmed' } : d) }, at)).toBeUndefined();
+  });
+  it('reads a strictly validated legacy v1 cache without trusting stored titles for display', () => {
+    const snapshot = createWidgetSnapshot(null, at, hash);
+    const { localePreference: _preference, copyRevision: _copy, ...legacy } = snapshot;
+    const old = { ...legacy, schemaVersion: 1, days: snapshot.days.map(day => ({ ...day, title: builtInScenes.find(s => s.id === day.sceneId)!.title })) };
+    expect(selectWidgetDay(old, at)?.sceneId).toBe(snapshot.days[0].sceneId);
+    expect(selectWidgetDay({ ...old, days: old.days.map((day, i) => i ? day : { ...day, title: 'private' }) }, at)).toBeUndefined();
   });
 });
 describe('widget links', () => {

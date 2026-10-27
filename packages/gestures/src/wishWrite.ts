@@ -1,4 +1,5 @@
 import type { GestureHandle } from './types'
+import { formatNumber, graphemeLength, subscribeLocale, translate } from '@wbr/i18n'
 
 export type WishWriteOpts = {
   maxLen?: number
@@ -37,31 +38,43 @@ export function createWishWrite(opts: WishWriteOpts): GestureHandle {
   let note: HTMLSpanElement | null = null
   let count: HTMLSpanElement | null = null
   let enabled = true
+  let composing = false
+  let stopLocale = () => {}
 
   /** The note under the box, or a gentle nudge after an empty submit. */
   const setNudge = (on: boolean) => {
     if (!note) return
-    note.textContent = on ? WISH_WRITE_COPY.empty : restingNote
+    note.textContent = translate(on ? WISH_WRITE_COPY.empty : restingNote)
     note.toggleAttribute('data-nudge', on)
   }
 
   const onInput = () => {
     if (!input || !count) return
-    count.textContent = `${input.value.length}/${maxLen}`
+    count.textContent = `${formatNumber(graphemeLength(input.value))}/${formatNumber(maxLen)}`
     if (note?.hasAttribute('data-nudge')) setNudge(false)
   }
 
   const onSubmit = (e: Event) => {
     e.preventDefault()
-    if (!enabled || !input) return
+    if (!enabled || composing || !input) return
     const text = input.value.trim()
     if (text.length < 1) {
       setNudge(true)
       input.focus()
       return
     }
-    if (text.length > maxLen) return
+    if (graphemeLength(text) > maxLen) return
     opts.onSubmit?.(text)
+  }
+  const compositionStart = () => { composing = true }
+  const compositionEnd = () => { composing = false; onInput() }
+  const refreshCopy = () => {
+    if (!input || !submit || !note || !count) return
+    input.placeholder = translate(WISH_WRITE_COPY.placeholder)
+    input.setAttribute('aria-label', translate(WISH_WRITE_COPY.label))
+    submit.textContent = translate(WISH_WRITE_COPY.submit)
+    note.textContent = translate(note.hasAttribute('data-nudge') ? WISH_WRITE_COPY.empty : restingNote)
+    count.textContent = `${formatNumber(graphemeLength(input.value))}/${formatNumber(maxLen)}`
   }
 
   return {
@@ -71,14 +84,15 @@ export function createWishWrite(opts: WishWriteOpts): GestureHandle {
       form = document.createElement('form')
       input = document.createElement('input')
       input.type = 'text'
-      input.maxLength = maxLen
-      input.placeholder = WISH_WRITE_COPY.placeholder
+      // The visible/product limit counts graphemes. This broader encoding cap only bounds input size.
+      input.maxLength = Math.max(1024, maxLen * 32)
+      input.placeholder = translate(WISH_WRITE_COPY.placeholder)
       input.enterKeyHint = 'done'
-      input.setAttribute('aria-label', WISH_WRITE_COPY.label)
+      input.setAttribute('aria-label', translate(WISH_WRITE_COPY.label))
       input.setAttribute('aria-describedby', metaId)
       submit = document.createElement('button')
       submit.type = 'submit'
-      submit.textContent = WISH_WRITE_COPY.submit
+      submit.textContent = translate(WISH_WRITE_COPY.submit)
       // Note (and nudges) on the left, n/maxLen on the right.
       const meta = document.createElement('p')
       meta.className = 'wish-write-meta'
@@ -92,15 +106,21 @@ export function createWishWrite(opts: WishWriteOpts): GestureHandle {
       form.append(input, submit, meta)
       form.addEventListener('submit', onSubmit)
       input.addEventListener('input', onInput)
+      input.addEventListener('compositionstart', compositionStart)
+      input.addEventListener('compositionend', compositionEnd)
+      stopLocale = subscribeLocale(refreshCopy)
       el.appendChild(form)
     },
     update() {},
     dispose() {
+      stopLocale()
       if (form) {
         form.removeEventListener('submit', onSubmit)
         form.remove()
       }
       input?.removeEventListener('input', onInput)
+      input?.removeEventListener('compositionstart', compositionStart)
+      input?.removeEventListener('compositionend', compositionEnd)
       form = null
       input = null
       submit = null

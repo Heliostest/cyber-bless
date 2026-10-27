@@ -1,6 +1,7 @@
+import { bindSceneAttribute, sceneProductCopy, sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { completesDirectionalDrag } from '../directional-drag'
@@ -17,11 +18,12 @@ export function createMalawiSansi(ctx: SceneContext): SceneInstance {
   const audio=createChimeAudio(),feedback=createSceneFeedback({...ctx,isSoundEnabled:()=>false})
   const ui=createStepOverlay(overlay,{title:'铁舌轻鸣',stepsAria:'自由演奏',action:'结束仪式'},safe)
   overlay.classList.add('scene-overlay--sansi');ui.dotsEl.hidden=true
-  ui.actionBtn.classList.add('scene-sansi-finish');ui.actionBtn.title='结束演奏'
-  const keyboard=document.createElement('div');keyboard.className='scene-sansi-keys';keyboard.setAttribute('role','group');keyboard.setAttribute('aria-label','铁舌音符，从左到右排列')
+  ui.actionBtn.classList.add('scene-sansi-finish');bindSceneAttribute(ui.actionBtn, "title", '结束演奏')
+  setSafeText(ui.actionBtn, '结束仪式', safe)
+  const keyboard=document.createElement('div');keyboard.className='scene-sansi-keys';keyboard.setAttribute('role','group');bindSceneAttribute(keyboard, 'aria-label', '铁舌音符，从左到右排列')
   const noteButtons=SANSI_KEYS.map((note,key)=>{
     const button=document.createElement('button');button.type='button';button.className='scene-sansi-key';button.dataset.key=String(key)
-    setSafeText(button,note.name,safe);button.setAttribute('aria-label','左起第'+(key+1)+'根，'+note.name);button.title='键盘 '+(key+1)
+    setSafeText(button,note.name,safe);bindSceneAttribute(button, 'aria-label', sceneTemplate('左起第{p0}根，{p1}', { p0: key + 1, p1: sceneProductCopy(note.name) }));bindSceneAttribute(button, "title", sceneTemplate('键盘 {p0}', { p0: key + 1 }))
     keyboard.append(button);return button
   })
   overlay.append(keyboard)

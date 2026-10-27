@@ -6,6 +6,8 @@ import * as Shared from '@wbr/shared'
 import type { SceneContext, SceneInstance } from '../contract'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import * as mod from './index'
+import { configureLocale } from '@wbr/i18n'
+import { sceneTemplate } from '../scene-localization'
 
 
 // Keep real Three geometry, intersections and cues; replace only GPU work.
@@ -32,7 +34,7 @@ vi.mock('@wbr/scene-runtime/debug-render-style', async () => {
   } }
 })
 const instances: SceneInstance[] = []
-afterEach(() => { instances.splice(0).forEach(s => s.dispose()); document.body.replaceChildren(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
+afterEach(() => { instances.splice(0).forEach(s => s.dispose()); configureLocale('zh-Hans'); document.body.replaceChildren(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
 function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
   const height = width === 1280 ? 600 : width === 284 ? 390 : 408, left = 17, top = 91
   const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
@@ -55,6 +57,15 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
   const run = (seconds = 1.5) => { for (let t = 0; t < seconds; t += .025) instance.update(.025) }
   return { instance, scene, camera, host, overlay, hit, button, point, run, progress, saveWish, complete, haptic }
 }
+
+it('localizes bowl templates on a later visit after unrelated scene compositions', () => {
+  for (let i = 0; i < 600; i++) sceneTemplate('刷印 {p0}%，抬手后也可以接着擦。', { p0: i })
+  configureLocale('en')
+  const s = mount(1)
+  expect(s.button.getAttribute('aria-label')).toContain('1')
+  expect(s.button.getAttribute('aria-label')).not.toContain('添水')
+  expect(s.overlay.querySelector('.scene-hint')?.textContent).not.toContain('水壶')
+})
 function event(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
   const e = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(e, { clientX, clientY, pointerId, pointerType: 'touch', button: 0 }); el.dispatchEvent(e)

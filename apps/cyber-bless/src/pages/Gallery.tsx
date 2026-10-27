@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { assertSafeCopy } from '@wbr/shared'
 import { sceneRegistry, isSceneImplemented } from '@wbr/scenes'
+import { translate as tr, translateScene } from '@wbr/i18n'
+import { useDeveloperLocale } from '../locale'
 
 const GESTURES = ['drag', 'tilt', 'spin', 'gyro', 'wishWrite'] as const
 const LATER = '稍后'
@@ -16,12 +18,13 @@ assertSafeCopy(GESTURES_HEADING)
 assertSafeCopy(INTRO)
 
 export function Gallery() {
+  useDeveloperLocale()
   return (
     <main className="page">
-      <h1>{GALLERY_TITLE}</h1>
-      <p className="muted">{INTRO}</p>
+      <h1>{tr(GALLERY_TITLE)}</h1>
+      <p className="muted">{tr(INTRO)}</p>
 
-      <h2>{GESTURES_HEADING}</h2>
+      <h2>{tr(GESTURES_HEADING)}</h2>
       <ul className="list">
         {GESTURES.map((g) => (
           <li key={g}>
@@ -30,7 +33,7 @@ export function Gallery() {
         ))}
       </ul>
 
-      <h2>{SCENES_HEADING}</h2>
+      <h2>{tr(SCENES_HEADING)}</h2>
       <ul className="gallery-cards">
         {sceneRegistry.map((s) => {
           assertSafeCopy(s.title)
@@ -42,17 +45,17 @@ export function Gallery() {
             >
               {ready ? (
                 <Link className="gallery-card-link" to={`/scene/${s.id}`}>
-                  <span className="gallery-card-title">{s.title}</span>
+                  <span className="gallery-card-title">{translateScene(s.title)}</span>
                   <code className="muted">{s.id}</code>
                   <span className="gallery-card-meta muted">
-                    {s.gestures.join(' · ')} · {s.grade}档
+                    {tr('{gestures} · {grade}档', { gestures: s.gestures.join(' · '), grade: s.grade })}
                   </span>
                 </Link>
               ) : (
                 <div className="gallery-card-link" aria-disabled="true">
-                  <span className="gallery-card-title">{s.title}</span>
+                  <span className="gallery-card-title">{translateScene(s.title)}</span>
                   <code className="muted">{s.id}</code>
-                  <span className="gallery-card-later">{LATER}</span>
+                  <span className="gallery-card-later">{tr(LATER)}</span>
                 </div>
               )}
             </li>

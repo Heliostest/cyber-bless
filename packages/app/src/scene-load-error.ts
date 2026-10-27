@@ -1,5 +1,4 @@
-/** Han characters: our own messages, written for people, not for logs. */
-const HAN = /\p{Script=Han}/u;
+import { hasProductCopy, translate } from '@wbr/i18n';
 
 export const SCENE_LOAD_ERROR_COPY = {
   offline: "网络好像断开了。连上网络后点「重试打开」；仍打不开时，刷新页面再试。",
@@ -10,15 +9,15 @@ export const SCENE_LOAD_ERROR_COPY = {
 } as const;
 
 /**
- * What to say when a scene would not open: always Chinese, with a way on.
- * Our own errors already read that way; a browser's or the content layer's
- * English message (often with a long URL) is kept only as `detail`.
+ * Only registered product messages are display copy. Unknown diagnostics stay in details,
+ * regardless of whether they contain Han, Latin or another script.
  */
 export function describeSceneLoadError(
   message: string,
   online = typeof navigator === "undefined" || navigator.onLine !== false,
 ): { reason: string; detail?: string } {
-  if (HAN.test(message)) return { reason: message };
+  if (hasProductCopy(message)) return { reason: translate(message) };
+  if (message === '此场景需要更新 App 后打开') return { reason: translate(SCENE_LOAD_ERROR_COPY.upgrade) };
   const detail = message.trim() || undefined;
   const reason = !online
     ? SCENE_LOAD_ERROR_COPY.offline
@@ -27,5 +26,5 @@ export function describeSceneLoadError(
       : /upgrade the app/i.test(message)
         ? SCENE_LOAD_ERROR_COPY.upgrade
         : SCENE_LOAD_ERROR_COPY.other;
-  return { reason, detail };
+  return { reason: translate(reason), detail };
 }

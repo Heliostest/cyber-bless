@@ -1,6 +1,9 @@
 import * as THREE from 'three'
+import { getLocale, subscribeLocale } from '@wbr/i18n'
+import { bindSceneText, sceneCopy, sceneTemplate } from '../scene-localization'
+import { wrapCanvasText } from '../canvas-text'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
 import { createPathSweep } from '../path-sweep'
 import { createTouchTarget } from '../touch-target'
@@ -162,19 +165,42 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   wishMark.rotation.x = -Math.PI / 2
   wishMark.position.set(0, 0.126, 0.82)
   envelope.add(wishMark)
-  const paintWish = (text: string) => {
+  const reading = document.createElement('details'); reading.className = 'scene-written-wish-reading scene-wish-slot'
+  reading.style.gridArea = 'wish'; reading.style.gridColumn = '1 / -1'
+  reading.style.maxBlockSize = '160px'; reading.style.overflowY = 'auto'
+  const readingLabel = document.createElement('summary'), readingText = document.createElement('p')
+  bindSceneText(readingLabel, '查看纸面文字'); reading.append(readingLabel, readingText); overlay.append(reading)
+  let writtenText = '赠礼心意', productDefault = true
+  const redrawWish = () => {
     if (!wishInk) return
+    const text = productDefault ? sceneCopy(writtenText) : writtenText
     wishInk.clearRect(0, 0, 768, 256)
     wishInk.fillStyle = '#72583d'
-    wishInk.font = '40px "Noto Serif SC", "Songti SC", serif'
     wishInk.textAlign = 'center'
     wishInk.textBaseline = 'middle'
-    const letters = Array.from(text)
-    const lines = [letters.slice(0, 14), letters.slice(14, 28), letters.slice(28, 40)].filter((line) => line.length)
-    lines.forEach((line, i) => wishInk.fillText(line.join(''), 384, 128 + (i - (lines.length - 1) / 2) * 57))
+    const locale = getLocale()
+    const family = locale === 'ja' ? '"Hiragino Mincho ProN", "Yu Mincho", serif'
+      : locale === 'ko' ? '"Apple SD Gothic Neo", "Malgun Gothic", sans-serif'
+      : locale === 'zh-Hant' ? '"Songti TC", "Noto Serif TC", serif'
+      : locale === 'zh-Hans' ? '"Songti SC", "Noto Serif SC", serif' : 'Georgia, serif'
+    let size = 40, lines: string[] = []
+    do {
+      wishInk.font = `${size}px ${family}`
+      lines = wrapCanvasText(text, 680, value => wishInk.measureText(value).width, locale)
+      if (lines.length * size * 1.3 <= 212 || size <= 14) break
+      size -= 2
+    } while (size >= 14)
+    lines.forEach((line, i) => wishInk.fillText(line, 384, 128 + (i - (lines.length - 1) / 2) * size * 1.3))
+    // The complete original remains readable in DOM even when the paper's physical space is small.
+    readingText.textContent = text; reading.hidden = productDefault
     wishMap.needsUpdate = true
   }
-  paintWish('赠礼心意')
+  const paintWish = (text: string, isProductDefault = false) => {
+    writtenText = text; productDefault = isProductDefault; redrawWish()
+  }
+  paintWish('赠礼心意', true)
+  const stopWishLocale = subscribeLocale(redrawWish)
+  void document.fonts?.ready.then(() => { if (!disposed) redrawWish() })
 
   const knot = new THREE.Group()
   knot.name = 'mizuhiki-interwoven-cords'
@@ -347,7 +373,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     // Lock before calling the host, including saveWish, to prevent re-entry.
     checkpoint = 3
     resetDrag()
-    paintWish(text || '赠你祝愿')
+    paintWish(text || '赠你祝愿', !text)
     syncUI()
     feedback.impact({ freqs: [523.25, 784, 1046.5], duration: 0.5, gain: 0.05 })
     if (text) ctx.saveWish?.(text)
@@ -399,7 +425,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     path.sample([pointerPoint.x, pointerPoint.z]); drag.next = path.next; drag.t = path.progress
     pose = checkpoint + drag.t * 0.76
     hintEl.dataset.progress = 'true'
-    setSafeText(hintEl, path.complete([pointerPoint.x, pointerPoint.z], .19) ? '这一段已绕好，松手即可。' : '已沿金点前进 ' + Math.round(path.progress * 100) + '%，继续到下一处提示。', shared.assertSafeCopy)
+    setSafeText(hintEl, path.complete([pointerPoint.x, pointerPoint.z], .19) ? '这一段已绕好，松手即可。' : sceneTemplate('已沿金点前进 {p0}%，继续到下一处提示。', { p0: Math.round(path.progress * 100) }), shared.assertSafeCopy)
     showTip(drag.t)
     poseCords()
   }
@@ -478,7 +504,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
       pose = Math.min(checkpoint, 2)
       motionTarget = pose
       settle = checkpoint === 3 ? 1 : 0
-      if (checkpoint === 3) paintWish('赠你祝愿')
+      if (checkpoint === 3) paintWish('赠你祝愿', true)
       poseCords()
       syncUI()
     },
@@ -513,6 +539,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     dispose() {
       if (disposed) return
       disposed = true
+      stopWishLocale()
       resetDrag()
       pressed.clear()
       stopResize()

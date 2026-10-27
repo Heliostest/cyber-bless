@@ -1,0 +1,11 @@
+{
+  "native.app.name": "一日一念",
+  "native.failure.message": "画面を開けませんでした。保存した記録はこの端末に残っています。",
+  "native.failure.retry": "もう一度開く",
+  "native.widget.name": "今日のひととき",
+  "native.widget.description": "今日に、少しのやさしさを",
+  "native.widget.resizeDescription": "カードをタップすると今日のシーンが開きます。2×2、4×2、4×4に変更できます。",
+  "native.widget.invitation": "一日一念を開いて、今日のひとときを",
+  "native.widget.subtitle": "今日に、少しのやさしさを",
+  "native.widget.accessibility": "{date}、{title}"
+}

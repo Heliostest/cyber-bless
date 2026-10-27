@@ -1,4 +1,7 @@
 node_modules/
+.superpowers/
+apps/mobile-expo/modules/blessing-widgets/android/.gradle/
+apps/mobile-expo/modules/blessing-widgets/android/build/
 dist/
 *.local
 .expo/

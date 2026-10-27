@@ -8,6 +8,7 @@ const fixture = vi.hoisted(() => ({
   instance: undefined as any,
 }));
 vi.mock("@wbr/scenes", () => ({
+  localizeSceneOverlay: () => () => {},
   loadScene: async () => ({
     create: (context: any) => {
       fixture.context = context;

@@ -1,0 +1,5 @@
+<resources>
+  <string name="blessing_widget_name">Rituel du jour</string>
+  <string name="blessing_widget_description">Touchez la carte pour ouvrir la scène du jour. Formats disponibles : 2×2, 4×2 ou 4×4.</string>
+  <string name="blessing_widget_generic_title">Ouvrez Un jour, une pensée pour découvrir le rituel du jour</string>
+</resources>

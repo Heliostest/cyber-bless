@@ -1,11 +1,13 @@
 import { Platform } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
 import { createSHA256 } from '@wbr/content';
-import { createWidgetSnapshot, widgetTimeline, type WidgetSnapshotV1 } from '@wbr/core/widgets';
+import { createWidgetSnapshot, widgetTimeline, type WidgetSnapshotV2 } from '@wbr/core/widgets';
+import { getLocales } from 'expo-localization';
+import { resolveLocale } from '@wbr/i18n/locales';
 
 let iosWidget: import('expo-widgets').Widget<import('@wbr/core/widgets').TodayWidgetProps> | undefined;
 let lastPublished = '';
-async function publish(snapshot: WidgetSnapshotV1) {
+async function publish(snapshot: WidgetSnapshotV2) {
   if (Platform.OS === 'ios') {
     // Expo Go must keep opening the existing DOM app without loading unavailable views.
     const native = requireOptionalNativeModule('ExpoWidgets');
@@ -30,7 +32,9 @@ export async function synchronizeWidgets(raw: string | null | undefined): Promis
   const sourceHash = Array.from(createSHA256().update(raw ?? '').digest(), byte => byte.toString(16).padStart(2, '0')).join('');
   const snapshot = createWidgetSnapshot(raw, new Date(), sourceHash);
   // Private edits and scene checkpoints do not spend widget refresh budget.
-  const signature = JSON.stringify([snapshot.catalogRevision, snapshot.timeZone, snapshot.validThroughDay, snapshot.days]);
+  const resolved = resolveLocale(snapshot.localePreference, getLocales().map(locale => locale.languageTag));
+  const signature = JSON.stringify([snapshot.catalogRevision, snapshot.timeZone, snapshot.validThroughDay,
+    snapshot.localePreference, resolved.locale, resolved.formatLocale, snapshot.copyRevision, snapshot.days]);
   if (signature === lastPublished) return;
   await publish(snapshot);
   lastPublished = signature;

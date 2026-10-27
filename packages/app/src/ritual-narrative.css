@@ -7,7 +7,7 @@
   padding: 0;
 }
 .ritual-narrative-header[data-narrative-present] { z-index: 1000; }
-.ritual-narrative-anchor { position: relative; height: 48px; }
+.ritual-narrative-anchor { position: relative; height: var(--ritual-narrative-closed-height, 48px); min-inline-size: 0; }
 .ritual-narrative-backdrop { position: fixed; inset: 0; z-index: 0; background: transparent; touch-action: none; }
 .ritual-narrative {
   --ritual-narrative-radius: 22px;
@@ -19,7 +19,8 @@
   left: 0;
   z-index: 1;
   width: var(--ritual-narrative-closed-width, max-content);
-  height: 48px;
+  max-width: 100%;
+  height: var(--ritual-narrative-closed-height, 48px);
   margin: 0;
   overflow: hidden;
   border: 2px solid var(--rim);
@@ -42,6 +43,7 @@
   align-items: center;
   gap: 8px;
   width: max-content;
+  max-width: calc(var(--ritual-narrative-limit-width, 100vw - 40px) - 4px);
   min-height: 44px;
   padding: 8px 12px;
   margin: 0;
@@ -53,7 +55,9 @@
   font-size: 15px;
   font-weight: 800;
   line-height: 1.4;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: start;
+  overflow-wrap: anywhere;
   cursor: pointer;
   transform: none;
   -webkit-tap-highlight-color: transparent;
@@ -71,10 +75,10 @@
 .ritual-narrative-body {
   box-sizing: border-box;
   position: absolute;
-  top: 44px;
+  top: calc(var(--ritual-narrative-closed-height, 48px) - 4px);
   left: 0;
   width: calc(var(--ritual-narrative-expanded-width, 354px) - 4px);
-  height: calc(var(--ritual-narrative-expanded-height, 400px) - 48px);
+  height: calc(var(--ritual-narrative-expanded-height, 400px) - var(--ritual-narrative-closed-height, 48px));
   max-height: none;
   overflow-x: hidden;
   overflow-y: auto;
@@ -90,7 +94,8 @@
   color: var(--ink-soft);
   font-size: 15px;
   line-height: 1.9;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
   text-align: start;
   opacity: 0;
   pointer-events: none;
@@ -104,9 +109,7 @@
 .ritual-narrative-toggle:focus-visible { outline: 3px solid var(--mint-text); outline-offset: -5px; }
 .ritual-narrative-body:focus-visible { outline: 2px solid var(--mint-text); outline-offset: -4px; }
 .scene-complete-status {
-  position: absolute;
-  top: 0;
-  right: 0;
+  position: relative;
   z-index: 2;
   display: flex;
   align-items: center;
@@ -115,7 +118,9 @@
   color: var(--ink-soft);
   font-size: 13px;
   font-weight: 600;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  justify-content: flex-end;
   text-align: right;
   pointer-events: none;
 }

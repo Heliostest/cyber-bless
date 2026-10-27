@@ -19,6 +19,11 @@ vi.mock('@wbr/scene-runtime/debug-render-style', () => ({
 }))
 import { createVotiveCandleCatholic } from './scene'
 const instances: SceneInstance[] = []
+it('keeps a forty-grapheme emoji wish without a hidden UTF-16 rejection', () => {
+  const s = mount(2), text = '👩🏽‍💻'.repeat(40)
+  s.write(text)
+  expect(s.saveWish).toHaveBeenCalledExactlyOnceWith(text)
+})
 afterEach(() => { instances.splice(0).forEach(s => s.dispose()); document.body.replaceChildren() })
 function mount(at = 0, extra: Partial<SceneContext> = {}) {
   const canvas = document.createElement('canvas'), overlay = document.createElement('div')

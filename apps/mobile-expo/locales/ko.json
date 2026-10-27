@@ -1,0 +1,9 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "하루 한 생각",
+    "CFBundleName": "하루 한 생각"
+  },
+  "android": {
+    "app_name": "하루 한 생각"
+  }
+}

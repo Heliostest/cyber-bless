@@ -15,5 +15,8 @@
   },
   "devDependencies": {
     "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "@wbr/i18n": "*"
   }
 }

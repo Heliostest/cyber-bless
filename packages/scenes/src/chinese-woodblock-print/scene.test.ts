@@ -227,7 +227,7 @@ describe('a rubbing and peeling woodblock print', () => {
     let active=true;const s=mount(0,{isReducedMotion:()=>true,isActive:()=>active,[callback]:()=>{active=false}}), frames=rendered.render.mock.calls.length;s.button.click();s.instance.update(.05);s.instance.update(.05);expect(rendered.render.mock.calls.length).toBe(frames)
   })
   it('saves a trimmed explicit wish once and never saves quiet drafts or returning visits',()=>{
-    const s=mount(2), input=s.overlay.querySelector<HTMLInputElement>('input')!;expect(input.maxLength).toBe(40);s.write('  ');s.write('心'.repeat(41));expect(s.progress).toEqual([])
+    const s=mount(2), input=s.overlay.querySelector<HTMLInputElement>('input')!;expect(input.maxLength).toBeGreaterThan(40);s.write('  ');s.write('心'.repeat(41));expect(s.progress).toEqual([])
     const form=input.form!;s.saveWish.mockImplementation(()=>{form.dispatchEvent(new Event('submit',{cancelable:true}));s.button.click();tap(s)})
     s.write('  春来平安  ');expect(s.progress).toEqual([3]);expect(s.saveWish).toHaveBeenCalledExactlyOnceWith('春来平安');expect(s.complete).toHaveBeenCalledOnce()
     const q=mount(2);q.overlay.querySelector<HTMLInputElement>('input')!.value='草稿';tap(q);expect(q.saveWish).not.toHaveBeenCalled()

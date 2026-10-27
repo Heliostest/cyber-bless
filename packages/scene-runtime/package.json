@@ -15,7 +15,8 @@
     "@wbr/content": "*",
     "postprocessing": "^6.39.5",
     "three": "^0.170.0",
-    "@wbr/core": "*"
+    "@wbr/core": "*",
+    "@wbr/i18n": "*"
   },
   "scripts": {
     "test": "vitest run"

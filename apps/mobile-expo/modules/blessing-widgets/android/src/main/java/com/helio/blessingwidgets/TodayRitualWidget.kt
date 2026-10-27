@@ -54,21 +54,28 @@ class TodayRitualWidget : GlanceAppWidget() {
       val view by produceState(initialValue = initial, key1 = revision) {
         value = withContext(Dispatchers.IO) { readView(context) }
       }
-      TodayCard(view.day, view.entry, activityIntent(context, view.entry))
+      TodayCard(view.day, view.entry, view.locale, view.formatLocale, activityIntent(context, view.entry))
     }
   }
 
   override suspend fun providePreview(context: Context, widgetCategory: Int) {
     // The gallery always uses public generic content and never opens the snapshot cache.
-    provideContent { TodayCard("", null, activityIntent(context, null)) }
+    val locale = WidgetLocalization.resolve("system", context.languageTags())
+    provideContent { TodayCard("", null, locale, WidgetLocalization.formatTag("system", context.languageTags()), activityIntent(context, null)) }
   }
 }
 
-private data class WidgetView(val day: String, val entry: WidgetDay?)
+private data class WidgetView(val day: String, val entry: WidgetDay?, val locale: String, val formatLocale: String)
+private fun Context.languageTags(): List<String> = resources.configuration.locales.let { values ->
+  (0 until values.size()).map { values[it].toLanguageTag() }
+}
 
 private fun readView(context: Context): WidgetView {
   val day = WidgetDates.localDay()
-  return WidgetView(day, WidgetSnapshotStore.read(context)?.select(day))
+  val snapshot = WidgetSnapshotStore.read(context)
+  val preference = snapshot?.localePreference ?: "system"
+  val tags = context.languageTags()
+  return WidgetView(day, snapshot?.select(day), WidgetLocalization.resolve(preference, tags), WidgetLocalization.formatTag(preference, tags))
 }
 
 private fun activityIntent(context: Context, entry: WidgetDay?) = Intent(Intent.ACTION_VIEW).apply {
@@ -80,17 +87,21 @@ private fun activityIntent(context: Context, entry: WidgetDay?) = Intent(Intent.
 private val coverTitle = ColorProvider(Color(0xFFFFFEF7))
 
 @Composable
-private fun TodayCard(day: String, entry: WidgetDay?, intent: Intent) {
+private fun TodayCard(day: String, entry: WidgetDay?, locale: String, formatLocale: String, intent: Intent) {
   val size = widgetCoverSize(LocalSize.current.width.value, LocalSize.current.height.value)
   val large = size == WidgetCoverSize.LARGE
   val compact = size == WidgetCoverSize.SMALL
-  val title = entry?.title ?: WidgetSnapshot.GENERIC_TITLE
+  val title = if (entry == null) WidgetLocalization.text(locale, "native.widget.invitation") else WidgetLocalization.title(locale, entry.sceneId)
+  val date = WidgetDates.parseDay(day)?.let {
+    java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM, java.util.Locale.forLanguageTag(formatLocale))
+      .apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }.format(it)
+  } ?: ""
   val launch = actionStartActivity(intent)
   Box(
     modifier = GlanceModifier.fillMaxSize()
       .background(ImageProvider(WidgetCatalog.cover(entry?.artKey, size)), contentScale = ContentScale.Crop)
       .cornerRadius(20.dp).clickable(launch)
-      .semantics { contentDescription = if (day.isEmpty()) title else "$day，$title" },
+      .semantics { contentDescription = if (day.isEmpty()) title else WidgetLocalization.accessibility(locale, date, title) },
   ) {
     // Native drawable preserves text contrast without tinting the scene's central artwork.
     Box(modifier = GlanceModifier.fillMaxSize()

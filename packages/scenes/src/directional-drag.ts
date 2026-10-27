@@ -1,3 +1,5 @@
+import { bindSceneText } from './scene-localization'
+
 type DirectionalDrag = {
   /** Last sampled move and release, projected onto the instructed direction. */
   along: number
@@ -22,7 +24,7 @@ export function updateDirectionalDragHint(hint: HTMLElement, ready: boolean, fal
   assertSafeCopy(text)
   if (ready) hint.dataset.ready = 'true'
   else delete hint.dataset.ready
-  hint.textContent = text
+  bindSceneText(hint, text)
 }
 
 /** A completed pose must remain completable when the player keeps dragging.

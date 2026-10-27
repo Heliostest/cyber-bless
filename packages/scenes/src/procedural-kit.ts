@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import type { SceneContext } from './contract'
+import { bindSceneAttribute, bindSceneText } from './scene-localization'
 
 /** Shared helpers for the warm C-grade procedural scenes on the island stage (Design A). */
 
@@ -9,8 +10,7 @@ export function setSafeText(
   assertSafeCopy: (t: string) => void,
 ) {
   assertSafeCopy(text)
-  el.textContent = text
-  if (el.classList.contains('scene-bow-tap')) el.setAttribute('aria-label', text)
+  bindSceneText(el, text)
 }
 
 export type StepOverlay = {
@@ -42,7 +42,7 @@ export function createStepOverlay(
   const dotsEl = document.createElement('div')
   dotsEl.className = 'scene-step-dots'
   dotsEl.setAttribute('role', 'list')
-  dotsEl.setAttribute('aria-label', copy.stepsAria)
+  bindSceneAttribute(dotsEl, 'aria-label', copy.stepsAria)
 
   const hintEl = document.createElement('div')
   hintEl.className = 'scene-hint'
@@ -53,7 +53,7 @@ export function createStepOverlay(
   const actionBtn = document.createElement('button')
   actionBtn.type = 'button'
   actionBtn.className = 'scene-bow-tap'
-  actionBtn.title = '辅助操作：也可以直接操作场景里的物品'
+  bindSceneAttribute(actionBtn, 'title', '辅助操作：也可以直接操作场景里的物品')
   setSafeText(actionBtn, copy.action, assertSafeCopy)
 
   overlay.append(hitLayer, titleEl, dotsEl, hintEl, actionBtn)

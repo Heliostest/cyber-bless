@@ -13,6 +13,9 @@ import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import * as Linking from 'expo-linking';
+import { getLocales, getCalendars } from 'expo-localization';
+import { resolveLocale, type LocalePreference } from '@wbr/i18n/locales';
+import nativeCopy from './widget-copy.generated.json';
 import { createProjectedStorage, type HapticStrength } from '@wbr/runtime';
 import { parseWidgetLink, type WidgetNavigationRequest } from '@wbr/core/widgets';
 import { synchronizeWidgets } from './widget-sync';
@@ -30,6 +33,19 @@ import {
 } from "./scene-cache";
 
 const SAVE_KEY = "cyber-bless:personal:v1";
+const preferredLanguages = () => getLocales().map(locale => locale.languageTag);
+const preferredHour12 = () => {
+  const use24 = getCalendars()[0]?.uses24hourClock;
+  return typeof use24 === 'boolean' ? !use24 : undefined;
+};
+function localePreference(raw: string | null): LocalePreference {
+  // Read only a validated preference. Never rewrite a damaged or older save here.
+  try {
+    const value = raw === null ? undefined : JSON.parse(raw);
+    const preference = value?.version === 1 ? value?.settings?.locale : undefined;
+    return preference === 'system' || Object.hasOwn(nativeCopy.native, preference) ? preference : 'system';
+  } catch { return 'system'; }
+}
 export default function App() {
   return (
     <SafeAreaProvider>
@@ -42,6 +58,11 @@ function Shell() {
   const [backRequest, setBackRequest] = useState(0);
   const [generation, setGeneration] = useState(0);
   const [failed, setFailed] = useState(false);
+  const [languages, setLanguages] = useState(preferredLanguages);
+  const [hour12, setHour12] = useState(preferredHour12);
+  const [preference, setPreference] = useState<LocalePreference>('system');
+  const [ready, setReady] = useState(false);
+  const initialRead = useRef<Promise<string | null> | null>(null);
   const canGoBack = useRef(false);
   const [navigationRequests, setNavigationRequests] = useState<WidgetNavigationRequest[]>([]);
   const nextRequest = useRef(0);
@@ -50,10 +71,24 @@ function Shell() {
     write: (raw) => AsyncStorage.setItem(SAVE_KEY, raw),
   }, synchronizeWidgets, () => console.warn('[Widgets] Cache update failed; retrying on the next foreground refresh.')));
   const readSave = useCallback(async () => {
-    return storage.read();
+    const pending = initialRead.current ?? storage.read();
+    initialRead.current = null;
+    const raw = await pending;
+    setPreference(localePreference(raw));
+    return raw;
   }, [storage]);
-  const writeSave = useCallback((raw: string) => {
-    return storage.write(raw);
+  const writeSave = useCallback(async (raw: string) => {
+    await storage.write(raw);
+    setPreference(localePreference(raw));
+  }, [storage]);
+  useEffect(() => {
+    // The DOM consumes this same initial read, avoiding a second bootstrap read.
+    let disposed = false;
+    const pending = storage.read();
+    initialRead.current = pending;
+    void pending.then(raw => { if (!disposed) setPreference(localePreference(raw)); })
+      .catch(() => {}).finally(() => { if (!disposed) setReady(true); });
+    return () => { disposed = true; };
   }, [storage]);
   const onNavigationConsumed = useCallback(async (requestId: number) => {
     setNavigationRequests(old => old.filter(request => request.requestId !== requestId));
@@ -92,7 +127,11 @@ function Shell() {
   useEffect(() => {
     const app = AppState.addEventListener("change", (next) => {
       setActive(next === "active");
-      if (next === 'active') void storage.refreshProjection().catch(() => {});
+      if (next === 'active') {
+        setLanguages(preferredLanguages());
+        setHour12(preferredHour12());
+        void storage.refreshProjection().catch(() => {});
+      }
       else void storage.flushWrites().catch(() => {});
     });
     const back = BackHandler.addEventListener("hardwareBackPress", () => {
@@ -114,10 +153,12 @@ function Shell() {
     canGoBack.current = false;
     setFailed(true);
   };
+  const resolved = resolveLocale(preference, languages).locale;
+  const copy = nativeCopy.native[resolved];
   return (
     <SafeAreaView style={styles.shell}>
       <StatusBar style="dark" />
-      <BlessingDom
+      {ready && <BlessingDom
         key={generation}
         readSave={readSave}
         readContentHistory={readContentHistory}
@@ -134,6 +175,9 @@ function Shell() {
         haptic={haptic}
         onCanGoBack={onCanGoBack}
         active={active}
+        preferredLanguages={languages}
+        localePreference={preference}
+        systemHour12={hour12}
         backRequest={backRequest}
         navigationRequest={navigationRequests[0]}
         onNavigationConsumed={onNavigationConsumed}
@@ -160,11 +204,11 @@ function Shell() {
           onContentProcessDidTerminate: fail,
           ...(Platform.OS === "android" ? { onRenderProcessGone: fail } : {}),
         }}
-      />
+      />}
       {failed && (
         <View style={styles.failure} accessibilityRole="alert">
           <Text style={styles.message}>
-            画面暂时无法打开，已保存的记录仍在设备上。
+            {copy['native.failure.message']}
           </Text>
           <Pressable
             style={styles.retry}
@@ -173,7 +217,7 @@ function Shell() {
               setGeneration((n) => n + 1);
             }}
           >
-            <Text style={styles.retryLabel}>重新打开</Text>
+            <Text style={styles.retryLabel}>{copy['native.failure.retry']}</Text>
           </Pressable>
         </View>
       )}

@@ -1,7 +1,8 @@
+import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
@@ -169,7 +170,7 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
     windowLight.visible = true
     windowLight.geometry.setDrawRange(0, Math.floor(windowLight.geometry.index!.count * windowPath.progress / 3) * 3)
     ui.hintEl.dataset.progress = 'true'
-    setSafeText(ui.hintEl, windowReady(x, y) ? '窗光已描好，松手即可。' : windowPath.progress === 1 ? '窗光已描好，回到暖色点附近松手。' : '已描好 ' + Math.round(windowPath.progress * 100) + '%，沿细线继续到暖色点。', safe)
+    setSafeText(ui.hintEl, windowReady(x, y) ? '窗光已描好，松手即可。' : windowPath.progress === 1 ? '窗光已描好，回到暖色点附近松手。' : sceneTemplate("已描好 {p0}%，沿细线继续到暖色点。", { p0: Math.round(windowPath.progress * 100) }), safe)
     matrices()
   }
   const pointer = createObjectPointer(ui.hitLayer, {

@@ -1,9 +1,22 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { dailyCollectibleId } from "@wbr/core";
+import { dailyCollectibleId, createState } from "@wbr/core";
 import { browserHost, createStore } from "./index";
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+it('shares a validated bootstrap preference with the first browser read and retries storage failures', async () => {
+  const state = createState(); state.settings.locale = 'fr';
+  const raw = JSON.stringify(state), getItem = vi.fn(() => raw);
+  vi.stubGlobal('localStorage', { getItem });
+  const host = browserHost();
+  expect(host.initialLocalePreference).toBe('fr');
+  expect(await host.read()).toBe(raw); expect(getItem).toHaveBeenCalledTimes(1);
+  expect(await host.read()).toBe(raw); expect(getItem).toHaveBeenCalledTimes(2);
+  getItem.mockImplementationOnce(() => { throw Error('blocked'); });
+  const failed = browserHost();
+  await expect(failed.read()).rejects.toThrow('blocked');
+  expect(await failed.read()).toBe(raw);
 });
 
 it("offers haptics only where the browser can vibrate", async () => {

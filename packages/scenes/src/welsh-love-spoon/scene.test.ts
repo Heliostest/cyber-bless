@@ -120,7 +120,7 @@ describe('an optional explicit gift wish', () => {
   })
   it('accepts forty characters only through explicit submission and rejects forty-one', () => {
     const s = mount(2), input = s.overlay.querySelector<HTMLInputElement>('input')!
-    expect(input.maxLength).toBe(40)
+    expect(input.maxLength).toBeGreaterThan(40)
     s.write('心'.repeat(41)); expect(s.progress).toEqual([]); expect(s.saveWish).not.toHaveBeenCalled()
     s.write('心'.repeat(40)); expect(s.progress).toEqual([3]); expect(s.saveWish).toHaveBeenCalledExactlyOnceWith('心'.repeat(40))
   })

@@ -14,13 +14,15 @@
   "dependencies": {
     "@wbr/content": "*",
     "@wbr/core": "*",
+    "@wbr/gestures": "*",
     "@wbr/runtime": "*",
     "@wbr/scene-runtime": "*",
-    "animejs": "^4.5.0",
-    "three": "^0.170.0",
     "@wbr/scenes": "*",
-    "@wbr/gestures": "*",
-    "@wbr/shared": "*"
+    "@wbr/shared": "*",
+    "animejs": "^4.5.0",
+    "react-intl": "12.1.5",
+    "three": "^0.170.0",
+    "@wbr/i18n": "*"
   },
   "peerDependencies": {
     "react": "^19.2.3",

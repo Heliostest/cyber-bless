@@ -6,6 +6,8 @@ import * as Shared from '@wbr/shared'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext } from '../contract'
 import { loadScene } from '../registry'
+import { configureLocale } from '@wbr/i18n'
+import { localizeSceneOverlay } from '../scene-localization'
 
 vi.mock('three', async (importOriginal) => {
   const actual = await importOriginal<typeof import('three')>()
@@ -149,6 +151,23 @@ describe.each(STEPS)('$id object cues', ({ id, kinds }) => {
 })
 
 describe('physical action cues', () => {
+  it('switches the live scene locale without recreating its engine or changing a composing wish draft', async () => {
+    configureLocale('zh-Hans')
+    const s = await mount('celtic-folk-spring', 2)
+    const input = s.overlay.querySelector<HTMLInputElement>('input')!
+    input.value = '👩🏽‍💻写好了'; input.focus(); input.setSelectionRange(2, 3)
+    input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
+    const originalObjects = [...s.scene.children]
+    const start = vi.spyOn(s.instance, 'start'), dispose = vi.spyOn(s.instance, 'dispose')
+    const stop = localizeSceneOverlay(s.overlay)
+    configureLocale('en')
+    expect(s.overlay.querySelector('.scene-title')?.textContent).not.toBe('泉边一念')
+    expect(s.overlay.querySelector('input')).toBe(input); expect(input.value).toBe('👩🏽‍💻写好了')
+    expect(document.activeElement).toBe(input); expect(input.selectionStart).toBe(2)
+    expect(s.scene.children).toEqual(originalObjects); expect(s.progress).not.toHaveBeenCalled()
+    expect(start).not.toHaveBeenCalled(); expect(dispose).not.toHaveBeenCalled()
+    stop(); s.instance.dispose(); configureLocale('zh-Hans')
+  })
   const finishWheel = (s: Awaited<ReturnType<typeof mount>>, id: string) => {
     if (id !== 'tibetan-wheel') return
     expect(s.progress).not.toHaveBeenCalled()
@@ -164,7 +183,7 @@ describe('physical action cues', () => {
     const input = s.overlay.querySelector<HTMLInputElement>('input')!
     input.value = '留作草稿'
     expect(button.hidden).toBe(false)
-    expect(button.textContent).toBe('静看片刻')
+    expect(button.getAttribute('aria-label')).toBe('静看片刻')
     button.click()
     expect(s.progress).not.toHaveBeenCalled()
     active = true
@@ -183,13 +202,13 @@ describe('physical action cues', () => {
     const s = await mount(id, step, { isActive: () => active })
     const button = s.overlay.querySelector<HTMLButtonElement>('.scene-bow-tap')!
     expect(button.hidden).toBe(false)
-    expect(button.getAttribute('aria-label')).toBe(button.textContent)
+    expect(button.getAttribute('aria-label')).toBe(button.querySelector('.scene-helper-action')?.textContent ?? button.textContent)
     button.click()
     expect(s.progress).not.toHaveBeenCalled()
     active = true
     button.click()
     expect(s.progress).toHaveBeenCalledExactlyOnceWith(next)
-    expect(button.getAttribute('aria-label')).toBe(button.textContent)
+    expect(button.getAttribute('aria-label')).toBe(button.querySelector('.scene-helper-action')?.textContent ?? button.textContent)
     s.instance.dispose()
   })
 

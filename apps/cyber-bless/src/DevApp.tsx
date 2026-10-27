@@ -4,13 +4,16 @@ import { About } from "./pages/About";
 import { Playground } from "./pages/Playground";
 import { ScenePage } from "./pages/ScenePage";
 import "./styles.css";
+import { translate as tr } from '@wbr/i18n';
+import { useDeveloperLocale } from './locale';
 export default function DevApp() {
+  useDeveloperLocale();
   return (
     <BrowserRouter basename="/dev">
       <nav className="app-nav">
-        <a href="/">回到 App</a>
-        <Link to="/gallery">旧场景</Link>
-        <Link to="/playground/drag">手势试验</Link>
+        <a href="/">{tr('回到 App')}</a>
+        <Link to="/gallery">{tr('旧场景')}</Link>
+        <Link to="/playground/drag">{tr('手势试验')}</Link>
       </nav>
       <Routes>
         <Route path="/" element={<Gallery />} />

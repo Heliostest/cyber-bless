@@ -1,0 +1,11 @@
+{
+  "native.app.name": "一日一念",
+  "native.failure.message": "画面暂时无法打开，已保存的记录仍在设备上。",
+  "native.failure.retry": "重新打开",
+  "native.widget.name": "今日仪式",
+  "native.widget.description": "为今天留一点温柔",
+  "native.widget.resizeDescription": "轻触卡片进入今日场景，可调整为 2×2、4×2 或 4×4。",
+  "native.widget.invitation": "打开一日一念，看看今天的仪式",
+  "native.widget.subtitle": "为今天，留一点温柔",
+  "native.widget.accessibility": "{date}，{title}"
+}

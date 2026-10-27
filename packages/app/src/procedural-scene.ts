@@ -1,6 +1,6 @@
 import * as Gestures from "@wbr/gestures";
 import * as Shared from "@wbr/shared";
-import { loadScene, type SceneContext } from "@wbr/scenes";
+import { loadScene, localizeSceneOverlay, type SceneContext } from "@wbr/scenes";
 import type { SceneController, SceneEngine } from "@wbr/scene-runtime";
 export type ProceduralContext = {
   progress: number;
@@ -65,11 +65,13 @@ export async function proceduralEngine(
         onVariantChange: context.onVariantChange,
         stage: context.stage,
       });
+      const stopLocale = localizeSceneOverlay(overlay);
       const dispose = () => {
         if (disposed) return;
         disposed = true;
         cancelAnimationFrame(frame);
         canvas.removeEventListener("webglcontextlost", lost);
+        stopLocale();
         instance.dispose();
         host.replaceChildren();
       };

@@ -151,7 +151,7 @@ describe('App scene availability', () => {
   it('keeps widget recommendations in step with the filtered App catalog', () => {
     const raw = JSON.stringify(createState());
     for (let month = 0; month < 12; month++) {
-      const clock = new Date(2026, month, 1, 12), snapshot = createWidgetSnapshot(raw, clock, 'visibility-test');
+      const clock = new Date(2026, month, 1, 12), snapshot = createWidgetSnapshot(raw, clock, 'b'.repeat(64));
       expect(snapshot.days).toHaveLength(7);
       expect(snapshot.days.map(e => e.sceneId)).not.toContain('chinese-suanpan');
       expect(selectWidgetDay(snapshot, clock)?.sceneId).toBe(snapshot.days[0].sceneId);

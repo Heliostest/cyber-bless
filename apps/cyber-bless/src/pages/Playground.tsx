@@ -9,6 +9,8 @@ import {
   type GestureHandle,
 } from '@wbr/gestures'
 import { assertSafeCopy } from '@wbr/shared'
+import { translate as tr, type MessageValues } from '@wbr/i18n'
+import { useDeveloperLocale } from '../locale'
 
 const GESTURES = ['drag', 'tilt', 'spin', 'gyro', 'wishWrite'] as const
 type GestureName = (typeof GESTURES)[number]
@@ -17,19 +19,20 @@ function isGestureName(value: string | undefined): value is GestureName {
   return GESTURES.includes(value as GestureName)
 }
 
+type Status = { source: string; values?: MessageValues }
 function setSafeStatus(
-  setStatus: (text: string) => void,
-  text: string,
+  setStatus: (text: Status) => void,
+  text: string, values?: MessageValues,
 ): void {
   assertSafeCopy(text)
-  setStatus(text)
+  setStatus({ source: text, values })
 }
 
 function createGesture(
   name: GestureName,
-  setStatus: (text: string) => void,
+  setStatus: (text: Status) => void,
 ): GestureHandle {
-  const status = (text: string) => setSafeStatus(setStatus, text)
+  const status = (text: string, values?: MessageValues) => setSafeStatus(setStatus, text, values)
 
   switch (name) {
     case 'drag':
@@ -40,13 +43,13 @@ function createGesture(
       })
     case 'tilt':
       return createTilt({
-        onAngle: (deg) => status(`倾角 ${deg.toFixed(0)}°`),
+        onAngle: (deg) => status('倾角 {angle}°', { angle: Math.round(deg) }),
         onPour: () => status('倾倒触发'),
       })
     case 'spin':
       return createSpin({
-        onAngle: (rad) => status(`转角 ${(rad * (180 / Math.PI)).toFixed(0)}°`),
-        onRevolution: (n) => status(`完成第 ${n} 圈`),
+        onAngle: (rad) => status('转角 {angle}°', { angle: Math.round(rad * 180 / Math.PI) }),
+        onRevolution: (n) => status('完成第 {count} 圈', { count: n }),
       })
     case 'gyro':
       return createGyro({
@@ -63,22 +66,23 @@ function createGesture(
 function hintFor(name: GestureName): string {
   switch (name) {
     case 'drag':
-      return '在画面上按住拖动，松手结束。'
+      return tr('在画面上按住拖动，松手结束。')
     case 'tilt':
-      return '上下拖动模拟倾角；超过阈值触发倾倒。'
+      return tr('上下拖动模拟倾角；超过阈值触发倾倒。')
     case 'spin':
-      return '左右拖动模拟旋转；满一圈有反馈。'
+      return tr('左右拖动模拟旋转；满一圈有反馈。')
     case 'gyro':
-      return '点按画面以授权运动传感器（若需要）；或使用点按回退。'
+      return tr('点按画面以授权运动传感器（若需要）；或使用点按回退。')
     case 'wishWrite':
-      return '在输入框写下短句后提交。'
+      return tr('在输入框写下短句后提交。')
   }
 }
 
 export function Playground() {
+  useDeveloperLocale()
   const { gesture } = useParams<{ gesture: string }>()
   const stageRef = useRef<HTMLDivElement>(null)
-  const [status, setStatus] = useState('就绪')
+  const [status, setStatus] = useState<Status>({ source: '就绪' })
 
   useEffect(() => {
     assertSafeCopy('就绪')
@@ -111,9 +115,9 @@ export function Playground() {
   if (!isGestureName(gesture)) {
     return (
       <main className="page">
-        <h1>未知手势</h1>
-        <p>可用：{GESTURES.join(', ')}</p>
-        <Link to="/playground/drag">回到 drag</Link>
+        <h1>{tr('未知手势')}</h1>
+        <p>{tr('可用：{gestures}', { gestures: GESTURES.join(', ') })}</p>
+        <Link to="/playground/drag">{tr('回到 drag')}</Link>
       </main>
     )
   }
@@ -130,7 +134,7 @@ export function Playground() {
         </div>
         <div className="hint">{hintFor(gesture)}</div>
         <div className="status" aria-live="polite">
-          {status}
+          {tr(status.source, status.values)}
         </div>
       </div>
       <div

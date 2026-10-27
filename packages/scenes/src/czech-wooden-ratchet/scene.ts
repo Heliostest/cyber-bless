@@ -1,6 +1,7 @@
+import { sceneJoin } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
@@ -81,7 +82,7 @@ export function createCzechWoodenRatchet(ctx: SceneContext): SceneInstance {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, ACTIONS[phase]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : at === 3 ? HINTS[3]! : readyToFinish ? HINTS[phase]! + ' 可以继续操作，想收尾时点「结束仪式」。' : HINTS[phase]!, safe)
+    setSafeText(ui.actionBtn, ACTIONS[phase]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : at === 3 ? HINTS[3]! : readyToFinish ? sceneJoin(HINTS[phase]!, ' 可以继续操作，想收尾时点「结束仪式」。') : HINTS[phase]!, safe)
     finishBtn.hidden = !readyToFinish || at === 3; finishBtn.disabled = !inputActive() || !!motion || controlsBusy || at === 3; finishBtn.setAttribute('aria-disabled', String(finishBtn.disabled))
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }

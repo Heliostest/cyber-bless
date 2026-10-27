@@ -1,0 +1,11 @@
+{
+  "native.app.name": "하루 한 생각",
+  "native.failure.message": "화면을 열 수 없습니다. 저장한 기록은 이 기기에 그대로 있습니다.",
+  "native.failure.retry": "다시 열기",
+  "native.widget.name": "오늘의 작은 의식",
+  "native.widget.description": "오늘을 위한 작은 다정함",
+  "native.widget.resizeDescription": "카드를 누르면 오늘의 장면이 열립니다. 2×2, 4×2 또는 4×4로 크기를 조절할 수 있습니다.",
+  "native.widget.invitation": "하루 한 생각을 열어 오늘의 작은 의식을 만나 보세요",
+  "native.widget.subtitle": "오늘을 위한 작은 다정함",
+  "native.widget.accessibility": "{date}, {title}"
+}

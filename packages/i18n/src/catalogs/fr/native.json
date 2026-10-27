@@ -1,0 +1,11 @@
+{
+  "native.app.name": "Un jour, une pensée",
+  "native.failure.message": "Impossible d'ouvrir la vue. Vos enregistrements restent sur cet appareil.",
+  "native.failure.retry": "Rouvrir",
+  "native.widget.name": "Rituel du jour",
+  "native.widget.description": "Un peu de douceur pour aujourd'hui",
+  "native.widget.resizeDescription": "Touchez la carte pour ouvrir la scène du jour. Formats disponibles : 2×2, 4×2 ou 4×4.",
+  "native.widget.invitation": "Ouvrez Un jour, une pensée pour découvrir le rituel du jour",
+  "native.widget.subtitle": "Un peu de douceur pour aujourd'hui",
+  "native.widget.accessibility": "{date}, {title}"
+}

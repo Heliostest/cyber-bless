@@ -1,0 +1,5 @@
+<resources>
+  <string name="blessing_widget_name">今日儀式</string>
+  <string name="blessing_widget_description">輕觸卡片進入今日場景，可調整為 2×2、4×2 或 4×4。</string>
+  <string name="blessing_widget_generic_title">開啟一日一念，看看今天的儀式</string>
+</resources>

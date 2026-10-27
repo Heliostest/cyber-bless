@@ -62,7 +62,7 @@ describe('first-play opening', () => {
     expect(scenes).not.toContain(next.id);
     expect(openingExclusions(s.opening, '2026-10-20')).toEqual([]);
     const clock = new Date(`${day}T12:00:00`);
-    const snapshot = createWidgetSnapshot(JSON.stringify(s), clock, 'opening-test');
+    const snapshot = createWidgetSnapshot(JSON.stringify(s), clock, 'a'.repeat(64));
     expect(selectWidgetDay(snapshot, clock)?.sceneId).toBe(next.id);
     expect(resolveWidgetScene({ day, sceneId: next.id }, day, builtInScenes, exclusions)?.id).toBe(next.id);
   });

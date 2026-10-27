@@ -145,6 +145,22 @@ describe("RitualNarrativeBlurb", () => {
     expect(ui.host.querySelector(".ritual-narrative-body .ritual-narrative-copy")).not.toBeNull();
   });
 
+  it("keeps a large translated trigger and the open reading panel inside a 320px viewport", () => {
+    vi.stubGlobal("innerHeight", 568); vi.stubGlobal("innerWidth", 320);
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function () {
+      const trigger = this.classList.contains("ritual-narrative-toggle");
+      const height = trigger ? 86 : this.classList.contains("ritual-narrative-copy") ? 900 : 48;
+      const width = trigger ? 460 : 294;
+      return { left: 13, top: 60, right: 13 + width, bottom: 60 + height, width, height, x: 13, y: 60, toJSON() {} };
+    });
+    const ui = mount(); clickOn(ui.button);
+    const shell = ui.host.querySelector<HTMLElement>(".ritual-narrative")!;
+    expect(parseFloat(shell.style.getPropertyValue("--ritual-narrative-closed-width"))).toBeLessThanOrEqual(294);
+    expect(parseFloat(shell.style.getPropertyValue("--ritual-narrative-expanded-width"))).toBeLessThanOrEqual(294);
+    expect(parseFloat(shell.style.getPropertyValue("--ritual-narrative-closed-height"))).toBe(90);
+    expect(parseFloat(shell.style.getPropertyValue("--ritual-narrative-expanded-height"))).toBeLessThanOrEqual(496);
+  });
+
   it("keeps keyboard focus inside the open shell and releases scroll locking on unmount", () => {
     const originalOverflow = document.body.style.overflow;
     const ui = mount(); clickOn(ui.button); const body = ui.host.querySelector<HTMLElement>(".ritual-narrative-body")!;

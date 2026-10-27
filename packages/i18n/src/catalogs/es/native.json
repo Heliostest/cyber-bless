@@ -1,0 +1,11 @@
+{
+  "native.app.name": "Un día, un pensamiento",
+  "native.failure.message": "No se pudo abrir la vista. Tus registros guardados siguen en este dispositivo.",
+  "native.failure.retry": "Volver a abrir",
+  "native.widget.name": "Ritual de hoy",
+  "native.widget.description": "Un poco de cariño para hoy",
+  "native.widget.resizeDescription": "Toca la tarjeta para abrir la escena de hoy. Ajusta el tamaño a 2×2, 4×2 o 4×4.",
+  "native.widget.invitation": "Abre Un día, un pensamiento para ver el ritual de hoy",
+  "native.widget.subtitle": "Un poco de cariño para hoy",
+  "native.widget.accessibility": "{date}, {title}"
+}

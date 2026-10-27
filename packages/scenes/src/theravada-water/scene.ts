@@ -1,6 +1,7 @@
+import { bindSceneAttribute, bindSceneText } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import { createStylizedWater } from '@wbr/scene-runtime/stylized-water'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -33,8 +34,8 @@ function setSafeText(
   assertSafeCopy: (t: string) => void,
 ) {
   assertSafeCopy(text)
-  el.textContent = text
-  if (el.classList.contains('scene-bow-tap')) el.setAttribute('aria-label', text)
+  bindSceneText(el, text)
+  if (el.classList.contains('scene-bow-tap')) bindSceneAttribute(el, 'aria-label', text)
 }
 
 export function createTheravadaWater(ctx: SceneContext): SceneInstance {
@@ -70,7 +71,7 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
   const dotsEl = document.createElement('div')
   dotsEl.className = 'scene-step-dots'
   dotsEl.setAttribute('role', 'list')
-  dotsEl.setAttribute('aria-label', COPY.stepsAria)
+  bindSceneAttribute(dotsEl, 'aria-label', COPY.stepsAria)
 
   const hintEl = document.createElement('div')
   hintEl.className = 'scene-hint'

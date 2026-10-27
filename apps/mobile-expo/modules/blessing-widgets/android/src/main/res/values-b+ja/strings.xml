@@ -1,0 +1,5 @@
+<resources>
+  <string name="blessing_widget_name">今日のひととき</string>
+  <string name="blessing_widget_description">カードをタップすると今日のシーンが開きます。2×2、4×2、4×4に変更できます。</string>
+  <string name="blessing_widget_generic_title">一日一念を開いて、今日のひとときを</string>
+</resources>

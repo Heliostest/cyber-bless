@@ -1,7 +1,8 @@
+import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { createPathSweep } from '../path-sweep'
@@ -186,7 +187,7 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
     spoon.position.copy(dragPoint)
     beads.forEach((bead, i) => (bead.material as THREE.MeshStandardMaterial).color.setHex(i < nextBead - 1 ? 0x79ac82 : 0xf1dec2))
     ui.hintEl.dataset.progress = 'true'
-    setSafeText(ui.hintEl, stirReady(x, y) ? '弧线已搅完，松手即可。' : stirPath.progress === 1 ? '弧线已搅完，回到最后一处圆点附近松手。' : '已沿弧线前进 ' + Math.round(stirPath.progress * 100) + '%，继续经过下一处浅色圆点。', shared.assertSafeCopy)
+    setSafeText(ui.hintEl, stirReady(x, y) ? '弧线已搅完，松手即可。' : stirPath.progress === 1 ? '弧线已搅完，回到最后一处圆点附近松手。' : sceneTemplate("已沿弧线前进 {p0}%，继续经过下一处浅色圆点。", { p0: Math.round(stirPath.progress * 100) }), shared.assertSafeCopy)
     world.updateMatrixWorld(true)
   }
   const pointer = createObjectPointer(ui.hitLayer, {

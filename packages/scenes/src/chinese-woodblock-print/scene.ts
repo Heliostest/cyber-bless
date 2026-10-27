@@ -1,7 +1,8 @@
+import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
@@ -199,7 +200,7 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
       const coverage = Math.min(99, Math.floor(100 * Math.min(1, rubTravel / .75, Math.max(0, maxRubX - minRubX) / .45)))
       setSafeText(ui.hintEl, rubComplete()
         ? lastContact ? '刷印已到位，可以松手揭纸。' : '刷印已覆盖，请把棕擦移回纸面。'
-        : `刷印 ${coverage}%，抬手后也可以接着擦。`, safe)
+        : sceneTemplate("刷印 {p0}%，抬手后也可以接着擦。", { p0: coverage }), safe)
     }
   }
   function callbackBoundary(work: () => void) { locked = true; sync(); try { work() } finally { locked = false; if (!disposed) sync() } }

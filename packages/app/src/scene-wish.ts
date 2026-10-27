@@ -1,4 +1,5 @@
 import { WISH_INTENTION_MAX, WISH_TITLE_MAX, type Action } from "@wbr/core";
+import { sliceGraphemes } from '@wbr/i18n';
 
 /**
  * A line written in a scene's wish box, as a new 心愿: never added to an
@@ -14,12 +15,12 @@ export function sceneWish(
 ): Extract<Action, { type: "wish.create" }> | undefined {
   const line = text.trim();
   if (!line) return undefined;
-  const title = line.slice(0, WISH_TITLE_MAX).trim();
+  const title = sliceGraphemes(line, 0, WISH_TITLE_MAX).trim();
   return {
     type: "wish.create",
     id,
     title,
-    intention: title === line ? "" : line.slice(0, WISH_INTENTION_MAX),
+    intention: title === line ? "" : sliceGraphemes(line, 0, WISH_INTENTION_MAX),
     category: "life",
     sourceSceneId: sceneId,
     at,

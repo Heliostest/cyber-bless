@@ -1,0 +1,11 @@
+{
+  "native.app.name": "Um dia, um pensamento",
+  "native.failure.message": "Não foi possível abrir a imagem. Os registos guardados continuam neste dispositivo.",
+  "native.failure.retry": "Abrir novamente",
+  "native.widget.name": "Ritual de hoje",
+  "native.widget.description": "Um pouco de carinho para hoje",
+  "native.widget.resizeDescription": "Toque no cartão para abrir a cena de hoje. Ajuste o tamanho para 2×2, 4×2 ou 4×4.",
+  "native.widget.invitation": "Abra Um dia, um pensamento para ver o ritual de hoje",
+  "native.widget.subtitle": "Um pouco de carinho para hoje",
+  "native.widget.accessibility": "{date}, {title}"
+}

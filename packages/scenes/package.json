@@ -15,7 +15,8 @@
     "@wbr/scene-runtime": "*",
     "@wbr/gestures": "*",
     "@wbr/shared": "*",
-    "three": "^0.170.0"
+    "three": "^0.170.0",
+    "@wbr/i18n": "*"
   },
   "devDependencies": {
     "@types/three": "^0.170.0",

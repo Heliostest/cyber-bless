@@ -107,7 +107,7 @@ describe('clootie cloth checkpoints', () => {
   it('dips, ties and releases once through keyboard buttons without saving a wish', () => {
     const s = mount()
     for (const [idx, action] of ['浸一下布', '系到枝上', '松手静看'].entries()) {
-      expect(s.button.textContent).toBe(action)
+      expect(s.button.getAttribute('aria-label')).toBe(action)
       s.button.click()
       s.button.click()
       s.run()

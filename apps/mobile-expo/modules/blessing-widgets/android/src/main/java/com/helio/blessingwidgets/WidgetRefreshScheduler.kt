@@ -87,6 +87,7 @@ class WidgetRefreshWorker(context: Context, parameters: WorkerParameters) : Coro
 class WidgetClockReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     if (intent.action in setOf(Intent.ACTION_TIME_CHANGED, Intent.ACTION_TIMEZONE_CHANGED,
+      Intent.ACTION_LOCALE_CHANGED,
       Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED)) {
       WidgetRefreshScheduler.requestRefresh(context.applicationContext)
     }

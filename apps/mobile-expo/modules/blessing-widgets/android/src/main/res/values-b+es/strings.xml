@@ -1,0 +1,5 @@
+<resources>
+  <string name="blessing_widget_name">Ritual de hoy</string>
+  <string name="blessing_widget_description">Toca la tarjeta para abrir la escena de hoy. Ajusta el tamaño a 2×2, 4×2 o 4×4.</string>
+  <string name="blessing_widget_generic_title">Abre Un día, un pensamiento para ver el ritual de hoy</string>
+</resources>

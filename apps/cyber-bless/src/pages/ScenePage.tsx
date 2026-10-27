@@ -2,14 +2,17 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
-import { loadScene, type SceneInstance } from '@wbr/scenes'
+import { loadScene, localizeSceneOverlay, sceneRegistry, type SceneInstance } from '@wbr/scenes'
 import { SceneComplete } from './SceneComplete'
+import { translate as tr, translateScene } from '@wbr/i18n'
+import { useDeveloperLocale } from '../locale'
 
 const UNAVAILABLE = '场景暂不可用'
 
 Shared.assertSafeCopy(UNAVAILABLE)
 
 export function ScenePage() {
+  useDeveloperLocale()
   const { sceneId } = useParams<{ sceneId: string }>()
   const wrapRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
@@ -31,6 +34,7 @@ export function ScenePage() {
     let cancelled = false
     let raf = 0
     let instance: SceneInstance | null = null
+    let stopLocale = () => {}
 
     const canvas = document.createElement('canvas')
     canvas.className = 'scene-canvas'
@@ -44,6 +48,7 @@ export function ScenePage() {
       cancelAnimationFrame(raf)
       raf = 0
       overlay.removeEventListener('scene:complete', onComplete)
+      stopLocale(); stopLocale = () => {}
       instance?.dispose()
       instance = null
       setComplete(true)
@@ -60,6 +65,7 @@ export function ScenePage() {
           gestures: Gestures,
           shared: Shared,
         })
+        stopLocale = localizeSceneOverlay(overlay)
         instance.start()
 
         let last = performance.now()
@@ -81,6 +87,7 @@ export function ScenePage() {
       cancelled = true
       cancelAnimationFrame(raf)
       overlay.removeEventListener('scene:complete', onComplete)
+      stopLocale(); stopLocale = () => {}
       instance?.dispose()
       instance = null
       wrap.replaceChildren()
@@ -90,8 +97,8 @@ export function ScenePage() {
   if (!sceneId) {
     return (
       <main className="page">
-        <h1>未知场景</h1>
-        <Link to="/gallery">回廊</Link>
+        <h1>{tr('未知场景')}</h1>
+        <Link to="/gallery">{tr('回廊')}</Link>
       </main>
     )
   }
@@ -99,15 +106,16 @@ export function ScenePage() {
   return (
     <div className="scene-page">
       <div className="scene-topbar">
-        <Link to="/gallery">退出</Link>
+        <h1>{translateScene(sceneRegistry.find(entry => entry.id === sceneId)?.title ?? sceneId)}</h1>
+        <Link to="/gallery">{tr('退出')}</Link>
       </div>
       {error ? (
         <div className="scene-error" role="alert">
-          <p>{error}</p>
-          <Link to="/gallery">回廊</Link>
+          <p>{tr(error)}</p>
+          <Link to="/gallery">{tr('回廊')}</Link>
         </div>
       ) : null}
-      <div ref={wrapRef} className="scene-stage" hidden={Boolean(error) || complete} />
+      <div ref={wrapRef} className="scene-stage library-scene-stage" data-scene={sceneId} hidden={Boolean(error) || complete} />
       {complete ? <SceneComplete onRetry={onRetry} /> : null}
     </div>
   )

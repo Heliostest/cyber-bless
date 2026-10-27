@@ -1,7 +1,8 @@
+import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
@@ -164,7 +165,7 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
         winding(windPath.progress)
         beads.forEach((bead, i) => (bead.material as THREE.MeshStandardMaterial).color.setHex(i < nextBead - 1 ? 0x79ac82 : 0xf2dfbb))
         ui.hintEl.dataset.progress = 'true'
-        setSafeText(ui.hintEl, windReady(x, y) ? '红绳已绕好，松手即可。' : windPath.progress === 1 ? '红绳已绕好，回到最后一处圆点附近松手。' : '已绕好 ' + Math.round(windPath.progress * 100) + '%，沿浅色圆点继续。', safe)
+        setSafeText(ui.hintEl, windReady(x, y) ? '红绳已绕好，松手即可。' : windPath.progress === 1 ? '红绳已绕好，回到最后一处圆点附近松手。' : sceneTemplate("已绕好 {p0}%，沿浅色圆点继续。", { p0: Math.round(windPath.progress * 100) }), safe)
         tip.position.copy(dragPoint); matrices()
       } else if (checkpoint === 1 && ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) {
         claspHead.position.copy(dragPoint).add(offset)

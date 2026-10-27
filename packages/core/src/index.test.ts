@@ -333,7 +333,7 @@ describe("a wish-type keepsake spent on a wish (collectible.spend)", () => {
       at: later,
     });
     expect(s.wishes[0].notes).toEqual([
-      { id: `vessel:${vessel}`, text: "为这个心愿，短册系竹", at: later },
+      { id: `vessel:${vessel}`, text: "为这个心愿，短册系竹", at: later, system: { type: 'scene', sceneId: 'tanzaku-tanabata' } },
     ]);
     expect(s.collectibles[0]).toMatchObject({ spentAt: later, wishId: "w1" });
     expect(hasReturnRitual(s, s.wishes[0])).toBe(true);
@@ -496,7 +496,7 @@ describe("a ritual walked as its scene (ritual.scene)", () => {
       },
     ]);
     expect(s.wishes[0].notes).toEqual([
-      { id: "ritual:scene-visit", text: "为这个心愿，折一只纸鹤", at: later },
+      { id: "ritual:scene-visit", text: "为这个心愿，折一只纸鹤", at: later, system: { type: 'ritual', ritual: 'crane' } },
     ]);
     expect(s.ledger).toEqual([]);
     expect(s.collectibles).toEqual([]);

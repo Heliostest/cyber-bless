@@ -1,7 +1,8 @@
 import * as THREE from 'three'
+import { graphemeLength } from '@wbr/i18n'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
-import { addInteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { createPosePlacement } from '../pose-placement'
@@ -159,7 +160,7 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || step !== 2) return
-    const line = text.trim(); if (line.length > 40) return
+    const line = text.trim(); if (graphemeLength(line) > 40) return
     step = 3; sync()
     if (line && !ctx.returning) ctx.saveWish?.(line)
     ctx.onProgress?.(3); overlay.dispatchEvent(new CustomEvent('scene:complete',{ bubbles:true }))

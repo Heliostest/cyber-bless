@@ -106,6 +106,10 @@ class WidgetSnapshotTest {
           .put("deepLink", "cyber-bless://widget/today?v=1&day=${entry.getString("day")}&scene=$id")
       }
       val selected = WidgetSnapshot.parse(json.toString())?.select("2026-10-11")
+      if (id in WidgetCatalog.hiddenSceneIds) {
+        assertNull(selected)
+        continue
+      }
       assertNotNull("Missing native whitelist metadata for $id", selected)
       assertEquals(id, selected!!.sceneId)
     }
@@ -165,5 +169,49 @@ class WidgetSnapshotTest {
     assertEquals(23 * 60 * 60 * 1000L, WidgetDates.untilNextMidnight(beforeSpringForward, zone))
     val beforeFallBack = epoch("2026-11-01T04:00:00Z")
     assertEquals(25 * 60 * 60 * 1000L, WidgetDates.untilNextMidnight(beforeFallBack, zone))
+  }
+
+  private fun snapshotV2(): JSONObject {
+    val json = snapshot().put("schemaVersion", 2).put("localePreference", "ja")
+      .put("copyRevision", WidgetLocalization.COPY_REVISION)
+    val days = json.getJSONArray("days")
+    for (index in 0 until days.length()) {
+      val day = days.getJSONObject(index)
+      val id = WidgetLocalization.dailyScene(day.getString("day"))!!
+      day.remove("title")
+      day.put("sceneId", id).put("artKey", id).put("category", WidgetCatalog.scenes.getValue(id).category)
+        .put("deepLink", "cyber-bless://widget/today?v=1&day=${day.getString("day")}&scene=$id")
+    }
+    return json
+  }
+
+  @Test fun v2UsesOnlyPublicIdsAndRetainsManualLanguage() {
+    val parsed = WidgetSnapshot.parse(snapshotV2().toString())!!
+    assertEquals("ja", parsed.localePreference)
+    assertEquals(2, parsed.schemaVersion)
+    assertFalse(JSONObject(parsed.toJson()).getJSONArray("days").getJSONObject(0).has("title"))
+    assertNotNull(WidgetSnapshot.parse(parsed.toJson()))
+    assertNull(WidgetSnapshot.parse(snapshotV2().put("localePreference", "private").toString()))
+    assertNull(WidgetSnapshot.parse(snapshotV2().put("copyRevision", "stale").toString()))
+    val privateTitle = snapshotV2()
+    privateTitle.getJSONArray("days").getJSONObject(0).put("title", "private title")
+    assertNull(WidgetSnapshot.parse(privateTitle.toString()))
+    val wrongChoice = snapshotV2()
+    wrongChoice.getJSONArray("days").getJSONObject(0).put("sceneId", "woodfish").put("artKey", "woodfish")
+      .put("category", "blessing").put("deepLink", "cyber-bless://widget/today?v=1&day=2026-10-11&scene=woodfish")
+    if (WidgetLocalization.dailyScene("2026-10-11") != "woodfish") assertNull(WidgetSnapshot.parse(wrongChoice.toString()))
+  }
+
+  @Test fun resolvesAllNativeLanguagesWithOrderedScriptAwareFallback() {
+    for (locale in WidgetLocalization.supported) assertEquals(locale, WidgetLocalization.resolve(locale, listOf("fr")))
+    assertEquals("ja", WidgetLocalization.resolve("system", listOf("de-DE", "ja-JP")))
+    assertEquals("zh-Hans", WidgetLocalization.resolve("system", listOf("zh-Hans-TW")))
+    assertEquals("zh-Hant", WidgetLocalization.resolve("system", listOf("zh-Hant-CN")))
+    assertEquals("zh-Hant", WidgetLocalization.resolve("system", listOf("zh-HK")))
+    assertEquals("pt", WidgetLocalization.resolve("system", listOf("pt-BR")))
+    assertEquals("en", WidgetLocalization.resolve("system", listOf("invalid_!", "de-DE")))
+    assertEquals("en-GB", WidgetLocalization.formatTag("system", listOf("de-DE", "en-GB")))
+    assertEquals("pt-BR", WidgetLocalization.formatTag("system", listOf("pt-BR")))
+    assertEquals("ja", WidgetLocalization.formatTag("ja", listOf("pt-BR")))
   }
 }

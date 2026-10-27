@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { getLocale, subscribeLocale, translate, translateScene } from "@wbr/i18n";
 import { useApp } from "./context";
 import { builtInScenes } from "./scene-library";
 
 const MORPH_MS = 420;
-const CLOSED_HEIGHT = 48;
-type Geometry = { closedWidth: number; expandedWidth: number; expandedHeight: number };
+type Geometry = { closedWidth: number; closedHeight: number; expandedWidth: number; expandedHeight: number };
 
 export function RitualNarrativeBlurb({ sceneId, completion }: { sceneId: string; completion?: string }) {
+  const locale = useSyncExternalStore(subscribeLocale, getLocale, getLocale);
   const app = useApp();
   const scene = builtInScenes.find((entry) => entry.id === sceneId);
-  const narrative = scene?.narrative?.trim();
-  const label = `${scene?.title}的介绍`;
+  const narrative = scene?.narrative ? translateScene(scene.narrative).trim() : undefined;
+  const label = translate("{title}的介绍", { title: scene ? translateScene(scene.title) : "" });
   const bodyId = useId();
   const header = useRef<HTMLDivElement>(null), anchor = useRef<HTMLDivElement>(null);
   const shell = useRef<HTMLDivElement>(null), button = useRef<HTMLButtonElement>(null);
@@ -46,27 +47,37 @@ export function RitualNarrativeBlurb({ sceneId, completion }: { sceneId: string;
       const rect = anchor.current.getBoundingClientRect(), viewport = window.visualViewport;
       const width = viewport?.width ?? window.innerWidth;
       const bottom = (viewport?.offsetTop ?? 0) + (viewport?.height ?? window.innerHeight);
-      const closedWidth = Math.ceil(button.current.getBoundingClientRect().width || 166) + 4;
       const availableWidth = header.current?.getBoundingClientRect().width || width - rect.left - 16;
-      const expandedWidth = Math.max(closedWidth, Math.min(430, availableWidth, width - rect.left - 12));
+      const right = (viewport?.offsetLeft ?? 0) + width;
+      const expandedWidth = Math.max(1, Math.floor(Math.min(430, availableWidth, right - rect.left - 12)));
       // Final text wrapping is independent of the changing shell: text never stretches.
       shell.current.style.setProperty("--ritual-narrative-expanded-width", `${expandedWidth}px`);
+      shell.current.style.setProperty("--ritual-narrative-limit-width", `${expandedWidth}px`);
+      const trigger = button.current.getBoundingClientRect();
+      const closedWidth = Math.min(expandedWidth, Math.ceil(trigger.width || 166) + 4);
+      const closedHeight = Math.ceil(Math.max(44, trigger.height)) + 4;
       const naturalHeight = Math.max(copy.current.scrollHeight, copy.current.getBoundingClientRect().height);
-      const availableHeight = Math.max(CLOSED_HEIGHT + 44, bottom - rect.top - 12);
-      const expandedHeight = Math.ceil(Math.min(CLOSED_HEIGHT + naturalHeight + 32, availableHeight));
-      const next = { closedWidth, expandedWidth, expandedHeight };
+      const availableHeight = Math.max(closedHeight, bottom - rect.top - 12);
+      const expandedHeight = Math.ceil(Math.min(closedHeight + naturalHeight + 32, availableHeight));
+      const next = { closedWidth, closedHeight, expandedWidth, expandedHeight };
       setGeometry(previous => previous && Object.keys(next).every(key => previous[key as keyof Geometry] === next[key as keyof Geometry]) ? previous : next);
     };
     measure();
     const observer = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : undefined;
     if (header.current) observer?.observe(header.current);
     if (copy.current) observer?.observe(copy.current);
+    if (button.current) observer?.observe(button.current);
     window.addEventListener("resize", measure); window.visualViewport?.addEventListener("resize", measure);
+    document.fonts?.addEventListener("loadingdone", measure);
+    let disposed = false;
+    document.fonts?.ready?.then(() => { if (!disposed) measure(); });
     return () => {
+      disposed = true;
       observer?.disconnect(); window.removeEventListener("resize", measure);
       window.visualViewport?.removeEventListener("resize", measure);
+      document.fonts?.removeEventListener("loadingdone", measure);
     };
-  }, [narrative]);
+  }, [narrative, locale]);
 
   useLayoutEffect(() => { if (open) body.current?.focus({ preventScroll: true }); }, [open]);
 
@@ -134,11 +145,13 @@ export function RitualNarrativeBlurb({ sceneId, completion }: { sceneId: string;
   if (!narrative && !completion) return null;
   const size = geometry ? {
     "--ritual-narrative-closed-width": `${geometry.closedWidth}px`,
+    "--ritual-narrative-closed-height": `${geometry.closedHeight}px`,
+    "--ritual-narrative-limit-width": `${geometry.expandedWidth}px`,
     "--ritual-narrative-expanded-width": `${geometry.expandedWidth}px`,
     "--ritual-narrative-expanded-height": `${geometry.expandedHeight}px`,
   } as CSSProperties : undefined;
   return (
-    <div ref={header} className="ritual-narrative-header" data-narrative-present={present || undefined}>
+    <div ref={header} className="ritual-narrative-header" style={size} data-narrative-present={present || undefined}>
       {narrative && <div className="ritual-narrative-anchor" ref={anchor}>
         {present && <div className="ritual-narrative-backdrop" aria-hidden="true" />}
         <div ref={shell} className="ritual-narrative ritual-narrative-panel" data-open={open} data-reduced-motion={reducedMotion || undefined}
@@ -150,7 +163,7 @@ export function RitualNarrativeBlurb({ sceneId, completion }: { sceneId: string;
             aria-expanded={open} aria-controls={bodyId} onClick={() => {
               if (openNow.current) close();
               else { openNow.current = true; setPresent(true); setOpen(true); }
-            }}><span className="ritual-narrative-chevron" aria-hidden="true" /><span>了解这个仪式</span></button>
+            }}><span className="ritual-narrative-chevron" aria-hidden="true" /><span>{translate("了解这个仪式")}</span></button>
           <div ref={body} id={bodyId} className="ritual-narrative-body" role="region" aria-label={label}
             aria-hidden={!open} inert={!open} tabIndex={0}>
             <div ref={copy} className="ritual-narrative-copy">

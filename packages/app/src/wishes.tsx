@@ -1,13 +1,14 @@
 import { useState, type FormEvent } from "react";
-import { hasReturnRitual, type ReturnMethod, type WishCategory } from "@wbr/core";
+import { hasReturnRitual, type ReturnMethod } from "@wbr/core";
 import { Art, Icon } from "./art";
 import { useAutoGrow } from "./auto-grow";
 import { formatDate, now, uid, useApp } from "./context";
 import { Empty } from "./pages";
-import { useOpenScene, useSceneLibrary } from "./scene-library";
+import { builtInScenes, useOpenScene, useSceneLibrary } from "./scene-library";
 import { SceneBadge } from "./scene-icons";
 import { FULFILL_VESSEL_COPY, usableVessels } from "./vessels";
 import { PageHead } from "./page-heading";
+import { WishRitualPicker } from "./wish-ritual-picker";
 
 function ReturnChoices({
   value,
@@ -52,97 +53,23 @@ function ReturnChoices({
   );
 }
 export function NewWish() {
-  const { go, dispatch } = useApp();
-  const [title, setTitle] = useState("");
-  const titleField = useAutoGrow(title);
-  const [category, setCategory] = useState<WishCategory>("work");
-  const [method, setMethod] = useState<ReturnMethod>("kindness");
-  function submit(e: FormEvent) {
-    e.preventDefault();
-    const id = uid();
-    if (
-      dispatch({
-        type: "wish.create",
-        id,
-        title,
-        intention: "",
-        category,
-        returnMethod: method,
-        at: now(),
-      })
-    )
-      go({ page: "wish", id });
-  }
   return (
     <div className="new-wish-page">
-      <PageHead title="许个小心愿" eyebrow="把期待，轻轻放在这里。" />
-      <Art kind="lantern" variant="wish" />
-      <form onSubmit={submit}>
-        <section className="form-card">
-          <div className="field-heading">
-            <label htmlFor="wish-title">我的心愿</label>
-            <span>{title.length} / 60</span>
-          </div>
-          <textarea
-            ref={titleField}
-            id="wish-title"
-            placeholder="希望这次面试顺利"
-            rows={2}
-            maxLength={60}
-            required
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <fieldset className="category-chips">
-            <legend className="sr-only">心愿分类</legend>
-            {(
-              [
-                ["study", "学业"],
-                ["work", "工作"],
-                ["life", "生活"],
-              ] as const
-            ).map(([key, label]) => (
-              <label key={key} className={category === key ? "selected" : ""}>
-                <input
-                  type="radio"
-                  name="category"
-                  checked={category === key}
-                  onChange={() => setCategory(key)}
-                />
-                <Icon name={key === "life" ? "leaf" : key} />
-                <span>{label}</span>
-              </label>
-            ))}
-          </fieldset>
-        </section>
-        <section className="form-card return-plan">
-          <h2>实现后，我想…</h2>
-          <ReturnChoices value={method} onChange={setMethod} />
-          <p className="quiet centered">不设期限，慢慢来。</p>
-          {/* A fact, not an option: a flat note, not a boxed row. */}
-          <p className="privacy-note">
-            <Icon name="lock" /> 仅自己可见
-          </p>
-        </section>
-        <button
-          className="button primary full"
-          type="submit"
-          disabled={!title.trim()}
-        >
-          点亮心愿灯
-        </button>
-      </form>
+      <PageHead title="选一个小仪式" eyebrow="亲手做完，再记下此刻的心愿。" />
+      <WishRitualPicker />
+      <p className="privacy-note">心愿仅保存在这台设备上。</p>
     </div>
   );
 }
 export function WishDetail({ id }: { id: string }) {
   const { state, go, dispatch } = useApp();
+  const { entries } = useSceneLibrary();
   const wish = state.wishes.find((w) => w.id === id);
   const [showAll, setShowAll] = useState(false);
   if (!wish)
     return (
       <Empty
-        title="这盏心愿灯暂时不在这里"
+        title="暂时没找到这个心愿"
         body="回到心愿页看看吧。"
         action="我的心愿"
         onClick={() => go({ page: "wishes" })}
@@ -150,6 +77,11 @@ export function WishDetail({ id }: { id: string }) {
     );
   const latest = [...wish.notes].reverse();
   const method = wish.returnMethod ?? "kindness";
+  const source = wish.sourceSceneId
+    ? entries.find(e => e.id === wish.sourceSceneId) ??
+      state.sceneRecords.find(e => e.id === wish.sourceSceneId) ??
+      builtInScenes.find(e => e.id === wish.sourceSceneId)
+    : undefined;
   return (
     <div className="wish-detail-page">
       <PageHead title="我的心愿" />
@@ -165,20 +97,16 @@ export function WishDetail({ id }: { id: string }) {
               ? "心愿已实现"
               : "心愿已如愿"}
       </span>
-      <Art
-        kind={wish.status === "fulfilled" ? "badge" : "lantern"}
-        variant={wish.status === "fulfilled" ? "default" : "wish-detail"}
-      />
       <h2 className="wish-title">{wish.title}</h2>
       <p className="wish-meta">
         <Icon name="lock" />
         {formatDate(wish.createdAt)}许下 · 仅自己可见
       </p>
+      {source && <p className="wish-source">记于「{source.title}」</p>}
       {wish.intention.trim() && (
         <section className="form-card effort-card">
           <h2>和自己做个小约定</h2>
           <div className="note-preview">
-            <Icon name="leaf" />
             <div>
               <p>{wish.intention}</p>
             </div>
@@ -201,7 +129,6 @@ export function WishDetail({ id }: { id: string }) {
         {latest.length ? (
           (showAll ? latest : latest.slice(0, 1)).map((n) => (
             <article className="note-preview" key={n.id}>
-              <Icon name="leaf" />
               <div>
                 <p>{n.text}</p>
                 <time>
@@ -215,7 +142,7 @@ export function WishDetail({ id }: { id: string }) {
             </article>
           ))
         ) : (
-          <p className="quiet empty-note">每一小步，都在靠近更好的自己。</p>
+          <p className="quiet empty-note">还没有记录，随时可以记下一小步。</p>
         )}
         {latest.length > 1 && (
           <button className="text-button" onClick={() => setShowAll((v) => !v)}>
@@ -287,7 +214,6 @@ export function WishNote({ id }: { id: string }) {
       className="note-page"
     >
       <PageHead title="记一笔" eyebrow="每一步，都值得记住。" />
-      <Art kind="crane" />
       <p className="note-context">关于「{wish.title}」</p>
       <section className="form-card">
         <div className="field-heading">
@@ -370,7 +296,6 @@ export function FulfillWish({ id }: { id: string }) {
   return (
     <div className="fulfill-page">
       <PageHead title="来还个愿" eyebrow="谢谢自己的努力，也谢谢遇到的善意。" />
-      <Art kind="lantern" variant="fulfill" />
       <form onSubmit={submit}>
         <section className="form-card fulfillment-card">
           <h2>这次，我想这样还愿</h2>

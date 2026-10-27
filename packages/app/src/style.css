@@ -2,6 +2,7 @@
 @import "./ritual-narrative.css";
 @import "./scene-reward-reveal.css";
 @import "./feedback-controls.css";
+@import "./wishes.css";
 /*
  * Cozy-island shell, the App's UI. Tokens and patterns are ported from
  * animal-island-ui: mint primary, candy accents, chunky press buttons on a

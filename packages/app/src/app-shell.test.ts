@@ -64,10 +64,10 @@ it("uses one shared title and supporting line on regular pages", async () => {
   }
   tap(".bottom-nav button", "心愿");
   await settle();
-  clickOn(ui.host.querySelector('.round-button[aria-label="许个心愿"]')!);
+  clickOn(ui.host.querySelector('.pray-button')!);
   await settle();
   expect(ribbon()).toBeNull();
-  expect(ui.host.querySelector('.page-heading h1')?.textContent).toBe('许个小心愿');
+  expect(ui.host.querySelector('.page-heading h1')?.textContent).toBe('选一个小仪式');
   ui.unmount();
 });
 

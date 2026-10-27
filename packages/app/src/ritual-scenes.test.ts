@@ -468,8 +468,8 @@ describe("许愿 through a keepsake", () => {
     state.collectibles.push(keepsake(sceneId, "2026-10-05"));
     const ui = await openApp(state);
     await ui.tap(ui.host.querySelector('[data-tab="wishes"]')!);
-    // 祈愿 unfolds the picker of 许愿小物 under the list.
-    await ui.tap(ui.button(VESSEL_COPY.pray, ".app-content"));
+    await ui.tap(ui.button("去许愿", ".app-content"));
+    expect(ui.page()).toBe("new");
     const card = ui.host.querySelector(
       `#vessel-picker .wish-practice-card[data-scene="${sceneId}"]`,
     )!;
@@ -530,10 +530,11 @@ describe("许愿 through a keepsake", () => {
     ui.unmount();
 
     // A reload from the save: the spent keepsake still holds the line, and
-    // the 祈愿 picker lists it, so the choice can be returned to.
+    // the ritual picker lists it, so the choice can be returned to.
     ui = await openApp(spent);
     await ui.tap(ui.host.querySelector('[data-tab="wishes"]')!);
-    await ui.tap(ui.button(VESSEL_COPY.pray, ".app-content"));
+    await ui.tap(ui.button("去许愿", ".app-content"));
+    expect(ui.page()).toBe("new");
     const card = ui.host.querySelector(
       `#vessel-picker .wish-practice-card[data-scene="crane"]`,
     )!;

@@ -5,13 +5,12 @@ import { fileURLToPath } from "node:url";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeAll, describe, expect, it } from "vitest";
-import { createState, dailyCollectibleId, type State } from "@wbr/core";
+import { createState, dailyCollectibleId, sceneIntention, type State } from "@wbr/core";
 import { isSceneVisibleInApp } from '@wbr/core/daily-scenes';
 import { Context, type AppContext } from "./context";
-import { clickOn, renderUI } from "./dom-test-utils";
 import { Today } from "./home";
-import { Wishes } from "./pages";
 import { SceneLibraryContext, builtInScenes } from "./scene-library";
+import { NewWish } from "./wishes";
 import {
   dailyCollectedPicks,
   dailyPrimaryScene,
@@ -89,8 +88,8 @@ describe("scene candy", () => {
   });
 
   it("follows a scene from 今日 to 心愿 by its id", () => {
-    // One usable keepsake, from yesterday, for every wish scene, so 祈愿's
-    // whole picker is up and 今日 picks one of them.
+    // A keepsake from yesterday for every wish scene lets the picker keep
+    // the writable ones and 今日 pick one of them.
     const yesterday = "2026-10-06";
     const state = createState();
     for (const id of WISH_SCENE_IDS)
@@ -104,25 +103,13 @@ describe("scene candy", () => {
       });
     const today = render(createElement(Today, { day }), state);
     const picks = dailyCollectedPicks(builtInScenes, state.collectibles, day);
-    const ui = renderUI(
-      createElement(
-        Context.Provider,
-        { value: { state, dispatch: () => true, go: () => {} } as unknown as AppContext },
-        createElement(
-          SceneLibraryContext.Provider,
-          { value: { entries: builtInScenes } as never },
-          createElement(Wishes),
-        ),
-      ),
-    );
-    clickOn(ui.host.querySelector(".pray-button")!);
-    const wishes = ui.host;
+    const wishes = render(createElement(NewWish), state);
     expect(
       [...today.querySelectorAll(".daily-set-card")].map((t) => t.getAttribute("data-scene")),
     ).toEqual([dailyPrimaryScene(builtInScenes, day)!, ...picks].map((e) => e.id));
     for (const id of WISH_SCENE_IDS) {
       const badge = wishes.querySelector(`.wish-practice-card[data-scene="${id}"] .scene-badge[data-scene="${id}"]`);
-      if (builtInScenes.filter(isSceneVisibleInApp).some(e => e.id === id)) expect(badge, id).not.toBeNull();
+      if (builtInScenes.filter(isSceneVisibleInApp).some(e => e.id === id) && sceneIntention(id)?.optionalWish) expect(badge, id).not.toBeNull();
       else expect(badge, id).toBeNull();
     }
     // The day's 许愿 pick is the same candy on both surfaces: one id, one map.
@@ -133,6 +120,5 @@ describe("scene candy", () => {
     expect(
       wishes.querySelector(`.wish-practice-card[data-scene="${shared}"] .scene-badge[data-scene="${shared}"]`),
     ).not.toBeNull();
-    ui.unmount();
   });
 });

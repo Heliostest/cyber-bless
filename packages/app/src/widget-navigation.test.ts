@@ -43,17 +43,23 @@ it('waits for a valid loaded save, opens today through the scene route, and ackn
 });
 it('keeps warm-start form text and defers navigation until the user leaves it', async () => {
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-  const host = { read: async () => JSON.stringify(createState()), write: async () => {} };
+  const state = reduce(createState(), {
+    type: 'wish.create', id: 'w1', title: '面试顺利', intention: '',
+    returnMethod: 'kindness', at: '2026-10-05T08:00:00.000Z',
+  });
+  const host = { read: async () => JSON.stringify(state), write: async () => {} };
   const ack = vi.fn(async () => {});
   const ui = renderUI(createElement(BlessingApp, { host }));
   await settle();
   clickOn(ui.host.querySelector('[data-tab="wishes"]')!);
-  clickOn(ui.host.querySelector('.round-button[aria-label="许个心愿"]')!);
+  clickOn(ui.host.querySelector('.wish-card[data-wish-id="w1"]')!);
   await settle();
-  typeInto(ui.host.querySelector('#wish-title')!, '未提交的心愿');
+  clickOn([...ui.host.querySelectorAll('.wish-detail-page button')].find(button => button.textContent?.includes('记一笔'))!);
+  await settle();
+  typeInto(ui.host.querySelector('#wish-note')!, '未提交的努力记录');
   ui.rerender(createElement(BlessingApp, { host, navigationRequest: { requestId: 2 }, onNavigationConsumed: ack }));
   await settle();
-  expect((ui.host.querySelector('#wish-title') as HTMLTextAreaElement).value).toBe('未提交的心愿');
+  expect((ui.host.querySelector('#wish-note') as HTMLTextAreaElement).value).toBe('未提交的努力记录');
   expect(ack).not.toHaveBeenCalled();
   expect(ui.host.querySelector('.widget-entry-notice')).not.toBeNull();
   clickOn(ui.host.querySelector('.back-button')!);

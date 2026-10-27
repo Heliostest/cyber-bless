@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { rituals, type Collectible } from "@wbr/core";
 import { isSceneVisibleInApp } from '@wbr/core/daily-scenes';
 import { Art, Icon } from "./art";
@@ -10,9 +10,9 @@ import {
   useOpenScene,
   useSceneLibrary,
 } from "./scene-library";
-import { SceneArt, SceneBadge } from "./scene-icons";
-import { pendingVessels, usableVessels, VESSEL_COPY } from "./vessels";
+import { SceneArt } from "./scene-icons";
 import { PageHead } from "./page-heading";
+import { WishRitualRack } from "./wish-ritual-rack";
 export function Empty({
   title,
   body,
@@ -40,197 +40,46 @@ export function Empty({
 export function Wishes() {
   const { state, go, arrival } = useApp();
   const [filter, setFilter] = useState("active");
-  // 祈愿 unfolds the 许愿小物 picker under it; the page opens folded.
-  const [praying, setPraying] = useState(false);
-  const wishes = state.wishes.filter((w) =>
-    filter === "archived"
-      ? w.archived
-      : !w.archived &&
-        (filter === "active"
-          ? w.status !== "fulfilled"
-          : w.status === "fulfilled"),
-  );
+  const wishes = state.wishes.filter(w => filter === "archived"
+    ? w.archived
+    : !w.archived && (filter === "active" ? w.status !== "fulfilled" : w.status === "fulfilled"));
   return (
-    <>
-      <PageHead eyebrow="把期待，交给慢慢来的日子" title="我的小心愿">
-        <button
-          className="round-button"
-          aria-label="许个心愿"
-          onClick={() => go({ page: "new" })}
-        >
-          <Icon name="plus" />
-        </button>
-      </PageHead>
-      <div className="wish-hero">
-        <Art kind="lantern" small />
-        <div>
-          <h2>愿望有光，日子有盼。</h2>
-          <p>每一份认真期待，都值得被记住。</p>
-        </div>
-      </div>
+    <div className="wishes-page">
+      <PageHead title="我的心愿" />
+      <WishRitualRack />
       <div className="filter-row" role="group" aria-label="心愿筛选">
-        {[
-          ["active", "心愿灯"],
-          ["fulfilled", "已如愿"],
-          ["archived", "先放下"],
-        ].map(([id, label]) => (
-          <button
-            key={id}
-            aria-pressed={filter === id}
-            className={filter === id ? "selected" : ""}
-            onClick={() => setFilter(id)}
-          >
-            {label}
-          </button>
+        {[["active", "进行中"], ["fulfilled", "已如愿"], ["archived", "先放下"]].map(([id, label]) => (
+          <button key={id} aria-pressed={filter === id}
+            className={filter === id ? "selected" : ""} onClick={() => setFilter(id)}>{label}</button>
         ))}
       </div>
       {wishes.length ? (
         <div className="wish-list">
-          {wishes.map((w) => {
-            // A scene's kept wish lands on its card: hidden while the slip
-            // flies, popped and rung with 新 once it lands.
-            const flying =
-              arrival?.wishId === w.id && arrival.phase === "flying";
+          {wishes.map(w => {
+            const flying = arrival?.wishId === w.id && arrival.phase === "flying";
             const isNew = arrival?.wishId === w.id && arrival.phase === "landed";
-            return (
-              <button
-                key={w.id}
-                className={`wish-card${isNew ? " reward-landed" : ""}`}
-                data-wish-id={w.id}
-                data-arriving={flying ? "" : undefined}
-                onClick={() => go({ page: "wish", id: w.id })}
-              >
-                <Art
-                  kind={w.status === "fulfilled" ? "badge" : "lantern"}
-                  small
-                />
-                <span>
-                  <span className="tag soft">
-                    {w.archived ? "暂时放下" : statusText[w.status]}
-                  </span>
-                  <strong>{w.title}</strong>
-                  <small>
-                    {formatDate(w.createdAt)}点亮 · {w.notes.length} 条记录
-                  </small>
-                </span>
-                <Icon name="arrow" />
-                {isNew && <span className="new-mark">新</span>}
-              </button>
-            );
+            return <button key={w.id} className={`wish-card${isNew ? " reward-landed" : ""}`}
+              data-wish-id={w.id} data-arriving={flying ? "" : undefined}
+              onClick={() => go({ page: "wish", id: w.id })}>
+              <span className="wish-card-copy">
+                <span className="tag soft wish-row-status">{w.archived ? "暂时放下" : statusText[w.status]}</span>
+                <strong>{w.title}</strong>
+                <small>{formatDate(w.createdAt)}记下{w.notes.length > 0 && ` · ${w.notes.length} 条记录`}</small>
+              </span>
+              <Icon name="arrow" />
+              {isNew && <span className="new-mark">新</span>}
+            </button>;
           })}
         </div>
       ) : (
-        <Empty
-          title={
-            filter === "active" ? "为你的第一个心愿点亮一盏灯" : "这里还很安静"
-          }
-          body={
-            filter === "active"
-              ? "关于生活，关于自己。大大小小，都可以。"
-              : "每个心愿都有自己的时间，不用着急。"
-          }
-          action={filter === "active" ? "许个心愿" : undefined}
-          onClick={() => go({ page: "new" })}
-        />
-      )}
-      <button
-        className="button primary full pray-button"
-        aria-expanded={praying}
-        aria-controls="vessel-picker"
-        onClick={() => setPraying(!praying)}
-      >
-        <Icon name="wishes" />
-        {VESSEL_COPY.pray}
-      </button>
-      {praying && <VesselPicker />}
-      <p className="privacy-note">
-        <Icon name="lock" /> 心愿仅保存在这台设备上，只有你能看见。
-      </p>
-    </>
-  );
-}
-/**
- * 祈愿's picker: the usable 许愿小物, newest first, each opening its scene as
- * a vessel visit, which spends it and keeps the line as a new wish. A vessel
- * already spent whose keep-or-discard choice still waits stays at the top:
- * leaving the walk never takes the phrase with it.
- */
-function VesselPicker() {
-  const { state, go } = useApp();
-  const { entries } = useSceneLibrary();
-  const openScene = useOpenScene();
-  const vessels = usableVessels(state, entries),
-    pending = pendingVessels(state, entries);
-  // It unfolds under a button at the page's foot: bring it into view.
-  const picker = useRef<HTMLElement>(null);
-  useEffect(() => {
-    picker.current?.scrollIntoView?.({
-      block: "nearest",
-      behavior: state.settings.reducedMotion ? "auto" : "smooth",
-    });
-  }, []);
-  return (
-    <section
-      id="vessel-picker"
-      className="vessel-picker"
-      aria-label={VESSEL_COPY.heading}
-      ref={picker}
-    >
-      <div className="section-heading">
-        <h2>{VESSEL_COPY.heading}</h2>
-        {vessels.length > 0 && <span>{vessels.length} 个可用</span>}
-      </div>
-      <p className="quiet vessel-picker-blurb">{VESSEL_COPY.blurb}</p>
-      {pending.length > 0 && (
-        <div className="wish-practice-grid">
-          {pending.map((c) => {
-            const entry = entries.find((e) => e.id === c.sceneId);
-            if (!entry) return null;
-            return (
-              <button
-                key={c.id}
-                className="wish-practice-card vessel-card"
-                data-scene={entry.id}
-                onClick={() => openScene(entry, { vessel: c.id })}
-              >
-                <SceneBadge id={entry.id} />
-                <strong>{entry.title}</strong>
-                <small>{VESSEL_COPY.pending}</small>
-                <Icon name="arrow" />
-              </button>
-            );
-          })}
+        <div className="wish-empty">
+          <h2>{filter === "active" ? "还没有记下心愿" : filter === "fulfilled" ? "还没有如愿的记录" : "还没有放下的心愿"}</h2>
+          <p>{filter === "active" ? "先完成一场小仪式，再留下一句话。" : "每个心愿，都有自己的时间。"}</p>
         </div>
       )}
-      {vessels.length ? (
-        <div className="wish-practice-grid">
-          {vessels.map((c) => {
-            const entry = entries.find((e) => e.id === c.sceneId);
-            if (!entry) return null;
-            return (
-              <button
-                key={c.id}
-                className="wish-practice-card vessel-card"
-                data-scene={entry.id}
-                onClick={() => openScene(entry, { vessel: c.id })}
-              >
-                <SceneBadge id={entry.id} />
-                <strong>{entry.title}</strong>
-                <small>{VESSEL_COPY.use}</small>
-                <Icon name="arrow" />
-              </button>
-            );
-          })}
-        </div>
-      ) : pending.length ? null : (
-        <Empty
-          title={VESSEL_COPY.emptyTitle}
-          body={VESSEL_COPY.emptyBody}
-          action={VESSEL_COPY.emptyAction}
-          onClick={() => go({ page: "today" })}
-        />
-      )}
-    </section>
+      <button className="button primary full pray-button" onClick={() => go({ page: "new" })}>去许愿</button>
+      <p className="privacy-note">心愿仅保存在这台设备上。</p>
+    </div>
   );
 }
 /** A keepsake's own art: a collected scene shows its drawn icon, not a crop. */

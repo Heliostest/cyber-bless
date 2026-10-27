@@ -18,8 +18,8 @@ const wish: Wish = {
 };
 
 /** An active wish's detail page, with the bundled scenes, as a parsed document. */
-function renderDetail() {
-  const state = { ...createState(), wishes: [wish] };
+function renderDetail(value: Wish = wish) {
+  const state = { ...createState(), wishes: [value] };
   const html = renderToStaticMarkup(
     createElement(
       Context.Provider,
@@ -49,5 +49,18 @@ describe("a wish's detail", () => {
     expect([...doc.querySelectorAll(".button")].map((b) => b.textContent)).toEqual([
       "我的心愿实现了",
     ]);
+  });
+
+  it("shows the actual scene a recorded wish came from", () => {
+    const detail = renderDetail({ ...wish, sourceSceneId: "tanzaku-tanabata" });
+    expect(detail.querySelector(".wish-source")?.textContent).toContain("短册系竹");
+    expect(detail.querySelector(".art-lantern")).toBeNull();
+  });
+
+  it("does not invent a scene for a legacy wish or unknown source", () => {
+    expect(doc.querySelector(".wish-source")).toBeNull();
+    const detail = renderDetail({ ...wish, sourceSceneId: "unavailable-scene" });
+    expect(detail.querySelector(".wish-source")).toBeNull();
+    expect(detail.querySelector(".wish-title")?.textContent).toBe(wish.title);
   });
 });

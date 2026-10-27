@@ -17,7 +17,7 @@ with sync_playwright() as p:
     try: page.locator('[data-renderer="ready"]').wait_for()
     except Exception:
         print(json.dumps({"errors":errors,"body":page.locator("body").inner_text()},ensure_ascii=True));raise
-    stage=page.locator(".woodfish-object");canvas=page.locator(".woodfish-canvas")
+    stage=page.locator(".woodfish-object");canvas=page.locator(".woodfish-stage canvas")
     def pos():return json.loads(canvas.get_attribute("data-mallet"))
     def count(n):expect(page.get_by_role("progressbar")).to_have_attribute("aria-valuenow",str(n))
     stage.scroll_into_view_if_needed();box=stage.bounding_box()

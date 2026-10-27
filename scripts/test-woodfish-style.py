@@ -19,8 +19,8 @@ MODEL = (ROOT / "assets/woodfish/blender-v2/woodfish.glb").read_bytes()
 def enter_woodfish(page, revision):
     page.get_by_role("button", name="木鱼", exact=True).click()
     page.locator(".woodfish-visual[data-renderer='ready']").wait_for()
-    assert page.locator(".woodfish-canvas").get_attribute("data-content-revision") == revision
-    assert page.locator(".woodfish-canvas canvas").count() == 1
+    assert page.locator(".woodfish-stage").get_attribute("data-content-revision") == revision
+    assert page.locator(".woodfish-stage canvas").count() == 1
 
 
 def staged_woodfish(browser, inject_composer_failure=False):
@@ -33,7 +33,7 @@ def staged_woodfish(browser, inject_composer_failure=False):
     page = context.new_page()
     page.goto(BASE, wait_until="networkidle")
     enter_woodfish(page, "bundled-woodfish-1")
-    original = page.locator(".woodfish-canvas canvas").screenshot()
+    original = page.locator(".woodfish-stage canvas").screenshot()
     page.wait_for_function("""async () => {
       const db = await new Promise((ok, no) => {const r=indexedDB.open('wbr-scene-content-v1');r.onsuccess=()=>ok(r.result);r.onerror=no});
       const value = await new Promise((ok, no) => {const r=db.transaction('metadata').objectStore('metadata').getAll();r.onsuccess=()=>ok(r.result);r.onerror=no});
@@ -70,7 +70,7 @@ def staged_woodfish(browser, inject_composer_failure=False):
         }""", {"module": MODULE, "fail": inject_composer_failure})
     enter_woodfish(page, "probe-toon-soft")
     assert page.evaluate("window.composerDraws") > 0, "Mounted scene never used the selected style"
-    selected = page.locator(".woodfish-canvas canvas").screenshot()
+    selected = page.locator(".woodfish-stage canvas").screenshot()
     if inject_composer_failure:
         assert page.evaluate("window.styleFailureInjected"), "Composer failure was not exercised"
         page.wait_for_function("window.directRecoveryDraws >= 2")
@@ -80,15 +80,16 @@ def staged_woodfish(browser, inject_composer_failure=False):
     count = page.locator(".ritual-counter").inner_text()
     page.get_by_role("button", name="轻敲木鱼").click()
     page.wait_for_function("before => document.querySelector('.ritual-counter')?.textContent !== before", arg=count)
-    assert page.locator(".woodfish-canvas canvas").count() == 1
+    assert page.locator(".woodfish-stage canvas").count() == 1
     if inject_composer_failure:
         page.evaluate("""() => {
-          const canvas = document.querySelector('.woodfish-canvas canvas');
+          const canvas = document.querySelector('.woodfish-stage canvas');
           const extension = canvas.getContext('webgl2').getExtension('WEBGL_lose_context');
           if (!extension) throw Error('WEBGL_lose_context unavailable');
           extension.loseContext();
         }""")
-        page.locator(".woodfish-visual[data-renderer='fallback']").wait_for()
+        page.locator(".scene-load-error").wait_for()
+        assert page.locator(".woodfish-object, .scene-experience img").count() == 0
     context.close()
 
 

@@ -11,7 +11,6 @@ type Crop = {
 export type ArtVariant =
   | "default"
   | "home"
-  | "play"
   | "complete"
   | "wish"
   | "wish-detail"
@@ -23,7 +22,6 @@ const crops: Record<string, Crop> = {
   lantern: { sheet: "rituals", x: 384, y: 755, width: 76, height: 79 },
   badge: { sheet: "wishes", x: 1062, y: 759, width: 90, height: 89 },
   home: { sheet: "rituals", x: 130, y: 264, width: 353, height: 267 },
-  play: { sheet: "rituals", x: 578, y: 382, width: 390, height: 273 },
   complete: { sheet: "rituals", x: 1060, y: 369, width: 361, height: 236 },
   wish: { sheet: "wishes", x: 139, y: 218, width: 345, height: 193 },
   "wish-detail": { sheet: "wishes", x: 600, y: 225, width: 360, height: 285 },

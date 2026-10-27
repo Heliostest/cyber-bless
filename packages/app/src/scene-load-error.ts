@@ -22,7 +22,7 @@ export function describeSceneLoadError(
   const detail = message.trim() || undefined;
   const reason = !online
     ? SCENE_LOAD_ERROR_COPY.offline
-    : /context lost/i.test(message)
+    : /context lost|webgl|graphics|shader/i.test(message)
       ? SCENE_LOAD_ERROR_COPY.graphics
       : /upgrade the app/i.test(message)
         ? SCENE_LOAD_ERROR_COPY.upgrade

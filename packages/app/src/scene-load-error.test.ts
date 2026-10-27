@@ -17,6 +17,11 @@ const RAW =
   "Content transfer interrupted: https://cdn.example.com/scene-content/woodfish/9f2c6d1e4b7a8c3d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d.glb";
 
 describe("describeSceneLoadError", () => {
+  it.each(["Error creating WebGL context", "Scene shader failed", "Graphics context lost"])(
+    "shows a graphics retry message for %s", message => {
+      expect(describeSceneLoadError(message)).toEqual({ reason: SCENE_LOAD_ERROR_COPY.graphics, detail: message });
+    },
+  );
   it("keeps our own Chinese messages as they are", () => {
     expect(describeSceneLoadError("此场景需要更新 App 后打开")).toEqual({
       reason: "此场景需要更新 App 后打开",

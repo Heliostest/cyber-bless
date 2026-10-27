@@ -37,14 +37,14 @@ it('shows direction in the separate guide and follows a moving destination witho
   expect(direction.style.getPropertyValue('--cue-angle')).toBe('-90deg')
   expect(s.host.querySelector('.scene-object-cue-path')).toBeNull()
 })
-it('uses the separate shelf for a woodfish canvas without a procedural overlay',()=>{
-  const s=mount(), button=document.createElement('button'), shelf=document.createElement('div')
-  button.className='woodfish-object'; shelf.className='scene-cue-shelf'
-  s.host.querySelector('.scene-overlay-host')!.remove()
-  document.body.append(button,shelf); button.append(s.host); s.update()
-  expect(shelf.querySelector('.scene-cue-guides')?.textContent).toContain('拖起小物')
-  expect(button.querySelector('.scene-cue-guides')).toBeNull()
-  s.cues.dispose(); expect(shelf.childElementCount).toBe(0)
+it('uses the shared tray for a woodfish hit layer too',()=>{
+  const s=mount()
+  s.host.className='library-scene-stage woodfish-stage'
+  s.hit.classList.add('woodfish-object'); s.update()
+  const overlay=s.host.querySelector('.scene-overlay-host')!
+  expect(overlay.querySelector('.scene-cue-guides')?.textContent).toContain('拖起小物')
+  expect(s.hit.querySelector('.scene-cue-guides')).toBeNull()
+  s.cues.dispose(); expect(overlay.querySelector('.scene-cue-guides')).toBeNull()
 })
 it('follows movement and hides completed or unavailable cues',()=>{
   const s=mount(); s.source.position.x=-.4; s.update()

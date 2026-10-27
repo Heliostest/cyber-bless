@@ -24,7 +24,7 @@ import { now, uid, useApp } from "./context";
 import { supportsScene, useSceneLibrary, woodfishPack } from "./scene-library";
 import { Woodfish } from "./woodfish";
 import { RitualNarrativeBlurb } from "./ritual-narrative";
-import { describeSceneLoadError } from "./scene-load-error";
+import { SceneLoadFailure } from "./scene-load-failure";
 import { sceneWish } from "./scene-wish";
 import { SceneArt } from "./scene-icons";
 import {
@@ -40,7 +40,7 @@ import { OptionalSceneWish } from './optional-scene-wish';
 import { useSceneVisualPreference } from "./scene-visual-preference";
 import { SceneRewardReveal } from "./scene-reward-reveal";
 
-function ProceduralScene({
+export function ProceduralScene({
   entry,
   progress,
   checkpoint,
@@ -424,21 +424,23 @@ function LoadedScene({
       {daily && (
         <p className="scene-caption">{SCENE_DAILY_CAPTION}</p>
       )}
-      <p className={`scene-progress${entry.engine !== "woodfish@1" ? " sr-only" : ""}`} role="status">
+      <p className="scene-progress sr-only" role="status">
         {entry.engine === 'woodfish@1' && !woodfishFinished
           ? `已轻敲 ${woodfishStrikes} 次 · 至少 ${steps} 次后可结束`
           : `已完成 ${progress} / ${steps}`}
       </p>
       {entry.engine === "woodfish@1" ? (
-        <>
           <Woodfish
             sceneId={entry.id}
             contentClient={client}
-            pulse={woodfishStrikes}
             active={active}
             reducedMotion={state.settings.reducedMotion}
             view="front"
             disabled={woodfishFinished}
+            strikes={woodfishStrikes}
+            minimumStrikes={steps}
+            instruction={instruction}
+            onFinish={() => { if (active && !woodfishFinished) checkpoint(steps); }}
             onStrike={() => {
               if (!active || woodfishFinished) return false;
               prepareFeedback();
@@ -448,18 +450,8 @@ function LoadedScene({
             }}
             onImpact={feedback}
             onInstruction={setInstruction}
-            onFailure={lease ? failed : undefined}
+            onFailure={failed}
           />
-          <p id="woodfish-instruction" className="scene-instruction">
-            {woodfishStrikes >= steps && !woodfishFinished ? '可以继续轻敲，想收尾时点「结束仪式」。' : instruction}
-          </p>
-          {woodfishStrikes >= steps && !woodfishFinished && <button
-            type="button"
-            className="button primary scene-woodfish-finish"
-            disabled={!active}
-            onClick={() => { if (active && !woodfishFinished) checkpoint(steps); }}
-          >结束仪式</button>}
-        </>
       ) : (
         <ProceduralScene
           entry={entry}
@@ -694,30 +686,14 @@ export function SceneExperience({
     };
   }, [entry, library, ready, attempt]);
   if (!entry) return <p role="alert">场景信息缺失，请返回目录重试。</p>;
-  const failure = error ? describeSceneLoadError(error) : undefined;
-  const completed = loaded && !failure &&
+  const completed = loaded && !error &&
     (state.sceneRecords.find(record => record.id === entry.id)?.progress ?? 0) >= sceneSteps(entry);
   return (
     <section className="scene-experience" aria-label={entry.title}>
       {opening && <OpeningGuide sceneId={entry.id} />}
       <RitualNarrativeBlurb sceneId={entry.id} completion={completed ? SCENE_DONE_COPY : undefined} />
-      {failure ? (
-        <div className="scene-load-error" role="alert">
-          <p>暂时无法打开。记录和进度已保留。</p>
-          <p>{failure.reason}</p>
-          {failure.detail && (
-            <details>
-              <summary>查看技术细节</summary>
-              <code>{failure.detail}</code>
-            </details>
-          )}
-          <button
-            className="button primary"
-            onClick={() => setAttempt((n) => n + 1)}
-          >
-            重试打开
-          </button>
-        </div>
+      {error ? (
+        <SceneLoadFailure message={error} onRetry={() => setAttempt(n => n + 1)} />
       ) : loaded ? (
         <>
           {loaded.caption && <p className="scene-caption">{loaded.caption}</p>}

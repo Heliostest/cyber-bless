@@ -28,8 +28,8 @@ with sync_playwright() as p:
     page.locator(".woodfish-visual[data-renderer='ready']").wait_for()
     open_panel(page)
     expect(page.locator("#debug-scene")).to_have_value("woodfish")
-    canvas = page.locator(".woodfish-canvas canvas")
-    page.evaluate("window.debugTestCanvas = document.querySelector('.woodfish-canvas canvas')")
+    canvas = page.locator(".woodfish-stage canvas")
+    page.evaluate("window.debugTestCanvas = document.querySelector('.woodfish-stage canvas')")
     # The bundled pack defaults to toon-ink; start the comparison from plain lighting.
     page.get_by_role("button", name="原始光照").click()
     expect(page.locator("#debug-overlay-panel").get_by_role("status")).to_contain_text("正在使用原始光照")
@@ -45,7 +45,7 @@ with sync_playwright() as p:
     soft = canvas.screenshot(style=CAPTURE_STYLE)
     (OUT / "woodfish-soft.png").write_bytes(soft)
     assert soft != ink
-    assert page.evaluate("window.debugTestCanvas === document.querySelector('.woodfish-canvas canvas')"), "Style switch remounted the canvas"
+    assert page.evaluate("window.debugTestCanvas === document.querySelector('.woodfish-stage canvas')"), "Style switch remounted the canvas"
     page.screenshot(path=str(OUT / "woodfish-desktop.png"))
     count = page.locator(".ritual-counter").inner_text()
     page.get_by_role("button", name="轻敲木鱼").click()
@@ -95,11 +95,11 @@ with sync_playwright() as p:
         expect(prod_page.get_by_role("button", name="SHADER LAB")).to_have_count(0)
         prod_page.get_by_role("button", name="木鱼", exact=True).click()
         prod_page.locator(".woodfish-visual[data-renderer='ready']").wait_for()
-        normal = prod_page.locator(".woodfish-canvas canvas").screenshot(style=CAPTURE_STYLE)
+        normal = prod_page.locator(".woodfish-stage canvas").screenshot(style=CAPTURE_STYLE)
         prod_page.goto(production.rstrip("/") + "/?debug=1", wait_until="networkidle")
         prod_page.get_by_role("button", name="木鱼", exact=True).click()
         prod_page.locator(".woodfish-visual[data-renderer='ready']").wait_for()
-        debug = prod_page.locator(".woodfish-canvas canvas").screenshot(style=CAPTURE_STYLE)
+        debug = prod_page.locator(".woodfish-stage canvas").screenshot(style=CAPTURE_STYLE)
         assert normal != debug, "Production debug flag did not gate the saved override"
         open_panel(prod_page)
         expect(prod_page.get_by_role("button", name="墨线卡通")).to_have_attribute("aria-pressed", "true")

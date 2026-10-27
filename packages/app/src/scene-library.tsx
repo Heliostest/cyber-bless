@@ -82,13 +82,9 @@ export function useOpenRitual() {
     { entries } = useSceneLibrary();
   return (ritual: RitualId, wishId?: string) => {
     if (!isSceneVisibleInApp({ id: ritual })) return;
-    const entry = ritualSceneEntry(entries, ritual);
-    if (!entry || !supportsScene(entry.engine)) {
-      // TODO: every ritual ships a bundled scene, so this is only reached if
-      // a remote catalog drops one or needs a newer App for it.
-      go({ page: "ritual", id: ritual, wishId });
-      return;
-    }
+    const offered = ritualSceneEntry(entries, ritual);
+    const entry = offered && supportsScene(offered.engine)
+      ? offered : ritualSceneEntry(builtInScenes, ritual)!;
     const record = state.sceneRecords.find((r) => r.id === entry.id);
     const progress = record ? sceneProgress(record) : 0;
     if (progress > 0 && (wishId || progress >= sceneSteps(entry)))

@@ -10,12 +10,11 @@ import { useContent, woodfishContent } from "./content";
 import { useApp } from "./context";
 import type { ProceduralContext } from "./procedural-scene";
 import { sceneEngines, type WoodfishContext } from "./scene-engines";
-import { SceneIcon } from "./scene-icons";
 import { sceneStage } from "./scene-placement";
 
 type EngineId = Parameters<typeof sceneEngines.load>[0];
 type PreviewContext = ProceduralContext | WoodfishContext;
-/** Mounting (the scene's icon on its sky), drawing, or gone (the plain card). */
+/** Mounting (loading text), drawing, or gone (the plain catalog card). */
 export type PreviewStatus = "loading" | "ready" | "failed";
 
 /** Whether this device can draw the 3D scenes at all: three.js needs WebGL2. */
@@ -129,9 +128,7 @@ export function DailyScenePreview({ entry }: { entry: CatalogEntry }) {
         data-stage={stage}
         ref={host}
       />
-      <span className="daily-set-preview-icon">
-        <SceneIcon id={entry.id} />
-      </span>
+      {status === "loading" && <span className="daily-set-preview-loading">正在准备场景…</span>}
     </span>
   );
 }

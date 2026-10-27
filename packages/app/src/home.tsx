@@ -35,8 +35,7 @@ export function Today({ day }: { day: string }) {
           <Icon name="clock" />
         </button>
       </PageHead>
-      {/* The one way left onto the 2D ritual page: a session begun there
-          before rituals opened as scenes still settles where it started. */}
+      {/* Old sessions retain their settlement ID and resume with 3D interaction. */}
       {state.activeSession && isSceneVisibleInApp({ id: state.activeSession.ritual }) && (
         <button
           className="resume-banner"

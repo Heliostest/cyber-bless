@@ -161,9 +161,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
       layer.style.top = `${rect.top - parentRect.top - host.clientTop + host.scrollTop}px`
       layer.style.width = `${rect.width}px`; layer.style.height = `${rect.height}px`
       const overlay = host.querySelector<HTMLElement>('.scene-overlay-host')
-      const shelf = host.closest('.woodfish-object')?.nextElementSibling
-      const guideHost = overlay ?? (shelf?.classList.contains('scene-cue-shelf') ? shelf : undefined)
-      if (guideHost && guides.parentElement !== guideHost) guideHost.append(guides)
+      if (overlay && guides.parentElement !== overlay) overlay.append(guides)
       guides.hidden = layer.hidden
       const candidates: { object: THREE.Object3D; cue: InteractionCue }[] = []
       scene.traverse(object => {

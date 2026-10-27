@@ -135,8 +135,9 @@ describe("今日's daily set", () => {
     expect(stage.className).toBe("library-scene-stage daily-set-preview-stage");
     expect(stage.getAttribute("data-scene")).toBe(primary.id);
     expect(stage.getAttribute("data-stage")).toBe(sceneStage(primary.id));
-    // While the scene mounts, its icon floats on the sky.
-    expect(preview.querySelector(".daily-set-preview-icon .scene-icon")).not.toBeNull();
+    // Loading is explicit text, never a substitute picture inside the stage.
+    expect(preview.querySelector(".daily-set-preview-loading")?.textContent).toBe("正在准备场景…");
+    expect(preview.querySelector("img, .scene-icon")).toBeNull();
   });
 
   it("then offers three kept scenes: exactly one 许愿, two 祈福", () => {
@@ -303,14 +304,10 @@ describe("今日 card layout", () => {
     expect(
       rule(".daily-set-primary > .daily-set-preview ~ small").getPropertyValue("grid-row"),
     ).toBe("3");
-    // Until the scene is ready, only its icon shows: the canvas fades in then.
+    // The real canvas fades in only once the scene is ready.
     expect(
       rule('.daily-set-preview[data-status="ready"] .daily-set-preview-stage > canvas')
         .getPropertyValue("opacity"),
     ).toBe("1");
-    expect(
-      rule('.daily-set-preview[data-status="ready"] .daily-set-preview-icon')
-        .getPropertyValue("opacity"),
-    ).toBe("0");
   });
 });

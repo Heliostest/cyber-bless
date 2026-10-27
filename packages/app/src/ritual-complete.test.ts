@@ -7,10 +7,11 @@ import { clickOn, renderUI, settle } from "./dom-test-utils";
 
 // The 3D woodfish is not under test: a ready session whose mallet can be
 // kept busy, or let rest, so the settle beat's whenIdle() wait is observable.
-const scene = vi.hoisted(() => ({ idle: Promise.resolve() as Promise<void> }));
+const scene = vi.hoisted(() => ({ idle: Promise.resolve() as Promise<void>, checkpoint: undefined as ((n: number) => void) | undefined }));
 vi.mock("@wbr/scene-runtime", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@wbr/scene-runtime")>()),
-  mountScene: (config: { ready(): void }) => {
+  mountScene: (config: { ready(): void; context: { checkpoint?(n: number): void } }) => {
+    scene.checkpoint = config.context.checkpoint;
     queueMicrotask(() => config.ready());
     const lifecycle = { setActive() {}, setReducedMotion() {}, dispose() {} };
     return {
@@ -94,9 +95,8 @@ async function openRitual(ui: { host: HTMLElement }) {
   expect(pageOf(ui)).toBe("ritual");
 }
 /** Strike the remaining steps, then let the beat settle the session. */
-async function settleRitual(ui: { host: HTMLElement }, steps: number) {
-  const object = ui.host.querySelector(".ritual-object")!;
-  for (let i = 0; i < steps; i++) clickOn(object);
+async function settleRitual(ui: { host: HTMLElement }) {
+  act(() => scene.checkpoint!(3));
   await settle();
   act(() => {
     vi.advanceTimersByTime(600);
@@ -111,7 +111,7 @@ describe("the settle beat (P0)", () => {
   it("reveals a new legacy completion but not a restored completion page", async () => {
     const ui = await openApp(withSession("crane", 3));
     await openRitual(ui);
-    await settleRitual(ui, 1);
+    await settleRitual(ui);
     expect(ui.host.querySelector(".scene-reward-reveal[data-scene='crane']")).not.toBeNull();
     ui.unmount();
     const completed = reduce(withSession("crane", 4), { type: "ritual.finish", id: "s1", at: AT });
@@ -124,19 +124,15 @@ describe("the settle beat (P0)", () => {
     expect(restored.host.querySelector(".scene-reward-reveal")).toBeNull();
     restored.unmount();
   });
-  it("settles the last strike by itself: no 完成仪式 button, one card, one of each leftover", async () => {
+  it("settles the last 3D checkpoint once, with one reward card", async () => {
     const ui = await openApp(withSession("crane", 3));
     await openRitual(ui);
-    // No second confirm exists, and the object stands down at ready.
-    const object = ui.host.querySelector<HTMLButtonElement>(".ritual-object")!;
-    clickOn(object);
+    // A duplicate checkpoint in the same turn must not duplicate old progress.
+    act(() => { scene.checkpoint!(3); scene.checkpoint!(3); });
     await settle();
     expect(ui.host.textContent).not.toContain("完成仪式");
-    expect(object.disabled).toBe(true);
-    // The settle moment speaks through the beat line.
-    const line = ui.host.querySelector(".tap-instruction")!;
-    expect(line.getAttribute("aria-live")).toBe("polite");
-    expect(line.textContent).toContain("这一刻，已经很好。");
+    expect(ui.host.querySelector('.library-scene-stage[data-scene="crane"]')).not.toBeNull();
+    expect(ui.host.querySelector(".ritual-object, .ritual-page img")).toBeNull();
 
     act(() => {
       vi.advanceTimersByTime(600);
@@ -202,7 +198,7 @@ describe("the settle beat (P0)", () => {
     clickOn(ui.host.querySelector('.back-button')!); await settle();
     await openRitual(ui);
     object = ui.host.querySelector<HTMLButtonElement>('.woodfish-object')!;
-    expect(ui.host.querySelector('.ritual-counter')?.textContent).toBe('014');
+    expect(ui.host.querySelector('.woodfish-count')?.textContent).toBe('已敲 14 次');
     const finish = [...ui.host.querySelectorAll('button')].find(b => b.textContent === '结束仪式')!;
     clickOn(finish);
     expect(object.disabled).toBe(true);
@@ -251,7 +247,7 @@ describe("the settle beat (P0)", () => {
   it("keeps the session when you leave during the beat, and settles it once on return", async () => {
     const ui = await openApp(withSession("crane", 3));
     await openRitual(ui);
-    clickOn(ui.host.querySelector(".ritual-object")!);
+    act(() => scene.checkpoint!(3));
     await settle();
     // Leave before the beat ends: no navigation, session still open.
     act(() => {
@@ -305,7 +301,7 @@ describe("the reward card's exits (P0/P1)", () => {
   it("✕ goes to 今日 and badges the 小天地 tab with +1", async () => {
     const ui = await openApp(withSession("crane", 3));
     await openRitual(ui);
-    await settleRitual(ui, 1);
+    await settleRitual(ui);
     clickOn(ui.host.querySelector('button[aria-label="关闭完成页"]')!);
     await settle();
     expect(pageOf(ui)).toBe("today");
@@ -321,7 +317,7 @@ describe("the reward card's exits (P0/P1)", () => {
   it("Android back leaves the card the same way ✕ does", async () => {
     const ui = await openApp(withSession("crane", 3));
     await openRitual(ui);
-    await settleRitual(ui, 1);
+    await settleRitual(ui);
     ui.rerender(
       createElement(BlessingApp, { host: ui.storage, backRequest: 1 }),
     );
@@ -337,7 +333,7 @@ describe("the reward card's exits (P0/P1)", () => {
   it("names a linked active wish on the card and badges 心愿", async () => {
     const ui = await openApp(withWishSession("active", "crane", 3));
     await openRitual(ui);
-    await settleRitual(ui, 1);
+    await settleRitual(ui);
     expect(ui.host.textContent).toContain("也为「面试顺利」记了一笔");
     clickOn(ui.host.querySelector(".completion .button.primary")!);
     expect(pageOf(ui)).toBe("world");

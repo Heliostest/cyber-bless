@@ -26,6 +26,7 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
     antialias: true,
     powerPreference: "low-power",
   });
+  renderer.domElement.className = "scene-canvas";
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.shadowMap.enabled = true;
@@ -128,7 +129,7 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
     view = "front";
   addInteractionCue(bodyGroup, {
     kind: "tap", label: "轻点木鱼听声", anchor: [0, 1.06, 0.7],
-    enabled: () => active && !disposed && loaded && view === "front" && !host.closest<HTMLButtonElement>(".woodfish-object")?.disabled,
+    enabled: () => active && !disposed && loaded && view === "front" && !host.querySelector<HTMLButtonElement>(".woodfish-object")?.disabled,
   });
   function mesh(
     geometry: THREE.BufferGeometry,
@@ -240,18 +241,20 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
       loaded = true;
       requestRender(true);
     })
-    .catch(() => {
-      if (!disposed) options.failed();
+    .catch((error) => {
+      if (!disposed) options.failed(error);
     });
 
   function resize() {
     if (disposed) return;
-    const { width, height } = host.getBoundingClientRect();
+    const { width, height } = renderer.domElement.getBoundingClientRect();
     if (!width || !height) return;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
     renderer.setSize(width, height, false);
     styleRenderer.resize(width, height);
-    const halfHeight = 1.57,
+    // Preserve room for the body and mallet when the fullscreen stage is tall.
+    // A fixed vertical span crops both sides on narrow phone/preview canvases.
+    const halfHeight = Math.max(1.57, (2.2 * height) / width),
       halfWidth = (halfHeight * width) / height;
     camera.left = -halfWidth;
     camera.right = halfWidth;
@@ -271,12 +274,12 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
     needsStillFrame = false;
     try {
       styleRenderer.render();
-    } catch {
-      options.failed();
+    } catch (error) {
+      options.failed(error);
       return;
     }
     if (shaderFailed) {
-      options.failed();
+      options.failed(Error("Scene shader failed"));
       return;
     }
     if (inspectMode) {
@@ -463,12 +466,12 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
   }
   function lost(event: Event) {
     event.preventDefault();
-    if (!disposed) options.failed();
+    if (!disposed) options.failed(Error("Graphics context lost"));
   }
   renderer.domElement.addEventListener("webglcontextlost", lost);
   window.addEventListener("resize", resize);
   const observer = new ResizeObserver(resize);
-  observer.observe(host);
+  observer.observe(renderer.domElement);
   resize();
   return {
     strike() {

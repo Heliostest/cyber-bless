@@ -906,23 +906,25 @@ describe("useOpenRitual", () => {
     );
   });
 
-  it("falls back to the 2D page only when the catalog has no playable scene", () => {
+  it("uses the bundled 3D scene when the catalog drops a ritual or requires a newer engine", () => {
     const without = opener(
       createState(),
       builtInScenes.filter((e) => e.id !== "crane"),
     );
     without.open("crane", "w1");
     expect(without.go).toHaveBeenCalledWith({
-      page: "ritual",
+      page: "scene",
       id: "crane",
+      entry: entryOf("crane"),
       wishId: "w1",
+      replay: false,
     });
     const newer = opener(createState(), [
       { ...entryOf("crane"), engine: "crane@9" },
     ]);
     newer.open("crane");
     expect(newer.go).toHaveBeenCalledWith(
-      expect.objectContaining({ page: "ritual", id: "crane" }),
+      expect.objectContaining({ page: "scene", id: "crane", entry: entryOf("crane") }),
     );
     expect(newer.dispatch).not.toHaveBeenCalled();
   });

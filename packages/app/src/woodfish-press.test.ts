@@ -52,7 +52,6 @@ async function renderWoodfish() {
       Context.Provider,
       { value: { state: createState(), decodeSound: vi.fn() } as unknown as AppContext },
       createElement(Woodfish, {
-        pulse: 0,
         active: true,
         reducedMotion: false,
         view: "front",

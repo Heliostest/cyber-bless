@@ -24,6 +24,7 @@ const cases = [
   { name: 'ordinary', id: 'tanzaku-tanabata' },
   { name: 'water', id: 'tibetan-water-bowls' },
   { name: 'woodfish', id: 'woodfish' },
+  { name: 'choices', id: 'milagros' },
 ].filter(test => selected('WBR_VIEWPORT_CASES', test.name))
 const report = {
   capturedAt: new Date().toISOString(), base: base.href, navigationOnly,
@@ -89,6 +90,11 @@ async function layout(page, label) {
       shell: box(document.querySelector('.app-shell')), main: box(document.querySelector('main.app-content')),
       stage: box(document.querySelector('.library-scene-stage, .woodfish-object')),
       canvas: box(document.querySelector('.scene-experience canvas')),
+      trayContent: [...document.querySelectorAll('.library-scene-stage .scene-cue-guides, .library-scene-stage .scene-hint, .library-scene-stage .scene-craft-choices')]
+        .filter(element => {
+          const style = getComputedStyle(element), r = element.getBoundingClientRect()
+          return !element.closest('[hidden]') && style.visibility !== 'hidden' && r.height > 2 && r.width > 2
+        }).map(box),
     }
     window.__sceneViewportLastLayout = result
     return result
@@ -103,6 +109,10 @@ async function layout(page, label) {
   assert.ok(Math.abs(metrics.window.x) <= 1 && Math.abs(metrics.window.y) <= 1, `${label}: window must stay at its origin`)
   assert.ok(metrics.canvas?.width > 0 && metrics.canvas?.height > 0, `${label}: actual scene canvas stays visible`)
   assert.ok(metrics.canvas.y >= metrics.main.y - 2 && metrics.canvas.bottom <= metrics.main.bottom + 2, `${label}: canvas fits the fixed main region`)
+  for (const content of metrics.trayContent) {
+    assert.ok(content.y >= metrics.canvas.bottom - 1, `${label}: tray content must not cover the 3D canvas`)
+    assert.ok(content.bottom <= metrics.stage.bottom + 1, `${label}: tray content stays inside the stage`)
+  }
   return { label, ...metrics }
 }
 
@@ -383,6 +393,11 @@ try {
         } else if (test.name === 'water') {
           assert.equal(await page.locator('.scene-step-dot').count(), 9, 'all nine water-bowl steps are represented')
           await finishFinite(page, test.id, 9, result.snapshots)
+          result.completion = await completion(page, test.id, prefix, false)
+        } else if (test.name === 'choices') {
+          assert.equal(await page.locator('.scene-craft-choices button').count(), 4)
+          await reachable(page.locator('.scene-craft-choices button'), 'metal charm choices')
+          await finishFinite(page, test.id, 3, result.snapshots)
           result.completion = await completion(page, test.id, prefix, false)
         } else if (test.name === 'woodfish') {
           const strike = page.locator('button.woodfish-object'), finish = page.locator('.scene-woodfish-finish')

@@ -238,7 +238,6 @@ describe("scene page lines", () => {
 
 describe("2D ritual stage", () => {
   it("keeps the lantern's string clear of the feedback lines, as the crane's", () => {
-    expect(declared(".ritual-lantern .ritual-object")).toMatch(/margin-top: 16px/);
     expect(declared(".art-variant-default:not(.art-small)")).toMatch(/margin: 16px auto/);
   });
 });

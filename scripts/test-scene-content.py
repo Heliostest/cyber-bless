@@ -24,7 +24,7 @@ def wait_revision(page, field, revision):
 def enter(page, revision):
     page.get_by_role("button", name="木鱼", exact=True).click()
     page.locator('[data-renderer="ready"]').wait_for()
-    expect(page.locator(".woodfish-canvas")).to_have_attribute("data-content-revision", revision)
+    expect(page.locator(".woodfish-stage")).to_have_attribute("data-content-revision", revision)
 def back(page): page.get_by_role("button", name="返回", exact=True).click()
 def wait_until(page, predicate):
     for _ in range(100):
@@ -64,10 +64,10 @@ with sync_playwright() as p:
     assert not downloads
     hold_manifest = False; held.pop().fulfill(json=candidate)
     wait_revision(page, "pending", "one")
-    expect(page.locator(".woodfish-canvas")).to_have_attribute("data-content-revision", "bundled-woodfish-1")
+    expect(page.locator(".woodfish-stage")).to_have_attribute("data-content-revision", "bundled-woodfish-1")
     candidate["revision"] = "two"; candidate["copy"]["instruction"] = "慢慢敲，今天也很好。"; candidate["parameters"]["keyIntensity"] = 2.8
     back(page); enter(page, "one"); wait_revision(page, "confirmed", "one"); wait_revision(page, "pending", "two")
-    expect(page.locator(".woodfish-canvas")).to_have_attribute("data-content-revision", "one")
+    expect(page.locator(".woodfish-stage")).to_have_attribute("data-content-revision", "one")
     back(page); enter(page, "two"); wait_revision(page, "confirmed", "two")
     expect(page.locator("#woodfish-instruction")).to_have_text(candidate["copy"]["instruction"])
     assert len(downloads) == 1, "Same hash must reuse cached bytes"
@@ -127,7 +127,7 @@ with sync_playwright() as p:
         wait_until(q, lambda: bool(delayed)); q.wait_for_timeout(150)
         expect(q.locator('[data-renderer="fallback"]')).to_have_count(0)
         delayed.pop().continue_(); q.locator('[data-renderer="ready"]').wait_for()
-        expect(q.locator(".woodfish-canvas")).to_have_attribute("data-content-revision", "bundled-woodfish-1")
+        expect(q.locator(".woodfish-stage")).to_have_attribute("data-content-revision", "bundled-woodfish-1")
         c.close()
     # Incompatible remote engine never blocks a fresh bootstrap.
     fresh = browser.new_context(); fresh.route("**/scene-content/woodfish.json", lambda r: r.fulfill(json={**original, "engine": "woodfish@999"}))

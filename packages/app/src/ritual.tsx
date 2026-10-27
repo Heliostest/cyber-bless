@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { localDay, rituals, type RitualId } from "@wbr/core";
+import { localDay, rituals, sceneIntention, type RitualId } from "@wbr/core";
 import { Art, Icon } from "./art";
 import { now, uid, useApp } from "./context";
 import { Empty } from "./pages";
@@ -9,11 +9,13 @@ import { RitualNarrativeBlurb } from "./ritual-narrative";
 import { rectOf } from "./reward-flight";
 import { PageHead } from "./page-heading";
 import { SceneRewardReveal } from "./scene-reward-reveal";
+import { LegacySceneRitual } from "./legacy-scene-ritual";
+import { sceneSteps } from "./scene-placement";
+import { builtInScenes } from "./scene-library";
 
 /**
- * The 2D ritual page. Rituals open as their 3D scenes (useOpenRitual), so it
- * is reached only to settle a session begun here (今日's resume banner), or
- * when the catalog has no playable scene for a ritual.
+ * Compatibility host for sessions begun before scene-based rituals.
+ * Their saved counters and rewards are preserved; every interaction is 3D.
  */
 export function Ritual({
   id,
@@ -27,7 +29,6 @@ export function Ritual({
 }) {
   const { state, dispatch, go, feedback, prepareFeedback, active } = useApp();
   const [wishId, setWishId] = useState(linkedWishId ?? "");
-  const [pulse, setPulse] = useState(0);
   const [paused, setPaused] = useState(false);
   const [ending, setEnding] = useState(false);
   const [view, setView] = useState("front");
@@ -40,6 +41,8 @@ export function Ritual({
   const progress = r?.progress ?? 0;
   const woodfishTotal = r?.strikes ?? progress;
   const ready = progress >= meta.steps;
+  const legacyProgress = useRef(progress);
+  legacyProgress.current = progress;
   function step() {
     if (!active || paused || document.hidden || ending || (ready && kind !== 'woodfish')) return false;
     if (
@@ -51,7 +54,6 @@ export function Ritual({
         at: now(),
       })
     ) {
-      setPulse((n) => n + 1);
       if (kind === "woodfish") prepareFeedback();
       else feedback();
       return true;
@@ -93,62 +95,53 @@ export function Ritual({
     };
     // r?.id, not r: each strike replaces the session object.
   }, [ready, r?.id, kind, whenIdleRef, ending]);
+  if (kind !== "woodfish") {
+    const entry = builtInScenes.find(entry => entry.id === kind)!;
+    const steps = sceneSteps(entry);
+    return <LegacySceneRitual kind={kind}
+      progress={Math.floor(progress * steps / meta.steps)}
+      returning={!!r?.wishId && state.wishes.some(w => w.id === r.wishId && w.status === "realized")}
+      checkpoint={next => {
+        if (!active || document.hidden || !Number.isInteger(next) || next < 0 || next > steps) return;
+        const target = Math.ceil(next * meta.steps / steps);
+        // Monotonic adapter: duplicate callbacks cannot create extra old steps.
+        while (legacyProgress.current < target) {
+          if (!dispatch({ type: "ritual.strike", id: uid(), ritual: kind,
+            wishId: wishId || undefined, at: now() })) break;
+          legacyProgress.current++;
+        }
+      }} />;
+  }
+  const intention = sceneIntention("woodfish");
   return (
-    <div className={`ritual-page ritual-${kind}`}>
-      {kind === "woodfish" && <RitualNarrativeBlurb sceneId="woodfish" />}
-      <div className="ritual-goal">
-        {kind === "woodfish" ? "本轮轻敲" : "今日目标"}{" "}
-        <strong>
-          {kind === 'woodfish' ? `已敲 ${woodfishTotal} 次 · 至少 ${meta.steps} 次` : `${progress} / ${meta.steps}`}
-        </strong>
-      </div>
+    <section className="scene-experience ritual-page ritual-woodfish" aria-label={meta.name}>
+      <RitualNarrativeBlurb sceneId="woodfish" />
+      {intention && <aside className="scene-intention" data-kind={intention.kind} aria-label="这一场的心意">
+        <strong>{intention.label}</strong><p>{intention.action}</p>
+      </aside>}
+      <p className="scene-progress sr-only" role="status">已轻敲 {woodfishTotal} 次 · 至少 {meta.steps} 次后可结束</p>
       <div
-        className="progress-track"
+        className="sr-only"
         role="progressbar"
         aria-label={kind === "woodfish" ? "轻敲进度" : "仪式进度"}
         aria-valuemin={0}
         aria-valuemax={meta.steps}
         aria-valuenow={progress}
-      >
-        <span style={{ width: `${(progress / meta.steps) * 100}%` }} />
-      </div>
-      <div className="ritual-stage">
-        <div className="ritual-feedback" key={pulse}>
-          <strong>
-            {kind === "woodfish"
-              ? ending ? "本轮轻敲已结束" : ready ? "可以继续轻敲" : pulse ? "已记下一次轻敲" : "听一声木鱼"
-              : ready ? "仪式已完成" : pulse ? "已记下这一步" : "留一点好心情"}
-          </strong>
-          <span>{kind === "woodfish" ? "听木槌敲击与余音" : "烦恼，轻轻放下"}</span>
-        </div>
-        {kind === "woodfish" ? (
+      />
           <Woodfish
-            pulse={pulse}
             active={active && !paused}
             reducedMotion={state.settings.reducedMotion}
             view={view}
             disabled={ending}
+            strikes={woodfishTotal}
+            minimumStrikes={meta.steps}
+            instruction={instruction}
+            onFinish={ready ? () => { if (active && !paused) setEnding(true); } : undefined}
             onStrike={step}
             onImpact={feedback}
             onInstruction={setInstruction}
             whenIdleRef={whenIdleRef}
           />
-        ) : (
-          <button
-            className="ritual-object"
-            aria-label={ready ? "仪式步骤已完成" : "完成当前步骤"}
-            onClick={step}
-            disabled={ready || !active || paused}
-          >
-            <span key={pulse} className={pulse ? "object-bounce" : ""}>
-              <Art
-                kind={kind}
-                variant={kind === "lantern" ? "wish" : "default"}
-              />
-            </span>
-          </button>
-        )}
-      </div>
       {kind === "woodfish" &&
         new URLSearchParams(window.location.search).has("inspectWoodfish") && (
           <label className="woodfish-inspection">
@@ -164,22 +157,6 @@ export function Ritual({
             </select>
           </label>
         )}
-      <div className="ritual-counter">{String(kind === 'woodfish' ? woodfishTotal : progress).padStart(3, "0")}</div>
-      <p
-        className="tap-instruction"
-        id={kind === "woodfish" ? "woodfish-instruction" : undefined}
-        // The beat line speaks the settle moment; while steps remain, the
-        // prompts change too often to announce.
-        aria-live={ready ? "polite" : "off"}
-      >
-        {paused
-          ? "停一会儿，也很好。"
-          : ready
-            ? kind === "woodfish" ? ending ? "轻敲已记下，静听余音。" : "可以继续轻敲，想收尾时点「结束仪式」。" : "这一刻，已经很好。"
-            : kind === "woodfish"
-              ? instruction
-              : meta.prompts[Math.min(progress, meta.prompts.length - 1)]}
-      </p>
       {!r && (
         <div className="ritual-link">
           <label htmlFor="ritual-wish">
@@ -201,12 +178,8 @@ export function Ritual({
           </select>
         </div>
       )}
-      {kind === 'woodfish' && ready && !ending && <button
-        type="button" className="button primary scene-woodfish-finish"
-        disabled={!active || paused}
-        onClick={() => { if (active && !paused) setEnding(true); }}
-      >结束仪式</button>}
       {kind === "woodfish" && !ending && (
+        <div className="scene-actions">
         <button
           className="woodfish-pause"
           onClick={() => {
@@ -216,13 +189,9 @@ export function Ritual({
         >
           {paused ? "继续轻敲" : "暂停片刻"}
         </button>
+        </div>
       )}
-      <p className="ritual-footer">
-        <span />
-        慢慢{kind === "woodfish" ? "敲" : "来"}，也可以。
-        <span />
-      </p>
-    </div>
+    </section>
   );
 }
 export function Complete({ id, revealReward }: { id: string; revealReward?: boolean }) {

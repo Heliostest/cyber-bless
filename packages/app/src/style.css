@@ -1504,116 +1504,11 @@ button:hover:not(:disabled) {
   text-align: center;
   color: var(--ink-soft);
 }
-.ritual-goal {
-  text-align: center;
-  margin: 9px 0 10px;
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--ink-soft);
-}
-.ritual-goal strong {
-  margin-left: 9px;
-  font-size: 22px;
-  font-weight: 900;
-  color: var(--ink);
-}
-/* A candy-striped progress bar in a thick rim. */
-.progress-track {
-  height: 20px;
-  background: var(--paper);
-  border: 3px solid var(--rim);
-  box-shadow:
-    0 0 0 2px var(--edge),
-    inset 0 2px 3px #9f773d1f;
-  border-radius: 999px;
-  width: 76%;
-  margin: 0 auto 22px;
-  overflow: hidden;
-}
-.progress-track span {
-  display: block;
-  height: 100%;
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--butter) 0 8px,
-    var(--butter-hi) 8px 16px
-  );
-  border-radius: 999px;
-  box-shadow: inset 0 -3px 0 #e0aa2566;
-  transition: width 0.18s var(--ease);
-}
-/* The ritual sits on a warm paper stage panel: the ground its art and the
-   woodfish lighting were made for. */
-.ritual-stage {
-  position: relative;
-  padding: 4px 8px 10px;
-  border: 4px solid var(--rim);
-  border-radius: 32px;
-  background: var(--art-paper);
-  box-shadow: var(--panel-shadow-static);
-}
-/* The 3D woodfish is a transparent canvas, so its stage can carry dots. */
-.ritual-woodfish .ritual-stage {
-  background:
-    radial-gradient(#efe1bf 1.6px, transparent 2.1px) 0 0 / 18px 18px,
-    var(--art-paper);
-}
-.ritual-feedback {
-  text-align: center;
-  height: 91px;
-  padding-top: 13px;
-  animation: feedback-in 0.3s var(--ease);
-}
-.ritual-feedback strong {
-  display: block;
-  transform: rotate(-6deg);
-  font-size: 31px;
-  color: #b4521f;
-  font-weight: 900;
-  text-shadow:
-    0 2px 0 #ffffff,
-    0 4px 0 #f6d9b8;
-  letter-spacing: 1px;
-}
-.ritual-feedback span {
-  display: block;
-  font-size: 22px;
-  font-weight: 900;
-  color: var(--leaf-ink);
-  margin-top: 7px;
-}
-.ritual-object {
-  padding: 0;
-  background: none;
-  width: 100%;
-  touch-action: manipulation;
-  user-select: none;
-}
-.ritual-object:disabled {
-  opacity: 1;
-}
-.ritual-object > span {
-  display: block;
-}
-.ritual-object .art-variant-play {
-  width: calc(100% + 16px);
-  margin: 0 -8px;
-}
-/* The lantern's string runs up to the top edge of its picture: the air the
-   crane's picture has (16px) keeps the feedback lines off the string. */
-.ritual-lantern .ritual-object {
-  margin-top: 16px;
-}
-.woodfish-visual {
-  position: relative;
-  display: block;
-  width: 100%;
-  aspect-ratio: 1.34;
-  background:
-    radial-gradient(ellipse 46% 48% at 30% 38%, #ffe2ad66, transparent 100%),
-    radial-gradient(ellipse 42% 42% at 70% 54%, #f5c78a30, transparent 100%);
-}
+/* The woodfish uses the same canvas hit layer and tray as the other scenes. */
 .woodfish-object {
+  padding: 0;
+  border: 0;
+  background: none;
   touch-action: none;
   cursor: grab;
 }
@@ -1621,37 +1516,16 @@ button:hover:not(:disabled) {
   transform: none;
   cursor: grabbing;
 }
-.woodfish-canvas,
-.woodfish-fallback {
-  position: absolute;
-  inset: 0;
-  display: block;
-}
-.woodfish-canvas {
+.woodfish-stage > canvas {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s;
 }
-.woodfish-canvas canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-.woodfish-visual[data-renderer="ready"] .woodfish-canvas {
+.woodfish-stage[data-renderer="ready"] > canvas {
   opacity: 1;
 }
-.woodfish-visual[data-renderer="ready"] .woodfish-fallback {
-  visibility: hidden;
-}
-.woodfish-status {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-}
+.woodfish-stage[hidden] { display: none; }
+.woodfish-count { font-size: 12px; white-space: nowrap; }
 .woodfish-pause {
   display: block;
   margin: 14px auto 0;
@@ -1671,31 +1545,10 @@ button:hover:not(:disabled) {
 .woodfish-inspection select {
   padding: 6px;
 }
-.ritual-object:focus-visible {
+.woodfish-object:focus-visible {
   outline: 3px solid var(--focus);
-  outline-offset: 3px;
+  outline-offset: -3px;
   border-radius: 24px;
-}
-/* Score digits as a chunky sticker. */
-.ritual-counter {
-  text-align: center;
-  font-size: 72px;
-  font-weight: 900;
-  line-height: 1.2;
-  letter-spacing: 4px;
-  font-variant-numeric: tabular-nums;
-  margin: 16px 0 0;
-  color: var(--ink);
-  text-shadow:
-    0 3px 0 #ffffff,
-    0 7px 0 var(--ledge);
-}
-.tap-instruction {
-  text-align: center;
-  font-size: 19px;
-  font-weight: 700;
-  margin: 2px 0 19px;
-  color: var(--ink-soft);
 }
 /* The wish picker is a field on the mint page: the field outline, not the
    panels' sand edge (1.1:1 there). */
@@ -1905,22 +1758,6 @@ button:hover:not(:disabled) {
 .switch:checked:before {
   border-color: var(--leaf-ink);
   transform: translate(22px, -50%);
-}
-.ritual-footer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  color: var(--ink-soft);
-  font-size: 13px;
-  font-weight: 700;
-  margin-top: 27px;
-}
-.ritual-footer span {
-  width: 45px;
-  height: 4px;
-  background: radial-gradient(circle, var(--leaf-ledge) 1.6px, transparent 2.1px)
-    0 50% / 8px 4px repeat-x;
 }
 .object-bounce {
   animation: bounce 0.22s ease-out;
@@ -3343,6 +3180,11 @@ button:hover:not(:disabled) {
 .library-scene-stage:has(.scene-wish-slot:not([hidden]) form) {
   --wish-box: 80px;
 }
+/* Choice rows occupy the same tray slot as a later writing form. Reserve
+   their space too, so the grid cannot push the guide onto the 3D canvas. */
+.library-scene-stage:has(.scene-wish-slot:not([hidden]) > .scene-craft-choices) {
+  --wish-box: 72px;
+}
 .scene-intention {
   margin: 0 0 12px;
   padding: 10px 14px;
@@ -3731,18 +3573,6 @@ button:hover:not(:disabled) {
 .scene-load-error p {
   font-weight: 600;
 }
-.scene-experience .woodfish-object {
-  width: 100%;
-  height: 340px;
-  border: 4px solid var(--rim);
-  border-radius: 30px;
-  background:
-    radial-gradient(#efe1bf 1.6px, transparent 2.1px) 0 0 / 18px 18px,
-    var(--sand);
-  box-shadow:
-    0 0 0 2px var(--edge),
-    var(--soft-drop);
-}
 /* A small HUD counter. */
 .scene-progress {
   display: inline-block;
@@ -3917,7 +3747,6 @@ button:hover:not(:disabled) {
   background: var(--paper);
 }
 .library-scene-stage .scene-bow-tap.scene-continuous-finish::before { content: none; }
-.scene-woodfish-finish { display: block; margin: 12px auto; min-height: 44px; }
 .library-scene-stage .scene-diabolo-repeat,
 .library-scene-stage .scene-yut-finish,
 .library-scene-stage .scene-angklung-finish {
@@ -4096,9 +3925,6 @@ button:hover:not(:disabled) {
   overflow-wrap: anywhere;
   animation: scene-cue-copy 2.4s ease-in-out var(--cue-delay, 0ms) infinite;
 }
-.scene-cue-shelf:empty,
-.scene-cue-shelf:has(> .scene-cue-guides:empty),
-.scene-cue-shelf[hidden],
 .scene-cue-guides[hidden] { display: none; }
 .scene-cue-direction {
   display: grid;
@@ -4149,8 +3975,7 @@ button:hover:not(:disabled) {
   visibility: hidden;
 }
 .library-scene-stage:has(.scene-overlay-host[inert]) .scene-object-cues,
-.scene-overlay-host[inert] .scene-cue-guides,
-.woodfish-object:disabled .scene-object-cues { visibility: hidden; }
+.scene-overlay-host[inert] .scene-cue-guides { visibility: hidden; }
 @keyframes scene-cue-dot { 0%, 100% { opacity: 0.8; } 25% { opacity: 1; } 70% { opacity: 0.9; } }
 @keyframes scene-cue-copy { 0%, 100% { opacity: 0.65; } 18%, 40% { opacity: 1; } 75% { opacity: 0.65; } }
 @keyframes scene-cue-ripple {
@@ -4298,7 +4123,7 @@ button:hover:not(:disabled) {
    scene page's own (.library-scene-stage: the day sky, the crane's, or the
    night and its moon) filled to the frame; the scene's HUD stays on the
    scene page. Look, don't touch: taps fall through to the card. While the
-   scene mounts, its icon floats on the sky; without a stage (no WebGL2, or
+   scene mounts, a loading message appears; without a stage (no WebGL2, or
    the scene failed) the card is the plain row above. */
 .daily-set-preview {
   position: relative;
@@ -4339,22 +4164,16 @@ button:hover:not(:disabled) {
   opacity: 0;
   transition: opacity 0.3s var(--ease);
 }
-.daily-set-preview-icon {
+.daily-set-preview-loading {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  transition: opacity 0.3s var(--ease);
-}
-.daily-set-preview-icon .scene-icon {
-  width: 72px;
-  height: 72px;
+  font-size: 13px;
+  color: var(--muted);
 }
 .daily-set-preview[data-status="ready"] .daily-set-preview-stage > canvas {
   opacity: 1;
-}
-.daily-set-preview[data-status="ready"] .daily-set-preview-icon {
-  opacity: 0;
 }
 /* Under the stage, the row as it was. */
 .daily-set-primary > .daily-set-preview ~ .scene-badge,
@@ -4666,8 +4485,8 @@ button:hover:not(:disabled) {
   min-width: 0;
   min-height: 0;
 }
-.app-shell[data-immersive] .scene-experience > :not(.library-scene-stage, .woodfish-object),
-.app-shell[data-immersive] .ritual-page > :not(.ritual-stage),
+.app-shell[data-immersive] .scene-experience > :not(.library-scene-stage),
+.app-shell[data-immersive] .ritual-page > :not(.library-scene-stage),
 .app-shell[data-immersive] .completion > :not(.celebration) { flex-shrink: 0; }
 .app-shell[data-immersive] .scene-experience > .library-scene-stage {
   --canvas-h: max(0px, calc(100% - var(--tray) - var(--wish-box)));
@@ -4675,12 +4494,6 @@ button:hover:not(:disabled) {
   min-height: 0;
   height: auto;
 }
-.app-shell[data-immersive] .scene-experience > .woodfish-object {
-  flex: 1 1 0;
-  min-height: 0;
-  height: auto;
-}
-.app-shell[data-immersive] .woodfish-visual { height: 100%; aspect-ratio: auto; }
 .app-shell[data-immersive] .scene-intention { margin: 0; padding: 7px 12px; }
 .app-shell[data-immersive] .scene-intention strong { font-size: 13px; }
 .app-shell[data-immersive] .scene-intention p { margin: 2px 0 0; font-size: 12px; line-height: 1.5; }
@@ -4690,7 +4503,6 @@ button:hover:not(:disabled) {
 .app-shell[data-immersive] .scene-actions { margin: 0; }
 .app-shell[data-immersive] .scene-actions .button,
 .app-shell[data-immersive] .scene-completion-actions > .button { min-height: 44px; padding-block: 6px; }
-.app-shell[data-immersive] .scene-woodfish-finish { margin: 0 auto; min-height: 44px; }
 .app-shell[data-immersive] .scene-done-row { gap: 8px; margin: 0; }
 .app-shell[data-immersive] .scene-done { font-size: 13px; line-height: 1.5; }
 .app-shell[data-immersive] .scene-wish-saved:empty { display: none; }
@@ -4733,22 +4545,9 @@ button:hover:not(:disabled) {
 .app-shell[data-immersive] .scene-load-error { margin: auto 0; max-height: 100%; overflow-y: auto; overscroll-behavior: contain; }
 .app-shell[data-immersive] .library-scene-stage .scene-step-dots { gap: 6px; padding-inline: 6px; }
 .app-shell[data-immersive] .scene-step-dot { flex-shrink: 0; }
-/* Legacy sessions still opened from a saved 2D ritual share the same budget. */
-.app-shell[data-immersive] .ritual-goal { margin: 0; font-size: 13px; }
-.app-shell[data-immersive] .ritual-goal strong { font-size: 16px; }
-.app-shell[data-immersive] .progress-track { flex-shrink: 0; height: 14px; margin-bottom: 0; }
-.app-shell[data-immersive] .ritual-stage { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; }
-.app-shell[data-immersive] .ritual-stage .ritual-object { flex: 1 1 0; min-height: 0; }
-.app-shell[data-immersive] .ritual-stage .ritual-object > span,
-.app-shell[data-immersive] .ritual-stage .ritual-object .art { max-height: 100%; }
-.app-shell[data-immersive] .ritual-feedback { flex-shrink: 0; height: 64px; padding-top: 6px; }
-.app-shell[data-immersive] .ritual-feedback strong { font-size: 22px; }
-.app-shell[data-immersive] .ritual-feedback span { margin-top: 4px; font-size: 15px; }
-.app-shell[data-immersive] .ritual-counter { margin: 0; font-size: 32px; }
-.app-shell[data-immersive] .tap-instruction { margin: 0; font-size: 14px; line-height: 1.5; }
+/* Legacy session extras share the same screen budget. */
 .app-shell[data-immersive] .woodfish-pause { margin: 0 auto; }
 .app-shell[data-immersive] .ritual-link { margin: 0; padding-block: 4px; }
-.app-shell[data-immersive] .ritual-footer { display: none; }
 .app-shell[data-immersive] .completion { gap: 10px; }
 .app-shell[data-immersive] .completion .page-heading { margin: 0; }
 .app-shell[data-immersive] .celebration { flex: 1 1 0; min-height: 0; margin: 0; padding: 0; display: flex; justify-content: center; }
@@ -4774,9 +4573,6 @@ button:hover:not(:disabled) {
   .app-shell[data-immersive] .ritual-page { gap: 6px; }
   .app-shell[data-immersive] > .app-topbar { height: 56px; padding-block: 6px; }
   .app-shell[data-immersive] .scene-intention { padding-block: 5px; }
-  .app-shell[data-immersive] .ritual-feedback { height: 50px; }
-  .app-shell[data-immersive] .ritual-feedback strong { font-size: 18px; }
-  .app-shell[data-immersive] .ritual-counter { font-size: 26px; }
 }
 @media (max-height: 450px) {
   /* In landscape or above a keyboard, keep the instrument touchable first. */
@@ -4784,6 +4580,4 @@ button:hover:not(:disabled) {
   .app-shell[data-immersive] .scene-caption,
   .app-shell[data-immersive] .ritual-feedback,
   .app-shell[data-immersive] .ritual-counter { display: none; }
-  .app-shell[data-immersive] .ritual-stage { min-height: 60px; }
-  .app-shell[data-immersive] .ritual-stage .woodfish-object { min-height: 44px; }
 }

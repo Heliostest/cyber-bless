@@ -13,6 +13,8 @@ describe('collected object touch feedback', () => {
     ['zeniarai-coin-washing', 'water'], ['slavic-wreath', 'air'],
     ['ema-votive-plaque', 'woodTap'], ['omamori-cycle', 'fabric'],
     ['lantern', 'paper'], ['votive-candle-catholic', 'air'],
+    ['hindu-coconut-offering', 'hollow'], ['mezuzah-doorpost', 'metal'],
+    ['sri-lankan-bodhi-puja', 'ceramic'], ['ukrainian-didukh', 'air'],
   ])('touching %s selects its displayed surface cue %s', (id, sound) => {
     expect(wishObjectFeedback(id).sound).toBe(sound)
   })
@@ -39,6 +41,12 @@ describe('collected object touch feedback', () => {
     expect(chime.motion.some(frame => String(frame.transform).includes('rotate(-'))).toBe(true)
     expect(chime.motion.some(frame => /rotate\([1-9]/.test(String(frame.transform)))).toBe(true)
     expect(daruma.motion).not.toEqual(chime.motion)
+  })
+
+  it('anchors the upright wheat bundle near its foot instead of using the unknown-object pulse', () => {
+    const bundle = wishObjectFeedback('ukrainian-didukh')
+    expect(bundle.motion.every(frame => frame.transformOrigin === '50% 90%')).toBe(true)
+    expect(bundle.motion.some(frame => String(frame.transform).includes('rotate(-'))).toBe(true)
   })
 
   it('lifts the paper crane and lantern gently without applying a shared rocking rotation', () => {

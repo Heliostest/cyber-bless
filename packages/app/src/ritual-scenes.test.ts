@@ -148,7 +148,7 @@ async function openApp(state: State) {
     sceneTitle: () => ui.host.querySelector(".app-topbar .title-ribbon")?.textContent,
     sceneProgress: () => ui.host.querySelector(".scene-progress")?.textContent,
     doneButtons: () =>
-      all(".scene-done-row button:not(.favorite-chip):not(.scene-wish-invite)").map((b) => b.textContent),
+      all(".scene-done-row button:not(.favorite-chip):not(.scene-wish-invite):not(.scene-share-trigger)").map((b) => b.textContent),
     /** The first button whose text includes `text`. */
     button: (text: string, within = "") =>
       all(`${within} button`).find((b) => b.textContent?.includes(text))!,
@@ -185,7 +185,9 @@ describe("今日's daily set", () => {
     const ui = await openApp(createState());
     await ui.tap(ui.host.querySelector(`.daily-set-primary[data-scene="${sceneId}"]`)!);
     expect(ui.host.querySelector(".scene-reward-reveal")).toBeNull();
+    expect(ui.host.querySelector('.scene-share-trigger')).toBeNull();
     await ui.walk();
+    expect(ui.host.querySelectorAll('.scene-share-trigger')).toHaveLength(1);
     expect(ui.host.querySelectorAll(".scene-reward-reveal")).toHaveLength(1);
     act(() => scene.context!.checkpoint!(3));
     await settle();

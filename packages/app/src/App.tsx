@@ -22,6 +22,7 @@ import { SceneLibraryProvider, SceneCatalog, CacheManager } from "./scene-librar
 import { SceneExperience } from "./scene-experience";
 import { FeedbackControls, dismissFeedbackMenu } from "./feedback-controls";
 import { dismissVisualStyleMenu } from "./visual-style-menu";
+import { dismissRitualShare } from "./ritual-share";
 import { PageTitle, useAppLayout } from "./page-heading";
 import { Opening } from "./opening";
 import { followSystemReducedMotion, initialSettings } from "./reduced-motion";
@@ -158,6 +159,8 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
         window.scrollTo?.(0, 0);
     }
     function back() {
+        if (dismissRitualShare(shell.current))
+            return;
         if (dismissVisualStyleMenu(shell.current))
             return;
         if (dismissFeedbackMenu(shell.current))
@@ -222,6 +225,8 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     useEffect(() => {
         if (lastBack.current !== backRequest) {
             lastBack.current = backRequest;
+            if (dismissRitualShare(shell.current))
+                return;
             // On the reward card, Android back leaves like ✕ does, not like a
             // stack pop: the exits agree, and the sticker still flies to the tab.
             if (route.page === "complete")
@@ -394,7 +399,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             : "";
     };
     const page = route.page === 'privacy' || route.page === 'support' ? <LegalInformation kind={route.page}/> :
-        route.page === "scenes" ? <SceneCatalog /> : route.page === "cache" ? <CacheManager /> : route.page === "scene" ? <SceneExperience entry={route.entry ?? state.sceneRecords.find(r => r.id === route.id)} wishId={route.wishId} daily={route.daily} vessel={route.vessel} replay={route.replay} opening={route.opening}/> : route.page === "today" ? (openingActive ? <Opening /> : <Today key={day} day={day}/>) : route.page === "wishes" ? (<Wishes />) : route.page === "world" ? (<World />) : route.page === "me" ? (<Me />) : route.page === "new" ? (<NewWish />) : route.page === "wish" ? (<WishDetail key={route.id} id={route.id!}/>) : route.page === "fulfill" ? (<FulfillWish key={route.id} id={route.id!}/>) : route.page === "note" ? (<WishNote key={route.id} id={route.id!}/>) : route.page === "ritual" ? (<Ritual id={route.id} wishId={route.wishId} whenIdleRef={woodfishIdle}/>) : route.page === "complete" ? (<Complete id={route.id!} revealReward={route.revealReward}/>) : route.page === "collection" ? (<CollectionDetail id={route.id!}/>) : (<History />);
+        route.page === "scenes" ? <SceneCatalog /> : route.page === "cache" ? <CacheManager /> : route.page === "scene" ? <SceneExperience entry={route.entry ?? state.sceneRecords.find(r => r.id === route.id)} wishId={route.wishId} daily={route.daily} vessel={route.vessel} replay={route.replay} opening={route.opening}/> : route.page === "today" ? (openingActive ? <Opening /> : <Today key={day} day={day}/>) : route.page === "wishes" ? (<Wishes />) : route.page === "world" ? (<World />) : route.page === "me" ? (<Me />) : route.page === "new" ? (<NewWish />) : route.page === "wish" ? (<WishDetail key={route.id} id={route.id!}/>) : route.page === "fulfill" ? (<FulfillWish key={route.id} id={route.id!}/>) : route.page === "note" ? (<WishNote key={route.id} id={route.id!}/>) : route.page === "ritual" ? (<Ritual id={route.id} wishId={route.wishId} whenIdleRef={woodfishIdle}/>) : route.page === "complete" ? (<Complete id={route.id!} revealReward={route.revealReward} shareSnapshot={route.shareSnapshot}/>) : route.page === "collection" ? (<CollectionDetail id={route.id!}/>) : (<History />);
     return (<IntlProvider locale={formatLocale} defaultLocale="zh-Hans" messages={catalogData[locale]}><ContentContext.Provider value={content ?? {}}>
       <Context.Provider value={{
             state,
@@ -404,6 +409,9 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             feedback,
             haptic,
             canHaptic: typeof host.haptic === "function",
+            shareImage: host.shareImage,
+            shareLink: host.shareLink,
+            publicShareBaseUrl: host.publicShareBaseUrl,
             decodeSound,
             prepareFeedback,
             stopInteractionSound,

@@ -4,7 +4,6 @@ import { localDay, rituals, sceneIntention, type RitualId } from "@wbr/core";
 import { Icon } from "./art";
 import { now, uid, useApp } from "./context";
 import { Empty } from "./pages";
-import { ritualTitle } from "./home";
 import { Woodfish } from "./woodfish";
 import { RitualNarrativeBlurb } from "./ritual-narrative";
 import { rewardOriginOf } from "./reward-flight";
@@ -12,6 +11,8 @@ import { SceneRewardReveal } from "./scene-reward-reveal";
 import { LegacySceneRitual } from "./legacy-scene-ritual";
 import { sceneSteps } from "./scene-placement";
 import { builtInScenes } from "./scene-library";
+import { captureSceneImage } from '@wbr/scene-runtime';
+import { SceneShareButton } from './ritual-share';
 /**
  * Compatibility host for sessions begun before scene-based rituals.
  * Their saved counters and rewards are preserved; every interaction is 3D.
@@ -58,7 +59,9 @@ export function Ritual({ id, wishId: linkedWishId, whenIdleRef, }: {
     }
     function finish() {
         if (r && dispatch({ type: "ritual.finish", id: r.id, at: now() })) {
-            go({ page: "complete", id: r.id, revealReward: true });
+            const root = document.querySelector('.app-content');
+            const shareSnapshot = root ? captureSceneImage(root) : undefined;
+            go({ page: "complete", id: r.id, revealReward: true, shareSnapshot });
         }
     }
     // Finite rituals settle at their last step. The woodfish keeps sounding
@@ -148,13 +151,12 @@ export function Ritual({ id, wishId: linkedWishId, whenIdleRef, }: {
         </div>)}
     </section>);
 }
-export function Complete({ id, revealReward }: {
+export function Complete({ id, revealReward, shareSnapshot }: {
     id: string;
     revealReward?: boolean;
+    shareSnapshot?: string;
 }) {
     const { state, go, launchReward } = useApp();
-    const [shareText, setShareText] = useState("");
-    const [copied, setCopied] = useState(false);
     const collectCta = useRef<HTMLButtonElement>(null);
     const r = state.sessions.find((s) => s.id === id);
     if (!r)
@@ -186,22 +188,6 @@ export function Complete({ id, revealReward }: {
         });
         go({ page: "world" });
     }
-    async function share() {
-        const text = r!.ritual === "woodfish"
-            ? tr("\u4ECA\u5929\u8F7B\u6572\u6728\u9C7C\uFF0C\u542C\u4E00\u8F6E\u6572\u51FB\u4E0E\u4F59\u97F3\u3002") : tr("\u4ECA\u5929{p0}\u3002\u628A\u5C0F\u4EEA\u5F0F\u8FC7\u6210\u597D\u5FC3\u60C5\u3002", { p0: tr(ritualTitle[r!.ritual]) });
-        if (navigator.share) {
-            try {
-                await navigator.share({ title: r!.ritual === "woodfish" ? tr("\u6728\u9C7C\u9759\u542C") : tr("\u4ECA\u65E5\u4EEA\u5F0F"), text });
-                return;
-            }
-            catch (e) {
-                if (e instanceof Error && e.name === "AbortError")
-                    return;
-            }
-        }
-        setShareText(text);
-        setCopied(false);
-    }
     return (<div className="completion">
       {revealReward && <SceneRewardReveal sceneId={r.ritual} reducedMotion={state.settings.reducedMotion}/>}
       {!wish && activeWish && (<p className="reward-wish-note">{message('app.wish.linkedNote', { title: activeWish.title })}</p>)}
@@ -224,27 +210,7 @@ export function Complete({ id, revealReward }: {
       <button className="button primary full" data-reward-origin={!wish || undefined} ref={collectCta} onClick={wish ? () => go({ page: "fulfill", id: wish.id }) : collect}>
         {wish ? tr("\u7EE7\u7EED\u8FD8\u613F \u00B7 \u7559\u4E0B\u8FD9\u4EFD\u5FC3\u60C5") : tr("\u6536\u4E0B{p0}", { p0: tr(rituals[r.ritual].object) })}
       </button>
-      <button className="button outline full" onClick={() => void share()}>
-        <Icon name="share"/>
-        {r.ritual === "woodfish" ? tr("\u5206\u4EAB\u8FD9\u6B21\u9759\u542C") : tr("\u5206\u4EAB\u4ECA\u65E5\u4EEA\u5F0F")}
-      </button>
-      {shareText && (<div className="share-panel">
-          <label htmlFor="share-copy">{tr("\u5206\u4EAB\u8FD9\u4EFD\u597D\u5FC3\u60C5")}</label>
-          <textarea id="share-copy" value={shareText} readOnly rows={3}/>
-          <button className="small-button" onClick={async () => {
-                try {
-                    await navigator.clipboard.writeText(shareText);
-                    setCopied(true);
-                }
-                catch {
-                    document
-                        .querySelector<HTMLTextAreaElement>("#share-copy")
-                        ?.select();
-                }
-            }}>
-            {copied ? tr("\u5DF2\u590D\u5236") : tr("\u590D\u5236\u6587\u6848")}
-          </button>
-        </div>)}
+      <SceneShareButton sceneId={r.ritual} title={translateScene(rituals[r.ritual].name)} snapshot={shareSnapshot} className="full"/>
       <p className="leaf-footer">
         <Icon name="leaf"/>{tr("\u660E\u5929\u8FD8\u6709\u4E00\u4E2A\u5C0F\u60CA\u559C\u3002")}<Icon name="leaf"/>
       </p>

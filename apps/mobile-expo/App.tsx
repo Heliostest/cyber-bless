@@ -20,6 +20,8 @@ import { createProjectedStorage, type HapticStrength } from '@wbr/runtime';
 import { parseWidgetLink, type WidgetNavigationRequest } from '@wbr/core/widgets';
 import { synchronizeWidgets } from './widget-sync';
 import BlessingDom from "./BlessingDom";
+import { shareImage } from './share-image';
+import { shareLink } from './share-link';
 import {
   readContentHistory,
   readSceneAsset,
@@ -173,6 +175,9 @@ function Shell() {
         manifestUrl={process.env.EXPO_PUBLIC_SCENE_MANIFEST_URL ?? ""}
         writeSave={writeSave}
         haptic={haptic}
+        shareImage={shareImage}
+        shareLink={shareLink}
+        publicShareBaseUrl={process.env.EXPO_PUBLIC_SHARE_BASE_URL ?? ''}
         onCanGoBack={onCanGoBack}
         active={active}
         preferredLanguages={languages}

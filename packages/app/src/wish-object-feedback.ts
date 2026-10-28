@@ -26,6 +26,10 @@ type Motion = keyof typeof motions
 // Authored touch reactions to the displayed objects. These do not prescribe
 // traditional handling, identify historical materials, or claim an effect.
 const objects: Record<string, readonly [SoftSound, Motion]> = {
+  'hindu-coconut-offering': ['hollow', 'weight'],
+  'mezuzah-doorpost': ['metal', 'weight'],
+  'sri-lankan-bodhi-puja': ['ceramic', 'weight'],
+  'ukrainian-didukh': ['air', 'nod'],
   'crane': ['paper', 'wings'],
   'furin-wind-chime': ['chime', 'swing'],
   'daruma-eye-painting': ['hollow', 'rock'],

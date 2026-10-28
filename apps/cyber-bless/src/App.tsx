@@ -7,6 +7,7 @@ import "@wbr/app/style.css";
 import { DebugOverlay, debugEnabled } from "./DebugOverlay";
 
 const host = browserHost();
+host.publicShareBaseUrl = import.meta.env.VITE_PUBLIC_SHARE_BASE_URL || undefined;
 configureLocale(host.initialLocalePreference ?? 'system', navigator.languages ?? [navigator.language]);
 const DevApp = lazy(() => import("./DevApp"));
 const OpeningPreview = import.meta.env.DEV ? lazy(() => import('./OpeningPreview')) : null;

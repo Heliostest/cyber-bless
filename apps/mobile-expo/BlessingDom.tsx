@@ -7,12 +7,15 @@ import {
 } from "@wbr/content/native-web";
 import "@wbr/app/style.css";
 import type { WidgetNavigationRequest } from '@wbr/core/widgets';
-import type { HapticStrength } from '@wbr/runtime';
+import type { HapticStrength, ShareImageRequest, ShareLinkRequest } from '@wbr/runtime';
 import type { LocalePreference } from '@wbr/i18n/locales';
 export default function BlessingDom({
   readSave,
   writeSave,
   haptic,
+  shareImage,
+  shareLink,
+  publicShareBaseUrl,
   onCanGoBack,
   active,
   preferredLanguages,
@@ -36,6 +39,9 @@ export default function BlessingDom({
   readSave(): Promise<string | null>;
   writeSave(raw: string): Promise<void>;
   haptic(strength?: HapticStrength): Promise<void>;
+  shareImage(image: ShareImageRequest): Promise<void>;
+  shareLink(request: ShareLinkRequest): Promise<void>;
+  publicShareBaseUrl: string;
   onCanGoBack(value: boolean): Promise<void>;
   active: boolean;
   preferredLanguages: string[];
@@ -55,10 +61,12 @@ export default function BlessingDom({
     if (!meta.parentNode) document.head.appendChild(meta);
   }, []);
   // DOM bridge proxies can change when native props update; keep a stable host.
-  const actions = useMemo(() => ({ readSave, writeSave, haptic }), []);
+  const actions = useMemo(() => ({ readSave, writeSave, haptic, shareImage, shareLink }), []);
   actions.readSave = readSave;
   actions.writeSave = writeSave;
   actions.haptic = haptic;
+  actions.shareImage = shareImage;
+  actions.shareLink = shareLink;
   const contentActions = useMemo(
     () => ({
       readContentHistory,
@@ -91,11 +99,13 @@ export default function BlessingDom({
       read: () => actions.readSave(),
       write: (raw: string) => actions.writeSave(raw),
       haptic: (strength?: HapticStrength) => actions.haptic(strength),
+      shareImage: (image: ShareImageRequest) => actions.shareImage(image),
+      shareLink: (request: ShareLinkRequest) => actions.shareLink(request),
     }),
     [actions],
   );
   // The native shell already read this same save before mounting the WebView.
-  Object.assign(host, { initialLocalePreference: localePreference });
+  Object.assign(host, { initialLocalePreference: localePreference, publicShareBaseUrl });
   return (
     <BlessingApp
       host={host}

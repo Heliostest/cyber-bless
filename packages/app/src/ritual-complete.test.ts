@@ -69,6 +69,7 @@ function withWishSession(
 
 beforeEach(() => {
   vi.useFakeTimers();
+  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, value: function (this: HTMLDialogElement) { this.setAttribute('open', ''); } });
   scene.idle = Promise.resolve();
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 });
@@ -148,12 +149,14 @@ describe("the settle beat (P0)", () => {
     expect(ui.host.querySelector(".reward-destination, [data-reward-sticker], .celebration, .page-heading")).toBeNull();
     expect(ui.host.querySelectorAll(".scene-reward-reveal")).toHaveLength(1);
     expect(ui.host.textContent).not.toContain('功德');
-    const share = [...ui.host.querySelectorAll('.completion button')].find(button => button.textContent?.includes('分享今日仪式'));
+    const share = [...ui.host.querySelectorAll('.completion button')].find(button => button.textContent?.includes('分享仪式'));
     expect(share).toBeDefined();
     clickOn(share!);
     await settle();
-    expect(ui.host.querySelector<HTMLTextAreaElement>('#share-copy')?.value).toContain('今天折一份小小的期待');
-    expect(ui.host.querySelector<HTMLTextAreaElement>('#share-copy')?.value).not.toContain('功德');
+    expect(ui.host.querySelector('dialog[open]')).not.toBeNull();
+    expect(ui.host.querySelector('a[href="https://apps.apple.com/app/id6821271597"]')).not.toBeNull();
+    clickOn(ui.host.querySelector('button[aria-label="关闭分享"]')!);
+    await settle();
 
     clickOn(primary[0]);
     // On 小天地: the sticker flew (instantly, jsdom has no Web Animations)

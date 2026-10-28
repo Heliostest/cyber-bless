@@ -1,4 +1,5 @@
 import { bindSceneMotion } from "./scene-motion";
+export { captureSceneImage } from "./scene-capture";
 
 export type SceneSettings = { active: boolean; reducedMotion: boolean };
 export type SceneMountOptions = SceneSettings & {

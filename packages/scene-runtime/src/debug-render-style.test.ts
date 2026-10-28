@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type * as THREE from "three";
+import * as THREE from "three";
 import { DEFAULT_STYLE_PARAMETERS } from "./render-style-parameters";
 import { createDebugRenderStyle } from "./debug-render-style";
 import { createCozyEnvironment } from "./cozy-environment";
+import { captureSceneImage } from "./scene-capture";
 
 const hooks = vi.hoisted(() => ({
   capture: vi.fn(() => "data:image/webp;base64,real"), prepare: vi.fn(), invalidate: vi.fn(),
@@ -27,14 +28,28 @@ beforeEach(() => {
 });
 
 function setup(objectPresentation = false) {
-  const renderer = { domElement: { dataset: {}, closest: (selector: string) =>
+  const renderer = { domElement: { width: 800, height: 600, matches: (selector: string) => selector === "canvas",
+    toDataURL: () => "data:image/png;base64,c2NlbmU=", dataset: {}, closest: (selector: string) =>
     objectPresentation && selector === '[data-scene-presentation="object"]' ? {} : undefined } } as unknown as THREE.WebGLRenderer;
-  const style = createDebugRenderStyle(renderer, {} as THREE.Scene, {} as THREE.Camera, { id: "tea", label: "茶", invalidate: hooks.invalidate });
+  const style = createDebugRenderStyle(renderer, new THREE.Scene(), new THREE.Camera(), { id: "tea", label: "茶", invalidate: hooks.invalidate });
   const capture = hooks.register.mock.calls[0][4] as (id: string, parameters: typeof DEFAULT_STYLE_PARAMETERS) => string | null;
-  return { style, capture };
+  return { style, capture, renderer };
 }
 
 describe("mounted renderer shader thumbnail readiness", () => {
+  it("exports a current scene frame only after readiness and unregisters it before renderer teardown", () => {
+    const ui = setup(), canvas = ui.renderer.domElement;
+    expect(captureSceneImage(canvas)).toBeUndefined();
+    ui.style.render();
+    const renderedBefore = hooks.render.mock.calls.length;
+    expect(captureSceneImage(canvas)).toBe("data:image/png;base64,c2NlbmU=");
+    expect(hooks.render.mock.calls.length).toBe(renderedBefore + 1);
+    expect(hooks.prepare).toHaveBeenLastCalledWith(ui.renderer, "toon-soft", { advanceMotion: false });
+    ui.style.dispose();
+    expect(captureSceneImage(canvas)).toBeUndefined();
+    expect(hooks.render.mock.calls.length).toBe(renderedBefore + 1);
+  });
+
   it.each([["normal scene", false, 1], ["inline object", true, 0]] as const)("%s keeps the expected environment lifecycle and default shading", async (_label, objectPresentation, environmentCalls) => {
     const ui = setup(objectPresentation);
     expect(createCozyEnvironment).toHaveBeenCalledTimes(environmentCalls);

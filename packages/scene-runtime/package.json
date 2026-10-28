@@ -9,7 +9,8 @@
     "./debug-render-style": "./src/debug-render-style.ts",
     "./debug-styles": "./src/debug-styles.ts",
     "./interaction-cues": "./src/interaction-cues.ts",
-    "./stylized-water": "./src/stylized-water.ts"
+    "./stylized-water": "./src/stylized-water.ts",
+    "./ritual-optics": "./src/ritual-optics.ts"
   },
   "dependencies": {
     "@wbr/content": "*",

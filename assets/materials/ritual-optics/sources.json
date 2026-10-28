@@ -1,0 +1,51 @@
+{
+  "accessed": "2026-10-28",
+  "license": "CC0-1.0",
+  "paperAcquisition": "HTTP Range: ZIP directory, local header and roughness member only. Other maps/package bytes not downloaded.",
+  "polyHavenManifest": "https://api.polyhaven.com/files/rough_linen",
+  "ambientCgManifest": "https://ambientcg.com/api/v2/full_json?id=Paper001&include=downloadData,mapData",
+  "sharpVersion": "0.34.5",
+  "assets": {
+    "paper": {
+      "asset": "ambientCG Paper001",
+      "sourceUrl": "https://acg-download.struffelproductions.com/file/ambientCG-Web/download/Paper001_JizQPMoh/Paper001_1K-JPG.zip",
+      "sourceMember": "Paper001_1K-JPG_Roughness.jpg",
+      "downloadedMapBytes": 437667,
+      "downloadedMapSha256": "28bcbbc7648ff0f99a47417b272bf98ae130126f74e8e5de640b7c2defd4e855",
+      "downloadedMapMd5": "4a4d0a5c3da854c949e5bebb1ee4b190",
+      "sourceDimensions": [
+        1024,
+        600
+      ],
+      "sourceChannels": 1,
+      "storedFile": "paper001-roughness-512.png",
+      "storedDimensions": [
+        512,
+        512
+      ],
+      "storedSha256": "4bea1bea58501a413050c31f3a49be7460e3dfcc33317d4ae67645ac164a4582",
+      "storedBytes": 196875,
+      "transform": "Extract channel 0 as scalar (no gamma/color conversion); Lanczos3 resize to 512x512; lossless 8-bit grayscale PNG."
+    },
+    "linen": {
+      "asset": "Poly Haven rough_linen",
+      "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/rough_linen/rough_linen_rough_1k.png",
+      "downloadedMapBytes": 2045070,
+      "downloadedMapSha256": "040eeef8041e3c619e5a17a76bb5f376416ce17f1ac42a04003a67952cc206a3",
+      "downloadedMapMd5": "e9107cbc7aae80fe39d140a7fe592c79",
+      "sourceDimensions": [
+        1024,
+        1026
+      ],
+      "sourceChannels": 1,
+      "storedFile": "rough-linen-roughness-512.png",
+      "storedDimensions": [
+        512,
+        512
+      ],
+      "storedSha256": "ff9bffe1c4969fb9a69f406fa40877689a7977791c2005d123444bf4bc3b41fe",
+      "storedBytes": 200703,
+      "transform": "Extract channel 0 as scalar (no gamma/color conversion); Lanczos3 resize to 512x512; lossless 8-bit grayscale PNG."
+    }
+  }
+}

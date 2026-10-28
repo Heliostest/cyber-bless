@@ -1,10 +1,5 @@
 [
   {
-    "id": "hindu-coconut-offering",
-    "title": "椰果献愿",
-    "category": "blessing"
-  },
-  {
     "id": "nanakusa-gayu",
     "title": "七草祈安",
     "category": "blessing"
@@ -37,6 +32,11 @@
   {
     "id": "uchide-wishing-mallet",
     "title": "振槌寄愿",
+    "category": "blessing"
+  },
+  {
+    "id": "mezuzah-doorpost",
+    "title": "门柱祈安",
     "category": "blessing"
   },
   {
@@ -242,6 +242,11 @@
   {
     "id": "greek-new-year-pomegranate",
     "title": "破榴迎新",
+    "category": "blessing"
+  },
+  {
+    "id": "hindu-coconut-offering",
+    "title": "椰果献愿",
     "category": "blessing"
   },
   {

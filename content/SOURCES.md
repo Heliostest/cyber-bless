@@ -4286,3 +4286,6 @@ Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](
 
 ## 椰果献愿 · 2026-10-23（验收延至10月24日）
 印度教椰果供献与为重要开端祈求祝福，见[专卡](traditions/hindu-coconut-offering.md)与[研究](../docs/research/2026-10-23-hindu-coconut-offering.md)。实际已读 Sri Ganesha Temple Plano 的供品／新开端／象头神／击石破壳相关正文，以及 Kauai Hindu Monastery 柱雕的椰树说明；保留宗教礼敬语境。单个去纤维褐壳椰果、固定两半、石盘及上／右／下三段为产品安排，无现实效验保证，未使用来源图片。
+
+## 门柱祈安 · 2026-10-24
+见[专卡](traditions/mezuzah-doorpost.md)和[逐项研究](../docs/research/2026-10-24-mezuzah-doorpost.md)。已读URJ与Chabad直接相关机构正文；经卷／护盒、记念上帝与家庭身份、护佑住户的信念、安装前祝福及右柱上段／朝门洞侧面有对应依据。闭合原创护盒、胶背、托架和上／右／下三个产品阶段不称完整mitzvah或现实保护保证；社群倾角差异保留，未复制来源图像。

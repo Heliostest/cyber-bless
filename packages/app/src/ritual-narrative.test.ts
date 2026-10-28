@@ -308,6 +308,7 @@ describe("builtInScenes narratives", () => {
       "mexican-metate",
       "mexican-molinillo",
       "mexican-tortilla-press",
+      "mezuzah-doorpost",
       "milagros",
       "minangkabau-spinning-top",
       "mizuhiki",

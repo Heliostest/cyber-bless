@@ -39,6 +39,9 @@ it.each([0,1,2])('cancels the real Chinowa walking view through production adapt
 })
 
 it.each([
+  ['mezuzah-doorpost', 0, 'mezuzah-case', 'mezuzah-case', [0,0,.12], [0,0,.12], [0,-60]],
+  ['mezuzah-doorpost', 1, 'mezuzah-case', 'mezuzah-case', [0,0,.12], [0,0,.12], [60,0]],
+  ['mezuzah-doorpost', 2, 'mezuzah-case', 'mezuzah-case', [0,0,.12], [0,0,.12], [0,60]],
   ['nanakusa-gayu', 0, 'serving-ladle', 'serving-ladle', [0,.42,.72], [0,0,0], [-60,0]],
   ['uchide-wishing-mallet', 0, 'uchide-mallet', 'uchide-mallet', [0,.425,-.2], [0,0,0], [0,-60]],
   ['kitano-nadeushi', 0, 'visitor-hand', 'visitor-hand', [0,0,0], [0,0,0], [0,-60]],

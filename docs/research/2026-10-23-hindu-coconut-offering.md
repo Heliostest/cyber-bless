@@ -86,3 +86,16 @@
 内部@wbr解析到新工作区，其他依赖共享；1715个LFS指针从本地缓存展开，无下载。移动离线使用忽略目录中临时Metro配置及本地Expo依赖解决跨盘解析，不改产品配置。最终离线结果、命令、当前构建与44张截图哈希／时间及Git状态见 [验收记录](../../artifacts/hindu-coconut-offering/validation.md) 和 `final-evidence.json`。技术通过不替代来源审阅。
 
 移动离线最终验收：Android与iOS均正式导出并通过本地HTML／JS／CSS及14资产哈希；各158 DOM JS，包内均有本场椰壳及石台代码；iOS465原生封面全哈希通过，三张本场封面也逐项核对。详细输出、chunk与hash保存于验收记录和offline-proof.json。
+
+## 2026-10-28 合并前来源复核
+
+本次重新阅读 AGENTS.md、场景来源规范及拟合并版本的 model、scene、README、专卡和宿主叙事。实际呈现仍为完整硬壳椰果抬起、移到石台上方、向下击石，接触以后才裂成两半并显出白瓤和石面水痕；中文介绍、提示及结束语未修改。
+
+| 对应主张 | 本轮实际打开的来源与位置 | 读取状态与日期 | 支持范围及限制 |
+| --- | --- | --- | --- |
+| 献供、重要开端祝祷、象头神、硬壳白瓤和击石破壳 | Sri Ganesha Temple Plano／Hindu Temple of North Texas，[Why Do Hindus Break a Coconut Before God?](https://sriganeshatempleplano.org/blog/why-do-hindus-break-a-coconut-before-god)，发布日仍显示 2026-08-07；正文开篇、供品、硬壳与白瓤、新开端、象头神、奉献心意和击石破壳段落，本轮提取 L18–46 | 2026-10-28 已读相关网页正文 | 支持宗教献供身份及该寺所述解释；不外推为统一流程、规定次数或应验保证 |
+| 寺庙破椰为献供 | Kauai Hindu Monastery／Himalayan Academy，[Pillars of Iraivan — Pillar Twelve](https://kauaishindumonastery.com/pillars-of-iraivan/Pillar12/)，第十二柱顶部北面椰树说明，本轮提取 L35–41；未见发布日期 | 2026-10-28 已读相关网页正文 | 直接支持破椰献供；不承担三段输入、单果双半、平台形制、起源或节期 |
+
+两页均返回相关正文，无摘要、验证码或错误页冒充正文；未查看来源图片，未把旁支外链登记为已核验。来源身份继续使用 `hindu-coconut-offering`，不存在借泛印度教卡或相似破果习俗背书的情况。三段方向、造型、时长、声音与结束反馈仍归产品安排，真实宗教背景及祝愿语气保持。
+
+本轮仅修正场景测试对共享 pointerup 终点采样的过期断言，并补充来源复核记录，不改生产动作或新增文化主张。聚焦 model／scene 测试实际运行 80 项通过；该结果只证明技术行为，不代替上述事实审阅。前文 2026-10-24 的构建、浏览器、截图与移动离线记录均属历史；当前检出没有其 artifacts 目录，未据此重新声称本轮已完成相同验收。宿主、注册表、metadata、原生目录及本轮整体构建由集成审查另行核对。

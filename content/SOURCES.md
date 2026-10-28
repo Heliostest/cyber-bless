@@ -4292,3 +4292,12 @@ Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](
 
 ## 菩提供水（2026-10-24）
 斯里兰卡 Bodhi-pūjā 的菩提树供水局部，见[专卡](traditions/sri-lankan-bodhi-puja.md)及[研究](../docs/research/2026-10-24-sri-lankan-bodhi-puja.md)。实际已读 A. G. S. Kariyawasam／BPS 第 2 节的 Access to Insight 转录，以及斯里兰卡教育出版署《Pirivena English Grade 4》印刷第16页原 PDF 渲染正文，核对持壶向树根供水，保留敬佛、作福与祈求护佑背景；NParks 物种正文只支持叶形、长叶尖与灰树皮。壶形、承台、三向操作及完成反馈属产品安排，不称整套仪式、古树现场复刻或愿望应验。BPS 官网404、植物园失访及初次 PDF 网页失败／后续本地目视已读的状态如实分列。
+
+## 迪杜赫麦束 · 2026-10-24
+
+乌克兰圣诞前夜 Didukh 麦束的入家祝愿与祖先信仰，见[专卡](traditions/ukrainian-didukh.md)和[逐项研究](../docs/research/2026-10-24-ukrainian-didukh.md)。
+
+- https://museum.kh.ua/blogs/blogs.html?title=Istoriia-odnoho-eksponatu-Didukh （哈尔科夫历史博物馆，2021-12-16）
+- https://stmichaelukrainian.org/2017/12/17/ukrainian-christmas-traditions/ （纽黑文乌克兰天主教堂区，2017-12-17）
+
+双方实际读相关正文；机构身份、段落和读取状态分别记录。原有广义乌克兰卡未直接介绍此物类，采用独立专卡。麦秆支脚和彩带有对应记述，三向动作、造型比例和简化屋角属产品安排；省略圣像、完整晚餐和后续处置，不规定当前统一公历日期或保证现实护佑。

@@ -48,3 +48,18 @@
 组件生成：旧154项封面记录逐项保留，155目录顺序与宿主一致，三种新WebGL2封面及Android源图字节哈希一致；468源封面核对及3组件专项测试通过。完整命令、构建来源、截图时间与SHA256及移动离线结果见本工作区[验收记录](../../artifacts/mezuzah-doorpost/validation.md)及final-evidence.json。
 
 移动离线最终通过：Android／iOS各159 DOM JS及14本地资产哈希校验，并查得本场真实模型代码。iOS468导出封面原始字节hash通过；Android封面由原生模块读取，核对468份drawable源图字节，不称Expo导出了Android封面或已构建APK。证据分别mobile-android.json、mobile-ios.json。
+
+## 2026-10-28 合并前来源复核
+
+本次重新阅读 AGENTS.md、来源规范及拟合并版本的 model、scene、README、专卡和宿主叙事。实际呈现仍为装有已备经卷的闭合护盒、准备托、预备胶背和住宅门框；从门外入内视角的右柱朝门洞侧面安放，位于上三分之一，上端向屋内倾斜。中文介绍、提示和结束语未修改。
+
+| 对应主张 | 本轮实际打开的来源与位置 | 读取状态与日期 | 支持范围及限制 |
+| --- | --- | --- | --- |
+| 经卷与护盒、家庭身份、祝福先于固定及倾角差异 | URJ／ReformJudaism.org，[What is a Mezuzah? Why And How do we Use it?](https://reformjudaism.org/beliefs-practices/lifecycle-rituals/what-mezuzah-why-and-how-do-we-use-it)，本轮提取 L18–33 | 2026-10-28 已读相关正文 | 支持右侧上段及阿什肯纳兹／部分塞法迪差异；不推出全球统一角度或数字三步 |
+| 经卷、shin、日常宗教提醒及护佑住户的信念 | Chabad.org，[What Is a Mezuzah? — The Scroll on the Doorpost](https://www.chabad.org/library/article_cdo/aid/256915/jewish/What-Is-a-Mezuzah.htm)，本轮提取 L254–320，重点为 L254／261／266–268／289–293／320 | 2026-10-28 已读相关正文 | 宗教诫命及该机构所述护佑信念保留；不把闭合数字盒视为有效经卷或现实保护，不采用寿命、富足或检修期限 |
+| 永久固定可用双面安装胶，安装前祝福 | Chabad.org／Dovid Zaklikowski 编纂，[Affixing the Mezuzah](https://www.chabad.org/library/article_cdo/aid/225414/jewish/Affixing-the-Mezuzah.htm)，本轮提取 L260–285，编纂说明 L301 | 2026-10-28 已读相关正文 | 安装胶为来源允许的永久固定方式；不把临时胶带、三段输入或省略祝福当成完整安装礼 |
+| 入门右侧、上段、门柱朝门洞的侧面及必要时替代位置 | Chabad.org／Dovid Zaklikowski 编纂，[Mezuzah Placement — Where on the Doorpost Do I Place the Mezuzah?](https://www.chabad.org/library/article_cdo/aid/225405/jewish/Mezuzah-Placement.htm)，本轮提取 L262–288，编纂说明 L303 | 2026-10-28 已读相关正文 | 当前采用通常门柱侧面；必要时例外不用于为街面前方安放背书，数值高度和角度为产品安排 |
+
+四页均读到相关正文，未见可确认的发布日期；未查看来源图片，未以摘要、验证码或错误页登记已读，也未将所有外链登记为已核验。模型最终胶背平面为 x=.89，对应入门右柱朝门洞侧面；上端指向屋内负 Z，盒体最低点仍在上三分之一，与限定的来源范围一致。来源身份继续使用 `mezuzah-doorpost`，三次输入、配色、托架、路径和反馈属于产品设计，完成不替代现实 mitzvah 或护佑。
+
+前文 2026-10-24 的测试、构建、浏览器、截图及离线导出均为原分支历史记录；当前检出没有其 artifacts 目录，未据此宣称本轮已重新完成相同验收。本轮共享 pointerup 终点采样的测试兼容修正不改变实际器物、生产动作或文化主张。原过期断言先复现为三个失败，修正后聚焦 model／scene／catalog 测试实际运行 78 项通过；技术通过不代替上述事实审阅。宿主／注册表／metadata／原生目录一致性及整体构建由本次集成审查另行记录。

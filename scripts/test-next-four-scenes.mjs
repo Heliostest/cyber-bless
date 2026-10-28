@@ -7,7 +7,7 @@ import { isSceneVisibleInApp } from '../packages/core/src/daily-scenes.ts'
 import { sceneIntention } from '../packages/core/src/scene-intentions.ts'
 const base=process.env.WBR_URL||'http://127.0.0.1:5178/'
 const batch=process.env.WBR_BATCH||'workshop'
-const batches={bodhi:['sri-lankan-bodhi-puja'],mezuzah:['mezuzah-doorpost'],gourdglass:['peruvian-engraved-gourd','venetian-glass-bead'],bojagidragonfly:['korean-bojagi-wrap','vietnamese-bamboo-dragonfly'],ebruangklung:['turkish-ebru-paper','indonesian-angklung'],kiteshadow:['weifang-paper-kite','chinese-shadow-puppet'],woolshell:['faroese-wool-knit','niue-shell-necklace'],paperclay:['polish-paper-cut','uzbek-clay-bowl'],printbead:['chinese-woodblock-print','czech-bead-star'],woven:['fijian-woven-fan','amazigh-woven-rug'],workshop:['slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart'],atelier:['bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon'],village:['barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant'],festival:['sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden'],handcraft:['dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top'],previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
+const batches={coconut:['hindu-coconut-offering'],didukh:['ukrainian-didukh'],bodhi:['sri-lankan-bodhi-puja'],mezuzah:['mezuzah-doorpost'],gourdglass:['peruvian-engraved-gourd','venetian-glass-bead'],bojagidragonfly:['korean-bojagi-wrap','vietnamese-bamboo-dragonfly'],ebruangklung:['turkish-ebru-paper','indonesian-angklung'],kiteshadow:['weifang-paper-kite','chinese-shadow-puppet'],woolshell:['faroese-wool-knit','niue-shell-necklace'],paperclay:['polish-paper-cut','uzbek-clay-bowl'],printbead:['chinese-woodblock-print','czech-bead-star'],woven:['fijian-woven-fan','amazigh-woven-rug'],workshop:['slovak-wire-bird', 'hungarian-embroidery-hoop', 'andalusian-ceramic-tile', 'sicilian-painted-cart'],atelier:['bai-indigo-cloth', 'ndebele-painted-house', 'purepecha-copper-bowl', 'welsh-love-spoon'],village:['barcelos-clay-rooster','finnish-birch-basket','croatian-licitar-heart','catalan-festival-giant'],festival:['sorbian-painted-egg','basque-sunflower','breton-banner','lithuanian-straw-garden'],handcraft:['dalarna-wooden-horse','aland-votive-ship','blang-tea','minangkabau-spinning-top'],previous:['omamori-cycle','shrine-suzu-bell','st-brigids-cross','bokjori'],seasonal:['omikuji','polish-blessing-basket','navruz-sumalak','floating-lantern-loy-krathong'],keepsake:['chinese-incense','hongsheng-red-string','italian-ex-voto','czech-pilgrim-journal']}
 assert.ok(batches[batch],`Unknown batch: ${batch}`)
 const out=path.resolve(process.env.WBR_OUT||(batch==='woven'?'artifacts/woven-pair-scenes/browser':`artifacts/${batch==='previous'?'next':batch}-four-scenes/browser`));await mkdir(out,{recursive:true})
 const allIds=batches[batch]
@@ -27,6 +27,7 @@ if(ids.includes('malawi-sansi')){
 }
 const widths=process.env.WBR_WIDTHS?process.env.WBR_WIDTHS.split(',').map(Number):[390,320,1280]
 const craftDeltas={
+  'ukrainian-didukh': [[0,-60],[60,0],[0,60]],
   'sri-lankan-bodhi-puja': [[0,-60],[60,0],[0,60]],
   'hindu-coconut-offering': [[0,-60],[60,0],[0,60]],
   'mezuzah-doorpost': [[0,-60],[60,0],[0,60]],
@@ -291,8 +292,8 @@ async function wrongCraftGesture(page,id,step){
 for(const width of process.env.WBR_RETURN_ONLY?[]:widths)for(const id of ids){
   const page=await pageAt(width);await catalog(page);await open(page,id)
   // On narrow canvases the upper-left corner can be a valid extended upward drag.
-  // Sotdae's explicit invalid path stays horizontal, outside its upward acceptance cone.
-  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,['korean-sotdae','japanese-kadomatsu','pucara-rooftop-bulls','chinese-longevity-lock','uchide-wishing-mallet','hindu-coconut-offering','mezuzah-doorpost','sri-lankan-bodhi-puja'].includes(id)?from[1]:box.y+3]
+  // These upward-first scenes use a horizontal invalid path outside the acceptance cone.
+  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,['korean-sotdae','japanese-kadomatsu','pucara-rooftop-bulls','chinese-longevity-lock','uchide-wishing-mallet','hindu-coconut-offering','mezuzah-doorpost','sri-lankan-bodhi-puja','ukrainian-didukh'].includes(id)?from[1]:box.y+3]
   const input=pointers.get(page)
   await input.down(wrong);await input.move(from);await input.up()
   await input.down(from);await input.move(wrong);await input.up()

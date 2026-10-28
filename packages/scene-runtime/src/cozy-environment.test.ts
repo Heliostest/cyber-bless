@@ -4,6 +4,17 @@ import { createCozyEnvironment } from "./cozy-environment";
 import * as sceneMotion from "./scene-motion";
 
 describe("a scene's surrounding world", () => {
+  it("keeps courtyard ground below the Didukh cutaway floor instead of painting over it", async () => {
+    const scene=new THREE.Scene()
+    const world=createCozyEnvironment(scene,{id:"ukrainian-didukh",loadSky:async()=>new THREE.DataTexture()})!
+    scene.updateMatrixWorld(true)
+    const ray=new THREE.Raycaster(new THREE.Vector3(.55,1,-.08),new THREE.Vector3(0,-1,0))
+    const hits=ray.intersectObject(scene.getObjectByName("cozy-environment")!,true)
+    expect(hits.length).toBeGreaterThan(0)
+    expect(Math.max(...hits.map(hit=>hit.point.y))).toBeLessThan(-.12)
+    await world.ready;world.dispose()
+  })
+
   it("prepares thumbnail lighting without advancing wind or its clock", async () => {
     const motion = vi.spyOn(sceneMotion, "readSceneMotion").mockReturnValue({ active: true, reducedMotion: false });
     const clock = vi.spyOn(performance, "now").mockReturnValue(1000);
@@ -113,6 +124,7 @@ describe("a scene's surrounding world", () => {
   it.each([
     ["mezuzah-doorpost", "courtyard"],
     ["yusheng-lohei", "garden"],
+    ["ukrainian-didukh", "courtyard"],
     ["sri-lankan-bodhi-puja", "garden"],
     ["fijian-woven-fan", "veranda"],
     ["polish-paper-cut", "veranda"],

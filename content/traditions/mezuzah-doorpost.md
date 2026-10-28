@@ -25,3 +25,7 @@ Chabad.org 将门柱经卷解释为在日常出入中记念上帝与托拉的提
 - **Chabad.org／Dovid Zaklikowski 编纂**：[Mezuzah Placement — Where on the Doorpost Do I Place the Mezuzah?](https://www.chabad.org/library/article_cdo/aid/225405/jewish/Mezuzah-Placement.htm)。2026-10-24根代理与研究代理已读相关正文L262–288：位置、上段高度及门柱内侧安放；L281–285把无法放在门柱内侧时的替代位置列为特殊情形。本场景采用右门柱朝门洞的侧面，不以例外为街面正前方安放背书。未见可确认的网页发布日期，来源图片未看。
 
 使用本专卡，不借无对应正文的泛犹太教卡。见[逐项研究](../../docs/research/2026-10-24-mezuzah-doorpost.md)与[场景README](../../packages/scenes/src/mezuzah-doorpost/README.md)。
+
+### 2026-10-28 合并前复核
+
+本轮重新打开上述四个 URL，均实际读到相关正文：URJ 的经卷、家庭身份、安装祝福及倾角差异（本轮提取 L18–33）；Chabad 器物与含义说明（L254–320）；永久固定与安装祝福（L260–285，署名说明 L301）；门柱位置和必要时的替代位置（L262–288，署名说明 L303）。阅读范围支持本卡所述器物、宗教背景、位置、社群差异及安装胶；不把三次输入、具体角度或数字完成反馈说成传统规则或现实护佑。四页未见可确认的发布日期，未查看来源图片，也未将旁支外链登记为已读。逐项范围及实际模型对照见研究记录本轮附记。

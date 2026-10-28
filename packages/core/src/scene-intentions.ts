@@ -15,6 +15,7 @@ export type SceneIntention = Readonly<{
 // Reviewed against the current scene actions and their bounded cultural contexts.
 // Evidence and product-expression boundaries: docs/research/2026-10-19-ritual-intentions.md.
 const intentions: Readonly<Record<string, SceneIntention>> = {
+  'ukrainian-didukh': { kind: 'blessing', label: '为家人寄一份丰足平安的祝愿', action: '拢齐麦秆、系拢彩带，再把麦束立稳在屋角，为家人寄一份祝愿。', optionalWish: false },
   'sri-lankan-bodhi-puja': {kind:'blessing',label:'为牵挂的人寄一份平安',action:'提起水壶，移近菩提树根，缓缓倾水供养。',optionalWish:false},
   'scottish-first-footing': {kind:'blessing',label:'携煤入户，祝家宅温暖安康',optionalWish:false,action:'作为新年午夜后的首位来客，拿起带来的煤礼，携过门槛，送进主人炉火。'},
   'nanakusa-gayu': {kind:'blessing',label:'为自己与家人祈一份安康',action:'轻拌七草，舀起温粥，再盛进碗中。',optionalWish:false},

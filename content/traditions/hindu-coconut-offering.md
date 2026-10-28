@@ -18,3 +18,7 @@ Kauai Hindu Monastery 的 Iraivan Temple 柱雕说明也直接将寺庙破椰称
 - **Kauai Hindu Monastery／Himalayan Academy**，*Pillars of Iraivan — Pillar Twelve*，页面未标发布日期。[正文](https://kauaishindumonastery.com/pillars-of-iraivan/Pillar12/)。**2026-10-23 已读相关正文**：“Top → NORTH FACE: Coconut Tree”（网页提取行35–41），明确寺庙破椰属于献供。该段没有给出完整流程、节期、数量或起源。
 
 两页均取得了相关网页正文，不以搜索摘要代替阅读；没有把未核验的旁支或外链登记为已读。具体矩阵、去重和产品边界见[研究记录](../../docs/research/2026-10-23-hindu-coconut-offering.md)。来源 slug：`hindu-coconut-offering`。
+
+### 2026-10-28 合并前复核
+
+本轮重新打开上述两个 URL，均实际读到相关正文：Plano 页面开篇与供品、硬壳与白瓤、新开端、象头神、奉献心意及击石破壳段落（本轮提取 L18–46）；Kauai 页面第十二柱北面椰树说明（L35–41）。两页仍支持本卡限定的宗教献供、祝祷及该寺解释，不能推出统一礼序、三次输入或现实功效。未以摘要、验证码或错误页登记为已读，未查看来源图片或顺带核验全部外链。实际模型、动作和中文文案的来源范围保持不变，详细逐项对照见研究记录本轮附记。

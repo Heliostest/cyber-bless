@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createSoftSoundPlayer, type SoftSound, type SoftSoundOptions } from '@wbr/shared'
 import type { SceneContext } from './contract'
 import { bindSceneAttribute, bindSceneText } from './scene-localization'
 
@@ -239,9 +240,10 @@ type ToneOpts = {
  * One lazily created AudioContext per scene instance; call `play` only from a
  * user gesture. Missing Web Audio is a silent no-op.
  */
-export function createChimeAudio() {
+export function createChimeAudio(enabled: () => boolean = () => true) {
   let ac: AudioContext | null = null
   let closed = false
+  const tones = new Set<OscillatorNode>()
 
   const ensure = (): AudioContext | null => {
     if (closed) return null
@@ -261,17 +263,28 @@ export function createChimeAudio() {
     return ac
   }
 
+  const soft = createSoftSoundPlayer({ context: ensure, enabled: () => !closed && enabled() })
+  const stop = () => {
+    soft.stop()
+    for (const osc of tones) {
+      try { osc.stop(); osc.disconnect?.() } catch { /* already ended */ }
+    }
+    tones.clear()
+  }
+
   return {
     /** Create/resume the context inside a user gesture (mobile autoplay). */
     unlock() {
+      if (!enabled()) { stop(); return }
       const a = ensure()
       if (a?.state === 'suspended') void a.resume().catch(() => {})
     },
     play({ freqs, duration, gain = 0.12, type = 'sine' }: ToneOpts) {
+      if (!enabled()) { stop(); return }
       const a = ensure()
       if (!a) return
       try {
-        if (a.state === 'suspended') void a.resume()
+        if (a.state === 'suspended') void a.resume().catch(() => {})
         const now = a.currentTime
         const master = a.createGain()
         master.gain.setValueAtTime(0.0001, now)
@@ -285,6 +298,8 @@ export function createChimeAudio() {
           const g = a.createGain()
           g.gain.value = 1 / (i + 1)
           osc.connect(g).connect(master)
+          tones.add(osc)
+          osc.onended = () => { tones.delete(osc); osc.disconnect?.(); g.disconnect?.() }
           osc.start(now)
           osc.stop(now + duration + 0.05)
         })
@@ -292,8 +307,19 @@ export function createChimeAudio() {
         // audio is decorative; ignore failures
       }
     },
+    /** Product-styled material cue; shares the gesture-unlocked context. */
+    sound(cue: SoftSound, options?: SoftSoundOptions) {
+      if (!enabled()) { stop(); return }
+      const a = ensure()
+      if (a?.state === 'suspended') void a.resume().catch(() => {})
+      soft.play(cue, options)
+    },
+    stop,
     dispose() {
+      if (closed) return
       closed = true
+      stop()
+      soft.dispose()
       if (ac) void ac.close().catch(() => {})
       ac = null
     },
@@ -308,22 +334,39 @@ export type ChimeTone = ToneOpts
  * are skipped.
  */
 export function createSceneFeedback(
-  ctx: Pick<SceneContext, 'prepareFeedback' | 'haptic' | 'isSoundEnabled'>,
+  ctx: Pick<SceneContext, 'prepareFeedback' | 'haptic' | 'isSoundEnabled' | 'isActive'>,
 ) {
-  const audio = createChimeAudio()
-  const soundOn = () => ctx.isSoundEnabled?.() ?? true
+  let disposed = false, focused = true
+  const soundOn = () => !disposed && focused && !(typeof document !== 'undefined' && document.hidden) && (ctx.isActive?.() ?? true) && (ctx.isSoundEnabled?.() ?? true)
+  const audio = createChimeAudio(soundOn)
+  const blur = () => { focused = false; audio.stop() }
+  const focus = () => { focused = true }
+  const visibility = () => { if (document.hidden) audio.stop() }
+  if (typeof window !== 'undefined') { window.addEventListener('blur', blur); window.addEventListener('focus', focus) }
+  if (typeof document !== 'undefined') document.addEventListener('visibilitychange', visibility)
   return {
     /** Call at gesture start so audio may start on the later impact. */
     prepare() {
+      if (disposed) return
       ctx.prepareFeedback?.()
       if (soundOn()) audio.unlock()
     },
     /** The impactful moment: haptic tick plus an optional chime. */
     impact(tone?: ChimeTone) {
+      if (disposed) return
       ctx.haptic?.()
       if (tone && soundOn()) audio.play(tone)
     },
+    /** Material feedback never adds a second haptic tick. */
+    sound(cue: SoftSound, options?: SoftSoundOptions) { audio.sound(cue, options) },
+    stop() { audio.stop() },
+    /** Scene updates observe mute/pause changes even while no new cue fires. */
+    update() { if (!soundOn()) audio.stop() },
     dispose() {
+      if (disposed) return
+      disposed = true
+      if (typeof window !== 'undefined') { window.removeEventListener('blur', blur); window.removeEventListener('focus', focus) }
+      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', visibility)
       audio.dispose()
     },
   }

@@ -11,6 +11,7 @@ internal object WidgetCatalog {
     "pucara-rooftop-bulls" to WidgetScene("陶牛护家", "blessing"),
     "chinese-longevity-lock" to WidgetScene("银锁寄安", "blessing"),
     "uchide-wishing-mallet" to WidgetScene("振槌寄愿", "blessing"),
+    "sri-lankan-bodhi-puja" to WidgetScene("菩提供水", "blessing"),
     "mezuzah-doorpost" to WidgetScene("门柱祈安", "blessing"),
     "alasita-miniature-house" to WidgetScene("微屋寄愿", "wish"),
     "yusheng-lohei" to WidgetScene("鱼生捞起", "blessing"),
@@ -171,6 +172,7 @@ internal object WidgetCatalog {
       "pucara-rooftop-bulls" -> intArrayOf(R.drawable.blessing_preview_pucara_rooftop_bulls_small, R.drawable.blessing_preview_pucara_rooftop_bulls_medium, R.drawable.blessing_preview_pucara_rooftop_bulls_large)
       "chinese-longevity-lock" -> intArrayOf(R.drawable.blessing_preview_chinese_longevity_lock_small, R.drawable.blessing_preview_chinese_longevity_lock_medium, R.drawable.blessing_preview_chinese_longevity_lock_large)
       "uchide-wishing-mallet" -> intArrayOf(R.drawable.blessing_preview_uchide_wishing_mallet_small, R.drawable.blessing_preview_uchide_wishing_mallet_medium, R.drawable.blessing_preview_uchide_wishing_mallet_large)
+      "sri-lankan-bodhi-puja" -> intArrayOf(R.drawable.blessing_preview_sri_lankan_bodhi_puja_small, R.drawable.blessing_preview_sri_lankan_bodhi_puja_medium, R.drawable.blessing_preview_sri_lankan_bodhi_puja_large)
       "mezuzah-doorpost" -> intArrayOf(R.drawable.blessing_preview_mezuzah_doorpost_small, R.drawable.blessing_preview_mezuzah_doorpost_medium, R.drawable.blessing_preview_mezuzah_doorpost_large)
       "alasita-miniature-house" -> intArrayOf(R.drawable.blessing_preview_alasita_miniature_house_small, R.drawable.blessing_preview_alasita_miniature_house_medium, R.drawable.blessing_preview_alasita_miniature_house_large)
       "yusheng-lohei" -> intArrayOf(R.drawable.blessing_preview_yusheng_lohei_small, R.drawable.blessing_preview_yusheng_lohei_medium, R.drawable.blessing_preview_yusheng_lohei_large)

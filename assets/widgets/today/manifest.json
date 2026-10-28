@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "d07182cc44ad0957668f75ec0657993a86b241a59685b9a6680059904d5c9b19",
+  "revision": "db87ecddf1bb03dcfa3df84f91adbdfeb4df62a90c68a9f3a28982fc20d9f344",
   "scenes": [
     {
       "id": "nanakusa-gayu",
@@ -5300,6 +5300,40 @@
         "width": 1200,
         "height": 1200,
         "sha256": "12498155171519f60a18ae7a903d32f3cafc14bbe0866b4e259e77d8672aff99",
+        "webgl": true,
+        "canvasWidth": 1200,
+        "canvasHeight": 1200,
+        "progress": 3
+      }
+    },
+    {
+      "id": "sri-lankan-bodhi-puja",
+      "engine": "sri-lankan-bodhi-puja@1",
+      "small": {
+        "file": "sri-lankan-bodhi-puja-small.png",
+        "width": 600,
+        "height": 600,
+        "sha256": "1a301a98969f2e451218ee8aabe86f5dbdb9e7b5453243ca5c74e3039cb6afc5",
+        "webgl": true,
+        "canvasWidth": 600,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "medium": {
+        "file": "sri-lankan-bodhi-puja-medium.png",
+        "width": 1280,
+        "height": 600,
+        "sha256": "f28fd3de7a245e5401f388343b90434b848e05ddd938749a9b78a4f9fb0e9296",
+        "webgl": true,
+        "canvasWidth": 1280,
+        "canvasHeight": 600,
+        "progress": 3
+      },
+      "large": {
+        "file": "sri-lankan-bodhi-puja-large.png",
+        "width": 1200,
+        "height": 1200,
+        "sha256": "e96b57a8dd39e95f8ef3a8bd5ae9477b15360bd31a0e389e46e3c652ea500347",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

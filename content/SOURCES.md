@@ -4289,3 +4289,6 @@ Brat Bríde留布户外窗台、盼圣人祝福与保护，采用对应[专卡](
 
 ## 门柱祈安 · 2026-10-24
 见[专卡](traditions/mezuzah-doorpost.md)和[逐项研究](../docs/research/2026-10-24-mezuzah-doorpost.md)。已读URJ与Chabad直接相关机构正文；经卷／护盒、记念上帝与家庭身份、护佑住户的信念、安装前祝福及右柱上段／朝门洞侧面有对应依据。闭合原创护盒、胶背、托架和上／右／下三个产品阶段不称完整mitzvah或现实保护保证；社群倾角差异保留，未复制来源图像。
+
+## 菩提供水（2026-10-24）
+斯里兰卡 Bodhi-pūjā 的菩提树供水局部，见[专卡](traditions/sri-lankan-bodhi-puja.md)及[研究](../docs/research/2026-10-24-sri-lankan-bodhi-puja.md)。实际已读 A. G. S. Kariyawasam／BPS 第 2 节的 Access to Insight 转录，以及斯里兰卡教育出版署《Pirivena English Grade 4》印刷第16页原 PDF 渲染正文，核对持壶向树根供水，保留敬佛、作福与祈求护佑背景；NParks 物种正文只支持叶形、长叶尖与灰树皮。壶形、承台、三向操作及完成反馈属产品安排，不称整套仪式、古树现场复刻或愿望应验。BPS 官网404、植物园失访及初次 PDF 网页失败／后续本地目视已读的状态如实分列。

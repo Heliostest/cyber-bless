@@ -347,6 +347,7 @@ describe("builtInScenes narratives", () => {
       "sorbian-painted-egg",
       "spanish-castanets",
       "spanish-twelve-grapes",
+      "sri-lankan-bodhi-puja",
       "st-brigids-cross",
       "sternsinger-house-blessing",
       "sumiyoshi-godairiki",

@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import type { Action, State, ReturnMethod } from "@wbr/core";
 import type { CatalogEntry } from "@wbr/content/catalog";
 import type { HapticStrength } from "@wbr/runtime";
+import type { SoftSound } from "@wbr/shared";
 import type { RewardFlight, RewardArrival } from "./reward-flight";
 export type FulfillmentDraft = { method: ReturnMethod; text: string };
 export type Route = {
@@ -38,13 +39,15 @@ export type AppContext = {
   go(route: Route): void;
   dispatch(a: Action): boolean;
   back(): void;
-  feedback(sound?: AudioBuffer): void;
+  feedback(sound?: AudioBuffer | SoftSound): void;
   /** Haptic tick or scene impact; respects the 震动 toggle. */
   haptic(strength?: HapticStrength): void;
   /** Whether the host can vibrate at all (not in iOS browsers); else no 震动 toggle. */
   canHaptic: boolean;
   decodeSound(bytes: ArrayBuffer): Promise<AudioBuffer>;
   prepareFeedback(): void;
+  /** Cancels an owned interaction tail on local pause/exit without cutting result cues. */
+  stopInteractionSound?(): void;
   active: boolean;
   fulfillmentDrafts: Record<string, FulfillmentDraft>;
   setFulfillmentDraft(id: string, draft?: FulfillmentDraft): void;

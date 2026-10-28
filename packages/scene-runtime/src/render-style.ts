@@ -9,6 +9,8 @@ import { createHalftoneEffect } from "./halftone-effect";
 import { PixelArtPass } from "./pixel-art-pass";
 import { normalizeStyleParameters, type RenderStyleParameters } from "./render-style-parameters";
 import { AdjustableOutlineEffect } from "./adjustable-outline-effect";
+import { createGallerySurfaces, gallerySubjects, isGallerySurfaceStyle } from "./gallery-surfaces";
+import { createGalleryEffect, isGalleryPostStyle } from "./gallery-effects";
 
 /** Shared material styling, color treatment and restrained contours. */
 export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera) {
@@ -20,6 +22,8 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
   let halftone: ReturnType<typeof createHalftoneEffect> | undefined;
   let pixels: PixelArtPass | undefined;
   let moebius: ReturnType<typeof createMoebiusEffect> | undefined;
+  let gallerySurfaces: ReturnType<typeof createGallerySurfaces> | undefined;
+  let galleryEffect: ReturnType<typeof createGalleryEffect> | undefined;
   let parameters = normalizeStyleParameters(undefined);
   let width = renderer.getSize(new THREE.Vector2()).width;
   let height = renderer.getSize(new THREE.Vector2()).height;
@@ -28,6 +32,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
     outline?.selection.clear();
     composer?.dispose();
     surfaces?.dispose();
+    gallerySurfaces?.dispose();
     composer = undefined;
     outline = undefined;
     normals = undefined;
@@ -35,6 +40,8 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
     halftone = undefined;
     pixels = undefined;
     moebius = undefined;
+    gallerySurfaces = undefined;
+    galleryEffect = undefined;
   }
 
   function setStyle(id: RenderStyleId) {
@@ -54,6 +61,20 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
       return;
     }
     composer.addPass(new RenderPass(scene, camera));
+    if (isGallerySurfaceStyle(active) || isGalleryPostStyle(active)) {
+      if (isGallerySurfaceStyle(active)) gallerySurfaces = createGallerySurfaces(active);
+      else if (active !== "space-grade") {
+        normals = new MoebiusNormals(scene, camera);
+        composer.addPass(normals);
+      }
+      composer.addPass(new EffectPass(camera, new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC })));
+      if (isGalleryPostStyle(active)) {
+        galleryEffect = createGalleryEffect(active, normals?.target.texture ?? null, normals?.target.depthTexture ?? null, renderer.getPixelRatio());
+        composer.addPass(new EffectPass(camera, galleryEffect.effect));
+      }
+      composer.setSize(width, height);
+      return;
+    }
     if (active === "halftone") {
       halftone = createHalftoneEffect(renderer.getPixelRatio());
       composer.addPass(new EffectPass(camera,new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC })));
@@ -119,11 +140,20 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
     const objects: [THREE.Object3D, boolean, number][] = [];
     scene.traverse((object) => objects.push([object, object.visible, object.layers.mask]));
     let frame: ReturnType<ReturnType<typeof createToonSurfaces>["apply"]> | undefined;
+    let galleryFrame: ReturnType<ReturnType<typeof createGallerySurfaces>["apply"]> | undefined;
     let failed = false;
     try {
       renderer.toneMapping = THREE.NoToneMapping;
       renderer.debug.onShaderError = () => { failed = true; };
       prepare();
+      if (gallerySurfaces) {
+        gallerySurfaces.setParameters(parameters);
+        galleryFrame = gallerySurfaces.apply(scene);
+      }
+      if (galleryEffect) {
+        galleryEffect.update(parameters, renderer.getPixelRatio());
+        normals?.selection.set(gallerySubjects(scene));
+      }
       if (active === "toon-outline") {
         surfaces?.setColorLevels(parameters.toonLevels);
         outline!.uniforms.get("lineWidth")!.value = parameters.toonWidth;
@@ -148,6 +178,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
       failed = true;
     } finally {
       frame?.restore();
+      galleryFrame?.restore();
       scene.background = previous.background;
       scene.overrideMaterial = previous.override;
       camera.layers.mask = previous.cameraMask;

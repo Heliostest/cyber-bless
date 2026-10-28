@@ -38,6 +38,28 @@ afterEach(() => {
   vi.unstubAllGlobals();
   fixture.progress = 0;
 });
+it("only forwards display taps for an active completed object presentation", async () => {
+  vi.stubGlobal("requestAnimationFrame", () => 1);
+  vi.stubGlobal("cancelAnimationFrame", () => {});
+  const engine = await proceduralEngine("crane");
+  const host = document.createElement("div");
+  host.dataset.scenePresentation = "object";
+  const controller = engine.create(host,
+    { progress: 3, sceneId: "crane", checkpoint: () => {} },
+    { active: true, reducedMotion: false, signal: new AbortController().signal, ready() {}, failed() {} });
+  const tap = vi.fn(() => true);
+  fixture.instance.tapPreview = tap;
+  expect(controller.tapPreview?.()).toBe(true);
+  controller.setActive(false);
+  expect(controller.tapPreview?.()).toBe(false);
+  controller.setActive(true);
+  delete host.dataset.scenePresentation;
+  expect(controller.tapPreview?.()).toBe(false);
+  host.dataset.scenePresentation = "object";
+  controller.dispose();
+  expect(controller.tapPreview?.()).toBe(false);
+  expect(tap).toHaveBeenCalledOnce();
+});
 it("keeps real gesture elapsed time when decorative motion is reduced", async () => {
   let callback: FrameRequestCallback = () => {};
   vi.stubGlobal("requestAnimationFrame", (fn: FrameRequestCallback) => {

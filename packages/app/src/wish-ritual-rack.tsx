@@ -1,60 +1,143 @@
 import { localizedTitle } from './localization';
 import { translate as tr, message } from '@wbr/i18n';
-import { useId, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type PointerEvent } from "react";
 import { sceneIntention } from "@wbr/core";
 import { formatDate, useApp } from "./context";
 import { supportsScene, useOpenScene, useSceneLibrary } from "./scene-library";
-import { hasSceneIcon, SceneIcon } from "./scene-icons";
+import { WishObjectPreview, type WishObjectPreviewHandle } from "./wish-object-preview";
+import { wishObjectFeedback } from "./wish-object-feedback";
 import { Icon } from "./art";
-/** A hanging display of actual collected objects; each copy keeps its own usage. */
+
+/** Each collected copy stays separate; touching the display never spends it. */
 export function WishRitualRack() {
-    const { state, go } = useApp();
+    const { state, go, prepareFeedback, feedback } = useApp();
     const { entries } = useSceneLibrary();
     const openScene = useOpenScene();
-    const [expanded, setExpanded] = useState(false);
-    const rackId = useId();
+    const rackId = useId(), hintId = useId();
+    const strip = useRef<HTMLDivElement>(null);
+    const previews = useRef(new Map<string, WishObjectPreviewHandle>());
+    const drag = useRef<{ id: number; x: number; y: number; left: number } | null>(null);
+    const suppressClick = useRef(false);
+    const [edges, setEdges] = useState({ start: true, end: false });
     const items = [...state.collectibles].reverse().flatMap(item => {
-        if (item.kind !== "scene" || !item.wishScene || !item.sceneId)
-            return [];
+        if (item.kind !== "scene" || !item.sceneId) return [];
         const entry = entries.find(entry => entry.id === item.sceneId);
-        if (!entry)
-            return [];
-        const status = item.spentAt
+        if (!entry) return [];
+        const status = !item.wishScene ? "kept" as const : item.spentAt
             ? state.vesselDrafts?.[item.id] ? "pending" as const : "used" as const
             : "unused" as const;
         return [{ item, entry, status }];
     }).sort((a, b) => {
-        const rank = { pending: 0, unused: 1, used: 2 };
+        const rank = { pending: 0, unused: 1, used: 2, kept: 3 };
         return rank[a.status] - rank[b.status];
     });
-    if (!items.length)
-        return null;
+    const reducedMotion = state.settings.reducedMotion ||
+        (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+    useEffect(() => {
+        if (reducedMotion) strip.current?.querySelectorAll<HTMLElement>(".wish-rack-charm")
+            .forEach(charm => charm.getAnimations?.().forEach(animation => animation.cancel()));
+    }, [reducedMotion]);
+    function updateEdges() {
+        const row = strip.current;
+        if (!row?.clientWidth) return;
+        const start = row.scrollLeft <= 1, end = row.scrollLeft + row.clientWidth >= row.scrollWidth - 1;
+        setEdges(previous => previous.start === start && previous.end === end ? previous : { start, end });
+    }
+    useLayoutEffect(() => {
+        const row = strip.current;
+        if (!row) return;
+        updateEdges();
+        const observer = typeof ResizeObserver === "function" ? new ResizeObserver(updateEdges) : undefined;
+        observer?.observe(row);
+        return () => observer?.disconnect();
+    }, [items.length]);
+    function browse(direction: number) {
+        const row = strip.current;
+        row?.scrollBy({ left: direction * row.clientWidth * .9, behavior: reducedMotion ? "instant" : "smooth" });
+    }
+    function endDrag(event: PointerEvent<HTMLDivElement>) {
+        if (drag.current?.id !== event.pointerId) return;
+        drag.current = null;
+        event.currentTarget.classList.remove("is-dragging");
+        if (event.currentTarget.hasPointerCapture?.(event.pointerId))
+            event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (!items.length) return null;
     const unused = items.filter(({ status }) => status === "unused").length;
-    const shown = expanded ? items : items.slice(0, 3);
-    const rows = Array.from({ length: Math.ceil(shown.length / 3) }, (_, i) => shown.slice(i * 3, i * 3 + 3));
-    return <section className="wish-ritual-rack" aria-label={tr("\u5DF2\u83B7\u5F97\u7684\u7948\u613F\u4EEA\u5F0F")}>
-    <header className="wish-rack-heading">
-      <h2>{tr("\u6536\u4E0B\u7684\u7948\u613F")}</h2>
-      <span className="wish-rack-count">{message('app.vessels.unused.count', { n: unused })}</span>
-      {items.length > 3 && <button type="button" className="text-button wish-rack-toggle" aria-controls={rackId} aria-expanded={expanded} onClick={() => setExpanded(value => !value)}>
-        {expanded ? tr("\u6536\u8D77") : tr("\u5168\u90E8 {p0} \u4EF6", { p0: items.length })}
-      </button>}
-    </header>
-    <div id={rackId} className="wish-rack-hangers">
-      {rows.map((row, index) => <div className="wish-rack-row" key={index}>
-        {row.map(({ item, entry, status }) => {
-                const label = status === "pending" ? tr("\u63A5\u7740\u521A\u624D") : status === "unused" ? tr("\u672A\u7528") : tr("\u5DF2\u7528");
-                const canOpen = supportsScene(entry.engine) &&
-                    (status === "pending" || (status === "unused" && sceneIntention(entry.id)?.optionalWish));
-                return <button key={item.id} type="button" className="wish-rack-item" data-scene={entry.id} data-collectible-id={item.id} data-rack-status={status} aria-label={tr("{p0}\uFF0C{p1}\uFF0C{p2}\u6536\u4E0B\uFF0C{p3}", { p0: localizedTitle(entry), p1: label, p2: formatDate(item.at), p3: canOpen ? tr("\u8FDB\u5165\u4EEA\u5F0F") : tr("\u67E5\u770B\u6536\u85CF") })} onClick={() => canOpen ? openScene(entry, { vessel: item.id }) : go({ page: "collection", id: item.id })}>
-            <span className="wish-rack-charm" aria-hidden="true">
-              {hasSceneIcon(entry.id) ? <SceneIcon id={entry.id}/> : <Icon name="leaf"/>}
-            </span>
-            <strong>{localizedTitle(entry)}</strong>
-            <span className="wish-rack-status">{label}</span>
-          </button>;
-            })}
-      </div>)}
-    </div>
-  </section>;
+    return <section className="wish-ritual-rack" aria-label={tr("仪式收藏")}>
+      <header className="wish-rack-heading">
+        <h2>{tr("仪式收藏")}</h2>
+        <span className="wish-rack-count">{message('app.vessels.unused.count', { n: unused })}</span>
+        {items.length > 3 && <span className="wish-rack-navigation">
+          <button type="button" aria-label={tr("向前浏览小物")} aria-controls={rackId} disabled={edges.start} onClick={() => browse(-1)}><Icon name="back"/></button>
+          <button type="button" aria-label={tr("向后浏览小物")} aria-controls={rackId} disabled={edges.end} onClick={() => browse(1)}><Icon name="arrow"/></button>
+        </span>}
+      </header>
+      <p className="wish-rack-hint" id={hintId}>{tr("点按小物，听听回应")}</p>
+      <div id={rackId} ref={strip} className="wish-rack-row" onScroll={updateEdges}
+        onPointerDown={event => {
+            if (event.button !== 0) return;
+            suppressClick.current = false;
+            drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, left: event.currentTarget.scrollLeft };
+        }} onPointerMove={event => {
+            const start = drag.current;
+            if (!start || start.id !== event.pointerId) return;
+            if (event.pointerType === "mouse" && event.buttons === 0) {
+                endDrag(event);
+                return;
+            }
+            const distance = event.clientX - start.x;
+            // Touch scrolling stays native. Both touch and mouse drags suppress the trailing click.
+            if (Math.abs(distance) > 8 && Math.abs(distance) > Math.abs(event.clientY - start.y))
+                suppressClick.current = true;
+            if (event.pointerType === "mouse" && suppressClick.current) {
+                event.currentTarget.setPointerCapture?.(event.pointerId);
+                event.currentTarget.classList.add("is-dragging");
+                event.currentTarget.scrollLeft = start.left - distance;
+            }
+        }} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag}
+        onClickCapture={event => {
+            if (suppressClick.current && event.detail !== 0) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        }} onKeyDown={event => {
+            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+            const buttons = [...event.currentTarget.querySelectorAll<HTMLButtonElement>(".wish-rack-item")];
+            const slot = (event.target as HTMLElement).closest(".wish-rack-slot");
+            const index = buttons.findIndex(button => button.closest(".wish-rack-slot") === slot);
+            if (index < 0) return;
+            event.preventDefault();
+            buttons[Math.max(0, Math.min(buttons.length - 1, index + (event.key === "ArrowRight" ? 1 : -1)))]?.focus();
+        }}>
+        {items.map(({ item, entry, status }) => {
+            const label = status === "kept" ? tr("已完成") : status === "pending" ? tr("接着刚才") : status === "unused" ? tr("未用") : tr("已用");
+            const canOpen = supportsScene(entry.engine) &&
+                (status === "pending" || (status === "unused" && sceneIntention(entry.id)?.optionalWish));
+            return <article className="wish-rack-slot" key={item.id} data-rack-status={status}>
+              <button type="button" className="wish-rack-item" data-scene={entry.id} data-collectible-id={item.id} data-rack-status={status}
+                aria-label={localizedTitle(entry)} aria-describedby={hintId} onClick={event => {
+                    prepareFeedback();
+                    const response = wishObjectFeedback(entry.id);
+                    feedback(response.sound);
+                    const charm = event.currentTarget.querySelector<HTMLElement>(".wish-rack-charm");
+                    if (!reducedMotion && !previews.current.get(item.id)?.tap() && charm?.animate) {
+                        charm.getAnimations().forEach(animation => animation.cancel());
+                        charm.animate(response.motion, response.timing);
+                    }
+                }}>
+                <span className="wish-rack-charm" aria-hidden="true">
+                  <WishObjectPreview entry={entry} variant={state.sceneRecords.find(record => record.id === entry.id)?.variant}
+                    ref={preview => { if (preview) previews.current.set(item.id, preview); else previews.current.delete(item.id); }}/>
+                </span>
+              </button>
+              <button type="button" className="wish-rack-open" aria-label={tr("{p0}，{p1}，{p2}收下，{p3}", { p0: localizedTitle(entry), p1: label, p2: formatDate(item.at), p3: canOpen ? tr("进入仪式") : tr("查看收藏") })}
+                onClick={() => canOpen ? openScene(entry, { vessel: item.id }) : go({ page: "collection", id: item.id })}>
+                <strong>{localizedTitle(entry)}</strong>
+                <span className="wish-rack-status">{label}<Icon name="arrow"/></span>
+              </button>
+            </article>;
+        })}
+      </div>
+    </section>;
 }

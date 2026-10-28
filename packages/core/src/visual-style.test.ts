@@ -1,6 +1,38 @@
 import { describe, expect, it } from "vitest";
 import { createState, reduce, restore } from "./index";
-import { getSceneVisualPreference, normalizeStyleParameters } from "./visual-style";
+import { DEFAULT_STYLE_PARAMETERS, getSceneVisualPreference, normalizeStyleParameters } from "./visual-style";
+
+describe("saved gallery shader preferences", () => {
+  it.each(["gallery-toon", "pencil-hatch", "height-palette", "normal-palette", "sketch-contour", "gallery-outline", "space-grade", "depth-rim"] as const)("restores %s locally and globally without changing ritual progress", style => {
+    const before = createState();
+    const local = reduce(before, { type: "scene.visual", id: "crane", style });
+    const restored = restore(JSON.stringify(local));
+    expect(getSceneVisualPreference(restored, "crane")).toMatchObject({ style, parameters: DEFAULT_STYLE_PARAMETERS });
+    expect(restored.sceneRecords).toEqual(before.sceneRecords);
+    const all = restore(JSON.stringify(reduce(restored, { type: "scene.visual.all", style })));
+    expect(all.visualStyles).toEqual({});
+    expect(getSceneVisualPreference(all, "unopened-ritual")).toMatchObject({ style });
+    const override = reduce(all, { type: "scene.visual", id: "crane", style: "original" });
+    const reset = reduce(override, { type: "scene.visual", id: "crane", style: null });
+    expect(getSceneVisualPreference(reset, "crane")).toEqual(all.globalVisualStyle);
+  });
+
+  it("clamps and rounds gallery controls while preserving defaults for invalid and legacy values", () => {
+    const value = normalizeStyleParameters({ galleryLevels: 20, galleryRim: -.2, pencilScale: 6.7,
+      pencilStrength: Infinity, paletteStrength: .637, normalStrength: "bad", sketchWidth: 3.7,
+      sketchStrength: -.5, galleryOutlineWidth: .25, galleryOutlineLevels: 1, glowStrength: 5,
+      vignetteStrength: .9, grainStrength: .027, rimWidth: 2.7, rimStrength: .643, rimDirection: 43 });
+    expect(value).toMatchObject({ galleryLevels: 8, galleryRim: 0, pencilScale: 7, pencilStrength: .65,
+      paletteStrength: .64, normalStrength: .7, sketchWidth: 3, sketchStrength: 0,
+      galleryOutlineWidth: .5, galleryOutlineLevels: 2, glowStrength: 1, vignetteStrength: .6,
+      grainStrength: .025, rimWidth: 2.5, rimStrength: .64, rimDirection: 45 });
+    const legacy = restore(JSON.stringify({ ...createState(), visualStyles: {
+      crane: { style: "pixel-art", parameters: { pixelSize: 5 } },
+    } }));
+    expect(legacy.visualStyles?.crane.parameters).toMatchObject({ pixelSize: 5, galleryLevels: 4, pencilScale: 24,
+      glowStrength: .3, vignetteStrength: .18, grainStrength: .02, rimWidth: 3, rimDirection: 40 });
+  });
+});
 
 describe("saved per-ritual visual preferences", () => {
   it("keeps preferences independent from progress and other rituals, across a host save", () => {

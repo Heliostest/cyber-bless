@@ -18,7 +18,8 @@ export const DEFAULT_PARAMETERS = {
   settleMs: 140,
 };
 export type Asset = { path: string; bytes: number; sha256: string };
-export type RenderStyleId = "original" | "toon-ink" | "toon-soft" | "gouache" | "moebius" | "toon-outline" | "halftone" | "pixel-art";
+export type RenderStyleId = "original" | "toon-ink" | "toon-soft" | "gouache" | "moebius" | "toon-outline" | "halftone" | "pixel-art"
+  | "gallery-toon" | "pencil-hatch" | "height-palette" | "normal-palette" | "sketch-contour" | "gallery-outline" | "space-grade" | "depth-rim";
 export type Pack = {
   schemaVersion: 1;
   sceneId: "woodfish";
@@ -33,7 +34,8 @@ export type Pack = {
 };
 export function parseRenderStyle(value: unknown): RenderStyleId {
   if (value === undefined) return "original";
-  if (value === "original" || value === "toon-ink" || value === "toon-soft" || value === "gouache" || value === "moebius" || value === "toon-outline" || value === "halftone" || value === "pixel-art")
+  if (value === "original" || value === "toon-ink" || value === "toon-soft" || value === "gouache" || value === "moebius" || value === "toon-outline" || value === "halftone" || value === "pixel-art"
+    || value === "gallery-toon" || value === "pencil-hatch" || value === "height-palette" || value === "normal-palette" || value === "sketch-contour" || value === "gallery-outline" || value === "space-grade" || value === "depth-rim")
     return value;
   throw Error("Unsupported render style");
 }

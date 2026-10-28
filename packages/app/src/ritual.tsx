@@ -58,7 +58,6 @@ export function Ritual({ id, wishId: linkedWishId, whenIdleRef, }: {
     }
     function finish() {
         if (r && dispatch({ type: "ritual.finish", id: r.id, at: now() })) {
-            feedback();
             go({ page: "complete", id: r.id, revealReward: true });
         }
     }

@@ -53,6 +53,25 @@ function setup(initial = createState()) {
 }
 
 describe("visual style application scope", () => {
+  it("previews a gallery shader, cancels it, then saves it for every ritual", () => {
+    const ui = setup();
+    try {
+      const before = ui.state();
+      ui.select("space-grade");
+      expect(ui.frames["scope-tea"].style).toBe("space-grade");
+      expect(ui.state()).toBe(before);
+      clickOn(ui.shell.querySelector('button[aria-label="关闭视觉风格"]')!);
+      expect(ui.frames["scope-tea"].style).toBe("toon-soft");
+      clickOn(ui.trigger);
+      ui.select("depth-rim");
+      clickOn(ui.button("应用到全部仪式"));
+      clickOn(ui.button("完成"));
+      expect(ui.state().globalVisualStyle).toMatchObject({ style: "depth-rim", parameters: { rimWidth: 3, rimStrength: .6, rimDirection: 40 } });
+      expect(ui.state().visualStyles).toEqual({});
+      ui.register("scope-crane");
+      expect(ui.frames["scope-crane"].style).toBe("depth-rim");
+    } finally { ui.dispose(); }
+  });
 
   it("closes Done after browsing back to the saved style without a state change", () => {
     const initial = reduce(createState(), { type: "scene.visual", id: "scope-tea", style: "pixel-art", parameters: { pixelSize: 7 } });

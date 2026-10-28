@@ -32,6 +32,8 @@ describe("current ritual shader thumbnails", () => {
       act(() => vi.advanceTimersByTime(1500));
       expect(s.capture).toHaveBeenCalledTimes(visualStyleOptions.length);
       expect(s.images()["pixel-art"]).toBe("data:image/png;base64,pixel-art:3");
+      expect(s.images()["depth-rim"]).toBe("data:image/png;base64,depth-rim:3");
+      expect(s.images()["space-grade"]).toBe("data:image/png;base64,space-grade:3");
       expect(sceneStyles.getSnapshot()).toBe(before);
     } finally { s.dispose(); }
   });
@@ -55,6 +57,20 @@ describe("current ritual shader thumbnails", () => {
     } finally { s.dispose(); }
   });
 
+  it("refreshes a gallery thumbnail only when that shader's controls change", () => {
+    const s = setup();
+    try {
+      act(() => vi.advanceTimersByTime(1500));
+      s.capture.mockClear();
+      const parameters = { ...DEFAULT_STYLE_PARAMETERS, rimDirection: 90 };
+      s.ui.rerender(createElement(s.Harness, { parameters }));
+      expect(s.images()["depth-rim"]).toBeUndefined();
+      expect(s.images()["space-grade"]).toBe("data:image/png;base64,space-grade:3");
+      act(() => vi.advanceTimersByTime(1500));
+      expect(s.capture).toHaveBeenCalledTimes(1);
+      expect(s.capture).toHaveBeenCalledWith("depth-rim", parameters);
+    } finally { s.dispose(); }
+  });
 
   it("cancels queued rendering immediately when the menu closes", () => {
     const s = setup();

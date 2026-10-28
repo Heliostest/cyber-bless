@@ -6,7 +6,8 @@ import { configureHour12, getHour12 } from '@wbr/i18n';
 import { IntlProvider } from 'react-intl';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, } from "react";
 import { createStore, type Host, type HapticStrength } from "@wbr/runtime";
-import { rituals } from "@wbr/core";
+import { rituals, sceneProgress, sceneStepCount } from "@wbr/core";
+import { createSoftSoundPlayer, type SoftSound } from "@wbr/shared";
 import { Context, type Route, type FulfillmentDraft } from "./context";
 import { Icon } from "./art";
 import { CollectionDetail, History, Me, Wishes, World } from "./pages";
@@ -96,6 +97,37 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     // 今日 is rebuilt only when the date changes, so focus and scroll survive.
     const day = useLocalDay(active);
     const audio = useRef<AudioContext | null>(null);
+    const activeNow = useRef(active);
+    activeNow.current = active;
+    const focused = useRef(true);
+    const pendingSaveSound = useRef(false);
+    const sampledSounds = useRef(new Set<AudioBufferSourceNode>());
+    const soundOptions = useMemo(() => ({
+        context: () => {
+            if (!audio.current) {
+                const Ctor = window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+                if (!Ctor) return null;
+                audio.current = new Ctor();
+            }
+            void audio.current.resume().catch(() => {});
+            return audio.current;
+        },
+        enabled: () => mounted.current && activeNow.current && focused.current && !document.hidden && !!store.getSnapshot().state?.settings.sound,
+    }), [store]);
+    const sounds = useMemo(() => createSoftSoundPlayer(soundOptions), [soundOptions]);
+    const interactionSounds = useMemo(() => createSoftSoundPlayer(soundOptions), [soundOptions]);
+    const stopInteractionSound = useCallback(() => {
+        interactionSounds.stop();
+        for (const source of sampledSounds.current) {
+            try { source.stop(); source.disconnect(); } catch { /* Already ended. */ }
+        }
+        sampledSounds.current.clear();
+    }, [interactionSounds]);
+    const stopFeedback = useCallback(() => {
+        pendingSaveSound.current = false;
+        sounds.stop();
+        stopInteractionSound();
+    }, [sounds, stopInteractionSound]);
     const shell = useRef<HTMLDivElement>(null);
     const route = routes[routes.length - 1];
     const state = snapshot.state;
@@ -134,7 +166,9 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
         setRoutes((old) => old.length > 1 ? old.slice(0, -1) : [{ page: "today" }]);
     }
     function launchReward(next: RewardFlight) {
+        if (flightRef.current) return;
         flightRef.current = next;
+        sounds.play("collect");
         skipNextPageIn.current = true;
         setArrival({
             key: Date.now(),
@@ -150,6 +184,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     }, []);
     const onRewardLand = useCallback(() => {
         const landed = flightRef.current;
+        flightRef.current = null;
         setFlight(null);
         setArrival((a) => (a ? { ...a, phase: "landed" } : a));
         if (landed)
@@ -196,8 +231,11 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
         }
     }, [backRequest, route.page]);
     useEffect(() => {
+        const blur = () => { focused.current = false; stopFeedback(); };
+        const focus = () => { focused.current = true; };
         const hidden = () => {
             if (document.hidden) {
+                stopFeedback();
                 void store.flush();
                 void audio.current?.suspend();
             }
@@ -210,25 +248,44 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             }
         };
         document.addEventListener("visibilitychange", hidden);
+        window.addEventListener("blur", blur);
+        window.addEventListener("focus", focus);
         window.addEventListener("beforeunload", beforeUnload);
         return () => {
             document.removeEventListener("visibilitychange", hidden);
+            window.removeEventListener("blur", blur);
+            window.removeEventListener("focus", focus);
             window.removeEventListener("beforeunload", beforeUnload);
+            stopFeedback();
+            // StrictMode replays this effect with the same memoized player.
+            // stop frees its nodes; mounted/active gate late callbacks.
             void audio.current?.close();
             audio.current = null;
         };
-    }, [store]);
+    }, [store, sounds, stopFeedback]);
+    useEffect(() => store.subscribe(() => {
+        const current = store.getSnapshot();
+        if (!current.state?.settings.sound) {
+            stopFeedback();
+        } else if (current.status === "saved" && pendingSaveSound.current) {
+            pendingSaveSound.current = false;
+            sounds.play("saved");
+        }
+    }), [store, sounds, stopFeedback]);
     useEffect(() => {
         if (!active) {
+            stopFeedback();
             void store.flush();
             void audio.current?.suspend();
         }
-    }, [active, store]);
+    }, [active, store, stopFeedback]);
     function prepareFeedback() {
-        if (!store.getSnapshot().state?.settings.sound)
+        if (!activeNow.current || !focused.current || document.hidden || !store.getSnapshot().state?.settings.sound)
             return;
         try {
-            const ctx = (audio.current ??= new AudioContext());
+            const Ctor = window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+            if (!Ctor) return;
+            const ctx = (audio.current ??= new Ctor());
             void ctx.resume().catch(() => { });
         }
         catch {
@@ -246,36 +303,27 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
         if (store.getSnapshot().state?.settings.haptics)
             void host.haptic?.(strength).catch(() => { });
     }
-    function feedback(sound?: AudioBuffer) {
+    function feedback(sound?: AudioBuffer | SoftSound) {
         haptic();
-        if (!state?.settings.sound)
+        if (!mounted.current || !activeNow.current || !focused.current || document.hidden || !store.getSnapshot().state?.settings.sound)
             return;
         try {
-            const ctx = (audio.current ??= new AudioContext());
-            void ctx.resume().catch(() => { });
+            if (!sound || typeof sound === "string") {
+                interactionSounds.play(sound ?? "woodfish");
+                return;
+            }
+            prepareFeedback();
+            const ctx = audio.current;
+            if (!ctx) return;
             if (sound) {
                 const source = ctx.createBufferSource();
                 source.buffer = sound;
                 source.connect(ctx.destination);
-                source.onended = () => source.disconnect();
+                sampledSounds.current.add(source);
+                source.onended = () => { source.disconnect(); sampledSounds.current.delete(source); };
                 source.start();
                 return;
             }
-            const oscillator = ctx.createOscillator();
-            const gain = ctx.createGain();
-            oscillator.type = "sine";
-            oscillator.frequency.setValueAtTime(420, ctx.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.12);
-            gain.gain.setValueAtTime(0.12, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-            oscillator.connect(gain);
-            gain.connect(ctx.destination);
-            oscillator.start();
-            oscillator.stop(ctx.currentTime + 0.2);
-            oscillator.onended = () => {
-                oscillator.disconnect();
-                gain.disconnect();
-            };
         }
         catch {
             /* Sound is optional if the host disallows Web Audio. */
@@ -358,6 +406,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             canHaptic: typeof host.haptic === "function",
             decodeSound,
             prepareFeedback,
+            stopInteractionSound,
             fulfillmentDrafts,
             setFulfillmentDraft: (id, draft) => setFulfillmentDrafts((old) => {
                 const next = { ...old };
@@ -370,9 +419,25 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             dispatch: (action) => {
                 try {
                     const before = store.getSnapshot().state;
+                    const savesWish = ["wish.create", "wish.note", "wish.realize", "wish.fulfill"].includes(action.type);
+                    if (savesWish) prepareFeedback();
                     store.dispatch(action);
                     setError("");
-                    return store.getSnapshot().state !== before;
+                    const after = store.getSnapshot().state;
+                    if (after === before) return false;
+                    if (savesWish) pendingSaveSound.current = true;
+                    if (action.type === "scene.progress") {
+                        const prior = before?.sceneRecords.find(record => record.id === action.id);
+                        const next = after?.sceneRecords.find(record => record.id === action.id);
+                        if (prior && next && sceneProgress(prior) < sceneStepCount(prior) && sceneProgress(next) >= sceneStepCount(next))
+                            sounds.play("complete");
+                    } else if (action.type === "opening.collect") {
+                        sounds.play("collect");
+                    } else if (action.type === "ritual.finish" || action.type === "opening.finish") {
+                        if (action.type === "ritual.finish") haptic();
+                        sounds.play("complete");
+                    }
+                    return true;
                 }
                 catch (e) {
                     setError(e instanceof ProductError ? e : e instanceof Error && hasProductCopy(e.message)

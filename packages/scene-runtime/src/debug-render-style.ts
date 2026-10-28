@@ -16,7 +16,8 @@ export function createDebugRenderStyle(
   let lastWidth = 0, lastHeight = 0;
   const style = createRenderStyle(renderer, scene, camera);
   const cues = createInteractionCues(renderer.domElement, scene, camera);
-  const environment = createCozyEnvironment(scene, { id, invalidate });
+  const objectPresentation = !!renderer.domElement.closest?.('[data-scene-presentation="object"]');
+  const environment = objectPresentation ? undefined : createCozyEnvironment(scene, { id, invalidate });
   if (environment) {
     renderer.domElement.dataset.environment = environment.kind;
     void environment.ready.then(() => {
@@ -35,7 +36,7 @@ export function createDebugRenderStyle(
     invalidate();
   }, renderer.domElement.closest?.(".app-shell") ?? undefined,
   (selected, parameters) => rendered && !disposed ? capture(selected, parameters) : null);
-  if (environment) registration.setDefault("toon-soft");
+  if (environment || objectPresentation) registration.setDefault("toon-soft");
   return {
     setStyle(selected: Parameters<typeof registration.setDefault>[0]) {
       // Content loaders also set their default after attaching a newly loaded model.

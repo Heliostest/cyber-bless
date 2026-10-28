@@ -10,6 +10,8 @@ export interface SceneController {
   setActive(active: boolean): void;
   setReducedMotion(reduced: boolean): void;
   dispose(): void;
+  /** Product display feedback; never advances or repeats an actual ritual. */
+  tapPreview?(): boolean;
 }
 export interface SceneEngine<Context, Controller extends SceneController> {
   create(

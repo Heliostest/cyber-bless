@@ -7,6 +7,14 @@ export const visualStyleOptions = [
   { id: "original", label: "原始光照", detail: "保留材质与自然明暗" },
   { id: "toon-ink", label: "墨线卡通", detail: "插画色块 · 几何细轮廓" },
   { id: "toon-soft", label: "柔和卡通", detail: "哑光玩具 · 柔和明暗" },
+  { id: "gallery-toon", label: "图库卡通", detail: "分层明暗 · 轻轮廓光" },
+  { id: "pencil-hatch", label: "铅笔排线", detail: "暗部排线 · 保留原色" },
+  { id: "height-palette", label: "高度配色", detail: "高度渐变 · 分层色彩" },
+  { id: "normal-palette", label: "法线配色", detail: "朝向着色 · 彩色表面" },
+  { id: "sketch-contour", label: "纸墨轮廓", detail: "纸色填充 · 手绘细线" },
+  { id: "gallery-outline", label: "法线描边", detail: "几何折角 · 清晰轮廓" },
+  { id: "space-grade", label: "柔光调色", detail: "柔光扩散 · 暗角颗粒" },
+  { id: "depth-rim", label: "深度边缘光", detail: "方向轮廓光 · 深色细边" },
 ] as const;
 
 /** Validated visual controls shared by the App and development tools; content defaults stay independent. */
@@ -19,12 +27,32 @@ export const styleParameterControls = [
   { style: "moebius", key: "hatchStrength", label: "排线强度", min: 0, max: 1, step: 0.01, unit: "%" },
   { style: "toon-outline", key: "toonWidth", label: "描边粗细", min: 0.5, max: 4, step: 0.25, unit: "×" },
   { style: "toon-outline", key: "toonLevels", label: "色阶", min: 2, max: 8, step: 1, unit: "级" },
+  { style: "gallery-toon", key: "galleryLevels", label: "色阶", min: 2, max: 8, step: 1, unit: "级" },
+  { style: "gallery-toon", key: "galleryRim", label: "轮廓光强度", min: 0, max: 1, step: 0.01, unit: "%" },
+  { style: "pencil-hatch", key: "pencilScale", label: "排线密度", min: 6, max: 60, step: 1, unit: "×" },
+  { style: "pencil-hatch", key: "pencilStrength", label: "排线强度", min: 0, max: 1, step: 0.01, unit: "%" },
+  { style: "height-palette", key: "paletteStrength", label: "配色强度", min: 0, max: 1, step: 0.01, unit: "%" },
+  { style: "normal-palette", key: "normalStrength", label: "法线色彩强度", min: 0, max: 1, step: 0.01, unit: "%" },
+  { style: "sketch-contour", key: "sketchWidth", label: "描边粗细", min: 0.5, max: 3, step: 0.1, unit: "px" },
+  { style: "sketch-contour", key: "sketchStrength", label: "纸墨强度", min: 0, max: 1, step: 0.01, unit: "%" },
+  { style: "gallery-outline", key: "galleryOutlineWidth", label: "描边粗细", min: 0.5, max: 3, step: 0.1, unit: "px" },
+  { style: "gallery-outline", key: "galleryOutlineLevels", label: "色阶", min: 2, max: 8, step: 1, unit: "级" },
+  { style: "space-grade", key: "glowStrength", label: "柔光强度", min: 0, max: 1, step: 0.01, unit: "%" },
+  { style: "space-grade", key: "vignetteStrength", label: "暗角强度", min: 0, max: 0.6, step: 0.01, unit: "%" },
+  { style: "space-grade", key: "grainStrength", label: "颗粒强度", min: 0, max: 0.08, step: 0.005, unit: "%" },
+  { style: "depth-rim", key: "rimWidth", label: "边缘光宽度", min: 1, max: 8, step: 0.5, unit: "px" },
+  { style: "depth-rim", key: "rimStrength", label: "边缘光强度", min: 0, max: 1, step: 0.01, unit: "%" },
+  { style: "depth-rim", key: "rimDirection", label: "边缘光方向", min: 0, max: 360, step: 5, unit: "°" },
 ] as const;
 
 export type RenderStyleParameters = Record<typeof styleParameterControls[number]["key"], number>;
 export const DEFAULT_STYLE_PARAMETERS: Readonly<RenderStyleParameters> = Object.freeze({
   halftoneSize: 4, halftoneStrength: 0.58, pixelSize: 3,
   moebiusWidth: 0.85, moebiusLevels: 8, hatchStrength: 0.5, toonWidth: 1, toonLevels: 3,
+  galleryLevels: 4, galleryRim: 0.18, pencilScale: 24, pencilStrength: 0.65,
+  paletteStrength: 0.65, normalStrength: 0.7, sketchWidth: 1.2, sketchStrength: 0.85,
+  galleryOutlineWidth: 1.1, galleryOutlineLevels: 4, glowStrength: 0.3,
+  vignetteStrength: 0.18, grainStrength: 0.02, rimWidth: 3, rimStrength: 0.6, rimDirection: 40,
 });
 
 export function normalizeStyleParameters(value: unknown, base = DEFAULT_STYLE_PARAMETERS): RenderStyleParameters {

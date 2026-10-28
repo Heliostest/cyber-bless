@@ -41,6 +41,20 @@ describe("App visual style menu", () => {
     } finally { ui.dispose(); }
   });
 
+  it("keeps the existing filmstrip order and offers every gallery shader for preview", () => {
+    const ui = openFilmstrip();
+    try {
+      expect([...ui.strip.querySelectorAll<HTMLButtonElement>("button[data-style]")].map(card => card.dataset.style)).toEqual([
+        "toon-soft", "original", "gouache", "moebius", "toon-outline", "halftone", "pixel-art", "toon-ink",
+        "gallery-toon", "pencil-hatch", "height-palette", "normal-palette", "sketch-contour", "gallery-outline", "space-grade", "depth-rim",
+      ]);
+      const card = ui.strip.querySelector<HTMLButtonElement>('[data-style="depth-rim"]')!;
+      clickOn(card);
+      expect(card.getAttribute("aria-pressed")).toBe("true");
+      expect(ui.host.querySelectorAll('input[type="range"]')).toHaveLength(3);
+      expect(ui.host.querySelector('[role="status"]')?.textContent).toContain("深度边缘光");
+    } finally { ui.dispose(); }
+  });
 
   it("drags with a mouse without selecting the release card, then accepts a normal click", () => {
     const ui = openFilmstrip();

@@ -32,13 +32,14 @@ export function Woodfish({ active, reducedMotion, view, disabled, onStrike, onIm
     useSceneVisualPreference(sceneId ?? "woodfish", () => {
         gesture.current = null;
         suppressClick.current = true;
+        latest.current.stopInteractionSound?.();
         scene.current?.setActive(false);
         scene.current?.setActive(active);
     }, host);
     const environment = useContent();
-    const { decodeSound } = useApp();
-    const latest = useRef({ active, reducedMotion, onImpact });
-    latest.current = { active, reducedMotion, onImpact };
+    const { decodeSound, stopInteractionSound } = useApp();
+    const latest = useRef({ active, reducedMotion, onImpact, stopInteractionSound });
+    latest.current = { active, reducedMotion, onImpact, stopInteractionSound };
     const gesture = useRef<{
         id: number;
         x: number;
@@ -68,7 +69,7 @@ export function Woodfish({ active, reducedMotion, view, disabled, onStrike, onIm
                 sceneId,
                 decodeSound,
                 onInstruction,
-                impact: (sound) => latest.current.onImpact(sound),
+                impact: (sound) => { if (latest.current.active) latest.current.onImpact(sound); },
             },
             active: latest.current.active,
             reducedMotion: latest.current.reducedMotion,
@@ -78,6 +79,7 @@ export function Woodfish({ active, reducedMotion, view, disabled, onStrike, onIm
             },
             failed: (error) => {
                 if (!disposed) {
+                    latest.current.stopInteractionSound?.();
                     gesture.current = null;
                     suppressClick.current = true;
                     setStatus("failed");
@@ -92,13 +94,17 @@ export function Woodfish({ active, reducedMotion, view, disabled, onStrike, onIm
             whenIdleRef.current = () => scene.current?.controller?.whenIdle?.() ?? Promise.resolve();
         return () => {
             disposed = true;
+            latest.current.stopInteractionSound?.();
             if (whenIdleRef)
                 whenIdleRef.current = null;
             scene.current?.dispose();
             scene.current = null;
         };
     }, [attempt]);
-    useEffect(() => scene.current?.setActive(active), [active]);
+    useEffect(() => {
+        scene.current?.setActive(active);
+        if (!active) latest.current.stopInteractionSound?.();
+    }, [active]);
     useEffect(() => {
         if (!active || disabled) {
             gesture.current = null;

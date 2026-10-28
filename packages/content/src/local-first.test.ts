@@ -64,7 +64,8 @@ describe("content contract", () => {
     expect(parsePack(legacyPack()).renderStyle).toBe("original");
   });
   it("accepts only the approved render styles", () => {
-    for (const renderStyle of ["toon-ink", "toon-soft", "gouache", "moebius", "toon-outline", "halftone", "pixel-art"] as const)
+    for (const renderStyle of ["toon-ink", "toon-soft", "gouache", "moebius", "toon-outline", "halftone", "pixel-art",
+      "gallery-toon", "pencil-hatch", "height-palette", "normal-palette", "sketch-contour", "gallery-outline", "space-grade", "depth-rim"] as const)
       expect(parsePack({ ...pack(), renderStyle }).renderStyle).toBe(
         renderStyle,
       );

@@ -123,6 +123,10 @@ export async function proceduralEngine(
       return {
         dispose,
         setActive,
+        tapPreview() {
+          if (disposed || !active || !host.closest('[data-scene-presentation="object"]')) return false;
+          return instance.tapPreview?.() ?? false;
+        },
         setReducedMotion(value) {
           reduced = value;
         },

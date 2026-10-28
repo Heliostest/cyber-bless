@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -40,6 +41,7 @@ const COPY = {
 const LIGHT_SECONDS = 1.6
 const LANTERN_Y = 1.45
 const LANTERN_HALF_H = 0.34
+const LANTERN_BAYS = 8
 const Z_AXIS = new THREE.Vector3(0, 0, 1)
 
 /** Barrel profile of the paper shade: radius at height `y` (−H..H). */
@@ -107,8 +109,8 @@ export function createLantern(ctx: SceneContext): SceneInstance {
   // brighter) is the one warm light, catching the frame near it.
   const night = ctx.stage === 'night'
   const litPeak = night
-    ? { glow: 3.2, shade: 1.05, halo: 0.75 }
-    : { glow: 2.2, shade: 0.7, halo: 0 }
+    ? { glow: 3.2, shade: 0.52, halo: 0.75 }
+    : { glow: 2.2, shade: 0.42, halo: 0 }
   const { renderer, scene } = createWarmStage(canvas)
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100)
   const cameraHome = new THREE.Vector3(0.2, 1.3, 4.1)
@@ -163,25 +165,34 @@ export function createLantern(ctx: SceneContext): SceneInstance {
   lantern.position.y = LANTERN_Y - 2.22
   pivot.add(lantern)
 
-  // Paper shade: barrel lathe; warm-yellow washi that glows from within.
+  // Paper shade: barrel lathe; warm-yellow paper that glows between its ribs.
   const profile: THREE.Vector2[] = []
   for (let i = 0; i <= 16; i++) {
     const y = -LANTERN_HALF_H + (i / 16) * LANTERN_HALF_H * 2
     profile.push(new THREE.Vector2(shadeRadius(y), y))
   }
-  const shadeMat = new THREE.MeshStandardMaterial({
+  const shadeMat = createRitualMaterial({
     color: 0xf0c464,
     emissive: 0xff9530,
     emissiveIntensity: 0.04,
     roughness: 0.95,
     side: THREE.DoubleSide,
+  }, {
+    kind: 'paper', strength: .65, fiber: 'paper',
+    paper: {
+      layout: 'bands', spacing: LANTERN_HALF_H * 2 / LANTERN_BAYS,
+      width: .13, contrast: .6, halfHeight: LANTERN_HALF_H,
+    },
   })
-  lantern.add(new THREE.Mesh(new THREE.LatheGeometry(profile, 32), shadeMat))
+  const shade = new THREE.Mesh(new THREE.LatheGeometry(profile, 32), shadeMat)
+  // Keep the curved paper's transmitted-light falloff smooth within toon-soft.
+  shade.userData.toonSurface = { shading: 'smooth' }
+  lantern.add(shade)
 
   // Thin bamboo ribs ring the shade, drawn as crisp ink bands.
-  const ribMat = new THREE.MeshStandardMaterial({ color: 0xc48d45, roughness: 0.9 })
-  for (let i = 1; i < 8; i++) {
-    const y = -LANTERN_HALF_H + (i / 8) * LANTERN_HALF_H * 2
+  const ribMat = new THREE.MeshStandardMaterial({ color: 0x7c5128, roughness: 0.9 })
+  for (let i = 1; i < LANTERN_BAYS; i++) {
+    const y = -LANTERN_HALF_H + (i / LANTERN_BAYS) * LANTERN_HALF_H * 2
     const rib = new THREE.Mesh(new THREE.TorusGeometry(shadeRadius(y) + 0.003, 0.005, 6, 40), ribMat)
     rib.rotation.x = Math.PI / 2
     rib.position.y = y

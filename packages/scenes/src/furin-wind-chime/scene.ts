@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -35,6 +36,7 @@ const SWING_TRIGGER_DEG = 30
 const RIBBON_SEGMENTS = 4
 const BELL_RADIUS = 0.26
 const BELL_SWEEP = Math.PI * 0.55
+const PREVIEW_SECONDS = 3.2
 
 export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, gestures, shared } = ctx
@@ -51,6 +53,11 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   let swing = 0
   let swingVel = 0
   let dragSwing = 0
+  // Display-only pendulum impulse, kept separate from the ritual's strike
+  // and breeze so it can settle or cancel back to that exact live baseline.
+  let previewElapsed = PREVIEW_SECONDS
+  let previewSwing = 0
+  let previewVel = 0
 
   const handles: GestureHandle[] = []
   let tiltHandle: GestureHandle | null = null
@@ -117,11 +124,13 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     new RoundedBoxGeometry(3.6, 0.14, 0.3, 2, 0.025),
     new THREE.MeshStandardMaterial({ color: 0xb98c60, roughness: 0.95 }),
   )
+  beam.name = 'furin-eave'
   beam.position.set(0, 2.45, -0.1)
   world.add(beam)
 
   // Pivot at the hanging point; everything below swings with it.
   const pivot = new THREE.Group()
+  pivot.name = 'furin-pivot'
   pivot.position.set(0, 2.38, 0)
   world.add(pivot)
 
@@ -132,20 +141,22 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   cord.position.y = -0.15
   pivot.add(cord)
 
-  const bellMat = new THREE.MeshStandardMaterial({
+  const bellMat = createRitualMaterial({
     color: 0xd2efff,
     emissive: 0x7ab8d8,
-    emissiveIntensity: 0.15,
-    metalness: 0.1,
+    emissiveIntensity: 0.04,
+    metalness: 0,
     roughness: 0.08,
-    transparent: true,
-    opacity: 0.55,
+    transmission: .76,
+    attenuationColor: 0xd2efff,
+    attenuationDistance: .8,
     side: THREE.DoubleSide,
-  })
+  }, { kind: 'glass', thickness: .035, strength: .65 })
   const bell = new THREE.Mesh(
     new THREE.SphereGeometry(BELL_RADIUS, 32, 16, 0, Math.PI * 2, 0, BELL_SWEEP),
     bellMat,
   )
+  bell.name = 'furin-bell'
   bell.position.y = -0.52
   pivot.add(bell)
 
@@ -174,6 +185,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
 
   // Clapper hangs inside the bell on its own sub-pivot.
   const clapperPivot = new THREE.Group()
+  clapperPivot.name = 'furin-clapper-pivot'
   clapperPivot.position.y = -0.45
   pivot.add(clapperPivot)
   const clapperString = new THREE.Mesh(
@@ -202,6 +214,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   let parent: THREE.Object3D = clapperPivot
   for (let i = 0; i < RIBBON_SEGMENTS; i++) {
     const joint = new THREE.Group()
+    joint.name = `furin-ribbon-joint-${i}`
     joint.position.y = i === 0 ? -0.42 : -0.13
     parent.add(joint)
     const segment = new THREE.Mesh(segGeo, ribbonMat)
@@ -258,6 +271,30 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   }
 
   const canAct = () => restoring || !ctx.isActive || ctx.isActive()
+  const resetPreview = () => {
+    previewElapsed = PREVIEW_SECONDS
+    previewSwing = 0
+    previewVel = 0
+  }
+  const posePendulum = (reduced: boolean, t: number) => {
+    // Smooth the small residual to zero over the last second, then remove it
+    // exactly. Retriggers retain the current angle and cap added velocity.
+    const fade = Math.min(1, Math.max(0, previewElapsed - (PREVIEW_SECONDS - 1)))
+    const weight = 1 - fade * fade * (3 - 2 * fade)
+    const displaySwing = swing + previewSwing * weight
+    const displayVel = swingVel + previewVel * weight
+    pivot.rotation.z = displaySwing
+    pivot.rotation.x = displaySwing * 0.3
+    clapperPivot.rotation.z = -displaySwing * 0.8
+    ribbonJoints.forEach((joint, i) => {
+      const flutter = reduced ? 0 : Math.sin(t * 3.2 - i * 0.9) * (0.08 + Math.abs(displayVel) * 0.06)
+      joint.rotation.z = -displaySwing * 0.25 * (i + 1) * 0.5 + flutter
+      joint.rotation.y = reduced ? 0 : Math.sin(t * 1.7 + i) * 0.25
+    })
+    const energy = Math.min(1, Math.abs(displayVel) * 0.5 + Math.abs(displaySwing))
+    glint.intensity = energy * 1.2
+    bellMat.emissiveIntensity = 0.04 + energy * 0.16
+  }
   const canCue = () => started && !disposed && !restoring && canAct() && step === 'idle'
   const removeCues = [
     addInteractionCue(bell, { kind: 'tap', label: '点按铃身', enabled: canCue, priority: 2 }),
@@ -385,6 +422,17 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
       restoring = false
       syncOverlayForStep()
     },
+    tapPreview() {
+      if (!started || disposed || restoring || !canAct() || step !== 'done') return false
+      if (ctx.isReducedMotion?.()) {
+        resetPreview()
+        posePendulum(true, 0)
+      } else {
+        previewElapsed = 0
+        previewVel = Math.min(1.1, previewVel + 0.95)
+      }
+      return true
+    },
     update(dt: number) {
       if (disposed || !started) return
       if (!canAct()) objectPointer?.cancel()
@@ -408,20 +456,23 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
       swingVel += (-(swing - target) * stiffness - swingVel * damping) * dt
       swing += swingVel * dt
       if (reduced) swing = THREE.MathUtils.clamp(swing, -0.08, 0.08)
-      pivot.rotation.z = swing
-      pivot.rotation.x = swing * 0.3
-
-      // Clapper and ribbon lag behind the bell.
-      clapperPivot.rotation.z = -swing * 0.8
-      ribbonJoints.forEach((joint, i) => {
-        const flutter = reduced ? 0 : Math.sin(t * 3.2 - i * 0.9) * (0.08 + Math.abs(swingVel) * 0.06)
-        joint.rotation.z = -swing * 0.25 * (i + 1) * 0.5 + flutter
-        joint.rotation.y = reduced ? 0 : Math.sin(t * 1.7 + i) * 0.25
-      })
-
-      const energy = Math.min(1, Math.abs(swingVel) * 0.5 + Math.abs(swing))
-      glint.intensity = energy * 1.2
-      bellMat.emissiveIntensity = 0.15 + energy * 0.4
+      if (reduced || !canAct()) resetPreview()
+      else if (previewElapsed < PREVIEW_SECONDS) {
+        previewElapsed += Math.max(0, dt)
+        if (previewElapsed >= PREVIEW_SECONDS) resetPreview()
+        else {
+          // Short substeps keep large host frames from amplifying a tap.
+          let remaining = Math.max(0, dt)
+          while (remaining > 0) {
+            const h = Math.min(remaining, 1 / 60)
+            previewVel += (-previewSwing * stiffness - previewVel * 3) * h
+            previewSwing = THREE.MathUtils.clamp(previewSwing + previewVel * h, -0.18, 0.18)
+            remaining -= h
+          }
+        }
+      }
+      // The bell carries the cord; its clapper and segmented ribbon lag.
+      posePendulum(reduced, t)
 
       camera.position.set(
         cameraHome.x + Math.sin(t * 0.12) * 0.08,
@@ -435,6 +486,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     dispose() {
       if (disposed) return
       disposed = true
+      resetPreview()
       resizeObserver?.disconnect()
       resizeObserver = null
       objectPointer?.dispose()

@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -48,7 +49,7 @@ export function createVenetianGlassBead(ctx: SceneContext): SceneInstance {
   const matte = (color: number, roughness = .8, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness })
   const porcelain = new THREE.MeshPhysicalMaterial({ color: 0xf6e6ce, roughness: .3, clearcoat: .55, clearcoatRoughness: .24 })
   const metal = matte(0xa0afb0, .23, .72), darkMetal = matte(0x596b70, .3, .55), cordMaterial = matte(0xc9a56c, .96)
-  const glass = (color: number) => new THREE.MeshPhysicalMaterial({ color, roughness: .12, metalness: 0, transparent: true, opacity: .84, transmission: .24, thickness: .45, ior: 1.46, clearcoat: 1, clearcoatRoughness: .08, depthWrite: false })
+  const glass = (color: number) => createRitualMaterial({ color, roughness: .12, metalness: 0, transmission: .24, thickness: .45, ior: 1.46, clearcoat: 1, clearcoatRoughness: .08, attenuationColor: color, attenuationDistance: .8, depthWrite: true }, { kind: 'glass', thickness: .45, strength: .24 })
   const turquoise = glass(0x20b5bd), amber = glass(0xf4ad46), coral = glass(0xe87862)
   const ribbonMaterial = new THREE.MeshPhysicalMaterial({ color: 0xf3b055, roughness: .19, clearcoat: 1, clearcoatRoughness: .1, emissive: 0xef743b, emissiveIntensity: 0 })
   const white = new THREE.MeshBasicMaterial({ color: 0xf5ffef, transparent: true, opacity: .62, depthWrite: false })

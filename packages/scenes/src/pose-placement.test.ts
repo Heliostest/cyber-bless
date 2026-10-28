@@ -19,9 +19,69 @@ function mount(width = 390, destination?: (step: number, goal: THREE.Vector3) =>
   const placement = createPosePlacement(canvas, camera, model, scene, { destination, planeNormal })
   const project = (point: THREE.Vector3) => { const p = point.clone().project(camera); return [left + (p.x + 1) * width / 2, top + (1 - p.y) * height / 2] as const }
   const source = () => { scene.updateMatrixWorld(true); return project(target.localToWorld(new THREE.Vector3(...anchor))) }
-  return { canvas, scene, root, camera, placement, source, project }
+  return { canvas, scene, parent, root, camera, placement, source, project }
 }
 describe('physical pose placement', () => {
+  it('can require a deliberate departure before returning to an overlapping home destination', () => {
+    const s=mount(), root=s.root
+    const model={roots:[root],targets:[root],pose(_step:number,_n:number){root.position.set(0,0,0);root.updateMatrixWorld(true)}}
+    model.pose(0,0)
+    const placement=createPosePlacement(s.canvas,s.camera,model,s.scene,{requireDeparture:true}), p=s.project(root.getWorldPosition(new THREE.Vector3()))
+    placement.begin(0,...p); expect(placement.move(p[0]+3,p[1])).toBe(false)
+    expect(placement.move(p[0],p[1]-40)).toBe(false)
+    expect(placement.move(p[0]+8,p[1]+4)).toBe(true)
+  })
+  it('can settle an accessible action from the current pose without a fabricated pointer grab', () => {
+    const s = mount(), from = s.root.position.clone()
+    s.placement.capture(0); s.root.position.set(9,9,9); s.placement.settle(0)
+    expect(s.root.position.distanceTo(from)).toBeLessThan(1e-8)
+    s.placement.settle(1); expect(s.root.position.distanceTo(new THREE.Vector3(1,.3,0))).toBeLessThan(1e-8)
+  })
+  it('inspects a held object through a full turn without accepting, moving its physical center or changing the destination', () => {
+    const s = mount(), a = s.source(), initial = new THREE.Box3().setFromObject(s.root,true).getCenter(new THREE.Vector3()), q = s.root.quaternion.clone(), goal = s.placement.destination(0)
+    s.placement.begin(0,...a); s.placement.rotate(Math.PI / 2,0)
+    expect(s.root.quaternion.angleTo(q)).toBeCloseTo(Math.PI / 2,6)
+    expect(new THREE.Box3().setFromObject(s.root,true).getCenter(new THREE.Vector3()).distanceTo(initial)).toBeLessThan(1e-8)
+    expect(s.placement.destination(0).distanceTo(goal)).toBeLessThan(1e-8)
+    expect(s.placement.ready(...a)).toBe(false)
+    s.placement.rotate(Math.PI * 1.5,0)
+    expect(s.root.quaternion.angleTo(q)).toBeLessThan(1e-7)
+    expect(s.placement.ready(...a)).toBe(false)
+  })
+  it('rebases the grip after turning so renewed movement follows the pointer without a jump', () => {
+    const s = mount(), a = s.source(); s.placement.begin(0,a[0]+11,a[1]-7)
+    s.placement.move(a[0]+31,a[1]+13); s.placement.rotate(.8,.3)
+    const before = s.root.getWorldPosition(new THREE.Vector3())
+    expect(s.placement.rebase(a[0]+31,a[1]+13)).toBe(true)
+    expect(s.placement.move(a[0]+31,a[1]+13)).toBe(false)
+    expect(s.root.getWorldPosition(new THREE.Vector3()).distanceTo(before)).toBeLessThan(1e-8)
+    const p = s.source(); s.placement.move(a[0]+41,a[1]+18)
+    const after = s.source()
+    expect(after[0]-p[0]).toBeCloseTo(10,5); expect(after[1]-p[1]).toBeCloseTo(5,5)
+  })
+  it('retains released inspection, allows a new grab and settles to the exact canonical final transform', () => {
+    const s = mount(), a = s.source(); s.placement.begin(0,...a); s.placement.move(a[0]+30,a[1]+15); s.placement.rotate(.7,.4)
+    const viewed = s.root.quaternion.clone(), viewedPosition = s.root.position.clone()
+    s.placement.release(); s.placement.cancel()
+    expect(s.root.quaternion.angleTo(viewed)).toBeLessThan(1e-7)
+    expect(s.root.position.distanceTo(viewedPosition)).toBeLessThan(1e-8)
+    expect(s.placement.move(...a)).toBe(false)
+    const grip = s.source(), goal = s.project(s.placement.destination(0))
+    expect(s.placement.begin(0,...grip)).toBe(true)
+    expect(s.placement.move(...goal)).toBe(true)
+    s.placement.capture(); s.placement.settle(1)
+    expect(s.root.position.distanceTo(new THREE.Vector3(1,.3,0))).toBeLessThan(1e-8)
+    expect(s.root.quaternion.angleTo(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),.3))).toBeLessThan(1e-7)
+  })
+  it('rotates in camera axes beneath a transformed parent and cancels back to the grabbed pose', () => {
+    const s = mount(); s.parent.rotation.set(.15,.4,-.2); s.parent.scale.setScalar(1.8); s.scene.updateMatrixWorld(true)
+    const a = s.source(), original = s.root.quaternion.clone(), worldPosition = new THREE.Box3().setFromObject(s.root,true).getCenter(new THREE.Vector3()), worldRotation = s.root.getWorldQuaternion(new THREE.Quaternion())
+    s.placement.begin(0,...a); s.placement.rotate(Math.PI / 3,0)
+    const expected = new THREE.Quaternion().setFromAxisAngle(s.camera.up.clone().normalize(),Math.PI / 3).multiply(worldRotation)
+    expect(s.root.getWorldQuaternion(new THREE.Quaternion()).angleTo(expected)).toBeLessThan(1e-7)
+    expect(new THREE.Box3().setFromObject(s.root,true).getCenter(new THREE.Vector3()).distanceTo(worldPosition)).toBeLessThan(1e-8)
+    s.placement.cancel(); expect(s.root.quaternion.angleTo(original)).toBeLessThan(1e-7)
+  })
   it('can keep a board piece on its physical horizontal surface while following the finger', () => {
     const s = mount(390, undefined, new THREE.Vector3(0, 1, 0))
     s.camera.position.set(2, 5, 8); s.camera.lookAt(0, 0, 0); s.camera.updateMatrixWorld(true)

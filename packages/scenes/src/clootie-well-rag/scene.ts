@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -139,7 +140,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
     stone.castShadow = stone.receiveShadow = true
     well.add(stone)
   }
-  const waterMat = new THREE.MeshStandardMaterial({ color: 0x88beb4, roughness: 0.29, metalness: 0.05, transparent: true, opacity: 0.94 })
+  const waterMat = createRitualMaterial({ color: 0x88beb4, roughness: .23, metalness: 0, transparent: true, opacity: .84 }, { kind: 'water', strength: .25 })
   const waterSurface = new THREE.Mesh(new THREE.CircleGeometry(0.354, 48), waterMat)
   waterSurface.name = 'clootie-well-water'
   waterSurface.rotation.x = -Math.PI / 2

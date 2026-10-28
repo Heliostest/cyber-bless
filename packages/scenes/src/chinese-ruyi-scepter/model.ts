@@ -1,11 +1,12 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
 // Original cloud-headed ruyi silhouette and display furniture, not a museum replica.
 export function createChineseRuyiScepterModel(){
  const root=new THREE.Group();root.name='chinese-ruyi-scepter-root'
  const subject=new THREE.Group();subject.name='chinese-ruyi-scepter-subject';root.add(subject)
  const scepter=new THREE.Group();scepter.name='ruyi-scepter';subject.add(scepter)
- const jade=new THREE.MeshStandardMaterial({color:0x8dbba6,roughness:.24,metalness:.08}),wood=new THREE.MeshStandardMaterial({color:0x674b38,roughness:.65}),pad=new THREE.MeshStandardMaterial({color:0xc9a16a,roughness:.86}),stone=new THREE.MeshStandardMaterial({color:0xb9b9a5,roughness:.96})
+ const jade=createRitualMaterial({color:0x8dbba6,roughness:.24,metalness:.08}, { kind: 'jade', strength: .12, thickness: .10, fiber: false }),wood=new THREE.MeshStandardMaterial({color:0x674b38,roughness:.65}),pad=new THREE.MeshStandardMaterial({color:0xc9a16a,roughness:.86}),stone=new THREE.MeshStandardMaterial({color:0xb9b9a5,roughness:.96})
  const mesh=(parent:THREE.Object3D,name:string,g:THREE.BufferGeometry,mat:THREE.Material,x=0,y=0,z=0)=>{const m=new THREE.Mesh(g,mat);m.name=name;m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
  const box=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat=wood)=>mesh(subject,name,new THREE.BoxGeometry(w,h,d),mat,x,y,z)
  box('ruyi-stone-base',4.8,.12,2.6,0,-.06,.20,stone)

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
@@ -54,20 +55,20 @@ function buildLantern(
   night: boolean,
 ): Lantern {
   const group = new THREE.Group()
-  const shellMat = new THREE.MeshStandardMaterial({
+  const shellMat = createRitualMaterial({
     color,
     emissive: 0xffa060,
     emissiveIntensity: night ? SHELL_GLOW_NIGHT : SHELL_GLOW,
     roughness: 0.9,
     side: THREE.DoubleSide,
-  })
-  const tipMat = new THREE.MeshStandardMaterial({
+  }, { kind: 'paper', strength: .18, fiber: 'paper' })
+  const tipMat = createRitualMaterial({
     color: 0xfbe4cf,
     emissive: 0xff9a70,
     emissiveIntensity: night ? 0.4 : 0.2,
     roughness: 0.9,
     side: THREE.DoubleSide,
-  })
+  }, { kind: 'paper', strength: .12, fiber: 'paper' })
   for (let row = 0; row < 2; row++) {
     const count = row === 0 ? 8 : 6
     for (let i = 0; i < count; i++) {

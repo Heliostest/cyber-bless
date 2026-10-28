@@ -5,6 +5,13 @@ import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneInstance } from './contract'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { createAlasitaModel } from './alasita-miniature-house/model'
+import { createSurvakaneModel } from './bulgarian-survakane/model'
+import { createLongevityLockModel } from './chinese-longevity-lock/model'
+import { createNagashibinaModel } from './mochigase-nagashibina/model'
+import { createVasilopitaModel } from './greek-vasilopita/model'
+import { createKhataModel } from './tibetan-khata-greeting/model'
+import { disposeTree } from './procedural-kit'
 
 const rendered = vi.hoisted(() => ({ scene: null as unknown, camera: null as unknown }))
 vi.mock('three', async original => {
@@ -44,6 +51,37 @@ export const spatialCasesB: [string, number[]][] = [
   ['japanese-shishi-odoshi', [0]], ['lao-baci-wrist', [0]], ['nanakusa-gayu', [0, 1]],
   ['greek-vasilopita', [0, 1, 2]], ['tibetan-khata-greeting', [0, 1]], ['polish-oplatek-sharing', [0, 2]],
 ]
+// The saved source checkpoint and the end of a continuous carry are different.
+// Assembly, tapping the back, taking the coin and the final handover stay distinct.
+function nextCheckpoint(id: string, step: number) {
+  if (['alasita-miniature-house', 'chinese-longevity-lock', 'mochigase-nagashibina'].includes(id)) return 3
+  if (['bulgarian-survakane', 'greek-vasilopita', 'tibetan-khata-greeting'].includes(id) && step < 2) return 2
+  if (id === 'czech-bead-star' && step === 0) return 2
+  return step + 1
+}
+function carryDestination(id: string, step: number) {
+  const factory = {
+    'alasita-miniature-house': createAlasitaModel,
+    'bulgarian-survakane': createSurvakaneModel,
+    'chinese-longevity-lock': createLongevityLockModel,
+    'mochigase-nagashibina': createNagashibinaModel,
+    'greek-vasilopita': createVasilopitaModel,
+    'tibetan-khata-greeting': createKhataModel,
+  }[id]
+  if (!factory) return null
+  const model = factory(), slot = nextCheckpoint(id, step) - 1
+  // The tray is accepted when it touches water, before its downstream drift.
+  model.pose(slot, id === 'mochigase-nagashibina' ? .6 : 1)
+  const anchor = model.anchors[slot]!, point = model.targets[slot]!.localToWorld(Array.isArray(anchor) ? new THREE.Vector3(...anchor) : anchor.clone())
+  if (id === 'greek-vasilopita' && slot === 1) {
+    // Acceptance seats the slice; the server is drawn out only afterwards.
+    const cake = model as ReturnType<typeof createVasilopitaModel>
+    point.sub(cake.server.getWorldPosition(new THREE.Vector3())).add(cake.served)
+  }
+  if ('dispose' in model) model.dispose()
+  disposeTree(model.root)
+  return point
+}
 function pointer(el: HTMLElement, type: string, x: number, y: number) {
   const e = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(e, { clientX: x, clientY: y, pointerId: 1, pointerType: 'touch', button: 0, buttons: type === 'pointerup' ? 0 : 1 })
@@ -78,6 +116,9 @@ describe('B group real object destination placement', () => {
       const anchor = new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))
       const start = s.project(object.localToWorld(anchor.clone()))
       const destination = typeof cue.destination === 'function' ? cue.destination() : cue.destination!.getWorldPosition(new THREE.Vector3())
+      const independentlyModeled = carryDestination(id, step)
+      if (independentlyModeled) expect(destination.distanceTo(independentlyModeled), 'the cue uses the current physical carry endpoint').toBeLessThan(1e-8)
+      if (id === 'czech-bead-star') expect(destination.distanceTo(s.scene.getObjectByName('bead-star-arm-joint')!.getWorldPosition(new THREE.Vector3()))).toBeLessThan(1e-8)
       const target = s.project(destination)
       pointer(s.hit, 'pointerdown', ...start)
       // A drawn stick remains in its real cylinder opening; its X axis stays constrained.
@@ -92,9 +133,9 @@ describe('B group real object destination placement', () => {
       const firstSettlingFrame = s.project(object.localToWorld(anchor.clone()))
       expect(Math.hypot(firstSettlingFrame[0] - heldAtArrival[0], firstSettlingFrame[1] - heldAtArrival[1]), 'settling starts at the held pose instead of replaying from home').toBeLessThan(9)
       s.run()
-      expect(s.progress, 'arrival commits without pointerup').toEqual([step + 1])
+      expect(s.progress, 'arrival commits without pointerup').toEqual([nextCheckpoint(id, step)])
       pointer(s.hit, 'pointermove', start[0], start[1]); pointer(s.hit, 'pointerup', ...start); s.run()
-      expect(s.progress, 'the tail of the same touch cannot affect the next step').toEqual([step + 1])
+      expect(s.progress, 'the tail of the same touch cannot affect the next step').toEqual([nextCheckpoint(id, step)])
     })
     it(`${id} step ${step} restores an unfinished grab and samples sparse release at the real destination`, async () => {
       const s = await mount(id, step, 390), { object, cue } = s.source
@@ -107,7 +148,7 @@ describe('B group real object destination placement', () => {
       pointer(s.hit, 'pointercancel', ...start)
       expect(object.localToWorld(anchor.clone()).distanceTo(original), 'cancel restores the actual selected surface').toBeLessThan(.001)
       pointer(s.hit, 'pointerdown', ...start); pointer(s.hit, 'pointerup', ...target); s.run()
-      expect(s.progress).toEqual([step + 1])
+      expect(s.progress).toEqual([nextCheckpoint(id, step)])
     })
   }
   it.each([
@@ -148,7 +189,7 @@ describe('B group real object destination placement', () => {
     pointer(s.hit,'pointerdown',...start)
     if(mode === 'held') pointer(s.hit,'pointermove',...to)
     else pointer(s.hit,'pointerup',...to)
-    s.run(); expect(s.progress).toEqual([1]); if(mode === 'held') pointer(s.hit,'pointerup',...to)
+    s.run(); expect(s.progress).toEqual([nextCheckpoint(id, 0)]); if(mode === 'held') pointer(s.hit,'pointerup',...to)
   })
   it.each([
     ['ema-votive-plaque', 2, [-.4,0,0], [.14,0,0]],

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -62,7 +63,7 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
   const world = new THREE.Group(); world.name = 'embroidery-workbench'; scene.add(world)
   const material = (color: number, roughness = .82) => new THREE.MeshStandardMaterial({ color, roughness })
   const oak = material(0xc4a57b), walnut = material(0x87674f), wood = material(0xba854e, .6)
-  const linen = material(0xf0e5cf), weave = material(0xded1b7), pad = material(0xadbdb1)
+  const linen = createRitualMaterial({ color: 0xf0e5cf, roughness: .82 }, { kind: 'cloth', strength: .14, fiber: 'linen' }), weave = material(0xded1b7), pad = material(0xadbdb1)
   const rose = material(0xbc4562, .68), pink = material(0xde8090, .72), teal = material(0x428a83, .72), gold = material(0xd1a655, .6)
   const brass = new THREE.MeshStandardMaterial({ color: 0xc4a16b, roughness: .45, metalness: .48 })
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {

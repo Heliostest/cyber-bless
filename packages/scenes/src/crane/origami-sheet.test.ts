@@ -14,4 +14,27 @@ describe('origami sheet (three.js view)', () => {
     expect(turned.y).toBeCloseTo(2 * SHEET_HALF * Math.SQRT2, 9)
     sheet.dispose()
   })
+
+  it('moves the finished wing surfaces, normals and ink together and restores every buffer exactly', () => {
+    const sheet = createOrigamiSheet()
+    sheet.pose(4, 1)
+    const buffers = () => sheet.object.children.map((child) => {
+      const geometry = (child as THREE.Mesh).geometry
+      return {
+        position: Array.from(geometry.getAttribute('position').array),
+        normal: geometry.getAttribute('normal') ? Array.from(geometry.getAttribute('normal').array) : undefined,
+        drawCount: geometry.drawRange.count,
+      }
+    })
+    const rest = buffers()
+    const transform = sheet.object.matrix.clone()
+    sheet.poseWingFlap(1)
+    const moved = buffers()
+    for (let i = 0; i < rest.length; i++) expect(moved[i].position).not.toEqual(rest[i].position)
+    expect(moved[0].normal).not.toEqual(rest[0].normal)
+    expect(sheet.object.matrix).toEqual(transform)
+    sheet.poseWingFlap(0)
+    expect(buffers()).toEqual(rest)
+    sheet.dispose()
+  })
 })

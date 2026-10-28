@@ -59,6 +59,7 @@ const FOLD_COUNT = FORM_COUNT - 1
 const FOLD_SECONDS = [0, 1.6, 2.2, 2.9, 2.3] as const
 const REST_Y = 0.9
 const LIFT_Y = 1.3
+const PREVIEW_FLAP_SECONDS = 1.8
 
 /**
  * How each form faces the camera, in the sheet's bird-base axes (right, up,
@@ -98,6 +99,7 @@ export function createCrane(ctx: SceneContext): SceneInstance {
   let posed = ''
   let liftT = 0
   let grabbed = false
+  let previewFlapT = PREVIEW_FLAP_SECONDS
 
   const handles: GestureHandle[] = []
   let dragHandle: GestureHandle | null = null
@@ -318,8 +320,8 @@ export function createCrane(ctx: SceneContext): SceneInstance {
     form += 1
     foldK = restoring || (ctx.isReducedMotion?.() ?? false) ? 1 : 0
     if (!restoring) {
-      // Soft paper crease: short, airy triangle tones.
-      fx.impact({ freqs: [880, 1320], duration: 0.2, gain: 0.035, type: 'triangle' })
+      fx.impact()
+      fx.sound('paper', { duration: ctx.isReducedMotion?.() ? .12 : .22, strength: .55 })
     }
     if (form >= FOLD_COUNT && foldK >= 1) goLift()
     else syncOverlayForStep()
@@ -426,8 +428,20 @@ export function createCrane(ctx: SceneContext): SceneInstance {
       restoring = false
       syncOverlayForStep()
     },
+    tapPreview() {
+      if (!started || disposed || restoring || !canAct() || step !== 'done') return false
+      // Two small wing beats are display feedback only. A fresh tap restarts
+      // this bounded pose; it never changes the fold/lift/wish state.
+      previewFlapT = ctx.isReducedMotion?.() ? PREVIEW_FLAP_SECONDS : 0
+      if (previewFlapT === PREVIEW_FLAP_SECONDS) {
+        sheet.pose(form, foldK)
+        posed = `${form}:${foldK}:0`
+      }
+      return true
+    },
     update(dt: number) {
       if (disposed || !started) return
+      fx.update()
       if (!canAct()) objectPointer?.cancel()
       dragHandle?.setEnabled(canAct() && gestureOwned && step === 'lift')
       for (const h of handles) h.update(dt)
@@ -443,10 +457,16 @@ export function createCrane(ctx: SceneContext): SceneInstance {
           else syncOverlayForStep()
         }
       }
+      if (reduced || !canAct()) previewFlapT = PREVIEW_FLAP_SECONDS
+      else previewFlapT = Math.min(PREVIEW_FLAP_SECONDS, previewFlapT + Math.max(0, dt))
+      const flapK = previewFlapT / PREVIEW_FLAP_SECONDS
+      const flap = flapK < 1 ? Math.sin(flapK * Math.PI * 4) * Math.sin(flapK * Math.PI) : 0
       const key = `${form}:${foldK}`
-      if (key !== posed) {
-        sheet.pose(form, foldK)
-        posed = key
+      const poseKey = `${key}:${flap}`
+      if (poseKey !== posed) {
+        if (flap !== 0) sheet.poseWingFlap(flap)
+        else sheet.pose(form, foldK)
+        posed = poseKey
       }
       // Turn, scale and centre between the two forms' rest framings.
       const from = frames[foldK < 1 ? form - 1 : form]

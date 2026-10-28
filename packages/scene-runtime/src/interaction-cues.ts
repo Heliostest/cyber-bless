@@ -40,6 +40,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
   const cursorStyles = new Map<HTMLElement, string>()
   const world = new THREE.Vector3(), projected = new THREE.Vector3(), ray = new THREE.Raycaster(), pointer = new THREE.Vector2()
   let disposed = false, dragging: InteractionCue | undefined
+  let inspectionHelp: HTMLElement | undefined
   let active: Entry[] = []
   function visible(object: THREE.Object3D) {
     for (let parent: THREE.Object3D | null = object; parent; parent = parent.parent) if (!parent.visible) return false
@@ -187,6 +188,14 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
         instruction(entry, from, to)
         return entry
       })
+      // The visual guide replaces the long screen-reader hint. Keep optional
+      // inspection controls discoverable here, below the ordinary action.
+      const inspectionHint = overlay?.querySelector<HTMLElement>('.scene-hint[data-placement-inspection="true"]')
+      const helpText = active.length && !layer.hidden ? inspectionHint?.title : undefined
+      if (helpText) {
+        if (!inspectionHelp) { inspectionHelp = document.createElement('span'); inspectionHelp.className = 'scene-inspection-help'; guides.append(inspectionHelp) }
+        if (inspectionHelp.textContent !== helpText) inspectionHelp.textContent = helpText
+      } else { inspectionHelp?.remove(); inspectionHelp = undefined }
       layoutGuides()
       if (dragging && !keep.has(dragging)) end()
       if (!active.length) setCursor()

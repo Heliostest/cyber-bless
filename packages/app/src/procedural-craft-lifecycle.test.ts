@@ -99,7 +99,6 @@ it.each([
   ['uzbek-clay-bowl', 1, 'clay-body', 'clay-body', [0, .2675, .5172792206135786], [0, .2675, .5172792206135786], [0, -70]],
   ['uzbek-clay-bowl', 2, 'clay-body', 'clay-body', [0, .5525, .6197334941505714], [0, .5525, .6197334941505714]],
   ['chinese-woodblock-print', 2, 'woodblock-print-face', 'woodblock-print-face'],
-  ['czech-bead-star', 0, 'bead-strand-grip', 'bead-star-arm-joint'],
   ['fijian-woven-fan', 0, 'fan-binding-grip', 'fan-neck-joint'],
   ['amazigh-woven-rug', 0, 'rug-shuttle-grip', 'rug-weft-gap'],
   ['slovak-wire-bird', 0, 'wire-wing-grip', 'wire-shoulder-joint'],
@@ -205,4 +204,78 @@ it.each([
     host.querySelector<HTMLButtonElement>('.scene-bow-tap')!.click()
     expect(checkpoint).toHaveBeenCalledExactlyOnceWith(3)
   } else expect(checkpoint).toHaveBeenCalledExactlyOnceWith(id==='malawi-sansi'?2:progress+1)
+})
+
+it.each([0, 1, 2])('preserves Czech bead assembly and optional viewing through host pause at %i', async progress => {
+  vi.stubGlobal('requestAnimationFrame', () => 1); vi.stubGlobal('cancelAnimationFrame', () => {})
+  vi.spyOn(HTMLCanvasElement.prototype, 'clientWidth', 'get').mockReturnValue(360)
+  vi.spyOn(HTMLCanvasElement.prototype, 'clientHeight', 'get').mockReturnValue(360)
+  vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 360, height: 360 } as DOMRect)
+  const host = document.createElement('div'); document.body.append(host)
+  const checkpoint = vi.fn(), complete = vi.fn(), engine = await proceduralEngine('czech-bead-star')
+  host.addEventListener('scene:complete', complete)
+  const ctrl = engine.create(host, { progress, sceneId: 'czech-bead-star', checkpoint, isSoundEnabled: () => false },
+    { active: true, reducedMotion: true, signal: new AbortController().signal, ready() {}, failed(error) { throw error } })
+  controllers.push(ctrl)
+  const scene = rendered.scene!, camera = rendered.camera!, hit = host.querySelector<HTMLElement>('.scene-hit-layer')!
+  hit.setPointerCapture = () => {}; hit.releasePointerCapture = () => {}
+  const project = (world: THREE.Vector3) => {
+    const p = world.clone().project(camera)
+    return [(p.x + 1) * 180, (1 - p.y) * 180]
+  }
+  const currentCue = (kind: InteractionCue['kind']) => {
+    scene.updateMatrixWorld(true); camera.updateMatrixWorld(true)
+    const entries: { object: THREE.Object3D; cue: InteractionCue }[] = []
+    scene.traverse(object => {
+      for (const cue of (object.userData.interactionCues ?? []) as InteractionCue[])
+        if (cue.enabled() && cue.kind === kind) entries.push({ object, cue })
+    })
+    expect(entries, 'the current physical action must expose its cue').toHaveLength(1)
+    const { object, cue } = entries[0]!
+    return { object, cue, from: project(object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0])))) }
+  }
+  expect(checkpoint).not.toHaveBeenCalled(); expect(complete).not.toHaveBeenCalled()
+  if (progress === 0) {
+    const loose = scene.getObjectByName('bead-loose-strand')!, saved = loose.position.clone()
+    const first = currentCue('drag'), destination = first.cue.destination!
+    expect(destination).toBeDefined()
+    const end = project(typeof destination === 'function' ? destination() : destination.getWorldPosition(new THREE.Vector3()))
+    pointer(hit, 'pointerdown', first.from)
+    pointer(hit, 'pointermove', first.from.map((value, axis) => value + (end[axis]! - value) * .2))
+    expect(loose.position.distanceTo(saved), 'pause must cancel an actual unfinished assembly').toBeGreaterThan(.02)
+    expect(checkpoint).not.toHaveBeenCalled()
+    ctrl.setActive(false); ctrl.setActive(true)
+    expect(loose.position.distanceTo(saved)).toBeLessThan(1e-8)
+    pointer(hit, 'pointerup', end)
+    expect(checkpoint).not.toHaveBeenCalled(); expect(complete).not.toHaveBeenCalled()
+    const fresh = currentCue('drag')
+    pointer(hit, 'pointerdown', fresh.from); pointer(hit, 'pointermove', end); pointer(hit, 'pointerup', end)
+    expect(checkpoint).toHaveBeenCalledExactlyOnceWith(2)
+    expect(loose.parent?.name).toBe('bead-star-body')
+    expect(complete, 'joining the strand must leave quiet viewing as a separate action').not.toHaveBeenCalled()
+  }
+
+  // The old checkpoint 1 and current checkpoint 2 both restore optional
+  // viewing. Turning is real motion, but never an extra progress requirement.
+  const star = scene.getObjectByName('bead-star-body')!, savedTurn = star.quaternion.clone(), view = currentCue('rotate')
+  const staleEnd = [view.from[0]! + 60, view.from[1]!]
+  pointer(hit, 'pointerdown', view.from); pointer(hit, 'pointermove', staleEnd)
+  expect(star.quaternion.angleTo(savedTurn)).toBeGreaterThan(.5)
+  expect(checkpoint.mock.calls.map(([value]) => value)).toEqual(progress === 0 ? [2] : [])
+  ctrl.setActive(false); ctrl.setActive(true)
+  expect(star.quaternion.angleTo(savedTurn)).toBeLessThan(1e-8)
+  pointer(hit, 'pointerup', staleEnd)
+  expect(checkpoint.mock.calls.map(([value]) => value)).toEqual(progress === 0 ? [2] : [])
+  expect(complete).not.toHaveBeenCalled()
+
+  // A fresh tap completes directly after restoration; no fixed turn or full
+  // revolution may be required, and the abandoned viewing release cannot tap.
+  const quiet = currentCue('rotate')
+  pointer(hit, 'pointerdown', quiet.from); pointer(hit, 'pointerup', quiet.from)
+  expect(checkpoint.mock.calls.map(([value]) => value)).toEqual(progress === 0 ? [2, 3] : [3])
+  expect(complete).toHaveBeenCalledTimes(1)
+  expect(host.querySelector<HTMLButtonElement>('.scene-bow-tap')!.hidden).toBe(true)
+  ctrl.setActive(false); ctrl.setActive(true); pointer(hit, 'pointerup', quiet.from)
+  expect(checkpoint.mock.calls.map(([value]) => value)).toEqual(progress === 0 ? [2, 3] : [3])
+  expect(complete).toHaveBeenCalledTimes(1)
 })

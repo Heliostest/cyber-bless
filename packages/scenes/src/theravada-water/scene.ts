@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { bindSceneAttribute, bindSceneText } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -195,13 +196,16 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
 
   // Stream (stretches from the spout tip down to the water surface while pouring)
   const streamBaseHeight = 0.9
-  const streamMat = new THREE.MeshStandardMaterial({
+  const streamMat = createRitualMaterial({
     color: 0x8ad0e8,
     emissive: 0x3a90b0,
-    emissiveIntensity: 0.6,
+    emissiveIntensity: 0.08,
+    roughness: .16,
+    metalness: 0,
+    depthWrite: false,
     transparent: true,
     opacity: 0,
-  })
+  }, { kind: 'water', strength: .3 })
   const stream = new THREE.Mesh(
     new THREE.CylinderGeometry(0.025, 0.045, streamBaseHeight, 8),
     streamMat,

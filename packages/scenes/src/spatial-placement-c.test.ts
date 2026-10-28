@@ -91,6 +91,14 @@ const cases = [
   ['thai-songkran-elders', songkran.create, createSongkranModel], ['zeniarai-coin-washing', washing.create, createCoinWashingModel],
   ['fgs-buddha-bathing', bathing.create, createBuddhaBathingModel],
 ] as const
+// Legacy saved checkpoints retain their source poses. The accepted target is
+// the end of the current continuous carry, not its removed intermediate stop.
+function placementStep(id: string, at: number) {
+  if (['brat-bride-cloth', 'chinese-fu-paper', 'japanese-hamaya', 'lanna-sand-pagoda', 'korean-sotdae'].includes(id)) return 2
+  if (['balinese-canang-sari', 'chinese-steelyard', 'kameido-usokae'].includes(id)) return at === 0 ? 0 : 2
+  if (id === 'thai-songkran-elders') return at < 2 ? 1 : 2
+  return at
+}
 const existing = [
   ['amazigh-woven-rug', rug.create, [['rug-shuttle-grip', [0,0,0]], ['rug-top-grip', [0,0,0]]]],
   ['catalan-festival-giant', giant.create, [['giant-rosette-grip', [0,0,0]], ['giant-base-grip', [0,0,0]]]],
@@ -112,7 +120,7 @@ const existing = [
 const instances: SceneInstance[] = []
 const constrained = [
   ['french-coffee-mill', coffee.create, createCoffeeMillModel, [2]],
-  ['japanese-wagasa', wagasa.create, createWagasaModel, [0,2]],
+  ['japanese-wagasa', wagasa.create, createWagasaModel, [0,1,2]],
   ['mexican-molinillo', molinillo.create, createMolinilloModel, [0]],
   ['paper-pinwheel', pinwheel.create, createPinwheelModel, [1]],
   ['setsubun-mamemaki', setsubun.create, createSetsubunModel, [0]],
@@ -138,6 +146,11 @@ function mount(create: (ctx: SceneContext) => SceneInstance, at: number, width =
   const cue = () => {
     const found: { object: THREE.Object3D; cue: InteractionCue }[] = []
     scene.traverse(object => { for (const c of object.userData.interactionCues ?? []) if (c.enabled()) found.push({ object, cue: c }) })
+    if (create === wagasa.create && at > 0) {
+      expect(found.map(entry => entry.cue.kind).sort()).toEqual(['drag', 'rotate'])
+      const closing = found.filter(entry => entry.cue.kind === 'drag')
+      expect(closing).toHaveLength(1); return closing[0]!
+    }
     expect(found).toHaveLength(1); return found[0]!
   }
   return { scene, hit, progress, completed, project, cue, instance }
@@ -150,15 +163,20 @@ describe('C group spatial object placement', () => {
       const goal=s.project(typeof d==='function'?d():d.getWorldPosition(new THREE.Vector3()))
       event(s.hit,'pointerdown',from);event(s.hit,'pointermove',[from[0]+(goal[0]-from[0])*.15,from[1]+(goal[1]-from[1])*.15]);expect(s.progress).toEqual([])
       const held=s.project(c.object.localToWorld(new THREE.Vector3(...anchor)));expect(Math.hypot(held[0]-from[0],held[1]-from[1])).toBeGreaterThan(.5)
-      event(s.hit,'pointermove',goal);expect(s.progress).toEqual([at+1]);event(s.hit,'pointerup',from);expect(s.progress).toEqual([at+1])
+      const checkpoint = id === 'tibetan-prayer-flags' && at > 0 ? 3 : at + 1
+      event(s.hit,'pointermove',goal);expect(s.progress).toEqual([checkpoint]);event(s.hit,'pointerup',from);expect(s.progress).toEqual([checkpoint])
     })
   }
   for (const [id, create, factory, steps] of constrained) for (const at of steps) {
     it(`${id} step ${at} follows its physical constraint and accepts the actual limit before release`, () => {
       const s=mount(create,at),c=s.cue(),anchor=c.cue.anchor??[0,0,0]
       const source=s.project(c.object.localToWorld(new THREE.Vector3(...anchor))),model=factory()
-      model.pose(at,1)
-      const goal=s.project(model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!)))
+      const targetStep = id === 'japanese-wagasa' && at > 0 ? 2 : at
+      model.pose(targetStep,1)
+      // Wagasa's runner marker follows the visible outer wall after viewing;
+      // the independently posed mechanism still supplies its actual limit.
+      const targetAnchor = id === 'japanese-wagasa' ? anchor : model.anchors[targetStep]!
+      const goal=s.project(model.targets[targetStep]!.localToWorld(new THREE.Vector3(...targetAnchor)))
       event(s.hit,'pointerdown',source)
       event(s.hit,'pointermove',[source[0]+(goal[0]-source[0])*.2,source[1]+(goal[1]-source[1])*.2])
       const held=s.project(c.object.localToWorld(new THREE.Vector3(...anchor)))
@@ -166,9 +184,10 @@ describe('C group spatial object placement', () => {
       expect(s.progress).toEqual([])
       event(s.hit,'pointermove',[source[0]-(goal[1]-source[1])*.2,source[1]+(goal[0]-source[0])*.2])
       event(s.hit,'pointermove',goal)
-      expect(s.progress).toEqual([at+1])
+      const checkpoint = id === 'japanese-wagasa' && at === 0 ? 2 : targetStep + 1
+      expect(s.progress).toEqual([checkpoint])
       event(s.hit,'pointermove',source);event(s.hit,'pointerup',source)
-      expect(s.progress).toEqual([at+1])
+      expect(s.progress).toEqual([checkpoint])
     })
   }
   it('does not accept a hoop spool moved away from the blank stitch target and cancelled', () => {
@@ -202,13 +221,13 @@ describe('C group spatial object placement', () => {
   }
   for (const [id, create, modelFactory] of cases) {
     it.each(id==='korean-sotdae'?[0,2]:id==='thai-songkran-elders'?[0,1]:[0,1,2])(`${id} step %i follows a curved route and completes on arrival while held`, at => {
-      const s = mount(create, at), model = modelFactory(), c = s.cue()
+      const s = mount(create, at), model = modelFactory(), c = s.cue(), targetStep = placementStep(id, at)
       const anchor = c.cue.anchor ?? [0, 0, 0]
       const source = s.project(c.object.localToWorld(new THREE.Vector3(...anchor)))
       const phase=id==='fgs-buddha-bathing'?.55:id==='zeniarai-coin-washing'&&at===1?.25:id==='zeniarai-coin-washing'&&at===2?.4:1
-      model.pose(at, phase)
-      const modelAnchor=model.anchors[at]!, tuple=Array.isArray(modelAnchor)?modelAnchor:modelAnchor.toArray()
-      const goalWorld = model.targets[at]!.localToWorld(new THREE.Vector3(...tuple))
+      model.pose(targetStep, phase)
+      const modelAnchor=model.anchors[targetStep]!, tuple=Array.isArray(modelAnchor)?modelAnchor:modelAnchor.toArray()
+      const goalWorld = model.targets[targetStep]!.localToWorld(new THREE.Vector3(...tuple))
       if (id === 'russian-matryoshka' && at === 1) goalWorld.y += 1.10
       const goal = s.project(goalWorld)
       // The journey deliberately bends and reverses; acceptance depends on place.
@@ -222,12 +241,12 @@ describe('C group spatial object placement', () => {
       }
       event(s.hit, 'pointermove', [source[0] - 16, source[1] + 22])
       event(s.hit, 'pointermove', goal)
-      expect(s.progress).toEqual([at + 1])
+      expect(s.progress).toEqual([targetStep + 1])
       event(s.hit, 'pointermove', [goal[0] + 40, goal[1] - 40])
-      expect(s.progress).toEqual([at + 1])
+      expect(s.progress).toEqual([targetStep + 1])
       event(s.hit, 'pointerup', goal)
-      expect(s.progress).toEqual([at + 1])
-      if (at === 2) expect(s.completed).toHaveBeenCalledOnce()
+      expect(s.progress).toEqual([targetStep + 1])
+      if (targetStep === 2) expect(s.completed).toHaveBeenCalledOnce()
     })
     it(`${id} cancellation restores the whole object and does not commit`, () => {
       const s = mount(create, 0), c = s.cue(), anchor = c.cue.anchor ?? [0, 0, 0]

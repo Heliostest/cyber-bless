@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 
 const V=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
@@ -48,7 +49,7 @@ export function createSongkranModel(){
  const cup=new THREE.Group();cup.name='songkran-cup-root';root.add(cup)
  const bowl=make('bowl',vessel([[0,0],[.12,0],[.155,.018],[.26,.18],[.244,.18],[.138,.026],[.115,.018],[0,.018]]),metal,cup)
  const home=V(-.80,.06,.60),lifted=V(-.80,.74,.60),ready=V(-.38,1.15,.425)
- const waterMaterial=new THREE.MeshStandardMaterial({color:0x93d8e6,transparent:true,opacity:.62,roughness:.15,metalness:.1,side:THREE.DoubleSide,depthWrite:false})
+ const waterMaterial=createRitualMaterial({color:0x93d8e6,transparent:true,opacity:.62,roughness:.15,metalness:0,side:THREE.DoubleSide,depthWrite:false},{kind:'water',strength:.3})
  const waterGeometry=new THREE.BufferGeometry();waterGeometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(256*9),3));waterGeometry.setDrawRange(0,0)
  const water=make('water-surface',waterGeometry,waterMaterial);water.userData.effect=true;water.castShadow=false
  const caught=make('caught-water',new THREE.CircleGeometry(.422,48),waterMaterial);caught.rotation.x=-Math.PI/2;caught.position.set(0,.027,.80);caught.userData.effect=true;caught.castShadow=false

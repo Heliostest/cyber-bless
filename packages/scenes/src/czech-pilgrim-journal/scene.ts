@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -89,7 +90,7 @@ export function createCzechPilgrimJournal(ctx: SceneContext): SceneInstance {
   box(.18,.035,.60,oak,[-1.25,.827,-.49],'journal-pencil-rest')
   const pencil=add(new THREE.CylinderGeometry(.023,.023,.58,8),pathMat,[-1.25,.862,-.49]);pencil.rotation.x=Math.PI/2
   add(new THREE.LatheGeometry([[0,0],[.1,0],[.14,.035],[.17,.20],[.15,.215],[.13,.19],[.10,.05],[0,.05]].map(([x,y])=>new THREE.Vector2(x,y)),28),leather,[1.33,.805,-.59],'journal-travel-cup')
-  const tea=add(new THREE.CylinderGeometry(.127,.127,.008,24),pathMat,[1.33,.973,-.59]);tea.castShadow=false
+  const tea=add(new THREE.CylinderGeometry(.127,.127,.008,24),createRitualMaterial({color:0xc79b70,roughness:.26,transmission:.18,attenuationColor:0xc79b70,attenuationDistance:.16},{kind:'tea',thickness:.008,strength:.2}),[1.33,.973,-.59]);tea.castShadow=false
   const matrices=()=>{scene.updateMatrixWorld(true);camera.updateMatrixWorld(true)}
   const restorePose=()=>{hinge.rotation.z=checkpoint>=1?Math.PI:0;ribbon.position.copy(checkpoint>=2?RIBBON_REST:RIBBON_HOME);ribbon.rotation.y=checkpoint>=2?0:Math.PI/2;matrices()}
   const enabled=(at:number)=>()=>active()&&!transition&&checkpoint===at

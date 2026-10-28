@@ -28,8 +28,10 @@ vi.mock('@wbr/scene-runtime/debug-render-style', async () => {
   } }
 })
 const instances: SceneInstance[] = []
-afterEach(() => { instances.splice(0).forEach(s => s.dispose()); document.body.replaceChildren(); vi.restoreAllMocks() })
+afterEach(() => { instances.splice(0).forEach(s => s.dispose()); document.body.replaceChildren(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
 function mount(at = 0, extra: Partial<SceneContext> = {}, width = 350, height = 408) {
+  let resize = () => {}
+  vi.stubGlobal('ResizeObserver', class { constructor(callback: () => void) { resize = callback } observe() {} disconnect() {} })
   const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
   host.append(canvas, overlay); document.body.append(host)
   const left = 17, top = 89
@@ -49,13 +51,13 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 350, height = 
     return [left + (p.x + 1) * width / 2, top + (1 - p.y) * height / 2]
   }
   const run = (seconds = 1) => { for (let t = 0; t < seconds; t += .025) instance.update(.025) }
-  return { instance, scene, camera, overlay, host, hit, button, point, run, progress, saveWish, complete, haptic }
+  return { instance, scene, camera, overlay, host, hit, button, point, run, progress, saveWish, complete, haptic, resize: () => resize() }
 }
-function pointer(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
+function pointer(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1, extra: Partial<PointerEvent> = {}) {
   if (type === 'pointerdown') pendingStarts.set(el, [clientX,clientY] as [number, number])
 
   const event = new Event(type, { bubbles: true, cancelable: true })
-  Object.assign(event, { clientX, clientY, pointerId, pointerType: 'touch', button: 0, buttons: type === 'pointerup' ? 0 : 1 }); el.dispatchEvent(event)
+  Object.assign(event, { clientX, clientY, pointerId, pointerType: 'touch', button: 0, buttons: type === 'pointerup' ? 0 : 1 }, extra); el.dispatchEvent(event)
 }
 function assemble(s: ReturnType<typeof mount>) {
   const a = s.point('bead-strand-grip'), b = s.point('bead-star-arm-joint')
@@ -64,6 +66,11 @@ function assemble(s: ReturnType<typeof mount>) {
 function rotate(s: ReturnType<typeof mount>, dx = 75, dy = 0) {
   const p = s.point('bead-star-center'), q: [number, number] = [p[0] + dx, p[1] + dy]
   pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointermove', q); pointer(s.hit, 'pointerup', q); s.run()
+}
+function expectInside(s: ReturnType<typeof mount>, point: [number,number]) {
+  const rect=s.host.querySelector('canvas')!.getBoundingClientRect()
+  expect(point[0]).toBeGreaterThanOrEqual(rect.left);expect(point[0]).toBeLessThanOrEqual(rect.right??rect.left+rect.width)
+  expect(point[1]).toBeGreaterThanOrEqual(rect.top);expect(point[1]).toBeLessThanOrEqual(rect.bottom??rect.top+rect.height)
 }
 function tap(s: ReturnType<typeof mount>) { const p = s.point('bead-star-center'); pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointerup', p) }
 function block(s: ReturnType<typeof mount>, name: string) {
@@ -80,32 +87,32 @@ describe('an original Czech hollow bead star', () => {
   })
   it('connects the loose wire strand, turns the whole star and quietly finishes once', () => {
     const s = mount(0, { isReducedMotion: () => true })
-    assemble(s); expect(s.progress).toEqual([1])
+    assemble(s); expect(s.progress).toEqual([2])
     const body = s.scene.getObjectByName('bead-star-body')!, strand = s.scene.getObjectByName('bead-loose-strand')!
     expect(strand.parent).toBe(body)
     const initial = body.rotation.y, before = strand.getWorldPosition(new THREE.Vector3())
-    rotate(s); expect(s.progress).toEqual([1, 2]); expect(body.rotation.y - initial).toBeGreaterThan(.45)
+    rotate(s); expect(s.progress).toEqual([2]); expect(body.rotation.y - initial).toBeGreaterThan(.45)
     expect(strand.getWorldPosition(new THREE.Vector3()).distanceTo(before)).toBeGreaterThan(.15)
     tap(s); tap(s); s.button.click()
-    expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
+    expect(s.progress).toEqual([2, 3]); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
-  it.each([false, true])('accepts the fully turned star after a corrected vertical detour, reduced=%s', reduced => {
+  it.each([false, true])('retains an optional viewing angle after a vertical detour, reduced=%s', reduced => {
     const s = mount(1, { isReducedMotion: () => reduced }), star = s.scene.getObjectByName('bead-star-body')!, a = s.point('bead-star-center')
     pointer(s.hit, 'pointerdown', a)
     for (const [dx, dy] of [[60, 0], [120, 60], [90, 0]]) pointer(s.hit, 'pointermove', [a[0] + dx, a[1] + dy])
     expect(star.rotation.y).toBeCloseTo(.9); expect(s.progress).toEqual([])
     pointer(s.hit, 'pointerup', [a[0] + 90, a[1]]); s.run()
-    expect(s.progress).toEqual([2]); expect(star.rotation.y).toBeCloseTo(.65)
-    tap(s); expect(s.progress).toEqual([2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+    expect(s.progress).toEqual([]); expect(star.rotation.y).toBeCloseTo(.9)
+    tap(s); expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
   })
-  it.each([false, true])('rejects wrong endpoints and cancellation after reaching the full turn, reduced=%s', reduced => {
+  it.each([false, true])('keeps arbitrary viewing endpoints and restores only a cancelled turn, reduced=%s', reduced => {
     for (const [dx, dy, end] of [[90, 60, 'pointerup'], [44, 0, 'pointerup'], [-90, 0, 'pointerup'], [90, 0, 'pointercancel']] as const) {
       const s = mount(1, { isReducedMotion: () => reduced }), star = s.scene.getObjectByName('bead-star-body')!, a = s.point('bead-star-center')
       pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', [a[0] + 120, a[1]])
       expect(star.rotation.y).toBeGreaterThan(.65)
       pointer(s.hit, 'pointermove', [a[0] + dx, a[1] + dy]); pointer(s.hit, end, [a[0] + dx, a[1] + dy]); s.run()
-      expect(s.progress).toEqual([]); expect(star.rotation.y).toBe(0)
-      rotate(s); expect(s.progress).toEqual([2]); s.instance.dispose()
+      expect(s.progress).toEqual([]); expect(star.rotation.y).toBeCloseTo(end === 'pointercancel' ? 0 : dx * .01)
+      rotate(s); expect(s.progress).toEqual([]); tap(s); expect(s.progress).toEqual([3]); s.instance.dispose()
     }
   })
   it.each([0, 1, 2, 3])('restores checkpoint %i silently and supports the same keyboard actions', at => {
@@ -114,7 +121,7 @@ describe('an original Czech hollow bead star', () => {
     expect(s.overlay.querySelector('input, textarea, form')).toBeNull(); expect(s.button.hidden).toBe(at === 3)
     expect(s.scene.getObjectByName('bead-loose-strand')!.parent?.name).toBe(at ? 'bead-star-body' : 'bead-workbench')
     for (let i = at; i < 3; i++) s.button.click()
-    expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled()
+    expect(s.progress).toEqual(at === 0 ? [2, 3] : at < 3 ? [3] : []); expect(s.saveWish).not.toHaveBeenCalled()
   })
   it.each([[284, 390], [350, 408], [1280, 600]])('frames every bead and wire vertex and real cue at %ix%i', (width, height) => {
     const s = mount(0, { isReducedMotion: () => true }, width, height)
@@ -139,7 +146,7 @@ describe('an original Czech hollow bead star', () => {
       }
       if (step === 0) assemble(s); else if (step === 1) rotate(s); else if (step === 2) tap(s)
     }
-    expect(s.progress).toEqual([1, 2, 3])
+    expect(s.progress).toEqual([2, 3])
   })
   it('uses opaque hollow shells with axial openings and threaded wire, leaving the star open', () => {
     const s = mount(1), beads: THREE.Mesh[] = [], wires: THREE.Mesh[] = []
@@ -191,24 +198,25 @@ describe('an original Czech hollow bead star', () => {
     if (at === 0) assemble(s); else if (at === 1) rotate(s); else tap(s)
     expect(s.progress).toEqual([]); clear()
     if (at === 0) assemble(s); else if (at === 1) rotate(s); else tap(s)
-    expect(s.progress).toEqual([at + 1])
+    if (at === 1) { expect(s.progress).toEqual([]); tap(s) }
+    expect(s.progress).toEqual([at === 0 ? 2 : 3])
   })
   it('rejects an obscured destination and restores the full loose strand', () => {
     const s = mount(0, { isReducedMotion: () => true }), strand = s.scene.getObjectByName('bead-loose-strand')!, home = strand.position.clone()
     const a = s.point('bead-strand-grip'), b = s.point('bead-star-arm-joint')
     const clear = block(s, 'bead-star-arm-joint'); pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', b);  pointer(s.hit, 'pointerup', b); s.run()
-    expect(s.progress).toEqual([]); expect(strand.position.equals(home)).toBe(true); clear(); assemble(s); expect(s.progress).toEqual([1])
+    expect(s.progress).toEqual([]); expect(strand.position.equals(home)).toBe(true); clear(); assemble(s); expect(s.progress).toEqual([2])
   })
-  it('rejects wrong drops, no movement, reversed/vertical turns and travel that comes back', () => {
+  it('rejects wrong assembly drops while viewing drags in every direction never complete', () => {
     const s = mount(0, { isReducedMotion: () => true })
     let p = s.point('bead-strand-grip'); pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointerup', p)
     pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointermove', [20, 20]); pointer(s.hit, 'pointerup', [20, 20]); expect(s.progress).toEqual([])
     s.button.click()
-    for (const [x, y] of [[0, 0], [12, 0], [-75, 0], [0, 75], [50, 70]]) { rotate(s, x, y); expect(s.progress).toEqual([1]) }
+    for (const [x, y] of [[12, 0], [-75, 0], [0, 75], [50, 70]]) { rotate(s, x, y); expect(s.progress).toEqual([2]) }
     p = s.point('bead-star-center'); pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointermove', [p[0] + 80, p[1]]); pointer(s.hit, 'pointermove', p); pointer(s.hit, 'pointerup', p)
-    expect(s.progress).toEqual([1]); rotate(s); p = s.point('bead-star-center')
+    expect(s.progress).toEqual([2]); rotate(s); p = s.point('bead-star-center')
     pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointermove', [p[0] + 30, p[1]]); pointer(s.hit, 'pointermove', p); pointer(s.hit, 'pointerup', p)
-    expect(s.progress).toEqual([1, 2]); tap(s); expect(s.progress).toEqual([1, 2, 3])
+    expect(s.progress).toEqual([2]); tap(s); expect(s.progress).toEqual([2, 3])
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause', 'multitouch'])('restores whole strand/star poses after %s', event => {
     for (const at of [0, 1]) {
@@ -231,14 +239,14 @@ describe('an original Czech hollow bead star', () => {
     if (effect === 'blur') window.dispatchEvent(new Event('blur')); else active = false
     s.run(2); expect(group.position.equals(pose)).toBe(true); expect(s.progress).toEqual([]); expect(rendered.frames).toBe(frames)
     expect(s.button.disabled).toBe(true); expect((s.host.querySelector('.scene-object-cues') as HTMLElement).hidden).toBe(true)
-    active = true; window.dispatchEvent(new Event('focus')); s.run(2); expect(s.progress).toEqual([1])
+    active = true; window.dispatchEvent(new Event('focus')); s.run(2); expect(s.progress).toEqual([2])
   })
-  it('shows material-turning motion while held and gently returns a cancelled turn without acceptance', () => {
+  it('shows material-turning motion while held and restores a cancelled turn without acceptance', () => {
     const s = mount(1), star = s.scene.getObjectByName('bead-star-body')!, p = s.point('bead-star-center'), q: [number, number] = [p[0] + 75, p[1]]
     pointer(s.hit, 'pointerdown', p); pointer(s.hit, 'pointermove', q)
     expect(star.rotation.y).toBeCloseTo(.75); expect(s.progress).toEqual([])
-    pointer(s.hit, 'pointercancel', q); expect(star.rotation.y).toBeCloseTo(.75)
-    s.run(.075); expect(star.rotation.y).toBeGreaterThan(0); expect(star.rotation.y).toBeLessThan(.75)
+    pointer(s.hit, 'pointercancel', q); expect(star.rotation.y).toBe(0)
+    s.run(.075); expect(star.rotation.y).toBe(0)
     s.run(.3); expect(star.rotation.y).toBe(0); expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled()
   })
   it.each([false, true])('locks synchronous prepare/progress/haptic input reentry with reduced motion %s', reduced => {
@@ -248,8 +256,8 @@ describe('an original Czech hollow bead star', () => {
       const s = mount(0, { isReducedMotion: () => reduced, prepareFeedback() { if (callback === 'prepare') replay() }, onProgress(n) { progress.push(n); if (callback === 'progress') replay() }, haptic() { if (callback === 'haptic') replay() } })
       replay = () => { s.button.dispatchEvent(new Event('click')); rotate(s); s.instance.update(1) }
       if (input === 'pointer') assemble(s); else { s.button.click(); s.run() }
-      expect(progress, `${callback}/${input}`).toEqual([1]); expect(s.complete).not.toHaveBeenCalled()
-      s.button.click(); s.run(); expect(progress).toEqual([1, 2]); s.button.click(); expect(progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+      expect(progress, `${callback}/${input}`).toEqual([2]); expect(s.complete).not.toHaveBeenCalled()
+      s.button.click(); s.run(); expect(progress).toEqual([2, 3]); s.button.click(); expect(progress).toEqual([2, 3]); expect(s.complete).toHaveBeenCalledOnce()
     }
   })
   it.each([false, true])('stops all callbacks and rendering after synchronous pause/dispose, reduced motion %s', reduced => {
@@ -262,7 +270,7 @@ describe('an original Czech hollow bead star', () => {
         haptic() { haptic(); if (callback === 'haptic') interrupt() } })
       interrupt = () => { frames = rendered.frames; if (effect === 'dispose') s.instance.dispose(); else active = false }
       s.button.click(); s.run(2)
-      expect(progress).toEqual(callback === 'prepare' ? [] : [at + 1]); expect(rendered.frames).toBe(frames)
+      expect(progress).toEqual(callback === 'prepare' ? [] : [at === 0 ? 2 : 3]); expect(rendered.frames).toBe(frames)
       expect(haptic).toHaveBeenCalledTimes(callback === 'haptic' ? 1 : 0); expect(s.complete).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
     }
   })
@@ -300,3 +308,74 @@ function pendingPoint(layer: HTMLElement, point: [number, number]): [number, num
  const start = pendingStarts.get(layer) ?? point
  return [start[0]+(point[0]-start[0])*.20,start[1]+(point[1]-start[1])*.20]
 }
+
+
+describe('optional free star inspection', () => {
+  it.each([1,2])('turns left through a full circle without progressing legacy checkpoint %i', at => {
+    const s=mount(at,{isReducedMotion:()=>true}), star=s.scene.getObjectByName('bead-star-body')!, loop=s.scene.getObjectByName('bead-hanging-loop')!, before=loop.getWorldPosition(new THREE.Vector3())
+    for(let i=0;i<6;i++){
+      const p=s.point('bead-star-center');expectInside(s,[p[0]-120,p[1]+30]);rotate(s,-120,30)
+      expect(s.progress).toEqual([])
+    }
+    expect(star.rotation.y).toBeLessThan(-Math.PI*2);expect(star.rotation.x).toBe(0);expect(star.rotation.z).toBe(0)
+    expect(loop.getWorldPosition(new THREE.Vector3()).distanceTo(before)).toBeLessThan(.00001);expect(s.progress).toEqual([])
+    tap(s);expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it.each([1,2])('can finish without any required rotation from legacy checkpoint %i', at => {
+    const s=mount(at,{isReducedMotion:()=>true});tap(s);expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it('connects the last strand directly into optional viewing without imposing an angle', () => {
+    const s=mount(0,{isReducedMotion:()=>true});assemble(s)
+    expect(s.progress).toEqual([2]);expect(s.scene.getObjectByName('bead-star-body')!.rotation.y).toBe(0)
+    s.button.click();expect(s.progress).toEqual([2,3]);expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it.each(['shift', 'right'])('inspects with %s mouse input without moving the hanging loop', mode => {
+    const s = mount(2), star = s.scene.getObjectByName('bead-star-body')!, loop = s.scene.getObjectByName('bead-hanging-loop')!
+    const before = loop.getWorldPosition(new THREE.Vector3())
+    const extra = { pointerType: 'mouse', button: mode === 'right' ? 2 : 0, shiftKey: mode === 'shift' }
+    for(let i=0;i<6;i++){
+      const p=s.point('bead-star-center'),q:[number,number]=[p[0]-120,p[1]+60];expectInside(s,p);expectInside(s,q)
+      pointer(s.hit, 'pointerdown', p, 1, extra); pointer(s.hit, 'pointermove', q, 1, extra); pointer(s.hit, 'pointerup', q, 1, extra)
+      expect(star.rotation.y).toBeCloseTo(-(i+1)*1.2);expect(s.progress).toEqual([])
+    }
+    expect(star.rotation.y).toBeLessThan(-Math.PI*2); expect(star.rotation.x).toBe(0); expect(star.rotation.z).toBe(0)
+    expect(loop.getWorldPosition(new THREE.Vector3()).distanceTo(before)).toBeLessThan(.00001)
+    expect(s.progress).toEqual([]); tap(s); expect(s.progress).toEqual([3]); expect(star.rotation.y).toBeCloseTo(-7.2)
+  })
+  it('allows two fingers on the actual star to inspect without committing on either release', () => {
+    const s = mount(2), star = s.scene.getObjectByName('bead-star-body')!,loop=s.scene.getObjectByName('bead-hanging-loop')!,before=loop.getWorldPosition(new THREE.Vector3())
+    for(let i=0;i<6;i++){
+      const p=s.point('bead-star-center'),q:[number,number]=[p[0]-120,p[1]+60];expectInside(s,p);expectInside(s,q)
+      pointer(s.hit, 'pointerdown', p, 1); pointer(s.hit, 'pointerdown', p, 2)
+      pointer(s.hit, 'pointermove', q, 1); pointer(s.hit, 'pointermove', q, 2)
+      pointer(s.hit, 'pointerup', q, 2); pointer(s.hit, 'pointerup', q, 1)
+      expect(star.rotation.y).toBeCloseTo(-(i+1)*1.2);expect(s.progress).toEqual([])
+    }
+    expect(star.rotation.y).toBeLessThan(-Math.PI*2); expect(star.rotation.x).toBe(0); expect(star.rotation.z).toBe(0)
+    expect(loop.getWorldPosition(new THREE.Vector3()).distanceTo(before)).toBeLessThan(.00001)
+    expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled()
+    tap(s); expect(s.progress).toEqual([3]); expect(star.rotation.y).toBeCloseTo(-7.2)
+  })
+  it.each(['blur', 'pause', 'resize'])('restores a parked viewing angle after %s without submitting', event => {
+    let active = true
+    const s = mount(1, { isActive: () => active }), star = s.scene.getObjectByName('bead-star-body')!
+    rotate(s, -90); expect(star.rotation.y).toBeCloseTo(-.9)
+    if (event === 'blur') window.dispatchEvent(new Event('blur'))
+    else if (event === 'pause') { active = false; s.run() }
+    else s.resize()
+    expect(star.rotation.y).toBe(0); expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled()
+    active = true; window.dispatchEvent(new Event('focus')); s.run(); tap(s)
+    expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it('offers optional keyboard yaw and reset through the existing quiet action', () => {
+    const s = mount(1), star = s.scene.getObjectByName('bead-star-body')!
+    for (let i = 0; i < 40; i++) s.button.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true, cancelable: true }))
+    expect(star.rotation.y).toBeCloseTo(-8); expect(s.progress).toEqual([])
+    s.button.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+    expect(star.rotation.y).toBe(0); expect(s.progress).toEqual([])
+    expect(s.button.textContent).toContain('轻点珠星静看')
+    const cue = s.scene.getObjectByName('bead-star-center')!.userData.interactionCues[0]
+    expect(cue.kind).toBe('rotate'); expect(cue.label).toBe('自由转动珠星查看正反面，再轻点静看。'); expect(cue.enabled()).toBe(true)
+    s.button.click(); expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+})

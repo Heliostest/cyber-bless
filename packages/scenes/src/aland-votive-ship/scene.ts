@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -124,7 +125,7 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
     if (y < rows && x < cols) { const n = y * (cols + 1) + x; sailIndices.push(n, n + 1, n + cols + 1, n + 1, n + cols + 2, n + cols + 1) }
   }
   const sailGeometry = new THREE.BufferGeometry(); sailGeometry.setAttribute('position', new THREE.Float32BufferAttribute(sailVertices, 3)); sailGeometry.setIndex(sailIndices); sailGeometry.computeVertexNormals()
-  const sailMaterial = cream.clone(); sailMaterial.side = THREE.DoubleSide
+  const sailMaterial = createRitualMaterial({ color: 0xeee2bd, roughness: .82, side: THREE.DoubleSide }, { kind: 'cloth', strength: .22, fiber: 'linen' })
   add('ship-cream-cloth-sail', sailGeometry, sailMaterial, [0, 0, 0], mast)
   line('ship-sail-hem', [[.04, .33, .035], [.70, .33, .035], [.20, 1.05, .035], [.04, 1.05, .035], [.04, .33, .035]], .008, brass, mast)
   for (const v of [.33, .66]) line('ship-sail-seam', [[.05, .32 + .73 * v, .046], [.04 + .66 * (1 - .76 * v), .32 + .73 * v, .046]], .004, honey, mast)

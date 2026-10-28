@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 
 // A prepared apple slice and honey dish; the return to the plate is product staging.
@@ -6,8 +7,8 @@ export function createAppleHoneyModel() {
   const subject=new THREE.Group();subject.name='apple-honey-subject';root.add(subject)
   const mat=(color:string,roughness=.7)=>new THREE.MeshStandardMaterial({color,roughness,metalness:0})
   const cream=mat('#f7e4a8',.85),red=mat('#bd4738',.55),ceramic=mat('#f8edd2',.46),blue=mat('#83aaa0',.65),wood=mat('#b38a56',.85),brown=mat('#69492e'),green=mat('#65834a')
-  const honeyMaterial=new THREE.MeshStandardMaterial({color:'#d79a24',roughness:.24,metalness:.01,transparent:true,opacity:.8})
-  const filmMaterial=new THREE.MeshStandardMaterial({color:'#d7941d',roughness:.22,metalness:0,transparent:true,opacity:.78})
+  const honeyMaterial=createRitualMaterial({color:'#d79a24',roughness:.24,metalness:0,transmission:.38,attenuationColor:'#d79a24',attenuationDistance:.22},{kind:'honey',thickness:.16,strength:.4})
+  const filmMaterial=createRitualMaterial({color:'#d7941d',roughness:.22,metalness:0,transmission:.25,attenuationColor:'#d7941d',attenuationDistance:.22},{kind:'honey',thickness:.006,strength:.25})
   // Remove only mathematically degenerate pole triangles after Float32 conversion.
   const finish=(source:THREE.BufferGeometry)=>{
     const raw=source.index?source.toNonIndexed():source,position=raw.getAttribute('position'),faces:number[]=[]

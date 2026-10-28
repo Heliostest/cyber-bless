@@ -40,13 +40,7 @@ it.each([0,1,2])('cancels the real Chinowa walking view through production adapt
 
 it.each([
   ['nanakusa-gayu', 0, 'serving-ladle', 'serving-ladle', [0,.42,.72], [0,0,0], [-60,0]],
-  ['brat-bride-cloth', 0, 'brat-cloth', 'brat-cloth', [0,.03,0], [0,0,0], [0,-60]],
-  ['korean-sotdae', 0, 'sotdae-pole', 'sotdae-pole', [0,.80,.02], [0,0,0], [0,-60]],
-  ['japanese-kadomatsu', 0, 'kadomatsu-right', 'kadomatsu-right', [0,.34,.30], [0,0,0], [0,-60]],
-  ['pucara-rooftop-bulls', 0, 'pucara-carrier', 'pucara-carrier', [.65,.04,.525], [0,0,0], [0,-60]],
-  ['chinese-longevity-lock', 0, 'longevity-carrier', 'longevity-carrier', [-.4,.04,1.05], [0,0,0], [0,-60]],
   ['uchide-wishing-mallet', 0, 'uchide-mallet', 'uchide-mallet', [0,.425,-.2], [0,0,0], [0,-60]],
-  ['alasita-miniature-house', 0, 'wish-house', 'wish-house', [.28,.35,.52], [0,0,0], [0,-60]],
   ['kitano-nadeushi', 0, 'visitor-hand', 'visitor-hand', [0,0,0], [0,0,0], [0,-60]],
   ['lao-baci-wrist', 0, 'baci-thread', 'baci-thread', [0,0,0], [0,.394,.16], [0,-60]],
   ['finnish-virpominen', 0, 'decorated-willow', 'decorated-willow', [0,.40,0], [0,0,0], [60,0]],
@@ -58,23 +52,11 @@ it.each([
   ['tibetan-prayer-flags', 0, 'prayer-flags-blue', 'prayer-flags-blue', [0,0,.004], [0,0,.004], [0,-60]],
   ['yusheng-lohei', 0, 'diner-chopsticks', 'diner-chopsticks', [-.1,1.02,.03], [-.1,1.02,.03], [0,60]],
   ['rosh-hashanah-apple-honey', 0, 'apple-slice', 'apple-slice', [0,-.13,.06], [0,0,0], [60,0]],
-  ['thai-songkran-elders', 0, 'songkran-bowl', 'songkran-cup-root', [0,0,0], [0,.018,0], [0,-60]],
   ['kameido-usokae', 0, 'old-wood-uso', 'old-wood-uso', [0,.82,.225], [0,0,0], [0,-60]],
-  ['persian-esfand', 0, 'esfand-grip', 'esfand-pan-root', [0,.0375,0], [0,0,0], [0,-60]],
-  ['mochigase-nagashibina', 0, 'nagashibina-tray', 'nagashibina-tray', [0,.075,.37], [0,0,0], [0,-60]],
-  ['greek-vasilopita', 0, 'vasilopita-grip', 'vasilopita-server-root', [0,0,.025], [0,0,0], [0,-60]],
-  ['tibetan-khata-greeting', 0, 'khata-scarf', 'khata-scarf', [0,.025,0], [0,0,0], [0,-60]],
-  ['shichigosan-chitose-ame', 0, 'chitose-grip', 'chitose-bag-root', [0,0,.025], [0,0,0], [0,-60]],
   ['mongolian-ovoo', 0, 'ovoo-offering-0', 'ovoo-offering-0', [0,.05,.02], [0,0,0], [-60,0]],
   ['fgs-buddha-bathing', 0, 'bathing-grip', 'bathing-ladle-root', [0,0,.025], [0,0,0], [0,-60]],
   ['balinese-canang-sari', 0, 'canang-white-flower', 'canang-white-flower', [0,.05,0], [0,0,0], [60,0]],
-  ['bulgarian-survakane', 0, 'surva-grip', 'surva-branch-root', [0,0,.025], [0,0,0], [0,-60]],
-  ['lanna-sand-pagoda',0,'lanna-tung','lanna-flag',[.17,.98,.02],[0,0,0],[0,-60]],
-  ['chinese-fu-paper',0,'fu-paper','fu-paper',[0,0,.012],[0,0,0],[0,-60]],
-  ['turkish-nazar-bead',0,'nazar-charm','nazar-charm',[0,-.04,.11],[0,0,0],[0,-60]],
-  ['japanese-hamaya',0,'hamaya-arrow','hamaya-arrow',[.85,.10,.025],[.85,.10,.025],[0,-60]],
   ['vietnamese-five-fruit-tray',0,'prepared-fruit-orange','prepared-fruit-orange',[0,.27,.18],[0,.27,.18],[60,0]],
-  ['chinese-ruyi-scepter',0,'ruyi-scepter','ruyi-scepter',[-.94,.13,0],[-.94,.13,0],[0,-60]],
   ['japanese-kumade',0,'kumade-tag-0','kumade-tag-0',[0,0,.035],[0,0,.035],[60,0]],
   ['neapolitan-cornicello',0,'cornicello-horn','cornicello-horn',[-.20,.15,-.30],[-.20,.15,-.30],[60,0]],
   ['spanish-twelve-grapes',0,'grapes-portion-0','grapes-portion-0',[0,.06,0],[0,.06,0],[60,0]],
@@ -83,11 +65,9 @@ it.each([
   ['sternsinger-house-blessing', 0, 'sternsinger-chalk', 'sternsinger-chalk', [0,0,0], [0,.16,0], [0,-60]],
   ['lam-tsuen-wishing-tree', 0, 'lamtsuen-paper', 'lamtsuen-paper-root', [0,0,.007], [0,0,0], [60,0]],
   ['kagami-mochi-offering', 0, 'kagami-large', 'kagami-root-0', [0,.18,0], [0,0,0], [0,-60]],
-  ['romanian-martisor', 0, 'martisor-red-head', 'martisor-cord', [0,0,0], [0,0,0], [0,-60]],
   ['sumiyoshi-godairiki', 0, 'godairiki-stone-0', 'godairiki-stone-root-0', [0,0,0], [.15,.09,0], [60,0]],
   ['polish-oplatek-sharing', 0, 'oplatek-main', 'oplatek-holder', [-.25,.015,0], [-.25,.015,0], [0,-60]],
   ['zeniarai-coin-washing', 0, 'wash-handle', 'wash-ladle', [.85,.28,0], [0,.115,.188], [0,-60]],
-  ['udo-undama', 0, 'undama-ball', 'undama-ball', [-1.05,.63,1], [0,0,0], [0,-60]],
   ['japanese-daruma-otoshi', 0, 'otoshi-mallet-handle', 'otoshi-mallet', [-.96,.68,.6], [0,0,.6], [0,60]],
   ['paper-pinwheel', 0, 'pinwheel-vane-0', 'pinwheel-rotor', [.556,1.9538,.107], [.556,.1038,.107], [60,0]],
   ['chinese-steelyard', 0, 'steelyard-counterweight', 'steelyard-weight', [0.3443452924758425, 1.4326603506990385, .16], [0, -.48, .16], [60, 0]],
@@ -96,7 +76,6 @@ it.each([
   ['scottish-plunge-churn', 0, 'churn-grip', 'churn-dasher', [.04, 2.67, .06], [.04, .1, .06], [0, 60]],
   ['irish-bodhran', 0, 'bodhran-tip-right', 'bodhran-tipper', [.46, 1.125, .519], [0, .025, .06], [0, 60]],
   ['french-coffee-mill', 2, 'coffee-drawer-knob', 'coffee-drawer', [.02, .41, .815], [.02, 0, .075], [0, 60]],
-  ['japanese-wagasa', 1, 'wagasa-grip', 'wagasa-spin', [.04, .475, .06], [.04, .1, .06], [60, 0]],
   ['spanish-castanets', 1, 'cast-shell-upper-1', 'cast-pivot-1', [.95, .9, .3], [0, .30, .30], [0, 60]],
   ['japanese-shishi-odoshi', 1, 'sozu-tube', 'sozu-pivot', [.75, 1.3, .16], [.75, 0, .16], [0, 60]],
   ['german-jumping-jack', 0, 'jack-handle', 'jack-arm-pivot-1', [0, .55, -.2], [0, 0, 0], [0, 60]],
@@ -161,7 +140,17 @@ it.each([
   ctrl.setActive(false); ctrl.setActive(true)
   pointer(hit,'pointerup',staleEnd); expect(checkpoint).not.toHaveBeenCalled(); expect(variant).not.toHaveBeenCalled()
   const { from: freshFrom, to: freshEnd } = gesture()
-  pointer(hit,'pointerdown',freshFrom); pointer(hit,'pointermove',freshEnd); pointer(hit,'pointerup',freshEnd)
+  pointer(hit,'pointerdown',freshFrom)
+  if (id === 'scottish-first-footing') {
+    // The coal must pass through the real door opening before turning toward
+    // the hearth. A straight screen drag to the hearth intersects the wall.
+    for (const [x, z] of [[.45, .85], [.45, .40], [.45, -.02], [-.75, -.02]]) {
+      const contact = new THREE.Vector3(x, .73, z + .16).project(rendered.camera!)
+      pointer(hit, 'pointermove', [(contact.x + 1) * 180, (1 - contact.y) * 180])
+      expect(checkpoint).not.toHaveBeenCalled()
+    }
+  }
+  pointer(hit,'pointermove',freshEnd); pointer(hit,'pointerup',freshEnd)
   if (id === 'korean-bojagi-wrap') {
     const step = Number(initialVariant!.slice(-1))
     expect(variant).toHaveBeenCalledExactlyOnceWith(`bojagi-step-${step + 1}`)
@@ -171,5 +160,179 @@ it.each([
     expect(checkpoint).not.toHaveBeenCalled()
     host.querySelector<HTMLButtonElement>('.scene-bow-tap')!.click()
     expect(checkpoint).toHaveBeenCalledExactlyOnceWith(3)
+  } else if (id === 'scottish-first-footing') {
+    expect(checkpoint).toHaveBeenCalledExactlyOnceWith(3)
   } else expect(checkpoint).toHaveBeenCalledExactlyOnceWith(id==='malawi-sansi'?2:progress+1)
+})
+
+// Current continuous-carry contracts from the 2026-10-28 scene READMEs:
+// pure placement restores any old checkpoint and commits only 3; carrying
+// before a distinct action restores 0/1, commits 2, then requires a new gesture.
+const continuousPlacements = [
+  'brat-bride-cloth', 'korean-sotdae', 'japanese-kadomatsu',
+  'pucara-rooftop-bulls', 'chinese-longevity-lock', 'alasita-miniature-house',
+  'mochigase-nagashibina', 'shichigosan-chitose-ame', 'lanna-sand-pagoda',
+  'chinese-fu-paper', 'turkish-nazar-bead', 'japanese-hamaya',
+  'chinese-ruyi-scepter', 'romanian-martisor',
+]
+const carryingBeforeAction = [
+  'thai-songkran-elders', 'persian-esfand', 'greek-vasilopita',
+  'tibetan-khata-greeting', 'bulgarian-survakane', 'udo-undama',
+]
+
+it.each([
+  ...continuousPlacements.flatMap(id => [0, 1, 2].map(progress => ({ id, progress, next: 3 }))),
+  ...carryingBeforeAction.flatMap(id => [0, 1].map(progress => ({ id, progress, next: 2 }))),
+])('cancels $id continuous carrying restored at $progress and preserves its completion boundary', async ({ id, progress, next }) => {
+  vi.stubGlobal('requestAnimationFrame', () => 1); vi.stubGlobal('cancelAnimationFrame', () => {})
+  vi.spyOn(HTMLCanvasElement.prototype, 'clientWidth', 'get').mockReturnValue(360)
+  vi.spyOn(HTMLCanvasElement.prototype, 'clientHeight', 'get').mockReturnValue(360)
+  vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 360, height: 360 } as DOMRect)
+  const host = document.createElement('div'); document.body.append(host)
+  const checkpoint = vi.fn(), complete = vi.fn(), engine = await proceduralEngine(id)
+  host.addEventListener('scene:complete', complete)
+  const ctrl = engine.create(host, { progress, sceneId: id, checkpoint, isSoundEnabled: () => false },
+    { active: true, reducedMotion: true, signal: new AbortController().signal, ready() {}, failed(error) { throw error } })
+  controllers.push(ctrl)
+  const scene = rendered.scene!, camera = rendered.camera!, hit = host.querySelector<HTMLElement>('.scene-hit-layer')!
+  hit.setPointerCapture = () => {}; hit.releasePointerCapture = () => {}
+  const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
+  const project = (world: THREE.Vector3) => {
+    const p = world.clone().project(camera)
+    return [(p.x + 1) * 180, (1 - p.y) * 180]
+  }
+  const currentGesture = () => {
+    matrices()
+    const entries: { object: THREE.Object3D; cue: InteractionCue }[] = []
+    scene.traverse(object => {
+      for (const cue of (object.userData.interactionCues ?? []) as InteractionCue[])
+        if (cue.enabled() && cue.kind === 'drag') entries.push({ object, cue })
+    })
+    const current = entries.sort((a, b) => (b.cue.priority ?? 0) - (a.cue.priority ?? 0))[0]
+    expect(current, 'the current action must expose its actual draggable object').toBeDefined()
+    const { object, cue } = current!
+    const anchor = () => { matrices(); return object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))) }
+    const from = project(anchor())
+    const destination = cue.destination
+      ? typeof cue.destination === 'function' ? cue.destination() : cue.destination.getWorldPosition(new THREE.Vector3())
+      : undefined
+    expect(destination || cue.direction, 'the cue must describe a destination or a physical gesture').toBeDefined()
+    const to = destination ? project(destination) : [from[0]! + cue.direction![0] * 60, from[1]! + cue.direction![1] * 60]
+    return { from, to, anchor, destination }
+  }
+  const awayFromTarget = ({ from, to }: { from: number[]; to: number[] }) => {
+    const dx = to[0]! - from[0]!, dy = to[1]! - from[1]!, length = Math.max(1, Math.hypot(dx, dy))
+    return [from[0]! - dx / length * 25, from[1]! - dy / length * 25]
+  }
+  const offTargetRelease = ({ from, to }: { from: number[]; to: number[] }) => {
+    // These saved poses sit against a sill, ground or branch. Move into the
+    // visible open space rather than releasing the cue behind that support.
+    if (!(id === 'brat-bride-cloth' && progress === 0) && !(id === 'romanian-martisor' && progress !== 1))
+      return awayFromTarget({ from, to })
+    const dx = to[0]! - from[0]!, dy = to[1]! - from[1]!, length = Math.hypot(dx, dy)
+    if (length > 60) return [from[0]! + dx / length * 25, from[1]! + dy / length * 25]
+    return length > 1 ? [from[0]! - dy / length * 30, from[1]! + dx / length * 30] : [from[0]! + 30, from[1]!]
+  }
+
+  expect(checkpoint).not.toHaveBeenCalled(); expect(complete).not.toHaveBeenCalled()
+  const first = currentGesture(), savedAnchor = first.anchor()
+  expect(first.destination, 'carrying must target the real support or recipient').toBeDefined()
+  pointer(hit, 'pointerdown', first.from); pointer(hit, 'pointermove', awayFromTarget(first))
+  expect(first.anchor().distanceTo(savedAnchor), 'the unfinished grab must actually move the object').toBeGreaterThan(.02)
+  expect(checkpoint).not.toHaveBeenCalled()
+  ctrl.setActive(false)
+  expect(first.anchor().distanceTo(savedAnchor), 'host pause must restore the saved pose').toBeLessThan(1e-8)
+  ctrl.setActive(true)
+  pointer(hit, 'pointerup', first.to)
+  expect(checkpoint).not.toHaveBeenCalled(); expect(complete).not.toHaveBeenCalled()
+
+  // An ordinary off-target release retains the held pose, so the successful
+  // retry must re-grab the object's current cue rather than its old screen point.
+  const inspect = currentGesture(), heldEnd = offTargetRelease(inspect)
+  pointer(hit, 'pointerdown', inspect.from); pointer(hit, 'pointermove', heldEnd); pointer(hit, 'pointerup', heldEnd)
+  expect(inspect.anchor().distanceTo(savedAnchor)).toBeGreaterThan(.02)
+  expect(checkpoint).not.toHaveBeenCalled(); expect(complete).not.toHaveBeenCalled()
+  const fresh = currentGesture()
+  pointer(hit, 'pointerdown', fresh.from); pointer(hit, 'pointermove', fresh.to); pointer(hit, 'pointerup', fresh.to)
+  expect(checkpoint).toHaveBeenCalledExactlyOnceWith(next)
+  const action = host.querySelector<HTMLButtonElement>('.scene-bow-tap')!
+  if (next === 2) {
+    expect(complete, 'carrying alone must not complete pouring, wafting, coin removal, handover, tapping or throwing').not.toHaveBeenCalled()
+    expect(action.hidden).toBe(false)
+    const final = currentGesture()
+    pointer(hit, 'pointerdown', final.from); pointer(hit, 'pointermove', final.to); pointer(hit, 'pointerup', final.to)
+    expect(checkpoint.mock.calls.map(([value]) => value)).toEqual([2, 3])
+  }
+  expect(complete).toHaveBeenCalledTimes(1)
+  expect(action.hidden).toBe(true)
+  ctrl.setActive(false); ctrl.setActive(true)
+  pointer(hit, 'pointerup', fresh.to)
+  expect(checkpoint.mock.calls.map(([value]) => value)).toEqual(next === 2 ? [2, 3] : [3])
+  expect(complete).toHaveBeenCalledTimes(1)
+})
+
+it.each([0, 1, 2])('preserves real wagasa opening, optional viewing and folding through adapter pause at %i', async progress => {
+  vi.stubGlobal('requestAnimationFrame', () => 1); vi.stubGlobal('cancelAnimationFrame', () => {})
+  vi.spyOn(HTMLCanvasElement.prototype, 'clientWidth', 'get').mockReturnValue(360)
+  vi.spyOn(HTMLCanvasElement.prototype, 'clientHeight', 'get').mockReturnValue(360)
+  vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 360, height: 360 } as DOMRect)
+  const host = document.createElement('div'); document.body.append(host)
+  const checkpoint = vi.fn(), complete = vi.fn(), engine = await proceduralEngine('japanese-wagasa')
+  host.addEventListener('scene:complete', complete)
+  const ctrl = engine.create(host, { progress, sceneId: 'japanese-wagasa', checkpoint, isSoundEnabled: () => false },
+    { active: true, reducedMotion: true, signal: new AbortController().signal, ready() {}, failed(error) { throw error } })
+  controllers.push(ctrl)
+  const scene = rendered.scene!, camera = rendered.camera!, hit = host.querySelector<HTMLElement>('.scene-hit-layer')!
+  hit.setPointerCapture = () => {}; hit.releasePointerCapture = () => {}
+  const project = (world: THREE.Vector3) => { const p = world.clone().project(camera); return [(p.x + 1) * 180, (1 - p.y) * 180] }
+  const cueFor = (kind: InteractionCue['kind']) => {
+    scene.updateMatrixWorld(true); camera.updateMatrixWorld(true)
+    const entries: { object: THREE.Object3D; cue: InteractionCue }[] = []
+    scene.traverse(object => {
+      for (const cue of (object.userData.interactionCues ?? []) as InteractionCue[])
+        if (cue.enabled() && cue.kind === kind) entries.push({ object, cue })
+    })
+    expect(entries).toHaveLength(1)
+    const { object, cue } = entries[0]!
+    const from = project(object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))))
+    const destination = cue.destination
+    const to = destination ? project(typeof destination === 'function' ? destination() : destination.getWorldPosition(new THREE.Vector3())) : undefined
+    return { object, from, to }
+  }
+  const runner = scene.getObjectByName('wagasa-runner')!, spin = scene.getObjectByName('wagasa-spin')!
+  const accepted = progress === 0 ? [2] : []
+  expect(checkpoint).not.toHaveBeenCalled(); expect(complete).not.toHaveBeenCalled()
+  if (progress === 0) {
+    const opening = cueFor('drag')
+    pointer(hit, 'pointerdown', opening.from); pointer(hit, 'pointermove', opening.to!); pointer(hit, 'pointerup', opening.to!)
+    expect(checkpoint.mock.calls.map(([value]) => value)).toEqual([2])
+    expect(complete, 'opening must leave folding as a separate mechanism action').not.toHaveBeenCalled()
+  }
+
+  const view = cueFor('rotate'), savedTurn = spin.quaternion.clone(), openedHeight = runner.position.y
+  const viewEnd = [view.from[0]! - 45, view.from[1]!]
+  pointer(hit, 'pointerdown', view.from); pointer(hit, 'pointermove', viewEnd)
+  expect(spin.quaternion.angleTo(savedTurn), 'the real grip must turn the open umbrella').toBeGreaterThan(.4)
+  expect(runner.position.y, 'viewing must not move the opening linkage').toBe(openedHeight)
+  expect(checkpoint.mock.calls.map(([value]) => value)).toEqual(accepted)
+  ctrl.setActive(false); ctrl.setActive(true); pointer(hit, 'pointerup', viewEnd)
+  expect(spin.quaternion.angleTo(savedTurn)).toBeLessThan(1e-8)
+  expect(checkpoint.mock.calls.map(([value]) => value)).toEqual(accepted)
+  expect(complete).not.toHaveBeenCalled()
+
+  const closing = cueFor('drag'), savedRunner = runner.position.clone()
+  pointer(hit, 'pointerdown', closing.from)
+  pointer(hit, 'pointermove', closing.from.map((value, axis) => value + (closing.to![axis]! - value) * .12))
+  expect(runner.position.distanceTo(savedRunner)).toBeGreaterThan(.005)
+  ctrl.setActive(false); ctrl.setActive(true); pointer(hit, 'pointerup', closing.to!)
+  expect(runner.position.distanceTo(savedRunner)).toBeLessThan(1e-8)
+  expect(checkpoint.mock.calls.map(([value]) => value)).toEqual(accepted)
+  const fresh = cueFor('drag')
+  pointer(hit, 'pointerdown', fresh.from); pointer(hit, 'pointermove', fresh.to!); pointer(hit, 'pointerup', fresh.to!)
+  expect(checkpoint.mock.calls.map(([value]) => value)).toEqual([...accepted, 3])
+  expect(complete).toHaveBeenCalledTimes(1)
+  expect(host.querySelector<HTMLButtonElement>('.scene-bow-tap')!.hidden).toBe(true)
+  ctrl.setActive(false); ctrl.setActive(true); pointer(hit, 'pointerup', fresh.to!)
+  expect(checkpoint.mock.calls.map(([value]) => value)).toEqual([...accepted, 3])
+  expect(complete).toHaveBeenCalledTimes(1)
 })

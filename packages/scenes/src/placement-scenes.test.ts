@@ -71,9 +71,11 @@ function destination(s: Awaited<ReturnType<typeof mount>>, cue: InteractionCue):
   const d = cue.destination!
   return s.project(typeof d === 'function' ? d() : d.getWorldPosition(new THREE.Vector3()))
 }
+const checkpoints = (id: string) => id === 'czech-bead-star' ? [2, 3] : [1, 2, 3]
 function operate(s: Awaited<ReturnType<typeof mount>>, mode: 'center' | 'sparse' = 'center') {
   const { object, cue } = s.cues()[0]!, a = s.source(object, cue)
-  const b = cue.destination ? destination(s, cue) : cue.kind === 'rotate' ? [a[0] + Math.min(180, s.width * .2), a[1]] as Point : a
+  // Bead-star viewing is optional: a stationary tap finishes quiet viewing.
+  const b = cue.destination ? destination(s, cue) : cue.kind === 'rotate' && s.id !== 'czech-bead-star' ? [a[0] + Math.min(180, s.width * .2), a[1]] as Point : a
   pointer(s.layer, 'pointerdown', a)
   if (cue.kind !== 'tap') {
     const samples = mode === 'sparse' ? [.1] : [.25, .5, .75, 1]
@@ -103,10 +105,18 @@ it.each(['andalusian-ceramic-tile', 'bai-indigo-cloth', 'croatian-licitar-heart'
 it.each(placements)('%s completes from the scene cues at touch and mouse viewport sizes', async id => {
   for (const width of [390, 1280]) {
     const s = await mount(id, width)
-    for (let at = 0; at < 3; at++) {
+    const accepted = checkpoints(id)
+    for (let at = 0; at < accepted.length; at++) {
       expect(s.cues().length, `${id} step ${at}, ${width}`).toBeGreaterThan(0)
+      if (id === 'czech-bead-star' && at === 1) {
+        const entry = s.cues()[0]!, from = s.source(entry.object, entry.cue), to: Point = [from[0] + 40, from[1]]
+        expect(entry.cue.kind).toBe('rotate')
+        pointer(s.layer, 'pointerdown', from); pointer(s.layer, 'pointermove', to); pointer(s.layer, 'pointerup', to); s.run()
+        expect(s.progress, 'optional viewing must not submit a checkpoint').toEqual([2])
+        expect(s.complete).not.toHaveBeenCalled()
+      }
       for (let i = 0; i < (id === 'st-brigids-cross' && at === 0 ? 4 : 1); i++) operate(s)
-      expect(s.progress, `${id} step ${at}, ${width}`).toEqual(Array.from({ length: at + 1 }, (_, i) => i + 1))
+      expect(s.progress, `${id} step ${at}, ${width}`).toEqual(accepted.slice(0, at + 1))
     }
     expect(s.complete).toHaveBeenCalledOnce(); s.instance.dispose()
   }
@@ -173,14 +183,15 @@ it.each(['czech-bead-star', 'fijian-woven-fan', 'finnish-birch-basket', 'basque-
   expect(s.progress).toEqual([])
   blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose()
   operate(s)
-  expect(s.progress).toEqual([1])
+  expect(s.progress).toEqual([checkpoints(id)[0]])
 })
 it.each(placements)('%s accepts final pointerup coordinates after a sparse drag', async id => {
   for (const width of [390, 1280]) {
     const s = await mount(id, width)
-    for (let at = 0; at < 3; at++) {
+    const accepted = checkpoints(id)
+    for (let at = 0; at < accepted.length; at++) {
       for (let i = 0; i < (id === 'st-brigids-cross' && at === 0 ? 4 : 1); i++) operate(s, 'sparse')
-      expect(s.progress, `${id} step ${at}, ${width}, sparse release`).toEqual(Array.from({ length: at + 1 }, (_, i) => i + 1))
+      expect(s.progress, `${id} step ${at}, ${width}, sparse release`).toEqual(accepted.slice(0, at + 1))
     }
     expect(s.complete).toHaveBeenCalledOnce(); s.instance.dispose()
   }
@@ -284,10 +295,11 @@ it.each(placements.filter(id => !['omamori-cycle', 'shrine-suzu-bell', 'ema-voti
     }
     expect(end, `${id} ${at} must offer an off-center source`).toBeDefined()
     s.run()
-    if (!(id === 'st-brigids-cross' && at === 0)) expect(s.progress, 'the held object arrives before pointerup').toEqual([at + 1])
+    const accepted = id === 'czech-bead-star' ? 2 : at + 1
+    if (!(id === 'st-brigids-cross' && at === 0)) expect(s.progress, 'the held object arrives before pointerup').toEqual([accepted])
     pointer(s.layer, 'pointerup', end!); s.run()
     if (id === 'st-brigids-cross' && at === 0) for (let i = 0; i < 3; i++) operate(s)
-    expect(s.progress, `${id} step ${at}, ${width}, aligned grip`).toEqual([at + 1])
+    expect(s.progress, `${id} step ${at}, ${width}, aligned grip`).toEqual([accepted])
     exercised++; s.instance.dispose()
   }
   expect(exercised).toBeGreaterThan(0)

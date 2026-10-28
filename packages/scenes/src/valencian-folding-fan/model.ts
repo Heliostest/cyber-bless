@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
 /** Original half-open folding fan; analytic accordion, no hand or cloth dynamics. */
 export function createFoldingFanModel() {
@@ -6,7 +7,7 @@ export function createFoldingFanModel() {
   const fan=new THREE.Group();fan.name='fan-body';fan.position.y=.28;subject.add(fan)
   const wood=new THREE.MeshStandardMaterial({color:0xcba46c,roughness:.8}),guardMat=new THREE.MeshStandardMaterial({color:0xb28a56,roughness:.7})
   const brass=new THREE.MeshStandardMaterial({color:0xb99b53,roughness:.4,metalness:.6})
-  const cloth=[0xe9aa86,0xfff1ce,0x6fa9a1].map(color=>new THREE.MeshStandardMaterial({color,roughness:.95,side:THREE.DoubleSide,flatShading:true}))
+  const cloth=[0xe9aa86,0xfff1ce,0x6fa9a1].map(color=>createRitualMaterial({color,roughness:.95,side:THREE.DoubleSide,flatShading:true}, { kind: 'cloth', strength: .20, fiber: 'linen' }))
   const add=(name:string,g:THREE.BufferGeometry,mat:THREE.Material|THREE.Material[],parent:THREE.Object3D=fan)=>{const m=new THREE.Mesh(g,mat);m.name=name;m.castShadow=m.receiveShadow=true;parent.add(m);return m}
   const ribs:THREE.Mesh<THREE.ExtrudeGeometry>[]=[],joints:THREE.Group[]=[],leaves:THREE.Mesh<THREE.BufferGeometry>[]=[],spacing=.016,minSpread=1.30,maxSpread=2.72
   for(let i=0;i<17;i++){

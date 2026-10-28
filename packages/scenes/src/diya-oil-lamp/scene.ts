@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -108,7 +109,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   const rimClay = new THREE.MeshStandardMaterial({ color: 0xcc7850, roughness: 0.93 })
   const cotton = new THREE.MeshStandardMaterial({ color: 0xf1dec0, roughness: 1 })
   const burnt = new THREE.MeshStandardMaterial({ color: 0x443128, roughness: 1 })
-  const amber = new THREE.MeshStandardMaterial({ color: 0x98631f, roughness: 0.26, metalness: 0.08, side: THREE.DoubleSide })
+  const amber = createRitualMaterial({ color: 0x98631f, roughness: .22, metalness: 0, clearcoat: .65, clearcoatRoughness: .1, side: THREE.DoubleSide }, { kind: 'wet', strength: .35 })
   const plateMat = new THREE.MeshStandardMaterial({ color: 0x987b60, roughness: 0.76, metalness: 0.25 })
   const petalMat = new THREE.MeshStandardMaterial({ color: 0xbe9b70, roughness: 0.86, metalness: 0.12, side: THREE.DoubleSide })
   const hidden = new THREE.MeshBasicMaterial({ visible: false })

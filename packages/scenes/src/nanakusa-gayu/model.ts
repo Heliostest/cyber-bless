@@ -1,9 +1,11 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 
 /** Closed original vessels and serving motion; not a traditional utensil specification. */
 export function createNanakusaModel() {
  const root=new THREE.Group();root.name='nanakusa-subject'
  const material=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.78})
+ const porridge=createRitualMaterial({color:0xf2ead0,roughness:.42,clearcoat:.38,clearcoatRoughness:.24},{kind:'wet',strength:.35})
  const ceramic=material(0x48695e),cream=material(0xf2ead0),leaf=material(0x547d48),wood=material(0xb47c46),boardMat=material(0xd2b58a),bowlMat=material(0x679c98),light=material(0xd7e0cc)
  const closed=(source:THREE.BufferGeometry)=>{
   const g=source.index?source.toNonIndexed():source,p=g.getAttribute('position'),values:number[]=[];let volume=0
@@ -22,7 +24,7 @@ export function createNanakusaModel() {
  const potBand=mesh('pot-rim-band',new THREE.TorusGeometry(.69,.012,6,48),light);potBand.rotation.x=Math.PI/2;potBand.position.set(-.55,.771,-.36)
  const bowl=lathe('receiving-bowl',[[0,0],[.25,0],[.40,.06],[.48,.25],[.50,.37],[.46,.37],[.43,.25],[.34,.10],[0,.10]],bowlMat);bowl.position.set(.70,.07,.62)
  const bowlBand=mesh('bowl-rim-band',new THREE.TorusGeometry(.48,.012,6,40),light);bowlBand.rotation.x=Math.PI/2;bowlBand.position.set(.70,.441,.62)
- const stock=mesh('pot-porridge',new THREE.CylinderGeometry(.61,.61,1,32),cream);stock.position.set(-.55,.39,-.36)
+ const stock=mesh('pot-porridge',new THREE.CylinderGeometry(.61,.61,1,32),porridge);stock.position.set(-.55,.39,-.36)
  const potGarnish=new THREE.Group();potGarnish.name='pot-rice-and-greens';root.add(potGarnish);potGarnish.position.set(-.55,.58,-.36)
  function garnish(parent:THREE.Object3D,prefix:string,radius:number,riceCount:number,greenCount:number,height=0){
   for(let i=0;i<riceCount+greenCount;i++){const a=i*2.3999632297,r=radius*Math.sqrt((i+.5)/(riceCount+greenCount)),green=i>=riceCount,o=mesh(`${prefix}-${green?'green':'rice'}-${i}`,new THREE.SphereGeometry(1,6,4),green?leaf:cream,parent);o.position.set(Math.cos(a)*r,height+(green?.004:.008),Math.sin(a)*r);o.scale.set(green?.038:.017,green?.006:.009,green?.019:.035);o.rotation.y=a}
@@ -33,17 +35,17 @@ export function createNanakusaModel() {
  const handle=tube('ladle-handle',new THREE.Vector3(0,.02,.16),new THREE.Vector3(0,.60,.98),.035,wood,ladle)
  const grip=mesh('ladle-grip',new THREE.SphereGeometry(1,8,6),wood,ladle);grip.position.set(0,.60,.98);grip.scale.set(.050,.045,.075);grip.quaternion.copy(handle.quaternion)
  const payload=new THREE.Group();payload.name='ladle-porridge';ladle.add(payload)
- lathe('ladle-loaded-porridge',[[0,-.052],[.09,-.034],[.145,0],[.16,.027],[0,.027]],cream,payload)
+ lathe('ladle-loaded-porridge',[[0,-.052],[.09,-.034],[.145,0],[.16,.027],[0,.027]],porridge,payload)
  garnish(payload,'loaded',.105,9,6,.022)
  const spout=new THREE.Vector3(.23,.115,0),bend=new THREE.Vector3(.18,.115,0)
  const bridge=new THREE.Group();bridge.name='porridge-over-lip';ladle.add(bridge)
- const throat=mesh('porridge-throat',new THREE.CylinderGeometry(.025,.025,1,10),cream,bridge)
- const outlet=tube('porridge-outlet',bend,spout,.025,cream,bridge)
- const bendFood=mesh('porridge-bend',new THREE.SphereGeometry(.025,8,6),cream,bridge);bendFood.position.copy(bend)
+ const throat=mesh('porridge-throat',new THREE.CylinderGeometry(.025,.025,1,10),porridge,bridge)
+ const outlet=tube('porridge-outlet',bend,spout,.025,porridge,bridge)
+ const bendFood=mesh('porridge-bend',new THREE.SphereGeometry(.025,8,6),porridge,bridge);bendFood.position.copy(bend)
  const served=new THREE.Group();served.name='served-porridge';served.position.set(.70,.17,.62);root.add(served)
- const bowlSoup=mesh('bowl-porridge',new THREE.CylinderGeometry(.35,.31,1,32),cream,served)
+ const bowlSoup=mesh('bowl-porridge',new THREE.CylinderGeometry(.35,.31,1,32),porridge,served)
  const bowlGarnish=new THREE.Group();bowlGarnish.name='served-rice-and-greens';served.add(bowlGarnish);garnish(bowlGarnish,'served',.31,16,11)
- const stream=mesh('pouring-porridge',new THREE.CylinderGeometry(.026,.035,1,10),cream)
+ const stream=mesh('pouring-porridge',new THREE.CylinderGeometry(.026,.035,1,10),porridge)
  const park=new THREE.Vector3(1.38,0,-.85);ladle.rotation.x=.55;ladle.position.copy(park);root.updateMatrixWorld(true);park.y=.095-new THREE.Box3().setFromObject(head,true).min.y;ladle.position.copy(park);root.updateMatrixWorld(true)
  function lowest(o:THREE.Mesh){const p=o.geometry.getAttribute('position');let best=new THREE.Vector3(0,Infinity,0);for(let i=0;i<p.count;i++){const v=new THREE.Vector3().fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld);if(v.y<best.y)best=v}return best}
  const headPoint=lowest(head),tailPoint=lowest(grip)

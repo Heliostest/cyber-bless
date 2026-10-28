@@ -8,7 +8,7 @@ import { addInteractionCue } from '../scene-localization'
 import { createStylizedWater } from '@wbr/scene-runtime/stylized-water'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
+import { addStageLights, CEL_STYLE, createLampHalo, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const TITLE = '叶舟寄意'
@@ -92,6 +92,8 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   const flameMat = new THREE.MeshBasicMaterial({ color: 0xffcb76, toneMapped: false })
   const flame = add('krathong-flame', new THREE.SphereGeometry(1,16,12), flameMat, new THREE.Vector3(.10,.685,-.07), boat)
   flame.scale.set(.032,.078,.032); flame.castShadow = false
+  const halo = createLampHalo(0xffb76b, .32)
+  halo.sprite.name = 'krathong-flame-halo'; halo.sprite.position.copy(flame.position); boat.add(halo.sprite)
   const glow = new THREE.PointLight(0xffcb82, 0, 2.3); glow.position.set(.10,.71,-.07); boat.add(glow)
   // A visible leaf binding offers a stable contact on the near folded face.
   const boatSource = add('krathong-boat-source', new RoundedBoxGeometry(.115,.049,.025,3,.012), green[2], new THREE.Vector3(0,.20,.52), boat)
@@ -117,7 +119,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   const resetPose = () => {
     boat.position.copy(step < 3 ? DOCK : WATER); boat.rotation.set(0,0,0)
     flower.position.copy(step === 0 ? FLOWER : boat.localToWorld(SEAT.clone()).add(new THREE.Vector3(0,.017,0)))
-    flame.visible = step >= 2; glow.intensity = step >= 2 ? .65 : 0; ripples.visible = step >= 2; matrices()
+    halo.material.opacity = step >= 2 ? .1 : 0; flame.visible = step >= 2; glow.intensity = step >= 2 ? .65 : 0; ripples.visible = step >= 2; matrices()
   }
   const sync = () => {
     ui.renderDots(step,3); ui.actionBtn.hidden = step === 3; ui.actionBtn.disabled = !ready() || step === 3
@@ -192,7 +194,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
         motion.t=reduced()?1:Math.min(1,motion.t+(Number.isFinite(dt)?Math.max(0,dt):0)/.75)
         const t=motion.t,p=t*t*(3-2*t)
         if(motion.step===0) flower.position.lerpVectors(motion.from,boat.localToWorld(SEAT.clone()).add(new THREE.Vector3(0,.017,0)),p)
-        if(motion.step===1) {flame.visible=true;glow.intensity=p*.65}
+        if(motion.step===1) {flame.visible=true;glow.intensity=p*.65;halo.material.opacity=p*.1}
         if(motion.step===2) {boat.position.lerpVectors(motion.from,WATER,p);flower.position.copy(boat.localToWorld(SEAT.clone()).add(new THREE.Vector3(0,.017,0)))}
         matrices(); if(t===1)settled()
       }
@@ -202,7 +204,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
       if(disposed)return
       disposed=true;pointer.dispose();stopResize();writer?.dispose();feedback.dispose()
       ui.actionBtn.removeEventListener('click',action);window.removeEventListener('blur',blur);window.removeEventListener('focus',focus)
-      style.dispose();waterEffect.dispose();disposeTree(world);Object.values(lights).forEach(l=>l.dispose());glow.dispose()
+      style.dispose();waterEffect.dispose();halo.sprite.removeFromParent();halo.dispose();disposeTree(world);Object.values(lights).forEach(l=>l.dispose());glow.dispose()
       renderer.dispose();renderer.forceContextLoss();scene.clear();overlay.replaceChildren();overlay.classList.remove('scene-overlay','scene-overlay--stage')
     },
   }

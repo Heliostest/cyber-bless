@@ -1,11 +1,12 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
 /** Close view of a guest's offered wrist. The pointer supplies the tying hand. */
 export function createBaciModel() {
   const root = new THREE.Group(); root.name = 'baci-root'
   const subject = new THREE.Group(); subject.name = 'baci-subject'; root.add(subject)
   const mat = (color: number, roughness = .85) => new THREE.MeshStandardMaterial({ color, roughness })
-  const skin = mat(0xc78d68), nail = mat(0xe1b899), cloth = mat(0x57938b), hem = mat(0xe4b976), cotton = mat(0xfff9e9), straw = mat(0xc7ae79)
+  const skin = mat(0xc78d68), handSkin = createRitualMaterial({ color: 0xc78d68, roughness: .85 }, { kind: 'skin', strength: .10, fiber: false }), nail = mat(0xe1b899), cloth = mat(0x57938b), hem = mat(0xe4b976), cotton = mat(0xfff9e9), straw = mat(0xc7ae79)
   const mesh = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, parent: THREE.Object3D = subject) => {
     const m = new THREE.Mesh(geometry, material); m.name = name; m.castShadow = true; m.receiveShadow = true; parent.add(m); return m
   }
@@ -23,14 +24,14 @@ export function createBaciModel() {
   ball('baci-sleeve',[-.88,.47,0],[.47,.24,.29],cloth)
   const cuff = mesh('baci-cuff',new THREE.CylinderGeometry(.245,.245,.085,32),hem); cuff.rotation.z = Math.PI/2; cuff.scale.z=1.16; cuff.position.set(-.53,.47,0)
   ball('baci-forearm',[-.13,.47,0],[.59,.15,.185],skin)
-  ball('baci-palm',[.65,.47,0],[.31,.115,.235],skin)
+  ball('baci-palm',[.65,.47,0],[.31,.115,.235],handSkin)
   // Palm faces up; unequal fingers and a separate thumb preserve a hand silhouette.
   for (const [i,z] of [-.16,-.055,.055,.16].entries()) {
     const length=[.25,.32,.30,.23][i]!
-    ball('baci-finger-'+i,[.90+length*.38,.475,z],[length,.065,.047],skin)
+    ball('baci-finger-'+i,[.90+length*.38,.475,z],[length,.065,.047],handSkin)
     ball('baci-nail-'+i,[.99+length*.4,.526,z],[.058,.009,.032],nail)
   }
-  const thumb=ball('baci-thumb',[.63,.47,.30],[.20,.08,.08],skin); thumb.rotation.y=-.55
+  const thumb=ball('baci-thumb',[.63,.47,.30],[.20,.08,.08],handSkin); thumb.rotation.y=-.55
   const thread = new THREE.Group(); thread.name='baci-thread'; subject.add(thread)
   const yarn = mesh('baci-cotton-strand',new THREE.BufferGeometry(),cotton,thread)
   const caps = [0,1].map(i=>{const cap=mesh('baci-thread-end-'+i,new THREE.SphereGeometry(.012,12,8),cotton,thread);return cap})

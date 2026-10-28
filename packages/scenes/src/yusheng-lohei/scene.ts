@@ -107,6 +107,7 @@ export function createYushengLohei(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
+      feedback.update()
       if (!active()) { lifecycleVersion++; pointer.cancel(); if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }

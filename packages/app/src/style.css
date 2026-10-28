@@ -3952,6 +3952,13 @@ button:hover:not(:disabled) {
   min-width: 0;
   max-width: 100%;
 }
+.scene-inspection-help {
+  order: 1;
+  flex-basis: 100%;
+  text-align: center;
+  overflow-wrap: anywhere;
+  font-weight: 400;
+}
 .scene-cue-text {
   overflow-wrap: anywhere;
   animation: scene-cue-copy 2.4s ease-in-out var(--cue-delay, 0ms) infinite;

@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -50,7 +51,7 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
   lights.key.shadow.bias = -.0007; lights.key.shadow.normalBias = .02
   const world = new THREE.Group(); world.name = 'tea-garden-table'; scene.add(world)
   const material = (color: number, roughness = .84) => new THREE.MeshStandardMaterial({ color, roughness })
-  const wood = material(0xc3a074), edge = material(0x99764f), clay = material(0x819d8d, .72), inside = material(0x607e70), cream = material(0xeee2bd), leafMat = material(0x5f7953), teaMat = material(0xc39442, .35)
+  const wood = material(0xc3a074), edge = material(0x99764f), clay = material(0x819d8d, .72), inside = material(0x607e70), cream = material(0xeee2bd), leafMat = material(0x5f7953), teaMat = createRitualMaterial({ color: 0xc39442, roughness: .22, transmission: .32, attenuationColor: 0xc39442, attenuationDistance: .26 }, { kind: 'tea', thickness: .12, strength: .35 })
   const add = (geo: THREE.BufferGeometry, mat: THREE.Material, p: [number,number,number], name = '', parent: THREE.Object3D = world) => {
     const m = new THREE.Mesh(geo, mat); m.position.set(...p); m.name = name; m.castShadow = m.receiveShadow = true; parent.add(m); return m
   }

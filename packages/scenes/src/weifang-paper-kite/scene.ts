@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -48,7 +49,8 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
   const kite = new THREE.Group(); kite.name = 'kite-airframe'; subject.add(kite)
   const mat = (color: number, roughness = .9) => new THREE.MeshStandardMaterial({ color, roughness })
   const bamboo = mat(0xe1b86c, .76), bambooEdge = mat(0x9a6e3e, .84), cord = mat(0xe8dfbd, .98)
-  const teal = mat(0x3b8a8a, .97), red = mat(0xc45d45, .97), ochre = mat(0xe5b453, .97), cream = mat(0xf3e5bf, .98), ink = mat(0x355955, .95)
+  const red = mat(0xc45d45, .97), ink = mat(0x355955, .95)
+  const paperTeal = createRitualMaterial({ color: 0x3b8a8a, roughness: .97 }, { kind: 'paper', strength: .16, fiber: 'paper' }), paperRed = createRitualMaterial({ color: 0xc45d45, roughness: .97 }, { kind: 'paper', strength: .12, fiber: 'paper' }), paperOchre = createRitualMaterial({ color: 0xe5b453, roughness: .97 }, { kind: 'paper', strength: .16, fiber: 'paper' }), paperCream = createRitualMaterial({ color: 0xf3e5bf, roughness: .98 }, { kind: 'paper', strength: .24, fiber: 'paper' })
   const wood = mat(0xb47e49, .72), woodEnd = mat(0xdfb575, .8)
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: XYZ, parent: THREE.Object3D = subject) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
@@ -69,24 +71,24 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
   for (const sign of [-1, 1]) {
     const side = sign < 0 ? 'left' : 'right', parent = sign < 0 ? left : prepared
     const mirror = (outline: XY[]) => outline.map(([x, y]) => [x * sign, y] as XY)
-    const skin = paper(`kite-paper-${side}`, mirror(wing), teal, parent)
+    const skin = paper(`kite-paper-${side}`, mirror(wing), paperTeal, parent)
     if (sign > 0) rightSkin = skin
     // The broad original colour blocks follow the feathers; no borrowed motif.
-    const stripe = paper(`kite-cream-feather-${side}`, mirror([[.48, .57], [1.63, .59], [1.43, .43], [.59, .40]]), cream, parent, .004); stripe.position.z = .015
-    const feather = paper(`kite-red-feather-${side}`, mirror([[.38, .25], [1.29, .23], [1.05, -.08], [.40, -.20]]), red, parent, .004); feather.position.z = .015
-    const tip = paper(`kite-ochre-tip-${side}`, mirror([[1.49, .57], [1.73, .60], [1.43, .26], [1.28, .24]]), ochre, parent, .004); tip.position.z = .02
+    const stripe = paper(`kite-cream-feather-${side}`, mirror([[.48, .57], [1.63, .59], [1.43, .43], [.59, .40]]), paperCream, parent, .004); stripe.position.z = .015
+    const feather = paper(`kite-red-feather-${side}`, mirror([[.38, .25], [1.29, .23], [1.05, -.08], [.40, -.20]]), paperRed, parent, .004); feather.position.z = .015
+    const tip = paper(`kite-ochre-tip-${side}`, mirror([[1.49, .57], [1.73, .60], [1.43, .26], [1.28, .24]]), paperOchre, parent, .004); tip.position.z = .02
     for (let i = 0; i < 3; i++) {
       const x = .52 + i * .19
-      const mark = paper(`kite-feather-mark-${side}-${i}`, mirror([[x, .18], [x + .055, .18], [x + .12, -.01], [x + .07, -.04]]), cream, parent, .003); mark.position.z = .02
+      const mark = paper(`kite-feather-mark-${side}-${i}`, mirror([[x, .18], [x + .055, .18], [x + .12, -.01], [x + .07, -.04]]), paperCream, parent, .003); mark.position.z = .02
     }
     // Bamboo stays on the airframe while the prepared skin slides into place.
     tube(`kite-bamboo-${side}`, [[0, .43, .048], [sign * .57, .70, .048], [sign * 1.8, .64, .048]], .021, bamboo, kite)
     tube(`kite-bamboo-diagonal-${side}`, [[0, -.25, .048], [sign * .80, .13, .048], [sign * 1.8, .64, .048]], .018, bamboo, kite)
     tube(`kite-bamboo-lower-${side}`, [[sign * .13, -.12, .045], [sign * .32, -.28, .045], [sign * 1.05, -.15, .045], [sign * 1.4, .18, .045], [sign * 1.8, .64, .045]], .014, bambooEdge, kite, 48)
   }
-  const body = paper('kite-body-paper', [[0, .98], [.19, .78], [.17, .30], [.29, -.14], [.58, -1.10], [0, -.73], [-.58, -1.10], [-.29, -.14], [-.17, .30], [-.19, .78]], cream, kite, .028)
-  const crown = paper('kite-red-crown', [[0, .98], [.19, .78], [.17, .52], [0, .61], [-.17, .52], [-.19, .78]], red, kite, .004); crown.position.z = .018
-  const tail = paper('kite-teal-tail', [[0, -.16], [.22, -.22], [.48, -.97], [0, -.65], [-.48, -.97], [-.22, -.22]], teal, kite, .004); tail.position.z = .018
+  const body = paper('kite-body-paper', [[0, .98], [.19, .78], [.17, .30], [.29, -.14], [.58, -1.10], [0, -.73], [-.58, -1.10], [-.29, -.14], [-.17, .30], [-.19, .78]], paperCream, kite, .028)
+  const crown = paper('kite-red-crown', [[0, .98], [.19, .78], [.17, .52], [0, .61], [-.17, .52], [-.19, .78]], paperRed, kite, .004); crown.position.z = .018
+  const tail = paper('kite-teal-tail', [[0, -.16], [.22, -.22], [.48, -.97], [0, -.65], [-.48, -.97], [-.22, -.22]], paperTeal, kite, .004); tail.position.z = .018
   for (const sign of [-1, 1]) {
     const eye = add(`kite-eye-${sign}`, new THREE.SphereGeometry(.027, 14, 10), ink, [sign * .09, .76, .026], kite); eye.scale.z = .35
     tube(`kite-bamboo-tail-${sign}`, [[0, -.20, .050], [sign * .24, -.50, .050], [sign * .58, -1.10, .050]], .016, bamboo, kite)

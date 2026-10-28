@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 
 /** Original basin, ladle and infant Buddha composition for FGS's public three-pour example. */
@@ -6,7 +7,7 @@ export function createBuddhaBathingModel() {
   const subject=new THREE.Group();subject.name='bathing-subject';root.add(subject)
   const mat=(color:number,roughness=.75,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness})
   const stone=mat(0xc9c5aa),ceramic=mat(0x689b9e,.38),rimMat=mat(0xa8c3b5,.46),gold=mat(0xd6a749,.4,.3),dark=mat(0x846238),wood=mat(0xae7947),petal=mat(0xe5b9a7),leaf=mat(0x71906a)
-  const waterMat=new THREE.MeshStandardMaterial({color:0x82c8cd,transparent:true,opacity:.55,roughness:.2,depthWrite:false})
+  const waterMat=createRitualMaterial({color:0x82c8cd,transparent:true,opacity:.55,roughness:.16,metalness:0,depthWrite:false},{kind:'water',strength:.35})
   const mesh=(g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D,name:string)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=!m.transparent;o.receiveShadow=true;parent.add(o);return o}
   const ball=(name:string,p:[number,number,number],scale:[number,number,number],m:THREE.Material,parent:THREE.Object3D=subject)=>{const o=mesh(new THREE.SphereGeometry(1,24,16),m,parent,name);o.position.set(...p);o.scale.set(...scale);return o}
   const rod=(name:string,a:[number,number,number],b:[number,number,number],radius:number,m:THREE.Material,parent:THREE.Object3D=subject)=>{

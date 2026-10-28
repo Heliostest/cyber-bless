@@ -25,7 +25,7 @@ export function createPrayerFlags(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number } | null = null
+  let motion: { step: 0 | 2; time: number; from: THREE.Vector3; to: THREE.Vector3; support: number } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
@@ -42,36 +42,63 @@ export function createPrayerFlags(ctx: SceneContext): SceneInstance {
   const model = createPrayerFlagsModel(); scene.add(model.root)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
-  const restore = () => pose(at, 0)
+  const restore = () => { withdrawn=false;pose(at, 0) }
   const loopFor=(step:number)=>model.loops[step===0?0:1]!
-  const loopGoals=model.targets.map((_,i)=>{model.pose(i,1);return loopFor(i).getWorldPosition(new THREE.Vector3())});model.pose(0,0)
+  const bodyGoals:THREE.Vector3[]=[]
+  const loopGoals=model.targets.map((_,i)=>{model.pose(i,1);bodyGoals.push(model.targets[i]!.localToWorld(model.anchors[i]!.clone()));return loopFor(i).getWorldPosition(new THREE.Vector3())});model.pose(0,0)
   const project=(point:THREE.Vector3)=>{const p=point.project(camera),r=canvas.getBoundingClientRect();return new THREE.Vector2(r.left+(p.x+1)*r.width/2,r.top+(1-p.y)*r.height/2)}
-  const guide=(step:number)=>{const goal=loopGoals[step]!.clone().project(camera),source=model.targets[step]!.localToWorld(model.anchors[step]!.clone()).project(camera),contact=loopFor(step).getWorldPosition(new THREE.Vector3()).project(camera);goal.x+=source.x-contact.x;goal.y+=source.y-contact.y;return goal.unproject(camera)}
-  const railStart=new THREE.Vector2(),railPath=new THREE.Vector2();let railRadius=0
-  const prepareRail=(x:number,y:number)=>{const from=project(loopFor(at).getWorldPosition(new THREE.Vector3())),goal=project(loopGoals[at]!.clone());railStart.set(x,y);railPath.copy(goal).sub(from);railRadius=Math.min(22,railPath.length()*.42)}
-  const moveRail=(x:number,y:number)=>{if(!insideCanvas(canvas,x,y))return false;const n=THREE.MathUtils.clamp(new THREE.Vector2(x,y).sub(railStart).dot(railPath)/Math.max(railPath.lengthSq(),1e-9),0,1);pose(at,n);return n>0&&project(loopFor(at).getWorldPosition(new THREE.Vector3())).distanceTo(project(loopGoals[at]!.clone()))<=railRadius&&!touch.occluded(x,y,model.targets[at]!,{ignore:model.root})}
+  const guide=(step:number)=>bodyGoals[step]!.clone()
+  const carryStep=()=>at===0?0:2
+  const plane=new THREE.Plane(),ray=new THREE.Raycaster(),ndc=new THREE.Vector2(),point=new THREE.Vector3(),offset=new THREE.Vector3()
+  let held:{step:0|2;index:0|1;x:number;y:number;radius:number;moved:boolean}|null=null
+  let withdrawn=false
+  const aim=(x:number,y:number)=>{const r=canvas.getBoundingClientRect();ndc.set((x-r.left)/r.width*2-1,1-(y-r.top)/r.height*2);camera.updateWorldMatrix(true,false);ray.setFromCamera(ndc,camera)}
+  const prepareEnd=(x:number,y:number)=>{
+    const step=carryStep() as 0|2,index=step===0?0:1,loop=loopFor(step),from=project(loop.getWorldPosition(new THREE.Vector3())),goal=project(loopGoals[step]!.clone())
+    // Withdraw from the checkpoint's peg once; a parked end is already free.
+    if(!withdrawn){const lifted=loop.position.clone();lifted.z+=.10;model.holdEnd(index,lifted);withdrawn=true;matrices()}
+    const grip=model.targets[step]!.localToWorld(model.anchors[step]!.clone())
+    plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),grip);aim(x,y)
+    if(!ray.ray.intersectPlane(plane,point))return
+    offset.subVectors(grip,point);held={step,index,x,y,radius:Math.min(22,from.distanceTo(goal)*.42),moved:false}
+  }
+  const moveEnd=(x:number,y:number)=>{
+    if(!held||!Number.isFinite(x)||!Number.isFinite(y)||!insideCanvas(canvas,x,y))return false
+    aim(x,y);if(!ray.ray.intersectPlane(plane,point))return false
+    const desired=point.clone().add(offset),target=model.targets[held.step]!
+    // Recompute the live string and cloth from its real end. Iteration keeps the
+    // picked cloth point under the finger without constraining it to a rail.
+    for(let i=0;i<6;i++){
+      const grip=target.localToWorld(model.anchors[held.step]!.clone()),error=desired.clone().sub(grip)
+      const end=loopFor(held.step).getWorldPosition(new THREE.Vector3()).add(error)
+      model.holdEnd(held.index,model.root.worldToLocal(end));matrices()
+    }
+    held.moved ||= x!==held.x||y!==held.y
+    const contact=project(loopFor(held.step).getWorldPosition(new THREE.Vector3())),goal=project(loopGoals[held.step]!.clone())
+    return held.moved&&contact.distanceTo(goal)<=held.radius&&!touch.occluded(x,y,target,{ignore:model.root})
+  }
 
   const directions: [number, number][] = [[0,-1],[1,0],[0,-1]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', destination:()=>guide(i),targetLabel:'绳环挂点', label: ACTIONS[i]!, anchor: model.anchors[i]!.toArray(), priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', destination:()=>guide(i),targetLabel:'绳环挂点', label: ACTIONS[i]!, anchor: model.anchors[i]!.toArray(), priority: 3, enabled: () => inputActive() && !motion && at<3 && i===carryStep() }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
+  const reset = () => { held=null; moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at===3?3:carryStep()]!, safe) }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x, y, model.roots[at]!) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0;prepareRail(x,y) },
-    onMove(x,y){if(!Number.isFinite(x)||!Number.isFinite(y)){invalid=true;return}if(!invalid&&moveRail(x,y)&&pointer.finish())advance(true)},
-    onRelease(x,y){if(!invalid&&moveRail(x,y))advance();else reset()    }, onCancel: reset,
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0;prepareEnd(x,y) },
+    onMove(x,y){if(!Number.isFinite(x)||!Number.isFinite(y)){invalid=true;return}if(!invalid&&moveEnd(x,y)&&pointer.finish())advance(true)},
+    onRelease(x,y){if(!invalid&&moveEnd(x,y))advance();else if(invalid||!insideCanvas(canvas,x,y))reset();else held=null }, onCancel: reset,
   })
   const sync = () => {
     if (motion || at === 3) delete ui.hintEl.dataset.ready
     if (cueLayer) cueLayer.hidden = !active()
-    ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
+    ui.renderDots(at===0?0:at===3?2:1, 2); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at]!, safe)
+    setSafeText(ui.actionBtn, ACTIONS[carryStep()]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at===3?3:carryStep()]!, safe)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
@@ -84,10 +111,11 @@ export function createPrayerFlags(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance(accepted=false) { if (!inputActive() || (pointer.isBusy() && !accepted) || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(accepted=false) { if (!inputActive() || (pointer.isBusy() && !accepted) || motion || at === 3) return; const step=carryStep() as 0|2; motion = { step, time: 0, from: loopFor(step).position.clone(), to: model.root.worldToLocal(loopGoals[step]!.clone()), support:model.temporarySupport.rotation.y }; held=null; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
-  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
+  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); if(!motion)reset(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
+    if(!motion){pointer.cancel();reset()}
     const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0,1.05,0), direction = new THREE.Vector3(.4,2.1,7).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target); camera.updateMatrixWorld(true)
     const inverse = camera.quaternion.clone().invert(), tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), p = new THREE.Vector3(); let distance = 1.3
@@ -110,14 +138,17 @@ export function createPrayerFlags(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
-      if (!active()) { lifecycleVersion++; pointer.cancel(); if (!suspended) { suspended = true; sync() }; return }
+      if (!active()) { lifecycleVersion++; pointer.cancel(); if(!motion)reset(); if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       if (motion) {
-        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85)
+        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .32)
         const eased=ease(motion.time)
-        pose(motion.step, motion.from+(1-motion.from)*eased); if (motion.time === 1) settle()
+        const carrying=motion;pose(carrying.step,eased)
+        model.holdEnd(carrying.step===0?0:1,carrying.from.clone().lerp(carrying.to,eased))
+        if(carrying.step===2)model.temporarySupport.rotation.y=THREE.MathUtils.lerp(carrying.support,-Math.PI/2,eased)
+        if (motion.time === 1) settle()
       }
       if (active()) { if (!ctx.isReducedMotion?.()) model.tick(delta); matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },

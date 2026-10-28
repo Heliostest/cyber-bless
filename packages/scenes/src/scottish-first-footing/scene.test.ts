@@ -75,7 +75,16 @@ function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, r
   for (let i = 1; i <= 8; i++) event(s.hit, 'pointermove', [p[0] + dx * i / 8, p[1] + dy * i / 8])
   event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); if (run) s.run()
 }
-function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) drag(s, at, ...delta(at,s), run) }
+function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) { carryRoute(s,at); if(run)s.run() } }
+function carryPoint(s:ReturnType<typeof mount>,x:number,z:number):[number,number]{const rect=s.host.querySelector('canvas')!.getBoundingClientRect(),p=new THREE.Vector3(x,.73,z+.16).project(s.camera);return[rect.left+(p.x+1)*rect.width/2,rect.top+(1-p.y)*rect.height/2]}
+function carryMoves(s:ReturnType<typeof mount>,at:number){
+  for(const[x,z]of(at<2?[[.45,.85],[.45,.40],[.45,-.02],[-.75,-.02]]:[[-.75,-.02]]))event(s.hit,'pointermove',carryPoint(s,x!,z!))
+  event(s.hit,'pointermove',carryPoint(s,-.75,-.65))
+}
+function carryRoute(s:ReturnType<typeof mount>,at:number,release=true){
+  event(s.hit,'pointerdown',s.point(targetName(at),anchor(at)))
+  carryMoves(s,at);if(release)event(s.hit,'pointerup',carryPoint(s,-.75,-.65))
+}
 function cues(s: ReturnType<typeof mount>) {
   const list: { object: THREE.Object3D; cue: InteractionCue }[] = []
   s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled()) list.push({ object, cue }) })
@@ -94,6 +103,33 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 
 
 describe('First-footing household coal gift', () => {
+  it.each([0,1,2])('carries through the actual open doorway and hearth in one gesture from legacy %i',at=>{
+    const s=mount(at,{isReducedMotion:()=>true});event(s.hit,'pointerdown',s.point(targetName(at),anchor(at)))
+    for(const[x,z]of(at<2?[[.45,.85],[.45,.40],[.45,-.02],[-.75,-.02]]:[[-.75,-.02]])){event(s.hit,'pointermove',carryPoint(s,x!,z!));expect(s.progress).toEqual([])}
+    event(s.hit,'pointermove',carryPoint(s,-.75,-.65));expect(s.progress).toEqual([3]);event(s.hit,'pointerup',carryPoint(s,-.75,-.65));expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it('completes the accessible action once without exposing carry waypoints as saved steps',()=>{
+    const s=mount(0,{isReducedMotion:()=>true});s.button.click();expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it('rejects a direct through-stone shortcut before allowing a real route',()=>{
+    const s=mount(0,{isReducedMotion:()=>true});event(s.hit,'pointerdown',s.point(targetName(0),anchor(0)))
+    event(s.hit,'pointermove',carryPoint(s,-.75,-.65));event(s.hit,'pointerup',carryPoint(s,-.75,-.65));expect(s.progress).toEqual([])
+    s.button.click();expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it.each([0,1,2])('retains an ordinary released carry but restores an ownerless pause at legacy %i',at=>{
+    let active=true;const s=mount(at,{isActive:()=>active,isReducedMotion:()=>true}),coal=s.scene.getObjectByName(targetName(at))!,home=coal.position.clone()
+    event(s.hit,'pointerdown',s.point(targetName(at),anchor(at)));event(s.hit,'pointermove',carryPoint(s,.55,at<2?.85:-.02));event(s.hit,'pointerup',carryPoint(s,.55,at<2?.85:-.02))
+    const parked=coal.position.clone();expect(parked.distanceTo(home)).toBeGreaterThan(.03);s.run();expect(coal.position.distanceTo(parked)).toBeLessThan(1e-7);expect(s.progress).toEqual([])
+    active=false;s.instance.update(.05);expect(coal.position.distanceTo(home)).toBeLessThan(1e-7)
+    active=true;s.instance.update(.05);step(s,at);expect(s.progress).toEqual([3])
+  })
+  it('keeps optional mouse inspection separate from delivery and can continue the inspected pose',()=>{
+    const s=mount(0,{isReducedMotion:()=>true}),p=s.point(targetName(0),anchor(0)),coal=s.scene.getObjectByName(targetName(0))!
+    const mouse=(type:string,x:number)=>{const e=new Event(type,{bubbles:true,cancelable:true});Object.assign(e,{pointerId:1,pointerType:'mouse',button:0,shiftKey:true,clientX:x,clientY:p[1]});s.hit.dispatchEvent(e)}
+    mouse('pointerdown',p[0]);mouse('pointermove',p[0]+35);mouse('pointerup',p[0]+35)
+    expect(coal.quaternion.angleTo(new THREE.Quaternion())).toBeGreaterThan(.2);expect(s.progress).toEqual([])
+    s.button.click();expect(s.progress).toEqual([3]);expect(coal.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(1e-7);expect(s.complete).toHaveBeenCalledOnce()
+  })
   it('exposes a real destination for carried objects and keeps non-placement directions',()=>{
     for(const at of[0,1,2]){const s=mount(at);const cue=cues(s)[0]!.cue;if(cue.destination)expect(cue.direction).toBeUndefined();else if(cue.destination)expect(cue.direction).toBeUndefined();else expect(cue.direction).toEqual(originalDelta(at).map(n=>n/60));s.instance.dispose()}
   })
@@ -107,17 +143,17 @@ describe('First-footing household coal gift', () => {
     const s=mount();expect(s.overlay.textContent).toContain('新年午夜后');expect(s.overlay.textContent).toContain('第一位来客')
   })
   it.each([0,1,2])('accepts arrival after a detour without waiting for release at %i',at=>{
-    const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx*.25-dy*.25,p[1]+dy*.25+dx*.25]);expect(s.progress).toEqual([]);event(s.hit,'pointermove',[p[0]+dx,p[1]+dy]);expect(s.progress).toEqual([at+1]);event(s.hit,'pointermove',p);event(s.hit,'pointerup',p);expect(s.progress).toEqual([at+1])
+    const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at));event(s.hit,'pointerdown',p);event(s.hit,'pointermove',carryPoint(s,.55,at<2?.94:-.02));expect(s.progress).toEqual([]);carryMoves(s,at);expect(s.progress).toEqual([3]);event(s.hit,'pointermove',p);event(s.hit,'pointerup',p);expect(s.progress).toEqual([3])
   })
   it.each([false,true])('lifts a brought coal gift, carries it through the opening and places it in the host hearth, reduced=%s', reduced => {
     const s=mount(0,{isReducedMotion:()=>reduced})
-    for(let i=0;i<3;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); expect(s.progress).toEqual([1,2,3].slice(0,i+1))}
+    step(s,0,false); if(!reduced)expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([3])
     s.button.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
   it('uses identical final subject transforms for ordinary, reduced motion and silently restored checkpoints', () => {
-    for (const checkpoint of [1, 2, 3]) {
+    for (const checkpoint of [3]) {
       const normal = mount(), reduced = mount(0, { isReducedMotion: () => true }), restored = mount(checkpoint)
-      for (let at = 0; at < checkpoint; at++) { step(normal, at); step(reduced, at) }
+      step(normal,0); step(reduced,0)
       normal.scene.updateMatrixWorld(true); reduced.scene.updateMatrixWorld(true); restored.scene.updateMatrixWorld(true)
       normal.scene.getObjectByName('first-footing-subject')!.traverse(o => {
         for (const other of [reduced, restored]) {
@@ -134,7 +170,7 @@ describe('First-footing household coal gift', () => {
     const s = mount(); expect(s.hit).not.toBeNull(); expect(s.button.type).toBe('button')
     expect(s.button.style.minWidth).toBe('44px'); expect(s.button.style.minHeight).toBe('44px'); expect(s.overlay.querySelector('input,form')).toBeNull()
     expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-    s.button.click(); expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([1])
+    s.button.click(); expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([3])
   })
   it('plays a quiet optional acceptance tone only after settlement and closes audio once', () => {
     const frequencies: number[] = [], peaks: number[] = []; let closed = 0, soundEnabled = false
@@ -146,14 +182,13 @@ describe('First-footing household coal gift', () => {
     }
     vi.stubGlobal('AudioContext', AudioBoundary)
     const s = mount(0, { isSoundEnabled: () => soundEnabled })
-    expect(frequencies).toEqual([]); step(s, 0); expect(frequencies).toEqual([])
-    soundEnabled = true; step(s, 1, false); expect(frequencies).toEqual([]); s.run(); expect(frequencies).toEqual([392])
-    const returning = mount(2, { returning: true, isSoundEnabled: () => true }); returning.run(); expect(frequencies).toEqual([392])
-    step(s, 2); expect(frequencies).toEqual([392, 440]); expect(peaks).toEqual([.003, .003])
+    expect(frequencies).toEqual([]); soundEnabled = true; step(s,0,false); expect(frequencies).toEqual([]); s.run(); expect(frequencies).toEqual([440])
+    const returning = mount(2, { returning: true, isSoundEnabled: () => true }); returning.run(); expect(frequencies).toEqual([440])
+    step(s,2); expect(frequencies).toEqual([440]); expect(peaks).toEqual([.003])
     s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })
   it.each([0,1,2])('rejects wrong surfaces, orphan release and grabs released outside the target at %i',at=>{
-    const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s),end:[number,number]=[p[0]+dx,p[1]+dy];event(s.hit,'pointerdown',[1,1]);event(s.hit,'pointermove',end);event(s.hit,'pointerup',end);event(s.hit,'pointerup',end);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx*.25,p[1]+dy*.25]);event(s.hit,'pointerup',[p[0]+dx*.25,p[1]+dy*.25]);expect(s.progress).toEqual([]);step(s,at);expect(s.progress).toEqual([at+1])
+    const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s),end:[number,number]=[p[0]+dx,p[1]+dy];event(s.hit,'pointerdown',[1,1]);event(s.hit,'pointermove',end);event(s.hit,'pointerup',end);event(s.hit,'pointerup',end);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx*.25,p[1]+dy*.25]);event(s.hit,'pointerup',[p[0]+dx*.25,p[1]+dy*.25]);expect(s.progress).toEqual([]);s.button.click();expect(s.progress).toEqual([3])
   })
   it.each([0,1,2])('rejects invalid release destinations before arrival at %i',at=>{
     for(const kind of['back','cross','nan']){const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx*.25,p[1]+dy*.25]);const end:[number,number]=kind==='back'?p:kind==='cross'?[p[0]+dx-dy,p[1]+dy+dx]:[NaN,p[1]];event(s.hit,'pointerup',end);expect(s.progress,kind).toEqual([]);s.instance.dispose()}
@@ -161,16 +196,16 @@ describe('First-footing household coal gift', () => {
   it.each([0,1,2])('accepts a completed drag with a small release correction or continued travel at %i',at=>{
     for(const factor of [.7,3]){
       const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s)
-      event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx,p[1]+dy])
+      event(s.hit,'pointerdown',p);carryMoves(s,at)
       event(s.hit,'pointerup',[p[0]+dx*factor,p[1]+dy*factor])
-      expect(s.progress).toEqual([at+1]);s.instance.dispose()
+      expect(s.progress).toEqual([3]);s.instance.dispose()
     }
   })
   it.each([0, 1, 2])('rejects a nonfinite move even when the final release is valid at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [NaN, p[1]])
     event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run()
-    expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([at + 1])
+    expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([3])
   })
   it.each([false, true])('rejects an unfinished sideways scribble and remains ready, reduced=%s', reduced => {
     for (const at of [0, 1, 2]) {
@@ -178,7 +213,7 @@ describe('First-footing household coal gift', () => {
       event(s.hit, 'pointerdown', p)
       for (const [along, cross] of [[6, 36], [12, -36], [18, 36], [24, -36], [27, 0]]) event(s.hit, 'pointermove', [p[0]+delta(at,s)[0]*along/60-delta(at,s)[1]*cross/60,p[1]+delta(at,s)[1]*along/60+delta(at,s)[0]*cross/60])
       event(s.hit, 'pointerup', [p[0] + delta(at,s)[0]*.45, p[1] + delta(at,s)[1]*.45])
-      s.run(); expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([at + 1])
+      s.run(); expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); s.button.click(); s.run(); expect(s.progress).toEqual([3])
     }
   })
   it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {
@@ -187,7 +222,7 @@ describe('First-footing household coal gift', () => {
       expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
       expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
       for (let i = at; i < 3; i++) s.button.click()
-      expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
+      expect(s.progress).toEqual(at < 3 ? [3] : []); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
     }
   })
   it.each([284, 350, 1280])('frames every subject vertex and exposes the first reachable material cue at width %i', width => {
@@ -203,7 +238,7 @@ describe('First-footing household coal gift', () => {
         const hit = first(s, object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))))
         expect(hit.object && (object === hit.object || object.getObjectById(hit.object.id) === hit.object), `first reachable material cue ${object.name}`).toBe(true); expect(Math.abs(hit.q.x)).toBeLessThan(.97); expect(Math.abs(hit.q.y)).toBeLessThan(.97)
       }
-      if (at < 3) step(s, at); expect(s.progress).toEqual(at < 3 ? [at + 1] : []); s.instance.dispose()
+      if (at < 3) step(s, at); expect(s.progress).toEqual(at < 3 ? [3] : []); s.instance.dispose()
     }
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or stale position/rotation', kind => {
@@ -216,10 +251,10 @@ describe('First-footing household coal gift', () => {
       if (kind === 'pause') { active = false; s.instance.update(.05); s.instance.update(.05); expect(rendered.render.mock.calls.length).toBe(frames) }
       else if (kind === 'blur') window.dispatchEvent(new Event('blur')); else event(s.hit, kind, p)
       event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run(); expect(s.progress).toEqual([]); expect(pivot.position.distanceTo(home)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(pivot.scale.distanceTo(scale)).toBeLessThan(.00001)
-      if (kind === 'blur') window.dispatchEvent(new Event('focus')); active = true; s.instance.update(.025); step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      if (kind === 'blur') window.dispatchEvent(new Event('focus')); active = true; s.instance.update(.025); step(s, at); expect(s.progress).toEqual([3]); s.instance.dispose()
     }
   })
-  it.each([284, 350, 1280])('keeps all subject vertices in frame during each three coal transfer paths at width %i', width => {
+  it.each([284, 350, 1280])('keeps all subject vertices in frame during the continuous coal transfer at width %i', width => {
     for (const at of [0, 1, 2]) {
       const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
       const check = () => {
@@ -231,10 +266,11 @@ describe('First-footing household coal gift', () => {
         })
         expect(extent).toBeLessThan(.97)
       }
-      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); check()
-      event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); check(); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy])
+      event(s.hit, 'pointerdown', p); check()
+      for(const[x,z]of(at<2?[[.45,.85],[.45,.40],[.45,-.02],[-.75,-.02],[-.75,-.65]]:[[-.75,-.02],[-.75,-.65]])){event(s.hit,'pointermove',carryPoint(s,x!,z!));check()}
+      event(s.hit, 'pointerup', carryPoint(s,-.75,-.65))
       for (let i = 0; i < 300; i++) { s.instance.update(.025); check() }
-      expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      expect(s.progress).toEqual([3]); s.instance.dispose()
     }
   })
   it.each([0, 1, 2])('freezes accepted motion and input while paused at %i', at => {
@@ -242,18 +278,18 @@ describe('First-footing household coal gift', () => {
     s.button.click(); for (const dt of [NaN, Infinity, -10, 100000]) s.instance.update(dt); expect(s.progress).toEqual([])
     active = false; const pivot = s.scene.getObjectByName(targetName(at))!, pose = pivot.position.clone(), rotation = pivot.quaternion.clone(), frames = rendered.render.mock.calls.length
     s.run(2); expect(rendered.render.mock.calls.length).toBe(frames); expect(pivot.position.distanceTo(pose)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(s.progress).toEqual([])
-    active = true; s.run(); expect(s.progress).toEqual([at + 1])
+    active = true; s.run(); expect(s.progress).toEqual([3])
   })
   it.each([0, 1, 2])('rejects a target behind another opaque object at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
     blocker.position.lerpVectors(s.scene.getObjectByName(targetName(at))!.localToWorld(new THREE.Vector3(...anchor(at))), s.camera.position, .15)
     blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker); s.scene.updateMatrixWorld(true); step(s, at); expect(s.progress).toEqual([])
-    blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose(); step(s, at); expect(s.progress).toEqual([at + 1])
+    blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose(); step(s, at); expect(s.progress).toEqual([3])
   })
   it.each([0, 1, 2])('preserves pointer ownership through prepareFeedback input on and outside the hit layer at %i', at => {
     for (const outside of [false, true]) for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) {
       let attack = () => {}; const s = mount(at, { isReducedMotion: () => true, prepareFeedback: () => attack() })
-      attack = () => event(outside ? document.body : s.hit, type, [1, 1]); step(s, at); expect(s.progress, `${outside} ${type}`).toEqual([at + 1]); s.instance.dispose()
+      attack = () => event(outside ? document.body : s.hit, type, [1, 1]); step(s, at); expect(s.progress, `${outside} ${type}`).toEqual([3]); s.instance.dispose()
     }
   })
   it.each([0, 1, 2])('invalidates prepared pointer and keyboard input on every pause/resume boundary at %i', at => {
@@ -261,18 +297,18 @@ describe('First-footing household coal gift', () => {
       let attack = () => {}, active = true; const s = mount(at, { isReducedMotion: () => true, isActive: () => active, prepareFeedback: () => attack() })
       attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
       for (let i = 0; i < 2; i++) { keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([]) }
-      attack = () => {}; keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
+      attack = () => {}; keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([3]); s.instance.dispose()
     }
   })
   it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('blocks synchronous %s step skipping and update reentry', callback => {
     let attack = () => {}; const seen: number[] = [], s = mount(0, { isReducedMotion: () => true, [callback]: () => attack(), onProgress: n => { seen.push(n); if (callback === 'onProgress') attack() } })
     attack = () => { s.button.click(); step(s, 0); step(s, 1); s.instance.update(100) }
-    s.button.click(); expect(seen).toEqual([1]); s.button.click(); expect(seen).toEqual([1, 2]); s.button.click(); expect(seen).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+    s.button.click(); expect(seen).toEqual([3]); s.button.click(); s.button.click(); expect(seen).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
   })
   it.each([0,1,2])('rejects multitouch with an otherwise valid primary drag at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at))
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointerdown', [1, 1], 2); event(s.hit, 'pointermove', [p[0]+delta(at,s)[0], p[1]+delta(at,s)[1]]); event(s.hit, 'pointerup', [p[0]+delta(at,s)[0], p[1]+delta(at,s)[1]]); event(s.hit, 'pointerup', [1, 1], 2)
-    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at+1])
+    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([3])
   })
   it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('stops after %s pauses or disposes the scene', callback => {
     for (const mode of ['pause', 'dispose']) {
@@ -288,7 +324,7 @@ describe('First-footing household coal gift', () => {
     if (callback === 'onProgress') expect(s.haptic).not.toHaveBeenCalled()
   })
   it.each([NaN, Infinity, -9])('normalizes invalid restoration %s without reporting progress', initial => {
-    const s = mount(initial, { isReducedMotion: () => true }); s.instance.start(); s.instance.update(NaN); expect(s.progress).toEqual([]); s.button.click(); expect(s.progress).toEqual([1])
+    const s = mount(initial, { isReducedMotion: () => true }); s.instance.start(); s.instance.update(NaN); expect(s.progress).toEqual([]); s.button.click(); expect(s.progress).toEqual([3])
   })
   it('removes all matching pointer callback guards exactly once', () => {
     const added = vi.spyOn(EventTarget.prototype, 'addEventListener'), removed = vi.spyOn(EventTarget.prototype, 'removeEventListener'), windowAdded = vi.spyOn(window, 'addEventListener'), windowRemoved = vi.spyOn(window, 'removeEventListener'), s = mount()

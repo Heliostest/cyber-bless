@@ -1,11 +1,12 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
 /** Original assisted frame drum; no force, skin or acoustic simulation. */
 export function createBodhranModel(){
  const subject=new THREE.Group();subject.name='bodhran-subject'
  const tipper=new THREE.Group();tipper.name='bodhran-tipper';subject.add(tipper)
  const wood=new THREE.MeshStandardMaterial({color:'#af7d4a',roughness:.80}),cut=new THREE.MeshStandardMaterial({color:'#cfaa74',roughness:.82}),dark=new THREE.MeshStandardMaterial({color:'#714b34',roughness:.74})
- const skin=new THREE.MeshStandardMaterial({color:'#ead4a4',roughness:.98}),green=new THREE.MeshStandardMaterial({color:'#497363',roughness:.76})
+ const skin=createRitualMaterial({color:'#ead4a4',roughness:.98}, { kind: 'skin', strength: .12, thickness: .018, fiber: false }),green=new THREE.MeshStandardMaterial({color:'#497363',roughness:.76})
  const mesh=(name:string,g:THREE.BufferGeometry,mat:THREE.Material,parent:THREE.Object3D=subject)=>{const o=new THREE.Mesh(g,mat);o.name=name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  const ring=(name:string,inner:number,outer:number,back:number,front:number,mat:THREE.Material)=>{const g=new THREE.LatheGeometry([[inner,back],[outer,back],[outer,front],[inner,front],[inner,back]].map(([r,z])=>new THREE.Vector2(r!,z!)),64);g.rotateX(Math.PI/2);return mesh(name,g,mat)}
  const frame=ring('bodhran-frame',.86,1,-.12,.12,wood)

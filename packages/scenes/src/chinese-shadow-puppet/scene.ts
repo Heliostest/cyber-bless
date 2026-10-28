@@ -63,7 +63,9 @@ export function createChineseShadowPuppet(ctx: SceneContext): SceneInstance {
   const clothPositions = clothGeometry.getAttribute('position'), centerColor = new THREE.Color(0xffe9b5), edgeColor = new THREE.Color(0xc7a478)
   for (let i = 0; i < clothPositions.count; i++) {
     const distance = Math.min(1, Math.hypot(clothPositions.getX(i) / 1.8, clothPositions.getY(i) / 1.6))
-    const color = centerColor.clone().lerp(edgeColor, distance * .35 + Math.sin(i * 13.2) * .012); clothColors.push(color.r, color.g, color.b)
+    // A restrained procedural weave keeps the authored unlit light field and opaque projection.
+    const weave = .003 * Math.sin(clothPositions.getX(i) * 37) * Math.sin(clothPositions.getY(i) * 41)
+    const color = centerColor.clone().lerp(edgeColor, distance * .35 + Math.sin(i * 13.2) * .012 + weave); clothColors.push(color.r, color.g, color.b)
   }
   clothGeometry.setAttribute('color', new THREE.Float32BufferAttribute(clothColors, 3))
   const cloth = add('shadow-cloth', clothGeometry, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }), [0, 1.89, SCREEN_Z - .012]); cloth.userData.toonSurface = { outline: false }; cloth.castShadow = false

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
 const V=(x=0,y=0,z=0)=>new THREE.Vector3(x,y,z)
 const NX=8,NY=10,W=.38,H=.45,COUNT=(NX+1)*(NY+1),LENGTH=2.5
@@ -43,7 +44,7 @@ export function createPrayerFlagsModel(){
  for(let j=0;j<SIDES;j++){ropeIndices.push(RINGS*SIDES,(j+1)%SIDES,j);const a=(RINGS-1)*SIDES;ropeIndices.push(RINGS*SIDES+1,a+j,a+(j+1)%SIDES)}
  ropeGeometry.setIndex(ropeIndices);const rope=make('rope',ropeGeometry,cotton)
  const colors=[0x5079be,0xf6f0dd,0xd76054,0x659e76,0xe9c257],names=['blue','white','red','green','yellow'],syllables=[['OM'],['MA'],['NI'],['PAD','ME'],['HUM']]
- const flags=names.map((name,i)=>{const material=matte(colors[i]!);material.map=print(syllables[i]!);const mesh=make(name,clothGeometry(),material);mesh.userData.mantra=syllables[i]!.join(' ');return mesh})
+ const flags=names.map((name,i)=>{const material=createRitualMaterial({color:colors[i]!,roughness:.94}, { kind: 'cloth', strength: .22, fiber: 'linen' });material.map=print(syllables[i]!);const mesh=make(name,clothGeometry(),material);mesh.userData.mantra=syllables[i]!.join(' ');return mesh})
  let time=0;const left=V(),right=V(),start=V(),end=V(),points:THREE.Vector3[]=[],lengths:number[]=[]
  const curve=(t:number,sag:number)=>start.clone().lerp(end,t).add(V(0,-4*sag*t*(1-t),0))
  function sample(sag:number){let length=0,previous=start.y;const dx=(end.x-start.x)/64,dz=(end.z-start.z)/64;for(let i=1;i<=64;i++){const t=i/64,y=start.y+(end.y-start.y)*t-4*sag*t*(1-t);length+=Math.hypot(dx,y-previous,dz);previous=y}return length}
@@ -68,6 +69,9 @@ export function createPrayerFlagsModel(){
   const fold=checkpoint<1?0:checkpoint>1?1:THREE.MathUtils.clamp((t-.25)/.45,0,1);temporarySupport.rotation.y=-Math.PI/2*fold*fold*(3-2*fold)
   left.copy(checkpoint===0?transfer(V(-1.15,1.50,.12),V(-1.15,1.85,.12),t):V(-1.15,1.835,.12))
   right.copy(checkpoint===0?V(.65,1.485,.12):checkpoint===1?transfer(V(.65,1.50,.12),V(1.15,1.50,.12),t):checkpoint===2?transfer(V(1.15,1.50,.12),V(1.15,1.85,.12),t):V(1.15,1.835,.12))
+  rebuild()
+ }
+ function rebuild(){
   loops[0]!.position.copy(left);loops[1]!.position.copy(right);start.copy(left).add(V(.060,0,0));end.copy(right).add(V(-.060,0,0))
   let lo=0,hi=1.5;for(let i=0;i<25;i++){const middle=(lo+hi)/2;if(sample(middle)<LENGTH)lo=middle;else hi=middle}
   points.length=lengths.length=0;lengths.push(0);for(let i=0;i<=64;i++){points.push(curve(i/64,(lo+hi)/2));if(i)lengths.push(lengths[i-1]!+points[i]!.distanceTo(points[i-1]!))}
@@ -76,6 +80,22 @@ export function createPrayerFlagsModel(){
   }
   p.setXYZ(RINGS*SIDES,start.x,start.y,start.z);p.setXYZ(RINGS*SIDES+1,end.x,end.y,end.z);p.needsUpdate=true;ropeGeometry.computeVertexNormals();ropeGeometry.computeBoundingSphere();cloth();root.updateMatrixWorld(true)
  }
+ function holdEnd(index:0|1,position:THREE.Vector3){
+  if(![position.x,position.y,position.z].every(Number.isFinite))return
+  const fixed=(index===0?right:left).clone().add(V(index===0?-.060:.060,0,0))
+  const offset=V(index===0?.060:-.060,0,0),desired=position.clone(),moving=index===0?left:right
+  for(let attempt=0;attempt<16;attempt++){
+   const delta=desired.clone().add(offset).sub(fixed)
+   // The string can become taut, but cannot stretch to follow an unreachable pointer.
+   if(delta.length()>LENGTH-.001)delta.setLength(LENGTH-.001)
+   moving.copy(fixed).add(delta).sub(offset);rebuild()
+   const clearance=.055+H-Math.min(...points.map(point=>point.y))
+   if(clearance<=0)break
+   // Lifting the moving end preserves the established off-ground presentation;
+   // a low pointer cannot lay the attached flags through the ground.
+   desired.copy(moving);desired.y+=clearance*2+.01
+  }
+ }
  pose(0,0)
- return{root,flags,rope,loops,pegs,temporarySupport,left,right,points,lengths,pose,tick:(dt:number)=>{time+=dt;cloth()},targets:[flags[0]!,flags[4]!,flags[4]!],roots:[flags[0]!,flags[4]!,flags[4]!],anchors:[V(0,0,.004),V(0,0,.004),V(0,0,.004)]}
+ return{root,flags,rope,loops,pegs,temporarySupport,left,right,points,lengths,pose,holdEnd,tick:(dt:number)=>{time+=dt;cloth()},targets:[flags[0]!,flags[4]!,flags[4]!],roots:[flags[0]!,flags[4]!,flags[4]!],anchors:[V(0,0,.004),V(0,0,.004),V(0,0,.004)]}
 }

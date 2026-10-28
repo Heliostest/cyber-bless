@@ -546,7 +546,7 @@
   "scene.croatian-licitar-heart.scene.label.e0069596": "Apoie o coração com cuidado",
   "scene.croatian-licitar-heart.scene.targetLabel.0c5bc0e2": "Prego de madeira do expositor",
   "scene.czech-bead-star.scene.assemble.3c8480d2": "Pegue na última fiada de contas de vidro no apoio de madeira e una-a à conta prateada exposta no braço da estrela.",
-  "scene.czech-bead-star.scene.rotate.c40a141f": "Arraste a estrela horizontalmente para a direita, rodando-a devagar para ver as contas azuis e prateadas receberem o sol.",
+  "scene.czech-bead-star.scene.rotate.c40a141f": "Rode a estrela livremente para ver a frente e o verso e toque para a contemplar em silêncio.",
   "scene.czech-bead-star.scene.quiet.89e36e74": "Toque na estrela e observe em silêncio, prolongando este instante.",
   "scene.czech-bead-star.scene.moving.4c417bbd": "Os fios finos unem-se e o brilho das contas roda suavemente…",
   "scene.czech-bead-star.scene.done.cbf038fd": "Guarde um feixe de luz límpida.",
@@ -1032,7 +1032,7 @@
   "scene.japanese-wagasa.scene.copy.ace9eae9": "Rodar suavemente o cabo",
   "scene.japanese-wagasa.scene.copy.89226bad": "Fechar e contemplar a sombrinha",
   "scene.japanese-wagasa.scene.copy.ff31e440": "Empurre o anel pelo eixo até à marca acima. As varetas abrem a armação de bambu, estendendo o papel num círculo de cor quente.",
-  "scene.japanese-wagasa.scene.copy.9837bf82": "Pressione a parte inferior do cabo e arraste um pouco para a direita. Rode suavemente a sombrinha, voltando o papel claro para o seu lado.",
+  "scene.japanese-wagasa.scene.copy.9837bf82": "Segure o cabo para rodar e observar livremente, ou baixe logo o aro de madeira pelo eixo até à marca inferior para fechar o guarda-chuva de papel.",
   "scene.japanese-wagasa.scene.copy.a4039b2d": "Mova o anel pelo eixo até à marca inferior. As varetas recolhem-se devagar, e o papel fecha pelas dobras.",
   "scene.japanese-wagasa.scene.copy.bfbb070b": "A sombrinha fechou. O bambu e as pregas de papel unem-se, e a face clara guarda uma sombra leve ao sol.",
   "scene.japanese-wagasa.scene.copy.85a86d4e": "O anel sobe, abrindo juntos o bambu e o papel…",
@@ -2207,5 +2207,14 @@
   "scene.italian-ex-voto.scene.copy.de59a0a7": "Progresso do traço: {p0}%. Continue pela linha fina até ao ponto quente.",
   "scene.mizuhiki.scene.copy.b6a0f131": "Ver o texto no papel",
   "scene.mizuhiki.scene.copy.b843e233": "Progresso pelos pontos dourados: {p0}%. Continue até à próxima indicação.",
-  "scene.navruz-sumalak.scene.copy.cf5d8496": "Progresso pelo arco: {p0}%. Continue pelo próximo ponto claro."
+  "scene.navruz-sumalak.scene.copy.cf5d8496": "Progresso pelo arco: {p0}%. Continue pelo próximo ponto claro.",
+  "scene.placement-inspection.hint.dbafb84c": "Arraste com um dedo para pegar e colocar. Arraste com dois dedos, com o botão direito ou premindo Shift para rodar e observar.",
+  "scene.placement-inspection.keyboard.6534a04e": "Setas: rodar e observar. Enter: colocar. Esc: devolver.",
+  "scene.chinese-fu-paper.scene.carry.249eff31": "Colocar fu na Festa da Primavera expressa votos de bênçãos para o lar. Leve-o ao lugar na porta; ficará fixo quando se aproximar.",
+  "scene.chinese-ruyi-scepter.scene.carry.22c6bc6e": "O ruyi guarda bons desejos. Apoie a cabeça de nuvem e leve-o ao suporte de madeira almofadado; assentará ao chegar ao lugar.",
+  "scene.japanese-hamaya.scene.carry.67656185": "A hamaya expressa desejos de proteção contra o infortúnio e de paz no lar. Leve a flecha decorativa aos dois apoios; assentará suavemente quando se aproximar.",
+  "scene.lanna-sand-pagoda.scene.carry.7d56b98e": "No Ano Novo de Lanna, oferecem-se bandeiras com as pagodas de areia para acumular mérito. Alinhe a vara de bambu com a base de areia junto da pagoda; ficará firme quando se aproximar.",
+  "scene.turkish-nazar-bead.scene.carry.4a7c035f": "A conta nazar turca guarda desejos de proteção contra o infortúnio. Pegue na conta azul e rode-a livremente para a observar; depois leve o aro à barra do suporte de madeira para a pendurar.",
+  "scene.placement-inspection.help.11e90018": "Arraste com dois dedos para rodar e observar. Com o rato, use o botão direito ou mantenha Shift ao arrastar.",
+  "scene.udo-undama.scene.carry.566dabf6": "Pegue na bola de barro, rode-a livremente se a quiser observar e leve-a à marca de lançamento."
 }

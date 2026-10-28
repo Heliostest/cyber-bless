@@ -7,6 +7,7 @@
  * paper's raw edges and the creases that are currently folded.
  */
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { buildFoldModel, createFoldKinematics, type FoldKinematics, ORIZURU } from './fold-kinematics'
 
 /** World half-size of the paper square. */
@@ -30,6 +31,8 @@ export type OrigamiSheet = {
   readonly kinematics: FoldKinematics
   /** Pose folding toward `form` at tap progress k (k = 1: the form at rest). */
   pose(form: number, k: number): void
+  /** Product display feedback around the finished wing hinges; zero restores rest. */
+  poseWingFlap(amount: number): void
   /** Bounds of the drawn sheet in its own frame, or turned by `turn` first. */
   bounds(target?: THREE.Box3, turn?: THREE.Quaternion): THREE.Box3
   /** Warm emissive lift of the paper (0 = none). */
@@ -55,7 +58,7 @@ export function createOrigamiSheet(): OrigamiSheet {
   geometry.addGroup(faceVerts, count - faceVerts, 2)
 
   const paper = (color: number, side: THREE.Side) =>
-    new THREE.MeshStandardMaterial({
+    createRitualMaterial({
       color,
       side,
       roughness: 0.88,
@@ -68,7 +71,7 @@ export function createOrigamiSheet(): OrigamiSheet {
       polygonOffsetUnits: 1,
       // Subtle flatness to emphasize the folded geometry
       flatShading: false,
-    })
+    }, { kind: 'paper', strength: .18, fiber: 'paper' })
   const materials = [
     paper(PAPER_TOP, THREE.FrontSide),
     paper(PAPER_BACK, THREE.BackSide),
@@ -157,6 +160,10 @@ export function createOrigamiSheet(): OrigamiSheet {
     kinematics,
     pose(form, k) {
       kinematics.pose(form, k)
+      update()
+    },
+    poseWingFlap(amount) {
+      kinematics.poseWingFlap(amount)
       update()
     },
     bounds(target = new THREE.Box3(), turn) {

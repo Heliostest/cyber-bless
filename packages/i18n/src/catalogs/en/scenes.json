@@ -1432,7 +1432,7 @@
   "scene.mizuhiki.scene.copy.b843e233": "Progress along the gold points: {p0}%. Continue to the next marker.",
   "scene.navruz-sumalak.scene.copy.cf5d8496": "Progress along the curve: {p0}%. Continue through the next pale dot.",
   "scene.czech-bead-star.scene.assemble.3c8480d2": "Pick up the last strand of glass beads from the wooden rest and join it to the exposed silver bead on the star's arm.",
-  "scene.czech-bead-star.scene.rotate.c40a141f": "Drag horizontally right on the beaded star to turn it slowly, watching the silver and blue beads catch the sunlight.",
+  "scene.czech-bead-star.scene.rotate.c40a141f": "Turn the bead star freely to see both sides, then tap to pause and look.",
   "scene.czech-bead-star.scene.quiet.89e36e74": "Tap the beaded star and look quietly, letting this moment stay.",
   "scene.czech-bead-star.scene.moving.4c417bbd": "Fine threads connect as the beads gently turn…",
   "scene.czech-bead-star.scene.done.cbf038fd": "Keep a little clear light.",
@@ -1710,7 +1710,7 @@
   "scene.japanese-wagasa.scene.copy.ace9eae9": "Gently turn the umbrella handle",
   "scene.japanese-wagasa.scene.copy.89226bad": "Close the umbrella, leaving a shadow",
   "scene.japanese-wagasa.scene.copy.ff31e440": "Push the wooden ring along the shaft to the upper guide. The stretchers open the bamboo ribs, spreading the paper into a warm-colored circle.",
-  "scene.japanese-wagasa.scene.copy.9837bf82": "Hold the lower handle and drag a little right. Gently turn the paper umbrella so its pale surface faces toward you.",
+  "scene.japanese-wagasa.scene.copy.9837bf82": "Hold the handle to turn and inspect freely, or move the wooden runner down along the shaft to the lower guide to close the paper umbrella.",
   "scene.japanese-wagasa.scene.copy.a4039b2d": "Move the wooden ring along the shaft to the lower guide. The bamboo ribs slowly draw together, and the paper closes along its folds.",
   "scene.japanese-wagasa.scene.copy.bfbb070b": "The paper umbrella closes, its bamboo ribs nestled against paper folds. The pale side holds a soft shadow in the sunlight.",
   "scene.japanese-wagasa.scene.copy.85a86d4e": "The wooden ring rises, and the bamboo ribs and paper spread together…",
@@ -2207,5 +2207,14 @@
   "scene.packages.core.src.scene-intentions.action.5aadc841": "Weave the wreath and gently place it on the water. Learn about its roots in Kupala divination of love and marriage, and keep a personal reflection as you watch it go.",
   "scene.packages.core.src.scene-intentions.label.b4ac52da": "Pray for world peace",
   "scene.packages.core.src.scene-intentions.action.3ae98047": "Fold the paper crane’s wings and lift it before you, holding wishes for peace and for children in this moment.",
-  "scene.hongsheng-red-string.scene.copy.fbb218a9": "Wound {p0}%. Continue along the pale dots."
+  "scene.hongsheng-red-string.scene.copy.fbb218a9": "Wound {p0}%. Continue along the pale dots.",
+  "scene.placement-inspection.hint.dbafb84c": "Drag with one finger to pick up and place. Drag with two fingers, the right mouse button, or Shift held down to turn and inspect.",
+  "scene.placement-inspection.keyboard.6534a04e": "Arrow keys: turn and inspect. Enter: place. Esc: put back.",
+  "scene.chinese-fu-paper.scene.carry.249eff31": "Putting up fu for the Spring Festival welcomes a blessing for the home. Move the character to its place on the door; it will settle into place when close.",
+  "scene.chinese-ruyi-scepter.scene.carry.22c6bc6e": "The ruyi carries good wishes. Support its cloud-shaped head and move it onto the cushioned wooden stand; it will settle when in place.",
+  "scene.japanese-hamaya.scene.carry.67656185": "The hamaya carries wishes for protection from misfortune and peace at home. Move the decorative arrow onto the two supports; it will settle gently when close.",
+  "scene.lanna-sand-pagoda.scene.carry.7d56b98e": "At Lanna New Year, banners are offered with sand pagodas to make merit. Align the bamboo pole with the sand base beside the pagoda; it will settle upright when close.",
+  "scene.turkish-nazar-bead.scene.carry.4a7c035f": "The Turkish nazar bead carries wishes for protection from misfortune. Pick up the blue bead and turn it freely to inspect it, then bring its loop to the wooden stand’s crossbar to hang it securely.",
+  "scene.placement-inspection.help.11e90018": "Drag with two fingers to turn and inspect. With a mouse, drag with the right button or hold Shift.",
+  "scene.udo-undama.scene.carry.566dabf6": "Pick up the clay ball, turn it freely for a closer look if you wish, then move it to the throwing guide."
 }

@@ -77,7 +77,7 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
     if (!(object as THREE.Mesh).isMesh) return
     for (let parent: THREE.Object3D | null = object; parent; parent = parent.parent) if (!parent.visible) return
     const mat = (object as THREE.Mesh).material as THREE.Material
-    if (mat.transparent) return
+    if (mat.transparent && mat.opacity < .5) return
     visible.push(object)
   })
   return { q, object: ray.intersectObjects(visible, false)[0]?.object }
@@ -203,7 +203,7 @@ describe('visible object input and recoverable progress', () => {
     active = false; s.run(); s.write('暂停'); s.button.click(); expect(s.progress).toEqual([2]); expect(s.saveWish).not.toHaveBeenCalled()
     active = true; s.run(); s.write('春日'); expect(s.progress).toEqual([2, 3]); expect(s.saveWish).toHaveBeenCalledExactlyOnceWith('春日')
   })
-  it.each([320, 390, 1280])('keeps each cue on the first visible opaque surface at width %i', width => {
+  it.each([320, 390, 1280])('keeps each cue on the first visible touch-eligible surface at width %i', width => {
     for (const at of [0, 1, 2]) {
       const s = mount(at, {}, width)
       for (const { object, cue } of cues(s)) {
@@ -211,7 +211,7 @@ describe('visible object input and recoverable progress', () => {
         expect(pick.object?.name).toBe(object.name); expect(Math.abs(pick.q.x)).toBeLessThan(.95); expect(Math.abs(pick.q.y)).toBeLessThan(.95)
         if (cue.destination instanceof THREE.Object3D) {
           const target = first(s, cue.destination.getWorldPosition(new THREE.Vector3()))
-          expect(target.object?.name).toBe(cue.destination.name); expect(Math.abs(target.q.x)).toBeLessThan(.95); expect(Math.abs(target.q.y)).toBeLessThan(.95)
+          expect(((s.scene.getObjectByName('indigo-rinse-water') as THREE.Mesh).material as THREE.Material).opacity).toBeGreaterThanOrEqual(.5); expect(target.object?.name).toBe(cue.destination.name); expect(Math.abs(target.q.x)).toBeLessThan(.95); expect(Math.abs(target.q.y)).toBeLessThan(.95)
         } else if (cue.destination) {
           const target = first(s, cue.destination())
           expect(target.object?.name).toBe('indigo-cloth-body'); expect(Math.abs(target.q.x)).toBeLessThan(.95); expect(Math.abs(target.q.y)).toBeLessThan(.95)

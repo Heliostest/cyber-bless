@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { createKoinoboriPrint } from './cloth-print'
 
 type XYZ = [number, number, number]
@@ -9,7 +10,7 @@ export function createKoinoboriModel() {
   const metal = new THREE.MeshStandardMaterial({ color: 0xb1a175, metalness: .25, roughness: .55 })
   const ropeMat = new THREE.MeshStandardMaterial({ color: 0x796d50, roughness: .96 })
   const print = createKoinoboriPrint()
-  const cloth = new THREE.MeshStandardMaterial({ map: print, roughness: .94, side: THREE.DoubleSide })
+  const cloth = createRitualMaterial({ map: print, roughness: .94, side: THREE.DoubleSide }, { kind: 'cloth', strength: .22, fiber: 'linen' })
   cloth.addEventListener('dispose', () => print.dispose())
   const cream = new THREE.MeshStandardMaterial({ color: 0xf4e1ad, roughness: .92 })
   const dark = new THREE.MeshStandardMaterial({ color: 0x294a50, roughness: .85 })

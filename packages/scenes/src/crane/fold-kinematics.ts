@@ -14,9 +14,9 @@
  *   generator solved vertex closure along every track (Belcastro–Hull
  *   condition at each interior vertex), so faces meet exactly along shared
  *   creases; `report().maxGap` measures what the sampled tracks leave.
- * - Fold angles come only from the tracks and stay inside each crease's
- *   mountain/valley range for the tap. Runtime angle modification is avoided
- *   to maintain physical constraints (no rangeViolations).
+ * - Fold angles come from the tracks and stay inside each crease's
+ *   mountain/valley range for the tap. Finished-object display feedback can
+ *   turn the six spread wing creases slightly, with the rest of the folds fixed.
  * - Paper thickness (rendering): each face is lifted `thickness` × its flat
  *   stack height — heights keep every overlapping pair in flat-fold layer
  *   order — and a band along each crease joins the two faces like the turned
@@ -423,6 +423,8 @@ export function createFoldKinematics(model: FoldModel, opts: KinematicsOptions =
   let gap = 0
   let form = 0
   let progress = 1
+  const wingCreases = data.taps.find((tap) => tap.form === FORM_COUNT - 1)
+    ?.phases.find((phase) => phase.id === 'wings')?.creases ?? []
 
   // BFS tree over CP faces from the root (the same tree for every pose).
   {
@@ -569,15 +571,25 @@ export function createFoldKinematics(model: FoldModel, opts: KinematicsOptions =
     }
   }
 
-  /** Pose the sheet folding toward `targetForm` at tap progress k. */
-  function pose(targetForm: number, k: number) {
+  function applyPose(targetForm: number, k: number, wingFlap = 0) {
     form = clampForm(targetForm)
     progress = Math.min(1, Math.max(0, k))
     creaseAnglesAt(data, form, progress, angle)
+    for (const c of wingCreases) angle[c] += Math.sign(angle[c]) * wingFlap * 0.14
     for (let c = 0; c < m; c++) [lo[c], hi[c]] = creaseRange(data, form, c)
     forwardKinematics()
     stackHeightsAt(data, form, progress, heights)
     updateLifts()
+  }
+
+  /** Pose the sheet folding toward `targetForm` at tap progress k. */
+  function pose(targetForm: number, k: number) {
+    applyPose(targetForm, k)
+  }
+
+  /** Product display feedback: a small flap around the finished wing hinges. */
+  function poseWingFlap(amount: number) {
+    applyPose(FORM_COUNT - 1, 1, Math.min(1, Math.max(-1, amount)))
   }
 
   /** Positions of the drawn sheet: faces lifted by stack height, fold bands. */
@@ -662,7 +674,7 @@ export function createFoldKinematics(model: FoldModel, opts: KinematicsOptions =
     render,
     /** Sheet vertex positions (zero thickness). */
     positions: x,
-    /** Current crease angles (radians) from the tracks. */
+    /** Current crease angles (radians), including finished wing feedback. */
     angles: angle as Readonly<Float64Array>,
     get form() {
       return form
@@ -671,6 +683,7 @@ export function createFoldKinematics(model: FoldModel, opts: KinematicsOptions =
       return progress
     },
     pose,
+    poseWingFlap,
     renderPositions,
     measuredAngle,
     report,

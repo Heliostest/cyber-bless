@@ -1,10 +1,11 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 const smooth=(x:number)=>{const t=THREE.MathUtils.clamp(x,0,1);return t*t*(3-2*t)}
 export function createWaterBowlsModel(){
  const root=new THREE.Group();root.name='water-bowls-subject';root.position.y=-.012
  const material=(color:number,metalness=0,roughness=.7)=>new THREE.MeshStandardMaterial({color,metalness,roughness})
  const wood=material(0x945d3e),gold=material(0xd4ac58,.25,.52),copper=material(0xbc7850,.35,.4),robe=material(0xc99c44,.18,.65),hair=material(0x3f5051),jugmat=material(0xeee4cb,.05,.35)
- const watermat=new THREE.MeshStandardMaterial({color:0x75bec8,transparent:true,opacity:.8,roughness:.25,metalness:.08,depthWrite:false})
+ const watermat=createRitualMaterial({color:0x75bec8,transparent:true,opacity:.8,roughness:.19,metalness:0,depthWrite:false},{kind:'water',strength:.3})
  const finish=(source:THREE.BufferGeometry)=>{
   const raw=source.index?source.toNonIndexed():source,p=raw.getAttribute('position'),faces:number[]=[]
   for(let i=0;i<p.count;i+=3){const v=[0,1,2].map(n=>new THREE.Vector3().fromBufferAttribute(p,i+n));if(new THREE.Triangle(v[0]!,v[1]!,v[2]!).getArea()>1e-12)v.forEach(q=>faces.push(q.x,q.y,q.z))}

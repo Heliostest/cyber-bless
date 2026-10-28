@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 
 /** Original prepared nazar display: one closed, pierced glass surface and a rigid metal bail. */
@@ -8,7 +9,7 @@ export function createTurkishNazarBeadModel() {
  const matte=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.88})
  const wood=matte(0x9d7852),ceramic=matte(0xe7d8b9),stone=matte(0xc7bba4)
  const metal=new THREE.MeshPhysicalMaterial({color:0xbda66d,metalness:.68,roughness:.25,clearcoat:.35})
- const glass=[0x16488e,0xf2edda,0x6cbac9,0x152a42].map(color=>new THREE.MeshPhysicalMaterial({color,roughness:.16,clearcoat:1,clearcoatRoughness:.08,ior:1.5,envMapIntensity:.85}))
+ const glass=[0x16488e,0xf2edda,0x6cbac9,0x152a42].map((color,index)=>index===0?createRitualMaterial({color,roughness:.16,clearcoat:1,clearcoatRoughness:.08,ior:1.5,envMapIntensity:.85,transmission:.1,attenuationColor:color,attenuationDistance:.2},{kind:'glass',thickness:.13,strength:.1}):new THREE.MeshPhysicalMaterial({color,roughness:.16,clearcoat:1,clearcoatRoughness:.08,ior:1.5,envMapIntensity:.85}))
  const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material|THREE.Material[],parent:THREE.Object3D=subject)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  const box=(name:string,size:[number,number,number],p:[number,number,number],m:THREE.Material,parent:THREE.Object3D=subject)=>{const o=mesh(name,new THREE.BoxGeometry(...size),m,parent);o.position.set(...p);return o}
  // One indexed closed surface. Coloured regions meet along shared vertices;

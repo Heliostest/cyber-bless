@@ -184,4 +184,37 @@ describe('rigid folding of the sheet (kinematics)', () => {
     const angles = creaseAnglesAt(ORIZURU, 3, 0.6)
     expect(Array.from(kin.angles)).toEqual(Array.from(angles))
   })
+
+  it('flaps both finished wings on their creases while keeping the body, neck and tail still', () => {
+    kin.pose(4, 1)
+    const rest = Float64Array.from(kin.positions)
+    const restDrawn = kin.renderPositions()
+    const restAngles = Float64Array.from(kin.angles)
+    const wings = taps.find((tap) => tap.form === 4)!.phases.find((phase) => phase.id === 'wings')!.creases
+    for (const amount of [-1, -0.5, 0.5, 1]) {
+      kin.poseWingFlap(amount)
+      expect(kin.form).toBe(4)
+      expect(kin.progress).toBe(1)
+      const movement = (v: number) => Math.hypot(...[0, 1, 2].map((axis) => kin.positions[3 * v + axis] - rest[3 * v + axis]))
+      for (const tip of [2, 7]) expect(movement(tip)).toBeGreaterThan(0.01)
+      for (let v = 0; v < V.length; v++) {
+        const [u, w] = V[v]
+        // Opposite paper quadrants form the head/neck and tail. The sheet's
+        // centre is the body top; none may ride along with the wing motion.
+        if (u * w < 0 || (u === 0 && w === 0)) expect(movement(v)).toBeLessThan(1e-10)
+      }
+      for (let c = 0; c < creases.length; c++) {
+        if (!wings.includes(c)) expect(kin.angles[c]).toBe(restAngles[c])
+      }
+      const report = kin.report()
+      expect(report.rangeViolations).toBe(0)
+      expect(report.components).toBe(1)
+      expect(report.maxGap).toBeLessThan(1e-9)
+      expect(report.maxStrain).toBeLessThan(1e-9)
+      expect(report.selfIntersections).toBe(0)
+    }
+    kin.poseWingFlap(0)
+    expect(kin.positions).toEqual(rest)
+    expect(kin.renderPositions()).toEqual(restDrawn)
+  })
 })

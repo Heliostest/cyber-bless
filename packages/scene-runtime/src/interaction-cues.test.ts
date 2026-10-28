@@ -29,6 +29,18 @@ it('projects the actual source and target with passive labels',()=>{
   expect(Number(target.dataset.x)).toBeGreaterThan(160)
   expect(s.host.querySelector('.scene-object-cues')!.getAttribute('aria-hidden')).toBe('true')
 })
+it('keeps optional inspection help visible in the guide shelf and follows its current locale and phase',()=>{
+  const s=mount(), hint=document.createElement('div')
+  hint.className='scene-hint'; hint.dataset.placementInspection='true'; hint.title='Two fingers turn the object.'
+  s.host.querySelector('.scene-overlay-host')!.append(hint); s.update()
+  const help=s.host.querySelector('.scene-cue-guides .scene-inspection-help')!
+  expect(help?.textContent).toBe(hint.title)
+  expect(s.hit.contains(help)).toBe(false)
+  hint.title='Deux doigts pour tourner.'; s.update()
+  expect(help.textContent).toBe(hint.title)
+  delete hint.dataset.placementInspection; s.update()
+  expect(s.host.querySelector('.scene-inspection-help')).toBeNull()
+})
 it('shows direction in the separate guide and follows a moving destination without drawing across the object',()=>{
   const s=mount()
   const direction=s.host.querySelector<HTMLElement>('.scene-cue-direction')!

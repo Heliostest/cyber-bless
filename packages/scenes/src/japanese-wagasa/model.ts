@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
 /** Original simplified wagasa. Assisted linkage/fold geometry, not paper tension or gravity. */
 export function createWagasaModel() {
@@ -18,13 +19,17 @@ export function createWagasaModel() {
  const positions=new Float32Array(24*18),colors=new Float32Array(positions.length)
  for(let i=0;i<24;i++){const color=new THREE.Color(i===6?'#f5dfb8':i%2?'#cf5d49':'#d76b54');for(let j=0;j<6;j++)color.toArray(colors,i*18+j*3)}
  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));geometry.setAttribute('color',new THREE.BufferAttribute(colors,3))
- const paper=mesh('wagasa-paper',geometry,new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:.86}))
+ // Local radial bands follow the existing bamboo spokes through every fold and turn.
+ const paper=mesh('wagasa-paper',geometry,createRitualMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:.86}, {
+  kind: 'paper', strength: .8, fiber: 'paper',
+  paper: { layout: 'radial', spacing: 2*Math.PI/24, width: .10, contrast: .48 },
+ }))
  const L=1.4,half=Math.PI/24,open=1.25,M2=L*L-(L*Math.sin(open)*Math.sin(half))**2
  const up=new THREE.Vector3(0,1,0),origin=new THREE.Vector3(0,2.8,0),a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3(),d=new THREE.Vector3(),direction=new THREE.Vector3()
  const segment=(o:THREE.Object3D,start:THREE.Vector3,end:THREE.Vector3)=>{o.position.copy(start).add(end).multiplyScalar(.5);o.quaternion.setFromUnitVectors(up,direction.subVectors(end,start).normalize())}
  function pose(step:number,n:number){
   const t=THREE.MathUtils.clamp(Number.isFinite(n)?n:0,0,1),theta=step===0?(t===1?open:.18+(open-.18)*t):step===1?open:step===2?(t===1?.18:open-(open-.18)*t):.18
-  spin.rotation.y=step===0?0:step===1?Math.PI/4*t:Math.PI/4
+  // Inspection owns azimuth independently of the real opening/folding linkage.
   const radius=L*Math.sin(theta),y=2.8-L*Math.cos(theta),jointRadius=radius*.48,jointY=2.8-L*.48*Math.cos(theta)
   runner.position.y=jointY-Math.sqrt(.85**2-(jointRadius-.095)**2)
   // Each sector is two rigid triangles sharing an outward crease; all three side lengths stay fixed.

@@ -546,7 +546,7 @@
   "scene.croatian-licitar-heart.scene.label.e0069596": "Soulevez doucement le cœur décoré",
   "scene.croatian-licitar-heart.scene.targetLabel.0c5bc0e2": "Clou de bois du présentoir",
   "scene.czech-bead-star.scene.assemble.3c8480d2": "Prenez la dernière guirlande de perles de verre sur le support de bois et joignez-la à la perle argentée visible sur une branche de l’étoile.",
-  "scene.czech-bead-star.scene.rotate.c40a141f": "Faites glisser horizontalement vers la droite sur l’étoile de perles pour la tourner lentement et voir les surfaces bleu argenté capter le soleil.",
+  "scene.czech-bead-star.scene.rotate.c40a141f": "Tournez librement l’étoile pour voir ses deux faces, puis touchez-la pour la contempler au calme.",
   "scene.czech-bead-star.scene.quiet.89e36e74": "Touchez l’étoile de perles pour la contempler et garder cet instant.",
   "scene.czech-bead-star.scene.moving.4c417bbd": "Les fils se rejoignent et les reflets des perles tournent doucement…",
   "scene.czech-bead-star.scene.done.cbf038fd": "Gardez un rayon de lumière limpide.",
@@ -1032,7 +1032,7 @@
   "scene.japanese-wagasa.scene.copy.ace9eae9": "Tourner doucement le manche",
   "scene.japanese-wagasa.scene.copy.89226bad": "Refermer l’ombrelle, garder son image",
   "scene.japanese-wagasa.scene.copy.ff31e440": "Poussez l’anneau de bois le long de l’axe jusqu’au repère supérieur pour que les supports déploient les baleines de bambou et le papier aux tons chauds.",
-  "scene.japanese-wagasa.scene.copy.9837bf82": "Maintenez le bas du manche et faites un petit glissement à droite pour tourner doucement l’ombrelle et orienter sa face claire vers vous.",
+  "scene.japanese-wagasa.scene.copy.9837bf82": "Tenez le manche pour tourner et observer librement, ou abaissez directement la bague de bois le long de l’axe jusqu’au repère inférieur pour refermer le parapluie de papier.",
   "scene.japanese-wagasa.scene.copy.a4039b2d": "Descendez l’anneau de bois le long de l’axe jusqu’au repère inférieur pour replier lentement les baleines et refermer le papier selon ses plis.",
   "scene.japanese-wagasa.scene.copy.bfbb070b": "L’ombrelle est refermée ; baleines de bambou et plis de papier se rejoignent. La face claire garde une ombre légère dans le soleil.",
   "scene.japanese-wagasa.scene.copy.85a86d4e": "L’anneau monte et les baleines et le papier se déploient ensemble…",
@@ -2207,5 +2207,14 @@
   "scene.italian-ex-voto.scene.copy.de59a0a7": "Tracé : {p0} %. Suivez la fine ligne jusqu’au point aux tons chauds.",
   "scene.mizuhiki.scene.copy.b6a0f131": "Lire le texte sur le papier",
   "scene.mizuhiki.scene.copy.b843e233": "Progression le long des points dorés : {p0} %. Continuez jusqu’au prochain repère.",
-  "scene.navruz-sumalak.scene.copy.cf5d8496": "Progression sur l’arc : {p0} %. Continuez jusqu’au prochain point clair."
+  "scene.navruz-sumalak.scene.copy.cf5d8496": "Progression sur l’arc : {p0} %. Continuez jusqu’au prochain point clair.",
+  "scene.placement-inspection.hint.dbafb84c": "Faites glisser avec un doigt pour prendre et poser. Faites glisser avec deux doigts, le bouton droit ou la touche Shift enfoncée pour tourner et observer.",
+  "scene.placement-inspection.keyboard.6534a04e": "Flèches : tourner et observer. Enter : poser. Esc : remettre à sa place.",
+  "scene.chinese-fu-paper.scene.carry.249eff31": "Afficher le caractère fu à la fête du Printemps exprime un vœu de bonheur pour le foyer. Amenez-le à sa place sur la porte ; il se fixera à l’approche.",
+  "scene.chinese-ruyi-scepter.scene.carry.22c6bc6e": "Le ruyi porte de bons vœux. Soutenez sa tête en forme de nuage et amenez-le sur le socle de bois rembourré ; il se posera une fois en place.",
+  "scene.japanese-hamaya.scene.carry.67656185": "La hamaya porte des vœux de protection contre le malheur et de paix au foyer. Amenez la flèche décorative sur les deux appuis ; elle s’y posera doucement à l’approche.",
+  "scene.lanna-sand-pagoda.scene.carry.7d56b98e": "Au Nouvel An lanna, des bannières sont offertes avec les pagodes de sable pour acquérir du mérite. Alignez la tige de bambou avec la base de sable près de la pagode ; elle s’y fixera à l’approche.",
+  "scene.turkish-nazar-bead.scene.carry.4a7c035f": "La perle nazar turque porte des vœux de protection contre le malheur. Prenez la perle bleue et tournez-la librement pour l’observer, puis amenez son anneau sur la traverse du présentoir de bois pour la suspendre.",
+  "scene.placement-inspection.help.11e90018": "Faites glisser avec deux doigts pour tourner et observer. Avec la souris, utilisez le bouton droit ou maintenez Shift en faisant glisser.",
+  "scene.udo-undama.scene.carry.566dabf6": "Prenez la boule d’argile, tournez-la librement si vous souhaitez l’observer, puis amenez-la au repère de lancer."
 }

@@ -2,7 +2,9 @@ import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
-import { createObjectPointer } from '../object-pointer'
+import { createFreePlacementPointer } from '../free-placement-pointer'
+import { sceneJoin } from '../scene-localization'
+import { insideCanvas } from '../touch-target'
 import { createPosePlacement } from '../pose-placement'
 import { createTouchTarget } from '../touch-target'
 import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
@@ -42,41 +44,50 @@ export function createChineseSteelyard(ctx: SceneContext): SceneInstance {
   const model = createSteelyardModel(); scene.add(model.root)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
-  const restore = () => pose(at, 0)
+  const canonicalRotations = model.roots.map(root => root.quaternion.clone())
+  const restore = () => {  model.roots.forEach((root,i) => root.quaternion.copy(canonicalRotations[i]!)); pose(at, 0) ; placement.restoreCheckpoint(at); matrices() }
+  const freePlacementStep = (step: number) => step === 1 || step === 2
+  const placementStep = (step: number): 0 | 1 | 2 => step === 0 ? 0 : 2
+  const placementHint = () => HINTS[at === 3 ? 3 : placementStep(at)]!
+  const placementAction = () => at === 0 ? ACTIONS[0]! : sceneJoin(ACTIONS[1]!, ACTIONS[2]!)
   const placementRoots=[model.weight,model.root,model.root],placementAnchors=model.anchors
   const isPlacementStep=(step:number)=>step>0
-  const placement=createPosePlacement(canvas,camera,{pose:model.pose,roots:placementRoots,targets:model.targets,anchors:placementAnchors},scene)
+  const placement=createPosePlacement(canvas,camera,{pose:model.pose,roots:placementRoots,targets:model.targets,anchors:placementAnchors},scene,{requireDeparture:()=>at===1})
   const railFrom=new THREE.Vector2(),railPath=new THREE.Vector2()
   let railRadius=0
   const screenPoint=(value:THREE.Vector3)=>{const p=value.project(camera),r=canvas.getBoundingClientRect();return new THREE.Vector2(r.left+(p.x+1)*r.width/2,r.top+(1-p.y)*r.height/2)}
   const prepareRail=(x:number,y:number)=>{const a=screenPoint(model.targets[0]!.localToWorld(new THREE.Vector3(...placementAnchors[0]!))),b=screenPoint(placement.destination(0));railFrom.set(x,y);railPath.copy(b).sub(a);railRadius=Math.min(22,railPath.length()*.42)}
   const moveRail=(x:number,y:number)=>{const n=THREE.MathUtils.clamp(new THREE.Vector2(x,y).sub(railFrom).dot(railPath)/Math.max(railPath.lengthSq(),1e-9),0,1);pose(0,n);const a=screenPoint(model.targets[0]!.localToWorld(new THREE.Vector3(...placementAnchors[0]!))),b=screenPoint(placement.destination(0));return n>0 && a.distanceTo(b)<=railRadius}
   const directions: [number, number][] = [[1,0],[0,-1],[0,1]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(isPlacementStep(i) || i===0 ? {destination:()=>placement.destination(i),targetLabel:'靠近后停稳'} : {direction:directions[i]}), label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(isPlacementStep(i) || i===0 ? {destination:()=>placement.destination(placementStep(i)),targetLabel:'靠近后停稳'} : {direction:directions[i]}), label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at < 3 && placementStep(at) === i }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
   const reset = () => { placement.cancel(); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
-  const pointer = createObjectPointer(ui.hitLayer, {
+  const pointer = createFreePlacementPointer(ui.hitLayer, canvas, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x, y, model.roots[at]!) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 ; if(isPlacementStep(at) && !placement.begin(at,x,y))pointer.cancel(); if(at===0)prepareRail(x,y); },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 ; if(isPlacementStep(at) && !placement.begin(placementStep(at),x,y))pointer.cancel(); if(at===0)prepareRail(x,y); },
     onMove(x, y) {if(!Number.isFinite(x)||!Number.isFinite(y)){invalid=true;return}if(at===0){if(!invalid&&moveRail(x,y)&&pointer.finish())advance(true)}else if(!invalid&&placement.move(x,y)&&pointer.finish()){placement.capture();advance(true)}},
-    onRelease(x, y) {if(at===0){if(!invalid&&moveRail(x,y))advance();else reset()}else if(!invalid&&placement.move(x,y)){placement.capture();advance()}else reset()}, onCancel: reset,
+    onRelease(x, y) {if(at===0){if(!invalid&&moveRail(x,y))advance();else reset()}else if(!invalid&&placement.move(x,y)){placement.capture();advance(true)}else if(!invalid&&insideCanvas(canvas,x,y)&&freePlacementStep(at))placement.release();else reset()},
+    onRebase(x,y) { if (freePlacementStep(at)) placement.rebase(x,y); else reset() },
+    onInspectEnd() { if (freePlacementStep(at)) placement.release(); else reset() },
+    onCancel: reset,
   })
   const sync = () => {
     if (motion || at === 3) delete ui.hintEl.dataset.ready
     if (cueLayer) cueLayer.hidden = !active()
-    ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
+    ui.renderDots(at === 0 ? 0 : at === 3 ? 2 : 1, 2); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at]!, safe)
+    setSafeText(ui.actionBtn, placementAction(), safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : placementHint(), safe)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
+    placement.settle(1)
     if (motion.placed && isPlacementStep(motion.step)) placement.settle(1)
     at = (motion.step + 1) as Checkpoint; motion = null; restore()
     withHostCallbacks(() => {
@@ -85,10 +96,11 @@ export function createChineseSteelyard(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance(placed=false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: at, time: 0, from: amount,placed,heldPosition:placed?placementRoots[at]!.position.clone():undefined,heldQuaternion:placed?placementRoots[at]!.quaternion.clone():undefined }; sync(); if (ctx.isReducedMotion?.()) settle() }
-  const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
-  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
+  function advance(placed=false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: placementStep(at), time: 0, from: amount,placed,heldPosition:placed?placementRoots[at]!.position.clone():undefined,heldQuaternion:placed?placementRoots[at]!.quaternion.clone():undefined }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; if (isPlacementStep(at)) { placement.capture(placementStep(at)); advance(true) } else advance() }
+  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); if (!motion) reset(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
+    if (started && !motion) { pointer.cancel(); reset() }
     const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(.4, 1.45, 0), direction = new THREE.Vector3(3.2, 3.6, 7.4).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target); camera.updateMatrixWorld(true)
     const inverse = camera.quaternion.clone().invert(), tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), p = new THREE.Vector3(); let distance = 3.4
@@ -96,7 +108,7 @@ export function createChineseSteelyard(ctx: SceneContext): SceneInstance {
     for (const [step, n] of [0,1,2].flatMap(step=>Array.from({length:61},(_,i)=>[step,i/60])).concat([[3,0]])) {
       pose(step!, n!)
       model.subject.traverse(o => { const m = o as THREE.Mesh; if (!m.geometry) return; const vertices = m.geometry.getAttribute('position')
-        for (let i = 0; i < vertices.count; i++) { p.fromBufferAttribute(vertices, i).applyMatrix4(m.matrixWorld).sub(target).applyQuaternion(inverse); distance = Math.max(distance, p.z + Math.abs(p.x) / (tangent * aspect * .86), p.z + Math.abs(p.y) / (tangent * .86)) }
+        for (let i = 0; i < vertices.count; i++) { p.fromBufferAttribute(vertices, i).applyMatrix4(m.matrixWorld).sub(target).applyQuaternion(inverse); distance = Math.max(distance, p.z + Math.abs(p.x) / (tangent * aspect * .74), p.z + Math.abs(p.y) / (tangent * .74)) }
       })
     }
     pose(at, saved); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
@@ -111,7 +123,7 @@ export function createChineseSteelyard(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
-      if (!active()) { lifecycleVersion++; pointer.cancel(); if (!suspended) { suspended = true; sync() }; return }
+      if (!active()) { lifecycleVersion++; pointer.cancel(); if (!motion) reset(); if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0

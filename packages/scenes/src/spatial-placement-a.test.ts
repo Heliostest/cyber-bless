@@ -41,6 +41,17 @@ import { create as kite } from './weifang-paper-kite'
 import { create as spring } from './celtic-folk-spring'
 import { create as flowerWater } from './theravada-water'
 import { create as lantern } from './lantern'
+import { createChineseRuyiScepterModel } from './chinese-ruyi-scepter/model'
+import { createKadomatsuModel } from './japanese-kadomatsu/model'
+import { createJapaneseKumadeModel } from './japanese-kumade/model'
+import { createPucaraModel } from './pucara-rooftop-bulls/model'
+import { createMartisorModel } from './romanian-martisor/model'
+import { createChitoseAmeModel } from './shichigosan-chitose-ame/model'
+import { createTurkishNazarBeadModel } from './turkish-nazar-bead/model'
+import { createPomegranateModel } from './greek-new-year-pomegranate/model'
+import { createEsfandModel } from './persian-esfand/model'
+import { createFirstFootingModel } from './scottish-first-footing/model'
+import { disposeTree } from './procedural-kit'
 
 const rendered = vi.hoisted(() => ({ scene: null as unknown, camera: null as unknown }))
 vi.mock('three', async original => {
@@ -63,6 +74,39 @@ vi.mock('@wbr/scene-runtime/debug-render-style', async () => {
 const instances: SceneInstance[] = []
 afterEach(() => { instances.splice(0).forEach(s => s.dispose()); document.body.replaceChildren(); vi.restoreAllMocks() })
 const cases = [ ['ruyi', ruyi], ['kadomatsu', kadomatsu], ['kumade', kumade], ['pucara', pucara], ['martisor', martisor], ['chitose', chitose], ['nazar', nazar] ] as const
+type PoseFixture = {
+  root: THREE.Object3D
+  pose(step: number, amount: number): void
+  targets: THREE.Object3D[]
+  anchors: (readonly number[] | THREE.Vector3)[]
+  dispose?(): void
+}
+type PlacementContract = {
+  checkpoints: readonly number[]
+  placementSlots: readonly number[]
+  model(): PoseFixture
+  destinationOffset?: [number, number, number]
+}
+// Current 2026-10-28 README contracts. A repeated carrying slot is not a
+// second operation; Kumade still places three different paper decorations.
+// Fruit breaking and cloth wafting remain separate after their carry to 2.
+const placementContracts: Record<string, PlacementContract> = {
+  ruyi: { checkpoints: [3, 3, 3], placementSlots: [2, 2, 2], model: createChineseRuyiScepterModel },
+  kadomatsu: { checkpoints: [3, 3, 3], placementSlots: [2, 2, 2], model: createKadomatsuModel },
+  kumade: { checkpoints: [1, 2, 3], placementSlots: [0, 1, 2], model: createJapaneseKumadeModel },
+  pucara: { checkpoints: [3, 3, 3], placementSlots: [2, 2, 2], model: createPucaraModel },
+  martisor: { checkpoints: [3, 3, 3], placementSlots: [2, 2, 2], model: createMartisorModel },
+  chitose: { checkpoints: [3, 3, 3], placementSlots: [2, 2, 2], model: createChitoseAmeModel },
+  nazar: { checkpoints: [3, 3, 3], placementSlots: [2, 2, 2], model: createTurkishNazarBeadModel },
+  pomegranate: { checkpoints: [2, 2, 3], placementSlots: [1, 1, 2], model: createPomegranateModel },
+  esfand: { checkpoints: [2, 2, 3], placementSlots: [1, 1, 2], model: createEsfandModel },
+  coal: { checkpoints: [3, 3, 3], placementSlots: [2, 2, 2], model: createFirstFootingModel, destinationOffset: [0, .38, 0] },
+}
+const creators = new Map<((ctx: SceneContext) => SceneInstance), string>([
+  ...cases, ['pomegranate', pomegranate], ['esfand', esfand], ['coal', coal],
+].map(([label, create]) => [create, label]) as [((ctx: SceneContext) => SceneInstance), string][])
+const checkpointAfter = (label: string, at: number) => placementContracts[label]?.checkpoints[at] ?? at + 1
+const progressAfter = (label: string, at: number) => label === 'cross' && at === 0 ? [] : [checkpointAfter(label, at)]
 function mount(create: (ctx: SceneContext) => SceneInstance, at: number, width: number, extra: Partial<SceneContext> = {}) {
   const height = 408, left = 17, top = 91, host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
   host.append(canvas, overlay); document.body.append(host)
@@ -80,12 +124,43 @@ function mount(create: (ctx: SceneContext) => SceneInstance, at: number, width: 
   const project = (p: THREE.Vector3): [number, number] => { const q = p.clone().project(camera); return [left + (q.x + 1) * width / 2, top + (1 - q.y) * height / 2] }
   const source = () => { scene.updateMatrixWorld(true); return project(object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0])))) }
   const goal = () => { expect(cue.destination, 'placement exposes its actual next target').toBeDefined(); return project(typeof cue.destination === 'function' ? cue.destination() : cue.destination!.getWorldPosition(new THREE.Vector3())) }
-  return { instance, progress, complete, hit, cue, source, goal, overlay }
+  const contract = placementContracts[creators.get(create) ?? '']
+  if (contract) {
+    const fixture = contract.model(), slot = contract.placementSlots[at]!
+    const anchor = (i: number) => { const a = fixture.anchors[i]!; return a instanceof THREE.Vector3 ? a.clone() : new THREE.Vector3(...a as [number, number, number]) }
+    try {
+      fixture.pose(at, 0); fixture.root.updateMatrixWorld(true)
+      const original = fixture.targets[slot]!.localToWorld(anchor(slot))
+      expect(object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).distanceTo(original), 'legacy checkpoint restores the real source pose').toBeLessThan(1e-7)
+      fixture.pose(slot, 1); fixture.root.updateMatrixWorld(true)
+      const expected = fixture.targets[slot]!.localToWorld(anchor(slot)).add(new THREE.Vector3(...(contract.destinationOffset ?? [0, 0, 0])))
+      const actual = typeof cue.destination === 'function' ? cue.destination() : cue.destination!.getWorldPosition(new THREE.Vector3())
+      expect(actual.distanceTo(expected), 'cue targets the independently posed final support, not the old intermediate marker').toBeLessThan(1e-7)
+      const target = project(expected)
+      expect(target[0]).toBeGreaterThanOrEqual(left); expect(target[0]).toBeLessThanOrEqual(left + width)
+      expect(target[1]).toBeGreaterThanOrEqual(top); expect(target[1]).toBeLessThanOrEqual(top + height)
+    } finally { fixture.dispose?.(); disposeTree(fixture.root) }
+  }
+  return { instance, progress, complete, hit, cue, source, goal, overlay, scene, camera, object, project }
 }
 function pointer(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
   const e = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(e, { clientX, clientY, pointerId, pointerType: 'touch', button: 0, buttons: type === 'pointerup' ? 0 : 1 }); el.dispatchEvent(e)
 }
+function coalRoute(s: ReturnType<typeof mount>, at: number) {
+  // Keep the whole lump between the real jambs, then move around the
+  // hearth's side wall before entering its front opening.
+  const route = at < 2 ? [[.45, .85], [.45, .40], [.45, -.02], [-.75, -.02]] : [[-.75, -.02]]
+  for (const [x, z] of route) {
+    pointer(s.hit, 'pointermove', s.project(new THREE.Vector3(x!, .73, z! + .16)))
+    expect(s.progress, 'crossing a doorway is not an intermediate checkpoint').toEqual([])
+  }
+}
+function arrive(s: ReturnType<typeof mount>, label: string, at: number, sparse = false) {
+  if (label === 'coal') coalRoute(s, at)
+  pointer(s.hit, sparse ? 'pointerup' : 'pointermove', s.goal())
+}
+
 describe.each(cases)('%s spatial placement', (_label, create) => {
   it.each([0, 1, 2])('follows the held object and accepts destination without releasing, step %i', at => {
     for (const width of [320, 390, 1280]) {
@@ -97,10 +172,11 @@ describe.each(cases)('%s spatial placement', (_label, create) => {
       expect(s.source()[0]).toBeCloseTo(detour[0], 5); expect(s.source()[1]).toBeCloseTo(detour[1], 5)
       expect(s.progress).toEqual([])
       pointer(s.hit, 'pointermove', b)
-      expect(s.progress).toEqual([at + 1])
+      expect(s.progress).toEqual([checkpointAfter(_label, at)])
+      expect(s.complete).toHaveBeenCalledTimes(checkpointAfter(_label, at) === 3 ? 1 : 0)
       pointer(s.hit, 'pointermove', [b[0] + 60, b[1] + 60]); s.overlay.querySelector<HTMLButtonElement>('button')?.click()
-      expect(s.progress).toEqual([at + 1])
-      pointer(s.hit, 'pointerup', b); expect(s.progress).toEqual([at + 1])
+      expect(s.progress).toEqual([checkpointAfter(_label, at)])
+      pointer(s.hit, 'pointerup', b); expect(s.progress).toEqual([checkpointAfter(_label, at)])
       s.instance.dispose()
     }
   })
@@ -120,9 +196,9 @@ describe.each(cases)('%s spatial placement', (_label, create) => {
     for(let i=0;i<20;i++)s.instance.update(.05)
     expect(s.source()[0]).toBeCloseTo(paused[0],5);expect(s.source()[1]).toBeCloseTo(paused[1],5);expect(s.progress).toEqual([])
     active=true;for(let i=0;i<50;i++)s.instance.update(.025)
-    expect(s.progress).toEqual([at+1]);pointer(s.hit,'pointermove',a);pointer(s.hit,'pointerup',a)
+    expect(s.progress).toEqual([checkpointAfter(_label,at)]);pointer(s.hit,'pointermove',a);pointer(s.hit,'pointerup',a)
     for(let i=0;i<10;i++)s.instance.update(.05)
-    expect(s.progress).toEqual([at+1]);expect(s.complete).toHaveBeenCalledTimes(at===2?1:0)
+    expect(s.progress).toEqual([checkpointAfter(_label,at)]);expect(s.complete).toHaveBeenCalledTimes(checkpointAfter(_label,at)===3?1:0)
   })
 })
 const carriedCases = [
@@ -140,12 +216,14 @@ describe.each(carriedCases)('%s existing carried object', (_label, create, steps
     for (const at of steps) for (const width of [320,390,1280]) {
       const s = mount(create,at,width), a=s.source(), b=s.goal()
       pointer(s.hit,'pointerdown',a); expect(s.progress).toEqual([])
-      pointer(s.hit,'pointermove',b)
+      arrive(s,_label,at)
       // Four rush bundles make the first cross checkpoint; a single bundle cannot skip it.
       if (_label === 'cross' && at === 0) {
         expect(s.progress).toEqual([])
-      } else expect(s.progress,`${_label} ${at} ${width}`).toEqual([at+1])
+      } else expect(s.progress,`${_label} ${at} ${width}`).toEqual([checkpointAfter(_label,at)])
+      if (placementContracts[_label]) expect(s.complete).toHaveBeenCalledTimes(checkpointAfter(_label,at)===3?1:0)
       pointer(s.hit,'pointerup',b)
+      expect(s.progress).toEqual(progressAfter(_label,at))
       s.instance.dispose()
     }
   })
@@ -161,22 +239,32 @@ describe.each(terminalCases)('%s terminal placement coordinates', (label,create,
       const s=mount(create,at,width),a=s.source(),b=s.goal()
       pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointerup',a)
       expect(s.progress,`${label} source-only ${at} ${width}`).toEqual([])
-      pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointerup',b)
-      expect(s.progress,`${label} sparse ${at} ${width}`).toEqual(label==='cross'&&at===0?[]:[at+1])
+      pointer(s.hit,'pointerdown',s.source());arrive(s,label,at,true)
+      expect(s.progress,`${label} sparse ${at} ${width}`).toEqual(progressAfter(label,at))
+      if (placementContracts[label]) expect(s.complete).toHaveBeenCalledTimes(checkpointAfter(label,at)===3?1:0)
       s.instance.dispose()
     }
   })
   it('preserves an off-centre grip while moving the actual object', () => {
     for(const at of steps) {
       const s=mount(create,at,390),a=s.source(),press:[number,number]=[a[0]+(label==='willow'?.1:2),a[1]],dx=['rooster','licitar','house','egg'].includes(label)?-10:10,dy=['rooster','egg'].includes(label)?0:-10,next:[number,number]=[press[0]+dx,press[1]+dy]
-      pointer(s.hit,'pointerdown',press);pointer(s.hit,'pointermove',next)
+      pointer(s.hit,'pointerdown',press)
+      let expected:[number,number]=[a[0]+dx,a[1]+dy]
+      if (label==='coal') {
+        // Coal uses a horizontal carry plane. Perspective changes its screen
+        // grip offset; derive the expected world translation with camera rays.
+        const anchor=s.object.localToWorld(new THREE.Vector3(...(s.cue.anchor??[0,0,0]))),plane=new THREE.Plane(new THREE.Vector3(0,1,0),-anchor.y),ray=new THREE.Raycaster()
+        const intersection=([x,y]:[number,number])=>{ray.setFromCamera(new THREE.Vector2((x-17)/390*2-1,1-(y-91)/408*2),s.camera);return ray.ray.intersectPlane(plane,new THREE.Vector3())!}
+        expected=s.project(anchor.add(intersection(next).sub(intersection(press))))
+      }
+      pointer(s.hit,'pointermove',next)
       expect(s.progress,`${label} off-target ${at}`).toEqual([])
       const held=s.source()
       // The cloth tab also deforms on its fixed fabric plane. Its perspective
       // scale can change slightly while the retained world-space grip moves.
       const precision=label==='banner'?1:4
-      expect(held[0],`${label} held x ${at}`).toBeCloseTo(a[0]+dx,precision)
-      expect(held[1],`${label} held y ${at}`).toBeCloseTo(a[1]+dy,precision)
+      expect(held[0],`${label} held x ${at}`).toBeCloseTo(expected[0],precision)
+      expect(held[1],`${label} held y ${at}`).toBeCloseTo(expected[1],precision)
       pointer(s.hit,'pointercancel',next)
       const restored=s.source()
       expect(restored[0],`${label} restored x ${at}`).toBeCloseTo(a[0],4)

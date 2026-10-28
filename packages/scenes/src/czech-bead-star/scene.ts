@@ -3,31 +3,31 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
-import { createObjectPointer } from '../object-pointer'
+import { createFreePlacementPointer } from '../free-placement-pointer'
+import { setPlacementInspectionHelp } from '../placement-inspection'
 import { placementHit } from '../placement-hit'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
 const COPY = {
   title: '珠星映光', assemble: '拿起木托上的最后一串玻璃珠，接到星臂露出的银珠处。',
-  rotate: '在珠星上向右横拖，慢慢转动，看银蓝珠面接住日光。', quiet: '轻点珠星静看，让这一刻停留。',
+  rotate: '自由转动珠星查看正反面，再轻点静看。', quiet: '轻点珠星静看，让这一刻停留。',
   moving: '细线相连，珠光轻转…', done: '留一束清亮的光。',
-  assembleAction: '接上最后一串珠', rotateAction: '向右转动珠星', quietAction: '轻点珠星静看',
+  assembleAction: '接上最后一串珠', quietAction: '轻点珠星静看',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 const STAR_HOME = new THREE.Vector3(0, 1.80, .05), STRAND_HOME = new THREE.Vector3(.70, .424, .40)
 const ARM_ROOT = new THREE.Vector3(.29, 0, 0), ARM_TIP = new THREE.Vector3(Math.cos(Math.PI / 6) * 1.08, .54, 0)
 const JOIN = ARM_ROOT.clone().lerp(ARM_TIP, .5), ARM_ANGLE = Math.atan2(ARM_TIP.y - ARM_ROOT.y, ARM_TIP.x - ARM_ROOT.x)
-const FINAL_TURN = .65, ease = (t: number) => t * t * (3 - 2 * t)
+const ease = (t: number) => t * t * (3 - 2 * t)
 
 /** Original open six-point beadwork; no borrowed artisan ornament pattern. */
 export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx, safe = shared.assertSafeCopy
   Object.values(COPY).forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, checkpoint: Checkpoint = 0
-  let dragging = false, maxTravel = 0, maxVertical = 0, stopResize = () => {}
-  let transition: { step: 0 | 1; time: number; from: THREE.Vector3; angle: number; turn: number } | null = null
-  let returningTurn: { from: number; time: number } | null = null
+  let dragging = false, viewing = false, maxTravel = 0, previousX = 0, stopResize = () => {}
+  let transition: { step: 0; time: number; from: THREE.Vector3; angle: number; turn: number } | null = null
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
   const inputActive = () => active() && !notifying, reduced = () => ctx.isReducedMotion?.() ?? false
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => active() && (ctx.isSoundEnabled?.() ?? true) })
@@ -119,16 +119,15 @@ export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
 
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restore = () => {
-    star.position.copy(STAR_HOME); star.rotation.set(0, checkpoint >= 2 ? FINAL_TURN : 0, 0)
+    star.position.copy(STAR_HOME); star.rotation.set(0, 0, 0)
     if (checkpoint === 0) { world.add(loose); loose.position.copy(STRAND_HOME); loose.rotation.set(0, 0, 0) }
     else { star.add(loose); loose.position.copy(JOIN); loose.rotation.set(0, 0, ARM_ANGLE) }
     matrices()
   }
-  const enabled = (step: number) => () => inputActive() && !transition && !returningTurn && checkpoint === step
+  const enabled = (step: number) => () => inputActive() && !transition && checkpoint === step
   const removeCues = [
     addInteractionCue(grip, { kind: 'drag', label: '拿起最后一串珠', priority: 3, enabled: enabled(0), destination: joint, targetLabel: '接到这颗银珠' }),
-    addInteractionCue(center, { kind: 'rotate', label: '向右转动珠星', priority: 3, enabled: enabled(1) }),
-    addInteractionCue(center, { kind: 'tap', label: '轻点珠星静看', priority: 3, enabled: enabled(2) }),
+    addInteractionCue(center, { kind: 'rotate', label: COPY.rotate, priority: 3, enabled: () => inputActive() && !transition && checkpoint > 0 && checkpoint < 3 }),
   ]
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
   const belongsTo = (object: THREE.Object3D | undefined, parent: THREE.Object3D) => { for (let p = object; p; p = p.parent ?? undefined) if (p === parent) return true; return false }
@@ -142,51 +141,64 @@ export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
     return belongsTo(ray.aim(x, y).intersectObjects(meshes, false)[0]?.object, target)
   }
   const reset = () => {
-    dragging = false; maxTravel = maxVertical = 0
+    dragging = viewing = false; maxTravel = 0
     if (transition || disposed) return
-    if (active() && !reduced() && checkpoint === 1 && Math.abs(star.rotation.y) > .001) returningTurn = { from: star.rotation.y, time: 0 }
-    else { returningTurn = null; restore() }
-    sync()
+    restore(); sync()
+  }
+  const turnStar = (pixels: number) => {
+    if (checkpoint === 0 || checkpoint === 3 || !Number.isFinite(pixels)) return
+    // Yaw around the vertical hanging axis: the loop center stays on its hook.
+    star.rotation.y += pixels * .010
+    star.rotation.x = star.rotation.z = 0
+    matrices()
   }
   // A reentrant pointermove must not reach the controller's inactive-cancel
   // path while prepareFeedback is still inside the original pointerdown.
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => ui.hitLayer.addEventListener(type, guardCallbackInput, true))
-  const pointer = createObjectPointer(ui.hitLayer, {
+  const pointer = createFreePlacementPointer(ui.hitLayer, canvas, {
     isActive: inputActive,
-    canStart(x, y) { if (transition || returningTurn || checkpoint === 3) return false; matrices(); return visibleHit(x, y, checkpoint === 0 ? loose : star) },
+    canStart(x, y) { if (transition || checkpoint === 3) return false; matrices(); return visibleHit(x, y, checkpoint === 0 ? loose : star) },
     onStart(x, y) {
-      withHostCallbacks(() => feedback.prepare()); if (!active()) { pointer.cancel(); return }
-      down.set(x, y); maxTravel = maxVertical = 0; dragging = checkpoint < 2
+      withHostCallbacks(() => feedback.prepare()); if (!inputActive()) { pointer.cancel(); return }
+      down.set(x, y); previousX = x; maxTravel = 0; viewing = false; dragging = checkpoint === 0
       plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), grip.getWorldPosition(new THREE.Vector3()))
       if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(loose.position).sub(point)
     },
     onMove(x, y) {
-      const dx = x - down.x, dy = y - down.y
-      maxTravel = Math.max(maxTravel, Math.hypot(dx, dy)); maxVertical = Math.max(maxVertical, Math.abs(dy))
-      if (!dragging) return
-      if (checkpoint === 0 && ray.aim(x, y).ray.intersectPlane(plane, point)) {
+      maxTravel = Math.max(maxTravel, Math.hypot(x-down.x, y-down.y))
+      if (checkpoint === 0 && dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) {
         loose.position.copy(point).add(offset); loose.position.x = THREE.MathUtils.clamp(loose.position.x, -1.20, 1.20); loose.position.y = THREE.MathUtils.clamp(loose.position.y, .424, 2.85)
-      } else if (checkpoint === 1) star.rotation.y = THREE.MathUtils.clamp(dx * .010, -.95, .95)
-      matrices();
+      } else if (checkpoint > 0) { viewing = true; turnStar(x-previousX) }
+      previousX = x; matrices()
       if (dragging && checkpoint === 0 && maxTravel > 0 && placementHit(canvas, camera, grip, x, y, (px, py) => visibleHit(px, py, joint, loose)) && pointer.finish()) { dragging = false; advance(true) }
     },
     onRelease(x, y) {
-      matrices(); const dx = x - down.x, dy = y - down.y
-      const valid = checkpoint === 0 ? dragging && maxTravel > 0 && placementHit(canvas, camera, grip, x, y, (px, py) => visibleHit(px, py, joint, loose))
-        : checkpoint === 1 ? dragging && dx >= 45 && Math.abs(dy) <= Math.max(18, dx * .42) && star.rotation.y >= .45
-          && (star.rotation.y >= FINAL_TURN || maxVertical <= Math.max(22, dx * .55))
-          : checkpoint === 2 && maxTravel < 12 && Math.hypot(dx, dy) < 12 && visibleHit(x, y, star)
-      dragging = false; if (valid) advance(); else reset()
-    }, onCancel: reset,
+      matrices()
+      if (checkpoint === 0) {
+        const valid = dragging && maxTravel > 0 && placementHit(canvas, camera, grip, x, y, (px, py) => visibleHit(px, py, joint, loose))
+        dragging = false; if (valid) advance(); else reset()
+      } else if (!viewing && maxTravel < 12 && visibleHit(x, y, star)) advance()
+    },
+    onRotate(dx) { if (checkpoint > 0) { viewing = true; turnStar(dx) } },
+    onRebase(x, y) {
+      down.set(x,y); previousX=x; maxTravel=0
+      if (checkpoint === 0) {
+        plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), grip.getWorldPosition(new THREE.Vector3()))
+        if (ray.aim(x,y).ray.intersectPlane(plane,point)) offset.copy(loose.position).sub(point)
+      }
+    },
+    onInspectEnd() { if (checkpoint === 0) reset(); else { dragging = false; matrices() } },
+    onCancel: reset,
   })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
-    ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !inputActive() || !!transition || !!returningTurn || checkpoint === 3
-    ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !transition && !returningTurn && checkpoint < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, checkpoint === 0 ? COPY.assembleAction : checkpoint === 1 ? COPY.rotateAction : COPY.quietAction, safe)
-    setSafeText(ui.hintEl, transition ? COPY.moving : checkpoint === 0 ? COPY.assemble : checkpoint === 1 ? COPY.rotate : checkpoint === 2 ? COPY.quiet : COPY.done, safe)
+    ui.renderDots(checkpoint === 0 ? 0 : checkpoint === 3 ? 2 : 1, 2); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !inputActive() || !!transition || checkpoint === 3
+    ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !transition && checkpoint < 3 ? 'auto' : 'none'
+    setSafeText(ui.actionBtn, checkpoint === 0 ? COPY.assembleAction : COPY.quietAction, safe)
+    setSafeText(ui.hintEl, transition ? COPY.moving : checkpoint === 0 ? COPY.assemble : checkpoint < 3 ? COPY.rotate : COPY.done, safe)
+    setPlacementInspectionHelp(ui.hintEl,!transition&&checkpoint>0&&checkpoint<3)
   }
   // Keep acceptance atomic across synchronous host input, update, and disposal.
   function withHostCallbacks(work: () => void) {
@@ -195,27 +207,34 @@ export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
   }
   function settle() {
     if (!inputActive() || !transition) return
-    checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore()
+    checkpoint = 2; transition = null; restore()
     withHostCallbacks(() => {
       ctx.onProgress?.(checkpoint)
       if (active()) feedback.impact({ freqs: [523.25, 783.99], duration: .14, gain: .009, type: 'triangle' })
     })
   }
   function advance(arrived = false) {
-    if (!inputActive() || (pointer.isBusy() && !arrived) || transition || returningTurn || checkpoint === 3) return
-    if (checkpoint === 2) {
-      checkpoint = 3; restore()
+    if (!inputActive() || (pointer.isBusy() && !arrived) || transition || checkpoint === 3) return
+    if (checkpoint > 0) {
+      const turn = star.rotation.y; checkpoint = 3; restore(); star.rotation.y = turn; matrices()
       withHostCallbacks(() => {
         ctx.onProgress?.(3); if (!active()) return
         feedback.impact({ freqs: [523.25, 659.25], duration: .22, gain: .008 })
         if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
       }); return
     }
-    transition = { step: checkpoint, time: 0, from: loose.position.clone(), angle: loose.rotation.z, turn: star.rotation.y }; sync(); if (reduced()) settle()
+    transition = { step: 0, time: 0, from: loose.position.clone(), angle: loose.rotation.z, turn: star.rotation.y }; sync(); if (reduced()) settle()
   }
-  const action = () => { if (!inputActive() || pointer.isBusy() || transition || returningTurn || checkpoint === 3) return; withHostCallbacks(() => feedback.prepare()); advance() }
-  const blur = () => { focused = false; pointer.cancel(); if (returningTurn) { returningTurn = null; restore() } sync() }, focus = () => { focused = true; if (!disposed) sync() }
-  const resize = () => { const aspect = sizeStage(canvas, renderer, style, camera), boost = portraitBoost(aspect, 7); camera.position.set(0, 2.72 + boost * .2, 6.45 + boost); camera.lookAt(0, 1.68, 0); matrices() }
+  const action = () => { if (!inputActive() || pointer.isBusy() || transition || checkpoint === 3) return; withHostCallbacks(() => feedback.prepare()); advance() }
+  const inspectKey = (event: KeyboardEvent) => {
+    if (!inputActive() || transition || pointer.isBusy() || checkpoint === 0 || checkpoint === 3 || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return
+    if (event.key === 'Escape') { event.preventDefault(); reset(); return }
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+    event.preventDefault(); withHostCallbacks(() => feedback.prepare())
+    if (inputActive()) turnStar(event.key === 'ArrowLeft' ? -20 : 20)
+  }
+  const blur = () => { focused = false; pointer.cancel(); if (!transition) reset(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
+  const resize = () => { pointer.cancel(); if (!transition) reset(); const aspect = sizeStage(canvas, renderer, style, camera), boost = portraitBoost(aspect, 7); camera.position.set(0, 2.72 + boost * .2, 6.45 + boost); camera.lookAt(0, 1.68, 0); matrices() }
   restore(); sync()
   return {
     start() {
@@ -223,25 +242,20 @@ export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
       started = true; const initial = ctx.initialProgress ?? 0
       checkpoint = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
       restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
-      ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
+      ui.actionBtn.addEventListener('click', action); ui.actionBtn.addEventListener('keydown', inspectKey); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {
       if (!started || disposed || notifying) return
-      if (!active()) { pointer.cancel(); if (returningTurn) { returningTurn = null; restore() } if (!suspended) { sync(); suspended = true } return }
+      if (!active()) { pointer.cancel(); if (!transition) reset(); if (!suspended) { sync(); suspended = true } return }
       if (suspended) { suspended = false; sync() }
-      if (returningTurn) {
-        const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
-        returningTurn.time = reduced() ? 1 : Math.min(1, returningTurn.time + delta / .24)
-        star.rotation.y = returningTurn.from * (1 - ease(returningTurn.time))
-        if (returningTurn.time === 1) { returningTurn = null; restore(); sync() }
-      }
+
       if (transition) {
         const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
         transition.time = reduced() ? 1 : Math.min(1, transition.time + delta / .7); const t = ease(transition.time)
         if (transition.step === 0) {
           loose.position.lerpVectors(transition.from, star.localToWorld(JOIN.clone()), t); loose.rotation.z = THREE.MathUtils.lerp(transition.angle, ARM_ANGLE, t)
           if (!reduced()) loose.position.z += Math.sin(t * Math.PI) * .09
-        } else star.rotation.y = THREE.MathUtils.lerp(transition.turn, FINAL_TURN, t)
+        }
         if (transition.time === 1) settle()
       }
       if (!active()) return
@@ -249,7 +263,7 @@ export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
     },
     dispose() {
       if (disposed) return
-      disposed = true; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      disposed = true; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action); ui.actionBtn.removeEventListener('keydown', inspectKey)
       guardedEvents.forEach(type => ui.hitLayer.removeEventListener(type, guardCallbackInput, true))
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world)
       Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss()

@@ -33,7 +33,7 @@ const SCENES = [
   ['french-coffee-mill', 'LRD'], ['french-petanque', 'UUU'], ['garden-croquet', 'LRR'],
   ['german-jumping-jack', 'DDD'], ['ghanaian-oware', 'URL'], ['greek-new-year-pomegranate', 'URD'],
   ['greek-vasilopita', 'URD'], ['hiiragi-iwashi', 'ULU'], ['irish-bodhran', 'DUD'],
-  ['japanese-daruma-otoshi', 'DRU'], ['japanese-shishi-odoshi', 'LDD'], ['japanese-wagasa', 'URD'],
+  ['japanese-daruma-otoshi', 'DRU'], ['japanese-shishi-odoshi', 'LDD'], ['japanese-wagasa', 'UDD'],
   ['kagami-biraki-sake', 'UDL'], ['kagami-mochi-offering', 'UUU'], ['kameido-usokae', 'ULD'],
   ['lam-tsuen-wishing-tree', 'RRU'], ['mexican-metate', 'DUU'], ['mexican-tortilla-press', 'DDU'],
   ['mochigase-nagashibina', 'URD'], ['mongolian-ovoo', 'LLL'], ['paper-pinwheel', 'RUR'],
@@ -48,8 +48,35 @@ const SCENES = [
 const DIRECTIONS: Record<string, [number, number]> = { R: [1, 0], L: [-1, 0], U: [0, -1], D: [0, 1] }
 const practiceThree = new Set(['finnish-kantele', 'irish-bodhran', 'chinese-rattle-drum'])
 const repeatable = new Set([...practiceThree, 'czech-wooden-ratchet', 'estonian-village-swing', 'german-jumping-jack', 'puerto-rican-guiro', 'spanish-castanets'])
-const checkpoints = (id: string, count: number) => practiceThree.has(id) ? [1, 1, 2].slice(0, count)
-  : repeatable.has(id) ? [1, 2].slice(0, count) : Array.from({ length: count }, (_, i) => i + 1)
+// Current action boundaries from the continuous-placement A/B/C reviews and
+// scene READMEs. Legacy 0/1/2 saves remain valid, but are not three new actions.
+const continuousCheckpoints: Record<string, readonly number[]> = {
+  'balinese-canang-sari': [1, 3, 3], // White flower, then the complete offering tray.
+  'bulgarian-survakane': [2, 2, 3], // Carry the branch, then separately tap the back.
+  'chinese-steelyard': [1, 3, 3], // Level the beam, then lift and return the balance.
+  'greek-new-year-pomegranate': [2, 2, 3], // Align intact fruit before the breaking drop.
+  'greek-vasilopita': [2, 2, 3], // Serve the slice before separately taking the coin.
+  'japanese-wagasa': [2, 3, 3], // Open, optionally inspect, then close from either open save.
+  'kameido-usokae': [1, 3, 3], // Return the old bird before receiving and placing the new one.
+  'mochigase-nagashibina': [3, 3, 3],
+  'persian-esfand': [2, 2, 3], // Place the pan before waving the cloth.
+  'romanian-martisor': [3, 3, 3],
+  'shichigosan-chitose-ame': [3, 3, 3],
+  'thai-songkran-elders': [2, 2, 3], // Carry the water bowl before pouring.
+  'tibetan-khata-greeting': [2, 2, 3], // Carry the scarf before the handover.
+  'tibetan-prayer-flags': [1, 3, 3], // Hang the two actual string ends separately.
+  'udo-undama': [2, 2, 3], // Carry to the preparation point, then separately throw.
+}
+const nextCheckpoint = (id: string, at: number) => continuousCheckpoints[id]?.[at] ?? at + 1
+function actionCheckpoints(id: string, steps: string) {
+  if (!continuousCheckpoints[id]) return Array.from({ length: steps.length }, (_, i) => i)
+  const result: number[] = []
+  for (let at = 0; at < steps.length; at = nextCheckpoint(id, at)) result.push(at)
+  return result
+}
+const checkpoints = (id: string, steps: string, count: number) => practiceThree.has(id) ? [1, 1, 2].slice(0, count)
+  : repeatable.has(id) ? [1, 2].slice(0, count)
+    : actionCheckpoints(id, steps).slice(0, count).map(at => nextCheckpoint(id, at))
 type Point = [number, number]
 const instances = new Set<SceneInstance>()
 afterEach(() => { instances.forEach(instance => instance.dispose()); instances.clear(); document.body.replaceChildren() })
@@ -76,8 +103,13 @@ async function mount(id: string, width: number, initialProgress = 0, reduced = t
     scene.updateMatrixWorld(true); camera.updateMatrixWorld(true)
     const entries: { object: THREE.Object3D; cue: InteractionCue }[] = []
     scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled()) entries.push({ object, cue }) })
-    expect(entries).toHaveLength(1)
-    const { object, cue } = entries[0]!
+    const wagasaOpen = id === 'japanese-wagasa' && (initialProgress > 0 || progress.includes(2))
+    if (wagasaOpen) expect(entries.map(entry => entry.cue.kind).sort()).toEqual(['drag', 'rotate'])
+    else expect(entries).toHaveLength(1)
+    // The open umbrella offers optional viewing beside its real closing rail.
+    const actionable = wagasaOpen ? entries.filter(entry => entry.cue.kind === 'drag') : entries
+    expect(actionable).toHaveLength(1)
+    const { object, cue } = actionable[0]!
     if (!cue.destination) expect(cue.direction, 'the arrow must match the action direction').toEqual(direction)
     const p = object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))).project(camera)
     return [(p.x + 1) * width / 2, (1 - p.y) * height / 2] as Point
@@ -92,7 +124,8 @@ async function mount(id: string, width: number, initialProgress = 0, reduced = t
   }
   const run = () => { for (let frame = 0; frame < 100; frame++) instance.update(.05) }
   const dispose = () => { instance.dispose(); instances.delete(instance); host.remove() }
-  return { layer, hint, overlay, progress, complete, source, destination, run, dispose }
+  const resetInput = () => { window.dispatchEvent(new Event('blur')); window.dispatchEvent(new Event('focus')) }
+  return { layer, hint, overlay, progress, complete, source, destination, run, dispose, resetInput }
 }
 function point(start: Point, direction: Point, along: number, cross = 0): Point {
   return [start[0] + direction[0] * along - direction[1] * cross, start[1] + direction[1] * along + direction[0] * cross]
@@ -106,16 +139,19 @@ const PATHS: [number, number][][] = [
 it.each(SCENES)('%s follows its actual spatial targets or constrained motion with corrections', async (id, steps) => {
   for (const width of [320, 390]) for (const path of PATHS) {
     const s = await mount(id, width)
-    for (let at = 0; at < steps.length; at++) {
+    for (const [action, at] of actionCheckpoints(id, steps).entries()) {
       const direction = DIRECTIONS[steps[at]!]!, a = s.source(direction), goal = s.destination()
       pointer(s.layer, 'pointerdown', a)
       if (goal) {
         // The target, rather than the old instructed vector, now owns success.
         const dx = goal[0] - a[0], dy = goal[1] - a[1], length = Math.hypot(dx, dy) || 1
-        for (const [along, cross] of path) pointer(s.layer, 'pointermove',
-          [a[0] + dx * along / 600 - dy / length * cross * .2, a[1] + dy * along / 600 + dx / length * cross * .2])
+        for (const [along, cross] of path) pointer(s.layer, 'pointermove', id === 'chinese-steelyard' && at === 1
+          // The balanced scale returns to its starting support: actually lift
+          // it out of the 24px departure zone before returning to the goal.
+          ? [a[0] + cross * .2, a[1] - along * .6]
+          : [a[0] + dx * along / 600 - dy / length * cross * .2, a[1] + dy * along / 600 + dx / length * cross * .2])
         pointer(s.layer, 'pointermove', goal); s.run()
-        expect(s.progress, 'arrives before the physical finger lifts').toEqual(checkpoints(id, at + 1))
+        expect(s.progress, 'arrives before the physical finger lifts').toEqual(checkpoints(id, steps, action + 1))
         pointer(s.layer, 'pointerup', goal)
       } else {
         for (const [along, cross] of path) pointer(s.layer, 'pointermove', point(a, direction, along, cross))
@@ -124,7 +160,7 @@ it.each(SCENES)('%s follows its actual spatial targets or constrained motion wit
         pointer(s.layer, 'pointerup', point(a, direction, ...path.at(-1)!))
       }
       s.run()
-      expect(s.progress, `step ${at}, ${width}px, ${JSON.stringify(path)}`).toEqual(checkpoints(id, at + 1))
+      expect(s.progress, `step ${at}, ${width}px, ${JSON.stringify(path)}`).toEqual(checkpoints(id, steps, action + 1))
       expect(s.hint.dataset.ready).not.toBe('true')
     }
     if (repeatable.has(id)) {
@@ -140,7 +176,10 @@ it.each(SCENES)('%s keeps reverse, returned-to-start, canceled and multitouch in
     const s = await mount(id, 390, at), direction = DIRECTIONS[steps[at]!]!
     for (const mode of ['reverse', 'cross', 'return', 'cancel', 'multi', 'orphan-release', 'nonfinite']) {
       const a = s.source(direction), goal = s.destination()
-      const away: Point = goal ? [a[0] - (goal[0] - a[0]) * .2, a[1] - (goal[1] - a[1]) * .2] : point(a, direction, 60)
+      const away: Point = id === 'chinese-steelyard' && at === 1
+        // A return after only 18px is still below the real departure threshold.
+        ? point(a, direction, mode === 'return' ? 18 : 60)
+        : goal ? [a[0] - (goal[0] - a[0]) * .2, a[1] - (goal[1] - a[1]) * .2] : point(a, direction, 60)
       const b = goal ? away : point(a, direction, 60)
       if (mode !== 'orphan-release') { pointer(s.layer, 'pointerdown', a); pointer(s.layer, 'pointermove', b) }
       if (mode === 'nonfinite') pointer(s.layer, 'pointermove', [NaN, a[1]])
@@ -151,10 +190,15 @@ it.each(SCENES)('%s keeps reverse, returned-to-start, canceled and multitouch in
       pointer(s.layer, 'pointerup', end)
       if (mode === 'multi') pointer(s.layer, 'pointerup', b, 2)
       s.run(); expect(s.progress, `${at}: ${mode}`).toEqual([]); expect(s.hint.dataset.ready).not.toBe('true')
+      // An ordinary missed free placement now keeps its held pose. Each mode
+      // starts from the same restored checkpoint, not accumulated offscreen misses.
+      s.resetInput(); expect(s.progress).toEqual([])
     }
     const a = s.source(direction), goal = s.destination()
-    pointer(s.layer, 'pointerdown', a); pointer(s.layer, 'pointermove', goal ?? point(a, direction, 20))
+    pointer(s.layer, 'pointerdown', a)
+    if (id === 'chinese-steelyard' && at === 1) pointer(s.layer, 'pointermove', [a[0], a[1] - 40])
+    pointer(s.layer, 'pointermove', goal ?? point(a, direction, 20))
     pointer(s.layer, 'pointerup', goal ?? point(a, direction, 120)); s.run()
-    expect(s.progress).toEqual(practiceThree.has(id) ? [at === 2 ? 2 : 1] : repeatable.has(id) && at === 2 ? [] : [at + 1]); s.dispose()
+    expect(s.progress).toEqual(practiceThree.has(id) ? [at === 2 ? 2 : 1] : repeatable.has(id) && at === 2 ? [] : [nextCheckpoint(id, at)]); s.dispose()
   }
 }, 30000)

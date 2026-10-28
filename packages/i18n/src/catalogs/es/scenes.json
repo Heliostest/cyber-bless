@@ -1432,7 +1432,7 @@
   "scene.mizuhiki.scene.copy.b843e233": "Avance por los puntos dorados: {p0} %. Continúa hasta la siguiente marca.",
   "scene.navruz-sumalak.scene.copy.cf5d8496": "Avance por la curva: {p0} %. Continúa por el siguiente punto claro.",
   "scene.czech-bead-star.scene.assemble.3c8480d2": "Recoge la última tira de cuentas de vidrio del apoyo de madera y únela a la cuenta plateada expuesta en el brazo de la estrella.",
-  "scene.czech-bead-star.scene.rotate.c40a141f": "Arrastra horizontalmente a la derecha sobre la estrella para girarla despacio y ver cómo las cuentas plateadas y azules recogen la luz del sol.",
+  "scene.czech-bead-star.scene.rotate.c40a141f": "Gira libremente la estrella para ver ambas caras y toca para contemplarla en calma.",
   "scene.czech-bead-star.scene.quiet.89e36e74": "Toca la estrella de cuentas y contémplala en calma para guardar este momento.",
   "scene.czech-bead-star.scene.moving.4c417bbd": "Los hilos finos se unen mientras las cuentas giran suavemente…",
   "scene.czech-bead-star.scene.done.cbf038fd": "Guarda una pequeña luz clara.",
@@ -1710,7 +1710,7 @@
   "scene.japanese-wagasa.scene.copy.ace9eae9": "Gira suavemente el mango de la sombrilla",
   "scene.japanese-wagasa.scene.copy.89226bad": "Cierra la sombrilla y deja su sombra",
   "scene.japanese-wagasa.scene.copy.ff31e440": "Empuja el aro de madera por el eje hasta la marca superior. Los tensores abren las varillas de bambú y extienden el papel en un círculo de tonos cálidos.",
-  "scene.japanese-wagasa.scene.copy.9837bf82": "Mantén pulsada la parte inferior del mango y arrastra un poco a la derecha. Gira suavemente la sombrilla para orientar su superficie clara hacia ti.",
+  "scene.japanese-wagasa.scene.copy.9837bf82": "Sujeta el mango para girar y observar libremente, o baja directamente el aro de madera por el eje hasta la marca inferior para cerrar el paraguas de papel.",
   "scene.japanese-wagasa.scene.copy.a4039b2d": "Desliza el aro por el eje hasta la marca inferior. Las varillas de bambú se juntan lentamente y el papel se cierra por sus pliegues.",
   "scene.japanese-wagasa.scene.copy.bfbb070b": "La sombrilla se cierra, con las varillas de bambú junto a los pliegues del papel. Su lado claro guarda una sombra suave bajo el sol.",
   "scene.japanese-wagasa.scene.copy.85a86d4e": "El aro de madera sube y las varillas de bambú y el papel se despliegan juntos…",
@@ -2207,5 +2207,14 @@
   "scene.packages.core.src.scene-intentions.action.5aadc841": "Trenza la corona y colócala suavemente en el agua. Conoce su origen en la adivinación amorosa y matrimonial de Kupala y guarda una reflexión propia mientras la ves alejarse.",
   "scene.packages.core.src.scene-intentions.label.b4ac52da": "Ruega por la paz mundial",
   "scene.packages.core.src.scene-intentions.action.3ae98047": "Pliega las alas de la grulla de papel y elévala ante ti, guardando en este instante deseos de paz y para los niños.",
-  "scene.hongsheng-red-string.scene.copy.fbb218a9": "Enrollado: {p0} %. Sigue los puntos claros."
+  "scene.hongsheng-red-string.scene.copy.fbb218a9": "Enrollado: {p0} %. Sigue los puntos claros.",
+  "scene.placement-inspection.hint.dbafb84c": "Arrastra con un dedo para tomar y colocar. Arrastra con dos dedos, con el botón derecho o manteniendo Shift para girar y observar.",
+  "scene.placement-inspection.keyboard.6534a04e": "Flechas: girar y observar. Enter: colocar. Esc: devolver.",
+  "scene.chinese-fu-paper.scene.carry.249eff31": "Colocar fu en la Fiesta de la Primavera expresa un deseo de bendiciones para el hogar. Llévalo a su lugar en la puerta; se fijará al acercarlo.",
+  "scene.chinese-ruyi-scepter.scene.carry.22c6bc6e": "El ruyi guarda buenos deseos. Sostén su cabeza de nube y llévalo a la base de madera acolchada; se asentará al llegar.",
+  "scene.japanese-hamaya.scene.carry.67656185": "La hamaya expresa deseos de protección ante la desgracia y de paz en el hogar. Lleva la flecha decorativa a los dos apoyos; se asentará suavemente al acercarla.",
+  "scene.lanna-sand-pagoda.scene.carry.7d56b98e": "En el Año Nuevo de Lanna se ofrecen banderines con las pagodas de arena para acumular mérito. Alinea la vara de bambú con la base de arena junto a la pagoda; se fijará al acercarla.",
+  "scene.turkish-nazar-bead.scene.carry.4a7c035f": "La cuenta nazar turca guarda deseos de protección contra la desgracia. Toma la cuenta azul y gírala libremente para observarla; después lleva la anilla a la barra del soporte de madera para colgarla.",
+  "scene.placement-inspection.help.11e90018": "Arrastra con dos dedos para girar y observar. Con ratón, usa el botón derecho o mantén Shift al arrastrar.",
+  "scene.udo-undama.scene.carry.566dabf6": "Toma la bola de arcilla, gírala libremente si quieres observarla y llévala a la guía de lanzamiento."
 }

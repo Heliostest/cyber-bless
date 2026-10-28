@@ -19,7 +19,7 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number; arrived?: boolean } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; arrived?: boolean; sounded?: boolean } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
@@ -81,6 +81,11 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
+  function soundMallet(short = false) {
+    if (!motion || motion.step !== 1 || motion.sounded || (!short && amount < .4)) return
+    motion.sounded = true
+    withHostCallbacks(() => feedback.sound('woodTap', { duration: short ? .1 : .18, strength: .55 }))
+  }
   function settle() {
     if (!inputActive() || !motion) return
     at = (motion.step + 1) as Checkpoint; motion = null; restore()
@@ -90,7 +95,7 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: at, time: 0, from: amount, arrived: placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: at, time: 0, from: amount, arrived: placed }; sync(); if (ctx.isReducedMotion?.()) { soundMallet(true); settle() } }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
@@ -111,6 +116,7 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
+      feedback.update()
       if (!active()) { lifecycleVersion++; pointer.cancel(); if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
@@ -118,7 +124,7 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
       if (motion) {
         motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.arrived ? .32 : 2.5))
         const eased=ease(motion.time)
-        pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); if (motion.time === 1) settle()
+        pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); soundMallet(); if (motion.time === 1) settle()
       }
       if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },

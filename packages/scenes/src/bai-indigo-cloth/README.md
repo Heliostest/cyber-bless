@@ -72,3 +72,8 @@ npm run test -w @wbr/scenes -- src/bai-indigo-cloth/scene.test.ts
 ## 2026-10-23 操作容错
 
 近距离拾取与落点增加最多22 CSS px的触控容差，保留前景遮挡和画布边界。指针或物件握点对齐均可安放；有效时显示可以松手，释放后落稳。取消、暂停或失焦会清除到位提示。以上属于产品输入与反馈修正，不新增传统规则；详见[操作修正记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。
+
+
+## 2026-10-28 材质光效接入
+
+蓝灰漂洗水面接入轻量受光水材质，保留盆底和棉布实体。 仅调整已审查部件的技术光学表现，器物、材料身份、动作、文案、来源、技术 ID 与存档不变；文化边界沿用本 README 既有核查及[逐场材质审查](../../../../docs/research/2026-10-28-material-lighting-audit.md)，不新增传统主张。实现与验证见[集中记录](../../../../docs/research/2026-10-28-ritual-optics-integration.md)。

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 
 const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z)
@@ -12,8 +13,8 @@ export function createTamagushiModel(){
  const table=new THREE.Group();table.name='tamagushi-table';root.add(table)
  const branch=new THREE.Group();branch.name='tamagushi-branch';root.add(branch)
  const matte=(color:number,roughness=.92)=>new THREE.MeshStandardMaterial({color,roughness})
- const wood=matte(0xd2ad72),bark=matte(0x6d6242),paper=matte(0xfff6df),skin=matte(0xd9a47d),sleeve=matte(0xe9e6da)
- const green=[0x608c49,0x78a455,0x4c7945].map(c=>matte(c,.77))
+ const wood=matte(0xd2ad72),bark=matte(0x6d6242),paper=createRitualMaterial({color:0xfff6df,roughness:.92}, { kind: 'paper', strength: .22, fiber: 'paper' }),skin=matte(0xd9a47d),sleeve=matte(0xe9e6da)
+ const green=[0x608c49,0x78a455,0x4c7945].map(color=>createRitualMaterial({color,roughness:.77}, { kind: 'leaf', strength: .12, fiber: false }))
  const mesh=(parent:THREE.Group,name:string,geometry:THREE.BufferGeometry,material:THREE.Material)=>{const o=new THREE.Mesh(geometry,material);o.name='tamagushi-'+name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  const box=(parent:THREE.Group,name:string,size:number[],p:number[],material:THREE.Material)=>{const o=mesh(parent,name,new THREE.BoxGeometry(...size as [number,number,number]),material);o.position.set(...p as [number,number,number]);return o}
  const cylinder=(parent:THREE.Group,name:string,a:THREE.Vector3,b:THREE.Vector3,r:number,material:THREE.Material)=>{

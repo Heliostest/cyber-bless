@@ -214,7 +214,9 @@ describe('Loy Krathong leaf float', () => {
     const s = mount(), resources = new Set<{ dispose(): void }>()
     drawn.scene!.traverse(o => {
       const m = o as THREE.Mesh
-      if (m.geometry) resources.add(m.geometry)
+      // Sprite geometry is Three.js-owned and shared by all sprites.
+      if (m.geometry && !(o as THREE.Sprite).isSprite) resources.add(m.geometry)
+      if ((o as THREE.Sprite).isSprite && (m.material as THREE.SpriteMaterial).map) resources.add((m.material as THREE.SpriteMaterial).map!)
       if (m.material) (Array.isArray(m.material) ? m.material : [m.material]).forEach(r => resources.add(r))
       if ((o as THREE.Light).isLight) resources.add(o as THREE.Light)
       const shadow = (o as THREE.DirectionalLight).shadow; if (shadow) resources.add(shadow)

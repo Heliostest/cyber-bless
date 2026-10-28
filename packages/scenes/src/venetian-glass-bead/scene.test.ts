@@ -164,7 +164,7 @@ describe('original contemporary wound glass beads', () => {
     const s = mount(1), bead = s.scene.getObjectByName('glass-hero-bead') as THREE.Mesh, ribbon = s.scene.getObjectByName('glass-colored-ribbon') as THREE.Mesh
     const source = bead.material as THREE.MeshPhysicalMaterial, adapter = createToonSurfaces('toon-soft'), applied = adapter.apply(s.scene)
     expect(bead.material).toBe(source); expect(bead.material).toBeInstanceOf(THREE.MeshPhysicalMaterial)
-    expect(source.transparent).toBe(true); expect(source.opacity).toBeGreaterThan(.6); expect(source.opacity).toBeLessThan(.98); expect(source.transmission).toBeGreaterThan(.1)
+    expect(source.transparent).toBe(true); expect(source.opacity).toBe(1); expect(source.attenuationDistance).toBeGreaterThan(0); expect(source.transmission).toBeGreaterThan(.1)
     expect(source.roughness).toBeLessThan(.25); expect(source.clearcoat).toBeGreaterThan(.8)
     expect(ribbon.material).toBeInstanceOf(THREE.MeshPhysicalMaterial); expect((ribbon.material as THREE.MeshPhysicalMaterial).roughness).toBeLessThan(.3)
     expect(applied.outlined).not.toContain(bead); applied.restore(); adapter.dispose()

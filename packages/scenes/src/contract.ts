@@ -39,6 +39,12 @@ export type SceneContext = {
 export type SceneInstance = {
   start(): void
   update(dt: number): void
+  /**
+   * Optional completed-object display feedback. Returns true when the object
+   * handles the tap, including reduced motion; never advances or saves ritual
+   * progress, wishes or variants. Hosts can use a fallback when false/absent.
+   */
+  tapPreview?(): boolean
   dispose(): void
 }
 

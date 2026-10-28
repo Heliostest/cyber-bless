@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
 /** Ordinary welcoming gift, with a pre-folded khata. The transfer is a product
  * sequence, not a prescribed three-part rite or a teacher's blessing. */
@@ -6,8 +7,8 @@ export function createKhataModel() {
   const root=new THREE.Group();root.name='khata-root'
   const subject=new THREE.Group();subject.name='khata-subject';root.add(subject)
   const material=(color:number,roughness=.85)=>new THREE.MeshStandardMaterial({color,roughness})
-  const stone=material(0xd3cbb3),cream=material(0xfff4db,.48),hem=material(0xe1dbc4,.6),skin=material(0xd7a17e),hair=material(0x584f43),shoe=material(0x555852)
-  const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D=subject)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
+  const stone=material(0xd3cbb3),cream=material(0xfff4db,.48),edgeCream=createRitualMaterial({color:0xfff4db,roughness:.48}, { kind: 'cloth', strength: .10, fiber: false }),hem=createRitualMaterial({color:0xe1dbc4,roughness:.6}, { kind: 'cloth', strength: .14, fiber: false }),skin=material(0xd7a17e),hair=material(0x584f43),shoe=material(0x555852)
+  const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material|THREE.Material[],parent:THREE.Object3D=subject)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
   const v=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
   const ball=(name:string,p:THREE.Vector3,s:[number,number,number],m:THREE.Material)=>{const o=mesh(name,new THREE.SphereGeometry(1,20,12),m);o.position.copy(p);o.scale.set(...s);return o}
   const rod=(name:string,r:number,m:THREE.Material,parent:THREE.Object3D=subject)=>{
@@ -28,8 +29,20 @@ export function createKhataModel() {
   // Keep the thin folded edges sharp; averaging across the inner/outer crease
   // would reverse some vertex normals on this narrow cross-section.
   const clothGeometry=joined.toNonIndexed();joined.dispose();clothGeometry.computeVertexNormals();clothGeometry.setIndex(Array.from({length:clothGeometry.getAttribute('position').count},(_,i)=>i))
+  // Keep the broad folded faces unchanged. Only the two free +x section edges
+  // get thin-silk backlighting; regroup indices into two draws, not one per fold.
+  const solidIndices:number[]=[],edgeIndices:number[]=[]
+  const originalIndex=clothGeometry.index!
+  for(let i=0;i<originalIndex.count;i+=3){
+    const sectionEdge=Math.floor(i/6)%N
+    const target=i<rings*N*6&&(sectionEdge===1||sectionEdge===6)?edgeIndices:solidIndices
+    target.push(originalIndex.getX(i),originalIndex.getX(i+1),originalIndex.getX(i+2))
+  }
+  clothGeometry.setIndex([...solidIndices,...edgeIndices])
+  clothGeometry.addGroup(0,solidIndices.length,0)
+  clothGeometry.addGroup(solidIndices.length,edgeIndices.length,1)
   const scarf=new THREE.Group();scarf.name='khata-scarf';subject.add(scarf)
-  const cloth=mesh('khata-cloth',clothGeometry,cream,scarf)
+  const cloth=mesh('khata-cloth',clothGeometry,[cream,edgeCream],scarf)
   // Short uninscribed fringes meet the cloth ends; no invented sacred symbols.
   for(const sign of[-1,1])for(let i=0;i<9;i++){const x=-.08+i*.02,z=sign*.74,t=rod('khata-fringe-'+sign+'-'+i,.0035,hem,scarf);t.set(v(x,drape(z),z),v(x+.006*Math.sin(i),drape(z)-.065,z+sign*.035))}
   const people=[{name:'giver',x:-.83,dir:1,color:0xc18b56},{name:'guest',x:.83,dir:-1,color:0x6b9a91}].map(({name,x,dir,color})=>{

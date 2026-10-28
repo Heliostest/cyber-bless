@@ -4,6 +4,38 @@ import {createWagasaModel} from './model'
 import {disposeTree} from '../procedural-kit'
 const point=(o:THREE.Object3D,p:THREE.Vector3)=>o.localToWorld(p.clone())
 describe('Connected rigid bamboo and paper umbrella',()=>{
+ it('keeps radial paper occlusion attached to all24 real ribs while opening, turning and folding',()=>{
+  const m=createWagasaModel(),paper=m.paper.material as THREE.MeshStandardMaterial,optics=paper.userData.ritualOptics
+  try{
+   expect(optics.paper?.layout).toBe('radial')
+   expect(optics.strength).toBeGreaterThan(.5)
+   const structure=optics.paper as {spacing:number;width:number;contrast:number}
+   expect(2*Math.PI/structure.spacing).toBeCloseTo(m.ribs.length,12)
+   expect(structure.width).toBeGreaterThan(0);expect(structure.width).toBeLessThan(.25)
+   expect(structure.contrast).toBeGreaterThan(0);expect(structure.contrast).toBeLessThan(1)
+   expect(paper.transparent).toBe(false);expect(paper.opacity).toBe(1);expect(paper.depthWrite).toBe(true)
+   expect(paper.side).toBe(THREE.DoubleSide);expect(paper.emissive.getHex()).toBe(0);expect(paper.vertexColors).toBe(true)
+   const vertexCount=m.paper.geometry.attributes.position!.count,colors=Array.from(m.paper.geometry.attributes.color!.array)
+   expect(vertexCount).toBe(144)
+   const palette=['#d76b54','#cf5d49','#f5dfb8'].map(color=>new THREE.Color(color).toArray())
+   for(let sector=0;sector<24;sector++)for(let vertex=0;vertex<6;vertex++){
+    const expected=palette[sector===6?2:sector%2]!
+    for(let channel=0;channel<3;channel++)expect(colors[sector*18+vertex*3+channel]).toBeCloseTo(expected[channel]!,7)
+   }
+   for(const step of[0,1,2])for(const t of[0,.25,.5,.75,1]){
+    m.pose(step,t)
+    const positions=m.paper.geometry.attributes.position!
+    for(let i=0;i<m.ribs.length;i++){
+     const tip=m.spin.worldToLocal(point(m.ribs[i]!,new THREE.Vector3(0,.7,0))),paperEdge=new THREE.Vector3().fromBufferAttribute(positions,i*6+2)
+     const phase=Math.atan2(tip.z,tip.x)/structure.spacing
+     expect(Math.abs(phase-Math.round(phase)),`rib ${i}, phase ${step}:${t}`).toBeLessThan(1e-12)
+     const azimuthError=Math.atan2(tip.x*paperEdge.z-tip.z*paperEdge.x,tip.x*paperEdge.x+tip.z*paperEdge.z)
+     expect(azimuthError,`paper edge ${i}, phase ${step}:${t}`).toBeCloseTo(0,6)
+    }
+    expect(positions.count).toBe(vertexCount);expect(Array.from(m.paper.geometry.attributes.color!.array)).toEqual(colors)
+   }
+  }finally{disposeTree(m.subject)}
+ })
  it('keeps the shaft grounded and the real runner bore clear through all1803poses',()=>{
   const m=createWagasaModel();let ground=0,gap=Infinity,nonfinite=0,scale=0
   for(let step=0;step<3;step++)for(let k=0;k<=600;k++){
@@ -38,7 +70,7 @@ describe('Connected rigid bamboo and paper umbrella',()=>{
   expect(error).toBeLessThan(6e-7);expect(minArea).toBeGreaterThan(.23);expect(minY).toBeGreaterThan(1.4);disposeTree(m.subject)
  })
  it('opens by raising the ring, rotates the whole canopy and closes with the new azimuth retained',()=>{
-  const m=createWagasaModel();const initial=m.runner.position.y;m.pose(0,1);const opened=m.runner.position.y;expect(opened-initial).toBeGreaterThan(.6);m.pose(1,1);expect(m.spin.rotation.y).toBeCloseTo(Math.PI/4,12);m.pose(2,1);expect(m.runner.position.y).toBeCloseTo(initial,12);expect(m.spin.rotation.y).toBeCloseTo(Math.PI/4,12);disposeTree(m.subject)
+  const m=createWagasaModel();const initial=m.runner.position.y;m.pose(0,1);const opened=m.runner.position.y;expect(opened-initial).toBeGreaterThan(.6);m.spin.rotation.y=-Math.PI*2-.7;m.pose(1,1);expect(m.spin.rotation.y).toBeCloseTo(-Math.PI*2-.7,12);m.pose(2,1);expect(m.runner.position.y).toBeCloseTo(initial,12);expect(m.spin.rotation.y).toBeCloseTo(-Math.PI*2-.7,12);disposeTree(m.subject)
  })
  it('reuses all geometry and exactly restores persistent checkpoint vertices and transforms',()=>{
   const m=createWagasaModel(),refs=new Map<THREE.Object3D,THREE.BufferGeometry>();m.subject.traverse(o=>{if((o as THREE.Mesh).geometry)refs.set(o,(o as THREE.Mesh).geometry)})

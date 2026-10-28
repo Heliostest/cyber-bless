@@ -2,9 +2,10 @@ import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
-import { createObjectPointer } from '../object-pointer'
+import { createFreePlacementPointer } from '../free-placement-pointer'
 import { createPosePlacement } from '../pose-placement'
-import { createTouchTarget } from '../touch-target'
+import { addKeyboardPlacementInspection, setPlacementHint } from '../placement-inspection'
+import { createTouchTarget, insideCanvas } from '../touch-target'
 import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createSongkranModel } from './model'
@@ -25,7 +26,7 @@ export function createSongkran(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean; heldPosition?: THREE.Vector3; heldQuaternion?: THREE.Quaternion } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean; heldPosition?: THREE.Vector3; heldQuaternion?: THREE.Quaternion; sounded?: boolean; flowing?: boolean } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
@@ -42,22 +43,25 @@ export function createSongkran(ctx: SceneContext): SceneInstance {
   const model = createSongkranModel(); scene.add(model.root)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
-  const restore = () => pose(at, 0)
+  const restore = () => { pose(at, 0);; placement.restoreCheckpoint(at); matrices() }
+  const carryStep = () => (at < 2 ? 1 : 2) as 1 | 2
+  const carrying = () => at < 2
   const placementRoots=model.roots,placementAnchors=model.anchors.map(a=>a.toArray() as [number,number,number])
   const isPlacementStep=(step:number)=>step<2
   const placement=createPosePlacement(canvas,camera,{pose:model.pose,roots:placementRoots,targets:model.targets,anchors:placementAnchors},scene)
   const directions: [number, number][] = [[0,-1],[1,0],[0,1]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(isPlacementStep(i) ? {destination:()=>placement.destination(i),targetLabel:'水碗准备位置'} : {direction:directions[i]}), label: ACTIONS[i]!, anchor: model.anchors[i]!.toArray(), priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(isPlacementStep(i) ? {destination:()=>placement.destination(carryStep()),targetLabel:'水碗准备位置'} : {direction:directions[i]}), label: ACTIONS[i]!, anchor: model.anchors[i]!.toArray(), priority: 3, enabled: () => inputActive() && !motion && (at < 2 ? i === 1 : at === i) }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
   const reset = () => { placement.cancel(); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
-  const pointer = createObjectPointer(ui.hitLayer, {
+  const inspectRotate = (dx:number,dy:number) => { if (!carrying()) return; placement.rotate(dx*.012,0); model.refreshHeldWater(); matrices() }
+  const pointer = createFreePlacementPointer(ui.hitLayer, canvas, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x, y, model.roots[at]!) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 ; if(isPlacementStep(at) && !placement.begin(at,x,y))pointer.cancel(); },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 ; if(isPlacementStep(at) && !placement.begin(carryStep(),x,y))pointer.cancel(); },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
       if(isPlacementStep(at)){const ready=placement.move(x,y);model.refreshHeldWater();if(!invalid && ready && pointer.finish()){placement.capture();advance(true)};return}
@@ -69,21 +73,32 @@ export function createSongkran(ctx: SceneContext): SceneInstance {
       updateDirectionalDragHint(ui.hintEl, !invalid && completesDirectionalDrag({ along, end: along, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel: pathTravel }), HINTS[at]!, safe)
     },
     onRelease(x, y) {
-      if(isPlacementStep(at)){if(!invalid && placement.move(x,y)){placement.capture();advance()}else reset();return}
+      if(isPlacementStep(at)){if(!invalid && placement.move(x,y)){placement.capture();advance()}else if(!invalid && insideCanvas(canvas,x,y))placement.release();else reset();return}
       const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
       const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
       if (valid) advance(); else reset()
-    }, onCancel: reset,
+    }, onRotate: inspectRotate,
+    onRebase(x,y) { if (carrying()) placement.rebase(x,y) },
+    onInspectEnd() { if (carrying()) { placement.release(); model.refreshHeldWater(); } else reset() }, onCancel: reset,
   })
   const sync = () => {
     if (motion || at === 3) delete ui.hintEl.dataset.ready
     if (cueLayer) cueLayer.hidden = !active()
-    ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
+    ui.renderDots(at < 2 ? 0 : at - 1, 2); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at]!, safe)
+    setSafeText(ui.actionBtn, ACTIONS[at < 2 ? 1 : 2]!, safe); setPlacementHint(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at < 2 ? 1 : at]!, !motion && carrying(), safe)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
+  function soundWater(short = false) {
+    if (!motion || motion.step !== 2) return
+    if ((short || model.stream.visible) && !motion.sounded) {
+      motion.sounded = true
+      withHostCallbacks(() => feedback.sound('water', { duration: short ? .12 : .8, strength: .5 }))
+    }
+    if (!model.stream.visible && motion.flowing) feedback.stop()
+    motion.flowing = model.stream.visible
+  }
   function settle() {
     if (!inputActive() || !motion) return
     at = (motion.step + 1) as Checkpoint; motion = null; restore(); resize()
@@ -93,10 +108,11 @@ export function createSongkran(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance(placed=false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: at, time: 0, from: amount,placed,heldPosition:placed?placementRoots[at]!.position.clone():undefined,heldQuaternion:placed?placementRoots[at]!.quaternion.clone():undefined }; sync(); if (ctx.isReducedMotion?.()) settle() }
-  const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
-  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
+  function advance(placed=false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: carryStep(), time: 0, from: amount,placed,heldPosition:placed?placementRoots[at]!.position.clone():undefined,heldQuaternion:placed?placementRoots[at]!.quaternion.clone():undefined }; sync(); if (ctx.isReducedMotion?.()) { soundWater(true); settle() } }
+  const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; if (carrying()) { placement.capture(carryStep()); advance(true) } else advance() }
+  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); if (!motion) { placement.cancel(); restore() }; sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
+    if (!motion) { pointer.cancel(); placement.cancel(); restore() }
     const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(-.08,.86,.10), direction = new THREE.Vector3(.8,4.2,6).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target); camera.updateMatrixWorld(true)
     const inverse = camera.quaternion.clone().invert(), tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), p = new THREE.Vector3(); let distance = 1.3
@@ -109,6 +125,7 @@ export function createSongkran(ctx: SceneContext): SceneInstance {
     }
     pose(at,saved);camera.position.copy(target).addScaledVector(direction,distance);camera.lookAt(target);matrices()
   }
+  const stopInspection = addKeyboardPlacementInspection(ui.actionBtn,canvas,camera,model,placement,{isActive:()=>inputActive()&&!motion&&carrying()&&!pointer.isBusy(),step:()=>carryStep(),prepare:prepareInput,reset,rotate:(yaw,pitch)=>inspectRotate(yaw/.012,pitch/.012)})
   restore(); sync()
   return {
     start() {
@@ -119,20 +136,21 @@ export function createSongkran(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
-      if (!active()) { lifecycleVersion++; pointer.cancel(); if (!suspended) { suspended = true; sync() }; return }
+      feedback.update()
+      if (!active()) { lifecycleVersion++; pointer.cancel(); if (!motion) { placement.cancel(); restore() }; if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       if (motion) {
         motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.placed?.32:.85))
         const eased=ease(motion.time)
-        pose(motion.step, motion.from+(1-motion.from)*eased); if(motion.placed && isPlacementStep(motion.step)){placement.settle(eased);model.refreshHeldWater()} if (motion.time === 1) settle()
+        pose(motion.step, motion.from+(1-motion.from)*eased); if(motion.placed && isPlacementStep(motion.step)){placement.settle(eased);model.refreshHeldWater()} soundWater(); if (motion.time === 1) settle()
       }
       if (active()) { if (!ctx.isReducedMotion?.()) model.tick(delta); matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },
     dispose() {
       if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      disposed = true; lifecycleVersion++; pointer.dispose(); stopInspection(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

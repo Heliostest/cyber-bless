@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
@@ -160,24 +161,24 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
   presetHangs.forEach((p, i) => {
     const strip = new THREE.Mesh(
       stripGeo,
-      new THREE.MeshStandardMaterial({
+      createRitualMaterial({
         color: STRIP_COLORS[i % STRIP_COLORS.length],
         roughness: 0.95,
         side: THREE.DoubleSide,
-      }),
+      }, { kind: 'paper', strength: .22, fiber: 'paper' }),
     )
     strip.position.copy(p)
     world.add(strip)
     hangingStrips.push(strip)
   })
 
-  const looseMat = new THREE.MeshStandardMaterial({
+  const looseMat = createRitualMaterial({
     color: STRIP_COLORS[4],
     emissive: 0x6a2a3a,
     emissiveIntensity: 0.15,
     roughness: 0.95,
     side: THREE.DoubleSide,
-  })
+  }, { kind: 'paper', strength: .22, fiber: 'paper' })
   const loose = new THREE.Mesh(stripGeo, looseMat)
   const looseHome = new THREE.Vector3(1.15, 0.45, 1.0)
   const looseHangPos = new THREE.Vector3(0.45, 1.75, 0.12)

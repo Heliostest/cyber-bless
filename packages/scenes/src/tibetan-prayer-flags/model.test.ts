@@ -2,6 +2,19 @@ import {describe,it,expect} from 'vitest'
 import * as THREE from 'three'
 import {createPrayerFlagsModel} from './model'
 describe('Complete mantra prayer flag string',()=>{
+ it('can carry either real cord end off the old screen rail without stretching or detaching cloth',()=>{
+  const m=createPrayerFlagsModel(), fixed=m.right.clone(), goal=new THREE.Vector3(-.8,1.95,.25)
+  m.holdEnd(0,goal)
+  expect(m.left.distanceTo(goal)).toBeLessThan(1e-8);expect(m.right.toArray()).toEqual(fixed.toArray())
+  expect(m.loops[0]!.position.toArray()).toEqual(goal.toArray());expect(m.lengths.at(-1)).toBeCloseTo(2.5,5)
+  m.holdEnd(1,new THREE.Vector3(10,10,10));expect(m.lengths.at(-1)).toBeCloseTo(2.5,5)
+  for(const flag of m.flags)expect(Array.from(flag.geometry.getAttribute('position').array).every(Number.isFinite)).toBe(true)
+ })
+ it('keeps the complete string and cloth above ground while a free end is dragged too low',()=>{
+  const m=createPrayerFlagsModel();m.holdEnd(0,m.right.clone().add(new THREE.Vector3(0,-3,0)))
+  for(const flag of m.flags)expect(new THREE.Box3().setFromObject(flag,true).min.y).toBeGreaterThan(.049)
+  expect(m.lengths.at(-1)).toBeCloseTo(2.5,5)
+ })
  it('retains five opaque cloths, the documented colour order and readable mantra syllables',()=>{
   const m=createPrayerFlagsModel();expect(m.flags.map(f=>f.userData.mantra)).toEqual(['OM','MA','NI','PAD ME','HUM']);expect(m.flags.map(f=>f.material.color.getHex())).toEqual([0x5079be,0xf6f0dd,0xd76054,0x659e76,0xe9c257]);expect(m.flags.every(f=>!f.material.transparent&&f.material.map instanceof THREE.DataTexture)).toBe(true)
   expect(m.targets).toEqual([m.flags[0],m.flags[4],m.flags[4]])

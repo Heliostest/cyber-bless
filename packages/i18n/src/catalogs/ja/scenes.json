@@ -547,7 +547,7 @@
   "scene.croatian-licitar-heart.scene.label.e0069596": "ハートをそっと支える",
   "scene.croatian-licitar-heart.scene.targetLabel.0c5bc0e2": "展示台の木の釘",
   "scene.czech-bead-star.scene.assemble.3c8480d2": "木の台の最後の一連のガラス玉を持ち、星の腕に見える銀の珠へつなぎましょう。",
-  "scene.czech-bead-star.scene.rotate.c40a141f": "珠の星を右へ横にドラッグしてゆっくり回し、銀と青の面が日光を受ける様子を見ましょう。",
+  "scene.czech-bead-star.scene.rotate.c40a141f": "珠の星を自由に回して表と裏を眺め、軽くタップして静かに見ましょう。",
   "scene.czech-bead-star.scene.quiet.89e36e74": "珠の星を軽く押して静かに眺め、このひとときに留まりましょう。",
   "scene.czech-bead-star.scene.moving.4c417bbd": "細い糸がつながり、珠の光がそっと回ります…",
   "scene.czech-bead-star.scene.done.cbf038fd": "澄んだ光を一筋残して。",
@@ -1033,7 +1033,7 @@
   "scene.japanese-wagasa.scene.copy.ace9eae9": "傘の柄を軽く回す",
   "scene.japanese-wagasa.scene.copy.89226bad": "傘を閉じて姿を眺める",
   "scene.japanese-wagasa.scene.copy.ff31e440": "軸に沿って木の輪を上の案内の印へ押すと、支えが竹の骨を広げ、紙が暖かな色の円になります。",
-  "scene.japanese-wagasa.scene.copy.9837bf82": "下の柄を押さえて右へ短くドラッグし、紙傘をそっと回して、淡い傘面をそばへ向けましょう。",
+  "scene.japanese-wagasa.scene.copy.9837bf82": "柄を持って自由に回して眺められます。そのまま木の輪を傘の軸に沿って下の目印まで動かし、紙傘を閉じることもできます。",
   "scene.japanese-wagasa.scene.copy.a4039b2d": "軸に沿って木の輪を下の案内の印へ移し、竹の骨をゆっくり寄せ、紙を折り目に沿って閉じましょう。",
   "scene.japanese-wagasa.scene.copy.bfbb070b": "紙傘が閉じ、竹の骨と紙のひだが寄り添い、淡い面に日差しの中の軽い影が残ります。",
   "scene.japanese-wagasa.scene.copy.85a86d4e": "木の輪が上がり、竹の骨と紙が一緒に広がります…",
@@ -2207,5 +2207,14 @@
   "scene.italian-ex-voto.scene.copy.de59a0a7": "描けた割合{p0}%。細い線に沿って暖かな色の点まで続けましょう。",
   "scene.mizuhiki.scene.copy.b6a0f131": "紙面の文字を見る",
   "scene.mizuhiki.scene.copy.b843e233": "金色の点に沿った進行状況{p0}%。次の案内まで続けましょう。",
-  "scene.navruz-sumalak.scene.copy.cf5d8496": "弧に沿った進行状況{p0}%。次の淡い丸印を通って続けましょう。"
+  "scene.navruz-sumalak.scene.copy.cf5d8496": "弧に沿った進行状況{p0}%。次の淡い丸印を通って続けましょう。",
+  "scene.placement-inspection.hint.dbafb84c": "1本指でドラッグして持ち運び、置きます。2本指、右ボタン、または Shift を押しながらドラッグすると回して眺められます。",
+  "scene.placement-inspection.keyboard.6534a04e": "矢印キーで回して見る、Enter で置く、Esc で元に戻す。",
+  "scene.chinese-fu-paper.scene.carry.249eff31": "春節に福の字を貼り、家の幸せを願いましょう。戸の所定の位置へ運ぶと、近づいたところで自然に貼り付きます。",
+  "scene.chinese-ruyi-scepter.scene.carry.22c6bc6e": "如意に良い願いを託しましょう。雲形の頭を支え、クッション付きの木の台へ運ぶと、所定の位置で自然に収まります。",
+  "scene.japanese-hamaya.scene.carry.67656185": "破魔矢に厄除けと家内安全の願いを託しましょう。飾り矢を二つの支えへ運ぶと、近づいたところでそっと収まります。",
+  "scene.lanna-sand-pagoda.scene.carry.7d56b98e": "ランナーの新年には、砂の仏塔に幡を供えて功徳を積みます。竹の竿を塔のそばの砂台に合わせると、近づいたところで自然に立ちます。",
+  "scene.turkish-nazar-bead.scene.carry.4a7c035f": "トルコのナザールに厄除けの願いを託しましょう。青い珠を持ち上げ、自由に回して眺めてから、輪を木の台の横軸へ運んで掛けられます。",
+  "scene.placement-inspection.help.11e90018": "2本指でドラッグすると回して眺められます。マウスでは右ボタン、または Shift を押しながらドラッグします。",
+  "scene.udo-undama.scene.carry.566dabf6": "陶の玉を持ち上げ、自由に回して眺めてから、投げる準備の目印へ運べます。"
 }

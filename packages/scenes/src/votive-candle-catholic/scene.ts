@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { graphemeLength } from '@wbr/i18n'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -58,6 +59,9 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   for (const x of [-1.06, 1.06]) for (let i = 0; i < 6; i++) box(.32, .018, .23, stone, [x, .3 + i * .32, -.62])
   for (const y of [.37, .76]) box(1.65, .065, .56, steel, [0, y, -.05])
   for (const x of [-.79, .79]) box(.08, .77, .08, steel, [x, .51, -.08])
+  // Only the thin rim and shallow wax pool scatter; the candle body and drips stay matte.
+  const waxTop = createRitualMaterial({ color: 0xffe9b4, roughness: .92 }, { kind: 'wax', strength: .14, fiber: false })
+  const waxPool = createRitualMaterial({ color: 0xddc695, roughness: .92 }, { kind: 'wax', strength: .10, fiber: false })
   const halos: ReturnType<typeof createLampHalo>[] = []
   const fireMat = new THREE.MeshBasicMaterial({ color: 0xffbd58, toneMapped: false, transparent: true, opacity: .94, depthWrite: false })
   const coreMat = new THREE.MeshBasicMaterial({ color: 0xffedb7, toneMapped: false })
@@ -65,8 +69,8 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   function candle(parent: THREE.Object3D, scale: number, lit: boolean) {
     const group = new THREE.Group(); group.scale.setScalar(scale); parent.add(group)
     add(new THREE.CylinderGeometry(.091, .11, .94, 28), wax, [0, .47, 0], group)
-    add(new THREE.TorusGeometry(.074, .022, 8, 28), wax, [0, .941, 0], group).rotation.x = Math.PI / 2
-    add(new THREE.CylinderGeometry(.071, .071, .018, 24), material(0xddc695), [0, .943, 0], group)
+    add(new THREE.TorusGeometry(.074, .022, 8, 28), waxTop, [0, .941, 0], group).rotation.x = Math.PI / 2
+    add(new THREE.CylinderGeometry(.071, .071, .018, 24), waxPool, [0, .943, 0], group)
     for (let i = 0; i < 7; i++) {
       const a = i * 2.4, y = .78 - (i % 3) * .11
       const drip = add(new THREE.CapsuleGeometry(.014 + i % 2 * .003, .07 + i % 3 * .035, 3, 8), wax,

@@ -1,11 +1,12 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
 /** A cutaway home and two handfuls of roasted beans; proportions and paths are illustrative. */
 export function createSetsubunModel() {
   const root=new THREE.Group();root.name='beans-root'
   const subject=new THREE.Group();subject.name='beans-subject';root.add(subject)
   const mat=(color:number,roughness=.85)=>new THREE.MeshStandardMaterial({color,roughness})
-  const wood=mat(0xae7b4c),lightWood=mat(0xd7ad73),paper=mat(0xf3e6bb),stone=mat(0xc5c6ab),floor=mat(0xc99560),beanMat=mat(0xd9b667,.7),hilumMat=mat(0x94714b)
+  const wood=mat(0xae7b4c),lightWood=mat(0xd7ad73),paper=createRitualMaterial({color:0xf3e6bb,roughness:.85}, { kind: 'paper', strength: .24, fiber: 'paper' }),stone=mat(0xc5c6ab),floor=mat(0xc99560),beanMat=mat(0xd9b667,.7),hilumMat=mat(0x94714b)
   const mesh=(g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D,name:string)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
   const box=(name:string,size:[number,number,number],p:[number,number,number],m:THREE.Material,parent:THREE.Object3D=subject)=>{const o=mesh(new THREE.BoxGeometry(...size),m,parent,name);o.position.set(...p);return o}
   const inside=box('beans-inside-floor',[3,.16,2.5],[0,.015,.70],floor)

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -49,7 +50,7 @@ export function createBasqueSunflower(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'sunflower-courtyard-workshop'; scene.add(world)
   const material = (color: number, roughness = .88) => new THREE.MeshStandardMaterial({ color, roughness })
   const walnut = material(0x80674b), oak = material(0xb29367), grain = material(0x987d58)
-  const paper = material(0xe7dfbc), innerPaper = material(0xcac9b0), seed = material(0x977640), seedLight = material(0xb6975c)
+  const paper = createRitualMaterial({ color: 0xe7dfbc, roughness: .88 }, { kind: 'paper', strength: .22, fiber: 'paper' }), innerPaper = createRitualMaterial({ color: 0xcac9b0, roughness: .88 }, { kind: 'paper', strength: .16, fiber: 'paper' }), seed = material(0x977640), seedLight = material(0xb6975c)
   const sage = material(0x9aa995), stone = material(0xc8c7ba), flax = material(0xb5a380)
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p)

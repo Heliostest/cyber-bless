@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -60,7 +61,7 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'navruz-courtyard-hearth'; scene.add(world)
   const mat = (color: number, roughness = .9) => new THREE.MeshStandardMaterial({ color, roughness })
   const clay = mat(0xba8a66), clayLight = mat(0xcfaa83), soot = mat(0x504740), iron = mat(0x6d7973), ironRim = mat(0x85948b)
-  const caramel = mat(0xa76231, .68), swirlMat = mat(0xc48b48, .75), wood = mat(0xc19057), woodLight = mat(0xd6ab70)
+  const caramel = createRitualMaterial({ color: 0xa76231, roughness: .43, clearcoat: .32, clearcoatRoughness: .28 }, { kind: 'wet', strength: .3 }), swirlMat = createRitualMaterial({ color: 0xc48b48, roughness: .49, clearcoat: .26, clearcoatRoughness: .3 }, { kind: 'wet', strength: .25 }), wood = mat(0xc19057), woodLight = mat(0xd6ab70)
   const glaze = mat(0x78a9a7, .28), cream = mat(0xf1dec2, .4), weave = mat(0xd2ab78), terracotta = mat(0xb27355)
   function add(geometry: THREE.BufferGeometry, material: THREE.Material, position: [number, number, number], parent: THREE.Object3D = world, name = '') {
     const mesh = new THREE.Mesh(geometry, material); mesh.position.set(...position); mesh.name = name

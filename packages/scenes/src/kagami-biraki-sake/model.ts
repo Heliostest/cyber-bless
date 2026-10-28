@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 
 // A finite kagami-biraki fragment. Lid partition, sliding and mallet return are product staging.
@@ -23,7 +24,7 @@ export function createKagamiBirakiModel(){
  const wrap=mesh('woven-komo-wrap',lathe([[radius(.08),.08],[radius(.08)+.035,.08],[.685,.5],[radius(.99)+.035,.99],[radius(.99),.99],[.65,.5],[radius(.08),.08]]),straw,cask)
  for(const y of[.20,.91]){const hoop=mesh('rope-hoop-'+y,new THREE.TorusGeometry(radius(y)+.035+.018,.018,8,64),rope,cask);hoop.rotation.x=Math.PI/2;hoop.position.y=y}
  const liquidRadius=.55-(.03*(.83-.5)/.58)
- const liquidMaterial=new THREE.MeshStandardMaterial({color:'#ead59b',roughness:.2,transparent:true,opacity:.78,metalness:0})
+ const liquidMaterial=createRitualMaterial({color:'#ead59b',roughness:.18,transparent:true,opacity:.78,metalness:0,depthWrite:false},{kind:'water',strength:.25})
  const liquid=mesh('sake-volume',lathe([[0,.12],[.50,.12],[.55,.5],[liquidRadius,.83],[0,.83]]),liquidMaterial,cask);liquid.castShadow=false
  // Both prepared halves stay flat on the rim; this opening geometry is an original simplification.
  const lids=[-1,1].map(side=>{const points=Array.from({length:49},(_,i)=>{const angle=-Math.PI/2+Math.PI*i/48;return new THREE.Vector2(side*.61*Math.cos(angle),.61*Math.sin(angle))});if(side===-1)points.reverse();const s=new THREE.Shape(points);s.closePath();const o=mesh('prepared-lid-'+(side===-1?'left':'right'),new THREE.ExtrudeGeometry(s,{depth:.045,bevelEnabled:false,curveSegments:24}),lidWood,cask);o.rotation.x=-Math.PI/2;o.position.y=1.08;return o})

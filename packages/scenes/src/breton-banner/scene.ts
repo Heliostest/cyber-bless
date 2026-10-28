@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -82,7 +83,8 @@ export function createBretonBanner(ctx: SceneContext): SceneInstance {
     uv.push(x / cols, y / rows)
     if (x < cols && y < rows) { const i = y * (cols + 1) + x; faces.push(i, i + cols + 1, i + 1, i + 1, i + cols + 1, i + cols + 2) }
   }
-  patch('banner-cloth', uv, faces, clothMat)
+  const bannerMaterial = createRitualMaterial({ color: 0x487f85, roughness: .9, side: THREE.DoubleSide }, { kind: 'cloth', strength: .22, fiber: 'linen' })
+  patch('banner-cloth', uv, faces, bannerMaterial)
   for (const v of [.025, .95]) strip('banner-woven-hem', Array.from({ length: 41 }, (_, i) => [i / 40, v]), .011, border)
   for (const u of [.025, .975]) {
     const edgeUV: number[] = [], edgeFaces: number[] = []

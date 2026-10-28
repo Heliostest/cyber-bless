@@ -23,7 +23,7 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...Array.from({ length: TOTAL_STEPS + 1 }, (_, i) => hintCopy(i)), ...Array.from({ length: TOTAL_STEPS }, (_, i) => movingCopy(i))].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: number; time: number; from: number; placed: boolean } | null = null
+  let motion: { step: number; time: number; from: number; placed: boolean; sounded?: boolean; flowing?: boolean } | null = null
   let amount = 0, invalid = false
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
@@ -81,6 +81,16 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
+  function soundWater(short = false) {
+    if (!motion || phase(motion.step) !== 1) return
+    // Only accepted motion observes the stream: resize/restore also call pose.
+    if ((short || model.stream.visible) && !motion.sounded) {
+      motion.sounded = true
+      withHostCallbacks(() => feedback.sound('water', { duration: short ? .12 : .8, strength: .55 }))
+    }
+    if (!model.stream.visible && motion.flowing) feedback.stop()
+    motion.flowing = model.stream.visible
+  }
   function settle() {
     if (!inputActive() || !motion) return
     placement.cancel(); at = motion.step + 1; motion = null; restore()
@@ -90,7 +100,7 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
       if (at === TOTAL_STEPS && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === TOTAL_STEPS) return; motion = { step: at, time: 0, from: amount, placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === TOTAL_STEPS) return; motion = { step: at, time: 0, from: amount, placed }; sync(); if (ctx.isReducedMotion?.()) { soundWater(true); settle() } }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === TOTAL_STEPS || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
@@ -111,6 +121,7 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
+      feedback.update()
       if (!active()) { lifecycleVersion++; pointer.cancel(); if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
@@ -123,6 +134,7 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
           if (motion.time <= .2) { const entering = ease(motion.time / .2); pose(motion.step, .12 * entering); placement.settle(entering) }
           else { placement.settle(1); pose(motion.step, .12 + .88 * ease((motion.time - .2) / .8)) }
         } else { pose(motion.step, motion.from + (1 - motion.from) * eased); placement.settle(eased) }
+        soundWater()
         if (motion.time === 1) settle()
       }
       if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue, type InteractionCue } from '../scene-localization'
@@ -89,7 +90,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
   }
   const patchwork = new THREE.DataTexture(pixels, textureSize, textureSize, THREE.RGBAFormat)
   patchwork.colorSpace = THREE.SRGBColorSpace; patchwork.minFilter = patchwork.magFilter = THREE.LinearFilter; patchwork.generateMipmaps = false; patchwork.needsUpdate = true
-  const clothMaterial = new THREE.MeshStandardMaterial({ map: patchwork, roughness: .96, side: THREE.DoubleSide })
+  const clothMaterial = createRitualMaterial({ map: patchwork, roughness: .96, side: THREE.DoubleSide }, { kind: 'cloth', strength: .20, fiber: 'linen' })
   const clothGeometry = new THREE.PlaneGeometry(2, 2, CLOTH_SEGMENTS, CLOTH_SEGMENTS)
   const cloth = add('bojagi-cloth', clothGeometry, clothMaterial)
   cloth.receiveShadow = false
@@ -132,7 +133,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     mesh.material.side = THREE.DoubleSide; mesh.receiveShadow = false; mesh.userData.toonSurface = { outline: false, shading: 'smooth' }
     return { mesh, geometry, uv: geometry.getAttribute('uv'), position: geometry.getAttribute('position'), at: CORNERS[n]! }
   })
-  const bandMaterial = new THREE.MeshStandardMaterial({ color: 0xd6a052, roughness: .93, side: THREE.DoubleSide })
+  const bandMaterial = createRitualMaterial({ color: 0xd6a052, roughness: .93, side: THREE.DoubleSide }, { kind: 'cloth', strength: .16, fiber: 'linen' })
   const bandSegments = 40
   const ribbons = ['near', 'far', 'left', 'right'].map(name => {
     const geometry = new THREE.PlaneGeometry(1, 1, bandSegments, 1)

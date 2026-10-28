@@ -1,9 +1,10 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 
 /** Original generalized washing station; named practice, authored materials and assistance. */
 export function createCoinWashingModel(){
  const root=new THREE.Group();root.name='wash-subject'
- const stone=new THREE.MeshStandardMaterial({color:'#b9b098',roughness:.95}),ledgeStone=new THREE.MeshStandardMaterial({color:'#d1c4a8',roughness:.96}),wood=new THREE.MeshStandardMaterial({color:'#c59b64',roughness:.8}),basketMat=new THREE.MeshStandardMaterial({color:'#d6b67b',roughness:.9}),clothMat=new THREE.MeshStandardMaterial({color:'#f4ead6',roughness:1}),metal=new THREE.MeshStandardMaterial({color:'#ba9954',roughness:.4,metalness:.58}),waterMat=new THREE.MeshBasicMaterial({color:'#8bd5d6',transparent:true,opacity:.52,depthWrite:false})
+ const stone=new THREE.MeshStandardMaterial({color:'#b9b098',roughness:.95}),ledgeStone=new THREE.MeshStandardMaterial({color:'#d1c4a8',roughness:.96}),wood=new THREE.MeshStandardMaterial({color:'#c59b64',roughness:.8}),basketMat=new THREE.MeshStandardMaterial({color:'#d6b67b',roughness:.9}),clothMat=new THREE.MeshStandardMaterial({color:'#f4ead6',roughness:1}),metal=new THREE.MeshStandardMaterial({color:'#ba9954',roughness:.4,metalness:.58}),waterMat=createRitualMaterial({color:'#8bd5d6',transparent:true,opacity:.58,roughness:.16,metalness:0,depthWrite:false},{kind:'water',strength:.35})
  const make=(name:string,g:THREE.BufferGeometry,mat:THREE.Material,parent:THREE.Object3D=root)=>{const o=new THREE.Mesh(g,mat);o.name=name;o.castShadow=o.receiveShadow=!mat.transparent;parent.add(o);return o}
  const box=(name:string,x:number,y:number,z:number,w:number,h:number,d:number,mat:THREE.Material,parent:THREE.Object3D=root)=>{const o=make(name,new THREE.BoxGeometry(w,h,d),mat,parent);o.position.set(x,y,z);return o}
  const n=48,ring=(r:number,y:number)=>Array.from({length:n},(_,i)=>new THREE.Vector3(r*Math.cos(i*2*Math.PI/n),y,r*Math.sin(i*2*Math.PI/n)))

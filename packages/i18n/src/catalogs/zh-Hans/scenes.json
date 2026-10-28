@@ -546,7 +546,7 @@
   "scene.croatian-licitar-heart.scene.label.e0069596": "轻托彩心",
   "scene.croatian-licitar-heart.scene.targetLabel.0c5bc0e2": "展架木钉",
   "scene.czech-bead-star.scene.assemble.3c8480d2": "拿起木托上的最后一串玻璃珠，接到星臂露出的银珠处。",
-  "scene.czech-bead-star.scene.rotate.c40a141f": "在珠星上向右横拖，慢慢转动，看银蓝珠面接住日光。",
+  "scene.czech-bead-star.scene.rotate.c40a141f": "自由转动珠星查看正反面，再轻点静看。",
   "scene.czech-bead-star.scene.quiet.89e36e74": "轻点珠星静看，让这一刻停留。",
   "scene.czech-bead-star.scene.moving.4c417bbd": "细线相连，珠光轻转…",
   "scene.czech-bead-star.scene.done.cbf038fd": "留一束清亮的光。",
@@ -1032,7 +1032,7 @@
   "scene.japanese-wagasa.scene.copy.ace9eae9": "轻旋伞柄",
   "scene.japanese-wagasa.scene.copy.89226bad": "收伞留影",
   "scene.japanese-wagasa.scene.copy.ff31e440": "沿伞轴把木环推到上方提示标记，撑杆带竹骨展开，纸面舒成一圈暖色。",
-  "scene.japanese-wagasa.scene.copy.9837bf82": "按住下端伞柄向右短拖，轻轻转动纸伞，让浅色伞面转向身旁。",
+  "scene.japanese-wagasa.scene.copy.9837bf82": "按住伞柄自由转动查看；也可直接沿伞轴把木环移到下方提示标记，收拢纸伞。",
   "scene.japanese-wagasa.scene.copy.a4039b2d": "沿伞轴把木环移到下方提示标记，竹骨缓缓收拢，纸面沿折痕合在一起。",
   "scene.japanese-wagasa.scene.copy.bfbb070b": "纸伞收拢，竹骨与纸褶相依，浅色的一面留住阳光里的轻影。",
   "scene.japanese-wagasa.scene.copy.85a86d4e": "木环升起，竹骨与纸面一起舒展……",
@@ -2207,5 +2207,14 @@
   "scene.italian-ex-voto.scene.copy.de59a0a7": "已描好 {p0}%，沿细线继续到暖色点。",
   "scene.mizuhiki.scene.copy.b6a0f131": "查看纸面文字",
   "scene.mizuhiki.scene.copy.b843e233": "已沿金点前进 {p0}%，继续到下一处提示。",
-  "scene.navruz-sumalak.scene.copy.cf5d8496": "已沿弧线前进 {p0}%，继续经过下一处浅色圆点。"
+  "scene.navruz-sumalak.scene.copy.cf5d8496": "已沿弧线前进 {p0}%，继续经过下一处浅色圆点。",
+  "scene.placement-inspection.hint.dbafb84c": "单指拖动拿放；双指拖动、右键或按住 Shift 拖动可转动查看。",
+  "scene.placement-inspection.keyboard.6534a04e": "方向键转动查看，Enter 安放，Esc 放回。",
+  "scene.chinese-fu-paper.scene.carry.249eff31": "春节贴福，迎一份家宅祝福。把福字移到门上的位置，靠近后会自动贴稳。",
+  "scene.chinese-ruyi-scepter.scene.carry.22c6bc6e": "如意寄托好愿。托住云头，把如意移到软垫木座上，到位会自动放稳。",
+  "scene.japanese-hamaya.scene.carry.67656185": "破魔矢寄托避厄护佑、家内平安的心愿。把饰矢放到双托上，靠近后会轻轻落稳。",
+  "scene.lanna-sand-pagoda.scene.carry.7d56b98e": "兰纳新年，随沙塔献幡修福。把竹杆对准塔旁沙座，靠近后会自动插稳。",
+  "scene.turkish-nazar-bead.scene.carry.4a7c035f": "土耳其护眼珠寄托避厄护佑的心意。拿起蓝珠，可自由转动查看，再将挂环送到木架横轴上挂稳。",
+  "scene.placement-inspection.help.11e90018": "双指拖动可转看；鼠标用右键或 Shift 拖动。",
+  "scene.udo-undama.scene.carry.566dabf6": "拿起陶玉，可自由转动查看，再移到投掷提示位置。"
 }

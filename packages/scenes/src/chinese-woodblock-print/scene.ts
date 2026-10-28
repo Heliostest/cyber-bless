@@ -1,5 +1,6 @@
 import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -46,7 +47,7 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'woodblock-workbench'; scene.add(world)
   const mat = (color: number, roughness = .9) => new THREE.MeshStandardMaterial({ color, roughness })
   const wood = mat(0xb59467), darkWood = mat(0x836348), cutWood = mat(0x9b784f), paleWood = mat(0xc4a575)
-  const paperMat = mat(0xeee6cc), paperEdge = mat(0xe0d4b5), ink = mat(0x334c5b), sage = mat(0x91a89a), bristle = mat(0x8f754d)
+  const paperMat = createRitualMaterial({ color: 0xeee6cc, roughness: .9 }, { kind: 'paper', strength: .22, fiber: 'paper' }), paperEdge = createRitualMaterial({ color: 0xe0d4b5, roughness: .9 }, { kind: 'paper', strength: .10, fiber: 'paper' }), ink = mat(0x334c5b), sage = mat(0x91a89a), bristle = mat(0x8f754d)
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: XYZ, parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }

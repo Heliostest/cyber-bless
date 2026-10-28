@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -111,7 +112,7 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   const profile = [[0, -.04], [.30, -.04], [.30, 0], [.47, .49], [.46, .53], [.41, .52], [.26, .08], [0, .08]]
   const basin = add('indigo-rinse-basin', new THREE.LatheGeometry(profile.map(p => new THREE.Vector2(p[0], p[1])), 64), ceramic, [-.78, .04, -.10])
   basin.userData.toonSurface = { outline: false }
-  const water = add('indigo-rinse-water', new THREE.CylinderGeometry(.384, .384, .012, 56), material(0x749da3, .40), [-.78, .44, -.10]); water.castShadow = false
+  const water = add('indigo-rinse-water', new THREE.CylinderGeometry(.384, .384, .012, 56), createRitualMaterial({ color: 0x749da3, roughness: .24, transparent: true, opacity: .72, depthWrite: false }, { kind: 'water', strength: .3 }), [-.78, .44, -.10]); water.castShadow = false
   rod('indigo-rinse-rest', .07, 1.42, [RINSED.x, RINSED.y, RINSED.z])
   for (const x of [-1.45, -.11]) {
     box('indigo-rinse-rest-foot', [.16, .07, .40], [x, .035, .49], walnut)

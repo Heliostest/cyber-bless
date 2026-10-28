@@ -1,3 +1,4 @@
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -56,7 +57,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   const jade = material(0x9db9a8, .66), jadeLight = material(0xc0d2bd, .71), jadeDark = material(0x718d7c)
   const clay = material(0xba9676), cream = material(0xf0e2c3), wood = material(0xbb8e68), woodLight = material(0xd9b68a)
   const paperMat = material(0xc98468), paperSeam = material(0xe6b995), stickMat = material(0x88624c), bamboo = material(0xcbab73)
-  const ash = material(0xd4c9b3), dark = material(0x625f50), teaMat = material(0x8f713e, .63)
+  const ash = material(0xd4c9b3), dark = material(0x625f50), teaMat = createRitualMaterial({ color: 0x8f713e, roughness: .3, transmission: .18, attenuationColor: 0x8f713e, attenuationDistance: .15 }, { kind: 'tea', thickness: .012, strength: .22 })
   const emberMat = new THREE.MeshStandardMaterial({ color: 0xcd7853, emissive: 0x8b381c, emissiveIntensity: .28, roughness: 1 })
   const add = (geo: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world, name = '') => {
     const mesh = new THREE.Mesh(geo, mat); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh

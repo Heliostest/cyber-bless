@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
 const R=.38,inner=.32,flat=.92,parts=6,detail=24,slices=8
 const V=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
@@ -15,7 +16,7 @@ function calyx(){const p:number[]=[],rim=Array.from({length:10},(_,i)=>{const a=
 /** An original six-piece rind around real opaque arils; deterministic authored fracture. */
 export function createPomegranateModel(){
  const root=new THREE.Group();root.name='pomegranate-subject';const fruit=new THREE.Group();fruit.name='pomegranate-fruit';root.add(fruit)
- const texture=skin(),red=new THREE.MeshStandardMaterial({map:texture,roughness:.66}),cream=new THREE.MeshStandardMaterial({color:0xf2d7a1,roughness:.91}),stone=new THREE.MeshStandardMaterial({color:0xd2c3a3,roughness:.97}),wood=new THREE.MeshStandardMaterial({color:0x3e878e,roughness:.83}),frame=new THREE.MeshStandardMaterial({color:0xf0e6c8,roughness:.94}),bronze=new THREE.MeshStandardMaterial({color:0xa68a4f,metalness:.65,roughness:.35}),ruby=new THREE.MeshStandardMaterial({color:0xbb2850,roughness:.32})
+ const texture=skin(),red=new THREE.MeshStandardMaterial({map:texture,roughness:.66}),cream=new THREE.MeshStandardMaterial({color:0xf2d7a1,roughness:.91}),stone=new THREE.MeshStandardMaterial({color:0xd2c3a3,roughness:.97}),wood=new THREE.MeshStandardMaterial({color:0x3e878e,roughness:.83}),frame=new THREE.MeshStandardMaterial({color:0xf0e6c8,roughness:.94}),bronze=new THREE.MeshStandardMaterial({color:0xa68a4f,metalness:.65,roughness:.35}),ruby=createRitualMaterial({color:0xbb2850,roughness:.32}, { kind: 'fruit', strength: .16, thickness: .045, fiber: false })
  const make=(name:string,g:THREE.BufferGeometry,material:THREE.Material|THREE.Material[],parent:THREE.Object3D=root)=>{const m=new THREE.Mesh(g,material);m.name=name;m.castShadow=m.receiveShadow=true;parent.add(m);return m}
  const floor=.2,step=make('pomegranate-threshold',new THREE.BoxGeometry(3.6,.2,3.5),stone);step.position.set(0,.1,.5)
  const door=make('pomegranate-door',new THREE.BoxGeometry(2,1.8,.14),wood);door.position.set(0,1.1,-1.15)

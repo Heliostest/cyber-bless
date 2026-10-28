@@ -1,6 +1,6 @@
 {
-  "checkedAt": "2026-10-13T06:04:01.997Z",
-  "completedAt": "2026-10-13T05:58:09.027Z",
+  "checkedAt": "2026-10-26T14:47:45.015Z",
+  "completedAt": "2026-10-26T14:46:19.505Z",
   "appId": "6821271597",
   "bundleId": "com.helio.cyberbless",
   "version": "1.0.0",
@@ -8,102 +8,29 @@
   "locale": "zh-Hans",
   "appStoreState": "PREPARE_FOR_SUBMISSION",
   "releaseType": "MANUAL",
-  "source": "Production Web build from the original 2026-10-10 EAS archive artifacts/eas-archive-awdd99/source, matching the original screenshot series; real browser viewport captures",
-  "totalGroups": 8,
-  "totalScreenshots": 40,
-  "addedScreenshots": 35,
-  "preservedScreenshots": 5,
+  "source": "iOS 26.5 Simulator / native Release / Xcode26.6 / Maestro 2.3.0 XCTest",
+  "sourceCommit": "7cf95e9f31eea3463c4624ad5b00cc21493245e4",
+  "buildNumber": "12",
+  "nativeStatusBar": true,
+  "totalGroups": 2,
+  "totalScreenshotSets": 8,
+  "totalScreenshots": 10,
+  "addedScreenshots": 10,
+  "removedObsoleteScreenshots": 40,
+  "preservedOldSourceFiles": 40,
   "allComplete": true,
-  "repeatRunVerified": true,
+  "orderVerified": true,
+  "independentReadbackVerified": true,
+  "previousScreenshotArchive": "artifacts/store-refresh-20261026/backup",
+  "emptyDisplayTypes": [
+    "APP_IPHONE_35",
+    "APP_IPHONE_55",
+    "APP_IPHONE_40",
+    "APP_IPHONE_47",
+    "APP_IPHONE_58",
+    "APP_IPHONE_65"
+  ],
   "groups": [
-    {
-      "displayType": "APP_IPHONE_67",
-      "setId": "c32c3cb6-6c0b-4e19-8370-4103a154279b",
-      "width": 1320,
-      "height": 2868,
-      "legacy": false,
-      "screenshots": [
-        {
-          "id": "80800019-6945-882d-8032-bcee22232ba2",
-          "fileName": "01-today.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-67/01-today.png",
-          "checksum": "1c15045dd07b0187ae3f10d24e2f6e2c",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "c7000019-6945-882d-8006-c894c25bf005",
-          "fileName": "02-wishes.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-67/02-wishes.png",
-          "checksum": "32d5035017ba79b2461132284e1486e7",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "c9000019-6945-882d-8030-33704c6910f4",
-          "fileName": "03-woodfish.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-67/03-woodfish.png",
-          "checksum": "4b1971259eefb5a8a9c3f06379b9364a",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "62000019-6945-882d-803e-0a9bebef24d9",
-          "fileName": "04-world.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-67/04-world.png",
-          "checksum": "68c44d2b4ea0652aa68e59370a691062",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "2e000019-6945-882d-802f-273be15c4f17",
-          "fileName": "05-privacy.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-67/05-privacy.png",
-          "checksum": "66d5d236f4519c0b2c5bfd3b65e0cb5f",
-          "state": "COMPLETE"
-        }
-      ]
-    },
-    {
-      "displayType": "APP_IPHONE_65",
-      "setId": "3a77a027-0e77-450e-a794-30cca9997de7",
-      "width": 1284,
-      "height": 2778,
-      "legacy": false,
-      "screenshots": [
-        {
-          "id": "25000019-6945-882d-8016-3f4857e257b2",
-          "fileName": "01-today.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-65/01-today.png",
-          "checksum": "7f0eb03cc4634c0fdf2dfa6d581c0169",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "56c00019-6945-882d-8025-0f4597614c41",
-          "fileName": "02-wishes.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-65/02-wishes.png",
-          "checksum": "86739fe9fc606c2905a5ca7b92edc440",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "bb400019-6945-882d-8021-9087e8c47e5b",
-          "fileName": "03-woodfish.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-65/03-woodfish.png",
-          "checksum": "2cfe4be78f3a7f46fa76b1542879fbe9",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "bf800019-6945-882d-8017-63c3a6dd9d90",
-          "fileName": "04-world.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-65/04-world.png",
-          "checksum": "add1da44db60b76b5524ee82a47f00b0",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "da400019-6945-882d-8003-b92d1cc6cec3",
-          "fileName": "05-privacy.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-65/05-privacy.png",
-          "checksum": "48e8b90e1f00bfdba3b7d5837b7cca5f",
-          "state": "COMPLETE"
-        }
-      ]
-    },
     {
       "displayType": "APP_IPHONE_61",
       "setId": "c57bd4cf-09fa-40f0-81c8-55c596eac4cc",
@@ -112,261 +39,106 @@
       "legacy": false,
       "screenshots": [
         {
-          "id": "0a000019-6945-882d-802c-e32b04ffa790",
-          "fileName": "01-today-medium.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/01-today-medium.png",
-          "checksum": "dd19413fce4dfaea8298ab483c0100cf",
+          "id": "ad000019-6945-882d-8002-12ac231e2357",
+          "fileName": "20261026-01-today.png",
+          "sourceFile": "store/screenshots/ios/zh-Hans/20261026-01-today.png",
+          "bytes": 919977,
+          "checksum": "9c270c8027b3dea06bc9fffb01b0bddc",
+          "sha256": "5108fafaefb0017bc162c8c3d44bdefadb3494144023cbc5b0786d060b339181",
           "state": "COMPLETE"
         },
         {
-          "id": "88800019-6945-882d-802f-6f0fdd00722b",
-          "fileName": "02-wishes-medium.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/02-wishes-medium.png",
-          "checksum": "65ca21370fca703956a29d1fc41e85cf",
+          "id": "b4000019-6945-882d-801a-b6e1cfd427b2",
+          "fileName": "20261026-02-wishes.png",
+          "sourceFile": "store/screenshots/ios/zh-Hans/20261026-02-wishes.png",
+          "bytes": 624036,
+          "checksum": "7e964db25216d0e041d6806d3c6a8dc5",
+          "sha256": "46696671f4f74018411cc0f587d50b10f2d5eb6c640eebc62530169e52f41037",
           "state": "COMPLETE"
         },
         {
-          "id": "34000019-6945-882d-801c-711464bb6e40",
-          "fileName": "03-woodfish-medium.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/03-woodfish-medium.png",
-          "checksum": "b053924f504cce8024c2280db21f70cd",
+          "id": "4b000019-6945-882d-8024-ace41de7422e",
+          "fileName": "20261026-03-windchime.png",
+          "sourceFile": "store/screenshots/ios/zh-Hans/20261026-03-windchime.png",
+          "bytes": 830813,
+          "checksum": "ff36e0f97ab748ee70faff5973fdbd7b",
+          "sha256": "15ff67e7130f3bf6e057892166517f77d034971251cf4541ea7e2d9aa0a73176",
           "state": "COMPLETE"
         },
         {
-          "id": "b7400019-6945-882d-8018-dca73e045e01",
-          "fileName": "04-world-medium.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/04-world-medium.png",
-          "checksum": "bb280b4bc7352b4bd94afbf04b579d87",
+          "id": "b9400019-6945-882d-8031-e49b7663a507",
+          "fileName": "20261026-04-crane.png",
+          "sourceFile": "store/screenshots/ios/zh-Hans/20261026-04-crane.png",
+          "bytes": 1010454,
+          "checksum": "9f72ba84b4bbd18a569c8db03dbaba41",
+          "sha256": "aa971c772f77382ab789b75e1fa2a3484229bf714a01aa71e95a448aa082c32e",
           "state": "COMPLETE"
         },
         {
-          "id": "26000019-6945-882d-8019-f5d40b3fd859",
-          "fileName": "05-privacy-medium.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/05-privacy-medium.png",
-          "checksum": "2a577d1b0c8113da0fc6d4a9dec83db3",
+          "id": "7ac00019-6945-882d-8028-24725e93aae9",
+          "fileName": "20261026-05-world.png",
+          "sourceFile": "store/screenshots/ios/zh-Hans/20261026-05-world.png",
+          "bytes": 705411,
+          "checksum": "8f068d44715f71646e1a184da3be783b",
+          "sha256": "33d8f0743e1904d2385ecc05d0764a7a4678081133c5e8a10a5c8510b717df37",
           "state": "COMPLETE"
         }
       ]
     },
     {
-      "displayType": "APP_IPHONE_58",
-      "setId": "9a41a6ce-b2f2-4a44-a001-d8b05a804c27",
-      "width": 1170,
-      "height": 2532,
+      "displayType": "APP_IPHONE_67",
+      "setId": "c32c3cb6-6c0b-4e19-8370-4103a154279b",
+      "width": 1320,
+      "height": 2868,
       "legacy": false,
       "screenshots": [
         {
-          "id": "d3000019-6945-882d-803e-0f8216a32e1b",
-          "fileName": "01-today.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-58/01-today.png",
-          "checksum": "53434a6273f57f38499178deff5054f2",
+          "id": "42800019-6945-882d-8037-5da32fa9fab8",
+          "fileName": "20261026-01-today.png",
+          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-67/20261026-01-today.png",
+          "bytes": 986152,
+          "checksum": "cd4b042485d2c8594b74b65225057582",
+          "sha256": "a9ba6abd5e54057fbc67926c47097a0dd964db2fde672d57888b5d39bd55e0b5",
           "state": "COMPLETE"
         },
         {
-          "id": "22800019-6945-882d-802d-2f36e5b16060",
-          "fileName": "02-wishes.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-58/02-wishes.png",
-          "checksum": "4e5ac4d12ddb5e13e6bb56a28b4cac29",
+          "id": "5b800019-6945-882d-800b-862877f55af9",
+          "fileName": "20261026-02-wishes.png",
+          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-67/20261026-02-wishes.png",
+          "bytes": 665684,
+          "checksum": "cb9cab3924f466f835f2ce516bbcba8e",
+          "sha256": "450db1438533f47b8a3cd81b56141e0357c62f5a0162290564fe03e7f3167222",
           "state": "COMPLETE"
         },
         {
-          "id": "b9000019-6945-882d-802b-9cd0b02a7a36",
-          "fileName": "03-woodfish.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-58/03-woodfish.png",
-          "checksum": "f25cf4c33879e030aa265f0b678139ab",
+          "id": "67400019-6945-882d-8007-6ff5ea88dc55",
+          "fileName": "20261026-03-windchime.png",
+          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-67/20261026-03-windchime.png",
+          "bytes": 973327,
+          "checksum": "1bb742ea00ab0d7755bb7d9965f03662",
+          "sha256": "f395eefd95fdb2a4bafb908d14489518a85b0fa34692d241a0c91ec2388e8f00",
           "state": "COMPLETE"
         },
         {
-          "id": "e3400019-6945-882d-803c-93bc8e762696",
-          "fileName": "04-world.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-58/04-world.png",
-          "checksum": "b5e1b98841243c26ef1f7b3c44d7bfd3",
+          "id": "d6000019-6945-882d-8004-9b1db48c074b",
+          "fileName": "20261026-04-crane.png",
+          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-67/20261026-04-crane.png",
+          "bytes": 1157861,
+          "checksum": "b01ae8192580bda93e5ef76ab3652e2a",
+          "sha256": "2c9c685b7a2de0c9d7fb1f4992d23194ad8abdeb86a3ced692b8eb23bff2f1bc",
           "state": "COMPLETE"
         },
         {
-          "id": "a3400019-6945-882d-803b-7dc5c579c7fd",
-          "fileName": "05-privacy.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-58/05-privacy.png",
-          "checksum": "45620358782a70103f45c5708f442d2d",
-          "state": "COMPLETE"
-        }
-      ]
-    },
-    {
-      "displayType": "APP_IPHONE_55",
-      "setId": "0451d6d7-95f8-44a6-96d4-93573ae2266f",
-      "width": 1242,
-      "height": 2208,
-      "legacy": false,
-      "screenshots": [
-        {
-          "id": "b2800019-6945-882d-8010-9db4e21569ab",
-          "fileName": "01-today.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-55/01-today.png",
-          "checksum": "6aff148c727a96da20806445b6debed8",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "c3400019-6945-882d-801e-6d09cb1108f7",
-          "fileName": "02-wishes.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-55/02-wishes.png",
-          "checksum": "7a36525dcb7bedd8d289c3f237b40f27",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "8d400019-6945-882d-8018-1157d6de4e45",
-          "fileName": "03-woodfish.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-55/03-woodfish.png",
-          "checksum": "c8e566af8840be4ccf00511c8ef363b2",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "9d800019-6945-882d-800a-7ab7f1259c68",
-          "fileName": "04-world.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-55/04-world.png",
-          "checksum": "81a3868751c55f2c773449d07aea1313",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "43000019-6945-882d-801e-6873abe42bf9",
-          "fileName": "05-privacy.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-55/05-privacy.png",
-          "checksum": "730dcc1c20e8eb7d653014e9fb49e929",
-          "state": "COMPLETE"
-        }
-      ]
-    },
-    {
-      "displayType": "APP_IPHONE_47",
-      "setId": "b6ed2f51-4075-413c-8bb4-ed2fd10e8343",
-      "width": 750,
-      "height": 1334,
-      "legacy": false,
-      "screenshots": [
-        {
-          "id": "8f800019-6945-882d-8018-6454a7aa86a5",
-          "fileName": "01-today.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-47/01-today.png",
-          "checksum": "fbcea653d71242337627978c4b5c86d6",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "74800019-6945-882d-801b-e48a295232e5",
-          "fileName": "02-wishes.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-47/02-wishes.png",
-          "checksum": "6cd9395c7abc2b032acb5763c063ac29",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "8c400019-6945-882d-801f-2112ca37103a",
-          "fileName": "03-woodfish.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-47/03-woodfish.png",
-          "checksum": "df36aef1cf57ac7c41774630a2818e42",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "90400019-6945-882d-801e-a27f1e8325a2",
-          "fileName": "04-world.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-47/04-world.png",
-          "checksum": "de4fc70b6326711363e3cbecaf8cf28f",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "31800019-6945-882d-803c-4deb0c3ee2b0",
-          "fileName": "05-privacy.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-47/05-privacy.png",
-          "checksum": "8b04275769fd7b168640b52f3e76bad1",
-          "state": "COMPLETE"
-        }
-      ]
-    },
-    {
-      "displayType": "APP_IPHONE_40",
-      "setId": "2bac0c7c-4a3a-4cf1-b0b2-91b9a1772c09",
-      "width": 640,
-      "height": 1096,
-      "legacy": true,
-      "screenshots": [
-        {
-          "id": "9f000019-6945-882d-800e-b69821588cf7",
-          "fileName": "01-today.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-40/01-today.png",
-          "checksum": "77a88494d0a6dab392c744aa4f904b23",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "76000019-6945-882d-800b-b5ced00e8821",
-          "fileName": "02-wishes.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-40/02-wishes.png",
-          "checksum": "f94d35263df0e363ed49b67c73bf28ed",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "6dc00019-6945-882d-800f-5eb48be4f22d",
-          "fileName": "03-woodfish.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-40/03-woodfish.png",
-          "checksum": "8843b212f8fc2b6f7e78ae5a5a917ab8",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "c2c00019-6945-882d-801e-b3e28206b8da",
-          "fileName": "04-world.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-40/04-world.png",
-          "checksum": "ef4d3bdd00e9a18c5df674cccec2b0d5",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "81400019-6945-882d-8030-a48725723e6e",
-          "fileName": "05-privacy.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-40/05-privacy.png",
-          "checksum": "ddd556ce7454b8de84eeca6ac119f7ff",
-          "state": "COMPLETE"
-        }
-      ]
-    },
-    {
-      "displayType": "APP_IPHONE_35",
-      "setId": "21d52bec-eb97-47e9-a231-7fe407469fb0",
-      "width": 640,
-      "height": 920,
-      "legacy": true,
-      "screenshots": [
-        {
-          "id": "d4000019-6945-882d-8002-c69dcc1cb6cf",
-          "fileName": "01-today.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-35/01-today.png",
-          "checksum": "cab1c5df44ea912522db26e99525dc50",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "fa400019-6945-882d-801d-8974b402f621",
-          "fileName": "02-wishes.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-35/02-wishes.png",
-          "checksum": "0c41d6e4f248dbdfc5f38ec4c54fb0e4",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "f7400019-6945-882d-8016-0948b991d9e8",
-          "fileName": "03-woodfish.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-35/03-woodfish.png",
-          "checksum": "1091da292b23c24238220246b3f4218e",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "10000019-6945-882d-8031-776953552f72",
-          "fileName": "04-world.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-35/04-world.png",
-          "checksum": "413274c7a039f52a8e39a8c2555ab288",
-          "state": "COMPLETE"
-        },
-        {
-          "id": "ce400019-6945-882d-803a-83ad09d0a0d2",
-          "fileName": "05-privacy.png",
-          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-35/05-privacy.png",
-          "checksum": "b21b059f1b43e8e47e3365d2df86e4fa",
+          "id": "8ec00019-6945-882d-801b-0830af80d3ed",
+          "fileName": "20261026-05-world.png",
+          "sourceFile": "store/screenshots/ios/zh-Hans/iphone-67/20261026-05-world.png",
+          "bytes": 767938,
+          "checksum": "0ab8aa2daf089802425b6156d65f77b4",
+          "sha256": "027dc27bb33a623ca84930952be49efb9173ac9853361768945937266114dcb8",
           "state": "COMPLETE"
         }
       ]
     }
-  ]
+  ],
+  "appReviewSubmitted": false
 }

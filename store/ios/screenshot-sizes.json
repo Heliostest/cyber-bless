@@ -1,23 +1,17 @@
 {
   "locale": "zh-Hans",
-  "specificationUrl": "https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/",
-  "checkedOn": "2026-10-13",
+  "specificationUrl": "https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications",
+  "checkedOn": "2026-10-26",
   "orientation": "portrait",
-  "views": ["01-today", "02-wishes", "03-woodfish", "04-world", "05-privacy"],
+  "views": ["01-today", "02-wishes", "03-windchime", "04-crane", "05-world"],
   "groups": [
-    {"displayType":"APP_IPHONE_67","directory":"iphone-67","width":1320,"height":2868,"scale":3,"label":"Dynamic Island large"},
-    {"displayType":"APP_IPHONE_65","directory":"iphone-65","width":1284,"height":2778,"scale":3,"label":"Face ID large"},
-    {"displayType":"APP_IPHONE_61","directory":".","width":1206,"height":2622,"scale":3,"label":"Dynamic Island medium","existingFiles":["01-today-medium.png","02-wishes-medium.png","03-woodfish-medium.png","04-world-medium.png","05-privacy-medium.png"]},
-    {"displayType":"APP_IPHONE_58","directory":"iphone-58","width":1170,"height":2532,"scale":3,"label":"Face ID medium"},
-    {"displayType":"APP_IPHONE_55","directory":"iphone-55","width":1242,"height":2208,"scale":3,"label":"Home button large"},
-    {"displayType":"APP_IPHONE_47","directory":"iphone-47","width":750,"height":1334,"scale":2,"label":"Home button medium"},
-    {"displayType":"APP_IPHONE_40","directory":"iphone-40","width":640,"height":1096,"scale":2,"label":"Legacy 4-inch without status bar","legacy":true},
-    {"displayType":"APP_IPHONE_35","directory":"iphone-35","width":640,"height":920,"scale":2,"label":"Legacy 3.5-inch without status bar","legacy":true}
+    {"displayType":"APP_IPHONE_61","directory":".","nativeDirectory":"medium","width":1206,"height":2622,"label":"Dynamic Island medium"},
+    {"displayType":"APP_IPHONE_67","directory":"iphone-67","nativeDirectory":"large","width":1320,"height":2868,"label":"Dynamic Island large"}
   ],
   "notes": [
-    "One accepted portrait resolution per API display group; other resolutions within the same group are alternatives, not additional groups.",
-    "The 4-inch and 3.5-inch groups are legacy asset groups; uploading assets does not add support for devices unable to run this app's minimum iOS version.",
-    "The app is portrait and iPhone only. Landscape and iPad assets are not included.",
-    "iPhone Duo dimensions are documented, but the current ScreenshotDisplayType enum has no Duo upload target. Apple DTS states support will arrive later in 2026."
+    "Import actual native Release screenshots from WBR_SCREENSHOT_NATIVE_DIR, with capture-source.json and medium/large subdirectories; no browser capture or synthetic resizing.",
+    "Each group imports the same five views in the listed order; filenames are captureId-view.png, preserving previous screenshot source files.",
+    "Inputs must match the configured native pixel dimensions. Alpha may be removed only when every alpha sample is fully opaque.",
+    "The app is portrait and iPhone only. Landscape and iPad assets are not included. Empty smaller iPhone slots can use App Store scaling from the current native screenshots."
   ]
 }

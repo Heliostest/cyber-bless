@@ -1,0 +1,59 @@
+{
+  "verifiedAt": "2026-10-27T09:13:45.240Z",
+  "appId": "6821271597",
+  "bundleIdentifier": "com.helio.cyberbless",
+  "version": "1.0.0",
+  "buildNumber": "13",
+  "sourceCommit": "c2c449233402d949ac08f3054e7a6d2b4b070292",
+  "buildSource": "mac-mini-ssh-xcode",
+  "xcodeVersion": "26.6",
+  "distribution": "app-store-connect",
+  "builtAt": "2026-10-27T09:02:27.764Z",
+  "uploadAcceptedAt": "2026-10-27T09:07:31.187Z",
+  "ipaBytes": 209002445,
+  "ipaSha256": "dbb33be173a211a5588420ab328c161212ce428ff0587a2d6384f4b75b5561f6",
+  "appleBuildId": "89557e0a-2466-463e-8159-fedb0780e6fa",
+  "processingState": "VALID",
+  "internalBuildState": "IN_BETA_TESTING",
+  "expirationDate": "2027-01-25T09:08:32.000Z",
+  "internalGroup": {
+    "id": "f6096459-cc7f-421b-ad5c-b6cc1fbf8683",
+    "name": "Team (Expo)",
+    "testerCount": 1,
+    "requestedTesterState": "INSTALLED",
+    "testerStateScope": "App-level membership; not evidence of build13 device installation"
+  },
+  "verification": {
+    "mobileVerifyPassed": true,
+    "interactionRegressionTestsPassed": 32,
+    "mainAppAndWidgetSignaturesVerified": true,
+    "distributionCertificateValidityVerified": true,
+    "packagedOfflineAssetHashesVerified": 14,
+    "packagedWidgetCoverHashesVerified": 465,
+    "sourceFilesHashed": 2198,
+    "realDeviceValidation": false
+  },
+  "easRemoteBuildNumber": "13",
+  "betaReviewSubmitted": false,
+  "appReviewSubmitted": false,
+  "publiclyReleased": false,
+  "testFlightUrl": "https://appstoreconnect.apple.com/apps/6821271597/testflight",
+  "appStoreVersion": {
+    "verifiedAt": "2026-10-26T14:47:45.015Z",
+    "id": "84ab28c1-b40b-4d0c-ade2-d3e02d2eaf62",
+    "selectedAppleBuildId": "c0729860-3f40-4392-992e-d1c16d9f83c4",
+    "appStoreState": "PREPARE_FOR_SUBMISSION",
+    "releaseType": "MANUAL",
+    "selectionVerifiedAt": "2026-10-27T09:13:45.240Z"
+  },
+  "sourceArchiveSha256": "bb19422e0ee91e9414f1ee360ca380a219a078fd3e68d956e5e5fc4941b3bfd9",
+  "betaReviewSubmittedByThisRun": false,
+  "appReviewSubmittedByThisRun": false,
+  "formalStoreBuildUnchangedByThisRun": true,
+  "previousInternalBuild": {
+    "buildNumber": "12",
+    "appleBuildId": "c0729860-3f40-4392-992e-d1c16d9f83c4",
+    "verifiedAt": "2026-10-26T11:28:37.092Z"
+  },
+  "evidenceDirectory": "artifacts/ios-testflight-20261027/"
+}

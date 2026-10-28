@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-10-26T14:47:45.015Z",
+  "appId": "6821271597",
+  "bundleIdentifier": "com.helio.cyberbless",
+  "version": "1.0.0",
+  "buildNumber": "12",
+  "appleBuildId": "c0729860-3f40-4392-992e-d1c16d9f83c4",
+  "sourceCommit": "7cf95e9f31eea3463c4624ad5b00cc21493245e4",
+  "appStoreState": "PREPARE_FOR_SUBMISSION",
+  "releaseType": "MANUAL",
+  "localizedCopyVerified": true,
+  "formalAndBetaReviewNotesVerified": true,
+  "buildTestInformationVerifiedAt": "2026-10-26T14:27:46.770Z",
+  "screenshots": {
+    "completedAt": "2026-10-26T14:46:19.505Z",
+    "activeGroups": 2,
+    "newCompleteImages": 10,
+    "removedObsoleteImages": 40,
+    "originalImagesBackedUp": 40,
+    "orderAndChecksumsVerified": true,
+    "nativeCapture": true
+  },
+  "appReviewSubmitted": false,
+  "publiclyReleased": false,
+  "knownValidationIssues": [
+    {
+      "area": "WidgetKit",
+      "environment": "iOS 26.5 Release Simulator",
+      "observed": "Widget gallery and Home Screen remain blank; CHSError1101 empty view collection",
+      "productionSignedIpaRealDeviceValidation": "pending",
+      "publicPromotionRemoved": true
+    },
+    {
+      "area": "woodfish",
+      "environment": "iOS 26.5 Release Simulator",
+      "observed": "Lightweight fallback mode",
+      "productionSignedIpaRealDeviceValidation": "pending"
+    }
+  ],
+  "evidence": {
+    "metadata": "artifacts/store-refresh-20261026/metadata-final-result.json",
+    "screenshots": "artifacts/store-refresh-20261026/report.json",
+    "independentReadback": "artifacts/store-refresh-20261026/asc-audit.json",
+    "consoleScreenshot": "artifacts/store-refresh-20261026/asc-updated.png"
+  }
+}

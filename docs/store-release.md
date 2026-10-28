@@ -1,5 +1,47 @@
 # 一日一念商店发布记录
 
+## 2026-10-27 构建 13：3D 交互更新与内部测试
+
+北京时间 17:11:51，新的 **1.0.0 (13)** 已完成 Mac mini 本地 Xcode 26.6 归档、App Store 签名导出、上传及 Apple 处理。源码为 `c2c449233402d949ac08f3054e7a6d2b4b070292`，包含 3D 首帧就绪后才接受交互、加载错误与重试、旧会话恢复至 3D 及共享场景布局更新。冻结归档包含 2,198 个文件，SHA-256 为 `bb19422e0ee91e9414f1ee360ca380a219a078fd3e68d956e5e5fc4941b3bfd9`，已在 Mac 逐项核对文件哈希。
+
+实际 IPA 为 209,002,445 字节，SHA-256 为 `dbb33be173a211a5588420ab328c161212ce428ff0587a2d6384f4b75b5561f6`。主应用与小组件扩展的身份、构建号 13、App Group、App Store profiles、实际代码签名及分发证书有效期均已核验；原生 `main.jsbundle`、DOM 本地依赖、14 项离线资源和 465 张小组件封面与本次源码匹配。上传回执为 `UPLOAD_ACCEPTED`。
+
+Apple build UUID 为 `89557e0a-2466-463e-8159-fedb0780e6fa`，已读回 `VALID / IN_BETA_TESTING` 并关联原内部组 `Team (Expo)`。构建 13 的测试说明已保存并读回；组内仍为 1 位既有直接成员，其测试员记录状态为 `INSTALLED`。该状态不作为本轮构建 13 已完成真机安装或 3D 验收的证明。本轮没有新增邀请、修改权限或提交审核，正式 App Store 版本仍关联构建 12。
+
+`mobile:verify` 已通过。针对本次变更的现有交互回归测试另有 32 项通过、38 项按范围跳过，覆盖 3D 就绪门槛、失败重试、旧纸鹤检查点恢复与单次结算、木鱼至少十二次后的主动结束及恢复路径。这些是 jsdom／模拟控制器测试与包资源检查，不等同于真实 WebGL、iOS GPU 或真机 3D 验收。小组件本轮未修改，显示、刷新及点击行为仍待生产签名包真机验证；不将本轮打包成功视为先前显示问题已修复。
+
+本机详细回执位于 `artifacts/ios-testflight-20261027/`：`source-verification-mac.json`、`build-report.json`、`certificate-validation.json`、`offline-validation.json`、`upload-receipt.json`、`testflight-completion.json`；相关测试日志为 `mobile-verify.log` 与 `interaction-tests.log`。不含个人资料的持久摘要仍见 [TestFlight 状态](../store/ios/testflight-status.json)。
+
+EAS 远端 iOS 构建计数已由 12 同步为 13，写入后已重新读取确认，后续自动递增将从其后继续；同步前确认本项目没有排队或运行中的云构建。回执为 `artifacts/ios-testflight-20261027/counter-sync.json`。
+
+## 2026-10-26 商店资料与真实原生截图更新
+
+北京时间 22:27 已将简体中文介绍、关键词、推广文字、正式审核说明、Beta 审核说明及构建 12 的测试说明保存到本应用并逐项读回。正式版本已关联 `1.0.0 (12)`，仍为 `PREPARE_FOR_SUBMISSION / MANUAL`；没有提交正式审核、外部 Beta Review 或公开发布。审核联系人、公开支持与隐私 URL 保留。
+
+截图来自冻结提交 `7cf95e9f31eea3463c4624ad5b00cc21493245e4` 的原生 Release 模拟器安装：iPhone 17 Pro（1206 × 2622）与 iPhone 17 Pro Max（1320 × 2868），Xcode 26.6、iOS 26.5。两台安装包的 `Info.plist` 均核对为 1.0.0、构建 12。各组按今日、心愿、风铃、完整纸鹤、小天地排列，使用虚构本地记录；没有拉伸、设备框或合成系统界面。完整来源和每图哈希见本机 `artifacts/store-refresh-20261026/manifest.json`。
+
+原拟加入的真实系统小组件截图因验证失败撤下：扩展可注册并添加，但 Release 模拟器的预览与主屏持续白卡，系统报告 `CHSErrorDomain 1101`、空视图集合。没有确认唯一根因，也不能据此断言生产签名包必然故障或只是模拟器问题。公开介绍、推广和关键词暂不宣传小组件；内部测试与审核说明如实记录此情况，正常签名 IPA 仍需真机验证。木鱼在模拟器进入“轻量模式”的现象同样保留待查；本轮没有修改产品源码或声称已修复。
+
+北京时间 22:46:19，十张新图全部 `COMPLETE` 后，已精确移除旧 40 张并核对两组各五张的顺序、字节数与 checksum；其余六个旧截图组为空。旧图原字节、ID、checksum 与顺序保存在本机 `artifacts/store-refresh-20261026/backup`。22:47:45 独立 Apple API 读取再次确认最终十图、构建 12 的 `VALID` 状态与正式关联，所有读取无错误；网页媒体管理也显示两组新图。
+
+持久摘要为 [商店资料状态](../store/ios/materials-refresh-status.json) 和 [截图上传状态](../store/ios/screenshot-upload-state.json)。本机文案、执行、独立读取和控制台证明分别为 `artifacts/store-refresh-20261026/metadata-final-result.json`、`report.json`、`asc-audit.json`、`asc-updated.png`。截图复用流程见 [iPhone 截图说明](iphone-screenshots.md)。输入与替换保护共 19 项离线检查通过，包括此次修正的 POST 上传指令保存/恢复；最后一张曾停留在 Apple `UPLOAD_COMPLETE`，等其转为 `COMPLETE` 后才清理旧图，没有重复传输已提交的分段。
+
+Mac 空间不足时，本项目旧构建 7–10 的八个 archive/export 目录已先流式保全到本机 `artifacts/store-refresh-20261026/mac-legacy-builds-7-10.tgz`，两端 SHA-256 均为 `a7519d3c4e1d6978c5d73816d55a672505dfe8b98a4b79890c8595e32915e8d0`，压缩包读取校验通过后才清理远端旧副本。另清理本任务可重建的 DerivedData、失败驱动临时目录及冻结工作目录的 node_modules，保留源码、lockfile、最新正式签名归档和 IPA。两台截图模拟器均已关闭。
+
+本次资料核查时，开发者新协议仍待账号持有人接受，DSA 仍未完成，付费协议处于等待用户信息且银行/税务资料待补；地区许可与备案须按实际发行范围核实。构建 12 不含应用内购买，未推广或配置尚未完成资料的买断商品。本次没有签署协议或修改定价、地区、法律声明。
+
+## 2026-10-26 Mac mini 本地构建与内部测试
+
+北京时间 19:28 已完成 SSH → Mac mini → Xcode 26.6 归档／商店签名导出 → Apple 上传 → TestFlight 内部邀请。源码为当前提交 `7cf95e9f31eea3463c4624ad5b00cc21493245e4`，版本为 **1.0.0 (12)**。主应用 `com.helio.cyberbless` 与小组件 `com.helio.cyberbless.widgets` 均使用 Team `6PG2WW6L6N`，两者构建号、App Group、有效 App Store profiles 与实际代码签名已逐项核验。
+
+Apple build UUID 为 `c0729860-3f40-4392-992e-d1c16d9f83c4`，已读回 `processingState=VALID`、`internalBuildState=IN_BETA_TESTING`；构建已关联内部组 `Team (Expo)`。用户指定的既有 Marketing 用户已获得本 App 访问权限，原角色与其他 App 权限保留；网页及官方 API 均确认内部组有 1 位测试员，状态为 `INVITED`。测试员邮箱仅保存在本机忽略的回执中。内部邀请经 App Store Connect 网页完成，公开 API 对既有外部 betaTester 记录返回 409，未重复该失败请求。
+
+已运行 `npm run mobile:verify`：类型检查、Expo 依赖兼容检查、8 项基础测试及双端嵌入导出通过。另对实际签名 IPA 的原生 JS、DOM 本地依赖、14 项离线资源和 465 张小组件封面执行哈希核验。IPA 为 209,002,157 字节，SHA-256 为 `6d28a54ee5d0caae146a8e1a5abaf9f649f079faa32a84a2a241ac638b6afdf5`。这些检查覆盖构建与资源完整性；本次未执行该新包的真机安装验收。
+
+EAS 远端 iOS 构建号已从 6 同步到 12，以便下次自动递增。Mac 构建目录为 `/Users/heli/world-blessing-testflight-20261026`；本机详细源码、签名、上传、离线核验及邀请回执位于忽略目录 `artifacts/ios-testflight-20261026/`。不含个人资料的持久状态见 [TestFlight 状态](../store/ios/testflight-status.json)，控制台入口为 [本应用 TestFlight](https://appstoreconnect.apple.com/apps/6821271597/testflight)。正式 App Review、外部 Beta Review 和公开发布均未执行。
+
+下方 10 月 10–13 日内容为历史快照；最新内部测试构建与邀请状态以上述记录为准。
+
 2026-10-13 19:30 更新：首发体验后买断已经授权，原生计费协调、验证、购买/恢复桥接与页面正在 `codex/mobile-paid-unlock` 托管工作目录实施，尚未合入主工作目录。已创建本应用非消耗型商品6822274692（com.helio.cyberbless.full_unlock），版本88375b0a-5ef9-4857-9fde-6d8664b0ce88及简体中文名称/描述已保存并读回；价格、销售范围和审核截图尚未填写。DSA已按授权填写联系资料，但仍待邮箱验证码；付费协议供审阅，未签署。最新实现和验证见 [mobile-paid-unlock.md](mobile-paid-unlock.md)，旧免费包不能作为买断验收包。没有新付费版本构建、上传或提审。
 
 最新核查：2026-10-13 18:52（北京时间）。本应用名称、副标题、描述、关键词、类别、年龄问卷、审核联系人、免费定价、175地区选择、40张iPhone截图及Notion隐私/支持URL已保存。开发者确认两张UI图片可用于发行后，内容版权字段已实际保存为 USES_THIRD_PARTY_CONTENT，并通过独立读取确认；完整声明见 [内容版权](../store/ios/content-rights.zh-Hans.md)，可重复执行 `npm run mobile:store:content-rights`，保存回执为 store/ios/content-rights-status.json。

@@ -1,83 +1,170 @@
-import { chromium } from 'playwright';
-import { createHash } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+// Import audited native screenshots; this entry point never captures or renders UI.
+// WBR_SCREENSHOT_NATIVE_DIR contains capture-source.json and medium/large folders,
+// each with 01-today.png ... 05-world.png from the actual native Release app.
+import { createHash, randomUUID } from 'node:crypto';
+import { mkdir, readFile, writeFile, realpath, stat, open, rename, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
-const root = fileURLToPath(new URL('../', import.meta.url));
-const base = new URL(process.env.WBR_SCREENSHOT_URL ?? 'http://127.0.0.1:4198');
-if (!['localhost','127.0.0.1'].includes(base.hostname)) throw Error('Capture only a local production preview');
-const config = JSON.parse(await readFile(path.join(root,'store/ios/screenshot-sizes.json'),'utf8'));
-const output = path.join(root,'store/screenshots/ios/zh-Hans');
-const manifestFile = path.join(root,'store/screenshots/ios-sizes-manifest.json');
-const sourceLabel = process.env.WBR_SCREENSHOT_SOURCE ?? 'Local production Web preview; browser capture, not native device or simulator';
-const at = '2026-10-10T04:00:00.000Z';
-const sample = { version:1, sceneRecords:[], wishes:[{id:'store-example-wish',title:'希望每天都从容一点',intention:'每天留一点时间给自己',category:'life',returnMethod:'kindness',status:'active',archived:false,createdAt:at,notes:[]}], activeSession:null, sessions:[{id:'store-example-session',ritual:'woodfish',progress:12,startedAt:at,completedAt:at}], collectibles:[{id:'store-example-woodfish',kind:'woodfish',title:'小木鱼',at}], ledger:[], settings:{sound:false,haptics:false,reducedMotion:true} };
-const manifest = { capturedAt:new Date().toISOString(), source:sourceLabel, browser:'Microsoft Edge headless / real production Web UI', nativeStatusBar:false, sampleData:'Fictional local records; sample date 2026-10-10', specificationUrl:config.specificationUrl, groups:[] };
-const browser = await chromium.launch({channel:process.env.WBR_SCREENSHOT_BROWSER ?? 'msedge',headless:true,args:['--enable-unsafe-swiftshader']});
-async function describe(file, group) {
-  const bytes = await readFile(file);
-  const meta = await sharp(bytes).metadata();
-  if (meta.width!==group.width || meta.height!==group.height || meta.hasAlpha) throw Error('Invalid screenshot format: '+file);
-  return {file:path.relative(root,file).replaceAll('\\','/'),width:meta.width,height:meta.height,hasAlpha:false,bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex'),md5:createHash('md5').update(bytes).digest('hex')};
+const VIEWS = ['01-today', '02-wishes', '03-windchime', '04-crane', '05-world'];
+const TARGETS = {
+  APP_IPHONE_61: { width: 1206, height: 2622, directory: '.', nativeDirectory: 'medium' },
+  APP_IPHONE_67: { width: 1320, height: 2868, directory: 'iphone-67', nativeDirectory: 'large' },
+};
+const hash = (bytes, algorithm = 'sha256') => createHash(algorithm).update(bytes).digest('hex');
+const fail = message => { throw Error(message); };
+const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+export function resolveWithin(root, relative) {
+  if (typeof relative !== 'string' || path.isAbsolute(relative) || path.win32.isAbsolute(relative)) fail('Path must be relative to its permitted directory');
+  const target = path.resolve(root, relative);
+  const remainder = path.relative(root, target);
+  if (remainder === '..' || remainder.startsWith(`..${path.sep}`) || path.isAbsolute(remainder)) fail('Path points outside its permitted directory');
+  return target;
 }
-try {
-  for (const group of config.groups) {
-    const record = {displayType:group.displayType,label:group.label,width:group.width,height:group.height,legacy:group.legacy ?? false,files:[]};
-    if (group.existingFiles) {
-      record.source = 'Preserved original production Web screenshots captured 2026-10-10';
-      for (const name of group.existingFiles) record.files.push(await describe(path.join(output,name),group));
-      manifest.groups.push(record);
-      continue;
+
+async function checkedRealPath(root, relative) {
+  const resolved = await realpath(resolveWithin(root, relative));
+  resolveWithin(root, path.relative(root, resolved));
+  return resolved;
+}
+
+export async function ensureDirectoryWithin(root, relative) {
+  const target = resolveWithin(root, relative);
+  let current = await realpath(root);
+  resolveWithin(root, path.relative(root, current));
+  for (const segment of path.relative(root, target).split(path.sep).filter(Boolean)) {
+    const candidate = path.join(current, segment);
+    let resolved;
+    try { resolved = await realpath(candidate); } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      // The parent has already been canonicalized and checked. Never create a
+      // deeper path through an unchecked existing symlink or junction.
+      try { await mkdir(candidate); } catch (creationError) { if (creationError.code !== 'EEXIST') throw creationError; }
+      resolved = await realpath(candidate);
     }
-    const directory = path.join(output,group.directory);
-    await mkdir(directory,{recursive:true});
-    const context = await browser.newContext({viewport:{width:group.width/group.scale,height:group.height/group.scale},deviceScaleFactor:group.scale,isMobile:true,hasTouch:true,colorScheme:'light',reducedMotion:'reduce',locale:'zh-CN',timezoneId:'Asia/Shanghai'});
-    await context.addInitScript(({sample,at})=>{
-      localStorage.setItem('cyber-bless:personal:v1',JSON.stringify(sample));
-      const NativeDate=Date, instant=Date.parse(at);
-      class SampleDate extends NativeDate { constructor(...args) { super(...(args.length ? args : [instant])); } static now() { return instant; } }
-      window.Date=SampleDate;
-    },{sample,at});
-    const page = await context.newPage();
-    const errors=[];
-    page.on('pageerror',e=>errors.push(e.message));
-    async function capture(view) {
-      await page.evaluate(()=>document.fonts.ready);
-      if (await page.evaluate(()=>document.documentElement.scrollWidth > innerWidth+1)) throw Error('Horizontal overflow in '+group.displayType+' '+view);
-      if (errors.length) throw Error('Product render errors: '+errors.join('; '));
-      const file=path.join(directory,view+'.png');
-      const bytes=await page.screenshot({fullPage:false,animations:'disabled'});
-      await sharp(bytes).removeAlpha().png().toFile(file);
-      record.files.push(await describe(file,group));
-    }
-    await page.goto(base.href,{waitUntil:'networkidle'});
-    await page.getByRole('heading',{name:'今日仪式',exact:true}).waitFor();
-    await capture('01-today');
-    await page.locator('[data-tab="wishes"]').click();
-    await page.getByText(sample.wishes[0].title,{exact:true}).waitFor();
-    await capture('02-wishes');
-    await page.locator('[data-tab="today"]').click();
-    await page.getByRole('button',{name:'开始今日仪式',exact:true}).click();
-    await page.locator('[data-renderer="ready"]').waitFor({timeout:60000});
-    await page.getByRole('progressbar').waitFor();
-    await capture('03-woodfish');
-    await page.getByRole('button',{name:'返回',exact:true}).click();
-    await page.locator('[data-tab="world"]').click();
-    await page.getByText('小木鱼',{exact:true}).first().waitFor();
-    await capture('04-world');
-    await page.locator('[data-tab="me"]').click();
-    await page.getByRole('button',{name:'隐私政策',exact:true}).click();
-    await page.locator('h1').filter({hasText:'隐私'}).waitFor();
-    await capture('05-privacy');
-    record.viewport={width:group.width/group.scale,height:group.height/group.scale,deviceScaleFactor:group.scale};
-    record.source=sourceLabel;
-    manifest.groups.push(record);
-    await context.close();
-    await writeFile(manifestFile,JSON.stringify(manifest,null,2)+'\n');
-    console.log(`${group.displayType}: ${record.files.length} captured, ${group.width}x${group.height}`);
+    resolveWithin(root, path.relative(root, resolved));
+    if (!(await stat(resolved)).isDirectory()) fail('Output path component is not a directory');
+    current = resolved;
   }
-} finally { await browser.close(); }
-await writeFile(manifestFile,JSON.stringify(manifest,null,2)+'\n');
-console.log(`Verified ${manifest.groups.length} groups / ${manifest.groups.reduce((n,g)=>n+g.files.length,0)} screenshots: ${manifestFile}`);
+  return current;
+}
+
+export function validateCaptureSource(source, expected) {
+  if (!isRecord(source)) fail('capture-source.json must be an object');
+  if (typeof source.captureId !== 'string' || !/^\d{8}$/.test(source.captureId)) fail('captureId must be eight date digits');
+  if (typeof source.capturedAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(source.capturedAt) || !Number.isFinite(Date.parse(source.capturedAt))) fail('capturedAt must be a valid ISO timestamp');
+  if (source.appId !== expected.appId || source.bundleIdentifier !== expected.bundleIdentifier || source.version !== expected.version) fail('Native capture identity/version does not match this project');
+  if (typeof source.buildNumber !== 'string' || !/^[1-9]\d*$/.test(source.buildNumber) || (expected.buildNumber && source.buildNumber !== expected.buildNumber)) fail('Invalid or mismatched native buildNumber');
+  if (typeof source.sourceCommit !== 'string' || !/^[a-f0-9]{40}$/i.test(source.sourceCommit)) fail('sourceCommit must be a full 40-character commit hash');
+  if (typeof source.source !== 'string' || !/iOS/i.test(source.source) || !/Simulator/i.test(source.source) || !/Release/i.test(source.source) || !/Xcode/i.test(source.source)) fail('Source must identify the iOS Simulator, Release build and Xcode version');
+  if (!isRecord(source.devices) || ['medium', 'large'].some(key => !isRecord(source.devices[key]) || !Object.keys(source.devices[key]).length)) fail('Native source requires medium and large device records');
+}
+
+export async function normalizeNativePng(original, dimensions) {
+  const metadata = await sharp(original).metadata();
+  if (metadata.format !== 'png' || metadata.width !== dimensions.width || metadata.height !== dimensions.height || (metadata.pages ?? 1) !== 1) fail('Native screenshot PNG dimensions/format mismatch; resizing is forbidden');
+  let buffer = original;
+  if (metadata.hasAlpha) {
+    // Never flatten transparency. Only an entirely opaque alpha channel may go.
+    const stats = await sharp(original).stats();
+    const alpha = stats.channels[metadata.channels - 1];
+    const opaque = metadata.depth === 'ushort' ? 65535 : 255;
+    if (!alpha || alpha.min !== opaque || alpha.max !== opaque) fail('Native screenshot alpha must be completely opaque (255 for every 8-bit sample)');
+    buffer = await sharp(original).removeAlpha().keepMetadata().png().toBuffer();
+  }
+  const normalized = await sharp(buffer).metadata();
+  if (normalized.format !== 'png' || normalized.width !== dimensions.width || normalized.height !== dimensions.height || normalized.hasAlpha) fail('Native PNG normalization changed its dimensions or retained alpha');
+  return { buffer, removedAlpha: Boolean(metadata.hasAlpha), originalBytes: original.length, originalSha256: hash(original) };
+}
+
+async function checkExisting(file, bytes, allowedRoot) {
+  try {
+    const actual = await checkedRealPath(allowedRoot, path.relative(allowedRoot, file));
+    if (!(await stat(actual)).isFile() || hash(await readFile(actual)) !== hash(bytes)) fail(`Refusing to overwrite different bytes at an existing screenshot: ${file}`);
+    return true;
+  } catch (error) { if (error.code === 'ENOENT') return false; throw error; }
+}
+
+export async function writeOrReuse(file, bytes, allowedRoot) {
+  resolveWithin(allowedRoot, path.relative(allowedRoot, file));
+  await checkedRealPath(allowedRoot, path.relative(allowedRoot, path.dirname(file)));
+  if (await checkExisting(file, bytes, allowedRoot)) return 'reused';
+  let handle;
+  try { handle = await open(file, 'wx'); } catch (error) {
+    if (error.code !== 'EEXIST') throw error;
+    if (await checkExisting(file, bytes, allowedRoot)) return 'reused';
+    throw error;
+  }
+  try { await handle.writeFile(bytes); } finally { await handle.close(); }
+  if (!(await checkExisting(file, bytes, allowedRoot))) fail('Written screenshot failed readback');
+  return 'written';
+}
+
+export function validateConfig(config) {
+  if (config.locale !== 'zh-Hans' || config.orientation !== 'portrait' || JSON.stringify(config.views) !== JSON.stringify(VIEWS) || !Array.isArray(config.groups) || config.groups.length !== 2 || new Set(config.groups.map(g => g.displayType)).size !== 2) fail('Unexpected native screenshot configuration');
+  for (const group of config.groups) {
+    const expected = TARGETS[group.displayType];
+    if (!expected || Object.entries(expected).some(([key, value]) => group[key] !== value)) fail('Screenshot target path/dimensions differ from the native import contract');
+  }
+}
+
+export async function importNativeScreenshots(nativeDirectory) {
+  if (typeof nativeDirectory !== 'string' || !nativeDirectory.trim() || !path.isAbsolute(nativeDirectory) || /^[/\\]{2}/.test(nativeDirectory) || /^[a-z]+:\/\//i.test(nativeDirectory)) fail('WBR_SCREENSHOT_NATIVE_DIR is required and must be an absolute local directory (no URL or network share)');
+  const root = await realpath(fileURLToPath(new URL('../', import.meta.url)));
+  const nativeRoot = await realpath(nativeDirectory);
+  if (!(await stat(nativeRoot)).isDirectory()) fail('WBR_SCREENSHOT_NATIVE_DIR is not a directory');
+  const [config, app, eas] = await Promise.all(['store/ios/screenshot-sizes.json', 'apps/mobile-expo/app.json', 'apps/mobile-expo/eas.json'].map(async file => JSON.parse(await readFile(path.join(root, file), 'utf8'))));
+  validateConfig(config);
+  const expected = { appId: eas.submit?.production?.ios?.ascAppId, bundleIdentifier: app.expo?.ios?.bundleIdentifier, version: app.expo?.version, buildNumber: app.expo?.ios?.buildNumber };
+  if (expected.appId !== '6821271597' || expected.bundleIdentifier !== 'com.helio.cyberbless' || (eas.submit.production.ios.bundleIdentifier && eas.submit.production.ios.bundleIdentifier !== expected.bundleIdentifier) || !expected.version) fail('Local project App Store identity is inconsistent');
+  const sourceFile = await checkedRealPath(nativeRoot, 'capture-source.json');
+  const sourceBytes = await readFile(sourceFile);
+  const source = JSON.parse(sourceBytes.toString('utf8'));
+  validateCaptureSource(source, expected);
+  const manifest = { captureId: source.captureId, capturedAt: source.capturedAt, importedAt: new Date().toISOString(), source: source.source, nativeStatusBar: true, appId: source.appId, bundleIdentifier: source.bundleIdentifier, sourceCommit: source.sourceCommit, version: source.version, buildNumber: source.buildNumber, devices: source.devices, captureSourceSha256: hash(sourceBytes), specificationUrl: config.specificationUrl, groups: [] };
+  const prepared = [];
+  // Check all ten original inputs before creating any output files.
+  for (const group of config.groups) {
+    const directory = await checkedRealPath(nativeRoot, group.nativeDirectory);
+    if (!(await stat(directory)).isDirectory()) fail('Native screenshot group is not a directory');
+    const record = { displayType: group.displayType, label: group.label, width: group.width, height: group.height, legacy: false, nativeDirectory: group.nativeDirectory, source: source.source, device: source.devices[group.nativeDirectory], files: [] };
+    for (const view of config.views) {
+      const nativeFile = `${group.nativeDirectory}/${view}.png`;
+      const originalPath = await checkedRealPath(nativeRoot, nativeFile);
+      if (!(await stat(originalPath)).isFile()) fail(`Native screenshot is not a regular file: ${nativeFile}`);
+      const result = await normalizeNativePng(await readFile(originalPath), group);
+      const fileName = `${source.captureId}-${view}.png`;
+      prepared.push({ group, record, nativeFile, fileName, ...result });
+    }
+    manifest.groups.push(record);
+  }
+  const output = await ensureDirectoryWithin(root, `store/screenshots/ios/${config.locale}`);
+  for (const group of config.groups) {
+    await ensureDirectoryWithin(output, group.directory);
+  }
+  // Preflight every destination, then create exclusively to cover later races.
+  for (const item of prepared) {
+    item.destination = resolveWithin(output, path.join(item.group.directory, item.fileName));
+    await checkExisting(item.destination, item.buffer, output);
+  }
+  for (const item of prepared) {
+    await writeOrReuse(item.destination, item.buffer, output);
+    item.record.files.push({ file: path.relative(root, item.destination).replaceAll(path.sep, '/'), fileName: item.fileName, width: item.group.width, height: item.group.height, hasAlpha: false, bytes: item.buffer.length, sha256: hash(item.buffer), md5: hash(item.buffer, 'md5'), nativeFile: item.nativeFile, originalBytes: item.originalBytes, originalSha256: item.originalSha256, removedOpaqueAlpha: item.removedAlpha });
+  }
+  const manifestFile = resolveWithin(root, 'store/screenshots/ios-sizes-manifest.json');
+  await checkedRealPath(root, path.relative(root, path.dirname(manifestFile)));
+  const temporary = `${manifestFile}.${randomUUID()}.tmp`;
+  try {
+    await writeFile(temporary, `${JSON.stringify(manifest, null, 2)}\n`, { flag: 'wx' });
+    await rename(temporary, manifestFile);
+  } finally { await unlink(temporary).catch(error => { if (error.code !== 'ENOENT') throw error; }); }
+  console.log(`Imported ${manifest.groups.length} native groups / ${prepared.length} screenshots without resizing: ${manifestFile}`);
+  return manifest;
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  try { await importNativeScreenshots(process.env.WBR_SCREENSHOT_NATIVE_DIR); }
+  catch (error) { console.error(error.message); process.exitCode = 1; }
+}

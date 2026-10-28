@@ -161,14 +161,24 @@ try {
   results.push({ check: 'material-sounds-and-native-local-motions', reactions, windChimeDisplayOnly: true, saveUnchanged: true });
   await individual.context().close();
 
-  const woodfish = await open(savedState([keepsake('woodfish', 'woodfish', { wishScene: false })]));
-  await ready(woodfish);
-  await item(woodfish, 'woodfish').click();
-  assert.equal(await woodfish.evaluate(() => window.rackSounds), 1);
-  assert.equal(await item(woodfish, 'woodfish').getAttribute('data-rack-status'), 'kept');
-  assert.equal((await saved(woodfish)).collectibles[0].spentAt, at);
-  results.push({ check: 'collected-woodfish-real-readonly-content-preview', passed: true });
-  await woodfish.context().close();
+  const reminder = keepsake('reminder', 'omikuji'); delete reminder.spentAt;
+  const nonPrayerInventory = [keepsake('woodfish', 'woodfish', { wishScene: false }),
+    reminder, keepsake('flowers', 'phuang-malai'),
+    keepsake('oil-lamp', 'diya-oil-lamp'), keepsake('sumalak', 'navruz-sumalak')];
+  const mixedInventory = [...inventory, ...nonPrayerInventory];
+  const prayerOnly = await open(savedState(mixedInventory)); await ready(prayerOnly);
+  assert.equal(await prayerOnly.locator('.wish-rack-item').count(), inventory.length);
+  for (const object of nonPrayerInventory) assert.equal(await item(prayerOnly, object.id).count(), 0);
+  assert.equal(await prayerOnly.locator('.wish-rack-count').innerText(), '0 个未用');
+  assert.deepEqual((await saved(prayerOnly)).collectibles, mixedInventory);
+  await screenshot(prayerOnly, 'prayer-only-390.png');
+  await prayerOnly.context().close();
+  const noPrayerObjects = await open(savedState(nonPrayerInventory));
+  assert.equal(await noPrayerObjects.locator('.wish-ritual-rack').count(), 0);
+  assert.equal(await noPrayerObjects.locator('.pray-button').count(), 1);
+  assert.deepEqual((await saved(noPrayerObjects)).collectibles, nonPrayerInventory);
+  await noPrayerObjects.context().close();
+  results.push({ check: 'only-wish-and-blessing-objects-with-original-collection-preserved', passed: true });
 
   const used = await open(savedState([keepsake('copy', 'crane', { title: '我的纸鹤' })])); await ready(used);
   await routeButton(used, 'copy').click(); await used.locator('.app-shell[data-page="collection"]').waitFor();

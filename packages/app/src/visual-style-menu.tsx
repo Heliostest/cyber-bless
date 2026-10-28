@@ -1,10 +1,11 @@
 import { translate as tr } from '@wbr/i18n';
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { visualStyleOptions, styleParameterControls, DEFAULT_STYLE_PARAMETERS, normalizeStyleParameters, getSceneVisualPreference, type VisualStylePreference, type VisualStyleId, } from "@wbr/core/visual-style";
 import { sceneStyles, type DebugScene } from "@wbr/scene-runtime/debug-styles";
 import { useApp } from "./context";
 import { Icon } from "./art";
+import { useVisualStyleThumbnails } from "./visual-style-thumbnails";
 const dismissEvent = "wbr:close-visual-style";
 /** Native Android back consumes an open menu before changing the App route. */
 export function dismissVisualStyleMenu(scope?: HTMLElement | null) {
@@ -13,10 +14,6 @@ export function dismissVisualStyleMenu(scope?: HTMLElement | null) {
 const order: VisualStyleId[] = ["toon-soft", "original", "gouache", "moebius", "toon-outline", "halftone", "pixel-art", "toon-ink"];
 const emptyScenes: DebugScene[] = [];
 type ApplyScope = "current" | "all";
-type Confirmation = {
-    value: VisualStylePreference | null;
-    trigger: HTMLElement;
-};
 const openMenus: HTMLElement[] = [];
 let scrollLocks = 0, originalBodyOverflow = "", ownsBodyScroll = false;
 function lockBodyScroll() {
@@ -69,112 +66,112 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
     trigger: HTMLButtonElement | null;
     onClose(): void;
 }) {
-    const { state, dispatch, active } = useApp();
+    const { state, dispatch } = useApp();
     const [choice, setChoice] = useState<VisualStylePreference | null>(getSceneVisualPreference(state, scene.id) ?? null);
     const [tuning, setTuning] = useState(false);
     const [previewing, setPreviewing] = useState(false);
-    const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
     const [appliedScope, setAppliedScope] = useState<ApplyScope>("current");
-    const confirming = useRef(confirmation);
-    confirming.current = confirmation;
-    const focusReturn = useRef<HTMLElement | null>(null);
-    const current = useRef(choice), latestDispatch = useRef(dispatch);
-    latestDispatch.current = dispatch;
+    const current = useRef(choice);
+    const changed = useRef(false), resetting = useRef(false);
     const preview = useRef<ReturnType<typeof sceneStyles.connectUserPreference> | null>(null);
-    const pending = useRef<{
-        value: VisualStylePreference | null;
-        scope: ApplyScope;
-    } | null>(null);
-    const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const panel = useRef<HTMLElement>(null), backdrop = useRef<HTMLDivElement>(null);
+    const filmstrip = useRef<HTMLDivElement>(null);
+    const drag = useRef<{ pointerId: number; x: number; left: number; moved: boolean } | null>(null);
+    const suppressClick = useRef(false);
     const selected = choice?.style ?? scene.defaultStyle;
     const parameters = choice?.parameters ?? DEFAULT_STYLE_PARAMETERS;
+    const thumbnails = useVisualStyleThumbnails(scene, parameters);
     const controls = styleParameterControls.filter(control => control.style === selected);
     const actualLabel = visualStyleOptions.find(option => option.id === scene.actual)?.label;
-    function flush() {
-        clearTimeout(timer.current);
-        const next = pending.current;
-        pending.current = null;
-        if (next) {
-            if (next.scope === "all")
-                latestDispatch.current({ type: "scene.visual.all", ...(next.value ?? { style: null }) });
-            else
-                latestDispatch.current({ type: "scene.visual", id: scene.id, ...(next.value ?? { style: null }) });
-        }
+    function centerCard(card: HTMLElement, animate = false) {
+        const strip = filmstrip.current;
+        if (!strip || !strip.clientWidth)
+            return;
+        const left = card.offsetLeft + card.offsetWidth / 2 - strip.clientWidth / 2;
+        const reducedMotion = state.settings.reducedMotion || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+        strip.scrollTo({ left, behavior: animate && !reducedMotion ? "smooth" : "instant" });
     }
-    function apply(value: VisualStylePreference | null, deferred = false, scope = appliedScope) {
+    useLayoutEffect(() => {
+        if (tuning || previewing)
+            return;
+        const card = filmstrip.current?.querySelector<HTMLElement>(`[data-style="${selected}"]`);
+        if (card)
+            centerCard(card);
+    // Selecting the center must never pull a moving strip back to that card.
+    }, [tuning, previewing]);
+    function endDrag(event: ReactPointerEvent<HTMLDivElement>) {
+        const currentDrag = drag.current;
+        if (!currentDrag || currentDrag.pointerId !== event.pointerId)
+            return;
+        drag.current = null;
+        event.currentTarget.classList.remove("is-dragging");
+        if (event.currentTarget.hasPointerCapture?.(event.pointerId))
+            event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    function apply(value: VisualStylePreference | null, reset = false) {
         if (value?.style !== current.current?.style)
             setTuning(false);
+        changed.current = true;
+        resetting.current = reset;
         current.current = value;
         setChoice(value);
         preview.current?.update(value);
-        pending.current = { value, scope };
-        clearTimeout(timer.current);
-        if (deferred)
-            timer.current = setTimeout(flush, 180);
-        else
-            flush();
     }
-    function requestChoice(value: VisualStylePreference | null, trigger: HTMLElement) {
-        flush();
-        setTuning(false);
-        setChoice(value);
-        preview.current?.update(value);
-        setConfirmation({ value, trigger });
-    }
-    function cancelConfirmation() {
-        const next = confirming.current;
-        if (!next)
+    function previewStyle(id: VisualStyleId) {
+        if (id === (current.current?.style ?? scene.defaultStyle))
             return;
-        focusReturn.current = next.trigger;
-        setChoice(current.current);
-        preview.current?.update(current.current);
-        setConfirmation(null);
+        apply({ style: id, parameters: current.current?.parameters ?? { ...scene.parameters } });
     }
-    function confirmChoice(scope: ApplyScope) {
-        if (!confirmation)
+    function previewCenter() {
+        const strip = filmstrip.current;
+        if (!strip || !strip.clientWidth)
             return;
-        // A local reset must bypass the global preference and restore this content default.
-        const value = confirmation.value ?? (scope === "current" && state.globalVisualStyle
-            ? { style: scene.defaultStyle, parameters: { ...DEFAULT_STYLE_PARAMETERS } } : null);
-        focusReturn.current = confirmation.trigger;
-        setConfirmation(null);
-        setAppliedScope(scope);
-        apply(value, false, scope);
-    }
-    useLayoutEffect(() => {
-        if (confirmation)
-            panel.current?.querySelector<HTMLButtonElement>(".visual-style-scope-current")?.focus();
-        else if (focusReturn.current) {
-            const target = focusReturn.current;
-            if (target.isConnected && !target.matches(":disabled") && !target.closest("[hidden]"))
-                target.focus();
-            else
-                panel.current?.querySelector<HTMLButtonElement>("[data-visual-style-close]")?.focus();
-            focusReturn.current = null;
+        const center = strip.scrollLeft + strip.clientWidth / 2;
+        let nearest: HTMLButtonElement | undefined, distance = Infinity;
+        for (const card of strip.querySelectorAll<HTMLButtonElement>("button[data-style]")) {
+            const next = Math.abs(card.offsetLeft + card.offsetWidth / 2 - center);
+            if (next < distance) {
+                nearest = card;
+                distance = next;
+            }
         }
-    }, [confirmation]);
+        if (nearest)
+            previewStyle(nearest.dataset.style as VisualStyleId);
+    }
+    function save() {
+        if (!tuning && !previewing)
+            previewCenter();
+        if (changed.current || appliedScope === "all") {
+            // Resetting locally must bypass an inherited global preference.
+            const value = resetting.current
+                ? appliedScope === "current" && state.globalVisualStyle
+                    ? { style: scene.defaultStyle, parameters: { ...DEFAULT_STYLE_PARAMETERS } } : null
+                : current.current ?? { style: scene.defaultStyle, parameters: { ...scene.parameters } };
+            const stored = appliedScope === "all" ? state.globalVisualStyle
+                : resetting.current ? state.visualStyles?.[scene.id] : getSceneVisualPreference(state, scene.id);
+            const unchanged = value === null ? !stored : stored?.style === value.style
+                && styleParameterControls.every(control => stored.parameters[control.key] === value.parameters[control.key]);
+            const clearsOverrides = appliedScope === "all" && Object.keys(state.visualStyles ?? {}).length > 0;
+            // App dispatch returns false for a legitimate no-op as well as a failure.
+            if (!unchanged || clearsOverrides) {
+                const saved = appliedScope === "all"
+                    ? dispatch({ type: "scene.visual.all", ...(value ?? { style: null }) })
+                    : dispatch({ type: "scene.visual", id: scene.id, ...(value ?? { style: null }) });
+                if (!saved)
+                    return;
+            }
+        }
+        onClose();
+    }
     useEffect(() => {
         const connection = sceneStyles.connectUserPreference(scene.id, current.current, undefined, scene.scope);
         preview.current = connection;
-        const hidden = () => {
-            if (document.hidden)
-                flush();
-        };
-        document.addEventListener("visibilitychange", hidden, true);
-        window.addEventListener("pagehide", flush, true);
         return () => {
-            document.removeEventListener("visibilitychange", hidden, true);
-            window.removeEventListener("pagehide", flush, true);
-            flush();
+            // The temporary owner is the entire draft; disposal restores the save.
             connection.dispose();
             preview.current = null;
         };
     }, [scene.id]);
-    useEffect(() => {
-        if (active === false)
-            flush();
-    }, [active]);
     useEffect(() => {
         const element = panel.current!;
         openMenus.push(element);
@@ -200,10 +197,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
                 return;
             if (event.key === "Escape") {
                 event.preventDefault();
-                if (confirming.current)
-                    cancelConfirmation();
-                else
-                    onClose();
+                onClose();
             }
             if (event.key === "Tab") {
                 const all = focusables(), first = all[0], last = all.at(-1);
@@ -222,10 +216,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
             if (scope && scope !== shell)
                 return;
             event.preventDefault();
-            if (confirming.current)
-                cancelConfirmation();
-            else
-                onClose();
+            onClose();
         };
         document.addEventListener("keydown", keydown);
         document.addEventListener(dismissEvent, dismiss);
@@ -254,27 +245,83 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
         };
     }, [shell]);
     return <div className={`visual-style-backdrop${previewing ? " is-previewing" : ""}`} ref={backdrop} onClick={event => {
-            if (event.target === event.currentTarget) {
-                if (confirmation)
-                    cancelConfirmation();
-                else
-                    onClose();
-            }
+            if (event.target === event.currentTarget)
+                onClose();
         }}>
-    <section className="visual-style-menu" role="dialog" aria-modal="true" aria-label={confirmation ? tr("\u5E94\u7528\u89C6\u89C9\u98CE\u683C") : tr("\u89C6\u89C9\u98CE\u683C")} ref={panel}>
-      <div hidden={!!confirmation} className="visual-style-editor">
+    <section className="visual-style-menu" role="dialog" aria-modal="true" aria-label={tr("\u89C6\u89C9\u98CE\u683C")} ref={panel}>
+      <div className="visual-style-editor">
       <header className="visual-style-heading" hidden={previewing}><div><h2><span className="visual-style-emblem" aria-hidden="true"><Icon name="visual"/></span>{tr("\u89C6\u89C9\u98CE\u683C")}</h2><p>{tr("\u4E3A\u300C")}{tr(scene.label)}{tr("\u300D\u9009\u4E00\u79CD\u559C\u6B22\u7684\u753B\u9762")}</p></div>
         <button type="button" className="round-button" data-visual-style-close="" aria-label={tr("\u5173\u95ED\u89C6\u89C9\u98CE\u683C")} onClick={onClose}><Icon name="close"/></button></header>
       <div className="visual-style-body" hidden={previewing}>
-        <div className="visual-style-grid" role="group" aria-label={tr("\u9009\u62E9\u89C6\u89C9\u98CE\u683C")} hidden={tuning && controls.length > 0}>
+        <div className="visual-style-grid visual-style-filmstrip" ref={filmstrip} role="group" aria-label={tr("\u9009\u62E9\u89C6\u89C9\u98CE\u683C")} hidden={tuning && controls.length > 0} onScroll={previewCenter}
+          onPointerDown={event => {
+                suppressClick.current = false;
+                if (event.pointerType !== "mouse" || event.button !== 0 || event.currentTarget.scrollWidth <= event.currentTarget.clientWidth)
+                    return;
+                drag.current = { pointerId: event.pointerId, x: event.clientX, left: event.currentTarget.scrollLeft, moved: false };
+            }}
+          onPointerMove={event => {
+                const currentDrag = drag.current;
+                if (!currentDrag || currentDrag.pointerId !== event.pointerId)
+                    return;
+                if (!(event.buttons & 1)) {
+                    endDrag(event);
+                    return;
+                }
+                const delta = event.clientX - currentDrag.x;
+                if (!currentDrag.moved && Math.abs(delta) < 6)
+                    return;
+                if (!currentDrag.moved) {
+                    currentDrag.moved = true;
+                    suppressClick.current = true;
+                    event.currentTarget.classList.add("is-dragging");
+                    event.currentTarget.setPointerCapture?.(event.pointerId);
+                }
+                event.preventDefault();
+                event.currentTarget.scrollLeft = currentDrag.left - delta;
+            }}
+          onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag}
+          onClickCapture={event => {
+                if (suppressClick.current && event.detail !== 0) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            }}
+          onKeyDown={event => {
+                const cards = [...event.currentTarget.querySelectorAll<HTMLButtonElement>("button[data-style]")];
+                const index = cards.indexOf(document.activeElement as HTMLButtonElement);
+                if (index < 0)
+                    return;
+                const next = event.key === "ArrowRight" ? Math.min(index + 1, cards.length - 1)
+                    : event.key === "ArrowLeft" ? Math.max(index - 1, 0)
+                    : event.key === "Home" ? 0 : event.key === "End" ? cards.length - 1 : null;
+                if (next !== null) {
+                    event.preventDefault();
+                    cards[next].focus({ preventScroll: true });
+                    previewStyle(cards[next].dataset.style as VisualStyleId);
+                    centerCard(cards[next], true);
+                }
+            }}>
           {order.map(id => {
             const option = visualStyleOptions.find(item => item.id === id)!;
-            return <button key={id} data-style={id} type="button" aria-pressed={id === selected} onClick={event => requestChoice({ style: id, parameters: current.current?.parameters ?? { ...scene.parameters } }, event.currentTarget)}>
-              <span className={`visual-style-swatch visual-style-swatch-${id}`} aria-hidden="true"/>
+            return <button key={id} data-style={id} type="button" aria-pressed={id === selected} onFocus={event => {
+                    // Pointer focus must not move a card between press and release.
+                    if (event.currentTarget.matches(":focus-visible")) {
+                        previewStyle(id);
+                        centerCard(event.currentTarget, true);
+                    }
+                }} onClick={event => { previewStyle(id); centerCard(event.currentTarget, true); }}>
+              <span className="visual-style-swatch" aria-hidden="true" data-preview-state={thumbnails[id] ? "ready" : thumbnails[id] === null ? "unavailable" : "loading"}>
+                {thumbnails[id] ? <img src={thumbnails[id]!} alt="" width="160" height="120" decoding="async" draggable={false}/> : <Icon name="visual"/>}
+              </span>
               <span><strong>{tr(option.label)}</strong><small>{id === scene.defaultStyle ? tr("\u9ED8\u8BA4\u753B\u9762") : tr(option.detail)}</small></span>
               <span className="visual-style-check" aria-hidden="true">{id === selected ? "✓" : ""}</span>
             </button>;
         })}
+        </div>
+        <div className="visual-style-scope" role="group" aria-label={tr("\u5E94\u7528\u89C6\u89C9\u98CE\u683C")}>
+          <button type="button" className="visual-style-scope-current" aria-pressed={appliedScope === "current"} onClick={() => setAppliedScope("current")}>{tr("\u4EC5\u5F53\u524D\u4EEA\u5F0F")}</button>
+          <button type="button" className="visual-style-scope-all" aria-pressed={appliedScope === "all"} onClick={() => setAppliedScope("all")}>{tr("\u5E94\u7528\u5230\u5168\u90E8\u4EEA\u5F0F")}</button>
         </div>
         {controls.length > 0 && <details className="visual-style-tuning" key={selected} open={tuning} onToggle={event => setTuning(event.currentTarget.open)}>
           <summary>{tuning ? tr("\u6536\u8D77\u5FAE\u8C03\uFF0C\u8FD4\u56DE\u98CE\u683C") : tr("\u5FAE\u8C03\u6548\u679C")}</summary>
@@ -282,7 +329,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
                 const value = parameters[control.key], formatted = control.unit === "%" ? `${Math.round(value * 100)}%` : `${value} ${control.unit}`;
                 return <div className="visual-style-parameter" key={control.key}>
               <div><label htmlFor={`visual-${control.key}`}>{tr(control.label)}</label><output htmlFor={`visual-${control.key}`}>{formatted}</output></div>
-              <input id={`visual-${control.key}`} type="range" min={control.min} max={control.max} step={control.step} value={value} aria-valuetext={formatted} onChange={event => apply({ style: selected, parameters: normalizeStyleParameters({ [control.key]: Number(event.target.value) }, current.current?.parameters) }, true)}/>
+              <input id={`visual-${control.key}`} type="range" min={control.min} max={control.max} step={control.step} value={value} aria-valuetext={formatted} onChange={event => apply({ style: selected, parameters: normalizeStyleParameters({ [control.key]: Number(event.target.value) }, current.current?.parameters) })}/>
             </div>;
             })}
           <button type="button" className="small-button visual-style-reset-parameters" onClick={() => {
@@ -292,23 +339,17 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
                 apply({ style: selected, parameters: next });
             }}>{tr("\u91CD\u7F6E\u53C2\u6570")}</button>
         </details>}
-        <p className="visual-style-status" role="status">{scene.actual !== selected ? tr("\u8FD9\u4E2A\u6548\u679C\u6682\u65F6\u65E0\u6CD5\u663E\u793A\uFF0C\u5DF2\u4F7F\u7528{p0}\u3002", { p0: actualLabel }) : appliedScope === "all" ? tr("\u5DF2\u7EDF\u4E00\u5168\u90E8\u4EEA\u5F0F\uFF0C\u7EE7\u7EED\u5FAE\u8C03\u4E5F\u4F1A\u5E94\u7528\u5230\u5168\u90E8\u3002") : tr("\u5FAE\u8C03\u4EC5\u4FEE\u6539\u5F53\u524D\u4EEA\u5F0F\uFF1B\u9009\u62E9\u98CE\u683C\u65F6\u53EF\u7EDF\u4E00\u5168\u90E8\u4EEA\u5F0F\u3002")}</p>
+        <p className="visual-style-status" role="status" data-expanded={scene.actual !== selected || undefined}>{scene.actual !== selected ? tr("\u8FD9\u4E2A\u6548\u679C\u6682\u65F6\u65E0\u6CD5\u663E\u793A\uFF0C\u5DF2\u4F7F\u7528{p0}\u3002", { p0: actualLabel }) : tr("\u5F53\u524D\u98CE\u683C\uFF1A{p0}", { p0: tr(visualStyleOptions.find(option => option.id === selected)!.label) })}</p>
       </div>
-      <footer><button type="button" className="button outline" onClick={event => requestChoice(null, event.currentTarget)} disabled={choice === null && !state.globalVisualStyle && !Object.keys(state.visualStyles ?? {}).length} hidden={previewing}>{tr("\u6062\u590D\u9ED8\u8BA4")}</button>
+      <footer><button type="button" className="button outline" onClick={() => {
+                apply(null, true);
+                const card = filmstrip.current?.querySelector<HTMLElement>(`[data-style="${scene.defaultStyle}"]`);
+                if (card)
+                    centerCard(card);
+            }} disabled={choice === null && !state.globalVisualStyle && !Object.keys(state.visualStyles ?? {}).length} hidden={previewing}>{tr("\u6062\u590D\u9ED8\u8BA4")}</button>
         <button type="button" className="button secondary" aria-pressed={previewing} onClick={() => setPreviewing(value => !value)}>{previewing ? tr("\u7EE7\u7EED\u8C03\u6574") : tr("\u770B\u753B\u9762")}</button>
-        <button type="button" className="button primary visual-style-done" onClick={onClose}>{tr("\u5B8C\u6210")}</button></footer>
+        <button type="button" className="button primary visual-style-done" onClick={save}>{tr("\u5B8C\u6210")}</button></footer>
       </div>
-      {confirmation && <div className="visual-style-scope">
-        <h2>{confirmation.value ? tr("\u5E94\u7528\u5230\u54EA\u4E9B\u4EEA\u5F0F\uFF1F") : tr("\u6062\u590D\u54EA\u4E9B\u4EEA\u5F0F\uFF1F")}</h2>
-        <p>{confirmation.value
-                ? tr("\u5F53\u524D\u98CE\u683C\uFF1A{p0}", { p0: visualStyleOptions.find(option => option.id === confirmation.value?.style)?.label }) : tr("\u6062\u590D\u5404\u81EA\u7684\u9ED8\u8BA4\u753B\u9762\u3002")}</p>
-        <p className="visual-style-scope-note">{confirmation.value ? tr("\u5168\u90E8\u5E94\u7528\u4F1A\u8986\u76D6\u5355\u72EC\u8BBE\u7F6E\u3002") : tr("\u5168\u90E8\u6062\u590D\u4F1A\u6E05\u9664\u5355\u72EC\u8BBE\u7F6E\u3002")}</p>
-        <div className="visual-style-scope-actions">
-          <button type="button" className="button secondary visual-style-scope-current" onClick={() => confirmChoice("current")}>{tr("\u4EC5\u5F53\u524D\u4EEA\u5F0F")}</button>
-          <button type="button" className="button primary" onClick={() => confirmChoice("all")}>{tr("\u5E94\u7528\u5230\u5168\u90E8\u4EEA\u5F0F")}</button>
-          <button type="button" className="text-button visual-style-scope-cancel" onClick={cancelConfirmation}>{tr("\u53D6\u6D88")}</button>
-        </div>
-      </div>}
     </section>
   </div>;
 }

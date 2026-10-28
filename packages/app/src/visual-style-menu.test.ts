@@ -10,6 +10,63 @@ import { clickOn, renderUI, typeInto } from "./dom-test-utils";
 
 afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 describe("App visual style menu", () => {
+  function openFilmstrip() {
+    const ui = renderUI(createElement(Context.Provider, { value: {
+      state: createState(), dispatch: () => true,
+    } as unknown as AppContext }, createElement("div", { className: "app-shell" },
+      createElement(VisualStyleControl, { sceneId: "filmstrip" }))));
+    let registration: ReturnType<typeof sceneStyles.register>;
+    act(() => {
+      registration = sceneStyles.register("filmstrip", "茶山一盏", () => {}, ui.host.querySelector<HTMLElement>(".app-shell")!);
+      registration.setDefault("toon-soft");
+    });
+    clickOn(ui.host.querySelector('button[aria-label="视觉风格"]')!);
+    const strip = ui.host.querySelector<HTMLElement>('[role="group"][aria-label="选择视觉风格"]')!;
+    return { ...ui, strip, dispose() { ui.unmount(); registration!.dispose(); } };
+  }
+
+  it("navigates the filmstrip with arrow and boundary keys without applying a style", () => {
+    const ui = openFilmstrip();
+    try {
+      const cards = [...ui.strip.querySelectorAll<HTMLButtonElement>("button")];
+      cards[0].focus();
+      const key = (value: string) => act(() => document.activeElement!.dispatchEvent(new KeyboardEvent("keydown", { key: value, bubbles: true, cancelable: true })));
+      key("ArrowRight"); expect(document.activeElement).toBe(cards[1]);
+      key("End"); expect(document.activeElement).toBe(cards.at(-1));
+      key("ArrowRight"); expect(document.activeElement).toBe(cards.at(-1));
+      key("ArrowLeft"); expect(document.activeElement).toBe(cards.at(-2));
+      key("Home"); expect(document.activeElement).toBe(cards[0]);
+      expect(ui.host.querySelector('[role="dialog"]')?.getAttribute("aria-label")).toBe("视觉风格");
+      expect(cards[0].getAttribute("aria-pressed")).toBe("true");
+    } finally { ui.dispose(); }
+  });
+
+
+  it("drags with a mouse without selecting the release card, then accepts a normal click", () => {
+    const ui = openFilmstrip();
+    try {
+      Object.defineProperties(ui.strip, { clientWidth: { value: 300 }, scrollWidth: { value: 1000 } });
+      Object.defineProperty(ui.strip, "scrollTo", { value: vi.fn() });
+      const card = ui.strip.querySelector<HTMLButtonElement>('[data-style="pixel-art"]')!;
+      const pointer = (type: string, x: number, buttons = type === "pointerup" ? 0 : 1) => act(() => {
+        const event = new MouseEvent(type, { clientX: x, clientY: 40, button: 0, buttons, bubbles: true });
+        Object.defineProperties(event, { pointerType: { value: "mouse" }, pointerId: { value: 1 }, isPrimary: { value: true } });
+        card.dispatchEvent(event);
+      });
+      // A release outside the strip must not turn a later hover into a drag.
+      pointer("pointerdown", 250); pointer("pointermove", 100, 0);
+      expect(ui.strip.scrollLeft).toBe(0);
+      pointer("pointerdown", 250); pointer("pointermove", 100); pointer("pointerup", 100);
+      expect(ui.strip.scrollLeft).toBe(150);
+      act(() => card.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 })));
+      expect(ui.host.querySelector('[role="dialog"]')?.getAttribute("aria-label")).toBe("视觉风格");
+      pointer("pointerdown", 100); pointer("pointerup", 100);
+      act(() => card.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 })));
+      expect(ui.host.querySelector('[role="dialog"]')?.getAttribute("aria-label")).toBe("视觉风格");
+      expect(card.getAttribute("aria-pressed")).toBe("true");
+    } finally { ui.dispose(); }
+  });
+
   it("notifies a parent before focusing the portal and leaves an existing body lock alone", () => {
     const changed = vi.fn(), focusStates: boolean[] = [];
     let childOpen = false;
@@ -88,7 +145,7 @@ describe("App visual style menu", () => {
     }
   });
 
-  it("previews without debug mode, saves per ritual, flushes slider edits on Escape and restores focus", () => {
+  it("keeps preview and slider edits unsaved in the background, discards on Escape and saves only on Done", () => {
     vi.useFakeTimers();
     const rendered: string[] = [], actions: unknown[] = [], cancel = vi.fn();
     function Harness() {
@@ -111,8 +168,7 @@ describe("App visual style menu", () => {
     clickOn(dialog.querySelector('[data-style="pixel-art"]')!);
     expect(rendered.at(-1)).toBe("pixel-art");
     expect(actions).toHaveLength(0);
-    clickOn(dialog.querySelector('.visual-style-scope-current')!);
-    expect(actions).toContainEqual(expect.objectContaining({ type: "scene.visual", id: "menu-test", style: "pixel-art" }));
+    expect(dialog.getAttribute("aria-label")).toBe("视觉风格");
     const details = dialog.querySelector("details")!; details.open = true;
     const slider = dialog.querySelector<HTMLInputElement>('input[type="range"]')!;
     expect(slider.min).toBe("1"); expect(slider.max).toBe("12");
@@ -121,19 +177,29 @@ describe("App visual style menu", () => {
     expect(actions).toHaveLength(count);
     const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
     act(() => { document.dispatchEvent(new Event("visibilitychange")); });
-    expect(actions).toContainEqual(expect.objectContaining({ parameters: expect.objectContaining({ pixelSize: 8 }) }));
+    expect(actions).toHaveLength(0);
     hidden.mockReturnValue(false);
     typeInto(slider, "7");
     act(() => { window.dispatchEvent(new Event("pagehide")); });
-    expect(actions).toContainEqual(expect.objectContaining({ parameters: expect.objectContaining({ pixelSize: 7 }) }));
+    expect(actions).toHaveLength(0);
     typeInto(slider, "9");
     act(() => { expect(dismissVisualStyleMenu(document.createElement("div"))).toBe(false); });
     expect(document.querySelector('[role="dialog"][aria-label="视觉风格"]')).not.toBeNull();
     act(() => { document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
-    expect(actions).toContainEqual(expect.objectContaining({ type: "scene.visual", id: "menu-test", style: "pixel-art", parameters: expect.objectContaining({ pixelSize: 9 }) }));
+    expect(actions).toHaveLength(0);
+    expect(rendered.at(-1)).toBe("toon-soft");
     expect(document.querySelector('[role="dialog"][aria-label="视觉风格"]')).toBeNull();
     expect(document.activeElement).toBe(button);
     expect(ui.host.querySelector('button[aria-label="仪式设置"]')?.getAttribute('aria-pressed')).toBe('true');
+    clickOn(button);
+    const reopened = scope.querySelector<HTMLElement>('[role="dialog"][aria-label="视觉风格"]')!;
+    clickOn(reopened.querySelector('[data-style="pixel-art"]')!);
+    const reopenedDetails = reopened.querySelector("details")!; reopenedDetails.open = true;
+    typeInto(reopened.querySelector<HTMLInputElement>('input[type="range"]')!, "9");
+    expect(actions).toHaveLength(0);
+    clickOn(reopened.querySelector('.visual-style-done')!);
+    expect(actions).toEqual([expect.objectContaining({ type: "scene.visual", id: "menu-test", style: "pixel-art", parameters: expect.objectContaining({ pixelSize: 9 }) })]);
+    expect(scope.querySelector('[role="dialog"][aria-label="视觉风格"]')).toBeNull();
     clickOn(button);
     act(() => { expect(dismissVisualStyleMenu(scope)).toBe(true); });
     expect(document.querySelector('[role="dialog"][aria-label="视觉风格"]')).toBeNull();

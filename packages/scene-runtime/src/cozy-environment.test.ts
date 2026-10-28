@@ -1,8 +1,32 @@
 import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { createCozyEnvironment } from "./cozy-environment";
+import * as sceneMotion from "./scene-motion";
 
 describe("a scene's surrounding world", () => {
+  it("prepares thumbnail lighting without advancing wind or its clock", async () => {
+    const motion = vi.spyOn(sceneMotion, "readSceneMotion").mockReturnValue({ active: true, reducedMotion: false });
+    const clock = vi.spyOn(performance, "now").mockReturnValue(1000);
+    const scene = new THREE.Scene(), sun = new THREE.DirectionalLight(); scene.add(sun);
+    const world = createCozyEnvironment(scene, { id: "woodfish", loadSky: async () => new THREE.DataTexture() })!;
+    const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
+    try {
+      world.prepare(renderer); clock.mockReturnValue(1020); world.prepare(renderer);
+      const meadow = scene.getObjectByName("windswept-meadow") as THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
+      const foliage = scene.getObjectByName("trees-round-leaves") as THREE.InstancedMesh;
+      const matrices = foliage.instanceMatrix.array.slice(), intensity = sun.intensity;
+      expect(meadow.material.uniforms.meadowTime.value).toBeCloseTo(.02);
+      clock.mockReturnValue(1030); world.prepare(renderer, "gouache", { advanceMotion: false });
+      expect(sun.intensity).toBeLessThan(intensity);
+      expect(meadow.material.uniforms.meadowTime.value).toBeCloseTo(.02);
+      expect(foliage.instanceMatrix.array).toEqual(matrices);
+      world.prepare(renderer, "toon-soft", { advanceMotion: false });
+      expect(sun.intensity).toBe(intensity);
+      clock.mockReturnValue(1040); world.prepare(renderer);
+      expect(meadow.material.uniforms.meadowTime.value).toBeCloseTo(.04);
+      await world.ready;
+    } finally { world.dispose(); motion.mockRestore(); clock.mockRestore(); }
+  });
   it("softens daylight in gouache and restores the existing rig on switching back", async () => {
     const scene = new THREE.Scene();
     const sun = new THREE.DirectionalLight(), ambient = new THREE.AmbientLight(), sky = new THREE.HemisphereLight();

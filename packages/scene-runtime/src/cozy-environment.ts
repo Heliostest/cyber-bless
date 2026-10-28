@@ -427,14 +427,16 @@ export function createCozyEnvironment(
   const meshes = new WeakSet<THREE.Mesh>();
   return {
     kind, ready,
-    prepare(renderer: THREE.WebGLRenderer, style: RenderStyleId = "toon-soft") {
+    prepare(renderer: THREE.WebGLRenderer, style: RenderStyleId = "toon-soft", { advanceMotion = true } = {}) {
       const paintedDay = style === "gouache" && !night;
-      const now = performance.now() * .001, motion = readSceneMotion(renderer.domElement);
-      if (motion.reducedMotion) windTime = 0;
-      else if (motion.active && lastFrame) windTime += Math.min(.05, Math.max(0, now - lastFrame));
-      lastFrame = now;
-      meadow?.update(windTime);
-      treeCanopies?.update(windTime, motion.reducedMotion);
+      if (advanceMotion) {
+        const now = performance.now() * .001, motion = readSceneMotion(renderer.domElement);
+        if (motion.reducedMotion) windTime = 0;
+        else if (motion.active && lastFrame) windTime += Math.min(.05, Math.max(0, now - lastFrame));
+        lastFrame = now;
+        meadow?.update(windTime);
+        treeCanopies?.update(windTime, motion.reducedMotion);
+      }
       let keySeen = false;
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = night || paintedDay ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;

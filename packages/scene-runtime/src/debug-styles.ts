@@ -3,6 +3,7 @@ export { visualStyleOptions as styleOptions } from "@wbr/core/visual-style";
 import type { RenderStyleId } from "@wbr/content";
 import { DEFAULT_STYLE_PARAMETERS, normalizeStyleParameters, styleParameterControls, type RenderStyleParameters } from "./render-style-parameters";
 export { styleParameterControls } from "./render-style-parameters";
+export type StylePreviewCapture = (style: RenderStyleId, parameters: RenderStyleParameters) => string | null;
 
 
 
@@ -16,8 +17,10 @@ export type DebugScene = {
   actual: RenderStyleId;
   parameters: RenderStyleParameters;
   userStyle: RenderStyleId | null;
+  /** Fresh completed frame or environment; changes also distinguish renderer mounts. */
+  previewVersion?: number;
 };
-type Entry = { state: DebugScene; apply(style: RenderStyleId, parameters: RenderStyleParameters): void };
+type Entry = { state: DebugScene; apply(style: RenderStyleId, parameters: RenderStyleParameters): void; capture?: StylePreviewCapture };
 const storageKey = "wbr.debug.scene-styles.v1";
 const parametersKey = "wbr.debug.scene-parameters.v1";
 function isStyle(value: unknown): value is RenderStyleId {
@@ -33,6 +36,7 @@ export function createDebugStyles() {
   const users = new Map<symbol, { id: string; scope?: object; preference: ReturnType<typeof normalizeVisualPreference>; cancelInput?: () => void }>();
   const listeners = new Set<() => void>();
   let snapshot: DebugScene[] = [];
+  let previewVersion = 0;
   function publish() {
     snapshot = [...entries.values()].map(({ state }) => ({ ...state, parameters: { ...state.parameters } }));
     listeners.forEach((listener) => listener());
@@ -82,6 +86,17 @@ export function createDebugStyles() {
       applyId(id, undefined, true);
     },
     getSnapshot: () => snapshot,
+    /** A read-only capture owner cannot outlive its renderer or cross App scopes. */
+    getPreviewCapture(id: string, scope?: object): StylePreviewCapture | undefined {
+      const found = [...entries.entries()].filter(([, entry]) => entry.state.id === id && entry.state.scope === scope).at(-1);
+      if (!found?.[1].capture) return undefined;
+      const [token, entry] = found;
+      return (style, parameters) => {
+        if (!entries.has(token)) return null;
+        try { return entry.capture!(style, normalizeStyleParameters(parameters)); }
+        catch { return null; }
+      };
+    },
     subscribe(listener: () => void) {
       listeners.add(listener);
       return () => { listeners.delete(listener); };
@@ -124,16 +139,23 @@ export function createDebugStyles() {
       }
       if (Object.keys(patch).length) setParameters(id, patch);
     },
-    register(id: string, label: string, onStyle: Entry["apply"], scope?: object) {
+    register(id: string, label: string, onStyle: Entry["apply"], scope?: object, capture?: StylePreviewCapture) {
       const token = Symbol(id);
       const entry: Entry = {
         state: { id, label, scope, defaultStyle: "original", override: null, userStyle: null, actual: "original", parameters: { ...DEFAULT_STYLE_PARAMETERS } },
         apply: onStyle,
+        capture,
       };
+      if (capture) entry.state.previewVersion = 0;
       entries.set(token, entry);
       apply(entry);
       publish();
       return {
+        refreshPreviews() {
+          if (!entries.has(token) || !capture) return;
+          entry.state.previewVersion = ++previewVersion;
+          publish();
+        },
         setDefault(style: RenderStyleId) {
           if (!entries.has(token)) return;
           entry.state.defaultStyle = style;

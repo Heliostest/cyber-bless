@@ -2,6 +2,42 @@ import { describe, expect, it } from "vitest";
 import { createDebugStyles } from "./debug-styles";
 
 describe("per-scene debug styles", () => {
+  it("captures genuine preview frames in the matching scope without publishing a style change", () => {
+    const store = createDebugStyles(), a = {}, b = {};
+    let captures = 0;
+    const registration = store.register("crane", "A", () => {}, a, (style, parameters) => {
+      captures++;
+      return `${style}:${parameters.pixelSize}`;
+    });
+    store.register("crane", "B", () => {}, b, () => "other-scope");
+    registration.refreshPreviews();
+    const before = store.getSnapshot();
+    expect(before[0].previewVersion).toBeGreaterThan(0);
+    const capture = store.getPreviewCapture("crane", a)!;
+    expect(capture("pixel-art", { ...before[0].parameters, pixelSize: 7 })).toBe("pixel-art:7");
+    expect(captures).toBe(1);
+    expect(store.getSnapshot()).toBe(before);
+    expect(store.getPreviewCapture("crane", b)!("original", before[1].parameters)).toBe("other-scope");
+    expect(store.getPreviewCapture("missing", a)).toBeUndefined();
+    registration.dispose();
+    expect(capture("original", before[0].parameters)).toBeNull();
+    expect(captures).toBe(1);
+  });
+
+  it("invalidates thumbnail generations across renderer replacements and contains capture failures", () => {
+    const store = createDebugStyles(), scope = {};
+    const first = store.register("tea", "Tea", () => {}, scope, () => { throw Error("lost context"); });
+    first.refreshPreviews();
+    const version = store.getSnapshot()[0].previewVersion!;
+    const capture = store.getPreviewCapture("tea", scope)!;
+    expect(capture("original", store.getSnapshot()[0].parameters)).toBeNull();
+    first.dispose();
+    const next = store.register("tea", "Tea", () => {}, scope, () => "new-frame");
+    next.refreshPreviews();
+    expect(store.getSnapshot()[0].previewVersion).toBeGreaterThan(version);
+    expect(capture("original", store.getSnapshot()[0].parameters)).toBeNull();
+  });
+
   it("isolates two App scopes even when their rituals have the same technical ID", () => {
     const store = createDebugStyles(), a = {}, b = {}, cancelA = () => { countA++; }, cancelB = () => { countB++; };
     let renderedA = "", renderedB = "", countA = 0, countB = 0;

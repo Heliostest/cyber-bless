@@ -276,6 +276,7 @@ describe("builtInScenes narratives", () => {
       "greek-new-year-pomegranate",
       "greek-vasilopita",
       "hiiragi-iwashi",
+      "hindu-coconut-offering",
       "hongsheng-red-string",
       "horseshoe-doorway-luck",
       "hungarian-embroidery-hoop",

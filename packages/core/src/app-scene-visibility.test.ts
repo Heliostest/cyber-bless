@@ -6,6 +6,7 @@ import { createWidgetSnapshot, selectWidgetDay } from './widgets';
 describe('App scene availability', () => {
   it('keeps exactly the 87 approved scenes visible and all 154 sources available', () => {
     const approved = [
+    "hindu-coconut-offering",
     "nanakusa-gayu",
     "brat-bride-cloth",
     "korean-sotdae",

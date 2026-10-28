@@ -67,6 +67,7 @@ export const sceneRegistry: SceneMeta[] = [
   { id:'sumiyoshi-godairiki',title:'三石寄愿',traditionSlug:'sumiyoshi-godairiki',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'polish-oplatek-sharing',title:'薄饼相祝',traditionSlug:'polish-oplatek-sharing',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'greek-new-year-pomegranate',title:'破榴迎新',traditionSlug:'greek-new-year-pomegranate',grade:'C',sensitivity:'低',gestures:['drag'] },
+  { id:'hindu-coconut-offering',title:'椰果献愿',traditionSlug:'hindu-coconut-offering',grade:'C',sensitivity:'中',gestures:['drag'] },
   { id:'bonfim-ribbon',title:'栏前结愿',traditionSlug:'bonfim-ribbon',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'chinowa-kuguri',title:'茅环祈安',traditionSlug:'chinowa-kuguri',grade:'C',sensitivity:'低',gestures:['drag'] },
   { id:'zeniarai-coin-washing',title:'泉水净币',traditionSlug:'zeniarai-coin-washing',grade:'C',sensitivity:'低',gestures:['drag'] },
@@ -285,6 +286,7 @@ const IMPLEMENTED = new Set([
   'sumiyoshi-godairiki',
   'polish-oplatek-sharing',
   'greek-new-year-pomegranate',
+  'hindu-coconut-offering',
   'bonfim-ribbon',
   'chinowa-kuguri',
   'malawi-sansi',
@@ -416,6 +418,7 @@ export async function loadScene(id: string): Promise<SceneModule> {
     case 'sumiyoshi-godairiki': return import('./sumiyoshi-godairiki/index')
     case 'polish-oplatek-sharing': return import('./polish-oplatek-sharing/index')
     case 'greek-new-year-pomegranate': return import('./greek-new-year-pomegranate/index')
+    case 'hindu-coconut-offering': return import('./hindu-coconut-offering/index')
     case 'bonfim-ribbon': return import('./bonfim-ribbon/index')
     case 'chinowa-kuguri': return import('./chinowa-kuguri/index')
     case 'zeniarai-coin-washing': return import('./zeniarai-coin-washing/index')

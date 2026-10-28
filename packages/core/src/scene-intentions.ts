@@ -154,6 +154,10 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
     kind: 'wish', label: '把三个心愿系在彩带上', optionalWish: false,
     action: '在栏前逐一收紧彩带的三个结，每收一结，在心中留一个愿望。',
   },
+  'hindu-coconut-offering': {
+    kind: 'blessing', label: '为新的开始寄托祝愿', optionalWish: false,
+    action: '提起椰果，移到石面上方，再向下轻击，怀着敬意为新的开始寄托祝愿。',
+  },
   'greek-new-year-pomegranate': {
     kind: 'blessing', label: '为家人寄托新年祝愿', optionalWish: false,
     action: '拿起石榴、移到门槛上方，向下落果，借破开的果实与散落红籽寄托新年好运和丰足。',

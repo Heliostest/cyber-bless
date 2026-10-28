@@ -71,6 +71,7 @@ export const sceneEngines = createSceneRegistry({
   "sumiyoshi-godairiki@1": () => import("./procedural-scene").then(m => m.proceduralEngine("sumiyoshi-godairiki")),
   "polish-oplatek-sharing@1": () => import("./procedural-scene").then(m => m.proceduralEngine("polish-oplatek-sharing")),
   "greek-new-year-pomegranate@1": () => import("./procedural-scene").then(m => m.proceduralEngine("greek-new-year-pomegranate")),
+  "hindu-coconut-offering@1": () => import("./procedural-scene").then(m => m.proceduralEngine("hindu-coconut-offering")),
   "bonfim-ribbon@1": () => import("./procedural-scene").then(m => m.proceduralEngine("bonfim-ribbon")),
   "chinowa-kuguri@1": () => import("./procedural-scene").then(m => m.proceduralEngine("chinowa-kuguri")),
   "zeniarai-coin-washing@1": () => import("./procedural-scene").then(m => m.proceduralEngine("zeniarai-coin-washing")),

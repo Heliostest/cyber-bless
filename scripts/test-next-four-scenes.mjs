@@ -287,7 +287,7 @@ for(const width of process.env.WBR_RETURN_ONLY?[]:widths)for(const id of ids){
   const page=await pageAt(width);await catalog(page);await open(page,id)
   // On narrow canvases the upper-left corner can be a valid extended upward drag.
   // Sotdae's explicit invalid path stays horizontal, outside its upward acceptance cone.
-  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,['korean-sotdae','japanese-kadomatsu','pucara-rooftop-bulls','chinese-longevity-lock'].includes(id)?from[1]:box.y+3]
+  const from=await point(page),box=await page.locator('canvas').boundingBox(),wrong=[box.x+3,['korean-sotdae','japanese-kadomatsu','pucara-rooftop-bulls','chinese-longevity-lock','hindu-coconut-offering'].includes(id)?from[1]:box.y+3]
   const input=pointers.get(page)
   await input.down(wrong);await input.move(from);await input.up()
   await input.down(from);await input.move(wrong);await input.up()

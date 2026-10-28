@@ -4,6 +4,7 @@ import { createRenderStyle } from "./render-style";
 import { createCozyEnvironment } from "./cozy-environment";
 import { createInteractionCues } from "./interaction-cues";
 import { createStylePreviewCapture } from "./style-preview-capture";
+import { captureSceneFrame, registerSceneCapture } from "./scene-capture";
 
 /** Content defaults remain independent of browser-local debug overrides. */
 export function createDebugRenderStyle(
@@ -30,6 +31,13 @@ export function createDebugRenderStyle(
   }
   const capture = createStylePreviewCapture(renderer, scene, camera, style,
     selected => environment?.prepare(renderer, selected, { advanceMotion: false }));
+  const releaseCapture = registerSceneCapture(renderer.domElement, () => {
+    if (!rendered || disposed) return undefined;
+    return captureSceneFrame(renderer.domElement, scene, () => {
+      environment?.prepare(renderer, style.getStyle(), { advanceMotion: false });
+      style.render();
+    });
+  });
   const registration = debugStyles.register(id, label, (selected, parameters) => {
     style.setStyle(selected);
     style.setParameters(parameters);
@@ -63,6 +71,7 @@ export function createDebugRenderStyle(
     dispose() {
       if (disposed) return;
       disposed = true;
+      releaseCapture();
       registration.dispose();
       cues.dispose();
       style.dispose();

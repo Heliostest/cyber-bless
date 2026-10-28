@@ -196,7 +196,10 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     wishMap.needsUpdate = true
   }
   const paintWish = (text: string, isProductDefault = false) => {
-    writtenText = text; productDefault = isProductDefault; redrawWish()
+    writtenText = text; productDefault = isProductDefault
+    // Personal writing stays on the user's envelope but leaves no mark in shared photos.
+    wishMark.userData.privateShare = !isProductDefault
+    redrawWish()
   }
   paintWish('赠礼心意', true)
   const stopWishLocale = subscribeLocale(redrawWish)

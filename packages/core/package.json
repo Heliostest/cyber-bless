@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./daily-scenes": "./src/daily-scenes.ts",
     "./widgets": "./src/widgets.ts",
-    "./visual-style": "./src/visual-style.ts"
+    "./visual-style": "./src/visual-style.ts",
+    "./scene-share": "./src/scene-share.ts"
   },
   "scripts": {
     "test": "vitest run"

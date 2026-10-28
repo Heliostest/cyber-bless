@@ -5,6 +5,7 @@ import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext } from '../contract'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { captureSceneFrame } from '../../../scene-runtime/src/scene-capture'
 
 // Keep the actual Three geometry/rays and DOM gestures; jsdom lacks a GPU.
 vi.mock('three', async (importOriginal) => {
@@ -103,6 +104,19 @@ function dot(s: Mounted) {
 }
 
 describe('mizuhiki craft state', () => {
+  it('keeps a personally written wish visible on the envelope while excluding it from a shared scene frame', () => {
+    const s = mount(2)
+    write(s, '这是只留给自己的心愿')
+    s.run()
+    const wishMark = drawn.scene!.getObjectByName('mizuhiki-written-wish')!
+    const frames: boolean[] = []
+    vi.spyOn(s.canvas, 'toDataURL').mockImplementation(() => wishMark.visible ? 'data:image/png;base64,cHJpdmF0ZQ==' : 'data:image/png;base64,cHVibGlj')
+    const image = captureSceneFrame(s.canvas, drawn.scene!, () => frames.push(wishMark.visible))
+    expect(image).toBe('data:image/png;base64,cHVibGlj')
+    expect(frames).toEqual([false, true])
+    expect(wishMark.visible).toBe(true)
+  })
+
   it('keeps the cord destination on the next ordered gate and suppresses cues during animation and writing', () => {
     const s = mount()
     const tip = drawn.scene!.getObjectByName('mizuhiki-cord-end-target')!

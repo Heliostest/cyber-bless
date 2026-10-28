@@ -13,11 +13,21 @@ export type Storage = {
     write(raw: string): Promise<void>;
 };
 export type HapticStrength = "light" | "medium" | "heavy";
+/** Serializable image export passed from the shared DOM UI to a native host. */
+export type ShareImageRequest = { dataUrl: string; fileName: string; title: string };
+/** Public scene page; the shared UI never adds a wish or a private record. */
+export type ShareLinkRequest = { title: string; text: string; url: string };
 /** `haptic` only where the host can vibrate; no strength keeps the usual tick. */
 export type Host = Storage & {
     /** Validated, read-only bootstrap hint; the store remains the source of truth. */
     initialLocalePreference?: LocalePreference;
     haptic?(strength?: HapticStrength): Promise<void>;
+    /** Opens the native image share sheet; resolving does not confirm delivery. */
+    shareImage?(image: ShareImageRequest): Promise<void>;
+    /** Deployed site root; an empty value leaves external link sharing unavailable. */
+    publicShareBaseUrl?: string;
+    /** Opens the native link share sheet; resolving does not confirm delivery. */
+    shareLink?(request: ShareLinkRequest): Promise<void>;
 };
 type Snapshot = {
     state: State | null;

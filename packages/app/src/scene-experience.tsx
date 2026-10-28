@@ -20,6 +20,7 @@ import { OpeningGuide, OpeningDone } from './opening';
 import { OptionalSceneWish } from './optional-scene-wish';
 import { useSceneVisualPreference } from "./scene-visual-preference";
 import { SceneRewardReveal } from "./scene-reward-reveal";
+import { SceneShareButton } from "./ritual-share";
 export function ProceduralScene({ entry, progress, checkpoint, saveWish, returning, initialVariant, onVariantChange, failed, }: {
     entry: CatalogEntry;
     progress: number;
@@ -400,6 +401,7 @@ function LoadedScene({ entry, lease, wishId, daily, vessel, replay, opening, fai
                 {tr(SCENE_DONE_CTA)}
               </button>)}
             </>)}
+          <SceneShareButton sceneId={entry.id} title={localizedTitle(entry)}/>
         </div>)}
       {canRecordWish && wishWriting && (<OptionalSceneWish active={active} onSubmit={saveCompletedWish} onClose={() => setWishWriting(false)}/>)}
       {entry.engine !== "woodfish@1" && (

@@ -9,10 +9,18 @@ import {
 } from "../../scripts/publish-scene-content.mjs";
 
 await prepareAppAssets();
+const base = process.env.VITE_BASE_PATH || '/';
 
 export default defineConfig({
   publicDir: "public",
-  define: { "process.env.EXPO_BASE_URL": JSON.stringify("/") },
+  base,
+  define: { "process.env.EXPO_BASE_URL": JSON.stringify(base) },
+  build: {
+    rollupOptions: { input: {
+      main: path.resolve(import.meta.dirname, 'index.html'),
+      share: path.resolve(import.meta.dirname, 'share.html'),
+    } },
+  },
   plugins: [
     react(),
     {

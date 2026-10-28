@@ -7,17 +7,19 @@
     "docs/research/2026-10-27-i18n-acceptance.md",
     "docs/research/2026-10-28-gallery-shader-i18n.md",
     "docs/research/2026-10-28-continuous-placement-i18n.md",
-    "docs/research/2026-10-28-four-scenes-i18n-integration.md"
+    "docs/research/2026-10-28-four-scenes-i18n-integration.md",
+    "docs/research/2026-10-28-ritual-image-sharing-i18n.md",
+    "docs/research/2026-10-28-interactive-scene-sharing-i18n.md"
   ],
   "catalogs": {
     "zh-Hans": {
       "app": {
-        "sourceHash": "6d8232923fc7fee43f4e0a6538b3e545c7da7d906163dd36142dd6866869a1f7",
-        "targetHash": "6d8232923fc7fee43f4e0a6538b3e545c7da7d906163dd36142dd6866869a1f7",
-        "messages": 440,
-        "reviewedAt": "2026-10-27T13:58:32.218Z",
+        "sourceHash": "15ea4fe853188baac43292667cf5013370c4f743ed21bf62653bd138a241499f",
+        "targetHash": "15ea4fe853188baac43292667cf5013370c4f743ed21bf62653bd138a241499f",
+        "messages": 470,
+        "reviewedAt": "2026-10-28T15:36:52.522Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex share_i18n agent (19 interactive-link controls and existing privacy sharing paragraph; prior image-share review retained in evidence; no native-speaker certification)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -70,12 +72,12 @@
     },
     "zh-Hant": {
       "app": {
-        "sourceHash": "6d8232923fc7fee43f4e0a6538b3e545c7da7d906163dd36142dd6866869a1f7",
-        "targetHash": "38b765458c7c1405fbd1078af2b25cacce11e8da2df16c1adf502707a9ddc28d",
-        "messages": 440,
-        "reviewedAt": "2026-10-27T13:58:32.221Z",
+        "sourceHash": "15ea4fe853188baac43292667cf5013370c4f743ed21bf62653bd138a241499f",
+        "targetHash": "bc2d354be39c7c0db3dac7ba0a70236a5e5266a03bd7e62fd9cb6d5e01f40b73",
+        "messages": 470,
+        "reviewedAt": "2026-10-28T15:36:52.524Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex share_i18n agent (19 interactive-link controls and existing privacy sharing paragraph; prior image-share review retained in evidence; no native-speaker certification)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -128,12 +130,12 @@
     },
     "en": {
       "app": {
-        "sourceHash": "6d8232923fc7fee43f4e0a6538b3e545c7da7d906163dd36142dd6866869a1f7",
-        "targetHash": "1972691096d9587d9c4807975a60b5a036d2893888247de81dfdb3e2b9c20f2d",
-        "messages": 440,
-        "reviewedAt": "2026-10-27T13:58:32.223Z",
+        "sourceHash": "15ea4fe853188baac43292667cf5013370c4f743ed21bf62653bd138a241499f",
+        "targetHash": "f312d725996085d4c41e638df333dfc2af6489336915d9b066729100c05b7f0b",
+        "messages": 470,
+        "reviewedAt": "2026-10-28T15:36:52.527Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex share_i18n agent (19 interactive-link controls and existing privacy sharing paragraph; prior image-share review retained in evidence; no native-speaker certification)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -186,12 +188,12 @@
     },
     "ja": {
       "app": {
-        "sourceHash": "6d8232923fc7fee43f4e0a6538b3e545c7da7d906163dd36142dd6866869a1f7",
-        "targetHash": "cc35be49618b801381cb1380f445447b296aa74588cb599b32bfd9d064caa3dd",
-        "messages": 440,
-        "reviewedAt": "2026-10-27T13:58:32.226Z",
+        "sourceHash": "15ea4fe853188baac43292667cf5013370c4f743ed21bf62653bd138a241499f",
+        "targetHash": "b22adca167f2f35a02080c1200c881f7c6e9a53f11dc04ac344f04c56a3f091d",
+        "messages": 470,
+        "reviewedAt": "2026-10-28T15:36:52.529Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex share_i18n agent (19 interactive-link controls and existing privacy sharing paragraph; prior image-share review retained in evidence; no native-speaker certification)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -244,12 +246,12 @@
     },
     "ko": {
       "app": {
-        "sourceHash": "6d8232923fc7fee43f4e0a6538b3e545c7da7d906163dd36142dd6866869a1f7",
-        "targetHash": "c26ceb74fc36eb7dc1eaba5ed22bdac4c1bfc121649adfbf78c669e304cbda47",
-        "messages": 440,
-        "reviewedAt": "2026-10-27T13:58:32.229Z",
+        "sourceHash": "15ea4fe853188baac43292667cf5013370c4f743ed21bf62653bd138a241499f",
+        "targetHash": "7be6e93518698dc1e583923a10f0f21918f2981dd2987571a470f78a9ca75e83",
+        "messages": 470,
+        "reviewedAt": "2026-10-28T15:36:52.531Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex share_i18n agent (19 interactive-link controls and existing privacy sharing paragraph; prior image-share review retained in evidence; no native-speaker certification)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -302,12 +304,12 @@
     },
     "es": {
       "app": {
-        "sourceHash": "6d8232923fc7fee43f4e0a6538b3e545c7da7d906163dd36142dd6866869a1f7",
-        "targetHash": "16b05a4fb59922309c9984afb55fdc06a2046b6bf673626df0807cb899e0722f",
-        "messages": 440,
-        "reviewedAt": "2026-10-27T14:13:47.053Z",
+        "sourceHash": "15ea4fe853188baac43292667cf5013370c4f743ed21bf62653bd138a241499f",
+        "targetHash": "9758d59ebaacda7591e66c89f516b8329665ecb0c3dbc04b12e07e5608519120",
+        "messages": 470,
+        "reviewedAt": "2026-10-28T15:36:52.533Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex share_i18n agent (19 interactive-link controls and existing privacy sharing paragraph; prior image-share review retained in evidence; no native-speaker certification)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -360,12 +362,12 @@
     },
     "pt": {
       "app": {
-        "sourceHash": "6d8232923fc7fee43f4e0a6538b3e545c7da7d906163dd36142dd6866869a1f7",
-        "targetHash": "0f221e4150895d995e705ce2621d4a9979dc4297bbaf9244b101441c1c64db3b",
-        "messages": 440,
-        "reviewedAt": "2026-10-27T14:13:47.056Z",
+        "sourceHash": "15ea4fe853188baac43292667cf5013370c4f743ed21bf62653bd138a241499f",
+        "targetHash": "91bf4306efffbe455e0a396a32aeb7446b69afc0cffeba534dba50afa8000ca9",
+        "messages": 470,
+        "reviewedAt": "2026-10-28T15:36:52.535Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex share_i18n agent (19 interactive-link controls and existing privacy sharing paragraph; prior image-share review retained in evidence; no native-speaker certification)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -418,12 +420,12 @@
     },
     "fr": {
       "app": {
-        "sourceHash": "6d8232923fc7fee43f4e0a6538b3e545c7da7d906163dd36142dd6866869a1f7",
-        "targetHash": "b9ba610b4238534a83a8c170e2b6cb8aa700184ccc40862f988869c0208737b0",
-        "messages": 440,
-        "reviewedAt": "2026-10-27T14:13:47.058Z",
+        "sourceHash": "15ea4fe853188baac43292667cf5013370c4f743ed21bf62653bd138a241499f",
+        "targetHash": "541d1de9befcd942ef481a9a199647d27c1060c0d931d0aa0b0bcc73052e8410",
+        "messages": 470,
+        "reviewedAt": "2026-10-28T15:36:52.536Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex share_i18n agent (19 interactive-link controls and existing privacy sharing paragraph; prior image-share review retained in evidence; no native-speaker certification)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",

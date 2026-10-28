@@ -54,6 +54,12 @@ describe('collected object touch feedback', () => {
     expect(daruma.motion).not.toEqual(chime.motion)
   })
 
+  it('anchors the upright wheat bundle near its foot instead of using the unknown-object pulse', () => {
+    const bundle = wishObjectFeedback('ukrainian-didukh')
+    expect(bundle.motion.every(frame => frame.transformOrigin === '50% 90%')).toBe(true)
+    expect(bundle.motion.some(frame => String(frame.transform).includes('rotate(-'))).toBe(true)
+  })
+
   it('lifts the paper crane and lantern gently without applying a shared rocking rotation', () => {
     for (const id of ['crane', 'lantern']) {
       const profile = wishObjectFeedback(id)

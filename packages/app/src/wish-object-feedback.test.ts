@@ -17,6 +17,19 @@ describe('collected object touch feedback', () => {
     expect(wishObjectFeedback(id).sound).toBe(sound)
   })
 
+  it.each([
+    ['hindu-coconut-offering', 'hollow', 'rotate(-4deg)'],
+    ['mezuzah-doorpost', 'metal', 'translateY(1px)'],
+    ['sri-lankan-bodhi-puja', 'ceramic', 'translateY(1px)'],
+    ['ukrainian-didukh', 'air', 'rotate(-3deg) translateY(-1px)'],
+  ])('gives the displayed %s object its authored %s sound and settling motion', (id, sound, reaction) => {
+    const profile = wishObjectFeedback(id)
+    expect(profile.sound).toBe(sound)
+    expect(profile.motion[1].transform).toBe(reaction)
+    expect(profile.motion[0].transform).toBe(profile.motion.at(-1)!.transform)
+    expect(profile).not.toEqual(wishObjectFeedback('future-object'))
+  })
+
   it('gives every current shelf object and compatible saved wish object a deliberate response', () => {
     const fallback = wishObjectFeedback('future-object')
     const ids = new Set([...builtInScenes.filter(isSceneVisibleInApp).map(entry => entry.id), ...WISH_SCENE_IDS])

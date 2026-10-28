@@ -127,11 +127,11 @@ const craftDeltas={
   'niue-shell-necklace':[[-60,0],[0,-60]],
 }
 const empty={version:1,sceneRecords:[],wishes:[],activeSession:null,sessions:[],collectibles:[],ledger:[],settings:{sound:false,haptics:false,reducedMotion:process.env.WBR_MOTION!=='1'}}
-const browser=await chromium.launch({headless:true,...(process.env.WBR_CHROME?{executablePath:process.env.WBR_CHROME}:{})}),results=[],errors=[],external=[]
+const browser=await chromium.launch({headless:true,args:['--no-proxy-server','--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader'],...(process.env.WBR_CHROME?{executablePath:process.env.WBR_CHROME}:{})}),results=[],errors=[],external=[]
 let captures=0,keyboardActions=0
 const pointers=new WeakMap(), touchMode=process.env.WBR_TOUCH==='1'
 async function pageAt(width=390,state=empty){
-  const page=await browser.newPage({viewport:{width,height:width>500?900:844},hasTouch:touchMode,isMobile:touchMode});page.setDefaultTimeout(20000)
+  const page=await browser.newPage({viewport:{width,height:width>500?900:844},locale:'zh-CN',hasTouch:touchMode,isMobile:touchMode});page.setDefaultTimeout(20000)
   page.on('pageerror',e=>errors.push(e.message))
   page.on('console',msg=>{if(msg.type()==='error')errors.push(msg.text())})
   page.on('request',r=>{if(!r.url().startsWith(new URL(base).origin)&&!/^(data:|blob:)/.test(r.url()))external.push(r.url())})

@@ -66,18 +66,26 @@ describe("collected prayer rituals on the wish rack", () => {
     expect(ui.host.querySelectorAll(".wish-rack-item")).toHaveLength(4);
     expect(ui.host.querySelector(".wish-rack-toggle")).toBeNull();
   });
-  it("shows acquired prayer objects and puts unused objects before used ones", () => {
+  it("shows only acquired wish and blessing objects, regardless of writing eligibility", () => {
     const state = createState();
     state.collectibles = [keepsake("used", "tanzaku-tanabata", true), keepsake("unused", "crane"),
-      { ...keepsake("blessing", "woodfish"), wishScene: false },
+      { ...keepsake("blessing", "uchide-wishing-mallet"), wishScene: false },
+      { ...keepsake("reflection", "woodfish"), wishScene: false },
+      keepsake("reminder", "omikuji"), keepsake("gratitude", "phuang-malai"),
+      keepsake("reverence", "diya-oil-lamp"), keepsake("celebration", "navruz-sumalak"),
       { id: "badge", kind: "badge", title: "如愿", at: AT },
       keepsake("hidden", "lantern")];
+    const before = JSON.stringify(state);
     const ui = open(state);
     expect([...ui.host.querySelectorAll(".wish-rack-item")].map(el => el.getAttribute("data-collectible-id"))).toEqual(["unused", "used", "blessing"]);
     expect(item(ui, "unused").dataset.rackStatus).toBe("unused");
     expect(item(ui, "used").dataset.rackStatus).toBe("used");
     expect(ui.host.querySelector(".wish-rack-count")?.textContent).toBe("1 个未用");
     expect(openItem(ui, "unused").textContent).toContain("折一只纸鹤");
+    clickOn(openItem(ui, "blessing"));
+    expect(ui.go).toHaveBeenCalledWith({ page: "collection", id: "blessing" });
+    expect(ui.dispatch).not.toHaveBeenCalled();
+    expect(JSON.stringify(state)).toBe(before);
   });
   it("opens the exact unused vessel without spending it or creating a wish on click", () => {
     const state = createState();
@@ -165,7 +173,9 @@ describe("collected prayer rituals on the wish rack", () => {
     expect(row.scrollLeft).toBe(0);
   });
   it("leaves no empty showcase when the user has not acquired a prayer object", () => {
-    const ui = open(createState());
+    const state = createState();
+    state.collectibles = [keepsake("reflection", "woodfish"), keepsake("gratitude", "phuang-malai")];
+    const ui = open(state);
     expect(ui.host.querySelector(".wish-ritual-rack")).toBeNull();
     expect(ui.host.querySelectorAll(".pray-button")).toHaveLength(1);
   });

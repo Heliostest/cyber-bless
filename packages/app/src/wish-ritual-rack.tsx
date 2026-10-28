@@ -23,6 +23,9 @@ export function WishRitualRack() {
         if (item.kind !== "scene" || !item.sceneId) return [];
         const entry = entries.find(entry => entry.id === item.sceneId);
         if (!entry) return [];
+        // Saved vessel flags describe writing eligibility, not the scene's purpose.
+        const intention = sceneIntention(entry.id);
+        if (intention?.kind !== "wish" && intention?.kind !== "blessing") return [];
         const status = !item.wishScene ? "kept" as const : item.spentAt
             ? state.vesselDrafts?.[item.id] ? "pending" as const : "used" as const
             : "unused" as const;

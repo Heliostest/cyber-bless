@@ -2723,6 +2723,17 @@ button:hover:not(:disabled) {
     transition: none !important;
   }
 }
+/* Phone viewports can exceed 430px. Fill their width so the darker desktop
+   ground never shows as narrow rails beside the page or loading screen. */
+@media (max-width: 599px) {
+  .app-shell,
+  .loading-screen {
+    max-width: none;
+  }
+  .bottom-nav {
+    width: calc(100% - 24px);
+  }
+}
 @media (min-width: 1000px) {
   /* Holds the shell's margins (they would collapse through it), so the page
      is exactly one window tall and never scrolls behind the device. */

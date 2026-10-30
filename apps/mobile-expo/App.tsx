@@ -20,6 +20,7 @@ import { createProjectedStorage, type HapticStrength } from '@wbr/runtime';
 import { parseWidgetLink, type WidgetNavigationRequest } from '@wbr/core/widgets';
 import { synchronizeWidgets } from './widget-sync';
 import BlessingDom from "./BlessingDom";
+import { SafeAreaBackground } from './SafeAreaBackground';
 import { shareImage } from './share-image';
 import { shareLink } from './share-link';
 import {
@@ -158,7 +159,9 @@ function Shell() {
   const resolved = resolveLocale(preference, languages).locale;
   const copy = nativeCopy.native[resolved];
   return (
-    <SafeAreaView style={styles.shell}>
+    <View style={styles.shell}>
+      <SafeAreaBackground />
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       {ready && <BlessingDom
         key={generation}
@@ -227,12 +230,14 @@ function Shell() {
         </View>
       )}
     </SafeAreaView>
+    </View>
   );
 }
-// Island shell colours (packages/app/src/style.css): the safe-area bands and
-// the WebView's first paint are the mint page, like index.html's theme-color.
+// Native tiles extend the CSS ground into the safe areas. Keep the WebView's
+// first paint mint; content, keyboard and fixed controls retain their safe rect.
 const styles = StyleSheet.create({
-  shell: { flex: 1, backgroundColor: "#cdf1e6" },
+  shell: { flex: 1, backgroundColor: "#cdf1e6", overflow: "hidden" },
+  safeArea: { flex: 1 },
   webview: { flex: 1, backgroundColor: "#cdf1e6" },
   failure: {
     ...StyleSheet.absoluteFill,

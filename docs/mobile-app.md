@@ -10,6 +10,8 @@
 
 原生壳处理安全区、深色状态栏文字、前后台、Android 返回键、触觉、AsyncStorage 和场景文件缓存。DOM 通过顶层 Promise 回调传递字符串、布尔值和可序列化资源描述；没有嵌套函数参数。原生返回事件由产品页面按弹窗、仪式和导航层级处理；首页返回交给 Android 系统。WebView 使用键盘 resize、内部滚动及 viewport-fit=cover；加载失败或渲染进程终止显示重新打开入口。声音由页面交互触发；前后台状态传入共享运行时。没有请求相机、麦克风、定位或共享存储权限。
 
+2026-10-30：原生外壳在透明的 SafeAreaView 后铺设波点，延伸到状态栏和底部手势区；WebView、按钮与正文仍保留既有安全区尺寸。SafeAreaBackground 仅在安全区边缘绘制固定 24pt 的小图，并按安全区偏移对齐页面初始背景，提供 1x/2x/3x 随包 PNG；不使用 Android 按原始像素重复的 repeat 模式，以兼容非整数屏幕密度。`node scripts/generate-island-dots.mjs` 从共享 CSS 配色重建纹理；修改波点几何后须同步生成脚本。原生背景固定，网页背景仍按现有行为随文档滚动。本次仅修改宿主背景，未改变场景与文化主张。验证记录见[实施计划](superpowers/plans/2026-10-30-safe-area-dots.md)。
+
 实际发布为手机竖屏，iOS 不声明 iPad 支持。签名 IPA 的最低系统为 iOS **16.4**，Android APK/AAB 为 minSdk **24（Android 7.0）**、targetSdk **36**。iOS 支持竖屏及倒置竖屏。图标和启动素材来自本项目原创 SVG 标记与现有配色。
 
 | 依赖 | 当前版本 |

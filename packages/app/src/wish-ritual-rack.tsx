@@ -6,6 +6,7 @@ import { formatDate, useApp } from "./context";
 import { supportsScene, useOpenScene, useSceneLibrary } from "./scene-library";
 import { WishObjectPreview, type WishObjectPreviewHandle } from "./wish-object-preview";
 import { wishObjectFeedback } from "./wish-object-feedback";
+import { isWishCollectionScene } from "./vessels";
 import { Icon } from "./art";
 
 /** Each collected copy stays separate; touching the display never spends it. */
@@ -23,9 +24,7 @@ export function WishRitualRack() {
         if (item.kind !== "scene" || !item.sceneId) return [];
         const entry = entries.find(entry => entry.id === item.sceneId);
         if (!entry) return [];
-        // Saved vessel flags describe writing eligibility, not the scene's purpose.
-        const intention = sceneIntention(entry.id);
-        if (intention?.kind !== "wish" && intention?.kind !== "blessing") return [];
+        if (!isWishCollectionScene(entry.id)) return [];
         const status = !item.wishScene ? "kept" as const : item.spentAt
             ? state.vesselDrafts?.[item.id] ? "pending" as const : "used" as const
             : "unused" as const;

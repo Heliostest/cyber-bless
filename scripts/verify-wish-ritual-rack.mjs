@@ -5,10 +5,10 @@ import sharp from 'sharp';
 
 // Rendered product UI and save invariants; this does not assess cultural facts or physical hardware.
 const base = process.env.WBR_URL || 'http://127.0.0.1:5176';
-const out = 'artifacts/wish-object-shelf', key = 'cyber-bless:personal:v1';
+const out = process.env.WBR_OUT || 'artifacts/wish-object-shelf', key = 'cyber-bless:personal:v1';
 const at = '2026-10-27T08:00:00.000Z';
 const keepsake = (id, sceneId, extra = {}) => ({ id, kind: 'scene', title: sceneId, sceneId, wishScene: true, at, spentAt: at, ...extra });
-const inventory = [keepsake('last-crane', 'crane'), keepsake('mallet', 'uchide-wishing-mallet'),
+const inventory = [keepsake('last-crane', 'crane'), keepsake('milagros', 'milagros'),
   keepsake('house', 'alasita-miniature-house'), keepsake('tanzaku', 'tanzaku-tanabata'),
   keepsake('daruma', 'daruma-eye-painting'), keepsake('first-crane', 'crane')];
 const savedState = (collectibles = inventory, reducedMotion = false, sound = true, extra = {}) => ({
@@ -131,11 +131,11 @@ try {
   results.push({ check: 'native-touch-swipe-without-activation', passed: true });
   await touch.context().close();
 
-  const individualInventory = [keepsake('ring', 'furin-wind-chime', { wishScene: false }),
+  const individualInventory = [keepsake('kept-house', 'alasita-miniature-house', { wishScene: false }),
     keepsake('paper', 'crane'), keepsake('doll', 'daruma-eye-painting')];
   const individual = await open(savedState(individualInventory)); await ready(individual);
   const reactions = [];
-  for (const id of ['paper', 'ring', 'doll']) {
+  for (const id of ['paper', 'doll']) {
     const tile = item(individual, id), charm = tile.locator('.wish-rack-charm');
     const before = await tile.screenshot();
     await item(individual, id).click(); await individual.waitForTimeout(180);
@@ -146,25 +146,28 @@ try {
     assert.equal(frames.length, id === 'doll' ? 1 : 0);
     reactions.push({ id, changedPixels: pixels, wrapperAnimations: frames.length,
       audio: await individual.evaluate(() => window.rackAudioEvents.at(-1)) });
-    await individual.waitForTimeout(id === 'ring' ? 3100 : 1800);
+    await individual.waitForTimeout(1800);
   }
   assert.ok(Math.abs(reactions[0].audio.duration - .38) < .002);
-  assert.ok(Math.abs(reactions[1].audio.duration - .95) < .002);
-  assert.ok(Math.abs(reactions[2].audio.duration - .24) < .002);
-  assert.equal(await item(individual, 'ring').getAttribute('data-rack-status'), 'kept');
+  assert.ok(Math.abs(reactions[1].audio.duration - .24) < .002);
+  assert.equal(await item(individual, 'kept-house').getAttribute('data-rack-status'), 'kept');
   assert.equal(await individual.locator('.wish-rack-count').innerText(), '0 个未用');
   assert.deepEqual((await saved(individual)).collectibles, individualInventory);
   assert.equal((await saved(individual)).wishes.length, 0);
   await screenshot(individual, 'individual-responses-390.png');
-  await routeButton(individual, 'ring').click();
+  await routeButton(individual, 'kept-house').click();
   await individual.locator('.app-shell[data-page="collection"]').waitFor();
-  results.push({ check: 'material-sounds-and-native-local-motions', reactions, windChimeDisplayOnly: true, saveUnchanged: true });
+  results.push({ check: 'material-sounds-and-native-local-motions', reactions, prayerCollectionDisplayOnly: true, saveUnchanged: true });
   await individual.context().close();
 
   const reminder = keepsake('reminder', 'omikuji'); delete reminder.spentAt;
   const nonPrayerInventory = [keepsake('woodfish', 'woodfish', { wishScene: false }),
     reminder, keepsake('flowers', 'phuang-malai'),
-    keepsake('oil-lamp', 'diya-oil-lamp'), keepsake('sumalak', 'navruz-sumalak')];
+    keepsake('oil-lamp', 'diya-oil-lamp'), keepsake('sumalak', 'navruz-sumalak'),
+    keepsake('bulls', 'pucara-rooftop-bulls', { wishScene: false }),
+    keepsake('pine', 'japanese-kadomatsu', { wishScene: false }),
+    keepsake('candy', 'shichigosan-chitose-ame', { wishScene: false }),
+    keepsake('chime', 'furin-wind-chime'), keepsake('legacy-bulls', 'pucara-rooftop-bulls')];
   const mixedInventory = [...inventory, ...nonPrayerInventory];
   const prayerOnly = await open(savedState(mixedInventory)); await ready(prayerOnly);
   assert.equal(await prayerOnly.locator('.wish-rack-item').count(), inventory.length);
@@ -178,7 +181,7 @@ try {
   assert.equal(await noPrayerObjects.locator('.pray-button').count(), 1);
   assert.deepEqual((await saved(noPrayerObjects)).collectibles, nonPrayerInventory);
   await noPrayerObjects.context().close();
-  results.push({ check: 'only-wish-and-blessing-objects-with-original-collection-preserved', passed: true });
+  results.push({ check: 'only-primary-wish-objects-with-original-collection-preserved', passed: true });
 
   const used = await open(savedState([keepsake('copy', 'crane', { title: '我的纸鹤' })])); await ready(used);
   await routeButton(used, 'copy').click(); await used.locator('.app-shell[data-page="collection"]').waitFor();

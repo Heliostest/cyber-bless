@@ -5,7 +5,7 @@ import { Icon } from "./art";
 import { useApp } from "./context";
 import { useOpenScene, useSceneLibrary } from "./scene-library";
 import { SceneBadge } from "./scene-icons";
-import { pendingVessels, usableVessels, VESSEL_COPY } from "./vessels";
+import { isWishCollectionScene, pendingVessels, usableVessels, VESSEL_COPY } from "./vessels";
 /** The same completed-scene writing flow, with or without a collected object. */
 export function WishRitualPicker() {
     const { state } = useApp();
@@ -17,7 +17,7 @@ export function WishRitualPicker() {
     const heldScenes = new Set([...pending, ...vessels].map(c => c.sceneId));
     const scenes = entries.filter(entry => {
         const intention = sceneIntention(entry.id);
-        return intention?.kind === "wish" && intention.optionalWish && !heldScenes.has(entry.id);
+        return isWishCollectionScene(entry.id) && intention?.kind === "wish" && intention.optionalWish && !heldScenes.has(entry.id);
     });
     const vesselRows = (items: typeof vessels, pendingChoice = false) => (<div className="wish-practice-grid">
       {items.map(item => {

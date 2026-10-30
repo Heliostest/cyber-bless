@@ -32,18 +32,19 @@ function openItem(ui: ReturnType<typeof open>, id: string) {
 }
 
 describe("collected prayer rituals on the wish rack", () => {
-  it("shows a collected wind chime as display-only without turning it into an unused wish vessel", () => {
+  it.each([false, true])("excludes a blessing collection even when its saved wish flag is %s", wishScene => {
     const state = createState();
-    state.collectibles = [{ ...keepsake("chime", "furin-wind-chime"), wishScene: false }];
+    state.collectibles = [
+      { ...keepsake("chime", "furin-wind-chime"), wishScene },
+      { ...keepsake("bulls", "pucara-rooftop-bulls"), wishScene },
+      { ...keepsake("pine", "japanese-kadomatsu"), wishScene },
+      { ...keepsake("candy", "shichigosan-chitose-ame"), wishScene },
+    ];
+    const before = JSON.stringify(state);
     const ui = open(state);
-    expect(item(ui, "chime")).not.toBeNull();
-    expect(item(ui, "chime").dataset.rackStatus).toBe("kept");
-    clickOn(item(ui, "chime"));
-    expect(ui.feedback).toHaveBeenCalledWith("chime");
-    expect(ui.go).not.toHaveBeenCalled();
-    clickOn(openItem(ui, "chime"));
-    expect(ui.go).toHaveBeenCalledWith({ page: "collection", id: "chime" });
+    expect(ui.host.querySelector(".wish-ritual-rack")).toBeNull();
     expect(ui.dispatch).not.toHaveBeenCalled();
+    expect(JSON.stringify(state)).toBe(before);
   });
   it("responds to object taps in place without spending, writing, or navigating", () => {
     const state = createState();
@@ -66,10 +67,11 @@ describe("collected prayer rituals on the wish rack", () => {
     expect(ui.host.querySelectorAll(".wish-rack-item")).toHaveLength(4);
     expect(ui.host.querySelector(".wish-rack-toggle")).toBeNull();
   });
-  it("shows only acquired wish and blessing objects, regardless of writing eligibility", () => {
+  it("uses the primary wish category while keeping non-writing wish collections", () => {
     const state = createState();
     state.collectibles = [keepsake("used", "tanzaku-tanabata", true), keepsake("unused", "crane"),
-      { ...keepsake("blessing", "uchide-wishing-mallet"), wishScene: false },
+      { ...keepsake("kept", "alasita-miniature-house"), wishScene: false },
+      keepsake("blessing", "uchide-wishing-mallet"),
       { ...keepsake("reflection", "woodfish"), wishScene: false },
       keepsake("reminder", "omikuji"), keepsake("gratitude", "phuang-malai"),
       keepsake("reverence", "diya-oil-lamp"), keepsake("celebration", "navruz-sumalak"),
@@ -77,13 +79,13 @@ describe("collected prayer rituals on the wish rack", () => {
       keepsake("hidden", "lantern")];
     const before = JSON.stringify(state);
     const ui = open(state);
-    expect([...ui.host.querySelectorAll(".wish-rack-item")].map(el => el.getAttribute("data-collectible-id"))).toEqual(["unused", "used", "blessing"]);
+    expect([...ui.host.querySelectorAll(".wish-rack-item")].map(el => el.getAttribute("data-collectible-id"))).toEqual(["unused", "used", "kept"]);
     expect(item(ui, "unused").dataset.rackStatus).toBe("unused");
     expect(item(ui, "used").dataset.rackStatus).toBe("used");
     expect(ui.host.querySelector(".wish-rack-count")?.textContent).toBe("1 个未用");
     expect(openItem(ui, "unused").textContent).toContain("折一只纸鹤");
-    clickOn(openItem(ui, "blessing"));
-    expect(ui.go).toHaveBeenCalledWith({ page: "collection", id: "blessing" });
+    clickOn(openItem(ui, "kept"));
+    expect(ui.go).toHaveBeenCalledWith({ page: "collection", id: "kept" });
     expect(ui.dispatch).not.toHaveBeenCalled();
     expect(JSON.stringify(state)).toBe(before);
   });

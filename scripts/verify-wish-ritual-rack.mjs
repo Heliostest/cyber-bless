@@ -215,7 +215,19 @@ try {
   results.push({ check: 'no-webgl-fallback-remains-tappable', passed: true });
   const empty = await open(savedState([]));
   assert.equal(await empty.locator('.wish-ritual-rack').count(), 0);
-  assert.equal(await empty.locator('.pray-button').count(), 1); await empty.context().close();
+  assert.equal(await empty.locator('.pray-button').count(), 1);
+  await empty.locator('.pray-button').click();
+  await empty.locator('.wish-ritual-picker').waitFor();
+  assert.equal(await empty.locator('.wish-scene-choice').count(), 18);
+  for (const id of ['crane', 'mizuhiki', 'ema-votive-plaque'])
+    assert.equal(await empty.locator(`.wish-scene-choice[data-scene="${id}"]`).count(), 1);
+  for (const id of ['phuang-malai', 'slavic-wreath', 'omikuji', 'furin-wind-chime', 'shinto-torii', 'bonfim-ribbon'])
+    assert.equal(await empty.locator(`.wish-practice-card[data-scene="${id}"]`).count(), 0);
+  assert.equal(await empty.evaluate(() => document.documentElement.scrollWidth), 390);
+  assert.deepEqual((await saved(empty)).collectibles, []);
+  await screenshot(empty, 'two-category-picker-390.png');
+  await empty.context().close();
+  results.push({ check: 'two-category-picker-with-18-writable-wish-scenes', passed: true });
   assert.deepEqual(errors, []);
   const report = { passed: true, base, checkedAt: new Date().toISOString(), results, screenshots, pageErrors: errors };
   await writeFile(`${out}/browser.json`, JSON.stringify(report, null, 2) + '\n');

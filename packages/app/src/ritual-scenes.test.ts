@@ -604,7 +604,7 @@ describe("许愿 through a keepsake", () => {
 
 describe("还愿 through a keepsake", () => {
   it.each([["daruma-eye-painting", "另一目"], ["omamori-cycle", "返纳盒"]])(
-    "shows gratitude and the returning action for %s", async (id, action) => {
+    "groups the returning action for %s under blessing while keeping its thanks", async (id, action) => {
       const state = withRealizedWish();
       state.collectibles.push(keepsake(id, "2026-10-05"));
       const ui = await openApp(state);
@@ -612,7 +612,7 @@ describe("还愿 through a keepsake", () => {
       await ui.tap(ui.host.querySelector('.wish-card[data-wish-id="w1"]')!);
       await ui.tap(ui.button("来还个愿", ".wish-detail-page"));
       await ui.tap(ui.host.querySelector(`.vessel-card[data-scene="${id}"]`)!);
-      const intention = ui.host.querySelector('.scene-intention[data-kind="gratitude"]');
+      const intention = ui.host.querySelector('.scene-intention[data-kind="blessing"]');
       expect(intention?.textContent ?? "").toContain("面试顺利");
       expect(intention?.textContent ?? "").toContain(action);
       expect(ui.host.querySelector(".scene-post-wish")).toBeNull();
@@ -1125,9 +1125,9 @@ describe("optional wishes after the ritual", () => {
     ui.unmount();
   });
 
-  it("keeps reflection practices focused on their own action", async () => {
+  it("groups reflection under blessing while keeping its own action and writing permission", async () => {
     const ui = await openCatalogScene("omikuji");
-    expect(ui.host.querySelector('.scene-intention[data-kind="reflection"]')).not.toBeNull();
+    expect(ui.host.querySelector('.scene-intention[data-kind="blessing"]')).not.toBeNull();
     await ui.walk();
     expect(ui.host.querySelector(".scene-post-wish")).toBeNull();
     expect((await ui.saved()).wishes).toEqual([]);

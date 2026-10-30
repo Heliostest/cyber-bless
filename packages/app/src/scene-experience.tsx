@@ -331,7 +331,7 @@ function LoadedScene({ entry, lease, wishId, daily, vessel, replay, opening, fai
         : undefined, [lease]);
     return (<>
       {rewardRevealed && <SceneRewardReveal sceneId={entry.id} reducedMotion={state.settings.reducedMotion}/>}
-      {intention && <aside className="scene-intention" data-kind={returnWish ? "gratitude" : intention.kind} aria-label={tr("\u8FD9\u4E00\u573A\u7684\u5FC3\u610F")}>
+      {intention && <aside className="scene-intention" data-kind={returnWish ? "blessing" : intention.kind} aria-label={tr("\u8FD9\u4E00\u573A\u7684\u5FC3\u610F")}>
         <strong>{returnWish ? tr("\u4E3A\u5DF2\u7ECF\u5B9E\u73B0\u7684\u5FC3\u613F\u8FD8\u613F") : translateScene(intention.label)}</strong>
         <p>{returnWish ? tr("\u4E3A\u300C{p0}\u300D\u8FD8\u613F\u3002{p1}", { p0: returnWish.title, p1: gratitudeAction }) : translateScene(intention.action)}</p>
       </aside>}

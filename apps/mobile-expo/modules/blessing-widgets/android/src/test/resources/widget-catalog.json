@@ -622,7 +622,7 @@
   {
     "id": "aland-votive-ship",
     "title": "舟模寄谢",
-    "category": "wish"
+    "category": "blessing"
   },
   {
     "id": "blang-tea",
@@ -647,7 +647,7 @@
   {
     "id": "italian-ex-voto",
     "title": "绘牌记谢",
-    "category": "wish"
+    "category": "blessing"
   },
   {
     "id": "czech-pilgrim-journal",
@@ -662,7 +662,7 @@
   {
     "id": "polish-blessing-basket",
     "title": "一篮春食",
-    "category": "wish"
+    "category": "blessing"
   },
   {
     "id": "navruz-sumalak",
@@ -732,7 +732,7 @@
   {
     "id": "phuang-malai",
     "title": "串花寄意",
-    "category": "wish"
+    "category": "blessing"
   },
   {
     "id": "woodfish",
@@ -777,7 +777,7 @@
   {
     "id": "slavic-wreath",
     "title": "火边花环",
-    "category": "wish"
+    "category": "blessing"
   },
   {
     "id": "crane",

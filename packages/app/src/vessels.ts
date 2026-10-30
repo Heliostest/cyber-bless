@@ -1,5 +1,12 @@
-import type { Collectible, State } from "@wbr/core";
+import { sceneIntention, type Collectible, type State } from "@wbr/core";
 import type { CatalogEntry } from "@wbr/content/catalog";
+import { isWishScene } from "./scene-placement";
+
+/** Use the primary wish category without reviving historical gratitude/reflection imports. */
+export function isWishCollectionScene(sceneId: string): boolean {
+  const kind = sceneIntention(sceneId)?.kind;
+  return isWishScene(sceneId) && (kind === "wish" || kind === "blessing");
+}
 
 /**
  * A wish-type keepsake (a 许愿小物): collected from 今日's daily set, spent
@@ -17,6 +24,7 @@ export function usableVessels(
         !!c.wishScene &&
         !c.spentAt &&
         !!c.sceneId &&
+        isWishCollectionScene(c.sceneId) &&
         entries.some((e) => e.id === c.sceneId),
     )
     .reverse();

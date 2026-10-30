@@ -192,7 +192,7 @@ describe("心愿's ritual picker", () => {
     const cards = [...picker.querySelectorAll(".wish-practice-card")];
     const eligible = builtInScenes.filter((entry) => {
       const intention = sceneIntention(entry.id);
-      return isSceneVisibleInApp(entry) && intention?.kind === "wish" && intention.optionalWish;
+      return isSceneVisibleInApp(entry) && isWishScene(entry.id) && intention?.kind === "wish" && intention.optionalWish;
     });
     expect(cards.map((card) => card.getAttribute("data-scene")).sort()).toEqual(
       eligible.map((entry) => entry.id).sort(),

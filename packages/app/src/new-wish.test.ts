@@ -6,6 +6,7 @@ import { Context, type AppContext } from "./context";
 import { clickOn, renderUI } from "./dom-test-utils";
 import { SceneLibraryContext, builtInScenes } from "./scene-library";
 import { NewWish } from "./wishes";
+import { usableVessels } from "./vessels";
 
 const AT = "2026-10-07T08:00:00.000Z";
 const mounted: ReturnType<typeof renderUI>[] = [];
@@ -37,8 +38,19 @@ describe("start a wish through a real ritual", () => {
   });
   it("does not offer hidden scenes, non-writing wishes or gratitude as new wishes", () => {
     const ui = open();
-    for (const id of ["lantern", "alasita-miniature-house", "lam-tsuen-wishing-tree", "phuang-malai", "omikuji"])
+    for (const id of ["lantern", "alasita-miniature-house", "lam-tsuen-wishing-tree", "phuang-malai", "omikuji", "shinto-torii", "bonfim-ribbon"])
       expect(ui.host.querySelector(`[data-scene="${id}"]`), id).toBeNull();
+  });
+  it("uses the same primary category for held new-wish and return-wish choices", () => {
+    const state = createState();
+    for (const id of ["furin-wind-chime", "pucara-rooftop-bulls", "japanese-kadomatsu", "shichigosan-chitose-ame", "phuang-malai"])
+      vessel(state, id);
+    const prayer = vessel(state, "crane");
+    const before = JSON.stringify(state);
+    const ui = open(state);
+    expect([...ui.host.querySelectorAll(".vessel-card")].map(card => card.getAttribute("data-scene"))).toEqual(["crane"]);
+    expect(usableVessels(state, builtInScenes).map(item => item.id)).toEqual([prayer]);
+    expect(JSON.stringify(state)).toBe(before);
   });
   it("prefers an existing keepsake without duplicating its scene as a free start", () => {
     const state = createState(), id = vessel(state, "tanzaku-tanabata");
@@ -48,11 +60,11 @@ describe("start a wish through a real ritual", () => {
     clickOn(cards[0]);
     expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", id: "tanzaku-tanabata", vessel: id }));
   });
-  it("keeps a spent legacy vessel's pending choice accessible even if it is not a new writing scene", () => {
-    const state = createState(), id = vessel(state, "alasita-miniature-house", true);
+  it("keeps a spent legacy vessel's pending choice accessible even after its category is filtered", () => {
+    const state = createState(), id = vessel(state, "furin-wind-chime", true);
     state.vesselDrafts = { [id]: { line: "愿家人平安", at: AT } };
     const ui = open(state);
-    const card = ui.host.querySelector('.vessel-card[data-scene="alasita-miniature-house"]');
+    const card = ui.host.querySelector('.vessel-card[data-scene="furin-wind-chime"]');
     expect(card).not.toBeNull();
     clickOn(card!);
     expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", vessel: id }));

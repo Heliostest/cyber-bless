@@ -30,6 +30,7 @@ describe("start a wish through a real ritual", () => {
   it("lets a first-time visitor start an eligible scene without a keepsake or a save form", () => {
     const ui = open();
     expect(ui.host.querySelector("form, textarea, input")).toBeNull();
+    expect(ui.host.querySelectorAll(".wish-scene-choice")).toHaveLength(18);
     const card = ui.host.querySelector('.wish-practice-card[data-scene="tanzaku-tanabata"]');
     expect(card).not.toBeNull();
     clickOn(card!);

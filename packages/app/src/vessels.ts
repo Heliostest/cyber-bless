@@ -1,11 +1,10 @@
-import { sceneIntention, type Collectible, type State } from "@wbr/core";
+import type { Collectible, State } from "@wbr/core";
 import type { CatalogEntry } from "@wbr/content/catalog";
 import { isWishScene } from "./scene-placement";
 
-/** Use the primary wish category without reviving historical gratitude/reflection imports. */
+/** The same two-category grouping used by Today's scene catalog. */
 export function isWishCollectionScene(sceneId: string): boolean {
-  const kind = sceneIntention(sceneId)?.kind;
-  return isWishScene(sceneId) && (kind === "wish" || kind === "blessing");
+  return isWishScene(sceneId);
 }
 
 /**

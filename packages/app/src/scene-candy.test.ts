@@ -88,11 +88,12 @@ describe("scene candy", () => {
   });
 
   it("follows a scene from 今日 to 心愿 by its id", () => {
-    // A keepsake from yesterday for every wish scene lets the picker keep
-    // the writable ones and 今日 pick one of them.
+    // A keepsake from yesterday for every writable wish scene lets both
+    // 今日 and the new-wish picker offer the same collected scene.
     const yesterday = "2026-10-06";
     const state = createState();
-    for (const id of WISH_SCENE_IDS)
+    for (const id of WISH_SCENE_IDS) {
+      if (!sceneIntention(id)?.optionalWish) continue;
       state.collectibles.push({
         id: dailyCollectibleId(yesterday, id),
         kind: "scene",
@@ -101,6 +102,7 @@ describe("scene candy", () => {
         sceneId: id,
         ...(isWishScene(id) ? { wishScene: true } : {}),
       });
+    }
     const today = render(createElement(Today, { day }), state);
     const picks = dailyCollectedPicks(builtInScenes, state.collectibles, day);
     const wishes = render(createElement(NewWish), state);

@@ -93,7 +93,7 @@ class WidgetSnapshotTest {
       Triple("yeondeunghoe", "燃灯上浮", "wish"),
       Triple("crane", "折一只纸鹤", "wish"),
       Triple("lantern", "月下一灯", "wish"),
-      Triple("slavic-wreath", "火边花环", "wish"),
+      Triple("slavic-wreath", "火边花环", "blessing"),
       Triple("japanese-koinobori", "鲤旗迎风", "blessing"),
       Triple("peruvian-engraved-gourd", "葫芦刻光", "wish"),
     )

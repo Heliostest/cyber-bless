@@ -17,7 +17,7 @@ export function WishRitualPicker() {
     const heldScenes = new Set([...pending, ...vessels].map(c => c.sceneId));
     const scenes = entries.filter(entry => {
         const intention = sceneIntention(entry.id);
-        return isWishCollectionScene(entry.id) && intention?.kind === "wish" && intention.optionalWish && !heldScenes.has(entry.id);
+        return isWishCollectionScene(entry.id) && !!intention?.optionalWish && !heldScenes.has(entry.id);
     });
     const vesselRows = (items: typeof vessels, pendingChoice = false) => (<div className="wish-practice-grid">
       {items.map(item => {

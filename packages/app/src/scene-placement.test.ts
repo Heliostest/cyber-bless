@@ -180,11 +180,11 @@ describe("scene placement", () => {
     ["croatian-licitar-heart", "croatian-licitar", true], ["catalan-festival-giant", "catalan-gegants", false],
     ["sorbian-painted-egg", "sorbian-easter-eggs", true], ["basque-sunflower", "basque-eguzkilore", true],
     ["breton-banner", "breton-pardons", false], ["lithuanian-straw-garden", "lithuanian-straw-gardens", false],
-    ["dalarna-wooden-horse", "dalarna-wooden-horse", false], ["aland-votive-ship", "aland-votive-ship", true],
+    ["dalarna-wooden-horse", "dalarna-wooden-horse", false], ["aland-votive-ship", "aland-votive-ship", false],
     ["blang-tea", "jingmai-tea-forest", false], ["minangkabau-spinning-top", undefined, true],
     ["chinese-incense", "chinese-incense", false], ["hongsheng-red-string", undefined, true],
-    ["italian-ex-voto", "italian-ex-voto", true], ["czech-pilgrim-journal", undefined, false],
-    ["omikuji", "omikuji", false], ["polish-blessing-basket", "polish-folk-catholic", true],
+    ["italian-ex-voto", "italian-ex-voto", false], ["czech-pilgrim-journal", undefined, false],
+    ["omikuji", "omikuji", false], ["polish-blessing-basket", "polish-folk-catholic", false],
     ["navruz-sumalak", "uzbek-sumalak-cooking", false], ["floating-lantern-loy-krathong", "floating-lantern-loy-krathong", true],
   ] as const)("places %s in the enlarged native-safe catalog", (id, slug, wish) => {
     const entry = builtInScenes.find(e => e.id === id)!;
@@ -203,11 +203,11 @@ describe("scene placement", () => {
     expect(hasSceneIcon(id)).toBe(true); expect(entry.traditionSlug).toBe(id);
     expect(isWishScene(id)).toBe(wish); expect(sceneStage(id)).toBe(night ? "night" : "day");
   });
-  it.each(["daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai"])("makes %s a playable wish keepsake with a distinct icon", id => {
+  it.each(["daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai"])("keeps %s playable with a distinct icon and the current category", id => {
     const entry = builtInScenes.find(entry => entry.id === id)!;
     expect(entry).toBeDefined();
     expect(supportsScene(entry.engine)).toBe(true);
-    expect(isWishScene(id)).toBe(true);
+    expect(isWishScene(id)).toBe(id !== "phuang-malai");
     expect(sceneSteps(entry)).toBe(3);
     expect(hasSceneIcon(id)).toBe(true);
     expect(entry.traditionSlug).toBe(id);
@@ -274,6 +274,7 @@ describe("scene placement", () => {
       "clootie-well-rag", "diya-oil-lamp",
       "shrine-suzu-bell", "st-brigids-cross", "bokjori",
       "omikuji", "navruz-sumalak",
+      "aland-votive-ship", "italian-ex-voto", "polish-blessing-basket", "phuang-malai", "slavic-wreath",
       "chinese-incense", "czech-pilgrim-journal",
       "dalarna-wooden-horse", "blang-tea",
       "breton-banner", "lithuanian-straw-garden",
@@ -333,13 +334,12 @@ describe("scene placement", () => {
       "yeondeunghoe",
       "crane",
       "lantern",
-      "slavic-wreath",
-      "daruma-eye-painting", "mizuhiki", "milagros", "phuang-malai",
+      "daruma-eye-painting", "mizuhiki", "milagros",
       "ema-votive-plaque", "votive-candle-catholic",
       "omamori-cycle",
-      "polish-blessing-basket", "floating-lantern-loy-krathong",
-      "hongsheng-red-string", "italian-ex-voto",
-      "aland-votive-ship", "minangkabau-spinning-top",
+      "floating-lantern-loy-krathong",
+      "hongsheng-red-string",
+      "minangkabau-spinning-top",
       "sorbian-painted-egg", "basque-sunflower",
       "barcelos-clay-rooster", "croatian-licitar-heart",
       "bai-indigo-cloth", "welsh-love-spoon",
@@ -353,7 +353,7 @@ describe("scene placement", () => {
       "peruvian-engraved-gourd",
     ]);
     expect(isWishScene("tanzaku-tanabata")).toBe(true);
-    expect(isWishScene("slavic-wreath")).toBe(true);
+    expect(isWishScene("slavic-wreath")).toBe(false);
     expect(isWishScene("furin-wind-chime")).toBe(false);
   });
 

@@ -1,0 +1,86 @@
+{
+  "id": "yusheng-lohei",
+  "sourceSha256": "e5a47cc9d37e72244190e887fd64a0081fa773a559fd410f3e14b3437a5e8a37",
+  "outputSha256": "6546ee2b47a87eecdd1d7496b56d4a00d40249362270eb5373533b211b04364f",
+  "sourceWidth": 418,
+  "sourceHeight": 409,
+  "sourceBounds": {
+    "left": 39,
+    "top": 62,
+    "width": 362,
+    "height": 288
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 409
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 77284,
+  "placement": {
+    "left": 16,
+    "top": 39,
+    "width": 224,
+    "height": 178
+  },
+  "sourceTransform": {
+    "width": 258,
+    "height": 253,
+    "left": -8,
+    "top": 1,
+    "canvasCrop": {
+      "left": 8,
+      "top": 0,
+      "width": 250,
+      "height": 253
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 55548,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-02.png",
+    "sha256": "25d839841f957fa3bb3ed1caeb314fca9f1ff96779b5417c114ae799b6240617",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 3,
+    "column": 0,
+    "row": 1,
+    "bounds": {
+      "left": 0,
+      "top": 414,
+      "width": 418,
+      "height": 409
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 822,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/yusheng-lohei.png",
+  "outputFile": "yusheng-lohei.webp"
+}

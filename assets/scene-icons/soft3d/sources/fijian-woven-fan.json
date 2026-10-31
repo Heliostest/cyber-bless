@@ -1,0 +1,86 @@
+{
+  "id": "fijian-woven-fan",
+  "sourceSha256": "affc3a93a136ba1486588f7bd4bbb464cbe689ac0c012cbd4a8a140e3bc9fd82",
+  "outputSha256": "91db6ff308447c1eef0d32022a4b85cbd7a7f142c5e5fac13cc5d80a622e6d2d",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 65,
+    "top": 10,
+    "width": 278,
+    "height": 352
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 422
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 66749,
+  "placement": {
+    "left": 39,
+    "top": 16,
+    "width": 177,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 265,
+    "height": 268,
+    "left": -2,
+    "top": 10,
+    "canvasCrop": {
+      "left": 2,
+      "top": 0,
+      "width": 256,
+      "height": 246
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 43892,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-15.png",
+    "sha256": "86d7df4a7094feb06d655593362c63b035365a472788a6721c2d1e178739709c",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 6,
+    "column": 0,
+    "row": 2,
+    "bounds": {
+      "left": 0,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/fijian-woven-fan.png",
+  "outputFile": "fijian-woven-fan.webp"
+}

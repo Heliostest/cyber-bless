@@ -1,0 +1,86 @@
+{
+  "id": "ukrainian-didukh",
+  "sourceSha256": "0b46f76962e34affe9a4f741cd63a3a664010e17de34c3edc612e77f14254e9b",
+  "outputSha256": "ff18a7900ce502b4aec970a75efafb74d48ca4101d70f7cc80c411e7e62c0e28",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 76,
+    "top": 25,
+    "width": 271,
+    "height": 375
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 422
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 75281,
+  "placement": {
+    "left": 47,
+    "top": 15,
+    "width": 162,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 251,
+    "height": 253,
+    "left": 1,
+    "top": 0,
+    "canvasCrop": {
+      "left": 0,
+      "top": 0,
+      "width": 251,
+      "height": 253
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 49448,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-01.png",
+    "sha256": "838012a0ab1074902f20cb62cacd9c7d488540be3b7ae79edf9537dc22b4c817",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 418,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 823,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/ukrainian-didukh.png",
+  "outputFile": "ukrainian-didukh.webp"
+}

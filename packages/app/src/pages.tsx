@@ -60,7 +60,7 @@ export function Wishes() {
       <p className="privacy-note">{tr("\u5FC3\u613F\u4EC5\u4FDD\u5B58\u5728\u8FD9\u53F0\u8BBE\u5907\u4E0A\u3002")}</p>
     </div>);
 }
-/** A keepsake's own art: a collected scene shows its drawn icon, not a crop. */
+/** Historical ritual kinds share their matching scene's current illustration. */
 function CollectibleArt({ kind, sceneId, small, }: {
     kind: Collectible["kind"];
     sceneId?: string;
@@ -68,7 +68,9 @@ function CollectibleArt({ kind, sceneId, small, }: {
 }) {
     if (kind === "scene")
         return <SceneArt id={sceneId ?? ""}/>;
-    return <Art kind={kind} small={small}/>;
+    if (kind === "badge")
+        return <Art kind="badge" small={small}/>;
+    return <SceneArt id={kind}/>;
 }
 export function World() {
     const { state, go, arrival } = useApp();

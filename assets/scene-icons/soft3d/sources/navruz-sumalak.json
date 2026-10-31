@@ -1,0 +1,86 @@
+{
+  "id": "navruz-sumalak",
+  "sourceSha256": "797b4842034b1c8afab95ab53b88bc48ad1aed2f7d7400f06a5b5d24147ab2ed",
+  "outputSha256": "c036914a5a6f6655cf356900282a3eed5ef63c2d50871f4772f880778137fa57",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 57,
+    "top": 10,
+    "width": 334,
+    "height": 345
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 422
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 70020,
+  "placement": {
+    "left": 19,
+    "top": 15,
+    "width": 218,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 273,
+    "height": 275,
+    "left": -18,
+    "top": 9,
+    "canvasCrop": {
+      "left": 18,
+      "top": 0,
+      "width": 255,
+      "height": 247
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 48638,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-08.png",
+    "sha256": "1cbcce7212637132c9c6f32396a10063b9c8d9465a43b5b4f1395ad0779ce924",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 6,
+    "column": 0,
+    "row": 2,
+    "bounds": {
+      "left": 0,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/navruz-sumalak.png",
+  "outputFile": "navruz-sumalak.webp"
+}

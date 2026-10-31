@@ -1,0 +1,86 @@
+{
+  "id": "tibetan-wheel",
+  "sourceSha256": "4ea384a86965e36405efa0270ab3b1a3e0e3e8e25feec0017dfa2105799891ba",
+  "outputSha256": "15edcd7971b37d3375b3f735caa64c806d4d661ca5a9e41965c947d16e36b741",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 73,
+    "top": 78,
+    "width": 276,
+    "height": 308
+  },
+  "sourceAlphaBounds": {
+    "left": 17,
+    "top": 9,
+    "width": 401,
+    "height": 413
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 74418,
+  "placement": {
+    "left": 27,
+    "top": 15,
+    "width": 202,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 305,
+    "height": 308,
+    "left": -26,
+    "top": -42,
+    "canvasCrop": {
+      "left": 26,
+      "top": 42,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 54810,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-10.png",
+    "sha256": "9190e8a75f527b1b92c6b209c3d171e4cfafb618527b199254a8d1a0461fb03f",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 418,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/tibetan-wheel.png",
+  "outputFile": "tibetan-wheel.webp"
+}

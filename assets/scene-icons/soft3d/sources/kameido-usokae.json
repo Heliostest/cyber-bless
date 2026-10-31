@@ -1,0 +1,86 @@
+{
+  "id": "kameido-usokae",
+  "sourceSha256": "ae867d88b743a5a1f0127b7f272ed00dc996256229cc58290377563a2ae6bc45",
+  "outputSha256": "f53250444761ef93bb807780b7e200a98b31411cb17769ed0d9edbf2bb4783ae",
+  "sourceWidth": 418,
+  "sourceHeight": 410,
+  "sourceBounds": {
+    "left": 129,
+    "top": 45,
+    "width": 154,
+    "height": 321
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 410
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 50812,
+  "placement": {
+    "left": 74,
+    "top": 16,
+    "width": 108,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 293,
+    "height": 287,
+    "left": -16,
+    "top": -16,
+    "canvasCrop": {
+      "left": 16,
+      "top": 16,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 37160,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-01.png",
+    "sha256": "838012a0ab1074902f20cb62cacd9c7d488540be3b7ae79edf9537dc22b4c817",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 4,
+    "column": 1,
+    "row": 1,
+    "bounds": {
+      "left": 418,
+      "top": 414,
+      "width": 418,
+      "height": 410
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 823,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/kameido-usokae.png",
+  "outputFile": "kameido-usokae.webp"
+}

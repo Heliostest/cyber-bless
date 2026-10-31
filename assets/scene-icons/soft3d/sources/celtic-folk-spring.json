@@ -1,0 +1,86 @@
+{
+  "id": "celtic-folk-spring",
+  "sourceSha256": "2e97826a8cae424babe89de446efb74429475f1d8c12fae67b18b59b566fd9ea",
+  "outputSha256": "36d89fd37dae49fe979503fa126985b0c7910b7235574fd479a57ca03ccbeb25",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 38,
+    "top": 111,
+    "width": 341,
+    "height": 224
+  },
+  "sourceAlphaBounds": {
+    "left": 1,
+    "top": 1,
+    "width": 388,
+    "height": 425
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 53614,
+  "placement": {
+    "left": 15,
+    "top": 54,
+    "width": 225,
+    "height": 148
+  },
+  "sourceTransform": {
+    "width": 276,
+    "height": 281,
+    "left": -10,
+    "top": -19,
+    "canvasCrop": {
+      "left": 10,
+      "top": 19,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 39588,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-17.png",
+    "sha256": "735e054e440772fec54a2784d8e480a659f0f57904d5a587d38786bbebb9ee8b",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/celtic-folk-spring.png",
+  "outputFile": "celtic-folk-spring.webp"
+}

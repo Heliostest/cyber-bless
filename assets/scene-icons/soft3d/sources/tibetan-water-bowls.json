@@ -1,0 +1,65 @@
+{
+  "id": "tibetan-water-bowls",
+  "sourceSha256": "b2706c78925f1605a8359532cf563fb30ad4a13f9c51b084a0e8bca7b41ca966",
+  "outputSha256": "2d809a565865040453779f7e042b1a88fe9658c2200d5a48af5584442536566a",
+  "sourceWidth": 406,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 10,
+    "top": 113,
+    "width": 375,
+    "height": 284
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 31,
+    "width": 406,
+    "height": 371
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 50308,
+  "placement": {
+    "left": 15,
+    "top": 43,
+    "width": 225,
+    "height": 170
+  },
+  "sourceTransform": {
+    "width": 244,
+    "height": 253,
+    "left": 9,
+    "top": -25,
+    "canvasCrop": {
+      "left": 0,
+      "top": 25,
+      "width": 244,
+      "height": 228
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 33102,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-03.png",
+    "sha256": "17d3890b78594adf5e3f6fc786005103568e18531f7ddf2657d41d50246f4fac",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 430,
+      "top": 0,
+      "width": 406,
+      "height": 422
+    },
+    "cropMode": "manual"
+  },
+  "sourceFile": "sources/tibetan-water-bowls.png",
+  "outputFile": "tibetan-water-bowls.webp"
+}

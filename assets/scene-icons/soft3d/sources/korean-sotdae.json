@@ -1,0 +1,86 @@
+{
+  "id": "korean-sotdae",
+  "sourceSha256": "7f212b1d4004f0d6fbad370342329988e401589fb9aafaa7d59424cf69d77886",
+  "outputSha256": "08cd4aeefce000a0aed17eb9845207fe4114076908a1f67a171f01d8c93d5541",
+  "sourceWidth": 418,
+  "sourceHeight": 479,
+  "sourceBounds": {
+    "left": 69,
+    "top": 5,
+    "width": 314,
+    "height": 428
+  },
+  "sourceAlphaBounds": {
+    "left": 65,
+    "top": 0,
+    "width": 321,
+    "height": 445
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 63119,
+  "placement": {
+    "left": 45,
+    "top": 15,
+    "width": 166,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 220,
+    "height": 252,
+    "left": 9,
+    "top": 12,
+    "canvasCrop": {
+      "left": 0,
+      "top": 0,
+      "width": 220,
+      "height": 244
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 29786,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-01.png",
+    "sha256": "7dbd55805da0c5520e0950c5e06e8a24cbb0db2fd4361a01454a486992dee805",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 6,
+    "column": 0,
+    "row": 2,
+    "bounds": {
+      "left": 0,
+      "top": 775,
+      "width": 418,
+      "height": 479
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 779,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/korean-sotdae.png",
+  "outputFile": "korean-sotdae.webp"
+}

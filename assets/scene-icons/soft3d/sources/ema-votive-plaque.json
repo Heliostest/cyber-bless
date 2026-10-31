@@ -1,0 +1,86 @@
+{
+  "id": "ema-votive-plaque",
+  "sourceSha256": "c23a33650d7e06a5db58b181b9a76efaec25a238974bfd216b0fdfc5e09d5d85",
+  "outputSha256": "2d10f957839ec70bdb39ed072ec46043711789c59108de0b92ee56b07d82d2d2",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 84,
+    "top": 59,
+    "width": 261,
+    "height": 345
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 29,
+    "width": 404,
+    "height": 393
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 64256,
+  "placement": {
+    "left": 43,
+    "top": 15,
+    "width": 170,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 273,
+    "height": 275,
+    "left": -12,
+    "top": -23,
+    "canvasCrop": {
+      "left": 12,
+      "top": 23,
+      "width": 256,
+      "height": 252
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 42598,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-09.png",
+    "sha256": "78bee5ccd43f0242cf0545e03b49b0e091d7432dcbffafdcae943deaa981826c",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 833,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/ema-votive-plaque.png",
+  "outputFile": "ema-votive-plaque.webp"
+}

@@ -1,0 +1,86 @@
+{
+  "id": "french-coffee-mill",
+  "sourceSha256": "999464ca49e837d72bd71231276b0d00fc73a00fa6504c2bb20bc2497498c19b",
+  "outputSha256": "716e9009231f34705cd842ab587a90fa4792e099446f5870279ce52b5eeb7e38",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 90,
+    "top": 64,
+    "width": 284,
+    "height": 341
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 20,
+    "width": 408,
+    "height": 402
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 64249,
+  "placement": {
+    "left": 34,
+    "top": 15,
+    "width": 188,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 276,
+    "height": 278,
+    "left": -25,
+    "top": -27,
+    "canvasCrop": {
+      "left": 25,
+      "top": 27,
+      "width": 251,
+      "height": 251
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 40756,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-11.png",
+    "sha256": "8649b61c9e59dd9cac8724c81ef310f7926e7bc635ed1dddc11318ecb9f5d4f6",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/french-coffee-mill.png",
+  "outputFile": "french-coffee-mill.webp"
+}

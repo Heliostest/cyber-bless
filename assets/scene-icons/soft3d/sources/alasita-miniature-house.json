@@ -1,0 +1,86 @@
+{
+  "id": "alasita-miniature-house",
+  "sourceSha256": "9b082db037563262adf0d8a0b3ae4ceb46e5f0d0720345e658b3a9bda896fba2",
+  "outputSha256": "c0397824b0b9577e68a842693d1a303047d28bcf69c4c4bf020eb2ff5bc18255",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 67,
+    "top": 91,
+    "width": 289,
+    "height": 291
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 17,
+    "width": 400,
+    "height": 405
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 76092,
+  "placement": {
+    "left": 16,
+    "top": 15,
+    "width": 223,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 323,
+    "height": 326,
+    "left": -36,
+    "top": -55,
+    "canvasCrop": {
+      "left": 36,
+      "top": 55,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 66158,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-02.png",
+    "sha256": "25d839841f957fa3bb3ed1caeb314fca9f1ff96779b5417c114ae799b6240617",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 831,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/alasita-miniature-house.png",
+  "outputFile": "alasita-miniature-house.webp"
+}

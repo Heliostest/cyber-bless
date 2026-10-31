@@ -1,0 +1,86 @@
+{
+  "id": "hongsheng-red-string",
+  "sourceSha256": "191d891ede8c2d9a947122c6ab0a940a7ae0378fbede863450719478ae35c337",
+  "outputSha256": "711a961aee96b8f2a4cee470a876a0eab93960f4f129683fb9af4479d42f061c",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 74,
+    "top": 68,
+    "width": 296,
+    "height": 285
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 5,
+    "width": 418,
+    "height": 421
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 54010,
+  "placement": {
+    "left": 15,
+    "top": 19,
+    "width": 225,
+    "height": 217
+  },
+  "sourceTransform": {
+    "width": 318,
+    "height": 324,
+    "left": -41,
+    "top": -33,
+    "canvasCrop": {
+      "left": 41,
+      "top": 33,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 54382,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-17.png",
+    "sha256": "735e054e440772fec54a2784d8e480a659f0f57904d5a587d38786bbebb9ee8b",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 3,
+    "column": 0,
+    "row": 1,
+    "bounds": {
+      "left": 0,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/hongsheng-red-string.png",
+  "outputFile": "hongsheng-red-string.webp"
+}

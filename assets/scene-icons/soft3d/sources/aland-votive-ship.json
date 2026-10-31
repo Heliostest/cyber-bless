@@ -1,0 +1,86 @@
+{
+  "id": "aland-votive-ship",
+  "sourceSha256": "213e7e505f902db44d1e0733ec27f093cee4d0fb665d2bd3a43875f265aa98ac",
+  "outputSha256": "225e89c94cd43758226f320bdf53c548eb972c4ca07d5e9f8667e14d827facfa",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 64,
+    "top": 44,
+    "width": 307,
+    "height": 366
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 19,
+    "width": 418,
+    "height": 403
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 65729,
+  "placement": {
+    "left": 33,
+    "top": 15,
+    "width": 189,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 257,
+    "height": 259,
+    "left": -6,
+    "top": -12,
+    "canvasCrop": {
+      "left": 6,
+      "top": 12,
+      "width": 251,
+      "height": 247
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 37940,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-08.png",
+    "sha256": "1cbcce7212637132c9c6f32396a10063b9c8d9465a43b5b4f1395ad0779ce924",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 418,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/aland-votive-ship.png",
+  "outputFile": "aland-votive-ship.webp"
+}

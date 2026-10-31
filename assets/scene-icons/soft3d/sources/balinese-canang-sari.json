@@ -1,0 +1,86 @@
+{
+  "id": "balinese-canang-sari",
+  "sourceSha256": "582990c940344f53f2c0f3b8dc76a7003bc874f2fd4a1a05369645288ba52dc3",
+  "outputSha256": "12559de2c5c11f3447bc163724688f3c50f1bba7aa92a3f505a1a37373a42364",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 46,
+    "top": 87,
+    "width": 342,
+    "height": 290
+  },
+  "sourceAlphaBounds": {
+    "left": 3,
+    "top": 4,
+    "width": 395,
+    "height": 376
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 70225,
+  "placement": {
+    "left": 15,
+    "top": 32,
+    "width": 225,
+    "height": 191
+  },
+  "sourceTransform": {
+    "width": 275,
+    "height": 280,
+    "left": -15,
+    "top": -25,
+    "canvasCrop": {
+      "left": 15,
+      "top": 25,
+      "width": 256,
+      "height": 255
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 53002,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-04.png",
+    "sha256": "1f590be0899984d55736775c4e2bb58f395eea9b86702065a177116091307406",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/balinese-canang-sari.png",
+  "outputFile": "balinese-canang-sari.webp"
+}

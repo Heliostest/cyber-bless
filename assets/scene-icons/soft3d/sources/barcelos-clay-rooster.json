@@ -1,0 +1,86 @@
+{
+  "id": "barcelos-clay-rooster",
+  "sourceSha256": "1df461febffe48bc29247ac584ffe7259e2d394f87ef7892ea2038828438fb97",
+  "outputSha256": "297bc5a672c85d03830fff02a11e7fbff2279642da0cedbd7e2c5a945d2a8097",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 93,
+    "top": 63,
+    "width": 262,
+    "height": 318
+  },
+  "sourceAlphaBounds": {
+    "left": 65,
+    "top": 19,
+    "width": 351,
+    "height": 373
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 53149,
+  "placement": {
+    "left": 35,
+    "top": 15,
+    "width": 186,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 296,
+    "height": 301,
+    "left": -31,
+    "top": -29,
+    "canvasCrop": {
+      "left": 31,
+      "top": 29,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 41708,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-03.png",
+    "sha256": "843da5fb3c2cb766d76f1f6246641c5b032c1e1c3e3fcfd913e6f483172412ac",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 3,
+    "column": 0,
+    "row": 1,
+    "bounds": {
+      "left": 0,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/barcelos-clay-rooster.png",
+  "outputFile": "barcelos-clay-rooster.webp"
+}

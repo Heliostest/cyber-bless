@@ -1,0 +1,86 @@
+{
+  "id": "indonesian-angklung",
+  "sourceSha256": "9246d2f7042c90dfb3b5ef0d9556486630dd2d94fc1b74434056c4f5909770e8",
+  "outputSha256": "d3a06958e74eaf7555ae37c01cb7b748f4190f720e54a86126efdf8fa1026e35",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 79,
+    "top": 81,
+    "width": 262,
+    "height": 308
+  },
+  "sourceAlphaBounds": {
+    "left": 1,
+    "top": 29,
+    "width": 417,
+    "height": 393
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 67485,
+  "placement": {
+    "left": 32,
+    "top": 15,
+    "width": 192,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 305,
+    "height": 308,
+    "left": -25,
+    "top": -44,
+    "canvasCrop": {
+      "left": 25,
+      "top": 44,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 48654,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-03.png",
+    "sha256": "843da5fb3c2cb766d76f1f6246641c5b032c1e1c3e3fcfd913e6f483172412ac",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 418,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/indonesian-angklung.png",
+  "outputFile": "indonesian-angklung.webp"
+}

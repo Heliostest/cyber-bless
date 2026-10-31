@@ -1,0 +1,86 @@
+{
+  "id": "japanese-kendama",
+  "sourceSha256": "9509104a99bb7c057b3d0619daa31ebea74c7b3e77092086cdc7ed00bf135a3d",
+  "outputSha256": "59666021c3199cea7b0e9fc663ba03c30b35c878006efc8deb532d579a64ba7a",
+  "sourceWidth": 418,
+  "sourceHeight": 393,
+  "sourceBounds": {
+    "left": 61,
+    "top": 25,
+    "width": 321,
+    "height": 338
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 393
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 56256,
+  "placement": {
+    "left": 21,
+    "top": 15,
+    "width": 213,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 278,
+    "height": 262,
+    "left": -20,
+    "top": -2,
+    "canvasCrop": {
+      "left": 20,
+      "top": 2,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 38430,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-13.png",
+    "sha256": "d8da03904776e46793aebc606a5160e21d61e97aaa92dafea4dd12a2096cd7a6",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 4,
+    "column": 1,
+    "row": 1,
+    "bounds": {
+      "left": 418,
+      "top": 414,
+      "width": 418,
+      "height": 393
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 806,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/japanese-kendama.png",
+  "outputFile": "japanese-kendama.webp"
+}

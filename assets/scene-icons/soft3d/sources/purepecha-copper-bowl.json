@@ -1,0 +1,86 @@
+{
+  "id": "purepecha-copper-bowl",
+  "sourceSha256": "5293ea2493b2b15be4e4db5f68fd38bcbd9345910105c97760db34a90f19ae39",
+  "outputSha256": "a45bbc2857f25d556dc102c045300966b0fa83accbcb134396bdbd3b2340b288",
+  "sourceWidth": 418,
+  "sourceHeight": 399,
+  "sourceBounds": {
+    "left": 51,
+    "top": 87,
+    "width": 310,
+    "height": 255
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 4,
+    "width": 386,
+    "height": 395
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 70024,
+  "placement": {
+    "left": 15,
+    "top": 35,
+    "width": 225,
+    "height": 186
+  },
+  "sourceTransform": {
+    "width": 303,
+    "height": 290,
+    "left": -22,
+    "top": -28,
+    "canvasCrop": {
+      "left": 22,
+      "top": 28,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 56042,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-16.png",
+    "sha256": "1a748a07623016fe5977ef4c8bd855191d145d8806d1b3dc06c9403eb306c75d",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 399
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 812,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/purepecha-copper-bowl.png",
+  "outputFile": "purepecha-copper-bowl.webp"
+}

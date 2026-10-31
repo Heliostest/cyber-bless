@@ -1,0 +1,86 @@
+{
+  "id": "dalarna-wooden-horse",
+  "sourceSha256": "503e718e40d0700416e3bd2247d1e90c0b4af34eda909268bc0b515b2d4ddb58",
+  "outputSha256": "8a2ed68abb2ea2ed647ee324b8145b22f53dbe0947a28c01e30bccea95c5d8e1",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 55,
+    "top": 77,
+    "width": 337,
+    "height": 311
+  },
+  "sourceAlphaBounds": {
+    "left": 31,
+    "top": 17,
+    "width": 387,
+    "height": 403
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 63410,
+  "placement": {
+    "left": 15,
+    "top": 24,
+    "width": 225,
+    "height": 208
+  },
+  "sourceTransform": {
+    "width": 279,
+    "height": 282,
+    "left": -22,
+    "top": -28,
+    "canvasCrop": {
+      "left": 22,
+      "top": 28,
+      "width": 256,
+      "height": 254
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 46050,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-17.png",
+    "sha256": "735e054e440772fec54a2784d8e480a659f0f57904d5a587d38786bbebb9ee8b",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 0,
+    "column": 0,
+    "row": 0,
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/dalarna-wooden-horse.png",
+  "outputFile": "dalarna-wooden-horse.webp"
+}

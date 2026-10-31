@@ -1,0 +1,28 @@
+{
+  "name": "batch-03",
+  "sourcePath": "C:\\Users\\helio\\.codex\\generated_images\\01a18fe1-1d5b-7862-8124-a6f5151d2419\\exec-bd4e48cb-ace4-46ab-85e6-4237ddd184e7.png",
+  "ids": [
+    "tamagushi-offering",
+    "tibetan-water-bowls",
+    "kagami-biraki-sake",
+    "tibetan-prayer-flags",
+    "rosh-hashanah-apple-honey",
+    "thai-songkran-elders",
+    "kameido-usokae",
+    "persian-esfand",
+    "mochigase-nagashibina"
+  ],
+  "columns": 3,
+  "rows": 3,
+  "prompt": "Create ONE production game-icon SPRITE ATLAS, exactly 3 columns by 3 rows on a square canvas, ideally 2048x2048, genuinely TRANSPARENT alpha PNG. Input image is the user's approved style sheet, STYLE reference only. Match that soft tactile dimensional 3D collectible family: gentle warm upper-left diffuse studio light, rounded yet faithful forms, bright pastel/candy color, subtle ambient occlusion, restrained material detail. Each object's true material remains recognizable: paper, wood, glass, metal, woven cloth. No same-clay treatment on everything. No heavy dark outlines or flat vector art.\n\nCRITICAL PACKAGING: There are EXACTLY NINE equal square virtual cells in a regular 3x3 grid. Draw ONE specified object/group centered within EACH virtual cell, at ONLY 48–52% of cell width/height, with at least 24% EMPTY TRANSPARENT MARGIN ON EVERY SIDE. Nothing may touch a virtual cell edge or cross into a neighbor. All strings, handles, leaves and shadows stay inside their own cell. Think SMALL MINIATURE ICONS with LARGE EMPTY GUTTERS, NOT large illustrations filling the sheet. Icon centers are x=16.67%,50%,83.33%, y=16.67%,50%,83.33% of the image. Each icon must fit in a box 18% of the overall image size. Empty space between shapes is essential. No visible grid lines, no backgrounds, no color squares, no borders, no captions, numbers, words, ID labels, titles or decorative props. Empty padding is genuine alpha transparency, NOT a drawn checkerboard. Top-left through bottom-right order is mandatory; do not swap cells. Each tile will be cropped at exact one-third boundaries into a separate icon. Keep centered and similarly weighted, readable at 32–66px. All objects fully in frame, no cropping. Only allow inscription glyphs explicitly specified in subject. Do not invent sacred symbols, cultural ornament, claims or text. No extra humans/hands/landscape/pedestals. Subject list in strict row-major order:\n1. Cell row 1, column 1: A diagonal brown sakaki branch with broad green leaves carries a cream-white folded zigzag paper streamer near its right side. Preserve the leafy branch and crisp angular paper folds, without flowers, cords, labels or extra offerings.\n2. Cell row 1, column 2: Seven small copper-gold offering bowls form one straight row on a reddish wooden altar shelf, with a small simple seated golden Buddha figure centered behind them. Keep exactly seven bowls and the restrained unadorned figure silhouette; no added scripture or surrounding ritual objects.\n3. Cell row 1, column 3: A pale honey-colored wooden sake barrel with a round slatted lid and two dark horizontal bands, accompanied by a diagonal wooden mallet and a small red accent at the lid. Preserve the barrel-and-mallet shapes, without labels, writing, cups or drinking figures.\n4. Cell row 2, column 1: Five plain rectangular cloth flags hang from a gently sagging cord between two slender brown posts, ordered blue, ivory-white, red, green and yellow from left to right. Preserve the five separate colors and unlettered icon faces; no invented scripts or extra flags.\n5. Cell row 2, column 2: A thick apple wedge with deep red peel and pale golden flesh sits beside a small muted teal cup filled with amber honey. Keep the clearly cut fruit shape and visible honey surface, without extra fruit, writing or serving figures.\n6. Cell row 2, column 3: A small pale blue bowl tilts above an open warm skin-toned hand, releasing a thin clear blue-tinted stream of water onto the palm. Preserve the simple bowl, continuous stream and receiving hand, without petals, perfume bottles or extra ceremony props.\n7. Cell row 3, column 1: A small upright honey-colored carved wooden bird has a black cap, ivory eyes, muted coral-red chest and simple dark wing and foot strokes above a flat base. Keep the tall compact wooden silhouette and painted color blocks, without real feathers or added writing.\n8. Cell row 3, column 2: A shallow dark blue-gray metal pan with a short tan wooden handle holds a dark seed bed, with two soft gray-green wisps of smoke curling upward. Preserve the open pan and restrained smoke, without flames, extra burners or added symbols.\n9. Cell row 3, column 3: Two small cream-faced paper dolls in muted coral folded robes sit together on a shallow golden woven straw tray, with a short teal water ripple below. Keep the simple flat folded-paper bodies and round pale heads, without elaborate headdresses or invented inscriptions.",
+  "autoGutters": true,
+  "rectangles": [
+    null,
+    {
+      "left": 430,
+      "top": 0,
+      "width": 406,
+      "height": 422
+    }
+  ]
+}

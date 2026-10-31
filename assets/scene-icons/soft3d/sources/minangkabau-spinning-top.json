@@ -1,0 +1,86 @@
+{
+  "id": "minangkabau-spinning-top",
+  "sourceSha256": "96647dfc161c27b5463f2563119eeec8284989e52212ccf81d463cfffa65d469",
+  "outputSha256": "8de01edb7e1a93e15d1c4e5a850f4cff074a66297fdc20d480e8d8774dd72a29",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 68,
+    "top": 65,
+    "width": 313,
+    "height": 313
+  },
+  "sourceAlphaBounds": {
+    "left": 1,
+    "top": 23,
+    "width": 401,
+    "height": 399
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 52897,
+  "placement": {
+    "left": 16,
+    "top": 15,
+    "width": 224,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 300,
+    "height": 303,
+    "left": -33,
+    "top": -32,
+    "canvasCrop": {
+      "left": 33,
+      "top": 32,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 45698,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-17.png",
+    "sha256": "735e054e440772fec54a2784d8e480a659f0f57904d5a587d38786bbebb9ee8b",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/minangkabau-spinning-top.png",
+  "outputFile": "minangkabau-spinning-top.webp"
+}

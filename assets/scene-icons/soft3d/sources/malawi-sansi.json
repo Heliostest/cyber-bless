@@ -1,0 +1,86 @@
+{
+  "id": "malawi-sansi",
+  "sourceSha256": "e7410705fddbe4174c6ae61b7173f89eee5d9ab2961e1da5928733a1f7c4f9b4",
+  "outputSha256": "b3c79cfe8482cc5f9ba951b789fffb6e812f3e2fa351762e54d96a9dc191a170",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 74,
+    "top": 31,
+    "width": 276,
+    "height": 306
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 404,
+    "height": 398
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 85494,
+  "placement": {
+    "left": 27,
+    "top": 16,
+    "width": 202,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 305,
+    "height": 308,
+    "left": -27,
+    "top": -6,
+    "canvasCrop": {
+      "left": 27,
+      "top": 6,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 66586,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-13.png",
+    "sha256": "d8da03904776e46793aebc606a5160e21d61e97aaa92dafea4dd12a2096cd7a6",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 8,
+    "column": 2,
+    "row": 2,
+    "bounds": {
+      "left": 836,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/malawi-sansi.png",
+  "outputFile": "malawi-sansi.webp"
+}

@@ -1,0 +1,86 @@
+{
+  "id": "votive-candle-catholic",
+  "sourceSha256": "a4a9941526844d64df23c53b48c267f250674df78fd05023fc11b0f9fe492f29",
+  "outputSha256": "b792bedb028876bb31df32dc823a00e0b38db9fff4d07355fde601ef987bc89b",
+  "sourceWidth": 418,
+  "sourceHeight": 420,
+  "sourceBounds": {
+    "left": 108,
+    "top": 39,
+    "width": 209,
+    "height": 331
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 402,
+    "height": 420
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 47216,
+  "placement": {
+    "left": 56,
+    "top": 16,
+    "width": 143,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 284,
+    "height": 285,
+    "left": -17,
+    "top": -11,
+    "canvasCrop": {
+      "left": 17,
+      "top": 11,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 29052,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-09.png",
+    "sha256": "78bee5ccd43f0242cf0545e03b49b0e091d7432dcbffafdcae943deaa981826c",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 420
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 833,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/votive-candle-catholic.png",
+  "outputFile": "votive-candle-catholic.webp"
+}

@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SCENE_ICON_IDS } from '../packages/app/src/scene-icon-assets.ts';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const app = path.join(root, 'apps/mobile-expo');
 const require = createRequire(path.join(app, 'package.json'));
@@ -35,6 +36,12 @@ for (const file of ['package-lock.json', 'scripts/prepare-app-assets.mjs', 'cont
   if (!(await stat(path.join(source, file))).size) throw Error(`Missing archive input: ${file}`);
 }
 const previews = JSON.parse(await readFile(path.join(source, 'assets/widgets/today/manifest.json'), 'utf8'));
+for (const id of SCENE_ICON_IDS) {
+  const file = `assets/scene-icons/soft3d/${id}.webp`;
+  const expected = createHash('sha256').update(await readFile(path.join(root, file))).digest('hex');
+  const actual = createHash('sha256').update(await readFile(path.join(source, file))).digest('hex');
+  if (actual !== expected) throw Error(`Archive scene illustration differs: ${file}`);
+}
 for (const scene of previews.scenes) for (const size of ['small', 'medium']) {
   const expected = scene[size].sha256;
   for (const file of [`assets/widgets/today/${scene[size].file}`,

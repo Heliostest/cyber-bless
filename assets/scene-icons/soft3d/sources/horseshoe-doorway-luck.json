@@ -1,0 +1,86 @@
+{
+  "id": "horseshoe-doorway-luck",
+  "sourceSha256": "ba899daab21dfde10ad2cee970d4cbf8c81bb6620d09ce9dbb5cb657f77c764e",
+  "outputSha256": "9c422958d6f78de3656c076d7b95833564da6ab5894eb9ab3af18d319ac54ab5",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 74,
+    "top": 41,
+    "width": 279,
+    "height": 287
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 422
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 54572,
+  "placement": {
+    "left": 18,
+    "top": 15,
+    "width": 219,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 328,
+    "height": 331,
+    "left": -40,
+    "top": -17,
+    "canvasCrop": {
+      "left": 40,
+      "top": 17,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 54606,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-05.png",
+    "sha256": "6c11397b3f89760f9b1b2cefc60d4f6748d22a73cf85b4fa4b731022a3931df0",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 7,
+    "column": 1,
+    "row": 2,
+    "bounds": {
+      "left": 418,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/horseshoe-doorway-luck.png",
+  "outputFile": "horseshoe-doorway-luck.webp"
+}

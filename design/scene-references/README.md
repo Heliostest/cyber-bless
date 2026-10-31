@@ -19,7 +19,7 @@
 
 - **署名与来源：** Origamidesigner，[Tsuru wiki.svg](https://commons.wikimedia.org/wiki/File:Tsuru_wiki.svg)，2011；[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)。本地保存 Commons 提供的 PNG 预览，未改画。
 - **观察／建模参考：** 可核对从方纸到鸟形基础、细分颈尾、展开翅膀的连续关系。原图透明底，深色 Markdown 阅读器可能看不清黑字，可在浅色背景查看或打开来源页。
-- **产品取舍：** 现有 App 的四次点击是阶段摘要，不是完整折纸教程。未来动画若压缩步骤，应明确是“折纸意象练习”；不要让材料凭空增减。配色仍参考原 [rituals.png](../../assets/reference-ui/rituals.png) 的绿色纸鹤。
+- **产品取舍（原设计记录）：** 当时 App 的四次点击是阶段摘要，不是完整折纸教程。未来动画若压缩步骤，应明确是“折纸意象练习”；不要让材料凭空增减。当时配色参考原 `rituals.png` 的绿色纸鹤；该旧 UI 拼图已于 2026-10-31 退役删除，不作为当前图标资源。
 
 ## 2. 点一盏心愿灯 `lantern`
 

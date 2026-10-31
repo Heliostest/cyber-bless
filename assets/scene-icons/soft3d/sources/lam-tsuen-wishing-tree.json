@@ -1,0 +1,86 @@
+{
+  "id": "lam-tsuen-wishing-tree",
+  "sourceSha256": "c136c7bde384d20307c6443878812f0b923307bff0ec1f4c75cbbb6fe3e2682b",
+  "outputSha256": "894988b057396d28bf72baa0862d8fffdb036b7b32a709dc762fb7f222a17726",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 44,
+    "top": 35,
+    "width": 357,
+    "height": 357
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 23,
+    "width": 418,
+    "height": 399
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 81705,
+  "placement": {
+    "left": 16,
+    "top": 16,
+    "width": 223,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 262,
+    "height": 264,
+    "left": -12,
+    "top": -6,
+    "canvasCrop": {
+      "left": 12,
+      "top": 6,
+      "width": 250,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 56440,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-06.png",
+    "sha256": "d00cec349762fd99cd67c6793c2afed4bc7109b44463cb4c1425dbfb8b137600",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 418,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/lam-tsuen-wishing-tree.png",
+  "outputFile": "lam-tsuen-wishing-tree.webp"
+}

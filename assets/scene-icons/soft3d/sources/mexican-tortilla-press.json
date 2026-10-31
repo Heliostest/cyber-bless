@@ -1,0 +1,86 @@
+{
+  "id": "mexican-tortilla-press",
+  "sourceSha256": "f4d559da0184b3b76ca01f53c6b793f6c6bd6d0058fd9b762e0dd270bf443a45",
+  "outputSha256": "821865ea35b42c2c61c1c84ca44aca7151fd8715be9058805193b7bdc71dc093",
+  "sourceWidth": 418,
+  "sourceHeight": 425,
+  "sourceBounds": {
+    "left": 74,
+    "top": 5,
+    "width": 338,
+    "height": 320
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 425
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 68704,
+  "placement": {
+    "left": 15,
+    "top": 21,
+    "width": 225,
+    "height": 213
+  },
+  "sourceTransform": {
+    "width": 278,
+    "height": 283,
+    "left": -34,
+    "top": 18,
+    "canvasCrop": {
+      "left": 34,
+      "top": 0,
+      "width": 244,
+      "height": 238
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 48004,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-12.png",
+    "sha256": "6912ba500d631f34c79ad8b55742f37104c95ce05ebc75c40d95a3d45cb83a97",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 6,
+    "column": 0,
+    "row": 2,
+    "bounds": {
+      "left": 0,
+      "top": 829,
+      "width": 418,
+      "height": 425
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 833,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/mexican-tortilla-press.png",
+  "outputFile": "mexican-tortilla-press.webp"
+}

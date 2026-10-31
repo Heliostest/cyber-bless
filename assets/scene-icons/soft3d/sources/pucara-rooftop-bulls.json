@@ -1,0 +1,86 @@
+{
+  "id": "pucara-rooftop-bulls",
+  "sourceSha256": "690bec567fe729cff1219deda053231ca912e4d365a914172280d59aec32b58f",
+  "outputSha256": "fc994053b12d1eb72507fd697da37a20b31484b0ba974688e2df206802307683",
+  "sourceWidth": 418,
+  "sourceHeight": 424,
+  "sourceBounds": {
+    "left": 10,
+    "top": 5,
+    "width": 379,
+    "height": 368
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 2,
+    "width": 404,
+    "height": 422
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 117250,
+  "placement": {
+    "left": 15,
+    "top": 18,
+    "width": 225,
+    "height": 219
+  },
+  "sourceTransform": {
+    "width": 248,
+    "height": 252,
+    "left": 9,
+    "top": 15,
+    "canvasCrop": {
+      "left": 0,
+      "top": 0,
+      "width": 247,
+      "height": 241
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 69906,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-01.png",
+    "sha256": "7dbd55805da0c5520e0950c5e06e8a24cbb0db2fd4361a01454a486992dee805",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 8,
+    "column": 2,
+    "row": 2,
+    "bounds": {
+      "left": 836,
+      "top": 830,
+      "width": 418,
+      "height": 424
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 834,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/pucara-rooftop-bulls.png",
+  "outputFile": "pucara-rooftop-bulls.webp"
+}

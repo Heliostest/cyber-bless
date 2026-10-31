@@ -1,0 +1,86 @@
+{
+  "id": "sternsinger-house-blessing",
+  "sourceSha256": "c0f8ab5167ecb747f0e89fae52c2e5eea716ee06ecb032c3105c03dc48c0a80d",
+  "outputSha256": "23c06092fb1ed9455c04f659a24b3a1503b40cbcf8ed4d1d29c5c7923ccd1bcf",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 54,
+    "top": 49,
+    "width": 305,
+    "height": 313
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 410,
+    "height": 426
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 93489,
+  "placement": {
+    "left": 18,
+    "top": 15,
+    "width": 219,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 300,
+    "height": 306,
+    "left": -21,
+    "top": -20,
+    "canvasCrop": {
+      "left": 21,
+      "top": 20,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 65722,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-01.png",
+    "sha256": "838012a0ab1074902f20cb62cacd9c7d488540be3b7ae79edf9537dc22b4c817",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/sternsinger-house-blessing.png",
+  "outputFile": "sternsinger-house-blessing.webp"
+}

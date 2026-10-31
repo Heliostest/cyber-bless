@@ -1,0 +1,86 @@
+{
+  "id": "vietnamese-bamboo-dragonfly",
+  "sourceSha256": "e2cf9df0363b8925115a25114bbd395f618c7a5d0aaafe4381ab68349e07d499",
+  "outputSha256": "a2161b7e8f041f0f81d3a10d346ef40e5204f6ccb18775f662c10c792ea3fbac",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 52,
+    "top": 88,
+    "width": 309,
+    "height": 315
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 37,
+    "width": 369,
+    "height": 385
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 36234,
+  "placement": {
+    "left": 17,
+    "top": 15,
+    "width": 221,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 299,
+    "height": 301,
+    "left": -20,
+    "top": -48,
+    "canvasCrop": {
+      "left": 20,
+      "top": 48,
+      "width": 256,
+      "height": 253
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 34630,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-03.png",
+    "sha256": "843da5fb3c2cb766d76f1f6246641c5b032c1e1c3e3fcfd913e6f483172412ac",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/vietnamese-bamboo-dragonfly.png",
+  "outputFile": "vietnamese-bamboo-dragonfly.webp"
+}

@@ -1,0 +1,86 @@
+{
+  "id": "sri-lankan-bodhi-puja",
+  "sourceSha256": "798dc47b267c6782800828451ac87e387a491bccf9337b0e31e9c53805f6aba5",
+  "outputSha256": "18153da4f70644b6fbba372a0211d6c8cfb662fe967058cbab5e1a5be4d226ba",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 36,
+    "top": 30,
+    "width": 354,
+    "height": 374
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 25,
+    "width": 414,
+    "height": 393
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 86717,
+  "placement": {
+    "left": 21,
+    "top": 15,
+    "width": 213,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 251,
+    "height": 254,
+    "left": 0,
+    "top": -3,
+    "canvasCrop": {
+      "left": 0,
+      "top": 3,
+      "width": 251,
+      "height": 251
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 54956,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-01.png",
+    "sha256": "7dbd55805da0c5520e0950c5e06e8a24cbb0db2fd4361a01454a486992dee805",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 418,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 795,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/sri-lankan-bodhi-puja.png",
+  "outputFile": "sri-lankan-bodhi-puja.webp"
+}

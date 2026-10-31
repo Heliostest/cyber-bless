@@ -1,0 +1,86 @@
+{
+  "id": "chinese-suanpan",
+  "sourceSha256": "e66b5c0a1a5633bde454001b7d1a77a61b2603991feb179be90b183f61ff2566",
+  "outputSha256": "9828fbc0ac9d17391ed8f3087dd04ad044c4522b847a2e7dea49a9aeaca1a289",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 84,
+    "top": 82,
+    "width": 283,
+    "height": 299
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 15,
+    "width": 418,
+    "height": 405
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 90088,
+  "placement": {
+    "left": 21,
+    "top": 15,
+    "width": 213,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 315,
+    "height": 318,
+    "left": -42,
+    "top": -47,
+    "canvasCrop": {
+      "left": 42,
+      "top": 47,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 69848,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-14.png",
+    "sha256": "8d9e10ab8b5f3e48f44ed6de93e9c0c8fb3078c011cb9bc9fa46040c0129c6f2",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 0,
+    "column": 0,
+    "row": 0,
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 835,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/chinese-suanpan.png",
+  "outputFile": "chinese-suanpan.webp"
+}

@@ -1,0 +1,86 @@
+{
+  "id": "venetian-glass-bead",
+  "sourceSha256": "02e7b7f7d2e02b9eeb7c4181edad97827337462409074ecd7a8b3e84f33cd5e1",
+  "outputSha256": "83f86846cb2d5ce32a4071887a9c87a2143f43a47e2002957b14c7b254f432d1",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 78,
+    "top": 128,
+    "width": 299,
+    "height": 246
+  },
+  "sourceAlphaBounds": {
+    "left": 27,
+    "top": 33,
+    "width": 391,
+    "height": 369
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 53973,
+  "placement": {
+    "left": 15,
+    "top": 35,
+    "width": 225,
+    "height": 185
+  },
+  "sourceTransform": {
+    "width": 315,
+    "height": 318,
+    "left": -44,
+    "top": -62,
+    "canvasCrop": {
+      "left": 44,
+      "top": 62,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 52844,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-03.png",
+    "sha256": "843da5fb3c2cb766d76f1f6246641c5b032c1e1c3e3fcfd913e6f483172412ac",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 0,
+    "column": 0,
+    "row": 0,
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/venetian-glass-bead.png",
+  "outputFile": "venetian-glass-bead.webp"
+}

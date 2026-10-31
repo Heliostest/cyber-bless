@@ -1,0 +1,86 @@
+{
+  "id": "shrine-suzu-bell",
+  "sourceSha256": "2b36429757fb2b3698e6e91ea1172ede806424618bc66441fe9adc27f20d2ba7",
+  "outputSha256": "52e7dd4340c2e60f6bff607106b92707cd3fb2b589686b04919c62d22fa7b6ee",
+  "sourceWidth": 418,
+  "sourceHeight": 427,
+  "sourceBounds": {
+    "left": 124,
+    "top": 5,
+    "width": 169,
+    "height": 383
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 390,
+    "height": 403
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 35536,
+  "placement": {
+    "left": 78,
+    "top": 15,
+    "width": 99,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 246,
+    "height": 251,
+    "left": 5,
+    "top": 12,
+    "canvasCrop": {
+      "left": 0,
+      "top": 0,
+      "width": 246,
+      "height": 244
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 23612,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-08.png",
+    "sha256": "1cbcce7212637132c9c6f32396a10063b9c8d9465a43b5b4f1395ad0779ce924",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 8,
+    "column": 2,
+    "row": 2,
+    "bounds": {
+      "left": 836,
+      "top": 827,
+      "width": 418,
+      "height": 427
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 831,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/shrine-suzu-bell.png",
+  "outputFile": "shrine-suzu-bell.webp"
+}

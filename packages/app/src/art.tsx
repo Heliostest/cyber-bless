@@ -1,34 +1,20 @@
 import { translate as tr } from '@wbr/i18n';
 import { useState, type CSSProperties, type ReactNode } from "react";
-import type { RitualId } from "@wbr/core";
 import { assetUrl } from "./assets";
 type Crop = {
-    sheet: "wishes" | "rituals";
     x: number;
     y: number;
     width: number;
     height: number;
 };
-export type ArtVariant = "default" | "home" | "complete" | "wish" | "wish-detail" | "fulfill";
-// Non-destructive crops from the two supplied 1536 × 1024 references. No redraw.
-const crops: Record<string, Crop> = {
-    woodfish: { sheet: "rituals", x: 255, y: 760, width: 88, height: 74 },
-    crane: { sheet: "rituals", x: 143, y: 755, width: 91, height: 77 },
-    lantern: { sheet: "rituals", x: 384, y: 755, width: 76, height: 79 },
-    badge: { sheet: "wishes", x: 1062, y: 759, width: 90, height: 89 },
-    home: { sheet: "rituals", x: 130, y: 264, width: 353, height: 267 },
-    complete: { sheet: "rituals", x: 1060, y: 369, width: 361, height: 236 },
-    wish: { sheet: "wishes", x: 139, y: 218, width: 345, height: 193 },
-    "wish-detail": { sheet: "wishes", x: 600, y: 225, width: 360, height: 285 },
-    fulfill: { sheet: "wishes", x: 1070, y: 285, width: 337, height: 173 },
-};
-export function Art({ kind, small = false, variant = "default", }: {
-    kind: RitualId | "badge";
+// The commemorative badge remains a crop of the supplied 1536 × 1024 image.
+const badgeCrop: Crop = { x: 1062, y: 759, width: 90, height: 89 };
+export function Art({ kind, small = false }: {
+    kind: "badge";
     small?: boolean;
-    variant?: ArtVariant;
 }) {
     const [failed, setFailed] = useState(false);
-    const crop = crops[variant !== "default" ? variant : kind];
+    const crop = badgeCrop;
     const style = {
         "--crop-ratio": `${crop.width} / ${crop.height}`,
         "--image-width": `${(1536 / crop.width) * 100}%`,
@@ -36,14 +22,11 @@ export function Art({ kind, small = false, variant = "default", }: {
         "--image-left": `${(-crop.x / crop.width) * 100}%`,
         "--image-top": `${(-crop.y / crop.height) * 100}%`,
     } as CSSProperties;
-    return (<div className={`art art-${kind} art-variant-${variant}${small ? " art-small" : ""}`} aria-hidden="true" style={style}>
+    return (<div className={`art art-${kind} art-variant-default${small ? " art-small" : ""}`} aria-hidden="true" style={style}>
       {failed ? (<span className="asset-fallback">
-          {kind === "badge"
-                ? tr("\u5982\u613F") : kind === "woodfish"
-                ? tr("\u6728\u9C7C") : kind === "crane"
-                ? tr("\u7EB8\u9E64") : tr("\u5FC3\u613F\u706F")}
+          {tr("\u5982\u613F")}
         </span>) : (<span className="reference-crop">
-          <img src={assetUrl(`reference-ui/${crop.sheet}.png`)} alt="" draggable={false} onError={() => setFailed(true)}/>
+          <img src={assetUrl("reference-ui/wishes.png")} alt="" draggable={false} onError={() => setFailed(true)}/>
         </span>)}
     </div>);
 }

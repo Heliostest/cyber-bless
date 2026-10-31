@@ -1,0 +1,86 @@
+{
+  "id": "floating-lantern-loy-krathong",
+  "sourceSha256": "cac7281f787843cab4f899628ef6f1ef8a6528970765df67636147b772939ab5",
+  "outputSha256": "bac069ab840f55598c99164cb6ae1e63da2b00dbc219282d9998c3a0ddcec389",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 42,
+    "top": 75,
+    "width": 343,
+    "height": 288
+  },
+  "sourceAlphaBounds": {
+    "left": 1,
+    "top": 3,
+    "width": 417,
+    "height": 419
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 70421,
+  "placement": {
+    "left": 15,
+    "top": 33,
+    "width": 225,
+    "height": 189
+  },
+  "sourceTransform": {
+    "width": 274,
+    "height": 277,
+    "left": -12,
+    "top": -16,
+    "canvasCrop": {
+      "left": 12,
+      "top": 16,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 48140,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-08.png",
+    "sha256": "1cbcce7212637132c9c6f32396a10063b9c8d9465a43b5b4f1395ad0779ce924",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 7,
+    "column": 1,
+    "row": 2,
+    "bounds": {
+      "left": 418,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/floating-lantern-loy-krathong.png",
+  "outputFile": "floating-lantern-loy-krathong.webp"
+}

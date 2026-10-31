@@ -1,0 +1,86 @@
+{
+  "id": "diya-oil-lamp",
+  "sourceSha256": "448f405450c4cfba4b1319dce5d0a9f2bb74ec07f8f075094ecd5cfc112e80a6",
+  "outputSha256": "d8687cc166b30a80cfec3dc02da9c25b80219c42bb3a99f4bdf56e86f017e27a",
+  "sourceWidth": 418,
+  "sourceHeight": 418,
+  "sourceBounds": {
+    "left": 54,
+    "top": 67,
+    "width": 347,
+    "height": 269
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 418
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 64567,
+  "placement": {
+    "left": 15,
+    "top": 40,
+    "width": 225,
+    "height": 175
+  },
+  "sourceTransform": {
+    "width": 271,
+    "height": 271,
+    "left": -20,
+    "top": -3,
+    "canvasCrop": {
+      "left": 20,
+      "top": 3,
+      "width": 251,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 40924,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-09.png",
+    "sha256": "78bee5ccd43f0242cf0545e03b49b0e091d7432dcbffafdcae943deaa981826c",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 4,
+    "column": 1,
+    "row": 1,
+    "bounds": {
+      "left": 418,
+      "top": 422,
+      "width": 418,
+      "height": 418
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 422,
+          "occupiedPixels": 0,
+          "clearAbove": 0,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/diya-oil-lamp.png",
+  "outputFile": "diya-oil-lamp.webp"
+}

@@ -1,0 +1,86 @@
+{
+  "id": "tibetan-prayer-flags",
+  "sourceSha256": "2c24fddd93a13350ad82a9c370df77726456c1b3b3283dd2b06c82f069d0955b",
+  "outputSha256": "7dca84911105e0197fb1b405f85f132599a9b60ce262f726ce47301f5de5f6eb",
+  "sourceWidth": 418,
+  "sourceHeight": 417,
+  "sourceBounds": {
+    "left": 53,
+    "top": 80,
+    "width": 352,
+    "height": 245
+  },
+  "sourceAlphaBounds": {
+    "left": 48,
+    "top": 0,
+    "width": 361,
+    "height": 417
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 52962,
+  "placement": {
+    "left": 15,
+    "top": 49,
+    "width": 225,
+    "height": 157
+  },
+  "sourceTransform": {
+    "width": 267,
+    "height": 267,
+    "left": -19,
+    "top": -2,
+    "canvasCrop": {
+      "left": 19,
+      "top": 2,
+      "width": 248,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 37608,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-03.png",
+    "sha256": "17d3890b78594adf5e3f6fc786005103568e18531f7ddf2657d41d50246f4fac",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 3,
+    "column": 0,
+    "row": 1,
+    "bounds": {
+      "left": 0,
+      "top": 414,
+      "width": 418,
+      "height": 417
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 830,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/tibetan-prayer-flags.png",
+  "outputFile": "tibetan-prayer-flags.webp"
+}

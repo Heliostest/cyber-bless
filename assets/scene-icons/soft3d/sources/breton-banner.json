@@ -1,0 +1,86 @@
+{
+  "id": "breton-banner",
+  "sourceSha256": "d9f51e4b9876379cbfd8ef94870113016b4bcf5c60f0f01dbbc97e775d790ff8",
+  "outputSha256": "65c61f1ca6d43c35f73d2f227901e1af1b84620e95c23b70d7035f7ffe18318a",
+  "sourceWidth": 418,
+  "sourceHeight": 446,
+  "sourceBounds": {
+    "left": 92,
+    "top": 5,
+    "width": 246,
+    "height": 364
+  },
+  "sourceAlphaBounds": {
+    "left": 9,
+    "top": 0,
+    "width": 363,
+    "height": 414
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 64251,
+  "placement": {
+    "left": 52,
+    "top": 16,
+    "width": 152,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 257,
+    "height": 274,
+    "left": -4,
+    "top": 13,
+    "canvasCrop": {
+      "left": 4,
+      "top": 0,
+      "width": 253,
+      "height": 243
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 37942,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-16.png",
+    "sha256": "1a748a07623016fe5977ef4c8bd855191d145d8806d1b3dc06c9403eb306c75d",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 8,
+    "column": 2,
+    "row": 2,
+    "bounds": {
+      "left": 836,
+      "top": 808,
+      "width": 418,
+      "height": 446
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 812,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/breton-banner.png",
+  "outputFile": "breton-banner.webp"
+}

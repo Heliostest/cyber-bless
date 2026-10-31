@@ -1,0 +1,86 @@
+{
+  "id": "shinto-torii",
+  "sourceSha256": "daff612e1477e2a7ed568a02eb45394ab074c5b669c9bfcfa4e54218aeb1b00b",
+  "outputSha256": "8427ae78b4b3be32f2c9bf5cb03178849d89f74956595db2f650b4a0dd501260",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 58,
+    "top": 70,
+    "width": 345,
+    "height": 315
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 25,
+    "width": 418,
+    "height": 397
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 54748,
+  "placement": {
+    "left": 15,
+    "top": 25,
+    "width": 225,
+    "height": 205
+  },
+  "sourceTransform": {
+    "width": 273,
+    "height": 275,
+    "left": -23,
+    "top": -21,
+    "canvasCrop": {
+      "left": 23,
+      "top": 21,
+      "width": 250,
+      "height": 254
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 34582,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-10.png",
+    "sha256": "9190e8a75f527b1b92c6b209c3d171e4cfafb618527b199254a8d1a0461fb03f",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 0,
+    "column": 0,
+    "row": 0,
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/shinto-torii.png",
+  "outputFile": "shinto-torii.webp"
+}

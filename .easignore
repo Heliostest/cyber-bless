@@ -35,6 +35,11 @@ assets/*
 !assets/README.md
 !assets/reference-ui
 !assets/reference-ui/**
+!assets/scene-icons
+assets/scene-icons/*
+!assets/scene-icons/soft3d
+assets/scene-icons/soft3d/*
+!assets/scene-icons/soft3d/*.webp
 !assets/fonts
 !assets/fonts/**
 !assets/environments

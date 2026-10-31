@@ -1,0 +1,86 @@
+{
+  "id": "japanese-daruma-otoshi",
+  "sourceSha256": "24941bd489047e9b7cb5c70e9cfe32ef7a609c656693649646ea20242a55e68a",
+  "outputSha256": "7e295125c27d6600faad560a476f2f25e219641174a6c4f540eb483511b1cbf9",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 81,
+    "top": 79,
+    "width": 317,
+    "height": 326
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 28,
+    "width": 418,
+    "height": 394
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 77249,
+  "placement": {
+    "left": 19,
+    "top": 15,
+    "width": 218,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 288,
+    "height": 291,
+    "left": -37,
+    "top": -39,
+    "canvasCrop": {
+      "left": 37,
+      "top": 39,
+      "width": 251,
+      "height": 252
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 51666,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-02.png",
+    "sha256": "50411e3d4e6162034111a2c85f187c8270ca796df26b67148b0670358a0f7214",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 0,
+    "column": 0,
+    "row": 0,
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/japanese-daruma-otoshi.png",
+  "outputFile": "japanese-daruma-otoshi.webp"
+}

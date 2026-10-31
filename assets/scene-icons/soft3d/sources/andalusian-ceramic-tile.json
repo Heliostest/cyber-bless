@@ -1,0 +1,86 @@
+{
+  "id": "andalusian-ceramic-tile",
+  "sourceSha256": "92222306423094884dc41fb3e79d07d6fb1e8e83c5dbfffdd53607c1154b6b0a",
+  "outputSha256": "9ca6f1783280cd91e1701155577e6408daad70c05961063605ac68efaa5fbab4",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 67,
+    "top": 97,
+    "width": 284,
+    "height": 287
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 29,
+    "width": 418,
+    "height": 393
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 84919,
+  "placement": {
+    "left": 17,
+    "top": 15,
+    "width": 222,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 328,
+    "height": 331,
+    "left": -36,
+    "top": -61,
+    "canvasCrop": {
+      "left": 36,
+      "top": 61,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 74628,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-16.png",
+    "sha256": "1a748a07623016fe5977ef4c8bd855191d145d8806d1b3dc06c9403eb306c75d",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 418,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 819,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/andalusian-ceramic-tile.png",
+  "outputFile": "andalusian-ceramic-tile.webp"
+}

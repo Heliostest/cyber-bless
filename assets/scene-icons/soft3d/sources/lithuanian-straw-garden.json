@@ -1,0 +1,86 @@
+{
+  "id": "lithuanian-straw-garden",
+  "sourceSha256": "b19ed68b3c25babf9d598cd4d975c211f9f6eae9b7a999f164de415559502dcf",
+  "outputSha256": "f1b0ad0a06eaee11232b31407dba89ddad16bb1e26ca1420d4f96bad2389307f",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 105,
+    "top": 0,
+    "width": 228,
+    "height": 398
+  },
+  "sourceAlphaBounds": {
+    "left": 31,
+    "top": 0,
+    "width": 387,
+    "height": 422
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 39495,
+  "placement": {
+    "left": 64,
+    "top": 16,
+    "width": 128,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 235,
+    "height": 237,
+    "left": 5,
+    "top": 16,
+    "canvasCrop": {
+      "left": 0,
+      "top": 0,
+      "width": 235,
+      "height": 237
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 26664,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-08.png",
+    "sha256": "1cbcce7212637132c9c6f32396a10063b9c8d9465a43b5b4f1395ad0779ce924",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 0,
+    "column": 0,
+    "row": 0,
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/lithuanian-straw-garden.png",
+  "outputFile": "lithuanian-straw-garden.webp"
+}

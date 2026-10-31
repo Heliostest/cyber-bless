@@ -1,0 +1,86 @@
+{
+  "id": "chinese-rattle-drum",
+  "sourceSha256": "bf70a8e84b298abfc3a36c7af08c8ed06334cb59a2c9b3a30c248577dbdd3aca",
+  "outputSha256": "4e6780e40fae5e0b7d39fbf683c9f0b73a4bb1c9668c711b9d944ea4dbe0a805",
+  "sourceWidth": 418,
+  "sourceHeight": 427,
+  "sourceBounds": {
+    "left": 46,
+    "top": 5,
+    "width": 313,
+    "height": 346
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 382,
+    "height": 401
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 46415,
+  "placement": {
+    "left": 27,
+    "top": 16,
+    "width": 202,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 270,
+    "height": 276,
+    "left": -3,
+    "top": 13,
+    "canvasCrop": {
+      "left": 3,
+      "top": 0,
+      "width": 256,
+      "height": 243
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 33618,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-12.png",
+    "sha256": "6912ba500d631f34c79ad8b55742f37104c95ce05ebc75c40d95a3d45cb83a97",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 8,
+    "column": 2,
+    "row": 2,
+    "bounds": {
+      "left": 836,
+      "top": 827,
+      "width": 418,
+      "height": 427
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 831,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/chinese-rattle-drum.png",
+  "outputFile": "chinese-rattle-drum.webp"
+}

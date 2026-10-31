@@ -1,0 +1,86 @@
+{
+  "id": "bulgarian-survakane",
+  "sourceSha256": "48aa3d7f2d49991b2877779b312b4196fd76bc8479ecfe69f410f57332d31378",
+  "outputSha256": "44c3a2e5de074d4f2050dca2af265aafaa9ea0b43a06882fcd28bc7e3f921e66",
+  "sourceWidth": 418,
+  "sourceHeight": 435,
+  "sourceBounds": {
+    "left": 97,
+    "top": 5,
+    "width": 236,
+    "height": 370
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 435
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 48407,
+  "placement": {
+    "left": 56,
+    "top": 16,
+    "width": 143,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 253,
+    "height": 263,
+    "left": -3,
+    "top": 13,
+    "canvasCrop": {
+      "left": 3,
+      "top": 0,
+      "width": 250,
+      "height": 243
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 37138,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-01.png",
+    "sha256": "838012a0ab1074902f20cb62cacd9c7d488540be3b7ae79edf9537dc22b4c817",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 7,
+    "column": 1,
+    "row": 2,
+    "bounds": {
+      "left": 418,
+      "top": 819,
+      "width": 418,
+      "height": 435
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 823,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/bulgarian-survakane.png",
+  "outputFile": "bulgarian-survakane.webp"
+}

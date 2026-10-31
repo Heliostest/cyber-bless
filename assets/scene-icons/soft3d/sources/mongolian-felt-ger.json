@@ -1,0 +1,86 @@
+{
+  "id": "mongolian-felt-ger",
+  "sourceSha256": "e7eae4f33b8ab55290e5a209856047a0613d89f98610c4ec8e8dbd2cb46fb794",
+  "outputSha256": "b26eafa3b8104f473ef7fd1124da6dbf4977a8d30c90ef73163035299ce8fb8e",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 46,
+    "top": 119,
+    "width": 339,
+    "height": 271
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 15,
+    "width": 418,
+    "height": 407
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 80560,
+  "placement": {
+    "left": 15,
+    "top": 38,
+    "width": 225,
+    "height": 180
+  },
+  "sourceTransform": {
+    "width": 277,
+    "height": 280,
+    "left": -15,
+    "top": -41,
+    "canvasCrop": {
+      "left": 15,
+      "top": 41,
+      "width": 256,
+      "height": 239
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 54592,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-14.png",
+    "sha256": "8d9e10ab8b5f3e48f44ed6de93e9c0c8fb3078c011cb9bc9fa46040c0129c6f2",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 418,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/mongolian-felt-ger.png",
+  "outputFile": "mongolian-felt-ger.webp"
+}

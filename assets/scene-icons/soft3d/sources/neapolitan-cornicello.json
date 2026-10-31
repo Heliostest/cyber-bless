@@ -1,0 +1,86 @@
+{
+  "id": "neapolitan-cornicello",
+  "sourceSha256": "8450ca9697ef59c3156ea682f86aa50b875589be443362801b0524f3cef35f7b",
+  "outputSha256": "857672a42686e554e45f1bf58fc48d1eca1f2d709a96df5e79560853e48e1309",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 82,
+    "top": 121,
+    "width": 302,
+    "height": 245
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 12,
+    "width": 410,
+    "height": 410
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 58490,
+  "placement": {
+    "left": 15,
+    "top": 36,
+    "width": 225,
+    "height": 183
+  },
+  "sourceTransform": {
+    "width": 311,
+    "height": 317,
+    "left": -46,
+    "top": -54,
+    "canvasCrop": {
+      "left": 46,
+      "top": 54,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 44138,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-05.png",
+    "sha256": "6c11397b3f89760f9b1b2cefc60d4f6748d22a73cf85b4fa4b731022a3931df0",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/neapolitan-cornicello.png",
+  "outputFile": "neapolitan-cornicello.webp"
+}

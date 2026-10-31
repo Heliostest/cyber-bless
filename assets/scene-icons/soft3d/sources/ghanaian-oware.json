@@ -1,0 +1,86 @@
+{
+  "id": "ghanaian-oware",
+  "sourceSha256": "2aa25fbbbfdf4911039755ed578078aacbfc97dca502944b7d72b75819322ea5",
+  "outputSha256": "6e72f9b16efe4672222b66ed90c7069ae03f5a8e4da605138f5caf3b9e7c1929",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 31,
+    "top": 98,
+    "width": 372,
+    "height": 192
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 374
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 71326,
+  "placement": {
+    "left": 15,
+    "top": 70,
+    "width": 225,
+    "height": 116
+  },
+  "sourceTransform": {
+    "width": 253,
+    "height": 255,
+    "left": -4,
+    "top": 11,
+    "canvasCrop": {
+      "left": 4,
+      "top": 0,
+      "width": 249,
+      "height": 245
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 40420,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-12.png",
+    "sha256": "6912ba500d631f34c79ad8b55742f37104c95ce05ebc75c40d95a3d45cb83a97",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 7,
+    "column": 1,
+    "row": 2,
+    "bounds": {
+      "left": 418,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/ghanaian-oware.png",
+  "outputFile": "ghanaian-oware.webp"
+}

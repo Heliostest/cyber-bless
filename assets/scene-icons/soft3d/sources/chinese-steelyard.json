@@ -1,0 +1,86 @@
+{
+  "id": "chinese-steelyard",
+  "sourceSha256": "8570baed5b11a3595ac8405ea1f9735494e9ec929108aae618a8d07b671cfcd6",
+  "outputSha256": "c0f156ca4f160a68294e9e8520e5a42bfcf1dbe0d87f5771f3d1fcdc295b8e43",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 56,
+    "top": 45,
+    "width": 351,
+    "height": 301
+  },
+  "sourceAlphaBounds": {
+    "left": 49,
+    "top": 0,
+    "width": 369,
+    "height": 410
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 44875,
+  "placement": {
+    "left": 15,
+    "top": 31,
+    "width": 225,
+    "height": 193
+  },
+  "sourceTransform": {
+    "width": 268,
+    "height": 271,
+    "left": -21,
+    "top": 2,
+    "canvasCrop": {
+      "left": 21,
+      "top": 0,
+      "width": 247,
+      "height": 254
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 32904,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-10.png",
+    "sha256": "9190e8a75f527b1b92c6b209c3d171e4cfafb618527b199254a8d1a0461fb03f",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 6,
+    "column": 0,
+    "row": 2,
+    "bounds": {
+      "left": 0,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/chinese-steelyard.png",
+  "outputFile": "chinese-steelyard.webp"
+}

@@ -1,0 +1,86 @@
+{
+  "id": "chinese-incense",
+  "sourceSha256": "9daf3b9349dcd96d382edaf3c771f10d8a9f352bef78ce7b6b75ed12778799b2",
+  "outputSha256": "b00397e9f31fb3e3639f486105eafad2663c707a7f8f75f38c189b4dd60f60f8",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 98,
+    "top": 43,
+    "width": 233,
+    "height": 364
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 9,
+    "width": 400,
+    "height": 413
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 42095,
+  "placement": {
+    "left": 55,
+    "top": 15,
+    "width": 145,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 258,
+    "height": 261,
+    "left": -5,
+    "top": -12,
+    "canvasCrop": {
+      "left": 5,
+      "top": 12,
+      "width": 253,
+      "height": 249
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 21842,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-08.png",
+    "sha256": "1cbcce7212637132c9c6f32396a10063b9c8d9465a43b5b4f1395ad0779ce924",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 831,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/chinese-incense.png",
+  "outputFile": "chinese-incense.webp"
+}

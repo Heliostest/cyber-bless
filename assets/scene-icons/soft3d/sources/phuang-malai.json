@@ -1,0 +1,86 @@
+{
+  "id": "phuang-malai",
+  "sourceSha256": "9827b5130fbb3595ca5090eb37b97146053fe3b764c12bad699be9e5fd845fcb",
+  "outputSha256": "7d949f894d239c143bc38b7652ab478b8de5d59af3ad751f5012c6e0d52b1edb",
+  "sourceWidth": 418,
+  "sourceHeight": 425,
+  "sourceBounds": {
+    "left": 90,
+    "top": 5,
+    "width": 228,
+    "height": 352
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 417,
+    "height": 425
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 59389,
+  "placement": {
+    "left": 55,
+    "top": 16,
+    "width": 145,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 265,
+    "height": 270,
+    "left": -2,
+    "top": 13,
+    "canvasCrop": {
+      "left": 2,
+      "top": 0,
+      "width": 256,
+      "height": 243
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 41088,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-09.png",
+    "sha256": "78bee5ccd43f0242cf0545e03b49b0e091d7432dcbffafdcae943deaa981826c",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 8,
+    "column": 2,
+    "row": 2,
+    "bounds": {
+      "left": 836,
+      "top": 829,
+      "width": 418,
+      "height": 425
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 833,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/phuang-malai.png",
+  "outputFile": "phuang-malai.webp"
+}

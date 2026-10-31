@@ -1,0 +1,86 @@
+{
+  "id": "croatian-licitar-heart",
+  "sourceSha256": "32868728f7539bc3d1f7e0e9736c45cfec65cecabd04f0e39b7a71fe2fd624b2",
+  "outputSha256": "7f3c802b780ad6f0cc45bbb0d0b02ebe139a87e84d92518dc12a36e5f52aa152",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 81,
+    "top": 14,
+    "width": 284,
+    "height": 333
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 422
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 62262,
+  "placement": {
+    "left": 32,
+    "top": 15,
+    "width": 191,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 282,
+    "height": 285,
+    "left": -23,
+    "top": 6,
+    "canvasCrop": {
+      "left": 23,
+      "top": 0,
+      "width": 256,
+      "height": 250
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 50532,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-07.png",
+    "sha256": "4b85ecf27f54528bb3d6057ef68949fa571007cb3d066d98943dcf569f8bfb6c",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 6,
+    "column": 0,
+    "row": 2,
+    "bounds": {
+      "left": 0,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/croatian-licitar-heart.png",
+  "outputFile": "croatian-licitar-heart.webp"
+}

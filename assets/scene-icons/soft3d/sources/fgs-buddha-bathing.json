@@ -1,0 +1,86 @@
+{
+  "id": "fgs-buddha-bathing",
+  "sourceSha256": "68436ea299401afbd3ba569891ebf339f1e7fb89fc1fca89c92621e275b878fa",
+  "outputSha256": "bc82c1861596812636c2c8e9afddeda839e93ae1a11881c8626219a78c6ba901",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 56,
+    "top": 37,
+    "width": 302,
+    "height": 353
+  },
+  "sourceAlphaBounds": {
+    "left": 1,
+    "top": 0,
+    "width": 417,
+    "height": 414
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 70435,
+  "placement": {
+    "left": 32,
+    "top": 16,
+    "width": 192,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 265,
+    "height": 270,
+    "left": -3,
+    "top": -7,
+    "canvasCrop": {
+      "left": 3,
+      "top": 7,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 49760,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-04.png",
+    "sha256": "1f590be0899984d55736775c4e2bb58f395eea9b86702065a177116091307406",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 4,
+    "column": 1,
+    "row": 1,
+    "bounds": {
+      "left": 418,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/fgs-buddha-bathing.png",
+  "outputFile": "fgs-buddha-bathing.webp"
+}

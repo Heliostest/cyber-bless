@@ -1,0 +1,86 @@
+{
+  "id": "finnish-virpominen",
+  "sourceSha256": "8fa7324fdff02a98095765484ae5b9099ef6d92aae0e4480c4acf2a205608dd4",
+  "outputSha256": "98f89552b794197f2fb4759e80b047cdfd7cc176342be38253fc3c82e7d9fe89",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 101,
+    "top": 62,
+    "width": 285,
+    "height": 332
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 3,
+    "width": 418,
+    "height": 423
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 66564,
+  "placement": {
+    "left": 31,
+    "top": 15,
+    "width": 193,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 283,
+    "height": 289,
+    "left": -37,
+    "top": -27,
+    "canvasCrop": {
+      "left": 37,
+      "top": 27,
+      "width": 246,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 44550,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-02.png",
+    "sha256": "50411e3d4e6162034111a2c85f187c8270ca796df26b67148b0670358a0f7214",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 4,
+    "column": 1,
+    "row": 1,
+    "bounds": {
+      "left": 418,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/finnish-virpominen.png",
+  "outputFile": "finnish-virpominen.webp"
+}

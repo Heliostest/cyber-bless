@@ -4078,7 +4078,12 @@ button:hover:not(:disabled) {
 .practice-card .daily-copy p {
   color: var(--ink-soft);
 }
-/* A drawn scene icon (scene-icons.tsx) in the same item slot as the crops. */
+/* Keep transparent scene illustrations inside every existing icon slot. */
+img.scene-icon {
+  display: block;
+  object-fit: contain;
+}
+/* A scene illustration in the same item slot as the crops. */
 .scene-art .scene-icon {
   width: 66px;
   max-width: 88%;

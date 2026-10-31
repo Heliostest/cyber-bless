@@ -1,0 +1,86 @@
+{
+  "id": "st-brigids-cross",
+  "sourceSha256": "f27916f8f7abb9095b662e468802b65fd4f8cd074d4c3c6557deeb7f00a471a9",
+  "outputSha256": "bcf54c67d9450b48b9ad5ab57877ae5e9fcdad6098e582f18475320df5aba386",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 73,
+    "top": 86,
+    "width": 319,
+    "height": 322
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 21,
+    "width": 418,
+    "height": 401
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 52981,
+  "placement": {
+    "left": 16,
+    "top": 15,
+    "width": 223,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 292,
+    "height": 295,
+    "left": -35,
+    "top": -45,
+    "canvasCrop": {
+      "left": 35,
+      "top": 45,
+      "width": 256,
+      "height": 250
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 45212,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-09.png",
+    "sha256": "78bee5ccd43f0242cf0545e03b49b0e091d7432dcbffafdcae943deaa981826c",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 0,
+    "column": 0,
+    "row": 0,
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 829,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/st-brigids-cross.png",
+  "outputFile": "st-brigids-cross.webp"
+}

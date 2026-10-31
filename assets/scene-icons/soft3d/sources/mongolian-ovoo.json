@@ -1,0 +1,86 @@
+{
+  "id": "mongolian-ovoo",
+  "sourceSha256": "85c56d014981524b6cb8e7e391866651e923c2613b955a84182f8f6813b62f05",
+  "outputSha256": "3539c54eb3627f35144b670719acf87bf498bf56bf1f6dc73bff88c460442f65",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 67,
+    "top": 32,
+    "width": 322,
+    "height": 355
+  },
+  "sourceAlphaBounds": {
+    "left": 49,
+    "top": 0,
+    "width": 369,
+    "height": 426
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 50293,
+  "placement": {
+    "left": 26,
+    "top": 15,
+    "width": 204,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 265,
+    "height": 270,
+    "left": -17,
+    "top": -5,
+    "canvasCrop": {
+      "left": 17,
+      "top": 5,
+      "width": 248,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 36766,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-04.png",
+    "sha256": "1f590be0899984d55736775c4e2bb58f395eea9b86702065a177116091307406",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 3,
+    "column": 0,
+    "row": 1,
+    "bounds": {
+      "left": 0,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/mongolian-ovoo.png",
+  "outputFile": "mongolian-ovoo.webp"
+}

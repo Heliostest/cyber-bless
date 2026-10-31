@@ -1,0 +1,86 @@
+{
+  "id": "hindu-coconut-offering",
+  "sourceSha256": "6293dbb6cd95f5aea46649f271550f7b7cd8f2ea14445851169d907ecfe651f0",
+  "outputSha256": "816e80036cce998792f1f4a02f78408763e22de25526f930251f0d0c82997b0b",
+  "sourceWidth": 418,
+  "sourceHeight": 366,
+  "sourceBounds": {
+    "left": 30,
+    "top": 83,
+    "width": 367,
+    "height": 255
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 366
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 86478,
+  "placement": {
+    "left": 16,
+    "top": 50,
+    "width": 224,
+    "height": 156
+  },
+  "sourceTransform": {
+    "width": 256,
+    "height": 224,
+    "left": -3,
+    "top": -1,
+    "canvasCrop": {
+      "left": 3,
+      "top": 1,
+      "width": 253,
+      "height": 223
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 52080,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-01.png",
+    "sha256": "7dbd55805da0c5520e0950c5e06e8a24cbb0db2fd4361a01454a486992dee805",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 3,
+    "column": 0,
+    "row": 1,
+    "bounds": {
+      "left": 0,
+      "top": 414,
+      "width": 418,
+      "height": 366
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 779,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/hindu-coconut-offering.png",
+  "outputFile": "hindu-coconut-offering.webp"
+}

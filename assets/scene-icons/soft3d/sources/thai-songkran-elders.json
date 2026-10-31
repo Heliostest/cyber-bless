@@ -1,0 +1,86 @@
+{
+  "id": "thai-songkran-elders",
+  "sourceSha256": "49c6330aacca7114a49a3804e46bab926a2217beb0c123e53d2b8b66342038ea",
+  "outputSha256": "16d467acc31cfe1ca9c3da9b655a71de101c93bb443b1e5b2c71aebd6038ce4a",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 68,
+    "top": 60,
+    "width": 306,
+    "height": 297
+  },
+  "sourceAlphaBounds": {
+    "left": 1,
+    "top": 13,
+    "width": 401,
+    "height": 413
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 48452,
+  "placement": {
+    "left": 16,
+    "top": 19,
+    "width": 224,
+    "height": 218
+  },
+  "sourceTransform": {
+    "width": 307,
+    "height": 313,
+    "left": -34,
+    "top": -25,
+    "canvasCrop": {
+      "left": 34,
+      "top": 25,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 37226,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-03.png",
+    "sha256": "17d3890b78594adf5e3f6fc786005103568e18531f7ddf2657d41d50246f4fac",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/thai-songkran-elders.png",
+  "outputFile": "thai-songkran-elders.webp"
+}

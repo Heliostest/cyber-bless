@@ -1,0 +1,86 @@
+{
+  "id": "romanian-martisor",
+  "sourceSha256": "98da55003932886649af0d2d5b9c42a2e761dc0add0783358d14fe505fa93827",
+  "outputSha256": "474e03e662482e5af6c0b4b1b7febd4fbc485c1b3ca391b10dd8ca18d4d9fe50",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 46,
+    "top": 33,
+    "width": 330,
+    "height": 352
+  },
+  "sourceAlphaBounds": {
+    "left": 31,
+    "top": 0,
+    "width": 387,
+    "height": 426
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 56674,
+  "placement": {
+    "left": 22,
+    "top": 15,
+    "width": 211,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 267,
+    "height": 272,
+    "left": -7,
+    "top": -6,
+    "canvasCrop": {
+      "left": 7,
+      "top": 6,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 45412,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-06.png",
+    "sha256": "d00cec349762fd99cd67c6793c2afed4bc7109b44463cb4c1425dbfb8b137600",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 3,
+    "column": 0,
+    "row": 1,
+    "bounds": {
+      "left": 0,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/romanian-martisor.png",
+  "outputFile": "romanian-martisor.webp"
+}

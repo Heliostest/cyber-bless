@@ -1,0 +1,86 @@
+{
+  "id": "turkish-ebru-paper",
+  "sourceSha256": "edfda574811b21fb1d1c2f3983552f36cfc622c806ebd502685e3a3fc6b4e398",
+  "outputSha256": "4820d5006a73cdbb2e1d3fddabb46c7a40aeac15cf18dd32b8cdbb2a1312d6a2",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 35,
+    "top": 66,
+    "width": 351,
+    "height": 292
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 408,
+    "height": 422
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 85075,
+  "placement": {
+    "left": 16,
+    "top": 35,
+    "width": 224,
+    "height": 186
+  },
+  "sourceTransform": {
+    "width": 266,
+    "height": 269,
+    "left": -6,
+    "top": -7,
+    "canvasCrop": {
+      "left": 6,
+      "top": 7,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 54976,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-14.png",
+    "sha256": "8d9e10ab8b5f3e48f44ed6de93e9c0c8fb3078c011cb9bc9fa46040c0129c6f2",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 835,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/turkish-ebru-paper.png",
+  "outputFile": "turkish-ebru-paper.webp"
+}

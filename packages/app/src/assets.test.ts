@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { assetFiles } from "../../../scripts/prepare-app-assets.mjs";
 import { fontStyles } from "./assets";
+import { builtInScenes } from "./scene-library";
 
 /** Each @font-face block of the font CSS the App injects. */
 const faces = fontStyles.match(/@font-face\{[^}]*\}/g) ?? [];
@@ -37,5 +38,36 @@ describe("bundled fonts", () => {
   it("puts the bundled Nunito first in the island's rounded stack", () => {
     const css = readFileSync(new URL("./style.css", import.meta.url), "utf8");
     expect(css).toMatch(/--font-round: "Nunito", /);
+  });
+});
+
+describe("bundled scene illustrations", () => {
+  it("retires the old ritual sheet while retaining the active badge sheet", () => {
+    expect(assetFiles).not.toContain("reference-ui/rituals.png");
+    expect(existsSync(new URL("../../../assets/reference-ui/rituals.png", import.meta.url))).toBe(false);
+    expect(assetFiles).toContain("reference-ui/wishes.png");
+    expect(existsSync(new URL("../../../assets/reference-ui/wishes.png", import.meta.url))).toBe(true);
+  });
+
+  it("keeps the subject review inventory aligned with current and historical scenes", () => {
+    const inventory = JSON.parse(readFileSync(new URL("../../../assets/scene-icons/soft3d/subjects.json", import.meta.url), "utf8")) as { subjects: { id: string }[] };
+    expect(inventory.subjects.map(({ id }) => id).sort()).toEqual(builtInScenes.map(({ id }) => id).sort());
+  });
+
+  it("includes every current and historical scene image in both apps' public assets", () => {
+    const icons = assetFiles.filter(file => file.startsWith("scene-icons/soft3d/"));
+    expect(icons.sort()).toEqual(builtInScenes.map(({ id }) => `scene-icons/soft3d/${id}.webp`).sort());
+  });
+
+  it("ships nonempty WebP data for every listed illustration", () => {
+    for (const { id } of builtInScenes) {
+      const file = `scene-icons/soft3d/${id}.webp`;
+      const source = new URL(`../../../assets/${file}`, import.meta.url);
+      expect(existsSync(source), file).toBe(true);
+      const bytes = readFileSync(source);
+      expect(bytes.length, file).toBeGreaterThan(12);
+      expect(bytes.toString("ascii", 0, 4), file).toBe("RIFF");
+      expect(bytes.toString("ascii", 8, 12), file).toBe("WEBP");
+    }
   });
 });

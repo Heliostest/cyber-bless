@@ -1,0 +1,86 @@
+{
+  "id": "spanish-twelve-grapes",
+  "sourceSha256": "2237acf40fe5dc75c30c15ebba2b34b46494842275bd0dfe26d7cf2a0ba94d2d",
+  "outputSha256": "5841572183d3349bd2683e2cce1ed068352380f197ab067872d3eb0dae7ee6cc",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 76,
+    "top": 81,
+    "width": 298,
+    "height": 228
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 422
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 63618,
+  "placement": {
+    "left": 15,
+    "top": 41,
+    "width": 225,
+    "height": 173
+  },
+  "sourceTransform": {
+    "width": 316,
+    "height": 319,
+    "left": -43,
+    "top": -20,
+    "canvasCrop": {
+      "left": 43,
+      "top": 20,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 50870,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-05.png",
+    "sha256": "6c11397b3f89760f9b1b2cefc60d4f6748d22a73cf85b4fa4b731022a3931df0",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 6,
+    "column": 0,
+    "row": 2,
+    "bounds": {
+      "left": 0,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/spanish-twelve-grapes.png",
+  "outputFile": "spanish-twelve-grapes.webp"
+}

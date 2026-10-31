@@ -136,7 +136,7 @@ describe("场景目录 rows", () => {
     );
     for (const card of cards) {
       expect(
-        card.querySelector(":scope > .scene-badge .scene-icon path"),
+        card.querySelector(":scope > .scene-badge img.scene-icon"),
       ).not.toBeNull();
       expect(card.lastElementChild!.tagName.toLowerCase()).toBe("svg");
     }

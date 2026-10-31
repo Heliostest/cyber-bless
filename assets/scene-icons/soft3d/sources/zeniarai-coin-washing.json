@@ -1,0 +1,86 @@
+{
+  "id": "zeniarai-coin-washing",
+  "sourceSha256": "36cfc6e84c6d780bc7e4c151d09263d0e26d70c825ad0764f9945845c62623a4",
+  "outputSha256": "dc0d0b34dc3be7a6dc1b6e961b2e069f2d5434c1b196a5e5a3147ab6174f8f05",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 51,
+    "top": 78,
+    "width": 340,
+    "height": 324
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 17,
+    "width": 418,
+    "height": 405
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 71930,
+  "placement": {
+    "left": 15,
+    "top": 20,
+    "width": 225,
+    "height": 215
+  },
+  "sourceTransform": {
+    "width": 277,
+    "height": 279,
+    "left": -19,
+    "top": -31,
+    "canvasCrop": {
+      "left": 19,
+      "top": 31,
+      "width": 256,
+      "height": 248
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 56596,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-07.png",
+    "sha256": "4b85ecf27f54528bb3d6057ef68949fa571007cb3d066d98943dcf569f8bfb6c",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 0,
+    "column": 0,
+    "row": 0,
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/zeniarai-coin-washing.png",
+  "outputFile": "zeniarai-coin-washing.webp"
+}

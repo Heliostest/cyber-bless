@@ -1,0 +1,86 @@
+{
+  "id": "peruvian-engraved-gourd",
+  "sourceSha256": "ed03169c58c732c23048fd485d726ec75002920fde787f18a56b6fea9442977f",
+  "outputSha256": "f2c9e50352f4bc0bdf59033a1b71d0ed09b935c4fdb9f6c15622ba4388149d46",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 99,
+    "top": 52,
+    "width": 236,
+    "height": 357
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 31,
+    "width": 412,
+    "height": 391
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 63196,
+  "placement": {
+    "left": 53,
+    "top": 15,
+    "width": 149,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 263,
+    "height": 266,
+    "left": -9,
+    "top": -18,
+    "canvasCrop": {
+      "left": 9,
+      "top": 18,
+      "width": 254,
+      "height": 248
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 37766,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-14.png",
+    "sha256": "8d9e10ab8b5f3e48f44ed6de93e9c0c8fb3078c011cb9bc9fa46040c0129c6f2",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 835,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/peruvian-engraved-gourd.png",
+  "outputFile": "peruvian-engraved-gourd.webp"
+}

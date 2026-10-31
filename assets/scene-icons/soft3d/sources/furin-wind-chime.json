@@ -1,0 +1,47 @@
+{
+  "id": "furin-wind-chime",
+  "sourceSha256": "1428c5b0062f55e9492f20fa02271f202a34dc636c5e5c2c3d85b5c36368b054",
+  "outputSha256": "8f4a0309f189348d60b2aed6c7e4e9d9f86f567ae1b9fba9bcddb39aab006c72",
+  "sourceWidth": 1254,
+  "sourceHeight": 1254,
+  "sourceBounds": {
+    "left": 311,
+    "top": 0,
+    "width": 632,
+    "height": 1203
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 1240,
+    "height": 1254
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 387118,
+  "placement": {
+    "left": 68,
+    "top": 16,
+    "width": 119,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 233,
+    "height": 233,
+    "left": 11,
+    "top": 16,
+    "canvasCrop": {
+      "left": 0,
+      "top": 0,
+      "width": 233,
+      "height": 233
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 23510,
+  "encoding": "lossless-webp",
+  "sourceFile": "sources/furin-wind-chime.png",
+  "outputFile": "furin-wind-chime.webp"
+}

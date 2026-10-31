@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import { bindSceneAttribute } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -120,6 +121,10 @@ export function createCrane(ctx: SceneContext): SceneInstance {
 
   const setHint = (text: string) => setSafeText(hintEl, text, assertSafeCopy)
 
+  const ending = createQuietEnding(ctx, { ui: ui, isActive: () => started && !disposed && canAct(),
+    duration: 3, motion: 'glow', targets: () => [sheet.object], cancelInput: () => { objectPointer?.cancel() }, complete: () => completeScene(),
+    onFrame: (p, _time, reduced) => { if (reduced) sheet.pose(form, foldK); else sheet.poseWingFlap(Math.sin(p * Math.PI * 4) * Math.sin(p * Math.PI) * .65) },
+  })
   const syncOverlayForStep = () => {
     ui.renderDots(
       step === 'done' ? STEP_ORDER.length : STEP_ORDER.indexOf(step),
@@ -145,6 +150,7 @@ export function createCrane(ctx: SceneContext): SceneInstance {
       setHint(COPY.hintWish)
       setSafeText(actionBtn, COPY.wishTap, assertSafeCopy)
     } else setHint(COPY.done)
+    ending.sync(step === 'wish')
   }
 
   // Transparent over the island stage: morning key, soft rim along the paper edges.
@@ -277,14 +283,15 @@ export function createCrane(ctx: SceneContext): SceneInstance {
     }),
   ]
 
-  const completeScene = () => {
+  const completeScene = (fromWriting = false) => {
+    if (!restoring && !ending.completing && !fromWriting) return
     if (!canAct() || step === 'done') return
     step = 'done'
     dragHandle?.setEnabled(false)
     wishHandle?.setEnabled(false)
-    if (!restoring) ctx.onProgress?.(3)
+    if (!restoring) { ctx.onProgress?.(3); if (disposed || !(canAct())) return }
     syncOverlayForStep()
-    overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    if (!restoring) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
 
   const goWish = () => {
@@ -394,13 +401,20 @@ export function createCrane(ctx: SceneContext): SceneInstance {
 
     actionBtn.addEventListener('click', onActionTap)
 
+    let submittingWish = false
     wishHandle = gestures.createWishWrite({
       maxLen: 40,
       saves: ctx.saveWish !== undefined,
       onSubmit: (text) => {
-        if (step !== 'wish' || !canAct()) return
-        ctx.saveWish?.(text)
-        completeScene()
+        if (submittingWish || disposed || step !== 'wish' || !canAct()) return
+        submittingWish = true
+        try {
+          ctx.saveWish?.(text)
+          if (disposed || !canAct()) return
+          completeScene(true)
+        } finally {
+          submittingWish = false
+        }
       },
     })
     wishHandle.mount(wishSlot, {})
@@ -510,10 +524,13 @@ export function createCrane(ctx: SceneContext): SceneInstance {
       )
       camera.lookAt(cameraLookAt)
 
+      ending.update(dt)
+      if (disposed || !(canAct())) return
       styleRenderer.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true
       stopResize()
       objectPointer?.dispose()

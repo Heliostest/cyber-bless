@@ -38,16 +38,20 @@ export function useAppLayout(ref: RefObject<HTMLElement | null>) {
         shell.removeAttribute("data-layout-scroll"); return;
       }
       const stageCss = getComputedStyle(stage), contentCss = getComputedStyle(content);
+      const card = stage.closest<HTMLElement>(".scene-stage-card") ?? stage;
+      const intention = card.querySelector<HTMLElement>(":scope > .scene-intention");
+      const intentionHeight = intention && getComputedStyle(intention).display !== "none"
+        ? intention.getBoundingClientRect().height : 0;
       const minimumCanvas = Math.max(224, (parseFloat(stageCss.fontSize) || 16) * 10);
       const guide = stage.querySelector<HTMLElement>(".scene-cue-guides:not([hidden])");
       const tray = parseFloat(stageCss.getPropertyValue("--tray")) ||
         (guide ? Math.max(112, guide.getBoundingClientRect().height + 88) : stage.classList.contains("library-scene-stage") ? 132 : 0);
       const wish = parseFloat(stageCss.getPropertyValue("--wish-box")) || 0;
-      const stageMinimum = minimumCanvas + tray + wish + 8;
+      const stageMinimum = minimumCanvas + tray + wish + intentionHeight + 8;
       shell.style.setProperty("--scene-min-canvas", `${minimumCanvas}px`);
       shell.style.setProperty("--scene-min-stage", `${stageMinimum}px`);
       const children = [...experience.children].filter((element): element is HTMLElement =>
-        element instanceof HTMLElement && element !== stage && getComputedStyle(element).display !== "none");
+        element instanceof HTMLElement && element !== card && getComputedStyle(element).display !== "none");
       const extras = children.reduce((height, element) => {
         const css = getComputedStyle(element);
         observe(element);
@@ -64,7 +68,7 @@ export function useAppLayout(ref: RefObject<HTMLElement | null>) {
       const needsScroll = !writingWish && available > 0 && stageMinimum + extras + gap * children.length > available;
       if (needsScroll) shell.setAttribute("data-layout-scroll", "true");
       else shell.removeAttribute("data-layout-scroll");
-      observe(content); observe(stage); observe(experience);
+      observe(content); observe(stage); observe(card); observe(intention); observe(experience);
     };
     const schedule = () => {
       if (disposed || frame) return;

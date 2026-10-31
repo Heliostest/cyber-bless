@@ -1,5 +1,15 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest'
+// jsdom has no Canvas 2D; exercise the explicit unavailable-texture fallback quietly.
+beforeEach(() => { vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null) })
+
+// Isolate spatial gestures, geometry and save callbacks from shared ending scheduling.
+// The real automatic timer, animation and lifecycle contract are covered across all
+// 20 scenes in ../quiet-ending-workshop-scenes.test.ts without this mock.
+vi.mock('../quiet-ending', () => ({
+  createQuietEnding: () => ({ sync() {}, update() {}, dispose() {}, completing: true, running: false }),
+}))
+
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
@@ -184,7 +194,7 @@ describe('a contemporary tea break inspired by Blang tea ecology',()=>{
     const added=vi.spyOn(window,'addEventListener'),removed=vi.spyOn(window,'removeEventListener')
     const disconnect=vi.fn();vi.stubGlobal('ResizeObserver',class {observe(){} disconnect=disconnect})
     const s=mount(),resources=new Set<THREE.BufferGeometry|THREE.Material>(),freed=new Map<unknown,number>()
-    s.scene.traverse(o=>{const m=o as THREE.Mesh;if(m.geometry)resources.add(m.geometry);for(const mat of Array.isArray(m.material)?m.material:m.material?[m.material]:[])resources.add(mat)})
+    s.scene.traverse(o=>{const m=o as THREE.Mesh;if (m.geometry) resources.add(m.geometry);for(const mat of Array.isArray(m.material)?m.material:m.material?[m.material]:[])resources.add(mat)})
     resources.forEach(r=>r.addEventListener('dispose',()=>freed.set(r,(freed.get(r)??0)+1)))
     const registrations=[...added.mock.calls],renderer=rendered.renderer as THREE.WebGLRenderer
     s.instance.dispose();s.instance.dispose();s.button.click();pointer(s.hit,'pointerdown',[100,100])

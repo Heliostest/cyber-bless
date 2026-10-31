@@ -1,4 +1,5 @@
 ﻿import * as THREE from 'three'
+import { createQuietEnding } from '../quiet-ending'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
@@ -201,6 +202,7 @@ export function createPeruvianEngravedGourd(ctx: SceneContext): SceneInstance {
       dragging = false; if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: inputActive, duration: 3, motion: 'glow', targets: () => [shell], cancelInput: () => pointer.cancel(), complete: () => finish() })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
@@ -208,6 +210,7 @@ export function createPeruvianEngravedGourd(ctx: SceneContext): SceneInstance {
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(inputActive() && !returning && at === 2 && !motion)
     setSafeText(ui.actionBtn, at === 0 ? '向右刻出纹带' : at === 1 ? '向下擦亮纹带' : '轻点葫芦静看', safe)
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.cutting : COPY.polishing : at === 0 ? COPY.cut : at === 1 ? COPY.polish : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    ending.sync(at === 2 && !motion)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const revision = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && revision === lifecycleVersion }
@@ -222,6 +225,7 @@ export function createPeruvianEngravedGourd(ctx: SceneContext): SceneInstance {
   }
   function finish(text = '') {
     if (!inputActive() || pointer.isBusy() || motion || at !== 2) return
+    if (!text.trim() && !ending.completing) return
     withHostCallbacks(() => {
       at = 3; restore(); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()
       if (text.trim() && !returning) ctx.saveWish?.(text.trim())
@@ -267,11 +271,12 @@ export function createPeruvianEngravedGourd(ctx: SceneContext): SceneInstance {
         const amount = THREE.MathUtils.lerp(motion.from, 1, ease(motion.time)); if (motion.step === 0) cutAmount = amount; else polishAmount = amount
         setShape(motion.step); if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); style.render() }
+      ending.update(dt)
+      if (!disposed && active()) { matrices(); style.render() }
     },
     dispose() {
       if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      ending.dispose(); disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose()
       // disposeTree reaches only the current shell material. The other immutable

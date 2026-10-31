@@ -2269,5 +2269,8 @@
   "scene.mezuzah-doorpost.intention.07f237ad": "托起备好的护盒，移向右门柱，再轻轻贴稳。",
   "scene.sri-lankan-bodhi-puja.intention.ba68dcf1": "提起水壶，移近菩提树根，缓缓倾水供养。",
   "scene.ukrainian-didukh.intention.fa0b869c": "为家人寄一份丰足平安的祝愿",
-  "scene.ukrainian-didukh.intention.9ba3c0a2": "拢齐麦秆、系拢彩带，再把麦束立稳在屋角，为家人寄一份祝愿。"
+  "scene.ukrainian-didukh.intention.9ba3c0a2": "拢齐麦秆、系拢彩带，再把麦束立稳在屋角，为家人寄一份祝愿。",
+  "scene.autoEnding.status": "正在收尾，片刻后自动完成。",
+  "scene.autoEnding.writing": "写好后点「写好了」继续。",
+  "scene.autoEnding.progress": "收尾进度"
 }

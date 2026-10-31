@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createQuietEnding } from '../quiet-ending'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -216,6 +217,7 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
       dragging=false;if(valid)finish();else reset()
     }, onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: inputActive, duration: 3, motion: 'glow', targets: () => [quietBody], cancelInput: () => pointer.cancel(), complete: () => finish() })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
@@ -223,6 +225,7 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(inputActive() && !returning && at === 2 && !motion)
     setSafeText(ui.actionBtn, at === 0 ? '向左穿入最后一枚螺壳' : at === 1 ? '向上拉拢线端' : '轻点贝链静看', safe)
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.threading : COPY.gathering : at === 0 ? COPY.thread : at === 1 ? COPY.gather : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    ending.sync(at === 2 && !motion)
   }
   function withHostCallbacks(work: () => void) { notifying = true; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() {
@@ -241,6 +244,7 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
   }
   function finish(text = '') {
     if (!inputActive() || pointer.isBusy() || motion || at !== 2) return
+    if (!text.trim() && !ending.completing) return
     withHostCallbacks(() => {
       at = 3; restore(); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()
       if (text.trim() && !returning) ctx.saveWish?.(text.trim())
@@ -278,11 +282,12 @@ export function createNiueShellNecklace(ctx: SceneContext): SceneInstance {
         else setGather(THREE.MathUtils.lerp(motion.gather, 1, t))
         if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); style.render() }
+      ending.update(dt)
+      if (!disposed && active()) { matrices(); style.render() }
     },
     dispose() {
       if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      ending.dispose(); disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

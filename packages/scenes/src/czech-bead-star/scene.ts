@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -192,6 +193,9 @@ export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
     onInspectEnd() { if (checkpoint === 0) reset(); else { dragging = false; matrices() } },
     onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: () => inputActive(), duration: 3, motion: 'glow',
+    targets: () => [star], cancelInput: () => pointer.cancel(), complete: () => advance(),
+  })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(checkpoint === 0 ? 0 : checkpoint === 3 ? 2 : 1, 2); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !inputActive() || !!transition || checkpoint === 3
@@ -199,6 +203,7 @@ export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
     setSafeText(ui.actionBtn, checkpoint === 0 ? COPY.assembleAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, transition ? COPY.moving : checkpoint === 0 ? COPY.assemble : checkpoint < 3 ? COPY.rotate : COPY.done, safe)
     setPlacementInspectionHelp(ui.hintEl,!transition&&checkpoint>0&&checkpoint<3)
+    ending.sync(checkpoint > 0 && checkpoint < 3 && !transition)
   }
   // Keep acceptance atomic across synchronous host input, update, and disposal.
   function withHostCallbacks(work: () => void) {
@@ -214,6 +219,7 @@ export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
     })
   }
   function advance(arrived = false) {
+    if (checkpoint > 0 && !ending.completing) return
     if (!inputActive() || (pointer.isBusy() && !arrived) || transition || checkpoint === 3) return
     if (checkpoint > 0) {
       const turn = star.rotation.y; checkpoint = 3; restore(); star.rotation.y = turn; matrices()
@@ -259,11 +265,14 @@ export function createCzechBeadStar(ctx: SceneContext): SceneInstance {
         if (transition.time === 1) settle()
       }
       if (!active()) return
-      matrices(); style.render()
+      if (!active()) return
+      ending.update(dt)
+      if (!active()) return
+      scene.updateMatrixWorld(true); camera.updateMatrixWorld(true); style.render()
     },
     dispose() {
       if (disposed) return
-      disposed = true; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action); ui.actionBtn.removeEventListener('keydown', inspectKey)
+      ending.dispose(); disposed = true; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action); ui.actionBtn.removeEventListener('keydown', inspectKey)
       guardedEvents.forEach(type => ui.hitLayer.removeEventListener(type, guardCallbackInput, true))
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world)
       Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss()

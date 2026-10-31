@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import { bindSceneAttribute, bindSceneText, sceneProductCopy, sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -169,6 +170,9 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
     charmMaterials.forEach((mat, i) => { mat.emissive.set(i === index ? 0x7b481c : 0); mat.emissiveIntensity = i === index ? 0.16 : 0 })
     buttons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)))
   }
+  const ending = createQuietEnding(ctx, { ui: ui, isActive: () => started && !disposed && canAct(),
+    duration: 3, motion: 'sway', targets: () => [charmGroups[selected]], cancelInput: () => { resetDrag() }, complete: () => finish(),
+  })
   function sync() {
     ui.renderDots(step, 3); choices.hidden = step !== 0; wish.hidden = step !== 2 || Boolean(ctx.returning)
     ui.actionBtn.hidden = step === 3
@@ -179,6 +183,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
     charmGroups.forEach((group, i) => {
       if (i !== selected) { group.position.copy(starts[i]); group.scale.setScalar(0.73) }
     })
+    ending.sync(step === 2)
   }
   function choose() {
     if (!canAct() || step !== 0) return
@@ -192,11 +197,12 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
     ctx.onProgress?.(2); feedback.impact({ freqs: [659, 988], duration: 0.45, gain: 0.06 }); sync()
   }
   function finish(text = '') {
+    if (!text.trim() && !ending.completing) return
     if (!canAct() || step !== 2) return
     const line = text.trim()
     step = 3; drag = null
-    if (line && !ctx.returning) ctx.saveWish?.(line)
-    ctx.onProgress?.(3); sync()
+    if (line && !ctx.returning) { ctx.saveWish?.(line); if (disposed || !canAct()) return }
+    ctx.onProgress?.(3); if (disposed || !canAct()) return; sync()
     overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
   const action = () => {
@@ -289,10 +295,13 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
         charmGroups[selected].scale.setScalar(0.73 + eased * 0.37)
       }
       if (step >= 2) charmGroups[selected].rotation.z = reduced ? 0 : Math.sin(clock * 1.3) * Math.exp(-clock * 0.08) * 0.035
+      ending.update(dt)
+      if (disposed || !(canAct())) return
       style.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true; pointers.clear(); drag = null; unobserve(); stopClaim(); writer.dispose(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', action)
       ui.hitLayer.removeEventListener('pointerdown', down); ui.hitLayer.removeEventListener('pointermove', move)

@@ -1,5 +1,11 @@
-﻿// @vitest-environment jsdom
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
+// Preserve this suite's geometry, pointer and callback contract in isolation.
+// The real animation clock and legacy-input lock are covered in quiet-ending-atelier-scenes.test.ts.
+vi.mock('../quiet-ending', () => ({ createQuietEnding: () => ({
+  running: false, completing: true, sync() {}, update() {}, dispose() {},
+}) }))
+
 import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'

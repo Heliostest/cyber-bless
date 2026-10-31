@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -65,6 +66,9 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
 
   const setHint = (text: string) => setSafeText(hintEl, text, assertSafeCopy)
 
+  const ending = createQuietEnding(ctx, { ui: ui, isActive: () => started && !disposed && canAct(),
+    duration: 3, motion: 'sway', targets: () => [loose], cancelInput: () => { onHitUp() }, complete: () => completeScene(),
+  })
   const syncOverlayForStep = () => {
     ui.renderDots(
       step === 'done' ? STEP_ORDER.length : STEP_ORDER.indexOf(step),
@@ -83,6 +87,7 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
       setHint(COPY.hintWish)
       setSafeText(actionBtn, COPY.wishTap, assertSafeCopy)
     } else setHint(COPY.done)
+    ending.sync(step === 'wish')
   }
 
   // Transparent over the island stage: peach key, lavender rim and fill.
@@ -279,14 +284,15 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     }),
   ]
 
-  const completeScene = () => {
+  const completeScene = (fromWriting = false) => {
+    if (!restoring && !ending.completing && !fromWriting) return
     if (!canAct() || step === 'done') return
     step = 'done'
     dragHandle?.setEnabled(false)
     wishHandle?.setEnabled(false)
-    if (!restoring) ctx.onProgress?.(3)
+    if (!restoring) { ctx.onProgress?.(3); if (disposed || !(canAct())) return }
     syncOverlayForStep()
-    overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    if (!restoring) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
 
   const goHang = () => {
@@ -395,13 +401,20 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     window.addEventListener('blur', onInputBlur)
     actionBtn.addEventListener('click', onActionTap)
 
+    let submittingWish = false
     wishHandle = gestures.createWishWrite({
       maxLen: 40,
       saves: ctx.saveWish !== undefined,
       onSubmit: (text) => {
-        if (step !== 'wish' || !canAct()) return
-        ctx.saveWish?.(text)
-        completeScene()
+        if (submittingWish || disposed || step !== 'wish' || !canAct()) return
+        submittingWish = true
+        try {
+          ctx.saveWish?.(text)
+          if (disposed || !canAct()) return
+          completeScene(true)
+        } finally {
+          submittingWish = false
+        }
       },
     })
     wishHandle.mount(wishSlot, {})
@@ -478,10 +491,13 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
       )
       camera.lookAt(cameraLookAt)
 
+      ending.update(dt)
+      if (disposed || !(canAct())) return
       styleRenderer.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true
       resizeObserver?.disconnect()
       resizeObserver = null

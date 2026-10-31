@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -134,16 +135,21 @@ export function createCatalanFestivalGiant(ctx: SceneContext): SceneInstance {
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: () => active(), duration: 3, motion: 'glow',
+    targets: () => [figure], cancelInput: () => pointer.cancel(), complete: () => advance(),
+  })
   const sync = () => {
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !active() || !!transition || checkpoint === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = checkpoint < 3 && !transition ? 'auto' : 'none'
     setSafeText(ui.actionBtn, checkpoint === 0 ? '别上小花章' : checkpoint === 1 ? '移到圆形展台' : '轻点底座静看', safe)
     setSafeText(ui.hintEl, transition ? COPY.moving : checkpoint === 0 ? COPY.assemble : checkpoint === 1 ? COPY.suspend : checkpoint === 2 ? COPY.rest : COPY.done, safe)
+    ending.sync(checkpoint === 2 && !transition)
   }
   function settle() { if (!active() || !transition) return; checkpoint = (transition.step + 1) as Checkpoint; transition = null; restore(); sync(); ctx.onProgress?.(checkpoint); feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .013 }) }
   function advance(placed = false) {
+    if (checkpoint === 2 && !ending.completing) return
     if (!active() || (pointer.isBusy() && !placed) || transition || checkpoint === 3) return
-    if (checkpoint === 2) { checkpoint = 3; restore(); sync(); ctx.onProgress?.(3); feedback.impact({ freqs: [392, 587.33], duration: .22, gain: .013 }); overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })); return }
+    if (checkpoint === 2) { checkpoint = 3; restore(); sync(); ctx.onProgress?.(3); if (!active()) return; feedback.impact({ freqs: [392, 587.33], duration: .22, gain: .013 }); if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })); return }
     transition = { step: checkpoint, time: 0, from: moving().position.clone() }; sync(); if (ctx.isReducedMotion?.()) settle()
   }
   const action = () => { if (!active() || pointer.isBusy() || transition || checkpoint === 3) return; feedback.prepare(); advance() }
@@ -163,8 +169,11 @@ export function createCatalanFestivalGiant(ctx: SceneContext): SceneInstance {
         if (!ctx.isReducedMotion?.()) moving().position.y += Math.sin(t * Math.PI) * .15
         if (transition.time === 1) settle()
       }
-      style.render()
+      if (!active()) return
+      ending.update(dt)
+      if (!active()) return
+      scene.updateMatrixWorld(true); camera.updateMatrixWorld(true); style.render()
     },
-    dispose() { if (disposed) return; disposed = true; pointer.dispose(); stopResize(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() { if (disposed) return; ending.dispose(); disposed = true; pointer.dispose(); stopResize(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }
 }

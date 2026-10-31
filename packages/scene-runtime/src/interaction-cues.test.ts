@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import * as THREE from 'three'
-import { afterEach, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { addInteractionCue, createInteractionCues } from './interaction-cues'
 const handles: ReturnType<typeof createInteractionCues>[]=[]
+// Geometry and lifecycle tests do not rasterize fonts; the browser verifies the actual texture.
+beforeEach(()=>{ vi.spyOn(HTMLCanvasElement.prototype,'getContext').mockReturnValue(null) })
 afterEach(()=>{ handles.splice(0).forEach(h=>h.dispose()); document.body.replaceChildren(); vi.restoreAllMocks() })
 function mount() {
   const host=document.createElement('div'), canvas=document.createElement('canvas'), hit=document.createElement('div'), overlay=document.createElement('div')
@@ -17,7 +19,7 @@ function mount() {
   const remove=addInteractionCue(source,{kind:'drag',label:'拖起小物',enabled:()=>enabled,destination:target,targetLabel:'放到这里'})
   const cues=createInteractionCues(canvas,scene,camera); handles.push(cues)
   const update=()=>{scene.updateMatrixWorld(true); cues.update()}; update()
-  return {host,hit,canvas,scene,source,target,cues,update,remove,disable:()=>{enabled=false}}
+  return {host,hit,canvas,scene,camera,source,target,cues,update,remove,disable:()=>{enabled=false}}
 }
 it('projects the actual source and target with passive labels',()=>{
   const s=mount(), source=s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!, target=s.host.querySelector<HTMLElement>('[data-cue-role="target"]')!
@@ -31,15 +33,19 @@ it('projects the actual source and target with passive labels',()=>{
 })
 it('keeps optional inspection help visible in the guide shelf and follows its current locale and phase',()=>{
   const s=mount(), hint=document.createElement('div')
+  const board=s.scene.getObjectByName('interaction-cue-placard') as THREE.Sprite
+  const originalHeight=(board.material.map!.image as HTMLCanvasElement).height
   hint.className='scene-hint'; hint.dataset.placementInspection='true'; hint.title='Two fingers turn the object.'
   s.host.querySelector('.scene-overlay-host')!.append(hint); s.update()
   const help=s.host.querySelector('.scene-cue-guides .scene-inspection-help')!
   expect(help?.textContent).toBe(hint.title)
+  expect((board.material.map!.image as HTMLCanvasElement).height).toBeGreaterThan(originalHeight)
   expect(s.hit.contains(help)).toBe(false)
   hint.title='Deux doigts pour tourner.'; s.update()
   expect(help.textContent).toBe(hint.title)
   delete hint.dataset.placementInspection; s.update()
   expect(s.host.querySelector('.scene-inspection-help')).toBeNull()
+  expect((board.material.map!.image as HTMLCanvasElement).height).toBe(originalHeight)
 })
 it('shows direction in the separate guide and follows a moving destination without drawing across the object',()=>{
   const s=mount()
@@ -124,4 +130,44 @@ it('keeps cue coordinates on the canvas when its positioned host has a border',(
   const layer=s.host.querySelector<HTMLElement>('.scene-object-cues')!
   expect(layer.style.left).toBe('0px');expect(layer.style.top).toBe('0px')
   expect(Number(s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!.dataset.x)).toBeCloseTo(160)
+})
+
+it('puts the instruction in the Three scene and connects its leader to the actual moving white point',()=>{
+  const s=mount()
+  const board=s.scene.getObjectByName('interaction-cue-placard') as THREE.Sprite
+  const leader=s.scene.getObjectByName('interaction-cue-leader') as THREE.Line
+  expect(board?.isSprite).toBe(true); expect(leader?.isLine).toBe(true)
+  expect(board.layers.test(s.source.layers)).toBe(false)
+  const end=()=>new THREE.Vector3().fromBufferAttribute(leader.geometry.getAttribute('position'),1).project(s.camera)
+  expect(end().x).toBeCloseTo(0); expect(end().y).toBeCloseTo(0)
+  s.source.position.set(-.4,.2,0); s.update()
+  const projected=s.source.getWorldPosition(new THREE.Vector3()).project(s.camera)
+  expect(end().x).toBeCloseTo(projected.x); expect(end().y).toBeCloseTo(projected.y)
+  expect(s.host.style.getPropertyValue('--cue-guide-height')).toBe('')
+})
+
+it('keeps a long localized placard within the canvas and releases all of its GPU resources',()=>{
+  const s=mount(), cue=s.source.userData.interactionCues[0]
+  cue.label='Déplacez délicatement le petit objet vers le repère indiqué'; s.source.position.set(.9,.9,0); s.update()
+  const board=s.scene.getObjectByName('interaction-cue-placard') as THREE.Sprite
+  const leader=s.scene.getObjectByName('interaction-cue-leader') as THREE.Line
+  const center=board.position.clone().project(s.camera)
+  const right=board.position.clone().add(new THREE.Vector3(board.scale.x/2,0,0)).project(s.camera)
+  expect(center.x-(right.x-center.x)).toBeGreaterThanOrEqual(-1)
+  expect(right.x).toBeLessThanOrEqual(1)
+  const texture=board.material.map!, disposeMap=vi.fn(), disposeMat=vi.fn(), disposeLine=vi.fn()
+  texture.addEventListener('dispose',disposeMap); board.material.addEventListener('dispose',disposeMat); leader.geometry.addEventListener('dispose',disposeLine)
+  s.disable(); s.update()
+  expect(s.scene.getObjectByName('interaction-cue-placard')).toBeUndefined()
+  expect(disposeMap).toHaveBeenCalledOnce(); expect(disposeMat).toHaveBeenCalledOnce(); expect(disposeLine).toHaveBeenCalledOnce()
+})
+
+it('hides the Three placard for a paused overlay and never creates one for compact instrument points',()=>{
+  const s=mount(), layer=s.host.querySelector<HTMLElement>('.scene-object-cues')!
+  layer.hidden=true; s.update()
+  const root=s.scene.getObjectByName('interaction-cue-presentations')!
+  expect(root.visible).toBe(false)
+  layer.hidden=false; s.source.userData.interactionCues[0].compact=true; s.update()
+  expect(s.scene.getObjectByName('interaction-cue-placard')).toBeUndefined()
+  expect(s.host.querySelector('[data-cue-role="source"]')).not.toBeNull()
 })

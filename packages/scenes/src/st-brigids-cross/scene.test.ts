@@ -1,8 +1,18 @@
 // @vitest-environment jsdom
+// jsdom has no Canvas 2D; exercise the explicit unavailable-texture fallback quietly.
+beforeEach(() => { vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null) })
+
+// Isolate spatial gestures, geometry and save callbacks from shared ending scheduling.
+// The real automatic timer, animation and lifecycle contract are covered across all
+// 20 scenes in ../quiet-ending-workshop-scenes.test.ts without this mock.
+vi.mock('../quiet-ending', () => ({
+  createQuietEnding: () => ({ sync() {}, update() {}, dispose() {}, completing: true, running: false }),
+}))
+
 import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
-import { afterEach, expect, it, vi } from 'vitest'
+import { beforeEach, afterEach, expect, it, vi } from 'vitest'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from '../contract'
 import * as mod from './index'

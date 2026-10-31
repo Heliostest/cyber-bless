@@ -5,6 +5,7 @@ import { createCozyEnvironment } from "./cozy-environment";
 import { createInteractionCues } from "./interaction-cues";
 import { createStylePreviewCapture } from "./style-preview-capture";
 import { captureSceneFrame, registerSceneCapture } from "./scene-capture";
+import { CUE_LAYER } from "./cue-placard";
 
 /** Content defaults remain independent of browser-local debug overrides. */
 export function createDebugRenderStyle(
@@ -16,7 +17,16 @@ export function createDebugRenderStyle(
   let disposed = false, rendered = false, needsPreviewRefresh = true;
   let lastWidth = 0, lastHeight = 0;
   const style = createRenderStyle(renderer, scene, camera);
-  const cues = createInteractionCues(renderer.domElement, scene, camera);
+  const cues = createInteractionCues(renderer.domElement, scene, camera, () => {
+    // A pause can stop the scene loop before another frame clears its labels.
+    if (!disposed && rendered) { cues.update(); draw(); }
+  });
+  function draw(includeCues = true) {
+    const mask = camera.layers.mask;
+    try { camera.layers.disable(CUE_LAYER); style.render(); }
+    finally { camera.layers.mask = mask; }
+    if (includeCues) cues.render(renderer);
+  }
   const objectPresentation = !!renderer.domElement.closest?.('[data-scene-presentation="object"]');
   const environment = objectPresentation ? undefined : createCozyEnvironment(scene, { id, invalidate });
   if (environment) {
@@ -29,21 +39,28 @@ export function createDebugRenderStyle(
       }
     });
   }
-  const capture = createStylePreviewCapture(renderer, scene, camera, style,
+  const capture = createStylePreviewCapture(renderer, scene, camera, { getStyle: style.getStyle, render: draw },
     selected => environment?.prepare(renderer, selected, { advanceMotion: false }));
   const releaseCapture = registerSceneCapture(renderer.domElement, () => {
     if (!rendered || disposed) return undefined;
-    return captureSceneFrame(renderer.domElement, scene, () => {
-      environment?.prepare(renderer, style.getStyle(), { advanceMotion: false });
-      style.render();
-    });
+    try {
+      return captureSceneFrame(renderer.domElement, scene, () => {
+        environment?.prepare(renderer, style.getStyle(), { advanceMotion: false });
+        draw(false);
+      });
+    } finally { cues.render(renderer); }
   });
   const registration = debugStyles.register(id, label, (selected, parameters) => {
     style.setStyle(selected);
     style.setParameters(parameters);
     invalidate();
   }, renderer.domElement.closest?.(".app-shell") ?? undefined,
-  (selected, parameters) => rendered && !disposed ? capture(selected, parameters) : null);
+  (selected, parameters) => {
+    if (!rendered || disposed) return null;
+    const mask = camera.layers.mask;
+    try { camera.layers.disable(CUE_LAYER); return capture(selected, parameters); }
+    finally { camera.layers.mask = mask; }
+  });
   if (environment || objectPresentation) registration.setDefault("toon-soft");
   return {
     setStyle(selected: Parameters<typeof registration.setDefault>[0]) {
@@ -60,8 +77,8 @@ export function createDebugRenderStyle(
     render() {
       if (disposed) return;
       environment?.prepare(renderer, style.getStyle());
-      style.render();
       cues.update();
+      draw();
       registration.report(style.getStyle());
       if (!rendered || needsPreviewRefresh) {
         rendered = true; needsPreviewRefresh = false;

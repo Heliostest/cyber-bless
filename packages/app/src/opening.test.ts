@@ -43,11 +43,12 @@ it('prepares a first-time opening instead of showing the empty home or navigatio
   ui.unmount();
 });
 
-it('teaches three real walks, permits an empty wish, then opens a home with three replays and a different daily scene', async () => {
+it('completes three real walks, permits an empty wish, then opens a home with three replays and a different daily scene', async () => {
   let ui = await open();
   for (let index = 0; index < 3; index++) {
     await ui.tap('.opening-start');
-    expect(ui.host.querySelector('.opening-guide')?.getAttribute('data-step')).toBe(String(index + 1));
+    expect(ui.host.querySelector('.library-scene-stage')?.getAttribute('data-scene')).toBe(ids[index]);
+    expect(ui.state().opening?.completed).toBe(index);
     expect(ui.host.querySelector('.scene-done-row')).toBeNull();
     await ui.walk();
     const collect = ui.host.querySelector('[data-opening-collect]')!;

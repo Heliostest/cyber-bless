@@ -16,11 +16,12 @@ import { SceneLoadFailure } from "./scene-load-failure";
 import { sceneWish } from "./scene-wish";
 import { dailyPrimaryScene, isWishScene, sceneRitual, sceneStage, sceneSteps, } from "./scene-placement";
 import { rectOf, rewardOriginOf } from "./reward-flight";
-import { OpeningGuide, OpeningDone } from './opening';
+import { OpeningDone } from './opening';
 import { OptionalSceneWish } from './optional-scene-wish';
 import { useSceneVisualPreference } from "./scene-visual-preference";
 import { SceneRewardReveal } from "./scene-reward-reveal";
 import { SceneShareButton } from "./ritual-share";
+import { SceneStageCard } from "./scene-stage-card";
 export function ProceduralScene({ entry, progress, checkpoint, saveWish, returning, initialVariant, onVariantChange, failed, }: {
     entry: CatalogEntry;
     progress: number;
@@ -331,16 +332,16 @@ function LoadedScene({ entry, lease, wishId, daily, vessel, replay, opening, fai
         : undefined, [lease]);
     return (<>
       {rewardRevealed && <SceneRewardReveal sceneId={entry.id} reducedMotion={state.settings.reducedMotion}/>}
-      {intention && <aside className="scene-intention" data-kind={returnWish ? "blessing" : intention.kind} aria-label={tr("\u8FD9\u4E00\u573A\u7684\u5FC3\u610F")}>
-        <strong>{returnWish ? tr("\u4E3A\u5DF2\u7ECF\u5B9E\u73B0\u7684\u5FC3\u613F\u8FD8\u613F") : translateScene(intention.label)}</strong>
-        <p>{returnWish ? tr("\u4E3A\u300C{p0}\u300D\u8FD8\u613F\u3002{p1}", { p0: returnWish.title, p1: gratitudeAction }) : translateScene(intention.action)}</p>
-      </aside>}
       {returnWish && (<p className="scene-caption">{message('app.return.caption', { title: returnWish.title })}</p>)}
       {daily && (<p className="scene-caption">{tr(SCENE_DAILY_CAPTION)}</p>)}
       <p className="scene-progress sr-only" role="status">
         {entry.engine === 'woodfish@1' && !woodfishFinished
             ? message('app.woodfish.progress', { n: woodfishStrikes, min: steps }) : tr("\u5DF2\u5B8C\u6210 {p0} / {p1}", { p0: progress, p1: steps })}
       </p>
+      <SceneStageCard intention={intention && <aside className="scene-intention" data-kind={returnWish ? "blessing" : intention.kind} aria-label={tr("\u8FD9\u4E00\u573A\u7684\u5FC3\u610F")}>
+        <strong>{returnWish ? tr("\u4E3A\u5DF2\u7ECF\u5B9E\u73B0\u7684\u5FC3\u613F\u8FD8\u613F") : translateScene(intention.label)}</strong>
+        <p>{returnWish ? tr("\u4E3A\u300C{p0}\u300D\u8FD8\u613F\u3002{p1}", { p0: returnWish.title, p1: gratitudeAction }) : translateScene(intention.action)}</p>
+      </aside>}>
       {entry.engine === "woodfish@1" ? (<Woodfish sceneId={entry.id} contentClient={client} active={active} reducedMotion={state.settings.reducedMotion} view="front" disabled={woodfishFinished} strikes={woodfishStrikes} minimumStrikes={steps} instruction={instruction} onFinish={() => {
                 if (active && !woodfishFinished)
                     checkpoint(steps);
@@ -352,6 +353,7 @@ function LoadedScene({ entry, lease, wishId, daily, vessel, replay, opening, fai
                 checkpoint(Math.min(steps - 1, woodfishStrikes + 1), woodfishStrikes + 1);
                 return true;
             }} onImpact={feedback} onInstruction={setInstruction} onFailure={failed}/>) : (<ProceduralScene entry={entry} progress={progress} checkpoint={checkpoint} saveWish={vessel && returnWish ? undefined : saveWish} returning={Boolean(returnWish)} initialVariant={record?.variant} onVariantChange={variant => dispatch({ type: "scene.variant", id: entry.id, variant })} failed={failed}/>)}
+      </SceneStageCard>
       {progress >= steps && (<div className="scene-done-row">
           {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} favorite={favoriteChip} prayer={prayerButton}/> : returnedFor ? (<>
               {/* No flight: the note is on the wish already, and the ritual
@@ -485,7 +487,6 @@ export function SceneExperience({ entry, wishId, daily, vessel, replay, opening,
     if (!entry)
         return <p role="alert">{tr("\u573A\u666F\u4FE1\u606F\u7F3A\u5931\uFF0C\u8BF7\u8FD4\u56DE\u76EE\u5F55\u91CD\u8BD5\u3002")}</p>;
     return (<section className="scene-experience" aria-label={localizedTitle(entry)}>
-      {opening && <OpeningGuide sceneId={entry.id}/>}
       <RitualNarrativeBlurb sceneId={entry.id}/>
       {error ? (<SceneLoadFailure message={error} onRetry={() => setAttempt(n => n + 1)}/>) : loaded ? (<>
           {loaded.caption && <p className="scene-caption" lang="und">{loaded.caption}</p>}

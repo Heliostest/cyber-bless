@@ -544,7 +544,6 @@ button:hover:not(:disabled) {
   font-size: 22px;
   font-weight: 900;
 }
-.opening-copy,
 .opening-summary > p {
   margin: 10px 0 18px;
   color: var(--ink-soft);
@@ -572,22 +571,6 @@ button:hover:not(:disabled) {
 }
 .opening-keepsakes small {
   color: var(--ink-soft);
-}
-.opening-guide {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  margin: 2px 0 10px;
-  border: 1px solid #ffffffb3;
-  border-radius: 14px;
-  background: #ffffff70;
-  color: var(--mint-ink);
-  font-size: 13px;
-}
-.opening-guide > p {
-  margin: 0;
-  line-height: 1.5;
 }
 .opening-complete > .scene-completion-actions {
   margin-top: 12px;
@@ -3234,6 +3217,22 @@ button:hover:not(:disabled) {
 .library-scene-stage:has(.scene-wish-slot:not([hidden]) > .scene-craft-choices) {
   --wish-box: 72px;
 }
+.scene-stage-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 4px solid var(--rim);
+  border-radius: 30px;
+  overflow: hidden;
+  background: var(--sand);
+  box-shadow: 0 0 0 2px var(--edge), var(--soft-drop);
+}
+.scene-stage-card > .library-scene-stage {
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
 .scene-intention {
   margin: 0 0 12px;
   padding: 10px 14px;
@@ -3244,6 +3243,14 @@ button:hover:not(:disabled) {
 }
 .scene-intention strong { font-size: 14px; }
 .scene-intention p { margin: 4px 0 0; font-size: 13px; line-height: 1.65; }
+.scene-stage-card > .scene-intention {
+  flex: 0 0 auto;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--rim);
+  border-radius: 0;
+  overflow-wrap: anywhere;
+}
 .scene-post-wish { width: min(440px, 100%); margin: 12px auto 0; }
 .scene-post-wish form { display: grid; gap: 8px; padding: 14px; border-radius: 14px; background: var(--paper, #fffaf1); }
 .scene-post-wish label { font-size: 14px; font-weight: 600; }
@@ -3943,19 +3950,14 @@ button:hover:not(:disabled) {
 .scene-cue-guides,
 .scene-cue-guides * { pointer-events: none; }
 .scene-cue-guides {
-  grid-area: hint;
-  align-self: center;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 6px 14px;
-  min-width: 0;
-  margin-top: 12px;
-  color: var(--ink-soft);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.5;
+  /* Text mirrors the Three.js placards; it no longer consumes a footer row. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 .scene-cue-guide {
   display: inline-flex;
@@ -3976,6 +3978,42 @@ button:hover:not(:disabled) {
   animation: scene-cue-copy 2.4s ease-in-out var(--cue-delay, 0ms) infinite;
 }
 .scene-cue-guides[hidden] { display: none; }
+.scene-ending-status {
+  grid-area: canvas;
+  z-index: 4;
+  align-self: end;
+  justify-self: center;
+  display: block;
+  max-width: calc(100% - 28px);
+  margin-bottom: 16px;
+  opacity: .65;
+  pointer-events: none;
+}
+.scene-ending-status[hidden] { display: none; }
+.scene-ending-status progress {
+  display: block;
+  width: 88px;
+  max-width: 100%;
+  height: 3px;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #fffaf05c;
+  color: #6a9b8e;
+  accent-color: #6a9b8e;
+}
+.scene-ending-status progress::-webkit-progress-bar { background: #fffaf05c; }
+.scene-ending-status progress::-webkit-progress-value { background: #6a9b8e; border-radius: 999px; }
+.scene-ending-status progress::-moz-progress-bar { background: #6a9b8e; border-radius: 999px; }
+.library-scene-stage:has(.scene-overlay-host[data-quiet-ending]) .scene-object-cues { visibility: hidden; }
+.scene-overlay-host[data-quiet-ending] > .scene-hint {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
 .scene-cue-direction {
   display: grid;
   flex: 0 0 24px;
@@ -3996,10 +4034,10 @@ button:hover:not(:disabled) {
 .scene-cue-guide[data-kind='tap'] .scene-cue-direction {
   animation: scene-cue-tap 2.4s ease-in-out var(--cue-delay, 0ms) infinite;
 }
-/* The short guide replaces the visual paragraph, which remains available to
-   assistive technology. Both occupy the shelf, never the subject's canvas. */
+/* Keep the original live hint for assistive technology. The current action
+   and its direction are drawn beside the real object in the canvas. */
 .library-scene-stage:has(.scene-cue-guides:not([hidden]) > .scene-cue-guide:not([hidden])) {
-  --tray: max(112px, calc(var(--cue-guide-height, 24px) + 88px));
+  --tray: 80px;
 }
 .scene-overlay-host:has(> .scene-cue-guides:not([hidden]) > .scene-cue-guide:not([hidden])) > .scene-hint {
   position: absolute;
@@ -4009,20 +4047,6 @@ button:hover:not(:disabled) {
   padding: 0;
   overflow: hidden;
   clip-path: inset(50%);
-}
-/* Show the changing completion state in the guide's existing shelf row, so
-   feedback is visible without resizing or moving the canvas under a finger. */
-.scene-overlay-host:has(> .scene-cue-guides:not([hidden]) > .scene-cue-guide:not([hidden])) > .scene-hint:is([data-ready='true'], [data-drop-ready='true'], [data-progress='true']) {
-  position: static;
-  width: auto;
-  height: auto;
-  margin: 12px 0 0;
-  padding: 0 4px;
-  overflow: visible;
-  clip-path: none;
-}
-.scene-overlay-host:has(> .scene-hint:is([data-ready='true'], [data-drop-ready='true'], [data-progress='true'])) > .scene-cue-guides {
-  visibility: hidden;
 }
 .library-scene-stage:has(.scene-overlay-host[inert]) .scene-object-cues,
 .scene-overlay-host[inert] .scene-cue-guides { visibility: hidden; }
@@ -4560,10 +4584,15 @@ img.scene-icon {
   min-width: 0;
   min-height: 0;
 }
-.app-shell[data-immersive] .scene-experience > :not(.library-scene-stage),
-.app-shell[data-immersive] .ritual-page > :not(.library-scene-stage),
+.app-shell[data-immersive] .scene-experience > :not(.library-scene-stage, .scene-stage-card),
+.app-shell[data-immersive] .ritual-page > :not(.library-scene-stage, .scene-stage-card),
 .app-shell[data-immersive] .completion > :not(.celebration) { flex-shrink: 0; }
-.app-shell[data-immersive] .scene-experience > .library-scene-stage {
+.app-shell[data-immersive] .scene-experience > .scene-stage-card {
+  flex: 1 1 0;
+  min-height: 0;
+}
+.app-shell[data-immersive] .scene-experience > .library-scene-stage,
+.app-shell[data-immersive] .scene-stage-card > .library-scene-stage {
   --canvas-h: max(0px, calc(100% - var(--tray) - var(--wish-box)));
   flex: 1 1 0;
   min-height: 0;
@@ -4583,6 +4612,7 @@ img.scene-icon {
 .app-shell[data-immersive] .scene-wish-saved:empty { display: none; }
 .app-shell[data-immersive] .scene-wish-saved { font-size: 13px; line-height: 1.5; }
 .app-shell[data-immersive] .scene-experience:has(.scene-done-row) > .scene-intention,
+.app-shell[data-immersive] .scene-experience:has(.scene-done-row) > .scene-stage-card > .scene-intention,
 .app-shell[data-immersive] .scene-experience:has(.scene-done-row) > .scene-caption { display: none; }
 .app-shell[data-immersive] .scene-done-row .reward-slot {
   flex-direction: row;
@@ -4619,7 +4649,6 @@ img.scene-icon {
   border-radius: 22px;
   box-shadow: 0 0 0 2px var(--edge), 0 -12px 28px #143c3926;
 }
-.app-shell[data-immersive] .opening-guide { margin: 0; padding-block: 6px; font-size: 12px; }
 .app-shell[data-immersive] .opening-complete { width: 100%; text-align: center; }
 .app-shell[data-immersive] .opening-complete > .scene-completion-actions { margin: 8px auto 0; }
 .app-shell[data-immersive] .scene-download,
@@ -4657,7 +4686,6 @@ img.scene-icon {
 }
 @media (max-height: 450px) {
   /* In landscape or above a keyboard, keep the instrument touchable first. */
-  .app-shell[data-immersive] .scene-intention,
   .app-shell[data-immersive] .scene-caption,
   .app-shell[data-immersive] .ritual-feedback,
   .app-shell[data-immersive] .ritual-counter { display: none; }
@@ -4756,11 +4784,16 @@ img.scene-icon {
   min-height: 100%;
   height: auto;
 }
-.app-shell[data-immersive][data-layout-scroll] :is(.scene-experience, .ritual-page) > .library-scene-stage {
+.app-shell[data-immersive][data-layout-scroll] :is(.scene-experience, .ritual-page) > .library-scene-stage,
+.app-shell[data-immersive][data-layout-scroll] :is(.scene-experience, .ritual-page) > .scene-stage-card {
   --canvas-h: var(--scene-min-canvas, 224px);
   flex: 0 0 var(--scene-min-stage, 382px);
   height: var(--scene-min-stage, 382px);
   min-height: var(--scene-min-stage, 382px);
+}
+.app-shell[data-immersive][data-layout-scroll] .scene-stage-card > .library-scene-stage {
+  --canvas-h: var(--scene-min-canvas, 224px);
+  flex: 1 0 auto;
 }
 .app-shell[data-immersive][data-layout-scroll] .celebration {
   min-height: var(--scene-min-canvas, 224px);

@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+// Isolate the existing object, geometry and callback contract from the ending clock.
+// Real automatic endings are covered by quiet-ending-legacy-scenes and the craft integration suites.
+vi.mock('./quiet-ending', () => ({ createQuietEnding: () => ({
+  running: false, completing: true, sync() {}, update() {}, dispose() {},
+}) }))
 import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'

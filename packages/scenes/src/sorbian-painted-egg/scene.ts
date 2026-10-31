@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -163,16 +164,29 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
       if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: active, duration: 3, motion: 'glow',
+    targets: () => [egg], cancelInput: () => pointer.cancel(), complete: () => finish() })
   const sync = () => {
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !active() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = !motion && at < 3 ? 'auto' : 'none'
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(active() && !returning && at === 2 && !motion)
     setSafeText(ui.actionBtn, at === 0 ? COPY.paintAction : at === 1 ? COPY.placeAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.painting : COPY.placing : at === 0 ? COPY.paint : at === 1 ? COPY.place : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    ending.sync(at === 2 && !motion)
   }
   function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); feedback.impact({ freqs: [440, 554.37], duration: .19, gain: .012, type: 'triangle' }) }
   function begin(placed = false) { if (!active() || (pointer.isBusy() && !placed) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
-  function finish(text = '') { if (!active() || pointer.isBusy() || motion || at !== 2) return; at = 3; restore(); sync(); if (text.trim() && !returning) ctx.saveWish?.(text.trim()); ctx.onProgress?.(3); feedback.impact({ freqs: [440, 659.25], duration: .24, gain: .012 }); overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })) }
+  function finish(text = '') {
+    if (!active() || pointer.isBusy() || motion || at !== 2) return
+    if (!text.trim() && !ending.completing) return
+    at = 3; restore(); sync()
+    if (text.trim() && !returning) ctx.saveWish?.(text.trim())
+    if (disposed) return
+    ctx.onProgress?.(3)
+    if (!active()) return
+    feedback.impact({ freqs: [440, 659.25], duration: .24, gain: .012 })
+    if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+  }
   const action = () => { if (!active() || pointer.isBusy() || motion || at === 3) return; feedback.prepare(); if (at < 2) begin(); else finish() }
   const blur = () => { focused = false; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => { const aspect = sizeStage(canvas, renderer, style, camera); camera.position.set(0, 3.45, 5.55 + portraitBoost(aspect, 7)); camera.lookAt(0, 1.20, 0); matrices() }
@@ -201,8 +215,10 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
         } else { egg.position.lerpVectors(motion.from, SEATED, t); if (!reduced()) egg.position.y += .20 * Math.sin(Math.PI * t) }
         if (motion.time === 1) settle()
       }
+      ending.update(dt)
+      if (disposed || !active()) return
       matrices(); style.render()
     },
-    dispose() { if (disposed) return; disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() { if (disposed) return; ending.dispose(); disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }
 }

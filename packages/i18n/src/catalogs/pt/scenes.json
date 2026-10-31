@@ -2269,5 +2269,8 @@
   "scene.mezuzah-doorpost.intention.07f237ad": "Erga o estojo preparado, mova-o até o batente direito e fixe-o com cuidado.",
   "scene.sri-lankan-bodhi-puja.intention.ba68dcf1": "Erga a jarra, aproxime-a das raízes da árvore bodhi e verta lentamente a água em oferenda.",
   "scene.ukrainian-didukh.intention.fa0b869c": "Desejar fartura e paz à família",
-  "scene.ukrainian-didukh.intention.9ba3c0a2": "Junte os talos, amarre a fita e coloque o feixe firme no canto, com um desejo para sua família."
+  "scene.ukrainian-didukh.intention.9ba3c0a2": "Junte os talos, amarre a fita e coloque o feixe firme no canto, com um desejo para sua família.",
+  "scene.autoEnding.status": "Finalizando. A conclusão será automática em instantes.",
+  "scene.autoEnding.writing": "Quando terminar, toque em “Acabei de escrever” para continuar.",
+  "scene.autoEnding.progress": "Progresso de finalização"
 }

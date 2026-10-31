@@ -2269,5 +2269,8 @@
   "scene.mezuzah-doorpost.intention.07f237ad": "Lift the prepared case, move it to the right doorpost, then gently affix it.",
   "scene.sri-lankan-bodhi-puja.intention.ba68dcf1": "Lift the jug, bring it near the bodhi tree’s roots and slowly pour a water offering.",
   "scene.ukrainian-didukh.intention.fa0b869c": "Wish your family abundance and peace",
-  "scene.ukrainian-didukh.intention.9ba3c0a2": "Gather the stalks, tie the ribbon, then stand the sheaf securely in the corner, holding a wish for your family."
+  "scene.ukrainian-didukh.intention.9ba3c0a2": "Gather the stalks, tie the ribbon, then stand the sheaf securely in the corner, holding a wish for your family.",
+  "scene.autoEnding.status": "Finishing up. This will complete shortly.",
+  "scene.autoEnding.writing": "When ready, choose “Done writing” to continue.",
+  "scene.autoEnding.progress": "Finishing progress"
 }

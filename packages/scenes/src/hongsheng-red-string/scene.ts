@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -132,6 +133,8 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
     claspHead.visible = checkpoint === 1; claspSocket.visible = checkpoint >= 1; tail.visible = checkpoint === 1
     claspHead.position.copy(CLASP_HOME); updateTail(); matrices()
   }
+  const ending = createQuietEnding(ctx, { ui, isActive: active, duration: 3, motion: 'glow',
+    targets: () => [ring], cancelInput: () => pointer.cancel(), complete: () => finish() })
   function sync() {
     delete ui.hintEl.dataset.progress
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !active() || !!motion || checkpoint === 3
@@ -139,6 +142,7 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
     wishSlot.hidden = returning || checkpoint !== 2; writer?.setEnabled(active() && checkpoint === 2 && !returning && !motion)
     setSafeText(ui.actionBtn, [COPY.windAction, COPY.claspAction, COPY.quietAction, COPY.quietAction][checkpoint], safe)
     setSafeText(ui.hintEl, motion ? COPY.moving : [COPY.wind, COPY.clasp, returning ? COPY.returning : COPY.quiet, COPY.done][checkpoint], safe)
+    ending.sync(checkpoint === 2 && !motion)
   }
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(), dragPoint = new THREE.Vector3(), offset = new THREE.Vector3(), down = new THREE.Vector2()
   const touch = createTouchTarget(canvas, camera, scene)
@@ -200,12 +204,13 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
   }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || checkpoint !== 2) return
+    if (!text.trim() && !ending.completing) return
     const line = text.trim()
     // Set terminal state before host callbacks so reentrant submissions cannot save twice.
     checkpoint = 3; pose(); sync()
     if (line && !returning) ctx.saveWish?.(line)
-    ctx.onProgress?.(3); feedback.impact({ freqs: [330, 495], duration: .3, gain: .017 })
-    overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    if (disposed) return; ctx.onProgress?.(3); if (!active()) return; feedback.impact({ freqs: [330, 495], duration: .3, gain: .017 })
+    if (!active()) return; overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
   const action = () => { if (!active() || pointer.isBusy() || motion || checkpoint === 3) return; feedback.prepare(); if (checkpoint < 2) begin(); else finish() }
   const blur = () => { focused = false; pointer.cancel(); sync() }
@@ -250,10 +255,13 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
         } else { claspHead.position.lerpVectors(motion.from, SOCKET, t); updateTail() }
         matrices(); if (motion.time === 1) settled()
       }
+      ending.update(dt)
+      if (disposed || !active()) return
       style.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       style.dispose(); disposeTree(scene); Object.values(lights).forEach(l => l.dispose()); renderer.dispose(); renderer.forceContextLoss()

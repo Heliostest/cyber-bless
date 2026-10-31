@@ -1,4 +1,5 @@
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -184,6 +185,7 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
       dragging = false; if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: inputActive, duration: 3, motion: 'glow', targets: () => [print], cancelInput: () => pointer.cancel(), complete: () => finish() })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
@@ -191,6 +193,7 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(inputActive() && !returning && at === 2 && !motion)
     setSafeText(ui.actionBtn, at === 0 ? '向右梳开彩纹' : at === 1 ? '按住白纸，向上轻揭' : '轻点彩纸静看', safe)
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.combing : COPY.peeling : at === 0 ? COPY.comb : at === 1 ? COPY.peel : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    ending.sync(at === 2 && !motion)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const revision = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && revision === lifecycleVersion }
@@ -205,6 +208,7 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
   }
   function finish(text = '') {
     if (!inputActive() || pointer.isBusy() || motion || at !== 2) return
+    if (!text.trim() && !ending.completing) return
     withHostCallbacks(() => {
       at = 3; restore(); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()
       if (text.trim() && !returning) ctx.saveWish?.(text.trim())
@@ -261,11 +265,12 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
         } else peelAmount = THREE.MathUtils.lerp(motion.peel, 1, ease(motion.time))
         setShape(); if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); style.render() }
+      ending.update(dt)
+      if (!disposed && active()) { matrices(); style.render() }
     },
     dispose() {
       if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      ending.dispose(); disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world)
       // Exactly one of the immutable underside materials is outside the tree.

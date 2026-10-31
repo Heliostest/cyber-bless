@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { CUE_LAYER, createCuePlacard, type CueBox } from './cue-placard'
 export type InteractionCue = {
   kind: 'tap' | 'drag' | 'rotate'
   label: string
@@ -20,28 +21,41 @@ export function addInteractionCue(object: THREE.Object3D, cue: InteractionCue) {
   return () => { const i = cues.indexOf(cue); if (i >= 0) cues.splice(i,1) }
 }
 /** Presentation only: gestures and settlement remain owned by the scene. */
-export function createInteractionCues(canvas: HTMLCanvasElement | undefined, scene: THREE.Scene, camera: THREE.Camera) {
+export function createInteractionCues(canvas: HTMLCanvasElement | undefined, scene: THREE.Scene, camera: THREE.Camera, redraw: () => void = () => {}) {
   const host = canvas?.parentElement
-  if (!canvas || !host) return { update() {}, dispose() {} }
+  if (!canvas || !host) return { update() {}, render(_renderer: THREE.WebGLRenderer) {}, dispose() {} }
   const layer = document.createElement('div')
   layer.className = 'scene-object-cues'
   layer.setAttribute('aria-hidden', 'true')
   host.append(layer)
-  // Instructions occupy the overlay's shelf, outside the canvas. Only tiny
-  // point markers are projected onto the object itself.
+  // DOM text remains available to diagnostics; visible copy is drawn in Three.
   const guides = document.createElement('div')
   guides.className = 'scene-cue-guides'
+  guides.dataset.inWorld = 'true'
   guides.setAttribute('aria-hidden', 'true')
   const epoch = performance.now()
-  const previousGuideHeight = host.style.getPropertyValue('--cue-guide-height')
+  const presentations = new THREE.Group()
+  presentations.name = 'interaction-cue-presentations'; presentations.layers.set(CUE_LAYER)
+  scene.add(presentations)
   const phase = (node: HTMLElement) => node.style.setProperty('--cue-delay', `${-((performance.now() - epoch) % 2400)}ms`)
-  type Entry = { object: THREE.Object3D; cue: InteractionCue; source: HTMLElement; guide: HTMLElement; target?: HTMLElement }
+  type Entry = { object: THREE.Object3D; cue: InteractionCue; source: HTMLElement; guide: HTMLElement; target?: HTMLElement; placard?: ReturnType<typeof createCuePlacard> }
   const entries = new Map<InteractionCue, Entry>()
   const cursorStyles = new Map<HTMLElement, string>()
   const world = new THREE.Vector3(), projected = new THREE.Vector3(), ray = new THREE.Raycaster(), pointer = new THREE.Vector2()
   let disposed = false, dragging: InteractionCue | undefined
   let inspectionHelp: HTMLElement | undefined
   let active: Entry[] = []
+  let fontLocale = '', font = 'sans-serif', fontVersion = 0
+  const unavailable = () => layer.hidden || !!host.querySelector('.scene-overlay-host[inert],.scene-overlay-host[data-quiet-ending]') || !!host.closest('.daily-set-preview')
+  let suspended = unavailable()
+  const observer = new MutationObserver(() => {
+    const next = unavailable()
+    if (next !== suspended && !disposed) { suspended = next; redraw() }
+  })
+  observer.observe(host, { subtree: true, attributes: true, attributeFilter: ['hidden', 'inert', 'data-quiet-ending'] })
+  const refreshFont = () => { if (!disposed) { fontVersion++; fontLocale = ''; redraw() } }
+  document.fonts?.addEventListener('loadingdone', refreshFont)
+  void document.fonts?.ready.then(refreshFont)
   function visible(object: THREE.Object3D) {
     for (let parent: THREE.Object3D | null = object; parent; parent = parent.parent) if (!parent.visible) return false
     return true
@@ -55,7 +69,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
     if (![projected.x, projected.y, projected.z].every(Number.isFinite) || Math.abs(projected.x) > 1 || Math.abs(projected.y) > 1 || Math.abs(projected.z) > 1) return
     const rect = canvas!.getBoundingClientRect()
     if (!rect.width || !rect.height) return
-    return { x: (projected.x + 1) * rect.width / 2, y: (1 - projected.y) * rect.height / 2 }
+    return { x: (projected.x + 1) * rect.width / 2, y: (1 - projected.y) * rect.height / 2, z: projected.z }
   }
   const icons = {
     tap: '<circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/>',
@@ -103,7 +117,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
     direction.style.setProperty('--cue-dy', `${Math.sin(angle * Math.PI / 180) * 6}px`)
     guide.dataset.dragging = String(cue === dragging)
   }
-  function remove(entry: Entry) { entry.source.remove(); entry.target?.remove(); entry.guide.remove() }
+  function remove(entry: Entry) { entry.source.remove(); entry.target?.remove(); entry.guide.remove(); entry.placard?.dispose() }
   function layoutGuides() {
     for (const entry of active) if (entry.target) {
       // One destination may also be a direct tap source (for example an eye).
@@ -115,10 +129,6 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
       entry.guide.hidden = !!entry.cue.compact || shown.has(key)
       if (!entry.guide.hidden) shown.add(key)
     }
-    // A multi-line guide grows the shelf downward instead of spilling upward
-    // into the canvas. Width comes from the overlay and is independent of this.
-    const height = `${Math.ceil(guides.getBoundingClientRect().height)}px`
-    if (host!.style.getPropertyValue('--cue-guide-height') !== height) host!.style.setProperty('--cue-guide-height', height)
   }
   function hit(event: MouseEvent) {
     const rect = canvas!.getBoundingClientRect()
@@ -156,6 +166,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
   return {
     update() {
       if (disposed) return
+      scene.updateMatrixWorld(true); camera.updateMatrixWorld(true)
       const rect = canvas.getBoundingClientRect(), parentRect = host.getBoundingClientRect()
       // Absolute children start at the host's padding box, after its border.
       layer.style.left = `${rect.left - parentRect.left - host.clientLeft + host.scrollLeft}px`
@@ -163,7 +174,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
       layer.style.width = `${rect.width}px`; layer.style.height = `${rect.height}px`
       const overlay = host.querySelector<HTMLElement>('.scene-overlay-host')
       if (overlay && guides.parentElement !== overlay) overlay.append(guides)
-      guides.hidden = layer.hidden
+      suspended = unavailable(); guides.hidden = suspended; presentations.visible = !suspended
       const candidates: { object: THREE.Object3D; cue: InteractionCue }[] = []
       scene.traverse(object => {
         const cues: InteractionCue[] = object.userData.interactionCues ?? []
@@ -197,18 +208,49 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
         if (inspectionHelp.textContent !== helpText) inspectionHelp.textContent = helpText
       } else { inspectionHelp?.remove(); inspectionHelp = undefined }
       layoutGuides()
+      const locale = document.documentElement.lang || navigator.language
+      if (locale !== fontLocale) { fontLocale = locale; font = getComputedStyle(host).fontFamily || 'sans-serif' }
+      const occupied: CueBox[] = active.flatMap(entry => [entry.source, entry.target].filter((node): node is HTMLElement => !!node).map(node =>
+        ({ x: Number(node.dataset.x)-24, y: Number(node.dataset.y)-24, width: 48, height: 48 })))
+      const feedback = overlay?.querySelector<HTMLElement>('.scene-hint:is([data-ready="true"],[data-drop-ready="true"],[data-progress="true"])')?.textContent
+      for (const entry of active) {
+        if (entry.guide.hidden) { entry.placard?.dispose(); entry.placard = undefined; continue }
+        if (suspended) continue
+        entry.placard ??= createCuePlacard(presentations)
+        const text = feedback || entry.guide.lastElementChild?.textContent || entry.cue.label
+        const from = point(entry.object, entry.cue.anchor)!
+        const angle = Number.parseFloat((entry.guide.firstElementChild as HTMLElement).style.getPropertyValue('--cue-angle')) || 0
+        occupied.push(entry.placard.update({ text, detail: helpText, kind: entry.cue.kind, angle, from, view: rect, occupied, font, locale, fontVersion }, camera))
+      }
       if (dragging && !keep.has(dragging)) end()
       if (!active.length) setCursor()
+    },
+    /** Draw sharp annotations after the world's postprocessing, on the same canvas. */
+    render(renderer: THREE.WebGLRenderer) {
+      if (disposed || !presentations.visible || !presentations.children.length) return
+      const previous = { mask: camera.layers.mask, background: scene.background, override: scene.overrideMaterial,
+        autoClear: renderer.autoClear, target: renderer.getRenderTarget(), face: renderer.getActiveCubeFace(), level: renderer.getActiveMipmapLevel(),
+        viewport: renderer.getViewport(new THREE.Vector4()), scissor: renderer.getScissor(new THREE.Vector4()), scissorTest: renderer.getScissorTest(),
+        shadows: renderer.shadowMap.enabled }
+      try {
+        camera.layers.set(CUE_LAYER); scene.background = null; scene.overrideMaterial = null
+        renderer.setRenderTarget(null); renderer.setScissorTest(false); renderer.autoClear = false; renderer.shadowMap.enabled = false
+        renderer.render(scene, camera)
+      } finally {
+        camera.layers.mask = previous.mask; scene.background = previous.background; scene.overrideMaterial = previous.override
+        renderer.autoClear = previous.autoClear; renderer.shadowMap.enabled = previous.shadows
+        renderer.setRenderTarget(previous.target, previous.face, previous.level)
+        renderer.setViewport(previous.viewport); renderer.setScissor(previous.scissor); renderer.setScissorTest(previous.scissorTest)
+      }
     },
     dispose() {
       if (disposed) return
       disposed = true
+      observer.disconnect(); document.fonts?.removeEventListener('loadingdone', refreshFont)
       host.removeEventListener('pointermove', move); host.removeEventListener('pointerdown', down); host.removeEventListener('pointerleave', end)
       window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end); window.removeEventListener('blur', end)
       for (const [target, cursor] of cursorStyles) target.style.cursor = cursor
-      entries.clear(); active = []; layer.remove(); guides.remove()
-      if (previousGuideHeight) host.style.setProperty('--cue-guide-height', previousGuideHeight)
-      else host.style.removeProperty('--cue-guide-height')
+      entries.forEach(remove); entries.clear(); active = []; layer.remove(); guides.remove(); presentations.removeFromParent()
     },
   }
 }

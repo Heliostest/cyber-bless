@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -174,12 +175,16 @@ export function createUzbekClayBowl(ctx: SceneContext): SceneInstance {
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: () => inputActive(), duration: 3, motion: 'glow',
+    targets: () => [clay], cancelInput: () => pointer.cancel(), complete: () => advance(),
+  })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !inputActive() || !!transition || checkpoint === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !transition && checkpoint < 3 ? 'auto' : 'none'
     setSafeText(ui.actionBtn, checkpoint === 0 ? COPY.turnAction : checkpoint === 1 ? COPY.pullAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, transition ? COPY.moving : checkpoint === 0 ? COPY.turn : checkpoint === 1 ? COPY.pull : checkpoint === 2 ? COPY.quiet : COPY.done, safe)
+    ending.sync(checkpoint === 2 && !transition)
   }
   function withHostCallbacks(work: () => void) {
     notifying = true; sync()
@@ -191,6 +196,7 @@ export function createUzbekClayBowl(ctx: SceneContext): SceneInstance {
     withHostCallbacks(() => { ctx.onProgress?.(checkpoint); if (active()) feedback.impact({ freqs: [196, 293.66], duration: .12, gain: .008, type: 'sine' }) })
   }
   function advance() {
+    if (checkpoint === 2 && !ending.completing) return
     if (!inputActive() || pointer.isBusy() || transition || checkpoint === 3) return
     if (checkpoint === 2) {
       checkpoint = 3; restore()
@@ -242,11 +248,14 @@ export function createUzbekClayBowl(ctx: SceneContext): SceneInstance {
         if (transition.time === 1) settle()
       }
       if (!active()) return
-      matrices(); style.render()
+      if (!active()) return
+      ending.update(dt)
+      if (!active()) return
+      scene.updateMatrixWorld(true); camera.updateMatrixWorld(true); style.render()
     },
     dispose() {
       if (disposed) return
-      disposed = true; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      ending.dispose(); disposed = true; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => {
         ui.hitLayer.removeEventListener(type, guardCallbackInput, true)
         window.removeEventListener(type, guardCallbackInput, true)

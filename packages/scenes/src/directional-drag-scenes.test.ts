@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest'
+
+// Isolate the existing physical gesture contract from the ending clock.
+// Real automatic endings are covered by the quiet-ending integration suites.
+vi.mock('./quiet-ending', () => ({ createQuietEnding: () => ({
+  running: false, completing: true, sync() {}, update() {}, dispose() {},
+}) }))
 import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'

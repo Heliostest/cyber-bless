@@ -2269,5 +2269,8 @@
   "scene.mezuzah-doorpost.intention.07f237ad": "Soulevez le boîtier préparé, approchez-le du montant droit, puis fixez-le doucement.",
   "scene.sri-lankan-bodhi-puja.intention.ba68dcf1": "Soulevez la cruche, approchez-la des racines de l’arbre de la bodhi et versez lentement l’eau en offrande.",
   "scene.ukrainian-didukh.intention.fa0b869c": "Souhaiter abondance et paix à votre famille",
-  "scene.ukrainian-didukh.intention.9ba3c0a2": "Rassemblez les tiges, nouez le ruban, puis placez la gerbe bien droite dans le coin en portant un vœu pour votre famille."
+  "scene.ukrainian-didukh.intention.9ba3c0a2": "Rassemblez les tiges, nouez le ruban, puis placez la gerbe bien droite dans le coin en portant un vœu pour votre famille.",
+  "scene.autoEnding.status": "La scène se termine. Elle sera bientôt achevée.",
+  "scene.autoEnding.writing": "Une fois le texte terminé, appuyez sur « J’ai terminé » pour continuer.",
+  "scene.autoEnding.progress": "Progression de la fin de scène"
 }

@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -74,6 +75,9 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
 
   const setHint = (text: string) => setSafeText(hintEl, text, assertSafeCopy)
 
+  const ending = createQuietEnding(ctx, { ui: ui, isActive: () => started && !disposed && canAct(),
+    duration: 3, motion: 'sway', targets: () => [pivot], cancelInput: () => { objectPointer?.cancel() }, complete: () => completeScene(),
+  })
   const syncOverlayForStep = () => {
     ui.renderDots(
       step === 'done' ? STEP_ORDER.length : STEP_ORDER.indexOf(step),
@@ -89,6 +93,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
       setHint(COPY.hintListen)
       setSafeText(actionBtn, COPY.listenTap, assertSafeCopy)
     } else setHint(COPY.done)
+    ending.sync(step === 'listen')
   }
 
   // Transparent over the island stage, sun-warm key light.
@@ -309,13 +314,14 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     }),
   ]
 
-  const completeScene = () => {
+  const completeScene = (fromWriting = false) => {
+    if (!restoring && !ending.completing && !fromWriting) return
     if (!canAct() || step === 'done') return
     step = 'done'
     tiltHandle?.setEnabled(false)
-    if (!restoring) ctx.onProgress?.(3)
+    if (!restoring) { ctx.onProgress?.(3); if (disposed || !(canAct())) return }
     syncOverlayForStep()
-    overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    if (!restoring) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
 
   const goListen = () => {
@@ -481,10 +487,13 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
       )
       camera.lookAt(cameraLookAt)
 
+      ending.update(dt)
+      if (disposed || !(canAct())) return
       styleRenderer.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true
       resetPreview()
       resizeObserver?.disconnect()

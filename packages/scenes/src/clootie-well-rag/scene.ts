@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
@@ -270,6 +271,9 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   const ray = createPointerRay(canvas, camera)
   const dragPlane = new THREE.Plane(), dragPoint = new THREE.Vector3(), dragOffset = new THREE.Vector3(), dragOrigin = new THREE.Vector3()
   const home = () => checkpoint === 0 ? DRY : checkpoint === 1 ? WET : TIED
+  const ending = createQuietEnding(ctx, { ui: ui, isActive: () => started && !disposed && active(),
+    duration: 3, motion: 'sway', targets: () => [rag], cancelInput: () => { pointer.cancel() }, complete: () => begin(),
+  })
   const syncUI = () => {
     ui.renderDots(checkpoint, 3)
     actionBtn.hidden = checkpoint === 3
@@ -277,6 +281,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
     setSafeText(actionBtn, checkpoint === 0 ? COPY.dipAction : checkpoint === 1 ? COPY.tieAction : COPY.releaseAction, assertSafeCopy)
     setSafeText(hintEl, motion ? [COPY.dipping, COPY.tying, COPY.settling][motion.step] : [COPY.dip, COPY.tie, COPY.release, COPY.done][checkpoint], assertSafeCopy)
     branchGuide.visible = checkpoint === 1 && !motion
+    ending.sync(checkpoint === 2 && !motion)
   }
   const poseCloth = () => {
     const attr = clothGeo.getAttribute('position') as THREE.BufferAttribute
@@ -315,13 +320,16 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
     restorePose()
     syncUI()
     ctx.onProgress?.(checkpoint)
+    if (disposed || !active()) return
     feedback.impact({ freqs: checkpoint === 1 ? [285, 428] : [342, 513], duration: 0.3, gain: 0.04 })
+    if (disposed || !active()) return
     if (checkpoint === 3 && !completed) {
       completed = true
       overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     }
   }
   const begin = (_arrived = false) => {
+    if (checkpoint === 2 && !ending.completing) return
     if (!active() || motion || checkpoint === 3) return
     motion = { step: checkpoint, time: 0, from: rag.position.clone() }
     dragging = false
@@ -414,13 +422,17 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
           dragBend = Math.sin(p * Math.PI) * 0.14 * (1 - p)
         }
         if (motion.time === 1) finish()
+        if (disposed || !active()) return
       }
       poseCloth()
       guideMat.opacity = reduced() ? 0.84 : 0.73 + Math.sin(clock * 2) * 0.11
+      ending.update(dt)
+      if (disposed || !(active())) return
       styleRenderer.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true
       pointer.dispose()
       stopResize()

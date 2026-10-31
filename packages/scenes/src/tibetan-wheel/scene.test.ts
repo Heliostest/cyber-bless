@@ -56,15 +56,18 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
 }
 
 describe('Continuous clockwise prayer wheel', () => {
-  it('keeps turning after the minimum and after coasting to rest until explicit finish', () => {
+  it('keeps accepting pushes while turning, then automatically finishes after its quiet animation', () => {
     const s = mount(), finish = s.overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!
     expect(finish.hidden).toBe(true)
     s.button.click(); expect(s.progress).toEqual([1]); expect(finish.hidden).toBe(false)
     for (let i = 0; i < 5; i++) { s.run(2); s.button.click() }
     expect(s.complete).not.toHaveBeenCalled(); expect(s.progress).not.toContain(3)
-    s.run(20); expect(s.progress).toEqual([1, 2]); expect(s.complete).not.toHaveBeenCalled()
-    s.button.click(); s.run(20); expect(s.progress).toEqual([1, 2])
-    finish.click(); finish.click(); expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+    for (let i = 0; i < 480 && !s.progress.includes(2); i++) s.run(.025)
+    expect(s.progress).toEqual([1, 2]); expect(s.complete).not.toHaveBeenCalled()
+    expect(finish.hidden).toBe(true); expect(s.button.hidden).toBe(true)
+    s.run(1.5); s.button.click(); expect(s.progress).toEqual([1, 2])
+    s.run(1.6); expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+    s.run(20); expect(s.progress).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
   })
   it('settles a turning wheel only after explicit finish and freezes while paused', () => {
     let active = true
@@ -73,11 +76,13 @@ describe('Continuous clockwise prayer wheel', () => {
     expect(s.complete).not.toHaveBeenCalled()
     active = true; s.run(4); expect(s.complete).toHaveBeenCalledOnce(); expect(s.progress.at(-1)).toBe(3)
   })
-  it('restores quiet and completed checkpoints without reporting completion again', () => {
+  it('automatically finishes a restored quiet checkpoint and restores a completed checkpoint silently', () => {
     const quiet = mount(2), finish = quiet.overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!
-    expect(finish.hidden).toBe(false); expect(quiet.progress).toEqual([]); expect(quiet.complete).not.toHaveBeenCalled()
-    quiet.button.click(); quiet.run(20); expect(quiet.progress).toEqual([]); finish.click(); expect(quiet.progress).toEqual([3])
+    expect(finish.hidden).toBe(true); expect(quiet.progress).toEqual([]); expect(quiet.complete).not.toHaveBeenCalled()
+    quiet.button.click(); quiet.run(1.5); expect(quiet.progress).toEqual([])
+    quiet.run(1.6); expect(quiet.progress).toEqual([3]); expect(quiet.complete).toHaveBeenCalledOnce()
     const done = mount(3); expect(done.progress).toEqual([]); expect(done.complete).not.toHaveBeenCalled()
     expect(done.overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!.hidden).toBe(true)
+    done.run(20); expect(done.progress).toEqual([]); expect(done.complete).not.toHaveBeenCalled()
   })
 })

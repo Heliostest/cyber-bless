@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -222,6 +223,8 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
     },
     onCancel: resetDrag,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: active, duration: 3, motion: 'glow',
+    targets: () => [censer], cancelInput: () => pointer.cancel(), complete: () => finish() })
   function sync() {
     dropFeedback.clear()
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3
@@ -231,6 +234,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
     setSafeText(ui.actionBtn, checkpoint === 0 ? COPY.lidAction : checkpoint === 1 ? COPY.incenseAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, placement ? placement.step === 0 ? COPY.movingLid : COPY.movingIncense
       : checkpoint === 0 ? COPY.lid : checkpoint === 1 ? COPY.incense : checkpoint === 2 ? ctx.returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    ending.sync(checkpoint === 2 && !placement)
   }
   function placed() {
     if (!active() || !placement) return
@@ -244,9 +248,10 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   }
   function finish() {
     if (!active() || pointer.isBusy() || placement || checkpoint !== 2) return
-    checkpoint = 3; pose(); sync(); ctx.onProgress?.(3)
+    if (!ending.completing) return
+    checkpoint = 3; pose(); sync(); if (disposed) return; ctx.onProgress?.(3)
     feedback.impact({ freqs: [330, 495], duration: .28, gain: .012 })
-    overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    if (!active()) return; overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
   const action = () => { if (!active() || pointer.isBusy() || placement || checkpoint === 3) return; feedback.prepare(); if (checkpoint < 2) beginPlacement(); else finish() }
   const blur = () => { focused = false; pointer.cancel(); sync() }
@@ -284,10 +289,13 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
         if (t === 1) placed()
       }
       if (!reduced() && checkpoint >= 2) { elapsed += delta; smoke.rotation.y = Math.sin(elapsed * .36) * .24 }
+      ending.update(dt)
+      if (disposed || !active()) return
       style.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose())

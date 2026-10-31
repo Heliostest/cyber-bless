@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest'
+
+// Keep host cancellation and real gesture ownership independent of the ending clock.
+// The real helper's completion behavior is covered by the quiet-ending integration suites.
+vi.mock('../../scenes/src/quiet-ending', () => ({ createQuietEnding: () => ({
+  running: false, completing: true, sync() {}, update() {}, dispose() {},
+}) }))
 import * as THREE from 'three'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 vi.mock('three', async (importOriginal) => {

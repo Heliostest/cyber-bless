@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -145,6 +146,8 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
       if (checkpoint < 2) begin(); else finish()
     }, onCancel: resetDrag,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: active, duration: 3, motion: 'glow',
+    targets: () => [rotor], cancelInput: () => pointer.cancel(), complete: () => finish() })
   const sync = () => {
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3
     ui.actionBtn.disabled = !active() || !!motion || checkpoint === 3; ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled))
@@ -152,6 +155,7 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
     ui.hitLayer.style.pointerEvents = checkpoint < 3 && !motion ? 'auto' : 'none'
     setSafeText(ui.actionBtn, checkpoint === 0 ? COPY.pullAction : checkpoint === 1 ? COPY.settleAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, motion ? COPY.moving : checkpoint === 0 ? COPY.pull : checkpoint === 1 ? COPY.settle : checkpoint === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    ending.sync(checkpoint === 2 && !motion)
   }
   function settled() {
     if (!active() || !motion) return
@@ -165,10 +169,11 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
   }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || checkpoint !== 2) return
+    if (!text.trim() && !ending.completing) return
     const line = text.trim(); checkpoint = 3; restorePose(); sync()
     if (line && !returning) ctx.saveWish?.(line)
-    ctx.onProgress?.(3); feedback.impact({ freqs: [392, 493.88], duration: .26, gain: .015 })
-    overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    if (disposed) return; ctx.onProgress?.(3); if (!active()) return; feedback.impact({ freqs: [392, 493.88], duration: .26, gain: .015 })
+    if (!active()) return; overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
   const action = () => { if (!active() || pointer.isBusy() || motion || checkpoint === 3) return; feedback.prepare(); if (checkpoint < 2) begin(); else finish() }
   const blur = () => { focused = false; pointer.cancel(); sync() }
@@ -212,10 +217,13 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
         spinTime += delta; rotor.rotation.y += delta * 8
         rotor.rotation.x = Math.sin(spinTime * 3) * .012; rotor.rotation.z = Math.cos(spinTime * 3) * .012
       } else { rotor.rotation.x = rotor.rotation.z = 0 }
+      ending.update(dt)
+      if (disposed || !active()) return
       style.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose())

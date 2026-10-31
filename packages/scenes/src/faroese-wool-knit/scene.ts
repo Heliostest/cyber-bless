@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -187,12 +188,16 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: () => inputActive(), duration: 3, motion: 'glow',
+    targets: () => [swatch], cancelInput: () => pointer.cancel(), complete: () => advance(),
+  })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
     setSafeText(ui.actionBtn, at === 0 ? '向左上穿入线圈' : at === 1 ? '向右下抽出新线圈' : '轻点织片静看', safe)
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.inserting : COPY.pulling : at === 0 ? COPY.insert : at === 1 ? COPY.pull : at === 2 ? COPY.quiet : COPY.done, safe)
+    ending.sync(at === 2 && !motion)
   }
   function withHostCallbacks(work: () => void) { notifying = true; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
@@ -202,6 +207,7 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
     withHostCallbacks(() => { ctx.onProgress?.(at); if (active()) feedback.impact({ freqs: [220, 330], duration: .12, gain: .007, type: 'sine' }) })
   }
   function advance() {
+    if (at === 2 && !ending.completing) return
     if (!inputActive() || pointer.isBusy() || motion || at === 3) return
     if (at === 2) {
       at = 3; restore(); withHostCallbacks(() => { ctx.onProgress?.(3); if (!active()) return; feedback.impact({ freqs: [220, 293.66], duration: .18, gain: .006 }); if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })) }); return
@@ -234,11 +240,14 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
         else pose(1, THREE.MathUtils.lerp(motion.from, 1, Math.min(t * 1.7, 1)), 1, ease(THREE.MathUtils.clamp((t - .4) / .6, 0, 1)))
         if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); style.render() }
+      if (!active()) return
+      ending.update(dt)
+      if (!active()) return
+      scene.updateMatrixWorld(true); camera.updateMatrixWorld(true); style.render()
     },
     dispose() {
       if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      ending.dispose(); disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

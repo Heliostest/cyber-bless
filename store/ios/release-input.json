@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.0",
+  "buildNumber": null,
+  "bundleIdentifier": "com.helio.cyberbless",
+  "appId": "6821271597",
+  "appleTeamId": "6PG2WW6L6N",
+  "syncEasCounter": true,
+  "toolchain": {
+    "node": "24.12.0",
+    "npm": "11.6.2",
+    "ruby": "3.2.0",
+    "cocoapods": "1.16.2",
+    "bundler": "2.4.1",
+    "xcode": "26.6",
+    "xcodeBuild": "17F113",
+    "sdk": "26.5",
+    "platform": "darwin",
+    "arch": "arm64",
+    "osVersion": "26.5.1",
+    "osBuild": "25F80"
+  }
+}

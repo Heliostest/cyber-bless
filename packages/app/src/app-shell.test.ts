@@ -47,10 +47,10 @@ it("uses one shared title and supporting line on regular pages", async () => {
         el.textContent?.includes(text),
       )!,
     );
-  tap(".bottom-nav button", "我的");
-  await settle();
   // The back button shares the title row, without a second title above it.
-  for (const row of ["场景目录", "资源缓存", "仪式时光"]) {
+  for (const [tab, row] of [["我的", "场景目录"], ["我的", "资源缓存"], ["小天地", "仪式时光"]]) {
+    tap(".bottom-nav button", tab);
+    await settle();
     tap(".settings-row", row);
     await settle();
     expect(ribbon(), row).toBeNull();

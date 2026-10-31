@@ -1,5 +1,5 @@
 import { localizedTitle } from './localization';
-import { translate as tr, message, formatNumber } from '@wbr/i18n';
+import { translate as tr, message } from '@wbr/i18n';
 import { LanguageSetting } from './language-setting';
 import { useState } from "react";
 import { rituals, type Collectible } from "@wbr/core";
@@ -111,6 +111,12 @@ export function World() {
         </div>
         <div className="room-floor"/>
       </div>
+      <div className="settings-card">
+        <button className="settings-row" onClick={() => go({ page: "history" })}>
+          <span>{tr("\u4EEA\u5F0F\u65F6\u5149")}</span>
+          <Icon name="arrow"/>
+        </button>
+      </div>
       <div className="section-heading">
         <h2>{tr("\u65F6\u5149\u91CC\u7684\u5C0F\u6536\u85CF")}</h2>
         <span>{tr("\u6BCF\u4E00\u4EF6\uFF0C\u90FD\u6709\u6765\u5904")}</span>
@@ -173,28 +179,14 @@ export function CollectionDetail({ id }: {
 }
 export function Me() {
     const { state, dispatch, go, canHaptic } = useApp();
-    const stats = [
-        [state.sessions.length + state.sceneRecords.length, tr("\u4EEA\u5F0F\u8BB0\u5F55")],
-        [state.collectibles.length, tr("\u5C0F\u5929\u5730\u6536\u85CF")],
-    ];
     return (<>
       <PageHead title={tr("\u6211\u7684")}/>
-      <div className="stats">
-        {stats.map(([n, label]) => (<div key={label}>
-            <strong>{formatNumber(Number(n))}</strong>
-            <span>{label}</span>
-          </div>))}
-      </div>
       <div className="settings-card">
         <LanguageSetting />
         <button className="settings-row" onClick={() => go({ page: 'privacy' })}><span>{tr("\u9690\u79C1\u653F\u7B56")}</span><Icon name="arrow"/></button>
         <button className="settings-row" onClick={() => go({ page: 'support' })}><span>{tr("\u6280\u672F\u652F\u6301")}</span><Icon name="arrow"/></button>
         <button className="settings-row" onClick={() => go({ page: "scenes" })}><span>{tr("\u573A\u666F\u76EE\u5F55")}</span><Icon name="arrow"/></button>
         <button className="settings-row" onClick={() => go({ page: "cache" })}><span>{tr("\u8D44\u6E90\u7F13\u5B58")}</span><Icon name="arrow"/></button>
-        <button className="settings-row" onClick={() => go({ page: "history" })}>
-          <span>{tr("\u4EEA\u5F0F\u65F6\u5149")}</span>
-          <Icon name="arrow"/>
-        </button>
         {([
             ["sound", tr("\u4EEA\u5F0F\u58F0\u97F3"), tr("\u7ED9\u5B89\u9759\u7684\u65F6\u523B\u4E00\u70B9\u56DE\u54CD")],
             ["haptics", tr("\u8F7B\u89E6\u53CD\u9988"), tr("\u6BCF\u4E00\u6B65\uFF0C\u90FD\u6709\u6E29\u67D4\u56DE\u5E94")],

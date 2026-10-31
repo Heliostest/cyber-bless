@@ -4083,6 +4083,16 @@ img.scene-icon {
   display: block;
   object-fit: contain;
 }
+/* Transparent keepsakes sit directly on the room, card and detail page. */
+.room-shelf .scene-art,
+.collection-card .scene-art,
+.app-shell[data-page="collection"] .app-content > .scene-art {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
 /* A scene illustration in the same item slot as the crops. */
 .scene-art .scene-icon {
   width: 66px;

@@ -1,0 +1,86 @@
+{
+  "id": "lanna-sand-pagoda",
+  "sourceSha256": "82297e3c16351f71c9167fca2e4653304fb1420affef472aacffabcf296c117c",
+  "outputSha256": "7883d63c0576c87c00119d1a19e130e718715ad0beb8c6edbada100482b14eff",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 69,
+    "top": 26,
+    "width": 315,
+    "height": 325
+  },
+  "sourceAlphaBounds": {
+    "left": 19,
+    "top": 1,
+    "width": 399,
+    "height": 421
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 59065,
+  "placement": {
+    "left": 19,
+    "top": 15,
+    "width": 218,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 289,
+    "height": 292,
+    "left": -28,
+    "top": -3,
+    "canvasCrop": {
+      "left": 28,
+      "top": 3,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 45870,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-02.png",
+    "sha256": "50411e3d4e6162034111a2c85f187c8270ca796df26b67148b0670358a0f7214",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 6,
+    "column": 0,
+    "row": 2,
+    "bounds": {
+      "left": 0,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/lanna-sand-pagoda.png",
+  "outputFile": "lanna-sand-pagoda.webp"
+}

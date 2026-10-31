@@ -1,0 +1,86 @@
+{
+  "id": "niue-shell-necklace",
+  "sourceSha256": "e61e18219e10ef46b89d967214e1b47ac38eb5f82f84c29246ffd23198f894ff",
+  "outputSha256": "92ae9c4010283f58c35e5c6c13e0a1fb6286132ff9db897c5ac02beaa9908186",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 56,
+    "top": 78,
+    "width": 304,
+    "height": 320
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 13,
+    "width": 404,
+    "height": 409
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 53943,
+  "placement": {
+    "left": 21,
+    "top": 15,
+    "width": 214,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 294,
+    "height": 297,
+    "left": -18,
+    "top": -40,
+    "canvasCrop": {
+      "left": 18,
+      "top": 40,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 47916,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-02.png",
+    "sha256": "50411e3d4e6162034111a2c85f187c8270ca796df26b67148b0670358a0f7214",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/niue-shell-necklace.png",
+  "outputFile": "niue-shell-necklace.webp"
+}

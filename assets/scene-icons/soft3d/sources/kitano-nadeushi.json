@@ -1,0 +1,86 @@
+{
+  "id": "kitano-nadeushi",
+  "sourceSha256": "0819104969c7b5958d20d5e3ce6291487ffdd0a19e298f1063009488a9fbcd6b",
+  "outputSha256": "f66ae0da23edeb8c762c2c678385641007aafa65fa8209f03e6d281b851556a8",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 40,
+    "top": 54,
+    "width": 361,
+    "height": 313
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 426
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 83951,
+  "placement": {
+    "left": 15,
+    "top": 31,
+    "width": 225,
+    "height": 194
+  },
+  "sourceTransform": {
+    "width": 259,
+    "height": 264,
+    "left": -9,
+    "top": -3,
+    "canvasCrop": {
+      "left": 9,
+      "top": 3,
+      "width": 250,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 51160,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-02.png",
+    "sha256": "25d839841f957fa3bb3ed1caeb314fca9f1ff96779b5417c114ae799b6240617",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 4,
+    "column": 1,
+    "row": 1,
+    "bounds": {
+      "left": 418,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/kitano-nadeushi.png",
+  "outputFile": "kitano-nadeushi.webp"
+}

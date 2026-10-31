@@ -1,0 +1,47 @@
+{
+  "id": "tanzaku-tanabata",
+  "sourceSha256": "42bc674222b0cc48b3f6c0df3020cc507ac5c52289b162f89606e7f8bf9c475c",
+  "outputSha256": "5474b210c42684da66d7e77efeaf9acb13957d19adaa63d29992f8ae24f061b6",
+  "sourceWidth": 1254,
+  "sourceHeight": 1254,
+  "sourceBounds": {
+    "left": 207,
+    "top": 62,
+    "width": 955,
+    "height": 1101
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 48,
+    "width": 1226,
+    "height": 1206
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 450589,
+  "placement": {
+    "left": 31,
+    "top": 15,
+    "width": 194,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 255,
+    "height": 255,
+    "left": -11,
+    "top": 3,
+    "canvasCrop": {
+      "left": 11,
+      "top": 0,
+      "width": 244,
+      "height": 253
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 33224,
+  "encoding": "lossless-webp",
+  "sourceFile": "sources/tanzaku-tanabata.png",
+  "outputFile": "tanzaku-tanabata.webp"
+}

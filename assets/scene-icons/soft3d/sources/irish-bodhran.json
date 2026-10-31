@@ -1,0 +1,86 @@
+{
+  "id": "irish-bodhran",
+  "sourceSha256": "a06777b438003519c0a21f054ef04fc2788932df4104a2df011378169bf7fb43",
+  "outputSha256": "105af80c1ed33a1e0e250548b0dbedce49759bb7b3a369353056baf6bb155530",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 75,
+    "top": 94,
+    "width": 312,
+    "height": 292
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 8,
+    "width": 418,
+    "height": 414
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 80311,
+  "placement": {
+    "left": 15,
+    "top": 23,
+    "width": 225,
+    "height": 210
+  },
+  "sourceTransform": {
+    "width": 301,
+    "height": 304,
+    "left": -39,
+    "top": -45,
+    "canvasCrop": {
+      "left": 39,
+      "top": 45,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 55804,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-11.png",
+    "sha256": "8649b61c9e59dd9cac8724c81ef310f7926e7bc635ed1dddc11318ecb9f5d4f6",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 418,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/irish-bodhran.png",
+  "outputFile": "irish-bodhran.webp"
+}

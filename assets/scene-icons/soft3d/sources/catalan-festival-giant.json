@@ -1,0 +1,86 @@
+{
+  "id": "catalan-festival-giant",
+  "sourceSha256": "f97fbae059f9097a1615558f3bb93af2195059b2537f6dcb74956ffe72764836",
+  "outputSha256": "8d790968c5fe0f16d67cb48f23d8f9ad100226c18148aa065821b62fcd275695",
+  "sourceWidth": 418,
+  "sourceHeight": 439,
+  "sourceBounds": {
+    "left": 105,
+    "top": 5,
+    "width": 206,
+    "height": 355
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 1,
+    "width": 416,
+    "height": 438
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 48541,
+  "placement": {
+    "left": 63,
+    "top": 15,
+    "width": 130,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 265,
+    "height": 278,
+    "left": -4,
+    "top": 12,
+    "canvasCrop": {
+      "left": 4,
+      "top": 0,
+      "width": 256,
+      "height": 244
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 33888,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-16.png",
+    "sha256": "1a748a07623016fe5977ef4c8bd855191d145d8806d1b3dc06c9403eb306c75d",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 7,
+    "column": 1,
+    "row": 2,
+    "bounds": {
+      "left": 418,
+      "top": 815,
+      "width": 418,
+      "height": 439
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 819,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/catalan-festival-giant.png",
+  "outputFile": "catalan-festival-giant.webp"
+}

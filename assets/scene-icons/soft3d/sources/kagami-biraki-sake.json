@@ -1,0 +1,86 @@
+{
+  "id": "kagami-biraki-sake",
+  "sourceSha256": "63198634abec13025aa865288264ae768e6ae2c6fb040f31d6e92a6cc2e97973",
+  "outputSha256": "d78b63da6e6d4f43d536e62128f5cb3c6742e617cbcd5fdade589bc2a0e1c06a",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 42,
+    "top": 104,
+    "width": 335,
+    "height": 297
+  },
+  "sourceAlphaBounds": {
+    "left": 7,
+    "top": 35,
+    "width": 387,
+    "height": 373
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 75188,
+  "placement": {
+    "left": 16,
+    "top": 29,
+    "width": 224,
+    "height": 198
+  },
+  "sourceTransform": {
+    "width": 279,
+    "height": 282,
+    "left": -12,
+    "top": -41,
+    "canvasCrop": {
+      "left": 12,
+      "top": 41,
+      "width": 256,
+      "height": 241
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 52224,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-03.png",
+    "sha256": "17d3890b78594adf5e3f6fc786005103568e18531f7ddf2657d41d50246f4fac",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/kagami-biraki-sake.png",
+  "outputFile": "kagami-biraki-sake.webp"
+}

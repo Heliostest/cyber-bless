@@ -1,0 +1,86 @@
+{
+  "id": "bokjori",
+  "sourceSha256": "baa689af67cf432bb145695c5b12bd36fec1ab609eef176738812dea797d07e0",
+  "outputSha256": "f6b03c3078c0043f9af4982e3749023f95e74cbcac4c62eefeb7d91a9772db22",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 61,
+    "top": 78,
+    "width": 354,
+    "height": 344
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 3,
+    "width": 418,
+    "height": 423
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 72446,
+  "placement": {
+    "left": 15,
+    "top": 19,
+    "width": 225,
+    "height": 218
+  },
+  "sourceTransform": {
+    "width": 266,
+    "height": 271,
+    "left": -24,
+    "top": -31,
+    "canvasCrop": {
+      "left": 24,
+      "top": 31,
+      "width": 242,
+      "height": 240
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 52378,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-09.png",
+    "sha256": "78bee5ccd43f0242cf0545e03b49b0e091d7432dcbffafdcae943deaa981826c",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 418,
+      "top": 0,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 422,
+          "occupiedPixels": 0,
+          "clearAbove": 0,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/bokjori.png",
+  "outputFile": "bokjori.webp"
+}

@@ -1,0 +1,86 @@
+{
+  "id": "korean-yutnori",
+  "sourceSha256": "f0208544756b06d82e1a8505a8f7e84a7168b71ad8d386eb7afa5f36a2810bcb",
+  "outputSha256": "c422e5e32ec8aeea97417c5dd8f212c92ce3c1e892f8e216a7e6905f3bbec628",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 60,
+    "top": 85,
+    "width": 311,
+    "height": 315
+  },
+  "sourceAlphaBounds": {
+    "left": 7,
+    "top": 17,
+    "width": 391,
+    "height": 395
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 85399,
+  "placement": {
+    "left": 16,
+    "top": 16,
+    "width": 223,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 299,
+    "height": 301,
+    "left": -27,
+    "top": -45,
+    "canvasCrop": {
+      "left": 27,
+      "top": 45,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 68956,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-13.png",
+    "sha256": "d8da03904776e46793aebc606a5160e21d61e97aaa92dafea4dd12a2096cd7a6",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/korean-yutnori.png",
+  "outputFile": "korean-yutnori.webp"
+}

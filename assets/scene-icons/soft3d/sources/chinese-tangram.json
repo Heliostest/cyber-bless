@@ -1,0 +1,86 @@
+{
+  "id": "chinese-tangram",
+  "sourceSha256": "6869ab8c47567928f085e498f35191184b524ebdffa86e0d5a6bfdb027a33a7a",
+  "outputSha256": "5877d9a6818eb497c9f14e2d17ec6ec216dca7866cddfcbbc95d0fde9d559abf",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 83,
+    "top": 110,
+    "width": 275,
+    "height": 276
+  },
+  "sourceAlphaBounds": {
+    "left": 1,
+    "top": 19,
+    "width": 417,
+    "height": 403
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 83062,
+  "placement": {
+    "left": 16,
+    "top": 16,
+    "width": 224,
+    "height": 224
+  },
+  "sourceTransform": {
+    "width": 341,
+    "height": 344,
+    "left": -52,
+    "top": -74,
+    "canvasCrop": {
+      "left": 52,
+      "top": 74,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 64092,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-02.png",
+    "sha256": "50411e3d4e6162034111a2c85f187c8270ca796df26b67148b0670358a0f7214",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 418,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/chinese-tangram.png",
+  "outputFile": "chinese-tangram.webp"
+}

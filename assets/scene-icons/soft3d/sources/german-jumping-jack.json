@@ -1,0 +1,86 @@
+{
+  "id": "german-jumping-jack",
+  "sourceSha256": "dd6a6a0a30298b80a3849b3d41d6ef354fb9672f3540b8f447a59566f2a4fcf3",
+  "outputSha256": "96e63fd31b2e76ca6acf196e1399b57893b434c1646be396d19d647a190bfc5d",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 78,
+    "top": 8,
+    "width": 265,
+    "height": 357
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 422
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 58633,
+  "placement": {
+    "left": 44,
+    "top": 15,
+    "width": 167,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 263,
+    "height": 266,
+    "left": -5,
+    "top": 10,
+    "canvasCrop": {
+      "left": 5,
+      "top": 0,
+      "width": 256,
+      "height": 246
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 35714,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-11.png",
+    "sha256": "8649b61c9e59dd9cac8724c81ef310f7926e7bc635ed1dddc11318ecb9f5d4f6",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 6,
+    "column": 0,
+    "row": 2,
+    "bounds": {
+      "left": 0,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/german-jumping-jack.png",
+  "outputFile": "german-jumping-jack.webp"
+}

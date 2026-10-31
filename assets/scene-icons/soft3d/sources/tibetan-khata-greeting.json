@@ -1,0 +1,86 @@
+{
+  "id": "tibetan-khata-greeting",
+  "sourceSha256": "44bd3ed10adf574aa64894a0a40f3e71d92ff21e4999db2d4b92c49b3a5af613",
+  "outputSha256": "fa4a516c27fc07e48178fea0a5d6f578e907f067812740f44691cda734fb88a0",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 69,
+    "top": 82,
+    "width": 293,
+    "height": 297
+  },
+  "sourceAlphaBounds": {
+    "left": 1,
+    "top": 3,
+    "width": 417,
+    "height": 419
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 67721,
+  "placement": {
+    "left": 16,
+    "top": 15,
+    "width": 223,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 317,
+    "height": 320,
+    "left": -36,
+    "top": -47,
+    "canvasCrop": {
+      "left": 36,
+      "top": 47,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 52112,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-04.png",
+    "sha256": "1f590be0899984d55736775c4e2bb58f395eea9b86702065a177116091307406",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 418,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/tibetan-khata-greeting.png",
+  "outputFile": "tibetan-khata-greeting.webp"
+}

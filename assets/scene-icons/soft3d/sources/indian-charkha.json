@@ -1,0 +1,86 @@
+{
+  "id": "indian-charkha",
+  "sourceSha256": "1668bf845556c4aad3f8dee1740360f29bfdfd81385069249a3a06f6178df7b3",
+  "outputSha256": "5ce5b53a38262d0a20127ccc9ef2e8e9612b9103896a285f49b41e2a6922379a",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 31,
+    "top": 60,
+    "width": 345,
+    "height": 292
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 20,
+    "width": 390,
+    "height": 406
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 64300,
+  "placement": {
+    "left": 16,
+    "top": 33,
+    "width": 224,
+    "height": 189
+  },
+  "sourceTransform": {
+    "width": 271,
+    "height": 276,
+    "left": -4,
+    "top": -6,
+    "canvasCrop": {
+      "left": 4,
+      "top": 6,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 49078,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-13.png",
+    "sha256": "d8da03904776e46793aebc606a5160e21d61e97aaa92dafea4dd12a2096cd7a6",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/indian-charkha.png",
+  "outputFile": "indian-charkha.webp"
+}

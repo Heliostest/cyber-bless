@@ -1,0 +1,47 @@
+{
+  "id": "woodfish",
+  "sourceSha256": "2eea6dbae883fcd9ec79f5bad2857af049b2ff84598f928160a7fa0b14989225",
+  "outputSha256": "8470513da4b834564ebb1d8ea33df1e0aabbea74b0b065ba6475c3daf47a864b",
+  "sourceWidth": 1254,
+  "sourceHeight": 1254,
+  "sourceBounds": {
+    "left": 102,
+    "top": 213,
+    "width": 1100,
+    "height": 845
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 9,
+    "width": 1228,
+    "height": 1245
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 686706,
+  "placement": {
+    "left": 15,
+    "top": 42,
+    "width": 225,
+    "height": 172
+  },
+  "sourceTransform": {
+    "width": 255,
+    "height": 255,
+    "left": -5,
+    "top": -1,
+    "canvasCrop": {
+      "left": 5,
+      "top": 1,
+      "width": 250,
+      "height": 254
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 44702,
+  "encoding": "lossless-webp",
+  "sourceFile": "sources/woodfish.png",
+  "outputFile": "woodfish.webp"
+}

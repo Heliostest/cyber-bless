@@ -3,10 +3,11 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { prepareBundledContent } from "./publish-scene-content.mjs";
+import { SCENE_ICON_IDS } from "../packages/app/src/scene-icon-assets.ts";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const assetFiles = [
   "reference-ui/wishes.png",
-  "reference-ui/rituals.png",
+  ...SCENE_ICON_IDS.map(id => `scene-icons/soft3d/${id}.webp`),
   "fonts/noto-sans-sc.woff2",
   "fonts/OFL.txt",
   "fonts/nunito-latin-500-normal.woff2",

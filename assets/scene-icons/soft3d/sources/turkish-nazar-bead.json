@@ -1,0 +1,86 @@
+{
+  "id": "turkish-nazar-bead",
+  "sourceSha256": "f0bf0e4adba38328477721d2356c06e566e451eabc0d3792c2960a88df867a0a",
+  "outputSha256": "1a9aa5016c7eac0241e9f6c66627c2c42d52a447d0bbd24a3a331d0520ef924c",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 105,
+    "top": 97,
+    "width": 245,
+    "height": 295
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 10,
+    "width": 418,
+    "height": 394
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 55680,
+  "placement": {
+    "left": 34,
+    "top": 15,
+    "width": 188,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 319,
+    "height": 322,
+    "left": -46,
+    "top": -59,
+    "canvasCrop": {
+      "left": 46,
+      "top": 59,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 50324,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-05.png",
+    "sha256": "6c11397b3f89760f9b1b2cefc60d4f6748d22a73cf85b4fa4b731022a3931df0",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 0,
+    "column": 0,
+    "row": 0,
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/turkish-nazar-bead.png",
+  "outputFile": "turkish-nazar-bead.webp"
+}

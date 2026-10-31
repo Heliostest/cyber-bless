@@ -1,0 +1,86 @@
+{
+  "id": "valencian-folding-fan",
+  "sourceSha256": "65dec246794359421ec4d013f76e96ff1c0880dc53efe0ddd63c35e5a6dc862e",
+  "outputSha256": "ce457c74ef7dbc94da935999a4f2a15139de229e7ab56ee7ec19292529e685cd",
+  "sourceWidth": 418,
+  "sourceHeight": 418,
+  "sourceBounds": {
+    "left": 14,
+    "top": 86,
+    "width": 378,
+    "height": 251
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 4,
+    "width": 402,
+    "height": 414
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 67782,
+  "placement": {
+    "left": 16,
+    "top": 54,
+    "width": 224,
+    "height": 148
+  },
+  "sourceTransform": {
+    "width": 247,
+    "height": 247,
+    "left": 8,
+    "top": 3,
+    "canvasCrop": {
+      "left": 0,
+      "top": 0,
+      "width": 247,
+      "height": 247
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 40946,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-12.png",
+    "sha256": "6912ba500d631f34c79ad8b55742f37104c95ce05ebc75c40d95a3d45cb83a97",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 418
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 831,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/valencian-folding-fan.png",
+  "outputFile": "valencian-folding-fan.webp"
+}

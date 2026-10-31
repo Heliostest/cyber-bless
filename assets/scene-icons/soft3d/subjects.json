@@ -1,0 +1,953 @@
+{
+  "version": 1,
+  "subjects": [
+    {
+      "id": "ukrainian-didukh",
+      "title": "迪杜赫麦束",
+      "description": "An upright golden wheat sheaf with complete grain heads, branching stalks and splayed straw feet; a coral-red tied ribbon with a narrow blue band gathers the waist. Keep the natural straw structure, without added icons or lettering.",
+      "visible": true
+    },
+    {
+      "id": "sri-lankan-bodhi-puja",
+      "title": "菩提供水",
+      "description": "A green long-tipped heart-shaped tree leaf and brown twig above a terracotta-colored open pitcher with a round handle and a distinct spout; pale blue water pours from the spout toward dark soil. Keep clear water and the leaf silhouette, without flowers or extra offerings.",
+      "visible": true
+    },
+    {
+      "id": "mezuzah-doorpost",
+      "title": "门柱祈安",
+      "description": "A warm tan wooden doorway with a muted teal opening; a closed blue-green rounded rectangular case with brass-colored end bands is mounted diagonally on the right post. Retain only the existing small shin mark on the case; no open scroll or invented scripture.",
+      "visible": true
+    },
+    {
+      "id": "hindu-coconut-offering",
+      "title": "椰果献愿",
+      "description": "Two separated brown hard-shell coconut halves on a low gray stone tray, their thick white flesh and hollow pale interiors facing upward. Keep the natural shell texture and split state, without a whole coconut, fibrous husk or extra offerings.",
+      "visible": true
+    },
+    {
+      "id": "nanakusa-gayu",
+      "title": "七草祈安",
+      "description": "A large dark sage-green pot and a smaller teal bowl filled with cream rice porridge and a few green herb flecks, with a brown wooden spoon raised diagonally beside them. Keep the simple prepared food and distinct pot, bowl and spoon shapes.",
+      "visible": true
+    },
+    {
+      "id": "brat-bride-cloth",
+      "title": "窗布祈护",
+      "description": "A plain teal square cloth with a pale stitched edge lies across the outer sill of a gray surround and brown cross-barred window with dark blue panes. Preserve the soft doubled fabric and unpatterned surface, without symbols or extra decoration.",
+      "visible": true
+    },
+    {
+      "id": "korean-sotdae",
+      "title": "鸟竿祈安",
+      "description": "One honey-brown carved wooden duck with an upturned head and long flat beak stands atop a tall narrow brown wooden pole on a low tan base. Preserve the duck's compact body, single dark eye and subtle carved wing line; no extra birds or emblems.",
+      "visible": true
+    },
+    {
+      "id": "japanese-kadomatsu",
+      "title": "门松迎岁",
+      "description": "Three green bamboo stems with diagonal cut tops at different heights rise from a tan straw-bound tapered base, flanked by dark green pine sprigs. Keep the center stem tallest and the two dark binding bands; no flowers, tags or extra offerings.",
+      "visible": true
+    },
+    {
+      "id": "pucara-rooftop-bulls",
+      "title": "陶牛护家",
+      "description": "A matched pair of small cream and ochre ceramic bulls stands side by side above a terracotta gabled roof ridge. Keep two separate upright horned bulls with short legs and dark eyes; no added cross, lettering or extra rooftop objects.",
+      "visible": true
+    },
+    {
+      "id": "chinese-longevity-lock",
+      "title": "银锁寄安",
+      "description": "A silver-colored scalloped lock pendant hangs from a warm orange-brown cotton cord loop, with three small silver drop ornaments below. Preserve the broad cloud-like curved outline and minimal linear face marks; no keyhole, key or invented inscription.",
+      "visible": true
+    },
+    {
+      "id": "uchide-wishing-mallet",
+      "title": "振槌寄愿",
+      "description": "A red lacquer-like barrel-headed mallet with golden end rings, a straight honey-brown wooden handle, round handle knob and short red cord tassel. Keep the broad horizontal drum-shaped head and simple unlettered surfaces.",
+      "visible": true
+    },
+    {
+      "id": "alasita-miniature-house",
+      "title": "微屋寄愿",
+      "description": "A small matte-painted turquoise house on a low ochre plinth, with a terracotta pitched roof, dark teal door and one cross-barred blue window edged in cream. Preserve the simple toy-sized house geometry and roof-tile lines, without added figures or lettering.",
+      "visible": true
+    },
+    {
+      "id": "yusheng-lohei",
+      "title": "鱼生捞起",
+      "description": "A broad teal-rimmed platter with a cream interior holds orange and green vegetable strips and a salmon-pink fish slice; two pairs of brown wooden chopsticks reach inward from opposite upper corners. Preserve the lifted, loosely crossed food strips and shared central plate.",
+      "visible": true
+    },
+    {
+      "id": "kitano-nadeushi",
+      "title": "抚牛寄愿",
+      "description": "A reclining gray-green stone ox with short horns, folded legs, broad muzzle and one visible dark eye rests on a pale rectangular stone base; a warm skin-toned hand reaches toward its forehead. Keep the ox as a still carved stone figure, without cloth, bells or gilded ornament.",
+      "visible": true
+    },
+    {
+      "id": "lao-baci-wrist",
+      "title": "白线祝归",
+      "description": "A warm skin-toned forearm and outstretched hand emerge from a teal sleeve; a thin ivory-white cotton cord wraps the wrist and forms a small tied loop with loose ends. Preserve the single cord and quiet horizontal hand pose, without bracelets or extra charms.",
+      "visible": true
+    },
+    {
+      "id": "finnish-virpominen",
+      "title": "柳枝祝春",
+      "description": "A brown branching pussy-willow twig with three soft ivory catkins and small coral and yellow paper decorations stands beside a pink wrapped chocolate egg in a shallow tan woven basket. Keep the twig, catkins, paper accents and wrapped egg distinct.",
+      "visible": true
+    },
+    {
+      "id": "scottish-first-footing",
+      "title": "煤火迎年",
+      "description": "One irregular charcoal-black coal lump with a few blue-gray facets sits beside a small warm tan stone hearth with an amber flame and an open tan doorway. Preserve the single coal lump, low hearth and simple architectural framing, without extra gifts or figures.",
+      "visible": true
+    },
+    {
+      "id": "hiiragi-iwashi",
+      "title": "柊鰯守门",
+      "description": "A prepared golden-brown sardine head with one dark eye is fixed to the top of a slender brown hiiragi twig, with paired sharp-edged dark green leaves below. Keep it as a fish head and Japanese hiiragi branch, without a whole fish, red berries or added decorations.",
+      "visible": true
+    },
+    {
+      "id": "tamagushi-offering",
+      "title": "玉串奉愿",
+      "description": "A diagonal brown sakaki branch with broad green leaves carries a cream-white folded zigzag paper streamer near its right side. Preserve the leafy branch and crisp angular paper folds, without flowers, cords, labels or extra offerings.",
+      "visible": true
+    },
+    {
+      "id": "tibetan-water-bowls",
+      "title": "清水七供",
+      "description": "Seven small copper-gold offering bowls form one straight row on a reddish wooden altar shelf, with a small simple seated golden Buddha figure centered behind them. Keep exactly seven bowls and the restrained unadorned figure silhouette; no added scripture or surrounding ritual objects.",
+      "visible": true
+    },
+    {
+      "id": "kagami-biraki-sake",
+      "title": "开樽祝愿",
+      "description": "A pale honey-colored wooden sake barrel with a round slatted lid and two dark horizontal bands, accompanied by a diagonal wooden mallet and a small red accent at the lid. Preserve the barrel-and-mallet shapes, without labels, writing, cups or drinking figures.",
+      "visible": true
+    },
+    {
+      "id": "tibetan-prayer-flags",
+      "title": "经幡迎风",
+      "description": "Five plain rectangular cloth flags hang from a gently sagging cord between two slender brown posts, ordered blue, ivory-white, red, green and yellow from left to right. Preserve the five separate colors and unlettered icon faces; no invented scripts or extra flags.",
+      "visible": true
+    },
+    {
+      "id": "rosh-hashanah-apple-honey",
+      "title": "蘸蜜迎岁",
+      "description": "A thick apple wedge with deep red peel and pale golden flesh sits beside a small muted teal cup filled with amber honey. Keep the clearly cut fruit shape and visible honey surface, without extra fruit, writing or serving figures.",
+      "visible": true
+    },
+    {
+      "id": "thai-songkran-elders",
+      "title": "浇水敬老",
+      "description": "A small pale blue bowl tilts above an open warm skin-toned hand, releasing a thin clear blue-tinted stream of water onto the palm. Preserve the simple bowl, continuous stream and receiving hand, without petals, perfume bottles or extra ceremony props.",
+      "visible": true
+    },
+    {
+      "id": "kameido-usokae",
+      "title": "木鷽迎福",
+      "description": "A small upright honey-colored carved wooden bird has a black cap, ivory eyes, muted coral-red chest and simple dark wing and foot strokes above a flat base. Keep the tall compact wooden silhouette and painted color blocks, without real feathers or added writing.",
+      "visible": true
+    },
+    {
+      "id": "persian-esfand",
+      "title": "熏籽祈安",
+      "description": "A shallow dark blue-gray metal pan with a short tan wooden handle holds a dark seed bed, with two soft gray-green wisps of smoke curling upward. Preserve the open pan and restrained smoke, without flames, extra burners or added symbols.",
+      "visible": true
+    },
+    {
+      "id": "mochigase-nagashibina",
+      "title": "纸雏祈安",
+      "description": "Two small cream-faced paper dolls in muted coral folded robes sit together on a shallow golden woven straw tray, with a short teal water ripple below. Keep the simple flat folded-paper bodies and round pale heads, without elaborate headdresses or invented inscriptions.",
+      "visible": true
+    },
+    {
+      "id": "greek-vasilopita",
+      "title": "新岁分糕",
+      "description": "A thick golden-brown cake slice with a pale cream top and warm crumb-colored sides rests on a pale ceramic plate with a muted teal rim; one small golden coin is visible at the front of the slice. Preserve the cut slice and single coin, without icing words, dates or extra decorations.",
+      "visible": true
+    },
+    {
+      "id": "tibetan-khata-greeting",
+      "title": "白绢迎客",
+      "description": "A plain ivory-white silk scarf hangs in a broad open U-shaped fold, with two long narrow ends and short pale tassel fringes. Preserve the soft fabric drape and empty center, without printed symbols, embroidery or extra knots.",
+      "visible": true
+    },
+    {
+      "id": "shichigosan-chitose-ame",
+      "title": "千岁赠糖",
+      "description": "A tall cream paper gift bag with a red cord handle holds two long pink-and-white wrapped candy sticks protruding from the top; the bag has a coral lower band and a simple coral flower mark. Preserve the slender candy and paper-bag forms, without invented lettering or extra motifs.",
+      "visible": true
+    },
+    {
+      "id": "mongolian-ovoo",
+      "title": "敖包祈护",
+      "description": "A tapered mound of gray-green stacked stones with pale horizontal stone edges supports a slender brown pole and one small blue cloth strip fluttering to the right. Keep the low irregular stone pile and single blue strip, without extra banners or sacred symbols.",
+      "visible": true
+    },
+    {
+      "id": "fgs-buddha-bathing",
+      "title": "浴佛发愿",
+      "description": "A small golden infant Buddha figure stands in a broad muted teal water basin, with the arm on the viewer's left raised and the other lowered; a small brown wooden ladle pours a thin blue water stream near the shoulder. Keep the simple original figure pose, basin and ladle, without added jewelry, script or surrounding offerings.",
+      "visible": true
+    },
+    {
+      "id": "balinese-canang-sari",
+      "title": "叶盘献谢",
+      "description": "A shallow folded pale green coconut-leaf tray holds distinct yellow, blue-violet, ivory-white and coral-pink flower clusters around small green central leaves. Preserve the angular leaf-fold seams and four-color flower arrangement, without adding flames, burning incense or new decorations.",
+      "visible": true
+    },
+    {
+      "id": "bulgarian-survakane",
+      "title": "彩枝贺年",
+      "description": "A slender brown dogwood branch forms two stacked open rounded loops, decorated with a few ivory popcorn-like pieces and short coral-red wool tassels. Preserve the open looped twig structure and sparse tied decorations, without extra ribbons, bells or lettering.",
+      "visible": true
+    },
+    {
+      "id": "lanna-sand-pagoda",
+      "title": "沙塔献幡",
+      "description": "A small tan sand pagoda rises in three tapering stepped tiers beside a slender bamboo pole with a top crossbar and one pale orange notched paper banner. Keep the sand texture, separate side pole and unlettered hanging paper; no added temple ornaments or script.",
+      "visible": true
+    },
+    {
+      "id": "chinese-fu-paper",
+      "title": "贴福迎春",
+      "description": "One bright red square paper rotated into a diamond bears the existing upright black geometric 福 character. Preserve the crisp paper corners, correct upright character and single-sheet composition; no added words, border patterns or tassels.",
+      "visible": true
+    },
+    {
+      "id": "turkish-nazar-bead",
+      "title": "蓝珠祈安",
+      "description": "A flattened round deep blue glass bead hangs from a small brass-colored top loop; its face has concentric ivory-white, light cyan and dark navy eye circles. Keep the four nested color fields and simple circular silhouette, without extra charms or script.",
+      "visible": true
+    },
+    {
+      "id": "japanese-hamaya",
+      "title": "饰矢祈安",
+      "description": "A tan wooden blunt-ended decorative arrow lies diagonally upward to the right, with large angular cream feather pieces, a short red tie and one small golden metal bell. Preserve the prepared arrow's soft blunt shaft and simple feather silhouette; no sharp arrowhead or added labels.",
+      "visible": true
+    },
+    {
+      "id": "vietnamese-five-fruit-tray",
+      "title": "五果迎春",
+      "description": "A shallow reddish-brown wooden fruit tray holds green bananas, one round yellow-green pomelo, an orange, a green apple and a golden pear with a short brown stem. Preserve the five distinct fruit types and low spread arrangement, without added flowers, labels or offerings.",
+      "visible": true
+    },
+    {
+      "id": "chinese-ruyi-scepter",
+      "title": "如意寄愿",
+      "description": "A jade-green curved ruyi scepter with a broad softly scalloped cloud-shaped head rests horizontally on a small two-support brown wooden stand. Preserve the asymmetrical curved handle and distinct head, without inscriptions, tassels or added symbols.",
+      "visible": true
+    },
+    {
+      "id": "japanese-kumade",
+      "title": "熊手纳福",
+      "description": "A tan bamboo-colored decorative rake fans into seven slender curved claws above a narrow handle and broad brown wooden foot, with three plain golden oval paper ornaments on the front. Preserve seven claws and three unlettered ovals; no coins, masks or extra emblems.",
+      "visible": true
+    },
+    {
+      "id": "neapolitan-cornicello",
+      "title": "红角赠福",
+      "description": "One smooth lacquer-red curved horn charm with a pointed curling tip is shown beside a small open cream gift box with tan edges. Preserve the simple solid horn silhouette and unlettered box, without a crown, face, beads or metal cap.",
+      "visible": true
+    },
+    {
+      "id": "spanish-twelve-grapes",
+      "title": "葡萄迎岁",
+      "description": "One shallow pale tan tray carries four round green grapes arranged in two rows of two, with slightly lighter lower grapes. Preserve this single four-grape tray from the existing icon, without stems, leaves, clock faces or extra fruit.",
+      "visible": true
+    },
+    {
+      "id": "horseshoe-doorway-luck",
+      "title": "蹄铁护家",
+      "description": "One thick muted gray-green iron horseshoe faces upward in a broad U shape, with four small pale nail holes in two vertical pairs. Preserve the open upper ends and four holes, without nails, engraving or decorative charms.",
+      "visible": true
+    },
+    {
+      "id": "setsubun-mamemaki",
+      "title": "节分撒豆",
+      "description": "A simple brown wooden doorway with a sliding cross-barred panel stands behind a small square tan wooden bean box, with three golden roasted soybeans visible around its open top. Keep the wooden structure and loose beans, without masks, figures or added writing.",
+      "visible": true
+    },
+    {
+      "id": "sternsinger-house-blessing",
+      "title": "门楣祝家",
+      "description": "A muted teal doorway with a pale stone-colored frame has a dark teal lintel strip bearing the existing small ivory chalk blessing marks, with a short piece of ivory chalk below and a small gold door knob. Preserve the source glyph layout and simple doorway; no extra words or decorations.",
+      "visible": true
+    },
+    {
+      "id": "lam-tsuen-wishing-tree",
+      "title": "林村抛愿",
+      "description": "A brown tree trunk and horizontal branch carry a broad muted green canopy, a red hanging paper tag and one small orange-colored fruit tied by a red cord. Preserve the visible looped cord, rectangular tag and round orange weight, without adding writing, coins or extra tags.",
+      "visible": true
+    },
+    {
+      "id": "kagami-mochi-offering",
+      "title": "镜饼迎岁",
+      "description": "Two soft ivory-white round mochi cakes are stacked with the larger cake below, topped by one orange fruit with a small green leaf, all on a low square tan wooden tray. Keep the two-tier cake silhouette and single orange, without extra paper, cords or inscriptions.",
+      "visible": true
+    },
+    {
+      "id": "romanian-martisor",
+      "title": "红白寄春",
+      "description": "A red-and-ivory twisted cord ring hangs from a brown flowering branch, with two short tassel ends below and two small pale pink blossoms with golden centers on the branch. Preserve the open cord loop, alternating fibers and two tassels, without extra charms or lettering.",
+      "visible": true
+    },
+    {
+      "id": "sumiyoshi-godairiki",
+      "title": "三石寄愿",
+      "description": "Three small rounded pale beige stones marked respectively 五, 大 and 力 sit beside an open muted teal cloth pouch with a cream lining and a pale gold mouth rim. Keep the three distinct source characters, soft bag opening and three separate stones; no additional writing or charms.",
+      "visible": true
+    },
+    {
+      "id": "polish-oplatek-sharing",
+      "title": "薄饼相祝",
+      "description": "A thin ivory rectangular wafer with a small corner broken away bears one shallow tan geometric four-point star motif and a simple lower border; the separated matching piece sits beside it. Preserve the light crisp wafer and irregular shared break, without added religious imagery or lettering.",
+      "visible": true
+    },
+    {
+      "id": "greek-new-year-pomegranate",
+      "title": "破榴迎新",
+      "description": "A red pomegranate with a small pointed crown is split open to show pale cream pith and ruby-red seeds above a low beige stone threshold, with one loose red seed beside it. Preserve the naturally broken fruit state and visible seeds, without a knife, bowl or decorative additions.",
+      "visible": true
+    },
+    {
+      "id": "bonfim-ribbon",
+      "title": "栏前结愿",
+      "description": "A warm golden-yellow woven ribbon wraps a muted teal metal railing, with three visible tied loops along the hanging portion and two long ribbon tails. Preserve the vertical bars, two crossbars and continuous ribbon path, without adding printed wording or extra charms.",
+      "visible": true
+    },
+    {
+      "id": "chinowa-kuguri",
+      "title": "茅环祈安",
+      "description": "A thick closed ring of bundled olive-green grass tied with a few pale straw bindings, held upright between two warm-brown wooden posts with short feet. Keep the central opening large and unobstructed.",
+      "visible": true
+    },
+    {
+      "id": "zeniarai-coin-washing",
+      "title": "泉水净币",
+      "description": "A shallow grey-beige stone water basin with turquoise water, a pale wooden openwork sieve holding one plain gold-brown coin, and a separate long-handled wooden ladle pouring a thin stream. Keep the coin in the sieve; no denomination or added lettering.",
+      "visible": true
+    },
+    {
+      "id": "udo-undama",
+      "title": "龟岩投愿",
+      "description": "One small ochre terracotta ball bearing the single character 運 beside a low grey-beige coastal rock with a distinct square recess in its top. Preserve the square target and plain clay surface; no extra coins, ropes or symbols.",
+      "visible": true
+    },
+    {
+      "id": "japanese-daruma-otoshi",
+      "title": "木槌落片",
+      "description": "A red rounded wooden daruma head with a cream face above three thick wooden discs in red, muted teal and ochre, the lowest disc offset to the right. A small natural-wood mallet stands alongside; keep the separate stacked pieces visible.",
+      "visible": false
+    },
+    {
+      "id": "paper-pinwheel",
+      "title": "纸翼转风",
+      "description": "A four-wing folded-paper pinwheel with alternating coral and turquoise blades, a small pale-gold axle bead and a straight warm-brown wooden stick. Keep exactly four curled triangular paper wings meeting at one central pin.",
+      "visible": false
+    },
+    {
+      "id": "chinese-steelyard",
+      "title": "移砣平衡",
+      "description": "A slender brown wooden steelyard beam with a small lifting ring, a brass-colored pan suspended from cords at the left and a dark metal sliding weight at the right. One orange fruit rests in the shallow pan; preserve the off-center balance structure.",
+      "visible": false
+    },
+    {
+      "id": "garden-croquet",
+      "title": "草坪过门",
+      "description": "A natural-wood long-handled croquet mallet beside one coral-red ball with a cream stripe and a pale grey metal U-shaped wicket on a short green ground strip. Keep the open wicket and horizontal cylindrical mallet head distinct.",
+      "visible": false
+    },
+    {
+      "id": "welsh-drop-spindle",
+      "title": "悬锤纺线",
+      "description": "A vertical honey-brown wooden drop spindle with a broad circular whorl low on its shaft and a compact cream yarn cop wound above the whorl. A small pale wool tuft and fine thread sit at the top; preserve the low-whorl structure.",
+      "visible": false
+    },
+    {
+      "id": "scottish-plunge-churn",
+      "title": "木杆搅乳",
+      "description": "A tapered warm-brown wooden churn barrel with two dark grey metal hoops, a fitted wooden lid and one vertical plunger rising through its center. The plunger has a short dark-brown grip; do not turn it into a crank mechanism.",
+      "visible": false
+    },
+    {
+      "id": "irish-bodhran",
+      "title": "鼓面轻拍",
+      "description": "A round warm-wood frame drum with a pale cream hide head, a muted green inner rim and a short diagonal double-ended wooden beater. Keep the shallow circular frame and two darker rounded beater ends.",
+      "visible": false
+    },
+    {
+      "id": "french-coffee-mill",
+      "title": "手磨晨光",
+      "description": "A square warm-brown wooden hand coffee grinder with a front drawer and small green knob, a shallow brass-colored metal hopper above, and a bent grey steel crank ending in a green grip. Keep the hopper, crank and drawer as separate recognizable parts.",
+      "visible": false
+    },
+    {
+      "id": "japanese-wagasa",
+      "title": "纸伞舒晴",
+      "description": "An open red-orange paper umbrella with one cream wedge, visible radial bamboo ribs, a straight brown shaft and a short muted-green handle. Preserve the faceted paper canopy and pointed central apex; no printed motifs.",
+      "visible": false
+    },
+    {
+      "id": "spanish-castanets",
+      "title": "木壳轻拍",
+      "description": "Two pairs of warm-brown hollow wooden castanet shells, each pair slightly open, joined at the top by dark teal cord loops. Keep the rounded teardrop shell forms and visible light inner edges; no hands or extra decoration.",
+      "visible": false
+    },
+    {
+      "id": "japanese-shishi-odoshi",
+      "title": "竹筒叩石",
+      "description": "A pale olive bamboo tipping tube on two short darker bamboo supports, poised above a shallow turquoise pool with a grey stone rim. Water falls from its open right end and a small knocking stone sits at the left; keep the central pivot readable.",
+      "visible": false
+    },
+    {
+      "id": "german-jumping-jack",
+      "title": "牵绳木偶",
+      "description": "A flat painted wooden pull-string puppet with a cream round head, orange hat, teal torso and blue jointed arms and legs. One thin tan cord and a small wooden bead hang below the body; preserve the visibly separate hinged limbs.",
+      "visible": false
+    },
+    {
+      "id": "finnish-kantele",
+      "title": "五弦轻拨",
+      "description": "A compact asymmetrical trapezoid-shaped honey-colored wooden zither with five parallel silver-grey strings, a dark pin bar at the right and a small round sound hole near its lower edge. Keep exactly five visible strings and the sloping left side.",
+      "visible": false
+    },
+    {
+      "id": "estonian-village-swing",
+      "title": "秋千轻荡",
+      "description": "A natural honey-brown wooden swing with two A-frame end supports, one heavy top beam and a broad plank seat suspended by two rigid wooden arms. Small grey pivot pins connect the arms to the beam; use no chain or rope suspension.",
+      "visible": false
+    },
+    {
+      "id": "french-petanque",
+      "title": "银球近靶",
+      "description": "Two silver-grey metal boules with shallow curved grooves and one much smaller ochre wooden target ball on an oval sandy-beige ground patch. Keep the contrasting ball sizes and metallic surfaces clear.",
+      "visible": false
+    },
+    {
+      "id": "english-hearth-bellows",
+      "title": "风囊轻送",
+      "description": "A partly open hand bellows with two warm-brown wooden leaves, a dark-brown folded leather air bag, two short handles at the right and a small brass nozzle at the left. Keep the layered hinged shape and flexible leather folds visible.",
+      "visible": false
+    },
+    {
+      "id": "mexican-metate",
+      "title": "石面磨香",
+      "description": "A plain grey stone grinding slab with a shallow concave top and three short supporting legs, with a long grey stone roller laid crosswise above it. A few pale ochre corn grains remain on the slab; no carved motifs.",
+      "visible": false
+    },
+    {
+      "id": "czech-wooden-ratchet",
+      "title": "木齿轻转",
+      "description": "A tan and brown wooden ratchet with an open rectangular frame, a prominent toothed wheel, a thin flexible wooden tongue and a short diagonal grip. A tiny muted-green end cap accents the top crosspiece; preserve the exposed mechanical parts.",
+      "visible": false
+    },
+    {
+      "id": "puerto-rican-guiro",
+      "title": "瓜棱轻奏",
+      "description": "A hollow golden-tan gourd scraper with a narrow open neck, rounded pear-shaped body and six visible horizontal ridges across its front. A simple brown wooden scraping stick rests diagonally alongside; keep the dark hollow mouth visible.",
+      "visible": false
+    },
+    {
+      "id": "valencian-folding-fan",
+      "title": "折扇轻风",
+      "description": "An open peach fabric folding fan with a curved teal band near the outer edge, slender tan wooden ribs radiating from one small brass pivot. Keep the fabric pleats and broad semicircular silhouette; no floral or calligraphic decoration.",
+      "visible": false
+    },
+    {
+      "id": "mexican-tortilla-press",
+      "title": "木压成圆",
+      "description": "A warm-tan wooden tortilla press with a flat lower plate, an angled raised upper plate and a long grey metal lever with a short teal grip. A pale yellow round piece of corn dough lies on the lower plate; keep the hinge and open gap apparent.",
+      "visible": false
+    },
+    {
+      "id": "ghanaian-oware",
+      "title": "木窝播籽",
+      "description": "A rounded rectangular honey-brown wooden board with two rows of six deep oval pits containing small muted grey-green seeds. Keep exactly twelve pits and their clear two-by-six arrangement; no extra scoring cups or symbols.",
+      "visible": false
+    },
+    {
+      "id": "chinese-rattle-drum",
+      "title": "拨浪轻响",
+      "description": "A small cream-headed round drum with a coral-red wooden rim, a simple teal circle on the head and a straight tan handle with a teal grip. Two thin side cords end in one blue and one ochre wooden bead; keep both beads visible.",
+      "visible": false
+    },
+    {
+      "id": "chinese-tangram",
+      "title": "七巧归方",
+      "description": "Seven flat painted wooden tangram pieces fitted into one square: five triangles of three sizes, one square and one parallelogram. Use coral, ochre, teal, blue, lavender, pale blue and dusty rose; keep the seven seams clear and add no markings.",
+      "visible": false
+    },
+    {
+      "id": "chinese-diabolo",
+      "title": "空竹轻扬",
+      "description": "A pale bamboo-and-wood double-wheel diabolo with teal wheel rims, small coral accents and one narrow brown axle, balanced on a fine tan string between two brown hand sticks. Keep the two hollow wheel forms distinct rather than making a solid ball.",
+      "visible": false
+    },
+    {
+      "id": "korean-yutnori",
+      "title": "木柶行棋",
+      "description": "A pale mint cloth game board with dark teal connecting lines and cream circular stations, one blue round playing token, and four separate half-round tan wooden throwing sticks below it. Preserve the board-and-four-sticks grouping without adding opponents or extra tokens.",
+      "visible": false
+    },
+    {
+      "id": "russian-matryoshka",
+      "title": "套娃相藏",
+      "description": "Two painted wooden nesting dolls of different sizes: a large teal doll with a coral headscarf, cream face and simple flower apron, beside a smaller sage-green doll with a cream face and ochre flower. Keep their rounded bodies, flat bases and the larger doll's horizontal opening seam.",
+      "visible": false
+    },
+    {
+      "id": "japanese-koinobori",
+      "title": "鲤旗迎风",
+      "description": "One turquoise cloth carp streamer hanging horizontally to the right from a slim brown pole with a small gold finial. Preserve its open coral-rimmed mouth, cream-and-dark eye, cream scale arcs and split cloth tail; no additional fish or family-color symbols.",
+      "visible": true
+    },
+    {
+      "id": "japanese-kendama",
+      "title": "剑玉轻接",
+      "description": "A natural honey-colored wooden cup-and-ball toy with a narrow upright spike, a horizontal crosspiece carrying unequal side cups and a red ball on a thin grey-brown string. The ball has one cream stripe; keep the cups concave and the tether attached.",
+      "visible": false
+    },
+    {
+      "id": "indian-charkha",
+      "title": "棉线慢成",
+      "description": "A small open brown wooden spinning-wheel frame with a large spoked wheel, a smaller horizontal metal spindle to its left and a fine connecting drive cord. A cream cotton tuft sits beside the spindle; preserve the exposed wheel, belt and spindle relationship.",
+      "visible": false
+    },
+    {
+      "id": "german-nutcracker",
+      "title": "木偶开果",
+      "description": "A painted wooden nutcracker figure with a natural-tan face, dark top hat and boots, muted-green coat, cream pointed beard and a rear wooden lever. One brown walnut sits beside it; keep the hinged lower jaw evident and add no regalia or lettering.",
+      "visible": false
+    },
+    {
+      "id": "mexican-molinillo",
+      "title": "木旋起沫",
+      "description": "A tall honey-brown wooden chocolate whisk standing in a terracotta handled cup filled with dark chocolate. Preserve its fluted lower head and two loose wooden rings near the surface, with only a few pale tan foam bubbles.",
+      "visible": false
+    },
+    {
+      "id": "malawi-sansi",
+      "title": "铁舌轻鸣",
+      "description": "A small rounded rectangular warm-brown wooden thumb-piano board with five silver-blue metal tongues of varied lengths, secured by two horizontal bridge bars. Keep the five separate tongues and the two small pale metal loops near the bottom corners; no added ornament.",
+      "visible": false
+    },
+    {
+      "id": "chinese-suanpan",
+      "title": "拨珠见数",
+      "description": "A dark-brown rectangular wooden abacus with a central divider, tan rods and ochre flattened oval beads. Preserve the icon's three visible rods, each with two beads above and five below the divider, and the small pale-gold corner fittings.",
+      "visible": false
+    },
+    {
+      "id": "mongolian-felt-ger",
+      "title": "毡屋向阳",
+      "description": "A cream felt-covered round ger shown with a low sloping roof, brown horizontal binding bands, a small terracotta-red roof ring and a teal door with a coral inset. Keep the felt surface, roof opening and compact cylindrical shelter form; no invented emblem or directional symbols.",
+      "visible": false
+    },
+    {
+      "id": "peruvian-engraved-gourd",
+      "title": "葫芦刻光",
+      "description": "A warm ochre dried gourd with a rounded bulbous base, narrow short neck and curved brown stem. Pale incised lines form the existing simple leaf-and-hill bands around its body; keep it a dry organic shell without added figures or lettering.",
+      "visible": false
+    },
+    {
+      "id": "venetian-glass-bead",
+      "title": "玻珠凝彩",
+      "description": "One large translucent teal glass bead with a visible threading hole, two warm-gold curved decorative bands and soft glass highlights, threaded on a thin tan cord beside one small coral bead. Keep the hole and glass identity rather than turning the main bead into clay.",
+      "visible": false
+    },
+    {
+      "id": "korean-bojagi-wrap",
+      "title": "方巾裹礼",
+      "description": "A small square parcel wrapped in sage-green, muted peach and pale ochre patchwork cloth with cream dashed seams. Two broad cream cloth ends form a soft top knot, with short peach tails; preserve folded fabric corners and add no copied motifs.",
+      "visible": true
+    },
+    {
+      "id": "vietnamese-bamboo-dragonfly",
+      "title": "竹蜓点风",
+      "description": "A painted bamboo balancing dragonfly with four long wings: the upper pair muted teal and the lower pair ochre, two pale-gold round eyes and a slender coral body and tail. Its pointed beak balances on a thin brown upright twig above a small grey-green support.",
+      "visible": false
+    },
+    {
+      "id": "turkish-ebru-paper",
+      "title": "浮彩成笺",
+      "description": "A rectangular cream sheet above a shallow brown tray, carrying broad flowing teal marbling with thinner coral swirls. A slender tan marbling tool lies diagonally across it; retain abstract fluid lines and no writing or new pictorial motifs.",
+      "visible": false
+    },
+    {
+      "id": "indonesian-angklung",
+      "title": "竹音轻摇",
+      "description": "A pale golden-bamboo rectangular frame holding two hollow bamboo tubes of different lengths, one straw-yellow and one olive-green. Preserve the open tube mouths, small suspension ties, visible bamboo nodes and lower horizontal support rail.",
+      "visible": false
+    },
+    {
+      "id": "weifang-paper-kite",
+      "title": "纸鸢乘风",
+      "description": "A teal swallow-shaped paper kite with broad pointed wings, a forked tail, coral central body and simple pale-gold structural lines. A single fine cream string curls below; keep the cut-paper silhouette and original sparse color blocks without copied motifs.",
+      "visible": false
+    },
+    {
+      "id": "chinese-shadow-puppet",
+      "title": "影偶小戏",
+      "description": "An original flat coral paper bird puppet with one jointed teal wing and two slender brown control rods in front of a warm cream screen in a brown rectangular frame. A soft offset bird shadow is visible on the screen; no human figure, leather substitution or lettering.",
+      "visible": false
+    },
+    {
+      "id": "faroese-wool-knit",
+      "title": "毛线织暖",
+      "description": "A small cream wool knitted swatch with grey V-shaped stitches, two crossed natural-wood knitting needles and a grey-beige wound yarn ball alongside. Keep the interlocking yarn texture and visible needle tips; no sweater-shaped or copied pattern additions.",
+      "visible": false
+    },
+    {
+      "id": "niue-shell-necklace",
+      "title": "贝链留光",
+      "description": "A looped fine tan cord carrying warm-yellow small spiral snail shells with darker openings and pale edge highlights. Preserve the icon's open necklace curve and eight visibly separate shells; no pendant, beads or extra symbols.",
+      "visible": false
+    },
+    {
+      "id": "polish-paper-cut",
+      "title": "剪纸开花",
+      "description": "A flat dark-teal symmetrical flower-and-leaf paper cutout on a cream rectangular cutting mat. Keep the central stem, mirrored angular leaves and real small openings within the paper; no added birds, roosters or multicolor layers.",
+      "visible": false
+    },
+    {
+      "id": "uzbek-clay-bowl",
+      "title": "陶轮慢成",
+      "description": "A plain reddish-brown wet-clay bowl with an open hollow interior and shallow circular throwing lines, centered on a small tan wooden pottery wheel. Keep the bowl unglazed and undecorated; no blue glaze, painted motifs or kiln effects.",
+      "visible": false
+    },
+    {
+      "id": "chinese-woodblock-print",
+      "title": "木版留春",
+      "description": "A cream paper sheet carrying one simple blue-grey and muted-teal leafy sprig above a tan rectangular carved woodblock. A short brown palm-fiber rubbing brush sits at the lower left; no book pages, stamps or text.",
+      "visible": false
+    },
+    {
+      "id": "czech-bead-star",
+      "title": "珠星映光",
+      "description": "An open six-armed star made from alternating silver-white and muted-blue hollow glass beads threaded on thin grey wire, with a small pale-gold central bead. Preserve the open spaces and six radiating beaded arms; no filled snowflake plate or added symbols.",
+      "visible": false
+    },
+    {
+      "id": "fijian-woven-fan",
+      "title": "叶扇纳凉",
+      "description": "A pale straw-gold woven pandanus-leaf fan with a pointed broad spade-shaped face, subtle diagonal crossing strips and a short tan wooden handle. Two muted-sage binding bands wrap the narrow neck; preserve the leaf-fiber texture and plain original weave.",
+      "visible": false
+    },
+    {
+      "id": "amazigh-woven-rug",
+      "title": "织毯寄暖",
+      "description": "A small rectangular ivory wool rug with rust-red bands, an ochre central diamond, muted indigo geometric accents and short tan fringes on both ends; preserve the simple original pattern and woven fibers.",
+      "visible": false
+    },
+    {
+      "id": "slovak-wire-bird",
+      "title": "铁线栖鸟",
+      "description": "An open gray metal-wire bird facing right, with a pointed beak, raised angular tail, warm brown looped wing and two slender legs on a small tan wooden perch; keep the body hollow rather than filling it with feathers.",
+      "visible": false
+    },
+    {
+      "id": "hungarian-embroidery-hoop",
+      "title": "花绣寄语",
+      "description": "A round tan wooden embroidery hoop with a small top fastener, ivory fabric and one dusty-rose stitched flower with green stem and leaves; preserve the original sparse floral design, without adding regional emblems.",
+      "visible": false
+    },
+    {
+      "id": "andalusian-ceramic-tile",
+      "title": "釉彩映晴",
+      "description": "Nine ivory glazed ceramic tiles in a three-by-three square inside a warm brown wooden frame; each tile has a simple blue-and-teal four-petal motif with an ochre center, with all nine grout divisions visible.",
+      "visible": false
+    },
+    {
+      "id": "sicilian-painted-cart",
+      "title": "彩车迎晴",
+      "description": "A miniature ochre painted wooden cart in side perspective, with a teal stripe on its rectangular box, one large visible cream-and-rust spoked wheel and a short reddish-brown shaft extending right; no horse, saint image or parade float.",
+      "visible": false
+    },
+    {
+      "id": "bai-indigo-cloth",
+      "title": "蓝白晾晴",
+      "description": "A blue indigo-dyed cotton cloth draped over a tan wooden drying rail, with an ivory central diamond outline and an ivory lower stripe; preserve the softly curved hanging hem and original simple resist-dye pattern.",
+      "visible": false
+    },
+    {
+      "id": "ndebele-painted-house",
+      "title": "彩墙寄家",
+      "description": "A small cream model-house facade with a centered brown doorway, teal geometric bands, one rust-colored diamond above the door and ochre lower accents; preserve the original simple painted fields without adding copied murals or clan symbols.",
+      "visible": false
+    },
+    {
+      "id": "purepecha-copper-bowl",
+      "title": "铜碗拾暖",
+      "description": "A deep round warm-copper bowl seen slightly from above, with a thick rolled rim, darker open interior and a few shallow hammered highlights on the curved exterior; retain metal identity with restrained reflections.",
+      "visible": false
+    },
+    {
+      "id": "welsh-love-spoon",
+      "title": "木勺寄情",
+      "description": "A warm honey-brown carved wooden spoon, upright with an open heart-shaped handle and a rounded oval bowl below; preserve the actual hole through the heart and the concave spoon bowl.",
+      "visible": true
+    },
+    {
+      "id": "barcelos-clay-rooster",
+      "title": "陶鸡报晓",
+      "description": "A painted dark-teal clay rooster facing right, with a raised sweeping tail, rust-red comb, ochre beak and legs, a small cream geometric chest mark and a terracotta display base; keep it a ceramic ornament, without invented lettering.",
+      "visible": true
+    },
+    {
+      "id": "finnish-birch-basket",
+      "title": "桦篮拾光",
+      "description": "A pale golden birch-bark basket with a broad rectangular opening, tapered woven body, cream top binding and one tall arched handle; show the interlaced bark strips clearly, without adding contents or symbolic decoration.",
+      "visible": false
+    },
+    {
+      "id": "croatian-licitar-heart",
+      "title": "彩心相赠",
+      "description": "A thick red dough heart ornament with a small sage hanging loop, a piped ivory heart outline and a pale blue-green oval center edged in gold; retain the decorated dough-and-icing identity, without adding words.",
+      "visible": true
+    },
+    {
+      "id": "catalan-festival-giant",
+      "title": "巨偶待游",
+      "description": "A miniature upright festival figure with a small peach face, ochre hat, teal jacket and sleeves, long terracotta bell-shaped skirt and one cream chest flower, standing on a low wooden base; no named character or copied crest.",
+      "visible": false
+    },
+    {
+      "id": "sorbian-painted-egg",
+      "title": "彩蛋寄春",
+      "description": "A warm terracotta-brown painted egg with a pointed upper end and rounded lower end, an ivory diamond around a small sage dot and a curved ivory band near the bottom; keep the original sparse painted design.",
+      "visible": true
+    },
+    {
+      "id": "basque-sunflower",
+      "title": "太阳花迎门",
+      "description": "An artificial cream paper-and-wood flower ornament with many narrow pointed radial petals and a round textured tan wooden center; keep it a handmade dry-looking ornament rather than a fresh sunflower or a harvested plant.",
+      "visible": true
+    },
+    {
+      "id": "breton-banner",
+      "title": "节旗轻展",
+      "description": "A muted sea-green hanging cloth banner on a tan wooden pole and crossbar, with a notched lower edge, a small cream sun disk and a cream wavy stripe; retain the original simple sun-and-wave design, without saints, crests or flags.",
+      "visible": false
+    },
+    {
+      "id": "lithuanian-straw-garden",
+      "title": "草穗悬园",
+      "description": "A suspended open geometric mobile made of golden straw tubes and fine tan thread, shaped as two pyramids joined at their square base with a smaller hanging diamond below; preserve the hollow framework and visible joints.",
+      "visible": true
+    },
+    {
+      "id": "dalarna-wooden-horse",
+      "title": "木马安放",
+      "description": "A small rust-red carved wooden horse facing right, with upright ears, four sturdy legs and an ivory rectangular saddle patch bearing a simple muted-teal V-shaped mark; preserve the original painted wooden silhouette.",
+      "visible": false
+    },
+    {
+      "id": "aland-votive-ship",
+      "title": "舟模寄谢",
+      "description": "A miniature tan wooden sailboat on a dark simple display cradle, with a low brown hull, one central wooden mast and two unequal cream triangular sails; no water, passengers, lettering or extra nautical emblems.",
+      "visible": true
+    },
+    {
+      "id": "blang-tea",
+      "title": "茶山一盏",
+      "description": "A rounded sage-green ceramic teapot with a short left spout, right loop handle, pale lid and simple light-green leaf mark, accompanied by one small ivory tea cup at lower right.",
+      "visible": false
+    },
+    {
+      "id": "minangkabau-spinning-top",
+      "title": "木陀轻转",
+      "description": "A warm reddish-brown wooden spinning top with a rounded wide shoulder, sharp lower tip, short upright spindle and two ivory bands; an ivory cotton pull cord wraps around it and ends in one small wooden bead.",
+      "visible": false
+    },
+    {
+      "id": "chinese-incense",
+      "title": "炉前一炷",
+      "description": "A pale sage ceramic incense burner with an open rounded bowl, cream rim and three short feet, holding one slender brown incense stick with a faint curl of gray smoke; preserve the current scene's single-stick presentation.",
+      "visible": true
+    },
+    {
+      "id": "hongsheng-red-string",
+      "title": "红绳自持",
+      "description": "A dusty-red textile cord forming one closed loop around a simple tan wooden display support, with a small pale-gold rectangular clasp near the bottom; no heart charm, deity figure or added script.",
+      "visible": false
+    },
+    {
+      "id": "italian-ex-voto",
+      "title": "绘牌记谢",
+      "description": "A cream ceramic picture plaque on a small tan wooden easel, painted with a simple sage landscape curve and one warm ochre divided window; retain the original domestic scene, without adding sacred portraits or lettering.",
+      "visible": true
+    },
+    {
+      "id": "czech-pilgrim-journal",
+      "title": "旅途一页",
+      "description": "An open small journal with a muted sage-green cover, cream curved pages, simple green mountain-and-path lines and a dusty-coral ribbon bookmark hanging near the right page; no map labels, stamps or religious signs.",
+      "visible": false
+    },
+    {
+      "id": "omikuji",
+      "title": "签纸慢读",
+      "description": "A tan faceted wooden draw-stick box with a narrow stick emerging upward, beside one tall cream paper slip bearing only a few short brown horizontal marks; keep the box and paper distinct, without invented readable predictions.",
+      "visible": true
+    },
+    {
+      "id": "polish-blessing-basket",
+      "title": "一篮春食",
+      "description": "A warm tan woven basket with a tall curved handle and folded white cloth liner, holding one small golden round bread loaf and one muted pink decorated egg; keep the limited two-food arrangement.",
+      "visible": true
+    },
+    {
+      "id": "navruz-sumalak",
+      "title": "春锅共煮",
+      "description": "A deep muted gray-green metal cooking pot with two loop handles, filled with warm brown thick food; a tan wooden stirring paddle leans upward from its center, with one curved swirl visible on the surface.",
+      "visible": true
+    },
+    {
+      "id": "floating-lantern-loy-krathong",
+      "title": "叶舟寄意",
+      "description": "A low green folded-leaf floating vessel with layered pointed leaf edges, one small ivory flower and one short cream candle with a warm golden flame; a small blue water ripple sits underneath, with no airborne lantern envelope.",
+      "visible": true
+    },
+    {
+      "id": "omamori-cycle",
+      "title": "御守伴行",
+      "description": "A closed dusty-coral woven pouch with sloping upper shoulders, cream hanging cord and tied loops, pale-gold border lines and a small original cream flower on its face; no readable script, shrine emblem or exposed contents.",
+      "visible": true
+    },
+    {
+      "id": "shrine-suzu-bell",
+      "title": "庭前一铃",
+      "description": "A warm brass rounded bell with a dark curved sound slit, suspended on a thick cream rope with a short reddish-tan flared pull tassel below; keep the bell, rope and tassel clearly separated.",
+      "visible": true
+    },
+    {
+      "id": "st-brigids-cross",
+      "title": "草编迎春",
+      "description": "A compact sage-and-straw woven four-armed cross, with a tightly interlaced square center, four bent rectangular rush bundles and pale bindings near the ends; preserve the woven pinwheel construction rather than a plain solid cross.",
+      "visible": true
+    },
+    {
+      "id": "bokjori",
+      "title": "竹筛迎岁",
+      "description": "A pale golden bamboo rice scoop-strainer with a broad shallow woven basket, short upright loop handle, a few ivory rice grains and two small dusty-coral cord ends below; preserve the curved open basket and visible weave.",
+      "visible": true
+    },
+    {
+      "id": "ema-votive-plaque",
+      "title": "木牌记愿",
+      "description": "A pale honey-colored pentagonal wooden plaque with a shallow roof-shaped top, two dark upper holes and one tan hanging cord; a small original pink flower and sage stem decorate its face, without readable script or a copied crest.",
+      "visible": true
+    },
+    {
+      "id": "clootie-well-rag",
+      "title": "井边放下",
+      "description": "A pale mint cotton strip tied over a low tan tree branch, with soft vertical folds; beside it sits a short gray stone well ring containing blue-green water, with no healing symbols or added offerings.",
+      "visible": true
+    },
+    {
+      "id": "diya-oil-lamp",
+      "title": "灯旋一瞥",
+      "description": "One shallow terracotta oil lamp with an asymmetric pointed lip, a warm golden oil surface, curved ivory cotton wick and a small yellow flame at the raised right edge; preserve the open clay bowl shape.",
+      "visible": true
+    },
+    {
+      "id": "votive-candle-catholic",
+      "title": "留一盏烛光",
+      "description": "One upright cream wax candle with small wax drips, a dark wick and warm golden flame, standing on a simple muted stone-colored candle stand with short gray metal side rails; no printed image or added religious emblem.",
+      "visible": true
+    },
+    {
+      "id": "daruma-eye-painting",
+      "title": "达摩点睛",
+      "description": "A bottom-heavy rounded red painted paper doll with a cream face, dark expressive brows and beard marks, and sparse gold body strokes; in the existing icon the viewer-left eye is black and the viewer-right eye remains white, with no lettering.",
+      "visible": true
+    },
+    {
+      "id": "mizuhiki",
+      "title": "水引结愿",
+      "description": "A tall cream folded paper gift envelope wrapped horizontally with coral and gold paper cords, forming an original symmetrical multi-loop knot with two short diagonal tails; keep the cords slender and distinct, without invented writing or a specified ceremonial knot.",
+      "visible": true
+    },
+    {
+      "id": "milagros",
+      "title": "留一枚感谢",
+      "description": "A small warm-gold metal heart token pinned by a round gold tack to the cream inset of a tan rectangular wooden display board; retain the simple rounded heart shape, without adding flames, wings or lettering.",
+      "visible": true
+    },
+    {
+      "id": "phuang-malai",
+      "title": "串花寄意",
+      "description": "A small circular garland of ivory flower buds with a few soft-pink accents, an open center and two short cream trailing strands ending in pink flower clusters; preserve the compact ring and paired pendants.",
+      "visible": true
+    },
+    {
+      "id": "woodfish",
+      "title": "敲一敲木鱼",
+      "description": "A rounded honey-colored wooden fish drum resting on a red oval cushion, with a small side mouth nub and dark curved sound slit; a slender wooden mallet with a round tan head leans along its right side, without added carvings or script.",
+      "visible": true
+    },
+    {
+      "id": "celtic-folk-spring",
+      "title": "泉边一念",
+      "description": "A low oval ring of gray-green stone around bright blue water, with one small smooth golden token hovering above its center and a pale circular ripple below; no coin engraving, sacred symbols or extra offerings.",
+      "visible": false
+    },
+    {
+      "id": "theravada-water",
+      "title": "花水位一倾",
+      "description": "A small silver-gray metal pitcher tilted to pour one thin blue stream into a wide warm brass-colored basin, with turquoise water and one small pink floating petal; no deity image or ceremonial lettering.",
+      "visible": false
+    },
+    {
+      "id": "furin-wind-chime",
+      "title": "风铃一响",
+      "description": "A pale blue translucent glass bell with a domed top and open lower rim, small coral flower-dot decoration and a long pink rectangular paper strip suspended beneath on a thin cord; keep glass, string and paper visually distinct.",
+      "visible": true
+    },
+    {
+      "id": "shinto-torii",
+      "title": "庭前一礼",
+      "description": "A vermilion wooden torii gate with two upright pillars, a horizontal lower crossbeam and a broad gently upswept upper lintel with a dark-brown cap; short dark pillar footings, with no rope, plaque or added crest.",
+      "visible": true
+    },
+    {
+      "id": "tibetan-wheel",
+      "title": "廊前轻转",
+      "description": "One fixed upright prayer drum on a vertical axle between two tan wooden horizontal supports; the short red cylindrical shell has gold top and bottom bands, a golden elliptical lid and three small gold studs, without script or a handheld chain.",
+      "visible": true
+    },
+    {
+      "id": "tanzaku-tanabata",
+      "title": "短册系竹",
+      "description": "A slim green bamboo stalk with visible joints and a short leafy branch, holding one long pink paper strip on a fine dark tie; preserve the simple paper strip with a few short muted-pink marks and no invented readable wish.",
+      "visible": true
+    },
+    {
+      "id": "yeondeunghoe",
+      "title": "燃灯上浮",
+      "description": "A glowing lotus-shaped paper lantern with layered soft-pink petals, a pale inner ring, warm golden light at its center and the existing icon's small green leaf-shaped lower rim; gently suspended without water, a balloon envelope or hanging string.",
+      "visible": true
+    },
+    {
+      "id": "crane",
+      "title": "折一只纸鹤",
+      "description": "One light sakura-pink origami paper crane with a small bent beak and long folded neck pointing left, a sharp tail extending right, two raised triangular wings and a compact diamond-shaped body; preserve crisp folds, thin paper edges and the original open silhouette.",
+      "visible": true
+    },
+    {
+      "id": "lantern",
+      "title": "月下一灯",
+      "description": "A small glowing amber paper lantern with a rounded ribbed cylindrical body, dark-brown top and bottom rims, short red suspension cord and one little tan rectangular wish plaque hanging below; no readable writing or invented symbols.",
+      "visible": false
+    },
+    {
+      "id": "slavic-wreath",
+      "title": "火边花环",
+      "description": "A green woven-stem flower wreath with an open center, six simple coral, yellow, blue, ivory and pink blossoms, two coral ribbon tails and the existing icon's small cream candle with a warm flame inside the ring.",
+      "visible": true
+    }
+  ]
+}

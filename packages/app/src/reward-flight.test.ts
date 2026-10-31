@@ -173,6 +173,17 @@ describe("RewardFlightLayer", () => {
     return { ui, onLand };
   };
 
+  it.each(["woodfish", "crane", "lantern"] as const)("flies the current illustration for historical kind %s", kind => {
+    const { ui } = mount(flight({ kind }), true);
+    try {
+      expect(ui.host.querySelector(".reward-ghost img.scene-icon")?.getAttribute("src"))
+        .toBe(`/scene-icons/soft3d/${kind}.webp`);
+      expect(ui.host.querySelector(".reference-crop")).toBeNull();
+    } finally {
+      ui.unmount();
+    }
+  });
+
   it("reveals at once without Web Animations (plain jsdom), reporting one landing", async () => {
     placeSlot();
     const { ui, onLand } = mount(flight({ collectibleId: "ritual:s1" }));

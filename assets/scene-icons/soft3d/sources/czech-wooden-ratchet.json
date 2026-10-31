@@ -1,0 +1,86 @@
+{
+  "id": "czech-wooden-ratchet",
+  "sourceSha256": "92c123a410f7e3d2598553d68b7d54eb4ff73c00b255dbd043fa45bbe557385d",
+  "outputSha256": "f16620bab261597e421dd5aeb9866821fbda0caa98de491bc9f681885d53af93",
+  "sourceWidth": 418,
+  "sourceHeight": 420,
+  "sourceBounds": {
+    "left": 63,
+    "top": 50,
+    "width": 355,
+    "height": 314
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 420
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 55630,
+  "placement": {
+    "left": 15,
+    "top": 29,
+    "width": 225,
+    "height": 198
+  },
+  "sourceTransform": {
+    "width": 265,
+    "height": 266,
+    "left": -25,
+    "top": -3,
+    "canvasCrop": {
+      "left": 25,
+      "top": 3,
+      "width": 240,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 37622,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-12.png",
+    "sha256": "6912ba500d631f34c79ad8b55742f37104c95ce05ebc75c40d95a3d45cb83a97",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 3,
+    "column": 0,
+    "row": 1,
+    "bounds": {
+      "left": 0,
+      "top": 414,
+      "width": 418,
+      "height": 420
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 833,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/czech-wooden-ratchet.png",
+  "outputFile": "czech-wooden-ratchet.webp"
+}

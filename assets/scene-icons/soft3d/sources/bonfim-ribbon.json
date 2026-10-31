@@ -1,0 +1,86 @@
+{
+  "id": "bonfim-ribbon",
+  "sourceSha256": "9239fa0ef196c2355fb019ae91fed5cc7d3beef56d87ee161935b4e07f0a5a0e",
+  "outputSha256": "adfae72d51c8a59a85bfccea196bffb5e210de1724733fee730acea9eb919e09",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 69,
+    "top": 24,
+    "width": 280,
+    "height": 355
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 11,
+    "width": 418,
+    "height": 381
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 80935,
+  "placement": {
+    "left": 39,
+    "top": 15,
+    "width": 178,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 265,
+    "height": 267,
+    "left": -5,
+    "top": 0,
+    "canvasCrop": {
+      "left": 5,
+      "top": 0,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 54788,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/fix-01.png",
+    "sha256": "838012a0ab1074902f20cb62cacd9c7d488540be3b7ae79edf9537dc22b4c817",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 6,
+    "column": 0,
+    "row": 2,
+    "bounds": {
+      "left": 0,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/bonfim-ribbon.png",
+  "outputFile": "bonfim-ribbon.webp"
+}

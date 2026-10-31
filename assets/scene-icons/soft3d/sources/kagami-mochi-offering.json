@@ -1,0 +1,86 @@
+{
+  "id": "kagami-mochi-offering",
+  "sourceSha256": "4f9745eea81a0e5beaead5616067b25308883b4743b9c435d4ed0ecaa52a7dd7",
+  "outputSha256": "69ab4f8f8acd0f5878547975721909cccb55649da791585b4bb7b8e5226070a4",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 40,
+    "top": 105,
+    "width": 324,
+    "height": 292
+  },
+  "sourceAlphaBounds": {
+    "left": 1,
+    "top": 35,
+    "width": 403,
+    "height": 387
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 62949,
+  "placement": {
+    "left": 15,
+    "top": 26,
+    "width": 225,
+    "height": 203
+  },
+  "sourceTransform": {
+    "width": 290,
+    "height": 293,
+    "left": -12,
+    "top": -47,
+    "canvasCrop": {
+      "left": 12,
+      "top": 47,
+      "width": 256,
+      "height": 246
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 43276,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-06.png",
+    "sha256": "d00cec349762fd99cd67c6793c2afed4bc7109b44463cb4c1425dbfb8b137600",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/kagami-mochi-offering.png",
+  "outputFile": "kagami-mochi-offering.webp"
+}

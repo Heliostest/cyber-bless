@@ -1,0 +1,86 @@
+{
+  "id": "chinese-ruyi-scepter",
+  "sourceSha256": "af1adf90b63e3f235cebcf0012e3c334dfd25f7ecfcf7ffd2f4e27153b271633",
+  "outputSha256": "de9570ef0cacde19a88b9e8b5ec3c778eab498c7ed3b9f67dc16abb5e3f9ee24",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 51,
+    "top": 130,
+    "width": 355,
+    "height": 221
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 11,
+    "width": 418,
+    "height": 415
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 57541,
+  "placement": {
+    "left": 16,
+    "top": 58,
+    "width": 224,
+    "height": 139
+  },
+  "sourceTransform": {
+    "width": 263,
+    "height": 268,
+    "left": -16,
+    "top": -24,
+    "canvasCrop": {
+      "left": 16,
+      "top": 24,
+      "width": 247,
+      "height": 244
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 34566,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-05.png",
+    "sha256": "6c11397b3f89760f9b1b2cefc60d4f6748d22a73cf85b4fa4b731022a3931df0",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 3,
+    "column": 0,
+    "row": 1,
+    "bounds": {
+      "left": 0,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/chinese-ruyi-scepter.png",
+  "outputFile": "chinese-ruyi-scepter.webp"
+}

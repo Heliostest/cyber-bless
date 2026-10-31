@@ -1,0 +1,86 @@
+{
+  "id": "russian-matryoshka",
+  "sourceSha256": "6c25e5693da0d5d53889919bc7dead35fe6c60405c32fa621d84c023dea2341f",
+  "outputSha256": "b1914c785a1f65ee5d8b2406f35ec197fedd1155c8e4def49f445daeeb2edd92",
+  "sourceWidth": 418,
+  "sourceHeight": 399,
+  "sourceBounds": {
+    "left": 51,
+    "top": 46,
+    "width": 346,
+    "height": 315
+  },
+  "sourceAlphaBounds": {
+    "left": 23,
+    "top": 1,
+    "width": 395,
+    "height": 398
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 85177,
+  "placement": {
+    "left": 15,
+    "top": 26,
+    "width": 225,
+    "height": 204
+  },
+  "sourceTransform": {
+    "width": 272,
+    "height": 259,
+    "left": -18,
+    "top": -4,
+    "canvasCrop": {
+      "left": 18,
+      "top": 4,
+      "width": 254,
+      "height": 255
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 58318,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-13.png",
+    "sha256": "d8da03904776e46793aebc606a5160e21d61e97aaa92dafea4dd12a2096cd7a6",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 3,
+    "column": 0,
+    "row": 1,
+    "bounds": {
+      "left": 0,
+      "top": 414,
+      "width": 418,
+      "height": 399
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 812,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/russian-matryoshka.png",
+  "outputFile": "russian-matryoshka.webp"
+}

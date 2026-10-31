@@ -1,0 +1,86 @@
+{
+  "id": "mexican-metate",
+  "sourceSha256": "4ed375e82fb3966c45e5b661e88544b1e66d4aa7bf5506f49cca17e20df0fcb7",
+  "outputSha256": "275e0c95ac865f756e78b290d5f9a93dc75810f85f24eef4a3dc969d72fba990",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 31,
+    "top": 133,
+    "width": 340,
+    "height": 230
+  },
+  "sourceAlphaBounds": {
+    "left": 3,
+    "top": 41,
+    "width": 391,
+    "height": 381
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 61475,
+  "placement": {
+    "left": 16,
+    "top": 52,
+    "width": 224,
+    "height": 151
+  },
+  "sourceTransform": {
+    "width": 275,
+    "height": 277,
+    "left": -4,
+    "top": -35,
+    "canvasCrop": {
+      "left": 4,
+      "top": 35,
+      "width": 256,
+      "height": 242
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 47738,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-12.png",
+    "sha256": "6912ba500d631f34c79ad8b55742f37104c95ce05ebc75c40d95a3d45cb83a97",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 831,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/mexican-metate.png",
+  "outputFile": "mexican-metate.webp"
+}

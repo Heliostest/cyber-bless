@@ -1,0 +1,86 @@
+{
+  "id": "basque-sunflower",
+  "sourceSha256": "e80adba4d0c61a690e14e2d2f2b8966d9ee3b4cdc48478c36a47154bc1440e40",
+  "outputSha256": "686bec3ae874c27efb0a468adfd465768028cb318329687445bb17ef3468bc71",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 46,
+    "top": 36,
+    "width": 320,
+    "height": 306
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 404,
+    "height": 422
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 72427,
+  "placement": {
+    "left": 15,
+    "top": 20,
+    "width": 225,
+    "height": 216
+  },
+  "sourceTransform": {
+    "width": 294,
+    "height": 297,
+    "left": -17,
+    "top": -5,
+    "canvasCrop": {
+      "left": 17,
+      "top": 5,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 49570,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-07.png",
+    "sha256": "4b85ecf27f54528bb3d6057ef68949fa571007cb3d066d98943dcf569f8bfb6c",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 8,
+    "column": 2,
+    "row": 2,
+    "bounds": {
+      "left": 836,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/basque-sunflower.png",
+  "outputFile": "basque-sunflower.webp"
+}

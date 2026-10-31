@@ -1,0 +1,86 @@
+{
+  "id": "chinese-fu-paper",
+  "sourceSha256": "9ba154a8bfcca6ff12261a54a30479d799d07d66d9215d3be359a8a47b4a1779",
+  "outputSha256": "ea877aa06d841266aaecea839b4d37ffa2842105346acb46d01f5740d6d97cfd",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 52,
+    "top": 30,
+    "width": 329,
+    "height": 333
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 13,
+    "width": 384,
+    "height": 389
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 57878,
+  "placement": {
+    "left": 17,
+    "top": 15,
+    "width": 222,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 282,
+    "height": 285,
+    "left": -18,
+    "top": -5,
+    "canvasCrop": {
+      "left": 18,
+      "top": 5,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 40662,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-04.png",
+    "sha256": "1f590be0899984d55736775c4e2bb58f395eea9b86702065a177116091307406",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 8,
+    "column": 2,
+    "row": 2,
+    "bounds": {
+      "left": 836,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/chinese-fu-paper.png",
+  "outputFile": "chinese-fu-paper.webp"
+}

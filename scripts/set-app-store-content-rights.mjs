@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { getOwnAppStoreClient } from './app-store-client.mjs';
+import { assetFiles } from './prepare-app-assets.mjs';
 
 const declaration = JSON.parse(await readFile(new URL('../store/ios/content-rights.json', import.meta.url), 'utf8'));
 if (declaration.contentRightsDeclaration !== 'USES_THIRD_PARTY_CONTENT' || !declaration.developerConfirmation.referenceImagesMayBeDistributed) {
@@ -11,7 +12,8 @@ if (c.appId !== declaration.appId || c.ownApp.attributes.bundleId !== declaratio
   throw Error('Own application identity mismatch; no changes made');
 }
 const imageEvidence = [];
-for (const file of ['wishes.png', 'rituals.png']) {
+for (const reference of assetFiles.filter(file => file.startsWith('reference-ui/'))) {
+  const file = reference.slice('reference-ui/'.length);
   const bytes = await readFile(new URL(`../assets/reference-ui/${file}`, import.meta.url));
   const sha256 = createHash('sha256').update(bytes).digest('hex');
   const confirmed = declaration.confirmedImages.find(i => i.file === file);

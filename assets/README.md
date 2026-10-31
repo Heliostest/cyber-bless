@@ -2,7 +2,7 @@
 
 五个待实现 Three.js 场景的实物／结构参考图另存于 [`design/scene-references/`](../design/scene-references/README.md)，包含 10 张图和逐图来源、许可、下载地址、校验值；仅用于设计研究，不打入 App 资源包。文化背景见[五场景考据](../specs/2026-10-01-five-scene-research.md)。
 
-`reference-ui/wishes.png` 与 `reference-ui/rituals.png` 是用户于 2026-09-20 提供的两张 1536 × 1024 UI 参考图的原样副本。`packages/app/src/art.tsx` 用坐标裁切显示木鱼、纸鹤、心愿灯与纪念章，CSS 柔化边缘并与奶油背景混合；没有重绘原图，也不是透明背景的独立抠图。后续可替换为同风格的高清透明素材。界面文字、表单、按钮和导航均为可交互组件，不是整屏图片。
+`reference-ui/wishes.png` 是用户于 2026-09-20 提供的 1536 × 1024 UI 参考图的原样副本，目前仅由 `packages/app/src/art.tsx` 裁切显示纪念章。旧仪式拼图 `reference-ui/rituals.png` 已于 2026-10-31 删除；木鱼、纸鹤、心愿灯及其历史收藏和奖励飞行均改用 `scene-icons/soft3d/` 的独立透明图标。界面文字、表单、按钮和导航均为可交互组件，不是整屏图片。
 
 `fonts/noto-sans-sc.woff2` 为 Noto Sans SC 可变字体的本地子集，保留拉丁、基础汉字、中文标点和全角字符，支持 100–900 字重。字体用于接近参考图的粗黑中文层级；无法从参考图确定其原始字体，不能视为完全一致。来源为 Google Fonts 官方仓库：
 
@@ -33,12 +33,12 @@ Web 和 Expo 启动/构建前由 `scripts/prepare-app-assets.mjs` 按实际资�
 
 ## 旧版木鱼资产（保留，不再用于仪式页运行时）
 
-`woodfish/body.bin` 为依照 `reference-ui/rituals.png` 轮廓制作的闭合木壳网格，含内腔、斜向开缝、圆形共鸣孔和鱼嘴。37,854 顶点 / 75,704 三角面。文件头为两个 little-endian uint32（顶点数、索引数），依次跟随 float32 positions、float32 normals、uint32 indices。木槌由 Three.js 基础几何组合。
+`woodfish/body.bin` 为依照原 `reference-ui/rituals.png`（2026-10-31 已退役删除）轮廓制作的闭合木壳网格，含内腔、斜向开缝、圆形共鸣孔和鱼嘴。37,854 顶点 / 75,704 三角面。文件头为两个 little-endian uint32（顶点数、索引数），依次跟随 float32 positions、float32 normals、uint32 indices。木槌由 Three.js 基础几何组合；模型和贴图保留，不依赖旧拼图运行。
 
 `woodfish/color.png`、`normal.png`、`roughness.png` 保留为 **程序化原版 PBR 材质，不是 GPT Image 2.5 生成**。第一轮因无法指定/核实该模型而使用程序化材质。随后用户授权尝试其他生图方法，当时场景曾切到 `woodfish/generated-v1/` 中内置 image_gen 工具生成的三张贴图。具体模型未披露，原始输出、提示词和局限见该目录 README。
 
 三张图均为 512 × 512 RGB、周期木纹，同一个高度场导出颜色、OpenGL (+Y) 法线和粗糙度。颜色图无烘焙光照/投影；颜色采用 sRGB，数据贴图保持线性。通过同一组物体空间三向投射和权重覆盖正面、背面、顶部、底部、开口边缘及内腔。避免球体 UV 极点和裸露背面；交叉投射的过渡仍属于临时材质的视觉局限。内腔遮蔽由几何位置计算，不写入颜色贴图。
 
-用 `node scripts/generate-woodfish.mjs` 重建模型与程序化原版，不覆盖生成图；`node scripts/check-woodfish-assets.mjs` 检查闭合性、绕序、法线和两套贴图尺寸。旧版生成贴图和 body.bin 保留为制作资料，已不进入当前移动运行时资源清单；原始 UI 参考图保留原样。
+用 `node scripts/generate-woodfish.mjs` 重建模型与程序化原版，不覆盖生成图；`node scripts/check-woodfish-assets.mjs` 检查闭合性、绕序、法线和两套贴图尺寸。旧版生成贴图和 body.bin 保留为制作资料，已不进入当前移动运行时资源清单；原始 UI 参考图目前仅保留仍供纪念章使用的 `wishes.png`。
 
 未来指定模型可用时的材质指令：以参考原图的温润浅棕木质为色彩和木种参考，生成可平铺的纯木材基色贴图，正交平面、均匀无方向照明、细长自然纤维，不画木鱼物体、孔洞、边缘、环境、投影、强高光、文字。法线图需严格对应同一基色纤维，切线空间 OpenGL +Y，克制微表面起伏；粗糙度图也需严格对应同一纤维，灰度、无方向光照、主体约 0.65–0.8。必须逐张检查对齐与周期边缘，并在当前 PBR 场景验证，不能把三次独立随机生成的纹理当作对应贴图。

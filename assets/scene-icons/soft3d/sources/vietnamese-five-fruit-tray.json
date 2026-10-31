@@ -1,0 +1,86 @@
+{
+  "id": "vietnamese-five-fruit-tray",
+  "sourceSha256": "a4ad64b1887dda8c78c9edcc5a335ef5d2f1305e7a71dd1ce6b321a0172d2afb",
+  "outputSha256": "90e52bc6f5bb021abf5b3679cb535b2a85093d8e599fece728d680263b6d867b",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 25,
+    "top": 130,
+    "width": 358,
+    "height": 268
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 27,
+    "width": 402,
+    "height": 387
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 75327,
+  "placement": {
+    "left": 15,
+    "top": 44,
+    "width": 225,
+    "height": 168
+  },
+  "sourceTransform": {
+    "width": 263,
+    "height": 265,
+    "left": -1,
+    "top": -38,
+    "canvasCrop": {
+      "left": 1,
+      "top": 38,
+      "width": 256,
+      "height": 227
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 49152,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-05.png",
+    "sha256": "6c11397b3f89760f9b1b2cefc60d4f6748d22a73cf85b4fa4b731022a3931df0",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/vietnamese-five-fruit-tray.png",
+  "outputFile": "vietnamese-five-fruit-tray.webp"
+}

@@ -1,0 +1,86 @@
+{
+  "id": "uzbek-clay-bowl",
+  "sourceSha256": "406a7bebfce4bb68a6e3997b59e7fc8180db33597fedc2cbbe317bbb31dcbe10",
+  "outputSha256": "02a3bd7ccbe5f11792327ece63d557a022917b099fc8ac4d39de1b2ad0be305b",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 64,
+    "top": 77,
+    "width": 310,
+    "height": 283
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 426
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 78264,
+  "placement": {
+    "left": 15,
+    "top": 25,
+    "width": 225,
+    "height": 205
+  },
+  "sourceTransform": {
+    "width": 303,
+    "height": 309,
+    "left": -31,
+    "top": -31,
+    "canvasCrop": {
+      "left": 31,
+      "top": 31,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 55440,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-15.png",
+    "sha256": "86d7df4a7094feb06d655593362c63b035365a472788a6721c2d1e178739709c",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 3,
+    "column": 0,
+    "row": 1,
+    "bounds": {
+      "left": 0,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/uzbek-clay-bowl.png",
+  "outputFile": "uzbek-clay-bowl.webp"
+}

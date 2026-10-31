@@ -1,0 +1,86 @@
+{
+  "id": "korean-bojagi-wrap",
+  "sourceSha256": "24f168397f541901b024986f01a8fafc2f3ba29e9af6184bf160a61d8dd202f4",
+  "outputSha256": "e65356dbc73bd51268779547aac1883208913375995d7206870070074a055760",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 50,
+    "top": 78,
+    "width": 365,
+    "height": 308
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 3,
+    "width": 418,
+    "height": 423
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 84886,
+  "placement": {
+    "left": 15,
+    "top": 33,
+    "width": 225,
+    "height": 190
+  },
+  "sourceTransform": {
+    "width": 258,
+    "height": 263,
+    "left": -16,
+    "top": -15,
+    "canvasCrop": {
+      "left": 16,
+      "top": 15,
+      "width": 242,
+      "height": 248
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 57208,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-07.png",
+    "sha256": "4b85ecf27f54528bb3d6057ef68949fa571007cb3d066d98943dcf569f8bfb6c",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 3,
+    "column": 0,
+    "row": 1,
+    "bounds": {
+      "left": 0,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/korean-bojagi-wrap.png",
+  "outputFile": "korean-bojagi-wrap.webp"
+}

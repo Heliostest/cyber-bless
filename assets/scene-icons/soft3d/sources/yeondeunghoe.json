@@ -1,0 +1,47 @@
+{
+  "id": "yeondeunghoe",
+  "sourceSha256": "569528f73a27abf07f327bc2ba2bc44f5c1d9615165dee04a8ad212d1580cf92",
+  "outputSha256": "fd679d9fbce4e5455c5fb34888cbc318b9246e44937f5273d510e686e27d4688",
+  "sourceWidth": 1254,
+  "sourceHeight": 1254,
+  "sourceBounds": {
+    "left": 34,
+    "top": 191,
+    "width": 1185,
+    "height": 820
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 17,
+    "width": 1248,
+    "height": 1237
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 674863,
+  "placement": {
+    "left": 15,
+    "top": 50,
+    "width": 225,
+    "height": 155
+  },
+  "sourceTransform": {
+    "width": 237,
+    "height": 237,
+    "left": 9,
+    "top": 14,
+    "canvasCrop": {
+      "left": 0,
+      "top": 0,
+      "width": 237,
+      "height": 237
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 34792,
+  "encoding": "lossless-webp",
+  "sourceFile": "sources/yeondeunghoe.png",
+  "outputFile": "yeondeunghoe.webp"
+}

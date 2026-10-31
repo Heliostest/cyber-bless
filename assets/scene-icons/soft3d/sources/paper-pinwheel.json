@@ -1,0 +1,86 @@
+{
+  "id": "paper-pinwheel",
+  "sourceSha256": "0ba81114b7fc4bed2533cdd89b272c6e015f00d0e9164466f241b432fbae0cc0",
+  "outputSha256": "62f2658c2a4d5b64ae743243f54ef2503f5a40a76960616ec053ab2e15c1bc0e",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 110,
+    "top": 44,
+    "width": 237,
+    "height": 348
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 404,
+    "height": 426
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 53700,
+  "placement": {
+    "left": 51,
+    "top": 15,
+    "width": 153,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 270,
+    "height": 275,
+    "left": -20,
+    "top": -13,
+    "canvasCrop": {
+      "left": 20,
+      "top": 13,
+      "width": 250,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 32866,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-10.png",
+    "sha256": "9190e8a75f527b1b92c6b209c3d171e4cfafb618527b199254a8d1a0461fb03f",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/paper-pinwheel.png",
+  "outputFile": "paper-pinwheel.webp"
+}

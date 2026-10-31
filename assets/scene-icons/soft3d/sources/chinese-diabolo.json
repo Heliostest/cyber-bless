@@ -1,0 +1,86 @@
+{
+  "id": "chinese-diabolo",
+  "sourceSha256": "c647447aa08fdd45a8b2524018401783f2a6e18b12896e8498a7631e6ae7b2dd",
+  "outputSha256": "2763d2630beaa1a37a1670c37c0923e1ea6a222e63baba35b667a233576afa4c",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 51,
+    "top": 112,
+    "width": 340,
+    "height": 253
+  },
+  "sourceAlphaBounds": {
+    "left": 1,
+    "top": 23,
+    "width": 417,
+    "height": 399
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 52200,
+  "placement": {
+    "left": 15,
+    "top": 44,
+    "width": 225,
+    "height": 167
+  },
+  "sourceTransform": {
+    "width": 277,
+    "height": 279,
+    "left": -19,
+    "top": -30,
+    "canvasCrop": {
+      "left": 19,
+      "top": 30,
+      "width": 256,
+      "height": 249
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 40066,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-13.png",
+    "sha256": "d8da03904776e46793aebc606a5160e21d61e97aaa92dafea4dd12a2096cd7a6",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 1,
+    "column": 1,
+    "row": 0,
+    "bounds": {
+      "left": 418,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 806,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/chinese-diabolo.png",
+  "outputFile": "chinese-diabolo.webp"
+}

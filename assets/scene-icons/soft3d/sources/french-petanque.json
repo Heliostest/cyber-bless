@@ -1,0 +1,86 @@
+{
+  "id": "french-petanque",
+  "sourceSha256": "966310827fa0762e1d9f2b73bfea209c9e06d778f4e395c39eb23cc65a0dfde1",
+  "outputSha256": "eaa188f34eba0748920f9f847a181d88765369eb7d60e6690042575efa36d097",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 46,
+    "top": 139,
+    "width": 351,
+    "height": 241
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 29,
+    "width": 418,
+    "height": 393
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 68809,
+  "placement": {
+    "left": 16,
+    "top": 51,
+    "width": 224,
+    "height": 153
+  },
+  "sourceTransform": {
+    "width": 266,
+    "height": 269,
+    "left": -13,
+    "top": -38,
+    "canvasCrop": {
+      "left": 13,
+      "top": 38,
+      "width": 253,
+      "height": 231
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 45140,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-12.png",
+    "sha256": "6912ba500d631f34c79ad8b55742f37104c95ce05ebc75c40d95a3d45cb83a97",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 0,
+    "column": 0,
+    "row": 0,
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 833,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/french-petanque.png",
+  "outputFile": "french-petanque.webp"
+}

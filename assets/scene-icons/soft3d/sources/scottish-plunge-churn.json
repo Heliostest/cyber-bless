@@ -1,0 +1,86 @@
+{
+  "id": "scottish-plunge-churn",
+  "sourceSha256": "fe0120d7c26b884c84318d9cdeceaa74160fda7cda15058764e96a07185f98e9",
+  "outputSha256": "5be081a6023bf16f386ffb2650e3688e65f0ed47ab15f7dc838b93a5a221b748",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 100,
+    "top": 49,
+    "width": 228,
+    "height": 356
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 24,
+    "width": 418,
+    "height": 396
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 63985,
+  "placement": {
+    "left": 56,
+    "top": 15,
+    "width": 144,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 264,
+    "height": 267,
+    "left": -7,
+    "top": -16,
+    "canvasCrop": {
+      "left": 7,
+      "top": 16,
+      "width": 256,
+      "height": 251
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 36056,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-11.png",
+    "sha256": "8649b61c9e59dd9cac8724c81ef310f7926e7bc635ed1dddc11318ecb9f5d4f6",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 0,
+    "column": 0,
+    "row": 0,
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/scottish-plunge-churn.png",
+  "outputFile": "scottish-plunge-churn.webp"
+}

@@ -1,0 +1,86 @@
+{
+  "id": "czech-pilgrim-journal",
+  "sourceSha256": "005b63e45fbbddcb18b479288133ca733d782725ad4b9894fd1080ce90eaba51",
+  "outputSha256": "fa20c454a614753c1aff7583732f6b1154c14fa9af763e5e143a6e6db3aef0fe",
+  "sourceWidth": 418,
+  "sourceHeight": 398,
+  "sourceBounds": {
+    "left": 44,
+    "top": 96,
+    "width": 347,
+    "height": 240
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 398
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 77026,
+  "placement": {
+    "left": 16,
+    "top": 50,
+    "width": 224,
+    "height": 155
+  },
+  "sourceTransform": {
+    "width": 269,
+    "height": 256,
+    "left": -12,
+    "top": -11,
+    "canvasCrop": {
+      "left": 12,
+      "top": 11,
+      "width": 256,
+      "height": 245
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 46384,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-17.png",
+    "sha256": "735e054e440772fec54a2784d8e480a659f0f57904d5a587d38786bbebb9ee8b",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 4,
+    "column": 1,
+    "row": 1,
+    "bounds": {
+      "left": 418,
+      "top": 414,
+      "width": 418,
+      "height": 398
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 811,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/czech-pilgrim-journal.png",
+  "outputFile": "czech-pilgrim-journal.webp"
+}

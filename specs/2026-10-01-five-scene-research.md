@@ -32,7 +32,7 @@
 
 - **日本岐阜的纸灯笼工艺只作为材料参照**：岐阜市历史博物馆 2023 年展览说明细竹篾外覆薄和纸或绢的构造，并展示当代大内行灯与历史制作资料。依据：[The Beautiful World of Gifu Lanterns](https://www.rekihaku.gifu.gifu.jp/en/exhibition/event/gifu-lanterns2023/)。
 - 日本文化厅的登记资料说明岐阜提灯自江户中期生产，并区分火袋、木型和其他制作部件；此项可支持竹骨、纸罩、上下圈口的工艺逻辑，不能证明「点心愿灯」是岐阜的传统仪式。依据：[岐阜提灯の製作用具及び製品](https://online.bunka.go.jp/heritages/detail/248255)。
-- 本 App 的暖黄灯笼、木架、愿望牌来自既有 [rituals.png](../assets/reference-ui/rituals.png) 与 [wishes.png](../assets/reference-ui/wishes.png) 产品视觉。**场景身份是原创祝愿体验**；上述外部资料并不将它重新定义为日本祭礼。
+- 本 App 的暖黄灯笼、木架、愿望牌来自当时 `rituals.png`（2026-10-31 已退役删除）与 [wishes.png](../assets/reference-ui/wishes.png) 产品视觉。**场景身份是原创祝愿体验**；上述外部资料并不将它重新定义为日本祭礼。
 
 ### 3D 可用形制与动作
 

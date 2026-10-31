@@ -1,0 +1,86 @@
+{
+  "id": "czech-bead-star",
+  "sourceSha256": "f4dd03249721d2a2f57b2f97b69dbc8429577dbfc8b556ce7d2d9881682466ac",
+  "outputSha256": "f189fa198bb1299de5ec87c9bcbe942d6452bc749fd7a7f2cae3cbf37eb8b125",
+  "sourceWidth": 418,
+  "sourceHeight": 426,
+  "sourceBounds": {
+    "left": 65,
+    "top": 43,
+    "width": 280,
+    "height": 312
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 400,
+    "height": 426
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 53620,
+  "placement": {
+    "left": 27,
+    "top": 15,
+    "width": 202,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 301,
+    "height": 307,
+    "left": -20,
+    "top": -16,
+    "canvasCrop": {
+      "left": 20,
+      "top": 16,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 39910,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-15.png",
+    "sha256": "86d7df4a7094feb06d655593362c63b035365a472788a6721c2d1e178739709c",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 426
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/czech-bead-star.png",
+  "outputFile": "czech-bead-star.webp"
+}

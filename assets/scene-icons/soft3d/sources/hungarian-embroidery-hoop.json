@@ -1,0 +1,86 @@
+{
+  "id": "hungarian-embroidery-hoop",
+  "sourceSha256": "b25acf3e05b6d9908616043785edad3b3260c7978188bc97e4234437fc260034",
+  "outputSha256": "bd8572663f9724aee387355c9555edf385fc7ad3c769e2df77f8f970a5b5d0a2",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 86,
+    "top": 83,
+    "width": 284,
+    "height": 314
+  },
+  "sourceAlphaBounds": {
+    "left": 25,
+    "top": 21,
+    "width": 393,
+    "height": 401
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 69719,
+  "placement": {
+    "left": 25,
+    "top": 15,
+    "width": 205,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 300,
+    "height": 302,
+    "left": -36,
+    "top": -44,
+    "canvasCrop": {
+      "left": 36,
+      "top": 44,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 68718,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-16.png",
+    "sha256": "1a748a07623016fe5977ef4c8bd855191d145d8806d1b3dc06c9403eb306c75d",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 0,
+    "column": 0,
+    "row": 0,
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 823,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/hungarian-embroidery-hoop.png",
+  "outputFile": "hungarian-embroidery-hoop.webp"
+}

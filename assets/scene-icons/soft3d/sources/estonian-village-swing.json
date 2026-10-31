@@ -1,0 +1,86 @@
+{
+  "id": "estonian-village-swing",
+  "sourceSha256": "72bcaf32453f2d50686b4f1cc0aaff2c4aec3c95c17cbb0c89b52b1ae7c79fdb",
+  "outputSha256": "c21dcd6e050f05cfed0a0600dc8fcc6a51b59e0e69efbc6c5a1227ef9573ee30",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 50,
+    "top": 68,
+    "width": 337,
+    "height": 278
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 3,
+    "width": 404,
+    "height": 403
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 69290,
+  "placement": {
+    "left": 16,
+    "top": 36,
+    "width": 224,
+    "height": 184
+  },
+  "sourceTransform": {
+    "width": 277,
+    "height": 280,
+    "left": -17,
+    "top": -9,
+    "canvasCrop": {
+      "left": 17,
+      "top": 9,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 44448,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-11.png",
+    "sha256": "8649b61c9e59dd9cac8724c81ef310f7926e7bc635ed1dddc11318ecb9f5d4f6",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 8,
+    "column": 2,
+    "row": 2,
+    "bounds": {
+      "left": 836,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/estonian-village-swing.png",
+  "outputFile": "estonian-village-swing.webp"
+}

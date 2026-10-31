@@ -1,0 +1,86 @@
+{
+  "id": "brat-bride-cloth",
+  "sourceSha256": "51511588d799d9652712c09112f841a92e02e8cdb23f0aa9706f4251262e8519",
+  "outputSha256": "ec0fe89eb12240e49c6373147cbb84487006a7b3dee561814cdab76c67247c0d",
+  "sourceWidth": 418,
+  "sourceHeight": 421,
+  "sourceBounds": {
+    "left": 26,
+    "top": 17,
+    "width": 353,
+    "height": 358
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 398,
+    "height": 421
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 114263,
+  "placement": {
+    "left": 16,
+    "top": 15,
+    "width": 223,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 263,
+    "height": 265,
+    "left": 0,
+    "top": 4,
+    "canvasCrop": {
+      "left": 0,
+      "top": 0,
+      "width": 256,
+      "height": 252
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 65324,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-01.png",
+    "sha256": "7dbd55805da0c5520e0950c5e06e8a24cbb0db2fd4361a01454a486992dee805",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 421
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 834,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/brat-bride-cloth.png",
+  "outputFile": "brat-bride-cloth.webp"
+}

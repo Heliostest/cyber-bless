@@ -1,0 +1,47 @@
+{
+  "id": "daruma-eye-painting",
+  "sourceSha256": "fcb628838d121e3d3995078c2d8eaa1a620e64ebb0df4f6e241d7aa6276efc6e",
+  "outputSha256": "124ab49ff139b92d5f18adf669f572175a00f6fa0c4d86e2f613849d963fce27",
+  "sourceWidth": 1254,
+  "sourceHeight": 1254,
+  "sourceBounds": {
+    "left": 100,
+    "top": 117,
+    "width": 1055,
+    "height": 1040
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 33,
+    "width": 1230,
+    "height": 1221
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 893234,
+  "placement": {
+    "left": 15,
+    "top": 17,
+    "width": 225,
+    "height": 222
+  },
+  "sourceTransform": {
+    "width": 267,
+    "height": 267,
+    "left": -6,
+    "top": -8,
+    "canvasCrop": {
+      "left": 6,
+      "top": 8,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 62832,
+  "encoding": "lossless-webp",
+  "sourceFile": "sources/daruma-eye-painting.png",
+  "outputFile": "daruma-eye-painting.webp"
+}

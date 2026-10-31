@@ -1,0 +1,86 @@
+{
+  "id": "mexican-molinillo",
+  "sourceSha256": "96aa146438621f4fe1e917ad67189bd8c46378c7841e8bdfce927a3b81cd7e16",
+  "outputSha256": "c597abfcefc1c2d22e1e394b7a1103e29079bef6d02083ebf7ba69bb14bf9a94",
+  "sourceWidth": 418,
+  "sourceHeight": 452,
+  "sourceBounds": {
+    "left": 97,
+    "top": 5,
+    "width": 279,
+    "height": 378
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 430
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 58098,
+  "placement": {
+    "left": 44,
+    "top": 15,
+    "width": 167,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 249,
+    "height": 269,
+    "left": -13,
+    "top": 12,
+    "canvasCrop": {
+      "left": 13,
+      "top": 0,
+      "width": 236,
+      "height": 244
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 35350,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-13.png",
+    "sha256": "d8da03904776e46793aebc606a5160e21d61e97aaa92dafea4dd12a2096cd7a6",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 7,
+    "column": 1,
+    "row": 2,
+    "bounds": {
+      "left": 418,
+      "top": 802,
+      "width": 418,
+      "height": 452
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 806,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/mexican-molinillo.png",
+  "outputFile": "mexican-molinillo.webp"
+}

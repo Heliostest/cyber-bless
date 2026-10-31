@@ -1,0 +1,86 @@
+{
+  "id": "chinese-shadow-puppet",
+  "sourceSha256": "85b16cc45c5d4b3e77ad00f15273fae7e2c97862ef7df73e1d46242d24a739c1",
+  "outputSha256": "f2e9856326792380538bc6e86c082736db56ada8035ed812d4e5c0aa99ef0533",
+  "sourceWidth": 418,
+  "sourceHeight": 423,
+  "sourceBounds": {
+    "left": 37,
+    "top": 5,
+    "width": 344,
+    "height": 356
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 2,
+    "width": 386,
+    "height": 421
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 104729,
+  "placement": {
+    "left": 19,
+    "top": 15,
+    "width": 218,
+    "height": 225
+  },
+  "sourceTransform": {
+    "width": 264,
+    "height": 267,
+    "left": -4,
+    "top": 12,
+    "canvasCrop": {
+      "left": 4,
+      "top": 0,
+      "width": 256,
+      "height": 244
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 56516,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-14.png",
+    "sha256": "8d9e10ab8b5f3e48f44ed6de93e9c0c8fb3078c011cb9bc9fa46040c0129c6f2",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 8,
+    "column": 2,
+    "row": 2,
+    "bounds": {
+      "left": 836,
+      "top": 831,
+      "width": 418,
+      "height": 423
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 835,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/chinese-shadow-puppet.png",
+  "outputFile": "chinese-shadow-puppet.webp"
+}

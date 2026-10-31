@@ -1,0 +1,86 @@
+{
+  "id": "finnish-kantele",
+  "sourceSha256": "f5801185c079a71f07a3990d836f71c7cdfc4a8af432b2f675ce5c1f1baacbf9",
+  "outputSha256": "aa95da241fe1b319fd6d0cd416cc26992f5ef17f2e7dc15c652f624654a106dd",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 26,
+    "top": 79,
+    "width": 359,
+    "height": 235
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 408
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 80290,
+  "placement": {
+    "left": 16,
+    "top": 54,
+    "width": 224,
+    "height": 147
+  },
+  "sourceTransform": {
+    "width": 260,
+    "height": 263,
+    "left": 0,
+    "top": 5,
+    "canvasCrop": {
+      "left": 0,
+      "top": 0,
+      "width": 256,
+      "height": 251
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 42616,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-11.png",
+    "sha256": "8649b61c9e59dd9cac8724c81ef310f7926e7bc635ed1dddc11318ecb9f5d4f6",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 7,
+    "column": 1,
+    "row": 2,
+    "bounds": {
+      "left": 418,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/finnish-kantele.png",
+  "outputFile": "finnish-kantele.webp"
+}

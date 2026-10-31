@@ -1,0 +1,86 @@
+{
+  "id": "garden-croquet",
+  "sourceSha256": "1c82f3da2b57785112b5a7a8a4c158bf0a3abe526826c779ee0a80352cc11845",
+  "outputSha256": "77a12f17cb37f107d3c85859d8fabd152ddc48766ad51d4969e0ace3245ff734",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 49,
+    "top": 29,
+    "width": 364,
+    "height": 328
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 0,
+    "width": 418,
+    "height": 422
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 58980,
+  "placement": {
+    "left": 15,
+    "top": 26,
+    "width": 225,
+    "height": 203
+  },
+  "sourceTransform": {
+    "width": 258,
+    "height": 261,
+    "left": -15,
+    "top": 8,
+    "canvasCrop": {
+      "left": 15,
+      "top": 0,
+      "width": 243,
+      "height": 248
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 32666,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-10.png",
+    "sha256": "9190e8a75f527b1b92c6b209c3d171e4cfafb618527b199254a8d1a0461fb03f",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 7,
+    "column": 1,
+    "row": 2,
+    "bounds": {
+      "left": 418,
+      "top": 832,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 836,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/garden-croquet.png",
+  "outputFile": "garden-croquet.webp"
+}

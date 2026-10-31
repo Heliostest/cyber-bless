@@ -1,0 +1,86 @@
+{
+  "id": "rosh-hashanah-apple-honey",
+  "sourceSha256": "62cae7832ebfe76d8f11d51b4b075f5e26218fa6b38d898d0e7b1629fee542f1",
+  "outputSha256": "bbb1921cb74ac3b450d838bfc7bbb7b634828f54d86ae9ef2ae640294f69e0b2",
+  "sourceWidth": 418,
+  "sourceHeight": 421,
+  "sourceBounds": {
+    "left": 42,
+    "top": 96,
+    "width": 336,
+    "height": 242
+  },
+  "sourceAlphaBounds": {
+    "left": 5,
+    "top": 23,
+    "width": 413,
+    "height": 398
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 54922,
+  "placement": {
+    "left": 16,
+    "top": 47,
+    "width": 224,
+    "height": 161
+  },
+  "sourceTransform": {
+    "width": 278,
+    "height": 280,
+    "left": -12,
+    "top": -17,
+    "canvasCrop": {
+      "left": 12,
+      "top": 17,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 38438,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-03.png",
+    "sha256": "17d3890b78594adf5e3f6fc786005103568e18531f7ddf2657d41d50246f4fac",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 4,
+    "column": 1,
+    "row": 1,
+    "bounds": {
+      "left": 418,
+      "top": 414,
+      "width": 418,
+      "height": 421
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 834,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/rosh-hashanah-apple-honey.png",
+  "outputFile": "rosh-hashanah-apple-honey.webp"
+}

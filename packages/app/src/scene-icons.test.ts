@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createElement, type ReactNode } from "react";
+import { act, createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createState, dailyCollectibleId, sceneIntention, type State } from "@wbr/core";
@@ -7,7 +7,7 @@ import { isSceneVisibleInApp } from "@wbr/core/daily-scenes";
 import { Context, type AppContext } from "./context";
 import { clickOn, renderUI } from "./dom-test-utils";
 import { Today } from "./home";
-import { Wishes } from "./pages";
+import { CollectionDetail, Wishes, World } from "./pages";
 import { SceneLibraryContext, builtInScenes } from "./scene-library";
 import { SceneArt, SceneBadge, SceneIcon, hasSceneIcon } from "./scene-icons";
 import {
@@ -98,22 +98,21 @@ describe("今日's daily set badges", () => {
   const doc = render(createElement(Today, { day }), state);
   const cards = [...doc.querySelectorAll(".daily-set-card")];
 
-  it("leads every card with its scene's drawn icon, keyed by scene id", () => {
+  it("leads every card with its scene's image, keyed by scene id", () => {
     expect(picks).toHaveLength(3);
     expect(cards.map((c) => c.getAttribute("data-scene"))).toEqual(
       [primary, ...picks].map((e) => e.id),
     );
     for (const card of cards) {
       expect(card.firstElementChild!.className).toBe("scene-badge");
-      expect(card.querySelector(".scene-badge svg path")).not.toBeNull();
+      expect(card.querySelector(".scene-badge img.scene-icon")).not.toBeNull();
     }
   });
 
   it("labels cards with words only: no emoji or symbol glyphs", () => {
     const note = (entry: { id: string }, copy: { wishNote: string; blessingNote: string }) =>
       isWishScene(entry.id) ? copy.wishNote : copy.blessingNote;
-    // SVG artwork can contain aria-hidden lettering, such as 運 on a wish ball.
-    // Check the card's label fields separately from that decorative artwork.
+    // Check the card's label fields separately from its decorative artwork.
     expect(cards.map((card) => `${card.querySelector(":scope > strong")!.textContent}${card.querySelector(":scope > small")!.textContent}`)).toEqual([
       `${primary.title}${note(primary, DAILY_SET_COPY)}`,
       ...picks.map((entry) => `${entry.title}${note(entry, DAILY_COLLECTED_COPY)}`),
@@ -160,7 +159,7 @@ describe("心愿's ritual picker", () => {
       "tanzaku-tanabata",
     ]);
     for (const card of ui.cards())
-      expect(card.querySelector(".scene-badge svg path")).not.toBeNull();
+      expect(card.querySelector(".scene-badge img.scene-icon")).not.toBeNull();
   });
 
   it("says the one action under the title, without repeating it", () => {
@@ -199,7 +198,7 @@ describe("心愿's ritual picker", () => {
     );
     expect(cards.length).toBeGreaterThan(0);
     for (const card of cards)
-      expect(card.querySelector(".scene-badge svg path")).not.toBeNull();
+      expect(card.querySelector(".scene-badge img.scene-icon")).not.toBeNull();
     expect(ui.cards()).toHaveLength(0);
     clickOn(cards[0]);
     expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({
@@ -211,7 +210,7 @@ describe("心愿's ritual picker", () => {
 });
 
 describe("scene badges", () => {
-  it("have a drawn icon for every built-in scene", () => {
+  it("have an image for every built-in scene", () => {
     for (const entry of builtInScenes)
       expect(hasSceneIcon(entry.id), entry.id).toBe(true);
   });
@@ -229,56 +228,89 @@ describe("scene badges", () => {
   });
 });
 
-function viewport(id: string, component = SceneIcon) {
-  const markup = renderToStaticMarkup(createElement(component, { id }));
-  const value = markup.match(/viewBox="([^"]+)"/)?.[1];
-  expect(value).toBeDefined();
-  return value!.split(/\s+/).map(Number);
-}
-
-function expectContains(id: string, bounds: number[]) {
-  const [x, y, width, height] = viewport(id);
-  expect(x).toBeLessThanOrEqual(bounds[0]);
-  expect(y).toBeLessThanOrEqual(bounds[1]);
-  expect(x + width).toBeGreaterThanOrEqual(bounds[2]);
-  expect(y + height).toBeGreaterThanOrEqual(bounds[3]);
-}
-
-describe("scene icon framing", () => {
-  it.each(["nanakusa-gayu", "korean-sotdae", "puerto-rican-guiro", "ghanaian-oware"])(
-    "contains the 64-unit artwork with stroke breathing room for %s",
-    id => expectContains(id, [-2, -2, 66, 66]),
-  );
-
-  it.each(["woodfish", "crane", "lantern", "german-nutcracker"])(
-    "keeps the 48-unit artwork on its smaller padded canvas for %s",
-    id => expect(viewport(id)).toEqual([-3, -3, 54, 54]),
-  );
-
-  it.each([
-    ["chinese-rattle-drum", [2, 3.5, 52, 50.5]],
-    ["korean-yutnori", [6.35, 4.35, 47.65, 50.55]],
-    ["russian-matryoshka", [5.35, 1, 50.5, 46]],
-    ["japanese-koinobori", [6, 4, 48.6, 45.5]],
-    ["chinese-incense", [6.9, -3.85, 41.1, 45.5]],
-    ["theravada-water", [0, -0.1, 48, 48]],
-    ["shrine-suzu-bell", [0, -0.6, 48, 48]],
-  ] as const)("contains the extended strokes for %s", (id, bounds) => {
-    expectContains(id, [...bounds]);
+describe("historical ritual keepsake illustrations", () => {
+  it.each(["woodfish", "crane", "lantern"] as const)("uses the current %s illustration in the room, grid and detail", kind => {
+    const state = createState();
+    const id = `legacy:${kind}`;
+    state.collectibles.push({ id, kind, title: kind, at: "2026-10-01T08:00:00.000Z" });
+    const world = render(createElement(World), state);
+    const images = world.querySelectorAll(`[data-collectible-id="${id}"] img.scene-icon`);
+    expect(images).toHaveLength(2);
+    for (const art of images) expect(art.getAttribute("src")).toBe(`/scene-icons/soft3d/${kind}.webp`);
+    const detail = render(createElement(CollectionDetail, { id }), state);
+    expect(detail.querySelector("img.scene-icon")?.getAttribute("src")).toBe(`/scene-icons/soft3d/${kind}.webp`);
   });
 
-  it("uses the same viewport in the reveal illustration and scene badges", () => {
-    for (const id of ["korean-sotdae", "woodfish", "chinese-incense"]) {
-      expect(viewport(id, SceneArt)).toEqual(viewport(id));
-      expect(viewport(id, SceneBadge)).toEqual(viewport(id));
+  it("keeps the commemorative badge on its separate wishes artwork", () => {
+    const state = createState();
+    state.collectibles.push({ id: "legacy:badge", kind: "badge", title: "还愿纪念", at: "2026-10-01T08:00:00.000Z" });
+    const detail = render(createElement(CollectionDetail, { id: "legacy:badge" }), state);
+    expect(detail.querySelector(".reference-crop img")?.getAttribute("src")).toBe("/reference-ui/wishes.png");
+  });
+});
+
+function image(id: string, component = SceneIcon) {
+  const markup = renderToStaticMarkup(createElement(component, { id }));
+  const art = new DOMParser().parseFromString(markup, "text/html").querySelector<HTMLImageElement>("img.scene-icon");
+  expect(art, id).not.toBeNull();
+  return art!;
+}
+
+describe("scene icon images", () => {
+  it("maps every built-in scene, including old keepsakes, to its own local WebP", () => {
+    for (const { id } of builtInScenes) {
+      expect(image(id).getAttribute("src"), id).toBe(`/scene-icons/soft3d/${id}.webp`);
     }
   });
 
-  it("keeps both canvas groups available and unknown scenes on their leaf fallback", () => {
-    expect(hasSceneIcon("nanakusa-gayu")).toBe(true);
-    expect(hasSceneIcon("woodfish")).toBe(true);
-    expect(hasSceneIcon("unknown-scene")).toBe(false);
-    expect(renderToStaticMarkup(createElement(SceneIcon, { id: "unknown-scene" }))).toBe("");
-    expect(renderToStaticMarkup(createElement(SceneArt, { id: "unknown-scene" }))).toContain('viewBox="0 0 24 24"');
+  it("keeps images decorative in every shared scene presentation", () => {
+    for (const component of [SceneIcon, SceneArt, SceneBadge]) {
+      const art = image("woodfish", component);
+      expect(art.getAttribute("alt")).toBe("");
+      expect(art.getAttribute("aria-hidden")).toBe("true");
+      expect(art.draggable).toBe(false);
+      expect(art.getAttribute("width")).toBe("256");
+      expect(art.getAttribute("height")).toBe("256");
+    }
+  });
+
+  it("uses the same image for reveal illustrations and scene badges", () => {
+    for (const id of ["korean-sotdae", "woodfish", "chinese-incense"]) {
+      expect(image(id, SceneArt).getAttribute("src")).toBe(image(id).getAttribute("src"));
+      expect(image(id, SceneBadge).getAttribute("src")).toBe(image(id).getAttribute("src"));
+    }
+  });
+
+  it.each(["unknown-scene", "toString", "constructor", "__proto__"])("keeps unknown id %s on its leaf fallback", id => {
+    expect(hasSceneIcon(id)).toBe(false);
+    expect(renderToStaticMarkup(createElement(SceneIcon, { id }))).toBe("");
+    expect(renderToStaticMarkup(createElement(SceneArt, { id }))).toContain('viewBox="0 0 24 24"');
+  });
+
+  it("shows a leaf after an image fails and retries when navigating away and back", () => {
+    const ui = renderUI(createElement(SceneBadge, { id: "woodfish" }));
+    try {
+      const art = ui.host.querySelector("img.scene-icon")!;
+      expect(art).not.toBeNull();
+      act(() => art.dispatchEvent(new Event("error")));
+      expect(ui.host.querySelector("img")).toBeNull();
+      expect(ui.host.querySelector(".scene-badge > svg path")).not.toBeNull();
+      expect(ui.host.querySelector(".scene-badge")?.getAttribute("aria-hidden")).toBe("true");
+      ui.rerender(createElement(SceneBadge, { id: "crane" }));
+      expect(ui.host.querySelector("img")?.getAttribute("src")).toBe("/scene-icons/soft3d/crane.webp");
+      ui.rerender(createElement(SceneBadge, { id: "woodfish" }));
+      expect(ui.host.querySelector("img")?.getAttribute("src")).toBe("/scene-icons/soft3d/woodfish.webp");
+    } finally {
+      ui.unmount();
+    }
+  });
+
+  it("resolves images under the configured Expo or Vite asset base", () => {
+    vi.stubEnv("EXPO_BASE_URL", "./embedded/");
+    try {
+      expect(image("woodfish").getAttribute("src")).toBe("./embedded/scene-icons/soft3d/woodfish.webp");
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });

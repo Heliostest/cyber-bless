@@ -1,0 +1,86 @@
+{
+  "id": "lao-baci-wrist",
+  "sourceSha256": "203861a42364eb25864ce9943fe534ff60440e85d89782ce28d8a32fe967ff96",
+  "outputSha256": "bc6035d4de0ed18040c265c6f808a11c5c40c6935cad149f105f8c9e8c688705",
+  "sourceWidth": 418,
+  "sourceHeight": 418,
+  "sourceBounds": {
+    "left": 45,
+    "top": 116,
+    "width": 340,
+    "height": 216
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 3,
+    "width": 388,
+    "height": 415
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 47191,
+  "placement": {
+    "left": 15,
+    "top": 56,
+    "width": 225,
+    "height": 143
+  },
+  "sourceTransform": {
+    "width": 277,
+    "height": 277,
+    "left": -15,
+    "top": -21,
+    "canvasCrop": {
+      "left": 15,
+      "top": 21,
+      "width": 256,
+      "height": 256
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 30890,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-02.png",
+    "sha256": "25d839841f957fa3bb3ed1caeb314fca9f1ff96779b5417c114ae799b6240617",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 5,
+    "column": 2,
+    "row": 1,
+    "bounds": {
+      "left": 836,
+      "top": 414,
+      "width": 418,
+      "height": 418
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 831,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/lao-baci-wrist.png",
+  "outputFile": "lao-baci-wrist.webp"
+}

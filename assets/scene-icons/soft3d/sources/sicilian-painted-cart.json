@@ -1,0 +1,86 @@
+{
+  "id": "sicilian-painted-cart",
+  "sourceSha256": "65ffd933d47d4536dd19dec5dbfd0c0cac3688c5811bce3ebac1794671d0629a",
+  "outputSha256": "9b1279b2a8e6c60cdc26496202734bb52a3d112eb1757483773d1858a1082191",
+  "sourceWidth": 418,
+  "sourceHeight": 422,
+  "sourceBounds": {
+    "left": 35,
+    "top": 148,
+    "width": 361,
+    "height": 221
+  },
+  "sourceAlphaBounds": {
+    "left": 0,
+    "top": 41,
+    "width": 400,
+    "height": 381
+  },
+  "visualAlphaThreshold": 32,
+  "visualBoundsFallback": false,
+  "sourceTransparency": "transparent",
+  "sourceTranslucentPixels": 50819,
+  "placement": {
+    "left": 15,
+    "top": 60,
+    "width": 225,
+    "height": 136
+  },
+  "sourceTransform": {
+    "width": 259,
+    "height": 261,
+    "left": -6,
+    "top": -32,
+    "canvasCrop": {
+      "left": 6,
+      "top": 32,
+      "width": 253,
+      "height": 229
+    }
+  },
+  "width": 256,
+  "height": 256,
+  "bytes": 34282,
+  "encoding": "lossless-webp",
+  "atlas": {
+    "file": "atlases/batch-16.png",
+    "sha256": "1a748a07623016fe5977ef4c8bd855191d145d8806d1b3dc06c9403eb306c75d",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "index": 2,
+    "column": 2,
+    "row": 0,
+    "bounds": {
+      "left": 836,
+      "top": 0,
+      "width": 418,
+      "height": 422
+    },
+    "cropMode": "auto-gutters",
+    "autoGutters": {
+      "alphaThreshold": 32,
+      "searchRadius": 84,
+      "transparentPadding": 4,
+      "boundaries": [
+        {
+          "nominal": 418,
+          "selected": 418,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 4
+        },
+        {
+          "nominal": 836,
+          "selected": 812,
+          "occupiedPixels": 0,
+          "clearAbove": 4,
+          "clearBelow": 1
+        }
+      ]
+    }
+  },
+  "sourceFile": "sources/sicilian-painted-cart.png",
+  "outputFile": "sicilian-painted-cart.webp"
+}

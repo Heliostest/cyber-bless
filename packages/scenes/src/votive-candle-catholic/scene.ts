@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { graphemeLength } from '@wbr/i18n'
@@ -148,6 +149,9 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   writer.mount(wish,{})
   const feedback = createSceneFeedback(ctx)
   let stopResize = () => {}
+  const ending = createQuietEnding(ctx, { ui: ui, isActive: () => started && !disposed && active(),
+    duration: 3, motion: 'glow', targets: () => [main.group], cancelInput: () => { pointer.cancel() }, complete: () => finish(),
+  })
   function sync() {
     ui.renderDots(step,3); ui.actionBtn.hidden = step === 3
     wish.hidden = step !== 2 || Boolean(ctx.returning)
@@ -156,6 +160,7 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
     setSafeText(ui.actionBtn,COPY.actions[Math.min(step,2)],safe)
     main.flame.visible = main.halo.sprite.visible = step >= 2
     glow.intensity = step >= 2 ? 1.6 : 0
+    ending.sync(step === 2)
   }
   function advance(placedInput=false) {
     if (!active() || (pointer.isBusy() && !placedInput) || step > 1) return
@@ -163,11 +168,13 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
     feedback.impact({ freqs: step === 1 ? [392,587] : [523,784], duration: .3, gain: .03 })
   }
   function finish(text = '') {
+    if (!text.trim() && !ending.completing) return
     if (!active() || pointer.isBusy() || step !== 2) return
     const line = text.trim(); if (graphemeLength(line) > 40) return
     step = 3; sync()
-    if (line && !ctx.returning) ctx.saveWish?.(line)
-    ctx.onProgress?.(3); overlay.dispatchEvent(new CustomEvent('scene:complete',{ bubbles:true }))
+    if (line && !ctx.returning) { ctx.saveWish?.(line); if (disposed || !active()) return }
+    ctx.onProgress?.(3); if (disposed || !active()) return
+    overlay.dispatchEvent(new CustomEvent('scene:complete',{ bubbles:true }))
   }
   const action = () => { if (step < 2) advance(); else finish() }
   const resize = () => {
@@ -187,10 +194,13 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
         c.flame.rotation.z = reduced ? 0 : Math.sin(clock*1.7+i)*.035
         c.flame.scale.y = reduced ? 1 : 1+Math.sin(clock*2.1+i)*.025
       }
+      ending.update(dt)
+      if (disposed || !(active())) return
       style.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true; pointer.dispose(); stopResize(); writer.dispose(); feedback.dispose()
       ui.actionBtn.removeEventListener('click',action)
       halos.forEach(h=>h.dispose()); glow.dispose()

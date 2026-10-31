@@ -7,6 +7,7 @@ import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
 import { addCraftTable } from '../cozy-furniture'
+import { createQuietEnding } from '../quiet-ending'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -151,6 +152,8 @@ export function createAmazighWovenRug(ctx: SceneContext): SceneInstance {
       if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: inputActive, duration: 3, motion: 'glow',
+    targets: () => [rug], cancelInput: () => pointer.cancel(), complete: () => finish() })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
@@ -158,6 +161,7 @@ export function createAmazighWovenRug(ctx: SceneContext): SceneInstance {
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(inputActive() && !returning && at === 2 && !motion)
     setSafeText(ui.actionBtn, at === 0 ? COPY.weaveAction : at === 1 ? COPY.displayAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, motion ? COPY.moving : at === 0 ? COPY.weave : at === 1 ? COPY.display : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    ending.sync(at === 2 && !motion)
   }
   // Host callbacks may synchronously dispatch input or update the scene. Keep this
   // entire acceptance boundary closed until the original action has returned.
@@ -177,6 +181,7 @@ export function createAmazighWovenRug(ctx: SceneContext): SceneInstance {
   function begin(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
   function finish(text = '') {
     if (!inputActive() || pointer.isBusy() || motion || at !== 2) return
+    if (!text.trim() && !ending.completing) return
     callbackBoundary(() => {
       at = 3; restore(); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()
       if (text.trim() && !returning) ctx.saveWish?.(text.trim())
@@ -215,8 +220,10 @@ export function createAmazighWovenRug(ctx: SceneContext): SceneInstance {
         } else { rug.position.lerpVectors(motion.from, REST, t); if (!reduced()) rug.position.y += .15 * Math.sin(Math.PI * t) }
         if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); style.render() }
+      ending.update(dt)
+      if (disposed || !active()) return
+      matrices(); style.render()
     },
-    dispose() { if (disposed) return; disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() { if (disposed) return; ending.dispose(); disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }
 }

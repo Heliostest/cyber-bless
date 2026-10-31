@@ -1,4 +1,5 @@
 import { sceneTemplate } from '../scene-localization'
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -188,6 +189,7 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
       dragging = false; if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: inputActive, duration: 3, motion: 'glow', targets: () => [face], cancelInput: () => pointer.cancel(), complete: () => finish() })
   const sync = () => {
     delete ui.hintEl.dataset.progress
     if (cueLayer) cueLayer.hidden = !active()
@@ -203,6 +205,7 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
         ? lastContact ? '刷印已到位，可以松手揭纸。' : '刷印已覆盖，请把棕擦移回纸面。'
         : sceneTemplate("刷印 {p0}%，抬手后也可以接着擦。", { p0: coverage }), safe)
     }
+    ending.sync(at === 2 && !motion)
   }
   function callbackBoundary(work: () => void) { locked = true; sync(); try { work() } finally { locked = false; if (!disposed) sync() } }
   function settle() {
@@ -213,6 +216,7 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
   function begin() { if (!inputActive() || pointer.isBusy() || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: -paper.rotation.x / 1.82 }; sync(); if (reduced()) settle() }
   function finish(text = '') {
     if (!inputActive() || pointer.isBusy() || motion || at !== 2) return
+    if (!text.trim() && !ending.completing) return
     callbackBoundary(() => {
       at = 3; restore(); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()
       if (text.trim() && !returning) ctx.saveWish?.(text.trim())
@@ -245,11 +249,12 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
         else bend(THREE.MathUtils.lerp(motion.from, 1, t))
         if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); style.render() }
+      ending.update(dt)
+      if (!disposed && active()) { matrices(); style.render() }
     },
     dispose() {
       if (disposed) return
-      disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      ending.dispose(); disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => ui.hitLayer.removeEventListener(type, guardCallbackInput, true))
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

@@ -1,5 +1,17 @@
 # 节旗轻展
 
+## 当前产品收尾（2026-10-31）
+
+进入独立的末尾静看／静候段后，使用悬挂物的轻摆（`sway`），只作小幅转动，不让物件离开挂点漂走。该段累计活动时间为3秒，减少动态为0.6秒并关闭共享收尾的位移／旋转；进度结束自动完成，无须再点物件或辅助按钮。前面的真实操作和既有动作动画不包含在这3秒内。
+
+本场目标：`cloth`。
+
+独立模块若提供原生写愿表单，输入框获得焦点、IME组合输入或存在非空白未提交草稿时暂停自动计时，保留文字；明确提交仍沿用原保存路径。App继续在动作完成后提供可选祈愿，不把文字输入变成完成门槛。
+
+暂停、失焦或页面隐藏时不计时；退出销毁不补发完成。恢复到原末尾静看检查点会重新播放收尾，已完成存档不重复奖励；尚未完成的物件操作保持原验收。
+
+来源继续使用 `breton-pardons`，文化支持范围不变。3秒、0.6秒、柔光、轻摆、轻浮及自动结算均为产品表现，不是传统期限、仪式动作或功效。较早记录中的“再点静看／静听／静立”及以该点按结算的说明不再是当前完成条件。现有文化事实、外链读取状态、技术ID、引擎版本与存档格式保持；逐场范围与验证边界见[自动收尾集中记录](../../../../docs/research/2026-10-31-automatic-quiet-endings.md)。
+
 A contemporary miniature flag-making tribute to the public preparation and banner imagery of Breton pardons. This is **not an actual pardon, a pilgrimage simulation, a church role, or an act granting absolution**. The sea-green cloth, small sun and wave decoration are original; no parish banner, saint image, coat of arms or national/regional flag is copied.
 
 Read `content/traditions/breton-pardons.md` and viewed `breton-pardons.jpg` on 2026-10-13. The photo shows a flower-decorated devotional shelter and is contextual research only; it is neither a flag template nor a runtime asset. Verified the French Ministry of Culture's [La Bretagne, terre des pardons](https://www.culture.gouv.fr/thematiques/patrimoine-culturel-immateriel/vivre-le-patrimoine-culturel-immateriel/reportages/la-bretagne-terre-des-pardons), published 2025-09-08. It describes the living religious and community tradition, including banners in processions and volunteers preparing events. That source establishes cultural context only; the three-step miniature craft choreography here is our invention.

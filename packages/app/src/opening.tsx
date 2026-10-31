@@ -9,9 +9,9 @@ import { Icon } from './art';
 import { now, useApp } from './context';
 import { PageHead } from './page-heading';
 const lessons = [
-    { title: '跟着提示动一动', copy: '跟随白色光点和箭头操作，也可以点右下角的辅助。', guide: '跟随白点和箭头操作，也可以点右下角的辅助。' },
-    { title: '把小物收进小天地', copy: '完成后收下小物，就能在小天地回看。喜欢的仪式，还可以点爱心标记。', guide: '完成后收下小物。点爱心，可以标记喜欢的仪式。' },
-    { title: '为自己留个心愿', copy: '这一场是祈愿仪式。心愿文字可以留，也可以不写；收下的小物还能在心愿页用于祈愿。', guide: '心愿文字可选。收下的祈愿小物，也能在心愿页使用。' },
+    { title: '跟着提示动一动' },
+    { title: '把小物收进小天地' },
+    { title: '为自己留个心愿' },
 ];
 export function Opening() {
     const { state, dispatch, go } = useApp();
@@ -51,29 +51,11 @@ export function Opening() {
       <p className="opening-step">{message('app.opening.step', { n: opening.completed + 1, lesson: tr(lessons[opening.completed].title) })}</p>
       <SceneArt id={current.id}/>
       <h2>{localizedTitle(current)}</h2>
-      <p className="opening-copy">{opening.completed === 0 && current.engine === 'woodfish@1'
-                ? tr("\u8F7B\u6572\u6728\u9C7C\uFF0C\u8DDF\u7740\u56DE\u54CD\u6162\u6162\u6765\u3002\u5B8C\u6210\u540E\u6536\u4E0B\u8FD9\u4EFD\u5C0F\u7269\u3002") : tr(lessons[opening.completed].copy)}</p>
       <button className="button primary full opening-start" onClick={() => openScene(current, { opening: true })}>
-        {progress ? tr("\u7EE7\u7EED\u8FD9\u4E00\u573A") : tr("\u5F00\u59CB\u8FD9\u4E00\u573A")}<Icon name="arrow"/>
+        {progress ? tr("\u7EE7\u7EED\u8FD9\u4E00\u573A") : tr('开始尝试')}<Icon name="arrow"/>
       </button>
     </section>}
   </div>;
-}
-/** A short note outside the canvas; the scene's own cues still teach the gesture. */
-export function OpeningGuide({ sceneId }: {
-    sceneId: string;
-}) {
-    const { state } = useApp();
-    const opening = state.opening;
-    if (opening?.status !== 'active')
-        return null;
-    const index = opening.sceneIds.indexOf(sceneId);
-    if (index < 0)
-        return null;
-    return <aside className="opening-guide" data-step={index + 1} aria-label={tr("\u5F00\u573A\u7B2C {p0} \u573A", { p0: index + 1 })}>
-    <p>{index === 0 && sceneId === 'woodfish'
-            ? tr("\u8F7B\u6572\u6728\u9C7C\uFF0C\u542C\u542C\u56DE\u54CD\uFF1B\u53F3\u4E0A\u89D2\u53EF\u5F00\u5173\u58F0\u97F3\u3002") : tr(lessons[index].guide)}</p>
-  </aside>;
 }
 export function OpeningDone({ entry, keptWish, favorite, prayer }: {
     entry: CatalogEntry;

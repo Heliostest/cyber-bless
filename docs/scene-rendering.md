@@ -4,6 +4,8 @@ The production App exposes **视觉风格** beside sound/haptics on supported ri
 
 All procedural scenes use the shared renderer in `packages/scene-runtime/src/render-style.ts`. The default `CEL_STYLE` is `toon-soft`; the cozy environment also selects that default. `packages/app/src/render-style.ts` is a re-export, not a second renderer.
 
+Action prompts are camera-facing Three.js placards connected to their actual interaction points. They share the world scene and canvas, use a separate layer after postprocessing, and remain sharp across visual styles. The complete intention text sits in the lower part of the scene card. See the [implementation and verification record](research/2026-10-31-scene-placards.md).
+
 ## Presets
 
 | Preset | Surfaces | Contours |
@@ -33,9 +35,9 @@ Materials are temporarily swapped only while rendering, cached per mesh and rest
 
 ## Compare and verify
 
-Open the Web app with `?debug=1`, enter a scene, then open **SHADER LAB**. Switching among the registered presets affects the same canvas. Overrides are local to the browser and active only in debug mode; **恢复内容默认** clears an override.
+Enter a supported ritual and open **视觉风格** beside sound/haptics. Switching presets affects the same canvas, and confirmed preferences persist through the normal App host save. The floating Shader Lab was removed from all App routes on 2026-10-31; neither development mode nor `?debug=1` mounts it or enables saved browser debug overrides.
 
-Optional `halftone` exposes dot size (2–16 CSS px) and strength (0–1); `pixel-art` exposes pixel size (1–12 CSS px). Defaults remain 4 / 0.58 / 3. Controls apply live without rebuilding the composer, and pixel targets resize only when necessary. Validated parameters persist per scene in a separate debug storage key, preserving the existing preset format and content defaults. See [Shader Lab controls](debug-overlay.md) and [implementation review](research/2026-10-22-halftone-pixel-rendering.md).
+Optional `halftone` exposes dot size (2–16 CSS px) and strength (0–1); `pixel-art` exposes pixel size (1–12 CSS px). Defaults remain 4 / 0.58 / 3. Controls apply live without rebuilding the composer, and pixel targets resize only when necessary. Confirmed parameters persist with the ritual's visual preference. See [the historical Shader Lab record](debug-overlay.md) and [implementation review](research/2026-10-22-halftone-pixel-rendering.md).
 
 `moebius` additionally exposes line sampling width (0.25–3 CSS px, default 0.85), luminance levels (2–12, default 8), and hatching strength (0–1, default 0.5). `toon-outline` exposes relative mask-sampling width (0.5–4×, default 1) and diffuse shade bands (2–8, default 3). Its 1× path preserves the original pmndrs edge texture; other widths sample the existing depth-tested mask, with the stock visible/hidden classification. Band changes reupload the same gradient texture and retain cached material references. These controls update existing resources and preserve all content defaults.
 

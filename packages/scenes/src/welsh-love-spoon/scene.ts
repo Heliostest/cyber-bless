@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createQuietEnding } from '../quiet-ending'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -153,17 +154,20 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
       if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: active, duration: 3, motion: 'glow', targets: () => [spoon], cancelInput: () => pointer.cancel(), complete: () => finish() })
   const sync = () => {
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !active() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = !motion && at < 3 ? 'auto' : 'none'
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(active() && !returning && at === 2 && !motion)
     setSafeText(ui.actionBtn, at === 0 ? COPY.decorateAction : at === 1 ? COPY.hangAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.wiping : COPY.placing : at === 0 ? COPY.decorate : at === 1 ? COPY.hang : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    ending.sync(at === 2 && !motion)
   }
   function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); if (!active()) return; feedback.impact({ freqs: [392, 523.25], duration: .19, gain: .012, type: 'triangle' }) }
   function begin(placed = false) { if (!active() || (pointer.isBusy() && !placed) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || at !== 2) return
+    if (!text.trim() && !ending.completing) return
     at = 3; restore(); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()
     if (text.trim() && !returning) ctx.saveWish?.(text.trim())
     // An accepted save and its checkpoint stay atomic across pause, but not disposal.
@@ -201,8 +205,9 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
         } else { spoon.position.lerpVectors(motion.from, REST, t); if (!reduced()) spoon.position.y += .14 * Math.sin(Math.PI * t) }
         if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); style.render() }
+      ending.update(dt)
+      if (!disposed && active()) { matrices(); style.render() }
     },
-    dispose() { if (disposed) return; disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() { if (disposed) return; ending.dispose(); disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }
 }

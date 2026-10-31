@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -277,6 +278,9 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     },
     onCancel: resetDrag,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: () => active(), duration: 3, motion: 'glow',
+    targets: () => [basket], cancelInput: () => pointer.cancel(), complete: () => finish(),
+  })
   const sync = () => {
     dropFeedback.clear()
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3
@@ -288,6 +292,7 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     setSafeText(ui.actionBtn, checkpoint === 0 ? COPY.breadAction : checkpoint === 1 ? COPY.eggAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, placement ? placement.step === 0 ? COPY.placingBread : COPY.placingEgg
       : checkpoint === 0 ? COPY.bread : checkpoint === 1 ? COPY.egg : checkpoint === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    ending.sync(checkpoint === 2 && !placement)
   }
   function placed() {
     if (!active() || !placement) return
@@ -301,13 +306,15 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     if (reduced()) placed()
   }
   function finish(text = '') {
+    if (!text.trim() && !ending.completing) return
     if (!active() || pointer.isBusy() || placement || checkpoint !== 2) return
     const line = text.trim()
     // Terminal state precedes host callbacks, so a reentrant submission cannot save twice.
     checkpoint = 3; restorePose(); sync()
     if (line && !returning) ctx.saveWish?.(line)
-    ctx.onProgress?.(3); feedback.impact({ freqs: [392, 587.33], duration: 0.26, gain: 0.017 })
-    overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    if (disposed) return
+    ctx.onProgress?.(3); if (!active()) return; feedback.impact({ freqs: [392, 587.33], duration: 0.26, gain: 0.017 })
+    if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
   const onAction = () => {
     if (!active() || pointer.isBusy() || placement || checkpoint === 3) return
@@ -352,11 +359,14 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
         if (!reduced()) food.position.y += Math.sin(t * Math.PI) * 0.13
         if (t === 1) placed()
       }
-      style.render()
+      if (!active()) return
+      ending.update(dt)
+      if (!active()) return
+      scene.updateMatrixWorld(true); camera.updateMatrixWorld(true); style.render()
     },
     dispose() {
       if (disposed) return
-      disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose()
+      ending.dispose(); disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', onAction); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose())
       scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')

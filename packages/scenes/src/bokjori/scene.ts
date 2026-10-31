@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -204,12 +205,16 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
     && !touch.occluded(x, y, checkpoint === 0 ? [grainTarget, grains] : [peg, pegCap], { ignore: scoop })
     && placementHit(canvas, camera, source, x, y, (px, py) => touch.hit(px, py, checkpoint === 0 ? [grainTarget, grains] : [peg, pegCap], { ignore: scoop }))
   const home = () => checkpoint === 0 ? READY : checkpoint === 1 ? LOADED : HUNG
+  const ending = createQuietEnding(ctx, { ui, isActive: () => active(), duration: 3, motion: 'sway',
+    targets: () => [scoop], cancelInput: () => pointer.cancel(), complete: () => begin(),
+  })
   const syncUI = () => {
     dropFeedback.clear()
     ui.renderDots(checkpoint, 3)
     actionBtn.hidden = checkpoint === 3; actionBtn.disabled = !!motion || checkpoint === 3
     setSafeText(actionBtn, [COPY.scoopAction, COPY.hangAction, COPY.quietAction, COPY.quietAction][checkpoint], assertSafeCopy)
     setSafeText(hintEl, motion ? [COPY.scooping, COPY.hanging, COPY.settling][motion.step] : [COPY.scoop, COPY.hang, COPY.quiet, COPY.done][checkpoint], assertSafeCopy)
+    ending.sync(checkpoint === 2 && !motion)
   }
   const restorePose = () => {
     scoop.position.copy(home()); scoop.rotation.set(checkpoint < 2 ? -0.18 : 0, 0, checkpoint < 2 ? -0.1 : 0)
@@ -222,12 +227,14 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
     if (!motion) return
     checkpoint = (motion.step + 1) as Checkpoint; motion = null; restorePose(); syncUI()
     ctx.onProgress?.(checkpoint)
+    if (!active()) return
     feedback.impact({ freqs: checkpoint === 1 ? [320, 480] : [350, 525], duration: 0.28, gain: 0.025 })
     if (checkpoint === 3 && !completed) {
-      completed = true; overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+      completed = true; if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     }
   }
   const begin = () => {
+    if (checkpoint === 2 && !ending.completing) return
     if (!active() || motion || checkpoint === 3) return
     motion = { step: checkpoint, time: 0, from: scoop.position.clone(), rotation: scoop.rotation.clone() }; dragging = false
     if (reduced()) finish(); else syncUI()
@@ -305,11 +312,14 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
         world.updateMatrixWorld(true)
         if (t === 1) finish()
       }
-      styleRenderer.render()
+      if (!active()) return
+      ending.update(dt)
+      if (!active()) return
+      scene.updateMatrixWorld(true); camera.updateMatrixWorld(true); styleRenderer.render()
     },
     dispose() {
       if (disposed) return
-      disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); actionBtn.removeEventListener('click', onAction)
+      ending.dispose(); disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); actionBtn.removeEventListener('click', onAction)
       feedback.dispose(); styleRenderer.dispose(); disposeTree(scene); grains.dispose()
       Object.values(lights).forEach(light => light.dispose())
       renderer.dispose(); renderer.forceContextLoss(); scene.clear(); overlay.replaceChildren()

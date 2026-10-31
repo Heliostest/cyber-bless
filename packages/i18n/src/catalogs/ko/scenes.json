@@ -2269,5 +2269,8 @@
   "scene.mezuzah-doorpost.intention.07f237ad": "준비된 함을 들어 오른쪽 문설주로 옮긴 뒤 부드럽게 붙이세요.",
   "scene.sri-lankan-bodhi-puja.intention.ba68dcf1": "물주전자를 들어 보리수 뿌리 가까이 옮기고 천천히 물을 부어 공양하세요.",
   "scene.ukrainian-didukh.intention.fa0b869c": "가족의 풍요와 평안을 기원하기",
-  "scene.ukrainian-didukh.intention.9ba3c0a2": "밀 줄기를 모아 리본을 묶고 방 모퉁이에 밀 다발을 안정되게 세우며 가족을 위한 바람을 담으세요."
+  "scene.ukrainian-didukh.intention.9ba3c0a2": "밀 줄기를 모아 리본을 묶고 방 모퉁이에 밀 다발을 안정되게 세우며 가족을 위한 바람을 담으세요.",
+  "scene.autoEnding.status": "잠시 후 자동으로 완료됩니다.",
+  "scene.autoEnding.writing": "작성을 마친 뒤 「다 썼어요」를 눌러 계속하세요.",
+  "scene.autoEnding.progress": "마무리 진행 상황"
 }

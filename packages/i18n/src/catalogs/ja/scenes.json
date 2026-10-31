@@ -2269,5 +2269,8 @@
   "scene.mezuzah-doorpost.intention.07f237ad": "用意されたケースを持ち上げ、右の門柱へ動かして、そっと貼り留めます。",
   "scene.sri-lankan-bodhi-puja.intention.ba68dcf1": "水差しを持ち上げ、菩提樹の根元へ近づけて、ゆっくり水をお供えします。",
   "scene.ukrainian-didukh.intention.fa0b869c": "家族の豊かさと平安を願う",
-  "scene.ukrainian-didukh.intention.9ba3c0a2": "麦の茎をそろえ、リボンを結び、部屋の隅に麦束をしっかり立てて、家族への願いを託します。"
+  "scene.ukrainian-didukh.intention.9ba3c0a2": "麦の茎をそろえ、リボンを結び、部屋の隅に麦束をしっかり立てて、家族への願いを託します。",
+  "scene.autoEnding.status": "まもなく自動で完了します。",
+  "scene.autoEnding.writing": "書き終えたら「書けた」で続けてください。",
+  "scene.autoEnding.progress": "完了までの進み具合"
 }

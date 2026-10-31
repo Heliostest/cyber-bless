@@ -2269,5 +2269,8 @@
   "scene.mezuzah-doorpost.intention.07f237ad": "Levanta el estuche preparado, acércalo a la jamba derecha y fíjalo con cuidado.",
   "scene.sri-lankan-bodhi-puja.intention.ba68dcf1": "Levanta la jarra, acércala a las raíces del árbol bodhi y vierte lentamente el agua como ofrenda.",
   "scene.ukrainian-didukh.intention.fa0b869c": "Desear abundancia y paz a tu familia",
-  "scene.ukrainian-didukh.intention.9ba3c0a2": "Junta los tallos, ata la cinta y deja la gavilla firme en el rincón, guardando un deseo para tu familia."
+  "scene.ukrainian-didukh.intention.9ba3c0a2": "Junta los tallos, ata la cinta y deja la gavilla firme en el rincón, guardando un deseo para tu familia.",
+  "scene.autoEnding.status": "Terminando. Se completará en un momento.",
+  "scene.autoEnding.writing": "Cuando termines, pulsa «Terminé de escribir» para continuar.",
+  "scene.autoEnding.progress": "Progreso de finalización"
 }

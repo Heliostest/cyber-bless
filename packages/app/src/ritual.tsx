@@ -13,6 +13,7 @@ import { sceneSteps } from "./scene-placement";
 import { builtInScenes } from "./scene-library";
 import { captureSceneImage } from '@wbr/scene-runtime';
 import { SceneShareButton } from './ritual-share';
+import { SceneStageCard } from './scene-stage-card';
 /**
  * Compatibility host for sessions begun before scene-based rituals.
  * Their saved counters and rewards are preserved; every interaction is 3D.
@@ -114,15 +115,16 @@ export function Ritual({ id, wishId: linkedWishId, whenIdleRef, }: {
     const intention = sceneIntention("woodfish");
     return (<section className="scene-experience ritual-page ritual-woodfish" aria-label={translateScene(meta.name)}>
       <RitualNarrativeBlurb sceneId="woodfish"/>
-      {intention && <aside className="scene-intention" data-kind={intention.kind} aria-label={tr("\u8FD9\u4E00\u573A\u7684\u5FC3\u610F")}>
-        <strong>{translateScene(intention.label)}</strong><p>{translateScene(intention.action)}</p>
-      </aside>}
       <p className="scene-progress sr-only" role="status">{message('app.woodfish.progress', { n: woodfishTotal, min: meta.steps })}</p>
       <div className="sr-only" role="progressbar" aria-label={kind === "woodfish" ? tr("\u8F7B\u6572\u8FDB\u5EA6") : tr("\u4EEA\u5F0F\u8FDB\u5EA6")} aria-valuemin={0} aria-valuemax={meta.steps} aria-valuenow={progress}/>
+      <SceneStageCard intention={intention && <aside className="scene-intention" data-kind={intention.kind} aria-label={tr("\u8FD9\u4E00\u573A\u7684\u5FC3\u610F")}>
+        <strong>{translateScene(intention.label)}</strong><p>{translateScene(intention.action)}</p>
+      </aside>}>
           <Woodfish active={active && !paused} reducedMotion={state.settings.reducedMotion} view={view} disabled={ending} strikes={woodfishTotal} minimumStrikes={meta.steps} instruction={instruction} onFinish={ready ? () => {
             if (active && !paused)
                 setEnding(true);
         } : undefined} onStrike={step} onImpact={feedback} onInstruction={setInstruction} whenIdleRef={whenIdleRef}/>
+      </SceneStageCard>
       {kind === "woodfish" &&
             new URLSearchParams(window.location.search).has("inspectWoodfish") && (<label className="woodfish-inspection">{tr("\u6A21\u578B\u89C6\u89D2")}<select aria-label={tr("\u6A21\u578B\u89C6\u89D2")} value={view} onChange={(e) => setView(e.target.value)}>
               {["front", "left", "right", "back", "top", "bottom"].map((v) => (<option key={v}>{v}</option>))}

@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -194,12 +195,16 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
       dragging = false; if (valid) { if (at===0) carried.capture(); advance(true) } else reset()
     }, onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: () => inputActive(), duration: 3, motion: 'glow',
+    targets: () => [kite], cancelInput: () => pointer.cancel(), complete: () => advance(),
+  })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
     setSafeText(ui.actionBtn, at === 0 ? '把纸翼贴合竹骨' : at === 1 ? '向下轻拉木线轮' : '轻点纸鸢静看', safe)
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.fitting : COPY.flying : at === 0 ? COPY.fit : at === 1 ? COPY.fly : at === 2 ? COPY.quiet : COPY.done, safe)
+    ending.sync(at === 2 && !motion)
   }
   function withHostCallbacks(work: () => void) { notifying = true; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
@@ -209,6 +214,7 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
     withHostCallbacks(() => { ctx.onProgress?.(at); if (active()) feedback.impact({ freqs: [293.66, 440], duration: .12, gain: .006, type: 'sine' }) })
   }
   function advance(placed = false) {
+    if (at === 2 && !ending.completing) return
     if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return
     if (at === 2) {
       at = 3; restore(); withHostCallbacks(() => { ctx.onProgress?.(3); if (!active()) return; feedback.impact({ freqs: [293.66, 392], duration: .18, gain: .006 }); if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })) }); return
@@ -243,11 +249,14 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
         if (ctx.isReducedMotion?.()) { if (kite.rotation.z !== 0 || kite.rotation.y !== 0) restore() }
         else { windTime += delta; pose(1, 1, windTime) }
       }
-      if (active()) { matrices(); style.render() }
+      if (!active()) return
+      ending.update(dt)
+      if (!active()) return
+      scene.updateMatrixWorld(true); camera.updateMatrixWorld(true); style.render()
     },
     dispose() {
       if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      ending.dispose(); disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

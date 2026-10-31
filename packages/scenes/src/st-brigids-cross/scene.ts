@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -101,19 +102,25 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
     if(step===0) { weaveTarget.position.copy(HELD).add(new THREE.Vector3(...FOLDS[Math.min(3,woven)]).multiplyScalar(CROSS_SCALE)); guide.position.copy(weaveTarget.position).add(new THREE.Vector3(0,0,.01)) }
     world.updateMatrixWorld(true)
   }
+  const ending = createQuietEnding(ctx, { ui, isActive: () => active(), duration: 3, motion: 'sway',
+    targets: () => [cross], cancelInput: () => pointer.cancel(), complete: () => advance(),
+  })
   function sync() {
     ui.renderDots(step,3); ui.actionBtn.hidden=step===3; ui.actionBtn.disabled=settling>0
     setSafeText(ui.actionBtn,[COPY.weave,COPY.hang,COPY.rest,COPY.rest][step],shared.assertSafeCopy)
     setSafeText(ui.hintEl,COPY.hints[step],shared.assertSafeCopy)
+    ending.sync(step === 2 && !settling)
   }
   function advance() {
+    if (step === 2 && !ending.completing) return
     if(!active()||settling||step===3) return
     if(step===0) { woven++; if(woven===4) { step=1; ctx.onProgress?.(1) } }
     else { step++; ctx.onProgress?.(step) }
+    if (!active()) return
     settling=reduced()?0:.18
     pose(); sync()
     feedback.impact({freqs:step===3?[264,396]:[220,330],duration:.18,gain:.025})
-    if(step===3&&!completed) { completed=true; overlay.dispatchEvent(new CustomEvent('scene:complete',{bubbles:true})) }
+    if(step===3&&!completed) { completed=true; if (active()) overlay.dispatchEvent(new CustomEvent('scene:complete',{bubbles:true})) }
   }
   const pointer=createObjectPointer(ui.hitLayer,{
     isActive:active,
@@ -162,11 +169,14 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
       if(settling) {settling=Math.max(0,settling-delta);if(reduced())settling=0;sync()}
       if(!reduced())clock+=delta
       if(step>=2&&!dragging)cross.rotation.z=reduced()?0:Math.sin(clock*1.15)*.015
-      style.render()
+      if (!active()) return
+      ending.update(dt)
+      if (!active()) return
+      scene.updateMatrixWorld(true); camera.updateMatrixWorld(true); style.render()
     },
     dispose() {
       if(disposed)return
-      disposed=true;pointer.dispose();stopResize();ui.actionBtn.removeEventListener('click',action);feedback.dispose()
+      ending.dispose(); disposed=true;pointer.dispose();stopResize();ui.actionBtn.removeEventListener('click',action);feedback.dispose()
       style.dispose();disposeTree(world)
       for(const light of Object.values(lights))light.dispose()
       scene.clear();renderer.dispose();renderer.forceContextLoss()

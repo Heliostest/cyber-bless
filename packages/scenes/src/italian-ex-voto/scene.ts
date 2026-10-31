@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -208,6 +209,8 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
     },
     onCancel: resetDrag,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: active, duration: 3, motion: 'glow',
+    targets: () => [plaque], cancelInput: () => pointer.cancel(), complete: () => finish() })
   const sync = () => {
     delete ui.hintEl.dataset.progress
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !active() || !!motion || checkpoint === 3
@@ -217,6 +220,7 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
     setSafeText(ui.actionBtn, checkpoint === 0 ? COPY.pathAction : checkpoint === 1 ? COPY.windowAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, motion ? COPY.moving : checkpoint === 0 ? COPY.path : checkpoint === 1 ? COPY.window
       : checkpoint === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    ending.sync(checkpoint === 2 && !motion)
   }
   function settled() {
     if (!active() || !motion) return
@@ -230,10 +234,11 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
   }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || checkpoint !== 2) return
+    if (!text.trim() && !ending.completing) return
     const line = text.trim(); checkpoint = 3; restorePose(); sync()
     if (line && !returning) ctx.saveWish?.(line)
-    ctx.onProgress?.(3); feedback.impact({ freqs: [392, 587.33], duration: .26, gain: .017 })
-    overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    if (disposed) return; ctx.onProgress?.(3); if (!active()) return; feedback.impact({ freqs: [392, 587.33], duration: .26, gain: .017 })
+    if (!active()) return; overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
   const action = () => { if (!active() || pointer.isBusy() || motion || checkpoint === 3) return; feedback.prepare(); if (checkpoint < 2) begin(); else finish() }
   const blur = () => { focused = false; pointer.cancel(); sync() }
@@ -280,10 +285,13 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
         }
         if (motion.time === 1) { windowLight.scale.set(1, 1, 1); windowLight.position.set(0, 0, 0); settled() }
       }
+      ending.update(dt)
+      if (disposed || !active()) return
       style.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose())

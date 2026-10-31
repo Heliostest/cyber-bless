@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -207,6 +208,9 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
     },
     onCancel: resetDrag,
   })
+  const ending = createQuietEnding(ctx, { ui: ui, isActive: () => started && !disposed && canAct(),
+    duration: 3, motion: 'sway', targets: () => [pouches[selected].root], cancelInput: () => { pointer.cancel() }, complete: () => finish(),
+  })
   const sync = () => {
     ui.renderDots(step, 3); ui.actionBtn.hidden = step === 3
     ui.actionBtn.disabled = placing || !canAct(); ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled))
@@ -215,6 +219,7 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
     ui.hitLayer.style.pointerEvents = step < 3 && !placing ? 'auto' : 'none'
     setSafeText(ui.hintEl, step === 0 ? returning ? COPY.selectReturn : COPY.select : step === 1 ? placing ? COPY.placing : returning ? COPY.box : COPY.clasp : step === 2 ? returning ? COPY.gratitude : COPY.wish : returning ? COPY.returned : COPY.done, safe)
     setSafeText(ui.actionBtn, step === 0 ? COPY.choose : step === 1 ? returning ? COPY.returnBag : COPY.carry : returning ? COPY.thank : COPY.quiet, safe)
+    ending.sync(step === 2 && !placing)
   }
   function choose(index: number) {
     if (!canAct() || pointer.isBusy() || step !== 0 || placing) return
@@ -233,13 +238,16 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
     if (reduced()) placed()
   }
   function finish(text = '') {
+    if (!text.trim() && !ending.completing) return
     if (!canAct() || pointer.isBusy() || step !== 2 || placing) return
     const line = text.trim()
     // Set the terminal phase before any host callback, including saving a wish.
     step = 3; clock = 0; physicalLayout(); sync()
-    if (line && !returning && !saved) { saved = true; ctx.saveWish?.(line) }
+    if (line && !returning && !saved) { saved = true; ctx.saveWish?.(line); if (disposed || !canAct()) return }
     ctx.onProgress?.(3)
+    if (disposed || !canAct()) return
     feedback.impact({ freqs: [392, 587.33], duration: 0.25, gain: 0.018 })
+    if (disposed || !canAct()) return
     overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
   const action = () => {
@@ -290,10 +298,13 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
         if (!quiet) clock += delta
         pouches[selected].root.rotation.z = quiet || returning ? 0 : Math.sin(clock * 1.8) * Math.exp(-clock * 1.1) * 0.012
       }
+      ending.update(dt)
+      if (disposed || !(canAct())) return
       style.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true; stopResize(); pointer.dispose(); writer?.dispose(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', action)
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)

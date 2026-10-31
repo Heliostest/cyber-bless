@@ -3056,5 +3056,8 @@ export interface MessageArguments {
   "scene.sri-lankan-bodhi-puja.intention.ba68dcf1": {  };
   "scene.ukrainian-didukh.intention.fa0b869c": {  };
   "scene.ukrainian-didukh.intention.9ba3c0a2": {  };
+  "scene.autoEnding.status": {  };
+  "scene.autoEnding.writing": {  };
+  "scene.autoEnding.progress": {  };
 }
 export type MessageId = keyof MessageArguments;

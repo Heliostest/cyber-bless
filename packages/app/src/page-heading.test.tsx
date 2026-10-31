@@ -48,3 +48,27 @@ it("starts measuring when the app shell appears after asynchronous storage boots
   expect(shell.current!.style.getPropertyValue("--app-dock-space")).not.toBe("");
   ui.unmount();
 });
+
+it("counts a card footer once when reserving the canvas in a short viewport", () => {
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function () {
+    const height = this.classList.contains("app-content") ? 450
+      : this.classList.contains("scene-intention") ? 100 : 0;
+    return { left: 0, top: 0, right: 320, bottom: height, width: 320, height } as DOMRect;
+  });
+  const shell = createRef<HTMLDivElement>();
+  function Host() {
+    useAppLayout(shell);
+    return <div ref={shell} className="app-shell" data-immersive="true">
+      <main className="app-content"><div className="scene-experience">
+        <div className="scene-stage-card">
+          <div className="library-scene-stage" style={{ "--tray": "132px" } as CSSProperties} />
+          <aside className="scene-intention">A complete intention below the scene</aside>
+        </div>
+      </div></main>
+    </div>;
+  }
+  const ui = renderUI(<Host />);
+  expect(shell.current!.style.getPropertyValue("--scene-min-stage")).toBe("464px");
+  expect(shell.current!.dataset.layoutScroll).toBe("true");
+  ui.unmount();
+});

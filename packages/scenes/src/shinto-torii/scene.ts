@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import { bindSceneAttribute } from '../scene-localization'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -109,6 +110,9 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
 
   const setHint = (text: string) => setSafeText(hintEl, text, assertSafeCopy)
 
+  const ending = createQuietEnding(ctx, { ui: ui, isActive: () => started && !disposed && canAct(),
+    duration: 3, motion: 'glow', targets: () => [torii], cancelInput: () => { dragHandle?.setEnabled(false) }, complete: () => completeScene(),
+  })
   const syncOverlayForStep = () => {
     ui.renderDots(
       step === 'done' ? STEP_ORDER.length : STEP_ORDER.indexOf(step),
@@ -128,6 +132,7 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
       setHint(COPY.hintEma)
       setSafeText(actionBtn, COPY.emaTap, assertSafeCopy)
     } else setHint(COPY.done)
+    ending.sync(step === 'ema')
   }
 
   // Transparent over the island stage: clear morning key, pale sky rim on the vermilion.
@@ -269,15 +274,16 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
       step === 'bow' && !bowing,
   })
 
-  const completeScene = () => {
+  const completeScene = (fromWriting = false) => {
+    if (!restoring && !ending.completing && !fromWriting) return
     if (!canAct() || step === 'done') return
     step = 'done'
     dragHandle?.setEnabled(false)
     gyroHandle?.setEnabled(false)
     wishHandle?.setEnabled(false)
-    if (!restoring) ctx.onProgress?.(3)
+    if (!restoring) { ctx.onProgress?.(3); if (disposed || !(canAct())) return }
     syncOverlayForStep()
-    overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    if (!restoring) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
 
   const goEma = () => {
@@ -399,14 +405,21 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
     gyroHandle.setEnabled(false)
     handles.push(gyroHandle)
 
+    let submittingWish = false
     wishHandle = gestures.createWishWrite({
       maxLen: 40,
       saves: ctx.saveWish !== undefined,
       onSubmit: (text) => {
-        if (step !== 'ema' || !canAct()) return
-        ctx.saveWish?.(text)
-        leaveEma()
-        completeScene()
+        if (submittingWish || disposed || step !== 'ema' || !canAct()) return
+        submittingWish = true
+        try {
+          ctx.saveWish?.(text)
+          if (disposed || !canAct()) return
+          leaveEma()
+          completeScene(true)
+        } finally {
+          submittingWish = false
+        }
       },
     })
     wishHandle.mount(wishSlot, {})
@@ -482,10 +495,13 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
       ownEmaMat.emissiveIntensity = emaGlow * 0.6
       ownEma.rotation.z = reduced ? 0 : Math.sin(t * 1.5) * 0.08
 
+      ending.update(dt)
+      if (disposed || !(canAct())) return
       styleRenderer.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true
       stopResize()
       stopClaim()

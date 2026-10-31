@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -185,6 +186,7 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
       if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: () => active() && !notifying, duration: 3, motion: 'glow', targets: () => [hoop], cancelInput: () => pointer.cancel(), complete: () => finish() })
   const sync = () => {
     dropFeedback.clear()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !active() || !!motion || at === 3
@@ -192,6 +194,7 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(active() && !returning && at === 2 && !motion)
     setSafeText(ui.actionBtn, at === 0 ? COPY.decorateAction : at === 1 ? COPY.hangAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, motion ? COPY.moving : at === 0 ? COPY.decorate : at === 1 ? COPY.hang : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    ending.sync(at === 2 && !motion)
   }
   function settle() {
     if (!active() || !motion) return
@@ -203,6 +206,7 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
   function begin(placed = false) { if (notifying || !active() || (pointer.isBusy() && !placed) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
   function finish(text = '') {
     if (notifying || !active() || pointer.isBusy() || motion || at !== 2) return
+    if (!text.trim() && !ending.completing) return
     at = 3; restore(); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()
     if (text.trim() && !returning) notifyHost(() => ctx.saveWish?.(text.trim()))
     if (disposed) return
@@ -240,8 +244,9 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
         } else { hoop.position.lerpVectors(motion.from, REST, t); if (!reduced()) hoop.position.y += .14 * Math.sin(Math.PI * t) }
         if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); style.render() }
+      ending.update(dt)
+      if (!disposed && active()) { matrices(); style.render() }
     },
-    dispose() { if (disposed) return; disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() { if (disposed) return; ending.dispose(); disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }
 }

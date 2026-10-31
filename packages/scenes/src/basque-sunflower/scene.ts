@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -174,12 +175,15 @@ export function createBasqueSunflower(ctx: SceneContext): SceneInstance {
       dragging = false; if (valid) { if (at < 2) begin(); else finish() } else reset()
     }, onCancel: reset,
   })
+  const ending = createQuietEnding(ctx, { ui, isActive: active, duration: 3, motion: 'glow',
+    targets: () => [flower], cancelInput: () => pointer.cancel(), complete: () => finish() })
   const sync = () => {
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !active() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = at < 3 && !motion ? 'auto' : 'none'
     wishSlot.hidden = returning || at !== 2; writer?.setEnabled(active() && !returning && at === 2 && !motion)
     setSafeText(ui.actionBtn, at === 0 ? COPY.assembleAction : at === 1 ? COPY.hangAction : COPY.quietAction, safe)
     setSafeText(ui.hintEl, motion ? COPY.moving : at === 0 ? COPY.assemble : at === 1 ? COPY.hang : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
+    ending.sync(at === 2 && !motion)
   }
   function settle() {
     if (!active() || !motion) return
@@ -192,9 +196,10 @@ export function createBasqueSunflower(ctx: SceneContext): SceneInstance {
   }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || at !== 2) return
+    if (!text.trim() && !ending.completing) return
     at = 3; restore(); sync(); if (text.trim() && !returning) ctx.saveWish?.(text.trim())
-    ctx.onProgress?.(3); feedback.impact({ freqs: [349.23, 523.25], duration: .24, gain: .012 })
-    overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    if (disposed) return; ctx.onProgress?.(3); if (!active()) return; feedback.impact({ freqs: [349.23, 523.25], duration: .24, gain: .012 })
+    if (!active()) return; overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
   const action = () => { if (!active() || pointer.isBusy() || motion || at === 3) return; feedback.prepare(); if (at < 2) begin(); else finish() }
   const blur = () => { focused = false; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
@@ -229,10 +234,13 @@ export function createBasqueSunflower(ctx: SceneContext): SceneInstance {
         if (!reduced()) moving().position.y += .08 * Math.sin(Math.PI * t)
         if (motion.time === 1) settle()
       }
+      ending.update(dt)
+      if (disposed || !active()) return
       matrices(); style.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss()

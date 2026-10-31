@@ -615,6 +615,8 @@ describe("还愿 through a keepsake", () => {
       const intention = ui.host.querySelector('.scene-intention[data-kind="blessing"]');
       expect(intention?.textContent ?? "").toContain("面试顺利");
       expect(intention?.textContent ?? "").toContain(action);
+      expect(intention?.parentElement?.className).toBe("scene-stage-card");
+      expect(intention?.previousElementSibling?.classList.contains("library-scene-stage")).toBe(true);
       expect(ui.host.querySelector(".scene-post-wish")).toBeNull();
       ui.unmount();
     });
@@ -1076,6 +1078,8 @@ describe("optional wishes after the ritual", () => {
     const ui = await openCatalogScene("tanzaku-tanabata");
     const intention = ui.host.querySelector('.scene-intention[data-kind="wish"]');
     expect(intention?.textContent ?? "").toContain("短册");
+    expect(intention?.parentElement?.className).toBe("scene-stage-card");
+    expect(intention?.previousElementSibling?.classList.contains("library-scene-stage")).toBe(true);
     expect(ui.host.querySelector(".scene-post-wish")).toBeNull();
     expect(scene.context?.deferWishWriting).toBe(true);
     await ui.walk();

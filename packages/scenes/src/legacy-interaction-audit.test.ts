@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+// Isolate the existing object, geometry and callback contract from the ending clock.
+// Real automatic endings are covered by quiet-ending-legacy-scenes and the craft integration suites.
+vi.mock('./quiet-ending', () => ({ createQuietEnding: () => ({
+  running: false, completing: true, sync() {}, update() {}, dispose() {},
+}) }))
 import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
@@ -292,7 +298,9 @@ it.each(IDS)('%s restores a completed ritual without replaying checkpoints', asy
   s.run(2)
   expect(s.progress).toEqual([])
   expect(s.cues()).toEqual([])
-  expect(s.complete).toHaveBeenCalledTimes(id === 'tibetan-wheel' ? 0 : 1)
+  // The unchanged pour and wreath paths retain their existing restore event.
+  // Automatic-ending scenes and the wheel never issue a new completion here.
+  expect(s.complete).toHaveBeenCalledTimes(['theravada-water', 'slavic-wreath'].includes(id) ? 1 : 0)
 })
 
 it.each(['theravada-water', 'tibetan-wheel', 'furin-wind-chime', 'yeondeunghoe']

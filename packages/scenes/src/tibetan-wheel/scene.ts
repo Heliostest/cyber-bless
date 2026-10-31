@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -103,13 +104,16 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
 
   const setHint = (text: string) => setSafeText(hintEl, text, assertSafeCopy)
 
+  const ending = createQuietEnding(ctx, { ui: ui, isActive: () => started && !disposed && canAct(),
+    duration: 3, motion: 'glow', targets: () => [main.drum], cancelInput: () => { spinHandle?.setEnabled(false) }, complete: () => completeScene(),
+  })
   const syncOverlayForStep = () => {
     ui.renderDots(
       step === 'done' ? STEP_ORDER.length : STEP_ORDER.indexOf(step),
       STEP_ORDER.length,
     )
     actionBtn.hidden = step === 'done'
-    finishButton.hidden = step === 'ready' || step === 'done'
+    finishButton.hidden = step === 'ready' || step === 'done' || step === 'still' && !finishRequested
     finishButton.disabled = !canAct() || settling
     finishButton.setAttribute('aria-disabled', String(finishButton.disabled))
     hitLayer.style.pointerEvents = step === 'done' ? 'none' : 'auto'
@@ -128,6 +132,7 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
       setHint(COPY.hintStill)
       setSafeText(actionBtn, COPY.pushTap, assertSafeCopy)
     } else setHint(COPY.done)
+    ending.sync(step === 'still' && !finishRequested)
   }
 
   // Transparent over the island stage: high-altitude sun key, cool rim, warm bounce.
@@ -277,11 +282,12 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
     enabled: () => started && !disposed && !restoring && canAct() && step === 'still',
   })
 
-  const completeScene = () => {
+  const completeScene = (fromWriting = false) => {
+    if (!restoring && !ending.completing && !finishRequested) return
     if (!canAct() || step === 'done') return
     step = 'done'
     spinHandle?.setEnabled(false)
-    if (!restoring) ctx.onProgress?.(3)
+    if (!restoring) { ctx.onProgress?.(3); if (disposed || !(canAct())) return }
     syncOverlayForStep()
     if (!restoring) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
@@ -467,10 +473,13 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
       )
       camera.lookAt(cameraLookAt)
 
+      ending.update(dt)
+      if (disposed || !(canAct())) return
       styleRenderer.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true
       stopResize()
       stopClaim()

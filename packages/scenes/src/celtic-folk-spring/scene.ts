@@ -1,3 +1,4 @@
+import { createQuietEnding } from '../quiet-ending'
 import { bindSceneAttribute, bindSceneText } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -103,6 +104,9 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
 
   const setHint = (text: string) => setSafeText(hintEl, text, assertSafeCopy)
 
+  const ending = createQuietEnding(ctx, { ui: { hitLayer, actionBtn: bowBtn, hintEl }, isActive: () => started && !disposed && canAct(),
+    duration: 3, motion: 'bob', targets: () => [token], cancelInput: () => { onOverlayCancel() }, complete: () => completeScene(),
+  })
   const syncOverlayForStep = () => {
     renderDots()
     bowBtn.hidden = step === 'done'
@@ -113,6 +117,7 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
     else if (step === 'drag') setHint(COPY.hintDrag)
     else if (step === 'wishWrite') setHint(COPY.hintWish)
     else setHint(COPY.done)
+    ending.sync(step === 'wishWrite')
   }
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true })
@@ -271,16 +276,17 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
     }
   }
 
-  const completeScene = () => {
+  const completeScene = (fromWriting = false) => {
+    if (!restoring && !ending.completing && !fromWriting) return
     if (!restoring && ctx.isActive && !ctx.isActive()) return
     if (step === 'done') return
     step = 'done'
     gyroHandle?.setEnabled(false)
     dragHandle?.setEnabled(false)
     wishHandle?.setEnabled(false)
-    if (!restoring) ctx.onProgress?.(3)
+    if (!restoring) { ctx.onProgress?.(3); if (disposed || !(canAct())) return }
     syncOverlayForStep()
-    overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    if (!restoring) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
 
   const goDrag = () => {
@@ -406,13 +412,20 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
     hitLayer.addEventListener('pointermove', onOverlayMove)
     hitLayer.addEventListener('pointerup', onOverlayUp)
 
+    let submittingWish = false
     wishHandle = gestures.createWishWrite({
       maxLen: 40,
       saves: ctx.saveWish !== undefined,
       onSubmit: (text) => {
-        if (step !== 'wishWrite' || (ctx.isActive && !ctx.isActive())) return
-        ctx.saveWish?.(text)
-        completeScene()
+        if (submittingWish || disposed || step !== 'wishWrite' || !canAct()) return
+        submittingWish = true
+        try {
+          ctx.saveWish?.(text)
+          if (disposed || !canAct()) return
+          completeScene(true)
+        } finally {
+          submittingWish = false
+        }
       },
     })
     wishHandle.mount(wishSlot, {})
@@ -476,10 +489,13 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
       )
       camera.lookAt(cameraLookAt)
 
+      ending.update(dt)
+      if (disposed || !(canAct())) return
       styleRenderer.render()
     },
     dispose() {
       if (disposed) return
+      ending.dispose()
       disposed = true
       resizeObserver?.disconnect()
       resizeObserver = null

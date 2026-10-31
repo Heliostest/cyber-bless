@@ -28,6 +28,10 @@ vi.mock('@wbr/scene-runtime/debug-render-style', async () => {
     return { setStyle() {}, resize() {}, render() { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true); cues.update() }, dispose() { cues.dispose() } }
   } }
 })
+// Keep these geometry/input tests on their original completion contract.
+// Real automatic timing is exercised in quiet-ending-eight-crafts.test.ts.
+vi.mock('../quiet-ending', () => ({ createQuietEnding: () => ({ running: false, completing: true, sync() {}, update() {}, dispose() {} }) }))
+
 const instances: SceneInstance[] = []
 afterEach(() => { instances.splice(0).forEach(s => s.dispose()); document.body.replaceChildren(); vi.restoreAllMocks() })
 function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {

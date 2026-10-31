@@ -23,6 +23,7 @@ import { SceneExperience } from "./scene-experience";
 import { FeedbackControls, dismissFeedbackMenu } from "./feedback-controls";
 import { dismissVisualStyleMenu } from "./visual-style-menu";
 import { dismissRitualShare } from "./ritual-share";
+import { dismissLanguageSetting } from "./language-setting";
 import { PageTitle, useAppLayout } from "./page-heading";
 import { Opening } from "./opening";
 import { followSystemReducedMotion, initialSettings } from "./reduced-motion";
@@ -159,6 +160,8 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
         window.scrollTo?.(0, 0);
     }
     function back() {
+        if (dismissLanguageSetting(shell.current))
+            return;
         if (dismissRitualShare(shell.current))
             return;
         if (dismissVisualStyleMenu(shell.current))

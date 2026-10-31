@@ -6,6 +6,7 @@
     "packages/*"
   ],
   "scripts": {
+    "ios:release:test": "node --test scripts/ios-release/*.test.mjs",
     "dev": "npm run i18n:compile && npm run dev -w @wbr/cyber-bless --",
     "build": "npm run i18n:verify && npm run build -w @wbr/cyber-bless",
     "test": "npm run i18n:test && npm run test -w @wbr/core && npm run test -w @wbr/runtime && npm run test -w @wbr/app && npm run test -w @wbr/gestures && npm run test -w @wbr/shared && npm run test -w @wbr/scenes && npm run test -w @wbr/content && npm run test -w @wbr/scene-runtime && node scripts/check-woodfish-assets.mjs",

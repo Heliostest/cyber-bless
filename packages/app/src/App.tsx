@@ -353,7 +353,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
         : route.page === "collection"
             ? "world"
             : route.page === "history"
-                ? "me"
+                ? "world"
                 : roots.includes(route.page)
                     ? route.page
                     : "today";

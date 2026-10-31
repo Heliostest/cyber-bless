@@ -225,11 +225,14 @@ async function populatedRoutes(locale, view) {
   if (width === 320 && scale === 2 && !reflowEquivalent) await screenshot(`${locale}-populated-world-${width}-${scale}`);
   await restoreText(); await page.locator('.collection-card').first().click();
   await page.locator('.app-shell[data-page="collection"]').waitFor(); await check('collection-detail', scale);
+  await back('world');
+  await restoreText(); await (await translatedButton('仪式时光')).click();
+  await page.locator('.app-shell[data-page="history"]').waitFor(); await check('history', scale);
+  assert.ok(await page.locator('.timeline li, .scene-catalog .scene-card').count(), 'history fixture must contain records');
   await back('world'); await tab('me'); await check('me-settings', scale);
-  for (const [source, route] of [['隐私政策', 'privacy'], ['技术支持', 'support'], ['资源缓存', 'cache'], ['仪式时光', 'history'], ['场景目录', 'scenes']]) {
+  for (const [source, route] of [['隐私政策', 'privacy'], ['技术支持', 'support'], ['资源缓存', 'cache'], ['场景目录', 'scenes']]) {
     await restoreText(); await (await translatedButton(source)).click();
     await page.locator(`.app-shell[data-page="${route}"]`).waitFor(); await check(route, scale);
-    if (route === 'history') assert.ok(await page.locator('.timeline li, .scene-catalog .scene-card').count(), 'history fixture must contain records');
     if (route === 'cache') await reachable('.cache-manager .button', 'cache');
     if (route === 'scenes') {
       await restoreText(); await page.locator('.scene-search input').fill('layout-no-matching-scene-xxxxxxxx');

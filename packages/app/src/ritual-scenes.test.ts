@@ -739,9 +739,16 @@ describe("仪式时光", () => {
     });
     const ui = await openApp(state);
     await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
-    expect([...ui.host.querySelectorAll('.stats > div')].map(el => el.textContent)).toEqual(['3仪式记录', '1小天地收藏']);
+    expect(ui.host.querySelector('.stats')).toBeNull();
+    expect(ui.host.querySelector('.settings-card')?.textContent).not.toContain('仪式时光');
+    expect(ui.button('场景目录', '.settings-card')).toBeDefined();
     expect(ui.host.textContent).not.toContain('功德');
+    await ui.tap(ui.host.querySelector('[data-tab="world"]')!);
+    expect(ui.host.querySelector('.count-pill')?.textContent).toBe('1 件珍藏');
+    expect(ui.host.querySelectorAll('.collection-card')).toHaveLength(1);
     await ui.tap(ui.button("仪式时光", ".settings-card"));
+    expect(ui.page()).toBe('history');
+    expect((await ui.saved()).collectibles).toEqual(state.collectibles);
     const lines = [...ui.host.querySelectorAll(".timeline li p")].map(
       (p) => p.textContent!,
     );
@@ -761,7 +768,10 @@ describe("仪式时光", () => {
 
   it("reopens a finished scene card from its first step", async () => {
     const ui = await openApp(withRecords({ crane: 3 }));
-    await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
+    await ui.tap(ui.host.querySelector('[data-tab="world"]')!);
+    await ui.tap(ui.button("仪式时光", ".settings-card"));
+    await ui.tap(ui.host.querySelector('.back-button')!);
+    expect(ui.page()).toBe('world');
     await ui.tap(ui.button("仪式时光", ".settings-card"));
     await ui.tap(
       ui.host.querySelector('.scene-catalog .scene-card[data-scene="crane"]')!,

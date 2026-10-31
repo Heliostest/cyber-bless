@@ -58,7 +58,10 @@ export function useAppLayout(ref: RefObject<HTMLElement | null>) {
       const gap = parseFloat(getComputedStyle(experience).rowGap) || 0;
       const available = content.getBoundingClientRect().height -
         (parseFloat(contentCss.paddingTop) || 0) - (parseFloat(contentCss.paddingBottom) || 0);
-      const needsScroll = available > 0 && stageMinimum + extras + gap * children.length > available;
+      // The editor overlays the stage and owns its scrolling. A minimum-height
+      // scene here would anchor the editor below the keyboard's visible area.
+      const writingWish = !!experience.querySelector(".scene-post-wish form");
+      const needsScroll = !writingWish && available > 0 && stageMinimum + extras + gap * children.length > available;
       if (needsScroll) shell.setAttribute("data-layout-scroll", "true");
       else shell.removeAttribute("data-layout-scroll");
       observe(content); observe(stage); observe(experience);

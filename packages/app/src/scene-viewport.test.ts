@@ -50,4 +50,26 @@ describe("scene viewport", () => {
     expect(shell.style.getPropertyValue("--scene-viewport-height")).toBe("");
     expect(document.body.style.overflow).toBe("");
   });
+
+  it("follows keyboard panning even when the visible height does not change", () => {
+    const viewport = Object.assign(new EventTarget(), { height: 420, offsetTop: 0 });
+    vi.stubGlobal("visualViewport", viewport);
+    const ui = renderUI(createElement(Screen, { active: true }));
+    const shell = ui.host.firstElementChild as HTMLElement;
+    expect(shell.style.getPropertyValue("--scene-viewport-top")).toBe("0px");
+    viewport.offsetTop = 260;
+    viewport.dispatchEvent(new Event("scroll"));
+    expect(shell.style.getPropertyValue("--scene-viewport-top")).toBe("260px");
+    expect(shell.style.getPropertyValue("--scene-viewport-height")).toBe("420px");
+    viewport.offsetTop = 0;
+    viewport.height = 844;
+    viewport.dispatchEvent(new Event("resize"));
+    expect(shell.style.getPropertyValue("--scene-viewport-top")).toBe("0px");
+    ui.rerender(createElement(Screen, { active: false }));
+    expect(shell.style.getPropertyValue("--scene-viewport-top")).toBe("");
+    viewport.offsetTop = 120;
+    viewport.dispatchEvent(new Event("scroll"));
+    expect(shell.style.getPropertyValue("--scene-viewport-top")).toBe("");
+    ui.unmount();
+  });
 });

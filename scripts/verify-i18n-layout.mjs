@@ -93,9 +93,6 @@ async function inspect(route) {
       position: getComputedStyle(dock).position,
       padding: parseFloat(getComputedStyle(content).paddingBottom) || 0 } : null;
     const canvas = document.querySelector('.library-scene-stage .scene-canvas');
-    const caption = document.querySelector('.room-caption');
-    const roomCaption = caption ? { writingMode: getComputedStyle(caption).writingMode,
-      letterSpacing: getComputedStyle(caption).letterSpacing, text: caption.textContent } : null;
     const counters = [...document.querySelectorAll('.count-pill')].filter(visible).map(element => ({ text: element.textContent,
       width: element.clientWidth, scrollWidth: element.scrollWidth, height: element.clientHeight, scrollHeight: element.scrollHeight }));
     const dockLabels = [...document.querySelectorAll('.bottom-nav button[data-tab]')].filter(visible).map(button => {
@@ -115,7 +112,7 @@ async function inspect(route) {
           text: element.textContent.slice(0, 100), left: rect.left, right: rect.right, width: rect.width,
           display: getComputedStyle(element).display })) : [];
     return { lang: document.documentElement.lang, viewport: innerWidth,
-      documentWidth: document.documentElement.scrollWidth, overflowElements, clipped, dockReserve, roomCaption, counters, dockLabels,
+      documentWidth: document.documentElement.scrollWidth, overflowElements, clipped, dockReserve, counters, dockLabels,
       title: document.querySelector('.title-ribbon')?.textContent,
       ribbonSize: document.querySelector('.title-ribbon') ? getComputedStyle(document.querySelector('.title-ribbon')).fontSize : null,
       scrollFallback: document.querySelector('.app-shell')?.hasAttribute('data-layout-scroll') || false,
@@ -123,10 +120,6 @@ async function inspect(route) {
   });
   assert.ok(result.documentWidth <= result.viewport + 2, `${route}: document overflow ${JSON.stringify(result)}`);
   assert.deepEqual(result.clipped, [], `${route}: clipped text ${JSON.stringify(result.clipped)}`);
-  if (result.roomCaption && ['en', 'es', 'pt', 'fr'].includes(result.lang)) {
-    assert.equal(result.roomCaption.writingMode, 'horizontal-tb', `${route}: Latin caption is rotated vertically`);
-    assert.ok(['normal', '0px'].includes(result.roomCaption.letterSpacing), `${route}: Latin caption uses CJK tracking`);
-  }
   if (result.dockReserve?.position === 'fixed') assert.ok(result.dockReserve.padding >= result.dockReserve.height + result.dockReserve.bottom + 8,
     `${route}: dock clearance ${JSON.stringify(result.dockReserve)}`);
   for (const label of result.dockLabels) {
@@ -226,10 +219,7 @@ async function populatedRoutes(locale, view) {
   await restoreText(); await page.locator('.collection-card').first().click();
   await page.locator('.app-shell[data-page="collection"]').waitFor(); await check('collection-detail', scale);
   await back('world');
-  await restoreText(); await (await translatedButton('仪式时光')).click();
-  await page.locator('.app-shell[data-page="history"]').waitFor(); await check('history', scale);
-  assert.ok(await page.locator('.timeline li, .scene-catalog .scene-card').count(), 'history fixture must contain records');
-  await back('world'); await tab('me'); await check('me-settings', scale);
+  await tab('me'); await check('me-settings', scale);
   for (const [source, route] of [['隐私政策', 'privacy'], ['技术支持', 'support'], ['资源缓存', 'cache'], ['场景目录', 'scenes']]) {
     await restoreText(); await (await translatedButton(source)).click();
     await page.locator(`.app-shell[data-page="${route}"]`).waitFor(); await check(route, scale);
@@ -312,8 +302,8 @@ async function fontFailure(base, locale) {
     assert.ok(statuses.some(font => font.status === 'error'), 'font failure must reach a failed FontFace');
     rows.push({ ...current, route: 'font-failure-status', abortedFonts, statuses, actualFonts: await fonts() });
     await tab('world'); await check('font-failure-world', 2);
-    await page.locator('.room-caption').scrollIntoViewIfNeeded(); await settle();
-    await screenshot(`${locale}-font-failure-world-caption-320-2`);
+    await page.locator('.room .count-pill').scrollIntoViewIfNeeded(); await settle();
+    await screenshot(`${locale}-font-failure-world-counter-320-2`);
     await tab('me'); await check('font-failure-me', 2);
     await screenshot(`${locale}-font-failure-me-320-2`);
   } finally { await context.close(); }
@@ -448,7 +438,7 @@ try {
   const report = { passed: true, sourceOnly, additionalOnly, worldOnly, checkedAt: new Date().toISOString(), rows, screenshots, errors, fontCoverage,
     scope: worldOnly ? 'World counter and dock regression in all requested locales at three representative views, including large text and desktop400%CSSreflow equivalence, plus French/Hantfont failures. Complete visible countertext, one-or-two-line localized dock labels, original full accessible names,44px targets, viewport bounds and actual center hits are asserted. This is a Vite DEV browser run, not native keyboard or all-scene verification.' : additionalOnly
       ? 'Additional suite only: note-editor viewport resize from390×844 to390×320/390 preserving draft/selection/focus and reachable submit, plus isolated French/Hant bundled-font failures. These are browser simulations, not native keyboard/IME or all-scene verification.'
-      : 'Eight shipped locales; empty wishes at requested viewport/text-scale matrix; populated wish/rack/detail/note/world/collection/settings/privacy/support/cache/history/catalog at three representative views; one tanzaku scene/dialog/helper per locale; actual FormatJS pseudo AST and text spacing; note-editor reduced viewport and French/Hant bundled-font failures. Desktop400% is a CSS reflow equivalence, not browser zoom UI. Native text scaling, hardware/accessibility and human linguistic review are separate. This does not test all87scenes.' };
+      : 'Eight shipped locales; empty wishes at requested viewport/text-scale matrix; populated wish/rack/detail/note/world/collection/settings/privacy/support/cache/catalog at three representative views; one tanzaku scene/dialog/helper per locale; actual FormatJS pseudo AST and text spacing; note-editor reduced viewport and French/Hant bundled-font failures. Desktop400% is a CSS reflow equivalence, not browser zoom UI. Native text scaling, hardware/accessibility and human linguistic review are separate. This does not test all87scenes.' };
   await writeFile(path.join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify({ passed: true, cases: rows.length, sourceOnly, additionalOnly, worldOnly, out, screenshots: screenshots.length }));
 } catch (error) {

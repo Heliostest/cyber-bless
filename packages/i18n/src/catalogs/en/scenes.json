@@ -2270,6 +2270,13 @@
   "scene.sri-lankan-bodhi-puja.intention.ba68dcf1": "Lift the jug, bring it near the bodhi tree’s roots and slowly pour a water offering.",
   "scene.ukrainian-didukh.intention.fa0b869c": "Wish your family abundance and peace",
   "scene.ukrainian-didukh.intention.9ba3c0a2": "Gather the stalks, tie the ribbon, then stand the sheaf securely in the corner, holding a wish for your family.",
+  "scene.close-inspection.action.3fc7e0e1": "Bring closer",
+  "scene.close-inspection.continue.5d8d1eea": "Continue to placement",
+  "scene.close-inspection.ready.254d7742": "Pick up the object and bring it closer to see the details.",
+  "scene.close-inspection.approaching.fc350845": "Bringing it closer…",
+  "scene.close-inspection.viewing.43c5ff52": "Drag left or right to look around, then continue to placement when ready.",
+  "scene.close-inspection.returning.521a1a9b": "Returning to the placement view…",
+  "scene.close-inspection.keyboard.110bad5e": "Use arrow keys to look around, Enter to continue to placement, Esc to put it back.",
   "scene.autoEnding.status": "Finishing up. This will complete shortly.",
   "scene.autoEnding.writing": "When ready, choose “Done writing” to continue.",
   "scene.autoEnding.progress": "Finishing progress"

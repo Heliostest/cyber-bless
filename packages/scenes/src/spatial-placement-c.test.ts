@@ -10,6 +10,7 @@ import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext, SceneInstance } from './contract'
+import { enterPlacementAfterCloseInspection } from './close-inspection-test-helper'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import * as canang from './balinese-canang-sari/index'
 import * as cloth from './brat-bride-cloth/index'
@@ -146,6 +147,8 @@ function mount(create: (ctx: SceneContext) => SceneInstance, at: number, width =
   overlay.addEventListener('scene:complete', completed)
   const instance = create({ canvas, overlay, gestures: Gestures, shared: Shared, initialProgress: at, isSoundEnabled: () => false, isReducedMotion: () => true, onProgress: n => progress.push(n) })
   instances.push(instance); instance.start(); instance.update(.025)
+  enterPlacementAfterCloseInspection(instance, overlay)
+  expect(progress).toEqual([]); expect(completed).not.toHaveBeenCalled()
   const scene = rendered.scene as THREE.Scene, camera = rendered.camera as THREE.Camera, hit = overlay.querySelector<HTMLElement>('.scene-hit-layer')!
   hit.setPointerCapture = () => {}; hit.releasePointerCapture = () => {}
   function project(p: THREE.Vector3) { const q = p.clone().project(camera); return [left + (q.x + 1) * width / 2, top + (1 - q.y) * height / 2] as [number, number] }

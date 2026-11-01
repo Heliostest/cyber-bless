@@ -2270,6 +2270,13 @@
   "scene.sri-lankan-bodhi-puja.intention.ba68dcf1": "Levanta la jarra, acércala a las raíces del árbol bodhi y vierte lentamente el agua como ofrenda.",
   "scene.ukrainian-didukh.intention.fa0b869c": "Desear abundancia y paz a tu familia",
   "scene.ukrainian-didukh.intention.9ba3c0a2": "Junta los tallos, ata la cinta y deja la gavilla firme en el rincón, guardando un deseo para tu familia.",
+  "scene.close-inspection.action.3fc7e0e1": "Ver de cerca",
+  "scene.close-inspection.continue.5d8d1eea": "Continuar con la colocación",
+  "scene.close-inspection.ready.254d7742": "Levanta el objeto y acércalo para ver sus detalles.",
+  "scene.close-inspection.approaching.fc350845": "Acercando…",
+  "scene.close-inspection.viewing.43c5ff52": "Arrastra a izquierda o derecha para observarlo y continúa con la colocación cuando quieras.",
+  "scene.close-inspection.returning.521a1a9b": "Volviendo a la vista de colocación…",
+  "scene.close-inspection.keyboard.110bad5e": "Usa las flechas para observarlo, Enter para continuar con la colocación y Esc para devolverlo a su sitio.",
   "scene.autoEnding.status": "Terminando. Se completará en un momento.",
   "scene.autoEnding.writing": "Cuando termines, pulsa «Terminé de escribir» para continuar.",
   "scene.autoEnding.progress": "Progreso de finalización"

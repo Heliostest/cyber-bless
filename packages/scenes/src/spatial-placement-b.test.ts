@@ -10,6 +10,7 @@ import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneInstance } from './contract'
+import { enterPlacementAfterCloseInspection } from './close-inspection-test-helper'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import { createAlasitaModel } from './alasita-miniature-house/model'
 import { createSurvakaneModel } from './bulgarian-survakane/model'
@@ -101,6 +102,8 @@ async function mount(id: string, step: number, width: number, reduced = false) {
   const progress: number[] = [], module = await import(`./${id}/index.ts`)
   const instance = module.create({ canvas, overlay, gestures: Gestures, shared: Shared, initialProgress: step, onProgress: (n: number) => progress.push(n), isSoundEnabled: () => false, isReducedMotion: () => reduced }) as SceneInstance
   instances.push(instance); instance.start(); instance.update(.025)
+  enterPlacementAfterCloseInspection(instance, overlay)
+  expect(progress).toEqual([])
   if (id === 'milagros') for (let n = 0; n < 50; n++) instance.update(.025)
   const scene = rendered.scene as THREE.Scene, camera = rendered.camera as THREE.Camera
   const hit = overlay.querySelector<HTMLElement>('.scene-hit-layer')!

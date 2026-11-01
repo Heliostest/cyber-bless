@@ -49,7 +49,7 @@ function register(el: HTMLElement, key: string, copy: Copy, render: Binding['ren
   entries.set(key, { copy, render }); render(renderCopy(copy))
 }
 function explicitAction(el: HTMLElement) {
-  return Array.from(el.classList).some(name => name.includes('finish'))
+  return el.classList.contains('scene-inspection-action') || Array.from(el.classList).some(name => name.includes('finish'))
 }
 function renderText(el: HTMLElement, value: string) {
   if (el.classList.contains('scene-bow-tap') && !explicitAction(el)) {

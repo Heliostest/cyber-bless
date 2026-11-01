@@ -11,6 +11,7 @@ import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneContext, SceneInstance } from './contract'
+import { enterPlacementAfterCloseInspection } from './close-inspection-test-helper'
 import { create as ruyi } from './chinese-ruyi-scepter'
 import { create as kadomatsu } from './japanese-kadomatsu'
 import { create as kumade } from './japanese-kumade'
@@ -122,6 +123,8 @@ function mount(create: (ctx: SceneContext) => SceneInstance, at: number, width: 
   overlay.addEventListener('scene:complete', complete)
   const instance = create({ canvas, overlay, gestures: Gestures, shared: Shared, initialProgress: at, isReducedMotion: () => true, isSoundEnabled: () => false, onProgress: n => progress.push(n), ...extra })
   instances.push(instance); instance.start(); instance.update(.025)
+  enterPlacementAfterCloseInspection(instance, overlay)
+  expect(progress).toEqual([]); expect(complete).not.toHaveBeenCalled()
   const scene = rendered.scene as THREE.Scene, camera = rendered.camera as THREE.Camera, hit = overlay.querySelector<HTMLElement>('.scene-hit-layer')!
   hit.setPointerCapture = () => {}; hit.releasePointerCapture = () => {}
   const cueList: { object: THREE.Object3D; cue: InteractionCue }[] = []

@@ -1,59 +1,115 @@
 {
-  "verifiedAt": "2026-10-27T09:13:45.240Z",
+  "verifiedAt": "2026-10-31T05:26:52.015Z",
   "appId": "6821271597",
   "bundleIdentifier": "com.helio.cyberbless",
   "version": "1.0.0",
-  "buildNumber": "13",
-  "sourceCommit": "c2c449233402d949ac08f3054e7a6d2b4b070292",
+  "buildNumber": "18",
+  "sourceCommit": "957dfba3df461b2ec70e417380f8b1bc21d958e1",
   "buildSource": "mac-mini-ssh-xcode",
   "xcodeVersion": "26.6",
   "distribution": "app-store-connect",
-  "builtAt": "2026-10-27T09:02:27.764Z",
-  "uploadAcceptedAt": "2026-10-27T09:07:31.187Z",
-  "ipaBytes": 209002445,
-  "ipaSha256": "dbb33be173a211a5588420ab328c161212ce428ff0587a2d6384f4b75b5561f6",
-  "appleBuildId": "89557e0a-2466-463e-8159-fedb0780e6fa",
+  "builtAt": "2026-10-31T05:19:06.527Z",
+  "uploadAcceptedAt": "2026-10-31T05:21:20.072Z",
+  "ipaBytes": 222296805,
+  "ipaSha256": "10816f8073ab524ddbae23d913dba2e75bea974268c9dea216eed4f23da49264",
+  "appleBuildId": "9cca53be-b804-4b10-9482-e023b63bb7d7",
   "processingState": "VALID",
   "internalBuildState": "IN_BETA_TESTING",
-  "expirationDate": "2027-01-25T09:08:32.000Z",
+  "expirationDate": "2027-01-29T05:22:54.000Z",
   "internalGroup": {
     "id": "f6096459-cc7f-421b-ad5c-b6cc1fbf8683",
     "name": "Team (Expo)",
+    "isInternalGroup": true,
+    "appId": "6821271597",
+    "automaticDistribution": true,
     "testerCount": 1,
-    "requestedTesterState": "INSTALLED",
-    "testerStateScope": "App-level membership; not evidence of build13 device installation"
+    "newBuildInGroup": true,
+    "testerStateScope": "Group membership and build availability; not evidence of build18 device installation"
   },
   "verification": {
     "mobileVerifyPassed": true,
-    "interactionRegressionTestsPassed": 32,
+    "i18nVerifyPassed": true,
+    "i18nLocalesVerified": 8,
+    "nativeLocalizationFilesChecked": 21,
+    "fullTestSuitePassed": false,
+    "knownFailingTests": 152,
+    "knownFailingFiles": [
+      "packages/app/src/hourly-scene-lifecycle.test.ts",
+      "packages/scenes/src/directional-tolerance-scenes.test.ts",
+      "packages/scenes/src/spatial-placement-a.test.ts",
+      "packages/scenes/src/spatial-placement-b.test.ts",
+      "packages/scenes/src/spatial-placement-c.test.ts"
+    ],
+    "knownFailureReason": "Old fixtures do not complete the current close-inspection stage before requesting placement cues or completion; updated scene and recovery tests cover this stage.",
     "mainAppAndWidgetSignaturesVerified": true,
     "distributionCertificateValidityVerified": true,
-    "packagedOfflineAssetHashesVerified": 14,
-    "packagedWidgetCoverHashesVerified": 465,
-    "sourceFilesHashed": 2198,
-    "realDeviceValidation": false
+    "packagedOfflineAssetHashesVerified": 171,
+    "packagedWidgetCoverHashesVerified": 477,
+    "packagedDomScriptsVerified": 162,
+    "sourceFilesHashed": 2631,
+    "sourceBusinessHashesVerifiedAfterPrebuild": true,
+    "localSourceMatchesFrozenSnapshot": true,
+    "releaseToolChangedAfterSnapshot": false,
+    "realDeviceValidation": false,
+    "detailedChecks": "artifacts/ios-release-18/validation/validation-summary.json",
+    "allFrozenInputsStillMatch": true,
+    "knownFailuresInheritedFromBuild17": true,
+    "fullSuiteRerunThisRelease": false
   },
-  "easRemoteBuildNumber": "13",
+  "easRemoteBuildNumber": "18",
   "betaReviewSubmitted": false,
   "appReviewSubmitted": false,
+  "betaReviewSubmittedByThisRun": false,
+  "appReviewSubmittedByThisRun": false,
   "publiclyReleased": false,
   "testFlightUrl": "https://appstoreconnect.apple.com/apps/6821271597/testflight",
   "appStoreVersion": {
-    "verifiedAt": "2026-10-26T14:47:45.015Z",
+    "verifiedAt": "2026-10-31T05:25:18.941Z",
     "id": "84ab28c1-b40b-4d0c-ade2-d3e02d2eaf62",
     "selectedAppleBuildId": "c0729860-3f40-4392-992e-d1c16d9f83c4",
     "appStoreState": "PREPARE_FOR_SUBMISSION",
-    "releaseType": "MANUAL",
-    "selectionVerifiedAt": "2026-10-27T09:13:45.240Z"
+    "releaseType": "MANUAL"
   },
-  "sourceArchiveSha256": "bb19422e0ee91e9414f1ee360ca380a219a078fd3e68d956e5e5fc4941b3bfd9",
-  "betaReviewSubmittedByThisRun": false,
-  "appReviewSubmittedByThisRun": false,
+  "sourceArchiveSha256": "2250e7ebe8d4bcf9b321b1126c48eea0a1193c1130bec0ae506d83744a451ecb",
+  "sourceTrackedDiffSha256": "19062f2e676939a1e78e469c1f5980a101ef9795e5aa172927101e157b001b61",
+  "sourceSnapshotIncludesWorktreeChanges": true,
   "formalStoreBuildUnchangedByThisRun": true,
+  "testflightCompletedAt": "2026-10-31T05:25:18.943Z",
   "previousInternalBuild": {
-    "buildNumber": "12",
-    "appleBuildId": "c0729860-3f40-4392-992e-d1c16d9f83c4",
-    "verifiedAt": "2026-10-26T11:28:37.092Z"
+    "buildNumber": "17",
+    "appleBuildId": "4aed2014-b853-44a6-a2f0-8fb18b02820c",
+    "verifiedAt": "2026-10-31T01:46:02.433Z"
   },
-  "evidenceDirectory": "artifacts/ios-testflight-20261027/"
+  "earlierInternalBuilds": [
+    {
+      "buildNumber": "16",
+      "appleBuildId": "c62673b0-0e82-4800-9eea-af0ce2cf3642",
+      "verifiedAt": "2026-10-30T15:21:52.156Z"
+    },
+    {
+      "buildNumber": "15",
+      "appleBuildId": "cb351c03-d6a0-49f1-b2f0-b78d1dab33a8",
+      "verifiedAt": "2026-10-30T12:30:55.747Z"
+    },
+    {
+      "buildNumber": "14",
+      "appleBuildId": "07622e4b-b5c1-4f48-835a-538105bafab0",
+      "verifiedAt": "2026-10-28T12:43:23.948Z"
+    },
+    {
+      "buildNumber": "13",
+      "appleBuildId": "89557e0a-2466-463e-8159-fedb0780e6fa",
+      "verifiedAt": "2026-10-27T09:13:45.240Z"
+    }
+  ],
+  "evidenceDirectory": "artifacts/ios-release-18/",
+  "releaseEntryDirectory": "scripts/ios-release/",
+  "dependenciesReused": true,
+  "derivedData": "/Users/heli/cyber-bless-testflight-20261030/artifacts/ios-release/DerivedData",
+  "derivedDataRemovedAfterArchive": false,
+  "artifactPaths": {
+    "localIpa": "D:\\ws\\app\\cyber-bless\\artifacts\\ios-release-18\\blessing-18.ipa",
+    "macIpa": "/Users/heli/cyber-bless-testflight-20261030/artifacts/ios-release/18/blessing-18.ipa",
+    "macArchive": "/Users/heli/cyber-bless-testflight-20261030/artifacts/ios-release/18/Blessing-18.xcarchive"
+  }
 }

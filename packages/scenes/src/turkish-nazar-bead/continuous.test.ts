@@ -39,6 +39,11 @@ function mount(initialProgress = 0) {
     const e = new Event(type,{ bubbles:true,cancelable:true }); Object.assign(e,{clientX:xy[0],clientY:xy[1],pointerId:id,pointerType:'touch',button:0,...extra}); layer.dispatchEvent(e)
   }
   const run = () => { for(let i=0;i<80;i++) instance.update(.025) }
+  overlay.querySelector<HTMLButtonElement>('.scene-bow-tap')!.click()
+  for(let i=0;i<28;i++) instance.update(.025)
+  overlay.querySelector<HTMLButtonElement>('.scene-bow-tap')!.click()
+  for(let i=0;i<24;i++) instance.update(.025)
+  expect(progress).toEqual([]); expect(complete).not.toHaveBeenCalled()
   return { instance, overlay, layer, charm, progress, complete, source, goal, event, run }
 }
 describe('one continuous nazar pickup and hang', () => {

@@ -470,11 +470,10 @@ button:hover:not(:disabled) {
   margin: 0 0 16px;
 }
 .daily-collected > .section-heading {
+  position: relative;
+  justify-content: flex-start;
+  gap: 4px;
   margin: 0;
-}
-.history-link {
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 /* First play stays in the same island, with one short lesson between walks. */
 .app-shell[data-opening] .app-content {
@@ -2213,30 +2212,22 @@ button:hover:not(:disabled) {
   height: 5px;
   background: var(--rim);
 }
-/* A little wall plaque, clear of the shelf so the whole line shows. */
-.room-caption {
+/* The collection total belongs inside the room, clear of the window and shelf. */
+.room-count {
   position: absolute;
-  right: 14px;
-  top: 16px;
+  right: 18px;
+  top: 18px;
   z-index: 2;
-  writing-mode: vertical-rl;
-  padding: 12px 4px;
-  border: 2.5px solid var(--rim);
-  border-radius: 999px;
-  background: var(--paper);
-  box-shadow:
-    0 0 0 2px var(--edge),
-    0 3px 0 2px #efd49a;
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--ink-soft);
-  letter-spacing: 3px;
+  max-width: calc(100% - 140px);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 .room-shelf {
   position: absolute;
   bottom: 56px;
   left: 15px;
-  right: 58px;
+  right: 15px;
   height: 90px;
   border-bottom: 10px solid #c98f5a;
   display: flex;
@@ -4136,12 +4127,46 @@ img.scene-icon {
   display: grid;
   gap: 10px;
 }
-.daily-set-blurb {
-  margin: 0;
+.daily-collected-info { flex: 0 0 auto; }
+.daily-collected-info-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  padding: 0;
+  background: transparent;
+  color: #5c8074b3;
+}
+.daily-collected-info-button > span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #6a95854d;
+  border-radius: 50%;
+  background: transparent;
   font-size: 13px;
   font-weight: 600;
+  line-height: 1;
+}
+.daily-collected-info-button[aria-expanded='true'] > span { background: #fffaf04d; }
+.daily-collected-info-button svg { width: 8px; height: 12px; fill: currentColor; stroke: none; }
+.daily-collected-info-panel {
+  position: absolute;
+  z-index: 8;
+  inset-block-start: calc(100% + 4px);
+  inset-inline-start: 0;
+  width: min(300px, 100%);
+  margin: 0;
+  padding: 12px 14px;
+  border: 2px solid var(--rim);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px var(--edge), var(--soft-drop);
+  font-size: 13px;
+  font-weight: 500;
   color: var(--ink-soft);
-  line-height: 1.6;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
 }
 .daily-set-grid {
   display: grid;
@@ -4802,27 +4827,6 @@ img.scene-icon {
 .app-shell[data-immersive] .scene-post-wish:has(form) { max-height: 100%; }
 .app-shell[data-immersive] .scene-post-wish form { max-height: inherit; }
 .app-shell[data-large-text] .collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-/* A Latin caption reads horizontally. Keep it in normal flow below the room's
-   fixed decorative shelf so expanded copy has space without covering objects. */
-.room:lang(en), .room:lang(es), .room:lang(pt), .room:lang(fr), .app-shell[data-large-text] .room {
-  height: auto;
-  min-height: 300px;
-  padding-block: 250px 14px;
-}
-.room:lang(en) .room-caption, .room:lang(es) .room-caption, .room:lang(pt) .room-caption,
-.room:lang(fr) .room-caption, .app-shell[data-large-text] .room-caption {
-  position: relative;
-  inset: auto;
-  writing-mode: horizontal-tb;
-  margin-inline: 14px;
-  padding: 8px 12px;
-  letter-spacing: normal;
-  line-height: 1.5;
-  overflow-wrap: break-word;
-  text-align: center;
-}
-.room:lang(en) .room-shelf, .room:lang(es) .room-shelf, .room:lang(pt) .room-shelf,
-.room:lang(fr) .room-shelf, .app-shell[data-large-text] .room-shelf { top: 150px; bottom: auto; }
 .scene-written-wish-reading { max-inline-size: 100%; padding: 10px 14px; border-radius: 14px; background: var(--paper); color: var(--ink); }
 .scene-written-wish-reading summary { min-height: 44px; cursor: pointer; line-height: 1.6; }
 .scene-written-wish-reading p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }

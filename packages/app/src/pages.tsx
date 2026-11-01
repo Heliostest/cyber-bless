@@ -8,7 +8,7 @@ import { Art, Icon } from "./art";
 import { formatDate, statusText, useApp } from "./context";
 import { ritualTitle } from "./home";
 import { SceneCard, useOpenRitual, useOpenScene, useSceneLibrary, } from "./scene-library";
-import { SceneArt } from "./scene-icons";
+import { SceneArt, hasSceneIcon } from "./scene-icons";
 import { PageHead } from "./page-heading";
 import { WishRitualRack } from "./wish-ritual-rack";
 export function Empty({ title, body, action, onClick, }: {
@@ -43,6 +43,7 @@ export function Wishes() {
                 const flying = arrival?.wishId === w.id && arrival.phase === "flying";
                 const isNew = arrival?.wishId === w.id && arrival.phase === "landed";
                 return <button key={w.id} className={`wish-card${isNew ? " reward-landed" : ""}`} data-wish-id={w.id} data-arriving={flying ? "" : undefined} onClick={() => go({ page: "wish", id: w.id })}>
+              {w.sourceSceneId && hasSceneIcon(w.sourceSceneId) && <SceneArt id={w.sourceSceneId}/>}
               <span className="wish-card-copy">
                 <span className="tag soft wish-row-status">{w.archived ? tr("\u6682\u65F6\u653E\u4E0B") : tr(statusText[w.status])}</span>
                 <strong>{w.title}</strong>
@@ -83,17 +84,15 @@ export function World() {
         : null;
     const bumped = arrival?.collectibleId && arrival.phase === "landed";
     return (<>
-      <PageHead eyebrow={tr("\u628A\u6BCF\u4E00\u4EFD\u5C0F\u7F8E\u597D\uFF0C\u90FD\u7559\u5728\u8FD9\u91CC")} title={tr("\u6211\u7684\u5C0F\u5929\u5730")}>
-        <span className={`count-pill${bumped ? " pill-bump" : ""}`} key={bumped ? arrival!.key : "count"}>
+      <PageHead eyebrow={tr("\u628A\u6BCF\u4E00\u4EFD\u5C0F\u7F8E\u597D\uFF0C\u90FD\u7559\u5728\u8FD9\u91CC")} title={tr("\u6211\u7684\u5C0F\u5929\u5730")}/>
+      <div className="room">
+        <span className={`count-pill room-count${bumped ? " pill-bump" : ""}`} key={bumped ? arrival!.key : "count"}>
           {message('app.collection.count', { n: state.collectibles.length })}
         </span>
-      </PageHead>
-      <div className="room">
         <div className="room-window">
           <span />
           <span />
         </div>
-        <div className="room-caption">{tr("\u4E00\u9685\u5B89\u9759\uFF0C\u6162\u6162\u4E30\u76DB\u3002")}</div>
         <div className="room-shelf">
           {state.collectibles.slice(-3).map((c) => {
             const slot = slotState(c.id);
@@ -113,15 +112,8 @@ export function World() {
         </div>
         <div className="room-floor"/>
       </div>
-      <div className="settings-card">
-        <button className="settings-row" onClick={() => go({ page: "history" })}>
-          <span>{tr("\u4EEA\u5F0F\u65F6\u5149")}</span>
-          <Icon name="arrow"/>
-        </button>
-      </div>
       <div className="section-heading">
         <h2>{tr("\u65F6\u5149\u91CC\u7684\u5C0F\u6536\u85CF")}</h2>
-        <span>{tr("\u6BCF\u4E00\u4EF6\uFF0C\u90FD\u6709\u6765\u5904")}</span>
       </div>
       {state.collectibles.length ? (<div className="collection-grid">
           {[...state.collectibles].reverse().map((c) => {
@@ -184,11 +176,6 @@ export function Me() {
     return (<>
       <PageHead title={tr("\u6211\u7684")}/>
       <div className="settings-card">
-        <LanguageSetting />
-        <button className="settings-row" onClick={() => go({ page: 'privacy' })}><span>{tr("\u9690\u79C1\u653F\u7B56")}</span><Icon name="arrow"/></button>
-        <button className="settings-row" onClick={() => go({ page: 'support' })}><span>{tr("\u6280\u672F\u652F\u6301")}</span><Icon name="arrow"/></button>
-        <button className="settings-row" onClick={() => go({ page: "scenes" })}><span>{tr("\u573A\u666F\u76EE\u5F55")}</span><Icon name="arrow"/></button>
-        <button className="settings-row" onClick={() => go({ page: "cache" })}><span>{tr("\u8D44\u6E90\u7F13\u5B58")}</span><Icon name="arrow"/></button>
         {([
             ["sound", tr("\u4EEA\u5F0F\u58F0\u97F3"), tr("\u7ED9\u5B89\u9759\u7684\u65F6\u523B\u4E00\u70B9\u56DE\u54CD")],
             ["haptics", tr("\u8F7B\u89E6\u53CD\u9988"), tr("\u6BCF\u4E00\u6B65\uFF0C\u90FD\u6709\u6E29\u67D4\u56DE\u5E94")],
@@ -203,6 +190,11 @@ export function Me() {
               </span>
               <input type="checkbox" className="switch" checked={state.settings[key]} onChange={(e) => dispatch({ type: "settings", key, value: e.target.checked })}/>
             </label>))}
+        <LanguageSetting />
+        <button className="settings-row" onClick={() => go({ page: 'privacy' })}><span>{tr("\u9690\u79C1\u653F\u7B56")}</span><Icon name="arrow"/></button>
+        <button className="settings-row" onClick={() => go({ page: 'support' })}><span>{tr("\u6280\u672F\u652F\u6301")}</span><Icon name="arrow"/></button>
+        <button className="settings-row" onClick={() => go({ page: "scenes" })}><span>{tr("\u573A\u666F\u76EE\u5F55")}</span><Icon name="arrow"/></button>
+        <button className="settings-row" onClick={() => go({ page: "cache" })}><span>{tr("\u8D44\u6E90\u7F13\u5B58")}</span><Icon name="arrow"/></button>
       </div>
     </>);
 }

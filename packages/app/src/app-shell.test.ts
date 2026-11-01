@@ -48,7 +48,7 @@ it("uses one shared title and supporting line on regular pages", async () => {
       )!,
     );
   // The back button shares the title row, without a second title above it.
-  for (const [tab, row] of [["我的", "场景目录"], ["我的", "资源缓存"], ["小天地", "仪式时光"]]) {
+  for (const [tab, row] of [["我的", "场景目录"], ["我的", "资源缓存"]]) {
     tap(".bottom-nav button", tab);
     await settle();
     tap(".settings-row", row);
@@ -62,6 +62,11 @@ it("uses one shared title and supporting line on regular pages", async () => {
     clickOn(ui.host.querySelector(".back-button")!);
     await settle();
   }
+  tap(".bottom-nav button", "小天地");
+  await settle();
+  expect(ui.host.querySelector('.page-heading h1')?.textContent).toBe('我的小天地');
+  expect(ui.host.querySelectorAll('h1')).toHaveLength(1);
+  expect(ui.host.querySelector('.settings-row')).toBeNull();
   tap(".bottom-nav button", "心愿");
   await settle();
   clickOn(ui.host.querySelector('.pray-button')!);

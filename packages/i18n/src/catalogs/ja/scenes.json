@@ -2270,6 +2270,13 @@
   "scene.sri-lankan-bodhi-puja.intention.ba68dcf1": "水差しを持ち上げ、菩提樹の根元へ近づけて、ゆっくり水をお供えします。",
   "scene.ukrainian-didukh.intention.fa0b869c": "家族の豊かさと平安を願う",
   "scene.ukrainian-didukh.intention.9ba3c0a2": "麦の茎をそろえ、リボンを結び、部屋の隅に麦束をしっかり立てて、家族への願いを託します。",
+  "scene.close-inspection.action.3fc7e0e1": "近くで見る",
+  "scene.close-inspection.continue.5d8d1eea": "置く操作へ進む",
+  "scene.close-inspection.ready.254d7742": "物を持ち上げ、近くで細部を見てみましょう。",
+  "scene.close-inspection.approaching.fc350845": "近くへ移動中……",
+  "scene.close-inspection.viewing.43c5ff52": "左右にドラッグして眺め、準備ができたら置く操作へ進みましょう。",
+  "scene.close-inspection.returning.521a1a9b": "置くときの視点に戻っています……",
+  "scene.close-inspection.keyboard.110bad5e": "方向キーで眺める向きを変え、Enter で置く操作へ進み、Esc で元に戻します。",
   "scene.autoEnding.status": "まもなく自動で完了します。",
   "scene.autoEnding.writing": "書き終えたら「書けた」で続けてください。",
   "scene.autoEnding.progress": "完了までの進み具合"

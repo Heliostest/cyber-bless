@@ -1,3 +1,4 @@
+import { createCloseInspection } from '../close-inspection'
 import { addKeyboardPlacementInspection, setPlacementHint } from '../placement-inspection'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -22,6 +23,7 @@ export function createScottishFirstFooting(ctx: SceneContext): SceneInstance {
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
   let motion: { time: number; arrived: boolean } | null = null
   let invalid = false
+  let inspection: ReturnType<typeof createCloseInspection> | undefined
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
@@ -39,7 +41,7 @@ export function createScottishFirstFooting(ctx: SceneContext): SceneInstance {
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restore = () => { model.pose(at,0); placement.reset(at); matrices() }
   const carryHint = sceneJoin(HINTS[0]!,HINTS[2]!)
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', label: ACTIONS[2]!, anchor: model.anchors[i], destination: () => placement.destination(i), targetLabel: '当前安放位置', priority: 3, enabled: () => i === 2 && inputActive() && !motion && at < 3 }))
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', label: ACTIONS[2]!, anchor: model.anchors[i], destination: () => placement.destination(i), targetLabel: '当前安放位置', priority: 3, enabled: () => !!inspection?.canPlace() && i === 2 && inputActive() && !motion && at < 3 }))
   const ray = createPointerRay(canvas, camera)
   const nearest = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
@@ -52,7 +54,7 @@ export function createScottishFirstFooting(ctx: SceneContext): SceneInstance {
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const inspectRotate=(dx:number,dy:number)=>{ placement.rotate(dx*.012,dy*.012) }
   const pointer = createFreePlacementPointer(ui.hitLayer, canvas, {
-    isActive: inputActive,
+    isActive: () => inputActive() && !!inspection?.canPlace(),
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); const hit = nearest(x, y); const target = model.roots[at]!; return !!hit && (hit.object === target || target.getObjectById(hit.object.id) === hit.object) },
     onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; invalid = false; if (!placement.begin(at,x,y)) pointer.cancel() },
     onMove(x, y) {
@@ -72,7 +74,9 @@ export function createScottishFirstFooting(ctx: SceneContext): SceneInstance {
     ui.renderDots(at === 3 ? 1 : 0, 1); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
     setSafeText(ui.actionBtn, ACTIONS[2]!, safe); setPlacementHint(ui.hintEl,motion ? MOVING[2]! : at === 3 ? HINTS[3]! : carryHint,!motion&&at<3,safe)
+    inspection?.decorate(at === 3)
   }
+  inspection = createCloseInspection({ canvas, scene, camera, actor: model.coal, ui, isActive: () => inputActive() && !motion, isReducedMotion: () => !!ctx.isReducedMotion?.(), prepare: prepareInput, safe, changed: sync })
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
@@ -85,18 +89,20 @@ export function createScottishFirstFooting(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { time: 0, arrived: placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
-  const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; if (placement.assist()) advance() }
-  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); if (!motion) reset(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
+  function advance(placed = false) { if (!inspection?.canPlace() || !inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { time: 0, arrived: placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  const action = () => { if (!inspection?.canPlace() || !inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; if (placement.assist()) advance() }
+  const blur = () => { focused = false; lifecycleVersion++; inspection?.cancel(); pointer.cancel(); if (!motion) reset(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
+    inspection?.cancel()
     const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0,.9,.15), direction = new THREE.Vector3(.40,3.0,6.8).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target);camera.updateMatrixWorld(true)
     const inverse=camera.quaternion.clone().invert(),tangent=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));let distance=3.4
     // Frame the entire cutaway doorway, cold step, hearth and coal transfer route.
     for(const x of[-1.55,1.55])for(const y of[-.12,2.15])for(const z of[-1.16,1.66]){const p=new THREE.Vector3(x,y,z).sub(target).applyQuaternion(inverse);distance=Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86))}
     camera.position.copy(target).addScaledVector(direction,distance);camera.lookAt(target);matrices()
+    sync()
   }
-  const stopInspection=addKeyboardPlacementInspection(ui.actionBtn,canvas,camera,model,placement,{isActive:()=>inputActive()&&!motion&&at<3&&!pointer.isBusy(),step:()=>at,prepare:prepareInput,reset,rotate:(yaw,pitch)=>inspectRotate(yaw/.012,pitch/.012)})
+  const stopInspection=addKeyboardPlacementInspection(ui.actionBtn,canvas,camera,model,placement,{isActive:()=>!!inspection?.canPlace()&&inputActive()&&!motion&&at<3&&!pointer.isBusy(),step:()=>at,prepare:prepareInput,reset,rotate:(yaw,pitch)=>inspectRotate(yaw/.012,pitch/.012)})
   restore(); sync()
   return {
     start() {
@@ -107,10 +113,11 @@ export function createScottishFirstFooting(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
-      if (!active()) { lifecycleVersion++; pointer.cancel(); if (!motion) reset(); if (!suspended) { suspended = true; sync() }; return }
+      if (!active()) { lifecycleVersion++; inspection?.cancel(); pointer.cancel(); if (!motion) reset(); if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
+      inspection?.update(delta)
       if (motion) {
         motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.arrived ? .32 : 1.6))
         const eased=ease(motion.time)
@@ -121,7 +128,7 @@ export function createScottishFirstFooting(ctx: SceneContext): SceneInstance {
     },
     dispose() {
       if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopInspection(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      disposed = true; lifecycleVersion++; inspection?.dispose(); pointer.dispose(); stopInspection(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); model.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

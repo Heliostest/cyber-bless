@@ -33,7 +33,7 @@ vi.mock('@wbr/scene-runtime/debug-render-style', async () => {
 })
 const instances: SceneInstance[] = []
 afterEach(() => { instances.splice(0).forEach(s => s.dispose()); document.body.replaceChildren(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
-function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
+function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390, completeInspection = true) {
   const height = width === 1280 ? 600 : width === 284 ? 390 : 408, left = 17, top = 91
   const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
   host.append(canvas, overlay); document.body.append(host)
@@ -55,6 +55,8 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
     return [left + (p.x + 1) * width / 2, top + (1 - p.y) * height / 2]
   }
   const run = (seconds = 2.8) => { for (let t = 0; t < seconds; t += .025) instance.update(.025) }
+  // Placement regressions traverse the real closeup before testing the original carry flow.
+  if (completeInspection && !(Number.isFinite(at) && Math.floor(at) >= 3)) { button.click(); run(.7); button.click(); run(.6) }
   return { instance, scene, camera, host, overlay, hit, button, point, run, progress, saveWish, complete, haptic, resize: () => resizeObserved() }
 }
 function event(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
@@ -177,9 +179,10 @@ describe('Outdoor windowsill cloth placement', () => {
   it.each([false, true])('accepts a gentle zigzag path and remains ready after settlement, reduced=%s', reduced => { for(const at of[0,1,2]){const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=placementDelta(s, at);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]-dy*.3,p[1]+dx*.3]);event(s.hit,'pointermove',[p[0]+dx,p[1]+dy]);expect(s.progress).toEqual([3]);event(s.hit,'pointerup',[p[0]+dx*2,p[1]+dy*2]);expect(s.progress).toEqual([3]);s.instance.dispose()} })
   it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {
     for (const returning of [false, true]) {
-      const s = mount(at, { returning, isReducedMotion: () => true }); s.run()
+      const s = mount(at, { returning, isReducedMotion: () => true }, 390, false); s.run()
       expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
+      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['tap'] : []); expect(s.button.hidden).toBe(at === 3)
+      if (at < 3) { s.button.click(); s.run(.7); s.button.click(); s.run(.6) }
       for (let i = at; i < 3; i++) s.button.click()
       expect(s.progress).toEqual(at < 3 ? [3] : []); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
     }
@@ -357,4 +360,68 @@ it('uses two fingers on the same object for inspection without implicit placemen
   event(s.hit,'pointerup',[p[0]+80,p[1]+20],2);event(s.hit,'pointerup',p,1)
   expect(object.getWorldQuaternion(new THREE.Quaternion()).angleTo(before)).toBeGreaterThan(.1);expect(s.progress).toEqual([])
   step(s,0);expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
+})
+
+
+describe('close inspection before placement', () => {
+  it('uses the first action to lift and view the complete object without completing placement', () => {
+    const s = mount(0, {}, 390, false), actor = s.scene.getObjectByName('brat-cloth')!
+    const before = actor.position.clone(), rotation = actor.quaternion.clone()
+    s.button.click(); s.run(1)
+    expect(s.progress).toEqual([])
+    expect(s.complete).not.toHaveBeenCalled()
+    expect(actor.position.y).toBeGreaterThan(before.y)
+    expect(actor.quaternion.angleTo(rotation)).toBeLessThan(1e-8)
+    s.run(8)
+    expect(actor.position.distanceTo(before)).toBeLessThan(1e-8)
+    expect(s.progress).toEqual([])
+    s.button.click(); s.run()
+    expect(s.progress).toEqual([3])
+    expect(s.complete).toHaveBeenCalledOnce()
+  })
+
+  it.each([0, 1, 2])('opens close viewing from a physical tap at legacy checkpoint %i without placing', at => {
+    const s = mount(at, {}, 390, false), p = s.point(targetName(at), anchor(at))
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p); s.run(1)
+    expect(s.progress).toEqual([])
+    expect(s.complete).not.toHaveBeenCalled()
+    expect(s.button.textContent).toContain('\u7ee7\u7eed\u5b89\u653e')
+    s.button.click(); s.run(.6)
+    s.button.click(); s.run()
+    expect(s.progress).toEqual([3])
+  })
+  it('keeps reduced motion viewing stable until the explicit continue action', () => {
+    const s = mount(0, { isReducedMotion: () => true }, 390, false)
+    s.button.click(); s.run(1)
+    const camera = s.camera.position.clone()
+    s.run(8)
+    expect(s.camera.position.distanceTo(camera)).toBeLessThan(1e-8)
+    expect(s.progress).toEqual([])
+    s.button.click(); s.run(.6)
+    expect(s.progress).toEqual([])
+    s.button.click(); s.run()
+    expect(s.progress).toEqual([3])
+  })
+
+  it.each(['blur', 'pause', 'resize'])('restores the closeup camera, object and scene on %s without progress', kind => {
+    let active = true, resized = () => {}
+    vi.stubGlobal('ResizeObserver', class { constructor(callback: () => void) { resized = callback } observe() {} disconnect() {} })
+    const s = mount(0, { isActive: () => active }, 390, false), actor = s.scene.getObjectByName('brat-cloth')!
+    const position = actor.position.clone(), rotation = actor.quaternion.clone(), camera = s.camera.position.clone(), cameraRotation = s.camera.quaternion.clone()
+    const visibility = new Map<THREE.Object3D, boolean>(); s.scene.traverse(object => visibility.set(object, object.visible))
+    s.button.click(); s.run(.9)
+    if (kind === 'blur') window.dispatchEvent(new Event('blur'))
+    else if (kind === 'pause') { active = false; s.instance.update(.025) }
+    else if ('resize' in s) (s.resize as () => void)()
+    else resized()
+    expect(actor.position.distanceTo(position)).toBeLessThan(1e-8)
+    expect(actor.quaternion.angleTo(rotation)).toBeLessThan(1e-7)
+    expect(s.camera.position.distanceTo(camera)).toBeLessThan(1e-8)
+    expect(s.camera.quaternion.angleTo(cameraRotation)).toBeLessThan(1e-7)
+    visibility.forEach((visible, object) => expect(object.visible, object.name).toBe(visible))
+    expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled()
+    active = true; window.dispatchEvent(new Event('focus')); s.instance.update(.025)
+    expect(s.overlay.getAttribute('data-close-inspection')).toBe('ready')
+    s.button.click(); s.run(1); expect(s.progress).toEqual([])
+  })
 })

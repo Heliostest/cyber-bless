@@ -2270,6 +2270,13 @@
   "scene.sri-lankan-bodhi-puja.intention.ba68dcf1": "提起水壺，移近菩提樹根，緩緩傾水供養。",
   "scene.ukrainian-didukh.intention.fa0b869c": "為家人寄一份豐足平安的祝願",
   "scene.ukrainian-didukh.intention.9ba3c0a2": "攏齊麥稈、繫攏彩帶，再把麥束立穩在屋角，為家人寄一份祝願。",
+  "scene.close-inspection.action.3fc7e0e1": "拿近看看",
+  "scene.close-inspection.continue.5d8d1eea": "繼續安放",
+  "scene.close-inspection.ready.254d7742": "拿起物品，靠近看看它的細節。",
+  "scene.close-inspection.approaching.fc350845": "正在拿近……",
+  "scene.close-inspection.viewing.43c5ff52": "左右拖動轉看，準備好後繼續安放。",
+  "scene.close-inspection.returning.521a1a9b": "正在回到安放視角……",
+  "scene.close-inspection.keyboard.110bad5e": "方向鍵轉看，Enter 繼續安放，Esc 放回。",
   "scene.autoEnding.status": "正在收尾，片刻後自動完成。",
   "scene.autoEnding.writing": "寫好後點「寫好了」繼續。",
   "scene.autoEnding.progress": "收尾進度"

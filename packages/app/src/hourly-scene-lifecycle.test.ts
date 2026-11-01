@@ -25,6 +25,26 @@ function pointer(el: HTMLElement, type: string, p: number[], pointerId = 1) {
   Object.assign(e, { clientX: p[0], clientY: p[1], pointerId, isPrimary: pointerId === 1, pointerType: 'touch', button: 0, buttons: type === 'pointerup' ? 0 : 1 })
   el.dispatchEvent(e)
 }
+function animationClock() {
+  let frame: FrameRequestCallback | undefined, now = performance.now()
+  vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => { frame = callback; return 1 })
+  vi.stubGlobal('cancelAnimationFrame', () => { frame = undefined })
+  return () => { const callback = frame; frame = undefined; callback?.(now += 25) }
+}
+function completeInspection(host: HTMLElement, frame: () => void) {
+  const overlay = host.querySelector<HTMLElement>('[data-close-inspection]')
+  if (!overlay) return
+  const action = overlay.querySelector<HTMLButtonElement>('.scene-bow-tap')!
+  expect(overlay.dataset.closeInspection).toBe('ready')
+  action.click()
+  expect(overlay.dataset.closeInspection).toBe('viewing')
+  action.click()
+  expect(overlay.dataset.closeInspection).toBe('placement')
+  // The adapter must deliver a new frame before placement accepts a fresh input.
+  expect(action.disabled).toBe(true)
+  frame()
+  expect(action.disabled).toBe(false)
+}
 it.each([0,1,2])('cancels the real Chinowa walking view through production adapter pause/resume at %i',async at=>{
   vi.stubGlobal('requestAnimationFrame',()=>1);vi.stubGlobal('cancelAnimationFrame',()=>{})
   vi.spyOn(HTMLCanvasElement.prototype,'clientWidth','get').mockReturnValue(360);vi.spyOn(HTMLCanvasElement.prototype,'clientHeight','get').mockReturnValue(408)
@@ -104,7 +124,7 @@ it.each([
   ['chinese-rattle-drum', 0, 'rattle-drum-grip', 'rattle-drum-grip', [0, 0, .108], [0, 0, .108], [60, 0]],
   ['chinese-tangram', 0, 'tangram-small-1-shell', 'tangram-small-1', [0, .09, 0], [0, .09, 0], [-60, 0]],
 ] as const)('cancels %s through host pause and accepts a fresh gesture', async (id, progress, source, target, targetAnchor: readonly number[] = [0, 0, 0], sourceAnchor: readonly number[] = [0, 0, 0], screenDelta?: readonly number[], initialVariant?: string) => {
-  vi.stubGlobal('requestAnimationFrame', () => 1); vi.stubGlobal('cancelAnimationFrame', () => {})
+  const frame = animationClock()
   vi.spyOn(HTMLCanvasElement.prototype, 'clientWidth', 'get').mockReturnValue(360)
   vi.spyOn(HTMLCanvasElement.prototype, 'clientHeight', 'get').mockReturnValue(360)
   vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 360, height: 360 } as DOMRect)
@@ -113,6 +133,8 @@ it.each([
   const ctrl = engine.create(host, { progress, sceneId: id, checkpoint, initialVariant, onVariantChange: variant, isSoundEnabled: () => false },
     { active: true, reducedMotion: true, signal: new AbortController().signal, ready() {}, failed(error) { throw error } })
   controllers.push(ctrl)
+  completeInspection(host, frame)
+  expect(checkpoint).not.toHaveBeenCalled(); expect(variant).not.toHaveBeenCalled()
   const hit = host.querySelector<HTMLElement>('.scene-hit-layer')!
   hit.setPointerCapture = () => {}; hit.releasePointerCapture = () => {}
   const point = (name: string, anchor: readonly number[] = [0, 0, 0]) => {
@@ -196,7 +218,7 @@ it.each([
   ...continuousPlacements.flatMap(id => [0, 1, 2].map(progress => ({ id, progress, next: 3 }))),
   ...carryingBeforeAction.flatMap(id => [0, 1].map(progress => ({ id, progress, next: 2 }))),
 ])('cancels $id continuous carrying restored at $progress and preserves its completion boundary', async ({ id, progress, next }) => {
-  vi.stubGlobal('requestAnimationFrame', () => 1); vi.stubGlobal('cancelAnimationFrame', () => {})
+  const frame = animationClock()
   vi.spyOn(HTMLCanvasElement.prototype, 'clientWidth', 'get').mockReturnValue(360)
   vi.spyOn(HTMLCanvasElement.prototype, 'clientHeight', 'get').mockReturnValue(360)
   vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 360, height: 360 } as DOMRect)
@@ -206,6 +228,7 @@ it.each([
   const ctrl = engine.create(host, { progress, sceneId: id, checkpoint, isSoundEnabled: () => false },
     { active: true, reducedMotion: true, signal: new AbortController().signal, ready() {}, failed(error) { throw error } })
   controllers.push(ctrl)
+  completeInspection(host, frame)
   const scene = rendered.scene!, camera = rendered.camera!, hit = host.querySelector<HTMLElement>('.scene-hit-layer')!
   hit.setPointerCapture = () => {}; hit.releasePointerCapture = () => {}
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }

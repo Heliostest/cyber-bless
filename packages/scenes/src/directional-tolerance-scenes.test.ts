@@ -5,6 +5,7 @@ import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import type { SceneInstance } from './contract'
+import { enterPlacementAfterCloseInspection } from './close-inspection-test-helper'
 import { loadScene } from './registry'
 
 const rendered = vi.hoisted(() => ({ scene: null as THREE.Scene | null, camera: null as THREE.Camera | null }))
@@ -96,6 +97,8 @@ async function mount(id: string, width: number, initialProgress = 0, reduced = t
   const instance = module.create({ canvas, overlay, gestures: Gestures, shared: Shared, initialProgress,
     onProgress: n => progress.push(n), isReducedMotion: () => reduced, isSoundEnabled: () => false })
   instances.add(instance); instance.start()
+  enterPlacementAfterCloseInspection(instance, overlay)
+  expect(progress).toEqual([]); expect(complete).not.toHaveBeenCalled()
   const scene = rendered.scene!, camera = rendered.camera!, layer = overlay.querySelector<HTMLElement>('.scene-hit-layer')!
   const hint = overlay.querySelector<HTMLElement>('.scene-hint')!
   layer.setPointerCapture = () => {}; layer.releasePointerCapture = () => {}

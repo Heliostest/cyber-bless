@@ -6,6 +6,68 @@
 
 本节是后续流程约定，不改变既有构建 18 及更早工作区快照的历史身份，也不表示本轮已创建 tag、构建或上传。既有回执保留；源码或工具修复须使用新提交和新 tag。
 
+## 2026-10-31 构建 18：柔和 3D 场景图标与透明纪念物图标
+
+**1.0.0 (18)** 已完成 Mac mini / Xcode 26.6 归档、App Store 签名导出和 ASC 上传，现有内部组 `Team (Expo)` 已包含本构建。Apple build UUID 为 `9cca53be-b804-4b10-9482-e023b63bb7d7`，最终读回 `VALID / IN_BETA_TESTING`，组内 1 位既有成员，测试说明匹配。正式商店仍关联构建 12，状态保持 `PREPARE_FOR_SUBMISSION / MANUAL`。本轮没有提交审核、新增邀请或扩大测试范围。
+
+源码为 HEAD `957dfba3df461b2ec70e417380f8b1bc21d958e1` 加冻结时工作区改动，含必要未跟踪源码。相比构建 17，增量为柔和 3D 场景图标、图标映射、收藏／奖励显示和透明底样式；场景动作、文化文案、来源和存档兼容未变。文化复核沿用 [近距离查看记录](research/2026-10-29-close-object-inspection.md)、[键盘布局记录](research/2026-10-31-wish-keyboard-layout.md) 及 [图标研究](research/2026-10-31-soft3d-scene-icons.md)，本轮抽核 18 张生产图，不据技术检查宣称全部文化事实重新认证。
+
+冻结源包 2631 文件、1135 个 LFS 实体，SHA-256 `2250e7ebe8d4bcf9b321b1126c48eea0a1193c1130bec0ae506d83744a451ecb`；本机归档、Mac 解包及 prebuild 后业务源码均逐项核验。发布快照额外排除根目录 `.tmp/` 中的图像中间产物。Mac 复用锁定依赖及 DerivedData；空间回收仅删除构建 17 已保有 IPA 和 archive/dSYM 的重复导出与解包副本。主应用和小组件的版本、构建号、Team、App Group、证书、profiles 及签名通过验证；包内 162 个 DOM 脚本、171 项离线资源及 477 张小组件图片哈希通过。临时钥匙串已锁定、搜索列表已恢复。
+
+IPA 222,296,805 字节，SHA-256 `10816f8073ab524ddbae23d913dba2e75bea974268c9dea216eed4f23da49264`，本机与 Mac 一致。本机备份 `artifacts/ios-release-18/blessing-18.ipa`；Mac archive/dSYM：`/Users/heli/cyber-bless-testflight-20261030/artifacts/ios-release/18/Blessing-18.xcarchive`。EAS 计数由 17 同步为 18 并读回，写前四类活动云构建均为零。
+
+当前检查记录见 `artifacts/ios-release-18/validation/validation-summary.json`；依赖最初缺失，按未改变的锁文件恢复后重跑。构建 17 已记录的 152 项旧 fixture 失败未在此轮修复或重跑完整套件，不声称全量测试全绿。TestFlight 可用不等于本包已经真机安装或验收；GPU、系统键盘、分享及小组件仍需真机验证。上传、签名、资源和最终交付证据见 `artifacts/ios-release-18/`。
+
+## 2026-10-31 构建 17：个人记录、语言选择与心愿键盘布局
+
+北京时间 09:45:30，**1.0.0 (17)** 已完成 Mac mini / Xcode 26.6 归档、App Store 签名导出、ASC 上传及现有内部组验证。归档完成于 09:34:45，Apple 于 09:37:01 接收上传。源码为 HEAD `76f4a743541970ad950f82e13106f287a0e8958a` 加当前工作区改动，包含必要未跟踪源码；相比构建 16 的业务增量为小天地中的个人记录、语言选择弹窗及心愿键盘视口布局。冻结源包 2470 文件、978 个 LFS 实体，SHA-256 `6b46e0061499b0a7679dbf089053821f043e04c707c56b5ac545676fc7ed9cec`；本机归档、Mac 解包及 prebuild 后业务源码逐项校验。
+
+实际 IPA 216,413,604 字节，SHA-256 `5050cbdabf81644c655c59685a69ff667d9f11fadf2aad270c3b328eedd0e7d6`，本机备份与 Mac 一致。主应用和小组件扩展的 bundle ID、版本、构建号、Team、App Group、有效分发证书、App Store profiles 与实际签名均已核验；包内原生 JS、162 个 DOM 脚本、14 项离线资源及 477 张小组件图片哈希检查通过。Mac 保留 archive/dSYM 与 DerivedData；签名钥匙串搜索列表已恢复，临时钥匙串已锁定。
+
+Apple build UUID `4aed2014-b853-44a6-a2f0-8fb18b02820c` 已读回 `VALID / IN_BETA_TESTING`，现有内部组 `Team (Expo)` 已自动包含本构建，1 位既有成员，测试说明匹配。没有新增邀请、修改权限、手动关联组或提交外部／正式审核；正式商店仍关联构建 12（`PREPARE_FOR_SUBMISSION / MANUAL`）。09:46:02 将 EAS iOS 计数由 16 同步为 17 并读回，写前四类活动云构建均为 0。
+
+完整 `mobile:verify`、八语言一致性与 21 份原生本地化检查、相关应用定向回归及场景／恢复测试通过。全量 `npm test` **没有全通过**：app 为 1267 项通过、43 项失败，均位于 `hourly-scene-lifecycle.test.ts`，旧 fixture 未经过现有拿近查看阶段便要求拖动 cue 或完成 checkpoint。已用实际包含查看阶段的场景及恢复测试交叉核对，未在本次发布中修改测试或业务实现。单独补跑场景全套另有 109 项失败，分布于 4 个同样绕过查看阶段的旧跨场景 fixture 文件；287 文件、10233 项通过。本次定向 18 文件、1363 项场景及恢复测试全部通过，应用定向 8 文件、558 项通过。合计当前检查 152 项失败，完整测试并未全绿。详细命令、计数、失败分析与日志见 `artifacts/ios-release-17/validation-summary.json`。
+
+本轮文化影响复核覆盖当前 15 场、来源卡、README、八语提示和绑定：仅记录产品查看阶段，未新增文化事实，沿用已有逐来源读取记录，不提升旧来源访问状态。心愿布局为纯技术变更。核查记录见 [近距离查看研究](research/2026-10-29-close-object-inspection.md) 与 [键盘布局记录](research/2026-10-31-wish-keyboard-layout.md)。TestFlight 可测试不等于本包已安装或通过真机验收；系统键盘、GPU 交互、图片分享及小组件仍待 iPhone 验证。
+
+本机 IPA：`artifacts/ios-release-17/blessing-17.ipa`；Mac archive：`/Users/heli/cyber-bless-testflight-20261030/artifacts/ios-release/17/Blessing-17.xcarchive`。回执及检查摘要保存在 `artifacts/ios-release-17/`，持久状态见 [TestFlight 状态](../store/ios/testflight-status.json)。
+
+## 2026-10-30 构建 16：手机点阵背景与心愿分类
+
+北京时间 23:20:58，新的 **1.0.0 (16)** 已完成 Mac mini / Xcode 26.6 归档、App Store 签名导出、ASC 上传及现有内部组验证。归档完成于 23:02:19，Apple 于 23:09:07 接收上传。源码为 HEAD `758a741297d78ec516aafae39319e914231eee54` 加冻结时工作区改动，包含手机与安全区点阵背景、心愿与祝福分类、心愿收藏筛选及此前近距离查看改动。冻结源包共 2,469 文件、978 个 LFS 实体，SHA-256 `b32c4b53acde8050449b1330f53791d6978e351a8796c1b6f7481cb0188ea953`；本机归档内容与 Mac 解包文件均逐项核验。
+
+实际 IPA 为 216,412,447 字节，SHA-256 `944492f6210c4df61a0a10ca64a7948f838e558cf83770020e7d1ed594deed6d`。主应用和小组件扩展的版本、构建号 16、Team、App Group、有效分发证书、App Store profiles 与实际签名已核验。实际包内原生 JS、162 个 DOM 脚本、14 项离线资源及 477 张小组件封面通过检查；另外从实际 IPA 提取新增的三张原生点阵 PNG，与冻结源的字节数及 SHA-256 逐项一致。
+
+Apple build UUID `c62673b0-0e82-4800-9eea-af0ce2cf3642` 已读回 `VALID / IN_BETA_TESTING`，现有内部组 `Team (Expo)` 已自动包含本构建，测试说明匹配。本轮未新增测试员、修改权限、手动关联组或提交外部 Beta Review、正式 App Review；正式商店仍关联构建 12（`PREPARE_FOR_SUBMISSION / MANUAL`）。组成员存在及可测试状态不等于构建 16 已完成真机安装或功能验收。
+
+本轮通过 `mobile:verify`（含 8 项打包保护检查）、完整八语言与 21 份原生本地化检查、7 个文件共 261 项应用回归，以及 5 项发布辅助脚本检查。真机安全区背景、分类筛选、GPU 交互、分享和小组件仍待 TestFlight 验证。23:21:52 已将 EAS iOS 计数由 15 同步为 16 并读回，写前四类非终态云构建均为 0。
+
+本轮建立固定的 `scripts/ios-release/` 参数化入口，按每轮配置串行同步、签名、构建和上传；复用该 App 构建副本的锁定依赖，保留 DerivedData 缓存。Expo prebuild 后已核验业务源文件；冻结后发布工具及其保护测试作了适配，覆盖测试说明就绪阶段，并处理 Xcode 导出预留的 `AWAITING_UPLOAD` 记录，前后工具哈希及依据见 `release-tool-adjustment.json`，不将发布工具变更表述为整个快照源码始终未变。已签名 IPA 保持上述哈希。Mac 保留归档及 dSYM，IPA 已备份本机 `artifacts/ios-release-16/blessing-16.ipa`。详细源码、构建、离线资源、背景图、上传、TestFlight 和计数回执见 `artifacts/ios-release-16/`；持久摘要见 [TestFlight 状态](../store/ios/testflight-status.json)。
+
+## 2026-10-30 构建 15：近距离查看与场景交互更新
+
+北京时间 20:30:23，新的 **1.0.0 (15)** 已完成 SSH → Mac mini → Xcode 26.6 归档、App Store 签名导出、上传及内部测试分发。实际归档完成于 19:57:59，Apple 于 20:00:18 接收上传。源码为 HEAD `a6fa6f9335a89f97d9121bfc1a33259b5ebd939a` 加冻结时工作区改动，包含近距离查看、场景操作与恢复路径更新，明确纳入三个尚未提交的近距离查看源码与验证文件。冻结源包共 2,456 文件、975 个 LFS 实体，SHA-256 `149396859e29654e61d257394b4f13ebf90099d990f0c097452b4799efa64141`；本机与 Mac 均已逐项核验。Expo prebuild 后仅 App package.json 的 ios/android 启动命令按预期改变，其余业务源文件哈希保持。
+
+实际 IPA 为 216,409,033 字节，SHA-256 `4798f8d3a9660600dca0a59225d8318c44142e3328bbcbc5a3f9560741154487`。主应用与小组件扩展的身份、构建号 15、Team、App Group、有效分发证书、App Store profiles 与实际代码签名均已核验；包内原生 JS、162 个 DOM 脚本、14 项离线资源及 477 张小组件封面验证通过。Apple build UUID `cb351c03-d6a0-49f1-b2f0-b78d1dab33a8` 已读回 `VALID / IN_BETA_TESTING`，测试说明匹配。
+
+原内部组 `Team (Expo)` 已自动包含构建 15，本轮只等待并读回自动分发关系，没有手动关联组、新增邀请或修改权限。既有一位测试员仍为直接成员，`INSTALLED` 是 App 层成员状态，不能作为构建 15 已真机安装或验收的证明。正式商店仍关联构建 12，保持 `PREPARE_FOR_SUBMISSION / MANUAL`；本轮没有提交正式 App Review、外部 Beta Review 或公开发布。
+
+本次 `mobile:verify`、完整八语言一致性检查、21 份原生本地化文件检查、18 个测试文件共 1,363 项场景回归、8 项打包保护测试及 17 项发布辅助脚本保护测试通过。保护测试包括显式 Mac/Windows 绝对路径参数、固定源包与构建身份、禁止手动关联组和自动分发等待。这些检查覆盖代码回归、打包及资源一致性；iOS 真机近距离操作、GPU 交互、图片分享和小组件显示与刷新仍待 TestFlight 验证，没有据此宣称完成真机验收。
+
+20:30:55 已将 EAS iOS 计数由 14 同步为 15 并重新读回；写前确认 `NEW / IN_QUEUE / IN_PROGRESS / PENDING_CANCEL` 四类非终态云构建均为 0。详细证据见本机忽略目录 `artifacts/ios-testflight-20261030/`，包括 `source-verification-mac.json`、`source-post-prebuild.json`、`build-report.json`、`offline-validation.json`、`upload-receipt.json`、`testflight-completion.json`、`counter-sync.json`、`validation-summary.json` 与 `release-result.json`。持久摘要见 [TestFlight 状态](../store/ios/testflight-status.json)。
+
+## 2026-10-28 构建 14：最新场景、语言与图片分享
+
+北京时间 20:42:12，新的 **1.0.0 (14)** 已完成 SSH → Mac mini → Xcode 26.6 归档、App Store 签名导出、上传及内部测试分发。源码为 HEAD `35847d57b51ce648515d63e09899fcc0d3aa52eb` 加冻结时工作区改动，包含最新场景、八语言与仪式图片分享代码，明确纳入 11 个尚未提交的分享功能文件。冻结源包共 2,441 文件、975 个 LFS 实体，SHA-256 `651600f13edae823745007c82c98b934d09037e93859746901623b2eea92d628`；本机与 Mac 均已逐项核验。原生生成后仅 App package.json 的 ios/android 启动命令按 Expo prebuild 预期改变，业务源文件哈希保持。
+
+实际 IPA 为 216,382,271 字节，SHA-256 `ebf9d3e7af706d8fc56076d710c848753321615da27056d30326ece286dd0572`。主应用与小组件扩展的身份、构建号、Team、App Group、有效分发证书与实际代码签名已核验；包内原生 JS、162 个 DOM 脚本、14 项离线资源及 477 张小组件封面均验证通过。Apple 于北京时间 20:35:24 接收上传，最终 build UUID `07622e4b-b5c1-4f48-835a-538105bafab0` 已读回 `VALID / IN_BETA_TESTING`，测试说明匹配。
+
+原内部组 `Team (Expo)` 开启自动分发，已自动包含构建 14。处理刚结束时手动关联 API 曾返回 422；已保留拒绝日志，没有重复发送，随后只读确认组关系自动生效，并无修改权限或新增邀请。后续运行应等待自动分发关系可读。[Apple 的内部测试说明](https://developer.apple.com/help/app-store-connect/test-a-beta-version/add-internal-testers/)支持组自动接收 Xcode 上传的构建。既有测试员仍为直接成员，`INSTALLED` 是 App 层成员状态，不能作为构建 14 已真机安装或验收的证明。正式商店仍关联构建 12，没有提交审核或公开发布。
+
+本次 `mobile:verify`、完整八语言一致性检查、124 项定向回归及 8 项打包保护测试通过。原生本地化生成同步了新场景文案。测试覆盖模拟系统分享、jsdom、场景类型与离线包完整性；iOS 真机分享、GPU 交互、小组件显示与刷新仍由本轮 TestFlight 验证。20:43:23 已将 EAS iOS 计数 13 同步为 14 并读回，写前确认四类非终态云构建均为 0。
+
+详细回执见本机忽略目录 `artifacts/ios-testflight-20261028/`，包括 `source-verification-mac.json`、`source-post-prebuild.json`、`prebuild-package-diff.json`、`build-report.json`、`offline-validation.json`、`upload-receipt.json`、`testflight-completion.json`、`counter-sync.json`、`validation-summary.json` 与 `release-result.json`。持久摘要见 [TestFlight 状态](../store/ios/testflight-status.json)。
+
 ## 2026-10-27 构建 13：3D 交互更新与内部测试
 
 北京时间 17:11:51，新的 **1.0.0 (13)** 已完成 Mac mini 本地 Xcode 26.6 归档、App Store 签名导出、上传及 Apple 处理。源码为 `c2c449233402d949ac08f3054e7a6d2b4b070292`，包含 3D 首帧就绪后才接受交互、加载错误与重试、旧会话恢复至 3D 及共享场景布局更新。冻结归档包含 2,198 个文件，SHA-256 为 `bb19422e0ee91e9414f1ee360ca380a219a078fd3e68d956e5e5fc4941b3bfd9`，已在 Mac 逐项核对文件哈希。

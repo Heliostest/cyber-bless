@@ -1,3 +1,4 @@
+import { createCloseInspection } from '../close-inspection'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -28,6 +29,7 @@ export function createChitoseAme(ctx: SceneContext): SceneInstance {
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
   let motion: { step: 0 | 1 | 2; time: number; from: number; arrived?: boolean } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
+  let inspection: ReturnType<typeof createCloseInspection> | undefined
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
@@ -48,7 +50,7 @@ export function createChitoseAme(ctx: SceneContext): SceneInstance {
   const carryStep = () => 2 as const
   const carrying = () => at < 3
   const directions: [number, number][] = [[0,-1],[1,0],[0,1]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', destination: () => placement.destination(carryStep()), targetLabel: '当前安放位置', label: ACTIONS[i]!, anchor: model.anchors[i]!.toArray(), priority: 3, enabled: () => inputActive() && !motion && at < 3 && i === 2 }))
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', destination: () => placement.destination(carryStep()), targetLabel: '当前安放位置', label: ACTIONS[i]!, anchor: model.anchors[i]!.toArray(), priority: 3, enabled: () => !!inspection?.canPlace() && inputActive() && !motion && at < 3 && i === 2 }))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const nearest = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
@@ -62,7 +64,7 @@ export function createChitoseAme(ctx: SceneContext): SceneInstance {
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const inspectRotate = (dx:number,dy:number) => { if (!carrying()) return; placement.rotate(dx*.012,dy*.012);  matrices() }
   const pointer = createFreePlacementPointer(ui.hitLayer, canvas, {
-    isActive: inputActive,
+    isActive: () => inputActive() && !!inspection?.canPlace(),
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); const hit = nearest(x, y); return !!hit && (hit === model.roots[at] || model.roots[at]!.getObjectById(hit.id) === hit) },
     onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; placement.begin(carryStep(),x,y) },
     onMove(x, y) {
@@ -84,7 +86,9 @@ export function createChitoseAme(ctx: SceneContext): SceneInstance {
     ui.renderDots(at === 3 ? 1 : 0, 1); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
     setSafeText(ui.actionBtn, ACTIONS[2]!, safe); setPlacementHint(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at === 3 ? 3 : 2]!, !motion && at < 3, safe)
+    inspection?.decorate(at === 3)
   }
+  inspection = createCloseInspection({ canvas, scene, camera, actor: model.bag, ui, isActive: () => inputActive() && !motion, isReducedMotion: () => !!ctx.isReducedMotion?.(), prepare: prepareInput, safe, changed: sync })
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
@@ -96,10 +100,11 @@ export function createChitoseAme(ctx: SceneContext): SceneInstance {
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: carryStep(), time: 0, from: amount, arrived: placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
-  const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; if (carrying()) { matrices(); const index=carryStep(), contact=model.targets[index]!.localToWorld(new THREE.Vector3(...model.anchors[index]!.toArray() as [number,number,number])).project(camera), rect=canvas.getBoundingClientRect(); if (!placement.begin(index,rect.left+(contact.x+1)*rect.width/2,rect.top+(1-contact.y)*rect.height/2)) return; placement.capture(); advance(true) } else advance() }
-  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); if (!motion) { placement.cancel(); restore() }; sync() }, focus = () => { focused = true; if (!disposed) sync() }
+  function advance(placed = false) { if (!inspection?.canPlace() || !inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: carryStep(), time: 0, from: amount, arrived: placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  const action = () => { if (!inspection?.canPlace() || !inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; if (carrying()) { matrices(); const index=carryStep(), contact=model.targets[index]!.localToWorld(new THREE.Vector3(...model.anchors[index]!.toArray() as [number,number,number])).project(camera), rect=canvas.getBoundingClientRect(); if (!placement.begin(index,rect.left+(contact.x+1)*rect.width/2,rect.top+(1-contact.y)*rect.height/2)) return; placement.capture(); advance(true) } else advance() }
+  const blur = () => { focused = false; lifecycleVersion++; inspection?.cancel(); pointer.cancel(); if (!motion) { placement.cancel(); restore() }; sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
+    inspection?.cancel()
     if (!motion) { pointer.cancel(); placement.cancel(); restore() }
     const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0, .95, 0), direction = new THREE.Vector3(1.6, 2.4, 7).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target); camera.updateMatrixWorld(true)
@@ -112,8 +117,9 @@ export function createChitoseAme(ctx: SceneContext): SceneInstance {
       })
     }
     pose(at, saved); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
+    sync()
   }
-  const stopInspection = addKeyboardPlacementInspection(ui.actionBtn,canvas,camera,model,placement,{isActive:()=>inputActive()&&!motion&&at < 3&&!pointer.isBusy(),step:()=>2,prepare:prepareInput,reset,rotate:(yaw,pitch)=>inspectRotate(yaw/.012,pitch/.012)})
+  const stopInspection = addKeyboardPlacementInspection(ui.actionBtn,canvas,camera,model,placement,{isActive:()=>!!inspection?.canPlace()&&inputActive()&&!motion&&at < 3&&!pointer.isBusy(),step:()=>2,prepare:prepareInput,reset,rotate:(yaw,pitch)=>inspectRotate(yaw/.012,pitch/.012)})
   restore(); sync()
   return {
     start() {
@@ -124,10 +130,11 @@ export function createChitoseAme(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
-      if (!active()) { lifecycleVersion++; pointer.cancel(); if (!motion) { placement.cancel(); restore() }; if (!suspended) { suspended = true; sync() }; return }
+      if (!active()) { lifecycleVersion++; inspection?.cancel(); pointer.cancel(); if (!motion) { placement.cancel(); restore() }; if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
+      inspection?.update(delta)
       if (motion) {
         motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.arrived ? .32 : .85))
         const eased=ease(motion.time)
@@ -137,7 +144,7 @@ export function createChitoseAme(ctx: SceneContext): SceneInstance {
     },
     dispose() {
       if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopInspection(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      disposed = true; lifecycleVersion++; inspection?.dispose(); pointer.dispose(); stopInspection(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

@@ -14,7 +14,6 @@ import type { HapticStrength } from "@wbr/runtime";
 import { assertSafeCopy } from "@wbr/shared";
 import { BlessingApp } from "./App";
 import { Context, type AppContext } from "./context";
-import { HISTORY_SCENE_LINE } from "./pages";
 import {
   SCENE_DAILY_CAPTION,
   SCENE_DAILY_CTA,
@@ -724,8 +723,8 @@ describe("小天地's 回看", () => {
   });
 });
 
-describe("仪式时光", () => {
-  it("keeps collection and wish notes, and 再次体验 opens the scene afresh", async () => {
+describe("小天地's collection records", () => {
+  it("keeps collection, sessions and wish notes when replaying from the collection grid", async () => {
     // A completed 2D lantern, then a crane walked as a scene for w1.
     let state: State = withRecords({ crane: 3 }, withRealizedWish());
     state = reduce(state, { type: "ritual.start", id: "r2d", ritual: "lantern", at: AT });
@@ -739,6 +738,8 @@ describe("仪式时光", () => {
       startedAt: AT,
       at: AT,
     });
+    const kept = keepsake("crane", "2026-10-05");
+    state.collectibles.push(kept);
     const ui = await openApp(state);
     await ui.tap(ui.host.querySelector('[data-tab="me"]')!);
     expect(ui.host.querySelector('.stats')).toBeNull();
@@ -746,38 +747,39 @@ describe("仪式时光", () => {
     expect(ui.button('场景目录', '.settings-card')).toBeDefined();
     expect(ui.host.textContent).not.toContain('功德');
     await ui.tap(ui.host.querySelector('[data-tab="world"]')!);
-    expect(ui.host.querySelector('.count-pill')?.textContent).toBe('1 件珍藏');
-    expect(ui.host.querySelectorAll('.collection-card')).toHaveLength(1);
-    await ui.tap(ui.button("仪式时光", ".settings-card"));
-    expect(ui.page()).toBe('history');
+    expect(ui.host.querySelector('.room .count-pill')?.textContent).toBe('2 件珍藏');
+    expect(ui.host.querySelectorAll('.collection-card')).toHaveLength(2);
+    expect(ui.button('仪式时光', '.settings-card')).toBeUndefined();
+    await ui.tap(ui.host.querySelector(`.collection-card[data-collectible-id="${kept.id}"]`)!);
+    expect(ui.page()).toBe('collection');
     expect((await ui.saved()).collectibles).toEqual(state.collectibles);
-    const lines = [...ui.host.querySelectorAll(".timeline li p")].map(
-      (p) => p.textContent!,
-    );
-    // Newest first.
-    expect(lines).toEqual([
-      `${HISTORY_SCENE_LINE} · 为「面试顺利」记了一笔`,
-      "收藏了暖心灯",
-    ]);
-    expect(() => assertSafeCopy(lines[0])).not.toThrow();
-
-    await ui.tap(ui.button("再次体验", ".timeline li:first-child"));
+    await ui.tap(ui.button("回看这场仪式", ".form-card"));
     expect(ui.page()).toBe("scene");
     expect(ui.sceneTitle()).toBe(entryOf("crane").title);
     expect(ui.sceneProgress()).toBe("已完成 0 / 3");
+    await ui.walk();
+    const saved = await ui.saved();
+    expect(saved.collectibles).toEqual(state.collectibles);
+    expect(saved.sessions).toEqual(state.sessions);
+    expect(saved.wishes).toEqual(state.wishes);
     ui.unmount();
   });
 
-  it("reopens a finished scene card from its first step", async () => {
-    const ui = await openApp(withRecords({ crane: 3 }));
+  it("reopens a finished collected scene from the shelf after returning from its detail", async () => {
+    const state = withRecords({ crane: 3 });
+    const kept = keepsake("crane", "2026-10-05");
+    state.collectibles.push(kept);
+    const ui = await openApp(state);
     await ui.tap(ui.host.querySelector('[data-tab="world"]')!);
-    await ui.tap(ui.button("仪式时光", ".settings-card"));
+    await ui.tap(ui.host.querySelector(`.collection-card[data-collectible-id="${kept.id}"]`)!);
+    expect(ui.page()).toBe('collection');
     await ui.tap(ui.host.querySelector('.back-button')!);
     expect(ui.page()).toBe('world');
-    await ui.tap(ui.button("仪式时光", ".settings-card"));
     await ui.tap(
-      ui.host.querySelector('.scene-catalog .scene-card[data-scene="crane"]')!,
+      ui.host.querySelector(`.room-shelf [data-collectible-id="${kept.id}"]`)!,
     );
+    expect(ui.page()).toBe('collection');
+    await ui.tap(ui.button("回看这场仪式", ".form-card"));
     expect(ui.page()).toBe("scene");
     expect(ui.sceneProgress()).toBe("已完成 0 / 3");
     ui.unmount();
@@ -952,6 +954,29 @@ describe("useOpenScene", () => {
     return { open, go, dispatch };
   }
   const reset = (id: string) => ({ type: "scene.progress", id, progress: 0 });
+
+  it("blocks a direct wish-picker call without the matching keepsake before resetting progress", () => {
+    const state = withRecords({ "tanzaku-tanabata": 3 });
+    state.sceneRecords.find(record => record.id === "tanzaku-tanabata")!.favorite = true;
+    state.collectibles.push(keepsake("crane", "2026-10-05"));
+    const before = JSON.stringify(state), target = opener(state);
+    target.open(entryOf("tanzaku-tanabata"), { wishPicker: true });
+    expect(target.go).not.toHaveBeenCalled();
+    expect(target.dispatch).not.toHaveBeenCalled();
+    expect(JSON.stringify(state)).toBe(before);
+  });
+
+  it("allows a matching collected scene through the wish-picker guard after its keepsake was spent", () => {
+    const state = withRecords({ "tanzaku-tanabata": 3 });
+    state.collectibles.push(keepsake("tanzaku-tanabata", "2026-10-05", AT));
+    const target = opener(state);
+    target.open(entryOf("tanzaku-tanabata"), { wishPicker: true });
+    expect(target.go).toHaveBeenCalledWith(expect.objectContaining({
+      page: "scene", id: "tanzaku-tanabata", vessel: undefined,
+    }));
+    expect(target.dispatch).toHaveBeenCalledWith(reset("tanzaku-tanabata"));
+    expect(target.dispatch).toHaveBeenCalledTimes(1);
+  });
 
   it("opens a scene as it stands, unless it is done; the daily set resumes a half-walked scene", () => {
     const fresh = opener(createState());

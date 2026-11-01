@@ -65,6 +65,13 @@ function mount(create: Factory, initialProgress: number) {
   const layer = overlay.querySelector<HTMLElement>('.scene-hit-layer')!, button = overlay.querySelector<HTMLButtonElement>('button')!
   const setCapture = vi.fn(), releaseCapture = vi.fn()
   layer.setPointerCapture = setCapture; layer.releasePointerCapture = releaseCapture
+  if (create !== steelyard && initialProgress < 3) {
+    button.click()
+    for (let i = 0; i < 28; i++) instance.update(.025)
+    button.click()
+    for (let i = 0; i < 24; i++) instance.update(.025)
+    expect(progress).toEqual([]); expect(complete).not.toHaveBeenCalled(); expect(haptic).not.toHaveBeenCalled()
+  }
   const project = (object: THREE.Object3D, anchor: [number, number, number] = [0, 0, 0]): Point => {
     scene.updateMatrixWorld(true); camera.updateMatrixWorld(true)
     const point = object.localToWorld(new THREE.Vector3(...anchor)).project(camera)

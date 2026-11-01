@@ -4,6 +4,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createFreePlacementPointer } from '../free-placement-pointer'
+import { createCloseInspection } from '../close-inspection'
 import { createPosePlacement } from '../pose-placement'
 import { addKeyboardPlacementInspection, setPlacementHint } from '../placement-inspection'
 import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
@@ -42,12 +43,14 @@ export function createChineseRuyiScepter(ctx: SceneContext): SceneInstance {
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
   const model = createChineseRuyiScepterModel(); scene.add(model.root)
+  let closeInspection: ReturnType<typeof createCloseInspection> | undefined
+  const canPlace = () => closeInspection?.canPlace() ?? false
   const placement = createPosePlacement(canvas, camera, model, scene)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
   const restore = () => { pose(at, 0);; placement.restoreCheckpoint(at); matrices() }
   const directions: [number, number][] = [[0,-1],[1,0],[0,1]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', destination: () => placement.destination(2), targetLabel: '当前安放位置', label: ACTIONS[2]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', destination: () => placement.destination(2), targetLabel: '当前安放位置', label: ACTIONS[2]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && canPlace() && !motion && at === i }))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const nearest = (x: number, y: number) => {
     const meshes: THREE.Object3D[] = []
@@ -61,7 +64,7 @@ export function createChineseRuyiScepter(ctx: SceneContext): SceneInstance {
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const inspectRotate = (dx:number,dy:number) => { if (!invalid) placement.rotate(dx * .012, dy * .012) }
   const pointer = createFreePlacementPointer(ui.hitLayer, canvas, {
-    isActive: inputActive,
+    isActive: () => inputActive() && canPlace(),
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); const hit = nearest(x, y); return !!hit && (hit === model.roots[at] || model.roots[at]!.getObjectById(hit.id) === hit) },
     onStart(x, y) {
       if (!prepareInput()) { pointer.cancel(); return }
@@ -88,6 +91,7 @@ export function createChineseRuyiScepter(ctx: SceneContext): SceneInstance {
     ui.renderDots(at === 3 ? 1 : 0, 1); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
     setSafeText(ui.actionBtn, ACTIONS[2]!, safe); setPlacementHint(ui.hintEl, motion ? MOVING[motion.step]! : (at === 3 ? HINTS[3]! : CARRY_HINT), !motion && at < 3, safe)
+    closeInspection?.decorate(at === 3)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
@@ -102,11 +106,12 @@ export function createChineseRuyiScepter(ctx: SceneContext): SceneInstance {
   }
   function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: 2, time: 0, from: 0, arrived: placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => {
-    if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return
+    if (!inputActive() || !canPlace() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return
     placement.capture(2); advance(true)
   }
-  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); if (!motion) reset(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
+  const blur = () => { focused = false; lifecycleVersion++; closeInspection?.cancel(); pointer.cancel(); if (!motion) reset(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
+    closeInspection?.cancel()
     pointer.cancel(); if (!motion) reset()
     const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0, .65, .15), direction = new THREE.Vector3(1.3, 3.9, 8).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target); camera.updateMatrixWorld(true)
@@ -120,7 +125,10 @@ export function createChineseRuyiScepter(ctx: SceneContext): SceneInstance {
     }
     pose(at, saved); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
   }
-  const stopInspection = addKeyboardPlacementInspection(ui.actionBtn,canvas,camera,model,placement,{isActive:()=>inputActive()&&!motion&&at < 3&&!pointer.isBusy(),step:()=>2,prepare:prepareInput,reset,rotate:(yaw,pitch)=>inspectRotate(yaw/.012,pitch/.012)})
+  const stopInspection = addKeyboardPlacementInspection(ui.actionBtn,canvas,camera,model,placement,{isActive:()=>inputActive()&&canPlace()&&!motion&&at < 3&&!pointer.isBusy(),step:()=>2,prepare:prepareInput,reset,rotate:(yaw,pitch)=>inspectRotate(yaw/.012,pitch/.012)})
+  closeInspection = createCloseInspection({ canvas, scene, camera, actor: model.scepter, ui,
+    isActive: () => inputActive() && !motion, isReducedMotion: () => !!ctx.isReducedMotion?.(),
+    prepare: prepareInput, safe, changed: () => sync() })
   restore(); sync()
   return {
     start() {
@@ -131,7 +139,7 @@ export function createChineseRuyiScepter(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
-      if (!active()) { lifecycleVersion++; pointer.cancel(); if (!motion) reset(); if (!suspended) { suspended = true; sync() }; return }
+      if (!active()) { lifecycleVersion++; closeInspection?.cancel(); pointer.cancel(); if (!motion) reset(); if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
@@ -140,11 +148,12 @@ export function createChineseRuyiScepter(ctx: SceneContext): SceneInstance {
         const eased=ease(motion.time)
         pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); if (motion.time === 1) settle()
       }
+      closeInspection.update(delta)
       if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },
     dispose() {
       if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopInspection(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      disposed = true; lifecycleVersion++; closeInspection?.dispose(); pointer.dispose(); stopInspection(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

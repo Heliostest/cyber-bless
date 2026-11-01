@@ -32,8 +32,51 @@ vi.mock('@wbr/scene-runtime/debug-render-style', async () => {
   } }
 })
 const instances: SceneInstance[] = []
+
+describe('close inspection before placement', () => {
+  it.each([284, 1280])('keeps every carried part in frame throughout the automatic orbit at width %i', width => {
+    const s = mount(0, {}, width, false), actor = s.scene.getObjectByName('nazar-charm')!, originalRotation = actor.quaternion.clone()
+    s.button.click(); s.run(.7)
+    let cameraTravel = 0, previous = s.camera.quaternion.clone()
+    for (let sample = 0; sample < 30; sample++) {
+      actor.traverse(object => {
+        const mesh = object as THREE.Mesh; if (!mesh.geometry) return
+        const vertices = mesh.geometry.getAttribute('position'), vertex = new THREE.Vector3()
+        for (let i = 0; i < vertices.count; i++) {
+          vertex.fromBufferAttribute(vertices, i).applyMatrix4(mesh.matrixWorld).project(s.camera)
+          expect(Math.max(Math.abs(vertex.x), Math.abs(vertex.y)), mesh.name).toBeLessThan(.97)
+        }
+      })
+      expect(actor.quaternion.angleTo(originalRotation)).toBeLessThan(.00001)
+      cameraTravel += s.camera.quaternion.angleTo(previous); previous.copy(s.camera.quaternion)
+      s.run(.2)
+    }
+    expect(cameraTravel).toBeGreaterThan(4)
+    expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled()
+    s.run(.6); s.button.click(); s.run()
+    expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it.each([0, 1, 2])('opens a close view without completing legacy checkpoint %i, then allows the original placement', at => {
+    const s = mount(at, {}, 390, false), cameraHome = s.camera.position.clone()
+    s.button.click(); s.run(.7)
+    expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
+    expect(s.camera.position.distanceTo(cameraHome)).toBeGreaterThan(.1)
+    s.button.click(); s.run(.6)
+    expect(s.progress).toEqual([]); expect(s.camera.position.distanceTo(cameraHome)).toBeLessThan(.00001)
+    s.button.click(); s.run()
+    expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it('uses the first object release to inspect instead of committing a destination drag', () => {
+    const s = mount(0, {}, 390, false), p = s.point(targetName(0), anchor(0)), cameraHome = s.camera.position.clone()
+    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0], p[1] - 25]); event(s.hit, 'pointerup', [p[0], p[1] - 25]); s.run(.7)
+    expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled()
+    expect(s.button.hidden).toBe(false); expect(s.camera.position.distanceTo(cameraHome)).toBeGreaterThan(.1)
+    s.button.click(); s.run(.6); s.button.click(); s.run()
+    expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+})
 afterEach(() => { instances.splice(0).forEach(s => s.dispose()); document.body.replaceChildren(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
-function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
+function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390, walkInspection = true) {
   const height = width === 1280 ? 600 : width === 284 ? 390 : 408, left = 17, top = 91
   const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
   host.append(canvas, overlay); document.body.append(host)
@@ -54,6 +97,10 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
     return [left + (p.x + 1) * width / 2, top + (1 - p.y) * height / 2]
   }
   const run = (seconds = 3) => { for (let t = 0; t < seconds; t += .025) instance.update(.025) }
+  if (walkInspection && (!Number.isFinite(at) || at < 3)) {
+    button.click(); run(.7); button.click(); run(.6)
+    expect(progress).toEqual([]); expect(complete).not.toHaveBeenCalled(); expect(saveWish).not.toHaveBeenCalled()
+  }
   return { instance, scene, camera, host, overlay, hit, button, point, run, progress, saveWish, complete, haptic }
 }
 function event(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
@@ -148,7 +195,7 @@ describe('Turkish nazar glass eye charm protective display', () => {
     const s = mount(0, { isSoundEnabled: () => soundEnabled })
     expect(frequencies).toEqual([]); step(s, 0); expect(frequencies).toEqual([])
     soundEnabled = true; const second = mount(1, { isSoundEnabled: () => soundEnabled }); step(second, 1, false); expect(frequencies).toEqual([]); second.run(); expect(frequencies).toEqual([440])
-    const returning = mount(2, { returning: true, isSoundEnabled: () => true }); returning.run(); expect(frequencies).toEqual([440])
+    const returning = mount(2, { returning: true, isSoundEnabled: () => true }, 390, false); returning.run(); expect(frequencies).toEqual([440])
     step(s, 2); expect(frequencies).toEqual([440]); expect(peaks).toEqual([.003])
     s.instance.dispose(); s.instance.dispose(); second.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })

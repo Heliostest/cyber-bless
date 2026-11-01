@@ -1,5 +1,8 @@
 node_modules/
 .superpowers/
+# Local scratch work and browser diagnostics.
+/.tmp/
+/debug.log
 apps/mobile-expo/modules/blessing-widgets/android/.gradle/
 apps/mobile-expo/modules/blessing-widgets/android/build/
 dist/

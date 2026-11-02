@@ -4,7 +4,25 @@
 
 正式 Mac mini 构建改用[参数化 tag 发布入口](../scripts/ios-release/README.md)：先提交业务源码、素材、发布工具、依赖锁及版本输入，合并／推送 `master` 后创建并推送附注 tag；Mac 直接获取该 tag 和 LFS 实体，执行同版本工具并串行验证、构建和交付。不再把未提交工作区生成的 `source.tgz` 用于新正式发布。构建号尚未分配时保持 release input 的 `null` 并拒绝执行，不猜测下一个编号。
 
-本节是后续流程约定，不改变既有构建 18 及更早工作区快照的历史身份，也不表示本轮已创建 tag、构建或上传。既有回执保留；源码或工具修复须使用新提交和新 tag。
+该入口已用于下述构建 20；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+
+## 2026-11-02 构建 20：Git tag 构建与内测协作
+
+北京时间 18:02:04，**1.0.0 (20)** 已完成 Mac mini / Xcode 26.6 归档、App Store 签名导出、ASC 上传及既有内部组验证。Apple build UUID 为 `e148c47c-f58e-425f-b592-429844d45453`，最终读回 `VALID / IN_BETA_TESTING`。`Team (Expo)` 自动包含本构建，仍为 1 位既有测试员，测试说明匹配；未新增邀请、修改权限或提交审核。正式商店仍关联构建 12，状态为 `PREPARE_FOR_SUBMISSION / MANUAL`。
+
+本轮实际来源为远端 `master` 中的提交 `b05c70e797b31fb977f77b73ab866ce09bb5fe46`，附注 tag `ios-v1.0.0-build.20`（tag 对象 `851a240cb299d7b3ad7f65cea4392962968240ec`，tree `ff5065c6aef7cfdcaa8d4e160989d5be7ffce290`）。Mac 直接获取该 tag 和 LFS 实体，在独立干净目录执行同一 tag 内的 runner；5327 个来源文件、2117 个 LFS 实体及阶段来源身份均核验一致。来源身份 SHA-256 为 `228d297036e20c5a32c0cc0d19aad41cca3577d41e2f89fe50af3f7f4a9b91a8`，没有以未提交工作区或旧快照代替该 tag。
+
+随包业务内容包括此前合并的内置仪式、完成后永久解锁、内测目录、反馈队列和团队测试状态。发布处理期间没有修改场景、文化文案或来源；`5732a384` 至本轮 tag 的 `apps/`、`packages/`、根 package/依赖锁与 Ruby 锁均无业务差异，不据构建与哈希检查宣称文化事实重新认证。实际技术修复为 CocoaPods 路径校验和规范化、Release 原生依赖与 provider 预生成，以及在依赖切换后重放官方 dSYM 映射阶段；冻结后源码或脚本修复均进入新提交和新 tag，没有改写旧 tag。
+
+本轮完整 `npm run verify` 通过，检查覆盖与 tag 相同的业务源码；冻结提交的发布工具测试为 96 项、94 通过、0 失败、2 项 Windows 平台跳过。跳过项包含的 Ruby 6 个用例和真实 Bash 失败即停检查已在 Mac 通过，4 项 dSYM 准备回归也在 Mac 通过。先执行不签名的 Release 构建和官方 dSYM 映射，再捕获原生输入；实际签名归档、导出与最终离线验证均保持 17796 项签名后原生输入不变，没有排除 provider、Pods 或 dSYM 源文件。主应用／小组件签名、Team、App Group、有效 profiles 与证书通过核验；包内 162 个 DOM 脚本、171 项离线资源和 477 张小组件图片哈希通过。临时签名钥匙串已锁定，搜索列表已恢复。
+
+IPA 为 227,218,915 字节，SHA-256 `1f6b4cb3f29fc09441465b62e07f44e4eaca2912f86ab5f1387a0dfadafdf6af`，本机备份与 Mac 一致。本机 IPA 为 `artifacts/ios-release-20/blessing-20.ipa`；Mac IPA、archive/dSYM 位于 `/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.20/source/artifacts/ios-release/20/`，archive 为 `Blessing-20.xcarchive`。北京时间 18:03:16，EAS iOS 计数由 18 同步为 20 并读回，写前四类活动云构建均为零。临时 Expo 会话使用备份恢复原状态，没有登出或撤销原会话。
+
+构建 19 的两次失败仍属于提交 `a3649751`：含斜杠 tag 的 `%2F` 目录触发 Clang 缓存写入失败；另一 tag 已完成归档／导出，但严格原生输入比较拒绝后未上传。ASC 中构建 19 仅有导出产生的 `AWAITING_UPLOAD` 预留，未成为已上传构建。旧 tag 保持原对象与来源，失败证据和必要 IPA／archive／dSYM 单独保留，不将其冒充构建 20 或成功交付。
+
+清理在同一 App 独占锁内完成：先核对失败 checkout 的 Git 身份和允许的 prebuild 差异，复制小型回执及必要产物，核对 IPA 及 archive/dSYM 的 SHA-256 后，再移除失败 checkout 与缓存。失败历史分别保留于 `/Users/heli/ios-builds/cyber-bless/history/failed-ios-slash-build19-a3649751` 与 `/Users/heli/ios-builds/cyber-bless/history/rejected-build19-a3649751`；验证日志／JSON 保留于同根 `history/release-validation-20261102`。验证副本、预热 DerivedData 和无签名验证 archive 已移除，构建 20 的原 checkout、IPA 和 archive/dSYM 保持不变。
+
+详细回执和核查摘要见 `artifacts/ios-release-20/` 与 [TestFlight 状态](../store/ios/testflight-status.json)。本轮没有安装或测试物理设备；TestFlight 可用和组成员存在不构成真机验收。系统键盘、GPU 操作、分享、小组件及反馈网络恢复仍需在 iPhone 上验证。
 
 ## 2026-10-31 构建 18：柔和 3D 场景图标与透明纪念物图标
 

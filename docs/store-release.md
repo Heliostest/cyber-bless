@@ -4,7 +4,21 @@
 
 正式 Mac mini 构建改用[参数化 tag 发布入口](../scripts/ios-release/README.md)：先提交业务源码、素材、发布工具、依赖锁及版本输入，合并／推送 `master` 后创建并推送附注 tag；Mac 直接获取该 tag 和 LFS 实体，执行同版本工具并串行验证、构建和交付。不再把未提交工作区生成的 `source.tgz` 用于新正式发布。构建号尚未分配时保持 release input 的 `null` 并拒绝执行，不猜测下一个编号。
 
-该入口已用于下述构建 20、21；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+该入口已用于下述构建 20、21、22；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+
+## 2026-11-03 构建 22：统一界面音效
+
+北京时间 02:10:13，**1.0.0 (22)** 已完成 Mac mini / Xcode 26.6 构建、ASC 上传和既有内部组验证；02:11:22 再次读回 `VALID / IN_BETA_TESTING`，Apple build UUID 为 `7d92aad7-e5f9-4453-8e32-37734d066a05`。`Team (Expo)` 已自动包含本构建，仍为 1 位既有测试员，测试说明匹配。未新增邀请、修改权限、提交审核或公开发布；正式商店继续关联构建 12，状态为 `PREPARE_FOR_SUBMISSION / MANUAL`。
+
+来源为已推送的 `master` 提交 `2503dc618345d2653386d881ff0706b9c676a26e`，附注 tag `ios-v1.0.0-build.22`（tag 对象 `a832a710b4b6fbe778a3152b5ed0742c9a69b226`，tree `dc7cdf337aba846edce160fe5617c2f0916e8996`）。Mac 直接获取 Git 与 2117 个 LFS 实体，使用该 tag 内工具及 runner 独占锁完成各阶段；5370 个来源文件和 17796 项签名后原生输入核对一致。来源身份 SHA-256 为 `e0acfda11f6b173fd89b2660072dc1cbb1b31b33c6bb10239e4788f925af712c`。没有移动 tag、混入未提交源码或重用旧包回执。
+
+本包加入 Three.js 场景内部操作以外的统一界面音效，覆盖导航、返回、筛选、弹层开合、设置与收藏等语义，保留保存、收下和完成声音；输入、滑动、重复当前选项和自动恢复安静。8 个 Kenney CC0 派生 WAV 及原始许可已从实际 IPA 逐个提取核对哈希。保留现有共享内测开关、旧存档及场景行为。文化影响与素材授权依据见 [操作与音效核查](research/2026-11-03-ui-operations-audio-audit.md)，本次没有新增场景文化事实或改变来源归属。
+
+冻结提交的完整 `npm run verify` 通过，含 1502 项 App、10764 项场景测试及双端嵌入检查；Windows 发布工具测试 94 通过、2 项平台跳过。Mac 初次补测因尚未安装依赖缺少 `xcode` 包而有 4 项失败；runner 完成锁定依赖安装后，Mac 完整 96 项全部通过、零跳过。预构建、4 项 dSYM 映射、归档、导出与签名验证通过，主应用／小组件均为构建 22。实际包内 180 项离线资源、162 个 DOM 脚本和 477 张小组件图片哈希验证通过。
+
+IPA 为 227,263,482 字节，SHA-256 `e9c40a8c6f6ca7b0cfc92b521ddd8666c805285dd7baed0f3894c7ef2818586f`。Mac IPA／archive／dSYM 保留于 `/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.22/source/artifacts/ios-release/22`；本机备份 [blessing-22.ipa](../artifacts/ios-release-22/blessing-22.ipa)。上传于 01:57:15 被接受，未重复上传。EAS 计数于 02:11:14 从 21 同步为 22 并读回，写前四类活动构建均为零。签名钥匙串搜索列表已恢复、临时钥匙串已锁定，Mac 原 Expo 会话状态已恢复，没有登出或撤销会话。
+
+完整回执和验证摘要见 `artifacts/ios-release-22/` 与 [TestFlight 状态](../store/ios/testflight-status.json)。现有构建 20、21 和本次 22 的 IPA／archive／dSYM 均保留。本轮没有安装或验收物理设备；内测组可用不能代替手机扬声器、耳机、静音键、键盘、安全区域、分享和小组件实机测试。
 
 ## 2026-11-03 构建 21：心愿记录、纪念章与共享内测开关
 

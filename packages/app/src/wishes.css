@@ -32,6 +32,7 @@
   font-size: 15px;
   color: var(--ink-soft);
 }
+.wish-ritual-picker .wish-picker-unlock-note { margin: -6px 0 14px; font-size: 12px; }
 .wish-ritual-picker .wish-practice-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px 14px;

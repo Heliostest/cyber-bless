@@ -24,6 +24,7 @@ import { SafeAreaBackground } from './SafeAreaBackground';
 import { shareImage } from './share-image';
 import { shareLink } from './share-link';
 import { detectInternalToolsEnabled } from './internal-tools';
+import { INTERNAL_TOOLS_ENABLED } from '@wbr/app/internal-tools-config';
 import { readTestFeedback, writeTestFeedback, submitTestFeedback, fetchTestFeedbackStatus, testFeedbackInfo } from './test-feedback';
 import {
   readContentHistory,
@@ -60,7 +61,7 @@ export default function App() {
 }
 function Shell() {
   const [active, setActive] = useState(AppState.currentState === "active");
-  const [internalToolsEnabled, setInternalToolsEnabled] = useState(__DEV__);
+  const [internalToolsEnabled, setInternalToolsEnabled] = useState(INTERNAL_TOOLS_ENABLED);
   const [feedbackInfo, setFeedbackInfo] = useState<TestFeedbackInfo>({ platform: Platform.OS === 'ios' ? 'ios' : 'android', appVersion: 'unknown', buildNumber: 'unknown', osVersion: String(Platform.Version) });
   useEffect(() => { let disposed = false; void testFeedbackInfo().then(info => { if (!disposed) setFeedbackInfo(info); }); return () => { disposed = true; }; }, []);
   useEffect(() => {

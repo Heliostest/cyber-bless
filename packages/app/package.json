@@ -9,6 +9,7 @@
   },
   "exports": {
     ".": "./src/App.tsx",
+    "./internal-tools-config": "./src/internal-tools-config.ts",
     "./style.css": "./src/style.css",
     "./public-scene": "./src/public-scene.tsx",
     "./public-scene.css": "./src/public-scene.css"

@@ -30,6 +30,10 @@
 .test-feedback-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .test-feedback-dialog .button { min-height: 44px; font-size: 13px; }
 .test-feedback-status { margin-top: 10px; font-size: 13px; line-height: 1.5; }
+.test-feedback-team-status { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 10px; }
+.test-feedback-team-status .text-button { min-height: 44px; font-size: 12px; }
+.test-feedback-pass { border-top: 1px dashed var(--rim); padding-top: 12px; margin-top: 14px; }
+.test-feedback-pass p { margin-bottom: 0; }
 .test-feedback-queue ul { padding-left: 18px; font-size: 12px; }
 .test-feedback-queue li { margin-bottom: 12px; overflow-wrap: anywhere; }
 .test-feedback-queue p { white-space: pre-wrap; }

@@ -5,6 +5,8 @@ import type { FeedbackReport } from '@wbr/shared/test-feedback';
 import { uid } from './context';
 import { localizedTitle } from './localization';
 import { useTestFeedback } from './test-feedback-provider';
+import { sceneTestingRevisions } from './scene-testing-revisions.generated';
+import { currentSceneTestStatus, SCENE_TEST_COPY } from './scene-feedback-status';
 
 type SceneFeedbackContext = FeedbackReport['context'];
 export const TEST_FEEDBACK_COPY = {
@@ -54,9 +56,16 @@ export function TestFeedbackOverlay({ entry, context, reducedMotion, onOpenChang
   const currentPending = !!draft && !!snapshot?.pending.some(report => report.id === draft.id);
   const receiptForDraft = !!draft && !!(snapshot?.receipts?.[draft.id] ?? (snapshot?.lastReceipt?.id === draft.id ? snapshot.lastReceipt : undefined));
   const delivered = receiptForDraft && snapshot?.status === 'ready' && !snapshot.saving;
+  const currentTeamStatus = currentSceneTestStatus(entry.id, snapshot);
+  const freshTeamStatus = snapshot?.teamStatusState === 'fresh' && currentTeamStatus;
+  const pendingForScene = snapshot?.pending.filter(report => report.scene.id === entry.id).length ?? 0;
+  const unsentIssue = !!draft?.message.trim() && draft.result !== 'pass' && !delivered;
+  const passBlock = !freshTeamStatus ? SCENE_TEST_COPY.passNeedsSync : pendingForScene > 0 ? SCENE_TEST_COPY.passBlockedPending
+    : unsentIssue ? SCENE_TEST_COPY.passBlockedDraft : currentTeamStatus.openIssueCount > 0 && currentTeamStatus.state === 'reported' ? SCENE_TEST_COPY.passBlockedOpen : undefined;
   const createDraft = (): FeedbackReport => ({
     schemaVersion: 1, id: uid(), createdAt: new Date().toISOString(),
-    scene: { id: entry.id, title: entry.title, engine: entry.engine, revision: entry.revision },
+    scene: { id: entry.id, title: entry.title, engine: entry.engine, revision: entry.revision,
+      ...(sceneTestingRevisions[entry.id] ? { testingRevision: sceneTestingRevisions[entry.id] } : {}) },
     context: { ...context }, message: '',
     client: {
       platform: feedback?.info?.platform ?? 'web', appVersion: feedback?.info?.appVersion ?? 'unknown',
@@ -66,6 +75,7 @@ export function TestFeedbackOverlay({ entry, context, reducedMotion, onOpenChang
     },
   });
   const close = () => { setOpen(false); onOpenChange(false); trigger.current?.focus(); };
+  useEffect(() => { if (open) void feedback?.client.refreshTeamStatus?.(); }, [open, feedback?.client]);
   useEffect(() => {
     if (!open || !dialog.current) return;
     const node = dialog.current;
@@ -102,6 +112,15 @@ export function TestFeedbackOverlay({ entry, context, reducedMotion, onOpenChang
       await feedback.client.enqueue(draft);
     } finally { setBusy(false); }
   };
+  const confirmPass = async () => {
+    if (!feedback || passBlock || busy || !currentTeamStatus) return;
+    // Never convert an issue draft or queued report. This is a new explicit
+    // confirmation of this installation and the team's currently visible basis.
+    const report: FeedbackReport = { ...createDraft(), result: 'pass', reviewToken: currentTeamStatus.reviewToken,
+      message: tr(SCENE_TEST_COPY.passMessage) };
+    setBusy(true); dirtyDraft.current = undefined; setDraft(report);
+    try { await feedback.client.enqueue(report); } finally { setBusy(false); }
+  };
   if (!feedback) return null;
   const error = errorText(snapshot?.error);
   return <div className="test-feedback-overlay">
@@ -123,14 +142,20 @@ export function TestFeedbackOverlay({ entry, context, reducedMotion, onOpenChang
         <button type="button" data-feedback-close className="text-button" onClick={close}>{tr(TEST_FEEDBACK_COPY.close)}</button>
       </div>
       <strong>{localizedTitle(entry)}</strong>
+      <div className="test-feedback-team-status">
+        <span className="scene-test-badge" data-test-state={currentTeamStatus?.state ?? 'unknown'}>{tr(SCENE_TEST_COPY[currentTeamStatus?.state ?? 'unknown'])}</span>
+        <button type="button" className="text-button" disabled={!snapshot?.connection.endpoint || !snapshot?.connection.token || snapshot.teamStatusState === 'loading'} onClick={() => void feedback.client.refreshTeamStatus?.()}>{tr(SCENE_TEST_COPY.refresh)}</button>
+      </div>
+      {snapshot?.teamStatus && snapshot.teamStatusState !== 'fresh' && <p className="quiet">{tr(SCENE_TEST_COPY.cached)}</p>}
       <p>{tr(TEST_FEEDBACK_COPY.progress, { p0: draft.context.completedSteps, p1: draft.context.totalSteps })}</p>
+      {draft.scene.testingRevision !== sceneTestingRevisions[entry.id] && <p className="quiet">{tr(SCENE_TEST_COPY.oldDraft)}</p>}
       <p className="quiet">{tr(TEST_FEEDBACK_COPY.intro)}</p>
       <label>{tr(TEST_FEEDBACK_COPY.step)}<input type="number" inputMode="numeric" min={1}
-        max={draft.context.totalSteps} value={draft.context.reportedStep} disabled={currentPending || receiptForDraft || delivered}
+        max={draft.context.totalSteps} value={draft.context.reportedStep} disabled={currentPending || receiptForDraft || delivered || draft.result === 'pass'}
         onChange={event => update({ ...draft, context: { ...draft.context, reportedStep: Number(event.target.value) } })}/></label>
       <p className="quiet">{tr(TEST_FEEDBACK_COPY.explanation)}</p>
       <label>{tr(TEST_FEEDBACK_COPY.message)}<textarea ref={textInput} rows={4} maxLength={4000}
-        placeholder={tr(TEST_FEEDBACK_COPY.placeholder)} value={draft.message} disabled={currentPending || receiptForDraft || delivered}
+        placeholder={tr(TEST_FEEDBACK_COPY.placeholder)} value={draft.message} disabled={currentPending || receiptForDraft || delivered || draft.result === 'pass'}
         onChange={event => update({ ...draft, message: event.target.value })}/></label>
       <details className="test-feedback-settings" open={!snapshot?.connection.endpoint}>
         <summary>{tr(TEST_FEEDBACK_COPY.settings)}</summary>
@@ -145,7 +170,11 @@ export function TestFeedbackOverlay({ entry, context, reducedMotion, onOpenChang
       <div className="test-feedback-actions">
         <button type="button" className="button" disabled={busy || currentPending || receiptForDraft || delivered || !draft.message.trim()}
           onClick={() => void send()}>{tr(TEST_FEEDBACK_COPY.send)}</button>
-        {(currentPending || delivered) && <button type="button" className="button secondary" onClick={() => update(createDraft())}>{tr(TEST_FEEDBACK_COPY.newReport)}</button>}
+        {(currentPending || delivered || draft.result === 'pass') && <button type="button" className="button secondary" onClick={() => update(createDraft())}>{tr(TEST_FEEDBACK_COPY.newReport)}</button>}
+      </div>
+      <div className="test-feedback-pass">
+        <button type="button" className="button secondary" disabled={busy || !!snapshot?.saving || !!passBlock || draft.result === 'pass'} onClick={() => void confirmPass()}>{tr(SCENE_TEST_COPY.pass)}</button>
+        {passBlock && <p className="quiet">{tr(passBlock)}</p>}
       </div>
       <div role="status" className="test-feedback-status" aria-live="polite">
         {snapshot?.sending ? tr(TEST_FEEDBACK_COPY.sending) : delivered ? tr(TEST_FEEDBACK_COPY.sent)

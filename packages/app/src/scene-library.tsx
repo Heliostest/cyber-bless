@@ -1,5 +1,5 @@
 import { localizedTitle } from './localization';
-import { translate as tr, formatNumber, getFormatLocale } from '@wbr/i18n';
+import { translate as tr, formatNumber, formatDate, getFormatLocale } from '@wbr/i18n';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode, } from "react";
 import { sceneProgress, type RitualId } from "@wbr/core";
 import { CACHE_BUDGET, parsePack, type Pack } from "@wbr/content";
@@ -12,6 +12,8 @@ import { SceneBadge } from "./scene-icons";
 import { ritualSceneEntry, sceneSteps } from "./scene-placement";
 import { PageHead } from "./page-heading";
 import { isWishSceneUnlocked } from './vessels';
+import { useTestFeedback } from './test-feedback-provider';
+import { SCENE_TEST_COPY, matchesSceneTestFilter, pendingSceneFeedback, sceneTestState, type SceneTestFilter } from './scene-feedback-status';
 export { builtInScenes, type BuiltInSceneEntry } from '@wbr/core/daily-scenes';
 import { builtInScenes, isSceneVisibleInApp } from '@wbr/core/daily-scenes';
 export const supportsScene = (engine: string) => builtInScenes.some((e) => e.engine === engine);
@@ -210,14 +212,22 @@ export function SceneCard({ id, title, disabled, onClick, children, }: {
 }
 export function SceneCatalog() {
     const { entries, error, ready } = useSceneLibrary();
+    const feedback = useTestFeedback(), snapshot = feedback?.snapshot;
     const openScene = useOpenScene();
     const [query, setQuery] = useState(""), [limit, setLimit] = useState(24);
+    const [testFilter, setTestFilter] = useState<SceneTestFilter>('all');
     const search = useRef<HTMLInputElement>(null);
+    useEffect(() => { void feedback?.client.refreshTeamStatus?.(); }, [feedback?.client]);
     const searchLocale = getFormatLocale();
     const normalizeSearch = (value: string) => value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase(searchLocale);
     const searchQuery = normalizeSearch(query.trim());
-    const matches = entries.filter((entry) => [localizedTitle(entry), entry.title, entry.id].some(value => normalizeSearch(value).includes(searchQuery)));
+    const matches = entries.filter((entry) => [localizedTitle(entry), entry.title, entry.id].some(value => normalizeSearch(value).includes(searchQuery)) && matchesSceneTestFilter(entry.id, testFilter, snapshot));
     const visible = matches.slice(0, limit);
+    const hasConnection = !!snapshot?.connection.endpoint && !!snapshot?.connection.token;
+    const syncing = snapshot?.teamStatusState === 'loading';
+    const syncNote = !hasConnection ? SCENE_TEST_COPY.unconfigured : syncing && !snapshot?.teamStatus ? SCENE_TEST_COPY.refreshing
+        : snapshot?.teamStatus && snapshot.teamStatusState !== 'fresh' ? SCENE_TEST_COPY.cached
+        : !snapshot?.teamStatus ? SCENE_TEST_COPY.unavailable : undefined;
     return (<>
       <PageHead title={tr("\u573A\u666F\u76EE\u5F55")} eyebrow={tr("{p0} 个场景 · 全部内置", { p0: entries.length })}/>
       {error && <p role="status">{error}</p>}
@@ -229,17 +239,36 @@ export function SceneCatalog() {
             setLimit(24);
         }}/>
       </label>
+      <div className="scene-test-toolbar">
+        <label><span>{tr(SCENE_TEST_COPY.filter)}</span><select aria-label={tr(SCENE_TEST_COPY.filter)} value={testFilter} onChange={event => {
+            setTestFilter(event.target.value as SceneTestFilter); setLimit(24);
+        }}>
+          {(['all', 'unreported', 'reported', 'retest', 'verified', 'pending', 'unknown'] as const).map(value =>
+            <option key={value} value={value}>{tr(value === 'all' ? SCENE_TEST_COPY.all : value === 'pending' ? SCENE_TEST_COPY.pendingFilter : SCENE_TEST_COPY[value])}</option>)}
+        </select></label>
+        <button type="button" className="button secondary" disabled={!hasConnection || syncing} onClick={() => void feedback?.client.refreshTeamStatus?.()}>{tr(SCENE_TEST_COPY.refresh)}</button>
+      </div>
+      <div className="scene-test-sync" role="status" aria-live="polite">
+        {syncNote && <p>{tr(syncNote)}</p>}
+        {snapshot?.teamStatus && <p>{tr(SCENE_TEST_COPY.lastSync, { p0: formatDate(snapshot.teamStatus.fetchedAt, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) })}</p>}
+      </div>
       <div className="scene-catalog">
         {visible.map((entry) => {
             const status = sceneStatus(entry);
+            const testState = sceneTestState(entry.id, snapshot), pending = pendingSceneFeedback(entry.id, snapshot);
             return (<SceneCard key={entry.id} id={entry.id} title={localizedTitle(entry)} disabled={!ready} onClick={() => openScene(entry, { feedbackSession: true })}>
-              <span className="scene-status" data-status={status}>
-                {tr(SCENE_STATUS_COPY[status])}
+              <span className="scene-catalog-statuses">
+                <span className="scene-status" data-status={status}>{tr(SCENE_STATUS_COPY[status])}</span>
+                <span className="scene-test-badge" data-test-state={testState}>{tr(SCENE_TEST_COPY[testState])}</span>
+                {pending > 0 && <span className="scene-test-pending">{tr(SCENE_TEST_COPY.pending, { p0: pending })}</span>}
               </span>
             </SceneCard>);
         })}
       </div>
-      {query.trim() !== "" && matches.length === 0 && (<div className="empty" role="status">
+      {matches.length === 0 && testFilter !== 'all' && (<div className="scene-test-empty" role="status">
+        <p>{tr(SCENE_TEST_COPY.empty)}</p><button type="button" className="button secondary" onClick={() => { setTestFilter('all'); setLimit(24); }}>{tr(SCENE_TEST_COPY.clearFilter)}</button>
+      </div>)}
+      {query.trim() !== "" && matches.length === 0 && testFilter === 'all' && (<div className="empty" role="status">
           <Icon name="leaf"/>
           <h3>{tr(CATALOG_EMPTY_COPY.title)}</h3>
           <p>{tr(CATALOG_EMPTY_COPY.body)}</p>

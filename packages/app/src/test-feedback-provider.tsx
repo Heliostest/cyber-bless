@@ -1,6 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useSyncExternalStore, type ReactNode } from 'react';
 import type { TestFeedbackHost } from '@wbr/runtime';
 import { createTestFeedbackClient, type TestFeedbackClient, type TestFeedbackSnapshot } from './test-feedback-client';
+import { builtInScenes, isSceneVisibleInApp } from '@wbr/core/daily-scenes';
+import { sceneTestingRevisions } from './scene-testing-revisions.generated';
+
+const testingScenes = () => builtInScenes.filter(isSceneVisibleInApp).map(scene => ({ id: scene.id, testingRevision: sceneTestingRevisions[scene.id]! }));
 
 type TestFeedbackContext = { client: TestFeedbackClient; snapshot: TestFeedbackSnapshot; info?: TestFeedbackHost['info'] };
 const Context = createContext<TestFeedbackContext | undefined>(undefined);
@@ -12,7 +16,8 @@ const emptySnapshot = () => empty;
 export function TestFeedbackProvider({ host, enabled, active, children }: {
   host?: TestFeedbackHost; enabled: boolean; active: boolean; children: ReactNode;
 }) {
-  const client = useMemo(() => host ? createTestFeedbackClient(host) : undefined, [host]);
+  const client = useMemo(() => host ? createTestFeedbackClient(host, { statusScenes: testingScenes }) : undefined, [host]);
+  const testingQuery = JSON.stringify(testingScenes());
   const lifetimes = useRef(new WeakMap<TestFeedbackClient, { generation: number }>());
   const snapshot = useSyncExternalStore(client?.subscribe ?? noopSubscribe, client?.getSnapshot ?? emptySnapshot, emptySnapshot);
   useEffect(() => {
@@ -28,12 +33,14 @@ export function TestFeedbackProvider({ host, enabled, active, children }: {
     };
   }, [client]);
   useEffect(() => {
-    client?.setActive(enabled && active);
+    client?.setActive(enabled && active && !document.hidden);
     if (enabled) void client?.load();
-    const online = () => { if (enabled && active) void client?.flush(); };
-    if (enabled) window.addEventListener('online', online);
-    return () => window.removeEventListener('online', online);
-  }, [client, enabled, active]);
+    const online = () => { if (enabled && active && !document.hidden) { void client?.flush(); void client?.refreshTeamStatus(); } };
+    const visibility = () => { client?.setActive(enabled && active && !document.hidden); };
+    const timer = enabled && active ? window.setInterval(() => { if (!document.hidden) void client?.refreshTeamStatus(); }, 60000) : undefined;
+    if (enabled) { window.addEventListener('online', online); document.addEventListener('visibilitychange', visibility); }
+    return () => { window.removeEventListener('online', online); document.removeEventListener('visibilitychange', visibility); if (timer !== undefined) window.clearInterval(timer); };
+  }, [client, enabled, active, testingQuery]);
   const value = useMemo(() => enabled && client ? { client, snapshot, info: host?.info } : undefined, [enabled, client, snapshot, host?.info]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

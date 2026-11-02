@@ -2,7 +2,7 @@ import http from 'node:http';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { mkdir, open, readFile, readdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
-import { FEEDBACK_MAX_BYTES, normalizeFeedbackEndpoint, parseFeedbackReport } from '../../packages/shared/src/test-feedback.ts';
+import { FEEDBACK_MAX_BYTES, normalizeFeedbackEndpoint, parseFeedbackReport, parseFeedbackStatusQuery } from '../../packages/shared/src/test-feedback.ts';
 import { dashboardHTML } from './dashboard.mjs';
 
 const statuses = new Set(['new', 'triaged', 'fixed']);
@@ -10,6 +10,25 @@ const fingerprint = value => createHash('sha256').update(value).digest('hex');
 const stable = value => JSON.stringify(value, (_key, v) => v && typeof v === 'object' && !Array.isArray(v)
   ? Object.fromEntries(Object.keys(v).sort().map(k => [k, v[k]])) : v);
 const failure = (status, message) => Object.assign(Error(message), { status });
+
+/** A pass attests only to an immutable issue basis and a particular source fingerprint. */
+export function aggregateFeedbackStatus(entries, rawQuery) {
+  const query = parseFeedbackStatusQuery(rawQuery);
+  return { schemaVersion: 1, generatedAt: new Date().toISOString(), scenes: query.scenes.map(identity => {
+    const history = entries.filter(entry => entry.report.scene.id === identity.id);
+    const issues = history.filter(entry => entry.report.result !== 'pass');
+    const basis = issues.map(entry => ({ id: entry.report.id, testingRevision: entry.report.scene.testingRevision ?? null,
+      engine: entry.report.scene.engine, revision: entry.report.scene.revision, status: entry.status,
+      updatedAt: entry.updatedAt ?? entry.receivedAt })).sort((a, b) => a.id.localeCompare(b.id));
+    const reviewToken = fingerprint(stable({ id: identity.id, issues: basis }));
+    const open = issues.filter(entry => entry.status !== 'fixed');
+    const currentOpen = open.some(entry => entry.report.scene.testingRevision === identity.testingRevision);
+    const verified = history.some(entry => entry.report.result === 'pass' && entry.report.scene.testingRevision === identity.testingRevision && entry.report.reviewToken === reviewToken);
+    const latestFeedbackAt = history.map(entry => entry.receivedAt).sort().at(-1);
+    return { ...identity, state: currentOpen ? 'reported' : verified ? 'verified' : history.length ? 'retest' : 'unreported',
+      issueCount: issues.length, openIssueCount: open.length, reviewToken, ...(latestFeedbackAt ? { latestFeedbackAt } : {}) };
+  }) };
+}
 
 /** The receiving file is synced before acknowledgment. Temporary files never look like receipts. */
 async function atomicJSON(file, value) {
@@ -44,7 +63,7 @@ export function createFeedbackStore(inbox) {
           return { receipt: { id: report.id, receivedAt: old.receivedAt }, duplicate: true };
         }
         const receivedAt = new Date().toISOString();
-        await atomicJSON(filename(report.id), { schemaVersion: 1, receivedAt, status: 'new', report });
+        await atomicJSON(filename(report.id), { schemaVersion: 1, receivedAt, status: report.result === 'pass' ? 'fixed' : 'new', report });
         return { receipt: { id: report.id, receivedAt }, duplicate: false };
       });
     },
@@ -57,7 +76,8 @@ export function createFeedbackStore(inbox) {
         try {
           const value = JSON.parse(await readFile(path.join(directory, name), 'utf8'));
           parseFeedbackReport(value.report);
-          if (!statuses.has(value.status) || !Number.isFinite(Date.parse(value.receivedAt))) throw Error('Invalid stored receipt');
+          if (value.schemaVersion !== 1 || name !== `${fingerprint(value.report.id)}.json` || !statuses.has(value.status) || !Number.isFinite(Date.parse(value.receivedAt)) ||
+              (value.updatedAt !== undefined && !Number.isFinite(Date.parse(value.updatedAt)))) throw Error('Invalid stored receipt');
           entries.push(value);
         } catch { invalidFiles.push(name); }
       }
@@ -68,7 +88,10 @@ export function createFeedbackStore(inbox) {
       return serialized(async () => {
         const old = await read(id);
         if (!old) throw failure(404, 'Feedback not found');
-        const value = { ...old, status, updatedAt: new Date().toISOString() };
+        if (old.status === status) return old;
+        if (old.report.result === 'pass') throw failure(400, 'A test confirmation is not an issue to triage');
+        const updatedAt = new Date(Math.max(Date.now(), Date.parse(old.updatedAt ?? old.receivedAt) + 1)).toISOString();
+        const value = { ...old, status, updatedAt };
         await atomicJSON(filename(id), value);
         return value;
       });
@@ -109,7 +132,7 @@ function markdownExport(entries) {
     entries.map(entry => `## ${entry.report.id}\n\n` + JSON.stringify(entry, null, 2).split('\n').map(line => `    ${line}`).join('\n')).join('\n\n') + '\n';
 }
 
-/** Only submitServer is exposed by cloudflared. Admin deliberately has a separate listener. */
+/** Only submitServer is exposed by cloudflared. It offers writes and narrow authenticated aggregates, never raw reports. */
 export async function startFeedbackServers({ inbox, token, submitPort = 4318, adminPort = 4319, runtimeFile, limitPerMinute = 200 }) {
   if (typeof token !== 'string' || token.length < 24 || token.length > 256) throw Error('A strong feedback token is required');
   if (submitPort !== 0 && submitPort === adminPort) throw Error('Submission and admin require different ports');
@@ -118,13 +141,20 @@ export async function startFeedbackServers({ inbox, token, submitPort = 4318, ad
   const submitServer = http.createServer(async (req, res) => {
     try {
       const pathname = new URL(req.url, 'http://localhost').pathname;
-      if (req.method === 'OPTIONS' && pathname === '/api/feedback') { res.writeHead(204, cors); res.end(); return; }
+      if (req.method === 'OPTIONS' && ['/api/feedback', '/api/scene-status'].includes(pathname)) { res.writeHead(204, cors); res.end(); return; }
       if (req.method === 'GET' && pathname === '/health') { json(res, 200, { ok: true }); return; }
-      if (req.method !== 'POST' || pathname !== '/api/feedback') throw failure(404, 'Not found');
+      if (req.method !== 'POST' || !['/api/feedback', '/api/scene-status'].includes(pathname)) throw failure(404, 'Not found');
       if (!validToken(req.headers['x-feedback-token'], token)) throw failure(401, 'Invalid test invitation');
       if (Date.now() - windowStart >= 60000) { windowStart = Date.now(); count = 0; }
       if (++count > limitPerMinute) throw failure(429, 'Too many reports; retry later');
       const body = await jsonBody(req);
+      if (pathname === '/api/scene-status') {
+        let query;
+        try { query = parseFeedbackStatusQuery(body); } catch { throw failure(400, 'Invalid scene status query'); }
+        const { entries, invalidFiles } = await store.list();
+        if (invalidFiles.length) throw failure(503, 'Scene status is incomplete; retained reports need inspection');
+        json(res, 200, aggregateFeedbackStatus(entries, query), cors); return;
+      }
       let report;
       try { report = parseFeedbackReport(body); } catch { throw failure(400, 'Invalid feedback report'); }
       const result = await store.put(report);
@@ -154,7 +184,8 @@ export async function startFeedbackServers({ inbox, token, submitPort = 4318, ad
       if (req.method === 'GET' && ['/api/feedback', '/api/export'].includes(url.pathname)) {
         const result = await store.list();
         const status = url.searchParams.get('status');
-        const entries = result.entries.filter(entry => !status || status === 'all' || entry.status === status);
+        const entries = result.entries.filter(entry => (!status || status === 'all' || entry.status === status) &&
+          (!['new', 'triaged'].includes(status) || entry.report.result !== 'pass'));
         if (url.pathname === '/api/export') {
           const markdown = url.searchParams.get('format') === 'markdown';
           res.writeHead(200, { 'Content-Type': markdown ? 'text/markdown; charset=utf-8' : 'application/json; charset=utf-8',

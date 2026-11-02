@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeFeedbackEndpoint, parseFeedbackReceipt, parseFeedbackReport } from './test-feedback';
+import { normalizeFeedbackEndpoint, parseFeedbackReceipt, parseFeedbackReport, parseFeedbackStatusQuery, parseFeedbackTeamStatus } from './test-feedback';
 
 const report = () => ({ schemaVersion: 1, id: 'feedback-test-123', createdAt: '2026-11-02T08:00:00.000Z',
   scene: { id: 'crane', title: '纸鹤', engine: 'crane@1', revision: 'bundled' },
@@ -33,5 +33,27 @@ describe('test feedback wire contract', () => {
     expect(normalizeFeedbackEndpoint('http://127.0.0.1:4318/api/feedback')).toBe('http://127.0.0.1:4318/api/feedback');
     for (const url of ['http://example.com', 'https://user:secret@example.com', 'https://example.com?token=secret', 'https://example.com/#token', 'https://example.com/admin', 'file:///tmp/report', 'http://127.0.0.1.evil.example'])
       expect(() => normalizeFeedbackEndpoint(url)).toThrow();
+  });
+  it('keeps old reports valid and requires versioned issue basis for a pass', () => {
+    const hash = 'a'.repeat(64), basis = 'b'.repeat(64);
+    expect(parseFeedbackReport(report()).result).toBeUndefined();
+    const pass = { ...report(), result: 'pass', reviewToken: basis, scene: { ...report().scene, testingRevision: hash } };
+    expect(parseFeedbackReport(pass).result).toBe('pass');
+    for (const invalid of [{ ...pass, reviewToken: undefined }, { ...pass, scene: report().scene }, { ...pass, result: 'fixed' },
+      { ...pass, scene: { ...pass.scene, testingRevision: 'bundled' } }, { ...pass, reviewToken: '../secret' }])
+      expect(() => parseFeedbackReport(invalid)).toThrow();
+  });
+  it('validates narrow bounded scene queries and aggregate replies without private fields', () => {
+    const identity = { id: 'crane', testingRevision: 'a'.repeat(64) };
+    const query = { schemaVersion: 1, scenes: [identity] };
+    expect(parseFeedbackStatusQuery(query).scenes).toEqual([identity]);
+    for (const value of [{ ...query, scenes: [identity, identity] }, { ...query, scenes: Array.from({ length: 201 }, (_, n) => ({ ...identity, id: 'scene-' + n })) },
+      { ...query, scenes: [{ ...identity, private: true }] }, { ...query, token: 'private' }]) expect(() => parseFeedbackStatusQuery(value)).toThrow();
+    const status = { ...identity, state: 'retest', issueCount: 2, openIssueCount: 1, reviewToken: 'b'.repeat(64), latestFeedbackAt: '2026-11-02T08:00:00.000Z' };
+    const reply = { schemaVersion: 1, generatedAt: '2026-11-02T08:00:00.000Z', scenes: [status] };
+    expect(parseFeedbackTeamStatus(reply).scenes[0].state).toBe('retest');
+    for (const value of [{ ...reply, scenes: [{ ...status, message: 'private' }] }, { ...reply, scenes: [{ ...status, openIssueCount: 3 }] },
+      { ...reply, scenes: [{ ...status, state: 'pending' }] }, { ...reply, scenes: [{ ...status, state: ['retest'] }] },
+      { ...reply, scenes: [status, status] }]) expect(() => parseFeedbackTeamStatus(value)).toThrow();
   });
 });

@@ -22,6 +22,13 @@ async function fixture(t, options = {}) {
   const send = (body = report(), extra = {}) => fetch(submit + '/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Feedback-Token': token, ...extra }, body: JSON.stringify(body) });
   return { directory, runtimeFile, servers, submit, admin, send };
 }
+const revisionA = 'a'.repeat(64), revisionB = 'b'.repeat(64);
+const currentReport = (id, revision = revisionA) => ({ ...report(id), scene: { ...report(id).scene, testingRevision: revision } });
+const query = (revision = revisionA) => ({ schemaVersion: 1, scenes: [{ id: 'crane', testingRevision: revision }] });
+const sceneStatus = async (f, revision = revisionA) => {
+  const response = await fetch(f.submit + '/api/scene-status', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Feedback-Token': token }, body: JSON.stringify(query(revision)) });
+  assert.equal(response.status, 200); return (await response.json()).scenes[0];
+};
 
 test('submission is authenticated, strictly validated and acknowledged only after a receipt file exists', async t => {
   const f = await fixture(t);
@@ -111,4 +118,95 @@ test('receiver token persists outside the inbox and a damaged config is preserve
   await writeFile(config, 'not json');
   await assert.rejects(readOrCreateToken(config));
   assert.equal(await readFile(config, 'utf8'), 'not json');
+});
+
+test('team status follows current issues, fixes, explicit versioned passes and subsequent new issues', async t => {
+  const f = await fixture(t);
+  const none = await sceneStatus(f);
+  assert.equal(none.state, 'unreported'); assert.equal(none.issueCount, 0);
+  await f.send(currentReport('current-issue-001'));
+  assert.equal((await sceneStatus(f)).state, 'reported');
+  assert.equal((await sceneStatus(f, revisionB)).state, 'retest');
+  await f.servers.store.setStatus('current-issue-001', 'fixed');
+  const fixed = await sceneStatus(f);
+  assert.equal(fixed.state, 'retest'); assert.equal(fixed.openIssueCount, 0);
+  const unchanged = await f.servers.store.setStatus('current-issue-001', 'fixed');
+  assert.equal((await sceneStatus(f)).reviewToken, fixed.reviewToken);
+  const pass = { ...currentReport('current-pass-001'), result: 'pass', reviewToken: fixed.reviewToken, message: '本版本测试通过' };
+  assert.equal((await f.send(pass)).status, 201);
+  const verified = await sceneStatus(f);
+  assert.equal(verified.state, 'verified'); assert.equal(verified.reviewToken, fixed.reviewToken);
+  assert.equal(verified.issueCount, 1);
+  const entry = (await f.servers.store.list()).entries.find(e => e.report.id === pass.id);
+  assert.equal(entry.status, 'fixed');
+  assert.deepEqual(await f.servers.store.setStatus('current-issue-001', 'fixed'), unchanged);
+  await f.send(currentReport('current-issue-002'));
+  assert.equal((await sceneStatus(f)).state, 'reported');
+  await f.servers.store.setStatus('current-issue-002', 'fixed');
+  const changed = await sceneStatus(f);
+  assert.equal(changed.state, 'retest'); assert.notEqual(changed.reviewToken, verified.reviewToken);
+  // A queued offline pass is accepted as data, but cannot clear the newer issue basis.
+  assert.equal((await f.send({ ...pass, id: 'old-offline-pass-002' })).status, 201);
+  assert.equal((await sceneStatus(f)).state, 'retest');
+  assert.equal((await f.send({ ...pass, id: 'current-pass-003', reviewToken: changed.reviewToken })).status, 201);
+  assert.equal((await sceneStatus(f)).state, 'verified');
+});
+
+test('legacy feedback and old-version passes require retest without mutating stored diagnostics', async t => {
+  const f = await fixture(t);
+  const legacy = report('legacy-report-001'); await f.send(legacy);
+  assert.equal((await sceneStatus(f)).state, 'retest');
+  const basis = (await sceneStatus(f)).reviewToken;
+  await f.send({ ...currentReport('current-pass-001'), result: 'pass', reviewToken: basis, message: '本版本测试通过' });
+  assert.equal((await sceneStatus(f)).state, 'verified');
+  assert.equal((await sceneStatus(f, revisionB)).state, 'retest');
+  assert.deepEqual((await f.servers.store.list()).entries.find(e => e.report.id === legacy.id).report, legacy);
+});
+
+test('a matching pass cannot close current open issues and reopened fixes invalidate earlier verification', async t => {
+  const f = await fixture(t); await f.send(currentReport('reopen-issue-001'));
+  const open = await sceneStatus(f);
+  const pass = { ...currentReport('while-open-pass-001'), result: 'pass', reviewToken: open.reviewToken, message: '本版本测试通过' };
+  await f.send(pass);
+  assert.equal((await sceneStatus(f)).state, 'reported');
+  const fixed = await f.servers.store.setStatus('reopen-issue-001', 'fixed');
+  const basis = await sceneStatus(f);
+  await f.send({ ...pass, id: 'after-fixed-pass-002', reviewToken: basis.reviewToken });
+  assert.equal((await sceneStatus(f)).state, 'verified');
+  const reopened = await f.servers.store.setStatus('reopen-issue-001', 'triaged');
+  assert.ok(Date.parse(reopened.updatedAt) > Date.parse(fixed.updatedAt));
+  assert.equal((await sceneStatus(f)).state, 'reported');
+  const refixed = await f.servers.store.setStatus('reopen-issue-001', 'fixed');
+  assert.ok(Date.parse(refixed.updatedAt) > Date.parse(reopened.updatedAt));
+  const needsRetest = await sceneStatus(f);
+  assert.equal(needsRetest.state, 'retest');
+  assert.notEqual(needsRetest.reviewToken, basis.reviewToken);
+});
+
+test('public status query is authenticated and returns only aggregate metadata', async t => {
+  const f = await fixture(t); await f.send(currentReport('private-report-001'));
+  const request = (body, auth = token) => fetch(f.submit + '/api/scene-status', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Feedback-Token': auth }, body: JSON.stringify(body) });
+  assert.equal((await request(query(), 'wrong')).status, 401);
+  assert.equal((await request({ ...query(), private: true })).status, 400);
+  assert.equal((await fetch(f.submit + '/api/scene-status', { method: 'OPTIONS' })).status, 204);
+  const response = await request(query()), raw = await response.text();
+  assert.equal(response.status, 200);
+  assert.doesNotMatch(raw, /private-report-001|第二步|buildNumber|message|receivedAt/i);
+  assert.equal(raw.includes(token), false);
+  const value = JSON.parse(raw); assert.equal(value.scenes[0].state, 'reported');
+  assert.deepEqual(Object.keys(value.scenes[0]).sort(), ['id','issueCount','latestFeedbackAt','openIssueCount','reviewToken','state','testingRevision']);
+  assert.equal((await fetch(f.submit + '/api/feedback', { headers: { 'X-Feedback-Token': token } })).status, 404);
+});
+
+test('damaged inbox data prevents false unreported status and pass rows stay out of pending issue exports', async t => {
+  const f = await fixture(t);
+  const basis = (await sceneStatus(f)).reviewToken;
+  await f.send({ ...currentReport('healthy-pass-001'), result: 'pass', reviewToken: basis, message: '本版本测试通过' });
+  const pending = await (await fetch(f.admin + '/api/export?status=new')).json();
+  assert.deepEqual(pending, []);
+  assert.equal((await sceneStatus(f)).state, 'verified');
+  await writeFile(path.join(f.directory, 'inbox', 'c'.repeat(64) + '.json'), 'damaged');
+  const response = await fetch(f.submit + '/api/scene-status', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Feedback-Token': token }, body: JSON.stringify(query()) });
+  assert.equal(response.status, 503);
+  assert.doesNotMatch(await response.text(), /unreported|healthy-pass-001/);
 });

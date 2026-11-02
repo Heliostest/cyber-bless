@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { browserTestFeedbackHost, sendTestFeedback, TEST_FEEDBACK_KEY } from './test-feedback';
+import { browserTestFeedbackHost, sendTestFeedback, readTestFeedbackStatus, TEST_FEEDBACK_KEY } from './test-feedback';
 
 const report = {
   schemaVersion: 1, id: 'transport-report-1', createdAt: '2026-11-02T08:00:00.000Z',
@@ -39,5 +39,16 @@ describe('internal feedback host transport', () => {
     expect(data.get('cyber-bless:personal:v1')).toBe('game-save');
     vi.stubGlobal('localStorage', { setItem: () => { throw Error('full'); } });
     await expect(host.write('pending')).rejects.toThrow('full');
+  });
+  it('reads only the narrow authenticated summary for the requested scene versions', async () => {
+    const query = { schemaVersion: 1, scenes: [{ id: 'crane', testingRevision: 'a'.repeat(64) }] };
+    const fetch = vi.fn(async () => new Response('{}', { status: 200 })); vi.stubGlobal('fetch', fetch);
+    await readTestFeedbackStatus('https://feedback.example/api/feedback', 'invite', JSON.stringify(query));
+    expect(fetch).toHaveBeenCalledWith('https://feedback.example/api/scene-status', expect.objectContaining({
+      method: 'POST', body: JSON.stringify(query), credentials: 'omit', redirect: 'error',
+      headers: { 'Content-Type': 'application/json', 'X-Feedback-Token': 'invite' },
+    }));
+    await expect(readTestFeedbackStatus('https://feedback.example', 'invite', JSON.stringify({ ...query, state: { wishes: ['private'] } }))).rejects.toThrow();
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

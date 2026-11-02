@@ -35,6 +35,7 @@ export default function BlessingDom({
   readTestFeedback,
   writeTestFeedback,
   submitTestFeedback,
+  fetchTestFeedbackStatus,
   navigationRequest,
   onNavigationConsumed,
   dom: _dom,
@@ -56,6 +57,7 @@ export default function BlessingDom({
   readTestFeedback(): Promise<string | null>;
   writeTestFeedback(raw: string): Promise<void>;
   submitTestFeedback(endpoint: string, token: string, reportJSON: string): Promise<string>;
+  fetchTestFeedbackStatus(endpoint: string, token: string, queryJSON: string): Promise<string>;
   navigationRequest?: WidgetNavigationRequest;
   onNavigationConsumed(requestId: number): Promise<void>;
   dom?: import("expo/dom").DOMProps;
@@ -73,12 +75,13 @@ export default function BlessingDom({
   actions.haptic = haptic;
   actions.shareImage = shareImage;
   actions.shareLink = shareLink;
-  const feedbackActions = useMemo(() => ({ readTestFeedback, writeTestFeedback, submitTestFeedback }), []);
-  Object.assign(feedbackActions, { readTestFeedback, writeTestFeedback, submitTestFeedback });
+  const feedbackActions = useMemo(() => ({ readTestFeedback, writeTestFeedback, submitTestFeedback, fetchTestFeedbackStatus }), []);
+  Object.assign(feedbackActions, { readTestFeedback, writeTestFeedback, submitTestFeedback, fetchTestFeedbackStatus });
   const feedbackHost = useMemo(() => ({
     read: () => feedbackActions.readTestFeedback(),
     write: (raw: string) => feedbackActions.writeTestFeedback(raw),
     send: (endpoint: string, token: string, raw: string) => feedbackActions.submitTestFeedback(endpoint, token, raw),
+    readStatus: (endpoint: string, token: string, raw: string) => feedbackActions.fetchTestFeedbackStatus(endpoint, token, raw),
     info: feedbackInfo,
   }), [feedbackActions]);
   feedbackHost.info = feedbackInfo;

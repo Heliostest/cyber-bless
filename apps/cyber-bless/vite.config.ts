@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { prepareAppAssets } from "../../scripts/prepare-app-assets.mjs";
+import { sceneTestingRevisionsPlugin } from '../../scripts/scene-testing-revisions.mjs';
 
 await prepareAppAssets();
 const base = process.env.VITE_BASE_PATH || '/';
@@ -16,7 +17,7 @@ export default defineConfig({
       share: path.resolve(import.meta.dirname, 'share.html'),
     } },
   },
-  plugins: [react()],
+  plugins: [react(), sceneTestingRevisionsPlugin()],
   server: {
     host: true,
   },

@@ -6,7 +6,7 @@ export function quickTunnelUrl(text) {
   return text.match(/https:\/\/(?!api\.)([a-z0-9-]+)\.trycloudflare\.com\b/i)?.[0];
 }
 
-/** Intentionally never accepts an arbitrary local URL: only the submit-only port is exposed. */
+/** Only the feedback intake/authenticated-summary port is exposed, never the local dashboard. */
 export async function startQuickTunnel({ port = 4318, runtimeFile, binary = process.env.CLOUDFLARED ||
   (process.platform === 'win32' ? 'C:\\Program Files (x86)\\cloudflared\\cloudflared.exe' : 'cloudflared') }) {
   const local = `http://127.0.0.1:${port}`;

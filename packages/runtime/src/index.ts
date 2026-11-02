@@ -2,7 +2,7 @@ import { productError } from '@wbr/i18n/errors';
 import { localePreferenceFromSave, type LocalePreference } from '@wbr/i18n/locales';
 import { reduce, restore, type Action, type State } from "@wbr/core";
 import type { TestFeedbackHost } from './test-feedback';
-export { browserTestFeedbackHost, sendTestFeedback, TEST_FEEDBACK_KEY, type TestFeedbackHost, type TestFeedbackInfo } from './test-feedback';
+export { browserTestFeedbackHost, sendTestFeedback, readTestFeedbackStatus, TEST_FEEDBACK_KEY, type TestFeedbackHost, type TestFeedbackInfo } from './test-feedback';
 export { createProjectedStorage } from './projected-storage';
 /**
  * The one save: the whole State (keepsakes included) as JSON, written on every

@@ -1,8 +1,12 @@
 import type { TestFeedbackHost } from '@wbr/runtime';
+import { sha256 } from '@wbr/content';
 import { FEEDBACK_MAX_MESSAGE_LENGTH, normalizeFeedbackEndpoint, parseFeedbackReceipt, parseFeedbackReport,
-  type FeedbackConnection, type FeedbackReceipt, type FeedbackReport } from '@wbr/shared/test-feedback';
+  parseFeedbackTeamStatus, parseFeedbackStatusQuery,
+  type FeedbackConnection, type FeedbackReceipt, type FeedbackReport, type FeedbackTeamStatus, type FeedbackSceneIdentity } from '@wbr/shared/test-feedback';
 
 export type TestFeedbackError = 'read' | 'write' | 'send' | 'receipt' | 'connection' | 'full' | 'invalid';
+export type FeedbackStatusCache = { targetKey: string; data: FeedbackTeamStatus; fetchedAt: string };
+const targetKey = (value: FeedbackConnection) => sha256(new TextEncoder().encode(JSON.stringify([value.endpoint, value.token])).buffer);
 type SavedFeedback = {
   version: 1;
   connection: FeedbackConnection;
@@ -10,12 +14,15 @@ type SavedFeedback = {
   pending: FeedbackReport[];
   lastReceipt?: FeedbackReceipt;
   receipts?: Record<string, FeedbackReceipt>;
+  teamStatus?: FeedbackStatusCache;
 };
 export type TestFeedbackSnapshot = Omit<SavedFeedback, 'version'> & {
   status: 'loading' | 'ready' | 'storage-error';
   saving: boolean;
   sending?: string;
   error?: TestFeedbackError;
+  teamStatusState?: 'idle' | 'loading' | 'fresh' | 'stale' | 'error' | 'unavailable';
+  teamStatusError?: boolean;
 };
 const MAX_PENDING = 100;
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
@@ -35,7 +42,7 @@ function draft(value: unknown): FeedbackReport {
 function restore(raw: string | null): SavedFeedback {
   if (raw === null) return { version: 1, connection: { endpoint: '', token: '' }, drafts: {}, pending: [], receipts: {} };
   const value: unknown = JSON.parse(raw);
-  if (!object(value) || value.version !== 1 || Object.keys(value).some(key => !['version', 'connection', 'drafts', 'pending', 'lastReceipt', 'receipts'].includes(key)) ||
+  if (!object(value) || value.version !== 1 || Object.keys(value).some(key => !['version', 'connection', 'drafts', 'pending', 'lastReceipt', 'receipts', 'teamStatus'].includes(key)) ||
       !object(value.drafts) || Object.keys(value.drafts).length > 200 || !Array.isArray(value.pending) || value.pending.length > MAX_PENDING)
     throw Error('store');
   const drafts: Record<string, FeedbackReport> = {};
@@ -52,14 +59,22 @@ function restore(raw: string | null): SavedFeedback {
     if (receipt.id !== id) throw Error('receipt id');
     return [id, receipt];
   }));
-  return { version: 1, connection: connection(value.connection), drafts, pending, receipts,
+  let teamStatus: FeedbackStatusCache | undefined;
+  try {
+    const cache = value.teamStatus;
+    if (object(cache) && typeof cache.targetKey === 'string' && /^[a-f0-9]{64}$/.test(cache.targetKey) &&
+        typeof cache.fetchedAt === 'string' && Number.isFinite(Date.parse(cache.fetchedAt)))
+      teamStatus = { targetKey: cache.targetKey, fetchedAt: cache.fetchedAt, data: parseFeedbackTeamStatus(cache.data) };
+  } catch { /* Derived status caches never make durable pending reports unreadable. */ }
+  return { version: 1, connection: connection(value.connection), drafts, pending, receipts, ...(teamStatus ? { teamStatus } : {}),
     ...(value.lastReceipt === undefined ? {} : { lastReceipt: parseFeedbackReceipt(value.lastReceipt) }) };
 }
 
 /** A separate durable outbox. It never reads or writes the player's game save. */
-export function createTestFeedbackClient(host: TestFeedbackHost, options: { retryDelayMs?: number; sendTimeoutMs?: number } = {}) {
+export function createTestFeedbackClient(host: TestFeedbackHost, options: { retryDelayMs?: number; sendTimeoutMs?: number;
+  statusScenes?: readonly FeedbackSceneIdentity[] | (() => readonly FeedbackSceneIdentity[]) } = {}) {
   let saved = restore(null);
-  let snapshot: TestFeedbackSnapshot = { ...saved, status: 'loading', saving: false };
+  let snapshot: TestFeedbackSnapshot = { ...saved, status: 'loading', saving: false, teamStatusState: 'idle' };
   let loaded = false, disposed = false, active = false;
   let revision = 0, durableRevision = -1, writes = 0, retries = 0;
   let writing: Promise<void> = Promise.resolve();
@@ -68,6 +83,8 @@ export function createTestFeedbackClient(host: TestFeedbackHost, options: { retr
   let flushAgain = false;
   let retryTimer: ReturnType<typeof setTimeout> | undefined;
   let acknowledging: { report: FeedbackReport; previous: SavedFeedback } | undefined;
+  let statusGeneration = 0;
+  let statusRequest: { key: string; promise: Promise<void> } | undefined;
   const listeners = new Set<() => void>();
   const publish = (patch: Partial<TestFeedbackSnapshot> = {}) => {
     let visible = saved;
@@ -81,7 +98,8 @@ export function createTestFeedbackClient(host: TestFeedbackHost, options: { retr
       visible = { ...saved, drafts, receipts, lastReceipt: previous.lastReceipt,
         pending: saved.pending.some(candidate => candidate.id === report.id) ? saved.pending : [report, ...saved.pending] };
     }
-    snapshot = { ...snapshot, ...visible, ...patch, saving: writes > 0 };
+    const cache = visible.teamStatus?.targetKey === targetKey(saved.connection) ? visible.teamStatus : undefined;
+    snapshot = { ...snapshot, ...visible, ...patch, teamStatus: cache, saving: writes > 0 };
     for (const listener of listeners) listener();
   };
   const cancelRetry = () => { if (retryTimer !== undefined) clearTimeout(retryTimer); retryTimer = undefined; };
@@ -118,7 +136,7 @@ export function createTestFeedbackClient(host: TestFeedbackHost, options: { retr
         const restored = restore(await host.read());
         if (disposed) return false;
         saved = restored; loaded = true; durableRevision = revision;
-        publish({ status: 'ready', error: undefined });
+        publish({ status: 'ready', error: undefined, teamStatusState: saved.teamStatus?.targetKey === targetKey(saved.connection) ? 'stale' : 'idle' });
         return true;
       } catch {
         if (!disposed) publish({ status: 'storage-error', error: 'read' });
@@ -131,6 +149,54 @@ export function createTestFeedbackClient(host: TestFeedbackHost, options: { retr
     if (disposed || !loaded) return false;
     saved = next; revision++; publish({ error: undefined });
     return persist();
+  }
+  async function refreshTeamStatus(force = false): Promise<void> {
+    if (!active || disposed) return;
+    if (!(await load()) || disposed || !active) return;
+    const target = { ...saved.connection };
+    const identities = typeof options.statusScenes === 'function' ? options.statusScenes() : options.statusScenes ?? [];
+    if (!host.readStatus || !target.endpoint || !target.token || !identities.length) {
+      publish({ teamStatusState: 'unavailable', teamStatusError: false }); return;
+    }
+    const targetIdentity = targetKey(target);
+    let query;
+    try { query = parseFeedbackStatusQuery({ schemaVersion: 1, scenes: identities }); }
+    catch { publish({ teamStatusState: snapshot.teamStatus ? 'stale' : 'error', teamStatusError: true }); return; }
+    const queryJSON = JSON.stringify(query);
+    const requestKey = targetIdentity + queryJSON;
+    if (!force && statusRequest?.key === requestKey) return statusRequest.promise;
+    const generation = ++statusGeneration;
+    publish({ teamStatusState: 'loading', teamStatusError: false });
+    const promise = (async () => {
+      let timeout: ReturnType<typeof setTimeout> | undefined;
+      try {
+        const raw = await Promise.race([Promise.resolve().then(() => host.readStatus!(target.endpoint, target.token, queryJSON)),
+          new Promise<never>((_, reject) => { timeout = setTimeout(() => reject(Error('timeout')), options.sendTimeoutMs ?? 15000); })]);
+        const data = parseFeedbackTeamStatus(JSON.parse(raw));
+        if (data.scenes.length !== query.scenes.length || query.scenes.some(scene => !data.scenes.some(row => row.id === scene.id && row.testingRevision === scene.testingRevision)))
+          throw Error('Status reply does not match requested scenes');
+        if (disposed || !active || generation !== statusGeneration || targetKey(saved.connection) !== targetIdentity) return;
+        const cache = { targetKey: targetIdentity, data, fetchedAt: new Date().toISOString() };
+        // Store independently of delivery acknowledgement: failure keeps the last
+        // durable cache and never rewrites a report or clears a pending item.
+        const previous = saved.teamStatus;
+        saved = { ...saved, teamStatus: cache }; revision++;
+        const stored = await persist();
+        if (disposed || generation !== statusGeneration || targetKey(saved.connection) !== targetIdentity) return;
+        if (!stored && saved.teamStatus === cache) {
+          saved = { ...saved, teamStatus: previous }; revision++;
+        }
+        publish({ teamStatusState: stored ? 'fresh' : (snapshot.teamStatus ? 'stale' : 'error'), teamStatusError: !stored });
+      } catch {
+        if (!disposed && active && generation === statusGeneration && targetKey(saved.connection) === targetIdentity)
+          publish({ teamStatusState: snapshot.teamStatus ? 'stale' : 'error', teamStatusError: true });
+      } finally {
+        if (timeout !== undefined) clearTimeout(timeout);
+        if (statusRequest?.key === requestKey && generation === statusGeneration) statusRequest = undefined;
+      }
+    })();
+    statusRequest = { key: requestKey, promise };
+    return promise;
   }
   async function send(report: FeedbackReport): Promise<FeedbackReceipt> {
     const target = { ...saved.connection };
@@ -200,6 +266,8 @@ export function createTestFeedbackClient(host: TestFeedbackHost, options: { retr
           }
           acknowledging = undefined;
           retries = 0; publish({ error: undefined });
+          // A read started before this ACK cannot certify the post-upload state.
+          void refreshTeamStatus(true);
           if (!retryFailedAfterSuccess) { retryFailedAfterSuccess = true; flushAgain = true; }
         } catch (error) {
           if (!disposed) publish({ error: error instanceof Error && error.message === 'receipt' ? 'receipt' : 'send' });
@@ -231,8 +299,10 @@ export function createTestFeedbackClient(host: TestFeedbackHost, options: { retr
       if (!loaded || disposed) return false;
       let normalized: FeedbackConnection;
       try { normalized = connection(value); } catch { publish({ error: 'connection' }); return false; }
-      const success = await change({ ...saved, connection: normalized });
-      if (success) { retries = 0; cancelRetry(); void flush(); }
+      const changed = targetKey(saved.connection) !== targetKey(normalized);
+      if (changed) { statusGeneration++; publish({ teamStatusState: 'idle', teamStatusError: false }); }
+      const success = await change({ ...saved, connection: normalized, ...(changed ? { teamStatus: undefined } : {}) });
+      if (success) { retries = 0; cancelRetry(); void flush(); void refreshTeamStatus(); }
       return success;
     },
     async enqueue(report: FeedbackReport): Promise<boolean> {
@@ -247,12 +317,13 @@ export function createTestFeedbackClient(host: TestFeedbackHost, options: { retr
       return success;
     },
     flush,
+    refreshTeamStatus,
     setActive(value: boolean) {
       active = value;
-      if (!active) cancelRetry();
-      else if (!disposed) { retries = 0; void flush(); }
+      if (!active) { cancelRetry(); statusGeneration++; statusRequest = undefined; }
+      else if (!disposed) { retries = 0; void flush(); void refreshTeamStatus(); }
     },
-    dispose() { disposed = true; active = false; cancelRetry(); listeners.clear(); },
+    dispose() { disposed = true; active = false; statusGeneration++; cancelRetry(); listeners.clear(); },
   };
 }
 export type TestFeedbackClient = ReturnType<typeof createTestFeedbackClient>;

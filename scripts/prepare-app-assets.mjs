@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { bundledWoodfishModel, prepareBundledContent } from "./publish-scene-content.mjs";
 import { SCENE_ICON_IDS } from "../packages/app/src/scene-icon-assets.ts";
+import { generateSceneTestingRevisions } from './scene-testing-revisions.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const assetFiles = [
   "reference-ui/wishes.png",
@@ -23,6 +24,7 @@ export const assetFiles = [
 ];
 export async function prepareAppAssets() {
   await prepareBundledContent();
+  await generateSceneTestingRevisions();
   const assets = [];
   const destinations = ["apps/mobile-expo/public", "apps/cyber-bless/public"];
   // Both directories contain generated output only, never authoring inputs.

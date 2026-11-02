@@ -24,7 +24,7 @@ import { SafeAreaBackground } from './SafeAreaBackground';
 import { shareImage } from './share-image';
 import { shareLink } from './share-link';
 import { detectInternalToolsEnabled } from './internal-tools';
-import { readTestFeedback, writeTestFeedback, submitTestFeedback, testFeedbackInfo } from './test-feedback';
+import { readTestFeedback, writeTestFeedback, submitTestFeedback, fetchTestFeedbackStatus, testFeedbackInfo } from './test-feedback';
 import {
   readContentHistory,
   readSceneAsset,
@@ -190,6 +190,7 @@ function Shell() {
         readTestFeedback={readTestFeedback}
         writeTestFeedback={writeTestFeedback}
         submitTestFeedback={submitTestFeedback}
+        fetchTestFeedbackStatus={fetchTestFeedbackStatus}
         writeSave={writeSave}
         haptic={haptic}
         shareImage={shareImage}

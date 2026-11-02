@@ -69,7 +69,7 @@ export function useSceneLibrary() {
  */
 export function useOpenRitual() {
     const { state, dispatch, go } = useApp();
-    return (ritual: RitualId, wishId?: string) => {
+    return (ritual: RitualId, wishId?: string, options?: { sound?: 'navigate' | false }) => {
         if (!isSceneVisibleInApp({ id: ritual }))
             return;
         const entry = ritualSceneEntry(builtInScenes, ritual)!;
@@ -79,12 +79,16 @@ export function useOpenRitual() {
             dispatch({ type: "scene.progress", id: entry.id, progress: 0 });
         // 再次体验 is a replay — it never settles 今日's keepsake, even when the
         // scene comes up as the day's main walk (a 还愿 walk never does either).
-        go({ page: "scene", id: entry.id, entry, wishId, replay: !wishId });
+        const route = { page: 'scene' as const, id: entry.id, entry, wishId, replay: !wishId };
+        if (options?.sound) go(route, { sound: options.sound });
+        else go(route);
     };
 }
 /** What a walk is for. The daily set resumes a half-walked scene; each other
  * flag makes it a fresh scene (progress to 0). */
 export type SceneVisit = {
+    /** Only explicit App UI entries request navigation sound; widget restores stay quiet. */
+    sound?: 'navigate' | false;
     /** A direct wish-picker entry requires the scene to have been completed once. */
     wishPicker?: boolean;
     opening?: boolean;
@@ -135,8 +139,8 @@ export function useOpenScene() {
         if (progress > 0 &&
             restart)
             dispatch({ type: "scene.progress", id: entry.id, progress: 0 });
-        go({
-            page: "scene",
+        const route = {
+            page: "scene" as const,
             id: entry.id,
             entry,
             daily: visit?.daily,
@@ -144,8 +148,10 @@ export function useOpenScene() {
             wishId: visit?.wishId,
             replay: visit?.replay,
             opening: visit?.opening,
-            ...(visit?.feedbackSession ? { feedbackSession: true } : {}),
-        });
+            ...(visit?.feedbackSession ? { feedbackSession: true as const } : {}),
+        };
+        if (visit?.sound) go(route, { sound: visit.sound });
+        else go(route);
     };
 }
 export function SceneLibraryProvider({ children }: {

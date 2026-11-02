@@ -14,7 +14,7 @@ export function dismissFeedbackMenu(scope?: HTMLElement | null): boolean {
 export function FeedbackControls({ sceneId }: {
     sceneId?: string;
 } = {}) {
-    const { state, dispatch, canHaptic } = useApp();
+    const { state, dispatch, canHaptic, uiSound } = useApp();
     const optionsId = useId();
     const shell = useRef<HTMLDivElement>(null), trigger = useRef<HTMLButtonElement>(null);
     const [open, setOpen] = useState(false), [present, setPresent] = useState(false);
@@ -24,10 +24,13 @@ export function FeedbackControls({ sceneId }: {
     const [systemReduced, setSystemReduced] = useState(false);
     const reducedMotion = state.settings.reducedMotion || systemReduced;
     const close = useCallback(() => {
+        if (!openNow.current)
+            return;
         openNow.current = false;
+        uiSound?.('close');
         setOpen(false);
         trigger.current?.focus({ preventScroll: true });
-    }, []);
+    }, [uiSound]);
     const finishClosing = useCallback(() => {
         if (openNow.current)
             return;
@@ -163,6 +166,7 @@ export function FeedbackControls({ sceneId }: {
                 close();
             else {
                 openNow.current = true;
+                uiSound?.('open');
                 presentNow.current = true;
                 setPresent(true);
                 setOpen(true);

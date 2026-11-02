@@ -182,7 +182,7 @@ describe("a line written in a scene", () => {
         (b) => b.textContent === "去看看",
       )!,
     );
-    expect(s.go).toHaveBeenCalledWith({ page: "wish", id: kept.id });
+    expect(s.go).toHaveBeenCalledWith({ page: "wish", id: kept.id }, { sound: 'navigate' });
 
     // Saved on the device, for 心愿 to list.
     await act(async () => { await s.store.flush(); });

@@ -132,7 +132,7 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
     feedbackSession?: boolean;
     failed(error?: unknown): void;
 }) {
-    const { state, dispatch, active, feedback, prepareFeedback, go, launchReward, announce, back, internalToolsEnabled, } = useApp();
+    const { state, dispatch, active, feedback, prepareFeedback, go, launchReward, announce, back, internalToolsEnabled, uiSound, } = useApp();
     const [reporterOpen, setReporterOpen] = useState(false);
     const feedbackEnabled = !!feedbackSession && !!internalToolsEnabled;
     const sceneActive = active && !(feedbackEnabled && reporterOpen);
@@ -165,6 +165,7 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
     const keptWishRef = useRef<string | undefined>(keptWish);
     const dailyKeepsake = useRef<string | undefined>(daily ? dailyCollectibleId(daily, entry.id) : undefined);
     const [wishWriting, setWishWriting] = useState(false);
+    const wishWritingNow = useRef(false), discardedNow = useRef(false);
     const postWishSubmitted = useRef(false);
     /** A vessel 许愿 walk holds its box line for the keep-or-not choice. */
     const [heldWish, setHeldWish] = useState<string | undefined>(() => draft?.line);
@@ -244,7 +245,10 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
     const favoriteChip = (<FavoriteChip id={entry.id} favorite={!!record?.favorite}/>);
     const canRecordWish = progress >= steps && !!intention?.optionalWish &&
         !returnWish && !keptWish && !heldWish && !discarded;
-    const prayerButton = canRecordWish ? <button type="button" className="button secondary scene-wish-invite" disabled={!active} aria-expanded={wishWriting} onClick={() => setWishWriting(true)}>{tr("\u7948\u613F")}</button> : null;
+    const prayerButton = canRecordWish ? <button type="button" className="button secondary scene-wish-invite" disabled={!active} aria-expanded={wishWriting} onClick={() => {
+        if (wishWritingNow.current) return;
+        wishWritingNow.current = true; uiSound?.('open'); setWishWriting(true);
+    }}>{tr("\u7948\u613F")}</button> : null;
     const completionActions = (completion: ReactNode) => (<div className="scene-completion-actions">
       {favoriteChip}
       {completion}
@@ -318,6 +322,9 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
     };
     /** The not-keep choice of a 许愿 vessel: the line goes, the moment stays. */
     const discardHeld = () => {
+        if (discardedNow.current || !heldWish || keptWish) return;
+        discardedNow.current = true;
+        uiSound?.('close');
         setDiscarded(true);
         announce(SCENE_DISCARDED_COPY);
         if (vessel)
@@ -330,6 +337,8 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
         if (!wish || !dispatch(wish))
             return;
         postWishSubmitted.current = true;
+        wishWritingNow.current = false;
+        setWishWriting(false);
         keptWishRef.current = wish.id;
         setKeptWish(wish.id);
         setHeldWish(undefined);
@@ -364,7 +373,7 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
       {progress >= steps && (<div className="scene-done-row">
           {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} favorite={favoriteChip} prayer={prayerButton}/> : returnedFor ? (<>
               {/* The legacy visit's note is saved; fulfillment is a separate kindness record. */}
-              {completionActions(<button type="button" className="button primary" onClick={() => go({ page: "wish", id: returnedFor })}>
+              {completionActions(<button type="button" className="button primary" onClick={() => go({ page: "wish", id: returnedFor }, { sound: 'navigate' })}>
                 {tr(SCENE_RETURN_CTA)}
               </button>)}
             </>) : dailyGranted ? (<>
@@ -377,7 +386,7 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
             </>) : vesselSpent ? (<>
               {discarded ? (<>
                   <p className="scene-done">{tr(SCENE_DISCARDED_COPY)}</p>
-                  {completionActions(<button type="button" className="button primary" onClick={back}>
+                  {completionActions(<button type="button" className="button primary" onClick={() => back({ sound: true })}>
                     {tr(SCENE_DONE_CTA)}
                   </button>)}
                 </>) : heldWish ? (<>
@@ -396,7 +405,7 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
                     {tr(SCENE_DONE_WISH_CTA)}
                   </button>)}
                 </>) : (<>
-                  {completionActions(<button type="button" className="button primary" onClick={back}>
+                  {completionActions(<button type="button" className="button primary" onClick={() => back({ sound: true })}>
                     {tr(SCENE_DONE_CTA)}
                   </button>)}
                 </>)}
@@ -405,19 +414,22 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
                 {tr(SCENE_DONE_WISH_CTA)}
               </button>)}
             </>) : (<>
-              {completionActions(<button type="button" className="button primary" onClick={back}>
+              {completionActions(<button type="button" className="button primary" onClick={() => back({ sound: true })}>
                 {tr(SCENE_DONE_CTA)}
               </button>)}
             </>)}
           <SceneShareButton sceneId={entry.id} title={localizedTitle(entry)}/>
         </div>)}
-      {canRecordWish && wishWriting && (<OptionalSceneWish active={active} onSubmit={saveCompletedWish} onClose={() => setWishWriting(false)}/>)}
+      {canRecordWish && wishWriting && (<OptionalSceneWish active={active} onSubmit={saveCompletedWish} onClose={() => {
+          if (!wishWritingNow.current) return;
+          wishWritingNow.current = false; uiSound?.('close'); setWishWriting(false);
+      }}/>)}
       {entry.engine !== "woodfish@1" && (
         // Present from the start (empty), so the confirmation is announced.
         <p className="scene-wish-saved" role="status">
           {keptWish && (<>
               {tr(WISH_WRITE_COPY.saved)}
-              {!opening && <button className="text-button" onClick={() => go({ page: "wish", id: keptWish })}>{tr("\u53BB\u770B\u770B")}</button>}
+              {!opening && <button className="text-button" onClick={() => go({ page: "wish", id: keptWish }, { sound: 'navigate' })}>{tr("\u53BB\u770B\u770B")}</button>}
             </>)}
         </p>)}
       {(progress < steps || pendingVesselChoice) && (<div className="scene-actions">{favoriteChip}</div>)}
@@ -489,7 +501,7 @@ export function SceneExperience({ entry: offeredEntry, wishId, daily, vessel, re
           </p>
           <button className="button secondary" onClick={() => {
                 cancel.current?.abort();
-                back();
+                back({ sound: true });
             }}>{tr("\u53D6\u6D88\u5E76\u8FD4\u56DE")}</button>
         </div>)}
     </section>);

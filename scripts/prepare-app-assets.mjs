@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { bundledWoodfishModel, prepareBundledContent } from "./publish-scene-content.mjs";
 import { SCENE_ICON_IDS } from "../packages/app/src/scene-icon-assets.ts";
+import { UI_SOUND_FILES } from "../packages/app/src/ui-sound-assets.ts";
 import { generateSceneTestingRevisions } from './scene-testing-revisions.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const assetFiles = [
@@ -15,6 +16,8 @@ export const assetFiles = [
   "fonts/nunito-latin-700-normal.woff2",
   "fonts/nunito-latin-900-normal.woff2",
   "fonts/nunito-OFL.txt",
+  ...Object.values(UI_SOUND_FILES),
+  "ui-sounds/License.txt",
   bundledWoodfishModel,
   "environments/kloppenheim-06-sky-1k.hdr",
   "environments/kloppenheim-02-night-1k.hdr",

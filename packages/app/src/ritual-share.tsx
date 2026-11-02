@@ -2,7 +2,7 @@ import { getLocale, translate as tr } from '@wbr/i18n';
 import { APP_STORE_URL, buildSceneShareUrl, isPublicShareBaseUrl } from '@wbr/core/scene-share';
 import { getSceneVisualPreference } from '@wbr/core/visual-style';
 import { captureSceneImage } from '@wbr/scene-runtime';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Icon } from './art';
 import { useApp } from './context';
 import { createRitualShareCard, shareImageInBrowser, type PreparedShareImage } from './ritual-share-image';
@@ -21,10 +21,12 @@ export function SceneShareButton(props: { sceneId: string; title: string; snapsh
 function ShareButton({ sceneId, title, snapshot, className = '' }: {
   sceneId: string; title: string; snapshot?: string; className?: string;
 }) {
-  const { active, state, shareImage, shareLink, publicShareBaseUrl } = useApp();
+  const { active, state, shareImage, shareLink, publicShareBaseUrl, uiSound } = useApp();
   const trigger = useRef<HTMLButtonElement>(null), dialog = useRef<HTMLDialogElement>(null);
   const headingId = useId(), noteId = useId();
   const [open, setOpen] = useState(false);
+  const openNow = useRef(false), latest = useRef({ active, uiSound, soundEnabled: state?.settings.sound !== false });
+  latest.current = { active, uiSound, soundEnabled: state?.settings.sound !== false };
   const [image, setImage] = useState<PreparedShareImage>();
   const [preparing, setPreparing] = useState(false), [sharing, setSharing] = useState(false);
   const [status, setStatus] = useState('');
@@ -33,13 +35,33 @@ function ShareButton({ sceneId, title, snapshot, className = '' }: {
   const shareUrl = publicShareBaseUrl && isPublicShareBaseUrl(publicShareBaseUrl) ? buildSceneShareUrl(publicShareBaseUrl, details) : undefined;
   const previewUrl = shareUrl ?? (!shareImage && ['http:', 'https:'].includes(window.location.protocol)
     ? buildSceneShareUrl(new URL('.', window.location.href).href, details) : undefined);
-  const generation = useRef(0), sharingNow = useRef(false);
-  const close = () => {
+  const generation = useRef(0), audioGeneration = useRef(0), sharingNow = useRef(false);
+  const close = useCallback(() => {
+    if (!openNow.current) return;
+    openNow.current = false;
+    latest.current.uiSound?.('close');
     generation.current++;
-    setOpen(false); setImage(undefined); setPreparing(false); setStatus(''); setLinkStatus(''); setManualCopy(false);
+    sharingNow.current = false;
+    setOpen(false); setImage(undefined); setPreparing(false); setSharing(false); setStatus(''); setLinkStatus(''); setManualCopy(false);
     trigger.current?.focus();
-  };
-  useEffect(() => () => { generation.current++; }, []);
+  }, []);
+  const currentRequest = (request: number) => openNow.current && generation.current === request;
+  useEffect(() => () => { openNow.current = false; generation.current++; }, []);
+  useEffect(() => {
+    if (active && state?.settings.sound !== false) return;
+    // UI work may finish normally, but its audio cannot cross a quiet lifecycle boundary.
+    audioGeneration.current++;
+  }, [active, state?.settings.sound]);
+  useEffect(() => {
+    const blur = () => { audioGeneration.current++; };
+    const visibility = () => { if (document.hidden) blur(); };
+    window.addEventListener('blur', blur);
+    document.addEventListener('visibilitychange', visibility);
+    return () => {
+      window.removeEventListener('blur', blur);
+      document.removeEventListener('visibilitychange', visibility);
+    };
+  }, []);
   useEffect(() => {
     if (!open) return;
     dialog.current?.showModal();
@@ -50,9 +72,12 @@ function ShareButton({ sceneId, title, snapshot, className = '' }: {
     };
     document.addEventListener(dismissEvent, dismiss);
     return () => document.removeEventListener(dismissEvent, dismiss);
-  }, [open]);
+  }, [open, close]);
 
   async function generate() {
+    if (!active) return;
+    uiSound?.(openNow.current ? 'select' : 'open');
+    openNow.current = true;
     const request = ++generation.current;
     setOpen(true); setPreparing(true); setStatus(''); setImage(undefined);
     try {
@@ -60,16 +85,17 @@ function ShareButton({ sceneId, title, snapshot, className = '' }: {
       const frame = snapshot ?? (root ? captureSceneImage(root) : undefined);
       if (!frame) throw new Error('Scene frame unavailable');
       const prepared = await createRitualShareCard({ snapshot: frame, sceneId, title, brand: tr('一日一念'), completed: tr('已完成') });
-      if (generation.current === request) setImage(prepared);
+      if (currentRequest(request)) setImage(prepared);
     } catch {
-      if (generation.current === request) setStatus(tr('画面暂时无法生成，请重试。'));
+      if (currentRequest(request)) setStatus(tr('画面暂时无法生成，请重试。'));
     } finally {
-      if (generation.current === request) setPreparing(false);
+      if (currentRequest(request)) setPreparing(false);
     }
   }
 
   async function share() {
-    if (!image || sharingNow.current || !active) return;
+    if (!openNow.current || !image || sharingNow.current || !active) return;
+    uiSound?.('select');
     const request = generation.current;
     sharingNow.current = true; setSharing(true); setStatus('');
     try {
@@ -77,45 +103,60 @@ function ShareButton({ sceneId, title, snapshot, className = '' }: {
         await shareImage({ dataUrl: image.dataUrl, fileName: image.fileName, title: image.title });
       } else {
         const result = await shareImageInBrowser(image);
-        if (result === 'unsupported' && generation.current === request)
+        if (result === 'unsupported' && currentRequest(request))
           setStatus(tr('当前设备不支持直接分享图片，请保存后发送。'));
       }
     } catch (error) {
       const cancelled = typeof error === 'object' && error !== null && 'name' in error && error.name === 'AbortError';
-      if (!cancelled && generation.current === request)
+      if (!cancelled && currentRequest(request))
         setStatus(shareImage ? tr('这一步暂时没有完成，请再试一次') : tr('暂时无法分享，请保存图片后发送。'));
     } finally {
-      sharingNow.current = false;
-      if (generation.current === request) setSharing(false);
+      if (currentRequest(request)) { sharingNow.current = false; setSharing(false); }
     }
   }
 
-  function showCopyResult(result: 'copied' | 'manual') {
+  function showCopyResult(result: 'copied' | 'manual', audioRequest: number) {
     setManualCopy(result === 'manual');
     setLinkStatus(result === 'copied' ? tr('链接已复制') : tr('请长按复制下面的链接。'));
+    if (result === 'copied' && audioGeneration.current === audioRequest && latest.current.active && latest.current.soundEnabled && !document.hidden)
+      latest.current.uiSound?.('saved');
+  }
+  async function copyLink() {
+    if (!openNow.current || !shareUrl || sharingNow.current || !active) return;
+    const request = generation.current;
+    const audioRequest = audioGeneration.current;
+    sharingNow.current = true; setSharing(true);
+    try {
+      const result = await copySceneLink(shareUrl);
+      if (currentRequest(request)) showCopyResult(result, audioRequest);
+    } finally {
+      if (currentRequest(request)) { sharingNow.current = false; setSharing(false); }
+    }
   }
   async function shareScene() {
-    if (!shareUrl || sharingNow.current || !active) return;
+    if (!openNow.current || !shareUrl || sharingNow.current || !active) return;
+    // The browser fallback may copy the link instead; that path gets only its result cue.
+    if (shareLink || typeof navigator.share === 'function') uiSound?.('select');
     const request = generation.current;
+    const audioRequest = audioGeneration.current;
     sharingNow.current = true; setSharing(true); setLinkStatus('');
     const payload = { title, text: `${tr('打开这个互动场景，一起体验这一刻。')}\n${tr('在 App Store 查看')}：${APP_STORE_URL}`, url: shareUrl };
     try {
       if (shareLink) await shareLink(payload);
       else {
         const result = await shareSceneLinkInBrowser(payload);
-        if (generation.current === request && (result === 'copied' || result === 'manual')) showCopyResult(result);
+        if (currentRequest(request) && (result === 'copied' || result === 'manual')) showCopyResult(result, audioRequest);
       }
     } catch (error) {
       const cancelled = typeof error === 'object' && error !== null && 'name' in error && error.name === 'AbortError';
-      if (!cancelled && generation.current === request) setLinkStatus(tr('这一步暂时没有完成，请再试一次'));
+      if (!cancelled && currentRequest(request)) setLinkStatus(tr('这一步暂时没有完成，请再试一次'));
     } finally {
-      sharingNow.current = false;
-      if (generation.current === request) setSharing(false);
+      if (currentRequest(request)) { sharingNow.current = false; setSharing(false); }
     }
   }
 
   return <>
-    <button type="button" ref={trigger} className={`button outline scene-share-trigger ${className}`} disabled={!active} onClick={() => { setSharing(false); void generate(); }}>
+    <button type="button" ref={trigger} className={`button outline scene-share-trigger ${className}`} disabled={!active} onClick={() => { if (!openNow.current) void generate(); }}>
       <Icon name="share"/>{tr('分享仪式')}
     </button>
     {open && <dialog ref={dialog} className="ritual-share-dialog" aria-labelledby={headingId} aria-describedby={noteId}
@@ -127,11 +168,11 @@ function ShareButton({ sceneId, title, snapshot, className = '' }: {
       <div className="ritual-share-link">
         {shareUrl ? <div className="ritual-share-actions">
           <button type="button" className="button primary" disabled={sharing || !active} onClick={() => void shareScene()}><Icon name="share"/>{tr('分享互动场景')}</button>
-          <button type="button" className="button secondary" disabled={sharing || !active} onClick={async () => { const request = generation.current; const result = await copySceneLink(shareUrl); if (generation.current === request) showCopyResult(result); }}>{tr('复制链接')}</button>
+          <button type="button" className="button secondary" disabled={sharing || !active} onClick={() => void copyLink()}>{tr('复制链接')}</button>
         </div> : <p className="ritual-share-note">{tr('互动链接分享暂未开放。')}</p>}
         <div className="ritual-share-destinations">
-          {previewUrl && <a href={previewUrl} target="_blank" rel="noopener noreferrer">{tr('预览互动场景')}</a>}
-          <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">{tr('在 App Store 查看')}</a>
+          {previewUrl && <a href={previewUrl} target="_blank" rel="noopener noreferrer" onClick={() => uiSound?.('select')}>{tr('预览互动场景')}</a>}
+          <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" onClick={() => uiSound?.('select')}>{tr('在 App Store 查看')}</a>
         </div>
         <p className="ritual-share-status" role="status">{linkStatus}</p>
         {manualCopy && shareUrl && <input className="ritual-share-url" aria-label={tr('分享链接')} value={shareUrl} readOnly onFocus={event => event.currentTarget.select()}/>}
@@ -145,7 +186,7 @@ function ShareButton({ sceneId, title, snapshot, className = '' }: {
       <div className="ritual-share-actions">
         {image ? <>
           <button type="button" className={`button ${shareUrl ? 'secondary' : 'primary'}`} disabled={sharing || !active} onClick={() => void share()}><Icon name="share"/>{tr('分享图片')}</button>
-          {!shareImage && <a className="button secondary" href={image.dataUrl} download={image.fileName}>{tr('保存图片')}</a>}
+          {!shareImage && <a className="button secondary" href={image.dataUrl} download={image.fileName} onClick={() => uiSound?.('select')}>{tr('保存图片')}</a>}
         </> : <button type="button" className="button secondary" disabled={preparing || sharing || !active} onClick={() => void generate()}>{tr('重新生成')}</button>}
       </div>
     </dialog>}

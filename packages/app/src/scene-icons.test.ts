@@ -150,7 +150,7 @@ describe("心愿's ritual picker", () => {
     );
     expect(ui.pray.nextElementSibling!.className).toBe("privacy-note");
     clickOn(ui.pray);
-    expect(ui.go).toHaveBeenCalledWith({ page: "new" });
+    expect(ui.go).toHaveBeenCalledWith({ page: "new" }, { sound: 'navigate' });
     expect(ui.picker()).toBeNull();
   });
 
@@ -184,7 +184,7 @@ describe("心愿's ritual picker", () => {
       daily: undefined,
       vessel: dailyCollectibleId("2026-10-07", "crane"),
       wishId: undefined,
-    });
+    }, { sound: 'navigate' });
   });
 
   it("shows drawn ritual choices without a keepsake but keeps them locked", () => {
@@ -241,7 +241,7 @@ describe("a wish's source object in the wish list", () => {
       ui.go.mockClear();
       clickOn(card(id).querySelector("img.scene-icon")!);
       expect(ui.go).toHaveBeenCalledTimes(1);
-      expect(ui.go).toHaveBeenCalledWith({ page: "wish", id });
+      expect(ui.go).toHaveBeenCalledWith({ page: "wish", id }, { sound: 'navigate' });
       expect(ui.dispatch).not.toHaveBeenCalled();
     }
     expect(JSON.stringify(state)).toBe(before);

@@ -38,8 +38,8 @@ describe('ritual-specific wish badges', () => {
       expect(buttons).toHaveLength(2);
       buttons.forEach(button => clickOn(button));
       expect(go).toHaveBeenCalledTimes(2);
-      expect(go).toHaveBeenNthCalledWith(1, { page: 'wish', id: 'wish' });
-      expect(go).toHaveBeenNthCalledWith(2, { page: 'wish', id: 'wish' });
+      expect(go).toHaveBeenNthCalledWith(1, { page: 'wish', id: 'wish' }, { sound: 'navigate' });
+      expect(go).toHaveBeenNthCalledWith(2, { page: 'wish', id: 'wish' }, { sound: 'navigate' });
     } finally { ui.unmount(); }
   });
 

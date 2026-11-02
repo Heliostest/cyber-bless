@@ -1,0 +1,190 @@
+{
+  "title": "Kenney Interface Sounds",
+  "version": "1.0",
+  "author": "Kenney",
+  "sourceUrl": "https://kenney.nl/assets/interface-sounds",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "licenseFile": {
+    "file": "ui-sounds/License.txt",
+    "bytes": 574,
+    "sha256": "f7966c773bbed0eca6a9c75081c44a178b38eae112724dbb5fdfbd4192d118a9"
+  },
+  "sourceZipSha256": "f2193d072726d6758a5f7871b2dcc54dcce0d5c35c6f0a62f92549b327c81232",
+  "processing": {
+    "decoder": "Microsoft Edge Web Audio",
+    "channels": 1,
+    "sampleRate": 24000,
+    "bitDepth": 16,
+    "lowpassHz": 3600,
+    "lowpassQ": 0.65,
+    "attackMs": 4,
+    "releaseMs": 12,
+    "normalization": "peak .032, notice .028; quantized to signed 16-bit PCM",
+    "edits": "Back cropped to 140ms; select padded to 60ms; notice cropped to 220ms; other clips retain decoded duration."
+  },
+  "verification": "Signal metrics and offline bundling only; no claim of subjective listening or physical-device silent-switch validation.",
+  "totalWavBytes": 52580,
+  "sounds": [
+    {
+      "sound": "navigate",
+      "file": "ui-sounds/navigate.wav",
+      "bytes": 4822,
+      "sha256": "72f9bb3e4652335da1c3e7cf9ad088587d40ad30b23231facea9f819495fe635",
+      "sampleRate": 24000,
+      "frames": 2389,
+      "duration": 0.09954166666666667,
+      "peak": 0.032012939453125,
+      "rms": 0.004692194272597529,
+      "maxSampleStep": 0.020111083984375,
+      "original": {
+        "file": "Audio/pluck_001.ogg",
+        "bytes": 6317,
+        "sha256": "be97ec4893a02d6eccfb678daa76c83e34cb2583b834ec2593d2641def739fa4",
+        "duration": 0.09952380952380953,
+        "sampleRate": 44100,
+        "channels": 2
+      }
+    },
+    {
+      "sound": "back",
+      "file": "ui-sounds/back.wav",
+      "bytes": 6766,
+      "sha256": "0b9f575d7ef75be5c79df7710e0e0ad686a89f91abe7d8ea70fa98afecfc4bb4",
+      "sampleRate": 24000,
+      "frames": 3361,
+      "duration": 0.14004166666666668,
+      "peak": 0.032012939453125,
+      "rms": 0.004921243642764264,
+      "maxSampleStep": 0.021636962890625,
+      "original": {
+        "file": "Audio/pluck_002.ogg",
+        "bytes": 6941,
+        "sha256": "c977fe249ff42d1c93a552b33abc13a8399df3879fa510475426e5c4bbac1da9",
+        "duration": 0.16165532879818595,
+        "sampleRate": 44100,
+        "channels": 2
+      }
+    },
+    {
+      "sound": "select",
+      "file": "ui-sounds/select.wav",
+      "bytes": 2924,
+      "sha256": "a4b45906acf00c27cfb580aec249f28a384045ab720db54c330264be583931af",
+      "sampleRate": 24000,
+      "frames": 1440,
+      "duration": 0.06,
+      "peak": 0.032012939453125,
+      "rms": 0.004411866734134167,
+      "maxSampleStep": 0.022064208984375,
+      "original": {
+        "file": "Audio/select_001.ogg",
+        "bytes": 5468,
+        "sha256": "aec0c31ea934a35936ae0d2ab8fac8123c93aa5647f935853a58dbaf90278b7a",
+        "duration": 0.04038548752834467,
+        "sampleRate": 44100,
+        "channels": 2
+      }
+    },
+    {
+      "sound": "open",
+      "file": "ui-sounds/open.wav",
+      "bytes": 7138,
+      "sha256": "a83750996f314a5cfaf899e2cad2b49df207b376b184dbe91525e5f0474dab64",
+      "sampleRate": 24000,
+      "frames": 3547,
+      "duration": 0.14779166666666665,
+      "peak": 0.032012939453125,
+      "rms": 0.007459773174188732,
+      "maxSampleStep": 0.023529052734375,
+      "original": {
+        "file": "Audio/open_001.ogg",
+        "bytes": 9834,
+        "sha256": "a27c6bb0df7da1e6af5dd5937593c98bc58b6e513f42fe6a3254cd6a6949c648",
+        "duration": 0.14777777777777779,
+        "sampleRate": 44100,
+        "channels": 1
+      }
+    },
+    {
+      "sound": "close",
+      "file": "ui-sounds/close.wav",
+      "bytes": 7138,
+      "sha256": "fc3bc75420cf31d9d91cf0ac4adad6121c08f3d2f72f5d6aa6b401ec53bc3188",
+      "sampleRate": 24000,
+      "frames": 3547,
+      "duration": 0.14779166666666665,
+      "peak": 0.032012939453125,
+      "rms": 0.007792540370881835,
+      "maxSampleStep": 0.028594970703125,
+      "original": {
+        "file": "Audio/close_001.ogg",
+        "bytes": 9915,
+        "sha256": "44af8249b933e0fd35ec957a638bb1a0b01f85b53fbe9674bf77bd3ca3168ef4",
+        "duration": 0.14777777777777779,
+        "sampleRate": 44100,
+        "channels": 1
+      }
+    },
+    {
+      "sound": "toggleOn",
+      "file": "ui-sounds/toggleOn.wav",
+      "bytes": 6594,
+      "sha256": "e15132cb2840ba9da4c6a9559532ec54837d715ac03b9bed4ff564c0dfeb6546",
+      "sampleRate": 24000,
+      "frames": 3275,
+      "duration": 0.13645833333333332,
+      "peak": 0.032012939453125,
+      "rms": 0.006184626364339191,
+      "maxSampleStep": 0.0152587890625,
+      "original": {
+        "file": "Audio/toggle_001.ogg",
+        "bytes": 7369,
+        "sha256": "ca1d2dde5f0b286abac4f070e23edab8f30927c8a533665cdf2ac6492a415e49",
+        "duration": 0.1364172335600907,
+        "sampleRate": 44100,
+        "channels": 1
+      }
+    },
+    {
+      "sound": "toggleOff",
+      "file": "ui-sounds/toggleOff.wav",
+      "bytes": 6594,
+      "sha256": "548922e526efb258dcc8b3f55ecfb470069a3879f0435c98703041a5799c683b",
+      "sampleRate": 24000,
+      "frames": 3275,
+      "duration": 0.13645833333333332,
+      "peak": 0.032012939453125,
+      "rms": 0.008405505310834525,
+      "maxSampleStep": 0.01995849609375,
+      "original": {
+        "file": "Audio/toggle_002.ogg",
+        "bytes": 8056,
+        "sha256": "1f564f5520cfa0764028ce245ad97599d3ece8f0ab504554c403af92ac72b900",
+        "duration": 0.1364172335600907,
+        "sampleRate": 44100,
+        "channels": 1
+      }
+    },
+    {
+      "sound": "notice",
+      "file": "ui-sounds/notice.wav",
+      "bytes": 10604,
+      "sha256": "64ebd2991e1bd74e6406cef9d8066eb9a934497d7c9f4b7b579e99461627f542",
+      "sampleRate": 24000,
+      "frames": 5280,
+      "duration": 0.22,
+      "peak": 0.027984619140625,
+      "rms": 0.01197191457900558,
+      "maxSampleStep": 0.0057373046875,
+      "original": {
+        "file": "Audio/question_002.ogg",
+        "bytes": 9455,
+        "sha256": "46056f10c70dda860e93bd27b66f4d33c0b7154eff28def06471b50028efa5b3",
+        "duration": 0.3325170068027211,
+        "sampleRate": 44100,
+        "channels": 1
+      }
+    }
+  ]
+}

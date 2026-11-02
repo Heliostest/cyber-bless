@@ -35,7 +35,7 @@ it('uses the shared build setting for default catalog visibility', async () => {
 it('hides the internal catalog when the build disables it while retaining settings', async () => {
   const ui = renderUI(createElement(BlessingApp, { host, internalToolsEnabled: false, initialRoute: { page: 'me' } }));
   await settle();
-  expect(ui.host.querySelector('.settings-card')?.textContent).toContain('仪式声音');
+  expect(ui.host.querySelector('.settings-card')?.textContent).toContain('音效');
   expect(ui.host.querySelector('.settings-card')?.textContent).toContain('隐私政策');
   expect(ui.host.querySelector('.settings-card')?.textContent).not.toContain('场景目录');
   expect(ui.host.querySelector('.settings-card')?.textContent).not.toContain('资源缓存');

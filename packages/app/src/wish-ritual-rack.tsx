@@ -11,7 +11,7 @@ import { Icon } from "./art";
 
 /** Each collected copy stays separate; touching the display never spends it. */
 export function WishRitualRack() {
-    const { state, go, prepareFeedback, feedback } = useApp();
+    const { state, go, prepareFeedback, feedback, uiSound } = useApp();
     const { entries } = useSceneLibrary();
     const openScene = useOpenScene();
     const rackId = useId(), hintId = useId();
@@ -89,7 +89,9 @@ export function WishRitualRack() {
     }, [items.length]);
     function browse(direction: number) {
         const row = strip.current;
-        row?.scrollBy({ left: direction * row.clientWidth * .9, behavior: reducedMotion ? "instant" : "smooth" });
+        if (!row?.clientWidth || (direction < 0 ? row.scrollLeft <= 1 : row.scrollLeft + row.clientWidth >= row.scrollWidth - 1)) return;
+        row.scrollBy({ left: direction * row.clientWidth * .9, behavior: reducedMotion ? "instant" : "smooth" });
+        uiSound?.('navigate');
     }
     function endDrag(event: PointerEvent<HTMLDivElement>) {
         if (drag.current?.id !== event.pointerId) return;
@@ -169,7 +171,7 @@ export function WishRitualRack() {
                 </span>
               </button>
               <button type="button" className="wish-rack-open" aria-label={tr("{p0}，{p1}，{p2}收下，{p3}", { p0: localizedTitle(entry), p1: label, p2: formatDate(item.at), p3: canOpen ? tr("进入仪式") : tr("查看收藏") })}
-                onClick={() => canOpen ? openScene(entry, { vessel: item.id }) : go({ page: "collection", id: item.id })}>
+                onClick={() => canOpen ? openScene(entry, { vessel: item.id, sound: 'navigate' }) : go({ page: "collection", id: item.id }, { sound: 'navigate' })}>
                 <strong>{localizedTitle(entry)}</strong>
                 <span className="wish-rack-status">{label}<Icon name="arrow"/></span>
               </button>

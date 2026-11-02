@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { createStore, type Host, type HapticStrength } from "@wbr/runtime";
 import { rituals, sceneProgress, sceneStepCount } from "@wbr/core";
 import { createSoftSoundPlayer, type SoftSound } from "@wbr/shared";
+import { createUiSoundPlayer, type UiSound } from './ui-sounds';
 import { Context, type Route, type FulfillmentDraft } from "./context";
 import { Icon } from "./art";
 import { CollectionDetail, History, Me, Wishes, World } from "./pages";
@@ -129,6 +130,27 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     }), [store]);
     const sounds = useMemo(() => createSoftSoundPlayer(soundOptions), [soundOptions]);
     const interactionSounds = useMemo(() => createSoftSoundPlayer(soundOptions), [soundOptions]);
+    const uiSounds = useMemo(() => createUiSoundPlayer(soundOptions), [soundOptions]);
+    const quietUiUntil = useRef(0);
+    const resultSound = useCallback((sound: 'saved' | 'collect' | 'complete') => {
+        if (!soundOptions.enabled()) return;
+        uiSounds.stop();
+        quietUiUntil.current = performance.now() + (sound === 'complete' ? 580 : sound === 'collect' ? 460 : 420);
+        sounds.play(sound);
+    }, [soundOptions, uiSounds, sounds]);
+    const uiSound = useCallback((sound: UiSound) => {
+        if (!soundOptions.enabled()) return;
+        if (sound === 'saved') { resultSound('saved'); return; }
+        if (performance.now() < quietUiUntil.current) return;
+        uiSounds.play(sound);
+    }, [soundOptions, uiSounds, resultSound]);
+    const prepareUiFeedback = useCallback(() => {
+        if (!soundOptions.enabled()) return;
+        uiSounds.prepare();
+    }, [soundOptions, uiSounds]);
+    useEffect(() => {
+        if (snapshot.state?.settings.sound) uiSounds.preload();
+    }, [uiSounds, snapshot.state?.settings.sound]);
     const stopInteractionSound = useCallback(() => {
         interactionSounds.stop();
         for (const source of sampledSounds.current) {
@@ -139,8 +161,9 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     const stopFeedback = useCallback(() => {
         pendingSaveSound.current = false;
         sounds.stop();
+        uiSounds.stop();
         stopInteractionSound();
-    }, [sounds, stopInteractionSound]);
+    }, [sounds, uiSounds, stopInteractionSound]);
     const shell = useRef<HTMLDivElement>(null);
     const route = permittedRoute(routes[routes.length - 1], internalToolsEnabled);
     const state = snapshot.state;
@@ -150,8 +173,12 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     const openingActive = !!state?.opening && state.opening.status !== 'complete';
     const roots = ["today", "wishes", "world", "me"];
     const canBack = routes.length > 1 || route.page !== "today";
-    function go(next: Route) {
+    function go(next: Route, options?: { sound?: 'navigate' | 'back' | false }) {
         if (!internalToolsEnabled && isInternalRoute(next)) return;
+        const same = route.page === next.page && route.id === next.id && route.entry?.id === next.entry?.id
+            && route.wishId === next.wishId && route.vessel === next.vessel && route.daily === next.daily
+            && route.replay === next.replay && route.opening === next.opening;
+        if (!same && options?.sound) uiSound(options.sound);
         setError("");
         setRoutes((old) => {
             if (roots.includes(next.page))
@@ -171,7 +198,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
         shell.current?.scrollTo?.(0, 0);
         window.scrollTo?.(0, 0);
     }
-    function back() {
+    function back(options?: { sound?: boolean }) {
         const feedbackClose = shell.current?.querySelector<HTMLButtonElement>('.test-feedback-dialog[open] [data-feedback-close]');
         if (feedbackClose) { feedbackClose.click(); return; }
         if (dismissLanguageSetting(shell.current))
@@ -182,13 +209,14 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             return;
         if (dismissFeedbackMenu(shell.current))
             return;
+        if (options?.sound && canBack) uiSound('back');
         setError("");
         setRoutes((old) => old.length > 1 ? old.slice(0, -1) : [{ page: "today" }]);
     }
     function launchReward(next: RewardFlight) {
         if (flightRef.current) return;
         flightRef.current = next;
-        sounds.play("collect");
+        resultSound("collect");
         skipNextPageIn.current = true;
         setArrival({
             key: Date.now(),
@@ -249,7 +277,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             if (route.page === "complete")
                 closeComplete();
             else
-                back();
+                back({ sound: true });
         }
     }, [backRequest, route.page]);
     useEffect(() => {
@@ -291,7 +319,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             stopFeedback();
         } else if (current.status === "saved" && pendingSaveSound.current) {
             pendingSaveSound.current = false;
-            sounds.play("saved");
+            resultSound("saved");
         }
     }), [store, sounds, stopFeedback]);
     useEffect(() => {
@@ -426,6 +454,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             back,
             active,
             feedback,
+            uiSound,
             haptic,
             canHaptic: typeof host.haptic === "function",
             shareImage: host.shareImage,
@@ -446,23 +475,35 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             dispatch: (action) => {
                 try {
                     const before = store.getSnapshot().state;
-                    const savesWish = ["wish.create", "wish.note", "wish.realize", "wish.fulfill"].includes(action.type);
+                    const savesWish = ["wish.create", "wish.note", "wish.realize", "wish.fulfill", "scene.visual", "scene.visual.all"].includes(action.type);
                     if (savesWish) prepareFeedback();
                     store.dispatch(action);
                     setError("");
                     const after = store.getSnapshot().state;
                     if (after === before) return false;
                     if (savesWish) pendingSaveSound.current = true;
+                    if (action.type === 'settings' && before?.settings[action.key] !== after?.settings[action.key]) {
+                        // The new setting is already live; muting therefore stays completely quiet.
+                        uiSound(action.value ? 'toggleOn' : 'toggleOff');
+                    } else if (action.type === 'scene.favorite') {
+                        if (before?.sceneRecords.find(record => record.id === action.id)?.favorite !==
+                            after?.sceneRecords.find(record => record.id === action.id)?.favorite)
+                            uiSound(action.favorite ? 'toggleOn' : 'toggleOff');
+                    } else if (action.type === 'wish.archive') {
+                        if (!!before?.wishes.find(wish => wish.id === action.id)?.archived !==
+                            !!after?.wishes.find(wish => wish.id === action.id)?.archived)
+                            uiSound(action.archived ? 'toggleOff' : 'toggleOn');
+                    }
                     if (action.type === "scene.progress") {
                         const prior = before?.sceneRecords.find(record => record.id === action.id);
                         const next = after?.sceneRecords.find(record => record.id === action.id);
                         if (prior && next && sceneProgress(prior) < sceneStepCount(prior) && sceneProgress(next) >= sceneStepCount(next))
-                            sounds.play("complete");
+                            resultSound("complete");
                     } else if (action.type === "opening.collect") {
-                        sounds.play("collect");
+                        resultSound("collect");
                     } else if (action.type === "ritual.finish" || action.type === "opening.finish") {
                         if (action.type === "ritual.finish") haptic();
-                        sounds.play("complete");
+                        resultSound("complete");
                     }
                     return true;
                 }
@@ -484,12 +525,15 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             <p>{tr("\u628A\u5C0F\u5C0F\u7684\u4EEA\u5F0F\uFF0C")}<br />{tr("\u8FC7\u6210\u6E29\u67D4\u7684\u65E5\u5E38\u3002")}</p>
             <span>CYBER BLESS · A LITTLE EVERY DAY</span>
           </div>
-          <div className="app-shell" data-page={route.page} data-immersive={immersive ? '' : undefined} data-opening={openingActive ? '' : undefined} ref={shell}>
+          <div className="app-shell" data-page={route.page} data-immersive={immersive ? '' : undefined} data-opening={openingActive ? '' : undefined} ref={shell}
+            onPointerDownCapture={prepareUiFeedback} onKeyDownCapture={event => {
+                if (event.key === 'Enter' || event.key === ' ') prepareUiFeedback();
+            }}>
             <WidgetNavigation request={navigationRequest} route={route} saved={snapshot.status === 'saved'} busy={!!flight} onConsumed={onNavigationConsumed}/>
             {!roots.includes(route.page) && (<header className={`app-topbar${route.page === "complete" ? " completion-topbar" : ""}${route.page === "scene" || route.page === "ritual" ? " scene-topbar" : " page-topbar"}`}>
                 <button className="back-button" aria-label={route.page === "complete" ? tr("\u5173\u95ED\u5B8C\u6210\u9875") : tr("\u8FD4\u56DE")} onClick={route.page === "complete"
                 ? closeComplete
-                : back}>
+                : () => back({ sound: true })}>
                   <Icon name={route.page === "complete" ? "close" : "back"}/>
                 </button>
                 {ribbon && <PageTitle title={route.page === 'ritual' ? tr(ribbon) : ribbon}/>}
@@ -502,11 +546,11 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             </span>
             {snapshot.status === "save-error" && (<div className="error-banner" role="alert">
                 <span>{snapshot.errorCode ? message(snapshot.errorCode) : snapshot.error ? tr(snapshot.error) : ''}</span>
-                <button onClick={() => store.retry()}>{tr("\u91CD\u8BD5\u4FDD\u5B58")}</button>
+                <button onClick={() => { uiSound('select'); store.retry(); }}>{tr("\u91CD\u8BD5\u4FDD\u5B58")}</button>
               </div>)}
             {error && (<div className="error-banner" role="alert">
                 <span>{error instanceof ProductError ? message(error.code, error.values) : tr(error)}</span>
-                <button onClick={() => setError("")}>{tr("\u77E5\u9053\u4E86")}</button>
+                <button onClick={() => { uiSound('close'); setError(""); }}>{tr("\u77E5\u9053\u4E86")}</button>
               </div>)}
             <main className="app-content" key={route.page + (route.id ?? "")} style={skipPageIn ? { animation: "none" } : undefined}>
               {page}
@@ -518,7 +562,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
                 ["wishes", message('app.nav.wishes'), tr("\u5FC3\u613F")],
                 ["world", message('app.nav.world'), tr("\u5C0F\u5929\u5730")],
                 ["me", message('app.nav.me'), tr("\u6211\u7684")],
-            ].map(([id, label, accessibleLabel]) => (<button key={id} data-tab={id} aria-label={accessibleLabel ?? label} aria-current={section === id ? "page" : undefined} className={hopTab === id ? "tab-hop" : undefined} onClick={() => go({ page: id as Route["page"] })}>
+            ].map(([id, label, accessibleLabel]) => (<button key={id} data-tab={id} aria-label={accessibleLabel ?? label} aria-current={section === id ? "page" : undefined} className={hopTab === id ? "tab-hop" : undefined} onClick={() => go({ page: id as Route["page"] }, { sound: 'navigate' })}>
                     <Icon name={id}/>
                     <span>{label}</span>
                     <i>{tabBadge(id)}</i>

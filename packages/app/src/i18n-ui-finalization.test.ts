@@ -69,11 +69,11 @@ it('uses the same broad encoding cap for the fulfillment note', () => {
   expect(ui.host.querySelector('textarea')!.maxLength).toBe(8192);
   ui.unmount();
 });
-it('preserves the fulfillment draft through language changes and commits complete emoji clusters after composition', () => {
+it('preserves an old ritual draft through language changes and submits kindness after composition', () => {
   const state = { ...createState(), wishes: [{ ...wish, status: 'realized' }] } as State;
   const dispatch = vi.fn(() => false);
   function Draft() {
-    const [draft, setDraft] = useState({ method: 'kindness' as ReturnMethod, text: '' });
+    const [draft, setDraft] = useState({ method: 'ritual' as ReturnMethod, text: '原来的草稿' });
     return provider(createElement(FulfillWish, { id: wish.id }), state, dispatch, {
       fulfillmentDrafts: { [wish.id]: draft },
       setFulfillmentDraft: (_id, next) => { if (next) setDraft(next); },
@@ -81,6 +81,7 @@ it('preserves the fulfillment draft through language changes and commits complet
   }
   const ui = renderUI(createElement(Draft));
   const input = ui.host.querySelector('textarea')!;
+  expect(input.value).toBe('原来的草稿');
   typeInto(input, 'e\u0301'.repeat(60));
   configureLocale('fr', []); ui.rerender(createElement(Draft));
   expect(ui.host.querySelector('textarea')).toBe(input);
@@ -94,7 +95,7 @@ it('preserves the fulfillment draft through language changes and commits complet
   act(() => input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true })));
   expect(input.value).toBe('👩🏽‍💻'.repeat(60));
   clickOn(ui.host.querySelector('button[type=submit]')!);
-  expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ text: '👩🏽‍💻'.repeat(60) }));
+  expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ text: '👩🏽‍💻'.repeat(60), method: 'kindness' }));
   ui.unmount();
 });
 it('reformats a source instruction after locale changes without remounting the woodfish', async () => {

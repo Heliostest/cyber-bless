@@ -1,34 +1,25 @@
-import { translate as tr } from '@wbr/i18n';
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { assetUrl } from "./assets";
-type Crop = {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-};
-// The commemorative badge remains a crop of the supplied 1536 × 1024 image.
-const badgeCrop: Crop = { x: 1062, y: 759, width: 90, height: 89 };
-export function Art({ kind, small = false }: {
+import { sceneIconFile } from "./scene-icon-assets";
+
+/** Product keepsake: the wish's original illustration in a shared gold relief. */
+export function Art({ kind, small = false, sceneId }: {
     kind: "badge";
     small?: boolean;
+    sceneId?: string;
 }) {
-    const [failed, setFailed] = useState(false);
-    const crop = badgeCrop;
-    const style = {
-        "--crop-ratio": `${crop.width} / ${crop.height}`,
-        "--image-width": `${(1536 / crop.width) * 100}%`,
-        "--image-height": `${(1024 / crop.height) * 100}%`,
-        "--image-left": `${(-crop.x / crop.width) * 100}%`,
-        "--image-top": `${(-crop.y / crop.height) * 100}%`,
-    } as CSSProperties;
-    return (<div className={`art art-${kind} art-variant-default${small ? " art-small" : ""}`} aria-hidden="true" style={style}>
-      {failed ? (<span className="asset-fallback">
-          {tr("\u5982\u613F")}
-        </span>) : (<span className="reference-crop">
-          <img src={assetUrl("reference-ui/wishes.png")} alt="" draggable={false} onError={() => setFailed(true)}/>
-        </span>)}
+    const file = sceneId ? sceneIconFile(sceneId) : undefined;
+    return (<div className={`art art-${kind} art-variant-default${small ? " art-small" : ""}`} data-scene={file ? sceneId : undefined} aria-hidden="true">
+      <span className="badge-medallion">
+        <BadgeRelief key={file ?? "neutral"} file={file}/>
+      </span>
     </div>);
+}
+
+function BadgeRelief({ file }: { file?: string }) {
+    const [failed, setFailed] = useState(false);
+    if (!file || failed) return <Icon name="world"/>;
+    return <img src={assetUrl(file)} width={256} height={256} alt="" draggable={false} decoding="async" onError={() => setFailed(true)}/>;
 }
 export function Icon({ name }: {
     name: string;

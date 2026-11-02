@@ -35,6 +35,21 @@ const port = (value, fallback) => {
   if (!/^\d+$/.test(value) || Number(value) < 1 || Number(value) > 65535) throw Error('Port must be 1..65535');
   return Number(value);
 };
+const notifyParent = value => { if (process.connected) process.send(value, () => {}); };
+/** A supervised child must not outlive a crashed/killed parent or retain its HTTP ports. */
+export function superviseLifetime(stop) {
+  let stopping = false;
+  const shutdown = () => {
+    if (stopping) return; stopping = true;
+    Promise.resolve().then(stop).then(() => process.exit(0), () => process.exit(1));
+  };
+  process.once('SIGINT', shutdown); process.once('SIGTERM', shutdown);
+  if (process.send) {
+    process.once('disconnect', shutdown);
+    process.on('message', message => { if (message?.type === 'shutdown') shutdown(); });
+    if (!process.connected) shutdown();
+  }
+}
 export async function main(args = process.argv.slice(2)) {
   const { values, positionals } = parseArgs({ args, allowPositionals: true, options: {
     'submit-port': { type: 'string' }, 'admin-port': { type: 'string' }, inbox: { type: 'string' }, config: { type: 'string' },
@@ -52,11 +67,18 @@ export async function main(args = process.argv.slice(2)) {
     console.log(`Feedback intake and authenticated status listener: http://127.0.0.1:${servers.submitPort}/api/feedback`);
     console.log(`Feedback files: ${inbox}`);
     console.log('Test invitation is available only in the local dashboard. Keep that dashboard port off public tunnels.');
-    const stop = async () => { await servers.close(); process.exit(0); };
-    process.once('SIGINT', stop); process.once('SIGTERM', stop);
+    superviseLifetime(() => servers.close());
+    notifyParent({ type: 'receiver-ready', submitPort: servers.submitPort, adminPort: servers.adminPort });
     return servers;
   }
-  if (command === 'tunnel') return startQuickTunnel({ port: port(values['submit-port'], 4318), runtimeFile });
+  if (command === 'tunnel') {
+    const child = await startQuickTunnel({ port: port(values['submit-port'], 4318), runtimeFile,
+      onStatus: state => notifyParent({ type: 'tunnel-status', status: state.status, publicUrl: state.publicUrl }) });
+    superviseLifetime(async () => { if (child.exitCode === null && !child.killed) child.kill(); await child.feedbackFinished; });
+    // An IPC pipe otherwise keeps this wrapper alive after cloudflared has exited.
+    child.feedbackFinished.then(() => { if (process.connected) process.disconnect(); });
+    return child;
+  }
   if (command === 'export') {
     const { entries } = await createFeedbackStore(inbox).list();
     const status = values.status ?? 'all';

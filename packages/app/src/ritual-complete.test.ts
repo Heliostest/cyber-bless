@@ -344,7 +344,7 @@ describe("the reward card's exits (P0/P1)", () => {
     ui.unmount();
   });
 
-  it("keeps 继续还愿 for a realized wish, with no flight", async () => {
+  it("returns a legacy realized-wish session to its wish without treating the ritual as fulfillment", async () => {
     const ui = await openApp(withWishSession("realized", "crane", 4));
     await openRitual(ui);
     act(() => {
@@ -352,10 +352,10 @@ describe("the reward card's exits (P0/P1)", () => {
     });
     expect(pageOf(ui)).toBe("complete");
     const primary = ui.host.querySelector(".completion .button.primary")!;
-    expect(primary.textContent).toBe("继续还愿 · 留下这份心情");
+    expect(primary.textContent).toBe("去心愿看看");
     expect(ui.host.querySelector("[data-reward-sticker]")).toBeNull();
     clickOn(primary);
-    expect(pageOf(ui)).toBe("fulfill");
+    expect(pageOf(ui)).toBe("wish");
     expect(ui.host.querySelector(".reward-flight-layer")).toBeNull();
     ui.unmount();
   });

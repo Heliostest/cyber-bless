@@ -11,6 +11,7 @@ import { SceneCard, useOpenRitual, useOpenScene, useSceneLibrary, } from "./scen
 import { SceneArt, hasSceneIcon } from "./scene-icons";
 import { PageHead } from "./page-heading";
 import { WishRitualRack } from "./wish-ritual-rack";
+import { WishDetail } from "./wishes";
 export function Empty({ title, body, action, onClick, }: {
     title: string;
     body: string;
@@ -62,16 +63,18 @@ export function Wishes() {
     </div>);
 }
 /** Historical ritual kinds share their matching scene's current illustration. */
-function CollectibleArt({ kind, sceneId, small, }: {
-    kind: Collectible["kind"];
-    sceneId?: string;
+function CollectibleArt({ item, small, }: {
+    item: Collectible;
     small?: boolean;
 }) {
-    if (kind === "scene")
-        return <SceneArt id={sceneId ?? ""}/>;
-    if (kind === "badge")
-        return <Art kind="badge" small={small}/>;
-    return <SceneArt id={kind}/>;
+    const { state } = useApp();
+    if (item.kind === "scene")
+        return <SceneArt id={item.sceneId ?? ""}/>;
+    if (item.kind === "badge") {
+        const wish = state.wishes.find(w => w.id === item.wishId);
+        return <Art kind="badge" sceneId={wish?.sourceSceneId} small={small}/>;
+    }
+    return <SceneArt id={item.kind}/>;
 }
 export function World() {
     const { state, go, arrival } = useApp();
@@ -83,6 +86,10 @@ export function World() {
             : "landed"
         : null;
     const bumped = arrival?.collectibleId && arrival.phase === "landed";
+    const openItem = (item: Collectible) => {
+        const wish = item.kind === "badge" && state.wishes.find(w => w.id === item.wishId && w.status === "fulfilled");
+        go(wish ? { page: "wish", id: wish.id } : { page: "collection", id: item.id });
+    };
     return (<>
       <PageHead eyebrow={tr("\u628A\u6BCF\u4E00\u4EFD\u5C0F\u7F8E\u597D\uFF0C\u90FD\u7559\u5728\u8FD9\u91CC")} title={tr("\u6211\u7684\u5C0F\u5929\u5730")}/>
       <div className="room">
@@ -96,8 +103,8 @@ export function World() {
         <div className="room-shelf">
           {state.collectibles.slice(-3).map((c) => {
             const slot = slotState(c.id);
-            return (<button key={c.id} aria-label={tr("\u67E5\u770B{p0}", { p0: localizedTitle(c) })} data-collectible-id={c.id} data-arriving={slot === "flying" ? "" : undefined} className={slot === "landed" ? "reward-landed" : undefined} onClick={() => go({ page: "collection", id: c.id })}>
-                <CollectibleArt kind={c.kind} sceneId={c.sceneId} small/>
+            return (<button key={c.id} aria-label={tr("\u67E5\u770B{p0}", { p0: localizedTitle(c) })} data-collectible-id={c.id} data-arriving={slot === "flying" ? "" : undefined} className={slot === "landed" ? "reward-landed" : undefined} onClick={() => openItem(c)}>
+                <CollectibleArt item={c} small/>
                 {slot === "landed" && (<>
                     <span className="new-mark">{tr("\u65B0")}</span>
                     <span className="reward-sparks" aria-hidden="true">
@@ -118,8 +125,8 @@ export function World() {
       {state.collectibles.length ? (<div className="collection-grid">
           {[...state.collectibles].reverse().map((c) => {
                 const slot = slotState(c.id);
-                return (<button key={c.id} className={`collection-card${slot === "landed" ? " reward-landed" : ""}`} data-collectible-id={c.id} data-arriving={slot === "flying" ? "" : undefined} onClick={() => go({ page: "collection", id: c.id })}>
-                <CollectibleArt kind={c.kind} sceneId={c.sceneId} small/>
+                return (<button key={c.id} className={`collection-card${slot === "landed" ? " reward-landed" : ""}`} data-collectible-id={c.id} data-arriving={slot === "flying" ? "" : undefined} onClick={() => openItem(c)}>
+                <CollectibleArt item={c} small/>
                 <strong>{localizedTitle(c)}</strong>
                 <small>{formatDate(c.at)}</small>
               </button>);
@@ -144,9 +151,12 @@ export function CollectionDetail({ id }: {
     const spentFor = item.spentAt
         ? state.wishes.find((w) => w.notes.some((n) => n.id === `vessel:${item.id}`))
         : undefined;
+    // Historical badge links share the same complete wish record, without a second badge page.
+    if (item.kind === "badge" && wish?.status === "fulfilled")
+        return <WishDetail id={wish.id}/>;
     return (<>
       <PageHead eyebrow={tr("\u5C5E\u4E8E\u4F60\u7684\u72EC\u4E00\u4EFD\u8BB0\u5FC6")} title={localizedTitle(item)}/>
-      <CollectibleArt kind={item.kind} sceneId={item.sceneId}/>
+      <CollectibleArt item={item}/>
       <div className="form-card">
         <span className="tag">
           {item.kind === "badge"

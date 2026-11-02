@@ -14,7 +14,7 @@ export function isWishSceneUnlocked(state: State, sceneId: string): boolean {
 
 /**
  * A wish-type keepsake (a 许愿小物): collected from 今日's daily set, spent
- * in 心愿 on a wish. A spent one stays in 小天地 for 回看, but is never
+ * in 心愿 on a new wish. A spent one stays in 小天地 for 回看, but is never
  * spent twice: one wish per vessel, a new one each day.
  */
 export function usableVessels(
@@ -38,7 +38,7 @@ export function usableVessels(
  * A 许愿 walk interrupted after its keepsake was spent: the line it held (or
  * the empty choice) still waits in `vesselDrafts`. These stay in the 祈愿
  * picker until the keep-or-discard choice is made, so the spent keepsake
- * never takes the phrase with it. 还愿 asks for unspent keepsakes only.
+ * never takes the phrase with it.
  */
 export function pendingVessels(
   state: State,
@@ -68,12 +68,4 @@ export const VESSEL_COPY = {
   emptyTitle: "还没有许愿小物",
   emptyBody: "在今日完成一场许愿仪式，就会收进一个小物。",
   emptyAction: "去今日看看",
-} as const;
-
-/** The vessel rows on 来还个愿. */
-export const FULFILL_VESSEL_COPY = {
-  pick: "挑一个许愿小物，替这个心愿还愿：",
-  use: "拿它还愿",
-  none: "还没有许愿小物。在今日完成一场许愿仪式，就会收进一个。",
-  noneAction: "去今日看看",
 } as const;

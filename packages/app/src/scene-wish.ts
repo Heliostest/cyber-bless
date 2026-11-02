@@ -12,6 +12,7 @@ export function sceneWish(
   sceneId: string,
   id: string,
   at: string,
+  sourceCollectibleId?: string,
 ): Extract<Action, { type: "wish.create" }> | undefined {
   const line = text.trim();
   if (!line) return undefined;
@@ -23,6 +24,7 @@ export function sceneWish(
     intention: title === line ? "" : sliceGraphemes(line, 0, WISH_INTENTION_MAX),
     category: "life",
     sourceSceneId: sceneId,
+    ...(sourceCollectibleId === undefined ? {} : { sourceCollectibleId }),
     at,
   };
 }

@@ -37,7 +37,7 @@ describe("completed scenes unlock the new-wish ritual picker", () => {
     const section = cards[0]!.closest("section")!;
     const heading = section.querySelector("h2");
     expect(heading).not.toBeNull();
-    expect(heading?.textContent).toBe("完成一次仪式后解锁");
+    expect(heading?.textContent).toBe("未解锁");
     expect(section.textContent).toContain("完成一次");
     expect(section.textContent).toContain("解锁");
     for (const card of cards) {
@@ -47,6 +47,20 @@ describe("completed scenes unlock the new-wish ritual picker", () => {
     }
     expect(ui.go).not.toHaveBeenCalled();
     expect(ui.dispatch).not.toHaveBeenCalled();
+  });
+
+  it("puts unlocked rituals in their own first group ahead of the locked catalog", () => {
+    const state = createState();
+    state.collectibles.push(keepsake("tanzaku-tanabata", { spent: true }), keepsake("daruma-eye-painting", { spent: true }));
+    const before = JSON.stringify(state), ui = open(state);
+    const sections = [...ui.host.querySelectorAll('#vessel-picker > section')];
+    expect(sections.map(section => section.querySelector('h2')?.textContent)).toEqual(['已解锁', '未解锁']);
+    const unlocked = [...sections[0]!.querySelectorAll<HTMLButtonElement>('.wish-scene-choice')];
+    expect(unlocked.map(card => card.dataset.scene)).toEqual(['daruma-eye-painting', 'tanzaku-tanabata']);
+    expect(unlocked.every(card => !card.disabled)).toBe(true);
+    expect([...sections[1]!.querySelectorAll<HTMLButtonElement>('.wish-scene-choice')].every(card => card.disabled)).toBe(true);
+    expect(ui.host.querySelectorAll('.wish-scene-choice')).toHaveLength(18);
+    expect(JSON.stringify(state)).toBe(before);
   });
 
   it("unlocks only the matching collected scene, even when its legacy wish flag is false", () => {

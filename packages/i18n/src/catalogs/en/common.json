@@ -1,6 +1,8 @@
 {
   "app.woodfish.progress": "{n, plural, one {# tap} other {# taps}} · Finish after at least {min, number}",
   "app.wish.returnSummary": "{status, select, fulfilled {Thanks offered: } other {When fulfilled: }}{method, select, kindness {do a small act of kindness} other {complete a small ritual}}",
+  "app.wish.effortPast": "The effort I put into this wish",
+  "app.wish.noPastNotes": "No effort notes were saved.",
   "app.note.about": "About “{title}”",
   "app.return.caption": "This time, offer thanks for “{title}”.",
   "app.visual.forScene": "Choose a look for “{title}”",

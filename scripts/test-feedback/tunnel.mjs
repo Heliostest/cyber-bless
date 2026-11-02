@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 export function quickTunnelUrl(text) {
@@ -7,7 +7,7 @@ export function quickTunnelUrl(text) {
 }
 
 /** Only the feedback intake/authenticated-summary port is exposed, never the local dashboard. */
-export async function startQuickTunnel({ port = 4318, runtimeFile, binary = process.env.CLOUDFLARED ||
+export async function startQuickTunnel({ port = 4318, runtimeFile, onStatus = () => {}, binary = process.env.CLOUDFLARED ||
   (process.platform === 'win32' ? 'C:\\Program Files (x86)\\cloudflared\\cloudflared.exe' : 'cloudflared') }) {
   const local = `http://127.0.0.1:${port}`;
   const check = await fetch(`${local}/health`, { signal: AbortSignal.timeout(3000) });
@@ -17,9 +17,14 @@ export async function startQuickTunnel({ port = 4318, runtimeFile, binary = proc
     { windowsHide: true, shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
   let publicUrl = '', tail = '', writes = Promise.resolve();
   const publish = status => {
-    writes = writes.then(() => writeFile(runtimeFile, JSON.stringify({ schemaVersion: 1, pid: child.pid, status,
-      publicUrl: status === 'running' ? publicUrl : '', lastPublicUrl: publicUrl, submitPort: port, updatedAt: new Date().toISOString() }, null, 2) + '\n'));
-    writes.catch(() => { console.error('Unable to update local tunnel status file'); });
+    const state = { schemaVersion: 1, pid: child.pid, status, publicUrl: status === 'running' ? publicUrl : '',
+      lastPublicUrl: publicUrl, submitPort: port, updatedAt: new Date().toISOString() };
+    onStatus(state);
+    writes = writes.then(async () => {
+      const temporary = `${runtimeFile}.${process.pid}.tmp`;
+      await writeFile(temporary, JSON.stringify(state, null, 2) + '\n', { mode: 0o600 });
+      await rename(temporary, runtimeFile);
+    }).catch(() => { console.error('Unable to update local tunnel status file'); });
   };
   const output = bytes => {
     tail = (tail + bytes.toString('utf8')).slice(-8192);
@@ -28,12 +33,14 @@ export async function startQuickTunnel({ port = 4318, runtimeFile, binary = proc
   };
   child.stdout.on('data', output); child.stderr.on('data', output);
   child.once('error', error => { publish('stopped'); console.error(`Unable to start cloudflared: ${error.message}`); process.exitCode = 1; });
-  child.once('exit', (code, signal) => {
+  // close also fires for spawn errors; finish only after output and state writes drain.
+  child.feedbackFinished = new Promise(resolve => child.once('close', async (code, signal) => {
     publish('stopped');
     if (!publicUrl && code) console.error('Quick Tunnel did not start. Check cloudflared networking or retry later.');
     else console.log(`Feedback tunnel stopped (${signal ?? code ?? 0}).`);
     process.exitCode = code ?? 0;
-  });
+    await writes; resolve();
+  }));
   const stop = () => { if (!child.killed) child.kill(); };
   process.once('SIGINT', stop); process.once('SIGTERM', stop);
   child.once('exit', () => { process.removeListener('SIGINT', stop); process.removeListener('SIGTERM', stop); });

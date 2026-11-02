@@ -1,6 +1,8 @@
 {
   "app.woodfish.progress": "{n, number} 回たたいた · {min, number} 回以上で終了できます",
   "app.wish.returnSummary": "{status, select, fulfilled {お礼済み：} other {叶ったら：}}{method, select, kindness {小さな親切をする} other {小さな儀式を行う}}",
+  "app.wish.effortPast": "この願いのために頑張ったこと",
+  "app.wish.noPastNotes": "努力の記録は残っていません。",
   "app.note.about": "「{title}」について",
   "app.return.caption": "今回は「{title}」のお礼を。",
   "app.visual.forScene": "「{title}」の見た目を選ぶ",

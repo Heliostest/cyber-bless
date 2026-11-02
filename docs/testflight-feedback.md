@@ -4,7 +4,27 @@
 
 ## 开始收件
 
-在仓库根目录分别运行两个终端：
+Windows 本机首次安装登录自启动并立即启动：
+
+```powershell
+npm run feedback:install
+npm run feedback:status
+npm run feedback:logs
+```
+
+计划任务 `CyberBless-TestFeedback` 使用当前登录用户，无需保存 Windows 密码。登录后自动启动，每分钟补偿检查；进程正常运行时忽略重复启动，没有三天运行时限。独立于 Codex、Vite 和日志终端，关闭日志查看器不影响收件。守护进程分别监控接收服务与隧道，异常退出或连续健康检查失败后自动重启，重试间隔递增至最多 60 秒。Windows runner 也会恢复退出的守护进程；使用 Job Object 清理整棵子进程树，避免孤儿服务占用端口。不会抢占或结束其他程序。
+
+公网地址每次变化都会带时间打印到终端和 `artifacts/test-feedback/supervisor.log`，本机后台也会刷新。日志达到 1 MiB 后轮换，保留一份旧日志；不记录邀请码或测试者描述。`feedback:logs` 持续跟随新日志，按 Ctrl+C 只退出查看。`runner.log` 记录外层启动失败或守护进程退出。`feedback:status` 查看任务、接收服务、隧道和当前公网地址。
+
+```powershell
+npm run feedback:stop       # 停止并禁用自启动/自动恢复
+npm run feedback:start      # 重新启用并立即启动
+npm run feedback:uninstall  # 移除任务，保留邀请码和反馈数据
+```
+
+任务使用本仓库的绝对路径；移动仓库前先卸载任务，再从新位置安装。自启动是当前用户登录后启动，电脑休眠、关机、未登录或断网期间不能在线收件；恢复运行/联网后继续尝试。临时公网地址仍需手动分发给测试者。计划任务能力参考 [Microsoft Task Scheduler 设置](https://learn.microsoft.com/en-us/powershell/module/scheduledtasks/new-scheduledtasksettingsset?view=windowsserver2025-ps)（2026-11-02 已读正文）。
+
+临时前台守护可运行 `npm run feedback:supervise`。手动诊断时先 `feedback:stop`，再分别运行两个终端：
 
 ```powershell
 npm run feedback:serve
@@ -15,7 +35,7 @@ npm run feedback:tunnel
 
 第二个命令只把反馈端口 `127.0.0.1:4318` 暴露到公网，允许提交反馈及携带邀请码查询团队状态汇总，不提供原始描述、设备信息或管理接口。不要把 4319、本机开发服务器或其他目录转发出去。接收服务、隧道和电脑须保持运行；电脑休眠或停止服务期间，手机反馈会保留待发。
 
-`cloudflared` 已安装时无需新增账号，命令会返回临时 `https://….trycloudflare.com` 地址；地址写入 `artifacts/test-feedback/tunnel-runtime.json`，后台会刷新显示。该文件没有邀请码。临时 Tunnel 每次启动可能更换地址，没有运行时间保证，适用于本轮内测；后续可改用固定域名而不改变 App 逻辑。[Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)（2026-11-02 已读正文）。本次没有创建定时任务；若以后用 agent 重启隧道，应先停止旧隧道进程，启动新进程，再从此文件读取新地址，不打印凭据。
+`cloudflared` 已安装时无需新增账号，命令会返回临时 `https://….trycloudflare.com` 地址；地址原子写入 `artifacts/test-feedback/tunnel-runtime.json`，后台会刷新显示。该文件没有邀请码。临时 Tunnel 每次启动可能更换地址，没有运行时间保证，适用于本轮内测；后续可改用固定域名而不改变 App 逻辑。[Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)（2026-11-02 已读正文）。已启用自启动时，由守护进程管理隧道，不再另外启动第二份；agent 可读取状态文件或 `feedback:status` 获取地址，不打印凭据。
 
 ## 测试者操作与失败重试
 
@@ -49,6 +69,8 @@ npm run feedback:export
 建议一次处理一组可复现操作问题，记录反馈编号、复现、修复与测试结果，再在本机后台标记状态。不得从反馈臆造文化主张；若改动器物、动作或提示，仍须执行 [场景来源核查规范](scene-provenance.md)。
 
 ## 验证记录与边界
+
+2026-11-02 自启动：`feedback:test` 全部通过，包含守护进程、IPC 断连、半发送 HTTP 关闭、PowerShell 解析、真实任务定义、Job Object 子孙进程清理和日志轮换。当前用户计划任务已实际安装；分别结束接收进程、cloudflared、Node 守护进程及外层 Windows runner，均成功恢复并重新验证公网健康，地址变化已输出。安装及故障演练前后邀请码和既有收件文件哈希一致。未重启电脑验证完整登录过程，登录触发器已按实际注册的任务定义检查。
 
 2026-11-02：协议 4 项、传输 4 项、后台/隧道 7 项、队列/provider/浮层 31 项通过；最终完整 App 1389 项通过；八语言校验、Web 构建与双端导出通过。独立审阅发现并复核修正了存储读失败恢复时旧草稿覆盖新输入的问题，新增新文字与主动清空两类回归。实际浏览器经 Quick Tunnel 发送合成报告 `662bef70-1e51-4546-b75b-da0b57cd3b71`，显示保存回执，与本机文件相符；公网管理 API 返回 404。本机后台读取并将该联调样例标为已修复。截图在 `artifacts/ui-review/test-feedback-delivered-2026-11-02.jpg` 和 `test-feedback-inbox-2026-11-02.jpg`。
 

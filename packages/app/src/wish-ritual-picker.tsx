@@ -19,6 +19,8 @@ export function WishRitualPicker() {
         const intention = sceneIntention(entry.id);
         return isWishCollectionScene(entry.id) && !!intention?.optionalWish && !heldScenes.has(entry.id);
     });
+    const unlockedScenes = scenes.filter(entry => isWishSceneUnlocked(state, entry.id));
+    const lockedScenes = scenes.filter(entry => !isWishSceneUnlocked(state, entry.id));
     const vesselRows = (items: typeof vessels, pendingChoice = false) => (<div className="wish-practice-grid">
       {items.map(item => {
             const entry = entries.find(e => e.id === item.sceneId)!;
@@ -30,7 +32,19 @@ export function WishRitualPicker() {
         </button>;
         })}
     </div>);
+    const sceneRows = (items: typeof scenes, unlocked: boolean) => (<div className="wish-practice-grid">
+      {items.map(entry => <button key={entry.id} type="button" className="wish-practice-card wish-scene-choice" data-scene={entry.id}
+        data-unlocked={unlocked} disabled={!unlocked} onClick={() => openScene(entry, { wishPicker: true })}>
+        <SceneBadge id={entry.id}/>
+        <strong>{localizedTitle(entry)}</strong>
+        <small className="wish-scene-access"><Icon name={unlocked ? 'check' : 'lock'}/>{tr(unlocked ? '已解锁' : '未解锁')}</small>
+      </button>)}
+    </div>);
     return <div id="vessel-picker" className="wish-ritual-picker">
+    {unlockedScenes.length > 0 && <section aria-label={tr('已解锁')}>
+      <h2>{tr('已解锁')}</h2>
+      {sceneRows(unlockedScenes, true)}
+    </section>}
     {pending.length > 0 && <section aria-label={tr("\u63A5\u7740\u521A\u624D")}>
       <h2>{tr("\u63A5\u7740\u521A\u624D")}</h2>
       {vesselRows(pending, true)}
@@ -39,19 +53,10 @@ export function WishRitualPicker() {
       <h2>{tr(VESSEL_COPY.heading)}</h2>
       {vesselRows(vessels)}
     </section>}
-    {scenes.length > 0 && <section aria-label={tr("完成一次仪式后解锁")}>
-      <h2>{tr("完成一次仪式后解锁")}</h2>
-      <div className="wish-practice-grid">
-        {scenes.map(entry => {
-          const unlocked = isWishSceneUnlocked(state, entry.id);
-          return <button key={entry.id} type="button" className="wish-practice-card wish-scene-choice" data-scene={entry.id}
-            data-unlocked={unlocked} disabled={!unlocked} onClick={() => openScene(entry, { wishPicker: true })}>
-          <SceneBadge id={entry.id}/>
-          <strong>{localizedTitle(entry)}</strong>
-          <small className="wish-scene-access"><Icon name={unlocked ? 'check' : 'lock'}/>{tr(unlocked ? '已解锁' : '未解锁')}</small>
-        </button>;
-        })}
-      </div>
+    {lockedScenes.length > 0 && <section aria-label={tr('未解锁')}>
+      <h2>{tr('未解锁')}</h2>
+      <p className="quiet wish-picker-unlock-note">{tr("完成一次仪式后解锁")}</p>
+      {sceneRows(lockedScenes, false)}
     </section>}
     {!pending.length && !vessels.length && !scenes.length &&
             <p className="quiet">{tr("\u6682\u65F6\u6CA1\u6709\u53EF\u5F00\u59CB\u7684\u4EEA\u5F0F\uFF0C\u8BF7\u7A0D\u540E\u518D\u6765\u3002")}</p>}

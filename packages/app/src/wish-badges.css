@@ -1,0 +1,72 @@
+/* A product-created gold keepsake, using the original ritual silhouette. */
+.art-badge {
+  --badge-size: 176px;
+  height: calc(var(--badge-size) + 12px);
+}
+.art-badge.art-small {
+  --badge-size: 68px;
+  height: 76px;
+  background: transparent;
+}
+.app-shell[data-page="collection"] .app-content > .art-badge {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.badge-medallion {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: var(--badge-size);
+  height: var(--badge-size);
+  border: 2px solid #b47c2f;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #fff0b1 8%, #ebc065 44%, #cb9140 78%, #f6d783);
+  box-shadow:
+    inset 0 1px 0 #fff9e0,
+    inset 0 -3px 0 #c58c3f,
+    0 3px 0 #a9742b,
+    0 5px 6px #6d461426;
+}
+.badge-medallion::before,
+.badge-medallion::after {
+  content: "";
+  position: absolute;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.badge-medallion::before {
+  inset: 6%;
+  border: 1px solid #fdf0bc;
+  background: radial-gradient(ellipse at 35% 22%, #ffe8a3, #e4b75e 68%, #cc9743);
+  box-shadow: inset 0 1px 2px #94602380, 0 1px 0 #94602380;
+}
+.badge-medallion::after {
+  inset: 12%;
+  border: 1px dotted #af772f80;
+}
+.badge-medallion > img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 74%;
+  height: 74%;
+  object-fit: contain;
+  filter:
+    grayscale(1) sepia(1) saturate(1.6) brightness(0.88) contrast(1.12)
+    drop-shadow(0 1px 0 #8b5a2499)
+    drop-shadow(0 -1px 0 #fff3b6b3);
+}
+.badge-medallion > svg {
+  position: relative;
+  z-index: 1;
+  width: 48%;
+  height: 48%;
+  color: #a36e2c;
+  fill: #edc875;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 1px 0 #fff0b5);
+}

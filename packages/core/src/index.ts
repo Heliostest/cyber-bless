@@ -69,6 +69,8 @@ export type Wish = {
     returnMethod?: ReturnMethod;
     /** The scene whose wish box this wish was written in, if any. */
     sourceSceneId?: string;
+    /** The exact daily/opening keepsake used when this wish was recorded. */
+    sourceCollectibleId?: string;
     status: WishStatus;
     archived: boolean;
     createdAt: string;
@@ -207,6 +209,7 @@ export type Action = ({
     category?: WishCategory;
     returnMethod?: ReturnMethod;
     sourceSceneId?: string;
+    sourceCollectibleId?: string;
     at: string;
 } | {
     type: "wish.note";
@@ -220,6 +223,7 @@ export type Action = ({
     at: string;
 } | {
     type: "wish.fulfill";
+    /** Accepted for older callers; new fulfillment always records kindness. */
     method?: ReturnMethod;
     id: string;
     noteId: string;
@@ -273,7 +277,7 @@ export type Action = ({
 /**
  * Uses a wish-type keepsake from 小天地: for 许愿 (nothing kept here — the
  * App asks first) or for 还愿 (`wishId`: the keepsake is marked spent and
- * the wish gets its note, so the wish can be fulfilled by ritual).
+ * the wish gets its note, preserving the historical association).
  */
  | {
     type: "collectible.spend";
@@ -400,7 +404,9 @@ export function reduce(s: State, a: Action): State {
                 ...s,
                 opening: { ...opening, completed: opening.completed + 1 },
                 collectibles: [...s.collectibles, { id: openingCollectibleId(entry.id), kind: 'scene', sceneId: entry.id,
-                        title: entry.title, wishScene: index === 2, at: a.at }],
+                        title: entry.title, wishScene: index === 2, at: a.at,
+                        ...(index === 2 && s.wishes.some(w => w.sourceCollectibleId === openingCollectibleId(entry.id))
+                            ? { spentAt: a.at } : {}) }],
             });
         }
         case 'opening.finish': {
@@ -438,15 +444,28 @@ export function reduce(s: State, a: Action): State {
             if (!sceneVariant(a.variant))
                 throw productError("\u573A\u666F\u9009\u9879\u65E0\u6548");
             return { ...s, sceneRecords: s.sceneRecords.map(r => r.id === a.id ? { ...r, variant: a.variant } : r) };
-        case "wish.create":
+        case "wish.create": {
             if (s.wishes.some((w) => w.id === a.id))
                 return s;
             if (graphemeLength(a.intention) > WISH_INTENTION_MAX || a.intention.length > 8192)
                 throw productError("\u5C0F\u7EA6\u5B9A\u8BF7\u63A7\u5236\u5728 {p0} \u5B57\u4EE5\u5185", { p0: WISH_INTENTION_MAX });
             if (!optionalId(a.sourceSceneId))
                 throw productError("\u5FC3\u613F\u7684\u6765\u6E90\u573A\u666F\u65E0\u6548");
+            const source = a.sourceCollectibleId === undefined ? undefined
+                : s.collectibles.find(c => c.id === a.sourceCollectibleId);
+            // Opening keepsakes are collected after writing. Keep the exact
+            // association in the wish so collecting after a reload still works.
+            const pendingOpening = a.sourceSceneId !== undefined && s.opening?.status === 'active' && s.opening.completed === 2 &&
+                s.opening.sceneIds[2] === a.sourceSceneId &&
+                a.sourceCollectibleId === openingCollectibleId(a.sourceSceneId) &&
+                !s.wishes.some(w => w.sourceCollectibleId === a.sourceCollectibleId);
+            if (!optionalId(a.sourceCollectibleId) || (a.sourceCollectibleId !== undefined &&
+                (!date(a.at) || (source ? source.kind !== 'scene' || !source.wishScene ||
+                    source.sceneId !== a.sourceSceneId || !!source.spentAt : !pendingOpening))))
+                throw productError("\u8FD9\u6B21\u7948\u613F\u7684\u8BB0\u5F55\u65E0\u6548");
             return {
                 ...s,
+                ...(source ? { collectibles: s.collectibles.map(c => c.id === source.id ? { ...c, spentAt: a.at } : c) } : {}),
                 wishes: [
                     {
                         id: a.id,
@@ -457,6 +476,7 @@ export function reduce(s: State, a: Action): State {
                         ...(a.sourceSceneId === undefined
                             ? {}
                             : { sourceSceneId: a.sourceSceneId }),
+                        ...(a.sourceCollectibleId === undefined ? {} : { sourceCollectibleId: a.sourceCollectibleId }),
                         createdAt: a.at,
                         status: "active",
                         archived: false,
@@ -465,8 +485,11 @@ export function reduce(s: State, a: Action): State {
                     ...s.wishes,
                 ],
             };
+        }
         case "wish.note": {
             const w = wishOf(s, a.id);
+            if (w.status === "fulfilled")
+                return s;
             if (w.archived)
                 throw productError("\u5148\u628A\u5FC3\u613F\u91CD\u65B0\u62FE\u8D77\uFF0C\u518D\u8BB0\u4E00\u7B14\u5427");
             if (w.notes.some((n) => n.id === a.noteId))
@@ -491,14 +514,11 @@ export function reduce(s: State, a: Action): State {
                 return s;
             if (w.status !== "realized" || w.archived)
                 throw productError("\u5148\u786E\u8BA4\u5FC3\u613F\u5B9E\u73B0\uFF0C\u518D\u6765\u8FD8\u613F\u5427");
-            const method = a.method ?? "kindness";
-            if (method === "ritual" && !hasReturnRitual(s, w))
-                throw productError("\u5148\u4E3A\u8FD9\u4E2A\u5DF2\u5B9E\u73B0\u7684\u5FC3\u613F\u5B8C\u6210\u4E00\u4E2A\u5C0F\u4EEA\u5F0F\u5427");
             const next = updateWish(s, {
                 ...w,
                 status: "fulfilled",
                 fulfilledAt: a.at,
-                returnMethod: method,
+                returnMethod: "kindness",
                 notes: [
                     ...w.notes,
                     { id: a.noteId, text: text(a.text, 500), at: a.at },
@@ -573,10 +593,12 @@ export function reduce(s: State, a: Action): State {
             let next = s;
             if (r.wishId) {
                 const w = wishOf(s, r.wishId);
-                next = updateWish(s, {
-                    ...w,
-                    notes: [...w.notes, ritualNote(r.id, r.ritual, a.at)],
-                });
+                // A restored linked session may finish after the wish has already been fulfilled.
+                if (w.status !== "fulfilled")
+                    next = updateWish(s, {
+                        ...w,
+                        notes: [...w.notes, ritualNote(r.id, r.ritual, a.at)],
+                    });
             }
             return rememberSceneUnlocks({
                 ...next,
@@ -754,6 +776,7 @@ export function reduce(s: State, a: Action): State {
 export function localDay(date = new Date()): string {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
+/** Identifies historical ritual associations; no longer a fulfillment condition. */
 export function hasReturnRitual(state: State, wish: Wish): boolean {
     return Boolean(wish.realizedAt &&
         (state.sessions.some((s) => s.wishId === wish.id &&
@@ -834,6 +857,7 @@ export function restore(raw: string | null, initialSettings?: Partial<State["set
             (w.returnMethod === undefined ||
                 ["kindness", "ritual"].includes(String(w.returnMethod))) &&
             optionalId(w.sourceSceneId) &&
+            optionalId(w.sourceCollectibleId) &&
             typeof w.archived === "boolean" &&
             ["active", "realized", "fulfilled"].includes(String(w.status)) &&
             date(w.createdAt) &&

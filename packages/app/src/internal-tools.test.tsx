@@ -3,6 +3,7 @@ import { createElement } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createState } from '@wbr/core';
 import { BlessingApp } from './App';
+import { INTERNAL_TOOLS_ENABLED } from './internal-tools-config';
 import { useApp } from './context';
 import { clickOn, renderUI, settle } from './dom-test-utils';
 
@@ -23,8 +24,16 @@ const host = { read: async () => JSON.stringify(createState()), write: async () 
 beforeEach(() => { vi.spyOn(window, 'scrollTo').mockImplementation(() => {}); });
 afterEach(() => vi.restoreAllMocks());
 
-it('hides the internal catalog and obsolete cache entry by default while retaining settings', async () => {
+it('uses the shared build setting for default catalog visibility', async () => {
   const ui = renderUI(createElement(BlessingApp, { host, initialRoute: { page: 'me' } }));
+  await settle();
+  expect(ui.host.querySelector('.settings-card')?.textContent?.includes('场景目录')).toBe(INTERNAL_TOOLS_ENABLED);
+  expect(ui.host.querySelector('.settings-card')?.textContent).not.toContain('资源缓存');
+  ui.unmount();
+});
+
+it('hides the internal catalog when the build disables it while retaining settings', async () => {
+  const ui = renderUI(createElement(BlessingApp, { host, internalToolsEnabled: false, initialRoute: { page: 'me' } }));
   await settle();
   expect(ui.host.querySelector('.settings-card')?.textContent).toContain('仪式声音');
   expect(ui.host.querySelector('.settings-card')?.textContent).toContain('隐私政策');
@@ -43,7 +52,7 @@ it('keeps the catalog available from My during internal testing', async () => {
 });
 
 it.each(['scenes', 'cache'] as const)('blocks a direct initial %s route in a release host', async page => {
-  const ui = renderUI(createElement(BlessingApp, { host, initialRoute: { page } }));
+  const ui = renderUI(createElement(BlessingApp, { host, internalToolsEnabled: false, initialRoute: { page } }));
   await settle();
   expect(ui.host.querySelector('[data-test-catalog], [data-test-cache]')).toBeNull();
   expect(ui.host.querySelector('.settings-card')).not.toBeNull();
@@ -51,7 +60,7 @@ it.each(['scenes', 'cache'] as const)('blocks a direct initial %s route in a rel
 });
 
 it.each(['catalog route', 'cache route'])('blocks programmatic navigation to %s in a release host', async label => {
-  const ui = renderUI(createElement(BlessingApp, { host }));
+  const ui = renderUI(createElement(BlessingApp, { host, internalToolsEnabled: false }));
   await settle();
   clickOn([...ui.host.querySelectorAll('button')].find(button => button.textContent === label)!);
   await settle();

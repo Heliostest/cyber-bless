@@ -1,4 +1,5 @@
 import { translate as tr } from '@wbr/i18n';
+import { INTERNAL_TOOLS_ENABLED } from './internal-tools-config';
 import { configureLocale, getLocale, getFormatLocale, localePreferenceFromSave, subscribeLocale, ProductError, message, hasProductCopy } from '@wbr/i18n';
 import { localizedTitle } from './localization';
 import { catalogData } from '@wbr/i18n/catalogs';
@@ -37,7 +38,7 @@ import { ARRIVAL_LINGER_MS, rewardOriginOf, shouldReduceMotion, type RewardFligh
 const isInternalRoute = (route: Route) => route.page === 'scenes' || route.page === 'cache';
 const permittedRoute = (route: Route, internalToolsEnabled: boolean): Route =>
     !internalToolsEnabled && isInternalRoute(route) ? { page: 'me' } : route;
-export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack, content, navigationRequest, onNavigationConsumed, initialRoute, systemLocales, systemHour12, internalToolsEnabled = false, }: {
+export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack, content, navigationRequest, onNavigationConsumed, initialRoute, systemLocales, systemHour12, internalToolsEnabled = INTERNAL_TOOLS_ENABLED, }: {
     host: Host;
     active?: boolean;
     backRequest?: number;

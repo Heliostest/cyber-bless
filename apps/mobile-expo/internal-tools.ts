@@ -1,17 +1,6 @@
-import { requireOptionalNativeModule } from 'expo';
-import { Platform } from 'react-native';
+import { INTERNAL_TOOLS_ENABLED } from '@wbr/app/internal-tools-config';
 
-type RuntimeModule = { isTestFlightAsync(): Promise<boolean> };
-
-/** A production build can be promoted from TestFlight to the App Store unchanged. */
+/** Internal testing ends by rebuilding with the shared switch disabled. */
 export async function detectInternalToolsEnabled(): Promise<boolean> {
-  if (__DEV__) return true;
-  if (Platform.OS !== 'ios') return false;
-  try {
-    const runtime = requireOptionalNativeModule<RuntimeModule>('BlessingRuntime');
-    return await runtime?.isTestFlightAsync() === true;
-  } catch {
-    // Older binaries, an unavailable store transaction or failed verification fail closed.
-    return false;
-  }
+  return INTERNAL_TOOLS_ENABLED;
 }

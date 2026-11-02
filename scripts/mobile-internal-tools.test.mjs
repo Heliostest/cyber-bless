@@ -8,13 +8,14 @@ const require = createRequire(import.meta.url);
 const { transformSync } = require('@babel/core');
 const filename = new URL('../apps/mobile-expo/internal-tools.ts', import.meta.url);
 
-function detector({ dev = false, platform = 'ios', native = null, throws = false } = {}) {
+function detector({ enabled = true, dev = false, platform = 'ios' } = {}) {
   const { code } = transformSync(readFileSync(filename, 'utf8'), { filename: filename.pathname, babelrc: false, configFile: false,
     presets: [require.resolve('babel-preset-expo')], caller: { name: 'metro', platform, isDev: dev, isServer: false, bundler: 'metro', supportsStaticESM: false } });
   const module = { exports: {} };
   const context = { module, exports: module.exports, __DEV__: dev, require: name => {
+    if (name === '@wbr/app/internal-tools-config') return { INTERNAL_TOOLS_ENABLED: enabled };
     if (name === 'react-native') return { Platform: { OS: platform } };
-    if (name === 'expo') return { requireOptionalNativeModule: () => { if (throws) throw Error('unavailable'); return native; } };
+    if (name === 'expo') return { requireOptionalNativeModule: () => { throw Error('Build access must not depend on a store receipt'); } };
     if (name.startsWith('@babel/runtime/')) return require(name);
     throw Error(`Unexpected import ${name}`);
   } };
@@ -22,25 +23,22 @@ function detector({ dev = false, platform = 'ios', native = null, throws = false
   return module.exports.detectInternalToolsEnabled;
 }
 
-test('development enables tools without a native module', async () => {
-  assert.equal(await detector({ dev: true, throws: true })(), true);
-});
-test('release enables tools only for an affirmative iOS TestFlight runtime result', async () => {
-  assert.equal(await detector({ native: { isTestFlightAsync: async () => true } })(), true);
-  for (const value of [false, undefined, 'true', 1]) {
-    assert.equal(await detector({ native: { isTestFlightAsync: async () => value } })(), false);
+test('enabled builds open tools on iOS and Android without native receipt detection', async () => {
+  for (const platform of ['ios', 'android']) for (const dev of [true, false]) {
+    assert.equal(await detector({ platform, dev })(), true);
   }
-  assert.equal(await detector({ platform: 'android', native: { isTestFlightAsync: async () => true } })(), false);
 });
-test('missing or failed native detection closes tools without failing startup', async () => {
-  assert.equal(await detector()(), false);
-  assert.equal(await detector({ throws: true })(), false);
-  assert.equal(await detector({ native: { isTestFlightAsync: async () => { throw Error('offline'); } } })(), false);
+
+test('the build switch closes tools consistently when internal testing is finished', async () => {
+  for (const platform of ['ios', 'android']) for (const dev of [true, false]) {
+    assert.equal(await detector({ enabled: false, platform, dev })(), false);
+  }
 });
-test('a fresh runtime decision cannot retain TestFlight access after store promotion', async () => {
-  let sandbox = true;
-  const detect = detector({ native: { isTestFlightAsync: async () => sandbox } });
-  assert.equal(await detect(), true);
-  sandbox = false;
-  assert.equal(await detect(), false);
+
+test('native startup and the browser host use the same small build configuration', () => {
+  const native = readFileSync(new URL('../apps/mobile-expo/App.tsx', import.meta.url), 'utf8');
+  const browser = readFileSync(new URL('../apps/cyber-bless/src/App.tsx', import.meta.url), 'utf8');
+  assert.match(native, /useState\(INTERNAL_TOOLS_ENABLED\)/);
+  assert.match(browser, /if \(INTERNAL_TOOLS_ENABLED\) host\.testFeedback/);
+  assert.match(browser, /internalToolsEnabled=\{INTERNAL_TOOLS_ENABLED\}/);
 });

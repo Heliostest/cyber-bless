@@ -2,6 +2,7 @@
 import { createElement } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 import { BlessingApp } from "./App";
+import { INTERNAL_TOOLS_ENABLED } from './internal-tools-config';
 import { createState } from '@wbr/core';
 import { clickOn, renderUI, settle } from "./dom-test-utils";
 
@@ -52,7 +53,7 @@ it("uses one shared title and supporting line on regular pages", async () => {
     tap(".bottom-nav button", tab);
     await settle();
     const settings = ui.host.querySelector('.settings-card')!.textContent;
-    expect(settings).not.toContain('场景目录');
+    expect(settings?.includes('场景目录')).toBe(INTERNAL_TOOLS_ENABLED);
     expect(settings).not.toContain('资源缓存');
     tap(".settings-row", row);
     await settle();

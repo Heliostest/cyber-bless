@@ -2,11 +2,12 @@ import { lazy, Suspense, useEffect } from "react";
 import { configureLocale, getLocalePreference, translate as tr } from '@wbr/i18n';
 import { useDeveloperLocale } from './locale';
 import { BlessingApp } from "@wbr/app";
+import { INTERNAL_TOOLS_ENABLED } from '@wbr/app/internal-tools-config';
 import { browserHost, browserTestFeedbackHost } from "@wbr/runtime";
 import "@wbr/app/style.css";
 
 const host = browserHost();
-if (import.meta.env.DEV) host.testFeedback = browserTestFeedbackHost();
+if (INTERNAL_TOOLS_ENABLED) host.testFeedback = browserTestFeedbackHost();
 host.publicShareBaseUrl = import.meta.env.VITE_PUBLIC_SHARE_BASE_URL || undefined;
 configureLocale(host.initialLocalePreference ?? 'system', navigator.languages ?? [navigator.language]);
 const DevApp = import.meta.env.DEV ? lazy(() => import("./DevApp")) : null;
@@ -34,7 +35,7 @@ export function App() {
   return (
     <BlessingApp
       host={host}
-      internalToolsEnabled={import.meta.env.DEV}
+      internalToolsEnabled={INTERNAL_TOOLS_ENABLED}
     />
   );
 }

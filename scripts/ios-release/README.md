@@ -84,6 +84,8 @@ node "$release_repo/scripts/ios-release/release-runner.mjs" <配置绝对路径>
 
 工具核对同一个 tag、commit/tree、文件哈希、原生编译输入和阶段回执。脚本或源码有修复时提交并使用新 tag。原生 iOS 仍由 prebuild 生成；升级依赖先更新跟踪的锁，不关闭 frozen／deployment 检查放行。
 
+Pods 安装通过同一提交内的 `pod-install.rb` 调用 CocoaPods。ExpoModulesCore 和 ExpoWidgets 的本地 podspec JSON 含 checkout 绝对路径；包装器仅在这两个保存的 JSON 校验和中，将本 checkout 的完整路径前缀（含 URI 转义形式）规范为固定占位符，避免编码 tag 目录改变锁。版本、依赖、脚本及其他字节仍参与校验，实际原生路径仍完整记录在原生输入回执中。安装继续使用冻结 Bundler 和 `--deployment`，并逐字节核对跟踪锁。更新 `store/ios/Podfile.lock` 时也必须使用该包装器；在独立验证 checkout 的 `apps/mobile-expo/ios` 中运行 `bundle exec ruby ../../../scripts/ios-release/pod-install.rb install` 生成候选锁后，验证 `install --deployment` 与目录迁移均不改变锁，再审阅提交。
+
 小型 manifest、工具链、IPA 哈希及上传回执用于追溯。源码和脚本已经在 Git/LFS 后，不再另外存大型源码压缩包；各 tag checkout 当前各有 Git/LFS／依赖缓存，结束后不要无限保留所有工作目录。需要安装或排查旧包时保全其 IPA／archive／dSYM，再清理旧 checkout。本工具不自动删除历史备份。
 
 旧构建 18 等工作区快照保持原有事实，不追认成 tag 构建。tag 固定输入并支持重建，不承诺重新签名的 IPA 字节一致。

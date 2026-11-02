@@ -1,4 +1,6 @@
 PODS:
+  - BlessingRuntime (1.0.0):
+    - ExpoModulesCore
   - EXConstants (57.0.22):
     - ExpoModulesCore
   - EXJSONUtils (57.0.2)
@@ -2179,6 +2181,7 @@ PODS:
   - Yoga (0.0.0)
 
 DEPENDENCIES:
+  - BlessingRuntime (from `../modules/blessing-runtime/ios`)
   - EXConstants (from `../../../node_modules/expo-constants/ios`)
   - EXJSONUtils (from `../../../node_modules/expo-json-utils/ios`)
   - EXManifests (from `../../../node_modules/expo-manifests/ios`)
@@ -2285,6 +2288,8 @@ DEPENDENCIES:
   - Yoga (from `../../../node_modules/react-native/ReactCommon/yoga`)
 
 EXTERNAL SOURCES:
+  BlessingRuntime:
+    :path: "../modules/blessing-runtime/ios"
   EXConstants:
     :path: "../../../node_modules/expo-constants/ios"
   EXJSONUtils:
@@ -2494,6 +2499,7 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
+  BlessingRuntime: ed0fb1658772b1a8ed89232ad5c7b9da770a5a62
   EXConstants: 8a0eb5e2553569c0e6710b73a8d90d1ce358c153
   EXJSONUtils: a49e3ef80dff762108e5690c7b2f360675dcf7f6
   EXManifests: 4c53b2602e03ccf44d0b4ff9c5d655b2c5acba3f
@@ -2511,13 +2517,13 @@ SPEC CHECKSUMS:
   ExpoLinking: b2f2952392549ef78f9c4b37fad836e4180de4e4
   ExpoLocalization: f204d4ca963bfcea932068a978247878f664f5a4
   ExpoLogBox: 80957303325cd4439137765c90a87d7f22aaf2ff
-  ExpoModulesCore: 8b536a594095ab382edc7615024f57c9798b7d61
+  ExpoModulesCore: 1ea28535c4b5b91ebba1b10a6266d87ed6b59e35
   ExpoModulesJSI: ded9f4c72f35fc9400ad85506a94acdd87b2b23b
   ExpoModulesWorklets: 44a66395ccb9c5683d06fcbfb6b1cc01df62d423
   ExpoSharing: 4f0529a876e307b0dc5463f80dd318e4c1457c77
   ExpoSplashScreen: 856060f5724dc4fca4d69a2d18a161e3baa37019
   ExpoUI: 162ba2d970e9fba2d53d819945c41ed6b529a73f
-  ExpoWidgets: d165f80371be7bf36a8fef44a7ec16ebf45dbfa7
+  ExpoWidgets: 9b656659ad485d343e967bad67247188d21f2c0e
   EXUpdatesInterface: 4c96533f11c8cefe879bd506564cc2d537f56804
   FBLazyVector: 2138c6c2ab66c31bf5754dc18097fbc498a49c7f
   hermes-engine: 8930e5f68b09f76e00ab617da3f7587e7262efd0

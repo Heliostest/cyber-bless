@@ -76,10 +76,14 @@ test('copies the tracked pod lock and installs with frozen bundle deployment', a
   await writeFile(path.join(repo, 'apps/mobile-expo/ios/Podfile.lock'), 'old generated lock');
   const actual = await installLockedPods(config, { run: async (command, args, options) => {
     assert.equal(path.basename(command), 'bundle');
-    assert.deepEqual(args, ['exec', 'pod', 'install', '--deployment']);
+    assert.deepEqual(args, ['exec', config.rubyBinary, path.join(repo, 'scripts/ios-release/pod-install.rb'), 'install', '--deployment']);
     assert.equal(options.cwd, path.join(repo, 'apps/mobile-expo/ios'));
     assert.equal(options.env.BUNDLE_GEMFILE, path.join(repo, 'Gemfile'));
     assert.equal(options.env.BUNDLE_FROZEN, 'true');
+    assert.equal(options.env.BUNDLE_IGNORE_CONFIG, 'true');
+    assert.equal(options.env.LANG, 'en_US.UTF-8');
+    assert.equal(options.env.LC_ALL, 'en_US.UTF-8');
+    assert.equal(options.env.RUBYOPT, undefined);
     assert.equal(await readFile(path.join(options.cwd, 'Podfile.lock'), 'utf8'), lock);
     return { stdout: 'Pod installation complete!\n' };
   } });

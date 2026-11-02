@@ -105,7 +105,9 @@ export async function installLockedPods(config, { run = defaultRun } = {}) {
   } catch (error) { if (error.code !== 'ENOENT') throw error; }
   await writeFile(generatedLock, bytes.podLock);
   const bundle = path.join(path.dirname(config.rubyBinary ?? 'ruby'), 'bundle');
-  await run(bundle, ['exec', 'pod', 'install', '--deployment'], { cwd: native, env: environment(config, files.gemfile) });
+  const ruby = config.rubyBinary ?? 'ruby';
+  const installer = path.join(config.repo, 'scripts/ios-release/pod-install.rb');
+  await run(bundle, ['exec', ruby, installer, 'install', '--deployment'], { cwd: native, env: environment(config, files.gemfile) });
   if (!(await regularFile(generatedLock)).equals(bytes.podLock)) throw Error('Generated Podfile.lock changed during deployment installation');
   for (const [name, file] of Object.entries(files)) {
     if (!(await regularFile(file)).equals(bytes[name])) throw Error('Tracked dependency input changed during installation: ' + path.basename(file));

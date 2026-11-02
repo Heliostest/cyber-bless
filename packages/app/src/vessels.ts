@@ -1,4 +1,4 @@
-import type { Collectible, State } from "@wbr/core";
+import { isSceneUnlocked, type Collectible, type State } from "@wbr/core";
 import type { CatalogEntry } from "@wbr/content/catalog";
 import { isWishScene } from "./scene-placement";
 
@@ -7,11 +7,9 @@ export function isWishCollectionScene(sceneId: string): boolean {
   return isWishScene(sceneId);
 }
 
-/** Collection unlocks the matching picker ritual; spending a copy keeps it unlocked. */
-export function isWishSceneUnlocked(state: Pick<State, 'collectibles'>, sceneId: string): boolean {
-  return isWishCollectionScene(sceneId) && state.collectibles.some(
-    item => item.kind === 'scene' && item.sceneId === sceneId,
-  );
+/** First completion unlocks the matching picker ritual permanently. */
+export function isWishSceneUnlocked(state: State, sceneId: string): boolean {
+  return isWishCollectionScene(sceneId) && isSceneUnlocked(state, sceneId);
 }
 
 /**

@@ -38,6 +38,8 @@
   "app.visual.spaceGrade.detail": "柔らかな光の拡散 · 周辺減光と粒子",
   "app.visual.depthRim": "深度リムライト",
   "app.visual.depthRim.detail": "方向付きリムライト · 濃い細線",
+  "app.visual.bandRim": "二段階リムライト",
+  "app.visual.bandRim.detail": "二段階の明暗 · ピンクの深度リム",
   "app.visual.galleryRim": "リムライトの強さ",
   "app.visual.pencilScale": "ハッチングの密度",
   "app.visual.paletteStrength": "配色の強さ",

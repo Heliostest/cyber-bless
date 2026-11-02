@@ -31,6 +31,8 @@ export type Route = {
   replay?: boolean;
   /** A resumable first-play walk, collected in the persisted opening order. */
   opening?: boolean;
+  /** Internal catalog provenance for this visit only; never stored in the game save. */
+  feedbackSession?: true;
   /** Transient feedback for a session just finished here; never persisted. */
   revealReward?: boolean;
   /** This visit's local frame, never persisted in the save. */
@@ -38,6 +40,8 @@ export type Route = {
 };
 export type AppContext = {
   state: State;
+  /** Enabled by the host for development or TestFlight, never by a saved preference. */
+  internalToolsEnabled?: boolean;
   go(route: Route): void;
   dispatch(a: Action): boolean;
   back(): void;

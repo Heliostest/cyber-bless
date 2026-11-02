@@ -131,6 +131,8 @@ export type State = {
     /** Absent on legacy saves. Only an empty host starts the first-play opening. */
     opening?: OpeningState;
     sceneRecords: SceneRecord[];
+    /** Permanent first-completion access; absent on saves from before unlocks existed. */
+    unlockedSceneIds?: string[];
     version: 1;
     wishes: Wish[];
     activeSession: Session | null;
@@ -311,6 +313,43 @@ export function createState(settings: Partial<State["settings"]> = {}): State {
         settings: { sound: true, haptics: true, reducedMotion: false, ...settings },
     };
 }
+/** Completed gameplay is enough; collecting its object is a separate choice. */
+function completedSceneIds(state: State): string[] {
+    const scenes = state.sceneRecords
+        .filter(record => sceneProgress(record) >= sceneStepCount(record))
+        .map(record => record.id);
+    for (const session of state.sessions) {
+        if (session.completedAt && session.progress >= rituals[session.ritual].steps)
+            scenes.push(session.ritual);
+    }
+    const active = state.activeSession;
+    // Woodfish can continue beyond its minimum; only its finish action settles it.
+    if (active && active.ritual !== "woodfish" && active.progress >= rituals[active.ritual].steps)
+        scenes.push(active.ritual);
+    // Old saves may only retain the object after replay has reset the record.
+    for (const object of state.collectibles) {
+        if (object.kind === "scene" && object.sceneId)
+            scenes.push(object.sceneId);
+        else if (kind(object.kind))
+            scenes.push(object.kind);
+    }
+    return scenes;
+}
+/** Also reads old completion evidence, so legacy in-memory states work before saving. */
+export function isSceneUnlocked(state: State, sceneId: string): boolean {
+    return !!state.unlockedSceneIds?.includes(sceneId) || completedSceneIds(state).includes(sceneId);
+}
+/** Preserve previous completion before replacing a record with replay progress. */
+function rememberSceneUnlocks(next: State, previous = next): State {
+    const ids = new Set([
+        ...(next.unlockedSceneIds ?? []),
+        ...completedSceneIds(previous),
+        ...(next === previous ? [] : completedSceneIds(next)),
+    ]);
+    if (ids.size === (next.unlockedSceneIds?.length ?? 0))
+        return next;
+    return { ...next, unlockedSceneIds: [...ids] };
+}
 function text(value: string, max: number) {
     const clean = value.trim();
     if (!clean || graphemeLength(clean) > max || clean.length > 8192)
@@ -357,12 +396,12 @@ export function reduce(s: State, a: Action): State {
             const record = s.sceneRecords.find(r => r.id === a.sceneId);
             if (!record || record.engine !== entry.engine || sceneProgress(record) < sceneStepCount(entry) || !date(a.at))
                 throw productError("\u5148\u5B8C\u6210\u8FD9\u573A\u4EEA\u5F0F\uFF0C\u518D\u6536\u4E0B\u5C0F\u7269");
-            return {
+            return rememberSceneUnlocks({
                 ...s,
                 opening: { ...opening, completed: opening.completed + 1 },
                 collectibles: [...s.collectibles, { id: openingCollectibleId(entry.id), kind: 'scene', sceneId: entry.id,
                         title: entry.title, wishScene: index === 2, at: a.at }],
-            };
+            });
         }
         case 'opening.finish': {
             if (s.opening?.status === 'complete')
@@ -390,9 +429,9 @@ export function reduce(s: State, a: Action): State {
                 throw productError("\u573A\u666F\u8FDB\u5EA6\u65E0\u6548");
             if (!validStrikes(a.strikes) || (a.strikes !== undefined && a.strikes < a.progress))
                 throw productError("\u8F7B\u6572\u6B21\u6570\u65E0\u6548");
-            return { ...s, sceneRecords: s.sceneRecords.map(r => r.id === a.id ? { ...r, progress: a.progress, steps: sceneStepCount(r),
+            return rememberSceneUnlocks({ ...s, sceneRecords: s.sceneRecords.map(r => r.id === a.id ? { ...r, progress: a.progress, steps: sceneStepCount(r),
                     ...(r.engine === 'woodfish@1' && (a.strikes !== undefined || r.strikes !== undefined)
-                        ? { strikes: a.progress === 0 ? 0 : a.strikes ?? r.strikes } : {}) } : r) };
+                        ? { strikes: a.progress === 0 ? 0 : a.strikes ?? r.strikes } : {}) } : r) }, s);
         case "scene.favorite":
             return { ...s, sceneRecords: s.sceneRecords.map(r => r.id === a.id ? { ...r, favorite: a.favorite } : r) };
         case "scene.variant":
@@ -516,14 +555,14 @@ export function reduce(s: State, a: Action): State {
             const r = s.activeSession;
             if (r.progress >= rituals[r.ritual].steps && r.ritual !== 'woodfish')
                 return s;
-            return {
+            return rememberSceneUnlocks({
                 ...s,
                 activeSession: {
                     ...r,
                     progress: Math.min(rituals[r.ritual].steps, r.progress + 1),
                     ...(r.ritual === 'woodfish' ? { strikes: Math.min(1000000, (r.strikes ?? r.progress) + 1) } : {}),
                 },
-            };
+            });
         }
         case "ritual.finish": {
             if (s.sessions.some((r) => r.id === a.id))
@@ -539,7 +578,7 @@ export function reduce(s: State, a: Action): State {
                     notes: [...w.notes, ritualNote(r.id, r.ritual, a.at)],
                 });
             }
-            return {
+            return rememberSceneUnlocks({
                 ...next,
                 activeSession: null,
                 sessions: [...s.sessions, { ...r, completedAt: a.at }],
@@ -553,7 +592,7 @@ export function reduce(s: State, a: Action): State {
                         wishId: r.wishId,
                     },
                 ],
-            };
+            });
         }
         case "ritual.scene": {
             if (s.sessions.some((r) => r.id === a.id))
@@ -573,7 +612,7 @@ export function reduce(s: State, a: Action): State {
                 ...w,
                 notes: [...w.notes, ritualNote(a.id, a.ritual, a.at)],
             });
-            return {
+            return rememberSceneUnlocks({
                 ...next,
                 sessions: [
                     ...s.sessions,
@@ -586,7 +625,7 @@ export function reduce(s: State, a: Action): State {
                         completedAt: a.at,
                     },
                 ],
-            };
+            });
         }
         case "daily.scene": {
             // One per scene per day: a re-fired last step, or a second walk the
@@ -603,7 +642,7 @@ export function reduce(s: State, a: Action): State {
                 !date(a.at) ||
                 typeof a.wishScene !== "boolean")
                 throw productError("\u8FD9\u6B21\u4EEA\u5F0F\u7684\u8BB0\u5F55\u65E0\u6548");
-            return {
+            return rememberSceneUnlocks({
                 ...s,
                 collectibles: [
                     ...s.collectibles,
@@ -616,7 +655,7 @@ export function reduce(s: State, a: Action): State {
                         ...(a.wishScene ? { wishScene: true } : {}),
                     },
                 ],
-            };
+            });
         }
         case "collectible.spend": {
             if (!id(a.id) || !date(a.at) || !optionalId(a.wishId))
@@ -780,6 +819,8 @@ export function restore(raw: string | null, initialSettings?: Partial<State["set
         v.version === 1 &&
         (v.opening === undefined || validOpeningState(v.opening)) &&
         (v.sceneRecords === undefined || list(v.sceneRecords, sceneRecord)) &&
+        (v.unlockedSceneIds === undefined || (Array.isArray(v.unlockedSceneIds) &&
+            v.unlockedSceneIds.every(id) && new Set(v.unlockedSceneIds).size === v.unlockedSceneIds.length)) &&
         obj(settings) &&
         ["sound", "haptics", "reducedMotion"].every((k) => typeof settings[k] === "boolean") &&
         list(v.wishes, (w) => obj(w) &&
@@ -846,5 +887,5 @@ export function restore(raw: string | null, initialSettings?: Partial<State["set
         throw productError("\u5B58\u6863\u7684\u5FC3\u613F\u5173\u8054\u4E0D\u5B8C\u6574\uFF0C\u539F\u6570\u636E\u5DF2\u4FDD\u7559");
     if (s.opening)
         s.opening = replaceHiddenOpeningScenes(s.opening);
-    return s;
+    return rememberSceneUnlocks(s);
 }

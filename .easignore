@@ -48,7 +48,7 @@ assets/scene-icons/soft3d/*
 !assets/widgets/**
 !assets/woodfish
 assets/woodfish/*
-!assets/woodfish/bundled-v1
-!assets/woodfish/bundled-v1/**
+!assets/woodfish/blender-v2
+!assets/woodfish/blender-v2/**
 content/traditions/
 content/traditions

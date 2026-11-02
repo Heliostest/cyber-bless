@@ -7,6 +7,8 @@ import { validateWoodfishGLB } from "../packages/content/src/glb.ts";
 import { parseSceneManifest } from "../packages/content/src/catalog.ts";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const contentOutput = path.join(root, "artifacts/scene-content");
+/** Shared by the descriptor generator and both offline host asset lists. */
+export const bundledWoodfishModel = "woodfish/blender-v2/woodfish.glb";
 const ref = async (file) => {
   const bytes = await readFile(path.join(root, file));
   return {
@@ -23,16 +25,16 @@ async function validateModel(file, bindings) {
   );
 }
 export async function prepareBundledContent() {
-  // Independently authored against the shipped GLB, never the remote descriptor.
+  // The current model and descriptor ship together in every App release.
   const source = JSON.parse(
     await readFile(path.join(root, "content/woodfish/bundled.json"), "utf8"),
   );
   const bundled = parsePack({
     ...source,
-    model: await ref("assets/woodfish/bundled-v1/woodfish.glb"),
+    model: await ref(`assets/${bundledWoodfishModel}`),
   });
   await validateModel(
-    "assets/woodfish/bundled-v1/woodfish.glb",
+    `assets/${bundledWoodfishModel}`,
     bundled.bindings,
   );
   const file = path.join(root, "packages/content/src/bundled.ts");

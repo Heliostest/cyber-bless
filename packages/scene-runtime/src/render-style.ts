@@ -63,7 +63,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
     composer.addPass(new RenderPass(scene, camera));
     if (isGallerySurfaceStyle(active) || isGalleryPostStyle(active)) {
       if (isGallerySurfaceStyle(active)) gallerySurfaces = createGallerySurfaces(active);
-      else if (active !== "space-grade") {
+      if (isGalleryPostStyle(active) && active !== "space-grade") {
         normals = new MoebiusNormals(scene, camera);
         composer.addPass(normals);
       }

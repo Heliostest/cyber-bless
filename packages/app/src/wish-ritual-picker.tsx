@@ -39,8 +39,8 @@ export function WishRitualPicker() {
       <h2>{tr(VESSEL_COPY.heading)}</h2>
       {vesselRows(vessels)}
     </section>}
-    {scenes.length > 0 && <section aria-label={tr("在今日收下对应小物后解锁")}>
-      <h2>{tr("在今日收下对应小物后解锁")}</h2>
+    {scenes.length > 0 && <section aria-label={tr("完成一次仪式后解锁")}>
+      <h2>{tr("完成一次仪式后解锁")}</h2>
       <div className="wish-practice-grid">
         {scenes.map(entry => {
           const unlocked = isWishSceneUnlocked(state, entry.id);

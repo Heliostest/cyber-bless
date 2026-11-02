@@ -15,6 +15,7 @@ export const visualStyleOptions = [
   { id: "gallery-outline", label: "法线描边", detail: "几何折角 · 清晰轮廓" },
   { id: "space-grade", label: "柔光调色", detail: "柔光扩散 · 暗角颗粒" },
   { id: "depth-rim", label: "深度边缘光", detail: "方向轮廓光 · 深色细边" },
+  { id: "band-rim", label: "两级边缘光", detail: "两级明暗 · 粉色深度边" },
 ] as const;
 
 /** Validated visual controls shared by the App and development tools; content defaults stay independent. */
@@ -43,6 +44,9 @@ export const styleParameterControls = [
   { style: "depth-rim", key: "rimWidth", label: "边缘光宽度", min: 1, max: 8, step: 0.5, unit: "px" },
   { style: "depth-rim", key: "rimStrength", label: "边缘光强度", min: 0, max: 1, step: 0.01, unit: "%" },
   { style: "depth-rim", key: "rimDirection", label: "边缘光方向", min: 0, max: 360, step: 5, unit: "°" },
+  { style: "band-rim", key: "bandRimWidth", label: "边缘光宽度", min: 1, max: 8, step: 0.5, unit: "px" },
+  { style: "band-rim", key: "bandRimStrength", label: "边缘光强度", min: 0, max: 1, step: 0.01, unit: "%" },
+  { style: "band-rim", key: "bandRimDirection", label: "边缘光方向", min: 0, max: 360, step: 5, unit: "°" },
 ] as const;
 
 export type RenderStyleParameters = Record<typeof styleParameterControls[number]["key"], number>;
@@ -53,6 +57,7 @@ export const DEFAULT_STYLE_PARAMETERS: Readonly<RenderStyleParameters> = Object.
   paletteStrength: 0.65, normalStrength: 0.7, sketchWidth: 1.2, sketchStrength: 0.85,
   galleryOutlineWidth: 1.1, galleryOutlineLevels: 4, glowStrength: 0.3,
   vignetteStrength: 0.18, grainStrength: 0.02, rimWidth: 3, rimStrength: 0.6, rimDirection: 40,
+  bandRimWidth: 2, bandRimStrength: 1, bandRimDirection: 90,
 });
 
 export function normalizeStyleParameters(value: unknown, base = DEFAULT_STYLE_PARAMETERS): RenderStyleParameters {

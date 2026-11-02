@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { RenderStyleParameters } from './render-style-parameters';
 import { copyRitualOptics } from './ritual-optics';
 
-export type GallerySurfaceStyle = 'gallery-toon' | 'pencil-hatch' | 'height-palette' | 'normal-palette';
+export type GallerySurfaceStyle = 'gallery-toon' | 'pencil-hatch' | 'height-palette' | 'normal-palette' | 'band-rim';
 
 type Lit = THREE.MeshStandardMaterial | THREE.MeshPhongMaterial | THREE.MeshLambertMaterial | THREE.MeshToonMaterial;
 type Entry = {
@@ -16,7 +16,7 @@ type Entry = {
 };
 
 export function isGallerySurfaceStyle(value: string): value is GallerySurfaceStyle {
-  return value === 'gallery-toon' || value === 'pencil-hatch' || value === 'height-palette' || value === 'normal-palette';
+  return value === 'gallery-toon' || value === 'pencil-hatch' || value === 'height-palette' || value === 'normal-palette' || value === 'band-rim';
 }
 
 function isOpaqueLit(material: THREE.Material): material is Lit {
@@ -76,14 +76,31 @@ const POSITION = `
   galleryWorldPosition = (modelMatrix * galleryPosition).xyz;
 `;
 
+// Two display-space bands from the Lā Jī lighting curve. Authored pigment stays.
+// The fixed green key and purple ambient replace smooth scene shading. r170 lit
+// materials fold shadows into the light loop, so this pass does not call getShadowMask.
+const BAND_RIM = `
+  vec3 galleryLightDirection = normalize(vec3(-0.1, -0.5, -1.0));
+  float galleryShade = pow(max(dot(normalize(galleryNormal), -galleryLightDirection), 0.0000001), 1.0 / 2.2);
+  float galleryShadeWidth = fwidth(galleryShade);
+  galleryShade = galleryShadeWidth > 0.1
+    ? round(galleryShade)
+    : mix(floor(galleryShade), ceil(galleryShade), smoothstep(floor(galleryShade) + 0.5, floor(galleryShade) + 0.5 + galleryShadeWidth, galleryShade));
+  vec3 galleryPigment = pow(max(diffuseColor.rgb, vec3(0.0)), vec3(1.0 / 2.2));
+  vec3 galleryDisplay = galleryPigment * vec3(0.30, 0.48, 0.30) * galleryShade + galleryPigment * vec3(0.70, 0.52, 0.70);
+  outgoingLight = pow(max(galleryDisplay, vec3(0.0)), vec3(2.2)) + totalEmissiveRadiance;
+`;
+
 function treatment(style: GallerySurfaceStyle): string {
+  const normal = `vec3 galleryNormal = inverseTransformDirection(normal, viewMatrix);\n`;
+  if (style === 'band-rim') return normal + BAND_RIM;
   const common = `
-    vec3 galleryNormal = inverseTransformDirection(normal, viewMatrix);
+    ${normal}
     vec3 galleryLumaWeights = vec3(0.2126, 0.7152, 0.0722);
     float galleryPigmentLuma = max(dot(diffuseColor.rgb, galleryLumaWeights), 0.025);
     float galleryLight = dot(max(outgoingLight - totalEmissiveRadiance, vec3(0.0)), galleryLumaWeights) / galleryPigmentLuma;
   `;
-  const modes: Record<GallerySurfaceStyle, string> = {
+  const modes: Record<Exclude<GallerySurfaceStyle, 'band-rim'>, string> = {
     'gallery-toon': `
       float galleryBand = (floor(min(galleryLight, 2.0) * galleryLevels) + 0.5) / galleryLevels;
       float galleryRatio = clamp(galleryBand / max(galleryLight, 0.05), 0.5, 1.5);

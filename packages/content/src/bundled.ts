@@ -5,11 +5,11 @@ export const bundledWoodfish = parsePack({
   "sceneId": "woodfish",
   "engine": "woodfish@1",
   "renderStyle": "toon-ink",
-  "revision": "bundled-woodfish-1",
+  "revision": "bundled-woodfish-2",
   "model": {
-    "path": "woodfish/bundled-v1/woodfish.glb",
-    "bytes": 1763136,
-    "sha256": "2a3ba9bf987ad3ec1d78519f48e65556f1c56fd40fcb7a236e922dabc7521185"
+    "path": "woodfish/blender-v2/woodfish.glb",
+    "bytes": 7235024,
+    "sha256": "c037b011fd01c504a771aefc793503de6978894dad6909b4879489c3d306d89e"
   },
   "bindings": {
     "body": "WoodfishBody",

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createState, dailyCollectibleId, type Collectible, type State } from "@wbr/core";
+import { createState, dailyCollectibleId, reduce, restore, sceneStepCount, type Collectible, type State } from "@wbr/core";
 import { Context, type AppContext } from "./context";
 import { clickOn, renderUI } from "./dom-test-utils";
 import { SceneLibraryContext, builtInScenes } from "./scene-library";
@@ -30,15 +30,15 @@ function open(state: State = createState()) {
   return { ...ui, go, dispatch, direct };
 }
 
-describe("collected scenes unlock the new-wish ritual picker", () => {
-  it("keeps uncollected scenes visible and disabled, with a heading and collection explanation", () => {
+describe("completed scenes unlock the new-wish ritual picker", () => {
+  it("keeps unplayed scenes visible and disabled, with a completion explanation", () => {
     const ui = open(), cards = [...ui.host.querySelectorAll<HTMLButtonElement>(".wish-scene-choice")];
     expect(cards).toHaveLength(18);
     const section = cards[0]!.closest("section")!;
     const heading = section.querySelector("h2");
     expect(heading).not.toBeNull();
-    expect(heading?.textContent).toBe("在今日收下对应小物后解锁");
-    expect(section.textContent).toContain("今日");
+    expect(heading?.textContent).toBe("完成一次仪式后解锁");
+    expect(section.textContent).toContain("完成一次");
     expect(section.textContent).toContain("解锁");
     for (const card of cards) {
       expect(card.querySelector("strong")?.textContent).toBeTruthy();
@@ -71,16 +71,30 @@ describe("collected scenes unlock the new-wish ritual picker", () => {
     expect(ui.go).not.toHaveBeenCalled();
   });
 
-  it("does not treat a completed or favorited scene record as a collected object", () => {
-    const state = createState(), entry = builtInScenes.find(entry => entry.id === "tanzaku-tanabata")!;
-    state.sceneRecords.push({ id: entry.id, title: entry.title, engine: entry.engine,
-      revision: entry.revision, manifestUrl: entry.manifestUrl, progress: 3, favorite: true, lastOpened: AT });
+  it("unlocks a completed scene without collecting, including after a replay reset and restart", () => {
+    const entry = builtInScenes.find(entry => entry.id === "tanzaku-tanabata")!;
+    let state = reduce(createState(), { type: "scene.visit", entry, at: AT });
+    state = reduce(state, { type: "scene.progress", id: entry.id, progress: sceneStepCount(entry) });
+    state = reduce(state, { type: "scene.progress", id: entry.id, progress: 0 });
+    state = restore(JSON.stringify(state));
     const before = JSON.stringify(state), ui = open(state);
+    expect(state.collectibles).toHaveLength(0);
+    expect(ui.direct(entry.id).disabled).toBe(false);
+    expect(ui.direct("crane").disabled).toBe(true);
+    clickOn(ui.direct(entry.id));
+    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", id: entry.id }));
+    expect(JSON.stringify(state)).toBe(before);
+  });
+
+  it("keeps a visited or favorited scene locked before its first completion", () => {
+    const entry = builtInScenes.find(entry => entry.id === "tanzaku-tanabata")!;
+    let state = reduce(createState(), { type: "scene.visit", entry, at: AT });
+    state = reduce(state, { type: "scene.progress", id: entry.id, progress: sceneStepCount(entry) - 1 });
+    state = reduce(state, { type: "scene.favorite", id: entry.id, favorite: true });
+    const ui = open(state);
     expect(ui.direct(entry.id).disabled).toBe(true);
     clickOn(ui.direct(entry.id));
     expect(ui.go).not.toHaveBeenCalled();
-    expect(ui.dispatch).not.toHaveBeenCalled();
-    expect(JSON.stringify(state)).toBe(before);
   });
 
   it("keeps a spent scene unlocked for a direct visit without spending the keepsake again", () => {

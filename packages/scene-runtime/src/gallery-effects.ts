@@ -2,9 +2,9 @@ import { BlendFunction, Effect, EffectAttribute } from "postprocessing";
 import { Color, Texture, Uniform } from "three";
 import type { RenderStyleParameters } from "./render-style-parameters";
 
-export type GalleryPostStyle = "sketch-contour" | "gallery-outline" | "space-grade" | "depth-rim";
+export type GalleryPostStyle = "sketch-contour" | "gallery-outline" | "space-grade" | "depth-rim" | "band-rim";
 export function isGalleryPostStyle(value: string): value is GalleryPostStyle {
-  return value === "sketch-contour" || value === "gallery-outline" || value === "space-grade" || value === "depth-rim";
+  return value === "sketch-contour" || value === "gallery-outline" || value === "space-grade" || value === "depth-rim" || value === "band-rim";
 }
 
 // Independent general-purpose image algorithms. Input is ACES-mapped linear RGB;
@@ -122,16 +122,16 @@ const grade = /* glsl */ `
 `;
 
 export function createGalleryEffect(style: GalleryPostStyle, normal: Texture | null, depth: Texture | null, pixelRatio: number) {
-  const effect = new Effect({ "sketch-contour": "GallerySketch", "gallery-outline": "GalleryOutline", "space-grade": "GallerySpaceGrade", "depth-rim": "GalleryDepthRim" }[style],
-    { "sketch-contour": sketch, "gallery-outline": outline, "space-grade": grade, "depth-rim": rim }[style], {
+  const effect = new Effect({ "sketch-contour": "GallerySketch", "gallery-outline": "GalleryOutline", "space-grade": "GallerySpaceGrade", "depth-rim": "GalleryDepthRim", "band-rim": "GalleryBandRim" }[style],
+    { "sketch-contour": sketch, "gallery-outline": outline, "space-grade": grade, "depth-rim": rim, "band-rim": rim }[style], {
       blendFunction: BlendFunction.NORMAL,
       attributes: EffectAttribute.CONVOLUTION | (style === "space-grade" ? EffectAttribute.NONE : EffectAttribute.DEPTH),
       uniforms: new Map<string, Uniform>([
         ["normalTexture", new Uniform(normal)], ["subjectDepth", new Uniform(depth)],
         ["pixelRatio", new Uniform(pixelRatio)], ["lineWidth", new Uniform(1)], ["strength", new Uniform(1)],
-        ["colorLevels", new Uniform(4)], ["direction", new Uniform(40)],
-        ["inkColor", new Uniform(new Color("#303840"))], ["paperColor", new Uniform(new Color("#f4eddb"))],
-        ["rimColor", new Uniform(new Color("#ffb4ce"))],
+        ["colorLevels", new Uniform(4)], ["direction", new Uniform(style === "band-rim" ? 90 : 40)],
+        ["inkColor", new Uniform(new Color(style === "band-rim" ? "#4d293d" : "#303840"))], ["paperColor", new Uniform(new Color("#f4eddb"))],
+        ["rimColor", new Uniform(new Color(style === "band-rim" ? "#ffa3b3" : "#ffb4ce"))],
         ["glow", new Uniform(.3)], ["vignette", new Uniform(.18)], ["grain", new Uniform(.02)],
       ]),
     });
@@ -143,6 +143,7 @@ export function createGalleryEffect(style: GalleryPostStyle, normal: Texture | n
       if (style === "sketch-contour") { set("lineWidth",parameters.sketchWidth); set("strength",parameters.sketchStrength); }
       if (style === "gallery-outline") { set("lineWidth",parameters.galleryOutlineWidth); set("colorLevels",parameters.galleryOutlineLevels); }
       if (style === "depth-rim") { set("lineWidth",parameters.rimWidth); set("strength",parameters.rimStrength); set("direction",parameters.rimDirection); }
+      if (style === "band-rim") { set("lineWidth",parameters.bandRimWidth); set("strength",parameters.bandRimStrength); set("direction",parameters.bandRimDirection); }
       if (style === "space-grade") { set("glow",parameters.glowStrength); set("vignette",parameters.vignetteStrength); set("grain",parameters.grainStrength); }
     },
   };

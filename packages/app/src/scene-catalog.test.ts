@@ -157,6 +157,9 @@ describe("场景目录 rows", () => {
       expect(chip.getAttribute("data-status")).toBe("bundled");
       expect(chip.textContent).toBe(SCENE_STATUS_COPY.bundled);
     }
+    expect(ui.host.textContent).not.toContain("按需准备");
+    expect(ui.host.textContent).not.toContain("需下载");
+    expect(ui.host.textContent).not.toContain("管理资源缓存");
     ui.unmount();
   });
 });
@@ -165,11 +168,12 @@ describe("sceneStatus", () => {
   const remote = { ...builtInScenes[0], manifestUrl: "/scene-content/x.json" };
   it.each([
     ["a built-in scene", builtInScenes[0], undefined, "bundled"],
-    ["a cached remote scene", remote, "cached", "cached"],
-    ["a remote scene whose files were cleared", remote, "missing", "download"],
-    ["a remote scene not yet downloaded", remote, "unknown", "download"],
-    ["a remote scene before its status loads", remote, undefined, "download"],
-    ["a scene this App cannot play", { ...remote, engine: "future@9" }, "cached", "update"],
+    ["an old cached revision of a known scene", remote, "cached", "bundled"],
+    ["a known scene whose old cache was cleared", remote, "missing", "bundled"],
+    ["a known scene with old remote metadata", remote, "unknown", "bundled"],
+    ["a known scene before any cache lookup", remote, undefined, "bundled"],
+    ["a known scene with an obsolete remote engine", { ...remote, engine: "future@9" }, "cached", "bundled"],
+    ["an unknown scene ID", { ...remote, id: "future-scene", engine: "future@9" }, "cached", "update"],
   ])("labels %s", (_name, entry, cache, status) => {
     expect(sceneStatus(entry, cache)).toBe(status);
   });

@@ -7,7 +7,7 @@ import {
 } from "@wbr/content/native-web";
 import "@wbr/app/style.css";
 import type { WidgetNavigationRequest } from '@wbr/core/widgets';
-import type { HapticStrength, ShareImageRequest, ShareLinkRequest } from '@wbr/runtime';
+import type { HapticStrength, ShareImageRequest, ShareLinkRequest, TestFeedbackInfo } from '@wbr/runtime';
 import type { LocalePreference } from '@wbr/i18n/locales';
 export default function BlessingDom({
   readSave,
@@ -30,8 +30,11 @@ export default function BlessingDom({
   protectSceneAssets,
   releaseSceneAssets,
   maintainSceneCache,
-  manifestUrl,
-  catalogUrl,
+  internalToolsEnabled,
+  feedbackInfo,
+  readTestFeedback,
+  writeTestFeedback,
+  submitTestFeedback,
   navigationRequest,
   onNavigationConsumed,
   dom: _dom,
@@ -48,8 +51,11 @@ export default function BlessingDom({
   localePreference: LocalePreference;
   systemHour12?: boolean;
   backRequest: number;
-  manifestUrl: string;
-  catalogUrl: string;
+  internalToolsEnabled: boolean;
+  feedbackInfo: TestFeedbackInfo;
+  readTestFeedback(): Promise<string | null>;
+  writeTestFeedback(raw: string): Promise<void>;
+  submitTestFeedback(endpoint: string, token: string, reportJSON: string): Promise<string>;
   navigationRequest?: WidgetNavigationRequest;
   onNavigationConsumed(requestId: number): Promise<void>;
   dom?: import("expo/dom").DOMProps;
@@ -67,6 +73,15 @@ export default function BlessingDom({
   actions.haptic = haptic;
   actions.shareImage = shareImage;
   actions.shareLink = shareLink;
+  const feedbackActions = useMemo(() => ({ readTestFeedback, writeTestFeedback, submitTestFeedback }), []);
+  Object.assign(feedbackActions, { readTestFeedback, writeTestFeedback, submitTestFeedback });
+  const feedbackHost = useMemo(() => ({
+    read: () => feedbackActions.readTestFeedback(),
+    write: (raw: string) => feedbackActions.writeTestFeedback(raw),
+    send: (endpoint: string, token: string, raw: string) => feedbackActions.submitTestFeedback(endpoint, token, raw),
+    info: feedbackInfo,
+  }), [feedbackActions]);
+  feedbackHost.info = feedbackInfo;
   const contentActions = useMemo(
     () => ({
       readContentHistory,
@@ -105,15 +120,14 @@ export default function BlessingDom({
     [actions],
   );
   // The native shell already read this same save before mounting the WebView.
-  Object.assign(host, { initialLocalePreference: localePreference, publicShareBaseUrl });
+  Object.assign(host, { initialLocalePreference: localePreference, publicShareBaseUrl, testFeedback: feedbackHost });
   return (
     <BlessingApp
       host={host}
+      internalToolsEnabled={internalToolsEnabled}
       systemHour12={systemHour12}
       content={{
         io: contentIO,
-        manifestUrl: manifestUrl || undefined,
-        catalogUrl: catalogUrl || undefined,
       }}
       active={active}
       systemLocales={preferredLanguages}

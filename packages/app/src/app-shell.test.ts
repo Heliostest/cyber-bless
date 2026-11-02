@@ -48,9 +48,12 @@ it("uses one shared title and supporting line on regular pages", async () => {
       )!,
     );
   // The back button shares the title row, without a second title above it.
-  for (const [tab, row] of [["我的", "场景目录"], ["我的", "资源缓存"]]) {
+  for (const [tab, row] of [["我的", "隐私政策"], ["我的", "技术支持"]]) {
     tap(".bottom-nav button", tab);
     await settle();
+    const settings = ui.host.querySelector('.settings-card')!.textContent;
+    expect(settings).not.toContain('场景目录');
+    expect(settings).not.toContain('资源缓存');
     tap(".settings-row", row);
     await settle();
     expect(ribbon(), row).toBeNull();
@@ -73,6 +76,22 @@ it("uses one shared title and supporting line on regular pages", async () => {
   await settle();
   expect(ribbon()).toBeNull();
   expect(ui.host.querySelector('.page-heading h1')?.textContent).toBe('选一个小仪式');
+  ui.unmount();
+});
+
+it('uses the shared title and supporting line for the internal catalog', async () => {
+  const ui = renderUI(createElement(BlessingApp, {
+    host: { read: async () => JSON.stringify(createState()), write: async () => {} },
+    internalToolsEnabled: true,
+    initialRoute: { page: 'scenes' },
+  }));
+  await settle();
+  expect(ui.host.querySelector('.app-topbar .title-ribbon')).toBeNull();
+  expect(ui.host.querySelectorAll('h1')).toHaveLength(1);
+  const heading = ui.host.querySelector('.page-heading')!;
+  expect(heading.firstElementChild?.querySelector('h1')?.textContent).toBe('场景目录');
+  expect(heading.lastElementChild?.className).toBe('page-tagline');
+  expect(heading.lastElementChild?.textContent).toContain('全部内置');
   ui.unmount();
 });
 

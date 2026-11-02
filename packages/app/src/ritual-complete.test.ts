@@ -82,7 +82,7 @@ afterEach(() => {
 /** The App on a memory host, already loaded to 今日. */
 async function openApp(state: State) {
   const storage = { read: async () => JSON.stringify(state), write: async () => {} };
-  const ui = renderUI(createElement(BlessingApp, { host: storage }));
+  const ui = renderUI(createElement(BlessingApp, { host: storage, internalToolsEnabled: true }));
   await settle();
   return { ...ui, storage };
 }

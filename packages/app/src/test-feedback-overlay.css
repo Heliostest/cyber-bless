@@ -1,0 +1,37 @@
+.test-feedback-overlay { position: relative; z-index: 1200; }
+.test-feedback-trigger {
+  position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(24px, env(safe-area-inset-bottom));
+  min-height: 44px; padding: 8px 15px; border: 2px solid var(--rim); border-radius: 18px;
+  color: var(--ink); background: var(--paper); font: inherit; font-weight: 800; font-size: 13px; line-height: 1.3;
+  box-shadow: 0 3px 0 var(--ledge); cursor: pointer;
+}
+.test-feedback-dialog {
+  box-sizing: border-box; width: min(100% - 24px, 460px); max-height: min(86dvh, 760px);
+  margin: auto; padding: 18px; overflow: auto; overscroll-behavior: contain;
+  border: 3px solid var(--rim); border-radius: 24px; background: var(--paper); color: var(--ink);
+  box-shadow: 0 12px 48px #23494455; font: inherit; text-align: left;
+}
+.test-feedback-dialog::backdrop { background: #173d3b70; }
+.test-feedback-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.test-feedback-heading h2 { margin: 0; font-size: 20px; }
+.test-feedback-heading button { min-width: 70px; min-height: 44px; }
+.test-feedback-dialog p { margin: 8px 0 12px; font-size: 13px; line-height: 1.55; }
+.test-feedback-dialog .quiet { font-size: 12px; }
+.test-feedback-dialog label { display: block; margin: 12px 0; font-size: 14px; font-weight: 800; }
+.test-feedback-dialog input, .test-feedback-dialog textarea {
+  display: block; box-sizing: border-box; width: 100%; min-height: 44px; margin-top: 6px; padding: 10px;
+  border: 2px solid var(--rim); border-radius: 12px; background: #fffdf5; color: var(--ink); font: inherit; font-weight: 400; font-size: 16px; line-height: 1.5;
+}
+.test-feedback-dialog textarea { resize: vertical; min-height: 130px; }
+.test-feedback-dialog input[type=number] { width: 88px; }
+.test-feedback-dialog input:focus-visible, .test-feedback-dialog textarea:focus-visible { outline: 3px solid #2ab4aa; outline-offset: 2px; }
+.test-feedback-settings, .test-feedback-queue { border-top: 1px dashed var(--rim); padding-top: 10px; margin-top: 12px; }
+.test-feedback-dialog summary { min-height: 36px; padding: 4px 0; cursor: pointer; font-size: 13px; font-weight: 800; }
+.test-feedback-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.test-feedback-dialog .button { min-height: 44px; font-size: 13px; }
+.test-feedback-status { margin-top: 10px; font-size: 13px; line-height: 1.5; }
+.test-feedback-queue ul { padding-left: 18px; font-size: 12px; }
+.test-feedback-queue li { margin-bottom: 12px; overflow-wrap: anywhere; }
+.test-feedback-queue p { white-space: pre-wrap; }
+.test-feedback-privacy { border-top: 1px dashed var(--rim); padding-top: 10px; }
+@media (min-width: 760px) { .test-feedback-trigger { right: max(24px, calc((100vw - 1120px) / 2)); } }

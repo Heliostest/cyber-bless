@@ -5,6 +5,7 @@ import { createWebContentIO } from "@wbr/content/web";
 import { assetUrl } from "./assets";
 import { validateWoodfishGLB } from "@wbr/content/glb";
 
+/** Legacy URL fields remain readable for older hosts; the App only loads bundled content. */
 export type ContentEnvironment = { io?: ContentIO; manifestUrl?: string; catalogUrl?: string };
 export const ContentContext = createContext<ContentEnvironment>({});
 export const useContent = () => useContext(ContentContext);
@@ -17,10 +18,7 @@ const clients = new WeakMap<
 export function woodfishContent(environment: ContentEnvironment) {
   const io = contentIO(environment);
   const base = new URL(assetUrl(""), window.location.href).href;
-  const url = environment.manifestUrl
-    ? new URL(environment.manifestUrl, window.location.href).href
-    : undefined;
-  const key = JSON.stringify([base, url]);
+  const key = base;
   let scoped = clients.get(io);
   if (!scoped) {
     scoped = new Map();
@@ -29,10 +27,17 @@ export function woodfishContent(environment: ContentEnvironment) {
   let client = scoped.get(key);
   if (!client) {
     client = createContentClient({
-      io,
+      // Download history belongs to the retired delivery flow. Never let an
+      // older confirmed/pending pack replace the resources shipped in this App.
+      io: {
+        readAsset: (asset, url, signal) => io.readAsset(asset, url, signal),
+        readHistory: async () => undefined,
+        writeHistory: async () => {},
+        readCachedAsset: async () => undefined,
+        readManifest: async () => { throw Error("Bundled content has no remote manifest"); },
+      },
       bundled: bundledWoodfish,
       bundledBase: base,
-      manifestUrl: url,
       validatePrepared: (pack, bytes) =>
         validateWoodfishGLB(bytes, pack.bindings),
     });

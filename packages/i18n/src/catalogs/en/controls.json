@@ -38,6 +38,8 @@
   "app.visual.spaceGrade.detail": "Soft light diffusion · Vignette and grain",
   "app.visual.depthRim": "Depth rim light",
   "app.visual.depthRim.detail": "Directional rim light · Fine dark edges",
+  "app.visual.bandRim": "Two-band rim light",
+  "app.visual.bandRim.detail": "Two-band shading · Pink depth rim",
   "app.visual.galleryRim": "Rim light strength",
   "app.visual.pencilScale": "Hatching density",
   "app.visual.paletteStrength": "Palette strength",

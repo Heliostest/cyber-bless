@@ -37,6 +37,7 @@ describe("Gallery styles in the shared renderer", () => {
   it.each([
     ["sketch-contour", "GallerySketch"], ["gallery-outline", "GalleryOutline"],
     ["depth-rim", "GalleryDepthRim"], ["space-grade", "GallerySpaceGrade"],
+    ["band-rim", "GalleryBandRim"],
   ] as const)("selects %s without falling back or stacking the old outline", (id, effectName) => {
     const { style, mesh, material } = setup(); style.setStyle(id as never); style.render();
     const effects = hooks.passes.flatMap(pass => pass.effects ?? []);
@@ -58,6 +59,23 @@ describe("Gallery styles in the shared renderer", () => {
     expect(hooks.size).toHaveBeenLastCalledWith(390, 844);
     style.setStyle("original"); expect(hooks.dispose).toHaveBeenCalledOnce(); style.dispose();
     expect(hooks.dispose).toHaveBeenCalledOnce();
+  });
+
+  it("combines the two-band surface with its own rim controls and restores the mesh", () => {
+    const { style, mesh, material } = setup();
+    style.setStyle("band-rim" as never);
+    style.setParameters({ rimWidth: 7, bandRimWidth: 2.5, bandRimStrength: .4, bandRimDirection: 180 } as never);
+    style.render();
+    const effect = hooks.passes.flatMap(pass => pass.effects ?? []).find(item => item.name === "GalleryBandRim");
+    expect(effect.uniforms.get("lineWidth").value).toBe(2.5);
+    expect(effect.uniforms.get("strength").value).toBe(.4);
+    expect(effect.uniforms.get("direction").value).toBe(180);
+    expect(effect.uniforms.get("rimColor").value.equals(new THREE.Color("#ffa3b3"))).toBe(true);
+    expect(effect.uniforms.get("inkColor").value.equals(new THREE.Color("#4d293d"))).toBe(true);
+    expect(hooks.passes.some(pass => pass.name === "MoebiusNormals")).toBe(true);
+    expect(mesh.material).toBe(material);
+    expect(style.getStyle()).toBe("band-rim");
+    style.dispose();
   });
 
   it("restores authored materials and renderer state before fallback on a failed frame", () => {

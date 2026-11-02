@@ -1,12 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { prepareAppAssets } from "../../scripts/prepare-app-assets.mjs";
-import {
-  publishSceneContent,
-  contentOutput,
-} from "../../scripts/publish-scene-content.mjs";
 
 await prepareAppAssets();
 const base = process.env.VITE_BASE_PATH || '/';
@@ -21,42 +16,7 @@ export default defineConfig({
       share: path.resolve(import.meta.dirname, 'share.html'),
     } },
   },
-  plugins: [
-    react(),
-    {
-      name: "local-scene-content",
-      async configureServer(server) {
-        await publishSceneContent();
-        server.middlewares.use("/scene-content", async (req, res, next) => {
-          const name = req.url?.split("?")[0]?.replace(/^\//, "");
-          if (
-            !name ||
-            !/^(woodfish\.json|catalog\.json|scene-[a-f0-9]{64}\.json|[a-f0-9]{64}\.(glb|wav|mp3|ogg|json))$/.test(name)
-          )
-            return next();
-          try {
-            const bytes = await readFile(path.join(contentOutput, name));
-            res.setHeader(
-              "Content-Type",
-              name.endsWith(".json")
-                ? "application/json"
-                : "application/octet-stream",
-            );
-            res.setHeader(
-              "Cache-Control",
-              name.endsWith(".json")
-                ? "no-cache"
-                : "public, max-age=31536000, immutable",
-            );
-            res.end(bytes);
-          } catch {
-            res.statusCode = 404;
-            res.end();
-          }
-        });
-      },
-    },
-  ],
+  plugins: [react()],
   server: {
     host: true,
   },

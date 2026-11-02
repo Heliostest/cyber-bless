@@ -15,6 +15,8 @@ import { isWishSceneUnlocked } from './vessels';
 export { builtInScenes, type BuiltInSceneEntry } from '@wbr/core/daily-scenes';
 import { builtInScenes, isSceneVisibleInApp } from '@wbr/core/daily-scenes';
 export const supportsScene = (engine: string) => builtInScenes.some((e) => e.engine === engine);
+/** Saved remote metadata never overrides the scene shipped under this stable ID. */
+export const bundledSceneEntry = (entry?: Pick<CatalogEntry, "id">) => builtInScenes.find(scene => scene.id === entry?.id);
 export function woodfishPack(manifest: SceneManifest): Pack {
     return parsePack({
         ...manifest.config,
@@ -64,13 +66,11 @@ export function useSceneLibrary() {
  * and a 还愿 visit always starts at 0: it is walked after the wish came true.
  */
 export function useOpenRitual() {
-    const { state, dispatch, go } = useApp(), { entries } = useSceneLibrary();
+    const { state, dispatch, go } = useApp();
     return (ritual: RitualId, wishId?: string) => {
         if (!isSceneVisibleInApp({ id: ritual }))
             return;
-        const offered = ritualSceneEntry(entries, ritual);
-        const entry = offered && supportsScene(offered.engine)
-            ? offered : ritualSceneEntry(builtInScenes, ritual)!;
+        const entry = ritualSceneEntry(builtInScenes, ritual)!;
         const record = state.sceneRecords.find((r) => r.id === entry.id);
         const progress = record ? sceneProgress(record) : 0;
         if (progress > 0 && (wishId || progress >= sceneSteps(entry)))
@@ -83,7 +83,7 @@ export function useOpenRitual() {
 /** What a walk is for. The daily set resumes a half-walked scene; each other
  * flag makes it a fresh scene (progress to 0). */
 export type SceneVisit = {
-    /** A direct wish-picker entry requires an already collected scene object. */
+    /** A direct wish-picker entry requires the scene to have been completed once. */
     wishPicker?: boolean;
     opening?: boolean;
     /** 今日's daily set: the local day the keepsake is collected for. */
@@ -94,6 +94,8 @@ export type SceneVisit = {
     wishId?: string;
     /** 小天地's 回看, or 仪式时光's 再次体验: a plain fresh replay. */
     replay?: boolean;
+    /** A testing visit opened from the internal catalog, without changing restart semantics. */
+    feedbackSession?: true;
 };
 /**
  * Opens a scene for a walk. 今日's daily set resumes a half-walked scene,
@@ -106,8 +108,9 @@ export type SceneVisit = {
  */
 export function useOpenScene() {
     const { state, dispatch, go } = useApp();
-    return (entry: CatalogEntry, visit?: SceneVisit) => {
-        if (!isSceneVisibleInApp(entry))
+    return (offered: CatalogEntry, visit?: SceneVisit) => {
+        const entry = bundledSceneEntry(offered);
+        if (!entry || !isSceneVisibleInApp(entry))
             return;
         if (visit?.wishPicker && !isWishSceneUnlocked(state, entry.id))
             return;
@@ -119,7 +122,7 @@ export function useOpenScene() {
         // earlier, unfinished walk of this vessel is let go.
         if (visit?.vessel && !spentVessel)
             dispatch({ type: "vessel.clear", id: visit.vessel });
-        const fresh = !!visit && !visit.daily && !visit.opening && !spentVessel;
+        const fresh = !!(visit?.wishPicker || visit?.vessel || visit?.wishId || visit?.replay) && !visit?.daily && !visit?.opening && !spentVessel;
         const restart = !spentVessel && !visit?.opening && (fresh || progress >= sceneSteps(entry));
         // Cloth folds subdivide legacy integer checkpoints. A new wrapping visit
         // clears that subdivision even if no full checkpoint was reached yet.
@@ -139,17 +142,17 @@ export function useOpenScene() {
             wishId: visit?.wishId,
             replay: visit?.replay,
             opening: visit?.opening,
+            ...(visit?.feedbackSession ? { feedbackSession: true } : {}),
         });
     };
 }
 export function SceneLibraryProvider({ children }: {
     children: ReactNode;
 }) {
-    const environment = useContent(), { active } = useApp();
+    const environment = useContent();
     const io = contentIO(environment);
     const library = useMemo(() => createSceneLibrary({ io, supports: supportsScene, validate }), [io]);
-    const [entries, setEntries] = useState(builtInScenes), [stats, setStats] = useState<CacheStats>();
-    const [error, setError] = useState(""), [ready, setReady] = useState(false);
+    const [stats, setStats] = useState<CacheStats>();
     async function maintain(options?: CacheOptions) {
         if (!io.cache)
             return;
@@ -159,67 +162,8 @@ export function SceneLibraryProvider({ children }: {
         setStats(next);
         return next;
     }
-    useEffect(() => {
-        let disposed = false;
-        void (async () => {
-            try {
-                const stored = await io
-                    .readHistory("cache-budget")
-                    .catch(() => undefined);
-                const budget = typeof stored === "number" &&
-                    Number.isSafeInteger(stored) &&
-                    stored >= 1 &&
-                    stored <= 1024 * 1024 * 1024
-                    ? stored
-                    : CACHE_BUDGET;
-                const next = await io.cache?.maintain({ budget });
-                if (!disposed)
-                    setStats(next);
-            }
-            catch {
-                if (!disposed)
-                    setError("\u8D44\u6E90\u7F13\u5B58\u6682\u4E0D\u53EF\u7528\uFF1B\u5185\u7F6E\u573A\u666F\u4ECD\u53EF\u6253\u5F00\u3002");
-            }
-            finally {
-                if (!disposed)
-                    setReady(true);
-            }
-        })();
-        return () => {
-            disposed = true;
-        };
-    }, [io]);
-    useEffect(() => {
-        if (!environment.catalogUrl)
-            return;
-        const controller = new AbortController();
-        void library
-            .catalog(new URL(environment.catalogUrl, window.location.href).href, controller.signal)
-            .then((remote) => {
-            if (!controller.signal.aborted)
-                setEntries([
-                    ...remote,
-                    ...builtInScenes.filter((e) => !remote.some((r) => r.id === e.id)),
-                ]);
-        })
-            .catch(() => {
-            if (!controller.signal.aborted)
-                setError("\u76EE\u5F55\u6682\u65F6\u65E0\u6CD5\u66F4\u65B0\uFF0C\u53EF\u4F7F\u7528\u5DF2\u6709\u573A\u666F\u548C\u5386\u53F2\u8BB0\u5F55\u3002");
-        });
-        return () => controller.abort();
-    }, [library, environment.catalogUrl]);
-    useEffect(() => {
-        if (!ready)
-            return;
-        const check = () => {
-            if (!document.hidden && active)
-                void maintain().catch(() => { });
-        };
-        check();
-        document.addEventListener("visibilitychange", check);
-        return () => document.removeEventListener("visibilitychange", check);
-    }, [io, active, ready]);
-    return (<Library.Provider value={{ entries, library, stats, error: error ? tr(error) : '', ready, maintain }}>
+    // Built-in scenes are ready independently of retired download cache storage.
+    return (<Library.Provider value={{ entries: builtInScenes, library, stats, error: '', ready: true, maintain }}>
       {children}
     </Library.Provider>);
 }
@@ -244,13 +188,9 @@ export const SCENE_STATUS_COPY = {
     update: "需更新 App",
 } as const;
 export type SceneStatus = keyof typeof SCENE_STATUS_COPY;
-/** A row's chip, from the library's cache status for a remote scene. */
-export function sceneStatus(entry: CatalogEntry, cache?: string): SceneStatus {
-    if (!supportsScene(entry.engine))
-        return "update";
-    if (!entry.manifestUrl || cache === "bundled")
-        return "bundled";
-    return cache === "cached" ? "cached" : "download";
+/** Known scene IDs always resolve to this App's built-in revision. */
+export function sceneStatus(entry: CatalogEntry, _cache?: string): SceneStatus {
+    return bundledSceneEntry(entry) ? "bundled" : "update";
 }
 /** A scene as a list row (场景目录, 仪式时光): its badge, its title over a
  * short line, and the go-to chevron of the settings rows. */
@@ -269,32 +209,17 @@ export function SceneCard({ id, title, disabled, onClick, children, }: {
     </button>);
 }
 export function SceneCatalog() {
-    const { entries, library, stats, error, ready } = useSceneLibrary(), { go } = useApp();
+    const { entries, error, ready } = useSceneLibrary();
     const openScene = useOpenScene();
     const [query, setQuery] = useState(""), [limit, setLimit] = useState(24);
-    const [statuses, setStatuses] = useState<Record<string, string>>({});
     const search = useRef<HTMLInputElement>(null);
     const searchLocale = getFormatLocale();
     const normalizeSearch = (value: string) => value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase(searchLocale);
     const searchQuery = normalizeSearch(query.trim());
     const matches = entries.filter((entry) => [localizedTitle(entry), entry.title, entry.id].some(value => normalizeSearch(value).includes(searchQuery)));
     const visible = matches.slice(0, limit);
-    useEffect(() => {
-        let disposed = false;
-        const hashes = new Set(stats?.entries.map((e) => e.key));
-        void Promise.all(visible.map(async (e) => [
-            e.id,
-            e.manifestUrl ? await library.status(e, hashes) : "bundled",
-        ])).then((pairs) => {
-            if (!disposed)
-                setStatuses(Object.fromEntries(pairs));
-        });
-        return () => {
-            disposed = true;
-        };
-    }, [entries, query, limit, stats, library, searchLocale]);
     return (<>
-      <PageHead title={tr("\u573A\u666F\u76EE\u5F55")} eyebrow={tr("{p0} \u4E2A\u573A\u666F \u00B7 \u6309\u9700\u51C6\u5907", { p0: entries.length })}/>
+      <PageHead title={tr("\u573A\u666F\u76EE\u5F55")} eyebrow={tr("{p0} 个场景 · 全部内置", { p0: entries.length })}/>
       {error && <p role="status">{error}</p>}
       <label className="scene-search">
         <span className="sr-only">{tr(CATALOG_SEARCH_COPY.label)}</span>
@@ -306,8 +231,8 @@ export function SceneCatalog() {
       </label>
       <div className="scene-catalog">
         {visible.map((entry) => {
-            const status = sceneStatus(entry, statuses[entry.id]);
-            return (<SceneCard key={entry.id} id={entry.id} title={localizedTitle(entry)} disabled={!ready} onClick={() => openScene(entry)}>
+            const status = sceneStatus(entry);
+            return (<SceneCard key={entry.id} id={entry.id} title={localizedTitle(entry)} disabled={!ready} onClick={() => openScene(entry, { feedbackSession: true })}>
               <span className="scene-status" data-status={status}>
                 {tr(SCENE_STATUS_COPY[status])}
               </span>
@@ -326,7 +251,6 @@ export function SceneCatalog() {
           </button>
         </div>)}
       {matches.length > limit && (<button className="button secondary" onClick={() => setLimit((n) => n + 24)}>{tr("\u663E\u793A\u66F4\u591A")}</button>)}
-      <button className="text-button" onClick={() => go({ page: "cache" })}>{tr("\u7BA1\u7406\u8D44\u6E90\u7F13\u5B58")}</button>
     </>);
 }
 export function CacheManager() {

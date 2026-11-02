@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
 import { createGallerySurfaces, gallerySubjects, isGallerySurfaceStyle } from './gallery-surfaces';
+import { isGalleryPostStyle } from './gallery-effects';
 import { createRitualMaterial } from './ritual-optics';
 import { normalizeStyleParameters } from './render-style-parameters';
 
@@ -13,12 +14,14 @@ function compile(material: THREE.Material, kind: keyof typeof THREE.ShaderLib = 
 
 describe('optional gallery surface adapters', () => {
   it('recognizes surface modes without claiming postprocess modes', () => {
-    expect(['gallery-toon', 'pencil-hatch', 'height-palette', 'normal-palette'].every(isGallerySurfaceStyle)).toBe(true);
+    expect(['gallery-toon', 'pencil-hatch', 'height-palette', 'normal-palette', 'band-rim'].every(isGallerySurfaceStyle)).toBe(true);
+    expect(isGalleryPostStyle('band-rim')).toBe(true);
+    expect(['gallery-toon', 'pencil-hatch', 'height-palette', 'normal-palette'].some(isGalleryPostStyle)).toBe(false);
     expect(isGallerySurfaceStyle('space-grade')).toBe(false);
     expect(isGallerySurfaceStyle('original')).toBe(false);
   });
 
-  it.each(['gallery-toon', 'pencil-hatch', 'height-palette', 'normal-palette'] as const)('preserves authored textures and restores the exact material after %s', style => {
+  it.each(['gallery-toon', 'pencil-hatch', 'height-palette', 'normal-palette', 'band-rim'] as const)('preserves authored textures and restores the exact material after %s', style => {
     const map = new THREE.Texture(), normalMap = new THREE.Texture();
     const original = new THREE.MeshPhysicalMaterial({ map, normalMap, color: 0x78a993, clearcoat: .6, side: THREE.DoubleSide, vertexColors: true });
     const scene = new THREE.Scene(), mesh = new THREE.Mesh(new THREE.BoxGeometry(), original); scene.add(mesh);
@@ -51,7 +54,7 @@ describe('optional gallery surface adapters', () => {
     frame.restore(); adapter.dispose(); geometry.dispose(); materials.forEach(material => material.dispose());
   });
 
-  it.each(['gallery-toon', 'pencil-hatch', 'height-palette', 'normal-palette'] as const)('still applies %s when every subject opts out of outlines', style => {
+  it.each(['gallery-toon', 'pencil-hatch', 'height-palette', 'normal-palette', 'band-rim'] as const)('still applies %s when every subject opts out of outlines', style => {
     const scene = new THREE.Scene(), source = new THREE.MeshStandardMaterial({ color: 0x6d997b });
     const mesh = new THREE.Mesh(new THREE.TorusGeometry(), source); mesh.userData.toonSurface = { outline: false }; scene.add(mesh);
     const adapter = createGallerySurfaces(style), frame = adapter.apply(scene);
@@ -142,5 +145,19 @@ describe('optional gallery surface adapters', () => {
     expect(shader.uniforms.galleryHeightRange.value.toArray()).toEqual([7,9]);
     expect(shader.uniforms.galleryPaletteStrength.value).toBe(.3);
     frame.restore(); adapter.dispose(); source.dispose(); mesh.geometry.dispose();
+  });
+
+  it('keeps the authored pigment and applies the two-band key, ambient and shadow curve', () => {
+    const map = new THREE.Texture();
+    const source = new THREE.MeshStandardMaterial({ map, color: 0xc47a3a });
+    const scene = new THREE.Scene(), mesh = new THREE.Mesh(new THREE.BoxGeometry(), source); scene.add(mesh);
+    const adapter = createGallerySurfaces('band-rim'), frame = adapter.apply(scene);
+    const shader = compile(mesh.material as THREE.Material);
+    expect(shader.fragmentShader).toContain('vec3(0.30, 0.48, 0.30)');
+    expect(shader.fragmentShader).toContain('vec3(0.70, 0.52, 0.70)');
+    expect(shader.fragmentShader).not.toContain('getShadowMask');
+    expect((mesh.material as THREE.MeshStandardMaterial).map).toBe(map);
+    expect((mesh.material as THREE.MeshStandardMaterial).color.getHex()).toBe(0xc47a3a);
+    frame.restore(); adapter.dispose(); source.dispose(); map.dispose(); mesh.geometry.dispose();
   });
 });

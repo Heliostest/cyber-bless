@@ -4,19 +4,17 @@
   "evidence": [
     "docs/research/2026-10-27-i18n-scene-implementation.md",
     "docs/research/2026-10-27-i18n-ui-finalization.md",
-    "docs/research/2026-10-27-i18n-acceptance.md",
-    "docs/research/2026-10-29-close-object-inspection.md"
+    "docs/research/2026-10-27-i18n-acceptance.md"
   ],
   "catalogs": {
     "zh-Hans": {
       "app": {
-        "sourceHash": "6ec0659ca5f46b2ed4dbb7f6bc275b4d1f33fcd7c7c858f556f4d7c5f602b548",
-        "targetHash": "6ec0659ca5f46b2ed4dbb7f6bc275b4d1f33fcd7c7c858f556f4d7c5f602b548",
-        "messages": 473,
-        "reviewedAt": "2026-10-31T14:11:35.849Z",
+        "sourceHash": "ed497218332abbc514363c4e53cc85cb8cd85409a206387716b5b44a64a04453",
+        "targetHash": "ed497218332abbc514363c4e53cc85cb8cd85409a206387716b5b44a64a04453",
+        "messages": 503,
+        "reviewedAt": "2026-11-02T06:26:10.437Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root/cue_review (wish-picker collection-unlock UI translation self-review)",
-        "reviewScope": "Incremental agent self-review of app.wish-ritual-picker.c04ef5899a and app.wishPicker.locked/unlocked only: explain unlocking by collecting the matching keepsake in Today, with locked/unlocked product states rather than purchase requirements. Unchanged app messages retain prior review. Completeness and ICU checked; no native-speaker certification or new scene/cultural claims."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -27,10 +25,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "controls": {
-        "sourceHash": "1d9bac939bc1cf45b9b8749d33cf96884e515fe9b6913bb8d40bab8b7d5bb41a",
-        "targetHash": "1d9bac939bc1cf45b9b8749d33cf96884e515fe9b6913bb8d40bab8b7d5bb41a",
-        "messages": 53,
-        "reviewedAt": "2026-10-28T06:18:28.586Z",
+        "sourceHash": "fef629ace9c346f3821a73ce7375d6314088df7c9f34376893e47d30179da5f9",
+        "targetHash": "fef629ace9c346f3821a73ce7375d6314088df7c9f34376893e47d30179da5f9",
+        "messages": 55,
+        "reviewedAt": "2026-11-02T05:13:30.608Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -64,19 +62,17 @@
         "messages": 2281,
         "reviewedAt": "2026-10-31T12:38:29.300Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root (three automatic-ending controls; prior review scope retained for unchanged entries)",
-        "reviewScope": "This change self-reviews only scene.autoEnding.status/writing/progress for an automatic product animation, not new cultural facts or native-speaker certification."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
     },
     "zh-Hant": {
       "app": {
-        "sourceHash": "6ec0659ca5f46b2ed4dbb7f6bc275b4d1f33fcd7c7c858f556f4d7c5f602b548",
-        "targetHash": "bc67a6ca1fc79fa8af24a9c00a29d3f6274a377adaea22f9abef7e5e0e5fb1c6",
-        "messages": 473,
-        "reviewedAt": "2026-10-31T14:11:35.849Z",
+        "sourceHash": "ed497218332abbc514363c4e53cc85cb8cd85409a206387716b5b44a64a04453",
+        "targetHash": "89e1a49979f5364da98492cf78625a43843b1edd27d89c5a8384c466235623c1",
+        "messages": 503,
+        "reviewedAt": "2026-11-02T06:26:10.440Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root/cue_review (wish-picker collection-unlock UI translation self-review)",
-        "reviewScope": "Incremental agent self-review of app.wish-ritual-picker.c04ef5899a and app.wishPicker.locked/unlocked only: explain unlocking by collecting the matching keepsake in Today, with locked/unlocked product states rather than purchase requirements. Unchanged app messages retain prior review. Completeness and ICU checked; no native-speaker certification or new scene/cultural claims."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -87,10 +83,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "controls": {
-        "sourceHash": "1d9bac939bc1cf45b9b8749d33cf96884e515fe9b6913bb8d40bab8b7d5bb41a",
-        "targetHash": "20a3c2e9dbabfaf0726572e844a2cdea154d89a7a7466434dd2cb7c7922b28d3",
-        "messages": 53,
-        "reviewedAt": "2026-10-28T06:18:28.587Z",
+        "sourceHash": "fef629ace9c346f3821a73ce7375d6314088df7c9f34376893e47d30179da5f9",
+        "targetHash": "d412ab21a10aa821b6dbb2e2b432e178fd40c293b6c247e7259e8110320a4e51",
+        "messages": 55,
+        "reviewedAt": "2026-11-02T05:13:30.611Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -124,19 +120,17 @@
         "messages": 2281,
         "reviewedAt": "2026-10-31T12:38:29.303Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root (three automatic-ending controls; prior review scope retained for unchanged entries)",
-        "reviewScope": "This change self-reviews only scene.autoEnding.status/writing/progress for an automatic product animation, not new cultural facts or native-speaker certification."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
     },
     "en": {
       "app": {
-        "sourceHash": "6ec0659ca5f46b2ed4dbb7f6bc275b4d1f33fcd7c7c858f556f4d7c5f602b548",
-        "targetHash": "584d7b5548f7033ab61597f30676207b7f2a73828c7aa8dfbc7fdba6b5e61907",
-        "messages": 473,
-        "reviewedAt": "2026-10-31T14:11:35.849Z",
+        "sourceHash": "ed497218332abbc514363c4e53cc85cb8cd85409a206387716b5b44a64a04453",
+        "targetHash": "b9bb25832d510276fc7047094e58b908837c94a0e3101c8e7338bc3601470c37",
+        "messages": 503,
+        "reviewedAt": "2026-11-02T06:26:10.442Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root/cue_review (wish-picker collection-unlock UI translation self-review)",
-        "reviewScope": "Incremental agent self-review of app.wish-ritual-picker.c04ef5899a and app.wishPicker.locked/unlocked only: explain unlocking by collecting the matching keepsake in Today, with locked/unlocked product states rather than purchase requirements. Unchanged app messages retain prior review. Completeness and ICU checked; no native-speaker certification or new scene/cultural claims."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -147,10 +141,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "controls": {
-        "sourceHash": "1d9bac939bc1cf45b9b8749d33cf96884e515fe9b6913bb8d40bab8b7d5bb41a",
-        "targetHash": "12205d530d8d3c3891f53d1ff0896de900650cd3acff80dafc745ba877c34fb8",
-        "messages": 53,
-        "reviewedAt": "2026-10-28T06:18:28.588Z",
+        "sourceHash": "fef629ace9c346f3821a73ce7375d6314088df7c9f34376893e47d30179da5f9",
+        "targetHash": "7a3e8813d243ffa107444ce62d238583b0608849b23ee9b7d878956652f79f03",
+        "messages": 55,
+        "reviewedAt": "2026-11-02T05:13:30.613Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -184,19 +178,17 @@
         "messages": 2281,
         "reviewedAt": "2026-10-31T12:38:29.306Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root (three automatic-ending controls; prior review scope retained for unchanged entries)",
-        "reviewScope": "This change self-reviews only scene.autoEnding.status/writing/progress for an automatic product animation, not new cultural facts or native-speaker certification."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
     },
     "ja": {
       "app": {
-        "sourceHash": "6ec0659ca5f46b2ed4dbb7f6bc275b4d1f33fcd7c7c858f556f4d7c5f602b548",
-        "targetHash": "5d8300b8be0c2e69bd58ff70126916ac9562901758cdeb7f4ddd8411dcc5f24e",
-        "messages": 473,
-        "reviewedAt": "2026-10-31T14:11:35.849Z",
+        "sourceHash": "ed497218332abbc514363c4e53cc85cb8cd85409a206387716b5b44a64a04453",
+        "targetHash": "345ea6ce5499edc28eb3bd77fd0e956584ef9b5d831ab60f1b4737a4d7124326",
+        "messages": 503,
+        "reviewedAt": "2026-11-02T06:26:10.445Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root/cue_review (wish-picker collection-unlock UI translation self-review)",
-        "reviewScope": "Incremental agent self-review of app.wish-ritual-picker.c04ef5899a and app.wishPicker.locked/unlocked only: explain unlocking by collecting the matching keepsake in Today, with locked/unlocked product states rather than purchase requirements. Unchanged app messages retain prior review. Completeness and ICU checked; no native-speaker certification or new scene/cultural claims."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -207,10 +199,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "controls": {
-        "sourceHash": "1d9bac939bc1cf45b9b8749d33cf96884e515fe9b6913bb8d40bab8b7d5bb41a",
-        "targetHash": "0f9175879401c1a3e2917c799158529a07f6d45a160b404ce261b922518cc0a7",
-        "messages": 53,
-        "reviewedAt": "2026-10-28T06:18:28.588Z",
+        "sourceHash": "fef629ace9c346f3821a73ce7375d6314088df7c9f34376893e47d30179da5f9",
+        "targetHash": "94801cbedffaac3b517830589c997ebc1696fd8658d62ac4bf0a5e51c2dc4a7c",
+        "messages": 55,
+        "reviewedAt": "2026-11-02T05:13:30.616Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -244,19 +236,17 @@
         "messages": 2281,
         "reviewedAt": "2026-10-31T12:38:29.308Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root (three automatic-ending controls; prior review scope retained for unchanged entries)",
-        "reviewScope": "This change self-reviews only scene.autoEnding.status/writing/progress for an automatic product animation, not new cultural facts or native-speaker certification."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
     },
     "ko": {
       "app": {
-        "sourceHash": "6ec0659ca5f46b2ed4dbb7f6bc275b4d1f33fcd7c7c858f556f4d7c5f602b548",
-        "targetHash": "fe5e1995fd5f148c31ba352a2f4dc15c35e98c3eec51e72eb025dd850ee7a34a",
-        "messages": 473,
-        "reviewedAt": "2026-10-31T14:11:35.849Z",
+        "sourceHash": "ed497218332abbc514363c4e53cc85cb8cd85409a206387716b5b44a64a04453",
+        "targetHash": "d19bba244815da746cf0415058dd51f2c87c151e1ad9de45214102820fdff892",
+        "messages": 503,
+        "reviewedAt": "2026-11-02T06:26:10.447Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root/cue_review (wish-picker collection-unlock UI translation self-review)",
-        "reviewScope": "Incremental agent self-review of app.wish-ritual-picker.c04ef5899a and app.wishPicker.locked/unlocked only: explain unlocking by collecting the matching keepsake in Today, with locked/unlocked product states rather than purchase requirements. Unchanged app messages retain prior review. Completeness and ICU checked; no native-speaker certification or new scene/cultural claims."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -267,10 +257,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "controls": {
-        "sourceHash": "1d9bac939bc1cf45b9b8749d33cf96884e515fe9b6913bb8d40bab8b7d5bb41a",
-        "targetHash": "a7cdf36a456424089f662b1bf4c7996eb842eb8ad2db0944f2b436150893a7ff",
-        "messages": 53,
-        "reviewedAt": "2026-10-28T06:18:28.589Z",
+        "sourceHash": "fef629ace9c346f3821a73ce7375d6314088df7c9f34376893e47d30179da5f9",
+        "targetHash": "8dc0cc0eb52a16d770700c170659da17b2a279f43f991380b074a13867a5a065",
+        "messages": 55,
+        "reviewedAt": "2026-11-02T05:13:30.618Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -304,19 +294,17 @@
         "messages": 2281,
         "reviewedAt": "2026-10-31T12:38:29.310Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root (three automatic-ending controls; prior review scope retained for unchanged entries)",
-        "reviewScope": "This change self-reviews only scene.autoEnding.status/writing/progress for an automatic product animation, not new cultural facts or native-speaker certification."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
     },
     "es": {
       "app": {
-        "sourceHash": "6ec0659ca5f46b2ed4dbb7f6bc275b4d1f33fcd7c7c858f556f4d7c5f602b548",
-        "targetHash": "e627ab8bf777fea06ea6d389f573aac5e2b57b59056ac0da147051eac806bbf5",
-        "messages": 473,
-        "reviewedAt": "2026-10-31T14:11:35.849Z",
+        "sourceHash": "ed497218332abbc514363c4e53cc85cb8cd85409a206387716b5b44a64a04453",
+        "targetHash": "ffa9cc0383ee6ed73f819371b5b96c39c18c3561e5d1ebdb180167f44108d5e7",
+        "messages": 503,
+        "reviewedAt": "2026-11-02T06:26:10.450Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root/cue_review (wish-picker collection-unlock UI translation self-review)",
-        "reviewScope": "Incremental agent self-review of app.wish-ritual-picker.c04ef5899a and app.wishPicker.locked/unlocked only: explain unlocking by collecting the matching keepsake in Today, with locked/unlocked product states rather than purchase requirements. Unchanged app messages retain prior review. Completeness and ICU checked; no native-speaker certification or new scene/cultural claims."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -327,10 +315,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "controls": {
-        "sourceHash": "1d9bac939bc1cf45b9b8749d33cf96884e515fe9b6913bb8d40bab8b7d5bb41a",
-        "targetHash": "0461268ccbe715c948734e7b9c2dc53d0ec72575f3f2e304fecc61350e009072",
-        "messages": 53,
-        "reviewedAt": "2026-10-28T06:18:28.589Z",
+        "sourceHash": "fef629ace9c346f3821a73ce7375d6314088df7c9f34376893e47d30179da5f9",
+        "targetHash": "f140d210486c15e036d18cccce746f77eae63a27f5772883572b047bf9f353ca",
+        "messages": 55,
+        "reviewedAt": "2026-11-02T05:13:30.621Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -364,19 +352,17 @@
         "messages": 2281,
         "reviewedAt": "2026-10-31T12:38:29.313Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root (three automatic-ending controls; prior review scope retained for unchanged entries)",
-        "reviewScope": "This change self-reviews only scene.autoEnding.status/writing/progress for an automatic product animation, not new cultural facts or native-speaker certification."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
     },
     "pt": {
       "app": {
-        "sourceHash": "6ec0659ca5f46b2ed4dbb7f6bc275b4d1f33fcd7c7c858f556f4d7c5f602b548",
-        "targetHash": "54720ffc4b58dc5353c34c6cbdd5bce85c788373f858f52a85654d359535b203",
-        "messages": 473,
-        "reviewedAt": "2026-10-31T14:11:35.849Z",
+        "sourceHash": "ed497218332abbc514363c4e53cc85cb8cd85409a206387716b5b44a64a04453",
+        "targetHash": "673270e1b5076b11ead98c2bcc6de59dd1d909b55caaf876c4a10e5920027786",
+        "messages": 503,
+        "reviewedAt": "2026-11-02T06:26:10.452Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root/cue_review (wish-picker collection-unlock UI translation self-review)",
-        "reviewScope": "Incremental agent self-review of app.wish-ritual-picker.c04ef5899a and app.wishPicker.locked/unlocked only: explain unlocking by collecting the matching keepsake in Today, with locked/unlocked product states rather than purchase requirements. Unchanged app messages retain prior review. Completeness and ICU checked; no native-speaker certification or new scene/cultural claims."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -387,10 +373,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "controls": {
-        "sourceHash": "1d9bac939bc1cf45b9b8749d33cf96884e515fe9b6913bb8d40bab8b7d5bb41a",
-        "targetHash": "0f17b31169fe9d31fb98afec6a5cd0eca3dc5abb68f7f84f4793565dd2a2db54",
-        "messages": 53,
-        "reviewedAt": "2026-10-28T06:18:28.590Z",
+        "sourceHash": "fef629ace9c346f3821a73ce7375d6314088df7c9f34376893e47d30179da5f9",
+        "targetHash": "538d2ead901cfcff019a5c9e0aaf5272308434a40483e6755c3ec231f739c784",
+        "messages": 55,
+        "reviewedAt": "2026-11-02T05:13:30.623Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -424,19 +410,17 @@
         "messages": 2281,
         "reviewedAt": "2026-10-31T12:38:29.315Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root (three automatic-ending controls; prior review scope retained for unchanged entries)",
-        "reviewScope": "This change self-reviews only scene.autoEnding.status/writing/progress for an automatic product animation, not new cultural facts or native-speaker certification."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
     },
     "fr": {
       "app": {
-        "sourceHash": "6ec0659ca5f46b2ed4dbb7f6bc275b4d1f33fcd7c7c858f556f4d7c5f602b548",
-        "targetHash": "7f79619fa49d77fd5a00e2a82cf8797c84a6521d656df6a5290df0d64fe6d92c",
-        "messages": 473,
-        "reviewedAt": "2026-10-31T14:11:35.849Z",
+        "sourceHash": "ed497218332abbc514363c4e53cc85cb8cd85409a206387716b5b44a64a04453",
+        "targetHash": "88a037c4717f9ea2036f1435a94ebba84e98d10bdae144c767ccaa911b36352d",
+        "messages": 503,
+        "reviewedAt": "2026-11-02T06:26:10.455Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root/cue_review (wish-picker collection-unlock UI translation self-review)",
-        "reviewScope": "Incremental agent self-review of app.wish-ritual-picker.c04ef5899a and app.wishPicker.locked/unlocked only: explain unlocking by collecting the matching keepsake in Today, with locked/unlocked product states rather than purchase requirements. Unchanged app messages retain prior review. Completeness and ICU checked; no native-speaker certification or new scene/cultural claims."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "common": {
         "sourceHash": "4be875fa9f67bda76044db7de888700f5e8e39ade251c45778f1356c8b38cc0f",
@@ -447,10 +431,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "controls": {
-        "sourceHash": "1d9bac939bc1cf45b9b8749d33cf96884e515fe9b6913bb8d40bab8b7d5bb41a",
-        "targetHash": "fe68bf5efa72c44fd7c59695b1776f8684b83863d8d51c63b00025d53199eb43",
-        "messages": 53,
-        "reviewedAt": "2026-10-28T06:18:28.590Z",
+        "sourceHash": "fef629ace9c346f3821a73ce7375d6314088df7c9f34376893e47d30179da5f9",
+        "targetHash": "ebc9d62d050bcabb1ba0812fbd3d8d7bc5649f43311282969a73328662d1bc47",
+        "messages": 55,
+        "reviewedAt": "2026-11-02T05:13:30.626Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -484,8 +468,7 @@
         "messages": 2281,
         "reviewedAt": "2026-10-31T12:38:29.317Z",
         "review": "agent-self-review",
-        "reviewer": "Codex /root (three automatic-ending controls; prior review scope retained for unchanged entries)",
-        "reviewScope": "This change self-reviews only scene.autoEnding.status/writing/progress for an automatic product animation, not new cultural facts or native-speaker certification."
+        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
     }
   }

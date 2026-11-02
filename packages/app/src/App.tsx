@@ -18,8 +18,9 @@ import { Complete, Ritual } from "./ritual";
 import { LegalInformation } from './legal';
 import { ContentContext, type ContentEnvironment } from "./content";
 import { InvalidContentError } from "@wbr/content";
-import { SceneLibraryProvider, SceneCatalog, CacheManager } from "./scene-library";
+import { SceneLibraryProvider, SceneCatalog, CacheManager, bundledSceneEntry } from "./scene-library";
 import { SceneExperience } from "./scene-experience";
+import { TestFeedbackProvider } from './test-feedback-provider';
 import { FeedbackControls, dismissFeedbackMenu } from "./feedback-controls";
 import { dismissVisualStyleMenu } from "./visual-style-menu";
 import { dismissRitualShare } from "./ritual-share";
@@ -33,7 +34,10 @@ import type { WidgetNavigationRequest } from '@wbr/core/widgets';
 import { RewardFlightLayer } from "./reward-flight-layer";
 import { useSceneViewport } from "./scene-viewport";
 import { ARRIVAL_LINGER_MS, rewardOriginOf, shouldReduceMotion, type RewardFlight, type RewardArrival, } from "./reward-flight";
-export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack, content, navigationRequest, onNavigationConsumed, initialRoute, systemLocales, systemHour12, }: {
+const isInternalRoute = (route: Route) => route.page === 'scenes' || route.page === 'cache';
+const permittedRoute = (route: Route, internalToolsEnabled: boolean): Route =>
+    !internalToolsEnabled && isInternalRoute(route) ? { page: 'me' } : route;
+export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack, content, navigationRequest, onNavigationConsumed, initialRoute, systemLocales, systemHour12, internalToolsEnabled = false, }: {
     host: Host;
     active?: boolean;
     backRequest?: number;
@@ -45,6 +49,8 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     initialRoute?: Route;
     systemLocales?: readonly string[];
     systemHour12?: boolean;
+    /** The host owns this runtime distribution decision; saves and URLs cannot enable it. */
+    internalToolsEnabled?: boolean;
 }) {
     const preferred = useRef(systemLocales);
     preferred.current = systemLocales;
@@ -79,7 +85,11 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
         document.documentElement.lang = locale; document.documentElement.dir = 'ltr';
         document.title = tr('一日一念');
     }, [locale]);
-    const [routes, setRoutes] = useState<Route[]>(() => [initialRoute ?? { page: "today" }]);
+    const [routes, setRoutes] = useState<Route[]>(() => [permittedRoute(initialRoute ?? { page: "today" }, internalToolsEnabled)]);
+    useEffect(() => {
+        if (!internalToolsEnabled)
+            setRoutes(old => old.some(isInternalRoute) ? [permittedRoute(old.at(-1)!, false)] : old);
+    }, [internalToolsEnabled]);
     const [error, setError] = useState<string | ProductError>("");
     const [fulfillmentDrafts, setFulfillmentDrafts] = useState<Record<string, FulfillmentDraft>>({});
     // One reward's trip home, and what shows once it lands. The flight lives
@@ -131,7 +141,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
         stopInteractionSound();
     }, [sounds, stopInteractionSound]);
     const shell = useRef<HTMLDivElement>(null);
-    const route = routes[routes.length - 1];
+    const route = permittedRoute(routes[routes.length - 1], internalToolsEnabled);
     const state = snapshot.state;
     const immersive = !!state && ["scene", "ritual", "complete"].includes(route.page);
     useSceneViewport(shell, immersive);
@@ -140,6 +150,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     const roots = ["today", "wishes", "world", "me"];
     const canBack = routes.length > 1 || route.page !== "today";
     function go(next: Route) {
+        if (!internalToolsEnabled && isInternalRoute(next)) return;
         setError("");
         setRoutes((old) => {
             if (roots.includes(next.page))
@@ -160,6 +171,8 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
         window.scrollTo?.(0, 0);
     }
     function back() {
+        const feedbackClose = shell.current?.querySelector<HTMLButtonElement>('.test-feedback-dialog[open] [data-feedback-close]');
+        if (feedbackClose) { feedbackClose.click(); return; }
         if (dismissLanguageSetting(shell.current))
             return;
         if (dismissRitualShare(shell.current))
@@ -361,7 +374,8 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
                     ? route.page
                     : "today";
     // Scene titles share the page ribbon; their canvas has no second heading.
-    const ribbonEntry = route.entry ?? state.sceneRecords.find(r => r.id === route.id);
+    const offeredRibbonEntry = route.entry ?? state.sceneRecords.find(r => r.id === route.id);
+    const ribbonEntry = bundledSceneEntry(offeredRibbonEntry) ?? offeredRibbonEntry;
     const ribbon = ({
         scene: ribbonEntry ? localizedTitle(ribbonEntry) : '',
         ritual: ritualTitle[state.activeSession?.ritual ??
@@ -402,10 +416,11 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             : "";
     };
     const page = route.page === 'privacy' || route.page === 'support' ? <LegalInformation kind={route.page}/> :
-        route.page === "scenes" ? <SceneCatalog /> : route.page === "cache" ? <CacheManager /> : route.page === "scene" ? <SceneExperience entry={route.entry ?? state.sceneRecords.find(r => r.id === route.id)} wishId={route.wishId} daily={route.daily} vessel={route.vessel} replay={route.replay} opening={route.opening}/> : route.page === "today" ? (openingActive ? <Opening /> : <Today key={day} day={day}/>) : route.page === "wishes" ? (<Wishes />) : route.page === "world" ? (<World />) : route.page === "me" ? (<Me />) : route.page === "new" ? (<NewWish />) : route.page === "wish" ? (<WishDetail key={route.id} id={route.id!}/>) : route.page === "fulfill" ? (<FulfillWish key={route.id} id={route.id!}/>) : route.page === "note" ? (<WishNote key={route.id} id={route.id!}/>) : route.page === "ritual" ? (<Ritual id={route.id} wishId={route.wishId} whenIdleRef={woodfishIdle}/>) : route.page === "complete" ? (<Complete id={route.id!} revealReward={route.revealReward} shareSnapshot={route.shareSnapshot}/>) : route.page === "collection" ? (<CollectionDetail id={route.id!}/>) : (<History />);
+        route.page === "scenes" ? <SceneCatalog /> : route.page === "cache" ? <CacheManager /> : route.page === "scene" ? <SceneExperience entry={route.entry ?? state.sceneRecords.find(r => r.id === route.id)} wishId={route.wishId} daily={route.daily} vessel={route.vessel} replay={route.replay} opening={route.opening} feedbackSession={route.feedbackSession}/> : route.page === "today" ? (openingActive ? <Opening /> : <Today key={day} day={day}/>) : route.page === "wishes" ? (<Wishes />) : route.page === "world" ? (<World />) : route.page === "me" ? (<Me />) : route.page === "new" ? (<NewWish />) : route.page === "wish" ? (<WishDetail key={route.id} id={route.id!}/>) : route.page === "fulfill" ? (<FulfillWish key={route.id} id={route.id!}/>) : route.page === "note" ? (<WishNote key={route.id} id={route.id!}/>) : route.page === "ritual" ? (<Ritual id={route.id} wishId={route.wishId} whenIdleRef={woodfishIdle}/>) : route.page === "complete" ? (<Complete id={route.id!} revealReward={route.revealReward} shareSnapshot={route.shareSnapshot}/>) : route.page === "collection" ? (<CollectionDetail id={route.id!}/>) : (<History />);
     return (<IntlProvider locale={formatLocale} defaultLocale="zh-Hans" messages={catalogData[locale]}><ContentContext.Provider value={content ?? {}}>
       <Context.Provider value={{
             state,
+            internalToolsEnabled,
             go,
             back,
             active,
@@ -460,7 +475,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             arrival,
             announce,
         }}>
-        <SceneLibraryProvider><div className={`bless-app${state.settings.reducedMotion ? " reduce-motion" : ""}`}>
+        <TestFeedbackProvider host={host.testFeedback} enabled={internalToolsEnabled} active={active}><SceneLibraryProvider><div className={`bless-app${state.settings.reducedMotion ? " reduce-motion" : ""}`}>
           <style>{fontStyles}</style>
           <div className="desktop-note">
             <span className="brand-mark">{tr("\u5FF5")}</span>
@@ -513,7 +528,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
               {announcement && (<span key={announcement.n}>{announcement.text}</span>)}
             </p>
           </div>
-        </div></SceneLibraryProvider>
+        </div></SceneLibraryProvider></TestFeedbackProvider>
       </Context.Provider>
   </ContentContext.Provider></IntlProvider>);
 }

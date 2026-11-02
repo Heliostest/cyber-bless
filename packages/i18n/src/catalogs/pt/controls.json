@@ -38,6 +38,8 @@
   "app.visual.spaceGrade.detail": "Difusão de luz suave · Vinheta e grão",
   "app.visual.depthRim": "Luz de contorno por profundidade",
   "app.visual.depthRim.detail": "Luz de contorno direcional · Bordos escuros finos",
+  "app.visual.bandRim": "Luz de contorno em duas faixas",
+  "app.visual.bandRim.detail": "Sombreado em duas faixas · Bordo de profundidade rosa",
   "app.visual.galleryRim": "Intensidade da luz de contorno",
   "app.visual.pencilScale": "Densidade das hachuras",
   "app.visual.paletteStrength": "Intensidade da paleta",

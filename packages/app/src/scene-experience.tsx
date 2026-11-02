@@ -1,15 +1,14 @@
 import { localizedTitle } from './localization';
 import { translate as tr, message, productError, translateScene } from '@wbr/i18n';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { mountScene, type SceneSession, type SceneController, } from "@wbr/scene-runtime";
-import type { CatalogEntry, SceneLease, SceneProgress, } from "@wbr/content/catalog";
+import type { CatalogEntry } from "@wbr/content/catalog";
 import { dailyCollectibleId, hasReturnRitual, localDay, openingExclusions, sceneIntention, } from "@wbr/core";
 import { WISH_WRITE_COPY } from "@wbr/gestures";
-import type { WoodfishContext } from "./scene-engines";
 import { sceneEngines } from "./scene-engines";
 import { Icon } from "./art";
 import { now, uid, useApp } from "./context";
-import { supportsScene, useSceneLibrary, woodfishPack } from "./scene-library";
+import { bundledSceneEntry, useSceneLibrary } from "./scene-library";
 import { Woodfish } from "./woodfish";
 import { RitualNarrativeBlurb } from "./ritual-narrative";
 import { SceneLoadFailure } from "./scene-load-failure";
@@ -22,7 +21,8 @@ import { useSceneVisualPreference } from "./scene-visual-preference";
 import { SceneRewardReveal } from "./scene-reward-reveal";
 import { SceneShareButton } from "./ritual-share";
 import { SceneStageCard } from "./scene-stage-card";
-export function ProceduralScene({ entry, progress, checkpoint, saveWish, returning, initialVariant, onVariantChange, failed, }: {
+import { TestFeedbackOverlay } from './test-feedback-overlay';
+export function ProceduralScene({ entry, progress, checkpoint, saveWish, returning, initialVariant, onVariantChange, failed, paused = false, }: {
     entry: CatalogEntry;
     progress: number;
     checkpoint(n: number): void;
@@ -32,9 +32,11 @@ export function ProceduralScene({ entry, progress, checkpoint, saveWish, returni
     initialVariant?: string;
     onVariantChange?(variant: string): void;
     failed(error?: unknown): void;
+    paused?: boolean;
 }) {
     const host = useRef<HTMLDivElement>(null), session = useRef<SceneSession<SceneController>>(null);
-    const { active, state, prepareFeedback, haptic } = useApp();
+    const { active: hostActive, state, prepareFeedback, haptic } = useApp();
+    const active = hostActive && !paused;
     useSceneVisualPreference(entry.id, () => {
         session.current?.setActive(false);
         session.current?.setActive(active);
@@ -116,9 +118,8 @@ export const SCENE_DISCARDED_COPY = "没有保存，只留此刻的心情。";
 export const SCENE_DAILY_CAPTION = "今日随机仪式 · 完成后收进小天地";
 /** Announced when the daily keepsake lands. */
 export const sceneDailyAnnounce = (title: string) => tr("{p0}\u5DF2\u653E\u8FDB\u5C0F\u5929\u5730", { p0: title });
-function LoadedScene({ entry, lease, wishId, daily, vessel, replay, opening, failed, }: {
+function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, feedbackSession, }: {
     entry: CatalogEntry;
-    lease?: SceneLease;
     /** On a 还愿 visit: the realized wish the ritual is walked for. */
     wishId?: string;
     /** On a daily-set visit: the local day the keepsake is collected for. */
@@ -128,9 +129,13 @@ function LoadedScene({ entry, lease, wishId, daily, vessel, replay, opening, fai
     /** On a plain replay (小天地's 回看, 仪式时光's 再次体验): settles nothing. */
     replay?: boolean;
     opening?: boolean;
+    feedbackSession?: boolean;
     failed(error?: unknown): void;
 }) {
-    const { state, dispatch, active, feedback, prepareFeedback, go, launchReward, announce, back, } = useApp();
+    const { state, dispatch, active, feedback, prepareFeedback, go, launchReward, announce, back, internalToolsEnabled, } = useApp();
+    const [reporterOpen, setReporterOpen] = useState(false);
+    const feedbackEnabled = !!feedbackSession && !!internalToolsEnabled;
+    const sceneActive = active && !(feedbackEnabled && reporterOpen);
     const { entries } = useSceneLibrary();
     const record = state.sceneRecords.find((r) => r.id === entry.id);
     const progress = record?.progress ?? 0;
@@ -313,23 +318,6 @@ function LoadedScene({ entry, lease, wishId, daily, vessel, replay, opening, fai
             dispatch({ type: "vessel.clear", id: vessel });
         announce(WISH_WRITE_COPY.saved);
     };
-    const client = useMemo<WoodfishContext["content"] | undefined>(() => lease && entry.engine === "woodfish@1"
-        ? {
-            prepareUpdate: async () => { },
-            async load(initialize, options = {}) {
-                const pack = woodfishPack(lease.manifest);
-                const model = await lease.read("model", options.signal);
-                const sound = pack.sound
-                    ? await lease.read("sound", options.signal)
-                    : undefined;
-                return {
-                    pack,
-                    value: await initialize(pack, model, sound),
-                    confirm: async () => { },
-                };
-            },
-        }
-        : undefined, [lease]);
     return (<>
       {rewardRevealed && <SceneRewardReveal sceneId={entry.id} reducedMotion={state.settings.reducedMotion}/>}
       {returnWish && (<p className="scene-caption">{message('app.return.caption', { title: returnWish.title })}</p>)}
@@ -342,17 +330,17 @@ function LoadedScene({ entry, lease, wishId, daily, vessel, replay, opening, fai
         <strong>{returnWish ? tr("\u4E3A\u5DF2\u7ECF\u5B9E\u73B0\u7684\u5FC3\u613F\u8FD8\u613F") : translateScene(intention.label)}</strong>
         <p>{returnWish ? tr("\u4E3A\u300C{p0}\u300D\u8FD8\u613F\u3002{p1}", { p0: returnWish.title, p1: gratitudeAction }) : translateScene(intention.action)}</p>
       </aside>}>
-      {entry.engine === "woodfish@1" ? (<Woodfish sceneId={entry.id} contentClient={client} active={active} reducedMotion={state.settings.reducedMotion} view="front" disabled={woodfishFinished} strikes={woodfishStrikes} minimumStrikes={steps} instruction={instruction} onFinish={() => {
-                if (active && !woodfishFinished)
+      {entry.engine === "woodfish@1" ? (<Woodfish sceneId={entry.id} active={sceneActive} reducedMotion={state.settings.reducedMotion} view="front" disabled={woodfishFinished} strikes={woodfishStrikes} minimumStrikes={steps} instruction={instruction} onFinish={() => {
+                if (sceneActive && !woodfishFinished)
                     checkpoint(steps);
             }} onStrike={() => {
-                if (!active || woodfishFinished)
+                if (!sceneActive || woodfishFinished)
                     return false;
                 prepareFeedback();
                 // The final checkpoint belongs to the user's finish action.
                 checkpoint(Math.min(steps - 1, woodfishStrikes + 1), woodfishStrikes + 1);
                 return true;
-            }} onImpact={feedback} onInstruction={setInstruction} onFailure={failed}/>) : (<ProceduralScene entry={entry} progress={progress} checkpoint={checkpoint} saveWish={vessel && returnWish ? undefined : saveWish} returning={Boolean(returnWish)} initialVariant={record?.variant} onVariantChange={variant => dispatch({ type: "scene.variant", id: entry.id, variant })} failed={failed}/>)}
+            }} onImpact={feedback} onInstruction={setInstruction} onFailure={failed}/>) : (<ProceduralScene entry={entry} progress={progress} checkpoint={checkpoint} saveWish={vessel && returnWish ? undefined : saveWish} returning={Boolean(returnWish)} initialVariant={record?.variant} onVariantChange={variant => dispatch({ type: "scene.variant", id: entry.id, variant })} failed={failed} paused={feedbackEnabled && reporterOpen}/>)}
       </SceneStageCard>
       {progress >= steps && (<div className="scene-done-row">
           {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} favorite={favoriteChip} prayer={prayerButton}/> : returnedFor ? (<>
@@ -415,9 +403,14 @@ function LoadedScene({ entry, lease, wishId, daily, vessel, replay, opening, fai
             </>)}
         </p>)}
       {(progress < steps || pendingVesselChoice) && (<div className="scene-actions">{favoriteChip}</div>)}
+      {feedbackEnabled && <TestFeedbackOverlay entry={entry} reducedMotion={state.settings.reducedMotion}
+        context={{ completedSteps: Math.min(progress, steps), totalSteps: steps, reportedStep: Math.min(progress + 1, steps),
+          ...(intention?.action ? { instruction: translateScene(intention.action) } : {}),
+          ...(record?.variant ? { variant: record.variant } : {}),
+          ...(entry.engine === 'woodfish@1' ? { strikes: woodfishStrikes } : {}) }} onOpenChange={setReporterOpen}/>}
     </>);
 }
-export function SceneExperience({ entry, wishId, daily, vessel, replay, opening, }: {
+export function SceneExperience({ entry: offeredEntry, wishId, daily, vessel, replay, opening, feedbackSession, }: {
     entry?: CatalogEntry;
     /** Set when the scene is walked as a 还愿 ritual for this wish. */
     wishId?: string;
@@ -428,75 +421,54 @@ export function SceneExperience({ entry, wishId, daily, vessel, replay, opening,
     /** Set on a plain replay (回看, 再次体验): it settles nothing. */
     replay?: boolean;
     opening?: boolean;
+    feedbackSession?: boolean;
 }) {
-    const { library, ready } = useSceneLibrary(), { dispatch, back } = useApp();
-    const [attempt, setAttempt] = useState(0), [progress, setProgress] = useState<SceneProgress>();
-    const [loaded, setLoaded] = useState<{
-        lease?: SceneLease;
-        caption?: string;
-    }>();
+    const { ready } = useSceneLibrary(), { dispatch, back } = useApp();
+    const entry = bundledSceneEntry(offeredEntry);
+    const offeredId = offeredEntry?.id;
+    const [attempt, setAttempt] = useState(0), [loaded, setLoaded] = useState(false);
     const [error, setError] = useState("");
     const cancel = useRef<AbortController>(null);
     const fail = (error?: unknown) => {
         cancel.current?.abort();
-        setLoaded(undefined);
+        setLoaded(false);
         setError(error instanceof Error && error.message ? error.message : "\u573A\u666F\u753B\u9762\u6682\u4E0D\u53EF\u7528");
     };
     useEffect(() => {
-        if (!ready || !entry)
+        if (!ready || !offeredId)
             return;
         const controller = new AbortController();
         cancel.current = controller;
-        let lease: SceneLease | undefined;
-        setLoaded(undefined);
+        setLoaded(false);
         setError("");
-        setProgress(undefined);
         void (async () => {
-            if (!supportsScene(entry.engine))
+            if (!entry)
                 throw productError("\u6B64\u573A\u666F\u9700\u8981\u66F4\u65B0 App \u540E\u6253\u5F00");
-            // Record the intent before network work; a failed download never erases history.
+            // Refresh saved metadata by stable ID so old URLs cannot replace a
+            // bundled scene or make an offline return depend on a download.
             if (!dispatch({ type: "scene.visit", entry, at: now() }))
                 throw productError("\u573A\u666F\u8BB0\u5F55\u65E0\u6CD5\u66F4\u65B0");
-            if (entry.manifestUrl)
-                lease = await library.open(entry, {
-                    signal: controller.signal,
-                    onProgress: setProgress,
-                });
-            let caption: string | undefined;
-            if (lease?.manifest.assets.presentation) {
-                const value = JSON.parse(new TextDecoder().decode(await lease.read("presentation", controller.signal)));
-                if (!value ||
-                    typeof value.caption !== "string" ||
-                    value.caption.length > 300)
-                    throw productError("\u573A\u666F\u6587\u6848\u914D\u7F6E\u65E0\u6548");
-                caption = value.caption;
-            }
             if (!controller.signal.aborted)
-                setLoaded({ lease, caption });
+                setLoaded(true);
         })().catch((e) => {
             if (!controller.signal.aborted) {
-                void lease?.release();
-                setError(e instanceof Error && e.message ? e.message : "\u4E0B\u8F7D\u5931\u8D25");
+                setError(e instanceof Error && e.message ? e.message : "\u573A\u666F\u753B\u9762\u6682\u4E0D\u53EF\u7528");
             }
         });
         return () => {
             controller.abort();
-            void lease?.release();
         };
-    }, [entry, library, ready, attempt]);
-    if (!entry)
+    }, [entry, offeredId, ready, attempt]);
+    if (!offeredEntry)
         return <p role="alert">{tr("\u573A\u666F\u4FE1\u606F\u7F3A\u5931\uFF0C\u8BF7\u8FD4\u56DE\u76EE\u5F55\u91CD\u8BD5\u3002")}</p>;
-    return (<section className="scene-experience" aria-label={localizedTitle(entry)}>
-      <RitualNarrativeBlurb sceneId={entry.id}/>
-      {error ? (<SceneLoadFailure message={error} onRetry={() => setAttempt(n => n + 1)}/>) : loaded ? (<>
-          {loaded.caption && <p className="scene-caption" lang="und">{loaded.caption}</p>}
-          <LoadedScene key={attempt} entry={entry} lease={loaded.lease} wishId={wishId} daily={daily} vessel={vessel} replay={replay} opening={opening} failed={fail}/>
+    return (<section className="scene-experience" aria-label={localizedTitle(entry ?? offeredEntry)}>
+      {entry && <RitualNarrativeBlurb sceneId={entry.id}/>}
+      {error ? (<SceneLoadFailure message={error} onRetry={() => setAttempt(n => n + 1)}/>) : loaded && entry ? (<>
+          <LoadedScene key={attempt} entry={entry} wishId={wishId} daily={daily} vessel={vessel} replay={replay} opening={opening} failed={fail} feedbackSession={feedbackSession}/>
         </>) : (<div className="scene-download" role="status">
           <p>
-            {progress?.phase === "downloading"
-                ? tr("\u6B63\u5728\u4E0B\u8F7D\u5E76\u6821\u9A8C\u573A\u666F\u8D44\u6E90\u2026") : tr("\u6B63\u5728\u51C6\u5907\u573A\u666F\u2026")}
+            {tr("\u6B63\u5728\u51C6\u5907\u573A\u666F\u2026")}
           </p>
-          {progress && progress.totalBytes > 0 && (<progress value={progress.completedBytes} max={progress.totalBytes}/>)}
           <button className="button secondary" onClick={() => {
                 cancel.current?.abort();
                 back();

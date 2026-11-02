@@ -806,7 +806,7 @@ button:hover:not(:disabled) {
 /* The tab bar is a chunky floating HUD dock; each tab has its own candy. */
 .bottom-nav {
   position: fixed;
-  bottom: max(10px, env(safe-area-inset-bottom));
+  bottom: max(4px, env(safe-area-inset-bottom));
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 4px;
@@ -815,10 +815,10 @@ button:hover:not(:disabled) {
   padding: 6px;
   background: var(--paper);
   border: 3px solid var(--rim);
-  border-radius: 30px;
+  border-radius: 40px;
   box-shadow:
     0 0 0 2px var(--edge),
-    0 7px 0 2px #8fcfbf,
+    0 2px 0 2px #8fcfbf,
     0 16px 26px #0b5a5233;
   z-index: 10;
 }
@@ -834,7 +834,7 @@ button:hover:not(:disabled) {
   gap: 1px;
   min-height: 58px;
   padding: 4px 0 5px;
-  border-radius: 22px;
+  border-radius: 32px;
   background: none;
   color: var(--muted);
   font-size: 12px;
@@ -2752,7 +2752,6 @@ button:hover:not(:disabled) {
     bottom: 12px;
     width: auto;
     margin: 0 12px 12px;
-    border-radius: 28px;
   }
   .desktop-note {
     display: block;

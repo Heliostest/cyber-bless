@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { prepareReleaseDsyms } from './prepare-dsyms.mjs';
 
 async function fixture(t, phases) {
@@ -29,7 +31,7 @@ test('replays only exact generated Expo dSYM resolvers with decoded scripts and 
   const actual = await prepareReleaseDsyms(config, { run: async (...args) => calls.push(args) });
   assert.deepEqual(actual, { phaseCount: 2 });
   assert.equal(calls.length, 2);
-  assert.deepEqual(calls[0].slice(0, 2), ['/bin/bash', ['-c', script]]);
+  assert.deepEqual(calls[0].slice(0, 2), ['/bin/bash', ['-e', '-c', script]]);
   assert.deepEqual(calls[0][2], {
     cwd: pods, log: 'prepare-dsym-0.log', env: {
       PODS_ROOT: pods, PODFILE_DIR: path.dirname(pods),
@@ -38,7 +40,7 @@ test('replays only exact generated Expo dSYM resolvers with decoded scripts and 
       DERIVED_FILE_DIR: path.join(config.output, 'prepare-dsym-stamps'),
     },
   });
-  assert.deepEqual(calls[1][1], ['-c', 'echo second\n']);
+  assert.deepEqual(calls[1][1], ['-e', '-c', 'echo second\n']);
   assert.equal(calls[1][2].log, 'prepare-dsym-1.log');
   assert.equal((await stat(calls[0][2].env.DERIVED_FILE_DIR)).isDirectory(), true);
 });
@@ -51,4 +53,16 @@ test('resolver failure stops preparation and propagates the command failure', as
 test('missing resolver phases fail closed without executing unrelated phases', async t => {
   const { config } = await fixture(t, [{ name: '[Expo] Remove duplicate codegen output', script: 'must not execute' }]);
   await assert.rejects(prepareReleaseDsyms(config, { run: async () => { throw Error('Should not run'); } }), /No generated Expo dSYM resolver phases/);
+});
+
+test('a failed resolver cannot be hidden by its trailing successful stamp command', { skip: process.platform === 'win32' }, async t => {
+  const { config } = await fixture(t, [{
+    name: '[CP-User] [Expo] Resolve ExpoFont dSYM source maps',
+    script: 'false\ntouch "$DERIVED_FILE_DIR/incorrect-success.stamp"\n',
+  }]);
+  const execute = promisify(execFile);
+  await assert.rejects(prepareReleaseDsyms(config, { run: (command, args, options) => execute(command, args, {
+    cwd: options.cwd, env: { ...process.env, ...options.env },
+  }) }), /Command failed/);
+  await assert.rejects(stat(path.join(config.output, 'prepare-dsym-stamps/incorrect-success.stamp')), { code: 'ENOENT' });
 });

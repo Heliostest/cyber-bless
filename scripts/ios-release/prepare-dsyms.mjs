@@ -32,7 +32,7 @@ export async function prepareReleaseDsyms(config, { run }) {
     if (!['/bin/sh', '/bin/bash'].includes(decode(phase.shellPath))) throw Error('Unexpected Expo dSYM phase shell');
     const script = decode(phase.shellScript);
     if (typeof script !== 'string' || !script.trim()) throw Error('Missing Expo dSYM resolver script');
-    await run('/bin/bash', ['-c', script], { cwd: pods, env, log: `prepare-dsym-${index}.log` });
+    await run('/bin/bash', ['-e', '-c', script], { cwd: pods, env, log: `prepare-dsym-${index}.log` });
   }
   return { phaseCount: phases.length };
 }

@@ -212,6 +212,7 @@ try {
   }
   await writeFile(projectFile, project.writeSync());
   const signedNativeInputs = await captureNativeInputs(repo);
+  await writeFile(path.join(output, 'signed-native-inputs.json'), JSON.stringify({ ...sourceReceipt(manifest), capturedAt: new Date().toISOString(), nativeInputs: signedNativeInputs }, null, 2) + '\n');
   await assertReleaseSource(release, { entrypoint: import.meta.url, allowPrebuildChanges: true, requirePrepared: true });
   console.log(`Archiving ${bundleIdentifier} ${version} (${buildNumber}) with its widget extension. See xcode-archive.log.`);
   await run('/usr/bin/xcodebuild', ['archive', '-workspace', workspace, '-scheme', 'app', '-configuration', 'Release', '-sdk', 'iphoneos', '-destination', 'generic/platform=iOS', '-archivePath', archive, '-derivedDataPath', derivedData, '-disableAutomaticPackageResolution', '-skipPackageUpdates', '-jobs', '4'], { cwd: ios, log: 'xcode-archive.log' });

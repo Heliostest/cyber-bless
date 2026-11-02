@@ -12,8 +12,8 @@
 ```bash
 git push origin master
 git lfs push origin master
-git tag -a ios/v1.0.0-build.19 master -m "iOS 1.0.0 build 19"
-git push origin refs/tags/ios/v1.0.0-build.19
+git tag -a ios-v1.0.0-build.19 master -m "iOS 1.0.0 build 19"
+git push origin refs/tags/ios-v1.0.0-build.19
 ```
 
 来源必须在远端 `master` 历史中；不能改分支参数绕过。入口比较 tag 对象、commit/tree，拒绝不存在或移动的 tag。`master` 后续推进不影响旧 tag 重建。
@@ -33,7 +33,7 @@ mkdir -p "$release_root"
 
 ```bash
 GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/Heliostest/cyber-bless.git "$release_root/bootstrap"
-node "$release_root/bootstrap/scripts/ios-release/checkout-tag.mjs" --tag=ios/v1.0.0-build.19 --root="$release_root" > "$release_root/source.json"
+node "$release_root/bootstrap/scripts/ios-release/checkout-tag.mjs" --tag=ios-v1.0.0-build.19 --root="$release_root" > "$release_root/source.json"
 release_repo=$(node -p 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).repo' "$release_root/source.json")
 ```
 
@@ -70,7 +70,7 @@ node "$release_repo/scripts/ios-release/release-runner.mjs" <配置绝对路径>
 ```
 
 - `build`：ASC 编号检查 → prepare → EAS 计数／活动构建检查（混用时）→ archive/export → offline verify。不会上传；先安装依赖再调用 EAS SDK。
-- `prepare`：核对实际工具链，`npm ci`，从干净原生目录生成工程，按冻结 Bundler 和 Podfile.lock 执行 deployment 安装，记录原生输入。失败使旧成功准备回执失效。
+- `prepare`：核对实际工具链，`npm ci`，从干净原生目录生成工程，按冻结 Bundler 和 Podfile.lock 执行 deployment 安装；先执行不签名的 Release 构建，让官方脚本完成预编译依赖切换、dSYM 与模块 provider 生成，再记录原生输入。失败使旧成功准备回执失效。
 - `upload`：重新核对源码、原生输入、验证器、签名包和回执，按原有保护上传一次。
 - `finish`：查询同一包，必要时更新测试说明。`pending:true` 表示需要合理间隔继续查询，不能重传包。
 - `status`／`counter-status` 只读查询；`counter-sync` 仅在同源 TestFlight 完成回执核验后同步 EAS 计数。
@@ -83,6 +83,8 @@ node "$release_repo/scripts/ios-release/release-runner.mjs" <配置绝对路径>
 ## 固定输入与存储
 
 工具核对同一个 tag、commit/tree、文件哈希、原生编译输入和阶段回执。脚本或源码有修复时提交并使用新 tag。原生 iOS 仍由 prebuild 生成；升级依赖先更新跟踪的锁，不关闭 frozen／deployment 检查放行。
+
+新发布 tag 使用不含斜杠与百分号的名称，例如 `ios-v1.0.0-build.20`。含斜杠的 tag 会生成含 `%2F` 的 checkout 目录；已在本机复现 Xcode Clang 缓存工具无法写入该目录。旧失败 tag 和回执保留，不移动或覆盖。
 
 Pods 安装通过同一提交内的 `pod-install.rb` 调用 CocoaPods。ExpoModulesCore 和 ExpoWidgets 的本地 podspec JSON 含 checkout 绝对路径；包装器仅在这两个保存的 JSON 校验和中，将本 checkout 的完整路径前缀（含 URI 转义形式）规范为固定占位符，避免编码 tag 目录改变锁。版本、依赖、脚本及其他字节仍参与校验，实际原生路径仍完整记录在原生输入回执中。安装继续使用冻结 Bundler 和 `--deployment`，并逐字节核对跟踪锁。更新 `store/ios/Podfile.lock` 时也必须使用该包装器；在独立验证 checkout 的 `apps/mobile-expo/ios` 中运行 `bundle exec ruby ../../../scripts/ios-release/pod-install.rb install` 生成候选锁后，验证 `install --deployment` 与目录迁移均不改变锁，再审阅提交。
 

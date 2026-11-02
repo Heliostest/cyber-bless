@@ -39,3 +39,19 @@ test('release output cannot target another checkout or another build number', as
   assert.throws(() => validateGitPreparation({ ...config, output: path.join(root, 'outside') }), /output/i);
   assert.throws(() => validateGitPreparation({ ...config, buildNumber: 20 }), /output/i);
 });
+
+test('native preparation warms the exact Release workspace without signing or archiving', async () => {
+  const { releaseWarmupArguments } = await import('./prepare-mac.mjs');
+  assert.equal(typeof releaseWarmupArguments, 'function');
+  const path = await import('node:path');
+  const repo = path.resolve('artifacts/prepare-release-test/source');
+  const config = { repo, derivedData: path.join(repo, 'artifacts/ios-release/DerivedData') };
+  assert.deepEqual(releaseWarmupArguments(config), [
+    'build', '-workspace', path.join(repo, 'apps/mobile-expo/ios/app.xcworkspace'),
+    '-scheme', 'app', '-configuration', 'Release', '-sdk', 'iphoneos',
+    '-destination', 'generic/platform=iOS', '-derivedDataPath', config.derivedData,
+    '-disableAutomaticPackageResolution', '-skipPackageUpdates', '-jobs', '4',
+    'CODE_SIGNING_ALLOWED=NO',
+  ]);
+  assert.throws(() => releaseWarmupArguments({ ...config, derivedData: path.join(repo, 'outside-cache') }), /cache/i);
+});

@@ -15,6 +15,18 @@ export function validateGitPreparation(config) {
   for (const field of ['nodeBinary', 'rubyBinary', 'developerDir']) if (!path.isAbsolute(config[field] ?? '')) throw Error('Expected absolute toolchain path: ' + field);
 }
 
+export function releaseWarmupArguments(config) {
+  const repo = path.resolve(config.repo);
+  if (config.derivedData !== path.join(repo, 'artifacts/ios-release/DerivedData')) throw Error('Unexpected shared build cache');
+  return [
+    'build', '-workspace', path.join(repo, 'apps/mobile-expo/ios/app.xcworkspace'),
+    '-scheme', 'app', '-configuration', 'Release', '-sdk', 'iphoneos',
+    '-destination', 'generic/platform=iOS', '-derivedDataPath', config.derivedData,
+    '-disableAutomaticPackageResolution', '-skipPackageUpdates', '-jobs', '4',
+    'CODE_SIGNING_ALLOWED=NO',
+  ];
+}
+
 export async function main(configFile) {
   if (!path.isAbsolute(configFile ?? '')) throw Error('Pass an absolute release-config JSON path');
   const config = JSON.parse(await readFile(configFile, 'utf8'));
@@ -58,11 +70,12 @@ export async function main(configFile) {
   await resetNativeProject(repo);
   await run(nodeBinary, [path.join(repo, 'node_modules/expo/bin/cli'), 'prebuild', '--platform', 'ios', '--no-install'], 'expo-prebuild.log', path.join(repo, 'apps/mobile-expo'));
   const dependencies = await installLockedPods(config);
+  await run('/usr/bin/xcodebuild', releaseWarmupArguments(config), 'xcode-prepare-release.log', path.join(repo, 'apps/mobile-expo/ios'));
   await assertReleaseSource(config, { entrypoint: import.meta.url, allowPrebuildChanges: true });
   const nativeInputs = await captureNativeInputs(repo);
   const prepared = { checkedAt: new Date().toISOString(), ...identity, commit: manifest.commit, sourceFilesChecked: manifest.fileCount, allBusinessSourceHashesVerified: true, tooling, dependencies, nativeInputs };
   await writeFile(path.join(output, 'source-post-prebuild.json'), JSON.stringify(prepared, null, 2) + '\n');
-  const result = { completedAt: new Date().toISOString(), ...identity, dependenciesInstalled: true, localizationVerified: true, offlineAssetsPrepared: true, nativeWorkspaceGenerated: true, podsInstalled: true, sourceHashesVerifiedAfterPrebuild: true, tooling };
+  const result = { completedAt: new Date().toISOString(), ...identity, dependenciesInstalled: true, localizationVerified: true, offlineAssetsPrepared: true, nativeWorkspaceGenerated: true, podsInstalled: true, unsignedReleaseBuildPassed: true, sourceHashesVerifiedAfterPrebuild: true, tooling };
   await writeFile(path.join(output, 'prepare-result.json'), JSON.stringify(result, null, 2) + '\n');
   console.log(JSON.stringify(result));
 }

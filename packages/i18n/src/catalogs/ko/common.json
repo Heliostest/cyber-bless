@@ -1,6 +1,8 @@
 {
   "app.woodfish.progress": "{n, number}번 두드렸어요 · {min, number}번 이상 두드리면 마칠 수 있어요",
   "app.wish.returnSummary": "{status, select, fulfilled {감사의 마음을 전했어요: } other {이루어지면: }}{method, select, kindness {작은 선행 하기} other {작은 의식 마치기}}",
+  "app.wish.effortPast": "이 소원을 위해 기울였던 노력",
+  "app.wish.noPastNotes": "남겨 둔 노력의 기록이 없어요.",
   "app.note.about": "「{title}」에 관해",
   "app.return.caption": "이번에는 「{title}」에 감사의 마음을 전해요.",
   "app.visual.forScene": "「{title}」의 화면 스타일을 골라요",

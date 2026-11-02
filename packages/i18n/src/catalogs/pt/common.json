@@ -1,6 +1,8 @@
 {
   "app.woodfish.progress": "{n,plural,one{# toque} many{# toques} other{# toques}} · Termine após pelo menos {min, number}",
   "app.wish.returnSummary": "{status, select, fulfilled {Agradecimento realizado: } other {Quando se realizar: }}{method, select, kindness {fazer uma pequena boa ação} other {concluir um pequeno ritual}}",
+  "app.wish.effortPast": "O esforço que dediquei a este desejo",
+  "app.wish.noPastNotes": "Não ficaram notas sobre o seu esforço.",
   "app.note.about": "Sobre «{title}»",
   "app.return.caption": "Desta vez, agradeça por «{title}».",
   "app.visual.forScene": "Escolha um estilo para «{title}»",

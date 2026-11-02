@@ -6,6 +6,7 @@ import {
   createState,
   dailyCollectibleId,
   localDay,
+  sceneIntention,
   reduce,
   type State,
 } from "@wbr/core";
@@ -13,7 +14,7 @@ import type { CatalogEntry } from "@wbr/content/catalog";
 import type { HapticStrength } from "@wbr/runtime";
 import { assertSafeCopy } from "@wbr/shared";
 import { BlessingApp } from "./App";
-import { Context, type AppContext } from "./context";
+import { Context, type AppContext, type Route } from "./context";
 import {
   SCENE_DAILY_CAPTION,
   SCENE_DAILY_CTA,
@@ -33,7 +34,7 @@ import {
   useOpenRitual,
 } from "./scene-library";
 import { dailyPrimaryScene, isWishScene } from "./scene-placement";
-import { FULFILL_VESSEL_COPY, VESSEL_COPY } from "./vessels";
+import { VESSEL_COPY } from "./vessels";
 import { clickOn, renderUI, settle, typeInto } from "./dom-test-utils";
 
 // The 3D scenes are not under test: keep the context the last one was given.
@@ -124,7 +125,7 @@ afterEach(() => {
 });
 
 /** The App on a memory host, loaded to 今日; `saved()` reads its last save. */
-async function openApp(state: State) {
+async function openApp(state: State, initialRoute?: Route) {
   let raw = JSON.stringify(state);
   const host = {
     read: async () => raw,
@@ -133,7 +134,7 @@ async function openApp(state: State) {
       raw = next;
     },
   };
-  const ui = renderUI(createElement(BlessingApp, { host, internalToolsEnabled: true }));
+  const ui = renderUI(createElement(BlessingApp, { host, internalToolsEnabled: true, initialRoute }));
   await settle();
   const all = (selector: string) => [...ui.host.querySelectorAll(selector)];
   return {
@@ -253,6 +254,20 @@ describe("今日's daily set", () => {
       wishScene: true,
     });
     expect(saved.ledger).toEqual([]);
+    ui.unmount();
+  });
+
+  it("uses the daily keepsake when the main ritual is completed and a wish is recorded outside the daily entry", async () => {
+    const day = Array.from({ length: builtInScenes.length }, (_, i) => new Date(Date.UTC(2026, 9, i + 1)).toISOString().slice(0, 10))
+      .find(day => { const id = dailyPrimaryScene(builtInScenes, day)!.id; return isWishScene(id) && sceneIntention(id)?.optionalWish; })!;
+    vi.setSystemTime(new Date(`${day}T12:00:00`));
+    const id = dailyPrimaryScene(builtInScenes, day)!.id;
+    const ui = await openApp(createState(), { page: "scene", id, entry: entryOf(id) });
+    await ui.walk();
+    await ui.tap(ui.host.querySelector(".scene-wish-invite")!);
+    typeInto(ui.host.querySelector(".scene-post-wish input")!, "愿家人平安");
+    await ui.tap(ui.host.querySelector('.scene-post-wish button[type="submit"]')!);
+    expect((await ui.saved()).collectibles).toMatchObject([{ id: dailyCollectibleId(day, id), spentAt: expect.any(String) }]);
     ui.unmount();
   });
 
@@ -601,16 +616,13 @@ describe("许愿 through a keepsake", () => {
   });
 });
 
-describe("还愿 through a keepsake", () => {
+describe("legacy in-progress ritual-wish visits", () => {
   it.each([["daruma-eye-painting", "另一目"], ["omamori-cycle", "返纳盒"]])(
     "groups the returning action for %s under blessing while keeping its thanks", async (id, action) => {
       const state = withRealizedWish();
       state.collectibles.push(keepsake(id, "2026-10-05"));
-      const ui = await openApp(state);
-      await ui.tap(ui.host.querySelector('[data-tab="wishes"]')!);
-      await ui.tap(ui.host.querySelector('.wish-card[data-wish-id="w1"]')!);
-      await ui.tap(ui.button("来还个愿", ".wish-detail-page"));
-      await ui.tap(ui.host.querySelector(`.vessel-card[data-scene="${id}"]`)!);
+      const ui = await openApp(state, { page: "scene", id, entry: entryOf(id),
+        vessel: dailyCollectibleId("2026-10-05", id), wishId: "w1" });
       const intention = ui.host.querySelector('.scene-intention[data-kind="blessing"]');
       expect(intention?.textContent ?? "").toContain("面试顺利");
       expect(intention?.textContent ?? "").toContain(action);
@@ -619,19 +631,11 @@ describe("还愿 through a keepsake", () => {
       expect(ui.host.querySelector(".scene-post-wish")).toBeNull();
       ui.unmount();
     });
-  it("spends the keepsake for the wish: a note, no merit, the badge only", async () => {
-    const state = withRecords({ crane: 2 }, withRealizedWish());
+  it("preserves a legacy visit's note while a new kindness completes fulfillment", async () => {
+    const state = withRecords({ crane: 0 }, withRealizedWish());
     state.collectibles.push(keepsake("crane", "2026-10-05"));
-    const ui = await openApp(state);
-    await ui.tap(ui.host.querySelector('[data-tab="wishes"]')!);
-    await ui.tap(ui.host.querySelector('.wish-card[data-wish-id="w1"]')!);
-    await ui.tap(ui.button("来还个愿", ".wish-detail-page"));
-    expect(ui.page()).toBe("fulfill");
-    expect(ui.host.querySelector(".linked-ritual")!.textContent).toContain(
-      FULFILL_VESSEL_COPY.pick,
-    );
-    // The crane record stands half-walked: a 还愿 visit still starts at 0.
-    await ui.tap(ui.host.querySelector('.vessel-card[data-scene="crane"]')!);
+    const ui = await openApp(state, { page: "scene", id: "crane", entry: entryOf("crane"),
+      vessel: dailyCollectibleId("2026-10-05", "crane"), wishId: "w1" });
     expect(ui.page()).toBe("scene");
     expect(ui.sceneProgress()).toBe("已完成 0 / 3");
     expect(scene.context?.progress).toBe(0);
@@ -659,17 +663,16 @@ describe("还愿 through a keepsake", () => {
     expect(saved.ledger).toEqual([]);
 
     await ui.tap(ui.button(SCENE_RETURN_CTA, ".scene-done-row"));
-    expect(ui.page()).toBe("fulfill");
-    expect(ui.host.querySelector(".linked-ritual")?.textContent).toContain(
-      "已为这个心愿完成小仪式",
-    );
-    typeInto(ui.host.querySelector("#return-note")!, "谢谢一直努力的自己");
+    expect(ui.page()).toBe("wish");
+    await ui.tap(ui.button("来还个愿", ".wish-detail-page"));
+    expect(ui.host.querySelector(".linked-ritual")).toBeNull();
+    typeInto(ui.host.querySelector("#return-note")!, "帮助朋友做了一件小事");
     await ui.tap(ui.button("完成还愿", "form"));
-    expect(ui.page()).toBe("collection");
+    expect(ui.page()).toBe("wish");
     saved = await ui.saved();
     expect(saved.wishes[0]).toMatchObject({
       status: "fulfilled",
-      returnMethod: "ritual",
+      returnMethod: "kindness",
     });
     // The 如愿 badge joins the spent keepsake, and no merit was ever given.
     expect(saved.collectibles.map((c) => c.kind)).toEqual(["scene", "badge"]);
@@ -677,17 +680,6 @@ describe("还愿 through a keepsake", () => {
     ui.unmount();
   });
 
-  it("points back to 今日 when no keepsake is usable yet", async () => {
-    const ui = await openApp(withRealizedWish());
-    await ui.tap(ui.host.querySelector('[data-tab="wishes"]')!);
-    await ui.tap(ui.host.querySelector('.wish-card[data-wish-id="w1"]')!);
-    await ui.tap(ui.button("来还个愿", ".wish-detail-page"));
-    const linked = ui.host.querySelector(".linked-ritual")!;
-    expect(linked.textContent).toContain(FULFILL_VESSEL_COPY.none);
-    await ui.tap(ui.button(FULFILL_VESSEL_COPY.noneAction, ".linked-ritual"));
-    expect(ui.page()).toBe("today");
-    ui.unmount();
-  });
 });
 
 describe("小天地's 回看", () => {
@@ -1086,9 +1078,6 @@ describe("ritual scene copy", () => {
       SCENE_DAILY_CAPTION,
       sceneDailyAnnounce("短册系竹"),
       ...Object.values(VESSEL_COPY),
-      FULFILL_VESSEL_COPY.pick,
-      FULFILL_VESSEL_COPY.none,
-      FULFILL_VESSEL_COPY.noneAction,
       "已拿去许过愿",
       "回看这场仪式",
     ])
@@ -1097,6 +1086,77 @@ describe("ritual scene copy", () => {
 });
 
 describe("optional wishes after the ritual", () => {
+  it("keeps the daily keepsake unused when post-ritual writing is cancelled", async () => {
+    const ui = await openApp(createState(), {
+      page: "scene", id: "tanzaku-tanabata", entry: entryOf("tanzaku-tanabata"), daily: DAY,
+    });
+    await ui.walk();
+    await ui.tap(ui.host.querySelector(".scene-wish-invite")!);
+    typeInto(ui.host.querySelector(".scene-post-wish input")!, "还没想好");
+    await ui.tap(ui.host.querySelector(".scene-wish-cancel")!);
+    const saved = await ui.saved();
+    expect(saved.wishes).toEqual([]);
+    expect(saved.collectibles).toHaveLength(1);
+    expect(saved.collectibles[0].spentAt).toBeUndefined();
+    ui.unmount();
+  });
+
+  it("records a wish during a replay without spending an existing daily keepsake", async () => {
+    const state = createState();
+    state.collectibles = [keepsake("tanzaku-tanabata", DAY)];
+    const ui = await openApp(state, {
+      page: "scene", id: "tanzaku-tanabata", entry: entryOf("tanzaku-tanabata"), replay: true,
+    });
+    await ui.walk();
+    await ui.tap(ui.host.querySelector(".scene-wish-invite")!);
+    typeInto(ui.host.querySelector(".scene-post-wish input")!, "愿家人平安");
+    await ui.tap(ui.host.querySelector('.scene-post-wish button[type="submit"]')!);
+    const saved = await ui.saved();
+    expect(saved.wishes).toHaveLength(1);
+    expect(saved.collectibles).toEqual(state.collectibles);
+    ui.unmount();
+  });
+
+  it("handles an older scene reporting its wish and final checkpoint in the same callback batch", async () => {
+    const ui = await openApp(createState(), {
+      page: "scene", id: "tanzaku-tanabata", entry: entryOf("tanzaku-tanabata"), daily: DAY,
+    });
+    act(() => {
+      scene.context!.saveWish!("愿家人平安");
+      scene.context!.checkpoint!(3);
+    });
+    const saved = await ui.saved();
+    expect(saved.wishes).toHaveLength(1);
+    expect(saved.collectibles).toMatchObject([{ spentAt: expect.any(String) }]);
+    ui.unmount();
+  });
+
+  it("marks only this daily keepsake used when its completed ritual records a wish", async () => {
+    const state = createState();
+    state.collectibles = [keepsake("tanzaku-tanabata", "2026-10-04"), keepsake("crane", "2026-10-04")];
+    const ui = await openApp(state, {
+      page: "scene", id: "tanzaku-tanabata", entry: entryOf("tanzaku-tanabata"), daily: DAY,
+    });
+    await ui.walk();
+    expect((await ui.saved()).collectibles.every(item => !item.spentAt)).toBe(true);
+    await ui.tap(ui.host.querySelector(".scene-wish-invite")!);
+    typeInto(ui.host.querySelector(".scene-post-wish input")!, "app早日发布");
+    await ui.tap(ui.host.querySelector('.scene-post-wish button[type="submit"]')!);
+    const saved = await ui.saved();
+    expect(saved.wishes).toMatchObject([{ title: "app早日发布", notes: [] }]);
+    expect(saved.collectibles.find(item => item.id === dailyCollectibleId(DAY, "tanzaku-tanabata"))?.spentAt).toEqual(expect.any(String));
+    expect(saved.collectibles.slice(0, 2)).toEqual(state.collectibles);
+    await ui.tap(ui.button(SCENE_DONE_WISH_CTA));
+    const slot = ui.host.querySelector(`[data-collectible-id="${dailyCollectibleId(DAY, "tanzaku-tanabata")}"]`);
+    expect(slot?.getAttribute("data-rack-status")).toBe("used");
+    expect(ui.host.querySelector(".wish-rack-count")?.textContent).toBe("2 个未用");
+    ui.unmount();
+
+    const restored = await openApp(saved, { page: "wishes" });
+    expect(restored.host.querySelector(`[data-collectible-id="${dailyCollectibleId(DAY, "tanzaku-tanabata")}"]`)?.getAttribute("data-rack-status")).toBe("used");
+    restored.unmount();
+  });
+
   async function openCatalogScene(id: string) {
     const ui = await openApp(createState());
     await ui.tap(ui.host.querySelector('[data-tab="me"]')!);

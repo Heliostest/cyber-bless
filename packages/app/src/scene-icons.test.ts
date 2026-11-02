@@ -310,11 +310,12 @@ describe("historical ritual keepsake illustrations", () => {
     expect(detail.querySelector("img.scene-icon")?.getAttribute("src")).toBe(`/scene-icons/soft3d/${kind}.webp`);
   });
 
-  it("keeps the commemorative badge on its separate wishes artwork", () => {
+  it("keeps an unlinked historical commemorative badge neutral", () => {
     const state = createState();
     state.collectibles.push({ id: "legacy:badge", kind: "badge", title: "还愿纪念", at: "2026-10-01T08:00:00.000Z" });
     const detail = render(createElement(CollectionDetail, { id: "legacy:badge" }), state);
-    expect(detail.querySelector(".reference-crop img")?.getAttribute("src")).toBe("/reference-ui/wishes.png");
+    expect(detail.querySelector(".art-badge img")).toBeNull();
+    expect(detail.querySelector(".badge-medallion svg")).not.toBeNull();
   });
 });
 

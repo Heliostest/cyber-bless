@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createState, reduce, restore, type State } from '@wbr/core';
 import { builtInScenes } from './scene-library';
 import { BlessingApp } from './App';
-import { clickOn, renderUI, settle } from './dom-test-utils';
+import { clickOn, renderUI, settle, typeInto } from './dom-test-utils';
 
 type Given = { progress?: number; checkpoint?(n: number): void; saveWish?(line: string): void };
 const scene = vi.hoisted(() => ({ context: undefined as Given | undefined }));
@@ -129,5 +129,36 @@ it('leaves legacy saved players on Today', async () => {
   const ui = await open(JSON.stringify(createState()));
   expect(ui.host.querySelector('.today-page')).not.toBeNull();
   expect(ui.host.querySelector('.opening-page')).toBeNull();
+  ui.unmount();
+});
+
+it.each([false, true])('collects the opening wish keepsake as used after recording a post-ritual wish (reload=%s)', async reload => {
+  let state = started();
+  for (const id of ids.slice(0, 2)) {
+    state = reduce(state, { type: 'scene.visit', entry: builtInScenes.find(e => e.id === id)!, at: new Date().toISOString() });
+    state = reduce(state, { type: 'scene.progress', id, progress: 3 });
+    state = reduce(state, { type: 'opening.collect', sceneId: id, at: new Date().toISOString() });
+  }
+  let ui = await open(JSON.stringify(state));
+  await ui.tap('.opening-start');
+  await ui.walk();
+  await ui.tap('.scene-wish-invite');
+  typeInto(ui.host.querySelector('.scene-post-wish input')!, '愿自己每天从容一点');
+  await ui.tap('.scene-post-wish button[type="submit"]');
+  if (reload) {
+    const saved = ui.raw();
+    ui.unmount();
+    ui = await open(saved);
+    await ui.tap('.opening-start');
+    expect(ui.host.querySelector('.scene-wish-invite')).toBeNull();
+    expect(ui.host.querySelector('.scene-wish-saved')?.textContent).toContain('已存进心愿');
+  }
+  await ui.tap('[data-opening-collect]');
+  expect(ui.state().wishes).toMatchObject([{ title: '愿自己每天从容一点', notes: [] }]);
+  expect(ui.state().collectibles.find(item => item.id === 'opening:crane')?.spentAt).toEqual(expect.any(String));
+  expect(ui.state().collectibles.slice(0, 2)).toEqual(state.collectibles);
+  await ui.tap('.opening-finish');
+  await ui.tap('[data-tab="wishes"]');
+  expect(ui.host.querySelector('[data-collectible-id="opening:crane"]')?.getAttribute('data-rack-status')).toBe('used');
   ui.unmount();
 });

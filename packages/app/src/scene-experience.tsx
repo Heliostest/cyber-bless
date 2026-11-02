@@ -3,7 +3,7 @@ import { translate as tr, message, productError, translateScene } from '@wbr/i18
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { mountScene, type SceneSession, type SceneController, } from "@wbr/scene-runtime";
 import type { CatalogEntry } from "@wbr/content/catalog";
-import { dailyCollectibleId, hasReturnRitual, localDay, openingExclusions, sceneIntention, } from "@wbr/core";
+import { dailyCollectibleId, hasReturnRitual, localDay, openingCollectibleId, openingExclusions, sceneIntention, } from "@wbr/core";
 import { WISH_WRITE_COPY } from "@wbr/gestures";
 import { sceneEngines } from "./scene-engines";
 import { Icon } from "./art";
@@ -105,8 +105,8 @@ export function FavoriteChip({ id, favorite }: {
 /** The exits shown when a scene's steps are done. */
 export const SCENE_DONE_WISH_CTA = "去心愿看看";
 export const SCENE_DONE_CTA = "完成";
-/** A 还愿 visit's exit, back to 来还个愿. */
-export const SCENE_RETURN_CTA = "继续还愿 · 留下这份心情";
+/** A legacy linked visit returns to the wish without completing fulfillment. */
+export const SCENE_RETURN_CTA = SCENE_DONE_WISH_CTA;
 /** A daily-set walk's closing moment: the keepsake settles, then flies home. */
 export const SCENE_DAILY_CTA = "收下";
 /** A vessel walk for a new wish: the held line gets an explicit choice. */
@@ -159,7 +159,11 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
     // keep-or-discard choice (and the phrase) survive back, remount and reload.
     const draft = vesselMake ? state.vesselDrafts?.[vessel] : undefined;
     /** The wish this visit kept, as always: from a line saved on a plain walk. */
-    const [keptWish, setKeptWish] = useState<string>();
+    const [keptWish, setKeptWish] = useState<string | undefined>(() => opening
+        ? state.wishes.find(w => w.sourceCollectibleId === openingCollectibleId(entry.id))?.id
+        : undefined);
+    const keptWishRef = useRef<string | undefined>(keptWish);
+    const dailyKeepsake = useRef<string | undefined>(daily ? dailyCollectibleId(daily, entry.id) : undefined);
     const [wishWriting, setWishWriting] = useState(false);
     const postWishSubmitted = useRef(false);
     /** A vessel 许愿 walk holds its box line for the keep-or-not choice. */
@@ -196,6 +200,7 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
                 ? localDay()
                 : undefined;
         if (settleDay) {
+            dailyKeepsake.current = dailyCollectibleId(settleDay, entry.id);
             const granted = dispatch({
                 type: "daily.scene",
                 id: visit.id,
@@ -208,6 +213,10 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
             });
             if (granted)
                 setDailyGranted(true);
+            // Compatibility with scenes that reported their written line
+            // before their final checkpoint, including callbacks in one batch.
+            if (isWishScene(entry.id) && keptWishRef.current)
+                dispatch({ type: "collectible.spend", id: dailyKeepsake.current, at: now() });
         }
         // A vessel is spent by the walk itself, whichever way the line goes.
         if (vessel) {
@@ -243,6 +252,13 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
     </div>);
     const pendingVesselChoice = !opening && !returnedFor && !dailyGranted &&
         vesselSpent && !!heldWish && !discarded && !keptWish;
+    const wishForVisit = (text: string) => {
+        const sourceCollectibleId = !vessel && !wishId && !replay && isWishScene(entry.id)
+            ? opening ? openingCollectibleId(entry.id)
+                : state.collectibles.find(c => c.id === dailyKeepsake.current && c.wishScene && !c.spentAt)?.id
+            : undefined;
+        return sceneWish(text, entry.id, uid(), now(), sourceCollectibleId);
+    };
     // The wish box, by path. A 许愿 vessel holds its line for the choice at
     // done — in the save, under the vessel, so the choice cannot be escaped
     // into a lost phrase; a 还愿 vessel keeps nothing (its box says so itself);
@@ -256,9 +272,11 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
             }
             return;
         }
-        const wish = sceneWish(text, entry.id, uid(), now());
-        if (wish && dispatch(wish))
+        const wish = wishForVisit(text);
+        if (wish && dispatch(wish)) {
+            keptWishRef.current = wish.id;
             setKeptWish(wish.id);
+        }
     };
     // One exit at done: back to 来还个愿 on a 还愿 visit, else to the kept
     // wish, with the slip flying into its new card, or simply back.
@@ -308,10 +326,11 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
     const saveCompletedWish = (text: string) => {
         if (!active || !canRecordWish || postWishSubmitted.current)
             return;
-        const wish = sceneWish(text, entry.id, uid(), now());
+        const wish = wishForVisit(text);
         if (!wish || !dispatch(wish))
             return;
         postWishSubmitted.current = true;
+        keptWishRef.current = wish.id;
         setKeptWish(wish.id);
         setHeldWish(undefined);
         if (vessel)
@@ -344,9 +363,8 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
       </SceneStageCard>
       {progress >= steps && (<div className="scene-done-row">
           {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} favorite={favoriteChip} prayer={prayerButton}/> : returnedFor ? (<>
-              {/* No flight: the note is on the wish already, and the ritual
-                        shows as done on 来还个愿. */}
-              {completionActions(<button type="button" className="button primary" onClick={() => go({ page: "fulfill", id: returnedFor })}>
+              {/* The legacy visit's note is saved; fulfillment is a separate kindness record. */}
+              {completionActions(<button type="button" className="button primary" onClick={() => go({ page: "wish", id: returnedFor })}>
                 {tr(SCENE_RETURN_CTA)}
               </button>)}
             </>) : dailyGranted ? (<>

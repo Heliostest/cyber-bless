@@ -1,6 +1,8 @@
 {
   "app.woodfish.progress": "已轻敲 {n, number} 次 · 至少 {min, number} 次后可结束",
   "app.wish.returnSummary": "{status, select, fulfilled {已还愿：} other {实现后：}}{method, select, kindness {做一件小善事} other {完成一个小仪式}}",
+  "app.wish.effortPast": "我为这个愿望努力过",
+  "app.wish.noPastNotes": "没有留下努力记录。",
   "app.note.about": "关于「{title}」",
   "app.return.caption": "这一次，为「{title}」还愿。",
   "app.visual.forScene": "为「{title}」选一种喜欢的画面",

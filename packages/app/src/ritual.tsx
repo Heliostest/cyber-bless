@@ -209,8 +209,8 @@ export function Complete({ id, revealReward, shareSnapshot }: {
           </strong>
         </div>
       </div>
-      <button className="button primary full" data-reward-origin={!wish || undefined} ref={collectCta} onClick={wish ? () => go({ page: "fulfill", id: wish.id }) : collect}>
-        {wish ? tr("\u7EE7\u7EED\u8FD8\u613F \u00B7 \u7559\u4E0B\u8FD9\u4EFD\u5FC3\u60C5") : tr("\u6536\u4E0B{p0}", { p0: tr(rituals[r.ritual].object) })}
+      <button className="button primary full" data-reward-origin={!wish || undefined} ref={collectCta} onClick={wish ? () => go({ page: "wish", id: wish.id }) : collect}>
+        {wish ? tr("去心愿看看") : tr("\u6536\u4E0B{p0}", { p0: tr(rituals[r.ritual].object) })}
       </button>
       <SceneShareButton sceneId={r.ritual} title={translateScene(rituals[r.ritual].name)} snapshot={shareSnapshot} className="full"/>
       <p className="leaf-footer">

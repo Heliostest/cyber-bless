@@ -4,6 +4,7 @@ import type { CatalogEntry } from "@wbr/content/catalog";
 import type { HapticStrength, Host } from "@wbr/runtime";
 import type { SoftSound } from "@wbr/shared";
 import type { RewardFlight, RewardArrival } from "./reward-flight";
+/** Old drafts may carry a ritual choice; only their text is used for new fulfillment. */
 export type FulfillmentDraft = { method: ReturnMethod; text: string };
 export type Route = {
   page:

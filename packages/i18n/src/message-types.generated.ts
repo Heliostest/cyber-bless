@@ -529,6 +529,8 @@ export interface MessageArguments {
   "app.scene-test.efc5eb6403": {  };
   "app.woodfish.progress": { "n": number; "min": number };
   "app.wish.returnSummary": { "status": string | number | boolean | Date | null | undefined; "method": string | number | boolean | Date | null | undefined };
+  "app.wish.effortPast": {  };
+  "app.wish.noPastNotes": {  };
   "app.note.about": { "title": string | number | boolean | Date | null | undefined };
   "app.return.caption": { "title": string | number | boolean | Date | null | undefined };
   "app.visual.forScene": { "title": string | number | boolean | Date | null | undefined };

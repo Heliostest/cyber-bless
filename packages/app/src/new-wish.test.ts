@@ -44,7 +44,7 @@ describe("start a wish through a real ritual", () => {
     for (const id of ["lantern", "alasita-miniature-house", "lam-tsuen-wishing-tree", "phuang-malai", "omikuji", "shinto-torii", "bonfim-ribbon"])
       expect(ui.host.querySelector(`[data-scene="${id}"]`), id).toBeNull();
   });
-  it("uses the same primary category for held new-wish and return-wish choices", () => {
+  it("uses the same primary category for held new-wish choices and usable vessels", () => {
     const state = createState();
     for (const id of ["furin-wind-chime", "pucara-rooftop-bulls", "japanese-kadomatsu", "shichigosan-chitose-ame", "phuang-malai"])
       vessel(state, id);

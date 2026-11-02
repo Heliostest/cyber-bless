@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { builtInScenes } from "./daily-scenes";
 import {
   createState,
   reduce,
@@ -81,34 +82,96 @@ describe("personal ritual loop", () => {
     bad.wishes[0].sourceSceneId = 7;
     expect(() => restore(JSON.stringify(bad))).toThrow();
   });
-  it("requires a completed linked ritual after realization for ritual-based fulfillment", () => {
-    let s = reduce(reduce(createState(), add), {
+  it.each([undefined, "kindness", "ritual"] as const)("fulfills an old ritual plan as kindness without a ritual (requested method: %s)", (method) => {
+    let s = reduce(reduce(createState(), { ...add, returnMethod: "ritual" }), {
       type: "wish.realize",
       id: "w1",
       at,
     });
+    s = reduce(s, {
+      type: "daily.scene", id: "unused-keepsake", sceneId: "crane", title: "纸鹤", wishScene: true,
+      day: "2026-09-20", startedAt: at, at,
+    });
+    s = restore(JSON.stringify(s));
+    expect(hasReturnRitual(s, s.wishes[0])).toBe(false);
     const done = {
       type: "wish.fulfill",
       id: "w1",
       noteId: "thanks",
-      text: "折好纸鹤，谢谢自己",
-      method: "ritual",
+      text: "帮邻居搬了东西",
+      method,
       at,
     } as const;
-    expect(() => reduce(s, done)).toThrow();
-    s = reduce(s, {
-      type: "ritual.start",
-      id: "r-return",
-      ritual: "crane",
-      wishId: "w1",
-      at,
-    });
-    for (let i = 0; i < 4; i++) s = reduce(s, { type: "ritual.step" });
-    s = reduce(s, { type: "ritual.finish", id: "r-return", at });
-    s = reduce(s, done);
-    expect(s.wishes[0].returnMethod).toBe("ritual");
-    expect(s.collectibles.filter((c) => c.kind === "badge")).toHaveLength(1);
-    expect(reduce(s, done)).toBe(s);
+    const fulfilled = reduce(s, done);
+    expect(fulfilled.wishes[0]).toMatchObject({ status: "fulfilled", returnMethod: "kindness", fulfilledAt: at });
+    expect(fulfilled.wishes[0].notes).toEqual([{ id: "thanks", text: "帮邻居搬了东西", at }]);
+    expect(fulfilled.sessions).toEqual([]);
+    expect(fulfilled.collectibles[0]).toEqual(s.collectibles[0]);
+    expect(fulfilled.collectibles[1]).toEqual({ id: "wish:w1", kind: "badge", title: "如愿纪念章", at, wishId: "w1" });
+    expect(reduce(fulfilled, done)).toBe(fulfilled);
+  });
+  it("restores completed ritual fulfillment unchanged and leaves its history intact on a retry", () => {
+    const later = "2026-09-21T08:00:00.000Z";
+    const legacy = {
+      ...createState(),
+      wishes: [{
+        id: "w1", title: "完成自己的小作品", intention: "每天留一点时间", returnMethod: "ritual",
+        status: "fulfilled", archived: false, createdAt: at, realizedAt: at, fulfilledAt: later,
+        notes: [
+          { id: "ritual:old-ritual", text: "为这个心愿，折一只纸鹤", at, system: { type: "ritual", ritual: "crane" } },
+          { id: "old-thanks", text: "折好纸鹤，谢谢自己", at: later },
+        ],
+      }],
+      sessions: [{ id: "old-ritual", ritual: "crane", progress: 4, startedAt: at, completedAt: at, wishId: "w1" }],
+      collectibles: [
+        { id: "daily:2026-09-20:crane", kind: "scene", sceneId: "crane", title: "纸鹤", wishScene: true,
+          at, spentAt: at, wishId: "w1" },
+        { id: "wish:w1", kind: "badge", title: "如愿纪念章", at: later, wishId: "w1" },
+      ],
+    };
+    const restored = restore(JSON.stringify(legacy));
+    expect(restored.wishes).toEqual(legacy.wishes);
+    expect(restored.sessions).toEqual(legacy.sessions);
+    expect(restored.collectibles).toEqual(legacy.collectibles);
+    expect(restored.ledger).toEqual(legacy.ledger);
+    expect(reduce(restored, {
+      type: "wish.fulfill", id: "w1", method: "kindness", noteId: "retry", text: "不应覆盖原记录", at: later,
+    })).toBe(restored);
+    expect(restore(JSON.stringify(restored))).toEqual(restored);
+  });
+  it("saves a scene wish and spends its exact keepsake atomically", () => {
+    let s = createState();
+    for (const day of ["2026-09-19", "2026-09-20"]) {
+      s = reduce(s, { type: "daily.scene", id: day, sceneId: "crane", title: "纸鹤", wishScene: true,
+        day, startedAt: at, at });
+    }
+    const action = { ...add, sourceSceneId: "crane", sourceCollectibleId: "daily:2026-09-20:crane" };
+    const saved = reduce(s, action);
+    expect(saved.collectibles[0]).toEqual(s.collectibles[0]);
+    expect(saved.collectibles[1].spentAt).toBe(at);
+    expect(saved.wishes[0].notes).toEqual([]);
+    expect(restore(JSON.stringify(saved)).wishes[0]).toMatchObject({ sourceCollectibleId: "daily:2026-09-20:crane" });
+    expect(reduce(saved, action)).toBe(saved);
+    expect(() => reduce(saved, { ...action, id: "w2" })).toThrow();
+    expect(() => reduce(s, { ...action, sourceSceneId: "tanzaku-tanabata" })).toThrow();
+    expect(() => reduce(s, { ...action, sourceCollectibleId: "missing" })).toThrow();
+    expect(() => reduce(s, { ...action, title: " " })).toThrow();
+    expect(s.collectibles.every(item => !item.spentAt)).toBe(true);
+  });
+  it("reserves the pending opening keepsake for only one recorded wish", () => {
+    const s = { ...createState(), opening: { status: "new" as const } };
+    let active = reduce(s, { type: "opening.start", sceneIds: ["furin-wind-chime", "shinto-torii", "crane"] });
+    for (const sceneId of ["furin-wind-chime", "shinto-torii"]) {
+      active = reduce(active, { type: "scene.visit", entry: builtInScenes.find(entry => entry.id === sceneId)!, at });
+      active = reduce(active, { type: "scene.progress", id: sceneId, progress: 3 });
+      active = reduce(active, { type: "opening.collect", sceneId, at });
+    }
+    const action = { ...add, sourceSceneId: "crane", sourceCollectibleId: "opening:crane" };
+    const saved = reduce(active, action);
+    expect(saved.collectibles).toEqual(active.collectibles);
+    expect(restore(JSON.stringify(saved)).wishes[0]).toMatchObject({ sourceCollectibleId: "opening:crane" });
+    expect(() => reduce(saved, { ...action, id: "w2" })).toThrow();
+    expect(() => reduce(active, { ...action, sourceCollectibleId: "opening:shinto-torii" })).toThrow();
   });
   it("creates a private wish, records progress and fulfills it exactly once", () => {
     let s = reduce(createState(), add);
@@ -133,6 +196,30 @@ describe("personal ritual loop", () => {
     expect(s.collectibles).toHaveLength(1);
     expect(reduce(s, done)).toBe(s);
     expect(s.ledger).toHaveLength(0);
+  });
+  it.each(["kindness", "ritual"] as const)("keeps restored %s fulfillment history unchanged when effort notes arrive later", (returnMethod) => {
+    let s = reduce(reduce(createState(), add), { type: "wish.realize", id: "w1", at });
+    s = reduce(s, {
+      type: "wish.fulfill", id: "w1", noteId: "thanks", text: "谢谢一直努力的自己", at,
+    });
+    const restored = restore(JSON.stringify({ ...s, wishes: [{ ...s.wishes[0], returnMethod }] }));
+    const before = JSON.stringify(restored);
+    const result = reduce(restored, {
+      type: "wish.note", id: "w1", noteId: "late-note", text: "不能再追加到如愿后的记录", at: "2026-09-21T08:00:00.000Z",
+    });
+    expect(result).toBe(restored);
+    expect(JSON.stringify(restored)).toBe(before);
+    expect(result.wishes[0].notes).toEqual([{ id: "thanks", text: "谢谢一直努力的自己", at }]);
+  });
+  it.each(["active", "realized"] as const)("continues accepting effort notes for an %s wish", (status) => {
+    const active = reduce(createState(), add);
+    const s = status === "realized" ? reduce(active, { type: "wish.realize", id: "w1", at }) : active;
+    const result = reduce(s, {
+      type: "wish.note", id: "w1", noteId: "effort", text: "今天又完成了一页", at,
+    });
+    expect(result.wishes[0].status).toBe(status);
+    expect(result.wishes[0].notes).toEqual([{ id: "effort", text: "今天又完成了一页", at }]);
+    expect(s.wishes[0].notes).toEqual([]);
   });
   it("rejects invalid transitions and blank wishes", () => {
     expect(() => reduce(createState(), { ...add, title: " " })).toThrow();
@@ -175,6 +262,38 @@ describe("personal ritual loop", () => {
     expect(s.collectibles).toHaveLength(1);
     expect(s.ledger).toEqual([]);
     expect(reduce(s, finish)).toBe(s);
+  });
+  it("settles a late linked ritual without appending notes to a wish fulfilled in the meantime", () => {
+    let s = reduce(createState(), add);
+    s = reduce(s, { type: "ritual.start", id: "late-ritual", ritual: "lantern", wishId: "w1", at });
+    s = reduce(s, { type: "wish.realize", id: "w1", at });
+    s = reduce(s, { type: "wish.fulfill", id: "w1", noteId: "thanks", text: "已经帮朋友完成了小事", at });
+    for (let step = 0; step < 3; step++) s = reduce(s, { type: "ritual.step" });
+    s = restore(JSON.stringify(s));
+    const completedWish = s.wishes[0];
+    const finish = { type: "ritual.finish", id: "late-ritual", at: "2026-09-21T08:00:00.000Z" } as const;
+    const settled = reduce(s, finish);
+    expect(settled.wishes[0]).toBe(completedWish);
+    expect(settled.wishes[0].notes).toEqual([{ id: "thanks", text: "已经帮朋友完成了小事", at }]);
+    expect(settled.activeSession).toBeNull();
+    expect(settled.sessions).toEqual([{ ...s.activeSession, completedAt: finish.at }]);
+    expect(settled.collectibles).toEqual([
+      ...s.collectibles,
+      { id: "ritual:late-ritual", kind: "lantern", title: "暖心灯", at: finish.at, wishId: "w1" },
+    ]);
+    expect(reduce(settled, finish)).toBe(settled);
+    expect(restore(JSON.stringify(settled))).toEqual(settled);
+  });
+  it.each(["active", "realized"] as const)("still records a completed linked ritual for an %s wish", (status) => {
+    let s = reduce(createState(), add);
+    s = reduce(s, { type: "ritual.start", id: "linked-ritual", ritual: "lantern", wishId: "w1", at });
+    if (status === "realized") s = reduce(s, { type: "wish.realize", id: "w1", at });
+    for (let step = 0; step < 3; step++) s = reduce(s, { type: "ritual.step" });
+    const settled = reduce(s, { type: "ritual.finish", id: "linked-ritual", at });
+    expect(settled.wishes[0].status).toBe(status);
+    expect(settled.wishes[0].notes).toEqual([
+      { id: "ritual:linked-ritual", text: "为这个心愿，点一盏心愿灯", at, system: { type: "ritual", ritual: "lantern" } },
+    ]);
   });
   it("does not silently replace an unfinished session", () => {
     const s = reduce(createState(), {
@@ -505,18 +624,20 @@ describe("a ritual walked as its scene (ritual.scene)", () => {
     expect(restore(JSON.stringify(s))).toEqual(s);
   });
 
-  it("counts as the return ritual, so the wish can be fulfilled by ritual", () => {
-    let s = reduce(realized(), walked);
-    expect(hasReturnRitual(s, s.wishes[0])).toBe(true);
-    s = reduce(s, {
+  it("keeps an existing ritual record while new fulfillment records kindness", () => {
+    const before = reduce(realized(), walked);
+    expect(hasReturnRitual(before, before.wishes[0])).toBe(true);
+    const s = reduce(before, {
       type: "wish.fulfill",
       id: "w1",
       noteId: "thanks",
-      text: "谢谢自己",
+      text: "请帮助过我的朋友喝了一杯咖啡",
       method: "ritual",
       at: later,
     });
-    expect(s.wishes[0]).toMatchObject({ status: "fulfilled", returnMethod: "ritual" });
+    expect(s.wishes[0]).toMatchObject({ status: "fulfilled", returnMethod: "kindness" });
+    expect(s.sessions).toEqual(before.sessions);
+    expect(s.wishes[0].notes[0]).toEqual(before.wishes[0].notes[0]);
     // The 如愿 badge is the only keepsake.
     expect(s.collectibles.map((c) => c.kind)).toEqual(["badge"]);
     expect(s.ledger).toEqual([]);

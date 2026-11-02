@@ -4,6 +4,7 @@ import type { CatalogEntry } from "@wbr/content/catalog";
 import type { HapticStrength, Host } from "@wbr/runtime";
 import type { SoftSound } from "@wbr/shared";
 import type { RewardFlight, RewardArrival } from "./reward-flight";
+import type { UiSound } from './ui-sounds';
 /** Old drafts may carry a ritual choice; only their text is used for new fulfillment. */
 export type FulfillmentDraft = { method: ReturnMethod; text: string };
 export type Route = {
@@ -43,9 +44,11 @@ export type AppContext = {
   state: State;
   /** Enabled by the host for development or TestFlight, never by a saved preference. */
   internalToolsEnabled?: boolean;
-  go(route: Route): void;
+  go(route: Route, options?: { sound?: 'navigate' | 'back' | false }): void;
   dispatch(a: Action): boolean;
-  back(): void;
+  back(options?: { sound?: boolean }): void;
+  /** Optional UI feedback without adding haptics; absent in isolated previews. */
+  uiSound?(sound: UiSound): void;
   feedback(sound?: AudioBuffer | SoftSound): void;
   /** Haptic tick or scene impact; respects the 震动 toggle. */
   haptic(strength?: HapticStrength): void;

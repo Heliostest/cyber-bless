@@ -162,7 +162,7 @@ export function Complete({ id, revealReward, shareSnapshot }: {
     const collectCta = useRef<HTMLButtonElement>(null);
     const r = state.sessions.find((s) => s.id === id);
     if (!r)
-        return (<Empty title={tr("\u56DE\u5230\u4ECA\u5929\uFF0C\u7EE7\u7EED\u6536\u96C6\u7F8E\u597D")} body={tr("\u5DF2\u5B8C\u6210\u7684\u4EEA\u5F0F\u90FD\u5728\u300C\u6211\u7684\u300D\u91CC\u3002")} action={tr("\u56DE\u5230\u4ECA\u65E5")} onClick={() => go({ page: "today" })}/>);
+        return (<Empty title={tr("\u56DE\u5230\u4ECA\u5929\uFF0C\u7EE7\u7EED\u6536\u96C6\u7F8E\u597D")} body={tr("\u5DF2\u5B8C\u6210\u7684\u4EEA\u5F0F\u90FD\u5728\u300C\u6211\u7684\u300D\u91CC\u3002")} action={tr("\u56DE\u5230\u4ECA\u65E5")} onClick={() => go({ page: "today" }, { sound: 'navigate' })}/>);
     const day = localDay(new Date(r.completedAt!));
     const today = state.sessions
         .filter((s) => localDay(new Date(s.completedAt!)) === day)
@@ -209,7 +209,7 @@ export function Complete({ id, revealReward, shareSnapshot }: {
           </strong>
         </div>
       </div>
-      <button className="button primary full" data-reward-origin={!wish || undefined} ref={collectCta} onClick={wish ? () => go({ page: "wish", id: wish.id }) : collect}>
+      <button className="button primary full" data-reward-origin={!wish || undefined} ref={collectCta} onClick={wish ? () => go({ page: "wish", id: wish.id }, { sound: 'navigate' }) : collect}>
         {wish ? tr("去心愿看看") : tr("\u6536\u4E0B{p0}", { p0: tr(rituals[r.ritual].object) })}
       </button>
       <SceneShareButton sceneId={r.ritual} title={translateScene(rituals[r.ritual].name)} snapshot={shareSnapshot} className="full"/>

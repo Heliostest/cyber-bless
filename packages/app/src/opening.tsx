@@ -51,7 +51,7 @@ export function Opening() {
       <p className="opening-step">{message('app.opening.step', { n: opening.completed + 1, lesson: tr(lessons[opening.completed].title) })}</p>
       <SceneArt id={current.id}/>
       <h2>{localizedTitle(current)}</h2>
-      <button className="button primary full opening-start" onClick={() => openScene(current, { opening: true })}>
+      <button className="button primary full opening-start" onClick={() => openScene(current, { opening: true, sound: 'navigate' })}>
         {progress ? tr("\u7EE7\u7EED\u8FD9\u4E00\u573A") : tr('开始尝试')}<Icon name="arrow"/>
       </button>
     </section>}

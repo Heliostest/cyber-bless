@@ -72,7 +72,7 @@ describe("completed scenes unlock the new-wish ritual picker", () => {
     clickOn(ui.direct("crane"));
     expect(ui.go).not.toHaveBeenCalled();
     clickOn(ui.direct("tanzaku-tanabata"));
-    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", id: "tanzaku-tanabata", vessel: undefined }));
+    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", id: "tanzaku-tanabata", vessel: undefined }), { sound: 'navigate' });
     expect(JSON.stringify(state)).toBe(before);
   });
 
@@ -96,7 +96,7 @@ describe("completed scenes unlock the new-wish ritual picker", () => {
     expect(ui.direct(entry.id).disabled).toBe(false);
     expect(ui.direct("crane").disabled).toBe(true);
     clickOn(ui.direct(entry.id));
-    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", id: entry.id }));
+    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", id: entry.id }), { sound: 'navigate' });
     expect(JSON.stringify(state)).toBe(before);
   });
 
@@ -118,7 +118,7 @@ describe("completed scenes unlock the new-wish ritual picker", () => {
     expect(ui.host.querySelector(`.vessel-card[data-scene="${owned.sceneId}"]`)).toBeNull();
     expect(ui.direct(owned.sceneId!).disabled).toBe(false);
     clickOn(ui.direct(owned.sceneId!));
-    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", id: owned.sceneId, vessel: undefined }));
+    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", id: owned.sceneId, vessel: undefined }), { sound: 'navigate' });
     expect(ui.dispatch).not.toHaveBeenCalled();
     expect(JSON.stringify(state)).toBe(before);
   });
@@ -131,7 +131,7 @@ describe("completed scenes unlock the new-wish ritual picker", () => {
     expect(card.disabled).toBe(false);
     expect(ui.direct("tanzaku-tanabata")).toBeNull();
     clickOn(card);
-    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", id: "tanzaku-tanabata", vessel: owned.id }));
+    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", id: "tanzaku-tanabata", vessel: owned.id }), { sound: 'navigate' });
     expect(ui.dispatch.mock.calls.some(([action]) => ["collectible.spend", "wish.create"].includes((action as { type: string }).type))).toBe(false);
     expect(JSON.stringify(state)).toBe(before);
   });
@@ -144,7 +144,7 @@ describe("completed scenes unlock the new-wish ritual picker", () => {
     const card = ui.host.querySelector<HTMLButtonElement>('.vessel-card[data-scene="furin-wind-chime"]')!;
     expect(card.disabled).toBe(false);
     clickOn(card);
-    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", vessel: owned.id }));
+    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", vessel: owned.id }), { sound: 'navigate' });
     expect(ui.dispatch).not.toHaveBeenCalled();
     expect(JSON.stringify(state)).toBe(before);
   });

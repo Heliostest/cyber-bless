@@ -20,12 +20,12 @@ export function NewWish() {
 export function WishDetail({ id }: {
     id: string;
 }) {
-    const { state, go, dispatch } = useApp();
+    const { state, go, dispatch, uiSound } = useApp();
     const { entries } = useSceneLibrary();
     const wish = state.wishes.find((w) => w.id === id);
     const [showAll, setShowAll] = useState(false);
     if (!wish)
-        return (<Empty title={tr("\u6682\u65F6\u6CA1\u627E\u5230\u8FD9\u4E2A\u5FC3\u613F")} body={tr("\u56DE\u5230\u5FC3\u613F\u9875\u770B\u770B\u5427\u3002")} action={tr("\u6211\u7684\u5FC3\u613F")} onClick={() => go({ page: "wishes" })}/>);
+        return (<Empty title={tr("\u6682\u65F6\u6CA1\u627E\u5230\u8FD9\u4E2A\u5FC3\u613F")} body={tr("\u56DE\u5230\u5FC3\u613F\u9875\u770B\u770B\u5427\u3002")} action={tr("\u6211\u7684\u5FC3\u613F")} onClick={() => go({ page: "wishes" }, { sound: 'navigate' })}/>);
     const latest = [...wish.notes].reverse();
     const method = wish.status === "fulfilled" ? wish.returnMethod ?? "kindness" : "kindness";
     const source = wish.sourceSceneId
@@ -63,7 +63,7 @@ export function WishDetail({ id }: {
       <section className="form-card effort-card">
         <div className="field-heading">
           <h2>{wish.status === "fulfilled" ? message('app.wish.effortPast') : tr("\u6211\u4E5F\u5728\u4E3A\u5B83\u52AA\u529B")}</h2>
-          {!wish.archived && wish.status !== "fulfilled" && (<button className="small-button" onClick={() => go({ page: "note", id })}>
+          {!wish.archived && wish.status !== "fulfilled" && (<button className="small-button" onClick={() => go({ page: "note", id }, { sound: 'navigate' })}>
               <Icon name="edit"/>{tr("\u8BB0\u4E00\u7B14")}</button>)}
         </div>
         {latest.length ? ((showAll ? latest : latest.slice(0, 1)).map((n) => (<article className="note-preview" key={n.id}>
@@ -75,7 +75,10 @@ export function WishDetail({ id }: {
                 </time>
               </div>
             </article>))) : (<p className="quiet empty-note">{wish.status === "fulfilled" ? message('app.wish.noPastNotes') : tr("\u8FD8\u6CA1\u6709\u8BB0\u5F55\uFF0C\u968F\u65F6\u53EF\u4EE5\u8BB0\u4E0B\u4E00\u5C0F\u6B65\u3002")}</p>)}
-        {latest.length > 1 && (<button className="text-button" onClick={() => setShowAll((v) => !v)}>
+        {latest.length > 1 && (<button className="text-button" onClick={() => {
+            setShowAll(!showAll);
+            uiSound?.(showAll ? 'close' : 'open');
+        }}>
             {showAll ? tr("\u6536\u8D77\u8BB0\u5F55") : tr("\u67E5\u770B\u5168\u90E8 {p0} \u6761\u8BB0\u5F55", { p0: latest.length })}
           </button>)}
       </section>
@@ -89,7 +92,7 @@ export function WishDetail({ id }: {
                 if (dispatch({ type: "wish.realize", id, at: now() }))
                     go({ page: "fulfill", id });
             }}>{tr("\u6211\u7684\u5FC3\u613F\u5B9E\u73B0\u4E86")}</button>)}
-      {!wish.archived && wish.status === "realized" && (<button className="button primary full" onClick={() => go({ page: "fulfill", id })}>{tr("\u6765\u8FD8\u4E2A\u613F")}</button>)}
+      {!wish.archived && wish.status === "realized" && (<button className="button primary full" onClick={() => go({ page: "fulfill", id }, { sound: 'navigate' })}>{tr("\u6765\u8FD8\u4E2A\u613F")}</button>)}
       {wish.status === "fulfilled" ? (<section className="wish-keepsake" aria-labelledby="wish-keepsake-title">
           <Art kind="badge" sceneId={wish.sourceSceneId}/>
           <h2 id="wish-keepsake-title">{tr("\u5982\u613F\u7EAA\u5FF5\u7AE0")}</h2>
@@ -141,7 +144,7 @@ export function FulfillWish({ id }: {
     const noteField = useAutoGrow(text);
     if (!wish || wish.archived || wish.status !== "realized")
         return (<Empty title={wish?.status === "fulfilled"
-                ? tr("\u8FD9\u4EFD\u7F8E\u597D\uFF0C\u5DF2\u7ECF\u8BB0\u4F4F\u4E86\u3002") : tr("\u5148\u786E\u8BA4\u5FC3\u613F\u5B9E\u73B0\uFF0C\u518D\u6765\u8FD8\u613F\u3002")} body={tr("\u613F\u6BCF\u4E00\u4EFD\u8BA4\u771F\uFF0C\u90FD\u6709\u56DE\u5E94\u3002")} action={tr("\u56DE\u5230\u5FC3\u613F")} onClick={() => go({ page: "wish", id })}/>);
+                ? tr("\u8FD9\u4EFD\u7F8E\u597D\uFF0C\u5DF2\u7ECF\u8BB0\u4F4F\u4E86\u3002") : tr("\u5148\u786E\u8BA4\u5FC3\u613F\u5B9E\u73B0\uFF0C\u518D\u6765\u8FD8\u613F\u3002")} body={tr("\u613F\u6BCF\u4E00\u4EFD\u8BA4\u771F\uFF0C\u90FD\u6709\u56DE\u5E94\u3002")} action={tr("\u56DE\u5230\u5FC3\u613F")} onClick={() => go({ page: "wish", id }, { sound: 'navigate' })}/>);
     function submit(e: FormEvent) {
         e.preventDefault();
         if (composing.current || !text.trim() || graphemeLength(text) > 60)

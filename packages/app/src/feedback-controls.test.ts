@@ -45,7 +45,7 @@ describe("震动 toggle", () => {
     "appears in 我的 settings only where the host can vibrate (%s)",
     (canHaptic) => {
       const html = render(createElement(Me), canHaptic);
-      expect(html).toContain("仪式声音");
+      expect(html).toContain("音效");
       expect(html).toContain("减少动态效果");
       expect(html.includes("轻触反馈")).toBe(canHaptic);
     },

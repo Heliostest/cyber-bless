@@ -21,11 +21,14 @@ export function RitualNarrativeBlurb({ sceneId, completion }: { sceneId: string;
   const [geometry, setGeometry] = useState<Geometry | null>(null);
   const [systemReduced, setSystemReduced] = useState(false);
   const reducedMotion = (app?.state?.settings?.reducedMotion ?? false) || systemReduced;
+  const uiSound = app?.uiSound;
 
   const close = useCallback(() => {
+    if (!openNow.current) return;
+    uiSound?.('close');
     openNow.current = false; setOpen(false);
     button.current?.focus({ preventScroll: true });
-  }, []);
+  }, [uiSound]);
 
   useEffect(() => {
     const query = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)");
@@ -162,7 +165,7 @@ export function RitualNarrativeBlurb({ sceneId, completion }: { sceneId: string;
           <button ref={button} type="button" className="ritual-narrative-toggle ritual-narrative-trigger" aria-haspopup="dialog"
             aria-expanded={open} aria-controls={bodyId} onClick={() => {
               if (openNow.current) close();
-              else { openNow.current = true; setPresent(true); setOpen(true); }
+              else { openNow.current = true; uiSound?.('open'); setPresent(true); setOpen(true); }
             }}><span className="ritual-narrative-chevron" aria-hidden="true" /><span>{translate("了解这个仪式")}</span></button>
           <div ref={body} id={bodyId} className="ritual-narrative-body" role="region" aria-label={label}
             aria-hidden={!open} inert={!open} tabIndex={0}>

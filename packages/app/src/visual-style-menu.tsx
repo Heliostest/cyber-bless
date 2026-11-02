@@ -33,12 +33,14 @@ export function VisualStyleControl({ sceneId, onOpenChange }: {
     sceneId?: string;
     onOpenChange?(open: boolean): void;
 }) {
+    const { uiSound } = useApp();
     const scenes = useSyncExternalStore(sceneStyles.subscribe, sceneStyles.getSnapshot, () => emptyScenes);
     const [scope, setScope] = useState<HTMLElement>();
     const scene = scenes.find(item => item.id === sceneId && item.scope === scope);
     const anchor = useRef<HTMLSpanElement>(null);
     const trigger = useRef<HTMLButtonElement>(null);
     const [target, setTarget] = useState<HTMLElement | null>(null);
+    const openNow = useRef(false);
     const notify = useRef(onOpenChange);
     notify.current = onOpenChange;
     useEffect(() => () => notify.current?.(false), []);
@@ -47,27 +49,36 @@ export function VisualStyleControl({ sceneId, onOpenChange }: {
         if (scene || !target)
             return;
         // Losing the renderer removes the portal without unmounting this control.
+        openNow.current = false;
         notify.current?.(false);
         setTarget(null);
     }, [scene, target]);
     return <span className="visual-style-anchor" ref={anchor}>{scene && <>
     <button type="button" aria-label={tr("\u89C6\u89C9\u98CE\u683C")} title={tr("\u89C6\u89C9\u98CE\u683C")} aria-haspopup="dialog" aria-expanded={!!target} onClick={() => {
+                if (openNow.current) return;
+                openNow.current = true;
+                uiSound?.('open');
                 sceneStyles.cancelInput(scene.id, scene.scope);
                 sceneStyles.clearDebugOverride(scene.id);
                 // The portal focuses itself on mount; its parent must yield capture first.
                 notify.current?.(true);
                 setTarget(trigger.current?.closest<HTMLElement>(".app-shell") ?? document.body);
             }} ref={trigger}><Icon name="visual"/></button>
-    {target && createPortal(<VisualStyleMenu scene={scene} shell={target} trigger={trigger.current} onClose={() => { notify.current?.(false); setTarget(null); }}/>, target)}
+    {target && createPortal(<VisualStyleMenu scene={scene} shell={target} trigger={trigger.current} onClose={(sound = true) => {
+        if (!openNow.current) return;
+        openNow.current = false;
+        if (sound) uiSound?.('close');
+        notify.current?.(false); setTarget(null);
+    }}/>, target)}
   </>}</span>;
 }
 function VisualStyleMenu({ scene, shell, trigger, onClose }: {
     scene: DebugScene;
     shell: HTMLElement;
     trigger: HTMLButtonElement | null;
-    onClose(): void;
+    onClose(sound?: boolean): void;
 }) {
-    const { state, dispatch } = useApp();
+    const { state, dispatch, uiSound } = useApp();
     const [choice, setChoice] = useState<VisualStylePreference | null>(getSceneVisualPreference(state, scene.id) ?? null);
     const [tuning, setTuning] = useState(false);
     const [previewing, setPreviewing] = useState(false);
@@ -118,10 +129,11 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
         setChoice(value);
         preview.current?.update(value);
     }
-    function previewStyle(id: VisualStyleId) {
+    function previewStyle(id: VisualStyleId, sound = false) {
         if (id === (current.current?.style ?? scene.defaultStyle))
             return;
         apply({ style: id, parameters: current.current?.parameters ?? { ...scene.parameters } });
+        if (sound) uiSound?.('select');
     }
     function previewCenter() {
         const strip = filmstrip.current;
@@ -140,6 +152,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
             previewStyle(nearest.dataset.style as VisualStyleId);
     }
     function save() {
+        let submitted = false;
         if (!tuning && !previewing)
             previewCenter();
         if (changed.current || appliedScope === "all") {
@@ -160,9 +173,10 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
                     : dispatch({ type: "scene.visual", id: scene.id, ...(value ?? { style: null }) });
                 if (!saved)
                     return;
+                submitted = true;
             }
         }
-        onClose();
+        onClose(!submitted);
     }
     useEffect(() => {
         const connection = sceneStyles.connectUserPreference(scene.id, current.current, undefined, scene.scope);
@@ -252,7 +266,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
     <section className="visual-style-menu" role="dialog" aria-modal="true" aria-label={tr("\u89C6\u89C9\u98CE\u683C")} ref={panel}>
       <div className="visual-style-editor">
       <header className="visual-style-heading" hidden={previewing}><div><h2><span className="visual-style-emblem" aria-hidden="true"><Icon name="visual"/></span>{tr("\u89C6\u89C9\u98CE\u683C")}</h2><p>{tr("\u4E3A\u300C")}{tr(scene.label)}{tr("\u300D\u9009\u4E00\u79CD\u559C\u6B22\u7684\u753B\u9762")}</p></div>
-        <button type="button" className="round-button" data-visual-style-close="" aria-label={tr("\u5173\u95ED\u89C6\u89C9\u98CE\u683C")} onClick={onClose}><Icon name="close"/></button></header>
+        <button type="button" className="round-button" data-visual-style-close="" aria-label={tr("\u5173\u95ED\u89C6\u89C9\u98CE\u683C")} onClick={() => onClose()}><Icon name="close"/></button></header>
       <div className="visual-style-body" hidden={previewing}>
         <div className="visual-style-grid visual-style-filmstrip" ref={filmstrip} role="group" aria-label={tr("\u9009\u62E9\u89C6\u89C9\u98CE\u683C")} hidden={tuning && controls.length > 0} onScroll={previewCenter}
           onPointerDown={event => {
@@ -298,8 +312,8 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
                     : event.key === "Home" ? 0 : event.key === "End" ? cards.length - 1 : null;
                 if (next !== null) {
                     event.preventDefault();
+                    previewStyle(cards[next].dataset.style as VisualStyleId, true);
                     cards[next].focus({ preventScroll: true });
-                    previewStyle(cards[next].dataset.style as VisualStyleId);
                     centerCard(cards[next], true);
                 }
             }}>
@@ -311,7 +325,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
                         previewStyle(id);
                         centerCard(event.currentTarget, true);
                     }
-                }} onClick={event => { previewStyle(id); centerCard(event.currentTarget, true); }}>
+                }} onClick={event => { previewStyle(id, true); centerCard(event.currentTarget, true); }}>
               <span className="visual-style-swatch" aria-hidden="true" data-preview-state={thumbnails[id] ? "ready" : thumbnails[id] === null ? "unavailable" : "loading"}>
                 {thumbnails[id] ? <img src={thumbnails[id]!} alt="" width="160" height="120" decoding="async" draggable={false}/> : <Icon name="visual"/>}
               </span>
@@ -321,11 +335,17 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
         })}
         </div>
         <div className="visual-style-scope" role="group" aria-label={tr("\u5E94\u7528\u89C6\u89C9\u98CE\u683C")}>
-          <button type="button" className="visual-style-scope-current" aria-pressed={appliedScope === "current"} onClick={() => setAppliedScope("current")}>{tr("\u4EC5\u5F53\u524D\u4EEA\u5F0F")}</button>
-          <button type="button" className="visual-style-scope-all" aria-pressed={appliedScope === "all"} onClick={() => setAppliedScope("all")}>{tr("\u5E94\u7528\u5230\u5168\u90E8\u4EEA\u5F0F")}</button>
+          <button type="button" className="visual-style-scope-current" aria-pressed={appliedScope === "current"} onClick={() => {
+              if (appliedScope !== 'current') { uiSound?.('select'); setAppliedScope('current'); }
+          }}>{tr("\u4EC5\u5F53\u524D\u4EEA\u5F0F")}</button>
+          <button type="button" className="visual-style-scope-all" aria-pressed={appliedScope === "all"} onClick={() => {
+              if (appliedScope !== 'all') { uiSound?.('select'); setAppliedScope('all'); }
+          }}>{tr("\u5E94\u7528\u5230\u5168\u90E8\u4EEA\u5F0F")}</button>
         </div>
         {controls.length > 0 && <details className="visual-style-tuning" key={selected} open={tuning} onToggle={event => setTuning(event.currentTarget.open)}>
-          <summary>{tuning ? tr("\u6536\u8D77\u5FAE\u8C03\uFF0C\u8FD4\u56DE\u98CE\u683C") : tr("\u5FAE\u8C03\u6548\u679C")}</summary>
+          <summary onClick={event => {
+              event.preventDefault(); uiSound?.(tuning ? 'close' : 'open'); setTuning(!tuning);
+          }}>{tuning ? tr("\u6536\u8D77\u5FAE\u8C03\uFF0C\u8FD4\u56DE\u98CE\u683C") : tr("\u5FAE\u8C03\u6548\u679C")}</summary>
           {controls.map(control => {
                 const value = parameters[control.key], formatted = control.unit === "%" ? `${Math.round(value * 100)}%` : `${value} ${control.unit}`;
                 return <div className="visual-style-parameter" key={control.key}>
@@ -334,21 +354,27 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
             </div>;
             })}
           <button type="button" className="small-button visual-style-reset-parameters" onClick={() => {
+                if (!controls.some(control => parameters[control.key] !== DEFAULT_STYLE_PARAMETERS[control.key])) return;
                 const next = { ...parameters };
                 for (const control of controls)
                     next[control.key] = DEFAULT_STYLE_PARAMETERS[control.key];
                 apply({ style: selected, parameters: next });
+                uiSound?.('select');
             }}>{tr("\u91CD\u7F6E\u53C2\u6570")}</button>
         </details>}
         <p className="visual-style-status" role="status" data-expanded={scene.actual !== selected || undefined}>{scene.actual !== selected ? tr("\u8FD9\u4E2A\u6548\u679C\u6682\u65F6\u65E0\u6CD5\u663E\u793A\uFF0C\u5DF2\u4F7F\u7528{p0}\u3002", { p0: actualLabel }) : tr("\u5F53\u524D\u98CE\u683C\uFF1A{p0}", { p0: tr(visualStyleOptions.find(option => option.id === selected)!.label) })}</p>
       </div>
       <footer><button type="button" className="button outline" onClick={() => {
+                const effective = current.current !== null || (appliedScope === 'all' && !resetting.current && Object.keys(state.visualStyles ?? {}).length > 0);
                 apply(null, true);
+                if (effective) uiSound?.('select');
                 const card = filmstrip.current?.querySelector<HTMLElement>(`[data-style="${scene.defaultStyle}"]`);
                 if (card)
                     centerCard(card);
             }} disabled={choice === null && !state.globalVisualStyle && !Object.keys(state.visualStyles ?? {}).length} hidden={previewing}>{tr("\u6062\u590D\u9ED8\u8BA4")}</button>
-        <button type="button" className="button secondary" aria-pressed={previewing} onClick={() => setPreviewing(value => !value)}>{previewing ? tr("\u7EE7\u7EED\u8C03\u6574") : tr("\u770B\u753B\u9762")}</button>
+        <button type="button" className="button secondary" aria-pressed={previewing} onClick={() => {
+            uiSound?.(previewing ? 'close' : 'open'); setPreviewing(!previewing);
+        }}>{previewing ? tr("\u7EE7\u7EED\u8C03\u6574") : tr("\u770B\u753B\u9762")}</button>
         <button type="button" className="button primary visual-style-done" onClick={save}>{tr("\u5B8C\u6210")}</button></footer>
       </div>
     </section>

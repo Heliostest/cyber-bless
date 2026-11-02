@@ -61,7 +61,7 @@ describe("start a wish through a real ritual", () => {
     const cards = ui.host.querySelectorAll('.wish-practice-card[data-scene="tanzaku-tanabata"]');
     expect(cards).toHaveLength(1);
     clickOn(cards[0]);
-    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", id: "tanzaku-tanabata", vessel: id }));
+    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", id: "tanzaku-tanabata", vessel: id }), { sound: 'navigate' });
   });
   it("keeps a spent legacy vessel's pending choice accessible even after its category is filtered", () => {
     const state = createState(), id = vessel(state, "furin-wind-chime", true);
@@ -70,7 +70,7 @@ describe("start a wish through a real ritual", () => {
     const card = ui.host.querySelector('.vessel-card[data-scene="furin-wind-chime"]');
     expect(card).not.toBeNull();
     clickOn(card!);
-    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", vessel: id }));
+    expect(ui.go).toHaveBeenCalledWith(expect.objectContaining({ page: "scene", vessel: id }), { sound: 'navigate' });
     expect(ui.dispatch).not.toHaveBeenCalled();
     expect(state.vesselDrafts[id].line).toBe("愿家人平安");
   });

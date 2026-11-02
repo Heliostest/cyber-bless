@@ -10,13 +10,18 @@ export function dismissLanguageSetting(scope?: HTMLElement | null): boolean {
 
 export function LanguageSetting() {
   useSyncExternalStore(subscribeLocale, getFormatLocale, getFormatLocale);
-  const { state, dispatch } = useApp();
+  const { state, dispatch, uiSound } = useApp();
+  const soundPlayer = useRef(uiSound); soundPlayer.current = uiSound;
   const [open, setOpen] = useState(false);
+  const openNow = useRef(false);
   const trigger = useRef<HTMLButtonElement>(null), dialog = useRef<HTMLDialogElement>(null);
   const id = useId(), headingId = `${id}-heading`, descriptionId = `${id}-description`;
   const preference = state.settings.locale ?? 'system';
   const name = (value: LocalePreference) => value === 'system' ? message('app.language.system') : LOCALE_NAMES[value];
-  const close = useCallback(() => {
+  const close = useCallback((sound = true) => {
+    if (!openNow.current) return;
+    openNow.current = false;
+    if (sound) soundPlayer.current?.('close');
     dialog.current?.close();
     setOpen(false);
     trigger.current?.focus();
@@ -47,20 +52,26 @@ export function LanguageSetting() {
   }, [open, close]);
 
   function choose(value: LocalePreference) {
-    if (value !== preference && dispatch({ type: 'settings.locale', value })) configureLocale(value);
-    close();
+    if (value !== preference && dispatch({ type: 'settings.locale', value })) {
+      configureLocale(value);
+      uiSound?.('select');
+      close(false);
+    } else close();
   }
 
   return <>
     <div className="settings-row language-setting">
       <span id={headingId}>{message('app.language.label')}<small>{message('app.language.description')}</small></span>
       <button ref={trigger} type="button" className="language-setting-trigger" aria-labelledby={`${headingId} ${id}-value`}
-        aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
+        aria-haspopup="dialog" aria-expanded={open} onClick={() => {
+          if (openNow.current) return;
+          openNow.current = true; uiSound?.('open'); setOpen(true);
+        }}>
         <span id={`${id}-value`} lang={preference === 'system' ? undefined : preference}>{name(preference)}</span><Icon name="arrow"/>
       </button>
     </div>
     {open && <dialog ref={dialog} className="language-dialog" aria-labelledby={`${id}-title`} aria-describedby={descriptionId}
-      onCancel={event => { event.preventDefault(); close(); }} onClose={() => setOpen(false)}
+      onCancel={event => { event.preventDefault(); close(); }} onClose={() => close()}
       onClick={event => {
         if (event.target !== event.currentTarget) return;
         const box = event.currentTarget.getBoundingClientRect();
@@ -68,7 +79,7 @@ export function LanguageSetting() {
       }}>
       <div className="language-dialog-heading">
         <div><h2 id={`${id}-title`}>{message('app.language.label')}</h2><p id={descriptionId}>{message('app.language.description')}</p></div>
-        <button type="button" className="language-dialog-close" aria-label={tr('关闭')} onClick={close}><Icon name="close"/></button>
+        <button type="button" className="language-dialog-close" aria-label={tr('关闭')} onClick={() => close()}><Icon name="close"/></button>
       </div>
       <div className="language-dialog-options" role="radiogroup" aria-labelledby={`${id}-title`}>
         {(['system', ...SUPPORTED_LOCALES] as const).map(value => <label key={value} className="language-dialog-option">

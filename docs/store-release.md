@@ -4,7 +4,23 @@
 
 正式 Mac mini 构建改用[参数化 tag 发布入口](../scripts/ios-release/README.md)：先提交业务源码、素材、发布工具、依赖锁及版本输入，合并／推送 `master` 后创建并推送附注 tag；Mac 直接获取该 tag 和 LFS 实体，执行同版本工具并串行验证、构建和交付。不再把未提交工作区生成的 `source.tgz` 用于新正式发布。构建号尚未分配时保持 release input 的 `null` 并拒绝执行，不猜测下一个编号。
 
-该入口已用于下述构建 20；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+该入口已用于下述构建 20、21；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+
+## 2026-11-03 构建 21：心愿记录、纪念章与共享内测开关
+
+北京时间 00:38:33，**1.0.0 (21)** 已完成 Mac mini / Xcode 26.6 归档、签名导出、ASC 上传和既有内部组分发验证。Apple build UUID 为 `34245485-f5ce-4021-8b30-33afef15b1a0`，最终读回 `VALID / IN_BETA_TESTING`，00:39:34 再次直接查询 Beta detail 确认。`Team (Expo)` 自动包含本构建，仍为 1 位既有测试员，测试说明匹配。未新增邀请、改变权限或提交审核；正式商店仍关联构建 12，保持 `PREPARE_FOR_SUBMISSION / MANUAL`。
+
+本轮来源为远端 `master` 提交 `bd2a93733647619f3121c4f1cd281b4ddc156925`，附注 tag `ios-v1.0.0-build.21`（tag 对象 `cc9f456f3f2f9dace6b1cb718b3403f647e4faf1`，tree `a7292c64d7ca46c432baf5fc9922eb6618489a20`）。同 tag 工具和 runner 独占锁覆盖准备、构建、验证、上传与计数同步；5347 个来源文件、2117 个 LFS 实体及阶段来源身份一致。来源身份 SHA-256 为 `2db5d2b43244d254c27d410d7cc138dd9d6b8f53a30cea3b077005c14611c928`。发布开始后只提交构建号 21，未改业务源码、原生模块、依赖锁或发布工具，未移动或覆盖 tag。
+
+相比构建 20，本包纳入已合并的心愿详情与小天地纪念章统一入口、原始许愿仪式图案、每日／开场许愿对应小物的精确使用状态、小善事还愿、已解锁仪式优先分组和底部导航调整。历史已完成的仪式还愿记录保留，旧存档 version=1 继续读取。本包沿用已合并的共享源码开关 `INTERNAL_TOOLS_ENABLED=true`：Web／iOS／Android 的场景目录与反馈入口默认开启，不依赖 StoreKit 收据或联网；内测结束后改为 `false` 并重新打包关闭，现有包不会自动改变。Windows 反馈服务守护也已合并，相关自动化测试通过。
+
+冻结提交的完整 `npm run verify` 通过；发布工具测试为 96 项、94 通过、0 失败、2 项 Windows 平台跳过。Mac 补充检查 5 项全部通过，覆盖 Ruby 校验和 6 个子用例、4 项 dSYM 准备／失败传播用例。构建和最终离线验证保持 17796 项签名后原生输入一致，主应用／小组件的身份、版本、Team、App Group、profiles、分发证书与签名通过；包内 162 个 DOM 脚本、171 项离线资源和 477 张小组件图片哈希核验通过。本轮没有新增或重写场景文化事实，宿主流程的文化影响范围见 [小善事还愿](research/2026-11-02-kindness-only-fulfillment.md)、[小物使用状态](research/2026-11-02-wish-keepsake-usage.md)及[纪念章呈现](research/2026-11-02-ritual-wish-badges.md)，技术检查不作为事实重新认证。
+
+导出时 Xcode ContentDelivery 服务发生 XPC 死锁。确认进程归属后，仅向阻塞的服务 PID 80232 依次发送 TERM、KILL；原 `xcodebuild` PID 80231 随后通过原 runner 自动恢复，使用同一 archive 完成导出。没有重新归档、修改源码／tag／构建号或重置账号／钥匙串。Apple 处理期间的临时网络、404 和缺失 Beta 字段通过正常查询重试恢复，最终状态以上述完成回执与直接 API 读回为准。签名钥匙串搜索列表已恢复，临时钥匙串已锁定。
+
+IPA 为 227,222,687 字节，SHA-256 `cf520054759d007c2f8bfd9508a0d046f01d8d8709e1d93f0d1bba1c6a848823`，本机与 Mac 一致。本机备份 `artifacts/ios-release-21/blessing-21.ipa`；Mac IPA 和 `Blessing-21.xcarchive`／dSYM 位于 `/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.21/source/artifacts/ios-release/21/`。00:39:26，EAS iOS 计数由 20 同步为 21 并读回，写前四类活动构建均为零；随后恢复 Mac 原 Expo 会话状态，没有登出或撤销原会话。
+
+本轮同时保留构建 20、21 的原 checkout、IPA、archive/dSYM，供当前内测安装与崩溃排查使用，未创建新的失败 checkout。详细证据见 `artifacts/ios-release-21/`、其中的 `validation-summary.json` 和 [TestFlight 状态](../store/ios/testflight-status.json)。本轮没有安装或测试物理设备；组内可用不能代替 iPhone 上的键盘、安全区域、GPU、分享、小组件及反馈恢复验收。
 
 ## 2026-11-02 构建 20：Git tag 构建与内测协作
 

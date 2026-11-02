@@ -39,6 +39,7 @@ export async function main(configFile) {
   const { assertReleaseSource, sourceReceipt } = await import('./source-identity.mjs');
   const { inspectToolchain, installLockedPods } = await import('./dependencies.mjs');
   const { resetNativeProject, captureNativeInputs } = await import('./native-inputs.mjs');
+  const { prepareReleaseDsyms } = await import('./prepare-dsyms.mjs');
   const { manifest } = await assertReleaseSource(config, { entrypoint: import.meta.url, allowPrebuildChanges: true });
   const identity = { ...sourceReceipt(manifest), ...Object.fromEntries(['version', 'buildNumber', 'bundleIdentifier', 'appId', 'appleTeamId'].map(key => [key, config[key]])) };
   for (const file of ['source-post-prebuild.json', 'prepare-result.json']) {
@@ -54,11 +55,11 @@ export async function main(configFile) {
     CI: '1', EXPO_NO_TELEMETRY: '1', EXPO_NO_DOTENV: '1', LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8',
     ...(process.env.TMPDIR ? { TMPDIR: process.env.TMPDIR } : {}),
   };
-  async function run(command, args, log, cwd = repo) {
+  async function run(command, args, log, cwd = repo, extraEnv = {}) {
     const handle = await open(path.join(output, log), 'w', 0o600);
     try {
       await new Promise((resolve, reject) => {
-        const child = spawn(command, args, { cwd, env, stdio: ['ignore', handle.fd, handle.fd] });
+        const child = spawn(command, args, { cwd, env: { ...env, ...extraEnv }, stdio: ['ignore', handle.fd, handle.fd] });
         child.once('error', () => reject(Error('Unable to start ' + path.basename(command))));
         child.once('close', code => code === 0 ? resolve() : reject(Error(path.basename(command) + ' failed; see ' + log)));
       });
@@ -71,11 +72,12 @@ export async function main(configFile) {
   await run(nodeBinary, [path.join(repo, 'node_modules/expo/bin/cli'), 'prebuild', '--platform', 'ios', '--no-install'], 'expo-prebuild.log', path.join(repo, 'apps/mobile-expo'));
   const dependencies = await installLockedPods(config);
   await run('/usr/bin/xcodebuild', releaseWarmupArguments(config), 'xcode-prepare-release.log', path.join(repo, 'apps/mobile-expo/ios'));
+  const dsymPreparation = await prepareReleaseDsyms(config, { run: (command, args, options) => run(command, args, options.log, options.cwd, options.env) });
   await assertReleaseSource(config, { entrypoint: import.meta.url, allowPrebuildChanges: true });
   const nativeInputs = await captureNativeInputs(repo);
   const prepared = { checkedAt: new Date().toISOString(), ...identity, commit: manifest.commit, sourceFilesChecked: manifest.fileCount, allBusinessSourceHashesVerified: true, tooling, dependencies, nativeInputs };
   await writeFile(path.join(output, 'source-post-prebuild.json'), JSON.stringify(prepared, null, 2) + '\n');
-  const result = { completedAt: new Date().toISOString(), ...identity, dependenciesInstalled: true, localizationVerified: true, offlineAssetsPrepared: true, nativeWorkspaceGenerated: true, podsInstalled: true, unsignedReleaseBuildPassed: true, sourceHashesVerifiedAfterPrebuild: true, tooling };
+  const result = { completedAt: new Date().toISOString(), ...identity, dependenciesInstalled: true, localizationVerified: true, offlineAssetsPrepared: true, nativeWorkspaceGenerated: true, podsInstalled: true, unsignedReleaseBuildPassed: true, dsymPreparation, sourceHashesVerifiedAfterPrebuild: true, tooling };
   await writeFile(path.join(output, 'prepare-result.json'), JSON.stringify(result, null, 2) + '\n');
   console.log(JSON.stringify(result));
 }

@@ -70,7 +70,7 @@ node "$release_repo/scripts/ios-release/release-runner.mjs" <配置绝对路径>
 ```
 
 - `build`：ASC 编号检查 → prepare → EAS 计数／活动构建检查（混用时）→ archive/export → offline verify。不会上传；先安装依赖再调用 EAS SDK。
-- `prepare`：核对实际工具链，`npm ci`，从干净原生目录生成工程，按冻结 Bundler 和 Podfile.lock 执行 deployment 安装；先执行不签名的 Release 构建，让官方脚本完成预编译依赖切换、dSYM 与模块 provider 生成，再记录原生输入。失败使旧成功准备回执失效。
+- `prepare`：核对实际工具链，`npm ci`，从干净原生目录生成工程，按冻结 Bundler 和 Podfile.lock 执行 deployment 安装；先执行不签名的 Release 构建，让官方脚本完成预编译依赖切换与模块 provider 生成，再重放生成工程中的 Expo dSYM 映射阶段，最后记录原生输入。首次构建的映射阶段可能早于依赖切换，因此必须在 Release 框架就位后再次执行。失败使旧成功准备回执失效。
 - `upload`：重新核对源码、原生输入、验证器、签名包和回执，按原有保护上传一次。
 - `finish`：查询同一包，必要时更新测试说明。`pending:true` 表示需要合理间隔继续查询，不能重传包。
 - `status`／`counter-status` 只读查询；`counter-sync` 仅在同源 TestFlight 完成回执核验后同步 EAS 计数。

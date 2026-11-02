@@ -6,6 +6,7 @@ import type { CatalogEntry } from "@wbr/content/catalog";
 import { Context, type AppContext } from "./context";
 import { SceneLibraryContext } from "./scene-library";
 import { SceneExperience } from "./scene-experience";
+import { SceneLoadFailure } from "./scene-load-failure";
 import {
   describeSceneLoadError,
   SCENE_LOAD_ERROR_COPY,
@@ -71,25 +72,8 @@ describe("a scene that will not open", () => {
   };
 
   it("explains in Chinese, keeps the raw message in a closed detail, and retries", async () => {
-    const open = vi.fn(async () => {
-      throw new Error(RAW);
-    });
-    const ui = renderUI(
-      createElement(
-        Context.Provider,
-        {
-          value: {
-            dispatch: () => true,
-            back: () => {},
-          } as unknown as AppContext,
-        },
-        createElement(
-          SceneLibraryContext.Provider,
-          { value: { entries: [entry], library: { open }, ready: true } as never },
-          createElement(SceneExperience, { entry }),
-        ),
-      ),
-    );
+    const retryOpen = vi.fn();
+    const ui = renderUI(createElement(SceneLoadFailure, { message: RAW, onRetry: retryOpen }));
     await settle();
     const alert = ui.host.querySelector(".scene-load-error[role=alert]")!;
     expect(alert).not.toBeNull();
@@ -108,7 +92,21 @@ describe("a scene that will not open", () => {
     )!;
     clickOn(retry);
     await settle();
-    expect(open).toHaveBeenCalledTimes(2);
+    expect(retryOpen).toHaveBeenCalledTimes(1);
+    ui.unmount();
+  });
+
+  it("requires an app update for unknown saved IDs without trying their remote manifests", async () => {
+    const open = vi.fn();
+    const ui = renderUI(createElement(Context.Provider, { value: { dispatch: vi.fn(), back: vi.fn() } as unknown as AppContext },
+      createElement(SceneLibraryContext.Provider, { value: { entries: [entry], library: { open }, ready: true } as never },
+        createElement(SceneExperience, { entry }))));
+    await settle();
+    expect(ui.host.querySelector(".scene-load-error")?.textContent).toContain("此场景需要更新 App 后打开");
+    expect(open).not.toHaveBeenCalled();
+    clickOn([...ui.host.querySelectorAll("button")].find(button => button.textContent === "重试打开")!);
+    await settle();
+    expect(open).not.toHaveBeenCalled();
     ui.unmount();
   });
 });

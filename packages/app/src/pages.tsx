@@ -172,7 +172,7 @@ export function CollectionDetail({ id }: {
     </>);
 }
 export function Me() {
-    const { state, dispatch, go, canHaptic } = useApp();
+    const { state, dispatch, go, canHaptic, internalToolsEnabled } = useApp();
     return (<>
       <PageHead title={tr("\u6211\u7684")}/>
       <div className="settings-card">
@@ -193,8 +193,7 @@ export function Me() {
         <LanguageSetting />
         <button className="settings-row" onClick={() => go({ page: 'privacy' })}><span>{tr("\u9690\u79C1\u653F\u7B56")}</span><Icon name="arrow"/></button>
         <button className="settings-row" onClick={() => go({ page: 'support' })}><span>{tr("\u6280\u672F\u652F\u6301")}</span><Icon name="arrow"/></button>
-        <button className="settings-row" onClick={() => go({ page: "scenes" })}><span>{tr("\u573A\u666F\u76EE\u5F55")}</span><Icon name="arrow"/></button>
-        <button className="settings-row" onClick={() => go({ page: "cache" })}><span>{tr("\u8D44\u6E90\u7F13\u5B58")}</span><Icon name="arrow"/></button>
+        {internalToolsEnabled && <button className="settings-row" onClick={() => go({ page: "scenes" })}><span>{tr("\u573A\u666F\u76EE\u5F55")}</span><Icon name="arrow"/></button>}
       </div>
     </>);
 }

@@ -2,13 +2,14 @@ import { lazy, Suspense, useEffect } from "react";
 import { configureLocale, getLocalePreference, translate as tr } from '@wbr/i18n';
 import { useDeveloperLocale } from './locale';
 import { BlessingApp } from "@wbr/app";
-import { browserHost } from "@wbr/runtime";
+import { browserHost, browserTestFeedbackHost } from "@wbr/runtime";
 import "@wbr/app/style.css";
 
 const host = browserHost();
+if (import.meta.env.DEV) host.testFeedback = browserTestFeedbackHost();
 host.publicShareBaseUrl = import.meta.env.VITE_PUBLIC_SHARE_BASE_URL || undefined;
 configureLocale(host.initialLocalePreference ?? 'system', navigator.languages ?? [navigator.language]);
-const DevApp = lazy(() => import("./DevApp"));
+const DevApp = import.meta.env.DEV ? lazy(() => import("./DevApp")) : null;
 const OpeningPreview = import.meta.env.DEV ? lazy(() => import('./OpeningPreview')) : null;
 const SceneReview = import.meta.env.DEV ? lazy(() => import('./SceneReview')) : null;
 
@@ -24,7 +25,7 @@ export function App() {
     return <Suspense fallback={<p>{tr('正在准备场景检查…')}</p>}><SceneReview /></Suspense>;
   if (OpeningPreview && window.location.pathname === '/opening-preview')
     return <Suspense fallback={<p>{tr('正在准备开场预览…')}</p>}><OpeningPreview /></Suspense>;
-  if (window.location.pathname.startsWith("/dev"))
+  if (DevApp && window.location.pathname.startsWith("/dev"))
     return (
       <Suspense fallback={<p>{tr('正在打开开发工具…')}</p>}>
         <DevApp />
@@ -33,12 +34,7 @@ export function App() {
   return (
     <BlessingApp
       host={host}
-      content={{
-        catalogUrl: import.meta.env.VITE_SCENE_CATALOG_URL || (import.meta.env.DEV ? "/scene-content/catalog.json" : undefined),
-        manifestUrl:
-          import.meta.env.VITE_SCENE_MANIFEST_URL ||
-          (import.meta.env.DEV ? "/scene-content/woodfish.json" : undefined),
-      }}
+      internalToolsEnabled={import.meta.env.DEV}
     />
   );
 }

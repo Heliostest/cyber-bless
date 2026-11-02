@@ -38,6 +38,8 @@
   "app.visual.spaceGrade.detail": "Difusión de luz suave · Viñeta y grano",
   "app.visual.depthRim": "Luz de borde por profundidad",
   "app.visual.depthRim.detail": "Luz de contorno direccional · Bordes oscuros finos",
+  "app.visual.bandRim": "Luz de borde en dos tonos",
+  "app.visual.bandRim.detail": "Sombreado en dos tonos · Borde de profundidad rosa",
   "app.visual.galleryRim": "Intensidad de la luz de contorno",
   "app.visual.pencilScale": "Densidad del rayado",
   "app.visual.paletteStrength": "Intensidad de la paleta",

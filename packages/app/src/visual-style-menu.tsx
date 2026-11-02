@@ -12,7 +12,7 @@ export function dismissVisualStyleMenu(scope?: HTMLElement | null) {
     return !document.dispatchEvent(new CustomEvent(dismissEvent, { cancelable: true, detail: scope }));
 }
 const order: VisualStyleId[] = ["toon-soft", "original", "gouache", "moebius", "toon-outline", "halftone", "pixel-art", "toon-ink",
-    "gallery-toon", "pencil-hatch", "height-palette", "normal-palette", "sketch-contour", "gallery-outline", "space-grade", "depth-rim"];
+    "gallery-toon", "pencil-hatch", "height-palette", "normal-palette", "sketch-contour", "gallery-outline", "space-grade", "depth-rim", "band-rim"];
 const emptyScenes: DebugScene[] = [];
 type ApplyScope = "current" | "all";
 const openMenus: HTMLElement[] = [];

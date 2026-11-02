@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "sceneId": "woodfish",
-  "revision": "bundled-woodfish-1",
+  "revision": "bundled-woodfish-2",
   "engine": "woodfish@1",
   "renderStyle": "toon-ink",
   "bindings": { "body": "WoodfishBody", "mallet": "Mallet" },

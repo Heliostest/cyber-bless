@@ -38,6 +38,8 @@
   "app.visual.spaceGrade.detail": "柔光擴散 · 暗角顆粒",
   "app.visual.depthRim": "深度邊緣光",
   "app.visual.depthRim.detail": "方向輪廓光 · 深色細邊",
+  "app.visual.bandRim": "兩級邊緣光",
+  "app.visual.bandRim.detail": "兩級明暗 · 粉色深度邊",
   "app.visual.galleryRim": "輪廓光強度",
   "app.visual.pencilScale": "排線密度",
   "app.visual.paletteStrength": "配色強度",

@@ -3,7 +3,7 @@ import { createState, reduce, restore } from "./index";
 import { DEFAULT_STYLE_PARAMETERS, getSceneVisualPreference, normalizeStyleParameters } from "./visual-style";
 
 describe("saved gallery shader preferences", () => {
-  it.each(["gallery-toon", "pencil-hatch", "height-palette", "normal-palette", "sketch-contour", "gallery-outline", "space-grade", "depth-rim"] as const)("restores %s locally and globally without changing ritual progress", style => {
+  it.each(["gallery-toon", "pencil-hatch", "height-palette", "normal-palette", "sketch-contour", "gallery-outline", "space-grade", "depth-rim", "band-rim"] as const)("restores %s locally and globally without changing ritual progress", style => {
     const before = createState();
     const local = reduce(before, { type: "scene.visual", id: "crane", style });
     const restored = restore(JSON.stringify(local));

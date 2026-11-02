@@ -8,6 +8,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@wbr/shared": "*",
     "@wbr/core": "*",
     "@wbr/i18n": "*"
   },

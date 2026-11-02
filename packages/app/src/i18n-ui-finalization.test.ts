@@ -129,7 +129,7 @@ it('retains unknown remote instructions verbatim and marks their unspecified lan
 });
 it.each(['en', 'ja', 'fr'] as const)('keeps the upgrade recovery classification in %s', async locale => {
   configureLocale(locale, []);
-  const entry = { ...builtInScenes[0], engine: 'future@99' };
+  const entry = { ...builtInScenes[0], id: 'unknown-future-scene', engine: 'future@99' };
   const ui = renderUI(provider(createElement(SceneExperience, { entry })));
   await settle();
   expect(ui.host.querySelector('.scene-load-error')?.textContent).toContain(translate('此场景需要更新 App 后打开'));

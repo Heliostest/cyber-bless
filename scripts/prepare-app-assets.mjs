@@ -2,7 +2,7 @@ import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { prepareBundledContent } from "./publish-scene-content.mjs";
+import { bundledWoodfishModel, prepareBundledContent } from "./publish-scene-content.mjs";
 import { SCENE_ICON_IDS } from "../packages/app/src/scene-icon-assets.ts";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const assetFiles = [
@@ -14,7 +14,7 @@ export const assetFiles = [
   "fonts/nunito-latin-700-normal.woff2",
   "fonts/nunito-latin-900-normal.woff2",
   "fonts/nunito-OFL.txt",
-  "woodfish/bundled-v1/woodfish.glb",
+  bundledWoodfishModel,
   "environments/kloppenheim-06-sky-1k.hdr",
   "environments/kloppenheim-02-night-1k.hdr",
   "environments/LICENSE.txt",

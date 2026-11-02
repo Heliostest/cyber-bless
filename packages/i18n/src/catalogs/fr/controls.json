@@ -38,6 +38,8 @@
   "app.visual.spaceGrade.detail": "Diffusion douce · Vignettage et grain",
   "app.visual.depthRim": "Éclairage de contour en profondeur",
   "app.visual.depthRim.detail": "Éclairage de contour orienté · Fins bords sombres",
+  "app.visual.bandRim": "Éclairage de contour en deux tons",
+  "app.visual.bandRim.detail": "Ombres en deux tons · Liseré de profondeur rose",
   "app.visual.galleryRim": "Intensité de l’éclairage de contour",
   "app.visual.pencilScale": "Densité des hachures",
   "app.visual.paletteStrength": "Intensité de la palette",

@@ -16,13 +16,15 @@ import * as Linking from 'expo-linking';
 import { getLocales, getCalendars } from 'expo-localization';
 import { resolveLocale, type LocalePreference } from '@wbr/i18n/locales';
 import nativeCopy from './widget-copy.generated.json';
-import { createProjectedStorage, type HapticStrength } from '@wbr/runtime';
+import { createProjectedStorage, type HapticStrength, type TestFeedbackInfo } from '@wbr/runtime';
 import { parseWidgetLink, type WidgetNavigationRequest } from '@wbr/core/widgets';
 import { synchronizeWidgets } from './widget-sync';
 import BlessingDom from "./BlessingDom";
 import { SafeAreaBackground } from './SafeAreaBackground';
 import { shareImage } from './share-image';
 import { shareLink } from './share-link';
+import { detectInternalToolsEnabled } from './internal-tools';
+import { readTestFeedback, writeTestFeedback, submitTestFeedback, testFeedbackInfo } from './test-feedback';
 import {
   readContentHistory,
   readSceneAsset,
@@ -58,6 +60,15 @@ export default function App() {
 }
 function Shell() {
   const [active, setActive] = useState(AppState.currentState === "active");
+  const [internalToolsEnabled, setInternalToolsEnabled] = useState(__DEV__);
+  const [feedbackInfo, setFeedbackInfo] = useState<TestFeedbackInfo>({ platform: Platform.OS === 'ios' ? 'ios' : 'android', appVersion: 'unknown', buildNumber: 'unknown', osVersion: String(Platform.Version) });
+  useEffect(() => { let disposed = false; void testFeedbackInfo().then(info => { if (!disposed) setFeedbackInfo(info); }); return () => { disposed = true; }; }, []);
+  useEffect(() => {
+    if (!active) return;
+    let disposed = false;
+    void detectInternalToolsEnabled().then(enabled => { if (!disposed) setInternalToolsEnabled(enabled); });
+    return () => { disposed = true; };
+  }, [active]);
   const [backRequest, setBackRequest] = useState(0);
   const [generation, setGeneration] = useState(0);
   const [failed, setFailed] = useState(false);
@@ -174,8 +185,11 @@ function Shell() {
         protectSceneAssets={protectSceneAssets}
         releaseSceneAssets={releaseSceneAssets}
         maintainSceneCache={maintainSceneCache}
-        catalogUrl={process.env.EXPO_PUBLIC_SCENE_CATALOG_URL ?? ""}
-        manifestUrl={process.env.EXPO_PUBLIC_SCENE_MANIFEST_URL ?? ""}
+        internalToolsEnabled={internalToolsEnabled}
+        feedbackInfo={feedbackInfo}
+        readTestFeedback={readTestFeedback}
+        writeTestFeedback={writeTestFeedback}
+        submitTestFeedback={submitTestFeedback}
         writeSave={writeSave}
         haptic={haptic}
         shareImage={shareImage}

@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SCENE_ICON_IDS } from '../packages/app/src/scene-icon-assets.ts';
+import { bundledWoodfishModel } from './publish-scene-content.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const app = path.join(root, 'apps/mobile-expo');
 const require = createRequire(path.join(app, 'package.json'));
@@ -23,7 +24,7 @@ function run(cli, args, cwd) {
 }
 await run(require.resolve('eas-cli/bin/run'), ['build:inspect', '-p', 'ios', '-s', 'archive', '-o', source], app);
 for (const file of ['package-lock.json', 'scripts/prepare-app-assets.mjs', 'content/woodfish/bundled.json',
-  'assets/fonts/OFL.txt', 'assets/fonts/nunito-OFL.txt', 'assets/woodfish/bundled-v1/woodfish.glb', 'apps/mobile-expo/assets/icon.png',
+  'assets/fonts/OFL.txt', 'assets/fonts/nunito-OFL.txt', `assets/${bundledWoodfishModel}`, 'apps/mobile-expo/assets/icon.png',
   'apps/mobile-expo/widget-sync.ts', 'apps/mobile-expo/widgets/TodayWidget.tsx',
   'apps/mobile-expo/widget-images.ts', 'apps/mobile-expo/widget-preview-assets.ts', 'assets/widgets/today/manifest.json',
   'apps/mobile-expo/plugins/withBlessingWidgets.cjs', 'apps/mobile-expo/modules/blessing-widgets/expo-module.config.json',

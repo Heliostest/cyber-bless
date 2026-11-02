@@ -38,6 +38,8 @@
   "app.visual.spaceGrade.detail": "부드러운 빛 확산 · 비네트와 입자",
   "app.visual.depthRim": "깊이 기반 림 라이트",
   "app.visual.depthRim.detail": "방향성 림 라이트 · 가는 짙은 선",
+  "app.visual.bandRim": "두 단계 림 라이트",
+  "app.visual.bandRim.detail": "두 단계 명암 · 분홍 깊이 가장자리",
   "app.visual.galleryRim": "림 라이트 강도",
   "app.visual.pencilScale": "해칭 밀도",
   "app.visual.paletteStrength": "색상 강도",

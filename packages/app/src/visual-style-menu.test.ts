@@ -46,7 +46,7 @@ describe("App visual style menu", () => {
     try {
       expect([...ui.strip.querySelectorAll<HTMLButtonElement>("button[data-style]")].map(card => card.dataset.style)).toEqual([
         "toon-soft", "original", "gouache", "moebius", "toon-outline", "halftone", "pixel-art", "toon-ink",
-        "gallery-toon", "pencil-hatch", "height-palette", "normal-palette", "sketch-contour", "gallery-outline", "space-grade", "depth-rim",
+        "gallery-toon", "pencil-hatch", "height-palette", "normal-palette", "sketch-contour", "gallery-outline", "space-grade", "depth-rim", "band-rim",
       ]);
       const card = ui.strip.querySelector<HTMLButtonElement>('[data-style="depth-rim"]')!;
       clickOn(card);

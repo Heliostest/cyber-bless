@@ -68,5 +68,20 @@
   "developer.SceneReview.13dfaa70": "最後",
   "developer.SceneReview.cc92cb4b": "最初から",
   "developer.SceneReview.2ecc082f": "切り替えるたびに最初から · 独立したテスト記録",
-  "developer.disclaimer.3fb5c5b7": "このアプリは、インタラクティブなシーンを通して器物や文化、日常の思いを表現します。実際の宗教儀礼に代わるものではなく、宗教的効力を約束しません。"
+  "developer.disclaimer.3fb5c5b7": "このアプリは、インタラクティブなシーンを通して器物や文化、日常の思いを表現します。実際の宗教儀礼に代わるものではなく、宗教的効力を約束しません。",
+  "developer.audio.console": "デバッグコンソール",
+  "developer.audio.filter": "UI効果音の表示",
+  "developer.audio.help": "右上のスピーカーで効果音を試聴できます。元の操作は実行されません。",
+  "developer.audio.scope": "UI操作と願いの棚の小物が対象です。3Dシーン内の操作は含みません。",
+  "developer.audio.count": "{count} 件の操作を表示",
+  "developer.audio.preview": "試聴：{name} · {cue}",
+  "developer.audio.muted": "効果音はオフです。「マイページ」でオンにしてください。",
+  "developer.audio.unready": "効果音を準備中です。もう一度押してください。",
+  "developer.audio.unavailable": "現在、この効果音は再生できません。",
+  "developer.audio.busy": "少し待ってから再度試聴してください。",
+  "developer.audio.playing": "試聴：{cue}",
+  "developer.audio.requested": "試聴リクエスト：{cue}",
+  "developer.audio.clip": "効果音クリップ",
+  "developer.audio.synth": "合成効果音",
+  "developer.audio.synthSource": "シンセサイザー：soft-audio.ts"
 }

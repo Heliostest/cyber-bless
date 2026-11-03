@@ -12,17 +12,18 @@ import { SceneArt, hasSceneIcon } from "./scene-icons";
 import { PageHead } from "./page-heading";
 import { WishRitualRack } from "./wish-ritual-rack";
 import { WishDetail } from "./wishes";
-export function Empty({ title, body, action, onClick, }: {
+export function Empty({ title, body, action, onClick, soundCue, }: {
     title: string;
     body: string;
     action?: string;
     onClick?: () => void;
+    soundCue?: 'navigate';
 }) {
     return (<div className="empty">
       <Icon name="leaf"/>
       <h3>{title}</h3>
       <p>{body}</p>
-      {action && (<button className="button secondary" onClick={onClick}>
+      {action && (<button data-audio-cue={soundCue} className="button secondary" onClick={onClick}>
           {action}
         </button>)}
     </div>);
@@ -37,7 +38,7 @@ export function Wishes() {
       <PageHead title={tr("\u6211\u7684\u5FC3\u613F")}/>
       <WishRitualRack />
       <div className="filter-row" role="group" aria-label={tr("\u5FC3\u613F\u7B5B\u9009")}>
-        {[["active", tr("\u8FDB\u884C\u4E2D")], ["fulfilled", tr("\u5DF2\u5982\u613F")], ["archived", tr("\u5148\u653E\u4E0B")]].map(([id, label]) => (<button key={id} aria-pressed={filter === id} className={filter === id ? "selected" : ""} onClick={() => {
+        {[["active", tr("\u8FDB\u884C\u4E2D")], ["fulfilled", tr("\u5DF2\u5982\u613F")], ["archived", tr("\u5148\u653E\u4E0B")]].map(([id, label]) => (<button data-audio-cue={filter === id ? undefined : "select"} key={id} aria-pressed={filter === id} className={filter === id ? "selected" : ""} onClick={() => {
             if (filter === id) return;
             setFilter(id);
             uiSound?.('select');
@@ -47,7 +48,7 @@ export function Wishes() {
           {wishes.map(w => {
                 const flying = arrival?.wishId === w.id && arrival.phase === "flying";
                 const isNew = arrival?.wishId === w.id && arrival.phase === "landed";
-                return <button key={w.id} className={`wish-card${isNew ? " reward-landed" : ""}`} data-wish-id={w.id} data-arriving={flying ? "" : undefined} onClick={() => go({ page: "wish", id: w.id }, { sound: 'navigate' })}>
+                return <button data-audio-cue="navigate" key={w.id} className={`wish-card${isNew ? " reward-landed" : ""}`} data-wish-id={w.id} data-arriving={flying ? "" : undefined} onClick={() => go({ page: "wish", id: w.id }, { sound: 'navigate' })}>
               {w.sourceSceneId && hasSceneIcon(w.sourceSceneId) && <SceneArt id={w.sourceSceneId}/>}
               <span className="wish-card-copy">
                 <span className="tag soft wish-row-status">{w.archived ? tr("\u6682\u65F6\u653E\u4E0B") : tr(statusText[w.status])}</span>
@@ -62,7 +63,7 @@ export function Wishes() {
           <h2>{filter === "active" ? tr("\u8FD8\u6CA1\u6709\u8BB0\u4E0B\u5FC3\u613F") : filter === "fulfilled" ? tr("\u8FD8\u6CA1\u6709\u5982\u613F\u7684\u8BB0\u5F55") : tr("\u8FD8\u6CA1\u6709\u653E\u4E0B\u7684\u5FC3\u613F")}</h2>
           <p>{filter === "active" ? tr("\u5148\u5B8C\u6210\u4E00\u573A\u5C0F\u4EEA\u5F0F\uFF0C\u518D\u7559\u4E0B\u4E00\u53E5\u8BDD\u3002") : tr("\u6BCF\u4E2A\u5FC3\u613F\uFF0C\u90FD\u6709\u81EA\u5DF1\u7684\u65F6\u95F4\u3002")}</p>
         </div>)}
-      <button className="button primary full pray-button" onClick={() => go({ page: "new" }, { sound: 'navigate' })}>{tr("\u53BB\u8BB8\u613F")}</button>
+      <button data-audio-cue="navigate" className="button primary full pray-button" onClick={() => go({ page: "new" }, { sound: 'navigate' })}>{tr("\u53BB\u8BB8\u613F")}</button>
       <p className="privacy-note">{tr("\u5FC3\u613F\u4EC5\u4FDD\u5B58\u5728\u8FD9\u53F0\u8BBE\u5907\u4E0A\u3002")}</p>
     </div>);
 }
@@ -107,7 +108,7 @@ export function World() {
         <div className="room-shelf">
           {state.collectibles.slice(-3).map((c) => {
             const slot = slotState(c.id);
-            return (<button key={c.id} aria-label={tr("\u67E5\u770B{p0}", { p0: localizedTitle(c) })} data-collectible-id={c.id} data-arriving={slot === "flying" ? "" : undefined} className={slot === "landed" ? "reward-landed" : undefined} onClick={() => openItem(c)}>
+            return (<button data-audio-cue="navigate" key={c.id} aria-label={tr("\u67E5\u770B{p0}", { p0: localizedTitle(c) })} data-collectible-id={c.id} data-arriving={slot === "flying" ? "" : undefined} className={slot === "landed" ? "reward-landed" : undefined} onClick={() => openItem(c)}>
                 <CollectibleArt item={c} small/>
                 {slot === "landed" && (<>
                     <span className="new-mark">{tr("\u65B0")}</span>
@@ -129,13 +130,13 @@ export function World() {
       {state.collectibles.length ? (<div className="collection-grid">
           {[...state.collectibles].reverse().map((c) => {
                 const slot = slotState(c.id);
-                return (<button key={c.id} className={`collection-card${slot === "landed" ? " reward-landed" : ""}`} data-collectible-id={c.id} data-arriving={slot === "flying" ? "" : undefined} onClick={() => openItem(c)}>
+                return (<button data-audio-cue="navigate" key={c.id} className={`collection-card${slot === "landed" ? " reward-landed" : ""}`} data-collectible-id={c.id} data-arriving={slot === "flying" ? "" : undefined} onClick={() => openItem(c)}>
                 <CollectibleArt item={c} small/>
                 <strong>{localizedTitle(c)}</strong>
                 <small>{formatDate(c.at)}</small>
               </button>);
             })}
-        </div>) : (<Empty title={tr("\u5C0F\u5929\u5730\uFF0C\u7B49\u4F60\u6162\u6162\u586B\u6EE1")} body={tr("\u5B8C\u6210\u4E00\u4E2A\u5C0F\u4EEA\u5F0F\uFF0C\u628A\u7B2C\u4E00\u4EF6\u6536\u85CF\u5E26\u56DE\u5BB6\u3002")} action={tr("\u53BB\u505A\u4E2A\u5C0F\u4EEA\u5F0F")} onClick={() => go({ page: "today" }, { sound: 'navigate' })}/>)}
+        </div>) : (<Empty soundCue="navigate" title={tr("\u5C0F\u5929\u5730\uFF0C\u7B49\u4F60\u6162\u6162\u586B\u6EE1")} body={tr("\u5B8C\u6210\u4E00\u4E2A\u5C0F\u4EEA\u5F0F\uFF0C\u628A\u7B2C\u4E00\u4EF6\u6536\u85CF\u5E26\u56DE\u5BB6\u3002")} action={tr("\u53BB\u505A\u4E2A\u5C0F\u4EEA\u5F0F")} onClick={() => go({ page: "today" }, { sound: 'navigate' })}/>)}
     </>);
 }
 export function CollectionDetail({ id }: {
@@ -178,9 +179,9 @@ export function CollectionDetail({ id }: {
         {item.kind === "scene" && item.wishScene && item.spentAt && (<p className="quiet vessel-spent-line">
             {spentFor ? tr("\u5DF2\u66FF\u300C{p0}\u300D\u8FD8\u8FC7\u613F", { p0: spentFor.title }) : tr("\u5DF2\u62FF\u53BB\u8BB8\u8FC7\u613F")}
           </p>)}
-        {sceneEntry && (<button className="button secondary" onClick={() => openScene(sceneEntry, { replay: true, sound: 'navigate' })}>{tr("\u56DE\u770B\u8FD9\u573A\u4EEA\u5F0F")}<Icon name="arrow"/>
+        {sceneEntry && (<button data-audio-cue="navigate" className="button secondary" onClick={() => openScene(sceneEntry, { replay: true, sound: 'navigate' })}>{tr("\u56DE\u770B\u8FD9\u573A\u4EEA\u5F0F")}<Icon name="arrow"/>
           </button>)}
-        {wish && (<button className="button secondary" onClick={() => go({ page: "wish", id: wish.id }, { sound: 'navigate' })}>{tr("\u770B\u770B\u5173\u8054\u7684\u5FC3\u613F")}<Icon name="arrow"/>
+        {wish && (<button data-audio-cue="navigate" className="button secondary" onClick={() => go({ page: "wish", id: wish.id }, { sound: 'navigate' })}>{tr("\u770B\u770B\u5173\u8054\u7684\u5FC3\u613F")}<Icon name="arrow"/>
           </button>)}
       </div>
     </>);
@@ -197,7 +198,7 @@ export function Me() {
         ] as const)
             // No 轻触反馈 where the host cannot vibrate (iOS browsers).
             .filter(([key]) => key !== "haptics" || canHaptic)
-            .map(([key, title, sub]) => (<label className="settings-row" key={key}>
+            .map(([key, title, sub]) => (<label data-audio-cue={key === "sound" && state.settings.sound ? undefined : state.settings[key] ? "toggleOff" : "toggleOn"} className="settings-row" key={key}>
               <span>
                 {title}
                 <small>{sub}</small>
@@ -205,9 +206,9 @@ export function Me() {
               <input type="checkbox" className="switch" checked={state.settings[key]} onChange={(e) => dispatch({ type: "settings", key, value: e.target.checked })}/>
             </label>))}
         <LanguageSetting />
-        <button className="settings-row" onClick={() => go({ page: 'privacy' }, { sound: 'navigate' })}><span>{tr("\u9690\u79C1\u653F\u7B56")}</span><Icon name="arrow"/></button>
-        <button className="settings-row" onClick={() => go({ page: 'support' }, { sound: 'navigate' })}><span>{tr("\u6280\u672F\u652F\u6301")}</span><Icon name="arrow"/></button>
-        {internalToolsEnabled && <button className="settings-row" onClick={() => go({ page: "scenes" }, { sound: 'navigate' })}><span>{tr("\u573A\u666F\u76EE\u5F55")}</span><Icon name="arrow"/></button>}
+        <button data-audio-cue="navigate" className="settings-row" onClick={() => go({ page: 'privacy' }, { sound: 'navigate' })}><span>{tr("\u9690\u79C1\u653F\u7B56")}</span><Icon name="arrow"/></button>
+        <button data-audio-cue="navigate" className="settings-row" onClick={() => go({ page: 'support' }, { sound: 'navigate' })}><span>{tr("\u6280\u672F\u652F\u6301")}</span><Icon name="arrow"/></button>
+        {internalToolsEnabled && <button data-audio-cue="navigate" className="settings-row" onClick={() => go({ page: "scenes" }, { sound: 'navigate' })}><span>{tr("\u573A\u666F\u76EE\u5F55")}</span><Icon name="arrow"/></button>}
       </div>
     </>);
 }
@@ -224,7 +225,7 @@ export function History() {
     return (<>
       <PageHead eyebrow={tr("\u4F60\u7559\u7ED9\u81EA\u5DF1\u7684\u6BCF\u4E00\u5206\u949F")} title={tr("\u4EEA\u5F0F\u65F6\u5149")}/>
       <div className="scene-catalog">
-        {records.map((record) => (<SceneCard key={record.id} id={record.id} title={`${localizedTitle(record)}${record.favorite ? tr(" \u00B7 \u5DF2\u6536\u85CF") : ""}`} onClick={() => openScene(record, { sound: 'navigate' })}>
+        {records.map((record) => (<SceneCard soundCue="navigate" key={record.id} id={record.id} title={`${localizedTitle(record)}${record.favorite ? tr(" \u00B7 \u5DF2\u6536\u85CF") : ""}`} onClick={() => openScene(record, { sound: 'navigate' })}>
             <small>{message('app.history.progress', { n: record.progress })}</small>
           </SceneCard>))}
       </div>
@@ -242,7 +243,7 @@ export function History() {
                         ? tr("\u6536\u85CF\u4E86{p0}", { p0: tr(rituals[s.ritual].object) }) : wish
                         ? tr("{p0} \u00B7 \u4E3A\u300C{p1}\u300D\u8BB0\u4E86\u4E00\u7B14", { p0: tr(HISTORY_SCENE_LINE), p1: wish.title }) : tr(HISTORY_SCENE_LINE)}
                 </p>
-                {isSceneVisibleInApp({ id: s.ritual }) && <button className="text-button" onClick={() => openRitual(s.ritual, undefined, { sound: 'navigate' })}>{tr("\u518D\u6B21\u4F53\u9A8C")}</button>}
+                {isSceneVisibleInApp({ id: s.ritual }) && <button data-audio-cue="navigate" className="text-button" onClick={() => openRitual(s.ritual, undefined, { sound: 'navigate' })}>{tr("\u518D\u6B21\u4F53\u9A8C")}</button>}
               </li>);
             })}
         </ol>) : records.length ? null : (<Empty title={state.sceneRecords.length ? tr("\u6682\u65E0\u53EF\u56DE\u770B\u7684\u573A\u666F") : tr("\u6545\u4E8B\u624D\u521A\u521A\u5F00\u59CB")} body={tr("\u5B8C\u6210\u7684\u5C0F\u4EEA\u5F0F\uFF0C\u4F1A\u4E00\u4E00\u8BB0\u5728\u8FD9\u91CC\u3002")}/>)}

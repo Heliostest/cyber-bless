@@ -68,5 +68,20 @@
   "developer.SceneReview.13dfaa70": "Última",
   "developer.SceneReview.cc92cb4b": "Reiniciar",
   "developer.SceneReview.2ecc082f": "Cada cambio empieza de nuevo · registros de prueba independientes",
-  "developer.disclaimer.3fb5c5b7": "Esta aplicación presenta objetos, culturas y pensamientos cotidianos mediante escenas interactivas. No sustituye los ritos religiosos reales ni promete eficacia religiosa."
+  "developer.disclaimer.3fb5c5b7": "Esta aplicación presenta objetos, culturas y pensamientos cotidianos mediante escenas interactivas. No sustituye los ritos religiosos reales ni promete eficacia religiosa.",
+  "developer.audio.console": "Consola de depuración",
+  "developer.audio.filter": "Cobertura de sonidos",
+  "developer.audio.help": "Toca el altavoz superior derecho para escuchar el sonido sin ejecutar la acción.",
+  "developer.audio.scope": "Incluye controles y objetos del estante de deseos; excluye acciones dentro de escenas 3D.",
+  "developer.audio.count": "{count} acciones marcadas",
+  "developer.audio.preview": "Escuchar {name} · {cue}",
+  "developer.audio.muted": "El sonido está desactivado. Actívalo en Mi espacio.",
+  "developer.audio.unready": "Preparando el sonido. Toca de nuevo.",
+  "developer.audio.unavailable": "Este sonido no está disponible ahora.",
+  "developer.audio.busy": "Espera un momento para volver a escucharlo.",
+  "developer.audio.playing": "Escucha: {cue}",
+  "developer.audio.requested": "Escucha solicitada: {cue}",
+  "developer.audio.clip": "Clip de sonido",
+  "developer.audio.synth": "Sonido sintetizado",
+  "developer.audio.synthSource": "Sintetizador: soft-audio.ts"
 }

@@ -150,7 +150,10 @@ describe('menu sounds at real UI transitions', () => {
 
   it('leaves changed-style save feedback to persistence and closes untouched style with close', () => {
     const ui = visual();
+    expect(ui.host.querySelector('.visual-style-done')?.getAttribute('data-audio-cue')).toBe('close');
+    expect(ui.host.querySelector('[data-visual-style-close]')?.getAttribute('data-audio-cue')).toBe('close');
     clickOn(ui.strip.querySelector('[data-style="original"]')!);
+    expect(ui.host.querySelector('.visual-style-done')?.getAttribute('data-audio-cue')).toBe('saved');
     clickOn(ui.host.querySelector('.visual-style-done')!);
     expect(ui.dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'scene.visual', style: 'original' }));
     expect(ui.sounds()).toEqual(['open', 'select']);

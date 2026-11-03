@@ -50,7 +50,7 @@ function DailyCollectedInfo({ copy }: { copy: string }) {
         };
     }, [open, uiSound]);
     return <div className="daily-collected-info" ref={shell}>
-      <button type="button" className="daily-collected-info-button" ref={trigger}
+      <button data-audio-cue={open ? "close" : "open"} type="button" className="daily-collected-info-button" ref={trigger}
         aria-label={tr(DAILY_COLLECTED_COPY.heading)} aria-expanded={open} aria-controls={panelId}
         aria-describedby={open ? panelId : undefined} onClick={() => {
             opened.current = !opened.current;
@@ -75,7 +75,7 @@ export function Today({ day }: {
     return (<div className="today-page">
       <PageHead title={tr("\u4ECA\u65E5\u4EEA\u5F0F")} eyebrow={tr("\u4ECA\u5929\uFF0C\u4E5F\u7ED9\u81EA\u5DF1\u4E00\u70B9\u597D\u8FD0\u3002")}/>
       {/* Old sessions retain their settlement ID and resume with 3D interaction. */}
-      {state.activeSession && isSceneVisibleInApp({ id: state.activeSession.ritual }) && (<button className="resume-banner" onClick={() => go({ page: "ritual" }, { sound: 'navigate' })}>
+      {state.activeSession && isSceneVisibleInApp({ id: state.activeSession.ritual }) && (<button data-audio-cue="navigate" className="resume-banner" onClick={() => go({ page: "ritual" }, { sound: 'navigate' })}>
           <span>{message('app.home.resume', { ritual: tr(rituals[state.activeSession.ritual].short) })}
             <small>{message('app.home.progress', { done: state.activeSession.progress, total: rituals[state.activeSession.ritual].steps })}</small>
           </span>
@@ -83,7 +83,7 @@ export function Today({ day }: {
         </button>)}
       {primary && (<>
           <section className="daily-set" aria-label={tr("\u4ECA\u65E5\u4EEA\u5F0F\u5361\u7247")}>
-            <button className="daily-set-card daily-set-primary" data-scene={primary.id} data-type={isWishScene(primary.id) ? "wish" : "blessing"} onClick={() => openScene(primary, { daily: day, sound: 'navigate' })}>
+            <button data-audio-cue="navigate" className="daily-set-card daily-set-primary" data-scene={primary.id} data-type={isWishScene(primary.id) ? "wish" : "blessing"} onClick={() => openScene(primary, { daily: day, sound: 'navigate' })}>
               {/* The day's scene, live above its row; the whole card opens
               the walk. The picks below stay pictures: one canvas a page. */}
               <DailyScenePreview key={`${primary.id}:${primary.engine}`} entry={primary}/>
@@ -109,7 +109,7 @@ export function Today({ day }: {
             {picks.length ? (<>
                 <div className="daily-set-grid daily-collected-grid">
                   {/* A 回看: no daily flag, so the walk collects nothing new. */}
-                  {picks.map((entry) => (<button key={entry.id} className="daily-set-card" data-scene={entry.id} data-type={isWishScene(entry.id) ? "wish" : "blessing"} onClick={() => openScene(entry, { replay: true, sound: 'navigate' })}>
+                  {picks.map((entry) => (<button data-audio-cue="navigate" key={entry.id} className="daily-set-card" data-scene={entry.id} data-type={isWishScene(entry.id) ? "wish" : "blessing"} onClick={() => openScene(entry, { replay: true, sound: 'navigate' })}>
                       <SceneBadge id={entry.id}/>
                       <strong>{localizedTitle(entry)}</strong>
                       <small>

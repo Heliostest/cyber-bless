@@ -68,5 +68,20 @@
   "developer.SceneReview.13dfaa70": "Última",
   "developer.SceneReview.cc92cb4b": "Recomeçar",
   "developer.SceneReview.2ecc082f": "Cada mudança começa do início · registos de teste separados",
-  "developer.disclaimer.3fb5c5b7": "Esta aplicação apresenta objetos, culturas e pensamentos do dia a dia através de cenas interativas. Não substitui ritos religiosos reais nem promete eficácia religiosa."
+  "developer.disclaimer.3fb5c5b7": "Esta aplicação apresenta objetos, culturas e pensamentos do dia a dia através de cenas interativas. Não substitui ritos religiosos reais nem promete eficácia religiosa.",
+  "developer.audio.console": "Console de depuração",
+  "developer.audio.filter": "Cobertura de sons da interface",
+  "developer.audio.help": "Toque no alto-falante no canto superior direito para ouvir o som sem executar a ação.",
+  "developer.audio.scope": "Inclui controles e objetos da prateleira de desejos; exclui ações dentro de cenas 3D.",
+  "developer.audio.count": "{count} ações marcadas",
+  "developer.audio.preview": "Ouvir {name} · {cue}",
+  "developer.audio.muted": "O som está desativado. Ative-o em Meu espaço.",
+  "developer.audio.unready": "Preparando o som. Toque novamente.",
+  "developer.audio.unavailable": "Este som está indisponível no momento.",
+  "developer.audio.busy": "Aguarde um momento para ouvir novamente.",
+  "developer.audio.playing": "Prévia: {cue}",
+  "developer.audio.requested": "Prévia solicitada: {cue}",
+  "developer.audio.clip": "Clipe de som",
+  "developer.audio.synth": "Som sintetizado",
+  "developer.audio.synthSource": "Sintetizador: soft-audio.ts"
 }

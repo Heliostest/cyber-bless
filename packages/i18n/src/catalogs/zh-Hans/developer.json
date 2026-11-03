@@ -68,5 +68,20 @@
   "developer.SceneReview.13dfaa70": "最后一个",
   "developer.SceneReview.cc92cb4b": "重新开始",
   "developer.SceneReview.2ecc082f": "每次切换从头体验 · 独立测试记录",
-  "developer.disclaimer.3fb5c5b7": "本应用以互动场景呈现器物、文化与日常心意，不替代真实宗教仪式，也不承诺宗教效力。"
+  "developer.disclaimer.3fb5c5b7": "本应用以互动场景呈现器物、文化与日常心意，不替代真实宗教仪式，也不承诺宗教效力。",
+  "developer.audio.console": "调试台",
+  "developer.audio.filter": "界面音效覆盖",
+  "developer.audio.help": "点右上角喇叭试听，不执行原操作。",
+  "developer.audio.scope": "标注界面操作与心愿架小物；不包含画布内动作。",
+  "developer.audio.count": "已标注 {count} 个操作",
+  "developer.audio.preview": "试听 {name} · {cue}",
+  "developer.audio.muted": "音效已关闭，请先在“我的”中开启。",
+  "developer.audio.unready": "音效准备中，请再点一次。",
+  "developer.audio.unavailable": "当前无法播放此音效。",
+  "developer.audio.busy": "请稍候再试听。",
+  "developer.audio.playing": "试听：{cue}",
+  "developer.audio.requested": "已请求试听：{cue}",
+  "developer.audio.clip": "音效片段",
+  "developer.audio.synth": "程序合成音效",
+  "developer.audio.synthSource": "合成器：soft-audio.ts"
 }

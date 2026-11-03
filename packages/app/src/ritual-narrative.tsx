@@ -162,7 +162,7 @@ export function RitualNarrativeBlurb({ sceneId, completion }: { sceneId: string;
           onTransitionEnd={event => {
             if (event.target === event.currentTarget && event.propertyName === "height" && !openNow.current) setPresent(false);
           }}>
-          <button ref={button} type="button" className="ritual-narrative-toggle ritual-narrative-trigger" aria-haspopup="dialog"
+          <button data-audio-cue={open ? "close" : "open"} ref={button} type="button" className="ritual-narrative-toggle ritual-narrative-trigger" aria-haspopup="dialog"
             aria-expanded={open} aria-controls={bodyId} onClick={() => {
               if (openNow.current) close();
               else { openNow.current = true; uiSound?.('open'); setPresent(true); setOpen(true); }

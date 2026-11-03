@@ -202,14 +202,15 @@ export function sceneStatus(entry: CatalogEntry, _cache?: string): SceneStatus {
 }
 /** A scene as a list row (场景目录, 仪式时光): its badge, its title over a
  * short line, and the go-to chevron of the settings rows. */
-export function SceneCard({ id, title, disabled, onClick, children, }: {
+export function SceneCard({ id, title, disabled, onClick, children, soundCue, }: {
     id: string;
     title: string;
     disabled?: boolean;
     onClick(): void;
     children: ReactNode;
+    soundCue?: 'navigate';
 }) {
-    return (<button className="scene-card" data-scene={id} disabled={disabled} onClick={onClick}>
+    return (<button data-audio-cue={soundCue} className="scene-card" data-scene={id} disabled={disabled} onClick={onClick}>
       <SceneBadge id={id}/>
       <strong lang={builtInScenes.some(entry => entry.id === id) ? undefined : "und"}>{title}</strong>
       {children}

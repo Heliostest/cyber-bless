@@ -25,7 +25,7 @@ export function WishDetail({ id }: {
     const wish = state.wishes.find((w) => w.id === id);
     const [showAll, setShowAll] = useState(false);
     if (!wish)
-        return (<Empty title={tr("\u6682\u65F6\u6CA1\u627E\u5230\u8FD9\u4E2A\u5FC3\u613F")} body={tr("\u56DE\u5230\u5FC3\u613F\u9875\u770B\u770B\u5427\u3002")} action={tr("\u6211\u7684\u5FC3\u613F")} onClick={() => go({ page: "wishes" }, { sound: 'navigate' })}/>);
+        return (<Empty soundCue="navigate" title={tr("\u6682\u65F6\u6CA1\u627E\u5230\u8FD9\u4E2A\u5FC3\u613F")} body={tr("\u56DE\u5230\u5FC3\u613F\u9875\u770B\u770B\u5427\u3002")} action={tr("\u6211\u7684\u5FC3\u613F")} onClick={() => go({ page: "wishes" }, { sound: 'navigate' })}/>);
     const latest = [...wish.notes].reverse();
     const method = wish.status === "fulfilled" ? wish.returnMethod ?? "kindness" : "kindness";
     const source = wish.sourceSceneId
@@ -63,7 +63,7 @@ export function WishDetail({ id }: {
       <section className="form-card effort-card">
         <div className="field-heading">
           <h2>{wish.status === "fulfilled" ? message('app.wish.effortPast') : tr("\u6211\u4E5F\u5728\u4E3A\u5B83\u52AA\u529B")}</h2>
-          {!wish.archived && wish.status !== "fulfilled" && (<button className="small-button" onClick={() => go({ page: "note", id }, { sound: 'navigate' })}>
+          {!wish.archived && wish.status !== "fulfilled" && (<button data-audio-cue="navigate" className="small-button" onClick={() => go({ page: "note", id }, { sound: 'navigate' })}>
               <Icon name="edit"/>{tr("\u8BB0\u4E00\u7B14")}</button>)}
         </div>
         {latest.length ? ((showAll ? latest : latest.slice(0, 1)).map((n) => (<article className="note-preview" key={n.id}>
@@ -75,7 +75,7 @@ export function WishDetail({ id }: {
                 </time>
               </div>
             </article>))) : (<p className="quiet empty-note">{wish.status === "fulfilled" ? message('app.wish.noPastNotes') : tr("\u8FD8\u6CA1\u6709\u8BB0\u5F55\uFF0C\u968F\u65F6\u53EF\u4EE5\u8BB0\u4E0B\u4E00\u5C0F\u6B65\u3002")}</p>)}
-        {latest.length > 1 && (<button className="text-button" onClick={() => {
+        {latest.length > 1 && (<button data-audio-cue={showAll ? "close" : "open"} className="text-button" onClick={() => {
             setShowAll(!showAll);
             uiSound?.(showAll ? 'close' : 'open');
         }}>
@@ -88,16 +88,16 @@ export function WishDetail({ id }: {
           {message('app.wish.returnSummary', { status: wish.status, method })}
         </span>
       </div>
-      {!wish.archived && wish.status === "active" && (<button className="button primary full" onClick={() => {
+      {!wish.archived && wish.status === "active" && (<button data-audio-cue="saved" className="button primary full" onClick={() => {
                 if (dispatch({ type: "wish.realize", id, at: now() }))
                     go({ page: "fulfill", id });
             }}>{tr("\u6211\u7684\u5FC3\u613F\u5B9E\u73B0\u4E86")}</button>)}
-      {!wish.archived && wish.status === "realized" && (<button className="button primary full" onClick={() => go({ page: "fulfill", id }, { sound: 'navigate' })}>{tr("\u6765\u8FD8\u4E2A\u613F")}</button>)}
+      {!wish.archived && wish.status === "realized" && (<button data-audio-cue="navigate" className="button primary full" onClick={() => go({ page: "fulfill", id }, { sound: 'navigate' })}>{tr("\u6765\u8FD8\u4E2A\u613F")}</button>)}
       {wish.status === "fulfilled" ? (<section className="wish-keepsake" aria-labelledby="wish-keepsake-title">
           <Art kind="badge" sceneId={wish.sourceSceneId}/>
           <h2 id="wish-keepsake-title">{tr("\u5982\u613F\u7EAA\u5FF5\u7AE0")}</h2>
           {wish.fulfilledAt && <time dateTime={wish.fulfilledAt}>{formatDate(wish.fulfilledAt)}</time>}
-        </section>) : (<button className="text-button archive-button" onClick={() => dispatch({ type: "wish.archive", id, archived: !wish.archived })}>
+        </section>) : (<button data-audio-cue={wish.archived ? "toggleOn" : "toggleOff"} className="text-button archive-button" onClick={() => dispatch({ type: "wish.archive", id, archived: !wish.archived })}>
           {wish.archived ? tr("\u91CD\u65B0\u62FE\u8D77\u8FD9\u4E2A\u5FC3\u613F") : tr("\u8BA9\u8FD9\u4E2A\u5FC3\u613F\u5148\u4F11\u606F\u3002")}
         </button>)}
     </div>);
@@ -130,7 +130,7 @@ export function WishNote({ id }: {
         </div>
         <textarea ref={noteField} id="wish-note" required maxLength={8192} rows={5} value={text} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={e => { composing.current = false; setText(sliceGraphemes(e.currentTarget.value, 0, 500)); }} onChange={(e) => setText(composing.current ? e.target.value : sliceGraphemes(e.target.value, 0, 500))} onKeyDown={e => { if (composing.current || e.nativeEvent.isComposing) e.stopPropagation(); }} placeholder={tr("\u4ECA\u5929\u8BA4\u771F\u51C6\u5907\u4E86\u81EA\u6211\u4ECB\u7ECD\u2026")}/>
       </section>
-      <button type="submit" className="button primary full" disabled={!text.trim() || graphemeLength(text) > 500}>{tr("\u8BB0\u4E0B\u8FD9\u4E00\u5C0F\u6B65")}</button>
+      <button data-audio-cue="saved" type="submit" className="button primary full" disabled={!text.trim() || graphemeLength(text) > 500}>{tr("\u8BB0\u4E0B\u8FD9\u4E00\u5C0F\u6B65")}</button>
     </form>);
 }
 export function FulfillWish({ id }: {
@@ -143,7 +143,7 @@ export function FulfillWish({ id }: {
     const setText = (text: string) => setFulfillmentDraft(id, { method: "kindness", text });
     const noteField = useAutoGrow(text);
     if (!wish || wish.archived || wish.status !== "realized")
-        return (<Empty title={wish?.status === "fulfilled"
+        return (<Empty soundCue="navigate" title={wish?.status === "fulfilled"
                 ? tr("\u8FD9\u4EFD\u7F8E\u597D\uFF0C\u5DF2\u7ECF\u8BB0\u4F4F\u4E86\u3002") : tr("\u5148\u786E\u8BA4\u5FC3\u613F\u5B9E\u73B0\uFF0C\u518D\u6765\u8FD8\u613F\u3002")} body={tr("\u613F\u6BCF\u4E00\u4EFD\u8BA4\u771F\uFF0C\u90FD\u6709\u56DE\u5E94\u3002")} action={tr("\u56DE\u5230\u5FC3\u613F")} onClick={() => go({ page: "wish", id }, { sound: 'navigate' })}/>);
     function submit(e: FormEvent) {
         e.preventDefault();
@@ -184,7 +184,7 @@ export function FulfillWish({ id }: {
             </div>
           </div>
         </section>
-        <button className="button primary full" type="submit" disabled={!text.trim() || graphemeLength(text) > 60}>{tr("\u5B8C\u6210\u8FD8\u613F")}</button>
+        <button data-audio-cue="saved" className="button primary full" type="submit" disabled={!text.trim() || graphemeLength(text) > 60}>{tr("\u5B8C\u6210\u8FD8\u613F")}</button>
       </form>
       <p className="leaf-footer">
         <Icon name="leaf"/>{tr("\u628A\u597D\u4E8B\u8BB0\u4E0B\u6765\u3002")}<Icon name="leaf"/>

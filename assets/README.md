@@ -1,6 +1,6 @@
 # 本地视觉与音频素材
 
-`ui-sounds/` 保存 Three.js 场景内部交互以外的界面短音：8 个派生 WAV 共 52,580 字节，取自 Kenney Interface Sounds 1.0（CC0）。原始许可、输入／输出 hash、处理步骤和重建脚本见 [音频素材说明](ui-sounds/README.md)。声音是通用产品反馈，不表示传统音乐或仪式录音；现有保存、收下和完成合成音继续保留。WAV 与许可随 Web 和 Expo 两个 public 资源目录离线打包。
+`ui-sounds/soft-garden-v1/` 保存用户试听确认的十段原创界面与结果音效，共 382,520 字节。全部由本地确定性配方生成，覆盖按钮操作以及保存、收集和完成；生成器、试听来源哈希与重建说明见 [音频素材说明](ui-sounds/README.md)。WAV 和来源清单随 Web 与 Expo 离线打包。旧界面音效素材已清除；仍在使用的场景材质音继续由代码合成。声音属于产品反馈，不表示传统音乐或仪式录音。
 
 五个待实现 Three.js 场景的实物／结构参考图另存于 [`design/scene-references/`](../design/scene-references/README.md)，包含 10 张图和逐图来源、许可、下载地址、校验值；仅用于设计研究，不打入 App 资源包。文化背景见[五场景考据](../specs/2026-10-01-five-scene-research.md)。
 

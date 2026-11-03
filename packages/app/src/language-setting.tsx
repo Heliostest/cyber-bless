@@ -62,7 +62,7 @@ export function LanguageSetting() {
   return <>
     <div className="settings-row language-setting">
       <span id={headingId}>{message('app.language.label')}<small>{message('app.language.description')}</small></span>
-      <button ref={trigger} type="button" className="language-setting-trigger" aria-labelledby={`${headingId} ${id}-value`}
+      <button data-audio-cue={open ? undefined : "open"} ref={trigger} type="button" className="language-setting-trigger" aria-labelledby={`${headingId} ${id}-value`}
         aria-haspopup="dialog" aria-expanded={open} onClick={() => {
           if (openNow.current) return;
           openNow.current = true; uiSound?.('open'); setOpen(true);
@@ -79,10 +79,10 @@ export function LanguageSetting() {
       }}>
       <div className="language-dialog-heading">
         <div><h2 id={`${id}-title`}>{message('app.language.label')}</h2><p id={descriptionId}>{message('app.language.description')}</p></div>
-        <button type="button" className="language-dialog-close" aria-label={tr('关闭')} onClick={() => close()}><Icon name="close"/></button>
+        <button data-audio-cue="close" type="button" className="language-dialog-close" aria-label={tr('关闭')} onClick={() => close()}><Icon name="close"/></button>
       </div>
       <div className="language-dialog-options" role="radiogroup" aria-labelledby={`${id}-title`}>
-        {(['system', ...SUPPORTED_LOCALES] as const).map(value => <label key={value} className="language-dialog-option">
+        {(['system', ...SUPPORTED_LOCALES] as const).map(value => <label data-audio-cue={value === preference ? "close" : "select"} key={value} className="language-dialog-option">
           <input type="radio" name={`${id}-locale`} value={value} checked={value === preference}
             onChange={() => choose(value)} onClick={() => { if (value === preference) close(); }}/>
           <span lang={value === 'system' ? undefined : value}>{name(value)}</span>

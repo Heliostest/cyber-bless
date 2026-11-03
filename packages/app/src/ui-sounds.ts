@@ -1,8 +1,9 @@
 import { assetUrl } from './assets';
 import { UI_SOUND_FILES } from './ui-sound-assets';
 
-export type UiSound = 'navigate' | 'back' | 'select' | 'open' | 'close' | 'toggleOn' | 'toggleOff' | 'notice' | 'saved';
-type Cue = Exclude<UiSound, 'saved'>;
+export type UiSound = keyof typeof UI_SOUND_FILES;
+type Cue = UiSound;
+export type UiPlaybackResult = 'played' | 'disabled' | 'unready' | 'busy' | 'unavailable';
 type Voice = { source: AudioBufferSourceNode; context: AudioContext; endsAt: number };
 
 /** Optional UI feedback. The caller owns context creation, unlocking and closing.
@@ -69,7 +70,7 @@ export function createUiSoundPlayer(options: { context: () => AudioContext | nul
         // later gesture after stop or after a caller replaces its context.
         void next.decodeAudioData(data.slice(0)).then(buffer => {
           if (disposed || generation !== currentGeneration || context !== next || !options.enabled()) return;
-          if (Number.isFinite(buffer.duration) && buffer.duration > 0 && buffer.duration <= .5 && buffer.numberOfChannels === 1)
+          if (Number.isFinite(buffer.duration) && buffer.duration > 0 && buffer.duration <= 1.2 && buffer.numberOfChannels === 1)
             buffers.set(sound, buffer);
         }).catch(() => { /* Unsupported or corrupt audio stays quiet. */ }).finally(() => {
           if (generation === currentGeneration) decoding.delete(sound);
@@ -83,18 +84,19 @@ export function createUiSoundPlayer(options: { context: () => AudioContext | nul
     try { prepareContext(); } catch { /* Optional audio must not block a gesture. */ }
   }
 
-  function play(sound: Cue): void {
+  function play(sound: Cue): UiPlaybackResult {
     let source: AudioBufferSourceNode | undefined;
     try {
-      if (disposed || !options.enabled() || !Object.hasOwn(UI_SOUND_FILES, sound)) return;
+      if (disposed || !options.enabled()) return 'disabled';
+      if (!Object.hasOwn(UI_SOUND_FILES, sound)) return 'unavailable';
       const ctx = prepareContext();
-      if (!ctx || ctx.state !== 'running' || !Number.isFinite(ctx.currentTime) || ctx.currentTime < 0) return;
+      if (!ctx || ctx.state !== 'running' || !Number.isFinite(ctx.currentTime) || ctx.currentTime < 0) return 'unavailable';
       const buffer = buffers.get(sound);
-      if (!buffer) return;
+      if (!buffer) return 'unready';
       if (voice && (voice.context.state === 'closed' || voice.context.currentTime >= voice.endsAt)) release(voice, true);
       // One voice prevents volume buildup; neither overlap nor throttled cues
       // are queued. Notice has a longer interval to keep repeated failures mild.
-      if (voice || ctx.currentTime - (lastPlayed.get(sound) ?? -Infinity) < (sound === 'notice' ? .8 : .06)) return;
+      if (voice || ctx.currentTime - (lastPlayed.get(sound) ?? -Infinity) < (sound === 'notice' ? .8 : .06)) return 'busy';
       source = ctx.createBufferSource();
       source.buffer = buffer;
       const active = { source, context: ctx, endsAt: ctx.currentTime + buffer.duration };
@@ -103,9 +105,11 @@ export function createUiSoundPlayer(options: { context: () => AudioContext | nul
       source.onended = () => release(active);
       source.start(ctx.currentTime);
       lastPlayed.set(sound, ctx.currentTime);
+      return 'played';
     } catch {
       if (voice && voice.source === source) release(voice, true);
       else if (source) { try { source.disconnect(); } catch { /* Best effort. */ } }
+      return 'unavailable';
     }
   }
 

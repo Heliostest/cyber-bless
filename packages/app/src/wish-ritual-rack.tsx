@@ -107,8 +107,8 @@ export function WishRitualRack() {
         <h2>{tr("祈愿仪式")}</h2>
         <span className="wish-rack-count">{message('app.vessels.unused.count', { n: unused })}</span>
         {items.length > 3 && <span className="wish-rack-navigation">
-          <button type="button" aria-label={tr("向前浏览小物")} aria-controls={rackId} disabled={edges.start} onClick={() => browse(-1)}><Icon name="back"/></button>
-          <button type="button" aria-label={tr("向后浏览小物")} aria-controls={rackId} disabled={edges.end} onClick={() => browse(1)}><Icon name="arrow"/></button>
+          <button data-audio-cue="navigate" type="button" aria-label={tr("向前浏览小物")} aria-controls={rackId} disabled={edges.start} onClick={() => browse(-1)}><Icon name="back"/></button>
+          <button data-audio-cue="navigate" type="button" aria-label={tr("向后浏览小物")} aria-controls={rackId} disabled={edges.end} onClick={() => browse(1)}><Icon name="arrow"/></button>
         </span>}
       </header>
       <p className="wish-rack-hint" id={hintId} data-visible={hintVisible} aria-hidden={!hintVisible}
@@ -154,7 +154,7 @@ export function WishRitualRack() {
             const canOpen = supportsScene(entry.engine) &&
                 (status === "pending" || (status === "unused" && sceneIntention(entry.id)?.optionalWish));
             return <article className="wish-rack-slot" key={item.id} data-rack-status={status}>
-              <button type="button" className="wish-rack-item" data-scene={entry.id} data-collectible-id={item.id} data-rack-status={status}
+              <button data-audio-cue={wishObjectFeedback(entry.id).sound} type="button" className="wish-rack-item" data-scene={entry.id} data-collectible-id={item.id} data-rack-status={status}
                 aria-label={localizedTitle(entry)} aria-describedby={hintVisible ? hintId : undefined} onClick={event => {
                     prepareFeedback();
                     const response = wishObjectFeedback(entry.id);
@@ -170,7 +170,7 @@ export function WishRitualRack() {
                     ref={preview => { if (preview) previews.current.set(item.id, preview); else previews.current.delete(item.id); }}/>
                 </span>
               </button>
-              <button type="button" className="wish-rack-open" aria-label={tr("{p0}，{p1}，{p2}收下，{p3}", { p0: localizedTitle(entry), p1: label, p2: formatDate(item.at), p3: canOpen ? tr("进入仪式") : tr("查看收藏") })}
+              <button data-audio-cue="navigate" type="button" className="wish-rack-open" aria-label={tr("{p0}，{p1}，{p2}收下，{p3}", { p0: localizedTitle(entry), p1: label, p2: formatDate(item.at), p3: canOpen ? tr("进入仪式") : tr("查看收藏") })}
                 onClick={() => canOpen ? openScene(entry, { vessel: item.id, sound: 'navigate' }) : go({ page: "collection", id: item.id }, { sound: 'navigate' })}>
                 <strong>{localizedTitle(entry)}</strong>
                 <span className="wish-rack-status">{label}<Icon name="arrow"/></span>

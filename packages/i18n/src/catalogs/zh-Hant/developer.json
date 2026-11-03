@@ -68,5 +68,20 @@
   "developer.SceneReview.13dfaa70": "最後一個",
   "developer.SceneReview.cc92cb4b": "重新開始",
   "developer.SceneReview.2ecc082f": "每次切換從頭體驗 · 獨立測試紀錄",
-  "developer.disclaimer.3fb5c5b7": "本應用程式以互動場景呈現器物、文化與日常心意，不取代真實宗教儀式，也不承諾宗教效力。"
+  "developer.disclaimer.3fb5c5b7": "本應用程式以互動場景呈現器物、文化與日常心意，不取代真實宗教儀式，也不承諾宗教效力。",
+  "developer.audio.console": "偵錯台",
+  "developer.audio.filter": "介面音效覆蓋",
+  "developer.audio.help": "點右上角喇叭試聽，不執行原操作。",
+  "developer.audio.scope": "標註介面操作與心願架小物；不包含畫布內動作。",
+  "developer.audio.count": "已標註 {count} 個操作",
+  "developer.audio.preview": "試聽 {name} · {cue}",
+  "developer.audio.muted": "音效已關閉，請先在「我的」中開啟。",
+  "developer.audio.unready": "音效準備中，請再點一次。",
+  "developer.audio.unavailable": "目前無法播放此音效。",
+  "developer.audio.busy": "請稍候再試聽。",
+  "developer.audio.playing": "試聽：{cue}",
+  "developer.audio.requested": "已請求試聽：{cue}",
+  "developer.audio.clip": "音效片段",
+  "developer.audio.synth": "程式合成音效",
+  "developer.audio.synthSource": "合成器：soft-audio.ts"
 }

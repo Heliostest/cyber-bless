@@ -43,7 +43,7 @@ export function Opening() {
         {entries.map(entry => <div key={entry.id}><SceneArt id={entry.id}/><strong>{localizedTitle(entry)}</strong><small>{tr("\u5DF2\u6536\u8FDB\u5C0F\u5929\u5730")}</small></div>)}
       </div>
       <p>{tr("\u9996\u9875\u53EF\u4EE5\u518D\u8D70\u8FD9\u4E09\u573A\uFF0C\u4E5F\u6709\u4E00\u573A\u65B0\u7684\u4ECA\u65E5\u4EEA\u5F0F\u3002")}</p>
-      <button className="button primary full opening-finish" onClick={() => {
+      <button data-audio-cue="complete" className="button primary full opening-finish" onClick={() => {
                 if (dispatch({ type: 'opening.finish', day: localDay(), at: now() }))
                     go({ page: 'today' });
             }}>{tr("\u8FDB\u5165\u4ECA\u65E5")}<Icon name="arrow"/></button>
@@ -51,7 +51,7 @@ export function Opening() {
       <p className="opening-step">{message('app.opening.step', { n: opening.completed + 1, lesson: tr(lessons[opening.completed].title) })}</p>
       <SceneArt id={current.id}/>
       <h2>{localizedTitle(current)}</h2>
-      <button className="button primary full opening-start" onClick={() => openScene(current, { opening: true, sound: 'navigate' })}>
+      <button data-audio-cue="navigate" className="button primary full opening-start" onClick={() => openScene(current, { opening: true, sound: 'navigate' })}>
         {progress ? tr("\u7EE7\u7EED\u8FD9\u4E00\u573A") : tr('开始尝试')}<Icon name="arrow"/>
       </button>
     </section>}
@@ -66,7 +66,7 @@ export function OpeningDone({ entry, keptWish, favorite, prayer }: {
     const { dispatch, go } = useApp();
     return <div className="opening-complete">
     {keptWish && <p className="quiet">{tr("\u5FC3\u613F\u4E5F\u5DF2\u7559\u5728\u5FC3\u613F\u9875\u3002")}</p>}
-    <div className="scene-completion-actions">{favorite}<button className="button primary" data-opening-collect onClick={() => {
+    <div className="scene-completion-actions">{favorite}<button data-audio-cue="collect" className="button primary" data-opening-collect onClick={() => {
             if (dispatch({ type: 'opening.collect', sceneId: entry.id, at: now() }))
                 go({ page: 'today' });
         }}>{tr("\u6536\u4E0B")}</button>{prayer}</div>

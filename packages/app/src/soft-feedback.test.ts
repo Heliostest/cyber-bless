@@ -6,6 +6,10 @@ import { BlessingApp } from './App';
 import type { AppContext } from './context';
 import { builtInScenes } from './scene-library';
 import { renderUI, settle } from './dom-test-utils';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import { UI_SOUND_FILES } from './ui-sound-assets';
 
 const probe = vi.hoisted(() => ({ app: null as AppContext | null }));
 // Keep the real App/store and replace only the home view with a context probe.
@@ -16,7 +20,9 @@ vi.mock('./home', async importOriginal => {
 });
 
 const mounted: ReturnType<typeof renderUI>[] = [];
-const started: { stop: ReturnType<typeof vi.fn> }[] = [];
+const started: { stop: ReturnType<typeof vi.fn>; buffer?: AudioBuffer | null }[] = [];
+const localWavs = new Map([...new Set(Object.values(UI_SOUND_FILES))].map(file => [file,
+  new Uint8Array(readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../assets', file))).buffer]));
 let audioContexts = 0;
 class AudioBoundary {
   currentTime = 0;
@@ -27,6 +33,13 @@ class AudioBoundary {
   resume = vi.fn(async () => {});
   suspend = vi.fn(async () => {});
   close = vi.fn(async () => {});
+  async decodeAudioData(bytes: ArrayBuffer) {
+    // Node has no decoder. Inspect the actual packaged PCM header; browser
+    // verification separately decodes these same bytes with Web Audio.
+    const wav = new DataView(bytes);
+    return { duration: wav.getUint32(40, true) / wav.getUint32(28, true),
+      numberOfChannels: wav.getUint16(22, true) } as AudioBuffer;
+  }
   createGain() {
     return { gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {}, linearRampToValueAtTime() {}, cancelScheduledValues() {} }, connect: (node: unknown) => node, disconnect() {} };
   }
@@ -36,7 +49,7 @@ class AudioBoundary {
   }
   createBuffer(_channels: number, frames: number) { return { getChannelData: () => new Float32Array(frames) }; }
   createBufferSource() {
-    const source = { buffer: null, playbackRate: { value: 1 }, connect: (node: unknown) => node, disconnect() {}, start() { started.push(source); }, stop: vi.fn(), onended: null as (() => void) | null };
+    const source = { buffer: null as AudioBuffer | null, playbackRate: { value: 1 }, connect: (node: unknown) => node, disconnect() {}, start() { started.push(source); }, stop: vi.fn(), onended: null as (() => void) | null };
     return source;
   }
 }
@@ -44,6 +57,10 @@ class AudioBoundary {
 beforeEach(() => {
   started.length = 0; audioContexts = 0;
   vi.stubGlobal('AudioContext', AudioBoundary);
+  vi.stubGlobal('fetch', async (url: string) => {
+    const bytes = [...localWavs].find(([file]) => String(url).endsWith(file))?.[1];
+    return { ok: !!bytes, arrayBuffer: async () => bytes?.slice(0) };
+  });
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
   vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
 });
@@ -60,6 +77,9 @@ async function open(state: State = createState(), write: (raw: string) => Promis
   const app = createElement(BlessingApp, { host });
   const ui = renderUI(strict ? createElement(StrictMode, null, app) : app);
   mounted.push(ui); await settle();
+  // Prepare in the same shell capture phase as a real pointer gesture.
+  act(() => ui.host.querySelector('.app-shell')!.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true })));
+  await settle();
   return { ...ui, hostBridge: host };
 }
 const dispatch = (action: Parameters<AppContext['dispatch']>[0]) => act(() => { probe.app!.dispatch(action); });
@@ -82,7 +102,8 @@ describe('App gentle sound feedback', () => {
     await open({ ...createState(), sceneRecords: [{ ...entry, progress: 2, favorite: false, lastOpened: AT }] });
     expect(started).toHaveLength(0);
     dispatch({ type: 'scene.progress', id: 'crane', progress: 3 });
-    expect(started.length).toBeGreaterThan(0);
+    expect(started).toHaveLength(1);
+    expect(started[0].buffer?.duration).toBe(.93);
     const first = started.length;
     dispatch({ type: 'scene.progress', id: 'crane', progress: 3 });
     expect(started).toHaveLength(first);
@@ -95,7 +116,8 @@ describe('App gentle sound feedback', () => {
     expect(started).toHaveLength(0);
     await act(async () => { finish!(); await Promise.resolve(); });
     await settle();
-    expect(started.length).toBeGreaterThan(0);
+    expect(started).toHaveLength(1);
+    expect(started[0].buffer?.duration).toBe(.52);
     const first = started.length;
     dispatch(wish); await settle();
     expect(started).toHaveLength(first);
@@ -115,7 +137,8 @@ describe('App gentle sound feedback', () => {
     const ui = await open(state);
     dispatch({ type: 'ritual.finish', id: 'legacy', at: AT });
     expect(ui.hostBridge.haptic).toHaveBeenCalledOnce();
-    expect(started.length).toBeGreaterThan(0);
+    expect(started).toHaveLength(1);
+    expect(started[0].buffer?.duration).toBe(.93);
     await settle();
   });
 
@@ -163,19 +186,22 @@ describe('App gentle sound feedback', () => {
     act(() => probe.app!.feedback()); dispatch(wish); await settle();
     expect(started).toHaveLength(first);
     dispatch({ type: 'settings', key: 'sound', value: true }); await settle();
-    expect(started).toHaveLength(first);
+    expect(started).toHaveLength(first + 1);
+    expect(started.at(-1)?.buffer?.duration).toBe(.26); // Only the explicit toggleOn, no saved replay.
   });
 
   it('can stop the woodfish tail without cutting off a completion melody', async () => {
     await open({ ...createState(), sceneRecords: [{ ...entry, progress: 2, favorite: false, lastOpened: AT }] });
     dispatch({ type: 'scene.progress', id: 'crane', progress: 3 });
+    const completion = started[0];
+    expect(completion.buffer?.duration).toBe(.93);
     act(() => probe.app!.feedback());
     const priorStops = started.map(source => source.stop.mock.calls.length);
     act(() => (probe.app as AppContext & { stopInteractionSound?(): void }).stopInteractionSound?.());
-    const material = started.filter(source => 'buffer' in source);
+    const material = started.filter(source => source !== completion);
     expect(material.length).toBeGreaterThan(0);
     expect(material.every(source => source.stop.mock.calls.length > priorStops[started.indexOf(source)])).toBe(true);
-    expect(started.filter(source => !('buffer' in source)).every(source => source.stop.mock.calls.length === priorStops[started.indexOf(source)])).toBe(true);
+    expect(completion.stop.mock.calls.length).toBe(priorStops[0]);
     await settle();
   });
 

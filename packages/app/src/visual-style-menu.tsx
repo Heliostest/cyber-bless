@@ -54,7 +54,7 @@ export function VisualStyleControl({ sceneId, onOpenChange }: {
         setTarget(null);
     }, [scene, target]);
     return <span className="visual-style-anchor" ref={anchor}>{scene && <>
-    <button type="button" aria-label={tr("\u89C6\u89C9\u98CE\u683C")} title={tr("\u89C6\u89C9\u98CE\u683C")} aria-haspopup="dialog" aria-expanded={!!target} onClick={() => {
+    <button data-audio-cue={target ? undefined : 'open'} type="button" aria-label={tr("\u89C6\u89C9\u98CE\u683C")} title={tr("\u89C6\u89C9\u98CE\u683C")} aria-haspopup="dialog" aria-expanded={!!target} onClick={() => {
                 if (openNow.current) return;
                 openNow.current = true;
                 uiSound?.('open');
@@ -151,10 +151,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
         if (nearest)
             previewStyle(nearest.dataset.style as VisualStyleId);
     }
-    function save() {
-        let submitted = false;
-        if (!tuning && !previewing)
-            previewCenter();
+    function pendingSave(): { value: VisualStylePreference | null } | undefined {
         if (changed.current || appliedScope === "all") {
             // Resetting locally must bypass an inherited global preference.
             const value = resetting.current
@@ -168,13 +165,20 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
             const clearsOverrides = appliedScope === "all" && Object.keys(state.visualStyles ?? {}).length > 0;
             // App dispatch returns false for a legitimate no-op as well as a failure.
             if (!unchanged || clearsOverrides) {
-                const saved = appliedScope === "all"
-                    ? dispatch({ type: "scene.visual.all", ...(value ?? { style: null }) })
-                    : dispatch({ type: "scene.visual", id: scene.id, ...(value ?? { style: null }) });
-                if (!saved)
-                    return;
-                submitted = true;
+                return { value };
             }
+        }
+    }
+    function save() {
+        let submitted = false;
+        if (!tuning && !previewing) previewCenter();
+        const pending = pendingSave();
+        if (pending) {
+            const saved = appliedScope === 'all'
+                ? dispatch({ type: 'scene.visual.all', ...(pending.value ?? { style: null }) })
+                : dispatch({ type: 'scene.visual', id: scene.id, ...(pending.value ?? { style: null }) });
+            if (!saved) return;
+            submitted = true;
         }
         onClose(!submitted);
     }
@@ -266,7 +270,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
     <section className="visual-style-menu" role="dialog" aria-modal="true" aria-label={tr("\u89C6\u89C9\u98CE\u683C")} ref={panel}>
       <div className="visual-style-editor">
       <header className="visual-style-heading" hidden={previewing}><div><h2><span className="visual-style-emblem" aria-hidden="true"><Icon name="visual"/></span>{tr("\u89C6\u89C9\u98CE\u683C")}</h2><p>{tr("\u4E3A\u300C")}{tr(scene.label)}{tr("\u300D\u9009\u4E00\u79CD\u559C\u6B22\u7684\u753B\u9762")}</p></div>
-        <button type="button" className="round-button" data-visual-style-close="" aria-label={tr("\u5173\u95ED\u89C6\u89C9\u98CE\u683C")} onClick={() => onClose()}><Icon name="close"/></button></header>
+        <button data-audio-cue="close" type="button" className="round-button" data-visual-style-close="" aria-label={tr("\u5173\u95ED\u89C6\u89C9\u98CE\u683C")} onClick={() => onClose()}><Icon name="close"/></button></header>
       <div className="visual-style-body" hidden={previewing}>
         <div className="visual-style-grid visual-style-filmstrip" ref={filmstrip} role="group" aria-label={tr("\u9009\u62E9\u89C6\u89C9\u98CE\u683C")} hidden={tuning && controls.length > 0} onScroll={previewCenter}
           onPointerDown={event => {
@@ -319,7 +323,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
             }}>
           {order.map(id => {
             const option = visualStyleOptions.find(item => item.id === id)!;
-            return <button key={id} data-style={id} type="button" aria-pressed={id === selected} onFocus={event => {
+            return <button data-audio-cue={id === selected ? undefined : "select"} key={id} data-style={id} type="button" aria-pressed={id === selected} onFocus={event => {
                     // Pointer focus must not move a card between press and release.
                     if (event.currentTarget.matches(":focus-visible")) {
                         previewStyle(id);
@@ -335,15 +339,15 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
         })}
         </div>
         <div className="visual-style-scope" role="group" aria-label={tr("\u5E94\u7528\u89C6\u89C9\u98CE\u683C")}>
-          <button type="button" className="visual-style-scope-current" aria-pressed={appliedScope === "current"} onClick={() => {
+          <button data-audio-cue={appliedScope === "current" ? undefined : "select"} type="button" className="visual-style-scope-current" aria-pressed={appliedScope === "current"} onClick={() => {
               if (appliedScope !== 'current') { uiSound?.('select'); setAppliedScope('current'); }
           }}>{tr("\u4EC5\u5F53\u524D\u4EEA\u5F0F")}</button>
-          <button type="button" className="visual-style-scope-all" aria-pressed={appliedScope === "all"} onClick={() => {
+          <button data-audio-cue={appliedScope === "all" ? undefined : "select"} type="button" className="visual-style-scope-all" aria-pressed={appliedScope === "all"} onClick={() => {
               if (appliedScope !== 'all') { uiSound?.('select'); setAppliedScope('all'); }
           }}>{tr("\u5E94\u7528\u5230\u5168\u90E8\u4EEA\u5F0F")}</button>
         </div>
         {controls.length > 0 && <details className="visual-style-tuning" key={selected} open={tuning} onToggle={event => setTuning(event.currentTarget.open)}>
-          <summary onClick={event => {
+          <summary data-audio-cue={tuning ? "close" : "open"} onClick={event => {
               event.preventDefault(); uiSound?.(tuning ? 'close' : 'open'); setTuning(!tuning);
           }}>{tuning ? tr("\u6536\u8D77\u5FAE\u8C03\uFF0C\u8FD4\u56DE\u98CE\u683C") : tr("\u5FAE\u8C03\u6548\u679C")}</summary>
           {controls.map(control => {
@@ -353,7 +357,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
               <input id={`visual-${control.key}`} type="range" min={control.min} max={control.max} step={control.step} value={value} aria-valuetext={formatted} onChange={event => apply({ style: selected, parameters: normalizeStyleParameters({ [control.key]: Number(event.target.value) }, current.current?.parameters) })}/>
             </div>;
             })}
-          <button type="button" className="small-button visual-style-reset-parameters" onClick={() => {
+          <button data-audio-cue={controls.some(control => parameters[control.key] !== DEFAULT_STYLE_PARAMETERS[control.key]) ? "select" : undefined} type="button" className="small-button visual-style-reset-parameters" onClick={() => {
                 if (!controls.some(control => parameters[control.key] !== DEFAULT_STYLE_PARAMETERS[control.key])) return;
                 const next = { ...parameters };
                 for (const control of controls)
@@ -364,7 +368,7 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
         </details>}
         <p className="visual-style-status" role="status" data-expanded={scene.actual !== selected || undefined}>{scene.actual !== selected ? tr("\u8FD9\u4E2A\u6548\u679C\u6682\u65F6\u65E0\u6CD5\u663E\u793A\uFF0C\u5DF2\u4F7F\u7528{p0}\u3002", { p0: actualLabel }) : tr("\u5F53\u524D\u98CE\u683C\uFF1A{p0}", { p0: tr(visualStyleOptions.find(option => option.id === selected)!.label) })}</p>
       </div>
-      <footer><button type="button" className="button outline" onClick={() => {
+      <footer><button data-audio-cue={choice !== null || (appliedScope === 'all' && !resetting.current && Object.keys(state.visualStyles ?? {}).length > 0) ? 'select' : undefined} type="button" className="button outline" onClick={() => {
                 const effective = current.current !== null || (appliedScope === 'all' && !resetting.current && Object.keys(state.visualStyles ?? {}).length > 0);
                 apply(null, true);
                 if (effective) uiSound?.('select');
@@ -372,10 +376,10 @@ function VisualStyleMenu({ scene, shell, trigger, onClose }: {
                 if (card)
                     centerCard(card);
             }} disabled={choice === null && !state.globalVisualStyle && !Object.keys(state.visualStyles ?? {}).length} hidden={previewing}>{tr("\u6062\u590D\u9ED8\u8BA4")}</button>
-        <button type="button" className="button secondary" aria-pressed={previewing} onClick={() => {
+        <button data-audio-cue={previewing ? "close" : "open"} type="button" className="button secondary" aria-pressed={previewing} onClick={() => {
             uiSound?.(previewing ? 'close' : 'open'); setPreviewing(!previewing);
         }}>{previewing ? tr("\u7EE7\u7EED\u8C03\u6574") : tr("\u770B\u753B\u9762")}</button>
-        <button type="button" className="button primary visual-style-done" onClick={save}>{tr("\u5B8C\u6210")}</button></footer>
+        <button data-audio-cue={pendingSave() ? 'saved' : 'close'} type="button" className="button primary visual-style-done" onClick={save}>{tr("\u5B8C\u6210")}</button></footer>
       </div>
     </section>
   </div>;

@@ -24,7 +24,7 @@ export function WishRitualPicker() {
     const vesselRows = (items: typeof vessels, pendingChoice = false) => (<div className="wish-practice-grid">
       {items.map(item => {
             const entry = entries.find(e => e.id === item.sceneId)!;
-            return <button key={item.id} type="button" className="wish-practice-card vessel-card" data-scene={entry.id} onClick={() => openScene(entry, { vessel: item.id, sound: 'navigate' })}>
+            return <button data-audio-cue="navigate" key={item.id} type="button" className="wish-practice-card vessel-card" data-scene={entry.id} onClick={() => openScene(entry, { vessel: item.id, sound: 'navigate' })}>
           <SceneBadge id={entry.id}/>
           <strong>{localizedTitle(entry)}</strong>
           <small>{tr(pendingChoice ? VESSEL_COPY.pending : VESSEL_COPY.use)}</small>
@@ -33,7 +33,7 @@ export function WishRitualPicker() {
         })}
     </div>);
     const sceneRows = (items: typeof scenes, unlocked: boolean) => (<div className="wish-practice-grid">
-      {items.map(entry => <button key={entry.id} type="button" className="wish-practice-card wish-scene-choice" data-scene={entry.id}
+      {items.map(entry => <button data-audio-cue="navigate" key={entry.id} type="button" className="wish-practice-card wish-scene-choice" data-scene={entry.id}
         data-unlocked={unlocked} disabled={!unlocked} onClick={() => openScene(entry, { wishPicker: true, sound: 'navigate' })}>
         <SceneBadge id={entry.id}/>
         <strong>{localizedTitle(entry)}</strong>

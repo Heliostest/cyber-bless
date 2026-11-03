@@ -24,8 +24,8 @@ export function OptionalSceneWish({ active, onSubmit, onClose }: {
       <p id={`${inputId}-count`} className="quiet">{message('app.input.counter', { n: count, max: WISH_TITLE_MAX })}</p>
       <p className="scene-post-wish-note">{tr("\u70B9\u300C\u5199\u597D\u4E86\u300D\u624D\u4F1A\u5B58\u8FDB\u5FC3\u613F\u3002")}</p>
       <div className="scene-post-wish-actions">
-        <button type="submit" className="button primary" disabled={!active || !line.trim() || count > WISH_TITLE_MAX}>{tr(WISH_WRITE_COPY.submit)}</button>
-        <button type="button" className="text-button scene-wish-cancel" disabled={!active} onClick={onClose}>{tr("\u6682\u4E0D\u8BB0\u5F55")}</button>
+        <button data-audio-cue="saved" type="submit" className="button primary" disabled={!active || !line.trim() || count > WISH_TITLE_MAX}>{tr(WISH_WRITE_COPY.submit)}</button>
+        <button data-audio-cue="close" type="button" className="text-button scene-wish-cancel" disabled={!active} onClick={onClose}>{tr("\u6682\u4E0D\u8BB0\u5F55")}</button>
       </div>
     </form>
   </div>;

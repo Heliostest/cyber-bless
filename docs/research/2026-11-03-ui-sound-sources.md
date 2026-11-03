@@ -1,5 +1,7 @@
 # 通用 UI 音效素材来源核查
 
+> 历史研究记录：用户随后试听并选择了原创 [Soft Garden v1](../../assets/ui-sounds/soft-garden-v1/README.md)，并要求清除不用的旧声音。本文下方描述的是早期选型与当时访问状态；旧正式 WAV、构建脚本、许可副本和加工清单已删除，可在提交 `b36e4eaf` 的 Git 历史中查阅。下文 `artifacts/` 路径属于被 Git 忽略的历史研究缓存，不属于当前素材库，也不参与打包；当前 App 只使用 Soft Garden。
+
 核查日期：2026-11-03。范围：Three.js 场景内部交互以外的应用操作反馈。本文保存素材下载与授权的研究依据；最终接入采用的派生文件见 [操作盘点与实施](2026-11-03-ui-operations-audio-audit.md) 和 [素材 README](../../assets/ui-sounds/README.md)。
 
 ## 结论与试听边界

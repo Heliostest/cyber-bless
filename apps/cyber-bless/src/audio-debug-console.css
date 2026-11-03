@@ -1,0 +1,47 @@
+.audio-debug-console {
+  position: fixed; left: 18px; bottom: 20px; z-index: 2147483000;
+  width: 252px; max-width: calc(100vw - 32px); color: #e8f4ef; background: #183c34;
+  border: 1px solid #628c7c; border-radius: 15px; box-shadow: 0 8px 28px #13312833;
+  font: 13px/1.5 system-ui, sans-serif; text-align: left;
+}
+.audio-debug-console button { font: inherit; color: inherit; cursor: pointer; }
+.audio-debug-console > button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 11px 14px; border: 0; background: transparent; border-radius: 15px; }
+.audio-debug-console > button span:last-child { margin-left: auto; }
+.audio-debug-console:not(:has(section)) { width: auto; }
+.audio-debug-console section { padding: 0 14px 12px; }
+.audio-debug-console [data-audio-filter] { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px; border: 1px solid #638a7b; border-radius: 10px; background: #2c4d43; }
+.audio-debug-console [data-audio-filter][aria-pressed="true"] { color: #172f26; background: #b9e5cc; }
+.audio-debug-console [data-audio-filter] i { width: 25px; height: 14px; border: 1px solid currentColor; border-radius: 12px; position: relative; }
+.audio-debug-console [data-audio-filter] i::after { content: ''; width: 8px; height: 8px; background: currentColor; border-radius: 50%; position: absolute; top: 2px; left: 2px; }
+.audio-debug-console [aria-pressed="true"] i::after { left: 13px; }
+.audio-debug-console p { margin: 9px 0 0; font: inherit; }
+.audio-debug-console small { display: block; margin: 6px 0; font-size: 11px; color: #b1c7bc; }
+.audio-debug-console output { display: block; margin-top: 9px; color: #c9e8aa; font-variant-numeric: tabular-nums; }
+.audio-debug-console .audio-debug-muted { color: #ffe0a1; }
+.audio-debug-console .audio-debug-stop { margin-top: 8px; border: 0; padding: 3px 0; background: transparent; text-decoration: underline; }
+.audio-debug-console svg, .app-shell button.audio-debug-marker[data-audio-preview] svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.app-shell button.audio-debug-marker[data-audio-preview] svg { width: 16px; height: 16px; padding: 0; border-radius: 0; background: none; color: inherit; }
+[data-audio-marked] { outline: 1px dashed #399c86aa !important; outline-offset: 2px; }
+.app-shell button.audio-debug-marker[data-audio-preview] {
+  all: initial; box-sizing: border-box; position: fixed; left: 0; top: 0; z-index: 2147483001;
+  display: flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+  min-width: 28px; min-height: 28px; padding: 0; border: 2px solid #fffdf3; border-radius: 50%;
+  background: #1f7966; color: white; box-shadow: 0 2px 7px #12382b44; cursor: pointer;
+  pointer-events: auto; touch-action: manipulation; visibility: hidden;
+}
+.app-shell button.audio-debug-marker[data-audio-preview]:hover { background: #125543; }
+.app-shell button.audio-debug-marker[data-audio-preview]:focus-visible, .audio-debug-console button:focus-visible { outline: 3px solid #edc469; outline-offset: 3px; }
+.audio-debug-console > button output { margin: 0; padding: 0 6px; border-radius: 8px; background: #315c4e; }
+.audio-debug-tooltip {
+  box-sizing: border-box; position: fixed; left: 0; top: 0; z-index: 2147483002;
+  width: 270px; max-width: calc(100vw - 16px); padding: 11px 13px; border: 1px solid #638a7b;
+  border-radius: 12px; background: #163c33; color: #f0f8f1; box-shadow: 0 5px 22px #102d3540;
+  font: 12px/1.5 system-ui, sans-serif; text-align: left; overflow-wrap: anywhere;
+  pointer-events: auto; visibility: hidden;
+}
+.audio-debug-tooltip-operation { display: block; margin-bottom: 6px; color: #c2d9cb; }
+.audio-debug-tooltip-cue { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.audio-debug-tooltip-cue > span { color: #c2d9cb; font-size: 11px; }
+.audio-debug-tooltip-cue > strong { color: #d6edb2; font: 700 14px/1.5 ui-monospace, monospace; }
+.audio-debug-tooltip > code { display: block; margin-top: 5px; color: #f0f8f1; font: 11px/1.5 ui-monospace, monospace; }
+@media (max-width: 700px) { .audio-debug-console { left: 10px; bottom: 88px; } }

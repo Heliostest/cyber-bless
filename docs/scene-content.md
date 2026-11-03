@@ -104,7 +104,7 @@ Web 校验完整响应后，以一个 IndexedDB 事务同时提交二进制和�
 
 原有首页木鱼仪式保留“待用缓存 → 最近两个已确认缓存版本 → 独立内置轻量包”的本地优先策略，首帧成功后后台准备远端更新，下次进入试用。该客户端也接入同一个容量预算和完整包保护。旧入口用于离线兜底和既有奖励流程；新场景目录入口用于显式按需下载和通用历史重开。二者下载相同哈希时复用文件。
 
-共享渲染支持 `original`、`toon-ink`、`toon-soft`、`gouache`、`moebius`、`toon-outline`、`halftone`、`pixel-art`。旧包缺省值仍为 `original`；应用内木鱼与程序化场景默认采用 `toon-soft`（柔和卡通）。水粉插画、Moebius 手绘漫画、卡通描边、网点印刷与复古像素均作为可选预设保留，可在仪式页“视觉风格”菜单或开发 Shader Lab 手动选择；恢复默认时跟随内容配置。本机已有的手动覆盖值继续有效。
+共享渲染支持 `original`、`toon-ink`、`toon-soft`、`gouache`、`moebius`、`toon-outline`、`halftone`、`pixel-art`。旧包缺省值仍为 `original`；应用内木鱼与程序化场景默认采用 `toon-soft`（柔和卡通）。水粉插画、Moebius 手绘漫画、卡通描边、网点印刷与复古像素均作为可选预设保留，可在仪式页“仪式设置 → 视觉风格”菜单手动选择；恢复默认时跟随内容配置。正式菜单保存的用户设置继续有效，旧 Shader Lab 调试覆盖不再加载。
 
 水粉模式保留彩绘贴图、玻璃与金属质感，以连续哑光明暗、较柔和的日光、轻量 Kuwahara 后处理和细轮廓统一画面。它新增本地 GLSL，不接收远端 shader；代码、已读技术参考与文化影响核查见 [水粉渲染记录](research/2026-10-22-gouache-rendering.md)。引擎首帧、渲染失败回退、卸载时模型/材质/纹理/阴影/动画/监听/renderer 释放继续保留。程序化场景也释放 renderer 并主动销毁 WebGL 上下文；减少动态效果不冻结手势计时。
 
@@ -141,7 +141,6 @@ npm run mobile:verify
 $env:WBR_URL='http://127.0.0.1:5177/'
 python scripts/test-scene-library.py
 python scripts/test-scene-content.py
-python scripts/test-debug-overlay.py
 python scripts/test-woodfish-pointer.py
 ```
 

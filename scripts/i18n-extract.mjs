@@ -66,9 +66,6 @@ export function auditSourceText(file, text, registry) {
   function check(node, source, sink, raw = false) {
     if (!meaningful(source)) return; // Whitespace, punctuation and fixed numeric decoration.
     if (raw && source === 'MiB') { record('exemptions', node, source, { reason: 'IEC binary-size unit symbol', sink }); return; }
-    if (raw && file === 'apps/cyber-bless/src/DebugOverlay.tsx' && source === 'THREE.JS') {
-      record('exemptions', node, source, { reason: 'Three.js library name, displayed verbatim', sink }); return;
-    }
     if (raw && file === 'packages/app/src/App.tsx' && sink === 'JSX:text' && source === 'CYBER BLESS · A LITTLE EVERY DAY' && insideClass(node, 'desktop-note')) {
       record('exemptions', node, source, { reason: 'Exact desktop brand lockup; adjacent product tagline is localized', sink }); return;
     }

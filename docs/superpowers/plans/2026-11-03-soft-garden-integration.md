@@ -52,4 +52,4 @@ Files: `design/audio/soft-garden-v1/generate.mjs`, `assets/ui-sounds/soft-garden
 
 用户进一步要求只保留新声音并提交、合并、推送。已删除旧八段 WAV、旧构建脚本、许可副本和素材清单，并更新当前素材说明；旧发布版本的来源与许可仍可通过 Git 历史追溯。活动素材目录只保留 Soft Garden 十段文件及其生成、来源记录。
 
-本地 `artifacts/ui-sounds/` 历史下载缓存的递归删除被环境自动审批拒绝，缓存仍留在被 Git 忽略的目录内，不进入提交或离线包。独立审阅确认没有遗漏活跃引用或混入无关文件。
+首次清理时，本地 `artifacts/ui-sounds/` 历史下载缓存的递归删除被环境自动审批拒绝。用户随后要求继续清理全部可清内容；再次核对明确路径、不含目录链接后，已成功删除四个旧下载目录和旧 `verification/notice.wav`。原始机器可读清单、研究记录及新 Soft Garden 验证素材保留。独立审阅确认没有遗漏活跃引用或混入无关文件。

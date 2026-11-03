@@ -56,7 +56,7 @@ try {
     const result = await page.evaluate(() => {
       const visible = el => { const r = el.getBoundingClientRect(), s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.display !== 'none' && s.visibility !== 'hidden' && s.clipPath !== 'inset(50%)' && !el.closest('[hidden]'); };
       const rect = el => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height, right: r.right, bottom: r.bottom }; };
-      const selectors = '.gallery-card-title,.app-nav a,.scene-topbar h1,.scene-topbar a,.scene-title,.scene-hint,.scene-cue-guide,.scene-bow-tap,.debug-overlay-toggle';
+      const selectors = '.gallery-card-title,.app-nav a,.scene-topbar h1,.scene-topbar a,.scene-title,.scene-hint,.scene-cue-guide,.scene-bow-tap';
       const elements = [...document.querySelectorAll(selectors)].filter(visible);
       const clipped = elements.filter(el => el.scrollWidth > el.clientWidth + 2 || el.getBoundingClientRect().right > innerWidth + 1 || el.getBoundingClientRect().left < -1).map(el => ({ className: el.className, text: el.textContent, ...rect(el), scrollWidth: el.scrollWidth }));
       const hint = [...document.querySelectorAll('.scene-hint,.scene-cue-guides')].find(visible), action = document.querySelector('.scene-bow-tap:not([hidden])');

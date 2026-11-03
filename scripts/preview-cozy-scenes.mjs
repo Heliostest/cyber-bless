@@ -51,7 +51,6 @@ page.on("request", request => {
   if (!request.url().startsWith(base.replace(/\/$/, "")) && !request.url().startsWith("data:") && !request.url().startsWith(`blob:${new URL(base).origin}/`)) external.push(request.url());
 });
 const entry = new URL(base);
-if (auditStyles) entry.searchParams.set("debug", "1");
 await page.goto(entry.href);
 await page.getByRole("button", { name: "我的", exact: true }).click();
 await page.getByRole("button", { name: "场景目录", exact: true }).click();
@@ -65,15 +64,16 @@ for (const id of ids) {
   }
   await page.waitForTimeout(700);
   if (auditStyles) {
-    const toggle = page.getByRole('button', { name: 'SHADER LAB' });
-    if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
-    const selected = await page.locator('.debug-overlay-presets [aria-pressed="true"] strong').innerText();
-    const actual = await page.locator('#debug-overlay-panel [role="status"]').innerText();
-    styles.push({ id, selected, actual });
-    if (!actual.startsWith(`正在使用${selected}`)) errors.push(`${id}: ${actual}`);
+    const state = await page.evaluate(async ({ module, id }) => {
+      const { sceneStyles } = await import(module);
+      const scene = sceneStyles.getSnapshot().find(item => item.id === id);
+      if (!scene) throw Error(`Missing renderer for ${id}`);
+      return { selected: scene.userStyle ?? scene.defaultStyle, actual: scene.actual };
+    }, { module: '/@fs/' + path.resolve('packages/scene-runtime/src/debug-styles.ts').replaceAll('\\', '/'), id });
+    styles.push({ id, ...state });
+    if (state.actual !== state.selected) errors.push(`${id}: requested ${state.selected}, rendered ${state.actual}`);
   }
-  await page.screenshot({ path: path.join(out, `${id}.png`), fullPage: true,
-    ...(auditStyles ? { style: '.debug-overlay { visibility: hidden !important; }' } : {}) });
+  await page.screenshot({ path: path.join(out, `${id}.png`), fullPage: true });
   await page.getByRole("button", { name: "返回", exact: true }).click();
   if (process.argv[2] !== "before") {
     await page.waitForFunction(() => window.environmentAudit.live === 0);

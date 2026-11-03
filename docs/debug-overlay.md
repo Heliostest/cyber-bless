@@ -1,10 +1,14 @@
-# 场景 Shader 调试面板
+# 场景 Shader 调试面板（历史记录）
+
+2026-11-03：已删除停用的 Shader 悬浮面板组件、样式、专属翻译和旧 UI 测试。正式视觉风格菜单及共用渲染器继续保留；下文旧面板操作仅作历史记录。
+
+当前验证：`node scripts/test-shader-parameters.mjs` 检查真实 WebGL 参数效果；`node scripts/test-gouache-style.mjs` 及同类风格脚本通过正式“仪式设置 → 视觉风格”菜单检查场景；`node scripts/verify-visual-style-filmstrip.mjs` 检查正式菜单布局与操作。均支持 `WBR_URL`。
 
 2026-11-03：Web 开发版新增独立「调试台 → 界面音效覆盖」，操作方式和当前范围见 [音效检查说明](audio-inspector.md)。它不启用下述旧 Shader 面板，生产版与原生包不显示。
 
 2026-10-31：已从所有 App 路由移除悬浮 Shader 调试台及入口，开发环境和 `?debug=1` 均不再挂载，也不再加载旧的浏览器调试覆盖。仪式内的正式“视觉风格”菜单继续使用用户保存的设置。下文保留旧实现与历史验证记录，其中悬浮面板的入口和 UI 回归命令不再适用于当前 App。
 
-正式 App 已在仪式音效／震动旁提供“视觉风格”菜单，按仪式经主机保存，默认不变；下文 Shader Lab 仍为开发工具。二者共用风格与参数定义，正式菜单不读取开发存储。开发覆盖优先；正式编辑清除对应调试项，开发面板清除覆盖时恢复用户已保存的选择。见 [App 接入评估](research/2026-10-23-app-visual-style.md)。
+正式 App 已在仪式音效／震动旁提供“视觉风格”菜单，按仪式经主机保存，默认不变；当时的 Shader Lab 为开发工具。二者共用风格与参数定义，正式菜单不读取开发存储。开发覆盖优先；正式编辑清除对应调试项，开发面板清除覆盖时恢复用户已保存的选择。见 [App 接入评估](research/2026-10-23-app-visual-style.md)。
 
 运行 `npm run dev -- --port 5176`，进入场景后点击右侧 **SHADER LAB**。开发环境默认显示入口；生产构建需在页面地址添加 `?debug=1` 才启用。手机上入口和紧凑面板位于右下方。
 
@@ -35,6 +39,6 @@
 
 木鱼卡通模式按“插画玩具”方向设置涂装底色，停用密集的木纹 albedo 和微法线，降低 AO 强度。通过 `mesh.userData.toonSurface = { color, simplifyMap: true, aoIntensity }` 指定场景美术参数。原贴图和 GLB 不做永久修改；每帧结束恢复原材质，切回原始光照或效果失败时即可恢复原 PBR 表现。透明水面、接触阴影和粒子保留各自材质。材质缓存、轮廓选择和 GPU 资源随风格切换及场景卸载释放。
 
-浏览器回归：启动 Vite 后运行 `python scripts/test-debug-overlay.py` 和 `python scripts/test-woodfish-style.py`。默认测试地址是 `http://127.0.0.1:5176/`，可通过 `WBR_URL` 修改。
+历史面板浏览器回归脚本已移除，原测试与结果可从 Git 历史查阅。木鱼渲染测试 `scripts/test-woodfish-style.py` 保留。
 
-可调参数回归：`node scripts/test-shader-parameters.mjs`，默认 `http://127.0.0.1:5173/`，支持 `WBR_URL`。覆盖实际场景面板、刷新与重置、桌面／手机视口，以及真实 WebGL 参数效果、透明度和重复调整的纹理数量。
+可调参数回归：`node scripts/test-shader-parameters.mjs`，默认 `http://127.0.0.1:5173/`，支持 `WBR_URL`。目前保留真实 WebGL 参数效果、透明度和重复调整的纹理数量检查；已移除停用面板的操作步骤，正式菜单操作由上述 App 测试负责。

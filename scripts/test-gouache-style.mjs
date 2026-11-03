@@ -14,6 +14,19 @@ const output = `${root}/artifacts/${target}-review`;
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const report = { fixture: null, scenes: [] };
+async function selectStyle(page, id, name) {
+  const trigger = page.getByRole("button", { name: "视觉风格", exact: true });
+  if (!await trigger.isVisible()) await page.getByRole("button", { name: "仪式设置", exact: true }).click();
+  await trigger.click();
+  const card = page.locator(`.visual-style-menu [data-style="${id}"]`);
+  await card.focus();
+  await card.press("Enter");
+  await page.locator(".visual-style-status").filter({ hasText: `当前风格：${name}` }).waitFor({ state: "attached" });
+  await page.locator(".visual-style-done").click();
+  await page.locator(".visual-style-menu").waitFor({ state: "hidden" });
+  const settings = page.getByRole("button", { name: "仪式设置", exact: true });
+  if (await settings.getAttribute("aria-expanded") === "true") await settings.click();
+}
 try {
   const fixture = await browser.newPage();
   await fixture.route("**/__gouache_probe", route => route.fulfill({ contentType: "text/html", body: "<html><body></body></html>" }));
@@ -122,21 +135,14 @@ try {
   for (const id of fixtureOnly ? [] : selected.length ? selected : ["dalarna-wooden-horse", "uzbek-clay-bowl", "andalusian-ceramic-tile", "venetian-glass-bead", "votive-candle-catholic"]) {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce" });
     const errors = [];
-    page.on("pageerror", error => errors.push(error.message));
+    page.on("pageerror", error => errors.push(error.stack ?? error.message));
     page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
     await page.goto(`${base}/scene-review?scene=${id}`, { waitUntil: "domcontentloaded" });
     await page.locator('canvas[data-environment-ready="true"]').waitFor();
-    await page.getByRole("button", { name: /SHADER LAB/ }).click();
-    await page.getByRole("status").filter({ hasText: "正在使用柔和卡通" }).waitFor();
-    await page.getByRole("button", { name: /柔和卡通/ }).click();
-    await page.getByRole("status").filter({ hasText: "正在使用柔和卡通" }).waitFor();
-    await page.getByRole("button", { name: /SHADER LAB/ }).click();
+    await selectStyle(page, "toon-soft", "柔和卡通");
     const canvas = page.locator("canvas[data-environment]");
     await canvas.screenshot({ path: `${output}/${id}-before.png` });
-    await page.getByRole("button", { name: /SHADER LAB/ }).click();
-    await page.getByRole("button", { name: new RegExp(label) }).click();
-    await page.getByRole("status").filter({ hasText: `正在使用${label}` }).waitFor();
-    await page.getByRole("button", { name: /SHADER LAB/ }).click();
+    await selectStyle(page, target, label);
     await page.screenshot({ path: `${output}/${id}-desktop.png` });
     await canvas.screenshot({ path: `${output}/${id}-after.png` });
     const hint = page.locator(".scene-hint");

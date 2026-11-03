@@ -1,6 +1,6 @@
 # 通用 UI 音效素材来源核查
 
-> 历史研究记录：用户随后试听并选择了原创 [Soft Garden v1](../../assets/ui-sounds/soft-garden-v1/README.md)，并要求清除不用的旧声音。本文下方描述的是早期选型与当时访问状态；旧正式 WAV、构建脚本、许可副本和加工清单已删除，可在提交 `b36e4eaf` 的 Git 历史中查阅。下文 `artifacts/` 路径属于被 Git 忽略的历史研究缓存，不属于当前素材库，也不参与打包；当前 App 只使用 Soft Garden。
+> 历史研究记录：用户随后试听并选择了原创 [Soft Garden v1](../../assets/ui-sounds/soft-garden-v1/README.md)，并要求清除不用的旧声音。本文下方描述的是早期选型与当时访问状态；旧正式 WAV、构建脚本、许可副本和加工清单已删除，可在提交 `b36e4eaf` 的 Git 历史中查阅。下文 `artifacts/` 路径是当时的研究缓存位置；后续清理已删除旧下载包、解压原件和旧 `notice.wav` 试听缓存，保留机器可读清单与研究记录。缓存不参与打包；当前 App 只使用 Soft Garden。
 
 核查日期：2026-11-03。范围：Three.js 场景内部交互以外的应用操作反馈。本文保存素材下载与授权的研究依据；最终接入采用的派生文件见 [操作盘点与实施](2026-11-03-ui-operations-audio-audit.md) 和 [素材 README](../../assets/ui-sounds/README.md)。
 
@@ -20,14 +20,14 @@
 
 | 暂定角色 | 原包路径 | 时长 | 原始字节数 | 本地原件 |
 | --- | --- | ---: | ---: | --- |
-| 轻触按钮 | `Audio/pluck_001.ogg` | 0.1024 秒 | 6,317 | [试听原件](D:/ws/app/cyber-bless/artifacts/ui-sounds/kenney-interface/Audio/pluck_001.ogg) |
-| 切换选项 | `Audio/select_001.ogg` | 0.0433 秒 | 5,468 | [试听原件](D:/ws/app/cyber-bless/artifacts/ui-sounds/kenney-interface/Audio/select_001.ogg) |
-| 打开面板 | `Audio/open_001.ogg` | 0.1478 秒 | 9,834 | [试听原件](D:/ws/app/cyber-bless/artifacts/ui-sounds/kenney-interface/Audio/open_001.ogg) |
-| 关闭面板 | `Audio/close_001.ogg` | 0.1478 秒 | 9,915 | [试听原件](D:/ws/app/cyber-bless/artifacts/ui-sounds/kenney-interface/Audio/close_001.ogg) |
-| 设置开关 | `Audio/toggle_001.ogg` | 0.1393 秒 | 7,369 | [试听原件](D:/ws/app/cyber-bless/artifacts/ui-sounds/kenney-interface/Audio/toggle_001.ogg) |
-| 保存成功 | `Audio/confirmation_001.ogg` | 0.2898 秒 | 8,968 | [试听原件](D:/ws/app/cyber-bless/artifacts/ui-sounds/kenney-interface/Audio/confirmation_001.ogg) |
-| 领取／完成 | `Audio/confirmation_002.ogg` | 0.5390 秒 | 14,169 | [试听原件](D:/ws/app/cyber-bless/artifacts/ui-sounds/kenney-interface/Audio/confirmation_002.ogg) |
-| 需要注意 | `Audio/question_002.ogg` | 0.3325 秒 | 9,455 | [试听原件](D:/ws/app/cyber-bless/artifacts/ui-sounds/kenney-interface/Audio/question_002.ogg) |
+| 轻触按钮 | `Audio/pluck_001.ogg` | 0.1024 秒 | 6,317 | `artifacts/ui-sounds/kenney-interface/Audio/pluck_001.ogg`（试听原件，缓存已清理） |
+| 切换选项 | `Audio/select_001.ogg` | 0.0433 秒 | 5,468 | `artifacts/ui-sounds/kenney-interface/Audio/select_001.ogg`（试听原件，缓存已清理） |
+| 打开面板 | `Audio/open_001.ogg` | 0.1478 秒 | 9,834 | `artifacts/ui-sounds/kenney-interface/Audio/open_001.ogg`（试听原件，缓存已清理） |
+| 关闭面板 | `Audio/close_001.ogg` | 0.1478 秒 | 9,915 | `artifacts/ui-sounds/kenney-interface/Audio/close_001.ogg`（试听原件，缓存已清理） |
+| 设置开关 | `Audio/toggle_001.ogg` | 0.1393 秒 | 7,369 | `artifacts/ui-sounds/kenney-interface/Audio/toggle_001.ogg`（试听原件，缓存已清理） |
+| 保存成功 | `Audio/confirmation_001.ogg` | 0.2898 秒 | 8,968 | `artifacts/ui-sounds/kenney-interface/Audio/confirmation_001.ogg`（试听原件，缓存已清理） |
+| 领取／完成 | `Audio/confirmation_002.ogg` | 0.5390 秒 | 14,169 | `artifacts/ui-sounds/kenney-interface/Audio/confirmation_002.ogg`（试听原件，缓存已清理） |
+| 需要注意 | `Audio/question_002.ogg` | 0.3325 秒 | 9,455 | `artifacts/ui-sounds/kenney-interface/Audio/question_002.ogg`（试听原件，缓存已清理） |
 
 8 个原件共 71,495 字节。没有把 `glitch_*`、`scratch_*`、激光或长滚动声放入首批试听；这是避免刺耳、重复和过长反馈的产品假设，仍需要试听验证。注意提示先尝试 `question_*`，不预设每个失败都需要明显的错误蜂鸣声。
 
@@ -36,9 +36,9 @@
 ### A. Kenney Interface Sounds 1.0：优先试听
 
 - 官方正文实际已读：列出 100 个文件、2020 年 1.0 版本与 Creative Commons CC0。[官方页](https://kenney.nl/assets/interface-sounds)
-- 包内 `License.txt` 实际已读全文：作者为 Kenney，允许个人、教育、商业项目，署名非强制。原文保存在 [本地授权原件](D:/ws/app/cyber-bless/artifacts/ui-sounds/kenney-interface/License.txt)。
+- 包内 `License.txt` 实际已读全文：作者为 Kenney，允许个人、教育、商业项目，署名非强制。原文保存在 `artifacts/ui-sounds/kenney-interface/License.txt`（本地授权原件，缓存已清理）。
 - 实际解包确认：`Audio/` 下 100 个 `.ogg`，含 `back_*`、`click_*`、`close_*`、`confirmation_*`、`drop_*`、`error_*`、`glass_*`、`glitch_*`、`maximize_*`、`minimize_*`、`open_*`、`pluck_*`、`question_*`、`scratch_*`、`scroll_*`、`select_*`、`switch_*`、`tick_*`、`toggle_*`。
-- 压缩包：[kenney_interface-sounds.zip](D:/ws/app/cyber-bless/artifacts/ui-sounds/originals/kenney_interface-sounds.zip)，834,536 字节。
+- 压缩包：`artifacts/ui-sounds/originals/kenney_interface-sounds.zip`（kenney_interface-sounds.zip，缓存已清理），834,536 字节。
 - ZIP SHA-256：`f2193d072726d6758a5f7871b2dcc54dcce0d5c35c6f0a62f92549b327c81232`。
 - 主要限制：原件只有 Ogg，原生 WebView 的解码与离线载入仍需在实际支持的 iOS／Android 版本上验证。本文没有运行终端设备测试；格式可用不等于实际设备音频已经验收。
 
@@ -47,9 +47,9 @@
 ### B. Kenney UI Audio：短操作备选
 
 - [官方正文](https://kenney.nl/assets/ui-audio) 实际已读：页称 50 个文件、2012 年 1.0 版本、CC0。
-- 包内 `License.txt` 实际已读全文：内容名称为 UI SFX Set，作者 Kenney Vleugels；个人与商业项目可用，署名非强制。[本地授权原件](D:/ws/app/cyber-bless/artifacts/ui-sounds/kenney-ui/License.txt)
+- 包内 `License.txt` 实际已读全文：内容名称为 UI SFX Set，作者 Kenney Vleugels；个人与商业项目可用，署名非强制。`artifacts/ui-sounds/kenney-ui/License.txt`（本地授权原件，缓存已清理）
 - 实际解包有 **51 个** `Audio/*.ogg`：`click1`–`click5`、`mouseclick1`、`mouserelease1`、`rollover1`–`rollover6`、`switch1`–`switch38`；另有压缩包根目录的 `Preview.ogg`。因此“50”是页面描述，不作为本地文件数量断言。
-- 压缩包：[kenney_ui-audio.zip](D:/ws/app/cyber-bless/artifacts/ui-sounds/originals/kenney_ui-audio.zip)，411,949 字节。
+- 压缩包：`artifacts/ui-sounds/originals/kenney_ui-audio.zip`（kenney_ui-audio.zip，缓存已清理），411,949 字节。
 - ZIP SHA-256：`946fc23a63d535d693eb31b2eabb80c8c28d6351e2186b344ceb71b2cb1d5eb6`。
 - 下载使用 [官方下载链接端点](https://kenney.nl/download-link/6173736574732f75692d617564696f) 和官方页面的短期签名流程；旧静态路径不作为可持续的直链入口。
 - 适用判断：可补充轻触和开关的不同候选，但缺少第一套清晰的开合、确认、询问分类。不能仅凭 `switch*` 文件名判断哪个柔和。
@@ -57,10 +57,10 @@
 ### C. Nomagician Cute, Cozy & Magical UI SFX：音乐感备选
 
 - [作者官方正文](https://nomagician.itch.io/cute-ui-sound-effects) 实际已读：描述为适合轻松体验的 UI 声，标注 WAV 24-bit／48 kHz、MP3 320 kbps／48 kHz、CC BY 4.0，作者建议署名 `Nomagician Music`；说明声音采用 C 与 G 大调。
-- 包内 `readme.txt` 实际已读全文：作者为 Nomagician Music／Roman T.，写明来自合成器或免费 VST 加处理，并明确指向 CC BY 4.0。[本地 readme 原件](D:/ws/app/cyber-bless/artifacts/ui-sounds/nomagician/readme.txt)
+- 包内 `readme.txt` 实际已读全文：作者为 Nomagician Music／Roman T.，写明来自合成器或免费 VST 加处理，并明确指向 CC BY 4.0。`artifacts/ui-sounds/nomagician/readme.txt`（本地 readme 原件，缓存已清理）
 - 页面称 22 个声音；实际解包为 **26 个 WAV、24 个 MP3**。WAV 名称为 `a`–`w` 加 `h2`、`i2`、`u2`；MP3 缺少 `n`、`o`。不会据官网数量假设每个格式都一一齐全。
 - WAV 容器实测均为 48 kHz、24-bit、双声道；文件长度约 0.4286–2.5714 秒。`u.wav`（0.4286 秒）、`u2.wav`（0.5357 秒）、`l.wav`（0.6429 秒）可以作为短备选的试听入口，**字母不具有官方操作含义**。
-- 压缩包：[nomagician-cute-ui.zip](D:/ws/app/cyber-bless/artifacts/ui-sounds/originals/nomagician-cute-ui.zip)，8,679,257 字节；作者提供的原始下载名为 `Cute, Cozy & Magical UI SFX - by Nomagician.zip`。
+- 压缩包：`artifacts/ui-sounds/originals/nomagician-cute-ui.zip`（nomagician-cute-ui.zip，缓存已清理），8,679,257 字节；作者提供的原始下载名为 `Cute, Cozy & Magical UI SFX - by Nomagician.zip`。
 - ZIP SHA-256：`ddcda60fca933b3b16c5ba614e2513f19503bbfb1bf871999f69b118329fdb50`。
 - 下载入口为 [作者下载页](https://nomagician.itch.io/cute-ui-sound-effects/purchase)，选择免费继续下载；本次实际取得上传编号 `15647651` 的文件。itch.io 的 `/cute-ui-sound-effects/download_url`、`/cute-ui-sound-effects/file/15647651?source=game_download` 生成临时地址，不应把带签名参数的 CDN URL 写为永久素材来源。
 

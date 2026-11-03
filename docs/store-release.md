@@ -4,7 +4,21 @@
 
 正式 Mac mini 构建改用[参数化 tag 发布入口](../scripts/ios-release/README.md)：先提交业务源码、素材、发布工具、依赖锁及版本输入，合并／推送 `master` 后创建并推送附注 tag；Mac 直接获取该 tag 和 LFS 实体，执行同版本工具并串行验证、构建和交付。不再把未提交工作区生成的 `source.tgz` 用于新正式发布。构建号尚未分配时保持 release input 的 `null` 并拒绝执行，不猜测下一个编号。
 
-该入口已用于下述构建 20、21、22；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+该入口已用于下述构建 20、21、22、23；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+
+## 2026-11-03 构建 23：Soft Garden 界面音效
+
+北京时间 14:05:36，**1.0.0 (23)** 已完成 Mac mini / Xcode 26.6 构建、ASC 上传和既有内部组验证；14:06:18 再次读回 `VALID / IN_BETA_TESTING`，Apple build UUID 为 `3ad7627e-8ea6-4c0d-9010-3c31ca54bf9d`。`Team (Expo)` 已包含本构建，仍为 1 位既有测试员，测试说明匹配。未新增邀请、修改权限、提交审核或公开发布；正式商店继续关联构建 12，状态为 `PREPARE_FOR_SUBMISSION / MANUAL`。
+
+来源为已推送的 `master` 提交 `8724e67aa8ea72e2ed2fc650be4765d6c73d5683`，附注 tag `ios-v1.0.0-build.23`（tag 对象 `b7d9e5cfe34a079589c169e1397032d48eed8b0f`，tree `3ec1fdac56012cfd90c9127d7e0fa29baff495c4`）。Mac 直接获取 Git 与 2117 个 LFS 实体，使用该 tag 内工具及 runner 独占锁完成各阶段；5380 个来源文件和 17796 项签名后原生输入核对一致。来源身份 SHA-256 为 `d9740da88bb96c45bf5c5e7e4a8c5230cb9c8e624e87c05babbb0b4c1cc01280`。没有移动 tag、混入未提交源码或复用旧包回执。
+
+本包将界面操作和保存／收下／完成反馈统一为 Soft Garden 产品原创音效，并包含开发音效检查器与旧调试工具清理。开发检查器只由开发宿主提供，原生宿主不提供该面板。10 个 WAV 和原创来源清单已从实际 IPA 逐个核对哈希，旧 Kenney UI 音频未混入。场景内部手势、器物、标题、文化主张和来源绑定未变；文化影响沿用 [操作与音效核查](research/2026-11-03-ui-operations-audio-audit.md)，原创合成范围见 [Soft Garden 说明](../assets/ui-sounds/soft-garden-v1/README.md)。
+
+冻结提交的完整 `npm run verify` 通过，含 1514 项 App、10764 项场景测试及双端嵌入检查；Windows 发布工具测试 94 通过、2 项平台跳过，Mac 完整 96 项全部通过、零跳过。预构建、4 项 dSYM 映射、归档、导出与签名验证通过，主应用／小组件均为构建 23。实际包内 182 项离线资源、162 个 DOM 脚本和 477 张小组件图片哈希验证通过。
+
+IPA 为 227,470,770 字节，SHA-256 `ad36265cf048896c5cb3b29440f9a45133a0d4b812cba999559a6e206c9cd8dd`。Mac IPA／archive／dSYM 保留于 `/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.23/source/artifacts/ios-release/23`；本机备份 [blessing-23.ipa](../artifacts/ios-release-23/blessing-23.ipa)，跨机器哈希一致。上传于 14:00:37 被接受，未重复上传。EAS 计数于 14:06:07 从 22 同步为 23 并读回，写前四类活动构建均为零。签名钥匙串搜索列表已恢复、临时钥匙串已锁定，Mac 原 Expo 会话状态已恢复，没有登出或撤销会话。
+
+完整回执和验证摘要见 `artifacts/ios-release-23/` 与 [TestFlight 状态](../store/ios/testflight-status.json)。构建 20、21、22 和本次 23 的 IPA／archive／dSYM 均保留。本轮没有安装或验收物理设备；内测组可用不能替代手机扬声器、耳机、静音键、分享和小组件实机验收。
 
 ## 2026-11-03 构建 22：统一界面音效
 

@@ -4,7 +4,21 @@
 
 正式 Mac mini 构建改用[参数化 tag 发布入口](../scripts/ios-release/README.md)：先提交业务源码、素材、发布工具、依赖锁及版本输入，合并／推送 `master` 后创建并推送附注 tag；Mac 直接获取该 tag 和 LFS 实体，执行同版本工具并串行验证、构建和交付。不再把未提交工作区生成的 `source.tgz` 用于新正式发布。构建号尚未分配时保持 release input 的 `null` 并拒绝执行，不猜测下一个编号。
 
-该入口已用于下述构建 20、21、22、23；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+该入口已用于下述构建 20、21、22、23、24；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+
+## 2026-11-03 构建 24：修复 iOS 界面音效读取
+
+北京时间 15:44:46，**1.0.0 (24)** 已完成 Mac mini / Xcode 26.6 构建、ASC 上传和既有内部组验证；15:45:41 再次读回 `VALID / IN_BETA_TESTING`。Apple build UUID 为 `c4c78f4e-8a65-4f90-bd07-c60b092f6bdf`，`Team (Expo)` 已包含本构建，仍为 1 位既有测试员，测试说明匹配。正式商店继续关联构建 12，状态为 `PREPARE_FOR_SUBMISSION / MANUAL`。
+
+来源为已推送的 `master` 提交 `4db12d25e44bd08f674041f7dda352d5c5f7ac22`，附注 tag `ios-v1.0.0-build.24`（tag 对象 `838366eb945ecfa82f8e3648392cec3f72645457`，tree `024e1597ca9eafa3da29a86e7635cacde5733051`）。Mac 直接获取该 tag 与 LFS 实体，使用同版本 runner 和独占锁；5383 个来源文件和 17796 项签名后原生输入核对一致。来源身份 SHA-256 为 `ca39fca7c122c05f45abf9918b06fc512511b226bfcab3b5ba1b94480f589547`。
+
+修复正式 iOS 包使用 WebView fetch 本地 WAV 失败的问题，改由原生读取白名单内随包音效，再交给现有播放器解码。实际 IPA 的 10 个 WAV 哈希与源码一致，原生桥及 DOM 读取分支均在包内；音色、音量、震动及具体仪式动作沿用原行为。文化影响与复现见[排查记录](research/2026-11-03-ios-ui-audio.md)。
+
+冻结提交的完整 `npm run verify` 通过，含 1524 项 App、10764 项场景测试及双端嵌入检查。Windows 发布工具测试 94 通过、2 项平台跳过；依赖安装后 Mac 完整 96 项通过、零跳过。Release 预构建、4 项 dSYM 映射、归档、导出和签名通过，主应用与小组件均为构建 24；实际包内 182 项离线资源、162 个 DOM 脚本和 477 张小组件图片验证通过。
+
+IPA 为 227,471,691 字节，SHA-256 `3b9bca238864a2729767d265ad220b3433a500c3a4bd41ebc2fadfa1e52f0740`；本机备份 [blessing-24.ipa](../artifacts/ios-release-24/blessing-24.ipa) 与 Mac 哈希一致。Mac IPA／archive／dSYM 保留于 `/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.24/source/artifacts/ios-release/24`。15:39:56 上传被接受；15:45:10 EAS 计数由 23 同步为 24 并读回，写前活动构建为零。签名钥匙串已恢复并锁定，Mac 原 Expo 状态已恢复。
+
+Apple 内测组接口的临时 500／404 及 EAS 查询网络失败均发生在上传前；查询恢复后沿用同一源码、tag 和构建号继续，没有重复上传或更改冻结源码。为释放磁盘，仅清理已完成构建 20、21 的 DerivedData；构建 20—24 的 IPA／archive／dSYM 和来源 checkout 均保留。完整回执见 `artifacts/ios-release-24/` 和 [TestFlight 状态](../store/ios/testflight-status.json)。本轮未安装或验收物理设备；新包仍需实机试听和震动回归。
 
 ## 2026-11-03 构建 23：Soft Garden 界面音效
 

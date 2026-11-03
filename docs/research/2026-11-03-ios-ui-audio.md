@@ -27,7 +27,7 @@
 
 本地证据位于 `artifacts/ios-audio-diagnosis/`：`transport-result.json`、`player-result.json`、`app-tests.log`、`build.log`，以及可重跑的探针源码。Mac 探针位于 `/Users/heli/ios-builds/cyber-bless/diagnostics/audio-23`；测试 App 已卸载，本轮启动的模拟器已关闭。
 
-此修复尚未生成、上传新的正式 IPA。构建 23 及其来源 tag 不变。后续按正式发布入口分配新构建号、冻结提交和新 tag；设备仍需验收扬声器／耳机、前后台恢复及具体场景的操作音。
+排查完成时尚未生成、上传新的正式 IPA。后续已按正式入口将修复冻结为 `ios-v1.0.0-build.24`，北京时间 2026-11-03 15:44:46 完成 `VALID / IN_BETA_TESTING` 和既有内部组验证，详见 [构建 24 发布记录](../store-release.md)。构建 23 及其来源 tag 不变；设备仍需验收扬声器／耳机、前后台恢复及具体场景的操作音。
 
 ## 文化影响
 

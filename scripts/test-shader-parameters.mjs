@@ -1,5 +1,5 @@
-// Real WebGL parameter changes plus the complete Shader Lab browser path.
-import assert from "node:assert/strict";
+// Real WebGL parameter effects, alpha and texture lifecycle.
+// App controls are covered by visual-style-menu.test.ts and verify-visual-style-filmstrip.mjs.
 import { mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
@@ -10,88 +10,10 @@ const output = `${root}/artifacts/shader-parameters-review`;
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch();
 try {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce" });
   const errors = [];
-  page.on("pageerror", error => errors.push(error.message));
-  page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
-  await page.goto(`${base}/scene-review?scene=blang-tea`);
-  await page.locator('canvas[data-environment-ready="true"]').waitFor();
-  await page.getByRole("button", { name: /SHADER LAB/ }).click();
-  await page.getByRole("status").filter({ hasText: "正在使用柔和卡通" }).waitFor();
-  assert.equal(await page.getByRole("slider").count(), 0);
-  await page.getByRole("button", { name: "网点印刷", exact: false }).click();
-  await page.getByRole("slider", { name: "网点大小", exact: true }).fill("10");
-  await page.getByRole("slider", { name: "效果强度", exact: true }).fill("0.85");
-  const dots = page.getByRole("slider", { name: "网点大小", exact: true });
-  const bounds = await dots.boundingBox();
-  assert.ok(bounds, "dot slider is outside the panel");
-  await page.mouse.move(bounds.x + bounds.width*0.57, bounds.y + bounds.height/2);
-  await page.mouse.down();
-  await page.mouse.move(bounds.x + bounds.width*0.2, bounds.y + bounds.height/2, { steps: 8 });
-  await page.mouse.up();
-  assert.notEqual(await dots.inputValue(), "10", "pointer dragging did not change dot size");
-  await dots.fill("10");
-  await page.screenshot({ path: `${output}/halftone-desktop.png` });
-  await page.getByRole("button", { name: "复古像素", exact: false }).click();
-  assert.equal(await page.getByRole("slider").count(), 1);
-  await page.getByRole("slider", { name: "像素大小", exact: true }).fill("8");
-  await page.reload();
-  await page.getByRole("button", { name: /SHADER LAB/ }).click();
-  await page.getByRole("status").filter({ hasText: "正在使用复古像素" }).waitFor();
-  assert.equal(await page.getByRole("slider", { name: "像素大小", exact: true }).inputValue(), "8");
-  await page.getByRole("button", { name: "重置参数", exact: true }).click();
-  assert.equal(await page.getByRole("slider").inputValue(), "3");
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("slider").fill("12");
-  await page.getByRole("slider").focus(); await page.keyboard.press("Home");
-  assert.equal(await page.getByRole("slider").inputValue(), "1");
-  await page.keyboard.press("End");
-  assert.equal(await page.getByRole("slider").inputValue(), "12");
-  await page.screenshot({ path: `${output}/pixel-mobile.png` });
-  await page.getByRole("button", { name: "网点印刷", exact: false }).click();
-  assert.equal(await page.getByRole("slider", { name: "网点大小", exact: true }).inputValue(), "10");
-  await page.getByRole("button", { name: "重置参数", exact: true }).click();
-  assert.equal(await page.getByRole("slider", { name: "效果强度", exact: true }).inputValue(), "0.58");
-  await page.setViewportSize({ width: 1280, height: 900 });
-  for (const preset of [
-    { label: "Moebius 手绘漫画", controls: [["描边粗细", "2.5"], ["色阶", "4"], ["排线强度", "0.8"]], image: "moebius-desktop" },
-    { label: "卡通描边", controls: [["描边粗细", "3"], ["色阶", "6"]], image: "toon-desktop" },
-  ]) {
-    await page.getByRole("button", { name: preset.label, exact: false }).click();
-    assert.equal(await page.getByRole("slider").count(), preset.controls.length);
-    for (const [name, value] of preset.controls) await page.getByRole("slider", { name, exact: true }).fill(value);
-    await page.reload();
-    await page.getByRole("button", { name: /SHADER LAB/ }).click();
-    await page.getByRole("status").filter({ hasText: `正在使用${preset.label}` }).waitFor();
-    for (const [name, value] of preset.controls) assert.equal(await page.getByRole("slider", { name, exact: true }).inputValue(), value);
-    await page.screenshot({ path: `${output}/${preset.image}.png` });
-  }
-  await page.getByRole("button", { name: "Moebius 手绘漫画", exact: false }).click();
-  assert.equal(await page.getByRole("slider", { name: "排线强度", exact: true }).inputValue(), "0.8");
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("slider", { name: "描边粗细", exact: true }).fill("3");
-  await page.getByRole("slider", { name: "排线强度", exact: true }).fill("0");
-  await page.screenshot({ path: `${output}/moebius-mobile.png` });
-  await page.getByRole("button", { name: "重置参数", exact: true }).click();
-  assert.equal(await page.getByRole("slider", { name: "描边粗细", exact: true }).inputValue(), "0.85");
-  assert.equal(await page.getByRole("slider", { name: "色阶", exact: true }).inputValue(), "8");
-  assert.equal(await page.getByRole("slider", { name: "排线强度", exact: true }).inputValue(), "0.5");
-  await page.getByRole("button", { name: "卡通描边", exact: false }).click();
-  assert.equal(await page.getByRole("slider", { name: "描边粗细", exact: true }).inputValue(), "3");
-  await page.screenshot({ path: `${output}/toon-mobile.png` });
-  await page.getByRole("button", { name: "重置参数", exact: true }).click();
-  assert.equal(await page.getByRole("slider", { name: "描边粗细", exact: true }).inputValue(), "1");
-  assert.equal(await page.getByRole("slider", { name: "色阶", exact: true }).inputValue(), "3");
-  await page.getByRole("button", { name: "恢复内容默认", exact: true }).click();
-  await page.getByRole("status").filter({ hasText: "正在使用柔和卡通" }).waitFor();
-  assert.equal(await page.getByRole("slider").count(), 0);
-  await page.reload();
-  await page.getByRole("button", { name: /SHADER LAB/ }).click();
-  await page.getByRole("status").filter({ hasText: "正在使用柔和卡通" }).waitFor();
-  assert.deepEqual(errors, []);
-  console.log("Shader Lab controls: live input, style isolation, reload, reset, desktop and mobile passed");
-
   const fixture = await browser.newPage();
+  fixture.on("pageerror", error => errors.push(error.message));
+  fixture.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
   await fixture.route("**/__parameter_probe", route => route.fulfill({ contentType: "text/html", body: "<html><body></body></html>" }));
   await fixture.goto(`${base}/__parameter_probe`);
   const gpu = await fixture.evaluate(async module => {
@@ -170,6 +92,7 @@ try {
       moebiusWidth: "visible", moebiusLevels: "visible", hatchStrength: "visible", toonWidth: "wider rim", toonLevels: "visible",
       alpha: "preserved", textures: "stable at repeated sizes and levels", dpr: 1.5 };
   }, `/@fs/${root}/packages/scene-runtime/src/render-style.ts`);
-  await writeFile(`${output}/report.json`, JSON.stringify({ ui: "passed", gpu, errors }, null, 2));
+  await writeFile(`${output}/report.json`, JSON.stringify({ gpu, errors }, null, 2));
+  if (errors.length) throw Error(errors.join("\n"));
   console.log("WebGL parameters passed", gpu);
 } finally { await browser.close(); }

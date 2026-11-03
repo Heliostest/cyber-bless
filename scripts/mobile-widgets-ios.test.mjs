@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync, mkdtempSync, mkdirSync } from 'node:fs';
+import { readFileSync, mkdtempSync, mkdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -133,11 +133,12 @@ test('an unavailable save registers the iOS layout and publishes a generic timel
   assert.equal(timelines[0][0].props.previewSmall, 'file:///group/generic-small.png');
   assert.equal(timelines[0][0].props.previewLarge, 'file:///group/generic-large.png');
 });
-test('the official source generator preserves all three families and dedicated App Group across regeneration', async () => {
+test('the official source generator preserves all three families and dedicated App Group across regeneration', async t => {
   const pluginRoot = path.dirname(require.resolve('expo-widgets/package.json'));
   const withSource = require(path.join(pluginRoot, 'plugin/build/ios/withWidgetSourceFiles.js')).default;
   mkdirSync(path.join(root, 'artifacts'), { recursive: true });
   const output = mkdtempSync(path.join(root, 'artifacts/widget-ios-sources-'));
+  t.after(() => rmSync(output, { recursive: true, force: true }));
   const config = JSON.parse(readFileSync(path.join(root, 'apps/mobile-expo/app.json'), 'utf8')).expo;
   const settings = config.plugins.find(p => Array.isArray(p) && p[0] === 'expo-widgets')[1];
   const withVisibility = require('../apps/mobile-expo/plugins/withWidgetSceneVisibility.cjs');

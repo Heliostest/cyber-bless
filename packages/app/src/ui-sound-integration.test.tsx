@@ -8,7 +8,7 @@ import { renderUI, settle, clickOn } from './dom-test-utils';
 
 const boundary = vi.hoisted(() => ({
   app: null as AppContext | null,
-  play: vi.fn(), stop: vi.fn(), prepare: vi.fn(), preload: vi.fn(), results: vi.fn(),
+  play: vi.fn(), stop: vi.fn(), prepare: vi.fn(), preload: vi.fn(), results: vi.fn(), softStop: vi.fn(),
 }));
 vi.mock('./ui-sounds', () => ({ createUiSoundPlayer: (options: { enabled(): boolean }) => ({
   play: (sound: string) => { if (options.enabled()) boundary.play(sound); },
@@ -17,7 +17,7 @@ vi.mock('./ui-sounds', () => ({ createUiSoundPlayer: (options: { enabled(): bool
 vi.mock('@wbr/shared', async original => ({
   ...await original<object>(),
   createSoftSoundPlayer: (options: { enabled(): boolean }) => ({
-    play: (sound: string) => { if (options.enabled()) boundary.results(sound); }, stop: vi.fn(), dispose: vi.fn(),
+    play: (sound: string) => { if (options.enabled()) boundary.results(sound); }, stop: boundary.softStop, dispose: vi.fn(),
   }),
 }));
 vi.mock('./home', async original => {
@@ -50,6 +50,34 @@ async function open(state: State = createState(), write: (raw: string) => Promis
 const app = () => boundary.app!;
 
 describe('semantic UI sound integration', () => {
+  it('auditions through the existing sound boundary without navigation, storage or haptics', async () => {
+    const ui = await open();
+    const write = vi.fn(async () => {});
+    const host = { read: async () => JSON.stringify(createState()), write, haptic: vi.fn(async () => {}) };
+    ui.rerender(createElement(BlessingApp, { host, debugOverlay: createElement('span', { 'data-debug-probe': true }) }));
+    await settle();
+    write.mockClear(); boundary.play.mockClear(); boundary.results.mockClear();
+    const initialPage = ui.host.querySelector('.app-shell')?.getAttribute('data-page');
+    expect(app().audioInspector).toBeDefined();
+    act(() => { app().audioInspector!.prepare(); app().audioInspector!.play('navigate'); });
+    act(() => app().audioInspector!.play('saved'));
+    expect(boundary.play).toHaveBeenCalledWith('navigate');
+    expect(boundary.play).toHaveBeenCalledWith('saved');
+    expect(boundary.results).not.toHaveBeenCalled();
+    expect(ui.host.querySelector('.app-shell')?.getAttribute('data-page')).toBe(initialPage);
+    expect(write).not.toHaveBeenCalled();
+    expect(host.haptic).not.toHaveBeenCalled();
+    act(() => app().audioInspector!.play('woodTap'));
+    boundary.softStop.mockClear();
+    act(() => app().uiSound?.('navigate'));
+    expect(boundary.softStop).toHaveBeenCalledOnce();
+    act(() => app().dispatch({ type: 'settings', key: 'sound', value: false }));
+    boundary.play.mockClear(); boundary.results.mockClear();
+    expect(app().audioInspector!.play('collect')).toBe('disabled');
+    expect(boundary.play).not.toHaveBeenCalled(); expect(boundary.results).not.toHaveBeenCalled();
+    ui.rerender(createElement(BlessingApp, { host })); await settle();
+    expect(app().audioInspector).toBeUndefined();
+  });
   it('keeps the UI sound callback stable across unrelated save renders', async () => {
     await open();
     const first = app().uiSound;
@@ -109,14 +137,15 @@ describe('semantic UI sound integration', () => {
     await open(createState(), () => new Promise<void>(resolve => { finish = resolve; }));
     act(() => app().dispatch({ type: 'scene.visual', id: 'crane', style: 'toon-outline' }));
     await settle();
-    expect(boundary.results).not.toHaveBeenCalled();
+    expect(boundary.play).not.toHaveBeenCalled();
     await act(async () => finish()); await settle();
-    expect(boundary.results).toHaveBeenCalledExactlyOnceWith('saved');
-    mounted.pop()!.unmount(); boundary.results.mockClear();
+    expect(boundary.play).toHaveBeenCalledExactlyOnceWith('saved');
+    expect(boundary.results).not.toHaveBeenCalled();
+    mounted.pop()!.unmount(); boundary.play.mockClear();
     await open(createState(), async () => { throw Error('disk full'); });
     act(() => app().dispatch({ type: 'scene.visual', id: 'crane', style: 'toon-outline' }));
     await settle();
-    expect(boundary.results).not.toHaveBeenCalled();
+    expect(boundary.play).not.toHaveBeenCalled();
   });
 
   it('stops UI feedback on background and blur and never replays on return', async () => {
@@ -142,8 +171,24 @@ describe('semantic UI sound integration', () => {
       app().launchReward({ kind: 'leaf', from: { x: 0, y: 0, width: 20, height: 20 }, tab: 'wishes', announce: '收下' });
       app().go({ page: 'wishes' }, { sound: 'navigate' });
     });
-    expect(boundary.results).toHaveBeenCalledExactlyOnceWith('collect');
-    expect(boundary.play).not.toHaveBeenCalled();
+    expect(boundary.play).toHaveBeenCalledExactlyOnceWith('collect');
+    expect(boundary.results).not.toHaveBeenCalled();
     expect(ui.hostBridge.haptic).not.toHaveBeenCalled();
+  });
+
+  it('protects the full new completion phrase from navigation and leaves material sounds synthesized', async () => {
+    await open();
+    let now = 1000;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    act(() => app().uiSound?.('complete'));
+    expect(boundary.play).toHaveBeenCalledExactlyOnceWith('complete');
+    now = 1650;
+    act(() => app().uiSound?.('navigate'));
+    expect(boundary.play).toHaveBeenCalledTimes(1);
+    now = 1940;
+    act(() => app().uiSound?.('navigate'));
+    expect(boundary.play).toHaveBeenLastCalledWith('navigate');
+    act(() => app().feedback('woodTap'));
+    expect(boundary.results).toHaveBeenCalledExactlyOnceWith('woodTap');
   });
 });

@@ -64,7 +64,7 @@ export function WidgetNavigation({ request, route, saved, busy, onConsumed }: {
         return null;
     return <div className="widget-entry-notice" role="status">
     <span>{saved ? tr("\u5148\u5B8C\u6210\u5F53\u524D\u9875\u9762\uFF0C\u518D\u6253\u5F00\u4ECA\u65E5\u4EEA\u5F0F\u3002") : tr("\u8BB0\u5F55\u4FDD\u5B58\u540E\uFF0C\u518D\u6253\u5F00\u4ECA\u65E5\u4EEA\u5F0F\u3002")}</span>
-    <button onClick={() => {
+    <button data-audio-cue="close" onClick={() => {
             uiSound?.('close');
             handled.current = request.requestId;
             void actions.current.onConsumed?.(request.requestId).catch(() => { handled.current = undefined; setRetry(n => n + 1); });

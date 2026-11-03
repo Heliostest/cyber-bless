@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { assetFiles, prepareAppAssets } from './prepare-app-assets.mjs';
 import { bundledWoodfishModel } from './publish-scene-content.mjs';
-import { UI_SOUND_FILES } from '../packages/app/src/ui-sound-assets.ts';
+import { UI_SOUND_FILES, RESULT_SOUND_DURATIONS } from '../packages/app/src/ui-sound-assets.ts';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 test('EAS upload rules include every offline resource needed to regenerate the app', async () => {
@@ -35,40 +35,45 @@ test('both hosts ship the current woodfish model with the descriptor hash and no
     assert.equal(createHash('sha256').update(packaged).digest('hex'), hash);
   }
 });
-test('both offline hosts include quiet mono UI WAVs and the original license with verified hashes', async () => {
+test('both offline hosts include the approved original UI and result WAVs with verified provenance', async () => {
   const assets = await prepareAppAssets();
-  const sounds = JSON.parse(await readFile(path.join(root, 'assets/ui-sounds/manifest.json'), 'utf8'));
-  assert.equal(sounds.license, 'CC0-1.0');
-  assert.equal(sounds.sounds.length, 8);
-  const files = [...Object.values(UI_SOUND_FILES), 'ui-sounds/License.txt'];
-  assert.ok(files.every(file => assetFiles.includes(file)), 'every cue and license must regenerate offline');
+  const sounds = JSON.parse(await readFile(path.join(root, 'assets/ui-sounds/soft-garden-v1/manifest.json'), 'utf8'));
+  assert.equal(sounds.provenance, 'product-original');
+  assert.equal(sounds.sounds.length, 10);
+  assert.equal(sounds.processing.gainFromApprovedAudition, .45);
+  assert.equal(sounds.generatorSha256, createHash('sha256').update(await readFile(path.join(root, sounds.generator))).digest('hex'));
+  assert.equal(UI_SOUND_FILES.notice, UI_SOUND_FILES.select);
+  const files = [...new Set(Object.values(UI_SOUND_FILES)), 'ui-sounds/soft-garden-v1/manifest.json'];
+  assert.ok(files.every(file => assetFiles.includes(file)), 'every cue and provenance record must regenerate offline');
+  assert.ok(!assetFiles.includes('ui-sounds/License.txt'), 'legacy third-party audio is no longer shipped');
   let wavBytes = 0;
   for (const file of files) {
     const source = await readFile(path.join(root, 'assets', file));
     const sha256 = createHash('sha256').update(source).digest('hex');
     assert.ok(assets.some(asset => asset.file === file && asset.sha256 === sha256 && asset.bytes === source.length));
-    if (file.endsWith('License.txt')) assert.deepEqual(sounds.licenseFile, { file, bytes: source.length, sha256 });
     if (file.endsWith('.wav')) {
       wavBytes += source.length;
       const entry = sounds.sounds.find(sound => sound.file === file);
       assert.equal(entry.sha256, sha256, `${file} provenance hash`);
-      assert.match(entry.original.sha256, /^[a-f0-9]{64}$/);
+      assert.match(entry.auditionSha256, /^[a-f0-9]{64}$/);
+      if (Object.hasOwn(RESULT_SOUND_DURATIONS, entry.sound)) assert.equal(entry.duration, RESULT_SOUND_DURATIONS[entry.sound]);
       assert.equal(source.toString('ascii', 0, 4), 'RIFF');
       assert.equal(source.toString('ascii', 8, 16), 'WAVEfmt ');
       assert.equal(source.readUInt16LE(20), 1, 'PCM encoding');
       assert.equal(source.readUInt16LE(22), 1, 'mono channel');
-      assert.equal(source.readUInt32LE(24), 24000, '24kHz source');
+      assert.equal(source.readUInt32LE(24), 48000, '48kHz approved source');
       assert.equal(source.readUInt16LE(34), 16, '16-bit samples');
       assert.equal(source.readUInt32LE(40), source.length - 44, 'complete PCM payload');
-      const duration = (source.length - 44) / 48000;
-      assert.ok(duration > .035 && duration <= .35, `${file} short UI duration`);
+      const duration = (source.length - 44) / 96000;
+      assert.equal(duration, entry.duration);
+      assert.ok(duration >= .16 && duration <= .93, `${file} approved cue duration`);
       let peak = 0, energy = 0;
       for (let offset = 44; offset < source.length; offset += 2) {
         const value = source.readInt16LE(offset) / 32768;
         peak = Math.max(peak, Math.abs(value)); energy += value * value;
       }
-      assert.ok(peak >= .025 && peak <= .04, `${file} normalized quiet peak`);
-      assert.ok(Math.sqrt(energy / ((source.length - 44) / 2)) < .025, `${file} modest RMS`);
+      assert.ok(peak >= .05 && peak <= .085, `${file} attenuated audition peak`);
+      assert.ok(Math.sqrt(energy / ((source.length - 44) / 2)) < .03, `${file} modest RMS`);
       assert.equal(source.readInt16LE(44), 0, 'silent attack edge');
       assert.equal(source.readInt16LE(source.length - 2), 0, 'silent release edge');
     }
@@ -79,5 +84,6 @@ test('both offline hosts include quiet mono UI WAVs and the original license wit
       assert.deepEqual(manifest.find(asset => asset.file === file), { file, bytes: source.length, sha256 });
     }
   }
-  assert.ok(wavBytes < 80000, 'short mono cues fit an 80KB offline budget');
+  assert.equal(wavBytes, sounds.totalWavBytes);
+  assert.ok(wavBytes < 400000, 'ten mono cues fit a 400KB offline budget');
 });

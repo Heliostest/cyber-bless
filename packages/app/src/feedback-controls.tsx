@@ -161,7 +161,7 @@ export function FeedbackControls({ sceneId }: {
             if (event.target === event.currentTarget && event.propertyName === "height")
                 finishClosing();
         }}>
-        <button type="button" className="feedback-controls-trigger" ref={trigger} aria-label={tr("\u4EEA\u5F0F\u8BBE\u7F6E")} aria-haspopup="dialog" aria-expanded={open} aria-pressed={open} aria-controls={optionsId} title={open ? tr("\u6536\u8D77\u4EEA\u5F0F\u8BBE\u7F6E") : tr("\u5C55\u5F00\u4EEA\u5F0F\u8BBE\u7F6E")} onClick={() => {
+        <button data-audio-cue={open ? "close" : "open"} type="button" className="feedback-controls-trigger" ref={trigger} aria-label={tr("\u4EEA\u5F0F\u8BBE\u7F6E")} aria-haspopup="dialog" aria-expanded={open} aria-pressed={open} aria-controls={optionsId} title={open ? tr("\u6536\u8D77\u4EEA\u5F0F\u8BBE\u7F6E") : tr("\u5C55\u5F00\u4EEA\u5F0F\u8BBE\u7F6E")} onClick={() => {
             if (openNow.current)
                 close();
             else {
@@ -179,7 +179,7 @@ export function FeedbackControls({ sceneId }: {
             ["haptics", tr("\u9707\u52A8")],
         ] as const)
             .filter(([key]) => key !== "haptics" || canHaptic)
-            .map(([key, label]) => (<button key={key} type="button" aria-label={label} aria-pressed={state.settings[key]} title={tr("{p0}\u5DF2{p1}", { p0: label, p1: state.settings[key] ? tr("\u5F00\u542F") : tr("\u5173\u95ED") })} onClick={() => dispatch({ type: "settings", key, value: !state.settings[key] })}>
+            .map(([key, label]) => (<button data-audio-cue={key === "sound" && state.settings.sound ? undefined : state.settings[key] ? "toggleOff" : "toggleOn"} key={key} type="button" aria-label={label} aria-pressed={state.settings[key]} title={tr("{p0}\u5DF2{p1}", { p0: label, p1: state.settings[key] ? tr("\u5F00\u542F") : tr("\u5173\u95ED") })} onClick={() => dispatch({ type: "settings", key, value: !state.settings[key] })}>
                 <Icon name={state.settings[key] ? key : `${key}-off`}/>
               </button>))}
           <VisualStyleControl key={sceneId} sceneId={sceneId} onOpenChange={onChildOpenChange}/>

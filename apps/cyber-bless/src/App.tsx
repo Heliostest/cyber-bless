@@ -13,6 +13,7 @@ configureLocale(host.initialLocalePreference ?? 'system', navigator.languages ??
 const DevApp = import.meta.env.DEV ? lazy(() => import("./DevApp")) : null;
 const OpeningPreview = import.meta.env.DEV ? lazy(() => import('./OpeningPreview')) : null;
 const SceneReview = import.meta.env.DEV ? lazy(() => import('./SceneReview')) : null;
+const AudioDebugConsole = import.meta.env.DEV ? lazy(() => import('./AudioDebugConsole')) : null;
 
 export function App() {
   const locale = useDeveloperLocale();
@@ -36,6 +37,7 @@ export function App() {
     <BlessingApp
       host={host}
       internalToolsEnabled={INTERNAL_TOOLS_ENABLED}
+      debugOverlay={AudioDebugConsole ? <Suspense fallback={null}><AudioDebugConsole /></Suspense> : undefined}
     />
   );
 }

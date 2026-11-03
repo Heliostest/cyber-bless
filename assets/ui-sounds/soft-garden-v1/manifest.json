@@ -1,0 +1,141 @@
+{
+  "title": "Soft Garden",
+  "version": "1",
+  "provenance": "product-original",
+  "source": "Local deterministic synthesis: oscillators, envelopes and seeded noise; no third-party samples.",
+  "generator": "design/audio/soft-garden-v1/generate.mjs",
+  "generatorSha256": "67ddf1b417e9599ea3c9b10100b7b316f7d4e32779d364132cfbf9fce28f134c",
+  "processing": {
+    "sampleRate": 48000,
+    "channels": 1,
+    "bitDepth": 16,
+    "gainFromApprovedAudition": 0.45,
+    "edits": "Uniform attenuation only; approved timbres, timing and relative dynamics retained."
+  },
+  "aliases": {
+    "notice": "select"
+  },
+  "totalWavBytes": 382520,
+  "sounds": [
+    {
+      "sound": "navigate",
+      "file": "ui-sounds/soft-garden-v1/navigate.wav",
+      "bytes": 25004,
+      "duration": 0.26,
+      "peakDbfs": -21.83,
+      "rmsDbfs": -35.88,
+      "dc": -6.2e-7,
+      "maxSampleStep": 0.009705,
+      "sha256": "c700e1fc9b5b4a3ba42611b33cbe85cde45a7241197ca679895c8233362974c1",
+      "auditionSha256": "7a435d8536720b227df44cd67f24aeda8891f51138603658a2722e4a5407bc09"
+    },
+    {
+      "sound": "back",
+      "file": "ui-sounds/soft-garden-v1/back.wav",
+      "bytes": 25964,
+      "duration": 0.27,
+      "peakDbfs": -21.83,
+      "rmsDbfs": -35.63,
+      "dc": -0.0000135,
+      "maxSampleStep": 0.00647,
+      "sha256": "5ed5ccb77991d9f8043008bf9d14e6b4036d0cba5f896be7a6e1796b895aad79",
+      "auditionSha256": "01d8353691b3e8d60a4180330b38f32410f33e6e08054bcf3bb4693c051e1dbf"
+    },
+    {
+      "sound": "select",
+      "file": "ui-sounds/soft-garden-v1/select.wav",
+      "bytes": 15404,
+      "duration": 0.16,
+      "peakDbfs": -24.01,
+      "rmsDbfs": -38.51,
+      "dc": 0.00000405,
+      "maxSampleStep": 0.009064,
+      "sha256": "e5519d0c053b9e2926a4e63b1f10f6ac01dc64ca032a516b2faff7a36af7d1d5",
+      "auditionSha256": "05cdb7e905bc17c2bee24d45f08ae9375c708f39a56b5ab4fd7c12991a13aa51"
+    },
+    {
+      "sound": "open",
+      "file": "ui-sounds/soft-garden-v1/open.wav",
+      "bytes": 37484,
+      "duration": 0.39,
+      "peakDbfs": -21.83,
+      "rmsDbfs": -36.13,
+      "dc": -0.00000442,
+      "maxSampleStep": 0.009827,
+      "sha256": "09b60dd2183f83aca1b58a935b37f4a680a043b0e4b7b503d8ceefd8fb7a7851",
+      "auditionSha256": "45bef3349ce999c2e1bb810ae1fbfb0ea7a7d9e2711e8a8465bd663e5256c9df"
+    },
+    {
+      "sound": "close",
+      "file": "ui-sounds/soft-garden-v1/close.wav",
+      "bytes": 32684,
+      "duration": 0.34,
+      "peakDbfs": -22.24,
+      "rmsDbfs": -35.35,
+      "dc": -0.00000203,
+      "maxSampleStep": 0.007385,
+      "sha256": "3c3a460b67420befe23cdc4e147bc476f8d7ae1b0ca5d5ad735e85605668623d",
+      "auditionSha256": "97b25723218882fbe109bed03b7a5e0cd8f565d8b6293fd3c7e9b55a001027f1"
+    },
+    {
+      "sound": "toggleOn",
+      "file": "ui-sounds/soft-garden-v1/toggleOn.wav",
+      "bytes": 25004,
+      "duration": 0.26,
+      "peakDbfs": -22.01,
+      "rmsDbfs": -35.98,
+      "dc": 8.3e-7,
+      "maxSampleStep": 0.012817,
+      "sha256": "c608b68bf5d287516c23456c6abfd4f5f4122e5fa6ebe82d891a0d6fa9e88258",
+      "auditionSha256": "cd920c5e568e64548d2668b478c4e3a996aa489b32b8bda96227db4bc65e8e0f"
+    },
+    {
+      "sound": "toggleOff",
+      "file": "ui-sounds/soft-garden-v1/toggleOff.wav",
+      "bytes": 23084,
+      "duration": 0.24,
+      "peakDbfs": -22.56,
+      "rmsDbfs": -36.72,
+      "dc": -0.00000154,
+      "maxSampleStep": 0.007477,
+      "sha256": "92bc96a1d3da8be572e7b643dad08c67cfb322bc4484362b324174517a405ff9",
+      "auditionSha256": "bde9d1abbbb645232e3c0b71603ff803a270f9296d52d334f80f808f6719e74a"
+    },
+    {
+      "sound": "saved",
+      "file": "ui-sounds/soft-garden-v1/saved.wav",
+      "bytes": 49964,
+      "duration": 0.52,
+      "peakDbfs": -22.43,
+      "rmsDbfs": -35.53,
+      "dc": -9.1e-7,
+      "maxSampleStep": 0.009735,
+      "sha256": "72d7ca8acd2b2452140e6bd23aa93f5d289c3a2a9de22dbec2c959b8460dd0ed",
+      "auditionSha256": "694fb888070247c2eebce483a9bef7f387bb7f0ffb0ee09e1e28b6734c8ec751"
+    },
+    {
+      "sound": "collect",
+      "file": "ui-sounds/soft-garden-v1/collect.wav",
+      "bytes": 58604,
+      "duration": 0.61,
+      "peakDbfs": -22.32,
+      "rmsDbfs": -36.18,
+      "dc": 6.8e-7,
+      "maxSampleStep": 0.010834,
+      "sha256": "6260e8b73be41f108973963b02e634c531fe88a40291bb1b0161d5d471e44b40",
+      "auditionSha256": "d88c2c43e7e512b48ddd0023cde83b35f3ca46212e38c9da0f8047566855cefe"
+    },
+    {
+      "sound": "complete",
+      "file": "ui-sounds/soft-garden-v1/complete.wav",
+      "bytes": 89324,
+      "duration": 0.93,
+      "peakDbfs": -22.27,
+      "rmsDbfs": -34.89,
+      "dc": -0.00000149,
+      "maxSampleStep": 0.013,
+      "sha256": "10ab01d185764fa3c62107c360ffcc7dd6e917008c7408e0cf65064dbe3e4e81",
+      "auditionSha256": "1ec4aee6a58d928e64ad0b03bfe0c1657349a26a93e1b6ae9c6af2a234a9d263"
+    }
+  ]
+}

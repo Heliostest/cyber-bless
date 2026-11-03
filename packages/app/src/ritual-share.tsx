@@ -156,23 +156,23 @@ function ShareButton({ sceneId, title, snapshot, className = '' }: {
   }
 
   return <>
-    <button type="button" ref={trigger} className={`button outline scene-share-trigger ${className}`} disabled={!active} onClick={() => { if (!openNow.current) void generate(); }}>
+    <button data-audio-cue={open ? undefined : "open"} type="button" ref={trigger} className={`button outline scene-share-trigger ${className}`} disabled={!active} onClick={() => { if (!openNow.current) void generate(); }}>
       <Icon name="share"/>{tr('分享仪式')}
     </button>
     {open && <dialog ref={dialog} className="ritual-share-dialog" aria-labelledby={headingId} aria-describedby={noteId}
       onCancel={event => { event.preventDefault(); close(); }} onClose={close}>
       <div className="ritual-share-heading">
         <h2 id={headingId}>{tr('分享这场仪式')}</h2>
-        <button type="button" className="text-button" aria-label={tr('关闭分享')} onClick={close} autoFocus><Icon name="close"/></button>
+        <button data-audio-cue="close" type="button" className="text-button" aria-label={tr('关闭分享')} onClick={close} autoFocus><Icon name="close"/></button>
       </div>
       <div className="ritual-share-link">
         {shareUrl ? <div className="ritual-share-actions">
-          <button type="button" className="button primary" disabled={sharing || !active} onClick={() => void shareScene()}><Icon name="share"/>{tr('分享互动场景')}</button>
-          <button type="button" className="button secondary" disabled={sharing || !active} onClick={() => void copyLink()}>{tr('复制链接')}</button>
+          <button data-audio-cue={shareLink || typeof navigator.share === "function" ? "select" : "saved"} type="button" className="button primary" disabled={sharing || !active} onClick={() => void shareScene()}><Icon name="share"/>{tr('分享互动场景')}</button>
+          <button data-audio-cue="saved" type="button" className="button secondary" disabled={sharing || !active} onClick={() => void copyLink()}>{tr('复制链接')}</button>
         </div> : <p className="ritual-share-note">{tr('互动链接分享暂未开放。')}</p>}
         <div className="ritual-share-destinations">
-          {previewUrl && <a href={previewUrl} target="_blank" rel="noopener noreferrer" onClick={() => uiSound?.('select')}>{tr('预览互动场景')}</a>}
-          <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" onClick={() => uiSound?.('select')}>{tr('在 App Store 查看')}</a>
+          {previewUrl && <a data-audio-cue="select" href={previewUrl} target="_blank" rel="noopener noreferrer" onClick={() => uiSound?.('select')}>{tr('预览互动场景')}</a>}
+          <a data-audio-cue="select" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" onClick={() => uiSound?.('select')}>{tr('在 App Store 查看')}</a>
         </div>
         <p className="ritual-share-status" role="status">{linkStatus}</p>
         {manualCopy && shareUrl && <input className="ritual-share-url" aria-label={tr('分享链接')} value={shareUrl} readOnly onFocus={event => event.currentTarget.select()}/>}
@@ -185,9 +185,9 @@ function ShareButton({ sceneId, title, snapshot, className = '' }: {
       <p className="ritual-share-status" role="status">{status}</p>
       <div className="ritual-share-actions">
         {image ? <>
-          <button type="button" className={`button ${shareUrl ? 'secondary' : 'primary'}`} disabled={sharing || !active} onClick={() => void share()}><Icon name="share"/>{tr('分享图片')}</button>
-          {!shareImage && <a className="button secondary" href={image.dataUrl} download={image.fileName} onClick={() => uiSound?.('select')}>{tr('保存图片')}</a>}
-        </> : <button type="button" className="button secondary" disabled={preparing || sharing || !active} onClick={() => void generate()}>{tr('重新生成')}</button>}
+          <button data-audio-cue="select" type="button" className={`button ${shareUrl ? 'secondary' : 'primary'}`} disabled={sharing || !active} onClick={() => void share()}><Icon name="share"/>{tr('分享图片')}</button>
+          {!shareImage && <a data-audio-cue="select" className="button secondary" href={image.dataUrl} download={image.fileName} onClick={() => uiSound?.('select')}>{tr('保存图片')}</a>}
+        </> : <button data-audio-cue="select" type="button" className="button secondary" disabled={preparing || sharing || !active} onClick={() => void generate()}>{tr('重新生成')}</button>}
       </div>
     </dialog>}
   </>;

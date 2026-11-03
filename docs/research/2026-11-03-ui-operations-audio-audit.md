@@ -110,7 +110,7 @@
 
 ## 实际接入
 
-素材作者、下载、许可和候选对比见 [界面音效素材来源](2026-11-03-ui-sound-sources.md)。正式选择 Kenney Interface Sounds 1.0 的 CC0 素材，保留原有 `saved/collect/complete`。8 个派生 WAV 与原始许可已入库，音频总计 52,580 字节；具体原件、加工、hash 和指标见 [素材 README](../../assets/ui-sounds/README.md) 与 [manifest](../../assets/ui-sounds/manifest.json)。
+早期素材作者、下载、许可和候选对比见 [界面音效素材来源](2026-11-03-ui-sound-sources.md)。当时选择 Kenney Interface Sounds 1.0 的 CC0 素材，保留原有 `saved/collect/complete`；8 个派生 WAV、原始许可、加工和 hash 记录保存在 Git 提交 `b36e4eaf` 中。同日用户试听确认原创 Soft Garden 并要求替换和清理旧声音；当前按钮与结果音统一使用十段 [Soft Garden v1](../../assets/ui-sounds/soft-garden-v1/README.md)，旧素材实体已删除。
 
 | UI 语义 | 原包素材 | 最终时长 |
 | --- | --- | ---: |

@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createUiSoundPlayer, type UiSound } from './ui-sounds';
+import { UI_SOUND_FILES } from './ui-sound-assets';
 
-type Cue = Exclude<UiSound, 'saved'>;
-const cues: Cue[] = ['navigate', 'back', 'select', 'open', 'close', 'toggleOn', 'toggleOff', 'notice'];
+type Cue = UiSound;
+const cues = Object.keys(UI_SOUND_FILES) as Cue[];
 const tick = async () => { for (let n = 0; n < 8; n++) await Promise.resolve(); };
 function deferred<T>() {
   let resolve!: (value: T) => void, reject!: (reason?: unknown) => void;
@@ -58,11 +59,32 @@ function fixture() {
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe('createUiSoundPlayer', () => {
+  it('plays the full approved completion cue without rejecting its longer duration', async () => {
+    const f = fixture(); f.context.pendingDecode = deferred<AudioBuffer>();
+    f.player.preload(); await tick(); f.player.prepare();
+    f.context.pendingDecode.resolve({ duration: .93, numberOfChannels: 1 } as AudioBuffer); await tick();
+    expect(f.player.play('complete')).toBe('played');
+    expect(f.context.sources[0].buffer?.duration).toBe(.93);
+    f.context.currentTime += .65;
+    expect(f.player.play('navigate')).toBe('busy');
+    f.player.stop();
+    expect(f.context.sources[0].stops).toEqual([3.65]);
+  });
+  it('reports whether an audition was actually scheduled without replaying an unready request', async () => {
+    const f = fixture();
+    expect(f.player.play('navigate')).toBe('unready');
+    await f.ready();
+    expect(f.context.sources).toHaveLength(0);
+    expect(f.player.play('navigate')).toBe('played');
+    expect(f.player.play('back')).toBe('busy');
+    f.setEnabled(false);
+    expect(f.player.play('navigate')).toBe('disabled');
+  });
   it('preloads each local WAV once without creating or decoding a context', async () => {
     vi.stubEnv('EXPO_BASE_URL', './embedded/');
     const f = fixture();
     f.player.preload(); f.player.preload(); await tick();
-    expect(f.requests).toEqual(cues.map(cue => `./embedded/ui-sounds/${cue}.wav`));
+    expect(f.requests).toEqual(cues.map(cue => `./embedded/${UI_SOUND_FILES[cue]}`));
     expect(f.getContext).not.toHaveBeenCalled();
     expect(f.context.decoded).toHaveLength(0);
     expect(f.context.sources).toHaveLength(0);
@@ -73,7 +95,7 @@ describe('createUiSoundPlayer', () => {
     f.player.prepare(); await tick();
     expect(f.context.decoded).toHaveLength(0);
     f.player.prepare(); await tick();
-    expect(f.context.decoded).toHaveLength(8);
+    expect(f.context.decoded).toHaveLength(cues.length);
     expect(f.context.sources).toHaveLength(0);
   });
 
@@ -99,10 +121,10 @@ describe('createUiSoundPlayer', () => {
     f.player.play(cue);
     const source = f.context.sources[0];
     expect(source).toBeDefined();
-    expect(source.buffer).toMatchObject({ id: cues.indexOf(cue) + 1 });
+    expect(source.buffer).toMatchObject({ id: cues.indexOf(cue === 'notice' ? 'select' : cue) + 1 });
     expect(source.connections).toEqual([f.context.destination]);
     expect(source.starts).toEqual([3]);
-    expect(f.context.decoded).toHaveLength(8);
+    expect(f.context.decoded).toHaveLength(cues.length);
     expect(f.context.close).not.toHaveBeenCalled();
     expect(f.context.resume).not.toHaveBeenCalled();
   });
@@ -202,4 +224,13 @@ describe('createUiSoundPlayer', () => {
     expect(() => player.prepare()).not.toThrow();
     expect(() => player.play('open')).not.toThrow();
   });
+
+  it.each([{ duration: 1.21, numberOfChannels: 1 }, { duration: .93, numberOfChannels: 2 }])(
+    'rejects oversized or multichannel result buffers: %j', async buffer => {
+      const f = fixture(); f.context.pendingDecode = deferred<AudioBuffer>();
+      f.player.preload(); await tick(); f.player.prepare();
+      f.context.pendingDecode.resolve(buffer as AudioBuffer); await tick();
+      expect(f.player.play('complete')).toBe('unready');
+      expect(f.context.sources).toHaveLength(0);
+    });
 });

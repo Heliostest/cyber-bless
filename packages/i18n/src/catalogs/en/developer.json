@@ -68,5 +68,20 @@
   "developer.SceneReview.13dfaa70": "Last",
   "developer.SceneReview.cc92cb4b": "Restart",
   "developer.SceneReview.2ecc082f": "Each selection starts over · separate test records",
-  "developer.disclaimer.3fb5c5b7": "This app presents objects, cultures and everyday thoughts through interactive scenes. It does not replace real religious rites or promise religious efficacy."
+  "developer.disclaimer.3fb5c5b7": "This app presents objects, cultures and everyday thoughts through interactive scenes. It does not replace real religious rites or promise religious efficacy.",
+  "developer.audio.console": "Debug console",
+  "developer.audio.filter": "UI sound coverage",
+  "developer.audio.help": "Tap a top-right speaker to preview its sound without performing the action.",
+  "developer.audio.scope": "Covers UI controls and wish-shelf objects, excluding actions inside 3D scenes.",
+  "developer.audio.count": "{count} actions marked",
+  "developer.audio.preview": "Preview {name} · {cue}",
+  "developer.audio.muted": "Sound is off. Enable it in Me first.",
+  "developer.audio.unready": "Preparing the sound. Tap again.",
+  "developer.audio.unavailable": "This sound is currently unavailable.",
+  "developer.audio.busy": "Wait a moment before previewing again.",
+  "developer.audio.playing": "Preview: {cue}",
+  "developer.audio.requested": "Preview requested: {cue}",
+  "developer.audio.clip": "Sound clip",
+  "developer.audio.synth": "Synthesized sound",
+  "developer.audio.synthSource": "Synthesizer: soft-audio.ts"
 }

@@ -97,7 +97,7 @@ export function FavoriteChip({ id, favorite }: {
     favorite: boolean;
 }) {
     const { dispatch } = useApp();
-    return (<button type="button" className="button favorite-chip" aria-pressed={favorite} onClick={() => dispatch({ type: "scene.favorite", id, favorite: !favorite })}>
+    return (<button data-audio-cue={favorite ? "toggleOff" : "toggleOn"} type="button" className="button favorite-chip" aria-pressed={favorite} onClick={() => dispatch({ type: "scene.favorite", id, favorite: !favorite })}>
       <Icon name="heart"/>
       {tr(SCENE_FAVORITE_LABEL)}
     </button>);
@@ -245,7 +245,7 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
     const favoriteChip = (<FavoriteChip id={entry.id} favorite={!!record?.favorite}/>);
     const canRecordWish = progress >= steps && !!intention?.optionalWish &&
         !returnWish && !keptWish && !heldWish && !discarded;
-    const prayerButton = canRecordWish ? <button type="button" className="button secondary scene-wish-invite" disabled={!active} aria-expanded={wishWriting} onClick={() => {
+    const prayerButton = canRecordWish ? <button data-audio-cue={wishWriting ? undefined : "open"} type="button" className="button secondary scene-wish-invite" disabled={!active} aria-expanded={wishWriting} onClick={() => {
         if (wishWritingNow.current) return;
         wishWritingNow.current = true; uiSound?.('open'); setWishWriting(true);
     }}>{tr("\u7948\u613F")}</button> : null;
@@ -373,48 +373,48 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
       {progress >= steps && (<div className="scene-done-row">
           {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} favorite={favoriteChip} prayer={prayerButton}/> : returnedFor ? (<>
               {/* The legacy visit's note is saved; fulfillment is a separate kindness record. */}
-              {completionActions(<button type="button" className="button primary" onClick={() => go({ page: "wish", id: returnedFor }, { sound: 'navigate' })}>
+              {completionActions(<button data-audio-cue="navigate" type="button" className="button primary" onClick={() => go({ page: "wish", id: returnedFor }, { sound: 'navigate' })}>
                 {tr(SCENE_RETURN_CTA)}
               </button>)}
             </>) : dailyGranted ? (<>
-              {completionActions(<button type="button" className="button primary" ref={collectCta} onClick={collectDaily}>
+              {completionActions(<button data-audio-cue="collect" type="button" className="button primary" ref={collectCta} onClick={collectDaily}>
                 {tr(SCENE_DAILY_CTA)}
               </button>)}
-              {keptWish && (<button type="button" className="text-button" ref={doneCta} onClick={goSeeWish}>
+              {keptWish && (<button data-audio-cue="collect" type="button" className="text-button" ref={doneCta} onClick={goSeeWish}>
                   {tr(SCENE_DONE_WISH_CTA)}
                 </button>)}
             </>) : vesselSpent ? (<>
               {discarded ? (<>
                   <p className="scene-done">{tr(SCENE_DISCARDED_COPY)}</p>
-                  {completionActions(<button type="button" className="button primary" onClick={() => back({ sound: true })}>
+                  {completionActions(<button data-audio-cue="back" type="button" className="button primary" onClick={() => back({ sound: true })}>
                     {tr(SCENE_DONE_CTA)}
                   </button>)}
                 </>) : heldWish ? (<>
                   <p className="scene-keep-line">「{heldWish}」</p>
                   <p className="scene-keep-question">{tr(SCENE_KEEP_QUESTION)}</p>
                   <div className="scene-keep-choice">
-                    <button type="button" className="button primary" onClick={keepHeld}>
+                    <button data-audio-cue="saved" type="button" className="button primary" onClick={keepHeld}>
                       {tr(SCENE_KEEP_CTA)}
                     </button>
-                    <button type="button" className="button secondary" onClick={discardHeld}>
+                    <button data-audio-cue="close" type="button" className="button secondary" onClick={discardHeld}>
                       {tr(SCENE_DISCARD_CTA)}
                     </button>
                   </div>
                 </>) : keptWish ? (<>
-                  {completionActions(<button type="button" className="button primary" ref={doneCta} onClick={goSeeWish}>
+                  {completionActions(<button data-audio-cue="collect" type="button" className="button primary" ref={doneCta} onClick={goSeeWish}>
                     {tr(SCENE_DONE_WISH_CTA)}
                   </button>)}
                 </>) : (<>
-                  {completionActions(<button type="button" className="button primary" onClick={() => back({ sound: true })}>
+                  {completionActions(<button data-audio-cue="back" type="button" className="button primary" onClick={() => back({ sound: true })}>
                     {tr(SCENE_DONE_CTA)}
                   </button>)}
                 </>)}
             </>) : keptWish ? (<>
-              {completionActions(<button type="button" className="button primary" ref={doneCta} onClick={goSeeWish}>
+              {completionActions(<button data-audio-cue="collect" type="button" className="button primary" ref={doneCta} onClick={goSeeWish}>
                 {tr(SCENE_DONE_WISH_CTA)}
               </button>)}
             </>) : (<>
-              {completionActions(<button type="button" className="button primary" onClick={() => back({ sound: true })}>
+              {completionActions(<button data-audio-cue="back" type="button" className="button primary" onClick={() => back({ sound: true })}>
                 {tr(SCENE_DONE_CTA)}
               </button>)}
             </>)}
@@ -429,7 +429,7 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
         <p className="scene-wish-saved" role="status">
           {keptWish && (<>
               {tr(WISH_WRITE_COPY.saved)}
-              {!opening && <button className="text-button" onClick={() => go({ page: "wish", id: keptWish }, { sound: 'navigate' })}>{tr("\u53BB\u770B\u770B")}</button>}
+              {!opening && <button data-audio-cue="navigate" className="text-button" onClick={() => go({ page: "wish", id: keptWish }, { sound: 'navigate' })}>{tr("\u53BB\u770B\u770B")}</button>}
             </>)}
         </p>)}
       {(progress < steps || pendingVesselChoice) && (<div className="scene-actions">{favoriteChip}</div>)}
@@ -499,7 +499,7 @@ export function SceneExperience({ entry: offeredEntry, wishId, daily, vessel, re
           <p>
             {tr("\u6B63\u5728\u51C6\u5907\u573A\u666F\u2026")}
           </p>
-          <button className="button secondary" onClick={() => {
+          <button data-audio-cue="back" className="button secondary" onClick={() => {
                 cancel.current?.abort();
                 back({ sound: true });
             }}>{tr("\u53D6\u6D88\u5E76\u8FD4\u56DE")}</button>

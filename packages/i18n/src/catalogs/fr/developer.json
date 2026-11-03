@@ -68,5 +68,20 @@
   "developer.SceneReview.13dfaa70": "Dernière",
   "developer.SceneReview.cc92cb4b": "Recommencer",
   "developer.SceneReview.2ecc082f": "Chaque changement recommence au début · données de test distinctes",
-  "developer.disclaimer.3fb5c5b7": "Cette application présente des objets, des cultures et des pensées du quotidien par des scènes interactives. Elle ne remplace pas de véritables rites religieux et ne promet aucune efficacité religieuse."
+  "developer.disclaimer.3fb5c5b7": "Cette application présente des objets, des cultures et des pensées du quotidien par des scènes interactives. Elle ne remplace pas de véritables rites religieux et ne promet aucune efficacité religieuse.",
+  "developer.audio.console": "Console de débogage",
+  "developer.audio.filter": "Couverture sonore",
+  "developer.audio.help": "Touchez le haut-parleur en haut à droite pour écouter le son sans exécuter l’action.",
+  "developer.audio.scope": "Couvre les commandes et les objets de l’étagère à souhaits, hors actions dans les scènes 3D.",
+  "developer.audio.count": "{count} actions signalées",
+  "developer.audio.preview": "Écouter {name} · {cue}",
+  "developer.audio.muted": "Le son est désactivé. Activez-le dans Mon espace.",
+  "developer.audio.unready": "Préparation du son. Touchez à nouveau.",
+  "developer.audio.unavailable": "Ce son est indisponible pour le moment.",
+  "developer.audio.busy": "Patientez avant de réécouter.",
+  "developer.audio.playing": "Écoute : {cue}",
+  "developer.audio.requested": "Écoute demandée : {cue}",
+  "developer.audio.clip": "Extrait sonore",
+  "developer.audio.synth": "Son de synthèse",
+  "developer.audio.synthSource": "Synthétiseur : soft-audio.ts"
 }

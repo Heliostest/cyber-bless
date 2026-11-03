@@ -5,11 +5,13 @@ import { localizedTitle } from './localization';
 import { catalogData } from '@wbr/i18n/catalogs';
 import { configureHour12, getHour12 } from '@wbr/i18n';
 import { IntlProvider } from 'react-intl';
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode, } from "react";
 import { createStore, type Host, type HapticStrength } from "@wbr/runtime";
 import { rituals, sceneProgress, sceneStepCount } from "@wbr/core";
 import { createSoftSoundPlayer, type SoftSound } from "@wbr/shared";
 import { createUiSoundPlayer, type UiSound } from './ui-sounds';
+import { UI_SOUND_FILES, RESULT_SOUND_DURATIONS } from './ui-sound-assets';
+import type { AudioInspector } from './context';
 import { Context, type Route, type FulfillmentDraft } from "./context";
 import { Icon } from "./art";
 import { CollectionDetail, History, Me, Wishes, World } from "./pages";
@@ -39,7 +41,7 @@ import { ARRIVAL_LINGER_MS, rewardOriginOf, shouldReduceMotion, type RewardFligh
 const isInternalRoute = (route: Route) => route.page === 'scenes' || route.page === 'cache';
 const permittedRoute = (route: Route, internalToolsEnabled: boolean): Route =>
     !internalToolsEnabled && isInternalRoute(route) ? { page: 'me' } : route;
-export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack, content, navigationRequest, onNavigationConsumed, initialRoute, systemLocales, systemHour12, internalToolsEnabled = INTERNAL_TOOLS_ENABLED, }: {
+export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack, content, navigationRequest, onNavigationConsumed, initialRoute, systemLocales, systemHour12, internalToolsEnabled = INTERNAL_TOOLS_ENABLED, debugOverlay, }: {
     host: Host;
     active?: boolean;
     backRequest?: number;
@@ -53,6 +55,8 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     systemHour12?: boolean;
     /** The host owns this runtime distribution decision; saves and URLs cannot enable it. */
     internalToolsEnabled?: boolean;
+    /** Optional developer UI. The production and native hosts never supply it. */
+    debugOverlay?: ReactNode;
 }) {
     const preferred = useRef(systemLocales);
     preferred.current = systemLocales;
@@ -131,19 +135,44 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     const sounds = useMemo(() => createSoftSoundPlayer(soundOptions), [soundOptions]);
     const interactionSounds = useMemo(() => createSoftSoundPlayer(soundOptions), [soundOptions]);
     const uiSounds = useMemo(() => createUiSoundPlayer(soundOptions), [soundOptions]);
+    const audition = useRef<'ui' | 'soft' | null>(null);
+    const audioInspector = useMemo<AudioInspector>(() => ({
+        prepare: () => uiSounds.prepare(),
+        play(sound) {
+            if (!soundOptions.enabled()) return 'disabled';
+            uiSounds.stop(); sounds.stop();
+            if (Object.hasOwn(UI_SOUND_FILES, sound)) {
+                audition.current = 'ui';
+                return uiSounds.play(sound as keyof typeof UI_SOUND_FILES);
+            }
+            audition.current = 'soft';
+            sounds.play(sound as SoftSound);
+            // The synthesis service has no scheduling receipt; do not claim audibility.
+            return 'requested';
+        },
+        stop() {
+            if (audition.current === 'ui') uiSounds.stop();
+            if (audition.current === 'soft') sounds.stop();
+            audition.current = null;
+        },
+    }), [uiSounds, sounds, soundOptions]);
+    const hasDebugOverlay = !!debugOverlay;
+    useEffect(() => () => audioInspector.stop(), [audioInspector, hasDebugOverlay]);
     const quietUiUntil = useRef(0);
     const resultSound = useCallback((sound: 'saved' | 'collect' | 'complete') => {
+        audioInspector.stop();
         if (!soundOptions.enabled()) return;
         uiSounds.stop();
-        quietUiUntil.current = performance.now() + (sound === 'complete' ? 580 : sound === 'collect' ? 460 : 420);
-        sounds.play(sound);
-    }, [soundOptions, uiSounds, sounds]);
+        quietUiUntil.current = performance.now() + RESULT_SOUND_DURATIONS[sound] * 1000;
+        uiSounds.play(sound);
+    }, [soundOptions, uiSounds, audioInspector]);
     const uiSound = useCallback((sound: UiSound) => {
+        audioInspector.stop();
         if (!soundOptions.enabled()) return;
-        if (sound === 'saved') { resultSound('saved'); return; }
+        if (sound === 'saved' || sound === 'collect' || sound === 'complete') { resultSound(sound); return; }
         if (performance.now() < quietUiUntil.current) return;
         uiSounds.play(sound);
-    }, [soundOptions, uiSounds, resultSound]);
+    }, [soundOptions, uiSounds, resultSound, audioInspector]);
     const prepareUiFeedback = useCallback(() => {
         if (!soundOptions.enabled()) return;
         uiSounds.prepare();
@@ -354,6 +383,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             void host.haptic?.(strength).catch(() => { });
     }
     function feedback(sound?: AudioBuffer | SoftSound) {
+        audioInspector.stop();
         haptic();
         if (!mounted.current || !activeNow.current || !focused.current || document.hidden || !store.getSnapshot().state?.settings.sound)
             return;
@@ -455,6 +485,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             active,
             feedback,
             uiSound,
+            audioInspector: hasDebugOverlay ? audioInspector : undefined,
             haptic,
             canHaptic: typeof host.haptic === "function",
             shareImage: host.shareImage,
@@ -531,7 +562,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             }}>
             <WidgetNavigation request={navigationRequest} route={route} saved={snapshot.status === 'saved'} busy={!!flight} onConsumed={onNavigationConsumed}/>
             {!roots.includes(route.page) && (<header className={`app-topbar${route.page === "complete" ? " completion-topbar" : ""}${route.page === "scene" || route.page === "ritual" ? " scene-topbar" : " page-topbar"}`}>
-                <button className="back-button" aria-label={route.page === "complete" ? tr("\u5173\u95ED\u5B8C\u6210\u9875") : tr("\u8FD4\u56DE")} onClick={route.page === "complete"
+                <button data-audio-cue={route.page === 'complete' ? state.sessions.some(session => session.id === route.id) ? 'collect' : undefined : canBack ? 'back' : undefined} className="back-button" aria-label={route.page === "complete" ? tr("\u5173\u95ED\u5B8C\u6210\u9875") : tr("\u8FD4\u56DE")} onClick={route.page === "complete"
                 ? closeComplete
                 : () => back({ sound: true })}>
                   <Icon name={route.page === "complete" ? "close" : "back"}/>
@@ -546,11 +577,11 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             </span>
             {snapshot.status === "save-error" && (<div className="error-banner" role="alert">
                 <span>{snapshot.errorCode ? message(snapshot.errorCode) : snapshot.error ? tr(snapshot.error) : ''}</span>
-                <button onClick={() => { uiSound('select'); store.retry(); }}>{tr("\u91CD\u8BD5\u4FDD\u5B58")}</button>
+                <button data-audio-cue="select" onClick={() => { uiSound('select'); store.retry(); }}>{tr("\u91CD\u8BD5\u4FDD\u5B58")}</button>
               </div>)}
             {error && (<div className="error-banner" role="alert">
                 <span>{error instanceof ProductError ? message(error.code, error.values) : tr(error)}</span>
-                <button onClick={() => { uiSound('close'); setError(""); }}>{tr("\u77E5\u9053\u4E86")}</button>
+                <button data-audio-cue="close" onClick={() => { uiSound('close'); setError(""); }}>{tr("\u77E5\u9053\u4E86")}</button>
               </div>)}
             <main className="app-content" key={route.page + (route.id ?? "")} style={skipPageIn ? { animation: "none" } : undefined}>
               {page}
@@ -562,7 +593,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
                 ["wishes", message('app.nav.wishes'), tr("\u5FC3\u613F")],
                 ["world", message('app.nav.world'), tr("\u5C0F\u5929\u5730")],
                 ["me", message('app.nav.me'), tr("\u6211\u7684")],
-            ].map(([id, label, accessibleLabel]) => (<button key={id} data-tab={id} aria-label={accessibleLabel ?? label} aria-current={section === id ? "page" : undefined} className={hopTab === id ? "tab-hop" : undefined} onClick={() => go({ page: id as Route["page"] }, { sound: 'navigate' })}>
+            ].map(([id, label, accessibleLabel]) => (<button data-audio-cue={section === id ? undefined : "navigate"} key={id} data-tab={id} aria-label={accessibleLabel ?? label} aria-current={section === id ? "page" : undefined} className={hopTab === id ? "tab-hop" : undefined} onClick={() => go({ page: id as Route["page"] }, { sound: 'navigate' })}>
                     <Icon name={id}/>
                     <span>{label}</span>
                     <i>{tabBadge(id)}</i>
@@ -572,6 +603,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             <p className="sr-only" role="status">
               {announcement && (<span key={announcement.n}>{announcement.text}</span>)}
             </p>
+            {debugOverlay}
           </div>
         </div></SceneLibraryProvider></TestFeedbackProvider>
       </Context.Provider>

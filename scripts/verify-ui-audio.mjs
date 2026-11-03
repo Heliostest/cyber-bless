@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright';
+import { UI_SOUND_FILES } from '../packages/app/src/ui-sound-assets.ts';
 
 const base = process.env.WBR_URL || 'http://127.0.0.1:5194';
 const out = path.resolve('artifacts/ui-sounds/verification');
@@ -51,7 +52,7 @@ try {
   }, moduleUrl);
   await page.reload();
   await page.locator('[data-tab="today"]').waitFor();
-  await page.waitForFunction(() => performance.getEntriesByType('resource').filter(entry => /ui-sounds\/.*\.wav/.test(entry.name)).length === 8);
+  await page.waitForFunction(() => new Set(performance.getEntriesByType('resource').filter(entry => /ui-sounds\/soft-garden-v1\/.*\.wav/.test(entry.name)).map(entry => entry.name)).size === 10);
   assert.equal(await count(), 0);
   assert.equal(await page.evaluate(() => window.uiAudioContexts), 0);
   check('startup fetches local bytes without audio context or playback', { played: 0 });
@@ -87,38 +88,50 @@ try {
   check('background stops active UI source and return does not replay', { playedAfterReturn: 0 });
   await page.keyboard.press('Escape'); await pause();
 
+  await changes('open wishes for a real saved result', () => page.locator('[data-tab="wishes"]').click());
+  await changes('open wish detail', () => page.locator('[data-wish-id="audio-wish"]').click());
+  await pause();
+  const savedBefore = await count();
+  await page.locator('.wish-detail-page [data-audio-cue="saved"]').click();
+  await page.waitForFunction(before => window.uiAudioEvents.filter(event => event.kind === 'start').length > before, savedBefore);
+  await page.waitForTimeout(600);
+  assert.equal(await count() - savedBefore, 1);
+  assert.equal(await page.evaluate(() => window.uiAudioEvents.filter(event => event.kind === 'start').at(-1).duration), .52);
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('cyber-bless:personal:v1')).wishes.find(wish => wish.id === 'audio-wish').status), 'realized');
+  check('successful wish persistence plays the new 520ms saved WAV exactly once', { played: 1 });
+
   // Decode every packaged WAV in the browser, inspect actual samples, and write
   // a review page using exactly the same bytes shipped in the App.
-  const files = ['navigate', 'back', 'select', 'open', 'close', 'toggleOn', 'toggleOff', 'notice'];
+  const files = Object.keys(UI_SOUND_FILES).filter(sound => sound !== 'notice');
   for (const sound of files) {
-    const result = await page.evaluate(async cue => {
-      const context = new OfflineAudioContext(1, 24000, 24000);
-      const response = await fetch(`/ui-sounds/${cue}.wav`);
-      if (!response.ok) throw Error(`Missing local sound ${cue}`);
+    const result = await page.evaluate(async ({ sound, file }) => {
+      const context = new OfflineAudioContext(1, 48000, 48000);
+      const response = await fetch(`/${file}`);
+      if (!response.ok) throw Error(`Missing local sound ${sound}`);
       const buffer = await context.decodeAudioData(await response.arrayBuffer());
       const samples = buffer.getChannelData(0);
       let peak = 0, energy = 0;
       for (const value of samples) { peak = Math.max(peak, Math.abs(value)); energy += value * value; }
-      return { sound: cue, duration: buffer.duration, channels: buffer.numberOfChannels, peak, rms: Math.sqrt(energy / samples.length) };
-    }, sound);
-    assert.ok(result.peak > .005 && result.peak <= .04);
-    assert.ok(result.duration > .04 && result.duration <= .5);
+      return { sound, duration: buffer.duration, channels: buffer.numberOfChannels, peak, rms: Math.sqrt(energy / samples.length) };
+    }, { sound, file: UI_SOUND_FILES[sound] });
+    assert.ok(result.peak > .05 && result.peak <= .085);
+    assert.ok(result.duration >= .16 && result.duration <= .93);
     assert.equal(result.channels, 1);
     report.assets.push(result);
-    await copyFile(path.resolve(`assets/ui-sounds/${sound}.wav`), path.join(out, `${sound}.wav`));
+    await copyFile(path.resolve('assets', UI_SOUND_FILES[sound]), path.join(out, `${sound}.wav`));
   }
-  const names = ['进入页面', '返回', '切换选项', '展开面板', '收起面板', '开启', '关闭选项', '轻提示'];
-  await writeFile(path.join(out, 'listen.html'), `<!doctype html><html lang="zh-Hans"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>界面音效试听</title><style>body{max-width:680px;margin:40px auto;padding:0 24px;background:#f8f5ed;color:#3e584b;font:16px system-ui}h1{font-size:26px}section{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0;padding:16px;background:#fffdf7;border-radius:20px}audio{width:min(65%,300px)}small{display:block;color:#65766b}a{color:#3e584b}</style><h1>一日一念 · 界面声音</h1><p>8 个本地短音。保存、收下和完成继续使用原有声音。</p>${files.map((sound, index) => `<section><span>${names[index]}<small>${Math.round(report.assets[index].duration * 1000)} ms</small></span><audio controls preload="none" src="${sound}.wav"></audio></section>`).join('')}<p>来源：<a href="https://kenney.nl/assets/interface-sounds">Kenney Interface Sounds</a> · CC0。已转为单声道 WAV，柔化音头并调整响度。</p><script>document.addEventListener('play',e=>{for(const a of document.querySelectorAll('audio'))if(a!==e.target)a.pause()},true)</script></html>`);
+  const names = ['进入页面', '返回', '切换选项', '展开面板', '收起面板', '开启', '关闭选项', '保存', '收集', '完成'];
+  await writeFile(path.join(out, 'listen.html'), `<!doctype html><html lang="zh-Hans"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>界面音效试听</title><style>body{max-width:680px;margin:40px auto;padding:0 24px;background:#f8f5ed;color:#3e584b;font:16px system-ui}h1{font-size:26px}section{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0;padding:16px;background:#fffdf7;border-radius:20px}audio{width:min(65%,300px)}small{display:block;color:#65766b}</style><h1>一日一念 · Soft Garden</h1><p>App 实际使用的十段原创合成音效。</p>${files.map((sound, index) => `<section><span>${names[index]}<small>${Math.round(report.assets[index].duration * 1000)} ms</small></span><audio controls preload="none" src="${sound}.wav"></audio></section>`).join('')}<p>本地确定性合成，统一调整为试听版的 45% 振幅。</p><script>document.addEventListener('play',e=>{for(const a of document.querySelectorAll('audio'))if(a!==e.target)a.pause()},true)</script></html>`);
   // Sequential reel with a quiet gap between each cue, usable as an inline preview.
   const pcm = [];
   for (const sound of files) {
-    const data = await readFile(path.resolve(`assets/ui-sounds/${sound}.wav`));
-    pcm.push(data.subarray(44), Buffer.alloc(24000 * 2 * .2));
+    const data = await readFile(path.resolve('assets', UI_SOUND_FILES[sound]));
+    pcm.push(data.subarray(44), Buffer.alloc(48000 * 2 * .2));
   }
   const data = Buffer.concat(pcm), header = Buffer.alloc(44);
   header.write('RIFF'); header.writeUInt32LE(36 + data.length, 4); header.write('WAVEfmt ', 8);
   header.writeUInt32LE(16, 16); header.writeUInt16LE(1, 20); header.writeUInt16LE(1, 22);
-  header.writeUInt32LE(24000, 24); header.writeUInt32LE(48000, 28); header.writeUInt16LE(2, 32); header.writeUInt16LE(16, 34);
+  header.writeUInt32LE(48000, 24); header.writeUInt32LE(96000, 28); header.writeUInt16LE(2, 32); header.writeUInt16LE(16, 34);
   header.write('data', 36); header.writeUInt32LE(data.length, 40);
   await writeFile(path.join(out, 'preview.wav'), Buffer.concat([header, data]));
   assert.deepEqual(report.errors, []);

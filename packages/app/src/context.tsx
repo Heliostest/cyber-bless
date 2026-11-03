@@ -4,7 +4,13 @@ import type { CatalogEntry } from "@wbr/content/catalog";
 import type { HapticStrength, Host } from "@wbr/runtime";
 import type { SoftSound } from "@wbr/shared";
 import type { RewardFlight, RewardArrival } from "./reward-flight";
-import type { UiSound } from './ui-sounds';
+import type { UiSound, UiPlaybackResult } from './ui-sounds';
+export type InspectableSound = UiSound | SoftSound;
+export type AudioInspector = {
+  prepare(): void;
+  play(sound: InspectableSound): UiPlaybackResult | 'requested';
+  stop(): void;
+};
 /** Old drafts may carry a ritual choice; only their text is used for new fulfillment. */
 export type FulfillmentDraft = { method: ReturnMethod; text: string };
 export type Route = {
@@ -49,6 +55,8 @@ export type AppContext = {
   back(options?: { sound?: boolean }): void;
   /** Optional UI feedback without adding haptics; absent in isolated previews. */
   uiSound?(sound: UiSound): void;
+  /** Present only when the Web development host supplies its debug overlay. */
+  audioInspector?: AudioInspector;
   feedback(sound?: AudioBuffer | SoftSound): void;
   /** Haptic tick or scene impact; respects the 震动 toggle. */
   haptic(strength?: HapticStrength): void;

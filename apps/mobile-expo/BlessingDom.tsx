@@ -15,6 +15,7 @@ export default function BlessingDom({
   haptic,
   shareImage,
   shareLink,
+  readUiSound,
   publicShareBaseUrl,
   onCanGoBack,
   active,
@@ -45,6 +46,7 @@ export default function BlessingDom({
   haptic(strength?: HapticStrength): Promise<void>;
   shareImage(image: ShareImageRequest): Promise<void>;
   shareLink(request: ShareLinkRequest): Promise<void>;
+  readUiSound?(file: string): Promise<string>;
   publicShareBaseUrl: string;
   onCanGoBack(value: boolean): Promise<void>;
   active: boolean;
@@ -69,12 +71,13 @@ export default function BlessingDom({
     if (!meta.parentNode) document.head.appendChild(meta);
   }, []);
   // DOM bridge proxies can change when native props update; keep a stable host.
-  const actions = useMemo(() => ({ readSave, writeSave, haptic, shareImage, shareLink }), []);
+  const actions = useMemo(() => ({ readSave, writeSave, haptic, shareImage, shareLink, readUiSound }), []);
   actions.readSave = readSave;
   actions.writeSave = writeSave;
   actions.haptic = haptic;
   actions.shareImage = shareImage;
   actions.shareLink = shareLink;
+  actions.readUiSound = readUiSound;
   const feedbackActions = useMemo(() => ({ readTestFeedback, writeTestFeedback, submitTestFeedback, fetchTestFeedbackStatus }), []);
   Object.assign(feedbackActions, { readTestFeedback, writeTestFeedback, submitTestFeedback, fetchTestFeedbackStatus });
   const feedbackHost = useMemo(() => ({
@@ -119,6 +122,7 @@ export default function BlessingDom({
       haptic: (strength?: HapticStrength) => actions.haptic(strength),
       shareImage: (image: ShareImageRequest) => actions.shareImage(image),
       shareLink: (request: ShareLinkRequest) => actions.shareLink(request),
+      readUiSound: readUiSound ? (file: string) => actions.readUiSound!(file) : undefined,
     }),
     [actions],
   );

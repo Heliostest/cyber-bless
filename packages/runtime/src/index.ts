@@ -21,6 +21,8 @@ export type ShareImageRequest = { dataUrl: string; fileName: string; title: stri
 export type ShareLinkRequest = { title: string; text: string; url: string };
 /** `haptic` only where the host can vibrate; no strength keeps the usual tick. */
 export type Host = Storage & {
+    /** Small allowlisted bundled WAVs, serialized across the native DOM bridge. */
+    readUiSound?(file: string): Promise<string>;
     /** Separate internal diagnostic storage and transport, never the user's game save. */
     testFeedback?: TestFeedbackHost;
     /** Validated, read-only bootstrap hint; the store remains the source of truth. */

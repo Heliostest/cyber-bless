@@ -7,10 +7,15 @@ export type UiPlaybackResult = 'played' | 'disabled' | 'unready' | 'busy' | 'una
 type Voice = { source: AudioBufferSourceNode; context: AudioContext; endsAt: number };
 
 /** Optional UI feedback. The caller owns context creation, unlocking and closing.
- * preload only fetches local bytes; prepare must be called in a user gesture.
+ * preload only reads local bytes; prepare must be called in a user gesture.
  * A missing or unprepared cue is dropped: async completions never schedule sound.
  */
-export function createUiSoundPlayer(options: { context: () => AudioContext | null; enabled: () => boolean }) {
+export function createUiSoundPlayer(options: {
+  context: () => AudioContext | null;
+  enabled: () => boolean;
+  /** Native iOS reads bundled WAVs: WKWebView cannot fetch its file: URLs. */
+  readBase64?: (file: string) => Promise<string>;
+}) {
   const bytes = new Map<Cue, ArrayBuffer>();
   const requested = new Set<Cue>();
   const buffers = new Map<Cue, AudioBuffer>();
@@ -36,9 +41,16 @@ export function createUiSoundPlayer(options: { context: () => AudioContext | nul
       if (requested.has(sound)) continue;
       requested.add(sound);
       void (async () => {
-        const response = await fetch(assetUrl(UI_SOUND_FILES[sound]));
-        if (!response.ok) return;
-        const data = await response.arrayBuffer();
+        let data: ArrayBuffer;
+        if (options.readBase64) {
+          const encoded = await options.readBase64(UI_SOUND_FILES[sound]);
+          if (!encoded || encoded.length > Math.ceil(100000 / 3) * 4) return;
+          data = Uint8Array.from(atob(encoded), char => char.charCodeAt(0)).buffer;
+        } else {
+          const response = await fetch(assetUrl(UI_SOUND_FILES[sound]));
+          if (!response.ok) return;
+          data = await response.arrayBuffer();
+        }
         if (!disposed) bytes.set(sound, data);
       })().catch(() => { /* Missing local audio is an optional enhancement. */ });
     }

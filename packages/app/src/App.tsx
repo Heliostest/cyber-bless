@@ -134,7 +134,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     }), [store]);
     const sounds = useMemo(() => createSoftSoundPlayer(soundOptions), [soundOptions]);
     const interactionSounds = useMemo(() => createSoftSoundPlayer(soundOptions), [soundOptions]);
-    const uiSounds = useMemo(() => createUiSoundPlayer(soundOptions), [soundOptions]);
+    const uiSounds = useMemo(() => createUiSoundPlayer({ ...soundOptions, readBase64: host.readUiSound }), [soundOptions, host]);
     const audition = useRef<'ui' | 'soft' | null>(null);
     const audioInspector = useMemo<AudioInspector>(() => ({
         prepare: () => uiSounds.prepare(),

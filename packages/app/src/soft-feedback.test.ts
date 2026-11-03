@@ -85,6 +85,25 @@ async function open(state: State = createState(), write: (raw: string) => Promis
 const dispatch = (action: Parameters<AppContext['dispatch']>[0]) => act(() => { probe.app!.dispatch(action); });
 
 describe('App gentle sound feedback', () => {
+  it('plays a native WAV through the real App when local WebView fetch is unavailable', async () => {
+    vi.stubGlobal('fetch', async () => { throw new TypeError('Load failed'); });
+    const host = {
+      read: async () => JSON.stringify(createState()), write: async () => {},
+      readUiSound: async (file: string) => Buffer.from(localWavs.get(file)!).toString('base64'),
+    };
+    const ui = renderUI(createElement(BlessingApp, { host }));
+    mounted.push(ui); await settle();
+    act(() => ui.host.querySelector('.app-shell')!.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true })));
+    await settle();
+    act(() => probe.app!.uiSound!('navigate'));
+    expect(started).toHaveLength(1);
+    expect(started[0].buffer?.duration).toBe(.26);
+    dispatch({ type: 'settings', key: 'sound', value: false });
+    act(() => probe.app!.uiSound!('back'));
+    expect(started).toHaveLength(1);
+    await settle();
+  });
+
   it('synthesizes a requested object material cue instead of treating its name as decoded audio', async () => {
     await open();
     act(() => probe.app!.feedback('paper'));

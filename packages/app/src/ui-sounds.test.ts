@@ -59,6 +59,32 @@ function fixture() {
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe('createUiSoundPlayer', () => {
+  it('decodes native bundled bytes when WKWebView cannot fetch local files', async () => {
+    const f = fixture();
+    vi.stubGlobal('fetch', async () => { throw new TypeError('Load failed'); });
+    const player = createUiSoundPlayer({
+      context: f.getContext, enabled: () => true,
+      readBase64: async (file: string) => btoa(String.fromCharCode(file.endsWith('/navigate.wav') ? 42 : 1)),
+    });
+    player.preload(); await tick(); player.prepare(); await tick();
+    expect(player.play('navigate')).toBe('played');
+    expect(f.context.sources[0].buffer).toMatchObject({ id: 42 });
+    expect(f.context.sources[0].starts).toEqual([3]);
+  });
+
+  it('does not replay a cue when native file reading completes after the gesture', async () => {
+    const f = fixture(), bytes = deferred<string>();
+    vi.stubGlobal('fetch', async () => { throw new TypeError('Load failed'); });
+    const player = createUiSoundPlayer({ context: f.getContext, enabled: () => true, readBase64: () => bytes.promise });
+    player.preload();
+    expect(player.play('navigate')).toBe('unready');
+    bytes.resolve(btoa(String.fromCharCode(42))); await tick();
+    expect(f.context.sources).toHaveLength(0);
+    player.prepare(); await tick();
+    expect(f.context.sources).toHaveLength(0);
+    expect(player.play('navigate')).toBe('played');
+  });
+
   it('plays the full approved completion cue without rejecting its longer duration', async () => {
     const f = fixture(); f.context.pendingDecode = deferred<AudioBuffer>();
     f.player.preload(); await tick(); f.player.prepare();

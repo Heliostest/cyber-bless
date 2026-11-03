@@ -23,6 +23,7 @@ import BlessingDom from "./BlessingDom";
 import { SafeAreaBackground } from './SafeAreaBackground';
 import { shareImage } from './share-image';
 import { shareLink } from './share-link';
+import { readUiSound } from './ui-sound';
 import { detectInternalToolsEnabled } from './internal-tools';
 import { INTERNAL_TOOLS_ENABLED } from '@wbr/app/internal-tools-config';
 import { readTestFeedback, writeTestFeedback, submitTestFeedback, fetchTestFeedbackStatus, testFeedbackInfo } from './test-feedback';
@@ -196,6 +197,7 @@ function Shell() {
         haptic={haptic}
         shareImage={shareImage}
         shareLink={shareLink}
+        readUiSound={Platform.OS === 'ios' && !__DEV__ ? readUiSound : undefined}
         publicShareBaseUrl={process.env.EXPO_PUBLIC_SHARE_BASE_URL ?? ''}
         onCanGoBack={onCanGoBack}
         active={active}

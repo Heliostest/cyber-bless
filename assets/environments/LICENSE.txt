@@ -1,5 +1,20 @@
 Environment assets used by 一日一念
 
+Toon Cloud — Antoine Clappier, March 2015
+Source: https://www.shadertoy.com/view/4t23RR
+License: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+(CC BY-NC-SA 4.0): https://creativecommons.org/licenses/by-nc-sa/4.0/
+Adapted via Shader Gallery's Three.js mesh layers by Cyber Bless (2026-11-04).
+Changes: distant sky depth and viewport placement, open vertical layer spacing,
+luminous daylight palette, opacity/softness, layered breeze and subtle vertical
+breathing, motion lifecycle and disabled raycasting. Original circular
+cloud contour functions are retained. The adapted shader retains CC BY-NC-SA 4.0.
+Retain credit, source/license links and change notice when redistributing;
+share adaptations under the same license. No commercial permission or author
+endorsement is implied. This component is not covered by the surrounding
+project's general CC BY notice and does not relicense Three.js or the app.
+Source and provenance record: packages/scene-runtime/src/toon-cloud-ATTRIBUTION.md.
+
 Kenney Nature Kit 2.1
 Created/distributed by Kenney (https://kenney.nl)
 Source: https://kenney.nl/assets/nature-kit

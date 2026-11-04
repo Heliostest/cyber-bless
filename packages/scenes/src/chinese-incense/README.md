@@ -65,3 +65,7 @@ GPU rendering alone is mocked in jsdom; scene geometry, raycasting, projected cu
 ## 2026-10-28 材质光效接入
 
 辅助茶面接入弱茶色透射；香烬、烟与陶炉保持原实现。 仅调整已审查部件的技术光学表现，器物、材料身份、动作、文案、来源、技术 ID 与存档不变；文化边界沿用本 README 既有核查及[逐场材质审查](../../../../docs/research/2026-10-28-material-lighting-audit.md)，不新增传统主张。实现与验证见[集中记录](../../../../docs/research/2026-10-28-ritual-optics-integration.md)。
+
+## 2026-11-04 共享日景远景云
+
+共享白天环境接入 Toon Cloud 远景云带；只在镜头露出的天空中显示，俯视时由地面和主体自然遮挡。云为产品布景，器物、材料、动作、信仰/节庆语境、完成条件、文案及来源沿用本 README 既有核查，不增加天气规则、传统云纹或功效主张。[本轮范围、署名许可与验证](../../../../docs/research/2026-11-04-toon-cloud-daylight-expansion.md)。

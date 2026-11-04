@@ -23,3 +23,7 @@
 NHB Roots 的 [Yusheng and Lo Hei](https://www.roots.gov.sg/ich-landing/ich/yusheng-and-lo-hei) 与 [Lohei](https://www.roots.gov.sg/stories-landing/stories/Lohei) 两页实际返回机器人／JavaScript验证，未记为已读正文；不作为新增文化主张证据。没有引用来源图片或复制照片造型。
 
 逐项主张、去重及产品边界见[研究记录](../../docs/research/2026-10-23-yusheng-lohei.md)。
+
+## 2026-11-04 共享日景布景更新
+
+对应场景的共享白天环境接入 Toon Cloud 远景云带，属于产品背景显示；不新增与本卡文化事实的对应关系，不改写既有实践、信仰语境或外部来源读取状态。原器物、动作、文案和来源分类保持。[范围、技术署名许可与验证](../../docs/research/2026-11-04-toon-cloud-daylight-expansion.md)。

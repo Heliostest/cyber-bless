@@ -75,3 +75,7 @@
 - https://doi.org/10.1111/rec3.12483
 - https://doi.org/10.7312/columbia/9780231168021.003.0004
 - https://scholarhub.ui.ac.id/jai/vol42/iss2/3/
+
+## 2026-11-04 共享日景布景更新
+
+对应场景的共享白天环境接入 Toon Cloud 远景云带，属于产品背景显示；不新增与本卡文化事实的对应关系，不改写既有实践、信仰语境或外部来源读取状态。原器物、动作、文案和来源分类保持。[范围、技术署名许可与验证](../../docs/research/2026-11-04-toon-cloud-daylight-expansion.md)。

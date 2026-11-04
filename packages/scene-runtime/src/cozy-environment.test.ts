@@ -2,8 +2,91 @@ import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { createCozyEnvironment } from "./cozy-environment";
 import * as sceneMotion from "./scene-motion";
+import { builtInScenes, isSceneVisibleInApp } from "@wbr/core/daily-scenes";
 
 describe("a scene's surrounding world", () => {
+  it("keeps the workbench clear and reduces far haze only in the shared daylight scenes", async () => {
+    const day = new THREE.Scene(), coast = new THREE.Scene();
+    const worlds = [
+      createCozyEnvironment(day, { id: "furin-wind-chime", loadSky: async () => new THREE.DataTexture() })!,
+      createCozyEnvironment(coast, { id: "udo-undama", loadSky: async () => new THREE.DataTexture() })!,
+    ];
+    try {
+      const daylight = day.fog as THREE.Fog, preserved = coast.fog as THREE.Fog;
+      expect(THREE.MathUtils.smoothstep(8, daylight.near, daylight.far)).toBe(0);
+      const distantHaze = THREE.MathUtils.smoothstep(40, daylight.near, daylight.far);
+      expect(distantHaze).toBeGreaterThan(0);
+      expect(distantHaze).toBeLessThan(.3);
+      expect(THREE.MathUtils.smoothstep(40, preserved.near, preserved.far)).toBeGreaterThan(.5);
+      await Promise.all(worlds.map(world => world.ready));
+    } finally { worlds.forEach(world => world.dispose()); }
+  });
+
+  it.each(["tibetan-prayer-flags", "japanese-koinobori", "tanzaku-tanabata"])("owns distant clouds without intercepting object input: %s", async id => {
+    const scene = new THREE.Scene();
+    const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
+    try {
+      const clouds = scene.getObjectByName("toon-cloud-backdrop");
+      expect(clouds).toBeDefined();
+      scene.updateMatrixWorld(true);
+      const ray = new THREE.Raycaster(new THREE.Vector3(0, 25, 5), new THREE.Vector3(0, 0, -1));
+      expect(ray.intersectObject(clouds!, true)).toHaveLength(0);
+      const released = new Set<THREE.BufferGeometry | THREE.Material>();
+      clouds!.traverse(object => {
+        if (!(object instanceof THREE.Mesh)) return;
+        for (const resource of [object.geometry, object.material as THREE.Material]) released.add(resource);
+      });
+      const disposals = [...released].map(resource => vi.spyOn(resource, "dispose"));
+      await world.ready; world.dispose(); world.dispose();
+      expect(scene.getObjectByName("toon-cloud-backdrop")).toBeUndefined();
+      disposals.forEach(disposal => expect(disposal).toHaveBeenCalledOnce());
+    } finally { world.dispose(); }
+  });
+
+  it("freezes cloud drift during previews, pauses and reduced motion", async () => {
+    const motion = vi.spyOn(sceneMotion, "readSceneMotion").mockReturnValue({ active: true, reducedMotion: false });
+    const clock = vi.spyOn(performance, "now").mockReturnValue(1000);
+    const scene = new THREE.Scene();
+    const world = createCozyEnvironment(scene, { id: "tibetan-prayer-flags", loadSky: async () => new THREE.DataTexture() })!;
+    const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
+    try {
+      const layer = scene.getObjectByName("toon-cloud-layer-0") as THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
+      expect(layer).toBeDefined();
+      world.prepare(renderer); clock.mockReturnValue(1020); world.prepare(renderer);
+      expect(layer.material.uniforms.uTime.value).toBeCloseTo(.02);
+      clock.mockReturnValue(1030); world.prepare(renderer, "gouache", { advanceMotion: false });
+      expect(layer.material.uniforms.uTime.value).toBeCloseTo(.02);
+      motion.mockReturnValue({ active: false, reducedMotion: false });
+      clock.mockReturnValue(1040); world.prepare(renderer);
+      expect(layer.material.uniforms.uTime.value).toBeCloseTo(.02);
+      motion.mockReturnValue({ active: true, reducedMotion: true });
+      clock.mockReturnValue(1060); world.prepare(renderer);
+      expect(layer.material.uniforms.uTime.value).toBe(0);
+      await world.ready;
+    } finally { world.dispose(); motion.mockRestore(); clock.mockRestore(); }
+  });
+
+  it.each(["lantern", "brat-bride-cloth", "scottish-first-footing", "diya-oil-lamp", "votive-candle-catholic", "yeondeunghoe", "chinese-shadow-puppet", "udo-undama", "paper-pinwheel", "weifang-paper-kite"])("preserves night, coastal and hidden scene backgrounds: %s", async id => {
+    const scene = new THREE.Scene();
+    const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
+    expect(scene.getObjectByName("toon-cloud-backdrop")).toBeUndefined();
+    await world.ready; world.dispose();
+  });
+
+  it("provides distant clouds throughout the App's shared daylight environments", async () => {
+    const preserved = new Set(["brat-bride-cloth", "scottish-first-footing", "udo-undama", "diya-oil-lamp", "votive-candle-catholic", "yeondeunghoe"]);
+    const entries = builtInScenes.filter(entry => isSceneVisibleInApp(entry) && !preserved.has(entry.id));
+    expect(entries).toHaveLength(85);
+    for (const { id } of entries) {
+      const scene = new THREE.Scene();
+      const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
+      try {
+        expect(scene.getObjectByName("toon-cloud-backdrop"), id).toBeDefined();
+        await world.ready;
+      } finally { world.dispose(); }
+    }
+  });
+
   it("keeps courtyard ground below the Didukh cutaway floor instead of painting over it", async () => {
     const scene=new THREE.Scene()
     const world=createCozyEnvironment(scene,{id:"ukrainian-didukh",loadSky:async()=>new THREE.DataTexture()})!

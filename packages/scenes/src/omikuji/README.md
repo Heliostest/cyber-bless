@@ -17,3 +17,7 @@
 边界：没有可确认的统一起源日期；应用签文不是古签/经文/预测，收进信封是产品收尾，不能被视为传统必须流程。
 
 来源正文的完整链接、实际阅读位置、访问状态及产品简化见[B 组逐项记录](../../../../docs/research/2026-10-20-scene-narratives-b.md#omikuji)与[来源卡](../../../../content/traditions/omikuji.md)。本节不更改现有交互；用户介绍集中维护于 `packages/core/src/scene-narratives/b.ts`。
+
+## 2026-11-04 共享日景远景云
+
+共享白天环境接入 Toon Cloud 远景云带；只在镜头露出的天空中显示，俯视时由地面和主体自然遮挡。云为产品布景，器物、材料、动作、信仰/节庆语境、完成条件、文案及来源沿用本 README 既有核查，不增加天气规则、传统云纹或功效主张。[本轮范围、署名许可与验证](../../../../docs/research/2026-11-04-toon-cloud-daylight-expansion.md)。

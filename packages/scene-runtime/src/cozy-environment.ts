@@ -1,11 +1,13 @@
 import * as THREE from "three";
 import type { RenderStyleId } from "@wbr/content";
+import { isSceneVisibleInApp } from "@wbr/core/daily-scenes";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import nature from "./nature-kit.data.json";
 import { gardenLayout, type GardenKind } from "./garden-layout";
 import { createStylizedMeadow } from "./stylized-meadow";
 import { createStylizedTrees } from "./stylized-trees";
 import { readSceneMotion } from "./scene-motion";
+import { createToonCloudBackdrop } from "./toon-cloud-backdrop";
 
 declare const process: { env: { EXPO_BASE_URL?: string } };
 type Kind = GardenKind;
@@ -176,9 +178,9 @@ type NatureModel = { parts: Part[] };
 const models = nature as Record<string, NatureModel>;
 
 /** A clear painted sky, independent of the photographic panorama used for lighting. */
-function createDaylightBackdrop() {
+function createDaylightBackdrop(clear = false) {
   const width = 4, height = 64, pixels = new Uint8Array(width * height * 4);
-  const horizon = new THREE.Color(0x9ed9f3), zenith = new THREE.Color(0x409ee0);
+  const horizon = new THREE.Color(clear ? 0xaddff4 : 0x9ed9f3), zenith = new THREE.Color(clear ? 0x57aee8 : 0x409ee0);
   const color = new THREE.Color(), rgb = { r: 0, g: 0, b: 0 };
   for (let y = 0; y < height; y++) {
     const elevation = Math.max(0, (y / (height - 1) - 0.25) / 0.75);
@@ -226,12 +228,15 @@ export function createCozyEnvironment(
   let sky: THREE.DataTexture | undefined;
   let meadow: ReturnType<typeof createStylizedMeadow> | undefined;
   let treeCanopies: ReturnType<typeof createStylizedTrees> | undefined;
+  const clouds = !night && !coastal && isSceneVisibleInApp({ id }) ? createToonCloudBackdrop() : undefined;
+  if (clouds) root.add(clouds.root);
+  const clearDay = !!clouds;
   let windTime = 0, lastFrame = 0;
-  const horizon = night ? 0x415d73 : 0xb8dce7;
-  const backdrop = night ? undefined : createDaylightBackdrop();
+  const horizon = night ? 0x415d73 : clearDay ? 0xc1e3ec : 0xb8dce7;
+  const backdrop = night ? undefined : createDaylightBackdrop(clearDay);
   scene.background = backdrop ?? new THREE.Color(horizon);
   // Atmospheric perspective belongs to the far tree line, not the workbench.
-  scene.fog = new THREE.Fog(horizon, night ? 7 : 18, night ? 24 : 55);
+  scene.fog = new THREE.Fog(horizon, night ? 7 : clearDay ? 24 : 18, night ? 24 : clearDay ? 80 : 55);
   scene.backgroundIntensity = night ? 0.065 : 1;
   scene.backgroundBlurriness = night ? 0.015 : 0;
   scene.environmentIntensity = warmLight ? 0.25 : night ? 0.16 : 0.22;
@@ -440,6 +445,7 @@ export function createCozyEnvironment(
         lastFrame = now;
         meadow?.update(windTime);
         treeCanopies?.update(windTime, motion.reducedMotion);
+        clouds?.update(windTime);
       }
       let keySeen = false;
       renderer.shadowMap.enabled = true;
@@ -488,6 +494,7 @@ export function createCozyEnvironment(
       root.removeFromParent();
       meadow?.dispose();
       treeCanopies?.dispose();
+      clouds?.dispose();
       instances.forEach(mesh => mesh.dispose());
       geometries.forEach(geometry => geometry.dispose());
       materials.forEach(material => material.dispose());

@@ -15,3 +15,7 @@ Three.js程序原创场景，ID/engine：horseshoe-doorway-luck / horseshoe-door
 蹄铁好运／护宅信念有博物馆正文支持；向上悬门上的具体说法限2020肯塔基一个家庭口述，不泛化全球方向／起源。三枚、四孔、固定柱、形状比例、准备台、门架、三步与祝愿文案均产品设计，不称真实钉装／完整仪式／愿望应验。程序几何未用来源图片，不称馆藏复刻。
 
 详见[来源专卡](../../../../content/traditions/horseshoe-doorway-luck.md)、[逐项来源核查](../../../../docs/research/2026-10-23-horseshoe-doorway-luck.md)。技术日志与独立实网格／像素审阅在artifacts/horseshoe-doorway-luck，触摸事件模拟不等于真机。只新增一个，完成本地提交和原子验收即停，不合并推送。
+
+## 2026-11-04 共享日景远景云
+
+共享白天环境接入 Toon Cloud 远景云带；只在镜头露出的天空中显示，俯视时由地面和主体自然遮挡。云为产品布景，器物、材料、动作、信仰/节庆语境、完成条件、文案及来源沿用本 README 既有核查，不增加天气规则、传统云纹或功效主张。[本轮范围、署名许可与验证](../../../../docs/research/2026-11-04-toon-cloud-daylight-expansion.md)。

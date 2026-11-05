@@ -540,6 +540,312 @@
         ]
       },
       "crownFlatten": 0.78
+    },
+    {
+      "key": "toona-round",
+      "file": "toona-round.glb",
+      "exportSpecies": "toona-product-adaptation",
+      "adaptation": "Source-derived product art: Toona-inspired pinnate compound foliage and airy upright rounded broad crown; actual oak/wood branching plus original leaf atlas, not a native upstream species generator or species-certified botanical model.",
+      "cardSegments": 2,
+      "parameters": {
+        "species": "oak",
+        "seed": 18317,
+        "size": 5.7,
+        "trunkThickness": 0.17,
+        "baseFlare": 1.25,
+        "trunkHeight": 0.25,
+        "splitHeight": 0.36,
+        "splitScatter": 0.48,
+        "mainLimbs": 4,
+        "levels": 1,
+        "branches": 4,
+        "spread": 0.73,
+        "crookedness": 0.19,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 0.65,
+        "cardsPerClump": 24,
+        "cardGrowth": 1.08,
+        "cardSize": 1.02,
+        "roundness": 0.7,
+        "clumpSize": 0.92,
+        "aoDistance": 2.5,
+        "leafTexture": "product toona compound",
+        "keepBuried": false,
+        "shadowSide": 0.22,
+        "ao": 0.3,
+        "variation": 0.12,
+        "capRings": 2
+      },
+      "palette": {
+        "name": "product toona foliage palette",
+        "leaves": [
+          "#486540",
+          "#819e60",
+          "#bfce98"
+        ],
+        "wood": [
+          "#675749",
+          "#8e7560",
+          "#b69b79"
+        ]
+      },
+      "crownFlatten": 1
+    },
+    {
+      "key": "toona-cluster",
+      "file": "toona-cluster.glb",
+      "exportSpecies": "toona-product-adaptation",
+      "adaptation": "Source-derived product art: Toona-inspired pinnate compound foliage and airy upright rounded broad crown; actual oak/wood branching plus original leaf atlas, not a native upstream species generator or species-certified botanical model.",
+      "cardSegments": 2,
+      "parameters": {
+        "species": "oak",
+        "seed": 59129,
+        "size": 5.7,
+        "trunkThickness": 0.17,
+        "baseFlare": 1.25,
+        "trunkHeight": 0.25,
+        "splitHeight": 0.36,
+        "splitScatter": 0.5599999999999999,
+        "mainLimbs": 4,
+        "levels": 1,
+        "branches": 4,
+        "spread": 0.77,
+        "crookedness": 0.19,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 0.65,
+        "cardsPerClump": 24,
+        "cardGrowth": 1.08,
+        "cardSize": 1.02,
+        "roundness": 0.7,
+        "clumpSize": 0.92,
+        "aoDistance": 2.5,
+        "leafTexture": "product toona compound",
+        "keepBuried": false,
+        "shadowSide": 0.22,
+        "ao": 0.3,
+        "variation": 0.12,
+        "capRings": 2
+      },
+      "palette": {
+        "name": "product toona foliage palette",
+        "leaves": [
+          "#486540",
+          "#819e60",
+          "#bfce98"
+        ],
+        "wood": [
+          "#675749",
+          "#8e7560",
+          "#b69b79"
+        ]
+      },
+      "crownFlatten": 1
+    },
+    {
+      "key": "acer-round",
+      "file": "acer-round.glb",
+      "exportSpecies": "acer-product-adaptation",
+      "adaptation": "Source-derived product art: Acer palmatum-inspired seven deep leaf lobes and lower spreading layered crown; actual oak/wood branching plus original leaf atlas, not a native upstream species generator or species-certified botanical model.",
+      "cardSegments": 2,
+      "parameters": {
+        "species": "oak",
+        "seed": 27137,
+        "size": 4.65,
+        "trunkThickness": 0.19,
+        "baseFlare": 1.35,
+        "trunkHeight": 0,
+        "splitHeight": 0.22,
+        "splitScatter": 0.65,
+        "mainLimbs": 4,
+        "levels": 1,
+        "branches": 5,
+        "spread": 0.96,
+        "crookedness": 0.25,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 0.65,
+        "cardsPerClump": 25,
+        "cardGrowth": 1.1,
+        "cardSize": 0.99,
+        "roundness": 0.7,
+        "clumpSize": 1.08,
+        "aoDistance": 2.5,
+        "leafTexture": "product acer seven lobes",
+        "keepBuried": false,
+        "shadowSide": 0.22,
+        "ao": 0.3,
+        "variation": 0.12,
+        "capRings": 2
+      },
+      "palette": {
+        "name": "product acer foliage palette",
+        "leaves": [
+          "#3e704b",
+          "#78ad72",
+          "#c6d993"
+        ],
+        "wood": [
+          "#675749",
+          "#8e7560",
+          "#b69b79"
+        ]
+      },
+      "crownFlatten": 0.58
+    },
+    {
+      "key": "acer-cluster",
+      "file": "acer-cluster.glb",
+      "exportSpecies": "acer-product-adaptation",
+      "adaptation": "Source-derived product art: Acer palmatum-inspired seven deep leaf lobes and lower spreading layered crown; actual oak/wood branching plus original leaf atlas, not a native upstream species generator or species-certified botanical model.",
+      "cardSegments": 2,
+      "parameters": {
+        "species": "oak",
+        "seed": 48121,
+        "size": 4.65,
+        "trunkThickness": 0.19,
+        "baseFlare": 1.35,
+        "trunkHeight": 0,
+        "splitHeight": 0.22,
+        "splitScatter": 0.73,
+        "mainLimbs": 4,
+        "levels": 1,
+        "branches": 5,
+        "spread": 1,
+        "crookedness": 0.25,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 0.65,
+        "cardsPerClump": 25,
+        "cardGrowth": 1.1,
+        "cardSize": 0.99,
+        "roundness": 0.7,
+        "clumpSize": 1.08,
+        "aoDistance": 2.5,
+        "leafTexture": "product acer seven lobes",
+        "keepBuried": false,
+        "shadowSide": 0.22,
+        "ao": 0.3,
+        "variation": 0.12,
+        "capRings": 2
+      },
+      "palette": {
+        "name": "product acer foliage palette",
+        "leaves": [
+          "#3e704b",
+          "#78ad72",
+          "#c6d993"
+        ],
+        "wood": [
+          "#675749",
+          "#8e7560",
+          "#b69b79"
+        ]
+      },
+      "crownFlatten": 0.58
+    },
+    {
+      "key": "maple-round",
+      "file": "maple-round.glb",
+      "exportSpecies": "maple-product-adaptation",
+      "adaptation": "Source-derived product art: Acer rubrum-inspired broad three/five leaf lobes and ascending branches with a taller rounded/ovoid autumn crown; actual oak/wood branching plus original leaf atlas, not a native upstream species generator or species-certified botanical model.",
+      "cardSegments": 2,
+      "parameters": {
+        "species": "oak",
+        "seed": 36241,
+        "size": 5.75,
+        "trunkThickness": 0.2,
+        "baseFlare": 1.3,
+        "trunkHeight": 0.6,
+        "splitHeight": 0.36,
+        "splitScatter": 0.42,
+        "mainLimbs": 4,
+        "levels": 1,
+        "branches": 4,
+        "spread": 0.55,
+        "crookedness": 0.19,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 0.65,
+        "cardsPerClump": 26,
+        "cardGrowth": 1.1,
+        "cardSize": 1.02,
+        "roundness": 0.7,
+        "clumpSize": 0.97,
+        "aoDistance": 2.5,
+        "leafTexture": "product maple broad lobes",
+        "keepBuried": false,
+        "shadowSide": 0.22,
+        "ao": 0.32,
+        "variation": 0.16,
+        "capRings": 2
+      },
+      "palette": {
+        "name": "product maple foliage palette",
+        "leaves": [
+          "#753b2e",
+          "#ae5136",
+          "#dba366"
+        ],
+        "wood": [
+          "#675749",
+          "#8e7560",
+          "#b69b79"
+        ]
+      },
+      "crownFlatten": 1.08
+    },
+    {
+      "key": "maple-cluster",
+      "file": "maple-cluster.glb",
+      "exportSpecies": "maple-product-adaptation",
+      "adaptation": "Source-derived product art: Acer rubrum-inspired broad three/five leaf lobes and ascending branches with a taller rounded/ovoid autumn crown; actual oak/wood branching plus original leaf atlas, not a native upstream species generator or species-certified botanical model.",
+      "cardSegments": 2,
+      "parameters": {
+        "species": "oak",
+        "seed": 74231,
+        "size": 5.75,
+        "trunkThickness": 0.2,
+        "baseFlare": 1.3,
+        "trunkHeight": 0.6,
+        "splitHeight": 0.36,
+        "splitScatter": 0.5,
+        "mainLimbs": 4,
+        "levels": 1,
+        "branches": 4,
+        "spread": 0.59,
+        "crookedness": 0.19,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 0.65,
+        "cardsPerClump": 26,
+        "cardGrowth": 1.1,
+        "cardSize": 1.02,
+        "roundness": 0.7,
+        "clumpSize": 0.97,
+        "aoDistance": 2.5,
+        "leafTexture": "product maple broad lobes",
+        "keepBuried": false,
+        "shadowSide": 0.22,
+        "ao": 0.32,
+        "variation": 0.16,
+        "capRings": 2
+      },
+      "palette": {
+        "name": "product maple foliage palette",
+        "leaves": [
+          "#753b2e",
+          "#ae5136",
+          "#dba366"
+        ],
+        "wood": [
+          "#675749",
+          "#8e7560",
+          "#b69b79"
+        ]
+      },
+      "crownFlatten": 1.08
     }
   ],
   "productExtensions": [
@@ -550,6 +856,22 @@
       "author": "Cyber Bless product adaptation",
       "classification": "product-authored-extension",
       "feature": "Five notched Canvas petals per flower; 46 small flowers per source atlas cell; source paintAtlas seed 42 and source card scatter/cluster normals/AO unchanged. Product crownFlatten 0.78 uses the existing source ellipsoid-clump API; no branch geometry is imported.",
+      "upstreamBase": [
+        "oak.js",
+        "wood.js",
+        "foliage.js",
+        "glb.js",
+        "textures.js"
+      ],
+      "externalAssetReuse": false
+    },
+    {
+      "file": "product-extensions/broadleaf-atlases.mjs",
+      "module": "broadleaf-atlases.js",
+      "sha256": "03a2f9595afa9c8dfebdc0988ac4df03b29860858658302bad36d7120c6e2c3d",
+      "author": "Cyber Bless product adaptation",
+      "classification": "product-authored-extension",
+      "feature": "Original Canvas masks: pinnate Toona-inspired compound leaves, seven-deep-lobed green Acer-inspired leaves, broad three/five-lobed autumn maple-inspired leaves. Source paintAtlas(42), card scatter, curvature, cluster normals, AO and GLB export retained. Crown flatten uses existing ellipsoid API, branch geometry uses actual oak.grow parameters.",
       "upstreamBase": [
         "oak.js",
         "wood.js",
@@ -569,5 +891,63 @@
     "pine-cluster.glb": "4619dbb226567cbb8efc5163d90e33fe735b4d8e9b8217082bd61d8f56a65a8a",
     "willow-round.glb": "f2b89e77b73894659b44e7ff64f90c041a4ac95bc1c2d7aa0d8c42babb7d9752",
     "willow-cluster.glb": "1c86af5a95448cbd59878148ef31938f404ba92f9b8229ec4223e53c0e0892a9"
-  }
+  },
+  "preToonaMapleAssetBaselines": {
+    "cherry-cluster.glb": "12bee718376c46699e640a9a1ffb53a55664982edf7686918ceddc220692f667",
+    "cherry-round.glb": "fb8c12b3ac6fc463421d53a00a4018999e404aeeea7ae14a3db467567fb05211",
+    "cluster.glb": "9939dfc87478caf72e239e634e77afb53fd8476cec9892b6cd90bc7bb7417c76",
+    "cypress-cluster.glb": "80706887d431e5e8e7a89529c51b7c230a8283b9cab85ada30f8afc799279a52",
+    "cypress-round.glb": "04316bb1240b288091aa369b71a8f8227a18b78c042c3d1fb9b4897822f58b1d",
+    "pine-cluster.glb": "4619dbb226567cbb8efc5163d90e33fe735b4d8e9b8217082bd61d8f56a65a8a",
+    "pine-round.glb": "c4103819704c44a7cbab84d140422cc51b821553ad5e62787cd199f312e67d32",
+    "round.glb": "1d8ef922aeb08f1c7edd08084cbaf019aadae60df6b83c48cf8907c59cca43e0",
+    "willow-cluster.glb": "1c86af5a95448cbd59878148ef31938f404ba92f9b8229ec4223e53c0e0892a9",
+    "willow-round.glb": "f2b89e77b73894659b44e7ff64f90c041a4ac95bc1c2d7aa0d8c42babb7d9752"
+  },
+  "preToonaMaplePreviewBaselines": {
+    "cherry-cluster.atlas.preview.png": "234333240a18552dd5fffa3bff83bd7e899d6f105d2eac88e7b0439c44e75559",
+    "cherry-cluster.preview.png": "3aa8a109128e2238bcc883500d16663b1f613f948bd3ae4462c77f657f7aaa06",
+    "cherry-round.atlas.preview.png": "234333240a18552dd5fffa3bff83bd7e899d6f105d2eac88e7b0439c44e75559",
+    "cherry-round.preview.png": "54ae1e6f4096d25aa14ac4ea1da4bd6e46cd6d188366b837ff7952af25b0e411",
+    "cluster.preview.png": "a505a9d372404398d144213342279d9c7f4d5d4580029f6bf905a42e6447cddc",
+    "cypress-cluster.preview.png": "70ae2447db748bf32e49e01d68978a59cf02eafbeb009ce2df9dbb1defcdc002",
+    "cypress-round.preview.png": "961ac71791526e16a5a43c93bd0f410e36c23235bde73c8e5ab138f1fb217526",
+    "pine-cluster.preview.png": "3fcbfcf2c8f8c897ff7e8a58bfb79549fce487cef131f15690fb9c6add21c7e0",
+    "pine-round.preview.png": "7f029d7bafd34a73ac3fde44911f3c5edce9641e1d2b33184856bdd7719fe108",
+    "round.preview.png": "08a5eeddca500bf87dddbbc7f5fcbcee62ee4b22c5af1e090f0f41838a5f17c4",
+    "willow-cluster.preview.png": "2feb4486281d83a734816ca2a220c68998e18a278b50ae31be2c7f5f694b535e",
+    "willow-round.preview.png": "b2cb3b86983558b0815f7d1230dd2e5545dc2ea8f0d2b6e314e06d0bbd2c4295"
+  },
+  "botanicalArtReferences": [
+    {
+      "productType": "toona",
+      "title": "Toona sinensis",
+      "publisher": "Oregon State University Landscape Plants",
+      "url": "https://landscapeplants.oregonstate.edu/plants/toona-sinensis",
+      "accessed": "2026-11-05",
+      "readingStatus": "Relevant body read; full article not required for these bounded art claims",
+      "scope": "Compound foliage with 10-20 oblong/ovate leaflets; bronze emerging leaves turning green. Supports the leaf-form inspiration only, not species certification or cultural/regional use.",
+      "sections": "Morphology paragraph, web lines 52"
+    },
+    {
+      "productType": "acer",
+      "title": "Acer palmatum",
+      "publisher": "NC State Extension Plant Toolbox",
+      "url": "https://plants.ces.ncsu.edu/plants/acer-palmatum/",
+      "accessed": "2026-11-05",
+      "readingStatus": "Relevant body read; full article not required for these bounded art claims",
+      "scope": "Spreading/layered rounded crown and palmately lobed leaves with 5-9 lobes. Seven lobes and flattened clump parameters are product art choices.",
+      "sections": "Description paragraphs, web lines 43-44"
+    },
+    {
+      "productType": "maple",
+      "title": "Acer rubrum",
+      "publisher": "Oregon State University Landscape Plants",
+      "url": "https://landscapeplants.oregonstate.edu/plants/acer-rubrum",
+      "accessed": "2026-11-05",
+      "readingStatus": "Relevant body read; full article not required for these bounded art claims",
+      "scope": "Ascending branches, ovoid/rounded crown; usually three, sometimes five leaf lobes; yellow, orange or red autumn color. Supports visual inspiration only.",
+      "sections": "Morphology and fall-color paragraphs, web lines 54-55, selection descriptions 60-67"
+    }
+  ]
 }

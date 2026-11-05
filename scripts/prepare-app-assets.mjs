@@ -29,7 +29,7 @@ export const assetFiles = [
     `environments/trees/${source}/cluster.glb`,
     `environments/trees/${source}/LICENSE.txt`,
   ]),
-  ...['cherry', 'cypress', 'willow', 'pine'].flatMap(species => ['round', 'cluster'].map(variant => `environments/trees/simple-tree/${species}-${variant}.glb`)),
+  ...['cherry', 'cypress', 'willow', 'pine', 'toona', 'acer', 'maple'].flatMap(species => ['round', 'cluster'].map(variant => `environments/trees/simple-tree/${species}-${variant}.glb`)),
 ];
 export async function prepareAppAssets() {
   await prepareBundledContent();

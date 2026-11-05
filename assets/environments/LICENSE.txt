@@ -100,6 +100,14 @@ They are not an upstream built-in cherry species or cultivar identification.
 No external Sakura Tree 01 geometry, textures or code are included in them.
 Complete MIT notice and provenance: trees/simple-tree/LICENSE.txt and README.md.
 
+Chinese toon (toona), green maple (acer), and autumn maple (maple) are
+additional product art adaptations of the same pinned MIT oak/wood and
+foliage pipeline. Each has two deterministic variants, distinct branch
+parameters and a product-authored procedural leaf atlas. These are not
+native upstream botanical generators or certified cultivar models.
+No botanical reference photographs or third-party textures are included.
+Parameters, extension hashes and provenance: trees/simple-tree/README.md.
+
 Timber furniture and shallow water are original project geometry/shaders.
 Evaluated external references are documented in furniture/PROVENANCE.md and
 water/README.md; those reference implementations/assets are not redistributed.

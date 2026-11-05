@@ -6,6 +6,7 @@ export function TreeDebugControls({ anchor, hidden }: { anchor: RefObject<HTMLEl
   const names: Record<TreeSpecies, string> = {
     original: message('developer.trees.keep'), cherry: message('developer.trees.cherry'),
     cypress: message('developer.trees.cypress'), willow: message('developer.trees.willow'), conifer: message('developer.trees.conifer'),
+    toona: message('developer.trees.toona'), acer: message('developer.trees.acer'), maple: message('developer.trees.maple'),
   };
   const snapshot = useSyncExternalStore(debugTrees.subscribe, debugTrees.getSnapshot);
   const [scope, setScope] = useState<Element>();
@@ -38,6 +39,9 @@ export function TreeDebugControls({ anchor, hidden }: { anchor: RefObject<HTMLEl
           <option value="cypress">{names.cypress}</option>
           <option value="willow">{names.willow}</option>
           <option value="conifer">{names.conifer}</option>
+          <option value="toona">{names.toona}</option>
+          <option value="acer">{names.acer}</option>
+          <option value="maple">{names.maple}</option>
         </optgroup>
       </select>
       <small role="status" aria-live="polite">{entry.status === 'loading' ? message('developer.trees.loading') :

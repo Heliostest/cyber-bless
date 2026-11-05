@@ -15,13 +15,20 @@ export function softenTreeFoliage(material: THREE.Material) {
       .replace('#include <color_fragment>', THREE.ShaderChunk.color_fragment.replace('diffuseColor.rgb *= vColor;', 'diffuseColor.rgb *= mix( vec3( 1.0 ), vColor, 0.68 );'));
     // Broad, matte light wraps around a leaf clump instead of cutting each card
     // at the Lambert terminator. Keep the deliberately banded ink styles intact.
-    for (const chunk of ['lights_physical_pars_fragment', 'lights_lambert_pars_fragment'] as const) {
-      shader.fragmentShader = shader.fragmentShader.replace(`#include <${chunk}>`, THREE.ShaderChunk[chunk].replace(
+    const wrappedIncidence = '0.72 * saturate( ( dot( geometryNormal, directLight.direction ) + 0.55 ) / 1.55 )';
+    shader.fragmentShader = shader.fragmentShader
+      // GGX must use the real incidence. With outward clump normals, both
+      // N.L and N.V can be zero; feeding wrapped light into its grazing-angle
+      // visibility term creates enormous specular values and white patches.
+      .replace('#include <lights_physical_pars_fragment>', THREE.ShaderChunk.lights_physical_pars_fragment.replace(
+        'reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );',
+        `reflectedLight.directDiffuse += ${wrappedIncidence} * directLight.color * BRDF_Lambert( material.diffuseColor );`,
+      ))
+      .replace('#include <lights_lambert_pars_fragment>', THREE.ShaderChunk.lights_lambert_pars_fragment.replace(
         'float dotNL = saturate( dot( geometryNormal, directLight.direction ) );',
-        'float dotNL = 0.72 * saturate( ( dot( geometryNormal, directLight.direction ) + 0.55 ) / 1.55 );',
+        `float dotNL = ${wrappedIncidence};`,
       ));
-    }
   };
-  material.customProgramCacheKey = () => `tree-clump-soft-v1:${cacheKey()}`;
+  material.customProgramCacheKey = () => `tree-clump-soft-v2:${cacheKey()}`;
   material.needsUpdate = true;
 }

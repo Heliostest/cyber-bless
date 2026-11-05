@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import { createEnvironmentTone } from './environment-tone';
 import { readFileSync } from 'node:fs';
 
-it.each(['cherry-round', 'cherry-cluster'])('keeps %s authored pink base color with grey AO vertices in the delivery palette', name => {
+it.each(['cherry-round', 'cherry-cluster', 'maple-round', 'maple-cluster'])('keeps %s authored accent color with grey AO vertices in the delivery palette', name => {
   const file = readFileSync(new URL(`../../../assets/environments/trees/simple-tree/${name}.glb`, import.meta.url));
   const gltf = JSON.parse(file.subarray(20, 20 + file.readUInt32LE(12)).toString('utf8'));
   const rgba = gltf.materials.find((material: { name: string }) => material.name === 'leaves').pbrMetallicRoughness.baseColorFactor;

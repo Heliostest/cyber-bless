@@ -14,7 +14,7 @@ test('both offline hosts ship each selectable tree and its license without remot
   const assets = await prepareAppAssets();
   const files = [
     ...['quaternius', 'simple-tree'].flatMap(source => ['round.glb', 'cluster.glb', 'LICENSE.txt'].map(name => `environments/trees/${source}/${name}`)),
-    ...['cherry', 'cypress', 'willow', 'pine'].flatMap(species => ['round', 'cluster'].map(variant => `environments/trees/simple-tree/${species}-${variant}.glb`)),
+    ...['cherry', 'cypress', 'willow', 'pine', 'toona', 'acer', 'maple'].flatMap(species => ['round', 'cluster'].map(variant => `environments/trees/simple-tree/${species}-${variant}.glb`)),
   ];
   assert.ok(!assetFiles.some(file => file.startsWith('environments/trees/regional/')), 'archived external cherry is not shipped or selected');
   for (const file of files) {

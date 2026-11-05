@@ -31,10 +31,10 @@ try {
       return JSON.stringify(localStorage);
     });
     const options = await select.locator('option').evaluateAll(nodes => nodes.map(node => node.value));
-    assert.deepEqual(options, ['original', 'scene', 'quaternius', 'simple-tree', 'cherry', 'cypress', 'willow', 'conifer']);
+    assert.deepEqual(options, ['original', 'scene', 'quaternius', 'simple-tree', 'cherry', 'cypress', 'willow', 'conifer', 'toona', 'acer', 'maple']);
     await select.selectOption('original');
     await page.screenshot({ path: path.join(out, `${id}-original.png`) });
-    for (const method of ['quaternius', 'simple-tree', 'cherry', 'cypress', 'willow', 'conifer']) {
+    for (const method of ['quaternius', 'simple-tree', 'cherry', 'cypress', 'willow', 'conifer', 'toona', 'acer', 'maple']) {
       await select.selectOption(method);
       await page.waitForFunction(method => {
         const canvas = document.querySelector('canvas[data-tree-method]');
@@ -130,7 +130,7 @@ try {
     const memory = () => ({ ...renderer.info.memory });
     style.render(); const baseline = memory();
     try {
-      for (const method of ['quaternius', 'simple-tree', 'cherry', 'cypress', 'willow', 'conifer']) {
+      for (const method of ['quaternius', 'simple-tree', 'cherry', 'cypress', 'willow', 'conifer', 'toona', 'acer', 'maple']) {
         await trees.select(method);
         for (const option of visualStyleOptions) {
           style.setStyle(option.id); trees.update(2, true); style.render();

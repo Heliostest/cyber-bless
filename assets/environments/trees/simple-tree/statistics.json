@@ -1,6 +1,6 @@
 {
   "sourceCommit": "8fd94b8edc7ef1b87c086694382a0808c059971c",
-  "adapterVersion": 3,
+  "adapterVersion": 4,
   "threeRevision": "170",
   "models": [
     {
@@ -564,6 +564,348 @@
         }
       ],
       "adaptation": "Source-derived flowering cherry; product vase-form parameters and five-petal notched blossom atlas, not a native upstream Prunus generator."
+    },
+    {
+      "key": "toona-round",
+      "file": "toona-round.glb",
+      "bytes": 287456,
+      "sha256": "05544750658f6797bea10329fdbd80f83534e54da1051107f83242ef75a13d08",
+      "species": "oak",
+      "leafTexture": "product toona compound",
+      "clumps": 16,
+      "leafCards": 380,
+      "vertices": 4779,
+      "triangles": 5120,
+      "bounds": {
+        "min": [
+          -4.981777191162109,
+          -0.015158419497311115,
+          -5.726938724517822
+        ],
+        "max": [
+          4.978148937225342,
+          8.996835708618164,
+          3.6234443187713623
+        ]
+      },
+      "shadeScale": 1.24653418,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 1359,
+          "triangles": 2080,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 3420,
+          "triangles": 3040,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.456285297870636,
+            0.9770742654800415
+          ]
+        }
+      ],
+      "adaptation": "Source-derived product art: Toona-inspired pinnate compound foliage and airy upright rounded broad crown; actual oak/wood branching plus original leaf atlas, not a native upstream species generator or species-certified botanical model."
+    },
+    {
+      "key": "toona-cluster",
+      "file": "toona-cluster.glb",
+      "bytes": 285680,
+      "sha256": "2ed1efc1f0a7a458971e2716abf207dca56a529c0adc3845eabf8f81c3bdb7c3",
+      "species": "oak",
+      "leafTexture": "product toona compound",
+      "clumps": 16,
+      "leafCards": 376,
+      "vertices": 4743,
+      "triangles": 5088,
+      "bounds": {
+        "min": [
+          -4.430697917938232,
+          -0.017088379710912704,
+          -4.382110595703125
+        ],
+        "max": [
+          4.095588684082031,
+          8.051752090454102,
+          5.109443187713623
+        ]
+      },
+      "shadeScale": 1.24653418,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 1359,
+          "triangles": 2080,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 3384,
+          "triangles": 3008,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.4584696888923645,
+            0.9612767696380615
+          ]
+        }
+      ],
+      "adaptation": "Source-derived product art: Toona-inspired pinnate compound foliage and airy upright rounded broad crown; actual oak/wood branching plus original leaf atlas, not a native upstream species generator or species-certified botanical model."
+    },
+    {
+      "key": "acer-round",
+      "file": "acer-round.glb",
+      "bytes": 341128,
+      "sha256": "b0f9078db3bd73aa2f822535a41e8494771f845d0b967de8c1e94e4fc3334328",
+      "species": "oak",
+      "leafTexture": "product acer seven lobes",
+      "clumps": 20,
+      "leafCards": 499,
+      "vertices": 6102,
+      "triangles": 6456,
+      "bounds": {
+        "min": [
+          -5.0209879875183105,
+          -0.13752871751785278,
+          -4.623320579528809
+        ],
+        "max": [
+          5.547667503356934,
+          7.396700382232666,
+          5.9593987464904785
+        ]
+      },
+      "shadeScale": 1.24653418,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 1611,
+          "triangles": 2464,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 4491,
+          "triangles": 3992,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.48187947273254395,
+            0.9605860114097595
+          ]
+        }
+      ],
+      "adaptation": "Source-derived product art: Acer palmatum-inspired seven deep leaf lobes and lower spreading layered crown; actual oak/wood branching plus original leaf atlas, not a native upstream species generator or species-certified botanical model."
+    },
+    {
+      "key": "acer-cluster",
+      "file": "acer-cluster.glb",
+      "bytes": 341568,
+      "sha256": "9c4c1df4024bf44a729293b17e01935c6e4bedf2a28d3f70064c0c4d47b6d456",
+      "species": "oak",
+      "leafTexture": "product acer seven lobes",
+      "clumps": 20,
+      "leafCards": 500,
+      "vertices": 6111,
+      "triangles": 6464,
+      "bounds": {
+        "min": [
+          -6.188966274261475,
+          -0.4443112015724182,
+          -4.740861415863037
+        ],
+        "max": [
+          4.000363349914551,
+          6.947495937347412,
+          6.2708611488342285
+        ]
+      },
+      "shadeScale": 1.24653418,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 1611,
+          "triangles": 2464,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 4500,
+          "triangles": 4000,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.5019934177398682,
+            0.9781027436256409
+          ]
+        }
+      ],
+      "adaptation": "Source-derived product art: Acer palmatum-inspired seven deep leaf lobes and lower spreading layered crown; actual oak/wood branching plus original leaf atlas, not a native upstream species generator or species-certified botanical model."
+    },
+    {
+      "key": "maple-round",
+      "file": "maple-round.glb",
+      "bytes": 275620,
+      "sha256": "dd944cd50dce7e9a1be98b570cb511ac481ff646c89dc0ca4313ae2e36ddf8e3",
+      "species": "oak",
+      "leafTexture": "product maple broad lobes",
+      "clumps": 18,
+      "leafCards": 406,
+      "vertices": 5013,
+      "triangles": 5328,
+      "bounds": {
+        "min": [
+          -3.659658193588257,
+          -0.021050432696938515,
+          -2.9815821647644043
+        ],
+        "max": [
+          3.8631792068481445,
+          8.614786148071289,
+          3.6429800987243652
+        ]
+      },
+      "shadeScale": 1.295044608,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 1359,
+          "triangles": 2080,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 3654,
+          "triangles": 3248,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.40264350175857544,
+            0.9708652496337891
+          ]
+        }
+      ],
+      "adaptation": "Source-derived product art: Acer rubrum-inspired broad three/five leaf lobes and ascending branches with a taller rounded/ovoid autumn crown; actual oak/wood branching plus original leaf atlas, not a native upstream species generator or species-certified botanical model."
+    },
+    {
+      "key": "maple-cluster",
+      "file": "maple-cluster.glb",
+      "bytes": 266704,
+      "sha256": "5a175148d6960cdca541530c9d6bc5cd1428e3a87efa47d163110e9c3028a57f",
+      "species": "oak",
+      "leafTexture": "product maple broad lobes",
+      "clumps": 16,
+      "leafCards": 386,
+      "vertices": 4833,
+      "triangles": 5168,
+      "bounds": {
+        "min": [
+          -4.47402286529541,
+          -0.010873974300920963,
+          -5.431782245635986
+        ],
+        "max": [
+          3.9945762157440186,
+          10.257915496826172,
+          2.923600196838379
+        ]
+      },
+      "shadeScale": 1.295044608,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 1359,
+          "triangles": 2080,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 3474,
+          "triangles": 3088,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.4084065854549408,
+            0.9520890116691589
+          ]
+        }
+      ],
+      "adaptation": "Source-derived product art: Acer rubrum-inspired broad three/five leaf lobes and ascending branches with a taller rounded/ovoid autumn crown; actual oak/wood branching plus original leaf atlas, not a native upstream species generator or species-certified botanical model."
     }
   ],
   "validation": {
@@ -575,6 +917,8 @@
     "clusterNormals": true,
     "validIndices": true,
     "alphaMaskedDoubleSided": true,
-    "embeddedAtlas512": true
+    "embeddedAtlas512": true,
+    "sourceMaterialMetadata": true,
+    "frozenExistingTen": true
   }
 }

@@ -707,6 +707,9 @@ export interface MessageArguments {
   "developer.trees.cypress": {  };
   "developer.trees.willow": {  };
   "developer.trees.conifer": {  };
+  "developer.trees.toona": {  };
+  "developer.trees.acer": {  };
+  "developer.trees.maple": {  };
   "developer.trees.recommended": { "species": string | number | boolean | Date | null | undefined };
   "developer.trees.bySource": {  };
   "developer.trees.bySpecies": {  };

@@ -1,6 +1,6 @@
-export const TREE_RENDER_METHODS = ['original', 'scene', 'quaternius', 'simple-tree', 'cherry', 'cypress', 'willow', 'conifer'] as const;
+export const TREE_RENDER_METHODS = ['original', 'scene', 'quaternius', 'simple-tree', 'cherry', 'cypress', 'willow', 'conifer', 'toona', 'acer', 'maple'] as const;
 export type TreeRenderMethod = typeof TREE_RENDER_METHODS[number];
-export type TreeSpecies = 'original' | 'cherry' | 'cypress' | 'willow' | 'conifer';
+export type TreeSpecies = 'original' | 'cherry' | 'cypress' | 'willow' | 'conifer' | 'toona' | 'acer' | 'maple';
 export type TreeModelSet = { round: string; cluster: string };
 const pair = (directory: string, prefix = ''): TreeModelSet => ({ round: `${directory}/${prefix}round.glb`, cluster: `${directory}/${prefix}cluster.glb` });
 const sets: Record<Exclude<TreeRenderMethod, 'original' | 'scene'>, TreeModelSet> = {
@@ -14,6 +14,11 @@ const sets: Record<Exclude<TreeRenderMethod, 'original' | 'scene'>, TreeModelSet
   // The upstream key is pine; its documented silhouette is fir-like, not a
   // botanical identification of Japanese garden pines or another Pinus species.
   conifer: pair('simple-tree', 'pine-'),
+  // Product adaptations of the pinned oak/foliage pipeline with distinct leaf
+  // atlases and branch parameters; these are not native upstream species.
+  toona: pair('simple-tree', 'toona-'),
+  acer: pair('simple-tree', 'acer-'),
+  maple: pair('simple-tree', 'maple-'),
 };
 
 export function resolveTreeModelSet(method: TreeRenderMethod, recommendation: TreeSpecies = 'original'): TreeModelSet | undefined {

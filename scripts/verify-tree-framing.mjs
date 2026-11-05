@@ -16,6 +16,9 @@ try {
   page.on('pageerror', error => report.errors.push(error.message));
   for (const id of ['shinto-torii', 'japanese-wagasa', 'chinese-diabolo', 'german-nutcracker', 'diya-oil-lamp']) {
     await page.goto(`${base}/scene-review?scene=${id}`, { waitUntil: 'domcontentloaded' });
+    // The manual-review navigation bar is outside the app and otherwise covers
+    // fixed developer controls after mobile screenshot scrolling.
+    await page.addStyleTag({ content: '.scene-review-header { position: static !important; }' });
     const canvas = page.locator('canvas[data-tree-method]').first();
     await canvas.waitFor({ timeout: 60000 });
     await page.evaluate(async url => {
@@ -30,19 +33,20 @@ try {
     }, '/@fs/' + path.resolve('packages/scene-runtime/src/imported-trees.ts').replaceAll('\\', '/'));
     await page.locator('[data-audio-console-toggle]').click();
     const select = page.locator(`select[data-tree-scene="${id}"]`);
-    const methods = id === 'shinto-torii' || id === 'diya-oil-lamp' ? ['cherry', 'willow', 'cypress', 'conifer'] : ['scene'];
+    const methods = id === 'shinto-torii' || id === 'diya-oil-lamp' ? ['cherry', 'willow', 'cypress', 'conifer', 'toona', 'acer', 'maple'] :
+      id === 'chinese-diabolo' ? ['scene', 'toona', 'acer', 'maple'] : ['scene'];
     for (const method of methods) {
       await select.selectOption(method);
       await page.waitForFunction(method => document.querySelector('canvas[data-tree-method]')?.dataset.treeMethod === method && document.querySelector('canvas[data-tree-status]')?.dataset.treeStatus === 'ready', method);
       await page.locator('[data-audio-console-toggle]').click();
       await canvas.screenshot({ path: path.join(out, `${id}-${method}.png`) });
-      await page.waitForFunction(() => window.treeFramingView?.scene.getObjectByName('alternative-environment-trees')?.children.length > 0);
+      await page.waitForFunction(() => (window.treeFramingView?.scene.getObjectByName('environment-trees') ?? window.treeFramingView?.scene.getObjectByName('alternative-environment-trees'))?.children.length > 0);
       const framing = await page.evaluate(() => {
         const THREE = window.treeFramingThree, { scene, camera } = window.treeFramingView;
-        const root = scene.getObjectByName('alternative-environment-trees');
+        const root = scene.getObjectByName('environment-trees') ?? scene.getObjectByName('alternative-environment-trees');
         const point = new THREE.Vector3(), matrix = new THREE.Matrix4();
         let central = 0, visible = 0, top = 0, wood = 0;
-        root.traverse(mesh => {
+        root.traverseVisible(mesh => {
           if (!mesh.isInstancedMesh) return;
           mesh.getMatrixAt(0, matrix); matrix.premultiply(mesh.matrixWorld);
           const vertices = mesh.geometry.getAttribute('position');

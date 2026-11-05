@@ -14,6 +14,11 @@ const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const check = process.argv.includes('--check');
 const preview = process.argv.includes('--preview');
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+// Freeze the actual assets accepted before this extension, including the
+// current all-pink cherry. Never overwrite a later concurrent asset change.
+for (const [file, hash] of Object.entries(manifest.preToonaMapleAssetBaselines ?? {})) {
+  if (sha256(await readFile(path.join(directory, file))) !== hash) throw Error(`Frozen existing asset changed on disk: ${file}`);
+}
 const source = {};
 for (const record of manifest.sources) {
   const bytes = await readFile(path.join(directory, 'source', record.file));
@@ -63,9 +68,14 @@ import { uniform, linear, sunDirection } from './core.js';
 import { liftBelow, packSwing } from './wind.js';
 import { leafStart } from './growth.js';
 import { cherryBlossomCluster } from './cherry-blossoms.js';
+import { toonaCompoundCluster, acerSevenLobeCluster, mapleBroadLobeCluster } from './broadleaf-atlases.js';
 ${source['foliage.js'].slice(source['foliage.js'].indexOf('// Anime foliage'))}`;
 if (!foliage.includes('const LEAVES = {')) throw Error('Missing upstream texture registration boundary');
-foliage = foliage.replace('const LEAVES = {', "const LEAVES = {\n  'product cherry blossoms': cherryBlossomCluster,");
+foliage = foliage.replace('const LEAVES = {', `const LEAVES = {
+  'product toona compound': toonaCompoundCluster,
+  'product acer seven lobes': acerSevenLobeCluster,
+  'product maple broad lobes': mapleBroadLobeCluster,
+  'product cherry blossoms': cherryBlossomCluster,`);
 foliage = replaceRange(foliage, '  // As drawn: a new theme', "  // What a tree's clumps need", `
   // CPU export only: replace TSL materials and preview meshes with their
   // data holders. The original update/bake functions below are unchanged.
@@ -172,6 +182,8 @@ try {
         for (let i = 0; i < count; i++) if (Math.abs(Math.hypot(attrs.normal.getX(i), attrs.normal.getY(i), attrs.normal.getZ(i)) - 1) > 0.00001) throw Error('Non-unit normal');
         if (!Array.from(mesh.geometry.index.array).every(i => i < count && i >= 0)) throw Error('Invalid index');
         const mat = mesh.material;
+        if (mat.roughness !== 1 || mat.metalness !== 0 || mat.userData.celRamp?.length !== 3) throw Error('Lost source material or cel ramp metadata');
+        if (mesh.name === 'leaves' && mat.userData.shadeScale !== baked.shadeScale) throw Error('Lost source foliage shadeScale');
         if (mesh.name === 'leaves' && (!attrs.color || !mat.map || mat.alphaTest !== 0.5 || mat.side !== THREE.DoubleSide)) throw Error('Leaf export lost mask, normals, color or sidedness');
         if (mesh.name === 'leaves') {
           const corners = (model.cardSegments + 1) ** 2;
@@ -219,19 +231,26 @@ try {
     const bytes = Buffer.from(generated.base64, 'base64');
     const baseline = manifest.preCherryAssetBaselines?.[model.file];
     if (baseline && sha256(bytes) !== baseline) throw Error(`Existing species changed during cherry adaptation: ${model.file}`);
+    const broadleafBaseline = manifest.preToonaMapleAssetBaselines?.[model.file];
+    if (broadleafBaseline && sha256(bytes) !== broadleafBaseline) throw Error(`Existing tree changed during broadleaf adaptation: ${model.file}`);
     const gltf = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString('utf8'));
     if (gltf.buffers.some(buffer => buffer.uri) || gltf.images.some(image => image.uri)) throw Error('Expected a self-contained GLB');
     const outputPath = path.join(directory, model.file);
     if (check) {
       if (!(await readFile(outputPath)).equals(bytes)) throw Error(`Generated asset is stale: ${model.file}`);
     } else await writeFile(outputPath, bytes);
-    if (preview) await page.screenshot({ path: path.join(directory, `${model.key}.preview.png`) });
-    if (generated.atlasPreview) await writeFile(path.join(directory, `${model.key}.atlas.preview.png`), Buffer.from(generated.atlasPreview, 'base64'));
+    async function writePreview(name, previewBytes) {
+      const frozen = manifest.preToonaMaplePreviewBaselines?.[name];
+      if (frozen && sha256(previewBytes) !== frozen) throw Error(`Existing tree preview changed: ${name}`);
+      await writeFile(path.join(directory, name), previewBytes);
+    }
+    if (preview) await writePreview(`${model.key}.preview.png`, await page.screenshot());
+    if (generated.atlasPreview) await writePreview(`${model.key}.atlas.preview.png`, Buffer.from(generated.atlasPreview, 'base64'));
     outputs.push({ key: model.key, file: model.file, bytes: bytes.length, sha256: sha256(bytes), ...generated.statistics });
     console.log(`${check ? 'Verified' : 'Prepared'} ${model.file}: ${generated.statistics.triangles} triangles, ${generated.statistics.leafCards} leaf cards, ${bytes.length} bytes (Three r${generated.threeRevision})`);
   }
-  const stats = JSON.stringify({ sourceCommit: manifest.commit, adapterVersion: 3, threeRevision: '170', models: outputs,
-    validation: { sourceHashes: true, sourceGitBlobs: true, glbReload: true, finiteAttributes: true, unitNormals: true, clusterNormals: true, validIndices: true, alphaMaskedDoubleSided: true, embeddedAtlas512: true } }, null, 2) + '\n';
+  const stats = JSON.stringify({ sourceCommit: manifest.commit, adapterVersion: 4, threeRevision: '170', models: outputs,
+    validation: { sourceHashes: true, sourceGitBlobs: true, glbReload: true, finiteAttributes: true, unitNormals: true, clusterNormals: true, validIndices: true, alphaMaskedDoubleSided: true, embeddedAtlas512: true, sourceMaterialMetadata: true, frozenExistingTen: true } }, null, 2) + '\n';
   const statsPath = path.join(directory, 'statistics.json');
   if (check) {
     if (await readFile(statsPath, 'utf8') !== stats) throw Error('Generated statistics are stale');

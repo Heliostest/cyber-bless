@@ -30,11 +30,37 @@ import {
   createSceneFeedback,
   createStepOverlay,
   createWarmStage,
+  observeCanvasResize,
 } from './procedural-kit'
 
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.clearAllMocks()
+})
+
+it('resizes the camera when the canvas changes inside an unchanged host', () => {
+  let notify = (_element: Element) => {}
+  vi.stubGlobal('ResizeObserver', class {
+    private targets = new Set<Element>()
+    constructor(private callback: () => void) {
+      notify = element => { if (this.targets.has(element)) this.callback() }
+    }
+    observe(element: Element) { this.targets.add(element) }
+    disconnect() { this.targets.clear() }
+  })
+  const host = document.createElement('div'), canvas = document.createElement('canvas')
+  host.append(canvas)
+  let height = 400
+  Object.defineProperties(canvas, { clientWidth: { get: () => 320 }, clientHeight: { get: () => height } })
+  const sizes: number[][] = []
+  const stop = observeCanvasResize(canvas, () => sizes.push([canvas.clientWidth, canvas.clientHeight]))
+  height = 280 // A tray changes the canvas, while the host's outer box stays fixed.
+  notify(canvas)
+  expect(sizes).toEqual([[320, 280]])
+  stop()
+  height = 360
+  notify(canvas)
+  expect(sizes).toEqual([[320, 280]])
 })
 
 describe('createStepOverlay', () => {

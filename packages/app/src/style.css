@@ -24,6 +24,7 @@
     radial-gradient(#8fd3c3 3px, transparent 3.6px) 17px 17px / 34px 34px,
     var(--island-deep);
   color-scheme: light;
+  scrollbar-gutter: stable both-edges;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -256,6 +257,7 @@ button:hover:not(:disabled) {
   min-height: 100dvh;
 }
 .app-shell {
+  --page-gutter: 18px;
   max-width: 430px;
   min-height: 100dvh;
   margin: auto;
@@ -300,18 +302,23 @@ button:hover:not(:disabled) {
 .page-topbar .back-button {
   pointer-events: auto;
 }
-/* The swallowtail grows with its complete translated title. Its side space
-   keeps navigation controls clear without making longer languages smaller. */
+/* Every page uses the same centred plaque. Long translations wrap at the
+   same type size; the side space keeps navigation controls clear. */
 .title-ribbon {
-  --reach: 0.6em; /* tails past the front's sides */
+  --ribbon-padding: clamp(6px, calc((100vw - 320px) / 8 + 6px), 18px);
+  --reach: min(0.6em, calc(var(--ribbon-padding) - 2px)); /* tails past the front's sides */
   --tuck: 0.9em; /* tails under the front: the width of a fold */
-  --drop: 0.4em; /* tails and folds below the front */
+  --drop: 0.35em; /* tails and folds below the front */
   position: relative;
   isolation: isolate;
+  display: grid;
+  place-items: center;
+  width: 188px;
   max-width: calc(100% - 104px);
+  min-height: calc(38px + var(--drop));
   margin-bottom: calc(-1 * var(--drop));
-  padding: 6px 30px calc(8px + var(--drop));
-  font-size: 19px;
+  padding: 6px var(--ribbon-padding) calc(6px + var(--drop));
+  font-size: 18px;
   font-weight: 900;
   line-height: 1.4;
   text-align: center;
@@ -367,11 +374,11 @@ button:hover:not(:disabled) {
   right: var(--reach);
   bottom: var(--drop);
   left: var(--reach);
-  border-radius: 0.2em;
+  border-radius: 0.3em;
   background: linear-gradient(180deg, var(--mint-hi), var(--mint));
   box-shadow:
-    inset 0 3px 0 #ffffff80,
-    inset 0 -4px 0 #17a09359;
+    inset 0 2px 0 #ffffff80,
+    inset 0 -3px 0 #17a09359;
   transform: perspective(11.5em) rotateX(3deg);
 }
 .back-button {
@@ -425,20 +432,17 @@ button:hover:not(:disabled) {
   display: none;
 }
 .page-heading {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   text-align: center;
 }
 .page-heading-row {
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 44px;
-  flex-wrap: wrap;
   gap: 10px;
-}
-.page-heading h1 {
-  font-size: 19px;
 }
 .page-heading-actions {
   display: flex;
@@ -447,7 +451,6 @@ button:hover:not(:disabled) {
   min-inline-size: 0;
   max-inline-size: 100%;
 }
-.page-heading-row:has(.page-heading-actions) .title-ribbon { max-width: 100%; }
 .page-heading-actions .count-pill {
   display: block;
   max-width: 100%;
@@ -458,15 +461,14 @@ button:hover:not(:disabled) {
   line-height: 1.5;
 }
 .page-tagline {
-  margin: 8px 0 0;
-  font-size: 13px;
+  margin: 10px auto 0;
+  max-width: 28em;
+  padding-inline: 8px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--ink-soft);
-  line-height: 1.6;
+  line-height: 1.7;
   text-wrap: pretty;
-}
-.today-page > .page-heading {
-  margin-bottom: 12px;
 }
 .today-page > .daily-set {
   margin: 0 0 16px;
@@ -1569,7 +1571,7 @@ button:hover:not(:disabled) {
   padding: 5px 0;
 }
 .scene-topbar {
-  --title-side-space: 70px;
+  --title-side-space: calc(52px + var(--page-gutter));
   --topbar-padding: 14px;
   container-type: inline-size;
   padding-inline: var(--topbar-padding);
@@ -1583,14 +1585,7 @@ button:hover:not(:disabled) {
 .scene-topbar:has([data-feedback-present]) { z-index: 1100; }
 .scene-topbar .title-ribbon {
   /* Reserve the same space for the back button and the collapsed gear. */
-  --ribbon-padding: clamp(6px, calc((100cqw + 2 * var(--topbar-padding) - 320px) / 8 + 6px), 18px);
-  --reach: min(0.6em, calc(var(--ribbon-padding) - 2px));
-  position: relative;
-  width: auto;
   max-width: calc(100% - 2 * (var(--title-side-space) - var(--topbar-padding)));
-  padding: 6px var(--ribbon-padding) calc(8px + var(--drop));
-  letter-spacing: normal;
-  font-size: 19px;
 }
 .visual-style-backdrop {
   position: fixed;
@@ -2731,6 +2726,8 @@ button:hover:not(:disabled) {
     overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: var(--ledge) transparent;
+    /* Long pages keep the same title centre as pages without a scrollbar. */
+    scrollbar-gutter: stable both-edges;
     box-shadow:
       0 0 0 3px var(--edge),
       0 12px 0 3px #7fc4b3,
@@ -2810,6 +2807,7 @@ button:hover:not(:disabled) {
   }
 }
 @media (max-width: 360px) {
+  .app-shell { --page-gutter: 13px; }
   .app-content {
     padding-left: 13px;
     padding-right: 13px;
@@ -4652,9 +4650,9 @@ img.scene-icon {
 .app-shell[data-immersive] .scene-done { font-size: 13px; line-height: 1.5; }
 .app-shell[data-immersive] .scene-wish-saved:empty { display: none; }
 .app-shell[data-immersive] .scene-wish-saved { font-size: 13px; line-height: 1.5; }
-.app-shell[data-immersive] .scene-experience:has(.scene-done-row) > .scene-intention,
-.app-shell[data-immersive] .scene-experience:has(.scene-done-row) > .scene-stage-card > .scene-intention,
-.app-shell[data-immersive] .scene-experience:has(.scene-done-row) > .scene-caption { display: none; }
+.app-shell[data-immersive] .scene-experience:not([data-stable-stage]):has(.scene-done-row) > .scene-intention,
+.app-shell[data-immersive] .scene-experience:not([data-stable-stage]):has(.scene-done-row) > .scene-stage-card > .scene-intention,
+.app-shell[data-immersive] .scene-experience:not([data-stable-stage]):has(.scene-done-row) > .scene-caption { display: none; }
 .app-shell[data-immersive] .scene-done-row .reward-slot {
   flex-direction: row;
   gap: 10px;
@@ -4719,10 +4717,8 @@ img.scene-icon {
   .app-shell[data-immersive] > .app-content { padding-inline: 13px; }
 }
 @media (max-height: 650px) {
-  .scene-topbar .feedback-controls-anchor { top: 2px; }
   .app-shell[data-immersive] .scene-experience,
   .app-shell[data-immersive] .ritual-page { gap: 6px; }
-  .app-shell[data-immersive] > .app-topbar { min-height: 56px; padding-block: 6px; }
   .app-shell[data-immersive] .scene-intention { padding-block: 5px; }
 }
 @media (max-height: 450px) {
@@ -4846,3 +4842,95 @@ img.scene-icon {
 .scene-written-wish-reading { max-inline-size: 100%; padding: 10px 14px; border-radius: 14px; background: var(--paper); color: var(--ink); }
 .scene-written-wish-reading summary { min-height: 44px; cursor: pointer; line-height: 1.6; }
 .scene-written-wish-reading p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
+
+/* A scene owns one stable window. Copy, helper choices and completion controls
+   scroll inside their reserved areas instead of changing the camera viewport. */
+.app-shell[data-immersive][data-page="scene"] > .app-content,
+.app-shell[data-immersive][data-page="ritual"] > .app-content {
+  container-type: size;
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable both-edges;
+}
+.app-shell[data-immersive] [data-stable-stage] {
+  --scene-heading-space: 48px;
+  --scene-caption-space: 24px;
+  --scene-footer-space: 112px;
+  --scene-tray-space: 132px;
+  --scene-intention-space: 80px;
+  --scene-frame-gap: 8px;
+  /* Viewport fallback for WebViews without container query units. */
+  --scene-canvas-fallback: clamp(224px, min(calc(min(100vw, 430px) * 1.1 - 80px),
+    calc(var(--scene-viewport-height, 100dvh) - var(--scene-screen-inset, 0px) - 68px - 16px
+      - var(--scene-heading-space) - var(--scene-caption-space) - var(--scene-footer-space)
+      - 3 * var(--scene-frame-gap) - var(--scene-tray-space) - var(--scene-intention-space) - 8px)), 440px);
+  --scene-canvas-size: var(--scene-canvas-fallback);
+  height: 100%;
+  min-height: 100%;
+  gap: var(--scene-frame-gap);
+}
+@supports (container-type: size) and (height: 1cqh) {
+  .app-shell[data-immersive] [data-stable-stage] {
+    --scene-canvas-size: clamp(224px, min(calc(110cqw - 8px),
+      calc(100cqh - var(--scene-heading-space) - var(--scene-caption-space) - var(--scene-footer-space)
+        - 3 * var(--scene-frame-gap) - var(--scene-tray-space) - var(--scene-intention-space) - 8px)), 440px);
+  }
+}
+@media (min-width: 1000px) {
+  .app-shell[data-immersive] { --scene-screen-inset: 56px; }
+}
+.app-shell[data-immersive] [data-stable-stage] > .scene-narrative-slot {
+  flex: 0 0 var(--scene-heading-space);
+  height: var(--scene-heading-space);
+}
+.app-shell[data-immersive] [data-stable-stage] > .scene-caption-slot {
+  display: block;
+  flex: 0 0 var(--scene-caption-space);
+  height: var(--scene-caption-space);
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.app-shell[data-immersive] [data-stable-stage] > .scene-stage-card {
+  flex: 0 0 auto;
+  height: calc(var(--scene-canvas-size) + var(--scene-tray-space) + var(--scene-intention-space) + 8px);
+  min-height: 0;
+}
+.app-shell[data-immersive] [data-stable-stage] .scene-stage-card > .library-scene-stage {
+  --canvas-h: var(--scene-canvas-size);
+  flex: 0 0 auto;
+  height: calc(var(--scene-canvas-size) + var(--scene-tray-space));
+  min-height: 0;
+}
+.app-shell[data-immersive] [data-stable-stage] .scene-stage-card > .scene-intention {
+  display: block;
+  flex: 0 0 var(--scene-intention-space);
+  height: var(--scene-intention-space);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 7px 12px;
+}
+.app-shell[data-immersive] [data-stable-stage] .scene-overlay-host {
+  grid-template-rows: var(--canvas-h) minmax(0, 1fr) minmax(0, auto) auto;
+  align-content: normal;
+}
+.app-shell[data-immersive] [data-stable-stage] .scene-overlay-host > :is(.scene-hint, .scene-wish-slot) {
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.app-shell[data-immersive] [data-stable-stage] > .scene-experience-footer {
+  flex: 0 0 var(--scene-footer-space);
+  height: var(--scene-footer-space);
+  min-height: 0;
+  padding: 2px 2px 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.app-shell[data-immersive] [data-stable-stage] .scene-completion-actions:has(> .scene-wish-invite) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}

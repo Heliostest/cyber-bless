@@ -435,10 +435,10 @@ export function portraitBoost(aspect: number, factor = 3) {
   return aspect < 0.8 ? (0.8 - aspect) * factor : 0
 }
 
-/** Re-runs `resize` when the canvas host changes size; returns a disconnect. */
+/** Track the rendered canvas box: a tray can change it without resizing its host. */
 export function observeCanvasResize(canvas: HTMLCanvasElement, resize: () => void) {
   if (typeof ResizeObserver === 'undefined') return () => {}
   const ro = new ResizeObserver(() => resize())
-  ro.observe(canvas.parentElement ?? canvas)
+  ro.observe(canvas)
   return () => ro.disconnect()
 }

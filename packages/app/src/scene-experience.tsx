@@ -348,8 +348,10 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
     };
     return (<>
       {rewardRevealed && <SceneRewardReveal sceneId={entry.id} reducedMotion={state.settings.reducedMotion}/>}
-      {returnWish && (<p className="scene-caption">{message('app.return.caption', { title: returnWish.title })}</p>)}
-      {daily && (<p className="scene-caption">{tr(SCENE_DAILY_CAPTION)}</p>)}
+      <div className="scene-caption-slot">
+        {returnWish && <p className="scene-caption">{message('app.return.caption', { title: returnWish.title })}</p>}
+        {daily && <p className="scene-caption">{tr(SCENE_DAILY_CAPTION)}</p>}
+      </div>
       <p className="scene-progress sr-only" role="status">
         {entry.engine === 'woodfish@1' && !woodfishFinished
             ? message('app.woodfish.progress', { n: woodfishStrikes, min: steps }) : tr("\u5DF2\u5B8C\u6210 {p0} / {p1}", { p0: progress, p1: steps })}
@@ -370,6 +372,7 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
                 return true;
             }} onImpact={feedback} onInstruction={setInstruction} onFailure={failed}/>) : (<ProceduralScene entry={entry} progress={progress} checkpoint={checkpoint} saveWish={vessel && returnWish ? undefined : saveWish} returning={Boolean(returnWish)} initialVariant={record?.variant} onVariantChange={variant => dispatch({ type: "scene.variant", id: entry.id, variant })} failed={failed} paused={feedbackEnabled && reporterOpen}/>)}
       </SceneStageCard>
+      <div className="scene-experience-footer">
       {progress >= steps && (<div className="scene-done-row">
           {opening ? <OpeningDone entry={entry} keptWish={!!keptWish} favorite={favoriteChip} prayer={prayerButton}/> : returnedFor ? (<>
               {/* The legacy visit's note is saved; fulfillment is a separate kindness record. */}
@@ -420,10 +423,6 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
             </>)}
           <SceneShareButton sceneId={entry.id} title={localizedTitle(entry)}/>
         </div>)}
-      {canRecordWish && wishWriting && (<OptionalSceneWish active={active} onSubmit={saveCompletedWish} onClose={() => {
-          if (!wishWritingNow.current) return;
-          wishWritingNow.current = false; uiSound?.('close'); setWishWriting(false);
-      }}/>)}
       {entry.engine !== "woodfish@1" && (
         // Present from the start (empty), so the confirmation is announced.
         <p className="scene-wish-saved" role="status">
@@ -433,6 +432,11 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
             </>)}
         </p>)}
       {(progress < steps || pendingVesselChoice) && (<div className="scene-actions">{favoriteChip}</div>)}
+      </div>
+      {canRecordWish && wishWriting && (<OptionalSceneWish active={active} onSubmit={saveCompletedWish} onClose={() => {
+          if (!wishWritingNow.current) return;
+          wishWritingNow.current = false; uiSound?.('close'); setWishWriting(false);
+      }}/>)}
       {feedbackEnabled && <TestFeedbackOverlay entry={entry} reducedMotion={state.settings.reducedMotion}
         context={{ completedSteps: Math.min(progress, steps), totalSteps: steps, reportedStep: Math.min(progress + 1, steps),
           ...(intention?.action ? { instruction: translateScene(intention.action) } : {}),
@@ -491,8 +495,8 @@ export function SceneExperience({ entry: offeredEntry, wishId, daily, vessel, re
     }, [entry, offeredId, ready, attempt]);
     if (!offeredEntry)
         return <p role="alert">{tr("\u573A\u666F\u4FE1\u606F\u7F3A\u5931\uFF0C\u8BF7\u8FD4\u56DE\u76EE\u5F55\u91CD\u8BD5\u3002")}</p>;
-    return (<section className="scene-experience" aria-label={localizedTitle(entry ?? offeredEntry)}>
-      {entry && <RitualNarrativeBlurb sceneId={entry.id}/>}
+    return (<section className="scene-experience" data-stable-stage="" aria-label={localizedTitle(entry ?? offeredEntry)}>
+      <div className="scene-narrative-slot">{entry && <RitualNarrativeBlurb sceneId={entry.id}/>}</div>
       {error ? (<SceneLoadFailure message={error} onRetry={() => setAttempt(n => n + 1)}/>) : loaded && entry ? (<>
           <LoadedScene key={attempt} entry={entry} wishId={wishId} daily={daily} vessel={vessel} replay={replay} opening={opening} failed={fail} feedbackSession={feedbackSession}/>
         </>) : (<div className="scene-download" role="status">

@@ -1,5 +1,10 @@
 # 棉线慢成
 
+## 2026-11-05 小物图标风格正式显示
+
+默认柔和风格现使用连续明暗、减弱描边与柔和阴影，并参照本场图标在原色系内限幅校准明度/饱和度；保留既有材料、贴图、透光/反射及动态反馈。器形、部件、原创图案和动作不变。这些是产品美术参数，不增加传统材料工艺、寓意、规则或功效主张。来源绑定、标题、引擎版本及存档保持；文化外链未重新访问，沿用既有逐场核查支持范围和读取状态。[实际呈现、边界与验证](../../../../docs/research/2026-11-05-icon-style-rollout.md)。较早试做记录为其当时状态，本轮已正式接入。
+
+
 `indian-charkha` / `indian-charkha-craft` is an original open-frame Indian spinning-wheel appreciation scene. Sources and cultural boundaries: `content/traditions/indian-charkha-craft.md`.
 
 Direct material gestures: pull cotton left60px to draft while wheel turns, crank right60px to add twist, then guide cotton right60px. The final action pauses wheel rotation while moving the thread back before slowly winding onto the spindle. The wheel and spindle turn at a6:1 illustrative drive ratio. A tangent cord belt joins both pulleys, with a moving splice showing travel. Yarn buffers update in place; a layered cop grows during winding. Frame feet and the initial cotton rest on real supports. No table, sign, invisible hit proxy, wish form, textures or copied assets.

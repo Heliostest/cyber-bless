@@ -190,8 +190,8 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
             }
             bodyGroup.add(asset.body);
             // Anime painted-wood palette for toon presets; original GLB/PBR maps remain intact.
-            asset.body.userData.toonSurface = { color: 0xd0a172, simplifyMap: true, aoIntensity: 0.3 };
-            asset.mallet.userData.toonSurface = { color: 0xb27a4a, simplifyMap: true, aoIntensity: 0.22 };
+            asset.body.userData.toonSurface = { color: 0xe0ae72, simplifyMap: true, aoIntensity: 0.95 };
+            asset.mallet.userData.toonSurface = { color: 0xdcb37c, simplifyMap: true, aoIntensity: 0.45 };
             bodyGroup.position.y = -0.91;
             asset.body.position.y = 0.91;
             mallet.add(asset.mallet);

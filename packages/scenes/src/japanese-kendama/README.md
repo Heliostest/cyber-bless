@@ -1,5 +1,10 @@
 # 剑玉轻接
 
+## 2026-11-05 小物图标风格正式显示
+
+默认柔和风格现使用连续明暗、减弱描边与柔和阴影，并参照本场图标在原色系内限幅校准明度/饱和度；保留既有材料、贴图、透光/反射及动态反馈。器形、部件、原创图案和动作不变。这些是产品美术参数，不增加传统材料工艺、寓意、规则或功效主张。来源绑定、标题、引擎版本及存档保持；文化外链未重新访问，沿用既有逐场核查支持范围和读取状态。[实际呈现、边界与验证](../../../../docs/research/2026-11-05-icon-style-rollout.md)。较早试做记录为其当时状态，本轮已正式接入。
+
+
 `japanese-kendama` / `japanese-kendama-craft` is an original Japanese cup-and-ball appreciation scene. Primary references and boundaries are in `content/traditions/japanese-kendama-craft.md`.
 
 Three direct upward60px handle drags lift the ball into the large cup, transfer it to the small cup, then align the socket over the spike. Each toss first clears the receiving surface before the handle turns. The pointer represents a hand holding the wooden ken. The toy starts and finishes on a cloth; no display furniture or invisible hit proxy. Concave cups fit the ball's sphere, and the open socket's internal stop meets the spike. The string stays attached at both ends and reuses its geometry buffer. Ball paint uses three material batches rather than one draw per face.

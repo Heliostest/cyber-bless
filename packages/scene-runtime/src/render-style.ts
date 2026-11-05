@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { BlendFunction, EffectComposer, EffectPass, OutlineEffect, RenderPass, ToneMappingEffect, ToneMappingMode } from "postprocessing";
 import type { RenderStyleId } from "@wbr/content";
 import { createToonSurfaces } from "./toon-surfaces";
+import { softenObjectLighting } from './icon-style';
 import { createGouacheEffect } from "./gouache-effect";
 import { createMoebiusEffect } from "./moebius-effect";
 import { MoebiusNormals } from "./moebius-normals";
@@ -13,7 +14,7 @@ import { createGallerySurfaces, gallerySubjects, isGallerySurfaceStyle } from ".
 import { createGalleryEffect, isGalleryPostStyle } from "./gallery-effects";
 
 /** Shared material styling, color treatment and restrained contours. */
-export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera) {
+export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera, { sceneId = '' }: { sceneId?: string } = {}) {
   let active: RenderStyleId = "original";
   let composer: EffectComposer | undefined;
   let outline: OutlineEffect | undefined;
@@ -82,7 +83,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
       composer.setSize(width,height);
       return;
     }
-    surfaces = createToonSurfaces(active);
+    surfaces = createToonSurfaces(active, sceneId);
     if (active === "moebius") {
       normals = new MoebiusNormals(scene, camera);
       composer.addPass(normals);
@@ -97,7 +98,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
       blendFunction: BlendFunction.ALPHA,
       visibleEdgeColor: active === "toon-outline" ? 0x252832 : active === "gouache" ? 0x53616a : 0x584235,
       hiddenEdgeColor: active === "toon-outline" ? 0x252832 : active === "gouache" ? 0x53616a : 0x584235,
-      edgeStrength: active === "toon-outline" ? 3.0 : active === "toon-ink" ? 1.8 : active === "gouache" ? 0.22 : 0.45,
+      edgeStrength: active === "toon-outline" ? 3.0 : active === "toon-ink" ? 1.8 : active === "gouache" ? 0.22 : 0.18,
       resolutionScale: 1,
       xRay: false,
       multisampling: 2,
@@ -127,6 +128,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
       target: renderer.getRenderTarget(),
       autoClear: renderer.autoClear,
       toneMapping: renderer.toneMapping,
+      exposure: renderer.toneMappingExposure,
       color: renderer.getClearColor(new THREE.Color()),
       alpha: renderer.getClearAlpha(),
       shaderError: renderer.debug.onShaderError,
@@ -135,6 +137,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
       cameraMask: camera.layers.mask,
       shadowEnabled: renderer.shadowMap.enabled,
       shadowAutoUpdate: renderer.shadowMap.autoUpdate,
+      shadowType: renderer.shadowMap.type,
     };
     // Outline rendering changes visibility/layers internally. Restore even on a failed pass.
     const objects: [THREE.Object3D, boolean, number][] = [];
@@ -142,6 +145,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
     let frame: ReturnType<ReturnType<typeof createToonSurfaces>["apply"]> | undefined;
     let galleryFrame: ReturnType<ReturnType<typeof createGallerySurfaces>["apply"]> | undefined;
     let failed = false;
+    let lights: ReturnType<typeof softenObjectLighting> | undefined;
     try {
       renderer.toneMapping = THREE.NoToneMapping;
       renderer.debug.onShaderError = () => { failed = true; };
@@ -159,6 +163,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
         outline!.uniforms.get("lineWidth")!.value = parameters.toonWidth;
       }
       frame = surfaces?.apply(scene);
+      if (active === 'toon-soft') lights = softenObjectLighting(scene, sceneId);
       if (frame) { outline?.selection.set(frame.outlined); normals?.selection.set(frame.outlined); }
       if (halftone) {
         halftone.uniforms.get("pixelRatio")!.value = renderer.getPixelRatio();
@@ -178,6 +183,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
       failed = true;
     } finally {
       frame?.restore();
+      lights?.restore();
       galleryFrame?.restore();
       scene.background = previous.background;
       scene.overrideMaterial = previous.override;
@@ -186,8 +192,10 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
       renderer.setRenderTarget(previous.target);
       renderer.autoClear = previous.autoClear;
       renderer.toneMapping = previous.toneMapping;
+      renderer.toneMappingExposure = previous.exposure;
       renderer.shadowMap.enabled = previous.shadowEnabled;
       renderer.shadowMap.autoUpdate = previous.shadowAutoUpdate;
+      renderer.shadowMap.type = previous.shadowType;
       renderer.setClearColor(previous.color, previous.alpha);
       renderer.debug.onShaderError = previous.shaderError;
     }

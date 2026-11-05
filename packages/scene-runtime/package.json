@@ -14,7 +14,8 @@
     "./interaction-cues": "./src/interaction-cues.ts",
     "./stylized-water": "./src/stylized-water.ts",
     "./ritual-optics": "./src/ritual-optics.ts",
-    "./craft-surfaces": "./src/craft-surfaces.ts"
+    "./craft-surfaces": "./src/craft-surfaces.ts",
+    "./soft-pouch-geometry": "./src/soft-pouch-geometry.ts"
   },
   "dependencies": {
     "@wbr/content": "*",

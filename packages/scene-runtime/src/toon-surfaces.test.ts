@@ -1,8 +1,47 @@
 import { describe, it, expect, vi } from "vitest";
 import * as THREE from "three";
 import { createToonSurfaces } from "./toon-surfaces";
+import { calibrateIconPigment } from './icon-style';
 
 describe("official toon material adaptation", () => {
+  it('calibrates only untextured subject pigment and keeps animated source colors live', () => {
+    const scene = new THREE.Scene(), source = new THREE.MeshStandardMaterial({color:0xb78b59}), subject = new THREE.Mesh(new THREE.BoxGeometry(),source);
+    const environment=new THREE.Group(); environment.name='cozy-environment'; const tree=new THREE.Mesh(new THREE.BoxGeometry(),source); environment.add(tree);
+    const map=new THREE.Texture(), printedSource=new THREE.MeshStandardMaterial({color:0xb78b59,map}), printed=new THREE.Mesh(new THREE.BoxGeometry(),printedSource);
+    const vertexSource=new THREE.MeshStandardMaterial({color:0xb78b59,vertexColors:true}), vertex=new THREE.Mesh(new THREE.BoxGeometry(),vertexSource); scene.add(subject,environment,printed,vertex);
+    const surfaces=createToonSurfaces('toon-soft','woodfish'), expected=new THREE.Color(); calibrateIconPigment(expected,source.color,'woodfish');
+    let frame=surfaces.apply(scene); expect((subject.material as THREE.MeshStandardMaterial).color.equals(expected)).toBe(true);
+    expect((tree.material as THREE.MeshStandardMaterial).color.equals(source.color)).toBe(true); expect((printed.material as THREE.MeshStandardMaterial).color.equals(printedSource.color)).toBe(true); expect((vertex.material as THREE.MeshStandardMaterial).color.equals(vertexSource.color)).toBe(true); frame.restore();
+    source.color.set(0x4a8862); frame=surfaces.apply(scene); calibrateIconPigment(expected,source.color,'woodfish'); expect((subject.material as THREE.MeshStandardMaterial).color.equals(expected)).toBe(true); frame.restore(); surfaces.dispose();
+  });
+  it('retains live normal/roughness maps, finish and normal strength in soft rendering', () => {
+    const source = new THREE.MeshStandardMaterial({ roughness: .8 }), scene = new THREE.Scene(), mesh = new THREE.Mesh(new THREE.BoxGeometry(), source); scene.add(mesh);
+    const surfaces = createToonSurfaces('toon-soft'); surfaces.apply(scene).restore();
+    const normal = new THREE.Texture(), roughness = new THREE.Texture(); source.normalMap = normal; source.roughnessMap = roughness; source.normalScale.set(.3,.4); source.roughness = .63;
+    const frame = surfaces.apply(scene), styled = mesh.material as THREE.MeshStandardMaterial;
+    expect(styled).toBeInstanceOf(THREE.MeshStandardMaterial); expect(styled.normalMap).toBe(normal); expect(styled.roughnessMap).toBe(roughness);
+    expect(styled.normalScale.toArray()).toEqual([.3,.4]); expect(styled.roughness).toBe(.63);
+    frame.restore(); surfaces.dispose(); expect(mesh.material).toBe(source);
+  });
+  it('retains transparent glass depth/optics and follows live physical parameters', () => {
+    const source = new THREE.MeshPhysicalMaterial({ transparent:true, transmission:.76, thickness:.035, depthWrite:false, clearcoat:.4 }); source.userData.ritualOptics={kind:'glass'};
+    const scene = new THREE.Scene(), mesh = new THREE.Mesh(new THREE.SphereGeometry(), source); scene.add(mesh); const surfaces = createToonSurfaces('toon-soft');
+    let frame = surfaces.apply(scene); expect(mesh.material).not.toBe(source); expect((mesh.material as THREE.Material).customProgramCacheKey()).toContain('icon-glass-rim'); expect(frame.outlined).not.toContain(mesh); frame.restore();
+    source.transmission=.85; source.clearcoat=.6; source.attenuationDistance=1.7;
+    frame=surfaces.apply(scene); const styled=mesh.material as THREE.MeshPhysicalMaterial;
+    expect(styled.transmission).toBe(.85); expect(styled.clearcoat).toBe(.6); expect(styled.attenuationDistance).toBe(1.7); expect(styled.transparent).toBe(true); expect(styled.depthWrite).toBe(false);
+    frame.restore(); surfaces.dispose(); expect(source.transmission).toBe(.85);
+  });
+  it('detects in-place material-array changes and releases partially built replacements on failure', () => {
+    const first = new THREE.MeshStandardMaterial({metalness:.6}), second = new THREE.MeshPhysicalMaterial();
+    const sources = [first], scene = new THREE.Scene(), mesh = new THREE.Mesh(new THREE.BoxGeometry(), sources); scene.add(mesh);
+    const surfaces = createToonSurfaces('toon-soft'), frame = surfaces.apply(scene), firstClone = (mesh.material as THREE.Material[])[0], released=vi.fn(); firstClone.addEventListener('dispose',released); frame.restore();
+    sources[0]=second; surfaces.apply(scene).restore(); expect(released).toHaveBeenCalledTimes(1);
+    surfaces.dispose();
+    const adapter=createToonSurfaces('toon-soft'), fail = new THREE.MeshPhysicalMaterial(); vi.spyOn(fail,'clone').mockImplementation(()=>{throw Error('clone failure')});
+    const clone=first.clone(), cleanup=vi.fn(); clone.addEventListener('dispose',cleanup); vi.spyOn(first,'clone').mockReturnValue(clone);
+    mesh.material=[first,fail]; expect(()=>adapter.apply(scene)).toThrow('clone failure'); expect(cleanup).toHaveBeenCalledTimes(1); expect(mesh.material).toEqual([first,fail]); adapter.dispose();
+  });
   it("updates outline shade counts while retaining the cached material, texture identity and authored map", () => {
     const map = new THREE.Texture(), source = new THREE.MeshStandardMaterial({ map, roughness: .8 });
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(), source), scene = new THREE.Scene(); scene.add(mesh);
@@ -80,14 +119,14 @@ describe("official toon material adaptation", () => {
     frame.restore(); surfaces.dispose();
     expect(mesh.material).toBe(original);
   });
-  it("uses soft cel lighting on the subject while leaving the backdrop smooth", () => {
+  it("uses continuous soft volume on the subject while leaving the backdrop smooth", () => {
     const scene = new THREE.Scene();
     const subject = new THREE.Mesh(new THREE.SphereGeometry(), new THREE.MeshStandardMaterial({ roughness: 0.8 }));
     const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(), new THREE.MeshStandardMaterial({ roughness: 1 }));
     backdrop.userData.toonSurface = { outline: false, shading: "smooth" };
     scene.add(subject, backdrop);
     const surfaces = createToonSurfaces("toon-soft"), frame = surfaces.apply(scene);
-    expect((subject.material as THREE.MeshToonMaterial).isMeshToonMaterial).toBe(true);
+    expect(subject.material).toBeInstanceOf(THREE.MeshStandardMaterial);
     expect((backdrop.material as THREE.MeshStandardMaterial).isMeshStandardMaterial).toBe(true);
     expect(frame.outlined).toEqual([subject]);
     frame.restore(); surfaces.dispose();
@@ -111,12 +150,11 @@ describe("official toon material adaptation", () => {
     const scene = new THREE.Scene(); scene.add(mesh);
     const surfaces = createToonSurfaces("toon-soft");
     const frame = surfaces.apply(scene);
-    const toon = mesh.material as unknown as THREE.MeshToonMaterial;
-    expect(toon.isMeshToonMaterial).toBe(true);
-    expect(toon.gradientMap).toBeInstanceOf(THREE.DataTexture);
+    const toon = mesh.material as THREE.MeshStandardMaterial;
+    expect(toon.isMeshStandardMaterial).toBe(true);
     expect(toon.color.getHex()).toBe(0xb98655);
     expect(toon.map).toBeNull();
-    expect(toon.normalMap).toBeNull();
+    expect(toon.normalMap).toBe(normal);
     expect(toon.aoMap).toBe(ao);
     expect(toon.aoMapIntensity).toBe(0.3);
     frame.restore();

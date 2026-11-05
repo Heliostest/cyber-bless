@@ -1,5 +1,10 @@
 # 竹蜓点风 · Vietnamese bamboo dragonfly
 
+## 2026-11-05 小物图标风格正式显示
+
+默认柔和风格现使用连续明暗、减弱描边与柔和阴影，并参照本场图标在原色系内限幅校准明度/饱和度；保留既有材料、贴图、透光/反射及动态反馈。器形、部件、原创图案和动作不变。这些是产品美术参数，不增加传统材料工艺、寓意、规则或功效主张。来源绑定、标题、引擎版本及存档保持；文化外链未重新访问，沿用既有逐场核查支持范围和读取状态。[实际呈现、边界与验证](../../../../docs/research/2026-11-05-icon-style-rollout.md)。较早试做记录为其当时状态，本轮已正式接入。
+
+
 An original contemporary appreciation of the public bamboo toy craft associated with Thạch Xá, Hanoi. Scene ID `vietnamese-bamboo-dragonfly`; tradition slug `thach-xa-bamboo-dragonfly`; grade C / sensitivity 低. Place it, repeatedly touch any visible dragonfly surface, then manually finish. No wish is created or saved.
 
 The [Vietnam tourism information centre's craft account](https://nongthon.vietnamtourism.gov.vn/thach-xa-bamboo-dragonfly-village-the-art-of-vietnamese-creativity-in-bamboo/?lang=en) supports the bamboo-strip body, wings and tail, colourful decoration and single-point balance. [Hanoi's culture and sports department](https://sovhtt.hanoi.gov.vn/en/unique-bamboo-dragonfly-made-thach-xa/) describes shaping the head and tail, balancing the proportions of the wings and body, and perching the toy by its beak on a finger or branch. No disputed origin date, religious ritual, or spinning-propeller interpretation is used.

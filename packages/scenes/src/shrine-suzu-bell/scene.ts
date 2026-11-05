@@ -61,7 +61,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   const endWood = mat(0x997755), woodGrain = mat(0xa98560)
   const cream = createCraftMaterial({ color: 0xe8deba }, { kind: 'cord' })
   const rust = createCraftMaterial({ color: 0xb16f53 }, { kind: 'cord' }), green = createCraftMaterial({ color: 0x819a76 }, { kind: 'cord' })
-  const gold = createCraftMaterial({ color: 0xd8b468, roughness: .46 }, { kind: 'metal' })
+  const gold = createCraftMaterial({ color: 0xdcb15b, roughness: .42, metalness: .88 }, { kind: 'metal' })
   const goldLight = createCraftMaterial({ color: 0xe8c887, roughness: .38 }, { kind: 'metal' })
   const darkGold = createCraftMaterial({ color: 0x75583d, roughness: .68 }, { kind: 'metal', strength: .4 })
   const add = (geometry: THREE.BufferGeometry, material: THREE.Material, xyz: [number, number, number], parent: THREE.Object3D = world) => {

@@ -1,5 +1,16 @@
 # 空竹轻扬
 
+## 2026-11-05 小物图标风格正式显示
+
+默认柔和风格现使用连续明暗、减弱描边与柔和阴影，并参照本场图标在原色系内限幅校准明度/饱和度；保留既有材料、贴图、透光/反射及动态反馈。器形、部件、原创图案和动作不变。这些是产品美术参数，不增加传统材料工艺、寓意、规则或功效主张。来源绑定、标题、引擎版本及存档保持；文化外链未重新访问，沿用既有逐场核查支持范围和读取状态。[实际呈现、边界与验证](../../../../docs/research/2026-11-05-icon-style-rollout.md)。较早试做记录为其当时状态，本轮已正式接入。
+
+
+Original two-wheel bamboo/wood diabolo, hollow drum chambers with real side apertures and wooden caps, an axle, two handsticks and a visible cord. Three 60px drags raise the right stick to spin, spread the left stick for an assisted toss/catch, and lower the right stick to settle on the cord. After catching, the rotor keeps spinning: drag the left stick again (or choose 再抛一次) for another toss, or lower the right stick / choose 收杆结束 to finish. Repeat throws do not advance checkpoints or settle the visit again. Light pull ticks, a medium launch and a stronger catch follow the host's haptics toggle. The rotor separates from the cord in flight. Sunny soft-toon garden without added furniture.
+
+The view omits hands and coordinates the objects through assisted paths. It is not a full rope-length/dynamics/acoustics simulation or a real-world acrobatics tutorial. No copied artifact imagery, efficacy claim, wish input or entry sound. Optional low settlement tone is interface feedback. Cultural scope and public sources: `content/traditions/chinese-diabolo.md`.
+
+Silent checkpoints, real mesh hit tests, cancellation, pointer/callback ownership, keyboard equivalents and resource disposal follow the accepted scene contract. Evidence: `artifacts/chinese-diabolo/`.
+
 ## 2026-10-20 当前介绍核查
 
 已按实际器物与用户提示扩充介绍。竹木双轮空竹、木轴、双杆细绳；提杆旋转→抛接（可重复）→收低停稳。

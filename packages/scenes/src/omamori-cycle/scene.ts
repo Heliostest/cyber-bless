@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { createCraftMaterial } from '@wbr/scene-runtime/craft-surfaces'
+import { puffPouchGeometry } from '@wbr/scene-runtime/soft-pouch-geometry'
 import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -45,7 +46,7 @@ function pouchGeometry() {
   const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.17, bevelEnabled: true, bevelSize: 0.02,
     bevelThickness: 0.025, bevelSegments: 3, curveSegments: 12, steps: 1 })
   geometry.translate(0, 0, -0.085)
-  return geometry
+  const soft = puffPouchGeometry(geometry); geometry.dispose(); return soft
 }
 
 export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
@@ -77,8 +78,8 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
   const woodEdge = material(0xb89164), cream = material(0xf5e8c8), gold = material(0xd0b56e, 0.62)
   const rope = createCraftMaterial({ color: 0xf7eed9 }, { kind: 'cord' })
   const leaf = material(0x94ac84), bagMat = material(0xa8bcb1), bagEdge = material(0x718e82)
-  const coral = createCraftMaterial({ color: 0xd79485 }, { kind: 'fabric' })
-  const sage = createCraftMaterial({ color: 0x90ad95 }, { kind: 'fabric' }), indigo = createCraftMaterial({ color: 0x8b97b8 }, { kind: 'fabric' })
+  const coral = createCraftMaterial({ color: 0xea837c }, { kind: 'fabric' })
+  const sage = createCraftMaterial({ color: 0x9db99d }, { kind: 'fabric' }), indigo = createCraftMaterial({ color: 0x9cace0 }, { kind: 'fabric' })
   const seam = createCraftMaterial({ color: 0xc5ad81 }, { kind: 'fabric' })
   const add = (geometry: THREE.BufferGeometry, mat: THREE.Material, position: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.position.set(...position); parent.add(mesh); return mesh
@@ -159,6 +160,13 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
     addInteractionCue(body, { kind: 'tap', label: returning ? '轻点小袋致谢' : '轻点小袋静候', priority: 3,
       anchor: [0, 0, 0.1], compact: returning,
       enabled: () => canAct() && !placing && step === 2 && i === selected })
+    // Keep the existing decoration and knot just above the fuller sealed cloth.
+    for (const part of root.children) {
+      if (part === body) continue;
+      let front = part.position.z > .09;
+      if (part instanceof THREE.Mesh && !front) { part.geometry.computeBoundingBox(); front = part.position.z + (part.geometry.boundingBox?.min.z ?? 0) > .09 }
+      if (front) part.position.z += .035
+    }
     return { root, body, suspension }
   })
   addInteractionCue(boxBody, { kind: 'tap', label: '轻点返还箱致谢', priority: 4, anchor: [0, -0.07, 0.37],

@@ -150,14 +150,16 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   pivot.add(cord)
 
   const bellMat = createRitualMaterial({
-    color: 0xd2efff,
+    color: 0xc8e7fb,
     emissive: 0x7ab8d8,
     emissiveIntensity: 0.04,
     metalness: 0,
-    roughness: 0.08,
-    transmission: .76,
+    roughness: 0.1,
+    transmission: .8,
     attenuationColor: 0xd2efff,
-    attenuationDistance: .8,
+    attenuationDistance: 2,
+    clearcoat: .65,
+    clearcoatRoughness: .18,
     side: THREE.DoubleSide,
   }, { kind: 'glass', thickness: .035, strength: .65 })
   const bell = new THREE.Mesh(
@@ -212,7 +214,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
 
   // Paper ribbon (tanzaku-style) as a chain of segments for flutter.
   const ribbonMat = new THREE.MeshStandardMaterial({
-    color: 0xf7cf6c,
+    color: 0xf0a8b6,
     roughness: 0.95,
     side: THREE.DoubleSide,
   })

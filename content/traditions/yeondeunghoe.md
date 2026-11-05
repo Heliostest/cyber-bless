@@ -1,5 +1,10 @@
 # 韩国燃灯会（Yeondeunghoe）
 
+## 2026-11-05 小物图标风格正式显示
+
+关联场景（`yeondeunghoe`）已接入图标参照的柔和显示：连续明暗、低强度描边/阴影、原色系内轻调配色，既有材料与文化说明保持。图标及程序表面只作产品美术参照，不是传统材料、工艺、纹样或信仰的证据；本轮未重新访问文化外链，沿用本卡原有支持范围和读取状态。各场实际变化、守袋体积例外与技术验证见[集中记录](../../docs/research/2026-11-05-icon-style-rollout.md)。
+
+
 ![首尔寺院燃灯会彩色莲灯](./yeondeunghoe.jpg)
 
 <!-- 来源：CC BY-SA 2.0 | https://commons.wikimedia.org/wiki/File:Coloured_lanterns_at_the_Lotus_Lantern_Festival.jpg -->

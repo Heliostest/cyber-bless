@@ -1,5 +1,10 @@
 # 木柶行棋
 
+## 2026-11-05 小物图标风格正式显示
+
+默认柔和风格现使用连续明暗、减弱描边与柔和阴影，并参照本场图标在原色系内限幅校准明度/饱和度；保留既有材料、贴图、透光/反射及动态反馈。器形、部件、原创图案和动作不变。这些是产品美术参数，不增加传统材料工艺、寓意、规则或功效主张。来源绑定、标题、引擎版本及存档保持；文化外链未重新访问，沿用既有逐场核查支持范围和读取状态。[实际呈现、边界与验证](../../../../docs/research/2026-11-05-icon-style-rollout.md)。较早试做记录为其当时状态，本轮已正式接入。
+
+
 `korean-yutnori` is an original single-piece free-play scene based on public museum/educational descriptions of yutnori. Cultural sources and scope are in `content/traditions/korean-yutnori.md`.
 
 Object drags gather four half-round wooden sticks, toss them, then move one blue token according to their visible landing faces. Each toss randomly samples the four faces: one to four flat faces up mean one to four steps; no flat faces up means five steps. The token stays on the board plane and follows the held pointer to the indicated destination. That destination counts the rolled steps around the 20-station outer loop, retaining position between rounds and wrapping around the loop. Arrival settles automatically; remaining finger motion cannot start another turn. After moving, the user may toss again or choose “结束仪式” to finish. The cloth board has 29 distinct stations and lies on a low woven playing mat. Stick bodies have real closed geometry, flat and curved faces, distinct end grain and original short marks. Every stick remains grounded at rest and clears its neighbors during flight.

@@ -1,5 +1,10 @@
 # 意大利绘牌还愿（ex-voto / tavoletta votiva）
 
+## 2026-11-05 小物图标风格正式显示
+
+关联场景（`italian-ex-voto`）已接入图标参照的柔和显示：连续明暗、低强度描边/阴影、原色系内轻调配色，既有材料与文化说明保持。图标及程序表面只作产品美术参照，不是传统材料、工艺、纹样或信仰的证据；本轮未重新访问文化外链，沿用本卡原有支持范围和读取状态。各场实际变化、守袋体积例外与技术验证见[集中记录](../../docs/research/2026-11-05-icon-style-rollout.md)。
+
+
 ![意大利教堂绘牌还愿（ex-voto／tavoletta votiva，Merano）](./italian-ex-voto.jpg)
 
 <!-- 来源：CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Merano,_chiesa_di_San_Leonardo_-_Dipinto_ex_voto.jpg -->

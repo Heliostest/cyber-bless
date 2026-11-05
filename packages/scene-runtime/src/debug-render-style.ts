@@ -1,6 +1,7 @@
 import type * as THREE from "three";
 import { debugStyles } from "./debug-styles";
 import { createRenderStyle } from "./render-style";
+import { createIconLookPreview } from './icon-look-preview';
 import { createCozyEnvironment } from "./cozy-environment";
 import { createInteractionCues } from "./interaction-cues";
 import { createStylePreviewCapture } from "./style-preview-capture";
@@ -22,7 +23,8 @@ export function createDebugRenderStyle(
 ) {
   let disposed = false, rendered = false, needsPreviewRefresh = true;
   let lastWidth = 0, lastHeight = 0;
-  const style = createRenderStyle(renderer, scene, camera);
+  const style = createRenderStyle(renderer, scene, camera, { sceneId: id });
+  const iconLook = createIconLookPreview(renderer, scene, camera, id);
   const water = createWaterRendering(scene);
   let waterMethod: WaterRenderMethod = 'original', lastWaterFrame: number | undefined;
   const cues = createInteractionCues(renderer.domElement, scene, camera, () => {
@@ -30,12 +32,13 @@ export function createDebugRenderStyle(
     if (!disposed && rendered) { cues.update(); draw(); }
   });
   function draw(includeCues = true) {
+    iconLook?.prepare();
     const mask = camera.layers.mask;
     // Production has no developer subscribers and needs no water inventory scan.
     const frame = waterMethod === 'original' && !debugWater.observed ? { surfaces: 0, restore() {} } : water.apply(waterMethod);
-    try { camera.layers.disable(CUE_LAYER); style.render(); }
+    try { camera.layers.disable(CUE_LAYER); if (iconLook?.enabled) iconLook.render(); else style.render(); }
     finally { camera.layers.mask = mask; frame.restore(); }
-    if (includeCues) cues.render(renderer);
+    if (includeCues && iconLook?.showCues !== false) cues.render(renderer);
     return frame.surfaces;
   }
   const waterRegistration = debugWater.register(id, label, method => {
@@ -154,6 +157,7 @@ export function createDebugRenderStyle(
       registration.dispose();
       cues.dispose();
       style.dispose();
+      iconLook?.dispose();
       environment?.dispose();
       delete renderer.domElement.dataset.environment;
       delete renderer.domElement.dataset.environmentReady;

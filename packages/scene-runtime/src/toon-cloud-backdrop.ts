@@ -5,7 +5,7 @@
  * https://creativecommons.org/licenses/by-nc-sa/4.0/
  * Adapted via Shader Gallery's Three.js mesh layers by Cyber Bless (2026-11-04).
  * Changes: sky depth, viewport-anchored ceiling, open vertical layer spacing,
- * luminous daylight palette, depth palettes/softness, visible layer spacing,
+ * luminous daylight and muted night palettes, depth softness, layer spacing,
  * layered breeze and subtle vertical breathing,
  * motion lifecycle and no input.
  * The adapted cloud shader retains CC BY-NC-SA 4.0.
@@ -28,6 +28,8 @@ const LAYER_STYLES = [
   { offset: 94, color: 0xf1faff, radiance: 2.7, opacity: .95, softness: 2.25 },
   { offset: 120, color: 0xfffef7, radiance: 3.2, opacity: .97, softness: 1.5 },
 ];
+// Colour alone changes at night; alpha, contours and fitted spacing stay shared.
+const NIGHT_COLORS = [0x26395f, 0x304569, 0x3c5277, 0x4a6289, 0x5c769d, 0x708eb7];
 
 const vertexShader = /* glsl */ `
 varying vec2 vUv;
@@ -121,7 +123,7 @@ function fitCloudCeilings(width: number, time: number, ceilings: Float64Array) {
 }
 
 /** A sky backdrop, independent of foreground lighting, fog and interaction. */
-export function createToonCloudBackdrop() {
+export function createToonCloudBackdrop(palette: "day" | "night" = "day") {
   const root = new THREE.Group();
   root.name = "toon-cloud-backdrop";
   const geometry = new THREE.PlaneGeometry(2, 2);
@@ -146,7 +148,8 @@ export function createToonCloudBackdrop() {
         uTime: { value: 0 }, uLayer: { value: i / 5 },
         // Scene ACES mapping compresses unit white to grey. Supply daylight
         // radiance so the shared direct/composer paths retain blue-to-white depth.
-        uColor: { value: new THREE.Color(style.color).multiplyScalar(style.radiance) },
+        uColor: { value: new THREE.Color(palette === "night" ? NIGHT_COLORS[i] : style.color)
+          .multiplyScalar(palette === "night" ? .8 : style.radiance) },
         uOpacity: { value: style.opacity }, uSoftness: { value: 3.5 * style.softness / PIXELS_PER_UNIT },
         uViewport: { value: viewport }, uCeiling: { value: 0 },
         uTopInset: { value: TOP_INSET }, uPixelScale: { value: PIXELS_PER_UNIT },

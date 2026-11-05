@@ -3,7 +3,9 @@ import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-const out = 'artifacts/toon-cloud/anchor';
+const palette = process.argv[2] || 'day';
+assert.ok(['day', 'night'].includes(palette));
+const out = palette === 'day' ? 'artifacts/toon-cloud/anchor' : 'artifacts/toon-cloud/anchor-night';
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ headless: true, ...(process.env.WBR_CHROME ? { executablePath: process.env.WBR_CHROME } : {}) });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -12,14 +14,16 @@ page.on('pageerror', error => errors.push(error.message));
 page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
 try {
   await page.goto(process.env.WBR_URL || 'http://127.0.0.1:5177/');
-  const report = await page.evaluate(async cloudModule => {
+  const report = await page.evaluate(async ({ cloudModule, palette }) => {
     const THREE = await import('/node_modules/.vite/deps/three.js');
     const { createToonCloudBackdrop } = await import(cloudModule);
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, preserveDrawingBuffer: true });
     renderer.setClearColor(0, 0);
     renderer.toneMapping = THREE.NoToneMapping;
-    const scene = new THREE.Scene(), clouds = createToonCloudBackdrop();
+    const scene = new THREE.Scene(), clouds = createToonCloudBackdrop(palette);
     scene.add(clouds.root);
+    const otherPalette = createToonCloudBackdrop(palette === 'day' ? 'night' : 'day');
+    scene.add(otherPalette.root); otherPalette.root.visible = false;
     const camera = new THREE.PerspectiveCamera(40, 1, .1, 40);
     const bufferSize = new THREE.Vector2(), results = [];
     for (const [width, height] of [[284, 320], [350, 480], [768, 400], [1280, 600]]) {
@@ -45,7 +49,14 @@ try {
           gl.readPixels(0, 0, bufferSize.x, bufferSize.y, gl.RGBA, gl.UNSIGNED_BYTE, tilted);
           let cameraChangedAlpha = false;
           for (let i = 3; i < pixels.length; i += 4) if (pixels[i] !== tilted[i]) { cameraChangedAlpha = true; break; }
-          results.push({ width, height, dpr, time, topCss: first, cameraChangedAlpha });
+          clouds.root.visible = false; otherPalette.root.visible = true; otherPalette.update(time);
+          renderer.render(scene, camera);
+          const alternate = new Uint8Array(pixels.length);
+          gl.readPixels(0, 0, bufferSize.x, bufferSize.y, gl.RGBA, gl.UNSIGNED_BYTE, alternate);
+          let paletteChangedAlpha = false;
+          for (let i = 3; i < pixels.length; i += 4) if (pixels[i] !== alternate[i]) { paletteChangedAlpha = true; break; }
+          clouds.root.visible = true; otherPalette.root.visible = false;
+          results.push({ width, height, dpr, time, topCss: first, cameraChangedAlpha, paletteChangedAlpha });
         }
       }
     }
@@ -94,14 +105,15 @@ try {
     const centreDepth = new Uint8Array(4), gl = renderer.getContext();
     gl.readPixels(175, 240, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, centreDepth);
     scene.overrideMaterial = null; depth.dispose();
-    clouds.dispose(); renderer.dispose(); renderer.forceContextLoss();
+    clouds.dispose(); otherPalette.dispose(); renderer.dispose(); renderer.forceContextLoss();
     return { results, layerAppearance, overrideDepthAlpha: centreDepth[3] };
-  }, '/@fs/' + path.resolve('packages/scene-runtime/src/toon-cloud-backdrop.ts').replaceAll('\\', '/'));
+  }, { cloudModule: '/@fs/' + path.resolve('packages/scene-runtime/src/toon-cloud-backdrop.ts').replaceAll('\\', '/'), palette });
   const { results } = report;
   await writeFile(`${out}/pixel-report.json`, JSON.stringify({ ...report, errors }, null, 2));
   for (const result of results) {
     assert.ok(result.topCss >= 47.5 && result.topCss <= 50, JSON.stringify(result));
     assert.equal(result.cameraChangedAlpha, false, JSON.stringify(result));
+    assert.equal(result.paletteChangedAlpha, false, `day and night share their full cloud silhouette: ${JSON.stringify(result)}`);
   }
   assert.equal(report.overrideDepthAlpha, 0, 'sky quads do not occlude the subject in override depth passes');
   assert.ok(report.layerAppearance[0].spanCss >= 85 && report.layerAppearance[0].spanCss <= 110,

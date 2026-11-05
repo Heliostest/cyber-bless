@@ -43,11 +43,11 @@ describe("a scene's surrounding world", () => {
     } finally { world.dispose(); }
   });
 
-  it("freezes cloud drift during previews, pauses and reduced motion", async () => {
+  it.each(["tibetan-prayer-flags", "yeondeunghoe"])("freezes cloud drift during previews, pauses and reduced motion: %s", async id => {
     const motion = vi.spyOn(sceneMotion, "readSceneMotion").mockReturnValue({ active: true, reducedMotion: false });
     const clock = vi.spyOn(performance, "now").mockReturnValue(1000);
     const scene = new THREE.Scene();
-    const world = createCozyEnvironment(scene, { id: "tibetan-prayer-flags", loadSky: async () => new THREE.DataTexture() })!;
+    const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
     const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
     try {
       const layer = scene.getObjectByName("toon-cloud-layer-0") as THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
@@ -66,17 +66,17 @@ describe("a scene's surrounding world", () => {
     } finally { world.dispose(); motion.mockRestore(); clock.mockRestore(); }
   });
 
-  it.each(["lantern", "brat-bride-cloth", "scottish-first-footing", "diya-oil-lamp", "votive-candle-catholic", "yeondeunghoe", "chinese-shadow-puppet", "udo-undama", "paper-pinwheel", "weifang-paper-kite"])("preserves night, coastal and hidden scene backgrounds: %s", async id => {
+  it.each(["lantern", "chinese-shadow-puppet", "udo-undama", "paper-pinwheel", "weifang-paper-kite"])("preserves coastal and hidden scene backgrounds: %s", async id => {
     const scene = new THREE.Scene();
     const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
     expect(scene.getObjectByName("toon-cloud-backdrop")).toBeUndefined();
     await world.ready; world.dispose();
   });
 
-  it("provides distant clouds throughout the App's shared daylight environments", async () => {
-    const preserved = new Set(["brat-bride-cloth", "scottish-first-footing", "udo-undama", "diya-oil-lamp", "votive-candle-catholic", "yeondeunghoe"]);
+  it("provides distant clouds throughout the App's shared day and night environments", async () => {
+    const preserved = new Set(["udo-undama"]);
     const entries = builtInScenes.filter(entry => isSceneVisibleInApp(entry) && !preserved.has(entry.id));
-    expect(entries).toHaveLength(85);
+    expect(entries).toHaveLength(90);
     for (const { id } of entries) {
       const scene = new THREE.Scene();
       const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
@@ -85,6 +85,26 @@ describe("a scene's surrounding world", () => {
         await world.ready;
       } finally { world.dispose(); }
     }
+  });
+
+  it.each(["brat-bride-cloth", "scottish-first-footing", "diya-oil-lamp", "votive-candle-catholic", "yeondeunghoe"])("keeps the painted night sky while loading and releasing its separate lighting HDR: %s", async id => {
+    const scene = new THREE.Scene(), previous = new THREE.Color(0x123456);
+    scene.background = previous;
+    const lighting = new THREE.DataTexture(), releasedLighting = vi.spyOn(lighting, "dispose");
+    const world = createCozyEnvironment(scene, { id, loadSky: async () => lighting })!;
+    try {
+      const background = scene.background;
+      expect(background).toBeInstanceOf(THREE.DataTexture);
+      const releasedBackground = vi.spyOn(background as THREE.DataTexture, "dispose");
+      await world.ready;
+      expect(scene.background).toBe(background);
+      expect(scene.environment).toBe(lighting);
+      expect(scene.getObjectByName("toon-cloud-backdrop")).toBeDefined();
+      world.dispose(); world.dispose();
+      expect(releasedBackground).toHaveBeenCalledOnce();
+      expect(releasedLighting).toHaveBeenCalledOnce();
+      expect(scene.background).toBe(previous);
+    } finally { world.dispose(); }
   });
 
   it("keeps courtyard ground below the Didukh cutaway floor instead of painting over it", async () => {

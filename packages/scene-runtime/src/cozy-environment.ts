@@ -178,9 +178,10 @@ type NatureModel = { parts: Part[] };
 const models = nature as Record<string, NatureModel>;
 
 /** A clear painted sky, independent of the photographic panorama used for lighting. */
-function createDaylightBackdrop(clear = false) {
+function createSkyBackdrop(clear = false, night = false) {
   const width = 4, height = 64, pixels = new Uint8Array(width * height * 4);
-  const horizon = new THREE.Color(clear ? 0xaddff4 : 0x9ed9f3), zenith = new THREE.Color(clear ? 0x57aee8 : 0x409ee0);
+  const horizon = new THREE.Color(night ? 0x1b355d : clear ? 0x6ec5ff : 0x9ed9f3);
+  const zenith = new THREE.Color(night ? 0x08152f : clear ? 0x278fe6 : 0x409ee0);
   const color = new THREE.Color(), rgb = { r: 0, g: 0, b: 0 };
   for (let y = 0; y < height; y++) {
     const elevation = Math.max(0, (y / (height - 1) - 0.25) / 0.75);
@@ -228,17 +229,17 @@ export function createCozyEnvironment(
   let sky: THREE.DataTexture | undefined;
   let meadow: ReturnType<typeof createStylizedMeadow> | undefined;
   let treeCanopies: ReturnType<typeof createStylizedTrees> | undefined;
-  const clouds = !night && !coastal && isSceneVisibleInApp({ id }) ? createToonCloudBackdrop() : undefined;
+  const clouds = !coastal && isSceneVisibleInApp({ id }) ? createToonCloudBackdrop(night ? "night" : "day") : undefined;
   if (clouds) root.add(clouds.root);
-  const clearDay = !!clouds;
+  const clearDay = !night && !!clouds;
   let windTime = 0, lastFrame = 0;
-  const horizon = night ? 0x415d73 : clearDay ? 0xc1e3ec : 0xb8dce7;
-  const backdrop = night ? undefined : createDaylightBackdrop(clearDay);
+  const horizon = night ? (clouds ? 0x20395a : 0x415d73) : clearDay ? 0xc1e3ec : 0xb8dce7;
+  const backdrop = night && !clouds ? undefined : createSkyBackdrop(clearDay, night);
   scene.background = backdrop ?? new THREE.Color(horizon);
   // Atmospheric perspective belongs to the far tree line, not the workbench.
   scene.fog = new THREE.Fog(horizon, night ? 7 : clearDay ? 24 : 18, night ? 24 : clearDay ? 80 : 55);
-  scene.backgroundIntensity = night ? 0.065 : 1;
-  scene.backgroundBlurriness = night ? 0.015 : 0;
+  scene.backgroundIntensity = night && !backdrop ? 0.065 : 1;
+  scene.backgroundBlurriness = night && !backdrop ? 0.015 : 0;
   scene.environmentIntensity = warmLight ? 0.25 : night ? 0.16 : 0.22;
   scene.backgroundRotation.set(0, 2.2, 0);
   scene.environmentRotation.copy(scene.backgroundRotation);
@@ -427,7 +428,7 @@ export function createCozyEnvironment(
       sky = texture;
       texture.mapping = THREE.EquirectangularReflectionMapping;
       scene.environment = texture;
-      if (night) scene.background = texture;
+      if (night && !backdrop) scene.background = texture;
       invalidate();
     })
     .catch(() => { /* Local sky unavailable: the fully built garden still renders. */ });

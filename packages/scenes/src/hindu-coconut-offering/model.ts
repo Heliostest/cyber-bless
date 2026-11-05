@@ -1,4 +1,5 @@
-﻿import * as THREE from 'three'
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import * as THREE from 'three'
 import { disposeTree } from '../procedural-kit'
 
 const RX = .46, RY = .5, RZ = .43
@@ -92,6 +93,7 @@ export function createCoconutOfferingModel() {
   const flesh = new THREE.MeshStandardMaterial({ color: '#f0e9d2', roughness: .65 })
   const eye = new THREE.MeshStandardMaterial({ color: '#3d2a21', roughness: 1 })
   const stone = new THREE.MeshStandardMaterial({ color: '#71858b', roughness: .97 })
+  applyCraftSurface(stone, { kind: 'stone', strength: .45 })
   const ringMaterial = new THREE.MeshStandardMaterial({ color: '#817d70', roughness: 1 })
   const waterMaterial = new THREE.MeshStandardMaterial({ color: '#8ebac1', roughness: .19, transparent: true, opacity: .46, depthWrite: false })
   waterMaterial.userData.waterRendering = true

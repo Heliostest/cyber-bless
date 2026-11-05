@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 // Original static 11:55 dial, neither a clock-tower replica nor a timer.
@@ -18,6 +19,10 @@ export function createSpanishTwelveGrapesModel(){
  const root=new THREE.Group();root.name='spanish-twelve-grapes-root'
  const subject=new THREE.Group();subject.name='spanish-twelve-grapes-subject';root.add(subject)
  const stone=new THREE.MeshStandardMaterial({color:0xcab99e,roughness:.95}),wood=new THREE.MeshStandardMaterial({color:0x936542,roughness:.85}),ceramic=new THREE.MeshStandardMaterial({color:0xffe9bf,roughness:.42}),platform=new THREE.MeshStandardMaterial({color:0xbba180,roughness:.85}),green=new THREE.MeshStandardMaterial({color:0x9cab49,roughness:.4})
+ applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+ applyCraftSurface(ceramic, { kind: 'ceramic', strength: .45 })
+ applyCraftSurface(stone, { kind: 'stone', strength: .4 })
+
  const add=(parent:THREE.Object3D,name:string,size:[number,number,number],position:[number,number,number],material:THREE.Material|THREE.Material[])=>{const m=new THREE.Mesh(new THREE.BoxGeometry(...size),material);m.name=name;m.position.set(...position);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
  add(subject,'grapes-stone-base',[4.6,.12,3.4],[0,-.06,.20],stone)
  add(subject,'grapes-serving-platform',[2.75,.14,.96],[.45,.07,.65],platform)

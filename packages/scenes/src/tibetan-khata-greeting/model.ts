@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
@@ -8,6 +9,9 @@ export function createKhataModel() {
   const subject=new THREE.Group();subject.name='khata-subject';root.add(subject)
   const material=(color:number,roughness=.85)=>new THREE.MeshStandardMaterial({color,roughness})
   const stone=material(0xd3cbb3),cream=material(0xfff4db,.48),edgeCream=createRitualMaterial({color:0xfff4db,roughness:.48}, { kind: 'cloth', strength: .10, fiber: false }),hem=createRitualMaterial({color:0xe1dbc4,roughness:.6}, { kind: 'cloth', strength: .14, fiber: false }),skin=material(0xd7a17e),hair=material(0x584f43),shoe=material(0x555852)
+  applyCraftSurface(cream, { kind: 'fabric', strength: .18 })
+  applyCraftSurface(stone, { kind: 'stone', strength: .4 })
+
   const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material|THREE.Material[],parent:THREE.Object3D=subject)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
   const v=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
   const ball=(name:string,p:THREE.Vector3,s:[number,number,number],m:THREE.Material)=>{const o=mesh(name,new THREE.SphereGeometry(1,20,12),m);o.position.copy(p);o.scale.set(...s);return o}
@@ -47,6 +51,9 @@ export function createKhataModel() {
   for(const sign of[-1,1])for(let i=0;i<9;i++){const x=-.08+i*.02,z=sign*.74,t=rod('khata-fringe-'+sign+'-'+i,.0035,hem,scarf);t.set(v(x,drape(z),z),v(x+.006*Math.sin(i),drape(z)-.065,z+sign*.035))}
   const people=[{name:'giver',x:-.83,dir:1,color:0xc18b56},{name:'guest',x:.83,dir:-1,color:0x6b9a91}].map(({name,x,dir,color})=>{
     const coat=material(color),pants=material(name==='giver'?0x667c85:0x828371)
+    applyCraftSurface(coat, { kind: 'fabric', strength: .26 })
+    applyCraftSurface(pants, { kind: 'fabric', strength: .26 })
+
     const body=ball('khata-'+name+'-jacket',v(x,.84,0),[.17,.30,.22],coat)
     const neck=rod('khata-'+name+'-neck',.068,skin);neck.set(v(x,1.04,0),v(x,1.19,0))
     const head=ball('khata-'+name+'-head',v(x,1.31,0),[.13,.17,.14],skin)

@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { bindSceneAttribute } from '../scene-localization'
 import * as THREE from 'three'
@@ -196,6 +197,8 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
 
   // A few approach-path stones (参道) mark entrance → path; no hall is modelled.
   const stoneMat = new THREE.MeshStandardMaterial({ color: 0xcfc5b6, roughness: 0.95 })
+  applyCraftSurface(stoneMat, { kind: 'stone', strength: .4 })
+
   const stoneGeo = new RoundedBoxGeometry(0.72, 0.05, 0.42, 2, 0.02)
   for (let i = 0; i < 6; i++) {
     const stone = new THREE.Mesh(stoneGeo, stoneMat)
@@ -209,6 +212,8 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
   rack.rotation.y = -0.5
   world.add(rack)
   const rackWood = new THREE.MeshStandardMaterial({ color: 0x8e6444, roughness: 0.95 })
+  applyCraftSurface(rackWood, { kind: 'wood', strength: .4 })
+
   for (const x of [-0.45, 0.45]) {
     const post = new THREE.Mesh(new RoundedBoxGeometry(0.06, 1.3, 0.06, 2, 0.015), rackWood)
     post.position.set(x, 0.65, 0)
@@ -221,6 +226,8 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
   }
   const emaGeo = emaGeometry()
   const emaMat = new THREE.MeshStandardMaterial({ color: 0xe8cda2, roughness: 0.9 })
+  applyCraftSurface(emaMat, { kind: 'wood', strength: .4 })
+
   const emaSpots: [number, number][] = [
     [-0.3, 1.1], [-0.08, 1.1], [0.2, 1.1], [-0.2, 0.8], [0.3, 0.8],
   ]
@@ -238,6 +245,7 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
     emissiveIntensity: 0,
     roughness: 0.9,
   })
+  applyCraftSurface(ownEmaMat, { kind: 'wood', strength: .4 })
   const ownEma = new THREE.Mesh(emaGeo, ownEmaMat)
   ownEma.position.set(0.05, 0.8, 0.05)
   ownEma.visible = false

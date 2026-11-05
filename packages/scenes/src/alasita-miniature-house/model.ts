@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 /** Original painted miniature and market supports; no copied collection object or ceremonial pattern. */
@@ -7,6 +8,9 @@ export function createAlasitaModel() {
   const wall = material(0x74b1a9), roof = material(0xb96043), tile = material(0xd47c54), trim = material(0xf2e5c4)
   const glass = material(0x355774, .38), door = material(0x286c73), foundation = material(0xddd2b7), brass = material(0xc9a65c, .45, .3)
   const wood = material(0x9f7956), edge = material(0x72533e), felt = material(0xd7ba72), alternate = material(0xe4c78a)
+  ;[wood, edge].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: .42 }))
+  applyCraftSurface(felt, { kind: 'fabric', strength: .25 })
+  applyCraftSurface(brass, { kind: 'metal', strength: .45 })
   const clean = (source: THREE.BufferGeometry) => {
     const raw = source.index ? source.toNonIndexed() : source, p = raw.getAttribute('position'), values: number[] = []
     for (let i = 0; i < p.count; i += 3) {

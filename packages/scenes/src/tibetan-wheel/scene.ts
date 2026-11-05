@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -166,6 +167,11 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
   const copperMat = new THREE.MeshStandardMaterial({ color: 0xc97a45, metalness: 0.3, roughness: 0.5 })
   const lacquerMat = new THREE.MeshStandardMaterial({ color: 0xb2402f, roughness: 0.7 })
   const bronzeMat = new THREE.MeshStandardMaterial({ color: 0x9f6f3a, metalness: 0.3, roughness: 0.55 })
+  applyCraftSurface(goldMat, { kind: 'metal', strength: .45 })
+  applyCraftSurface(copperMat, { kind: 'metal', strength: .45 })
+  applyCraftSurface(bronzeMat, { kind: 'metal', strength: .45 })
+  applyCraftSurface(axleMat, { kind: 'metal', strength: .45 })
+
 
   const beamGeo = new RoundedBoxGeometry(1.1, 0.12, 0.3, 2, 0.03)
   const postGeo = new RoundedBoxGeometry(0.1, 2.05, 0.1, 2, 0.02)

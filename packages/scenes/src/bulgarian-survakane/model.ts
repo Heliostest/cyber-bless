@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 /** Cornel branch, looped twigs and a seated relative. Geometry is an illustrative composition. */
@@ -7,6 +8,9 @@ export function createSurvakaneModel() {
   const mat=(color:number,roughness=.85)=>new THREE.MeshStandardMaterial({color,roughness})
   const bark=mat(0x936038),wood=mat(0xba8652),coat=mat(0x4e8791),cloth=mat(0x385b6a),skin=mat(0xd4a075),hair=mat(0xdbd5be),shoe=mat(0x625344)
   const red=mat(0xc65e55),gold=mat(0xe7ba64),cream=mat(0xf2e5bc),green=mat(0x648b62),thread=mat(0xbfa97b)
+  applyCraftSurface(wood,{kind:'wood',strength:.4})
+  ;[coat,cloth].forEach(material=>applyCraftSurface(material,{kind:'fabric',strength:.28}))
+  ;[red,gold,green,thread].forEach(material=>applyCraftSurface(material,{kind:'cord',strength:.3}))
   const mesh=(g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D,name:string)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
   const ball=(name:string,p:[number,number,number],scale:[number,number,number],m:THREE.Material,parent:THREE.Object3D=subject)=>{const o=mesh(new THREE.SphereGeometry(1,24,16),m,parent,name);o.position.set(...p);o.scale.set(...scale);return o}
   const rod=(name:string,a:[number,number,number],b:[number,number,number],radius:number,m:THREE.Material,parent:THREE.Object3D=subject)=>{

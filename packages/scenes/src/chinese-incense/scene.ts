@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
@@ -60,6 +61,13 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   const paperMat = material(0xc98468), paperSeam = material(0xe6b995), stickMat = material(0x88624c), bamboo = material(0xcbab73)
   const ash = material(0xd4c9b3), dark = material(0x625f50), teaMat = createRitualMaterial({ color: 0x8f713e, roughness: .3, transmission: .18, attenuationColor: 0x8f713e, attenuationDistance: .15 }, { kind: 'tea', thickness: .012, strength: .22 })
   const emberMat = new THREE.MeshStandardMaterial({ color: 0xcd7853, emissive: 0x8b381c, emissiveIntensity: .28, roughness: 1 })
+  // Cream/clay also appear in ash, paper printing and the woven pad.
+  const matFabric = applyCraftSurface(cream.clone(), { kind: 'fabric', strength: .25 })
+  const matThread = applyCraftSurface(clay.clone(), { kind: 'fabric', strength: .25 })
+  const creamCeramic = applyCraftSurface(cream.clone(), { kind: 'ceramic', strength: .45 })
+  ;[jade, jadeLight, jadeDark, clay, dark].forEach(mat => applyCraftSurface(mat, { kind: 'ceramic', strength: .45 }))
+  ;[wood, woodLight].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: .42 }))
+  applyCraftSurface(bamboo, { kind: 'bamboo', strength: .35, axis: 'y' })
   const add = (geo: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world, name = '') => {
     const mesh = new THREE.Mesh(geo, mat); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
@@ -89,10 +97,10 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   }
   const shadow = add(new THREE.PlaneGeometry(3.9, 2.5), new THREE.ShadowMaterial({ opacity: .12 }), [0, .003, 0])
   shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
-  const mat = add(new RoundedBoxGeometry(1.51, .025, 1.34, 4, .13), cream, [.12, .565, -.22], world, 'incense-woven-mat')
+  const mat = add(new RoundedBoxGeometry(1.51, .025, 1.34, 4, .13), matFabric, [.12, .565, -.22], world, 'incense-woven-mat')
   mat.userData.toonSurface = { outline: false }
   for (let i = 0; i < 15; i++) {
-    const thread = add(new THREE.BoxGeometry(.006, .003, 1.12), clay, [-.51 + i * .09, .580, -.22]); thread.userData.toonSurface = { outline: false }
+    const thread = add(new THREE.BoxGeometry(.006, .003, 1.12), matThread, [-.51 + i * .09, .580, -.22]); thread.userData.toonSurface = { outline: false }
   }
 
   const censer = new THREE.Group(); censer.name = 'incense-censer'; censer.position.set(.12, .78, -.22); world.add(censer)
@@ -127,7 +135,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
     const angle = i / 8 * Math.PI * 2, dot = pebble([Math.cos(angle) * .342, .105, Math.sin(angle) * .342], [.018, .008, .026], jadeDark, lid)
     dot.rotation.y = -angle; dot.userData.toonSurface = { outline: false }
   }
-  const rest = add(new THREE.CylinderGeometry(.58, .54, .06, 56), cream, [1.035, .605, .36], world, 'incense-lid-rest')
+  const rest = add(new THREE.CylinderGeometry(.58, .54, .06, 56), creamCeramic, [1.035, .605, .36], world, 'incense-lid-rest')
   ring(.566, .012, [1.035, .63, .36], clay)
 
   const paper = new THREE.Group(); paper.name = 'incense-paper-holder'; world.add(paper)
@@ -157,9 +165,9 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
 
   const tea = new THREE.Group(); tea.name = 'incense-tea'; tea.position.set(-.04, .55, .64); world.add(tea)
   const saucer = add(new THREE.CylinderGeometry(.29, .26, .038, 48), jadeLight, [0, .022, 0], tea, 'incense-tea-saucer')
-  ring(.276, .012, [0, .043, 0], cream, tea)
+  ring(.276, .012, [0, .043, 0], creamCeramic, tea)
   const cup = new THREE.Group(); cup.name = 'incense-teacup'; cup.position.set(0, .04, -.075); tea.add(cup)
-  lathe([[0, 0], [.11, 0], [.14, .03], [.184, .13], [.191, .20], [.177, .21], [.167, .18], [.14, .065], [.09, .035], [0, .035]], cream, cup, 'incense-teacup-body')
+  lathe([[0, 0], [.11, 0], [.14, .03], [.184, .13], [.191, .20], [.177, .21], [.167, .18], [.14, .065], [.09, .035], [0, .035]], creamCeramic, cup, 'incense-teacup-body')
   ring(.181, .009, [0, .202, 0], clay, cup)
   add(new THREE.CylinderGeometry(.164, .151, .012, 40), teaMat, [0, .174, 0], cup, 'incense-tea-surface')
 

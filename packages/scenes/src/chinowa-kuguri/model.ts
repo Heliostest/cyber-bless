@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 const UP = new THREE.Vector3(0, 1, 0), EYE = 1.664
@@ -62,6 +63,8 @@ export function createChinowaModel() {
   const root = new THREE.Group(); root.name = 'chinowa-world'
   const subject = new THREE.Group(); subject.name = 'chinowa-subject'; root.add(subject)
   const texture = kayaTexture(), kaya = new THREE.MeshStandardMaterial({ color: 0xffffff, map: texture, roughness: .96 }), wood = new THREE.MeshStandardMaterial({ color: 0xae8053, roughness: .87 }), rope = new THREE.MeshStandardMaterial({ color: 0xd1bd88, roughness: 1 })
+  applyCraftSurface(wood, { kind: 'wood', strength: .4, axis: 'y' })
+  applyCraftSurface(rope, { kind: 'cord', strength: .3 })
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, x: number, y: number, z: number) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(x, y, z); mesh.castShadow = mesh.receiveShadow = true; subject.add(mesh); return mesh
   }

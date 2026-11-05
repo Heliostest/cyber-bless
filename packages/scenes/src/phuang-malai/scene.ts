@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { bindSceneAttribute } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -102,6 +103,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   const cream = new THREE.MeshStandardMaterial({ color: 0xfff7e4, roughness: 0.94 })
   const rose = new THREE.MeshStandardMaterial({ color: 0xd98a9b, roughness: 0.96 })
   const thread = new THREE.MeshStandardMaterial({ color: 0xd7c897, roughness: 1 })
+  applyCraftSurface(thread,{kind:'cord',strength:.28})
   const paleGold = new THREE.MeshStandardMaterial({ color: 0xe5c885, roughness: 0.9 })
   const pedestalMat = new THREE.MeshStandardMaterial({ color: 0xf5dfbf, roughness: 0.94 })
   const trayMat = new THREE.MeshStandardMaterial({ color: 0xbd956d, roughness: 1 })

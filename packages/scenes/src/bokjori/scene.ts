@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -75,6 +76,8 @@ function makeScoop() {
   const accent = new THREE.MeshStandardMaterial({ color: 0x78977d, roughness: 0.94, side: THREE.DoubleSide })
   const red = new THREE.MeshStandardMaterial({ color: 0xb96755, roughness: 1 })
   const cord = new THREE.MeshStandardMaterial({ color: 0xe4d4a5, roughness: 1 })
+  ;[...bamboo, accent].forEach(mat => applyCraftSurface(mat, { kind: 'bamboo', strength: .4, axis: 'y' }))
+  ;[red, cord].forEach(mat => applyCraftSurface(mat, { kind: 'cord', strength: .3 }))
   for (const vertical of [false, true]) for (let i = -8; i <= 8; i++) {
     const fixed = i / 9, extent = Math.sqrt(1 - fixed * fixed)
     const points: THREE.Vector3[] = []
@@ -151,6 +154,7 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'bokjori-veranda-work'; scene.add(world)
   const wood = new THREE.MeshStandardMaterial({ color: 0xb5966d, roughness: 1 })
   const paleWood = new THREE.MeshStandardMaterial({ color: 0xc8ad85, roughness: 1 })
+  ;[wood, paleWood].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: .4, axis: 'y' }))
   const wall = new THREE.Group(); wall.name = 'bokjori-timber-wall'; world.add(wall)
   for (let i = 0; i < 7; i++) {
     const slat = new THREE.Mesh(new THREE.BoxGeometry(0.305, 2.48, 0.095), i % 2 ? paleWood : wood)

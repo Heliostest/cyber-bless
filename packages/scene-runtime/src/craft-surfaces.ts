@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export type CraftSurfaceKind = 'wood' | 'ceramic' | 'metal' | 'fabric' | 'cord';
+export type CraftSurfaceKind = 'wood' | 'ceramic' | 'metal' | 'fabric' | 'cord' | 'bamboo' | 'straw' | 'stone';
 export type CraftSurfaceOptions = {
   kind: CraftSurfaceKind;
   /** Pattern frequency in geometry-local units; never advances with time. */
@@ -80,6 +80,11 @@ function pattern(surface: Surface, filtered = true) {
     `,
     ceramic: `return ${noise}(p * 95.0) * 0.60 + (craftNoise(p * 9.0) - 0.5) * 0.22;`,
     metal: `return ${noise}(p * 72.0) * 0.35 + (craftNoise(p * 15.0) - 0.5) * 0.45;`,
+    bamboo: `return ${wave}(p.y * 180.0 + p.z * 32.0 + sin(p.x * 2.0) * 0.35) * 0.24
+      + (craftNoise(p * vec3(2.0, 25.0, 12.0)) - 0.5) * 0.28;`,
+    straw: `return ${wave}(p.y * 205.0 + p.z * 75.0 + sin(p.x * 2.5) * 0.3) * 0.26
+      + (craftNoise(p * vec3(3.0, 32.0, 12.0)) - 0.5) * 0.24;`,
+    stone: `return ${noise}(p * 80.0) * 0.24 + (craftNoise(p * 12.0) - 0.5) * 0.42;`,
     fabric: `
       vec3 weights = pow(abs(normalize(craftLocalNormal)), vec3(4.0));
       weights /= max(dot(weights, vec3(1.0)), 0.001);
@@ -115,7 +120,7 @@ function attach(material: THREE.Material, surface: Surface) {
     shader.fragmentShader = '#define WBR_CRAFT_SURFACE\n' + varying + HEADER + pattern(surface) + '\n' + pattern(surface, false) + '\n' + shader.fragmentShader;
     const pigment = surface.kind === 'wood' ? .22 : surface.kind === 'fabric' || surface.kind === 'cord' ? .17 : .08;
     const relief = surface.kind === 'wood' ? .00015 : surface.kind === 'fabric' || surface.kind === 'cord' ? .00065 : .0005;
-    const frequency = { wood: 100, ceramic: 95, metal: 72, fabric: 310, cord: 235 }[surface.kind];
+    const frequency = { wood: 100, ceramic: 95, metal: 72, fabric: 310, cord: 235, bamboo: 180, straw: 205, stone: 80 }[surface.kind];
     shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
       #include <color_fragment>
       float craftGrain = craftPattern() * craftStrength;
@@ -141,6 +146,11 @@ function attach(material: THREE.Material, surface: Surface) {
 export function createCraftMaterial(parameters: THREE.MeshStandardMaterialParameters, options: CraftSurfaceOptions): THREE.MeshStandardMaterial {
   const material = new THREE.MeshStandardMaterial({ roughness: options.kind === 'metal' ? .42 : options.kind === 'ceramic' ? .55 : .9,
     metalness: options.kind === 'metal' ? .72 : 0, ...parameters });
+  return applyCraftSurface(material, options);
+}
+
+/** Add detail without replacing an authored material, its optics or animated references. */
+export function applyCraftSurface<T extends THREE.MeshStandardMaterial>(material: T, options: CraftSurfaceOptions): T {
   attach(material, { kind: options.kind, scale: bounded(options.scale, 1, .1, 8),
     strength: bounded(options.strength, .65, 0, 1), axis: options.axis ?? 'x' });
   return material;

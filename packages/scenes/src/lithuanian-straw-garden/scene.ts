@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -43,6 +44,11 @@ export function createLithuanianStrawGarden(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'straw-garden-workbench'; scene.add(world)
   const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: .85 })
   const straw = material(0xdabb78), pale = material(0xefdfac), oak = material(0xb9976a), walnut = material(0x8d7356), thread = material(0xf2e6c8), sage = material(0x829b84)
+  const paleStalk = material(0xefdfac), clothMaterial = material(0x829b84)
+  for(const timber of[oak,walnut,sage])applyCraftSurface(timber,{kind:'wood',strength:.4})
+  applyCraftSurface(thread,{kind:'cord',strength:.28})
+  for(const stalk of[straw,paleStalk])applyCraftSurface(stalk,{kind:'straw',strength:.3,axis:'y'})
+  applyCraftSurface(clothMaterial,{kind:'fabric',strength:.25})
   const add = (geometry: THREE.BufferGeometry, mat: THREE.Material, xyz: [number, number, number], name = '', parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.position.set(...xyz); mesh.name = name; mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
@@ -69,7 +75,7 @@ export function createLithuanianStrawGarden(ctx: SceneContext): SceneInstance {
     const group = new THREE.Group(); group.name = name; group.position.set(...xyz); parent.add(group)
     const ring = [new THREE.Vector3(radius, 0, 0), new THREE.Vector3(0, 0, radius), new THREE.Vector3(-radius, 0, 0), new THREE.Vector3(0, 0, -radius)]
     for (let i = 0; i < 4; i++) {
-      for (const y of [-height, height]) stem(new THREE.Vector3(0, y, 0), ring[i], .021, i % 2 ? straw : pale, group, `${name}-stalk`)
+      for (const y of [-height, height]) stem(new THREE.Vector3(0, y, 0), ring[i], .021, i % 2 ? straw : paleStalk, group, `${name}-stalk`)
       stem(ring[i], ring[(i + 1) % 4], .018, straw, group, `${name}-rim`)
       bead(.03, [ring[i].x, 0, ring[i].z], '', group, pale)
     }
@@ -87,7 +93,7 @@ export function createLithuanianStrawGarden(ctx: SceneContext): SceneInstance {
   const pendant = diamond(world, .20, .28, [0, 0, 0], 'straw-pendant')
   const grip = bead(.085, [0, 0, .20], 'straw-pendant-grip', pendant, sage)
   const link = stem(new THREE.Vector3(0, -.56, 0), new THREE.Vector3(0, -.56, .055), .009, thread, mobile)
-  const cloth = box(.70, .012, .58, sage, [-1.05, .733, .55])
+  const cloth = box(.70, .012, .58, clothMaterial, [-1.05, .733, .55])
   for (let i = 0; i < 5; i++) stem(new THREE.Vector3(.20 + i * .055, .74, .45), new THREE.Vector3(.45 + i * .055, .74, .63), .014, straw, world)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restore = () => {

@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 const V=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
@@ -7,6 +8,8 @@ function panGeometry(){return new THREE.LatheGeometry([[0,0],[.285,0],[.32,.025]
 export function createEsfandModel(){
  const root=new THREE.Group();root.name='esfand-subject';const subject=root
  const metal=new THREE.MeshStandardMaterial({color:0x535e64,metalness:.55,roughness:.4}),wood=new THREE.MeshStandardMaterial({color:0xc39558,roughness:.88}),tile=new THREE.MeshStandardMaterial({color:0xf0e8d4,roughness:.7}),blue=new THREE.MeshStandardMaterial({color:0x579da0,roughness:.85}),stainless=new THREE.MeshStandardMaterial({color:0xc1c8c5,metalness:.6,roughness:.4}),black=new THREE.MeshStandardMaterial({color:0x34383c,roughness:.86})
+ for(const cookware of[metal,stainless])applyCraftSurface(cookware,{kind:'metal',strength:.45})
+ applyCraftSurface(wood,{kind:'wood',strength:.4,axis:'z'})
  const make=(name:string,g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D=root)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  const cabinet=make('esfand-kitchen-cabinet',new THREE.BoxGeometry(2.18,.66,1.72),blue);cabinet.position.set(0,.33,.12)
  const counter=make('esfand-counter',new THREE.BoxGeometry(2.30,.06,1.84),tile);counter.position.set(0,.69,.12)
@@ -26,7 +29,7 @@ export function createEsfandModel(){
  const clothGeometry=new THREE.BoxGeometry(.48,.018,.36,16,1,12),pos=clothGeometry.getAttribute('position'),colors:number[]=[]
  for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i);pos.setY(i,pos.getY(i)+.008*Math.cos(x/.48*Math.PI*4));const border=Math.abs(x)>.203||Math.abs(z)>.146;const c=new THREE.Color(border?0x3c7f83:0xf4dfb1);colors.push(c.r,c.g,c.b)}
  clothGeometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));clothGeometry.computeVertexNormals();clothGeometry.computeBoundingBox()
- const cloth=make('esfand-cloth',clothGeometry,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1}),clothRoot)
+ const cloth=make('esfand-cloth',clothGeometry,applyCraftSurface(new THREE.MeshStandardMaterial({vertexColors:true,roughness:1}),{kind:'fabric',strength:.25}),clothRoot)
  const home=V(-.46,.72,.06),lifted=home.clone().add(V(0,.34,0)),heated=V(.48,.825,-.18),clothHome=V(.85,.72-clothGeometry.boundingBox!.min.y,.81)
  const smoke=new THREE.Group();smoke.name='esfand-smoke-effect';smoke.userData.effect=true;root.add(smoke)
  const uniforms={time:{value:0},spread:{value:0}}

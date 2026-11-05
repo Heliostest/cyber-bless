@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 /** A worn cord with an open loop, placed over the free end of a blossoming branch. */
@@ -7,6 +8,9 @@ export function createMartisorModel() {
   const cord = new THREE.Group(); cord.name = 'martisor-cord'; subject.add(cord)
   const material = (color: number, roughness = .85) => new THREE.MeshStandardMaterial({ color, roughness })
   const red = material(0xc43c54), white = material(0xffedce), bark = material(0x805f44), cut = material(0xc9a77b)
+  for(const fiber of[red,white])applyCraftSurface(fiber,{kind:'cord',strength:.3})
+  // The living bark retains its authored surface; only the exposed cut end gets grain.
+  applyCraftSurface(cut,{kind:'wood',strength:.35,axis:'z'})
   const petal = material(0xffd8d8), pale = material(0xfff1df), pollen = material(0xe2ad42), leaf = material(0x80a468)
   let serial = 0
   const mesh = (geometry: THREE.BufferGeometry, mat: THREE.Material, parent: THREE.Object3D, name?: string) => {

@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 /** An illustrative stone ovoo and visitor. Three clockwise circuits are source-supported;
@@ -8,6 +9,9 @@ export function createOvooModel() {
   const mat=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.88})
   const grey=[mat(0xa6afa9),mat(0x8c9b99),mat(0xb9b6a4),mat(0x758b8e)],sand=mat(0xd8c8a4),blue=mat(0x74a4ba),bark=mat(0x837158)
   const coat=mat(0xc8874f),pants=mat(0x496d75),skin=mat(0xdbab85),hair=mat(0x504b40),shoe=mat(0x5d5b50)
+  grey.forEach(stone=>applyCraftSurface(stone,{kind:'stone',strength:.45}))
+  applyCraftSurface(bark,{kind:'wood',strength:.35,axis:'y'})
+  for(const textile of[blue,coat,pants])applyCraftSurface(textile,{kind:'fabric',strength:.25})
   const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D=subject)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
   const ball=(name:string,p:[number,number,number],s:[number,number,number],m:THREE.Material,parent:THREE.Object3D=subject)=>{const o=mesh(name,new THREE.SphereGeometry(1,20,12),m,parent);o.position.set(...p);o.scale.set(...s);return o}
   const rod=(name:string,a:THREE.Vector3,b:THREE.Vector3,r:number,m:THREE.Material,parent:THREE.Object3D=subject)=>{

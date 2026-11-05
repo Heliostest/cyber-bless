@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
@@ -129,6 +130,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     new RoundedBoxGeometry(3.6, 0.14, 0.3, 2, 0.025),
     new THREE.MeshStandardMaterial({ color: 0xb98c60, roughness: 0.95 }),
   )
+  applyCraftSurface(beam.material, { kind: 'wood', strength: .4, axis: 'x' })
   beam.name = 'furin-eave'
   beam.position.set(0, 2.45, -0.1)
   world.add(beam)
@@ -143,6 +145,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     new THREE.CylinderGeometry(0.006, 0.006, 0.3, 6),
     new THREE.MeshStandardMaterial({ color: 0xd2574d, roughness: 0.95 }),
   )
+  applyCraftSurface(cord.material, { kind: 'cord', strength: .28 })
   cord.position.y = -0.15
   pivot.add(cord)
 
@@ -197,6 +200,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     new THREE.CylinderGeometry(0.004, 0.004, 0.42, 4),
     new THREE.MeshStandardMaterial({ color: 0xf2efe8, roughness: 0.9 }),
   )
+  applyCraftSurface(clapperString.material, { kind: 'cord', strength: .28 })
   clapperString.position.y = -0.21
   clapperPivot.add(clapperString)
   const clapper = new THREE.Mesh(

@@ -57,7 +57,7 @@ try {
 
   // Real driver compilation, including local projection on geometry without UVs
   // and a deliberately dim light rig. No claim of measured phone performance.
-  for (const kind of ['wood', 'ceramic', 'metal', 'fabric', 'cord']) for (const lighting of ['day', 'dim']) {
+  for (const kind of ['wood', 'ceramic', 'metal', 'fabric', 'cord', 'bamboo', 'straw', 'stone']) for (const lighting of ['day', 'dim']) {
     profiles.push(await page.evaluate(({ kind, lighting }) => {
       const p = window.craftProbe, T = p.THREE, stage = document.querySelector('#stage');
       stage.innerHTML = '<canvas></canvas>';
@@ -81,7 +81,7 @@ try {
     }, { kind, lighting }));
   }
 
-  for (const width of [320, 390, 640]) {
+  for (const width of process.argv.includes('--profiles-only') ? [] : [320, 390, 640]) {
     await page.setViewportSize({ width, height: width });
     for (const lighting of width === 640 ? ['day'] : ['day', 'night'])
     for (const id of ids) for (const progress of width === 640 || lighting === 'night' ? [1] : [0, 1, 3]) {

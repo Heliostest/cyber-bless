@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 /** A modern replica wishing tree, a paper wish and its plastic orange weight. */
@@ -6,6 +7,8 @@ export function createLamTsuenModel() {
  const subject=new THREE.Group();subject.name='lamtsuen-subject';root.add(subject)
  const mat=(color:number,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness})
  const bark=mat(0x987456,.72),leaf=mat(0x79a45c),lightLeaf=mat(0xa3bd67),stone=mat(0xd8c7a1),red=mat(0xd85243),ink=mat(0xffe5a3),orange=mat(0xf79831,.4),cordMat=mat(0xc54230),green=mat(0x557b49)
+ applyCraftSurface(cordMat,{kind:'cord',strength:.3})
+ applyCraftSurface(stone,{kind:'stone',strength:.4})
  const mesh=(g:THREE.BufferGeometry,m:THREE.Material,p:THREE.Object3D,name:string)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;p.add(o);return o}
  const link=(a:THREE.Vector3,b:THREE.Vector3,r:number,m:THREE.Material,p:THREE.Object3D,name:string)=>{const o=mesh(new THREE.CylinderGeometry(r,r,a.distanceTo(b),12),m,p,name);o.position.copy(a).add(b).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());return o}
  const v=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)

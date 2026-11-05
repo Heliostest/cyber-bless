@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 // Kameido's straight wooden bullfinch, not Dazaifu's curled-wing form.
@@ -6,6 +7,7 @@ export function createUsokaeModel() {
   const subject=new THREE.Group();subject.name='usokae-subject';root.add(subject)
   const material=(color:string,roughness=.88)=>new THREE.MeshStandardMaterial({color,roughness,metalness:0})
   const wood=material('#d3a766'),oldWood=material('#ba9464'),grain=material('#ac814d'),ink=material('#393e3e'),red=material('#c65c50'),oldRed=material('#aa6958'),eye=material('#f6e5bd'),stone=material('#b9bba3'),support=material('#98785a')
+  for(const timber of[wood,oldWood,support])applyCraftSurface(timber,{kind:'wood',strength:.35,axis:'y'})
   const mesh=(name:string,geometry:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D)=>{const o=new THREE.Mesh(geometry,m);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
   // Front of the actual twelve-sided column and tapered crown.
   const skin=(x:number,y:number)=>{const r=y<=.91?.23-.005*y/.91:.225-.325*(y-.91),ax=Math.abs(x);return ax<=r*.5?r-ax*Math.tan(Math.PI/12):ax<=r*Math.sqrt(3)/2?r*(1+Math.sqrt(3))/2-ax:(r-ax)/Math.tan(Math.PI/12)}

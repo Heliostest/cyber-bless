@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 type Point = [number, number]
@@ -28,6 +29,10 @@ export function createSternsingerModel(){
  const material=(color:number,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness})
  const stone=material(0xc7ba9d),plaster=material(0xf3d9aa),wood=material(0x366c79,.85),dark=material(0x234955,.92),edge=material(0x60959a,.83),chalkMaterial=material(0xfff9df),metal=material(0xa98a4c,.43)
  metal.metalness=.6
+ applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+ applyCraftSurface(metal, { kind: 'metal', strength: .45 })
+ applyCraftSurface(stone, { kind: 'stone', strength: .4 })
+
  const box=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat:THREE.Material)=>{const o=make(name,new THREE.BoxGeometry(w,h,d),mat);o.position.set(x,y,z);return o}
  const floor=.14
  box('sternsinger-threshold',3.5,floor,1.5,0,floor/2,.34,stone)

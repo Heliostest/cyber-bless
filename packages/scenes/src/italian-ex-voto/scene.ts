@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
@@ -63,6 +64,11 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
   const ceramic = mat(0xffefd0, .52), glaze = mat(0xf7e4bb, .5), blue = mat(0x7299ac), blueLight = mat(0xb4cbd1)
   const terra = mat(0xba7964), gold = mat(0xe7b365), grass = mat(0x94ac88), leaf = mat(0x729178), bristle = mat(0xa86e40)
   const cream = mat(0xf9eacb), handleMat = mat(0x659399), metal = mat(0xd6cab2, .45), ink = mat(0x657c7c)
+  // Painted route and studio cloth must not inherit the table's wooden surface.
+  const routePaint = board.clone(), studioCloth = applyCraftSurface(cream.clone(), { kind: 'fabric', strength: .25 })
+  ;[oak, edge, board].forEach(material => applyCraftSurface(material, { kind: 'wood', strength: .4 }))
+  ;[ceramic, glaze].forEach(material => applyCraftSurface(material, { kind: 'ceramic', strength: .4 }))
+  applyCraftSurface(metal, { kind: 'metal', strength: .45 })
   const add = (geo: THREE.BufferGeometry, material: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geo, material); mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
@@ -121,7 +127,7 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
   for (let i = 0; i < 22; i++) {
     const p = curve.getPoint(i / 21); oval(p.toArray() as [number, number, number], [.046, .024, .008], gold, route)
   }
-  const routePencil = stroke(routePoints, .007, board); routePencil.name = 'exvoto-route-pencil'
+  const routePencil = stroke(routePoints, .007, routePaint); routePencil.name = 'exvoto-route-pencil'
   const traceGuide = stroke([WINDOW_START, WINDOW_END], .011, gold); traceGuide.name = 'exvoto-window-guide'
   const windowEnd = oval(WINDOW_END.toArray() as [number, number, number], [.072, .061, .014], gold); windowEnd.name = 'exvoto-window-end'
   const windowLight = stroke([WINDOW_START, WINDOW_END], .035, gold); windowLight.name = 'exvoto-painted-window-light'
@@ -143,7 +149,7 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
   stroke([new THREE.Vector3(-.10, .17, 0), new THREE.Vector3(-.20, .34, 0), new THREE.Vector3(-.27, .46, 0)], .03, handleMat, brush)
   oval([-.27, .46, 0], [.029, .035, .029], cream, brush)
   // Small studio cloth and two spare brushes clarify a painting station rather than a votive wall.
-  rounded(.38, .035, .32, [.91, .75, .35], cream)
+  rounded(.38, .035, .32, [.91, .75, .35], studioCloth)
   for (let i = 0; i < 2; i++) stroke([new THREE.Vector3(.83 + i * .09, .79, .14), new THREE.Vector3(.94 + i * .07, .80, .57)], .017, i ? terra : handleMat)
 
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }

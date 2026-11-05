@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { createStylizedWater } from '@wbr/scene-runtime/stylized-water'
 
@@ -8,6 +9,9 @@ export function createNagashibinaModel() {
   const tray=new THREE.Group();tray.name='nagashibina-tray';subject.add(tray)
   const mat=(color:string,roughness=.88)=>new THREE.MeshStandardMaterial({color,roughness,metalness:0})
   const straw=mat('#c5a15b'),strand=mat('#e1c780'),edge=mat('#ac884c'),paper=mat('#fff0d6'),blue=mat('#647e95'),coral=mat('#c87871'),ink=mat('#3e4746'),pink=mat('#e9a4ae'),wood=mat('#80664d'),sweet=mat('#d9dfb3'),bank=mat('#b8b89a')
+  const flowerHeart=mat('#e1c780') // The flower centres share pigment, not straw fibres.
+  for(const bundle of[straw,strand,edge])applyCraftSurface(bundle,{kind:'straw',strength:.3,axis:'y'})
+  applyCraftSurface(wood,{kind:'wood',strength:.35,axis:'y'})
   const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D=tray)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
   const rod=(name:string,a:THREE.Vector3,b:THREE.Vector3,r:number,m:THREE.Material,parent:THREE.Object3D=tray)=>{const d=b.clone().sub(a),o=mesh(name,new THREE.CylinderGeometry(r,r,d.length(),8),m,parent);o.position.copy(a).add(b).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return o}
   const base=mesh('round-straw-base',new THREE.CylinderGeometry(.58,.58,.06,64),straw);base.position.y=.03
@@ -36,10 +40,10 @@ export function createNagashibinaModel() {
   for(const [i,x,z] of [[0,.32,.18],[1,.42,.07],[2,.21,.27]] as const){
     rod('peach-twig-'+i,new THREE.Vector3(.22,.098,.23),new THREE.Vector3(x,.138,z),.006,wood)
     for(let p=0;p<5;p++){const angle=p*Math.PI*2/5,o=mesh('peach-'+i+'-petal-'+p,new THREE.SphereGeometry(.024,12,8),pink);o.scale.set(1,.25,1);o.position.set(x+Math.cos(angle)*.027,.148,z+Math.sin(angle)*.027)}
-    const heart=mesh('peach-'+i+'-heart',new THREE.SphereGeometry(.012,12,8),strand);heart.position.set(x,.152,z)
+    const heart=mesh('peach-'+i+'-heart',new THREE.SphereGeometry(.012,12,8),flowerHeart);heart.position.set(x,.152,z)
   }
   const shore=mesh('riverbank',new THREE.BoxGeometry(2.1,.32,4.5),bank,root);shore.position.set(-1.26,-.10,0)
-  const shoreLip=mesh('bank-stone-edge',new THREE.BoxGeometry(.16,.12,4.5),mat('#c9c6a5'),root);shoreLip.position.set(-.25,0,0)
+  const shoreLip=mesh('bank-stone-edge',new THREE.BoxGeometry(.16,.12,4.5),applyCraftSurface(mat('#c9c6a5'),{kind:'stone',strength:.4}),root);shoreLip.position.set(-.25,0,0)
   const water=createStylizedWater({geometry:new THREE.PlaneGeometry(5.0,4.5).rotateX(-Math.PI/2),normal:'y',depth:.22,color:'#7fc6bb',bedColor:'#afc4a2',opacity:.56,waveScale:3.5,causticScale:3})
   water.surface.position.set(1.65,0,0);root.add(water.surface)
   const pose=(step:number,amount:number)=>{

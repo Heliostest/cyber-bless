@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 /** Prepared red Fu paper, original block glyph and a product-designed household doorway. */
@@ -7,12 +8,14 @@ export function createChineseFuPaperModel() {
  const paper=new THREE.Group();paper.name='fu-paper';subject.add(paper)
  const mat=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.94})
  const red=mat(0xc83329),ink=mat(0x24201b),wood=mat(0x99734e),frame=mat(0x78563c),brass=mat(0xb19965)
+ ;[wood,frame].forEach(material=>applyCraftSurface(material,{kind:'wood',strength:.4,axis:'y'}))
+ applyCraftSurface(brass,{kind:'metal',strength:.45})
  let serial=0
  const mesh=(g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D,name?:string)=>{const o=new THREE.Mesh(g,m);o.name=name??`fu-detail-${serial++}`;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  const box=(name:string,size:[number,number,number],pos:[number,number,number],m:THREE.Material,parent:THREE.Object3D=subject)=>{const o=mesh(new THREE.BoxGeometry(...size),m,parent,name);o.position.set(...pos);return o}
  const door=new THREE.Group();door.name='fu-door-leaf';subject.add(door)
  // Adjacent planks have the same front plane: the completed paper is flush across them.
- for(let i=0;i<5;i++)box(`fu-door-plank-${i}`,[1.28/5-.003,2.10,.16],[-.22+(i+.5)*1.28/5,1.05,-.11],mat([0xa48057,0x9f7951,0xa88259,0x9c764f,0xa27d55][i]!),door)
+ for(let i=0;i<5;i++)box(`fu-door-plank-${i}`,[1.28/5-.003,2.10,.16],[-.22+(i+.5)*1.28/5,1.05,-.11],applyCraftSurface(mat([0xa48057,0x9f7951,0xa88259,0x9c764f,0xa27d55][i]!),{kind:'wood',strength:.4,axis:'y'}),door)
  box('fu-frame-left',[.10,2.16,.24],[-.28,1.08,-.05],frame)
  box('fu-frame-right',[.10,2.16,.24],[1.12,1.08,-.05],frame)
  box('fu-frame-top',[1.60,.13,.24],[.42,2.15,-.04],frame)
@@ -46,7 +49,7 @@ export function createChineseFuPaperModel() {
  rect('fu-field-middle-horizontal',.009,-.16,.177,.029)
  rect('fu-field-middle-vertical',.083,-.238,.03,.186)
  // Two restrained stone edges ground this small entry vignette, without a temple reconstruction.
- box('fu-entry-slab',[2.75,.06,1.35],[-.1,-.11,.19],mat(0xc8bba3),root)
+ box('fu-entry-slab',[2.75,.06,1.35],[-.1,-.11,.19],applyCraftSurface(mat(0xc8bba3),{kind:'stone',strength:.45}),root)
  const positions:[number,number,number][]=[[-.88,.64,.55],[-.88,1.06,.55],[.42,1.26,.55],[.42,1.38,-.029]]
  const pose=(step:number,n:number)=>{
   const t=Number.isFinite(n)?THREE.MathUtils.clamp(n,0,1):0,index=THREE.MathUtils.clamp(Math.floor(step),0,3)

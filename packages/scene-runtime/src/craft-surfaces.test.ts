@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
-import { createCraftMaterial, copyCraftSurface } from './craft-surfaces';
+import { createCraftMaterial, copyCraftSurface, applyCraftSurface } from './craft-surfaces';
+import { createRitualMaterial } from './ritual-optics';
 import { createToonSurfaces } from './toon-surfaces';
 import { createGallerySurfaces } from './gallery-surfaces';
 
@@ -12,9 +13,35 @@ function compile(material: THREE.Material) {
 }
 
 describe('craft material style compatibility', () => {
-  it.each(['wood', 'ceramic', 'metal', 'fabric', 'cord'] as const)('keeps the %s height field free of derivatives before evaluating its gradient', kind => {
+  it('applies detail to the same Physical material without replacing its finish or owned maps', () => {
+    const map = new THREE.Texture(), original = new THREE.MeshPhysicalMaterial({ color: 0x996633, map, clearcoat: .4, roughness: .67 });
+    const result = applyCraftSurface(original, { kind: 'wood', strength: .3 });
+    expect(result).toBe(original); expect(result.clearcoat).toBe(.4); expect(result.roughness).toBe(.67); expect(result.map).toBe(map);
+    const first = compile(original);
+    applyCraftSurface(original, { kind: 'wood', strength: .3 });
+    expect(compile(original).fragmentShader.match(/#define WBR_CRAFT_SURFACE/g)).toHaveLength(1);
+    expect(first.uniforms.craftStrength.value).toBe(.3);
+    original.dispose(); map.dispose();
+  });
+
+  it('combines existing cloth light transmission and new weave through both style adapters', () => {
+    const source = createRitualMaterial({ color: 0x99b6a8 }, { kind: 'cloth', fiber: false });
+    applyCraftSurface(source, { kind: 'fabric', strength: .35 });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(), source), scene = new THREE.Scene(); scene.add(mesh);
+    for (const adapter of [createToonSurfaces('toon-soft'), createGallerySurfaces('pencil-hatch')]) {
+      const frame = adapter.apply(scene), shader = compile(mesh.material as THREE.Material);
+      expect(shader.uniforms.craftStrength.value).toBe(.35);
+      expect(shader.uniforms.ritualScatterStrength.value).toBe(.16);
+      expect(shader.fragmentShader.match(/#define WBR_CRAFT_SURFACE/g)).toHaveLength(1);
+      frame.restore(); expect(mesh.material).toBe(source); adapter.dispose();
+    }
+    source.dispose(); mesh.geometry.dispose();
+  });
+  it.each(['wood', 'ceramic', 'metal', 'fabric', 'cord', 'bamboo', 'straw', 'stone'] as const)('keeps the %s height field free of derivatives before evaluating its gradient', kind => {
     const material = createCraftMaterial({}, { kind }), shader = compile(material);
     const visited = new Set<string>();
+    const executable = shader.fragmentShader.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(executable).not.toMatch(/\b(?:undefined|NaN|Infinity)\b/);
     function check(name: string) {
       if (visited.has(name)) return;
       visited.add(name);

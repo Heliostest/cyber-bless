@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -50,6 +51,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'bojagi-subject'; scene.add(world)
   const mat = (color: number, roughness = .8, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness })
   const cream = mat(0xeacfa5), coral = mat(0xc96d5c), straw = mat(0xb58e55)
+  for(const textile of[coral,straw])applyCraftSurface(textile,{kind:'fabric',strength:.22})
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: XYZ = [0, 0, 0]) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p)
     mesh.castShadow = mesh.receiveShadow = true; world.add(mesh); return mesh
@@ -59,6 +61,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
   const floorMat = box('bojagi-woven-mat', [2.05, .055, 2.35], [0, .028, .1], straw)
   floorMat.userData.toonSurface = { outline: false }
   const weave = mat(0xb99b69)
+  applyCraftSurface(weave,{kind:'fabric',strength:.2})
   for (let n = 0; n < 19; n++) {
     const weft = box(`bojagi-weft-${n}`, [1.96, .006, .010], [0, .058, -1.02 + n * .125], weave)
     const warp = box(`bojagi-warp-${n}`, [.008, .005, 2.24], [-.97 + n * .108, .057, .1], weave)

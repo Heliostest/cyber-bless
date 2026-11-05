@@ -1,0 +1,2718 @@
+{
+  "date": "2026-11-05",
+  "base": "f798f9d2",
+  "visible": 91,
+  "hiddenRetained": 67,
+  "entries": [
+    {
+      "id": "nanakusa-gayu",
+      "source": "nanakusa-gayu",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "Ladle head/handle/grip and board front edge; .35 / axis y."
+        },
+        {
+          "materialOrMesh": "boardMat",
+          "kind": "wood",
+          "note": "Serving board; .4 / axis x."
+        },
+        {
+          "materialOrMesh": "ceramic; bowlMat",
+          "kind": "ceramic",
+          "note": "Pot, pot handles and receiving bowl; .45."
+        }
+      ],
+      "retained": [
+        "porridge及流柱/薄膜保持wet光学；cream是熟米粒而非陶瓷，leaf是熟菜碎粒。",
+        "light同时用于器皿口沿与基材未明的勺托；本轮整体保留，避免为勺托新增陶身份。"
+      ],
+      "files": [
+        "packages/scenes/src/nanakusa-gayu/model.ts",
+        "packages/scenes/src/nanakusa-gayu/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "七草祈安"
+    },
+    {
+      "id": "brat-bride-cloth",
+      "source": "brat-bride-cloth",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "cloth.material",
+          "kind": "fabric",
+          "note": "封闭双层布及封边；.28，保留 vertexColors 与动态 position/normal。"
+        },
+        {
+          "materialOrMesh": "wood / benchMat",
+          "kind": "wood",
+          "note": "窗框/窗棂、凳腿与凳面；.4。"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "墙、石柱、门楣、户外窗台；.45。"
+        }
+      ],
+      "retained": [
+        "夜色窗格 glass 与 base 地台保持。",
+        "布的厚度、封边几何、底色与曲面动画保持。"
+      ],
+      "files": [
+        "packages/scenes/src/brat-bride-cloth/model.ts",
+        "packages/scenes/src/brat-bride-cloth/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "窗布祈护"
+    },
+    {
+      "id": "korean-sotdae",
+      "source": "korean-sotdae",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "sotdae-shaft; sotdae-collar-*; sotdae-support-*; sotdae-bird-tail/neck",
+          "kind": "wood",
+          "note": "Semantic cache; .4 / axis y."
+        },
+        {
+          "materialOrMesh": "sotdae-bird-body/head/bill/wing-*",
+          "kind": "wood",
+          "note": "Semantic cache excluding eye dots; .4 / axis z."
+        }
+      ],
+      "retained": [
+        "sotdae-earthen-socket为土座，不套ceramic或stone；眼部色点保持。"
+      ],
+      "files": [
+        "packages/scenes/src/korean-sotdae/model.ts",
+        "packages/scenes/src/korean-sotdae/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "鸟竿祈安"
+    },
+    {
+      "id": "japanese-kadomatsu",
+      "source": "japanese-kadomatsu",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "kadomatsu-wood-door; kadomatsu-jamb-*; kadomatsu-door-slat-*",
+          "kind": "wood",
+          "note": "Semantic cache; .4 / axis y."
+        },
+        {
+          "materialOrMesh": "kadomatsu-lintel; kadomatsu-threshold; kadomatsu-preparation-tray",
+          "kind": "wood",
+          "note": "Semantic cache; .4 / axis x."
+        },
+        {
+          "materialOrMesh": "kadomatsu-left/right-pine-branch-*",
+          "kind": "wood",
+          "note": "Cut pine branch wood only; .35 / axis y."
+        },
+        {
+          "materialOrMesh": "kadomatsu-left/right-bamboo-* including node rings",
+          "kind": "bamboo",
+          "note": ".35 / axis y; preserves vertexColors."
+        },
+        {
+          "materialOrMesh": "kadomatsu-left/right-straw-*",
+          "kind": "straw",
+          "note": "Base and strips; .3 / axis y."
+        },
+        {
+          "materialOrMesh": "kadomatsu-left/right-cord-*",
+          "kind": "cord",
+          "note": "Binding rings only; .3."
+        },
+        {
+          "materialOrMesh": "kadomatsu-paving",
+          "kind": "stone",
+          "note": "Product paving; .4."
+        }
+      ],
+      "retained": [
+        "松针、墙面、门把手材质不据颜色猜测木种或金属。"
+      ],
+      "files": [
+        "packages/scenes/src/japanese-kadomatsu/model.ts",
+        "packages/scenes/src/japanese-kadomatsu/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "门松迎岁"
+    },
+    {
+      "id": "pucara-rooftop-bulls",
+      "source": "pucara-rooftop-bulls",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "pucara-bull-left/right-*",
+          "kind": "ceramic",
+          "note": "Every closed sculptural bull part, eyes/horns/tongue/tail and original painted ornaments; semantic cache; .45; original pigments/roughness preserved."
+        },
+        {
+          "materialOrMesh": "pucara-carrier-board",
+          "kind": "wood",
+          "note": "Shared carrying board only; semantic cache; .4."
+        }
+      ],
+      "retained": [
+        "屋面、墙、窗/窗棂、屋脊承台、低架与门等产品布景未逐项明确基材，不能只按赭/棕色一律陶或木。",
+        "door-handle颜色不是金属证据。"
+      ],
+      "files": [
+        "packages/scenes/src/pucara-rooftop-bulls/model.ts",
+        "packages/scenes/src/pucara-rooftop-bulls/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "陶牛护家"
+    },
+    {
+      "id": "chinese-longevity-lock",
+      "source": "chinese-longevity-lock",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "mesh(..., kind: metal): silver-lock / raised-lock-rim / suspension-bar / suspension-post-* / flower-drop-*; line(..., kind: metal): drop-stem-*",
+          "kind": "metal",
+          "note": "在实际构造调用处显式传入物类；.42，锁片与连接件保留原反射。"
+        },
+        {
+          "materialOrMesh": "mesh(..., kind: cord): cotton-neck-cord",
+          "kind": "cord",
+          "note": "闭合橘色棉项绳；.3。"
+        },
+        {
+          "materialOrMesh": "mesh(..., kind: wood): case-base / case-side-* / case-end-* / preparation-stand",
+          "kind": "wood",
+          "note": "礼匣与准备台；.42。"
+        },
+        {
+          "materialOrMesh": "mesh(..., kind: fabric): case-inner-pad / carrier-board",
+          "kind": "fabric",
+          "note": "绒面垫与承板可见外包面；.25。"
+        }
+      ],
+      "retained": [
+        "#50606a 原创长命几何笔画保持原暗色。",
+        "原材质缓存和颜色/金属度选择保持；kind 由调用部件显式提供。"
+      ],
+      "files": [
+        "packages/scenes/src/chinese-longevity-lock/model.ts",
+        "packages/scenes/src/chinese-longevity-lock/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "银锁寄安"
+    },
+    {
+      "id": "uchide-wishing-mallet",
+      "source": "uchide-wishing-mallet",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "uchide-head-rest,uchide-handle-rest",
+          "kind": "wood",
+          "note": "逐网格克隆原 Standard 的双木托"
+        },
+        {
+          "materialOrMesh": "uchide-wood-handle,uchide-handle-pommel",
+          "kind": "wood",
+          "note": "逐网格木柄及钮，烘焙长轴 z"
+        },
+        {
+          "materialOrMesh": "uchide-tassel-cord,uchide-tassel-strand-*",
+          "kind": "cord",
+          "note": "按具名网格拆出绳穗材质"
+        }
+      ],
+      "retained": [
+        "金色端圈、箍和穗领基材未明",
+        "红漆头与未确认的握圈"
+      ],
+      "files": [
+        "packages/scenes/src/uchide-wishing-mallet/model.ts",
+        "packages/scenes/src/uchide-wishing-mallet/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "振槌寄愿"
+    },
+    {
+      "id": "ukrainian-didukh",
+      "source": "ukrainian-didukh",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood,trayWood,baseboardWood",
+          "kind": "wood",
+          "note": "木地板、工作托盘及踢脚线"
+        },
+        {
+          "materialOrMesh": "blue,coral",
+          "kind": "fabric",
+          "note": "束带、结与蝴蝶结"
+        },
+        {
+          "materialOrMesh": "straw,stalkGold,awnGold",
+          "kind": "straw",
+          "note": "干茎、颖壳和芒，局部轴 y"
+        }
+      ],
+      "retained": [
+        "grainGold 籽粒",
+        "clay 泥灰墙及 plaster 墙面"
+      ],
+      "files": [
+        "packages/scenes/src/ukrainian-didukh/model.ts",
+        "packages/scenes/src/ukrainian-didukh/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "迪杜赫麦束"
+    },
+    {
+      "id": "sri-lankan-bodhi-puja",
+      "source": "sri-lankan-bodhi-puja",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "clay,band",
+          "kind": "ceramic",
+          "note": "壶身、把手及原创釉带"
+        },
+        {
+          "materialOrMesh": "stone,stoneShade",
+          "kind": "stone",
+          "note": "石板、壶座及树围石"
+        }
+      ],
+      "retained": [
+        "活树皮、枝、根、叶、叶脉和叶柄",
+        "水、土及湿土"
+      ],
+      "files": [
+        "packages/scenes/src/sri-lankan-bodhi-puja/model.ts",
+        "packages/scenes/src/sri-lankan-bodhi-puja/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "菩提供水"
+    },
+    {
+      "id": "mezuzah-doorpost",
+      "source": "mezuzah-doorpost",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood; panelWood; insetWood",
+          "kind": "wood",
+          "note": "Doorway, panels and preparation supports; .4 / axis y."
+        },
+        {
+          "materialOrMesh": "brass",
+          "kind": "metal",
+          "note": "Endcaps, edges, shin and handle; .45; original .4 roughness/.62 metalness."
+        }
+      ],
+      "retained": [
+        "teal闭合护盒主体只指定蓝绿色盒面，未明确基材，不能凭metalness .16或颜色套ceramic/metal。",
+        "adhesive为安装胶背，不套cloth/paper；盒内经卷不打开、不增加虚构经文。"
+      ],
+      "files": [
+        "packages/scenes/src/mezuzah-doorpost/model.ts",
+        "packages/scenes/src/mezuzah-doorpost/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "门柱祈安"
+    },
+    {
+      "id": "alasita-miniature-house",
+      "source": "aymara",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood / edge",
+          "kind": "wood",
+          "note": "摊台台面、腿与前沿；.42。"
+        },
+        {
+          "materialOrMesh": "felt",
+          "kind": "fabric",
+          "note": "front-felt-pad；.25。"
+        },
+        {
+          "materialOrMesh": "brass",
+          "kind": "metal",
+          "note": "微屋门钮；.45，原 .3 metalness 保留。"
+        }
+      ],
+      "retained": [
+        "原创微屋的涂色墙、屋顶、瓦脊、窗格、门与地基保持，不推定陶屋或木屋。",
+        "trim 房屋细节与软垫包边保持。"
+      ],
+      "files": [
+        "packages/scenes/src/alasita-miniature-house/model.ts",
+        "packages/scenes/src/alasita-miniature-house/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "微屋寄愿"
+    },
+    {
+      "id": "yusheng-lohei",
+      "source": "yusheng-lohei",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood,table-apron",
+          "kind": "wood",
+          "note": "餐桌与独立桌裙材质"
+        },
+        {
+          "materialOrMesh": "porcelain,celadon",
+          "kind": "ceramic",
+          "note": "共享大盘、边碟和釉色盘沿"
+        },
+        {
+          "materialOrMesh": "bamboo",
+          "kind": "bamboo",
+          "note": "筷子，局部轴 y"
+        },
+        {
+          "materialOrMesh": "sleeves,cuffCloth",
+          "kind": "fabric",
+          "note": "衣袖及从 porcelain 拆出的独立袖口"
+        }
+      ],
+      "retained": [
+        "金色筷箍",
+        "食物、皮肤与手部"
+      ],
+      "files": [
+        "packages/scenes/src/yusheng-lohei/model.ts",
+        "packages/scenes/src/yusheng-lohei/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "鱼生捞起"
+    },
+    {
+      "id": "kitano-nadeushi",
+      "source": "kitano-nadeushi",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "stone; cutStone",
+          "kind": "stone",
+          "note": "Complete stone ox and plinth; .45."
+        },
+        {
+          "materialOrMesh": "cuff / sleeve-cuff",
+          "kind": "fabric",
+          "note": "Visitor cuff only; .25."
+        }
+      ],
+      "retained": [
+        "skin手掌、手指和腕部保持肤色表现；dark眼鼻刻画保持，不按深色套金属。"
+      ],
+      "files": [
+        "packages/scenes/src/kitano-nadeushi/model.ts",
+        "packages/scenes/src/kitano-nadeushi/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "抚牛寄愿"
+    },
+    {
+      "id": "lao-baci-wrist",
+      "source": "lao-baci-phi",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "cotton",
+          "kind": "cord",
+          "note": "White cotton strand and end caps; .25; dynamic TubeGeometry keeps original material reference."
+        },
+        {
+          "materialOrMesh": "cloth; hem",
+          "kind": "fabric",
+          "note": "Sleeve and cuff; .25."
+        }
+      ],
+      "retained": [
+        "handSkin已有skin光学；skin前臂和nail保持。",
+        "straw与现场创建的mat-weft材质是未具体注明纤维种的织垫，已有几何纬线，保持；不因变量名臆定稻草。"
+      ],
+      "files": [
+        "packages/scenes/src/lao-baci-wrist/model.ts",
+        "packages/scenes/src/lao-baci-wrist/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "白线祝归"
+    },
+    {
+      "id": "finnish-virpominen",
+      "source": "finnish-virpominen",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "doorWood",
+          "kind": "wood",
+          "note": "从 wood 拆出，仅门内木地板与两条 inset shadow；.4，axis y。"
+        },
+        {
+          "materialOrMesh": "yellowCuff / blueCuff",
+          "kind": "fabric",
+          "note": "从 yellow / blue 拆出的普通衣袖，三只手的 cuff；.25。"
+        },
+        {
+          "materialOrMesh": "foil",
+          "kind": "metal",
+          "note": "独立箔包装外表面；.4，保留原粉色与 .15 metalness。"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "门阶；.45。"
+        }
+      ],
+      "retained": [
+        "wood 篮底/篮条/编环保持，编材未明。",
+        "bark 柳枝、willow 猫柳芽、yellow/pink/paper 纸花/纸带与 skin 手保持。",
+        "blue 涂色门框、inside 内墙与纸色箔接缝保持。"
+      ],
+      "files": [
+        "packages/scenes/src/finnish-virpominen/model.ts",
+        "packages/scenes/src/finnish-virpominen/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "柳枝祝春"
+    },
+    {
+      "id": "scottish-first-footing",
+      "source": "scottish-first-footing",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood,woodGrain",
+          "kind": "wood",
+          "note": "地板、门、壁炉台及独立木板线；clothStripe 从 wood 拆开，woodGrain 从灰缝 grain 拆开"
+        },
+        {
+          "materialOrMesh": "linen,clothStripe",
+          "kind": "fabric",
+          "note": "煤布及独立布条"
+        },
+        {
+          "materialOrMesh": "iron",
+          "kind": "metal",
+          "note": "门环，保留 roughness 与 metalness"
+        },
+        {
+          "materialOrMesh": "sandstone,blueStone",
+          "kind": "stone",
+          "note": "石阶、门槛、壁炉石面"
+        }
+      ],
+      "retained": [
+        "grain 石灰缝、edge 和 inside 未明结构",
+        "煤块、余烬、火焰与灯光"
+      ],
+      "files": [
+        "packages/scenes/src/scottish-first-footing/model.ts",
+        "packages/scenes/src/scottish-first-footing/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "煤火迎年"
+    },
+    {
+      "id": "hiiragi-iwashi",
+      "source": "hiiragi-iwashi",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "木门板；.4，axis y。"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "门前石阶；.45。"
+        }
+      ],
+      "retained": [
+        "bark 跨门构件与带皮柊枝/叶柄，保持原样。",
+        "鱼头、鱼眼、有机柊叶及 dark 共用的门环均保持，不凭金属度/颜色推断。"
+      ],
+      "files": [
+        "packages/scenes/src/hiiragi-iwashi/model.ts",
+        "packages/scenes/src/hiiragi-iwashi/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "柊鰯守门"
+    },
+    {
+      "id": "tamagushi-offering",
+      "source": "tamagushi-offering",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "供案、腿和产品承托轨"
+        },
+        {
+          "materialOrMesh": "sleeve",
+          "kind": "fabric",
+          "note": "袖口和衣袖"
+        }
+      ],
+      "retained": [
+        "paper、leaf 透光与纤维设置",
+        "paper-tie 纸、皮肤与树皮"
+      ],
+      "files": [
+        "packages/scenes/src/tamagushi-offering/model.ts",
+        "packages/scenes/src/tamagushi-offering/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "玉串奉愿"
+    },
+    {
+      "id": "tibetan-water-bowls",
+      "source": "tibetan-water-bowls",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "供台与台腿"
+        },
+        {
+          "materialOrMesh": "copper",
+          "kind": "metal",
+          "note": "七只供碗，保留 metalness .35 与 roughness .4"
+        },
+        {
+          "materialOrMesh": "jugmat",
+          "kind": "ceramic",
+          "note": "陶壶、把手和出水唇"
+        }
+      ],
+      "retained": [
+        "水光学",
+        "佛像金色、robe、hair 及佛像装饰"
+      ],
+      "files": [
+        "packages/scenes/src/tibetan-water-bowls/model.ts",
+        "packages/scenes/src/tibetan-water-bowls/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "清水七供"
+    },
+    {
+      "id": "kagami-biraki-sake",
+      "source": "kagami-biraki-sake",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "cedar",
+          "kind": "wood",
+          "note": "Barrel and mallet handle; .4 / axis y."
+        },
+        {
+          "materialOrMesh": "lidWood; malletWood",
+          "kind": "wood",
+          "note": "Prepared lid halves and mallet head; .4 / axis x."
+        },
+        {
+          "materialOrMesh": "rope",
+          "kind": "cord",
+          "note": "Cask hoops; .3."
+        },
+        {
+          "materialOrMesh": "red; white",
+          "kind": "fabric",
+          "note": "Mallet ribbon band/knot/tails; .25."
+        }
+      ],
+      "retained": [
+        "straw已有原创DataTexture编织菰层，保留map/repeat/disposal，避免叠加另一套密纹。",
+        "liquidMaterial保持water optics、透明和waterRendering=false的酒液排除策略。"
+      ],
+      "files": [
+        "packages/scenes/src/kagami-biraki-sake/model.ts",
+        "packages/scenes/src/kagami-biraki-sake/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "开樽祝愿"
+    },
+    {
+      "id": "tibetan-prayer-flags",
+      "source": "tibetan-prayer-flags",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "支点、木钉和临时支架"
+        },
+        {
+          "materialOrMesh": "cotton",
+          "kind": "cord",
+          "note": "绳与端环"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "支柱石脚"
+        }
+      ],
+      "retained": [
+        "旗面的既有 cloth optics 与 linen 纤维",
+        "咒语 DataTexture 和原动作"
+      ],
+      "files": [
+        "packages/scenes/src/tibetan-prayer-flags/model.ts",
+        "packages/scenes/src/tibetan-prayer-flags/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "经幡迎风"
+    },
+    {
+      "id": "rosh-hashanah-apple-honey",
+      "source": "rosh-hashanah-apple-honey",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood / serving-board",
+          "kind": "wood",
+          "note": "Round serving board; .4."
+        },
+        {
+          "materialOrMesh": "ceramic; blue",
+          "kind": "ceramic",
+          "note": "Apple plate and honey dish; .45."
+        }
+      ],
+      "retained": [
+        "honeyMaterial/filmMaterial保留Physical子类、transmission/attenuation/thickness与现有honey光学。",
+        "cream/red/brown/green为苹果果肉果皮、籽、茎与叶，不套ceramic/wood；brown同时用于籽和茎也不能整色wood。"
+      ],
+      "files": [
+        "packages/scenes/src/rosh-hashanah-apple-honey/model.ts",
+        "packages/scenes/src/rosh-hashanah-apple-honey/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "蘸蜜迎岁"
+    },
+    {
+      "id": "thai-songkran-elders",
+      "source": "thai-songkran-elders",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "木凳座与木腿"
+        },
+        {
+          "materialOrMesh": "shirt,pants",
+          "kind": "fabric",
+          "note": "长者衣裤"
+        },
+        {
+          "materialOrMesh": "metal",
+          "kind": "metal",
+          "note": "接水盆与水碗，保留反射参数"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "石底面"
+        }
+      ],
+      "retained": [
+        "水光学、皮肤、头发",
+        "dark 五官与鞋"
+      ],
+      "files": [
+        "packages/scenes/src/thai-songkran-elders/model.ts",
+        "packages/scenes/src/thai-songkran-elders/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "浇水敬老"
+    },
+    {
+      "id": "kameido-usokae",
+      "source": "kameido-usokae",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood; oldWood; support",
+          "kind": "wood",
+          "note": "New/old wooden bird bodies and wooden support parts; .35 / axis y."
+        }
+      ],
+      "retained": [
+        "ink/red/oldRed/eye是原有黑顶、红颊、墨脚与眼部彩绘；grain为原作者细条纹，保持。",
+        "stone用于ledge-plinth，可作为可选石kind但不需为主体收益改动。"
+      ],
+      "files": [
+        "packages/scenes/src/kameido-usokae/model.ts",
+        "packages/scenes/src/kameido-usokae/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "木鷽迎福"
+    },
+    {
+      "id": "persian-esfand",
+      "source": "persian-esfand",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "metal; stainless",
+          "kind": "metal",
+          "note": "Pan/neck, cabinet pull and stove shell; .45; .55/.6 metalness and .4 roughness preserved."
+        },
+        {
+          "materialOrMesh": "wood / esfand-grip",
+          "kind": "wood",
+          "note": "Wooden grip; .4 / axis z."
+        },
+        {
+          "materialOrMesh": "esfand-cloth.material",
+          "kind": "fabric",
+          "note": "Same vertex-colour material receives finish at construction; .25."
+        }
+      ],
+      "retained": [
+        "blue柜体未明确木基材，tile台面未明确陶/石基材，black炉盘/旋钮未明确材质，保持。",
+        "种籽与其受热颜色动画保留；smoke ShaderMaterial是独立效果，不接craft。"
+      ],
+      "files": [
+        "packages/scenes/src/persian-esfand/model.ts",
+        "packages/scenes/src/persian-esfand/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "熏籽祈安"
+    },
+    {
+      "id": "mochigase-nagashibina",
+      "source": "mochigase-nagashibina",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "straw; strand; edge",
+          "kind": "straw",
+          "note": "Round straw base, bundles, cross ties and rim; .3 / axis y; flower hearts now separate flowerHeart."
+        },
+        {
+          "materialOrMesh": "wood / peach-branch; peach-twig-*",
+          "kind": "wood",
+          "note": "Cut branch wood only; .35 / axis y."
+        },
+        {
+          "materialOrMesh": "bank-stone-edge",
+          "kind": "stone",
+          "note": "Independently authored shore lip material; .4."
+        }
+      ],
+      "retained": [
+        "paper/blue/coral为薄纸雏、纸衣与纸面；ink为纸偶面部/帽髻刻画，不当真头发或布。",
+        "pink花瓣、peach花心、sweet点心保持有机/食物身份。",
+        "createStylizedWater表面/河床与透明水光学保持。",
+        "bank河岸未细分基材，保持。"
+      ],
+      "files": [
+        "packages/scenes/src/mochigase-nagashibina/model.ts",
+        "packages/scenes/src/mochigase-nagashibina/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "纸雏祈安"
+    },
+    {
+      "id": "greek-vasilopita",
+      "source": "greek-vasilopita",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "桌面与桌腿；.4。"
+        },
+        {
+          "materialOrMesh": "ceramic",
+          "kind": "ceramic",
+          "note": "大盘与家庭分糕盘；.45。"
+        },
+        {
+          "materialOrMesh": "metal / gold",
+          "kind": "metal",
+          "note": "糕铲片/颈/铆钉及硬币/币圈；.45，保留 .72/.66 金属度。"
+        }
+      ],
+      "retained": [
+        "bread/crust/sugar 食物保持不透明；blue 糕铲握柄未明基材，保持。"
+      ],
+      "files": [
+        "packages/scenes/src/greek-vasilopita/model.ts",
+        "packages/scenes/src/greek-vasilopita/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "新岁分糕"
+    },
+    {
+      "id": "tibetan-khata-greeting",
+      "source": "tibetan-khata-greeting",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "cream",
+          "kind": "fabric",
+          "note": "宽哈达面仅 .18，避免粗布化"
+        },
+        {
+          "materialOrMesh": "coat,pants",
+          "kind": "fabric",
+          "note": "赠予者和来客衣裤"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "石地面"
+        }
+      ],
+      "retained": [
+        "edgeCream、hem 的 cloth optics 和 fiber:false",
+        "皮肤、头发及鞋"
+      ],
+      "files": [
+        "packages/scenes/src/tibetan-khata-greeting/model.ts",
+        "packages/scenes/src/tibetan-khata-greeting/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "白绢迎客"
+    },
+    {
+      "id": "shichigosan-chitose-ame",
+      "source": "shichigosan-chitose-ame",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "cord",
+          "kind": "cord",
+          "note": "袋提绳和握位"
+        },
+        {
+          "materialOrMesh": "coat,pants",
+          "kind": "fabric",
+          "note": "儿童衣裤"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "铺石与准备台"
+        }
+      ],
+      "retained": [
+        "纸袋、原创花纹、糖及糖皮",
+        "皮肤、头发、鞋和五官"
+      ],
+      "files": [
+        "packages/scenes/src/shichigosan-chitose-ame/model.ts",
+        "packages/scenes/src/shichigosan-chitose-ame/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "千岁赠糖"
+    },
+    {
+      "id": "mongolian-ovoo",
+      "source": "mongolian-ovoo",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "grey[]",
+          "kind": "stone",
+          "note": "Cairn core, all stones, crown and three placed stones; .45."
+        },
+        {
+          "materialOrMesh": "bark / ovoo-pole",
+          "kind": "wood",
+          "note": "Detached pole; .35 / axis y."
+        },
+        {
+          "materialOrMesh": "blue; coat; pants",
+          "kind": "fabric",
+          "note": "Sash, jacket/arms, trousers and pack; .25."
+        }
+      ],
+      "retained": [
+        "sand为地面，不套stone/ceramic；skin、hair、shoe保持肤色/头发/鞋，鞋未明确皮革或织物。"
+      ],
+      "files": [
+        "packages/scenes/src/mongolian-ovoo/model.ts",
+        "packages/scenes/src/mongolian-ovoo/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "敖包祈护"
+    },
+    {
+      "id": "fgs-buddha-bathing",
+      "source": "fgs-buddha-bathing",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "ceramic / rimMat",
+          "kind": "ceramic",
+          "note": "厚壁水盆、底足与盆沿；.45。"
+        },
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "木杓杯与柄；.4，axis y。"
+        },
+        {
+          "materialOrMesh": "gripWood",
+          "kind": "wood",
+          "note": "从 dark 拆出的木杓握柄；.4，axis y。"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "铺地；.45。"
+        }
+      ],
+      "retained": [
+        "waterMat 的盆水、杓水、水流、水滴和涟漪保持。",
+        "gold 金色太子像/莲座/花心、dark 头发/五官与所有花叶保持。"
+      ],
+      "files": [
+        "packages/scenes/src/fgs-buddha-bathing/model.ts",
+        "packages/scenes/src/fgs-buddha-bathing/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "浴佛发愿"
+    },
+    {
+      "id": "balinese-canang-sari",
+      "source": "balinese-canang-sari",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "stone / cap / joint",
+          "kind": "stone",
+          "note": "铺地及供台脚、座、体、颈、承面、凹线；.45。"
+        },
+        {
+          "materialOrMesh": "coinMat",
+          "kind": "metal",
+          "note": "独立 canang-coin；.45，原金属度 .45 保留。"
+        }
+      ],
+      "retained": [
+        "叶盘、pandan、花材、米粒、食品和石灰保持。",
+        "wood 跨边缝、槟榔与香共用，未接入木纹。"
+      ],
+      "files": [
+        "packages/scenes/src/balinese-canang-sari/model.ts",
+        "packages/scenes/src/balinese-canang-sari/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "叶盘献谢"
+    },
+    {
+      "id": "bulgarian-survakane",
+      "source": "bulgarian-survakane",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "木凳座与腿；.4。"
+        },
+        {
+          "materialOrMesh": "coat / cloth",
+          "kind": "fabric",
+          "note": "普通外衣、袖子、前臂和裤腿；.28。"
+        },
+        {
+          "materialOrMesh": "red / gold / green / thread",
+          "kind": "cord",
+          "note": "彩色毛线、握柄绕线、绑线和流苏；.3，gold 为黄线。"
+        }
+      ],
+      "retained": [
+        "bark 带皮山茱萸枝、爆米花 cream 与人体/发/鞋保持。",
+        "匿名铺地基材未明，保持。"
+      ],
+      "files": [
+        "packages/scenes/src/bulgarian-survakane/model.ts",
+        "packages/scenes/src/bulgarian-survakane/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "彩枝贺年"
+    },
+    {
+      "id": "lanna-sand-pagoda",
+      "source": "lanna-sand-pagoda",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "Holder base/ring/feet; .4 / axis y."
+        },
+        {
+          "materialOrMesh": "bamboo; node",
+          "kind": "bamboo",
+          "note": "Pole, crossbar and node rings; .35 / axis y."
+        },
+        {
+          "materialOrMesh": "binding / lanna-binding-*",
+          "kind": "cord",
+          "note": "New same-pigment material separated from node; .3."
+        }
+      ],
+      "retained": [
+        "sand、sandLight、grainMat实际为沙体/沙粒，不错套stone或ceramic；如需增强应新增sand kind。",
+        "paper与纸折痕保持纸身份，不做fabric。"
+      ],
+      "files": [
+        "packages/scenes/src/lanna-sand-pagoda/model.ts",
+        "packages/scenes/src/lanna-sand-pagoda/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "沙塔献幡"
+    },
+    {
+      "id": "chinese-fu-paper",
+      "source": "chinese-fu-paper",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood / frame / fu-door-plank-* explicit material instances",
+          "kind": "wood",
+          "note": "门槛、托架、门框及五块显式门板；.4，axis y。"
+        },
+        {
+          "materialOrMesh": "brass",
+          "kind": "metal",
+          "note": "门环与挂座；.45。"
+        },
+        {
+          "materialOrMesh": "fu-entry-slab material",
+          "kind": "stone",
+          "note": "原 stone edges 地台；.45，在该网格构造处显式接入。"
+        }
+      ],
+      "retained": [
+        "red 福纸与 ink 原创福字保持纸墨身份。"
+      ],
+      "files": [
+        "packages/scenes/src/chinese-fu-paper/model.ts",
+        "packages/scenes/src/chinese-fu-paper/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "贴福迎春"
+    },
+    {
+      "id": "turkish-nazar-bead",
+      "source": "turkish-nazar-bead",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "展示木架"
+        },
+        {
+          "materialOrMesh": "ceramic",
+          "kind": "ceramic",
+          "note": "准备陶托"
+        },
+        {
+          "materialOrMesh": "metal",
+          "kind": "metal",
+          "note": "Physical 挂环原位保留 clearcoat、metalness 和 roughness"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "石底座"
+        }
+      ],
+      "retained": [
+        "玻璃的全部材质槽",
+        "原玻璃 optics 和整体穿孔结构"
+      ],
+      "files": [
+        "packages/scenes/src/turkish-nazar-bead/model.ts",
+        "packages/scenes/src/turkish-nazar-bead/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "蓝珠祈安"
+    },
+    {
+      "id": "japanese-hamaya",
+      "source": "japanese-hamaya",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood / stand / bluntWood",
+          "kind": "wood",
+          "note": "木杆、尾帽与双托木架；平头从 dark 拆出；.4，axis y。"
+        },
+        {
+          "materialOrMesh": "gold / bellClapper",
+          "kind": "metal",
+          "note": "小铃壳、环、芯杆及从 dark 拆出的铃舌；.45。"
+        },
+        {
+          "materialOrMesh": "red",
+          "kind": "cord",
+          "note": "羽片系带、绕绳及悬绳；.28。"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "石基座；.45。"
+        }
+      ],
+      "retained": [
+        "cream 羽片与 rib 羽肋保持羽毛/装饰线身份；未改木杆为竹杆。"
+      ],
+      "files": [
+        "packages/scenes/src/japanese-hamaya/model.ts",
+        "packages/scenes/src/japanese-hamaya/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "饰矢祈安"
+    },
+    {
+      "id": "vietnamese-five-fruit-tray",
+      "source": "vietnamese-five-fruit-tray",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "red",
+          "kind": "wood",
+          "note": "朱红木盘弱强度 .35，不新增树种主张"
+        },
+        {
+          "materialOrMesh": "ceramic",
+          "kind": "ceramic",
+          "note": "准备陶板"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "石底座"
+        }
+      ],
+      "retained": [
+        "gold 盘沿基材未明",
+        "水果、叶和果梗"
+      ],
+      "files": [
+        "packages/scenes/src/vietnamese-five-fruit-tray/model.ts",
+        "packages/scenes/src/vietnamese-five-fruit-tray/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "五果迎春"
+    },
+    {
+      "id": "chinese-ruyi-scepter",
+      "source": "chinese-ruyi-scepter",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "low/high 双托的脚、柱与座；.4。"
+        },
+        {
+          "materialOrMesh": "pad",
+          "kind": "fabric",
+          "note": "双托软垫；.25。"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "ruyi-stone-base；.45。"
+        }
+      ],
+      "retained": [
+        "jade 主体已有浅层散射与不透明玉质全部保持。"
+      ],
+      "files": [
+        "packages/scenes/src/chinese-ruyi-scepter/model.ts",
+        "packages/scenes/src/chinese-ruyi-scepter/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "如意寄愿"
+    },
+    {
+      "id": "japanese-kumade",
+      "source": "japanese-kumade",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "bamboo / kumade-bamboo-body",
+          "kind": "bamboo",
+          "note": ".35 / axis y."
+        },
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "Holder, preparation rack and supports; .4."
+        },
+        {
+          "materialOrMesh": "stone / kumade-stone-base",
+          "kind": "stone",
+          "note": ".4."
+        }
+      ],
+      "retained": [
+        "gold、edge实际用于金色椭圆纸饰（README与来源卡明示），保留纸身份和既有色彩/光泽，不套metal。",
+        "red准备架饰边未明确基材，保持。"
+      ],
+      "files": [
+        "packages/scenes/src/japanese-kumade/model.ts",
+        "packages/scenes/src/japanese-kumade/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "熊手纳福"
+    },
+    {
+      "id": "neapolitan-cornicello",
+      "source": "neapolitan-cornicello",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood / cornicello-horn-pad; cornicello-card-pad",
+          "kind": "wood",
+          "note": "Two preparation pads; .4."
+        },
+        {
+          "materialOrMesh": "stone / cornicello-stone-base",
+          "kind": "stone",
+          "note": "Product base; .4."
+        }
+      ],
+      "retained": [
+        "red角符只被定义为漆红色示意浮雕，不能据红色改陶瓷、蜡、珊瑚或木。",
+        "cream礼盒、green绿衬垫未明确基材，保持。",
+        "paper卡纸与gold心形产品记号保持；金色记号未声明金属实体。"
+      ],
+      "files": [
+        "packages/scenes/src/neapolitan-cornicello/model.ts",
+        "packages/scenes/src/neapolitan-cornicello/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "红角赠福"
+    },
+    {
+      "id": "spanish-twelve-grapes",
+      "source": "spanish-twelve-grapes",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "木准备垫、钟座和钟壳"
+        },
+        {
+          "materialOrMesh": "ceramic",
+          "kind": "ceramic",
+          "note": "三份承托陶器"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "石底座"
+        }
+      ],
+      "retained": [
+        "DataTexture 表盘",
+        "葡萄和基材未明 serving-platform"
+      ],
+      "files": [
+        "packages/scenes/src/spanish-twelve-grapes/model.ts",
+        "packages/scenes/src/spanish-twelve-grapes/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "葡萄迎岁"
+    },
+    {
+      "id": "horseshoe-doorway-luck",
+      "source": "horseshoe-doorway-luck",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "iron",
+          "kind": "metal",
+          "note": "铁蹄铁与固定柱；.45。"
+        },
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "准备底座与门架柱/横梁；.4。"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "石基座；.45。"
+        }
+      ],
+      "retained": [
+        "原金属度、实体孔数与造型保持；未新增钉锤或部件。"
+      ],
+      "files": [
+        "packages/scenes/src/horseshoe-doorway-luck/model.ts",
+        "packages/scenes/src/horseshoe-doorway-luck/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "蹄铁护家"
+    },
+    {
+      "id": "setsubun-mamemaki",
+      "source": "setsubun-mamemaki",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood,lightWood,floor",
+          "kind": "wood",
+          "note": "门框、轨道、木升及室内木地板"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "室外石面与门槛"
+        }
+      ],
+      "retained": [
+        "paper 纸光学和纸纤维",
+        "豆与豆脐"
+      ],
+      "files": [
+        "packages/scenes/src/setsubun-mamemaki/model.ts",
+        "packages/scenes/src/setsubun-mamemaki/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "节分撒豆"
+    },
+    {
+      "id": "sternsinger-house-blessing",
+      "source": "sternsinger-house-blessing",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "明确木门扇、木门框及木质面板"
+        },
+        {
+          "materialOrMesh": "metal",
+          "kind": "metal",
+          "note": "门把手与把手片，保留原 metalness .6"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "石门槛"
+        }
+      ],
+      "retained": [
+        "dark、edge 其余结构基材未明",
+        "粉笔、题字和灰泥墙"
+      ],
+      "files": [
+        "packages/scenes/src/sternsinger-house-blessing/model.ts",
+        "packages/scenes/src/sternsinger-house-blessing/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "门楣祝家"
+    },
+    {
+      "id": "lam-tsuen-wishing-tree",
+      "source": "lam-tsuen-wishing-tree",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "cordMat",
+          "kind": "cord",
+          "note": "Paper/orange ties, connecting rope segments and saddle; .3."
+        },
+        {
+          "materialOrMesh": "stone / lamtsuen-paving",
+          "kind": "stone",
+          "note": "Product paving; .4."
+        }
+      ],
+      "retained": [
+        "bark及leaf/lightLeaf为现代仿真树，来源明确塑料榕树；不套wood或生叶光学。",
+        "orange及green为塑料橙与塑料茎，不套fruit或wood。",
+        "red宝牒与ink示例字保留纸/字身份。"
+      ],
+      "files": [
+        "packages/scenes/src/lam-tsuen-wishing-tree/model.ts",
+        "packages/scenes/src/lam-tsuen-wishing-tree/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "林村抛愿"
+    },
+    {
+      "id": "kagami-mochi-offering",
+      "source": "kagami-mochi-offering",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood / kagami-low-wood-base",
+          "kind": "wood",
+          "note": "Only explicit wooden part; .4."
+        }
+      ],
+      "retained": [
+        "rice是食物，orange/green是果实与植物，paper与edge为纸面和纸边；均不套陶瓷/布/木。"
+      ],
+      "files": [
+        "packages/scenes/src/kagami-mochi-offering/model.ts",
+        "packages/scenes/src/kagami-mochi-offering/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "镜饼迎岁"
+    },
+    {
+      "id": "romanian-martisor",
+      "source": "romanian-martisor",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "red; white",
+          "kind": "cord",
+          "note": "Twisted strands, knot, bindings and tassels; .3."
+        },
+        {
+          "materialOrMesh": "cut / martisor-branch-tip",
+          "kind": "wood",
+          "note": "Exposed cut end only; .35 / axis z; living bark remains unchanged."
+        }
+      ],
+      "retained": [
+        "petal/pale/pollen/leaf为花瓣、花心、树叶；ground保持地面。",
+        "bark 是开花活树树干/枝表面，按本轮边界保留；仅 cut 暴露切端接木纹。"
+      ],
+      "files": [
+        "packages/scenes/src/romanian-martisor/model.ts",
+        "packages/scenes/src/romanian-martisor/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "红白寄春"
+    },
+    {
+      "id": "sumiyoshi-godairiki",
+      "source": "sumiyoshi-godairiki",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "cloth",
+          "kind": "fabric",
+          "note": "布袋原位保留 vertexColors"
+        },
+        {
+          "materialOrMesh": "godairiki-soft-rim",
+          "kind": "fabric",
+          "note": "独立软袋沿材质"
+        },
+        {
+          "materialOrMesh": "cordMat",
+          "kind": "cord",
+          "note": "袋口绳环"
+        },
+        {
+          "materialOrMesh": "stoneMat",
+          "kind": "stone",
+          "note": "三枚独立石体"
+        }
+      ],
+      "retained": [
+        "独立墨字",
+        "原背景碎石和地床"
+      ],
+      "files": [
+        "packages/scenes/src/sumiyoshi-godairiki/model.ts",
+        "packages/scenes/src/sumiyoshi-godairiki/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "三石寄愿"
+    },
+    {
+      "id": "polish-oplatek-sharing",
+      "source": "polish-oplatek-sharing",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "clothA; clothB",
+          "kind": "fabric",
+          "note": "Giver and receiver cuffs/sleeves; .25; intentionalCrop unchanged."
+        }
+      ],
+      "retained": [
+        "wafer/relief为面粉水薄饼及食物浮纹，不是纸、陶瓷或石板。",
+        "skinA/skinB为两位家人的肤色；保持。"
+      ],
+      "files": [
+        "packages/scenes/src/polish-oplatek-sharing/model.ts",
+        "packages/scenes/src/polish-oplatek-sharing/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "薄饼相祝"
+    },
+    {
+      "id": "greek-new-year-pomegranate",
+      "source": "greek-new-year-pomegranate",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "涂色木门；.4，axis y。"
+        },
+        {
+          "materialOrMesh": "bronze",
+          "kind": "metal",
+          "note": "门钮；.45。"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "门槛；.45。"
+        }
+      ],
+      "retained": [
+        "red 果皮/果冠原创 skin() 图、cream 内皮与 ruby 果籽浅层散射保持。",
+        "frame 门框基材未明，保持。"
+      ],
+      "files": [
+        "packages/scenes/src/greek-new-year-pomegranate/model.ts",
+        "packages/scenes/src/greek-new-year-pomegranate/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "破榴迎新"
+    },
+    {
+      "id": "hindu-coconut-offering",
+      "source": "hindu-coconut-offering",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "围石浅盘与击石面；.45。"
+        }
+      ],
+      "retained": [
+        "硬椰壳 brown、细壳纤维 fiber、白瓤 flesh 与种孔 eye 保持有机表面。",
+        "waterMaterial 椰水和 waterRendering 标记保持；ringMaterial 准备环未明基材，保持。"
+      ],
+      "files": [
+        "packages/scenes/src/hindu-coconut-offering/model.ts",
+        "packages/scenes/src/hindu-coconut-offering/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "椰果献愿"
+    },
+    {
+      "id": "bonfim-ribbon",
+      "source": "bonfim-ribbon",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "metal",
+          "kind": "metal",
+          "note": "栏杆与横轨；.45，保留涂色及 .48 金属度。"
+        }
+      ],
+      "retained": [
+        "连续厚织带 cloth 完整保留已有原创 clothTexture 织纹与 BONFIM 字样；不叠第二织纹。",
+        "贴图 UV、动画引用与 texture.dispose 保持。"
+      ],
+      "files": [
+        "packages/scenes/src/bonfim-ribbon/model.ts",
+        "packages/scenes/src/bonfim-ribbon/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "栏前结愿"
+    },
+    {
+      "id": "chinowa-kuguri",
+      "source": "chinowa-kuguri",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "原木脚与支柱；.4，axis y。"
+        },
+        {
+          "materialOrMesh": "rope",
+          "kind": "cord",
+          "note": "短连接绳；.3。"
+        }
+      ],
+      "retained": [
+        "kaya 茅环完整保留原创 kayaTexture 的纤维与六处绑带，不叠第二草纹或改为芦苇。"
+      ],
+      "files": [
+        "packages/scenes/src/chinowa-kuguri/model.ts",
+        "packages/scenes/src/chinowa-kuguri/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "茅环祈安"
+    },
+    {
+      "id": "zeniarai-coin-washing",
+      "source": "zeniarai-coin-washing",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "勺杯、柄及筛支架"
+        },
+        {
+          "materialOrMesh": "clothMat",
+          "kind": "fabric",
+          "note": "布"
+        },
+        {
+          "materialOrMesh": "metal",
+          "kind": "metal",
+          "note": "硬币，保留原反射参数"
+        },
+        {
+          "materialOrMesh": "stone,ledgeStone",
+          "kind": "stone",
+          "note": "石水槽和石台"
+        }
+      ],
+      "retained": [
+        "basketMat 仅木色而基材未明",
+        "水光学"
+      ],
+      "files": [
+        "packages/scenes/src/zeniarai-coin-washing/model.ts",
+        "packages/scenes/src/zeniarai-coin-washing/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "泉水净币"
+    },
+    {
+      "id": "udo-undama",
+      "source": "udo-undama",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "undama-ball",
+          "kind": "ceramic",
+          "note": "独立陶球原位保留運字 DataTexture"
+        },
+        {
+          "materialOrMesh": "material,ledgeMaterial",
+          "kind": "stone",
+          "note": "岩体与岩台"
+        }
+      ],
+      "retained": [
+        "運字贴图与原投掷动作"
+      ],
+      "files": [
+        "packages/scenes/src/udo-undama/model.ts",
+        "packages/scenes/src/udo-undama/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "龟岩投愿"
+    },
+    {
+      "id": "japanese-koinobori",
+      "source": "japanese-koinobori",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "Pole, base, wooden pulley/tie parts and weight; .4 / axis y."
+        },
+        {
+          "materialOrMesh": "metal",
+          "kind": "metal",
+          "note": "Finial, axle and pulley ring; .45; original .25 metalness/.55 roughness."
+        },
+        {
+          "materialOrMesh": "ropeMat",
+          "kind": "cord",
+          "note": "Dynamic halyard/bridle and knots; same material object; .3."
+        }
+      ],
+      "retained": [
+        "cloth已有createRitualMaterial cloth/linen、原创print贴图与飘动；不重复加第二层高频布纹。",
+        "cream/dark/vermilion/gold为原创眼部彩绘和口圈；gold不是金属身份。"
+      ],
+      "files": [
+        "packages/scenes/src/japanese-koinobori/model.ts",
+        "packages/scenes/src/japanese-koinobori/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "鲤旗迎风"
+    },
+    {
+      "id": "korean-bojagi-wrap",
+      "source": "korean-bojagi",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "coral; straw",
+          "kind": "fabric",
+          "note": "Corner reinforcement patches and woven mat; .22. straw is a colour variable."
+        },
+        {
+          "materialOrMesh": "weave",
+          "kind": "fabric",
+          "note": "Mat warp/weft geometric strips; .2."
+        }
+      ],
+      "retained": [
+        "clothMaterial与bandMaterial已有cloth/linen光学，保留原创patchwork贴图、缝线、DoubleSide及连续变形。",
+        "cream礼盒未声明木或陶，保持。",
+        "交互drop/coverage标记保持Basic/Line材质。"
+      ],
+      "files": [
+        "packages/scenes/src/korean-bojagi-wrap/scene.ts",
+        "packages/scenes/src/korean-bojagi-wrap/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "方巾裹礼"
+    },
+    {
+      "id": "welsh-love-spoon",
+      "source": "welsh-love-spoons",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "carved",
+          "kind": "wood",
+          "note": "勺体和柄，局部轴 y"
+        },
+        {
+          "materialOrMesh": "grain",
+          "kind": "wood",
+          "note": "原创浅纹弱强度 .35、局部轴 y"
+        },
+        {
+          "materialOrMesh": "walnut",
+          "kind": "wood",
+          "note": "展示木架"
+        },
+        {
+          "materialOrMesh": "linen",
+          "kind": "fabric",
+          "note": "垫与擦拭布"
+        }
+      ],
+      "retained": [
+        "原创孔洞及几何纹样",
+        "共享工艺桌与原安放动作"
+      ],
+      "files": [
+        "packages/scenes/src/welsh-love-spoon/scene.ts",
+        "packages/scenes/src/welsh-love-spoon/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "木勺寄情"
+    },
+    {
+      "id": "barcelos-clay-rooster",
+      "source": "barcelos-clay-rooster",
+      "changed": false,
+      "decision": "existing-pilot",
+      "parts": [
+        {
+          "materialOrMesh": "charcoal/red/clay",
+          "kind": "ceramic",
+          "note": "首批已验证的接入保持。"
+        }
+      ],
+      "retained": [
+        "首批材质和原互动保持，本轮未改该场实现。"
+      ],
+      "files": [],
+      "title": "陶鸡报晓"
+    },
+    {
+      "id": "croatian-licitar-heart",
+      "source": "croatian-licitar",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "oak / walnut",
+          "kind": "wood",
+          "note": "展架、木钉杆及背托；.4。"
+        },
+        {
+          "materialOrMesh": "linen",
+          "kind": "fabric",
+          "note": "彩心与裱花袋的布面衬垫；.25。"
+        },
+        {
+          "materialOrMesh": "ribbonMaterial",
+          "kind": "fabric",
+          "note": "从 cream 拆出，仅挂环与两条挂带；.22。"
+        }
+      ],
+      "retained": [
+        "姜饼红心与所有原创彩糖霜、蓝花心、裱花碗和小镜保持。",
+        "cream 木钉帽、糖霜、裱花袋/袋结与 paleMirror 裱花嘴保持。",
+        "共享 addCraftTable 不在本组修改。"
+      ],
+      "files": [
+        "packages/scenes/src/croatian-licitar-heart/scene.ts",
+        "packages/scenes/src/croatian-licitar-heart/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "彩心相赠"
+    },
+    {
+      "id": "sorbian-painted-egg",
+      "source": "sorbian-easter-eggs",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "clay",
+          "kind": "ceramic",
+          "note": "染料陶碟及陶杯"
+        },
+        {
+          "materialOrMesh": "dark",
+          "kind": "wood",
+          "note": "笔柄，局部轴 y"
+        },
+        {
+          "materialOrMesh": "linenRest",
+          "kind": "fabric",
+          "note": "从 sage 拆开的 egg-linen-rest 布垫"
+        },
+        {
+          "materialOrMesh": "brushFerrule",
+          "kind": "metal",
+          "note": "从 gold 拆开的笔箍，保留原反射参数"
+        },
+        {
+          "materialOrMesh": "cupCream",
+          "kind": "ceramic",
+          "note": "从 cream 拆开的杯沿与杯前点饰"
+        }
+      ],
+      "retained": [
+        "蛋壳、颜料与原创彩纹",
+        "cream 刷毛及基材未明笔搁、共享工艺桌"
+      ],
+      "files": [
+        "packages/scenes/src/sorbian-painted-egg/scene.ts",
+        "packages/scenes/src/sorbian-painted-egg/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "彩蛋寄春"
+    },
+    {
+      "id": "basque-sunflower",
+      "source": "basque-eguzkilore",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "walnut / oak / grain / seed / seedLight",
+          "kind": "wood",
+          "note": "门板/框、工作架、木底衬、木花心、花心座与木钉；.4。"
+        },
+        {
+          "materialOrMesh": "suspension",
+          "kind": "cord",
+          "note": "从 flax 拆出，限 sunflower-hanging-loop 与左右绑绳；.3。"
+        },
+        {
+          "materialOrMesh": "stone",
+          "kind": "stone",
+          "note": "展示石脚；.45。"
+        }
+      ],
+      "retained": [
+        "paper / innerPaper 的既有纸纤维与透光保留。",
+        "flax 纸折线、未明基材的中心环以及 sage 衬垫保持。"
+      ],
+      "files": [
+        "packages/scenes/src/basque-sunflower/scene.ts",
+        "packages/scenes/src/basque-sunflower/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "太阳花迎门"
+    },
+    {
+      "id": "lithuanian-straw-garden",
+      "source": "lithuanian-straw-gardens",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "oak; walnut; sage",
+          "kind": "wood",
+          "note": "Wooden jigs, stands, beads and three sage grip/peg/join beads; .4."
+        },
+        {
+          "materialOrMesh": "thread",
+          "kind": "cord",
+          "note": "Cotton suspension and connection lines; .28."
+        },
+        {
+          "materialOrMesh": "straw; paleStalk",
+          "kind": "straw",
+          "note": "Straw stems/rims and loose stems; .3 / axis y; pale corner beads stay unchanged."
+        },
+        {
+          "materialOrMesh": "clothMaterial",
+          "kind": "fabric",
+          "note": "Preparation cloth separated from sage wood; .25."
+        }
+      ],
+      "retained": [
+        "pale未命名角部珠基材未细述，保持。",
+        "草杆双锥、木珠、棉线及支架保持各自材料；不靠同色归类。"
+      ],
+      "files": [
+        "packages/scenes/src/lithuanian-straw-garden/scene.ts",
+        "packages/scenes/src/lithuanian-straw-garden/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "草穗悬园"
+    },
+    {
+      "id": "aland-votive-ship",
+      "source": "aland-votive-ship",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "oak / dark / honey",
+          "kind": "wood",
+          "note": "船壳、甲板、舷缘、船架及桅杆木件；.42，帆缝在接入前另取 sailSeam。"
+        },
+        {
+          "materialOrMesh": "brass",
+          "kind": "metal",
+          "note": "桅座、扣件、顶珠与船架目标；.45，帆边先拆为 sailHem。"
+        },
+        {
+          "materialOrMesh": "rope",
+          "kind": "cord",
+          "note": "前后支索与侧索；.3。"
+        },
+        {
+          "materialOrMesh": "felt",
+          "kind": "fabric",
+          "note": "从 teal 拆出，限工作垫、桅杆垫及船架毡面；.25。"
+        }
+      ],
+      "retained": [
+        "sailMaterial 的既有 linen 纤维/背光与 DoubleSide 保留。",
+        "sailSeam / sailHem 保留原缝线色与参数；teal 船舱、cream 舱顶保持。",
+        "共享 addCraftTable 不在本组修改。"
+      ],
+      "files": [
+        "packages/scenes/src/aland-votive-ship/scene.ts",
+        "packages/scenes/src/aland-votive-ship/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "舟模寄谢"
+    },
+    {
+      "id": "chinese-incense",
+      "source": "chinese-incense",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "jade / jadeLight / jadeDark / clay / dark",
+          "kind": "ceramic",
+          "note": "陶炉/足/耳、炉盖、陶环、香托及凹陶香孔；.45。clay 布垫细线先拆。"
+        },
+        {
+          "materialOrMesh": "creamCeramic",
+          "kind": "ceramic",
+          "note": "从 cream 拆出，限盖托、茶杯体与茶托环；.45。"
+        },
+        {
+          "materialOrMesh": "wood / woodLight",
+          "kind": "wood",
+          "note": "桌板、桌腿、横档及原木纹线；.42。"
+        },
+        {
+          "materialOrMesh": "matFabric / matThread",
+          "kind": "fabric",
+          "note": "分别从 cream/clay 拆出，仅衬垫与十五条织线；.25。"
+        },
+        {
+          "materialOrMesh": "bamboo",
+          "kind": "bamboo",
+          "note": "细香底部竹芯；.35，axis y。"
+        }
+      ],
+      "retained": [
+        "cream 灰床圈线与纸套印纹、paperMat/paperSeam、灰床 ash 与 stickMat 香料涂层保持。",
+        "teaMat 的 Physical 透射/吸收、余烬及烟保持。"
+      ],
+      "files": [
+        "packages/scenes/src/chinese-incense/scene.ts",
+        "packages/scenes/src/chinese-incense/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "炉前一炷"
+    },
+    {
+      "id": "italian-ex-voto",
+      "source": "italian-ex-voto",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "oak / edge / board",
+          "kind": "wood",
+          "note": "真实桌、画架及木调色盘；.4，board 画面路线先拆。"
+        },
+        {
+          "materialOrMesh": "ceramic / glaze",
+          "kind": "ceramic",
+          "note": "陶牌及釉面底层；.4。"
+        },
+        {
+          "materialOrMesh": "metal",
+          "kind": "metal",
+          "note": "真实画笔金属箍；.45。"
+        },
+        {
+          "materialOrMesh": "studioCloth",
+          "kind": "fabric",
+          "note": "从 cream 拆出，仅 [.91,.75,.35] 工作室布巾；.25。"
+        }
+      ],
+      "retained": [
+        "routePaint 从 board 拆出，保留画面路线原参数。",
+        "原创画面、窗帘/路线/屋/草叶及金色颜料全部保持，不把画中的物类当实体材质。",
+        "handleMat 未明基材的涂色笔柄与 bristle 笔毛保持。"
+      ],
+      "files": [
+        "packages/scenes/src/italian-ex-voto/scene.ts",
+        "packages/scenes/src/italian-ex-voto/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "绘牌记谢"
+    },
+    {
+      "id": "omikuji",
+      "source": "omikuji",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "honey; pale; edge; timber",
+          "kind": "wood",
+          "note": "Wooden box/rims/stick/stand; .3 / axis y, low strength over authored grain geometry."
+        }
+      ],
+      "retained": [
+        "cream/paperEdge/sage/sageLight/ink/coral含纸签、信封、原创叶纹/字迹/印章，保留纸面和原创笔迹。",
+        "guideMaterial/guideRimMaterial和倾斜目标保持。"
+      ],
+      "files": [
+        "packages/scenes/src/omikuji/scene.ts",
+        "packages/scenes/src/omikuji/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "签纸慢读"
+    },
+    {
+      "id": "polish-blessing-basket",
+      "source": "polish-folk-catholic",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "oak; oakEdge; boardMat",
+          "kind": "wood",
+          "note": "Table, legs, apron and bread board; .4."
+        },
+        {
+          "materialOrMesh": "clothMaterial",
+          "kind": "fabric",
+          "note": "Lining and flap, separated from cream saucer/rest/nest/medallion; .25; DoubleSide preserved."
+        },
+        {
+          "materialOrMesh": "embroidery",
+          "kind": "cord",
+          "note": "Two embroidered stitches separated from stitch medallion heart; .28."
+        }
+      ],
+      "retained": [
+        "wicker[]是实际willow篮条，已有交错编织几何；不套straw/bamboo/cord。若后续有收益，可专门新增wicker细皮纹，当前保留。",
+        "cream还给egg-saucer和篮上花形标记，不能整色套fabric或ceramic；碟基材未明可保留。",
+        "crust/breadCut、eggRose/eggCream/eggBlue、sage/darkLeaf为食物、原创彩蛋花纹和植物，保持。",
+        "cream所用面包承托、蛋窝与卷环的具体基材未细述，保持，不为它们新增织物或陶身份。"
+      ],
+      "files": [
+        "packages/scenes/src/polish-blessing-basket/scene.ts",
+        "packages/scenes/src/polish-blessing-basket/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "一篮春食"
+    },
+    {
+      "id": "navruz-sumalak",
+      "source": "uzbek-sumalak-cooking",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "iron; ironRim",
+          "kind": "metal",
+          "note": "Cauldron, rim and handles; .45; original metalness/roughness preserved."
+        },
+        {
+          "materialOrMesh": "wood; woodLight",
+          "kind": "wood",
+          "note": "Spoon parts, shallow hollow/line and hearth logs; .35 / axis y."
+        },
+        {
+          "materialOrMesh": "glaze; bowlCream",
+          "kind": "ceramic",
+          "note": "Both bowl bodies, rims, basins and dots; .45; separated from guide cream."
+        },
+        {
+          "materialOrMesh": "weave; terracotta; matStripe",
+          "kind": "fabric",
+          "note": "Sharing mat and all stripes; .25; separated from ceramic and guide cream."
+        }
+      ],
+      "retained": [
+        "caramel、swirlMat保持不透明wet食物光学。",
+        "clay/clayLight炉座和砖是粗土/砖布景，若未明确烧制细节可保持，不能从颜色强化成釉陶。",
+        "soot炉口与交互guides保持。"
+      ],
+      "files": [
+        "packages/scenes/src/navruz-sumalak/scene.ts",
+        "packages/scenes/src/navruz-sumalak/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "春锅共煮"
+    },
+    {
+      "id": "floating-lantern-loy-krathong",
+      "source": "floating-lantern-loy-krathong",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood / endgrain",
+          "kind": "wood",
+          "note": "码头木板与支柱；.4。"
+        }
+      ],
+      "retained": [
+        "叶舟、香蕉基座、折叶、花、蜡与炭色烛芯保持。",
+        "stylized-water、火焰/点光/halo、水面目标与涟漪保持。"
+      ],
+      "files": [
+        "packages/scenes/src/floating-lantern-loy-krathong/scene.ts",
+        "packages/scenes/src/floating-lantern-loy-krathong/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "叶舟寄意"
+    },
+    {
+      "id": "omamori-cycle",
+      "source": "omamori-cycle",
+      "changed": false,
+      "decision": "existing-pilot",
+      "parts": [
+        {
+          "materialOrMesh": "wood",
+          "kind": "wood",
+          "note": "首批已验证的接入保持。"
+        },
+        {
+          "materialOrMesh": "coral/sage/indigo/seam",
+          "kind": "fabric",
+          "note": "首批已验证的接入保持。"
+        },
+        {
+          "materialOrMesh": "rope",
+          "kind": "cord",
+          "note": "首批已验证的接入保持。"
+        }
+      ],
+      "retained": [
+        "首批材质和原互动保持，本轮未改该场实现。"
+      ],
+      "files": [],
+      "title": "御守伴行"
+    },
+    {
+      "id": "shrine-suzu-bell",
+      "source": "shrine-suzu-bell",
+      "changed": false,
+      "decision": "existing-pilot",
+      "parts": [
+        {
+          "materialOrMesh": "wood/postWood",
+          "kind": "wood",
+          "note": "首批已验证的接入保持。"
+        },
+        {
+          "materialOrMesh": "gold/goldLight/darkGold",
+          "kind": "metal",
+          "note": "首批已验证的接入保持。"
+        },
+        {
+          "materialOrMesh": "cream/rust/green",
+          "kind": "cord",
+          "note": "首批已验证的接入保持。"
+        }
+      ],
+      "retained": [
+        "首批材质和原互动保持，本轮未改该场实现。"
+      ],
+      "files": [],
+      "title": "庭前一铃"
+    },
+    {
+      "id": "st-brigids-cross",
+      "source": "st-brigids-cross",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "timber,edge",
+          "kind": "wood",
+          "note": "木架、木脚和木钉"
+        },
+        {
+          "materialOrMesh": "cord",
+          "kind": "cord",
+          "note": "环、绑绳与挂绳"
+        }
+      ],
+      "retained": [
+        "绿色 rushes 不作为干谷秆",
+        "cream 准备面与引导光"
+      ],
+      "files": [
+        "packages/scenes/src/st-brigids-cross/scene.ts",
+        "packages/scenes/src/st-brigids-cross/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "草编迎春"
+    },
+    {
+      "id": "bokjori",
+      "source": "bokjori",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "bamboo[] / accent",
+          "kind": "bamboo",
+          "note": "竹编经纬、竹柄及卷竹边；.4，geometry-local y 方向。"
+        },
+        {
+          "materialOrMesh": "red / cord",
+          "kind": "cord",
+          "note": "绕柄线、绑线、结与挂环；.3。"
+        },
+        {
+          "materialOrMesh": "wood / paleWood",
+          "kind": "wood",
+          "note": "木墙、横档、木挂点、棚板及支脚；.4，axis y。"
+        }
+      ],
+      "retained": [
+        "米粒及米盘食物表面保持。",
+        "trayMat 未明基材的盘体保持，不按浅棕色推定木/竹。"
+      ],
+      "files": [
+        "packages/scenes/src/bokjori/scene.ts",
+        "packages/scenes/src/bokjori/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "竹筛迎岁"
+    },
+    {
+      "id": "ema-votive-plaque",
+      "source": "ema-votive-plaque",
+      "changed": false,
+      "decision": "existing-pilot",
+      "parts": [
+        {
+          "materialOrMesh": "wood/timber/postTimber/edgeWood",
+          "kind": "wood",
+          "note": "首批已验证的接入保持。"
+        },
+        {
+          "materialOrMesh": "ropeMat",
+          "kind": "cord",
+          "note": "首批已验证的接入保持。"
+        }
+      ],
+      "retained": [
+        "首批材质和原互动保持，本轮未改该场实现。"
+      ],
+      "files": [],
+      "title": "木牌记愿"
+    },
+    {
+      "id": "clootie-well-rag",
+      "source": "clootie-well-rag",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "cotton",
+          "kind": "fabric",
+          "note": "布片、抓持部位与布结；.2，保留 cottonMap、DoubleSide 及湿色动画。"
+        },
+        {
+          "materialOrMesh": "stoneColors[]",
+          "kind": "stone",
+          "note": "井壁石楔与散落卵石；.45。"
+        }
+      ],
+      "retained": [
+        "waterMat 水体、水波与暗井底保持。",
+        "活树 bark/barkHighlight 树皮、树结、树冠和苔藓保持，未套锯切木纹。"
+      ],
+      "files": [
+        "packages/scenes/src/clootie-well-rag/scene.ts",
+        "packages/scenes/src/clootie-well-rag/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "井边放下"
+    },
+    {
+      "id": "diya-oil-lamp",
+      "source": "diya-oil-lamp",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "clay / rimClay",
+          "kind": "ceramic",
+          "note": "陶盏与陶边；.45。"
+        },
+        {
+          "materialOrMesh": "cotton",
+          "kind": "cord",
+          "note": "曲管棉芯；.28。"
+        }
+      ],
+      "retained": [
+        "amber 的原 wet 湿润油面反射保持。",
+        "未明基材的托盘/瓣形装饰、焦端、火焰、内核、点光与 halo 保持。"
+      ],
+      "files": [
+        "packages/scenes/src/diya-oil-lamp/scene.ts",
+        "packages/scenes/src/diya-oil-lamp/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "灯旋一瞥"
+    },
+    {
+      "id": "votive-candle-catholic",
+      "source": "votive-candle-catholic",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "steel",
+          "kind": "metal",
+          "note": "烛架和烛领，保留原反射参数"
+        },
+        {
+          "materialOrMesh": "stone,stoneFace",
+          "kind": "stone",
+          "note": "石底与石龛面"
+        }
+      ],
+      "retained": [
+        "所有蜡及蜡光学",
+        "烛焰、光晕和照明"
+      ],
+      "files": [
+        "packages/scenes/src/votive-candle-catholic/scene.ts",
+        "packages/scenes/src/votive-candle-catholic/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "留一盏烛光"
+    },
+    {
+      "id": "daruma-eye-painting",
+      "source": "daruma-eye-painting",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood / darkWood",
+          "kind": "wood",
+          "note": "木座、细线与画笔木杆/领圈；.4。"
+        }
+      ],
+      "retained": [
+        "纸偶的红/奶油/白、墨与描金绘画、redPaint、笔毛和 vertexColors 表面变化保持。"
+      ],
+      "files": [
+        "packages/scenes/src/daruma-eye-painting/scene.ts",
+        "packages/scenes/src/daruma-eye-painting/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "达摩点睛"
+    },
+    {
+      "id": "mizuhiki",
+      "source": "mizuhiki",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "cordMaterials[]",
+          "kind": "cord",
+          "note": "Five washi cords, fixed envelope bands and deforming knot strands; .28; metalness/roughness/emissive unchanged."
+        }
+      ],
+      "retained": [
+        "paper/foldedPaper/topPaper保留paperMap和纸层。",
+        "gold、red同时用于礼封上的折纸装饰；gold不是独立金属件。",
+        "red还给绳端小球，不能因此整体改cord；提示圆点/线路、用户文字Canvas与隐私标记保持。"
+      ],
+      "files": [
+        "packages/scenes/src/mizuhiki/scene.ts",
+        "packages/scenes/src/mizuhiki/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "水引结愿"
+    },
+    {
+      "id": "milagros",
+      "source": "milagros",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "wood; darkWood",
+          "kind": "wood",
+          "note": "Frame, feet and selection tray; .4."
+        },
+        {
+          "materialOrMesh": "pinMat; charmMaterials[]",
+          "kind": "metal",
+          "note": "Pin, four charms, loops and pressed marks; .45; animated material references preserved."
+        },
+        {
+          "materialOrMesh": "decorativeCharmMaterial",
+          "kind": "metal",
+          "note": "Explicit shared material for three small background charms; .45; original .35 metalness/.6 roughness."
+        }
+      ],
+      "retained": [
+        "paper用于衬板与托台衬纸；交互guide和pinTarget保持。",
+        "保留charmMaterials原对象，选择态emissive动画不变。"
+      ],
+      "files": [
+        "packages/scenes/src/milagros/scene.ts",
+        "packages/scenes/src/milagros/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "留一枚感谢"
+    },
+    {
+      "id": "phuang-malai",
+      "source": "phuang-malai",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "thread",
+          "kind": "cord",
+          "note": "Garland core, double suspension loops, thread tails and binding knot; .28."
+        }
+      ],
+      "retained": [
+        "cream/rose是茉莉与玫瑰花材，不是陶瓷/织物；保留InstancedMesh色差。",
+        "pedestalMat与trayMat仅定义奶油色小台/托盘，未声明陶瓷或木，保持。",
+        "paleGold同时用于提示环与小台饰沿，不凭金色套metal。"
+      ],
+      "files": [
+        "packages/scenes/src/phuang-malai/scene.ts",
+        "packages/scenes/src/phuang-malai/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "串花寄意"
+    },
+    {
+      "id": "woodfish",
+      "source": "chinese-buddhism",
+      "changed": true,
+      "decision": "enhanced",
+      "parts": [
+        {
+          "materialOrMesh": "GLB WoodfishBody / Mallet Standard 材质",
+          "kind": "wood",
+          "note": "原位应用，strength .5 / scale .42；原图、normal、roughness/AO贴图及对象引用保留。"
+        }
+      ],
+      "retained": [
+        "原 GLB、卡通调色、打击/近看/声音/存档保持。"
+      ],
+      "files": [
+        "packages/app/src/woodfish-scene.ts",
+        "packages/app/src/woodfish/README.md"
+      ],
+      "title": "敲一敲木鱼"
+    },
+    {
+      "id": "tanzaku-tanabata",
+      "source": "tanzaku-tanabata",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "stalkMat,nodeMat",
+          "kind": "bamboo",
+          "note": "竹节与竹秆，均使用局部轴 y"
+        }
+      ],
+      "retained": [
+        "纸短册的纸光学与纤维",
+        "叶与原互动，不补造绳"
+      ],
+      "files": [
+        "packages/scenes/src/tanzaku-tanabata/scene.ts",
+        "packages/scenes/src/tanzaku-tanabata/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "短册系竹"
+    },
+    {
+      "id": "yeondeunghoe",
+      "source": "yeondeunghoe",
+      "changed": false,
+      "parts": [],
+      "retained": [
+        "既有纸瓣光学、纸纤维及发光",
+        "台座基材未明，不强加 craft kind"
+      ],
+      "files": [
+        "packages/scenes/src/yeondeunghoe/README.md"
+      ],
+      "decision": "retained",
+      "title": "燃灯上浮"
+    },
+    {
+      "id": "furin-wind-chime",
+      "source": "furin-wind-chime",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "beam.material",
+          "kind": "wood",
+          "note": "明确木檐横梁；.4，axis x。"
+        },
+        {
+          "materialOrMesh": "cord.material / clapperString.material",
+          "kind": "cord",
+          "note": "上下悬绳；.28。"
+        }
+      ],
+      "retained": [
+        "bellMat Physical 玻璃透射、玻璃描边与彩绘保留。",
+        "ribbonMat 纸短册及分节飘动保留；未明基材的 clapper 保留。"
+      ],
+      "files": [
+        "packages/scenes/src/furin-wind-chime/scene.ts",
+        "packages/scenes/src/furin-wind-chime/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "风铃一响"
+    },
+    {
+      "id": "shinto-torii",
+      "source": "shinto",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "rackWood,emaMat,ownEmaMat",
+          "kind": "wood",
+          "note": "绘马架和绘马板；保留 ownEmaMat 发光动画引用"
+        },
+        {
+          "materialOrMesh": "stoneMat",
+          "kind": "stone",
+          "note": "参道石"
+        }
+      ],
+      "retained": [
+        "vermilion、ink 鸟居本体基材未明",
+        "原发光反馈与文字"
+      ],
+      "files": [
+        "packages/scenes/src/shinto-torii/scene.ts",
+        "packages/scenes/src/shinto-torii/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "庭前一礼"
+    },
+    {
+      "id": "tibetan-wheel",
+      "source": "tibetan-buddhism",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "goldMat,copperMat,bronzeMat,axleMat",
+          "kind": "metal",
+          "note": "明确金属面板、环、帽、铆点与轴，保留全部反射参数"
+        }
+      ],
+      "retained": [
+        "frameMat、eaveMat 基材未明",
+        "lacquerMat 漆带及原转动"
+      ],
+      "files": [
+        "packages/scenes/src/tibetan-wheel/scene.ts",
+        "packages/scenes/src/tibetan-wheel/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "廊前轻转"
+    },
+    {
+      "id": "slavic-wreath",
+      "source": "kupala-wreath",
+      "changed": true,
+      "parts": [
+        {
+          "materialOrMesh": "logMat",
+          "kind": "wood",
+          "note": "仅篝火木段，弱强度 .35、局部轴 y"
+        }
+      ],
+      "retained": [
+        "鲜草茎、reedMat、水、花、叶",
+        "火焰与涟漪"
+      ],
+      "files": [
+        "packages/scenes/src/slavic-wreath/scene.ts",
+        "packages/scenes/src/slavic-wreath/README.md"
+      ],
+      "decision": "enhanced",
+      "title": "火边花环"
+    },
+    {
+      "id": "crane",
+      "source": "origami-crane-senbazuru",
+      "changed": false,
+      "parts": [],
+      "retained": [
+        "实际仅纸鹤与不可见命中体，没有合适的木/陶/金属/布/绳收益对象。",
+        "origami-sheet.ts 正反面/纸边的既有纸纤维、薄纸透光、墨边与折痕全部保留。"
+      ],
+      "files": [],
+      "decision": "retained",
+      "title": "折一只纸鹤"
+    }
+  ]
+}

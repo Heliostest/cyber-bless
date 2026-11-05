@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 const V=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
@@ -6,6 +7,7 @@ export function createCanangModel(){
  const root=new THREE.Group();root.name='canang-subject'
  const mat=(color:number,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness})
  const leaf=mat(0xbacb76,.87),leafEdge=mat(0x879d4f),leafLight=mat(0xdbd69a),stone=mat(0xbfc2ac),cap=mat(0xd5d4ba),joint=mat(0x999d85),white=mat(0xfff7de),red=mat(0xd96174),yellow=mat(0xf0c257),blue=mat(0x7895ce),pandan=mat(0x718f4c),cakeMat=mat(0xe3b87c),bananaMat=mat(0xf1d47d),wood=mat(0x947057)
+ ;[stone,cap,joint].forEach(material=>applyCraftSurface(material,{kind:'stone',strength:.45}))
  const make=(name:string,geometry:THREE.BufferGeometry,material:THREE.Material,parent:THREE.Object3D=root)=>{const m=new THREE.Mesh(geometry,material);m.name=name;m.castShadow=m.receiveShadow=true;parent.add(m);return m}
  const box=(name:string,size:[number,number,number],pos:[number,number,number],material:THREE.Material,parent:THREE.Object3D=root)=>{const m=make(name,new THREE.BoxGeometry(...size),material,parent);m.position.set(...pos);return m}
  const solid=(name:string,size:[number,number,number],pos:[number,number,number],material:THREE.Material,parent:THREE.Object3D)=>{const m=make(name,new THREE.IcosahedronGeometry(1,2),material,parent);m.scale.set(...size);m.position.set(...pos);return m}
@@ -36,7 +38,7 @@ export function createCanangModel(){
  const caneEdge=make('canang-sugarcane-rind',new THREE.TorusGeometry(.084,.008,6,24),pandan,tray);caneEdge.rotation.x=Math.PI/2;caneEdge.position.set(-.32,.125,.44)
  const banana=solid('canang-banana',[.16,.045,.065],[0,.105,.44],bananaMat,tray);banana.rotation.y=-.15
  box('canang-cake',[.16,.075,.13],[.31,.0975,.44],cakeMat,tray)
- const coinMat=mat(0xc5a767,.45);coinMat.metalness=.45
+ const coinMat=mat(0xc5a767,.45);coinMat.metalness=.45;applyCraftSurface(coinMat,{kind:'metal',strength:.45})
  const coin=make('canang-coin',new THREE.CylinderGeometry(.037,.037,.012,20),coinMat,tray);coin.position.set(.48,.066,.38)
  for(let i=0;i<5;i++){const m=solid('canang-rice-'+i,[.012,.007,.023],[.15+i%3*.022,.067,.36+Math.floor(i/3)*.03],white,tray);m.rotation.y=i*.6}
  for(const x of[.51,.55])box('canang-incense-'+x,[.012,.014,.86],[x,.067,-.06],wood,tray)

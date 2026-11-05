@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { bindSceneAttribute } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -197,6 +198,8 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
   mound.scale.y = 0.25
   fire.add(mound)
   const logMat = new THREE.MeshStandardMaterial({ color: 0x6b4630, roughness: 0.95 })
+ applyCraftSurface(logMat, { kind: 'wood', strength: .35, axis: 'y' })
+
   for (let i = 0; i < 4; i++) {
     const log = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.6, 8), logMat)
     const a = (i / 4) * Math.PI * 2

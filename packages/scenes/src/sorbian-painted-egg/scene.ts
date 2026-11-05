@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -54,6 +55,13 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
   const material = (color: number, roughness = .83) => new THREE.MeshStandardMaterial({ color, roughness })
   const blue = material(0x427a83, .67), cream = material(0xf0e3bd), sage = material(0x94aaa0), gold = material(0xcaa26c)
   const oak = material(0xc7b294), dark = material(0x94795c), clay = material(0xb78169), pigment = material(0x456e75, .57)
+  const linenRest=sage.clone(),brushFerrule=gold.clone(),cupCream=cream.clone()
+  applyCraftSurface(clay, { kind: 'ceramic', strength: .45 })
+  applyCraftSurface(dark, { kind: 'wood', strength: .4, axis: 'y' })
+  applyCraftSurface(linenRest, { kind: 'fabric', strength: .26 })
+  applyCraftSurface(brushFerrule, { kind: 'metal', strength: .45 })
+  applyCraftSurface(cupCream, { kind: 'ceramic', strength: .45 })
+
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
@@ -63,7 +71,7 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
     add(name, new THREE.LatheGeometry(profile.map(v => new THREE.Vector2(...v)), 64), mat, p, parent)
   addCraftTable(world, { name: 'egg-table', topName: 'egg-table-top', width: 3.3, depth: 1.78, surfaceY: .74, thickness: .12, center: [0,0], support: 'joined', finish: 'birch' })
   const shadow = add('egg-ground-shadow', new THREE.PlaneGeometry(3.9, 2.5), new THREE.ShadowMaterial({ opacity: .13 }), [0, .003, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
-  box('egg-linen-rest', [1.01, .04, .91], [-.48, .76, .08], sage)
+  box('egg-linen-rest', [1.01, .04, .91], [-.48, .76, .08], linenRest)
   box('egg-brush-rest', [.85, .036, .24], [-1.02, .758, .56], cream)
   // The dish has a raised ceramic rim around a shallow painted pool.
   lathe('egg-dye-dish', [[0, 0], [.23, 0], [.28, .035], [.29, .095], [.26, .11], [.235, .07], [0, .06]], clay, [-1.13, .74, -.56])
@@ -76,8 +84,8 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
   for (let i = 20; i >= 0; i--) { const y = .25 * i / 20; cupProfile.push([radius(y) + .003, SEATED.y + y]) }
   cupProfile.push([0, .917])
   lathe('egg-cup-bowl', cupProfile, clay, [0, 0, 0], cup)
-  const rim = add('egg-cup-cream-rim', new THREE.TorusGeometry(radius(.25) + .018, .018, 10, 64), cream, [0, 1.183, 0], cup); rim.rotation.x = Math.PI / 2
-  const cupTarget = add('egg-cup-target', new THREE.SphereGeometry(1, 24, 16), cream, [0, 1.125, .303], cup); cupTarget.scale.set(.13, .055, .025)
+  const rim = add('egg-cup-cream-rim', new THREE.TorusGeometry(radius(.25) + .018, .018, 10, 64), cupCream, [0, 1.183, 0], cup); rim.rotation.x = Math.PI / 2
+  const cupTarget = add('egg-cup-target', new THREE.SphereGeometry(1, 24, 16), cupCream, [0, 1.125, .303], cup); cupTarget.scale.set(.13, .055, .025)
   cupTarget.userData.toonSurface = { outline: false }
   const egg = new THREE.Group(); egg.name = 'sorbian-painted-egg'; world.add(egg)
   const profile: [number, number][] = Array.from({ length: 81 }, (_, i) => { const y = HEIGHT * i / 80; return [radius(y), y] })
@@ -119,7 +127,7 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
   }
   const brush = new THREE.Group(); brush.name = 'egg-brush'; world.add(brush)
   const grip = add('egg-brush-grip', new THREE.CapsuleGeometry(.061, .31, 6, 16), dark, [-.04, 0, 0], brush); grip.rotation.z = Math.PI / 2
-  const ferrule = add('egg-brush-ferrule', new THREE.CylinderGeometry(.043, .043, .13, 16), gold, [.22, 0, 0], brush); ferrule.rotation.z = Math.PI / 2
+  const ferrule = add('egg-brush-ferrule', new THREE.CylinderGeometry(.043, .043, .13, 16), brushFerrule, [.22, 0, 0], brush); ferrule.rotation.z = Math.PI / 2
   const tip = add('egg-brush-tip', new THREE.ConeGeometry(.042, .17, 16), cream, [.37, 0, 0], brush); tip.rotation.z = -Math.PI / 2
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restore = () => { egg.position.copy(at >= 2 ? SEATED : HOME); brush.position.copy(BRUSH_HOME); motif.visible = at >= 1; matrices() }

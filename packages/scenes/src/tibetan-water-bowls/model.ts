@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 const smooth=(x:number)=>{const t=THREE.MathUtils.clamp(x,0,1);return t*t*(3-2*t)}
@@ -5,6 +6,10 @@ export function createWaterBowlsModel(){
  const root=new THREE.Group();root.name='water-bowls-subject';root.position.y=-.012
  const material=(color:number,metalness=0,roughness=.7)=>new THREE.MeshStandardMaterial({color,metalness,roughness})
  const wood=material(0x945d3e),gold=material(0xd4ac58,.25,.52),copper=material(0xbc7850,.35,.4),robe=material(0xc99c44,.18,.65),hair=material(0x3f5051),jugmat=material(0xeee4cb,.05,.35)
+ applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+ applyCraftSurface(copper, { kind: 'metal', strength: .45 })
+ applyCraftSurface(jugmat, { kind: 'ceramic', strength: .45 })
+
  const watermat=createRitualMaterial({color:0x75bec8,transparent:true,opacity:.8,roughness:.19,metalness:0,depthWrite:false},{kind:'water',strength:.3})
  const finish=(source:THREE.BufferGeometry)=>{
   const raw=source.index?source.toNonIndexed():source,p=raw.getAttribute('position'),faces:number[]=[]

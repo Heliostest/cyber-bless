@@ -371,7 +371,7 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
         resizeObserver = new ResizeObserver(() => {
           if (!disposed) resize()
         })
-        resizeObserver.observe(canvas.parentElement ?? canvas)
+        resizeObserver.observe(canvas)
       }
       wireGestures()
       if ((ctx.initialProgress ?? 0) >= 1) goRise()

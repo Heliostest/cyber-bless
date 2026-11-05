@@ -268,7 +268,7 @@ describe("page ribbon", () => {
     const ribbon = declared(".title-ribbon");
     expect(ribbon).toMatch(/isolation: isolate/);
     expect(ribbon).toMatch(/margin-bottom: calc\(-1 \* var\(--drop\)\)/);
-    expect(ribbon).toMatch(/padding: 6px 30px calc\(8px \+ var\(--drop\)\)/);
+    expect(ribbon).toMatch(/padding: 6px var\(--ribbon-padding\) calc\(6px \+ var\(--drop\)\)/);
   });
 });
 

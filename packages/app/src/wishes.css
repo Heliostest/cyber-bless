@@ -1,6 +1,5 @@
 /* Layout refinements only. Animal Island tokens, ribbon, dotted ground,
    sand panels, press ledges and the four-color HUD dock stay in style.css. */
-.wishes-page .page-heading { margin-bottom: 18px; }
 .wishes-page .filter-row { margin: 0 0 20px; }
 .wishes-page .wish-card { padding: 15px 16px; gap: 14px; }
 .wishes-page .wish-card > .scene-art {

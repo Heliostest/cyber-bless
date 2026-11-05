@@ -33,6 +33,12 @@ export function useAppLayout(ref: RefObject<HTMLElement | null>) {
       } else shell.style.removeProperty("--app-dock-space");
       const content = shell.querySelector<HTMLElement>(".app-content");
       const experience = content?.querySelector<HTMLElement>(".scene-experience, .ritual-page, .completion");
+      // The shared scene frame uses viewport/container dimensions in CSS.
+      // Content-dependent scroll switching would resize it during a checkpoint.
+      if (experience?.hasAttribute('data-stable-stage')) {
+        shell.removeAttribute('data-layout-scroll');
+        return;
+      }
       const stage = experience?.querySelector<HTMLElement>(".library-scene-stage, .celebration");
       if (!shell.hasAttribute("data-immersive") || !content || !experience || !stage) {
         shell.removeAttribute("data-layout-scroll"); return;

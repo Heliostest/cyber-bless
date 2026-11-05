@@ -113,8 +113,9 @@ export function Ritual({ id, wishId: linkedWishId, whenIdleRef, }: {
             }}/>;
     }
     const intention = sceneIntention("woodfish");
-    return (<section className="scene-experience ritual-page ritual-woodfish" aria-label={translateScene(meta.name)}>
-      <RitualNarrativeBlurb sceneId="woodfish"/>
+    return (<section className="scene-experience ritual-page ritual-woodfish" data-stable-stage="" aria-label={translateScene(meta.name)}>
+      <div className="scene-narrative-slot"><RitualNarrativeBlurb sceneId="woodfish"/></div>
+      <div className="scene-caption-slot" />
       <p className="scene-progress sr-only" role="status">{message('app.woodfish.progress', { n: woodfishTotal, min: meta.steps })}</p>
       <div className="sr-only" role="progressbar" aria-label={kind === "woodfish" ? tr("\u8F7B\u6572\u8FDB\u5EA6") : tr("\u4EEA\u5F0F\u8FDB\u5EA6")} aria-valuemin={0} aria-valuemax={meta.steps} aria-valuenow={progress}/>
       <SceneStageCard intention={intention && <aside className="scene-intention" data-kind={intention.kind} aria-label={tr("\u8FD9\u4E00\u573A\u7684\u5FC3\u610F")}>
@@ -125,6 +126,7 @@ export function Ritual({ id, wishId: linkedWishId, whenIdleRef, }: {
                 setEnding(true);
         } : undefined} onStrike={step} onImpact={feedback} onInstruction={setInstruction} whenIdleRef={whenIdleRef}/>
       </SceneStageCard>
+      <div className="scene-experience-footer">
       {kind === "woodfish" &&
             new URLSearchParams(window.location.search).has("inspectWoodfish") && (<label className="woodfish-inspection">{tr("\u6A21\u578B\u89C6\u89D2")}<select aria-label={tr("\u6A21\u578B\u89C6\u89D2")} value={view} onChange={(e) => setView(e.target.value)}>
               {["front", "left", "right", "back", "top", "bottom"].map((v) => (<option key={v}>{v}</option>))}
@@ -151,6 +153,7 @@ export function Ritual({ id, wishId: linkedWishId, whenIdleRef, }: {
           {paused ? tr("\u7EE7\u7EED\u8F7B\u6572") : tr("\u6682\u505C\u7247\u523B")}
         </button>
         </div>)}
+      </div>
     </section>);
 }
 export function Complete({ id, revealReward, shareSnapshot }: {

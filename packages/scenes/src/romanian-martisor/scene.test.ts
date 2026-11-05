@@ -53,10 +53,10 @@ describe('close inspection before placement', () => {
     }
     expect(cameraTravel).toBeGreaterThan(4)
     expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled()
-    s.run(.6); s.button.click(); s.run()
-    expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
+    s.run(.6); s.button.click(); s.run(.6); s.button.click(); s.run()
+    expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled()
   })
-  it.each([0, 1, 2])('opens a close view without completing legacy checkpoint %i, then allows the original placement', at => {
+  it.each([0, 1])('opens a close view without completing legacy checkpoint %i, then allows the original placement', at => {
     const s = mount(at, {}, 390, false), cameraHome = s.camera.position.clone()
     s.button.click(); s.run(.7)
     expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
@@ -64,7 +64,7 @@ describe('close inspection before placement', () => {
     s.button.click(); s.run(.6)
     expect(s.progress).toEqual([]); expect(s.camera.position.distanceTo(cameraHome)).toBeLessThan(.00001)
     s.button.click(); s.run()
-    expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
+    expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled()
   })
   it('uses the first object release to inspect instead of committing a destination drag', () => {
     const s = mount(0, {}, 390, false), p = s.point(targetName(0), anchor(0)), cameraHome = s.camera.position.clone()
@@ -72,7 +72,7 @@ describe('close inspection before placement', () => {
     expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled()
     expect(s.button.hidden).toBe(false); expect(s.camera.position.distanceTo(cameraHome)).toBeGreaterThan(.1)
     s.button.click(); s.run(.6); s.button.click(); s.run()
-    expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
+    expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled()
   })
 })
 afterEach(() => { instances.splice(0).forEach(s => s.dispose()); document.body.replaceChildren(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
@@ -96,7 +96,7 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390, walkInspe
     return [left + (p.x + 1) * width / 2, top + (1 - p.y) * height / 2]
   }
   const run = (seconds = 1.2) => { for (let t = 0; t < seconds; t += .025) instance.update(.025) }
-  if (walkInspection && (!Number.isFinite(at) || at < 3)) {
+  if (walkInspection && (!Number.isFinite(at) || at < 2)) {
     button.click(); run(.7); button.click(); run(.6)
     expect(progress).toEqual([]); expect(complete).not.toHaveBeenCalled(); expect(saveWish).not.toHaveBeenCalled()
   }
@@ -106,7 +106,7 @@ function event(el: HTMLElement, type: string, [clientX, clientY]: [number, numbe
   const e = new Event(type, { bubbles: true, cancelable: true })
   Object.assign(e, { clientX, clientY, pointerId, pointerType: 'touch', button: 0 }); el.dispatchEvent(e)
 }
-const nextCheckpoint = (at: number) => 3
+const nextCheckpoint = (at: number) => 2
 const targetName = (at: number) => ['martisor-red-head','martisor-red-head','martisor-red-head'][at]!
 const anchor = (at: number): [number, number, number] => [[0,0,0],[0,0,0],[0,0,0]][at] as [number,number,number]
 const originalDelta = (at: number): [number,number] => [[0,-60],[60,0],[0,60]][at] as [number,number]
@@ -149,7 +149,7 @@ describe('Romanian Martisor blossom branch', () => {
   })
   it.each([false,true])('lifts a worn spring cord, threads the branch and lowers to actual support, reduced=%s', reduced => {
     const s=mount(0,{isReducedMotion:()=>reduced})
-    step(s,0,false); if(!reduced)expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([3])
+    step(s,0,false); if(!reduced)expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([2])
     s.button.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
   it('uses identical final subject transforms for ordinary, reduced motion and silently restored checkpoints', () => {
@@ -172,7 +172,7 @@ describe('Romanian Martisor blossom branch', () => {
     const s = mount(); expect(s.hit).not.toBeNull(); expect(s.button.type).toBe('button')
     expect(s.button.style.minWidth).toBe('44px'); expect(s.button.style.minHeight).toBe('44px'); expect(s.overlay.querySelector('input,form')).toBeNull()
     expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-    s.button.click(); expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([3])
+    s.button.click(); expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([2])
   })
   it('plays a quiet optional acceptance tone only after settlement and closes audio once', () => {
     const frequencies: number[] = [], peaks: number[] = []; let closed = 0, soundEnabled = false
@@ -190,13 +190,13 @@ describe('Romanian Martisor blossom branch', () => {
     step(s, 2); expect(frequencies).toEqual([440]); expect(peaks).toEqual([.003])
     s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
   })
-  it.each([0,1,2])('rejects wrong surfaces, orphan release and grabs released outside the target at %i',at=>{
+  it.each([0,1])('rejects wrong surfaces, orphan release and grabs released outside the target at %i',at=>{
     const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s),end:[number,number]=[p[0]+dx,p[1]+dy];event(s.hit,'pointerdown',[1,1]);event(s.hit,'pointermove',end);event(s.hit,'pointerup',end);event(s.hit,'pointerup',end);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx*.25,p[1]+dy*.25]);event(s.hit,'pointerup',[p[0]+dx*.25,p[1]+dy*.25]);expect(s.progress).toEqual([]);step(s,at);expect(s.progress).toEqual([nextCheckpoint(at)])
   })
-  it.each([0,1,2])('rejects invalid release destinations before arrival at %i',at=>{
+  it.each([0,1])('rejects invalid release destinations before arrival at %i',at=>{
     for(const kind of['back','cross','nan']){const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=delta(at,s);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx*.25,p[1]+dy*.25]);const end:[number,number]=kind==='back'?p:kind==='cross'?[p[0]+dx-dy,p[1]+dy+dx]:[NaN,p[1]];event(s.hit,'pointerup',end);expect(s.progress,kind).toEqual([]);s.instance.dispose()}
   })
-  it.each([0, 1, 2])('accepts a continued same-direction release and an eighteen pixel correction at %i', at => {
+  it.each([0, 1])('accepts a continued same-direction release and an eighteen pixel correction at %i', at => {
     for (const factor of [3, .7]) {
       const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
       event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
@@ -204,28 +204,29 @@ describe('Romanian Martisor blossom branch', () => {
       expect(s.progress).toEqual([nextCheckpoint(at)]); s.instance.dispose()
     }
   })
-  it.each([0, 1, 2])('rejects a nonfinite move even when the final release is valid at %i', at => {
+  it.each([0, 1])('rejects a nonfinite move even when the final release is valid at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [NaN, p[1]])
     event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run()
     expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([nextCheckpoint(at)])
   })
   it.each([false, true])('accepts a gentle zigzag path and remains ready after settlement, reduced=%s', reduced => {
-    for (const at of [0, 1, 2]) {
+    for (const at of [0, 1]) {
       const s = mount(at, { isReducedMotion: () => reduced }), p = s.point(targetName(at), anchor(at)), [dx,dy]=delta(at,s)
       event(s.hit, 'pointerdown', p)
       for (const [along, cross] of [[12, 16], [24, -16], [36, 16], [48, -16], [60, 0]]) event(s.hit, 'pointermove', [p[0]+dx*along/60-dy*cross/60,p[1]+dy*along/60+dx*cross/60])
       event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy])
-      s.run(); expect(s.progress).toEqual([nextCheckpoint(at)]); expect(s.button.disabled).toBe(true)
+      s.run(); expect(s.progress).toEqual([nextCheckpoint(at)]); expect(s.button.disabled).toBe(false)
     }
   })
   it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {
     for (const returning of [false, true]) {
       const s = mount(at, { returning, isReducedMotion: () => true }); s.run()
       expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
-      for (let i = at; i < 3; i++) s.button.click()
-      expect(s.progress).toEqual([3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
+      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 2 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
+      if (at < 2) { s.button.click(); s.run() }
+      if (at < 3) s.button.click()
+      expect(s.progress).toEqual(at < 2 ? [2,3] : at === 2 ? [3] : []); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
     }
   })
   it.each([284, 350, 1280])('frames every subject vertex and exposes the first reachable material cue at width %i', width => {
@@ -241,11 +242,11 @@ describe('Romanian Martisor blossom branch', () => {
         const hit = first(s, object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))))
         expect(hit.object?.name, `first reachable material cue ${object.name}`).toBe(object.name); expect(Math.abs(hit.q.x)).toBeLessThan(.97); expect(Math.abs(hit.q.y)).toBeLessThan(.97)
       }
-      if (at < 3) step(s, at); expect(s.progress).toEqual(at < 3 ? [nextCheckpoint(at)] : []); s.instance.dispose()
+      if (at < 2) step(s, at); expect(s.progress).toEqual(at < 2 ? [nextCheckpoint(at)] : []); s.instance.dispose()
     }
   })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or stale position/rotation', kind => {
-    for (const at of [0, 1, 2]) {
+    for (const at of [0, 1]) {
       let active = true; const s = mount(at, { isActive: () => active }), pivot = s.scene.getObjectByName(['martisor-cord','martisor-cord','martisor-cord'][at]!)!, home = pivot.position.clone(), scale = pivot.scale.clone(), rotation = pivot.quaternion.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
       // Sample a nonterminal held pose for each actual stick path.
       const fraction=.5
@@ -260,7 +261,7 @@ describe('Romanian Martisor blossom branch', () => {
     }
   })
   it.each([284, 350, 1280])('keeps all subject vertices in frame during all three hanging paths at width %i', width => {
-    for (const at of [0, 1, 2]) {
+    for (const at of [0, 1]) {
       const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)
       const check = () => {
         s.scene.updateMatrixWorld(true); let extent = 0
@@ -277,26 +278,26 @@ describe('Romanian Martisor blossom branch', () => {
       expect(s.progress).toEqual([nextCheckpoint(at)]); s.instance.dispose()
     }
   })
-  it.each([0, 1, 2])('freezes accepted motion and input while paused at %i', at => {
+  it.each([0, 1])('freezes accepted motion and input while paused at %i', at => {
     let active = true; const s = mount(at, { isActive: () => active }); step(s, at, false); expect(s.button.disabled).toBe(true); expect(s.hit.style.pointerEvents).toBe('none')
     s.button.click(); for (const dt of [NaN, Infinity, -10, 100000]) s.instance.update(dt); expect(s.progress).toEqual([])
     active = false; const pivot = s.scene.getObjectByName(['martisor-cord','martisor-cord','martisor-cord'][at]!)!, pose = pivot.position.clone(), rotation = pivot.quaternion.clone(), frames = rendered.render.mock.calls.length
     s.run(2); expect(rendered.render.mock.calls.length).toBe(frames); expect(pivot.position.distanceTo(pose)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(s.progress).toEqual([])
     active = true; s.run(); expect(s.progress).toEqual([nextCheckpoint(at)])
   })
-  it.each([0, 1, 2])('rejects a target behind another opaque object at %i', at => {
+  it.each([0, 1])('rejects a target behind another opaque object at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
     blocker.position.lerpVectors(s.scene.getObjectByName(targetName(at))!.localToWorld(new THREE.Vector3(...anchor(at))), s.camera.position, .15)
     blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker); s.scene.updateMatrixWorld(true); step(s, at); expect(s.progress).toEqual([])
     blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose(); step(s, at); expect(s.progress).toEqual([nextCheckpoint(at)])
   })
-  it.each([0, 1, 2])('preserves pointer ownership through prepareFeedback input on and outside the hit layer at %i', at => {
+  it.each([0, 1])('preserves pointer ownership through prepareFeedback input on and outside the hit layer at %i', at => {
     for (const outside of [false, true]) for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) {
       let attack = () => {}; const s = mount(at, { isReducedMotion: () => true, prepareFeedback: () => attack() })
       attack = () => event(outside ? document.body : s.hit, type, [1, 1]); step(s, at); expect(s.progress, `${outside} ${type}`).toEqual([nextCheckpoint(at)]); s.instance.dispose()
     }
   })
-  it.each([0, 1, 2])('invalidates prepared pointer and keyboard input on every pause/resume boundary at %i', at => {
+  it.each([0, 1])('invalidates prepared pointer and keyboard input on every pause/resume boundary at %i', at => {
     for (const keyboard of [false, true]) {
       let attack = () => {}, active = true; const s = mount(at, { isReducedMotion: () => true, isActive: () => active, prepareFeedback: () => attack() })
       attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
@@ -307,9 +308,9 @@ describe('Romanian Martisor blossom branch', () => {
   it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('blocks synchronous %s step skipping and update reentry', callback => {
     let attack = () => {}; const seen: number[] = [], s = mount(0, { isReducedMotion: () => true, [callback]: () => attack(), onProgress: n => { seen.push(n); if (callback === 'onProgress') attack() } })
     attack = () => { s.button.click(); step(s, 0); step(s, 1); s.instance.update(100) }
-    s.button.click(); expect(seen).toEqual([3]); s.button.click(); expect(seen).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
+    s.button.click(); expect(seen).toEqual([2]); s.instance.update(.025); s.button.click(); expect(seen).toEqual([2,3]); expect(s.complete).toHaveBeenCalledOnce()
   })
-  it.each([0,1,2])('rejects multitouch with an otherwise valid primary drag at %i', at => {
+  it.each([0,1])('rejects multitouch with an otherwise valid primary drag at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at))
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointerdown', [1, 1], 2); event(s.hit, 'pointermove', [p[0]+delta(at,s)[0], p[1]+delta(at,s)[1]]); event(s.hit, 'pointerup', [p[0]+delta(at,s)[0], p[1]+delta(at,s)[1]]); event(s.hit, 'pointerup', [1, 1], 2)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([nextCheckpoint(at)])
@@ -324,11 +325,11 @@ describe('Romanian Martisor blossom branch', () => {
   it.each(['onProgress', 'haptic'] as const)('invalidates terminal completion after a synchronous %s pause/resume', callback => {
     let active = true, attack = () => {}; const s = mount(2, { isActive: () => active, [callback]: () => attack() })
     attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
-    step(s, 2); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.hidden).toBe(true)
+    s.button.click(); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.hidden).toBe(true)
     if (callback === 'onProgress') expect(s.haptic).not.toHaveBeenCalled()
   })
   it.each([NaN, Infinity, -9])('normalizes invalid restoration %s without reporting progress', initial => {
-    const s = mount(initial, { isReducedMotion: () => true }); s.instance.start(); s.instance.update(NaN); expect(s.progress).toEqual([]); s.button.click(); expect(s.progress).toEqual([3])
+    const s = mount(initial, { isReducedMotion: () => true }); s.instance.start(); s.instance.update(NaN); expect(s.progress).toEqual([]); s.button.click(); expect(s.progress).toEqual([2])
   })
   it('removes all matching pointer callback guards exactly once', () => {
     const added = vi.spyOn(EventTarget.prototype, 'addEventListener'), removed = vi.spyOn(EventTarget.prototype, 'removeEventListener'), windowAdded = vi.spyOn(window, 'addEventListener'), windowRemoved = vi.spyOn(window, 'removeEventListener'), s = mount()
@@ -354,12 +355,12 @@ describe('Romanian Martisor blossom branch', () => {
 
 
 describe('continuous carrying regression', () => {
-  it.each([0,1,2])('carries directly from legacy checkpoint %i to the final physical destination', at => {
+  it.each([0,1])('carries directly from legacy checkpoint %i to the final physical destination', at => {
     const s=mount(at,{isReducedMotion:()=>true}), settled=mount(3,{isReducedMotion:()=>true});
     const source=s.point(targetName(at),anchor(at)), destination=settled.point(targetName(at),anchor(at));
     event(s.hit,'pointerdown',source); event(s.hit,'pointermove',destination); event(s.hit,'pointerup',destination); s.run();
-    expect(s.progress).toEqual([3]);
-    expect(s.complete).toHaveBeenCalledOnce();
+    expect(s.progress).toEqual([2]);
+    expect(s.complete).not.toHaveBeenCalled();
   });
 });
 

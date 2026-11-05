@@ -206,9 +206,9 @@ const continuousPlacements = [
   'brat-bride-cloth', 'korean-sotdae', 'japanese-kadomatsu',
   'pucara-rooftop-bulls', 'chinese-longevity-lock', 'alasita-miniature-house',
   'mochigase-nagashibina', 'shichigosan-chitose-ame', 'lanna-sand-pagoda',
-  'chinese-fu-paper', 'turkish-nazar-bead', 'japanese-hamaya',
-  'chinese-ruyi-scepter', 'romanian-martisor',
+  'chinese-fu-paper', 'japanese-hamaya', 'chinese-ruyi-scepter',
 ]
+const hangingOrnaments = ['turkish-nazar-bead', 'romanian-martisor']
 const carryingBeforeAction = [
   'thai-songkran-elders', 'persian-esfand', 'greek-vasilopita',
   'tibetan-khata-greeting', 'bulgarian-survakane', 'udo-undama',
@@ -216,6 +216,7 @@ const carryingBeforeAction = [
 
 it.each([
   ...continuousPlacements.flatMap(id => [0, 1, 2].map(progress => ({ id, progress, next: 3 }))),
+  ...hangingOrnaments.flatMap(id => [0, 1].map(progress => ({ id, progress, next: 2 }))),
   ...carryingBeforeAction.flatMap(id => [0, 1].map(progress => ({ id, progress, next: 2 }))),
 ])('cancels $id continuous carrying restored at $progress and preserves its completion boundary', async ({ id, progress, next }) => {
   const frame = animationClock()
@@ -294,8 +295,15 @@ it.each([
   if (next === 2) {
     expect(complete, 'carrying alone must not complete pouring, wafting, coin removal, handover, tapping or throwing').not.toHaveBeenCalled()
     expect(action.hidden).toBe(false)
-    const final = currentGesture()
-    pointer(hit, 'pointerdown', final.from); pointer(hit, 'pointermove', final.to); pointer(hit, 'pointerup', final.to)
+    if (hangingOrnaments.includes(id)) {
+      // Hanging is a durable boundary; a fresh explicit finish follows the
+      // next frame, never the tail of the placement gesture.
+      action.click(); expect(checkpoint.mock.calls.map(([value]) => value)).toEqual([2])
+      frame(); action.click()
+    } else {
+      const final = currentGesture()
+      pointer(hit, 'pointerdown', final.from); pointer(hit, 'pointermove', final.to); pointer(hit, 'pointerup', final.to)
+    }
     expect(checkpoint.mock.calls.map(([value]) => value)).toEqual([2, 3])
   }
   expect(complete).toHaveBeenCalledTimes(1)
@@ -304,6 +312,37 @@ it.each([
   pointer(hit, 'pointerup', fresh.to)
   expect(checkpoint.mock.calls.map(([value]) => value)).toEqual(next === 2 ? [2, 3] : [3])
   expect(complete).toHaveBeenCalledTimes(1)
+})
+
+it.each([
+  ['turkish-nazar-bead', 'nazar-charm', [0,-.04,.11], [0,.7955,0], [.37,1.8155,.42]],
+  ['romanian-martisor', 'martisor-cord', [-.085,-.39,.02], [0,.208,0], [.55,1.555,-.05]],
+] as const)('restores %s hung, cancels adjustment through host pause, and finishes explicitly', async (id, name, grip, contact, support) => {
+  const frame=animationClock()
+  vi.spyOn(HTMLCanvasElement.prototype,'clientWidth','get').mockReturnValue(360)
+  vi.spyOn(HTMLCanvasElement.prototype,'clientHeight','get').mockReturnValue(360)
+  vi.spyOn(HTMLCanvasElement.prototype,'getBoundingClientRect').mockReturnValue({left:0,top:0,width:360,height:360} as DOMRect)
+  const host=document.createElement('div'); document.body.append(host)
+  const checkpoint=vi.fn(), complete=vi.fn(), engine=await proceduralEngine(id)
+  host.addEventListener('scene:complete',complete)
+  const ctrl=engine.create(host,{progress:2,sceneId:id,checkpoint,isSoundEnabled:()=>false},{active:true,reducedMotion:true,signal:new AbortController().signal,ready(){},failed(e){throw e}})
+  controllers.push(ctrl)
+  expect(host.querySelector<HTMLElement>('[data-close-inspection]')!.dataset.closeInspection).toBe('done')
+  const actor=rendered.scene!.getObjectByName(name)!, home=actor.quaternion.clone(), hit=host.querySelector<HTMLElement>('.scene-hit-layer')!
+  hit.setPointerCapture=()=>{}; hit.releasePointerCapture=()=>{}
+  const point=()=>{rendered.scene!.updateMatrixWorld(true); const p=actor.localToWorld(new THREE.Vector3(...grip)).project(rendered.camera!); return [(p.x+1)*180,(1-p.y)*180]}
+  const supported=()=>{rendered.scene!.updateMatrixWorld(true); expect(actor.localToWorld(new THREE.Vector3(...contact)).distanceTo(new THREE.Vector3(...support))).toBeLessThan(1e-7)}
+  frame(); expect(checkpoint).not.toHaveBeenCalled(); expect(complete).not.toHaveBeenCalled(); supported()
+  const p=point(); pointer(hit,'pointerdown',p); pointer(hit,'pointermove',[p[0]+24,p[1]+4])
+  expect(actor.quaternion.angleTo(home)).toBeGreaterThan(.02); supported()
+  ctrl.setActive(false); ctrl.setActive(true); pointer(hit,'pointerup',p)
+  expect(actor.quaternion.angleTo(home)).toBeLessThan(1e-7); supported(); expect(checkpoint).not.toHaveBeenCalled()
+  const action=host.querySelector<HTMLButtonElement>('.scene-continuous-finish')!
+  action.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true,cancelable:true}))
+  expect(actor.quaternion.angleTo(home)).toBeGreaterThan(.05); supported(); expect(checkpoint).not.toHaveBeenCalled()
+  action.click(); expect(checkpoint).toHaveBeenCalledExactlyOnceWith(3); expect(complete).toHaveBeenCalledOnce()
+  ctrl.setActive(false); ctrl.setActive(true); action.click(); frame()
+  expect(checkpoint).toHaveBeenCalledExactlyOnceWith(3); expect(complete).toHaveBeenCalledOnce()
 })
 
 it.each([0, 1, 2])('preserves real wagasa opening, optional viewing and folding through adapter pause at %i', async progress => {

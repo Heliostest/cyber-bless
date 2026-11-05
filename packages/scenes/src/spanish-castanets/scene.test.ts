@@ -103,9 +103,9 @@ describe('Cord-linked hollow castanets', () => {
     expect(s.overlay.querySelector('[aria-label="响板步骤"]')).not.toBeNull()
     expect(rendered.metadata).toEqual({id:'spanish-castanets',label:'木壳轻拍'})
   })
-  it.each([false,true])('claps the left, right and both pairs through rigid shell movements, reduced=%s', reduced => {
+  it.each([false,true])('contacts the guided sides and completes only through finish, reduced=%s', reduced => {
     const s=mount(0,{isReducedMotion:()=>reduced})
-    for(let i=0;i<3;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); expect(s.progress).toEqual([1,2,3].slice(0,i+1))}
+    for(let i=0;i<3;i++){step(s,i,false); expect(s.progress).toEqual([1,2,3].slice(0,i+1)); s.run()}
     s.button.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
   })
   it('uses identical final subject transforms for ordinary, reduced motion and silently restored checkpoints', () => {
@@ -128,29 +128,13 @@ describe('Cord-linked hollow castanets', () => {
     const s = mount(); expect(s.hit).not.toBeNull(); expect(s.button.type).toBe('button')
     expect(s.button.style.minWidth).toBe('44px'); expect(s.button.style.minHeight).toBe('44px'); expect(s.overlay.querySelector('input,form')).toBeNull()
     expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-    s.button.click(); expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([1])
-  })
-  it('plays a quiet optional acceptance tone only after settlement and closes audio once', () => {
-    const frequencies: number[] = [], peaks: number[] = []; let closed = 0, soundEnabled = false
-    class AudioBoundary {
-      state = 'running'; currentTime = 0; destination = {}
-      close() { closed++; return Promise.resolve() }
-      createGain() { return { gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime(n: number) { if (n > .0001) peaks.push(n) } }, connect(next: unknown) { return next } } }
-      createOscillator() { return { type: 'sine', frequency: { setValueAtTime(n: number) { frequencies.push(n) } }, connect(g: { connect(next: unknown): unknown }) { return g }, start() {}, stop() {} } }
-    }
-    vi.stubGlobal('AudioContext', AudioBoundary)
-    const s = mount(0, { isSoundEnabled: () => soundEnabled })
-    expect(frequencies).toEqual([]); step(s, 0); expect(frequencies).toEqual([])
-    soundEnabled = true; step(s, 1, false); expect(frequencies).toEqual([]); s.run(); expect(frequencies).toEqual([392])
-    const returning = mount(2, { returning: true, isSoundEnabled: () => true }); returning.run(); expect(frequencies).toEqual([392])
-    step(s, 2); expect(frequencies).toEqual([392, 440]); expect(peaks).toEqual([.003, .003])
-    s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
+    s.button.click(); expect(s.progress).toEqual([1]); s.run(); expect(s.progress).toEqual([1])
   })
   it.each([0, 1, 2])('rejects wrong surfaces, orphan release, reverse, short, cross-axis and deliberately withdrawn gestures at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at), end: [number, number] = [p[0] + dx, p[1] + dy]
     event(s.hit, 'pointerdown', [1, 1]); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end)
     event(s.hit, 'pointerup', end)
-    for (const [x, y] of [[dx / 8, dy / 8], [-dx, -dy], [-dy, dx], [-dx * 3, -dy * 3]]) drag(s, at, x, y)
+    for (const [x, y] of [[dx / 3, dy / 3], [-dx, -dy], [-dy, dx], [-dx * 3, -dy * 3]]) drag(s, at, x, y)
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', [p[0] + dx * .4, p[1] + dy * .4]); event(s.hit, 'pointerup', [p[0] + dx * .4, p[1] + dy * .4])
     event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointermove', p); event(s.hit, 'pointerup', p)
     expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at + 1])
@@ -191,7 +175,7 @@ describe('Cord-linked hollow castanets', () => {
     for (const returning of [false, true]) {
       const s = mount(at, { returning, isReducedMotion: () => true }); s.run()
       expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
+      expect(cues(s).map(x => x.cue.kind)).toEqual(at === 2 ? ['tap','tap'] : at < 2 ? ['tap'] : []); expect(s.button.hidden).toBe(at === 3)
       for (let i = at; i < 3; i++) { if (i === 2) finish(s).click(); else s.button.click() }
       expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
     }
@@ -243,12 +227,14 @@ describe('Cord-linked hollow castanets', () => {
       expect(s.progress).toEqual(at < 2 ? [at + 1] : []); if (at === 2) { finish(s).click(); s.run(); expect(s.progress).toEqual([3]) }; s.instance.dispose()
     }
   })
-  it.each([0, 1, 2])('freezes accepted motion and input while paused at %i', at => {
-    let active = true; const s = mount(at, { isActive: () => active }); step(s, at, false); expect(s.button.disabled).toBe(true); expect(s.hit.style.pointerEvents).toBe('none')
-    s.button.click(); for (const dt of [NaN, Infinity, -10, 100000]) s.instance.update(dt); expect(s.progress).toEqual([])
-    active = false; const pivot = s.scene.getObjectByName(at===1?'cast-pivot-1':'cast-pivot-0')!, pose = pivot.position.clone(), rotation = pivot.quaternion.clone(), frames = rendered.render.mock.calls.length
-    s.run(2); expect(rendered.render.mock.calls.length).toBe(frames); expect(pivot.position.distanceTo(pose)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(s.progress).toEqual([])
-    active = true; s.run(); expect(s.progress).toEqual([at + 1])
+  it.each([0, 1, 2])('stops input and returns springs to their rest pose while paused at %i', at => {
+    let active = true; const s = mount(at, { isActive: () => active }); step(s, at, false)
+    expect(s.progress).toEqual([at+1]); expect(s.button.disabled).toBe(at===2)
+    active = false; s.instance.update(.025); const frames = rendered.render.mock.calls.length
+    s.button.click(); for (const dt of [NaN, Infinity, -10, 100000]) s.instance.update(dt)
+    expect(rendered.render.mock.calls.length).toBe(frames); expect(s.progress).toEqual([at+1])
+    for(const k of [0,1])expect(s.scene.getObjectByName('cast-pivot-'+k)!.rotation.x).toBe(-.55)
+    active = true; s.run(); expect(s.progress).toEqual([at+1])
   })
   it.each([0, 1])('rejects a target behind another opaque object at %i', at => {
     const s = mount(at, { isReducedMotion: () => true }), blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))

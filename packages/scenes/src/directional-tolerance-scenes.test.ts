@@ -26,6 +26,9 @@ vi.mock('@wbr/scene-runtime/debug-render-style', () => ({
 }))
 
 // Literal directions reviewed against the existing action copy, independent of the cue/axes implementation.
+// Free play is covered by paper-pinwheel/scene.test.ts,
+// romanian-martisor/scene.test.ts and spanish-castanets/handling-flow.test.ts.
+// Their pickup/placement and repeatable input no longer form three directional actions.
 const SCENES = [
   ['balinese-canang-sari', 'RUL'], ['bonfim-ribbon', 'RLR'], ['bulgarian-survakane', 'URU'],
   ['chinese-rattle-drum', 'RLD'], ['chinese-steelyard', 'RUD'], ['chinese-tangram', 'LUR'],
@@ -37,10 +40,10 @@ const SCENES = [
   ['japanese-daruma-otoshi', 'DRU'], ['japanese-shishi-odoshi', 'LDD'], ['japanese-wagasa', 'UDD'],
   ['kagami-biraki-sake', 'UDL'], ['kagami-mochi-offering', 'UUU'], ['kameido-usokae', 'ULD'],
   ['lam-tsuen-wishing-tree', 'RRU'], ['mexican-metate', 'DUU'], ['mexican-tortilla-press', 'DDU'],
-  ['mochigase-nagashibina', 'URD'], ['mongolian-ovoo', 'LLL'], ['paper-pinwheel', 'RUR'],
+  ['mochigase-nagashibina', 'URD'], ['mongolian-ovoo', 'LLL'],
   ['persian-esfand', 'URD'], ['polish-oplatek-sharing', 'URU'], ['puerto-rican-guiro', 'DUD'],
-  ['romanian-martisor', 'URD'], ['rosh-hashanah-apple-honey', 'RDL'], ['scottish-plunge-churn', 'DUU'],
-  ['setsubun-mamemaki', 'RUD'], ['shichigosan-chitose-ame', 'URD'], ['spanish-castanets', 'DDD'],
+  ['rosh-hashanah-apple-honey', 'RDL'], ['scottish-plunge-churn', 'DUU'],
+  ['setsubun-mamemaki', 'RUD'], ['shichigosan-chitose-ame', 'URD'],
   ['sternsinger-house-blessing', 'URD'], ['sumiyoshi-godairiki', 'RRR'], ['tamagushi-offering', 'RRU'],
   ['thai-songkran-elders', 'URD'], ['tibetan-khata-greeting', 'URR'], ['tibetan-prayer-flags', 'URU'],
   ['tibetan-water-bowls', 'URRRRRRRD'], ['udo-undama', 'URU'], ['valencian-folding-fan', 'RLL'],
@@ -48,7 +51,7 @@ const SCENES = [
 ] as const
 const DIRECTIONS: Record<string, [number, number]> = { R: [1, 0], L: [-1, 0], U: [0, -1], D: [0, 1] }
 const practiceThree = new Set(['finnish-kantele', 'irish-bodhran', 'chinese-rattle-drum'])
-const repeatable = new Set([...practiceThree, 'czech-wooden-ratchet', 'estonian-village-swing', 'german-jumping-jack', 'puerto-rican-guiro', 'spanish-castanets'])
+const repeatable = new Set([...practiceThree, 'czech-wooden-ratchet', 'estonian-village-swing', 'german-jumping-jack', 'puerto-rican-guiro'])
 // Current action boundaries from the continuous-placement A/B/C reviews and
 // scene READMEs. Legacy 0/1/2 saves remain valid, but are not three new actions.
 const continuousCheckpoints: Record<string, readonly number[]> = {
@@ -61,7 +64,6 @@ const continuousCheckpoints: Record<string, readonly number[]> = {
   'kameido-usokae': [1, 3, 3], // Return the old bird before receiving and placing the new one.
   'mochigase-nagashibina': [3, 3, 3],
   'persian-esfand': [2, 2, 3], // Place the pan before waving the cloth.
-  'romanian-martisor': [3, 3, 3],
   'shichigosan-chitose-ame': [3, 3, 3],
   'thai-songkran-elders': [2, 2, 3], // Carry the water bowl before pouring.
   'tibetan-khata-greeting': [2, 2, 3], // Carry the scarf before the handover.

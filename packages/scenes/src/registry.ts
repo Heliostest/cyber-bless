@@ -219,7 +219,7 @@ export const sceneRegistry: SceneMeta[] = [
     traditionSlug: "furin-wind-chime",
     grade: 'C',
     sensitivity: '低',
-    gestures: ['tilt'],
+    gestures: ['drag', 'tilt'],
   },
   {
     id: 'crane',

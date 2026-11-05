@@ -551,5 +551,6 @@
   "app.sceneVisual.maple": "紅葉型",
   "app.sceneVisual.bamboo": "笹・竹の枝葉",
   "app.sceneVisual.bodhi": "菩提樹の主題",
-  "app.sceneVisual.wish-tree": "願いの木の主題"
+  "app.sceneVisual.wish-tree": "願いの木の主題",
+  "app.scene.restart": "最初から体験"
 }

@@ -47,10 +47,10 @@ function mount(initialProgress = 0) {
   return { instance, overlay, layer, charm, progress, complete, source, goal, event, run }
 }
 describe('one continuous nazar pickup and hang', () => {
-  it.each([0,1,2])('goes directly from old checkpoint %i to the final support without intermediate stops', at => {
+  it.each([0,1])('goes directly from old checkpoint %i to the final support without intermediate stops', at => {
     const s=mount(at), from=s.source(), to=s.goal(); s.event('pointerdown',from)
     s.event('pointermove',[from[0]+20,from[1]-30]); s.event('pointermove',to); s.event('pointerup',to); s.run()
-    expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
+    expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled()
     expect(s.charm.position.toArray()).toEqual([.37,1.02,.42])
   })
   it('keeps an off-target released object available for re-grabbing, without saving', () => {
@@ -59,7 +59,7 @@ describe('one continuous nazar pickup and hang', () => {
     s.event('pointerup',[from[0],from[1]-45]); s.run()
     expect(s.charm.position.distanceTo(lifted)).toBeLessThan(1e-8); expect(s.progress).toEqual([])
     const next=s.source(), goal=s.goal(); s.event('pointerdown',next); s.event('pointermove',goal); s.event('pointerup',goal); s.run()
-    expect(s.progress).toEqual([3])
+    expect(s.progress).toEqual([2])
   })
   it('allows inspection in both directions without counting a rotation as progress', () => {
     const s=mount(), from=s.source(); s.event('pointerdown',from)
@@ -71,6 +71,6 @@ describe('one continuous nazar pickup and hang', () => {
   })
   it('offers one auxiliary placement instead of requiring three button activations', () => {
     const s=mount(); s.overlay.querySelector<HTMLButtonElement>('.scene-bow-tap')!.click(); s.run()
-    expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
+    expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled()
   })
 })

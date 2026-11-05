@@ -68,6 +68,8 @@ const SCRIPTS: Script[] = [
 ]
 
 async function mount(id: string, initialProgress = 0, extra: Partial<SceneContext> = {}) {
+  // The original strike/listen regression matrix begins after the new prelude.
+  const offset = id === 'furin-wind-chime' ? 2 : 0
   const mod = await loadScene(id)
   const canvas = document.createElement('canvas')
   const overlay = document.createElement('div')
@@ -80,8 +82,8 @@ async function mount(id: string, initialProgress = 0, extra: Partial<SceneContex
     gestures: Gestures,
     shared: Shared,
     sceneId: id,
-    initialProgress,
-    onProgress: (n) => progress.push(n),
+    initialProgress: initialProgress + offset,
+    onProgress: (n) => progress.push(n - offset),
     haptic,
     isSoundEnabled: () => false,
     ...extra,

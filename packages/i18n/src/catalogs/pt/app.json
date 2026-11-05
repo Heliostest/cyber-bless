@@ -551,5 +551,6 @@
   "app.sceneVisual.maple": "Forma de bordo de outono",
   "app.sceneVisual.bamboo": "Folhagem de bambu",
   "app.sceneVisual.bodhi": "Árvore bodhi em destaque",
-  "app.sceneVisual.wish-tree": "Árvore de desejos em destaque"
+  "app.sceneVisual.wish-tree": "Árvore de desejos em destaque",
+  "app.scene.restart": "Começar de novo"
 }

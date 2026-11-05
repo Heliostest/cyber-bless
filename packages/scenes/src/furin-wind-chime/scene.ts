@@ -1,4 +1,5 @@
 import { createFurinPaintedFlowers } from './painted-flowers'
+import { createFurinHandling } from './handling'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -51,6 +52,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   let disposed = false
   let started = false
   let restoring = true
+  let preparingFeedback = false
   let ringElapsed = 0
   // Damped pendulum state for the bell (radians, rad/s).
   let swing = 0
@@ -66,6 +68,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   let tiltHandle: GestureHandle | null = null
   let resizeObserver: ResizeObserver | null = null
   let objectPointer: ReturnType<typeof createObjectPointer> | null = null
+  let handling: ReturnType<typeof createFurinHandling> | undefined
   const fx = createSceneFeedback(ctx)
 
   const ui = createStepOverlay(
@@ -81,9 +84,12 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     duration: 3, motion: 'sway', targets: () => [pivot], cancelInput: () => { objectPointer?.cancel() }, complete: () => completeScene(),
   })
   const syncOverlayForStep = () => {
+    if (handling && !handling.isHung()) { handling.sync(); return }
+    ui.actionBtn.disabled = false
+    ui.actionBtn.setAttribute('aria-disabled', 'false')
     ui.renderDots(
-      step === 'done' ? STEP_ORDER.length : STEP_ORDER.indexOf(step),
-      STEP_ORDER.length,
+      step === 'done' ? 5 : STEP_ORDER.indexOf(step) + 2,
+      5,
     )
     actionBtn.hidden = step === 'ring' || step === 'done'
     hitLayer.style.pointerEvents = step === 'idle' || step === 'listen' ? 'auto' : 'none'
@@ -254,6 +260,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   const pointerNdc = new THREE.Vector2()
 
   const resize = () => {
+    handling?.cancel()
     const parentEl = canvas.parentElement
     const w = canvas.clientWidth || parentEl?.clientWidth || 1
     const h = canvas.clientHeight || parentEl?.clientHeight || 1
@@ -263,9 +270,15 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     const portraitBoost = camera.aspect < 0.8 ? (0.8 - camera.aspect) * 2.5 : 0
     cameraHome.z = 3.4 + portraitBoost
     camera.updateProjectionMatrix()
+    camera.position.copy(cameraHome); camera.lookAt(cameraLookAt)
   }
 
   const bellHitTest = (clientX: number, clientY: number) => {
+    // Include the small suspension loop while lifting, with room for a fingertip.
+    const lifting = !handling?.isHung()
+    tapZone.scale.y = lifting ? 1.2 : 1
+    tapZone.position.copy(pivot.position).add(new THREE.Vector3(0, lifting ? -.65 : -.8, 0))
+    tapZone.updateMatrixWorld(true); camera.updateMatrixWorld(true)
     const rect = canvas.getBoundingClientRect()
     pointerNdc.x = ((clientX - rect.left) / Math.max(rect.width, 1)) * 2 - 1
     pointerNdc.y = -((clientY - rect.top) / Math.max(rect.height, 1)) * 2 + 1
@@ -288,7 +301,13 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     swingVel += (reduced ? 0.4 : 2.6) * strength
   }
 
-  const canAct = () => restoring || !ctx.isActive || ctx.isActive()
+  const canAct = () => !disposed && !preparingFeedback && (restoring || !ctx.isActive || ctx.isActive())
+  const prepareInput = () => {
+    if (!started || !canAct()) return false
+    preparingFeedback = true
+    try { fx.prepare() } finally { preparingFeedback = false }
+    return started && canAct()
+  }
   const resetPreview = () => {
     previewElapsed = PREVIEW_SECONDS
     previewSwing = 0
@@ -313,7 +332,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     glint.intensity = energy * 1.2
     bellMat.emissiveIntensity = 0.04 + energy * 0.16
   }
-  const canCue = () => started && !disposed && !restoring && canAct() && step === 'idle'
+  const canCue = () => !!handling?.isHung() && started && !disposed && !restoring && canAct() && step === 'idle'
   const removeCues = [
     addInteractionCue(bell, { kind: 'tap', label: '点按铃身', enabled: canCue, priority: 2 }),
     addInteractionCue(ribbonSegments[1], {
@@ -323,7 +342,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     }),
     addInteractionCue(bell, {
       kind: 'tap', label: '点按铃身结束聆听',
-      enabled: () => started && !disposed && !restoring && canAct() && step === 'listen',
+      enabled: () => !!handling?.isHung() && started && !disposed && !restoring && canAct() && step === 'listen',
     }),
   ]
 
@@ -332,7 +351,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     if (!canAct() || step === 'done') return
     step = 'done'
     tiltHandle?.setEnabled(false)
-    if (!restoring) { ctx.onProgress?.(3); if (disposed || !(canAct())) return }
+    if (!restoring) { ctx.onProgress?.(5); if (disposed || !(canAct())) return }
     syncOverlayForStep()
     if (!restoring) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
@@ -340,12 +359,13 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   const goListen = () => {
     if (!canAct() || step !== 'ring') return
     step = 'listen'
-    if (!restoring) ctx.onProgress?.(2)
+    if (!restoring) ctx.onProgress?.(4)
+    if (!canAct()) return
     syncOverlayForStep()
   }
 
   const goRing = () => {
-    if (!canAct() || step !== 'idle') return
+    if (!canAct() || !handling?.isHung() || step !== 'idle') return
     step = 'ring'
     ringElapsed = 0
     dragSwing = 0
@@ -353,15 +373,17 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     if (!restoring) {
       strike(1)
       ping()
-      ctx.onProgress?.(1)
+      if (!canAct()) return
+      ctx.onProgress?.(3)
+      if (!canAct()) return
     }
     syncOverlayForStep()
     if (!restoring && (ctx.isReducedMotion?.() ?? false)) goListen()
   }
 
-  const onActionTap = () => {
-    if (disposed || objectPointer?.isBusy()) return
-    fx.prepare()
+  const onActionTap = (event: MouseEvent) => {
+    if (event.detail > 1 || disposed || !handling?.isHung() || objectPointer?.isBusy()) return
+    if (!prepareInput()) return
     if (step === 'idle') goRing()
     else if (step === 'listen') completeScene()
   }
@@ -372,7 +394,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   const onHitDown = (x: number, y: number) => {
     gestureOwned = true
     tiltHandle?.setEnabled(step === 'idle')
-    fx.prepare()
+    if (!prepareInput()) { objectPointer?.cancel(); return }
     downX = x
     downY = y
   }
@@ -393,7 +415,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   const wireGestures = () => {
     // Swings start on the bell; elsewhere a vertical swipe scrolls the page.
     objectPointer = createObjectPointer(hitLayer, {
-      isActive: () => started && !disposed && !restoring && canAct(),
+      isActive: () => !!handling?.isHung() && started && !disposed && !restoring && canAct(),
       canStart: (x, y) => (step === 'idle' || step === 'listen') && bellHitTest(x, y),
       onStart: onHitDown,
       onRelease: onHitUp,
@@ -421,12 +443,20 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     actionBtn.addEventListener('click', onActionTap)
   }
 
+  handling = createFurinHandling({ canvas, scene, camera, actor: pivot, world, ui,
+    isActive: () => started && !disposed && !restoring && canAct(),
+    isReducedMotion: () => !!ctx.isReducedMotion?.(), hit: bellHitTest,
+    prepare: prepareInput,
+    safe: assertSafeCopy, changed: syncOverlayForStep, progress: n => ctx.onProgress?.(n),
+  })
   syncOverlayForStep()
 
   return {
     start() {
       if (disposed || started) return
       started = true
+      const initial = Number.isFinite(ctx.initialProgress) ? THREE.MathUtils.clamp(Math.floor(ctx.initialProgress!), 0, 5) : 0
+      handling!.start(initial)
       resize()
       if (typeof ResizeObserver !== 'undefined') {
         resizeObserver = new ResizeObserver(() => {
@@ -435,9 +465,9 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
         resizeObserver.observe(canvas)
       }
       wireGestures()
-      if ((ctx.initialProgress ?? 0) >= 1) goRing()
-      if ((ctx.initialProgress ?? 0) >= 2) goListen()
-      if ((ctx.initialProgress ?? 0) >= 3) completeScene()
+      if (initial >= 3) goRing()
+      if (initial >= 4) goListen()
+      if (initial >= 5) completeScene()
       restoring = false
       syncOverlayForStep()
     },
@@ -454,6 +484,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     },
     update(dt: number) {
       if (disposed || !started) return
+      handling!.update(dt)
       if (!canAct()) objectPointer?.cancel()
       tiltHandle?.setEnabled(canAct() && gestureOwned && step === 'idle')
       for (const h of handles) h.update(dt)
@@ -466,7 +497,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
       }
 
       // Pendulum: breeze sway + damped impulse from strikes.
-      const breeze = reduced
+      const breeze = reduced || !handling!.isHung()
         ? 0
         : Math.sin(t * 0.9) * (step === 'listen' || step === 'done' ? 0.05 : 0.025)
       const stiffness = 14
@@ -493,12 +524,12 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
       // The bell carries the cord; its clapper and segmented ribbon lag.
       posePendulum(reduced, t)
 
-      camera.position.set(
+      if (!handling!.isInspecting()) camera.position.set(
         cameraHome.x + Math.sin(t * 0.12) * 0.08,
         cameraHome.y,
         cameraHome.z,
       )
-      camera.lookAt(cameraLookAt)
+      if (!handling!.isInspecting()) camera.lookAt(cameraLookAt)
 
       ending.update(dt)
       if (disposed || !(canAct())) return
@@ -508,6 +539,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
       if (disposed) return
       ending.dispose()
       disposed = true
+      handling?.dispose()
       resetPreview()
       resizeObserver?.disconnect()
       resizeObserver = null

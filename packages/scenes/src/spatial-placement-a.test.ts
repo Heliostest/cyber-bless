@@ -102,9 +102,9 @@ const placementContracts: Record<string, PlacementContract> = {
   kadomatsu: { checkpoints: [3, 3, 3], placementSlots: [2, 2, 2], model: createKadomatsuModel },
   kumade: { checkpoints: [1, 2, 3], placementSlots: [0, 1, 2], model: createJapaneseKumadeModel },
   pucara: { checkpoints: [3, 3, 3], placementSlots: [2, 2, 2], model: createPucaraModel },
-  martisor: { checkpoints: [3, 3, 3], placementSlots: [2, 2, 2], model: createMartisorModel },
+  martisor: { checkpoints: [2, 2], placementSlots: [2, 2], model: createMartisorModel },
   chitose: { checkpoints: [3, 3, 3], placementSlots: [2, 2, 2], model: createChitoseAmeModel },
-  nazar: { checkpoints: [3, 3, 3], placementSlots: [2, 2, 2], model: createTurkishNazarBeadModel },
+  nazar: { checkpoints: [2, 2], placementSlots: [2, 2], model: createTurkishNazarBeadModel },
   pomegranate: { checkpoints: [2, 2, 3], placementSlots: [1, 1, 2], model: createPomegranateModel },
   esfand: { checkpoints: [2, 2, 3], placementSlots: [1, 1, 2], model: createEsfandModel },
   coal: { checkpoints: [3, 3, 3], placementSlots: [2, 2, 2], model: createFirstFootingModel, destinationOffset: [0, .38, 0] },
@@ -171,7 +171,8 @@ function arrive(s: ReturnType<typeof mount>, label: string, at: number, sparse =
 }
 
 describe.each(cases)('%s spatial placement', (_label, create) => {
-  it.each([0, 1, 2])('follows the held object and accepts destination without releasing, step %i', at => {
+  const steps = _label === 'nazar' || _label === 'martisor' ? [0,1] : [0,1,2]
+  it.each(steps)('follows the held object and accepts destination without releasing, step %i', at => {
     for (const width of [320, 390, 1280]) {
       const s = mount(create, at, width), a = s.source(), b = s.goal()
       expect(s.cue.direction).toBeUndefined()
@@ -186,6 +187,11 @@ describe.each(cases)('%s spatial placement', (_label, create) => {
       pointer(s.hit, 'pointermove', [b[0] + 60, b[1] + 60]); s.overlay.querySelector<HTMLButtonElement>('button')?.click()
       expect(s.progress).toEqual([checkpointAfter(_label, at)])
       pointer(s.hit, 'pointerup', b); expect(s.progress).toEqual([checkpointAfter(_label, at)])
+      if (_label === 'nazar' || _label === 'martisor') {
+        s.instance.update(.025)
+        s.overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!.click()
+        expect(s.progress).toEqual([2,3]); expect(s.complete).toHaveBeenCalledOnce()
+      }
       s.instance.dispose()
     }
   })
@@ -194,7 +200,7 @@ describe.each(cases)('%s spatial placement', (_label, create) => {
     pointer(s.hit, 'pointerdown', a); pointer(s.hit, 'pointermove', [a[0] + 10, a[1] + 65]); pointer(s.hit, 'pointercancel', a)
     expect(s.progress).toEqual([]); expect(s.source()[0]).toBeCloseTo(a[0], 5); expect(s.source()[1]).toBeCloseTo(a[1], 5)
   })
-  it.each([0,1,2])('keeps the held pose when ordinary settlement starts and resumes once after pause at %i', at => {
+  it.each(steps)('keeps the held pose when ordinary settlement starts and resumes once after pause at %i', at => {
     let active=true
     const s=mount(create,at,390,{isReducedMotion:()=>false,isActive:()=>active}),a=s.source(),b=s.goal()
     pointer(s.hit,'pointerdown',a);pointer(s.hit,'pointermove',b)
@@ -239,7 +245,7 @@ describe.each(carriedCases)('%s existing carried object', (_label, create, steps
 })
 
 const terminalCases = [
-  ...cases.map(([label,create]) => [label,create,[0,1,2]] as const),
+  ...cases.map(([label,create]) => [label,create,label === 'nazar' || label === 'martisor' ? [0,1] : [0,1,2]] as const),
   ...carriedCases,
 ]
 describe.each(terminalCases)('%s terminal placement coordinates', (label,create,steps) => {

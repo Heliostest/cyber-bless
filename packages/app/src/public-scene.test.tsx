@@ -67,7 +67,7 @@ describe('public interactive scene page', () => {
     const ui = renderUI(createElement(PublicScenePage, { url: base })); await settle();
     act(() => scene.mounts[0].context.checkpoint?.(3)); await settle();
     expect(ui.host.textContent).toContain('已完成');
-    clickOn(button(ui.host, '重新体验')); await settle();
+    clickOn(button(ui.host, '从头体验')); await settle();
     expect(scene.mounts).toHaveLength(2);
     expect(ui.host.querySelector('.public-scene-completed')).toBeNull();
     expect(scene.dispose).toHaveBeenCalledTimes(1);

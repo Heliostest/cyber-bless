@@ -12,6 +12,7 @@ import { assetUrl, fontStyles } from './assets';
 import { ProceduralScene } from './scene-experience';
 import { sceneSteps } from './scene-placement';
 import { Woodfish } from './woodfish';
+import { SceneRestartButton } from './scene-restart';
 
 type ShareRequest = NonNullable<ReturnType<typeof parseSceneShareUrl>>;
 const noop = () => {};
@@ -185,7 +186,7 @@ function PublicSceneVisit({ request }: { request: ShareRequest }) {
       </main>
       <footer className="public-scene-controls">
         <button type="button" className="button secondary" aria-pressed={sound} onClick={toggleSound} disabled={!active}>{sound ? tr('关闭声音') : tr('开启声音')}</button>
-        <button type="button" className="button outline" onClick={restart}>{tr('重新体验')}</button>
+        <SceneRestartButton onRestart={restart} disabled={!active}/>
       </footer>
     </div>
   </Context.Provider>;

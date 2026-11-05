@@ -6,7 +6,7 @@ import { createStepOverlay } from './procedural-kit'
 
 const cleanups: (() => void)[] = []
 afterEach(() => { cleanups.splice(0).forEach(cleanup => cleanup()); document.body.replaceChildren() })
-function mount(width = 390, height = 408, reduced = false) {
+function mount(width = 390, height = 408, reduced = false, autoReturn?: boolean) {
   const canvas = document.createElement('canvas'), overlay = document.createElement('div')
   canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width, height }) as DOMRect
   document.body.append(canvas, overlay)
@@ -26,7 +26,7 @@ function mount(width = 390, height = 408, reduced = false) {
   let active = true, inspection: ReturnType<typeof createCloseInspection>
   const prepare = vi.fn(() => true), originalPlace = vi.fn()
   const sync = () => { ui.actionBtn.hidden = false; ui.actionBtn.disabled = !active; inspection.decorate(false) }
-  inspection = createCloseInspection({ canvas, scene, camera, actor, ui, isActive: () => active, isReducedMotion: () => reduced, prepare, safe: () => {}, changed: sync })
+  inspection = createCloseInspection({ canvas, scene, camera, actor, ui, autoReturn, isActive: () => active, isReducedMotion: () => reduced, prepare, safe: () => {}, changed: sync })
   ui.actionBtn.addEventListener('click', originalPlace)
   cleanups.push(() => { inspection.dispose(); solid.geometry.dispose(); detail.geometry.dispose(); furniture.geometry.dispose() })
   sync()
@@ -37,7 +37,7 @@ function mount(width = 390, height = 408, reduced = false) {
 }
 
 describe('close object inspection', () => {
-  it('requires an actual pickup before placement, then returns after one automatic full orbit', () => {
+  it('requires pickup and explicit continue, leaving time to look after the automatic full orbit', () => {
     const s = mount()
     expect(s.inspection.canPlace()).toBe(false)
     s.ui.actionBtn.click(); expect(s.originalPlace).not.toHaveBeenCalled(); s.run(.7)
@@ -48,13 +48,24 @@ describe('close object inspection', () => {
     expect(s.camera.position.distanceTo(p)).toBeGreaterThan(1)
     expect(s.actor.quaternion.angleTo(s.initial.rotation)).toBeLessThan(1e-7)
     expect(s.detail.position.distanceTo(s.initial.detail)).toBeLessThan(1e-7)
-    s.run(3.7)
+    s.run(9)
+    expect(s.inspection.canPlace()).toBe(false)
+    expect(s.ui.hitLayer.parentElement?.getAttribute('data-close-inspection')).toBe('viewing')
+    expect(s.furniture.visible).toBe(false)
+    s.ui.actionBtn.click(); s.run(.6)
     expect(s.inspection.canPlace()).toBe(true)
     expect(s.camera.position.distanceTo(s.initial.camera)).toBeLessThan(1e-7)
     expect(s.camera.quaternion.angleTo(s.initial.quaternion)).toBeLessThan(1e-7)
     expect(s.actor.position.distanceTo(s.initial.actor)).toBeLessThan(1e-7)
     expect(s.furniture.visible).toBe(true); expect(s.hidden.visible).toBe(false)
     expect(s.originalPlace).not.toHaveBeenCalled(); s.ui.actionBtn.click(); expect(s.originalPlace).toHaveBeenCalledOnce()
+  })
+  it('supports an explicitly opted-in automatic return without placing on the same action', () => {
+    const s = mount(390, 408, false, true)
+    s.ui.actionBtn.click(); s.run(8)
+    expect(s.inspection.canPlace()).toBe(true)
+    expect(s.originalPlace).not.toHaveBeenCalled()
+    expect(s.actor.position.distanceTo(s.initial.actor)).toBeLessThan(1e-7)
   })
   it.each([[284, 408], [390, 408], [1280, 600]])('keeps the complete actor inside the close frame throughout an orbit at %i x %i', (w,h) => {
     const s = mount(w,h); s.ui.actionBtn.click(); s.run(.7)
@@ -147,6 +158,17 @@ describe('close object inspection', () => {
     expect(s.originalPlace).not.toHaveBeenCalled()
     s.ui.actionBtn.dispatchEvent(new MouseEvent('click',{detail:1,bubbles:true}))
     expect(s.originalPlace).toHaveBeenCalledOnce()
+  })
+  it('does not let the native pickup double-click tail skip reduced-motion viewing', () => {
+    const s = mount(390,408,true)
+    s.ui.actionBtn.dispatchEvent(new MouseEvent('click',{detail:1,bubbles:true}))
+    s.ui.actionBtn.dispatchEvent(new MouseEvent('click',{detail:2,bubbles:true}))
+    s.run(.05)
+    expect(s.ui.hitLayer.parentElement?.getAttribute('data-close-inspection')).toBe('viewing')
+    expect(s.inspection.canPlace()).toBe(false)
+    expect(s.originalPlace).not.toHaveBeenCalled()
+    s.ui.actionBtn.dispatchEvent(new MouseEvent('click',{detail:1,bubbles:true})); s.run(.05)
+    expect(s.inspection.canPlace()).toBe(true)
   })
   it('shows an explicit continue action while manual inspection is open', () => {
     const s = mount(); s.ui.actionBtn.click(); s.run(.7)

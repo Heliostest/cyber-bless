@@ -8,7 +8,7 @@ export const meta: SceneMeta = {
   traditionSlug: "furin-wind-chime",
   grade: 'C',
   sensitivity: '低',
-  gestures: ['tilt'],
+  gestures: ['drag', 'tilt'],
 }
 
 export function create(ctx: SceneContext) {

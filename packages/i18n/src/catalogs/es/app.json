@@ -551,5 +551,6 @@
   "app.sceneVisual.maple": "Forma de arce otoñal",
   "app.sceneVisual.bamboo": "Hojas de bambú",
   "app.sceneVisual.bodhi": "Árbol bodhi protagonista",
-  "app.sceneVisual.wish-tree": "Árbol de deseos protagonista"
+  "app.sceneVisual.wish-tree": "Árbol de deseos protagonista",
+  "app.scene.restart": "Volver a empezar"
 }

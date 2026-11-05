@@ -551,5 +551,6 @@
   "app.sceneVisual.maple": "Forme d’érable d’automne",
   "app.sceneVisual.bamboo": "Feuillage de bambou",
   "app.sceneVisual.bodhi": "Bodhi au premier plan",
-  "app.sceneVisual.wish-tree": "Arbre à souhaits au premier plan"
+  "app.sceneVisual.wish-tree": "Arbre à souhaits au premier plan",
+  "app.scene.restart": "Recommencer"
 }

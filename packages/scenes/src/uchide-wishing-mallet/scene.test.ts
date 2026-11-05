@@ -1,282 +1,230 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
-import * as Gestures from '@wbr/gestures'
-import * as Shared from '@wbr/shared'
+import * as gestures from '@wbr/gestures'
+import * as shared from '@wbr/shared'
 import type { SceneContext, SceneInstance } from '../contract'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
-import * as mod from './index'
-
-
-// Keep real Three geometry, intersections and cues; replace only GPU work.
-const rendered = vi.hoisted(() => ({ scene: null as unknown, camera: null as unknown, renderer: null as unknown, render: vi.fn(), metadata: null as null | {id:string;label:string} }))
+const drawn = vi.hoisted(() => ({ scene: null as THREE.Scene | null, camera: null as THREE.PerspectiveCamera | null }))
 vi.mock('three', async original => {
   const actual = await original<typeof import('three')>()
   class WebGLRenderer {
-    domElement: HTMLCanvasElement
     shadowMap = { enabled: false, type: 0 }
-    dispose = vi.fn(); forceContextLoss = vi.fn()
-    constructor({ canvas }: { canvas: HTMLCanvasElement }) { this.domElement = canvas; rendered.renderer = this }
-    setSize() {} setPixelRatio() {} setClearColor() {}
+    setSize() {} setPixelRatio() {} setClearColor() {} dispose() {} forceContextLoss() {}
   }
   return { ...actual, WebGLRenderer }
 })
-vi.mock('@wbr/scene-runtime/debug-render-style', async () => {
-  const { createInteractionCues } = await import('@wbr/scene-runtime/interaction-cues')
-  return { createDebugRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera, metadata:{id:string;label:string}) {
-    rendered.metadata=metadata
-    rendered.scene = scene; rendered.camera = camera
-    const cues = createInteractionCues(renderer.domElement, scene, camera)
-    const render = vi.fn(() => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true); cues.update() }); rendered.render = render
-    return { setStyle() {}, resize() {}, render, dispose() { cues.dispose() } }
-  } }
-})
-const instances: SceneInstance[] = []
-afterEach(() => { instances.splice(0).forEach(s => s.dispose()); document.body.replaceChildren(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
-function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
-  const height = width === 1280 ? 600 : width === 284 ? 390 : 408, left = 17, top = 91
+vi.mock('@wbr/scene-runtime/debug-render-style', () => ({
+  createDebugRenderStyle(_renderer: unknown, scene: THREE.Scene, camera: THREE.PerspectiveCamera) {
+    drawn.scene = scene; drawn.camera = camera
+    return { setStyle() {}, resize() {}, dispose() {}, render() { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) } }
+  },
+}))
+import { createWishingMallet } from './scene'
+const live: SceneInstance[] = []
+afterEach(() => { live.splice(0).forEach(scene => scene.dispose()); document.body.replaceChildren(); vi.restoreAllMocks() })
+function mount(progress = 0, extra: Partial<SceneContext> = {}, width = 390) {
   const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
   host.append(canvas, overlay); document.body.append(host)
+  const height = width === 1280 ? 600 : 420
   Object.defineProperties(canvas, { clientWidth: { value: width }, clientHeight: { value: height } })
-  canvas.getBoundingClientRect = () => ({ left, top, width, height }) as DOMRect
-  const progress: number[] = [], saveWish = vi.fn(), complete = vi.fn(), haptic = vi.fn()
+  canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width, height }) as DOMRect
+  const saved: number[] = [], complete = vi.fn(), haptic = vi.fn()
   overlay.addEventListener('scene:complete', complete)
-  const instance = mod.create({ canvas, overlay, gestures: Gestures, shared: Shared, initialProgress: at,
-    onProgress: n => progress.push(n), saveWish, haptic, isSoundEnabled: () => false, ...extra })
-  instances.push(instance); instance.start(); instance.update(.025)
-  const scene = rendered.scene as THREE.Scene, camera = rendered.camera as THREE.Camera
-  const hit = overlay.querySelector<HTMLElement>('.scene-hit-layer')!, button = overlay.querySelector<HTMLButtonElement>('button')!
-  if (hit) { hit.setPointerCapture = () => {}; hit.releasePointerCapture = () => {} }
-  const point = (name: string, anchor: [number, number, number] = [0, 0, 0]): [number, number] => {
-    scene.updateMatrixWorld(true); camera.updateMatrixWorld(true)
-    const p = scene.getObjectByName(name)!.localToWorld(new THREE.Vector3(...anchor)).project(camera)
-    return [left + (p.x + 1) * width / 2, top + (1 - p.y) * height / 2]
+  const instance = createWishingMallet({ canvas, overlay, gestures, shared, initialProgress: progress, onProgress: n => saved.push(n), haptic, isSoundEnabled: () => false, ...extra })
+  live.push(instance); instance.start(); instance.update(0)
+  const scene = drawn.scene!, camera = drawn.camera!, layer = overlay.querySelector<HTMLElement>('.scene-hit-layer')!
+  layer.setPointerCapture = () => {}; layer.releasePointerCapture = () => {}
+  const button = () => overlay.querySelector<HTMLButtonElement>('.scene-bow-tap')!
+  const run = (seconds: number) => { for (let t = 0; t < seconds; t += .025) instance.update(.025) }
+  const object = (name: string) => { const object = scene.getObjectByName(name); expect(object, name).toBeDefined(); return object! }
+  const project = (point: THREE.Vector3) => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true); const p = point.clone().project(camera); return [(p.x + 1) * width / 2, (1 - p.y) * height / 2] as const }
+  const point = (name: string, anchor: [number, number, number]) => project(object(name).localToWorld(new THREE.Vector3(...anchor)))
+  const pointer = (type: string, p: readonly number[], id = 1) => {
+    const event = new Event(type, { bubbles: true, cancelable: true })
+    Object.assign(event, { clientX: p[0], clientY: p[1], pointerId: id, pointerType: 'touch', isPrimary: id === 1, button: 0 })
+    layer.dispatchEvent(event)
   }
-  const run = (seconds = 2.8) => { for (let t = 0; t < seconds; t += .025) instance.update(.025) }
-  return { instance, scene, camera, host, overlay, hit, button, point, run, progress, saveWish, complete, haptic }
+  const playPoint = () => point('uchide-mallet', [0,.425,-.2])
+  const play = (dx = 45, seconds = .05) => {
+    const from = playPoint(), to = [from[0] + dx, from[1]]
+    pointer('pointerdown', from); run(seconds); pointer('pointermove', to); pointer('pointerup', to)
+  }
+  const place = (pick: boolean) => {
+    const target = object('uchide-mallet')
+    const cue = (target.userData.interactionCues as InteractionCue[]).find(cue => cue.destination && cue.enabled())!
+    expect(cue).toBeDefined()
+    const start = target.localToWorld(new THREE.Vector3(...cue.anchor!)), from = project(start)
+    const destination = typeof cue.destination === 'function' ? cue.destination() : cue.destination!.getWorldPosition(new THREE.Vector3())
+    const goal = project(destination), to = [from[0] + goal[0] - project(start)[0], from[1] + goal[1] - project(start)[1]]
+    pointer('pointerdown', from); pointer('pointermove', to); pointer('pointerup', to); run(.5)
+    expect(saved).toContain(pick ? 1 : 3)
+  }
+  return { instance, scene, camera, overlay, saved, complete, haptic, run, button, object, point, project, pointer, playPoint, play, place }
 }
-function event(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
-  const e = new Event(type, { bubbles: true, cancelable: true })
-  Object.assign(e, { clientX, clientY, pointerId, pointerType: 'touch', button: 0 }); el.dispatchEvent(e)
-}
-const targetName = (at: number) => ['uchide-mallet','uchide-mallet','uchide-mallet'][at]!
-const anchor = (at: number): [number, number, number] => [0,.425,-.2]
-const delta = (at: number): [number, number] => [[0,-60],[60,0],[0,60]][at] as [number,number]
-function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, run = true) {
-  const p = s.point(targetName(at), anchor(at)); event(s.hit, 'pointerdown', p)
-  for (let i = 1; i <= 8; i++) event(s.hit, 'pointermove', [p[0] + dx * i / 8, p[1] + dy * i / 8])
-  event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); if (run) s.run()
-}
-function step(s: ReturnType<typeof mount>, at: number, run = true) { if(at < 3) drag(s, at, ...spatialDelta(s, at), run) }
-function cues(s: ReturnType<typeof mount>) {
-  const list: { object: THREE.Object3D; cue: InteractionCue }[] = []
-  s.scene.traverse(object => { for (const cue of object.userData.interactionCues ?? []) if (cue.enabled()) list.push({ object, cue }) })
-  return list
-}
-// Destination input replaces the former fixed-direction test driver.
-function spatialDelta(s: ReturnType<typeof mount>, at: number): [number, number] {
-  const cue = cues(s).find(x => x.cue.destination)?.cue
-  if (!cue?.destination) return delta(at)
-  const destination = typeof cue.destination === 'function' ? cue.destination() : cue.destination.getWorldPosition(new THREE.Vector3())
-  const q = destination.clone().project(s.camera), rect = s.host.querySelector('canvas')!.getBoundingClientRect(), p = s.point(targetName(at), anchor(at))
-  return [rect.left + (q.x + 1) * rect.width / 2 - p[0], rect.top + (1 - q.y) * rect.height / 2 - p[1]]
-}
-
-function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
-  const q = p.clone().project(s.camera), ray = new THREE.Raycaster(); ray.setFromCamera(new THREE.Vector2(q.x, q.y), s.camera)
-  const meshes: THREE.Object3D[] = []
-  s.scene.traverseVisible(o => {
-    const mesh = o as THREE.Mesh; if (!mesh.isMesh) return
-    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
-    if (materials.some(m => m.visible && (!m.transparent || m.opacity >= 1))) meshes.push(o)
+describe('continuous mallet handling', () => {
+  it('keeps the held mallet readable on a 342 pixel canvas', () => {
+    const s = mount(1, {}, 342), bounds = new THREE.Box2(), p = new THREE.Vector3()
+    s.object('uchide-mallet').traverse(object => {
+      const mesh = object as THREE.Mesh
+      if (!mesh.geometry) return
+      const vertices = mesh.geometry.getAttribute('position')
+      for (let i = 0; i < vertices.count; i++) {
+        p.fromBufferAttribute(vertices, i).applyMatrix4(mesh.matrixWorld).project(s.camera)
+        bounds.expandByPoint(new THREE.Vector2((p.x + 1) * 171, (1 - p.y) * 210))
+      }
+    })
+    expect(bounds.getSize(new THREE.Vector2()).x).toBeGreaterThan(342 * .4)
   })
-  return { q, object: ray.intersectObjects(meshes, false)[0]?.object }
-}
-
-
-describe('Wish-shaking lucky mallet', () => {
-  it('uses Uchide wish-shaking identity for the visible title, accessible steps and default style registration',()=>{
-    const s=mount()
-    expect(s.overlay.querySelector('.scene-title')?.textContent).toBe('振槌寄愿')
-    expect(s.overlay.querySelector('[aria-label="振槌寄愿步骤"]')).not.toBeNull()
-    expect(rendered.metadata).toEqual({id:'uchide-wishing-mallet',label:'振槌寄愿'})
+  it('keeps the grasp point fixed while following left and right movement', () => {
+    const s = mount(1), actor = s.object('uchide-mallet'), from = s.playPoint()
+    const grip = new THREE.Vector3(0,.36,-.2), home = actor.localToWorld(grip.clone())
+    s.pointer('pointerdown', from)
+    for (const dx of [-100, -40, 40, 100]) {
+      s.pointer('pointermove', [from[0] + dx, from[1]])
+      expect(actor.localToWorld(grip.clone()).distanceTo(home)).toBeLessThan(1e-8)
+    }
+    s.pointer('pointercancel', from)
+    expect(s.saved).toEqual([])
   })
-  it.each([false,true])('lifts the mallet, sways it in the air and replaces it on the rack, reduced=%s', reduced => {
-    const s=mount(0,{isReducedMotion:()=>reduced})
-    for(let i=0;i<3;i++){step(s,i,false); if(!reduced)expect(s.progress).toHaveLength(i); s.run(); expect(s.progress).toEqual([1,2,3].slice(0,i+1))}
-    s.button.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
+  it('does not mark the mallet as shaken when a drag has no shaking movement', () => {
+    const s = mount(1), from = s.playPoint()
+    s.pointer('pointerdown', from); s.pointer('pointermove', [from[0], from[1] - 40]); s.pointer('pointerup', [from[0], from[1] - 40])
+    expect(s.saved).toEqual([])
   })
-  it('uses identical final subject transforms for ordinary, reduced motion and silently restored checkpoints', () => {
-    for (const checkpoint of [1, 2, 3]) {
-      const normal = mount(), reduced = mount(0, { isReducedMotion: () => true }), restored = mount(checkpoint)
-      for (let at = 0; at < checkpoint; at++) { step(normal, at); step(reduced, at) }
-      normal.scene.updateMatrixWorld(true); reduced.scene.updateMatrixWorld(true); restored.scene.updateMatrixWorld(true)
-      normal.scene.getObjectByName('uchide-subject')!.traverse(o => {
-        for (const other of [reduced, restored]) {
-          const counterpart=other.scene.getObjectByName(o.name)!,m=counterpart.matrixWorld
-          o.matrixWorld.elements.forEach((v, i) => expect(v, o.name).toBeCloseTo(m.elements[i], 9))
-          const geometry=(o as THREE.Mesh).geometry,restoredGeometry=(counterpart as THREE.Mesh).geometry
-          if(geometry?.attributes.position)expect(Array.from(geometry.attributes.position.array),o.name).toEqual(Array.from(restoredGeometry.attributes.position!.array))
+  it('starts button replacement at the current hand-following pose', () => {
+    const s = mount(2), actor = s.object('uchide-mallet')
+    s.overlay.querySelector<HTMLButtonElement>('.scene-toy-repeat')!.click()
+    const pose = actor.matrixWorld.clone()
+    s.button().click(); s.instance.update(0)
+    expect(actor.matrixWorld.elements).toEqual(pose.elements)
+    s.run(.8); expect(s.saved).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it.each([1,2])('accepts a smoothly sampled downward return from held checkpoint %i', checkpoint => {
+    const s = mount(checkpoint, { isReducedMotion: () => true }), actor = s.object('uchide-mallet'), from = s.playPoint()
+    const cue = (actor.userData.interactionCues as InteractionCue[]).find(cue => cue.destination && cue.enabled())!
+    const destination = cue.destination as () => THREE.Vector3, goal = s.project(destination())
+    s.pointer('pointerdown', from)
+    for (const dy of [2,4,6,7,9]) s.pointer('pointermove', [from[0], from[1] + dy])
+    expect(s.saved).toEqual([])
+    s.pointer('pointermove', goal); s.pointer('pointerup', goal)
+    expect(s.saved).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it.each([false, true])('picks up before playing and allows repeated play until explicit return, reduced=%s', reduced => {
+    const s = mount(0, { isReducedMotion: () => reduced })
+    expect(s.button().textContent).toContain('托起')
+    s.button().click(); s.run(.8); expect(s.saved).toEqual([1])
+    s.play(); expect(s.saved).toEqual([1, 2])
+    for (let i = 0; i < 6; i++) { s.play(i % 2 ? -40 : 40); s.run(.1) }
+    s.run(20)
+    expect(s.saved).toEqual([1, 2]); expect(s.complete).not.toHaveBeenCalled()
+    expect(s.overlay.querySelector<HTMLButtonElement>('.scene-toy-repeat')?.hidden).toBe(false)
+    s.button().click(); s.run(.8)
+    expect(s.saved).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it('moves the actual toy with both drag directions without locking input', () => {
+    const s = mount(1), actor = s.object('uchide-mallet'), home = actor.quaternion.clone()
+    const from = s.playPoint()
+    s.pointer('pointerdown', from); s.run(.05); s.pointer('pointermove', [from[0] + 30, from[1]])
+    const right = actor.quaternion.clone()
+    expect(right.angleTo(home)).toBeGreaterThan(.05)
+    expect(s.saved).toEqual([]); expect(s.button().disabled).toBe(false)
+    s.pointer('pointermove', [from[0] - 30, from[1]])
+    expect(actor.quaternion.angleTo(right)).toBeGreaterThan(.1)
+    s.pointer('pointerup', [from[0] - 30, from[1]])
+    expect(s.saved).toEqual([2]); expect(s.button().disabled).toBe(false)
+    const repeat = s.overlay.querySelector<HTMLButtonElement>('.scene-toy-repeat')!
+    repeat.click(); repeat.click(); s.run(.1)
+    expect(s.saved).toEqual([2]); expect(s.complete).not.toHaveBeenCalled()
+  })
+  it.each([284, 390, 1280])('accepts real geometry pickup and return at width %i', width => {
+    const s = mount(0, {}, width)
+    s.place(true); s.play(); s.place(false)
+    expect(s.saved).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
+  })
+  it.each(['pointercancel', 'lostpointercapture', 'second', 'blur', 'pause', 'invalid'])('cancels unfinished playing for %s without progress', kind => {
+    let active = true
+    const s = mount(1, { isActive: () => active }), actor = s.object('uchide-mallet'), home = actor.quaternion.clone(), from = s.playPoint()
+    s.pointer('pointerdown', from); s.pointer('pointermove', [from[0] + 25, from[1]])
+    expect(actor.quaternion.angleTo(home)).toBeGreaterThan(.03)
+    if (kind === 'pause') { active = false; s.instance.update(.025) }
+    else if (kind === 'blur') window.dispatchEvent(new Event('blur'))
+    else if (kind === 'second') { s.pointer('pointerdown', from, 2); s.pointer('pointerup', from, 2) }
+    else if (kind === 'invalid') s.pointer('pointermove', [NaN, from[1]])
+    else s.pointer(kind, from)
+    s.pointer('pointerup', [from[0] + 45, from[1]]); s.run(.5)
+    expect(s.saved).toEqual([]); expect(s.complete).not.toHaveBeenCalled()
+    expect(actor.quaternion.angleTo(home)).toBeLessThan(.00001)
+    active = true; window.dispatchEvent(new Event('focus')); s.instance.update(.025)
+    s.play(); expect(s.saved).toEqual([2])
+  })
+  it.each([0, 1, 2, 3])('silently restores checkpoint %i and its compatible complete save', checkpoint => {
+    const s = mount(checkpoint, { returning: true, isReducedMotion: () => true })
+    s.run(10); expect(s.saved).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); expect(s.complete).not.toHaveBeenCalled()
+    expect(s.button().hidden).toBe(checkpoint === 3)
+    if (checkpoint === 3) { s.button().click(); s.play(); expect(s.saved).toEqual([]) }
+    else if (checkpoint > 0) { s.play(); expect(s.saved).toEqual(checkpoint === 1 ? [2] : []) }
+  })
+  it('keeps a focused repeat button enabled throughout preparation and contact feedback', () => {
+    let button: HTMLButtonElement | undefined
+    const states: boolean[] = []
+    const s = mount(2, { prepareFeedback: () => { if (button) states.push(button.disabled) }, haptic: () => { if (button) states.push(button.disabled) } })
+    button = s.overlay.querySelector<HTMLButtonElement>('.scene-toy-repeat')!
+    button.focus(); button.click()
+    expect(states).toEqual([false, false]); expect(document.activeElement).toBe(button)
+    expect(s.saved).toEqual([]); expect(s.complete).not.toHaveBeenCalled()
+  })
+  it('keeps keyboard/button alternatives usable and ignores the prior double-click tail', () => {
+    const s = mount(0, { isReducedMotion: () => true })
+    expect(s.button().style.minWidth).toBe('44px'); expect(s.button().style.minHeight).toBe('44px')
+    s.button().click(); expect(s.saved).toEqual([1])
+    s.button().dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 2 })); expect(s.saved).toEqual([1])
+    s.button().click(); expect(s.saved).toEqual([1, 2])
+    s.button().dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 2 })); expect(s.saved).toEqual([1, 2])
+    s.button().click(); expect(s.saved).toEqual([1, 2, 3])
+  })
+  it.each(['pause', 'dispose'])('does not continue host feedback after reentrant %s', mode => {
+    let active = true, instance: SceneInstance | undefined
+    const saved: number[] = []
+    const s = mount(2, { isReducedMotion: () => true, isActive: () => active, onProgress: n => { saved.push(n); if (mode === 'dispose') instance?.dispose(); else active = false } })
+    instance = s.instance; s.button().click()
+    expect(saved).toEqual([3]); expect(s.haptic).not.toHaveBeenCalled(); expect(s.complete).not.toHaveBeenCalled()
+  })
+  it.each([284, 390, 1280])('frames the real moving vertices across both drag directions at width %i', width => {
+    const s = mount(1, {}, width), actor = s.object('uchide-subject')
+    const check = () => {
+      s.scene.updateMatrixWorld(true)
+      actor.traverse(object => {
+        const mesh = object as THREE.Mesh
+        if (!mesh.geometry) return
+        const positions = mesh.geometry.getAttribute('position'), p = new THREE.Vector3()
+        for (let i = 0; i < positions.count; i++) {
+          p.fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld).project(s.camera)
+          expect(Math.max(Math.abs(p.x), Math.abs(p.y)), mesh.name).toBeLessThan(.97)
         }
       })
-      normal.instance.dispose(); reduced.instance.dispose(); restored.instance.dispose()
     }
+    for (let i = 0; i < 4; i++) { s.play(i % 2 ? -65 : 65); check(); s.run(.1); check() }
+    s.button().click()
+    for (let i = 0; i < 24; i++) { s.instance.update(.025); check() }
+    expect(s.saved).toEqual([2, 3])
   })
-  it('offers 44px native keyboard actions, physical input and no wish form or entry feedback', () => {
-    const s = mount(); expect(s.hit).not.toBeNull(); expect(s.button.type).toBe('button')
-    expect(s.button.style.minWidth).toBe('44px'); expect(s.button.style.minHeight).toBe('44px'); expect(s.overlay.querySelector('input,form')).toBeNull()
-    expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-    s.button.click(); expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([1])
+  it('keeps a paused placement frozen and resumes from the same progress', () => {
+    let active = true
+    const s = mount(0, { isActive: () => active }), actor = s.object('uchide-subject')
+    s.button().click(); s.run(.1); const pose = actor.matrixWorld.clone()
+    active = false; s.run(2); expect(actor.matrixWorld.elements).toEqual(pose.elements); expect(s.saved).toEqual([])
+    active = true; s.run(.8); expect(s.saved).toEqual([1])
   })
-  it('plays a quiet optional acceptance tone only after settlement and closes audio once', () => {
-    const frequencies: number[] = [], peaks: number[] = []; let closed = 0, soundEnabled = false
-    class AudioBoundary {
-      state = 'running'; currentTime = 0; destination = {}
-      close() { closed++; return Promise.resolve() }
-      createGain() { return { gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime(n: number) { if (n > .0001) peaks.push(n) } }, connect(next: unknown) { return next } } }
-      createOscillator() { return { type: 'sine', frequency: { setValueAtTime(n: number) { frequencies.push(n) } }, connect(g: { connect(next: unknown): unknown }) { return g }, start() {}, stop() {} } }
-    }
-    vi.stubGlobal('AudioContext', AudioBoundary)
-    const s = mount(0, { isSoundEnabled: () => soundEnabled })
-    expect(frequencies).toEqual([]); step(s, 0); expect(frequencies).toEqual([])
-    soundEnabled = true; step(s, 1, false); expect(frequencies).toEqual([]); s.run(); expect(frequencies).toEqual([392])
-    const returning = mount(2, { returning: true, isSoundEnabled: () => true }); returning.run(); expect(frequencies).toEqual([392])
-    step(s, 2); expect(frequencies).toEqual([392, 440]); expect(peaks).toEqual([.003, .003])
-    s.instance.dispose(); s.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
+  it('releases every physical geometry and material exactly once', () => {
+    const s = mount(), geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>()
+    s.object('uchide-subject').traverse(object => { const mesh = object as THREE.Mesh; if (!mesh.geometry) return; geometries.add(mesh.geometry); for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) materials.add(material) })
+    const disposed = [...geometries, ...materials].map(resource => { const dispose = vi.fn(); resource.addEventListener('dispose', dispose); return dispose })
+    s.instance.dispose(); s.instance.dispose(); disposed.forEach(dispose => expect(dispose).toHaveBeenCalledOnce())
   })
-  it.each([0, 1, 2])('rejects a nonfinite move even when the final release is valid at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = spatialDelta(s, at)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [NaN, p[1]])
-    event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run()
-    expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {
-    for (const returning of [false, true]) {
-      const s = mount(at, { returning, isReducedMotion: () => true }); s.run()
-      expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['drag'] : []); expect(s.button.hidden).toBe(at === 3)
-      for (let i = at; i < 3; i++) s.button.click()
-      expect(s.progress).toEqual([1, 2, 3].filter(n => n > at)); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
-    }
-  })
-  it.each([284, 350, 1280])('frames every subject vertex and exposes the first reachable material cue at width %i', width => {
-    for (const at of [0, 1, 2, 3]) {
-      const s = mount(at, { isReducedMotion: () => true }, width); s.scene.updateMatrixWorld(true)
-      s.scene.getObjectByName('uchide-subject')!.traverse(o => {
-        const m = o as THREE.Mesh; if (!m.geometry) return
-        const pos = m.geometry.getAttribute('position'), bounds = new THREE.Box3(), p = new THREE.Vector3()
-        for (let i = 0; i < pos.count; i++) bounds.expandByPoint(p.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).project(s.camera))
-        expect(Math.max(Math.abs(bounds.min.x), Math.abs(bounds.max.x), Math.abs(bounds.min.y), Math.abs(bounds.max.y)), m.name).toBeLessThan(.97)
-      })
-      for (const { object, cue } of cues(s)) {
-        const hit = first(s, object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))))
-        expect(hit.object && (object === hit.object || object.getObjectById(hit.object.id) === hit.object), `first reachable material cue ${object.name}`).toBe(true); expect(Math.abs(hit.q.x)).toBeLessThan(.97); expect(Math.abs(hit.q.y)).toBeLessThan(.97)
-      }
-      if (at < 3) step(s, at); expect(s.progress).toEqual(at < 3 ? [at + 1] : []); s.instance.dispose()
-    }
-  })
-  it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or stale position/rotation', kind => {
-    for (const at of [0, 1, 2]) {
-      let active = true; const s = mount(at, { isActive: () => active }), pivot = s.scene.getObjectByName(targetName(at))!, home = pivot.position.clone(), scale = pivot.scale.clone(), rotation = pivot.quaternion.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = spatialDelta(s, at)
-      // Sample a small held displacement of the held mallet before release.
-      const fraction=.5
-      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx * fraction, p[1] + dy * fraction]); const frames = rendered.render.mock.calls.length
-      expect(pivot.position.distanceTo(home)+pivot.quaternion.angleTo(rotation)).toBeGreaterThan(.002)
-      if (kind === 'pause') { active = false; s.instance.update(.05); s.instance.update(.05); expect(rendered.render.mock.calls.length).toBe(frames) }
-      else if (kind === 'blur') window.dispatchEvent(new Event('blur')); else event(s.hit, kind, p)
-      event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run(); expect(s.progress).toEqual([]); expect(pivot.position.distanceTo(home)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(pivot.scale.distanceTo(scale)).toBeLessThan(.00001)
-      if (kind === 'blur') window.dispatchEvent(new Event('focus')); active = true; s.instance.update(.025); step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
-    }
-  })
-  it.each([284, 350, 1280])('keeps all subject vertices in frame during each three wish mallet paths at width %i', width => {
-    for (const at of [0, 1, 2]) {
-      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = spatialDelta(s, at)
-      const check = () => {
-        s.scene.updateMatrixWorld(true); let extent = 0
-        s.scene.getObjectByName('uchide-subject')!.traverse(o => {
-          const m = o as THREE.Mesh; if (!m.geometry) return
-          const positions = m.geometry.getAttribute('position'), vertex = new THREE.Vector3()
-          for (let i = 0; i < positions.count; i++) { vertex.fromBufferAttribute(positions, i).applyMatrix4(m.matrixWorld).project(s.camera); extent = Math.max(extent, Math.abs(vertex.x), Math.abs(vertex.y)) }
-        })
-        expect(extent).toBeLessThan(.97)
-      }
-      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); check()
-      event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); check(); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy])
-      for (let i = 0; i < 115; i++) { s.instance.update(.025); check() }
-      expect(s.progress).toEqual([at + 1]); s.instance.dispose()
-    }
-  })
-  it.each([0, 1, 2])('freezes accepted motion and input while paused at %i', at => {
-    let active = true; const s = mount(at, { isActive: () => active }); step(s, at, false); expect(s.button.disabled).toBe(true); expect(s.hit.style.pointerEvents).toBe('none')
-    s.button.click(); for (const dt of [NaN, Infinity, -10, 100000]) s.instance.update(dt); expect(s.progress).toEqual([])
-    active = false; const pivot = s.scene.getObjectByName(targetName(at))!, pose = pivot.position.clone(), rotation = pivot.quaternion.clone(), frames = rendered.render.mock.calls.length
-    s.run(2); expect(rendered.render.mock.calls.length).toBe(frames); expect(pivot.position.distanceTo(pose)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(s.progress).toEqual([])
-    active = true; s.run(); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([0, 1, 2])('rejects a target behind another opaque object at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
-    blocker.position.lerpVectors(s.scene.getObjectByName(targetName(at))!.localToWorld(new THREE.Vector3(...anchor(at))), s.camera.position, .15)
-    blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker); s.scene.updateMatrixWorld(true); step(s, at); expect(s.progress).toEqual([])
-    blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose(); step(s, at); expect(s.progress).toEqual([at + 1])
-  })
-  it.each([0, 1, 2])('preserves pointer ownership through prepareFeedback input on and outside the hit layer at %i', at => {
-    for (const outside of [false, true]) for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) {
-      let attack = () => {}; const s = mount(at, { isReducedMotion: () => true, prepareFeedback: () => attack() })
-      attack = () => event(outside ? document.body : s.hit, type, [1, 1]); step(s, at); expect(s.progress, `${outside} ${type}`).toEqual([at + 1]); s.instance.dispose()
-    }
-  })
-  it.each([0, 1, 2])('invalidates prepared pointer and keyboard input on every pause/resume boundary at %i', at => {
-    for (const keyboard of [false, true]) {
-      let attack = () => {}, active = true; const s = mount(at, { isReducedMotion: () => true, isActive: () => active, prepareFeedback: () => attack() })
-      attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
-      for (let i = 0; i < 2; i++) { keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([]) }
-      attack = () => {}; keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([at + 1]); s.instance.dispose()
-    }
-  })
-  it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('blocks synchronous %s step skipping and update reentry', callback => {
-    let attack = () => {}; const seen: number[] = [], s = mount(0, { isReducedMotion: () => true, [callback]: () => attack(), onProgress: n => { seen.push(n); if (callback === 'onProgress') attack() } })
-    attack = () => { s.button.click(); step(s, 0); step(s, 1); s.instance.update(100) }
-    s.button.click(); expect(seen).toEqual([1]); s.button.click(); expect(seen).toEqual([1, 2]); s.button.click(); expect(seen).toEqual([1, 2, 3]); expect(s.complete).toHaveBeenCalledOnce()
-  })
-  it.each([0,1,2])('rejects multitouch with an otherwise valid primary drag at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at))
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerdown', [1, 1], 2); event(s.hit, 'pointermove', [p[0]+spatialDelta(s, at)[0], p[1]+spatialDelta(s, at)[1]]); event(s.hit, 'pointerup', [p[0]+spatialDelta(s, at)[0], p[1]+spatialDelta(s, at)[1]]); event(s.hit, 'pointerup', [1, 1], 2)
-    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([at+1])
-  })
-  it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('stops after %s pauses or disposes the scene', callback => {
-    for (const mode of ['pause', 'dispose']) {
-      let active = true, destroy = () => {}; const s = mount(0, { isReducedMotion: () => true, isActive: () => active, [callback]: () => { if (mode === 'pause') active = false; else destroy() } })
-      destroy = () => s.instance.dispose(); const frames = rendered.render.mock.calls.length; s.button.click(); s.instance.update(.1); s.button.click(); expect(rendered.render.mock.calls.length).toBe(frames)
-      if (mode === 'dispose') expect(s.overlay.childElementCount).toBe(0); s.instance.dispose()
-    }
-  })
-  it.each(['onProgress', 'haptic'] as const)('invalidates terminal completion after a synchronous %s pause/resume', callback => {
-    let active = true, attack = () => {}; const s = mount(2, { isActive: () => active, [callback]: () => attack() })
-    attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
-    step(s, 2); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.hidden).toBe(true)
-    if (callback === 'onProgress') expect(s.haptic).not.toHaveBeenCalled()
-  })
-  it.each([NaN, Infinity, -9])('normalizes invalid restoration %s without reporting progress', initial => {
-    const s = mount(initial, { isReducedMotion: () => true }); s.instance.start(); s.instance.update(NaN); expect(s.progress).toEqual([]); s.button.click(); expect(s.progress).toEqual([1])
-  })
-  it('removes all matching pointer callback guards exactly once', () => {
-    const added = vi.spyOn(EventTarget.prototype, 'addEventListener'), removed = vi.spyOn(EventTarget.prototype, 'removeEventListener'), windowAdded = vi.spyOn(window, 'addEventListener'), windowRemoved = vi.spyOn(window, 'removeEventListener'), s = mount()
-    const guards = added.mock.calls.filter(([type, , options], i) => added.mock.contexts[i] === s.hit && options === true && ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture'].includes(type))
-    expect(guards).toHaveLength(5); s.instance.dispose(); s.instance.dispose()
-    for (const [type, listener, options] of guards) {
-      expect(removed.mock.calls.filter(([t, l, o], i) => removed.mock.contexts[i] === s.hit && t === type && l === listener && o === options)).toHaveLength(1)
-      expect(windowAdded.mock.calls.filter(([t, l, o]) => t === type && l === listener && o === options)).toHaveLength(1)
-      expect(windowRemoved.mock.calls.filter(([t, l, o]) => t === type && l === listener && o === options)).toHaveLength(1)
-    }
-  })
-  it('releases capture, geometry, materials, cues and DOM once and rejects retained inputs after disposal', () => {
-    const s = mount(2), resources = new Set<THREE.BufferGeometry | THREE.Material | THREE.Texture>(), cued: THREE.Object3D[] = []
-    s.scene.traverse(o => { if (o.userData.interactionCues?.length) cued.push(o); const m = o as THREE.Mesh; if (m.geometry) resources.add(m.geometry); for (const mat of Array.isArray(m.material) ? m.material : m.material ? [m.material] : []) { resources.add(mat); const map = (mat as THREE.MeshStandardMaterial).map; if (map) resources.add(map) } })
-    const freed = new Map<unknown, number>(); resources.forEach(r => r.addEventListener('dispose', () => freed.set(r, (freed.get(r) ?? 0) + 1)))
-    const p = s.point(targetName(2), anchor(2)), release = vi.fn(); s.hit.releasePointerCapture = release; event(s.hit, 'pointerdown', p)
-    const renderer = rendered.renderer as THREE.WebGLRenderer, frames = rendered.render.mock.calls.length; s.instance.dispose(); s.instance.dispose(); s.button.click(); event(s.hit, 'pointerup', p); s.instance.start(); s.instance.update(10)
-    expect(release).toHaveBeenCalledExactlyOnceWith(1); expect(s.progress).toEqual([]); expect(s.saveWish).not.toHaveBeenCalled(); expect(rendered.render.mock.calls.length).toBe(frames)
-    expect(freed.size).toBe(resources.size); expect([...freed.values()].every(n => n === 1)).toBe(true); expect(renderer.dispose).toHaveBeenCalledOnce(); expect(renderer.forceContextLoss).toHaveBeenCalledOnce()
-    expect(s.overlay.childElementCount).toBe(0); expect(s.host.querySelector('.scene-object-cues')).toBeNull(); for (const o of cued) expect(o.userData.interactionCues).toEqual([])
+  it('rejects retained input after disposal and disposes only once', () => {
+    const s = mount(1), button = s.button(), from = s.playPoint()
+    s.instance.dispose(); s.instance.dispose(); button.click(); s.pointer('pointerdown', from); s.pointer('pointerup', [from[0] + 45, from[1]]); s.run(2)
+    expect(s.saved).toEqual([]); expect(s.overlay.childElementCount).toBe(0)
   })
 })

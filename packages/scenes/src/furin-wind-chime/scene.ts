@@ -1,3 +1,4 @@
+import { createFurinPaintedFlowers } from './painted-flowers'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -154,8 +155,8 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
     emissive: 0x7ab8d8,
     emissiveIntensity: 0.04,
     metalness: 0,
-    roughness: 0.1,
-    transmission: .8,
+    roughness: 0.14,
+    transmission: .58,
     attenuationColor: 0xd2efff,
     attenuationDistance: 2,
     clearcoat: .65,
@@ -184,14 +185,20 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   crown.position.y = bell.position.y + BELL_RADIUS
   pivot.add(crown)
 
-  // Painted band on the glass (goldfish-red summer stripe).
-  const band = new THREE.Mesh(
-    new THREE.TorusGeometry(0.235, 0.012, 8, 32),
-    new THREE.MeshStandardMaterial({ color: 0xea5a4c, roughness: 0.9 }),
-  )
-  band.rotation.x = Math.PI / 2
-  band.position.y = -0.62
-  pivot.add(band)
+  // Surface paint remains visible while the surrounding glass stays clear.
+  bell.add(createFurinPaintedFlowers(BELL_RADIUS))
+
+  // A restrained blue glass edge, as in the icon, stays legible against clouds.
+  const profileMat = new THREE.LineBasicMaterial({ color: 0x81c4e3, transparent: true, opacity: .72 })
+  for (const side of [-1, 1]) {
+    const points = Array.from({ length: 49 }, (_, i) => {
+      const theta = BELL_SWEEP * i / 48, r = BELL_RADIUS + .0015
+      return new THREE.Vector3(side * Math.sin(theta) * r * .995, Math.cos(theta) * r, Math.sin(theta) * r * .1)
+    })
+    const profile = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), profileMat)
+    profile.name = side < 0 ? 'furin-glass-profile-left' : 'furin-glass-profile-right'
+    bell.add(profile)
+  }
 
   // Clapper hangs inside the bell on its own sub-pivot.
   const clapperPivot = new THREE.Group()

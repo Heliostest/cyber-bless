@@ -50,7 +50,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "floating-lantern-loy-krathong": "a43678c029043e378c22ecbeba177749650216d8007098c8b8761ee4e55145d8",
   "french-coffee-mill": "4d00d6b0dbd5c7f69b6b2f6add3a38d8d9c0ce6301b644a081f09befcf5836c5",
   "french-petanque": "07b30eb27df1acaa458f074db509cfac81200dced6d1ac7dec1b5c24c992f48b",
-  "furin-wind-chime": "2a4da61caab8c49d37059a2dd448680eb0faae9af75d9ace73c14a6f0f5baf53",
+  "furin-wind-chime": "7067095029ee893eb63407c38cd11390154b9b0cb197e8d0aa24d076b31023f7",
   "garden-croquet": "987cb9795c0e6ecdd19e644b2f50408ad9fc0574b7ecd58616a46f6426dc92d4",
   "german-jumping-jack": "d1b8b8338765bfa511aee742f5cc0c89f628ce4cffadd2cb2f58fd2dd87d08cd",
   "german-nutcracker": "05de9aa0868ee3203c3378a79de15f3ffaec4d2e82da0c02a4cc3f8bb73de7e5",

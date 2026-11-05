@@ -3,6 +3,7 @@ import { assertSafeCopy } from '@wbr/shared'
 import { sceneRegistry, isSceneImplemented } from '@wbr/scenes'
 import { translate as tr, translateScene } from '@wbr/i18n'
 import { useDeveloperLocale } from '../locale'
+import { SceneVisualFeatures, SceneVisualLegend } from '@wbr/app/scene-visual-features'
 
 const GESTURES = ['drag', 'tilt', 'spin', 'gyro', 'wishWrite'] as const
 const LATER = '稍后'
@@ -34,6 +35,7 @@ export function Gallery() {
       </ul>
 
       <h2>{tr(SCENES_HEADING)}</h2>
+      <SceneVisualLegend />
       <ul className="gallery-cards">
         {sceneRegistry.map((s) => {
           assertSafeCopy(s.title)
@@ -46,6 +48,7 @@ export function Gallery() {
               {ready ? (
                 <Link className="gallery-card-link" to={`/scene/${s.id}`}>
                   <span className="gallery-card-title">{translateScene(s.title)}</span>
+                  <SceneVisualFeatures id={s.id} />
                   <code className="muted">{s.id}</code>
                   <span className="gallery-card-meta muted">
                     {tr('{gestures} · {grade}档', { gestures: s.gestures.join(' · '), grade: s.grade })}

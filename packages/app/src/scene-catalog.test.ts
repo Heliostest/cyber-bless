@@ -122,6 +122,18 @@ describe("场景目录 rows", () => {
     document.body.replaceChildren();
   });
 
+  it('shows readable visual features on every row, with a shared icon legend', async () => {
+    const ui = renderCatalog();
+    await settle();
+    for (const row of ui.host.querySelectorAll('.scene-card')) {
+      const features = row.querySelector('.scene-visual-features');
+      expect(features).not.toBeNull();
+      expect(features?.querySelector('[data-visual-feature="lighting"]')?.getAttribute('title')).toBeTruthy();
+    }
+    expect(ui.host.querySelector('.scene-visual-legend')).not.toBeNull();
+    ui.unmount();
+  });
+
   it("lead with the scene's drawn badge and end with a go-to chevron", async () => {
     const ui = renderCatalog();
     await settle();

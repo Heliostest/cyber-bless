@@ -36,6 +36,9 @@
 .scene-review-controls button:not(:disabled):hover { background: #dcf4ea; }
 .scene-review-controls :focus-visible { outline: 3px solid #267662; outline-offset: 2px; }
 .scene-review-header p { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 8px 0 0; font-size: 12px; }
+.scene-review-features { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin-top: 8px; }
+.scene-review-features .scene-visual-legend { margin: 0; }
+.scene-review-features .scene-visual-legend[open] { flex-basis: 100%; }
 .scene-review .bless-app { min-height: calc(100dvh - 150px); }
 @media (min-width: 1000px) {
   .scene-review .app-shell { height: calc(100dvh - 206px); min-height: 420px; }

@@ -14,6 +14,7 @@ import { PageHead } from "./page-heading";
 import { isWishSceneUnlocked } from './vessels';
 import { useTestFeedback } from './test-feedback-provider';
 import { SCENE_TEST_COPY, matchesSceneTestFilter, pendingSceneFeedback, sceneTestState, type SceneTestFilter } from './scene-feedback-status';
+import { SceneVisualFeatures, SceneVisualLegend, sceneVisualLabels } from './scene-visual-features';
 export { builtInScenes, type BuiltInSceneEntry } from '@wbr/core/daily-scenes';
 import { builtInScenes, isSceneVisibleInApp } from '@wbr/core/daily-scenes';
 export const supportsScene = (engine: string) => builtInScenes.some((e) => e.engine === engine);
@@ -202,18 +203,20 @@ export function sceneStatus(entry: CatalogEntry, _cache?: string): SceneStatus {
 }
 /** A scene as a list row (场景目录, 仪式时光): its badge, its title over a
  * short line, and the go-to chevron of the settings rows. */
-export function SceneCard({ id, title, disabled, onClick, children, soundCue, }: {
+export function SceneCard({ id, title, disabled, onClick, children, soundCue, visualFeatures = false, }: {
     id: string;
     title: string;
     disabled?: boolean;
     onClick(): void;
     children: ReactNode;
     soundCue?: 'navigate';
+    visualFeatures?: boolean;
 }) {
     return (<button data-audio-cue={soundCue} className="scene-card" data-scene={id} disabled={disabled} onClick={onClick}>
       <SceneBadge id={id}/>
       <strong lang={builtInScenes.some(entry => entry.id === id) ? undefined : "und"}>{title}</strong>
       {children}
+      {visualFeatures && <SceneVisualFeatures id={id} />}
       <Icon name="arrow"/>
     </button>);
 }
@@ -228,7 +231,7 @@ export function SceneCatalog() {
     const searchLocale = getFormatLocale();
     const normalizeSearch = (value: string) => value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase(searchLocale);
     const searchQuery = normalizeSearch(query.trim());
-    const matches = entries.filter((entry) => [localizedTitle(entry), entry.title, entry.id].some(value => normalizeSearch(value).includes(searchQuery)) && matchesSceneTestFilter(entry.id, testFilter, snapshot));
+    const matches = entries.filter((entry) => [localizedTitle(entry), entry.title, entry.id, ...sceneVisualLabels(entry.id)].some(value => normalizeSearch(value).includes(searchQuery)) && matchesSceneTestFilter(entry.id, testFilter, snapshot));
     const visible = matches.slice(0, limit);
     const hasConnection = !!snapshot?.connection.endpoint && !!snapshot?.connection.token;
     const syncing = snapshot?.teamStatusState === 'loading';
@@ -259,11 +262,12 @@ export function SceneCatalog() {
         {syncNote && <p>{tr(syncNote)}</p>}
         {snapshot?.teamStatus && <p>{tr(SCENE_TEST_COPY.lastSync, { p0: formatDate(snapshot.teamStatus.fetchedAt, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) })}</p>}
       </div>
+      <SceneVisualLegend />
       <div className="scene-catalog">
         {visible.map((entry) => {
             const status = sceneStatus(entry);
             const testState = sceneTestState(entry.id, snapshot), pending = pendingSceneFeedback(entry.id, snapshot);
-            return (<SceneCard key={entry.id} id={entry.id} title={localizedTitle(entry)} disabled={!ready} onClick={() => openScene(entry, { feedbackSession: true })}>
+            return (<SceneCard key={entry.id} id={entry.id} title={localizedTitle(entry)} visualFeatures disabled={!ready} onClick={() => openScene(entry, { feedbackSession: true })}>
               <span className="scene-catalog-statuses">
                 <span className="scene-status" data-status={status}>{tr(SCENE_STATUS_COPY[status])}</span>
                 <span className="scene-test-badge" data-test-state={testState}>{tr(SCENE_TEST_COPY[testState])}</span>

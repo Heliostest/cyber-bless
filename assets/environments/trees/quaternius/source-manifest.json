@@ -1,0 +1,161 @@
+{
+  "asset": "Quaternius Stylized Nature MegaKit",
+  "edition": "Standard FREE",
+  "creator": "Quaternius",
+  "creatorUrl": "https://quaternius.com/packs/stylizednaturemegakit.html",
+  "itchUrl": "https://quaternius.itch.io/stylized-nature-megakit",
+  "downloadPage": "https://opengameart.org/content/stylized-nature-megakit",
+  "downloadAuthor": "quaternius",
+  "downloadPagePublished": "2025-04-16",
+  "retrieved": "2026-11-05",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "archive": {
+    "url": "https://opengameart.org/sites/default/files/stylized_nature_megakitstandard.zip",
+    "bytes": 104088529,
+    "etag": "67ffd282-63443d1",
+    "lastModified": "Wed, 16 Apr 2025 15:53:38 GMT",
+    "retrieval": "Selected original ZIP records retrieved by HTTP Range; full archive not retained or SHA-256 hashed. Inflated record CRC32 and selected-file SHA-256 were verified.",
+    "centralDirectory": {
+      "path": "source/zip-central-directory.bin",
+      "offset": 104040299,
+      "bytes": 48208,
+      "records": 459,
+      "sha256": "29d00620f7ba2441fa8e3c51ecd085bdc391d2e24b55505f36b7821f02afc4a3"
+    }
+  },
+  "models": [
+    {
+      "key": "round",
+      "source": "CommonTree_1"
+    },
+    {
+      "key": "cluster",
+      "source": "CommonTree_5"
+    }
+  ],
+  "files": [
+    {
+      "path": "glTF/CommonTree_1.gltf",
+      "archivePath": "glTF/CommonTree_1.gltf",
+      "offset": 43871666,
+      "recordBytes": 1036,
+      "method": 8,
+      "crc32": "16e71a42",
+      "bytes": 3869,
+      "sha256": "b51cdea6545edb51d102dd6c27caafe62aa75e3c328ac8f9039f4e7bfd690bfa"
+    },
+    {
+      "path": "glTF/CommonTree_1.bin",
+      "archivePath": "glTF/CommonTree_1.bin",
+      "offset": 43662238,
+      "recordBytes": 209428,
+      "method": 8,
+      "crc32": "517142b6",
+      "bytes": 491576,
+      "sha256": "9dd689e84e1aa2f5b08db8def591254d582783c73737af54ba0d89b3e549c3ae"
+    },
+    {
+      "path": "glTF/CommonTree_5.gltf",
+      "archivePath": "glTF/CommonTree_5.gltf",
+      "offset": 44435101,
+      "recordBytes": 1026,
+      "method": 8,
+      "crc32": "20c30bfe",
+      "bytes": 3860,
+      "sha256": "fb7061f2bf9fe850870b056431f8f66cd8fdeb443c90695c5efbcf1fe6876d53"
+    },
+    {
+      "path": "glTF/CommonTree_5.bin",
+      "archivePath": "glTF/CommonTree_5.bin",
+      "offset": 44319030,
+      "recordBytes": 116071,
+      "method": 8,
+      "crc32": "7af1d619",
+      "bytes": 252996,
+      "sha256": "0e617612d50e6bb2ca3c64338383f8938ce9e04d55b548ff11cec7a7b7d8f072"
+    },
+    {
+      "path": "glTF/Bark_NormalTree.png",
+      "archivePath": "Textures/Bark_NormalTree.png",
+      "offset": 75094022,
+      "recordBytes": 3894846,
+      "method": 0,
+      "crc32": "589c800f",
+      "bytes": 3894788,
+      "sha256": "f36e94fdd73255347325b998e02a0b2575fdf714b0315bfe5e8ff34bc8e13603"
+    },
+    {
+      "path": "glTF/Bark_NormalTree_Normal.png",
+      "archivePath": "glTF/Bark_NormalTree_Normal.png",
+      "offset": 28788613,
+      "recordBytes": 4384557,
+      "method": 0,
+      "crc32": "525ea39b",
+      "bytes": 4384496,
+      "sha256": "852f6155404b8c39e100e41e26970e02a6a5c81b482d3726618dab28e3ad03a2"
+    },
+    {
+      "path": "glTF/Leaves_NormalTree_C.png",
+      "archivePath": "glTF/Leaves_NormalTree_C.png",
+      "offset": 48763636,
+      "recordBytes": 156295,
+      "method": 8,
+      "crc32": "fff91ff3",
+      "bytes": 158796,
+      "sha256": "998612bdf0b76a22f5f54d65cd7a457815d2842d89653fa4348a4ebb42933ad3"
+    },
+    {
+      "path": "License_Standard.txt",
+      "archivePath": "License_Standard.txt",
+      "offset": 58226191,
+      "recordBytes": 469,
+      "method": 8,
+      "crc32": "78c23f09",
+      "bytes": 852,
+      "sha256": "120710e542c3ebaf83856c4eb55b4a1e680593b39302eba7fdc5d942dfe78c58"
+    }
+  ],
+  "treeAvailability": {
+    "checked": "2026-11-05",
+    "scope": "All 459 entry names in the pinned free Standard archive, across all formats and textures; no claim about later archives or the full kit.",
+    "treeModels": [
+      "glTF/CommonTree_1.gltf",
+      "glTF/CommonTree_2.gltf",
+      "glTF/CommonTree_3.gltf",
+      "glTF/CommonTree_4.gltf",
+      "glTF/CommonTree_5.gltf",
+      "glTF/DeadTree_1.gltf",
+      "glTF/DeadTree_2.gltf",
+      "glTF/DeadTree_3.gltf",
+      "glTF/DeadTree_4.gltf",
+      "glTF/DeadTree_5.gltf",
+      "glTF/Pine_1.gltf",
+      "glTF/Pine_2.gltf",
+      "glTF/Pine_3.gltf",
+      "glTF/Pine_4.gltf",
+      "glTF/Pine_5.gltf",
+      "glTF/TwistedTree_1.gltf",
+      "glTF/TwistedTree_2.gltf",
+      "glTF/TwistedTree_3.gltf",
+      "glTF/TwistedTree_4.gltf",
+      "glTF/TwistedTree_5.gltf"
+    ],
+    "unavailableSpecies": {
+      "cherry": [
+        "cherry",
+        "blossom"
+      ],
+      "birch": [
+        "birch"
+      ],
+      "palm": [
+        "palm"
+      ],
+      "cypress": [
+        "cypress"
+      ]
+    },
+    "handling": "No creator-identified models or maps for these requested species in this source; do not relabel or recolor CommonTree as another species. No additional species GLBs exported."
+  }
+}

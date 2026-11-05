@@ -10,6 +10,29 @@ import { bundledWoodfishModel } from './publish-scene-content.mjs';
 import { UI_SOUND_FILES, RESULT_SOUND_DURATIONS } from '../packages/app/src/ui-sound-assets.ts';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+test('both offline hosts ship each selectable tree and its license without remote dependencies', async () => {
+  const assets = await prepareAppAssets();
+  const files = [
+    ...['quaternius', 'simple-tree'].flatMap(source => ['round.glb', 'cluster.glb', 'LICENSE.txt'].map(name => `environments/trees/${source}/${name}`)),
+    ...['cherry', 'cypress', 'willow', 'pine'].flatMap(species => ['round', 'cluster'].map(variant => `environments/trees/simple-tree/${species}-${variant}.glb`)),
+  ];
+  assert.ok(!assetFiles.some(file => file.startsWith('environments/trees/regional/')), 'archived external cherry is not shipped or selected');
+  for (const file of files) {
+    const bytes = await readFile(path.join(root, 'assets', file));
+    const hash = createHash('sha256').update(bytes).digest('hex');
+    assert.ok(assetFiles.includes(file));
+    assert.deepEqual(assets.find(item => item.file === file), { file, bytes: bytes.length, sha256: hash });
+    for (const host of ['apps/mobile-expo/public', 'apps/cyber-bless/public']) {
+      assert.equal(createHash('sha256').update(await readFile(path.join(root, host, file))).digest('hex'), hash);
+    }
+    if (file.endsWith('.glb')) {
+      assert.equal(bytes.toString('ascii', 0, 4), 'glTF');
+      const json = JSON.parse(bytes.toString('utf8', 20, 20 + bytes.readUInt32LE(12)));
+      assert.ok(json.meshes.length > 0);
+      for (const item of [...(json.buffers ?? []), ...(json.images ?? [])]) assert.ok(!item.uri || item.uri.startsWith('data:'), `${file}: embedded buffer/texture`);
+    }
+  }
+});
 test('EAS upload rules include every offline resource needed to regenerate the app', async () => {
   const require = createRequire(new URL('../apps/mobile-expo/package.json', import.meta.url));
   const { Ignore } = require('eas-cli/build/vcs/local');

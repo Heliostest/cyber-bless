@@ -4,7 +4,8 @@
   "evidence": [
     "docs/research/2026-10-27-i18n-scene-implementation.md",
     "docs/research/2026-10-27-i18n-ui-finalization.md",
-    "docs/research/2026-10-27-i18n-acceptance.md"
+    "docs/research/2026-10-27-i18n-acceptance.md",
+    "docs/research/2026-11-05-environment-tone.md"
   ],
   "catalogs": {
     "zh-Hans": {
@@ -33,12 +34,12 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "developer": {
-        "sourceHash": "4def716120364c238bb1ab0e9654803508f580b3394ca4a0159033cba387b660",
-        "targetHash": "4def716120364c238bb1ab0e9654803508f580b3394ca4a0159033cba387b660",
-        "messages": 77,
-        "reviewedAt": "2026-11-04T14:35:36.526Z",
+        "sourceHash": "9028b35bb5121fff7c32dcd7ec08d4946370f9c25811e96c2c0efa106a669174",
+        "targetHash": "9028b35bb5121fff7c32dcd7ec08d4946370f9c25811e96c2c0efa106a669174",
+        "messages": 106,
+        "reviewedAt": "2026-11-05T06:56:51.662Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex /root; production environment defaults and reset/error copy self-review"
       },
       "narratives": {
         "sourceHash": "8fa4f870a9302e676ac09335e8388f5dab64b9b35dee93ce576ba79225e8f329",
@@ -91,12 +92,12 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "developer": {
-        "sourceHash": "4def716120364c238bb1ab0e9654803508f580b3394ca4a0159033cba387b660",
-        "targetHash": "ae1b130be4628a89069c70cb6837a5e710a532ec06fbc57713c54f6ab9515ef7",
-        "messages": 77,
-        "reviewedAt": "2026-11-04T14:35:36.529Z",
+        "sourceHash": "9028b35bb5121fff7c32dcd7ec08d4946370f9c25811e96c2c0efa106a669174",
+        "targetHash": "ccc45a353e098a6d751506760cdc403d31c29d9c0013503a4bc0e0e16e2d4714",
+        "messages": 106,
+        "reviewedAt": "2026-11-05T06:56:51.664Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex /root; production environment defaults and reset/error copy self-review"
       },
       "narratives": {
         "sourceHash": "8fa4f870a9302e676ac09335e8388f5dab64b9b35dee93ce576ba79225e8f329",
@@ -149,12 +150,12 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "developer": {
-        "sourceHash": "4def716120364c238bb1ab0e9654803508f580b3394ca4a0159033cba387b660",
-        "targetHash": "3ce1b1773ee9c1ed6ea764100106c1614c4adceb73d90c9f1e2d550d256f98fb",
-        "messages": 77,
-        "reviewedAt": "2026-11-04T14:35:36.532Z",
+        "sourceHash": "9028b35bb5121fff7c32dcd7ec08d4946370f9c25811e96c2c0efa106a669174",
+        "targetHash": "be0b06991a836f8bee572fba23467542056d5fb5306f21fde458af395b3780a3",
+        "messages": 106,
+        "reviewedAt": "2026-11-05T06:56:51.665Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex /root; production environment defaults and reset/error copy self-review"
       },
       "narratives": {
         "sourceHash": "8fa4f870a9302e676ac09335e8388f5dab64b9b35dee93ce576ba79225e8f329",
@@ -207,12 +208,12 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "developer": {
-        "sourceHash": "4def716120364c238bb1ab0e9654803508f580b3394ca4a0159033cba387b660",
-        "targetHash": "7f43022eb7e3a146c6abff5db95b683c9903ea93741c85b73da52ac139ad6b25",
-        "messages": 77,
-        "reviewedAt": "2026-11-04T14:35:36.535Z",
+        "sourceHash": "9028b35bb5121fff7c32dcd7ec08d4946370f9c25811e96c2c0efa106a669174",
+        "targetHash": "62cbb815c30927b7970cebf95e9f2a85bfb859fecb10f242d0a23fea3e780e1f",
+        "messages": 106,
+        "reviewedAt": "2026-11-05T06:56:51.665Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex /root; production environment defaults and reset/error copy self-review"
       },
       "narratives": {
         "sourceHash": "8fa4f870a9302e676ac09335e8388f5dab64b9b35dee93ce576ba79225e8f329",
@@ -265,12 +266,12 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "developer": {
-        "sourceHash": "4def716120364c238bb1ab0e9654803508f580b3394ca4a0159033cba387b660",
-        "targetHash": "1ec6618eb9d844b78f7a7846a9948d98f796f33705320be0c2e4c2ddbdada520",
-        "messages": 77,
-        "reviewedAt": "2026-11-04T14:35:36.538Z",
+        "sourceHash": "9028b35bb5121fff7c32dcd7ec08d4946370f9c25811e96c2c0efa106a669174",
+        "targetHash": "9e51b7f55106e9a2c748f9bfeff92b1e6b2faa111868fea1b8c880a2e90f259d",
+        "messages": 106,
+        "reviewedAt": "2026-11-05T06:56:51.665Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex /root; production environment defaults and reset/error copy self-review"
       },
       "narratives": {
         "sourceHash": "8fa4f870a9302e676ac09335e8388f5dab64b9b35dee93ce576ba79225e8f329",
@@ -323,12 +324,12 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "developer": {
-        "sourceHash": "4def716120364c238bb1ab0e9654803508f580b3394ca4a0159033cba387b660",
-        "targetHash": "3eebdec2e7d308b648b22c26ab92834439326cd6b9bd40f48db4f6a8506b60f5",
-        "messages": 77,
-        "reviewedAt": "2026-11-04T14:35:36.541Z",
+        "sourceHash": "9028b35bb5121fff7c32dcd7ec08d4946370f9c25811e96c2c0efa106a669174",
+        "targetHash": "29c9c9306a9849a6abcdcb5a4a07deb3fa088aaafaa1f73f48679b60c24095ad",
+        "messages": 106,
+        "reviewedAt": "2026-11-05T06:56:51.665Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex /root; production environment defaults and reset/error copy self-review"
       },
       "narratives": {
         "sourceHash": "8fa4f870a9302e676ac09335e8388f5dab64b9b35dee93ce576ba79225e8f329",
@@ -381,12 +382,12 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "developer": {
-        "sourceHash": "4def716120364c238bb1ab0e9654803508f580b3394ca4a0159033cba387b660",
-        "targetHash": "50914d8611d83cf1080dae42b1dc904222657602be8d7f35093a574c535cadfe",
-        "messages": 77,
-        "reviewedAt": "2026-11-04T14:35:36.543Z",
+        "sourceHash": "9028b35bb5121fff7c32dcd7ec08d4946370f9c25811e96c2c0efa106a669174",
+        "targetHash": "1436f31c02b9f03e0ad44fa1ada061295c71510b8d4cd9da5960f83a74105f59",
+        "messages": 106,
+        "reviewedAt": "2026-11-05T06:56:51.666Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex /root; production environment defaults and reset/error copy self-review"
       },
       "narratives": {
         "sourceHash": "8fa4f870a9302e676ac09335e8388f5dab64b9b35dee93ce576ba79225e8f329",
@@ -439,12 +440,12 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "developer": {
-        "sourceHash": "4def716120364c238bb1ab0e9654803508f580b3394ca4a0159033cba387b660",
-        "targetHash": "42eff683ea01bc6c6c520bbca8f97560d09ac947340d4abcaeb3e039615ec16b",
-        "messages": 77,
-        "reviewedAt": "2026-11-04T14:35:36.546Z",
+        "sourceHash": "9028b35bb5121fff7c32dcd7ec08d4946370f9c25811e96c2c0efa106a669174",
+        "targetHash": "decedd262adecd74ef3dbd507678e2d65b4e9a2f187a191905ce434a491a966c",
+        "messages": 106,
+        "reviewedAt": "2026-11-05T06:56:51.666Z",
         "review": "agent-self-review",
-        "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
+        "reviewer": "Codex /root; production environment defaults and reset/error copy self-review"
       },
       "narratives": {
         "sourceHash": "8fa4f870a9302e676ac09335e8388f5dab64b9b35dee93ce576ba79225e8f329",

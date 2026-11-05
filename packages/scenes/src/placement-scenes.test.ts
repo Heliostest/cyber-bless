@@ -30,7 +30,9 @@ vi.mock('@wbr/scene-runtime/debug-render-style', () => ({
 }))
 const instances: SceneInstance[] = []
 beforeEach(() => {
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ clearRect() {}, fillRect() {}, fillText() {}, measureText(text: string) { return { width: Array.from(text).length * 20 } } } as unknown as CanvasRenderingContext2D)
+  const context = { clearRect() {}, fillRect() {}, fillText() {}, measureText(text: string) { return { width: Array.from(text).length * 20 } } } as unknown as CanvasRenderingContext2D
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(
+    ((kind: string) => kind === '2d' ? context : null) as HTMLCanvasElement['getContext'])
 })
 afterEach(() => { instances.splice(0).forEach(s => s.dispose()); document.body.replaceChildren(); vi.restoreAllMocks() })
 type Point = [number, number]

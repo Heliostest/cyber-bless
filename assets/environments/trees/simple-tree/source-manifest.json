@@ -1,0 +1,573 @@
+{
+  "title": "Just a simple tree - offline source and product adaptations",
+  "repository": "https://github.com/MikeFernandez-Pro/just-a-simple-tree",
+  "commit": "8fd94b8edc7ef1b87c086694382a0808c059971c",
+  "commitDate": "2026-11-01T11:47:55Z",
+  "acquired": "2026-11-05",
+  "author": "MikeFernandez-Pro",
+  "license": "MIT",
+  "licenseFile": "source/LICENSE",
+  "upstreamThree": "^0.186.1",
+  "conversionThree": "0.170.0",
+  "palette": {
+    "name": "upstream spring theme",
+    "leaves": [
+      "#4ea276",
+      "#a8ff75",
+      "#d7f08c"
+    ],
+    "wood": [
+      "#837282",
+      "#8a796a",
+      "#b4a088"
+    ]
+  },
+  "barkStops": [
+    0,
+    0.497,
+    1
+  ],
+  "bakedSunDirection": [
+    0.7775170317935721,
+    0.470625888171158,
+    0.41710734667951105
+  ],
+  "sources": [
+    {
+      "file": "LICENSE",
+      "gitBlob": "7869fe5a6f4d3fe7ddca38019553ffcc07855f8d",
+      "sha256": "137104f582f2393de9e73a910b04e45afbfeee8c6ec93e0e9f753b9acd983582"
+    },
+    {
+      "file": "README.md",
+      "gitBlob": "1dce14be33b55e0895b1357df35aa02b1a15415b",
+      "sha256": "56f781f573188769b0f1e859bd7a05e44bc7b6681d0343229526c03a90b02779"
+    },
+    {
+      "file": "foliage.js",
+      "gitBlob": "63b0ac2a14fc0fe0d4f5fb53794669fcab1b2ddb",
+      "sha256": "c60b70ad845b44b4467171b7591d2c046c23b512305e9c9bf4a0460134337fa3"
+    },
+    {
+      "file": "glb.js",
+      "gitBlob": "35d87124afb851cc7235ecf33d3013384bf791ab",
+      "sha256": "1fc718acccbb4d1060881d59cfea0335fd30c08dae3c6240f842374275de4211"
+    },
+    {
+      "file": "main.js",
+      "gitBlob": "80072ad4b4d6645b58c19959a3c16269c58a6150",
+      "sha256": "cb18ba1f298575a12a0f23ae8e0e78f92b309bbae234c9b135eb25f458b3d120"
+    },
+    {
+      "file": "oak.js",
+      "gitBlob": "a415079a060caaad19d50ea1db224b3651d34c91",
+      "sha256": "bdbaf91bb726736d4411451015c50faefb39f46f09f90e9e49e8628e63611b2a"
+    },
+    {
+      "file": "package.json",
+      "gitBlob": "cd8b2dd8031e8d90e930f92a658c6eb88ecd168e",
+      "sha256": "f702ff32c7c020b7fdf0d79745b64e575bf93b6d9c1a18045537b6d67a02a636"
+    },
+    {
+      "file": "regenerate.js",
+      "gitBlob": "efd5e00ee55e0a3e153080e5b26a95ff3cfe0cc3",
+      "sha256": "f62f87b040511c752f359b572e9c299a61ba00ba8f29d05b170280f49daa5f39"
+    },
+    {
+      "file": "shading.js",
+      "gitBlob": "3293c8dcb56ec0f49063c0207278e3a99eb5d6ae",
+      "sha256": "f18bf35a2708ad653986f9d2154653d89d6c92cb406d5533d1665e7d4d571d9a"
+    },
+    {
+      "file": "textures.js",
+      "gitBlob": "8f73ed80b784d5f45d38179bb25e40a06a020c2c",
+      "sha256": "a6d582494352c63cd104f43c4b61a2f37a2e6a29e9dea72ce66d3875cea39daa"
+    },
+    {
+      "file": "themes.js",
+      "gitBlob": "544b93c7f8f9a95e5530463dd7f436e3d22ecb59",
+      "sha256": "da8e84decf04b2c9b4b816dac704e4fc7863d82e19dfffc9d2f091af55d28c4c"
+    },
+    {
+      "file": "wind.js",
+      "gitBlob": "099231829d8c4e48da61912160d43c58e49f8014",
+      "sha256": "7d5af2eb0c08ffa4fb4fa6acf03848859c9f7b22aa82067f909d4115a3307b47"
+    },
+    {
+      "file": "wood.js",
+      "gitBlob": "633f03a3871865911ed8820fe64c2d4d8b7617be",
+      "sha256": "3cadfaff62be296a2c825a2c91f3fb03b3aacfb58b4e346d4b1f92984c252537"
+    },
+    {
+      "file": "cypress.js",
+      "gitBlob": "345af4e15bbf8a99f8cbdae92fb6c17cdeee6e72",
+      "sha256": "776535878732f4b37de2b988ea2a237da270663145ec962297a62d4d83ea371d"
+    },
+    {
+      "file": "pine.js",
+      "gitBlob": "ea08061b3c1a249fbad910d63e44945d4a7ece21",
+      "sha256": "f1aa268009a8a63f0c84c98661944b188cebe5e8930240b69eecf3b94aacb911"
+    },
+    {
+      "file": "willow.js",
+      "gitBlob": "a14a2e95c87de1af850e00de9f696a78ca1844c2",
+      "sha256": "8f9c688b7d4962655c319d655fa7dcc45bae0f80ebb694737cbfaa67d7e59939"
+    }
+  ],
+  "models": [
+    {
+      "key": "round",
+      "file": "round.glb",
+      "cardSegments": 2,
+      "parameters": {
+        "species": "oak",
+        "seed": 8263,
+        "size": 4.87,
+        "trunkThickness": 0.21,
+        "baseFlare": 1.69,
+        "trunkHeight": 0,
+        "splitHeight": 0.41,
+        "splitScatter": 0,
+        "mainLimbs": 3,
+        "levels": 1,
+        "branches": 4,
+        "spread": 0.89,
+        "crookedness": 0.34,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 1,
+        "cardsPerClump": 26,
+        "cardGrowth": 1.1602387022306428,
+        "cardSize": 0.92,
+        "roundness": 0.58,
+        "clumpSize": 1,
+        "aoDistance": 2.5,
+        "leafTexture": "round cluster",
+        "keepBuried": false,
+        "shadowSide": 0.435,
+        "ao": 0.54,
+        "variation": 0.25,
+        "capRings": 2
+      }
+    },
+    {
+      "key": "cluster",
+      "file": "cluster.glb",
+      "cardSegments": 2,
+      "parameters": {
+        "species": "oak",
+        "seed": 29017,
+        "size": 4.87,
+        "trunkThickness": 0.21,
+        "baseFlare": 1.69,
+        "trunkHeight": 0.25,
+        "splitHeight": 0.36,
+        "splitScatter": 0.35,
+        "mainLimbs": 4,
+        "levels": 1,
+        "branches": 4,
+        "spread": 0.78,
+        "crookedness": 0.34,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 1,
+        "cardsPerClump": 26,
+        "cardGrowth": 1.1602387022306428,
+        "cardSize": 0.92,
+        "roundness": 0.58,
+        "clumpSize": 0.93,
+        "aoDistance": 2.5,
+        "leafTexture": "pointed cluster",
+        "keepBuried": false,
+        "shadowSide": 0.435,
+        "ao": 0.54,
+        "variation": 0.25,
+        "capRings": 2
+      }
+    },
+    {
+      "key": "cypress-round",
+      "file": "cypress-round.glb",
+      "cardSegments": 1,
+      "parameters": {
+        "species": "cypress",
+        "seed": 8263,
+        "size": 5.27,
+        "trunkThickness": 0.21,
+        "baseFlare": 1,
+        "trunkHeight": 1.22,
+        "splitHeight": 0.41,
+        "splitScatter": 0,
+        "mainLimbs": 3,
+        "levels": 1,
+        "branches": 4,
+        "spread": 0.89,
+        "crookedness": 0.5,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 1,
+        "cardsPerClump": 35,
+        "cardGrowth": 1,
+        "cardSize": 0.66,
+        "roundness": 0,
+        "clumpSize": 1.1,
+        "aoDistance": 2.5,
+        "leafTexture": "willow leaves",
+        "keepBuried": false,
+        "shadowSide": 0.435,
+        "ao": 0.54,
+        "variation": 0.25,
+        "capRings": 2,
+        "droop": -0.16,
+        "slenderness": 0.85,
+        "cypressBranches": 24
+      },
+      "palette": {
+        "name": "product evergreen contrast palette",
+        "leaves": [
+          "#28573e",
+          "#5d9458",
+          "#9ec886"
+        ],
+        "wood": [
+          "#837282",
+          "#8a796a",
+          "#b4a088"
+        ]
+      }
+    },
+    {
+      "key": "cypress-cluster",
+      "file": "cypress-cluster.glb",
+      "cardSegments": 1,
+      "parameters": {
+        "species": "cypress",
+        "seed": 29017,
+        "size": 5.27,
+        "trunkThickness": 0.21,
+        "baseFlare": 1,
+        "trunkHeight": 1.22,
+        "splitHeight": 0.41,
+        "splitScatter": 0,
+        "mainLimbs": 3,
+        "levels": 1,
+        "branches": 4,
+        "spread": 0.89,
+        "crookedness": 0.5,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 1,
+        "cardsPerClump": 35,
+        "cardGrowth": 1,
+        "cardSize": 0.66,
+        "roundness": 0,
+        "clumpSize": 1.1,
+        "aoDistance": 2.5,
+        "leafTexture": "willow leaves",
+        "keepBuried": false,
+        "shadowSide": 0.435,
+        "ao": 0.54,
+        "variation": 0.25,
+        "capRings": 2,
+        "droop": -0.16,
+        "slenderness": 0.9,
+        "cypressBranches": 26
+      },
+      "palette": {
+        "name": "product evergreen contrast palette",
+        "leaves": [
+          "#28573e",
+          "#5d9458",
+          "#9ec886"
+        ],
+        "wood": [
+          "#837282",
+          "#8a796a",
+          "#b4a088"
+        ]
+      }
+    },
+    {
+      "key": "pine-round",
+      "file": "pine-round.glb",
+      "cardSegments": 1,
+      "parameters": {
+        "species": "pine",
+        "seed": 8263,
+        "size": 5.27,
+        "trunkThickness": 0.21,
+        "baseFlare": 1.4,
+        "trunkHeight": 0,
+        "splitHeight": 0.41,
+        "splitScatter": 0,
+        "mainLimbs": 3,
+        "levels": 1,
+        "branches": 4,
+        "spread": 0.89,
+        "crookedness": 0.45,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 1,
+        "cardsPerClump": 13,
+        "cardGrowth": 1,
+        "cardSize": 0.8,
+        "roundness": 0,
+        "clumpSize": 1.25,
+        "aoDistance": 2.5,
+        "leafTexture": "willow leaves",
+        "keepBuried": false,
+        "shadowSide": 0.435,
+        "ao": 0.54,
+        "variation": 0.25,
+        "capRings": 1,
+        "droop": -1,
+        "whorls": 7,
+        "whorlBranches": 5
+      }
+    },
+    {
+      "key": "pine-cluster",
+      "file": "pine-cluster.glb",
+      "cardSegments": 1,
+      "parameters": {
+        "species": "pine",
+        "seed": 29017,
+        "size": 5.27,
+        "trunkThickness": 0.21,
+        "baseFlare": 1.4,
+        "trunkHeight": 0,
+        "splitHeight": 0.41,
+        "splitScatter": 0,
+        "mainLimbs": 3,
+        "levels": 1,
+        "branches": 4,
+        "spread": 0.89,
+        "crookedness": 0.45,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 1,
+        "cardsPerClump": 13,
+        "cardGrowth": 1,
+        "cardSize": 0.8,
+        "roundness": 0,
+        "clumpSize": 1.25,
+        "aoDistance": 2.5,
+        "leafTexture": "willow leaves",
+        "keepBuried": false,
+        "shadowSide": 0.435,
+        "ao": 0.54,
+        "variation": 0.25,
+        "capRings": 1,
+        "droop": -1,
+        "whorls": 8,
+        "whorlBranches": 5
+      }
+    },
+    {
+      "key": "willow-round",
+      "file": "willow-round.glb",
+      "cardSegments": 1,
+      "parameters": {
+        "species": "willow",
+        "seed": 8263,
+        "size": 6.82,
+        "trunkThickness": 0.18,
+        "baseFlare": 1.49,
+        "trunkHeight": 0,
+        "splitHeight": 0.41,
+        "splitScatter": 0,
+        "mainLimbs": 5,
+        "levels": 1,
+        "branches": 4,
+        "spread": 0.89,
+        "crookedness": 0.72,
+        "sides": 6,
+        "smoothness": 1,
+        "variety": 1,
+        "cardsPerClump": 4,
+        "cardGrowth": 1,
+        "cardSize": 2.05,
+        "roundness": 0.27,
+        "clumpSize": 0.9,
+        "aoDistance": 2.5,
+        "leafTexture": "willow leaves",
+        "keepBuried": false,
+        "shadowSide": 0.435,
+        "ao": 0.54,
+        "variation": 0.25,
+        "capRings": 1,
+        "willowStrands": 80,
+        "hang": 0.8,
+        "ringStep": 3
+      }
+    },
+    {
+      "key": "willow-cluster",
+      "file": "willow-cluster.glb",
+      "cardSegments": 1,
+      "parameters": {
+        "species": "willow",
+        "seed": 29017,
+        "size": 6.82,
+        "trunkThickness": 0.18,
+        "baseFlare": 1.49,
+        "trunkHeight": 0,
+        "splitHeight": 0.41,
+        "splitScatter": 0,
+        "mainLimbs": 5,
+        "levels": 1,
+        "branches": 4,
+        "spread": 0.89,
+        "crookedness": 0.72,
+        "sides": 6,
+        "smoothness": 1,
+        "variety": 1,
+        "cardsPerClump": 4,
+        "cardGrowth": 1,
+        "cardSize": 2.05,
+        "roundness": 0.27,
+        "clumpSize": 0.9,
+        "aoDistance": 2.5,
+        "leafTexture": "willow leaves",
+        "keepBuried": false,
+        "shadowSide": 0.435,
+        "ao": 0.54,
+        "variation": 0.25,
+        "capRings": 1,
+        "willowStrands": 88,
+        "hang": 0.75,
+        "ringStep": 3
+      }
+    },
+    {
+      "key": "cherry-round",
+      "file": "cherry-round.glb",
+      "exportSpecies": "flowering-cherry-product-adaptation",
+      "adaptation": "Source-derived flowering cherry; product vase-form parameters and five-petal notched blossom atlas, not a native upstream Prunus generator.",
+      "cardSegments": 2,
+      "parameters": {
+        "species": "oak",
+        "seed": 49271,
+        "size": 4.9,
+        "trunkThickness": 0.18,
+        "baseFlare": 1.05,
+        "trunkHeight": 0,
+        "splitHeight": 0.24,
+        "splitScatter": 0.42,
+        "mainLimbs": 4,
+        "levels": 1,
+        "branches": 5,
+        "spread": 1.02,
+        "crookedness": 0.22,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 0.6,
+        "cardsPerClump": 26,
+        "cardGrowth": 1.1,
+        "cardSize": 0.98,
+        "roundness": 0.48,
+        "clumpSize": 0.77,
+        "aoDistance": 2.5,
+        "leafTexture": "product cherry blossoms",
+        "keepBuried": false,
+        "shadowSide": 0.26,
+        "ao": 0.48,
+        "variation": 0.16,
+        "capRings": 2
+      },
+      "palette": {
+        "name": "product flowering cherry all pink",
+        "leaves": [
+          "#ad4875",
+          "#e57ca8",
+          "#ffb5d1"
+        ],
+        "wood": [
+          "#674b48",
+          "#8b6254",
+          "#bc8a73"
+        ]
+      },
+      "crownFlatten": 0.78
+    },
+    {
+      "key": "cherry-cluster",
+      "file": "cherry-cluster.glb",
+      "exportSpecies": "flowering-cherry-product-adaptation",
+      "adaptation": "Source-derived flowering cherry; product vase-form parameters and five-petal notched blossom atlas, not a native upstream Prunus generator.",
+      "cardSegments": 2,
+      "parameters": {
+        "species": "oak",
+        "seed": 67103,
+        "size": 4.9,
+        "trunkThickness": 0.18,
+        "baseFlare": 1.05,
+        "trunkHeight": 0,
+        "splitHeight": 0.21,
+        "splitScatter": 0.42,
+        "mainLimbs": 5,
+        "levels": 1,
+        "branches": 4,
+        "spread": 1.08,
+        "crookedness": 0.22,
+        "sides": 8,
+        "smoothness": 1,
+        "variety": 0.6,
+        "cardsPerClump": 26,
+        "cardGrowth": 1.1,
+        "cardSize": 0.98,
+        "roundness": 0.48,
+        "clumpSize": 0.74,
+        "aoDistance": 2.5,
+        "leafTexture": "product cherry blossoms",
+        "keepBuried": false,
+        "shadowSide": 0.26,
+        "ao": 0.48,
+        "variation": 0.16,
+        "capRings": 2
+      },
+      "palette": {
+        "name": "product flowering cherry all pink",
+        "leaves": [
+          "#ad4875",
+          "#e57ca8",
+          "#ffb5d1"
+        ],
+        "wood": [
+          "#674b48",
+          "#8b6254",
+          "#bc8a73"
+        ]
+      },
+      "crownFlatten": 0.78
+    }
+  ],
+  "productExtensions": [
+    {
+      "file": "product-extensions/cherry-blossoms.mjs",
+      "module": "cherry-blossoms.js",
+      "sha256": "7f06ec2a77106da88967bd556e32ec6b010a6e474857766e090ab3dfc2ac36a6",
+      "author": "Cyber Bless product adaptation",
+      "classification": "product-authored-extension",
+      "feature": "Five notched Canvas petals per flower; 46 small flowers per source atlas cell; source paintAtlas seed 42 and source card scatter/cluster normals/AO unchanged. Product crownFlatten 0.78 uses the existing source ellipsoid-clump API; no branch geometry is imported.",
+      "upstreamBase": [
+        "oak.js",
+        "wood.js",
+        "foliage.js",
+        "glb.js",
+        "textures.js"
+      ],
+      "externalAssetReuse": false
+    }
+  ],
+  "preCherryAssetBaselines": {
+    "round.glb": "1d8ef922aeb08f1c7edd08084cbaf019aadae60df6b83c48cf8907c59cca43e0",
+    "cluster.glb": "9939dfc87478caf72e239e634e77afb53fd8476cec9892b6cd90bc7bb7417c76",
+    "cypress-round.glb": "04316bb1240b288091aa369b71a8f8227a18b78c042c3d1fb9b4897822f58b1d",
+    "cypress-cluster.glb": "80706887d431e5e8e7a89529c51b7c230a8283b9cab85ada30f8afc799279a52",
+    "pine-round.glb": "c4103819704c44a7cbab84d140422cc51b821553ad5e62787cd199f312e67d32",
+    "pine-cluster.glb": "4619dbb226567cbb8efc5163d90e33fe735b4d8e9b8217082bd61d8f56a65a8a",
+    "willow-round.glb": "f2b89e77b73894659b44e7ff64f90c041a4ac95bc1c2d7aa0d8c42babb7d9752",
+    "willow-cluster.glb": "1c86af5a95448cbd59878148ef31938f404ba92f9b8229ec4223e53c0e0892a9"
+  }
+}

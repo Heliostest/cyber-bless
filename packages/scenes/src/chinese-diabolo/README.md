@@ -1,11 +1,5 @@
 # 空竹轻扬
 
-Original two-wheel bamboo/wood diabolo, hollow drum chambers with real side apertures and wooden caps, an axle, two handsticks and a visible cord. Three 60px drags raise the right stick to spin, spread the left stick for an assisted toss/catch, and lower the right stick to settle on the cord. After catching, the rotor keeps spinning: drag the left stick again (or choose 再抛一次) for another toss, or lower the right stick / choose 收杆结束 to finish. Repeat throws do not advance checkpoints or settle the visit again. Light pull ticks, a medium launch and a stronger catch follow the host's haptics toggle. The rotor separates from the cord in flight. Sunny soft-toon garden without added furniture.
-
-The view omits hands and coordinates the objects through assisted paths. It is not a full rope-length/dynamics/acoustics simulation or a real-world acrobatics tutorial. No copied artifact imagery, efficacy claim, wish input or entry sound. Optional low settlement tone is interface feedback. Cultural scope and public sources: `content/traditions/chinese-diabolo.md`.
-
-Silent checkpoints, real mesh hit tests, cancellation, pointer/callback ownership, keyboard equivalents and resource disposal follow the accepted scene contract. Evidence: `artifacts/chinese-diabolo/`.
-
 ## 2026-10-20 当前介绍核查
 
 已按实际器物与用户提示扩充介绍。竹木双轮空竹、木轴、双杆细绳；提杆旋转→抛接（可重复）→收低停稳。
@@ -18,3 +12,8 @@ Silent checkpoints, real mesh hit tests, cancellation, pointer/callback ownershi
 ## 2026-10-23 共享方向容错
 
 共享方向判定支持同向长拖、合理斜拖与10–20px的小幅纠正，到位后继续同向拖不会丢失成功资格；明显反向、退回起点、取消及多指仍不提交。保留本模块的真实起点、动作与主动结束／留言流程。仅调整产品技术容错，未改变器物、文化主张、动作顺序、来源归属、技术 ID 或存档。验证与文化影响边界见[本轮修复记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。
+
+
+## 默认推荐树木与暖阳配色（2026-11-05）
+
+按用户指定，正式默认背景采用垂柳。配色默认采用暖阳小镇。这是考虑地区园林与季节的产品布景，不改变主题器物、动作或文化来源，也不表示该树是仪式必需植物；春景属于产品选景，不构成真实季节或仪式门槛。实际已读证据、对应范围与排除项见[地区树形记录](../../../../docs/research/2026-11-05-regional-tree-evidence.md)；默认启用与分享行为见[默认布景核查](../../../../docs/research/2026-11-05-environment-defaults.md)；树形与许可见[素材记录](../../../../assets/environments/trees/README.md)。

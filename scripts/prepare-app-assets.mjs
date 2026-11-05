@@ -24,6 +24,12 @@ export const assetFiles = [
   "environments/LICENSE.txt",
   "environments/meadow/LICENSE.boona13.txt",
   "environments/trees/source/License.txt",
+  ...['quaternius', 'simple-tree'].flatMap(source => [
+    `environments/trees/${source}/round.glb`,
+    `environments/trees/${source}/cluster.glb`,
+    `environments/trees/${source}/LICENSE.txt`,
+  ]),
+  ...['cherry', 'cypress', 'willow', 'pine'].flatMap(species => ['round', 'cluster'].map(variant => `environments/trees/simple-tree/${species}-${variant}.glb`)),
 ];
 export async function prepareAppAssets() {
   await prepareBundledContent();

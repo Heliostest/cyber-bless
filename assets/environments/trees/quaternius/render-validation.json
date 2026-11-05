@@ -1,0 +1,84 @@
+{
+  "results": [
+    {
+      "key": "round",
+      "meshes": [
+        {
+          "name": "CommonTree_1",
+          "material": "Bark_NormalTree",
+          "alphaTest": 0,
+          "transparent": false,
+          "doubleSided": true,
+          "normalMap": true,
+          "vertexColors": true,
+          "map": {
+            "width": 512,
+            "height": 512
+          },
+          "mapColorSpace": "srgb",
+          "normalColorSpace": "",
+          "colorAttributeNormalized": true
+        },
+        {
+          "name": "CommonTree_1_1",
+          "material": "Leaves_NormalTree",
+          "alphaTest": 0.20000000298023224,
+          "transparent": false,
+          "doubleSided": true,
+          "normalMap": false,
+          "vertexColors": true,
+          "map": {
+            "width": 512,
+            "height": 512
+          },
+          "mapColorSpace": "srgb",
+          "colorAttributeNormalized": true
+        }
+      ]
+    },
+    {
+      "key": "cluster",
+      "meshes": [
+        {
+          "name": "CommonTree_5",
+          "material": "Bark_NormalTree",
+          "alphaTest": 0,
+          "transparent": false,
+          "doubleSided": true,
+          "normalMap": true,
+          "vertexColors": true,
+          "map": {
+            "width": 512,
+            "height": 512
+          },
+          "mapColorSpace": "srgb",
+          "normalColorSpace": "",
+          "colorAttributeNormalized": true
+        },
+        {
+          "name": "CommonTree_5_1",
+          "material": "Leaves_NormalTree",
+          "alphaTest": 0.20000000298023224,
+          "transparent": false,
+          "doubleSided": true,
+          "normalMap": false,
+          "vertexColors": true,
+          "map": {
+            "width": 512,
+            "height": 512
+          },
+          "mapColorSpace": "srgb",
+          "colorAttributeNormalized": true
+        }
+      ]
+    }
+  ],
+  "render": {
+    "frame": 1,
+    "calls": 5,
+    "triangles": 9449,
+    "points": 0,
+    "lines": 0
+  },
+  "errors": []
+}

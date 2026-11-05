@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Jogoss cherry source validation</title>
+<style>body{margin:0;background:#dbe6d3;color:#253725;font:16px system-ui}header{padding:16px 24px}h1{font-size:24px;margin:0}p{margin:4px 0}canvas{display:block}label{position:absolute;top:90px;padding:8px 16px;background:#fff8;border-radius:8px}.a{left:20%}.b{left:70%}</style>
+<header><h1>Jogoss · Sakura Tree 01 · CC BY 4.0</h1><p>Same authentic tree, two orientations. Original mesh/normals/UVs. Embedded flower alpha512 and bark256×512. Blossom BLEND → MASK0.3.</p></header>
+<label class="a">Original orientation</label><label class="b">Turned 0.8 radians</label>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';import {GLTFLoader}from'three/addons/loaders/GLTFLoader.js';
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(1400,800);renderer.setPixelRatio(1);renderer.setClearColor(0xdbe6d3);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;document.body.append(renderer.domElement);
+const scene=new THREE.Scene();scene.add(new THREE.HemisphereLight(0xe9f3ff,0x9aa779,2.3));const sun=new THREE.DirectionalLight(0xffedd0,3);sun.position.set(-4,7,5);scene.add(sun);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(8,4),new THREE.MeshStandardMaterial({color:0x91a870,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.01;scene.add(ground);
+const camera=new THREE.OrthographicCamera(-1.5,1.5,.94,-.72,.01,20);camera.position.set(0,2.2,5);camera.lookAt(0,.45,0);
+const loaded=await new GLTFLoader().loadAsync('./cherry.glb');const results=[];
+for(const[x,turn]of[[-.72,0],[.72,.8]]){const model=loaded.scene.clone(true);const bounds=new THREE.Box3().setFromObject(model),height=bounds.max.y-bounds.min.y,center=bounds.getCenter(new THREE.Vector3());const normalize=new THREE.Group();normalize.scale.setScalar(1/height);model.position.add(new THREE.Vector3(-center.x,-bounds.min.y,-center.z));normalize.add(model);const wrapper=new THREE.Group();wrapper.position.x=x;wrapper.rotation.y=turn;wrapper.add(normalize);scene.add(wrapper);const meshes=[];model.traverse(object=>{if(!object.isMesh)return;const m=object.material;meshes.push({name:object.name,material:m.name,alphaTest:m.alphaTest,transparent:m.transparent,doubleSided:m.side===THREE.DoubleSide,normalAttribute:!!object.geometry.getAttribute('normal'),map:{width:m.map.image.width,height:m.map.image.height,colorSpace:m.map.colorSpace},vertices:object.geometry.getAttribute('position').count,triangles:object.geometry.index.count/3});});results.push({turn,sourceHeight:height,meshes});}
+renderer.render(scene,camera);window.assetValidation={results,render:renderer.info.render};window.assetValidationReady=true;
+</script></html>

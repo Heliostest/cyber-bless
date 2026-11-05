@@ -1,0 +1,70 @@
+{
+  "title": "Sakura Tree 01 - Low Poly Model",
+  "creator": "Jogoss",
+  "creatorUrl": "https://sketchfab.com/thejogoss9",
+  "originalUrl": "https://sketchfab.com/3d-models/sakura-tree-01-low-poly-model-147ae7d0d332456a99ec6195e9b0cd4f",
+  "license": "CC-BY-4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "retrieved": "2026-11-05",
+  "mirror": {
+    "repository": "https://github.com/amilutinovic/grafika",
+    "commit": "fe25b38080b6c881948d96ddc87db68c28ef3aec",
+    "path": "resources/objects/sakura_tree_01_-_low_poly_model",
+    "reason": "Sketchfab public page returned 403 and Blender connector was unavailable; official public API was accessible and used to verify attribution/license. Pinned mirror retains matching model-specific license and glTF asset.extras. Original official download archive was not retrieved for byte comparison."
+  },
+  "files": [
+    {
+      "path": "jogoss/scene.gltf",
+      "url": "https://raw.githubusercontent.com/amilutinovic/grafika/fe25b38080b6c881948d96ddc87db68c28ef3aec/resources/objects/sakura_tree_01_-_low_poly_model/scene.gltf",
+      "bytes": 7826,
+      "sha256": "165fffee1303c15b8a449c4d4e73c1bcf670ca515cd3b3754981ca4b364ec9a4",
+      "gitBlobSha1": "fe58510374e526e003b4a9f5510afa49236fd5a4"
+    },
+    {
+      "path": "jogoss/scene.bin",
+      "url": "https://raw.githubusercontent.com/amilutinovic/grafika/fe25b38080b6c881948d96ddc87db68c28ef3aec/resources/objects/sakura_tree_01_-_low_poly_model/scene.bin",
+      "bytes": 517972,
+      "sha256": "cd0c5e99fbc2d7cd3d093baa73d8f1b6757daa5bed26a30dcc6eb4059ed9cd8c",
+      "gitBlobSha1": "6f470f13bdf2cd1440213f5fd393739eaeda6f0d"
+    },
+    {
+      "path": "jogoss/license.txt",
+      "url": "https://raw.githubusercontent.com/amilutinovic/grafika/fe25b38080b6c881948d96ddc87db68c28ef3aec/resources/objects/sakura_tree_01_-_low_poly_model/license.txt",
+      "bytes": 740,
+      "sha256": "45dbb5c6cf94d8119f45f26fedcc7db2c145720a533f43cd7f0e2f5102237d8e",
+      "gitBlobSha1": "07a03813f089a03a917c32e2d3c86f15ba578ea1"
+    },
+    {
+      "path": "jogoss/textures/Bark001_2K_JPG_Mat_baseColor.png",
+      "url": "https://raw.githubusercontent.com/amilutinovic/grafika/fe25b38080b6c881948d96ddc87db68c28ef3aec/resources/objects/sakura_tree_01_-_low_poly_model/textures/Bark001_2K_JPG_Mat_baseColor.png",
+      "bytes": 3896127,
+      "sha256": "a37aa420292a03bd3b6f89a917848dd4261389335e561c51105091c838d125bd",
+      "gitBlobSha1": "4cccae967b22770d27ecb2177919ca29d7081578"
+    },
+    {
+      "path": "jogoss/textures/Sakura_Mat_baseColor.png",
+      "url": "https://raw.githubusercontent.com/amilutinovic/grafika/fe25b38080b6c881948d96ddc87db68c28ef3aec/resources/objects/sakura_tree_01_-_low_poly_model/textures/Sakura_Mat_baseColor.png",
+      "bytes": 694430,
+      "sha256": "8484b70e1cc3d9001d22f4aca6da7facf60ee7a048a8b18323a9544a125c6d59",
+      "gitBlobSha1": "6363291d87722252c2a8af436b08c39e8c96b73f"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "jogoss-model-metadata.json",
+      "url": "https://api.sketchfab.com/v3/models/147ae7d0d332456a99ec6195e9b0cd4f",
+      "sha256": "5348acdf387c37a77336bafe25325292d32aced2fd81c6cdd727943457c70e9d",
+      "accessed": "2026-11-05",
+      "scope": "Public creator metadata read: author Jogoss, exact title and model UID, CC-BY-4.0, commercial attribution requirement, downloadable status, 7007 faces and cherry description."
+    },
+    {
+      "path": "jogoss-creator-preview.jpeg",
+      "url": "https://media.sketchfab.com/models/147ae7d0d332456a99ec6195e9b0cd4f/thumbnails/e6e860955b634a87a58c698aecb5ba3e/80fe984a59e24708912a6372a335c12f.jpeg",
+      "sha256": "fa290faae5c532e4db4db0a7c0856a0f0ad0c084fea15e7d7953a2c826d2e7da",
+      "accessed": "2026-11-05",
+      "scope": "Creator preview image inspected: spreading branches and blossom alpha cards, entire tree."
+    }
+  ],
+  "output": "cherry.glb",
+  "variants": "One authentic tree; runtime may vary orientation/scale and use this same URL for both variation keys."
+}

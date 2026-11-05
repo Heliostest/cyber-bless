@@ -28,3 +28,8 @@ Invalid release or cancellation restores a pending drag to its checkpoint silent
 ## 2026-10-23 共享方向容错
 
 共享方向判定支持同向长拖、合理斜拖与10–20px的小幅纠正，到位后继续同向拖不会丢失成功资格；明显反向、退回起点、取消及多指仍不提交。保留本模块的真实起点、动作与主动结束／留言流程。仅调整产品技术容错，未改变器物、文化主张、动作顺序、来源归属、技术 ID 或存档。验证与文化影响边界见[本轮修复记录](../../../../docs/research/2026-10-23-scene-interaction-fixes.md)。
+
+
+## 默认推荐树木与暖阳配色（2026-11-05）
+
+按用户指定，正式默认背景采用层叠针叶树。配色默认采用暖阳小镇。这是考虑地区园林与季节的产品布景，不改变主题器物、动作或文化来源，也不表示该树是仪式必需植物；春景属于产品选景，不构成真实季节或仪式门槛。实际已读证据、对应范围与排除项见[地区树形记录](../../../../docs/research/2026-11-05-regional-tree-evidence.md)；默认启用与分享行为见[默认布景核查](../../../../docs/research/2026-11-05-environment-defaults.md)；树形与许可见[素材记录](../../../../assets/environments/trees/README.md)。

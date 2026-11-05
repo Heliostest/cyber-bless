@@ -1,0 +1,84 @@
+{
+  "results": [
+    {
+      "turn": 0,
+      "sourceHeight": 0.417199508385115,
+      "meshes": [
+        {
+          "name": "Sakura_Bark001_2K_JPG_Mat_0",
+          "material": "Bark001_2K_JPG_Mat",
+          "alphaTest": 0,
+          "transparent": false,
+          "doubleSided": true,
+          "normalAttribute": true,
+          "map": {
+            "width": 256,
+            "height": 512,
+            "colorSpace": "srgb"
+          },
+          "vertices": 3428,
+          "triangles": 4847
+        },
+        {
+          "name": "Sakura_Sakura_Mat_0",
+          "material": "Sakura_Mat",
+          "alphaTest": 0.3,
+          "transparent": false,
+          "doubleSided": true,
+          "normalAttribute": true,
+          "map": {
+            "width": 512,
+            "height": 512,
+            "colorSpace": "srgb"
+          },
+          "vertices": 4320,
+          "triangles": 2160
+        }
+      ]
+    },
+    {
+      "turn": 0.8,
+      "sourceHeight": 0.417199508385115,
+      "meshes": [
+        {
+          "name": "Sakura_Bark001_2K_JPG_Mat_0",
+          "material": "Bark001_2K_JPG_Mat",
+          "alphaTest": 0,
+          "transparent": false,
+          "doubleSided": true,
+          "normalAttribute": true,
+          "map": {
+            "width": 256,
+            "height": 512,
+            "colorSpace": "srgb"
+          },
+          "vertices": 3428,
+          "triangles": 4847
+        },
+        {
+          "name": "Sakura_Sakura_Mat_0",
+          "material": "Sakura_Mat",
+          "alphaTest": 0.3,
+          "transparent": false,
+          "doubleSided": true,
+          "normalAttribute": true,
+          "map": {
+            "width": 512,
+            "height": 512,
+            "colorSpace": "srgb"
+          },
+          "vertices": 4320,
+          "triangles": 2160
+        }
+      ]
+    }
+  ],
+  "render": {
+    "frame": 1,
+    "calls": 5,
+    "triangles": 14016,
+    "points": 0,
+    "lines": 0
+  },
+  "errors": []
+}

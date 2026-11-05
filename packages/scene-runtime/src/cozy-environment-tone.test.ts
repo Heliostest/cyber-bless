@@ -1,0 +1,33 @@
+import * as THREE from 'three';
+import { expect, it } from 'vitest';
+import { createCozyEnvironment } from './cozy-environment';
+
+it.each(['woodfish', 'diya-oil-lamp', 'udo-undama'])('keeps %s geometry, subject colors and original environment intact across tone changes and capture', async id => {
+  const scene = new THREE.Scene(), sun = new THREE.DirectionalLight(), subject = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial({ color: 0xe02516 }));
+  scene.add(sun, subject);
+  const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
+  await world.ready;
+  world.setTone('original');
+  const renderer = { shadowMap: {} } as THREE.WebGLRenderer;
+  world.prepare(renderer);
+  const background = scene.background, fog = scene.fog!.color.clone(), intensity = sun.intensity;
+  const root = scene.getObjectByName('cozy-environment')!, subjectColor = subject.material.color.clone();
+  const meadow = scene.getObjectByName('windswept-meadow') as THREE.InstancedMesh | undefined;
+  const bladeColors = meadow?.instanceColor?.array.slice();
+  const ground = scene.getObjectByName('meadow-ground') as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
+  const pixels = ground.material.map?.image.data.slice();
+  world.setTone('tiny-delivery'); world.prepare(renderer);
+  expect(scene.background).not.toBe(background);
+  expect(scene.fog!.color.equals(fog)).toBe(false);
+  expect(scene.getObjectByName('cozy-environment')).toBe(root);
+  expect(subject.material.color.equals(subjectColor)).toBe(true);
+  if (bladeColors) expect(meadow!.instanceColor!.array).not.toEqual(bladeColors);
+  if (pixels) expect(ground.material.map!.image.data).not.toEqual(pixels);
+  const restore = world.captureDefaultTone(); expect(restore).toBeUndefined();
+  world.setTone('original'); world.prepare(renderer);
+  expect(scene.background).toBe(background); expect(scene.fog!.color.equals(fog)).toBe(true);
+  expect(sun.intensity).toBe(intensity);
+  if (bladeColors) expect(meadow!.instanceColor!.array).toEqual(bladeColors);
+  if (pixels) expect(ground.material.map!.image.data).toEqual(pixels);
+  world.dispose(); subject.geometry.dispose(); subject.material.dispose();
+});

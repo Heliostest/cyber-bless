@@ -74,3 +74,8 @@ Run `npm run test -w @wbr/scenes -- src/turkish-ebru-paper/scene.test.ts`. The t
 ## 2026-10-28 材质光效接入
 
 仅揭纸后露出的浴液接入轻量受光水材质；浮彩覆盖、纸与印纹保持原样。 仅调整已审查部件的技术光学表现，器物、材料身份、动作、文案、来源、技术 ID 与存档不变；文化边界沿用本 README 既有核查及[逐场材质审查](../../../../docs/research/2026-10-28-material-lighting-audit.md)，不新增传统主张。实现与验证见[集中记录](../../../../docs/research/2026-10-28-ritual-optics-integration.md)。
+
+
+## 2026-11-04 调试台水体渲染
+
+浮彩承载液显式排除共享 Toon Water 清水调试选项，颜料纹样保持原样，不因既有通用水光学参数而改成清水。器形、材料身份、动作、文化主张、来源、技术 ID 与存档保持；文化核查沿用本 README 既有记录。[水体清单、技术来源与验证](../../../../docs/research/2026-11-04-toon-water.md)。

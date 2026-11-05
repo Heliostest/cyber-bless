@@ -6,6 +6,7 @@ import { browserHost } from '@wbr/runtime';
 import './scene-review.css';
 import { getLocalePreference, formatNumber, translate as tr, translateScene } from '@wbr/i18n';
 import { useDeveloperLocale } from './locale';
+import AudioDebugConsole from './AudioDebugConsole';
 
 function indexFromURL() {
   const id = new URLSearchParams(window.location.search).get('scene');
@@ -67,6 +68,7 @@ export default function SceneReview() {
       <p><code>{entry.id}</code><span>{tr('每次切换从头体验 · 独立测试记录')}</span></p>
     </header>
     <BlessingApp key={`${entry.id}:${attempt}`} host={host}
+      debugOverlay={<AudioDebugConsole />}
       initialRoute={{ page: 'scene', id: entry.id, entry, replay: true }} />
   </div>;
 }

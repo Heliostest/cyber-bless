@@ -7,8 +7,13 @@
 .audio-debug-console button { font: inherit; color: inherit; cursor: pointer; }
 .audio-debug-console > button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 11px 14px; border: 0; background: transparent; border-radius: 15px; }
 .audio-debug-console > button span:last-child { margin-left: auto; }
-.audio-debug-console:not(:has(section)) { width: auto; }
+.audio-debug-console:not(:has(section:not([hidden]))) { width: auto; }
 .audio-debug-console section { padding: 0 14px 12px; }
+.audio-debug-console .water-debug-controls:not([hidden]) { border-top: 1px solid #628c7c; padding-top: 10px; }
+.water-debug-controls label { display: block; margin-top: 8px; }
+.water-debug-controls label > span { display: block; margin-bottom: 4px; }
+.water-debug-controls select { width: 100%; padding: 7px 8px; border: 1px solid #638a7b; border-radius: 8px; background: #2c4d43; color: #e8f4ef; font: inherit; }
+.water-debug-controls select:focus-visible { outline: 3px solid #edc469; outline-offset: 2px; }
 .audio-debug-console [data-audio-filter] { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px; border: 1px solid #638a7b; border-radius: 10px; background: #2c4d43; }
 .audio-debug-console [data-audio-filter][aria-pressed="true"] { color: #172f26; background: #b9e5cc; }
 .audio-debug-console [data-audio-filter] i { width: 25px; height: 14px; border: 1px solid currentColor; border-radius: 12px; position: relative; }

@@ -6,6 +6,8 @@ import { createCozyEnvironment } from "./cozy-environment";
 import { captureSceneImage } from "./scene-capture";
 import { createInteractionCues } from "./interaction-cues";
 import { createStylePreviewCapture } from "./style-preview-capture";
+import { debugWater } from './debug-water';
+import { bindSceneMotion } from './scene-motion';
 
 const hooks = vi.hoisted(() => ({
   capture: vi.fn(() => "data:image/webp;base64,real"), prepare: vi.fn(), invalidate: vi.fn(),
@@ -104,6 +106,36 @@ describe("mounted renderer shader thumbnail readiness", () => {
 });
 
 describe("scene cue drawing and capture isolation", () => {
+  it('applies water only while drawing and keeps capture, reduced motion and inactive time still', () => {
+    const now = vi.spyOn(performance, 'now').mockReturnValue(1000);
+    const ui = setup(), source = new THREE.MeshStandardMaterial({ transparent: true, opacity: .5 });
+    source.userData.waterRendering = true;
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), source); ui.scene.add(mesh);
+    let motion = { active: true, reducedMotion: false };
+    const unbind = bindSceneMotion(ui.renderer.domElement, () => motion), release = debugWater.enable();
+    const phases: number[] = [];
+    hooks.render.mockImplementation(() => {
+      expect(mesh.material).toBeInstanceOf(THREE.ShaderMaterial);
+      phases.push((mesh.material as unknown as THREE.ShaderMaterial).uniforms.uTime.value);
+    });
+    debugWater.select('tea', 'toon-water');
+    ui.style.render();
+    expect(mesh.material).toBe(source);
+    now.mockReturnValue(1050); ui.style.render();
+    expect(phases.at(-1)).toBeCloseTo(.05);
+    now.mockReturnValue(1090); captureSceneImage(ui.renderer.domElement);
+    expect(phases.at(-1)).toBeCloseTo(.05);
+    motion = { active: false, reducedMotion: false };
+    now.mockReturnValue(2000); ui.style.render();
+    motion = { active: true, reducedMotion: true };
+    now.mockReturnValue(3000); ui.style.render();
+    expect(phases.at(-1)).toBeCloseTo(.05);
+    hooks.render.mockImplementation(() => { expect(mesh.material).toBe(source); });
+    release();
+    ui.style.render();
+    ui.style.dispose(); unbind(); now.mockRestore();
+    expect(debugWater.getSnapshot()).toEqual([]);
+  });
   it("updates cues before the world, then draws them with the owner's camera layers restored", () => {
     const ui = setup(), order: string[] = [];
     ui.camera.layers.enable(31);

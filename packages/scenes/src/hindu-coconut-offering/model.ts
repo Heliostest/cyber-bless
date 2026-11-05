@@ -94,6 +94,7 @@ export function createCoconutOfferingModel() {
   const stone = new THREE.MeshStandardMaterial({ color: '#71858b', roughness: .97 })
   const ringMaterial = new THREE.MeshStandardMaterial({ color: '#817d70', roughness: 1 })
   const waterMaterial = new THREE.MeshStandardMaterial({ color: '#8ebac1', roughness: .19, transparent: true, opacity: .46, depthWrite: false })
+  waterMaterial.userData.waterRendering = true
   const add = (parent: THREE.Object3D, name: string, geometry: THREE.BufferGeometry, material: THREE.Material | THREE.Material[]) => {
     const mesh = new THREE.Mesh(geometry, material)
     mesh.name = name; mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh)

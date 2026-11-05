@@ -116,6 +116,7 @@ export function createStylizedWater<G extends THREE.BufferGeometry>(options: Sty
     opacity: options.opacity ?? 0.48,
     depthWrite: false,
   })
+  material.userData.waterRendering = true
   const bedMaterial = new THREE.MeshStandardMaterial({
     color: options.bedColor ?? 0xa9b28b,
     roughness: 0.93,

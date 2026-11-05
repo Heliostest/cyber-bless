@@ -679,6 +679,13 @@ export interface MessageArguments {
   "developer.audio.clip": {  };
   "developer.audio.synth": {  };
   "developer.audio.synthSource": {  };
+  "developer.water.title": {  };
+  "developer.water.empty": {  };
+  "developer.water.original": {  };
+  "developer.water.count": { "count": string | number | boolean | Date | null | undefined };
+  "developer.water.help": {  };
+  "developer.water.restore": {  };
+  "developer.water.toon": {  };
   "scene.nanakusa-gayu.narrative.094e40b1": {  };
   "scene.brat-bride-cloth.narrative.1f2193d9": {  };
   "scene.korean-sotdae.narrative.bff5c305": {  };

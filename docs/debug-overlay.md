@@ -1,5 +1,7 @@
 # 场景 Shader 调试面板（历史记录）
 
+2026-11-04：当前开发版「调试台」增加独立的「水体渲染」选择，可在 15 个实际含水场景中切换原有水体与 Shader Gallery Toon Water，不启用下述旧 Shader Lab。普通 App 和 `/scene-review` 均可使用；收起面板保留预览，恢复按钮或卸载调试台撤销本 App 的覆盖，不写正式存档。场景清单、排除项、来源状态与验证见[水体盘点](research/2026-11-04-toon-water.md)。
+
 2026-11-03：已删除停用的 Shader 悬浮面板组件、样式、专属翻译和旧 UI 测试。正式视觉风格菜单及共用渲染器继续保留；下文旧面板操作仅作历史记录。
 
 当前验证：`node scripts/test-shader-parameters.mjs` 检查真实 WebGL 参数效果；`node scripts/test-gouache-style.mjs` 及同类风格脚本通过正式“仪式设置 → 视觉风格”菜单检查场景；`node scripts/verify-visual-style-filmstrip.mjs` 检查正式菜单布局与操作。均支持 `WBR_URL`。

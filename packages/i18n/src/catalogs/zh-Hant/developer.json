@@ -68,5 +68,12 @@
   "developer.audio.requested": "已請求試聽：{cue}",
   "developer.audio.clip": "音效片段",
   "developer.audio.synth": "程式合成音效",
-  "developer.audio.synthSource": "合成器：soft-audio.ts"
+  "developer.audio.synthSource": "合成器：soft-audio.ts",
+  "developer.water.title": "水體渲染",
+  "developer.water.empty": "目前場景沒有可切換的水體。",
+  "developer.water.original": "原有水體",
+  "developer.water.count": "已接入 {count} 個水體網格",
+  "developer.water.help": "即時預覽；切換不會重設儀式進度。",
+  "developer.water.restore": "恢復原有水體",
+  "developer.water.toon": "Toon Water"
 }

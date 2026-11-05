@@ -64,6 +64,7 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
     for (const x of [-1.36, 1.36]) add(`ebru-rivet-${side}-${x}`, new THREE.SphereGeometry(.023, 8, 6), brightCopper, [x, .415, side * 1.144])
   }
   const liquid = add('ebru-liquid-meniscus', new THREE.BoxGeometry(3.05, .055, 2.04), createRitualMaterial({ color: 0xc1ddd2, roughness: .22, metalness: 0, transparent: true, opacity: .78, depthWrite: false }, { kind: 'water', strength: .2 }), [0, .413, 0]); liquid.castShadow = false
+  liquid.material.userData.waterRendering = false // Pigment-bearing size is not clear water.
   // Both surfaces retain exactly the same UVs and original pixel field. The
   // inverse horizontal displacement is the comb's authored flow field.
   const textureWidth = 256, textureHeight = 192, pixels = new Uint8Array(textureWidth * textureHeight * 4)

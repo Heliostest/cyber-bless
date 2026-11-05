@@ -6,6 +6,7 @@ export function createShishiOdoshiModel(){
  subject.name='sozu-subject';fixed.name='sozu-fixed';pivot.name='sozu-pivot';feed.name='sozu-feed';subject.add(fixed,pivot,feed);pivot.position.y=1.15
  const bamboo=new THREE.MeshStandardMaterial({color:'#9aa557',roughness:.82,vertexColors:true}),cut=new THREE.MeshStandardMaterial({color:'#ded19b',roughness:.9}),node=new THREE.MeshStandardMaterial({color:'#788342',roughness:.88}),stone=new THREE.MeshStandardMaterial({color:'#8c9a98',roughness:.98,vertexColors:true}),pinMat=new THREE.MeshStandardMaterial({color:'#b99b6a',roughness:.8})
  const waterMat=new THREE.MeshPhysicalMaterial({color:'#70c9c5',transparent:true,opacity:.70,roughness:.20,depthWrite:false,side:THREE.DoubleSide})
+ waterMat.userData.waterRendering=true
  const mesh=(name:string,g:THREE.BufferGeometry,mat:THREE.Material|THREE.Material[],parent:THREE.Object3D,x=0,y=0,z=0)=>{
   if((mat as THREE.MeshStandardMaterial).vertexColors){const p=g.attributes.position!,a=new Float32Array(p.count*3);for(let i=0;i<p.count;i++){const v=.94+.035*Math.sin(p.getX(i)*31+p.getY(i)*8+p.getZ(i)*17);a.set([v,v,v],i*3)}g.setAttribute('color',new THREE.BufferAttribute(a,3))}
   const m=new THREE.Mesh(g,mat);m.name=name;m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;parent.add(m);return m

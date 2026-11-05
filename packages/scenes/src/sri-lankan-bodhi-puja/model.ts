@@ -18,6 +18,7 @@ export function createBodhiPujaModel() {
   const clay = new THREE.MeshStandardMaterial({ color: 0xb76e47, roughness: .68 })
   const band = new THREE.MeshStandardMaterial({ color: 0xe1cfaa, roughness: .51 })
   const water = new THREE.MeshStandardMaterial({ color: 0x9bcbd0, roughness: .2, metalness: .03, transparent: true, opacity: .8 })
+  water.userData.waterRendering = true
   const leaves = [0x668743, 0x79994a, 0x8caa58].map(color => new THREE.MeshStandardMaterial({ color, roughness: .77 }))
   const veinMaterial = new THREE.MeshStandardMaterial({ color: 0xa8b77b, roughness: .9 })
 

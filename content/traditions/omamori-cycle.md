@@ -1,5 +1,7 @@
 # 御守领受—返还（omamori）
 
+本产品于 2026-11-05 为既有守袋和绳增加低强度程序织纹/纤维；不指定纤维、织法或产地，不展示袋内物；奉持、返还与期限差异的既有说明保持。[本轮显示与核查记录](../../docs/research/2026-11-05-craft-materials.md)。
+
 ![御守（omamori）各类随身守护袋](./omamori-cycle.jpg)
 
 <!-- 来源：Public domain | https://commons.wikimedia.org/wiki/File:Variousomamori.jpg -->

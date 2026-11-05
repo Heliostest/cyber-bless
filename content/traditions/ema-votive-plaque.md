@@ -1,5 +1,7 @@
 # 绘马（ema）
 
+本产品于 2026-11-05 增强既有木牌、木架与绳的表面显示；程序木纹、纤维和数值属于产品美术，不新增木种或传统工序主张。[本轮显示与核查记录](../../docs/research/2026-11-05-craft-materials.md)。
+
 ![日本神社绘马（ema）还愿木牌](./ema-votive-plaque.jpg)
 
 <!-- 来源：CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Iwakiyama_shrine_Ema.jpg -->

@@ -2,6 +2,7 @@ import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { createCraftMaterial } from '@wbr/scene-runtime/craft-surfaces'
 import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -71,8 +72,11 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
   const lights = addStageLights(scene, ctx.stage, { sky: 0xfff4e3, ground: 0xc4ad8e, key: 0xffe6c1, rim: 0xd8ede0 })
   const world = new THREE.Group(); scene.add(world)
   const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: 0.91 })
-  const wood = material(0xd5af7b), timber = material(0xb58b64), edgeWood = material(0x966e4e)
-  const ropeMat = material(0xe5d9b8), green = material(0x84ab88), coral = material(0xd99077)
+  const wood = createCraftMaterial({ color: 0xd5af7b, roughness: .91 }, { kind: 'wood' })
+  const timber = createCraftMaterial({ color: 0xb58b64, roughness: .91 }, { kind: 'wood' })
+  const postTimber = createCraftMaterial({ color: 0xb58b64, roughness: .91 }, { kind: 'wood', axis: 'y' })
+  const edgeWood = createCraftMaterial({ color: 0x966e4e, roughness: .91 }, { kind: 'wood' })
+  const ropeMat = createCraftMaterial({ color: 0xe5d9b8 }, { kind: 'cord' }), green = material(0x84ab88), coral = material(0xd99077)
   const cream = material(0xf3ddb3), gold = material(0xd4ae63), ink = material(0x776951)
   const add = (geometry: THREE.BufferGeometry, mat: THREE.Material, position: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.position.set(...position); parent.add(mesh); return mesh
@@ -80,7 +84,7 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
   const paint = (mesh: THREE.Mesh) => { mesh.userData.toonSurface = { outline: false }; return mesh }
   const rack = new THREE.Group(); rack.name = 'ema-rack'; world.add(rack)
   for (const x of [-1.08, 1.08]) {
-    add(new RoundedBoxGeometry(0.18, 2.16, 0.23, 3, 0.04), timber, [x, 1.08, -0.2], rack)
+    add(new RoundedBoxGeometry(0.18, 2.16, 0.23, 3, 0.04), postTimber, [x, 1.08, -0.2], rack)
     add(new RoundedBoxGeometry(0.35, 0.09, 0.68, 3, 0.035), edgeWood, [x, 0.045, -0.14], rack)
   }
   for (const y of [0.64, 1.87]) add(new RoundedBoxGeometry(2.38, 0.17, 0.23, 3, 0.04), timber, [0, y, -0.11], rack)

@@ -1,5 +1,7 @@
 # 神社铃绪（参拜铃）
 
+本产品于 2026-11-05 增强既有金属铃、木架与铃绳的表面显示；不新增合金、镀金或传统编织技法主张，金属色泽和粗糙度为美术参数，参拜宗教语境保持。[本轮显示与核查记录](../../docs/research/2026-11-05-craft-materials.md)。
+
 ![神社铃绪（suzuo／参拜铃绳）](./shrine-suzu-bell.jpg)
 
 <!-- 来源：CC BY-SA 2.0 | https://commons.wikimedia.org/wiki/File:%E9%88%B4%E7%B7%92_(Suzuo)_(14946502606).jpg -->

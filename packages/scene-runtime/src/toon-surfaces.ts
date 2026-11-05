@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { RenderStyleId } from "@wbr/content";
 import { copyRitualOptics } from './ritual-optics';
+import { copyCraftSurface, hasCraftFinish } from './craft-surfaces';
 
 /**
  * Optional art direction on mesh.userData.toonSurface. Source textures stay untouched.
@@ -37,7 +38,7 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
     if (!(source instanceof THREE.MeshStandardMaterial || source instanceof THREE.MeshPhongMaterial || source instanceof THREE.MeshLambertMaterial) || source.transparent) return source;
     const pbr = source instanceof THREE.MeshStandardMaterial ? source : undefined;
     const transmitted = source instanceof THREE.MeshPhysicalMaterial && source.transmission > 0;
-    const keepFinish = transmitted || (style !== "toon-ink" && (source instanceof THREE.MeshPhysicalMaterial ||
+    const keepFinish = transmitted || (style !== "toon-ink" && (hasCraftFinish(source) || source instanceof THREE.MeshPhysicalMaterial ||
       (hint.metalness ?? pbr?.metalness ?? 0) >= 0.3 || (hint.roughness ?? pbr?.roughness ?? 1) <= 0.4));
     const painted = {
       color: hint.color ?? source.color,
@@ -80,6 +81,7 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
     } else toon = new THREE.MeshToonMaterial({ ...painted, gradientMap: gradient });
     toon.name = `${source.name || "surface"} / ${style}`;
     copyRitualOptics(source, toon);
+    copyCraftSurface(source, toon);
     owned.push(toon);
     adapted.push([source, toon, hint.color !== undefined]);
     return toon;
@@ -131,7 +133,7 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
               toon.emissiveIntensity = source.emissiveIntensity;
               toon.opacity = source.opacity;
               toon.visible = source.visible;
-              if (source.userData.ritualOptics && source instanceof THREE.MeshStandardMaterial && toon instanceof THREE.MeshStandardMaterial) {
+              if ((source.userData.ritualOptics || source.userData.craftSurface) && source instanceof THREE.MeshStandardMaterial && toon instanceof THREE.MeshStandardMaterial) {
                 toon.roughness = (object.userData.toonSurface as ToonSurface | undefined)?.roughness ?? source.roughness;
                 toon.metalness = (object.userData.toonSurface as ToonSurface | undefined)?.metalness ?? source.metalness;
                 if (source instanceof THREE.MeshPhysicalMaterial && toon instanceof THREE.MeshPhysicalMaterial) {

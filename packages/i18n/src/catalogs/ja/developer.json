@@ -68,5 +68,12 @@
   "developer.audio.requested": "試聴リクエスト：{cue}",
   "developer.audio.clip": "効果音クリップ",
   "developer.audio.synth": "合成効果音",
-  "developer.audio.synthSource": "シンセサイザー：soft-audio.ts"
+  "developer.audio.synthSource": "シンセサイザー：soft-audio.ts",
+  "developer.water.title": "水の描画",
+  "developer.water.empty": "このシーンには切り替えられる水がありません。",
+  "developer.water.original": "元の水の表現",
+  "developer.water.count": "水のメッシュ {count} 個に対応",
+  "developer.water.help": "即時プレビュー。切り替えても儀式の進行状況は保持されます。",
+  "developer.water.restore": "元の水の表現に戻す",
+  "developer.water.toon": "Toon Water"
 }

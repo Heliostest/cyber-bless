@@ -68,5 +68,12 @@
   "developer.audio.requested": "Écoute demandée : {cue}",
   "developer.audio.clip": "Extrait sonore",
   "developer.audio.synth": "Son de synthèse",
-  "developer.audio.synthSource": "Synthétiseur : soft-audio.ts"
+  "developer.audio.synthSource": "Synthétiseur : soft-audio.ts",
+  "developer.water.title": "Rendu de l’eau",
+  "developer.water.empty": "Cette scène ne contient pas d’eau à modifier.",
+  "developer.water.original": "Eau d’origine",
+  "developer.water.count": "{count} maillages d’eau connectés",
+  "developer.water.help": "Aperçu en direct ; le changement conserve la progression du rituel.",
+  "developer.water.restore": "Rétablir l’eau d’origine",
+  "developer.water.toon": "Toon Water"
 }

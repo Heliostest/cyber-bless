@@ -68,5 +68,12 @@
   "developer.audio.requested": "Preview requested: {cue}",
   "developer.audio.clip": "Sound clip",
   "developer.audio.synth": "Synthesized sound",
-  "developer.audio.synthSource": "Synthesizer: soft-audio.ts"
+  "developer.audio.synthSource": "Synthesizer: soft-audio.ts",
+  "developer.water.title": "Water rendering",
+  "developer.water.empty": "This scene has no water to switch.",
+  "developer.water.original": "Original water",
+  "developer.water.count": "{count} water meshes connected",
+  "developer.water.help": "Live preview; switching preserves ritual progress.",
+  "developer.water.restore": "Restore original water",
+  "developer.water.toon": "Toon Water"
 }

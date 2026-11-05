@@ -74,3 +74,15 @@ normalized each tree to unit height; separated wood/canopy batches for breeze.
 Timber furniture and shallow water are original project geometry/shaders.
 Evaluated external references are documented in furniture/PROVENANCE.md and
 water/README.md; those reference implementations/assets are not redistributed.
+
+Optional developer Toon Water pattern — Water Toon Torrent
+Author: Leon Denise (leon), 2023/08/19.
+Original: https://www.shadertoy.com/view/dlScDt
+Ported from Shader Gallery src/three-materials/water-material.js.
+Changes: authored opacity, optional XZ projection for meshes without UVs,
+Three.js fog, lifecycle-controlled time, and disabled vertex displacement.
+The archived original contains no explicit license grant. No additional
+redistribution rights are asserted; no license is invented or reassigned.
+Full source hashes and access status: packages/scene-runtime/src/toon-water-ATTRIBUTION.md.
+This third-party-derived optional pattern is separate from the original
+project shallow-water shader described above.

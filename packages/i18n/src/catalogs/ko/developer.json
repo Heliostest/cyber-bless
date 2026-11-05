@@ -68,5 +68,12 @@
   "developer.audio.requested": "미리 듣기 요청됨: {cue}",
   "developer.audio.clip": "효과음 클립",
   "developer.audio.synth": "합성 효과음",
-  "developer.audio.synthSource": "합성기: soft-audio.ts"
+  "developer.audio.synthSource": "합성기: soft-audio.ts",
+  "developer.water.title": "물 렌더링",
+  "developer.water.empty": "이 장면에는 전환할 수 있는 물이 없습니다.",
+  "developer.water.original": "기존 물 표현",
+  "developer.water.count": "물 메시 {count}개 연결됨",
+  "developer.water.help": "실시간 미리보기. 전환해도 의식 진행 상태가 유지됩니다.",
+  "developer.water.restore": "기존 물 표현으로 복원",
+  "developer.water.toon": "Toon Water"
 }

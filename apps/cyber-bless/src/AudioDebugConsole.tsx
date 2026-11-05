@@ -4,6 +4,7 @@ import { message, translate as tr } from '@wbr/i18n';
 import { useApp, type InspectableSound } from '../../../packages/app/src/context';
 import { UI_SOUND_FILES } from '../../../packages/app/src/ui-sound-assets';
 import './audio-debug-console.css';
+import { WaterDebugControls } from './WaterDebugControls';
 
 const cues = new Set<string>([...Object.keys(UI_SOUND_FILES), 'woodfish', 'paper', 'water',
   'woodTap', 'beans', 'chime', 'glass', 'ceramic', 'fabric', 'metal', 'stone', 'hollow', 'air']);
@@ -204,6 +205,7 @@ export default function AudioDebugConsole() {
         <p role="status" aria-live="polite">{status}</p>
         {enabled && <button type="button" className="audio-debug-stop" onClick={() => { setEnabled(false); setStatus(''); }}>{tr('关闭')}</button>}
       </section>}
+      <WaterDebugControls anchor={anchor} hidden={!open}/>
     </aside>
     {enabled && targets.map(target => <Marker key={ids.current.get(target.element)} target={target} onPlay={play}/>)}
   </>;

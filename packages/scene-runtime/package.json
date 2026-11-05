@@ -8,6 +8,7 @@
     "./render-style": "./src/render-style.ts",
     "./debug-render-style": "./src/debug-render-style.ts",
     "./debug-styles": "./src/debug-styles.ts",
+    "./debug-water": "./src/debug-water.ts",
     "./interaction-cues": "./src/interaction-cues.ts",
     "./stylized-water": "./src/stylized-water.ts",
     "./ritual-optics": "./src/ritual-optics.ts"

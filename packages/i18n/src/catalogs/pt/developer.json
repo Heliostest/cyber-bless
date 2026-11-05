@@ -68,5 +68,12 @@
   "developer.audio.requested": "Prévia solicitada: {cue}",
   "developer.audio.clip": "Clipe de som",
   "developer.audio.synth": "Som sintetizado",
-  "developer.audio.synthSource": "Sintetizador: soft-audio.ts"
+  "developer.audio.synthSource": "Sintetizador: soft-audio.ts",
+  "developer.water.title": "Renderização da água",
+  "developer.water.empty": "Esta cena não tem água que possa ser alterada.",
+  "developer.water.original": "Água original",
+  "developer.water.count": "{count} malhas de água ligadas",
+  "developer.water.help": "Pré-visualização em tempo real; a alteração preserva o progresso do ritual.",
+  "developer.water.restore": "Restaurar a água original",
+  "developer.water.toon": "Toon Water"
 }

@@ -13,6 +13,7 @@
     "./ui-sound-assets": "./src/ui-sound-assets.ts",
     "./style.css": "./src/style.css",
     "./public-scene": "./src/public-scene.tsx",
+    "./scene-visual-features": "./src/scene-visual-features.tsx",
     "./public-scene.css": "./src/public-scene.css"
   },
   "dependencies": {

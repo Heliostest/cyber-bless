@@ -7,6 +7,7 @@ import './scene-review.css';
 import { getLocalePreference, formatNumber, translate as tr, translateScene } from '@wbr/i18n';
 import { useDeveloperLocale } from './locale';
 import AudioDebugConsole from './AudioDebugConsole';
+import { SceneVisualFeatures, SceneVisualLegend, sceneVisualOptionSuffix } from '@wbr/app/scene-visual-features';
 
 function indexFromURL() {
   const id = new URLSearchParams(window.location.search).get('scene');
@@ -58,7 +59,7 @@ export default function SceneReview() {
         <select aria-label={tr('跳转场景')} value={entry.id}
           onChange={event => select(builtInScenes.findIndex(scene => scene.id === event.target.value))}>
           {builtInScenes.map((scene, n) => <option key={scene.id} value={scene.id}>
-            {formatNumber(n + 1, { minimumIntegerDigits: 2 })} · {translateScene(scene.title)}
+            {formatNumber(n + 1, { minimumIntegerDigits: 2 })} · {translateScene(scene.title)} · {sceneVisualOptionSuffix(scene.id)}
           </option>)}
         </select>
         <button type="button" disabled={index === builtInScenes.length - 1} onClick={() => select(index + 1)}>{tr('下一个')}</button>
@@ -66,6 +67,7 @@ export default function SceneReview() {
         <button type="button" onClick={() => setAttempt(n => n + 1)}>{tr('重新开始')}</button>
       </nav>
       <p><code>{entry.id}</code><span>{tr('每次切换从头体验 · 独立测试记录')}</span></p>
+      <div className="scene-review-features"><SceneVisualFeatures id={entry.id} /><SceneVisualLegend /></div>
     </header>
     <BlessingApp key={`${entry.id}:${attempt}`} host={host}
       debugOverlay={<AudioDebugConsole />}

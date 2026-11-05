@@ -1,0 +1,28 @@
+.scene-visual-features {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  min-width: 0;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.scene-visual-feature {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border: 1px solid #7b968b55;
+  border-radius: 7px;
+  background: #f4f8ef;
+  color: #365c50;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.scene-visual-feature > [aria-hidden] { font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; font-size: 13px; }
+.scene-visual-legend { margin: 12px 0; color: #365c50; font-size: 12px; line-height: 1.6; }
+.scene-visual-legend > summary { cursor: pointer; padding: 4px 0; }
+.scene-visual-legend > p { margin: 6px 0; }
+.scene-card > .scene-visual-features { grid-column: 2; margin-top: 3px; }
+.scene-card:has(> .scene-visual-features) > .scene-badge,
+.scene-card:has(> .scene-visual-features) > svg { grid-row: 1 / span 3; }

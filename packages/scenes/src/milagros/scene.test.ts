@@ -147,7 +147,7 @@ describe('milagros craft', () => {
   it('restores the chosen object without emitting a new choice', () => {
     const onVariantChange = vi.fn()
     const s = mount(2, { initialVariant: 'flower', onVariantChange })
-    expect(s.scene.getObjectByName('milagros-charm-3')!.position.y).toBe(1.22)
+    expect(s.scene.getObjectByName('milagros-charm-3')!.localToWorld(new THREE.Vector3(0, .37, .025)).distanceTo(new THREE.Vector3(0, 1.69, .16))).toBeLessThan(1e-8)
     expect(s.scene.getObjectByName('milagros-charm-0')!.position.y).toBe(0.41)
     expect(onVariantChange).not.toHaveBeenCalled()
   })

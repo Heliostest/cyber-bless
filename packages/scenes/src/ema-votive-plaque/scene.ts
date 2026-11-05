@@ -22,7 +22,9 @@ const COPY = {
   done: '木牌已经挂好，心意留在了这里。',
 } as const
 const HELD = new THREE.Vector3(0.35, 0.8, 0.62)
-const HUNG = new THREE.Vector3(0, 1.04, 0.05)
+const HANG_ANCHOR = new THREE.Vector3(0, 0.8, 0)
+const HANG_POINT = new THREE.Vector3(0, 1.84, 0.09)
+const HUNG = HANG_POINT.clone().sub(HANG_ANCHOR)
 
 function plaqueShape() {
   const shape = new THREE.Shape()
@@ -97,7 +99,13 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
   const guide = add(new THREE.TorusGeometry(0.12, 0.008, 6, 36), new THREE.MeshBasicMaterial({ color: 0xb4cbbb, transparent: true, opacity: 0.65, depthWrite: false }), [0, 1.84, 0.155], rack)
   guide.userData.toonSurface = { outline: false }
 
-  const plaque = new THREE.Group(); plaque.name = 'ema-plaque'; plaque.position.copy(HELD); world.add(plaque)
+  const suspension = new THREE.Group(); suspension.name = 'ema-suspension'; world.add(suspension)
+  const plaque = new THREE.Group(); plaque.name = 'ema-plaque'; plaque.position.copy(HELD); suspension.add(plaque)
+  // Preserve the face-turning origin before hanging; only the hung assembly pivots at the rope.
+  function suspend() {
+    suspension.position.copy(HANG_POINT); suspension.rotation.set(0, 0, 0)
+    plaque.position.copy(HANG_ANCHOR).negate(); plaque.rotation.set(0, backAngle, 0)
+  }
   const bodyGeometry = new THREE.ExtrudeGeometry(plaqueShape(), { depth: 0.1, bevelEnabled: true,
     bevelSize: 0.012, bevelThickness: 0.012, bevelSegments: 3, curveSegments: 24, steps: 1 })
   bodyGeometry.translate(0, 0, -0.05)
@@ -224,7 +232,7 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
   }
   function complete() {
     if (!canAct() || step !== 2 || !hanging) return
-    step = 3; hanging = false; plaque.position.copy(HUNG); plaque.rotation.set(0, backAngle, 0); clock = 0
+    step = 3; hanging = false; suspend(); clock = 0
     sync(); ctx.onProgress?.(3)
     feedback.impact({ freqs: [392, 587.33], duration: 0.28, gain: 0.025 })
     overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
@@ -252,7 +260,7 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
       if (started || disposed) return
       started = true; step = THREE.MathUtils.clamp(Math.floor(ctx.initialProgress ?? 0), 0, 3)
       angleTarget = step === 0 ? 0 : Math.PI; plaque.rotation.y = angleTarget
-      plaque.position.copy(step === 3 ? HUNG : HELD)
+      if (step === 3) suspend(); else plaque.position.copy(HELD)
       resize(); stopResize = observeCanvasResize(canvas, resize)
       if (!returning) {
         writer = gestures.createWishWrite({ maxLen: 40, saves: ctx.saveWish !== undefined,
@@ -281,7 +289,7 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
         if (hangT === 1) complete()
       } else if (step === 3) {
         if (!quiet) clock += delta
-        plaque.rotation.z = quiet ? 0 : Math.sin(clock * 2.1) * Math.exp(-clock * 1.2) * 0.025
+        suspension.rotation.z = quiet ? 0 : Math.sin(clock * 2.1) * Math.exp(-clock * 1.2) * 0.025
       }
       style.render()
     },

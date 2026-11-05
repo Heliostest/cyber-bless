@@ -113,6 +113,7 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
 
   // Procedural bamboo: segmented stalks with node rings and a few leaves.
   const bamboo = new THREE.Group()
+  bamboo.name = 'tanzaku-bamboo'
   world.add(bamboo)
   // Flat, matte greens read as painted cel bands; darker nodes mark the rhythm.
   const stalkMat = new THREE.MeshStandardMaterial({ color: 0x9cc66e, roughness: 0.9 })
@@ -177,7 +178,8 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
       }, { kind: 'paper', strength: .22, fiber: 'paper' }),
     )
     strip.position.copy(p)
-    world.add(strip)
+    strip.name = `tanzaku-preset-strip-${i}`
+    bamboo.add(strip)
     hangingStrips.push(strip)
   })
 
@@ -189,8 +191,12 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     side: THREE.DoubleSide,
   }, { kind: 'paper', strength: .22, fiber: 'paper' })
   const loose = new THREE.Mesh(stripGeo, looseMat)
+  loose.name = 'tanzaku-loose-strip'
   const looseHome = new THREE.Vector3(1.15, 0.45, 1.0)
   const looseHangPos = new THREE.Vector3(0.45, 1.75, 0.12)
+  const hungPoint = new THREE.Vector3()
+  const seatingFrom = new THREE.Vector3()
+  let seating = 1
   loose.position.copy(looseHome)
   loose.rotation.z = 0.5
   world.add(loose)
@@ -259,7 +265,7 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     const rect = canvas.getBoundingClientRect()
     if (clientX < rect.left || clientX > rect.left + rect.width || clientY < rect.top || clientY > rect.top + rect.height) return false
     const actual = loose.getWorldPosition(new THREE.Vector3()).project(camera)
-    const target = world.localToWorld(looseHangPos.clone()).project(camera)
+    const target = bamboo.localToWorld(looseHangPos.clone()).project(camera)
     return Math.hypot((actual.x - target.x) * rect.width / 2, (actual.y - target.y) * rect.height / 2) <= 22
   }
 
@@ -282,7 +288,7 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     }),
     addInteractionCue(loose, {
       kind: 'drag', label: '拖到竹枝', anchor: [0, -0.21, 0],
-      destination: () => world.localToWorld(looseHangPos.clone().add(new THREE.Vector3(0, -.21, 0))),
+      destination: () => bamboo.localToWorld(looseHangPos.clone().add(new THREE.Vector3(0, -.21, 0))),
       targetLabel: '竹枝系结处',
       enabled: () => canCue() && step === 'hang',
     }),
@@ -315,6 +321,8 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
   const goWish = () => {
     if (!canAct() || step !== 'hang') return
     step = 'wish'
+    seatingFrom.copy(loose.position)
+    seating = restoring || (ctx.isReducedMotion?.() ?? false) ? 1 : 0
     grabbed = false
     dragHandle?.setEnabled(false)
     dragTarget.copy(looseHangPos)
@@ -470,7 +478,6 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
         loose.rotation.z = THREE.MathUtils.lerp(loose.rotation.z, 0, follow)
         pickZone.position.set(loose.position.x, loose.position.y - 0.2, loose.position.z)
       } else if (step === 'wish' || step === 'done') {
-        loose.position.lerp(looseHangPos, reduced ? 1 : 1 - Math.exp(-dt * 6))
         loose.rotation.z = THREE.MathUtils.lerp(
           loose.rotation.z,
           Math.sin(t * 1.5) * 0.14,
@@ -497,6 +504,14 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
 
       ending.update(dt)
       if (disposed || !(canAct())) return
+      if (step === 'wish' || step === 'done') {
+        // The bamboo carries the fixed paper top; only the free paper can lag.
+        bamboo.localToWorld(hungPoint.copy(looseHangPos))
+        world.worldToLocal(hungPoint)
+        seating = reduced ? 1 : Math.min(1, seating + Math.max(0, dt) / .18)
+        loose.position.lerpVectors(seatingFrom, hungPoint, seating * seating * (3 - 2 * seating))
+        loose.getWorldPosition(sparkleLight.position)
+      }
       styleRenderer.render()
     },
     dispose() {

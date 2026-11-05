@@ -225,6 +225,8 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
     rack.add(bar)
   }
   const emaGeo = emaGeometry()
+  // The apex remains on the rack while the lower board stirs in the breeze.
+  emaGeo.translate(0, -.09, 0)
   const emaMat = new THREE.MeshStandardMaterial({ color: 0xe8cda2, roughness: 0.9 })
   applyCraftSurface(emaMat, { kind: 'wood', strength: .4 })
 
@@ -234,7 +236,8 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
   const emas: THREE.Mesh[] = []
   for (const [x, y] of emaSpots) {
     const ema = new THREE.Mesh(emaGeo, emaMat)
-    ema.position.set(x, y, 0.03)
+    ema.name = `torii-rack-ema-${emas.length}`
+    ema.position.set(x, y + .09, 0.03)
     rack.add(ema)
     emas.push(ema)
   }
@@ -247,7 +250,8 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
   })
   applyCraftSurface(ownEmaMat, { kind: 'wood', strength: .4 })
   const ownEma = new THREE.Mesh(emaGeo, ownEmaMat)
-  ownEma.position.set(0.05, 0.8, 0.05)
+  ownEma.name = 'torii-own-ema'
+  ownEma.position.set(0.05, 0.89, 0.05)
   ownEma.visible = false
   rack.add(ownEma)
 

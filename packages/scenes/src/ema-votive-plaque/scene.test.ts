@@ -112,7 +112,7 @@ describe('ema plaque', () => {
     s.run(2)
     expect(s.progress).toEqual([1, 2, 3])
     expect(s.complete).toHaveBeenCalledOnce()
-    expect(s.scene.getObjectByName('ema-plaque')!.position.y).toBeCloseTo(1.04)
+    expect(s.scene.getObjectByName('ema-plaque')!.localToWorld(new THREE.Vector3(0, .8, 0)).distanceTo(new THREE.Vector3(0, 1.84, .09))).toBeLessThan(1e-8)
     s.button.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce()
   })
 
@@ -131,7 +131,7 @@ describe('ema plaque', () => {
     s.run(2)
     expect(s.progress).toEqual([]); expect(s.saveWish).not.toHaveBeenCalled(); expect(s.complete).not.toHaveBeenCalled()
     expect(s.scene.getObjectByName('ema-plaque')!.rotation.y).toBeCloseTo(at === 0 ? 0 : Math.PI)
-    expect(s.scene.getObjectByName('ema-plaque')!.position.y).toBeCloseTo(at === 3 ? 1.04 : 0.8)
+    expect(s.scene.getObjectByName('ema-plaque')!.localToWorld(new THREE.Vector3(0, .8, 0)).y).toBeCloseTo(at === 3 ? 1.84 : 1.6)
     expect(Array.from(s.overlay.querySelectorAll<HTMLElement>('.scene-step-dot')).filter(dot => dot.dataset.state === 'done')).toHaveLength(at)
     expect(s.button.hidden).toBe(at === 3)
   })

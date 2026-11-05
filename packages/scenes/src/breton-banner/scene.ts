@@ -28,7 +28,7 @@ export function createBretonBanner(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx, safe = shared.assertSafeCopy
   Object.values(COPY).forEach(safe)
   let started = false, disposed = false, focused = true, inactiveRendered = false, checkpoint: Checkpoint = 0
-  let dragging = false, maxTravel = 0, open = 0, lift = 0, stopResize = () => {}
+  let dragging = false, maxTravel = 0, open = 0, lift = 0, flutter = 0, stopResize = () => {}
   let transition: { step: 0 | 1; time: number; from: THREE.Vector3; open: number; lift: number } | null = null
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
   const feedback = createSceneFeedback(ctx)
@@ -114,7 +114,7 @@ export function createBretonBanner(ctx: SceneContext): SceneInstance {
   const surface = (u: number, v: number, depth = 0) => new THREE.Vector3(
     LEFT + (FOLDED_WIDTH + (FULL_WIDTH - FOLDED_WIDTH) * open) * u,
     TOP - v * (1.04 + .055 * Math.cos(u * Math.PI * 2)) + lift * u,
-    .10 + Math.sin(u * Math.PI * 12) * (.065 * (1 - open) + .012 * open) * Math.sin(v * Math.PI / 2) + depth,
+    .10 + Math.sin(u * Math.PI * 12) * (.065 * (1 - open) + .012 * open) * Math.sin(v * Math.PI / 2) + depth + flutter * v * v,
   )
   const deform = (value: number, rise = 0) => {
     open = THREE.MathUtils.clamp(value, 0, 1); lift = rise
@@ -127,7 +127,7 @@ export function createBretonBanner(ctx: SceneContext): SceneInstance {
     for (const { u, group } of tassels) group.position.copy(surface(u, 1, .01))
   }
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const restore = () => { assembly.position.copy(checkpoint >= 2 ? SEATED : HOME); deform(checkpoint >= 1 ? 1 : 0); matrices() }
+  const restore = () => { flutter = 0; assembly.position.copy(checkpoint >= 2 ? SEATED : HOME); deform(checkpoint >= 1 ? 1 : 0); matrices() }
   const enabled = (at: number) => () => active() && !transition && checkpoint === at
   addInteractionCue(tab, { kind: 'drag', label: '展开布旗', priority: 3, enabled: enabled(0), destination: clip, targetLabel: '横杆右端夹头' })
   addInteractionCue(grip, { kind: 'drag', label: '握住木杆', priority: 3, enabled: enabled(1), destination: socket, targetLabel: '木座圆孔' })
@@ -179,7 +179,12 @@ export function createBretonBanner(ctx: SceneContext): SceneInstance {
       dragging = false; if (valid) advance(); else reset()
     }, onCancel: reset,
   })
-  const ending = createQuietEnding(ctx, { ui, isActive: () => active(), duration: 3, motion: 'sway',
+  const ending = createQuietEnding(ctx, { ui, isActive: () => active(), duration: 3, motion: 'glow',
+    // The top seam has two fixed attachments: bend the free cloth, never rotate its ties.
+    onFrame(progress, _elapsed, reduced) {
+      flutter = reduced ? 0 : Math.sin(progress * Math.PI * 4) * Math.sin(progress * Math.PI) * .055
+      deform(open, lift)
+    },
     targets: () => [cloth], cancelInput: () => pointer.cancel(), complete: () => advance(),
   })
   const sync = () => {

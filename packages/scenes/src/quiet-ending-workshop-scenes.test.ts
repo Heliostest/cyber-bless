@@ -155,3 +155,29 @@ it('also resumes the bead star archive whose older quiet checkpoint was numbered
   s.run(.6)
   expect(s.onProgress).toHaveBeenCalledExactlyOnceWith(3); expect(s.complete).toHaveBeenCalledOnce()
 })
+
+describe.each([
+  { id: 'bokjori', name: 'bokjori-scoop', anchor: [0, 1.23, .075], fixed: [.5, 2.09, -.245] },
+  { id: 'st-brigids-cross', name: 'brigid-cross', anchor: [0, .98, .02], fixed: [0, 1.98, .2656] },
+])('$id suspension', ({ id, name, anchor, fixed }) => {
+  it.each([1, 2, 3].flatMap(initial => [false, true].map(reduced => ({ initial, reduced }))))('keeps the hanging point fixed through sway and settling from checkpoint $initial, reduced=$reduced', async ({ initial, reduced }) => {
+    const s = await mount(id, initial, { isReducedMotion: () => reduced }), object = s.scene.getObjectByName(name)!
+    if (initial === 1) s.overlay.querySelector<HTMLButtonElement>('.scene-bow-tap')!.click()
+    const pin = new THREE.Vector3(...fixed), local = new THREE.Vector3(...anchor)
+    let firstBody: THREE.Vector3 | undefined, movement = 0, samples = 0
+    for (let i = 0; i < 220; i++) {
+      s.instance.update(.025)
+      if (initial === 1 && !s.onProgress.mock.calls.some(([step]) => step >= 2)) continue
+      s.scene.updateMatrixWorld(true)
+      expect(object.localToWorld(local.clone()).distanceTo(pin), `attachment at frame ${i}`).toBeLessThan(1e-8)
+      const body = object.getWorldPosition(new THREE.Vector3())
+      firstBody ??= body.clone(); movement = Math.max(movement, body.distanceTo(firstBody)); samples++
+    }
+    expect(samples).toBeGreaterThan(150)
+    if (reduced) expect(movement).toBeLessThan(1e-8)
+    if (initial < 3) {
+      if (!reduced) expect(movement).toBeGreaterThan(.01)
+      expect(s.complete).toHaveBeenCalledOnce()
+    } else expect(s.complete).not.toHaveBeenCalled()
+  })
+})

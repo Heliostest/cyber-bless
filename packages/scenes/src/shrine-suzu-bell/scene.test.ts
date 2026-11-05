@@ -71,6 +71,30 @@ function cues(_s: Mounted) {
 }
 
 describe('shrine suzu object actions', () => {
+  it('keeps the bell eye fixed at its suspension through pulling, ringing and settling', () => {
+    const s = mount(), bell = s.object('suzu-round-split-bell'), pin = new THREE.Vector3(0, 2.48, .11)
+    const bodyHome = bell.getWorldPosition(new THREE.Vector3()); let movement = 0
+    for (let step = 0; step < 3; step++) {
+      s.button.click()
+      for (let frame = 0; frame < 60; frame++) {
+        s.instance.update(.025); drawn.scene!.updateMatrixWorld(true)
+        expect(bell.localToWorld(new THREE.Vector3(0, .31, 0)).distanceTo(pin)).toBeLessThan(1e-8)
+        movement = Math.max(movement, bell.getWorldPosition(new THREE.Vector3()).distanceTo(bodyHome))
+      }
+    }
+    expect(movement).toBeGreaterThan(.01); expect(s.progress).toEqual([1, 2, 3])
+  })
+
+  it('keeps the stretched rope attached to the bottom of the bell', () => {
+    const s = mount(), rope = s.object('suzu-braided-rope'), bell = s.object('suzu-round-split-bell')
+    s.button.click()
+    for (let frame = 0; frame < 60; frame++) {
+      s.instance.update(.025); drawn.scene!.updateMatrixWorld(true)
+      const top = new THREE.Vector3(0, -.265, 0)
+      expect(rope.localToWorld(top.clone()).distanceTo(bell.localToWorld(top.clone()))).toBeLessThan(1e-8)
+    }
+  })
+
   it('creates an accessible auxiliary action for pulling the actual rope', () => {
     const s = mount()
     expect(s.button).not.toBeNull()

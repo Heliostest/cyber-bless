@@ -144,7 +144,8 @@ describe('omamori companion', () => {
     expect(s.overlay.querySelector<HTMLElement>('.scene-wish-slot')!.hidden).toBe(at !== 2)
     expect(Array.from(s.overlay.querySelectorAll<HTMLElement>('.scene-step-dot')).filter(dot => dot.dataset.state === 'done')).toHaveLength(at)
     const pouch = s.scene.getObjectByName('omamori-pouch-indigo')!
-    expect(pouch.position.x).toBeCloseTo(at >= 2 ? 0.58 : at === 1 ? -0.62 : 0.14)
+    if (at >= 2) expect(pouch.localToWorld(new THREE.Vector3(0, .64, -.015)).distanceTo(new THREE.Vector3(.58, 1.68, .25))).toBeLessThan(1e-8)
+    else expect(pouch.position.x).toBeCloseTo(at === 1 ? -0.62 : 0.14)
   })
 
   it('falls back safely from an unrecognized persisted variant without reporting a new choice', () => {

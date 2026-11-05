@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 const V=(x=0,y=0,z=0)=>new THREE.Vector3(x,y,z)
@@ -8,12 +9,21 @@ export function createFirstFootingModel(){
  const root=new THREE.Group();root.name='first-footing-subject'
  const material=(color:number,roughness=.8,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness})
  const sandstone=material(0xb6aa8b),edge=material(0x8e8773),wood=material(0x9b7651),grain=material(0x7b5d43),blueStone=material(0x8faaa9),linen=material(0xd3c1a0),charcoal=material(0x29353b,.59,.12),iron=material(0x4b4c41,.55,.3),inside=material(0x484b42)
+ const woodGrain=grain.clone(),clothStripe=wood.clone()
+ applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+ applyCraftSurface(woodGrain, { kind: 'wood', strength: .35 })
+ applyCraftSurface(linen, { kind: 'fabric', strength: .26 })
+ applyCraftSurface(clothStripe, { kind: 'fabric', strength: .26 })
+ applyCraftSurface(iron, { kind: 'metal', strength: .45 })
+ applyCraftSurface(sandstone, { kind: 'stone', strength: .4 })
+ applyCraftSurface(blueStone, { kind: 'stone', strength: .4 })
+
  const solids:THREE.Mesh[]=[]
  const mesh=(name:string,geometry:THREE.BufferGeometry,mat:THREE.Material,parent:THREE.Object3D=root,x=0,y=0,z=0)=>{const m=new THREE.Mesh(geometry,mat);m.name=name;m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
  const box=(name:string,x:number,y:number,z:number,w:number,h:number,d:number,mat:THREE.Material,solid=true)=>{const m=mesh(name,new THREE.BoxGeometry(w,h,d),mat,root,x,y,z);if(solid)solids.push(m);return m}
  box('outside-step',0,-.06,.85,3,.12,1.6,blueStone)
  box('inside-floor',0,-.06,-.55,3,.12,1.2,wood)
- for(let x=-1.45;x<1.5;x+=.25)box('floor-seam-'+x,x,.001,-.55,.008,.002,1.16,grain,false)
+ for(let x=-1.45;x<1.5;x+=.25)box('floor-seam-'+x,x,.001,-.55,.008,.002,1.16,woodGrain,false)
  box('stone-threshold',.45,.045,.35,1.16,.09,.24,sandstone)
  box('door-post-left',-.17,1.0,.35,.14,2,.24,edge)
  box('door-post-right',1.07,1.0,.35,.14,2,.24,edge)
@@ -21,10 +31,10 @@ export function createFirstFootingModel(){
  for(const x of[-.17,1.07])box('post-light-face-'+x,x,1.0,.477,.10,1.96,.014,sandstone,false)
  // The door is already open: no closed sheet blocks the gift's inward path.
  box('open-door',1.25,.96,-.29,.10,1.92,1.02,wood)
- for(const z of[-.64,-.39,-.14])box('door-board-'+z,1.307,.96,z,.014,1.82,.008,grain,false)
+ for(const z of[-.64,-.39,-.14])box('door-board-'+z,1.307,.96,z,.014,1.82,.008,woodGrain,false)
  const handle=mesh('open-door-handle',new THREE.TorusGeometry(.052,.012,8,20),iron,root,1.317,.88,.04);handle.rotation.y=Math.PI/2
  box('coal-cloth',.36,.0225,1.12,.80,.045,.68,linen)
- for(const x of[-.01,.73])box('cloth-stripe-'+x,x,.0458,1.12,.012,.0015,.64,wood,false)
+ for(const x of[-.01,.73])box('cloth-stripe-'+x,x,.0458,1.12,.012,.0015,.64,clothStripe,false)
  // A bevelled, closed uneven lump with a genuinely planar base, rather than a black sphere.
  const outline=new THREE.Shape();[[-.21,-.17],[.07,-.21],[.26,-.10],[.22,.15],[.04,.21],[-.25,.12],[-.28,-.03]].forEach(([x,y],i)=>i?outline.lineTo(x!,y!):outline.moveTo(x!,y!));outline.closePath()
  const coalGeometry=new THREE.ExtrudeGeometry(outline,{depth:.29,bevelEnabled:true,bevelThickness:.025,bevelSize:.028,bevelSegments:1,steps:1});coalGeometry.rotateX(-Math.PI/2);coalGeometry.computeBoundingBox();coalGeometry.translate(0,-coalGeometry.boundingBox!.min.y,0);coalGeometry.computeBoundingBox()

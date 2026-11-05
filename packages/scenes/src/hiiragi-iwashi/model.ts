@@ -1,9 +1,12 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 const smooth=(x:number)=>{const t=THREE.MathUtils.clamp(x,0,1);return t*t*(3-2*t)}
 export function createHiiragiModel(){
  const root=new THREE.Group();root.name='hiiragi-subject';root.position.y=-.012
  const material=(color:number,roughness=.75,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness})
  const wood=material(0x966746),bark=material(0x776044),leafmat=material(0x426e42,.6),veinmat=material(0x77925b),stone=material(0xc6c6af),roast=material(0x928b75,.64,.18),dark=material(0x4c493e),eye=material(0x323e3a,.35),rim=material(0xc8b98c)
+ applyCraftSurface(wood,{kind:'wood',strength:.4,axis:'y'})
+ applyCraftSurface(stone,{kind:'stone',strength:.45})
  const finish=(source:THREE.BufferGeometry)=>{
   const raw=source.index?source.toNonIndexed():source,p=raw.getAttribute('position'),faces:number[]=[]
   for(let i=0;i<p.count;i+=3){const v=[0,1,2].map(n=>new THREE.Vector3().fromBufferAttribute(p,i+n));if(new THREE.Triangle(v[0]!,v[1]!,v[2]!).getArea()>1e-12)v.forEach(q=>faces.push(q.x,q.y,q.z))}

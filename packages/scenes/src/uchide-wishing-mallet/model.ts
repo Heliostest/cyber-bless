@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 function solid(source:THREE.BufferGeometry){
@@ -36,6 +37,10 @@ export function createWishingMalletModel(){
  mesh(actor,'uchide-tassel-cord',cappedCurve([[0,.36,.50],[0,.30,.62],[0,.18,.70]],.016),'#b74434',[0,0,0])
  mesh(actor,'uchide-tassel-collar',new THREE.CylinderGeometry(.045,.045,.05,12),'#d9b56b',[0,.165,.70])
  for(let i=0;i<6;i++){const a=i*Math.PI/3;mesh(actor,`uchide-tassel-strand-${i}`,new THREE.ConeGeometry(.012,.14,6),'#b74434',[Math.cos(a)*.025,.07,.70+Math.sin(a)*.025])}
+ // Split cached display colors by the reviewed physical parts, never by pigment.
+ for(const m of [headRest,handleRest])m.material=applyCraftSurface((m.material as THREE.MeshStandardMaterial).clone(), { kind: 'wood', strength: .4 })
+ for(const m of [handle,pommel])m.material=applyCraftSurface((m.material as THREE.MeshStandardMaterial).clone(), { kind: 'wood', strength: .4, axis: 'z' })
+ root.traverse(o=>{if(o instanceof THREE.Mesh&&(o.name==='uchide-tassel-cord'||o.name.startsWith('uchide-tassel-strand-')))o.material=applyCraftSurface((o.material as THREE.MeshStandardMaterial).clone(), { kind: 'cord', strength: .3 })})
  const pose=(step:number,t:number)=>{const n=THREE.MathUtils.clamp(t,0,1);actor.position.set(-.55,step===0?.20+.65*n:step===1?.85:step===2?.85-.65*n:.20,.70);actor.rotation.set(0,step===1?-.35*Math.sin(Math.PI*2*n):0,0);root.updateMatrixWorld(true)}
  pose(0,0)
  return{root,actor,head,handle,pommel,headRest,handleRest,pose,targets:[actor,actor,actor],roots:[actor,actor,actor],anchors:[[0,.425,-.2],[0,.425,-.2],[0,.425,-.2]] as[number,number,number][],dispose(){}}

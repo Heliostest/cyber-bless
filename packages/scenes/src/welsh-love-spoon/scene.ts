@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { createQuietEnding } from '../quiet-ending'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -58,6 +59,11 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'spoon-veranda-workbench'; scene.add(world)
   const material = (color: number, roughness = .82) => new THREE.MeshStandardMaterial({ color, roughness })
   const carved = material(0xc69050, .62), grain = material(0xe1b579, .62), oak = material(0xc5ac80), walnut = material(0x80634b), linen = material(0x94b4ad)
+  applyCraftSurface(carved, { kind: 'wood', strength: .4, axis: 'y' })
+  applyCraftSurface(grain, { kind: 'wood', strength: .35, axis: 'y' })
+  applyCraftSurface(walnut, { kind: 'wood', strength: .4 })
+  applyCraftSurface(linen, { kind: 'fabric', strength: .26 })
+
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }

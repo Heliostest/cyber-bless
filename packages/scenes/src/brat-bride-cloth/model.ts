@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 /** Original window and cloth: the three paths are product choreography. */
@@ -5,6 +6,8 @@ export function createBratBrideModel() {
  const root=new THREE.Group();root.name='brat-cloth-subject'
  const material=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.86})
  const stone=material(0xaaa6b1),wood=material(0x80584d),glass=material(0x35435f),benchMat=material(0xb18061),base=material(0x586775)
+ ;[wood,benchMat].forEach(mat=>applyCraftSurface(mat,{kind:'wood',strength:.4}))
+ applyCraftSurface(stone,{kind:'stone',strength:.45})
  const box=(name:string,size:[number,number,number],at:[number,number,number],mat:THREE.Material)=>{const g=new THREE.BoxGeometry(...size).toNonIndexed(),mesh=new THREE.Mesh(g,mat);mesh.name=name;mesh.position.set(...at);mesh.castShadow=mesh.receiveShadow=true;root.add(mesh);return mesh}
  const board=box('window-plinth',[3.6,.08,3.35],[0,.04,.80],base)
  box('window-lower-wall',[2.70,.68,.36],[0,.42,-.22],stone)
@@ -30,7 +33,7 @@ export function createBratBrideModel() {
  const vertices:number[]=[],sample:{x:number;z:number;under:boolean}[]=[]
  for(const index of faces){const [x,side,z]=points[index]!;vertices.push(x!,0,z!);sample.push({x:x!,z:z!,under:side===1});const rim=Math.abs(x!)>.78||Math.abs(z!)>.34,color=side===1?bottom:rim?hem:top;colors.push(color.r,color.g,color.b)}
  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geometry.computeVertexNormals()
- const cloth=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.95}));cloth.name='brat-cloth';cloth.castShadow=cloth.receiveShadow=true;root.add(cloth)
+ const cloth=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.95}));applyCraftSurface(cloth.material,{kind:'fabric',strength:.28});cloth.name='brat-cloth';cloth.castShadow=cloth.receiveShadow=true;root.add(cloth)
  const clamp=(n:number)=>THREE.MathUtils.clamp(n,0,1)
  function pose(step:number,t:number){
   t=clamp(t);let y=.32,z=1.75,amplitude=.045

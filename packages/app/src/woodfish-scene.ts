@@ -7,6 +7,7 @@ import { animate, createTimeline } from "animejs";
 import { swingPose } from "./woodfish-motion";
 import { parseWoodfishModel } from "./woodfish-model";
 import { createDebugRenderStyle } from "@wbr/scene-runtime/debug-render-style";
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces';
 import { addInteractionCue } from "@wbr/scenes";
 type Options = WoodfishContext & SceneMountOptions;
 export const woodfishEngine: SceneEngine<WoodfishContext, WoodfishController> = {
@@ -181,6 +182,12 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
             key.intensity = parameters.keyIntensity;
             fill.intensity = parameters.fillIntensity;
             rim.intensity = parameters.rimIntensity;
+            for (const mesh of [asset.body, asset.mallet]) {
+                for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+                    if (material instanceof THREE.MeshStandardMaterial)
+                        applyCraftSurface(material, { kind: 'wood', strength: .5, scale: .42 });
+                }
+            }
             bodyGroup.add(asset.body);
             // Anime painted-wood palette for toon presets; original GLB/PBR maps remain intact.
             asset.body.userData.toonSurface = { color: 0xd0a172, simplifyMap: true, aoIntensity: 0.3 };

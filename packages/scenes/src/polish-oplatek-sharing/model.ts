@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 // An original wafer and one complementary corner. The relief and fracture are
@@ -20,6 +21,7 @@ export function createOplatekModel() {
   const skinB=new THREE.MeshStandardMaterial({color:0xbb7956,roughness:.86})
   const clothA=new THREE.MeshStandardMaterial({color:0x6b9496,roughness:.98})
   const clothB=new THREE.MeshStandardMaterial({color:0xb25e59,roughness:.98})
+  for(const sleeve of[clothA,clothB])applyCraftSurface(sleeve,{kind:'fabric',strength:.25})
   function solid(points: [number,number][],depth:number,material:THREE.Material,name:string) {
     const shape=new THREE.Shape();points.forEach(([x,z],i)=>i?shape.lineTo(x,-z):shape.moveTo(x,-z));shape.closePath()
     const geometry=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:false,steps:1});geometry.rotateX(-Math.PI/2);geometry.translate(0,-depth/2,0)

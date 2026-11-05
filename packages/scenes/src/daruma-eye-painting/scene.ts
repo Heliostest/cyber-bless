@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -158,6 +159,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
   const wood = new THREE.MeshStandardMaterial({ color: 0xa8794f, roughness: 0.9 })
   const darkWood = new THREE.MeshStandardMaterial({ color: 0x78523b, roughness: 0.92 })
 
+  ;[wood, darkWood].forEach(material => applyCraftSurface(material, { kind: 'wood', strength: .4 }))
   const stand = new THREE.Mesh(new RoundedBoxGeometry(1.72, 0.13, 1.04, 3, 0.055), wood)
   stand.name = 'daruma-stand'
   stand.position.y = 0.065

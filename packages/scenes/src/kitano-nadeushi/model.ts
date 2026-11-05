@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 /** An original stone recumbent ox: no museum object's dimensions or surface art are copied. */
@@ -8,6 +9,8 @@ export function createNadeushiModel() {
   const dark = new THREE.MeshStandardMaterial({ color: 0x384f54, roughness: .82 })
   const skin = new THREE.MeshStandardMaterial({ color: 0xf0bc91, roughness: .82 })
   const cuff = new THREE.MeshStandardMaterial({ color: 0xd5ede3, roughness: .91 })
+  for(const carving of[stone,cutStone])applyCraftSurface(carving,{kind:'stone',strength:.45})
+  applyCraftSurface(cuff,{kind:'fabric',strength:.25})
   // Remove the degenerate pole triangles from sphere/lathe primitives before rendering.
   const clean = (source: THREE.BufferGeometry) => {
     const raw = source.index ? source.toNonIndexed() : source, p = raw.getAttribute('position'), values: number[] = []

@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 /** Original doorway, decorated willow and gift; no named person's likeness or copied patterns. */
@@ -5,6 +6,11 @@ export function createVirpominenModel(){
  const root=new THREE.Group();root.name='virpominen-subject'
  const material=(color:number,roughness=.85,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness})
  const bark=material(0x806746),willow=material(0xe4e2ce),blue=material(0x699b9a),wood=material(0xb3a27b),stone=material(0xc8c9b5),inside=material(0xe3dcc1),skin=material(0xe9b18a),yellow=material(0xf2ce78),pink=material(0xea918e),paper=material(0xf1e8bf),foil=material(0xd75e79,.5,.15)
+ // Basket fibers and paper flowers keep their original shared palette.
+ const doorWood=applyCraftSurface(wood.clone(),{kind:'wood',strength:.4,axis:'y'})
+ const yellowCuff=applyCraftSurface(yellow.clone(),{kind:'fabric',strength:.25}),blueCuff=applyCraftSurface(blue.clone(),{kind:'fabric',strength:.25})
+ applyCraftSurface(foil,{kind:'metal',strength:.4})
+ applyCraftSurface(stone,{kind:'stone',strength:.45})
  const clean=(source:THREE.BufferGeometry)=>{const raw=source.index?source.toNonIndexed():source,p=raw.getAttribute('position'),v:number[]=[];for(let i=0;i<p.count;i+=3){const a=new THREE.Vector3().fromBufferAttribute(p,i),b=new THREE.Vector3().fromBufferAttribute(p,i+1),c=new THREE.Vector3().fromBufferAttribute(p,i+2);if(new THREE.Triangle(a,b,c).getArea()>1e-12)v.push(...a.toArray(),...b.toArray(),...c.toArray())}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.computeVertexNormals();if(raw!==source)raw.dispose();source.dispose();return g}
  const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D=root)=>{const o=new THREE.Mesh(clean(g),m);o.name=name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  const ball=(name:string,p:number[],s:number[],mat:THREE.Material,parent:THREE.Object3D=root)=>{const o=mesh(name,new THREE.SphereGeometry(1,20,12),mat,parent);o.position.set(...p as [number,number,number]);o.scale.set(...s as [number,number,number]);return o}
@@ -19,8 +25,8 @@ export function createVirpominenModel(){
  for(const x of[-.46,1.26])box('painted-door-jamb-'+x,[x,1.14,-.59],[.13,2.0,.17],blue)
  box('painted-lintel',[.40,2.17,-.59],[1.85,.12,.17],blue)
  box('interior-wall',[.40,1.12,-.86],[1.6,1.96,.1],inside)
- box('door-inner-floor',[.40,.17,-.62],[1.6,.06,.40],wood)
- for(const x of[-.33,1.13])box('door-inset-shadow-'+x,[x,1.12,-.75],[.045,1.9,.10],wood)
+ box('door-inner-floor',[.40,.17,-.62],[1.6,.06,.40],doorWood)
+ for(const x of[-.33,1.13])box('door-inset-shadow-'+x,[x,1.12,-.75],[.045,1.9,.10],doorWood)
 
  const branch=new THREE.Group();branch.name='decorated-willow';root.add(branch)
  const stem=mesh('willow-stem',new THREE.CylinderGeometry(.012,.018,1.10,12),bark,branch);stem.position.y=.30
@@ -47,7 +53,7 @@ export function createVirpominenModel(){
   const open=(n:number)=>{fingers.scale.set(1+.5*n,1,1+.5*n);palm.position.z=-back-.04*n;cuff.position.z=palm.position.z}
   open(0);return{root:hand,open}
  }
- const visitor=makeHand('visitor-hand','stem',yellow),receiver=makeHand('receiving-hand','stem',blue),giver=makeHand('gift-hand','egg',blue)
+ const visitor=makeHand('visitor-hand','stem',yellowCuff),receiver=makeHand('receiving-hand','stem',blueCuff),giver=makeHand('gift-hand','egg',blueCuff)
  const childOrigin=new THREE.Vector3(-.68,.78,.66),childOffset=new THREE.Vector3(0,-.09,0),childRest=new THREE.Vector3(-1.02,.66,1.15),receiveOrigin=new THREE.Vector3(.73,.78,-.02),giftStart=new THREE.Vector3(.99,.83,.31)
  const receivingGrip=receiveOrigin.clone().add(new THREE.Vector3(0,.24,0)),receivingWait=receivingGrip.clone().add(new THREE.Vector3(0,0,-.30))
  const basket=new THREE.Group();basket.name='visitor-basket';basket.position.set(-.65,0,.82);root.add(basket)

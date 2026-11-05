@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
@@ -29,6 +30,10 @@ export function createPrayerFlagsModel(){
  const matte=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.94})
  const make=<M extends THREE.Material>(name:string,g:THREE.BufferGeometry,m:M)=>{const o=new THREE.Mesh(g,m);o.name='prayer-flags-'+name;o.castShadow=o.receiveShadow=true;root.add(o);return o}
  const wood=matte(0xb48756),stone=matte(0xd6c9ab),cotton=matte(0xf8efdd)
+ applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+ applyCraftSurface(cotton, { kind: 'cord', strength: .3 })
+ applyCraftSurface(stone, { kind: 'stone', strength: .4 })
+
  const box=(name:string,size:number[],p:number[],m:THREE.Material)=>{const o=make(name,new THREE.BoxGeometry(...size as [number,number,number]),m);o.position.set(...p as [number,number,number]);return o}
  for(const x of[-1.15,1.15]){box('post-'+x,[.10,2.05,.10],[x,1.025,0],wood);box('foot-'+x,[.25,.12,.25],[x,.06,0],stone)}
  const arm=box('temporary-arm',[.60,.055,.06],[.90,1.50,0],wood)

@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -53,6 +54,12 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
   const material = (color: number, roughness = .82) => new THREE.MeshStandardMaterial({ color, roughness })
   const oak = material(0xc3a074), dark = material(0x8d6248), honey = material(0xd5b58b)
   const cream = material(0xeee2bd), rope = material(0x5e594d), teal = material(0x819d8d), brass = material(0xc6a467, .55)
+  // Split sail stitching and felt from the ship's wood/metal paint palette.
+  const sailSeam = honey.clone(), sailHem = brass.clone(), felt = teal.clone()
+  ;[oak, dark, honey].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: .42 }))
+  applyCraftSurface(brass, { kind: 'metal', strength: .45 })
+  applyCraftSurface(rope, { kind: 'cord', strength: .3 })
+  applyCraftSurface(felt, { kind: 'fabric', strength: .25 })
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
@@ -70,16 +77,16 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
   shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
 
   // Both work positions have real support: a soft keel rest and a two-post V cradle.
-  box('ship-work-rest', [1.30, .035, .42], [-.12, .755, .38], teal)
+  box('ship-work-rest', [1.30, .035, .42], [-.12, .755, .38], felt)
   const cradle = new THREE.Group(); cradle.name = 'ship-two-post-cradle'; world.add(cradle)
   box('ship-cradle-base', [1.76, .065, .62], [.42, .777, -.35], dark, cradle)
   for (const x of [-.06, .90]) {
     box('ship-cradle-post', [.16, .12, .22], [x, .87, -.35], oak, cradle)
     line('ship-cradle-saddle', [[x, 1.089, -.57], [x, .963, -.46], [x, .929, -.35], [x, .963, -.24], [x, 1.089, -.13]], .035, honey, cradle)
-    line('ship-cradle-felt', [[x, 1.105, -.57], [x, .979, -.46], [x, .945, -.35], [x, .979, -.24], [x, 1.105, -.13]], .019, teal, cradle)
+    line('ship-cradle-felt', [[x, 1.105, -.57], [x, .979, -.46], [x, .945, -.35], [x, .979, -.24], [x, 1.105, -.13]], .019, felt, cradle)
   }
   const cradleTarget = oval('ship-cradle-target', [1.15, .836, -.09], [.115, .026, .10], brass, cradle)
-  box('ship-loose-mast-rest', [.27, .055, .27], [-1.4, .773, .45], teal)
+  box('ship-loose-mast-rest', [.27, .055, .27], [-1.4, .773, .45], felt)
 
   const ship = new THREE.Group(); ship.name = 'ship-model'; world.add(ship)
   // Lofted bent hull: tapered ends, curved belly, raised sheer. This is not an elongated box.
@@ -128,8 +135,8 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
   const sailGeometry = new THREE.BufferGeometry(); sailGeometry.setAttribute('position', new THREE.Float32BufferAttribute(sailVertices, 3)); sailGeometry.setIndex(sailIndices); sailGeometry.computeVertexNormals()
   const sailMaterial = createRitualMaterial({ color: 0xeee2bd, roughness: .82, side: THREE.DoubleSide }, { kind: 'cloth', strength: .22, fiber: 'linen' })
   add('ship-cream-cloth-sail', sailGeometry, sailMaterial, [0, 0, 0], mast)
-  line('ship-sail-hem', [[.04, .33, .035], [.70, .33, .035], [.20, 1.05, .035], [.04, 1.05, .035], [.04, .33, .035]], .008, brass, mast)
-  for (const v of [.33, .66]) line('ship-sail-seam', [[.05, .32 + .73 * v, .046], [.04 + .66 * (1 - .76 * v), .32 + .73 * v, .046]], .004, honey, mast)
+  line('ship-sail-hem', [[.04, .33, .035], [.70, .33, .035], [.20, 1.05, .035], [.04, 1.05, .035], [.04, .33, .035]], .008, sailHem, mast)
+  for (const v of [.33, .66]) line('ship-sail-seam', [[.05, .32 + .73 * v, .046], [.04 + .66 * (1 - .76 * v), .32 + .73 * v, .046]], .004, sailSeam, mast)
   oval('ship-mast-finial', [0, 1.14, 0], [.039, .045, .039], brass, mast)
   const rigging = new THREE.Group(); rigging.name = 'ship-rigging'; ship.add(rigging)
   line('ship-forestay', [[0, 1.44, .19], [1.14, .40, 0]], .008, rope, rigging)

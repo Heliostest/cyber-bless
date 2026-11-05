@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 ﻿import * as THREE from 'three'
 import { disposeTree } from '../procedural-kit'
 
@@ -15,6 +16,8 @@ export function createMezuzahModel() {
   const panelWood = new THREE.MeshStandardMaterial({ color: 0x9b7550, roughness: .78 })
   const insetWood = new THREE.MeshStandardMaterial({ color: 0x8d6747, roughness: .84 })
   const adhesive = new THREE.MeshStandardMaterial({ color: 0xccc4ae, roughness: .93 })
+  for(const timber of[wood,panelWood,insetWood])applyCraftSurface(timber,{kind:'wood',strength:.4,axis:'y'})
+  applyCraftSurface(brass,{kind:'metal',strength:.45})
 
   const add = (parent: THREE.Object3D, name: string, geometry: THREE.BufferGeometry, material: THREE.Material, x = 0, y = 0, z = 0) => {
     const mesh = new THREE.Mesh(geometry, material)

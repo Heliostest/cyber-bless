@@ -1,4 +1,5 @@
-﻿import * as THREE from 'three'
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import * as THREE from 'three'
 import { disposeTree } from '../procedural-kit'
 
 /** An original wheat rendering; the gathering, ribbon motion and room are product staging. */
@@ -20,6 +21,15 @@ export function createDidukhModel() {
   const plaster = new THREE.MeshStandardMaterial({ color: 0xe8d6b6, roughness: .98 })
   const clay = new THREE.MeshStandardMaterial({ color: 0xd3b695, roughness: .98 })
   const baseboardWood = new THREE.MeshStandardMaterial({ color: 0x916d48, roughness: .93 })
+  applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+  applyCraftSurface(trayWood, { kind: 'wood', strength: .4 })
+  applyCraftSurface(baseboardWood, { kind: 'wood', strength: .4 })
+  applyCraftSurface(blue, { kind: 'fabric', strength: .26 })
+  applyCraftSurface(coral, { kind: 'fabric', strength: .26 })
+  applyCraftSurface(straw, { kind: 'straw', strength: .3, axis: 'y' })
+  applyCraftSurface(stalkGold, { kind: 'straw', strength: .3, axis: 'y' })
+  applyCraftSurface(awnGold, { kind: 'straw', strength: .3, axis: 'y' })
+
 
   function add(parent: THREE.Object3D, name: string, geometry: THREE.BufferGeometry, material: THREE.Material, x = 0, y = 0, z = 0) {
     const mesh = new THREE.Mesh(geometry, material)

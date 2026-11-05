@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -42,6 +43,10 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); scene.add(world)
   const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: .92 })
   const stone = material(0xc6b6a0), stoneFace = material(0xe0cdb2), wax = material(0xffe9b4), steel = material(0x666f69)
+  applyCraftSurface(steel, { kind: 'metal', strength: .45 })
+  applyCraftSurface(stone, { kind: 'stone', strength: .4 })
+  applyCraftSurface(stoneFace, { kind: 'stone', strength: .4 })
+
   const add = (geometry: THREE.BufferGeometry, mat: THREE.Material, xyz: number[], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.position.set(xyz[0], xyz[1], xyz[2]); parent.add(mesh); return mesh
   }

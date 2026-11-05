@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { bindSceneAttribute } from '../scene-localization'
 import { graphemeLength } from '@wbr/i18n'
 import { placementHit } from '../placement-hit'
@@ -51,6 +52,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   world.add(waterEffect.surface)
   const mat = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: .92 })
   const wood = mat(0xb39471), endgrain = mat(0xd4b992), green = [mat(0x6f9f72), mat(0x90b381), mat(0xa3ba85)]
+  ;[wood, endgrain].forEach(material => applyCraftSurface(material, { kind: 'wood', strength: .4 }))
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: THREE.Vector3, parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.copy(p)
     mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh

@@ -1,3 +1,4 @@
+import { applyCraftSurface, type CraftSurfaceOptions } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 function solid(source:THREE.BufferGeometry){
@@ -9,8 +10,23 @@ function solid(source:THREE.BufferGeometry){
 }
 export function createKadomatsuModel(){
  const root=new THREE.Group();root.name='kadomatsu-subject'
- const materials=new Map<string,THREE.MeshStandardMaterial>(),material=(color:string)=>{if(!materials.has(color))materials.set(color,new THREE.MeshStandardMaterial({color,roughness:.9}));return materials.get(color)!}
- const mesh=(parent:THREE.Object3D,name:string,source:THREE.BufferGeometry,color:string,p:[number,number,number])=>{const m=new THREE.Mesh(solid(source),material(color));m.name=name;m.position.set(...p);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
+ const materials=new Map<string,THREE.MeshStandardMaterial>()
+ const material=(color:string,surface?:CraftSurfaceOptions)=>{
+  const key=`${color}:${surface?.kind??''}:${surface?.axis??''}`
+  if(!materials.has(key)){const m=new THREE.MeshStandardMaterial({color,roughness:.9});if(surface)applyCraftSurface(m,surface);materials.set(key,m)}
+  return materials.get(key)!
+ }
+ // Cache by authored part family as well as colour: bamboo, straw and cord stay distinct.
+ const surfaceFor=(name:string):CraftSurfaceOptions|undefined=>{
+  if(name==='kadomatsu-paving')return{kind:'stone',strength:.4}
+  if(/^kadomatsu-(left|right)-bamboo-/.test(name))return{kind:'bamboo',strength:.35,axis:'y'}
+  if(/^kadomatsu-(left|right)-straw-/.test(name))return{kind:'straw',strength:.3,axis:'y'}
+  if(/^kadomatsu-(left|right)-cord-/.test(name))return{kind:'cord',strength:.3}
+  if(/^kadomatsu-(left|right)-pine-branch-/.test(name))return{kind:'wood',strength:.35,axis:'y'}
+  if(name==='kadomatsu-wood-door'||/^kadomatsu-(jamb-|door-slat-)/.test(name))return{kind:'wood',strength:.4,axis:'y'}
+  if(['kadomatsu-lintel','kadomatsu-threshold','kadomatsu-preparation-tray'].includes(name))return{kind:'wood',strength:.4}
+ }
+ const mesh=(parent:THREE.Object3D,name:string,source:THREE.BufferGeometry,color:string,p:[number,number,number])=>{const m=new THREE.Mesh(solid(source),material(color,surfaceFor(name)));m.name=name;m.position.set(...p);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
  const paving=mesh(root,'kadomatsu-paving',new THREE.BoxGeometry(3.8,.08,2.9),'#c8bca3',[0,.04,.15])
  const door=new THREE.Group();door.name='kadomatsu-door';root.add(door)
  mesh(door,'kadomatsu-wall',new THREE.BoxGeometry(2.3,2.25,.12),'#d6c7a6',[0,1.205,-.80])

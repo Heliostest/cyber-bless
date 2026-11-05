@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -53,6 +54,10 @@ export function createBasqueSunflower(ctx: SceneContext): SceneInstance {
   const walnut = material(0x80674b), oak = material(0xb29367), grain = material(0x987d58)
   const paper = createRitualMaterial({ color: 0xe7dfbc, roughness: .88 }, { kind: 'paper', strength: .22, fiber: 'paper' }), innerPaper = createRitualMaterial({ color: 0xcac9b0, roughness: .88 }, { kind: 'paper', strength: .16, fiber: 'paper' }), seed = material(0x977640), seedLight = material(0xb6975c)
   const sage = material(0x9aa995), stone = material(0xc8c7ba), flax = material(0xb5a380)
+  // Only the suspension uses cord; paper fold lines and the center rim keep their finish.
+  const suspension = applyCraftSurface(flax.clone(), { kind: 'cord', strength: .3 })
+  ;[walnut, oak, grain, seed, seedLight].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: .4 }))
+  applyCraftSurface(stone, { kind: 'stone', strength: .45 })
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p)
     mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
@@ -106,10 +111,10 @@ export function createBasqueSunflower(ctx: SceneContext): SceneInstance {
   const rim = add('sunflower-center-rim', new THREE.TorusGeometry(.279, .013, 8, 48), flax, [0, 0, .047], flower)
   rim.userData.toonSurface = { outline: false }
   // The open top of the flax loop contacts the top of the peg shaft at y=1.885.
-  const loop = add('sunflower-hanging-loop', new THREE.TorusGeometry(.09, .014, 10, 40), flax, [0, .68, -.005], flower)
+  const loop = add('sunflower-hanging-loop', new THREE.TorusGeometry(.09, .014, 10, 40), suspension, [0, .68, -.005], flower)
   loop.userData.toonSurface = { outline: false }
-  tube('sunflower-left-tie', [[-.035, .33, -.025], [-.05, .48, -.015], [-.045, .604, -.005]], .012, flax, flower)
-  tube('sunflower-right-tie', [[.035, .33, -.025], [.05, .48, -.015], [.045, .604, -.005]], .012, flax, flower)
+  tube('sunflower-left-tie', [[-.035, .33, -.025], [-.05, .48, -.015], [-.045, .604, -.005]], .012, suspension, flower)
+  tube('sunflower-right-tie', [[.035, .33, -.025], [.05, .48, -.015], [.045, .604, -.005]], .012, suspension, flower)
   const centerPiece = new THREE.Group(); centerPiece.name = 'sunflower-center-piece'; world.add(centerPiece)
   const center = add('sunflower-center', new THREE.SphereGeometry(1, 40, 24), seed, [0, 0, 0], centerPiece); center.scale.set(.246, .246, .06)
   // Seed-like wooden dimples follow rings, leaving a clear central finger contact.

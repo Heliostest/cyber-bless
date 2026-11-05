@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { bindSceneAttribute, bindSceneText, sceneProductCopy, sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
@@ -78,6 +79,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); scene.add(world)
   const material = (color: number, metalness = 0, roughness = 0.9) => new THREE.MeshStandardMaterial({ color, metalness, roughness })
   const wood = material(0xbe9169), paper = material(0xf8e8c9), darkWood = material(0x987355)
+  for(const timber of[wood,darkWood])applyCraftSurface(timber,{kind:'wood',strength:.4})
   const add = (geometry: THREE.BufferGeometry, mat: THREE.Material, x: number, y: number, z: number, parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.position.set(x, y, z); parent.add(mesh); return mesh
   }
@@ -88,7 +90,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   add(new RoundedBoxGeometry(2.35, 0.13, 0.84, 3, 0.065), wood, 0, 0.16, 0.45)
   const liner = add(new RoundedBoxGeometry(2.17, 0.027, 0.71, 2, 0.02), paper, 0, 0.24, 0.45)
   liner.userData.toonSurface = { outline: false }
-  const pinMat = material(0xc49b50, 0.45, 0.42)
+  const pinMat = applyCraftSurface(material(0xc49b50, 0.45, 0.42),{kind:'metal',strength:.45})
   const pin = add(new THREE.SphereGeometry(0.048, 12, 8), pinMat, 0, 1.69, 0.16)
   pin.name = 'milagros-pin'
   const pinTarget = add(new THREE.SphereGeometry(0.24, 16, 8), new THREE.MeshBasicMaterial({ visible: false }), 0, 1.65, 0.20)
@@ -103,7 +105,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
     const start = new THREE.Vector3(-0.81 + i * 0.54, 0.41, 0.72)
     group.position.copy(start); group.scale.setScalar(0.73)
     world.add(group); charmGroups.push(group); starts.push(start)
-    const mat = material(colors[i], 0.55, 0.35); charmMaterials.push(mat)
+    const mat = applyCraftSurface(material(colors[i], 0.55, 0.35),{kind:'metal',strength:.45}); charmMaterials.push(mat)
     const mesh = add(new THREE.ExtrudeGeometry(charmShape(i), {
       depth: 0.028, bevelEnabled: true, bevelSegments: 2, steps: 1,
       bevelSize: 0.016, bevelThickness: 0.014, curveSegments: 16,
@@ -117,9 +119,10 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
     for (const x of [-0.07, 0.07]) add(new THREE.SphereGeometry(0.017, 8, 6), mat, x, 0.02, 0.055, group).scale.z = 0.25
   }
   // Small original ornaments suggest accumulated thanks without copying a sacred site.
+  const decorativeCharmMaterial=applyCraftSurface(material(0xcbb48f,0.35,0.6),{kind:'metal',strength:.45})
   for (let i = 0; i < 3; i++) {
     const mesh = add(new THREE.ExtrudeGeometry(charmShape(i), { depth: 0.025, bevelEnabled: true, bevelSize: 0.012, bevelThickness: 0.01, bevelSegments: 2 }),
-      material(0xcbb48f, 0.35, 0.6), i === 1 ? 0.65 : -0.64, i === 2 ? 0.89 : 1.42, 0.065)
+      decorativeCharmMaterial, i === 1 ? 0.65 : -0.64, i === 2 ? 0.89 : 1.42, 0.065)
     mesh.scale.setScalar(0.34); mesh.rotation.z = i === 1 ? 0.1 : -0.12
   }
   const held = new THREE.Vector3(0.62, 1.04, 0.62)

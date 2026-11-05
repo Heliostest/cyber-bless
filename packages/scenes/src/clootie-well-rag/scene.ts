@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { placementHit } from '../placement-hit'
@@ -118,6 +119,8 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   const mossMat = new THREE.MeshStandardMaterial({ color: 0x9aaf7e, roughness: 1 })
   const stoneColors = [0xc8bfaa, 0xd9cdb6, 0xbabba6, 0xc6c4b2].map((color) => new THREE.MeshStandardMaterial({ color, roughness: 1 }))
 
+  stoneColors.forEach(material => applyCraftSurface(material, { kind: 'stone', strength: .45 }))
+
   // A low, open stone well. Separate beveled wedges preserve the dark opening
   // and the visible water surface instead of closing it with a cylinder cap.
   const well = new THREE.Group()
@@ -219,6 +222,8 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
 
   const cottonMap = cottonTexture()
   const cotton = new THREE.MeshStandardMaterial({ color: 0xf6e8c9, map: cottonMap, roughness: 1, side: THREE.DoubleSide })
+  // Preserve the original cotton map and its animated wet color.
+  applyCraftSurface(cotton, { kind: 'fabric', strength: .2 })
   const rag = new THREE.Group()
   rag.name = 'clootie-rag'
   rag.position.copy(DRY)

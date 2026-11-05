@@ -1,9 +1,13 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 /** Original compact digital mounting; counts and dimensions are product choices. */
 export function createHorseshoeDoorwayLuckModel(){
  const root=new THREE.Group();root.name='horseshoe-doorway-luck-root'
  const subject=new THREE.Group();subject.name='horseshoe-doorway-luck-subject';root.add(subject)
  const iron=new THREE.MeshStandardMaterial({color:0x596967,metalness:.65,roughness:.4}),wood=new THREE.MeshStandardMaterial({color:0x9c6c42,roughness:.85}),stone=new THREE.MeshStandardMaterial({color:0xb6b2a1,roughness:.95})
+ applyCraftSurface(iron,{kind:'metal',strength:.45})
+ applyCraftSurface(wood,{kind:'wood',strength:.4})
+ applyCraftSurface(stone,{kind:'stone',strength:.45})
  function mesh(name:string,g:THREE.BufferGeometry,mat:THREE.Material,x:number,y:number,z:number){const m=new THREE.Mesh(g,mat);m.name=name;m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;subject.add(m);return m}
  const block=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat=wood)=>mesh(name,new THREE.BoxGeometry(w,h,d),mat,x,y,z)
  block('horseshoe-stone-base',4.6,.12,2,0,-.06,.15,stone)

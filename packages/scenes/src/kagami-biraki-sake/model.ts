@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 
@@ -7,6 +8,11 @@ export function createKagamiBirakiModel(){
  const subject=new THREE.Group();subject.name='kagami-biraki-subject';root.add(subject)
  const mat=(color:string,roughness=.75)=>new THREE.MeshStandardMaterial({color,roughness,metalness:0})
  const cedar=mat('#b68a55'),lidWood=mat('#e2bf86'),malletWood=mat('#c3955c'),rope=mat('#a78b55'),red=mat('#bb4841',.78),white=mat('#f8ebd2',.85)
+ applyCraftSurface(cedar,{kind:'wood',strength:.4,axis:'y'})
+ applyCraftSurface(lidWood,{kind:'wood',strength:.4})
+ applyCraftSurface(malletWood,{kind:'wood',strength:.4})
+ applyCraftSurface(rope,{kind:'cord',strength:.3})
+ for(const ribbon of[red,white])applyCraftSurface(ribbon,{kind:'fabric',strength:.25})
  const straw=mat('#d5ba7e',.95)
  const pixels=new Uint8Array(32*32*4)
  for(let y=0;y<32;y++)for(let x=0;x<32;x++){const v=(x%8<2?-.10:.04)+(y%8<2?-.07:0)+.025*Math.sin(x*13+y*7),i=(y*32+x)*4,value=Math.round(255*THREE.MathUtils.clamp(.92+v,0,1));pixels[i]=value;pixels[i+1]=value;pixels[i+2]=value;pixels[i+3]=255}

@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -38,6 +39,10 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
   const world=new THREE.Group(); scene.add(world)
   const mat=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.94})
   const timber=mat(0xbe916e), edge=mat(0x947657), cream=mat(0xf4e6c1), cord=mat(0xd4ba8c)
+  applyCraftSurface(timber, { kind: 'wood', strength: .4 })
+  applyCraftSurface(edge, { kind: 'wood', strength: .4 })
+  applyCraftSurface(cord, { kind: 'cord', strength: .3 })
+
   const rushes=[mat(0x819568),mat(0xa4b07b),mat(0x91a36c)]
   const add=(geometry:THREE.BufferGeometry,material:THREE.Material,p:[number,number,number],parent:THREE.Object3D=world)=>{
     const mesh=new THREE.Mesh(geometry,material); mesh.position.set(...p); parent.add(mesh); return mesh

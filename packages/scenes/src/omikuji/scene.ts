@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -63,6 +64,7 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
   const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: 0.91 })
   const honey = material(0xd5af74), pale = material(0xe9c992), edge = material(0xb88c5d)
   const timber = material(0xb39170), cream = material(0xffefd2), paperEdge = material(0xe6d5b3)
+  for(const timberPart of[honey,pale,edge,timber])applyCraftSurface(timberPart,{kind:'wood',strength:.3,axis:'y'})
   const sage = material(0x829a80), sageLight = material(0xafb9a0), ink = material(0x947a60), coral = material(0xc77e65)
   const add = (geometry: THREE.BufferGeometry, mat: THREE.Material, name: string, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p)

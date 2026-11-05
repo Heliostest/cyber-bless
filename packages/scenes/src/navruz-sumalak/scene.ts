@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
@@ -63,6 +64,12 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
   const clay = mat(0xba8a66), clayLight = mat(0xcfaa83), soot = mat(0x504740), iron = mat(0x6d7973), ironRim = mat(0x85948b)
   const caramel = createRitualMaterial({ color: 0xa76231, roughness: .43, clearcoat: .32, clearcoatRoughness: .28 }, { kind: 'wet', strength: .3 }), swirlMat = createRitualMaterial({ color: 0xc48b48, roughness: .49, clearcoat: .26, clearcoatRoughness: .3 }, { kind: 'wet', strength: .25 }), wood = mat(0xc19057), woodLight = mat(0xd6ab70)
   const glaze = mat(0x78a9a7, .28), cream = mat(0xf1dec2, .4), weave = mat(0xd2ab78), terracotta = mat(0xb27355)
+  // Same pigment spans ceramics, textiles and guide beads; keep their surfaces separate.
+  const bowlCream=mat(0xf1dec2,.4), matStripe=mat(0xf1dec2,.4)
+  for(const cookware of[iron,ironRim])applyCraftSurface(cookware,{kind:'metal',strength:.45})
+  for(const timber of[wood,woodLight])applyCraftSurface(timber,{kind:'wood',strength:.35,axis:'y'})
+  for(const vessel of[glaze,bowlCream])applyCraftSurface(vessel,{kind:'ceramic',strength:.45})
+  for(const textile of[weave,terracotta,matStripe])applyCraftSurface(textile,{kind:'fabric',strength:.25})
   function add(geometry: THREE.BufferGeometry, material: THREE.Material, position: [number, number, number], parent: THREE.Object3D = world, name = '') {
     const mesh = new THREE.Mesh(geometry, material); mesh.position.set(...position); mesh.name = name
     mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
@@ -102,7 +109,7 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
   const sharingMat = add(new RoundedBoxGeometry(.86, .043, .9, 3, .06), weave, [.79, .035, -.62], world, 'navruz-sharing-mat')
   sharingMat.userData.toonSurface = { outline: false }
   for (let i = 0; i < 13; i++) {
-    const stripe = add(new THREE.BoxGeometry(.76, .005, .013), i % 3 ? cream : terracotta, [.79, .059, -.98 + i * .06])
+    const stripe = add(new THREE.BoxGeometry(.76, .005, .013), i % 3 ? matStripe : terracotta, [.79, .059, -.98 + i * .06])
     stripe.userData.toonSurface = { outline: false }
   }
   for (const x of [.46, 1.12]) add(new THREE.BoxGeometry(.025, .006, .75), terracotta, [x, .06, -.62]).userData.toonSurface = { outline: false }
@@ -110,11 +117,11 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
     const bowl = new THREE.Group(); bowl.name = name; bowl.position.copy(position); bowl.scale.setScalar(scale); world.add(bowl)
     const profile = [[0, 0], [.12, 0], [.15, .04], [.23, .09], [.285, .20], [.278, .224], [.25, .215], [.2, .115], [.1, .065], [0, .065]].map(([x, y]) => new THREE.Vector2(x, y))
     add(new THREE.LatheGeometry(profile, 40), glaze, [0, 0, 0], bowl)
-    const edge = add(new THREE.TorusGeometry(.272, .013, 6, 40), cream, [0, .215, 0], bowl); edge.rotation.x = Math.PI / 2
-    const basin = add(new THREE.CylinderGeometry(.18, .11, .015, 32), cream, [0, .09, 0], bowl, `${name}-basin`)
+    const edge = add(new THREE.TorusGeometry(.272, .013, 6, 40), bowlCream, [0, .215, 0], bowl); edge.rotation.x = Math.PI / 2
+    const basin = add(new THREE.CylinderGeometry(.18, .11, .015, 32), bowlCream, [0, .09, 0], bowl, `${name}-basin`)
     for (let i = 0; i < 12; i++) {
       const a = i / 12 * Math.PI * 2
-      const dot = add(new THREE.SphereGeometry(.018, 7, 5), cream, [Math.cos(a) * .253, .16, Math.sin(a) * .253], bowl)
+      const dot = add(new THREE.SphereGeometry(.018, 7, 5), bowlCream, [Math.cos(a) * .253, .16, Math.sin(a) * .253], bowl)
       dot.scale.y = 1.6; dot.userData.toonSurface = { outline: false }
     }
     return { bowl, basin }

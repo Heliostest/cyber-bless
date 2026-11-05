@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 const smooth = (n: number) => { const t=THREE.MathUtils.clamp(n,0,1); return t*t*(3-2*t) }
@@ -12,6 +13,10 @@ export function createGodairikiModel() {
  const ink=new THREE.MeshStandardMaterial({color:0x3f4446,roughness:1})
  const cloth=new THREE.MeshStandardMaterial({color:0x64aaa3,roughness:1,vertexColors:true})
  const cordMat=new THREE.MeshStandardMaterial({color:0xefd4a0,roughness:1})
+ applyCraftSurface(cloth, { kind: 'fabric', strength: .26 })
+ applyCraftSurface(cordMat, { kind: 'cord', strength: .3 })
+ applyCraftSurface(stoneMat, { kind: 'stone', strength: .4 })
+
  const make=(name:string,g:THREE.BufferGeometry,mat:THREE.Material,parent:THREE.Object3D=subject)=>{const mesh=new THREE.Mesh(g,mat);mesh.name=name;mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh}
  const ground=make('godairiki-gravel-bed',new THREE.CylinderGeometry(1.85,1.9,.07,64),new THREE.MeshStandardMaterial({color:0xd6cdb4,roughness:1}));ground.position.set(-.08,-.035,0);ground.geometry.scale(1,1,.72)
  // This profile travels from the outer underside, up the outside and down the inside.
@@ -27,7 +32,7 @@ export function createGodairikiModel() {
  bagGeometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));bagGeometry.computeVertexNormals()
  const pouch=make('godairiki-pouch',bagGeometry,cloth);pouch.position.x=.85
  const rimGeometry=new THREE.TorusGeometry(.725,.025,8,64);rimGeometry.rotateX(Math.PI/2);rimGeometry.scale(1,1,.83);const rimPos=rimGeometry.attributes.position!;for(let i=0;i<rimPos.count;i++){const x=rimPos.getX(i),z=rimPos.getZ(i),f=1+.055*Math.sin(Math.atan2(z/.83,x)*12);rimPos.setXYZ(i,x*f,rimPos.getY(i),z*f)}rimGeometry.computeVertexNormals()
- const rim=make('godairiki-soft-rim',rimGeometry,new THREE.MeshStandardMaterial({color:0x8bbdb0,roughness:1}));rim.position.set(.85,.90,0)
+ const rim=make('godairiki-soft-rim',rimGeometry,applyCraftSurface(new THREE.MeshStandardMaterial({color:0x8bbdb0,roughness:1}), { kind: 'fabric', strength: .26 }));rim.position.set(.85,.90,0)
  // Closed drawstring loops lie against either side of the open mouth.
  for(const side of[-1,1]){const g=new THREE.TorusGeometry(.15,.016,8,32);g.scale(.72,1.5,1);const loop=make(`godairiki-cord-${side}`,g,cordMat);loop.position.set(.85+side*.81,.62,.10)}
  // Individually spaced ordinary pebbles provide context without a shrine replica or tray.

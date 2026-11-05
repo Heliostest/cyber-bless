@@ -1,3 +1,4 @@
+import { applyCraftSurface, type CraftSurfaceOptions } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 function solid(source:THREE.BufferGeometry){
@@ -24,8 +25,17 @@ function crossSection(profile:[number,number][],width:number){
 
 export function createPucaraModel(){
  const root=new THREE.Group();root.name='pucara-subject'
- const materials=new Map<string,THREE.MeshStandardMaterial>(),material=(color:string)=>{if(!materials.has(color))materials.set(color,new THREE.MeshStandardMaterial({color,roughness:color==='#e6cf9d'?.48:.82}));return materials.get(color)!}
- const mesh=(parent:THREE.Object3D,name:string,source:THREE.BufferGeometry,color:string,p:[number,number,number])=>{const m=new THREE.Mesh(solid(source),material(color));m.name=name;m.position.set(...p);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
+ const materials=new Map<string,THREE.MeshStandardMaterial>()
+ const material=(color:string,surface?:CraftSurfaceOptions)=>{
+  const key=`${color}:${surface?.kind??''}:${surface?.axis??''}`
+  if(!materials.has(key)){const m=new THREE.MeshStandardMaterial({color,roughness:color==='#e6cf9d'?.48:.82});if(surface)applyCraftSurface(m,surface);materials.set(key,m)}
+  return materials.get(key)!
+ }
+ const surfaceFor=(name:string):CraftSurfaceOptions|undefined=>{
+  if(name.startsWith('pucara-bull-left-')||name.startsWith('pucara-bull-right-'))return{kind:'ceramic',strength:.45}
+  if(name==='pucara-carrier-board')return{kind:'wood',strength:.4}
+ }
+ const mesh=(parent:THREE.Object3D,name:string,source:THREE.BufferGeometry,color:string,p:[number,number,number])=>{const m=new THREE.Mesh(solid(source),material(color,surfaceFor(name)));m.name=name;m.position.set(...p);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
  const house=new THREE.Group();house.name='pucara-house';root.add(house)
  mesh(house,'pucara-walls',new THREE.BoxGeometry(2.65,.65,1.8),'#d8c7a6',[0,.325,0])
  const roof=mesh(house,'pucara-roof',crossSection([[-.95,.60],[0,1],[.95,.60]],2.8),'#ad6d4d',[0,0,0])

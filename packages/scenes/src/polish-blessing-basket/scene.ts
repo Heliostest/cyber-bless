@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -67,6 +68,10 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
   const oak = material(0xc7a57e), oakEdge = material(0xa98761), boardMat = material(0xe3c59b)
   const wicker = [0xc79561, 0xd8b27c, 0xe2c293].map(color => material(color))
   const cream = material(0xf4edd7, THREE.DoubleSide), stitch = material(0xc48174)
+  const clothMaterial=material(0xf4edd7,THREE.DoubleSide), embroidery=material(0xc48174)
+  for(const timber of[oak,oakEdge,boardMat])applyCraftSurface(timber,{kind:'wood',strength:.4})
+  applyCraftSurface(clothMaterial,{kind:'fabric',strength:.25})
+  applyCraftSurface(embroidery,{kind:'cord',strength:.28})
   const crust = material(0xc79558), breadCut = material(0xf2d49b), sage = material(0x849f72), darkLeaf = material(0x627f59)
   const eggRose = material(0xc98173), eggCream = material(0xfaedce), eggBlue = material(0x91aeb7)
   const add = (geo: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
@@ -134,16 +139,16 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     if (row < 12 && col < 64) { const i = row * 65 + col; clothIndices.push(i, i + 65, i + 1, i + 1, i + 65, i + 66) }
   }
   const clothGeo = new THREE.BufferGeometry(); clothGeo.setAttribute('position', new THREE.Float32BufferAttribute(clothPositions, 3))
-  clothGeo.setIndex(clothIndices); clothGeo.computeVertexNormals(); add(clothGeo, cream, [0, 0, 0], cloth)
+  clothGeo.setIndex(clothIndices); clothGeo.computeVertexNormals(); add(clothGeo, clothMaterial, [0, 0, 0], cloth)
   const flapGeo = new THREE.PlaneGeometry(0.56, 0.40, 16, 12), flapVertices = flapGeo.attributes.position
   for (let i = 0; i < flapVertices.count; i++) {
     const x = flapVertices.getX(i), y = flapVertices.getY(i)
     flapVertices.setXYZ(i, x, y, Math.cos(x * 31) * 0.013 + 0.025 * Math.sin((y + 0.2) * Math.PI / 0.4))
   }
   flapGeo.computeVertexNormals()
-  const flap = add(flapGeo, cream, [-0.27, 0.275, 0.47], cloth); flap.rotation.x = -0.15
+  const flap = add(flapGeo, clothMaterial, [-0.27, 0.275, 0.47], cloth); flap.rotation.x = -0.15
   for (const x of [-0.49, -0.44]) {
-    cloth.add(tube([new THREE.Vector3(x, 0.09, 0.495), new THREE.Vector3(x, 0.25, 0.516), new THREE.Vector3(x, 0.44, 0.455)], 0.007, stitch))
+    cloth.add(tube([new THREE.Vector3(x, 0.09, 0.495), new THREE.Vector3(x, 0.25, 0.516), new THREE.Vector3(x, 0.44, 0.455)], 0.007, embroidery))
   }
   const breadRest = pebble([0.12, 1.165, 0.05], [0.33, 0.035, 0.30], cream, world); breadRest.name = 'basket-bread-rest'
   const nest = pebble([0.85, 1.195, 0.13], [0.23, 0.038, 0.21], cream, world); nest.name = 'basket-egg-nest'

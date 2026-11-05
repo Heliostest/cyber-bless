@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
@@ -7,6 +8,8 @@ export function createBaciModel() {
   const subject = new THREE.Group(); subject.name = 'baci-subject'; root.add(subject)
   const mat = (color: number, roughness = .85) => new THREE.MeshStandardMaterial({ color, roughness })
   const skin = mat(0xc78d68), handSkin = createRitualMaterial({ color: 0xc78d68, roughness: .85 }, { kind: 'skin', strength: .10, fiber: false }), nail = mat(0xe1b899), cloth = mat(0x57938b), hem = mat(0xe4b976), cotton = mat(0xfff9e9), straw = mat(0xc7ae79)
+  applyCraftSurface(cotton,{kind:'cord',strength:.25})
+  for(const sleeve of[cloth,hem])applyCraftSurface(sleeve,{kind:'fabric',strength:.25})
   const mesh = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, parent: THREE.Object3D = subject) => {
     const m = new THREE.Mesh(geometry, material); m.name = name; m.castShadow = true; m.receiveShadow = true; parent.add(m); return m
   }

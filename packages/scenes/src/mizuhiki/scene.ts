@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { getLocale, subscribeLocale } from '@wbr/i18n'
 import { bindSceneText, sceneCopy, sceneTemplate } from '../scene-localization'
@@ -210,6 +211,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   world.add(knot)
   const colors = [0xb74442, 0xd6ad52, 0xfff2d8, 0xb74442, 0xe6c572]
   const cordMaterials = colors.map((color, i) => new THREE.MeshStandardMaterial({ color, roughness: i === 1 || i === 4 ? 0.54 : 0.88, metalness: i === 1 || i === 4 ? 0.28 : 0, emissive: 0xe7b264, emissiveIntensity: 0 }))
+  cordMaterials.forEach(material=>applyCraftSurface(material,{kind:'cord',strength:.28}))
   // Five fine, individually spaced strands bind the paper envelope.
   colors.forEach((_color, i) => {
     const band = new THREE.Mesh(new THREE.TubeGeometry(curve([[-0.76, 0.145, (i - 2) * 0.025], [-0.35, 0.151, (i - 2) * 0.025 - 0.015], [0.35, 0.151, (i - 2) * 0.025 + 0.015], [0.76, 0.145, (i - 2) * 0.025 + 0.025]]), 32, 0.008, 6, false), cordMaterials[i])

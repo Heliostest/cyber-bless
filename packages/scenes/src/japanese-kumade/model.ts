@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 // Original flat bamboo-strip approximation; no shrine names, sacred inscription or replica.
@@ -5,6 +6,9 @@ export function createJapaneseKumadeModel(){
  const root=new THREE.Group();root.name='japanese-kumade-root'
  const subject=new THREE.Group();subject.name='japanese-kumade-subject';root.add(subject)
  const bamboo=new THREE.MeshStandardMaterial({color:0xd3b775,roughness:.65}),wood=new THREE.MeshStandardMaterial({color:0x93633c,roughness:.72}),red=new THREE.MeshStandardMaterial({color:0xa34c3b,roughness:.82}),stone=new THREE.MeshStandardMaterial({color:0xb9b9a5,roughness:.96}),gold=new THREE.MeshStandardMaterial({color:0xe8ba50,roughness:.38,metalness:.35}),edge=new THREE.MeshStandardMaterial({color:0xa7782d,roughness:.58,metalness:.2})
+ applyCraftSurface(bamboo,{kind:'bamboo',strength:.35,axis:'y'})
+ applyCraftSurface(wood,{kind:'wood',strength:.4})
+ applyCraftSurface(stone,{kind:'stone',strength:.4})
  const mesh=(parent:THREE.Object3D,name:string,g:THREE.BufferGeometry,mat:THREE.Material|THREE.Material[],x=0,y=0,z=0)=>{const m=new THREE.Mesh(g,mat);m.name=name;m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
  const box=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat=wood)=>mesh(subject,name,new THREE.BoxGeometry(w,h,d),mat,x,y,z)
  box('kumade-stone-base',4.6,.12,2,0,-.06,.20,stone)

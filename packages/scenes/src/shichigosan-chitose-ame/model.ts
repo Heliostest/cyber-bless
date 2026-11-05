@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 /** Original family gift composition; the three motions are an interaction arrangement. */
@@ -6,6 +7,11 @@ export function createChitoseAmeModel(){
  const subject=new THREE.Group();subject.name='chitose-subject';root.add(subject)
  const mat=(color:number,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness})
  const stone=mat(0xcac6ac),paper=mat(0xf5e7be),coral=mat(0xd77b76),cream=mat(0xfff6db),skin=mat(0xdba47a),coat=mat(0xd8ac57),pants=mat(0x5f7e78),hair=mat(0x715244),dark=mat(0x443c35),shoe=mat(0x876657),cord=mat(0xc95855),redCandy=mat(0xe48b8b,.34),whiteCandy=mat(0xffefce,.34)
+ applyCraftSurface(cord, { kind: 'cord', strength: .3 })
+ applyCraftSurface(coat, { kind: 'fabric', strength: .26 })
+ applyCraftSurface(pants, { kind: 'fabric', strength: .26 })
+ applyCraftSurface(stone, { kind: 'stone', strength: .4 })
+
  const mesh=(g:THREE.BufferGeometry,m:THREE.Material,p:THREE.Object3D,name:string)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;p.add(o);return o}
  const box=(name:string,size:[number,number,number],pos:[number,number,number],m:THREE.Material,p:THREE.Object3D=subject)=>{const o=mesh(new THREE.BoxGeometry(...size),m,p,name);o.position.set(...pos);return o}
  const ball=(name:string,pos:[number,number,number],scale:[number,number,number],m:THREE.Material,p:THREE.Object3D=subject)=>{const o=mesh(new THREE.SphereGeometry(1,24,24),m,p,name);o.position.set(...pos);o.scale.set(...scale);return o}

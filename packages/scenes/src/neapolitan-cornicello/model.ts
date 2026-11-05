@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 // An original flat-backed relief: a rounded upper section, curved taper and
@@ -24,6 +25,8 @@ export function createNeapolitanCornicelloModel(){
  const root=new THREE.Group();root.name='neapolitan-cornicello-root'
  const subject=new THREE.Group();subject.name='neapolitan-cornicello-subject';root.add(subject)
  const cream=new THREE.MeshStandardMaterial({color:0xe7cba1,roughness:.67}),green=new THREE.MeshStandardMaterial({color:0x55725b,roughness:.95}),wood=new THREE.MeshStandardMaterial({color:0x946744,roughness:.88}),red=new THREE.MeshStandardMaterial({color:0xb52f24,roughness:.32}),paper=new THREE.MeshStandardMaterial({color:0xfff2cf,roughness:.94}),gold=new THREE.MeshStandardMaterial({color:0xc49145,metalness:.55,roughness:.34}),stone=new THREE.MeshStandardMaterial({color:0xcebd9e,roughness:.96})
+ applyCraftSurface(wood,{kind:'wood',strength:.4})
+ applyCraftSurface(stone,{kind:'stone',strength:.4})
  const add=(parent:THREE.Object3D,name:string,size:[number,number,number],position:[number,number,number],material:THREE.Material)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(...size),material);m.name=name;m.position.set(...position);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
  add(subject,'cornicello-stone-base',[4.6,.12,3],[0,-.06,.20],stone)
  add(subject,'cornicello-horn-pad',[1.1,.10,1.30],[-1.4,.05,-.30],wood)

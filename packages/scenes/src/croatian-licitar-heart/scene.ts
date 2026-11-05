@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -54,6 +55,9 @@ export function createCroatianLicitarHeart(ctx: SceneContext): SceneInstance {
   const material = (color: number, roughness = .82) => new THREE.MeshStandardMaterial({ color, roughness })
   const red = material(0xce293c, .62), cream = material(0xffedc9), green = material(0x6e9780), blue = material(0x85a7b3)
   const oak = material(0xc29e6b), walnut = material(0x80613f), linen = material(0xc7d5cd), paleMirror = material(0xc5dae0, .40)
+  const ribbonMaterial = applyCraftSurface(cream.clone(), { kind: 'fabric', strength: .22 })
+  ;[oak, walnut].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: .4 }))
+  applyCraftSurface(linen, { kind: 'fabric', strength: .25 })
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
@@ -120,8 +124,8 @@ export function createCroatianLicitarHeart(ctx: SceneContext): SceneInstance {
   const frame = add('licitar-mirror-icing-frame', new THREE.TorusGeometry(.098, .011, 8, 48), cream, [0, .66, .165], motif); frame.scale.y = .84; frame.userData.toonSurface = { outline: false }
 
   const ribbonPoints = Array.from({ length: 80 }, (_, i) => { const a = i / 80 * Math.PI * 2; return new THREE.Vector3(.115 * Math.cos(a), 1.23 + .22 * Math.sin(a), .015) })
-  tube('licitar-ribbon-loop', ribbonPoints, .022, cream, heart, true)
-  for (const side of [-1, 1]) tube('licitar-ribbon-tie', [[side * .14, .86, -.085], [side * .12, 1.025, .015], [side * .112, 1.20, .015]].map(p => new THREE.Vector3(...p as [number, number, number])), .022, cream, heart)
+  tube('licitar-ribbon-loop', ribbonPoints, .022, ribbonMaterial, heart, true)
+  for (const side of [-1, 1]) tube('licitar-ribbon-tie', [[side * .14, .86, -.085], [side * .12, 1.025, .015], [side * .112, 1.20, .015]].map(p => new THREE.Vector3(...p as [number, number, number])), .022, ribbonMaterial, heart)
 
   const cone = new THREE.Group(); cone.name = 'licitar-icing-cone'; world.add(cone)
   const grip = add('licitar-icing-grip', new THREE.CylinderGeometry(.057, .142, .43, 24, 5), cream, [0, 0, 0], cone); grip.rotation.z = -Math.PI / 2

@@ -1,3 +1,4 @@
+import { applyCraftSurface, type CraftSurfaceOptions } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 // Strip primitive pole/seam degeneracies; keep closed solids and outward winding.
@@ -12,8 +13,16 @@ export function createKoreanSotdaeModel(){
  const root=new THREE.Group();root.name='sotdae-subject'
  const actor=new THREE.Group();actor.name='sotdae-pole';root.add(actor)
  const materials=new Map<string,THREE.MeshStandardMaterial>()
- const material=(color:string)=>{if(!materials.has(color))materials.set(color,new THREE.MeshStandardMaterial({color,roughness:.88}));return materials.get(color)!}
- const mesh=(parent:THREE.Object3D,name:string,g:THREE.BufferGeometry,color:string,position:[number,number,number])=>{const m=new THREE.Mesh(solid(g),material(color));m.name=name;m.position.set(...position);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
+ const material=(color:string,surface?:CraftSurfaceOptions)=>{
+  const key=`${color}:${surface?.kind??''}:${surface?.axis??''}`
+  if(!materials.has(key)){const m=new THREE.MeshStandardMaterial({color,roughness:.88});if(surface)applyCraftSurface(m,surface);materials.set(key,m)}
+  return materials.get(key)!
+ }
+ const surfaceFor=(name:string):CraftSurfaceOptions|undefined=>{
+  if(/^sotdae-(shaft$|collar-|support-)/.test(name)||/^sotdae-bird-(tail$|neck$)/.test(name))return{kind:'wood',strength:.4,axis:'y'}
+  if(/^sotdae-bird-(body$|head$|bill$|wing-)/.test(name))return{kind:'wood',strength:.4,axis:'z'}
+ }
+ const mesh=(parent:THREE.Object3D,name:string,g:THREE.BufferGeometry,color:string,position:[number,number,number])=>{const m=new THREE.Mesh(solid(g),material(color,surfaceFor(name)));m.name=name;m.position.set(...position);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
  const ground=mesh(root,'sotdae-earthen-socket',new THREE.LatheGeometry([[0,0],[1.25,0],[1.25,.12],[.09,.12],[.09,.02],[0,.02]].map(([x,y])=>new THREE.Vector2(x!,y!)),32),'#b49d70',[0,0,0])
  const shaft=mesh(actor,'sotdae-shaft',new THREE.CylinderGeometry(.055,.055,1.56,12),'#976345',[0,.78,0])
  const collars=[.35,1.05].map((y,i)=>mesh(actor,`sotdae-collar-${i}`,new THREE.CylinderGeometry(.075,.075,.10,12),'#a97b50',[0,y,0]))

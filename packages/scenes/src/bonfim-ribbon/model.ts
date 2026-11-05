@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 const centers=[1.55,1.10,.65],start=.27,end=2*Math.PI-.27
@@ -40,6 +41,8 @@ function clothTexture(){
 export function createBonfimModel(){
  const root=new THREE.Group();root.name='bonfim-subject'
  const metal=new THREE.MeshStandardMaterial({color:0x477f7a,metalness:.48,roughness:.65}),texture=clothTexture(),cloth=new THREE.MeshStandardMaterial({color:0xffffff,map:texture,roughness:.93})
+ applyCraftSurface(metal,{kind:'metal',strength:.45})
+ // The authored BONFIM weave already supplies the cloth texture.
  const make=(name:string,g:THREE.BufferGeometry,mat:THREE.Material)=>{const m=new THREE.Mesh(g,mat);m.name=name;m.castShadow=m.receiveShadow=true;root.add(m);return m}
  const bars=[-1.35,0,1.35].map((x,i)=>{const m=make('bonfim-bar-'+i,new THREE.CylinderGeometry(.055,.055,2.8,16),metal);m.position.set(x,1.4,0);return m})
  const rails=[.15,2.65].map((y,i)=>{const m=make('bonfim-rail-'+i,new THREE.BoxGeometry(2.8,.085,.085),metal);m.position.y=y;return m})

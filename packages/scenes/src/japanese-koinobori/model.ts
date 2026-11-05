@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { createKoinoboriPrint } from './cloth-print'
 
@@ -9,6 +10,9 @@ export function createKoinoboriModel() {
   const wood = new THREE.MeshStandardMaterial({ color: 0xc89a63, roughness: .82 })
   const metal = new THREE.MeshStandardMaterial({ color: 0xb1a175, metalness: .25, roughness: .55 })
   const ropeMat = new THREE.MeshStandardMaterial({ color: 0x796d50, roughness: .96 })
+  applyCraftSurface(wood, { kind: 'wood', strength: .4, axis: 'y' })
+  applyCraftSurface(metal, { kind: 'metal', strength: .45 })
+  applyCraftSurface(ropeMat, { kind: 'cord', strength: .3 })
   const print = createKoinoboriPrint()
   const cloth = createRitualMaterial({ map: print, roughness: .94, side: THREE.DoubleSide }, { kind: 'cloth', strength: .22, fiber: 'linen' })
   cloth.addEventListener('dispose', () => print.dispose())

@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 /** Original sand-pagoda diorama; one prepared paper-and-bamboo tung is planted beside it. */
@@ -7,6 +8,10 @@ export function createLannaSandPagodaModel() {
  const flag=new THREE.Group();flag.name='lanna-flag';subject.add(flag)
  const mat=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.93})
  const sand=mat(0xd7b67d),sandLight=mat(0xe4c995),bamboo=mat(0xa5864e),node=mat(0xc4aa6b),paper=mat(0xf0bf83),wood=mat(0x90714f)
+ const binding=mat(0xc4aa6b) // Separate fixing cord from the equally coloured bamboo nodes.
+ applyCraftSurface(wood,{kind:'wood',strength:.4,axis:'y'})
+ for(const cane of[bamboo,node])applyCraftSurface(cane,{kind:'bamboo',strength:.35,axis:'y'})
+ applyCraftSurface(binding,{kind:'cord',strength:.3})
  let serial=0
  const mesh=(g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D,name?:string)=>{const o=new THREE.Mesh(g,m);o.name=name??`lanna-detail-${serial++}`;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  const ground=mesh(new THREE.CylinderGeometry(1.13,1.17,.08,64),sand,root,'lanna-sand-bed');ground.position.y=-.04
@@ -23,7 +28,7 @@ export function createLannaSandPagodaModel() {
  const shape=new THREE.Shape();shape.moveTo(.035,1.48);shape.lineTo(.30,1.48);shape.lineTo(.30,.54);shape.lineTo(.235,.48);shape.lineTo(.17,.54);shape.lineTo(.10,.48);shape.lineTo(.035,.54);shape.closePath()
  const paperGeometry=new THREE.ExtrudeGeometry(shape,{depth:.008,bevelEnabled:false,steps:1});
  const tung=mesh(paperGeometry,paper,flag,'lanna-tung');tung.position.z=.008
- for(const [i,x] of[.09,.24].entries()){const tie=mesh(new THREE.TorusGeometry(.019,.0025,6,16),node,flag,`lanna-binding-${i}`);tie.rotation.y=Math.PI/2;tie.position.set(x,1.477,.006)}
+ for(const [i,x] of[.09,.24].entries()){const tie=mesh(new THREE.TorusGeometry(.019,.0025,6,16),binding,flag,`lanna-binding-${i}`);tie.rotation.y=Math.PI/2;tie.position.set(x,1.477,.006)}
  // Subtle paper creases are geometry; no sacred diagram, writing, borrowed pattern or texture.
  for(const y of[.78,1.04,1.30]){const crease=mesh(new THREE.BoxGeometry(.255,.003,.003),mat(0xe6b278),flag);crease.position.set(.1675,y,.018)}
  // Small irregular grains stay on the sand surface, away from the holder and planted pole.

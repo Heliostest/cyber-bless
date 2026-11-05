@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 /** Prepared round rice cakes and a daidai orange, placed on a clean paper surface. */
@@ -6,6 +7,7 @@ export function createKagamiModel() {
  const subject=new THREE.Group();subject.name='kagami-subject';root.add(subject)
  const mat=(color:number,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness})
  const rice=mat(0xfff2d6,.96),orange=mat(0xf29a32,.64),green=mat(0x56794b),wood=mat(0xa67951),paper=mat(0xfff7e8,1),edge=mat(0xc8514d)
+ applyCraftSurface(wood,{kind:'wood',strength:.4})
  const mesh=(g:THREE.BufferGeometry,m:THREE.Material,p:THREE.Object3D,name:string)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;p.add(o);return o}
  const base=mesh(new THREE.BoxGeometry(2.60,.12,2.78),wood,subject,'kagami-low-wood-base');base.position.set(0,-.06,.15)
  const cloth=mesh(new THREE.BoxGeometry(2.52,.012,2.70),edge,subject,'kagami-paper-edge');cloth.position.set(0,.006,.15)

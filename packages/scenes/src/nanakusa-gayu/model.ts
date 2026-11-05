@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 
@@ -7,6 +8,9 @@ export function createNanakusaModel() {
  const material=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.78})
  const porridge=createRitualMaterial({color:0xf2ead0,roughness:.42,clearcoat:.38,clearcoatRoughness:.24},{kind:'wet',strength:.35})
  const ceramic=material(0x48695e),cream=material(0xf2ead0),leaf=material(0x547d48),wood=material(0xb47c46),boardMat=material(0xd2b58a),bowlMat=material(0x679c98),light=material(0xd7e0cc)
+ applyCraftSurface(wood,{kind:'wood',strength:.35,axis:'y'})
+ applyCraftSurface(boardMat,{kind:'wood',strength:.4})
+ for(const vessel of[ceramic,bowlMat])applyCraftSurface(vessel,{kind:'ceramic',strength:.45})
  const closed=(source:THREE.BufferGeometry)=>{
   const g=source.index?source.toNonIndexed():source,p=g.getAttribute('position'),values:number[]=[];let volume=0
   for(let i=0;i<p.count;i+=3){const a=new THREE.Vector3().fromBufferAttribute(p,i),b=new THREE.Vector3().fromBufferAttribute(p,i+1),c=new THREE.Vector3().fromBufferAttribute(p,i+2);if(new THREE.Triangle(a,b,c).getArea()<=1e-12)continue;values.push(...a.toArray(),...b.toArray(),...c.toArray());volume+=a.dot(b.clone().cross(c))/6}

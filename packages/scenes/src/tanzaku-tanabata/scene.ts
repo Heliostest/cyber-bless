@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -116,6 +117,9 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
   // Flat, matte greens read as painted cel bands; darker nodes mark the rhythm.
   const stalkMat = new THREE.MeshStandardMaterial({ color: 0x9cc66e, roughness: 0.9 })
   const nodeMat = new THREE.MeshStandardMaterial({ color: 0x5f9147, roughness: 0.9 })
+  applyCraftSurface(stalkMat, { kind: 'bamboo', strength: .38, axis: 'y' })
+  applyCraftSurface(nodeMat, { kind: 'bamboo', strength: .38, axis: 'y' })
+
   const leafMat = new THREE.MeshStandardMaterial({
     color: 0x7fbc5c,
     roughness: 0.9,

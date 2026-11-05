@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 
@@ -11,6 +12,12 @@ export function createSongkranModel(){
  const make=(name:string,g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D=root)=>{const o=new THREE.Mesh(g,m);o.name='songkran-'+name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  const matte=(color:number,roughness=.9)=>new THREE.MeshStandardMaterial({color,roughness})
  const skin=matte(0xd49a73),shirt=matte(0xf5e7bb),pants=matte(0x468b8a),wood=matte(0x9c6c43),hair=matte(0xe1e0d3),dark=matte(0x55595a),stone=matte(0xdacfc0),metal=new THREE.MeshStandardMaterial({color:0x9dc2c3,metalness:.35,roughness:.42})
+ applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+ applyCraftSurface(shirt, { kind: 'fabric', strength: .26 })
+ applyCraftSurface(pants, { kind: 'fabric', strength: .26 })
+ applyCraftSurface(metal, { kind: 'metal', strength: .45 })
+ applyCraftSurface(stone, { kind: 'stone', strength: .4 })
+
  const box=(name:string,size:number[],p:number[],m:THREE.Material,parent:THREE.Object3D=root)=>{const o=make(name,new THREE.BoxGeometry(...size as [number,number,number]),m,parent);o.position.set(...p as [number,number,number]);return o}
  const sphere=(name:string,p:number[],scale:number[],m:THREE.Material,parent:THREE.Object3D=root)=>{const o=make(name,new THREE.SphereGeometry(1,20,12),m,parent);o.position.set(...p as [number,number,number]);o.scale.set(...scale as [number,number,number]);return o}
  const link=(name:string,a:THREE.Vector3,b:THREE.Vector3,r:number,m:THREE.Material,parent:THREE.Object3D)=>{const o=make(name,new THREE.CapsuleGeometry(r,a.distanceTo(b),4,12),m,parent);o.position.copy(a).add(b).multiplyScalar(.5);o.quaternion.setFromUnitVectors(V(0,1,0),b.clone().sub(a).normalize());return o}

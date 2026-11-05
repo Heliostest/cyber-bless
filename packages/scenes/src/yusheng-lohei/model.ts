@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
 // Authored geometry is deterministic; cache only measured placement heights, never live objects.
@@ -9,6 +10,13 @@ export function createYushengModel() {
   const subject = new THREE.Group(); subject.name = 'yusheng-subject'; root.add(subject)
   const material = (color:string, roughness=.72) => new THREE.MeshStandardMaterial({color,roughness,metalness:0})
   const porcelain=material('#fff1d8',.38), celadon=material('#4f9990',.45), wood=material('#b47d4e'), bamboo=material('#804936'), gold=material('#e8b74e',.4)
+  const cuffCloth=porcelain.clone()
+  applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+  applyCraftSurface(porcelain, { kind: 'ceramic', strength: .45 })
+  applyCraftSurface(celadon, { kind: 'ceramic', strength: .45 })
+  applyCraftSurface(bamboo, { kind: 'bamboo', strength: .38, axis: 'y' })
+  applyCraftSurface(cuffCloth, { kind: 'fabric', strength: .26 })
+
   const ingredients=[material('#ef9e3d'),material('#f5edc9'),material('#a4bf66'),material('#d6717b'),material('#deba78')]
   const salmon=material('#ee907b',.48), fishFat=material('#fbe4bc',.48), green=material('#528b56'), sesame=material('#e5c185')
   // Cylinder/lathe poles contain mathematical zero-area triangles; retain all real faces.
@@ -20,7 +28,7 @@ export function createYushengModel() {
   const mesh=(name:string,geometry:THREE.BufferGeometry,mat:THREE.Material,parent:THREE.Object3D)=>{const m=new THREE.Mesh(finish(geometry),mat);m.name=name;m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
   const lathe=(p:number[][])=>new THREE.LatheGeometry(p.map(v=>new THREE.Vector2(v[0]!,v[1]!)),64)
   const table=mesh('round-dining-table',new THREE.CylinderGeometry(1.78,1.78,.14,64),wood,root);table.position.y=.09
-  const tableApron=mesh('table-apron',new THREE.CylinderGeometry(1.69,1.69,.15,64),material('#91613f'),root);tableApron.position.y=-.045
+  const tableApron=mesh('table-apron',new THREE.CylinderGeometry(1.69,1.69,.15,64),applyCraftSurface(material('#91613f'), { kind: 'wood', strength: .4 }),root);tableApron.position.y=-.045
   const plate=mesh('shared-porcelain-platter',lathe([[0,0],[.98,0],[1.30,.07],[1.36,.12],[1.36,.15],[1.30,.15],[.99,.078],[0,.078]]),porcelain,root);plate.position.y=.16
   const rim=mesh('celadon-platter-band',lathe([[1.30,.146],[1.355,.146],[1.355,.151],[1.30,.151],[1.30,.146]]),celadon,root);rim.position.copy(plate.position)
   // Small plates and seats identify a shared meal; none is a wish board or altar.
@@ -83,6 +91,7 @@ export function createYushengModel() {
   for(let i=0;i<food.length;i++)peaks[i]!.y=homes[i]!.y+(i%4!==0?.73+.32*frac(i*.53):.025)
   const diners:THREE.Group[]=[]
   const skins=[material('#dba986'),material('#ba8463'),material('#e1ba99')],sleeves=[material('#dc7767'),material('#72aaa0'),material('#82a7bf')]
+  sleeves.forEach(m=>applyCraftSurface(m, { kind: 'fabric', strength: .26 }))
   const rod=(name:string,a:THREE.Vector3,b:THREE.Vector3,parent:THREE.Object3D,mat:THREE.Material,tip=.026,end=.045)=>{
     const delta=b.clone().sub(a),m=mesh(name,new THREE.CylinderGeometry(end,tip,delta.length(),10),mat,parent);m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());return m
   }
@@ -95,7 +104,7 @@ export function createYushengModel() {
     const palm=mesh('diner-palm-'+i,new THREE.SphereGeometry(1,16,10).scale(.19,.24,.12),skins[i]!,group);palm.position.set(.02,1.42,-.04)
     for(let finger=0;finger<3;finger++){const f=mesh('diner-finger-'+i+'-'+finger,new THREE.CapsuleGeometry(.038,.20,4,8),skins[i]!,group);f.position.set(-.04,1.28+finger*.07,.07);f.rotation.z=1.35}
     const sleeve=mesh('diner-sleeve-'+i,new THREE.CylinderGeometry(.22,.17,.36,16),sleeves[i]!,group);sleeve.position.set(.025,1.72,-.04)
-    const cuff=mesh('diner-cuff-'+i,new THREE.CylinderGeometry(.176,.176,.07,16),porcelain,group);cuff.position.set(.025,1.515,-.04)
+    const cuff=mesh('diner-cuff-'+i,new THREE.CylinderGeometry(.176,.176,.07,16),cuffCloth,group);cuff.position.set(.025,1.515,-.04)
   }
   const direction=new THREE.Vector3(),lerp=THREE.MathUtils.lerp,dipCenters:THREE.Vector3[]=[],dipHeights:number[]=[]
   // Pick an actual broad fish surface for each pair, rather than stopping over a gap.

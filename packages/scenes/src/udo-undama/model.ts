@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import {STAMP_ROWS} from './stamp'
 
@@ -7,6 +8,9 @@ export function createUndamaModel(){
  const radius=.13,cx=.65,cz=-.45,floor=.25,n=64
  const material=new THREE.MeshStandardMaterial({color:'#a99b81',roughness:.97})
  const ledgeMaterial=new THREE.MeshStandardMaterial({color:'#c4b49a',roughness:.96})
+ applyCraftSurface(material, { kind: 'stone', strength: .4 })
+ applyCraftSurface(ledgeMaterial, { kind: 'stone', strength: .4 })
+
  const make=(name:string,g:THREE.BufferGeometry,mat:THREE.Material)=>{const o=new THREE.Mesh(g,mat);o.name=name;o.castShadow=o.receiveShadow=true;root.add(o);return o}
  const closed=(loops:THREE.Vector3[][],bottom:THREE.Vector3,top:THREE.Vector3)=>{
   const p:number[]=[],idx:number[]=[]
@@ -26,7 +30,7 @@ export function createUndamaModel(){
  const width=256,height=128,data=new Uint8Array(width*height*4)
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){const i=(y*width+x)*4;const gx=x-48,gy=109-y,ink=gx>=0&&gx<32&&gy>=0&&gy<32&&STAMP_ROWS[gy]![gx]==='1';data[i]=ink?139:205;data[i+1]=ink?80:145;data[i+2]=ink?49:94;data[i+3]=255}
  const stamp=new THREE.DataTexture(data,width,height,THREE.RGBAFormat);stamp.colorSpace=THREE.SRGBColorSpace;stamp.needsUpdate=true
- const ball=make('undama-ball',new THREE.SphereGeometry(radius,32,20),new THREE.MeshStandardMaterial({color:'#ffffff',map:stamp,roughness:.94}))
+ const ball=make('undama-ball',new THREE.SphereGeometry(radius,32,20),applyCraftSurface(new THREE.MeshStandardMaterial({color:'#ffffff',map:stamp,roughness:.94}), { kind: 'ceramic', strength: .45 }))
  ball.geometry.computeBoundingBox();const endY=floor-ball.geometry.boundingBox!.min.y
  const initial=new THREE.Vector3(-1.05,.5-ball.geometry.boundingBox!.min.y,1),raised=new THREE.Vector3(-1.05,1.08,1),aimed=new THREE.Vector3(-.75,1.08,1),release=new THREE.Vector3(-.83,1.14,1.14),landed=new THREE.Vector3(cx,endY,cz)
  const mix=(a:number,b:number,t:number)=>t<=0?a:t>=1?b:a+(b-a)*t

@@ -3,34 +3,33 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createPosePlacement } from '../pose-placement'
 import { createTouchTarget, insideCanvas } from '../touch-target'
-import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createPinwheelModel } from './model'
 
 type Checkpoint = 0 | 1 | 2 | 3
-const ACTIONS = ['拨翼起转', '提柄上移', '续转停稳']
-const HINTS = [
- '按住珊瑚色纸翼向右短拖，让四片纸翼绕细轴转动。',
- '握住木柄下段，将整只风车提到上方提示标记，纸翼继续转动。',
- '按住珊瑚色纸翼向右短拖，续转一小段，慢慢停稳。',
- '纸翼停住，弯折的纸面与木柄留下轻柔的影子。',
-]
-const MOVING = ['四片纸翼围着细轴轻轻转动……', '木柄上移，纸翼继续旋转……', '纸翼续转，慢慢停稳……']
+const ACTIONS = ['托起风车', '转动纸翼', '放回风车']
+const HINTS = ['握住木柄，把风车托到上方的提示位置。', '拨动纸翼，快慢随手；也可以握住木柄放回原处。', '纸翼可以反复拨动；想结束时，把木柄放回原处。', '风车已放回原处，纸翼慢慢停住。']
+const MOVING = ['风车缓缓提起……', '风车轻轻放回原处……']
+const REPEAT = '再转一会儿'
 const ease = (t: number) => t * t * (3 - 2 * t)
 
 export function createPaperPinwheel(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx, safe = shared.assertSafeCopy
-  ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
+  ;[...ACTIONS, ...HINTS, ...MOVING, REPEAT].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
-  let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number } | null = null
-  let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
+  let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}, elapsed = 0
+  let motion: { step: 0 | 2; time: number; placed: boolean; angle: number } | null = null
+  let mode: 'pickup' | 'play' | 'return' | 'undecided' = 'undecided', invalid = false, travel = 0, lastSample = 0
+  let angle = 0, velocity = 0, heldAngle = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
   const ui = createStepOverlay(overlay, { title: '纸翼转风', stepsAria: '纸风车步骤', action: ACTIONS[0]! }, safe)
-  ui.actionBtn.style.minWidth = '44px'; ui.actionBtn.style.minHeight = '44px'
+  const repeat = document.createElement('button'); repeat.type = 'button'; repeat.className = 'scene-bow-tap scene-toy-repeat'
+  ui.actionBtn.after(repeat)
+  for (const button of [ui.actionBtn, repeat]) { button.style.minWidth = '44px'; button.style.minHeight = '44px' }
   const { scene, renderer } = createWarmStage(canvas), camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'paper-pinwheel', label: '纸翼转风' }); style.setStyle(CEL_STYLE)
@@ -39,86 +38,123 @@ export function createPaperPinwheel(ctx: SceneContext): SceneInstance {
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
   const model = createPinwheelModel(); scene.add(model.root)
+  const placement = createPosePlacement(canvas, camera, model, scene)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
-  const restore = () => pose(at, 0)
-  const isSpatialStep=(step:number)=>step === 1
-  const limitPoints=model.targets.map((target,i)=>{model.pose(i,1);return target!.localToWorld(new THREE.Vector3(...model.anchors[i]!))})
-  model.pose(0,0)
-  const railStart=new THREE.Vector2(),railPath=new THREE.Vector2()
-  let railRadius=0
-  const screenPoint=(point:THREE.Vector3)=>{const p=point.project(camera),r=canvas.getBoundingClientRect();return new THREE.Vector2(r.left+(p.x+1)*r.width/2,r.top+(1-p.y)*r.height/2)}
-  const prepareRail=(x:number,y:number)=>{const a=screenPoint(model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!))),b=screenPoint(limitPoints[at]!.clone());railStart.set(x,y);railPath.copy(b).sub(a);railRadius=Math.min(22,railPath.length()*.42)}
-  const moveRail=(x:number,y:number)=>{
-    if(!insideCanvas(canvas,x,y))return false
-    const n=THREE.MathUtils.clamp(new THREE.Vector2(x,y).sub(railStart).dot(railPath)/Math.max(railPath.lengthSq(),1e-9),0,1)
-    pose(at,n)
-    const contact=screenPoint(model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!))),goal=screenPoint(limitPoints[at]!.clone())
-    return n>0 && contact.distanceTo(goal)<=railRadius && !touch.occluded(x,y,model.targets[at]!,{ignore:model.subject})
-  }
-
-  const directions: [number, number][] = [[1,0],[0,-1],[1,0]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(isSpatialStep(i)?{destination:()=>limitPoints[i]!.clone(),targetLabel:'风车托起位置'}:{direction:directions[i]}), label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const applyPlay = () => { model.rotor.rotation.z = angle; matrices() }
+  const restore = () => { model.pose(at, 0); angle = velocity = 0; matrices() }
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
-  const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
+  const removeCues = [
+    addInteractionCue(model.targets[0]!, { kind: 'drag', destination: () => placement.destination(0), targetLabel: '风车托起位置', label: ACTIONS[0]!, anchor: model.anchors[0], priority: 3, enabled: () => inputActive() && !motion && at === 0 }),
+    addInteractionCue(model.targets[1]!, { kind: 'drag', direction: [1,0], label: ACTIONS[1]!, anchor: model.anchors[1], priority: 3, enabled: () => inputActive() && !motion && (at === 1 || at === 2) }),
+    addInteractionCue(model.targets[2]!, { kind: 'drag', destination: () => placement.destination(2), targetLabel: '风车放回位置', label: ACTIONS[2]!, anchor: model.anchors[2], priority: 2, enabled: () => inputActive() && !motion && (at === 1 || at === 2) }),
+  ]
+  const reset = () => {
+    placement.cancel(); invalid = false; travel = 0
+    if (!motion && !disposed) { angle = heldAngle; velocity = 0; if (at === 0 || at === 3) restore(); else { model.pose(at, 0); applyPlay() } }
+    mode = 'undecided'
+  }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
-    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x, y, model.roots[at]!) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if(isSpatialStep(at))prepareRail(x,y) },
-    onMove(x, y) {
-      if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
-      if(isSpatialStep(at)){if(!invalid && moveRail(x,y) && pointer.finish())advance(true);return}
-      pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
-      const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
-      maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
-      // Preview real rotor rotation or rigid handle lift; release completes the path.
-      pose(at, THREE.MathUtils.clamp(along / 60, 0, 1) * .6)
-      updateDirectionalDragHint(ui.hintEl, !invalid && completesDirectionalDrag({ along, end: along, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel: pathTravel }), HINTS[at]!, safe)
+    canStart(x, y) {
+      if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false
+      matrices(); return touch.hit(x, y, model.handle) || (at > 0 && touch.hit(x, y, model.rotor))
     },
-    onRelease(x, y) {
-      if(isSpatialStep(at)){if(!invalid && moveRail(x,y))advance();else reset();return}
-      const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
-      const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
-      if (valid) advance(); else reset()
+    onStart(x, y) {
+      if (!prepareInput()) { pointer.cancel(); return }
+      down.set(x, y); previous.copy(down); lastSample = elapsed; invalid = false; travel = 0
+      heldAngle = angle; velocity = 0
+      mode = at === 0 ? 'pickup' : touch.hit(x, y, model.handle) ? 'return' : 'play'
+      if (mode !== 'play' && !placement.begin(at === 0 ? 0 : 2, x, y)) pointer.cancel()
+    },
+    onMove(x, y) {
+      if (!Number.isFinite(x) || !Number.isFinite(y) || !insideCanvas(canvas, x, y)) { invalid = true; return }
+      if (invalid) return
+
+      if (mode === 'pickup' || mode === 'return') {
+        if (placement.move(x, y) && pointer.finish()) { placement.capture(); beginPlacement(mode === 'pickup' ? 0 : 2, true) }
+        return
+      }
+      const dx = x - previous.x
+      travel += Math.abs(dx)
+      angle += dx * .025
+      velocity = THREE.MathUtils.clamp(dx * .025 / Math.max(1 / 240, elapsed - lastSample), -18, 18)
+      previous.set(x, y); lastSample = elapsed; applyPlay()
+    },
+    onRelease() {
+      if (invalid || mode !== 'play' || travel < 8) { reset(); return }
+      placement.release(); mode = 'undecided'
+      // A finger held still before release has no fresh flick momentum.
+      velocity *= ctx.isReducedMotion?.() ? 0 : Math.max(0, 1 - (elapsed - lastSample) / .15)
+      recordPlayed()
     }, onCancel: reset,
   })
   const sync = () => {
-    if (motion || at === 3) delete ui.hintEl.dataset.ready
+    if (disposed) return
     if (cueLayer) cueLayer.hidden = !active()
-    ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
-    ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at]!, safe)
+    ui.renderDots(at, 3)
+    // Callback reentry is guarded by inputActive; leave keyboard focus intact.
+    ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !active() || !!motion || at === 3
+    ui.actionBtn.classList.toggle('scene-continuous-finish', at === 2)
+    ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled))
+    repeat.hidden = at !== 2; repeat.disabled = !active() || !!motion || at !== 2
+    repeat.setAttribute('aria-disabled', String(repeat.disabled))
+    ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
+    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(repeat, REPEAT, safe)
+    setSafeText(ui.hintEl, motion ? MOVING[motion.step === 0 ? 0 : 1]! : HINTS[at]!, safe)
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
-  function settle() {
-    if (!inputActive() || !motion) return
-    at = (motion.step + 1) as Checkpoint; motion = null; restore()
+  function notifyProgress() {
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance(accepted=false) { if (!inputActive() || (pointer.isBusy() && !accepted) || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
-  const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
-  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
+  function recordPlayed() {
+    if (!inputActive()) return
+    if (at === 1) { at = 2; notifyProgress() }
+    else withHostCallbacks(() => feedback.impact({ freqs: [392], duration: .06, gain: .002, type: 'sine' }))
+  }
+  function settle() {
+    if (!inputActive() || !motion) return
+    placement.settle(1); placement.cancel(); at = motion.step === 0 ? 1 : 3; motion = null; restore(); notifyProgress()
+  }
+  function beginPlacement(step: 0 | 2, placed = false) {
+    if (!inputActive() || motion || at === 3 || (pointer.isBusy() && !placed)) return
+    velocity = 0; motion = { step, time: 0, placed, angle: THREE.MathUtils.euclideanModulo(angle + Math.PI, Math.PI * 2) - Math.PI }; sync()
+    if (ctx.isReducedMotion?.()) settle()
+  }
+  function playButton(event: MouseEvent) {
+    if (event.detail > 1 || !inputActive() || pointer.isBusy() || motion || (at !== 1 && at !== 2) || !prepareInput()) return
+    angle += .45; velocity = ctx.isReducedMotion?.() ? 0 : 8; applyPlay()
+    recordPlayed()
+  }
+  const action = (event: MouseEvent) => {
+    if (event.detail > 1 || !inputActive() || pointer.isBusy() || motion || at === 3) return
+    if (at === 1) { playButton(event); return }
+    if (!prepareInput()) return
+    beginPlacement(at === 0 ? 0 : 2)
+  }
+  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); velocity = 0; sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
     const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0, 1.55, .1), direction = new THREE.Vector3(2.3, 2.9, 7.5).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target); camera.updateMatrixWorld(true)
     const inverse = camera.quaternion.clone().invert(), tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), p = new THREE.Vector3(); let distance = 3.4
-    const saved = amount
-    for (const [step, n] of [0,1,2].flatMap(step=>Array.from({length:61},(_,i)=>[step,i/60])).concat([[3,0]])) {
-      pose(step!, n!)
-      model.subject.traverse(o => { const m = o as THREE.Mesh; if (!m.geometry) return; const vertices = m.geometry.getAttribute('position')
-        for (let i = 0; i < vertices.count; i++) { p.fromBufferAttribute(vertices, i).applyMatrix4(m.matrixWorld).sub(target).applyQuaternion(inverse); distance = Math.max(distance, p.z + Math.abs(p.x) / (tangent * aspect * .86), p.z + Math.abs(p.y) / (tangent * .86)) }
+    const savedY = model.root.position.y, savedAngle = model.rotor.rotation.z
+    // Frame the entire rotating silhouette at both ends of the pickup path.
+    for (const lift of [0,.18]) for (let i = 0; i < 32; i++) {
+      model.root.position.y = lift; model.rotor.rotation.z = i * Math.PI / 16; matrices()
+      model.root.traverse(o => { const m = o as THREE.Mesh; if (!m.geometry) return; const vertices = m.geometry.getAttribute('position')
+        for (let j = 0; j < vertices.count; j++) { p.fromBufferAttribute(vertices, j).applyMatrix4(m.matrixWorld).sub(target).applyQuaternion(inverse); distance = Math.max(distance, p.z + Math.abs(p.x) / (tangent * aspect * .86), p.z + Math.abs(p.y) / (tangent * .86)) }
       })
     }
-    pose(at, saved); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
+    model.root.position.y = savedY; model.rotor.rotation.z = savedAngle
+    camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target)
+    matrices()
   }
   restore(); sync()
   return {
@@ -126,26 +162,33 @@ export function createPaperPinwheel(ctx: SceneContext): SceneInstance {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
       restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
-      ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
+      ui.actionBtn.addEventListener('click', action); repeat.addEventListener('click', playButton); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {
       if (!started || disposed) return
-      if (!active()) { lifecycleVersion++; pointer.cancel(); if (!suspended) { suspended = true; sync() }; return }
+      if (!active()) { lifecycleVersion++; pointer.cancel(); velocity = 0; if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
+      elapsed += delta
       if (motion) {
-        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85)
-        const eased=ease(motion.time)
-        pose(motion.step, motion.from+(1-motion.from)*eased); if (motion.time === 1) settle()
+        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.placed ? .28 : .55))
+        const n = ease(motion.time)
+        model.pose(motion.step, n); model.rotor.rotation.z = motion.angle * (1 - n)
+        placement.settle(n); matrices(); if (motion.time === 1) settle()
+      } else if (at === 1 || at === 2) {
+        if (!pointer.isBusy()) {
+          if (ctx.isReducedMotion?.()) velocity = 0
+          angle += velocity * delta; velocity *= Math.exp(-2.4 * delta); applyPlay()
+        }
       }
       if (active()) { matrices(); style.render() }
     },
     dispose() {
       if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
+      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action); repeat.removeEventListener('click', playButton)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose();  disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

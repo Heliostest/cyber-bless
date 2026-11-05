@@ -6,6 +6,7 @@ import {
   restore,
   hasReturnRitual,
   dailyCollectibleId,
+  sceneStepCount,
 } from "./index";
 
 const at = "2026-09-20T08:00:00.000Z";
@@ -162,8 +163,9 @@ describe("personal ritual loop", () => {
     const s = { ...createState(), opening: { status: "new" as const } };
     let active = reduce(s, { type: "opening.start", sceneIds: ["furin-wind-chime", "shinto-torii", "crane"] });
     for (const sceneId of ["furin-wind-chime", "shinto-torii"]) {
-      active = reduce(active, { type: "scene.visit", entry: builtInScenes.find(entry => entry.id === sceneId)!, at });
-      active = reduce(active, { type: "scene.progress", id: sceneId, progress: 3 });
+      const entry = builtInScenes.find(entry => entry.id === sceneId)!;
+      active = reduce(active, { type: "scene.visit", entry, at });
+      active = reduce(active, { type: "scene.progress", id: sceneId, progress: sceneStepCount(entry) });
       active = reduce(active, { type: "opening.collect", sceneId, at });
     }
     const action = { ...add, sourceSceneId: "crane", sourceCollectibleId: "opening:crane" };

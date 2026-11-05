@@ -65,6 +65,9 @@ import { loadScene } from '../registry'
 const OWN_SCENES = ['tanzaku-tanabata', 'yeondeunghoe', 'furin-wind-chime', 'crane', 'lantern'] as const
 
 async function mount(id: string, initialProgress = 0, extra: Partial<SceneContext> = {}, size: readonly [number, number] = [300, 300]) {
+  // These legacy cue matrices exercise the original post-hanging actions.
+  // The complete five-checkpoint workflow has its own handling-flow suite.
+  const offset = id === 'furin-wind-chime' ? 2 : 0
   const mod = await loadScene(id)
   const canvas = document.createElement('canvas')
   const overlay = document.createElement('div')
@@ -80,7 +83,7 @@ async function mount(id: string, initialProgress = 0, extra: Partial<SceneContex
   const haptic = vi.fn()
   const instance = mod.create({
     canvas, overlay, gestures: Gestures, shared: Shared, sceneId: id,
-    initialProgress, onProgress: (n) => progress.push(n), haptic,
+    initialProgress: initialProgress + offset, onProgress: (n) => progress.push(n - offset), haptic,
     isSoundEnabled: () => false, ...extra,
   })
   instance.start()

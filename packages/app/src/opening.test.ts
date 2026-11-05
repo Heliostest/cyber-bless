@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { createState, reduce, restore, type State } from '@wbr/core';
+import { createState, reduce, restore, sceneStepCount, type State } from '@wbr/core';
 import { builtInScenes } from './scene-library';
 import { BlessingApp } from './App';
 import { clickOn, renderUI, settle, typeInto } from './dom-test-utils';
@@ -30,7 +30,12 @@ async function open(raw: string | null = JSON.stringify(started())) {
   await settle();
   return { ...ui, raw: () => saved!, state: () => restore(saved),
     tap: async (selector: string) => { clickOn(ui.host.querySelector(selector)!); await settle(); },
-    walk: async () => { for (const n of [1, 2, 3]) act(() => scene.context!.checkpoint!(n)); await settle(); },
+    walk: async () => {
+      const id = ui.host.querySelector('.library-scene-stage')!.getAttribute('data-scene');
+      const steps = sceneStepCount(builtInScenes.find(entry => entry.id === id)!);
+      for (let n = 1; n <= steps; n++) act(() => scene.context!.checkpoint!(n));
+      await settle();
+    },
   };
 }
 
@@ -109,7 +114,7 @@ it('keeps a written wish without sending the player out of the opening', async (
   let state = started();
   for (const id of ids.slice(0, 2)) {
     state = reduce(state, { type: 'scene.visit', entry: builtInScenes.find(e => e.id === id)!, at: new Date().toISOString() });
-    state = reduce(state, { type: 'scene.progress', id, progress: 3 });
+    state = reduce(state, { type: 'scene.progress', id, progress: sceneStepCount(builtInScenes.find(e => e.id === id)!) });
     state = reduce(state, { type: 'opening.collect', sceneId: id, at: new Date().toISOString() });
   }
   const ui = await open(JSON.stringify(state));
@@ -136,7 +141,7 @@ it.each([false, true])('collects the opening wish keepsake as used after recordi
   let state = started();
   for (const id of ids.slice(0, 2)) {
     state = reduce(state, { type: 'scene.visit', entry: builtInScenes.find(e => e.id === id)!, at: new Date().toISOString() });
-    state = reduce(state, { type: 'scene.progress', id, progress: 3 });
+    state = reduce(state, { type: 'scene.progress', id, progress: sceneStepCount(builtInScenes.find(e => e.id === id)!) });
     state = reduce(state, { type: 'opening.collect', sceneId: id, at: new Date().toISOString() });
   }
   let ui = await open(JSON.stringify(state));

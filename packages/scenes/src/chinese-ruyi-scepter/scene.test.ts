@@ -53,7 +53,8 @@ describe('close inspection before placement', () => {
     }
     expect(cameraTravel).toBeGreaterThan(4)
     expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled()
-    s.run(.6); s.button.click(); s.run()
+    s.run(.6); expect(s.overlay.getAttribute('data-close-inspection')).toBe('viewing')
+    s.button.click(); s.run(.6); s.button.click(); s.run()
     expect(s.progress).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
   })
   it.each([0, 1, 2])('opens a close view without completing legacy checkpoint %i, then allows the original placement', at => {

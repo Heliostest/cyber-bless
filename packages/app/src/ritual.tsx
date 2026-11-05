@@ -2,6 +2,7 @@ import { translate as tr, message, translateScene, formatNumber } from '@wbr/i18
 import { useEffect, useRef, useState } from "react";
 import { localDay, rituals, sceneIntention, type RitualId } from "@wbr/core";
 import { Icon } from "./art";
+import { SceneRestartButton } from './scene-restart';
 import { now, uid, useApp } from "./context";
 import { Empty } from "./pages";
 import { Woodfish } from "./woodfish";
@@ -10,7 +11,7 @@ import { rewardOriginOf } from "./reward-flight";
 import { SceneRewardReveal } from "./scene-reward-reveal";
 import { LegacySceneRitual } from "./legacy-scene-ritual";
 import { sceneSteps } from "./scene-placement";
-import { builtInScenes } from "./scene-library";
+import { builtInScenes, useOpenScene } from "./scene-library";
 import { captureSceneImage } from '@wbr/scene-runtime';
 import { SceneShareButton } from './ritual-share';
 import { SceneStageCard } from './scene-stage-card';
@@ -161,7 +162,8 @@ export function Complete({ id, revealReward, shareSnapshot }: {
     revealReward?: boolean;
     shareSnapshot?: string;
 }) {
-    const { state, go, launchReward } = useApp();
+    const { state, active, go, launchReward } = useApp();
+    const openScene = useOpenScene();
     const collectCta = useRef<HTMLButtonElement>(null);
     const r = state.sessions.find((s) => s.id === id);
     if (!r)
@@ -215,7 +217,10 @@ export function Complete({ id, revealReward, shareSnapshot }: {
       <button data-audio-cue={wish ? "navigate" : "collect"} className="button primary full" data-reward-origin={!wish || undefined} ref={collectCta} onClick={wish ? () => go({ page: "wish", id: wish.id }, { sound: 'navigate' }) : collect}>
         {wish ? tr("去心愿看看") : tr("\u6536\u4E0B{p0}", { p0: tr(rituals[r.ritual].object) })}
       </button>
-      <SceneShareButton sceneId={r.ritual} title={translateScene(rituals[r.ritual].name)} snapshot={shareSnapshot} className="full"/>
+      <div className="scene-restart-actions">
+        <SceneRestartButton onRestart={() => openScene(builtInScenes.find(entry => entry.id === r.ritual)!, { replay: true })} disabled={!active}/>
+        <SceneShareButton sceneId={r.ritual} title={translateScene(rituals[r.ritual].name)} snapshot={shareSnapshot}/>
+      </div>
       <p className="leaf-footer">
         <Icon name="leaf"/>{tr("\u660E\u5929\u8FD8\u6709\u4E00\u4E2A\u5C0F\u60CA\u559C\u3002")}<Icon name="leaf"/>
       </p>

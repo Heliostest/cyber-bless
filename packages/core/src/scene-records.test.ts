@@ -9,6 +9,23 @@ const entry = {
   manifestUrl: "https://cdn.test/spring-v1.json",
 };
 describe("durable scene records", () => {
+  const furin = { ...entry, id: 'furin-wind-chime', engine: 'furin-wind-chime@1' };
+  it.each([[0, 0], [1, 3], [2, 4], [3, 5]])('preserves legacy wind chime checkpoint %i as %i exactly once', (old, expected) => {
+    const state = { ...createState(), sceneRecords: [{ ...furin, progress: old, steps: 3, favorite: true, lastOpened: '2026-11-05T00:00:00Z' }] };
+    const restored = restore(JSON.stringify(state));
+    expect(sceneStepCount(furin)).toBe(5);
+    expect(restored.sceneRecords[0]).toMatchObject({ progress: expected, steps: 5, favorite: true });
+    expect(restore(JSON.stringify(restored)).sceneRecords[0].progress).toBe(expected);
+    expect(reduce(state, { type: 'scene.visit', entry: furin, at: '2026-11-06T00:00:00Z' }).sceneRecords[0].progress).toBe(expected);
+  });
+  it('keeps new chime inspection and hanging checkpoints across save and reopen', () => {
+    let state = reduce(createState(), { type: 'scene.visit', entry: furin, at: '2026-11-05T00:00:00Z' });
+    for (const progress of [1, 2, 3, 4, 5, 0]) {
+      state = reduce(state, { type: 'scene.progress', id: furin.id, progress });
+      state = restore(JSON.stringify(state));
+      expect(state.sceneRecords[0]).toMatchObject({ progress, steps: 5 });
+    }
+  });
   it('keeps woodfish strikes beyond its minimum through restore and clears them for a fresh visit', () => {
     const woodfish = { ...entry, id: 'woodfish', engine: 'woodfish@1' };
     let state = reduce(createState(), { type: 'scene.visit', entry: woodfish, at: '2026-10-12T00:00:00Z' });

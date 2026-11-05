@@ -3023,6 +3023,24 @@ button:hover:not(:disabled) {
 .scene-yut-finish:focus-visible, .scene-angklung-finish:focus-visible { outline: 3px solid var(--mint-ink); outline-offset: 3px; }
 .scene-yut-finish:disabled, .scene-angklung-finish:disabled { opacity: 0.55; cursor: progress; }
 
+.scene-overlay:where(:has(> .scene-toy-repeat:not([hidden])), :has(> .scene-hanging-flick:not([hidden]))) > .scene-continuous-finish {
+  left: 14px;
+  transform: none;
+  max-width: calc(50% - 21px);
+  white-space: normal;
+}
+.scene-toy-repeat, .scene-hanging-flick {
+  left: auto;
+  right: 14px;
+  transform: none;
+  max-width: calc(50% - 21px);
+  white-space: normal;
+}
+.scene-toy-repeat:active, .scene-hanging-flick:active { transform: translateY(1px); }
+.scene-castanets-buttons { flex-wrap: wrap; }
+.scene-overlay:not(.scene-overlay-host) > .scene-castanets-buttons { position: absolute !important; right: 14px; bottom: 116px; max-width: 54%; }
+.scene-overlay:not(.scene-overlay-host):has(> .scene-castanets-buttons) > .scene-castanets-finish { left: 14px; transform: none; }
+
 @keyframes scene-fade-in {
   from {
     opacity: 0;
@@ -3553,6 +3571,22 @@ button:hover:not(:disabled) {
 .scene-done-row .scene-done {
   margin: 0;
 }
+.scene-restart-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: min(360px, 100%);
+  margin-inline: auto;
+}
+.scene-restart-actions > .button {
+  flex: 1 1 130px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 6px 12px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
 .scene-completion-actions {
   display: grid;
   grid-template-columns: minmax(80px, 0.65fr) minmax(0, 1fr);
@@ -3802,6 +3836,10 @@ button:hover:not(:disabled) {
   background: var(--paper);
 }
 .library-scene-stage .scene-bow-tap.scene-continuous-finish::before { content: none; }
+.library-scene-stage .scene-toy-repeat, .library-scene-stage .scene-hanging-flick {
+  right: auto;
+  max-width: 100%;
+}
 .library-scene-stage .scene-diabolo-repeat,
 .library-scene-stage .scene-yut-finish,
 .library-scene-stage .scene-angklung-finish {

@@ -55,11 +55,14 @@ export function createCastanetsModel() {
     // Actual interpolation knots pass through all four open eyelet centres.
     for(const i of [0,1,4,5])cordPoints.push(curve.getPoint(i/8).applyMatrix4(pairs[k]!.matrixWorld))
   }
-  const pose=(step:number,n:number)=>{
-    const t=THREE.MathUtils.clamp(n,0,1),pulse=t<=.65?t/.65:(1-t)/.35
-    for(let k=0;k<2;k++)pivots[k]!.rotation.x=-.55*(1-((step===k||step===2)&&step<3?pulse:0))
+  const poseClosures=(left:number,right:number)=>{
+    for(let k=0;k<2;k++)pivots[k]!.rotation.x=-.55*(1-THREE.MathUtils.clamp(k===0?left:right,0,1))
     subject.updateMatrixWorld(true);cordPoints=[];for(let k=0;k<2;k++)updateCord(k)
   }
+  const pose=(step:number,n:number)=>{
+    const t=THREE.MathUtils.clamp(n,0,1),pulse=t<=.65?t/.65:(1-t)/.35
+    poseClosures((step===0||step===2)?pulse:0,(step===1||step===2)?pulse:0)
+  }
   pose(0,0)
-  return {subject,pairs,pivots,upper,lower,eyes,cords,get cordPoints(){return cordPoints},pose,targets:[upper[0]!,upper[1]!,upper[0]!],roots:[upper[0]!,upper[1]!,upper[0]!],anchors:[[0,.30,.30],[0,.30,.30],[0,.30,.30]] as [number,number,number][]}
+  return {subject,pairs,pivots,upper,lower,eyes,cords,get cordPoints(){return cordPoints},pose,poseClosures,targets:[upper[0]!,upper[1]!,upper[0]!],roots:[upper[0]!,upper[1]!,upper[0]!],anchors:[[0,.30,.30],[0,.30,.30],[0,.30,.30]] as [number,number,number][]}
 }

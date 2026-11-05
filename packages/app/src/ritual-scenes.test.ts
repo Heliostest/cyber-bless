@@ -148,7 +148,7 @@ async function openApp(state: State, initialRoute?: Route) {
     sceneTitle: () => ui.host.querySelector(".app-topbar .title-ribbon")?.textContent,
     sceneProgress: () => ui.host.querySelector(".scene-progress")?.textContent,
     doneButtons: () =>
-      all(".scene-done-row button:not(.favorite-chip):not(.scene-wish-invite):not(.scene-share-trigger)").map((b) => b.textContent),
+      all(".scene-done-row button:not(.favorite-chip):not(.scene-wish-invite):not(.scene-share-trigger):not(.scene-restart)").map((b) => b.textContent),
     /** The first button whose text includes `text`. */
     button: (text: string, within = "") =>
       all(`${within} button`).find((b) => b.textContent?.includes(text))!,

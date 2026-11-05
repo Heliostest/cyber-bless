@@ -65,7 +65,7 @@ function mount(create: Factory, initialProgress: number) {
   const layer = overlay.querySelector<HTMLElement>('.scene-hit-layer')!, button = overlay.querySelector<HTMLButtonElement>('button')!
   const setCapture = vi.fn(), releaseCapture = vi.fn()
   layer.setPointerCapture = setCapture; layer.releasePointerCapture = releaseCapture
-  if (create !== steelyard && initialProgress < 3) {
+  if (create !== steelyard && initialProgress < (create === nazar ? 2 : 3)) {
     button.click()
     for (let i = 0; i < 28; i++) instance.update(.025)
     button.click()
@@ -78,6 +78,7 @@ function mount(create: Factory, initialProgress: number) {
     return [rect.left + (point.x + 1) * rect.width / 2, rect.top + (1 - point.y) * rect.height / 2]
   }
   const grip = (): Point => {
+    if (create === nazar && initialProgress === 2) return project(scene.getObjectByName('nazar-charm')!, [0,-.04,.11])
     let selected: { object: THREE.Object3D; cue: InteractionCue } | undefined
     scene.traverse(object => {
       const cue = (object.userData.interactionCues as InteractionCue[] | undefined)?.find(item => item.enabled() && item.kind === 'drag')
@@ -162,7 +163,9 @@ describe('captured release outside the canvas does not strand a movable object o
     expect(root.quaternion.angleTo(rotation)).toBeGreaterThan(.1)
     pointer(s.layer,'pointerup',[s.rect.left-1000,start[1]],true)
     expectSnapshot(canonical);expect(s.progress).toEqual([]);expect(s.complete).not.toHaveBeenCalled();expect(s.haptic).not.toHaveBeenCalled()
-    s.button.click();expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
+    s.button.click()
+    if (at < 2) { expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled(); s.instance.update(.025); s.button.click() }
+    expect(s.progress).toEqual(at < 2 ? [2,3] : [3]);expect(s.complete).toHaveBeenCalledOnce()
   })
   const scenes = [
     ['Alasita', alasita], ['Brat', brat], ['Fu', fu], ['Longevity lock', longevity], ['Ruyi', ruyi],
@@ -178,7 +181,9 @@ describe('captured release outside the canvas does not strand a movable object o
       pointer(destination === 'window listener' ? document.body : s.layer, 'pointerup', outside)
       expect(s.releaseCapture).toHaveBeenCalledWith(1); expectSnapshot(canonical)
       expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled()
-      s.button.click(); s.instance.update(.025); expect(s.progress).toEqual([3])
+      s.button.click(); s.instance.update(.025)
+      if (create === nazar && at < 2) { expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled(); s.button.click() }
+      expect(s.progress).toEqual(create === nazar && at < 2 ? [2,3] : [3])
     })
   }
 })

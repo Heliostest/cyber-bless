@@ -44,6 +44,8 @@ const IDS = ['celtic-folk-spring', 'shinto-torii', 'theravada-water', 'tibetan-w
   'tanzaku-tanabata', 'yeondeunghoe', 'furin-wind-chime', 'crane', 'lantern'] as const
 
 async function mount(id: string, initialProgress = 0, reduced = false, width = 390, extra: Partial<SceneContext> = {}) {
+  // Keep this matrix focused on the pre-existing ringing/listening contract.
+  const offset = id === 'furin-wind-chime' ? 2 : 0
   const height = 408
   const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
   host.append(canvas, overlay); document.body.append(host)
@@ -52,8 +54,9 @@ async function mount(id: string, initialProgress = 0, reduced = false, width = 3
   const progress: number[] = [], complete = vi.fn()
   overlay.addEventListener('scene:complete', complete)
   const module = await loadScene(id)
-  const instance = module.create({ canvas, overlay, gestures: Gestures, shared: Shared, initialProgress,
-    onProgress: n => progress.push(n), isReducedMotion: () => reduced, isSoundEnabled: () => false, ...extra })
+  const instance = module.create({ canvas, overlay, gestures: Gestures, shared: Shared, initialProgress: initialProgress + offset,
+    isReducedMotion: () => reduced, isSoundEnabled: () => false, ...extra,
+    onProgress: n => extra.onProgress ? extra.onProgress(n - offset) : progress.push(n - offset) })
   instances.add(instance); instance.start(); instance.update(0)
   const scene = rendered.scene!, camera = rendered.camera!
   const layer = overlay.querySelector<HTMLElement>('.scene-hit-layer')!

@@ -551,5 +551,6 @@
   "app.sceneVisual.maple": "秋枫树型",
   "app.sceneVisual.bamboo": "竹叶／竹枝",
   "app.sceneVisual.bodhi": "菩提主题树",
-  "app.sceneVisual.wish-tree": "许愿主题树"
+  "app.sceneVisual.wish-tree": "许愿主题树",
+  "app.scene.restart": "从头体验"
 }

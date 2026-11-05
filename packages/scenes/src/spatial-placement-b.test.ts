@@ -18,6 +18,7 @@ import { createLongevityLockModel } from './chinese-longevity-lock/model'
 import { createNagashibinaModel } from './mochigase-nagashibina/model'
 import { createVasilopitaModel } from './greek-vasilopita/model'
 import { createKhataModel } from './tibetan-khata-greeting/model'
+import { createWishingMalletModel } from './uchide-wishing-mallet/model'
 import { disposeTree } from './procedural-kit'
 
 const rendered = vi.hoisted(() => ({ scene: null as unknown, camera: null as unknown }))
@@ -47,7 +48,7 @@ export const spatialCasesB: [string, number[]][] = [
   ['horseshoe-doorway-luck', [0, 1, 2]], ['kagami-mochi-offering', [0, 1, 2]],
   ['mochigase-nagashibina', [0, 1, 2]], ['neapolitan-cornicello', [0, 1, 2]],
   ['rosh-hashanah-apple-honey', [0, 1, 2]], ['sternsinger-house-blessing', [0, 2]],
-  ['uchide-wishing-mallet', [0, 2]], ['vietnamese-five-fruit-tray', [0, 1, 2]],
+  ['uchide-wishing-mallet', [0, 1, 2]], ['vietnamese-five-fruit-tray', [0, 1, 2]],
   ['bai-indigo-cloth', [0, 1]], ['basque-sunflower', [0, 1]],
   ['czech-bead-star', [0]], ['dalarna-wooden-horse', [0, 1]],
   ['finnish-birch-basket', [0, 1]], ['clootie-well-rag', [0, 1]],
@@ -61,6 +62,7 @@ export const spatialCasesB: [string, number[]][] = [
 // The saved source checkpoint and the end of a continuous carry are different.
 // Assembly, tapping the back, taking the coin and the final handover stay distinct.
 function nextCheckpoint(id: string, step: number) {
+  if (id === 'uchide-wishing-mallet') return step === 0 ? 1 : 3
   if (['alasita-miniature-house', 'chinese-longevity-lock', 'mochigase-nagashibina'].includes(id)) return 3
   if (['bulgarian-survakane', 'greek-vasilopita', 'tibetan-khata-greeting'].includes(id) && step < 2) return 2
   if (id === 'czech-bead-star' && step === 0) return 2
@@ -74,6 +76,7 @@ function carryDestination(id: string, step: number) {
     'mochigase-nagashibina': createNagashibinaModel,
     'greek-vasilopita': createVasilopitaModel,
     'tibetan-khata-greeting': createKhataModel,
+    'uchide-wishing-mallet': createWishingMalletModel,
   }[id]
   if (!factory) return null
   const model = factory(), slot = nextCheckpoint(id, step) - 1
@@ -131,7 +134,11 @@ describe('B group real object destination placement', () => {
       const target = s.project(destination)
       pointer(s.hit, 'pointerdown', ...start)
       // A drawn stick remains in its real cylinder opening; its X axis stays constrained.
-      const bend = [start[0] + (target[0] - start[0]) * .35 + (id === 'omikuji' && step === 1 ? 0 : 18), start[1] + (target[1] - start[1]) * .35 - 15] as const
+      // Held mallet play remains available at both checkpoints: begin the
+      // deliberate return downward, then bend toward its physical rests.
+      const bend = id === 'uchide-wishing-mallet' && step > 0
+        ? [start[0] + 3, start[1] + (target[1] - start[1]) * .35] as const
+        : [start[0] + (target[0] - start[0]) * .35 + (id === 'omikuji' && step === 1 ? 0 : 18), start[1] + (target[1] - start[1]) * .35 - 15] as const
       pointer(s.hit, 'pointermove', ...bend)
       expect(s.progress).toEqual([])
       const actual = s.project(object.localToWorld(anchor.clone()))

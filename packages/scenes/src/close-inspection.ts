@@ -25,6 +25,8 @@ type Options = {
   prepare(): boolean
   safe(text: string): void
   changed(): void
+  /** Returning on a timer is opt-in; viewers choose when to continue by default. */
+  autoReturn?: boolean
 }
 const ease = (n: number) => n * n * (3 - 2 * n)
 const belongs = (object: THREE.Object3D, root: THREE.Object3D) => {
@@ -164,7 +166,7 @@ export function createCloseInspection(options: Options) {
       return
     }
     event.stopImmediatePropagation()
-    if (!interactive() || pointer.isBusy()) return
+    if (event.detail > 1 || !interactive() || pointer.isBusy()) return
     if (phase === 'ready') begin()
     else if (phase === 'viewing') leave()
   }
@@ -219,7 +221,7 @@ export function createCloseInspection(options: Options) {
         if (amount === 1) { phase = 'viewing'; elapsed = 0; notify() }
       } else if (phase === 'viewing' && !manual && !options.isReducedMotion()) {
         const before = elapsed; elapsed = Math.min(6,elapsed+delta); yaw += (ease(elapsed/6)-ease(before/6))*Math.PI*2; orbit()
-        if (elapsed >= 6 && !pointer.isBusy()) leave()
+        if (elapsed >= 6 && options.autoReturn === true && !pointer.isBusy()) leave()
       } else if (phase === 'returning' && snapshot) {
         elapsed += delta
         const amount = options.isReducedMotion() ? 1 : Math.min(1,elapsed/.5), t = ease(amount)

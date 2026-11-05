@@ -22,6 +22,7 @@ import { SceneRewardReveal } from "./scene-reward-reveal";
 import { SceneShareButton } from "./ritual-share";
 import { SceneStageCard } from "./scene-stage-card";
 import { TestFeedbackOverlay } from './test-feedback-overlay';
+import { SceneRestartButton } from './scene-restart';
 export function ProceduralScene({ entry, progress, checkpoint, saveWish, returning, initialVariant, onVariantChange, failed, paused = false, }: {
     entry: CatalogEntry;
     progress: number;
@@ -46,37 +47,39 @@ export function ProceduralScene({ entry, progress, checkpoint, saveWish, returni
     latest.current = { ...callbacks, state };
     const stage = sceneStage(entry.id);
     useEffect(() => {
+        let current = true;
         session.current = mountScene({
             host: host.current!,
             active,
             reducedMotion: state.settings.reducedMotion,
             context: {
                 progress,
-                checkpoint: (n: number) => latest.current.checkpoint(n),
+                checkpoint: (n: number) => { if (current) latest.current.checkpoint(n); },
                 sceneId: entry.id,
-                prepareFeedback: () => latest.current.prepareFeedback(),
-                haptic: (strength?: Parameters<typeof haptic>[0]) => latest.current.haptic(strength),
+                prepareFeedback: () => { if (current) latest.current.prepareFeedback(); },
+                haptic: (strength?: Parameters<typeof haptic>[0]) => { if (current) latest.current.haptic(strength); },
                 isSoundEnabled: () => latest.current.state.settings.sound,
                 // Absent on a walk that keeps nothing: the box then says so itself.
                 ...(saveWish
                     ? {
-                        saveWish: (text: string) => latest.current.saveWish!(text),
+                        saveWish: (text: string) => { if (current) latest.current.saveWish!(text); },
                     }
                     : {}),
                 stage,
                 returning,
                 deferWishWriting: true,
                 initialVariant,
-                onVariantChange: (variant: string) => latest.current.onVariantChange?.(variant),
+                onVariantChange: (variant: string) => { if (current) latest.current.onVariantChange?.(variant); },
             },
             load: () => sceneEngines.load(entry.engine as "celtic-folk-spring@1" | "theravada-water@1" | "tanzaku-tanabata@1" | "yeondeunghoe@1" | "furin-wind-chime@1"),
             ready: () => {
-                if (host.current)
+                if (current && host.current)
                     host.current.dataset.ready = "true";
             },
-            failed: (error) => latest.current.failed(error),
+            failed: (error) => { if (current) latest.current.failed(error); },
         });
         return () => {
+            current = false;
             session.current?.dispose();
             session.current = null;
         };
@@ -118,7 +121,7 @@ export const SCENE_DISCARDED_COPY = "没有保存，只留此刻的心情。";
 export const SCENE_DAILY_CAPTION = "今日随机仪式 · 完成后收进小天地";
 /** Announced when the daily keepsake lands. */
 export const sceneDailyAnnounce = (title: string) => tr("{p0}\u5DF2\u653E\u8FDB\u5C0F\u5929\u5730", { p0: title });
-function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, feedbackSession, }: {
+function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, feedbackSession, onRestart, }: {
     entry: CatalogEntry;
     /** On a 还愿 visit: the realized wish the ritual is walked for. */
     wishId?: string;
@@ -131,11 +134,14 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
     opening?: boolean;
     feedbackSession?: boolean;
     failed(error?: unknown): void;
+    onRestart(): void;
 }) {
     const { state, dispatch, active, feedback, prepareFeedback, go, launchReward, announce, back, internalToolsEnabled, uiSound, } = useApp();
     const [reporterOpen, setReporterOpen] = useState(false);
     const feedbackEnabled = !!feedbackSession && !!internalToolsEnabled;
     const sceneActive = active && !(feedbackEnabled && reporterOpen);
+    const mounted = useRef(true);
+    useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
     const { entries } = useSceneLibrary();
     const record = state.sceneRecords.find((r) => r.id === entry.id);
     const progress = record?.progress ?? 0;
@@ -181,6 +187,7 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
     // One record per visit, however often the last step reports.
     const [visit] = useState(() => ({ id: uid(), startedAt: now() }));
     const checkpoint = (n: number, strikes?: number) => {
+        if (!mounted.current) return;
         const advanced = dispatch({ type: "scene.progress", id: entry.id, progress: n, ...(strikes === undefined ? {} : { strikes }) });
         if (n < steps)
             return;
@@ -268,6 +275,7 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
     // into a lost phrase; a 还愿 vessel keeps nothing (its box says so itself);
     // every other walk saves each line as its own new 心愿, as it always has.
     const saveWish = (text: string) => {
+        if (!mounted.current) return;
         if (vesselMake) {
             const line = text.trim();
             if (line) {
@@ -370,7 +378,7 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
                 // The final checkpoint belongs to the user's finish action.
                 checkpoint(Math.min(steps - 1, woodfishStrikes + 1), woodfishStrikes + 1);
                 return true;
-            }} onImpact={feedback} onInstruction={setInstruction} onFailure={failed}/>) : (<ProceduralScene entry={entry} progress={progress} checkpoint={checkpoint} saveWish={vessel && returnWish ? undefined : saveWish} returning={Boolean(returnWish)} initialVariant={record?.variant} onVariantChange={variant => dispatch({ type: "scene.variant", id: entry.id, variant })} failed={failed} paused={feedbackEnabled && reporterOpen}/>)}
+            }} onImpact={feedback} onInstruction={setInstruction} onFailure={failed}/>) : (<ProceduralScene entry={entry} progress={progress} checkpoint={checkpoint} saveWish={vessel && returnWish ? undefined : saveWish} returning={Boolean(returnWish)} initialVariant={record?.variant} onVariantChange={variant => { if (mounted.current) dispatch({ type: "scene.variant", id: entry.id, variant }); }} failed={failed} paused={feedbackEnabled && reporterOpen}/>)}
       </SceneStageCard>
       <div className="scene-experience-footer">
       {progress >= steps && (<div className="scene-done-row">
@@ -421,7 +429,10 @@ function LoadedScene({ entry, wishId, daily, vessel, replay, opening, failed, fe
                 {tr(SCENE_DONE_CTA)}
               </button>)}
             </>)}
-          <SceneShareButton sceneId={entry.id} title={localizedTitle(entry)}/>
+          <div className="scene-restart-actions">
+            <SceneRestartButton onRestart={onRestart} disabled={!sceneActive}/>
+            <SceneShareButton sceneId={entry.id} title={localizedTitle(entry)}/>
+          </div>
         </div>)}
       {entry.engine !== "woodfish@1" && (
         // Present from the start (empty), so the confirmation is announced.
@@ -457,16 +468,28 @@ export function SceneExperience({ entry: offeredEntry, wishId, daily, vessel, re
     opening?: boolean;
     feedbackSession?: boolean;
 }) {
-    const { ready } = useSceneLibrary(), { dispatch, back } = useApp();
+    const { ready } = useSceneLibrary(), { state, active, dispatch, back } = useApp();
     const entry = bundledSceneEntry(offeredEntry);
     const offeredId = offeredEntry?.id;
     const [attempt, setAttempt] = useState(0), [loaded, setLoaded] = useState(false);
+    const [replaying, setReplaying] = useState(false);
+    const restarting = useRef(false);
     const [error, setError] = useState("");
     const cancel = useRef<AbortController>(null);
     const fail = (error?: unknown) => {
         cancel.current?.abort();
         setLoaded(false);
         setError(error instanceof Error && error.message ? error.message : "\u573A\u666F\u753B\u9762\u6682\u4E0D\u53EF\u7528");
+    };
+    const restart = () => {
+        if (!entry || !active || !loaded || restarting.current ||
+            (state.sceneRecords.find(record => record.id === entry.id)?.progress ?? 0) < sceneSteps(entry)) return;
+        restarting.current = true;
+        if (entry.id === 'korean-bojagi-wrap')
+            dispatch({ type: 'scene.variant', id: entry.id, variant: 'bojagi-step-0' });
+        dispatch({ type: 'scene.progress', id: entry.id, progress: 0 });
+        setReplaying(true);
+        setAttempt(value => value + 1);
     };
     useEffect(() => {
         if (!ready || !offeredId)
@@ -482,8 +505,10 @@ export function SceneExperience({ entry: offeredEntry, wishId, daily, vessel, re
             // bundled scene or make an offline return depend on a download.
             if (!dispatch({ type: "scene.visit", entry, at: now() }))
                 throw productError("\u573A\u666F\u8BB0\u5F55\u65E0\u6CD5\u66F4\u65B0");
-            if (!controller.signal.aborted)
+            if (!controller.signal.aborted) {
+                restarting.current = false;
                 setLoaded(true);
+            }
         })().catch((e) => {
             if (!controller.signal.aborted) {
                 setError(e instanceof Error && e.message ? e.message : "\u573A\u666F\u753B\u9762\u6682\u4E0D\u53EF\u7528");
@@ -498,7 +523,7 @@ export function SceneExperience({ entry: offeredEntry, wishId, daily, vessel, re
     return (<section className="scene-experience" data-stable-stage="" aria-label={localizedTitle(entry ?? offeredEntry)}>
       <div className="scene-narrative-slot">{entry && <RitualNarrativeBlurb sceneId={entry.id}/>}</div>
       {error ? (<SceneLoadFailure message={error} onRetry={() => setAttempt(n => n + 1)}/>) : loaded && entry ? (<>
-          <LoadedScene key={attempt} entry={entry} wishId={wishId} daily={daily} vessel={vessel} replay={replay} opening={opening} failed={fail} feedbackSession={feedbackSession}/>
+          <LoadedScene key={attempt} entry={entry} wishId={replaying ? undefined : wishId} daily={replaying ? undefined : daily} vessel={replaying ? undefined : vessel} replay={replaying || replay} opening={opening} failed={fail} feedbackSession={feedbackSession} onRestart={restart}/>
         </>) : (<div className="scene-download" role="status">
           <p>
             {tr("\u6B63\u5728\u51C6\u5907\u573A\u666F\u2026")}

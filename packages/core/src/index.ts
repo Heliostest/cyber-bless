@@ -897,7 +897,8 @@ export function restore(raw: string | null, initialSettings?: Partial<State["set
             delete s.globalVisualStyle;
     }
     s.sceneRecords ??= [];
-    s.sceneRecords = s.sceneRecords.map(r => r.id === 'tibetan-water-bowls' && r.engine === 'tibetan-water-bowls@1'
+    s.sceneRecords = s.sceneRecords.map(r => (r.id === 'tibetan-water-bowls' && r.engine === 'tibetan-water-bowls@1')
+        || (r.id === 'furin-wind-chime' && r.engine === 'furin-wind-chime@1')
         ? { ...r, progress: sceneProgress(r), steps: sceneStepCount(r) } : r);
     if (s.opening && s.opening.status !== 'new' &&
         s.opening.sceneIds.slice(0, s.opening.completed).some((sceneId, i) => !s.collectibles.some(c => c.id === openingCollectibleId(sceneId) && c.kind === 'scene' &&

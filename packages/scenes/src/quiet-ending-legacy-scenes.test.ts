@@ -30,7 +30,9 @@ async function mount(id: string, progress = 2, overrides: Partial<SceneContext> 
   Object.defineProperties(canvas,{clientWidth:{value:390},clientHeight:{value:560}})
   canvas.getBoundingClientRect=()=>({left:0,top:0,width:390,height:560}) as DOMRect
   const complete=vi.fn(), onProgress=vi.fn(), saveWish=vi.fn(); overlay.addEventListener('scene:complete',complete)
-  const module=await loadScene(id), instance=module.create({canvas,overlay,gestures:Gestures,shared:Shared,sceneId:id,initialProgress:progress,isSoundEnabled:()=>false,onProgress,saveWish,...overrides})
+  // This suite starts after handling/hanging, preserving the original ending matrix.
+  const offset = id === 'furin-wind-chime' ? 2 : 0
+  const module=await loadScene(id), instance=module.create({canvas,overlay,gestures:Gestures,shared:Shared,sceneId:id,initialProgress:progress+offset,isSoundEnabled:()=>false,saveWish,...overrides,onProgress:n=>(overrides.onProgress ?? onProgress)(n-offset)})
   instances.push(instance); instance.start(); instance.update(0)
   const run=(seconds:number)=>{for(let i=0;i<Math.round(seconds*40);i++)instance.update(.025)}
   return {instance,overlay,complete,onProgress,saveWish,run}

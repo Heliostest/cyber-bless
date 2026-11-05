@@ -129,7 +129,7 @@ const constrained = [
   ['french-coffee-mill', coffee.create, createCoffeeMillModel, [2]],
   ['japanese-wagasa', wagasa.create, createWagasaModel, [0,1,2]],
   ['mexican-molinillo', molinillo.create, createMolinilloModel, [0]],
-  ['paper-pinwheel', pinwheel.create, createPinwheelModel, [1]],
+  ['paper-pinwheel', pinwheel.create, createPinwheelModel, [0,2]],
   ['setsubun-mamemaki', setsubun.create, createSetsubunModel, [0]],
   ['japanese-koinobori', koinobori.create, createKoinoboriModel, [1,2]],
 ] as const
@@ -160,11 +160,27 @@ function mount(create: (ctx: SceneContext) => SceneInstance, at: number, width =
       const closing = found.filter(entry => entry.cue.kind === 'drag')
       expect(closing).toHaveLength(1); return closing[0]!
     }
+    if (create === pinwheel.create && at > 0) {
+      expect(found).toHaveLength(2)
+      // Free spinning and returning coexist; placement tests use the handle
+      // cue with a physical destination, never the repeatable vane gesture.
+      const returning = found.filter(entry => entry.cue.destination)
+      expect(returning).toHaveLength(1); return returning[0]!
+    }
     expect(found).toHaveLength(1); return found[0]!
   }
   return { scene, hit, progress, completed, project, cue, instance }
 }
 describe('C group spatial object placement', () => {
+  it.each([0,2])('paper-pinwheel step %i restores its complete toy after a cancelled placement', at => {
+    const s = mount(pinwheel.create, at), { object, cue } = s.cue(), anchor = new THREE.Vector3(...cue.anchor!)
+    const home = object.localToWorld(anchor.clone()), from = s.project(home)
+    event(s.hit, 'pointerdown', from); event(s.hit, 'pointermove', [from[0] + 11, from[1] + 7])
+    expect(object.localToWorld(anchor.clone()).distanceTo(home)).toBeGreaterThan(.01)
+    event(s.hit, 'pointercancel', from)
+    expect(object.localToWorld(anchor.clone()).distanceTo(home)).toBeLessThan(1e-8)
+    expect(s.progress).toEqual([]); expect(s.completed).not.toHaveBeenCalled()
+  })
   for(const[id,create,steps]of[['tibetan-prayer-flags',flags.create,[0,1,2]],['niue-shell-necklace',necklace.create,[0,1]],['venetian-glass-bead',glass.create,[1]]] as const)for(const at of steps){
     it(`${id} step ${at} moves its complete linked assembly to the physical end domain`,()=>{
       const s=mount(create,at),c=s.cue(),anchor=c.cue.anchor??[0,0,0],from=s.project(c.object.localToWorld(new THREE.Vector3(...anchor))),d=c.cue.destination!

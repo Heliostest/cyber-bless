@@ -551,5 +551,6 @@
   "app.sceneVisual.maple": "가을 단풍나무형",
   "app.sceneVisual.bamboo": "대나무 잎·가지",
   "app.sceneVisual.bodhi": "보리수 주제 나무",
-  "app.sceneVisual.wish-tree": "소원나무 주제"
+  "app.sceneVisual.wish-tree": "소원나무 주제",
+  "app.scene.restart": "처음부터 체험"
 }

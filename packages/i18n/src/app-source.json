@@ -525,5 +525,6 @@
   "请先发送或清空当前问题描述，再确认通过。": "app.scene-test.fb346312fa",
   "请先上传本仪式的待发送反馈，再确认通过。": "app.scene-test.66b0aca91e",
   "当前版本仍有未处理反馈，请整改后再确认通过。": "app.scene-test.4714c0a3e6",
-  "这是更新前保留的草稿；发送时会保留原版本信息。": "app.scene-test.efc5eb6403"
+  "这是更新前保留的草稿；发送时会保留原版本信息。": "app.scene-test.efc5eb6403",
+  "从头体验": "app.scene.restart"
 }

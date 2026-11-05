@@ -49,7 +49,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-function mount(initialProgress = 3, extra: Partial<SceneContext> = {}, start = true) {
+function mount(initialProgress = 5, extra: Partial<SceneContext> = {}, start = true) {
   const canvas = document.createElement('canvas'), overlay = document.createElement('div')
   document.body.append(canvas, overlay)
   Object.defineProperties(canvas, { clientWidth: { value: 390 }, clientHeight: { value: 520 } })
@@ -87,7 +87,7 @@ describe('completed wind chime display motion', () => {
     const audioContext = vi.fn(function () { throw new Error('Display motion must not request scene audio') })
     vi.stubGlobal('AudioContext', audioContext)
     vi.stubGlobal('webkitAudioContext', audioContext)
-    const s = mount(3, { isSoundEnabled: () => true })
+    const s = mount(5, { isSoundEnabled: () => true })
     expect(s.instance.tapPreview?.()).toBe(true)
     s.run(0.3)
     expect(s.object('furin-pivot').rotation.z).toBeGreaterThan(0.025)
@@ -141,7 +141,7 @@ describe('completed wind chime display motion', () => {
     s.unchanged()
   })
 
-  it.each([0, 1, 2])('does not expose display motion at ritual checkpoint %i', (checkpoint) => {
+  it.each([0, 1, 2, 3, 4])('does not expose display motion at ritual checkpoint %i', (checkpoint) => {
     const s = mount(checkpoint), before = s.snapshot()
     expect(s.instance.tapPreview?.()).toBe(false)
     expect(s.snapshot()).toEqual(before)
@@ -150,7 +150,7 @@ describe('completed wind chime display motion', () => {
 
   it('requires a started, live, active scene and cancels display sway when paused', () => {
     let active = true
-    const s = mount(3, { isActive: () => active }, false)
+    const s = mount(5, { isActive: () => active }, false)
     expect(s.instance.tapPreview?.()).toBe(false)
     s.instance.start(); s.instance.update(0)
     const rest = s.snapshot()
@@ -167,7 +167,7 @@ describe('completed wind chime display motion', () => {
 
   it('handles reduced motion without an animation or a host fallback, and immediately cancels an active sway', () => {
     let reduced = true
-    const s = mount(3, { isReducedMotion: () => reduced }), rest = s.snapshot()
+    const s = mount(5, { isReducedMotion: () => reduced }), rest = s.snapshot()
     expect(s.instance.tapPreview?.()).toBe(true)
     s.run(0.5)
     expect(s.snapshot()).toEqual(rest)

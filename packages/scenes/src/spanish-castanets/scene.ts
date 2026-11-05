@@ -3,33 +3,44 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
+import { completesDirectionalDrag, updateDirectionalDragHint } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createCastanetsModel } from './model'
 
 type Checkpoint = 0 | 1 | 2 | 3
-const ACTIONS = ['左壳轻合', '右壳回应', '双壳同拍']
+type Side = 0 | 1
+const ACTIONS = ['左壳轻合', '右壳回应']
 const HINTS = [
- '按住左侧上方的木壳向下短拖，让两片凹壳轻轻相碰，再松开。',
- '按住右侧上方的木壳向下短拖，让另一副响板回应一声。',
- '可以继续向下轻拖左侧木壳，让两副一同轻拍；想收尾时点「结束仪式」。',
- '木壳轻轻张开，细绳留住两片弧面，节拍留在明亮的草地边。',
+  '轻点左侧木壳，或向下轻压后松开，让两片凹壳相碰。',
+  '轻点右侧木壳，或向下轻压后松开，听另一副响板回应。',
+  '左右木壳可以分别轻点、快速交替；想收尾时点「结束仪式」。',
+  '木壳轻轻张开，细绳留住两片弧面，节拍留在明亮的草地边。',
 ]
-const MOVING = ['左侧木壳轻合，再沿细绳张开……', '右侧木壳回应一声，慢慢松开……', '两副木壳一同轻合，再慢慢张开……']
-const ease = (t: number) => t * t * (3 - 2 * t)
 
 export function createSpanishCastanets(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx, safe = shared.assertSafeCopy
-  ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
+  ;[...ACTIONS, ...HINTS].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number; finishing?: boolean } | null = null
-  let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
-  const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
+  let guidedClickOwner: EventTarget | null = null
+  const closures: [number, number] = [0, 0], rebounds: [number, number] = [0, 0]
+  let held: Side | null = null, candidate: Side | null = null
+  let invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
+  const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
+  const inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
   const ui = createStepOverlay(overlay, { title: '木壳轻拍', stepsAria: '响板步骤', action: ACTIONS[0]! }, safe)
-  ui.actionBtn.style.minWidth = '44px'; ui.actionBtn.style.minHeight = '44px'
+  ui.actionBtn.classList.add('scene-inspection-action')
+  const rightButton = document.createElement('button'); rightButton.type = 'button'; rightButton.className = 'scene-bow-tap scene-castanets-right scene-inspection-action'
+  setSafeText(rightButton, ACTIONS[1]!, safe)
+  const sideButtons = document.createElement('div'); sideButtons.className = 'scene-castanets-buttons'
+  Object.assign(sideButtons.style, { gridArea: 'action', gridColumn: '3', justifySelf: 'end', position: 'relative', gap: '4px' })
+  for (const button of [ui.actionBtn, rightButton]) {
+    Object.assign(button.style, { minWidth: '44px', minHeight: '44px', position: 'static', transform: 'none', marginTop: '10px', paddingInline: '8px' })
+    sideButtons.append(button)
+  }
+  overlay.append(sideButtons)
   const finishButton = document.createElement('button'); finishButton.type = 'button'; finishButton.className = 'scene-castanets-finish scene-bow-tap scene-continuous-finish'
   setSafeText(finishButton, '结束仪式', safe); overlay.append(finishButton)
   const { scene, renderer } = createWarmStage(canvas), camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
@@ -41,109 +52,160 @@ export function createSpanishCastanets(ctx: SceneContext): SceneInstance {
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
   const model = createCastanetsModel(); scene.add(model.subject)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
-  const restore = () => pose(at, 0)
-  const directions: [number, number][] = [[0,1],[0,1],[0,1]]
-  const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: directions[i], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
+  const applyPose = () => { model.poseClosures(...closures); matrices() }
+  const restore = () => { closures.fill(0); rebounds.fill(0); held = candidate = null; applyPose() }
+  const sideEnabled = (side: Side) => at === 2 || at === side
+  const removeCues = model.upper.map((target, side) => addInteractionCue(target, { kind: 'tap', label: ACTIONS[side]!, anchor: [0,.30,.30], priority: 3, enabled: () => inputActive() && sideEnabled(side as Side) }))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
-  const nearest = (x: number, y: number) => {
+  const belongs = (o: THREE.Object3D, side: Side) => o === model.pairs[side] || model.pairs[side]!.getObjectById(o.id) === o
+  const pickSide = (x: number, y: number): Side | null => {
+    if (at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return null
+    matrices()
     const meshes: THREE.Object3D[] = []
     scene.traverseVisible(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; const materials = Array.isArray(m.material) ? m.material : [m.material]; if (materials.some(m => m.visible && (!m.transparent || m.opacity >= 1))) meshes.push(o) })
-    return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
+    const hit = ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
+    if (hit) { for (const side of [0,1] as const) if (belongs(hit, side)) return sideEnabled(side) ? side : null; return null }
+    // Padding follows the whole pair, including its moving upper shell. It
+    // never reaches through another opaque object, and is at least 48px wide.
+    const rect = canvas.getBoundingClientRect(), point = new THREE.Vector3()
+    let found: Side | null = null, nearest = Infinity
+    for (const side of [0,1] as const) {
+      if (!sideEnabled(side)) continue
+      const box = new THREE.Box3().setFromObject(model.pairs[side]!), bounds = new THREE.Box2()
+      for (const px of [box.min.x,box.max.x]) for (const py of [box.min.y,box.max.y]) for (const pz of [box.min.z,box.max.z]) {
+        point.set(px,py,pz).project(camera); bounds.expandByPoint(new THREE.Vector2(rect.left+(point.x+1)*rect.width/2,rect.top+(1-point.y)*rect.height/2))
+      }
+      const center = bounds.getCenter(new THREE.Vector2()), size = bounds.getSize(new THREE.Vector2())
+      const padX = Math.max(10,(48-size.x)/2), padY = Math.max(10,(48-size.y)/2)
+      if (x < bounds.min.x-padX || x > bounds.max.x+padX || y < bounds.min.y-padY || y > bounds.max.y+padY) continue
+      const distance = Math.hypot(x-center.x,y-center.y)
+      if (distance < nearest) { nearest = distance; found = side }
+    }
+    return found
   }
-  const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
+  const reset = () => {
+    if (held !== null) { closures[held] = 0; rebounds[held] = 0 }
+    held = candidate = null; invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0
+    if (!disposed) { applyPose(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
+  }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
-    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); const hit = nearest(x, y); return !!hit && (hit === model.roots[at] || model.roots[at]!.getObjectById(hit.id) === hit) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0 },
+    canStart(x, y) { candidate = pickSide(x,y); return candidate !== null },
+    onStart(x, y) {
+      const selected = candidate
+      if (selected === null || !prepareInput()) { pointer.cancel(); return }
+      held = selected; rebounds[selected] = 0; closures[selected] = 0; down.set(x,y); previous.copy(down)
+      invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; applyPose()
+    },
     onMove(x, y) {
+      if (held === null) return
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
-      pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
-      const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
-      maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
-      // Preview the upper shell closing; release continues through one rim contact and reopens.
-      pose(at, THREE.MathUtils.clamp(along / 60, 0, 1) * .6)
-      updateDirectionalDragHint(ui.hintEl, !invalid && completesDirectionalDrag({ along, end: along, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel: pathTravel }), HINTS[at]!, safe)
+      pathTravel += Math.hypot(x-previous.x,y-previous.y); previous.set(x,y)
+      along = y-down.y; const cross = x-down.x
+      maxAlong = Math.max(maxAlong,along); minAlong = Math.min(minAlong,along); backtrack = Math.max(backtrack,maxAlong-along); maxCross = Math.max(maxCross,Math.abs(cross))
+      closures[held] = ctx.isReducedMotion?.() ? 0 : THREE.MathUtils.clamp(along/60,0,.95); applyPose()
+      updateDirectionalDragHint(ui.hintEl, !invalid && completesDirectionalDrag({ along, end: along, maxAlong, minAlong, backtrack, maxCross, cross, travel: pathTravel }), HINTS[at]!, safe)
     },
     onRelease(x, y) {
-      const [end, cross] = axes(x - down.x, y - down.y), travel = pathTravel + Math.hypot(x - previous.x, y - previous.y)
-      const valid = !invalid && moved && completesDirectionalDrag({ along, end: end!, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel })
-      if (valid) advance(); else reset()
-    }, onCancel: reset,
+      const side = held, end = y-down.y, cross = x-down.x, travel = pathTravel + Math.hypot(x-previous.x,y-previous.y)
+      const tap = travel <= 10 && Math.hypot(cross,end) <= 8
+      const squeeze = completesDirectionalDrag({ along, end, maxAlong, minAlong, backtrack, maxCross, cross, travel })
+      if (side !== null && !invalid && (tap || squeeze)) { held = null; contact(side) } else reset()
+    },
+    onCancel: reset,
   })
   const sync = () => {
-    if (motion || at === 3) delete ui.hintEl.dataset.ready
     if (cueLayer) cueLayer.hidden = !active()
-    ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !inputActive() || !!motion || at === 3
-    finishButton.hidden = at !== 2; finishButton.disabled = !inputActive() || !!motion
-    finishButton.setAttribute('aria-disabled', String(finishButton.disabled))
-    ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = inputActive() && !motion && at < 3 ? 'auto' : 'none'
-    setSafeText(ui.actionBtn, ACTIONS[Math.min(at, 2)]!, safe); setSafeText(ui.hintEl, motion ? MOVING[motion.step]! : HINTS[at]!, safe)
+    ui.renderDots(at, 3); sideButtons.style.display = at === 3 ? 'none' : 'flex'
+    ui.actionBtn.hidden = at === 3; rightButton.hidden = at !== 2
+    // Reentry is guarded by handlers. Disabling a focused button for the
+    // duration of a synchronous callback would discard keyboard focus.
+    for (const button of [ui.actionBtn,rightButton,finishButton]) { button.disabled = !active() || at === 3; button.setAttribute('aria-disabled',String(button.disabled)) }
+    finishButton.hidden = at !== 2
+    ui.hitLayer.style.pointerEvents = inputActive() && at < 3 ? 'auto' : 'none'
+    setSafeText(ui.actionBtn, ACTIONS[at === 1 ? 1 : 0]!, safe); setSafeText(ui.hintEl, HINTS[at]!, safe)
+    delete ui.hintEl.dataset.ready
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
-  function settle() {
-    if (!inputActive() || !motion) return
-    const played = motion.step, changed = at < 2 || motion.finishing
-    at = (motion.finishing ? 3 : Math.min(2, motion.step + 1)) as Checkpoint; motion = null; restore()
+  function contact(side: Side) {
+    if (!inputActive() || pointer.isBusy() || !sideEnabled(side)) return
+    closures[side] = ctx.isReducedMotion?.() ? 0 : 1; rebounds[side] = closures[side]; applyPose()
+    const changed = at < 2
+    if (changed) at = (at+1) as Checkpoint
     withHostCallbacks(() => {
-      if (changed) ctx.onProgress?.(at); if (!callbackActive()) return
-      feedback.impact({ freqs: [[329.63,392,440][played] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
-      if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+      if (changed) ctx.onProgress?.(at)
+      if (!callbackActive()) return
+      feedback.impact()
+      if (callbackActive()) feedback.sound('woodTap', { duration: .10, strength: side === 0 ? .48 : .58 })
     })
   }
-  const finish = () => {
-    if (!inputActive() || pointer.isBusy() || motion || at !== 2 || !prepareInput()) return
-    motion = { step: 2, time: 0, from: 0, finishing: true }; sync()
-    if (ctx.isReducedMotion?.()) settle()
+  const finish = (event: MouseEvent) => {
+    if (event.detail > 1 || !inputActive() || pointer.isBusy() || at !== 2 || !prepareInput()) return
+    at = 3; restore()
+    withHostCallbacks(() => {
+      ctx.onProgress?.(3); if (!callbackActive()) return
+      feedback.impact(); if (!callbackActive()) return
+      overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
-  const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
-  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
+  const buttonBeat = (side: Side, event: MouseEvent) => {
+    // Native click counts identify the old button's remaining sequence even
+    // after its guided-right label becomes the free-play left action. A new
+    // sequence (detail 1), keyboard activation (0), or the other stable button
+    // can start free play immediately, without imposing a rhythm timer.
+    if ((event.detail > 1 && (at < 2 || event.currentTarget === guidedClickOwner)) || !inputActive() || pointer.isBusy() || !sideEnabled(side) || !prepareInput()) return
+    guidedClickOwner = at < 2 && event.detail > 0 ? event.currentTarget : null
+    contact(side)
+  }
+  const action = (event: MouseEvent) => buttonBeat(at === 1 ? 1 : 0,event)
+  const rightAction = (event: MouseEvent) => buttonBeat(1,event)
+  const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); restore(); sync() }
+  const focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
-    const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0, .55, 0), direction = new THREE.Vector3(1.5, 4.6, 6.2).normalize()
+    const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0,.55,0), direction = new THREE.Vector3(1.5,4.6,6.2).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target); camera.updateMatrixWorld(true)
-    const inverse = camera.quaternion.clone().invert(), tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), p = new THREE.Vector3(); let distance = 3.4
-    const saved = amount
-    for (const [step, n] of [0,1,2].flatMap(step=>Array.from({length:21},(_,i)=>[step,i/20])).concat([[3,0]])) {
-      pose(step!, n!)
+    const inverse = camera.quaternion.clone().invert(), tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov/2)), p = new THREE.Vector3(); let distance = 3.4
+    for (const left of [0,.5,1]) for (const right of [0,.5,1]) {
+      model.poseClosures(left,right)
       model.subject.traverse(o => { const m = o as THREE.Mesh; if (!m.geometry) return; const vertices = m.geometry.getAttribute('position')
-        for (let i = 0; i < vertices.count; i++) { p.fromBufferAttribute(vertices, i).applyMatrix4(m.matrixWorld).sub(target).applyQuaternion(inverse); distance = Math.max(distance, p.z + Math.abs(p.x) / (tangent * aspect * .86), p.z + Math.abs(p.y) / (tangent * .86)) }
+        for (let i=0;i<vertices.count;i++) { p.fromBufferAttribute(vertices,i).applyMatrix4(m.matrixWorld).sub(target).applyQuaternion(inverse); distance = Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86)) }
       })
     }
-    pose(at, saved); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
+    applyPose(); camera.position.copy(target).addScaledVector(direction,distance); camera.lookAt(target); matrices()
   }
   restore(); sync()
   return {
     start() {
       if (started || disposed) return
-      started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
+      started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial),0,3) : 0) as Checkpoint
       restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
-      ui.actionBtn.addEventListener('click', action); finishButton.addEventListener('click', finish); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
+      ui.actionBtn.addEventListener('click',action); rightButton.addEventListener('click',rightAction); finishButton.addEventListener('click',finish)
+      window.addEventListener('blur',blur); window.addEventListener('focus',focus); sync()
     },
     update(dt) {
       if (!started || disposed) return
-      if (!active()) { lifecycleVersion++; pointer.cancel(); if (!suspended) { suspended = true; sync() }; return }
+      if (!active()) { lifecycleVersion++; pointer.cancel(); if (!suspended) { suspended = true; restore(); sync() }; feedback.update(); return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
-      const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
-      if (motion) {
-        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85)
-        const eased=ease(motion.time)
-        pose(motion.step, motion.from+(1-motion.from)*eased); if (motion.time === 1) settle()
+      const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt,0,.05) : 0
+      let changed = false
+      for (const side of [0,1] as const) if (rebounds[side] > 0 && held !== side) {
+        rebounds[side] = ctx.isReducedMotion?.() ? 0 : Math.max(0,rebounds[side]-delta/.18)
+        const t = rebounds[side]; closures[side] = t*t*(3-2*t); changed = true
       }
-      if (active()) { matrices(); style.render() }
+      if (changed) applyPose()
+      feedback.update(); if (active()) { matrices(); style.render() }
     },
     dispose() {
       if (disposed) return
-      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
-      finishButton.removeEventListener('click', finish)
-      guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.subject); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove())
+      ui.actionBtn.removeEventListener('click',action); rightButton.removeEventListener('click',rightAction); finishButton.removeEventListener('click',finish)
+      guardedEvents.forEach(type => { window.removeEventListener(type,guardCallbackInput,true); ui.hitLayer.removeEventListener(type,guardCallbackInput,true) })
+      window.removeEventListener('blur',blur); window.removeEventListener('focus',focus); style.dispose(); disposeTree(model.subject); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay','scene-overlay--stage')
     },
   }
 }

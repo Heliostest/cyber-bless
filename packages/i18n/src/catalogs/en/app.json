@@ -551,5 +551,6 @@
   "app.sceneVisual.maple": "Autumn maple form",
   "app.sceneVisual.bamboo": "Bamboo foliage",
   "app.sceneVisual.bodhi": "Bodhi subject tree",
-  "app.sceneVisual.wish-tree": "Wishing subject tree"
+  "app.sceneVisual.wish-tree": "Wishing subject tree",
+  "app.scene.restart": "Start again"
 }

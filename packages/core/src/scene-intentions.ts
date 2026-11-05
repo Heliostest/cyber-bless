@@ -22,7 +22,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
   'japanese-kadomatsu': {kind:'blessing',label:'为新岁寄一份平安',action:'提起备好的门松，移到门边，再轻轻放稳。',optionalWish:false},
   'pucara-rooftop-bulls': {kind:'blessing',label:'为家人寄一份平安',action:'托起一对陶牛，移向屋脊，再稳稳安放。',optionalWish:false},
   'chinese-longevity-lock': {kind:'blessing',label:'为孩子寄一份平安',action:'托起备好的银锁，移入礼匣，再轻轻落稳。',optionalWish:false},
-  'uchide-wishing-mallet': {kind:'blessing',label:'为心愿寄一份祝福',action:'托起小槌，轻轻摇动寄愿，再放回木托。',optionalWish:false},
+  'uchide-wishing-mallet': {kind:'blessing',label:'为心愿寄一份祝福',action:'托起小槌，自由轻摇寄愿，准备好后放回木托。',optionalWish:false},
   'mezuzah-doorpost': {kind:'blessing',label:'为家人寄一份平安',action:'托起备好的护盒，移向右门柱，再轻轻贴稳。',optionalWish:false},
   // Source/action boundaries: docs/research/2026-10-19-hourly-scene-integration.md.
   'alasita-miniature-house': { kind:'wish',label:'寄一份安居的心愿',optionalWish:false,action:'提起、转看微型小屋，再将这份愿景安放好。' },
@@ -99,7 +99,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
   },
   'lanna-sand-pagoda': {kind:'blessing',label:'留一份新年修福的心意',optionalWish:false,action:'提起纸竹长幡，移到已堆好的沙塔旁，将竹杆插稳，留一份兰纳新年修福的心意。'},
   'chinese-fu-paper': {kind:'blessing',label:'留一份新年纳福的心意',optionalWish:false,action:'提起现成的福字纸，移到家门前，轻轻贴稳，留一份迎春纳福的心意。'},
-  'turkish-nazar-bead': {kind:'blessing',label:'留一份避厄护佑的心意',optionalWish:false,action:'提起备好的护眼珠，移向木架，让挂环落稳，留一份避厄护佑的心意。'},
+  'turkish-nazar-bead': {kind:'blessing',label:'留一份避厄护佑的心意',optionalWish:false,action:'拿近转看护眼珠，挂稳后轻拨欣赏，再自行收尾，留一份避厄护佑的心意。'},
   'japanese-hamaya': {kind:'blessing',label:'留一份家内平安的心意',optionalWish:false,action:'提起备好的饰矢，移向后方木托，轻轻落稳，留一份家内平安的心意。'},
   'vietnamese-five-fruit-tray': {kind:'blessing',label:'为新岁备一盘平安丰足',optionalWish:false,action:'依次安放橙、青苹果和梨，为春节祭祖备好果盘，留一份新岁平安的心愿。'},
   'chinese-ruyi-scepter': {kind:'blessing',label:'安放如意，寄一份顺遂好愿',optionalWish:false,action:'抬起如意，移近木座，轻轻放稳，寄一份顺遂与如愿的祝福。'},
@@ -129,7 +129,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
   },
   'romanian-martisor': {
     kind: 'blessing', label: '留一份迎春的健康祝愿', optionalWish: false,
-    action: '提起已解下的红白春绳，将绳环套上开花的树枝，轻放流苏，寄托迎春的健康祝愿。',
+    action: '拿近已解下的红白春绳，挂上花枝后轻拨欣赏，再自行收尾，寄托迎春的健康祝愿。',
   },
   'sumiyoshi-godairiki': {
     kind: 'wish', label: '随三石寄托心愿', optionalWish: false,
@@ -285,7 +285,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
   },
   'furin-wind-chime': {
     kind: 'blessing', label: '祈愿平安度夏', optionalWish: true,
-    action: '轻拂纸条、听一声风铃，为自己与牵挂的人留一份平安度夏的祝愿。',
+    action: '拿近转看风铃，将它挂到木檐，再轻拂纸条、听一声轻响，为自己与牵挂的人留一份平安度夏的祝愿。',
   },
   'shinto-torii': {
     kind: 'blessing', label: '带着敬意祈愿', optionalWish: true,

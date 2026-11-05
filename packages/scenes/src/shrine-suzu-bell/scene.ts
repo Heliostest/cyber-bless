@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { createCraftMaterial } from '@wbr/scene-runtime/craft-surfaces'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
@@ -55,17 +56,21 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   })
   const world = new THREE.Group(); world.name = 'suzu-timber-and-bell'; scene.add(world)
   const mat = (color: number, roughness = 0.91) => new THREE.MeshStandardMaterial({ color, roughness })
-  const wood = mat(0xb9936c), endWood = mat(0x997755), woodGrain = mat(0xa98560)
-  const cream = mat(0xe8deba), rust = mat(0xb16f53), green = mat(0x819a76)
-  const gold = mat(0xd8b468, 0.52), goldLight = mat(0xe8c887, 0.64), darkGold = mat(0x75583d)
-  gold.metalness = 0.28
+  const wood = createCraftMaterial({ color: 0xb9936c, roughness: .91 }, { kind: 'wood' })
+  const postWood = createCraftMaterial({ color: 0xb9936c, roughness: .91 }, { kind: 'wood', axis: 'y' })
+  const endWood = mat(0x997755), woodGrain = mat(0xa98560)
+  const cream = createCraftMaterial({ color: 0xe8deba }, { kind: 'cord' })
+  const rust = createCraftMaterial({ color: 0xb16f53 }, { kind: 'cord' }), green = createCraftMaterial({ color: 0x819a76 }, { kind: 'cord' })
+  const gold = createCraftMaterial({ color: 0xd8b468, roughness: .46 }, { kind: 'metal' })
+  const goldLight = createCraftMaterial({ color: 0xe8c887, roughness: .38 }, { kind: 'metal' })
+  const darkGold = createCraftMaterial({ color: 0x75583d, roughness: .68 }, { kind: 'metal', strength: .4 })
   const add = (geometry: THREE.BufferGeometry, material: THREE.Material, xyz: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.position.set(...xyz); parent.add(mesh); return mesh
   }
   const detail = (mesh: THREE.Mesh) => { mesh.userData.toonSurface = { outline: false }; return mesh }
   const timber = new THREE.Group(); timber.name = 'suzu-original-timber-lintel'; world.add(timber)
   for (const x of [-1.02, 1.02]) {
-    add(new RoundedBoxGeometry(0.18, 2.6, 0.25, 3, 0.035), wood, [x, 1.3, -0.21], timber)
+    add(new RoundedBoxGeometry(0.18, 2.6, 0.25, 3, 0.035), postWood, [x, 1.3, -0.21], timber)
     add(new RoundedBoxGeometry(0.31, 0.13, 0.4, 3, 0.04), endWood, [x, 0.065, -0.2], timber)
     add(new RoundedBoxGeometry(0.23, 0.19, 0.31, 3, 0.035), endWood, [x, 2.49, -0.2], timber)
   }

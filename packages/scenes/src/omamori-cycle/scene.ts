@@ -2,6 +2,7 @@ import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { createCraftMaterial } from '@wbr/scene-runtime/craft-surfaces'
 import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -69,9 +70,13 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
   const lights = addStageLights(scene, ctx.stage, { sky: 0xfff5e2, ground: 0xc7b295, key: 0xffe8c6, rim: 0xd7e7de })
   const world = new THREE.Group(); world.name = 'omamori-world'; scene.add(world)
   const material = (color: number, roughness = 0.9) => new THREE.MeshStandardMaterial({ color, roughness })
-  const wood = material(0xd4ae7d), woodEdge = material(0xb89164), cream = material(0xf5e8c8), gold = material(0xd0b56e, 0.62)
-  const rope = material(0xf7eed9), leaf = material(0x94ac84), bagMat = material(0xa8bcb1), bagEdge = material(0x718e82)
-  const coral = material(0xd79485), sage = material(0x90ad95), indigo = material(0x8b97b8), seam = material(0xc5ad81)
+  const wood = createCraftMaterial({ color: 0xd4ae7d, roughness: .9 }, { kind: 'wood' })
+  const woodEdge = material(0xb89164), cream = material(0xf5e8c8), gold = material(0xd0b56e, 0.62)
+  const rope = createCraftMaterial({ color: 0xf7eed9 }, { kind: 'cord' })
+  const leaf = material(0x94ac84), bagMat = material(0xa8bcb1), bagEdge = material(0x718e82)
+  const coral = createCraftMaterial({ color: 0xd79485 }, { kind: 'fabric' })
+  const sage = createCraftMaterial({ color: 0x90ad95 }, { kind: 'fabric' }), indigo = createCraftMaterial({ color: 0x8b97b8 }, { kind: 'fabric' })
+  const seam = createCraftMaterial({ color: 0xc5ad81 }, { kind: 'fabric' })
   const add = (geometry: THREE.BufferGeometry, mat: THREE.Material, position: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.position.set(...position); parent.add(mesh); return mesh
   }

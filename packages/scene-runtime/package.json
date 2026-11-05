@@ -11,7 +11,8 @@
     "./debug-water": "./src/debug-water.ts",
     "./interaction-cues": "./src/interaction-cues.ts",
     "./stylized-water": "./src/stylized-water.ts",
-    "./ritual-optics": "./src/ritual-optics.ts"
+    "./ritual-optics": "./src/ritual-optics.ts",
+    "./craft-surfaces": "./src/craft-surfaces.ts"
   },
   "dependencies": {
     "@wbr/content": "*",

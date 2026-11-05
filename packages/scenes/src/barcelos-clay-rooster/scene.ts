@@ -2,6 +2,7 @@ import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { createCraftMaterial } from '@wbr/scene-runtime/craft-surfaces'
 import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -52,8 +53,11 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
   lights.key.shadow.bias = -.0007; lights.key.shadow.normalBias = .02
   const world = new THREE.Group(); world.name = 'rooster-pottery-workbench'; scene.add(world)
   const material = (color: number, roughness = .8) => new THREE.MeshStandardMaterial({ color, roughness })
-  const charcoal = material(0x293c40, .61), cream = material(0xf0dfae), green = material(0x739481), red = material(0xbd5142, .66)
-  const oak = material(0xc4aa85), dark = material(0x8f7153), clay = material(0xad7359), gold = material(0xcea060), linen = material(0xabc0ad)
+  const charcoal = createCraftMaterial({ color: 0x293c40, roughness: .48 }, { kind: 'ceramic' })
+  const red = createCraftMaterial({ color: 0xbd5142, roughness: .56 }, { kind: 'ceramic' })
+  const cream = material(0xf0dfae), green = material(0x739481)
+  const clay = createCraftMaterial({ color: 0xad7359, roughness: .8 }, { kind: 'ceramic', strength: .8 })
+  const oak = material(0xc4aa85), dark = material(0x8f7153), gold = material(0xcea060), linen = material(0xabc0ad)
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }

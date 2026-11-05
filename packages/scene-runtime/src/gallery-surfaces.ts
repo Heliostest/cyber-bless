@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { RenderStyleParameters } from './render-style-parameters';
 import { copyRitualOptics } from './ritual-optics';
+import { copyCraftSurface } from './craft-surfaces';
 
 export type GallerySurfaceStyle = 'gallery-toon' | 'pencil-hatch' | 'height-palette' | 'normal-palette' | 'band-rim';
 
@@ -172,6 +173,7 @@ export function createGallerySurfaces(style: GallerySurfaceStyle) {
       // Material.clone does not copy shader hooks. Rebuild ownership of optical
       // fibers while retaining any custom hook wrapped around the source optics.
       copyRitualOptics(source, target);
+      copyCraftSurface(source, target);
       const before = target.onBeforeCompile, baseKey = target.customProgramCacheKey();
       target.onBeforeCompile = function(shader, renderer) {
         before.call(this, shader, renderer);

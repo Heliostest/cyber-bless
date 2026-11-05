@@ -33,6 +33,7 @@ const LOADED = new THREE.Vector3(-0.44, 0.79, 0.34)
 const DIP = new THREE.Vector3(0.59, 0.59, 0.5)
 const PEG = new THREE.Vector3(0.5, 2.09, -0.245)
 const HUNG = new THREE.Vector3(0.5, 0.86, -0.32)
+const HANG_ANCHOR = new THREE.Vector3(0, 1.23, 0.075)
 const smooth = (t: number) => { const p = THREE.MathUtils.clamp(t, 0, 1); return p * p * (3 - 2 * p) }
 
 function tube(points: THREE.Vector3[], radius: number, material: THREE.Material, closed = false) {
@@ -193,7 +194,9 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
     grainPose.scale.set(0.012, 0.009, 0.025); grainPose.rotation.y = a; grainPose.updateMatrix(); grains.setMatrixAt(i, grainPose.matrix)
   }
   tray.add(grains)
-  const { scoop, rice } = makeScoop(); world.add(scoop)
+  // Keep the modelling origin at the bowl, but rotate the hung assembly at its loop.
+  const suspension = new THREE.Group(); suspension.name = 'bokjori-suspension'; world.add(suspension)
+  const { scoop, rice } = makeScoop(); suspension.add(scoop)
   const source = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }))
   source.name = 'bokjori-scoop-source'; scoop.add(source)
   addInteractionCue(source, { kind: 'drag', label: '试用竹筛舀米', priority: 2, enabled: () => active() && !motion && checkpoint === 0, destination: grainTarget, targetLabel: '米盘' })
@@ -210,7 +213,7 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
     && placementHit(canvas, camera, source, x, y, (px, py) => touch.hit(px, py, checkpoint === 0 ? [grainTarget, grains] : [peg, pegCap], { ignore: scoop }))
   const home = () => checkpoint === 0 ? READY : checkpoint === 1 ? LOADED : HUNG
   const ending = createQuietEnding(ctx, { ui, isActive: () => active(), duration: 3, motion: 'sway',
-    targets: () => [scoop], cancelInput: () => pointer.cancel(), complete: () => begin(),
+    targets: () => [suspension], cancelInput: () => pointer.cancel(), complete: () => begin(),
   })
   const syncUI = () => {
     dropFeedback.clear()
@@ -221,7 +224,10 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
     ending.sync(checkpoint === 2 && !motion)
   }
   const restorePose = () => {
-    scoop.position.copy(home()); scoop.rotation.set(checkpoint < 2 ? -0.18 : 0, 0, checkpoint < 2 ? -0.1 : 0)
+    suspension.rotation.set(0, 0, 0)
+    suspension.position.set(0, 0, 0); scoop.position.copy(home())
+    if (checkpoint >= 2) { suspension.position.copy(PEG); scoop.position.copy(HANG_ANCHOR).negate() }
+    scoop.rotation.set(checkpoint < 2 ? -0.18 : 0, 0, checkpoint < 2 ? -0.1 : 0)
     rice.visible = checkpoint >= 1
     source.position.set(0, checkpoint === 1 ? 0.9 : -0.02, checkpoint === 1 ? 0.07 : -0.09)
     source.scale.setScalar(checkpoint === 1 ? 0.55 : 1)
@@ -312,7 +318,7 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
         } else if (motion.step === 1) {
           scoop.position.lerpVectors(motion.from, HUNG, p)
           scoop.rotation.x = motion.rotation.x * (1 - p); scoop.rotation.z = motion.rotation.z * (1 - p)
-        } else scoop.rotation.z = Math.sin(t * Math.PI * 2) * 0.035 * (1 - p)
+        } else suspension.rotation.z = Math.sin(t * Math.PI * 2) * 0.035 * (1 - p)
         world.updateMatrixWorld(true)
         if (t === 1) finish()
       }

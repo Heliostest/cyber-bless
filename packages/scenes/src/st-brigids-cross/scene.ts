@@ -18,6 +18,7 @@ const COPY = {
 const HELD = new THREE.Vector3(-0.32, 1.04, 0.52)
 const CROSS_SCALE = 0.78
 const HUNG = new THREE.Vector3(0, 1.98 - 0.98 * CROSS_SCALE, 0.25)
+const HANG_ANCHOR = new THREE.Vector3(0, .98, .02).multiplyScalar(CROSS_SCALE)
 const LOOSE = new THREE.Vector3(0.75, 0.57, 0.83)
 const FOLDS: [number,number,number][] = [[-.08,-.15,.11],[.15,-.08,.11],[.08,.15,.11],[-.15,.08,.11]]
 
@@ -66,7 +67,8 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
   const hangTarget=add(new THREE.SphereGeometry(.21,16,12),invisible,[0,1.98,.17]); hangTarget.name='brigid-hang-target'
   const hookRing=add(new THREE.TorusGeometry(.1,.012,6,24),cord,[0,1.96,.08])
 
-  const cross=new THREE.Group(); cross.name='brigid-cross'; cross.scale.setScalar(CROSS_SCALE); world.add(cross)
+  const suspension=new THREE.Group(); suspension.name='brigid-suspension'; world.add(suspension)
+  const cross=new THREE.Group(); cross.name='brigid-cross'; cross.scale.setScalar(CROSS_SCALE); suspension.add(cross)
   const center=new THREE.Group(); cross.add(center)
   // Raised concentric interlocks and four offset rush bundles follow the local reference.
   for(let i=0;i<6;i++) {
@@ -99,7 +101,12 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
   const plane=new THREE.Plane(), dragPoint=new THREE.Vector3(), offset=new THREE.Vector3()
   const carried=()=>step===0?loose:cross
   function pose() {
-    cross.position.copy(step>=2?HUNG:HELD); loose.position.copy(LOOSE)
+    suspension.rotation.set(0,0,0)
+    suspension.position.set(0,0,0)
+    if(step>=2) suspension.position.copy(HUNG).add(HANG_ANCHOR)
+    cross.position.copy(step>=2?HANG_ANCHOR:HELD)
+    if(step>=2) cross.position.negate()
+    loose.position.copy(LOOSE)
     cross.rotation.set(0,0,0)
     for(let i=0;i<4;i++) arms[i].visible=i<woven
     loop.visible=step>=1
@@ -108,7 +115,7 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
     world.updateMatrixWorld(true)
   }
   const ending = createQuietEnding(ctx, { ui, isActive: () => active(), duration: 3, motion: 'sway',
-    targets: () => [cross], cancelInput: () => pointer.cancel(), complete: () => advance(),
+    targets: () => [suspension], cancelInput: () => pointer.cancel(), complete: () => advance(),
   })
   function sync() {
     ui.renderDots(step,3); ui.actionBtn.hidden=step===3; ui.actionBtn.disabled=settling>0
@@ -173,7 +180,7 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
       const delta=Number.isFinite(dt)?Math.max(0,dt):0
       if(settling) {settling=Math.max(0,settling-delta);if(reduced())settling=0;sync()}
       if(!reduced())clock+=delta
-      if(step>=2&&!dragging)cross.rotation.z=reduced()?0:Math.sin(clock*1.15)*.015
+      if(step>=2&&!dragging)suspension.rotation.z=reduced()?0:Math.sin(clock*1.15)*.015
       if (!active()) return
       ending.update(dt)
       if (!active()) return

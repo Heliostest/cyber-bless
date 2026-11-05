@@ -1,5 +1,9 @@
 # 布列塔尼赦罪朝圣与民间祈福（Breton Pardons）
 
+## 2026-11-05 产品连接关系技术修复
+
+`breton-banner` 收尾改为顶边及左右布耳固定、自由下摆产生小幅布面形变，避免整组转动使布旗脱离横杆。原展开、安放、计时和完成条件保持，减少动态时关闭形变。此节修正下方2026-10-31产品轻摆描述，未更改文化事实、宗教语境、来源身份或外链读取状态；沿用[既有介绍核查](../../docs/research/2026-10-20-scene-narratives-a.md#breton-banner)。实际几何支点与验证范围见[场景技术记录](../../packages/scenes/src/breton-banner/README.md)。
+
 ![布列塔尼洛科龙大巡行（Troménie）圣洛朗礼拜堂](./breton-pardons.jpg)
 
 <!-- 来源：CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:506_Troménie_Locronan.jpg -->
@@ -65,7 +69,7 @@ Troménie 是布列塔尼巡行传统的一部分；介绍具体地点、路程�
 
 适用场景：`breton-banner`。
 
-`breton-banner`（节旗轻展）：悬挂物的轻摆（`sway`），只作小幅转动，不让物件离开挂点漂走，目标为 `cloth`。
+`breton-banner`（节旗轻展）：柔和光泽（`glow`）配合自由下摆轻动，顶边与左右布耳固定，目标为 `cloth`；不对整组布旗施加旋转。
 
 末尾独立静看段按3秒活动时间播放，减少动态为0.6秒并关闭共享收尾的位移／旋转；随后自动完成，不再要求额外轻点静看或结束聆听。前面的物件操作及既有动作动画保持，固定器物不因收尾而漂离安放处。较早产品段中的最终点按条件仅记录历史实现。
 

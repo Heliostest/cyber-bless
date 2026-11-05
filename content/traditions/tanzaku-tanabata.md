@@ -1,5 +1,7 @@
 # 七夕短册（tanzaku）
 
+`tanzaku-tanabata` 于 2026-11-05 仅修复纸签顶部与轻摆竹枝的产品动画连接，并同步提示落点。沿用本卡既有文化支持范围和读取状态，不新增系结礼序、期限或功效主张。[技术遍历与验证](../../docs/research/2026-11-05-all-hanging-pivots.md)。
+
 ![竹枝上悬挂的七夕短册（tanzaku）](./tanzaku-tanabata.jpg)
 
 <!-- 来源：CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Portland_Japanese_Garden_Tanabata_tanzaku.jpg -->

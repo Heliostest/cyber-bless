@@ -97,6 +97,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   pinTarget.name = 'milagros-pin-target'
   const guide = add(new THREE.TorusGeometry(0.15, 0.008, 6, 32),
     new THREE.MeshBasicMaterial({ color: 0xebce82, transparent: true, opacity: 0.65, depthWrite: false }), 0, 1.65, 0.14)
+  const suspensions: THREE.Group[] = []
   const charmGroups: THREE.Group[] = [], charmMeshes: THREE.Mesh[] = []
   const starts: THREE.Vector3[] = [], charmMaterials: THREE.MeshStandardMaterial[] = []
   const colors = [0xe8bd75, 0xb7c5c3, 0xdab48a, 0xedcf87]
@@ -104,8 +105,9 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
     const group = new THREE.Group(); group.name = `milagros-charm-${i}`
     const start = new THREE.Vector3(-0.81 + i * 0.54, 0.41, 0.72)
     group.position.copy(start); group.scale.setScalar(0.73)
-    world.add(group); charmGroups.push(group); starts.push(start)
-    const mat = applyCraftSurface(material(colors[i], 0.55, 0.35),{kind:'metal',strength:.45}); charmMaterials.push(mat)
+    const suspension = new THREE.Group(); suspension.name = `milagros-suspension-${i}`; world.add(suspension)
+    suspension.add(group); suspensions.push(suspension); charmGroups.push(group); starts.push(start)
+    const mat = applyCraftSurface(material(colors[i], 0.55, 0.35), { kind: 'metal', strength: .45 }); charmMaterials.push(mat)
     const mesh = add(new THREE.ExtrudeGeometry(charmShape(i), {
       depth: 0.028, bevelEnabled: true, bevelSegments: 2, steps: 1,
       bevelSize: 0.016, bevelThickness: 0.014, curveSegments: 16,
@@ -126,7 +128,13 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
     mesh.scale.setScalar(0.34); mesh.rotation.z = i === 1 ? 0.1 : -0.12
   }
   const held = new THREE.Vector3(0.62, 1.04, 0.62)
-  const hung = new THREE.Vector3(0, 1.22, 0.18)
+  const hangAnchor = new THREE.Vector3(0, 0.37, 0.025)
+  // The loop center stays on the pin while its scaled body swings below it.
+  function suspend() {
+    const group = charmGroups[selected], suspension = suspensions[selected]
+    suspension.position.copy(pin.position); suspension.rotation.set(0, 0, 0)
+    group.position.copy(hangAnchor).multiplyScalar(-1.15); group.scale.setScalar(1.15); group.rotation.set(0, 0, 0)
+  }
   charmMeshes.forEach((mesh, index) => {
     addInteractionCue(mesh, {
       kind: 'tap', label: '轻点选择小符',
@@ -174,7 +182,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
     buttons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)))
   }
   const ending = createQuietEnding(ctx, { ui: ui, isActive: () => started && !disposed && canAct(),
-    duration: 3, motion: 'sway', targets: () => [charmGroups[selected]], cancelInput: () => { resetDrag() }, complete: () => finish(),
+    duration: 3, motion: 'sway', targets: () => [suspensions[selected]], cancelInput: () => { resetDrag() }, complete: () => finish(),
   })
   function sync() {
     ui.renderDots(step, 3); choices.hidden = step !== 0; wish.hidden = step !== 2 || Boolean(ctx.returning)
@@ -196,7 +204,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   function hang() {
     if (!canAct() || step !== 1) return
     step = 2; drag = null; elapsed = 1
-    charmGroups[selected].position.copy(hung); charmGroups[selected].scale.setScalar(1.15)
+    suspend()
     ctx.onProgress?.(2); feedback.impact({ freqs: [659, 988], duration: 0.45, gain: 0.06 }); sync()
   }
   function finish(text = '') {
@@ -282,7 +290,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
       window.addEventListener('pointerup', windowEnd); window.addEventListener('pointercancel', windowEnd)
       window.addEventListener('blur', blur)
       if (step === 1) { charmGroups[selected].position.copy(held); charmGroups[selected].scale.setScalar(1.1) }
-      if (step >= 2) { charmGroups[selected].position.copy(hung); charmGroups[selected].scale.setScalar(1.15) }
+      if (step >= 2) { suspend() }
       sync()
     },
     update(dt) {
@@ -297,7 +305,7 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
         charmGroups[selected].position.lerpVectors(starts[selected], held, eased)
         charmGroups[selected].scale.setScalar(0.73 + eased * 0.37)
       }
-      if (step >= 2) charmGroups[selected].rotation.z = reduced ? 0 : Math.sin(clock * 1.3) * Math.exp(-clock * 0.08) * 0.035
+      if (step >= 2) suspensions[selected].rotation.z = reduced ? 0 : Math.sin(clock * 1.3) * Math.exp(-clock * 0.08) * 0.035
       ending.update(dt)
       if (disposed || !(canAct())) return
       style.render()

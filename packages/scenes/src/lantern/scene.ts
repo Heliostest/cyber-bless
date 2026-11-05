@@ -43,7 +43,6 @@ const LIGHT_SECONDS = 1.6
 const LANTERN_Y = 1.45
 const LANTERN_HALF_H = 0.34
 const LANTERN_BAYS = 8
-const Z_AXIS = new THREE.Vector3(0, 0, 1)
 
 /** Barrel profile of the paper shade: radius at height `y` (−H..H). */
 const shadeRadius = (y: number) => 0.2 + 0.1 * Math.cos((y / LANTERN_HALF_H) * (Math.PI / 2))
@@ -157,6 +156,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
 
   // Lantern pivots from the beam so it and the plaque can sway together.
   const pivot = new THREE.Group()
+  pivot.name = 'lantern-suspension'
   pivot.position.set(0, 2.22, 0)
   world.add(pivot)
   const cordMat = new THREE.MeshStandardMaterial({ color: 0xc8453a, roughness: 0.95 })
@@ -217,6 +217,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
 
   // Wish plaque: rests at the stand's foot, then hangs under the lantern.
   const plaque = new THREE.Group()
+  plaque.name = 'lantern-plaque'
   world.add(plaque)
   const plaqueMat = new THREE.MeshStandardMaterial({
     color: 0xe8c89a,
@@ -462,9 +463,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
 
       const follow = reduced ? 1 : 1 - Math.exp(-dt * 10)
       if (hung) {
-        // Hang the plaque from the lantern's bottom rim, lagging the sway.
-        hangPos.copy(plaqueHung).sub(pivot.position).applyAxisAngle(Z_AXIS, swing)
-        plaque.position.lerp(hangPos.add(pivot.position), follow)
+        // Only its free rotation lags; the upper cord stays on the lantern.
         plaque.rotation.z = THREE.MathUtils.lerp(
           plaque.rotation.z,
           swing * 1.6 + (reduced ? 0 : Math.sin(t * 1.6) * 0.08),
@@ -485,6 +484,11 @@ export function createLantern(ctx: SceneContext): SceneInstance {
 
       ending.update(dt)
       if (disposed || !(canAct())) return
+      if (hung) {
+        hangPos.copy(plaqueHung).sub(pivot.position)
+        pivot.localToWorld(hangPos)
+        plaque.position.copy(world.worldToLocal(hangPos))
+      }
       styleRenderer.render()
     },
     dispose() {

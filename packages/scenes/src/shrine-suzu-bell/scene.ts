@@ -82,7 +82,8 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
 
   const suspension = add(new THREE.TorusGeometry(0.102, 0.024, 9, 32), darkGold, [0, 2.52, 0.07])
   suspension.scale.set(0.75, 1, 1)
-  const hanging = new THREE.Group(); hanging.name = 'suzu-hanging-object'; hanging.position.set(0, 2.17, 0.11); world.add(hanging)
+  const pivot = new THREE.Group(); pivot.name = 'suzu-suspension-pivot'; pivot.position.set(0, 2.48, 0.11); world.add(pivot)
+  const hanging = new THREE.Group(); hanging.name = 'suzu-hanging-object'; hanging.position.set(0, -.31, 0); pivot.add(hanging)
   const bell = new THREE.Group(); bell.name = 'suzu-round-split-bell'; hanging.add(bell)
   const eye = add(new THREE.TorusGeometry(0.078, 0.027, 9, 32), goldLight, [0, 0.31, 0], bell)
   eye.scale.set(0.85, 1, 1)
@@ -153,8 +154,10 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   const sources = () => checkpoint < 2 ? ropeMeshes : [body, ...lowerLobes]
   const pose = (amount: number, sway = 0) => {
     pullAmount = amount
-    hanging.rotation.z = amount * 0.038 + sway
+    pivot.rotation.z = amount * 0.038 + sway
     rope.scale.y = 1 + amount * 0.115
+    // Stretch down from the bell attachment rather than away from it.
+    rope.position.y = .265 * (rope.scale.y - 1)
     matrices()
   }
   const restorePose = () => pose(checkpoint === 1 && !reduced() ? 0.32 : 0)

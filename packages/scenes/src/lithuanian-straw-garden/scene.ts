@@ -19,6 +19,7 @@ const COPY = {
   assembling: '小菱形缓缓接向中央，棉线连起草秆…', suspending: '草编花园缓缓移向木架，挂线轻轻落稳…', done: '草编花园已在工坊木架上挂稳，静赏草秆与棉线的结构。',
 } as const
 const HOME = new THREE.Vector3(-.66, 1.88, 0), REST = new THREE.Vector3(.72, 2.12, 0)
+const HANG_ANCHOR = new THREE.Vector3(0, .77, .12)
 const PENDANT_HOME = new THREE.Vector3(-1.05, 1.02, .60), JOIN = new THREE.Vector3(0, -.84, 0)
 type Checkpoint = 0 | 1 | 2 | 3
 const ease = (t: number) => t * t * (3 - 2 * t)
@@ -70,7 +71,9 @@ export function createLithuanianStrawGarden(ctx: SceneContext): SceneInstance {
   box(.87, .095, .095, oak, [1.04, 2.90, -.14])
   stem(new THREE.Vector3(.72, 2.89, -.14), new THREE.Vector3(.72, 2.89, .12), .04, walnut, world)
   const peg = bead(.085, [.72, 2.89, .12], 'straw-display-peg', world, sage)
-  const mobile = new THREE.Group(); mobile.name = 'straw-mobile'; world.add(mobile)
+  // Rotate around the real top thread endpoint, which rests on the display peg.
+  const suspension = new THREE.Group(); suspension.name = 'straw-suspension'; world.add(suspension)
+  const mobile = new THREE.Group(); mobile.name = 'straw-mobile'; suspension.add(mobile)
   const diamond = (parent: THREE.Object3D, radius: number, height: number, xyz: [number, number, number], name: string) => {
     const group = new THREE.Group(); group.name = name; group.position.set(...xyz); parent.add(group)
     const ring = [new THREE.Vector3(radius, 0, 0), new THREE.Vector3(0, 0, radius), new THREE.Vector3(-radius, 0, 0), new THREE.Vector3(0, 0, -radius)]
@@ -87,7 +90,7 @@ export function createLithuanianStrawGarden(ctx: SceneContext): SceneInstance {
     diamond(mobile, .15, .20, [x, -.31, 0], 'straw-side-diamond')
   }
   // The cream suspension loop and its wooden clasp remain actual visible geometry.
-  stem(new THREE.Vector3(0, .56, 0), new THREE.Vector3(0, .77, .12), .009, thread, mobile)
+  stem(new THREE.Vector3(0, .56, 0), new THREE.Vector3(0, .77, .12), .009, thread, mobile, 'straw-suspension-thread')
   const lift = bead(.105, [0, .67, .12], 'straw-lift-bead', mobile, walnut)
   const join = bead(.085, [0, -.56, .055], 'straw-join-bead', mobile, sage)
   const pendant = diamond(world, .20, .28, [0, 0, 0], 'straw-pendant')
@@ -97,7 +100,9 @@ export function createLithuanianStrawGarden(ctx: SceneContext): SceneInstance {
   for (let i = 0; i < 5; i++) stem(new THREE.Vector3(.20 + i * .055, .74, .45), new THREE.Vector3(.45 + i * .055, .74, .63), .014, straw, world)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restore = () => {
-    mobile.position.copy(checkpoint >= 2 ? REST : HOME); mobile.rotation.set(0, 0, 0)
+    suspension.rotation.set(0, 0, 0); suspension.position.set(0, 0, 0)
+    mobile.position.copy(HOME); mobile.rotation.set(0, 0, 0)
+    if (checkpoint >= 2) { suspension.position.copy(REST).add(HANG_ANCHOR); mobile.position.copy(HANG_ANCHOR).negate() }
     if (checkpoint >= 1) { mobile.add(pendant); pendant.position.copy(JOIN) } else { world.add(pendant); pendant.position.copy(PENDANT_HOME) }
     link.visible = checkpoint >= 1; cloth.visible = true; matrices()
   }
@@ -135,7 +140,7 @@ export function createLithuanianStrawGarden(ctx: SceneContext): SceneInstance {
     }, onCancel: reset,
   })
   const ending = createQuietEnding(ctx, { ui, isActive: () => active(), duration: 3, motion: 'sway',
-    targets: () => [mobile], cancelInput: () => pointer.cancel(), complete: () => advance(),
+    targets: () => [suspension], cancelInput: () => pointer.cancel(), complete: () => advance(),
   })
   const sync = () => {
     ui.renderDots(checkpoint, 3); ui.actionBtn.hidden = checkpoint === 3; ui.actionBtn.disabled = !active() || !!transition || checkpoint === 3

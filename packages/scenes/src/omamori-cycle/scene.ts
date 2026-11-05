@@ -28,7 +28,10 @@ const COPY = {
 } as const
 const VARIANTS = ['coral', 'sage', 'indigo'] as const
 const HELD = new THREE.Vector3(-0.62, 1.66, 0.56)
-const HUNG = new THREE.Vector3(0.58, 1.08, 0.47)
+// Cord apex rests on the clasp top; body origin stays free for pre-attachment dragging.
+const HANG_ANCHOR = new THREE.Vector3(0, 0.64, -0.015)
+const HANG_POINT = new THREE.Vector3(0.58, 1.68, 0.25)
+const HUNG = HANG_POINT.clone().addScaledVector(HANG_ANCHOR, -0.9)
 const RETURNED = new THREE.Vector3(0.58, 1.32, 0.42)
 const DISPLAY = [-1.0, -0.43, 0.14] as const
 
@@ -97,7 +100,7 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
   travelBag.add(cord([[0.3, 1.48, -0.07], [0.32, 1.88, -0.07], [0.62, 1.96, -0.07], [0.91, 1.87, -0.07], [0.93, 1.48, -0.07]], 0.042, bagEdge))
   const clasp = add(new RoundedBoxGeometry(0.17, 0.16, 0.085, 3, 0.025), gold, [0.58, 1.6, 0.235], travelBag)
   clasp.name = 'omamori-clasp'
-  add(new THREE.TorusGeometry(0.072, 0.012, 7, 24), gold, [0.58, 1.49, 0.26], travelBag)
+  add(new THREE.TorusGeometry(0.072, 0.012, 7, 24), gold, [0.58, 1.68, 0.25], travelBag)
   for (const x of [0.35, 0.87]) add(new THREE.SphereGeometry(0.022, 10, 8), gold, [x, 1.54, 0.205], travelBag)
 
   const returnBox = new THREE.Group(); returnBox.name = 'omamori-return-box'; returnBox.visible = returning; world.add(returnBox)
@@ -116,7 +119,8 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
 
   const bodyGeo = pouchGeometry()
   const pouches = VARIANTS.map((variant, i) => {
-    const root = new THREE.Group(); root.name = `omamori-pouch-${variant}`; world.add(root)
+    const suspension = new THREE.Group(); suspension.name = `omamori-suspension-${variant}`; world.add(suspension)
+    const root = new THREE.Group(); root.name = `omamori-pouch-${variant}`; suspension.add(root)
     const body = add(bodyGeo, [coral, sage, indigo][i], [0, 0, 0], root); body.name = `omamori-pouch-body-${variant}`
     // Filled extrusion, sealed top seam and a tied cord: no opening or interior contents.
     add(new RoundedBoxGeometry(0.31, 0.065, 0.21, 3, 0.02), seam, [0, 0.315, 0], root)
@@ -155,7 +159,7 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
     addInteractionCue(body, { kind: 'tap', label: returning ? '轻点小袋致谢' : '轻点小袋静候', priority: 3,
       anchor: [0, 0, 0.1], compact: returning,
       enabled: () => canAct() && !placing && step === 2 && i === selected })
-    return { root, body }
+    return { root, body, suspension }
   })
   addInteractionCue(boxBody, { kind: 'tap', label: '轻点返还箱致谢', priority: 4, anchor: [0, -0.07, 0.37],
     enabled: () => canAct() && !placing && returning && step === 2 })
@@ -167,11 +171,16 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
     && !touch.occluded(x,y,returning?returnSlot:clasp,{ignore:pouches[selected].root})
     && placementHit(canvas,camera,pouches[selected].body,x,y,(px,py)=>touch.hit(px,py,returning?returnSlot:clasp,{ignore:pouches[selected].root}),[0,0,.1])
   const physicalLayout = () => {
-    pouches.forEach(({ root }, i) => {
+    pouches.forEach(({ root, suspension }, i) => {
+      suspension.position.set(0, 0, 0); suspension.rotation.set(0, 0, 0)
       const isSelected = i === selected && step > 0
       root.position.set(DISPLAY[i], 1.075, 0.38); root.scale.setScalar(0.72); root.rotation.set(0, 0, i === 1 ? 0.04 : -0.035)
       if (isSelected) {
         root.position.copy(step >= 2 ? destination : HELD); root.scale.setScalar(0.9); root.rotation.set(0, 0, 0)
+        if (step >= 2 && !returning) {
+          suspension.position.copy(HANG_POINT)
+          root.position.copy(HANG_ANCHOR).multiplyScalar(-0.9)
+        }
       }
     })
   }
@@ -214,7 +223,7 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
     onCancel: resetDrag,
   })
   const ending = createQuietEnding(ctx, { ui: ui, isActive: () => started && !disposed && canAct(),
-    duration: 3, motion: 'sway', targets: () => [pouches[selected].root], cancelInput: () => { pointer.cancel() }, complete: () => finish(),
+    duration: 3, motion: 'sway', targets: () => [returning ? pouches[selected].root : pouches[selected].suspension], cancelInput: () => { pointer.cancel() }, complete: () => finish(),
   })
   const sync = () => {
     ui.renderDots(step, 3); ui.actionBtn.hidden = step === 3
@@ -301,7 +310,7 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
         if (placeT === 1) placed()
       } else if (step >= 2 && !dragging) {
         if (!quiet) clock += delta
-        pouches[selected].root.rotation.z = quiet || returning ? 0 : Math.sin(clock * 1.8) * Math.exp(-clock * 1.1) * 0.012
+        pouches[selected].suspension.rotation.z = quiet || returning ? 0 : Math.sin(clock * 1.8) * Math.exp(-clock * 1.1) * 0.012
       }
       ending.update(dt)
       if (disposed || !(canAct())) return

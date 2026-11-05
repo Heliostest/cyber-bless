@@ -1,5 +1,9 @@
 # 立陶宛 Sodai 草编花园
 
+## 2026-11-05 产品悬线支点技术修复
+
+`lithuanian-straw-garden` 收尾绕真实悬线顶端与木架挂点的接触处轻摆，目标改为 `straw-suspension` 支点组，避免草园中心旋转造成脱钩。原拼装、搬移、计时和完成条件保持，减少动态时关闭旋转。此节修正下方2026-10-31产品目标描述，未更改文化事实、和睦寄寓、来源身份或外链读取状态；沿用[既有介绍核查](../../docs/research/2026-10-20-scene-narratives-b.md#lithuanian-straw-garden)。实际支点与验证范围见[场景技术记录](../../packages/scenes/src/lithuanian-straw-garden/README.md)。
+
 ## 文化与器物
 
 - 立陶宛sodai是由草秆连接成精确几何形体的悬饰，常见两座共方底的相反金字塔。

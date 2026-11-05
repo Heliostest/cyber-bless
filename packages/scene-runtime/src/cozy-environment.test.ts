@@ -1,10 +1,72 @@
 import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
-import { createCozyEnvironment } from "./cozy-environment";
+import { createCozyEnvironment as createEnvironment } from "./cozy-environment";
 import * as sceneMotion from "./scene-motion";
 import { builtInScenes, isSceneVisibleInApp } from "@wbr/core/daily-scenes";
 
+// Unit tests supply local trees; actual bundled GLBs are covered by the browser audit.
+const createCozyEnvironment: typeof createEnvironment = (scene, options) => createEnvironment(scene, {
+  ...options, loadTree: options.loadTree ?? (async () => {
+    const root = new THREE.Group(); root.add(new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshStandardMaterial())); return root;
+  }),
+});
+
 describe("a scene's surrounding world", () => {
+  it.each(['woodfish', 'diya-oil-lamp'])('softens preview shadows and restores their strength for captures and teardown: %s', async id => {
+    const scene = new THREE.Scene(), sun = new THREE.DirectionalLight(); sun.shadow.intensity = .8; scene.add(sun);
+    const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture(), loadTree: async () => {
+      const model = new THREE.Group(); model.add(new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshStandardMaterial())); return model;
+    } })!;
+    const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
+    world.prepare(renderer); const radius = sun.shadow.radius;
+    await world.setTreeMethod('cherry'); world.prepare(renderer);
+    expect(sun.shadow.intensity).toBeLessThan(.8); expect(sun.shadow.radius).toBeGreaterThan(radius);
+    expect(renderer.shadowMap.type).toBe(THREE.PCFShadowMap);
+    const restore = world.captureDefaultTrees(); world.prepare(renderer);
+    expect(sun.shadow.intensity).toBe(.8); expect(sun.shadow.radius).toBe(radius);
+    restore?.(); world.prepare(renderer); expect(sun.shadow.intensity).toBeLessThan(.8);
+    await world.ready; world.dispose(); expect(sun.shadow.intensity).toBe(.8); expect(sun.shadow.radius).toBe(radius);
+  });
+  it('loads both recommended cherry variants by default and reuses them after a legacy comparison', async () => {
+    const scene = new THREE.Scene(), loadTree = vi.fn(async () => {
+      const root = new THREE.Group(), mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshStandardMaterial());
+      mesh.position.y = 1; root.add(mesh); return root;
+    });
+    const world = createCozyEnvironment(scene, { id: 'shinto-torii', loadTree, loadSky: async () => new THREE.DataTexture() })!;
+    expect(world.treeRecommendation).toBe('cherry'); expect(loadTree).toHaveBeenCalledTimes(2);
+    await world.ready; await world.setTreeMethod('original');
+    await world.setTreeMethod('scene');
+    expect(loadTree).toHaveBeenCalledTimes(2);
+    expect(loadTree).toHaveBeenCalledWith('/environments/trees/simple-tree/cherry-round.glb');
+    expect(loadTree).toHaveBeenCalledWith('/environments/trees/simple-tree/cherry-cluster.glb');
+    await world.ready; world.dispose();
+  });
+  it.each(['woodfish', 'diya-oil-lamp'])('switches only environment trees in day and night without rebuilding the scene: %s', async id => {
+    const scene = new THREE.Scene(), subject = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial());
+    subject.name = 'cultural-subject'; scene.add(subject);
+    const loadTree = vi.fn(async () => {
+      const root = new THREE.Group(), mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshStandardMaterial());
+      mesh.position.y = 1; root.add(mesh); return root;
+    });
+    const report = vi.fn(), world = createCozyEnvironment(scene, { id, loadTree, onTrees: report, loadSky: async () => new THREE.DataTexture() })!;
+    const originalRoot = scene.getObjectByName('cozy-environment');
+    const nightTree = originalRoot!.children.find(child => child.position.x === -6.8 && child.position.z === -6.5);
+    const nightHeight = nightTree ? new THREE.Box3().setFromObject(nightTree).getSize(new THREE.Vector3()).y : undefined;
+    expect(world.treeCount).toBeGreaterThan(0); expect(loadTree).not.toHaveBeenCalled();
+    await world.setTreeMethod('quaternius');
+    expect(report).toHaveBeenLastCalledWith({ count: world.treeCount, actual: 'quaternius', status: 'ready' });
+    expect(scene.getObjectByName('alternative-environment-trees')!.children.length).toBeGreaterThan(0);
+    if (nightHeight) {
+      const imported = scene.getObjectByName('alternative-environment-trees')!.children.find(child => child.name.includes('cluster')) as THREE.InstancedMesh;
+      const transform = new THREE.Matrix4(); imported.getMatrixAt(0, transform);
+      imported.geometry.computeBoundingBox();
+      expect(imported.geometry.boundingBox!.clone().applyMatrix4(transform).getSize(new THREE.Vector3()).y).toBeCloseTo(nightHeight);
+    }
+    expect(scene.getObjectByName('cozy-environment')).toBe(originalRoot); expect(subject.visible).toBe(true);
+    await world.setTreeMethod('original'); expect(scene.getObjectByName('alternative-environment-trees')!.children).toHaveLength(0);
+    await world.ready; world.dispose(); expect(subject.parent).toBe(scene);
+    subject.geometry.dispose(); (subject.material as THREE.Material).dispose();
+  });
   it("keeps the workbench clear and reduces far haze only in the shared daylight scenes", async () => {
     const day = new THREE.Scene(), coast = new THREE.Scene();
     const worlds = [

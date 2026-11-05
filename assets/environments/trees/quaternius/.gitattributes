@@ -1,0 +1,5 @@
+# These vendor notices are hash-verified and contain original CR/CR/LF bytes.
+LICENSE.txt -text
+source/License_Standard.txt -text
+source/opengameart-page.html -text
+source/zip-central-directory.bin -text

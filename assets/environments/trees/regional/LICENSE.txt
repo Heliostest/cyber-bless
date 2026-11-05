@@ -1,0 +1,16 @@
+Model Information:
+* title:	Sakura Tree 01 - Low Poly Model
+* source:	https://sketchfab.com/3d-models/sakura-tree-01-low-poly-model-147ae7d0d332456a99ec6195e9b0cd4f
+* author:	Jogoss (https://sketchfab.com/thejogoss9)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Sakura Tree 01 - Low Poly Model" (https://sketchfab.com/3d-models/sakura-tree-01-low-poly-model-147ae7d0d332456a99ec6195e9b0cd4f) by Jogoss (https://sketchfab.com/thejogoss9) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+Adaptation and retrieval:
+Textures resized with Lanczos3: blossom 1024x1024 to 512x512 PNG; bark 1024x2048 to 256x512 JPEG quality 85 (4:4:4). Blossom alpha BLEND changed to double-sided MASK with cutoff 0.3 for depth, instancing and shadows. Original meshes, normals, UVs, indices and node transforms retained. Repacked as self-contained cherry.glb. No claim of botanical cultivar accuracy.
+
+Source retrieved 2026-11-05 from public mirror https://github.com/amilutinovic/grafika, commit fe25b38080b6c881948d96ddc87db68c28ef3aec, path resources/objects/sakura_tree_01_-_low_poly_model. Original attribution and CC-BY-4.0 were cross-checked against the creator's public Sketchfab API metadata. See source-manifest.json for exact original source filenames and hashes.

@@ -1,0 +1,92 @@
+{
+  "title": "Sakura Tree 01 - Low Poly Model",
+  "creator": "Jogoss",
+  "license": "CC-BY-4.0",
+  "file": "cherry.glb",
+  "bytes": 683924,
+  "gzipBytes": 383926,
+  "sha256": "f0a95976c50ed84e11ffb8e7615a37ea54613ba785f151dd3792119fee167c56",
+  "triangles": 7007,
+  "vertices": 7748,
+  "parts": [
+    {
+      "name": "Sakura_Bark001_2K_JPG_Mat_0",
+      "material": "Bark001_2K_JPG_Mat",
+      "vertices": 3428,
+      "triangles": 4847
+    },
+    {
+      "name": "Sakura_Sakura_Mat_0",
+      "material": "Sakura_Mat",
+      "vertices": 4320,
+      "triangles": 2160
+    }
+  ],
+  "images": [
+    {
+      "source": "textures/Bark001_2K_JPG_Mat_baseColor.png",
+      "sourceSize": [
+        1024,
+        2048
+      ],
+      "size": [
+        256,
+        512
+      ],
+      "bytes": 45566,
+      "sha256": "12ecf7ed94b37ec1924ae1f70e284ea01e70886dd7f5563bfc9a44f009a8d591",
+      "alpha": {
+        "min": 255,
+        "max": 255,
+        "transparentPixels": 0,
+        "opaquePixels": 131072
+      }
+    },
+    {
+      "source": "textures/Sakura_Mat_baseColor.png",
+      "sourceSize": [
+        1024,
+        1024
+      ],
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 115795,
+      "sha256": "a1ed9d9e4bbf3a4fbeade18f3ed7f9446ac5d58ef9f0899c439b650fc6519762",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 220175,
+        "opaquePixels": 30343
+      }
+    }
+  ],
+  "geometry": "Complete original binary unchanged; normals, UVs, positions and indices retained",
+  "bounds": {
+    "min": [
+      -0.19639070071896825,
+      -0.000008965952237963926,
+      -0.21449250695498628
+    ],
+    "max": [
+      0.20722705377875883,
+      0.4171905424328771,
+      0.18713717996022458
+    ]
+  },
+  "materials": [
+    {
+      "name": "Bark001_2K_JPG_Mat",
+      "alphaMode": "OPAQUE",
+      "doubleSided": true
+    },
+    {
+      "name": "Sakura_Mat",
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.3,
+      "doubleSided": true
+    }
+  ],
+  "selfContained": true
+}

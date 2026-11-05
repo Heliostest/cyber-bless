@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { GardenKind } from "./garden-layout";
+import type { EnvironmentTone } from './debug-environment-tone';
 
 // Wind bending and root-to-tip lighting adapted from boona13's MIT-licensed
 // threejs-grass-water-shaders. See assets/environments/meadow/ for provenance.
@@ -63,18 +64,25 @@ function patch(x: number, z: number) {
     + .06 * Math.sin(x * 1.43 + z * .82);
 }
 const shade = new THREE.Color(0x619c44), sun = new THREE.Color(0xabc657), middle = new THREE.Color(0x83b44b);
-function grassColor(x: number, z: number, target: THREE.Color) {
+const originalGrass = [shade, middle, sun];
+const deliveryGrass = [0x479638, 0x83bf3b, 0xb6ce46].map(color => new THREE.Color(color));
+function grassColor(x: number, z: number, target: THREE.Color, tone: EnvironmentTone = 'original') {
+  const [dark, mid, bright] = tone === 'original' ? originalGrass : deliveryGrass;
   const value = THREE.MathUtils.smoothstep(patch(x, z), .15, .88);
-  return value < .5 ? target.copy(shade).lerp(middle, value * 2) : target.copy(middle).lerp(sun, (value - .5) * 2);
+  return value < .5 ? target.copy(dark).lerp(mid, value * 2) : target.copy(mid).lerp(bright, (value - .5) * 2);
 }
 
-function createGroundMap() {
-  const size = 256, bytes = new Uint8Array(size * size * 4), color = new THREE.Color(), rgb = { r: 0, g: 0, b: 0 };
+function paintGround(bytes: Uint8Array, tone: EnvironmentTone) {
+  const size = 256, color = new THREE.Color(), rgb = { r: 0, g: 0, b: 0 };
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-    grassColor((x / (size - 1) - .5) * 100, (.5 - y / (size - 1)) * 100 - 12, color).getRGB(rgb, THREE.SRGBColorSpace);
+    grassColor((x / (size - 1) - .5) * 100, (.5 - y / (size - 1)) * 100 - 12, color, tone).getRGB(rgb, THREE.SRGBColorSpace);
     const i = (y * size + x) * 4;
     bytes.set([Math.round(rgb.r * 255), Math.round(rgb.g * 255), Math.round(rgb.b * 255), 255], i);
   }
+}
+function createGroundMap() {
+  const size = 256, bytes = new Uint8Array(size * size * 4);
+  paintGround(bytes, 'original');
   const texture = new THREE.DataTexture(bytes, size, size);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.minFilter = THREE.LinearMipmapLinearFilter; texture.magFilter = THREE.LinearFilter;
@@ -139,10 +147,12 @@ export function createStylizedMeadow({ kind, floor, id }: { kind: GardenKind; fl
   mesh.name = "windswept-meadow"; mesh.userData.toonSurface = { outline: false };
   mesh.castShadow = false; mesh.receiveShadow = true;
   const transform = new THREE.Object3D(), color = new THREE.Color();
+  const variations: number[] = [];
   points.forEach(([x, z, height], i) => {
     transform.position.set(x, floor + (kind === "river" ? .08 : .006), z);
     transform.rotation.y = random() * Math.PI * 2; transform.scale.set(1, height, 1); transform.updateMatrix();
-    mesh.setMatrixAt(i, transform.matrix); mesh.setColorAt(i, grassColor(x, z, color).multiplyScalar(.94 + random() * .12));
+    variations.push(.94 + random() * .12);
+    mesh.setMatrixAt(i, transform.matrix); mesh.setColorAt(i, grassColor(x, z, color).multiplyScalar(variations[i]));
   });
   mesh.instanceMatrix.needsUpdate = true;
   if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
@@ -152,6 +162,12 @@ export function createStylizedMeadow({ kind, floor, id }: { kind: GardenKind; fl
   let disposed = false;
   return {
     mesh, groundMap,
+    setTone(tone: EnvironmentTone) {
+      if (disposed) return;
+      paintGround(groundMap.image.data as Uint8Array, tone); groundMap.needsUpdate = true;
+      points.forEach(([x, z], i) => mesh.setColorAt(i, grassColor(x, z, color, tone).multiplyScalar(variations[i])));
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    },
     update(time: number) { if (!disposed) material.uniforms.meadowTime.value = time; },
     dispose() {
       if (disposed) return; disposed = true;

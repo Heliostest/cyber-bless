@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Quaternius Standard tree validation</title>
+<style>body{margin:0;background:#dbe6d3;color:#253725;font:16px system-ui}header{padding:16px 24px}h1{font-size:24px;margin:0}p{margin:4px 0}canvas{display:block}label{position:absolute;top:90px;padding:8px 16px;background:#fff8;border-radius:8px}.a{left:20%}.b{left:70%}</style>
+<header><h1>Quaternius · Stylized Nature MegaKit · Standard FREE · CC0</h1><p>Original tree geometry, authored normals and alpha leaves. 512px embedded textures. Three.js 0.170 GLTFLoader.</p></header>
+<label class="a">CommonTree_1 · round</label><label class="b">CommonTree_5 · cluster</label>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const renderer = new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setSize(1400,800); renderer.setPixelRatio(1); renderer.setClearColor(0xdbe6d3);
+renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping;
+document.body.append(renderer.domElement);
+const scene=new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xe9f3ff,0x9aa779,2.3));
+const sun=new THREE.DirectionalLight(0xffedd0,3); sun.position.set(-4,7,5);scene.add(sun);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(8,4),new THREE.MeshStandardMaterial({color:0x91a870,roughness:1}));
+ground.rotation.x=-Math.PI/2;ground.position.y=-0.01;scene.add(ground);
+const camera=new THREE.OrthographicCamera(-1.45,1.45,.94,-.72,.01,20);camera.position.set(0,2.2,5);camera.lookAt(0,.45,0);
+const loader=new GLTFLoader();const results=[];
+for(const [key,x]of[['round',-.68],['cluster',.68]]){
+ const loaded=await loader.loadAsync(`./${key}.glb`);const model=loaded.scene;
+ const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3());
+ const center=box.getCenter(new THREE.Vector3());
+ model.scale.setScalar(1/size.y);model.position.set(x-center.x/size.y,-box.min.y/size.y,-center.z/size.y);model.rotation.y=.35;
+ scene.add(model);const meshes=[];model.traverse(object=>{if(!object.isMesh)return;const m=object.material;meshes.push({name:object.name,material:m.name,alphaTest:m.alphaTest,transparent:m.transparent,doubleSided:m.side===THREE.DoubleSide,normalMap:!!m.normalMap,vertexColors:m.vertexColors,map:m.map?.image?{width:m.map.image.width,height:m.map.image.height}:null,mapColorSpace:m.map?.colorSpace,normalColorSpace:m.normalMap?.colorSpace,colorAttributeNormalized:object.geometry.getAttribute('color')?.normalized});});
+ results.push({key,meshes});
+}
+renderer.render(scene,camera);window.assetValidation={results,render:renderer.info.render};window.assetValidationReady=true;
+</script></html>

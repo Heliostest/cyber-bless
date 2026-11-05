@@ -8,12 +8,15 @@ import { createInteractionCues } from "./interaction-cues";
 import { createStylePreviewCapture } from "./style-preview-capture";
 import { debugWater } from './debug-water';
 import { bindSceneMotion } from './scene-motion';
+import { debugTrees, type TreeRenderReport } from './debug-trees';
 
 const hooks = vi.hoisted(() => ({
   capture: vi.fn(() => "data:image/webp;base64,real"), prepare: vi.fn(), invalidate: vi.fn(),
   ready: Promise.resolve(), resolve: () => {}, render: vi.fn(), resize: vi.fn(), dispose: vi.fn(),
   refresh: vi.fn(), report: vi.fn(), register: vi.fn(), setDefault: vi.fn(),
   cueUpdate: vi.fn(), cueRender: vi.fn(), cueDispose: vi.fn(),
+  treeCount: 0, treeMethod: vi.fn(), treeReport: undefined as ((report: TreeRenderReport) => void) | undefined,
+  captureTrees: vi.fn(),
 }));
 vi.mock("./style-preview-capture", () => ({ createStylePreviewCapture: vi.fn(() => hooks.capture) }));
 vi.mock("./render-style", () => ({ createRenderStyle: () => ({
@@ -23,15 +26,19 @@ vi.mock("./render-style", () => ({ createRenderStyle: () => ({
 vi.mock("./interaction-cues", () => ({ createInteractionCues: vi.fn(() => ({
   update: hooks.cueUpdate, render: hooks.cueRender, dispose: hooks.cueDispose,
 })) }));
-vi.mock("./cozy-environment", () => ({ createCozyEnvironment: vi.fn(() => ({
-  kind: "garden", get ready() { return hooks.ready; }, prepare: hooks.prepare, dispose: vi.fn(),
-})) }));
+vi.mock("./cozy-environment", () => ({ createCozyEnvironment: vi.fn((_scene, options) => {
+  hooks.treeReport = options.onTrees;
+  return { kind: "garden", get ready() { return hooks.ready; }, prepare: hooks.prepare, dispose: vi.fn(),
+    treeCount: hooks.treeCount, setTreeMethod: hooks.treeMethod, captureDefaultTrees: hooks.captureTrees };
+}) }));
 vi.mock("./debug-styles", () => ({ debugStyles: { register: hooks.register } }));
 
 beforeEach(() => {
   vi.clearAllMocks();
   hooks.render.mockReset(); hooks.cueUpdate.mockReset(); hooks.cueRender.mockReset();
   hooks.ready = new Promise<void>(resolve => { hooks.resolve = resolve; });
+  hooks.treeCount = 0; hooks.treeMethod.mockReset(); hooks.treeReport = undefined;
+  hooks.captureTrees.mockReset();
   hooks.register.mockReturnValue({ setDefault: hooks.setDefault, report: hooks.report, refreshPreviews: hooks.refresh, dispose: hooks.dispose });
 });
 
@@ -48,6 +55,24 @@ function setup(objectPresentation = false) {
 }
 
 describe("mounted renderer shader thumbnail readiness", () => {
+  it('exports production default scenery and then redraws the temporary tree preview', () => {
+    let originalTrees = false;
+    hooks.captureTrees.mockImplementation(() => { originalTrees = true; return () => { originalTrees = false; }; });
+    const ui = setup(); ui.style.render();
+    const frames: boolean[] = []; hooks.render.mockImplementation(() => frames.push(originalTrees));
+    ui.encode.mockImplementation(() => { expect(originalTrees).toBe(true); return 'data:image/png;base64,c2NlbmU='; });
+    expect(captureSceneImage(ui.renderer.domElement)).toBe('data:image/png;base64,c2NlbmU=');
+    expect(frames).toEqual([true, false]); expect(originalTrees).toBe(false); ui.style.dispose();
+  });
+  it('preserves the loading status of a retained tree choice when its scene remounts', () => {
+    hooks.treeCount = 6;
+    const release = debugTrees.enable(); debugTrees.select('tea', 'quaternius');
+    hooks.treeMethod.mockImplementation(() => hooks.treeReport?.({ count: 6, actual: 'original', status: 'loading' }));
+    const ui = setup();
+    try {
+      expect(debugTrees.getSnapshot().find(entry => entry.id === 'tea')).toMatchObject({ method: 'quaternius', actual: 'original', status: 'loading' });
+    } finally { ui.style.dispose(); release(); }
+  });
   it("exports a current scene frame only after readiness and unregisters it before renderer teardown", () => {
     const ui = setup(), canvas = ui.renderer.domElement;
     expect(captureSceneImage(canvas)).toBeUndefined();

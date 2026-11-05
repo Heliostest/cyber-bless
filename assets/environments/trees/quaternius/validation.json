@@ -1,0 +1,264 @@
+{
+  "source": "Quaternius Stylized Nature MegaKit Standard",
+  "sourceIntegrity": "SHA-256 verified",
+  "treeAvailability": {
+    "checked": "2026-11-05",
+    "scope": "All 459 entry names in the pinned free Standard archive, across all formats and textures; no claim about later archives or the full kit.",
+    "treeModels": [
+      "glTF/CommonTree_1.gltf",
+      "glTF/CommonTree_2.gltf",
+      "glTF/CommonTree_3.gltf",
+      "glTF/CommonTree_4.gltf",
+      "glTF/CommonTree_5.gltf",
+      "glTF/DeadTree_1.gltf",
+      "glTF/DeadTree_2.gltf",
+      "glTF/DeadTree_3.gltf",
+      "glTF/DeadTree_4.gltf",
+      "glTF/DeadTree_5.gltf",
+      "glTF/Pine_1.gltf",
+      "glTF/Pine_2.gltf",
+      "glTF/Pine_3.gltf",
+      "glTF/Pine_4.gltf",
+      "glTF/Pine_5.gltf",
+      "glTF/TwistedTree_1.gltf",
+      "glTF/TwistedTree_2.gltf",
+      "glTF/TwistedTree_3.gltf",
+      "glTF/TwistedTree_4.gltf",
+      "glTF/TwistedTree_5.gltf"
+    ],
+    "unavailableSpecies": {
+      "cherry": [
+        "cherry",
+        "blossom"
+      ],
+      "birch": [
+        "birch"
+      ],
+      "palm": [
+        "palm"
+      ],
+      "cypress": [
+        "cypress"
+      ]
+    },
+    "handling": "No creator-identified models or maps for these requested species in this source; do not relabel or recolor CommonTree as another species. No additional species GLBs exported."
+  },
+  "geometry": "Original positions/normals/UVs/indices, no simplification",
+  "textures": [
+    {
+      "source": "Bark_NormalTree_Normal.png",
+      "sourceSize": [
+        2048,
+        2048
+      ],
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 368765,
+      "sha256": "a318c04ab5e0280875e41285562ad6071168dc647a1528f569bc7989e89e32ab",
+      "alpha": {
+        "min": 255,
+        "max": 255,
+        "transparentPixels": 0,
+        "opaquePixels": 262144
+      }
+    },
+    {
+      "source": "Bark_NormalTree.png",
+      "sourceSize": [
+        2048,
+        2048
+      ],
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 28653,
+      "sha256": "fc325b54ffd7a5cd7165b21247a038890ce9a1e040197ea486c6ea788970ae33",
+      "alpha": {
+        "min": 255,
+        "max": 255,
+        "transparentPixels": 0,
+        "opaquePixels": 262144
+      }
+    },
+    {
+      "source": "Leaves_NormalTree_C.png",
+      "sourceSize": [
+        1024,
+        1024
+      ],
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 62890,
+      "sha256": "6670bde6ecb0f691a88bcf1aa3b1a2a0558574b8e8def4a70f806efc5de638e4",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 194250,
+        "opaquePixels": 36617
+      }
+    }
+  ],
+  "models": [
+    {
+      "key": "round",
+      "source": "CommonTree_1.gltf",
+      "file": "round.glb",
+      "bytes": 841608,
+      "gzipBytes": 672935,
+      "sha256": "08480a621ec1c30189a89f9fbc8b6b30ea001b44b0d3e39c609ae67374767d9a",
+      "bounds": {
+        "min": [
+          -2.1944587230682373,
+          -0.24277201294898987,
+          -2.2245190143585205
+        ],
+        "max": [
+          2.116964101791382,
+          7.022013187408447,
+          2.3531949520111084
+        ]
+      },
+      "vertices": 9458,
+      "triangles": 6265,
+      "parts": [
+        {
+          "material": "Bark_NormalTree",
+          "vertices": 5618,
+          "triangles": 4345,
+          "bounds": {
+            "min": [
+              -1.3591265678405762,
+              -0.24277201294898987,
+              -1.126320481300354
+            ],
+            "max": [
+              1.2684564590454102,
+              6.483748912811279,
+              1.3548027276992798
+            ]
+          },
+          "normals": "original FLOAT32",
+          "uv": "original FLOAT32",
+          "colors": "original AO quantized UNORM8"
+        },
+        {
+          "material": "Leaves_NormalTree",
+          "vertices": 3840,
+          "triangles": 1920,
+          "bounds": {
+            "min": [
+              -2.1944587230682373,
+              2.3466193675994873,
+              -2.2245190143585205
+            ],
+            "max": [
+              2.116964101791382,
+              7.022013187408447,
+              2.3531949520111084
+            ]
+          },
+          "normals": "original FLOAT32",
+          "uv": "original FLOAT32",
+          "colors": "original AO quantized UNORM8"
+        }
+      ],
+      "materials": [
+        {
+          "name": "Bark_NormalTree",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true
+        },
+        {
+          "name": "Leaves_NormalTree",
+          "alphaMode": "MASK",
+          "alphaCutoff": 0.20000000298023224,
+          "doubleSided": true
+        }
+      ],
+      "selfContained": true
+    },
+    {
+      "key": "cluster",
+      "source": "CommonTree_5.gltf",
+      "file": "cluster.glb",
+      "bytes": 658036,
+      "gzipBytes": 577584,
+      "sha256": "4d9f733a0c94e4a19afe09f6ccd0fc5d5ac296167f07400b1e3d50f82720cf90",
+      "bounds": {
+        "min": [
+          -1.912354588508606,
+          -0.24277201294898987,
+          -2.162447929382324
+        ],
+        "max": [
+          1.7588107585906982,
+          6.763467788696289,
+          2.057202100753784
+        ]
+      },
+      "vertices": 4873,
+      "triangles": 3182,
+      "parts": [
+        {
+          "material": "Bark_NormalTree",
+          "vertices": 2273,
+          "triangles": 1882,
+          "bounds": {
+            "min": [
+              -0.8957228064537048,
+              -0.24277201294898987,
+              -0.920511782169342
+            ],
+            "max": [
+              0.9063012599945068,
+              5.4537034034729,
+              0.8049076795578003
+            ]
+          },
+          "normals": "original FLOAT32",
+          "uv": "original FLOAT32",
+          "colors": "original AO quantized UNORM8"
+        },
+        {
+          "material": "Leaves_NormalTree",
+          "vertices": 2600,
+          "triangles": 1300,
+          "bounds": {
+            "min": [
+              -1.912354588508606,
+              2.356473684310913,
+              -2.162447929382324
+            ],
+            "max": [
+              1.7588107585906982,
+              6.763467788696289,
+              2.057202100753784
+            ]
+          },
+          "normals": "original FLOAT32",
+          "uv": "original FLOAT32",
+          "colors": "original AO quantized UNORM8"
+        }
+      ],
+      "materials": [
+        {
+          "name": "Bark_NormalTree",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true
+        },
+        {
+          "name": "Leaves_NormalTree",
+          "alphaMode": "MASK",
+          "alphaCutoff": 0.20000000298023224,
+          "doubleSided": true
+        }
+      ],
+      "selfContained": true
+    }
+  ]
+}

@@ -1,0 +1,580 @@
+{
+  "sourceCommit": "8fd94b8edc7ef1b87c086694382a0808c059971c",
+  "adapterVersion": 3,
+  "threeRevision": "170",
+  "models": [
+    {
+      "key": "round",
+      "file": "round.glb",
+      "bytes": 232588,
+      "sha256": "1d8ef922aeb08f1c7edd08084cbaf019aadae60df6b83c48cf8907c59cca43e0",
+      "species": "oak",
+      "leafTexture": "round cluster",
+      "clumps": 13,
+      "leafCards": 336,
+      "vertices": 4068,
+      "triangles": 4288,
+      "bounds": {
+        "min": [
+          -4.046340465545654,
+          -0.009060433134436607,
+          -3.4366090297698975
+        ],
+        "max": [
+          3.909485101699829,
+          6.839718341827393,
+          4.146742820739746
+        ]
+      },
+      "shadeScale": 1.5038357812499996,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 1044,
+          "triangles": 1600,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 3024,
+          "triangles": 2688,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.24944959580898285,
+            0.8977344632148743
+          ]
+        }
+      ]
+    },
+    {
+      "key": "cluster",
+      "file": "cluster.glb",
+      "bytes": 288708,
+      "sha256": "9939dfc87478caf72e239e634e77afb53fd8476cec9892b6cd90bc7bb7417c76",
+      "species": "oak",
+      "leafTexture": "pointed cluster",
+      "clumps": 17,
+      "leafCards": 416,
+      "vertices": 5103,
+      "triangles": 5408,
+      "bounds": {
+        "min": [
+          -3.177840232849121,
+          -0.020706094801425934,
+          -2.9988162517547607
+        ],
+        "max": [
+          3.334343910217285,
+          6.391589164733887,
+          3.5101890563964844
+        ]
+      },
+      "shadeScale": 1.5038357812499996,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 1359,
+          "triangles": 2080,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 3744,
+          "triangles": 3328,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.19265402853488922,
+            0.9660451412200928
+          ]
+        }
+      ]
+    },
+    {
+      "key": "cypress-round",
+      "file": "cypress-round.glb",
+      "bytes": 532112,
+      "sha256": "04316bb1240b288091aa369b71a8f8227a18b78c042c3d1fb9b4897822f58b1d",
+      "species": "cypress",
+      "leafTexture": "willow leaves",
+      "clumps": 89,
+      "leafCards": 2319,
+      "vertices": 10761,
+      "triangles": 6878,
+      "bounds": {
+        "min": [
+          -1.5599579811096191,
+          -0.00540648028254509,
+          -1.626853346824646
+        ],
+        "max": [
+          1.4234510660171509,
+          9.229145050048828,
+          1.4143612384796143
+        ]
+      },
+      "shadeScale": 1.5038357812499996,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 1485,
+          "triangles": 2240,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 9276,
+          "triangles": 4638,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.19608519971370697,
+            0.9746373891830444
+          ]
+        }
+      ]
+    },
+    {
+      "key": "cypress-cluster",
+      "file": "cypress-cluster.glb",
+      "bytes": 616804,
+      "sha256": "80706887d431e5e8e7a89529c51b7c230a8283b9cab85ada30f8afc799279a52",
+      "species": "cypress",
+      "leafTexture": "willow leaves",
+      "clumps": 95,
+      "leafCards": 2741,
+      "vertices": 12557,
+      "triangles": 7882,
+      "bounds": {
+        "min": [
+          -1.4094847440719604,
+          -0.008815301582217216,
+          -1.5501255989074707
+        ],
+        "max": [
+          1.8576781749725342,
+          8.196076393127441,
+          1.3831993341445923
+        ]
+      },
+      "shadeScale": 1.5038357812499996,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 1593,
+          "triangles": 2400,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 10964,
+          "triangles": 5482,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.17968152463436127,
+            0.9736590385437012
+          ]
+        }
+      ]
+    },
+    {
+      "key": "pine-round",
+      "file": "pine-round.glb",
+      "bytes": 389388,
+      "sha256": "c4103819704c44a7cbab84d140422cc51b821553ad5e62787cd199f312e67d32",
+      "species": "pine",
+      "leafTexture": "willow leaves",
+      "clumps": 102,
+      "leafCards": 1321,
+      "vertices": 7651,
+      "triangles": 6274,
+      "bounds": {
+        "min": [
+          -2.5092756748199463,
+          -0.022663604468107224,
+          -2.6601529121398926
+        ],
+        "max": [
+          2.5293939113616943,
+          7.381173133850098,
+          2.7181084156036377
+        ]
+      },
+      "shadeScale": 1.5038357812499996,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 2367,
+          "triangles": 3632,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 5284,
+          "triangles": 2642,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.2524360716342926,
+            0.965099573135376
+          ]
+        }
+      ]
+    },
+    {
+      "key": "pine-cluster",
+      "file": "pine-cluster.glb",
+      "bytes": 440476,
+      "sha256": "4619dbb226567cbb8efc5163d90e33fe735b4d8e9b8217082bd61d8f56a65a8a",
+      "species": "pine",
+      "leafTexture": "willow leaves",
+      "clumps": 117,
+      "leafCards": 1511,
+      "vertices": 8717,
+      "triangles": 7118,
+      "bounds": {
+        "min": [
+          -2.6791372299194336,
+          -0.0016050583217293024,
+          -2.6310274600982666
+        ],
+        "max": [
+          2.7300591468811035,
+          6.449259281158447,
+          2.3818678855895996
+        ]
+      },
+      "shadeScale": 1.5038357812499996,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 2673,
+          "triangles": 4096,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 6044,
+          "triangles": 3022,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.22267085313796997,
+            0.9942965507507324
+          ]
+        }
+      ]
+    },
+    {
+      "key": "willow-round",
+      "file": "willow-round.glb",
+      "bytes": 443048,
+      "sha256": "f2b89e77b73894659b44e7ff64f90c041a4ac95bc1c2d7aa0d8c42babb7d9752",
+      "species": "willow",
+      "leafTexture": "willow leaves",
+      "clumps": 416,
+      "leafCards": 1603,
+      "vertices": 8955,
+      "triangles": 6422,
+      "bounds": {
+        "min": [
+          -5.786069869995117,
+          -0.08837741613388062,
+          -3.8244385719299316
+        ],
+        "max": [
+          5.1890716552734375,
+          8.717354774475098,
+          6.313361644744873
+        ]
+      },
+      "shadeScale": 1.5038357812499996,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 2543,
+          "triangles": 3216,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 6412,
+          "triangles": 3206,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.1712341010570526,
+            0.9871140122413635
+          ]
+        }
+      ]
+    },
+    {
+      "key": "willow-cluster",
+      "file": "willow-cluster.glb",
+      "bytes": 424436,
+      "sha256": "1c86af5a95448cbd59878148ef31938f404ba92f9b8229ec4223e53c0e0892a9",
+      "species": "willow",
+      "leafTexture": "willow leaves",
+      "clumps": 377,
+      "leafCards": 1456,
+      "vertices": 8559,
+      "triangles": 6368,
+      "bounds": {
+        "min": [
+          -4.2494683265686035,
+          -0.006576389539986849,
+          -3.2752020359039307
+        ],
+        "max": [
+          3.160304069519043,
+          6.824002742767334,
+          3.4896650314331055
+        ]
+      },
+      "shadeScale": 1.5038357812499996,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 2735,
+          "triangles": 3456,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 5824,
+          "triangles": 2912,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.18098628520965576,
+            0.9777349829673767
+          ]
+        }
+      ]
+    },
+    {
+      "key": "cherry-round",
+      "file": "cherry-round.glb",
+      "bytes": 355712,
+      "sha256": "fb8c12b3ac6fc463421d53a00a4018999e404aeeea7ae14a3db467567fb05211",
+      "species": "oak",
+      "leafTexture": "product cherry blossoms",
+      "clumps": 21,
+      "leafCards": 544,
+      "vertices": 6507,
+      "triangles": 6816,
+      "bounds": {
+        "min": [
+          -4.077436923980713,
+          -0.006755337584763765,
+          -4.111743450164795
+        ],
+        "max": [
+          5.3676581382751465,
+          7.175608158111572,
+          5.108478546142578
+        ]
+      },
+      "shadeScale": 1.3765509120000001,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 1611,
+          "triangles": 2464,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 4896,
+          "triangles": 4352,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.33011001348495483,
+            0.9826434254646301
+          ]
+        }
+      ],
+      "adaptation": "Source-derived flowering cherry; product vase-form parameters and five-petal notched blossom atlas, not a native upstream Prunus generator."
+    },
+    {
+      "key": "cherry-cluster",
+      "file": "cherry-cluster.glb",
+      "bytes": 349104,
+      "sha256": "12bee718376c46699e640a9a1ffb53a55664982edf7686918ceddc220692f667",
+      "species": "oak",
+      "leafTexture": "product cherry blossoms",
+      "clumps": 20,
+      "leafCards": 522,
+      "vertices": 6372,
+      "triangles": 6736,
+      "bounds": {
+        "min": [
+          -4.864025592803955,
+          -0.014589464291930199,
+          -5.283024311065674
+        ],
+        "max": [
+          4.856232643127441,
+          7.595219612121582,
+          6.02512264251709
+        ]
+      },
+      "shadeScale": 1.3765509120000001,
+      "parts": [
+        {
+          "name": "wood",
+          "vertices": 1674,
+          "triangles": 2560,
+          "attributes": [
+            "position",
+            "normal",
+            "uv"
+          ],
+          "alphaTest": 0,
+          "doubleSided": false
+        },
+        {
+          "name": "leaves",
+          "vertices": 4698,
+          "triangles": 4176,
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "color"
+          ],
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "vertexColorRange": [
+            0.37363383173942566,
+            0.9655460119247437
+          ]
+        }
+      ],
+      "adaptation": "Source-derived flowering cherry; product vase-form parameters and five-petal notched blossom atlas, not a native upstream Prunus generator."
+    }
+  ],
+  "validation": {
+    "sourceHashes": true,
+    "sourceGitBlobs": true,
+    "glbReload": true,
+    "finiteAttributes": true,
+    "unitNormals": true,
+    "clusterNormals": true,
+    "validIndices": true,
+    "alphaMaskedDoubleSided": true,
+    "embeddedAtlas512": true
+  }
+}

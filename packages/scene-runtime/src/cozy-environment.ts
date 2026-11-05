@@ -6,8 +6,15 @@ import nature from "./nature-kit.data.json";
 import { gardenLayout, type GardenKind } from "./garden-layout";
 import { createStylizedMeadow } from "./stylized-meadow";
 import { createStylizedTrees } from "./stylized-trees";
+import type { TreePlacement } from './stylized-trees';
+import { createEnvironmentTrees } from './environment-trees';
+import type { TreeRenderMethod, TreeRenderReport } from './debug-trees';
+import { getSceneTreeRecommendation } from './tree-profiles';
 import { readSceneMotion } from "./scene-motion";
 import { createToonCloudBackdrop } from "./toon-cloud-backdrop";
+import { createEnvironmentTone, DELIVERY_PALETTE } from './environment-tone';
+import type { EnvironmentTone } from './debug-environment-tone';
+import { DEFAULT_ENVIRONMENT_TONE } from './environment-defaults';
 
 declare const process: { env: { EXPO_BASE_URL?: string } };
 type Kind = GardenKind;
@@ -178,10 +185,10 @@ type NatureModel = { parts: Part[] };
 const models = nature as Record<string, NatureModel>;
 
 /** A clear painted sky, independent of the photographic panorama used for lighting. */
-function createSkyBackdrop(clear = false, night = false) {
+function createSkyBackdrop(clear = false, night = false, delivery = false) {
   const width = 4, height = 64, pixels = new Uint8Array(width * height * 4);
-  const horizon = new THREE.Color(night ? 0x1b355d : clear ? 0x6ec5ff : 0x9ed9f3);
-  const zenith = new THREE.Color(night ? 0x08152f : clear ? 0x278fe6 : 0x409ee0);
+  const horizon = new THREE.Color(night ? (delivery ? 0x304959 : 0x1b355d) : delivery ? DELIVERY_PALETTE.horizon : clear ? 0x6ec5ff : 0x9ed9f3);
+  const zenith = new THREE.Color(night ? (delivery ? 0x14283d : 0x08152f) : delivery ? DELIVERY_PALETTE.zenith : clear ? 0x278fe6 : 0x409ee0);
   const color = new THREE.Color(), rgb = { r: 0, g: 0, b: 0 };
   for (let y = 0; y < height; y++) {
     const elevation = Math.max(0, (y / (height - 1) - 0.25) / 0.75);
@@ -202,10 +209,13 @@ function createSkyBackdrop(clear = false, night = false) {
 /** Small, source-derived Kenney props and local sky lighting; each mount owns its GPU resources. */
 export function createCozyEnvironment(
   scene: THREE.Scene,
-  { id, loadSky = (url: string) => new RGBELoader().loadAsync(url), invalidate = () => {} }: {
+  { id, loadSky = (url: string) => new RGBELoader().loadAsync(url), invalidate = () => {}, loadTree, onTrees, camera }: {
     id: string;
     loadSky?: (url: string) => Promise<THREE.DataTexture>;
     invalidate?: () => void;
+    loadTree?: (url: string) => Promise<THREE.Group>;
+    onTrees?: (report: TreeRenderReport) => void;
+    camera?: THREE.Camera;
   },
 ) {
   const profile = profiles[id];
@@ -221,6 +231,9 @@ export function createCozyEnvironment(
   root.name = "cozy-environment";
   root.userData.environment = kind;
   scene.add(root);
+  const toneSurfaces = createEnvironmentTone(root, night);
+  let tone: EnvironmentTone = 'original', toneDirty = false;
+  let deliveryBackdrop: THREE.DataTexture | undefined;
   const geometries = new Set<THREE.BufferGeometry>();
   const materials = new Set<THREE.Material>();
   const propGeometries = new Map<string, THREE.BufferGeometry[]>();
@@ -229,6 +242,8 @@ export function createCozyEnvironment(
   let sky: THREE.DataTexture | undefined;
   let meadow: ReturnType<typeof createStylizedMeadow> | undefined;
   let treeCanopies: ReturnType<typeof createStylizedTrees> | undefined;
+  const originalTrees: THREE.Object3D[] = [];
+  let treePlacements: readonly TreePlacement[] = [];
   const clouds = !coastal && isSceneVisibleInApp({ id }) ? createToonCloudBackdrop(night ? "night" : "day") : undefined;
   if (clouds) root.add(clouds.root);
   const clearDay = !night && !!clouds;
@@ -244,15 +259,16 @@ export function createCozyEnvironment(
   scene.backgroundRotation.set(0, 2.2, 0);
   scene.environmentRotation.copy(scene.backgroundRotation);
 
-  const makeMaterial = (color: number) => {
+  const makeMaterial = (color: number, role?: keyof typeof DELIVERY_PALETTE) => {
     const material = new THREE.MeshStandardMaterial({ color, roughness: 1, metalness: 0 });
+    material.userData.environmentRole = role;
     materials.add(material);
     return material;
   };
-  const grass = makeMaterial(night ? 0x718e82 : 0x90c65b);
-  const sand = makeMaterial(night ? 0x9e9b83 : 0xecdfbd);
-  const wood = makeMaterial(night ? 0xa78e70 : 0xd9b98c);
-  const trim = makeMaterial(night ? 0x8c846e : 0xbfa07a);
+  const grass = makeMaterial(night ? 0x718e82 : 0x90c65b, 'grass');
+  const sand = makeMaterial(night ? 0x9e9b83 : 0xecdfbd, 'sand');
+  const wood = makeMaterial(night ? 0xa78e70 : 0xd9b98c, 'wood');
+  const trim = makeMaterial(night ? 0x8c846e : 0xbfa07a, 'trim');
   const addMesh = (geometry: THREE.BufferGeometry, material: THREE.Material, x: number, y: number, z: number) => {
     geometries.add(geometry);
     const mesh = new THREE.Mesh(geometry, material);
@@ -287,7 +303,7 @@ export function createCozyEnvironment(
 
   if (!night && !coastal) {
     // Two broad meadow silhouettes give depth without adding small visual detail.
-    const meadow = makeMaterial(0x86b95c), distantMeadow = makeMaterial(0xa3cb7a);
+    const meadow = makeMaterial(0x86b95c, 'hill'), distantMeadow = makeMaterial(0xa3cb7a, 'distantHill');
     const left = addMesh(new THREE.SphereGeometry(1, 32, 12), meadow, kind === "river" ? -15 : -8, groundY - 1.0, -19);
     left.scale.set(12, 2.1, 6);
     const right = addMesh(new THREE.SphereGeometry(1, 32, 12), distantMeadow, kind === "river" ? 17 : 10, groundY - 1.3, -26);
@@ -357,6 +373,8 @@ export function createCozyEnvironment(
     else if (color.g > color.r * 1.1) color.lerp(new THREE.Color(night ? 0x729988 : 0x6fa84c), night ? 0.48 : 0.65);
     else if (name.startsWith("tree")) color.lerp(new THREE.Color(night ? 0xa78e70 : 0xb5906c), 0.65);
     const material = new THREE.MeshStandardMaterial({ color, roughness: 1 });
+    if (name.startsWith('rock')) material.userData.environmentRole = 'stone';
+    else if (name === 'flowers') material.userData.environmentRole = color.g > color.r * 1.1 ? 'foliage' : 'flower';
     materials.add(material);
     return material;
   };
@@ -373,6 +391,7 @@ export function createCozyEnvironment(
       group.add(mesh);
     });
     root.add(group);
+    return group;
   };
   if (night) {
     // Preserve the quiet night arrangement around the authored lamps.
@@ -380,7 +399,13 @@ export function createCozyEnvironment(
       [-6.8, -6.5, 2.4], [7.0, -7.5, 2.8], [-7.0, -8.8, 3.2],
       [7.4, -10, 3.6], [-4.4, -11, 2.2], [4.6, -13, 2.5], [-10, -15, 4.1], [10.4, -16, 4.3],
     ];
-    trees.forEach(([x, z, scale], index) => prop(index % 3 === 0 ? "tree-pine" : "tree-round", x, z, scale, index * 0.8));
+    treePlacements = trees.map(([x, z, scale], index) => {
+      const model = models[index % 3 === 0 ? 'tree-pine' : 'tree-round'];
+      let low = Infinity, high = -Infinity;
+      model.parts.forEach(part => { for (let i = 1; i < part.positions.length; i += 3) { low = Math.min(low, part.positions[i]); high = Math.max(high, part.positions[i]); } });
+      return { x, z, scale: scale * (high - low), turn: index * .8, lift: scale * low };
+    });
+    trees.forEach(([x, z, scale], index) => originalTrees.push(prop(index % 3 === 0 ? "tree-pine" : "tree-round", x, z, scale, index * 0.8)));
     for (const [x, z, scale] of [[-2.8, -2.3, 1.3], [3.0, -3.3, 1.1], [-5.2, -6.6, 1.8], [4, -7, 1.5]]) {
       prop("bush", x, z, scale, x);
     }
@@ -393,7 +418,9 @@ export function createCozyEnvironment(
   } else if (!coastal) {
     const planting = new THREE.Group(); planting.name = "daylight-planting"; root.add(planting);
     const layout = gardenLayout(kind, id).filter(item => id !== "chinowa-kuguri" || Math.abs(item.x) > 7.8 || item.z < -5.5), transform = new THREE.Object3D();
-    treeCanopies = createStylizedTrees(layout.filter(item => item.model.startsWith("tree-")), groundY);
+    treePlacements = layout.filter(item => item.model.startsWith('tree-'));
+    treeCanopies = createStylizedTrees(treePlacements, groundY);
+    originalTrees.push(treeCanopies.root);
     planting.add(treeCanopies.root);
     for (const name of new Set(layout.filter(item => !item.model.startsWith("tree-")).map(item => item.model))) {
       const placements = layout.filter(item => item.model === name), parts = propParts(name);
@@ -420,60 +447,110 @@ export function createCozyEnvironment(
     }
   }
 
+  const treeRecommendation = getSceneTreeRecommendation(id);
+  const treeRendering = createEnvironmentTrees(originalTrees, treePlacements, groundY, { load: loadTree,
+    onChange: report => { toneDirty = true; onTrees?.(report); }, invalidate, recommendation: treeRecommendation, camera });
+  root.add(treeRendering.root);
   const file = night ? "kloppenheim-02-night-1k.hdr" : "kloppenheim-06-sky-1k.hdr";
   const base = process.env.EXPO_BASE_URL || "/";
-  const ready = loadSky(`${base.replace(/\/$/, "")}/environments/${file}`)
+  const skyReady = loadSky(`${base.replace(/\/$/, "")}/environments/${file}`)
     .then(texture => {
       if (disposed) { texture.dispose(); return; }
       sky = texture;
       texture.mapping = THREE.EquirectangularReflectionMapping;
       scene.environment = texture;
-      if (night && !backdrop) scene.background = texture;
+      if (night && !backdrop && tone === 'original') scene.background = texture;
       invalidate();
     })
     .catch(() => { /* Local sky unavailable: the fully built garden still renders. */ });
 
   const lights = new WeakSet<THREE.Light>();
   const meshes = new WeakSet<THREE.Mesh>();
+  const previewShadows = new Map<THREE.DirectionalLight, { intensity: number; radius: number }>();
+  function restorePreviewShadows() {
+    previewShadows.forEach((original, light) => { light.shadow.intensity = original.intensity; light.shadow.radius = original.radius; });
+    previewShadows.clear();
+  }
+  function setTone(next: EnvironmentTone) {
+    if (disposed || next === tone) return;
+    tone = next;
+    toneSurfaces.setTone(next); meadow?.setTone(next);
+    if (next === 'tiny-delivery') {
+      deliveryBackdrop ??= createSkyBackdrop(clearDay, night, true);
+      scene.background = deliveryBackdrop;
+      scene.backgroundIntensity = 1; scene.backgroundBlurriness = 0;
+      scene.fog?.color.setHex(night ? 0x304959 : DELIVERY_PALETTE.horizon);
+      scene.environmentIntensity = night ? .2 : .26;
+    } else {
+      scene.background = backdrop ?? sky ?? new THREE.Color(horizon);
+      scene.backgroundIntensity = night && !backdrop ? .065 : 1;
+      scene.backgroundBlurriness = night && !backdrop ? .015 : 0;
+      scene.fog?.color.setHex(horizon);
+      scene.environmentIntensity = warmLight ? .25 : night ? .16 : .22;
+    }
+    invalidate();
+  }
+  setTone(DEFAULT_ENVIRONMENT_TONE);
+  let captureReady = false;
+  const ready = Promise.all([skyReady, treeRendering.ready]).then(() => { captureReady = true; });
   return {
     kind, ready,
+    get captureReady() { return captureReady; },
+    setTone,
+    captureDefaultTone() {
+      const selected = tone;
+      if (selected === DEFAULT_ENVIRONMENT_TONE) return undefined;
+      setTone(DEFAULT_ENVIRONMENT_TONE);
+      return () => setTone(selected);
+    },
+    treeCount: treePlacements.length,
+    treeRecommendation,
+    captureDefaultTrees: treeRendering.captureDefault,
+    setTreeMethod(method: TreeRenderMethod) { return treeRendering.select(method); },
     prepare(renderer: THREE.WebGLRenderer, style: RenderStyleId = "toon-soft", { advanceMotion = true } = {}) {
+      treeRendering.reframe();
+      if (toneDirty) { toneSurfaces.refresh(); toneDirty = false; }
+      const delivery = tone === 'tiny-delivery';
       const paintedDay = style === "gouache" && !night;
+      const softTrees = treeRendering.isPreviewVisible();
+      if (!softTrees) restorePreviewShadows();
       if (advanceMotion) {
         const now = performance.now() * .001, motion = readSceneMotion(renderer.domElement);
         if (motion.reducedMotion) windTime = 0;
         else if (motion.active && lastFrame) windTime += Math.min(.05, Math.max(0, now - lastFrame));
         lastFrame = now;
         meadow?.update(windTime);
-        treeCanopies?.update(windTime, motion.reducedMotion);
+        if (treeCanopies?.root.visible) treeCanopies.update(windTime, motion.reducedMotion);
+        treeRendering.update(windTime, motion.reducedMotion);
         clouds?.update(windTime);
       }
       let keySeen = false;
       renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = night || paintedDay ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+      renderer.shadowMap.type = !softTrees && (night || paintedDay || delivery) ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
       scene.traverse(object => {
         if (object instanceof THREE.Mesh && !meshes.has(object)) {
           meshes.add(object);
           const surfaces = Array.isArray(object.material) ? object.material : [object.material];
           if (surfaces.some(material => material instanceof THREE.MeshStandardMaterial && !material.transparent)) {
-            object.castShadow = object.receiveShadow = true;
+            object.castShadow = true;
+            object.receiveShadow = !object.userData.importedTreeFoliage;
           }
         }
         if (!(object instanceof THREE.Light)) return;
         const first = !lights.has(object);
         if (first) lights.add(object);
         if (object instanceof THREE.AmbientLight) {
-          object.color.set(warmLight ? 0xffe0b9 : night ? 0xa8bddb : 0xfff8ee);
-          object.intensity = warmLight ? 0.35 : night ? 0.24 : paintedDay ? 0.26 : 0.18;
+          object.color.set(warmLight ? 0xffe0b9 : night ? 0xa8bddb : delivery ? 0xffedcf : 0xfff8ee);
+          object.intensity = warmLight ? 0.35 : night ? 0.24 : paintedDay ? .26 : delivery ? .2 : .18;
         } else if (object instanceof THREE.HemisphereLight) {
-          object.color.set(night ? 0xaec9e1 : 0xd8eeff);
-          object.groundColor.set(warmLight ? 0x988568 : night ? 0x536971 : 0xb9ad8b);
-          object.intensity = warmLight ? 0.6 : night ? 0.48 : paintedDay ? 1.0 : 0.6;
+          object.color.set(night ? 0xaec9e1 : delivery ? 0xc8e6e6 : 0xd8eeff);
+          object.groundColor.set(warmLight ? 0x988568 : night ? 0x536971 : delivery ? 0x9fa77c : 0xb9ad8b);
+          object.intensity = warmLight ? 0.6 : night ? 0.48 : paintedDay ? 1 : delivery ? .65 : .6;
         } else if (object instanceof THREE.DirectionalLight) {
           const key = !keySeen;
           keySeen = true;
-          object.color.set(warmLight && key ? 0xffd19a : night ? 0xd6e5fb : key ? 0xfff4e5 : 0xecf4ff);
-          object.intensity = warmLight && key ? 1.15 : night ? (key ? 0.65 : 0.2) : (key ? (paintedDay ? 2.9 : 3.8) : 0.1);
+          object.color.set(warmLight && key ? 0xffd19a : night ? 0xd6e5fb : key ? (delivery ? 0xfff0d5 : 0xfff4e5) : 0xecf4ff);
+          object.intensity = warmLight && key ? 1.15 : night ? (key ? 0.65 : 0.2) : (key ? (paintedDay ? 2.9 : delivery ? 3.25 : 3.8) : 0.1);
           // A common high side sun makes shapes and contact shadows legible.
           // Keep authored night directions and animated point lights intact.
           if (key && !night) object.position.set(-6, 9, 5);
@@ -486,20 +563,29 @@ export function createCozyEnvironment(
             object.shadow.radius = night ? 4 : 1;
             object.shadow.camera.updateProjectionMatrix();
           }
+          if (key && !softTrees) object.shadow.radius = delivery ? 4 : night ? 4 : 1;
+          if (softTrees && key) {
+            if (!previewShadows.has(object)) previewShadows.set(object, { intensity: object.shadow.intensity, radius: object.shadow.radius });
+            object.shadow.intensity = previewShadows.get(object)!.intensity * .52;
+            object.shadow.radius = 12;
+          }
         }
       });
     },
     dispose() {
       if (disposed) return;
       disposed = true;
+      restorePreviewShadows();
       root.removeFromParent();
       meadow?.dispose();
+      treeRendering.dispose();
       treeCanopies?.dispose();
       clouds?.dispose();
       instances.forEach(mesh => mesh.dispose());
       geometries.forEach(geometry => geometry.dispose());
       materials.forEach(material => material.dispose());
       backdrop?.dispose();
+      deliveryBackdrop?.dispose();
       sky?.dispose();
       scene.background = previous.background;
       scene.environment = previous.environment;

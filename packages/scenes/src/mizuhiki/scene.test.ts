@@ -37,9 +37,11 @@ const live: ReturnType<typeof createMizuhiki>[] = []
 beforeEach(() => {
   drawn.scene = drawn.camera = null
   // Only text rasterization needs a 2D canvas. The scene state stays real.
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+  const context = {
     clearRect() {}, fillRect() {}, fillText() {}, measureText(text: string) { return { width: Array.from(text).length * 20 } },
-  } as unknown as CanvasRenderingContext2D)
+  } as unknown as CanvasRenderingContext2D
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(
+    ((kind: string) => kind === '2d' ? context : null) as HTMLCanvasElement['getContext'])
 })
 afterEach(() => {
   live.forEach((s) => s.dispose())

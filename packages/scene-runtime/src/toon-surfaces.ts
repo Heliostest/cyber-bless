@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { RenderStyleId } from "@wbr/content";
 import { copyRitualOptics } from './ritual-optics';
 import { copyCraftSurface, hasCraftFinish } from './craft-surfaces';
+import { softenTreeFoliage } from './tree-foliage';
 
 /**
  * Optional art direction on mesh.userData.toonSurface. Source textures stay untouched.
@@ -82,6 +83,7 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">) {
     toon.name = `${source.name || "surface"} / ${style}`;
     copyRitualOptics(source, toon);
     copyCraftSurface(source, toon);
+    if (source.userData.treeClusterNormals) softenTreeFoliage(toon);
     owned.push(toon);
     adapted.push([source, toon, hint.color !== undefined]);
     return toon;

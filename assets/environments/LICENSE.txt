@@ -71,6 +71,35 @@ Pinned mirror, file hashes and retrieval details: trees/source-manifest.json.
 Changes: baked transforms/gradient atlas to vertex colours; grounded and
 normalized each tree to unit height; separated wood/canopy batches for breeze.
 
+Optional developer environment tree alternatives (2026-11-05)
+Quaternius Stylized Nature MegaKit, free Standard edition, by Quaternius.
+License: CC0 1.0; original notice: trees/quaternius/LICENSE.txt.
+Source: https://quaternius.com/packs/stylizednaturemegakit.html
+Original CommonTree_1 / CommonTree_5, repacked as self-contained GLB,
+512px embedded textures; source provenance and changes in trees/quaternius/.
+
+Just a simple tree by Mike Fernandez, MIT License.
+Source: https://github.com/MikeFernandez-Pro/just-a-simple-tree
+Revision: 8fd94b8edc7ef1b87c086694382a0808c059971c.
+Complete notice: trees/simple-tree/LICENSE.txt.
+Two deterministic oaks generated offline from the source CPU path;
+leaf cards, cluster normals, generated leaf textures and vertex AO retained.
+No third-party music or sound from the source editor is distributed.
+Exact source hashes, generation parameters and changes in trees/simple-tree/.
+
+Additional optional developer tree forms (2026-11-05)
+Just a simple tree cypress/willow/pine outputs use the same pinned MIT code.
+The cypress source describes Italian cypress. The source key pine is a
+fir-like tiered conifer, not a species-certified Japanese garden pine.
+Full source parameters, names and limitations: trees/simple-tree/README.md.
+
+The two cherry outputs are product art adaptations of the same MIT source
+oak/wood branching and foliage clump/AO pipeline, with spreading crowns,
+flatter clumps and a new procedural five-petal flower atlas and pink palette.
+They are not an upstream built-in cherry species or cultivar identification.
+No external Sakura Tree 01 geometry, textures or code are included in them.
+Complete MIT notice and provenance: trees/simple-tree/LICENSE.txt and README.md.
+
 Timber furniture and shallow water are original project geometry/shaders.
 Evaluated external references are documented in furniture/PROVENANCE.md and
 water/README.md; those reference implementations/assets are not redistributed.

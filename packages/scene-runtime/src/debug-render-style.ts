@@ -9,6 +9,9 @@ import { CUE_LAYER } from "./cue-placard";
 import { debugWater, type WaterRenderMethod } from './debug-water';
 import { createWaterRendering } from './water-rendering';
 import { readSceneMotion } from './scene-motion';
+import { debugTrees, type TreeRenderReport } from './debug-trees';
+import { debugEnvironmentTone, type EnvironmentTone } from './debug-environment-tone';
+import { DEFAULT_ENVIRONMENT_TONE } from './environment-defaults';
 
 /** Content defaults remain independent of browser-local debug overrides. */
 export function createDebugRenderStyle(
@@ -43,7 +46,23 @@ export function createDebugRenderStyle(
     if (rendered && !disposed) draw();
   }, renderer.domElement.closest?.('.app-shell') ?? undefined);
   const objectPresentation = !!renderer.domElement.closest?.('[data-scene-presentation="object"]');
-  const environment = objectPresentation ? undefined : createCozyEnvironment(scene, { id, invalidate });
+  let treeRegistration: ReturnType<typeof debugTrees.register> | undefined;
+  let treeReport: TreeRenderReport | undefined;
+  const environment = objectPresentation ? undefined : createCozyEnvironment(scene, { id, camera, invalidate, onTrees: report => {
+    if (disposed) return;
+    treeReport = report;
+    renderer.domElement.dataset.treeMethod = report.actual;
+    renderer.domElement.dataset.treeStatus = report.status;
+    treeRegistration?.report(report);
+    needsPreviewRefresh = true;
+    if (rendered) { environment?.prepare(renderer, style.getStyle(), { advanceMotion: false }); draw(); }
+  } });
+  if (environment?.treeCount) {
+    renderer.domElement.dataset.treeMethod = treeReport?.actual ?? 'original';
+    renderer.domElement.dataset.treeStatus = treeReport?.status ?? 'ready';
+    treeRegistration = debugTrees.register(id, label, method => { void environment.setTreeMethod(method); }, renderer.domElement.closest?.('.app-shell') ?? undefined, environment.treeRecommendation);
+    treeRegistration.report(treeReport ?? { count: environment.treeCount, actual: 'original', status: 'ready' });
+  }
   if (environment) {
     renderer.domElement.dataset.environment = environment.kind;
     void environment.ready.then(() => {
@@ -54,16 +73,34 @@ export function createDebugRenderStyle(
       }
     });
   }
+  let environmentTone: EnvironmentTone = DEFAULT_ENVIRONMENT_TONE;
+  const toneRegistration = environment ? debugEnvironmentTone.register(id, label, tone => {
+    renderer.domElement.dataset.environmentTone = tone;
+    if (tone === environmentTone) return;
+    environmentTone = tone;
+    environment.setTone?.(tone);
+    needsPreviewRefresh = true;
+    invalidate();
+    if (rendered && !disposed) { environment.prepare(renderer, style.getStyle(), { advanceMotion: false }); draw(); }
+  }, renderer.domElement.closest?.('.app-shell') ?? undefined) : undefined;
   const capture = createStylePreviewCapture(renderer, scene, camera, { getStyle: style.getStyle, render: draw },
     selected => environment?.prepare(renderer, selected, { advanceMotion: false }));
   const releaseCapture = registerSceneCapture(renderer.domElement, () => {
-    if (!rendered || disposed) return undefined;
+    if (!rendered || disposed || environment?.captureReady === false) return undefined;
+    // Shares use approved defaults; temporary comparisons stay in the console.
+    const restoreTrees = environment?.captureDefaultTrees?.();
+    const restoreTone = environment?.captureDefaultTone?.();
     try {
       return captureSceneFrame(renderer.domElement, scene, () => {
         environment?.prepare(renderer, style.getStyle(), { advanceMotion: false });
         draw(false);
       });
-    } finally { cues.render(renderer); }
+    } finally {
+      restoreTrees?.();
+      restoreTone?.();
+      if (restoreTrees || restoreTone) { environment?.prepare(renderer, style.getStyle(), { advanceMotion: false }); draw(); }
+      else cues.render(renderer);
+    }
   });
   const registration = debugStyles.register(id, label, (selected, parameters) => {
     style.setStyle(selected);
@@ -111,6 +148,8 @@ export function createDebugRenderStyle(
       disposed = true;
       releaseCapture();
       waterRegistration.dispose();
+      treeRegistration?.dispose();
+      toneRegistration?.dispose();
       water.dispose();
       registration.dispose();
       cues.dispose();
@@ -118,8 +157,11 @@ export function createDebugRenderStyle(
       environment?.dispose();
       delete renderer.domElement.dataset.environment;
       delete renderer.domElement.dataset.environmentReady;
+      delete renderer.domElement.dataset.environmentTone;
       delete renderer.domElement.dataset.waterMethod;
       delete renderer.domElement.dataset.waterSurfaces;
+      delete renderer.domElement.dataset.treeMethod;
+      delete renderer.domElement.dataset.treeStatus;
     },
   };
 }

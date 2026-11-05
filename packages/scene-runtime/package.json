@@ -9,6 +9,8 @@
     "./debug-render-style": "./src/debug-render-style.ts",
     "./debug-styles": "./src/debug-styles.ts",
     "./debug-water": "./src/debug-water.ts",
+    "./debug-trees": "./src/debug-trees.ts",
+    "./debug-environment-tone": "./src/debug-environment-tone.ts",
     "./interaction-cues": "./src/interaction-cues.ts",
     "./stylized-water": "./src/stylized-water.ts",
     "./ritual-optics": "./src/ritual-optics.ts",

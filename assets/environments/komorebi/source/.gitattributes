@@ -1,0 +1,2 @@
+# Keep the pinned upstream snapshot byte-exact, including vendor whitespace.
+* -text -whitespace

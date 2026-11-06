@@ -24,6 +24,7 @@ export function EnvironmentToneControls({ anchor, hidden }: { anchor: RefObject<
           onChange={event => select(event.target.value as EnvironmentTone)}>
           <option value="original">{message('developer.environment.original')}</option>
           <option value="tiny-delivery">{message('developer.environment.delivery')}</option>
+          <option value="komorebi">{message('developer.environment.komorebi')}</option>
         </select>
       </label>
       <div className="environment-tone-swatches" aria-hidden="true" data-tone={scenes[0].tone}>

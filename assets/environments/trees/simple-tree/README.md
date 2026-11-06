@@ -2,6 +2,8 @@
 
 本目录包含通过 [Mike Fernandez 的 Just a simple tree](https://github.com/MikeFernandez-Pro/just-a-simple-tree) 实际代码生成的十六个静态 GLB：四种上游树形与花樱、椿树、槭树、枫树四种产品改编，各两个种子变体。上游树形使用各自的分枝算法；产品改编使用 oak/wood 的实际分枝，再加入明确记录的冠形参数与原创 Canvas 叶纹。所有样本沿用源码的叶簇表面撒卡、簇法线、射线 AO、簇间色差和 GLB 导出路径，没有用球体网格近似树冠。
 
+2026-11-06：七个夜景移除旧球状／锥形简模，默认复用本目录既有绿色槭形、椿形、柱形柏与层叠针叶模型。模型字节与许可不变；这些新增搭配是背景美术选择，没有新增地区或仪式植物主张，见 [替换范围与验证](../../../../docs/research/2026-11-06-night-tree-retirement.md)。
+
 来源固定为提交 [`8fd94b8edc7ef1b87c086694382a0808c059971c`](https://github.com/MikeFernandez-Pro/just-a-simple-tree/commit/8fd94b8edc7ef1b87c086694382a0808c059971c)（2026-11-01）。2026-11-05 从作者官方仓库读取并保存相关正文与代码；完整原件在 `source/`，原始 Git blob SHA-1 与本地 SHA-256 在 `source-manifest.json`，输出校验与几何统计在 `statistics.json`。
 
 上游代码许可为 MIT，Copyright (c) 2026 Mike Fernandez。完整许可保存在 `LICENSE.txt` 和未经修改的 `source/LICENSE`。本目录没有上游的音乐、声音、外部用户图片或其他素材。上游程序叶纹来自 `foliage.js` 的 `round cluster` / `pointed cluster` / `willow leaves` 路径；花樱的五瓣缺口花纹由本产品编写，在 `product-extensions/cherry-blossoms.mjs` 中保存。椿树的羽状复叶、绿槭的七深裂掌状叶及秋枫的三／五宽裂叶保存在 `product-extensions/broadleaf-atlases.mjs`；这些扩展均不属于上游原件。

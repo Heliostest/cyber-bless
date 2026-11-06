@@ -23,8 +23,10 @@ export const assetFiles = [
   "environments/kloppenheim-02-night-1k.hdr",
   "environments/LICENSE.txt",
   "environments/meadow/LICENSE.boona13.txt",
+  "environments/komorebi/LICENSE.Babylon.md",
+  "environments/komorebi/NOTICE.Babylon.md",
   "environments/trees/source/License.txt",
-  ...['quaternius', 'simple-tree'].flatMap(source => [
+  ...['quaternius', 'simple-tree', 'komorebi'].flatMap(source => [
     `environments/trees/${source}/round.glb`,
     `environments/trees/${source}/cluster.glb`,
     `environments/trees/${source}/LICENSE.txt`,

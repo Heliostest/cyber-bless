@@ -87,7 +87,7 @@
   "developer.trees.original": "Árboles originales",
   "developer.trees.count": "{count} árboles de fondo conectados",
   "developer.trees.help": "Vista previa en directo; el cambio conserva el progreso del ritual.",
-  "developer.trees.restore": "Restaurar la recomendación de la escena",
+  "developer.trees.restore": "Restaurar los árboles predeterminados",
   "developer.trees.loading": "Cargando árboles…",
   "developer.trees.error": "No se pudieron cargar los árboles. Se han restaurado los predeterminados de la escena.",
   "developer.trees.quaternius": "Quaternius Stylized Nature",
@@ -103,9 +103,16 @@
   "developer.trees.recommended": "Sugerencia de escena: {species}",
   "developer.trees.bySource": "Por fuente del recurso",
   "developer.trees.bySpecies": "Por forma del árbol",
-  "developer.trees.regionalHelp": "Las propuestas de paisaje consideran la región y la estación; las escenas sin correspondencia verificada conservan su paisaje original.",
+  "developer.trees.regionalHelp": "Forma de árbol sugerida para el entorno; puedes cambiarla por separado.",
   "developer.trees.cherryCredit": "Modelo del cerezo:",
   "developer.trees.cherryAuthor": "Jogoss",
   "developer.trees.cherryLicense": "CC BY 4.0",
-  "developer.trees.adapted": "Adaptado · detalles"
+  "developer.trees.adapted": "Adaptado · detalles",
+  "developer.grass.title": "Estilo de césped",
+  "developer.grass.empty": "Esta escena no tiene césped intercambiable.",
+  "developer.grass.original": "Césped original",
+  "developer.grass.help": "Vista previa de las hojas y el suelo. La selección se conserva durante la depuración sin reiniciar el progreso.",
+  "developer.environment.komorebi": "Komorebi · Sombra fría, luz cálida",
+  "developer.trees.komorebi": "Komorebi · Árbol 1",
+  "developer.grass.komorebi": "Komorebi"
 }

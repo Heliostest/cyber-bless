@@ -16,7 +16,9 @@ it('previews the registered environment, retains collapsed choices and restores 
     await act(async () => { entry = debugEnvironmentTone.register('woodfish', '木鱼', apply, ui.host.querySelector('.app-shell')!); });
     await settle();
     const select = ui.host.querySelector('select')!;
-    expect([...select.options].map(option => option.value)).toEqual(['original', 'tiny-delivery']);
+    expect([...select.options].map(option => option.value)).toEqual(['original', 'tiny-delivery', 'komorebi']);
+    await act(async () => { select.value = 'komorebi'; select.dispatchEvent(new Event('change', { bubbles: true })); });
+    expect(apply).toHaveBeenLastCalledWith('komorebi');
     await act(async () => { select.value = 'tiny-delivery'; select.dispatchEvent(new Event('change', { bubbles: true })); });
     expect(apply).toHaveBeenLastCalledWith('tiny-delivery');
     ui.rerender(createElement(Fixture, { hidden: true }));
@@ -27,5 +29,5 @@ it('previews the registered environment, retains collapsed choices and restores 
     expect(apply).toHaveBeenLastCalledWith('original');
     await act(async () => { select.value = 'tiny-delivery'; select.dispatchEvent(new Event('change', { bubbles: true })); });
   } finally { ui.unmount(); entry?.dispose(); }
-  expect(apply).toHaveBeenLastCalledWith('tiny-delivery');
+  expect(apply).toHaveBeenLastCalledWith('komorebi');
 });

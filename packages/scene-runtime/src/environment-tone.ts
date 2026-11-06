@@ -7,6 +7,11 @@ export const DELIVERY_PALETTE = {
   hill: 0x71ad3d, distantHill: 0x98c65e, stone: 0xb7b6a0,
   foliage: 0x63ab38, flower: 0xe9b8a4, horizon: 0x67caff, zenith: 0x248fe6,
 };
+export const KOMOREBI_PALETTE: typeof DELIVERY_PALETTE = {
+  grass: 0x74a951, sand: 0xcab68e, wood: 0xaa8968, trim: 0x877663,
+  hill: 0x548346, distantHill: 0x8aa980, stone: 0xa4a6b0,
+  foliage: 0x246d4f, flower: 0xe4c5a5, horizon: 0xa3cadb, zenith: 0x6e9fcd,
+};
 
 /** Only background-owned surfaces are visited. Source maps and geometry stay owned by their loaders. */
 export function createEnvironmentTone(root: THREE.Group, night = false) {
@@ -20,7 +25,7 @@ export function createEnvironmentTone(root: THREE.Group, night = false) {
     // Pink blossoms and other authored foliage accents keep their identity.
     if (role === 'foliage' && !green) return color;
     const neutral = Math.max(color.r, color.g, color.b) - Math.min(color.r, color.g, color.b) < .12;
-    target.setHex(DELIVERY_PALETTE[role ?? (green ? 'foliage' : neutral ? 'stone' : 'wood')]);
+    target.setHex((tone === 'komorebi' ? KOMOREBI_PALETTE : DELIVERY_PALETTE)[role ?? (green ? 'foliage' : neutral ? 'stone' : 'wood')]);
     if (night) target.multiplyScalar(.62);
     // Preserve source variation so tree crowns and small stones retain their facets.
     const brightness = THREE.MathUtils.clamp(.8 + color.r * .15 + color.g * .3 + color.b * .05, .8, 1.3);
@@ -44,7 +49,7 @@ export function createEnvironmentTone(root: THREE.Group, night = false) {
         if (!colors.has(material)) colors.set(material, material.color.clone());
         material.color.copy(colors.get(material)!);
         // The meadow owns its painted ground texture and per-blade palette.
-        if (tone !== 'original' && material.map?.name !== 'painted-meadow-patches') {
+        if (tone !== 'original' && material.map?.name !== 'painted-meadow-patches' && !(tone === 'komorebi' && material.userData.komorebiPigment)) {
           if (material.vertexColors) {
             // Simple Tree keeps its pink/green tint in the base material; its
             // vertex colors mostly hold AO. White would erase the blossom hue.
@@ -52,6 +57,10 @@ export function createEnvironmentTone(root: THREE.Group, night = false) {
           } else remap(material.color, material.userData.environmentRole);
         }
       }
+      // This meadow owns both root-to-tip vertex pigment and its per-instance
+      // palette. Shared remapping would recolor it a second time after captures
+      // or palette changes, making the result depend on selection order.
+      if (object.userData.komorebiGrass) return;
       const attribute = object.geometry.getAttribute('color');
       if (!(attribute instanceof THREE.BufferAttribute) || seenAttributes.has(attribute)) return;
       seenAttributes.add(attribute);
@@ -59,7 +68,7 @@ export function createEnvironmentTone(root: THREE.Group, night = false) {
       const original = vertices.get(attribute)!;
       for (let i = 0; i < attribute.count; i++) {
         source.fromArray(original, i * attribute.itemSize);
-        if (tone !== 'original') remap(source, object.userData.treeRole === 'leaves' ? 'foliage' : undefined);
+        if (tone !== 'original' && !(tone === 'komorebi' && surfaces.some(material => material.userData.komorebiPigment))) remap(source, object.userData.treeRole === 'leaves' ? 'foliage' : undefined);
         attribute.setXYZ(i, source.r, source.g, source.b);
       }
       attribute.needsUpdate = true;

@@ -87,7 +87,7 @@
   "developer.trees.original": "Árvores originais",
   "developer.trees.count": "{count} árvores de fundo ligadas",
   "developer.trees.help": "Pré-visualização em tempo real; a alteração preserva o progresso do ritual.",
-  "developer.trees.restore": "Restaurar a recomendação da cena",
+  "developer.trees.restore": "Restaurar as árvores predefinidas",
   "developer.trees.loading": "A carregar árvores…",
   "developer.trees.error": "Não foi possível carregar as árvores. Os padrões da cena foram restaurados.",
   "developer.trees.quaternius": "Quaternius Stylized Nature",
@@ -103,9 +103,16 @@
   "developer.trees.recommended": "Sugestão da cena: {species}",
   "developer.trees.bySource": "Por origem do recurso",
   "developer.trees.bySpecies": "Por forma da árvore",
-  "developer.trees.regionalHelp": "As sugestões paisagísticas consideram a região e a estação; os cenários sem correspondência verificada mantêm a paisagem original.",
+  "developer.trees.regionalHelp": "Forma de árvore sugerida para o cenário; pode ser alterada separadamente.",
   "developer.trees.cherryCredit": "Modelo da cerejeira:",
   "developer.trees.cherryAuthor": "Jogoss",
   "developer.trees.cherryLicense": "CC BY 4.0",
-  "developer.trees.adapted": "Adaptado · detalhes"
+  "developer.trees.adapted": "Adaptado · detalhes",
+  "developer.grass.title": "Estilo de relva",
+  "developer.grass.empty": "Esta cena não tem relva que possa ser alterada.",
+  "developer.grass.original": "Relva original",
+  "developer.grass.help": "Prévia das folhas e do solo. A escolha permanece durante a depuração sem reiniciar o progresso.",
+  "developer.environment.komorebi": "Komorebi · Sombra fria, luz quente",
+  "developer.trees.komorebi": "Komorebi · Árvore 1",
+  "developer.grass.komorebi": "Komorebi"
 }

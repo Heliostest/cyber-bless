@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import { expect, it } from 'vitest';
-import { createCozyEnvironment } from './cozy-environment';
+import { createCozyEnvironment as createEnvironment } from './cozy-environment';
+const createCozyEnvironment: typeof createEnvironment = (scene,options)=>createEnvironment(scene,{...options,loadTree:options.loadTree??(async()=>{const root=new THREE.Group(),mesh=new THREE.Mesh(new THREE.BoxGeometry(1,2,1),new THREE.MeshStandardMaterial());mesh.position.y=1;root.add(mesh);return root;})});
 
 it.each(['woodfish', 'diya-oil-lamp', 'udo-undama'])('keeps %s geometry, subject colors and original environment intact across tone changes and capture', async id => {
   const scene = new THREE.Scene(), sun = new THREE.DirectionalLight(), subject = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial({ color: 0xe02516 }));
   scene.add(sun, subject);
   const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
   await world.ready;
+  const approved=scene.background;
   world.setTone('original');
   const renderer = { shadowMap: {} } as THREE.WebGLRenderer;
   world.prepare(renderer);
@@ -23,7 +25,7 @@ it.each(['woodfish', 'diya-oil-lamp', 'udo-undama'])('keeps %s geometry, subject
   expect(subject.material.color.equals(subjectColor)).toBe(true);
   if (bladeColors) expect(meadow!.instanceColor!.array).not.toEqual(bladeColors);
   if (pixels) expect(ground.material.map!.image.data).not.toEqual(pixels);
-  const restore = world.captureDefaultTone(); expect(restore).toBeUndefined();
+  const restore = world.captureDefaultTone(); expect(scene.background).toBe(approved);restore?.();
   world.setTone('original'); world.prepare(renderer);
   expect(scene.background).toBe(background); expect(scene.fog!.color.equals(fog)).toBe(true);
   expect(sun.intensity).toBe(intensity);

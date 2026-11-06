@@ -745,6 +745,13 @@ export interface MessageArguments {
   "developer.trees.cherryAuthor": {  };
   "developer.trees.cherryLicense": {  };
   "developer.trees.adapted": {  };
+  "developer.grass.title": {  };
+  "developer.grass.empty": {  };
+  "developer.grass.original": {  };
+  "developer.grass.help": {  };
+  "developer.environment.komorebi": {  };
+  "developer.trees.komorebi": {  };
+  "developer.grass.komorebi": {  };
   "scene.nanakusa-gayu.narrative.094e40b1": {  };
   "scene.brat-bride-cloth.narrative.1f2193d9": {  };
   "scene.korean-sotdae.narrative.bff5c305": {  };

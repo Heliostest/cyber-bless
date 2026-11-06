@@ -1,5 +1,5 @@
 import { environmentProfiles } from './environment-profiles';
-import { getSceneTreeRecommendation } from './tree-profiles';
+import { getSceneTreeDefault } from './tree-profiles';
 
 /** Render inventory, not cultural provenance. Includes elements revealed during interaction.
  * Evidence and exclusions: docs/research/2026-11-05-scene-visual-features.md.
@@ -41,7 +41,7 @@ export function getSceneVisualFeatures(id: string): SceneVisualFeature[] {
   if (flame.has(id)) features.push('flame');
   if (smoke.has(id)) features.push('smoke');
   if (!profile.coastal) {
-    const tree = getSceneTreeRecommendation(id);
+    const tree = getSceneTreeDefault(id);
     features.push(tree === 'original' ? (profile.night ? 'mixed-trees' : 'broadleaf') : tree);
   }
   if (id === 'tanzaku-tanabata' || id === 'japanese-kadomatsu') features.push('bamboo');

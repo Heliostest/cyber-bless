@@ -87,7 +87,7 @@
   "developer.trees.original": "原有樹木",
   "developer.trees.count": "已接入 {count} 棵環境樹木",
   "developer.trees.help": "即時預覽；切換不會重設儀式進度。",
-  "developer.trees.restore": "恢復場景推薦",
+  "developer.trees.restore": "恢復預設樹木",
   "developer.trees.loading": "正在載入樹木…",
   "developer.trees.error": "樹木載入失敗，已恢復場景預設。",
   "developer.trees.quaternius": "Quaternius Stylized Nature",
@@ -103,9 +103,16 @@
   "developer.trees.recommended": "依場景推薦：{species}",
   "developer.trees.bySource": "依素材來源",
   "developer.trees.bySpecies": "依樹形選擇",
-  "developer.trees.regionalHelp": "依地區庭園與季節選景；尚未核實匹配的場景保留原景。",
+  "developer.trees.regionalHelp": "背景樹形搭配，可單獨切換。",
   "developer.trees.cherryCredit": "櫻花模型：",
   "developer.trees.cherryAuthor": "Jogoss",
   "developer.trees.cherryLicense": "CC BY 4.0",
-  "developer.trees.adapted": "已適配·說明"
+  "developer.trees.adapted": "已適配·說明",
+  "developer.grass.title": "草地樣式",
+  "developer.grass.empty": "目前場景沒有可切換的草地。",
+  "developer.grass.original": "原有草地",
+  "developer.grass.help": "切換草葉與地表配色；保留本次除錯選擇，不重設進度。",
+  "developer.environment.komorebi": "Komorebi · 冷影暖光",
+  "developer.trees.komorebi": "Komorebi · 樹種1",
+  "developer.grass.komorebi": "Komorebi"
 }

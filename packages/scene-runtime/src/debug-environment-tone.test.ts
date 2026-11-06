@@ -8,12 +8,12 @@ it('keeps a scoped tone across scene mounts, collapse and release without produc
   const second = store.register('tea', '茶', other, b);
   store.select('original', a);
   expect(apply).toHaveBeenLastCalledWith('original');
-  expect(other).toHaveBeenLastCalledWith('tiny-delivery');
+  expect(other).toHaveBeenLastCalledWith('komorebi');
   first.dispose();
   const next = store.register('woodfish', '木鱼', apply, a);
   expect(apply).toHaveBeenLastCalledWith('original');
   release();
-  expect(apply).toHaveBeenLastCalledWith('tiny-delivery');
-  expect(store.getSnapshot().every(entry => entry.tone === 'tiny-delivery')).toBe(true);
+  expect(apply).toHaveBeenLastCalledWith('komorebi');
+  expect(store.getSnapshot().every(entry => entry.tone === 'komorebi')).toBe(true);
   next.dispose(); second.dispose();
 });

@@ -87,7 +87,7 @@
   "developer.trees.original": "Arbres d’origine",
   "developer.trees.count": "{count} arbres de décor connectés",
   "developer.trees.help": "Aperçu en direct ; le changement conserve la progression du rituel.",
-  "developer.trees.restore": "Rétablir la recommandation de la scène",
+  "developer.trees.restore": "Rétablir les arbres par défaut",
   "developer.trees.loading": "Chargement des arbres…",
   "developer.trees.error": "Impossible de charger les arbres. Les paramètres par défaut de la scène ont été rétablis.",
   "developer.trees.quaternius": "Quaternius Stylized Nature",
@@ -103,9 +103,16 @@
   "developer.trees.recommended": "Suggestion de la scène : {species}",
   "developer.trees.bySource": "Par source de ressource",
   "developer.trees.bySpecies": "Par forme d’arbre",
-  "developer.trees.regionalHelp": "Les suggestions paysagères tiennent compte de la région et de la saison ; les scènes sans correspondance vérifiée conservent leur décor d’origine.",
+  "developer.trees.regionalHelp": "Forme d’arbre proposée pour le décor, modifiable séparément.",
   "developer.trees.cherryCredit": "Modèle du cerisier :",
   "developer.trees.cherryAuthor": "Jogoss",
   "developer.trees.cherryLicense": "CC BY 4.0",
-  "developer.trees.adapted": "Adapté · détails"
+  "developer.trees.adapted": "Adapté · détails",
+  "developer.grass.title": "Style de prairie",
+  "developer.grass.empty": "Cette scène ne propose pas de prairie modifiable.",
+  "developer.grass.original": "Herbe originale",
+  "developer.grass.help": "Aperçu des brins et du sol. Choix conservé pendant le débogage sans réinitialiser la progression.",
+  "developer.environment.komorebi": "Komorebi · Ombres fraîches, lumière chaude",
+  "developer.trees.komorebi": "Komorebi · Arbre 1",
+  "developer.grass.komorebi": "Komorebi"
 }

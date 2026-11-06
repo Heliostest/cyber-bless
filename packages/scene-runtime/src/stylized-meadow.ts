@@ -67,7 +67,7 @@ const shade = new THREE.Color(0x619c44), sun = new THREE.Color(0xabc657), middle
 const originalGrass = [shade, middle, sun];
 const deliveryGrass = [0x479638, 0x83bf3b, 0xb6ce46].map(color => new THREE.Color(color));
 function grassColor(x: number, z: number, target: THREE.Color, tone: EnvironmentTone = 'original') {
-  const [dark, mid, bright] = tone === 'original' ? originalGrass : deliveryGrass;
+  const [dark, mid, bright] = tone === 'tiny-delivery' ? deliveryGrass : originalGrass;
   const value = THREE.MathUtils.smoothstep(patch(x, z), .15, .88);
   return value < .5 ? target.copy(dark).lerp(mid, value * 2) : target.copy(mid).lerp(bright, (value - .5) * 2);
 }
@@ -116,7 +116,7 @@ function tuftGeometry() {
   return geometry;
 }
 
-function canGrow(kind: GardenKind, x: number, z: number) {
+export function canMeadowGrow(kind: GardenKind, x: number, z: number) {
   if (Math.abs(x) < 2.2 && z > -2.2 && z < 3.2) return false;
   if (kind === "river") return Math.abs(x) > 2.68 && Math.abs(x) < 7.25;
   if (kind === "veranda" && Math.abs(x) < 6.2 && z > -2.8) return false;
@@ -135,7 +135,7 @@ export function createStylizedMeadow({ kind, floor, id }: { kind: GardenKind; fl
   const points: [number, number, number][] = [];
   for (let z = -24; z < 3; z += .32) for (let x = -12; x < 12; x += .32) {
     const px = x + random() * .28, pz = z + random() * .28;
-    if (canGrow(kind, px, pz) && random() > .12) points.push([px, pz, .21 + random() * .23]);
+    if (canMeadowGrow(kind, px, pz) && random() > .12) points.push([px, pz, .21 + random() * .23]);
   }
   const groundMap = createGroundMap(), geometry = tuftGeometry();
   const material = new THREE.ShaderMaterial({

@@ -87,7 +87,7 @@
   "developer.trees.original": "Original trees",
   "developer.trees.count": "{count} environment trees connected",
   "developer.trees.help": "Live preview; switching preserves ritual progress.",
-  "developer.trees.restore": "Restore scene recommendation",
+  "developer.trees.restore": "Restore default trees",
   "developer.trees.loading": "Loading trees…",
   "developer.trees.error": "Trees could not load. Scene defaults restored.",
   "developer.trees.quaternius": "Quaternius Stylized Nature",
@@ -103,9 +103,16 @@
   "developer.trees.recommended": "Scene suggestion: {species}",
   "developer.trees.bySource": "By asset source",
   "developer.trees.bySpecies": "By tree form",
-  "developer.trees.regionalHelp": "Landscaping suggestions consider region and season; unverified settings keep their original scenery.",
+  "developer.trees.regionalHelp": "Suggested landscape tree form; switch it independently.",
   "developer.trees.cherryCredit": "Cherry model:",
   "developer.trees.cherryAuthor": "Jogoss",
   "developer.trees.cherryLicense": "CC BY 4.0",
-  "developer.trees.adapted": "Adapted · details"
+  "developer.trees.adapted": "Adapted · details",
+  "developer.grass.title": "Grass style",
+  "developer.grass.empty": "This scene has no switchable meadow.",
+  "developer.grass.original": "Original grass",
+  "developer.grass.help": "Preview blades and ground color. Kept for this debug session without resetting progress.",
+  "developer.environment.komorebi": "Komorebi · Cool shade, warm light",
+  "developer.trees.komorebi": "Komorebi · Tree 1",
+  "developer.grass.komorebi": "Komorebi"
 }

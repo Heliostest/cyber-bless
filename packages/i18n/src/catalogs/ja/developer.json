@@ -87,7 +87,7 @@
   "developer.trees.original": "元の木",
   "developer.trees.count": "背景の木 {count} 本に対応",
   "developer.trees.help": "即時プレビュー。切り替えても儀式の進行状況は保持されます。",
-  "developer.trees.restore": "シーンのおすすめに戻す",
+  "developer.trees.restore": "既定の樹木に戻す",
   "developer.trees.loading": "木を読み込み中…",
   "developer.trees.error": "木を読み込めなかったため、シーンの初期設定に戻しました。",
   "developer.trees.quaternius": "Quaternius Stylized Nature",
@@ -103,9 +103,16 @@
   "developer.trees.recommended": "シーンの提案：{species}",
   "developer.trees.bySource": "素材の出典別",
   "developer.trees.bySpecies": "樹形から選ぶ",
-  "developer.trees.regionalHelp": "地域の庭園と季節を参考にした景観案です。対応を確認できないシーンは元の景観を保ちます。",
+  "developer.trees.regionalHelp": "背景に合わせた樹形です。個別に切り替えられます。",
   "developer.trees.cherryCredit": "桜のモデル：",
   "developer.trees.cherryAuthor": "Jogoss",
   "developer.trees.cherryLicense": "CC BY 4.0",
-  "developer.trees.adapted": "調整済み・詳細"
+  "developer.trees.adapted": "調整済み・詳細",
+  "developer.grass.title": "草地のスタイル",
+  "developer.grass.empty": "このシーンに切り替え可能な草地はありません。",
+  "developer.grass.original": "元の草地",
+  "developer.grass.help": "草の葉と地表の色をプレビュー。デバッグ中の選択と進行状況を維持します。",
+  "developer.environment.komorebi": "Komorebi · 冷たい影と暖かい光",
+  "developer.trees.komorebi": "Komorebi · 樹種1",
+  "developer.grass.komorebi": "Komorebi"
 }

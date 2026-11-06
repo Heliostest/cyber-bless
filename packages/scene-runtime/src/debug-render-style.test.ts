@@ -9,6 +9,7 @@ import { createStylePreviewCapture } from "./style-preview-capture";
 import { debugWater } from './debug-water';
 import { bindSceneMotion } from './scene-motion';
 import { debugTrees, type TreeRenderReport } from './debug-trees';
+import { debugEnvironmentTone } from './debug-environment-tone';
 
 const hooks = vi.hoisted(() => ({
   capture: vi.fn(() => "data:image/webp;base64,real"), prepare: vi.fn(), invalidate: vi.fn(),
@@ -17,10 +18,11 @@ const hooks = vi.hoisted(() => ({
   cueUpdate: vi.fn(), cueRender: vi.fn(), cueDispose: vi.fn(),
   treeCount: 0, treeMethod: vi.fn(), treeReport: undefined as ((report: TreeRenderReport) => void) | undefined,
   captureTrees: vi.fn(),
+  environmentTone: vi.fn(), captureGrass: vi.fn(),
 }));
 vi.mock("./style-preview-capture", () => ({ createStylePreviewCapture: vi.fn(() => hooks.capture) }));
 vi.mock("./render-style", () => ({ createRenderStyle: () => ({
-  setStyle: vi.fn(), setParameters: vi.fn(), getStyle: () => "toon-soft", render: hooks.render,
+  setStyle: vi.fn(), setParameters: vi.fn(), setEnvironmentTone: hooks.environmentTone, getStyle: () => "toon-soft", render: hooks.render,
   resize: hooks.resize, dispose: vi.fn(),
 }) }));
 vi.mock("./interaction-cues", () => ({ createInteractionCues: vi.fn(() => ({
@@ -29,7 +31,7 @@ vi.mock("./interaction-cues", () => ({ createInteractionCues: vi.fn(() => ({
 vi.mock("./cozy-environment", () => ({ createCozyEnvironment: vi.fn((_scene, options) => {
   hooks.treeReport = options.onTrees;
   return { kind: "garden", get ready() { return hooks.ready; }, prepare: hooks.prepare, dispose: vi.fn(),
-    treeCount: hooks.treeCount, setTreeMethod: hooks.treeMethod, captureDefaultTrees: hooks.captureTrees };
+    treeCount: hooks.treeCount, setTreeMethod: hooks.treeMethod, captureDefaultTrees: hooks.captureTrees, captureDefaultGrass: hooks.captureGrass };
 }) }));
 vi.mock("./debug-styles", () => ({ debugStyles: { register: hooks.register } }));
 
@@ -39,6 +41,7 @@ beforeEach(() => {
   hooks.ready = new Promise<void>(resolve => { hooks.resolve = resolve; });
   hooks.treeCount = 0; hooks.treeMethod.mockReset(); hooks.treeReport = undefined;
   hooks.captureTrees.mockReset();
+  hooks.captureGrass.mockReset();
   hooks.register.mockReturnValue({ setDefault: hooks.setDefault, report: hooks.report, refreshPreviews: hooks.refresh, dispose: hooks.dispose });
 });
 
@@ -55,6 +58,25 @@ function setup(objectPresentation = false) {
 }
 
 describe("mounted renderer shader thumbnail readiness", () => {
+  it('keeps object-only shelf captures on their separate lighting without changing the live grade',()=>{
+    const ui=setup(true);ui.style.render();
+    ui.encode.mockImplementation(()=>{expect(hooks.environmentTone).toHaveBeenLastCalledWith('original');return 'data:image/png;base64,c2NlbmU=';});
+    expect(captureSceneImage(ui.renderer.domElement)).toBe('data:image/png;base64,c2NlbmU=');
+    expect(hooks.environmentTone).toHaveBeenLastCalledWith('original');ui.style.dispose();
+  });
+  it('captures default grass and grading then restores the live Komorebi comparison even after encoding fails', () => {
+    const release = debugEnvironmentTone.enable();
+    const ui = setup();
+    const restoreGrass = vi.fn(); hooks.captureGrass.mockReturnValue(restoreGrass);
+    try {
+      debugEnvironmentTone.select('tiny-delivery'); ui.style.render();
+      expect(hooks.environmentTone).toHaveBeenLastCalledWith('tiny-delivery');
+      ui.encode.mockImplementation(() => { expect(hooks.environmentTone).toHaveBeenLastCalledWith('komorebi'); throw Error('encoding'); });
+      expect(captureSceneImage(ui.renderer.domElement)).toBeUndefined();
+      expect(restoreGrass).toHaveBeenCalledOnce();
+      expect(hooks.environmentTone).toHaveBeenLastCalledWith('tiny-delivery');
+    } finally { ui.style.dispose(); release(); }
+  });
   it('exports production default scenery and then redraws the temporary tree preview', () => {
     let originalTrees = false;
     hooks.captureTrees.mockImplementation(() => { originalTrees = true; return () => { originalTrees = false; }; });

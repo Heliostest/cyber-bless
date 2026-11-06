@@ -17,6 +17,8 @@ for (const { key: name, file, sha256, normals } of manifest.models) {
   const bytes = await readFile(path.join(source, file));
   const actualHash = createHash("sha256").update(bytes).digest("hex");
   if (actualHash !== sha256) throw Error(`Source hash mismatch: ${file}`);
+  // Keep the licensed source archive, but do not ship retired sphere/cone trees.
+  if (name === 'tree-round' || name === 'tree-pine') continue;
   if (bytes.toString("ascii", 0, 4) !== "glTF" || bytes.readUInt32LE(4) !== 2
     || bytes.readUInt32LE(8) !== bytes.length) throw Error(`Invalid GLB: ${file}`);
   const jsonLength = bytes.readUInt32LE(12);

@@ -7,6 +7,7 @@ import './audio-debug-console.css';
 import { WaterDebugControls } from './WaterDebugControls';
 import { TreeDebugControls } from './TreeDebugControls';
 import { EnvironmentToneControls } from './EnvironmentToneControls';
+import { GrassDebugControls } from './GrassDebugControls';
 
 const cues = new Set<string>([...Object.keys(UI_SOUND_FILES), 'woodfish', 'paper', 'water',
   'woodTap', 'beans', 'chime', 'glass', 'ceramic', 'fabric', 'metal', 'stone', 'hollow', 'air']);
@@ -209,6 +210,7 @@ export default function AudioDebugConsole() {
       </section>}
       <WaterDebugControls anchor={anchor} hidden={!open}/>
       <TreeDebugControls anchor={anchor} hidden={!open}/>
+      <GrassDebugControls anchor={anchor} hidden={!open}/>
       <EnvironmentToneControls anchor={anchor} hidden={!open}/>
     </aside>
     {enabled && targets.map(target => <Marker key={ids.current.get(target.element)} target={target} onPlay={play}/>)}

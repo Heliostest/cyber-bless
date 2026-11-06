@@ -5,6 +5,8 @@ import type { TreeRenderMethod, TreeRenderReport } from './debug-trees';
 import { resolveTreeModelSet, type TreeSpecies } from './tree-models';
 import { treePreviewLayout, type TreePreviewShape, type TreePreviewPlacement } from './tree-preview-layout';
 import { softenTreeFoliage } from './tree-foliage';
+import { applyKomorebiTreeWind } from './komorebi-tree-wind';
+import { adaptKomorebiModel } from './komorebi-surface';
 
 declare const process: { env: { EXPO_BASE_URL?: string } };
 type Options = { load?: (url: string) => Promise<THREE.Group>; onChange?: (report: TreeRenderReport) => void; invalidate?: () => void; recommendation?: TreeSpecies; camera?: THREE.Camera };
@@ -34,11 +36,15 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
   type Request = { cancelled: boolean; owned: Map<THREE.Group, () => void> };
   let pending: Request | undefined;
   let batches: { mesh: THREE.InstancedMesh; placements: readonly TreePreviewPlacement[]; originals: readonly TreePlacement[]; indices: number[]; local: THREE.Matrix4; shape: TreePreviewShape; matrices: THREE.Matrix4[]; foliage: boolean }[] = [];
+  const windTime = { value: 0 };
+  function disposeBatch({ mesh }: typeof batches[number]) {
+    mesh.customDepthMaterial?.dispose(); mesh.customDistanceMaterial?.dispose(); mesh.dispose();
+  }
   let projection = '';
   const originalVisibility = originals.map(object => object.visible), matrix = new THREE.Matrix4(), transform = new THREE.Object3D();
   function report() { if (!disposed) options.onChange?.({ count: placements.length, actual, status }); }
   function clear() {
-    batches.forEach(({ mesh }) => mesh.dispose()); batches = [];
+    batches.forEach(disposeBatch); batches = [];
     release?.(); release = undefined; root.clear();
   }
   function restore() { originals.forEach((object, index) => { object.visible = originalVisibility[index]; }); }
@@ -70,7 +76,7 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
       });
       batch.mesh.instanceMatrix.needsUpdate = true;
       batch.mesh.computeBoundingSphere();
-      if (batch.mesh.boundingSphere) batch.mesh.boundingSphere.radius += Math.max(0, ...batch.placements.map(item => item.scale)) * .02;
+      if (batch.mesh.boundingSphere) batch.mesh.boundingSphere.radius += Math.max(0, ...batch.placements.map(item => item.scale)) * (batch.mesh.userData.komorebiTree ? .04 : .02);
     });
   }
   return {
@@ -105,6 +111,7 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
         const loaded = await Promise.all(variants.map(variant => {
           const url = `${base}/environments/trees/${models[variant]}`;
           if (!loading.has(url)) loading.set(url, load(url).then(model => {
+            if (method === 'komorebi') adaptKomorebiModel(model);
             const dispose = resources([model]);
             if (disposed || request.cancelled || token !== generation) dispose();
             else request.owned.set(model, dispose);
@@ -145,10 +152,23 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
             if (!(object instanceof THREE.Mesh)) return;
             const material = object.material;
             const foliage = (Array.isArray(material) ? material : [material]).some(item => item.alphaTest > 0 || /lea[fv]|foliage/i.test(item.name));
+            if (method === 'komorebi') (Array.isArray(material) ? material : [material]).forEach(item => {
+              item.userData.komorebiPigment = true;
+              if (foliage) softenTreeFoliage(item);
+              applyKomorebiTreeWind(item, windTime);
+            });
             if (foliage && models.round.startsWith('simple-tree/')) {
               (Array.isArray(material) ? material : [material]).forEach(softenTreeFoliage);
             }
             const mesh = new THREE.InstancedMesh(object.geometry, material, trees.length);
+            mesh.userData.komorebiTree = method === 'komorebi';
+            if (method === 'komorebi' && object.geometry.hasAttribute('_tree_wind')) {
+              const side = (Array.isArray(material) ? material[0] : material).side;
+              mesh.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, side });
+              mesh.customDistanceMaterial = new THREE.MeshDistanceMaterial({ side });
+              applyKomorebiTreeWind(mesh.customDepthMaterial, windTime);
+              applyKomorebiTreeWind(mesh.customDistanceMaterial, windTime);
+            }
             mesh.name = `${method}-${variants[variantIndex]}-${object.name || 'part'}`;
             mesh.castShadow = true;
             // Dense cutout cards retain their authored canopy normals. Receiving
@@ -165,7 +185,7 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
             });
             if (foliage || options.camera) mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
             mesh.computeBoundingSphere();
-            if (mesh.boundingSphere) mesh.boundingSphere.radius += Math.max(0, ...trees.map(item => item.scale)) * .02;
+            if (mesh.boundingSphere) mesh.boundingSphere.radius += Math.max(0, ...trees.map(item => item.scale)) * (method === 'komorebi' ? .04 : .02);
             next.push({ mesh, placements: trees, originals: trees, indices, local, shape, matrices, foliage }); group.add(mesh);
           });
         });
@@ -176,13 +196,15 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
         actual = method; status = 'ready';
       } catch {
         if (disposed || token !== generation) return;
-        cancelPending(); next.forEach(({ mesh }) => mesh.dispose());
+        cancelPending(); next.forEach(disposeBatch);
         clear(); restore(); actual = 'original'; status = 'error';
       }
       report(); options.invalidate?.();
     },
     update(time: number, reducedMotion = false) {
       if (disposed) return;
+      windTime.value = reducedMotion ? 0 : time;
+      if (actual === 'komorebi') return;
       batches.forEach(batch => {
         if (!batch.foliage) return;
         batch.placements.forEach((item, index) => {

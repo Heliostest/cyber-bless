@@ -1,5 +1,6 @@
 import { TREE_RENDER_METHODS, type TreeRenderMethod, type TreeSpecies } from './tree-models';
 import { DEFAULT_TREE_METHOD } from './environment-defaults';
+export { DEFAULT_TREE_METHOD } from './environment-defaults';
 export type { TreeRenderMethod, TreeSpecies } from './tree-models';
 export type TreeRenderReport = { count: number; actual: TreeRenderMethod; status: 'ready' | 'loading' | 'error' };
 export type DebugTreeScene = TreeRenderReport & { id: string; label: string; scope?: object; method: TreeRenderMethod; recommendation: TreeSpecies };

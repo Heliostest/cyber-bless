@@ -4,7 +4,17 @@
 
 正式 Mac mini 构建改用[参数化 tag 发布入口](../scripts/ios-release/README.md)：先提交业务源码、素材、发布工具、依赖锁及版本输入，合并／推送 `master` 后创建并推送附注 tag；Mac 直接获取该 tag 和 LFS 实体，执行同版本工具并串行验证、构建和交付。不再把未提交工作区生成的 `source.tgz` 用于新正式发布。构建号尚未分配时保持 release input 的 `null` 并拒绝执行，不猜测下一个编号。
 
-该入口已用于下述构建 20、21、22、23、24、25；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+该入口已用于下述构建 20、21、22、23、24、25、26；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+
+## 2026-11-06 构建 26：固定反馈地址与 Xcode 发布
+
+北京时间 17:29:32，**1.0.0 (26)** 已完成 Xcode 构建、ASC 上传和既有内部组验证；17:30:12 读回 `VALID / IN_BETA_TESTING`。Apple build UUID 为 `cabe55a0-9762-4d6c-a884-6cb84cd5dd59`，`Team (Expo)` 已包含本构建，测试说明匹配。
+
+来源为 master 提交 `5d94a766b1e816a6bb681a2d84989c92c246de69`、附注 tag `ios-v1.0.0-build.26-xcode`。本次交付固定反馈域名、首次使用默认反馈地址、连接保留与服务端隧道就绪状态修正。按当前只用 Xcode 的发布方式，已提交 `syncEasCounter:false`，编号由 ASC 核对分配，不要求 EAS 登录或回写计数。原 `ios-v1.0.0-build.26` 仅配置过源码，未构建或上传；切换策略后另建新 tag，旧 tag 保留。
+
+完整项目验证通过：13,210 项单元测试、生产构建、场景修订、移动嵌入与离线资源核验完成；反馈专项回归通过。完整验证使用提交 `62bbb82d` 的业务源码，此后只调整发布计数配置和发布说明；新发布输入另经 Windows 94 项发布测试（2 项平台跳过）和 Mac 96 项全部通过。Mac 的锁定依赖、Release 预构建、4 个 dSYM 映射阶段、归档、主应用与小组件签名均通过；5607 个来源文件与 17796 项原生输入匹配，包内 202 项离线资源、477 张小组件封面及 162 个 DOM 脚本完成核验。
+
+IPA 为 231,375,077 字节，SHA-256 `401854a477dfcaf028b7017738ab5dc5da2409915a3de268423d213a9b46371c`；[本机 IPA](../artifacts/ios-release-26/blessing-26.ipa) 与 Mac 校验一致。Mac IPA／archive／dSYM 保留于 `/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.26-xcode/source/artifacts/ios-release/26`。钥匙串搜索列表已恢复、隔离构建钥匙串已锁定；未迁移 Expo 凭据。只清理旧构建 24、25 的 DerivedData，旧 IPA／archive／dSYM 保留。回执见 `artifacts/ios-release-26/` 和 [TestFlight 状态](../store/ios/testflight-status.json)。本轮验证到内部组可测试，未进行真机功能验收。
 
 ## 2026-11-06 构建 25：场景画面与手机操作更新
 

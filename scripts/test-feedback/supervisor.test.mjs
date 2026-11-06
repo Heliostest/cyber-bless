@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { createServiceLogger, acquireSupervisorLock, superviseProcess, trackTunnelAddress } from './supervisor.mjs';
+import { createServiceLogger, acquireSupervisorLock, superviseProcess, trackTunnelAddress, main } from './supervisor.mjs';
 
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function until(check) { for (let n = 0; n < 150; n++) { if (check()) return; await pause(5); } assert.fail('Timed out'); }
@@ -75,4 +75,58 @@ test('logs persist safe timestamped messages and rotate at a bounded size', asyn
   const content = await readFile(file, 'utf8');
   assert.match(content, /\d{4}-\d{2}-\d{2}T/); assert.match(content, /event 9/);
   assert.ok((await readFile(`${file}.1`, 'utf8')).length <= 200);
+});
+
+test('fixed tunnel tracking accepts only the configured origin and clears readiness on outage', () => {
+  const messages = [], states = [];
+  const track = trackTunnelAddress({ expectedUrl: 'https://feedback.heliosoft.win', log: m => messages.push(m), update: s => states.push(s) });
+  track({ status: 'running', publicUrl: 'https://feedback.heliosoft.win' });
+  track({ status: 'running', publicUrl: 'https://other.example' });
+  track({ status: 'running', publicUrl: 'https://unrelated.trycloudflare.com' });
+  track({ status: 'stopped' });
+  track({ status: 'running', publicUrl: 'https://feedback.heliosoft.win' });
+  assert.deepEqual(states.map(state => state.publicUrl), ['https://feedback.heliosoft.win', '', 'https://feedback.heliosoft.win']);
+  assert.equal(messages.length, 1);
+});
+
+test('invalid fixed configuration clears stale readiness under the lock and releases it on failure', async t => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'feedback-startup-failure-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const runtimeFile = path.join(directory, 'tunnel-runtime.json');
+  const supervisorFile = path.join(directory, 'supervisor-runtime.json');
+  const tunnelConfig = path.join(directory, 'tunnel.json');
+  const stale = { schemaVersion: 1, status: 'running', receiver: 'running', tunnel: 'running', publicUrl: 'https://feedback.heliosoft.win' };
+  await writeFile(runtimeFile, JSON.stringify(stale));
+  await writeFile(supervisorFile, JSON.stringify(stale));
+  await writeFile(tunnelConfig, '{broken');
+  const reserved = await acquireSupervisorLock(0), lockPort = reserved.port;
+  await reserved.close();
+  await assert.rejects(main({ defaults: { runtimeFile, tunnelConfig }, lockPort }), /Invalid fixed tunnel configuration/);
+  for (const file of [runtimeFile, supervisorFile]) {
+    const state = JSON.parse(await readFile(file, 'utf8'));
+    assert.equal(state.status, 'stopped'); assert.equal(state.publicUrl, '');
+  }
+  const released = await acquireSupervisorLock(lockPort); await released.close();
+});
+
+test('a competing supervisor leaves the live owner readiness untouched', async t => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'feedback-live-owner-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const runtimeFile = path.join(directory, 'tunnel-runtime.json');
+  const supervisorFile = path.join(directory, 'supervisor-runtime.json');
+  const tunnelConfig = path.join(directory, 'tunnel.json');
+  const running = JSON.stringify({ status: 'running', publicUrl: 'https://feedback.heliosoft.win' });
+  await writeFile(runtimeFile, running);
+  await writeFile(supervisorFile, running);
+  await writeFile(tunnelConfig, '{broken');
+  const owner = await acquireSupervisorLock(0);
+  const previousExitCode = process.exitCode;
+  try {
+    await main({ defaults: { runtimeFile, tunnelConfig }, lockPort: owner.port });
+    assert.equal(await readFile(runtimeFile, 'utf8'), running);
+    assert.equal(await readFile(supervisorFile, 'utf8'), running);
+  } finally {
+    process.exitCode = previousExitCode;
+    await owner.close();
+  }
 });

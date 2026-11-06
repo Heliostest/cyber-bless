@@ -55,6 +55,19 @@ function button(host: HTMLElement, copy: string) {
 afterEach(() => { document.body.replaceChildren(); scene.mounts = []; vi.restoreAllMocks(); });
 
 describe('internal ritual feedback overlay', () => {
+  it('prefills the fixed upload address and sends without the tester entering a URL', async () => {
+    const ui = await open();
+    ui.adapter.send = vi.fn(async (_endpoint, _token, reportJSON) => JSON.stringify({ id: JSON.parse(reportJSON).id, receivedAt: at }));
+    await openReporter(ui);
+    expect(ui.dialog().querySelector<HTMLInputElement>('input[type=url]')!.value).toBe('https://feedback.heliosoft.win/api/feedback');
+    expect(ui.dialog().querySelector<HTMLDetailsElement>('.test-feedback-settings')!.open).toBe(true);
+    typeInto(ui.textarea(), '使用默认地址提交反馈');
+    typeInto(ui.dialog().querySelector<HTMLInputElement>('input[type=password]')!, 'existing-invite');
+    clickOn(button(ui.host, TEST_FEEDBACK_COPY.send)); await settle(); await settle();
+    expect(ui.adapter.send).toHaveBeenCalledWith('https://feedback.heliosoft.win/api/feedback', 'existing-invite', expect.any(String));
+    expect(ui.dialog().textContent).toContain(TEST_FEEDBACK_COPY.sent); ui.unmount();
+  });
+
   it.each([[true, false], [false, true], [false, false]])('stays absent for enabled=%s and catalog marker=%s', async (enabled, marker) => {
     const ui = await open({ enabled, marker });
     expect(ui.trigger()).toBeNull(); ui.unmount();

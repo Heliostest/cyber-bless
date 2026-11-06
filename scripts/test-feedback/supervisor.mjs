@@ -4,6 +4,7 @@ import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { feedbackDefaults } from './cli.mjs';
+import { loadTunnelConfig } from './tunnel.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const cli = fileURLToPath(new URL('./cli.mjs', import.meta.url));
@@ -38,11 +39,11 @@ export async function acquireSupervisorLock(port = 4320) {
   return { port: server.address().port, close: () => new Promise(resolve => server.close(resolve)) };
 }
 
-export function trackTunnelAddress({ log, update }) {
+export function trackTunnelAddress({ log, update, expectedUrl }) {
   let previous = '';
   return state => {
     const url = state.status === 'running' ? state.publicUrl : '';
-    if (url && !/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/i.test(url)) return;
+    if (url && (expectedUrl ? url !== expectedUrl : !/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/i.test(url))) return;
     update({ tunnel: url ? 'running' : 'restarting', publicUrl: url });
     if (url && url !== previous) { log(`Public upload URL: ${url}`); previous = url; }
   };
@@ -117,11 +118,11 @@ async function health(url) {
   } catch { return false; }
 }
 
-export async function main() {
-  const defaults = feedbackDefaults(), directory = path.dirname(defaults.runtimeFile);
+export async function main({ defaults = feedbackDefaults(), lockPort = 4320 } = {}) {
+  const directory = path.dirname(defaults.runtimeFile);
   const log = createServiceLogger(path.join(directory, 'supervisor.log'));
   let lock;
-  try { lock = await acquireSupervisorLock(); }
+  try { lock = await acquireSupervisorLock(lockPort); }
   catch (error) { log(error.message); process.exitCode = 1; return; }
   const abort = new AbortController();
   const stop = () => abort.abort();
@@ -132,7 +133,6 @@ export async function main() {
     try { writeState(path.join(directory, 'supervisor-runtime.json'), state); }
     catch { log('Unable to update supervisor state file.'); }
   };
-  const tunnelAddress = trackTunnelAddress({ log, update });
   const launch = command => spawn(process.execPath, [cli, command], {
     cwd: root, windowsHide: true, shell: false, stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
   });
@@ -140,6 +140,8 @@ export async function main() {
     // Clear any stale URL before a replacement tunnel can announce readiness.
     writeState(defaults.runtimeFile, { schemaVersion: 1, status: 'starting', publicUrl: '', updatedAt: new Date().toISOString() });
     update({});
+    const fixed = await loadTunnelConfig(defaults.tunnelConfig);
+    const tunnelAddress = trackTunnelAddress({ log, update, expectedUrl: fixed?.publicUrl });
     log('Feedback supervisor started. Local inbox: http://127.0.0.1:4319/');
     await Promise.all([
       superviseProcess({ name: 'Receiver', signal: abort.signal, log,
@@ -161,6 +163,7 @@ export async function main() {
     ]);
   } finally {
     abort.abort(); update({ status: 'stopped', receiver: 'restarting', tunnel: 'restarting', publicUrl: '' });
+    try { writeState(defaults.runtimeFile, { schemaVersion: 1, status: 'stopped', publicUrl: '', updatedAt: new Date().toISOString() }); } catch { log('Unable to clear tunnel state.'); }
     process.removeListener('SIGINT', stop); process.removeListener('SIGTERM', stop);
     await lock.close(); log('Feedback supervisor stopped.');
   }

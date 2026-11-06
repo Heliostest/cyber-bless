@@ -6,6 +6,10 @@ Web、iOS 和 Android 共用 `packages/app/src/internal-tools-config.ts` 中的 
 
 ## 开始收件
 
+2026-11-06：本机已切换到固定收件地址 `https://feedback.heliosoft.win/api/feedback`，由命名隧道 `cyber-bless-feedback` 转发到 `http://127.0.0.1:4318`。现有邀请码和收件数据沿用，管理后台仍只在本机 4319 开放。
+
+App 的默认上传地址现已设为该固定网址。更新到包含此改动的版本后，本机保存的空网址或旧 `*.trycloudflare.com` 地址会自动迁移，并保留邀请码、草稿、待发反馈和既有回执；旧服务的团队状态缓存清除后重新同步。迁移先写入本机，成功后才上传待发项；写入失败保留原数据并退避重试。自定义 HTTPS 收件地址和本机联调地址保留。已有安装包不会随源码改变默认值，需更新 App 后生效。
+
 Windows 本机首次安装登录自启动并立即启动：
 
 ```powershell
@@ -24,7 +28,7 @@ npm run feedback:start      # 重新启用并立即启动
 npm run feedback:uninstall  # 移除任务，保留邀请码和反馈数据
 ```
 
-任务使用本仓库的绝对路径；移动仓库前先卸载任务，再从新位置安装。自启动是当前用户登录后启动，电脑休眠、关机、未登录或断网期间不能在线收件；恢复运行/联网后继续尝试。临时公网地址仍需手动分发给测试者。计划任务能力参考 [Microsoft Task Scheduler 设置](https://learn.microsoft.com/en-us/powershell/module/scheduledtasks/new-scheduledtasksettingsset?view=windowsserver2025-ps)（2026-11-02 已读正文）。
+任务使用本仓库的绝对路径；移动仓库前先卸载任务，再从新位置安装。自启动是当前用户登录后启动，电脑休眠、关机、未登录或断网期间不能在线收件；恢复运行/联网后继续尝试。使用固定隧道时重启不会换网址；使用临时隧道时，地址变更仍需手动分发给测试者。计划任务能力参考 [Microsoft Task Scheduler 设置](https://learn.microsoft.com/en-us/powershell/module/scheduledtasks/new-scheduledtasksettingsset?view=windowsserver2025-ps)（2026-11-02 已读正文）。
 
 临时前台守护可运行 `npm run feedback:supervise`。手动诊断时先 `feedback:stop`，再分别运行两个终端：
 
@@ -37,12 +41,32 @@ npm run feedback:tunnel
 
 第二个命令只把反馈端口 `127.0.0.1:4318` 暴露到公网，允许提交反馈及携带邀请码查询团队状态汇总，不提供原始描述、设备信息或管理接口。不要把 4319、本机开发服务器或其他目录转发出去。接收服务、隧道和电脑须保持运行；电脑休眠或停止服务期间，手机反馈会保留待发。
 
-`cloudflared` 已安装时无需新增账号，命令会返回临时 `https://….trycloudflare.com` 地址；地址原子写入 `artifacts/test-feedback/tunnel-runtime.json`，后台会刷新显示。该文件没有邀请码。临时 Tunnel 每次启动可能更换地址，没有运行时间保证，适用于本轮内测；后续可改用固定域名而不改变 App 逻辑。[Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)（2026-11-02 已读正文）。已启用自启动时，由守护进程管理隧道，不再另外启动第二份；agent 可读取状态文件或 `feedback:status` 获取地址，不打印凭据。
+### 固定域名配置
+
+`feedback:tunnel` 和守护进程会读取 Git 外部的 `%LOCALAPPDATA%/CyberBless/test-feedback/tunnel.json`：
+
+```json
+{
+  "schemaVersion": 1,
+  "publicUrl": "https://feedback.heliosoft.win",
+  "tokenFile": "cloudflare-tunnel.token"
+}
+```
+
+`tokenFile` 可使用绝对路径，或相对于此配置文件目录的路径。令牌文件来自该命名隧道的连接器安装说明，仅保存专用令牌，不保存安装命令；不要把它写入 Git、App、日志或命令行参数。启动使用已安装的 `cloudflared tunnel --protocol http2 run --token-file …`，仍由现有任务持有进程树，不再另装一份 cloudflared Windows 服务。
+
+在 Cloudflare 中添加已发布应用程序路由：主机名 `feedback.heliosoft.win`，Service URL `http://127.0.0.1:4318`；Cloudflare 自动创建对应 CNAME。不要转发管理后台 4319。收到连接器注册事件后才公布固定网址，公网健康检查继续由守护进程验证。更新配置后运行 `feedback:stop`、`feedback:start`，用 `feedback:status` 核对当前地址。Windows 任务停止是异步操作，排查重启时应等待旧进程实际退出再判断新进程状态。
+
+固定配置损坏或凭据文件不存在时会拒绝启动，不会自动退回一个变化的临时网址。只有配置文件不存在时才启用 Quick Tunnel 模式。
+
+### 可选临时隧道
+
+没有固定配置文件时，已安装的 `cloudflared` 可创建临时 `https://….trycloudflare.com` 地址；地址原子写入 `artifacts/test-feedback/tunnel-runtime.json`，后台会刷新显示。该文件没有邀请码。临时 Tunnel 每次启动可能更换地址，没有运行时间保证。[Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)（2026-11-02 已读正文）。无论固定或临时模式，已启用自启动时都由守护进程管理隧道，不再另外启动第二份；agent 可读取状态文件或 `feedback:status` 获取地址，不打印凭据。
 
 ## 测试者操作与失败重试
 
 1. 从场景目录进入仪式，点击“反馈问题”。
-2. 首次在“上传设置”填写网址与测试邀请码。网址支持域名根地址或 `/api/feedback`；远端须 HTTPS，本机联调允许 loopback HTTP。换临时地址只改网址，邀请码仍沿用同一个接收服务配置。
+2. “上传设置”已默认填写固定收件网址，已有邀请码继续沿用；新测试者首次只需填写测试邀请码。开发联调其他接收服务时仍可修改网址，支持域名根地址或 `/api/feedback`；远端须 HTTPS，本机联调允许 loopback HTTP。
 3. 描述具体操作问题，可用手机键盘的听写功能；不是录音上传。自动记录打开时的场景、已完成检查点、公开提示、版本和运行环境，问题步骤可手动修正。多动作检查点不等于细分手势步骤。
 4. 点击“发送反馈”。先保存到本机，再尝试上传；“已送达本机后台”表示后台已经持久化并返回匹配编号的回执。本机确认写入成功后才从待发队列清除。
 
@@ -71,6 +95,14 @@ npm run feedback:export
 建议一次处理一组可复现操作问题，记录反馈编号、复现、修复与测试结果，再在本机后台标记状态。不得从反馈臆造文化主张；若改动器物、动作或提示，仍须执行 [场景来源核查规范](scene-provenance.md)。
 
 ## 验证记录与边界
+
+2026-11-06 App 默认地址：固定网址默认值、旧空地址/临时域名迁移、邀请码与待发项保留、迁移写入失败自动重试、等待持久化完成再发送、旧缓存失效，以及不输入网址直接提交的 UI 回归共 56 项通过；完整 `npm test` 退出 0。Web 生产构建、移动端 TypeScript、11 项移动启动/离线嵌入检查及 Android/iOS 离线导出校验通过；两端导出 JS 均已确认包含固定上传网址。
+
+`mobile:verify` 的 Expo 版本检查仍提示现有 `expo`、`@expo/metro-runtime`、`expo-asset`、`expo-dev-client`、`expo-sharing`、`expo-splash-screen`、`expo-widgets` 补丁版本与其推荐版本不一致，因此不登记为完整移动检查通过；本次没有修改依赖和锁文件。相关日志位于 `artifacts/test-feedback/default-endpoint-*.log`，独立双端导出回执见 `artifacts/mobile-verification/latest.json`。本次修改尚未发布新的原生安装包，需随 App 更新让已安装版本获得默认值与自动迁移。
+
+2026-11-06 固定域名：新增固定配置校验、连接后发布地址、重启保留主机名、凭据不进入命令参数、退出清理和指定域名跟踪回归，后台 29 项测试通过，完整 `npm test` 退出 0。Cloudflare 已确认命名隧道健康，已创建 `feedback.heliosoft.win` 的 DNS 和公开应用路由。
+
+通过公网 HTTPS 提交合成报告 `ed4bcdd9-043f-47e2-84e7-5a4db99f9e55`，回执与本机持久化内容一致，重复发送及计划任务重启后仍只有一条记录；该记录使用独立诊断场景 ID 并标记已处理，不影响真实场景测试状态。未鉴权提交返回 401，公网 setup/list/export 返回 404，带邀请码的团队汇总返回 200。重启前后 4 条既有收件和邀请码配置哈希保持一致。实际注册任务已核对为当前用户登录启动、每分钟补偿、无运行时限，且已验证停止与重新启动后的公网恢复。未通过重启整台电脑验证登录过程。小型回执与截图保存在忽略目录 `artifacts/test-feedback/fixed-domain-*`。
 
 2026-11-02 自启动：`feedback:test` 全部通过，包含守护进程、IPC 断连、半发送 HTTP 关闭、PowerShell 解析、真实任务定义、Job Object 子孙进程清理和日志轮换。当前用户计划任务已实际安装；分别结束接收进程、cloudflared、Node 守护进程及外层 Windows runner，均成功恢复并重新验证公网健康，地址变化已输出。安装及故障演练前后邀请码和既有收件文件哈希一致。未重启电脑验证完整登录过程，登录触发器已按实际注册的任务定义检查。
 

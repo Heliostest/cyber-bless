@@ -118,12 +118,11 @@ async function health(url) {
   } catch { return false; }
 }
 
-export async function main() {
-  const defaults = feedbackDefaults(), directory = path.dirname(defaults.runtimeFile);
-  const fixed = await loadTunnelConfig(defaults.tunnelConfig);
+export async function main({ defaults = feedbackDefaults(), lockPort = 4320 } = {}) {
+  const directory = path.dirname(defaults.runtimeFile);
   const log = createServiceLogger(path.join(directory, 'supervisor.log'));
   let lock;
-  try { lock = await acquireSupervisorLock(); }
+  try { lock = await acquireSupervisorLock(lockPort); }
   catch (error) { log(error.message); process.exitCode = 1; return; }
   const abort = new AbortController();
   const stop = () => abort.abort();
@@ -134,7 +133,6 @@ export async function main() {
     try { writeState(path.join(directory, 'supervisor-runtime.json'), state); }
     catch { log('Unable to update supervisor state file.'); }
   };
-  const tunnelAddress = trackTunnelAddress({ log, update, expectedUrl: fixed?.publicUrl });
   const launch = command => spawn(process.execPath, [cli, command], {
     cwd: root, windowsHide: true, shell: false, stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
   });
@@ -142,6 +140,8 @@ export async function main() {
     // Clear any stale URL before a replacement tunnel can announce readiness.
     writeState(defaults.runtimeFile, { schemaVersion: 1, status: 'starting', publicUrl: '', updatedAt: new Date().toISOString() });
     update({});
+    const fixed = await loadTunnelConfig(defaults.tunnelConfig);
+    const tunnelAddress = trackTunnelAddress({ log, update, expectedUrl: fixed?.publicUrl });
     log('Feedback supervisor started. Local inbox: http://127.0.0.1:4319/');
     await Promise.all([
       superviseProcess({ name: 'Receiver', signal: abort.signal, log,
@@ -163,6 +163,7 @@ export async function main() {
     ]);
   } finally {
     abort.abort(); update({ status: 'stopped', receiver: 'restarting', tunnel: 'restarting', publicUrl: '' });
+    try { writeState(defaults.runtimeFile, { schemaVersion: 1, status: 'stopped', publicUrl: '', updatedAt: new Date().toISOString() }); } catch { log('Unable to clear tunnel state.'); }
     process.removeListener('SIGINT', stop); process.removeListener('SIGTERM', stop);
     await lock.close(); log('Feedback supervisor stopped.');
   }

@@ -27,3 +27,4 @@
 - [x] Restart the existing scheduled task, verify its login/minute recovery definition, and verify the fixed hostname survives a controlled restart.
 - [x] Send an authenticated public synthetic feedback report, compare its receipt and persisted content, verify unauthorized requests and public administration are rejected, and mark the test report as a resolved synthetic sample.
 - [x] Update operational documentation and retain small non-secret verification receipts. Run the relevant feedback checks and inspect the final diff.
+- [x] Review correction: acquire the exclusive supervisor lock before clearing stale readiness, validate configuration inside the guarded lifecycle, and clear both runtime files on startup failure. Regressions cover malformed configuration, lock release, and a competing process preserving the live owner's state.

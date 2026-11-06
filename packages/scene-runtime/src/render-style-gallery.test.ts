@@ -34,6 +34,18 @@ function setup() {
 beforeEach(() => { vi.clearAllMocks(); hooks.passes = []; hooks.render.mockReset(); });
 
 describe("Gallery styles in the shared renderer", () => {
+  it('uses the source display curve without ACES or extra light softening for Komorebi daylight', () => {
+    const { style, scene } = setup(), sun=new THREE.DirectionalLight(0xffffff,3.5); scene.add(sun);
+    let during=0; hooks.render.mockImplementation(()=>{during=sun.intensity;});
+    style.setStyle('toon-soft'); style.setEnvironmentTone('komorebi'); style.render();
+    const effects=hooks.passes.flatMap(pass=>pass.effects??[]);
+    expect(effects.some(effect=>effect.name==='ToneMappingEffect')).toBe(false);
+    expect(effects.filter(effect=>effect.name==='KomorebiGrade')).toHaveLength(1);
+    expect(during).toBe(3.5);
+    style.setEnvironmentTone('tiny-delivery'); style.render();
+    expect(hooks.passes.flatMap(pass=>pass.effects??[]).some(effect=>effect.name==='ToneMappingEffect')).toBe(true);
+    style.dispose();
+  });
   it.each([
     ["sketch-contour", "GallerySketch"], ["gallery-outline", "GalleryOutline"],
     ["depth-rim", "GalleryDepthRim"], ["space-grade", "GallerySpaceGrade"],

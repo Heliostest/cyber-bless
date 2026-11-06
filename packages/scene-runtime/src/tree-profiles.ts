@@ -17,3 +17,20 @@ const recommendations: Readonly<Record<string, TreeSpecies>> = {
   'valencian-folding-fan': 'cypress',
 };
 export function getSceneTreeRecommendation(id: string): TreeSpecies { return recommendations[id] ?? 'original'; }
+
+/** Product landscape compositions replacing the retired primitive night trees.
+ * These choices describe silhouette and foliage only, with no regional or ritual claim.
+ * Existing evidence-backed recommendations above remain separate and unchanged.
+ */
+const nightArt: Readonly<Record<string, TreeSpecies>> = {
+  'brat-bride-cloth': 'acer',
+  'scottish-first-footing': 'conifer',
+  'chinese-shadow-puppet': 'toona',
+  'diya-oil-lamp': 'acer',
+  'votive-candle-catholic': 'cypress',
+  lantern: 'acer',
+  yeondeunghoe: 'toona',
+};
+export function getSceneTreeDefault(id: string): TreeSpecies {
+  return recommendations[id] ?? nightArt[id] ?? 'original';
+}

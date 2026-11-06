@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from 'react';
-import { debugTrees, type TreeRenderMethod, type TreeSpecies } from '@wbr/scene-runtime/debug-trees';
+import { debugTrees, DEFAULT_TREE_METHOD, type TreeRenderMethod, type TreeSpecies } from '@wbr/scene-runtime/debug-trees';
 import { message, translateScene } from '@wbr/i18n';
 
 export function TreeDebugControls({ anchor, hidden }: { anchor: RefObject<HTMLElement | null>; hidden: boolean }) {
@@ -33,6 +33,7 @@ export function TreeDebugControls({ anchor, hidden }: { anchor: RefObject<HTMLEl
         <optgroup label={message('developer.trees.bySource')}>
           <option value="quaternius">{message('developer.trees.quaternius')}</option>
           <option value="simple-tree">{message('developer.trees.simple')}</option>
+          <option value="komorebi">{message('developer.trees.komorebi')}</option>
         </optgroup>
         <optgroup label={message('developer.trees.bySpecies')}>
           <option value="cherry">{names.cherry}</option>
@@ -49,7 +50,7 @@ export function TreeDebugControls({ anchor, hidden }: { anchor: RefObject<HTMLEl
       {entry.method === 'scene' && <small>{message('developer.trees.regionalHelp')}</small>}
     </label>)}
     {!!scenes.length && <p>{message('developer.trees.help')}</p>}
-    {scenes.some(entry => entry.method !== 'scene') && <button type="button" className="audio-debug-stop"
+    {scenes.some(entry => entry.method !== DEFAULT_TREE_METHOD) && <button type="button" className="audio-debug-stop"
       data-tree-reset="" onClick={() => { release.current?.(); release.current = undefined; }}>
       {message('developer.trees.restore')}
     </button>}

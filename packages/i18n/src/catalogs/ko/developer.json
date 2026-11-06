@@ -87,7 +87,7 @@
   "developer.trees.original": "기존 나무",
   "developer.trees.count": "배경 나무 {count}그루 연결됨",
   "developer.trees.help": "실시간 미리보기. 전환해도 의식 진행 상태가 유지됩니다.",
-  "developer.trees.restore": "장면 추천으로 복원",
+  "developer.trees.restore": "기본 나무로 복원",
   "developer.trees.loading": "나무 불러오는 중…",
   "developer.trees.error": "나무를 불러오지 못해 장면 기본값으로 복원했습니다.",
   "developer.trees.quaternius": "Quaternius Stylized Nature",
@@ -103,9 +103,16 @@
   "developer.trees.recommended": "장면 추천: {species}",
   "developer.trees.bySource": "소재 출처별",
   "developer.trees.bySpecies": "나무 형태별",
-  "developer.trees.regionalHelp": "지역 정원과 계절을 고려한 조경 제안입니다. 적합성을 확인하지 못한 장면은 기존 경관을 유지합니다.",
+  "developer.trees.regionalHelp": "배경에 맞춘 나무 형태이며 따로 바꿀 수 있습니다.",
   "developer.trees.cherryCredit": "벚나무 모델:",
   "developer.trees.cherryAuthor": "Jogoss",
   "developer.trees.cherryLicense": "CC BY 4.0",
-  "developer.trees.adapted": "수정됨 · 상세"
+  "developer.trees.adapted": "수정됨 · 상세",
+  "developer.grass.title": "풀밭 스타일",
+  "developer.grass.empty": "이 장면에는 전환할 수 있는 풀밭이 없어요.",
+  "developer.grass.original": "기존 풀밭",
+  "developer.grass.help": "풀잎과 지면 색상을 미리 봅니다. 디버그 선택과 진행 상태를 유지합니다.",
+  "developer.environment.komorebi": "Komorebi · 차가운 그늘과 따뜻한 빛",
+  "developer.trees.komorebi": "Komorebi · 나무 1",
+  "developer.grass.komorebi": "Komorebi"
 }

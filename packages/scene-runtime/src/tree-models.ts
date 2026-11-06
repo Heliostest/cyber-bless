@@ -1,4 +1,4 @@
-export const TREE_RENDER_METHODS = ['original', 'scene', 'quaternius', 'simple-tree', 'cherry', 'cypress', 'willow', 'conifer', 'toona', 'acer', 'maple'] as const;
+export const TREE_RENDER_METHODS = ['original', 'scene', 'quaternius', 'simple-tree', 'komorebi', 'cherry', 'cypress', 'willow', 'conifer', 'toona', 'acer', 'maple'] as const;
 export type TreeRenderMethod = typeof TREE_RENDER_METHODS[number];
 export type TreeSpecies = 'original' | 'cherry' | 'cypress' | 'willow' | 'conifer' | 'toona' | 'acer' | 'maple';
 export type TreeModelSet = { round: string; cluster: string };
@@ -6,6 +6,7 @@ const pair = (directory: string, prefix = ''): TreeModelSet => ({ round: `${dire
 const sets: Record<Exclude<TreeRenderMethod, 'original' | 'scene'>, TreeModelSet> = {
   quaternius: pair('quaternius'),
   'simple-tree': pair('simple-tree'),
+  komorebi: pair('komorebi'),
   // Flowering cherry is a product adaptation of the pinned generator's oak
   // branches and foliage pipeline, with a spreading crown and blossom atlas.
   cherry: pair('simple-tree', 'cherry-'),

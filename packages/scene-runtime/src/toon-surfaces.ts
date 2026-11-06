@@ -4,6 +4,7 @@ import { copyRitualOptics } from './ritual-optics';
 import { copyCraftSurface, hasCraftFinish } from './craft-surfaces';
 import { softenTreeFoliage } from './tree-foliage';
 import { calibrateIconPigment, isSceneEnvironment } from './icon-style';
+import { copyKomorebiTreeWind } from './komorebi-tree-wind';
 
 /**
  * Optional art direction on mesh.userData.toonSurface. Source textures stay untouched.
@@ -46,6 +47,9 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">, sc
   }
 
   function adapt(source: THREE.Material, hint: ToonSurface, owned: Painted[], adapted: Adapted[]) {
+    // This source owns its pigment/light response and deformation. Replacing it
+    // with a toon shader would copy incompatible Phong hooks and erase vertex color.
+    if (source.userData.komorebiSurface) return source;
     const glass = source instanceof THREE.MeshPhysicalMaterial && source.userData.ritualOptics?.kind === 'glass';
     if (!(source instanceof THREE.MeshStandardMaterial || source instanceof THREE.MeshPhongMaterial || source instanceof THREE.MeshLambertMaterial) || source.transparent && !(style === 'toon-soft' && glass)) return source;
     const pbr = source instanceof THREE.MeshStandardMaterial ? source : undefined;
@@ -111,6 +115,11 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">, sc
       toon.customProgramCacheKey = () => `${baseKey}|icon-glass-rim-v1`;
     }
     if (source.userData.treeClusterNormals) softenTreeFoliage(toon);
+    copyKomorebiTreeWind(source, toon);
+    if (source.userData.komorebiGrass) {
+      toon.onBeforeCompile = source.onBeforeCompile;
+      toon.customProgramCacheKey = source.customProgramCacheKey;
+    }
     adapted.push([source, toon, hint.color !== undefined ? new THREE.Color(hint.color) : undefined]);
     return toon;
   }

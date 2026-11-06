@@ -1,0 +1,66 @@
+{
+  "sourceProject": "komorebi",
+  "snapshotDate": "2026-11-06",
+  "head": "1e1f89af2209096fc03beb8a60efc72182f3eda4",
+  "workingTreeSnapshot": true,
+  "files": [
+    {
+      "file": "src/leafy-tree.ts",
+      "sha256": "a4b5590b3a19bd48a4f95fe34739a5a614031f23e49b602f4b186aaefcc2cf6d"
+    },
+    {
+      "file": "src/data/tree-skeletons.json",
+      "sha256": "b9611b7069ffae58dfea686292468b70edd903a053c92ed2af4a5190d9313f45"
+    },
+    {
+      "file": "src/meadow-grass.ts",
+      "sha256": "bea9422eb6d015749edd5b1a1fa004d1535c9a3acc4119e0b4ebcdf8eb2eed2f"
+    },
+    {
+      "file": "src/meadow-field.ts",
+      "sha256": "28fa917a0066cce9cbd0afe83fb80a8b844b882d42399f82eaafd50c70b77004"
+    },
+    {
+      "file": "src/tree-wind.ts",
+      "sha256": "da42591aada4ae5e006727799786006c227524cd30522282a90431ae285daf3b"
+    },
+    {
+      "file": "scripts/generate-tree-skeletons.mjs",
+      "sha256": "cb24cd110be1843fa4f7f825f0ebeff21b2ad2aa6774b5bb8d93aa7a5074a9e5"
+    },
+    {
+      "file": "scripts/vendor/ez-tree/LICENSE",
+      "sha256": "20e4afadfb10c67952b3d73cd2982d21d165ab4ae82b0dd9e4d6f2166ee349b6"
+    },
+    {
+      "file": "scripts/vendor/ez-tree/README.md",
+      "sha256": "af547e960f8dd16193310e2ed1ae178f7e14350082319806e04b08a2650bfafc"
+    },
+    {
+      "file": "scripts/vendor/ez-tree/tree.mjs",
+      "sha256": "8719ffc7d2f22822541f41cb300d0c8946d5f09a41670fe773d47530945f3453"
+    }
+  ],
+  "trees": {
+    "round": 0,
+    "cluster": 3
+  },
+  "lighting": {
+    "sun": "#fff1dc",
+    "sky": "#79a8e3",
+    "ground": "#253e57",
+    "contrast": 1.17,
+    "exposure": 0.97
+  },
+  "curves": {
+    "globalSaturation": 8,
+    "shadowsHue": 214,
+    "shadowsDensity": 55,
+    "shadowsSaturation": 3,
+    "shadowsExposure": -5,
+    "midtonesSaturation": 0,
+    "highlightsHue": 38,
+    "highlightsDensity": 5,
+    "highlightsExposure": -3
+  }
+}

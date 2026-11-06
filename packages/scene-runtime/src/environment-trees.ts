@@ -16,7 +16,7 @@ export function createEnvironmentTrees(originals: THREE.Object3D[], placements: 
   let previewReport: TreeRenderReport = { ...baselineReport };
   function visible() {
     const selected = capturing ? DEFAULT_TREE_METHOD : method;
-    const previewVisible = selected !== 'scene' && selected !== 'original' && previewReport.status === 'ready' && previewReport.actual !== 'original';
+    const previewVisible = selected !== DEFAULT_TREE_METHOD && selected !== 'original' && previewReport.status === 'ready' && previewReport.actual !== 'original';
     preview.root.visible = previewVisible;
     baseline.root.visible = selected !== 'original' && !previewVisible;
     originals.forEach(object => { object.visible = selected === 'original' || (!previewVisible && baselineReport.actual === 'original'); });
@@ -24,7 +24,7 @@ export function createEnvironmentTrees(originals: THREE.Object3D[], placements: 
   function report() {
     if (disposed) return;
     visible();
-    const state = method === 'scene' ? baselineReport : method === 'original' ? { ...baselineReport, actual: 'original' as const, status: 'ready' as const } : {
+    const state = method === DEFAULT_TREE_METHOD ? baselineReport : method === 'original' ? { ...baselineReport, actual: 'original' as const, status: 'ready' as const } : {
       ...previewReport, actual: previewReport.actual === 'original' ? baselineReport.actual : previewReport.actual,
     };
     options.onChange?.(state); options.invalidate?.();
@@ -34,7 +34,7 @@ export function createEnvironmentTrees(originals: THREE.Object3D[], placements: 
   baseline.root.name = 'recommended-environment-trees';
   const preview = createTreeRendering([], placements, floor, { ...common, onChange: next => { previewReport = next; report(); } });
   root.add(baseline.root, preview.root);
-  const ready = options.recommendation === 'original' || !placements.length ? Promise.resolve() : baseline.select('scene');
+  const ready = options.recommendation === 'original' || !placements.length ? Promise.resolve() : baseline.select(DEFAULT_TREE_METHOD);
   visible();
   return {
     root, ready,
@@ -43,11 +43,11 @@ export function createEnvironmentTrees(originals: THREE.Object3D[], placements: 
     async select(next: TreeRenderMethod) {
       if (disposed) return;
       method = next;
-      if (next === 'scene' || next === 'original') { await preview.select('original'); report(); }
+      if (next === DEFAULT_TREE_METHOD || next === 'original') { await preview.select('original'); report(); }
       else { await preview.select(next); }
     },
     captureDefault() {
-      if (disposed || method === 'scene') return undefined;
+      if (disposed || method === DEFAULT_TREE_METHOD) return undefined;
       capturing = true; visible();
       return () => { capturing = false; if (!disposed) visible(); };
     },

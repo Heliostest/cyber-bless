@@ -12,7 +12,7 @@ export function softenTreeFoliage(material: THREE.Material) {
     compile.call(material, shader, renderer);
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <normal_fragment_begin>', THREE.ShaderChunk.normal_fragment_begin.replace('normal *= faceDirection;', '// Keep outward source clump normals on both sides of a leaf card.'))
-      .replace('#include <color_fragment>', THREE.ShaderChunk.color_fragment.replace('diffuseColor.rgb *= vColor;', 'diffuseColor.rgb *= mix( vec3( 1.0 ), vColor, 0.68 );'));
+      .replace('#include <color_fragment>', material.userData.komorebiPigment ? THREE.ShaderChunk.color_fragment : THREE.ShaderChunk.color_fragment.replace('diffuseColor.rgb *= vColor;', 'diffuseColor.rgb *= mix( vec3( 1.0 ), vColor, 0.68 );'));
     // Broad, matte light wraps around a leaf clump instead of cutting each card
     // at the Lambert terminator. Keep the deliberately banded ink styles intact.
     const wrappedIncidence = '0.72 * saturate( ( dot( geometryNormal, directLight.direction ) + 0.55 ) / 1.55 )';
@@ -29,6 +29,6 @@ export function softenTreeFoliage(material: THREE.Material) {
         `float dotNL = ${wrappedIncidence};`,
       ));
   };
-  material.customProgramCacheKey = () => `tree-clump-soft-v2:${cacheKey()}`;
+  material.customProgramCacheKey = () => `tree-clump-soft-v2:${!!material.userData.komorebiPigment}:${cacheKey()}`;
   material.needsUpdate = true;
 }

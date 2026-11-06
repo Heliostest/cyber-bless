@@ -9,12 +9,15 @@ import { createStylizedTrees } from "./stylized-trees";
 import type { TreePlacement } from './stylized-trees';
 import { createEnvironmentTrees } from './environment-trees';
 import type { TreeRenderMethod, TreeRenderReport } from './debug-trees';
-import { getSceneTreeRecommendation } from './tree-profiles';
+import { getSceneTreeDefault } from './tree-profiles';
 import { readSceneMotion } from "./scene-motion";
 import { createToonCloudBackdrop } from "./toon-cloud-backdrop";
-import { createEnvironmentTone, DELIVERY_PALETTE } from './environment-tone';
+import { createEnvironmentTone, DELIVERY_PALETTE, KOMOREBI_PALETTE } from './environment-tone';
 import type { EnvironmentTone } from './debug-environment-tone';
-import { DEFAULT_ENVIRONMENT_TONE } from './environment-defaults';
+import { DEFAULT_ENVIRONMENT_TONE, DEFAULT_GRASS_METHOD } from './environment-defaults';
+import { createKomorebiMeadow } from './komorebi-meadow';
+import type { GrassRenderMethod } from './debug-grass';
+import { createKomorebiSurface } from './komorebi-surface';
 
 declare const process: { env: { EXPO_BASE_URL?: string } };
 import { environmentProfiles } from './environment-profiles';
@@ -24,10 +27,10 @@ type NatureModel = { parts: Part[] };
 const models = nature as Record<string, NatureModel>;
 
 /** A clear painted sky, independent of the photographic panorama used for lighting. */
-function createSkyBackdrop(clear = false, night = false, delivery = false) {
+function createSkyBackdrop(clear = false, night = false, delivery = false, komorebi = false) {
   const width = 4, height = 64, pixels = new Uint8Array(width * height * 4);
-  const horizon = new THREE.Color(night ? (delivery ? 0x304959 : 0x1b355d) : delivery ? DELIVERY_PALETTE.horizon : clear ? 0x6ec5ff : 0x9ed9f3);
-  const zenith = new THREE.Color(night ? (delivery ? 0x14283d : 0x08152f) : delivery ? DELIVERY_PALETTE.zenith : clear ? 0x278fe6 : 0x409ee0);
+  const horizon = new THREE.Color(night ? (delivery ? 0x304959 : 0x1b355d) : komorebi ? KOMOREBI_PALETTE.horizon : delivery ? DELIVERY_PALETTE.horizon : clear ? 0x6ec5ff : 0x9ed9f3);
+  const zenith = new THREE.Color(night ? (delivery ? 0x14283d : 0x08152f) : komorebi ? KOMOREBI_PALETTE.zenith : delivery ? DELIVERY_PALETTE.zenith : clear ? 0x278fe6 : 0x409ee0);
   const color = new THREE.Color(), rgb = { r: 0, g: 0, b: 0 };
   for (let y = 0; y < height; y++) {
     const elevation = Math.max(0, (y / (height - 1) - 0.25) / 0.75);
@@ -65,14 +68,17 @@ export function createCozyEnvironment(
     intensity: scene.backgroundIntensity, blur: scene.backgroundBlurriness,
     environmentIntensity: scene.environmentIntensity,
     backgroundRotation: scene.backgroundRotation.clone(), environmentRotation: scene.environmentRotation.clone(),
+    environmentNight: scene.userData.environmentNight,
   };
   const root = new THREE.Group();
   root.name = "cozy-environment";
   root.userData.environment = kind;
   scene.add(root);
+  scene.userData.environmentNight = night;
   const toneSurfaces = createEnvironmentTone(root, night);
   let tone: EnvironmentTone = 'original', toneDirty = false;
   let deliveryBackdrop: THREE.DataTexture | undefined;
+  let komorebiBackdrop: THREE.DataTexture | undefined;
   const geometries = new Set<THREE.BufferGeometry>();
   const materials = new Set<THREE.Material>();
   const propGeometries = new Map<string, THREE.BufferGeometry[]>();
@@ -80,6 +86,8 @@ export function createCozyEnvironment(
   let disposed = false;
   let sky: THREE.DataTexture | undefined;
   let meadow: ReturnType<typeof createStylizedMeadow> | undefined;
+  let komorebiMeadow: ReturnType<typeof createKomorebiMeadow> | undefined;
+  let grassMethod: GrassRenderMethod = 'original';
   let treeCanopies: ReturnType<typeof createStylizedTrees> | undefined;
   const originalTrees: THREE.Object3D[] = [];
   let treePlacements: readonly TreePlacement[] = [];
@@ -105,6 +113,7 @@ export function createCozyEnvironment(
     return material;
   };
   const grass = makeMaterial(night ? 0x718e82 : 0x90c65b, 'grass');
+  let komorebiGround: THREE.MeshPhongMaterial | undefined;
   const sand = makeMaterial(night ? 0x9e9b83 : 0xecdfbd, 'sand');
   const wood = makeMaterial(night ? 0xa78e70 : 0xd9b98c, 'wood');
   const trim = makeMaterial(night ? 0x8c846e : 0xbfa07a, 'trim');
@@ -235,16 +244,14 @@ export function createCozyEnvironment(
   if (night) {
     // Preserve the quiet night arrangement around the authored lamps.
     const trees: [number, number, number][] = [
-      [-6.8, -6.5, 2.4], [7.0, -7.5, 2.8], [-7.0, -8.8, 3.2],
-      [7.4, -10, 3.6], [-4.4, -11, 2.2], [4.6, -13, 2.5], [-10, -15, 4.1], [10.4, -16, 4.3],
+      [-6.8, -6.5, 3.7], [7.0, -7.5, 3.4], [-7.0, -8.8, 3.9],
+      [7.4, -10, 5.5], [-4.4, -11, 2.7], [4.6, -13, 3.1], [-10, -15, 6.3], [10.4, -16, 5.3],
     ];
-    treePlacements = trees.map(([x, z, scale], index) => {
-      const model = models[index % 3 === 0 ? 'tree-pine' : 'tree-round'];
-      let low = Infinity, high = -Infinity;
-      model.parts.forEach(part => { for (let i = 1; i < part.positions.length; i += 3) { low = Math.min(low, part.positions[i]); high = Math.max(high, part.positions[i]); } });
-      return { x, z, scale: scale * (high - low), turn: index * .8, lift: scale * low };
-    });
-    trees.forEach(([x, z, scale], index) => originalTrees.push(prop(index % 3 === 0 ? "tree-pine" : "tree-round", x, z, scale, index * 0.8)));
+    // Use the same detailed, asymmetric KayKit fallback as daylight. Retired
+    // sphere/cone trees must not reappear on original selection or a failed load.
+    treePlacements = trees.map(([x, z, scale], index) => ({ x, z, scale, turn: index * .8 }));
+    treeCanopies = createStylizedTrees(treePlacements, groundY);
+    originalTrees.push(treeCanopies.root); root.add(treeCanopies.root);
     for (const [x, z, scale] of [[-2.8, -2.3, 1.3], [3.0, -3.3, 1.1], [-5.2, -6.6, 1.8], [4, -7, 1.5]]) {
       prop("bush", x, z, scale, x);
     }
@@ -286,7 +293,7 @@ export function createCozyEnvironment(
     }
   }
 
-  const treeRecommendation = getSceneTreeRecommendation(id);
+  const treeRecommendation = getSceneTreeDefault(id);
   const treeRendering = createEnvironmentTrees(originalTrees, treePlacements, groundY, { load: loadTree,
     onChange: report => { toneDirty = true; onTrees?.(report); }, invalidate, recommendation: treeRecommendation, camera });
   root.add(treeRendering.root);
@@ -304,6 +311,7 @@ export function createCozyEnvironment(
     .catch(() => { /* Local sky unavailable: the fully built garden still renders. */ });
 
   const lights = new WeakSet<THREE.Light>();
+  const hemiDirections = new Map<THREE.HemisphereLight,THREE.Vector3>();
   const meshes = new WeakSet<THREE.Mesh>();
   const previewShadows = new Map<THREE.DirectionalLight, { intensity: number; radius: number }>();
   function restorePreviewShadows() {
@@ -313,13 +321,18 @@ export function createCozyEnvironment(
   function setTone(next: EnvironmentTone) {
     if (disposed || next === tone) return;
     tone = next;
-    toneSurfaces.setTone(next); meadow?.setTone(next);
+    toneSurfaces.setTone(next); meadow?.setTone(next); komorebiMeadow?.setTone(next);
     if (next === 'tiny-delivery') {
       deliveryBackdrop ??= createSkyBackdrop(clearDay, night, true);
       scene.background = deliveryBackdrop;
       scene.backgroundIntensity = 1; scene.backgroundBlurriness = 0;
       scene.fog?.color.setHex(night ? 0x304959 : DELIVERY_PALETTE.horizon);
       scene.environmentIntensity = night ? .2 : .26;
+    } else if (next === 'komorebi') {
+      komorebiBackdrop ??= createSkyBackdrop(clearDay, night, false, true);
+      scene.background = komorebiBackdrop; scene.backgroundIntensity = 1; scene.backgroundBlurriness = 0;
+      scene.fog?.color.setHex(night ? 0x20395a : KOMOREBI_PALETTE.horizon);
+      scene.environmentIntensity = .16;
     } else {
       scene.background = backdrop ?? sky ?? new THREE.Color(horizon);
       scene.backgroundIntensity = night && !backdrop ? .065 : 1;
@@ -330,12 +343,38 @@ export function createCozyEnvironment(
     invalidate();
   }
   setTone(DEFAULT_ENVIRONMENT_TONE);
+  function setGrassMethod(next: GrassRenderMethod) {
+    if (disposed || !meadow || next === grassMethod) return;
+    if (next === 'komorebi' && !komorebiMeadow) {
+      komorebiMeadow = createKomorebiMeadow({ kind, floor: groundY, id }); root.add(komorebiMeadow.root); komorebiMeadow.setTone(tone);
+    }
+    grassMethod = next; meadow.mesh.visible = next === 'original';
+    if (komorebiMeadow) komorebiMeadow.root.visible = next === 'komorebi';
+    grass.map = next === 'komorebi' ? komorebiMeadow!.groundMap : meadow.groundMap;
+    if (next === 'komorebi' && !komorebiGround) { komorebiGround=createKomorebiSurface(); materials.add(komorebiGround); }
+    if (komorebiGround) {
+      komorebiGround.map=komorebiMeadow!.groundMap;
+      root.traverse(object=>{
+        if (!(object instanceof THREE.Mesh)) return;
+        if (next==='komorebi' && object.material===grass) object.material=komorebiGround!;
+        else if (next==='original' && object.material===komorebiGround) object.material=grass;
+      });
+    }
+    invalidate();
+  }
+  setGrassMethod(DEFAULT_GRASS_METHOD);
   let captureReady = false;
   const ready = Promise.all([skyReady, treeRendering.ready]).then(() => { captureReady = true; });
   return {
     kind, ready,
     get captureReady() { return captureReady; },
     setTone,
+    hasGrass: !!meadow,
+    setGrassMethod,
+    captureDefaultGrass() {
+      if (!meadow || grassMethod === DEFAULT_GRASS_METHOD) return undefined;
+      const selected = grassMethod; setGrassMethod(DEFAULT_GRASS_METHOD); return () => setGrassMethod(selected);
+    },
     captureDefaultTone() {
       const selected = tone;
       if (selected === DEFAULT_ENVIRONMENT_TONE) return undefined;
@@ -350,6 +389,7 @@ export function createCozyEnvironment(
       treeRendering.reframe();
       if (toneDirty) { toneSurfaces.refresh(); toneDirty = false; }
       const delivery = tone === 'tiny-delivery';
+      const komorebi = tone === 'komorebi';
       const paintedDay = style === "gouache" && !night;
       const softTrees = treeRendering.isPreviewVisible();
       if (!softTrees) restorePreviewShadows();
@@ -359,6 +399,7 @@ export function createCozyEnvironment(
         else if (motion.active && lastFrame) windTime += Math.min(.05, Math.max(0, now - lastFrame));
         lastFrame = now;
         meadow?.update(windTime);
+        if (grassMethod === 'komorebi') komorebiMeadow?.update(windTime);
         if (treeCanopies?.root.visible) treeCanopies.update(windTime, motion.reducedMotion);
         treeRendering.update(windTime, motion.reducedMotion);
         clouds?.update(windTime);
@@ -371,7 +412,7 @@ export function createCozyEnvironment(
           meshes.add(object);
           const surfaces = Array.isArray(object.material) ? object.material : [object.material];
           if (surfaces.some(material => material instanceof THREE.MeshStandardMaterial && !material.transparent)) {
-            object.castShadow = true;
+            object.castShadow = !object.userData.komorebiGrass;
             object.receiveShadow = !object.userData.importedTreeFoliage;
           }
         }
@@ -381,18 +422,32 @@ export function createCozyEnvironment(
         if (object instanceof THREE.AmbientLight) {
           object.color.set(warmLight ? 0xffe0b9 : night ? 0xa8bddb : delivery ? 0xffedcf : 0xfff8ee);
           object.intensity = warmLight ? 0.35 : night ? 0.24 : paintedDay ? .26 : delivery ? .2 : .18;
+          if (komorebi && !night && !warmLight) object.intensity=0;
         } else if (object instanceof THREE.HemisphereLight) {
-          object.color.set(night ? 0xaec9e1 : delivery ? 0xc8e6e6 : 0xd8eeff);
-          object.groundColor.set(warmLight ? 0x988568 : night ? 0x536971 : delivery ? 0x9fa77c : 0xb9ad8b);
+          object.color.set(night ? 0xaec9e1 : komorebi ? 0x79a8e3 : delivery ? 0xc8e6e6 : 0xd8eeff);
+          object.groundColor.set(warmLight ? 0x988568 : night ? 0x536971 : komorebi ? 0x253e57 : delivery ? 0x9fa77c : 0xb9ad8b);
+          // Babylon's Color3.FromHexString feeds these lighting floats directly.
+          if (komorebi && !night) {
+            object.color.setRGB(121 / 255, 168 / 255, 227 / 255);
+            if (!warmLight) object.groundColor.setRGB(37 / 255, 62 / 255, 87 / 255);
+          }
           object.intensity = warmLight ? 0.6 : night ? 0.48 : paintedDay ? 1 : delivery ? .65 : .6;
+          if (komorebi && !night) {
+            if (!hemiDirections.has(object)) hemiDirections.set(object,object.position.clone());
+            object.intensity=.64*Math.PI; object.position.set(.2,1,.3);
+          } else if (hemiDirections.has(object)) {
+            object.position.copy(hemiDirections.get(object)!); hemiDirections.delete(object);
+          }
         } else if (object instanceof THREE.DirectionalLight) {
           const key = !keySeen;
           keySeen = true;
-          object.color.set(warmLight && key ? 0xffd19a : night ? 0xd6e5fb : key ? (delivery ? 0xfff0d5 : 0xfff4e5) : 0xecf4ff);
-          object.intensity = warmLight && key ? 1.15 : night ? (key ? 0.65 : 0.2) : (key ? (paintedDay ? 2.9 : delivery ? 3.25 : 3.8) : 0.1);
+          object.color.set(warmLight && key ? 0xffd19a : night ? 0xd6e5fb : key ? (komorebi ? 0xfff1dc : delivery ? 0xfff0d5 : 0xfff4e5) : 0xecf4ff);
+          if (komorebi && key && !night && !warmLight) object.color.setRGB(1, 241 / 255, 220 / 255);
+          object.intensity = warmLight && key ? 1.15 : night ? (key ? 0.65 : 0.2) : (key ? (komorebi ? 3.1 : paintedDay ? 2.9 : delivery ? 3.25 : 3.8) : 0.1);
+          if (komorebi && !night && !warmLight) object.intensity=key?1.12*Math.PI:0;
           // A common high side sun makes shapes and contact shadows legible.
           // Keep authored night directions and animated point lights intact.
-          if (key && !night) object.position.set(-6, 9, 5);
+          if (key && !night) object.position.set(-6, komorebi ? 12 : 9, komorebi ? 6 : 5);
           object.castShadow = key;
           if (key && first) {
             object.shadow.mapSize.set(night ? 1024 : 2048, night ? 1024 : 2048);
@@ -415,8 +470,10 @@ export function createCozyEnvironment(
       if (disposed) return;
       disposed = true;
       restorePreviewShadows();
+      hemiDirections.forEach((position,light)=>light.position.copy(position)); hemiDirections.clear();
       root.removeFromParent();
       meadow?.dispose();
+      komorebiMeadow?.dispose();
       treeRendering.dispose();
       treeCanopies?.dispose();
       clouds?.dispose();
@@ -425,6 +482,7 @@ export function createCozyEnvironment(
       materials.forEach(material => material.dispose());
       backdrop?.dispose();
       deliveryBackdrop?.dispose();
+      komorebiBackdrop?.dispose();
       sky?.dispose();
       scene.background = previous.background;
       scene.environment = previous.environment;
@@ -434,6 +492,8 @@ export function createCozyEnvironment(
       scene.environmentIntensity = previous.environmentIntensity;
       scene.backgroundRotation.copy(previous.backgroundRotation);
       scene.environmentRotation.copy(previous.environmentRotation);
+      if (previous.environmentNight === undefined) delete scene.userData.environmentNight;
+      else scene.userData.environmentNight = previous.environmentNight;
     },
   };
 }

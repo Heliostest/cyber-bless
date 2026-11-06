@@ -30,6 +30,10 @@ describe('scene visual inventory', () => {
     expect(getSceneVisualFeatures('neapolitan-cornicello')).toContain('cypress');
     expect(getSceneVisualFeatures('chinese-diabolo')).toContain('willow');
     expect(getSceneVisualFeatures('german-nutcracker')).toContain('conifer');
+    expect(getSceneVisualFeatures('lantern')).toContain('acer');
+    expect(getSceneVisualFeatures('chinese-shadow-puppet')).toContain('toona');
+    expect(getSceneVisualFeatures('scottish-first-footing')).toContain('conifer');
+    expect(getSceneVisualFeatures('votive-candle-catholic')).toContain('cypress');
     expect(getSceneVisualFeatures('japanese-kendama')).toContain('broadleaf');
     expect(getSceneVisualFeatures('japanese-kendama')).not.toContain('cherry');
     expect(getSceneVisualFeatures('tanzaku-tanabata')).toContain('bamboo');

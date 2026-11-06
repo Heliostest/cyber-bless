@@ -13,6 +13,7 @@ import { readSceneMotion } from './scene-motion';
 import { debugTrees, type TreeRenderReport } from './debug-trees';
 import { debugEnvironmentTone, type EnvironmentTone } from './debug-environment-tone';
 import { DEFAULT_ENVIRONMENT_TONE } from './environment-defaults';
+import { debugGrass } from './debug-grass';
 
 /** Content defaults remain independent of browser-local debug overrides. */
 export function createDebugRenderStyle(
@@ -76,9 +77,18 @@ export function createDebugRenderStyle(
       }
     });
   }
-  let environmentTone: EnvironmentTone = DEFAULT_ENVIRONMENT_TONE;
+  // Shelf/object presentations have their own approved rig and no outdoor environment.
+  // Capturing one must use the same effective tone as its live rendering.
+  const approvedTone: EnvironmentTone = environment ? DEFAULT_ENVIRONMENT_TONE : 'original';
+  let environmentTone: EnvironmentTone = approvedTone;
+  const grassRegistration = environment?.hasGrass ? debugGrass.register(id, label, method => {
+    renderer.domElement.dataset.grassMethod = method;
+    environment.setGrassMethod(method); needsPreviewRefresh = true; invalidate();
+    if (rendered && !disposed) { environment.prepare(renderer, style.getStyle(), { advanceMotion: false }); draw(); }
+  }, renderer.domElement.closest?.('.app-shell') ?? undefined) : undefined;
   const toneRegistration = environment ? debugEnvironmentTone.register(id, label, tone => {
     renderer.domElement.dataset.environmentTone = tone;
+    style.setEnvironmentTone(tone);
     if (tone === environmentTone) return;
     environmentTone = tone;
     environment.setTone?.(tone);
@@ -93,6 +103,8 @@ export function createDebugRenderStyle(
     // Shares use approved defaults; temporary comparisons stay in the console.
     const restoreTrees = environment?.captureDefaultTrees?.();
     const restoreTone = environment?.captureDefaultTone?.();
+    const restoreGrass = environment?.captureDefaultGrass?.();
+    style.setEnvironmentTone(approvedTone);
     try {
       return captureSceneFrame(renderer.domElement, scene, () => {
         environment?.prepare(renderer, style.getStyle(), { advanceMotion: false });
@@ -101,7 +113,8 @@ export function createDebugRenderStyle(
     } finally {
       restoreTrees?.();
       restoreTone?.();
-      if (restoreTrees || restoreTone) { environment?.prepare(renderer, style.getStyle(), { advanceMotion: false }); draw(); }
+      restoreGrass?.(); style.setEnvironmentTone(environmentTone);
+      if (restoreTrees || restoreTone || restoreGrass) { environment?.prepare(renderer, style.getStyle(), { advanceMotion: false }); draw(); }
       else cues.render(renderer);
     }
   });
@@ -153,6 +166,7 @@ export function createDebugRenderStyle(
       waterRegistration.dispose();
       treeRegistration?.dispose();
       toneRegistration?.dispose();
+      grassRegistration?.dispose();
       water.dispose();
       registration.dispose();
       cues.dispose();
@@ -162,6 +176,7 @@ export function createDebugRenderStyle(
       delete renderer.domElement.dataset.environment;
       delete renderer.domElement.dataset.environmentReady;
       delete renderer.domElement.dataset.environmentTone;
+      delete renderer.domElement.dataset.grassMethod;
       delete renderer.domElement.dataset.waterMethod;
       delete renderer.domElement.dataset.waterSurfaces;
       delete renderer.domElement.dataset.treeMethod;

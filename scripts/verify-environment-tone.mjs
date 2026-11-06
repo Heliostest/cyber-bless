@@ -38,16 +38,19 @@ try {
     const canvas = page.locator('canvas[data-environment-tone]').first();
     await canvas.waitFor({ timeout: 60000 });
     await page.locator('canvas[data-environment-ready="true"]').waitFor();
-    assert.equal(await canvas.getAttribute('data-environment-tone'), 'tiny-delivery');
-    if (id !== 'udo-undama') assert.equal(await canvas.getAttribute('data-tree-method'), recommendations[id] ? 'scene' : 'original');
+    const defaultTree = await page.evaluate(async ({ url, id }) => {
+      const { getSceneTreeDefault } = await import(url); return getSceneTreeDefault(id);
+    }, { url: '/@fs/' + path.resolve('packages/scene-runtime/src/tree-profiles.ts').replaceAll('\\', '/'), id });
+    assert.equal(await canvas.getAttribute('data-environment-tone'), 'komorebi');
+    if (id !== 'udo-undama') assert.equal(await canvas.getAttribute('data-tree-method'), defaultTree === 'original' ? 'original' : 'scene');
     await canvas.screenshot({ path: path.join(out, `${id}-default-scene.png`) });
     await page.evaluate(() => { window.toneCanvas = document.querySelector('canvas[data-environment-tone]'); });
     const saved = await page.evaluate(() => JSON.stringify(localStorage));
     await page.locator('[data-audio-console-toggle]').click();
     const select = page.locator('.environment-tone-controls select');
     await select.waitFor();
-    assert.deepEqual(await select.locator('option').evaluateAll(nodes => nodes.map(node => node.value)), ['original', 'tiny-delivery']);
-    assert.equal(await select.inputValue(), 'tiny-delivery');
+    assert.deepEqual(await select.locator('option').evaluateAll(nodes => nodes.map(node => node.value)), ['original', 'tiny-delivery', 'komorebi']);
+    assert.equal(await select.inputValue(), 'komorebi');
     const treeSelect = page.locator(`select[data-tree-scene="${id}"]`);
     if (await treeSelect.count()) assert.equal(await treeSelect.inputValue(), 'scene');
     await select.selectOption('original');
@@ -115,7 +118,7 @@ try {
     assert.ok(panel.x >= 0 && panel.x + panel.width <= 390 && panel.y >= 0 && panel.y + panel.height <= 844);
     if (id === 'woodfish') await page.screenshot({ path: path.join(out, 'mobile-console.png') });
     await page.setViewportSize({ width: 1100, height: 900 });
-    report.scenes.push({ id, recommendation: recommendations[id] ?? 'original', defaultTone: 'tiny-delivery',
+    report.scenes.push({ id, regionalComparison: recommendations[id] ?? 'original', defaultTone: 'komorebi', defaultTrees: 'scene',
       sameCanvas: true, restored: true, collapsedChoiceRetained: true, noStorageWrites: true, mobilePanelFits: true });
   }
   assert.deepEqual(report.errors, []);

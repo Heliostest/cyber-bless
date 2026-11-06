@@ -44,6 +44,14 @@
 .audio-debug-console small { display: block; margin: 6px 0; font-size: 11px; color: #b1c7bc; }
 .audio-debug-console output { display: block; margin-top: 9px; color: #c9e8aa; font-variant-numeric: tabular-nums; }
 .audio-debug-console .audio-debug-muted { color: #ffe0a1; }
+.audio-debug-console .grass-debug-controls:not([hidden]) { border-top: 1px solid #628c7c; padding-top: 10px; }
+.grass-debug-controls label, .grass-debug-controls label > span { display: block; margin-top: 8px; margin-bottom: 4px; }
+.grass-debug-controls select { width: 100%; padding: 7px 8px; border: 1px solid #638a7b; border-radius: 8px; background: #2c4d43; color: #e8f4ef; font: inherit; }
+.grass-debug-controls select:focus-visible { outline: 3px solid #edc469; outline-offset: 2px; }
+.environment-tone-swatches[data-tone="komorebi"] i { background: #74a951; }
+.environment-tone-swatches[data-tone="komorebi"] i:nth-child(2) { background: #246d4f; }
+.environment-tone-swatches[data-tone="komorebi"] i:nth-child(3) { background: #cab68e; }
+.environment-tone-swatches[data-tone="komorebi"] i:nth-child(4) { background: #79a8e3; }
 .audio-debug-console .audio-debug-stop { margin-top: 8px; border: 0; padding: 3px 0; background: transparent; text-decoration: underline; }
 .audio-debug-console svg, .app-shell button.audio-debug-marker[data-audio-preview] svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .app-shell button.audio-debug-marker[data-audio-preview] svg { width: 16px; height: 16px; padding: 0; border-radius: 0; background: none; color: inherit; }

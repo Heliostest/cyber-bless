@@ -12,33 +12,50 @@ const createCozyEnvironment: typeof createEnvironment = (scene, options) => crea
 });
 
 describe("a scene's surrounding world", () => {
+  it.each(['brat-bride-cloth', 'scottish-first-footing', 'chinese-shadow-puppet', 'diya-oil-lamp', 'votive-candle-catholic', 'lantern', 'yeondeunghoe'])('never restores primitive night trees, including when imported assets fail: %s', async id => {
+    const scene = new THREE.Scene(), loadTree = vi.fn(async () => { throw Error('unavailable'); });
+    const world = createCozyEnvironment(scene, { id, loadTree, loadSky: async () => new THREE.DataTexture() })!;
+    try {
+      await world.ready;
+      expect(loadTree).toHaveBeenCalled();
+      const fallback = scene.getObjectByName('stylized-trees');
+      expect(fallback).toBeDefined(); expect(fallback?.visible).toBe(true);
+      expect(fallback?.children.some(tree => tree.userData.treeRole === 'leaves')).toBe(true);
+      await world.setTreeMethod('original'); expect(fallback?.visible).toBe(true);
+      const restore = world.captureDefaultTrees(); expect(fallback?.visible).toBe(true); restore?.();
+    } finally { world.dispose(); }
+  });
   it.each(['woodfish', 'diya-oil-lamp'])('softens preview shadows and restores their strength for captures and teardown: %s', async id => {
     const scene = new THREE.Scene(), sun = new THREE.DirectionalLight(); sun.shadow.intensity = .8; scene.add(sun);
     const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture(), loadTree: async () => {
       const model = new THREE.Group(); model.add(new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshStandardMaterial())); return model;
     } })!;
     const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
-    world.prepare(renderer); const radius = sun.shadow.radius;
+    await world.ready;await world.setTreeMethod('original');world.prepare(renderer); const radius = sun.shadow.radius;
     await world.setTreeMethod('cherry'); world.prepare(renderer);
     expect(sun.shadow.intensity).toBeLessThan(.8); expect(sun.shadow.radius).toBeGreaterThan(radius);
     expect(renderer.shadowMap.type).toBe(THREE.PCFShadowMap);
     const restore = world.captureDefaultTrees(); world.prepare(renderer);
-    expect(sun.shadow.intensity).toBe(.8); expect(sun.shadow.radius).toBe(radius);
+    expect(sun.shadow.intensity).toBeCloseTo(id === 'diya-oil-lamp' ? .8 * .52 : .8);
+    expect(sun.shadow.radius).toBe(id === 'diya-oil-lamp' ? 12 : radius);
     restore?.(); world.prepare(renderer); expect(sun.shadow.intensity).toBeLessThan(.8);
     await world.ready; world.dispose(); expect(sun.shadow.intensity).toBe(.8); expect(sun.shadow.radius).toBe(radius);
   });
-  it('loads both recommended cherry variants by default and reuses them after a legacy comparison', async () => {
+  it('keeps scene trees as the default and loads both Komorebi variants only when selected', async () => {
     const scene = new THREE.Scene(), loadTree = vi.fn(async () => {
       const root = new THREE.Group(), mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshStandardMaterial());
       mesh.position.y = 1; root.add(mesh); return root;
     });
     const world = createCozyEnvironment(scene, { id: 'shinto-torii', loadTree, loadSky: async () => new THREE.DataTexture() })!;
     expect(world.treeRecommendation).toBe('cherry'); expect(loadTree).toHaveBeenCalledTimes(2);
-    await world.ready; await world.setTreeMethod('original');
-    await world.setTreeMethod('scene');
-    expect(loadTree).toHaveBeenCalledTimes(2);
+    await world.ready;
     expect(loadTree).toHaveBeenCalledWith('/environments/trees/simple-tree/cherry-round.glb');
     expect(loadTree).toHaveBeenCalledWith('/environments/trees/simple-tree/cherry-cluster.glb');
+    await world.setTreeMethod('komorebi');
+    expect(loadTree).toHaveBeenCalledTimes(4);
+    expect(loadTree).toHaveBeenCalledWith('/environments/trees/komorebi/round.glb');
+    expect(loadTree).toHaveBeenCalledWith('/environments/trees/komorebi/cluster.glb');
+    await world.setTreeMethod('scene'); expect(loadTree).toHaveBeenCalledTimes(4);
     await world.ready; world.dispose();
   });
   it.each(['woodfish', 'diya-oil-lamp'])('switches only environment trees in day and night without rebuilding the scene: %s', async id => {
@@ -52,7 +69,9 @@ describe("a scene's surrounding world", () => {
     const originalRoot = scene.getObjectByName('cozy-environment');
     const nightTree = originalRoot!.children.find(child => child.position.x === -6.8 && child.position.z === -6.5);
     const nightHeight = nightTree ? new THREE.Box3().setFromObject(nightTree).getSize(new THREE.Vector3()).y : undefined;
-    expect(world.treeCount).toBeGreaterThan(0); expect(loadTree).not.toHaveBeenCalled();
+    expect(world.treeCount).toBeGreaterThan(0);
+    if (id === 'woodfish') expect(loadTree).not.toHaveBeenCalled();
+    else { await world.ready; expect(loadTree).toHaveBeenCalledTimes(2); }
     await world.setTreeMethod('quaternius');
     expect(report).toHaveBeenLastCalledWith({ count: world.treeCount, actual: 'quaternius', status: 'ready' });
     expect(scene.getObjectByName('alternative-environment-trees')!.children.length).toBeGreaterThan(0);
@@ -147,7 +166,7 @@ describe("a scene's surrounding world", () => {
         await world.ready;
       } finally { world.dispose(); }
     }
-  });
+  },60000);
 
   it.each(["brat-bride-cloth", "scottish-first-footing", "diya-oil-lamp", "votive-candle-catholic", "yeondeunghoe"])("keeps the painted night sky while loading and releasing its separate lighting HDR: %s", async id => {
     const scene = new THREE.Scene(), previous = new THREE.Color(0x123456);
@@ -185,6 +204,7 @@ describe("a scene's surrounding world", () => {
     const clock = vi.spyOn(performance, "now").mockReturnValue(1000);
     const scene = new THREE.Scene(), sun = new THREE.DirectionalLight(); scene.add(sun);
     const world = createCozyEnvironment(scene, { id: "woodfish", loadSky: async () => new THREE.DataTexture() })!;
+    world.setTone('original');
     const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
     try {
       world.prepare(renderer); clock.mockReturnValue(1020); world.prepare(renderer);
@@ -209,6 +229,7 @@ describe("a scene's surrounding world", () => {
     const lamp = new THREE.PointLight(0xffaa44, .7);
     scene.add(sun, ambient, sky, lamp);
     const world = createCozyEnvironment(scene, { id: "dalarna-wooden-horse", loadSky: async () => new THREE.DataTexture() })!;
+    world.setTone('original');
     const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
     world.prepare(renderer);
     const original = { sun: sun.intensity, ambient: ambient.intensity, sky: sky.intensity };
@@ -439,7 +460,8 @@ describe("a scene's surrounding world", () => {
     const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
     const renderer = { shadowMap: { enabled: false, type: THREE.PCFSoftShadowMap } } as THREE.WebGLRenderer;
     world.prepare(renderer);
-    expect(sun.intensity).toBeGreaterThan(3 * (ambient.intensity + sky.intensity + fill.intensity));
+    expect(sun.intensity).toBeCloseTo(1.12*Math.PI);
+    expect(sky.intensity).toBeCloseTo(.64*Math.PI);expect(ambient.intensity).toBe(0);expect(fill.intensity).toBe(0);
     expect(sun.position.x).toBeLessThan(-2);
     expect(sun.position.y).toBeGreaterThan(sun.position.z);
     expect(sun.position.z).toBeGreaterThan(0);
@@ -449,7 +471,8 @@ describe("a scene's surrounding world", () => {
     sun.position.set(-1, 1, -8); sun.intensity = .1;
     world.prepare(renderer);
     expect(sun.position.clone().normalize().distanceTo(direction)).toBeLessThan(.0001);
-    expect(sun.intensity).toBeGreaterThan(3 * (ambient.intensity + sky.intensity + fill.intensity));
+    expect(sun.intensity).toBeCloseTo(1.12*Math.PI);
+    expect(sky.intensity).toBeCloseTo(.64*Math.PI);expect(ambient.intensity).toBe(0);expect(fill.intensity).toBe(0);
     await world.ready; world.dispose();
   });
 

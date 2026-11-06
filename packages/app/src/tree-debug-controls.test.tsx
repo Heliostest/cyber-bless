@@ -16,7 +16,7 @@ it('offers both real tree sources, keeps collapsed previews and restores on cons
     await act(async () => { entry = debugTrees.register('tea', '茶', apply, scope, 'cherry'); entry.report({ count: 12, actual: 'original', status: 'ready' }); });
     await settle();
     const select = ui.host.querySelector('select')!;
-    expect([...select.options].map(option => option.value)).toEqual(['original', 'scene', 'quaternius', 'simple-tree', 'cherry', 'cypress', 'willow', 'conifer', 'toona', 'acer', 'maple']);
+    expect([...select.options].map(option => option.value)).toEqual(['original', 'scene', 'quaternius', 'simple-tree', 'komorebi', 'cherry', 'cypress', 'willow', 'conifer', 'toona', 'acer', 'maple']);
     expect(select.options[1].textContent).toContain('樱花');
     for (const [id, label] of [['toona', '椿树'], ['acer', '槭树'], ['maple', '枫树']]) {
       expect([...select.options].find(option => option.value === id)?.textContent).toContain(label);
@@ -34,7 +34,7 @@ it('offers both real tree sources, keeps collapsed previews and restores on cons
       await act(async () => { select.value = method; select.dispatchEvent(new Event('change', { bubbles: true })); });
       expect(apply).toHaveBeenLastCalledWith(method);
     }
-    for (const method of ['quaternius', 'simple-tree']) {
+    for (const method of ['komorebi', 'quaternius', 'simple-tree']) {
       await act(async () => { select.value = method; select.dispatchEvent(new Event('change', { bubbles: true })); });
       expect(apply).toHaveBeenLastCalledWith(method);
     }

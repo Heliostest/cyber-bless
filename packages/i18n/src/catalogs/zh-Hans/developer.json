@@ -87,7 +87,7 @@
   "developer.trees.original": "原有树木",
   "developer.trees.count": "已接入 {count} 棵环境树木",
   "developer.trees.help": "即时预览；切换不会重置仪式进度。",
-  "developer.trees.restore": "恢复场景推荐",
+  "developer.trees.restore": "恢复默认树木",
   "developer.trees.loading": "正在加载树木…",
   "developer.trees.error": "树木加载失败，已恢复场景默认。",
   "developer.trees.quaternius": "Quaternius Stylized Nature",
@@ -103,9 +103,16 @@
   "developer.trees.recommended": "按场景推荐：{species}",
   "developer.trees.bySource": "按素材来源",
   "developer.trees.bySpecies": "按树形选择",
-  "developer.trees.regionalHelp": "按地区园林与季节选景；未核实匹配的场景保留原景。",
+  "developer.trees.regionalHelp": "背景树形搭配，可单独切换。",
   "developer.trees.cherryCredit": "樱花模型：",
   "developer.trees.cherryAuthor": "Jogoss",
   "developer.trees.cherryLicense": "CC BY 4.0",
-  "developer.trees.adapted": "已适配·说明"
+  "developer.trees.adapted": "已适配·说明",
+  "developer.grass.title": "草地样式",
+  "developer.grass.empty": "当前场景没有可切换的草地。",
+  "developer.grass.original": "原有草地",
+  "developer.grass.help": "切换草叶与地表配色；保留本次调试选择，不重置进度。",
+  "developer.environment.komorebi": "Komorebi · 冷影暖光",
+  "developer.trees.komorebi": "Komorebi · 树种1",
+  "developer.grass.komorebi": "Komorebi"
 }

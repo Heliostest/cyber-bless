@@ -1,5 +1,5 @@
 import { DEFAULT_ENVIRONMENT_TONE } from './environment-defaults';
-export type EnvironmentTone = 'original' | 'tiny-delivery';
+export type EnvironmentTone = 'original' | 'tiny-delivery' | 'komorebi';
 export type DebugEnvironmentScene = { id: string; label: string; scope?: object; tone: EnvironmentTone };
 
 /** One session-only palette per app shell, retained when navigating between scenes. */
@@ -33,7 +33,7 @@ export function createDebugEnvironmentTone() {
       };
     },
     select(tone: EnvironmentTone, scope?: object) {
-      if (!owners.get(scope)?.size || (tone !== 'original' && tone !== 'tiny-delivery')) return;
+      if (!owners.get(scope)?.size || !['original', 'tiny-delivery', 'komorebi'].includes(tone)) return;
       choices.set(scope, tone); applyScope(scope);
     },
     register(id: string, label: string, apply: (tone: EnvironmentTone) => void, scope?: object) {

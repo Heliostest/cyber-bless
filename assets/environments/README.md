@@ -1,11 +1,11 @@
 # 场景环境素材
 
-现有 59 个场景共享自然道具与天空资源，按场景配置庭院、泉边、木廊、手作桌或河岸。日景使用明亮蓝天、方向明确的阳光和五段柔和色阶；环境保留连续哑光着色，主体保留各自的织物、陶土、木材和釉面差异。草地带宽幅明暗图斑和随风摆动的草叶，圆润阔叶树与成组花草衬托石径和清浅水面；中央留给交互物件。夜间仍保持原有灯火布置。
+现有 158 个场景共享自然道具与天空资源，按场景配置庭院、泉边、木廊、手作桌或河岸。当前草地、光照与调色采用校准后的 Komorebi 默认，主体保留各自的织物、陶土、木材和釉面差异。七个夜景的球状／锥形简模树已移除，改用不同的现有枝叶模型，灯火与中央交互区域保留。日景原树、九个既有推荐与主题植物保持，Komorebi 树为可选。见 [默认画风](../../docs/research/2026-11-06-komorebi-defaults.md)与 [夜景树木替换](../../docs/research/2026-11-06-night-tree-retirement.md)；下方旧阶段说明按各自时间阅读。
 
 - Kenney [Nature Kit](https://kenney.nl/assets/nature-kit)：精选 CC0 源模型保存在 `source/kenney/`。运行 `node scripts/prepare-nature-props.mjs` 重建精简几何数据，源文件与哈希记录随模型保存。原有五个道具沿用平滑法线，新增道具保留各自的源法线。
-- KayKit [Forest Nature Pack](https://kaylousberg.itch.io/kaykit-forest)：日景使用两种 CC0 阔叶树，保留源模型、原始渐变图集和作者许可。`node scripts/prepare-tree-props.mjs` 校验来源哈希并生成顶点颜色几何；具体来源及镜像版本见 [trees/README.md](trees/README.md)。Kenney 继续提供灌木、花草、石块及夜间树木。
+- KayKit [Forest Nature Pack](https://kaylousberg.itch.io/kaykit-forest)：日景原树及夜景原树比较／加载失败回退使用两种 CC0 阔叶树，保留源模型、原始渐变图集和作者许可。`node scripts/prepare-tree-props.mjs` 校验来源哈希并生成顶点颜色几何；具体来源及镜像版本见 [trees/README.md](trees/README.md)。Kenney 继续提供灌木、花草和石块，退役的球状／锥形树不再输出到运行时资源。
 - 调试台「树木样式」可在原有背景树、[Quaternius 免费 Standard](trees/quaternius/README.md) 与 [Just a simple tree](trees/simple-tree/README.md) 之间切换，支持共享日景和夜景，GLB 及 CC0／MIT 许可离线打包。替代树预览采用两棵近景侧树及后方树丛，局部枝干出画、叶冠探入上沿，中央保留操作空间；调试选择不写正式偏好。主题器物树和无背景树的海岸不替换。
-- 树形选择提供樱花、柱形柏、垂柳、层叠针叶树，以及新增手动比较的椿树（香椿）、槭树（青槭）、枫树（秋色），特色树形全部使用 [Just a simple tree](trees/simple-tree/README.md)。樱花及新增三种树为源分枝／叶簇管线上的产品美术改编，采用各自程序叶纹和参数。十八份可选 GLB 及完整 CC0／MIT 通知离线打包；先前外部樱花仅保留来源档案。新增三项不改现有默认或九个地区推荐；详见[形态参考与范围](../../docs/research/2026-11-05-toona-maple-previews.md)及[地区证据边界](../../docs/research/2026-11-05-regional-tree-evidence.md)。
+- 树形选择提供樱花、柱形柏、垂柳、层叠针叶树，以及椿树（香椿）、槭树（青槭）、枫树（秋色），特色树形全部使用 [Just a simple tree](trees/simple-tree/README.md)。樱花、椿树及两种槭／枫树为源分枝／叶簇管线上的产品美术改编，采用各自程序叶纹和参数。连同 Quaternius 和 Komorebi，二十份 GLB 及完整 CC0／MIT 通知离线打包；先前外部樱花仅保留来源档案。九个地区推荐保持，另增加七个夜景的纯美术搭配；详见[形态参考与范围](../../docs/research/2026-11-05-toona-maple-previews.md)、[地区证据边界](../../docs/research/2026-11-05-regional-tree-evidence.md)与[夜景替换](../../docs/research/2026-11-06-night-tree-retirement.md)。
 - 草地：本地生成明暗色块，实例化草叶接收阴影并随风轻动。草叶弯曲与根尖着色参考并改编自 MIT 开源项目 [boona13/threejs-grass-water-shaders](https://github.com/boona13/threejs-grass-water-shaders)，完整许可与改动说明在 [meadow/](meadow/README.md)。
 - 水面：四处水体使用透明物理材质、缓慢交错波纹及水底风格化焦散光纹，是本项目实现；不含光学折射或物理焦散模拟。开源方案比较和接入说明见 [water/README.md](water/README.md)。
 - 家具：21 个功能性手作桌增加圆角拼板、木纹、木销和不同支架，保持原台面尺寸与高度。程序几何由本项目编写，Kenney 与 KayKit 家具仅作视觉参考，见 [furniture/PROVENANCE.md](furniture/PROVENANCE.md)。

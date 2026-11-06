@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { BlendFunction, EffectComposer, EffectPass, OutlineEffect, RenderPass, ToneMappingEffect, ToneMappingMode } from "postprocessing";
+import { BlendFunction, EffectComposer, EffectPass, OutlineEffect, RenderPass, ToneMappingEffect, ToneMappingMode, type Effect } from "postprocessing";
 import type { RenderStyleId } from "@wbr/content";
 import { createToonSurfaces } from "./toon-surfaces";
 import { softenObjectLighting } from './icon-style';
@@ -12,10 +12,13 @@ import { normalizeStyleParameters, type RenderStyleParameters } from "./render-s
 import { AdjustableOutlineEffect } from "./adjustable-outline-effect";
 import { createGallerySurfaces, gallerySubjects, isGallerySurfaceStyle } from "./gallery-surfaces";
 import { createGalleryEffect, isGalleryPostStyle } from "./gallery-effects";
+import { createKomorebiGrade } from './komorebi-grade';
+import type { EnvironmentTone } from './debug-environment-tone';
 
 /** Shared material styling, color treatment and restrained contours. */
 export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera, { sceneId = '' }: { sceneId?: string } = {}) {
   let active: RenderStyleId = "original";
+  let environmentTone: EnvironmentTone = 'original';
   let composer: EffectComposer | undefined;
   let outline: OutlineEffect | undefined;
   let normals: MoebiusNormals | undefined;
@@ -52,45 +55,60 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
   }
 
   function prepare() {
-    if (composer || active === "original") return;
+    if (composer || active === "original" && environmentTone !== 'komorebi') return;
     composer = new EffectComposer(renderer, { frameBufferType: THREE.HalfFloatType, multisampling: 2 });
+    function finish() {
+      if (environmentTone === 'komorebi') composer!.addPass(new EffectPass(camera, createKomorebiGrade(!!scene.userData.environmentNight)));
+      composer!.setSize(width, height);
+    }
+    function addTonePass(...effects: Effect[]) {
+      // The source's daytime image processor clips and grades diffuse RGB;
+      // applying ACES first changes both green hue and highlight saturation.
+      if (environmentTone !== 'komorebi' || scene.userData.environmentNight)
+        effects.unshift(new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC }));
+      if (effects.length) composer!.addPass(new EffectPass(camera,...effects));
+    }
     if (active === "pixel-art") {
       pixels = new PixelArtPass(scene,camera);
       composer.addPass(pixels);
-      composer.addPass(new EffectPass(camera,new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC })));
-      composer.setSize(width,height);
+      addTonePass();
+      finish();
       return;
     }
     composer.addPass(new RenderPass(scene, camera));
+    if (active === 'original') {
+      addTonePass();
+      finish(); return;
+    }
     if (isGallerySurfaceStyle(active) || isGalleryPostStyle(active)) {
       if (isGallerySurfaceStyle(active)) gallerySurfaces = createGallerySurfaces(active);
       if (isGalleryPostStyle(active) && active !== "space-grade") {
         normals = new MoebiusNormals(scene, camera);
         composer.addPass(normals);
       }
-      composer.addPass(new EffectPass(camera, new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC })));
+      addTonePass();
       if (isGalleryPostStyle(active)) {
         galleryEffect = createGalleryEffect(active, normals?.target.texture ?? null, normals?.target.depthTexture ?? null, renderer.getPixelRatio());
         composer.addPass(new EffectPass(camera, galleryEffect.effect));
       }
-      composer.setSize(width, height);
+      finish();
       return;
     }
     if (active === "halftone") {
       halftone = createHalftoneEffect(renderer.getPixelRatio());
-      composer.addPass(new EffectPass(camera,new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC })));
+      addTonePass();
       composer.addPass(new EffectPass(camera,halftone));
-      composer.setSize(width,height);
+      finish();
       return;
     }
     surfaces = createToonSurfaces(active, sceneId);
     if (active === "moebius") {
       normals = new MoebiusNormals(scene, camera);
       composer.addPass(normals);
-      composer.addPass(new EffectPass(camera, new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC })));
+      addTonePass();
       moebius = createMoebiusEffect(normals.target.texture, normals.target.depthTexture!, renderer.getPixelRatio());
       composer.addPass(new EffectPass(camera, moebius));
-      composer.setSize(width, height);
+      finish();
       return;
     }
     const Outline = active === "toon-outline" ? AdjustableOutlineEffect : OutlineEffect;
@@ -103,14 +121,13 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
       xRay: false,
       multisampling: 2,
     });
-    const tone = new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC });
     // Tone-map before compositing ink, so dark lines are not blown out by exposure.
     if (active === "gouache") {
-      composer.addPass(new EffectPass(camera, tone));
+      addTonePass();
       // Separate pass: the brush samples the tone-mapped image, not HDR input.
       composer.addPass(new EffectPass(camera, createGouacheEffect(), outline));
-    } else composer.addPass(new EffectPass(camera, tone, outline));
-    composer.setSize(width, height);
+    } else addTonePass(outline);
+    finish();
   }
 
   function resize(nextWidth: number, nextHeight: number) {
@@ -120,7 +137,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
   }
 
   function render() {
-    if (active === "original") {
+    if (active === "original" && environmentTone !== 'komorebi') {
       renderer.render(scene, camera);
       return;
     }
@@ -163,7 +180,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
         outline!.uniforms.get("lineWidth")!.value = parameters.toonWidth;
       }
       frame = surfaces?.apply(scene);
-      if (active === 'toon-soft') lights = softenObjectLighting(scene, sceneId);
+      if (active === 'toon-soft' && (environmentTone !== 'komorebi' || scene.userData.environmentNight)) lights = softenObjectLighting(scene, sceneId);
       if (frame) { outline?.selection.set(frame.outlined); normals?.selection.set(frame.outlined); }
       if (halftone) {
         halftone.uniforms.get("pixelRatio")!.value = renderer.getPixelRatio();
@@ -207,6 +224,7 @@ export function createRenderStyle(renderer: THREE.WebGLRenderer, scene: THREE.Sc
   }
 
   return { setStyle, getStyle: () => active,
+    setEnvironmentTone(tone: EnvironmentTone) { if (tone === environmentTone) return; release(); environmentTone = tone; },
     setParameters(patch: Partial<RenderStyleParameters>) { parameters = normalizeStyleParameters(patch, parameters); },
     resize, render, dispose: release };
 }

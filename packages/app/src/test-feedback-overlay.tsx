@@ -157,7 +157,7 @@ export function TestFeedbackOverlay({ entry, context, reducedMotion, onOpenChang
       <label>{tr(TEST_FEEDBACK_COPY.message)}<textarea ref={textInput} rows={4} maxLength={4000}
         placeholder={tr(TEST_FEEDBACK_COPY.placeholder)} value={draft.message} disabled={currentPending || receiptForDraft || delivered || draft.result === 'pass'}
         onChange={event => update({ ...draft, message: event.target.value })}/></label>
-      <details className="test-feedback-settings" open={!snapshot?.connection.endpoint}>
+      <details className="test-feedback-settings" open={!snapshot?.connection.endpoint || !snapshot.connection.token}>
         <summary>{tr(TEST_FEEDBACK_COPY.settings)}</summary>
         <label>{tr(TEST_FEEDBACK_COPY.endpoint)}<input type="url" autoCapitalize="none" autoCorrect="off"
           placeholder={tr(TEST_FEEDBACK_COPY.endpoint)} value={endpoint} onChange={event => setEndpoint(event.target.value)}/></label>

@@ -76,3 +76,15 @@ test('logs persist safe timestamped messages and rotate at a bounded size', asyn
   assert.match(content, /\d{4}-\d{2}-\d{2}T/); assert.match(content, /event 9/);
   assert.ok((await readFile(`${file}.1`, 'utf8')).length <= 200);
 });
+
+test('fixed tunnel tracking accepts only the configured origin and clears readiness on outage', () => {
+  const messages = [], states = [];
+  const track = trackTunnelAddress({ expectedUrl: 'https://feedback.heliosoft.win', log: m => messages.push(m), update: s => states.push(s) });
+  track({ status: 'running', publicUrl: 'https://feedback.heliosoft.win' });
+  track({ status: 'running', publicUrl: 'https://other.example' });
+  track({ status: 'running', publicUrl: 'https://unrelated.trycloudflare.com' });
+  track({ status: 'stopped' });
+  track({ status: 'running', publicUrl: 'https://feedback.heliosoft.win' });
+  assert.deepEqual(states.map(state => state.publicUrl), ['https://feedback.heliosoft.win', '', 'https://feedback.heliosoft.win']);
+  assert.equal(messages.length, 1);
+});

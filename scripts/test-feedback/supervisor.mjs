@@ -4,6 +4,7 @@ import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { feedbackDefaults } from './cli.mjs';
+import { loadTunnelConfig } from './tunnel.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const cli = fileURLToPath(new URL('./cli.mjs', import.meta.url));
@@ -38,11 +39,11 @@ export async function acquireSupervisorLock(port = 4320) {
   return { port: server.address().port, close: () => new Promise(resolve => server.close(resolve)) };
 }
 
-export function trackTunnelAddress({ log, update }) {
+export function trackTunnelAddress({ log, update, expectedUrl }) {
   let previous = '';
   return state => {
     const url = state.status === 'running' ? state.publicUrl : '';
-    if (url && !/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/i.test(url)) return;
+    if (url && (expectedUrl ? url !== expectedUrl : !/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/i.test(url))) return;
     update({ tunnel: url ? 'running' : 'restarting', publicUrl: url });
     if (url && url !== previous) { log(`Public upload URL: ${url}`); previous = url; }
   };
@@ -119,6 +120,7 @@ async function health(url) {
 
 export async function main() {
   const defaults = feedbackDefaults(), directory = path.dirname(defaults.runtimeFile);
+  const fixed = await loadTunnelConfig(defaults.tunnelConfig);
   const log = createServiceLogger(path.join(directory, 'supervisor.log'));
   let lock;
   try { lock = await acquireSupervisorLock(); }
@@ -132,7 +134,7 @@ export async function main() {
     try { writeState(path.join(directory, 'supervisor-runtime.json'), state); }
     catch { log('Unable to update supervisor state file.'); }
   };
-  const tunnelAddress = trackTunnelAddress({ log, update });
+  const tunnelAddress = trackTunnelAddress({ log, update, expectedUrl: fixed?.publicUrl });
   const launch = command => spawn(process.execPath, [cli, command], {
     cwd: root, windowsHide: true, shell: false, stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
   });

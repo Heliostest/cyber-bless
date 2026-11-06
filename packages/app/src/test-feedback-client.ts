@@ -5,6 +5,7 @@ import { FEEDBACK_MAX_MESSAGE_LENGTH, normalizeFeedbackEndpoint, parseFeedbackRe
   type FeedbackConnection, type FeedbackReceipt, type FeedbackReport, type FeedbackTeamStatus, type FeedbackSceneIdentity } from '@wbr/shared/test-feedback';
 
 export type TestFeedbackError = 'read' | 'write' | 'send' | 'receipt' | 'connection' | 'full' | 'invalid';
+export const DEFAULT_TEST_FEEDBACK_ENDPOINT = 'https://feedback.heliosoft.win/api/feedback';
 export type FeedbackStatusCache = { targetKey: string; data: FeedbackTeamStatus; fetchedAt: string };
 const targetKey = (value: FeedbackConnection) => sha256(new TextEncoder().encode(JSON.stringify([value.endpoint, value.token])).buffer);
 type SavedFeedback = {
@@ -40,7 +41,7 @@ function draft(value: unknown): FeedbackReport {
   return clone(value as FeedbackReport);
 }
 function restore(raw: string | null): SavedFeedback {
-  if (raw === null) return { version: 1, connection: { endpoint: '', token: '' }, drafts: {}, pending: [], receipts: {} };
+  if (raw === null) return { version: 1, connection: { endpoint: DEFAULT_TEST_FEEDBACK_ENDPOINT, token: '' }, drafts: {}, pending: [], receipts: {} };
   const value: unknown = JSON.parse(raw);
   if (!object(value) || value.version !== 1 || Object.keys(value).some(key => !['version', 'connection', 'drafts', 'pending', 'lastReceipt', 'receipts', 'teamStatus'].includes(key)) ||
       !object(value.drafts) || Object.keys(value.drafts).length > 200 || !Array.isArray(value.pending) || value.pending.length > MAX_PENDING)
@@ -116,7 +117,7 @@ export function createTestFeedbackClient(host: TestFeedbackHost, options: { retr
       try {
         await host.write(raw);
         durableRevision = current;
-        if (!disposed && current === revision) publish({ status: 'ready', error: snapshot.error === 'write' ? undefined : snapshot.error });
+        if (!disposed && loaded && current === revision) publish({ status: 'ready', error: snapshot.error === 'write' ? undefined : snapshot.error });
         return true;
       } catch {
         if (!disposed) publish({ status: 'storage-error', error: 'write' });
@@ -135,7 +136,17 @@ export function createTestFeedbackClient(host: TestFeedbackHost, options: { retr
       try {
         const restored = restore(await host.read());
         if (disposed) return false;
-        saved = restored; loaded = true; durableRevision = revision;
+        const endpoint = restored.connection.endpoint;
+        const migrate = !endpoint || new URL(endpoint).hostname.endsWith('.trycloudflare.com');
+        saved = migrate ? { ...restored, connection: { ...restored.connection, endpoint: DEFAULT_TEST_FEEDBACK_ENDPOINT }, teamStatus: undefined } : restored;
+        if (migrate) {
+          // Persist the new target before either uploading retained reports or
+          // publishing a ready snapshot. Pending IDs, drafts and invitations stay intact.
+          revision++;
+          if (!(await persist())) { scheduleRetry(); return false; }
+          if (disposed) return false;
+        }
+        loaded = true; durableRevision = revision;
         publish({ status: 'ready', error: undefined, teamStatusState: saved.teamStatus?.targetKey === targetKey(saved.connection) ? 'stale' : 'idle' });
         return true;
       } catch {

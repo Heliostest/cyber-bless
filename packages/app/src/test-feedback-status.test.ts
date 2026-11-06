@@ -19,6 +19,19 @@ async function setup(raw: string | null = null) {
 }
 afterEach(() => { clients.forEach(client => client.dispose()); clients.length = 0; vi.useRealTimers(); });
 describe('team feedback status synchronization', () => {
+  it('discards the old receiver cache when migrating a saved temporary address', async () => {
+    const { client, disk } = await setup();
+    await client.setConnection({ endpoint: 'https://old.trycloudflare.com', token: 'existing-invite' }); client.setActive(true);
+    await client.refreshTeamStatus();
+    expect(client.getSnapshot().teamStatusState).toBe('fresh');
+    const saved = disk(); client.dispose();
+    const restarted = await setup(saved);
+    expect(restarted.client.getSnapshot().connection).toEqual({ endpoint: 'https://feedback.heliosoft.win/api/feedback', token: 'existing-invite' });
+    expect(restarted.client.getSnapshot().teamStatus).toBeUndefined();
+    expect(restarted.client.getSnapshot().teamStatusState).toBe('idle');
+    expect(JSON.parse(restarted.disk()!).teamStatus).toBeUndefined();
+  });
+
   it('does not label an unconfigured or unavailable receiver as unreported', async () => {
     const { client, host } = await setup(); client.setActive(true); await client.refreshTeamStatus();
     expect(host.readStatus).not.toHaveBeenCalled();

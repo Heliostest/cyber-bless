@@ -25,6 +25,73 @@ async function setup(raw: string | null = null) {
 afterEach(() => { for (const client of clients) client.dispose(); clients.length = 0; vi.useRealTimers(); });
 
 describe('durable test feedback outbox', () => {
+  it('starts with the fixed upload address without embedding a test invitation', async () => {
+    const host: TestFeedbackHost = { read: vi.fn(async () => null), write: vi.fn(async () => {}), send: vi.fn(async () => '{}') };
+    const client = createTestFeedbackClient(host); clients.push(client);
+    await client.load(); client.setActive(true); await client.flush();
+    expect(client.getSnapshot().connection).toEqual({ endpoint: 'https://feedback.heliosoft.win/api/feedback', token: '' });
+    expect(host.send).not.toHaveBeenCalled(); expect(host.write).not.toHaveBeenCalled();
+  });
+
+  it.each(['', 'https://republic-biz-aid-span.trycloudflare.com/api/feedback'])('migrates saved address %j and delivers pending feedback with the existing invitation', async endpoint => {
+    const pending = report(), oldReceipt = JSON.parse(receipt('feedback_old'));
+    const { client, host, disk } = await setup(JSON.stringify({ version: 1, connection: { endpoint, token: 'existing-invite' },
+      drafts: { crane: pending }, pending: [pending], lastReceipt: oldReceipt, receipts: { feedback_old: oldReceipt } }));
+    expect(client.getSnapshot().connection).toEqual({ endpoint: 'https://feedback.heliosoft.win/api/feedback', token: 'existing-invite' });
+    expect(JSON.parse(disk()!).drafts.crane).toEqual(pending);
+    expect(JSON.parse(disk()!).pending).toEqual([pending]);
+    expect(client.getSnapshot().receipts?.feedback_old).toEqual(oldReceipt);
+    client.setActive(true); await client.flush();
+    expect(host.send).toHaveBeenCalledWith('https://feedback.heliosoft.win/api/feedback', 'existing-invite', JSON.stringify(pending));
+    expect(client.getSnapshot().pending).toEqual([]);
+    expect(client.getSnapshot().receipts?.feedback_old).toEqual(oldReceipt);
+  });
+
+  it.each(['https://custom-receiver.example/api/feedback', 'http://127.0.0.1:4318/api/feedback'])('preserves the explicit custom address %s', async endpoint => {
+    const { client, host } = await setup(JSON.stringify({ version: 1, connection: { endpoint, token: 'custom-invite' }, drafts: {}, pending: [] }));
+    expect(client.getSnapshot().connection).toEqual({ endpoint, token: 'custom-invite' });
+    expect(host.write).not.toHaveBeenCalled();
+  });
+
+  it('does not upload until the address migration is durable and retains the outbox if that write fails', async () => {
+    vi.useFakeTimers();
+    const pending = report();
+    let disk = JSON.stringify({ version: 1, connection: { endpoint: 'https://old.trycloudflare.com/api/feedback', token: 'existing-invite' },
+      drafts: { crane: pending }, pending: [pending] });
+    const original = disk;
+    const host: TestFeedbackHost = { read: vi.fn(async () => disk), write: vi.fn(async () => { throw Error('disk full'); }),
+      send: vi.fn(async (_endpoint, _token, raw) => receipt(JSON.parse(raw).id)) };
+    const client = createTestFeedbackClient(host); clients.push(client);
+    expect(await client.load()).toBe(false);
+    expect(client.getSnapshot().error).toBe('write');
+    client.setActive(true); await client.flush();
+    expect(host.send).not.toHaveBeenCalled(); expect(disk).toBe(original);
+    expect(client.getSnapshot().pending).toEqual([pending]);
+    host.write = vi.fn(async raw => { disk = raw; });
+    await vi.advanceTimersByTimeAsync(5001); await client.flush();
+    expect(host.send).toHaveBeenCalledWith('https://feedback.heliosoft.win/api/feedback', 'existing-invite', JSON.stringify(pending));
+    expect(JSON.parse(disk).pending).toEqual([]);
+  });
+
+  it('waits for the migration write before any queued report can leave the device', async () => {
+    const pending = report();
+    let disk = JSON.stringify({ version: 1, connection: { endpoint: 'https://old.trycloudflare.com/api/feedback', token: 'existing-invite' },
+      drafts: { crane: pending }, pending: [pending] });
+    let acceptWrite!: () => void, firstWrite = true;
+    const host: TestFeedbackHost = { read: vi.fn(async () => disk), write: vi.fn(async raw => {
+      if (firstWrite) { firstWrite = false; await new Promise<void>(resolve => { acceptWrite = resolve; }); }
+      disk = raw;
+    }), send: vi.fn(async (_endpoint, _token, raw) => receipt(JSON.parse(raw).id)) };
+    const client = createTestFeedbackClient(host); clients.push(client);
+    const loading = client.load(); client.setActive(true);
+    await vi.waitFor(() => expect(acceptWrite).toBeTypeOf('function'));
+    expect(host.send).not.toHaveBeenCalled();
+    expect(client.getSnapshot().status).toBe('loading');
+    acceptWrite(); await loading; await client.flush();
+    expect(host.send).toHaveBeenCalledTimes(1);
+    expect(client.getSnapshot().pending).toEqual([]);
+  });
+
   it('persists first and only clears text after a matching durable receipt', async () => {
     const { client, host, disk } = await setup();
     const first = report();

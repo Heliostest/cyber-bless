@@ -245,7 +245,7 @@ function Show-FeedbackStatus {
             $runtime = Get-Content -LiteralPath $file -Raw -Encoding UTF8 | ConvertFrom-Json
             if ($runtime.schemaVersion -eq 1 -and $task.State -eq 4) {
                 Write-Output ("Receiver: {0}; tunnel: {1}" -f $runtime.receiver, $runtime.tunnel)
-                if ($runtime.status -eq 'running' -and $runtime.publicUrl -match '^https://[a-z0-9-]+\.trycloudflare\.com/?$') {
+                if ($runtime.status -eq 'running' -and $runtime.publicUrl -match '^https://[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?/?$') {
                     Write-Output ("Public upload URL: {0}" -f $runtime.publicUrl)
                 }
             }

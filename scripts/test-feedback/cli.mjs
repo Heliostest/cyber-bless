@@ -5,12 +5,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { createFeedbackStore, startFeedbackServers } from './server.mjs';
-import { startQuickTunnel } from './tunnel.mjs';
+import { loadTunnelConfig, startFeedbackTunnel } from './tunnel.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 export function feedbackDefaults() {
   const external = process.env.LOCALAPPDATA || process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
   return { config: path.join(external, 'CyberBless', 'test-feedback', 'server.json'),
+    tunnelConfig: path.join(external, 'CyberBless', 'test-feedback', 'tunnel.json'),
     inbox: path.join(root, 'artifacts', 'test-feedback', 'inbox'),
     runtimeFile: path.join(root, 'artifacts', 'test-feedback', 'tunnel-runtime.json') };
 }
@@ -54,6 +55,7 @@ export async function main(args = process.argv.slice(2)) {
   const { values, positionals } = parseArgs({ args, allowPositionals: true, options: {
     'submit-port': { type: 'string' }, 'admin-port': { type: 'string' }, inbox: { type: 'string' }, config: { type: 'string' },
     'runtime-file': { type: 'string' }, format: { type: 'string' }, status: { type: 'string' }, out: { type: 'string' },
+    'tunnel-config': { type: 'string' },
   } });
   const command = positionals[0] ?? 'serve';
   const defaults = feedbackDefaults();
@@ -72,7 +74,8 @@ export async function main(args = process.argv.slice(2)) {
     return servers;
   }
   if (command === 'tunnel') {
-    const child = await startQuickTunnel({ port: port(values['submit-port'], 4318), runtimeFile,
+    const fixed = await loadTunnelConfig(path.resolve(values['tunnel-config'] ?? defaults.tunnelConfig));
+    const child = await startFeedbackTunnel({ port: port(values['submit-port'], 4318), runtimeFile, fixed,
       onStatus: state => notifyParent({ type: 'tunnel-status', status: state.status, publicUrl: state.publicUrl }) });
     superviseLifetime(async () => { if (child.exitCode === null && !child.killed) child.kill(); await child.feedbackFinished; });
     // An IPC pipe otherwise keeps this wrapper alive after cloudflared has exited.

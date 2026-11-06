@@ -1,28 +1,27 @@
 {
-  "verifiedAt": "2026-11-03T07:45:41.062Z",
+  "verifiedAt": "2026-11-06T03:31:23.868Z",
   "appId": "6821271597",
   "bundleIdentifier": "com.helio.cyberbless",
   "version": "1.0.0",
-  "buildNumber": "24",
+  "buildNumber": "25",
   "sourceMode": "git-tag",
-  "sourceTag": "ios-v1.0.0-build.24",
-  "sourceTagObject": "838366eb945ecfa82f8e3648392cec3f72645457",
-  "sourceCommit": "4db12d25e44bd08f674041f7dda352d5c5f7ac22",
-  "sourceTree": "024e1597ca9eafa3da29a86e7635cacde5733051",
-  "sourceIdentitySha256": "ca39fca7c122c05f45abf9918b06fc512511b226bfcab3b5ba1b94480f589547",
+  "sourceTag": "ios-v1.0.0-build.25",
+  "sourceTagObject": "75fc8941be1cccc6485aa46009df6eb643e35f08",
+  "sourceCommit": "9bef553f0fffbcb85ffdd90ede2b8fb983ce4ca6",
+  "sourceTree": "6dea95c5a5c5caba7039e3af5169c428f8410969",
+  "sourceIdentitySha256": "bc20d528120f5833facf3f95b252f042fa877886e3f27718501a6a2595e6c99f",
   "sourceBranch": "master",
   "repositoryUrl": "https://github.com/Heliostest/cyber-bless.git",
   "buildSource": "mac-mini-git-tag-xcode",
-  "xcodeVersion": "26.6",
   "distribution": "app-store-connect",
-  "builtAt": "2026-11-03T07:37:17.875Z",
-  "uploadAcceptedAt": "2026-11-03T07:39:56.937Z",
-  "ipaBytes": 227471691,
-  "ipaSha256": "3b9bca238864a2729767d265ad220b3433a500c3a4bd41ebc2fadfa1e52f0740",
-  "appleBuildId": "c4c78f4e-8a65-4f90-bd07-c60b092f6bdf",
+  "builtAt": "2026-11-06T03:12:02.478Z",
+  "uploadAcceptedAt": "2026-11-06T03:17:03.805Z",
+  "ipaBytes": 231374673,
+  "ipaSha256": "9e9041edce3c467ead1a172bbf2e2703569cda82e185a652a0223cecf3e8918a",
+  "appleBuildId": "6042fdad-147f-486a-8d57-269e9d606973",
   "processingState": "VALID",
   "internalBuildState": "IN_BETA_TESTING",
-  "expirationDate": "2027-01-31T23:41:25-08:00",
+  "expirationDate": "2027-02-03T19:25:31-08:00",
   "internalGroup": {
     "id": "f6096459-cc7f-421b-ad5c-b6cc1fbf8683",
     "name": "Team (Expo)",
@@ -30,118 +29,111 @@
     "appId": "6821271597",
     "automaticDistribution": true,
     "testerCount": 1,
-    "newBuildInGroup": true,
-    "testerStateScope": "Group membership and build availability; not evidence of build24 device installation"
+    "newBuildInGroup": true
   },
-  "verification": {
-    "fullTestSuitePassed": true,
-    "fullSuiteRerunThisRelease": true,
-    "fullSuiteCommand": "npm run verify",
-    "fullSuiteSourceCommit": "4db12d25e44bd08f674041f7dda352d5c5f7ac22",
-    "fullSuiteLog": "artifacts/ios-release-24/frozen-verify.log",
-    "knownFailingTests": 0,
-    "appTestsPassed": 1524,
-    "sceneTestsPassed": 10764,
-    "mobileVerifyPassed": true,
-    "i18nVerifyPassed": true,
-    "i18nLocalesVerified": 8,
-    "nativeLocalizationFilesChecked": 21,
-    "releaseToolTests": {
-      "total": 96,
-      "passed": 94,
-      "failed": 0,
-      "skipped": 2,
-      "platform": "Windows",
-      "log": "artifacts/ios-release-24/release-tools-tests.log"
-    },
-    "macReleaseToolTests": {
-      "total": 96,
-      "passed": 96,
-      "failed": 0,
-      "skipped": 0,
-      "log": "artifacts/ios-release-24/mac-release-tests.log"
-    },
-    "unsignedReleaseBuildPassed": true,
-    "dsymPreparationPhaseCount": 4,
-    "mainAppAndWidgetSignaturesVerified": true,
-    "distributionCertificateValidityVerified": true,
-    "packagedOfflineAssetHashesVerified": 182,
-    "packagedWidgetCoverHashesVerified": 477,
-    "packagedDomScriptsVerified": 162,
-    "packagedUiAudioClipsVerified": 10,
-    "packagedProductOriginalAudioManifestVerified": true,
-    "retiredUiAudioAbsent": true,
-    "sourceFilesHashed": 5383,
-    "lfsEntitiesVerified": 2117,
-    "sourceBusinessHashesVerifiedAfterPrebuild": true,
-    "signedNativeInputsVerified": 17796,
-    "signedNativeInputsSha256": "754e73d33fba3cfddc91688c8fe1077e76dc69ac92fe9c3a0936c6465b7e465e",
-    "allFrozenInputsStillMatch": true,
-    "localIpaMatchesMac": true,
-    "testInformationMatches": true,
-    "keychainSearchListRestored": true,
-    "isolatedKeychainLocked": true,
-    "realDeviceValidation": false,
-    "cultureScope": "UI audio transport only. Existing product-original sounds, scene objects, gestures, cultural claims and source bindings unchanged. See docs/research/2026-11-03-ios-ui-audio.md.",
-    "detailedChecks": "artifacts/ios-release-24/validation-summary.json",
-    "sourceCommit": "4db12d25e44bd08f674041f7dda352d5c5f7ac22",
-    "sourceTag": "ios-v1.0.0-build.24",
-    "ipaSha256": "3b9bca238864a2729767d265ad220b3433a500c3a4bd41ebc2fadfa1e52f0740",
-    "nativeUiAudioBridgeIncluded": true,
-    "domNativeAudioReaderIncluded": true
-  },
-  "easRemoteBuildNumber": "24",
-  "easCounterBefore": "23",
-  "easCounterSyncedAt": "2026-11-03T07:45:10.480Z",
+  "whatToTest": "本次更新场景天空与昼夜云层、推荐树木和村落配色、多种器物的工艺材质与造型，并为场景增加视觉特征图标。风铃增加彩绘花纹与操作步骤，多个场景增加重新开始入口，操作提示改为手机触摸表述。请重点验证风铃及各场景点按、拖动、长按等提示与实际行为一致；悬挂器物支点、画面布局、步骤切换和重新开始保持稳定；观察材质、树木、天空与水面显示。回归旧存档、完成奖励、心愿、小天地、界面音效、分享、小组件及断网冷启动。",
+  "testflightCompletedAt": "2026-11-06T03:30:22.865Z",
+  "formalStoreBuildUnchanged": true,
+  "appStoreVersions": [
+    {
+      "versionId": "84ab28c1-b40b-4d0c-ade2-d3e02d2eaf62",
+      "version": "1.0.0",
+      "appStoreState": "PREPARE_FOR_SUBMISSION",
+      "releaseType": "MANUAL",
+      "buildId": "c0729860-3f40-4392-992e-d1c16d9f83c4"
+    }
+  ],
+  "easRemoteBuildNumber": "25",
+  "easCounterBefore": "24",
+  "easCounterSyncedAt": "2026-11-06T03:30:33.812Z",
   "easActiveBuildCountsBeforeSync": {
     "NEW": 0,
     "IN_QUEUE": 0,
     "IN_PROGRESS": 0,
     "PENDING_CANCEL": 0
   },
-  "betaReviewSubmittedByThisRun": false,
-  "appReviewSubmittedByThisRun": false,
-  "permissionsChangedByThisRun": false,
-  "invitationsCreatedByThisRun": false,
-  "publiclyReleased": false,
-  "testFlightUrl": "https://appstoreconnect.apple.com/apps/6821271597/testflight",
-  "appStoreVersion": {
-    "verifiedAt": "2026-11-03T07:45:41.062Z",
-    "id": "84ab28c1-b40b-4d0c-ade2-d3e02d2eaf62",
-    "selectedAppleBuildId": "c0729860-3f40-4392-992e-d1c16d9f83c4",
-    "selectedBuildNumber": "12",
-    "appStoreState": "PREPARE_FOR_SUBMISSION",
-    "releaseType": "MANUAL"
+  "verification": {
+    "sourceCommit": "9bef553f0fffbcb85ffdd90ede2b8fb983ce4ca6",
+    "sourceTag": "ios-v1.0.0-build.25",
+    "projectUnitTestsPassed": 13201,
+    "appTestsPassed": 1698,
+    "sceneTestsPassed": 10819,
+    "projectChecksCompleted": true,
+    "checkLogs": [
+      "artifacts/ios-release-25/verify.log",
+      "artifacts/ios-release-25/verify-remaining.log",
+      "artifacts/ios-release-25/build.log",
+      "artifacts/ios-release-25/revisions.log",
+      "artifacts/ios-release-25/mobile-verify-locked-sdk.log"
+    ],
+    "sandboxRestrictedStepsRerunOutsideSandbox": true,
+    "mobileDependencyCompatibility": "EXPO_OFFLINE=1 uses the compatibility map shipped with locked Expo SDK 57.0.31. Online map recommended newer patches; dependencies and Podfile.lock were preserved.",
+    "releaseToolTests": {
+      "total": 96,
+      "passed": 94,
+      "skipped": 2,
+      "failed": 0,
+      "platform": "Windows",
+      "log": "artifacts/ios-release-25/release-tests.log"
+    },
+    "macReleaseToolTests": {
+      "total": 96,
+      "passed": 96,
+      "skipped": 0,
+      "failed": 0,
+      "log": "artifacts/ios-release-25/mac-release-tests.log"
+    },
+    "sourceFilesHashed": 5605,
+    "nativeInputsVerified": 17796,
+    "nativeInputsSha256": "73d48a7fe01e09ac324ce56475d433c33a9141d88daf6a16334e9cce00b4d8a5",
+    "unsignedReleaseBuildPassed": true,
+    "offlineAssetsVerified": true,
+    "widgetCoverHashesVerified": true,
+    "mainAppAndWidgetSignaturesVerified": true,
+    "localIpaMatchesMac": true,
+    "keychainSearchListRestored": true,
+    "isolatedKeychainLocked": true,
+    "expoSessionRestored": true,
+    "realDeviceValidation": false
   },
-  "sourceSnapshotIncludesWorktreeChanges": false,
-  "formalStoreBuildUnchangedByThisRun": true,
-  "testflightCompletedAt": "2026-11-03T07:44:46.800Z",
-  "whatToTest": "修复 iOS 正式包内界面音效无声：由原生读取随包 WAV，再交给播放器。请重点验证导航、返回、选项、弹层开合、开关，以及保存、收下和完成提示均可听见。声音应在有效操作时出现，重复当前选项、输入、滑动、自动恢复保持安静；关闭音效立即停播，切后台再返回不补播。请分别试听扬声器和耳机，并回归震动开关、旧存档、心愿、小天地、分享、小组件和断网冷启动。音色、音量和具体仪式内操作沿用既有行为。",
+  "evidenceDirectory": "artifacts/ios-release-25/",
+  "artifactPaths": {
+    "localIpa": "D:/ws/app/cyber-bless/artifacts/ios-release-25/blessing-25.ipa",
+    "macIpa": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.25/source/artifacts/ios-release/25/blessing-25.ipa",
+    "macArchive": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.25/source/artifacts/ios-release/25/Blessing-25.xcarchive"
+  },
+  "artifactRetention": {
+    "removedRebuildableCaches": [
+      "build22 DerivedData",
+      "build23 DerivedData"
+    ],
+    "historicalIpaArchiveDsymPreserved": true
+  },
   "previousInternalBuild": {
-    "verifiedAt": "2026-11-03T06:06:18.827Z",
+    "verifiedAt": "2026-11-03T07:45:41.062Z",
     "appId": "6821271597",
     "bundleIdentifier": "com.helio.cyberbless",
     "version": "1.0.0",
-    "buildNumber": "23",
+    "buildNumber": "24",
     "sourceMode": "git-tag",
-    "sourceTag": "ios-v1.0.0-build.23",
-    "sourceTagObject": "b7d9e5cfe34a079589c169e1397032d48eed8b0f",
-    "sourceCommit": "8724e67aa8ea72e2ed2fc650be4765d6c73d5683",
-    "sourceTree": "3ec1fdac56012cfd90c9127d7e0fa29baff495c4",
-    "sourceIdentitySha256": "d9740da88bb96c45bf5c5e7e4a8c5230cb9c8e624e87c05babbb0b4c1cc01280",
+    "sourceTag": "ios-v1.0.0-build.24",
+    "sourceTagObject": "838366eb945ecfa82f8e3648392cec3f72645457",
+    "sourceCommit": "4db12d25e44bd08f674041f7dda352d5c5f7ac22",
+    "sourceTree": "024e1597ca9eafa3da29a86e7635cacde5733051",
+    "sourceIdentitySha256": "ca39fca7c122c05f45abf9918b06fc512511b226bfcab3b5ba1b94480f589547",
     "sourceBranch": "master",
     "repositoryUrl": "https://github.com/Heliostest/cyber-bless.git",
     "buildSource": "mac-mini-git-tag-xcode",
     "xcodeVersion": "26.6",
     "distribution": "app-store-connect",
-    "builtAt": "2026-11-03T05:57:37.718Z",
-    "uploadAcceptedAt": "2026-11-03T06:00:37.587Z",
-    "ipaBytes": 227470770,
-    "ipaSha256": "ad36265cf048896c5cb3b29440f9a45133a0d4b812cba999559a6e206c9cd8dd",
-    "appleBuildId": "3ad7627e-8ea6-4c0d-9010-3c31ca54bf9d",
+    "builtAt": "2026-11-03T07:37:17.875Z",
+    "uploadAcceptedAt": "2026-11-03T07:39:56.937Z",
+    "ipaBytes": 227471691,
+    "ipaSha256": "3b9bca238864a2729767d265ad220b3433a500c3a4bd41ebc2fadfa1e52f0740",
+    "appleBuildId": "c4c78f4e-8a65-4f90-bd07-c60b092f6bdf",
     "processingState": "VALID",
     "internalBuildState": "IN_BETA_TESTING",
-    "expirationDate": "2027-01-31T22:02:12-08:00",
+    "expirationDate": "2027-01-31T23:41:25-08:00",
     "internalGroup": {
       "id": "f6096459-cc7f-421b-ad5c-b6cc1fbf8683",
       "name": "Team (Expo)",
@@ -150,16 +142,16 @@
       "automaticDistribution": true,
       "testerCount": 1,
       "newBuildInGroup": true,
-      "testerStateScope": "Group membership and build availability; not evidence of build23 device installation"
+      "testerStateScope": "Group membership and build availability; not evidence of build24 device installation"
     },
     "verification": {
       "fullTestSuitePassed": true,
       "fullSuiteRerunThisRelease": true,
       "fullSuiteCommand": "npm run verify",
-      "fullSuiteSourceCommit": "8724e67aa8ea72e2ed2fc650be4765d6c73d5683",
-      "fullSuiteLog": "artifacts/ios-release-23/frozen-verify.log",
+      "fullSuiteSourceCommit": "4db12d25e44bd08f674041f7dda352d5c5f7ac22",
+      "fullSuiteLog": "artifacts/ios-release-24/frozen-verify.log",
       "knownFailingTests": 0,
-      "appTestsPassed": 1514,
+      "appTestsPassed": 1524,
       "sceneTestsPassed": 10764,
       "mobileVerifyPassed": true,
       "i18nVerifyPassed": true,
@@ -171,14 +163,14 @@
         "failed": 0,
         "skipped": 2,
         "platform": "Windows",
-        "log": "artifacts/ios-release-23/windows-release-tests.log"
+        "log": "artifacts/ios-release-24/release-tools-tests.log"
       },
       "macReleaseToolTests": {
         "total": 96,
         "passed": 96,
         "failed": 0,
         "skipped": 0,
-        "log": "artifacts/ios-release-23/mac-release-tests.log"
+        "log": "artifacts/ios-release-24/mac-release-tests.log"
       },
       "unsignedReleaseBuildPassed": true,
       "dsymPreparationPhaseCount": 4,
@@ -190,26 +182,28 @@
       "packagedUiAudioClipsVerified": 10,
       "packagedProductOriginalAudioManifestVerified": true,
       "retiredUiAudioAbsent": true,
-      "sourceFilesHashed": 5380,
+      "sourceFilesHashed": 5383,
       "lfsEntitiesVerified": 2117,
       "sourceBusinessHashesVerifiedAfterPrebuild": true,
       "signedNativeInputsVerified": 17796,
-      "signedNativeInputsSha256": "0a191845eb0113ce460e221cff3f9c8af2380056508eab3faa4775822e771f40",
+      "signedNativeInputsSha256": "754e73d33fba3cfddc91688c8fe1077e76dc69ac92fe9c3a0936c6465b7e465e",
       "allFrozenInputsStillMatch": true,
       "localIpaMatchesMac": true,
       "testInformationMatches": true,
       "keychainSearchListRestored": true,
       "isolatedKeychainLocked": true,
       "realDeviceValidation": false,
-      "cultureScope": "Soft Garden product-original UI/result sounds and developer tooling cleanup. No changed scene objects, Three.js gestures, cultural claims or tradition bindings. See docs/research/2026-11-03-ui-operations-audio-audit.md and assets/ui-sounds/soft-garden-v1/README.md.",
-      "detailedChecks": "artifacts/ios-release-23/validation-summary.json",
-      "sourceCommit": "8724e67aa8ea72e2ed2fc650be4765d6c73d5683",
-      "sourceTag": "ios-v1.0.0-build.23",
-      "ipaSha256": "ad36265cf048896c5cb3b29440f9a45133a0d4b812cba999559a6e206c9cd8dd"
+      "cultureScope": "UI audio transport only. Existing product-original sounds, scene objects, gestures, cultural claims and source bindings unchanged. See docs/research/2026-11-03-ios-ui-audio.md.",
+      "detailedChecks": "artifacts/ios-release-24/validation-summary.json",
+      "sourceCommit": "4db12d25e44bd08f674041f7dda352d5c5f7ac22",
+      "sourceTag": "ios-v1.0.0-build.24",
+      "ipaSha256": "3b9bca238864a2729767d265ad220b3433a500c3a4bd41ebc2fadfa1e52f0740",
+      "nativeUiAudioBridgeIncluded": true,
+      "domNativeAudioReaderIncluded": true
     },
-    "easRemoteBuildNumber": "23",
-    "easCounterBefore": "22",
-    "easCounterSyncedAt": "2026-11-03T06:06:07.195Z",
+    "easRemoteBuildNumber": "24",
+    "easCounterBefore": "23",
+    "easCounterSyncedAt": "2026-11-03T07:45:10.480Z",
     "easActiveBuildCountsBeforeSync": {
       "NEW": 0,
       "IN_QUEUE": 0,
@@ -223,7 +217,7 @@
     "publiclyReleased": false,
     "testFlightUrl": "https://appstoreconnect.apple.com/apps/6821271597/testflight",
     "appStoreVersion": {
-      "verifiedAt": "2026-11-03T06:06:18.827Z",
+      "verifiedAt": "2026-11-03T07:45:41.062Z",
       "id": "84ab28c1-b40b-4d0c-ade2-d3e02d2eaf62",
       "selectedAppleBuildId": "c0729860-3f40-4392-992e-d1c16d9f83c4",
       "selectedBuildNumber": "12",
@@ -232,33 +226,33 @@
     },
     "sourceSnapshotIncludesWorktreeChanges": false,
     "formalStoreBuildUnchangedByThisRun": true,
-    "testflightCompletedAt": "2026-11-03T06:05:36.463Z",
-    "whatToTest": "本次将界面反馈统一为 Soft Garden 原创音效，包含导航、返回、选择、弹层开合、设置开关，以及保存、收下和完成的短旋律。请重点试听 iPhone 扬声器、耳机和静音开关下的音量与听感；保存应在写入成功后响一次，收下和完成不应叠加普通点击音。同页重复点击、输入、滑动和自动恢复应安静，关闭音效应立即停止，切后台或失焦后不补播旧声音。同时回归心愿、小天地、旧存档、分享、小组件和断网体验。Three.js 场景内部手势和材质声音沿用既有行为。",
+    "testflightCompletedAt": "2026-11-03T07:44:46.800Z",
+    "whatToTest": "修复 iOS 正式包内界面音效无声：由原生读取随包 WAV，再交给播放器。请重点验证导航、返回、选项、弹层开合、开关，以及保存、收下和完成提示均可听见。声音应在有效操作时出现，重复当前选项、输入、滑动、自动恢复保持安静；关闭音效立即停播，切后台再返回不补播。请分别试听扬声器和耳机，并回归震动开关、旧存档、心愿、小天地、分享、小组件和断网冷启动。音色、音量和具体仪式内操作沿用既有行为。",
     "previousInternalBuild": {
-      "verifiedAt": "2026-11-02T18:11:22.222Z",
+      "verifiedAt": "2026-11-03T06:06:18.827Z",
       "appId": "6821271597",
       "bundleIdentifier": "com.helio.cyberbless",
       "version": "1.0.0",
-      "buildNumber": "22",
+      "buildNumber": "23",
       "sourceMode": "git-tag",
-      "sourceTag": "ios-v1.0.0-build.22",
-      "sourceTagObject": "a832a710b4b6fbe778a3152b5ed0742c9a69b226",
-      "sourceCommit": "2503dc618345d2653386d881ff0706b9c676a26e",
-      "sourceTree": "dc7cdf337aba846edce160fe5617c2f0916e8996",
-      "sourceIdentitySha256": "e0acfda11f6b173fd89b2660072dc1cbb1b31b33c6bb10239e4788f925af712c",
+      "sourceTag": "ios-v1.0.0-build.23",
+      "sourceTagObject": "b7d9e5cfe34a079589c169e1397032d48eed8b0f",
+      "sourceCommit": "8724e67aa8ea72e2ed2fc650be4765d6c73d5683",
+      "sourceTree": "3ec1fdac56012cfd90c9127d7e0fa29baff495c4",
+      "sourceIdentitySha256": "d9740da88bb96c45bf5c5e7e4a8c5230cb9c8e624e87c05babbb0b4c1cc01280",
       "sourceBranch": "master",
       "repositoryUrl": "https://github.com/Heliostest/cyber-bless.git",
       "buildSource": "mac-mini-git-tag-xcode",
       "xcodeVersion": "26.6",
       "distribution": "app-store-connect",
-      "builtAt": "2026-11-02T17:53:53.864Z",
-      "uploadAcceptedAt": "2026-11-02T17:57:15.992Z",
-      "ipaBytes": 227263482,
-      "ipaSha256": "e9c40a8c6f6ca7b0cfc92b521ddd8666c805285dd7baed0f3894c7ef2818586f",
-      "appleBuildId": "7d92aad7-e5f9-4453-8e32-37734d066a05",
+      "builtAt": "2026-11-03T05:57:37.718Z",
+      "uploadAcceptedAt": "2026-11-03T06:00:37.587Z",
+      "ipaBytes": 227470770,
+      "ipaSha256": "ad36265cf048896c5cb3b29440f9a45133a0d4b812cba999559a6e206c9cd8dd",
+      "appleBuildId": "3ad7627e-8ea6-4c0d-9010-3c31ca54bf9d",
       "processingState": "VALID",
       "internalBuildState": "IN_BETA_TESTING",
-      "expirationDate": "2027-01-31T10:05:55-08:00",
+      "expirationDate": "2027-01-31T22:02:12-08:00",
       "internalGroup": {
         "id": "f6096459-cc7f-421b-ad5c-b6cc1fbf8683",
         "name": "Team (Expo)",
@@ -267,17 +261,16 @@
         "automaticDistribution": true,
         "testerCount": 1,
         "newBuildInGroup": true,
-        "testerStateScope": "Group membership and build availability; not evidence of build22 device installation"
+        "testerStateScope": "Group membership and build availability; not evidence of build23 device installation"
       },
       "verification": {
         "fullTestSuitePassed": true,
         "fullSuiteRerunThisRelease": true,
         "fullSuiteCommand": "npm run verify",
-        "fullSuiteSourceCommit": "2503dc618345d2653386d881ff0706b9c676a26e",
-        "fullSuiteLog": "artifacts/ios-release-22/frozen-verify.log",
-        "fullSuiteScope": "Passed on the exact frozen commit, with command-local Vitest workers limited to two and an 8GiB Node heap.",
+        "fullSuiteSourceCommit": "8724e67aa8ea72e2ed2fc650be4765d6c73d5683",
+        "fullSuiteLog": "artifacts/ios-release-23/frozen-verify.log",
         "knownFailingTests": 0,
-        "appTestsPassed": 1502,
+        "appTestsPassed": 1514,
         "sceneTestsPassed": 10764,
         "mobileVerifyPassed": true,
         "i18nVerifyPassed": true,
@@ -289,41 +282,45 @@
           "failed": 0,
           "skipped": 2,
           "platform": "Windows",
-          "log": "artifacts/ios-release-22/windows-release-tests.log"
+          "log": "artifacts/ios-release-23/windows-release-tests.log"
         },
         "macReleaseToolTests": {
           "total": 96,
           "passed": 96,
           "failed": 0,
           "skipped": 0,
-          "log": "artifacts/ios-release-22/mac-release-tests-final.log"
+          "log": "artifacts/ios-release-23/mac-release-tests.log"
         },
         "unsignedReleaseBuildPassed": true,
         "dsymPreparationPhaseCount": 4,
         "mainAppAndWidgetSignaturesVerified": true,
         "distributionCertificateValidityVerified": true,
-        "packagedOfflineAssetHashesVerified": 180,
+        "packagedOfflineAssetHashesVerified": 182,
         "packagedWidgetCoverHashesVerified": 477,
         "packagedDomScriptsVerified": 162,
-        "packagedUiAudioClipsVerified": 8,
-        "packagedOriginalAudioLicenseVerified": true,
-        "sourceFilesHashed": 5370,
+        "packagedUiAudioClipsVerified": 10,
+        "packagedProductOriginalAudioManifestVerified": true,
+        "retiredUiAudioAbsent": true,
+        "sourceFilesHashed": 5380,
         "lfsEntitiesVerified": 2117,
         "sourceBusinessHashesVerifiedAfterPrebuild": true,
         "signedNativeInputsVerified": 17796,
-        "signedNativeInputsSha256": "cafd0ea9f3b5afb1f8e031266d4bf4fb9814e1fa2096253a87d418571e4b17ce",
+        "signedNativeInputsSha256": "0a191845eb0113ce460e221cff3f9c8af2380056508eab3faa4775822e771f40",
         "allFrozenInputsStillMatch": true,
         "localIpaMatchesMac": true,
         "testInformationMatches": true,
         "keychainSearchListRestored": true,
         "isolatedKeychainLocked": true,
         "realDeviceValidation": false,
-        "cultureScope": "Generic product UI feedback only. No changes to Three.js internal gestures, cultural facts, tradition bindings or scene identity. See docs/research/2026-11-03-ui-operations-audio-audit.md.",
-        "detailedChecks": "artifacts/ios-release-22/validation-summary.json"
+        "cultureScope": "Soft Garden product-original UI/result sounds and developer tooling cleanup. No changed scene objects, Three.js gestures, cultural claims or tradition bindings. See docs/research/2026-11-03-ui-operations-audio-audit.md and assets/ui-sounds/soft-garden-v1/README.md.",
+        "detailedChecks": "artifacts/ios-release-23/validation-summary.json",
+        "sourceCommit": "8724e67aa8ea72e2ed2fc650be4765d6c73d5683",
+        "sourceTag": "ios-v1.0.0-build.23",
+        "ipaSha256": "ad36265cf048896c5cb3b29440f9a45133a0d4b812cba999559a6e206c9cd8dd"
       },
-      "easRemoteBuildNumber": "22",
-      "easCounterBefore": "21",
-      "easCounterSyncedAt": "2026-11-02T18:11:14.526Z",
+      "easRemoteBuildNumber": "23",
+      "easCounterBefore": "22",
+      "easCounterSyncedAt": "2026-11-03T06:06:07.195Z",
       "easActiveBuildCountsBeforeSync": {
         "NEW": 0,
         "IN_QUEUE": 0,
@@ -337,7 +334,7 @@
       "publiclyReleased": false,
       "testFlightUrl": "https://appstoreconnect.apple.com/apps/6821271597/testflight",
       "appStoreVersion": {
-        "verifiedAt": "2026-11-02T18:11:22.222Z",
+        "verifiedAt": "2026-11-03T06:06:18.827Z",
         "id": "84ab28c1-b40b-4d0c-ade2-d3e02d2eaf62",
         "selectedAppleBuildId": "c0729860-3f40-4392-992e-d1c16d9f83c4",
         "selectedBuildNumber": "12",
@@ -346,33 +343,33 @@
       },
       "sourceSnapshotIncludesWorktreeChanges": false,
       "formalStoreBuildUnchangedByThisRun": true,
-      "testflightCompletedAt": "2026-11-02T18:10:13.286Z",
-      "whatToTest": "本次新增 Three.js 场景以外的界面音效。请重点试听底部导航、返回、心愿筛选、收藏与归档、语言和视觉风格弹层、设置开关的短音；同页重复点击、输入、滑动与自动恢复应安静，保存、收下和完成应只有对应结果反馈。关闭音效应立即静音，切后台或失焦后不补播旧声音；复制链接仅在复制成功后提示，关闭分享、系统取消或跨后台返回不应迟到响成功音。请用 iPhone 扬声器、耳机和静音开关检查音量与系统行为，同时回归旧存档、心愿、小天地、内部场景目录与断网体验。Three.js 场景内部操作和既有场景声音保持原行为。",
+      "testflightCompletedAt": "2026-11-03T06:05:36.463Z",
+      "whatToTest": "本次将界面反馈统一为 Soft Garden 原创音效，包含导航、返回、选择、弹层开合、设置开关，以及保存、收下和完成的短旋律。请重点试听 iPhone 扬声器、耳机和静音开关下的音量与听感；保存应在写入成功后响一次，收下和完成不应叠加普通点击音。同页重复点击、输入、滑动和自动恢复应安静，关闭音效应立即停止，切后台或失焦后不补播旧声音。同时回归心愿、小天地、旧存档、分享、小组件和断网体验。Three.js 场景内部手势和材质声音沿用既有行为。",
       "previousInternalBuild": {
-        "verifiedAt": "2026-11-02T16:39:34.770Z",
+        "verifiedAt": "2026-11-02T18:11:22.222Z",
         "appId": "6821271597",
         "bundleIdentifier": "com.helio.cyberbless",
         "version": "1.0.0",
-        "buildNumber": "21",
+        "buildNumber": "22",
         "sourceMode": "git-tag",
-        "sourceTag": "ios-v1.0.0-build.21",
-        "sourceTagObject": "cc9f456f3f2f9dace6b1cb718b3403f647e4faf1",
-        "sourceCommit": "bd2a93733647619f3121c4f1cd281b4ddc156925",
-        "sourceTree": "a7292c64d7ca46c432baf5fc9922eb6618489a20",
-        "sourceIdentitySha256": "2db5d2b43244d254c27d410d7cc138dd9d6b8f53a30cea3b077005c14611c928",
+        "sourceTag": "ios-v1.0.0-build.22",
+        "sourceTagObject": "a832a710b4b6fbe778a3152b5ed0742c9a69b226",
+        "sourceCommit": "2503dc618345d2653386d881ff0706b9c676a26e",
+        "sourceTree": "dc7cdf337aba846edce160fe5617c2f0916e8996",
+        "sourceIdentitySha256": "e0acfda11f6b173fd89b2660072dc1cbb1b31b33c6bb10239e4788f925af712c",
         "sourceBranch": "master",
         "repositoryUrl": "https://github.com/Heliostest/cyber-bless.git",
         "buildSource": "mac-mini-git-tag-xcode",
         "xcodeVersion": "26.6",
         "distribution": "app-store-connect",
-        "builtAt": "2026-11-02T16:26:04.018Z",
-        "uploadAcceptedAt": "2026-11-02T16:28:49.007Z",
-        "ipaBytes": 227222687,
-        "ipaSha256": "cf520054759d007c2f8bfd9508a0d046f01d8d8709e1d93f0d1bba1c6a848823",
-        "appleBuildId": "34245485-f5ce-4021-8b30-33afef15b1a0",
+        "builtAt": "2026-11-02T17:53:53.864Z",
+        "uploadAcceptedAt": "2026-11-02T17:57:15.992Z",
+        "ipaBytes": 227263482,
+        "ipaSha256": "e9c40a8c6f6ca7b0cfc92b521ddd8666c805285dd7baed0f3894c7ef2818586f",
+        "appleBuildId": "7d92aad7-e5f9-4453-8e32-37734d066a05",
         "processingState": "VALID",
         "internalBuildState": "IN_BETA_TESTING",
-        "expirationDate": "2027-01-31T08:30:17-08:00",
+        "expirationDate": "2027-01-31T10:05:55-08:00",
         "internalGroup": {
           "id": "f6096459-cc7f-421b-ad5c-b6cc1fbf8683",
           "name": "Team (Expo)",
@@ -381,15 +378,18 @@
           "automaticDistribution": true,
           "testerCount": 1,
           "newBuildInGroup": true,
-          "testerStateScope": "Group membership and build availability; not evidence of build21 device installation"
+          "testerStateScope": "Group membership and build availability; not evidence of build22 device installation"
         },
         "verification": {
           "fullTestSuitePassed": true,
           "fullSuiteRerunThisRelease": true,
           "fullSuiteCommand": "npm run verify",
-          "fullSuiteScope": "npm run verify passed on the exact frozen commit bd2a93733647619f3121c4f1cd281b4ddc156925.",
-          "businessSourceComparison": "git diff --exit-code 9acda420 bd2a93733647619f3121c4f1cd281b4ddc156925 -- apps packages package.json package-lock.json Gemfile Gemfile.lock",
+          "fullSuiteSourceCommit": "2503dc618345d2653386d881ff0706b9c676a26e",
+          "fullSuiteLog": "artifacts/ios-release-22/frozen-verify.log",
+          "fullSuiteScope": "Passed on the exact frozen commit, with command-local Vitest workers limited to two and an 8GiB Node heap.",
           "knownFailingTests": 0,
+          "appTestsPassed": 1502,
+          "sceneTestsPassed": 10764,
           "mobileVerifyPassed": true,
           "i18nVerifyPassed": true,
           "i18nLocalesVerified": 8,
@@ -400,58 +400,47 @@
             "failed": 0,
             "skipped": 2,
             "platform": "Windows",
-            "log": "artifacts/release-workflow-tests-build21.log"
+            "log": "artifacts/ios-release-22/windows-release-tests.log"
           },
-          "macSupplementalTests": {
-            "total": 5,
-            "passed": 5,
+          "macReleaseToolTests": {
+            "total": 96,
+            "passed": 96,
             "failed": 0,
             "skipped": 0,
-            "rubyChecksumCasesPassed": 6,
-            "dsymPreparationCasesPassed": 4,
-            "realBashFailFastPassed": true,
-            "log": "artifacts/ios-release-21/mac-supplemental-tests.log"
+            "log": "artifacts/ios-release-22/mac-release-tests-final.log"
           },
           "unsignedReleaseBuildPassed": true,
           "dsymPreparationPhaseCount": 4,
           "mainAppAndWidgetSignaturesVerified": true,
           "distributionCertificateValidityVerified": true,
-          "packagedOfflineAssetHashesVerified": 171,
+          "packagedOfflineAssetHashesVerified": 180,
           "packagedWidgetCoverHashesVerified": 477,
           "packagedDomScriptsVerified": 162,
-          "sourceFilesHashed": 5347,
+          "packagedUiAudioClipsVerified": 8,
+          "packagedOriginalAudioLicenseVerified": true,
+          "sourceFilesHashed": 5370,
           "lfsEntitiesVerified": 2117,
           "sourceBusinessHashesVerifiedAfterPrebuild": true,
           "signedNativeInputsVerified": 17796,
-          "signedNativeInputsSha256": "f34fa144bfaefc3452e128dcdf0380deeabe5b13ef20c2ec8f1c43a9d345b976",
+          "signedNativeInputsSha256": "cafd0ea9f3b5afb1f8e031266d4bf4fb9814e1fa2096253a87d418571e4b17ce",
           "allFrozenInputsStillMatch": true,
           "localIpaMatchesMac": true,
           "testInformationMatches": true,
-          "finalBetaDetailReadback": {
-            "checkedAt": "2026-11-02T10:07:36.824Z",
-            "internalBuildState": "IN_BETA_TESTING",
-            "evidence": "artifacts/ios-release-20/final-beta-detail.json"
-          },
           "keychainSearchListRestored": true,
           "isolatedKeychainLocked": true,
           "realDeviceValidation": false,
-          "cultureScope": "This release run changed only the committed release build number; existing host-flow cultural-impact records remain applicable. No cultural factual recertification claimed.",
-          "detailedChecks": "artifacts/ios-release-21/validation-summary.json",
-          "fullSuiteSourceCommit": "bd2a93733647619f3121c4f1cd281b4ddc156925",
-          "fullSuiteLog": "artifacts/release-verify-build21.log",
-          "finalBetaDetailConfirmedAt": "2026-11-02T16:39:34.770Z"
+          "cultureScope": "Generic product UI feedback only. No changes to Three.js internal gestures, cultural facts, tradition bindings or scene identity. See docs/research/2026-11-03-ui-operations-audio-audit.md.",
+          "detailedChecks": "artifacts/ios-release-22/validation-summary.json"
         },
-        "easRemoteBuildNumber": "21",
-        "easCounterBefore": "20",
-        "easCounterSyncedAt": "2026-11-02T16:39:26.114Z",
+        "easRemoteBuildNumber": "22",
+        "easCounterBefore": "21",
+        "easCounterSyncedAt": "2026-11-02T18:11:14.526Z",
         "easActiveBuildCountsBeforeSync": {
           "NEW": 0,
           "IN_QUEUE": 0,
           "IN_PROGRESS": 0,
           "PENDING_CANCEL": 0
         },
-        "betaReviewSubmitted": false,
-        "appReviewSubmitted": false,
         "betaReviewSubmittedByThisRun": false,
         "appReviewSubmittedByThisRun": false,
         "permissionsChangedByThisRun": false,
@@ -459,7 +448,7 @@
         "publiclyReleased": false,
         "testFlightUrl": "https://appstoreconnect.apple.com/apps/6821271597/testflight",
         "appStoreVersion": {
-          "verifiedAt": "2026-11-02T16:38:33.422Z",
+          "verifiedAt": "2026-11-02T18:11:22.222Z",
           "id": "84ab28c1-b40b-4d0c-ade2-d3e02d2eaf62",
           "selectedAppleBuildId": "c0729860-3f40-4392-992e-d1c16d9f83c4",
           "selectedBuildNumber": "12",
@@ -468,33 +457,33 @@
         },
         "sourceSnapshotIncludesWorktreeChanges": false,
         "formalStoreBuildUnchangedByThisRun": true,
-        "testflightCompletedAt": "2026-11-02T16:38:33.424Z",
-        "whatToTest": "请重点验证：“我的→场景目录”首次启动和断网时均可进入，反馈及团队状态正常；许愿页已解锁仪式优先展示，未解锁不可进入；每日及开场保存心愿后仅将本次小物标为已用，取消不消耗，重启保持。还愿直接记录小善事，无需额外仪式、不消耗小物；旧记录和草稿保留。小天地纪念章使用原始许愿仪式图案，点击进入对应心愿详情；已完成记录不可追加。检查底部导航、键盘、安全区域及反馈断网重试。",
+        "testflightCompletedAt": "2026-11-02T18:10:13.286Z",
+        "whatToTest": "本次新增 Three.js 场景以外的界面音效。请重点试听底部导航、返回、心愿筛选、收藏与归档、语言和视觉风格弹层、设置开关的短音；同页重复点击、输入、滑动与自动恢复应安静，保存、收下和完成应只有对应结果反馈。关闭音效应立即静音，切后台或失焦后不补播旧声音；复制链接仅在复制成功后提示，关闭分享、系统取消或跨后台返回不应迟到响成功音。请用 iPhone 扬声器、耳机和静音开关检查音量与系统行为，同时回归旧存档、心愿、小天地、内部场景目录与断网体验。Three.js 场景内部操作和既有场景声音保持原行为。",
         "previousInternalBuild": {
-          "verifiedAt": "2026-11-02T10:02:04.881Z",
+          "verifiedAt": "2026-11-02T16:39:34.770Z",
           "appId": "6821271597",
           "bundleIdentifier": "com.helio.cyberbless",
           "version": "1.0.0",
-          "buildNumber": "20",
+          "buildNumber": "21",
           "sourceMode": "git-tag",
-          "sourceTag": "ios-v1.0.0-build.20",
-          "sourceTagObject": "851a240cb299d7b3ad7f65cea4392962968240ec",
-          "sourceCommit": "b05c70e797b31fb977f77b73ab866ce09bb5fe46",
-          "sourceTree": "ff5065c6aef7cfdcaa8d4e160989d5be7ffce290",
-          "sourceIdentitySha256": "228d297036e20c5a32c0cc0d19aad41cca3577d41e2f89fe50af3f7f4a9b91a8",
+          "sourceTag": "ios-v1.0.0-build.21",
+          "sourceTagObject": "cc9f456f3f2f9dace6b1cb718b3403f647e4faf1",
+          "sourceCommit": "bd2a93733647619f3121c4f1cd281b4ddc156925",
+          "sourceTree": "a7292c64d7ca46c432baf5fc9922eb6618489a20",
+          "sourceIdentitySha256": "2db5d2b43244d254c27d410d7cc138dd9d6b8f53a30cea3b077005c14611c928",
           "sourceBranch": "master",
           "repositoryUrl": "https://github.com/Heliostest/cyber-bless.git",
           "buildSource": "mac-mini-git-tag-xcode",
           "xcodeVersion": "26.6",
           "distribution": "app-store-connect",
-          "builtAt": "2026-11-02T09:53:13.154Z",
-          "uploadAcceptedAt": "2026-11-02T09:57:06.292Z",
-          "ipaBytes": 227218915,
-          "ipaSha256": "1f6b4cb3f29fc09441465b62e07f44e4eaca2912f86ab5f1387a0dfadafdf6af",
-          "appleBuildId": "e148c47c-f58e-425f-b592-429844d45453",
+          "builtAt": "2026-11-02T16:26:04.018Z",
+          "uploadAcceptedAt": "2026-11-02T16:28:49.007Z",
+          "ipaBytes": 227222687,
+          "ipaSha256": "cf520054759d007c2f8bfd9508a0d046f01d8d8709e1d93f0d1bba1c6a848823",
+          "appleBuildId": "34245485-f5ce-4021-8b30-33afef15b1a0",
           "processingState": "VALID",
           "internalBuildState": "IN_BETA_TESTING",
-          "expirationDate": "2027-01-31T01:58:32-08:00",
+          "expirationDate": "2027-01-31T08:30:17-08:00",
           "internalGroup": {
             "id": "f6096459-cc7f-421b-ad5c-b6cc1fbf8683",
             "name": "Team (Expo)",
@@ -503,14 +492,14 @@
             "automaticDistribution": true,
             "testerCount": 1,
             "newBuildInGroup": true,
-            "testerStateScope": "Group membership and build availability; not evidence of build20 device installation"
+            "testerStateScope": "Group membership and build availability; not evidence of build21 device installation"
           },
           "verification": {
             "fullTestSuitePassed": true,
             "fullSuiteRerunThisRelease": true,
             "fullSuiteCommand": "npm run verify",
-            "fullSuiteScope": "Passed on business sources identical to the tagged release; final frozen release tooling checked separately.",
-            "businessSourceComparison": "git diff --exit-code 5732a384 b05c70e797b31fb977f77b73ab866ce09bb5fe46 -- apps packages package.json package-lock.json Gemfile Gemfile.lock",
+            "fullSuiteScope": "npm run verify passed on the exact frozen commit bd2a93733647619f3121c4f1cd281b4ddc156925.",
+            "businessSourceComparison": "git diff --exit-code 9acda420 bd2a93733647619f3121c4f1cd281b4ddc156925 -- apps packages package.json package-lock.json Gemfile Gemfile.lock",
             "knownFailingTests": 0,
             "mobileVerifyPassed": true,
             "i18nVerifyPassed": true,
@@ -522,12 +511,17 @@
               "failed": 0,
               "skipped": 2,
               "platform": "Windows",
-              "log": "artifacts/release-workflow-tests-build20-frozen.log"
+              "log": "artifacts/release-workflow-tests-build21.log"
             },
             "macSupplementalTests": {
+              "total": 5,
+              "passed": 5,
+              "failed": 0,
+              "skipped": 0,
               "rubyChecksumCasesPassed": 6,
+              "dsymPreparationCasesPassed": 4,
               "realBashFailFastPassed": true,
-              "dsymPreparationCasesPassed": 4
+              "log": "artifacts/ios-release-21/mac-supplemental-tests.log"
             },
             "unsignedReleaseBuildPassed": true,
             "dsymPreparationPhaseCount": 4,
@@ -536,11 +530,11 @@
             "packagedOfflineAssetHashesVerified": 171,
             "packagedWidgetCoverHashesVerified": 477,
             "packagedDomScriptsVerified": 162,
-            "sourceFilesHashed": 5327,
+            "sourceFilesHashed": 5347,
             "lfsEntitiesVerified": 2117,
             "sourceBusinessHashesVerifiedAfterPrebuild": true,
             "signedNativeInputsVerified": 17796,
-            "signedNativeInputsSha256": "8a68a8f61c164ca5eaafed0559678208b04c99a208d3e1ebb1cc7a2be8fd810b",
+            "signedNativeInputsSha256": "f34fa144bfaefc3452e128dcdf0380deeabe5b13ef20c2ec8f1c43a9d345b976",
             "allFrozenInputsStillMatch": true,
             "localIpaMatchesMac": true,
             "testInformationMatches": true,
@@ -552,12 +546,15 @@
             "keychainSearchListRestored": true,
             "isolatedKeychainLocked": true,
             "realDeviceValidation": false,
-            "cultureScope": "No scene or cultural claims changed during this release run; no cultural factual recertification claimed.",
-            "detailedChecks": "artifacts/ios-release-20/validation-summary.json"
+            "cultureScope": "This release run changed only the committed release build number; existing host-flow cultural-impact records remain applicable. No cultural factual recertification claimed.",
+            "detailedChecks": "artifacts/ios-release-21/validation-summary.json",
+            "fullSuiteSourceCommit": "bd2a93733647619f3121c4f1cd281b4ddc156925",
+            "fullSuiteLog": "artifacts/release-verify-build21.log",
+            "finalBetaDetailConfirmedAt": "2026-11-02T16:39:34.770Z"
           },
-          "easRemoteBuildNumber": "20",
-          "easCounterBefore": "18",
-          "easCounterSyncedAt": "2026-11-02T10:03:16.799Z",
+          "easRemoteBuildNumber": "21",
+          "easCounterBefore": "20",
+          "easCounterSyncedAt": "2026-11-02T16:39:26.114Z",
           "easActiveBuildCountsBeforeSync": {
             "NEW": 0,
             "IN_QUEUE": 0,
@@ -573,7 +570,7 @@
           "publiclyReleased": false,
           "testFlightUrl": "https://appstoreconnect.apple.com/apps/6821271597/testflight",
           "appStoreVersion": {
-            "verifiedAt": "2026-11-02T10:02:04.881Z",
+            "verifiedAt": "2026-11-02T16:38:33.422Z",
             "id": "84ab28c1-b40b-4d0c-ade2-d3e02d2eaf62",
             "selectedAppleBuildId": "c0729860-3f40-4392-992e-d1c16d9f83c4",
             "selectedBuildNumber": "12",
@@ -582,26 +579,33 @@
           },
           "sourceSnapshotIncludesWorktreeChanges": false,
           "formalStoreBuildUnchangedByThisRun": true,
-          "testflightCompletedAt": "2026-11-02T10:02:04.884Z",
-          "whatToTest": "请重点验证：全部仪式断网可打开，旧存档可继续；完成仪式后永久解锁，重玩与重启不撤销；心愿页入口、近距离查看与继续安放、提示板、自动收尾及小天地收藏展示正常。TestFlight“我的→场景目录”应可进入全部内置场景；反馈浮层可暂停/继续仪式，版本号正确，发送失败保留待发并联网重试；团队状态筛选、刷新与“本版本测试通过”生效。检查 iPhone 键盘、安全区域、语言切换、小组件跳转及离线重开。",
+          "testflightCompletedAt": "2026-11-02T16:38:33.424Z",
+          "whatToTest": "请重点验证：“我的→场景目录”首次启动和断网时均可进入，反馈及团队状态正常；许愿页已解锁仪式优先展示，未解锁不可进入；每日及开场保存心愿后仅将本次小物标为已用，取消不消耗，重启保持。还愿直接记录小善事，无需额外仪式、不消耗小物；旧记录和草稿保留。小天地纪念章使用原始许愿仪式图案，点击进入对应心愿详情；已完成记录不可追加。检查底部导航、键盘、安全区域及反馈断网重试。",
           "previousInternalBuild": {
-            "verifiedAt": "2026-10-31T05:26:52.015Z",
+            "verifiedAt": "2026-11-02T10:02:04.881Z",
             "appId": "6821271597",
             "bundleIdentifier": "com.helio.cyberbless",
             "version": "1.0.0",
-            "buildNumber": "18",
-            "sourceCommit": "957dfba3df461b2ec70e417380f8b1bc21d958e1",
-            "buildSource": "mac-mini-ssh-xcode",
+            "buildNumber": "20",
+            "sourceMode": "git-tag",
+            "sourceTag": "ios-v1.0.0-build.20",
+            "sourceTagObject": "851a240cb299d7b3ad7f65cea4392962968240ec",
+            "sourceCommit": "b05c70e797b31fb977f77b73ab866ce09bb5fe46",
+            "sourceTree": "ff5065c6aef7cfdcaa8d4e160989d5be7ffce290",
+            "sourceIdentitySha256": "228d297036e20c5a32c0cc0d19aad41cca3577d41e2f89fe50af3f7f4a9b91a8",
+            "sourceBranch": "master",
+            "repositoryUrl": "https://github.com/Heliostest/cyber-bless.git",
+            "buildSource": "mac-mini-git-tag-xcode",
             "xcodeVersion": "26.6",
             "distribution": "app-store-connect",
-            "builtAt": "2026-10-31T05:19:06.527Z",
-            "uploadAcceptedAt": "2026-10-31T05:21:20.072Z",
-            "ipaBytes": 222296805,
-            "ipaSha256": "10816f8073ab524ddbae23d913dba2e75bea974268c9dea216eed4f23da49264",
-            "appleBuildId": "9cca53be-b804-4b10-9482-e023b63bb7d7",
+            "builtAt": "2026-11-02T09:53:13.154Z",
+            "uploadAcceptedAt": "2026-11-02T09:57:06.292Z",
+            "ipaBytes": 227218915,
+            "ipaSha256": "1f6b4cb3f29fc09441465b62e07f44e4eaca2912f86ab5f1387a0dfadafdf6af",
+            "appleBuildId": "e148c47c-f58e-425f-b592-429844d45453",
             "processingState": "VALID",
             "internalBuildState": "IN_BETA_TESTING",
-            "expirationDate": "2027-01-29T05:22:54.000Z",
+            "expirationDate": "2027-01-31T01:58:32-08:00",
             "internalGroup": {
               "id": "f6096459-cc7f-421b-ad5c-b6cc1fbf8683",
               "name": "Team (Expo)",
@@ -610,63 +614,208 @@
               "automaticDistribution": true,
               "testerCount": 1,
               "newBuildInGroup": true,
-              "testerStateScope": "Group membership and build availability; not evidence of build18 device installation"
+              "testerStateScope": "Group membership and build availability; not evidence of build20 device installation"
             },
             "verification": {
+              "fullTestSuitePassed": true,
+              "fullSuiteRerunThisRelease": true,
+              "fullSuiteCommand": "npm run verify",
+              "fullSuiteScope": "Passed on business sources identical to the tagged release; final frozen release tooling checked separately.",
+              "businessSourceComparison": "git diff --exit-code 5732a384 b05c70e797b31fb977f77b73ab866ce09bb5fe46 -- apps packages package.json package-lock.json Gemfile Gemfile.lock",
+              "knownFailingTests": 0,
               "mobileVerifyPassed": true,
               "i18nVerifyPassed": true,
               "i18nLocalesVerified": 8,
               "nativeLocalizationFilesChecked": 21,
-              "fullTestSuitePassed": false,
-              "knownFailingTests": 152,
-              "knownFailingFiles": [
-                "packages/app/src/hourly-scene-lifecycle.test.ts",
-                "packages/scenes/src/directional-tolerance-scenes.test.ts",
-                "packages/scenes/src/spatial-placement-a.test.ts",
-                "packages/scenes/src/spatial-placement-b.test.ts",
-                "packages/scenes/src/spatial-placement-c.test.ts"
-              ],
-              "knownFailureReason": "Old fixtures do not complete the current close-inspection stage before requesting placement cues or completion; updated scene and recovery tests cover this stage.",
+              "releaseToolTests": {
+                "total": 96,
+                "passed": 94,
+                "failed": 0,
+                "skipped": 2,
+                "platform": "Windows",
+                "log": "artifacts/release-workflow-tests-build20-frozen.log"
+              },
+              "macSupplementalTests": {
+                "rubyChecksumCasesPassed": 6,
+                "realBashFailFastPassed": true,
+                "dsymPreparationCasesPassed": 4
+              },
+              "unsignedReleaseBuildPassed": true,
+              "dsymPreparationPhaseCount": 4,
               "mainAppAndWidgetSignaturesVerified": true,
               "distributionCertificateValidityVerified": true,
               "packagedOfflineAssetHashesVerified": 171,
               "packagedWidgetCoverHashesVerified": 477,
               "packagedDomScriptsVerified": 162,
-              "sourceFilesHashed": 2631,
+              "sourceFilesHashed": 5327,
+              "lfsEntitiesVerified": 2117,
               "sourceBusinessHashesVerifiedAfterPrebuild": true,
-              "localSourceMatchesFrozenSnapshot": true,
-              "releaseToolChangedAfterSnapshot": false,
-              "realDeviceValidation": false,
-              "detailedChecks": "artifacts/ios-release-18/validation/validation-summary.json",
+              "signedNativeInputsVerified": 17796,
+              "signedNativeInputsSha256": "8a68a8f61c164ca5eaafed0559678208b04c99a208d3e1ebb1cc7a2be8fd810b",
               "allFrozenInputsStillMatch": true,
-              "knownFailuresInheritedFromBuild17": true,
-              "fullSuiteRerunThisRelease": false
+              "localIpaMatchesMac": true,
+              "testInformationMatches": true,
+              "finalBetaDetailReadback": {
+                "checkedAt": "2026-11-02T10:07:36.824Z",
+                "internalBuildState": "IN_BETA_TESTING",
+                "evidence": "artifacts/ios-release-20/final-beta-detail.json"
+              },
+              "keychainSearchListRestored": true,
+              "isolatedKeychainLocked": true,
+              "realDeviceValidation": false,
+              "cultureScope": "No scene or cultural claims changed during this release run; no cultural factual recertification claimed.",
+              "detailedChecks": "artifacts/ios-release-20/validation-summary.json"
             },
-            "easRemoteBuildNumber": "18",
+            "easRemoteBuildNumber": "20",
+            "easCounterBefore": "18",
+            "easCounterSyncedAt": "2026-11-02T10:03:16.799Z",
+            "easActiveBuildCountsBeforeSync": {
+              "NEW": 0,
+              "IN_QUEUE": 0,
+              "IN_PROGRESS": 0,
+              "PENDING_CANCEL": 0
+            },
             "betaReviewSubmitted": false,
             "appReviewSubmitted": false,
             "betaReviewSubmittedByThisRun": false,
             "appReviewSubmittedByThisRun": false,
+            "permissionsChangedByThisRun": false,
+            "invitationsCreatedByThisRun": false,
             "publiclyReleased": false,
             "testFlightUrl": "https://appstoreconnect.apple.com/apps/6821271597/testflight",
             "appStoreVersion": {
-              "verifiedAt": "2026-10-31T05:25:18.941Z",
+              "verifiedAt": "2026-11-02T10:02:04.881Z",
               "id": "84ab28c1-b40b-4d0c-ade2-d3e02d2eaf62",
               "selectedAppleBuildId": "c0729860-3f40-4392-992e-d1c16d9f83c4",
+              "selectedBuildNumber": "12",
               "appStoreState": "PREPARE_FOR_SUBMISSION",
               "releaseType": "MANUAL"
             },
-            "sourceArchiveSha256": "2250e7ebe8d4bcf9b321b1126c48eea0a1193c1130bec0ae506d83744a451ecb",
-            "sourceTrackedDiffSha256": "19062f2e676939a1e78e469c1f5980a101ef9795e5aa172927101e157b001b61",
-            "sourceSnapshotIncludesWorktreeChanges": true,
+            "sourceSnapshotIncludesWorktreeChanges": false,
             "formalStoreBuildUnchangedByThisRun": true,
-            "testflightCompletedAt": "2026-10-31T05:25:18.943Z",
+            "testflightCompletedAt": "2026-11-02T10:02:04.884Z",
+            "whatToTest": "请重点验证：全部仪式断网可打开，旧存档可继续；完成仪式后永久解锁，重玩与重启不撤销；心愿页入口、近距离查看与继续安放、提示板、自动收尾及小天地收藏展示正常。TestFlight“我的→场景目录”应可进入全部内置场景；反馈浮层可暂停/继续仪式，版本号正确，发送失败保留待发并联网重试；团队状态筛选、刷新与“本版本测试通过”生效。检查 iPhone 键盘、安全区域、语言切换、小组件跳转及离线重开。",
             "previousInternalBuild": {
-              "buildNumber": "17",
-              "appleBuildId": "4aed2014-b853-44a6-a2f0-8fb18b02820c",
-              "verifiedAt": "2026-10-31T01:46:02.433Z"
+              "verifiedAt": "2026-10-31T05:26:52.015Z",
+              "appId": "6821271597",
+              "bundleIdentifier": "com.helio.cyberbless",
+              "version": "1.0.0",
+              "buildNumber": "18",
+              "sourceCommit": "957dfba3df461b2ec70e417380f8b1bc21d958e1",
+              "buildSource": "mac-mini-ssh-xcode",
+              "xcodeVersion": "26.6",
+              "distribution": "app-store-connect",
+              "builtAt": "2026-10-31T05:19:06.527Z",
+              "uploadAcceptedAt": "2026-10-31T05:21:20.072Z",
+              "ipaBytes": 222296805,
+              "ipaSha256": "10816f8073ab524ddbae23d913dba2e75bea974268c9dea216eed4f23da49264",
+              "appleBuildId": "9cca53be-b804-4b10-9482-e023b63bb7d7",
+              "processingState": "VALID",
+              "internalBuildState": "IN_BETA_TESTING",
+              "expirationDate": "2027-01-29T05:22:54.000Z",
+              "internalGroup": {
+                "id": "f6096459-cc7f-421b-ad5c-b6cc1fbf8683",
+                "name": "Team (Expo)",
+                "isInternalGroup": true,
+                "appId": "6821271597",
+                "automaticDistribution": true,
+                "testerCount": 1,
+                "newBuildInGroup": true,
+                "testerStateScope": "Group membership and build availability; not evidence of build18 device installation"
+              },
+              "verification": {
+                "mobileVerifyPassed": true,
+                "i18nVerifyPassed": true,
+                "i18nLocalesVerified": 8,
+                "nativeLocalizationFilesChecked": 21,
+                "fullTestSuitePassed": false,
+                "knownFailingTests": 152,
+                "knownFailingFiles": [
+                  "packages/app/src/hourly-scene-lifecycle.test.ts",
+                  "packages/scenes/src/directional-tolerance-scenes.test.ts",
+                  "packages/scenes/src/spatial-placement-a.test.ts",
+                  "packages/scenes/src/spatial-placement-b.test.ts",
+                  "packages/scenes/src/spatial-placement-c.test.ts"
+                ],
+                "knownFailureReason": "Old fixtures do not complete the current close-inspection stage before requesting placement cues or completion; updated scene and recovery tests cover this stage.",
+                "mainAppAndWidgetSignaturesVerified": true,
+                "distributionCertificateValidityVerified": true,
+                "packagedOfflineAssetHashesVerified": 171,
+                "packagedWidgetCoverHashesVerified": 477,
+                "packagedDomScriptsVerified": 162,
+                "sourceFilesHashed": 2631,
+                "sourceBusinessHashesVerifiedAfterPrebuild": true,
+                "localSourceMatchesFrozenSnapshot": true,
+                "releaseToolChangedAfterSnapshot": false,
+                "realDeviceValidation": false,
+                "detailedChecks": "artifacts/ios-release-18/validation/validation-summary.json",
+                "allFrozenInputsStillMatch": true,
+                "knownFailuresInheritedFromBuild17": true,
+                "fullSuiteRerunThisRelease": false
+              },
+              "easRemoteBuildNumber": "18",
+              "betaReviewSubmitted": false,
+              "appReviewSubmitted": false,
+              "betaReviewSubmittedByThisRun": false,
+              "appReviewSubmittedByThisRun": false,
+              "publiclyReleased": false,
+              "testFlightUrl": "https://appstoreconnect.apple.com/apps/6821271597/testflight",
+              "appStoreVersion": {
+                "verifiedAt": "2026-10-31T05:25:18.941Z",
+                "id": "84ab28c1-b40b-4d0c-ade2-d3e02d2eaf62",
+                "selectedAppleBuildId": "c0729860-3f40-4392-992e-d1c16d9f83c4",
+                "appStoreState": "PREPARE_FOR_SUBMISSION",
+                "releaseType": "MANUAL"
+              },
+              "sourceArchiveSha256": "2250e7ebe8d4bcf9b321b1126c48eea0a1193c1130bec0ae506d83744a451ecb",
+              "sourceTrackedDiffSha256": "19062f2e676939a1e78e469c1f5980a101ef9795e5aa172927101e157b001b61",
+              "sourceSnapshotIncludesWorktreeChanges": true,
+              "formalStoreBuildUnchangedByThisRun": true,
+              "testflightCompletedAt": "2026-10-31T05:25:18.943Z",
+              "previousInternalBuild": {
+                "buildNumber": "17",
+                "appleBuildId": "4aed2014-b853-44a6-a2f0-8fb18b02820c",
+                "verifiedAt": "2026-10-31T01:46:02.433Z"
+              },
+              "earlierInternalBuilds": [
+                {
+                  "buildNumber": "16",
+                  "appleBuildId": "c62673b0-0e82-4800-9eea-af0ce2cf3642",
+                  "verifiedAt": "2026-10-30T15:21:52.156Z"
+                },
+                {
+                  "buildNumber": "15",
+                  "appleBuildId": "cb351c03-d6a0-49f1-b2f0-b78d1dab33a8",
+                  "verifiedAt": "2026-10-30T12:30:55.747Z"
+                },
+                {
+                  "buildNumber": "14",
+                  "appleBuildId": "07622e4b-b5c1-4f48-835a-538105bafab0",
+                  "verifiedAt": "2026-10-28T12:43:23.948Z"
+                },
+                {
+                  "buildNumber": "13",
+                  "appleBuildId": "89557e0a-2466-463e-8159-fedb0780e6fa",
+                  "verifiedAt": "2026-10-27T09:13:45.240Z"
+                }
+              ],
+              "evidenceDirectory": "artifacts/ios-release-18/",
+              "releaseEntryDirectory": "scripts/ios-release/",
+              "dependenciesReused": true,
+              "derivedData": "/Users/heli/cyber-bless-testflight-20261030/artifacts/ios-release/DerivedData",
+              "derivedDataRemovedAfterArchive": false,
+              "artifactPaths": {
+                "localIpa": "D:\\ws\\app\\cyber-bless\\artifacts\\ios-release-18\\blessing-18.ipa",
+                "macIpa": "/Users/heli/cyber-bless-testflight-20261030/artifacts/ios-release/18/blessing-18.ipa",
+                "macArchive": "/Users/heli/cyber-bless-testflight-20261030/artifacts/ios-release/18/Blessing-18.xcarchive"
+              }
             },
             "earlierInternalBuilds": [
+              {
+                "buildNumber": "17",
+                "appleBuildId": "4aed2014-b853-44a6-a2f0-8fb18b02820c",
+                "verifiedAt": "2026-10-31T01:46:02.433Z"
+              },
               {
                 "buildNumber": "16",
                 "appleBuildId": "c62673b0-0e82-4800-9eea-af0ce2cf3642",
@@ -688,18 +837,59 @@
                 "verifiedAt": "2026-10-27T09:13:45.240Z"
               }
             ],
-            "evidenceDirectory": "artifacts/ios-release-18/",
+            "unsuccessfulBuild19": {
+              "sourceCommit": "a3649751",
+              "tags": [
+                "ios/v1.0.0-build.19",
+                "ios-v1.0.0-build.19"
+              ],
+              "sourceIdentityPreserved": true,
+              "tagsOverwritten": false,
+              "uploaded": false,
+              "uploadReservationId": "5fe449bc-79d7-439e-8a16-d7f1e1f23ff6",
+              "uploadReservationState": "AWAITING_UPLOAD",
+              "reasons": [
+                "Percent-encoded slash tag path rejected by Clang stat cache before archive.",
+                "Plain tag archive/export completed, then strict native-input comparison rejected runtime dependency/provider rewrites before upload."
+              ],
+              "retentionDirectories": [
+                "/Users/heli/ios-builds/cyber-bless/history/failed-ios-slash-build19-a3649751",
+                "/Users/heli/ios-builds/cyber-bless/history/rejected-build19-a3649751"
+              ],
+              "retentionVerified": true
+            },
+            "evidenceDirectory": "artifacts/ios-release-20/",
             "releaseEntryDirectory": "scripts/ios-release/",
-            "dependenciesReused": true,
-            "derivedData": "/Users/heli/cyber-bless-testflight-20261030/artifacts/ios-release/DerivedData",
+            "dependencyPreparation": "Fresh npm ci, frozen Bundler and byte-identical pod install --deployment, followed by unsigned Release warmup and generated Expo dSYM resolvers.",
+            "derivedData": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.20/source/artifacts/ios-release/DerivedData",
+            "derivedDataReusedWithinRelease": true,
             "derivedDataRemovedAfterArchive": false,
+            "expoSession": {
+              "temporarySessionUsed": true,
+              "originalStateRestored": true,
+              "loggedOutOrRevoked": false
+            },
             "artifactPaths": {
-              "localIpa": "D:\\ws\\app\\cyber-bless\\artifacts\\ios-release-18\\blessing-18.ipa",
-              "macIpa": "/Users/heli/cyber-bless-testflight-20261030/artifacts/ios-release/18/blessing-18.ipa",
-              "macArchive": "/Users/heli/cyber-bless-testflight-20261030/artifacts/ios-release/18/Blessing-18.xcarchive"
+              "localIpa": "D:\\ws\\app\\cyber-bless\\artifacts\\ios-release-20\\blessing-20.ipa",
+              "macIpa": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.20/source/artifacts/ios-release/20/blessing-20.ipa",
+              "macArchive": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.20/source/artifacts/ios-release/20/Blessing-20.xcarchive"
+            },
+            "cleanup": {
+              "appLockHeld": true,
+              "failedCheckoutIdentitiesVerified": true,
+              "retainedArtifactTreesSha256Verified": true,
+              "failedCheckoutsRemoved": true,
+              "verificationCheckoutAndCachesRemoved": true,
+              "validationEvidenceDirectory": "/Users/heli/ios-builds/cyber-bless/history/release-validation-20261102",
+              "successfulBuild20CheckoutAndArtifactsPreserved": true
             }
           },
           "earlierInternalBuilds": [
+            {
+              "buildNumber": "18",
+              "appleBuildId": "9cca53be-b804-4b10-9482-e023b63bb7d7",
+              "verifiedAt": "2026-10-31T05:26:52.015Z"
+            },
             {
               "buildNumber": "17",
               "appleBuildId": "4aed2014-b853-44a6-a2f0-8fb18b02820c",
@@ -726,31 +916,10 @@
               "verifiedAt": "2026-10-27T09:13:45.240Z"
             }
           ],
-          "unsuccessfulBuild19": {
-            "sourceCommit": "a3649751",
-            "tags": [
-              "ios/v1.0.0-build.19",
-              "ios-v1.0.0-build.19"
-            ],
-            "sourceIdentityPreserved": true,
-            "tagsOverwritten": false,
-            "uploaded": false,
-            "uploadReservationId": "5fe449bc-79d7-439e-8a16-d7f1e1f23ff6",
-            "uploadReservationState": "AWAITING_UPLOAD",
-            "reasons": [
-              "Percent-encoded slash tag path rejected by Clang stat cache before archive.",
-              "Plain tag archive/export completed, then strict native-input comparison rejected runtime dependency/provider rewrites before upload."
-            ],
-            "retentionDirectories": [
-              "/Users/heli/ios-builds/cyber-bless/history/failed-ios-slash-build19-a3649751",
-              "/Users/heli/ios-builds/cyber-bless/history/rejected-build19-a3649751"
-            ],
-            "retentionVerified": true
-          },
-          "evidenceDirectory": "artifacts/ios-release-20/",
+          "evidenceDirectory": "artifacts/ios-release-21/",
           "releaseEntryDirectory": "scripts/ios-release/",
           "dependencyPreparation": "Fresh npm ci, frozen Bundler and byte-identical pod install --deployment, followed by unsigned Release warmup and generated Expo dSYM resolvers.",
-          "derivedData": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.20/source/artifacts/ios-release/DerivedData",
+          "derivedData": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.21/source/artifacts/ios-release/DerivedData",
           "derivedDataReusedWithinRelease": true,
           "derivedDataRemovedAfterArchive": false,
           "expoSession": {
@@ -759,21 +928,58 @@
             "loggedOutOrRevoked": false
           },
           "artifactPaths": {
-            "localIpa": "D:\\ws\\app\\cyber-bless\\artifacts\\ios-release-20\\blessing-20.ipa",
-            "macIpa": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.20/source/artifacts/ios-release/20/blessing-20.ipa",
-            "macArchive": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.20/source/artifacts/ios-release/20/Blessing-20.xcarchive"
+            "localIpa": "D:\\ws\\app\\cyber-bless\\artifacts\\ios-release-21\\blessing-21.ipa",
+            "macIpa": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.21/source/artifacts/ios-release/21/blessing-21.ipa",
+            "macArchive": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.21/source/artifacts/ios-release/21/Blessing-21.xcarchive"
           },
-          "cleanup": {
-            "appLockHeld": true,
-            "failedCheckoutIdentitiesVerified": true,
-            "retainedArtifactTreesSha256Verified": true,
-            "failedCheckoutsRemoved": true,
-            "verificationCheckoutAndCachesRemoved": true,
-            "validationEvidenceDirectory": "/Users/heli/ios-builds/cyber-bless/history/release-validation-20261102",
-            "successfulBuild20CheckoutAndArtifactsPreserved": true
+          "finalBetaDetail": {
+            "checkedAt": "2026-11-02T16:39:34.770Z",
+            "appId": "6821271597",
+            "buildId": "34245485-f5ce-4021-8b30-33afef15b1a0",
+            "id": "34245485-f5ce-4021-8b30-33afef15b1a0",
+            "autoNotifyEnabled": true,
+            "internalBuildState": "IN_BETA_TESTING",
+            "externalBuildState": "READY_FOR_BETA_SUBMISSION"
+          },
+          "internalToolsBuildSwitch": {
+            "enabled": true,
+            "sourceFile": "packages/app/src/internal-tools-config.ts",
+            "behavior": "Shared Web/iOS/Android build setting; independent of StoreKit receipts or network. Rebuild with false to close internal tools."
+          },
+          "exportRecovery": {
+            "sourceTag": "ios-v1.0.0-build.21",
+            "sourceCommit": "bd2a93733647619f3121c4f1cd281b4ddc156925",
+            "exportProcessId": 80231,
+            "deadlockedServiceProcessId": 80232,
+            "diagnosis": "Xcode ContentDelivery service main thread and KPI_Queue synchronously waited for each other during IDEDistributionUploadAccountStep.",
+            "actions": [
+              "Sent TERM only to the confirmed deadlocked Xcode.ITunesSoftwareService process; it remained blocked.",
+              "Sent KILL only to the same confirmed service process.",
+              "The original xcodebuild export process recovered automatically and completed through the existing release runner."
+            ],
+            "rearchived": false,
+            "sourceOrReleaseToolChanged": false,
+            "accountOrKeychainReset": false,
+            "buildNumberChanged": false,
+            "builtAt": "2026-11-02T16:26:04.018Z",
+            "ipaSha256": "cf520054759d007c2f8bfd9508a0d046f01d8d8709e1d93f0d1bba1c6a848823"
+          },
+          "artifactRetention": {
+            "retainedBuilds": [
+              "20",
+              "21"
+            ],
+            "originalCheckoutsAndIpaArchiveDsymPreserved": true,
+            "reason": "Current internal installation and crash investigation needs.",
+            "failedCheckoutsCreatedThisRun": false
           }
         },
         "earlierInternalBuilds": [
+          {
+            "buildNumber": "20",
+            "appleBuildId": "e148c47c-f58e-425f-b592-429844d45453",
+            "verifiedAt": "2026-11-02T10:02:04.881Z"
+          },
           {
             "buildNumber": "18",
             "appleBuildId": "9cca53be-b804-4b10-9482-e023b63bb7d7",
@@ -805,10 +1011,10 @@
             "verifiedAt": "2026-10-27T09:13:45.240Z"
           }
         ],
-        "evidenceDirectory": "artifacts/ios-release-21/",
+        "evidenceDirectory": "artifacts/ios-release-22/",
         "releaseEntryDirectory": "scripts/ios-release/",
-        "dependencyPreparation": "Fresh npm ci, frozen Bundler and byte-identical pod install --deployment, followed by unsigned Release warmup and generated Expo dSYM resolvers.",
-        "derivedData": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.21/source/artifacts/ios-release/DerivedData",
+        "dependencyPreparation": "Fresh npm ci, frozen Bundler and deployment Podfile.lock, unsigned Release warmup and four generated Expo dSYM resolvers.",
+        "derivedData": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.22/source/artifacts/ios-release/DerivedData",
         "derivedDataReusedWithinRelease": true,
         "derivedDataRemovedAfterArchive": false,
         "expoSession": {
@@ -817,53 +1023,48 @@
           "loggedOutOrRevoked": false
         },
         "artifactPaths": {
-          "localIpa": "D:\\ws\\app\\cyber-bless\\artifacts\\ios-release-21\\blessing-21.ipa",
-          "macIpa": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.21/source/artifacts/ios-release/21/blessing-21.ipa",
-          "macArchive": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.21/source/artifacts/ios-release/21/Blessing-21.xcarchive"
+          "localIpa": "D:\\ws\\app\\cyber-bless\\artifacts\\ios-release-22\\blessing-22.ipa",
+          "macIpa": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.22/source/artifacts/ios-release/22/blessing-22.ipa",
+          "macArchive": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.22/source/artifacts/ios-release/22/Blessing-22.xcarchive"
         },
-        "finalBetaDetail": {
-          "checkedAt": "2026-11-02T16:39:34.770Z",
-          "appId": "6821271597",
-          "buildId": "34245485-f5ce-4021-8b30-33afef15b1a0",
-          "id": "34245485-f5ce-4021-8b30-33afef15b1a0",
-          "autoNotifyEnabled": true,
+        "finalBuildReadback": {
+          "checkedAt": "2026-11-02T18:11:22.222Z",
+          "buildId": "7d92aad7-e5f9-4453-8e32-37734d066a05",
+          "processingState": "VALID",
           "internalBuildState": "IN_BETA_TESTING",
-          "externalBuildState": "READY_FOR_BETA_SUBMISSION"
+          "inExistingInternalGroup": true
         },
         "internalToolsBuildSwitch": {
           "enabled": true,
           "sourceFile": "packages/app/src/internal-tools-config.ts",
           "behavior": "Shared Web/iOS/Android build setting; independent of StoreKit receipts or network. Rebuild with false to close internal tools."
         },
-        "exportRecovery": {
-          "sourceTag": "ios-v1.0.0-build.21",
-          "sourceCommit": "bd2a93733647619f3121c4f1cd281b4ddc156925",
-          "exportProcessId": 80231,
-          "deadlockedServiceProcessId": 80232,
-          "diagnosis": "Xcode ContentDelivery service main thread and KPI_Queue synchronously waited for each other during IDEDistributionUploadAccountStep.",
-          "actions": [
-            "Sent TERM only to the confirmed deadlocked Xcode.ITunesSoftwareService process; it remained blocked.",
-            "Sent KILL only to the same confirmed service process.",
-            "The original xcodebuild export process recovered automatically and completed through the existing release runner."
-          ],
-          "rearchived": false,
-          "sourceOrReleaseToolChanged": false,
-          "accountOrKeychainReset": false,
-          "buildNumberChanged": false,
-          "builtAt": "2026-11-02T16:26:04.018Z",
-          "ipaSha256": "cf520054759d007c2f8bfd9508a0d046f01d8d8709e1d93f0d1bba1c6a848823"
-        },
         "artifactRetention": {
           "retainedBuilds": [
             "20",
-            "21"
+            "21",
+            "22"
           ],
           "originalCheckoutsAndIpaArchiveDsymPreserved": true,
-          "reason": "Current internal installation and crash investigation needs.",
-          "failedCheckoutsCreatedThisRun": false
+          "failedCheckoutsCreatedThisRun": false,
+          "reason": "Retain existing installation and crash-investigation artifacts; no broad cleanup in this release."
         }
       },
       "earlierInternalBuilds": [
+        {
+          "buildNumber": "21",
+          "appleBuildId": "34245485-f5ce-4021-8b30-33afef15b1a0",
+          "verifiedAt": "2026-11-02T16:39:34.770Z",
+          "sourceTag": "ios-v1.0.0-build.21",
+          "sourceCommit": "bd2a93733647619f3121c4f1cd281b4ddc156925",
+          "ipaSha256": "cf520054759d007c2f8bfd9508a0d046f01d8d8709e1d93f0d1bba1c6a848823",
+          "evidenceDirectory": "artifacts/ios-release-21/",
+          "artifactPaths": {
+            "localIpa": "D:\\ws\\app\\cyber-bless\\artifacts\\ios-release-21\\blessing-21.ipa",
+            "macIpa": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.21/source/artifacts/ios-release/21/blessing-21.ipa",
+            "macArchive": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.21/source/artifacts/ios-release/21/Blessing-21.xcarchive"
+          }
+        },
         {
           "buildNumber": "20",
           "appleBuildId": "e148c47c-f58e-425f-b592-429844d45453",
@@ -900,10 +1101,10 @@
           "verifiedAt": "2026-10-27T09:13:45.240Z"
         }
       ],
-      "evidenceDirectory": "artifacts/ios-release-22/",
+      "evidenceDirectory": "artifacts/ios-release-23/",
       "releaseEntryDirectory": "scripts/ios-release/",
       "dependencyPreparation": "Fresh npm ci, frozen Bundler and deployment Podfile.lock, unsigned Release warmup and four generated Expo dSYM resolvers.",
-      "derivedData": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.22/source/artifacts/ios-release/DerivedData",
+      "derivedData": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.23/source/artifacts/ios-release/DerivedData",
       "derivedDataReusedWithinRelease": true,
       "derivedDataRemovedAfterArchive": false,
       "expoSession": {
@@ -912,13 +1113,13 @@
         "loggedOutOrRevoked": false
       },
       "artifactPaths": {
-        "localIpa": "D:\\ws\\app\\cyber-bless\\artifacts\\ios-release-22\\blessing-22.ipa",
-        "macIpa": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.22/source/artifacts/ios-release/22/blessing-22.ipa",
-        "macArchive": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.22/source/artifacts/ios-release/22/Blessing-22.xcarchive"
+        "localIpa": "D:\\ws\\app\\cyber-bless\\artifacts\\ios-release-23\\blessing-23.ipa",
+        "macIpa": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.23/source/artifacts/ios-release/23/blessing-23.ipa",
+        "macArchive": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.23/source/artifacts/ios-release/23/Blessing-23.xcarchive"
       },
       "finalBuildReadback": {
-        "checkedAt": "2026-11-02T18:11:22.222Z",
-        "buildId": "7d92aad7-e5f9-4453-8e32-37734d066a05",
+        "checkedAt": "2026-11-03T06:06:18.827Z",
+        "buildId": "3ad7627e-8ea6-4c0d-9010-3c31ca54bf9d",
         "processingState": "VALID",
         "internalBuildState": "IN_BETA_TESTING",
         "inExistingInternalGroup": true
@@ -932,11 +1133,12 @@
         "retainedBuilds": [
           "20",
           "21",
-          "22"
+          "22",
+          "23"
         ],
         "originalCheckoutsAndIpaArchiveDsymPreserved": true,
         "failedCheckoutsCreatedThisRun": false,
-        "reason": "Retain existing installation and crash-investigation artifacts; no broad cleanup in this release."
+        "reason": "Existing installation and crash-investigation artifacts retained; no broad cleanup in this release."
       }
     },
     "earlierInternalBuilds": [
@@ -990,10 +1192,10 @@
         "verifiedAt": "2026-10-27T09:13:45.240Z"
       }
     ],
-    "evidenceDirectory": "artifacts/ios-release-23/",
+    "evidenceDirectory": "artifacts/ios-release-24/",
     "releaseEntryDirectory": "scripts/ios-release/",
     "dependencyPreparation": "Fresh npm ci, frozen Bundler and deployment Podfile.lock, unsigned Release warmup and four generated Expo dSYM resolvers.",
-    "derivedData": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.23/source/artifacts/ios-release/DerivedData",
+    "derivedData": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.24/source/artifacts/ios-release/DerivedData",
     "derivedDataReusedWithinRelease": true,
     "derivedDataRemovedAfterArchive": false,
     "expoSession": {
@@ -1002,13 +1204,13 @@
       "loggedOutOrRevoked": false
     },
     "artifactPaths": {
-      "localIpa": "D:\\ws\\app\\cyber-bless\\artifacts\\ios-release-23\\blessing-23.ipa",
-      "macIpa": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.23/source/artifacts/ios-release/23/blessing-23.ipa",
-      "macArchive": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.23/source/artifacts/ios-release/23/Blessing-23.xcarchive"
+      "localIpa": "D:/ws/app/cyber-bless/artifacts/ios-release-24/blessing-24.ipa",
+      "macIpa": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.24/source/artifacts/ios-release/24/blessing-24.ipa",
+      "macArchive": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.24/source/artifacts/ios-release/24/Blessing-24.xcarchive"
     },
     "finalBuildReadback": {
-      "checkedAt": "2026-11-03T06:06:18.827Z",
-      "buildId": "3ad7627e-8ea6-4c0d-9010-3c31ca54bf9d",
+      "checkedAt": "2026-11-03T07:45:41.062Z",
+      "buildId": "c4c78f4e-8a65-4f90-bd07-c60b092f6bdf",
       "processingState": "VALID",
       "internalBuildState": "IN_BETA_TESTING",
       "inExistingInternalGroup": true
@@ -1023,106 +1225,16 @@
         "20",
         "21",
         "22",
-        "23"
+        "23",
+        "24"
       ],
       "originalCheckoutsAndIpaArchiveDsymPreserved": true,
       "failedCheckoutsCreatedThisRun": false,
-      "reason": "Existing installation and crash-investigation artifacts retained; no broad cleanup in this release."
+      "removedRebuildableCaches": [
+        "build20 DerivedData",
+        "build21 DerivedData"
+      ],
+      "reason": "IPA, archive, dSYM and receipts retained; only completed old DerivedData caches were removed."
     }
-  },
-  "earlierInternalBuilds": [
-    {
-      "buildNumber": "21",
-      "appleBuildId": "34245485-f5ce-4021-8b30-33afef15b1a0",
-      "verifiedAt": "2026-11-02T16:39:34.770Z",
-      "sourceTag": "ios-v1.0.0-build.21",
-      "sourceCommit": "bd2a93733647619f3121c4f1cd281b4ddc156925",
-      "ipaSha256": "cf520054759d007c2f8bfd9508a0d046f01d8d8709e1d93f0d1bba1c6a848823",
-      "evidenceDirectory": "artifacts/ios-release-21/",
-      "artifactPaths": {
-        "localIpa": "D:\\ws\\app\\cyber-bless\\artifacts\\ios-release-21\\blessing-21.ipa",
-        "macIpa": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.21/source/artifacts/ios-release/21/blessing-21.ipa",
-        "macArchive": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.21/source/artifacts/ios-release/21/Blessing-21.xcarchive"
-      }
-    },
-    {
-      "buildNumber": "20",
-      "appleBuildId": "e148c47c-f58e-425f-b592-429844d45453",
-      "verifiedAt": "2026-11-02T10:02:04.881Z"
-    },
-    {
-      "buildNumber": "18",
-      "appleBuildId": "9cca53be-b804-4b10-9482-e023b63bb7d7",
-      "verifiedAt": "2026-10-31T05:26:52.015Z"
-    },
-    {
-      "buildNumber": "17",
-      "appleBuildId": "4aed2014-b853-44a6-a2f0-8fb18b02820c",
-      "verifiedAt": "2026-10-31T01:46:02.433Z"
-    },
-    {
-      "buildNumber": "16",
-      "appleBuildId": "c62673b0-0e82-4800-9eea-af0ce2cf3642",
-      "verifiedAt": "2026-10-30T15:21:52.156Z"
-    },
-    {
-      "buildNumber": "15",
-      "appleBuildId": "cb351c03-d6a0-49f1-b2f0-b78d1dab33a8",
-      "verifiedAt": "2026-10-30T12:30:55.747Z"
-    },
-    {
-      "buildNumber": "14",
-      "appleBuildId": "07622e4b-b5c1-4f48-835a-538105bafab0",
-      "verifiedAt": "2026-10-28T12:43:23.948Z"
-    },
-    {
-      "buildNumber": "13",
-      "appleBuildId": "89557e0a-2466-463e-8159-fedb0780e6fa",
-      "verifiedAt": "2026-10-27T09:13:45.240Z"
-    }
-  ],
-  "evidenceDirectory": "artifacts/ios-release-24/",
-  "releaseEntryDirectory": "scripts/ios-release/",
-  "dependencyPreparation": "Fresh npm ci, frozen Bundler and deployment Podfile.lock, unsigned Release warmup and four generated Expo dSYM resolvers.",
-  "derivedData": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.24/source/artifacts/ios-release/DerivedData",
-  "derivedDataReusedWithinRelease": true,
-  "derivedDataRemovedAfterArchive": false,
-  "expoSession": {
-    "temporarySessionUsed": true,
-    "originalStateRestored": true,
-    "loggedOutOrRevoked": false
-  },
-  "artifactPaths": {
-    "localIpa": "D:/ws/app/cyber-bless/artifacts/ios-release-24/blessing-24.ipa",
-    "macIpa": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.24/source/artifacts/ios-release/24/blessing-24.ipa",
-    "macArchive": "/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.24/source/artifacts/ios-release/24/Blessing-24.xcarchive"
-  },
-  "finalBuildReadback": {
-    "checkedAt": "2026-11-03T07:45:41.062Z",
-    "buildId": "c4c78f4e-8a65-4f90-bd07-c60b092f6bdf",
-    "processingState": "VALID",
-    "internalBuildState": "IN_BETA_TESTING",
-    "inExistingInternalGroup": true
-  },
-  "internalToolsBuildSwitch": {
-    "enabled": true,
-    "sourceFile": "packages/app/src/internal-tools-config.ts",
-    "behavior": "Shared Web/iOS/Android build setting; independent of StoreKit receipts or network. Rebuild with false to close internal tools."
-  },
-  "artifactRetention": {
-    "retainedBuilds": [
-      "20",
-      "21",
-      "22",
-      "23",
-      "24"
-    ],
-    "originalCheckoutsAndIpaArchiveDsymPreserved": true,
-    "failedCheckoutsCreatedThisRun": false,
-    "removedRebuildableCaches": [
-      "build20 DerivedData",
-      "build21 DerivedData"
-    ],
-    "reason": "IPA, archive, dSYM and receipts retained; only completed old DerivedData caches were removed."
   }
 }

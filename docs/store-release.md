@@ -4,7 +4,17 @@
 
 正式 Mac mini 构建改用[参数化 tag 发布入口](../scripts/ios-release/README.md)：先提交业务源码、素材、发布工具、依赖锁及版本输入，合并／推送 `master` 后创建并推送附注 tag；Mac 直接获取该 tag 和 LFS 实体，执行同版本工具并串行验证、构建和交付。不再把未提交工作区生成的 `source.tgz` 用于新正式发布。构建号尚未分配时保持 release input 的 `null` 并拒绝执行，不猜测下一个编号。
 
-该入口已用于下述构建 20、21、22、23、24；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+该入口已用于下述构建 20、21、22、23、24、25；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+
+## 2026-11-06 构建 25：场景画面与手机操作更新
+
+北京时间 11:30:22，**1.0.0 (25)** 已完成 Mac mini 构建、ASC 上传及既有内部组验证。11:31:23 读回 `VALID / IN_BETA_TESTING`，Apple build UUID 为 `6042fdad-147f-486a-8d57-269e9d606973`，`Team (Expo)` 已包含本构建，测试说明匹配。
+
+来源为 master 提交 `9bef553f0fffbcb85ffdd90ede2b8fb983ce4ca6`、附注 tag `ios-v1.0.0-build.25`。Mac 直接获取该 tag 和 LFS 实体，使用 tag 内 runner 与独占锁；5605 个来源文件、17796 项原生输入核对一致。此次交付当前已合并的天空、材质、器物造型、视觉特征图标、风铃步骤和手机操作提示等更新。
+
+项目检查分阶段完成：13,201 项工作区单元测试、反馈工具与资源检查、生产构建、场景修订及移动嵌入验证通过。Windows 沙箱限制的 Git、本机网络和系统 API 步骤已在正常权限重跑。Expo 在线兼容表推荐了新补丁；移动依赖检查使用 `EXPO_OFFLINE=1` 核对锁定 SDK 自带兼容表，通过后保留现有依赖锁与 Pod 锁。发布工具 Windows 94 项通过、2 项平台跳过，Mac 96 项全部通过。Release 预构建、dSYM 映射、归档、主应用及小组件签名、离线资源核验通过。
+
+IPA 为 231,374,673 字节，SHA-256 `9e9041edce3c467ead1a172bbf2e2703569cda82e185a652a0223cecf3e8918a`；[本机 IPA](../artifacts/ios-release-25/blessing-25.ipa) 与 Mac 校验一致。Mac IPA／archive／dSYM 保留于 `/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.25/source/artifacts/ios-release/25`。EAS 计数由 24 同步为 25 并读回。钥匙串搜索列表已恢复、构建钥匙串已锁定，原 Mac Expo 状态已恢复。为释放空间，仅清理旧构建 22、23 的 DerivedData，保留其 IPA／archive／dSYM。回执见 `artifacts/ios-release-25/` 和 [TestFlight 状态](../store/ios/testflight-status.json)。本轮验证到内部组可测试，未进行真机功能验收。
 
 ## 2026-11-03 构建 24：修复 iOS 界面音效读取
 

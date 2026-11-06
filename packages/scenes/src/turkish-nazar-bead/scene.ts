@@ -21,7 +21,7 @@ const HINTS = [
 const MOVING = ['从陶托提起备好的护眼珠……', '整体移向木架，让横轴穿过挂环……', '挂环缓缓落稳，留一份日常护佑的心意……']
 const CARRY_HINT = '土耳其护眼珠寄托避厄护佑的心意。拿起蓝珠，可自由转动查看，再将挂环送到木架横轴上挂稳。'
 const PLAY_HINT = '挂件已悬稳。轻拨可让它摆动，拖动可微调朝向，准备好后结束欣赏。'
-const PLAY_KEYS = '方向键微调朝向，Enter 结束欣赏，Esc 复位。'
+const PLAY_HELP = '单指拖动微调朝向；点按「结束欣赏」收尾。'
 const ease = (t: number) => t * t * (3 - 2 * t)
 
 export function createTurkishNazarBead(ctx: SceneContext): SceneInstance {
@@ -40,7 +40,7 @@ export function createTurkishNazarBead(ctx: SceneContext): SceneInstance {
   const flickBtn = document.createElement('button'); flickBtn.type = 'button'; flickBtn.className = 'scene-bow-tap scene-hanging-flick scene-inspection-action'
   flickBtn.style.minWidth = '44px'; flickBtn.style.minHeight = '44px'
   setSafeText(flickBtn, '轻拨挂件', safe); overlay.append(flickBtn)
-  ;[PLAY_HINT, PLAY_KEYS, '结束欣赏'].forEach(safe)
+  ;[PLAY_HINT, PLAY_HELP, '结束欣赏'].forEach(safe)
   const { scene, renderer } = createWarmStage(canvas), camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'turkish-nazar-bead', label: '蓝珠祈安' }); style.setStyle(CEL_STYLE)
@@ -121,7 +121,7 @@ export function createTurkishNazarBead(ctx: SceneContext): SceneInstance {
     setSafeText(ui.actionBtn, at === 2 ? '结束欣赏' : ACTIONS[2]!, safe)
     setPlacementHint(ui.hintEl, motion ? MOVING[2]! : at === 3 ? HINTS[3]! : at === 2 ? PLAY_HINT : CARRY_HINT, !motion && at < 2, safe)
     closeInspection?.decorate(at >= 2)
-    if (at >= 2) { ui.renderDots(at === 3 ? 3 : 2, 3); bindSceneAttribute(ui.actionBtn, 'title', PLAY_KEYS) }
+    if (at >= 2) { ui.renderDots(at === 3 ? 3 : 2, 3); bindSceneAttribute(ui.actionBtn, 'title', PLAY_HELP) }
   }
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }

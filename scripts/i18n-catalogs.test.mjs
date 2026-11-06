@@ -1,4 +1,11 @@
-import{test}from'node:test';import assert from'node:assert/strict';import{validateCatalog,parseCatalog,validateCatalogGroups}from'./i18n-catalogs.mjs';
+import{test}from'node:test';import assert from'node:assert/strict';import{validateCatalog,parseCatalog,validateCatalogGroups,readCatalogs}from'./i18n-catalogs.mjs';
+test('all scene catalogs describe mobile controls without desktop hardware instructions',async()=>{
+ const catalogs=await readCatalogs();
+ const desktop=/鼠标|滑鼠|右[键鍵]|方向[键鍵]|[键鍵][盘盤]|\b(?:Shift|[Ee]sc|[Mm]ouse|[Kk]eyboard|[Aa]rrow keys)\b|マウス|キーボード|마우스|키보드/;
+ for(const[locale,groups]of Object.entries(catalogs))for(const[id,text]of Object.entries(groups.scenes)){
+  assert.doesNotMatch(text,desktop,`${locale}/${id} must describe touch controls`);
+ }
+});
 test('target-only catalog groups cannot evade validation or review hashes',()=>{
  assert.match(validateCatalogGroups({app:{}},{app:{},extra:{unknown:'text'}})[0],/unknown catalog group/);
  assert.deepEqual(validateCatalogGroups({app:{}},{app:{}}),[]);

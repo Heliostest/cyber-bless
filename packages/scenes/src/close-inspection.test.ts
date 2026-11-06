@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import * as THREE from 'three'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { configureLocale, SUPPORTED_LOCALES } from '@wbr/i18n'
 import { createCloseInspection } from './close-inspection'
 import { createStepOverlay } from './procedural-kit'
 
 const cleanups: (() => void)[] = []
-afterEach(() => { cleanups.splice(0).forEach(cleanup => cleanup()); document.body.replaceChildren() })
+afterEach(() => { cleanups.splice(0).forEach(cleanup => cleanup()); document.body.replaceChildren(); configureLocale('zh-Hans') })
 function mount(width = 390, height = 408, reduced = false, autoReturn?: boolean) {
   const canvas = document.createElement('canvas'), overlay = document.createElement('div')
   canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width, height }) as DOMRect
@@ -37,6 +38,13 @@ function mount(width = 390, height = 408, reduced = false, autoReturn?: boolean)
 }
 
 describe('close object inspection', () => {
+  it.each(SUPPORTED_LOCALES)('uses mobile help for pickup and the current viewing phase in %s', locale => {
+    configureLocale(locale)
+    const s=mount()
+    expect(s.ui.actionBtn.title).not.toMatch(/方向[键鍵]|\b(?:enter|esc|arrow keys)\b/i)
+    s.ui.actionBtn.click();s.run(.7)
+    expect(s.ui.actionBtn.title).toBe(s.ui.hintEl.textContent)
+  })
   it('requires pickup and explicit continue, leaving time to look after the automatic full orbit', () => {
     const s = mount()
     expect(s.inspection.canPlace()).toBe(false)

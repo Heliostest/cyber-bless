@@ -87,6 +87,14 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 describe('Sansi free performance', () => {
   const keys = (s: ReturnType<typeof mount>) => Array.from(s.overlay.querySelectorAll<HTMLButtonElement>('.scene-sansi-key'))
   const tap = (s: ReturnType<typeof mount>, key: number) => { const p=s.point(targetName(key),anchor(0));event(s.hit,'pointerdown',p);event(s.hit,'pointerup',p) }
+  it('describes touch performance and note buttons without requiring a physical keyboard',()=>{
+    const s=mount()
+    expect(s.overlay.querySelector('.scene-hint')!.textContent).not.toMatch(/键盘|1–9/)
+    for(const button of keys(s)){
+      expect(button.title).toContain(button.textContent)
+      expect(button.title).not.toContain('键盘')
+    }
+  })
   it('projects a separate playable marker for every tine',()=>{
     const s=mount();expect(s.host.querySelectorAll('[data-cue-role="source"]')).toHaveLength(9)
     tap(s,0);s.instance.update(.025);expect(s.host.querySelectorAll('[data-cue-role="source"]')).toHaveLength(9)

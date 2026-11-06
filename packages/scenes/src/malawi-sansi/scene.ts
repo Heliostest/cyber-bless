@@ -23,7 +23,7 @@ export function createMalawiSansi(ctx: SceneContext): SceneInstance {
   const keyboard=document.createElement('div');keyboard.className='scene-sansi-keys';keyboard.setAttribute('role','group');bindSceneAttribute(keyboard, 'aria-label', '铁舌音符，从左到右排列')
   const noteButtons=SANSI_KEYS.map((note,key)=>{
     const button=document.createElement('button');button.type='button';button.className='scene-sansi-key';button.dataset.key=String(key)
-    setSafeText(button,note.name,safe);bindSceneAttribute(button, 'aria-label', sceneTemplate('左起第{p0}根，{p1}', { p0: key + 1, p1: sceneProductCopy(note.name) }));bindSceneAttribute(button, "title", sceneTemplate('键盘 {p0}', { p0: key + 1 }))
+    setSafeText(button,note.name,safe);bindSceneAttribute(button, 'aria-label', sceneTemplate('左起第{p0}根，{p1}', { p0: key + 1, p1: sceneProductCopy(note.name) }));bindSceneAttribute(button, "title", sceneTemplate('点按演奏：{p0}', { p0: sceneProductCopy(note.name) }))
     keyboard.append(button);return button
   })
   overlay.append(keyboard)
@@ -79,7 +79,7 @@ export function createMalawiSansi(ctx: SceneContext): SceneInstance {
     ui.actionBtn.hidden=at===0||at===3;ui.actionBtn.disabled=!controlsActive||controlsBusy||at===0
     ui.actionBtn.setAttribute('aria-disabled',String(ui.actionBtn.disabled));ui.hitLayer.style.pointerEvents=inputActive()?'auto':'none'
     keyboard.hidden=at===3;noteButtons.forEach(button=>button.disabled=!controlsActive||controlsBusy)
-    setSafeText(ui.hintEl,at===3?'指尖停下，余音轻轻散去。': '点按或向下轻拨任意铁舌，试着奏出自己的旋律。键盘1–9也可演奏，想收尾时点「结束仪式」。',safe)
+    setSafeText(ui.hintEl,at===3?'指尖停下，余音轻轻散去。': '点按或向下轻拨任意铁舌，试着奏出自己的旋律。想收尾时点「结束仪式」。',safe)
   }
   function withHostCallbacks(work:()=>void){notifying=true;callbackVersion=lifecycleVersion;sync();try{work()}finally{notifying=false;if(!disposed)sync()}}
   function prepareInput(unlock=true){const version=lifecycleVersion;withHostCallbacks(()=>{feedback.prepare();if(unlock&&callbackActive()&&(ctx.isSoundEnabled?.()??true))audio.unlock()});return inputActive()&&version===lifecycleVersion}

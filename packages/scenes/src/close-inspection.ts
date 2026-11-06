@@ -11,7 +11,7 @@ const COPY = {
   approaching: '正在拿近……',
   viewing: '左右拖动转看，准备好后继续安放。',
   returning: '正在回到安放视角……',
-  keyboard: '方向键转看，Enter 继续安放，Esc 放回。',
+  pickupHelp: '点按物品或辅助按钮拿近查看。',
 }
 type Phase = 'ready' | 'approaching' | 'viewing' | 'returning' | 'placement'
 type Options = {
@@ -202,8 +202,9 @@ export function createCloseInspection(options: Options) {
       ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled))
       ui.hitLayer.style.pointerEvents = interactive() && !busy ? 'auto' : 'none'
       setSafeText(ui.actionBtn, phase === 'ready' || phase === 'approaching' ? COPY.pickup : COPY.continue, options.safe)
-      setSafeText(ui.hintEl, phase === 'ready' ? COPY.ready : phase === 'approaching' ? COPY.approaching : phase === 'returning' ? COPY.returning : COPY.viewing, options.safe)
-      bindSceneAttribute(ui.actionBtn, 'title', COPY.keyboard)
+      const hint = phase === 'ready' ? COPY.ready : phase === 'approaching' ? COPY.approaching : phase === 'returning' ? COPY.returning : COPY.viewing
+      setSafeText(ui.hintEl, hint, options.safe)
+      bindSceneAttribute(ui.actionBtn, 'title', phase === 'ready' ? COPY.pickupHelp : hint)
     },
     update(dt: number) {
       if (disposed) return

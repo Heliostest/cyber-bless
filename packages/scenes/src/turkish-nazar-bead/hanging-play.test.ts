@@ -58,6 +58,13 @@ function mount(kind: typeof cases[number], initialProgress = 0, extra: Partial<S
   return { instance, overlay, actor, camera, layer, button, source, goal, event, run, inspect, hang, progress, complete, haptic, support, flick }
 }
 describe.each(cases)('$name hanging play', kind => {
+  it('describes touch controls on the hanging and completed action', () => {
+    const s=mount(kind,2)
+    expect(s.button.title).not.toMatch(/方向键|Enter|Esc/)
+    expect(s.button.title).toContain('单指')
+    s.button.click()
+    expect(s.button.title).not.toMatch(/方向键|Enter|Esc/)
+  })
   it('hangs at checkpoint 2 without completing, then accepts a separate explicit finish once', () => {
     const s=mount(kind); s.hang()
     expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.disabled).toBe(false)

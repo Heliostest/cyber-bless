@@ -1,8 +1,12 @@
 // @vitest-environment jsdom
 import * as THREE from 'three'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { configureLocale, SUPPORTED_LOCALES } from '@wbr/i18n'
 import { createPosePlacement } from './pose-placement'
-import { addKeyboardPlacementInspection } from './placement-inspection'
+import { addKeyboardPlacementInspection, setPlacementHint } from './placement-inspection'
+import { localizeSceneOverlay } from './scene-localization'
+
+afterEach(() => configureLocale('zh-Hans'))
 
 function fixture() {
   const canvas=document.createElement('canvas'), button=document.createElement('button')
@@ -15,8 +19,22 @@ function fixture() {
   let active=true
   const stop=addKeyboardPlacementInspection(button,canvas,camera,model,placement,{isActive:()=>active,step:()=>0,prepare,reset:()=>model.pose(0,0)})
   const key=(key:string)=>button.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}))
-  return{root,placement,prepare,stop,key,inactive:()=>{active=false}}
+  return{root,button,placement,prepare,stop,key,inactive:()=>{active=false}}
 }
+
+it.each(SUPPORTED_LOCALES)('keeps placement instructions touch-only after switching to %s', locale => {
+  const s=fixture(), overlay=document.createElement('div'), hint=document.createElement('div')
+  overlay.append(hint,s.button)
+  setPlacementHint(hint,'已完成',true,()=>{})
+  const stop=localizeSceneOverlay(overlay)
+  try {
+    configureLocale(locale)
+    for (const text of [hint.textContent,hint.title,s.button.title]) {
+      expect(text).toBeTruthy()
+      expect(text).not.toMatch(/鼠标|滑鼠|右[键鍵]|方向[键鍵]|\b(?:shift|enter|esc|mouse|arrow keys)\b|マウス|마우스/i)
+    }
+  } finally { stop();s.stop() }
+})
 describe('optional keyboard inspection',()=>{
   it('turns either way without translating or committing, and Esc restores the saved pose',()=>{
     const s=fixture(), position=s.root.position.clone()

@@ -4,7 +4,7 @@
 
 ## 提交并固定发布输入
 
-1. 用现有商店／EAS 状态入口核对已用编号，更新 `store/ios/release-input.json` 的版本、构建号与工具链。初始 `buildNumber:null` 故意阻止未分配的新发布。
+1. 用现有商店状态入口核对 ASC 已用编号，更新 `store/ios/release-input.json` 的版本、构建号与工具链。当前仅用 Xcode 构建，`syncEasCounter:false`，不要求 EAS 登录。只有继续混用 EAS 构建时，才同时核对 EAS 占用并开启计数同步。初始 `buildNumber:null` 故意阻止未分配的新发布。
 2. 审阅并提交本次业务源码、素材、全部发布工具、`package-lock.json`、`Gemfile`／`Gemfile.lock`、`store/ios/Podfile.lock`。不笼统提交其他任务的工作。
 3. 合并 `master`，验证准确的合并提交，包含项目规定检查及 `npm run ios:release:test`。检查后再修改输入，就重新提交、验证。
 4. 推送代码和 LFS 后创建附注 tag。下列 **19 仅是命名示例，不代表编号已分配**：
@@ -66,19 +66,20 @@ node "$release_repo/scripts/ios-release/release-runner.mjs" configure "$release_
 node "$release_repo/scripts/ios-release/release-runner.mjs" <配置绝对路径> build
 node "$release_repo/scripts/ios-release/release-runner.mjs" <配置绝对路径> upload
 node "$release_repo/scripts/ios-release/release-runner.mjs" <配置绝对路径> finish
-node "$release_repo/scripts/ios-release/release-runner.mjs" <配置绝对路径> counter-sync
 ```
 
 - `build`：ASC 编号检查 → prepare → EAS 计数／活动构建检查（混用时）→ archive/export → offline verify。不会上传；先安装依赖再调用 EAS SDK。
 - `prepare`：核对实际工具链，`npm ci`，从干净原生目录生成工程，按冻结 Bundler 和 Podfile.lock 执行 deployment 安装；先执行不签名的 Release 构建，让官方脚本完成预编译依赖切换与模块 provider 生成，再重放生成工程中的 Expo dSYM 映射阶段，最后记录原生输入。首次构建的映射阶段可能早于依赖切换，因此必须在 Release 框架就位后再次执行。失败使旧成功准备回执失效。
 - `upload`：重新核对源码、原生输入、验证器、签名包和回执，按原有保护上传一次。
 - `finish`：查询同一包，必要时更新测试说明。`pending:true` 表示需要合理间隔继续查询，不能重传包。
-- `status`／`counter-status` 只读查询；`counter-sync` 仅在同源 TestFlight 完成回执核验后同步 EAS 计数。
+- `status` 只读查询 ASC。仅在 `syncEasCounter:true`、混用 EAS 构建时执行 `counter-status`／`counter-sync`；后者必须在同源 TestFlight 完成回执核验后同步 EAS 计数。仅 Xcode 发布不执行这两个 EAS 阶段。
 - `rebuild`：按旧 tag 只准备、归档和验证，不要求新编号、不上传、不更改计数。不会覆盖已有产物。
 
 所有阶段都必须通过 runner 持有本 App 独占锁。不要直接调用阶段脚本。异常留下 `.release.lock` 时先核对进程状态，不自动抢锁。归档成功但导出失败时，先查日志；确需重新归档，应先把该轮 IPA／archive／回执保全到本 App 构建根内的明确历史目录，再处理该轮已生成目录，不能盲目重跑或删除其他发布。
 
-继续混用 EAS 编号时，Mac 需要登录现有 Expo 账号或通过安全环境注入 `EXPO_TOKEN`。本轮只读探测确认 Mac 尚无可用 Expo 登录；不能依赖 Windows 的本机会话。可先运行 `prepare` 安装锁定 CLI，再由账号持有人在该 checkout 执行 `npm exec -w @wbr/mobile -- eas login`，随后运行 `counter-status` 验证。不要把 token 写入 Git、machine.json 或日志，也不为绕过登录而擅自关闭已提交的 `syncEasCounter:true`。
+Xcode 归档、签名、上传 ASC 和内部 TestFlight 分发均不依赖 EAS 认证。当前按 ASC 分配构建号，EAS 远端计数不再回写；本机 Expo 原生工程生成和离线资源准备照常执行。
+
+以后若恢复混用 EAS 构建，先核对 ASC 与 EAS 的实际占用及活动构建，选择未用编号，把 `syncEasCounter:true` 提交并使用新 tag。此时 Mac 才需要登录现有 Expo 账号或通过安全环境注入 `EXPO_TOKEN`；不能依赖 Windows 的本机会话。不要把 token 写入 Git、machine.json 或日志。冻结 tag 的计数策略不能就地改写。
 
 ## 固定输入与存储
 

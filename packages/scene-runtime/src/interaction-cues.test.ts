@@ -2,11 +2,12 @@
 import * as THREE from 'three'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { addInteractionCue, createInteractionCues } from './interaction-cues'
+import { bindSceneMotion } from './scene-motion'
 const handles: ReturnType<typeof createInteractionCues>[]=[]
 // Geometry and lifecycle tests do not rasterize fonts; the browser verifies the actual texture.
 beforeEach(()=>{ vi.spyOn(HTMLCanvasElement.prototype,'getContext').mockReturnValue(null) })
 afterEach(()=>{ handles.splice(0).forEach(h=>h.dispose()); document.body.replaceChildren(); vi.restoreAllMocks() })
-function mount() {
+function mount(motion?: { active: boolean; reducedMotion: boolean }, redraw: () => void = () => {}) {
   const host=document.createElement('div'), canvas=document.createElement('canvas'), hit=document.createElement('div'), overlay=document.createElement('div')
   overlay.className='scene-overlay-host'; hit.className='scene-hit-layer'; overlay.append(hit); host.append(canvas,overlay); document.body.append(host)
   Object.defineProperties(canvas,{clientWidth:{value:320},clientHeight:{value:400}})
@@ -17,10 +18,78 @@ function mount() {
   const target=new THREE.Object3D(); target.position.x=.6; scene.add(source,target)
   let enabled=true
   const remove=addInteractionCue(source,{kind:'drag',label:'拖起小物',enabled:()=>enabled,destination:target,targetLabel:'放到这里'})
-  const cues=createInteractionCues(canvas,scene,camera); handles.push(cues)
+  if(motion) bindSceneMotion(host,()=>motion)
+  const cues=createInteractionCues(canvas,scene,camera,redraw); handles.push(cues)
   const update=()=>{scene.updateMatrixWorld(true); cues.update()}; update()
   return {host,hit,canvas,scene,camera,source,target,cues,update,remove,disable:()=>{enabled=false}}
 }
+it('reveals a new placard gently without moving its actual manipulation point',()=>{
+  const clock=vi.spyOn(performance,'now').mockReturnValue(0)
+  const s=mount({active:true,reducedMotion:false})
+  const board=s.scene.getObjectByName('interaction-cue-placard') as THREE.Sprite
+  expect(board.material.opacity).toBe(0)
+  clock.mockReturnValue(180); s.update()
+  expect(board.material.opacity).toBeGreaterThan(0)
+  expect(board.material.opacity).toBeLessThan(1)
+  expect(Number(s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!.dataset.y)).toBeCloseTo(200)
+  clock.mockReturnValue(700); s.update()
+  expect(board.material.opacity).toBe(1)
+})
+it('crossfades changed instructions and releases each retired texture, including rapid replacements',()=>{
+  const clock=vi.spyOn(performance,'now').mockReturnValue(0)
+  const s=mount({active:true,reducedMotion:false})
+  clock.mockReturnValue(700); s.update()
+  const board=s.scene.getObjectByName('interaction-cue-placard') as THREE.Sprite
+  const oldMap=board.material.map!, retired=vi.fn(); oldMap.addEventListener('dispose',retired)
+  s.source.userData.interactionCues[0].label='下一步'; s.update()
+  expect(s.scene.getObjectByName('interaction-cue-retiring')).toBeDefined()
+  expect(retired).not.toHaveBeenCalled()
+  clock.mockReturnValue(760); s.source.userData.interactionCues[0].label='最后一步'; s.update()
+  expect(retired).toHaveBeenCalledOnce()
+  expect(s.scene.getObjectByName('interaction-cue-presentations')!.children.filter(n=>n.name==='interaction-cue-retiring')).toHaveLength(1)
+  clock.mockReturnValue(1500); s.update()
+  expect(s.scene.getObjectByName('interaction-cue-retiring')).toBeUndefined()
+  expect(board.material.opacity).toBe(1)
+})
+it('settles an in-flight reveal and stops requesting frames when motion is reduced or the scene pauses',async()=>{
+  vi.spyOn(performance,'now').mockReturnValue(0)
+  vi.spyOn(window,'requestAnimationFrame').mockReturnValue(73)
+  const cancel=vi.spyOn(window,'cancelAnimationFrame')
+  const motion={active:true,reducedMotion:false},s=mount(motion)
+  await Promise.resolve()
+  const board=s.scene.getObjectByName('interaction-cue-placard') as THREE.Sprite
+  motion.reducedMotion=true; s.update()
+  expect(board.material.opacity).toBe(1)
+  expect(cancel).toHaveBeenCalledWith(73)
+  expect(s.host.querySelector<HTMLElement>('.scene-object-cues')!.dataset.motion).toBe('still')
+  motion.active=false; s.update()
+  expect(s.scene.getObjectByName('interaction-cue-presentations')!.visible).toBe(false)
+})
+it('shares an existing scene frame and only redraws the world itself for an on-demand owner',async()=>{
+  const clock=vi.spyOn(performance,'now').mockReturnValue(0)
+  const callbacks: FrameRequestCallback[]=[]
+  vi.spyOn(window,'requestAnimationFrame').mockImplementation(callback=>{callbacks.push(callback);return callbacks.length})
+  const redraw=vi.fn()
+  const s=mount({active:true,reducedMotion:false},redraw)
+  await Promise.resolve()
+  clock.mockReturnValue(16); s.update(); callbacks.shift()!(16)
+  expect(redraw).not.toHaveBeenCalled()
+  await Promise.resolve()
+  clock.mockReturnValue(32); callbacks.shift()!(32)
+  expect(redraw).toHaveBeenCalledOnce()
+})
+it('keeps live progress fully readable instead of restarting a reveal on every numeric update',()=>{
+  const clock=vi.spyOn(performance,'now').mockReturnValue(0)
+  const s=mount({active:true,reducedMotion:false})
+  const hint=document.createElement('p'); hint.className='scene-hint'; hint.dataset.progress='true'
+  s.host.querySelector('.scene-overlay-host')!.append(hint)
+  const board=s.scene.getObjectByName('interaction-cue-placard') as THREE.Sprite
+  for(let progress=1;progress<=40;progress++) {
+    clock.mockReturnValue(progress*16); hint.textContent=`刷印 ${progress}%，抬手后也可以接着擦。`; s.update()
+    expect(board.material.opacity).toBe(1)
+    expect(s.scene.getObjectByName('interaction-cue-retiring')).toBeUndefined()
+  }
+})
 it('projects the actual source and target with passive labels',()=>{
   const s=mount(), source=s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!, target=s.host.querySelector<HTMLElement>('[data-cue-role="target"]')!
   expect(source).not.toBeNull(); expect(target).not.toBeNull()

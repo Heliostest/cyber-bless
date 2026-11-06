@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { CUE_LAYER, createCuePlacard, type CueBox } from './cue-placard'
+import { readSceneMotion } from './scene-motion'
 export type InteractionCue = {
   kind: 'tap' | 'drag' | 'rotate'
   label: string
@@ -33,25 +34,46 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
   guides.className = 'scene-cue-guides'
   guides.dataset.inWorld = 'true'
   guides.setAttribute('aria-hidden', 'true')
-  const epoch = performance.now()
   const presentations = new THREE.Group()
   presentations.name = 'interaction-cue-presentations'; presentations.layers.set(CUE_LAYER)
   scene.add(presentations)
-  const phase = (node: HTMLElement) => node.style.setProperty('--cue-delay', `${-((performance.now() - epoch) % 2400)}ms`)
+  const phase = (node: HTMLElement) => node.style.setProperty('--cue-delay', '0ms')
   type Entry = { object: THREE.Object3D; cue: InteractionCue; source: HTMLElement; guide: HTMLElement; target?: HTMLElement; placard?: ReturnType<typeof createCuePlacard> }
   const entries = new Map<InteractionCue, Entry>()
   const cursorStyles = new Map<HTMLElement, string>()
   const world = new THREE.Vector3(), projected = new THREE.Vector3(), ray = new THREE.Raycaster(), pointer = new THREE.Vector2()
   let disposed = false, dragging: InteractionCue | undefined
+  let motionFrame: number | undefined, motionQueued = false, updatedAt = 0
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+  function stopFrame() { motionQueued = false; if (motionFrame !== undefined) { cancelAnimationFrame(motionFrame); motionFrame = undefined } }
+  function scheduleFrame() {
+    if (motionQueued || motionFrame !== undefined) return
+    // Let the owner register its next frame first. A continuously rendering
+    // scene then samples the transition without a second world/postprocess pass.
+    motionQueued = true
+    queueMicrotask(() => {
+      if (!motionQueued || disposed) return
+      motionQueued = false
+      motionFrame = requestAnimationFrame(time => {
+        motionFrame = undefined
+        if (disposed) return
+        if (updatedAt < time) redraw()
+        else if (active.some(entry => entry.placard?.animating)) scheduleFrame()
+      })
+    })
+  }
+  function refreshMotion() { if (!disposed) redraw() }
+  reduced?.addEventListener('change', refreshMotion)
   let inspectionHelp: HTMLElement | undefined
   let active: Entry[] = []
   let fontLocale = '', font = 'sans-serif', fontVersion = 0
-  const unavailable = () => layer.hidden || !!host.querySelector('.scene-overlay-host[inert],.scene-overlay-host[data-quiet-ending]') || !!host.closest('.daily-set-preview')
+  const unavailable = () => layer.hidden || !readSceneMotion(canvas).active || document.hidden || !!host.querySelector('.scene-overlay-host[inert],.scene-overlay-host[data-quiet-ending]') || !!host.closest('.daily-set-preview')
   let suspended = unavailable()
   const observer = new MutationObserver(() => {
     const next = unavailable()
     if (next !== suspended && !disposed) { suspended = next; redraw() }
   })
+  document.addEventListener('visibilitychange', refreshMotion)
   observer.observe(host, { subtree: true, attributes: true, attributeFilter: ['hidden', 'inert', 'data-quiet-ending'] })
   const refreshFont = () => { if (!disposed) { fontVersion++; fontLocale = ''; redraw() } }
   document.fonts?.addEventListener('loadingdone', refreshFont)
@@ -166,6 +188,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
   return {
     update() {
       if (disposed) return
+      updatedAt = performance.now()
       scene.updateMatrixWorld(true); camera.updateMatrixWorld(true)
       const rect = canvas.getBoundingClientRect(), parentRect = host.getBoundingClientRect()
       // Absolute children start at the host's padding box, after its border.
@@ -175,6 +198,11 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
       const overlay = host.querySelector<HTMLElement>('.scene-overlay-host')
       if (overlay && guides.parentElement !== overlay) overlay.append(guides)
       suspended = unavailable(); guides.hidden = suspended; presentations.visible = !suspended
+      const preferences = readSceneMotion(canvas)
+      const motion = !suspended && !preferences.reducedMotion && !reduced?.matches
+      layer.dataset.motion = guides.dataset.motion = motion ? 'active' : 'still'
+      layer.dataset.suspended = String(suspended)
+      if (!motion) { stopFrame(); for (const entry of entries.values()) entry.placard?.settle() }
       const candidates: { object: THREE.Object3D; cue: InteractionCue }[] = []
       scene.traverse(object => {
         const cues: InteractionCue[] = object.userData.interactionCues ?? []
@@ -212,16 +240,21 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
       if (locale !== fontLocale) { fontLocale = locale; font = getComputedStyle(host).fontFamily || 'sans-serif' }
       const occupied: CueBox[] = active.flatMap(entry => [entry.source, entry.target].filter((node): node is HTMLElement => !!node).map(node =>
         ({ x: Number(node.dataset.x)-24, y: Number(node.dataset.y)-24, width: 48, height: 48 })))
-      const feedback = overlay?.querySelector<HTMLElement>('.scene-hint:is([data-ready="true"],[data-drop-ready="true"],[data-progress="true"])')?.textContent
+      const feedback = overlay?.querySelector<HTMLElement>('.scene-hint:is([data-ready="true"],[data-drop-ready="true"],[data-progress="true"])')
       for (const entry of active) {
         if (entry.guide.hidden) { entry.placard?.dispose(); entry.placard = undefined; continue }
         if (suspended) continue
         entry.placard ??= createCuePlacard(presentations)
-        const text = feedback || entry.guide.lastElementChild?.textContent || entry.cue.label
+        const text = feedback?.textContent || entry.guide.lastElementChild?.textContent || entry.cue.label
         const from = point(entry.object, entry.cue.anchor)!
         const angle = Number.parseFloat((entry.guide.firstElementChild as HTMLElement).style.getPropertyValue('--cue-angle')) || 0
-        occupied.push(entry.placard.update({ text, detail: helpText, kind: entry.cue.kind, angle, from, view: rect, occupied, font, locale, fontVersion }, camera))
+        // Live percentages/counts must remain readable through every input frame.
+        occupied.push(entry.placard.update({ text, detail: helpText, kind: entry.cue.kind, angle, from, view: rect, occupied, font, locale, fontVersion,
+          motion: motion && feedback?.dataset.progress !== 'true' }, camera))
       }
+      if (motion && active.some(entry => entry.placard?.animating)) {
+        scheduleFrame()
+      } else stopFrame()
       if (dragging && !keep.has(dragging)) end()
       if (!active.length) setCursor()
     },
@@ -246,6 +279,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
     dispose() {
       if (disposed) return
       disposed = true
+      stopFrame(); reduced?.removeEventListener('change', refreshMotion); document.removeEventListener('visibilitychange', refreshMotion)
       observer.disconnect(); document.fonts?.removeEventListener('loadingdone', refreshFont)
       host.removeEventListener('pointermove', move); host.removeEventListener('pointerdown', down); host.removeEventListener('pointerleave', end)
       window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end); window.removeEventListener('blur', end)

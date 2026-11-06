@@ -7,13 +7,13 @@ import type { createPosePlacement } from './pose-placement'
 export function setPlacementInspectionHelp(element: HTMLElement, enabled: boolean) {
   if (enabled) {
     element.dataset.placementInspection = 'true'
-    bindSceneAttribute(element, 'title', '双指拖动可转看；鼠标用右键或 Shift 拖动。')
+    bindSceneAttribute(element, 'title', '双指拖动可转动查看。')
   } else delete element.dataset.placementInspection
 }
 
 export function setPlacementHint(element: HTMLElement, source: string, enabled: boolean, safe: (value: string) => void) {
   setPlacementInspectionHelp(element, enabled)
-  setSafeText(element, enabled ? sceneJoin(source, '单指拖动拿放；双指拖动、右键或按住 Shift 拖动可转动查看。') : source, safe)
+  setSafeText(element, enabled ? sceneJoin(source, '单指拖动拿放；双指拖动可转动查看。') : source, safe)
 }
 
 /** Reuses the existing accessible auxiliary action: Enter places; arrow keys
@@ -24,7 +24,7 @@ export function addKeyboardPlacementInspection(
   placement: Pick<ReturnType<typeof createPosePlacement>,'begin'|'rotate'|'release'>,
   options: { isActive(): boolean; step(): number; prepare(): boolean; reset(): void; rotate?(yaw:number,pitch:number):void },
 ) {
-  bindSceneAttribute(button, 'title', '方向键转动查看，Enter 安放，Esc 放回。')
+  bindSceneAttribute(button, 'title', '双指拖动物品转动查看；点按辅助按钮继续操作。')
   const keydown = (event: KeyboardEvent) => {
     if (!options.isActive() || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return
     if (event.key === 'Escape') { event.preventDefault(); options.reset(); return }

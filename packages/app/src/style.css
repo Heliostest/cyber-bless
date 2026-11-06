@@ -3944,11 +3944,13 @@ button:hover:not(:disabled) {
   contain: layout style;
 }
 .scene-object-cues * { pointer-events: none; }
+.scene-object-cues[data-suspended='true'] { visibility: hidden; }
 .scene-object-cue {
   position: absolute;
   width: 6px;
   height: 6px;
   transform: translate(-50%, -50%);
+  transition: opacity 180ms ease-out;
 }
 .scene-object-cue-dot {
   display: block;
@@ -3956,8 +3958,8 @@ button:hover:not(:disabled) {
   height: 6px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 0 1px #31483e66, 0 0 5px #ffffffa6;
-  animation: scene-cue-dot 2.4s ease-in-out var(--cue-delay, 0ms) infinite;
+  box-shadow: 0 0 0 1px #31483e40, 0 0 7px #ffffff80;
+  animation: scene-cue-dot 3.6s ease-in-out var(--cue-delay, 0ms) infinite;
 }
 .scene-object-cue-ring {
   position: absolute;
@@ -3965,10 +3967,10 @@ button:hover:not(:disabled) {
   height: 26px;
   left: -10px;
   top: -10px;
-  border: 1px solid #ffffffb3;
+  border: 1px solid #ffffffa6;
   border-radius: 50%;
   background: #ffffff0a;
-  animation: scene-cue-ripple 2.4s cubic-bezier(0.4, 0, 0.2, 1) var(--cue-delay, 0ms) infinite;
+  animation: scene-cue-ripple 3.6s cubic-bezier(0.22, 0.61, 0.36, 1) var(--cue-delay, 0ms) infinite;
 }
 .scene-object-cue[data-compact='true'] .scene-object-cue-ring {
   width: 18px;
@@ -3978,6 +3980,8 @@ button:hover:not(:disabled) {
 }
 .scene-object-cue[data-cue-role='target'] { opacity: 0.6; }
 .scene-object-cue[data-dragging='true'] { opacity: 0.25; }
+.scene-object-cue[data-dragging='true'] .scene-object-cue-ring { animation-play-state: paused; }
+.scene-object-cue[data-cue-role='target'] .scene-object-cue-ring { animation-delay: 180ms; }
 .library-scene-stage:has(.scene-hint[data-drop-ready='true']) .scene-object-cue[data-cue-role='target'],
 .library-scene-stage:has(.scene-hint[data-ready='true']) .scene-object-cue[data-cue-role='source'] {
   opacity: 1;
@@ -4093,13 +4097,13 @@ button:hover:not(:disabled) {
 }
 .library-scene-stage:has(.scene-overlay-host[inert]) .scene-object-cues,
 .scene-overlay-host[inert] .scene-cue-guides { visibility: hidden; }
-@keyframes scene-cue-dot { 0%, 100% { opacity: 0.8; } 25% { opacity: 1; } 70% { opacity: 0.9; } }
+@keyframes scene-cue-dot { 0%, 100% { opacity: .84; } 32% { opacity: 1; } 70% { opacity: .9; } }
 @keyframes scene-cue-copy { 0%, 100% { opacity: 0.65; } 18%, 40% { opacity: 1; } 75% { opacity: 0.65; } }
 @keyframes scene-cue-ripple {
-  0% { transform: scale(0.35); opacity: 0.25; }
-  18% { opacity: 0.65; }
-  75% { transform: scale(1.2); opacity: 0.12; }
-  100% { transform: scale(1.2); opacity: 0; }
+  0% { transform: scale(.6); opacity: 0; }
+  14% { opacity: .5; }
+  65% { transform: scale(1.16); opacity: 0; }
+  100% { transform: scale(1.16); opacity: 0; }
 }
 @keyframes scene-cue-swipe {
   0%, 100% { transform: translate(0, 0); opacity: 0.6; }
@@ -4114,6 +4118,8 @@ button:hover:not(:disabled) {
   .scene-cue-text,
   .scene-cue-guide .scene-cue-direction { animation: none; }
 }
+.scene-object-cues[data-motion='still'] *,
+.scene-cue-guides[data-motion='still'] * { animation: none; transition: none; }
 /* The note under the wish box sits on the sand tray on every stage. */
 .library-scene-stage .scene-wish-slot .wish-write-meta {
   color: var(--ink-soft);

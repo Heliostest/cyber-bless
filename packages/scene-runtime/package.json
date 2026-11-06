@@ -20,6 +20,7 @@
     "./soft-pouch-geometry": "./src/soft-pouch-geometry.ts"
   },
   "dependencies": {
+    "animejs": "^4.5.0",
     "@wbr/content": "*",
     "postprocessing": "^6.39.5",
     "three": "^0.170.0",

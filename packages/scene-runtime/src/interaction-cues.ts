@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { CUE_LAYER, createCuePlacard, type CueBox } from './cue-placard'
 import { readSceneMotion } from './scene-motion'
+import { createCueBackdrop } from './cue-backdrop'
 export type InteractionCue = {
   kind: 'tap' | 'drag' | 'rotate'
   label: string
@@ -35,6 +36,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
   guides.dataset.inWorld = 'true'
   guides.setAttribute('aria-hidden', 'true')
   const presentations = new THREE.Group()
+  const backdrop = createCueBackdrop()
   presentations.name = 'interaction-cue-presentations'; presentations.layers.set(CUE_LAYER)
   scene.add(presentations)
   const phase = (node: HTMLElement) => node.style.setProperty('--cue-delay', '0ms')
@@ -244,7 +246,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
       for (const entry of active) {
         if (entry.guide.hidden) { entry.placard?.dispose(); entry.placard = undefined; continue }
         if (suspended) continue
-        entry.placard ??= createCuePlacard(presentations)
+        entry.placard ??= createCuePlacard(presentations, backdrop)
         const text = feedback?.textContent || entry.guide.lastElementChild?.textContent || entry.cue.label
         const from = point(entry.object, entry.cue.anchor)!
         const angle = Number.parseFloat((entry.guide.firstElementChild as HTMLElement).style.getPropertyValue('--cue-angle')) || 0
@@ -268,6 +270,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
       try {
         camera.layers.set(CUE_LAYER); scene.background = null; scene.overrideMaterial = null
         renderer.setRenderTarget(null); renderer.setScissorTest(false); renderer.autoClear = false; renderer.shadowMap.enabled = false
+        backdrop.capture(renderer)
         renderer.render(scene, camera)
       } finally {
         camera.layers.mask = previous.mask; scene.background = previous.background; scene.overrideMaterial = previous.override
@@ -284,7 +287,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
       host.removeEventListener('pointermove', move); host.removeEventListener('pointerdown', down); host.removeEventListener('pointerleave', end)
       window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end); window.removeEventListener('blur', end)
       for (const [target, cursor] of cursorStyles) target.style.cursor = cursor
-      entries.forEach(remove); entries.clear(); active = []; layer.remove(); guides.remove(); presentations.removeFromParent()
+      entries.forEach(remove); entries.clear(); active = []; layer.remove(); guides.remove(); presentations.removeFromParent(); backdrop.dispose()
     },
   }
 }

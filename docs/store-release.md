@@ -4,7 +4,17 @@
 
 正式 Mac mini 构建改用[参数化 tag 发布入口](../scripts/ios-release/README.md)：先提交业务源码、素材、发布工具、依赖锁及版本输入，合并／推送 `master` 后创建并推送附注 tag；Mac 直接获取该 tag 和 LFS 实体，执行同版本工具并串行验证、构建和交付。不再把未提交工作区生成的 `source.tgz` 用于新正式发布。构建号尚未分配时保持 release input 的 `null` 并拒绝执行，不猜测下一个编号。
 
-该入口已用于下述构建 20、21、22、23、24、25、26；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+该入口已用于下述构建 20、21、22、23、24、25、26、27；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+
+## 2026-11-07 构建 27：环境画风与连贯玻璃提示
+
+北京时间 19:37:19，**1.0.0 (27)** 已完成 Xcode 构建、ASC 上传及既有内部组验证；19:38:01 读回 `VALID / IN_BETA_TESTING`。Apple build UUID 为 `fe3b91e8-1181-47eb-98b6-74abd34a3ad4`，`Team (Expo)` 已包含本构建，测试说明匹配。
+
+来源为 master 提交 `62b6fc7d4c9071efcc12c8769f19b01c211e938a`、附注 tag `ios-v1.0.0-build.27`。此次交付已校准的共享草地、光照与调色、七个夜景背景树替换，以及居中磨砂玻璃操作提示、周期高光、提示框／连接线／触摸点的连贯动效。按既有文化影响记录核对，变更限于产品布景和辅助界面，器物、交互条件、文化主张及来源绑定保持；未重新访问无变化的文化来源，也未以技术测试代替事实审阅。编号以 ASC 为准，`syncEasCounter:false`，不要求 EAS 登录。
+
+本次完整 `verify` 在相同冻结输入上通过：13,253 项工作区单元测试（App 1,708、场景 10,819、场景运行时 361），以及资源、国际化、生产构建、场景修订和移动离线检查。发布工具 Windows 94 项通过、2 项平台跳过，Mac 96 项全部通过。Mac 锁定依赖、Release 预构建、4 个 dSYM 映射阶段、主应用与小组件签名及包内核验通过；5656 个来源文件、17796 项原生输入一致，207 项离线资源、477 张小组件封面、162 个 DOM 脚本已核验。
+
+IPA 为 232,148,275 字节，SHA-256 `d261dbf6ef717efd50ffb00c203456c63739f5c28b976e79023a0315a18d47cc`；[本机 IPA](../artifacts/ios-release-27/blessing-27.ipa) 与 Mac 校验一致。Mac IPA／archive／dSYM 保留于 `/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.27/source/artifacts/ios-release/27`。钥匙串搜索列表已恢复、隔离构建钥匙串已锁定。清理前验证旧 IPA 哈希和 archive/dSYM，仅清理构建 20–23 的 node_modules／Pods 和构建 26 的 DerivedData，旧签名产物及符号保留。回执见 `artifacts/ios-release-27/` 与 [TestFlight 状态](../store/ios/testflight-status.json)。本轮验证到内部组可测试，未做真机功能或 GPU 性能验收。
 
 ## 2026-11-06 构建 26：固定反馈地址与 Xcode 发布
 

@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { graphemes } from '@wbr/i18n/text'
 import { animate } from 'animejs'
+import { applyCueGlass, type CueBackdrop } from './cue-backdrop'
 
 /** Reserved for annotations: the main camera never includes this layer. */
 export const CUE_LAYER = 31
@@ -25,9 +26,11 @@ function overlap(a: CueBox, b: CueBox) {
 }
 
 /** A camera-facing, measured label and a leader, with no input surface. */
-export function createCuePlacard(parent: THREE.Group) {
+export function createCuePlacard(parent: THREE.Group, backdrop?: CueBackdrop) {
   let map: THREE.CanvasTexture | undefined
   const material = new THREE.SpriteMaterial({ depthTest: false, depthWrite: false, toneMapped: false, fog: false })
+  const glassSize = new THREE.Vector2()
+  if (backdrop) applyCueGlass(material, backdrop, glassSize)
   const board = new THREE.Sprite(material)
   // Own the quad as well as its texture: disposing a board must neither leak
   // its geometry nor invalidate Three's shared Sprite quad used by other scenes.
@@ -75,7 +78,7 @@ export function createCuePlacard(parent: THREE.Group) {
       view: { width: number; height: number }; occupied: CueBox[]; font: string; locale: string; fontVersion?: number; motion?: boolean; now?: number
     }, camera: THREE.Camera): CueBox {
       sample(now, motion)
-      const maxWidth = Math.max(76, Math.min(232, view.width - 24)), ratio = Math.min(window.devicePixelRatio || 1, 2)
+      const maxWidth = Math.max(76, Math.min(248, view.width - 24)), ratio = Math.min(window.devicePixelRatio || 1, 2)
       const heading = Math.round(angle / 10) * 10
       const next = JSON.stringify([text, detail, kind, heading, maxWidth, font, locale, ratio, fontVersion])
       const nextContent = JSON.stringify([text, detail, kind, locale])
@@ -85,6 +88,7 @@ export function createCuePlacard(parent: THREE.Group) {
           if (map && motion && material.opacity > .05) {
             const sprite = board.clone(); sprite.material = material.clone()
             sprite.geometry = board.geometry
+            if (backdrop) applyCueGlass(sprite.material, backdrop, glassSize.clone())
             sprite.name = 'interaction-cue-retiring'; sprite.renderOrder = 1000; sprite.raycast = () => {}
             parent.add(sprite)
             retiring = { sprite, origin: sprite.position.clone(), opacity: material.opacity }
@@ -104,22 +108,27 @@ export function createCuePlacard(parent: THREE.Group) {
         const size = 14, lineHeight = 20
         if (ink) ink.font = `500 ${size}px ${font}`
         const measure = (value: string) => ink?.measureText(value).width ?? graphemes(value).length * size * .75
-        const lines = wrap(text, maxWidth - 54, measure, locale)
-        width = detail ? maxWidth : Math.min(maxWidth, Math.max(100, Math.ceil(Math.max(...lines.map(measure))) + 54))
+        const lines = wrap(text, maxWidth - 64, measure, locale)
+        width = detail ? maxWidth : Math.min(maxWidth, Math.max(104, Math.ceil(Math.max(...lines.map(measure))) + 64))
         if (ink) ink.font = `500 11px ${font}`
         const detailMeasure = (value: string) => ink?.measureText(value).width ?? graphemes(value).length * 8
-        const details = detail ? wrap(detail, width - 24, detailMeasure, locale) : []
-        height = Math.max(46, lines.length * lineHeight + 20) + (details.length ? 4 + details.length * 16 : 0)
+        const details = detail ? wrap(detail, width - 32, detailMeasure, locale) : []
+        const mainHeight = Math.max(24, lines.length * lineHeight), mainCenter = 14 + mainHeight / 2
+        height = mainHeight + 28 + (details.length ? 8 + details.length * 16 : 0)
+        glassSize.set(width, height)
         image.width = Math.ceil(width * ratio); image.height = Math.ceil(height * ratio)
         if (ink) {
           ink.setTransform(ratio, 0, 0, ratio, 0, 0)
           ink.clearRect(0, 0, width, height)
-          // A thin warm surface and a soft edge keep the label distinct from the object.
-          ink.shadowColor = '#294e3b20'; ink.shadowBlur = 5; ink.shadowOffsetY = 2
-          ink.beginPath(); ink.roundRect(3, 3, width - 6, height - 8, 16)
-          ink.fillStyle = '#fffdf6f5'; ink.fill()
-          ink.shadowColor = 'transparent'; ink.lineWidth = .8; ink.strokeStyle = '#aec8bca6'; ink.stroke()
-          ink.save(); ink.translate(24, 9 + lines.length * lineHeight / 2); ink.strokeStyle = '#4e8c79'; ink.lineWidth = 1.5
+          const surface = ink.createLinearGradient(0, 4, 0, height - 4)
+          surface.addColorStop(0, '#f8fffd26'); surface.addColorStop(.5, '#effaf314'); surface.addColorStop(1, '#edf7ef0d')
+          ink.shadowColor = '#163e351a'; ink.shadowBlur = 6; ink.shadowOffsetY = 2
+          ink.beginPath(); ink.roundRect(4, 4, width - 8, height - 8, 14)
+          ink.fillStyle = surface; ink.fill(); ink.shadowColor = 'transparent'
+          const edge = ink.createLinearGradient(0, 4, width * .25, height - 4)
+          edge.addColorStop(0, '#ffffff99'); edge.addColorStop(.45, '#f5fff24d'); edge.addColorStop(1, '#527d6b24')
+          ink.lineWidth = .75; ink.strokeStyle = edge; ink.stroke()
+          ink.save(); ink.translate(28, mainCenter); ink.strokeStyle = '#1d5148'; ink.lineWidth = 1.5
           ink.lineCap = 'round'; ink.lineJoin = 'round'; ink.beginPath()
           if (kind === 'drag') {
             ink.rotate(heading * Math.PI / 180); ink.moveTo(-8, 0); ink.lineTo(8, 0); ink.moveTo(3, -5); ink.lineTo(8, 0); ink.lineTo(3, 5)
@@ -130,10 +139,17 @@ export function createCuePlacard(parent: THREE.Group) {
             ink.arc(0, 0, 8, .3, Math.PI*1.85); ink.moveTo(8, -7); ink.lineTo(8, -1); ink.lineTo(2, -2)
           }
           ink.stroke(); ink.restore()
-          ink.fillStyle = '#35584c'; ink.font = `500 ${size}px ${font}`; ink.textBaseline = 'top'
-          lines.forEach((line, i) => ink.fillText(line, 43, 9 + i * lineHeight))
-          ink.fillStyle = '#557366'; ink.font = `500 11px ${font}`
-          details.forEach((line, i) => ink.fillText(line, 12, 15 + lines.length * lineHeight + i * 16))
+          // Canvas 'top' includes font leading. Center the visible glyph bounds,
+          // not the font em box, on the same row center as the gesture symbol.
+          const centeredText = (line: string, x: number, center: number) => {
+            const metrics = ink.measureText(line)
+            const ascent = metrics.actualBoundingBoxAscent, descent = metrics.actualBoundingBoxDescent
+            ink.fillText(line, x, center + (Number.isFinite(ascent + descent) ? (ascent - descent) / 2 : size * .3))
+          }
+          ink.textBaseline = 'alphabetic'; ink.fillStyle = '#102d29'; ink.font = `500 ${size}px ${font}`
+          lines.forEach((line, i) => centeredText(line, 48, mainCenter + (i - (lines.length - 1) / 2) * lineHeight))
+          ink.fillStyle = '#3e625c'; ink.font = `400 11px ${font}`
+          details.forEach((line, i) => centeredText(line, 16, 14 + mainHeight + 8 + (i + .5) * 16))
         }
         map?.dispose()
         map = new THREE.CanvasTexture(image)

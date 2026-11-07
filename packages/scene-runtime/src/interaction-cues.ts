@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { CUE_LAYER, createCuePlacard, type CueBox } from './cue-placard'
 import { readSceneMotion } from './scene-motion'
 import { createCueBackdrop } from './cue-backdrop'
+import { createCueGlare } from './cue-glare'
 export type InteractionCue = {
   kind: 'tap' | 'drag' | 'rotate'
   label: string
@@ -37,6 +38,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
   guides.setAttribute('aria-hidden', 'true')
   const presentations = new THREE.Group()
   const backdrop = createCueBackdrop()
+  const glare = createCueGlare(backdrop.uniforms.cueGlareProgress, redraw)
   presentations.name = 'interaction-cue-presentations'; presentations.layers.set(CUE_LAYER)
   scene.add(presentations)
   const phase = (node: HTMLElement) => node.style.setProperty('--cue-delay', '0ms')
@@ -60,7 +62,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
         motionFrame = undefined
         if (disposed) return
         if (updatedAt < time) redraw()
-        else if (active.some(entry => entry.placard?.animating)) scheduleFrame()
+        else if (glare.animating || active.some(entry => entry.placard?.animating)) scheduleFrame()
       })
     })
   }
@@ -174,12 +176,14 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
   }
   function down(event: Event) {
     const hovered = hit(event as MouseEvent)
-    if (hovered && hovered.cue.kind !== 'tap') { dragging = hovered.cue; hovered.source.dataset.dragging = 'true'; setCursor('grabbing') }
+    if (hovered && hovered.cue.kind !== 'tap') { dragging = hovered.cue; hovered.source.dataset.dragging = 'true'; setCursor('grabbing'); redraw() }
   }
   function end() {
+    const wasDragging = !!dragging
     dragging = undefined
     for (const entry of entries.values()) delete entry.source.dataset.dragging
     setCursor()
+    if (wasDragging) redraw()
   }
   host.addEventListener('pointermove', move, { passive: true })
   host.addEventListener('pointerdown', down, { passive: true })
@@ -254,7 +258,9 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
         occupied.push(entry.placard.update({ text, detail: helpText, kind: entry.cue.kind, angle, from, view: rect, occupied, font, locale, fontVersion,
           motion: motion && feedback?.dataset.progress !== 'true' }, camera))
       }
-      if (motion && active.some(entry => entry.placard?.animating)) {
+      const changing = active.some(entry => entry.placard?.animating)
+      glare.update(motion && !dragging && feedback?.dataset.progress !== 'true' && !changing && active.some(entry => !!entry.placard))
+      if (motion && (glare.animating || changing)) {
         scheduleFrame()
       } else stopFrame()
       if (dragging && !keep.has(dragging)) end()
@@ -282,6 +288,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
     dispose() {
       if (disposed) return
       disposed = true
+      glare.dispose()
       stopFrame(); reduced?.removeEventListener('change', refreshMotion); document.removeEventListener('visibilitychange', refreshMotion)
       observer.disconnect(); document.fonts?.removeEventListener('loadingdone', refreshFont)
       host.removeEventListener('pointermove', move); host.removeEventListener('pointerdown', down); host.removeEventListener('pointerleave', end)

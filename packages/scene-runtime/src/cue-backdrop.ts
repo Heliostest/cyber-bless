@@ -4,7 +4,8 @@ import * as THREE from 'three'
 export function createCueBackdrop() {
   const resolution = new THREE.Vector2(1, 1)
   const uniforms = { cueBackdrop: { value: null as THREE.FramebufferTexture | null },
-    cueResolution: { value: resolution }, cuePixelRatio: { value: 1 }, cueGlassReady: { value: 0 }, cueBackdropSrgb: { value: 1 } }
+    cueResolution: { value: resolution }, cuePixelRatio: { value: 1 }, cueGlassReady: { value: 0 }, cueBackdropSrgb: { value: 1 },
+    cueGlareProgress: { value: -1 } }
   let disposed = false
   return {
     uniforms,
@@ -40,7 +41,7 @@ export type CueBackdrop = ReturnType<typeof createCueBackdrop>
 
 /** Keep Sprite's typography/opacity while replacing only its glass backing. */
 export function applyCueGlass(material: THREE.SpriteMaterial, backdrop: CueBackdrop, size: THREE.Vector2) {
-  material.customProgramCacheKey = () => 'scene-cue-frosted-glass-v2'
+  material.customProgramCacheKey = () => 'scene-cue-frosted-glass-v3'
   material.onBeforeCompile = shader => {
     Object.assign(shader.uniforms, backdrop.uniforms, { cueSize: { value: size } })
     shader.fragmentShader = /* glsl */`
@@ -49,6 +50,7 @@ uniform vec2 cueResolution;
 uniform float cuePixelRatio;
 uniform float cueGlassReady;
 uniform float cueBackdropSrgb;
+uniform float cueGlareProgress;
 uniform vec2 cueSize;
 vec3 cueRead(vec2 uv) {
   vec4 color = texture2D(cueBackdrop, uv);
@@ -95,6 +97,22 @@ vec3 cueFrost(vec2 uv) {
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.012, .026, .023), night * surface);
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.88, .96, .93), night * lettering);
     diffuseColor.rgb = mix(behind, diffuseColor.rgb, inkAlpha);
+    // Visual reference: React Bits Glare Hover's diagonal sweep + rim glint.
+    // This is the native glass shader, not a port of its DOM component.
+    if (cueGlareProgress >= 0.) {
+      float phase = cueGlareProgress * cueGlareProgress * (3. - 2. * cueGlareProgress);
+      vec2 local = (vMapUv - .5) * cueSize;
+      float reach = cueSize.x * .5 + cueSize.y * .24 + 24.;
+      float along = local.x + local.y * .48 - mix(-reach, reach, phase);
+      float width = max(16., cueSize.x * .17);
+      float broad = along / width, narrow = along / (width * .23);
+      float softBand = exp(-broad * broad);
+      float brightCore = exp(-narrow * narrow);
+      float rim = 1. - smoothstep(.3, 1.5, abs(distanceToEdge));
+      float envelope = sin(cueGlareProgress * 3.14159265);
+      float reflection = envelope * (softBand * mix(.22, .055, night) + brightCore * mix(.16, .02, night) + rim * softBand * .72);
+      diffuseColor.rgb = mix(diffuseColor.rgb, vec3(1.), min(.8, reflection) * glassMask * (1. - lettering));
+    }
     diffuseColor.a = max(diffuseColor.a, glassMask * opacity * .9);
   }
 #endif

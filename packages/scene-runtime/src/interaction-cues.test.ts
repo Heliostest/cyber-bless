@@ -21,8 +21,130 @@ function mount(motion?: { active: boolean; reducedMotion: boolean }, redraw: () 
   if(motion) bindSceneMotion(host,()=>motion)
   const cues=createInteractionCues(canvas,scene,camera,redraw); handles.push(cues)
   const update=()=>{scene.updateMatrixWorld(true); cues.update()}; update()
-  return {host,hit,canvas,scene,camera,source,target,cues,update,remove,disable:()=>{enabled=false}}
+  return {host,hit,canvas,scene,camera,source,target,cues,update,remove,disable:()=>{enabled=false},enable:()=>{enabled=true}}
 }
+it('draws the connector toward the exact touch point before revealing that point',()=>{
+  const clock=vi.spyOn(performance,'now').mockReturnValue(0),s=mount({active:true,reducedMotion:false})
+  const line=s.scene.getObjectByName('interaction-cue-leader') as THREE.Line
+  const point=s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!
+  const length=()=>{const p=line.geometry.getAttribute('position');return new THREE.Vector3().fromBufferAttribute(p,0).distanceTo(new THREE.Vector3().fromBufferAttribute(p,1))}
+  expect(length()).toBeCloseTo(0)
+  expect(Number(point.style.getPropertyValue('--cue-reveal'))).toBe(0)
+  clock.mockReturnValue(200);s.update();const middleLength=length()
+  expect(middleLength).toBeGreaterThan(0)
+  expect(Number(point.style.getPropertyValue('--cue-reveal'))).toBe(0)
+  clock.mockReturnValue(400);s.update()
+  expect(Number(point.style.getPropertyValue('--cue-reveal'))).toBeGreaterThan(0)
+  clock.mockReturnValue(700);s.update()
+  expect(length()).toBeGreaterThan(middleLength)
+  expect(Number(point.style.getPropertyValue('--cue-reveal'))).toBe(1)
+  expect(new THREE.Vector3().fromBufferAttribute(line.geometry.getAttribute('position'),1).project(s.camera).x).toBeCloseTo(0)
+})
+it('fades the touch point and retracts its connector before releasing the departing group',()=>{
+  const clock=vi.spyOn(performance,'now').mockReturnValue(0),s=mount({active:true,reducedMotion:false})
+  clock.mockReturnValue(700);s.update()
+  const board=s.scene.getObjectByName('interaction-cue-placard') as THREE.Sprite
+  const point=s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!,released=vi.fn()
+  board.material.map!.addEventListener('dispose',released)
+  s.disable();s.update()
+  expect(board.parent).not.toBeNull();expect(released).not.toHaveBeenCalled()
+  expect(s.host.querySelector('.scene-cue-guide')).toBeNull()
+  clock.mockReturnValue(760);s.update()
+  expect(Number(point.style.getPropertyValue('--cue-reveal'))).toBeLessThan(1)
+  clock.mockReturnValue(1000);s.update()
+  expect(board.parent).toBeNull();expect(point.isConnected).toBe(false);expect(released).toHaveBeenCalledOnce()
+})
+it('revives an interrupted exit without replacing the label texture or touch point',()=>{
+  const clock=vi.spyOn(performance,'now').mockReturnValue(0),s=mount({active:true,reducedMotion:false})
+  clock.mockReturnValue(700);s.update()
+  const board=s.scene.getObjectByName('interaction-cue-placard') as THREE.Sprite,texture=board.material.map
+  const point=s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!
+  s.disable();s.update();clock.mockReturnValue(760);s.update();s.enable();s.update()
+  clock.mockReturnValue(1400);s.update()
+  expect(s.scene.getObjectByName('interaction-cue-placard')).toBe(board)
+  expect(board.material.map).toBe(texture)
+  expect(s.host.querySelector('[data-cue-role="source"]')).toBe(point)
+  expect(board.material.opacity).toBe(1)
+  expect(Number(point.style.getPropertyValue('--cue-reveal'))).toBe(1)
+})
+it('revives every selected cue before trimming the retiring-group budget',()=>{
+  const clock=vi.spyOn(performance,'now').mockReturnValue(0),s=mount({active:true,reducedMotion:false})
+  let first=true
+  for (let i=0;i<5;i++) {
+    const object=new THREE.Object3D();object.position.x=(i-2)*.1;s.scene.add(object)
+    addInteractionCue(object,{kind:'tap',label:`小物 ${i}`,enabled:()=>i<2?first:!first})
+  }
+  s.update();clock.mockReturnValue(700);s.update()
+  const root=s.scene.getObjectByName('interaction-cue-presentations')!
+  const original=root.children.filter(n=>n.name==='interaction-cue-placard')
+  expect(original).toHaveLength(3)
+  first=false;s.disable();s.update();clock.mockReturnValue(760);s.update()
+  first=true;s.enable();s.update()
+  expect(original.every(board=>board.parent===root)).toBe(true)
+  expect(root.children.filter(n=>n.name==='interaction-cue-placard')).toHaveLength(6)
+  clock.mockReturnValue(1400);s.update()
+  expect(root.children.filter(n=>n.name==='interaction-cue-placard')).toHaveLength(3)
+})
+it('keeps a departing connector and touch point anchored while its object moves',()=>{
+  const clock=vi.spyOn(performance,'now').mockReturnValue(0),s=mount({active:true,reducedMotion:false})
+  clock.mockReturnValue(700);s.update();s.disable();s.update()
+  s.source.position.set(-.4,.2,0);clock.mockReturnValue(730);s.update()
+  const projected=s.source.getWorldPosition(new THREE.Vector3()).project(s.camera)
+  const point=s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!
+  expect(Number(point.dataset.x)).toBeCloseTo((projected.x+1)*160)
+  expect(Number(point.dataset.y)).toBeCloseTo((1-projected.y)*200)
+  const line=s.scene.getObjectByName('interaction-cue-leader') as THREE.Line
+  // The leader has not begun retracting at 30ms, so it still reaches the point.
+  const end=new THREE.Vector3().fromBufferAttribute(line.geometry.getAttribute('position'),1).project(s.camera)
+  expect(end.x).toBeCloseTo(projected.x);expect(end.y).toBeCloseTo(projected.y)
+})
+it('keeps the connector and point established while changing only the current instruction',()=>{
+  const clock=vi.spyOn(performance,'now').mockReturnValue(0),s=mount({active:true,reducedMotion:false})
+  clock.mockReturnValue(700);s.update()
+  const line=s.scene.getObjectByName('interaction-cue-leader') as THREE.Line
+  s.source.userData.interactionCues[0].label='下一步，请继续';s.update()
+  const p=line.geometry.getAttribute('position')
+  expect(new THREE.Vector3().fromBufferAttribute(p,0).distanceTo(new THREE.Vector3().fromBufferAttribute(p,1))).toBeGreaterThan(0)
+  expect(Number(s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!.style.getPropertyValue('--cue-reveal'))).toBe(1)
+})
+it('preserves the visible text composite when exit interrupts a crossfade',()=>{
+  const clock=vi.spyOn(performance,'now').mockReturnValue(0),s=mount({active:true,reducedMotion:false})
+  clock.mockReturnValue(700);s.update();s.source.userData.interactionCues[0].label='下一步';s.update()
+  clock.mockReturnValue(720);s.update()
+  const board=s.scene.getObjectByName('interaction-cue-placard') as THREE.Sprite
+  const ghost=s.scene.getObjectByName('interaction-cue-retiring') as THREE.Sprite
+  const composite=board.material.opacity+ghost.material.opacity
+  expect(composite).toBeCloseTo(1)
+  s.disable();s.update()
+  expect(ghost.parent!==null).toBe(true)
+  expect(board.material.opacity+ghost.material.opacity).toBeCloseTo(composite)
+  clock.mockReturnValue(870);s.update()
+  expect(board.material.opacity+ghost.material.opacity).toBeLessThan(composite)
+  clock.mockReturnValue(1020);s.update();expect(ghost.parent).toBeNull();expect(board.parent).toBeNull()
+})
+it('immediately clears departing GPU resources when motion is reduced, paused or disposed',()=>{
+  const clock=vi.spyOn(performance,'now').mockReturnValue(0),motion={active:true,reducedMotion:false},s=mount(motion)
+  clock.mockReturnValue(700);s.update()
+  const board=s.scene.getObjectByName('interaction-cue-placard') as THREE.Sprite,released=vi.fn()
+  board.material.map!.addEventListener('dispose',released)
+  s.disable();s.update();motion.reducedMotion=true;s.update()
+  expect(board.parent).toBeNull();expect(released).toHaveBeenCalledOnce()
+  expect(s.host.querySelector('[data-retiring]')).toBeNull()
+  motion.reducedMotion=false;s.enable();s.update();clock.mockReturnValue(1400);s.update();s.disable();s.update()
+  s.cues.dispose();s.cues.dispose()
+  expect(s.scene.getObjectByName('interaction-cue-presentations')).toBeUndefined()
+})
+it('hands over different cues without leaving the old instruction in the current guide',()=>{
+  const clock=vi.spyOn(performance,'now').mockReturnValue(0),s=mount({active:true,reducedMotion:false})
+  clock.mockReturnValue(700);s.update()
+  addInteractionCue(s.target,{kind:'tap',label:'轻点新的小物',enabled:()=>true})
+  s.disable();s.update()
+  expect(s.host.querySelector('.scene-cue-guides')!.textContent).toBe('轻点新的小物')
+  expect(s.host.querySelector('[data-retiring="true"]')).not.toBeNull()
+  clock.mockReturnValue(1500);s.update()
+  expect(s.host.querySelector('[data-retiring="true"]')).toBeNull()
+  expect(s.host.querySelectorAll('[data-cue-role="source"]')).toHaveLength(1)
+})
 it('reveals a new placard gently without moving its actual manipulation point',()=>{
   const clock=vi.spyOn(performance,'now').mockReturnValue(0)
   const s=mount({active:true,reducedMotion:false})

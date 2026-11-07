@@ -44,6 +44,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
   const phase = (node: HTMLElement) => node.style.setProperty('--cue-delay', '0ms')
   type Entry = { object: THREE.Object3D; cue: InteractionCue; source: HTMLElement; guide: HTMLElement; target?: HTMLElement; placard?: ReturnType<typeof createCuePlacard> }
   const entries = new Map<InteractionCue, Entry>()
+  const retiring = new Map<InteractionCue, { entry: Entry; width: number; height: number }>()
   const cursorStyles = new Map<HTMLElement, string>()
   const world = new THREE.Vector3(), projected = new THREE.Vector3(), ray = new THREE.Raycaster(), pointer = new THREE.Vector2()
   let disposed = false, dragging: InteractionCue | undefined
@@ -62,7 +63,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
         motionFrame = undefined
         if (disposed) return
         if (updatedAt < time) redraw()
-        else if (glare.animating || active.some(entry => entry.placard?.animating)) scheduleFrame()
+        else if (glare.animating || retiring.size || active.some(entry => entry.placard?.animating)) scheduleFrame()
       })
     })
   }
@@ -144,6 +145,15 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
     guide.dataset.dragging = String(cue === dragging)
   }
   function remove(entry: Entry) { entry.source.remove(); entry.target?.remove(); entry.guide.remove(); entry.placard?.dispose() }
+  function showPoint(entry: Entry) {
+    const opacity = entry.placard?.pointOpacity ?? 1
+    for (const node of [entry.source, entry.target]) if (node) {
+      node.style.setProperty('--cue-reveal', String(opacity))
+      node.style.setProperty('--cue-scale', String(.65 + .35 * opacity))
+      node.dataset.presenting = String(opacity < .999 || node.dataset.retiring === 'true')
+    }
+  }
+  function clearRetiring() { for (const { entry } of retiring.values()) remove(entry); retiring.clear() }
   function layoutGuides() {
     for (const entry of active) if (entry.target) {
       // One destination may also be a direct tap source (for example an eye).
@@ -194,7 +204,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
   return {
     update() {
       if (disposed) return
-      updatedAt = performance.now()
+      const now = performance.now(); updatedAt = now
       scene.updateMatrixWorld(true); camera.updateMatrixWorld(true)
       const rect = canvas.getBoundingClientRect(), parentRect = host.getBoundingClientRect()
       // Absolute children start at the host's padding box, after its border.
@@ -208,7 +218,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
       const motion = !suspended && !preferences.reducedMotion && !reduced?.matches
       layer.dataset.motion = guides.dataset.motion = motion ? 'active' : 'still'
       layer.dataset.suspended = String(suspended)
-      if (!motion) { stopFrame(); for (const entry of entries.values()) entry.placard?.settle() }
+      if (!motion) { stopFrame(); clearRetiring(); for (const entry of entries.values()) entry.placard?.settle() }
       const candidates: { object: THREE.Object3D; cue: InteractionCue }[] = []
       scene.traverse(object => {
         const cues: InteractionCue[] = object.userData.interactionCues ?? []
@@ -217,9 +227,21 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
       candidates.sort((a, b) => (b.cue.priority ?? 0) - (a.cue.priority ?? 0))
       const selected = [...candidates.filter(e => !e.cue.compact).slice(0, 3), ...candidates.filter(e => e.cue.compact).filter((e,i) => i < 4 || e.cue.keepVisible)]
       const keep = new Set(selected.map(e => e.cue))
-      for (const [cue, entry] of entries) if (!keep.has(cue)) { remove(entry); entries.delete(cue) }
+      for (const [cue, entry] of entries) if (!keep.has(cue)) {
+        entries.delete(cue)
+        if (motion && entry.placard && visible(entry.object) && point(entry.object, entry.cue.anchor)) {
+          entry.guide.remove(); entry.placard.exit(now)
+          entry.source.dataset.retiring = 'true'; if (entry.target) entry.target.dataset.retiring = 'true'
+          retiring.set(cue, { entry, width: rect.width, height: rect.height })
+        } else remove(entry)
+      }
       active = selected.map(({ object, cue }) => {
         let entry = entries.get(cue)
+        if (!entry && retiring.has(cue)) {
+          entry = retiring.get(cue)!.entry; retiring.delete(cue); entries.set(cue, entry)
+          delete entry.source.dataset.retiring; if (entry.target) delete entry.target.dataset.retiring
+          guides.append(entry.guide); entry.placard?.resume(now)
+        }
         if (!entry) { entry = { object, cue, source: marker('source'), guide: guide() }; entries.set(cue, entry) }
         const from = point(object, cue.anchor)!
         entry.source.dataset.compact = String(cue.compact ?? false)
@@ -233,6 +255,8 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
         instruction(entry, from, to)
         return entry
       })
+      // Revive selected cues first, then bound the remaining passive remnants.
+      while (retiring.size > 3) { const [cue, value] = retiring.entries().next().value!; remove(value.entry); retiring.delete(cue) }
       // The visual guide replaces the long screen-reader hint. Keep optional
       // inspection controls discoverable here, below the ordinary action.
       const inspectionHint = overlay?.querySelector<HTMLElement>('.scene-hint[data-placement-inspection="true"]')
@@ -256,10 +280,24 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
         const angle = Number.parseFloat((entry.guide.firstElementChild as HTMLElement).style.getPropertyValue('--cue-angle')) || 0
         // Live percentages/counts must remain readable through every input frame.
         occupied.push(entry.placard.update({ text, detail: helpText, kind: entry.cue.kind, angle, from, view: rect, occupied, font, locale, fontVersion,
-          motion: motion && feedback?.dataset.progress !== 'true' }, camera))
+          motion: motion && feedback?.dataset.progress !== 'true', now, entranceDelay: retiring.size ? 120 : 0 }, camera))
       }
-      const changing = active.some(entry => entry.placard?.animating)
-      glare.update(motion && !dragging && feedback?.dataset.progress !== 'true' && !changing && active.some(entry => !!entry.placard))
+      for (const entry of active) showPoint(entry)
+      for (const [cue, value] of retiring) {
+        const { entry } = value
+        const from = point(entry.object, entry.cue.anchor)
+        if (value.width !== rect.width || value.height !== rect.height || !visible(entry.object) || !from) {
+          remove(entry); retiring.delete(cue); continue
+        }
+        position(entry.source, from)
+        const destination = entry.cue.destination
+        const to = typeof destination === 'function' ? project(destination()) : destination && visible(destination) ? point(destination) : undefined
+        if (entry.target) { if (to) position(entry.target, to); else entry.target.hidden = true }
+        entry.placard!.advance(now, from); showPoint(entry)
+        if (entry.placard!.exitComplete) { remove(entry); retiring.delete(cue) }
+      }
+      const changing = retiring.size > 0 || active.some(entry => entry.placard?.animating)
+      glare.update(motion && !dragging && feedback?.dataset.progress !== 'true' && !changing && active.some(entry => !!entry.placard), now)
       if (motion && (glare.animating || changing)) {
         scheduleFrame()
       } else stopFrame()
@@ -294,7 +332,7 @@ export function createInteractionCues(canvas: HTMLCanvasElement | undefined, sce
       host.removeEventListener('pointermove', move); host.removeEventListener('pointerdown', down); host.removeEventListener('pointerleave', end)
       window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end); window.removeEventListener('blur', end)
       for (const [target, cursor] of cursorStyles) target.style.cursor = cursor
-      entries.forEach(remove); entries.clear(); active = []; layer.remove(); guides.remove(); presentations.removeFromParent(); backdrop.dispose()
+      entries.forEach(remove); entries.clear(); clearRetiring(); active = []; layer.remove(); guides.remove(); presentations.removeFromParent(); backdrop.dispose()
     },
   }
 }

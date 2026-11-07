@@ -47,7 +47,9 @@ export function createCuePlacard(parent: THREE.Group, backdrop?: CueBackdrop) {
   parent.add(leader, board)
   let key = '', contentKey = '', width = 0, height = 0, previous: CueBox | undefined
   let transition: ReturnType<typeof animate> | undefined, started = 0
-  const reveal = { value: 1, leader: 1 }
+  const reveal = { value: 1, fade: 1, leader: 1, point: 1, lift: 0 }
+  let departing = false, layoutFrom: CueBox | undefined
+  let pose: { box: CueBox; from: CuePoint; view: { width: number; height: number }; camera: THREE.Camera } | undefined
   let retiring: { sprite: THREE.Sprite; origin: THREE.Vector3; opacity: number } | undefined
   function releaseRetiring() {
     if (!retiring) return
@@ -55,27 +57,63 @@ export function createCuePlacard(parent: THREE.Group, backdrop?: CueBackdrop) {
     retiring = undefined
   }
   function settle() {
-    transition?.cancel(); transition = undefined; reveal.value = reveal.leader = 1
+    transition?.cancel(); transition = undefined; reveal.value = reveal.fade = reveal.leader = reveal.point = 1; reveal.lift = 0
+    departing = false; layoutFrom = undefined
     releaseRetiring()
   }
   function sample(now: number, motion: boolean) {
     if (!motion) settle()
     if (transition) {
       transition.seek(Math.max(0, now - started), true)
-      if (now - started >= transition.duration) settle()
+      if (now - started >= transition.duration) {
+        if (!departing) settle()
+        else { transition.cancel(); transition = undefined; reveal.value = reveal.fade = reveal.leader = reveal.point = 0; reveal.lift = -3; releaseRetiring() }
+      }
     }
-    material.opacity = reveal.value; lineMaterial.opacity = .44 * reveal.leader
+    material.opacity = reveal.value * reveal.fade; lineMaterial.opacity = .44 * Math.min(1, reveal.leader * 5)
   }
   const at = new THREE.Vector3(), across = new THREE.Vector3(), above = new THREE.Vector3()
   function world(x: number, y: number, z: number, view: { width: number; height: number }, camera: THREE.Camera, out: THREE.Vector3) {
     return out.set(x / view.width * 2 - 1, 1 - y / view.height * 2, z).unproject(camera)
   }
+  function draw({ box, from, view, camera }: NonNullable<typeof pose>) {
+    const y = Math.max(10, Math.min(view.height - box.height - 10, box.y + reveal.lift))
+    world(box.x + box.width/2, y + box.height/2, from.z, view, camera, at)
+    world(box.x + box.width, y + box.height/2, from.z, view, camera, across)
+    world(box.x + box.width/2, y, from.z, view, camera, above)
+    board.position.copy(at); board.scale.set(at.distanceTo(across) * 2, at.distanceTo(above) * 2, 1)
+    if (retiring) {
+      retiring.sprite.material.opacity = retiring.opacity * (1 - reveal.value) * reveal.fade
+      retiring.sprite.position.copy(retiring.origin).addScaledVector(above.sub(at), reveal.value * 6 / height)
+    }
+    const edgeX = Math.max(box.x + 8, Math.min(box.x + box.width - 8, from.x))
+    const edgeY = Math.max(y + 6, Math.min(y + box.height - 6, from.y))
+    world(edgeX, edgeY, from.z, view, camera, at)
+    world(from.x, from.y, from.z, view, camera, across).lerp(at, 1 - reveal.leader)
+    const positions = geometry.getAttribute('position') as THREE.BufferAttribute
+    positions.setXYZ(0, at.x, at.y, at.z); positions.setXYZ(1, across.x, across.y, across.z); positions.needsUpdate = true
+  }
   return {
     get animating() { return !!transition },
+    get pointOpacity() { return reveal.point },
+    get exitComplete() { return departing && !transition },
+    exit(now = performance.now()) {
+      sample(now, true); transition?.cancel(); layoutFrom = undefined; departing = true; started = now
+      // Fade the visible text composite together if a step ends during a crossfade.
+      transition = animate(reveal, { fade: { to: 0, delay: 85, duration: 155, ease: 'outCubic' },
+        leader: { to: 0, delay: 35, duration: 145, ease: 'inCubic' }, point: { to: 0, duration: 90, ease: 'outCubic' },
+        lift: { to: -3, delay: 85, duration: 155, ease: 'inCubic' }, autoplay: false })
+    },
+    resume(now = performance.now()) {
+      sample(now, true); transition?.cancel(); departing = false; started = now
+      transition = animate(reveal, { value: { to: 1, duration: 260 }, fade: { to: 1, duration: 260 }, leader: { to: 1, duration: 220 },
+        point: { to: 1, delay: 70, duration: 150 }, lift: { to: 0, duration: 260 }, ease: 'outQuint', autoplay: false })
+    },
+    advance(now: number, from: CuePoint) { sample(now, true); if (pose) { pose.from = { ...from }; draw(pose) } },
     settle,
-    update({ text, detail, kind, angle, from, view, occupied, font, locale, fontVersion = 0, motion = false, now = performance.now() }: {
+    update({ text, detail, kind, angle, from, view, occupied, font, locale, fontVersion = 0, motion = false, now = performance.now(), entranceDelay = 0 }: {
       text: string; detail?: string; kind: 'tap' | 'drag' | 'rotate'; angle: number; from: CuePoint;
-      view: { width: number; height: number }; occupied: CueBox[]; font: string; locale: string; fontVersion?: number; motion?: boolean; now?: number
+      view: { width: number; height: number }; occupied: CueBox[]; font: string; locale: string; fontVersion?: number; motion?: boolean; now?: number; entranceDelay?: number
     }, camera: THREE.Camera): CueBox {
       sample(now, motion)
       const maxWidth = Math.max(76, Math.min(248, view.width - 24)), ratio = Math.min(window.devicePixelRatio || 1, 2)
@@ -84,6 +122,7 @@ export function createCuePlacard(parent: THREE.Group, backdrop?: CueBackdrop) {
       const nextContent = JSON.stringify([text, detail, kind, locale])
       if (next !== key) {
         if (nextContent !== contentKey) {
+          const initial = !map
           transition?.cancel(); releaseRetiring()
           if (map && motion && material.opacity > .05) {
             const sprite = board.clone(); sprite.material = material.clone()
@@ -95,9 +134,12 @@ export function createCuePlacard(parent: THREE.Group, backdrop?: CueBackdrop) {
           } else map?.dispose()
           map = undefined
           if (motion) {
-            started = now
-            transition = animate(reveal, { value: { from: 0, to: 1 }, leader: { from: 0, to: 1, delay: 65, duration: 320 },
-              duration: 480, ease: 'outQuint', autoplay: false })
+            started = now; departing = false; reveal.fade = 1; layoutFrom = initial ? undefined : pose?.box
+            const delay = initial ? entranceDelay : 0
+            transition = animate(reveal, { value: { from: 0, to: 1, delay, duration: 260 },
+              leader: { from: initial ? 0 : reveal.leader, to: 1, delay: initial ? delay + 90 : 0, duration: 280 },
+              point: { from: initial ? 0 : reveal.point, to: 1, delay: initial ? delay + 300 : 0, duration: 150 },
+              lift: { from: initial ? 7 : reveal.lift, to: 0, delay, duration: 260 }, ease: 'outQuint', autoplay: false })
           } else settle()
           contentKey = nextContent
         }
@@ -176,24 +218,14 @@ export function createCuePlacard(parent: THREE.Group, backdrop?: CueBackdrop) {
           Math.max(0, gap - distance) * 100 + Math.abs(distance - gap) * .5 + index * 4 +
           (previous ? Math.hypot(box.x - previous.x, box.y - previous.y) * .12 : 0)
       }
-      const box = options.map((box, i) => ({ box, score: score(box, i) })).sort((a,b) => a.score-b.score)[0].box
-      previous = box
-      const lift = 7 * (1 - reveal.value)
-      const y = Math.max(inset, Math.min(view.height - height - inset, box.y + lift))
-      world(box.x + width/2, y + height/2, from.z, view, camera, at)
-      world(box.x + width, y + height/2, from.z, view, camera, across)
-      world(box.x + width/2, y, from.z, view, camera, above)
-      board.position.copy(at); board.scale.set(at.distanceTo(across) * 2, at.distanceTo(above) * 2, 1)
-      if (retiring) {
-        retiring.sprite.material.opacity = retiring.opacity * (1 - reveal.value)
-        retiring.sprite.position.copy(retiring.origin).addScaledVector(above.sub(at), reveal.value * 6 / height)
+      let box = options.map((box, i) => ({ box, score: score(box, i) })).sort((a,b) => a.score-b.score)[0].box
+      if (layoutFrom && transition) {
+        const to = box, t = reveal.value
+        box = { x: THREE.MathUtils.lerp(layoutFrom.x, to.x, t), y: THREE.MathUtils.lerp(layoutFrom.y, to.y, t),
+          width: THREE.MathUtils.lerp(layoutFrom.width, to.width, t), height: THREE.MathUtils.lerp(layoutFrom.height, to.height, t) }
       }
-      const edgeX = Math.max(box.x + 8, Math.min(box.x + width - 8, from.x))
-      const edgeY = Math.max(y + 6, Math.min(y + height - 6, from.y))
-      world(edgeX, edgeY, from.z, view, camera, at)
-      world(from.x, from.y, from.z, view, camera, across)
-      const positions = geometry.getAttribute('position') as THREE.BufferAttribute
-      positions.setXYZ(0, at.x, at.y, at.z); positions.setXYZ(1, across.x, across.y, across.z); positions.needsUpdate = true
+      previous = box
+      pose = { box, from: { ...from }, view: { width: view.width, height: view.height }, camera }; draw(pose)
       return box
     },
     dispose() { settle(); board.removeFromParent(); leader.removeFromParent(); map?.dispose(); material.dispose(); board.geometry.dispose(); geometry.dispose(); lineMaterial.dispose() },

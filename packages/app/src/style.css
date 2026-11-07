@@ -3949,7 +3949,8 @@ button:hover:not(:disabled) {
   position: absolute;
   width: 6px;
   height: 6px;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(var(--cue-scale, 1));
+  filter: opacity(var(--cue-reveal, 1));
   transition: opacity 180ms ease-out;
 }
 .scene-object-cue-dot {
@@ -3981,6 +3982,9 @@ button:hover:not(:disabled) {
 .scene-object-cue[data-cue-role='target'] { opacity: 0.6; }
 .scene-object-cue[data-dragging='true'] { opacity: 0.25; }
 .scene-object-cue[data-dragging='true'] .scene-object-cue-ring { animation-play-state: paused; }
+.scene-object-cue[data-presenting='true'] :is(.scene-object-cue-ring, .scene-object-cue-dot) { animation: none; }
+.scene-object-cue[data-presenting='true'] .scene-object-cue-ring { opacity: 0; }
+.scene-object-cue[data-presenting='true'] .scene-object-cue-dot { opacity: .84; }
 .scene-object-cue[data-cue-role='target'] .scene-object-cue-ring { animation-delay: 180ms; }
 .library-scene-stage:has(.scene-hint[data-drop-ready='true']) .scene-object-cue[data-cue-role='target'],
 .library-scene-stage:has(.scene-hint[data-ready='true']) .scene-object-cue[data-cue-role='source'] {

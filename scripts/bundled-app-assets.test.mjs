@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -138,4 +139,13 @@ test('both offline hosts include the approved original UI and result WAVs with v
   }
   assert.equal(wavBytes, sounds.totalWavBytes);
   assert.ok(wavBytes < 400000, 'ten mono cues fit a 400KB offline budget');
+});
+
+test('Git preserves exact registered license bytes even with input line-ending conversion', async () => {
+  const relative = 'assets/environments/komorebi/LICENSE.Babylon.md';
+  const original = await readFile(path.join(root, relative));
+  const bytes = Buffer.from(original.toString('utf8').replace(/\r?\n/g, '\r\n'));
+  const expected = createHash('sha1').update(Buffer.from('blob ' + bytes.length + '\0')).update(bytes).digest('hex');
+  const actual = execFileSync('git', ['-c', 'core.autocrlf=input', 'hash-object', '--stdin', '--path', relative], { cwd: root, input: bytes, encoding: 'utf8' }).trim();
+  assert.equal(actual, expected, 'Git must retain the same bytes used by Metro and signed asset hashes');
 });

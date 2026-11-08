@@ -6,3 +6,6 @@
 *.gltf filter=lfs diff=lfs merge=lfs -text
 # The public trust certificate participates in native update configuration.
 apps/mobile-expo/certs/*.pem text eol=lf
+
+# This runtime license is content-addressed; preserve its original bytes.
+assets/environments/komorebi/LICENSE.Babylon.md -text whitespace=cr-at-eol

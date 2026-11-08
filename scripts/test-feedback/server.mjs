@@ -4,6 +4,7 @@ import { mkdir, open, readFile, readdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { FEEDBACK_MAX_BYTES, normalizeFeedbackEndpoint, parseFeedbackReport, parseFeedbackStatusQuery } from '../../packages/shared/src/test-feedback.ts';
 import { dashboardHTML } from './dashboard.mjs';
+import { validateInvitations } from './invitations.mjs';
 
 const statuses = new Set(['new', 'triaged', 'fixed']);
 const fingerprint = value => createHash('sha256').update(value).digest('hex');
@@ -54,7 +55,7 @@ export function createFeedbackStore(inbox) {
   }
   return {
     directory,
-    put(raw) {
+    put(raw, source) {
       const report = parseFeedbackReport(raw);
       return serialized(async () => {
         const old = await read(report.id);
@@ -63,7 +64,8 @@ export function createFeedbackStore(inbox) {
           return { receipt: { id: report.id, receivedAt: old.receivedAt }, duplicate: true };
         }
         const receivedAt = new Date().toISOString();
-        await atomicJSON(filename(report.id), { schemaVersion: 1, receivedAt, status: report.result === 'pass' ? 'fixed' : 'new', report });
+        await atomicJSON(filename(report.id), { schemaVersion: 1, receivedAt, status: report.result === 'pass' ? 'fixed' : 'new', report,
+          ...(source ? { source: { id: source.id, label: source.label } } : {}) });
         return { receipt: { id: report.id, receivedAt }, duplicate: false };
       });
     },
@@ -138,8 +140,10 @@ function markdownExport(entries) {
 }
 
 /** Only submitServer is exposed by cloudflared. It offers writes and narrow authenticated aggregates, never raw reports. */
-export async function startFeedbackServers({ inbox, token, submitPort = 4318, adminPort = 4319, runtimeFile, limitPerMinute = 200 }) {
+export async function startFeedbackServers({ inbox, token, invitations = [], submitPort = 4318, adminPort = 4319, runtimeFile, limitPerMinute = 200 }) {
   if (typeof token !== 'string' || token.length < 24 || token.length > 256) throw Error('A strong feedback token is required');
+  const namedInvitations = validateInvitations(invitations).map(invitation => ({ ...invitation }));
+  if (namedInvitations.some(invitation => invitation.token === token)) throw Error('Named invitations must differ from the shared invitation');
   if (submitPort !== 0 && submitPort === adminPort) throw Error('Submission and admin require different ports');
   const store = createFeedbackStore(inbox);
   let windowStart = Date.now(), count = 0;
@@ -149,7 +153,10 @@ export async function startFeedbackServers({ inbox, token, submitPort = 4318, ad
       if (req.method === 'OPTIONS' && ['/api/feedback', '/api/scene-status'].includes(pathname)) { res.writeHead(204, cors); res.end(); return; }
       if (req.method === 'GET' && pathname === '/health') { json(res, 200, { ok: true }); return; }
       if (req.method !== 'POST' || !['/api/feedback', '/api/scene-status'].includes(pathname)) throw failure(404, 'Not found');
-      if (!validToken(req.headers['x-feedback-token'], token)) throw failure(401, 'Invalid test invitation');
+      const provided = req.headers['x-feedback-token'];
+      const invitation = validToken(provided, token) ? { id: 'shared', label: '共用邀请码' }
+        : namedInvitations.find(candidate => validToken(provided, candidate.token));
+      if (!invitation) throw failure(401, 'Invalid test invitation');
       if (Date.now() - windowStart >= 60000) { windowStart = Date.now(); count = 0; }
       if (++count > limitPerMinute) throw failure(429, 'Too many reports; retry later');
       const body = await jsonBody(req);
@@ -162,7 +169,7 @@ export async function startFeedbackServers({ inbox, token, submitPort = 4318, ad
       }
       let report;
       try { report = parseFeedbackReport(body); } catch { throw failure(400, 'Invalid feedback report'); }
-      const result = await store.put(report);
+      const result = await store.put(report, invitation);
       json(res, result.duplicate ? 200 : 201, result.receipt, cors);
     } catch (error) { if (!res.headersSent) json(res, error.status ?? 500, { error: error.status ? error.message : 'Feedback was not saved; retry later' }, cors); }
   });
@@ -184,7 +191,7 @@ export async function startFeedbackServers({ inbox, token, submitPort = 4318, ad
       if (req.method === 'GET' && url.pathname === '/api/setup') {
         let endpoint = '';
         try { endpoint = normalizeFeedbackEndpoint(JSON.parse(await readFile(runtimeFile, 'utf8')).publicUrl); } catch { /* Tunnel not running. */ }
-        json(res, 200, { endpoint, token, inbox: store.directory }); return;
+        json(res, 200, { endpoint, token, invitations: namedInvitations, inbox: store.directory }); return;
       }
       if (req.method === 'GET' && ['/api/feedback', '/api/export'].includes(url.pathname)) {
         const result = await store.list();

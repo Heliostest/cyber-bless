@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { createFeedbackStore, startFeedbackServers } from './server.mjs';
 import { loadTunnelConfig, startFeedbackTunnel } from './tunnel.mjs';
+import { createInvitations, readInvitations, revokeInvitation } from './invitations.mjs';
+export { createInvitations, readInvitations, revokeInvitation } from './invitations.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 export function feedbackDefaults() {
@@ -55,15 +57,18 @@ export async function main(args = process.argv.slice(2)) {
   const { values, positionals } = parseArgs({ args, allowPositionals: true, options: {
     'submit-port': { type: 'string' }, 'admin-port': { type: 'string' }, inbox: { type: 'string' }, config: { type: 'string' },
     'runtime-file': { type: 'string' }, format: { type: 'string' }, status: { type: 'string' }, out: { type: 'string' },
-    'tunnel-config': { type: 'string' },
+    'tunnel-config': { type: 'string' }, 'invitations-file': { type: 'string' },
+    label: { type: 'string' }, count: { type: 'string' }, id: { type: 'string' },
   } });
   const command = positionals[0] ?? 'serve';
   const defaults = feedbackDefaults();
   const inbox = path.resolve(values.inbox ?? defaults.inbox), config = path.resolve(values.config ?? defaults.config);
   const runtimeFile = path.resolve(values['runtime-file'] ?? defaults.runtimeFile);
+  const invitationsFile = path.resolve(values['invitations-file'] ?? path.join(path.dirname(config), 'invitations.json'));
   if (command === 'serve') {
     const token = await readOrCreateToken(config);
-    const servers = await startFeedbackServers({ inbox, token, runtimeFile,
+    const invitations = await readInvitations(invitationsFile);
+    const servers = await startFeedbackServers({ inbox, token, invitations, runtimeFile,
       submitPort: port(values['submit-port'], 4318), adminPort: port(values['admin-port'], 4319) });
     console.log(`Local feedback inbox: http://127.0.0.1:${servers.adminPort}/`);
     console.log(`Feedback intake and authenticated status listener: http://127.0.0.1:${servers.submitPort}/api/feedback`);
@@ -72,6 +77,20 @@ export async function main(args = process.argv.slice(2)) {
     superviseLifetime(() => servers.close());
     notifyParent({ type: 'receiver-ready', submitPort: servers.submitPort, adminPort: servers.adminPort });
     return servers;
+  }
+  if (command === 'create-invites') {
+    const count = values.count ?? '5';
+    if (!/^\d+$/.test(count) || Number(count) < 1 || Number(count) > 50) throw Error('Count must be 1..50');
+    const prefix = values.label ?? '测试员';
+    const created = await createInvitations(invitationsFile, Array.from({ length: Number(count) }, (_, index) => `${prefix}${String(index + 1).padStart(2, '0')}`));
+    console.log(`Stored ${created.length} invitations outside Git. Restart the receiver and copy codes from the local dashboard.`);
+    return created;
+  }
+  if (command === 'revoke-invite') {
+    if (!values.id) throw Error('Invitation ID is required');
+    await revokeInvitation(invitationsFile, values.id);
+    console.log('Invitation revoked in external configuration. Restart the receiver for the change to take effect.');
+    return;
   }
   if (command === 'tunnel') {
     const fixed = await loadTunnelConfig(path.resolve(values['tunnel-config'] ?? defaults.tunnelConfig));
@@ -100,10 +119,10 @@ export async function main(args = process.argv.slice(2)) {
     const temporary = `${config}.${process.pid}.tmp`;
     await writeFile(temporary, JSON.stringify({ schemaVersion: 1, token: randomBytes(32).toString('base64url') }, null, 2) + '\n', { mode: 0o600 });
     await rename(temporary, config);
-    console.log('New invitation stored outside Git. Restart the receiver, then copy it from the local dashboard.');
+    console.log('New shared invitation stored outside Git; named invitations are unchanged. Restart the receiver, then copy it from the local dashboard.');
     return;
   }
-  throw Error('Use serve, tunnel, export, or rotate-token');
+  throw Error('Use serve, tunnel, export, create-invites, revoke-invite, or rotate-token');
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(error => {
   console.error(`Feedback service: ${error.message}`); process.exitCode = 1;

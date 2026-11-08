@@ -30,6 +30,39 @@ const sceneStatus = async (f, revision = revisionA) => {
   assert.equal(response.status, 200); return (await response.json()).scenes[0];
 };
 
+test('independent invitations authenticate existing clients and persist only first-receipt source metadata', async t => {
+  const invitations = ['01', '02'].map(id => ({ id: `tester-${id}`, label: `测试员${id}`, token: `independent-test-invitation-${id}-1234567890` }));
+  const f = await fixture(t, { invitations });
+  const source = invitation => ({ id: invitation.id, label: invitation.label });
+  const send = (body, invitation) => f.send(body, { 'X-Feedback-Token': invitation.token });
+  const first = await send(report('named-report-001'), invitations[0]);
+  assert.equal(first.status, 201);
+  const receipt = await first.json();
+  assert.deepEqual(Object.keys(receipt).sort(), ['id', 'receivedAt']);
+  assert.equal((await send(report('named-report-002'), invitations[1])).status, 201);
+  assert.deepEqual(await (await send(report('named-report-001'), invitations[1])).json(), receipt);
+  assert.equal((await f.send(report('shared-report-003'))).status, 201);
+  const entries = (await f.servers.store.list()).entries;
+  assert.deepEqual(entries.find(e => e.report.id === 'named-report-001').source, source(invitations[0]));
+  assert.deepEqual(entries.find(e => e.report.id === 'named-report-002').source, source(invitations[1]));
+  assert.deepEqual(entries.find(e => e.report.id === 'shared-report-003').source, { id: 'shared', label: '共用邀请码' });
+  const changed = await f.servers.store.setStatus('named-report-001', 'fixed');
+  assert.deepEqual(changed.source, source(invitations[0]));
+  const rawExport = await (await fetch(f.admin + '/api/export')).text();
+  for (const invitation of invitations) {
+    assert.ok(!rawExport.includes(invitation.token));
+    const status = await fetch(f.submit + '/api/scene-status', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Feedback-Token': invitation.token }, body: JSON.stringify(query()) });
+    assert.equal(status.status, 200);
+    assert.doesNotMatch(await status.text(), /测试员|tester-|invitation/);
+    assert.equal((await fetch(f.submit + '/api/setup', { headers: { 'X-Feedback-Token': invitation.token } })).status, 404);
+  }
+  assert.equal((await send(report('invalid-report-004'), { token: 'wrong' })).status, 401);
+  const setup = await (await fetch(f.admin + '/api/setup')).json();
+  assert.deepEqual(setup.invitations, invitations);
+  const restartedStore = createFeedbackStore(path.join(f.directory, 'inbox'));
+  assert.deepEqual((await restartedStore.list()).entries.find(e => e.report.id === 'named-report-001').source, source(invitations[0]));
+});
+
 test('submission is authenticated, strictly validated and acknowledged only after a receipt file exists', async t => {
   const f = await fixture(t);
   assert.equal((await f.send(report(), { 'X-Feedback-Token': 'wrong' })).status, 401);

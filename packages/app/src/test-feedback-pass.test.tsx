@@ -18,23 +18,30 @@ function existing(message: string): FeedbackReport {
     context: { completedSteps: 0, totalSteps: 3, reportedStep: 1 }, message,
     client: { platform: 'ios', appVersion: '1', buildNumber: '1', locale: 'zh-Hans', width: 390, height: 844, pixelRatio: 2, reducedMotion: false } };
 }
-async function setup(options: { status?: string; draft?: FeedbackReport; pending?: FeedbackReport[]; openIssue?: boolean; rowRevision?: string } = {}) {
+async function setup(options: { status?: string; draft?: FeedbackReport; pending?: FeedbackReport[]; openIssue?: boolean; rowRevision?: string;historyMessage?:string } = {}) {
   const enqueue = vi.fn(async (_report: FeedbackReport) => true), saveDraft = vi.fn(async () => true), refreshTeamStatus = vi.fn(async () => {});
   const snapshot = { status: 'ready', saving: false, connection: { endpoint: 'https://feedback.example/api/feedback', token: 'invite' },
     drafts: options.draft ? { [entry.id]: options.draft } : {}, pending: options.pending ?? [], receipts: {},
     teamStatusState: options.status ?? 'fresh', teamStatus: { targetKey: 'receiver', fetchedAt: at, data: { schemaVersion: 1, generatedAt: at,
       scenes: [{ id: entry.id, testingRevision: options.rowRevision ?? sceneTestingRevisions[entry.id], state: options.openIssue ? 'reported' : 'retest', issueCount: 1,
         openIssueCount: options.openIssue ? 1 : 0, reviewToken: 'a'.repeat(64) }] } } };
-  current.value = { client: { enqueue, saveDraft, setConnection: vi.fn(async () => true), refreshTeamStatus }, snapshot,
+  const readHistory=vi.fn(async()=>({schemaVersion:1,sceneId:entry.id,generatedAt:at,items:options.historyMessage?[{id:'old-fixed-issue-001',createdAt:at,receivedAt:at,updatedAt:at,status:'fixed',message:options.historyMessage,reportedStep:2,totalSteps:3,revision:'bundled',testingRevision:'b'.repeat(64),platform:'ios',appVersion:'1.0.0',buildNumber:'28'}]:[]}));
+  current.value = { client: { enqueue, saveDraft, setConnection: vi.fn(async () => true), refreshTeamStatus,readHistory }, snapshot,
     info: { platform: 'ios', appVersion: '1', buildNumber: '2' } };
   const onOpenChange = vi.fn();
   const ui = renderUI(createElement(TestFeedbackOverlay, { entry, context, reducedMotion: false, onOpenChange }));
   clickOn(ui.host.querySelector('button')!); await settle();
   const button = (copy: string) => [...ui.host.querySelectorAll<HTMLButtonElement>('button')].find(candidate => candidate.textContent === copy)!;
-  return { ...ui, snapshot, enqueue, saveDraft, refreshTeamStatus, button,
+  return { ...ui, snapshot, enqueue, saveDraft, refreshTeamStatus,readHistory, button,
     pass: () => button(SCENE_TEST_COPY.pass), textarea: () => ui.host.querySelector<HTMLTextAreaElement>('textarea')! };
 }
 afterEach(() => { current.value = undefined; document.body.replaceChildren(); });
+
+it('automatically shows earlier fixed issues during retest without turning them into a new draft or a pass',async()=>{
+ const ui=await setup({historyMessage:'之前第二步无法放下'});
+ expect(ui.readHistory).toHaveBeenCalledWith(entry.id,undefined);expect(ui.host.textContent).toContain('之前第二步无法放下');expect(ui.host.textContent).toContain('已修复，待核对');expect(ui.host.textContent).toContain('1.0.0 (28)');
+ expect(ui.textarea().value).toBe('');expect(ui.enqueue).not.toHaveBeenCalled();expect(ui.pass().disabled).toBe(false);ui.unmount();
+});
 
 it('creates an immutable explicit pass for the current version and review basis instead of converting an old draft', async () => {
   const oldDraft = existing('');

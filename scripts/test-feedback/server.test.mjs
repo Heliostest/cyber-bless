@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
 import { startFeedbackServers, createFeedbackStore } from './server.mjs';
+import * as feedbackServer from './server.mjs';
 import { readOrCreateToken } from './cli.mjs';
 
 const token = 'local-test-invitation-1234567890';
@@ -29,6 +30,28 @@ const sceneStatus = async (f, revision = revisionA) => {
   const response = await fetch(f.submit + '/api/scene-status', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Feedback-Token': token }, body: JSON.stringify(query(revision)) });
   assert.equal(response.status, 200); return (await response.json()).scenes[0];
 };
+
+test('history is paged newest first for one scene, including fixed and old issues, with deterministic ties',()=>{
+  const entries=Array.from({length:23},(_,i)=>({report:currentReport(`history-issue-${String(i).padStart(3,'0')}`,revisionA),receivedAt:'2026-11-02T08:00:00.000Z',status:i%2?'fixed':'new',source:{id:'secret-person',label:'private-name'}}));
+  entries.push({report:{...currentReport('history-pass-001'),result:'pass'},receivedAt:'2026-11-03T08:00:00.000Z',status:'fixed'});
+  entries.push({report:{...report('other-scene-001'),scene:{...report().scene,id:'woodfish'}},receivedAt:'2026-11-03T08:00:00.000Z',status:'new'});
+  const query={schemaVersion:1,type:'history',sceneId:'crane'};
+  const first=feedbackServer.aggregateFeedbackHistory(entries,query);assert.equal(first.items.length,20);assert.equal(first.items[0].id,'history-issue-022');assert.ok(first.items.some(item=>item.status==='fixed'));assert.ok(first.nextCursor);
+  const second=feedbackServer.aggregateFeedbackHistory(entries,{...query,cursor:first.nextCursor});assert.equal(second.items.length,3);assert.equal(second.nextCursor,undefined);assert.equal(new Set([...first.items,...second.items].map(item=>item.id)).size,23);
+  assert.doesNotMatch(JSON.stringify(first),/private-name|secret-person|reviewToken|pixelRatio/);
+  assert.throws(()=>feedbackServer.aggregateFeedbackHistory(entries,{...query,sceneId:'woodfish',cursor:first.nextCursor}));
+});
+
+test('history endpoint requires an invitation, returns only that scene, and remains read-only',async t=>{
+  const f=await fixture(t);await f.send();await f.servers.store.setStatus(report().id,'fixed');
+  const body=JSON.stringify({schemaVersion:1,type:'history',sceneId:'crane'});
+  assert.equal((await fetch(f.submit+'/api/scene-feedback-history',{method:'POST',headers:{'Content-Type':'application/json'},body})).status,401);
+  const result=await fetch(f.submit+'/api/scene-feedback-history',{method:'POST',headers:{'Content-Type':'application/json','X-Feedback-Token':token},body});
+  assert.equal(result.status,200);const page=await result.json();assert.equal(page.items[0].message,report().message);assert.equal(page.items[0].status,'fixed');
+  assert.equal((await f.servers.store.list()).entries[0].status,'fixed');
+  assert.equal((await fetch(f.submit+'/api/scene-feedback-history',{headers:{'X-Feedback-Token':token}})).status,404);
+  assert.equal((await fetch(f.submit+'/api/feedback',{headers:{'X-Feedback-Token':token}})).status,404);
+});
 
 test('independent invitations authenticate existing clients and persist only first-receipt source metadata', async t => {
   const invitations = ['01', '02'].map(id => ({ id: `tester-${id}`, label: `测试员${id}`, token: `independent-test-invitation-${id}-1234567890` }));

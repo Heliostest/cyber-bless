@@ -2,7 +2,7 @@ import http from 'node:http';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { mkdir, open, readFile, readdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
-import { FEEDBACK_MAX_BYTES, normalizeFeedbackEndpoint, parseFeedbackReport, parseFeedbackStatusQuery } from '../../packages/shared/src/test-feedback.ts';
+import { FEEDBACK_MAX_BYTES, FEEDBACK_HISTORY_PAGE_SIZE, normalizeFeedbackEndpoint, parseFeedbackReport, parseFeedbackStatusQuery,parseFeedbackHistoryQuery,parseFeedbackHistoryPage } from '../../packages/shared/src/test-feedback.ts';
 import { dashboardHTML } from './dashboard.mjs';
 import { validateInvitations } from './invitations.mjs';
 
@@ -29,6 +29,28 @@ export function aggregateFeedbackStatus(entries, rawQuery) {
     return { ...identity, state: currentOpen ? 'reported' : verified ? 'verified' : history.length ? 'retest' : 'unreported',
       issueCount: issues.length, openIssueCount: open.length, reviewToken, ...(latestFeedbackAt ? { latestFeedbackAt } : {}) };
   }) };
+}
+
+/** Only issue text and its retest context leave the local dashboard. */
+export function aggregateFeedbackHistory(entries,rawQuery) {
+  const query=parseFeedbackHistoryQuery(rawQuery);
+  let cursor;
+  if(query.cursor){
+    try{
+      const decoded=Buffer.from(query.cursor,'base64url');
+      cursor=JSON.parse(decoded.toString('utf8'));
+      if(decoded.toString('base64url')!==query.cursor||!Array.isArray(cursor)||cursor.length!==3||cursor[0]!==query.sceneId||typeof cursor[1]!=='string'||!Number.isFinite(Date.parse(cursor[1]))||typeof cursor[2]!=='string'||!/^[A-Za-z0-9][A-Za-z0-9_-]{7,99}$/.test(cursor[2]))throw Error();
+    }catch{throw failure(400,'Invalid scene history cursor')}
+  }
+  const issues=entries.filter(entry=>entry.report.scene.id===query.sceneId&&entry.report.result!=='pass')
+    .sort((a,b)=>Date.parse(b.receivedAt)-Date.parse(a.receivedAt)||(a.report.id<b.report.id?1:a.report.id>b.report.id?-1:0))
+    .filter(entry=>!cursor||Date.parse(entry.receivedAt)<Date.parse(cursor[1])||Date.parse(entry.receivedAt)===Date.parse(cursor[1])&&entry.report.id<cursor[2]);
+  const selected=issues.slice(0,FEEDBACK_HISTORY_PAGE_SIZE);
+  const items=selected.map(({report,receivedAt,updatedAt,status})=>({id:report.id,createdAt:report.createdAt,receivedAt,updatedAt:updatedAt??receivedAt,status,message:report.message,
+    reportedStep:report.context.reportedStep,totalSteps:report.context.totalSteps,...(report.context.instruction?{instruction:report.context.instruction}:{}),revision:report.scene.revision,...(report.scene.testingRevision?{testingRevision:report.scene.testingRevision}:{}),
+    platform:report.client.platform,appVersion:report.client.appVersion,buildNumber:report.client.buildNumber,...(report.client.updateSourceCommit?{updateSourceCommit:report.client.updateSourceCommit}:{})}));
+  const last=selected.at(-1);
+  return parseFeedbackHistoryPage({schemaVersion:1,sceneId:query.sceneId,generatedAt:new Date().toISOString(),items,...(issues.length>selected.length&&last?{nextCursor:Buffer.from(JSON.stringify([query.sceneId,last.receivedAt,last.report.id])).toString('base64url')}:{})});
 }
 
 /** The receiving file is synced before acknowledgment. Temporary files never look like receipts. */
@@ -151,16 +173,22 @@ export async function startFeedbackServers({ inbox, token, invitations = [], sub
   const submitServer = http.createServer(async (req, res) => {
     try {
       const pathname = new URL(req.url, 'http://localhost').pathname;
-      if (req.method === 'OPTIONS' && ['/api/feedback', '/api/scene-status'].includes(pathname)) { res.writeHead(204, cors); res.end(); return; }
+      if (req.method === 'OPTIONS' && ['/api/feedback', '/api/scene-status','/api/scene-feedback-history'].includes(pathname)) { res.writeHead(204, cors); res.end(); return; }
       if (req.method === 'GET' && pathname === '/health') { json(res, 200, { ok: true }); return; }
       if(internalUpdates&&await internalUpdates.handlePublic(req,res,{authorized:!!invitationFor(req.headers['x-feedback-token'])}))return;
-      if (req.method !== 'POST' || !['/api/feedback', '/api/scene-status'].includes(pathname)) throw failure(404, 'Not found');
+      if (req.method !== 'POST' || !['/api/feedback', '/api/scene-status','/api/scene-feedback-history'].includes(pathname)) throw failure(404, 'Not found');
       const provided = req.headers['x-feedback-token'];
       const invitation = invitationFor(provided);
       if (!invitation) throw failure(401, 'Invalid test invitation');
       if (Date.now() - windowStart >= 60000) { windowStart = Date.now(); count = 0; }
       if (++count > limitPerMinute) throw failure(429, 'Too many reports; retry later');
       const body = await jsonBody(req);
+      if(pathname==='/api/scene-feedback-history'){
+        let query;try{query=parseFeedbackHistoryQuery(body)}catch{throw failure(400,'Invalid feedback history query')}
+        const {entries,invalidFiles}=await store.list();
+        if(invalidFiles.length)throw failure(503,'Scene history is incomplete; retained reports need inspection');
+        json(res,200,aggregateFeedbackHistory(entries,query),cors);return;
+      }
       if (pathname === '/api/scene-status') {
         let query;
         try { query = parseFeedbackStatusQuery(body); } catch { throw failure(400, 'Invalid scene status query'); }

@@ -9,6 +9,12 @@ const report = {
 };
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
 describe('internal feedback host transport', () => {
+  it('uses the existing JSON bridge for the authenticated narrow history endpoint',async()=>{
+    const query={schemaVersion:1,type:'history',sceneId:'crane'};
+    const fetch=vi.fn(async()=>new Response('{}',{status:200}));vi.stubGlobal('fetch',fetch);
+    await readTestFeedbackStatus('https://feedback.example/api/feedback','invite',JSON.stringify(query));
+    expect(fetch).toHaveBeenCalledWith('https://feedback.example/api/scene-feedback-history',expect.objectContaining({method:'POST',body:JSON.stringify(query),credentials:'omit',redirect:'error',headers:{'Content-Type':'application/json','X-Feedback-Token':'invite'}}));
+  });
   it('sends only the validated report to the selected endpoint without cookies or redirecting', async () => {
     const receipt = JSON.stringify({ id: report.id, receivedAt: report.createdAt });
     const fetch = vi.fn(async () => new Response(receipt, { status: 201 }));

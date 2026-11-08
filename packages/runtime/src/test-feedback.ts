@@ -1,4 +1,4 @@
-import { normalizeFeedbackEndpoint, parseFeedbackReport, parseFeedbackStatusQuery } from '@wbr/shared/test-feedback';
+import { normalizeFeedbackEndpoint, parseFeedbackReport, parseFeedbackStatusQuery,parseFeedbackHistoryQuery } from '@wbr/shared/test-feedback';
 import type { Storage } from './index';
 
 export const TEST_FEEDBACK_KEY = 'cyber-bless:test-feedback:v1';
@@ -49,11 +49,13 @@ export function browserTestFeedbackHost(info?: TestFeedbackInfo): TestFeedbackHo
   };
 }
 
-/** Reads only the authenticated team summary; individual reports stay on the local dashboard. */
+/** Existing JSON bridge: aggregate status or explicitly requested, narrow scene history. */
 export async function readTestFeedbackStatus(endpoint: string, token: string, queryJSON: string): Promise<string> {
   const url = new URL(normalizeFeedbackEndpoint(endpoint));
-  url.pathname = '/api/scene-status';
-  const query = parseFeedbackStatusQuery(JSON.parse(queryJSON));
+  const input=JSON.parse(queryJSON);
+  const history=input?.type==='history';
+  url.pathname = history?'/api/scene-feedback-history':'/api/scene-status';
+  const query = history?parseFeedbackHistoryQuery(input):parseFeedbackStatusQuery(input);
   if (!token.trim() || token.length > 256) throw Error('Invalid feedback invitation');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12000);

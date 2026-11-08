@@ -2,12 +2,14 @@ import type { TestFeedbackHost } from '@wbr/runtime';
 import { sha256 } from '@wbr/content';
 import { FEEDBACK_MAX_MESSAGE_LENGTH, normalizeFeedbackEndpoint, parseFeedbackReceipt, parseFeedbackReport,
   parseFeedbackTeamStatus, parseFeedbackStatusQuery,
+  parseFeedbackHistoryQuery,parseFeedbackHistoryPage,type FeedbackHistoryPage,
   type FeedbackConnection, type FeedbackReceipt, type FeedbackReport, type FeedbackTeamStatus, type FeedbackSceneIdentity } from '@wbr/shared/test-feedback';
 
 export type TestFeedbackError = 'read' | 'write' | 'send' | 'receipt' | 'connection' | 'full' | 'invalid';
 export const DEFAULT_TEST_FEEDBACK_ENDPOINT = 'https://feedback.heliosoft.win/api/feedback';
 export type FeedbackStatusCache = { targetKey: string; data: FeedbackTeamStatus; fetchedAt: string };
-const targetKey = (value: FeedbackConnection) => sha256(new TextEncoder().encode(JSON.stringify([value.endpoint, value.token])).buffer);
+export const feedbackConnectionKey = (value: FeedbackConnection) => sha256(new TextEncoder().encode(JSON.stringify([value.endpoint, value.token])).buffer);
+const targetKey=feedbackConnectionKey;
 type SavedFeedback = {
   version: 1;
   connection: FeedbackConnection;
@@ -85,6 +87,7 @@ export function createTestFeedbackClient(host: TestFeedbackHost, options: { retr
   let retryTimer: ReturnType<typeof setTimeout> | undefined;
   let acknowledging: { report: FeedbackReport; previous: SavedFeedback } | undefined;
   let statusGeneration = 0;
+  let historyGeneration=0;
   let statusRequest: { key: string; promise: Promise<void> } | undefined;
   const listeners = new Set<() => void>();
   const publish = (patch: Partial<TestFeedbackSnapshot> = {}) => {
@@ -224,6 +227,20 @@ export function createTestFeedbackClient(host: TestFeedbackHost, options: { retr
       } catch { throw Error('receipt'); }
     } finally { if (timeout !== undefined) clearTimeout(timeout); }
   }
+
+  async function readHistory(sceneId:string,cursor?:string):Promise<FeedbackHistoryPage> {
+    if(!active||disposed||!await load()||!host.readStatus)throw Error('History unavailable');
+    const target={...saved.connection},identity=targetKey(target),generation=historyGeneration;
+    if(!target.endpoint||!target.token)throw Error('History invitation required');
+    const query=parseFeedbackHistoryQuery({schemaVersion:1,type:'history',sceneId,...(cursor?{cursor}:{})});
+    let timer:ReturnType<typeof setTimeout>|undefined;
+    try{
+      const raw=await Promise.race([Promise.resolve().then(()=>host.readStatus!(target.endpoint,target.token,JSON.stringify(query))),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error('History timeout')),options.sendTimeoutMs??15000)})]);
+      const page=parseFeedbackHistoryPage(JSON.parse(raw));
+      if(page.sceneId!==sceneId||cursor&&page.nextCursor===cursor||disposed||!active||generation!==historyGeneration||identity!==targetKey(saved.connection))throw Error('History reply no longer matches');
+      return page;
+    }finally{if(timer!==undefined)clearTimeout(timer)}
+  }
   async function runFlush() {
     if (!active || disposed || !(await load())) return;
     cancelRetry();
@@ -311,7 +328,7 @@ export function createTestFeedbackClient(host: TestFeedbackHost, options: { retr
       let normalized: FeedbackConnection;
       try { normalized = connection(value); } catch { publish({ error: 'connection' }); return false; }
       const changed = targetKey(saved.connection) !== targetKey(normalized);
-      if (changed) { statusGeneration++; publish({ teamStatusState: 'idle', teamStatusError: false }); }
+      if (changed) { statusGeneration++; historyGeneration++; publish({ teamStatusState: 'idle', teamStatusError: false }); }
       const success = await change({ ...saved, connection: normalized, ...(changed ? { teamStatus: undefined } : {}) });
       if (success) { retries = 0; cancelRetry(); void flush(); void refreshTeamStatus(); }
       return success;
@@ -329,12 +346,14 @@ export function createTestFeedbackClient(host: TestFeedbackHost, options: { retr
     },
     flush,
     refreshTeamStatus,
+    readHistory,
     setActive(value: boolean) {
+      if(active!==value)historyGeneration++;
       active = value;
       if (!active) { cancelRetry(); statusGeneration++; statusRequest = undefined; }
       else if (!disposed) { retries = 0; void flush(); void refreshTeamStatus(); }
     },
-    dispose() { disposed = true; active = false; statusGeneration++; cancelRetry(); listeners.clear(); },
+    dispose() { disposed = true; active = false; statusGeneration++; historyGeneration++; cancelRetry(); listeners.clear(); },
   };
 }
 export type TestFeedbackClient = ReturnType<typeof createTestFeedbackClient>;

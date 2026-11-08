@@ -12,6 +12,14 @@ export type FeedbackSceneStatus = FeedbackSceneIdentity & {
 };
 export type FeedbackTeamStatus = { schemaVersion: 1; generatedAt: string; scenes: FeedbackSceneStatus[] };
 export type FeedbackStatusQuery = { schemaVersion: 1; scenes: FeedbackSceneIdentity[] };
+export const FEEDBACK_HISTORY_PAGE_SIZE=20;
+export type FeedbackHistoryQuery={schemaVersion:1;type:'history';sceneId:string;cursor?:string};
+export type FeedbackHistoryItem={
+  id:string;createdAt:string;receivedAt:string;updatedAt:string;status:'new'|'triaged'|'fixed';message:string;
+  reportedStep:number;totalSteps:number;instruction?:string;revision:string;testingRevision?:string;
+  platform:'web'|'ios'|'android';appVersion:string;buildNumber:string;updateSourceCommit?:string;
+};
+export type FeedbackHistoryPage={schemaVersion:1;sceneId:string;generatedAt:string;items:FeedbackHistoryItem[];nextCursor?:string};
 export type FeedbackReport = {
   schemaVersion: 1;
   id: string;
@@ -126,4 +134,18 @@ export function parseFeedbackTeamStatus(value: unknown): FeedbackTeamStatus {
         (scene.latestFeedbackAt !== undefined && !timestamp(scene.latestFeedbackAt))) ||
       new Set(value.scenes.map(scene => scene.id)).size !== value.scenes.length) throw Error('Invalid feedback team status');
   return value as FeedbackTeamStatus;
+}
+
+const historyCursor=(value:unknown)=>typeof value==='string'&&/^[A-Za-z0-9_-]{1,512}$/.test(value);
+export function parseFeedbackHistoryQuery(value:unknown):FeedbackHistoryQuery {
+  if(!record(value)||!exactKeys(value,['schemaVersion','type','sceneId'],['cursor'])||value.schemaVersion!==1||value.type!=='history'||!sceneId(value.sceneId)||(value.cursor!==undefined&&!historyCursor(value.cursor)))throw Error('Invalid feedback history query');
+  return value as FeedbackHistoryQuery;
+}
+export function parseFeedbackHistoryPage(value:unknown):FeedbackHistoryPage {
+  if(!record(value)||!exactKeys(value,['schemaVersion','sceneId','generatedAt','items'],['nextCursor'])||value.schemaVersion!==1||!sceneId(value.sceneId)||!timestamp(value.generatedAt)||!Array.isArray(value.items)||value.items.length>FEEDBACK_HISTORY_PAGE_SIZE||(value.nextCursor!==undefined&&!historyCursor(value.nextCursor)))throw Error('Invalid feedback history page');
+  for(const item of value.items){
+    if(!record(item)||!exactKeys(item,['id','createdAt','receivedAt','updatedAt','status','message','reportedStep','totalSteps','revision','platform','appVersion','buildNumber'],['instruction','testingRevision','updateSourceCommit'])||!feedbackId(item.id)||![item.createdAt,item.receivedAt,item.updatedAt].every(timestamp)||typeof item.status!=='string'||!['new','triaged','fixed'].includes(item.status)||!bounded(item.message,1,FEEDBACK_MAX_MESSAGE_LENGTH)||!item.message.trim()||!integer(item.totalSteps,1,1000)||!integer(item.reportedStep,1,item.totalSteps)||!bounded(item.revision,1,150)||typeof item.platform!=='string'||!['web','ios','android'].includes(item.platform)||!bounded(item.appVersion,1,100)||!bounded(item.buildNumber,1,100)||(item.instruction!==undefined&&!bounded(item.instruction,0,1000))||(item.testingRevision!==undefined&&!hash(item.testingRevision))||(item.updateSourceCommit!==undefined&&(typeof item.updateSourceCommit!=='string'||!/^[a-f\d]{40}$/.test(item.updateSourceCommit))))throw Error('Invalid feedback history item');
+  }
+  if(new Set(value.items.map(item=>item.id)).size!==value.items.length)throw Error('Duplicate feedback history item');
+  return value as FeedbackHistoryPage;
 }

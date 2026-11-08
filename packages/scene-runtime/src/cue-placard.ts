@@ -1,4 +1,7 @@
 import * as THREE from 'three'
+import { Line2 } from 'three/addons/lines/Line2.js'
+import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 import { graphemes } from '@wbr/i18n/text'
 import { animate } from 'animejs'
 import { applyCueGlass, type CueBackdrop } from './cue-backdrop'
@@ -36,11 +39,13 @@ export function createCuePlacard(parent: THREE.Group, backdrop?: CueBackdrop) {
   // its geometry nor invalidate Three's shared Sprite quad used by other scenes.
   board.geometry = board.geometry.clone()
   board.name = 'interaction-cue-placard'; board.layers.set(CUE_LAYER); board.renderOrder = 1001
-  const geometry = new THREE.BufferGeometry()
-  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3))
-  const lineMaterial = new THREE.LineBasicMaterial({ color: 0x648b7b, transparent: true, opacity: .44,
+  const geometry = new LineGeometry().setPositions([0, 0, 0, 0, 0, 0])
+  // Native WebGL lines stay one physical pixel wide. Use a screen-space stroke
+  // so the connector stays readable on high-density mobile displays too.
+  const lineOpacity = .8
+  const lineMaterial = new LineMaterial({ color: 0x527b68, linewidth: 2.5, worldUnits: false, transparent: true, opacity: lineOpacity,
     depthTest: false, depthWrite: false, toneMapped: false, fog: false })
-  const leader = new THREE.Line(geometry, lineMaterial)
+  const leader = new Line2(geometry, lineMaterial)
   leader.name = 'interaction-cue-leader'; leader.layers.set(CUE_LAYER); leader.renderOrder = 1000
   board.frustumCulled = leader.frustumCulled = false
   board.raycast = leader.raycast = () => {}
@@ -70,7 +75,8 @@ export function createCuePlacard(parent: THREE.Group, backdrop?: CueBackdrop) {
         else { transition.cancel(); transition = undefined; reveal.value = reveal.fade = reveal.leader = reveal.point = 0; reveal.lift = -3; releaseRetiring() }
       }
     }
-    material.opacity = reveal.value * reveal.fade; lineMaterial.opacity = .44 * Math.min(1, reveal.leader * 5)
+    material.opacity = reveal.value * reveal.fade; lineMaterial.opacity = lineOpacity * Math.min(1, reveal.leader * 5)
+    leader.visible = reveal.leader > .001
   }
   const at = new THREE.Vector3(), across = new THREE.Vector3(), above = new THREE.Vector3()
   function world(x: number, y: number, z: number, view: { width: number; height: number }, camera: THREE.Camera, out: THREE.Vector3) {
@@ -90,8 +96,9 @@ export function createCuePlacard(parent: THREE.Group, backdrop?: CueBackdrop) {
     const edgeY = Math.max(y + 6, Math.min(y + box.height - 6, from.y))
     world(edgeX, edgeY, from.z, view, camera, at)
     world(from.x, from.y, from.z, view, camera, across).lerp(at, 1 - reveal.leader)
-    const positions = geometry.getAttribute('position') as THREE.BufferAttribute
-    positions.setXYZ(0, at.x, at.y, at.z); positions.setXYZ(1, across.x, across.y, across.z); positions.needsUpdate = true
+    const start = geometry.getAttribute('instanceStart') as THREE.InterleavedBufferAttribute
+    const end = geometry.getAttribute('instanceEnd') as THREE.InterleavedBufferAttribute
+    start.setXYZ(0, at.x, at.y, at.z); end.setXYZ(0, across.x, across.y, across.z); start.needsUpdate = true
   }
   return {
     get animating() { return !!transition },

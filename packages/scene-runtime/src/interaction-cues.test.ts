@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import * as THREE from 'three'
+import type { Line2 } from 'three/addons/lines/Line2.js'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { addInteractionCue, createInteractionCues } from './interaction-cues'
 import { bindSceneMotion } from './scene-motion'
@@ -23,11 +24,13 @@ function mount(motion?: { active: boolean; reducedMotion: boolean }, redraw: () 
   const update=()=>{scene.updateMatrixWorld(true); cues.update()}; update()
   return {host,hit,canvas,scene,camera,source,target,cues,update,remove,disable:()=>{enabled=false},enable:()=>{enabled=true}}
 }
+const lineStart = (line: Line2) => new THREE.Vector3().fromBufferAttribute(line.geometry.getAttribute('instanceStart'), 0)
+const lineEnd = (line: Line2) => new THREE.Vector3().fromBufferAttribute(line.geometry.getAttribute('instanceEnd'), 0)
 it('draws the connector toward the exact touch point before revealing that point',()=>{
   const clock=vi.spyOn(performance,'now').mockReturnValue(0),s=mount({active:true,reducedMotion:false})
-  const line=s.scene.getObjectByName('interaction-cue-leader') as THREE.Line
+  const line=s.scene.getObjectByName('interaction-cue-leader') as Line2
   const point=s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!
-  const length=()=>{const p=line.geometry.getAttribute('position');return new THREE.Vector3().fromBufferAttribute(p,0).distanceTo(new THREE.Vector3().fromBufferAttribute(p,1))}
+  const length=()=>lineStart(line).distanceTo(lineEnd(line))
   expect(length()).toBeCloseTo(0)
   expect(Number(point.style.getPropertyValue('--cue-reveal'))).toBe(0)
   clock.mockReturnValue(200);s.update();const middleLength=length()
@@ -38,7 +41,7 @@ it('draws the connector toward the exact touch point before revealing that point
   clock.mockReturnValue(700);s.update()
   expect(length()).toBeGreaterThan(middleLength)
   expect(Number(point.style.getPropertyValue('--cue-reveal'))).toBe(1)
-  expect(new THREE.Vector3().fromBufferAttribute(line.geometry.getAttribute('position'),1).project(s.camera).x).toBeCloseTo(0)
+  expect(lineEnd(line).project(s.camera).x).toBeCloseTo(0)
 })
 it('fades the touch point and retracts its connector before releasing the departing group',()=>{
   const clock=vi.spyOn(performance,'now').mockReturnValue(0),s=mount({active:true,reducedMotion:false})
@@ -93,18 +96,17 @@ it('keeps a departing connector and touch point anchored while its object moves'
   const point=s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!
   expect(Number(point.dataset.x)).toBeCloseTo((projected.x+1)*160)
   expect(Number(point.dataset.y)).toBeCloseTo((1-projected.y)*200)
-  const line=s.scene.getObjectByName('interaction-cue-leader') as THREE.Line
+  const line=s.scene.getObjectByName('interaction-cue-leader') as Line2
   // The leader has not begun retracting at 30ms, so it still reaches the point.
-  const end=new THREE.Vector3().fromBufferAttribute(line.geometry.getAttribute('position'),1).project(s.camera)
+  const end=lineEnd(line).project(s.camera)
   expect(end.x).toBeCloseTo(projected.x);expect(end.y).toBeCloseTo(projected.y)
 })
 it('keeps the connector and point established while changing only the current instruction',()=>{
   const clock=vi.spyOn(performance,'now').mockReturnValue(0),s=mount({active:true,reducedMotion:false})
   clock.mockReturnValue(700);s.update()
-  const line=s.scene.getObjectByName('interaction-cue-leader') as THREE.Line
+  const line=s.scene.getObjectByName('interaction-cue-leader') as Line2
   s.source.userData.interactionCues[0].label='下一步，请继续';s.update()
-  const p=line.geometry.getAttribute('position')
-  expect(new THREE.Vector3().fromBufferAttribute(p,0).distanceTo(new THREE.Vector3().fromBufferAttribute(p,1))).toBeGreaterThan(0)
+  expect(lineStart(line).distanceTo(lineEnd(line))).toBeGreaterThan(0)
   expect(Number(s.host.querySelector<HTMLElement>('[data-cue-role="source"]')!.style.getPropertyValue('--cue-reveal'))).toBe(1)
 })
 it('preserves the visible text composite when exit interrupts a crossfade',()=>{
@@ -326,10 +328,10 @@ it('keeps cue coordinates on the canvas when its positioned host has a border',(
 it('puts the instruction in the Three scene and connects its leader to the actual moving white point',()=>{
   const s=mount()
   const board=s.scene.getObjectByName('interaction-cue-placard') as THREE.Sprite
-  const leader=s.scene.getObjectByName('interaction-cue-leader') as THREE.Line
-  expect(board?.isSprite).toBe(true); expect(leader?.isLine).toBe(true)
+  const leader=s.scene.getObjectByName('interaction-cue-leader') as Line2
+  expect(board?.isSprite).toBe(true); expect(leader?.isLine2).toBe(true)
   expect(board.layers.test(s.source.layers)).toBe(false)
-  const end=()=>new THREE.Vector3().fromBufferAttribute(leader.geometry.getAttribute('position'),1).project(s.camera)
+  const end=()=>lineEnd(leader).project(s.camera)
   expect(end().x).toBeCloseTo(0); expect(end().y).toBeCloseTo(0)
   s.source.position.set(-.4,.2,0); s.update()
   const projected=s.source.getWorldPosition(new THREE.Vector3()).project(s.camera)
@@ -341,7 +343,7 @@ it('keeps a long localized placard within the canvas and releases all of its GPU
   const s=mount(), cue=s.source.userData.interactionCues[0]
   cue.label='Déplacez délicatement le petit objet vers le repère indiqué'; s.source.position.set(.9,.9,0); s.update()
   const board=s.scene.getObjectByName('interaction-cue-placard') as THREE.Sprite
-  const leader=s.scene.getObjectByName('interaction-cue-leader') as THREE.Line
+  const leader=s.scene.getObjectByName('interaction-cue-leader') as Line2
   const center=board.position.clone().project(s.camera)
   const right=board.position.clone().add(new THREE.Vector3(board.scale.x/2,0,0)).project(s.camera)
   expect(center.x-(right.x-center.x)).toBeGreaterThanOrEqual(-1)

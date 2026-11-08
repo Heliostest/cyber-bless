@@ -4,6 +4,7 @@ import { lstat, readFile, realpath, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
+import { assertInternalUpdateMode, releaseUpdateEnvironment } from './internal-update-mode.mjs';
 
 const execute = promisify(execFile);
 const toolchainFields = ['node', 'npm', 'ruby', 'cocoapods', 'bundler', 'xcode', 'xcodeBuild', 'sdk', 'platform', 'arch', 'osVersion', 'osBuild'];
@@ -18,6 +19,7 @@ async function inputs(config) {
   const repo = config.repo;
   if (!repo || !path.isAbsolute(repo)) throw Error('Expected absolute release checkout path');
   const input = JSON.parse(await regularFile(path.join(repo, 'store/ios/release-input.json')));
+  assertInternalUpdateMode(input, config);
   if (!Number.isSafeInteger(input.buildNumber) || input.buildNumber < 1) throw Error('Tracked release build number is unallocated; check used numbers, commit the release input, and create a new tag');
   for (const field of ['version', 'buildNumber', 'bundleIdentifier', 'appId', 'appleTeamId']) {
     if (input[field] !== config[field]) throw Error('Tracked release input mismatch: ' + field);
@@ -43,6 +45,7 @@ function environment(config, gemfile) {
     DEVELOPER_DIR: config.developerDir, NODE_BINARY: nodeBinary,
     BUNDLE_GEMFILE: gemfile, BUNDLE_FROZEN: 'true', BUNDLE_IGNORE_CONFIG: 'true', BUNDLE_DISABLE_VERSION_CHECK: 'true',
     CI: '1', COCOAPODS_DISABLE_STATS: 'true', LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8',
+    ...releaseUpdateEnvironment(config),
     ...(process.env.TMPDIR ? { TMPDIR: process.env.TMPDIR } : {}),
   };
 }

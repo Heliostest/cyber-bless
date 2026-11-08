@@ -29,7 +29,7 @@ export function PublicScenePage({ url = window.location.href }: { url?: string }
     document.title = tr('朋友分享的仪式');
   }, [locale]);
   return <div className="public-scene-page">
-    <style>{fontStyles}</style>
+    <style>{fontStyles()}</style>
     {request ? <PublicSceneVisit key={url} request={request}/> : <div className="public-scene-invalid">
       <h1>{tr('这个场景暂时无法打开')}</h1>
       <p>{tr('请检查分享链接，或前往 App Store 查看应用。')}</p>
@@ -143,8 +143,8 @@ function PublicSceneVisit({ request }: { request: ShareRequest }) {
     io: {
       readHistory: async () => undefined, writeHistory: async () => {},
       readManifest: async () => bundledWoodfish, readCachedAsset: async () => undefined,
-      readAsset: async (_asset, assetURL, signal) => {
-        const response = await fetch(assetURL, { signal, credentials: 'omit' });
+      readAsset: async (asset, _assetURL, signal) => {
+        const response = await fetch(assetUrl(asset.path), { signal, credentials: 'omit' });
         if (!response.ok) throw Error('Scene asset unavailable');
         return response.arrayBuffer();
       },

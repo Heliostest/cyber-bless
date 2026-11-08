@@ -1,9 +1,12 @@
 const { getDefaultConfig } = require("expo/metro-config");
 const path = require("path");
 const { createDomBootstrapMiddleware } = require("../../scripts/expo-dom-bootstrap.cjs");
+const { withDomExportCompatibility } = require("../../scripts/expo-dom-export.cjs");
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, "../..");
 const config = getDefaultConfig(projectRoot);
+config.resolver.assetExts = [...new Set([...config.resolver.assetExts, 'glb', 'hdr', 'woff2', 'bin'])];
+config.serializer.customSerializer = withDomExportCompatibility(config.serializer.customSerializer);
 if (process.env.WBR_METRO_CACHE) {
   const { FileStore } = require('metro-cache');
   config.cacheStores = [new FileStore({ root: process.env.WBR_METRO_CACHE })];

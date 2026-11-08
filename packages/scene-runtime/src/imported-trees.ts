@@ -8,7 +8,7 @@ import { softenTreeFoliage } from './tree-foliage';
 import { applyKomorebiTreeWind } from './komorebi-tree-wind';
 import { adaptKomorebiModel } from './komorebi-surface';
 
-declare const process: { env: { EXPO_BASE_URL?: string } };
+import { assetUrl } from './asset-urls';
 type Options = { load?: (url: string) => Promise<THREE.Group>; onChange?: (report: TreeRenderReport) => void; invalidate?: () => void; recommendation?: TreeSpecies; camera?: THREE.Camera };
 
 function resources(objects: THREE.Object3D[]) {
@@ -103,13 +103,12 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
       }
       status = 'loading'; report();
       const variants = [...new Set(placements.map((item, index) => item.variant ?? (index % 2 ? 'round' : 'cluster')))];
-      const base = (process.env.EXPO_BASE_URL || '/').replace(/\/$/, '');
       const request: Request = { cancelled: false, owned: new Map() }; pending = request;
       const next: typeof batches = [];
       try {
         const loading = new Map<string, Promise<THREE.Group>>();
         const loaded = await Promise.all(variants.map(variant => {
-          const url = `${base}/environments/trees/${models[variant]}`;
+          const url = assetUrl(`environments/trees/${models[variant]}`);
           if (!loading.has(url)) loading.set(url, load(url).then(model => {
             if (method === 'komorebi') adaptKomorebiModel(model);
             const dispose = resources([model]);

@@ -4,6 +4,7 @@ import {
   BackHandler,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -11,6 +12,7 @@ import {
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Updates from 'expo-updates';
 import * as Haptics from "expo-haptics";
 import * as Linking from 'expo-linking';
 import { getLocales, getCalendars } from 'expo-localization';
@@ -26,7 +28,12 @@ import { shareLink } from './share-link';
 import { readUiSound } from './ui-sound';
 import { detectInternalToolsEnabled } from './internal-tools';
 import { INTERNAL_TOOLS_ENABLED } from '@wbr/app/internal-tools-config';
-import { readTestFeedback, writeTestFeedback, submitTestFeedback, fetchTestFeedbackStatus, testFeedbackInfo } from './test-feedback';
+import { readTestFeedback, writeTestFeedback, flushTestFeedbackWrites, submitTestFeedback, fetchTestFeedbackStatus, testFeedbackInfo } from './test-feedback';
+import {createNativeUpdateHost} from './internal-updates';
+import {resolveBundledAssetUris} from './bundled-assets';
+import type {InternalUpdateAction} from '@wbr/runtime';
+import {InternalUpdateRecovery} from './InternalUpdateRecovery';
+import {watchDomReadiness} from './dom-readiness';
 import {
   readContentHistory,
   readSceneAsset,
@@ -62,6 +69,7 @@ export default function App() {
 }
 function Shell() {
   const [active, setActive] = useState(AppState.currentState === "active");
+  const activeRef=useRef(active);activeRef.current=active;
   const [internalToolsEnabled, setInternalToolsEnabled] = useState(INTERNAL_TOOLS_ENABLED);
   const [feedbackInfo, setFeedbackInfo] = useState<TestFeedbackInfo>({ platform: Platform.OS === 'ios' ? 'ios' : 'android', appVersion: 'unknown', buildNumber: 'unknown', osVersion: String(Platform.Version) });
   useEffect(() => { let disposed = false; void testFeedbackInfo().then(info => { if (!disposed) setFeedbackInfo(info); }); return () => { disposed = true; }; }, []);
@@ -73,6 +81,11 @@ function Shell() {
   }, [active]);
   const [backRequest, setBackRequest] = useState(0);
   const [generation, setGeneration] = useState(0);
+  const domGeneration=useRef(0);
+  const [domHealthy,setDomHealthy]=useState(false);
+  const [nativeApplying,setNativeApplying]=useState(false);
+  const applyingRef=useRef(false);
+  const [assetMap,setAssetMap]=useState<Record<string,string>|null>(__DEV__||Platform.OS==='web'?{}:null);
   const [failed, setFailed] = useState(false);
   const [languages, setLanguages] = useState(preferredLanguages);
   const [hour12, setHour12] = useState(preferredHour12);
@@ -80,12 +93,38 @@ function Shell() {
   const [ready, setReady] = useState(false);
   const initialRead = useRef<Promise<string | null> | null>(null);
   const canGoBack = useRef(false);
+  const fail=useCallback((session:number)=>{
+    if(session!==domGeneration.current)return;
+    void resetSceneCacheSession().catch(()=>{});
+    canGoBack.current=false;setFailed(true);
+  },[]);
+  const onDomReady=useCallback(async(session:number)=>{if(session===domGeneration.current)setDomHealthy(true)},[]);
+  const onDomFailure=useCallback(async(session:number)=>{fail(session)},[fail]);
   const [navigationRequests, setNavigationRequests] = useState<WidgetNavigationRequest[]>([]);
   const nextRequest = useRef(0);
   const [storage] = useState(() => createProjectedStorage({
     read: () => AsyncStorage.getItem(SAVE_KEY),
     write: (raw) => AsyncStorage.setItem(SAVE_KEY, raw),
   }, synchronizeWidgets, () => console.warn('[Widgets] Cache update failed; retrying on the next foreground refresh.')));
+  const [updateHost]=useState(()=>createNativeUpdateHost({isActive:()=>activeRef.current,flushWrites:async()=>{await storage.flushWrites();await flushTestFeedbackWrites();await storage.flushProjection()}}));
+  const updates=Updates.useUpdates();
+  useEffect(()=>{updateHost.updateProgress(updates.downloadProgress??0)},[updateHost,updates.downloadProgress]);
+  const requestInternalUpdate=useCallback(async(action:InternalUpdateAction)=>{
+    if(action==='apply'){applyingRef.current=true;setNativeApplying(true)}
+    try{const result=await updateHost.request(action);if(action==='apply'&&result.phase!=='applying'){applyingRef.current=false;setNativeApplying(false)}return result}
+    catch(error){if(action==='apply'){applyingRef.current=false;setNativeApplying(false)}throw error}
+  },[updateHost]);
+  const [recoveryHost]=useState(()=>({request:requestInternalUpdate}));
+  useEffect(()=>{
+    if(__DEV__||!active||!ready||assetMap===null||failed||domHealthy)return;
+    return watchDomReadiness(()=>fail(generation));
+  },[active,ready,assetMap,failed,domHealthy,generation,fail]);
+  useEffect(()=>{
+    if(assetMap!==null)return;
+    let disposed=false;
+    void resolveBundledAssetUris().then(map=>{if(!disposed)setAssetMap(map)}).catch(()=>{if(!disposed)fail(generation)});
+    return()=>{disposed=true};
+  },[assetMap,generation]);
   const readSave = useCallback(async () => {
     const pending = initialRead.current ?? storage.read();
     initialRead.current = null;
@@ -164,11 +203,6 @@ function Shell() {
       clearInterval(timer);
     };
   }, [storage]);
-  const fail = () => {
-    void resetSceneCacheSession().catch(() => {});
-    canGoBack.current = false;
-    setFailed(true);
-  };
   const resolved = resolveLocale(preference, languages).locale;
   const copy = nativeCopy.native[resolved];
   return (
@@ -176,8 +210,13 @@ function Shell() {
       <SafeAreaBackground />
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
-      {ready && <BlessingDom
+      {ready && assetMap!==null && !failed && <BlessingDom
         key={generation}
+        domSession={generation}
+        onDomReady={onDomReady}
+        onDomFailure={onDomFailure}
+        assetMap={assetMap}
+        requestInternalUpdate={requestInternalUpdate}
         readSave={readSave}
         readContentHistory={readContentHistory}
         readSceneAsset={readSceneAsset}
@@ -226,26 +265,29 @@ function Shell() {
           contentInsetAdjustmentBehavior: "never",
           bounces: false,
           keyboardDisplayRequiresUserAction: true,
-          onError: fail,
-          onContentProcessDidTerminate: fail,
-          ...(Platform.OS === "android" ? { onRenderProcessGone: fail } : {}),
+          onError: ()=>fail(generation),
+          onContentProcessDidTerminate: ()=>fail(generation),
+          ...(Platform.OS === "android" ? { onRenderProcessGone: ()=>fail(generation) } : {}),
         }}
       />}
       {failed && (
-        <View style={styles.failure} accessibilityRole="alert">
+        <ScrollView style={styles.failure} contentContainerStyle={styles.failureContent} accessibilityRole="alert">
           <Text style={styles.message}>
             {copy['native.failure.message']}
           </Text>
           <Pressable
             style={styles.retry}
+            disabled={nativeApplying}
             onPress={() => {
+              if(applyingRef.current)return;
+              domGeneration.current++;setGeneration(domGeneration.current);setDomHealthy(false);
               setFailed(false);
-              setGeneration((n) => n + 1);
             }}
           >
             <Text style={styles.retryLabel}>{copy['native.failure.retry']}</Text>
           </Pressable>
-        </View>
+          {internalToolsEnabled&&Updates.isEnabled&&<InternalUpdateRecovery host={recoveryHost} copy={copy}/>}
+        </ScrollView>
       )}
     </SafeAreaView>
     </View>
@@ -260,6 +302,9 @@ const styles = StyleSheet.create({
   failure: {
     ...StyleSheet.absoluteFill,
     backgroundColor: "#fbf3dc",
+  },
+  failureContent: {
+    flexGrow:1,
     justifyContent: "center",
     alignItems: "center",
     padding: 30,

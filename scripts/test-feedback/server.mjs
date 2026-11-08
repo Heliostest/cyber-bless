@@ -2,7 +2,7 @@ import http from 'node:http';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { mkdir, open, readFile, readdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
-import { FEEDBACK_MAX_BYTES, normalizeFeedbackEndpoint, parseFeedbackReport, parseFeedbackStatusQuery } from '../../packages/shared/src/test-feedback.ts';
+import { FEEDBACK_MAX_BYTES, FEEDBACK_HISTORY_PAGE_SIZE, normalizeFeedbackEndpoint, parseFeedbackReport, parseFeedbackStatusQuery,parseFeedbackHistoryQuery,parseFeedbackHistoryPage } from '../../packages/shared/src/test-feedback.ts';
 import { dashboardHTML } from './dashboard.mjs';
 import { validateInvitations } from './invitations.mjs';
 
@@ -29,6 +29,28 @@ export function aggregateFeedbackStatus(entries, rawQuery) {
     return { ...identity, state: currentOpen ? 'reported' : verified ? 'verified' : history.length ? 'retest' : 'unreported',
       issueCount: issues.length, openIssueCount: open.length, reviewToken, ...(latestFeedbackAt ? { latestFeedbackAt } : {}) };
   }) };
+}
+
+/** Only issue text and its retest context leave the local dashboard. */
+export function aggregateFeedbackHistory(entries,rawQuery) {
+  const query=parseFeedbackHistoryQuery(rawQuery);
+  let cursor;
+  if(query.cursor){
+    try{
+      const decoded=Buffer.from(query.cursor,'base64url');
+      cursor=JSON.parse(decoded.toString('utf8'));
+      if(decoded.toString('base64url')!==query.cursor||!Array.isArray(cursor)||cursor.length!==3||cursor[0]!==query.sceneId||typeof cursor[1]!=='string'||!Number.isFinite(Date.parse(cursor[1]))||typeof cursor[2]!=='string'||!/^[A-Za-z0-9][A-Za-z0-9_-]{7,99}$/.test(cursor[2]))throw Error();
+    }catch{throw failure(400,'Invalid scene history cursor')}
+  }
+  const issues=entries.filter(entry=>entry.report.scene.id===query.sceneId&&entry.report.result!=='pass')
+    .sort((a,b)=>Date.parse(b.receivedAt)-Date.parse(a.receivedAt)||(a.report.id<b.report.id?1:a.report.id>b.report.id?-1:0))
+    .filter(entry=>!cursor||Date.parse(entry.receivedAt)<Date.parse(cursor[1])||Date.parse(entry.receivedAt)===Date.parse(cursor[1])&&entry.report.id<cursor[2]);
+  const selected=issues.slice(0,FEEDBACK_HISTORY_PAGE_SIZE);
+  const items=selected.map(({report,receivedAt,updatedAt,status})=>({id:report.id,createdAt:report.createdAt,receivedAt,updatedAt:updatedAt??receivedAt,status,message:report.message,
+    reportedStep:report.context.reportedStep,totalSteps:report.context.totalSteps,...(report.context.instruction?{instruction:report.context.instruction}:{}),revision:report.scene.revision,...(report.scene.testingRevision?{testingRevision:report.scene.testingRevision}:{}),
+    platform:report.client.platform,appVersion:report.client.appVersion,buildNumber:report.client.buildNumber,...(report.client.updateSourceCommit?{updateSourceCommit:report.client.updateSourceCommit}:{})}));
+  const last=selected.at(-1);
+  return parseFeedbackHistoryPage({schemaVersion:1,sceneId:query.sceneId,generatedAt:new Date().toISOString(),items,...(issues.length>selected.length&&last?{nextCursor:Buffer.from(JSON.stringify([query.sceneId,last.receivedAt,last.report.id])).toString('base64url')}:{})});
 }
 
 /** The receiving file is synced before acknowledgment. Temporary files never look like receipts. */
@@ -140,26 +162,33 @@ function markdownExport(entries) {
 }
 
 /** Only submitServer is exposed by cloudflared. It offers writes and narrow authenticated aggregates, never raw reports. */
-export async function startFeedbackServers({ inbox, token, invitations = [], submitPort = 4318, adminPort = 4319, runtimeFile, limitPerMinute = 200 }) {
+export async function startFeedbackServers({ inbox, token, invitations = [], submitPort = 4318, adminPort = 4319, runtimeFile, limitPerMinute = 200, internalUpdates, updatePreparation }) {
   if (typeof token !== 'string' || token.length < 24 || token.length > 256) throw Error('A strong feedback token is required');
   const namedInvitations = validateInvitations(invitations).map(invitation => ({ ...invitation }));
   if (namedInvitations.some(invitation => invitation.token === token)) throw Error('Named invitations must differ from the shared invitation');
   if (submitPort !== 0 && submitPort === adminPort) throw Error('Submission and admin require different ports');
   const store = createFeedbackStore(inbox);
+  const invitationFor=provided=>validToken(provided,token)?{id:'shared',label:'共用邀请码'}:namedInvitations.find(candidate=>validToken(provided,candidate.token));
   let windowStart = Date.now(), count = 0;
   const submitServer = http.createServer(async (req, res) => {
     try {
       const pathname = new URL(req.url, 'http://localhost').pathname;
-      if (req.method === 'OPTIONS' && ['/api/feedback', '/api/scene-status'].includes(pathname)) { res.writeHead(204, cors); res.end(); return; }
+      if (req.method === 'OPTIONS' && ['/api/feedback', '/api/scene-status','/api/scene-feedback-history'].includes(pathname)) { res.writeHead(204, cors); res.end(); return; }
       if (req.method === 'GET' && pathname === '/health') { json(res, 200, { ok: true }); return; }
-      if (req.method !== 'POST' || !['/api/feedback', '/api/scene-status'].includes(pathname)) throw failure(404, 'Not found');
+      if(internalUpdates&&await internalUpdates.handlePublic(req,res,{authorized:!!invitationFor(req.headers['x-feedback-token'])}))return;
+      if (req.method !== 'POST' || !['/api/feedback', '/api/scene-status','/api/scene-feedback-history'].includes(pathname)) throw failure(404, 'Not found');
       const provided = req.headers['x-feedback-token'];
-      const invitation = validToken(provided, token) ? { id: 'shared', label: '共用邀请码' }
-        : namedInvitations.find(candidate => validToken(provided, candidate.token));
+      const invitation = invitationFor(provided);
       if (!invitation) throw failure(401, 'Invalid test invitation');
       if (Date.now() - windowStart >= 60000) { windowStart = Date.now(); count = 0; }
       if (++count > limitPerMinute) throw failure(429, 'Too many reports; retry later');
       const body = await jsonBody(req);
+      if(pathname==='/api/scene-feedback-history'){
+        let query;try{query=parseFeedbackHistoryQuery(body)}catch{throw failure(400,'Invalid feedback history query')}
+        const {entries,invalidFiles}=await store.list();
+        if(invalidFiles.length)throw failure(503,'Scene history is incomplete; retained reports need inspection');
+        json(res,200,aggregateFeedbackHistory(entries,query),cors);return;
+      }
       if (pathname === '/api/scene-status') {
         let query;
         try { query = parseFeedbackStatusQuery(body); } catch { throw failure(400, 'Invalid scene status query'); }
@@ -183,6 +212,15 @@ export async function startFeedbackServers({ inbox, token, invitations = [], sub
       const origin = req.headers.origin;
       if (origin && !allowedHosts.some(h => origin === `http://${h}`)) throw failure(403, 'Local dashboard only');
       const url = new URL(req.url, `http://${host}`);
+      if(internalUpdates&&url.pathname.startsWith('/api/internal-updates')){
+        if(req.method!=='GET'&&req.headers['x-feedback-admin']!=='1')throw failure(403,'Dashboard action required');
+        if(updatePreparation&&url.pathname==='/api/internal-updates/prepare'){
+          if(req.method==='GET'){json(res,200,updatePreparation.get());return}
+          if(req.method!=='POST')throw failure(405,'Expected POST');
+          json(res,202,await updatePreparation.start(await jsonBody(req)));return;
+        }
+        if(await internalUpdates.handleAdmin(req,res))return;
+      }
       if (req.method === 'GET' && url.pathname === '/') {
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
           'Content-Security-Policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'" });

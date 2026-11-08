@@ -19,7 +19,7 @@ import { createKomorebiMeadow } from './komorebi-meadow';
 import type { GrassRenderMethod } from './debug-grass';
 import { createKomorebiSurface } from './komorebi-surface';
 
-declare const process: { env: { EXPO_BASE_URL?: string } };
+import { assetUrl } from './asset-urls';
 import { environmentProfiles } from './environment-profiles';
 
 type Part = { positions: number[]; normals: number[]; indices: number[]; color: number[] };
@@ -298,8 +298,7 @@ export function createCozyEnvironment(
     onChange: report => { toneDirty = true; onTrees?.(report); }, invalidate, recommendation: treeRecommendation, camera });
   root.add(treeRendering.root);
   const file = night ? "kloppenheim-02-night-1k.hdr" : "kloppenheim-06-sky-1k.hdr";
-  const base = process.env.EXPO_BASE_URL || "/";
-  const skyReady = loadSky(`${base.replace(/\/$/, "")}/environments/${file}`)
+  const skyReady = loadSky(assetUrl(`environments/${file}`))
     .then(texture => {
       if (disposed) { texture.dispose(); return; }
       sky = texture;

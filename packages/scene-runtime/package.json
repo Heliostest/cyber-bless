@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./render-style": "./src/render-style.ts",
+    "./asset-urls": "./src/asset-urls.ts",
     "./debug-render-style": "./src/debug-render-style.ts",
     "./debug-styles": "./src/debug-styles.ts",
     "./debug-water": "./src/debug-water.ts",

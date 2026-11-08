@@ -7,5 +7,19 @@
   "native.widget.resizeDescription": "Touchez la carte pour ouvrir la scène du jour. Formats disponibles : 2×2, 4×2 ou 4×4.",
   "native.widget.invitation": "Ouvrez Un jour, une pensée pour découvrir le rituel du jour",
   "native.widget.subtitle": "Un peu de douceur pour aujourd'hui",
-  "native.widget.accessibility": "{date}, {title}"
+  "native.widget.accessibility": "{date}, {title}",
+  "native.update.check": "Rechercher des mises à jour",
+  "native.update.download": "Télécharger la mise à jour",
+  "native.update.apply": "Appliquer et rouvrir",
+  "native.update.checking": "Recherche de mises à jour de test…",
+  "native.update.downloading": "Téléchargement et vérification de la mise à jour…",
+  "native.update.ready": "La mise à jour est prête à être appliquée ici.",
+  "native.update.latest": "Aucune mise à jour de réparation disponible. Contactez la personne responsable des tests.",
+  "native.update.invitation": "Saisissez d’abord une invitation de test valide dans les paramètres d’envoi des retours.",
+  "native.update.incompatible": "Cette réparation nécessite une nouvelle version de test de l’app.",
+  "native.update.network": "Impossible de récupérer la réparation. Vérifiez la connexion et réessayez.",
+  "native.update.missing": "Téléchargez et vérifiez d’abord la mise à jour disponible.",
+  "native.update.unsafe": "Revenez dans l’app et réessayez.",
+  "native.update.save": "Vos données ne sont pas enregistrées. La réparation n’a pas été appliquée.",
+  "native.update.reload": "La réparation n’a pas été appliquée. Réessayez."
 }

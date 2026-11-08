@@ -84,6 +84,7 @@ test('copies the tracked pod lock and installs with frozen bundle deployment', a
     assert.equal(options.env.LANG, 'en_US.UTF-8');
     assert.equal(options.env.LC_ALL, 'en_US.UTF-8');
     assert.equal(options.env.RUBYOPT, undefined);
+    assert.equal(options.env.EXPO_INTERNAL_UPDATES, '0');
     assert.equal(await readFile(path.join(options.cwd, 'Podfile.lock'), 'utf8'), lock);
     return { stdout: 'Pod installation complete!\n' };
   } });
@@ -114,4 +115,9 @@ test('propagates pod installation failure without a success receipt', async t =>
   }, /pod exited 1/);
   assert.equal(result, undefined);
   assert.deepEqual(await readdir(config.output), []);
+});
+
+test('dependency installation refuses an update mode that differs from the frozen release input', async t => {
+  const { config } = await fixture(t);
+  await assert.rejects(installLockedPods({ ...config, internalUpdates: true }, { run: () => { throw Error('Should not run'); } }), /internal.*update|mode/i);
 });

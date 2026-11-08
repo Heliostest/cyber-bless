@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import type { Action, State, ReturnMethod } from "@wbr/core";
 import type { CatalogEntry } from "@wbr/content/catalog";
-import type { HapticStrength, Host } from "@wbr/runtime";
+import type { HapticStrength, Host, InternalUpdateHost, InternalUpdateState } from "@wbr/runtime";
 import type { SoftSound } from "@wbr/shared";
 import type { RewardFlight, RewardArrival } from "./reward-flight";
 import type { UiSound, UiPlaybackResult } from './ui-sounds';
@@ -50,6 +50,8 @@ export type AppContext = {
   state: State;
   /** Enabled by the host for development or TestFlight, never by a saved preference. */
   internalToolsEnabled?: boolean;
+  internalUpdates?: InternalUpdateHost;
+  applyInternalUpdate?(): Promise<InternalUpdateState>;
   go(route: Route, options?: { sound?: 'navigate' | 'back' | false }): void;
   dispatch(a: Action): boolean;
   back(options?: { sound?: boolean }): void;

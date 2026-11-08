@@ -25,6 +25,7 @@
     "@wbr/app": "*",
     "@wbr/content": "*",
     "@wbr/core": "*",
+    "@wbr/i18n": "*",
     "@wbr/runtime": "*",
     "expo": "~57.0.31",
     "expo-asset": "~57.0.19",
@@ -36,14 +37,14 @@
     "expo-sharing": "~57.0.24",
     "expo-splash-screen": "~57.0.10",
     "expo-status-bar": "~57.0.1",
+    "expo-updates": "~57.0.26",
     "expo-widgets": "~57.0.23",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-web": "^0.21.2",
-    "react-native-webview": "13.16.1",
-    "@wbr/i18n": "*"
+    "react-native-webview": "13.16.1"
   },
   "devDependencies": {
     "@expo/ngrok": "npm:expo-cloudflared@^4.2.2",

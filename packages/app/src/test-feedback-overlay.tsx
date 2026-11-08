@@ -7,6 +7,8 @@ import { localizedTitle } from './localization';
 import { useTestFeedback } from './test-feedback-provider';
 import { sceneTestingRevisions } from './scene-testing-revisions.generated';
 import { currentSceneTestStatus, SCENE_TEST_COPY } from './scene-feedback-status';
+import {FeedbackHistoryPanel} from './feedback-history-panel';
+import {feedbackConnectionKey} from './test-feedback-client';
 
 type SceneFeedbackContext = FeedbackReport['context'];
 export const TEST_FEEDBACK_COPY = {
@@ -21,6 +23,7 @@ export const TEST_FEEDBACK_COPY = {
   queued: '已保存在本机，联网或更换地址后会自动重试。',
   newReport: '继续记录新问题', queueTitle: '查看待发送反馈',
   privacy: '仅发送这段描述、场景步骤和设备版本信息，不发送心愿或完整存档。',
+  sharedHistory:'已上传的问题描述可供内测人员复测核对。',
   readError: '反馈记录暂时无法读取，请保留当前输入并重试。',
   writeError: '尚未保存到本机，请保留页面并重试。',
   sendError: '上传未成功，反馈仍保存在本机。',
@@ -72,6 +75,11 @@ export function TestFeedbackOverlay({ entry, context, reducedMotion, onOpenChang
       buildNumber: feedback?.info?.buildNumber ?? 'unknown', locale: getFormatLocale(),
       width: window.innerWidth, height: window.innerHeight, pixelRatio: window.devicePixelRatio || 1,
       reducedMotion, ...(feedback?.info?.osVersion ? { osVersion: feedback.info.osVersion } : {}),
+      ...(feedback?.info?.updateId?{updateId:feedback.info.updateId}:{}),
+      ...(feedback?.info?.updateRuntimeVersion?{updateRuntimeVersion:feedback.info.updateRuntimeVersion}:{}),
+      ...(feedback?.info?.updateSourceCommit?{updateSourceCommit:feedback.info.updateSourceCommit}:{}),
+      ...(feedback?.info?.updateSourceTree?{updateSourceTree:feedback.info.updateSourceTree}:{}),
+      ...(typeof feedback?.info?.updateEmbedded==='boolean'?{updateEmbedded:feedback.info.updateEmbedded}:{}),
     },
   });
   const close = () => { setOpen(false); onOpenChange(false); trigger.current?.focus(); };
@@ -147,6 +155,7 @@ export function TestFeedbackOverlay({ entry, context, reducedMotion, onOpenChang
         <button type="button" className="text-button" disabled={!snapshot?.connection.endpoint || !snapshot?.connection.token || snapshot.teamStatusState === 'loading'} onClick={() => void feedback.client.refreshTeamStatus?.()}>{tr(SCENE_TEST_COPY.refresh)}</button>
       </div>
       {snapshot?.teamStatus && snapshot.teamStatusState !== 'fresh' && <p className="quiet">{tr(SCENE_TEST_COPY.cached)}</p>}
+      <FeedbackHistoryPanel key={`${entry.id}:${feedbackConnectionKey(snapshot?.connection??{endpoint:'',token:''})}`} sceneId={entry.id} currentRevision={sceneTestingRevisions[entry.id]??''} readHistory={feedback.client.readHistory} enabled={!!snapshot?.connection.endpoint&&!!snapshot?.connection.token} autoOpen={currentTeamStatus?.state==='retest'}/>
       <p>{tr(TEST_FEEDBACK_COPY.progress, { p0: draft.context.completedSteps, p1: draft.context.totalSteps })}</p>
       {draft.scene.testingRevision !== sceneTestingRevisions[entry.id] && <p className="quiet">{tr(SCENE_TEST_COPY.oldDraft)}</p>}
       <p className="quiet">{tr(TEST_FEEDBACK_COPY.intro)}</p>
@@ -189,6 +198,7 @@ export function TestFeedbackOverlay({ entry, context, reducedMotion, onOpenChang
         <button type="button" className="button secondary" disabled={!!snapshot.sending} onClick={() => void feedback.client.flush()}>{tr(TEST_FEEDBACK_COPY.retry)}</button>
       </details>}
       <p className="quiet test-feedback-privacy">{tr(TEST_FEEDBACK_COPY.privacy)}</p>
+      <p className="quiet test-feedback-privacy">{tr(TEST_FEEDBACK_COPY.sharedHistory)}</p>
     </dialog>}
   </div>;
 }

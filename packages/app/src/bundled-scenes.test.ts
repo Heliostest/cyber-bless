@@ -11,6 +11,7 @@ import { Context, type AppContext } from "./context";
 import { ContentContext, woodfishContent } from "./content";
 import { builtInScenes, SceneLibraryProvider, useOpenScene, useSceneLibrary } from "./scene-library";
 import { clickOn, renderUI, settle } from "./dom-test-utils";
+import { installNativeAssetMap } from '@wbr/scene-runtime/asset-urls';
 
 const runtime = vi.hoisted(() => ({ mounts: [] as { context?: { sceneId?: string; checkpoint?(n: number): void } }[] }));
 vi.mock("@wbr/scene-runtime", async original => ({
@@ -32,7 +33,7 @@ function contentIO(): ContentIO {
     writeHistory: vi.fn(async () => {}),
   };
 }
-afterEach(() => { document.body.replaceChildren(); runtime.mounts = []; vi.restoreAllMocks(); });
+afterEach(() => { document.body.replaceChildren(); runtime.mounts = []; vi.restoreAllMocks(); installNativeAssetMap({}); });
 
 describe("the app's bundled-only ritual library", () => {
   it("offers built-in entries immediately without reading an old remote catalog or cache", async () => {
@@ -121,5 +122,21 @@ describe("the app's bundled-only ritual library", () => {
     expect(ui.host.querySelector(".scene-load-error")).toBeNull();
     expect(io.readManifest).not.toHaveBeenCalled();
     ui.unmount();
+  });
+
+  it('loads the woodfish model from the installed update rather than its old public URL', async () => {
+    installNativeAssetMap({ [bundledWoodfish.model.path]: 'file:///updates/b/woodfish.glb' });
+    const bytes = await readFile(path.resolve(process.cwd(), '../../assets', bundledWoodfish.model.path));
+    const model = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    const io = contentIO();
+    io.readAsset = async (_asset, url) => {
+      if (url !== 'file:///updates/b/woodfish.glb') throw Error('Stale embedded URL');
+      return model;
+    };
+    const client = woodfishContent({ io });
+    const lease = await client.load(async () => 'updated model ready');
+    expect(lease.value).toBe('updated model ready');
+    installNativeAssetMap({ [bundledWoodfish.model.path]: 'file:///updates/c/woodfish.glb' });
+    expect(woodfishContent({ io })).not.toBe(client);
   });
 });

@@ -4,8 +4,10 @@ import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import path from 'node:path';
 import { assertReleaseLock, assertOfficialBuildRoot } from './release-lock.mjs';
+import { internalUpdatesEnabled, releaseUpdateEnvironment, inspectEvaluatedReleaseUpdateConfig } from './internal-update-mode.mjs';
 
 export function validateGitPreparation(config) {
+  internalUpdatesEnabled(config);
   if (config.sourceMode !== 'git-tag' || typeof config.sourceTag !== 'string' || !config.sourceTag) throw Error('Official releases require a pushed Git tag; worktree archives are no longer accepted');
   for (const field of ['sourceTagObject', 'sourceCommit', 'sourceTree']) if (!/^[a-f0-9]{40}$/.test(config[field] ?? '')) throw Error('Missing immutable tag/source identity: ' + field);
   if (!/^[a-f0-9]{64}$/.test(config.sourceIdentitySha256 ?? '')) throw Error('Missing source manifest identity');
@@ -41,7 +43,7 @@ export async function main(configFile) {
   const { resetNativeProject, captureNativeInputs } = await import('./native-inputs.mjs');
   const { prepareReleaseDsyms } = await import('./prepare-dsyms.mjs');
   const { manifest } = await assertReleaseSource(config, { entrypoint: import.meta.url, allowPrebuildChanges: true });
-  const identity = { ...sourceReceipt(manifest), ...Object.fromEntries(['version', 'buildNumber', 'bundleIdentifier', 'appId', 'appleTeamId'].map(key => [key, config[key]])) };
+  const identity = { ...sourceReceipt(manifest), ...Object.fromEntries(['version', 'buildNumber', 'bundleIdentifier', 'appId', 'appleTeamId'].map(key => [key, config[key]])), internalUpdates: internalUpdatesEnabled(config) };
   for (const file of ['source-post-prebuild.json', 'prepare-result.json']) {
     await unlink(path.join(output, file)).catch(error => { if (error.code !== 'ENOENT') throw error; });
   }
@@ -53,6 +55,7 @@ export async function main(configFile) {
     PATH: `${path.dirname(nodeBinary)}:${path.dirname(rubyBinary)}:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin`,
     DEVELOPER_DIR: developerDir, NODE_BINARY: nodeBinary,
     CI: '1', EXPO_NO_TELEMETRY: '1', EXPO_NO_DOTENV: '1', LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8',
+    ...releaseUpdateEnvironment(config),
     ...(process.env.TMPDIR ? { TMPDIR: process.env.TMPDIR } : {}),
   };
   async function run(command, args, log, cwd = repo, extraEnv = {}) {
@@ -68,6 +71,8 @@ export async function main(configFile) {
   await run(path.join(path.dirname(nodeBinary), 'npm'), ['ci', '--no-audit', '--no-fund'], 'npm-ci.log');
   await run(path.join(path.dirname(nodeBinary), 'npm'), ['run', 'i18n:verify'], 'i18n-verify-mac.log');
   await run(path.join(path.dirname(nodeBinary), 'npm'), ['run', 'assets:prepare', '-w', '@wbr/mobile'], 'assets-prepare.log');
+  const updateMode = await inspectEvaluatedReleaseUpdateConfig(config, { env });
+  await writeFile(path.join(output, 'expo-update-config.json'), JSON.stringify(updateMode, null, 2) + '\n', { mode: 0o600 });
   await resetNativeProject(repo);
   await run(nodeBinary, [path.join(repo, 'node_modules/expo/bin/cli'), 'prebuild', '--platform', 'ios', '--no-install'], 'expo-prebuild.log', path.join(repo, 'apps/mobile-expo'));
   const dependencies = await installLockedPods(config);

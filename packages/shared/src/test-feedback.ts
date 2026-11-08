@@ -12,6 +12,14 @@ export type FeedbackSceneStatus = FeedbackSceneIdentity & {
 };
 export type FeedbackTeamStatus = { schemaVersion: 1; generatedAt: string; scenes: FeedbackSceneStatus[] };
 export type FeedbackStatusQuery = { schemaVersion: 1; scenes: FeedbackSceneIdentity[] };
+export const FEEDBACK_HISTORY_PAGE_SIZE=20;
+export type FeedbackHistoryQuery={schemaVersion:1;type:'history';sceneId:string;cursor?:string};
+export type FeedbackHistoryItem={
+  id:string;createdAt:string;receivedAt:string;updatedAt:string;status:'new'|'triaged'|'fixed';message:string;
+  reportedStep:number;totalSteps:number;instruction?:string;revision:string;testingRevision?:string;
+  platform:'web'|'ios'|'android';appVersion:string;buildNumber:string;updateSourceCommit?:string;
+};
+export type FeedbackHistoryPage={schemaVersion:1;sceneId:string;generatedAt:string;items:FeedbackHistoryItem[];nextCursor?:string};
 export type FeedbackReport = {
   schemaVersion: 1;
   id: string;
@@ -40,6 +48,11 @@ export type FeedbackReport = {
     pixelRatio: number;
     reducedMotion: boolean;
     osVersion?: string;
+    updateId?: string;
+    updateRuntimeVersion?: string;
+    updateSourceCommit?: string;
+    updateSourceTree?: string;
+    updateEmbedded?: boolean;
   };
 };
 export const FEEDBACK_MAX_BYTES = 32 * 1024;
@@ -84,13 +97,17 @@ export function parseFeedbackReport(value: unknown): FeedbackReport {
       (context.variant !== undefined && !bounded(context.variant, 0, 200)) ||
       (context.strikes !== undefined && !integer(context.strikes, 0, 1000000))) throw Error('Invalid feedback step');
   if (!record(client) || !exactKeys(client,
-      ['platform', 'appVersion', 'buildNumber', 'locale', 'width', 'height', 'pixelRatio', 'reducedMotion'], ['osVersion']) ||
+    ['platform', 'appVersion', 'buildNumber', 'locale', 'width', 'height', 'pixelRatio', 'reducedMotion'], ['osVersion','updateId','updateRuntimeVersion','updateSourceCommit','updateSourceTree','updateEmbedded']) ||
       typeof client.platform !== 'string' || !['web', 'ios', 'android'].includes(client.platform) ||
       !bounded(client.appVersion, 1, 100) || !bounded(client.buildNumber, 1, 100) || !bounded(client.locale, 1, 50) ||
       !integer(client.width, 1, 32768) || !integer(client.height, 1, 32768) ||
       typeof client.pixelRatio !== 'number' || !Number.isFinite(client.pixelRatio) || client.pixelRatio < 0.25 || client.pixelRatio > 8 ||
       typeof client.reducedMotion !== 'boolean' ||
-      (client.osVersion !== undefined && !bounded(client.osVersion, 1, 100))) throw Error('Invalid feedback client');
+      (client.osVersion !== undefined && !bounded(client.osVersion, 1, 100)) ||
+      (client.updateId!==undefined&&(typeof client.updateId!=='string'||!/^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(client.updateId))) ||
+      (client.updateRuntimeVersion!==undefined&&!bounded(client.updateRuntimeVersion,1,200)) ||
+      ([client.updateSourceCommit,client.updateSourceTree].some(value=>value!==undefined&&(typeof value!=='string'||!/^[a-f\d]{40}$/.test(value)))) ||
+      (client.updateEmbedded!==undefined&&typeof client.updateEmbedded!=='boolean')) throw Error('Invalid feedback client');
   return value as FeedbackReport;
 }
 
@@ -117,4 +134,18 @@ export function parseFeedbackTeamStatus(value: unknown): FeedbackTeamStatus {
         (scene.latestFeedbackAt !== undefined && !timestamp(scene.latestFeedbackAt))) ||
       new Set(value.scenes.map(scene => scene.id)).size !== value.scenes.length) throw Error('Invalid feedback team status');
   return value as FeedbackTeamStatus;
+}
+
+const historyCursor=(value:unknown)=>typeof value==='string'&&/^[A-Za-z0-9_-]{1,512}$/.test(value);
+export function parseFeedbackHistoryQuery(value:unknown):FeedbackHistoryQuery {
+  if(!record(value)||!exactKeys(value,['schemaVersion','type','sceneId'],['cursor'])||value.schemaVersion!==1||value.type!=='history'||!sceneId(value.sceneId)||(value.cursor!==undefined&&!historyCursor(value.cursor)))throw Error('Invalid feedback history query');
+  return value as FeedbackHistoryQuery;
+}
+export function parseFeedbackHistoryPage(value:unknown):FeedbackHistoryPage {
+  if(!record(value)||!exactKeys(value,['schemaVersion','sceneId','generatedAt','items'],['nextCursor'])||value.schemaVersion!==1||!sceneId(value.sceneId)||!timestamp(value.generatedAt)||!Array.isArray(value.items)||value.items.length>FEEDBACK_HISTORY_PAGE_SIZE||(value.nextCursor!==undefined&&!historyCursor(value.nextCursor)))throw Error('Invalid feedback history page');
+  for(const item of value.items){
+    if(!record(item)||!exactKeys(item,['id','createdAt','receivedAt','updatedAt','status','message','reportedStep','totalSteps','revision','platform','appVersion','buildNumber'],['instruction','testingRevision','updateSourceCommit'])||!feedbackId(item.id)||![item.createdAt,item.receivedAt,item.updatedAt].every(timestamp)||typeof item.status!=='string'||!['new','triaged','fixed'].includes(item.status)||!bounded(item.message,1,FEEDBACK_MAX_MESSAGE_LENGTH)||!item.message.trim()||!integer(item.totalSteps,1,1000)||!integer(item.reportedStep,1,item.totalSteps)||!bounded(item.revision,1,150)||typeof item.platform!=='string'||!['web','ios','android'].includes(item.platform)||!bounded(item.appVersion,1,100)||!bounded(item.buildNumber,1,100)||(item.instruction!==undefined&&!bounded(item.instruction,0,1000))||(item.testingRevision!==undefined&&!hash(item.testingRevision))||(item.updateSourceCommit!==undefined&&(typeof item.updateSourceCommit!=='string'||!/^[a-f\d]{40}$/.test(item.updateSourceCommit))))throw Error('Invalid feedback history item');
+  }
+  if(new Set(value.items.map(item=>item.id)).size!==value.items.length)throw Error('Duplicate feedback history item');
+  return value as FeedbackHistoryPage;
 }

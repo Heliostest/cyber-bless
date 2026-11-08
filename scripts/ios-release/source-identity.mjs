@@ -5,6 +5,7 @@ import { lstat, readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify, isDeepStrictEqual } from 'node:util';
+import { assertInternalUpdateMode } from './internal-update-mode.mjs';
 
 const execute = promisify(execFile);
 const oidPattern = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
@@ -187,10 +188,12 @@ export async function assertReleaseSource(config, { entrypoint, allowPrebuildCha
   const releaseFile = 'store/ios/release-input.json';
   if (!manifest.files.some(file => file.path === releaseFile)) throw Error('Tagged release input is missing');
   const input = JSON.parse(await readFile(path.join(config.repo, releaseFile), 'utf8'));
+  assertInternalUpdateMode(input, config);
   for (const key of ['version', 'buildNumber', 'appId', 'bundleIdentifier', 'appleTeamId']) if (input[key] === undefined || input[key] !== config[key]) throw Error(`Machine configuration differs from tagged release input: ${key}`);
   if (requirePrepared) {
     const prepared = JSON.parse(await readFile(path.join(config.output, 'source-post-prebuild.json'), 'utf8'));
     assertSourceReceipt(prepared, manifest);
+    assertInternalUpdateMode(config, prepared);
     if (prepared.allBusinessSourceHashesVerified !== true) throw Error('Release source preparation has not been verified');
   }
   return { manifest, sourceIdentitySha256: manifest.sourceIdentitySha256 };

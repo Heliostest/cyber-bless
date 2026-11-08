@@ -90,6 +90,18 @@ test('accepts delivery evidence from the same tagged source and build', () => {
   assert.doesNotThrow(() => assertDeliveryReceipts(release, manifest, receipts));
 });
 
+test('delivery evidence cannot mix formal and internal update modes', () => {
+  for (const mode of [false, true]) {
+    const { release, manifest, receipts } = delivery(); release.internalUpdates = mode;
+    for (const receipt of Object.values(receipts)) receipt.internalUpdates = mode;
+    assert.doesNotThrow(() => assertDeliveryReceipts(release, manifest, receipts));
+    for (const kind of ['verified', 'prepared', 'report', 'offline']) {
+      const changed = { ...receipts, [kind]: { ...receipts[kind], internalUpdates: !mode } };
+      assert.throws(() => assertDeliveryReceipts(release, manifest, changed), /internal.*update|mode/i);
+    }
+  }
+});
+
 test('delivery rejects offline checks against different native compilation inputs', () => {
   const { release, manifest, receipts } = delivery();
   receipts.offline.nativeInputsSha256 = '8'.repeat(64);

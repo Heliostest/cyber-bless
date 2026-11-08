@@ -7,5 +7,19 @@
   "native.widget.resizeDescription": "カードをタップすると今日のシーンが開きます。2×2、4×2、4×4に変更できます。",
   "native.widget.invitation": "一日一念を開いて、今日のひとときを",
   "native.widget.subtitle": "今日に、少しのやさしさを",
-  "native.widget.accessibility": "{date}、{title}"
+  "native.widget.accessibility": "{date}、{title}",
+  "native.update.check": "更新を確認",
+  "native.update.download": "更新をダウンロード",
+  "native.update.apply": "適用して開き直す",
+  "native.update.checking": "テスト更新を確認しています……",
+  "native.update.downloading": "更新をダウンロードして検証しています……",
+  "native.update.ready": "更新の準備ができました。ここで適用できます。",
+  "native.update.latest": "修復用の更新はありません。テスト担当者に連絡してください。",
+  "native.update.invitation": "先にフィードバック送信設定で有効なテスト招待コードを入力してください。",
+  "native.update.incompatible": "この修復には新しいテストアプリが必要です。",
+  "native.update.network": "修復用の更新を取得できません。通信状態を確認して再試行してください。",
+  "native.update.missing": "先に利用可能な更新をダウンロードして検証してください。",
+  "native.update.unsafe": "アプリを前面に戻して再試行してください。",
+  "native.update.save": "記録を保存できていないため、修復は適用されていません。",
+  "native.update.reload": "修復は適用されませんでした。もう一度お試しください。"
 }

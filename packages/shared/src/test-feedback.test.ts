@@ -7,6 +7,12 @@ const report = () => ({ schemaVersion: 1, id: 'feedback-test-123', createdAt: '2
   client: { platform: 'ios', appVersion: '1.0', buildNumber: '20', locale: 'zh-Hans', width: 390, height: 844, pixelRatio: 3, reducedMotion: false } });
 
 describe('test feedback wire contract', () => {
+  it('accepts bounded update identity without changing old report requirements',()=>{
+    const value={...report(),client:{...report().client,updateId:'4ca724b7-a28e-4355-81ac-bb4ed70838e5',updateRuntimeVersion:'native-v1',updateSourceCommit:'a'.repeat(40),updateSourceTree:'b'.repeat(40),updateEmbedded:false}};
+    expect(parseFeedbackReport(value).client.updateSourceCommit).toBe('a'.repeat(40));
+    expect(()=>parseFeedbackReport({...value,client:{...value.client,updateSourceCommit:'private notes'}})).toThrow();
+    expect(()=>parseFeedbackReport({...value,client:{...value.client,updateRuntimeVersion:'x'.repeat(201)}})).toThrow();
+  });
   it('accepts bounded diagnostic reports and rejects private extra state', () => {
     expect(parseFeedbackReport(report()).scene.id).toBe('crane');
     expect(() => parseFeedbackReport({ ...report(), state: { wishes: ['private'] } })).toThrow();

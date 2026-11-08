@@ -5,6 +5,7 @@ import path from 'node:path';
 import { assertReleaseSource, assertSourceReceipt, sourceReceipt } from './source-identity.mjs';
 import { assertReleaseLock, assertOfficialBuildRoot } from './release-lock.mjs';
 import { assertNativeInputs } from './native-inputs.mjs';
+import { assertInternalUpdateMode, internalUpdatesEnabled } from './internal-update-mode.mjs';
 
 // Read-only product validation. Assets, the native project and the IPA must
 // already exist; this helper only writes offline-validation.json on success.
@@ -21,6 +22,7 @@ if (!Number.isSafeInteger(expectedWidgetCoverCount) || expectedWidgetCoverCount 
 const report = JSON.parse(await readFile(path.join(output, 'build-report.json'), 'utf8'));
 await assertNativeInputs(repo, report.nativeInputs, { allowSigningChanges: true });
 assertSourceReceipt(report, sourceManifest);
+assertInternalUpdateMode(release, report);
 if (report.bundleIdentifier !== expectedBundleIdentifier || report.appId !== release.appId || report.appleTeamId !== release.appleTeamId || report.buildNumber !== release.buildNumber || report.version !== release.version) throw Error('Unexpected application/build in build report');
 if (typeof report.builtApp !== 'string' || typeof report.ipa !== 'string' || !/^[a-f0-9]{64}$/.test(report.sha256 ?? '')) throw Error('Incomplete build report');
 const builtApp = path.resolve(report.builtApp);
@@ -98,6 +100,7 @@ const result = {
   ...sourceReceipt(sourceManifest),
   checkedAt: new Date().toISOString(),
   version: report.version, buildNumber: report.buildNumber, bundleIdentifier: report.bundleIdentifier, appId: release.appId, appleTeamId: release.appleTeamId,
+  internalUpdates: internalUpdatesEnabled(release),
   ipa: report.ipa, ipaBytes: report.bytes, ipaSha256: report.sha256, ipaMatchesBuildReport: true,
   ...validation,
   nativeBundleBytes, nativeBundleSha256: await hashFile(nativeJs),

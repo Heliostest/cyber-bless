@@ -2039,7 +2039,7 @@
   "scene.packages.core.src.scene-intentions.label.c235b401": "Pray for well-being for yourself and your family",
   "scene.packages.core.src.scene-intentions.action.ce23b11f": "Gently stir the seven herbs, scoop up warm porridge, and serve it in the bowl.",
   "scene.packages.core.src.scene-intentions.label.fbca8088": "Send a wish for safety to someone you care about",
-  "scene.packages.core.src.scene-intentions.action.e057ad59": "Lift the square cloth, move it outside the window, then gently lay it down.",
+  "scene.packages.core.src.scene-intentions.action.e057ad59": "Move the cloth onto the outside sill, then smooth it from side to side.",
   "scene.packages.core.src.scene-intentions.label.a91709af": "Send a wish for safety to the home",
   "scene.packages.core.src.scene-intentions.action.cc249c22": "Lift the wooden bird pole, straighten it, then set it securely in place.",
   "scene.packages.core.src.scene-intentions.label.074fafe5": "Send a wish for safety for the new year",
@@ -2307,5 +2307,11 @@
   "scene.interaction-play.d531752889": "Drag with one finger to adjust the angle. Tap “Finish viewing” when you are done.",
   "scene.interaction-play.3d610c75cd": "Tap the left wooden shells, or gently press down and release to bring the two hollow shells together.",
   "scene.interaction-play.05b5285e77": "Tap the right wooden shells, or gently press down and release to hear the other castanet respond.",
-  "scene.interaction-play.10e478ab0a": "Tap the left and right shells separately or alternate quickly. Tap “Finish ritual” when you are ready to stop."
+  "scene.interaction-play.10e478ab0a": "Tap the left and right shells separately or alternate quickly. Tap “Finish ritual” when you are ready to stop.",
+  "scene.brat-bride-cloth.smoothing.place": "Place the cloth on the sill",
+  "scene.brat-bride-cloth.smoothing.smooth": "Smooth the cloth",
+  "scene.brat-bride-cloth.smoothing.carry": "Pick up the cloth, move it to the outside windowsill and gently lay it down.",
+  "scene.brat-bride-cloth.smoothing.settling": "The cloth settles on the sill. Move closer to smooth it out…",
+  "scene.brat-bride-cloth.smoothing.smoothing": "Stroke left and right across the cloth to gently flatten the remaining folds.",
+  "scene.brat-bride-cloth.smoothing.finishing": "The folds relax, leaving the cloth resting neatly by the window…"
 }

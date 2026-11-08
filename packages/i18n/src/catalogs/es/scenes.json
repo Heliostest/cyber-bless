@@ -2039,7 +2039,7 @@
   "scene.packages.core.src.scene-intentions.label.c235b401": "Ruega por tu bienestar y el de tu familia",
   "scene.packages.core.src.scene-intentions.action.ce23b11f": "Remueve suavemente las siete hierbas, recoge una cucharada de gachas calientes y sírvela en el cuenco.",
   "scene.packages.core.src.scene-intentions.label.fbca8088": "Envía un deseo de protección a alguien que te importa",
-  "scene.packages.core.src.scene-intentions.action.e057ad59": "Levanta el paño cuadrado, sácalo por la ventana y extiéndelo suavemente.",
+  "scene.packages.core.src.scene-intentions.action.e057ad59": "Lleva la tela al alféizar exterior y alísala de lado a lado.",
   "scene.packages.core.src.scene-intentions.label.a91709af": "Envía un deseo de protección para el hogar",
   "scene.packages.core.src.scene-intentions.action.cc249c22": "Levanta el poste de madera con el pájaro, enderézalo y colócalo con firmeza.",
   "scene.packages.core.src.scene-intentions.label.074fafe5": "Envía un deseo de protección para el nuevo año",
@@ -2307,5 +2307,11 @@
   "scene.interaction-play.d531752889": "Arrastra con un dedo para ajustar la orientación. Toca «Terminar de observar» para acabar.",
   "scene.interaction-play.3d610c75cd": "Toca las conchas de madera de la izquierda, o presiona suavemente hacia abajo y suelta para juntarlas.",
   "scene.interaction-play.05b5285e77": "Toca las conchas de madera de la derecha, o presiona suavemente hacia abajo y suelta para oír responder a la otra castañuela.",
-  "scene.interaction-play.10e478ab0a": "Toca cada lado por separado o altérnalos rápidamente. Cuando quieras terminar, toca «Finalizar ritual»."
+  "scene.interaction-play.10e478ab0a": "Toca cada lado por separado o altérnalos rápidamente. Cuando quieras terminar, toca «Finalizar ritual».",
+  "scene.brat-bride-cloth.smoothing.place": "Colocar la tela en el alféizar",
+  "scene.brat-bride-cloth.smoothing.smooth": "Alisar la tela",
+  "scene.brat-bride-cloth.smoothing.carry": "Levanta la tela, llévala al alféizar exterior y déjala con cuidado.",
+  "scene.brat-bride-cloth.smoothing.settling": "La tela se posa en el alféizar. Acércate para alisarla…",
+  "scene.brat-bride-cloth.smoothing.smoothing": "Desliza el dedo de lado a lado sobre la tela para alisar los pliegues que quedan.",
+  "scene.brat-bride-cloth.smoothing.finishing": "Los pliegues se alisan y la tela queda bien extendida junto a la ventana…"
 }

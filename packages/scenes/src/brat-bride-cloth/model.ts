@@ -1,5 +1,6 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { createClothSmoothing } from './cloth-smoothing'
 
 /** Original window and cloth: the three paths are product choreography. */
 export function createBratBrideModel() {
@@ -30,11 +31,16 @@ export function createBratBrideModel() {
  for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const a=at(i,j),b=at(i+1,j),c=at(i+1,j+1),d=at(i,j+1);quad(a,d,c,b);quad(a+layer,b+layer,c+layer,d+layer)}
  const boundary:number[]=[];for(let j=0;j<=nz;j++)boundary.push(at(0,j));for(let i=1;i<=nx;i++)boundary.push(at(i,nz));for(let j=nz-1;j>=0;j--)boundary.push(at(nx,j));for(let i=nx-1;i>0;i--)boundary.push(at(i,0));
  for(let i=0;i<boundary.length;i++){const a=boundary[i]!,b=boundary[(i+1)%boundary.length]!;quad(a,a+layer,b+layer,b)}
- const vertices:number[]=[],sample:{x:number;z:number;under:boolean}[]=[]
- for(const index of faces){const [x,side,z]=points[index]!;vertices.push(x!,0,z!);sample.push({x:x!,z:z!,under:side===1});const rim=Math.abs(x!)>.78||Math.abs(z!)>.34,color=side===1?bottom:rim?hem:top;colors.push(color.r,color.g,color.b)}
+ const vertices:number[]=[],sample:{x:number;z:number;under:boolean;grid:number}[]=[]
+ for(const index of faces){const [x,side,z]=points[index]!;vertices.push(x!,0,z!);sample.push({x:x!,z:z!,under:side===1,grid:index%layer});const rim=Math.abs(x!)>.78||Math.abs(z!)>.34,color=side===1?bottom:rim?hem:top;colors.push(color.r,color.g,color.b)}
  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geometry.computeVertexNormals()
  const cloth=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.95}));applyCraftSurface(cloth.material,{kind:'fabric',strength:.28});cloth.name='brat-cloth';cloth.castShadow=cloth.receiveShadow=true;root.add(cloth)
  const clamp=(n:number)=>THREE.MathUtils.clamp(n,0,1)
+ const smoothing=createClothSmoothing(nx,nz,heights=>{
+  const p=geometry.getAttribute('position')
+  for(let i=0;i<sample.length;i++){const s=sample[i]!;p.setY(i,heights[s.grid]!+(s.under?0:.012))}
+  p.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere()
+ })
  function pose(step:number,t:number){
   t=clamp(t);let y=.32,z=1.75,amplitude=.045
   if(step===0){y=THREE.MathUtils.lerp(.32,1.16,t);amplitude=THREE.MathUtils.lerp(.045,.085,t)}
@@ -47,5 +53,5 @@ export function createBratBrideModel() {
   p.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();root.updateMatrixWorld(true)
  }
  pose(0,0)
- return {root,cloth,board,bench,sill,pose,targets:[cloth,cloth,cloth],roots:[cloth,cloth,cloth],anchors:[[0,.03,0],[0,.03,0],[0,.03,0]] as [number,number,number][],dispose(){}}
+ return {root,cloth,board,bench,sill,pose,smoothing,targets:[cloth,cloth,cloth],roots:[cloth,cloth,cloth],anchors:[[0,.03,0],[0,.03,0],[0,.03,0]] as [number,number,number][],dispose(){}}
 }

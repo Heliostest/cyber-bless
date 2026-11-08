@@ -65,7 +65,7 @@ function mount(create: Factory, initialProgress: number) {
   const layer = overlay.querySelector<HTMLElement>('.scene-hit-layer')!, button = overlay.querySelector<HTMLButtonElement>('button')!
   const setCapture = vi.fn(), releaseCapture = vi.fn()
   layer.setPointerCapture = setCapture; layer.releasePointerCapture = releaseCapture
-  if (create !== steelyard && initialProgress < (create === nazar ? 2 : 3)) {
+  if (create !== brat && create !== steelyard && initialProgress < (create === nazar ? 2 : 3)) {
     button.click()
     for (let i = 0; i < 28; i++) instance.update(.025)
     button.click()
@@ -182,6 +182,7 @@ describe('captured release outside the canvas does not strand a movable object o
       expect(s.releaseCapture).toHaveBeenCalledWith(1); expectSnapshot(canonical)
       expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled()
       s.button.click(); s.instance.update(.025)
+      if (create === brat) { expect(s.progress).toEqual([]); s.button.click() }
       if (create === nazar && at < 2) { expect(s.progress).toEqual([2]); expect(s.complete).not.toHaveBeenCalled(); s.button.click() }
       expect(s.progress).toEqual(create === nazar && at < 2 ? [2,3] : [3])
     })

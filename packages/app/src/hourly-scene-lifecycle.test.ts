@@ -290,6 +290,13 @@ it.each([
   expect(checkpoint).not.toHaveBeenCalled(); expect(complete).not.toHaveBeenCalled()
   const fresh = currentGesture()
   pointer(hit, 'pointerdown', fresh.from); pointer(hit, 'pointermove', fresh.to); pointer(hit, 'pointerup', fresh.to)
+  if (id === 'brat-bride-cloth') {
+    // Seating the cloth now opens a distinct smoothing stage, which survives
+    // host pause without accepting the carried finger's tail as completion.
+    expect(checkpoint).not.toHaveBeenCalled(); expect(complete).not.toHaveBeenCalled()
+    frame(); ctrl.setActive(false); ctrl.setActive(true); frame()
+    host.querySelector<HTMLButtonElement>('.scene-bow-tap')!.click()
+  }
   expect(checkpoint).toHaveBeenCalledExactlyOnceWith(next)
   const action = host.querySelector<HTMLButtonElement>('.scene-bow-tap')!
   if (next === 2) {

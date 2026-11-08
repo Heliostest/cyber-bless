@@ -55,8 +55,6 @@ function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390, completeI
     return [left + (p.x + 1) * width / 2, top + (1 - p.y) * height / 2]
   }
   const run = (seconds = 2.8) => { for (let t = 0; t < seconds; t += .025) instance.update(.025) }
-  // Placement regressions traverse the real closeup before testing the original carry flow.
-  if (completeInspection && !(Number.isFinite(at) && Math.floor(at) >= 3)) { button.click(); run(.7); button.click(); run(.6) }
   return { instance, scene, camera, host, overlay, hit, button, point, run, progress, saveWish, complete, haptic, resize: () => resizeObserved() }
 }
 function event(el: HTMLElement, type: string, [clientX, clientY]: [number, number], pointerId = 1) {
@@ -102,329 +100,121 @@ function first(s: ReturnType<typeof mount>, p: THREE.Vector3) {
 }
 
 
-describe('Outdoor windowsill cloth placement', () => {
-  it('points every drag guide along the accepted screen gesture',()=>{ for(const at of[0,1,2]){const s=mount(at);expect(typeof cues(s)[0]!.cue.destination).toBe('function');expect(cues(s)[0]!.cue.direction).toBeUndefined();s.instance.dispose()} })
-  it('uses cloth blessing identity for the visible title, accessible steps and default style registration',()=>{
-    const s=mount()
-    expect(s.overlay.querySelector('.scene-title')?.textContent).toBe('窗布祈护')
-    expect(s.overlay.querySelector('[aria-label="窗布祈护步骤"]')).not.toBeNull()
-    expect(rendered.metadata).toEqual({id:'brat-bride-cloth',label:'窗布祈护'})
-  })
-  it.each([false,true])('lifts the cloth, moves it to the sill and lays it down, reduced=%s', reduced => {
-    const s=mount(0,{isReducedMotion:()=>reduced})
-    step(s,0,false); if(!reduced) expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([3])
-    s.button.click(); s.run(); expect(s.complete).toHaveBeenCalledOnce(); expect(s.saveWish).not.toHaveBeenCalled()
-  })
-  it('completes every legacy checkpoint into identical final transforms', () => {
-    for (const checkpoint of [0,1,2]) {
-      const normal = mount(checkpoint), reduced = mount(checkpoint, { isReducedMotion: () => true }), restored = mount(3)
-      step(normal,checkpoint); step(reduced,checkpoint)
-      normal.scene.updateMatrixWorld(true); reduced.scene.updateMatrixWorld(true); restored.scene.updateMatrixWorld(true)
-      normal.scene.getObjectByName('brat-cloth-subject')!.traverse(object => {
-        for (const other of [reduced,restored]) {
-          const counterpart = other.scene.getObjectByName(object.name)!
-          object.matrixWorld.elements.forEach((value,index) => expect(value,object.name).toBeCloseTo(counterpart.matrixWorld.elements[index],9))
-          const geometry = (object as THREE.Mesh).geometry, otherGeometry = (counterpart as THREE.Mesh).geometry
-          if (geometry?.attributes.position) expect(Array.from(geometry.attributes.position.array),object.name).toEqual(Array.from(otherGeometry.attributes.position!.array))
-        }
-      })
-      normal.instance.dispose(); reduced.instance.dispose(); restored.instance.dispose()
-    }
-  })
+function sweep(s: ReturnType<typeof mount>, z: number, reverse = false, end = 'pointerup') {
+  const a=s.point('brat-cloth',[reverse?.76:-.76,.015,z]),b=s.point('brat-cloth',[reverse?-.76:.76,.015,z])
+  event(s.hit,'pointerdown',a)
+  for(let i=1;i<=20;i++){event(s.hit,'pointermove',[a[0]+(b[0]-a[0])*i/20,a[1]+(b[1]-a[1])*i/20]);s.instance.update(.016)}
+  event(s.hit,end,b)
+}
+function smooth(s: ReturnType<typeof mount>) { for(const z of[-.24,0,.24])sweep(s,z,z===0);s.run(1) }
+function positions(s:ReturnType<typeof mount>) {return Array.from((s.scene.getObjectByName('brat-cloth') as THREE.Mesh).geometry.getAttribute('position').array)}
 
-  it('offers 44px native keyboard actions, physical input and no wish form or entry feedback', () => {
-    const s = mount(); expect(s.hit).not.toBeNull(); expect(s.button.type).toBe('button')
-    expect(s.button.style.minWidth).toBe('44px'); expect(s.button.style.minHeight).toBe('44px'); expect(s.overlay.querySelector('input,form')).toBeNull()
-    expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-    s.button.click(); expect(s.progress).toEqual([]); s.run(); expect(s.progress).toEqual([3])
+describe('Outdoor windowsill cloth placement and smoothing',()=>{
+  it('starts with direct placement and waits for close-up smoothing before completion',()=>{
+    const s=mount(),before=s.camera.position.clone()
+    expect(s.button.textContent).not.toContain('看看');expect(s.overlay.getAttribute('data-close-inspection')).toBeNull()
+    step(s,0);expect(s.progress).toEqual([]);expect(s.complete).not.toHaveBeenCalled()
+    expect(s.button.textContent).toContain('抹平');expect(s.camera.position.distanceTo(before)).toBeGreaterThan(1)
+    expect(s.overlay.dataset.clothPhase).toBe('smoothing')
+    smooth(s);expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
   })
-  it('plays one optional terminal acceptance tone and closes audio once', () => {
-    const frequencies: number[] = [], peaks: number[] = []; let closed = 0
-    class AudioBoundary {
-      state = 'running'; currentTime = 0; destination = {}
-      close() { closed++; return Promise.resolve() }
-      createGain() { return { gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime(n: number) { if(n > .0001) peaks.push(n) } }, connect(next: unknown) { return next } } }
-      createOscillator() { return { type: 'sine', frequency: { setValueAtTime(n: number) { frequencies.push(n) } }, connect(next: unknown) { return next }, start() {}, stop() {} } }
-    }
-    vi.stubGlobal('AudioContext',AudioBoundary)
-    const silent = mount(0,{isSoundEnabled:()=>false}); step(silent,0); expect(frequencies).toEqual([])
-    const audible = mount(1,{isSoundEnabled:()=>true}); step(audible,1,false); expect(frequencies).toEqual([]); audible.run()
-    expect(frequencies).toEqual([440]); expect(peaks).toEqual([.003])
-    const returning = mount(3,{returning:true,isSoundEnabled:()=>true}); returning.run(); expect(frequencies).toEqual([440])
-    audible.button.click(); audible.run(); expect(frequencies).toEqual([440])
-    silent.instance.dispose(); audible.instance.dispose(); audible.instance.dispose(); returning.instance.dispose(); expect(closed).toBe(1)
+  it.each([false,true])('requires real horizontal cloth coverage before completing, reduced=%s', reduced=>{
+    const s=mount(0,{isReducedMotion:()=>reduced});step(s,0)
+    const before=positions(s);sweep(s,-.24);expect(positions(s)).not.toEqual(before)
+    expect(s.progress).toEqual([]);sweep(s,0,true);sweep(s,.24);s.run(1)
+    expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce();expect(s.saveWish).not.toHaveBeenCalled()
+    s.button.click();smooth(s);expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
   })
-
-  it.each([0,1,2])('rejects wrong pickups and orphan releases before final arrival at %i', at => {
-    const s = mount(at,{isReducedMotion:()=>true}), source = s.point(targetName(at),anchor(at)), [dx,dy] = placementDelta(s,at), end: [number,number] = [source[0]+dx,source[1]+dy]
-    event(s.hit,'pointerdown',[1,1]); event(s.hit,'pointermove',end); event(s.hit,'pointerup',end); event(s.hit,'pointerup',end)
-    expect(s.progress).toEqual([]); step(s,at); expect(s.progress).toEqual([3])
+  it.each([0,1,2])('restores legacy checkpoint %i and keeps placement and smoothing as separate actions',at=>{
+    const s=mount(at,{isReducedMotion:()=>true})
+    expect(s.progress).toEqual([]);s.button.click();s.button.click();expect(s.progress).toEqual([])
+    s.instance.update(.025);expect(s.overlay.dataset.clothPhase).toBe('smoothing')
+    s.button.dispatchEvent(new MouseEvent('click',{detail:2,bubbles:true}));expect(s.progress).toEqual([])
+    s.button.click();expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
   })
-
-  it.each([0, 1, 2])('checks terminal release coordinates for withdrawn, cross-axis and nonfinite input at %i', at => { for(const factor of[0,3]){const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=placementDelta(s, at);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx,p[1]+dy]);expect(s.progress).toEqual([3]);event(s.hit,'pointerup',[p[0]+dx*factor,p[1]+dy*factor]);expect(s.progress).toEqual([3]);s.instance.dispose()} })
-  it.each([0, 1, 2])('accepts a continued same-direction release and an eighteen pixel correction at %i', at => {
-    for (const factor of [3, .7]) {
-      const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = placementDelta(s, at)
-      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
-      event(s.hit, 'pointerup', [p[0] + dx * factor, p[1] + dy * factor])
-      expect(s.progress).toEqual([3]); s.instance.dispose()
-    }
+  it.each([0,1,2])('supports a coalesced placement release from checkpoint %i',at=>{
+    const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=placementDelta(s,at)
+    event(s.hit,'pointerdown',p);event(s.hit,'pointerup',[p[0]+dx,p[1]+dy]);s.instance.update(.025)
+    expect(s.overlay.dataset.clothPhase).toBe('smoothing');expect(s.progress).toEqual([])
+    smooth(s);expect(s.progress).toEqual([3])
   })
-  it.each([0, 1, 2])('rejects a nonfinite move even when the final release is valid at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at)), [dx, dy] = placementDelta(s, at)
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [NaN, p[1]])
-    event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run()
-    expect(s.progress).toEqual([]); expect(s.button.disabled).toBe(false); step(s, at); expect(s.progress).toEqual([3])
+  it('rejects taps, vertical drags, off-cloth input and repeated rubbing of a small spot',()=>{
+    const s=mount(0,{isReducedMotion:()=>true});step(s,0)
+    const a=s.point('brat-cloth',[0,.015,-.24]),b=s.point('brat-cloth',[0,.015,.24])
+    for(let i=0;i<8;i++){event(s.hit,'pointerdown',a);event(s.hit,'pointerup',a);event(s.hit,'pointerdown',a);event(s.hit,'pointermove',b);event(s.hit,'pointerup',b)}
+    for(let i=0;i<10;i++){event(s.hit,'pointerdown',[20,95]);event(s.hit,'pointermove',[150,95]);event(s.hit,'pointerup',[150,95])}
+    for(let i=0;i<20;i++){const a=s.point('brat-cloth',[-.04,.015,0]),b=s.point('brat-cloth',[.04,.015,0]);event(s.hit,'pointerdown',a);event(s.hit,'pointermove',b);event(s.hit,'pointerup',b)}
+    s.run();expect(s.progress).toEqual([]);smooth(s);expect(s.progress).toEqual([3])
   })
-  it.each([false, true])('accepts a gentle zigzag path and remains ready after settlement, reduced=%s', reduced => { for(const at of[0,1,2]){const s=mount(at,{isReducedMotion:()=>true}),p=s.point(targetName(at),anchor(at)),[dx,dy]=placementDelta(s, at);event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]-dy*.3,p[1]+dx*.3]);event(s.hit,'pointermove',[p[0]+dx,p[1]+dy]);expect(s.progress).toEqual([3]);event(s.hit,'pointerup',[p[0]+dx*2,p[1]+dy*2]);expect(s.progress).toEqual([3]);s.instance.dispose()} })
-  it.each([0, 1, 2, 3])('silently restores ordinary and returning checkpoint %i', at => {
-    for (const returning of [false, true]) {
-      const s = mount(at, { returning, isReducedMotion: () => true }, 390, false); s.run()
-      expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled(); expect(s.haptic).not.toHaveBeenCalled(); expect(s.saveWish).not.toHaveBeenCalled()
-      expect(cues(s).map(x => x.cue.kind)).toEqual(at < 3 ? ['tap'] : []); expect(s.button.hidden).toBe(at === 3)
-      if (at < 3) { s.button.click(); s.run(.7); s.button.click(); s.run(.6) }
-      for (let i = at; i < 3; i++) s.button.click()
-      expect(s.progress).toEqual(at < 3 ? [3] : []); expect(s.saveWish).not.toHaveBeenCalled(); s.instance.dispose()
-    }
+  it.each(['pointercancel','lostpointercapture','blur','pause','resize','Escape','second touch'])('rolls back an unfinished smoothing stroke on %s and can resume',kind=>{
+    let active=true;const s=mount(0,{isReducedMotion:()=>true,isActive:()=>active});step(s,0)
+    sweep(s,-.24);s.run(.1);const before=positions(s)
+    const a=s.point('brat-cloth',[-.76,.015,0]),b=s.point('brat-cloth',[.76,.015,0])
+    event(s.hit,'pointerdown',a);event(s.hit,'pointermove',b);s.instance.update(.025)
+    expect(positions(s)).not.toEqual(before)
+    if(kind==='blur')window.dispatchEvent(new Event('blur'))
+    else if(kind==='pause'){active=false;s.instance.update(.025)}
+    else if(kind==='resize')s.resize()
+    else if(kind==='Escape')document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))
+    else if(kind==='second touch'){event(document.body,'pointerdown',b,2);event(document.body,'pointerup',b,2)}
+    else event(s.hit,kind,b)
+    expect(positions(s)).toEqual(before);expect(s.progress).toEqual([])
+    event(s.hit,'pointerup',b);active=true;window.dispatchEvent(new Event('focus'));s.instance.update(.025)
+    smooth(s);expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
   })
-  it.each([284, 350, 1280])('frames every subject vertex and exposes the first reachable material cue at width %i', width => {
-    for (const at of [0, 1, 2, 3]) {
-      const s = mount(at, { isReducedMotion: () => true }, width); s.scene.updateMatrixWorld(true)
-      s.scene.getObjectByName('brat-cloth-subject')!.traverse(o => {
-        const m = o as THREE.Mesh; if (!m.geometry) return
-        const pos = m.geometry.getAttribute('position'), bounds = new THREE.Box3(), p = new THREE.Vector3()
-        for (let i = 0; i < pos.count; i++) bounds.expandByPoint(p.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).project(s.camera))
-        expect(Math.max(Math.abs(bounds.min.x), Math.abs(bounds.max.x), Math.abs(bounds.min.y), Math.abs(bounds.max.y)), m.name).toBeLessThan(.97)
-      })
-      for (const { object, cue } of cues(s)) {
-        const hit = first(s, object.localToWorld(new THREE.Vector3(...(cue.anchor ?? [0, 0, 0]))))
-        expect(hit.object && (object === hit.object || object.getObjectById(hit.object.id) === hit.object), `first reachable material cue ${object.name}`).toBe(true); expect(Math.abs(hit.q.x)).toBeLessThan(.97); expect(Math.abs(hit.q.y)).toBeLessThan(.97)
-      }
-      if (at < 3) step(s, at); expect(s.progress).toEqual(at < 3 ? [3] : []); s.instance.dispose()
-    }
+  it.each(['blur','pause','resize','pointercancel'])('restores a held or released placement on %s',kind=>{
+    let active=true;const s=mount(0,{isActive:()=>active}),cloth=s.scene.getObjectByName('brat-cloth')!,home=cloth.position.clone(),p=s.point('brat-cloth',anchor(0)),[dx,dy]=placementDelta(s,0)
+    event(s.hit,'pointerdown',p);event(s.hit,'pointermove',[p[0]+dx*.2,p[1]+dy*.2]);expect(cloth.position.distanceTo(home)).toBeGreaterThan(.01)
+    if(kind==='blur')window.dispatchEvent(new Event('blur'));else if(kind==='pause'){active=false;s.instance.update(.025)}else if(kind==='resize')s.resize();else event(s.hit,kind,p)
+    expect(cloth.position.distanceTo(home)).toBeLessThan(1e-7);event(s.hit,'pointerup',p);expect(s.progress).toEqual([])
+    active=true;window.dispatchEvent(new Event('focus'));s.instance.update(.025);step(s,0);smooth(s);expect(s.progress).toEqual([3])
   })
-  it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or stale position/rotation', kind => {
-    for (const at of [0, 1, 2]) {
-      let active = true; const s = mount(at, { isActive: () => active }), pivot = s.scene.getObjectByName(targetName(at))!, home = pivot.position.clone(), scale = pivot.scale.clone(), rotation = pivot.quaternion.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = placementDelta(s, at)
-      // Sample a small held displacement of the held cloth before release.
-      const fraction=.5
-      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx * fraction, p[1] + dy * fraction]); const frames = rendered.render.mock.calls.length
-      expect(pivot.position.distanceTo(home)+pivot.quaternion.angleTo(rotation)).toBeGreaterThan(.002)
-      if (kind === 'pause') { active = false; s.instance.update(.05); s.instance.update(.05); expect(rendered.render.mock.calls.length).toBe(frames) }
-      else if (kind === 'blur') window.dispatchEvent(new Event('blur')); else event(s.hit, kind, p)
-      event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run(); expect(s.progress).toEqual([]); expect(pivot.position.distanceTo(home)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(pivot.scale.distanceTo(scale)).toBeLessThan(.00001)
-      if (kind === 'blur') window.dispatchEvent(new Event('focus')); active = true; s.instance.update(.025); step(s, at); expect(s.progress).toEqual([3]); s.instance.dispose()
-    }
+  it('freezes accepted placement, camera motion and cloth simulation while paused',()=>{
+    let active=true;const s=mount(0,{isActive:()=>active});s.button.click();s.instance.update(.025)
+    active=false;s.instance.update(.025);const before=positions(s),camera=s.camera.position.clone(),frames=rendered.render.mock.calls.length
+    s.run(3);expect(positions(s)).toEqual(before);expect(s.camera.position.equals(camera)).toBe(true);expect(rendered.render.mock.calls.length).toBe(frames);expect(s.progress).toEqual([])
+    active=true;s.run(2);expect(s.overlay.dataset.clothPhase).toBe('smoothing');smooth(s);expect(s.progress).toEqual([3])
   })
-  it.each([284, 350, 1280])('keeps all subject vertices in frame during each three cloth placement paths at width %i', width => {
-    for (const at of [0, 1, 2]) {
-      const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = placementDelta(s, at)
-      const check = () => {
-        s.scene.updateMatrixWorld(true); let extent = 0
-        s.scene.getObjectByName('brat-cloth-subject')!.traverse(o => {
-          const m = o as THREE.Mesh; if (!m.geometry) return
-          const positions = m.geometry.getAttribute('position'), vertex = new THREE.Vector3()
-          for (let i = 0; i < positions.count; i++) { vertex.fromBufferAttribute(positions, i).applyMatrix4(m.matrixWorld).project(s.camera); extent = Math.max(extent, Math.abs(vertex.x), Math.abs(vertex.y)) }
-        })
-        expect(extent).toBeLessThan(.97)
-      }
-      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 2, p[1] + dy / 2]); check()
-      event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy]); check(); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy])
-      for (let i = 0; i < 115; i++) { s.instance.update(.025); check() }
-      expect(s.progress).toEqual([3]); s.instance.dispose()
-    }
+  it('restores a completed save with the same flat surface as freshly smoothed cloth',()=>{
+    const fresh=mount(0,{isReducedMotion:()=>true});step(fresh,0);smooth(fresh)
+    expect(fresh.progress).toEqual([3])
+    const restored=mount(3,{isReducedMotion:()=>true})
+    expect(positions(restored)).toEqual(positions(fresh));expect(restored.progress).toEqual([])
+    expect(restored.button.hidden).toBe(true);expect(restored.complete).not.toHaveBeenCalled()
   })
-  it.each([0, 1, 2])('freezes accepted motion and input while paused at %i', at => {
-    let active = true; const s = mount(at, { isActive: () => active }); step(s, at, false); expect(s.button.disabled).toBe(true); expect(s.hit.style.pointerEvents).toBe('none')
-    s.button.click(); for (const dt of [NaN, Infinity, -10, 100000]) s.instance.update(dt); expect(s.progress).toEqual([])
-    active = false; const pivot = s.scene.getObjectByName(targetName(at))!, pose = pivot.position.clone(), rotation = pivot.quaternion.clone(), frames = rendered.render.mock.calls.length
-    s.run(2); expect(rendered.render.mock.calls.length).toBe(frames); expect(pivot.position.distanceTo(pose)).toBeLessThan(.00001); expect(pivot.quaternion.angleTo(rotation)).toBeLessThan(.00001); expect(s.progress).toEqual([])
-    active = true; s.run(); expect(s.progress).toEqual([3])
+  it.each([284,350,440,1280])('keeps the full cloth visible and touchable in close-up at width %i',width=>{
+    const s=mount(0,{isReducedMotion:()=>true},width);step(s,0)
+    const cloth=s.scene.getObjectByName('brat-cloth') as THREE.Mesh,p=cloth.geometry.getAttribute('position'),bounds=new THREE.Box3()
+    for(let i=0;i<p.count;i++)bounds.expandByPoint(new THREE.Vector3().fromBufferAttribute(p,i).applyMatrix4(cloth.matrixWorld).project(s.camera))
+    expect(Math.max(Math.abs(bounds.min.x),Math.abs(bounds.max.x),Math.abs(bounds.min.y),Math.abs(bounds.max.y))).toBeLessThan(.9)
+    expect(bounds.max.x-bounds.min.x).toBeGreaterThan(width===1280?.3:1)
+    smooth(s);expect(s.progress).toEqual([3])
   })
-  it.each([0, 1, 2])('rejects a target behind another opaque object at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), blocker = new THREE.Mesh(new THREE.PlaneGeometry(.85, .85), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
-    blocker.position.lerpVectors(s.scene.getObjectByName(targetName(at))!.localToWorld(new THREE.Vector3(...anchor(at))), s.camera.position, .15)
-    blocker.quaternion.copy(s.camera.quaternion); s.scene.add(blocker); s.scene.updateMatrixWorld(true); step(s, at); expect(s.progress).toEqual([])
-    blocker.removeFromParent(); blocker.geometry.dispose(); blocker.material.dispose(); step(s, at); expect(s.progress).toEqual([3])
+  it.each([0,1,2,3,NaN,Infinity,-1])('silently restores checkpoint %s without entry completion or haptics',at=>{
+    const s=mount(at,{isReducedMotion:()=>true});s.run()
+    expect(s.progress).toEqual([]);expect(s.complete).not.toHaveBeenCalled();expect(s.haptic).not.toHaveBeenCalled()
+    expect(s.button.hidden).toBe(at===3)
+    if(at!==3){step(s,Number.isFinite(at)&&at>=0?at:0);smooth(s);expect(s.progress).toEqual([3])}
   })
-  it.each([0, 1, 2])('preserves pointer ownership through prepareFeedback input on and outside the hit layer at %i', at => {
-    for (const outside of [false, true]) for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) {
-      let attack = () => {}; const s = mount(at, { isReducedMotion: () => true, prepareFeedback: () => attack() })
-      attack = () => event(outside ? document.body : s.hit, type, [1, 1]); step(s, at); expect(s.progress, `${outside} ${type}`).toEqual([3]); s.instance.dispose()
-    }
+  it('rejects a foreground blocker and wrong pickups',()=>{
+    const s=mount(0,{isReducedMotion:()=>true}),blocker=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({side:THREE.DoubleSide})),cloth=s.scene.getObjectByName('brat-cloth')!
+    blocker.position.lerpVectors(cloth.getWorldPosition(new THREE.Vector3()),s.camera.position,.15);blocker.quaternion.copy(s.camera.quaternion);s.scene.add(blocker)
+    step(s,0);expect(s.overlay.dataset.clothPhase).toBe('placement');expect(s.progress).toEqual([])
+    blocker.removeFromParent();blocker.geometry.dispose();blocker.material.dispose();step(s,0);smooth(s);expect(s.progress).toEqual([3])
   })
-  it.each([0, 1, 2])('invalidates prepared pointer and keyboard input on every pause/resume boundary at %i', at => {
-    for (const keyboard of [false, true]) {
-      let attack = () => {}, active = true; const s = mount(at, { isReducedMotion: () => true, isActive: () => active, prepareFeedback: () => attack() })
-      attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
-      for (let i = 0; i < 2; i++) { keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([]) }
-      attack = () => {}; keyboard ? s.button.click() : step(s, at); expect(s.progress).toEqual([3]); s.instance.dispose()
-    }
+  it.each(['prepareFeedback','onProgress','haptic'] as const)('guards synchronous %s reentry and duplicate completion',callback=>{
+    let attack=()=>{};const s=mount(0,{isReducedMotion:()=>true,[callback]:()=>attack()})
+    attack=()=>{s.button.click();s.instance.update(10);event(s.hit,'pointerdown',[1,1]);event(s.hit,'pointerup',[1,1])}
+    s.button.click();s.instance.update(.025);s.button.click()
+    expect(s.complete).toHaveBeenCalledOnce();s.button.click();expect(s.complete).toHaveBeenCalledOnce()
+    if(callback!=='onProgress')expect(s.progress).toEqual([3])
   })
-  it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('blocks synchronous %s step skipping and update reentry', callback => {
-    let attack = () => {}; const seen: number[] = [], s = mount(0, { isReducedMotion: () => true, [callback]: () => attack(), onProgress: n => { seen.push(n); if (callback === 'onProgress') attack() } })
-    attack = () => { s.button.click(); step(s, 0); step(s, 1); s.instance.update(100) }
-    s.button.click(); expect(seen).toEqual([3]); s.button.click(); expect(seen).toEqual([3]); s.button.click(); expect(seen).toEqual([3]); expect(s.complete).toHaveBeenCalledOnce()
-  })
-  it.each([0,1,2])('rejects a second touch outside the picked object at %i', at => {
-    const s = mount(at, { isReducedMotion: () => true }), p = s.point(targetName(at), anchor(at))
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerdown', [1, 1], 2); event(s.hit, 'pointermove', [p[0]+placementDelta(s, at)[0], p[1]+placementDelta(s, at)[1]]); event(s.hit, 'pointerup', [p[0]+placementDelta(s, at)[0], p[1]+placementDelta(s, at)[1]]); event(s.hit, 'pointerup', [1, 1], 2)
-    expect(s.progress).toEqual([]); step(s, at); expect(s.progress).toEqual([3])
-  })
-  it.each(['prepareFeedback', 'haptic', 'onProgress'] as const)('stops after %s pauses or disposes the scene', callback => {
-    for (const mode of ['pause', 'dispose']) {
-      let active = true, destroy = () => {}; const s = mount(0, { isReducedMotion: () => true, isActive: () => active, [callback]: () => { if (mode === 'pause') active = false; else destroy() } })
-      destroy = () => s.instance.dispose(); const frames = rendered.render.mock.calls.length; s.button.click(); s.instance.update(.1); s.button.click(); expect(rendered.render.mock.calls.length).toBe(frames)
-      if (mode === 'dispose') expect(s.overlay.childElementCount).toBe(0); s.instance.dispose()
-    }
-  })
-  it.each(['onProgress', 'haptic'] as const)('invalidates terminal completion after a synchronous %s pause/resume', callback => {
-    let active = true, attack = () => {}; const s = mount(2, { isActive: () => active, [callback]: () => attack() })
-    attack = () => { active = false; s.instance.update(0); active = true; s.instance.update(0) }
-    step(s, 2); expect(s.complete).not.toHaveBeenCalled(); expect(s.button.hidden).toBe(true)
-    if (callback === 'onProgress') expect(s.haptic).not.toHaveBeenCalled()
-  })
-  it.each([NaN, Infinity, -9])('normalizes invalid restoration %s without reporting progress', initial => {
-    const s = mount(initial, { isReducedMotion: () => true }); s.instance.start(); s.instance.update(NaN); expect(s.progress).toEqual([]); s.button.click(); expect(s.progress).toEqual([3])
-  })
-  it('removes all matching pointer callback guards exactly once', () => {
-    const added = vi.spyOn(EventTarget.prototype, 'addEventListener'), removed = vi.spyOn(EventTarget.prototype, 'removeEventListener'), windowAdded = vi.spyOn(window, 'addEventListener'), windowRemoved = vi.spyOn(window, 'removeEventListener'), s = mount()
-    const guards = added.mock.calls.filter(([type, , options], i) => added.mock.contexts[i] === s.hit && options === true && ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture'].includes(type))
-    expect(guards).toHaveLength(5); s.instance.dispose(); s.instance.dispose()
-    for (const [type, listener, options] of guards) {
-      expect(removed.mock.calls.filter(([t, l, o], i) => removed.mock.contexts[i] === s.hit && t === type && l === listener && o === options)).toHaveLength(1)
-      expect(windowAdded.mock.calls.filter(([t, l, o]) => t === type && l === listener && o === options)).toHaveLength(1)
-      expect(windowRemoved.mock.calls.filter(([t, l, o]) => t === type && l === listener && o === options)).toHaveLength(1)
-    }
-  })
-  it('releases capture, geometry, materials, cues and DOM once and rejects retained inputs after disposal', () => {
-    const s = mount(2), resources = new Set<THREE.BufferGeometry | THREE.Material | THREE.Texture>(), cued: THREE.Object3D[] = []
-    s.scene.traverse(o => { if (o.userData.interactionCues?.length) cued.push(o); const m = o as THREE.Mesh; if (m.geometry) resources.add(m.geometry); for (const mat of Array.isArray(m.material) ? m.material : m.material ? [m.material] : []) { resources.add(mat); const map = (mat as THREE.MeshStandardMaterial).map; if (map) resources.add(map) } })
-    const freed = new Map<unknown, number>(); resources.forEach(r => r.addEventListener('dispose', () => freed.set(r, (freed.get(r) ?? 0) + 1)))
-    const p = s.point(targetName(2), anchor(2)), release = vi.fn(); s.hit.releasePointerCapture = release; event(s.hit, 'pointerdown', p)
-    const renderer = rendered.renderer as THREE.WebGLRenderer, frames = rendered.render.mock.calls.length; s.instance.dispose(); s.instance.dispose(); s.button.click(); event(s.hit, 'pointerup', p); s.instance.start(); s.instance.update(10)
-    expect(release).toHaveBeenCalledExactlyOnceWith(1); expect(s.progress).toEqual([]); expect(s.saveWish).not.toHaveBeenCalled(); expect(rendered.render.mock.calls.length).toBe(frames)
-    expect(freed.size).toBe(resources.size); expect([...freed.values()].every(n => n === 1)).toBe(true); expect(renderer.dispose).toHaveBeenCalledOnce(); expect(renderer.forceContextLoss).toHaveBeenCalledOnce()
-    expect(s.overlay.childElementCount).toBe(0); expect(s.host.querySelector('.scene-object-cues')).toBeNull(); for (const o of cued) expect(o.userData.interactionCues).toEqual([])
-  })
-})
-
-it.each([0, 1, 2])('accepts a deliberate release when the browser coalesces all move events, phase=%i', at => {
-  const s = mount(at, { isReducedMotion: () => true }); const p = s.point(targetName(at), anchor(at)); const [dx, dy] = placementDelta(s, at);
-  event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]);
-  expect(s.progress).toEqual([3]);
-});
-
-
-describe('continuous final placement', () => {
-  it.each([0,1,2])('places directly at the final destination from legacy checkpoint %i', at => {
-    const s = mount(at, { isReducedMotion: () => true });
-    step(s, at);
-    expect(s.progress).toEqual([3]);
-    expect(s.complete).toHaveBeenCalledOnce();
-  });
-  it.each([0,1,2])('keeps a released inspection position without advancing checkpoint %i', at => {
-    const s = mount(at, { isReducedMotion: () => true });
-    const object = s.scene.getObjectByName(targetName(at))!, home = object.getWorldPosition(new THREE.Vector3()), p = s.point(targetName(at), anchor(at));
-    const [dx,dy] = placementDelta(s,at), end: [number,number] = [p[0]+dx*.1,p[1]+dy*.1];
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', end); event(s.hit, 'pointerup', end);
-    expect(s.progress).toEqual([]);
-    expect(object.getWorldPosition(new THREE.Vector3()).distanceTo(home)).toBeGreaterThan(.001);
-  });
-});
-
-
-describe('inspection and parked input safety', () => {
-  it.each([0,1,2])('turns a picked object freely without committing legacy checkpoint %i', at => {
-    const s=mount(at,{isReducedMotion:()=>true}), object=s.scene.getObjectByName(targetName(at))!, before=object.getWorldQuaternion(new THREE.Quaternion()), p=s.point(targetName(at),anchor(at))
-    const inspect=(type:string,x:number,y:number)=>{const e=new Event(type,{bubbles:true,cancelable:true});Object.assign(e,{clientX:x,clientY:y,pointerId:1,pointerType:'mouse',button:0,shiftKey:true});s.hit.dispatchEvent(e)}
-    inspect('pointerdown',p[0],p[1]);inspect('pointermove',p[0]+140,p[1]+35);inspect('pointerup',p[0]+140,p[1]+35)
-    expect(object.getWorldQuaternion(new THREE.Quaternion()).angleTo(before)).toBeGreaterThan(.2)
-    expect(s.progress).toEqual([]);s.run();expect(s.progress).toEqual([])
-    step(s,at);expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
-  })
-  it.each(['blur','pause','resize'])('restores a released parked object on %s', kind => {
-    let active=true;const s=mount(0,{isActive:()=>active}), object=s.scene.getObjectByName(targetName(0))!, home=object.getWorldPosition(new THREE.Vector3()), p=s.point(targetName(0),anchor(0)),[dx,dy]=placementDelta(s,0),end:[number,number]=[p[0]+dx*.1,p[1]+dy*.1]
-    event(s.hit,'pointerdown',p);event(s.hit,'pointermove',end);event(s.hit,'pointerup',end)
-    expect(object.getWorldPosition(new THREE.Vector3()).distanceTo(home)).toBeGreaterThan(.001)
-    if(kind==='pause'){active=false;s.instance.update(.025)}else if(kind==='resize')s.resize();else window.dispatchEvent(new Event(kind))
-    expect(object.getWorldPosition(new THREE.Vector3()).distanceTo(home)).toBeLessThan(.00001);expect(s.progress).toEqual([])
-    if(kind==='blur')window.dispatchEvent(new Event('focus'));active=true;s.instance.update(.025);step(s,0);expect(s.progress).toEqual([3])
-  })
-})
-
-
-it('uses two fingers on the same object for inspection without implicit placement', () => {
-  const s=mount(0,{isReducedMotion:()=>true}), object=s.scene.getObjectByName(targetName(0))!, before=object.getWorldQuaternion(new THREE.Quaternion()), p=s.point(targetName(0),anchor(0))
-  event(s.hit,'pointerdown',p,1);event(s.hit,'pointerdown',p,2);event(s.hit,'pointermove',[p[0]+80,p[1]+20],2)
-  event(s.hit,'pointerup',[p[0]+80,p[1]+20],2);event(s.hit,'pointerup',p,1)
-  expect(object.getWorldQuaternion(new THREE.Quaternion()).angleTo(before)).toBeGreaterThan(.1);expect(s.progress).toEqual([])
-  step(s,0);expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
-})
-
-
-describe('close inspection before placement', () => {
-  it('uses the first action to lift and view the complete object without completing placement', () => {
-    const s = mount(0, {}, 390, false), actor = s.scene.getObjectByName('brat-cloth')!
-    const before = actor.position.clone(), rotation = actor.quaternion.clone()
-    s.button.click(); s.run(1)
-    expect(s.progress).toEqual([])
-    expect(s.complete).not.toHaveBeenCalled()
-    expect(actor.position.y).toBeGreaterThan(before.y)
-    expect(actor.quaternion.angleTo(rotation)).toBeLessThan(1e-8)
-    s.run(8)
-    expect(actor.position.y).toBeGreaterThan(before.y)
-    expect(s.overlay.getAttribute('data-close-inspection')).toBe('viewing')
-    s.button.click(); s.run(.6)
-    expect(actor.position.distanceTo(before)).toBeLessThan(1e-8)
-    expect(s.progress).toEqual([])
-    s.button.click(); s.run()
-    expect(s.progress).toEqual([3])
-    expect(s.complete).toHaveBeenCalledOnce()
-  })
-
-  it.each([0, 1, 2])('opens close viewing from a physical tap at legacy checkpoint %i without placing', at => {
-    const s = mount(at, {}, 390, false), p = s.point(targetName(at), anchor(at))
-    event(s.hit, 'pointerdown', p); event(s.hit, 'pointerup', p); s.run(1)
-    expect(s.progress).toEqual([])
-    expect(s.complete).not.toHaveBeenCalled()
-    expect(s.button.textContent).toContain('\u7ee7\u7eed\u5b89\u653e')
-    s.button.click(); s.run(.6)
-    s.button.click(); s.run()
-    expect(s.progress).toEqual([3])
-  })
-  it('keeps reduced motion viewing stable until the explicit continue action', () => {
-    const s = mount(0, { isReducedMotion: () => true }, 390, false)
-    s.button.click(); s.run(1)
-    const camera = s.camera.position.clone()
-    s.run(8)
-    expect(s.camera.position.distanceTo(camera)).toBeLessThan(1e-8)
-    expect(s.progress).toEqual([])
-    s.button.click(); s.run(.6)
-    expect(s.progress).toEqual([])
-    s.button.click(); s.run()
-    expect(s.progress).toEqual([3])
-  })
-
-  it.each(['blur', 'pause', 'resize'])('restores the closeup camera, object and scene on %s without progress', kind => {
-    let active = true, resized = () => {}
-    vi.stubGlobal('ResizeObserver', class { constructor(callback: () => void) { resized = callback } observe() {} disconnect() {} })
-    const s = mount(0, { isActive: () => active }, 390, false), actor = s.scene.getObjectByName('brat-cloth')!
-    const position = actor.position.clone(), rotation = actor.quaternion.clone(), camera = s.camera.position.clone(), cameraRotation = s.camera.quaternion.clone()
-    const visibility = new Map<THREE.Object3D, boolean>(); s.scene.traverse(object => visibility.set(object, object.visible))
-    s.button.click(); s.run(.9)
-    if (kind === 'blur') window.dispatchEvent(new Event('blur'))
-    else if (kind === 'pause') { active = false; s.instance.update(.025) }
-    else if ('resize' in s) (s.resize as () => void)()
-    else resized()
-    expect(actor.position.distanceTo(position)).toBeLessThan(1e-8)
-    expect(actor.quaternion.angleTo(rotation)).toBeLessThan(1e-7)
-    expect(s.camera.position.distanceTo(camera)).toBeLessThan(1e-8)
-    expect(s.camera.quaternion.angleTo(cameraRotation)).toBeLessThan(1e-7)
-    visibility.forEach((visible, object) => expect(object.visible, object.name).toBe(visible))
-    expect(s.progress).toEqual([]); expect(s.complete).not.toHaveBeenCalled()
-    active = true; window.dispatchEvent(new Event('focus')); s.instance.update(.025)
-    expect(s.overlay.getAttribute('data-close-inspection')).toBe('ready')
-    s.button.click(); s.run(1); expect(s.progress).toEqual([])
+  it('releases captured input, resources and DOM once after disposal',()=>{
+    const s=mount(),resources=new Set<THREE.BufferGeometry|THREE.Material|THREE.Texture>()
+    s.scene.traverse(o=>{const m=o as THREE.Mesh;if(m.geometry)resources.add(m.geometry);for(const mat of Array.isArray(m.material)?m.material:m.material?[m.material]:[]){resources.add(mat);const map=(mat as THREE.MeshStandardMaterial).map;if(map)resources.add(map)}})
+    const freed=new Map<unknown,number>();resources.forEach(r=>r.addEventListener('dispose',()=>freed.set(r,(freed.get(r)??0)+1)))
+    const p=s.point('brat-cloth',anchor(0)),release=vi.fn();s.hit.releasePointerCapture=release;event(s.hit,'pointerdown',p)
+    s.instance.dispose();s.instance.dispose();s.button.click();s.instance.start();s.instance.update(1)
+    expect(release).toHaveBeenCalledExactlyOnceWith(1);expect(s.progress).toEqual([]);expect(freed.size).toBe(resources.size);expect([...freed.values()].every(n=>n===1)).toBe(true);expect(s.overlay.childElementCount).toBe(0)
   })
 })

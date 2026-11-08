@@ -41,10 +41,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "narratives": {
-        "sourceHash": "c9773ec7f174e1fb0e9e169429cd202ba49852f447802110d92e2450cfac8c14",
-        "targetHash": "c9773ec7f174e1fb0e9e169429cd202ba49852f447802110d92e2450cfac8c14",
+        "sourceHash": "4f3dd9fdd91b5d8efd0917027cc3f44701bdcb6f98f535a46442c194830ffe0f",
+        "targetHash": "4f3dd9fdd91b5d8efd0917027cc3f44701bdcb6f98f535a46442c194830ffe0f",
         "messages": 158,
-        "reviewedAt": "2026-11-05T11:15:20.278Z",
+        "reviewedAt": "2026-11-08T09:32:01.641Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -57,10 +57,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "scenes": {
-        "sourceHash": "e68d63dcfd36cafae0ca3c86471dab3084648ffce8fabfa13f488b7752b98c2f",
-        "targetHash": "e68d63dcfd36cafae0ca3c86471dab3084648ffce8fabfa13f488b7752b98c2f",
-        "messages": 2309,
-        "reviewedAt": "2026-11-06T01:13:40.299Z",
+        "sourceHash": "abb36fc3953fc57c1815de23a80794bc8909674a9072570fbb985d14d0f49a05",
+        "targetHash": "abb36fc3953fc57c1815de23a80794bc8909674a9072570fbb985d14d0f49a05",
+        "messages": 2315,
+        "reviewedAt": "2026-11-08T09:32:01.644Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
@@ -99,10 +99,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "narratives": {
-        "sourceHash": "c9773ec7f174e1fb0e9e169429cd202ba49852f447802110d92e2450cfac8c14",
-        "targetHash": "49054d00a54ab40c8f14a627fdfef8d489f2385e23a13b62a77762a909235725",
+        "sourceHash": "4f3dd9fdd91b5d8efd0917027cc3f44701bdcb6f98f535a46442c194830ffe0f",
+        "targetHash": "049e7bbe5b638a4c333e27e3490fc8d17242426f1244ace4cde5395db411baaa",
         "messages": 158,
-        "reviewedAt": "2026-11-05T11:15:20.282Z",
+        "reviewedAt": "2026-11-08T09:32:01.644Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -115,10 +115,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "scenes": {
-        "sourceHash": "e68d63dcfd36cafae0ca3c86471dab3084648ffce8fabfa13f488b7752b98c2f",
-        "targetHash": "3a0754ea72617c13a57af706ebf6fa60fa6983bdb7e7c0555720d829520f336e",
-        "messages": 2309,
-        "reviewedAt": "2026-11-06T01:13:40.302Z",
+        "sourceHash": "abb36fc3953fc57c1815de23a80794bc8909674a9072570fbb985d14d0f49a05",
+        "targetHash": "4f63d5326695e40a9f453f7b1be96e85b61932968c8449f63d3d98ccd6523235",
+        "messages": 2315,
+        "reviewedAt": "2026-11-08T09:32:01.646Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
@@ -157,10 +157,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "narratives": {
-        "sourceHash": "c9773ec7f174e1fb0e9e169429cd202ba49852f447802110d92e2450cfac8c14",
-        "targetHash": "49ece1ee505b5f74a4e1052ceb7df81661d620e1a90393c76fa8e1b679e5d709",
+        "sourceHash": "4f3dd9fdd91b5d8efd0917027cc3f44701bdcb6f98f535a46442c194830ffe0f",
+        "targetHash": "922b80cb83a398a3cdecd926beadb2bc6c359d8f1091b4cb2111b1dbbdf8f988",
         "messages": 158,
-        "reviewedAt": "2026-11-05T11:15:20.286Z",
+        "reviewedAt": "2026-11-08T09:32:01.647Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -173,10 +173,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "scenes": {
-        "sourceHash": "e68d63dcfd36cafae0ca3c86471dab3084648ffce8fabfa13f488b7752b98c2f",
-        "targetHash": "68fad8b40c1166fcd68c0925484d42689f5329428c19bc54c9dd3b91c969aab2",
-        "messages": 2309,
-        "reviewedAt": "2026-11-06T01:13:40.305Z",
+        "sourceHash": "abb36fc3953fc57c1815de23a80794bc8909674a9072570fbb985d14d0f49a05",
+        "targetHash": "922ab39c9e284f4c1fb6596eb05e2d5ffd4d9a7bffbb6cf752cd1ba08e3f21a5",
+        "messages": 2315,
+        "reviewedAt": "2026-11-08T09:32:01.648Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
@@ -215,10 +215,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "narratives": {
-        "sourceHash": "c9773ec7f174e1fb0e9e169429cd202ba49852f447802110d92e2450cfac8c14",
-        "targetHash": "8dd892a44d4ea7e646e1f872f1987433009b1bf07053025cb43f26e58968b760",
+        "sourceHash": "4f3dd9fdd91b5d8efd0917027cc3f44701bdcb6f98f535a46442c194830ffe0f",
+        "targetHash": "6b228221418ec1f46d6680b0a17c33a1c4bcb388edb87eaa9a4aa526e783239c",
         "messages": 158,
-        "reviewedAt": "2026-11-05T11:15:20.290Z",
+        "reviewedAt": "2026-11-08T09:32:01.649Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -231,10 +231,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "scenes": {
-        "sourceHash": "e68d63dcfd36cafae0ca3c86471dab3084648ffce8fabfa13f488b7752b98c2f",
-        "targetHash": "4fff7c30bec63831088ac969c026e81ee740f6f17bfbd279316d5ba14218e7d9",
-        "messages": 2309,
-        "reviewedAt": "2026-11-06T01:13:40.307Z",
+        "sourceHash": "abb36fc3953fc57c1815de23a80794bc8909674a9072570fbb985d14d0f49a05",
+        "targetHash": "a020c6bf09b15d45583d38e117a616be6e0c8aaabc825cc17dd5ecc4b19d0c68",
+        "messages": 2315,
+        "reviewedAt": "2026-11-08T09:32:01.651Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
@@ -273,10 +273,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "narratives": {
-        "sourceHash": "c9773ec7f174e1fb0e9e169429cd202ba49852f447802110d92e2450cfac8c14",
-        "targetHash": "0d71e0afd67a583905a0cbb055859bf9e6886ac4f08955c9960225972defc2af",
+        "sourceHash": "4f3dd9fdd91b5d8efd0917027cc3f44701bdcb6f98f535a46442c194830ffe0f",
+        "targetHash": "78e71388ce282d5e35e06df7e4585e691441faac93f98a99fd9296f7b9fc5257",
         "messages": 158,
-        "reviewedAt": "2026-11-05T11:15:20.293Z",
+        "reviewedAt": "2026-11-08T09:32:01.652Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -289,10 +289,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "scenes": {
-        "sourceHash": "e68d63dcfd36cafae0ca3c86471dab3084648ffce8fabfa13f488b7752b98c2f",
-        "targetHash": "17771b8acc3936bf7e39660ea05480269f6704b81b854d8cbe152854b9274905",
-        "messages": 2309,
-        "reviewedAt": "2026-11-06T01:13:40.310Z",
+        "sourceHash": "abb36fc3953fc57c1815de23a80794bc8909674a9072570fbb985d14d0f49a05",
+        "targetHash": "bf138617ef410e81d891f036739905fc20bc16bff89754f544f39495b610330c",
+        "messages": 2315,
+        "reviewedAt": "2026-11-08T09:32:01.653Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
@@ -331,10 +331,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "narratives": {
-        "sourceHash": "c9773ec7f174e1fb0e9e169429cd202ba49852f447802110d92e2450cfac8c14",
-        "targetHash": "2f85c7f9db777dfca87512e83ee82b448d2c5f70e0a6bcc8366ab3a6fef7679c",
+        "sourceHash": "4f3dd9fdd91b5d8efd0917027cc3f44701bdcb6f98f535a46442c194830ffe0f",
+        "targetHash": "85a25d26808ddcc3c3fcf33be0ac1a65d151ad50e332cedd3095721d263f98ef",
         "messages": 158,
-        "reviewedAt": "2026-11-05T11:15:20.296Z",
+        "reviewedAt": "2026-11-08T09:32:01.654Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -347,10 +347,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "scenes": {
-        "sourceHash": "e68d63dcfd36cafae0ca3c86471dab3084648ffce8fabfa13f488b7752b98c2f",
-        "targetHash": "eef7ff2b66fcaa5d6d9829e50d4177bbb9095343350cdc0cf2081131f5298f0f",
-        "messages": 2309,
-        "reviewedAt": "2026-11-06T01:13:40.312Z",
+        "sourceHash": "abb36fc3953fc57c1815de23a80794bc8909674a9072570fbb985d14d0f49a05",
+        "targetHash": "420d00b3dc0a6d80f73f7a008e08e71e27ea92220402b3229d702be944bc78ed",
+        "messages": 2315,
+        "reviewedAt": "2026-11-08T09:32:01.656Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
@@ -389,10 +389,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "narratives": {
-        "sourceHash": "c9773ec7f174e1fb0e9e169429cd202ba49852f447802110d92e2450cfac8c14",
-        "targetHash": "0f3d08e8eb8da566ce63eb3a2b5ae450e4ca44976269bba100da4c6e8f48af98",
+        "sourceHash": "4f3dd9fdd91b5d8efd0917027cc3f44701bdcb6f98f535a46442c194830ffe0f",
+        "targetHash": "c68f592ce14147bf18b05efd560e3ec1ad95315c34325e788e5634cb1428d279",
         "messages": 158,
-        "reviewedAt": "2026-11-05T11:15:20.298Z",
+        "reviewedAt": "2026-11-08T09:32:01.657Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -405,10 +405,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "scenes": {
-        "sourceHash": "e68d63dcfd36cafae0ca3c86471dab3084648ffce8fabfa13f488b7752b98c2f",
-        "targetHash": "50e6f5ff0f0e8e38aebbc4dd008139b220c4b9592e1528dbb5b0bb34ffac9113",
-        "messages": 2309,
-        "reviewedAt": "2026-11-06T01:13:40.315Z",
+        "sourceHash": "abb36fc3953fc57c1815de23a80794bc8909674a9072570fbb985d14d0f49a05",
+        "targetHash": "2e9295d7ce4715252b29b151fec6b666aef8520b1b7faa61a3819b584271fd8e",
+        "messages": 2315,
+        "reviewedAt": "2026-11-08T09:32:01.659Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }
@@ -447,10 +447,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "narratives": {
-        "sourceHash": "c9773ec7f174e1fb0e9e169429cd202ba49852f447802110d92e2450cfac8c14",
-        "targetHash": "40d2a940fb0b0786d510ab4c2d910aaa1addb5589c681d19a4ad57e92860c551",
+        "sourceHash": "4f3dd9fdd91b5d8efd0917027cc3f44701bdcb6f98f535a46442c194830ffe0f",
+        "targetHash": "1c8bc9f57564af98283690c620745f75851782200804cc397cb232160ea07595",
         "messages": 158,
-        "reviewedAt": "2026-11-05T11:15:20.302Z",
+        "reviewedAt": "2026-11-08T09:32:01.660Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
@@ -463,10 +463,10 @@
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       },
       "scenes": {
-        "sourceHash": "e68d63dcfd36cafae0ca3c86471dab3084648ffce8fabfa13f488b7752b98c2f",
-        "targetHash": "60a1ef5104a2c5220b24f34c4ae093b235072e75166968063f1e651378d656c1",
-        "messages": 2309,
-        "reviewedAt": "2026-11-06T01:13:40.318Z",
+        "sourceHash": "abb36fc3953fc57c1815de23a80794bc8909674a9072570fbb985d14d0f49a05",
+        "targetHash": "86c5f4d7f2cb52dfb43d05cfb2dfd640a67b351bbf3c4303b2b2958d10d161ab",
+        "messages": 2315,
+        "reviewedAt": "2026-11-08T09:32:01.662Z",
         "review": "agent-self-review",
         "reviewer": "Codex implementation agents (translation self-review); /root (integration review)"
       }

@@ -2030,7 +2030,7 @@
   "scene.packages.core.src.scene-intentions.label.c235b401": "Pedir saúde para si e para a família",
   "scene.packages.core.src.scene-intentions.action.ce23b11f": "Mexa suavemente a papa das sete ervas, recolha uma colher quente e sirva na tigela.",
   "scene.packages.core.src.scene-intentions.label.fbca8088": "Desejar paz a quem lhe é querido",
-  "scene.packages.core.src.scene-intentions.action.e057ad59": "Levante o pano quadrado, leve-o para fora da janela e estenda-o suavemente.",
+  "scene.packages.core.src.scene-intentions.action.e057ad59": "Leve o pano ao parapeito exterior e alise-o de um lado para o outro.",
   "scene.packages.core.src.scene-intentions.label.a91709af": "Desejar paz ao lar e à comunidade",
   "scene.packages.core.src.scene-intentions.action.cc249c22": "Levante o poste com pássaro de madeira, endireite-o e coloque-o com firmeza.",
   "scene.packages.core.src.scene-intentions.label.074fafe5": "Desejar paz para o novo ano",
@@ -2307,5 +2307,11 @@
   "scene.interaction-play.d531752889": "Arraste com um dedo para ajustar o ângulo. Toque em «Concluir a contemplação» para terminar.",
   "scene.interaction-play.3d610c75cd": "Toque nas conchas de madeira à esquerda, ou pressione suavemente para baixo e solte para uni-las.",
   "scene.interaction-play.05b5285e77": "Toque nas conchas de madeira à direita, ou pressione suavemente para baixo e solte para ouvir a outra castanhola responder.",
-  "scene.interaction-play.10e478ab0a": "Toque em cada lado separadamente ou alterne rapidamente. Quando quiser parar, toque em “Encerrar ritual”."
+  "scene.interaction-play.10e478ab0a": "Toque em cada lado separadamente ou alterne rapidamente. Quando quiser parar, toque em “Encerrar ritual”.",
+  "scene.brat-bride-cloth.smoothing.place": "Colocar o pano no parapeito",
+  "scene.brat-bride-cloth.smoothing.smooth": "Alisar o pano",
+  "scene.brat-bride-cloth.smoothing.carry": "Pegue no pano, leve-o até ao parapeito exterior e pouse-o com cuidado.",
+  "scene.brat-bride-cloth.smoothing.settling": "O pano assenta no parapeito. Aproxime-se para o alisar…",
+  "scene.brat-bride-cloth.smoothing.smoothing": "Passe o dedo de um lado para o outro sobre o pano para alisar as pregas restantes.",
+  "scene.brat-bride-cloth.smoothing.finishing": "As pregas desfazem-se e o pano fica bem estendido junto à janela…"
 }

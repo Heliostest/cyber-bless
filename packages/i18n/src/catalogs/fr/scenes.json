@@ -2030,7 +2030,7 @@
   "scene.packages.core.src.scene-intentions.label.c235b401": "Prier pour votre santé et celle de votre famille",
   "scene.packages.core.src.scene-intentions.action.ce23b11f": "Mélangez doucement les sept herbes, prenez de la bouillie chaude et servez-la dans le bol.",
   "scene.packages.core.src.scene-intentions.label.fbca8088": "Un vœu de paix pour les personnes qui vous sont chères",
-  "scene.packages.core.src.scene-intentions.action.e057ad59": "Soulevez le carré de tissu, amenez-le à l’extérieur de la fenêtre et déposez-le doucement.",
+  "scene.packages.core.src.scene-intentions.action.e057ad59": "Portez le tissu sur le rebord extérieur, puis lissez-le de gauche à droite.",
   "scene.packages.core.src.scene-intentions.label.a91709af": "Un vœu de paix pour le foyer",
   "scene.packages.core.src.scene-intentions.action.cc249c22": "Soulevez le mât à oiseau de bois, redressez-le puis installez-le fermement.",
   "scene.packages.core.src.scene-intentions.label.074fafe5": "Un vœu de paix pour l’année nouvelle",
@@ -2307,5 +2307,11 @@
   "scene.interaction-play.d531752889": "Faites glisser avec un doigt pour ajuster l’orientation. Touchez « Terminer l’observation » pour finir.",
   "scene.interaction-play.3d610c75cd": "Touchez les coques en bois à gauche, ou appuyez doucement vers le bas puis relâchez pour les faire se rencontrer.",
   "scene.interaction-play.05b5285e77": "Touchez les coques en bois à droite, ou appuyez doucement vers le bas puis relâchez pour entendre l’autre castagnette répondre.",
-  "scene.interaction-play.10e478ab0a": "Touchez chaque côté séparément ou alternez rapidement. Pour vous arrêter, touchez « Terminer le rituel »."
+  "scene.interaction-play.10e478ab0a": "Touchez chaque côté séparément ou alternez rapidement. Pour vous arrêter, touchez « Terminer le rituel ».",
+  "scene.brat-bride-cloth.smoothing.place": "Poser le tissu sur le rebord",
+  "scene.brat-bride-cloth.smoothing.smooth": "Lisser le tissu",
+  "scene.brat-bride-cloth.smoothing.carry": "Soulevez le tissu, portez-le sur le rebord extérieur et posez-le doucement.",
+  "scene.brat-bride-cloth.smoothing.settling": "Le tissu se pose sur le rebord. Approchez-vous pour le lisser…",
+  "scene.brat-bride-cloth.smoothing.smoothing": "Passez le doigt de gauche à droite sur le tissu pour aplatir doucement les plis restants.",
+  "scene.brat-bride-cloth.smoothing.finishing": "Les plis se détendent et le tissu repose bien à plat près de la fenêtre…"
 }

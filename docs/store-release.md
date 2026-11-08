@@ -4,7 +4,21 @@
 
 正式 Mac mini 构建改用[参数化 tag 发布入口](../scripts/ios-release/README.md)：先提交业务源码、素材、发布工具、依赖锁及版本输入，合并／推送 `master` 后创建并推送附注 tag；Mac 直接获取该 tag 和 LFS 实体，执行同版本工具并串行验证、构建和交付。不再把未提交工作区生成的 `source.tgz` 用于新正式发布。构建号尚未分配时保持 release input 的 `null` 并拒绝执行，不猜测下一个编号。
 
-该入口已用于下述构建 20、21、22、23、24、25、26、27、28；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+该入口已用于下述构建 20、21、22、23、24、25、26、27、28、29；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+
+## 2026-11-09 构建 29：反馈复测与交互修复
+
+北京时间 00:48:51，**1.0.0 (29)** 完成 Xcode 构建、ASC 上传及既有内部组验证；00:49:34 再次读回 `VALID / IN_BETA_TESTING`。Apple build UUID 为 `fae99be2-73b4-4fe5-b322-61e1ab17baad`，`Team (Expo)` 已包含本构建，仍为 1 位既有测试员，测试说明匹配。
+
+来源为已推送的 master 提交 `ea0171351d83c925266d97ab51988556ab72c485`、附注 tag `ios-v1.0.0-build.29`（tag 对象 `e301ede70f879f3b7fa50d7d312c734e96347b14`、tree `a06bd9a49b37dfe376efc2c8cafeaf5956900d3f`）。本包包含近景转看方向修复、窗布拿放后近景抹平、仪式历史反馈及提示连接线显示改进；相关文化影响分别沿用[交互修复核查](research/2026-11-08-pending-feedback-fixes.md)、[历史反馈核查](research/2026-11-08-feedback-history.md)及[提示线核查](research/2026-11-08-ritual-cue-visibility.md)。本轮发布未新增文化主张，也未重新认证既有来源。冻结输入 `internalUpdates:false`、`syncEasCounter:false`；原生热更新保持关闭，构建号按 ASC 分配。
+
+冻结提交的全部项目检查阶段已完成，含 13,286 项工作区 Vitest 测试及配套 Node 检查、生产构建和 158 场修订检查。在线 Expo 兼容表推荐七项新补丁，完整移动阶段改用已锁定 SDK 的本地兼容表后通过；没有升级依赖或排除测试。Windows 发布工具 100 项通过、2 项平台跳过；Mac 102 项全部通过。锁定依赖、Release 预构建、4 个 dSYM 映射阶段、归档、导出及主应用/小组件签名验证通过；5720 个来源文件、17853 项原生输入一致，207 项离线资源、162 个 DOM 脚本与 477 张小组件封面核验通过。
+
+IPA 为 269,395,901 字节，SHA-256 `3766d572b2e3cb385163fe069468470f14fae55866fc76bfbecfb5eb28cbca3c`；[本机 IPA](../artifacts/ios-release-29/blessing-29.ipa) 与 Mac 校验一致。Mac IPA/archive/dSYM 保留于 `/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.29/source/artifacts/ios-release/29`。钥匙串搜索列表已恢复，隔离构建钥匙串已锁定。
+
+为解决构建前磁盘仅余约 2.3 GiB，已核对构建 20–27 的内部组完成回执、IPA 哈希与 archive/dSYM，将各轮完整产物目录迁至 `/Users/heli/ios-builds/cyber-bless/history/retained-<原tag>/artifacts` 后清理对应旧 checkout 和可重建缓存，可用空间恢复至约 20 GiB；历史路径变更有保留清单，不修改原始回执中的来源身份。构建 28 和本轮 29 的完整 checkout 与产物保留。清单及全部回执见 `artifacts/ios-release-29/` 和[最新内测状态](../store/ios/testflight-status.json)。
+
+没有新增邀请、扩大测试范围、提交正式审核或公开发布；正式商店仍关联构建 12。此次未执行物理设备安装或功能验收。
 
 ## 2026-11-08 构建 28：当前 master 重新构建
 

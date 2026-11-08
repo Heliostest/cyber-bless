@@ -266,12 +266,19 @@ describe('C group spatial object placement', () => {
       }
       event(s.hit, 'pointermove', [source[0] - 16, source[1] + 22])
       event(s.hit, 'pointermove', goal)
-      expect(s.progress).toEqual([targetStep + 1])
+      const expected = id === 'brat-bride-cloth' ? [] : [targetStep + 1]
+      expect(s.progress).toEqual(expected)
       event(s.hit, 'pointermove', [goal[0] + 40, goal[1] - 40])
-      expect(s.progress).toEqual([targetStep + 1])
+      expect(s.progress).toEqual(expected)
       event(s.hit, 'pointerup', goal)
-      expect(s.progress).toEqual([targetStep + 1])
-      if (targetStep === 2) expect(s.completed).toHaveBeenCalledOnce()
+      expect(s.progress).toEqual(expected)
+      if (id === 'brat-bride-cloth') {
+        // Arrival now enters cloth smoothing. The old touch tail cannot finish it.
+        expect(s.completed).not.toHaveBeenCalled()
+        s.instance.update(.025)
+        const button = s.hit.parentElement!.querySelector<HTMLButtonElement>('button')!
+        button.click(); expect(s.progress).toEqual([3]); expect(s.completed).toHaveBeenCalledOnce()
+      } else if (targetStep === 2) expect(s.completed).toHaveBeenCalledOnce()
     })
     it(`${id} cancellation restores the whole object and does not commit`, () => {
       const s = mount(create, 0), c = s.cue(), anchor = c.cue.anchor ?? [0, 0, 0]

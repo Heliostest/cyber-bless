@@ -3,6 +3,30 @@ import * as THREE from 'three'
 import {createBratBrideModel} from './model'
 import {disposeTree} from '../procedural-kit'
 describe('cloth and real window supports',()=>{
+ it('responds locally to horizontal smoothing and stays on the sill with closed finite thickness',()=>{
+  const m=createBratBrideModel();m.pose(3,0);m.smoothing.begin()
+  const p=m.cloth.geometry.getAttribute('position'),before=Array.from(p.array),buffer=p.array
+  m.smoothing.stroke(new THREE.Vector2(-.7,0),new THREE.Vector2(0,0))
+  m.smoothing.update(.05,false)
+  expect(Array.from(p.array)).not.toEqual(before)
+  expect(m.smoothing.progress()).toBeGreaterThan(0);expect(m.smoothing.progress()).toBeLessThan(.8)
+  for(const dt of[NaN,Infinity,-1,10000,...Array(100).fill(.05)])m.smoothing.update(dt,false)
+  expect(p.array).toBe(buffer)
+  for(let i=0;i<p.count;i++){expect(Number.isFinite(p.getY(i))).toBe(true);expect(p.getY(i)).toBeGreaterThanOrEqual(0)}
+  disposeTree(m.root)
+ })
+ it('requires surface coverage rather than taps, vertical rubbing or repeated rubbing of one spot',()=>{
+  const m=createBratBrideModel();m.pose(3,0);m.smoothing.begin()
+  for(let i=0;i<30;i++)m.smoothing.stroke(new THREE.Vector2(0,-.2),new THREE.Vector2(0,.2))
+  expect(m.smoothing.progress()).toBe(0)
+  for(let i=0;i<30;i++)m.smoothing.stroke(new THREE.Vector2(-.05,0),new THREE.Vector2(.05,0))
+  expect(m.smoothing.progress()).toBeLessThan(.3)
+  for(const z of[-.24,0,.24])m.smoothing.stroke(new THREE.Vector2(-.78,z),new THREE.Vector2(.78,z))
+  expect(m.smoothing.progress()).toBeGreaterThan(.82)
+  m.smoothing.finish();m.smoothing.update(.05,true)
+  const p=m.cloth.geometry.getAttribute('position');expect(Math.max(...Array.from({length:p.count},(_,i)=>p.getY(i)))).toBeLessThan(.013)
+  disposeTree(m.root)
+ })
  it('attaches the night pane to its actual wooden frame',()=>{const m=createBratBrideModel(),pane=new THREE.Box3().setFromObject(m.root.getObjectByName('window-night-pane')!,true);for(const name of['window-frame--1.27','window-frame-1.27','window-crossbar-2.07'])expect(pane.intersectsBox(new THREE.Box3().setFromObject(m.root.getObjectByName(name)!,true)),name).toBe(true);disposeTree(m.root)})
  it('preserves all checkpoint shapes and world matrices, including a path reversal',()=>{const m=createBratBrideModel();for(let step=0;step<3;step++){m.pose(step,1);const positions=Array.from(m.cloth.geometry.getAttribute('position').array),matrix=[...m.cloth.matrixWorld.elements];m.pose(step+1,0);expect(Array.from(m.cloth.geometry.getAttribute('position').array)).toEqual(positions);expect(m.cloth.matrixWorld.elements).toEqual(matrix)}m.pose(0,0);const before=Array.from(m.cloth.geometry.getAttribute('position').array);m.pose(2,.7);m.pose(0,0);expect(Array.from(m.cloth.geometry.getAttribute('position').array)).toEqual(before);disposeTree(m.root)})
  it('starts on the bench and ends fully supported on the sill',()=>{const m=createBratBrideModel();for(const [step,top,support]of [[0,.32,m.bench],[3,.88,m.sill]] as const){m.pose(step,0);const box=new THREE.Box3().setFromObject(m.cloth,true),base=new THREE.Box3().setFromObject(support,true);expect(box.min.y).toBeCloseTo(top,6);expect(base.max.y).toBeCloseTo(top,6);expect(box.min.x).toBeGreaterThan(base.min.x);expect(box.max.x).toBeLessThan(base.max.x);expect(box.min.z).toBeGreaterThan(base.min.z);expect(box.max.z).toBeLessThan(base.max.z)}disposeTree(m.root)})

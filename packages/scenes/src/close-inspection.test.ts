@@ -38,6 +38,27 @@ function mount(width = 390, height = 408, reduced = false, autoReturn?: boolean)
 }
 
 describe('close object inspection', () => {
+  it.each([[32, 0], [-32, 0], [0, 22], [0, -22]])('moves the visible surface with a finger dragged by %i,%i', (dx, dy) => {
+    const s = mount(390, 408, true); s.ui.actionBtn.click()
+    const center = new THREE.Box3().setFromObject(s.actor, true).getCenter(new THREE.Vector3())
+    // A point on the camera-facing surface, independent of orbit implementation.
+    const surface = center.clone().add(s.camera.position.clone().sub(center).normalize().multiplyScalar(.3))
+    const before = surface.clone().project(s.camera), p = s.point()
+    s.pointer('pointerdown', p); s.pointer('pointermove', [p[0] + dx, p[1] + dy]); s.pointer('pointerup', [p[0] + dx, p[1] + dy])
+    const after = surface.clone().project(s.camera)
+    if (dx) expect((after.x - before.x) * dx).toBeGreaterThan(0)
+    if (dy) expect((before.y - after.y) * dy).toBeGreaterThan(0)
+  })
+  it.each([['ArrowLeft', -1, 0], ['ArrowRight', 1, 0], ['ArrowUp', 0, -1], ['ArrowDown', 0, 1]] as const)('moves the viewed surface toward %s', (key, dx, dy) => {
+    const s = mount(390, 408, true); s.ui.actionBtn.click()
+    const center = new THREE.Box3().setFromObject(s.actor, true).getCenter(new THREE.Vector3())
+    const surface = center.clone().add(s.camera.position.clone().sub(center).normalize().multiplyScalar(.3))
+    const before = surface.clone().project(s.camera)
+    s.ui.actionBtn.dispatchEvent(new KeyboardEvent('keydown', {key, bubbles:true, cancelable:true}))
+    const after = surface.clone().project(s.camera)
+    if (dx) expect((after.x - before.x) * dx).toBeGreaterThan(0)
+    if (dy) expect((before.y - after.y) * dy).toBeGreaterThan(0)
+  })
   it.each(SUPPORTED_LOCALES)('uses mobile help for pickup and the current viewing phase in %s', locale => {
     configureLocale(locale)
     const s=mount()

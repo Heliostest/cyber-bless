@@ -2030,7 +2030,7 @@
   "scene.packages.core.src.scene-intentions.label.c235b401": "自分と家族の健やかさを祈る",
   "scene.packages.core.src.scene-intentions.action.ce23b11f": "七草粥を軽く混ぜ、温かな一さじをすくい、碗へ盛ります。",
   "scene.packages.core.src.scene-intentions.label.fbca8088": "大切な人の無事を願う",
-  "scene.packages.core.src.scene-intentions.action.e057ad59": "四角い布を持ち上げ、窓の外へ移し、そっと広げます。",
+  "scene.packages.core.src.scene-intentions.action.e057ad59": "布を屋外の窓台に移し、左右になでて平らにしましょう。",
   "scene.packages.core.src.scene-intentions.label.a91709af": "故郷に平安を願う",
   "scene.packages.core.src.scene-intentions.action.cc249c22": "木の鳥の竿を持ち上げ、まっすぐにしてしっかり置きます。",
   "scene.packages.core.src.scene-intentions.label.074fafe5": "新年の平安を願う",
@@ -2307,5 +2307,11 @@
   "scene.interaction-play.d531752889": "1本指でドラッグして向きを調整し、「鑑賞を終える」をタップして終えます。",
   "scene.interaction-play.3d610c75cd": "左の木の殻をタップするか、下へ軽く押してから離し、二枚のくぼんだ殻を合わせましょう。",
   "scene.interaction-play.05b5285e77": "右の木の殻をタップするか、下へ軽く押してから離し、もう一組のカスタネットの音を聞きましょう。",
-  "scene.interaction-play.10e478ab0a": "左右の殻を別々にタップしたり、素早く交互に鳴らしたりできます。終えるときは「儀式を終える」を押してください。"
+  "scene.interaction-play.10e478ab0a": "左右の殻を別々にタップしたり、素早く交互に鳴らしたりできます。終えるときは「儀式を終える」を押してください。",
+  "scene.brat-bride-cloth.smoothing.place": "布を窓台に置く",
+  "scene.brat-bride-cloth.smoothing.smooth": "布をならす",
+  "scene.brat-bride-cloth.smoothing.carry": "布を持ち上げ、屋外の窓台へ運んで、そっと置きましょう。",
+  "scene.brat-bride-cloth.smoothing.settling": "布が窓台にそっと下ります。近くでゆっくりならしましょう……",
+  "scene.brat-bride-cloth.smoothing.smoothing": "布の上を左右になでて、残っているしわをゆっくり伸ばしましょう。",
+  "scene.brat-bride-cloth.smoothing.finishing": "しわが伸び、布が窓辺に落ち着きます……"
 }

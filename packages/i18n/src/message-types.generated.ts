@@ -3228,5 +3228,11 @@ export interface MessageArguments {
   "scene.interaction-play.3d610c75cd": {  };
   "scene.interaction-play.05b5285e77": {  };
   "scene.interaction-play.10e478ab0a": {  };
+  "scene.brat-bride-cloth.smoothing.place": {  };
+  "scene.brat-bride-cloth.smoothing.smooth": {  };
+  "scene.brat-bride-cloth.smoothing.carry": {  };
+  "scene.brat-bride-cloth.smoothing.settling": {  };
+  "scene.brat-bride-cloth.smoothing.smoothing": {  };
+  "scene.brat-bride-cloth.smoothing.finishing": {  };
 }
 export type MessageId = keyof MessageArguments;

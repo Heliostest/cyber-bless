@@ -17,7 +17,7 @@ const intentions: Readonly<Record<string, SceneIntention>> = {
   'sri-lankan-bodhi-puja': {kind:'blessing',label:'为牵挂的人寄一份平安',action:'提起水壶，移近菩提树根，缓缓倾水供养。',optionalWish:false},
   'scottish-first-footing': {kind:'blessing',label:'携煤入户，祝家宅温暖安康',optionalWish:false,action:'作为新年午夜后的首位来客，拿起带来的煤礼，携过门槛，送进主人炉火。'},
   'nanakusa-gayu': {kind:'blessing',label:'为自己与家人祈一份安康',action:'轻拌七草，舀起温粥，再盛进碗中。',optionalWish:false},
-  'brat-bride-cloth': {kind:'blessing',label:'为牵挂的人寄一份平安',action:'提起方布，移到窗外，再轻轻铺好。',optionalWish:false},
+  'brat-bride-cloth': {kind:'blessing',label:'为牵挂的人寄一份平安',action:'把方布移到户外窗台，左右抹平铺好。',optionalWish:false},
   'korean-sotdae': {kind:'blessing',label:'为家园寄一份平安',action:'托起木制鸟竿，扶正后安放稳妥。',optionalWish:false},
   'japanese-kadomatsu': {kind:'blessing',label:'为新岁寄一份平安',action:'提起备好的门松，移到门边，再轻轻放稳。',optionalWish:false},
   'pucara-rooftop-bulls': {kind:'blessing',label:'为家人寄一份平安',action:'托起一对陶牛，移向屋脊，再稳稳安放。',optionalWish:false},

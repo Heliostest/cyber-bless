@@ -146,7 +146,9 @@ export function createCloseInspection(options: Options) {
   }
   function turn(dx: number, dy: number) {
     if (!interactive() || phase !== 'viewing' || !Number.isFinite(dx) || !Number.isFinite(dy)) return
-    manual = true; yaw += dx; elevation = THREE.MathUtils.clamp(elevation + dy, -.55, 1.25)
+    // Orbiting the camera needs the opposite horizontal turn to rotating the
+    // asset: its visible surface should travel with the finger on screen.
+    manual = true; yaw -= dx; elevation = THREE.MathUtils.clamp(elevation + dy, -.55, 1.25)
     orbit()
   }
   const pointer = createObjectPointer(ui.hitLayer, {
@@ -173,7 +175,7 @@ export function createCloseInspection(options: Options) {
   const keyboard = (event: KeyboardEvent) => {
     if (!interactive() || phase === 'placement' || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return
     if (event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); cancel(); return }
-    const direction: Record<string,[number,number]> = { ArrowLeft: [-.16,0], ArrowRight: [.16,0], ArrowUp: [0,.12], ArrowDown: [0,-.12] }
+    const direction: Record<string,[number,number]> = { ArrowLeft: [-.16,0], ArrowRight: [.16,0], ArrowUp: [0,-.12], ArrowDown: [0,.12] }
     const delta = direction[event.key]
     if (!delta) return
     event.preventDefault(); event.stopImmediatePropagation(); turn(...delta)

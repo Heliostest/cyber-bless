@@ -2030,7 +2030,7 @@
   "scene.packages.core.src.scene-intentions.label.c235b401": "자신과 가족의 건강과 평안을 빌어요",
   "scene.packages.core.src.scene-intentions.action.ce23b11f": "칠초죽을 가볍게 젓고 따뜻한 죽을 떠 그릇에 담아요.",
   "scene.packages.core.src.scene-intentions.label.fbca8088": "소중한 이에게 평안을 빌어요",
-  "scene.packages.core.src.scene-intentions.action.e057ad59": "네모 천을 들어 창밖으로 옮긴 뒤 가볍게 펴요.",
+  "scene.packages.core.src.scene-intentions.action.e057ad59": "천을 바깥 창턱으로 옮긴 뒤 좌우로 쓸어 펴 주세요.",
   "scene.packages.core.src.scene-intentions.label.a91709af": "집의 평안을 빌어요",
   "scene.packages.core.src.scene-intentions.action.cc249c22": "나무 새 장대를 들어 바로 세운 뒤 안정적으로 놓아요.",
   "scene.packages.core.src.scene-intentions.label.074fafe5": "새해 평안을 빌어요",
@@ -2307,5 +2307,11 @@
   "scene.interaction-play.d531752889": "한 손가락으로 끌어 방향을 조절하세요. 마치려면 ‘감상 마치기’를 탭하세요.",
   "scene.interaction-play.3d610c75cd": "왼쪽 나무 패를 가볍게 누르거나 아래로 살짝 눌렀다 놓아 두 오목한 패를 부딪쳐 보세요.",
   "scene.interaction-play.05b5285e77": "오른쪽 나무 패를 가볍게 누르거나 아래로 살짝 눌렀다 놓아 다른 캐스터네츠의 소리를 들어 보세요.",
-  "scene.interaction-play.10e478ab0a": "좌우 나무 패를 따로 누르거나 빠르게 번갈아 눌러 보세요. 마치려면 ‘의식 끝내기’를 누르세요."
+  "scene.interaction-play.10e478ab0a": "좌우 나무 패를 따로 누르거나 빠르게 번갈아 눌러 보세요. 마치려면 ‘의식 끝내기’를 누르세요.",
+  "scene.brat-bride-cloth.smoothing.place": "천을 창턱에 놓기",
+  "scene.brat-bride-cloth.smoothing.smooth": "천 펴기",
+  "scene.brat-bride-cloth.smoothing.carry": "천을 들어 바깥 창턱으로 옮긴 뒤 살며시 내려놓으세요.",
+  "scene.brat-bride-cloth.smoothing.settling": "천이 창턱에 살며시 놓입니다. 가까이에서 천천히 펴 보세요…",
+  "scene.brat-bride-cloth.smoothing.smoothing": "천 위를 좌우로 쓸어 남은 주름을 천천히 펴 주세요.",
+  "scene.brat-bride-cloth.smoothing.finishing": "주름이 펴지고 천이 창가에 가지런히 놓입니다…"
 }

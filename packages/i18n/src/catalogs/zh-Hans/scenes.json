@@ -2030,7 +2030,7 @@
   "scene.packages.core.src.scene-intentions.label.c235b401": "为自己与家人祈一份安康",
   "scene.packages.core.src.scene-intentions.action.ce23b11f": "轻拌七草，舀起温粥，再盛进碗中。",
   "scene.packages.core.src.scene-intentions.label.fbca8088": "为牵挂的人寄一份平安",
-  "scene.packages.core.src.scene-intentions.action.e057ad59": "提起方布，移到窗外，再轻轻铺好。",
+  "scene.packages.core.src.scene-intentions.action.e057ad59": "把方布移到户外窗台，左右抹平铺好。",
   "scene.packages.core.src.scene-intentions.label.a91709af": "为家园寄一份平安",
   "scene.packages.core.src.scene-intentions.action.cc249c22": "托起木制鸟竿，扶正后安放稳妥。",
   "scene.packages.core.src.scene-intentions.label.074fafe5": "为新岁寄一份平安",
@@ -2307,5 +2307,11 @@
   "scene.interaction-play.d531752889": "单指拖动微调朝向；点按「结束欣赏」收尾。",
   "scene.interaction-play.3d610c75cd": "轻点左侧木壳，或向下轻压后松开，让两片凹壳相碰。",
   "scene.interaction-play.05b5285e77": "轻点右侧木壳，或向下轻压后松开，听另一副响板回应。",
-  "scene.interaction-play.10e478ab0a": "左右木壳可以分别轻点、快速交替；想收尾时点「结束仪式」。"
+  "scene.interaction-play.10e478ab0a": "左右木壳可以分别轻点、快速交替；想收尾时点「结束仪式」。",
+  "scene.brat-bride-cloth.smoothing.place": "把布放到窗台",
+  "scene.brat-bride-cloth.smoothing.smooth": "抹平方布",
+  "scene.brat-bride-cloth.smoothing.carry": "拿住方布，移到户外窗台上，轻轻放下。",
+  "scene.brat-bride-cloth.smoothing.settling": "方布轻落窗台，靠近后慢慢抹平……",
+  "scene.brat-bride-cloth.smoothing.smoothing": "在布面上左右抹过，把还隆起的褶皱慢慢铺平。",
+  "scene.brat-bride-cloth.smoothing.finishing": "褶皱舒展开来，方布安稳地留在窗边……"
 }

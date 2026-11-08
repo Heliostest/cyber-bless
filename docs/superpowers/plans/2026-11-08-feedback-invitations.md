@@ -22,8 +22,18 @@
 
 ## Implementation and verification
 
-- [ ] Add failing tests for independent authentication, attribution/idempotency/privacy, persisted creation/revocation and damaged configuration preservation.
-- [ ] Implement external invitation storage and CLI create/revoke commands; wire the receiver and local dashboard.
-- [ ] Run backend and feedback integration suites; review the diff and update operational documentation.
-- [ ] Review the implementation, switch the live receiver, create five external invitations, and test each through the fixed public hostname with synthetic resolved samples.
-- [ ] Confirm original reports/shared invitation are unchanged and codes remain valid after a controlled restart; deliver the five codes and availability limits.
+- [x] Add failing tests for independent authentication, attribution/idempotency/privacy, persisted creation/revocation and damaged configuration preservation.
+- [x] Implement external invitation storage and CLI create/revoke commands; wire the receiver and local dashboard.
+- [x] Run backend and feedback integration suites; review the diff and update operational documentation.
+- [x] Review the implementation, switch the live receiver, create five external invitations, and test each through the fixed public hostname with synthetic resolved samples.
+- [x] Confirm original reports/shared invitation are unchanged and codes remain valid after a controlled restart.
+- [x] Prepare five verified codes and availability limits for delivery to the owner.
+
+## Verification record
+
+- Observed new named submissions failing with HTTP 401 before the implementation; all 107 feedback-suite checks subsequently passed, including 36 backend checks.
+- Fresh code review found no actionable P0–P3 issues. A real browser confirmed two fixture invitation rows, copying the intended code, visible report attribution and markup rendered as text, with zero page errors.
+- The first full-suite attempt in the isolated worktree failed 15 checks in `assets.test.ts`, `bundled-scenes.test.ts` and `procedural-craft-lifecycle.test.ts`. That checkout had LFS pointers and shared dependencies resolving into the primary workspace. After hydrating 2,149 local LFS objects, only the 13 cross-worktree lifecycle checks remained red. The same three suites passed all 105 checks in the primary workspace, where the full App suite also passed 1,708 checks. The complete primary-workspace `npm test` then finished with exit code 0; its log is `artifacts/test-feedback/named-invitations-full-test.log`.
+- Five named invitations were verified through Cloudflare before and after a controlled scheduled-task restart. Each returned authenticated status and an exactly-once, disk-backed receipt with its own source label. Cross-code retries preserved the first source and receipt; all synthetic samples were marked resolved.
+- All five original report files, the original shared invitation configuration and the named invitation configuration retained their recorded hashes. Public administration remained HTTP 404 and an invalid invitation returned HTTP 401.
+- Actual Windows task settings still include current-user login, minute recovery and no execution time limit. This does not promise online intake while the host is off, asleep, logged out or disconnected. Non-secret receipts are in ignored `artifacts/test-feedback/named-invitation-*` files; actual codes remain in external AppData storage.

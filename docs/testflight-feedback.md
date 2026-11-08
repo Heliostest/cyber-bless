@@ -116,6 +116,8 @@ npm run feedback:export
 
 ## 验证记录与边界
 
+2026-11-08 独立邀请码：107 项反馈相关检查通过，完整 `npm test` 在主工作区退出 0。独立审阅通过；真实浏览器验证了邀请码复制、来源显示及标签作为纯文本呈现。5 个独立码均经固定公网域名验证鉴权、实际收件、持久化回执、重复提交及重启后继续可用；合成样例全部标记已修复，原有 5 条收件和共用码配置的哈希不变。邀请码没有自动到期逻辑，撤销需更新外部配置并重启接收服务；可用性仍取决于这台电脑登录、运行及联网。小型回执与测试日志保存在忽略目录 `artifacts/test-feedback/named-invitation*`。
+
 2026-11-06 App 默认地址：固定网址默认值、旧空地址/临时域名迁移、邀请码与待发项保留、迁移写入失败自动重试、等待持久化完成再发送、旧缓存失效，以及不输入网址直接提交的 UI 回归共 56 项通过；完整 `npm test` 退出 0。Web 生产构建、移动端 TypeScript、11 项移动启动/离线嵌入检查及 Android/iOS 离线导出校验通过；两端导出 JS 均已确认包含固定上传网址。
 
 `mobile:verify` 的 Expo 版本检查仍提示现有 `expo`、`@expo/metro-runtime`、`expo-asset`、`expo-dev-client`、`expo-sharing`、`expo-splash-screen`、`expo-widgets` 补丁版本与其推荐版本不一致，因此不登记为完整移动检查通过；本次没有修改依赖和锁文件。相关日志位于 `artifacts/test-feedback/default-endpoint-*.log`，独立双端导出回执见 `artifacts/mobile-verification/latest.json`。本次修改尚未发布新的原生安装包，需随 App 更新让已安装版本获得默认值与自动迁移。

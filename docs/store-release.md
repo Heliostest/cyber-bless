@@ -4,7 +4,17 @@
 
 正式 Mac mini 构建改用[参数化 tag 发布入口](../scripts/ios-release/README.md)：先提交业务源码、素材、发布工具、依赖锁及版本输入，合并／推送 `master` 后创建并推送附注 tag；Mac 直接获取该 tag 和 LFS 实体，执行同版本工具并串行验证、构建和交付。不再把未提交工作区生成的 `source.tgz` 用于新正式发布。构建号尚未分配时保持 release input 的 `null` 并拒绝执行，不猜测下一个编号。
 
-该入口已用于下述构建 20、21、22、23、24、25、26、27；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+该入口已用于下述构建 20、21、22、23、24、25、26、27、28；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+
+## 2026-11-08 构建 28：当前 master 重新构建
+
+北京时间 10:06:23，**1.0.0 (28)** 完成 Xcode 构建、ASC 上传及既有内部组验证；10:06:42 读回 `VALID / IN_BETA_TESTING`。Apple build UUID 为 `8378d620-3b31-4d3d-bb95-d19a29fd660e`，`Team (Expo)` 已包含本构建，测试说明匹配。
+
+来源为 master 提交 `d542b199709ae189d1bac1462ee817a52c4d3825`、附注 tag `ios-v1.0.0-build.28`。App 代码、资源、依赖锁和发布工具与构建 27 一致；来源同时纳入已合并的反馈服务独立测试邀请码工具与文档记录，并分配构建号 28；没有修改场景文化主张或来源关联，也未重新认证原有文化事实。编号以 ASC 为准，`syncEasCounter:false`。
+
+项目 `verify` 的全部检查项已完成；首轮受沙箱限制的反馈测试已重跑通过，再接续其余阶段，含 13,253 项工作区单元测试，以及资源、国际化、生产构建、场景修订和移动离线检查。发布工具 Windows 94 项通过、2 项平台跳过，Mac 96 项全部通过。Mac 锁定依赖、Release 预构建、4 个 dSYM 映射阶段、主应用与小组件签名及包内核验通过；5660 个来源文件、17796 项原生输入一致，207 项离线资源、477 张小组件封面、162 个 DOM 脚本已核验。
+
+IPA 为 232,148,331 字节，SHA-256 `8e00cf536366c9ae3c397ed23e834ebc001d11b6a35fa86db0994e091bec7d04`；[本机 IPA](../artifacts/ios-release-28/blessing-28.ipa) 与 Mac 校验一致。Mac IPA／archive／dSYM 保留于 `/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.28/source/artifacts/ios-release/28`。钥匙串搜索列表已恢复、隔离构建钥匙串已锁定。清理前核验旧 IPA 哈希和 archive/dSYM，仅清理构建 24–27 的 node_modules／Pods 和构建 27 的 DerivedData，历史签名产物及符号保留。回执见 `artifacts/ios-release-28/` 与 [TestFlight 状态](../store/ios/testflight-status.json)。本轮验证到内部组可测试，未做真机功能验收。
 
 ## 2026-11-07 构建 27：环境画风与连贯玻璃提示
 

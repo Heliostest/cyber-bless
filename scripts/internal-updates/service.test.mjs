@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import { once } from 'node:events';
 import { createHash, verify } from 'node:crypto';
-import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, rm, rename } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import certificates from '@expo/code-signing-certificates';
@@ -254,4 +254,40 @@ test('an unavailable configured private key reports disabled signing rather than
   await rm(f.signing.privateKeyPath);
   assert.equal((await f.service.list()).signingConfigured, false);
   await assert.rejects(f.service.publish({ releaseId: release.id }), /signing.*unavailable|not configured/i);
+});
+
+test('SDK57 www.bundle hashed DOM files package and import while hostile paths and external JS imports are rejected', async t => {
+  const f = await fixture(t);
+  await rename(path.join(f.exportDir, 'dom'), path.join(f.exportDir, 'www.bundle'));
+  for (const platform of ['ios', 'android']) f.metadata.fileMetadata[platform].assets = f.metadata.fileMetadata[platform].assets.map(asset => ({ ...asset, path: asset.path.replace(/^dom\//, 'www.bundle/') }));
+  const save = () => writeFile(path.join(f.exportDir, 'metadata.json'), JSON.stringify(f.metadata));
+  const packageIt = name => f.packageExpoExport({ exportDir: f.exportDir, outputDir: path.join(f.dir, name), runtimeVersion: 'test-native-1', source: f.source, ...f.signing });
+  await save();
+  const release = await packageIt('sdk57-www');
+  assert.equal(release.files.filter(file => file.path.startsWith('www.bundle/')).length, 3);
+  assert.equal(release.files.find(file => file.ext === 'html').key, 'a'.repeat(32));
+  assert.equal((await f.service.importRelease(path.join(f.dir, 'sdk57-www'))).id, release.id);
+  const original = f.metadata.fileMetadata.ios.assets[1].path;
+  for (const [index, hostile] of [
+    'www.bundle/../../private.pem', `www.bundle/${'a'.repeat(31)}.html`, 'www.bundle/ordinary.html',
+    `www.bundle/${'a'.repeat(32)}.map`, `www.bundle/${'a'.repeat(32)}.pem`,
+    `www.bundle/subdir/${'a'.repeat(32)}.html`, `www.bundle/${'a'.repeat(32)}.html/child`,
+    `www.bundle/${'a'.repeat(32)}.html?token=bad`, `www.bundleX/${'a'.repeat(32)}.html`,
+  ].entries()) {
+    f.metadata.fileMetadata.ios.assets[1].path = hostile; await save();
+    await assert.rejects(packageIt(`hostile-${index}`), /path|allowlist/i);
+  }
+  f.metadata.fileMetadata.ios.assets[1].path = original; await save();
+  await writeFile(path.join(f.exportDir, 'www.bundle', `${'b'.repeat(32)}.js`), 'import("https://example.invalid/runtime.js")');
+  await assert.rejects(packageIt('external-www-js'), /external|dependency/i);
+});
+
+test('real existing SDK57 export validates using only ephemeral test signing and synthetic test provenance', { skip: !process.env.INTERNAL_UPDATES_REAL_EXPORT_DIR }, async t => {
+  const f = await fixture(t);
+  const release = await f.packageExpoExport({ exportDir: path.resolve(process.env.INTERNAL_UPDATES_REAL_EXPORT_DIR), outputDir: path.join(f.dir, 'real-export-test-only'),
+    runtimeVersion: 'TEST-ONLY-NOT-A-PRODUCTION-RUNTIME', source: f.source, message: 'TEST ONLY: synthetic fixture provenance, never publish this attestation', ...f.signing });
+  assert.ok(release.files.some(file => /^www\.bundle\/[a-f0-9]{32}\.html$/.test(file.path)));
+  assert.ok(release.files.some(file => /^www\.bundle\/[a-f0-9]{32}\.js$/.test(file.path)));
+  assert.equal((await f.service.importRelease(path.join(f.dir, 'real-export-test-only'))).id, release.id);
+  t.diagnostic(`Structurally validated ${release.files.length} files (${release.files.reduce((sum, file) => sum + file.size, 0)} bytes) with synthetic test provenance only`);
 });

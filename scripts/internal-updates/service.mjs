@@ -23,7 +23,7 @@ function text(value, label, max = 200) {
 function relativeFile(value) {
   if (typeof value !== 'string' || !value || value.length > 500 || /[\\:%?#\x00-\x20\x7f]/.test(value) || value.startsWith('/') ||
       value.split('/').some(p => !p || p === '.' || p === '..' || p.startsWith('.'))) throw fail(400, 'Unsafe export path');
-  if (!/^(assets|dom|_expo)\/[a-zA-Z0-9_./@+-]+$/.test(value)) throw fail(400, 'Export path is outside the Metro allowlist');
+  if (!/^(assets|dom|_expo)\/[a-zA-Z0-9_./@+-]+$/.test(value) && !/^www\.bundle\/[a-f0-9]{32}\.(?:js|css|html)$/.test(value)) throw fail(400, 'Export path is outside the Metro allowlist');
   return value;
 }
 function extension(value) {
@@ -144,7 +144,7 @@ function validateDOM(file, bytes, all) {
   if (file.endsWith('.css')) {
     for (const match of content.matchAll(/url\(\s*["']?([^"')\s]+)["']?\s*\)|@import\s+["']([^"']+)["']/gi)) validateLocalDependency(match[1] ?? match[2], file, all);
   }
-  if (file.startsWith('dom/') && /\.(js|html)$/.test(file)) {
+  if ((file.startsWith('dom/') || file.startsWith('www.bundle/')) && /\.(js|html)$/.test(file)) {
     for (const match of content.matchAll(/\bimport\s*\(\s*["']([^"']+)["']\s*\)|\b(?:import|export)\s+(?:[^;\n]*?\s+from\s+)?["']([^"']+)["']/g)) {
       validateLocalDependency(match[1] ?? match[2], file, all);
     }

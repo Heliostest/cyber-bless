@@ -7,6 +7,9 @@ import { parseArgs } from 'node:util';
 import { createFeedbackStore, startFeedbackServers } from './server.mjs';
 import { loadTunnelConfig, startFeedbackTunnel } from './tunnel.mjs';
 import { createInvitations, readInvitations, revokeInvitation } from './invitations.mjs';
+import {createInternalUpdateService} from '../internal-updates/service.mjs';
+import {internalUpdateDefaults} from '../internal-updates/cli.mjs';
+import {createInternalUpdatePreparation} from '../internal-update-preparation.mjs';
 export { createInvitations, readInvitations, revokeInvitation } from './invitations.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -68,7 +71,9 @@ export async function main(args = process.argv.slice(2)) {
   if (command === 'serve') {
     const token = await readOrCreateToken(config);
     const invitations = await readInvitations(invitationsFile);
+    const updateOptions=internalUpdateDefaults(),internalUpdates=createInternalUpdateService(updateOptions);
     const servers = await startFeedbackServers({ inbox, token, invitations, runtimeFile,
+      internalUpdates,updatePreparation:createInternalUpdatePreparation({service:internalUpdates,options:updateOptions}),
       submitPort: port(values['submit-port'], 4318), adminPort: port(values['admin-port'], 4319) });
     console.log(`Local feedback inbox: http://127.0.0.1:${servers.adminPort}/`);
     console.log(`Feedback intake and authenticated status listener: http://127.0.0.1:${servers.submitPort}/api/feedback`);

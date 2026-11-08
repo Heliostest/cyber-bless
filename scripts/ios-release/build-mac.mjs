@@ -10,6 +10,7 @@ import { assertReleaseSource, assertSourceReceipt, sourceReceipt } from './sourc
 import { inspectToolchain } from './dependencies.mjs';
 import { assertReleaseLock, assertOfficialBuildRoot } from './release-lock.mjs';
 import { assertNativeInputs, captureNativeInputs, assertNativeWriteTargets } from './native-inputs.mjs';
+import { assertInternalUpdateMode, internalUpdatesEnabled, releaseUpdateEnvironment } from './internal-update-mode.mjs';
 
 // Run only after the caller has installed dependencies, prepared assets and
 // generated the iOS workspace/Pods. This script never invokes npm or prebuild.
@@ -41,7 +42,10 @@ const prepared = JSON.parse(await readFile(path.join(output, 'source-post-prebui
 assertSourceReceipt(sourceCheck, manifest);
 assertSourceReceipt(prepared, manifest);
 if (sourceCheck.filesChecked !== manifest.files.length || sourceCheck.allSourceHashesVerified !== true || prepared.sourceFilesChecked !== manifest.files.length || prepared.allBusinessSourceHashesVerified !== true) throw Error('Unverified tagged source preparation');
-for (const receipt of [sourceCheck, prepared]) if (Number(receipt.buildNumber) !== buildNumber || ['version', 'bundleIdentifier', 'appId', 'appleTeamId'].some(field => receipt[field] !== release[field])) throw Error('Source preparation belongs to a different App or build');
+for (const receipt of [sourceCheck, prepared]) {
+  assertInternalUpdateMode(release, receipt);
+  if (Number(receipt.buildNumber) !== buildNumber || ['version', 'bundleIdentifier', 'appId', 'appleTeamId'].some(field => receipt[field] !== release[field])) throw Error('Source preparation belongs to a different App or build');
+}
 await assertNativeInputs(repo, prepared.nativeInputs);
 await assertNativeWriteTargets(repo);
 const derivedData = path.resolve(release.derivedData);
@@ -62,6 +66,7 @@ const env = {
   PATH: `${path.dirname(nodeBinary)}:${path.dirname(rubyBinary)}:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin`,
   NODE_BINARY: nodeBinary, LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8',
   CI: '1', EXPO_NO_TELEMETRY: '1', EXPO_NO_DOTENV: '1', RCT_METRO_PORT: '8081',
+  ...releaseUpdateEnvironment(release),
 };
 await mkdir(output, { recursive: true });
 async function run(command, args, { log, cwd = repo } = {}) {
@@ -284,7 +289,7 @@ try {
   if (domBundles.length !== 1 || !(await readdir(domBundles[0])).length) throw Error('Missing or ambiguous DOM www.bundle');
   await copyFile(exportedIpa, ipa);
   await assertNativeInputs(repo, signedNativeInputs);
-  report = { ...sourceReceipt(manifest), builtAt: new Date().toISOString(), version, buildNumber, bundleIdentifier, appId: release.appId, appleTeamId: release.appleTeamId, builtApp, ipa, bytes: (await stat(ipa)).size, sha256: await hashFile(ipa), targets: summaries, runtime: { nativeJsBytes, domBundle: path.relative(builtApp, domBundles[0]) }, derivedDataRemovedAfterArchive: false, derivedData, tooling, nativeInputs: signedNativeInputs };
+  report = { ...sourceReceipt(manifest), builtAt: new Date().toISOString(), version, buildNumber, bundleIdentifier, appId: release.appId, appleTeamId: release.appleTeamId, internalUpdates: internalUpdatesEnabled(release), builtApp, ipa, bytes: (await stat(ipa)).size, sha256: await hashFile(ipa), targets: summaries, runtime: { nativeJsBytes, domBundle: path.relative(builtApp, domBundles[0]) }, derivedDataRemovedAfterArchive: false, derivedData, tooling, nativeInputs: signedNativeInputs };
 } catch (error) { failure = error; }
 finally {
   try { await run('/usr/bin/security', ['list-keychains', '-d', 'user', '-s', ...originalKeychains]); }

@@ -7,5 +7,19 @@
   "native.widget.resizeDescription": "카드를 누르면 오늘의 장면이 열립니다. 2×2, 4×2 또는 4×4로 크기를 조절할 수 있습니다.",
   "native.widget.invitation": "하루 한 생각을 열어 오늘의 작은 의식을 만나 보세요",
   "native.widget.subtitle": "오늘을 위한 작은 다정함",
-  "native.widget.accessibility": "{date}, {title}"
+  "native.widget.accessibility": "{date}, {title}",
+  "native.update.check": "업데이트 확인",
+  "native.update.download": "업데이트 다운로드",
+  "native.update.apply": "적용하고 다시 열기",
+  "native.update.checking": "테스트 업데이트를 확인하고 있습니다…",
+  "native.update.downloading": "업데이트를 다운로드하고 검증하고 있습니다…",
+  "native.update.ready": "업데이트가 준비되었습니다. 여기에서 적용할 수 있습니다.",
+  "native.update.latest": "사용 가능한 복구 업데이트가 없습니다. 테스트 담당자에게 문의하세요.",
+  "native.update.invitation": "먼저 피드백 업로드 설정에서 유효한 테스트 초대 코드를 입력하세요.",
+  "native.update.incompatible": "이 복구에는 새 테스트 앱 빌드가 필요합니다.",
+  "native.update.network": "복구 업데이트를 받을 수 없습니다. 연결을 확인하고 다시 시도하세요.",
+  "native.update.missing": "먼저 사용 가능한 업데이트를 다운로드하고 검증하세요.",
+  "native.update.unsafe": "앱을 화면에 다시 연 뒤 시도하세요.",
+  "native.update.save": "기록이 저장되지 않아 복구를 적용하지 않았습니다.",
+  "native.update.reload": "복구를 적용하지 못했습니다. 다시 시도하세요."
 }

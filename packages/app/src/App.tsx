@@ -6,7 +6,7 @@ import { catalogData } from '@wbr/i18n/catalogs';
 import { configureHour12, getHour12 } from '@wbr/i18n';
 import { IntlProvider } from 'react-intl';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode, } from "react";
-import { createStore, type Host, type HapticStrength } from "@wbr/runtime";
+import { createStore, type Host, type HapticStrength, type InternalUpdateState } from "@wbr/runtime";
 import { rituals, sceneProgress, sceneStepCount } from "@wbr/core";
 import { createSoftSoundPlayer, type SoftSound } from "@wbr/shared";
 import { createUiSoundPlayer, type UiSound } from './ui-sounds';
@@ -62,6 +62,8 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     preferred.current = systemLocales;
     const localeOwner = useRef<object | null>(null);
     const mounted = useRef(true);
+    const updateReload=useRef(false);
+    const [updateReloadPending,setUpdateReloadPending]=useState(false);
     const systemLanguages = () => preferred.current ?? (typeof navigator === 'undefined' ? [] : navigator.languages ?? [navigator.language]);
     const store = useMemo(() => {
         const owner = {};
@@ -195,6 +197,18 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     }, [sounds, uiSounds, stopInteractionSound]);
     const shell = useRef<HTMLDivElement>(null);
     const route = permittedRoute(routes[routes.length - 1], internalToolsEnabled);
+    async function applyInternalUpdate():Promise<InternalUpdateState> {
+        if(!internalToolsEnabled||!host.internalUpdates||route.page!=='me'||!active||updateReload.current||store.getSnapshot().status!=='saved')throw Error('unsafe');
+        updateReload.current=true;setUpdateReloadPending(true);
+        let restarting=false;
+        try{
+            await store.flush();
+            if(store.getSnapshot().status!=='saved')throw Error('save');
+            const result=await host.internalUpdates.request('apply');
+            restarting=result.phase==='applying';
+            return result;
+        }finally{if(!restarting){updateReload.current=false;if(mounted.current)setUpdateReloadPending(false)}}
+    }
     const state = snapshot.state;
     const immersive = !!state && ["scene", "ritual", "complete"].includes(route.page);
     useSceneViewport(shell, immersive);
@@ -203,6 +217,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     const roots = ["today", "wishes", "world", "me"];
     const canBack = routes.length > 1 || route.page !== "today";
     function go(next: Route, options?: { sound?: 'navigate' | 'back' | false }) {
+        if(updateReload.current)return;
         if (!internalToolsEnabled && isInternalRoute(next)) return;
         const same = route.page === next.page && route.id === next.id && route.entry?.id === next.entry?.id
             && route.wishId === next.wishId && route.vessel === next.vessel && route.daily === next.daily
@@ -228,6 +243,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
         window.scrollTo?.(0, 0);
     }
     function back(options?: { sound?: boolean }) {
+        if(updateReload.current)return;
         const feedbackClose = shell.current?.querySelector<HTMLButtonElement>('.test-feedback-dialog[open] [data-feedback-close]');
         if (feedbackClose) { feedbackClose.click(); return; }
         if (dismissLanguageSetting(shell.current))
@@ -411,7 +427,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
     }
     if (!state)
         return (<div className="bless-app">
-        <style>{fontStyles}</style>
+        <style>{fontStyles()}</style>
         <div className="loading-screen">
           <Icon name="leaf"/>
           <p className="eyebrow">{tr("\u4E00\u65E5\u4E00\u5FF5 \u00B7 \u8D5B\u535A\u7948\u798F")}</p>
@@ -480,9 +496,11 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
       <Context.Provider value={{
             state,
             internalToolsEnabled,
+            internalUpdates:internalToolsEnabled?host.internalUpdates:undefined,
+            applyInternalUpdate,
             go,
             back,
-            active,
+            active:active&&!updateReloadPending,
             feedback,
             uiSound,
             audioInspector: hasDebugOverlay ? audioInspector : undefined,
@@ -504,6 +522,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
                 return next;
             }),
             dispatch: (action) => {
+                if(updateReload.current)return false;
                 try {
                     const before = store.getSnapshot().state;
                     const savesWish = ["wish.create", "wish.note", "wish.realize", "wish.fulfill", "scene.visual", "scene.visual.all"].includes(action.type);
@@ -548,8 +567,8 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             arrival,
             announce,
         }}>
-        <TestFeedbackProvider host={host.testFeedback} enabled={internalToolsEnabled} active={active}><SceneLibraryProvider><div className={`bless-app${state.settings.reducedMotion ? " reduce-motion" : ""}`}>
-          <style>{fontStyles}</style>
+        <TestFeedbackProvider host={host.testFeedback} enabled={internalToolsEnabled} active={active&&!updateReloadPending}><SceneLibraryProvider><div className={`bless-app${state.settings.reducedMotion ? " reduce-motion" : ""}`} inert={updateReloadPending?true:undefined}>
+          <style>{fontStyles()}</style>
           <div className="desktop-note">
             <span className="brand-mark">{tr("\u5FF5")}</span>
             <strong>{tr("\u4E00\u65E5\u4E00\u5FF5")}</strong>
@@ -560,7 +579,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             onPointerDownCapture={prepareUiFeedback} onKeyDownCapture={event => {
                 if (event.key === 'Enter' || event.key === ' ') prepareUiFeedback();
             }}>
-            <WidgetNavigation request={navigationRequest} route={route} saved={snapshot.status === 'saved'} busy={!!flight} onConsumed={onNavigationConsumed}/>
+            <WidgetNavigation request={navigationRequest} route={route} saved={snapshot.status === 'saved'} busy={!!flight||updateReloadPending} onConsumed={onNavigationConsumed}/>
             {!roots.includes(route.page) && (<header className={`app-topbar${route.page === "complete" ? " completion-topbar" : ""}${route.page === "scene" || route.page === "ritual" ? " scene-topbar" : " page-topbar"}`}>
                 <button data-audio-cue={route.page === 'complete' ? state.sessions.some(session => session.id === route.id) ? 'collect' : undefined : canBack ? 'back' : undefined} className="back-button" aria-label={route.page === "complete" ? tr("\u5173\u95ED\u5B8C\u6210\u9875") : tr("\u8FD4\u56DE")} onClick={route.page === "complete"
                 ? closeComplete
@@ -605,7 +624,7 @@ export function BlessingApp({ host, active = true, backRequest = 0, onCanGoBack,
             </p>
             {debugOverlay}
           </div>
-        </div></SceneLibraryProvider></TestFeedbackProvider>
+        </div>{updateReloadPending&&<div className="internal-update-mask" role="status" aria-live="assertive">{tr('正在保存记录并应用更新……')}</div>}</SceneLibraryProvider></TestFeedbackProvider>
       </Context.Provider>
   </ContentContext.Provider></IntlProvider>);
 }

@@ -40,6 +40,11 @@ export type FeedbackReport = {
     pixelRatio: number;
     reducedMotion: boolean;
     osVersion?: string;
+    updateId?: string;
+    updateRuntimeVersion?: string;
+    updateSourceCommit?: string;
+    updateSourceTree?: string;
+    updateEmbedded?: boolean;
   };
 };
 export const FEEDBACK_MAX_BYTES = 32 * 1024;
@@ -84,13 +89,17 @@ export function parseFeedbackReport(value: unknown): FeedbackReport {
       (context.variant !== undefined && !bounded(context.variant, 0, 200)) ||
       (context.strikes !== undefined && !integer(context.strikes, 0, 1000000))) throw Error('Invalid feedback step');
   if (!record(client) || !exactKeys(client,
-      ['platform', 'appVersion', 'buildNumber', 'locale', 'width', 'height', 'pixelRatio', 'reducedMotion'], ['osVersion']) ||
+    ['platform', 'appVersion', 'buildNumber', 'locale', 'width', 'height', 'pixelRatio', 'reducedMotion'], ['osVersion','updateId','updateRuntimeVersion','updateSourceCommit','updateSourceTree','updateEmbedded']) ||
       typeof client.platform !== 'string' || !['web', 'ios', 'android'].includes(client.platform) ||
       !bounded(client.appVersion, 1, 100) || !bounded(client.buildNumber, 1, 100) || !bounded(client.locale, 1, 50) ||
       !integer(client.width, 1, 32768) || !integer(client.height, 1, 32768) ||
       typeof client.pixelRatio !== 'number' || !Number.isFinite(client.pixelRatio) || client.pixelRatio < 0.25 || client.pixelRatio > 8 ||
       typeof client.reducedMotion !== 'boolean' ||
-      (client.osVersion !== undefined && !bounded(client.osVersion, 1, 100))) throw Error('Invalid feedback client');
+      (client.osVersion !== undefined && !bounded(client.osVersion, 1, 100)) ||
+      (client.updateId!==undefined&&(typeof client.updateId!=='string'||!/^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(client.updateId))) ||
+      (client.updateRuntimeVersion!==undefined&&!bounded(client.updateRuntimeVersion,1,200)) ||
+      ([client.updateSourceCommit,client.updateSourceTree].some(value=>value!==undefined&&(typeof value!=='string'||!/^[a-f\d]{40}$/.test(value)))) ||
+      (client.updateEmbedded!==undefined&&typeof client.updateEmbedded!=='boolean')) throw Error('Invalid feedback client');
   return value as FeedbackReport;
 }
 

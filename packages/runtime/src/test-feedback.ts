@@ -7,6 +7,11 @@ export type TestFeedbackInfo = {
   appVersion: string;
   buildNumber: string;
   osVersion?: string;
+  updateId?: string;
+  updateRuntimeVersion?: string;
+  updateSourceCommit?: string;
+  updateSourceTree?: string;
+  updateEmbedded?: boolean;
 };
 export type TestFeedbackHost = Storage & {
   send(endpoint: string, token: string, reportJSON: string): Promise<string>;

@@ -19,6 +19,7 @@
         "buildType": "apk"
       },
       "env": {
+        "EXPO_INTERNAL_UPDATES": "1",
         "SHARP_IGNORE_GLOBAL_LIBVIPS": "1",
         "EXPO_APPLE_TEAM_ID": "6PG2WW6L6N",
         "EXPO_APPLE_TEAM_TYPE": "INDIVIDUAL"

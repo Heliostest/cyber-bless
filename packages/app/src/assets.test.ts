@@ -1,14 +1,25 @@
 import { existsSync, readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { assetFiles } from "../../../scripts/prepare-app-assets.mjs";
 import { fontStyles } from "./assets";
+import { installNativeAssetMap } from '../../scene-runtime/src/asset-urls';
 import { builtInScenes } from "./scene-library";
 
 /** Each @font-face block of the font CSS the App injects. */
-const faces = fontStyles.match(/@font-face\{[^}]*\}/g) ?? [];
+const faces = fontStyles().match(/@font-face\{[^}]*\}/g) ?? [];
 const nunito = faces.filter((face) => face.includes("font-family:'Nunito'"));
 
 describe("bundled fonts", () => {
+  afterEach(() => installNativeAssetMap({}));
+  it('resolves font faces after the native map arrives, including replacement update maps', () => {
+    const files = ['noto-sans-sc.woff2', 'nunito-latin-500-normal.woff2', 'nunito-latin-700-normal.woff2', 'nunito-latin-900-normal.woff2'];
+    expect(fontStyles()).toContain("url('/fonts/noto-sans-sc.woff2')");
+    installNativeAssetMap(Object.fromEntries(files.map(file => [`fonts/${file}`, `file:///updates/b/${file}`])));
+    expect(fontStyles()).toContain("url('file:///updates/b/noto-sans-sc.woff2')");
+    expect(fontStyles()).not.toContain("url('/fonts/");
+    installNativeAssetMap(Object.fromEntries(files.map(file => [`fonts/${file}`, `file:///updates/c/${file}`])));
+    expect(fontStyles()).toContain("url('file:///updates/c/noto-sans-sc.woff2')");
+  });
   it("ships Nunito's latin subset at 500, 700 and 900, so digits are rounded on every device", () => {
     expect(nunito.map((face) => face.match(/font-weight:(\d+);/)?.[1])).toEqual([
       "500",

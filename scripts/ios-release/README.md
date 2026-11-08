@@ -18,6 +18,8 @@ git push origin refs/tags/ios-v1.0.0-build.19
 
 来源必须在远端 `master` 历史中；不能改分支参数绕过。入口比较 tag 对象、commit/tree，拒绝不存在或移动的 tag。`master` 后续推进不影响旧 tag 重建。
 
+`release-input.json` 中的 `internalUpdates` 是冻结的原生分发决定，必须为布尔值，缺省按 `false` 兼容历史输入。正式包保持 `false`。指定内测接入包需要审阅并提交 `internalUpdates:true`，同时源码内测总开关必须开启；不能用机器配置或 SSH 环境临时开启。runner、资产准备、prebuild、Pods 和 Xcode 归档统一从该字段设置 `EXPO_INTERNAL_UPDATES=0|1`，实际求值的非公开 Expo 配置检查及各阶段回执必须与其一致。完整求值配置只在内存中检查，日志仅保存模式、runtime 策略和签名 key ID。安装包中的 `X-Feedback-Token` 仅为空字符串占位符，真实邀请码由手机运行时覆盖；不得把邀请码写入冻结输入或原生配置。内测使用真实 fingerprint runtime，新增原生依赖、桥或证书会改变兼容身份；此前未包含接入能力的原生包必须先换装，新包后再验证 A→B→回退→断网启动。
+
 ## Mac 获取与配置
 
 Git LFS 3.8.1 已安装。非交互 SSH 显式使用现有工具路径；后续版本以已提交 release input 为准。在 Mac shell 中：

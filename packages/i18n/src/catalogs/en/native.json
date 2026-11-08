@@ -7,5 +7,19 @@
   "native.widget.resizeDescription": "Tap the card to open today's scene. Resize to 2×2, 4×2 or 4×4.",
   "native.widget.invitation": "Open One Day, One Thought for today's ritual",
   "native.widget.subtitle": "A little kindness for today",
-  "native.widget.accessibility": "{date}, {title}"
+  "native.widget.accessibility": "{date}, {title}",
+  "native.update.check": "Check for updates",
+  "native.update.download": "Download update",
+  "native.update.apply": "Apply and reopen",
+  "native.update.checking": "Checking for test updates…",
+  "native.update.downloading": "Downloading and verifying the update…",
+  "native.update.ready": "The update is ready to apply here.",
+  "native.update.latest": "No repair update is available. Contact the test coordinator.",
+  "native.update.invitation": "Enter a valid test invitation in the feedback upload settings first.",
+  "native.update.incompatible": "This repair needs a new test app build.",
+  "native.update.network": "Unable to get the repair update. Check your connection and try again.",
+  "native.update.missing": "Download and verify the available update first.",
+  "native.update.unsafe": "Return to the foreground and try again.",
+  "native.update.save": "Your records have not been saved. The repair was not applied.",
+  "native.update.reload": "The repair was not applied. Please try again."
 }

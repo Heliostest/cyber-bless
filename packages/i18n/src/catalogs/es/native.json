@@ -7,5 +7,19 @@
   "native.widget.resizeDescription": "Toca la tarjeta para abrir la escena de hoy. Ajusta el tamaño a 2×2, 4×2 o 4×4.",
   "native.widget.invitation": "Abre Un día, un pensamiento para ver el ritual de hoy",
   "native.widget.subtitle": "Un poco de cariño para hoy",
-  "native.widget.accessibility": "{date}, {title}"
+  "native.widget.accessibility": "{date}, {title}",
+  "native.update.check": "Buscar actualizaciones",
+  "native.update.download": "Descargar actualización",
+  "native.update.apply": "Aplicar y volver a abrir",
+  "native.update.checking": "Buscando actualizaciones de prueba…",
+  "native.update.downloading": "Descargando y verificando la actualización…",
+  "native.update.ready": "La actualización está lista para aplicarla aquí.",
+  "native.update.latest": "No hay una actualización de reparación. Contacta con la persona responsable de las pruebas.",
+  "native.update.invitation": "Introduce primero una invitación de prueba válida en los ajustes de envío de comentarios.",
+  "native.update.incompatible": "Esta reparación necesita una nueva compilación de prueba.",
+  "native.update.network": "No se puede obtener la reparación. Comprueba la conexión e inténtalo de nuevo.",
+  "native.update.missing": "Descarga y verifica primero la actualización disponible.",
+  "native.update.unsafe": "Vuelve a la app e inténtalo de nuevo.",
+  "native.update.save": "No se han guardado tus registros. La reparación no se ha aplicado.",
+  "native.update.reload": "La reparación no se ha aplicado. Vuelve a intentarlo."
 }

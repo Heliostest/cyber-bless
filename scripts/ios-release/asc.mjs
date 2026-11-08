@@ -10,6 +10,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { assertReleaseSource, assertSourceReceipt, sourceReceipt } from './source-identity.mjs';
 import { assertReleaseLock, assertOfficialBuildRoot } from './release-lock.mjs';
 import { assertNativeInputs } from './native-inputs.mjs';
+import { assertInternalUpdateMode } from './internal-update-mode.mjs';
 
 const json = async file => JSON.parse(await readFile(file, 'utf8'));
 async function save(file, value) { await writeFile(file + '.tmp', JSON.stringify(value, null, 2) + '\n', { mode: 0o600 }); await rename(file + '.tmp', file); }
@@ -128,6 +129,7 @@ export function assertDeliveryReceipts(config, manifest, { verified, prepared, r
   assertSourceReceipt(config, manifest);
   for (const receipt of [verified, prepared, report, offline]) {
     assertSourceReceipt(receipt, manifest);
+    assertInternalUpdateMode(config, receipt);
     if (receipt.sourceArchiveSha256 !== undefined || receipt.archiveSha256 !== undefined) throw Error('Legacy source identity is unsupported for delivery');
     if (Number(receipt.buildNumber) !== config.buildNumber || ['version', 'bundleIdentifier', 'appId', 'appleTeamId'].some(field => receipt[field] !== config[field])) throw Error('Delivery receipt App, version or build number differs from this release');
   }

@@ -72,6 +72,11 @@ export function TestFeedbackOverlay({ entry, context, reducedMotion, onOpenChang
       buildNumber: feedback?.info?.buildNumber ?? 'unknown', locale: getFormatLocale(),
       width: window.innerWidth, height: window.innerHeight, pixelRatio: window.devicePixelRatio || 1,
       reducedMotion, ...(feedback?.info?.osVersion ? { osVersion: feedback.info.osVersion } : {}),
+      ...(feedback?.info?.updateId?{updateId:feedback.info.updateId}:{}),
+      ...(feedback?.info?.updateRuntimeVersion?{updateRuntimeVersion:feedback.info.updateRuntimeVersion}:{}),
+      ...(feedback?.info?.updateSourceCommit?{updateSourceCommit:feedback.info.updateSourceCommit}:{}),
+      ...(feedback?.info?.updateSourceTree?{updateSourceTree:feedback.info.updateSourceTree}:{}),
+      ...(typeof feedback?.info?.updateEmbedded==='boolean'?{updateEmbedded:feedback.info.updateEmbedded}:{}),
     },
   });
   const close = () => { setOpen(false); onOpenChange(false); trigger.current?.focus(); };

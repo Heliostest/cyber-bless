@@ -2,6 +2,8 @@ import { productError } from '@wbr/i18n/errors';
 import { localePreferenceFromSave, type LocalePreference } from '@wbr/i18n/locales';
 import { reduce, restore, type Action, type State } from "@wbr/core";
 import type { TestFeedbackHost } from './test-feedback';
+import type { InternalUpdateHost } from './internal-updates';
+export { createInternalUpdateController, type InternalUpdateAction, type InternalUpdateError, type InternalUpdateState, type InternalUpdateCandidate, type InternalUpdateIdentity, type InternalUpdateHost } from './internal-updates';
 export { browserTestFeedbackHost, sendTestFeedback, readTestFeedbackStatus, TEST_FEEDBACK_KEY, type TestFeedbackHost, type TestFeedbackInfo } from './test-feedback';
 export { createProjectedStorage } from './projected-storage';
 /**
@@ -25,6 +27,8 @@ export type Host = Storage & {
     readUiSound?(file: string): Promise<string>;
     /** Separate internal diagnostic storage and transport, never the user's game save. */
     testFeedback?: TestFeedbackHost;
+    /** Present only in a compatible, explicitly enabled internal native build. */
+    internalUpdates?: InternalUpdateHost;
     /** Validated, read-only bootstrap hint; the store remains the source of truth. */
     initialLocalePreference?: LocalePreference;
     haptic?(strength?: HapticStrength): Promise<void>;

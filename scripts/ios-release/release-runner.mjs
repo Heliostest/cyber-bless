@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { withReleaseLock, assertOfficialBuildRoot } from './release-lock.mjs';
+import { internalUpdatesEnabled, releaseUpdateEnvironment } from './internal-update-mode.mjs';
 
 const json = async file => JSON.parse(await readFile(file, 'utf8'));
 const stages = {
@@ -22,7 +23,7 @@ export async function readReleaseInput(repo) {
   if (!Number.isSafeInteger(input.buildNumber) || input.buildNumber < 1) throw Error('Allocate and commit a positive release build number before tagging');
   const { expo } = await json(path.join(repo, 'apps/mobile-expo/app.json'));
   if (input.version !== (expo.ios?.version ?? expo.version) || input.bundleIdentifier !== expo.ios?.bundleIdentifier || input.appleTeamId !== expo.ios?.appleTeamId || !/^\d+$/.test(input.appId ?? '')) throw Error('Committed release input version/App identity mismatch');
-  return input;
+  return { ...input, internalUpdates: internalUpdatesEnabled(input) };
 }
 
 async function safeOutput(repo, output) {
@@ -59,6 +60,7 @@ export async function configureRelease(source, machine) {
     nodeBinary: machine.nodeBinary, rubyBinary: machine.rubyBinary, developerDir: machine.developerDir,
     privateDir: machine.privateDir, groupId: machine.groupId, whatToTest: machine.whatToTest ?? '',
     syncEasCounter: input.syncEasCounter === true,
+    internalUpdates: input.internalUpdates,
     derivedData: path.join(repo, 'artifacts/ios-release/DerivedData'),
   };
   await safeOutput(repo, output);
@@ -87,7 +89,7 @@ export async function runReleaseStage(config, configFile, stage, options = {}) {
   if (stage === 'build' && config.syncEasCounter === true) steps = [...steps.slice(0, 2), ['counter.mjs', 'status'], ...steps.slice(2)];
   return withReleaseLock(config.buildRoot, async lease => {
     for (const [script, mode] of steps) {
-      await (options.run ?? run)(config.nodeBinary, [path.join(config.repo, 'scripts/ios-release', script), configFile, ...(mode ? [mode] : [])], { cwd: config.repo, env: { ...process.env, WBR_RELEASE_LOCK_TOKEN: lease.token } });
+      await (options.run ?? run)(config.nodeBinary, [path.join(config.repo, 'scripts/ios-release', script), configFile, ...(mode ? [mode] : [])], { cwd: config.repo, env: { ...process.env, ...releaseUpdateEnvironment(config), WBR_RELEASE_LOCK_TOKEN: lease.token } });
     }
   });
 }

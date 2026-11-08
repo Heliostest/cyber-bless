@@ -5,11 +5,40 @@ import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import vm from 'node:vm';
 import { assetFiles, prepareAppAssets } from './prepare-app-assets.mjs';
 import { bundledWoodfishModel } from './publish-scene-content.mjs';
 import { UI_SOUND_FILES, RESULT_SOUND_DURATIONS } from '../packages/app/src/ui-sound-assets.ts';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+test('Metro registers every actual asset as a file, including text and JSON payloads', async () => {
+  await prepareAppAssets();
+  const registryFile = path.join(root, 'apps/mobile-expo/bundled-assets.generated.ts');
+  const require = createRequire(new URL('../apps/mobile-expo/package.json', import.meta.url));
+  const ts = require('typescript');
+  const source = ts.transpileModule(await readFile(registryFile, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const required = [];
+  const context = vm.createContext({ exports: {}, require(file) { required.push(file); return required.length; } });
+  vm.runInContext(source, context);
+  const registry = context.exports.bundledAssetModules;
+  assert.deepEqual(Object.keys(registry).sort(), [...assetFiles].sort(), 'no public asset can be left outside the Metro graph');
+  const metro = require('./metro.config.js');
+  const { getAndroidResourceFolderName } = require(path.join(root, 'node_modules/@react-native/community-cli-plugin/dist/commands/bundle/assetPathUtils.js')).default;
+  for (const [file, entry] of Object.entries(registry)) {
+    const registeredFile = path.resolve(path.dirname(registryFile), required[entry.module - 1]);
+    const bytes = await readFile(registeredFile);
+    assert.equal(bytes.length, entry.bytes, file);
+    assert.equal(createHash('md5').update(bytes).digest('hex'), entry.md5, file);
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), createHash('sha256').update(await readFile(path.join(root, 'assets', file))).digest('hex'), file);
+    assert.ok(metro.resolver.assetExts.includes(path.extname(registeredFile).slice(1)), `${file} must be a Metro asset`);
+    assert.ok(!metro.resolver.sourceExts.includes(path.extname(registeredFile).slice(1)), `${file} must not become a source/JSON module`);
+    if (/\.(?:png|webp)$/.test(file)) {
+      // Native drawable PNGs may be crunched by AAPT. The DOM requires the
+      // exact source bytes used by the manifest and runtime integrity check.
+      assert.equal(getAndroidResourceFolderName({ type: path.extname(registeredFile).slice(1) }, 1), 'raw', `${file} must bypass drawable image transforms`);
+    }
+  }
+});
 test('both offline hosts ship each selectable tree and its license without remote dependencies', async () => {
   const assets = await prepareAppAssets();
   const files = [

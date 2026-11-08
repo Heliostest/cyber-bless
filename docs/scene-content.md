@@ -1,5 +1,7 @@
 # 场景内容分发与缓存
 
+> 2026-11-08 内测例外：本人和内测人员可使用[内测热更新](internal-updates.md)，在首次安装接入包后更新兼容的 JavaScript 和注册资产。正式用户继续采用随安装包分发策略。下述旧数据目录/缓存协议与新的 Expo 更新通道不同。
+
 > 2026-11-02 发布策略变更：所有提供给玩家的仪式、模型和素材随安装包发布，新增内容通过 App 更新扩展。用户 App 只采用内置目录与资源，不使用旧在线目录配置、旧记录的远程清单或已下载版本覆盖内置场景。“我的 → 场景目录”仅供开发和 TestFlight 验收，正式版不提供。玩家完成一次仪式即永久解锁对应入口；领取小物与解锁分开。详见[当前规格](superpowers/specs/2026-11-02-bundled-rituals-internal-catalog.md)。本文其余下载、缓存及发布示例为历史底层实现说明，不再作为用户 App 的上线步骤。
 
 截至 2026-09-24，应用具有通用场景目录、按需准备内容、共享磁盘缓存、历史重开和缓存管理入口。现有木鱼更新客户端仍保留本地优先、已确认版本与内置回退；新目录使用独立版本清单，资源缺失时重新下载，不把任意场景替换成木鱼。
@@ -49,9 +51,9 @@
 
 动态 `import()` 只延迟代码加载/执行。Metro 输出的引擎代码仍进入 App 安装产物。本轮在安装包外按需下载的是数据，新增交互代码通过应用商店发版；未注册引擎会显示需要更新 App，并在下载资源之前终止。
 
-官方资料于 2026-09-24 核对：Expo DOM 文档明确说明 DOM components 当前嵌入应用，尚不支持 OTA updates，因此不能直接把 EAS Update 作为本项目逐场景远端代码下载通道。[Expo DOM components](https://docs.expo.dev/guides/dom-components/)
+2026-11-08 更正旧技术判断：官方 SDK 53 更新记录已介绍 DOM components 的实验性 EAS Update 支持；本项目 SDK 57 具有相应原生资产映射路径。`public/` 文件仍不受 Expo Update 支持，需静态注册并解析本地资产 URI。内测通道采用已签名、平台/runtime 匹配的整套更新，不复用旧在线场景目录。[Expo DOM components](https://docs.expo.dev/guides/dom-components/)、[SDK 53 更新记录](https://expo.dev/changelog/sdk-53)。
 
-如果业务以后要求“不更新 App 就增加完全不同的新玩法代码”，需要单独建设受隔离的网页小游戏容器、受限消息桥、清单认证、兼容/回退及审核流程。Apple 2.5.2 约束下载改变功能的代码；4.7 为 HTML5/JavaScript 小程序、小游戏等规定了独立要求，包括内容责任和原生能力暴露限制。Google Play 限制外部下载 dex/JAR/native 可执行代码，对解释器内代码另有例外及政策要求。这些规则不是任意执行远端脚本的授权；本轮没有实现该容器。[Apple App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)；[Google Play Device and Network Abuse](https://support.google.com/googleplay/android-developer/answer/16559646?hl=en)
+旧方案讨论过独立网页小游戏容器；当前内测改用 Expo Updates 的签名、兼容与回退机制，未建设该容器。面向正式用户的发布策略仍以随包分发为准，内测通道不自动成为正式商店分发通道。
 
 ## 目录、清单与打开流程
 

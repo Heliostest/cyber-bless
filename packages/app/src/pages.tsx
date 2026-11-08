@@ -1,6 +1,7 @@
 import { localizedTitle } from './localization';
 import { translate as tr, message } from '@wbr/i18n';
 import { LanguageSetting } from './language-setting';
+import { InternalUpdatesPanel } from './internal-updates-panel';
 import { useState } from "react";
 import { rituals, type Collectible } from "@wbr/core";
 import { isSceneVisibleInApp } from '@wbr/core/daily-scenes';
@@ -187,7 +188,7 @@ export function CollectionDetail({ id }: {
     </>);
 }
 export function Me() {
-    const { state, dispatch, go, canHaptic, internalToolsEnabled } = useApp();
+    const { state, dispatch, go, canHaptic, internalToolsEnabled, internalUpdates, applyInternalUpdate } = useApp();
     return (<>
       <PageHead title={tr("\u6211\u7684")}/>
       <div className="settings-card">
@@ -210,6 +211,7 @@ export function Me() {
         <button data-audio-cue="navigate" className="settings-row" onClick={() => go({ page: 'support' }, { sound: 'navigate' })}><span>{tr("\u6280\u672F\u652F\u6301")}</span><Icon name="arrow"/></button>
         {internalToolsEnabled && <button data-audio-cue="navigate" className="settings-row" onClick={() => go({ page: "scenes" }, { sound: 'navigate' })}><span>{tr("\u573A\u666F\u76EE\u5F55")}</span><Icon name="arrow"/></button>}
       </div>
+      {internalToolsEnabled&&internalUpdates&&applyInternalUpdate&&<InternalUpdatesPanel host={internalUpdates} apply={applyInternalUpdate}/>}
     </>);
 }
 /**

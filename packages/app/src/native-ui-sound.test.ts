@@ -4,27 +4,29 @@ import { UI_SOUND_FILES } from './ui-sound-assets';
 import { readUiSound } from '../../../apps/mobile-expo/ui-sound';
 
 const boundary = vi.hoisted(() => ({ paths: [] as string[], size: 25004 }));
+vi.mock('../../../apps/mobile-expo/bundled-assets', () => ({
+  resolveBundledAssetUris: async () => Object.fromEntries([...new Set(Object.values(UI_SOUND_FILES))].map(file => [file, `file:///updates/current/${file}`])),
+}));
 vi.mock('expo-file-system', () => ({
-  Paths: { bundle: 'file:///App.app' },
   File: class {
     path: string;
     constructor(...parts: string[]) { this.path = parts.join('/'); boundary.paths.push(this.path); }
     exists = true;
     get size() { return boundary.size; }
     async base64() {
-      const file = this.path.replace('file:///App.app/www.bundle/', '');
+      const file = this.path.replace('file:///updates/current/', '');
       return readFileSync(new URL(`../../../assets/${file}`, import.meta.url)).toString('base64');
     }
   },
 }));
 afterEach(() => { boundary.paths.length = 0; boundary.size = 25004; });
 
-it('reads the approved WAV bytes from the native offline bundle', async () => {
+it('reads the approved WAV bytes from this launch\'s registered local modules', async () => {
   for (const file of new Set(Object.values(UI_SOUND_FILES))) {
     const encoded = await readUiSound(file);
     expect(Buffer.from(encoded, 'base64')).toEqual(readFileSync(new URL(`../../../assets/${file}`, import.meta.url)));
   }
-  expect(boundary.paths[0]).toBe('file:///App.app/www.bundle/ui-sounds/soft-garden-v1/navigate.wav');
+  expect(boundary.paths[0]).toBe('file:///updates/current/ui-sounds/soft-garden-v1/navigate.wav');
 });
 
 it.each(['../../Documents/save.json', 'https://example.com/a.wav', '__proto__', '/ui-sounds/soft-garden-v1/navigate.wav'])(

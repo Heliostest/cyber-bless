@@ -66,6 +66,11 @@ test('release input must allocate a positive build number and match the selected
   await assert.rejects(readReleaseInput(root), /build number/i);
   await writeFile(file, JSON.stringify({ ...input, buildNumber: 19 }));
   assert.equal((await readReleaseInput(root)).buildNumber, 19);
+  assert.equal((await readReleaseInput(root)).internalUpdates, false);
+  await writeFile(file, JSON.stringify({ ...input, buildNumber: 19, internalUpdates: '1' }));
+  await assert.rejects(readReleaseInput(root), /boolean/i);
+  await writeFile(file, JSON.stringify({ ...input, buildNumber: 19, internalUpdates: true }));
+  assert.equal((await readReleaseInput(root)).internalUpdates, true);
   await writeFile(file, JSON.stringify({ ...input, buildNumber: 19, version: '2.0.0' }));
   await assert.rejects(readReleaseInput(root), /identity|version/i);
 });
@@ -135,4 +140,17 @@ test('a fresh checkout can load the real EAS context only after preparation inst
 test('unsupported stages fail before touching the build directory', async () => {
   const { runReleaseStage } = await import('./release-runner.mjs');
   await assert.rejects(runReleaseStage({}, '/unused.json', 'publish'), /stage|Usage/i);
+});
+
+test('stage environments derive the update flag from frozen config instead of ambient process settings', async t => {
+  const { runReleaseStage } = await import('./release-runner.mjs');
+  const root = await temporary(t), previous = process.env.EXPO_INTERNAL_UPDATES;
+  process.env.EXPO_INTERNAL_UPDATES = '1';
+  try {
+    for (const [mode, expected] of [[undefined, '0'], [false, '0'], [true, '1']]) {
+      await runReleaseStage({ repo: root, buildRoot: root, nodeBinary: process.execPath, internalUpdates: mode }, path.join(root, 'config.json'), 'prepare', {
+        run: async (_command, _args, options) => { assert.equal(options.env.EXPO_INTERNAL_UPDATES, expected); },
+      });
+    }
+  } finally { if (previous === undefined) delete process.env.EXPO_INTERNAL_UPDATES; else process.env.EXPO_INTERNAL_UPDATES = previous; }
 });

@@ -140,22 +140,23 @@ function markdownExport(entries) {
 }
 
 /** Only submitServer is exposed by cloudflared. It offers writes and narrow authenticated aggregates, never raw reports. */
-export async function startFeedbackServers({ inbox, token, invitations = [], submitPort = 4318, adminPort = 4319, runtimeFile, limitPerMinute = 200 }) {
+export async function startFeedbackServers({ inbox, token, invitations = [], submitPort = 4318, adminPort = 4319, runtimeFile, limitPerMinute = 200, internalUpdates, updatePreparation }) {
   if (typeof token !== 'string' || token.length < 24 || token.length > 256) throw Error('A strong feedback token is required');
   const namedInvitations = validateInvitations(invitations).map(invitation => ({ ...invitation }));
   if (namedInvitations.some(invitation => invitation.token === token)) throw Error('Named invitations must differ from the shared invitation');
   if (submitPort !== 0 && submitPort === adminPort) throw Error('Submission and admin require different ports');
   const store = createFeedbackStore(inbox);
+  const invitationFor=provided=>validToken(provided,token)?{id:'shared',label:'共用邀请码'}:namedInvitations.find(candidate=>validToken(provided,candidate.token));
   let windowStart = Date.now(), count = 0;
   const submitServer = http.createServer(async (req, res) => {
     try {
       const pathname = new URL(req.url, 'http://localhost').pathname;
       if (req.method === 'OPTIONS' && ['/api/feedback', '/api/scene-status'].includes(pathname)) { res.writeHead(204, cors); res.end(); return; }
       if (req.method === 'GET' && pathname === '/health') { json(res, 200, { ok: true }); return; }
+      if(internalUpdates&&await internalUpdates.handlePublic(req,res,{authorized:!!invitationFor(req.headers['x-feedback-token'])}))return;
       if (req.method !== 'POST' || !['/api/feedback', '/api/scene-status'].includes(pathname)) throw failure(404, 'Not found');
       const provided = req.headers['x-feedback-token'];
-      const invitation = validToken(provided, token) ? { id: 'shared', label: '共用邀请码' }
-        : namedInvitations.find(candidate => validToken(provided, candidate.token));
+      const invitation = invitationFor(provided);
       if (!invitation) throw failure(401, 'Invalid test invitation');
       if (Date.now() - windowStart >= 60000) { windowStart = Date.now(); count = 0; }
       if (++count > limitPerMinute) throw failure(429, 'Too many reports; retry later');
@@ -183,6 +184,15 @@ export async function startFeedbackServers({ inbox, token, invitations = [], sub
       const origin = req.headers.origin;
       if (origin && !allowedHosts.some(h => origin === `http://${h}`)) throw failure(403, 'Local dashboard only');
       const url = new URL(req.url, `http://${host}`);
+      if(internalUpdates&&url.pathname.startsWith('/api/internal-updates')){
+        if(req.method!=='GET'&&req.headers['x-feedback-admin']!=='1')throw failure(403,'Dashboard action required');
+        if(updatePreparation&&url.pathname==='/api/internal-updates/prepare'){
+          if(req.method==='GET'){json(res,200,updatePreparation.get());return}
+          if(req.method!=='POST')throw failure(405,'Expected POST');
+          json(res,202,await updatePreparation.start(await jsonBody(req)));return;
+        }
+        if(await internalUpdates.handleAdmin(req,res))return;
+      }
       if (req.method === 'GET' && url.pathname === '/') {
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
           'Content-Security-Policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'" });

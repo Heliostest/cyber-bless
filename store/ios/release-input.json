@@ -6,6 +6,7 @@
   "appId": "6821271597",
   "appleTeamId": "6PG2WW6L6N",
   "syncEasCounter": false,
+  "internalUpdates": false,
   "toolchain": {
     "node": "24.12.0",
     "npm": "11.6.2",

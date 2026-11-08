@@ -18,7 +18,7 @@ const clients = new WeakMap<
 export function woodfishContent(environment: ContentEnvironment) {
   const io = contentIO(environment);
   const base = new URL(assetUrl(""), window.location.href).href;
-  const key = base;
+  const key = assetUrl(bundledWoodfish.model.path);
   let scoped = clients.get(io);
   if (!scoped) {
     scoped = new Map();
@@ -30,7 +30,7 @@ export function woodfishContent(environment: ContentEnvironment) {
       // Download history belongs to the retired delivery flow. Never let an
       // older confirmed/pending pack replace the resources shipped in this App.
       io: {
-        readAsset: (asset, url, signal) => io.readAsset(asset, url, signal),
+        readAsset: (asset, _url, signal) => io.readAsset(asset, new URL(assetUrl(asset.path), window.location.href).href, signal),
         readHistory: async () => undefined,
         writeHistory: async () => {},
         readCachedAsset: async () => undefined,

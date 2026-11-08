@@ -9,7 +9,13 @@ import "@wbr/app/style.css";
 import type { WidgetNavigationRequest } from '@wbr/core/widgets';
 import type { HapticStrength, ShareImageRequest, ShareLinkRequest, TestFeedbackInfo } from '@wbr/runtime';
 import type { LocalePreference } from '@wbr/i18n/locales';
+import type {InternalUpdateAction,InternalUpdateState} from '@wbr/runtime';
+import {installNativeAssetMap} from '@wbr/scene-runtime/asset-urls';
+import {DomHealthBoundary} from './dom-health';
 export default function BlessingDom({
+  assetMap,
+  domSession,onDomReady,onDomFailure,
+  requestInternalUpdate,
   readSave,
   writeSave,
   haptic,
@@ -41,6 +47,11 @@ export default function BlessingDom({
   onNavigationConsumed,
   dom: _dom,
 }: NativeContentBridge & {
+  assetMap:Record<string,string>;
+  domSession:number;
+  onDomReady(session:number):Promise<void>;
+  onDomFailure(session:number):Promise<void>;
+  requestInternalUpdate(action:InternalUpdateAction):Promise<InternalUpdateState>;
   readSave(): Promise<string | null>;
   writeSave(raw: string): Promise<void>;
   haptic(strength?: HapticStrength): Promise<void>;
@@ -64,6 +75,10 @@ export default function BlessingDom({
   onNavigationConsumed(requestId: number): Promise<void>;
   dom?: import("expo/dom").DOMProps;
 }) {
+  // Register URI indirection before any App/font/Three loader renders. HTTP
+  // Metro previews retain public paths; only file-hosted DOM can read files.
+  useMemo(()=>installNativeAssetMap(window.location.protocol==='file:'?assetMap:{}),[assetMap]);
+  useEffect(()=>{void onDomReady(domSession).catch(()=>{})},[domSession]);
   useEffect(() => {
     const meta = document.querySelector('meta[name="viewport"]') ?? document.createElement('meta');
     meta.setAttribute('name', 'viewport');
@@ -71,13 +86,14 @@ export default function BlessingDom({
     if (!meta.parentNode) document.head.appendChild(meta);
   }, []);
   // DOM bridge proxies can change when native props update; keep a stable host.
-  const actions = useMemo(() => ({ readSave, writeSave, haptic, shareImage, shareLink, readUiSound }), []);
+  const actions = useMemo(() => ({ readSave, writeSave, haptic, shareImage, shareLink, readUiSound,requestInternalUpdate }), []);
   actions.readSave = readSave;
   actions.writeSave = writeSave;
   actions.haptic = haptic;
   actions.shareImage = shareImage;
   actions.shareLink = shareLink;
   actions.readUiSound = readUiSound;
+  actions.requestInternalUpdate=requestInternalUpdate;
   const feedbackActions = useMemo(() => ({ readTestFeedback, writeTestFeedback, submitTestFeedback, fetchTestFeedbackStatus }), []);
   Object.assign(feedbackActions, { readTestFeedback, writeTestFeedback, submitTestFeedback, fetchTestFeedbackStatus });
   const feedbackHost = useMemo(() => ({
@@ -123,13 +139,14 @@ export default function BlessingDom({
       shareImage: (image: ShareImageRequest) => actions.shareImage(image),
       shareLink: (request: ShareLinkRequest) => actions.shareLink(request),
       readUiSound: readUiSound ? (file: string) => actions.readUiSound!(file) : undefined,
+      internalUpdates:{request:(action:InternalUpdateAction)=>actions.requestInternalUpdate(action)},
     }),
     [actions],
   );
   // The native shell already read this same save before mounting the WebView.
   Object.assign(host, { initialLocalePreference: localePreference, publicShareBaseUrl, testFeedback: feedbackHost });
   return (
-    <BlessingApp
+    <DomHealthBoundary onFailure={()=>{void onDomFailure(domSession).catch(()=>{})}}><BlessingApp
       host={host}
       internalToolsEnabled={internalToolsEnabled}
       systemHour12={systemHour12}
@@ -142,6 +159,6 @@ export default function BlessingDom({
       onCanGoBack={onCanGoBack}
       navigationRequest={navigationRequest}
       onNavigationConsumed={onNavigationConsumed}
-    />
+    /></DomHealthBoundary>
   );
 }

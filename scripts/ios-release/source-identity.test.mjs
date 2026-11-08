@@ -263,7 +263,7 @@ test('legacy archives cannot be substituted for a Git source identity', async t 
 test('a machine configuration cannot override the tagged release identity', async t => {
   const f = await fixture(t);
   await f.freeze();
-  for (const change of [{ version: '2.0.0' }, { buildNumber: 20 }, { appId: '456' }, { bundleIdentifier: 'com.other' }, { appleTeamId: 'OTHER' }, { sourceIdentitySha256: undefined }]) {
+  for (const change of [{ version: '2.0.0' }, { buildNumber: 20 }, { appId: '456' }, { bundleIdentifier: 'com.other' }, { appleTeamId: 'OTHER' }, { sourceIdentitySha256: undefined }, { internalUpdates: true }]) {
     await assert.rejects(api.assertReleaseSource({ ...f.config, ...change }, { entrypoint: f.entrypoint }));
   }
 });

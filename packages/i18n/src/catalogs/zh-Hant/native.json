@@ -7,5 +7,19 @@
   "native.widget.resizeDescription": "輕觸卡片進入今日場景，可調整為 2×2、4×2 或 4×4。",
   "native.widget.invitation": "開啟一日一念，看看今天的儀式",
   "native.widget.subtitle": "為今天，留一點溫柔",
-  "native.widget.accessibility": "{date}，{title}"
+  "native.widget.accessibility": "{date}，{title}",
+  "native.update.check": "檢查更新",
+  "native.update.download": "下載更新",
+  "native.update.apply": "套用並重新開啟",
+  "native.update.checking": "正在檢查內測更新……",
+  "native.update.downloading": "正在下載並驗證更新……",
+  "native.update.ready": "更新已準備好，可在這裡套用。",
+  "native.update.latest": "暫無可用的修復更新，請聯絡內測負責人。",
+  "native.update.invitation": "請先在回饋上傳設定中填寫有效的測試邀請碼。",
+  "native.update.incompatible": "此修復需要新的內測安裝包。",
+  "native.update.network": "無法取得修復更新，請檢查網路後重試。",
+  "native.update.missing": "請先下載並驗證可用更新。",
+  "native.update.unsafe": "請回到前景後重試。",
+  "native.update.save": "記錄尚未儲存成功，修復更新沒有套用。",
+  "native.update.reload": "修復暫時沒有套用，請重試。"
 }

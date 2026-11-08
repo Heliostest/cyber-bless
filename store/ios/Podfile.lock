@@ -1,6 +1,8 @@
 PODS:
   - BlessingRuntime (1.0.0):
     - ExpoModulesCore
+  - EASClient (57.0.5):
+    - ExpoModulesCore
   - EXConstants (57.0.22):
     - ExpoModulesCore
   - EXJSONUtils (57.0.2)
@@ -239,6 +241,35 @@ PODS:
   - ExpoWidgets (57.0.27):
     - ExpoModulesCore
     - ExpoUI
+  - EXStructuredHeaders (57.0.1)
+  - EXUpdates (57.0.27):
+    - EASClient
+    - EXManifests
+    - ExpoModulesCore
+    - EXStructuredHeaders
+    - EXUpdatesInterface
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - ReachabilitySwift
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - EXUpdatesInterface (57.0.2):
     - ExpoModulesCore
   - FBLazyVector (0.86.3)
@@ -254,6 +285,7 @@ PODS:
     - FBLazyVector (= 0.86.3)
     - RCTRequired (= 0.86.3)
     - React-Core (= 0.86.3)
+  - ReachabilitySwift (5.2.4)
   - React (0.86.3):
     - React-Core (= 0.86.3)
     - React-Core/DevSupport (= 0.86.3)
@@ -2182,6 +2214,7 @@ PODS:
 
 DEPENDENCIES:
   - BlessingRuntime (from `../modules/blessing-runtime/ios`)
+  - EASClient (from `../../../node_modules/expo-eas-client/ios`)
   - EXConstants (from `../../../node_modules/expo-constants/ios`)
   - EXJSONUtils (from `../../../node_modules/expo-json-utils/ios`)
   - EXManifests (from `../../../node_modules/expo-manifests/ios`)
@@ -2206,6 +2239,8 @@ DEPENDENCIES:
   - ExpoSplashScreen (from `../../../node_modules/expo-splash-screen/ios`)
   - "ExpoUI (from `../../../node_modules/@expo/ui/ios`)"
   - ExpoWidgets (from `../../../node_modules/expo-widgets/ios`)
+  - EXStructuredHeaders (from `../../../node_modules/expo-structured-headers/ios`)
+  - EXUpdates (from `../../../node_modules/expo-updates/ios`)
   - EXUpdatesInterface (from `../../../node_modules/expo-updates-interface/ios`)
   - FBLazyVector (from `../../../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../../../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
@@ -2287,9 +2322,15 @@ DEPENDENCIES:
   - "RNCAsyncStorage (from `../../../node_modules/@react-native-async-storage/async-storage`)"
   - Yoga (from `../../../node_modules/react-native/ReactCommon/yoga`)
 
+SPEC REPOS:
+  trunk:
+    - ReachabilitySwift
+
 EXTERNAL SOURCES:
   BlessingRuntime:
     :path: "../modules/blessing-runtime/ios"
+  EASClient:
+    :path: "../../../node_modules/expo-eas-client/ios"
   EXConstants:
     :path: "../../../node_modules/expo-constants/ios"
   EXJSONUtils:
@@ -2338,6 +2379,10 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/@expo/ui/ios"
   ExpoWidgets:
     :path: "../../../node_modules/expo-widgets/ios"
+  EXStructuredHeaders:
+    :path: "../../../node_modules/expo-structured-headers/ios"
+  EXUpdates:
+    :path: "../../../node_modules/expo-updates/ios"
   EXUpdatesInterface:
     :path: "../../../node_modules/expo-updates-interface/ios"
   FBLazyVector:
@@ -2500,6 +2545,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   BlessingRuntime: ed0fb1658772b1a8ed89232ad5c7b9da770a5a62
+  EASClient: c0ccc7ee5d3da785fbbd8c87b881d151a7428742
   EXConstants: 8a0eb5e2553569c0e6710b73a8d90d1ce358c153
   EXJSONUtils: a49e3ef80dff762108e5690c7b2f360675dcf7f6
   EXManifests: 4c53b2602e03ccf44d0b4ff9c5d655b2c5acba3f
@@ -2524,6 +2570,8 @@ SPEC CHECKSUMS:
   ExpoSplashScreen: 856060f5724dc4fca4d69a2d18a161e3baa37019
   ExpoUI: 162ba2d970e9fba2d53d819945c41ed6b529a73f
   ExpoWidgets: 9b656659ad485d343e967bad67247188d21f2c0e
+  EXStructuredHeaders: 07c88ee9f7dfcbafeaaab0e78ea276dfe0eb332e
+  EXUpdates: c31702bd1fceae0977a38c3ef08efe9ce0505662
   EXUpdatesInterface: 4c96533f11c8cefe879bd506564cc2d537f56804
   FBLazyVector: 2138c6c2ab66c31bf5754dc18097fbc498a49c7f
   hermes-engine: 8930e5f68b09f76e00ab617da3f7587e7262efd0
@@ -2532,6 +2580,7 @@ SPEC CHECKSUMS:
   RCTSwiftUI: e818198d11928a78c2b2afe281d072171dab617f
   RCTSwiftUIWrapper: b9457f8613a1d0c8146c08844a04154702ff8809
   RCTTypeSafety: efc19e6b92931abf0b68b064212323a258a5f019
+  ReachabilitySwift: 32793e867593cfc1177f5d16491e3a197d2fccda
   React: 52dce66f71097ed7a4968673d95eeb8095ded74e
   React-callinvoker: afa0525ab27f4ffbb4c377f855fe9368edb099bc
   React-Core: fdb67992e049f2526ade3e258c21b8404e7943a3

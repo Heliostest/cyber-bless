@@ -420,6 +420,76 @@ describe('Daruma eye painting', () => {
     expect(disposed.size).toBe(resources.size)
   })
 
+  it('places the first eye on the viewer\'s right, matching the documented Takasaki order', async () => {
+    const s = await mount()
+    expect(s.point('daruma-eye-target-first')[0]).toBeGreaterThan(s.point('daruma-eye-target-second')[0] + 40)
+    // The tap cue guides the user to that same first eye.
+    const cued: string[] = []
+    s.scene.traverse(object => {
+      if ((object.userData.interactionCues as InteractionCue[] | undefined)?.some(cue => cue.enabled() && cue.kind === 'tap')) cued.push(object.name)
+    })
+    expect(cued).toEqual(['daruma-eye-target-first'])
+  })
+
+  it('grounds the brush on its rest inside a phone-width frame', async () => {
+    const s = await mount()
+    const brush = new THREE.Box3().setFromObject(s.scene.getObjectByName('daruma-brush')!)
+    const stand = new THREE.Box3().setFromObject(s.scene.getObjectByName('daruma-stand')!)
+    const rest = new THREE.Box3().setFromObject(s.scene.getObjectByName('daruma-brush-rest')!)
+    expect(rest.min.y - stand.max.y).toBeLessThan(0.01)
+    // It lies on the block and stand rather than floating beside the doll.
+    expect(brush.min.y - stand.max.y).toBeLessThan(0.03)
+    expect(brush.min.y).toBeGreaterThan(stand.max.y - 0.03)
+    s.scene.updateMatrixWorld()
+    for (const x of [brush.min.x, brush.max.x]) for (const y of [brush.min.y, brush.max.y]) for (const z of [brush.min.z, brush.max.z]) {
+      const p = new THREE.Vector3(x, y, z).project(s.camera)
+      expect((p.x + 1) * 180).toBeGreaterThan(12); expect((p.x + 1) * 180).toBeLessThan(348)
+      expect((1 - p.y) * 180).toBeLessThan(348)
+    }
+  })
+
+  it('paints from a fingertip tap just outside the small eye, but not from the far cheek', async () => {
+    const s = await mount()
+    const eye = s.point('daruma-eye-target-first')
+    const far: [number, number] = [eye[0] + 6, eye[1] + 70]
+    pointer(s.hit, 'pointerdown', far); pointer(s.hit, 'pointerup', far)
+    expect(s.progress).toEqual([])
+    const edge = s.scene.getObjectByName('daruma-eye-target-first') as THREE.Mesh
+    const bounds = new THREE.Box3().setFromObject(edge), corner = new THREE.Vector3(bounds.max.x, bounds.getCenter(new THREE.Vector3()).y, bounds.max.z).project(s.camera)
+    const beside: [number, number] = [(corner.x + 1) * 180 + 9, eye[1]]
+    pointer(s.hit, 'pointerdown', beside); pointer(s.hit, 'pointerup', beside)
+    expect(s.progress).toEqual([1])
+  })
+
+  it('paints as soon as the carried brush tip reaches the eye and ignores the same touch afterwards', async () => {
+    const s = await mount()
+    const brush = s.point('daruma-brush'), eye = s.point('daruma-eye-target-first')
+    pointer(s.hit, 'pointerdown', brush)
+    s.run(0.2)
+    expect(s.scene.getObjectByName('daruma-brush')!.rotation.z).toBeLessThan(0.9)
+    pointer(s.hit, 'pointermove', [(brush[0] + eye[0]) / 2, (brush[1] + eye[1]) / 2])
+    expect(s.progress).toEqual([])
+    pointer(s.hit, 'pointermove', eye)
+    expect(s.progress).toEqual([1])
+    expect(s.eye('daruma-pupil-first')).toBe(true)
+    pointer(s.hit, 'pointermove', [8, 8]); pointer(s.hit, 'pointerup', [8, 8])
+    expect(s.progress).toEqual([1])
+    s.run(1)
+    expect(s.scene.getObjectByName('daruma-pupil-first')!.scale.toArray()).toEqual([1, 1, 1])
+  })
+
+  it('returns an abandoned brush to its resting tilt and paints a still pupil with reduced motion', async () => {
+    const s = await mount()
+    const brush = s.point('daruma-brush')
+    pointer(s.hit, 'pointerdown', brush); s.run(0.3)
+    pointer(s.hit, 'pointerup', [brush[0] - 30, brush[1] - 40]); s.run(1)
+    expect(s.progress).toEqual([])
+    expect(s.scene.getObjectByName('daruma-brush')!.rotation.z).toBeCloseTo(1.2, 2)
+    const quiet = await mount(0, { isReducedMotion: () => true })
+    quiet.button.click()
+    expect(quiet.scene.getObjectByName('daruma-pupil-first')!.scale.toArray()).toEqual([1, 1, 1])
+  })
+
   it('unregisters every owned window pointer and focus listener on disposal', async () => {
     // Spies retain native event delivery; the assertion checks closure ownership.
     const added = vi.spyOn(window, 'addEventListener')

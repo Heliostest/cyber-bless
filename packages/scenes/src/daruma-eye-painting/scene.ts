@@ -6,6 +6,7 @@ import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createPosePlacement } from '../pose-placement'
+import { createTouchTarget } from '../touch-target'
 import {
   addStageLights, CEL_STYLE, claimObjectTouches, createPointerRay, createSceneFeedback,
   createStepOverlay, createWarmStage, disposeTree, observeCanvasResize,
@@ -33,6 +34,10 @@ const COPY = {
 const HEIGHT = 1.72
 const REST_Y = 0.135
 const HELD_Y = REST_Y + 0.12
+/** Resting on its block the brush leans toward the face; lifted, it turns upright to paint. */
+const BRUSH_REST_TILT = 1.2
+const BRUSH_HELD_TILT = 0.42
+const BRUSH_TIP = 0.515
 
 /** A bottom-heavy egg with a small flat base, rather than a sphere. */
 function radiusAt(y: number) {
@@ -241,7 +246,9 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
 
   const pupils: THREE.Mesh[] = []
   const eyes: THREE.Mesh[] = []
-  for (const [i, x] of [-0.255, 0.255].entries()) {
+  // Takasaki's documented order: the first eye is the one on the viewer's right
+  // (the daruma's own left); the second is the viewer's left.
+  for (const [i, x] of [0.255, -0.255].entries()) {
     const eyeName = i === 0 ? 'first' : 'second'
     const addDisk = (rx: number, ry: number, offset: number, material: THREE.Material) => {
       const { geometry, centre } = disk(x, 1.075, rx, ry, offset)
@@ -280,23 +287,54 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
   doll.add(stroke([[-0.08, 0.595], [0, 0.586], [0.08, 0.595]], 0.005, redPaint))
   doll.add(stroke([[-0.21, 0.24], [0, 0.21], [0.21, 0.24]], 0.011, gold, 0.019))
 
+  // The brush rests on a small wooden block at the stand's front-right, inside a
+  // phone-width frame, its inked tip already pointing toward the face.
+  const rest = new THREE.Mesh(new RoundedBoxGeometry(0.13, 0.081, 0.13, 2, 0.022), darkWood)
+  rest.name = 'daruma-brush-rest'
+  rest.position.set(0.66, 0.1705, 0.5)
+  world.add(rest)
   const brush = new THREE.Group()
   brush.name = 'daruma-brush'
-  const brushHome = new THREE.Vector3(0.91, 0.63, 0.44)
+  const brushHome = new THREE.Vector3(0.6, 0.2645, 0.5)
   brush.position.copy(brushHome)
-  brush.rotation.z = -0.38
+  brush.rotation.z = BRUSH_REST_TILT
   world.add(brush)
-  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.039, 0.54, 14), wood)
+  const bamboo = new THREE.MeshStandardMaterial({ color: 0xcaa56c, roughness: 0.84 })
+  applyCraftSurface(bamboo, { kind: 'bamboo', strength: .35, axis: 'y' })
+  const hair = new THREE.MeshStandardMaterial({ color: 0xf2e8d2, roughness: 0.95 })
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.034, 0.5, 18), bamboo)
   shaft.name = 'daruma-brush-shaft'
   brush.add(shaft)
-  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.043, 0.035, 0.08, 14), darkWood)
-  collar.position.y = 0.28
+  for (const y of [-0.07, 0.12]) {
+    const node = new THREE.Mesh(new THREE.TorusGeometry(0.032, 0.006, 6, 20), bamboo)
+    node.rotation.x = Math.PI / 2
+    node.position.y = y
+    brush.add(node)
+  }
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.034, 14, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), darkWood)
+  cap.position.y = -0.25
+  brush.add(cap)
+  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.043, 0.035, 0.07, 18), darkWood)
+  collar.position.y = 0.282
   brush.add(collar)
-  const bristles = new THREE.Mesh(new THREE.ConeGeometry(0.041, 0.17, 16), ink)
-  bristles.position.y = 0.395
+  // A soft hair head whose upper half is already dipped in ink.
+  const head = (from: number, to: number, material: THREE.Material) => new THREE.Mesh(new THREE.LatheGeometry(
+    Array.from({ length: 13 }, (_, i) => {
+      const t = from + (to - from) * i / 12
+      return new THREE.Vector2(Math.max(0.0015, 0.047 * Math.sin(Math.PI * Math.min(1, 0.32 + t * 0.68)) * (1 - t * 0.18)), t * 0.2)
+    }), 18), material)
+  const hairBase = head(0, 0.5, hair)
+  hairBase.position.y = 0.315
+  brush.add(hairBase)
+  const bristles = head(0.5, 1, ink)
+  bristles.name = 'daruma-brush-ink-tip'
+  bristles.position.y = 0.315
   brush.add(bristles)
-  const brushTip = new THREE.Vector3(0, 0.48, 0).applyEuler(brush.rotation)
+  const brushTip = new THREE.Vector3()
+  const tipFor = (tilt: number) => brushTip.set(0, BRUSH_TIP, 0).applyEuler(new THREE.Euler(0, 0, tilt))
   const brushTarget = brushHome.clone()
+  let brushTilt = BRUSH_REST_TILT
+  let pupilBloom = 1
 
   const placement = createPosePlacement(canvas,camera,{
     roots:[doll],targets:[doll],anchors:[[0,0,0]],
@@ -309,16 +347,21 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     updateMatrices()
     return pointer.hits(x, y, objects)
   }
-  const onDoll = (x: number, y: number) => hits(x, y, [shell])
+  // Fingertip-sized margins around the real doll, brush and blank eye; a nearer
+  // surface under the finger still wins, so the margin never reaches through it.
+  const touch = createTouchTarget(canvas, camera, scene)
+  const onDoll = (x: number, y: number) => touch.hit(x, y, doll)
+  const onBrush = (x: number, y: number) => brush.visible && touch.hit(x, y, brush)
   const onObject = (x: number, y: number) => canAct() && !settling && !blockedMulti && (
-    step === 0 ? hits(x, y, [shell, shaft, collar, bristles]) : (step === 2 || returning && step === 1) && onDoll(x, y)
+    step === 0 ? onBrush(x, y) || onDoll(x, y) : (step === 2 || returning && step === 1) && onDoll(x, y)
   )
-  const onEye = (x: number, y: number) => hits(x, y, [eyes[returning ? 1 : 0]])
+  const onEye = (x: number, y: number) => touch.hit(x, y, eyes[returning ? 1 : 0])
   const onStand = (x: number, y: number) => hits(x, y, [stand])
   const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.66)
   const hitPoint = new THREE.Vector3()
   const pointers = new Set<number>()
   let dragId: number | null = null
+  let brushHeld = false
   let downY = 0
   let dragLean = 0
 
@@ -374,6 +417,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     const claimed = dragId
     // Releasing capture can emit lostpointercapture synchronously.
     dragId = null
+    brushHeld = false
     dragLean = 0
     if (!settling) { placement.cancel(); if(step===2)doll.position.set(0,HELD_Y,0) }
     brushTarget.copy(brushHome)
@@ -385,6 +429,8 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     if (!canAct() || step !== 0) return
     step = 1
     pupils[returning ? 1 : 0].visible = true
+    pupilBloom = reduced() ? 1 : 0
+    pupils[returning ? 1 : 0].scale.setScalar(reduced() ? 1 : 0.35)
     brush.visible = false
     cancelDrag()
     wobbleVelocity = reduced() ? 0 : 0.42
@@ -460,6 +506,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     if (pointers.size > 1 || blockedMulti) { blockedMulti = true; cancelDrag(); return }
     if (!onObject(e.clientX, e.clientY)) return
     dragId = e.pointerId
+    brushHeld = step === 0 && onBrush(e.clientX, e.clientY)
     downY = e.clientY
     if(step===2 && !placement.begin(0,e.clientX,e.clientY)){cancelDrag();return}
     fx.prepare()
@@ -471,10 +518,13 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     if (e.buttons === 0) { cancelDrag(); return }
     if (step === 0) {
       if (pointer.aim(e.clientX, e.clientY).ray.intersectPlane(dragPlane, hitPoint)) {
-        brushTarget.copy(hitPoint).sub(brushTip)
+        brushTarget.copy(hitPoint).sub(tipFor(BRUSH_HELD_TILT))
         brushTarget.x = THREE.MathUtils.clamp(brushTarget.x, -1, 1.15)
         brushTarget.y = THREE.MathUtils.clamp(brushTarget.y, 0.2, 1.7)
       }
+      // Like other placements, a carried brush settles as soon as its tip reaches
+      // the blank eye; the finger does not have to find the exact release spot.
+      if (brushHeld && onEye(e.clientX, e.clientY)) { paintEye(); return }
     } else if (step === 2 && placement.move(e.clientX,e.clientY)) {
       placement.capture(); settle()
     }
@@ -585,6 +635,16 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
         doll.position.y = THREE.MathUtils.lerp(doll.position.y, targetY, quiet ? 1 : 1 - Math.exp(-delta * 10))
       }
       brush.position.lerp(brushTarget, quiet ? 1 : 1 - Math.exp(-delta * 18))
+      // Picking the brush up turns it upright to write; released, it lies back on its block.
+      const tilt = brushHeld && dragId !== null ? BRUSH_HELD_TILT : BRUSH_REST_TILT
+      brushTilt = quiet ? tilt : THREE.MathUtils.lerp(brushTilt, tilt, 1 - Math.exp(-delta * 16))
+      brush.rotation.z = brushTilt
+      if (pupilBloom < 1) {
+        // The new pupil blooms like a soft ink dab, settling exactly at full size.
+        pupilBloom = quiet ? 1 : Math.min(1, pupilBloom + delta / 0.36)
+        const p = pupilBloom, c = 1.9
+        pupils[returning ? 1 : 0].scale.setScalar(p >= 1 ? 1 : 0.35 + 0.65 * (1 + (c + 1) * (p - 1) ** 3 + c * (p - 1) ** 2))
+      }
       ;(contactShadow.material as THREE.MeshBasicMaterial).opacity = 0.37 - (doll.position.y - REST_Y) * 0.8
       camera.position.copy(cameraHome)
       camera.lookAt(cameraLookAt)

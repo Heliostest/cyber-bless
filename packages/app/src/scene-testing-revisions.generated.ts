@@ -36,7 +36,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "czech-pilgrim-journal": "6ed1bdf6f48205c6a9cb35e8de30b2d659610aa2d2bb585fc890eb7c7a82c8a6",
   "czech-wooden-ratchet": "54b7c5600f09c7206c6a8a185b710263957c7b5dc2a8988491986d7faae3310a",
   "dalarna-wooden-horse": "af827684575d064d9d3a3d04366669861514fd41a2101ce942925c7228f23e8c",
-  "daruma-eye-painting": "afb5a02f4a05c2d8b25533745d40416d16a3e1637e897e1a3cad247a9ce4e5db",
+  "daruma-eye-painting": "18a131977360d8896174741389a6bde139f1ff74aa2e7789f495214994675758",
   "diya-oil-lamp": "3b30dce0f74ca95859ad5782be99de186573edb15a6cef34cc9685997c8f1584",
   "ema-votive-plaque": "91c717e2563e41d708263009aa0d86e3e6e5e86a3f3b3d1b82ca28e32f6dd0a7",
   "english-hearth-bellows": "06682293782e7b9f5691644457e3a301456d67d1f481d491685cac8d622ba4e6",

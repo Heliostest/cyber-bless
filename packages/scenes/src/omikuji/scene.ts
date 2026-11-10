@@ -1,4 +1,5 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -6,6 +7,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { createTouchTarget } from '../touch-target'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -26,6 +28,8 @@ const STICK = new THREE.Vector3(-0.52, 1.655, 0.08)
 const DRAW = new THREE.Vector3(-0.52, 2.28, 0.08)
 const READ = new THREE.Vector3(-0.09, 1.5, 0.5)
 const KEEP = new THREE.Vector3(0.67, 0.77, 0.385)
+/** A held object swells slightly, like an app item lifted under the finger. */
+const HELD_SCALE = 0.055
 const smooth = (t: number) => { const p = THREE.MathUtils.clamp(t, 0, 1); return p * p * (3 - 2 * p) }
 
 /** Beveled six-sided timber body, with the extrusion axis turned vertically. */
@@ -66,6 +70,11 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
   const timber = material(0xb39170), cream = material(0xffefd2), paperEdge = material(0xe6d5b3)
   for(const timberPart of[honey,pale,edge,timber])applyCraftSurface(timberPart,{kind:'wood',strength:.3,axis:'y'})
   const sage = material(0x829a80), sageLight = material(0xafb9a0), ink = material(0x947a60), coral = material(0xc77e65)
+  // Paper-only optics: the slip and envelope keep a soft fibrous body, while the
+  // badge, seal and decorative marks stay flat pigment.
+  const slipPaper = createRitualMaterial({ color: 0xfff1d6, roughness: .9 }, { kind: 'paper', strength: .2, fiber: 'paper' })
+  const envelopePaper = createRitualMaterial({ color: 0x90a98d, roughness: .9 }, { kind: 'paper', strength: .14, fiber: 'paper' })
+  const envelopeLining = material(0x5f7a63), hole = material(0x4a3a2c)
   const add = (geometry: THREE.BufferGeometry, mat: THREE.Material, name: string, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p)
     mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
@@ -88,8 +97,11 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     add(hexagon(0.335, 0.09), pale, 'omikuji-box-rim', [0, y, 0], box)
     add(hexagon(0.34, 0.022, 0.005), edge, 'omikuji-box-band', [0, y + (y > 0 ? -0.044 : 0.044), 0], box)
   }
-  const slot = add(new RoundedBoxGeometry(0.115, 0.014, 0.075, 3, 0.015), ink, 'omikuji-box-slot', [0, 0.469, 0], box)
+  // A small round opening in the lid: the stick visibly rises out of a real hole.
+  const slot = add(new THREE.CylinderGeometry(0.056, 0.05, 0.012, 28), hole, 'omikuji-box-slot', [0, 0.466, 0], box)
   slot.userData.toonSurface = { outline: false }
+  const slotRim = add(new THREE.TorusGeometry(0.064, 0.012, 8, 32), edge, 'omikuji-box-slot-rim', [0, 0.47, 0], box)
+  slotRim.rotation.x = Math.PI / 2
   const grain = new THREE.Group(); grain.name = 'omikuji-wood-grain'; box.add(grain)
   for (let face = 0; face < 6; face++) {
     for (let line = 0; line < 4; line++) {
@@ -105,9 +117,15 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     const leaf = add(new THREE.SphereGeometry(1, 12, 8), sage, 'omikuji-badge-leaf', [x, y, 0.307], box)
     leaf.scale.set(0.032, 0.015, 0.004); leaf.rotation.z = angle; leaf.userData.toonSurface = { outline: false }
   }
-  const stick = add(new RoundedBoxGeometry(0.076, 0.57, 0.057, 3, 0.015), pale, 'omikuji-draw-stick', [...STICK.toArray()] as [number, number, number])
-  const stickMark = add(new RoundedBoxGeometry(0.046, 0.025, 0.006, 2, 0.004), coral, 'omikuji-stick-mark', [0, 0.205, 0.031], stick)
+  // A readable stick: rounded body, painted coral tip band and three abstract
+  // engraved dots for its number, never a real shrine numeral or verse.
+  const stick = add(new RoundedBoxGeometry(0.088, 0.6, 0.062, 4, 0.024), pale, 'omikuji-draw-stick', [...STICK.toArray()] as [number, number, number])
+  const stickMark = add(new RoundedBoxGeometry(0.094, 0.072, 0.068, 3, 0.022), coral, 'omikuji-stick-mark', [0, 0.248, 0], stick)
   stickMark.userData.toonSurface = { outline: false }
+  for (const y of [0.15, 0.1, 0.05]) {
+    const dot = add(new THREE.CircleGeometry(0.011, 14), ink, 'omikuji-stick-number-dot', [0, y, 0.0315], stick)
+    dot.userData.toonSurface = { outline: false }
+  }
   const guideMaterial = new THREE.MeshBasicMaterial({ color: 0x91ae8a, transparent: true, opacity: 0.2, depthWrite: false })
   const tiltTarget = add(hexagon(0.32, 0.8), guideMaterial, 'omikuji-tilt-target', [...TILT.toArray()] as [number, number, number])
   tiltTarget.rotation.z = -0.42; tiltTarget.castShadow = tiltTarget.receiveShadow = false
@@ -123,12 +141,12 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
 
   // Three hinged sections unfold into one cream paper with original decorative brush marks.
   const paper = new THREE.Group(); paper.name = 'omikuji-paper'; world.add(paper)
-  const middle = add(new RoundedBoxGeometry(0.55, 0.34, 0.015, 3, 0.007), cream, 'omikuji-paper-middle', [0, 0, 0], paper)
+  const middle = add(new RoundedBoxGeometry(0.55, 0.34, 0.015, 3, 0.007), slipPaper, 'omikuji-paper-middle', [0, 0, 0], paper)
   const upper = new THREE.Group(), lower = new THREE.Group()
   upper.name = 'omikuji-paper-top-fold'; lower.name = 'omikuji-paper-bottom-fold'
   upper.position.y = 0.17; lower.position.y = -0.17; paper.add(upper, lower)
-  const topPanel = add(new RoundedBoxGeometry(0.55, 0.34, 0.015, 3, 0.007), cream, 'omikuji-paper-top', [0, 0.17, 0], upper)
-  const bottomPanel = add(new RoundedBoxGeometry(0.55, 0.34, 0.015, 3, 0.007), cream, 'omikuji-paper-bottom', [0, -0.17, 0], lower)
+  const topPanel = add(new RoundedBoxGeometry(0.55, 0.34, 0.015, 3, 0.007), slipPaper, 'omikuji-paper-top', [0, 0.17, 0], upper)
+  const bottomPanel = add(new RoundedBoxGeometry(0.55, 0.34, 0.015, 3, 0.007), slipPaper, 'omikuji-paper-bottom', [0, -0.17, 0], lower)
   for (const panel of [topPanel, middle, bottomPanel]) {
     for (const x of [-0.245, 0.245]) tube([[x, -0.15, 0.01], [x, 0, 0.01], [x, 0.15, 0.01]], 0.003, paperEdge, panel)
     for (const [row, length] of [[-0.084, 0.29], [-0.01, 0.34], [0.063, 0.25]]) {
@@ -139,25 +157,35 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
   seal.userData.toonSurface = { outline: false }
   for (const y of [-0.168, 0.168]) tube([[-0.255, y, 0.01], [0, y, 0.01], [0.255, y, 0.01]], 0.0022, paperEdge, paper)
 
+  // A slim paper envelope: the open flap leans back from a darker lining, so the
+  // pocket reads as an opening rather than a solid little house.
   const envelope = new THREE.Group(); envelope.name = 'omikuji-envelope'; envelope.position.set(0.67, 0.74, 0.38); world.add(envelope)
-  add(new RoundedBoxGeometry(0.66, 0.455, 0.022, 3, 0.018), sageLight, 'omikuji-envelope-back', [0, 0, -0.025], envelope)
-  const pocket = add(new RoundedBoxGeometry(0.67, 0.43, 0.034, 3, 0.02), sage, 'omikuji-envelope-pocket', [0, -0.014, 0.035], envelope)
-  const flapShape = new THREE.Shape(); flapShape.moveTo(-0.32, 0); flapShape.lineTo(0, 0.255); flapShape.lineTo(0.32, 0); flapShape.closePath()
-  const flapGeometry = new THREE.ExtrudeGeometry(flapShape, { depth: 0.012, bevelEnabled: true, bevelSize: 0.01, bevelThickness: 0.006, bevelSegments: 3 })
-  add(flapGeometry, sageLight, 'omikuji-envelope-open-flap', [0, 0.21, -0.032], envelope)
-  tube([[-0.306, 0.17, 0.056], [0, -0.065, 0.056], [0.306, 0.17, 0.056]], 0.004, sageLight, envelope)
-  tube([[-0.31, -0.19, 0.056], [0, -0.066, 0.056], [0.31, -0.19, 0.056]], 0.003, sageLight, envelope)
-  const envelopeSeal = add(new THREE.CircleGeometry(0.035, 20), cream, 'omikuji-envelope-dot', [0, -0.07, 0.058], envelope)
+  add(new RoundedBoxGeometry(0.66, 0.455, 0.016, 3, 0.008), sageLight, 'omikuji-envelope-back', [0, 0, -0.022], envelope)
+  const lining = add(new RoundedBoxGeometry(0.62, 0.1, 0.006, 2, 0.003), envelopeLining, 'omikuji-envelope-lining', [0, 0.175, -0.01], envelope)
+  lining.userData.toonSurface = { outline: false }
+  const pocket = add(new RoundedBoxGeometry(0.67, 0.43, 0.026, 3, 0.012), envelopePaper, 'omikuji-envelope-pocket', [0, -0.014, 0.039], envelope)
+  const flapShape = new THREE.Shape(); flapShape.moveTo(-0.32, 0); flapShape.quadraticCurveTo(-0.04, 0.2, 0, 0.245); flapShape.quadraticCurveTo(0.04, 0.2, 0.32, 0); flapShape.closePath()
+  const flapGeometry = new THREE.ExtrudeGeometry(flapShape, { depth: 0.008, bevelEnabled: true, bevelSize: 0.006, bevelThickness: 0.004, bevelSegments: 2, curveSegments: 10 })
+  const flap = add(flapGeometry, sageLight, 'omikuji-envelope-open-flap', [0, 0.222, -0.03], envelope)
+  flap.rotation.x = -0.42
+  tube([[-0.306, 0.17, 0.056], [0, -0.065, 0.056], [0.306, 0.17, 0.056]], 0.0045, sageLight, envelope)
+  tube([[-0.31, -0.19, 0.056], [0, -0.066, 0.056], [0.31, -0.19, 0.056]], 0.0032, sageLight, envelope)
+  const envelopeSeal = add(new THREE.CircleGeometry(0.038, 24), cream, 'omikuji-envelope-dot', [0, -0.07, 0.058], envelope)
   envelopeSeal.userData.toonSurface = { outline: false }
+  // An original leaf pair beside the seal echoes the box badge; no shrine mark.
+  for (const [x, angle] of [[-0.058, 0.7], [0.058, -0.7]] as const) {
+    const sprig = add(new THREE.SphereGeometry(1, 12, 8), cream, 'omikuji-envelope-leaf', [x, -0.064, 0.058], envelope)
+    sprig.scale.set(0.03, 0.013, 0.003); sprig.rotation.z = angle; sprig.userData.toonSurface = { outline: false }
+  }
 
   const canCue = () => active() && !motion
   addInteractionCue(body, { kind: 'drag', label: '拖签筒轻摇', enabled: () => canCue() && checkpoint === 0, destination: tiltTarget, targetLabel: '倾斜轻摇处', priority: 2 })
   addInteractionCue(stick, { kind: 'drag', label: '向上抽出签棒', enabled: () => canCue() && checkpoint === 1, destination: drawTarget, targetLabel: '向上抽出', priority: 2 })
   addInteractionCue(middle, { kind: 'drag', label: '将纸签收进信封', enabled: () => canCue() && checkpoint === 2, destination: pocket, targetLabel: '信封开口', priority: 2 })
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: COPY.steps, action: COPY.shake }, safe)
-  const feedback = createSceneFeedback(ctx), ray = createPointerRay(canvas, camera)
+  const feedback = createSceneFeedback(ctx), ray = createPointerRay(canvas, camera), touch = createTouchTarget(canvas, camera, scene)
   const plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3(), start = new THREE.Vector2()
-  let travel = 0
+  let travel = 0, held = 0
   const carried = () => checkpoint === 0 ? box : checkpoint === 1 ? stick : paper
   const source = () => checkpoint === 0 ? body : checkpoint === 1 ? stick : middle
   const destination = () => checkpoint === 0 ? tiltTarget : checkpoint === 1 ? drawTarget : pocket
@@ -174,7 +202,7 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     stick.position.copy(STICK); stick.rotation.set(0, 0, 0); stick.visible = checkpoint === 1
     paper.visible = checkpoint >= 2; paper.position.copy(checkpoint === 3 ? KEEP : READ)
     paper.rotation.set(0, 0, checkpoint === 3 ? 0 : -0.035)
-    paper.scale.setScalar(1)
+    held = 0; box.scale.setScalar(1); stick.scale.setScalar(1); paper.scale.setScalar(1)
     upper.rotation.x = checkpoint === 3 ? Math.PI : 0; lower.rotation.x = checkpoint === 3 ? -Math.PI : 0
     upper.position.z = checkpoint === 3 ? 0.018 : 0; lower.position.z = checkpoint === 3 ? 0.036 : 0
     tiltTarget.visible = checkpoint === 0; drawTarget.visible = checkpoint === 1
@@ -197,7 +225,10 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
   }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart(x, y) { matrix(); return !motion && checkpoint < 3 && ray.hits(x, y, checkpoint === 2 ? [middle, topPanel, bottomPanel] : [source()]) },
+    // A fingertip-sized margin around the whole held object (badge, grain, stick
+    // marks and slip folds included): thin parts stay easy to take without
+    // accepting empty courtyard space.
+    canStart(x, y) { matrix(); return !motion && checkpoint < 3 && touch.hit(x, y, carried()) },
     onStart(x, y) {
       dragging = true; travel = 0; start.set(x, y); feedback.prepare()
       plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), carried().position)
@@ -234,7 +265,7 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
   const focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
     const aspect = sizeStage(canvas, renderer, style, camera)
-    camera.position.set(0, 2.08, 5.35 + portraitBoost(aspect, 4.6)); camera.lookAt(0, 1.28, 0.1); matrix()
+    camera.position.set(0, 2.02, 4.62 + portraitBoost(aspect, 4.6)); camera.lookAt(0, 1.3, 0.1); matrix()
   }
   restore(); sync()
   return {
@@ -251,8 +282,11 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
       if (!started || disposed) return
       if (!active()) { pointer.cancel(); ui.actionBtn.disabled = true; style.render(); return }
       ui.actionBtn.disabled = !!motion || checkpoint === 3
+      const delta = Number.isFinite(dt) ? Math.max(0, dt) : 0
+      const lifted = dragging && !reduced() ? 1 : 0
+      held = Math.abs(held - lifted) < 0.002 ? lifted : THREE.MathUtils.damp(held, lifted, 16, Math.min(delta, 0.05))
+      if (checkpoint < 3) carried().scale.setScalar(1 + HELD_SCALE * smooth(held))
       if (motion) {
-        const delta = Number.isFinite(dt) ? Math.max(0, dt) : 0
         motion.time = reduced() ? 1 : Math.min(1, motion.time + delta / (motion.step === 0 ? 1.25 : 1))
         const t = motion.time, p = smooth(t)
         if (motion.step === 0) {

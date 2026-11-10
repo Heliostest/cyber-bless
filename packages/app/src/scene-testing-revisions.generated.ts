@@ -103,7 +103,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "neapolitan-cornicello": "89e10d537cfc601eac4eb515390f7d3582606d5fcf160364047211b04f8b5bb0",
   "niue-shell-necklace": "d496db049b4c448c039858229b1ba8456b1279184208ce89c716ff47b7da4777",
   "omamori-cycle": "26fc349accc3992f8ac146b02abff75613c4d0ed72713c0d3add5d6b08052803",
-  "omikuji": "a3d934eccac6a5bd670c432a029bd032d58968cf29208cae40171e2b04e01f6a",
+  "omikuji": "079fd3a91c876cb253dac0b92962717fb9c92e8909a00de49ea52f3ea41fcd10",
   "paper-pinwheel": "db815ad26cf0108dac9fa5adbbda912c1631731bc1c9673e958f64ceb6008e54",
   "persian-esfand": "ca9fe70c8a7e6ea6a3ccab150c5d4deb36332fbc74341fa4de1cff648d950dce",
   "peruvian-engraved-gourd": "391ba2a78ec12cd67e88255e57de882c7cd1ddd0456f7774b540a38142d52d88",

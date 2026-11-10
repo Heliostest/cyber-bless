@@ -290,6 +290,72 @@ describe('omikuji original reflection practice', () => {
     expect(s.progress).toEqual([]); drag(s, 0); expect(s.progress).toEqual([1])
   })
 
+  it('takes the thin drawn stick from a fingertip press just beside it, but not from empty space', () => {
+    const s = mount(1), at = project(s, object(sources[1])), target = project(s, object(targets[1]))
+    const touch = (p: Point) => {
+      const e = new Event('touchstart', { cancelable: true })
+      Object.assign(e, { changedTouches: [{ clientX: p[0], clientY: p[1] }] }); s.hit.dispatchEvent(e)
+      return e.defaultPrevented
+    }
+    // The stick is about a dozen pixels wide on a phone; a near miss still owns it.
+    const beside: Point = [at[0] + 15, at[1]], far: Point = [at[0] + 70, at[1]]
+    expect(touch(far)).toBe(false); expect(touch(beside)).toBe(true)
+    pointer(s.hit, 'pointerdown', far); pointer(s.hit, 'pointermove', target); pointer(s.hit, 'pointerup', target); s.run()
+    expect(s.progress).toEqual([])
+    pointer(s.hit, 'pointerdown', beside); pointer(s.hit, 'pointermove', [target[0] + 15, target[1]]); pointer(s.hit, 'pointerup', [target[0] + 15, target[1]]); s.run()
+    expect(s.progress).toEqual([2])
+  })
+
+  it('swells only the held object while carried and restores its exact size on tap, cancel and placement', () => {
+    const s = mount(), source = project(s, object(sources[0])), box = object('omikuji-box')
+    pointer(s.hit, 'pointerdown', source); s.run(0.4)
+    expect(box.scale.x).toBeGreaterThan(1.03); expect(box.scale.x).toBeLessThan(1.07)
+    expect(object('omikuji-envelope').scale.toArray()).toEqual([1, 1, 1])
+    pointer(s.hit, 'pointerup', source); expect(box.scale.toArray()).toEqual([1, 1, 1])
+    s.run(0.2); expect(box.scale.toArray()).toEqual([1, 1, 1])
+    pointer(s.hit, 'pointerdown', source); s.run(0.4); pointer(s.hit, 'pointercancel', source)
+    expect(box.scale.toArray()).toEqual([1, 1, 1]); expect(project(s, box)).toEqual(source)
+    for (let step = 0; step < 3; step++) {
+      drag(s, step)
+      for (const name of ['omikuji-box', 'omikuji-draw-stick', 'omikuji-paper']) expect(object(name).scale.toArray()).toEqual([1, 1, 1])
+    }
+    expect(s.progress).toEqual([1, 2, 3])
+  })
+
+  it('keeps every held object at its real size with reduced motion', () => {
+    const s = mount(0, { isReducedMotion: () => true }), source = project(s, object(sources[0]))
+    pointer(s.hit, 'pointerdown', source); s.run(0.4)
+    expect(object('omikuji-box').scale.toArray()).toEqual([1, 1, 1])
+  })
+
+  it('gives the slip and envelope paper optics and the lid a real round opening', () => {
+    mount(2)
+    const material = (name: string) => (object(name) as THREE.Mesh).material as THREE.Material
+    expect(material('omikuji-paper-middle').userData.ritualOptics.kind).toBe('paper')
+    expect(material('omikuji-envelope-pocket').userData.ritualOptics.kind).toBe('paper')
+    // Seal, leaves and brush marks remain flat original pigment.
+    expect(material('omikuji-envelope-dot').userData.ritualOptics).toBeUndefined()
+    expect(material('omikuji-paper-small-seal').userData.ritualOptics).toBeUndefined()
+    expect((object('omikuji-box-slot') as THREE.Mesh).geometry).toBeInstanceOf(THREE.CylinderGeometry)
+    expect(object('omikuji-draw-stick').children.filter(child => child.name === 'omikuji-stick-number-dot')).toHaveLength(3)
+    // The open flap leans back from the pocket instead of standing like a roof.
+    expect(object('omikuji-envelope-open-flap').rotation.x).toBeLessThan(-0.2)
+  })
+
+  it('frames the box, stick, slip and envelope large enough to handle on a phone stage', () => {
+    const s = mount(0, {}, 346)
+    const bounds = (name: string) => {
+      const box = new THREE.Box3().setFromObject(object(name)), corners: Point[] = []
+      for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
+        const p = new THREE.Vector3(x, y, z).project(drawn.camera!); corners.push([(p.x + 1) * 346 / 2, (1 - p.y) * 260])
+      }
+      return { width: Math.max(...corners.map(p => p[0])) - Math.min(...corners.map(p => p[0])), height: Math.max(...corners.map(p => p[1])) - Math.min(...corners.map(p => p[1])) }
+    }
+    expect(project(s, object('omikuji-box'))[0]).toBeGreaterThan(20)
+    expect(bounds('omikuji-box').height).toBeGreaterThan(95)
+    expect(bounds('omikuji-envelope').width).toBeGreaterThan(70)
+  })
+
   it('disposes every owned geometry, material, light, shadow map, context and listener once', () => {
     const added = vi.spyOn(window, 'addEventListener'), removed = vi.spyOn(window, 'removeEventListener')
     const s = mount(), resources = new Set<{ dispose(): void }>()

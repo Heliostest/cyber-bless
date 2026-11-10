@@ -20,7 +20,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "chinese-diabolo": "da8fc7c0a75a2cd48ea595d8a1832673923b6e213d9f9005f5dd8f8fb751df86",
   "chinese-fu-paper": "1f326a9e78dbadf76b0c0f703a63474d7728f143830d4ab28dd361b5a76c3c2a",
   "chinese-incense": "b441253bafbe5604d5db7a5410743a44562afcdc19a1a48bdff03e1e974c5d4f",
-  "chinese-longevity-lock": "e5fe7d4f8d55e5e6e8df71f9d53b8cb85678302c42869bdd2ec03b6e5ff10e8e",
+  "chinese-longevity-lock": "a6690d7fe2abd16fadc747431715f35513efe3c33c24daf511e97331b0014ac1",
   "chinese-rattle-drum": "28b9e6f6c3e348760a58fb399b30fb0c43c992fc20d1fbd0534c6a437b9fd049",
   "chinese-ruyi-scepter": "6cbca00fb2edaa60ab5e5d28019e290386aee47f5fecdd5c07aa78345ca08dd4",
   "chinese-shadow-puppet": "556d3c97504905472c3bfcdfb8f7bcc1c5262102788a3e24875e03220b7b4047",

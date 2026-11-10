@@ -95,6 +95,60 @@ describe('shrine suzu object actions', () => {
     }
   })
 
+  it('answers a pull with a visible swing, pellet rattle and warm swell on the bell, then rests exactly', () => {
+    const s = mount(), pivot = s.object('suzu-suspension-pivot')
+    const body = s.object('suzu-bell-body') as THREE.Mesh, metal = body.material as THREE.MeshStandardMaterial
+    const base = metal.emissiveIntensity
+    const from = s.point('suzu-rope-grip')
+    pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', [from[0], from[1] + 70]); pointer(s.hit, 'pointerup', [from[0], from[1] + 70])
+    let swing = 0, rattle = 0, swell = 0
+    for (let frame = 0; frame < 40; frame++) {
+      s.instance.update(0.025)
+      swing = Math.max(swing, Math.abs(pivot.rotation.z - 0.32 * 0.038)); rattle = Math.max(rattle, Math.abs(pivot.rotation.x))
+      swell = Math.max(swell, metal.emissiveIntensity - base)
+    }
+    expect(swing).toBeGreaterThan(0.05); expect(rattle).toBeGreaterThan(0.015); expect(swell).toBeGreaterThan(0.15)
+    expect(s.progress).toEqual([1]); expect(s.haptic).toHaveBeenCalledOnce()
+    s.run(1.5)
+    expect(pivot.rotation.x).toBe(0); expect(metal.emissiveIntensity).toBe(base)
+    tap(s, 'suzu-rope-grip'); s.run(1.5)
+    expect(pivot.rotation.z).toBe(0)
+    // A greeting tap answers on the bell with a swell, not a second ring.
+    const at = s.point('suzu-bell-body'); pointer(s.hit, 'pointerdown', at); pointer(s.hit, 'pointerup', at)
+    for (let frame = 0; frame < 3; frame++) s.instance.update(0.05)
+    expect(metal.emissiveIntensity).toBeGreaterThan(base + 0.2)
+    s.run(1); expect(metal.emissiveIntensity).toBe(base); expect(s.haptic).toHaveBeenCalledOnce()
+  })
+
+  it('keeps the bell still and unlit by motion with reduced motion', () => {
+    const s = mount(0, { isReducedMotion: () => true }), pivot = s.object('suzu-suspension-pivot')
+    const metal = (s.object('suzu-bell-body') as THREE.Mesh).material as THREE.MeshStandardMaterial, base = metal.emissiveIntensity
+    pull(s)
+    expect(s.progress).toEqual([1]); expect(pivot.rotation.x).toBe(0); expect(pivot.rotation.z).toBe(0)
+    expect(metal.emissiveIntensity).toBe(base)
+  })
+
+  it('lets the bell follow a sideways drift while pulling and restores it after a short pull', () => {
+    const s = mount(), pivot = s.object('suzu-suspension-pivot'), from = s.point('suzu-rope-grip')
+    pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointermove', [from[0] + 40, from[1] + 20])
+    expect(pivot.rotation.z).toBeGreaterThan(0.05)
+    pointer(s.hit, 'pointerup', [from[0] + 40, from[1] + 20]); s.run()
+    expect(s.progress).toEqual([]); expect(pivot.rotation.z).toBe(0)
+  })
+
+  it('hangs a larger bell and a thicker rope that read on a phone stage', () => {
+    const s = mount(), size = (name: string) => {
+      const box = new THREE.Box3().setFromObject(s.object(name)), xs: number[] = [], ys: number[] = []
+      for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
+        const p = new THREE.Vector3(x, y, z).project(drawn.camera!); xs.push((p.x + 1) * 195); ys.push((1 - p.y) * 260)
+      }
+      return [Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)]
+    }
+    expect(s.object('suzu-hanging-object').scale.x).toBeGreaterThan(1.1)
+    expect(size('suzu-bell-body')[0]).toBeGreaterThan(80)
+    expect(size('suzu-rope-grip')[0]).toBeGreaterThan(30)
+  })
+
   it('creates an accessible auxiliary action for pulling the actual rope', () => {
     const s = mount()
     expect(s.button).not.toBeNull()

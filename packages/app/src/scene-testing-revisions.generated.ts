@@ -122,7 +122,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "setsubun-mamemaki": "912f4ceb77960722ec23a4e4148af7574849f68e6ae9371ee29b1f7f4f5da3e5",
   "shichigosan-chitose-ame": "067fc7e075084081442e311c727fec01854ceb183edc5e213cb6d223b3ac3055",
   "shinto-torii": "c7d60dba35355eb0295f3b037ae2933160b097adc4e9c84d806ee6e4f1d7af64",
-  "shrine-suzu-bell": "ec0524e588c0cbaad867bad3c9f3ab1261645927e9967b1bd2a3fa5551bb1fa3",
+  "shrine-suzu-bell": "03a2f5f525a94d937e94db32be23ed072cb4cbffb131751964148e3ea3dcdb90",
   "sicilian-painted-cart": "41adb4c8a215cf07c408ea3776af18f50654e09c556582d68abc5a4aefc80ca6",
   "slavic-wreath": "2135756b309704d6bc8c5d44300aea4d1856dcc292815a105044c16df41d5270",
   "slovak-wire-bird": "5b9deec8bb581a0bcc8e0a5355522bd64645058e56868526e1b1fb7e1057cded",

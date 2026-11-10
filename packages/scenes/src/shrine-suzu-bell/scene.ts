@@ -23,8 +23,12 @@ const COPY = {
   pullCue: '向下轻拉铃绳', target: '往下轻拉', settleCue: '轻点铃绳收好', greetCue: '轻点铃身问安',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
-type Motion = { kind: 'ring' | 'settle' | 'greet'; time: number; from: number }
+type Motion = { kind: 'ring' | 'settle' | 'greet'; time: number; from: number; sway: number }
 const smooth = (t: number) => t * t * (3 - 2 * t)
+/** The bell, braid and tassel hang a little larger so the bell reads and the rope is easy to hold on a phone. */
+const HANGING_SCALE = 1.12
+/** Warm base glow keeps the toon-lit metal golden on small screens; a ring adds a brief swell. */
+const BELL_GLOW = 0.2
 
 function tube(points: THREE.Vector3[], radius: number, material: THREE.Material, segments = 32) {
   const curve = new THREE.CatmullRomCurve3(points)
@@ -47,7 +51,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: COPY.steps, action: COPY.pull }, safe)
   const { scene, renderer } = createWarmStage(canvas)
   const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 40)
-  const look = new THREE.Vector3(0, 1.4, 0)
+  const look = new THREE.Vector3(0, 1.48, 0)
   const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'shrine-suzu-bell', label: COPY.title })
   style.setStyle(CEL_STYLE)
   const lights = addStageLights(scene, ctx.stage, {
@@ -61,8 +65,8 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   const endWood = mat(0x997755), woodGrain = mat(0xa98560)
   const cream = createCraftMaterial({ color: 0xe8deba }, { kind: 'cord' })
   const rust = createCraftMaterial({ color: 0xb16f53 }, { kind: 'cord' }), green = createCraftMaterial({ color: 0x819a76 }, { kind: 'cord' })
-  const gold = createCraftMaterial({ color: 0xdcb15b, roughness: .42, metalness: .88 }, { kind: 'metal' })
-  const goldLight = createCraftMaterial({ color: 0xe8c887, roughness: .38 }, { kind: 'metal' })
+  const gold = createCraftMaterial({ color: 0xe6bc5c, roughness: .34, metalness: .55, emissive: 0x6a4410, emissiveIntensity: BELL_GLOW }, { kind: 'metal' })
+  const goldLight = createCraftMaterial({ color: 0xf2d590, roughness: .32, metalness: .45, emissive: 0x6a4410, emissiveIntensity: BELL_GLOW }, { kind: 'metal' })
   const darkGold = createCraftMaterial({ color: 0x75583d, roughness: .68 }, { kind: 'metal', strength: .4 })
   const add = (geometry: THREE.BufferGeometry, material: THREE.Material, xyz: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.position.set(...xyz); parent.add(mesh); return mesh
@@ -83,7 +87,8 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   const suspension = add(new THREE.TorusGeometry(0.102, 0.024, 9, 32), darkGold, [0, 2.52, 0.07])
   suspension.scale.set(0.75, 1, 1)
   const pivot = new THREE.Group(); pivot.name = 'suzu-suspension-pivot'; pivot.position.set(0, 2.48, 0.11); world.add(pivot)
-  const hanging = new THREE.Group(); hanging.name = 'suzu-hanging-object'; hanging.position.set(0, -.31, 0); pivot.add(hanging)
+  const hanging = new THREE.Group(); hanging.name = 'suzu-hanging-object'; hanging.position.set(0, -.31 * HANGING_SCALE, 0)
+  hanging.scale.setScalar(HANGING_SCALE); pivot.add(hanging)
   const bell = new THREE.Group(); bell.name = 'suzu-round-split-bell'; hanging.add(bell)
   const eye = add(new THREE.TorusGeometry(0.078, 0.027, 9, 32), goldLight, [0, 0.31, 0], bell)
   eye.scale.set(0.85, 1, 1)
@@ -152,15 +157,17 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   const ray = createPointerRay(canvas, camera)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const sources = () => checkpoint < 2 ? ropeMeshes : [body, ...lowerLobes]
-  const pose = (amount: number, sway = 0) => {
+  const pose = (amount: number, sway = 0, rattle = 0) => {
     pullAmount = amount
     pivot.rotation.z = amount * 0.038 + sway
+    pivot.rotation.x = rattle
     rope.scale.y = 1 + amount * 0.115
     // Stretch down from the bell attachment rather than away from it.
     rope.position.y = .265 * (rope.scale.y - 1)
     matrices()
   }
-  const restorePose = () => pose(checkpoint === 1 && !reduced() ? 0.32 : 0)
+  const glow = (amount: number) => { gold.emissiveIntensity = goldLight.emissiveIntensity = BELL_GLOW + amount * 0.55 }
+  const restorePose = () => { glow(0); pose(checkpoint === 1 && !reduced() ? 0.32 : 0) }
   const sync = () => {
     ui.renderDots(checkpoint, 3)
     ui.actionBtn.hidden = checkpoint === 3
@@ -188,11 +195,11 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   const perform = () => {
     if (!active() || pointer.isBusy() || motion || checkpoint === 3) return
     if (checkpoint === 0) {
-      motion = { kind: 'ring', time: 0, from: Math.max(pullAmount, 0.8) }
+      motion = { kind: 'ring', time: 0, from: Math.max(pullAmount, 0.8), sway: pivot.rotation.z - pullAmount * 0.038 }
       advance(1)
       // Only the first pull rings. Settling and greeting stay quiet; repeats never score.
       feedback.impact({ freqs: [587.33, 1174.66, 1762], duration: 0.7, gain: 0.035 })
-    } else motion = { kind: checkpoint === 1 ? 'settle' : 'greet', time: 0, from: pullAmount }
+    } else motion = { kind: checkpoint === 1 ? 'settle' : 'greet', time: 0, from: pullAmount, sway: 0 }
     if (reduced()) finishMotion()
     else sync()
   }
@@ -201,7 +208,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
     canStart(x, y) { matrices(); return !motion && checkpoint < 3 && touchTarget.hit(x, y, sources()) },
     onStart(x, y) { downX = x; downY = y; feedback.prepare() },
     onMove(x, y) {
-      if (checkpoint === 0 && !reduced()) pose(THREE.MathUtils.clamp((y - downY) / 90, 0, 1), THREE.MathUtils.clamp((x - downX) / 900, -0.025, 0.025))
+      if (checkpoint === 0 && !reduced()) pose(THREE.MathUtils.clamp((y - downY) / 90, 0, 1), THREE.MathUtils.clamp((x - downX) / 520, -0.07, 0.07))
     },
     onRelease(x, y) {
       const dx = x - downX, dy = y - downY
@@ -220,7 +227,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   const focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
     const aspect = sizeStage(canvas, renderer, style, camera)
-    camera.position.set(0.1, 1.93, 5.65 + portraitBoost(aspect, 3.5))
+    camera.position.set(0.08, 1.88, 4.85 + portraitBoost(aspect, 3.5))
     camera.lookAt(look); matrices()
   }
   sync()
@@ -246,8 +253,15 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
         const duration = motion.kind === 'settle' ? 0.65 : motion.kind === 'ring' ? 0.75 : 0.35
         motion.time = reduced() ? 1 : Math.min(1, motion.time + delta / duration)
         const t = motion.time, p = smooth(t)
-        if (motion.kind === 'ring') pose(THREE.MathUtils.lerp(motion.from, 0.32, p), Math.sin(t * Math.PI * 4) * (1 - t) * 0.045)
+        if (motion.kind === 'ring') {
+          const fade = (1 - t) ** 1.6
+          pose(THREE.MathUtils.lerp(motion.from, 0.32, p), motion.sway * (1 - p) + Math.sin(t * Math.PI * 5) * fade * 0.11,
+            Math.sin(t * Math.PI * 16) * fade * fade * 0.06)
+          glow(Math.sin(Math.min(1, t * 2.4) * Math.PI) * (1 - t))
+        }
         else if (motion.kind === 'settle') pose(motion.from * (1 - p))
+        // A greeting tap answers on the bell itself with a soft warm swell, without another ring.
+        else glow(Math.sin(t * Math.PI) * 0.6)
         if (t === 1) finishMotion()
       } else if (reduced() && !pointer.isBusy()) pose(0)
       style.render()

@@ -4,7 +4,23 @@
 
 正式 Mac mini 构建改用[参数化 tag 发布入口](../scripts/ios-release/README.md)：先提交业务源码、素材、发布工具、依赖锁及版本输入，合并／推送 `master` 后创建并推送附注 tag；Mac 直接获取该 tag 和 LFS 实体，执行同版本工具并串行验证、构建和交付。不再把未提交工作区生成的 `source.tgz` 用于新正式发布。构建号尚未分配时保持 release input 的 `null` 并拒绝执行，不猜测下一个编号。
 
-该入口已用于下述构建 20、21、22、23、24、25、26、27、28、29；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+该入口已用于下述构建 20、21、22、23、24、25、26、27、28、29、30；不改变既有构建 18 及更早工作区快照的历史身份。既有回执保留；源码或工具修复须使用新提交和新 tag。
+
+## 2026-11-10 构建 30：签名内测热更新接入
+
+北京时间 22:17:17，**1.0.0 (30)** 已完成 Xcode 构建、ASC 上传与现有内部组验证，读回 `VALID / IN_BETA_TESTING`。Apple build UUID 为 `c531c634-442d-420b-819e-1786a6a9baf4`，`Team (Expo)` 已包含本构建，仍为 1 位既有测试员，测试说明匹配。
+
+来源为已推送的 master 提交 `38086926c0ded79520bee6d831157b827d89e993`、附注 tag `ios-v1.0.0-build.30`（tag 对象 `342d9c067b0e0471c69cb5261afc6ac96daf8492`、tree `4c55b9b1ca02b04ab8e55e3f1daa2ec7da4183aa`）。ASC 全量构建与上传占用核对后分配编号 30，冻结输入 `internalUpdates:true`、`syncEasCounter:false`。本包包含签纸慢读、达摩点睛、庭前一铃与银锁寄安的造型及输入优化，文化范围沿用各场 README、来源卡和[本轮器物审阅](architecture/2026-11-10-ritual-prop-visual-mobile-audit.md)；达摩先点观者右眼是对既有来源主张的呈现修正。本次发布配置及分发不新增文化主张，也未将既有外链登记为重新读过。
+
+开启热更新的冻结输入上，完整 `verify` 通过，含 13,301 项工作区 Vitest 测试、配套 Node 检查、生产构建、158 场修订检查与双平台离线导出。移动依赖按锁定 SDK 的离线兼容表检查，未升级依赖。发布工具 Windows 100 项通过、2 项平台跳过；Mac 首轮早于依赖安装而缺模块，`npm ci` 完成后整套 102 项通过、无跳过。Mac 核验 5721 个来源文件、17853 项原生输入，完成 4 个 dSYM 映射阶段、主应用/小组件签名及 207 项离线资源、162 个 DOM 脚本、477 张小组件封面校验。
+
+实际签名 App 中热更新已开启，公钥与签名候选一致，请求头仅含 `internal` 通道和空邀请码占位。SDK 57 的 `file:fingerprint` 按原生读取规则解析包内 `EXUpdates.bundle/fingerprint`，实际 iOS runtime 为 `ad7944cad9c572098b8d3e8052b244324055fee1`，与同源 OTA 一致。
+
+已发布 iOS 签名候选 `eddaba74-fedf-4299-926d-22f47d766f3d`，更新 ID 为 `18272ef1-75b7-48a1-9644-cd0abe745be2`。公网实际清单签名、原生启动 JS、DOM HTML 与承载场景改动的 DOM JS 下载及 SHA-256 校验通过；未授权返回 401，不兼容 runtime 与已是当前版本均返回 204。本次 OTA 与构建 30 内嵌内容一致，供首次下载/应用验证；旧 29 包原生更新关闭，仍须先换装。安装和操作见[内测更新说明](internal-updates.md)。真机应用、旧版/嵌入回退、断网启动及存档/反馈/Widget 保留仍待设备验证，没有登记为已通过。
+
+IPA 为 269,398,555 字节，SHA-256 `7568d30472a0b3e52b6eb50e9e1562106b6977b3cf4d96f9ae0ec4d79ecd4250`；[本机 IPA](../artifacts/ios-release-30/blessing-30.ipa) 与 Mac 一致，Mac IPA/archive/dSYM 保留于 `/Users/heli/ios-builds/cyber-bless/releases/tag-ios-v1.0.0-build.30/source/artifacts/ios-release/30`。钥匙串搜索列表已恢复，隔离构建钥匙串已锁定。构建前核验旧 28/29 包的 IPA 哈希及 archive/dSYM，仅清理其 DerivedData；原产物、源码和回执保留。ASC 前置只读查询曾返回 500/超时，未进入传包；确认状态后仅启动一次实际上传，并获接受。全部证据见 `artifacts/ios-release-30/` 与[最新内测状态](../store/ios/testflight-status.json)。
+
+沿用既有内部组，没有新增邀请、扩大测试范围、提交正式审核或公开发布；正式商店关联保持原状。本轮未执行物理设备安装或功能验收。
 
 ## 2026-11-09 构建 29：反馈复测与交互修复
 

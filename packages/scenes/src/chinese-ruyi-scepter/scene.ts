@@ -1,4 +1,4 @@
-import { insideCanvas } from '../touch-target'
+import { createTouchTarget, insideCanvas } from '../touch-target'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -8,7 +8,7 @@ import { createCloseInspection } from '../close-inspection'
 import { createPosePlacement } from '../pose-placement'
 import { addKeyboardPlacementInspection, setPlacementHint } from '../placement-inspection'
 import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
-import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
+import { addStageLights, CEL_STYLE, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createChineseRuyiScepterModel } from './model'
 
 type Checkpoint = 0 | 1 | 2 | 3
@@ -22,6 +22,9 @@ const HINTS = [
 const CARRY_HINT = '如意寄托好愿。托住云头，把如意移到软垫木座上，到位会自动放稳。'
 const MOVING = ['如意离开准备托，慢慢抬起……', '云头越过木座，轻轻移近……', '曲柄贴近软垫，缓缓落稳……']
 const ease = (t: number) => t * t * (3 - 2 * t)
+// Product micro-motion (all off with reduced motion): a 5% pickup swell, a
+// small inertial lean, a short settle squash, and travelling light on the jade.
+const HELD_SCALE = .05, MAX_LEAN = THREE.MathUtils.degToRad(3), IDLE_EVERY = 8, IDLE_SWEEP = 1.4, LANDING = .55
 
 export function createChineseRuyiScepter(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx, safe = shared.assertSafeCopy
@@ -51,21 +54,24 @@ export function createChineseRuyiScepter(ctx: SceneContext): SceneInstance {
   const restore = () => { pose(at, 0);; placement.restoreCheckpoint(at); matrices() }
   const directions: [number, number][] = [[0,-1],[1,0],[0,1]]
   const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', destination: () => placement.destination(2), targetLabel: '当前安放位置', label: ACTIONS[2]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && canPlace() && !motion && at === i }))
-  const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
-  const nearest = (x: number, y: number) => {
-    const meshes: THREE.Object3D[] = []
-    scene.traverseVisible(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; const materials = Array.isArray(m.material) ? m.material : [m.material]; if (materials.some(m => m.visible && (!m.transparent || m.opacity >= 1))) meshes.push(o) })
-    return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
+  // The whole ruyi is the pickup target, with a bounded 22 CSS px margin.
+  const touch = createTouchTarget(canvas, camera, scene)
+  let lift = 0, lean = 0, leanVelocity = 0, lastX: number | undefined, idle = 0, landing = -1
+  const sweep = model.jade.uniforms as { uSweep: THREE.IUniform<number>; uSweepGain: THREE.IUniform<number> }
+  const calm = () => {
+    lift = lean = leanVelocity = idle = 0; lastX = undefined; landing = -1
+    model.motion.position.set(0, 0, 0); model.motion.rotation.set(0, 0, 0); model.motion.scale.setScalar(1)
+    sweep.uSweep.value = -1; sweep.uSweepGain.value = 0
   }
   const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
-  const reset = () => { placement.cancel(); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, (at === 3 ? HINTS[3]! : CARRY_HINT), safe) }
+  const reset = () => { calm(); placement.cancel(); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, (at === 3 ? HINTS[3]! : CARRY_HINT), safe) }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
   const inspectRotate = (dx:number,dy:number) => { if (!invalid) placement.rotate(dx * .012, dy * .012) }
   const pointer = createFreePlacementPointer(ui.hitLayer, canvas, {
     isActive: () => inputActive() && canPlace(),
-    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); const hit = nearest(x, y); return !!hit && (hit === model.roots[at] || model.roots[at]!.getObjectById(hit.id) === hit) },
+    canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x, y, model.roots[at]!) },
     onStart(x, y) {
       if (!prepareInput()) { pointer.cancel(); return }
       invalid = false
@@ -98,6 +104,8 @@ export function createChineseRuyiScepter(ctx: SceneContext): SceneInstance {
   function settle() {
     if (!inputActive() || !motion) return
     placement.settle(1); placement.cancel(); at = 3; motion = null; restore()
+    // The settle squash and head-to-tail light start with the completion tone.
+    if (!ctx.isReducedMotion?.()) landing = 0
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
@@ -111,19 +119,52 @@ export function createChineseRuyiScepter(ctx: SceneContext): SceneInstance {
   }
   const blur = () => { focused = false; lifecycleVersion++; closeInspection?.cancel(); pointer.cancel(); if (!motion) reset(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
-    closeInspection?.cancel()
+    calm(); closeInspection?.cancel()
     pointer.cancel(); if (!motion) reset()
-    const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0, .65, .15), direction = new THREE.Vector3(1.3, 3.9, 8).normalize()
+    const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(-.12, .58, .08), direction = new THREE.Vector3(1.3, 3.9, 8).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target); camera.updateMatrixWorld(true)
     const inverse = camera.quaternion.clone().invert(), tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), p = new THREE.Vector3(); let distance = 3.4
     const saved = amount
     for (const [step, n] of [0,1,2].flatMap(step=>Array.from({length:61},(_,i)=>[step,i/60])).concat([[3,0]])) {
       pose(step!, n!)
-      model.subject.traverse(o => { const m = o as THREE.Mesh; if (!m.geometry) return; const vertices = m.geometry.getAttribute('position')
+      model.subject.traverse(o => { const m = o as THREE.Mesh, kind = (m.material as THREE.Material | undefined)?.userData.ruyiToon
+        // Outline shells share their surface's vertices; contact shadows are not subject.
+        if (!m.geometry || kind === 'outline' || kind === 'contact-shadow') return; const vertices = m.geometry.getAttribute('position')
         for (let i = 0; i < vertices.count; i++) { p.fromBufferAttribute(vertices, i).applyMatrix4(m.matrixWorld).sub(target).applyQuaternion(inverse); distance = Math.max(distance, p.z + Math.abs(p.x) / (tangent * aspect * .86), p.z + Math.abs(p.y) / (tangent * .86)) }
       })
     }
-    pose(at, saved); camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices()
+    pose(at, saved); camera.position.copy(target).addScaledVector(direction, distance * 1.04); camera.lookAt(target); matrices()
+  }
+  function animate(delta: number) {
+    if (ctx.isReducedMotion?.()) { calm(); return }
+    const holding = pointer.isBusy() && !motion && at < 3
+    const target = holding ? 1 : 0
+    lift = Math.abs(lift - target) < .002 ? target : THREE.MathUtils.damp(lift, target, 16, delta)
+    // Lean against the sideways carry speed, then spring back upright.
+    const x = model.scepter.getWorldPosition(new THREE.Vector3()).x
+    const speed = holding && lastX !== undefined && delta > 0 ? (x - lastX) / delta : 0; lastX = holding ? x : undefined
+    const goal = THREE.MathUtils.clamp(-speed * .03, -MAX_LEAN, MAX_LEAN)
+    leanVelocity += ((goal - lean) * 140 - leanVelocity * (motion ? 30 : 15)) * delta; lean += leanVelocity * delta
+    lean = THREE.MathUtils.clamp(lean, -MAX_LEAN * 1.3, MAX_LEAN * 1.3)
+    if (!holding && Math.abs(lean) < 1e-4 && Math.abs(leanVelocity) < 1e-3) lean = leanVelocity = 0
+    let squash = 0
+    if (landing >= 0) {
+      landing += delta; const t = landing
+      squash = t < .2 ? -.035 * Math.sin(Math.PI * t / .2) : t < LANDING ? .012 * Math.sin(Math.PI * (t - .2) / (LANDING - .2)) : 0
+      const p = Math.min(1, t / LANDING)
+      sweep.uSweep.value = 1.05 - 1.1 * ease(p); sweep.uSweepGain.value = .55 * Math.sin(Math.PI * p)
+      if (t >= LANDING) { landing = -1; idle = 0; sweep.uSweep.value = -1; sweep.uSweepGain.value = 0 }
+    } else if (!holding && !motion) {
+      idle += delta
+      const p = (idle - IDLE_EVERY) / IDLE_SWEEP
+      if (p >= 1) { idle = 0; sweep.uSweep.value = -1; sweep.uSweepGain.value = 0 }
+      else if (p >= 0) { sweep.uSweep.value = -.05 + 1.1 * p; sweep.uSweepGain.value = .3 * Math.sin(Math.PI * p) }
+    } else { idle = 0; sweep.uSweep.value = -1; sweep.uSweepGain.value = 0 }
+    // Rise enough that a leaning ruyi never dips below where it was held.
+    model.motion.position.set(0, .04 * ease(lift) + 1.6 * Math.abs(Math.sin(lean)), 0)
+    model.motion.rotation.set(0, 0, lean)
+    const swell = 1 + HELD_SCALE * ease(lift)
+    model.motion.scale.set(swell, swell * (1 + squash), swell)
   }
   const stopInspection = addKeyboardPlacementInspection(ui.actionBtn,canvas,camera,model,placement,{isActive:()=>inputActive()&&canPlace()&&!motion&&at < 3&&!pointer.isBusy(),step:()=>2,prepare:prepareInput,reset,rotate:(yaw,pitch)=>inspectRotate(yaw/.012,pitch/.012)})
   closeInspection = createCloseInspection({ canvas, scene, camera, actor: model.scepter, ui,
@@ -149,6 +190,7 @@ export function createChineseRuyiScepter(ctx: SceneContext): SceneInstance {
         pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); if (motion.time === 1) settle()
       }
       closeInspection.update(delta)
+      animate(delta)
       if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },
     dispose() {

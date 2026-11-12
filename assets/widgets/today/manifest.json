@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "6093a2308299f1762e371fb4bd849c856382be95d0a5a98d4552547120e13330",
+  "revision": "b423017101c66b338345f3b4bbb82c581e53e2e3241739fdbca9607222a470b0",
   "scenes": [
     {
       "id": "nanakusa-gayu",
@@ -1199,7 +1199,7 @@
         "file": "chinese-ruyi-scepter-small.png",
         "width": 600,
         "height": 600,
-        "sha256": "6cc0a1ff0c13a3ce005738f15c34bd468a39ebca890906e94527d1de38b64143",
+        "sha256": "c4b0ad6def174183103e31329ee99721db5e44d497fdfbf09ed494deed528928",
         "webgl": true,
         "canvasWidth": 600,
         "canvasHeight": 600,
@@ -1209,7 +1209,7 @@
         "file": "chinese-ruyi-scepter-medium.png",
         "width": 1280,
         "height": 600,
-        "sha256": "258ac8fabce254b5e40fdf47ae602f646aa73a5b64f2d902794c9be852ee86b9",
+        "sha256": "a450bea65b813ea41c45b23877dab040ccf05cad14e53fbc57a7cb73c26ef87b",
         "webgl": true,
         "canvasWidth": 1280,
         "canvasHeight": 600,
@@ -1219,7 +1219,7 @@
         "file": "chinese-ruyi-scepter-large.png",
         "width": 1200,
         "height": 1200,
-        "sha256": "5fd021a7276c5e408c5032d59eff3f35fb16c7a9890b1d3d94e7a745f278d30d",
+        "sha256": "04153dbcde65edca02359af52b845037d4838ea21755c4318a129c8dc19f226d",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

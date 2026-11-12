@@ -6,6 +6,7 @@ import * as Shared from '@wbr/shared'
 import type { SceneContext, SceneInstance } from '../contract'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import * as mod from './index'
+import { createChineseRuyiScepterModel } from './model'
 
 
 // Keep real Three geometry, intersections and cues; replace only GPU work.
@@ -111,7 +112,8 @@ function event(el: HTMLElement, type: string, [clientX, clientY]: [number, numbe
   Object.assign(e, { clientX, clientY, pointerId, pointerType: 'touch', button: 0 }); el.dispatchEvent(e)
 }
 const targetName = (_at: number) => 'ruyi-scepter'
-const anchor = (at: number): [number, number, number] => [-.94,.13,0]
+const HEAD_ANCHOR = createChineseRuyiScepterModel().anchors[0]!
+const anchor = (_at: number): [number, number, number] => HEAD_ANCHOR
 const originalDelta = (at: number): [number,number] => [[0,-60],[60,0],[0,60]][at] as [number,number]
 function delta(at:number,s:ReturnType<typeof mount>):[number,number]{
  const cue=cues(s).find(entry=>entry.cue.kind==='drag')?.cue
@@ -416,4 +418,76 @@ it('uses two fingers on the same object for inspection without implicit placemen
   event(s.hit,'pointerup',[p[0]+80,p[1]+20],2);event(s.hit,'pointerup',p,1)
   expect(object.getWorldQuaternion(new THREE.Quaternion()).angleTo(before)).toBeGreaterThan(.1);expect(s.progress).toEqual([])
   step(s,0);expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
+})
+
+describe('ruyi pickup margin and micro-motion', () => {
+  const inner = (s: ReturnType<typeof mount>) => s.scene.getObjectByName('ruyi-scepter-motion')!
+  const light = (s: ReturnType<typeof mount>) => ((s.scene.getObjectByName('ruyi-jade-body') as THREE.Mesh).material as THREE.ShaderMaterial).uniforms as Record<string, THREE.IUniform<number>>
+  const identity = (s: ReturnType<typeof mount>) => { const m = inner(s); const zero = (a: unknown[]) => a.slice(0, 3).map(n => (n as number) + 0); expect(zero(m.position.toArray())).toEqual([0, 0, 0]); expect(zero(m.rotation.toArray())).toEqual([0, 0, 0]); expect(m.quaternion.angleTo(new THREE.Quaternion())).toBe(0); expect(zero(m.scale.toArray())).toEqual([1, 1, 1]) }
+  const handleEdge = (s: ReturnType<typeof mount>) => {
+    // Screen point on the handle's upper silhouette above a bearing.
+    const body = s.scene.getObjectByName('ruyi-jade-body') as THREE.Mesh, p = body.geometry.getAttribute('position'), v = new THREE.Vector3()
+    let best: [number, number] = [0, Infinity]
+    s.scene.updateMatrixWorld(true)
+    for (let i = 0; i < p.count; i++) {
+      if (Math.abs(p.getX(i) - .2) > .03) continue
+      v.fromBufferAttribute(p, i).applyMatrix4(body.matrixWorld).project(s.camera)
+      const x = 17 + (v.x + 1) * 390 / 2, y = 91 + (1 - v.y) * 408 / 2
+      if (y < best[1]) best = [x, y]
+    }
+    return best
+  }
+  it('picks up the whole ruyi within a 22 CSS px margin, and nowhere further away', () => {
+    for (const [gap, picked] of [[14, true], [40, false]] as const) {
+      const s = mount(0), before = s.scene.getObjectByName('ruyi-scepter')!.position.clone(), [x, y] = handleEdge(s)
+      event(s.hit, 'pointerdown', [x, y - gap]); event(s.hit, 'pointermove', [x + 10, y - gap - 30])
+      expect(s.scene.getObjectByName('ruyi-scepter')!.position.distanceTo(before) > .01, `gap ${gap}`).toBe(picked)
+      event(s.hit, 'pointercancel', [x + 10, y - gap - 30]); s.instance.dispose()
+    }
+  })
+  it('swells about 5%, leans at most a few degrees while carried, never dips below its held height, and zeroes on cancel', () => {
+    const s = mount(0), body = s.scene.getObjectByName('ruyi-jade-body')!, p = s.point(targetName(0), anchor(0)), [dx, dy] = placementDelta(s, 0)
+    const low = () => new THREE.Box3().setFromObject(body).min.y
+    event(s.hit, 'pointerdown', p); let maxLean = 0, scale = 1
+    for (let i = 1; i <= 12; i++) {
+      event(s.hit, 'pointermove', [p[0] + dx * i / 30, p[1] + dy * i / 30 - i * 2])
+      const held = s.scene.getObjectByName('ruyi-scepter')!.position.y, before = low()
+      s.instance.update(.025)
+      maxLean = Math.max(maxLean, Math.abs(inner(s).rotation.z)); scale = inner(s).scale.x
+      expect(low(), 'no dip below the held pose').toBeGreaterThanOrEqual(Math.min(before, held) - 1e-9)
+    }
+    s.run(.4); expect(inner(s).scale.x).toBeCloseTo(1.05, 2); expect(scale).toBeGreaterThan(1.02)
+    expect(maxLean).toBeGreaterThan(.005); expect(maxLean).toBeLessThan(THREE.MathUtils.degToRad(4))
+    event(s.hit, 'pointercancel', p); identity(s); expect(light(s).uSweepGain!.value).toBe(0)
+    expect(s.progress).toEqual([]); expect(s.haptic).not.toHaveBeenCalled()
+  })
+  it.each(['blur', 'resize'])('returns the inner motion to rest on %s', kind => {
+    const s = mount(0), p = s.point(targetName(0), anchor(0))
+    event(s.hit, 'pointerdown', p); for (let i = 1; i <= 6; i++) { event(s.hit, 'pointermove', [p[0] + i * 8, p[1] - i * 6]); s.instance.update(.025) }
+    expect(inner(s).scale.x).toBeGreaterThan(1)
+    if (kind === 'blur') window.dispatchEvent(new Event('blur')); else s.resize()
+    identity(s); expect(light(s).uSweepGain!.value).toBe(0)
+  })
+  it('settles with one short squash and a head-to-tail light on the completion tone, then rests exactly with one haptic', () => {
+    const s = mount(0); step(s, 0, false)
+    let squash = 1, sweepStart = -1, sweepEnd = 2
+    for (let t = 0; t < 1.6; t += .025) {
+      s.instance.update(.025); squash = Math.min(squash, inner(s).scale.y)
+      const u = light(s); if (u.uSweepGain!.value > .05) { if (sweepStart < 0) sweepStart = u.uSweep!.value; sweepEnd = u.uSweep!.value }
+    }
+    expect(s.progress).toEqual([3]); expect(s.haptic).toHaveBeenCalledOnce()
+    expect(squash).toBeLessThan(.985); expect(squash).toBeGreaterThan(.95)
+    expect(sweepStart).toBeGreaterThan(sweepEnd)
+    identity(s)
+    // Idle: a faint light runs along the ridge about every eight seconds.
+    let idle = 0; for (let t = 0; t < 9.5; t += .025) { s.instance.update(.025); idle = Math.max(idle, light(s).uSweepGain!.value) }
+    expect(idle).toBeGreaterThan(.1); expect(idle).toBeLessThan(.4); identity(s); expect(s.haptic).toHaveBeenCalledOnce()
+  })
+  it('keeps every micro-motion off with reduced motion', () => {
+    const s = mount(0, { isReducedMotion: () => true }), p = s.point(targetName(0), anchor(0))
+    event(s.hit, 'pointerdown', p); for (let i = 1; i <= 6; i++) { event(s.hit, 'pointermove', [p[0] + i * 8, p[1] - i * 6]); s.instance.update(.025); identity(s) }
+    event(s.hit, 'pointercancel', p); step(s, 0, false)
+    let gain = 0; for (let t = 0; t < 10; t += .025) { s.instance.update(.025); identity(s); gain = Math.max(gain, light(s).uSweepGain!.value) }
+    expect(gain).toBe(0); expect(s.progress).toEqual([3]); expect(s.haptic).toHaveBeenCalledOnce()
+  })
 })

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { createStylizedMeadow } from "./stylized-meadow";
+import { courtyardPathCenterX, courtyardPathHalfWidth, courtyardPathT } from "./courtyard-stone-path";
 
 describe("a small windswept meadow", () => {
   it.each(["garden", "courtyard", "veranda", "river", "table"] as const)("keeps %s interaction space and built surfaces free of grass", kind => {
@@ -13,6 +14,10 @@ describe("a small windswept meadow", () => {
       expect(Math.abs(point.x) < 2.2 && point.z > -2.2 && point.z < 3.2).toBe(false);
       if (kind === "river") expect(Math.abs(point.x)).toBeGreaterThan(2.65);
       if (kind === "veranda") expect(Math.abs(point.x) < 6.2 && point.z > -2.8).toBe(false);
+      if (kind === "courtyard") {
+        const t = courtyardPathT(point.z), center = courtyardPathCenterX(t);
+        expect(Math.abs(point.x - center)).toBeGreaterThanOrEqual(courtyardPathHalfWidth(t) + .18);
+      }
     }
     meadow.dispose();
   });

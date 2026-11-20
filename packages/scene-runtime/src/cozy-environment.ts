@@ -18,6 +18,7 @@ import { DEFAULT_ENVIRONMENT_TONE, DEFAULT_GRASS_METHOD } from './environment-de
 import { createKomorebiMeadow } from './komorebi-meadow';
 import type { GrassRenderMethod } from './debug-grass';
 import { createKomorebiSurface } from './komorebi-surface';
+import { createCourtyardStonePath } from './courtyard-stone-path';
 
 import { assetUrl } from './asset-urls';
 import { environmentProfiles } from './environment-profiles';
@@ -87,6 +88,9 @@ export function createCozyEnvironment(
   let sky: THREE.DataTexture | undefined;
   let meadow: ReturnType<typeof createStylizedMeadow> | undefined;
   let komorebiMeadow: ReturnType<typeof createKomorebiMeadow> | undefined;
+  let stonePath: ReturnType<typeof createCourtyardStonePath> | undefined;
+  let gardenPath: THREE.Mesh | undefined;
+  let komorebiSand: THREE.MeshPhongMaterial | undefined;
   let grassMethod: GrassRenderMethod = 'original';
   let treeCanopies: ReturnType<typeof createStylizedTrees> | undefined;
   const originalTrees: THREE.Object3D[] = [];
@@ -159,16 +163,9 @@ export function createCozyEnvironment(
   }
 
   if (kind === "courtyard") {
-    const positions: number[] = [], indices: number[] = [];
-    for (let i = 0; i <= 32; i++) {
-      const t = i / 32, x = Math.sin(t * Math.PI * 1.5) * 1.6, half = 1.22 - t * 0.65;
-      positions.push(x - half, floor + 0.012, 4 - t * 36, x + half, floor + 0.012, 4 - t * 36);
-      if (i < 32) { const a = i * 2; indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
-    }
-    const path = new THREE.BufferGeometry();
-    path.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-    path.setIndex(indices); path.computeVertexNormals();
-    addMesh(path, sand, 0, 0, 0);
+    stonePath = createCourtyardStonePath({ floor, night });
+    root.add(stonePath.mesh);
+    if (stonePath.mossMesh) root.add(stonePath.mossMesh);
   } else if (kind === "veranda") {
     box(12, 0.12, 5.3, wood, 0, floor - 0.055, 0.2);
     for (let i = -5; i <= 5; i++) box(0.018, 0.003, 5.3, trim, i, floor + 0.01, 0.2);
@@ -192,10 +189,10 @@ export function createCozyEnvironment(
       const hole = new THREE.Path(); hole.absarc(0, 0, 1.36, 0, Math.PI * 2, true); shape.holes.push(hole);
       pathGeometry = new THREE.ShapeGeometry(shape, 48);
     }
-    const path = addMesh(pathGeometry, sand, 0, floor + 0.008, 0);
-    path.name = "garden-path";
-    path.rotation.x = -Math.PI / 2;
-    if (!spring) path.scale.set(1.15, 0.86, 1);
+    gardenPath = addMesh(pathGeometry, sand, 0, floor + 0.008, 0);
+    gardenPath.name = "garden-path";
+    gardenPath.rotation.x = -Math.PI / 2;
+    if (!spring) gardenPath.scale.set(1.15, 0.86, 1);
   }
 
   const propParts = (name: string) => {
@@ -320,6 +317,20 @@ export function createCozyEnvironment(
   function setTone(next: EnvironmentTone) {
     if (disposed || next === tone) return;
     tone = next;
+    stonePath?.setTone(next);
+    if (gardenPath && !night) {
+      if (next === 'komorebi') {
+        if (!komorebiSand) {
+          komorebiSand = createKomorebiSurface();
+          komorebiSand.color.setRGB(0xc2 / 255, 0xb1 / 255, 0x90 / 255);
+          komorebiSand.name = 'Komorebi garden sand pad';
+          materials.add(komorebiSand);
+        }
+        gardenPath.material = komorebiSand;
+      } else {
+        gardenPath.material = sand;
+      }
+    }
     toneSurfaces.setTone(next); meadow?.setTone(next); komorebiMeadow?.setTone(next);
     if (next === 'tiny-delivery') {
       deliveryBackdrop ??= createSkyBackdrop(clearDay, night, true);
@@ -411,7 +422,7 @@ export function createCozyEnvironment(
           meshes.add(object);
           const surfaces = Array.isArray(object.material) ? object.material : [object.material];
           if (surfaces.some(material => material instanceof THREE.MeshStandardMaterial && !material.transparent)) {
-            object.castShadow = !object.userData.komorebiGrass;
+            object.castShadow = !object.userData.komorebiGrass && !object.userData.stonePath;
             object.receiveShadow = !object.userData.importedTreeFoliage;
           }
         }
@@ -473,6 +484,7 @@ export function createCozyEnvironment(
       root.removeFromParent();
       meadow?.dispose();
       komorebiMeadow?.dispose();
+      stonePath?.dispose();
       treeRendering.dispose();
       treeCanopies?.dispose();
       clouds?.dispose();

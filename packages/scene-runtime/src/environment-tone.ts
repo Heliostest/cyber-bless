@@ -60,7 +60,7 @@ export function createEnvironmentTone(root: THREE.Group, night = false) {
       // This meadow owns both root-to-tip vertex pigment and its per-instance
       // palette. Shared remapping would recolor it a second time after captures
       // or palette changes, making the result depend on selection order.
-      if (object.userData.komorebiGrass) return;
+      if (object.userData.komorebiGrass || object.userData.stonePath) return;
       const attribute = object.geometry.getAttribute('color');
       if (!(attribute instanceof THREE.BufferAttribute) || seenAttributes.has(attribute)) return;
       seenAttributes.add(attribute);

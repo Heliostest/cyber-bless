@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { GardenKind } from "./garden-layout";
 import type { EnvironmentTone } from './debug-environment-tone';
+import { courtyardPathCenterX, courtyardPathHalfWidth, courtyardPathT } from './courtyard-stone-path';
 
 // Wind bending and root-to-tip lighting adapted from boona13's MIT-licensed
 // threejs-grass-water-shaders. See assets/environments/meadow/ for provenance.
@@ -123,8 +124,8 @@ export function canMeadowGrow(kind: GardenKind, x: number, z: number) {
   if (kind === "table" && Math.abs(x) < 3.2 && z > -1.6) return false;
   if (kind === "garden" && (x / 3.2) ** 2 + (z / 2.5) ** 2 < 1) return false;
   if (kind === "courtyard") {
-    const t = THREE.MathUtils.clamp((4 - z) / 36, 0, 1), center = Math.sin(t * Math.PI * 1.5) * 1.6;
-    if (Math.abs(x - center) < 1.4 - t * .65) return false;
+    const t = courtyardPathT(z), center = courtyardPathCenterX(t);
+    if (Math.abs(x - center) < courtyardPathHalfWidth(t) + .18) return false;
   }
   return true;
 }

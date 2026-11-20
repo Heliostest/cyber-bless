@@ -35,12 +35,6 @@ export function gardenLayout(kind: GardenKind, id: string): Planting[] {
       add("shore-leaves", side * (2.85 + (i % 2) * .18), -.8 - i * 1.9, 1.55 + (i % 3) * .18, .07);
       add("rock-flat", side * (2.75 + (i % 2) * .12), -1.2 - i * 2.0, 1.25 + (i % 2) * .25, .06);
     }
-  } else if (kind === "courtyard") {
-    // Continue the existing curved path behind the subject, away from authored steps.
-    for (let i = 0; i < 10; i++) {
-      const z = -3.8 - i * 1.15, t = (4 - z) / 36;
-      add("rock-flat", Math.sin(t * Math.PI * 1.5) * 1.6, z, 1.35 - i * .035, .012);
-    }
   } else if (kind === "garden") {
     for (const side of [-1, 1]) for (let i = 0; i < 4; i++) {
       add(i % 2 ? "flowers" : "flowers-purple", side * (2.8 + i * .12), -.25 - i * .48, 1.7 + i * .12);

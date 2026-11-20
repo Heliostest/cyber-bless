@@ -8,7 +8,7 @@ Copyright (c) 2026 He Li
 
 2026-10-31 更新：旧仪式拼图 `rituals.png` 已退役删除，当前只保留纪念章使用的 `wishes.png`；仪式图标使用新生成的 soft3d 资产。上述确认及旧图片哈希、Apple 保存回执保留为历史记录；版权脚本仅校验当前资源清单中仍随包的参考图片。
 
-应用使用的 Noto Sans SC 与 Nunito 字体遵循 SIL Open Font License 1.1；Kenney Nature Kit 模型与 Poly Haven 天空素材遵循 CC0 许可。相关许可证及来源记录保留在项目资源中。第三方素材的权利归其原权利人或按相应许可处理，本应用不声称独占这些素材。
+应用使用的 Noto Sans SC 与 Nunito 字体遵循 SIL Open Font License 1.1；银锁寄安场景锁面「長命」三维浮雕离线提取自《开元小篆》（Kaiyuan Small Seal Font，`https://github.com/frankslin/kaiyuan-small-seal-font`，公版《说文解字》字形），遵循 SIL Open Font License 1.1（仅烘焙二字轮廓，不随包分发整套字体，不单独售卖字体，不使用保留字体名称命名衍生字体文件，完整许可原文见 `packages/scenes/src/chinese-longevity-lock/kaiyuan-small-seal-OFL.txt`）；Kenney Nature Kit 模型与 Poly Haven 天空素材遵循 CC0 许可。相关许可证及来源记录保留在项目资源中。第三方素材的权利归其原权利人或按相应许可处理，本应用不声称独占这些素材。
 
 设计研究目录中的第三方参考照片不作为运行时素材打入应用。文化材料的引用与产品原创文字不应被表述为某文化组织对本应用的授权或认可。
 

@@ -54,17 +54,35 @@ describe('silver lock necklace and supported gift presentation',()=>{
   const side=ray(.49+.02,P.bailZ-.33,m.cord);expect(side).toBeDefined();expect(m.motion.worldToLocal(side!.point).y).toBeLessThan(P.boardTop+.06-.004)
   const bail=box(m.bail),run=points(m.cord).filter(p=>{const q=m.motion.worldToLocal(p.clone());return Math.abs(q.x)<.08&&Math.abs(q.z-P.bailZ)<.1});expect(run.length).toBeGreaterThan(0)
   for(const p of run){expect(p.z).toBeGreaterThan(bail.min.z-1e-6);expect(p.z).toBeLessThan(bail.max.z+1e-6);expect(p.y).toBeLessThan(bail.max.y+1e-6)}})
- it('domes the closed silver plate inside a raised rim, with the original strokes raised on its face',()=>{const m=createLongevityLockModel(),P=m.plate
+ it('domes the closed silver plate inside a raised rim, with the small-seal relief raised on its face',()=>{const m=createLongevityLockModel(),P=m.plate
   const plate=box(m.lock);expect(plate.max.y-plate.min.y).toBeGreaterThan(.1)
   // Across the plate's waist: a raised rim near the edge, a shallow channel inside it, a fuller dome at the centre.
   const heights:[number,number][]=[];for(let x=.545;x>=0;x-=.0025)heights.push([x,m.face(x,P.z)-P.boardTop])
   const rim=Math.max(...heights.filter(([x])=>x>.47).map(([,h])=>h)),rimAt=heights.find(([,h])=>h===rim)![0]
   const channel=Math.min(...heights.filter(([x])=>x<rimAt&&x>.40).map(([,h])=>h)),centre=heights.at(-1)![1]
   expect(rim-channel).toBeGreaterThan(.008);expect(centre-rim).toBeGreaterThan(.02);expect(centre).toBeGreaterThan(.1)
+  const bail=box(m.bail),cord=box(m.cord)
   for(const name of['longevity-letter-long','longevity-letter-ming']){const letter=m.motion.getObjectByName(name) as THREE.Mesh;expect(letter?.isMesh,name).toBe(true)
+   expect(letter.children,name).toHaveLength(0)
    const p=letter.geometry.getAttribute('position'),gap:number[]=[];for(let i=0;i<p.count;i+=7){const v=new THREE.Vector3().fromBufferAttribute(p,i);gap.push(v.y-m.face(v.x,v.z))}
    // Metal relief above the face, seated into it rather than floating.
-   expect(Math.max(...gap),name).toBeGreaterThan(P.stroke*1.2);expect(Math.min(...gap),name).toBeLessThan(0)}
+   expect(Math.max(...gap),name).toBeGreaterThan(P.stroke*1.2);expect(Math.min(...gap),name).toBeLessThan(0)
+   const b=box(letter);expect(b.min.z,name).toBeGreaterThan(bail.max.z+.05);expect(b.min.z,name).toBeGreaterThan(cord.max.z+.05)
+   expect(b.max.z,name).toBeLessThan(plate.max.z-.12);expect(b.min.x,name).toBeGreaterThan(plate.min.x+.15);expect(b.max.x,name).toBeLessThan(plate.max.x-.15)}
+  // Left "長" and right "命" stay clear of each other and keep upright small-seal proportions.
+  const longMesh=m.motion.getObjectByName('longevity-letter-long') as THREE.Mesh,mingMesh=m.motion.getObjectByName('longevity-letter-ming') as THREE.Mesh
+  const longBox=box(longMesh),mingBox=box(mingMesh),plateCenterX=(plate.min.x+plate.max.x)/2
+  expect(longBox.max.x-plateCenterX).toBeLessThan(-.05);expect(mingBox.min.x-plateCenterX).toBeGreaterThan(.05)
+  const mingPos=mingMesh.geometry.getAttribute('position')
+  let mingMinZ=Infinity,mingMaxZ=-Infinity
+  for(let i=0;i<mingPos.count;i++){const z=mingPos.getZ(i);mingMinZ=Math.min(mingMinZ,z);mingMaxZ=Math.max(mingMaxZ,z)}
+  let topMinX=Infinity,topMaxX=-Infinity,botMinX=Infinity,botMaxX=-Infinity
+  const mingMidZ=(mingMinZ+mingMaxZ)/2
+  for(let i=0;i<mingPos.count;i++){const x=mingPos.getX(i),z=mingPos.getZ(i);if(z<mingMidZ){topMinX=Math.min(topMinX,x);topMaxX=Math.max(topMaxX,x)}else if(z>mingMaxZ-.08){botMinX=Math.min(botMinX,x);botMaxX=Math.max(botMaxX,x)}}
+  // Small-seal "命" has its wide roof toward -z (cord side) and narrow stem at +z (drop side).
+  expect(topMaxX-topMinX).toBeGreaterThan((botMaxX-botMinX)*2.5)
+  const relief=longMesh.material as THREE.ShaderMaterial;expect(relief.userData.longevityToon).toBe('relief')
+  expect((relief.uniforms.uBands!.value as THREE.Vector2).y).toBeGreaterThan(.85);expect(relief.uniforms.uSide!.value).toBeGreaterThan(.3)
   const silver=m.lock.material as THREE.ShaderMaterial;expect(silver.userData.longevityToon).toBe('silver');expect(silver.uniforms.uLit).toBeDefined()})
  it('keeps three original five-petal flower drops, each joined to the plate by a short silver link',()=>{const m=createLongevityLockModel();expect(m.drops).toHaveLength(3);expect(m.links).toHaveLength(3)
   for(const[i,drop]of m.drops.entries()){const p=drop.geometry.getAttribute('position'),floor:[number,number][]=[]

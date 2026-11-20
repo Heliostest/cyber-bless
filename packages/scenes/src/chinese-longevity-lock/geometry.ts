@@ -178,3 +178,87 @@ export function mergeSolids(parts: THREE.BufferGeometry[]) {
   }
   return orient(positions, normals)
 }
+
+export type GlyphContour = {
+  readonly outer: readonly (readonly [number, number])[]
+  readonly holes: readonly (readonly (readonly [number, number])[])[]
+}
+
+function signedArea2D(ring: readonly (readonly [number, number])[]) {
+  let sum = 0
+  for (let i = 0; i < ring.length; i++) {
+    const a = ring[i]!, b = ring[(i + 1) % ring.length]!
+    sum += a[0] * b[1] - b[0] * a[1]
+  }
+  return sum * 0.5
+}
+
+function subdivideLoop(ring: readonly (readonly [number, number])[], maxStep: number): [number, number][] {
+  const out: [number, number][] = []
+  for (let i = 0; i < ring.length; i++) {
+    const a = ring[i]!, b = ring[(i + 1) % ring.length]!
+    out.push([a[0], a[1]])
+    const d = Math.hypot(b[0] - a[0], b[1] - a[1])
+    if (d > maxStep) {
+      const steps = Math.ceil(d / maxStep)
+      for (let s = 1; s < steps; s++) {
+        const t = s / steps
+        out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t])
+      }
+    }
+  }
+  return out
+}
+
+/** Extrudes closed 2D glyph contours (+y up, +x right) into a watertight, outward,
+ * creased-normal 3D metal relief solid conformed to the curved plate `face(x, z)`. */
+export function domeReliefSolid(
+  shapes: readonly GlyphContour[],
+  cx: number,
+  cz: number,
+  size: number,
+  height: number,
+  sink: number,
+  face: (x: number, z: number) => number,
+  options: { maxEdge?: number; creaseDegrees?: number } = {},
+) {
+  const maxStep = (options.maxEdge ?? 0.035) / size
+  const creaseDegrees = options.creaseDegrees ?? 52
+  const positions: number[] = []
+  const pushTri = (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3) => {
+    positions.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z)
+  }
+  for (const shape of shapes) {
+    const outerRaw = signedArea2D(shape.outer) < 0 ? [...shape.outer].reverse() : shape.outer
+    const outer = subdivideLoop(outerRaw, maxStep)
+    const holes = shape.holes.map(h => subdivideLoop(signedArea2D(h) > 0 ? [...h].reverse() : h, maxStep))
+    const outerV2 = outer.map(([x, y]) => new THREE.Vector2(x, y))
+    const holesV2 = holes.map(h => h.map(([x, y]) => new THREE.Vector2(x, y)))
+    const faces = THREE.ShapeUtils.triangulateShape(outerV2, holesV2)
+    const all: [number, number][] = [...outer]
+    for (const h of holes) all.push(...h)
+    const topV: THREE.Vector3[] = [], botV: THREE.Vector3[] = []
+    for (const [gx, gy] of all) {
+      const x = cx + gx * size, z = cz - gy * size, fy = face(x, z)
+      topV.push(new THREE.Vector3(x, fy + height, z))
+      botV.push(new THREE.Vector3(x, fy - sink, z))
+    }
+    for (const [i0, i1, i2] of faces) {
+      pushTri(topV[i0!]!, topV[i1!]!, topV[i2!]!)
+      pushTri(botV[i0!]!, botV[i2!]!, botV[i1!]!)
+    }
+    const walls = (offset: number, count: number) => {
+      for (let i = 0; i < count; i++) {
+        const a = offset + i, b = offset + ((i + 1) % count)
+        pushTri(topV[a]!, botV[a]!, botV[b]!)
+        pushTri(topV[a]!, botV[b]!, topV[b]!)
+      }
+    }
+    walls(0, outer.length)
+    let offset = outer.length
+    for (const h of holes) { walls(offset, h.length); offset += h.length }
+  }
+  const raw = new THREE.BufferGeometry()
+  raw.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  return creasedSolid(raw, creaseDegrees)
+}

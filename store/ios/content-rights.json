@@ -9,11 +9,12 @@
     "referenceImagesMayBeDistributed": true,
     "source": "Developer confirmed the two supplied UI images were self-made or generated for this project and may be used for distribution."
   },
-  "statement": "一日一念由个人开发者 He Li 制作。开发者确认，两张随包 UI 图片 wishes.png 和 rituals.png 为自行制作或为本项目生成，可用于本应用发行。应用使用的 Noto Sans SC 与 Nunito 字体遵循 SIL Open Font License 1.1；Kenney Nature Kit 模型与 Poly Haven 天空素材遵循 CC0 许可。Toon Cloud 远景云改编自 Antoine Clappier 的作品，遵循 CC BY-NC-SA 4.0，作者、来源、许可与修改说明随包保留。相关许可证及来源记录随资源保留。第三方素材的权利归其原权利人或按相应许可处理，本应用不声称独占这些素材。设计研究目录中的第三方参考照片不作为运行时素材打入应用。",
+  "statement": "一日一念由个人开发者 He Li 制作。开发者确认，两张随包 UI 图片 wishes.png 和 rituals.png 为自行制作或为本项目生成，可用于本应用发行。应用使用的 Noto Sans SC 与 Nunito 字体遵循 SIL Open Font License 1.1；银锁寄安场景锁面「長命」三维浮雕离线提取自《开元小篆》（Kaiyuan Small Seal Font，公版《说文解字》字形），遵循 SIL Open Font License 1.1，仅烘焙二字轮廓而不随包分发整套字体，不单独售卖字体，也不使用保留字体名称命名衍生字体文件；Kenney Nature Kit 模型与 Poly Haven 天空素材遵循 CC0 许可。Toon Cloud 远景云改编自 Antoine Clappier 的作品，遵循 CC BY-NC-SA 4.0，作者、来源、许可与修改说明随包保留。相关许可证及来源记录随资源保留。第三方素材的权利归其原权利人或按相应许可处理，本应用不声称独占这些素材。设计研究目录中的第三方参考照片不作为运行时素材打入应用。",
   "sources": [
     "assets/README.md",
     "assets/fonts/OFL.txt",
     "assets/fonts/nunito-OFL.txt",
+    "packages/scenes/src/chinese-longevity-lock/kaiyuan-small-seal-OFL.txt",
     "assets/environments/LICENSE.txt"
   ],
   "confirmedImages": [

@@ -1,11 +1,14 @@
 import * as THREE from 'three'
-import { capsuleBetween, closedOutline, creasedSolid, mergeSolids, profiledSolid, roundedRect, roundedSlab, shellGeometry, tubeSolid, type ProfileRing } from './geometry'
+import { capsuleBetween, closedOutline, creasedSolid, domeReliefSolid, mergeSolids, profiledSolid, roundedRect, roundedSlab, shellGeometry, tubeSolid, type ProfileRing } from './geometry'
+import { SEAL_GLYPHS } from './seal-glyphs'
 import { createLockToonFactory, createOutlineShell } from './toon'
 
 // Product-original lock necklace and display furniture, not a museum replica.
-// The curved plate outline, its rim and dome, the two geometric "长命" strokes,
-// the five-petal drops, the cord layout, the board, the case and the stand are
-// product art. Colours are art parameters, not material or craft claims.
+// The curved plate outline, its rim and dome, the raised small-seal "長命"
+// metal relief (offline contours from Kaiyuan Small Seal Font, SIL OFL 1.1,
+// product art choice rather than a museum inscription replica), the five-petal
+// drops, the cord layout, the board, the case and the stand are product art.
+// Colours are art parameters, not material or craft claims.
 export const LOCK_COLORS = {
   silver: { lit: 0xeaf1f6, base: 0xccd7e1, shade: 0x8b9db0, horizon: 0x9fb0c2, line: 0x4a5968, smallLine: 0x5f6f80 },
   relief: { lit: 0x8a9dae, base: 0x55697b, shade: 0x33414f, horizon: 0x4a5b6b },
@@ -38,12 +41,10 @@ const PLATE_RINGS: ProfileRing[] = [
 /** Right half of the plate outline from the top tab, mirrored; +y points to the cord. */
 const PLATE_RIGHT: [number, number][] = [[0, .40], [.08, .39], [.13, .345], [.22, .315], [.36, .33], [.48, .37], [.585, .372], [.645, .31], [.635, .215], [.575, .13], [.555, .03], [.585, -.07], [.585, -.18], [.53, -.28], [.43, -.345], [.31, -.37], [.20, -.395], [.10, -.425]]
 const PLATE_BOTTOM = -.44
-// Original raised geometric strokes, not a scanned inscription or a font asset.
-const LETTERS: [string, number, number[][][]][] = [
-  ['long', -.235, [[[.09, -.14], [-.09, -.02]], [[-.14, 0], [.13, 0]], [[-.02, -.17], [-.02, .15], [.07, .10]], [[.01, .02], [.15, .16]]]],
-  ['ming', .235, [[[0, -.17], [-.16, -.06]], [[0, -.17], [.16, -.06]], [[-.09, -.035], [.09, -.035]], [[-.13, .01], [-.13, .14], [-.025, .14], [-.025, .01], [-.13, .01]], [[.04, .01], [.14, .01], [.14, .12], [.10, .12]], [[.04, .01], [.04, .18]]]],
-]
-const LETTER_SCALE = 1.05, LETTER_Z = .02, STROKE = .02
+// Raised 3D small-seal "長命" relief (Kaiyuan Small Seal U+3EB4E / U+3D3B9, SIL OFL 1.1),
+// baked offline as compact 2D contours and extruded onto the curved lock face.
+const SEAL_LETTERS: readonly (readonly ['long' | 'ming', number])[] = [['long', -.230], ['ming', .220]]
+const LETTER_Z = .042, LETTER_SIZE = .465, RELIEF_HEIGHT = .029, RELIEF_SINK = .014, STROKE = .02
 const DROPS = [-.40, 0, .40], FLOWER = .105, NOTCH = .74, LINK = .014, LINK_GAP = .055
 const CORD = .03, BAIL = .044
 
@@ -80,7 +81,7 @@ export function createLongevityLockModel() {
   const materials = {
     silver: toon.create('longevity-silver-toon', 'silver', C.silver, { bend: 1.8, bands: [.66, .90], horizonGain: .5, side: .45, streak: 1, spot: 1, streakBand: [.865, .91, .60], horizon: C.silver.horizon, sweep: true }),
     small: toon.create('longevity-silver-small-toon', 'silver', C.silver, { bands: [.55, .85], horizonGain: .2, side: .3, spot: 1, streakBand: [.86, .91, .52], horizon: C.silver.horizon }),
-    relief: toon.create('longevity-letter-toon', 'relief', C.relief, { bands: [.45, .80], horizonGain: .3, streak: .5, spot: .6, streakBand: [.86, .90, .55], horizon: C.relief.horizon }),
+    relief: toon.create('longevity-letter-toon', 'relief', C.relief, { bands: [.45, .89], horizonGain: .3, side: .5, streak: .5, spot: .6, streakBand: [.86, .90, .55], horizon: C.relief.horizon }),
     cord: toon.create('longevity-cord-toon', 'cord', C.cord, { twist: 46, bands: [.42, .82] }),
     velvet: toon.create('longevity-velvet-toon', 'velvet', C.velvet, { sheen: C.velvet.sheen, bands: [.40, .84] }),
     wood: toon.create('longevity-wood-toon', 'wood', C.wood, { bands: [.40, .86] }),
@@ -133,15 +134,9 @@ export function createLongevityLockModel() {
     if (!hit) throw Error('point lies off the lock face')
     return motion.worldToLocal(hit.point.clone()).y
   }
-  for (const [name, cx, strokes] of LETTERS) {
-    const parts: THREE.BufferGeometry[] = []
-    for (const stroke of strokes) for (let j = 1; j < stroke.length; j++) {
-      const [ax, az] = stroke[j - 1]!, [bx, bz] = stroke[j]!
-      const a = new THREE.Vector3(cx + ax! * LETTER_SCALE, 0, PLATE_Z + LETTER_Z + az! * LETTER_SCALE), b = new THREE.Vector3(cx + bx! * LETTER_SCALE, 0, PLATE_Z + LETTER_Z + bz! * LETTER_SCALE)
-      a.y = face(a.x, a.z) + STROKE * .35; b.y = face(b.x, b.z) + STROKE * .35
-      parts.push(capsuleBetween(a, b, STROKE, 10, 3))
-    }
-    small(mesh(motion, `longevity-letter-${name}`, mergeSolids(parts), materials.relief))
+  for (const [name, cx] of SEAL_LETTERS) {
+    const geometry = domeReliefSolid(SEAL_GLYPHS[name], cx, PLATE_Z + LETTER_Z, LETTER_SIZE, RELIEF_HEIGHT, RELIEF_SINK, face)
+    small(mesh(motion, `longevity-letter-${name}`, geometry, materials.relief))
   }
 
   // A rounded bail across the top tab; the cord runs through it.

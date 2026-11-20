@@ -6,6 +6,7 @@ import * as Shared from '@wbr/shared'
 import type { SceneContext, SceneInstance } from '../contract'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import * as mod from './index'
+import { createLongevityLockModel } from './model'
 
 
 // Keep real Three geometry, intersections and cues; replace only GPU work.
@@ -64,7 +65,9 @@ function event(el: HTMLElement, type: string, [clientX, clientY]: [number, numbe
   Object.assign(e, { clientX, clientY, pointerId, pointerType: 'touch', button: 0 }); el.dispatchEvent(e)
 }
 const targetName = (at: number) => ['longevity-carrier','longevity-carrier','longevity-carrier'][at]!
-const anchor = (at: number): [number, number, number] => [0,.165,.50]
+// The carrier's real contact anchor on the lock face, as the scene's drag cue uses it.
+const LOCK_ANCHOR = createLongevityLockModel().anchors[2]!
+const anchor = (at: number): [number, number, number] => LOCK_ANCHOR
 const delta = (at: number): [number, number] => [[0,-60],[60,0],[0,60]][at] as [number,number]
 function drag(s: ReturnType<typeof mount>, at: number, dx: number, dy: number, run = true) {
   const p = s.point(targetName(at), anchor(at)); event(s.hit, 'pointerdown', p)
@@ -320,7 +323,9 @@ describe('inspection and parked input safety', () => {
   it.each([0,1,2])('turns a picked object freely without committing legacy checkpoint %i', at => {
     const s=mount(at,{isReducedMotion:()=>true}), object=s.scene.getObjectByName(targetName(at))!, before=object.getWorldQuaternion(new THREE.Quaternion()), p=s.point(targetName(at),anchor(at))
     const inspect=(type:string,x:number,y:number)=>{const e=new Event(type,{bubbles:true,cancelable:true});Object.assign(e,{clientX:x,clientY:y,pointerId:1,pointerType:'mouse',button:0,shiftKey:true});s.hit.dispatchEvent(e)}
-    inspect('pointerdown',p[0],p[1]);inspect('pointermove',p[0]+140,p[1]+35);inspect('pointerup',p[0]+140,p[1]+35)
+    // Turn toward the canvas centre so the release stays on the stage (an inspection ending outside it cancels).
+    const dx=p[0]>17+195?-140:140
+    inspect('pointerdown',p[0],p[1]);inspect('pointermove',p[0]+dx,p[1]+35);inspect('pointerup',p[0]+dx,p[1]+35)
     expect(object.getWorldQuaternion(new THREE.Quaternion()).angleTo(before)).toBeGreaterThan(.2)
     expect(s.progress).toEqual([]);s.run();expect(s.progress).toEqual([])
     step(s,at);expect(s.progress).toEqual([3]);expect(s.complete).toHaveBeenCalledOnce()
@@ -408,5 +413,122 @@ describe('close inspection before placement', () => {
     active = true; window.dispatchEvent(new Event('focus')); s.instance.update(.025)
     expect(s.overlay.getAttribute('data-close-inspection')).toBe('ready')
     s.button.click(); s.run(1); expect(s.progress).toEqual([])
+  })
+})
+
+
+describe('restrained silver light and settle rebound', () => {
+  const parts = (s: ReturnType<typeof mount>) => {
+    const motion = s.scene.getObjectByName('longevity-carrier-motion')!, plate = s.scene.getObjectByName('longevity-silver-lock') as THREE.Mesh
+    const uniforms = (plate.material as THREE.ShaderMaterial).uniforms
+    return { motion, gain: () => uniforms.uSweepGain!.value as number, sweep: () => uniforms.uSweep!.value as number }
+  }
+  const atRest = (motion: THREE.Object3D) => { expect(motion.position.lengthSq()).toBe(0); expect(motion.quaternion.angleTo(new THREE.Quaternion())).toBe(0); expect(motion.scale.toArray()).toEqual([1, 1, 1]) }
+
+  it('keeps every product micro-motion off with reduced motion, through idle and completion', () => {
+    const s = mount(0, { isReducedMotion: () => true }), { motion, gain } = parts(s)
+    for (let i = 0; i < 480; i++) { s.instance.update(.025); atRest(motion); expect(gain()).toBe(0) }
+    step(s, 0, false)
+    for (let i = 0; i < 480; i++) { s.instance.update(.025); atRest(motion); expect(gain()).toBe(0) }
+    expect(s.progress).toEqual([3])
+  })
+
+  it('shows a faint idle light now and then, and stops it while the carrier is held', () => {
+    const s = mount(0), { motion, gain, sweep } = parts(s)
+    let peak = 0, seen = 0
+    for (let t = 0; t < 9.5; t += .025) { s.instance.update(.025); peak = Math.max(peak, gain()); if (gain() > 0) seen++; atRest(motion) }
+    expect(peak).toBeGreaterThan(.08); expect(peak).toBeLessThanOrEqual(.24 + 1e-9)
+    // It is an occasional pass of about a second, not a constant glow.
+    expect(seen * .025).toBeLessThan(1.5)
+    let t = 0; while (gain() < .05 && t < 9) { s.instance.update(.025); t += .025 }
+    expect(gain()).toBeGreaterThan(.05)
+    const p = s.point(targetName(0), anchor(0)); event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + 10, p[1] - 4]); s.instance.update(.025)
+    expect(gain()).toBe(0); expect(sweep()).toBe(-1)
+    event(s.hit, 'pointercancel', [p[0] + 10, p[1] - 4]); s.instance.update(.025); expect(gain()).toBe(0)
+  })
+
+  it('starts one short rebound with the completion tone, never sinking, turning or scaling the carrier', () => {
+    const tones: number[] = []
+    class AudioBoundary {
+      state = 'running'; currentTime = 0; destination = {}
+      close() { return Promise.resolve() }
+      createGain() { return { gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect(next: unknown) { return next } } }
+      createOscillator() { return { type: 'sine', frequency: { setValueAtTime(n: number) { tones.push(n) } }, connect(next: unknown) { return next }, start() {}, stop() {} } }
+    }
+    vi.stubGlobal('AudioContext', AudioBoundary)
+    const s = mount(0, { isSoundEnabled: () => true }), { motion } = parts(s), actor = s.scene.getObjectByName('longevity-carrier')!
+    step(s, 0, false)
+    let toneFrame = -1, riseFrame = -1, peak = 0
+    for (let i = 0; i < 80; i++) {
+      s.instance.update(.025)
+      if (toneFrame < 0 && tones.length) toneFrame = i
+      if (riseFrame < 0 && motion.position.y > 0) riseFrame = i
+      peak = Math.max(peak, motion.position.y)
+      expect(motion.position.y).toBeGreaterThanOrEqual(0); expect(motion.position.x).toBe(0); expect(motion.position.z).toBe(0)
+      expect(motion.quaternion.angleTo(new THREE.Quaternion())).toBe(0); expect(motion.scale.toArray()).toEqual([1, 1, 1]); expect(actor.scale.toArray()).toEqual([1, 1, 1])
+    }
+    expect(s.progress).toEqual([3]); expect(tones).toEqual([440])
+    expect(riseFrame).toBe(toneFrame); expect(peak).toBeGreaterThan(.015); expect(peak).toBeLessThan(.05)
+    atRest(motion)
+  })
+
+  it.each(['blur', 'pause', 'resize'] as const)('returns the idle light and the rebound to rest at once on %s', kind => {
+    let active = true; const s = mount(0, { isActive: () => active }), { motion, gain, sweep } = parts(s)
+    const interrupt = () => { if (kind === 'blur') window.dispatchEvent(new Event('blur')); else if (kind === 'pause') { active = false; s.instance.update(.025) } else s.resize() }
+    const resume = () => { if (kind === 'blur') window.dispatchEvent(new Event('focus')); active = true; s.instance.update(.025) }
+    let t = 0; while (gain() < .05 && t < 12) { s.instance.update(.025); t += .025 }
+    expect(gain()).toBeGreaterThan(.05)
+    interrupt(); expect(gain()).toBe(0); expect(sweep()).toBe(-1); atRest(motion); resume()
+    step(s, 0, false)
+    for (let i = 0; i < 200 && !(s.progress.length && motion.position.y > .005); i++) s.instance.update(.025)
+    expect(s.progress).toEqual([3]); expect(motion.position.y).toBeGreaterThan(.005)
+    interrupt(); atRest(motion); expect(gain()).toBe(0); resume()
+    for (let i = 0; i < 40; i++) { s.instance.update(.025); atRest(motion) }
+  })
+
+  it.each(['pause', 'dispose'] as const)('keeps the carrier motion at rest when onProgress %ss during completion', mode => {
+    let active = true, destroy = () => {}
+    const s = mount(0, { isActive: () => active, onProgress: () => { if (mode === 'pause') active = false; else destroy() } })
+    destroy = () => s.instance.dispose()
+    const { motion, gain } = parts(s)
+    step(s, 0, false)
+    for (let i = 0; i < 40; i++) s.instance.update(.025)
+    atRest(motion); expect(gain()).toBe(0)
+  })
+})
+
+
+describe('whole-carrier pickup', () => {
+  it('picks up the complete carrier from its bare velvet corners, not only from the lock', () => {
+    for (const at of [0, 1, 2]) for (const corner of [[-.62, .07, .80], [-.62, .07, -.80]] as [number, number, number][]) {
+      const s = mount(at, { isReducedMotion: () => true }), p = s.point('longevity-carrier', corner), carrier = s.scene.getObjectByName('longevity-carrier')!
+      const hit = first(s, carrier.localToWorld(new THREE.Vector3(...corner)))
+      expect(hit.object?.name).toMatch(/^longevity-carrier-(velvet|board)$/)
+      const home = carrier.position.clone(), [dx, dy] = placementDelta(s, at)
+      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + dx / 3, p[1] + dy / 3])
+      // The whole carrier follows the finger from a bare corner.
+      expect(carrier.position.distanceTo(home), `checkpoint ${at}`).toBeGreaterThan(.02)
+      for (let i = 1; i <= 8; i++) event(s.hit, 'pointermove', [p[0] + dx * i / 8, p[1] + dy * i / 8])
+      event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy]); s.run()
+      // From the back corner the finger ends over the case behind the goal, so the drop is accepted there too.
+      if (corner[2] < 0) expect(s.progress, `checkpoint ${at}`).toEqual([3])
+      else {
+        // From the front corner the finger can end over the case's near wall, which the shared clear-path rule
+        // treats as foreground: then the carrier is parked where it was let go and the assist button finishes.
+        if (!s.progress.length) { expect(carrier.position.distanceTo(home)).toBeGreaterThan(.02); s.button.click(); s.run() }
+        expect(s.progress).toEqual([3])
+      }
+      s.instance.dispose()
+    }
+  })
+  it('ignores a press on the empty case or the bare stand', () => {
+    const s = mount(1, { isReducedMotion: () => true }), carrier = s.scene.getObjectByName('longevity-carrier')!, before = carrier.position.clone()
+    for (const name of ['longevity-case-inner-pad', 'longevity-preparation-stand']) {
+      const target = s.scene.getObjectByName(name)!, box = new THREE.Box3().setFromObject(target)
+      const spot = new THREE.Vector3((box.min.x + box.max.x) / 2, box.max.y, box.max.z - .15)
+      const q = spot.project(s.camera), p: [number, number] = [17 + (q.x + 1) * 390 / 2, 91 + (1 - q.y) * 408 / 2]
+      event(s.hit, 'pointerdown', p); event(s.hit, 'pointermove', [p[0] + 30, p[1]]); event(s.hit, 'pointerup', [p[0] + 30, p[1]]); s.run(.2)
+      expect(carrier.position.distanceTo(before), name).toBeLessThan(1e-9); expect(s.progress).toEqual([])
+    }
   })
 })

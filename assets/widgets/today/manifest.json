@@ -1,6 +1,6 @@
 {
   "renderer": "project-threejs-scenes",
-  "revision": "d7b208fa3ca1afabae7661c899198147b351193a0b47e81ec65c4352e2c2e191",
+  "revision": "2b9d996f913b86bdee063589a47e9e75ef2353363b0c4e84cfda865bfda337f8",
   "scenes": [
     {
       "id": "nanakusa-gayu",
@@ -179,7 +179,7 @@
         "file": "chinese-longevity-lock-small.png",
         "width": 600,
         "height": 600,
-        "sha256": "fef4e245bc290c51add409b0e5b1e5dfddabbfe7c625f1d01a93cdd8081f01c0",
+        "sha256": "d4ec1360ca7ca1a4a9664f0ace9e68f7261fd439f067b982169aa98532918514",
         "webgl": true,
         "canvasWidth": 600,
         "canvasHeight": 600,
@@ -189,7 +189,7 @@
         "file": "chinese-longevity-lock-medium.png",
         "width": 1280,
         "height": 600,
-        "sha256": "52ea4d0c0ab6e89663aee97d57133db7182cfb417f6caf9ad5816f5b8d2c93c6",
+        "sha256": "10c49bf0a9aa06de9709978d02e591415328df10b4aa14528bf07e337a831187",
         "webgl": true,
         "canvasWidth": 1280,
         "canvasHeight": 600,
@@ -199,7 +199,7 @@
         "file": "chinese-longevity-lock-large.png",
         "width": 1200,
         "height": 1200,
-        "sha256": "610c81625af68455958142f5703f791d49e9a522a4d5754b8473f3551d6267fd",
+        "sha256": "c0bd8180d53ebcb5148dc00e6a3c0bee7b3399a800402264b2d0500acab1d38c",
         "webgl": true,
         "canvasWidth": 1200,
         "canvasHeight": 1200,

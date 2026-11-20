@@ -17,6 +17,10 @@ const ACTIONS = ['托起银锁', '移向礼匣', '收妥寄安']
 const HINTS = ["握住承板，托起锁饰到上方提示位置。","握住承板，挪到敞口礼匣上方的提示范围。","把银锁连同承板挪到礼匣内垫的提示范围，轻轻落稳。","银锁已收妥，愿孩子平安长大。"]
 const MOVING = ['银锁与棉项绳随承板轻轻托起……','锁饰缓缓移向敞开的礼匣……','承板轻轻落稳，留一份平安祝愿……']
 const ease = (t: number) => t * t * (3 - 2 * t)
+// Product micro-motion (all off with reduced motion), on an inner carrier node only:
+// a faint light across the silver face now and then while idle, and one short
+// rebound of the carrier when it settles, started with the completion tone.
+const IDLE_EVERY = 7, IDLE_SWEEP = 1.3, IDLE_GAIN = .24, LANDING = .34, REBOUND = .03
 
 export function createLongevityLock(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx, safe = shared.assertSafeCopy
@@ -47,7 +51,15 @@ export function createLongevityLock(ctx: SceneContext): SceneInstance {
   const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', destination: () => placement.destination(2), targetLabel: '当前安放位置', label: ACTIONS[2]!, anchor: model.anchors[2], priority: 3, enabled: () => !!inspection?.canPlace() && inputActive() && !motion && at === i }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
-  const reset = () => { placement.cancel(); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at === 3 ? 3 : 2]!, safe) }
+  let idle = 0, landing = -1
+  const sweep = model.sweep
+  /** Return every product micro-motion to rest. */
+  const calm = () => {
+    idle = 0; landing = -1
+    model.motion.position.set(0, 0, 0); model.motion.quaternion.identity(); model.motion.scale.setScalar(1); model.motion.updateMatrixWorld(true)
+    sweep.uSweep.value = -1; sweep.uSweepGain.value = 0
+  }
+  const reset = () => { calm(); placement.cancel(); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at === 3 ? 3 : 2]!, safe) }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
@@ -88,6 +100,8 @@ export function createLongevityLock(ctx: SceneContext): SceneInstance {
   function settle() {
     if (!inputActive() || !motion) return
     placement.settle(1); placement.cancel(); at = 3; motion = null; restore()
+    // The rebound starts with the completion tone below.
+    if (!ctx.isReducedMotion?.()) { calm(); landing = 0 }
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
@@ -99,17 +113,40 @@ export function createLongevityLock(ctx: SceneContext): SceneInstance {
     if (!inspection?.canPlace() || !inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return
     placement.capture(2); advance(true)
   }
-  const blur = () => { focused = false; lifecycleVersion++; inspection?.cancel(); pointer.cancel(); if (!motion) reset(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
+  const blur = () => { focused = false; lifecycleVersion++; calm(); inspection?.cancel(); pointer.cancel(); if (!motion) reset(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
-    inspection?.cancel()
+    calm(); inspection?.cancel()
     pointer.cancel(); if (!motion) reset()
-    const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0,.40,.15), direction = new THREE.Vector3(1.6,5.6,7).normalize()
+    const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(-.05,.36,.12), direction = new THREE.Vector3(1.6,5.6,7).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target);camera.updateMatrixWorld(true)
-    const inverse=camera.quaternion.clone().invert(),tangent=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));let distance=3.4
-    // Frame the complete lock necklace and carrier through all gift placement paths.
-    for(const x of[-2.40,2.16])for(const y of[0,1.05])for(const z of[-1.3,1.65]){const p=new THREE.Vector3(x,y,z).sub(target).applyQuaternion(inverse);distance=Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86))}
+    const inverse=camera.quaternion.clone().invert(),tangent=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),p=new THREE.Vector3();let distance=3.4
+    const fit=(box:THREE.Box3)=>{for(const x of[box.min.x,box.max.x])for(const y of[box.min.y,box.max.y])for(const z of[box.min.z,box.max.z]){p.set(x,y,z).sub(target).applyQuaternion(inverse);distance=Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86))}}
+    // Frame the case, the stand and the complete carrier at every placement checkpoint;
+    // the scripted path is straight between them, so its ends bound it.
+    fit(new THREE.Box3().setFromObject(model.box)); fit(new THREE.Box3().setFromObject(model.stand))
+    const home=model.actor.position.clone(),turn=model.actor.quaternion.clone()
+    model.actor.quaternion.identity()
+    for(const[step,n]of[[0,0],[0,1],[1,1],[2,1]]as const){model.pose(step,n);fit(new THREE.Box3().setFromObject(model.actor))}
+    model.actor.position.copy(home);model.actor.quaternion.copy(turn);model.root.updateMatrixWorld(true)
     camera.position.copy(target).addScaledVector(direction,distance);camera.lookAt(target);matrices()
     sync()
+  }
+  /** Idle light and settle rebound; both live on inner nodes and uniforms only. */
+  function animate(delta: number) {
+    if (ctx.isReducedMotion?.()) { if (landing >= 0 || idle > 0 || sweep.uSweepGain.value !== 0 || model.motion.position.lengthSq() > 0) calm(); return }
+    let lift = 0
+    if (landing >= 0) {
+      landing += delta; const t = landing
+      lift = t < .18 ? REBOUND * Math.sin(Math.PI * t / .18) : t < LANDING ? REBOUND * .3 * Math.sin(Math.PI * (t - .18) / (LANDING - .18)) : 0
+      if (t >= LANDING) { landing = -1; lift = 0 }
+    }
+    model.motion.position.set(0, lift, 0)
+    const quiet = !motion && landing < 0 && !pointer.isBusy()
+    if (!quiet) { idle = 0; sweep.uSweep.value = -1; sweep.uSweepGain.value = 0; return }
+    idle += delta
+    const t = (idle - IDLE_EVERY) / IDLE_SWEEP
+    if (t >= 1) { idle = 0; sweep.uSweep.value = -1; sweep.uSweepGain.value = 0 }
+    else if (t >= 0) { sweep.uSweep.value = -.12 + 1.24 * t; sweep.uSweepGain.value = IDLE_GAIN * Math.sin(Math.PI * t) }
   }
   const stopInspection = addKeyboardPlacementInspection(ui.actionBtn,canvas,camera,model,placement,{isActive:()=>!!inspection?.canPlace()&&inputActive()&&!motion&&at < 3&&!pointer.isBusy(),step:()=>2,prepare:prepareInput,reset,rotate:(yaw,pitch)=>inspectRotate(yaw/.012,pitch/.012)})
   restore(); sync()
@@ -122,7 +159,7 @@ export function createLongevityLock(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
-      if (!active()) { lifecycleVersion++; inspection?.cancel(); pointer.cancel(); if (!motion) reset(); if (!suspended) { suspended = true; sync() }; return }
+      if (!active()) { lifecycleVersion++; calm(); inspection?.cancel(); pointer.cancel(); if (!motion) reset(); if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
@@ -132,7 +169,8 @@ export function createLongevityLock(ctx: SceneContext): SceneInstance {
         const eased=ease(motion.time)
         pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); matrices(); if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) { animate(delta); matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      else if (landing >= 0 || idle > 0 || sweep.uSweepGain.value !== 0 || model.motion.position.lengthSq() > 0) calm()
     },
     dispose() {
       if (disposed) return

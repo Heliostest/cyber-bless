@@ -43,3 +43,77 @@ it('restores exactly each deposited-stone checkpoint without changing shape or s
  for(let s=0;s<3;s++)for(const t of [0,.1,.25,.4,.7,.9,1]){m.pose(s,t);m.targets.forEach((o,i)=>{expect(o.scale.toArray()).toEqual([1,1,1]);expect(Array.from(o.geometry.attributes.position!.array)).toEqual(positions[i]);expect(o.matrixWorld.elements.every(Number.isFinite)).toBe(true)})}
  disposeTree(m.root)
 })
+
+it('deforms the closed cloth pouch and gravel-resting drawstrings under stone weight with damped landing cushion and calm equilibrium', () => {
+ const m = createGodairikiModel()
+ const pouchPos = m.pouch.geometry.attributes.position!
+ const pouchArr = pouchPos.array
+ const rim = m.root.getObjectByName('godairiki-soft-rim') as THREE.Mesh
+ const leftCord = m.root.getObjectByName('godairiki-cord--1') as THREE.Mesh
+ const rightCord = m.root.getObjectByName('godairiki-cord-1') as THREE.Mesh
+ expect(rim).toBeTruthy(); expect(leftCord).toBeTruthy(); expect(rightCord).toBeTruthy()
+
+ const rimMeanY = () => {
+  const rp = rim.geometry.attributes.position!
+  let sum = 0
+  for (let i = 0; i < rp.count; i++) sum += rp.getY(i)
+  return sum / rp.count
+ }
+
+ // Empty pose (checkpoint 0)
+ m.pose(0, 0)
+ const emptySnap = Array.from(pouchArr)
+ const emptyBox = new THREE.Box3().setFromObject(m.pouch)
+ const emptyRimY = rimMeanY()
+
+ // Mid-landing cushion pulse during 3rd stone drop (t=0.85)
+ m.pose(2, 0.85)
+ const landingSnap = Array.from(pouchArr)
+ expect(m.pouch.geometry.attributes.position!.array).toBe(pouchArr)
+ expect(landingSnap.every(Number.isFinite)).toBe(true)
+
+ // Loaded pose (checkpoint 3, all 3 stones seated)
+ m.pose(3, 0)
+ const loadedSnap = Array.from(pouchArr)
+ const loadedBox = new THREE.Box3().setFromObject(m.pouch)
+ const loadedRimY = rimMeanY()
+
+ expect(loadedSnap).not.toEqual(emptySnap)
+ expect(landingSnap).not.toEqual(loadedSnap)
+ // Stone weight broadens the lower belly and settles the gathered collar lower.
+ expect(loadedBox.max.x - loadedBox.min.x).toBeGreaterThan((emptyBox.max.x - emptyBox.min.x) + 0.04)
+ expect(loadedRimY).toBeLessThan(emptyRimY - 0.035)
+
+ // Pouch remains a closed positive-volume 2-manifold when fully loaded.
+ const ix = m.pouch.geometry.index!
+ let vol = 0
+ for (let i = 0; i < ix.count; i += 3) {
+  const a = new THREE.Vector3().fromBufferAttribute(pouchPos, ix.getX(i))
+  const b = new THREE.Vector3().fromBufferAttribute(pouchPos, ix.getX(i + 1))
+  const c = new THREE.Vector3().fromBufferAttribute(pouchPos, ix.getX(i + 2))
+  vol += a.dot(b.clone().cross(c)) / 6
+ }
+ expect(vol).toBeGreaterThan(0.15)
+
+ // Both gravity-draped drawstring loops rest above ground (y >= 0) and stay within the gravel disc ellipse.
+ for (const cord of [leftCord, rightCord]) {
+  const cp = cord.geometry.attributes.position!
+  let minY = Infinity
+  for (let i = 0; i < cp.count; i++) {
+   const wp = cord.localToWorld(new THREE.Vector3().fromBufferAttribute(cp, i))
+   expect(Number.isFinite(wp.x) && Number.isFinite(wp.y) && Number.isFinite(wp.z)).toBe(true)
+   minY = Math.min(minY, wp.y)
+   const ellipse = ((wp.x + 0.08) / 1.85) ** 2 + (wp.z / (1.85 * 0.72)) ** 2
+   expect(ellipse, `${cord.name} stays over gravel disc`).toBeLessThan(1.01)
+  }
+  expect(minY, `${cord.name} rests on gravel`).toBeGreaterThanOrEqual(-0.002)
+  expect(minY, `${cord.name} actually reaches gravel surface`).toBeLessThan(0.03)
+ }
+
+ // Calm equilibrium: pose(2, 1) and repeated pose(3, 0) yield bit-for-bit identical geometry.
+ m.pose(2, 1)
+ expect(Array.from(pouchArr)).toEqual(loadedSnap)
+ m.pose(3, 0)
+ expect(Array.from(pouchArr)).toEqual(loadedSnap)
+ disposeTree(m.root)
+})

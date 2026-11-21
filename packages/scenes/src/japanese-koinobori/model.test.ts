@@ -4,7 +4,7 @@ import { disposeTree } from '../procedural-kit'
 import { createKoinoboriModel } from './model'
 
 const models: ReturnType<typeof createKoinoboriModel>[] = []
-afterEach(() => { models.splice(0).forEach(model => disposeTree(model.subject)) })
+afterEach(() => { models.splice(0).forEach(model => { model.dispose(); disposeTree(model.subject) }) })
 function create() { const model = createKoinoboriModel(); models.push(model); return model }
 
 describe('height-driven koinobori breeze', () => {
@@ -48,5 +48,32 @@ describe('height-driven koinobori breeze', () => {
         }
       }
     }
+  })
+  it('drives carp clothTube and halyard rope with real Rapier physics while preserving mouth, tail stitch and endpoints', async () => {
+    const model = create()
+    model.pose(3, 0)
+    await model.startPhysics()
+    expect(model.rapierReady).toBe(true)
+    const body = model.subject.getObjectByName('koinobori-body') as THREE.Mesh
+    const rope = model.subject.getObjectByName('koinobori-halyard') as THREE.Mesh
+    const bodyPos = body.geometry.getAttribute('position')
+    const ropePos = rope.geometry.getAttribute('position')
+    const mouth = Array.from(bodyPos.array).slice(0, 49 * 3)
+    const beforeBody = Array.from(bodyPos.array)
+    for (let i = 0; i < 30; i++) model.stepPhysics(1 / 60, (i + 1) / 60)
+    model.subject.updateMatrixWorld(true)
+    expect(Array.from(bodyPos.array)).not.toEqual(beforeBody)
+    expect(Array.from(bodyPos.array).slice(0, 49 * 3)).toEqual(mouth)
+    for (const name of ['koinobori-tail', 'koinobori-tail-back']) {
+      const tail = model.subject.getObjectByName(name) as THREE.Mesh
+      const vertices = tail.geometry.getAttribute('position')
+      for (let j = 0; j <= 24; j++) {
+        const root = tail.localToWorld(new THREE.Vector3().fromBufferAttribute(vertices, j))
+        const at = 48 * 49 + (name === 'koinobori-tail' ? j : 48 - j)
+        const rim = body.localToWorld(new THREE.Vector3().fromBufferAttribute(bodyPos, at))
+        expect(root.distanceTo(rim)).toBeLessThan(1e-5)
+      }
+    }
+    expect(Array.from(ropePos.array).every(Number.isFinite)).toBe(true)
   })
 })

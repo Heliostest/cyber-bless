@@ -18,15 +18,17 @@
     "./stylized-water": "./src/stylized-water.ts",
     "./ritual-optics": "./src/ritual-optics.ts",
     "./craft-surfaces": "./src/craft-surfaces.ts",
-    "./soft-pouch-geometry": "./src/soft-pouch-geometry.ts"
+    "./soft-pouch-geometry": "./src/soft-pouch-geometry.ts",
+    "./rapier-soft-body": "./src/rapier-soft-body.ts"
   },
   "dependencies": {
-    "animejs": "^4.5.0",
+    "@dimforge/rapier3d-simd": "^0.21.0",
     "@wbr/content": "*",
-    "postprocessing": "^6.39.5",
-    "three": "^0.170.0",
     "@wbr/core": "*",
-    "@wbr/i18n": "*"
+    "@wbr/i18n": "*",
+    "animejs": "^4.5.0",
+    "postprocessing": "^6.39.5",
+    "three": "^0.170.0"
   },
   "scripts": {
     "test": "vitest run"

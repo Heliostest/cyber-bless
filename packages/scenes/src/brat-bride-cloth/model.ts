@@ -1,9 +1,9 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
-import { createClothSmoothing } from './cloth-smoothing'
+import { createClothSmoothing, type ClothSmoothingOptions } from './cloth-smoothing'
 
 /** Original window and cloth: the three paths are product choreography. */
-export function createBratBrideModel() {
+export function createBratBrideModel(options: ClothSmoothingOptions = {}) {
  const root=new THREE.Group();root.name='brat-cloth-subject'
  const material=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.86})
  const stone=material(0xaaa6b1),wood=material(0x80584d),glass=material(0x35435f),benchMat=material(0xb18061),base=material(0x586775)
@@ -40,7 +40,7 @@ export function createBratBrideModel() {
   const p=geometry.getAttribute('position')
   for(let i=0;i<sample.length;i++){const s=sample[i]!;p.setY(i,heights[s.grid]!+(s.under?0:.012))}
   p.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere()
- })
+ },options)
  function pose(step:number,t:number){
   t=clamp(t);let y=.32,z=1.75,amplitude=.045
   if(step===0){y=THREE.MathUtils.lerp(.32,1.16,t);amplitude=THREE.MathUtils.lerp(.045,.085,t)}
@@ -53,5 +53,5 @@ export function createBratBrideModel() {
   p.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();root.updateMatrixWorld(true)
  }
  pose(0,0)
- return {root,cloth,board,bench,sill,pose,smoothing,targets:[cloth,cloth,cloth],roots:[cloth,cloth,cloth],anchors:[[0,.03,0],[0,.03,0],[0,.03,0]] as [number,number,number][],dispose(){}}
+ return {root,cloth,board,bench,sill,pose,smoothing,targets:[cloth,cloth,cloth],roots:[cloth,cloth,cloth],anchors:[[0,.03,0],[0,.03,0],[0,.03,0]] as [number,number,number][],dispose(){smoothing.dispose()}}
 }

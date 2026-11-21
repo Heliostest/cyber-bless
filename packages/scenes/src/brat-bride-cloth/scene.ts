@@ -38,7 +38,7 @@ export function createBratBrideCloth(ctx: SceneContext): SceneInstance {
   const lights=addStageLights(scene,ctx.stage,{sky:0xc6d3ec,ground:0x62647b,key:0xffdfb9,rim:0xaac8f3,keyPosition:[-3,5,4],keyIntensity:2,rimIntensity:.8})
   lights.key.castShadow=true;lights.key.shadow.mapSize.set(1024,1024);lights.key.shadow.bias=-.0004;lights.key.shadow.normalBias=.008
   Object.assign(lights.key.shadow.camera,{left:-4,right:4,top:4,bottom:-4,near:.1,far:15})
-  const model=createBratBrideModel();scene.add(model.root)
+  const model=createBratBrideModel({isActive:active,isReducedMotion:()=>!!ctx.isReducedMotion?.()});scene.add(model.root)
   const matrices=()=>{scene.updateMatrixWorld(true);camera.updateMatrixWorld(true)}
   const placement=createPosePlacement(canvas,camera,model,scene),touch=createTouchTarget(canvas,camera,scene)
   const homeCamera=new THREE.Vector3(), homeRotation=new THREE.Quaternion(), closeCamera=new THREE.Vector3(),closeRotation=new THREE.Quaternion()
@@ -66,7 +66,7 @@ export function createBratBrideCloth(ctx: SceneContext): SceneInstance {
   const guard=(event:Event)=>{if(notifying)event.stopImmediatePropagation()}
   guardedEvents.forEach(type=>{window.addEventListener(type,guard,true);ui.hitLayer.addEventListener(type,guard,true)})
 
-  function startSettle() {phase='settling';elapsed=0;sync();if(ctx.isReducedMotion?.())enterSmoothing()}
+  function startSettle() {phase='settling';elapsed=0;if(!ctx.isReducedMotion?.())void model.smoothing.activate();sync();if(ctx.isReducedMotion?.())enterSmoothing()}
   const carryPointer=createObjectPointer(ui.hitLayer,{
     isActive:canPlace,
     canStart(x,y){matrices();return touch.hit(x,y,model.cloth)},
@@ -88,6 +88,7 @@ export function createBratBrideCloth(ctx: SceneContext): SceneInstance {
   }
   function enterSmoothing() {
     placement.settle(1);placement.cancel();model.pose(3,0);model.smoothing.begin()
+    if(!ctx.isReducedMotion?.())void model.smoothing.activate()
     homeCamera.copy(camera.position);homeRotation.copy(camera.quaternion);aimClose()
     phase=ctx.isReducedMotion?.()?'smoothing':'focusing';elapsed=0;handoff=true
     if(phase==='focusing'){camera.position.copy(homeCamera);camera.quaternion.copy(homeRotation)}

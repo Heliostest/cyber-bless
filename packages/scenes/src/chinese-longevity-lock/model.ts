@@ -1,4 +1,10 @@
 import * as THREE from 'three'
+import {
+  createClosedTubeWriter,
+  createRapierSoftBodyHost,
+  type RapierSoftBodySession,
+  type RigidColliderHandle,
+} from '@wbr/scene-runtime/rapier-soft-body'
 import { capsuleBetween, closedOutline, creasedSolid, domeReliefSolid, mergeSolids, profiledSolid, roundedRect, roundedSlab, shellGeometry, tubeSolid, type ProfileRing } from './geometry'
 import { SEAL_GLYPHS } from './seal-glyphs'
 import { createLockToonFactory, createOutlineShell } from './toon'
@@ -75,7 +81,12 @@ const FLOWER_RINGS: ProfileRing[] = [
   { s: .26, y: .060 }, { s: .14, y: .063 },
 ]
 
-export function createLongevityLockModel() {
+export interface LongevityLockModelOptions {
+  isActive?: () => boolean
+  isReducedMotion?: () => boolean
+}
+
+export function createLongevityLockModel(options: LongevityLockModelOptions = {}) {
   const root = new THREE.Group(); root.name = 'longevity-subject'
   const toon = createLockToonFactory(), C = LOCK_COLORS
   const materials = {
@@ -145,11 +156,224 @@ export function createLongevityLockModel() {
   const bailGeometry = new THREE.LatheGeometry(bailProfile, 20); bailGeometry.rotateZ(Math.PI / 2)
   const bail = small(mesh(motion, 'longevity-lock-bail', creasedSolid(bailGeometry, 50), materials.small, C.silver.smallLine, 0, BOARD_TOP + BAIL, bailZ, 1.25))
 
-  // A closed cotton neck cord: through the bail, then round in a natural loop.
-  const half: [number, number][] = [[0, 0], [.12, 0], [.21, -.025], [.32, -.095], [.43, -.20], [.49, -.33], [.48, -.45], [.40, -.525], [.27, -.578], [.135, -.597]]
-  const loop = [...half, [0, -.60] as [number, number], ...half.slice(1).reverse().map(([x, z]) => [-x, z] as [number, number])]
-  const cordCurve = new THREE.CatmullRomCurve3(loop.map(([x, z]) => new THREE.Vector3(x, BOARD_TOP + CORD, bailZ + z)), true, 'centripetal')
-  const cord = small(mesh(motion, 'longevity-cotton-neck-cord', tubeSolid(new THREE.TubeGeometry(cordCurve, 240, CORD, 12, true)), materials.cord, C.cord.line, 0, 0, 0, 1.5))
+  // A closed cotton neck cord: threaded through the raised bail channel, visibly dropping
+  // downward onto the velvet board on exit and settling in a relaxed organic drape (not a
+  // rigid symmetrical hoop). Simulated with a lazy closed Rapier rope when active.
+  const loopRest: THREE.Vector3[] = [
+    // Inside the silver bail channel (lifted along the bail axis, then visibly dipping down to velvet).
+    new THREE.Vector3(0, BOARD_TOP + .046, bailZ),
+    new THREE.Vector3(.115, BOARD_TOP + .045, bailZ),
+    new THREE.Vector3(.195, BOARD_TOP + .037, bailZ - .022),
+    new THREE.Vector3(.295, BOARD_TOP + CORD, bailZ - .095),
+    new THREE.Vector3(.425, BOARD_TOP + CORD, bailZ - .195),
+    new THREE.Vector3(.49, BOARD_TOP + CORD, bailZ - .33),
+    new THREE.Vector3(.462, BOARD_TOP + CORD, bailZ - .465),
+    new THREE.Vector3(.355, BOARD_TOP + CORD, bailZ - .555),
+    new THREE.Vector3(.215, BOARD_TOP + CORD, bailZ - .598),
+    new THREE.Vector3(.065, BOARD_TOP + CORD, bailZ - .632),
+    // Softly relaxed gravity crest (slight organic slack drape on the velvet).
+    new THREE.Vector3(-.085, BOARD_TOP + CORD, bailZ - .626),
+    new THREE.Vector3(-.245, BOARD_TOP + CORD, bailZ - .592),
+    new THREE.Vector3(-.392, BOARD_TOP + CORD, bailZ - .532),
+    new THREE.Vector3(-.468, BOARD_TOP + CORD, bailZ - .438),
+    new THREE.Vector3(-.472, BOARD_TOP + CORD, bailZ - .315),
+    new THREE.Vector3(-.415, BOARD_TOP + CORD, bailZ - .185),
+    new THREE.Vector3(-.285, BOARD_TOP + CORD, bailZ - .088),
+    new THREE.Vector3(-.192, BOARD_TOP + .037, bailZ - .022),
+    new THREE.Vector3(-.115, BOARD_TOP + .045, bailZ),
+  ]
+  const cordCurve = new THREE.CatmullRomCurve3(loopRest, true, 'centripetal')
+  const CORD_SEGMENTS = 240, CORD_RADIAL = 12
+  const velvetHalfX = (L.board.width - .06) / 2 - .024 - CORD - .002
+  const velvetHalfZ = (L.board.depth - .06) / 2 - .024 - CORD - .002
+  const clampCordCenter = (p: THREE.Vector3) => {
+    p.x = THREE.MathUtils.clamp(p.x, -velvetHalfX, velvetHalfX)
+    p.z = THREE.MathUtils.clamp(p.z, -velvetHalfZ, bailZ + .012)
+    if (p.y < BOARD_TOP + CORD) p.y = BOARD_TOP + CORD
+  }
+  const cord = small(mesh(motion, 'longevity-cotton-neck-cord', tubeSolid(new THREE.TubeGeometry(cordCurve, CORD_SEGMENTS, CORD, CORD_RADIAL, true)), materials.cord, C.cord.line, 0, 0, 0, 1.5))
+  const cordOutline = cord.children.find((c) => c.name === 'longevity-cotton-neck-cord-line') as THREE.Mesh | undefined
+  const cordWriter = createClosedTubeWriter(cord.geometry, CORD_SEGMENTS, CORD_RADIAL, CORD, cordOutline?.geometry, clampCordCenter)
+
+  // Resample 32 evenly spaced closed-loop particles for the Rapier soft cotton cord.
+  const CORD_PARTICLES = 32
+  const restSamples: THREE.Vector3[] = Array.from({ length: CORD_PARTICLES }, (_, i) => {
+    const p = cordCurve.getPointAt(i / CORD_PARTICLES)
+    clampCordCenter(p)
+    return p
+  })
+  // Write the clamped rest loop immediately so the initial geometry has zero spline dip into the velvet.
+  cordWriter.update(restSamples)
+  const bailParticleMask = restSamples.map((p) => Math.abs(p.x) <= .128 && Math.abs(p.z - bailZ) <= .045)
+  const pinnedCordIndices = bailParticleMask.flatMap((pinned, i) => (pinned ? [i] : []))
+  const cordLocalPoints: THREE.Vector3[] = restSamples.map((p) => p.clone())
+
+  let cordBody: ReturnType<RapierSoftBodySession['createCustomRope']> | null = null
+  let velvetCollider: RigidColliderHandle | null = null
+  let lockCollider: RigidColliderHandle | null = null
+  let rapierReady = false
+  let cordDisposed = false
+  const prevCarrierPos = new THREE.Vector3()
+  const prevCarrierQuat = new THREE.Quaternion()
+  const prevCarrierVel = new THREE.Vector3()
+  const currCarrierPos = new THREE.Vector3()
+  const currCarrierQuat = new THREE.Quaternion()
+  const currCarrierVel = new THREE.Vector3()
+  const invCarrierQuat = new THREE.Quaternion()
+  const worldGravity = new THREE.Vector3(0, -9.81, 0)
+  const extraLocalAccel = new THREE.Vector3()
+  const tmpAccel = new THREE.Vector3()
+
+  function resetCordParticlesToRest() {
+    if (!cordBody || !cordBody.isValid()) return
+    motion.updateWorldMatrix(true, false)
+    for (let i = 0; i < CORD_PARTICLES; i++) {
+      const r = restSamples[i]!
+      cordBody.setParticlePosition(i, { x: r.x, y: r.y, z: r.z })
+      cordBody.setParticleVelocity(i, { x: 0, y: 0, z: 0 })
+    }
+    motion.getWorldPosition(prevCarrierPos)
+    motion.getWorldQuaternion(prevCarrierQuat)
+    prevCarrierVel.set(0, 0, 0)
+    extraLocalAccel.set(0, 0, 0)
+  }
+
+  function writeCordFromRapier() {
+    if (!cordBody || !cordBody.isValid()) return
+    const pos = cordBody.particlePositions()
+    for (let i = 0; i < CORD_PARTICLES; i++) {
+      if (bailParticleMask[i]) {
+        cordLocalPoints[i]!.copy(restSamples[i]!)
+        continue
+      }
+      const rest = restSamples[i]!
+      // Keep the closed cotton cord safely on top of the flat velvet board and clear of the bail/plate.
+      const x = THREE.MathUtils.clamp(pos[i * 3]!, -velvetHalfX, velvetHalfX)
+      const z = THREE.MathUtils.clamp(pos[i * 3 + 2]!, -velvetHalfZ, Math.min(bailZ + .02, rest.z + .075))
+      const y = THREE.MathUtils.clamp(pos[i * 3 + 1]!, BOARD_TOP + CORD, BOARD_TOP + CORD + .11)
+      cordLocalPoints[i]!.set(x, y, z)
+    }
+    cordWriter.update(cordLocalPoints)
+  }
+
+  // Simulate the cotton neck cord in carrier-local space with fixed velvet & lock colliders
+  // and injected D'Alembert inertial acceleration + carrier-tilted gravity. This gives real
+  // gravity drape, velvet contact, and clean inertial sway during carrier placement without
+  // world-space damping drag or kinematic collider tunneling.
+  const cordHost = createRapierSoftBodyHost({
+    gravity: { x: 0, y: -9.81, z: 0 },
+    fixedDt: 1 / 60,
+    maxSubsteps: 4,
+    solverIterations: 6,
+    internalPgsIterations: 2,
+    sleepSpeedThreshold: 0.006,
+    sleepTimeRequired: 0.35,
+    isActive: options.isActive,
+    isReducedMotion: options.isReducedMotion,
+    onReady(session) {
+      if (cordDisposed) return
+      motion.updateWorldMatrix(true, false)
+      velvetCollider = session.addFixedBox(
+        { x: 0, y: BOARD_TOP / 2, z: 0 },
+        { x: L.board.width - .06, y: BOARD_TOP, z: L.board.depth - .06 },
+        { friction: 0.85, restitution: 0.01 },
+      )
+      lockCollider = session.addFixedBox(
+        { x: 0, y: BOARD_TOP + .055, z: PLATE_Z + .05 },
+        { x: 1.24, y: .11, z: .78 },
+        { friction: 0.7, restitution: 0.02 },
+      )
+      cordBody = session.createCustomRope({
+        points: restSamples.map((p) => ({ x: p.x, y: p.y, z: p.z })),
+        closed: true,
+        bending: true,
+        wireCollision: true,
+        pinnedParticles: pinnedCordIndices,
+        mass: 0.16,
+        particleRadius: CORD,
+        linearDamping: 4.8,
+        edgeSoftness: { naturalFrequency: 28, dampingRatio: 0.9 },
+        bendSoftness: { naturalFrequency: 10, dampingRatio: 0.85 },
+        friction: 0.85,
+        restitution: 0.01,
+        canSleep: true,
+      })
+      rapierReady = true
+      motion.getWorldPosition(prevCarrierPos)
+      motion.getWorldQuaternion(prevCarrierQuat)
+      prevCarrierVel.set(0, 0, 0)
+      extraLocalAccel.set(0, 0, 0)
+      cordHost.settle(14, applyCordForces)
+      writeCordFromRapier()
+    },
+  })
+
+  function applyCordForces() {
+    if (!cordBody || !cordBody.isValid()) return
+    cordBody.resetForces(false)
+    const pos = cordBody.particlePositions()
+    const vel = cordBody.particleVelocities()
+    const m = Math.max(cordBody.mass() / CORD_PARTICLES, 1e-4)
+
+    for (let i = 0; i < CORD_PARTICLES; i++) {
+      if (bailParticleMask[i]) continue
+      const rest = restSamples[i]!
+      const px = pos[i * 3]!, py = pos[i * 3 + 1]!, pz = pos[i * 3 + 2]!
+      const vx = vel[i * 3]!, vy = vel[i * 3 + 1]!, vz = vel[i * 3 + 2]!
+      // Soft in-plane cotton memory keeps the closed loop tidy on the velvet while
+      // letting gravity and carrier inertia drive subtle natural sway & settle.
+      const kPlanar = 32, cPlanar = 7.5
+      const fx = m * (kPlanar * (rest.x - px) - cPlanar * vx + extraLocalAccel.x)
+      const fz = m * (kPlanar * (rest.z - pz) - cPlanar * vz + extraLocalAccel.z)
+      // Gravity pulls the cord onto the velvet collider; gentle vertical damping prevents bounce.
+      const dy = rest.y - py
+      const fy = m * ((dy < -0.008 ? 20 * dy - 5 * vy : -3.5 * vy) + extraLocalAccel.y)
+      cordBody.addParticleForce(i, { x: fx, y: fy, z: fz }, false)
+    }
+  }
+
+  function stepCord(dt: number) {
+    if (cordDisposed || options.isReducedMotion?.()) return false
+    if (!rapierReady || !cordBody || !cordBody.isValid()) return false
+    motion.updateWorldMatrix(true, false)
+    motion.getWorldPosition(currCarrierPos)
+    motion.getWorldQuaternion(currCarrierQuat)
+    const movedDist = currCarrierPos.distanceTo(prevCarrierPos)
+    const turnedAngle = currCarrierQuat.angleTo(prevCarrierQuat)
+    const dtSafe = Math.max(dt, 1 / 60)
+    if (movedDist > 1e-4 || turnedAngle > 1e-4) {
+      cordHost.wakeUp()
+      // On large teleports (checkpoint jump / cancel), snap cleanly instead of creating a huge inertial spike.
+      if (movedDist > 0.45 || turnedAngle > 0.8) {
+        resetCordParticlesToRest()
+      } else {
+        currCarrierVel.subVectors(currCarrierPos, prevCarrierPos).divideScalar(dtSafe)
+        tmpAccel.subVectors(currCarrierVel, prevCarrierVel).divideScalar(dtSafe)
+        // Clamp and softly couple inertial acceleration so rapid UI placement moves gently sway the cotton loop.
+        const mag = tmpAccel.length()
+        if (mag > 12) tmpAccel.multiplyScalar(12 / mag)
+        invCarrierQuat.copy(currCarrierQuat).invert()
+        // Effective local acceleration = R^-1 * (g - 0.45 * a_carrier), minus Rapier's fixed local g.
+        extraLocalAccel.copy(worldGravity).addScaledVector(tmpAccel, -0.45).applyQuaternion(invCarrierQuat).sub(worldGravity)
+        prevCarrierVel.copy(currCarrierVel)
+        prevCarrierPos.copy(currCarrierPos)
+        prevCarrierQuat.copy(currCarrierQuat)
+      }
+    } else {
+      prevCarrierVel.multiplyScalar(0.5)
+      invCarrierQuat.copy(currCarrierQuat).invert()
+      extraLocalAccel.copy(worldGravity).applyQuaternion(invCarrierQuat).sub(worldGravity)
+    }
+    const stepped = cordHost.step(dt, applyCordForces)
+    if (stepped) writeCordFromRapier()
+    return stepped
+  }
+
+  function calmCord() {
+    if (cordDisposed) return
+    cordWriter.update(restSamples)
+    if (rapierReady) resetCordParticlesToRest()
+  }
 
   // Three original five-petal drops on short silver links.
   const { points: petals, petal } = flowerOutline()
@@ -179,6 +403,21 @@ export function createLongevityLockModel() {
     targets: [actor, actor, actor], roots: [actor, actor, actor], anchors: [boardAnchor, boardAnchor, lockAnchor] as [number, number, number][],
     /** Height of the plate's face under a point in carrier space (for tests and probes). */
     face, plate: { z: PLATE_Z, letterZ: PLATE_Z + LETTER_Z, stroke: STROKE, boardTop: BOARD_TOP, bailZ },
-    dispose() {},
+    startCordPhysics() {
+      if (cordDisposed || options.isReducedMotion?.()) return Promise.resolve(null)
+      return cordHost.start()
+    },
+    stepCord,
+    calmCord,
+    get cordRapierReady() { return rapierReady },
+    get cordSleeping() { return cordHost.sleeping },
+    dispose() {
+      cordDisposed = true
+      cordBody = null
+      velvetCollider = null
+      lockCollider = null
+      rapierReady = false
+      cordHost.dispose()
+    },
   }
 }

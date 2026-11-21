@@ -38,3 +38,13 @@ it('keeps ribbon face winding aligned with its vertex normals at every checkpoin
 it('leaves positive room between each tight knot and the standing ribbon inside it',()=>{
  const m=createBonfimModel();m.pose(3,0);const p=m.ribbon.geometry.attributes.position!;for(const[begin,end]of m.knotRanges){let minimum=Infinity;for(let i=begin!*4;i<(end!+1)*4;i++)minimum=Math.min(minimum,Math.hypot(p.getX(i)-.5,p.getZ(i)-.8));expect(minimum).toBeGreaterThan(.023)}m.dispose();disposeTree(m.root)
 })
+it('simulates ribbon drape against rigid fence colliders with real Rapier soft body while keeping buffer identity and finite geometry',async()=>{
+ const m=createBonfimModel(),pos=m.ribbon.geometry.attributes.position!,buf=pos.array,before=Array.from(buf)
+ await m.startPhysics()
+ expect(m.rapierReady).toBe(true)
+ for(let i=0;i<30;i++)m.stepPhysics(1/60)
+ expect(m.ribbon.geometry.attributes.position!.array).toBe(buf)
+ expect(Array.from(buf)).not.toEqual(before)
+ expect(Array.from(buf).every(Number.isFinite)).toBe(true)
+ m.dispose();disposeTree(m.root)
+})

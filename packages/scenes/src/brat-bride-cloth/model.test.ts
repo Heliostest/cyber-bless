@@ -34,4 +34,20 @@ describe('cloth and real window supports',()=>{
  it('uses closed positive-volume finite meshes with outward normals at every moving checkpoint',()=>{const m=createBratBrideModel();for(const [step,t] of [[0,0],[0,.5],[1,.5],[2,.5],[3,0]]){m.pose(step!,t!);m.root.traverse(o=>{const mesh=o as THREE.Mesh;if(!mesh.isMesh)return;const p=mesh.geometry.getAttribute('position'),normals=mesh.geometry.getAttribute('normal'),edges=new Map<string,{count:number,balance:number}>();let volume=0,minArea=Infinity,minNormalDot=Infinity;const key=(v:THREE.Vector3)=>v.toArray().map(n=>Math.round(n*1e5)).join(',');for(let i=0;i<p.count;i+=3){const a=new THREE.Vector3().fromBufferAttribute(p,i),b=new THREE.Vector3().fromBufferAttribute(p,i+1),c=new THREE.Vector3().fromBufferAttribute(p,i+2),face=new THREE.Vector3().subVectors(b,a).cross(new THREE.Vector3().subVectors(c,a));expect([...a,...b,...c].every(Number.isFinite)).toBe(true);minArea=Math.min(minArea,face.length()/2);volume+=a.dot(b.clone().cross(c))/6;for(let j=0;j<3;j++)minNormalDot=Math.min(minNormalDot,face.clone().normalize().dot(new THREE.Vector3().fromBufferAttribute(normals,i+j)));const vs=[a,b,c];for(let j=0;j<3;j++){const x=key(vs[j]!),y=key(vs[(j+1)%3]!),name=[x,y].sort().join('|'),edge=edges.get(name)??{count:0,balance:0};edge.count++;edge.balance+=x<y?1:-1;edges.set(name,edge)}}expect(volume,mesh.name).toBeGreaterThan(0);expect(minArea,mesh.name).toBeGreaterThan(1e-12);expect(minNormalDot,mesh.name).toBeGreaterThan(.99);expect([...edges.values()].every(e=>e.count===2&&e.balance===0),mesh.name).toBe(true)})}disposeTree(m.root)})
  it('keeps the full cloth footprint and finite thickness during lifting and laying',()=>{const m=createBratBrideModel();let minThickness=Infinity;for(let step=0;step<3;step++)for(let n=0;n<=100;n++){m.pose(step,n/100);m.cloth.geometry.computeBoundingBox();const b=m.cloth.geometry.boundingBox!,size=b.getSize(new THREE.Vector3());expect(size.x).toBeCloseTo(1.65,5);expect(size.z).toBeCloseTo(.74,5);minThickness=Math.min(minThickness,size.y)}expect(minThickness).toBeGreaterThan(.008);disposeTree(m.root)})
  it('reuses all position and normal buffers throughout motion',()=>{const m=createBratBrideModel(),buffers=new Map<THREE.Mesh,[unknown,unknown]>();m.root.traverse(o=>{const mesh=o as THREE.Mesh;if(mesh.isMesh)buffers.set(mesh,[mesh.geometry.getAttribute('position').array,mesh.geometry.getAttribute('normal').array])});for(let step=0;step<3;step++)for(let n=0;n<=100;n++){m.pose(step,n/100);for(const [mesh,[positions,normals]]of buffers){expect(mesh.geometry.getAttribute('position').array).toBe(positions);expect(mesh.geometry.getAttribute('normal').array).toBe(normals)}}disposeTree(m.root)})
+ it('simulates cloth smoothing with real Rapier soft-body sill contact and clean snapshot rollback',async()=>{
+  const m=createBratBrideModel();m.pose(3,0);m.smoothing.begin()
+  await m.smoothing.activate()
+  expect(m.smoothing.rapierReady).toBe(true)
+  const p=m.cloth.geometry.getAttribute('position'),buf=p.array
+  const snap=m.smoothing.snapshot()
+  const before=Array.from(p.array)
+  m.smoothing.stroke(new THREE.Vector2(-.72,0),new THREE.Vector2(.72,0))
+  for(let i=0;i<24;i++)m.smoothing.update(1/60,false)
+  expect(p.array).toBe(buf)
+  expect(Array.from(p.array)).not.toEqual(before)
+  for(let i=0;i<p.count;i++){expect(Number.isFinite(p.getY(i))).toBe(true);expect(p.getY(i)).toBeGreaterThanOrEqual(0)}
+  m.smoothing.restore(snap)
+  expect(Array.from(p.array)).toEqual(before)
+  m.dispose();disposeTree(m.root)
+ })
 })

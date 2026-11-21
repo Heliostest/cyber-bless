@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { prepareAppAssets } from "../../scripts/prepare-app-assets.mjs";
 import { sceneTestingRevisionsPlugin } from '../../scripts/scene-testing-revisions.mjs';
+import { rapierWasmPlugin } from '../../scripts/vite-rapier-wasm.mjs';
 
 await prepareAppAssets();
 const base = process.env.VITE_BASE_PATH || '/';
@@ -11,13 +12,16 @@ export default defineConfig({
   publicDir: "public",
   base,
   define: { "process.env.EXPO_BASE_URL": JSON.stringify(base) },
+  optimizeDeps: {
+    exclude: ['@dimforge/rapier3d-simd'],
+  },
   build: {
     rollupOptions: { input: {
       main: path.resolve(import.meta.dirname, 'index.html'),
       share: path.resolve(import.meta.dirname, 'share.html'),
     } },
   },
-  plugins: [react(), sceneTestingRevisionsPlugin()],
+  plugins: [rapierWasmPlugin(), react(), sceneTestingRevisionsPlugin()],
   server: {
     host: true,
   },

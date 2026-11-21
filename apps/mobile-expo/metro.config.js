@@ -5,7 +5,7 @@ const { withDomExportCompatibility } = require("../../scripts/expo-dom-export.cj
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, "../..");
 const config = getDefaultConfig(projectRoot);
-config.resolver.assetExts = [...new Set([...config.resolver.assetExts, 'glb', 'hdr', 'woff2', 'bin'])];
+config.resolver.assetExts = [...new Set([...config.resolver.assetExts, 'glb', 'hdr', 'woff2', 'bin', 'wasm'])];
 config.serializer.customSerializer = withDomExportCompatibility(config.serializer.customSerializer);
 if (process.env.WBR_METRO_CACHE) {
   const { FileStore } = require('metro-cache');
@@ -34,6 +34,14 @@ config.resolver.resolveRequest = (context, name, platform) => {
       filePath: path.join(
         path.dirname(require.resolve("@noble/hashes/sha256")),
         "crypto.js",
+      ),
+    };
+  if (name === "@dimforge/rapier3d-simd")
+    return {
+      type: "sourceFile",
+      filePath: path.join(
+        path.dirname(require.resolve("@dimforge/rapier3d-simd/package.json")),
+        "rapier.js",
       ),
     };
   if (/^react(?:\/|$)|^react-dom(?:\/|$)/.test(name))

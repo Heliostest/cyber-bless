@@ -113,4 +113,32 @@ describe('silver lock necklace and supported gift presentation',()=>{
   const C=LOCK_COLORS;for(const dark of[C.velvet.lit,C.wood.lit,C.stand.lit,C.cord.base])expect(luminance(C.silver.shade)).toBeGreaterThan(luminance(dark))
   for(const dark of[C.velvet.lit,C.wood.lit])expect(luminance(dark)).toBeLessThan(.08)
   expect(luminance(C.silver.base)).toBeGreaterThan(luminance(C.cord.lit))})
+ it('simulates only the closed cotton neck cord with Rapier, keeps bail threading and outline match, and sleeps calmly',async()=>{
+  const m=createLongevityLockModel(),L=LOCK_LAYOUT,cordPos=m.cord.geometry.getAttribute('position'),cordBuf=cordPos.array
+  const lockBefore=Array.from(m.lock.geometry.getAttribute('position').array)
+  const cordLine=m.cord.children.find(c=>c.name==='longevity-cotton-neck-cord-line') as THREE.Mesh
+  const lineBuf=cordLine.geometry.getAttribute('position').array
+  await m.startCordPhysics()
+  expect(m.cordRapierReady).toBe(true)
+  // Lift and sweep carrier across into the case to excite gravity & inertia on the soft cord without kinking.
+  const restBox=box(m.cord)
+  for(let i=1;i<=12;i++){m.pose(0,i/12);m.stepCord(1/30)}
+  for(let i=1;i<=12;i++){m.pose(1,i/12);m.stepCord(1/30)}
+  const sweptBox=box(m.cord)
+  // During the rapid slide, the loop stays smoothly open (never collapsing or bunching past 12% width distortion).
+  expect(Math.abs((sweptBox.max.x-sweptBox.min.x)-(restBox.max.x-restBox.min.x))).toBeLessThan(.12)
+  const lifted=Array.from(cordBuf)
+  for(let i=0;i<60;i++)m.stepCord(1/60)
+  expect(m.cord.geometry.getAttribute('position').array).toBe(cordBuf)
+  expect(cordLine.geometry.getAttribute('position').array).toBe(lineBuf)
+  // Silver lock geometry was never modified.
+  expect(Array.from(m.lock.geometry.getAttribute('position').array)).toEqual(lockBefore)
+  expect(lifted.every(Number.isFinite)).toBe(true)
+  // Cord stays inside flat velvet top and on/above velvet surface, outline box stays synced.
+  const half=[(L.board.width-.06)/2-.024,(L.board.depth-.06)/2-.024]
+  for(const p of points(m.cord)){const q=m.actor.worldToLocal(p.clone());expect(Math.abs(q.x)).toBeLessThanOrEqual(half[0]+1e-4);expect(Math.abs(q.z)).toBeLessThanOrEqual(half[1]+1e-4);expect(q.y).toBeGreaterThanOrEqual(m.plate.boardTop-1e-4)}
+  m.cord.geometry.computeBoundingBox();cordLine.geometry.computeBoundingBox()
+  expect(cordLine.geometry.boundingBox!.min.distanceTo(m.cord.geometry.boundingBox!.min)+cordLine.geometry.boundingBox!.max.distanceTo(m.cord.geometry.boundingBox!.max)).toBeLessThan(1e-5)
+  m.dispose()
+ })
 })

@@ -32,7 +32,7 @@ export function createBonfimRibbon(ctx: SceneContext): SceneInstance {
   const lights = addStageLights(scene, ctx.stage, { sky: 0xeaf4ed, ground: 0xa39c74, key: 0xffedca, rim: 0xd6f3ff, keyPosition: [-3, 5, 4], keyIntensity: 2.0, rimIntensity: .8 })
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
-  const model = createBonfimModel(); scene.add(model.root)
+  const model = createBonfimModel({ isActive: active, isReducedMotion: () => !!ctx.isReducedMotion?.() }); scene.add(model.root)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
   const restore = () => pose(at, 0)
@@ -102,7 +102,8 @@ export function createBonfimRibbon(ctx: SceneContext): SceneInstance {
     start() {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
-      restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
+      restore(); resize(); if (!ctx.isReducedMotion?.()) void model.startPhysics()
+      stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
       ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {
@@ -116,6 +117,7 @@ export function createBonfimRibbon(ctx: SceneContext): SceneInstance {
         const eased=ease(motion.time)
         pose(motion.step, motion.from+(1-motion.from)*eased); if (motion.time === 1) settle()
       }
+      if (!ctx.isReducedMotion?.()) model.stepPhysics(delta)
       if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },
     dispose() {

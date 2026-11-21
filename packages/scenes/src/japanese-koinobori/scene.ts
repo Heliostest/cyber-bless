@@ -39,7 +39,7 @@ export function createJapaneseKoinobori(ctx: SceneContext): SceneInstance {
   const lights = addStageLights(scene, ctx.stage, { sky: 0xeaf4ed, ground: 0xa39c74, key: 0xffedca, rim: 0xd6f3ff, keyPosition: [-3, 5, 4], keyIntensity: 2.0, rimIntensity: .8 })
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3, near: .1, far: 15 })
-  const model = createKoinoboriModel(); scene.add(model.subject)
+  const model = createKoinoboriModel({ isActive: active, isReducedMotion: () => !!ctx.isReducedMotion?.() }); scene.add(model.subject)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n,ctx.isReducedMotion?.() ? 0 : breezeTime); matrices() }
   const restore = () => pose(at, 0)
@@ -124,7 +124,8 @@ export function createJapaneseKoinobori(ctx: SceneContext): SceneInstance {
     start() {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
-      restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
+      restore(); resize(); if (!ctx.isReducedMotion?.()) void model.startPhysics()
+      stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
       ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {
@@ -134,15 +135,21 @@ export function createJapaneseKoinobori(ctx: SceneContext): SceneInstance {
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       if (!ctx.isReducedMotion?.()) breezeTime += delta
-      if (motion) { motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85); pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time))); if (motion.time === 1) settle() }
-      else model.flutter(ctx.isReducedMotion?.() ? 0 : breezeTime)
+      if (motion) {
+        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85)
+        pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time)))
+        if (!ctx.isReducedMotion?.()) model.stepPhysics(delta, breezeTime)
+        if (motion.time === 1) settle()
+      }
+      else if (!ctx.isReducedMotion?.()) model.stepPhysics(delta, breezeTime)
+      else model.flutter(0)
       if (active()) { matrices(); style.render() }
     },
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.subject); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); model.dispose(); disposeTree(model.subject); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

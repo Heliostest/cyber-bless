@@ -42,7 +42,7 @@ export function createLongevityLock(ctx: SceneContext): SceneInstance {
   const lights = addStageLights(scene, ctx.stage, { sky: 0xf2ead5, ground: 0x837457, key: 0xffdfb9, rim: 0xaac8f3, keyPosition: [-3, 5, 4], keyIntensity: 2.4, rimIntensity: .8 })
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
-  const model = createLongevityLockModel(); scene.add(model.root)
+  const model = createLongevityLockModel({ isActive: active, isReducedMotion: () => !!ctx.isReducedMotion?.() }); scene.add(model.root)
   const placement = createPosePlacement(canvas, camera, model, scene), spatialSteps = new Set([0,1,2])
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
@@ -58,6 +58,7 @@ export function createLongevityLock(ctx: SceneContext): SceneInstance {
     idle = 0; landing = -1
     model.motion.position.set(0, 0, 0); model.motion.quaternion.identity(); model.motion.scale.setScalar(1); model.motion.updateMatrixWorld(true)
     sweep.uSweep.value = -1; sweep.uSweepGain.value = 0
+    model.calmCord()
   }
   const reset = () => { calm(); placement.cancel(); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at === 3 ? 3 : 2]!, safe) }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
@@ -154,7 +155,8 @@ export function createLongevityLock(ctx: SceneContext): SceneInstance {
     start() {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
-      restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
+      restore(); resize(); if (!ctx.isReducedMotion?.()) void model.startCordPhysics()
+      stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
       ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {
@@ -169,7 +171,7 @@ export function createLongevityLock(ctx: SceneContext): SceneInstance {
         const eased=ease(motion.time)
         pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); matrices(); if (motion.time === 1) settle()
       }
-      if (active()) { animate(delta); matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) { animate(delta); matrices(); if (!ctx.isReducedMotion?.()) model.stepCord(delta); matrices(); lights.key.shadow.normalBias = .03; style.render() }
       else if (landing >= 0 || idle > 0 || sweep.uSweepGain.value !== 0 || model.motion.position.lengthSq() > 0) calm()
     },
     dispose() {

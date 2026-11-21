@@ -313,3 +313,27 @@ describe('free object inspection without forced route checkpoints',()=>{
     expect(object.position.distanceTo(home)).toBeLessThan(1e-7);expect(object.quaternion.angleTo(rotation)).toBeLessThan(1e-7);expect(s.progress).toEqual([]);
   });
 });
+
+describe('khata soft-body WASM gating & reduced-motion stillness', () => {
+  it('never loads Rapier WASM before start or in pure reduced motion, and stays bit-for-bit still', async () => {
+    const { isRapierLoaded, _resetRapierLoaderForTest } = await import('@wbr/scene-runtime/rapier-soft-body')
+    _resetRapierLoaderForTest()
+    const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
+    host.append(canvas, overlay); document.body.append(host)
+    Object.defineProperties(canvas, { clientWidth: { value: 390 }, clientHeight: { value: 408 } })
+    canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 390, height: 408 }) as DOMRect
+    const unstarted = mod.create({ canvas, overlay, gestures: Gestures, shared: Shared, initialProgress: 3, isSoundEnabled: () => false })
+    expect(isRapierLoaded()).toBe(false)
+    unstarted.dispose()
+
+    const quiet = mount(3, { isReducedMotion: () => true })
+    const cloth = quiet.scene.getObjectByName('khata-cloth') as THREE.Mesh
+    const fringe = quiet.scene.getObjectByName('khata-fringe-1-4') as THREE.Mesh
+    const c0 = Array.from(cloth.geometry.getAttribute('position').array)
+    const f0 = Array.from(fringe.geometry.getAttribute('position').array)
+    quiet.run(1.0)
+    expect(isRapierLoaded()).toBe(false)
+    expect(Array.from(cloth.geometry.getAttribute('position').array)).toEqual(c0)
+    expect(Array.from(fringe.geometry.getAttribute('position').array)).toEqual(f0)
+  })
+})

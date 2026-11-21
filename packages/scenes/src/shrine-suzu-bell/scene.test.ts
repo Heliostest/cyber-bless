@@ -197,13 +197,16 @@ describe('shrine suzu object actions', () => {
   })
 
   it('holds the rope gently after one ring and returns its geometry to rest on the next tap', () => {
-    const s = mount(), rope = s.object('suzu-braided-rope')
-    expect(rope.scale.y).toBe(1)
+    const s = mount(), grip = s.object('suzu-rope-grip')
+    const restGripY = grip.getWorldPosition(new THREE.Vector3()).y
+    expect(grip.scale.toArray()).toEqual([1, 1, 1])
     pull(s)
-    expect(rope.scale.y).toBeGreaterThan(1)
+    const heldGripY = grip.getWorldPosition(new THREE.Vector3()).y
+    expect(heldGripY).toBeLessThan(restGripY - 0.025)
+    expect(grip.scale.toArray()).toEqual([1, 1, 1])
     expect(s.haptic).toHaveBeenCalledOnce()
     tap(s, 'suzu-rope-grip')
-    expect(rope.scale.y).toBe(1)
+    expect(grip.getWorldPosition(new THREE.Vector3()).y).toBeCloseTo(restGripY, 5)
     expect(s.object('suzu-hanging-object').rotation.z).toBe(0)
     expect(s.haptic).toHaveBeenCalledOnce()
   })
@@ -340,5 +343,96 @@ describe('shrine suzu object actions', () => {
     for (const [type, fn, options] of registrations) expect(removed.mock.calls.some(call => call[0] === type && call[1] === fn && call[2] === options)).toBe(true)
     pointer(s.hit, 'pointerdown', from); pointer(s.hit, 'pointerup', [from[0], from[1] + 70]); s.button.click(); s.run()
     expect(s.progress).toEqual([]); expect(s.overlay.childElementCount).toBe(0)
+  })
+
+  it('never loads Rapier WASM on construction or in pure reduced motion, and stays bit-for-bit still', async () => {
+    const { isRapierLoaded, _resetRapierLoaderForTest } = await import('@wbr/scene-runtime/rapier-soft-body')
+    _resetRapierLoaderForTest()
+    const canvas = document.createElement('canvas'), overlay = document.createElement('div')
+    document.body.append(canvas, overlay)
+    Object.defineProperties(canvas, { clientWidth: { value: 390 }, clientHeight: { value: 520 } })
+    canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 390, height: 520, right: 390, bottom: 520 }) as DOMRect
+    const unstarted = createShrineSuzuBell({ canvas, overlay, gestures: Gestures, shared: Shared, isSoundEnabled: () => false })
+    expect(isRapierLoaded()).toBe(false)
+    unstarted.dispose()
+
+    const quiet = mount(0, { isReducedMotion: () => true })
+    const strand = quiet.object('suzu-braid-strand-0') as THREE.Mesh
+    const tassel0 = quiet.object('suzu-tassel-strand-0') as THREE.Mesh
+    const s0 = Array.from(strand.geometry.getAttribute('position').array)
+    const t0 = Array.from(tassel0.geometry.getAttribute('position').array)
+    quiet.run(1.0)
+    expect(isRapierLoaded()).toBe(false)
+    expect(Array.from(strand.geometry.getAttribute('position').array)).toEqual(s0)
+    expect(Array.from(tassel0.geometry.getAttribute('position').array)).toEqual(t0)
+    expect(s0.every(Number.isFinite)).toBe(true)
+    expect(t0.every(Number.isFinite)).toBe(true)
+  })
+
+  it('flexes the 3-strand cotton braid and tassel with lazy Rapier physics during ring while preserving bell attachment, pause and reduced stillness', async () => {
+    const { loadRapier } = await import('@wbr/scene-runtime/rapier-soft-body')
+    await loadRapier()
+    let isActive = true
+    let isReduced = false
+    const s = mount(0, { isActive: () => isActive, isReducedMotion: () => isReduced })
+    const strand0 = s.object('suzu-braid-strand-0') as THREE.Mesh
+    const tassel0 = s.object('suzu-tassel-strand-0') as THREE.Mesh
+    const bell = s.object('suzu-round-split-bell')
+    const rope = s.object('suzu-braided-rope')
+    const strandBuf = strand0.geometry.getAttribute('position').array
+    const tasselBuf = tassel0.geometry.getAttribute('position').array
+    const restStrand = Array.from(strandBuf)
+    const restTassel = Array.from(tasselBuf)
+
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    // Trigger pull & ring motion; verify braid and tassel flex dynamically without collapsing or detaching.
+    s.button.click()
+    let maxBraidFlexX = 0
+    for (let i = 0; i < 24; i++) {
+      s.instance.update(1 / 60)
+      drawn.scene!.updateMatrixWorld(true)
+      expect(rope.localToWorld(new THREE.Vector3(0, -0.265, 0)).distanceTo(bell.localToWorld(new THREE.Vector3(0, -0.265, 0)))).toBeLessThan(1e-8)
+      const pos = strand0.geometry.getAttribute('position')
+      for (let k = 0; k < pos.count; k++) maxBraidFlexX = Math.max(maxBraidFlexX, Math.abs(pos.getX(k)))
+    }
+    expect(strand0.geometry.getAttribute('position').array).toBe(strandBuf)
+    expect(tassel0.geometry.getAttribute('position').array).toBe(tasselBuf)
+    expect(Array.from(strandBuf)).not.toEqual(restStrand)
+    expect(Array.from(tasselBuf)).not.toEqual(restTassel)
+    expect(Array.from(strandBuf).every(Number.isFinite)).toBe(true)
+    expect(Array.from(tasselBuf).every(Number.isFinite)).toBe(true)
+    // Flexed braided strands stay plump (never collapsed to zero radius) and visibly swing laterally.
+    expect(maxBraidFlexX).toBeGreaterThan(0.11)
+    // Outward winding check: braided cotton strands face strictly outward (positive signed volume along tubes).
+    const sPos = strand0.geometry.getAttribute('position')
+    const sNorm = strand0.geometry.getAttribute('normal')
+    const sIdx = strand0.geometry.index!
+    let outwardFaces = 0
+    const va = new THREE.Vector3(), vb = new THREE.Vector3(), vc = new THREE.Vector3(), fn = new THREE.Vector3(), vn = new THREE.Vector3()
+    for (let i = 0; i < sIdx.count; i += 3) {
+      const ia = sIdx.getX(i), ib = sIdx.getX(i + 1), ic = sIdx.getX(i + 2)
+      va.fromBufferAttribute(sPos, ia); vb.fromBufferAttribute(sPos, ib); vc.fromBufferAttribute(sPos, ic)
+      fn.copy(vb).sub(va).cross(vc.clone().sub(va))
+      expect(fn.length()).toBeGreaterThan(1e-10)
+      vn.fromBufferAttribute(sNorm, ia)
+      if (fn.dot(vn) > 0) outwardFaces++
+    }
+    expect(outwardFaces).toBe(sIdx.count / 3)
+
+    // Pause freezes simulation mid-ring.
+    isActive = false
+    const pausedStrand = Array.from(strandBuf)
+    for (let i = 0; i < 12; i++) s.instance.update(1 / 60)
+    expect(Array.from(strandBuf)).toEqual(pausedStrand)
+
+    // Runtime reduced toggle snaps to calm rest and stays strictly still.
+    isActive = true
+    isReduced = true
+    s.instance.update(1 / 60)
+    const redStrand = Array.from(strandBuf)
+    const redTassel = Array.from(tasselBuf)
+    for (let i = 0; i < 12; i++) s.instance.update(1 / 60)
+    expect(Array.from(strandBuf)).toEqual(redStrand)
+    expect(Array.from(tasselBuf)).toEqual(redTassel)
   })
 })

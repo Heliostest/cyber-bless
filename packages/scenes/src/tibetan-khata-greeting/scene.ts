@@ -23,6 +23,7 @@ export function createTibetanKhataGreeting(ctx: SceneContext): SceneInstance {
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
   let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
+  let wasReduced = false
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
@@ -35,7 +36,7 @@ export function createTibetanKhataGreeting(ctx: SceneContext): SceneInstance {
   const lights = addStageLights(scene, ctx.stage, { sky: 0xeaf4ed, ground: 0xa39c74, key: 0xffedca, rim: 0xd6f3ff, keyPosition: [-3, 5, 4], keyIntensity: 2.0, rimIntensity: .8 })
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
-  const model = createKhataModel(); scene.add(model.root)
+  const model = createKhataModel({ isActive: active, isReducedMotion: () => !!ctx.isReducedMotion?.() }); scene.add(model.root)
   const placement = createPosePlacement(canvas, camera, model, scene), spatialSteps = new Set([0,1])
   const supportHeldScarf = () => {
     model.root.updateMatrixWorld(true)
@@ -44,7 +45,7 @@ export function createTibetanKhataGreeting(ctx: SceneContext): SceneInstance {
   }
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
-  const restore = () => { pose(at, 0);; placement.restoreCheckpoint(at); matrices() }
+  const restore = () => { pose(at, 0); placement.restoreCheckpoint(at); if (ctx.isReducedMotion?.()) model.calm(); matrices() }
   const carryStep = () => (at < 2 ? 1 : 2) as 1 | 2
   const carrying = () => at < 2
   const directions: [number, number][] = [[0,-1],[1,0],[1,0]]
@@ -120,7 +121,10 @@ export function createTibetanKhataGreeting(ctx: SceneContext): SceneInstance {
     start() {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
-      restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
+      wasReduced = !!ctx.isReducedMotion?.()
+      restore(); resize()
+      if (!wasReduced) void model.startPhysics()
+      stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
       ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {
@@ -128,13 +132,22 @@ export function createTibetanKhataGreeting(ctx: SceneContext): SceneInstance {
       if (!active()) { lifecycleVersion++; pointer.cancel(); if (!motion) { placement.cancel(); restore() }; if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
+      const reducedNow = !!ctx.isReducedMotion?.()
+      if (reducedNow !== wasReduced) {
+        wasReduced = reducedNow
+        if (reducedNow) model.calm()
+        else void model.startPhysics()
+      }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       if (motion) {
-        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.placed ? .28 : 2.5))
+        motion.time = reducedNow ? 1 : Math.min(1, motion.time + delta / (motion.placed ? .28 : 2.5))
         const eased=ease(motion.time)
         pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); if (motion.placed && motion.step < 2) supportHeldScarf(); matrices(); if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) {
+        if (!reducedNow) model.stepPhysics(delta)
+        matrices(); lights.key.shadow.normalBias = .03; style.render()
+      }
     },
     dispose() {
       if (disposed) return

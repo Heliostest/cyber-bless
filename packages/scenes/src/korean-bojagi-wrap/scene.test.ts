@@ -303,4 +303,25 @@ describe('six spatial cloth operations', () => {
     expect(release).toHaveBeenCalledExactlyOnceWith(1); expect(s.variants).toEqual([]); expect([...freed.values()]).toHaveLength(resources.size); expect([...freed.values()].every(n => n === 1)).toBe(true)
     expect(renderer.dispose).toHaveBeenCalledOnce(); expect(renderer.forceContextLoss).toHaveBeenCalledOnce(); expect(s.overlay.childElementCount).toBe(0); expect(s.host.querySelector('.scene-object-cues')).toBeNull()
   })
+  it('simulates coarse bojagi cloth and draping linen ribbon tails with real lazy Rapier physics against parcel and mat colliders', async () => {
+    const { loadRapier } = await import('@wbr/scene-runtime/rapier-soft-body')
+    await loadRapier()
+    const s = mount(7)
+    const clothMesh = s.scene.getObjectByName('bojagi-cloth') as THREE.Mesh
+    const rightBand = s.scene.getObjectByName('bojagi-band-right') as THREE.Mesh
+    const clothBuf = clothMesh.geometry.getAttribute('position').array
+    const bandBuf = rightBand.geometry.getAttribute('position').array
+    const beforeBand = Array.from(bandBuf)
+    await new Promise((resolve) => setTimeout(resolve, 25))
+    for (let i = 0; i < 40; i++) s.instance.update(1 / 60)
+    expect(clothMesh.geometry.getAttribute('position').array).toBe(clothBuf)
+    expect(rightBand.geometry.getAttribute('position').array).toBe(bandBuf)
+    expect(Array.from(bandBuf)).not.toEqual(beforeBand)
+    expect(Array.from(clothBuf).every(Number.isFinite)).toBe(true)
+    expect(Array.from(bandBuf).every(Number.isFinite)).toBe(true)
+    // Right ribbon tail drapes under gravity down the parcel side toward the woven mat (well below the old 0.43 float).
+    const bandBounds = new THREE.Box3().setFromObject(rightBand)
+    expect(bandBounds.min.y).toBeLessThan(0.32)
+    expect(bandBounds.min.y).toBeGreaterThan(0.06)
+  })
 })

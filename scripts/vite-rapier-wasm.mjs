@@ -33,7 +33,7 @@ export function rapierWasmPlugin() {
       if (!normalized.endsWith(RAPIER_WASM_SUFFIX) || normalized.includes('?')) {
         return null;
       }
-      if (options?.ssr) {
+      if (options?.ssr || process.env.VITEST) {
         const wasmPath = JSON.stringify(path.resolve(id));
         const bgPath = JSON.stringify(path.resolve(path.dirname(id), 'rapier_wasm3d_bg.js'));
         return [

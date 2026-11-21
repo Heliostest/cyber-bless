@@ -242,4 +242,32 @@ describe('an original contemporary cloth banner', () => {
     const capture = (o: boolean | EventListenerOptions | undefined) => typeof o === 'boolean' ? o : o?.capture ?? false
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), type).toBe(true)
   })
+  it('drives the unfurled banner cloth and three tassels with real lazy Rapier physics while keeping crossbar ties, staff clearance and front sun paint', async () => {
+    const { loadRapier } = await import('@wbr/scene-runtime/rapier-soft-body')
+    await loadRapier()
+    const s = mount(3)
+    const clothMesh = s.scene.getObjectByName('banner-cloth') as THREE.Mesh
+    const sunMesh = s.scene.getObjectByName('banner-original-sun') as THREE.Mesh
+    const clothBuf = clothMesh.geometry.getAttribute('position').array
+    const before = Array.from(clothBuf)
+    await new Promise((resolve) => setTimeout(resolve, 25))
+    for (let i = 0; i < 36; i++) s.instance.update(1 / 60)
+    expect(clothMesh.geometry.getAttribute('position').array).toBe(clothBuf)
+    expect(Array.from(clothBuf)).not.toEqual(before)
+    expect(Array.from(clothBuf).every(Number.isFinite)).toBe(true)
+    // Fixed left hem remains anchored at the crossbar tie and banner clears the staff behind it.
+    const anchor = s.scene.getObjectByName('banner-fixed-hem')!.getWorldPosition(new THREE.Vector3())
+    const fixed = s.scene.getObjectByName('banner-crossbar-left-tie')!.getWorldPosition(new THREE.Vector3())
+    expect(anchor.distanceTo(fixed)).toBeLessThan(.03)
+    const pos = clothMesh.geometry.getAttribute('position')
+    let minZ = Infinity
+    for (let i = 0; i < pos.count; i++) minZ = Math.min(minZ, pos.getZ(i))
+    expect(minZ).toBeGreaterThanOrEqual(0.067)
+    // Sun paint remains strictly in front of the billowing cloth along +Z camera rays.
+    const sp = sunMesh.geometry.getAttribute('position')
+    const center = new THREE.Vector3().fromBufferAttribute(sp, 0)
+    sunMesh.localToWorld(center); center.z += 1
+    const ray = new THREE.Raycaster(center, new THREE.Vector3(0, 0, -1))
+    expect(ray.intersectObjects([sunMesh, clothMesh], false)[0]?.object.name).toBe('banner-original-sun')
+  })
 })

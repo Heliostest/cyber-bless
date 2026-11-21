@@ -359,6 +359,28 @@ describe('clootie real object gestures', () => {
     expect(s.progress).toEqual([])
     expect(s.overlay.childElementCount).toBe(0)
   })
+
+  it('drives hanging wet cotton with real lazy Rapier cloth physics against branch colliders while preserving buffer identity and bounds', async () => {
+    const { loadRapier } = await import('@wbr/scene-runtime/rapier-soft-body')
+    await loadRapier()
+    const s = mount(3)
+    const mesh = cloth()
+    const posAttr = mesh.geometry.getAttribute('position')
+    const buf = posAttr.array
+    const before = Array.from(buf)
+    await new Promise((resolve) => setTimeout(resolve, 25))
+    for (let i = 0; i < 30; i++) s.instance.update(1 / 60)
+    expect(mesh.geometry.getAttribute('position').array).toBe(buf)
+    expect(Array.from(buf)).not.toEqual(before)
+    expect(Array.from(buf).every(Number.isFinite)).toBe(true)
+    const bounds = new THREE.Box3().setFromObject(mesh)
+    const branch = object('clootie-branch-target').getWorldPosition(new THREE.Vector3())
+    expect(bounds.min.y).toBeGreaterThan(0)
+    expect(bounds.max.y).toBeCloseTo(branch.y, 1)
+    expect(bounds.max.y - bounds.min.y).toBeGreaterThan(0.68)
+    // Volumetric drapery width stays readable below the knot (not collapsed to a thin thread).
+    expect(bounds.max.x - bounds.min.x).toBeGreaterThan(0.22)
+  })
 })
 
 // Cancellation happens before arrival; a completed placement already owns its result.

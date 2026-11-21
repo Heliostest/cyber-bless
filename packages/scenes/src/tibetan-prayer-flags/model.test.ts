@@ -39,4 +39,27 @@ describe('Complete mantra prayer flag string',()=>{
  it('restores exactly continuous checkpoint transforms without leftover movement',()=>{
   const a=createPrayerFlagsModel(),b=createPrayerFlagsModel();for(let step=0;step<3;step++){a.pose(step,1);b.pose(step+1,0);for(let i=0;i<5;i++){expect(a.flags[i]!.position.toArray()).toEqual(b.flags[i]!.position.toArray());expect(Array.from(a.flags[i]!.geometry.getAttribute('position').array)).toEqual(Array.from(b.flags[i]!.geometry.getAttribute('position').array))}}
  })
+ it('drives all five prayer flags and connecting rope with real lazy Rapier physics while preserving buffers, manifold topology and ground clearance',async()=>{
+  const m=createPrayerFlagsModel()
+  expect(m.rapierReady).toBe(false)
+  m.pose(3,0)
+  const flagBufs=m.flags.map(f=>f.geometry.getAttribute('position').array)
+  const ropeBuf=m.rope.geometry.getAttribute('position').array
+  const beforeFlags=flagBufs.map(b=>Array.from(b))
+  const beforeRope=Array.from(ropeBuf)
+  await m.startPhysics()
+  expect(m.rapierReady).toBe(true)
+  for(let i=0;i<36;i++)m.tick(1/60)
+  expect(m.rope.geometry.getAttribute('position').array).toBe(ropeBuf)
+  expect(Array.from(ropeBuf)).not.toEqual(beforeRope)
+  expect(Array.from(ropeBuf).every(Number.isFinite)).toBe(true)
+  for(let k=0;k<5;k++){
+   const f=m.flags[k]!,pos=f.geometry.getAttribute('position')
+   expect(pos.array).toBe(flagBufs[k])
+   expect(Array.from(pos.array)).not.toEqual(beforeFlags[k])
+   expect(Array.from(pos.array).every(Number.isFinite)).toBe(true)
+   expect(new THREE.Box3().setFromObject(f,true).min.y).toBeGreaterThan(.05)
+  }
+  m.dispose()
+ })
 })

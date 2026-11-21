@@ -1,6 +1,10 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import {
+  createRapierSoftBodyHost,
+  type RapierSoftBodySession,
+} from '@wbr/scene-runtime/rapier-soft-body'
 import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -32,7 +36,69 @@ const DIPPED = new THREE.Vector3(-0.62, 0.83, 0.06)
 const WET = new THREE.Vector3(-0.45, 1.19, 0.28)
 const TIED = new THREE.Vector3(0.12, 1.46, 0.15)
 const COLS = 16, ROWS = 30
+const SIM_NU = 9, SIM_NV = 15 // 135 particles
+const CLOTH_W = 0.48, CLOTH_H = 0.74
 const smooth = (t: number) => { const p = THREE.MathUtils.clamp(t, 0, 1); return p * p * (3 - 2 * p) }
+
+function catmullRom(p0: number, p1: number, p2: number, p3: number, t: number): number {
+  const t2 = t * t, t3 = t2 * t
+  return 0.5 * (
+    (2 * p1) +
+    (-p0 + p2) * t +
+    (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
+    (-p0 + 3 * p1 - 3 * p2 + p3) * t3
+  )
+}
+
+function sampleClothGrid(
+  pos: Float32Array,
+  nu: number,
+  nv: number,
+  u: number,
+  v: number,
+  out: THREE.Vector3,
+): THREE.Vector3 {
+  const fu = THREE.MathUtils.clamp(u, 0, 1) * (nu - 1)
+  const fv = THREE.MathUtils.clamp(v, 0, 1) * (nv - 1)
+  const i1 = Math.min(nu - 2, Math.floor(fu))
+  const j1 = Math.min(nv - 2, Math.floor(fv))
+  const tu = fu - i1
+  const tv = fv - j1
+  const i0 = Math.max(0, i1 - 1), i2 = i1 + 1, i3 = Math.min(nu - 1, i1 + 2)
+  const j0 = Math.max(0, j1 - 1), j2 = j1 + 1, j3 = Math.min(nv - 1, j1 + 2)
+
+  const sampleAxis = (axis: 0 | 1 | 2) => {
+    const row = (j: number) => catmullRom(
+      pos[(i0 * nv + j) * 3 + axis]!,
+      pos[(i1 * nv + j) * 3 + axis]!,
+      pos[(i2 * nv + j) * 3 + axis]!,
+      pos[(i3 * nv + j) * 3 + axis]!,
+      tu,
+    )
+    return catmullRom(row(j0), row(j1), row(j2), row(j3), tv)
+  }
+
+  return out.set(sampleAxis(0), sampleAxis(1), sampleAxis(2))
+}
+
+function addSegmentCapsule(
+  session: RapierSoftBodySession,
+  a: [number, number, number],
+  b: [number, number, number],
+  radius: number,
+) {
+  const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b)
+  const mid = va.clone().add(vb).multiplyScalar(0.5)
+  const diff = vb.clone().sub(va)
+  const len = diff.length()
+  const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), diff.normalize())
+  return session.addFixedCapsule(
+    { x: mid.x, y: mid.y, z: mid.z },
+    radius,
+    Math.max(0.01, len * 0.5),
+    { rotation: { x: quat.x, y: quat.y, z: quat.z, w: quat.w }, friction: 0.72, restitution: 0.02 },
+  )
+}
 
 /** Original cotton weave, with alternating warp/weft and a muted edge band. */
 function cottonTexture() {
@@ -84,7 +150,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   const { assertSafeCopy } = shared
   Object.values(COPY).forEach(assertSafeCopy)
   let started = false, disposed = false, completed = false
-  let checkpoint: Checkpoint = 0, clock = 0, unfold = 0, tied = 0, dragBend = 0
+  let checkpoint: Checkpoint = 0, clock = 0, simClock = 0, unfold = 0, tied = 0, dragBend = 0
   let motion: Motion | null = null, dragging = false
   let stopResize = () => {}
   const active = () => started && !disposed && (ctx.isActive?.() ?? true)
@@ -182,7 +248,8 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   for (const side of [-1, 1]) {
     tree.add(tube([[0.79, 0.2, -0.09], [0.79 + side * 0.16, 0.095, 0.01], [0.79 + side * 0.34, 0.054, 0.2]], 0.045, bark, 16))
   }
-  tree.add(tube([[0.77, 1.31, -0.1], [0.52, 1.4, -0.015], [0.24, 1.465, 0.03], [0.04, 1.455, 0.065]], 0.046, bark))
+  const branchPts: [number, number, number][] = [[0.77, 1.31, -0.1], [0.52, 1.4, -0.015], [0.24, 1.465, 0.03], [0.04, 1.455, 0.065]]
+  tree.add(tube(branchPts, 0.046, bark))
   tree.add(tube([[0.81, 1.76, -0.13], [1.02, 1.96, -0.1], [1.12, 2.24, -0.09]], 0.045, bark))
   tree.add(tube([[0.86, 1.9, -0.15], [0.53, 2.13, -0.22], [0.26, 2.28, -0.21]], 0.043, bark))
   // Sparse bark ridges and a rounded knot mark the tree's age gently.
@@ -228,7 +295,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   rag.name = 'clootie-rag'
   rag.position.copy(DRY)
   world.add(rag)
-  const clothGeo = new THREE.PlaneGeometry(0.48, 0.74, COLS, ROWS)
+  const clothGeo = new THREE.PlaneGeometry(CLOTH_W, CLOTH_H, COLS, ROWS)
   const cloth = new THREE.Mesh(clothGeo, cotton)
   cloth.name = 'clootie-cotton-rag'
   cloth.castShadow = cloth.receiveShadow = true
@@ -273,6 +340,175 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   shadow.position.set(0.04, 0.005, 0.14)
   world.add(shadow)
 
+  // Lazy-loaded Rapier cloth host (135 particles, tensionOnly, real branch/trunk/well/ground colliders).
+  let ragBody: ReturnType<RapierSoftBodySession['createCloth']> | null = null
+  let rapierReady = false
+  let physicsStepped = false
+  const tmpSample = new THREE.Vector3()
+  const pinnedTopRow: number[] = []
+  for (let i = 0; i < SIM_NU; i++) pinnedTopRow.push(i * SIM_NV)
+
+  function topAnchorWorld(u: number, out: THREE.Vector3): THREE.Vector3 {
+    // When untied (entry / wet over well), keep full woven cotton width; when tied on the branch,
+    // cinch smoothly under the knot with 3-flute Z-pleats so weft stiffness naturally fans out
+    // into lush, volumetric vertical drapery folds instead of collapsing into a narrow strip.
+    const topWidth = THREE.MathUtils.lerp(0.42, 0.145, tied)
+    const archDrop = Math.pow(Math.abs(u - 0.5) * 2, 1.8) * THREE.MathUtils.lerp(0.024, 0.028, tied)
+    const zPleat = tied * (0.028 * Math.cos((u - 0.5) * Math.PI * 5) - 0.006) + (1 - tied) * 0.016 * Math.sin((u - 0.5) * Math.PI * 3)
+    return out.set(
+      rag.position.x + (u - 0.5) * topWidth,
+      rag.position.y - archDrop,
+      rag.position.z + zPleat,
+    )
+  }
+
+  function resetRagBodyToCurrentPose() {
+    if (!ragBody || !ragBody.isValid()) return
+    for (let i = 0; i < SIM_NU; i++) {
+      const u = i / (SIM_NU - 1)
+      topAnchorWorld(u, tmpSample)
+      const flareW = THREE.MathUtils.lerp(0.44, 0.36, tied)
+      for (let j = 0; j < SIM_NV; j++) {
+        const v = j / (SIM_NV - 1)
+        const k = i * SIM_NV + j
+        const spread = THREE.MathUtils.lerp(tmpSample.x - rag.position.x, (u - 0.5) * flareW, Math.pow(v, 0.62))
+        const pleatZ = (0.034 * tied + 0.022 * (1 - tied)) * Math.cos((u - 0.5) * Math.PI * 5 + v * 1.1) * Math.sin(v * Math.PI * 0.85)
+        ragBody.setParticlePosition(k, {
+          x: rag.position.x + spread,
+          y: Math.max(0.04, tmpSample.y - v * CLOTH_H),
+          z: tmpSample.z + pleatZ + 0.022 * v * v,
+        })
+        ragBody.setParticleVelocity(k, { x: 0, y: 0, z: 0 })
+      }
+    }
+  }
+
+  const host = createRapierSoftBodyHost({
+    gravity: { x: 0, y: -9.81, z: 0 },
+    fixedDt: 1 / 60,
+    maxSubsteps: 4,
+    solverIterations: 6,
+    internalPgsIterations: 3,
+    sleepSpeedThreshold: 0,
+    isActive: active,
+    isReducedMotion: reduced,
+    onReady(session) {
+      if (disposed) return
+      // Real Rapier rigid colliders for the low overhanging branch, trunk, stone well rim, and meadow ground.
+      for (let i = 0; i < branchPts.length - 1; i++) {
+        addSegmentCapsule(session, branchPts[i]!, branchPts[i + 1]!, 0.052)
+      }
+      addSegmentCapsule(session, [0.80, 0.14, -0.10], [0.79, 2.05, -0.15], 0.135)
+      session.addFixedCylinder({ x: -0.62, y: 0.22, z: 0.06 }, 0.54, 0.44, { friction: 0.7, restitution: 0.02 })
+      session.addFixedBox({ x: 0, y: -0.05, z: 0 }, { x: 5.0, y: 0.10, z: 5.0 }, { friction: 0.8, restitution: 0.02 })
+
+      // Keep weft compression resistance (`tensionOnly: false`) with soft bending so the gathered
+      // top knot naturally buckles into 3 deep, volumetric woven-cotton drapery flutes below the knot.
+      ragBody = session.createCloth({
+        origin: { x: DRY.x - CLOTH_W / 2, y: DRY.y, z: DRY.z },
+        du: { x: CLOTH_W / (SIM_NU - 1), y: 0, z: 0 },
+        dv: { x: 0, y: -CLOTH_H / (SIM_NV - 1), z: 0 },
+        nu: SIM_NU,
+        nv: SIM_NV,
+        mass: 0.28,
+        particleRadius: 0.015,
+        gravityScale: 1.0,
+        linearDamping: 2.4,
+        edgeSoftness: { naturalFrequency: 18, dampingRatio: 0.86 },
+        bendSoftness: { naturalFrequency: 3.2, dampingRatio: 0.80 },
+        tensionOnly: false,
+        pinnedParticles: pinnedTopRow,
+        friction: 0.65,
+        restitution: 0.02,
+        canSleep: false,
+      })
+      rapierReady = true
+      resetRagBodyToCurrentPose()
+      host.settle(54, applyRagForces)
+      physicsStepped = true
+      writeFromRapier()
+    },
+  })
+
+  function applyRagForces(_session: RapierSoftBodySession, subDt: number) {
+    if (!ragBody || !ragBody.isValid()) return
+    simClock += subDt
+    const t = simClock
+    ragBody.resetForces(false)
+    const pMass = Math.max(ragBody.mass() / (SIM_NU * SIM_NV), 1e-4)
+    const vel = ragBody.particleVelocities()
+
+    for (let i = 0; i < SIM_NU; i++) {
+      const u = i / (SIM_NU - 1)
+      topAnchorWorld(u, tmpSample)
+      ragBody.setParticleKinematicTarget(i * SIM_NV, { x: tmpSample.x, y: tmpSample.y, z: tmpSample.z })
+    }
+
+    // Serene lakeside breeze: gently billows heavy wet cotton into organic asymmetric drapery
+    // while keeping woven cloth width full and readable on both official stage and close-up.
+    const breezeScale = checkpoint === 3 ? 0.82 : checkpoint === 0 ? 0.42 : 1.0
+    for (let i = 0; i < SIM_NU; i++) {
+      const u = i / (SIM_NU - 1)
+      for (let j = 1; j < SIM_NV; j++) {
+        const v = j / (SIM_NV - 1)
+        const k = i * SIM_NV + j
+        const vWeight = THREE.MathUtils.smoothstep(v, 0.06, 0.92)
+        const gustPhase = t * 1.55 - v * 2.5 + u * 2.2
+
+        const windX = (1.35 + 1.35 * Math.sin(gustPhase) + 0.5 * Math.sin(t * 2.7 - v * 4.0)) * breezeScale * vWeight
+        const windZ = (0.95 + 1.05 * Math.cos(gustPhase * 0.85) + 1.15 * Math.cos((u - 0.5) * Math.PI * 5) * tied) * breezeScale * vWeight
+
+        const vx = vel[k * 3]!, vy = vel[k * 3 + 1]!, vz = vel[k * 3 + 2]!
+        ragBody.addParticleForce(k, {
+          x: pMass * (windX - 1.8 * vx),
+          y: pMass * (-1.4 * vy),
+          z: pMass * (windZ - 1.8 * vz),
+        }, false)
+      }
+    }
+  }
+
+  function writeFromRapier() {
+    if (!ragBody || !ragBody.isValid()) return
+    const simPos = ragBody.particlePositions()
+    const attr = clothGeo.getAttribute('position') as THREE.BufferAttribute
+    const heightScale = THREE.MathUtils.lerp(0.48, 1.0, unfold)
+    const originX = rag.position.x, originY = rag.position.y, originZ = rag.position.z
+
+    for (let row = 0; row <= ROWS; row++) {
+      const v = row / ROWS
+      for (let col = 0; col <= COLS; col++) {
+        const u = col / COLS
+        sampleClothGrid(simPos, SIM_NU, SIM_NV, u, v, tmpSample)
+        let lx = tmpSample.x - originX
+        let ly = tmpSample.y - originY
+        let lz = tmpSample.z - originZ
+
+        if (unfold < 0.999) {
+          // Soft double-drape dry cloth fold at entry (no rigid zig-zag accordion):
+          // smooth vertical gathering + gentle organic lap fold in Z.
+          const foldFactor = 1 - unfold
+          ly *= heightScale
+          lz += foldFactor * (0.042 * Math.sin(v * Math.PI * 2.0) + 0.018 * Math.sin((u - 0.5) * Math.PI * 3) * v)
+        }
+
+        // Keep unfolding cotton safely above the host floor (y >= 0.02) and readable in frame.
+        const minLocalY = 0.02 - originY
+        if (ly < minLocalY) ly = minLocalY
+        attr.setXYZ(row * (COLS + 1) + col, lx, ly, lz)
+      }
+    }
+    attr.needsUpdate = true
+    clothGeo.computeVertexNormals()
+    clothGeo.computeBoundingBox()
+    clothGeo.computeBoundingSphere()
+    ragHandle.position.set(0, -THREE.MathUtils.lerp(0.15, 0.28, unfold), 0.025)
+    knot.visible = tied > 0.6
+    knot.scale.setScalar(Math.max(0.01, tied))
+    cotton.color.setHex(checkpoint === 0 && !motion ? 0xf6e8c9 : 0xd8dfc8)
+    world.updateMatrixWorld(true)
+  }
+
   const ray = createPointerRay(canvas, camera)
   const dragPlane = new THREE.Plane(), dragPoint = new THREE.Vector3(), dragOffset = new THREE.Vector3(), dragOrigin = new THREE.Vector3()
   const home = () => checkpoint === 0 ? DRY : checkpoint === 1 ? WET : TIED
@@ -289,6 +525,10 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
     ending.sync(checkpoint === 2 && !motion)
   }
   const poseCloth = () => {
+    if (rapierReady && physicsStepped && !reduced()) {
+      writeFromRapier()
+      return
+    }
     const attr = clothGeo.getAttribute('position') as THREE.BufferAttribute
     const breeze = reduced() || checkpoint === 3 ? 0 : Math.sin(clock * 1.55) * 0.013
     for (let row = 0; row <= ROWS; row++) for (let col = 0; col <= COLS; col++) {
@@ -311,18 +551,24 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
     cotton.color.setHex(checkpoint === 0 && !motion ? 0xf6e8c9 : 0xd8dfc8)
     world.updateMatrixWorld(true)
   }
-  const restorePose = () => {
+  const restorePose = (reseedPhysics = true) => {
     rag.position.copy(home())
     unfold = checkpoint === 0 ? 0 : 1
     tied = checkpoint >= 2 ? 1 : 0
     dragBend = 0
+    if (reseedPhysics && rapierReady && !reduced()) {
+      resetRagBodyToCurrentPose()
+      host.settle(24, applyRagForces)
+    }
     poseCloth()
   }
   const finish = () => {
     if (!motion) return
+    const finishedStep = motion.step
     checkpoint = (motion.step + 1) as Checkpoint
     motion = null
-    restorePose()
+    // Preserve live Rapier swinging momentum when settling from tying or releasing!
+    restorePose(finishedStep === 0 && reduced())
     syncUI()
     ctx.onProgress?.(checkpoint)
     if (disposed || !active()) return
@@ -398,6 +644,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
       restorePose()
       syncUI()
       resize()
+      if (!reduced()) void host.start()
       stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
       actionBtn.addEventListener('click', onAction)
     },
@@ -425,11 +672,30 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
           tied = p
         } else {
           dragBend = Math.sin(p * Math.PI) * 0.14 * (1 - p)
+          if (rapierReady && ragBody && ragBody.isValid() && motion.time < 0.15) {
+            // Soft release sway impulse as the hand lets go of the wet cotton.
+            const m = Math.max(ragBody.mass() / (SIM_NU * SIM_NV), 1e-4)
+            for (let i = 0; i < SIM_NU; i++) {
+              for (let j = 6; j < SIM_NV; j++) {
+                ragBody.applyParticleImpulse(i * SIM_NV + j, { x: m * 0.45 * delta * 25, y: 0, z: m * 0.35 * delta * 25 }, true)
+              }
+            }
+          }
         }
         if (motion.time === 1) finish()
         if (disposed || !active()) return
       }
-      poseCloth()
+      if (!reduced() && rapierReady && ragBody) {
+        const stepped = host.step(delta, applyRagForces)
+        if (stepped || physicsStepped) {
+          physicsStepped = true
+          writeFromRapier()
+        } else {
+          poseCloth()
+        }
+      } else {
+        poseCloth()
+      }
       guideMat.opacity = reduced() ? 0.84 : 0.73 + Math.sin(clock * 2) * 0.11
       ending.update(dt)
       if (disposed || !(active())) return
@@ -439,6 +705,10 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
       if (disposed) return
       ending.dispose()
       disposed = true
+      ragBody = null
+      rapierReady = false
+      physicsStepped = false
+      host.dispose()
       pointer.dispose()
       stopResize()
       actionBtn.removeEventListener('click', onAction)

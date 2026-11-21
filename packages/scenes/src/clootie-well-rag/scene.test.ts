@@ -381,6 +381,129 @@ describe('clootie real object gestures', () => {
     // Volumetric drapery width stays readable below the knot (not collapsed to a thin thread).
     expect(bounds.max.x - bounds.min.x).toBeGreaterThan(0.22)
   })
+
+  it('renders a cinched, pleated quiet resting drape in reduced motion without loading WASM and stays bit-identical across calm frames', async () => {
+    const { _resetRapierLoaderForTest, isRapierLoaded } = await import('@wbr/scene-runtime/rapier-soft-body')
+    _resetRapierLoaderForTest()
+    expect(isRapierLoaded()).toBe(false)
+
+    // 1. Entry (checkpoint=0): soft double-drape dry cloth (not cramped 0.26m accordion washboard).
+    const dry = mount(0, { isReducedMotion: () => true })
+    const dryBounds = new THREE.Box3().setFromObject(cloth())
+    expect(dryBounds.max.y - dryBounds.min.y).toBeGreaterThan(0.32)
+    expect(dryBounds.min.y).toBeGreaterThan(0.35)
+    dry.instance.dispose()
+
+    // 2. Complete (checkpoint=3): cinched tightly at the branch knot, non-bulging upper shoulder,
+    //    volumetric 3-flute Z pleats, full weighty lower hem, zero WASM load, bit-still across frames.
+    const s = mount(3, { isReducedMotion: () => true })
+    await new Promise((resolve) => setTimeout(resolve, 25))
+    expect(isRapierLoaded()).toBe(false)
+
+    const mesh = cloth()
+    const pos = mesh.geometry.getAttribute('position')
+    const cols = 16, rows = 30
+    const rowWidth = (row: number) => {
+      let minX = Infinity, maxX = -Infinity
+      for (let col = 0; col <= cols; col++) {
+        const x = pos.getX(row * (cols + 1) + col)
+        if (x < minX) minX = x
+        if (x > maxX) maxX = x
+      }
+      return maxX - minX
+    }
+    const rowZSpan = (row: number) => {
+      let minZ = Infinity, maxZ = -Infinity
+      for (let col = 0; col <= cols; col++) {
+        const z = pos.getZ(row * (cols + 1) + col)
+        if (z < minZ) minZ = z
+        if (z > maxZ) maxZ = z
+      }
+      return maxZ - minZ
+    }
+
+    const branch = object('clootie-branch-target').getWorldPosition(new THREE.Vector3())
+    const bounds = new THREE.Box3().setFromObject(mesh)
+    // Attached cleanly under the branch knot and hangs in front of the branch without clipping.
+    expect(bounds.max.y).toBeCloseTo(branch.y, 1)
+    expect(bounds.min.y).toBeGreaterThan(0.65)
+    expect(rowWidth(0)).toBeLessThan(0.16)
+    expect(rowWidth(0)).toBeGreaterThan(0.12)
+    // Upper shoulder stays cinched (no inflated ~0.38m rounded dome bulge at v = 0.2).
+    expect(rowWidth(6)).toBeLessThan(0.26)
+    // Bottom hem stays full and weighty (no cloth-as-rope collapse).
+    expect(rowWidth(rows)).toBeGreaterThan(0.36)
+    // Deep volumetric vertical pleats at mid-body (v = 0.5).
+    expect(rowZSpan(15)).toBeGreaterThan(0.07)
+
+    // Multiple calm frames (2 full seconds) must be bit-for-bit identical and never load WASM.
+    const snap = Array.from(pos.array)
+    for (let i = 0; i < 120; i++) s.instance.update(1 / 60)
+    expect(Array.from(pos.array)).toEqual(snap)
+    expect(isRapierLoaded()).toBe(false)
+  })
+
+  it('handles runtime normal -> reduced -> normal transitions, lazy reduced -> normal activation, and pause/dispose cleanly', async () => {
+    const { _resetRapierLoaderForTest, isRapierLoaded, loadRapier } = await import('@wbr/scene-runtime/rapier-soft-body')
+
+    // Case A: Start calm (no WASM), verify pause/resume stillness, then switch to normal -> lazy WASM load.
+    _resetRapierLoaderForTest()
+    let reduced = true
+    let active = true
+    const lazy = mount(3, { isReducedMotion: () => reduced, isActive: () => active })
+    const lazyMesh = cloth()
+    const calmSnap = Array.from(lazyMesh.geometry.getAttribute('position').array)
+    for (let i = 0; i < 10; i++) lazy.instance.update(1 / 60)
+    expect(isRapierLoaded()).toBe(false)
+    expect(Array.from(lazyMesh.geometry.getAttribute('position').array)).toEqual(calmSnap)
+
+    active = false
+    for (let i = 0; i < 10; i++) lazy.instance.update(1 / 60)
+    active = true
+    for (let i = 0; i < 10; i++) lazy.instance.update(1 / 60)
+    expect(Array.from(lazyMesh.geometry.getAttribute('position').array)).toEqual(calmSnap)
+    expect(isRapierLoaded()).toBe(false)
+
+    // Switch reduced -> normal at runtime: lazily loads Rapier and activates gentle breeze physics.
+    reduced = false
+    lazy.instance.update(1 / 60)
+    await new Promise((resolve) => setTimeout(resolve, 60))
+    for (let i = 0; i < 30; i++) lazy.instance.update(1 / 60)
+    expect(isRapierLoaded()).toBe(true)
+    const liveLazy = Array.from(lazyMesh.geometry.getAttribute('position').array)
+    expect(liveLazy).not.toEqual(calmSnap)
+    expect(liveLazy.every(Number.isFinite)).toBe(true)
+    lazy.instance.dispose()
+
+    // Case B: Start normal -> switch reduced (snaps to deterministic resting drape & stays still) -> switch normal.
+    await loadRapier()
+    reduced = false
+    active = true
+    const s = mount(3, { isReducedMotion: () => reduced, isActive: () => active })
+    const mesh = cloth()
+    const bufRef = mesh.geometry.getAttribute('position').array
+    await new Promise((resolve) => setTimeout(resolve, 25))
+    for (let i = 0; i < 30; i++) s.instance.update(1 / 60)
+    expect(Array.from(bufRef)).not.toEqual(calmSnap)
+
+    reduced = true
+    s.instance.update(1 / 60)
+    expect(Array.from(bufRef)).toEqual(calmSnap)
+    for (let i = 0; i < 60; i++) s.instance.update(1 / 60)
+    expect(Array.from(bufRef)).toEqual(calmSnap)
+
+    reduced = false
+    for (let i = 0; i < 30; i++) s.instance.update(1 / 60)
+    expect(mesh.geometry.getAttribute('position').array).toBe(bufRef)
+    expect(Array.from(bufRef)).not.toEqual(calmSnap)
+    expect(Array.from(bufRef).every(Number.isFinite)).toBe(true)
+
+    const beforeDispose = Array.from(bufRef)
+    s.instance.dispose()
+    s.instance.dispose()
+    for (let i = 0; i < 10; i++) s.instance.update(1 / 60)
+    expect(Array.from(bufRef)).toEqual(beforeDispose)
+  })
 })
 
 // Cancellation happens before arrival; a completed placement already owns its result.

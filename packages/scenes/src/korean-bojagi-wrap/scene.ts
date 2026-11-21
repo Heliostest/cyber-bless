@@ -272,8 +272,10 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
   const bandLivePts: THREE.Vector3[][] = NAMES.map(() => Array.from({ length: BAND_SIM_PARTICLES }, () => new THREE.Vector3()))
   let clothBody: ReturnType<RapierSoftBodySession['createCloth']> | null = null
   const bandBodies: ReturnType<RapierSoftBodySession['createCustomRope']>[] = []
+  let rapierRequested = false
   let rapierReady = false
   let physicsStepped = false
+  let lastReduced = false
   let prevTieAmount = 0
   const tmpDelta = new THREE.Vector3()
   const tmpNormal = new THREE.Vector3()
@@ -300,9 +302,124 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     return p
   }
 
-  function liveClothPoint(u: number, v: number, useRapier: boolean): THREE.Vector3 {
+  function restingClothPoint(u: number, v: number): THREE.Vector3 {
     const p = clothPoint(u, v)
-    if (useRapier) {
+    const x = (u - v) * 1.05, z = (u + v) * 1.05, radius = Math.max(Math.abs(x), Math.abs(z))
+    if (radius <= 0.58) return p
+    const fold = clothFoldWeight(u, v)
+
+    // Quiet gravity rest for open sheet: settles onto woven straw mat and drapes all four
+    // overhanging corners cleanly over the raised mat rim onto the wood floor.
+    const openW = (1 - fold) * THREE.MathUtils.smoothstep(radius, 0.58, 0.78)
+    if (openW > 1e-4) {
+      const overX = THREE.MathUtils.smoothstep(Math.abs(p.x), 1.01, 1.20)
+      const overZPos = THREE.MathUtils.smoothstep(p.z, 1.26, 1.46)
+      const overZNeg = THREE.MathUtils.smoothstep(-p.z, 1.06, 1.26)
+      const overMat = Math.max(overX, overZPos, overZNeg)
+      const targetOpenY = THREE.MathUtils.lerp(0.074, 0.022, overMat)
+        + 0.004 * Math.sin(u * 9 + v * 7) * (1 - overMat * 0.5)
+      const liftFade = heldOffset.lengthSq() > 1e-6
+        ? 1 - THREE.MathUtils.clamp(heldOffset.y / 0.25, 0, 1)
+        : 1
+      p.y = THREE.MathUtils.lerp(p.y, targetOpenY, openW * liftFade)
+    }
+
+    // Quiet wrapped-parcel cushion: subtle downward gravity settle and soft linen fold contour
+    // on parcel sides/shoulders while strictly preserving parcel clearance.
+    if (fold > 0.05) {
+      const length = (radius - 0.58) * 1.38
+      const sideBand = THREE.MathUtils.smoothstep(p.y, 0.14, 0.28) * (1 - THREE.MathUtils.smoothstep(p.y, 0.62, 0.72))
+      const shoulderBand = THREE.MathUtils.smoothstep(p.y, 0.58, 0.70) * (1 - THREE.MathUtils.smoothstep(length, 0.78, 1.05))
+      const angle = Math.atan2(z, x)
+      p.y -= fold * (0.011 * sideBand + 0.005 * shoulderBand)
+      const broadFold = 0.005 * Math.sin(angle * 4 + length * 3.2) * sideBand * fold
+      const radialExpand = 0.003 * sideBand * fold + Math.max(0, broadFold)
+      if (radius > 1e-4) {
+        p.x += (x / radius) * radialExpand
+        p.z += (z / radius) * radialExpand
+      }
+    }
+
+    return clampClothOutsideParcelAndFloor(p)
+  }
+
+  function restingRibbonPath(name: string, startPt: THREE.Vector3): THREE.CatmullRomCurve3 {
+    const n = NAMES.indexOf(name as typeof NAMES[number])
+    const f = amounts[n]!
+    const direction = new THREE.Vector3(name === 'left' ? -1 : name === 'right' ? 1 : 0, 0, name === 'near' ? 1 : name === 'far' ? -1 : 0)
+
+    if (f < 1e-4) {
+      const mid = startPt.clone().addScaledVector(direction, 0.11)
+      const end = startPt.clone().addScaledVector(direction, 0.23)
+      const clampOpen = (pt: THREE.Vector3, bump: number) => {
+        const inMat = Math.abs(pt.x) <= 1.03 && pt.z >= -1.08 && pt.z <= 1.28
+        pt.y = Math.max(inMat ? 0.072 : 0.020, Math.min(pt.y, (inMat ? 0.078 : 0.026) + bump))
+        return pt
+      }
+      return new THREE.CatmullRomCurve3([startPt.clone(), clampOpen(mid, 0.005), clampOpen(end, 0)])
+    }
+
+    if (name === 'near' || name === 'far') {
+      const opened = [
+        startPt.clone(),
+        startPt.clone().addScaledVector(direction, 0.10).add(new THREE.Vector3(0, 0.012, 0)),
+        startPt.clone().addScaledVector(direction, 0.23),
+      ]
+      const closed = name === 'near'
+        ? [startPt.clone(), new THREE.Vector3(-0.08, 0.812, 0.14), new THREE.Vector3(-0.135, 0.764, 0.295), new THREE.Vector3(-0.175, 0.736, 0.425)]
+        : [startPt.clone(), new THREE.Vector3(0.02, 0.832, -0.04), new THREE.Vector3(0.11, 0.812, 0.21), new THREE.Vector3(0.158, 0.762, 0.345), new THREE.Vector3(0.192, 0.736, 0.455)]
+      const a = new THREE.CatmullRomCurve3(opened), b = new THREE.CatmullRomCurve3(closed)
+      return new THREE.CatmullRomCurve3(Array.from({ length: 15 }, (_, i) => a.getPoint(i / 14).lerp(b.getPoint(i / 14), f)))
+    }
+
+    // Left & right side bands: keep pre-knot & active tightening drag identical to authored path;
+    // once tied and resting, drape the free tails smoothly over the parcel shoulders, down the
+    // vertical side walls, and onto the woven straw mat with zero floating or clipping.
+    const base = ribbonPathForState(name, startPt)
+    const drapeWeight = dragging && at === 5
+      ? 0
+      : ease(THREE.MathUtils.clamp(tieAmount, 0, 1)) * ease(THREE.MathUtils.clamp(looseAmount, 0, 1)) * f
+    if (drapeWeight < 1e-4) return base
+
+    const side = name === 'right' ? 1 : -1
+    const height = 0.79 + (1 - tieAmount) * 0.09
+    const radius = 0.09 + (1 - tieAmount) * 0.12
+    const knotLoop = new THREE.CatmullRomCurve3([
+      startPt.clone(),
+      new THREE.Vector3(side * 0.17, height, -0.03),
+      new THREE.Vector3(side * radius, height + 0.06, -0.13),
+      new THREE.Vector3(-side * radius * 0.6, height + 0.08, -0.02),
+      new THREE.Vector3(-side * radius * 0.5, height + 0.025, 0.13),
+      new THREE.Vector3(side * 0.22, height, 0.13),
+    ], false, 'centripetal')
+    const tailDrop = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(side * 0.22, height, 0.13),
+      new THREE.Vector3(side * 0.49, 0.780, 0.145),
+      new THREE.Vector3(side * 0.635, 0.715, 0.160),
+      new THREE.Vector3(side * 0.658, 0.545, 0.174),
+      new THREE.Vector3(side * 0.662, 0.355, 0.184),
+      new THREE.Vector3(side * 0.668, 0.165, 0.192),
+      new THREE.Vector3(side * 0.718, 0.088, 0.197),
+      new THREE.Vector3(side * 0.758, 0.080, 0.199),
+    ], false, 'centripetal')
+    const drapedPts: THREE.Vector3[] = []
+    for (let i = 0; i <= 11; i++) drapedPts.push(knotLoop.getPoint(i / 11))
+    for (let i = 1; i <= 10; i++) drapedPts.push(tailDrop.getPoint(i / 10))
+    const draped = new THREE.CatmullRomCurve3(drapedPts, false, 'centripetal')
+    if (drapeWeight >= 0.999) return draped
+    return new THREE.CatmullRomCurve3(
+      Array.from({ length: 20 }, (_, i) => base.getPoint(i / 19).lerp(draped.getPoint(i / 19), drapeWeight)),
+      false,
+      'centripetal',
+    )
+  }
+
+  type ShapeMode = 'authored' | 'resting' | 'rapier'
+
+  function liveClothPoint(u: number, v: number, mode: ShapeMode): THREE.Vector3 {
+    if (mode === 'resting') return restingClothPoint(u, v)
+    const p = clothPoint(u, v)
+    if (mode === 'rapier') {
       sampleDeltaGrid(clothDeltas, SIM_N, (u + 1) * 0.5, (v + 1) * 0.5, tmpDelta)
       p.add(tmpDelta)
       clampClothOutsideParcelAndFloor(p)
@@ -325,7 +442,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
   function refreshBandTargets(useLiveClothStart: boolean) {
     for (let b = 0; b < 4; b++) {
       const name = NAMES[b]!
-      const start = liveClothPoint(...attachmentUV[name]!, useLiveClothStart)
+      const start = liveClothPoint(...attachmentUV[name]!, useLiveClothStart ? 'rapier' : 'authored')
       const pth = ribbonPathForState(name, start)
       for (let j = 0; j < BAND_SIM_PARTICLES; j++) {
         pth.getPoint(j / (BAND_SIM_PARTICLES - 1), bandTargets[b]![j]!)
@@ -425,10 +542,14 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
       amounts.splice(0, 4, ...savedAmounts); looseAmount = savedLoose; tieAmount = savedTie
 
       rapierReady = true
-      resetPhysicsBodiesToAuthored()
-      host.settle(48, applyBojagiForces)
-      physicsStepped = true
-      setShape(true)
+      if (!reduced()) {
+        resetPhysicsBodiesToAuthored()
+        host.settle(48, applyBojagiForces)
+        physicsStepped = true
+        setShape('rapier')
+      } else {
+        setShape('resting')
+      }
     },
   })
 
@@ -581,23 +702,29 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
 
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
 
-  const setShape = (useRapier = false) => {
-    const live = useRapier && rapierReady && physicsStepped && !reduced() && !dragging
+  const defaultShapeMode = (): ShapeMode =>
+    rapierReady && physicsStepped && !reduced() && !dragging ? 'rapier' : reduced() ? 'resting' : 'authored'
+
+  const setShape = (requestedMode: ShapeMode = defaultShapeMode()) => {
+    const mode: ShapeMode = requestedMode === 'rapier'
+      ? (rapierReady && physicsStepped && !reduced() && !dragging ? 'rapier' : reduced() ? 'resting' : 'authored')
+      : requestedMode
+    const live = mode === 'rapier'
     if (live) {
       refreshClothTargets()
       extractClothDeltas()
     }
 
     for (let i = 0; i < clothPosition.count; i++) {
-      const p = liveClothPoint(clothUV.getX(i) * 2 - 1, clothUV.getY(i) * 2 - 1, live)
+      const p = liveClothPoint(clothUV.getX(i) * 2 - 1, clothUV.getY(i) * 2 - 1, mode)
       clothPosition.setXYZ(i, p.x, p.y, p.z)
     }
     updateGeometry(clothGeometry)
 
     for (const corner of corners) {
-      const home = liveClothPoint(...corner.at, live); corner.mesh.position.copy(home)
+      const home = liveClothPoint(...corner.at, mode); corner.mesh.position.copy(home)
       for (let i = 0; i < corner.position.count; i++) {
-        const p = liveClothPoint(corner.at[0] + (corner.uv.getX(i) - .5) * .075, corner.at[1] + (corner.uv.getY(i) - .5) * .075, live).sub(home)
+        const p = liveClothPoint(corner.at[0] + (corner.uv.getX(i) - .5) * .075, corner.at[1] + (corner.uv.getY(i) - .5) * .075, mode).sub(home)
         corner.position.setXYZ(i, p.x, p.y + .012, p.z)
       }
       updateGeometry(corner.geometry)
@@ -605,7 +732,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
 
     for (let b = 0; b < ribbons.length; b++) {
       const ribbon = ribbons[b]!
-      const startPt = liveClothPoint(...attachmentUV[ribbon.name]!, live)
+      const startPt = liveClothPoint(...attachmentUV[ribbon.name]!, mode)
       let path: THREE.CatmullRomCurve3
       const useBody = live && amounts[b]! >= 0.85 && (b < 2 || looseAmount >= 0.35) && bandBodies[b]?.isValid()
       if (useBody) {
@@ -625,6 +752,8 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
           pts[j]!.set(x, y, z)
         }
         path = new THREE.CatmullRomCurve3(pts, false, 'centripetal')
+      } else if (mode === 'resting') {
+        path = restingRibbonPath(ribbon.name, startPt)
       } else {
         path = ribbonPathForState(ribbon.name, startPt)
       }
@@ -686,10 +815,10 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     if (reseedPhysics && rapierReady && !reduced()) {
       resetPhysicsBodiesToAuthored()
       host.settle(36, applyBojagiForces)
-      setShape(true)
+      setShape('rapier')
       return
     }
-    setShape(false)
+    setShape(reduced() ? 'resting' : 'authored')
   }
 
   const targets = [...corners.map(c => c.mesh), ...tips]
@@ -754,8 +883,9 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     // until accepted; tightening responds to tension against the other tail.
     const outward = held.clone().sub(pullOrigin).dot(pullAxis) > 0
     const tension = at === 5 && outward ? THREE.MathUtils.clamp((held.distanceTo(oppositeTail) - restSpan) / .30, 0, 1) : 0
-    pose(at, at < 4 ? THREE.MathUtils.clamp(fraction, 0, 1) : tension); setShape(false)
-    heldOffset.copy(held).sub(targets[at]!.localToWorld(new THREE.Vector3(...GRIP))); setShape(false)
+    const dragMode: ShapeMode = reduced() ? 'resting' : 'authored'
+    pose(at, at < 4 ? THREE.MathUtils.clamp(fraction, 0, 1) : tension); setShape(dragMode)
+    heldOffset.copy(held).sub(targets[at]!.localToWorld(new THREE.Vector3(...GRIP))); setShape(dragMode)
     return true
   }
   const showReadiness = (ready: boolean) => {
@@ -835,9 +965,9 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     heldOffset.set(0, 0, 0); pose(at)
     if (rapierReady && !reduced()) {
       host.wakeUp()
-      setShape(true)
+      setShape('rapier')
     } else {
-      setShape(false)
+      setShape(reduced() ? 'resting' : 'authored')
     }
     if (at === 4) resize()
     withHostCallbacks(() => {
@@ -856,7 +986,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
   function finish() {
     if (!inputActive() || pointer.isBusy() || motion || at !== 6) return
     withHostCallbacks(() => {
-      at = 7; pose(at); setShape(rapierReady && physicsStepped && !reduced()); sync(); reportStep(); if (!callbackActive()) return
+      at = 7; pose(at); setShape(); sync(); reportStep(); if (!callbackActive()) return
       ctx.haptic?.('light'); if (!callbackActive()) return
       feedback.impact({ freqs: [392, 587.33], duration: .20, gain: .008 }); if (!callbackActive()) return
       overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
@@ -873,7 +1003,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     const close = saved.step >= 4, stages = close ? [4, 5, 6] : [0, 1, 2, 3, 4, 5, 6]
     let distance = close ? 2 : 3.5
     for (const step of stages) {
-      at = step; pose(step); setShape(false)
+      at = step; pose(step); setShape('authored')
       world.traverse(o => {
         const mesh = o as THREE.Mesh; if (!mesh.geometry || close && /^bojagi-(woven-mat|weft-|warp-)/.test(mesh.name)) return
         const vertices = mesh.geometry.getAttribute('position')
@@ -884,7 +1014,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
       })
     }
     at = saved.step; amounts.splice(0, 4, ...saved.amounts); looseAmount = saved.looseAmount; tieAmount = saved.tieAmount; heldOffset.copy(saved.heldOffset)
-    setShape(rapierReady && physicsStepped && !reduced() && !dragging)
+    setShape()
     camera.position.copy(targetPoint).addScaledVector(direction, distance); camera.lookAt(targetPoint); matrices()
   }
   restore(false); sync()
@@ -892,11 +1022,15 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     start() {
       if (started || disposed) return
       started = true
+      lastReduced = reduced()
       const initial = ctx.initialProgress ?? 0, progress = Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0
       const match = /^bojagi-step-([0-7])$/.exec(ctx.initialVariant ?? ''), saved = match ? Number(match[1]) : -1
       at = saved >= 0 && checkpoint(saved) === progress ? saved : [0, 4, 6, 7][progress]!
       restore(false); resize()
-      if (!reduced()) void host.start()
+      if (!lastReduced) {
+        rapierRequested = true
+        void host.start()
+      }
       stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
       ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
@@ -905,18 +1039,37 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
       if (!active()) { lifecycleVersion++; pointer.cancel(); if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
+      const isReduced = reduced()
+      if (isReduced !== lastReduced) {
+        lastReduced = isReduced
+        if (isReduced) {
+          setShape('resting')
+        } else if (!rapierRequested) {
+          rapierRequested = true
+          setShape('authored')
+          void host.start()
+        } else if (rapierReady && clothBody) {
+          resetPhysicsBodiesToAuthored()
+          host.wakeUp()
+          host.settle(36, applyBojagiForces)
+          physicsStepped = true
+          setShape('rapier')
+        } else {
+          setShape('authored')
+        }
+      }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       if (motion) {
-        motion.time = reduced() ? 1 : Math.min(1, motion.time + delta / .62)
+        motion.time = isReduced ? 1 : Math.min(1, motion.time + delta / .62)
         const t = ease(motion.time); pose(motion.step, THREE.MathUtils.lerp(motion.amount, 1, t)); heldOffset.copy(motion.offset).multiplyScalar(1 - t)
-        if (!rapierReady || reduced()) setShape(false)
+        if (!rapierReady || isReduced) setShape(isReduced ? 'resting' : 'authored')
         if (motion.time === 1) settle()
       }
-      if (!reduced() && !dragging && rapierReady && clothBody) {
+      if (!isReduced && !dragging && rapierReady && clothBody) {
         const stepped = host.step(delta, applyBojagiForces)
         if (stepped || (motion && physicsStepped)) {
           physicsStepped = true
-          setShape(true)
+          setShape('rapier')
         }
       }
       if (active()) { matrices(); style.render() }
@@ -924,7 +1077,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++
-      clothBody = null; bandBodies.length = 0; rapierReady = false; physicsStepped = false
+      clothBody = null; bandBodies.length = 0; rapierRequested = false; rapierReady = false; physicsStepped = false
       host.dispose()
       pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })

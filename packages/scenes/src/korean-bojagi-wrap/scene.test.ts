@@ -324,4 +324,139 @@ describe('six spatial cloth operations', () => {
     expect(bandBounds.min.y).toBeLessThan(0.32)
     expect(bandBounds.min.y).toBeGreaterThan(0.06)
   })
+
+  it('renders a quiet, weighty resting drape in reduced motion without loading WASM and stays bit-identical across calm frames', async () => {
+    const { _resetRapierLoaderForTest, isRapierLoaded } = await import('@wbr/scene-runtime/rapier-soft-body')
+    _resetRapierLoaderForTest()
+    expect(isRapierLoaded()).toBe(false)
+
+    // 1. Entry (progress=0): all four overhanging cloth corners rest onto wood floor outside the woven mat.
+    const open = mount(0, { isReducedMotion: () => true })
+    const openCloth = open.scene.getObjectByName('bojagi-cloth') as THREE.Mesh
+    const openUv = openCloth.geometry.getAttribute('uv')
+    const openPos = openCloth.geometry.getAttribute('position')
+    for (const [cu, cv] of [[1, 1], [0, 0], [0, 1], [1, 0]] as const) {
+      let cornerY = Infinity
+      for (let i = 0; i < openUv.count; i++) {
+        if (openUv.getX(i) === cu && openUv.getY(i) === cv) {
+          cornerY = openPos.getY(i)
+          break
+        }
+      }
+      expect(cornerY, `open corner (${cu},${cv}) drapes onto floor`).toBeLessThan(0.035)
+      expect(cornerY).toBeGreaterThanOrEqual(0.014)
+    }
+    open.instance.dispose()
+
+    // 2. Complete (stage=7): both side ribbons stay sewn to corners, clear the parcel side walls,
+    //    and drape cleanly down onto the woven straw mat instead of floating in mid-air.
+    const s = mount(7, { isReducedMotion: () => true })
+    await new Promise((resolve) => setTimeout(resolve, 25))
+    expect(isRapierLoaded()).toBe(false)
+
+    const clothMesh = s.scene.getObjectByName('bojagi-cloth') as THREE.Mesh
+    const leftBand = s.scene.getObjectByName('bojagi-band-left') as THREE.Mesh
+    const rightBand = s.scene.getObjectByName('bojagi-band-right') as THREE.Mesh
+    const leftTip = s.scene.getObjectByName('bojagi-band-left-tip') as THREE.Mesh
+    const rightTip = s.scene.getObjectByName('bojagi-band-right-tip') as THREE.Mesh
+
+    for (const [band, tip, side] of [[leftBand, leftTip, -1], [rightBand, rightTip, 1]] as const) {
+      const bounds = new THREE.Box3().setFromObject(band)
+      expect(bounds.min.y, `${band.name} drapes down to woven mat`).toBeLessThan(0.12)
+      expect(bounds.min.y).toBeGreaterThan(0.06)
+      expect(tip.position.y, `${tip.name} rests near woven mat`).toBeLessThan(0.12)
+      expect(tip.position.y).toBeGreaterThanOrEqual(0.075)
+      expect(Math.abs(tip.position.x)).toBeLessThan(1.0)
+      // Side-wall ribbon vertices stay strictly outside the wrapped parcel walls (no cloth/box clipping).
+      const attr = band.geometry.getAttribute('position')
+      for (let i = 0; i < attr.count; i++) {
+        const x = attr.getX(i), y = attr.getY(i)
+        if (y > 0.22 && y < 0.62) {
+          expect(x * side, `${band.name} clears side wall at y=${y.toFixed(2)}`).toBeGreaterThan(0.62)
+        }
+      }
+    }
+
+    // Multiple calm frames (2 full seconds) must not drift a single bit and must never load WASM.
+    const snapCloth = Array.from(clothMesh.geometry.getAttribute('position').array)
+    const snapLeft = Array.from(leftBand.geometry.getAttribute('position').array)
+    const snapRight = Array.from(rightBand.geometry.getAttribute('position').array)
+    const snapTipL = leftTip.position.toArray()
+    const snapTipR = rightTip.position.toArray()
+    for (let i = 0; i < 120; i++) s.instance.update(1 / 60)
+    expect(Array.from(clothMesh.geometry.getAttribute('position').array)).toEqual(snapCloth)
+    expect(Array.from(leftBand.geometry.getAttribute('position').array)).toEqual(snapLeft)
+    expect(Array.from(rightBand.geometry.getAttribute('position').array)).toEqual(snapRight)
+    expect(leftTip.position.toArray()).toEqual(snapTipL)
+    expect(rightTip.position.toArray()).toEqual(snapTipR)
+    expect(isRapierLoaded()).toBe(false)
+  })
+
+  it('handles runtime normal -> reduced -> normal transitions, lazy reduced -> normal activation, and pause/dispose cleanly', async () => {
+    const { _resetRapierLoaderForTest, isRapierLoaded, loadRapier } = await import('@wbr/scene-runtime/rapier-soft-body')
+
+    // Case A: Start calm (no WASM), then turn off reduced motion at runtime -> lazily loads Rapier & activates.
+    _resetRapierLoaderForTest()
+    let reduced = true
+    let active = true
+    const lazy = mount(7, { isReducedMotion: () => reduced, isActive: () => active })
+    const lazyRight = lazy.scene.getObjectByName('bojagi-band-right') as THREE.Mesh
+    const calmRight = Array.from(lazyRight.geometry.getAttribute('position').array)
+    for (let i = 0; i < 10; i++) lazy.instance.update(1 / 60)
+    expect(isRapierLoaded()).toBe(false)
+    expect(Array.from(lazyRight.geometry.getAttribute('position').array)).toEqual(calmRight)
+
+    // Pause and resume while calm keeps resting drape untouched.
+    active = false
+    for (let i = 0; i < 10; i++) lazy.instance.update(1 / 60)
+    active = true
+    for (let i = 0; i < 10; i++) lazy.instance.update(1 / 60)
+    expect(Array.from(lazyRight.geometry.getAttribute('position').array)).toEqual(calmRight)
+    expect(isRapierLoaded()).toBe(false)
+
+    // Switch reduced -> normal at runtime: lazily loads Rapier and resumes dynamic simulation.
+    reduced = false
+    lazy.instance.update(1 / 60)
+    await new Promise((resolve) => setTimeout(resolve, 60))
+    for (let i = 0; i < 30; i++) lazy.instance.update(1 / 60)
+    expect(isRapierLoaded()).toBe(true)
+    const liveFromLazy = Array.from(lazyRight.geometry.getAttribute('position').array)
+    expect(liveFromLazy).not.toEqual(calmRight)
+    expect(liveFromLazy.every(Number.isFinite)).toBe(true)
+    lazy.instance.dispose()
+
+    // Case B: Start normal -> switch reduced (deterministic quiet resting drape, stays still) -> switch back normal.
+    await loadRapier()
+    reduced = false
+    active = true
+    const s = mount(7, { isReducedMotion: () => reduced, isActive: () => active })
+    const rightBand = s.scene.getObjectByName('bojagi-band-right') as THREE.Mesh
+    const bufRef = rightBand.geometry.getAttribute('position').array
+    await new Promise((resolve) => setTimeout(resolve, 25))
+    for (let i = 0; i < 35; i++) s.instance.update(1 / 60)
+    const liveBeforeToggle = Array.from(bufRef)
+    expect(liveBeforeToggle).not.toEqual(calmRight)
+
+    // Switch normal -> reduced: immediately snaps to deterministic resting drape and stays bit-still.
+    reduced = true
+    s.instance.update(1 / 60)
+    const reducedAfterToggle = Array.from(bufRef)
+    expect(reducedAfterToggle).toEqual(calmRight)
+    for (let i = 0; i < 60; i++) s.instance.update(1 / 60)
+    expect(Array.from(bufRef)).toEqual(calmRight)
+
+    // Switch reduced -> normal: resumes Rapier cleanly in-place without reallocating buffers.
+    reduced = false
+    for (let i = 0; i < 35; i++) s.instance.update(1 / 60)
+    expect(rightBand.geometry.getAttribute('position').array).toBe(bufRef)
+    expect(Array.from(bufRef)).not.toEqual(calmRight)
+    expect(Array.from(bufRef).every(Number.isFinite)).toBe(true)
+
+    // Double dispose is safe and stops further updates cleanly.
+    const beforeDispose = Array.from(bufRef)
+    s.instance.dispose()
+    s.instance.dispose()
+    for (let i = 0; i < 10; i++) s.instance.update(1 / 60)
+    expect(Array.from(bufRef)).toEqual(beforeDispose)
+  })
 })

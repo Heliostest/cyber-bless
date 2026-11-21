@@ -70,7 +70,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "japanese-hamaya": "38d6f4d54a1e29b82ba9789b3e02e68eab689a09b5d274262e34bb3ef7d7cc47",
   "japanese-kadomatsu": "3a02d6c329c3732926bea1575eb91be36e321baca0e48fb3844e3c47972b7baa",
   "japanese-kendama": "2ddf5ccabcbf625d4082292dcfb82f03a151fe310800f5deb9e0665cf080cfdb",
-  "japanese-koinobori": "cd7b7dcca24cc82217f6625e31b8d1fc6a4b89e5da2aaed353484eea991bbad2",
+  "japanese-koinobori": "57f8ad0232bb56cc4c3ebee544ad00778903749adc8be4b82a130c98b77bfa76",
   "japanese-kumade": "67ddea813e8553c23454f80e76a2313c5f86b362604ad9fa3353e0c176e53e62",
   "japanese-shishi-odoshi": "53a954b04722780913c94e8a88f14ed36c5751658aeeea5d8ba5dd795a9c8717",
   "japanese-wagasa": "7d6d0fccf8d72a9aaa02ba341bf18c93971eb1f48f2a23415b9619befa6e6693",

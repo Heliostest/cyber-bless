@@ -76,4 +76,47 @@ describe('height-driven koinobori breeze', () => {
     }
     expect(Array.from(ropePos.array).every(Number.isFinite)).toBe(true)
   })
+  it('produces a readable Rapier wind S-curve at full hoist and a non-buckling droop at entry', async () => {
+    const hoisted = create()
+    hoisted.pose(3, 0)
+    await hoisted.startPhysics()
+    const hoistedBody = hoisted.subject.getObjectByName('koinobori-body') as THREE.Mesh
+    const hPos = hoistedBody.geometry.getAttribute('position')
+    const ringCenterY = (pos: THREE.BufferAttribute | THREE.InterleavedBufferAttribute, row: number) => {
+      let sum = 0
+      for (let j = 0; j < 48; j++) sum += pos.getY(row * 49 + j)
+      return sum / 48
+    }
+    let minMidY = Infinity, maxMidY = -Infinity, minTailY = Infinity, maxTailY = -Infinity, maxChordDev = 0
+    for (let i = 0; i < 120; i++) {
+      hoisted.stepPhysics(1 / 60, (i + 1) / 60)
+      if (i % 6 === 0) {
+        const yHead = ringCenterY(hPos, 10)
+        const yMid = ringCenterY(hPos, 28)
+        const yTail = ringCenterY(hPos, 48)
+        minMidY = Math.min(minMidY, yMid); maxMidY = Math.max(maxMidY, yMid)
+        minTailY = Math.min(minTailY, yTail); maxTailY = Math.max(maxTailY, yTail)
+        const chordY = yHead + (yTail - yHead) * ((28 - 10) / (48 - 10))
+        maxChordDev = Math.max(maxChordDev, Math.abs(yMid - chordY))
+      }
+    }
+    // Readable wind-driven vertical sweep and S-curve curvature (not a stiff straight horizontal pipe).
+    expect(maxTailY - minTailY).toBeGreaterThan(0.22)
+    expect(maxMidY - minMidY).toBeGreaterThan(0.08)
+    expect(maxChordDev).toBeGreaterThan(0.06)
+
+    const entry = create()
+    entry.pose(0, 0)
+    await entry.startPhysics()
+    const entryBody = entry.subject.getObjectByName('koinobori-body') as THREE.Mesh
+    const entryFish = entry.subject.getObjectByName('koinobori-fish')!
+    const ePos = entryBody.geometry.getAttribute('position')
+    for (let i = 0; i < 45; i++) entry.stepPhysics(1 / 60, (i + 1) / 60)
+    const entryMidY = ringCenterY(ePos, 24)
+    const entryTailY = ringCenterY(ePos, 48)
+    // Smooth downward gravity droop at entry without upward compression buckling or ground clipping.
+    expect(entryMidY).toBeLessThan(-0.08)
+    expect(entryTailY).toBeLessThan(entryMidY - 0.12)
+    expect(entryFish.position.y + entryTailY).toBeGreaterThan(0.25)
+  })
 })

@@ -16,7 +16,30 @@ export interface KoinoboriModelOptions {
 
 const TUBE_AROUND = 12
 const TUBE_ALONG = 14
+const PINNED_HEAD_RINGS = 3
+const TUBE_REST_LENGTH = 1.9
 const ROPE_PARTICLES = 18
+
+function catmullRom(p0: number, p1: number, p2: number, p3: number, t: number): number {
+  const t2 = t * t, t3 = t2 * t
+  return 0.5 * (
+    (2 * p1) +
+    (-p0 + p2) * t +
+    (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
+    (-p0 + 3 * p1 - 3 * p2 + p3) * t3
+  )
+}
+
+function sampleRingSpline(values: Float32Array, u: number): number {
+  const last = values.length - 1
+  const fu = THREE.MathUtils.clamp(u, 0, 1) * last
+  const i1 = Math.min(last - 1, Math.floor(fu))
+  const t = fu - i1
+  const i0 = Math.max(0, i1 - 1)
+  const i2 = Math.min(last, i1 + 1)
+  const i3 = Math.min(last, i1 + 2)
+  return catmullRom(values[i0]!, values[i1]!, values[i2]!, values[i3]!, t)
+}
 
 /** Original single-carp appreciation rig. Cloth tube and halyard rope are driven by lazy Rapier soft bodies when active. */
 export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
@@ -92,18 +115,29 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
   const ropeGeometry = new THREE.TubeGeometry(new THREE.LineCurve3(new THREE.Vector3(), new THREE.Vector3(0, 1, 0)), 96, .011, 6, false)
   const rope = add('koinobori-halyard', ropeGeometry, ropeMat, [0, 0, 0]); rope.userData.toonSurface = { outline: false }
 
-  let length = 1.12, sag = .56, spread = .65, wind = .18, secureAmount = 0, simClock = 0
+  let length = 1.12, sag = .56, spread = .65, wind = .18, unfurlAmount = 0, liftAmount = 0, secureAmount = 0, simClock = 0
   let tubeBody: ReturnType<RapierSoftBodySession['createClothTube']> | null = null
   let halyardBody: ReturnType<RapierSoftBodySession['createRope']> | null = null
   let rapierReady = false
   let physicsStepped = false
   let disposed = false
 
-  // Per-ring centerline offset & radial billow scratch buffers (no per-frame heap churn).
+  // Per-ring centerline, velocity & cross-section scratch buffers (no per-frame heap churn).
+  const ringCenterX = new Float32Array(TUBE_ALONG)
   const ringCenterY = new Float32Array(TUBE_ALONG)
   const ringCenterZ = new Float32Array(TUBE_ALONG)
   const ringRadialScaleY = new Float32Array(TUBE_ALONG)
   const ringRadialScaleZ = new Float32Array(TUBE_ALONG)
+  const simCx = new Float32Array(TUBE_ALONG)
+  const simCy = new Float32Array(TUBE_ALONG)
+  const simCz = new Float32Array(TUBE_ALONG)
+  const simVy = new Float32Array(TUBE_ALONG)
+  const simVz = new Float32Array(TUBE_ALONG)
+  const meshCx = new Float32Array(rows + 1)
+  const meshCy = new Float32Array(rows + 1)
+  const meshCz = new Float32Array(rows + 1)
+  const meshScaleY = new Float32Array(rows + 1)
+  const meshScaleZ = new Float32Array(rows + 1)
   const ringTailVelY = { value: 0 }
   const ringTailVelZ = { value: 0 }
   const ropePts: THREE.Vector3[] = Array.from({ length: ROPE_PARTICLES }, () => new THREE.Vector3())
@@ -111,6 +145,8 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
   const axisX = new THREE.Vector3(1, 0, 0), axisY = new THREE.Vector3(0, 1, 0)
 
   const radius = (u: number) => .32 * (1 - .55 * u) + .05 * Math.sin(u * Math.PI)
+  const softBound = (v: number, lo: number, hi: number, knee = 0.14) =>
+    v < lo ? lo - knee * Math.tanh((lo - v) / knee) : v > hi ? hi + knee * Math.tanh((v - hi) / knee) : v
   const wave = (u: number, time: number) => {
     const w = wind * Math.max(0, (u - .28) / .72) ** 1.6
     return [w * (.18 * Math.sin(time * 2.5 - u * 7) + .035 * Math.sin(time * 4.3 - u * 11.5)),
@@ -185,17 +221,33 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
 
   function resetTubeToCurrentPose() {
     if (!tubeBody || !tubeBody.isValid()) return
+    // Initialize on an arc-length-preserving droop curve in canonical TUBE_REST_LENGTH space
+    // so tension-only edges start relaxed without axial compression buckling or recoil snap.
+    const ds = TUBE_REST_LENGTH / (TUBE_ALONG - 1)
+    const headSag = sag * (TUBE_REST_LENGTH / Math.max(length, 0.5))
+    let curX = 0, curY = 0
     for (let ri = 0; ri < TUBE_ALONG; ri++) {
       const u = ri / (TUBE_ALONG - 1)
       const r = radius(u)
       const zScale = 1 - (1 - spread) * Math.sin(u * Math.PI / 2)
-      const baseY = -sag * u * u
+      let cx: number, cy: number
+      if (ri < PINNED_HEAD_RINGS) {
+        cx = TUBE_REST_LENGTH * u
+        cy = -headSag * u * u
+        curX = cx; curY = cy
+      } else {
+        const slope = THREE.MathUtils.clamp((-2 * headSag * u) / TUBE_REST_LENGTH, -0.78, 0)
+        const inv = 1 / Math.hypot(1, slope)
+        curX += ds * inv
+        curY += ds * slope * inv
+        cx = curX; cy = curY
+      }
       for (let rj = 0; rj < TUBE_AROUND; rj++) {
         const phi = (rj / TUBE_AROUND) * Math.PI * 2
         const k = ri * TUBE_AROUND + rj
         tubeBody.setParticlePosition(k, {
-          x: length * u,
-          y: baseY + r * Math.sin(phi),
+          x: cx,
+          y: cy + r * Math.sin(phi),
           z: -r * Math.cos(phi) * zScale,
         })
         tubeBody.setParticleVelocity(k, { x: 0, y: 0, z: 0 })
@@ -220,7 +272,7 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
   }
 
   const pinnedHeadRings: number[] = []
-  for (let ri = 0; ri < 4; ri++) {
+  for (let ri = 0; ri < PINNED_HEAD_RINGS; ri++) {
     for (let rj = 0; rj < TUBE_AROUND; rj++) pinnedHeadRings.push(ri * TUBE_AROUND + rj)
   }
 
@@ -228,8 +280,8 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
     gravity: { x: 0, y: -9.81, z: 0 },
     fixedDt: 1 / 60,
     maxSubsteps: 4,
-    solverIterations: 5,
-    internalPgsIterations: 2,
+    solverIterations: 6,
+    internalPgsIterations: 3,
     // Koinobori flies continuously in wind when active; disable auto-sleep while wind is active.
     sleepSpeedThreshold: 0,
     isActive: options.isActive,
@@ -240,20 +292,22 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
       session.addFixedCylinder({ x: -1.05, y: 1.585, z: -0.2 }, 0.068, 3.05, { friction: 0.6 })
       session.addFixedBox({ x: -1.05, y: 0.42, z: 0.13 }, { x: 0.30, y: 0.12, z: 0.30 }, { friction: 0.6 })
 
-      // Carp cloth tube (in fish-local coordinate space; no world collider interference).
+      // Carp cloth tube in canonical fish-local coordinate space.
+      // tensionOnly lets fabric fold/curve freely in compression like real linen instead of acting like a rigid pipe.
       tubeBody = session.createClothTube({
         origin: { x: 0, y: 0, z: 0 },
-        axis: { x: 1.9, y: 0, z: 0 },
+        axis: { x: TUBE_REST_LENGTH, y: 0, z: 0 },
         radiusStart: 0.32,
         radiusEnd: 0.144,
         numAround: TUBE_AROUND,
         numAlong: TUBE_ALONG,
         mass: 0.36,
         particleRadius: 0.02,
-        linearDamping: 2.6,
-        gravityScale: 0.42,
-        edgeSoftness: { naturalFrequency: 24, dampingRatio: 0.72 },
-        bendSoftness: { naturalFrequency: 9, dampingRatio: 0.72 },
+        linearDamping: 2.3,
+        gravityScale: 0.50,
+        edgeSoftness: { naturalFrequency: 24, dampingRatio: 0.78 },
+        bendSoftness: { naturalFrequency: 3.4, dampingRatio: 0.76 },
+        tensionOnly: true,
         pinnedParticles: pinnedHeadRings,
         noSurfaceCollider: true,
         canSleep: false,
@@ -278,8 +332,8 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
       rapierReady = true
       resetTubeToCurrentPose()
       resetHalyardToCurrentPose()
-      // Warm up briefly so initial wind/gravity shape settles smoothly on first live frame.
-      host.settle(12, applyPhysicsForces)
+      // Warm up into a fully developed gravity drape & traveling wind S-wave on the first live frame.
+      host.settle(54, applyPhysicsForces)
       physicsStepped = true
     },
   })
@@ -290,60 +344,108 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
     if (tubeBody && tubeBody.isValid()) {
       tubeBody.resetForces(false)
       const pos = tubeBody.particlePositions()
+      const vel = tubeBody.particleVelocities()
       const pMass = Math.max(tubeBody.mass() / (TUBE_ALONG * TUBE_AROUND), 1e-4)
 
-      // Update pinned head rings (u <= 0.23) to stay locked to the current unfurl/sag pose.
-      for (let ri = 0; ri < 4; ri++) {
+      // Update pinned head rings (mouth hoop & eye anchor) in canonical rest-length space.
+      const headSag = sag * (TUBE_REST_LENGTH / Math.max(length, 0.5))
+      for (let ri = 0; ri < PINNED_HEAD_RINGS; ri++) {
         const u = ri / (TUBE_ALONG - 1)
         const r = radius(u)
         const zScale = 1 - (1 - spread) * Math.sin(u * Math.PI / 2)
-        const baseY = -sag * u * u
+        const baseY = -headSag * u * u
         for (let rj = 0; rj < TUBE_AROUND; rj++) {
           const phi = (rj / TUBE_AROUND) * Math.PI * 2
           const k = ri * TUBE_AROUND + rj
           tubeBody.setParticleKinematicTarget(k, {
-            x: length * u,
+            x: TUBE_REST_LENGTH * u,
             y: baseY + r * Math.sin(phi),
             z: -r * Math.cos(phi) * zScale,
           })
         }
       }
 
-      // Aerodynamic wind, internal inflation pressure, and travelling gusts on free rings.
-      for (let ri = 4; ri < TUBE_ALONG; ri++) {
-        const u = ri / (TUBE_ALONG - 1)
-        const r = radius(u)
-        const zScale = 1 - (1 - spread) * Math.sin(u * Math.PI / 2)
-        const tailWeight = Math.max(0, (u - 0.25) / 0.75) ** 1.25
-        // Compute current ring centroid for outward radial pressure.
-        let cx = 0, cy = 0, cz = 0
+      // Compute ring centroids and transverse velocities for local cross-section inflation & air damping.
+      for (let ri = 0; ri < TUBE_ALONG; ri++) {
+        let cx = 0, cy = 0, cz = 0, vy = 0, vz = 0
         for (let rj = 0; rj < TUBE_AROUND; rj++) {
           const k = (ri * TUBE_AROUND + rj) * 3
           cx += pos[k]!; cy += pos[k + 1]!; cz += pos[k + 2]!
+          vy += vel[k + 1]!; vz += vel[k + 2]!
         }
-        cx /= TUBE_AROUND; cy /= TUBE_AROUND; cz /= TUBE_AROUND
+        simCx[ri] = cx / TUBE_AROUND
+        simCy[ri] = cy / TUBE_AROUND
+        simCz[ri] = cz / TUBE_AROUND
+        simVy[ri] = vy / TUBE_AROUND
+        simVz[ri] = vz / TUBE_AROUND
+      }
 
-        const targetY = -sag * u * u
-        const gustY = wind * tailWeight * (12.8 * Math.sin(t * 2.85 - u * 7.0) + 4.0 * Math.sin(t * 4.7 - u * 11.6))
-        const gustZ = wind * tailWeight * (14.2 * Math.sin(t * 2.35 - u * 6.4) + 4.4 * Math.sin(t * 3.9 - u * 10.8))
-        const liftAssist = pMass * (4.12 * (0.42 + 0.58 * wind))
+      // Horizontal wind drag scales with unfurled sail area and hoisting height so real gravity
+      // naturally produces a deep entry drape and a buoyant high-altitude droop without cancelling weight.
+      const windDragX = 5.1 + 6.9 * unfurlAmount + 6.4 * liftAmount * liftAmount
+
+      for (let ri = PINNED_HEAD_RINGS; ri < TUBE_ALONG; ri++) {
+        const u = ri / (TUBE_ALONG - 1)
+        const r = radius(u)
+        const zScale = 1 - (1 - spread) * Math.sin(u * Math.PI / 2)
+        // Area-weighted aerodynamic excitation: ramps smoothly behind the gill collar so the
+        // dorsal outline never pinches, drives a clean ~1-wavelength S-curve across the body,
+        // and tapers softly at the narrow open tail to avoid chaotic whip.
+        const headRamp = THREE.MathUtils.smoothstep(u, 0.20, 0.42)
+        const tipTaper = 1 - 0.36 * THREE.MathUtils.clamp((u - 0.72) / 0.28, 0, 1)
+        const areaWeight = headRamp * (r / 0.24) * tipTaper
+
+        const rPrev = Math.max(0, ri - 1)
+        const rNext = Math.min(TUBE_ALONG - 1, ri + 1)
+        let tx = simCx[rNext]! - simCx[rPrev]!
+        let ty = simCy[rNext]! - simCy[rPrev]!
+        let tz = simCz[rNext]! - simCz[rPrev]!
+        const tLen = Math.hypot(tx, ty, tz) || 1
+        tx = Math.max(tx / tLen, 0.25); ty /= tLen; tz /= tLen
+        const tRenorm = Math.hypot(tx, ty, tz) || 1
+        tx /= tRenorm; ty /= tRenorm; tz /= tRenorm
+
+        // Local cross-section basis (U, S) perpendicular to centerline tangent T.
+        let sx = -tz, sz = tx
+        const sLen = Math.hypot(sx, sz) || 1
+        sx /= sLen; sz /= sLen
+        const ux = -sz * ty
+        const uy = sz * tx - sx * tz
+        const uz = sx * ty
+
+        const waveY = wind * areaWeight * (
+          31 * Math.sin(t * 2.75 - u * 8.0) +
+          7.5 * Math.sin(t * 4.35 - u * 12.2)
+        )
+        const waveZ = wind * areaWeight * (
+          15 * Math.sin(t * 2.15 - u * 7.0) +
+          4.2 * Math.sin(t * 3.35 - u * 10.6)
+        )
+
+        const aeroDragX = windDragX * (0.55 + 0.75 * (r / 0.26))
+        const airDampY = -3.6 * simVy[ri]!
+        const airDampZ = -3.6 * simVz[ri]! - 5.2 * simCz[ri]!
+        const inflateK = 95 + 120 * wind
 
         for (let rj = 0; rj < TUBE_AROUND; rj++) {
           const phi = (rj / TUBE_AROUND) * Math.PI * 2
           const k = ri * TUBE_AROUND + rj
           const px = pos[k * 3]!, py = pos[k * 3 + 1]!, pz = pos[k * 3 + 2]!
-          const targetX = length * u
-          const targetPy = targetY + r * Math.sin(phi)
-          const targetPz = -r * Math.cos(phi) * zScale
 
-          // Outward radial windsock pressure (keeps cloth full and readable under cel shading).
-          const dy = py - cy, dz = pz - cz
-          const dLen = Math.hypot(dy, dz) || 1
-          const radialPressure = pMass * (1.5 + 5.2 * wind) * (r / Math.max(dLen, 0.08) - 0.85)
+          // Internal windsock inflation around this ring's own centroid (zero net force on centerline).
+          const sinP = Math.sin(phi)
+          const negCosP = -Math.cos(phi)
+          const idealDx = r * sinP * ux + r * zScale * negCosP * sx
+          const idealDy = r * sinP * uy
+          const idealDz = r * sinP * uz + r * zScale * negCosP * sz
 
-          const fx = pMass * (38 * (targetX - px) + 7.5 * wind)
-          const fy = liftAssist + pMass * (6.2 * (targetPy - py) + gustY) + radialPressure * (dy / dLen)
-          const fz = pMass * (5.2 * (targetPz - pz) + gustZ) + radialPressure * (dz / dLen)
+          const infX = inflateK * (idealDx - (px - simCx[ri]!))
+          const infY = inflateK * (idealDy - (py - simCy[ri]!))
+          const infZ = inflateK * (idealDz - (pz - simCz[ri]!))
+
+          const fx = pMass * (aeroDragX + infX)
+          const fy = pMass * (waveY + airDampY + infY)
+          const fz = pMass * (waveZ + airDampZ + infZ)
           tubeBody.addParticleForce(k, { x: fx, y: fy, z: fz }, false)
         }
       }
@@ -369,17 +471,17 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
     if (!tubeBody || !tubeBody.isValid()) return false
     const pos = tubeBody.particlePositions()
     const vel = tubeBody.particleVelocities()
+    const scale = length / TUBE_REST_LENGTH
     for (let ri = 0; ri < TUBE_ALONG; ri++) {
       const u = ri / (TUBE_ALONG - 1)
-      const baseY = -sag * u * u
       const r = radius(u)
       const zScale = 1 - (1 - spread) * Math.sin(u * Math.PI / 2)
-      let cy = 0, cz = 0, sy = 0, sz = 0
+      let cx = 0, cy = 0, cz = 0, sy = 0, sz = 0
       for (let rj = 0; rj < TUBE_AROUND; rj++) {
         const k = (ri * TUBE_AROUND + rj) * 3
-        cy += pos[k + 1]!; cz += pos[k + 2]!
+        cx += pos[k]!; cy += pos[k + 1]!; cz += pos[k + 2]!
       }
-      cy /= TUBE_AROUND; cz /= TUBE_AROUND
+      cx /= TUBE_AROUND; cy /= TUBE_AROUND; cz /= TUBE_AROUND
       for (let rj = 0; rj < TUBE_AROUND; rj++) {
         const k = (ri * TUBE_AROUND + rj) * 3
         sy += Math.abs(pos[k + 1]! - cy)
@@ -389,13 +491,33 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
       const meanAbsZ = sz / TUBE_AROUND
       const refAbsY = Math.max(r * (2 / Math.PI), 1e-4)
       const refAbsZ = Math.max(r * zScale * (2 / Math.PI), 1e-4)
-      // Bound wave displacement cleanly inside the framing envelope.
-      const dy = cy - baseY
-      const dz = cz
-      ringCenterY[ri] = Math.tanh(dy / 0.27) * 0.27
-      ringCenterZ[ri] = Math.tanh(dz / 0.29) * 0.29
-      ringRadialScaleY[ri] = THREE.MathUtils.clamp(meanAbsY / refAbsY, 0.84, 1.16)
-      ringRadialScaleZ[ri] = THREE.MathUtils.clamp(meanAbsZ / refAbsZ, 0.82, 1.18)
+
+      const rawX = cx * scale
+      const minX = ri === 0 ? 0 : ringCenterX[ri - 1]! + 0.018 * scale
+      ringCenterX[ri] = THREE.MathUtils.clamp(rawX, minX, length * 1.03)
+      // Preserve true Rapier gravity droop & S-wave 1:1 within the framing envelope; only soft-knee outside.
+      ringCenterY[ri] = softBound(cy * scale, -0.66, 0.34, 0.14)
+      ringCenterZ[ri] = softBound(cz * scale, -0.34, 0.34, 0.12)
+
+      // Preserve plump anime windsock fullness while conveying subtle cross-section ovalization/breathing.
+      const ratioY = meanAbsY / refAbsY
+      const ratioZ = meanAbsZ / refAbsZ
+      const meanRatio = Math.max((ratioY + ratioZ) * 0.5, 0.2)
+      const ovalY = ratioY / meanRatio
+      const ovalZ = ratioZ / meanRatio
+      const breath = 1 + (meanRatio - 0.78) * 0.20
+      ringRadialScaleY[ri] = THREE.MathUtils.clamp(breath * THREE.MathUtils.lerp(1, ovalY, 0.45), 0.93, 1.09)
+      ringRadialScaleZ[ri] = THREE.MathUtils.clamp(breath * THREE.MathUtils.lerp(1, ovalZ, 0.45), 0.93, 1.09)
+    }
+    // Two lightweight binomial smoothing passes over free rings remove local ring-to-ring curvature
+    // kinks so scales stay evenly spaced on inner bends while preserving full Rapier droop & S-waves.
+    for (let pass = 0; pass < 2; pass++) {
+      simCx.set(ringCenterX); simCy.set(ringCenterY); simCz.set(ringCenterZ)
+      for (let ri = PINNED_HEAD_RINGS; ri < TUBE_ALONG - 1; ri++) {
+        ringCenterX[ri] = 0.20 * simCx[ri - 1]! + 0.60 * simCx[ri]! + 0.20 * simCx[ri + 1]!
+        ringCenterY[ri] = 0.20 * simCy[ri - 1]! + 0.60 * simCy[ri]! + 0.20 * simCy[ri + 1]!
+        ringCenterZ[ri] = 0.20 * simCz[ri - 1]! + 0.60 * simCz[ri]! + 0.20 * simCz[ri + 1]!
+      }
     }
     let vy = 0, vz = 0
     const lastOffset = (TUBE_ALONG - 1) * TUBE_AROUND
@@ -403,8 +525,8 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
       const k = (lastOffset + rj) * 3
       vy += vel[k + 1]!; vz += vel[k + 2]!
     }
-    ringTailVelY.value = vy / TUBE_AROUND
-    ringTailVelZ.value = vz / TUBE_AROUND
+    ringTailVelY.value = (vy / TUBE_AROUND) * scale
+    ringTailVelZ.value = (vz / TUBE_AROUND) * scale
     return true
   }
 
@@ -412,41 +534,142 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
     const p = bodyGeometry.getAttribute('position') as THREE.BufferAttribute
     const hasRapierData = fromRapier && extractTubeRingDisplacements()
 
+    if (hasRapierData) {
+      // Exact back edge of the painted eye rings so mouth & eyes stay completely flush and undistorted.
+      const headRigidEnd = 0.15 + 0.125 / Math.max(length, 0.5)
+      for (let i = 0; i <= rows; i++) {
+        const u = i / rows
+        const blend = THREE.MathUtils.smoothstep(u, headRigidEnd, headRigidEnd + 0.18)
+        const hx = length * u
+        const hy = -sag * u * u
+        meshCx[i] = THREE.MathUtils.lerp(hx, sampleRingSpline(ringCenterX, u), blend)
+        meshCy[i] = THREE.MathUtils.lerp(hy, sampleRingSpline(ringCenterY, u), blend)
+        meshCz[i] = sampleRingSpline(ringCenterZ, u) * blend
+        meshScaleY[i] = THREE.MathUtils.lerp(1, sampleRingSpline(ringRadialScaleY, u), blend)
+        meshScaleZ[i] = THREE.MathUtils.lerp(1, sampleRingSpline(ringRadialScaleZ, u), blend)
+      }
+
+      let endTx = 1, endTy = 0, endTz = 0
+      let endRy = radius(1), endRz = radius(1) * spread
+      for (let i = 0; i <= rows; i++) {
+        const u = i / rows, r = radius(u)
+        const zSpread = 1 - (1 - spread) * Math.sin(u * Math.PI / 2)
+        const frameBlend = THREE.MathUtils.smoothstep(u, headRigidEnd, headRigidEnd + 0.20) * 0.54
+        const iPrev = Math.max(0, i - 1), iNext = Math.min(rows, i + 1)
+        let tx = meshCx[iNext]! - meshCx[iPrev]!
+        let ty = meshCy[iNext]! - meshCy[iPrev]!
+        let tz = meshCz[iNext]! - meshCz[iPrev]!
+        const tLen = Math.hypot(tx, ty, tz) || 1
+        tx = THREE.MathUtils.lerp(1, tx / tLen, frameBlend)
+        ty = THREE.MathUtils.lerp(0, ty / tLen, frameBlend)
+        tz = THREE.MathUtils.lerp(0, tz / tLen, frameBlend)
+        const nLen = Math.hypot(tx, ty, tz) || 1
+        tx /= nLen; ty /= nLen; tz /= nLen
+
+        // Twist-free orthonormal cross-section frame: S = normalize(T x Y), U = S x T.
+        let sx = -tz, sz = tx
+        const sLen = Math.hypot(sx, sz) || 1
+        sx /= sLen; sz /= sLen
+        const ux = -sz * ty
+        const uy = sz * tx - sx * tz
+        const uz = sx * ty
+
+        const cx = meshCx[i]!, cy = meshCy[i]!, cz = meshCz[i]!
+        const rY = r * meshScaleY[i]!, rZ = r * meshScaleZ[i]! * zSpread
+        if (i === rows) {
+          endTx = tx; endTy = ty; endTz = tz
+          endRy = rY; endRz = rZ
+        }
+        for (let j = 0; j <= columns; j++) {
+          const theta = j / columns * Math.PI * 2
+          const ct = Math.cos(theta), st = Math.sin(theta)
+          p.setXYZ(
+            i * (columns + 1) + j,
+            cx + rY * ct * ux + rZ * st * sx,
+            cy + rY * ct * uy,
+            cz + rY * ct * uz + rZ * st * sz,
+          )
+        }
+      }
+      p.needsUpdate = true; bodyGeometry.computeVertexNormals(); bodyGeometry.computeBoundingBox(); bodyGeometry.computeBoundingSphere()
+
+      // Stitch both tail roots seamlessly onto bodyGeometry's exact rear rim (i = rows) and
+      // sweep the forked fins organically along the rear body tangent with soft inertial trail lag.
+      const rimOffset = rows * (columns + 1)
+      const lagY = THREE.MathUtils.clamp(-ringTailVelY.value * 0.11, -0.22, 0.22)
+      const lagZ = THREE.MathUtils.clamp(-ringTailVelZ.value * 0.13, -0.24, 0.24)
+      let tipTx = Math.max(endTx, 0.65)
+      let tipTy = THREE.MathUtils.clamp(endTy + lagY, -0.52, 0.44)
+      let tipTz = THREE.MathUtils.clamp(endTz + lagZ, -0.45, 0.45)
+      const tipLen = Math.hypot(tipTx, tipTy, tipTz) || 1
+      tipTx /= tipLen; tipTy /= tipLen; tipTz /= tipLen
+
+      const endCx = meshCx[rows]!, endCy = meshCy[rows]!, endCz = meshCz[rows]!
+      tails.forEach((t, index) => {
+        const v = t.geometry.getAttribute('position') as THREE.BufferAttribute
+        const baseX = t.position.x, baseY = t.position.y
+        const rimLocalX = endCx - baseX, rimLocalY = endCy - baseY, rimLocalZ = endCz
+        const sign = index === 0 ? 1 : -1
+        for (let j = 0; j <= 24; j++) {
+          const bodyIdx = rimOffset + (index === 0 ? j : columns - j)
+          const rx = p.getX(bodyIdx) - baseX
+          const ry = p.getY(bodyIdx) - baseY
+          const rz = p.getZ(bodyIdx)
+          v.setXYZ(j, rx, ry, rz)
+          const theta = j * Math.PI / 24, h = Math.cos(theta), s = Math.sin(theta)
+          const tipHalfSep = Math.max(0.012, radius(1) * spread * s * 0.22)
+          for (let i = 1; i <= 8; i++) {
+            const u = i / 8
+            const ext = (.21 + .16 * Math.abs(h)) * u
+            let dx = THREE.MathUtils.lerp(endTx, tipTx, 0.55 * u)
+            let dy = THREE.MathUtils.lerp(endTy, tipTy, 0.55 * u)
+            let dz = THREE.MathUtils.lerp(endTz, tipTz, 0.55 * u)
+            const dLen = Math.hypot(dx, dy, dz) || 1
+            dx /= dLen; dy /= dLen; dz /= dLen
+            let sx = -dz, sz = dx
+            const sLen = Math.hypot(sx, sz) || 1
+            sx /= sLen; sz /= sLen
+            const ux = -sz * dy
+            const uy = sz * dx - sx * dz
+            const uz = sx * dy
+
+            const fanH = THREE.MathUtils.lerp(endRy * h, .31 * h, u)
+            const sep = sign * THREE.MathUtils.lerp(endRz * s, tipHalfSep, u)
+            const flap = wind * u * u * h * (.075 * Math.sin(time * 4.1 - u * 2.2) + .034 * Math.sin(time * 2.6 + theta * 2))
+            const hTotal = fanH + flap * .38
+            const sTotal = sep + flap
+            v.setXYZ(
+              i * 25 + j,
+              rimLocalX + dx * ext + hTotal * ux + sTotal * sx,
+              rimLocalY + dy * ext + hTotal * uy,
+              rimLocalZ + dz * ext + hTotal * uz + sTotal * sz,
+            )
+          }
+        }
+        v.needsUpdate = true; t.geometry.computeVertexNormals(); t.geometry.computeBoundingBox(); t.geometry.computeBoundingSphere()
+      })
+      return
+    }
+
     for (let i = 0; i <= rows; i++) {
       const u = i / rows, r = radius(u)
-      let wy = 0, wz = 0, scaleY = 1, scaleZ = 1
-      if (hasRapierData) {
-        const blend = THREE.MathUtils.smoothstep(u, 0.24, 0.36)
-        const fu = u * (TUBE_ALONG - 1)
-        const r0 = Math.floor(fu), r1 = Math.min(TUBE_ALONG - 1, r0 + 1), alpha = fu - r0
-        wy = (ringCenterY[r0]! * (1 - alpha) + ringCenterY[r1]! * alpha) * blend
-        wz = (ringCenterZ[r0]! * (1 - alpha) + ringCenterZ[r1]! * alpha) * blend
-        scaleY = THREE.MathUtils.lerp(1, ringRadialScaleY[r0]! * (1 - alpha) + ringRadialScaleY[r1]! * alpha, blend * 0.65)
-        scaleZ = THREE.MathUtils.lerp(1, ringRadialScaleZ[r0]! * (1 - alpha) + ringRadialScaleZ[r1]! * alpha, blend * 0.65)
-      } else {
-        const [py, pz] = wave(u, time)
-        wy = py!; wz = pz!
-      }
+      const [py, pz] = wave(u, time)
+      const wy = py!, wz = pz!
       const zSpread = 1 - (1 - spread) * Math.sin(u * Math.PI / 2)
       for (let j = 0; j <= columns; j++) {
         const theta = j / columns * Math.PI * 2
         p.setXYZ(
           i * (columns + 1) + j,
           length * u,
-          -sag * u * u + r * scaleY * Math.cos(theta) + wy,
-          r * scaleZ * Math.sin(theta) * zSpread + wz,
+          -sag * u * u + r * Math.cos(theta) + wy,
+          r * Math.sin(theta) * zSpread + wz,
         )
       }
     }
     p.needsUpdate = true; bodyGeometry.computeVertexNormals(); bodyGeometry.computeBoundingBox(); bodyGeometry.computeBoundingSphere()
 
-    // Stitch both tail roots seamlessly onto bodyGeometry's exact rear rim (i = rows).
     const rimOffset = rows * (columns + 1)
-    const endWy = hasRapierData ? ringCenterY[TUBE_ALONG - 1]! : wave(1, time)[0]!
-    const endWz = hasRapierData ? ringCenterZ[TUBE_ALONG - 1]! : wave(1, time)[1]!
-    const velLagY = hasRapierData ? THREE.MathUtils.clamp(-ringTailVelY.value * 0.045, -0.07, 0.07) : 0
-    const velLagZ = hasRapierData ? THREE.MathUtils.clamp(-ringTailVelZ.value * 0.06, -0.09, 0.09) : 0
-
+    const [endWy, endWz] = wave(1, time)
     tails.forEach((t, index) => {
       const v = t.geometry.getAttribute('position') as THREE.BufferAttribute
       const baseX = t.position.x, baseY = t.position.y
@@ -460,9 +683,9 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
         for (let i = 1; i <= 8; i++) {
           const u = i / 8
           const flap = wind * u * u * h * (.085 * Math.sin(time * 4.1 - u * 2.2) + .038 * Math.sin(time * 2.6 + theta * 2))
-          const tipY = THREE.MathUtils.lerp(ry, .30 * h + endWy + velLagY, u) + flap * .45
+          const tipY = THREE.MathUtils.lerp(ry, .30 * h + endWy!, u) + flap * .45
           const minSep = (index === 0 ? 1 : -1) * Math.max(0.012, radius(1) * spread * Math.sin(theta) * (1 - .78 * u))
-          const tipZ = THREE.MathUtils.lerp(rz, minSep + endWz + velLagZ, u) + flap
+          const tipZ = THREE.MathUtils.lerp(rz, minSep + endWz!, u) + flap
           v.setXYZ(i * 25 + j, rx + (.20 + .16 * Math.abs(h)) * u, tipY, tipZ)
         }
       }
@@ -496,7 +719,7 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
 
   function pose(step: number, amount: number, time = 0) {
     const p = THREE.MathUtils.clamp(step + (step === 3 ? 0 : amount), 0, 3), unfurl = Math.min(1, p), lift = THREE.MathUtils.clamp(p - 1, 0, 1), secure = Math.max(0, p - 2)
-    length = 1.12 + .78 * unfurl; sag = .56 * (1 - .65 * lift); spread = .65 + .35 * lift; secureAmount = secure
+    length = 1.12 + .78 * unfurl; sag = .56 * (1 - .65 * lift); spread = .65 + .35 * lift; unfurlAmount = unfurl; liftAmount = lift; secureAmount = secure
     wind = (.18 + .82 * lift * lift * (3 - 2 * lift)) * (.45 + .55 * unfurl)
     fish.position.set(-.50, 1.05 + 1.15 * lift, 0)
     const seating = THREE.MathUtils.smoothstep(secure, .22, .74)

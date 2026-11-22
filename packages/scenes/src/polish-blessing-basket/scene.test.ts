@@ -255,4 +255,112 @@ describe('Polish seasonal family basket', () => {
     const capture = (o: boolean | EventListenerOptions | undefined) => typeof o === 'boolean' ? o : o?.capture ?? false
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), `owned ${type} listener`).toBe(true)
   })
+
+  it('never loads Rapier WASM on construction or in pure reduced motion, wraps cleanly over the rim with outward normals, and stays bit-for-bit still', async () => {
+    const { isRapierLoaded, _resetRapierLoaderForTest } = await import('@wbr/scene-runtime/rapier-soft-body')
+    _resetRapierLoaderForTest()
+
+    const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
+    host.append(canvas, overlay); document.body.append(host)
+    Object.defineProperties(canvas, { clientWidth: { value: 390 }, clientHeight: { value: 560 } })
+    canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 390, height: 560 }) as DOMRect
+    const unstarted = mod.create({ canvas, overlay, shared: Shared, gestures: Gestures, isSoundEnabled: () => false })
+    expect(isRapierLoaded()).toBe(false)
+    unstarted.dispose()
+
+    const s = mount(0, { isReducedMotion: () => true })
+    const flap = s.scene.getObjectByName('basket-cloth-flap') as THREE.Mesh
+    const stripe0 = s.scene.getObjectByName('basket-cloth-embroidery-0') as THREE.Mesh
+    const stripe1 = s.scene.getObjectByName('basket-cloth-embroidery-1') as THREE.Mesh
+    expect(flap).toBeDefined()
+    expect(stripe0).toBeDefined()
+    expect(stripe1).toBeDefined()
+
+    const flapPos = flap.geometry.getAttribute('position') as THREE.BufferAttribute
+    const flapNorm = flap.geometry.getAttribute('normal') as THREE.BufferAttribute
+    const flapIdx = flap.geometry.index!
+    const snapFlap = Array.from(flapPos.array)
+    const snapStripe0 = Array.from((stripe0.geometry.getAttribute('position') as THREE.BufferAttribute).array)
+
+    // Verify smooth rim wrap crest strictly clears wicker rim top (y = 0.460) and skirt clears tabletop (y = -0.030).
+    let maxY = -Infinity, minY = Infinity
+    for (let i = 0; i < flapPos.count; i++) {
+      const x = flapPos.getX(i), y = flapPos.getY(i), z = flapPos.getZ(i)
+      expect(Number.isFinite(x + y + z)).toBe(true)
+      maxY = Math.max(maxY, y)
+      minY = Math.min(minY, y)
+      // Skirt vertices below the rim crest must stay outside the oval wicker wall and clear of the right-side medallion.
+      if (y < 0.39) {
+        const h = THREE.MathUtils.clamp((y - 0.035) / 0.38, 0, 1)
+        const rx = 0.58 + h * 0.18 + 0.025
+        const rz = 0.33 + h * 0.17 + 0.025
+        expect(Math.hypot(x / rx, z / rz)).toBeGreaterThan(0.99)
+        expect(x).toBeLessThan(0.09)
+      }
+    }
+    expect(maxY).toBeGreaterThan(0.466)
+    expect(minY).toBeGreaterThan(-0.015)
+
+    // Verify non-degenerate outward-facing triangles (front normals align with geometric face cross product).
+    const va = new THREE.Vector3(), vb = new THREE.Vector3(), vc = new THREE.Vector3(), fn = new THREE.Vector3(), vn = new THREE.Vector3()
+    let outward = 0
+    for (let i = 0; i < flapIdx.count; i += 3) {
+      const ia = flapIdx.getX(i), ib = flapIdx.getX(i + 1), ic = flapIdx.getX(i + 2)
+      va.fromBufferAttribute(flapPos, ia); vb.fromBufferAttribute(flapPos, ib); vc.fromBufferAttribute(flapPos, ic)
+      fn.copy(vb).sub(va).cross(vc.clone().sub(va))
+      expect(fn.length()).toBeGreaterThan(1e-9)
+      vn.fromBufferAttribute(flapNorm, ia)
+      if (fn.dot(vn) > 0) outward++
+    }
+    expect(outward).toBe(flapIdx.count / 3)
+
+    // Pure reduced motion stays bit-for-bit stationary and never loads WASM.
+    s.run(1.2)
+    expect(isRapierLoaded()).toBe(false)
+    expect(Array.from(flapPos.array)).toEqual(snapFlap)
+    expect(Array.from((stripe0.geometry.getAttribute('position') as THREE.BufferAttribute).array)).toEqual(snapStripe0)
+  })
+
+  it('simulates overhanging linen and bound embroidery with lazy Rapier physics, responds to bread placement, and honors pause/reduced toggles', async () => {
+    const { loadRapier } = await import('@wbr/scene-runtime/rapier-soft-body')
+    await loadRapier()
+    let isActive = true
+    let isReduced = false
+    const s = mount(0, { isActive: () => isActive, isReducedMotion: () => isReduced })
+    const flap = s.scene.getObjectByName('basket-cloth-flap') as THREE.Mesh
+    const stripe0 = s.scene.getObjectByName('basket-cloth-embroidery-0') as THREE.Mesh
+    const flapBuf = flap.geometry.getAttribute('position').array
+    const stripeBuf = stripe0.geometry.getAttribute('position').array
+    const calmFlap = Array.from(flapBuf)
+
+    // Let lazy Rapier start resolve and settle, then trigger bread placement into the basket.
+    await new Promise((resolve) => setTimeout(resolve, 35))
+    s.button.click()
+    for (let i = 0; i < 60; i++) s.instance.update(1 / 60)
+
+    expect(s.progress).toEqual([1])
+    expect(flap.geometry.getAttribute('position').array).toBe(flapBuf)
+    expect(stripe0.geometry.getAttribute('position').array).toBe(stripeBuf)
+    const activeFlap = Array.from(flapBuf)
+    expect(activeFlap.every(Number.isFinite)).toBe(true)
+    expect(activeFlap).not.toEqual(calmFlap)
+    expect(Array.from(stripeBuf).every(Number.isFinite)).toBe(true)
+
+    // Pause freezes simulation completely.
+    isActive = false
+    const pausedFlap = Array.from(flapBuf)
+    for (let i = 0; i < 15; i++) s.instance.update(1 / 60)
+    expect(Array.from(flapBuf)).toEqual(pausedFlap)
+
+    // Runtime reduced toggle snaps cleanly to calm resting drape and stays bit-for-bit still.
+    isActive = true
+    isReduced = true
+    s.instance.update(1 / 60)
+    const reducedFlap = Array.from(flapBuf)
+    const reducedStripe = Array.from(stripeBuf)
+    expect(reducedFlap).toEqual(calmFlap)
+    for (let i = 0; i < 15; i++) s.instance.update(1 / 60)
+    expect(Array.from(flapBuf)).toEqual(reducedFlap)
+    expect(Array.from(stripeBuf)).toEqual(reducedStripe)
+  })
 })

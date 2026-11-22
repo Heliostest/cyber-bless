@@ -32,6 +32,11 @@ const COPY = {
 type Checkpoint = 0 | 1 | 2 | 3
 type Coord = readonly [number, number, number]
 
+const CORD_RADIUS = 0.0086
+const STRAND_SPACING = 0.0205
+const BAND_RADIUS = 0.0084
+const BAND_Y = 0.115
+
 // Deliberate paths round each lobe, then through the crossing. This is a
 // decorative, source-informed knot, with no named-knot claim.
 const ROUTES: readonly (readonly Coord[])[] = [
@@ -39,12 +44,59 @@ const ROUTES: readonly (readonly Coord[])[] = [
   [[0.25, 0.31, 0.40], [0.55, 0.31, 0.25], [0.66, 0.31, -0.05], [0.52, 0.31, -0.35], [0.22, 0.31, -0.39], [0.03, 0.31, -0.10], [-0.30, 0.31, 0.19]],
 ]
 
+// Seated paper-cord centerline forms resting cleanly on the washi envelope (y ≈ 0.115–0.125)
+// and lifting strictly where strands cross over the horizontal binding band (y ≈ 0.139) or
+// weave cleanly over/under one another in distinct non-colliding vertical layers.
 const CORD_FORMS: readonly (readonly Coord[])[] = [
-  [[0.50, 0.22, 0.43], [0.20, 0.22, 0.27], [0.02, 0.23, 0.05], [-0.12, 0.22, 0.08], [-0.32, 0.22, 0.28], [-0.62, 0.23, 0.48]],
-  [[0.25, 0.22, 0.40], [0.12, 0.22, 0.24], [0, 0.26, 0.06], [-0.42, 0.21, 0.27], [-0.69, 0.21, 0.06], [-0.60, 0.21, -0.28], [-0.32, 0.21, -0.40], [-0.05, 0.22, -0.24], [0.12, 0.28, 0]],
-  // The central crossing passes above, below, and above again. Heights
-  // separate all three lobes instead of showing a flat intersecting line.
-  [[-0.30, 0.19, 0.19], [0.05, 0.28, 0], [0.53, 0.19, -0.37], [0.67, 0.19, -0.08], [0.47, 0.19, 0.22], [0.12, 0.19, 0.22], [-0.06, 0.28, 0.05], [-0.40, 0.19, -0.38], [-0.68, 0.19, -0.24], [-0.65, 0.19, 0.09], [-0.32, 0.19, 0.28], [0, 0.145, 0.05], [0.28, 0.19, 0.43], [0.23, 0.19, 0.64], [-0.04, 0.19, 0.60], [-0.10, 0.19, 0.35], [0, 0.27, 0.05], [0.30, 0.19, 0.30], [0.49, 0.19, 0.48]],
+  // Stage 0: Open 5-strand paper ribbon seated on the envelope, gently arching over the horizontal band.
+  [
+    [0.50, 0.117, 0.43],
+    [0.24, 0.122, 0.27],
+    [0.04, 0.141, 0.04],
+    [-0.12, 0.141, 0.05],
+    [-0.34, 0.122, 0.28],
+    [-0.62, 0.117, 0.48],
+  ],
+  // Stage 1: Left bow loop formed, arching over the horizontal band at the left lobe and over Pass 1 at center.
+  [
+    [0.26, 0.118, 0.40],
+    [0.14, 0.124, 0.23],
+    [0.01, 0.141, 0.04],
+    [-0.34, 0.125, 0.26],
+    [-0.64, 0.140, 0.05],
+    [-0.60, 0.128, -0.25],
+    [-0.32, 0.122, -0.39],
+    [-0.06, 0.138, -0.22],
+    [0.13, 0.165, 0.01],
+  ],
+  // Stage 2/3: Completed 3-lobe interwoven mizuhiki knot with verified over-under vertical stacking:
+  // Horizontal band = 0.115; Pass 3 (center low) = 0.138; Pass 1 (SW->NE) = 0.161;
+  // Pass 2 (SE->NW) = 0.184; Pass 4 (lower lobe -> Tail B) weaves smoothly OVER Pass 3 & Pass 1.
+  [
+    [-0.31, 0.118, 0.22],   // Tail A (seated on paper)
+    [-0.10, 0.148, 0.08],   // Approach center (rising to Layer 2)
+    [0.08, 0.161, -0.05],   // Pass 1 center (Layer 2 = 0.161)
+    [0.34, 0.130, -0.28],   // Out to upper-right lobe
+    [0.57, 0.126, -0.34],   // Right lobe top-right
+    [0.67, 0.141, -0.04],   // Right lobe outer bend (clears horizontal band 0.115!)
+    [0.54, 0.124, 0.20],    // Right lobe lower return
+    [0.24, 0.148, 0.17],    // Approach center (rising to Layer 3)
+    [-0.02, 0.184, -0.01],  // Pass 2 center (Layer 3 = 0.184, OVER Pass 1 = 0.161!)
+    [-0.29, 0.134, -0.28],  // Out to upper-left lobe
+    [-0.56, 0.126, -0.34],  // Left lobe top-left
+    [-0.67, 0.141, -0.03],  // Left lobe outer bend (clears horizontal band 0.115!)
+    [-0.52, 0.124, 0.22],   // Left lobe lower return
+    [-0.22, 0.126, 0.24],   // Sweep inward at Layer 1
+    [-0.04, 0.138, 0.12],   // Pass 3 center-low (Layer 1 = 0.138, OVER band, UNDER Pass 1/2!)
+    [0.16, 0.124, 0.34],    // Descend into right leg of lower lobe
+    [0.22, 0.120, 0.56],    // Lower lobe bottom-right
+    [-0.01, 0.119, 0.63],   // Lower lobe bottom crest (generous radius, no kink)
+    [-0.20, 0.120, 0.50],   // Lower lobe bottom-left
+    [-0.14, 0.136, 0.30],   // Rise out of lower lobe
+    [-0.01, 0.164, 0.14],   // Pass 4 front-weave lock (OVER Pass 3 = 0.138!)
+    [0.23, 0.150, 0.26],    // Exit OVER lower-lobe right leg (0.124 -> +0.026 clearance!)
+    [0.49, 0.118, 0.47],    // Tail B (seated on paper)
+  ],
 ]
 
 function curve(points: readonly Coord[]) {
@@ -86,6 +138,200 @@ function paperPolygon(points: readonly (readonly [number, number])[], y: number,
   return mesh
 }
 
+/**
+ * Allocates a closed-end (flush-capped) paper-cord tube BufferGeometry whose vertex
+ * positions and normals can be rewritten in-place with zero allocations.
+ */
+function createCappedCordGeometry(tubeSegments: number, radialSegments: number, dynamic: boolean): THREE.BufferGeometry {
+  const ringStride = radialSegments + 1
+  const bodyVerts = (tubeSegments + 1) * ringStride
+  // Add start cap (1 center + radialSegments rim) and end cap (1 center + radialSegments rim).
+  const capVerts = (1 + radialSegments) * 2
+  const totalVerts = bodyVerts + capVerts
+  const positions = new Float32Array(totalVerts * 3)
+  const normals = new Float32Array(totalVerts * 3)
+  const uvs = new Float32Array(totalVerts * 2)
+  const bodyIndices = tubeSegments * radialSegments * 6
+  const capIndices = radialSegments * 6
+  const indices = new Uint32Array(bodyIndices + capIndices)
+
+  for (let i = 0; i <= tubeSegments; i++) {
+    const u = i / tubeSegments
+    for (let j = 0; j <= radialSegments; j++) {
+      const idx = i * ringStride + j
+      uvs[idx * 2] = u
+      uvs[idx * 2 + 1] = j / radialSegments
+    }
+  }
+
+  let cursor = 0
+  for (let i = 0; i < tubeSegments; i++) {
+    for (let j = 0; j < radialSegments; j++) {
+      const a = i * ringStride + j
+      const b = (i + 1) * ringStride + j
+      const c = (i + 1) * ringStride + j + 1
+      const d = i * ringStride + j + 1
+      // Outward winding: (b - a) x (d - a) = (+T) x (+up) = +lat (outward radial normal).
+      indices[cursor++] = a
+      indices[cursor++] = b
+      indices[cursor++] = d
+      indices[cursor++] = b
+      indices[cursor++] = c
+      indices[cursor++] = d
+    }
+  }
+
+  // Start cap (faces -tangent)
+  const startCenter = bodyVerts
+  const startRim = startCenter + 1
+  for (let j = 0; j < radialSegments; j++) {
+    const next = (j + 1) % radialSegments
+    indices[cursor++] = startCenter
+    indices[cursor++] = startRim + j
+    indices[cursor++] = startRim + next
+  }
+
+  // End cap (faces +tangent)
+  const endCenter = startRim + radialSegments
+  const endRim = endCenter + 1
+  for (let j = 0; j < radialSegments; j++) {
+    const next = (j + 1) % radialSegments
+    indices[cursor++] = endCenter
+    indices[cursor++] = endRim + next
+    indices[cursor++] = endRim + j
+  }
+
+  const geometry = new THREE.BufferGeometry()
+  const posAttr = new THREE.BufferAttribute(positions, 3)
+  const normAttr = new THREE.BufferAttribute(normals, 3)
+  if (dynamic) {
+    posAttr.setUsage(THREE.DynamicDrawUsage)
+    normAttr.setUsage(THREE.DynamicDrawUsage)
+  }
+  geometry.setAttribute('position', posAttr)
+  geometry.setAttribute('normal', normAttr)
+  geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2))
+  geometry.setIndex(new THREE.BufferAttribute(indices, 1))
+  return geometry
+}
+
+const _tan = new THREE.Vector3()
+const _lat = new THREE.Vector3()
+const _up = new THREE.Vector3()
+const _cPt = new THREE.Vector3()
+
+/**
+ * Rewrites a capped mizuhiki paper-cord strand in-place along `centres`, applying:
+ * - Parallel ribbon-band offset (with slight pinch tightening inside the central knot)
+ * - Subtle spiral silk/washi-wrap cord micro-relief
+ * - Flush solid paper end-caps at both cut tips (no hollow pipe ends!)
+ */
+function writeMizuhikiStrandInPlace(
+  geometry: THREE.BufferGeometry,
+  centres: readonly THREE.Vector3[],
+  tubeSegments: number,
+  radialSegments: number,
+  radius: number,
+  lateralOffset: number,
+  options: { turns?: number; plyDepth?: number; phase?: number; pinchCenter?: boolean; fixedLateralZ?: boolean } = {},
+) {
+  const positions = geometry.getAttribute('position') as THREE.BufferAttribute
+  const normals = geometry.getAttribute('normal') as THREE.BufferAttribute
+  const ringStride = radialSegments + 1
+  const turns = options.turns ?? 38
+  const plyDepth = options.plyDepth ?? 0.042
+  const phase = options.phase ?? 0
+  const pinchCenter = options.pinchCenter ?? false
+  const fixedLateralZ = options.fixedLateralZ ?? false
+
+  for (let i = 0; i <= tubeSegments; i++) {
+    const u = i / tubeSegments
+    const prev = centres[Math.max(0, i - 1)]!
+    const next = centres[Math.min(tubeSegments, i + 1)]!
+    _tan.subVectors(next, prev)
+    if (_tan.lengthSq() < 1e-12) _tan.set(1, 0, 0)
+    else _tan.normalize()
+
+    if (fixedLateralZ) {
+      // Exact continuous XY-plane ribbon frame: lateral = +Z, outward normal = +Z x T.
+      // Never flips sign around the vertical side walls of the beveled envelope.
+      _lat.set(0, 0, 1)
+      _up.crossVectors(_lat, _tan).normalize()
+      _lat.crossVectors(_tan, _up).normalize()
+    } else {
+      // Planar-stabilized horizontal ribbon frame: keeps all 5 strands lying neatly flat
+      // side-by-side on the envelope while tilting cleanly across vertical over-under ramps.
+      const horizLen = Math.hypot(_tan.x, _tan.z)
+      if (horizLen > 1e-4) {
+        _lat.set(-_tan.z / horizLen, 0, _tan.x / horizLen)
+      } else {
+        _lat.set(0, 0, 1)
+      }
+      _up.crossVectors(_lat, _tan).normalize()
+      if (_up.y < 0) _up.negate()
+      // Re-orthogonalize lateral vector against 3D tangent so the cross-section stays circular.
+      _lat.crossVectors(_tan, _up).normalize()
+    }
+
+    const c = centres[i]!
+    // Subtle bundle compression right in the tight central gathering zone prevents inner-bend crowding.
+    let effOffset = lateralOffset
+    if (pinchCenter) {
+      const distCenter = Math.hypot(c.x, c.z - 0.02)
+      const pinch = 1 - 0.14 * Math.exp(-distCenter * distCenter * 22)
+      effOffset *= pinch
+    }
+
+    _cPt.set(
+      c.x + _lat.x * effOffset,
+      c.y + _lat.y * effOffset,
+      c.z + _lat.z * effOffset,
+    )
+
+    const twist = u * turns * Math.PI * 2 + phase
+    for (let j = 0; j <= radialSegments; j++) {
+      const a = (j / radialSegments) * Math.PI * 2
+      const cos = Math.cos(a)
+      const sin = Math.sin(a)
+      const r = radius * (1 + plyDepth * Math.cos(2 * (a - twist)))
+      const nx = _lat.x * cos + _up.x * sin
+      const ny = _lat.y * cos + _up.y * sin
+      const nz = _lat.z * cos + _up.z * sin
+      const n = i * ringStride + j
+      positions.setXYZ(n, _cPt.x + nx * r, _cPt.y + ny * r, _cPt.z + nz * r)
+      normals.setXYZ(n, nx, ny, nz)
+    }
+
+    if (i === 0) {
+      const startCenter = (tubeSegments + 1) * ringStride
+      const startRim = startCenter + 1
+      positions.setXYZ(startCenter, _cPt.x, _cPt.y, _cPt.z)
+      normals.setXYZ(startCenter, -_tan.x, -_tan.y, -_tan.z)
+      for (let j = 0; j < radialSegments; j++) {
+        const src = j
+        positions.setXYZ(startRim + j, positions.getX(src), positions.getY(src), positions.getZ(src))
+        normals.setXYZ(startRim + j, -_tan.x, -_tan.y, -_tan.z)
+      }
+    } else if (i === tubeSegments) {
+      const endCenter = (tubeSegments + 1) * ringStride + 1 + radialSegments
+      const endRim = endCenter + 1
+      positions.setXYZ(endCenter, _cPt.x, _cPt.y, _cPt.z)
+      normals.setXYZ(endCenter, _tan.x, _tan.y, _tan.z)
+      const baseRing = tubeSegments * ringStride
+      for (let j = 0; j < radialSegments; j++) {
+        const src = baseRing + j
+        positions.setXYZ(endRim + j, positions.getX(src), positions.getY(src), positions.getZ(src))
+        normals.setXYZ(endRim + j, _tan.x, _tan.y, _tan.z)
+      }
+    }
+  }
+
+  positions.needsUpdate = true
+  normals.needsUpdate = true
+  geometry.computeBoundingBox()
+  geometry.computeBoundingSphere()
+}
+
 export function createMizuhiki(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, gestures, shared } = ctx
   Object.values(COPY).forEach(shared.assertSafeCopy)
@@ -93,6 +339,8 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   let checkpoint: Checkpoint = 0
   let pose = 0, motionFrom = 0, motionTarget = 0, motionT = 1
   let settle = 0, sparkle = 0
+  // Brief stiff-paper elastic settle oscillation upon locking a loop (zero in reduced motion).
+  let springTimer = 1, springAmp = 0
   let stopResize = () => {}, stopClaim = () => {}
   let wishHandle: GestureHandle | null = null
   const feedback = createSceneFeedback(ctx)
@@ -210,52 +458,99 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   knot.name = 'mizuhiki-interwoven-cords'
   world.add(knot)
   const colors = [0xb74442, 0xd6ad52, 0xfff2d8, 0xb74442, 0xe6c572]
-  const cordMaterials = colors.map((color, i) => new THREE.MeshStandardMaterial({ color, roughness: i === 1 || i === 4 ? 0.54 : 0.88, metalness: i === 1 || i === 4 ? 0.28 : 0, emissive: 0xe7b264, emissiveIntensity: 0 }))
-  cordMaterials.forEach(material=>applyCraftSurface(material,{kind:'cord',strength:.28}))
-  // Five fine, individually spaced strands bind the paper envelope.
+  const cordMaterials = colors.map((color, i) => new THREE.MeshStandardMaterial({
+    color,
+    roughness: i === 1 || i === 4 ? 0.48 : 0.78,
+    metalness: i === 1 || i === 4 ? 0.30 : 0,
+    emissive: 0xe7b264,
+    emissiveIntensity: 0,
+  }))
+  cordMaterials.forEach((material, i) => applyCraftSurface(material, { kind: 'cord', scale: 2.0, strength: i === 1 || i === 4 ? 0.30 : 0.34 }))
+
+  // Five tightly parallel washi paper-cord bands seated cleanly on the envelope
+  // and wrapped smoothly around both left and right beveled edges.
+  const bandSegments = 64, bandRadial = 8
+  const bandCenterPath = curve([
+    [-0.742, 0.034, 0],
+    [-0.768, 0.056, 0],
+    [-0.766, 0.098, 0],
+    [-0.735, BAND_Y, 0],
+    [-0.36, BAND_Y + 0.002, 0],
+    [0, BAND_Y + 0.003, 0],
+    [0.36, BAND_Y + 0.002, 0],
+    [0.735, BAND_Y, 0],
+    [0.766, 0.098, 0],
+    [0.768, 0.056, 0],
+    [0.742, 0.034, 0],
+  ])
+  const bandCentres = bandCenterPath.getSpacedPoints(bandSegments)
   colors.forEach((_color, i) => {
-    const band = new THREE.Mesh(new THREE.TubeGeometry(curve([[-0.76, 0.145, (i - 2) * 0.025], [-0.35, 0.151, (i - 2) * 0.025 - 0.015], [0.35, 0.151, (i - 2) * 0.025 + 0.015], [0.76, 0.145, (i - 2) * 0.025 + 0.025]]), 32, 0.008, 6, false), cordMaterials[i])
+    const bandGeo = createCappedCordGeometry(bandSegments, bandRadial, false)
+    writeMizuhikiStrandInPlace(bandGeo, bandCentres, bandSegments, bandRadial, BAND_RADIUS, (i - 2) * STRAND_SPACING, {
+      turns: 26,
+      plyDepth: 0.04,
+      phase: i * 0.7,
+      pinchCenter: false,
+      fixedLateralZ: true,
+    })
+    const band = new THREE.Mesh(bandGeo, cordMaterials[i])
+    band.name = `mizuhiki-binding-band-${i}`
     knot.add(band)
   })
 
-  // Reuse fixed tube allocations as the strands follow prescribed curves;
-  // no rope simulation or per-frame geometry allocation is required.
-  const tubeSegments = 120, radialSegments = 6
+  // Reuse fixed closed-end tube allocations as the stiff paper cords follow arc-length
+  // parameterized curves; zero rope simulation or per-frame GPU allocation.
+  const tubeSegments = 220, radialSegments = 10
   const forms = CORD_FORMS.map(curve)
-  const sampled = forms.map((path) => path.getPoints(tubeSegments))
+  const sampled = forms.map((path) => path.getSpacedPoints(tubeSegments))
   const cordMeshes = cordMaterials.map((material, strand) => {
-    const geometry = new THREE.TubeGeometry(forms[0], tubeSegments, 0.009, radialSegments, false)
-    ;(geometry.getAttribute('position') as THREE.BufferAttribute).setUsage(THREE.DynamicDrawUsage)
-    ;(geometry.getAttribute('normal') as THREE.BufferAttribute).setUsage(THREE.DynamicDrawUsage)
+    const geometry = createCappedCordGeometry(tubeSegments, radialSegments, true)
     const mesh = new THREE.Mesh(geometry, material)
     mesh.name = `mizuhiki-loop-strand-${strand}`
     knot.add(mesh)
     return mesh
   })
   const centres = Array.from({ length: tubeSegments + 1 }, () => new THREE.Vector3())
-  const normal = new THREE.Vector3(), tangent = new THREE.Vector3()
   let lastPose = Number.NaN
-  const poseCords = () => {
-    if (pose === lastPose) return
+  let lastSpringOffset = Number.NaN
+  const poseCords = (springOffset = 0) => {
+    if (pose === lastPose && springOffset === lastSpringOffset) return
     lastPose = pose
+    lastSpringOffset = springOffset
     const from = Math.min(1, Math.floor(pose)), to = Math.min(2, from + 1), k = ease(pose - from)
-    centres.forEach((point, i) => point.lerpVectors(sampled[from][i], sampled[to][i], k))
-    cordMeshes.forEach((mesh, strand) => {
-      const positions = mesh.geometry.getAttribute('position') as THREE.BufferAttribute
-      const normals = mesh.geometry.getAttribute('normal') as THREE.BufferAttribute
-      const offset = (strand - 2) * 0.026
-      for (let i = 0; i <= tubeSegments; i++) {
-        tangent.subVectors(centres[Math.min(tubeSegments, i + 1)], centres[Math.max(0, i - 1)]).normalize()
-        normal.set(-tangent.z, 0, tangent.x).normalize()
-        for (let j = 0; j <= radialSegments; j++) {
-          const a = j / radialSegments * Math.PI * 2, cos = Math.cos(a), sin = Math.sin(a)
-          const n = i * (radialSegments + 1) + j, center = centres[i]
-          positions.setXYZ(n, center.x + normal.x * (offset + 0.009 * cos), center.y + 0.009 * sin, center.z + normal.z * (offset + 0.009 * cos))
-          normals.setXYZ(n, normal.x * cos, sin, normal.z * cos)
-        }
+    // Gentle vertical lift arc during active transition so the stiff ribbon clears lower passes smoothly.
+    const transitLift = Math.sin(Math.PI * k) * 0.024
+    for (let i = 0; i <= tubeSegments; i++) {
+      const u = i / tubeSegments
+      const p = centres[i]!
+      p.lerpVectors(sampled[from]![i]!, sampled[to]![i]!, k)
+      if (transitLift > 1e-5) {
+        const edgeMask = Math.sin(Math.PI * u)
+        p.y += transitLift * edgeMask
       }
-      positions.needsUpdate = normals.needsUpdate = true
-      mesh.geometry.computeBoundingSphere()
+      if (springOffset !== 0) {
+        // Stiff-paper spring flexure localized to the arched bow lobes, keeping the central weave seated.
+        const distCenter = Math.hypot(p.x, p.z - 0.02)
+        const lobeWeight = THREE.MathUtils.smoothstep(distCenter, 0.16, 0.52)
+        p.y = Math.max(0.114, p.y + springOffset * lobeWeight)
+      }
+    }
+    cordMeshes.forEach((mesh, strand) => {
+      const offset = (strand - 2) * STRAND_SPACING
+      writeMizuhikiStrandInPlace(
+        mesh.geometry,
+        centres,
+        tubeSegments,
+        radialSegments,
+        CORD_RADIUS,
+        offset,
+        {
+          turns: 44,
+          plyDepth: 0.044,
+          phase: strand * 0.65,
+          pinchCenter: true,
+        },
+      )
     })
   }
 
@@ -359,8 +654,15 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     checkpoint = motionTarget as Checkpoint
     pose = checkpoint
     sparkle = 0.65
+    if (ctx.isReducedMotion?.()) {
+      springTimer = 1
+      springAmp = 0
+    } else {
+      springTimer = 0
+      springAmp = 0.011
+    }
     syncUI()
-    poseCords()
+    poseCords(0)
     ctx.onProgress?.(checkpoint)
   }
   const workCord = () => {
@@ -368,6 +670,8 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     motionFrom = pose
     motionTarget = checkpoint + 1
     motionT = (ctx.isReducedMotion?.() ?? false) ? 1 : 0
+    springTimer = 1
+    springAmp = 0
     resetDrag()
     feedback.impact({ freqs: checkpoint === 0 ? [784, 1176] : [659.25, 987.77], duration: 0.3, gain: 0.035, type: 'triangle' })
     if (motionT === 1) finishCord()
@@ -432,7 +736,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     hintEl.dataset.progress = 'true'
     setSafeText(hintEl, path.complete([pointerPoint.x, pointerPoint.z], .19) ? '这一段已绕好，松手即可。' : sceneTemplate('已沿金点前进 {p0}%，继续到下一处提示。', { p0: Math.round(path.progress * 100) }), shared.assertSafeCopy)
     showTip(drag.t)
-    poseCords()
+    poseCords(0)
   }
   const onUp = (e: PointerEvent) => {
     const current = drag
@@ -467,7 +771,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     if (checkpoint < 2) workCord()
     else complete()
   }
-  const blur = () => { focused = false; resetDrag(); pressed.clear(); blockedMulti = false; poseCords(); syncUI() }
+  const blur = () => { focused = false; resetDrag(); pressed.clear(); blockedMulti = false; poseCords(0); syncUI() }
   const focus = () => { focused = true; if (!disposed) syncUI() }
   const resize = () => {
     const aspect = sizeStage(canvas, renderer, styleRenderer, camera)
@@ -478,7 +782,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   }
 
   syncUI()
-  poseCords()
+  poseCords(0)
   return {
     start() {
       if (disposed || started) return
@@ -509,8 +813,10 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
       pose = Math.min(checkpoint, 2)
       motionTarget = pose
       settle = checkpoint === 3 ? 1 : 0
+      springTimer = 1
+      springAmp = 0
       if (checkpoint === 3) paintWish('赠你祝愿', true)
-      poseCords()
+      poseCords(0)
       syncUI()
     },
     update(dt) {
@@ -518,7 +824,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
       if (!canAct()) {
         suspended = true
         resetDrag()
-        poseCords()
+        poseCords(0)
         syncUI()
         styleRenderer.render()
         return
@@ -526,15 +832,25 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
       if (suspended) { suspended = false; syncUI() }
       wishHandle?.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
+      const safeDt = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, 0.05) : 0
       if (moving()) {
-        motionT = reduced ? 1 : Math.min(1, motionT + Math.max(0, dt) / (checkpoint === 0 ? 0.9 : 1.15))
+        motionT = reduced ? 1 : Math.min(1, motionT + safeDt / (checkpoint === 0 ? 0.9 : 1.15))
         pose = THREE.MathUtils.lerp(motionFrom, motionTarget, ease(motionT))
         if (motionT === 1) finishCord()
       }
-      poseCords()
-      settle = checkpoint === 3 ? reduced ? 1 : Math.min(1, settle + dt / 0.75) : 0
+      let springOffset = 0
+      if (reduced) {
+        springTimer = 1
+        springAmp = 0
+      } else if (springTimer < 0.42 && springAmp > 0) {
+        springTimer = Math.min(0.42, springTimer + safeDt)
+        const env = Math.exp(-10.5 * springTimer)
+        springOffset = springTimer >= 0.42 ? 0 : springAmp * env * Math.cos(24 * springTimer)
+      }
+      poseCords(springOffset)
+      settle = checkpoint === 3 ? reduced ? 1 : Math.min(1, settle + safeDt / 0.75) : 0
       world.rotation.y = -0.065 * ease(settle)
-      sparkle = Math.max(0, sparkle - dt)
+      sparkle = Math.max(0, sparkle - safeDt)
       cordMaterials.forEach((mat) => { mat.emissiveIntensity = reduced ? 0 : sparkle * 0.16 })
       // A stable desk camera keeps both loops and every fold edge readable.
       tipRing.scale.setScalar(reduced ? 1 : 1 + Math.sin(performance.now() * 0.003) * 0.045)

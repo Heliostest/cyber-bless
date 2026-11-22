@@ -390,3 +390,78 @@ it('does not start the cord through a nearer opaque surface',()=>{
  follow(s);expect(s.progress).toEqual([])
  block.removeFromParent();block.geometry.dispose();block.material.dispose();follow(s);expect(s.progress).toEqual([1])
 })
+
+describe('mizuhiki paper-cord craft geometry and continuity', () => {
+  it('uses outward-wound closed-end tubes on all binding bands and loop strands at every checkpoint', () => {
+    const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3()
+    const ab = new THREE.Vector3(), ac = new THREE.Vector3(), faceN = new THREE.Vector3()
+    const n0 = new THREE.Vector3(), n1 = new THREE.Vector3(), n2 = new THREE.Vector3(), avgN = new THREE.Vector3()
+    for (const checkpoint of [0, 1, 2, 3]) {
+      const s = mount(checkpoint, { isReducedMotion: () => true })
+      for (const prefix of ['mizuhiki-binding-band-', 'mizuhiki-loop-strand-']) {
+        for (let strand = 0; strand < 5; strand++) {
+          const mesh = drawn.scene!.getObjectByName(`${prefix}${strand}`) as THREE.Mesh
+          expect(mesh, `${prefix}${strand}`).toBeDefined()
+          const pos = mesh.geometry.getAttribute('position') as THREE.BufferAttribute
+          const norm = mesh.geometry.getAttribute('normal') as THREE.BufferAttribute
+          const idx = mesh.geometry.getIndex()!
+          expect(pos.count).toBeGreaterThan(200)
+          for (let i = 0; i < pos.count; i++) {
+            expect(Number.isFinite(pos.getX(i) + pos.getY(i) + pos.getZ(i))).toBe(true)
+            expect(Number.isFinite(norm.getX(i) + norm.getY(i) + norm.getZ(i))).toBe(true)
+          }
+          let outwardCount = 0, inwardCount = 0
+          for (let t = 0; t < idx.count; t += 3) {
+            const i0 = idx.getX(t), i1 = idx.getX(t + 1), i2 = idx.getX(t + 2)
+            a.fromBufferAttribute(pos, i0); b.fromBufferAttribute(pos, i1); c.fromBufferAttribute(pos, i2)
+            ab.subVectors(b, a); ac.subVectors(c, a); faceN.crossVectors(ab, ac)
+            if (faceN.lengthSq() < 1e-14) continue
+            n0.fromBufferAttribute(norm, i0); n1.fromBufferAttribute(norm, i1); n2.fromBufferAttribute(norm, i2)
+            avgN.copy(n0).add(n1).add(n2)
+            if (faceN.dot(avgN) > 0) outwardCount++
+            else inwardCount++
+          }
+          expect(outwardCount, `${prefix}${strand} at ${checkpoint}`).toBeGreaterThan(100)
+          expect(inwardCount, `${prefix}${strand} inward faces at ${checkpoint}`).toBe(0)
+        }
+      }
+      s.instance.dispose()
+    }
+  })
+
+  it('seats loop strands close to the envelope surface and wraps horizontal bands around both edges', () => {
+    const s = mount(3, { isReducedMotion: () => true })
+    for (let strand = 0; strand < 5; strand++) {
+      const band = drawn.scene!.getObjectByName(`mizuhiki-binding-band-${strand}`) as THREE.Mesh
+      const bandBox = new THREE.Box3().setFromObject(band)
+      expect(bandBox.min.x).toBeLessThan(-0.76)
+      expect(bandBox.max.x).toBeGreaterThan(0.76)
+      expect(bandBox.min.y).toBeLessThan(0.05)
+      expect(bandBox.max.y).toBeLessThan(0.14)
+
+      const loop = drawn.scene!.getObjectByName(`mizuhiki-loop-strand-${strand}`) as THREE.Mesh
+      const loopBox = new THREE.Box3().setFromObject(loop)
+      expect(loopBox.min.y).toBeGreaterThan(0.10)
+      expect(loopBox.max.y).toBeLessThan(0.21)
+    }
+    s.instance.dispose()
+  })
+
+  it('reuses fixed vertex buffers across transitions and settles still in reduced motion', () => {
+    const s = mount(0)
+    const buffers = Array.from({ length: 5 }, (_, i) => {
+      const m = drawn.scene!.getObjectByName(`mizuhiki-loop-strand-${i}`) as THREE.Mesh
+      return { geo: m.geometry, pos: m.geometry.getAttribute('position').array }
+    })
+    s.button.click()
+    s.run(0.5)
+    for (let i = 0; i < 5; i++) {
+      const m = drawn.scene!.getObjectByName(`mizuhiki-loop-strand-${i}`) as THREE.Mesh
+      expect(m.geometry).toBe(buffers[i]!.geo)
+      expect(m.geometry.getAttribute('position').array).toBe(buffers[i]!.pos)
+    }
+    s.run(1.5)
+    expect(s.progress).toEqual([1])
+    s.instance.dispose()
+  })
+})

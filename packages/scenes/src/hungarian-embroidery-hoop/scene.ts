@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -12,6 +13,7 @@ import { createDropFeedback } from '../drop-feedback'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
+import { createSpoolThreadSim, TAIL_RADIUS, writeFlossTubeInPlace } from './thread-sim'
 
 const COPY = {
   title: '花绣寄语', decorateAction: '添一朵线花', hangAction: '把绣圈安放在展托', quietAction: '轻点绣圈静看',
@@ -24,6 +26,56 @@ const COPY = {
 type Checkpoint = 0 | 1 | 2 | 3
 const HOME = new THREE.Vector3(-.72, 1.535, .015), REST = new THREE.Vector3(.82, 1.615, .015), SPOOL_HOME = new THREE.Vector3(-.98, .99, .64)
 const ease = (t: number) => t * t * (3 - 2 * t)
+
+/** Fine procedural natural woven linen map (subtle warp/weft slub + hoop-edge tension shadow). */
+function createLinenWeaveTexture(): THREE.DataTexture {
+  const size = 256
+  const data = new Uint8Array(size * size * 4)
+  for (let y = 0; y < size; y++) {
+    const ny = (y + .5) / size * 2 - 1
+    const weftPhase = Math.sin(y * Math.PI * .75)
+    const weftSlub = Math.sin(y * .43 + 1.3) * .5 + Math.sin(y * 1.17) * .5
+    for (let x = 0; x < size; x++) {
+      const nx = (x + .5) / size * 2 - 1
+      const warpPhase = Math.sin(x * Math.PI * .75)
+      const warpSlub = Math.sin(x * .39 + .7) * .5 + Math.sin(x * 1.09) * .5
+      const checker = ((x + y) & 1) ? 1 : -1
+      const weave = (warpPhase + weftPhase) * 3.4 + checker * 2.2 + (warpSlub + weftSlub) * 1.8
+      const r = Math.hypot(nx, ny)
+      const edgeShade = THREE.MathUtils.smoothstep(r, .78, 1.0) * 14
+      const i = (y * size + x) * 4
+      data[i] = THREE.MathUtils.clamp(Math.round(240 + weave - edgeShade), 185, 252)
+      data[i + 1] = THREE.MathUtils.clamp(Math.round(229 + weave * .94 - edgeShade * 1.05), 172, 245)
+      data[i + 2] = THREE.MathUtils.clamp(Math.round(207 + weave * .88 - edgeShade * 1.12), 152, 228)
+      data[i + 3] = 255
+    }
+  }
+  const map = new THREE.DataTexture(data, size, size)
+  map.colorSpace = THREE.SRGBColorSpace
+  map.wrapS = map.wrapT = THREE.ClampToEdgeWrapping
+  map.magFilter = map.minFilter = THREE.LinearFilter
+  map.needsUpdate = true
+  return map
+}
+
+function buildSpoolHelixPoints(
+  turns: number,
+  yMin: number,
+  yMax: number,
+  radius: number,
+  samples: number,
+  phaseOffset = 0,
+): THREE.Vector3[] {
+  const pts: THREE.Vector3[] = []
+  for (let i = 0; i <= samples; i++) {
+    const u = i / samples
+    const angle = u * turns * Math.PI * 2 + phaseOffset
+    const y = THREE.MathUtils.lerp(yMin, yMax, u)
+    const r = radius + Math.sin(u * Math.PI) * .0035
+    pts.push(new THREE.Vector3(Math.cos(angle) * r, y, Math.sin(angle) * r))
+  }
+  return pts
+}
 
 /** Original raised thread flowers for contemporary craft appreciation; no traced traditional pattern. */
 export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance {
@@ -64,17 +116,42 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
   const world = new THREE.Group(); world.name = 'embroidery-workbench'; scene.add(world)
   const material = (color: number, roughness = .82) => new THREE.MeshStandardMaterial({ color, roughness })
   const oak = material(0xc4a57b), walnut = material(0x87674f), wood = material(0xba854e, .6)
-  const linen = createRitualMaterial({ color: 0xf0e5cf, roughness: .82 }, { kind: 'cloth', strength: .14, fiber: 'linen' }), weave = material(0xded1b7), pad = material(0xadbdb1)
-  const rose = material(0xbc4562, .68), pink = material(0xde8090, .72), teal = material(0x428a83, .72), gold = material(0xd1a655, .6)
+  const linenMap = createLinenWeaveTexture()
+  const linen = createRitualMaterial({ color: 0xffffff, map: linenMap, roughness: .84 }, { kind: 'cloth', strength: .14, fiber: 'linen' })
+  const weaveTrim = material(0xd7c8ad, .92)
+  const pad = applyCraftSurface(material(0xadbdb1, .9), { kind: 'fabric', scale: 1.8, strength: .28 })
+  const rose = applyCraftSurface(material(0xbc4562, .58), { kind: 'cord', scale: 2.8, strength: .36 })
+  const roseDeep = applyCraftSurface(material(0xaa3b58, .61), { kind: 'cord', scale: 2.8, strength: .36 })
+  const pink = applyCraftSurface(material(0xde8090, .60), { kind: 'cord', scale: 2.8, strength: .34 })
+  const pinkDeep = applyCraftSurface(material(0xd27084, .63), { kind: 'cord', scale: 2.8, strength: .34 })
+  const teal = applyCraftSurface(material(0x428a83, .62), { kind: 'cord', scale: 2.8, strength: .36 })
+  const tealDeep = applyCraftSurface(material(0x326f69, .66), { kind: 'cord', scale: 2.8, strength: .36 })
+  const gold = applyCraftSurface(material(0xd1a655, .52), { kind: 'cord', scale: 3.0, strength: .34 })
   const brass = new THREE.MeshStandardMaterial({ color: 0xc4a16b, roughness: .45, metalness: .48 })
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
   const box = (name: string, size: [number, number, number], p: [number, number, number], mat: THREE.Material = oak, parent: THREE.Object3D = world) =>
     add(name, new RoundedBoxGeometry(...size, 3, Math.min(.025, ...size.map(v => v / 3))), mat, p, parent)
-  const thread = (name: string, points: [number, number, number][], radius: number, mat: THREE.Material, parent: THREE.Object3D) => {
-    const mesh = add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 14, radius, 6, false), mat, [0, 0, 0], parent)
-    mesh.userData.toonSurface = { outline: false }; return mesh
+  const flossThread = (
+    name: string,
+    points: [number, number, number][],
+    radius: number,
+    mat: THREE.Material,
+    parent: THREE.Object3D,
+    options: { tubular?: number; radial?: number; turns?: number; plyDepth?: number; phase?: number; dynamic?: boolean } = {},
+  ) => {
+    const vecs = points.map(p => new THREE.Vector3(...p))
+    const curve = new THREE.CatmullRomCurve3(vecs)
+    const geometry = new THREE.TubeGeometry(curve, options.tubular ?? 14, radius, options.radial ?? 8, false)
+    if (options.dynamic) {
+      ;(geometry.getAttribute('position') as THREE.BufferAttribute).setUsage(THREE.DynamicDrawUsage)
+      ;(geometry.getAttribute('normal') as THREE.BufferAttribute).setUsage(THREE.DynamicDrawUsage)
+    }
+    writeFlossTubeInPlace(geometry, vecs, { turns: options.turns ?? 4, plyDepth: options.plyDepth ?? .072, phase: options.phase ?? 0 })
+    const mesh = add(name, geometry, mat, [0, 0, 0], parent)
+    mesh.userData.toonSurface = { outline: false }
+    return mesh as THREE.Mesh<THREE.TubeGeometry>
   }
   addCraftTable(world, { name: 'hoop-table', topName: 'hoop-table-top', width: 3.48, depth: 1.70, surfaceY: .76, thickness: .12, center: [0,.04], support: 'joined', finish: 'birch' })
   const ground = add('hoop-contact-shadow', new THREE.PlaneGeometry(3.9, 2.1), new THREE.ShadowMaterial({ opacity: .13 }), [0, .002, .1]); ground.rotation.x = -Math.PI / 2; ground.castShadow = false
@@ -89,58 +166,220 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
   add('hoop-front-bead', new THREE.TorusGeometry(.681, .014, 8, 96), oak, [0, 0, .048], hoop)
   const cloth = add('hoop-linen', new THREE.CylinderGeometry(.668, .668, .034, 96), linen, [0, 0, 0], hoop); cloth.rotation.x = Math.PI / 2
   cloth.userData.toonSurface = { outline: false }
-  // Fine warp/weft threads end inside the wooden rim.
+  // Inner tension crease where the stretched linen tucks cleanly inside the wooden hoop rim.
   const clothWeave = new THREE.Group(); clothWeave.name = 'hoop-linen-weave'; hoop.add(clothWeave)
-  for (let i = -8; i <= 8; i++) {
-    const a = i * .068, edge = Math.sqrt(.62 * .62 - a * a)
-    thread('hoop-warp', [[a, -edge, .017], [a, 0, .0172], [a, edge, .017]], .0011, weave, clothWeave)
-    thread('hoop-weft', [[-edge, a, .017], [0, a, .0172], [edge, a, .017]], .0011, weave, clothWeave)
-  }
+  const tensionCrease = add('hoop-linen-rim-crease', new THREE.TorusGeometry(.623, .004, 6, 72), weaveTrim, [0, 0, .017], clothWeave)
+  tensionCrease.userData.toonSurface = { outline: false }
   box('hoop-clamp-left', [.08, .16, .10], [-.095, .70, .005], wood, hoop)
   box('hoop-clamp-right', [.08, .16, .10], [.095, .70, .005], wood, hoop)
   const grip = add('hoop-clamp-bridge', new THREE.CylinderGeometry(.025, .025, .25, 16), brass, [0, .748, .026], hoop); grip.rotation.z = Math.PI / 2
   add('hoop-clamp-knob', new THREE.SphereGeometry(.044, 16, 12), brass, [.157, .748, .026], hoop)
   const stitches = new THREE.Group(); stitches.name = 'hoop-floral-stitches'; hoop.add(stitches)
-  // Freely composed five-petal flowers: seven transverse satin-like threads per petal.
-  const flower = (parent: THREE.Object3D, x: number, y: number, size: number, mat: THREE.Material) => {
+
+  // Dense satin-stitched five-petal flowers: 11 closely-packed transverse embroidery floss arches
+  // per petal (anchored cleanly into the linen at z=.017) plus coiled French-knot centers.
+  type FlourishRevealItem = { mesh: THREE.Mesh; totalIndices: number; startT: number; endT: number; anchorLocal: THREE.Vector3; isKnot?: boolean }
+  const flower = (
+    parent: THREE.Object3D,
+    x: number,
+    y: number,
+    size: number,
+    mat: THREE.Material,
+    innerMat: THREE.Material,
+    revealList?: FlourishRevealItem[],
+  ) => {
+    const rows = 11
+    const stitchRadius = THREE.MathUtils.clamp(size * .044, .0068, .0098)
     for (let petal = 0; petal < 5; petal++) {
       const a = Math.PI / 2 + petal * Math.PI * 2 / 5, ux = Math.cos(a), uy = Math.sin(a), vx = -uy, vy = ux
-      for (let row = 0; row < 7; row++) {
-        const t = (row + 1) / 8, r = size * (.22 + t * .78), w = size * .26 * Math.sin(Math.PI * t)
-        thread('hoop-petal-stitch', [[x + ux * r - vx * w, y + uy * r - vy * w, .017], [x + ux * r, y + uy * r, .040], [x + ux * r + vx * w, y + uy * r + vy * w, .017]], .0075, mat, parent)
+      const petalStart = .34 + petal * .058
+      const petalSpan = .056
+      for (let row = 0; row < rows; row++) {
+        const t = (row + .5) / rows
+        const r = size * (.21 + t * .79)
+        const w = size * .31 * Math.pow(Math.sin(Math.PI * Math.pow(t, .84)), .82)
+        const peakZ = .0385 + .0042 * Math.sin(Math.PI * t)
+        const shoulderZ = .017 + (peakZ - .017) * .68
+        const px = x + ux * r, py = y + uy * r
+        const stitchMat = row < 2 ? innerMat : mat
+        const mesh = flossThread(
+          'hoop-petal-stitch',
+          [
+            [px - vx * w, py - vy * w, .017],
+            [px - vx * w * .52, py - vy * w * .52, shoulderZ],
+            [px, py, peakZ],
+            [px + vx * w * .52, py + vy * w * .52, shoulderZ],
+            [px + vx * w, py + vy * w, .017],
+          ],
+          stitchRadius,
+          stitchMat,
+          parent,
+          { tubular: 14, radial: 8, turns: 2.5, plyDepth: .062, phase: row * .55 },
+        )
+        if (revealList) {
+          const sT = petalStart + (row / rows) * petalSpan
+          const eT = Math.min(.65, sT + .018)
+          const idxCount = mesh.geometry.index ? mesh.geometry.index.count : mesh.geometry.attributes.position.count
+          revealList.push({ mesh, totalIndices: idxCount, startT: sT, endT: eT, anchorLocal: new THREE.Vector3(px, py, peakZ + .008) })
+        }
       }
     }
+    const knotRingGeo = (r: number, tube: number) => new THREE.TorusGeometry(r, tube, 8, 16)
     for (let i = 0; i < 7; i++) {
-      const a = i * Math.PI * 2 / 7, r = size * .13
-      const knot = add('hoop-flower-knot', new THREE.SphereGeometry(.012, 10, 8), gold, [x + r * Math.cos(a), y + r * Math.sin(a), .025], parent); knot.scale.z = .8
+      const a = i * Math.PI * 2 / 7, r = size * .14
+      const kx = x + r * Math.cos(a), ky = y + r * Math.sin(a)
+      const knot = add('hoop-flower-knot', knotRingGeo(.0095, .0054), gold, [kx, ky, .024], parent)
+      knot.userData.toonSurface = { outline: false }
+      if (revealList) {
+        const sT = .63 + (i / 7) * .055
+        revealList.push({ mesh: knot, totalIndices: 0, startT: sT, endT: sT + .015, anchorLocal: new THREE.Vector3(kx, ky, .03), isKnot: true })
+      }
+    }
+    const centerKnot = add('hoop-flower-knot', knotRingGeo(.0085, .0052), gold, [x, y, .026], parent)
+    centerKnot.userData.toonSurface = { outline: false }
+    if (revealList) {
+      revealList.push({ mesh: centerKnot, totalIndices: 0, startT: .675, endT: .695, anchorLocal: new THREE.Vector3(x, y, .032), isKnot: true })
     }
   }
+
+  // Herringbone / fishbone satin-stitched embroidered leaves with central teal vein.
   const leaf = (x: number, y: number, dx: number, dy: number) => {
-    for (let i = 0; i < 7; i++) {
-      const t = (i + 1) / 8, w = Math.sin(t * Math.PI) * .037
-      thread('hoop-leaf-stitch', [[x + dx * t - dy * w, y + dy * t + dx * w, .017], [x + dx * t, y + dy * t, .037], [x + dx * t + dy * w, y + dy * t - dx * w, .017]], .007, teal, stitches)
+    const len = Math.hypot(dx, dy)
+    const ux = dx / len, uy = dy / len
+    const vx = -uy, vy = ux
+    flossThread(
+      'hoop-leaf-vein',
+      [[x, y, .017], [x + dx * .5, y + dy * .5, .026], [x + dx, y + dy, .017]],
+      .0068,
+      tealDeep,
+      stitches,
+      { tubular: 16, radial: 8, turns: 5, plyDepth: .065 },
+    )
+    const pairs = 9
+    for (let i = 0; i < pairs; i++) {
+      const t = (i + .6) / (pairs + .6)
+      const w = .056 * Math.pow(Math.sin(Math.PI * Math.pow(t, .82)), .85)
+      const tipShift = Math.min(len * .16, w * .68)
+      const bx = x + dx * t, by = y + dy * t
+      for (const side of [-1, 1] as const) {
+        const ex = bx + vx * w * side + ux * tipShift
+        const ey = by + vy * w * side + uy * tipShift
+        const mx = (bx + ex) * .5, my = (by + ey) * .5
+        const peakZ = .031 + .0045 * Math.sin(Math.PI * t)
+        flossThread(
+          'hoop-leaf-stitch',
+          [[bx, by, .017], [mx, my, peakZ], [ex, ey, .017]],
+          .0068,
+          i % 3 === 0 ? tealDeep : teal,
+          stitches,
+          { tubular: 12, radial: 7, turns: 2, plyDepth: .058, phase: i * .4 + side },
+        )
+      }
     }
   }
-  thread('hoop-stem', [[-.12, -.38, .019], [-.17, -.17, .026], [-.12, .17, .019]], .011, teal, stitches)
-  thread('hoop-branch', [[-.16, -.13, .019], [.04, .04, .026], [.18, .31, .019]], .008, teal, stitches)
-  leaf(-.16, -.18, -.23, .13); leaf(-.15, -.30, .23, .12)
-  flower(stitches, -.12, .17, .22, rose); flower(stitches, .19, .32, .105, pink)
+
+  flossThread('hoop-stem', [[-.12, -.38, .017], [-.17, -.17, .028], [-.12, .17, .017]], .0115, teal, stitches, { tubular: 28, radial: 8, turns: 9, plyDepth: .075 })
+  flossThread('hoop-branch', [[-.16, -.13, .017], [.04, .04, .027], [.18, .31, .017]], .0088, teal, stitches, { tubular: 24, radial: 8, turns: 8, plyDepth: .072 })
+  leaf(-.16, -.18, -.22, .13); leaf(-.15, -.30, .20, .11)
+  flower(stitches, -.12, .17, .22, rose, roseDeep); flower(stitches, .19, .32, .105, pink, pinkDeep)
+
   const flourish = new THREE.Group(); flourish.name = 'hoop-completed-flourish'; hoop.add(flourish)
-  flower(flourish, .25, -.22, .14, rose)
-  thread('hoop-flourish-stem', [[-.12, -.37, .017], [.10, -.37, .025], [.25, -.24, .017]], .008, teal, flourish)
+  const flourishReveal: FlourishRevealItem[] = []
+  const flourishStem = flossThread('hoop-flourish-stem', [[-.12, -.37, .017], [.09, -.36, .027], [.25, -.24, .017]], .0088, teal, flourish, { tubular: 24, radial: 8, turns: 7, plyDepth: .072 })
+  flourishReveal.push({
+    mesh: flourishStem,
+    totalIndices: flourishStem.geometry.index ? flourishStem.geometry.index.count : flourishStem.geometry.attributes.position.count,
+    startT: .20,
+    endT: .34,
+    anchorLocal: new THREE.Vector3(.10, -.35, .034),
+  })
+  flower(flourish, .25, -.22, .14, rose, roseDeep, flourishReveal)
+
   const spool = new THREE.Group(); spool.name = 'hoop-thread-spool'; world.add(spool)
   add('hoop-spool-bottom', new THREE.CylinderGeometry(.18, .18, .04, 32), wood, [0, -.21, 0], spool)
   add('hoop-spool-core', new THREE.CylinderGeometry(.09, .09, .40, 24), wood, [0, 0, 0], spool)
-  add('hoop-wound-thread', new THREE.CylinderGeometry(.14, .14, .34, 40), rose, [0, 0, 0], spool)
-  for (let i = -7; i <= 7; i++) {
-    const coil = add('hoop-thread-coil', new THREE.TorusGeometry(.14, .009, 6, 40), i % 3 === 0 ? pink : rose, [0, i * .022, 0], spool)
-    coil.rotation.x = Math.PI / 2; coil.userData.toonSurface = { outline: false }
-  }
+  add('hoop-wound-thread', new THREE.CylinderGeometry(.138, .138, .35, 40), roseDeep, [0, 0, 0], spool)
+  // Continuous non-overlapping double-helix wound embroidery thread replacing disconnected torus rings.
+  // Matched pitch (10.5 turns across 0.336 -> pitch 0.032, half-pitch 0.016) with π phase shift keeps
+  // the rose and soft-pink accent strands cleanly nested side-by-side with zero crossing z-fighting.
+  const mainHelixPts = buildSpoolHelixPoints(10.5, -.168, .168, .1415, 224, 0)
+  const mainHelixCurve = new THREE.CatmullRomCurve3(mainHelixPts)
+  const mainHelixGeo = new THREE.TubeGeometry(mainHelixCurve, 224, .0092, 8, false)
+  writeFlossTubeInPlace(mainHelixGeo, mainHelixPts, { turns: 36, plyDepth: .052 })
+  const mainCoil = add('hoop-thread-coil', mainHelixGeo, rose, [0, 0, 0], spool)
+  mainCoil.userData.toonSurface = { outline: false }
+  const sheenHelixPts = buildSpoolHelixPoints(10.5, -.168, .168, .1402, 224, Math.PI)
+  const sheenHelixCurve = new THREE.CatmullRomCurve3(sheenHelixPts)
+  const sheenHelixGeo = new THREE.TubeGeometry(sheenHelixCurve, 224, .0076, 8, false)
+  writeFlossTubeInPlace(sheenHelixGeo, sheenHelixPts, { turns: 36, plyDepth: .048, phase: .8 })
+  const sheenCoil = add('hoop-thread-coil-sheen', sheenHelixGeo, pink, [0, 0, 0], spool)
+  sheenCoil.userData.toonSurface = { outline: false }
+
   const spoolGrip = add('hoop-spool-cap', new THREE.CylinderGeometry(.18, .18, .04, 32), wood, [0, .21, 0], spool)
-  thread('hoop-spool-tail', [[.13, -.10, .05], [.24, -.17, .04], [.29, -.222, .02]], .009, rose, spool)
+  const tailGeo = new THREE.TubeGeometry(
+    new THREE.CatmullRomCurve3([new THREE.Vector3(.136, -.088, .054), new THREE.Vector3(.26, -.22, .10), new THREE.Vector3(.43, -.22, .12)]),
+    36,
+    TAIL_RADIUS,
+    8,
+    false,
+  )
+  ;(tailGeo.getAttribute('position') as THREE.BufferAttribute).setUsage(THREE.DynamicDrawUsage)
+  ;(tailGeo.getAttribute('normal') as THREE.BufferAttribute).setUsage(THREE.DynamicDrawUsage)
+  const spoolTail = add('hoop-spool-tail', tailGeo, rose, [0, 0, 0], spool) as THREE.Mesh<THREE.TubeGeometry>
+  spoolTail.userData.toonSurface = { outline: false }
+
+  const threadSim = createSpoolThreadSim({
+    spoolPos: SPOOL_HOME,
+    isActive: active,
+    isReducedMotion: reduced,
+  })
+  const localTailPts = Array.from({ length: 18 }, () => new THREE.Vector3())
+  const stitchWorldTarget = new THREE.Vector3()
+  const writeTailFromWorldPoints = (worldPts: readonly THREE.Vector3[]) => {
+    for (let i = 0; i < worldPts.length; i++) {
+      localTailPts[i]!.copy(worldPts[i]!).sub(spool.position)
+    }
+    writeFlossTubeInPlace(spoolTail.geometry, localTailPts, { turns: 7, plyDepth: .075, taperEnd: true })
+  }
+
+  const setFlourishProgress = (progress: number | null) => {
+    if (progress === null) {
+      for (const item of flourishReveal) {
+        item.mesh.visible = true
+        if (item.isKnot) item.mesh.scale.setScalar(1)
+        else item.mesh.geometry.setDrawRange(0, Infinity)
+      }
+      return null
+    }
+    let activeAnchor: THREE.Vector3 | null = null
+    for (const item of flourishReveal) {
+      const f = THREE.MathUtils.clamp((progress - item.startT) / Math.max(1e-4, item.endT - item.startT), 0, 1)
+      if (f <= 0) {
+        item.mesh.visible = false
+        if (!item.isKnot) item.mesh.geometry.setDrawRange(0, 0)
+      } else {
+        item.mesh.visible = true
+        if (item.isKnot) {
+          item.mesh.scale.setScalar(ease(f))
+        } else {
+          const triCount = Math.floor((item.totalIndices / 3) * f) * 3
+          item.mesh.geometry.setDrawRange(0, Math.max(3, triCount))
+        }
+        if (f < 1 || !activeAnchor) activeAnchor = item.anchorLocal
+      }
+    }
+    return activeAnchor
+  }
 
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const restore = () => { hoop.position.copy(at >= 2 ? REST : HOME); spool.position.copy(SPOOL_HOME); flourish.visible = at >= 1; matrices() }
+  const restore = () => {
+    hoop.position.copy(at >= 2 ? REST : HOME)
+    spool.position.copy(SPOOL_HOME)
+    flourish.visible = at >= 1
+    setFlourishProgress(null)
+    writeTailFromWorldPoints(threadSim.resetToCalm(spool.position, null))
+    matrices()
+  }
   const enabled = (step: number) => () => active() && !motion && at === step
   const stitchPoint = () => hoop.localToWorld(new THREE.Vector3(.25, -.22, .017))
   addInteractionCue(spoolGrip, { kind: 'drag', label: '拿起线轴', priority: 3, enabled: enabled(0), destination: stitchPoint, targetLabel: '亚麻布留白' })
@@ -175,6 +414,7 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
       moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .80, 2.3); matrices()
+      if (at === 0) threadSim.wakeUp()
       dropFeedback.setReady(dragging && automaticReady(x, y))
     if (dragging && automaticReady(x, y) && pointer.finish()) { dragging = false; dropFeedback.clear(); begin(true) }
     },
@@ -203,7 +443,7 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
     if (!active()) return
     notifyHost(() => feedback.impact({ freqs: [392, 523.25], duration: .19, gain: .012, type: 'triangle' }))
   }
-  function begin(placed = false) { if (notifying || !active() || (pointer.isBusy() && !placed) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
+  function begin(placed = false) { if (notifying || !active() || (pointer.isBusy() && !placed) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; threadSim.wakeUp(); sync(); if (reduced()) settle() }
   function finish(text = '') {
     if (notifying || !active() || pointer.isBusy() || motion || at !== 2) return
     if (!text.trim() && !ending.completing) return
@@ -228,25 +468,56 @@ export function createHungarianEmbroideryHoop(ctx: SceneContext): SceneInstance 
       if (!returning && at < 3) { writer = gestures.createWishWrite({ maxLen: 40, saves: ctx.saveWish !== undefined,
         onSubmit: text => { if (notifying || !active() || pointer.isBusy() || motion || at !== 2 || !text.trim()) return; notifyHost(() => feedback.prepare()); finish(text) } }); writer.mount(wishSlot, {}) }
       ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
+      threadSim.start()
     },
     update(dt) {
       if (!started || disposed) return
       if (!active()) { pointer.cancel(); writer?.setEnabled(false); ui.actionBtn.disabled = true; ui.actionBtn.setAttribute('aria-disabled', 'true'); if (!inactiveRendered) { style.render(); inactiveRendered = true }; return }
       if (inactiveRendered) { inactiveRendered = false; sync() }
       writer?.setEnabled(at === 2 && !returning && !motion); writer?.update(dt)
+      const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
+      let liveStitchTarget: THREE.Vector3 | null = null
       if (motion) {
-        const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0; motion.time = reduced() ? 1 : Math.min(1, motion.time + delta / .8); const t = ease(motion.time)
+        motion.time = reduced() ? 1 : Math.min(1, motion.time + delta / .8); const t = ease(motion.time)
         if (motion.step === 0) {
-          const target = stitchPoint().add(new THREE.Vector3(0, .10, .25))
-          if (t < .66) { spool.position.lerpVectors(motion.from, target, Math.min(1, t / .3)); spool.position.y += Math.sin(t / .66 * Math.PI) * .045 }
-          else spool.position.lerpVectors(target, SPOOL_HOME, (t - .66) / .34)
-          flourish.visible = t > .35
-        } else { hoop.position.lerpVectors(motion.from, REST, t); if (!reduced()) hoop.position.y += .14 * Math.sin(Math.PI * t) }
+          // Hover slightly beside the blank linen patch so the live working thread and
+          // progressively embroidering third blossom stay clearly unobstructed.
+          const target = stitchPoint().add(new THREE.Vector3(-.22, -.02, .24))
+          if (t < .68) {
+            spool.position.lerpVectors(motion.from, target, Math.min(1, t / .26))
+            const hoverPhase = Math.max(0, (t - .26) / .42)
+            spool.position.x += Math.sin(hoverPhase * Math.PI * 3) * .026
+            spool.position.y += Math.sin(t / .68 * Math.PI) * .042
+          } else {
+            spool.position.lerpVectors(target, SPOOL_HOME, (t - .68) / .32)
+          }
+          if (t >= .18) {
+            flourish.visible = true
+            const activeLocal = setFlourishProgress(t)
+            if (activeLocal && t <= .70) {
+              hoop.updateMatrixWorld(true)
+              stitchWorldTarget.copy(activeLocal).applyMatrix4(hoop.matrixWorld)
+              liveStitchTarget = stitchWorldTarget
+            }
+          } else {
+            flourish.visible = false
+          }
+        } else {
+          hoop.position.lerpVectors(motion.from, REST, t)
+          if (!reduced()) hoop.position.y += .14 * Math.sin(Math.PI * t)
+        }
         if (motion.time === 1) settle()
+      }
+      if (!disposed && active()) {
+        const tailPts = threadSim.step(delta, spool.position, liveStitchTarget, dragging && at === 0)
+        writeTailFromWorldPoints(tailPts)
       }
       ending.update(dt)
       if (!disposed && active()) { matrices(); style.render() }
     },
-    dispose() { if (disposed) return; ending.dispose(); disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() {
+      if (disposed) return
+      ending.dispose(); disposed = true; threadSim.dispose(); pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); linenMap.dispose(); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+    },
   }
 }

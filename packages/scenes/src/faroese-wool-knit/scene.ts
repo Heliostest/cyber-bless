@@ -1,6 +1,7 @@
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -19,8 +20,137 @@ type Checkpoint = 0 | 1 | 2 | 3
 type XYZ = [number, number, number]
 const HOME = new THREE.Vector3(.90, 0, .235), INSERTED = new THREE.Vector3(.64, .20, .235), DRAWN = new THREE.Vector3(.93, -.15, .235)
 const BALL_EXIT: XYZ = [.98, -.58, .42]
+const NEEDLE_ANGLE = .70
+const NEEDLE_AXIS_X = -Math.sin(NEEDLE_ANGLE)
+const NEEDLE_AXIS_Y = Math.cos(NEEDLE_ANGLE)
+const NEEDLE_SIDE_X = Math.cos(NEEDLE_ANGLE)
+const NEEDLE_SIDE_Y = Math.sin(NEEDLE_ANGLE)
 const ease = (t: number) => t * t * (3 - 2 * t)
 const vectors = (points: XYZ[]) => points.map(p => new THREE.Vector3(...p))
+
+type PliedOptions = { turns: number; plyDepth?: number; phase?: number; capEnds?: boolean }
+
+const _pt = new THREE.Vector3()
+const _tan = new THREE.Vector3()
+const _prevTan = new THREE.Vector3()
+const _norm = new THREE.Vector3()
+const _binorm = new THREE.Vector3()
+const _quat = new THREE.Quaternion()
+const _refZ = new THREE.Vector3(0, 0, 1)
+const _refY = new THREE.Vector3(0, 1, 0)
+const _seamN = new THREE.Vector3()
+
+/**
+ * Rewrites an existing TubeGeometry in-place with Bishop parallel-transport frames
+ * and a stylized 2-ply helical wool cross-section, preserving `geometry.type === 'TubeGeometry'`
+ * and `geometry.parameters.path` without per-frame allocation.
+ */
+function writePliedTube(geometry: THREE.TubeGeometry, curve: THREE.CatmullRomCurve3, options: PliedOptions) {
+  const { tubularSegments, radius, radialSegments } = geometry.parameters
+  const turns = options.turns
+  const plyDepth = options.plyDepth ?? 0.145
+  const phase = options.phase ?? 0
+  const capEnds = options.capEnds ?? false
+  const posAttr = geometry.getAttribute('position') as THREE.BufferAttribute
+  const normAttr = geometry.getAttribute('normal') as THREE.BufferAttribute
+  const ringStride = radialSegments + 1
+
+  curve.updateArcLengths()
+  curve.getTangentAt(0, _prevTan).normalize()
+  const ref = Math.abs(_prevTan.dot(_refZ)) < 0.92 ? _refZ : _refY
+  _norm.crossVectors(ref, _prevTan).normalize()
+  _binorm.crossVectors(_prevTan, _norm).normalize()
+
+  for (let i = 0; i <= tubularSegments; i++) {
+    const u = i / tubularSegments
+    curve.getPointAt(u, _pt)
+    if (i > 0) {
+      curve.getTangentAt(u, _tan).normalize()
+      const dot = THREE.MathUtils.clamp(_prevTan.dot(_tan), -1, 1)
+      if (dot < 0.999999) {
+        if (dot > -0.999999) {
+          _quat.setFromUnitVectors(_prevTan, _tan)
+          _norm.applyQuaternion(_quat)
+        }
+        _norm.addScaledVector(_tan, -_norm.dot(_tan))
+        if (_norm.lengthSq() > 1e-10) _norm.normalize()
+      }
+      _binorm.crossVectors(_tan, _norm).normalize()
+      _prevTan.copy(_tan)
+    }
+
+    const twistAngle = u * turns * Math.PI * 2 + phase
+    // Optional gentle rounded taper only at the outermost ring of open ends.
+    let endScale = 1
+    if (capEnds && (i === 0 || i === tubularSegments)) endScale = 0.62
+
+    for (let j = 0; j <= radialSegments; j++) {
+      const theta = (j / radialSegments) * Math.PI * 2
+      const plyMod = 1 + plyDepth * Math.cos(2 * (theta - twistAngle))
+      const r = radius * plyMod * endScale
+      const cx = -Math.cos(theta)
+      const sy = Math.sin(theta)
+      const nx = _norm.x * cx + _binorm.x * sy
+      const ny = _norm.y * cx + _binorm.y * sy
+      const nz = _norm.z * cx + _binorm.z * sy
+      const idx = i * ringStride + j
+      posAttr.setXYZ(idx, _pt.x + nx * r, _pt.y + ny * r, _pt.z + nz * r)
+    }
+  }
+
+  posAttr.needsUpdate = true
+  geometry.computeVertexNormals()
+  // Weld lighting normals across the radial seam (j = 0 and j = radialSegments).
+  for (let i = 0; i <= tubularSegments; i++) {
+    const a = i * ringStride
+    const b = a + radialSegments
+    _seamN.set(
+      normAttr.getX(a) + normAttr.getX(b),
+      normAttr.getY(a) + normAttr.getY(b),
+      normAttr.getZ(a) + normAttr.getZ(b),
+    )
+    if (_seamN.lengthSq() > 1e-10) {
+      _seamN.normalize()
+      normAttr.setXYZ(a, _seamN.x, _seamN.y, _seamN.z)
+      normAttr.setXYZ(b, _seamN.x, _seamN.y, _seamN.z)
+    }
+  }
+  normAttr.needsUpdate = true
+  geometry.computeBoundingBox()
+  geometry.computeBoundingSphere()
+}
+
+function createPliedTubeGeometry(
+  points: XYZ[],
+  segments: number,
+  radius: number,
+  radialSegments: number,
+  options: PliedOptions,
+  dynamic = false,
+): THREE.TubeGeometry {
+  const curve = new THREE.CatmullRomCurve3(vectors(points))
+  const geometry = new THREE.TubeGeometry(curve, segments, radius, radialSegments, false)
+  if (dynamic) {
+    ;(geometry.getAttribute('position') as THREE.BufferAttribute).setUsage(THREE.DynamicDrawUsage)
+    ;(geometry.getAttribute('normal') as THREE.BufferAttribute).setUsage(THREE.DynamicDrawUsage)
+  }
+  writePliedTube(geometry, curve, options)
+  return geometry
+}
+
+function updatePliedTubeInPlace(mesh: THREE.Mesh<THREE.TubeGeometry>, points: XYZ[], options: PliedOptions) {
+  const geometry = mesh.geometry
+  const curve = geometry.parameters.path as THREE.CatmullRomCurve3
+  if (curve.points.length !== points.length) {
+    curve.points = vectors(points)
+  } else {
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i]!
+      curve.points[i]!.set(p[0], p[1], p[2])
+    }
+  }
+  writePliedTube(geometry, curve, options)
+}
 
 /** An original swatch and one ordinary knit stitch, not an exclusive regional technique. */
 export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
@@ -45,45 +175,123 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'wool-workbench'; scene.add(world)
   const mat = (color: number, roughness = .9) => new THREE.MeshStandardMaterial({ color, roughness })
   const wood = mat(0xba956c), darkWood = mat(0x8d7053), needleWood = mat(0xc39254, .68), needleEnd = mat(0x956b40, .72)
-  const cream = mat(0xeee3cc, .98), grey = mat(0x7b8982, .98), ballShade = mat(0xd8cbb4, .98)
+  const woolMat = (color: number) => applyCraftSurface(mat(color, .96), { kind: 'cord', scale: 1.65, strength: .24 })
+  const cream = woolMat(0xeee3cc), grey = woolMat(0x7b8982), ballShade = woolMat(0xd8cbb4)
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: XYZ, parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
   const box = (name: string, size: XYZ, p: XYZ, material: THREE.Material, parent: THREE.Object3D = world) => add(name, new RoundedBoxGeometry(...size, 3, Math.min(.025, ...size.map(n => n / 3))), material, p, parent)
-  const tube = (name: string, points: XYZ[], radius: number, material: THREE.Material, parent: THREE.Object3D, segments = 48) => {
-    const mesh = add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(vectors(points)), segments, radius, 7, false), material, [0, 0, 0], parent)
-    mesh.userData.toonSurface = { outline: false, roughness: .98 }; return mesh as THREE.Mesh<THREE.TubeGeometry>
+  const pliedTube = (
+    name: string,
+    points: XYZ[],
+    radius: number,
+    material: THREE.Material,
+    parent: THREE.Object3D,
+    segments: number,
+    options: PliedOptions,
+    radialSegments = 10,
+    dynamic = false,
+  ) => {
+    const geometry = createPliedTubeGeometry(points, segments, radius, radialSegments, options, dynamic)
+    const mesh = add(name, geometry, material, [0, 0, 0], parent)
+    mesh.userData.toonSurface = { outline: false, roughness: .96 }
+    return mesh as THREE.Mesh<THREE.TubeGeometry>
   }
+
   // The ordinary tabletop continues beyond the crop. The yarn itself is the
   // subject; there is no separate display board or miniature furniture below it.
   box('wool-table', [9, .18, 7], [0, .625, 0], wood)
   const board = new THREE.Group(); board.name = 'wool-work-surface'; board.position.set(0, .688, 0); board.rotation.x = -Math.PI / 2; world.add(board)
 
-  // Each open loop passes from the back of one course to the front of the next.
-  // Short V-shaped front legs overlap the previous course; their smaller holes
-  // and thicker yarn read as a textile rather than a ladder of separate rings.
-  // All 90 stitches share one geometry and two rough wool materials.
-  const stitchPoints: XYZ[] = [[-.0925, -.06, .08], [-.025, -.10, .105], [-.020, -.055, .17], [-.046, .025, .17], [-.070, .09, .17], [-.053, .14, .11], [.053, .14, .11], [.070, .09, .17], [.046, .025, .17], [.020, -.055, .17], [.025, -.10, .105], [.0925, -.06, .08]]
-  const stitchGeometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(vectors(stitchPoints)), 44, .032, 7, false)
+  // Real interlocking stockinette stitch topology: sinker loops meet smoothly at
+  // x = ±0.0925 behind the previous course, V-shaped front legs rise forward over
+  // the lower stitch crown, and crowns dip back to cradle the emerging next course.
+  // All 90 stitches share one 2-ply twisted TubeGeometry and two wool materials.
+  const stitchPoints: XYZ[] = [
+    [-.0925, -.064, .084],
+    [-.062, -.086, .082],
+    [-.024, -.072, .122],
+    [-.025, -.028, .164],
+    [-.046, .025, .172],
+    [-.060, .086, .156],
+    [-.040, .136, .096],
+    [0, .150, .088],
+    [.040, .136, .096],
+    [.060, .086, .156],
+    [.046, .025, .172],
+    [.025, -.028, .164],
+    [.024, -.072, .122],
+    [.062, -.086, .082],
+    [.0925, -.064, .084],
+  ]
+  const stitchGeometry = createPliedTubeGeometry(stitchPoints, 60, .0315, 10, { turns: 3.5, plyDepth: .118 })
   const swatch = new THREE.Group(); swatch.name = 'wool-swatch'; swatch.position.z = -.018; board.add(swatch)
   for (let row = 0; row < 10; row++) for (let column = 0; column < 9; column++) {
     const m = add(`wool-stitch-${row}-${column}`, stitchGeometry, row === 2 || row === 3 || row === 7 ? grey : cream, [-1.19 + column * .185, -.80 + row * .132, 0], swatch)
-    m.userData.toonSurface = { outline: false, roughness: .98 }
+    m.userData.toonSurface = { outline: false, roughness: .96 }
   }
-  tube('wool-cast-on-edge', [[-1.31, -.90, .08], [-1.18, -.96, .08], [-.9, -.94, .08], [-.55, -.96, .08], [-.2, -.94, .08], [.30, -.94, .08], [.49, -.91, .08]], .025, cream, swatch, 50)
-  // Short joins connect adjacent courses at alternating sample edges.
+
+  // Scalloped long-tail cast-on edge threading snugly through the base of row 0.
+  const castOnPoints: XYZ[] = [[-1.29, -.864, .092]]
+  for (let col = 0; col < 9; col++) {
+    const cx = -1.19 + col * .185
+    castOnPoints.push([cx - .052, -.876, .106], [cx, -.870, .136], [cx + .052, -.876, .106])
+    if (col < 8) castOnPoints.push([cx + .0925, -.866, .092])
+  }
+  castOnPoints.push([.392, -.864, .092])
+  pliedTube('wool-cast-on-edge', castOnPoints, .029, cream, swatch, 108, { turns: 12, plyDepth: .115, capEnds: true }, 9)
+
+  // Smooth tucked selvedge course joins matching the exact sinker endpoints at alternating edges.
   for (let row = 0; row < 9; row++) {
-    const x = row % 2 ? -1.2825 : .3825, y = -.80 + row * .132
-    tube(`wool-course-join-${row}`, [[x, y - .06, .08], [x + (row % 2 ? -.025 : .025), y, .07], [x, y + .072, .08]], .032, row === 2 || row === 3 || row === 7 ? grey : cream, swatch, 12)
+    const leftEdge = row % 2 === 1
+    const side = leftEdge ? -1 : 1
+    const x = leftEdge ? -1.2825 : .3825
+    const y0 = -.80 + row * .132 - .064
+    const y1 = y0 + .132
+    pliedTube(
+      `wool-course-join-${row}`,
+      [
+        [x, y0, .084],
+        [x + side * .026, y0 + .032, .102],
+        [x + side * .032, y0 + .066, .110],
+        [x + side * .026, y0 + .100, .102],
+        [x, y1, .084],
+      ],
+      .029,
+      row === 2 || row === 3 || row === 7 ? grey : cream,
+      swatch,
+      20,
+      { turns: 1.5, plyDepth: .11 },
+      8,
+    )
   }
-  const livePoints = (x: number, drop = 0): XYZ[] => {
-    // Before lowering, carry the crown beyond the left needle's x=.44 tip.
-    // The two feet remain in the existing fabric while the old loop slips free.
-    const overTip = Math.sin(drop * Math.PI) * .36
-    return [[x - .07, .45, .12], [x - .045 + overTip * .4, .57 - drop * .13, .14], [x - .05 + overTip, .71 - drop * .28, .17], [x + overTip, .75 - drop * .30, .22], [x + .055 + overTip, .71 - drop * .27, .27], [x + .045 + overTip * .4, .57 - drop * .12, .19], [x + .07, .45, .13]]
+
+  // Live loops emerge cleanly from row 9's stitch crowns (y ≈ 0.445) and hug
+  // snugly over the left wooden needle (y = 0.66, z = 0.215, radius = 0.037).
+  const livePoints = (x: number, insert = 0, slip = 0): XYZ[] => {
+    const s = THREE.MathUtils.clamp(slip, 0, 1)
+    // Carry the crown smoothly beyond the left needle tip (x = 0.44) before lowering it.
+    const overTip = Math.sin(s * Math.PI) * .33
+    const liftZ = Math.sin(s * Math.PI) * .038
+    const openFront = insert * (1 - s) * .022
+    const settleY = s * .175
+    const settleX = s * .018
+    return [
+      [x - .046, .435, .124],
+      [x - .036 + overTip * .22, .520 - settleY * .25, .162 + openFront * .3],
+      [x - .030 + overTip * .68 + settleX * .4, .630 - settleY * .72, .268 + openFront + liftZ - s * .085],
+      [x + overTip + settleX, .726 - settleY, .222 + liftZ - s * .055],
+      [x + .030 + overTip * .72 + settleX * .5, .635 - settleY * .72, .156 + liftZ * .5 + s * .015],
+      [x + .038 + overTip * .24, .520 - settleY * .25, .148],
+      [x + .046, .435, .122],
+    ]
   }
-  for (let i = 0; i < 8; i++) tube(`wool-live-loop-${i}`, livePoints(-1.19 + i * .185), .032, cream, swatch, 34)
-  const oldLoop = tube('wool-active-old-loop', livePoints(.25), .03, cream, swatch, 42)
+  for (let i = 0; i < 8; i++) {
+    pliedTube(`wool-live-loop-${i}`, livePoints(-1.19 + i * .185), .031, cream, swatch, 40, { turns: 3.0, plyDepth: .115 }, 10)
+  }
+  const ACTIVE_LOOP_X = .275
+  const ACTIVE_LOOP_PLY: PliedOptions = { turns: 3.0, plyDepth: .115 }
+  const oldLoop = pliedTube('wool-active-old-loop', livePoints(ACTIVE_LOOP_X), .030, cream, swatch, 44, ACTIVE_LOOP_PLY, 10, true)
 
   // Small needle rests keep the tapered shafts above the knitted loops.
   const leftNeedle = new THREE.Group(); leftNeedle.name = 'wool-left-needle'; leftNeedle.position.set(-.62, .66, .215); leftNeedle.rotation.z = -Math.PI / 2; board.add(leftNeedle)
@@ -91,26 +299,49 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
   add('wool-left-needle-tip', new THREE.ConeGeometry(.037, .19, 14), needleWood, [0, .965, 0], leftNeedle)
   add('wool-left-needle-stop', new THREE.SphereGeometry(.068, 14, 10), needleEnd, [0, -.91, 0], leftNeedle)
   box('wool-left-needle-rest', [.15, .15, .15], [-1.45, .66, .102], darkWood, board)
-  const needle = new THREE.Group(); needle.name = 'wool-right-needle'; needle.rotation.z = .70; board.add(needle)
+  const needle = new THREE.Group(); needle.name = 'wool-right-needle'; needle.rotation.z = NEEDLE_ANGLE; board.add(needle)
   const grip = add('wool-right-needle-grip', new THREE.CylinderGeometry(.047, .047, .52, 16), needleWood, [0, -.32, 0], needle)
   add('wool-right-needle-shaft', new THREE.CylinderGeometry(.038, .047, .58, 16), needleWood, [0, .23, 0], needle)
   add('wool-right-needle-tip', new THREE.ConeGeometry(.038, .18, 16), needleWood, [0, .61, 0], needle)
   add('wool-right-needle-stop', new THREE.SphereGeometry(.063, 14, 10), needleEnd, [0, -.61, 0], needle)
-  const rightRest = box('wool-right-needle-rest', [.19, .13, .16], [1.17, -.33, .107], darkWood, board); rightRest.rotation.z = .70
+  const rightRest = box('wool-right-needle-rest', [.19, .13, .16], [1.17, -.33, .107], darkWood, board); rightRest.rotation.z = NEEDLE_ANGLE
   for (const n of [leftNeedle, needle]) n.traverse(o => { if ((o as THREE.Mesh).isMesh) o.userData.toonSurface = { outline: false, roughness: .68 } })
 
+  // Plush layered wool yarn ball: 5 overlapping plied winding bands hugging an inner wool core.
   const ball = new THREE.Group(); ball.name = 'wool-yarnball'; ball.position.set(1.02, -.70, 0); board.add(ball)
-  const core = add('wool-yarnball-core', new THREE.SphereGeometry(.29, 28, 18), ballShade, [0, 0, 0], ball); core.userData.toonSurface = { outline: false, roughness: .98 }
-  // One continuous winding in each of three directions makes a compact wound ball.
-  for (let band = 0; band < 3; band++) {
+  const core = add('wool-yarnball-core', new THREE.SphereGeometry(.278, 28, 18), ballShade, [0, 0, 0], ball); core.userData.toonSurface = { outline: false, roughness: .96 }
+  const bandSpecs: Array<{ euler: XYZ; radius: number; turns: number; yarnR: number; shade: boolean }> = [
+    { euler: [0.00, 0.00, 0.00], radius: .283, turns: 13, yarnR: .0185, shade: false },
+    { euler: [0.76, 0.58, 0.84], radius: .288, turns: 13, yarnR: .0185, shade: true },
+    { euler: [1.52, 1.18, 1.64], radius: .293, turns: 14, yarnR: .0190, shade: false },
+    { euler: [2.22, 0.42, 1.18], radius: .297, turns: 13, yarnR: .0190, shade: true },
+    { euler: [0.44, 1.72, 2.35], radius: .300, turns: 14, yarnR: .0192, shade: false },
+  ]
+  for (let band = 0; band < bandSpecs.length; band++) {
+    const spec = bandSpecs[band]!
     const points: XYZ[] = []
-    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(band * .78, band * .61, band * .88))
-    for (let i = 0; i <= 300; i++) {
-      const t = i / 300, latitude = -.86 + t * 1.72, angle = t * Math.PI * 2 * 11
-      const p = new THREE.Vector3(Math.cos(latitude) * Math.cos(angle), Math.sin(latitude), Math.cos(latitude) * Math.sin(angle)).multiplyScalar(.297).applyQuaternion(q)
+    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(...spec.euler))
+    for (let i = 0; i <= 260; i++) {
+      const t = i / 260
+      const latitude = -.82 + t * 1.64
+      const angle = t * Math.PI * 2 * spec.turns
+      const p = new THREE.Vector3(
+        Math.cos(latitude) * Math.cos(angle),
+        Math.sin(latitude),
+        Math.cos(latitude) * Math.sin(angle),
+      ).multiplyScalar(spec.radius).applyQuaternion(q)
       points.push([p.x, p.y, p.z])
     }
-    tube(`wool-yarnball-winding-${band}`, points, .014, band === 1 ? ballShade : cream, ball, 420)
+    pliedTube(
+      `wool-yarnball-winding-${band}`,
+      points,
+      spec.yarnR,
+      spec.shade ? ballShade : cream,
+      ball,
+      360,
+      { turns: 42, plyDepth: .11, phase: band * .6 },
+      7,
+    )
   }
   // Seat the actual lowest winding on the tabletop, without a hidden pedestal.
   // In this horizontal work frame the tabletop is at local z = .027.
@@ -119,29 +350,117 @@ export function createFaroeseWoolKnit(ctx: SceneContext): SceneInstance {
     const geometry = (child as THREE.Mesh).geometry; geometry.computeBoundingBox(); ballBounds.union(geometry.boundingBox!)
   }
   ball.position.z = .027 - ballBounds.min.z
-  const working = tube('wool-working-yarn', [BALL_EXIT, [.79, -.10, .16], [.42, .45, .16], [.33, .59, .17]], .023, cream, board, 80)
-  const drawnLoop = tube('wool-drawn-loop', [[.19, .40, .14], [.22, .60, .24], [.30, .60, .26], [.34, .40, .16]], .025, cream, board, 48)
-  const updateTube = (mesh: THREE.Mesh<THREE.TubeGeometry>, points: XYZ[]) => {
-    const old = mesh.geometry, p = old.parameters
-    mesh.geometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(vectors(points)), p.tubularSegments, p.radius, p.radialSegments, false); old.dispose()
-  }
+
+  const WORKING_PLY: PliedOptions = { turns: 8.5, plyDepth: .105 }
+  const DRAWN_PLY: PliedOptions = { turns: 4.5, plyDepth: .115 }
+  const working = pliedTube('wool-working-yarn', [BALL_EXIT, [.86, -.34, .18], [.66, -.02, .11], [.49, .26, .12], [.35, .43, .13], [.30, .46, .12]], .024, cream, board, 112, WORKING_PLY, 10, true)
+  const drawnLoop = pliedTube('wool-drawn-loop', [[.255, .47, .14], [.36, .45, .19], [.54, .31, .24], [.58, .26, .20], [.315, .45, .135]], .027, cream, board, 64, DRAWN_PLY, 10, true)
+
+  const needlePoint = (alongDist: number, side = 0, up = 0): XYZ => [
+    needle.position.x + NEEDLE_AXIS_X * alongDist + NEEDLE_SIDE_X * side,
+    needle.position.y + NEEDLE_AXIS_Y * alongDist + NEEDLE_SIDE_Y * side,
+    needle.position.z + up,
+  ]
+  const lerpXYZ = (a: XYZ, b: XYZ, t: number): XYZ => [
+    a[0] + (b[0] - a[0]) * t,
+    a[1] + (b[1] - a[1]) * t,
+    a[2] + (b[2] - a[2]) * t,
+  ]
+
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (insert: number, pull: number, wrap: number, slip: number) => {
     insertAmount = insert; pullAmount = pull
     needle.position.lerpVectors(HOME, INSERTED, insert).lerp(DRAWN, pull)
     // The small right rest follows the shaft across the work surface.
     rightRest.position.set(needle.position.x + .27, needle.position.y - .33, .107)
-    const tip = new THREE.Vector3(-Math.sin(.70) * .49, Math.cos(.70) * .49, 0).add(needle.position)
-    const wrapCenter = new THREE.Vector3(.33, .59, .17).lerp(tip, wrap)
-    const yarn: XYZ[] = [BALL_EXIT, [.79, -.32, .15], [.71, .15, .13], [wrapCenter.x + .13, wrapCenter.y -.07, .17]]
-    for (let i = 0; i <= 10; i++) {
-      const a = -Math.PI / 2 + i / 10 * Math.PI * 1.65 * wrap
-      yarn.push([wrapCenter.x + Math.cos(a) * .061 * wrap, wrapCenter.y + Math.sin(a) * .058 * wrap, wrapCenter.z + Math.cos(a) * .056 * wrap])
+
+    // Continuous working yarn:
+    // - At p=0 (wrap=0, pull=0): relaxed 2-ply strand curving softly across tabletop into column 8.
+    // - At p=1 (wrap=1, pull=0): lifts under smooth tension and makes one clean helical wrap
+    //   around the right needle shaft just behind the tapered tip.
+    // - At p=2/3 (wrap=1, pull=1): the wrap releases seamlessly into `wool-drawn-loop`, leaving
+    //   a single continuous strand feeding from the yarnball into the new loop on the right needle.
+    const w = ease(wrap)
+    const p = ease(pull)
+    const wrapRadius = .052
+    const wrapBaseAlong = .535
+
+    // Fixed 12-point spline so interpolation across rest -> wrap -> drawn has zero collapsed kinks.
+    const restPath: XYZ[] = [
+      BALL_EXIT,
+      [.89, -.36, .165],
+      [.79, -.15, .105],
+      [.72, .05, .092],
+      [.64, .21, .098],
+      [.54, .33, .108],
+      [.45, .40, .118],
+      [.39, .44, .124],
+      [.345, .46, .126],
+      [.32, .46, .124],
+      [.305, .45, .120],
+      [.295, .435, .118],
+    ]
+    const wrappedPath: XYZ[] = [
+      BALL_EXIT,
+      [.85, -.28, .19],
+      [.71, .06, .16],
+      [.55, .36, .175],
+      needlePoint(wrapBaseAlong - .032, .072, -.018),
+      needlePoint(wrapBaseAlong - .010, .048, -.042),
+      needlePoint(wrapBaseAlong + .004, -.012, -.054),
+      needlePoint(wrapBaseAlong + .016, -.054, -.004),
+      needlePoint(wrapBaseAlong + .024, -.024, .052),
+      needlePoint(wrapBaseAlong + .016, .038, .040),
+      [.345, .495, .148],
+      [.295, .440, .122],
+    ]
+    const drawnFeedExit = needlePoint(wrapBaseAlong - .022, .042, -.032)
+    const drawnPath: XYZ[] = [
+      BALL_EXIT,
+      [.88, -.39, .170],
+      [.79, -.21, .115],
+      [.72, -.08, .105],
+      [.67, .02, .112],
+      [.64, .10, .126],
+      [.625, .155, .142],
+      [.615, .192, .158],
+      [.605, .214, .172],
+      [.596, .226, .184],
+      lerpXYZ([.596, .226, .184], drawnFeedExit, .55),
+      drawnFeedExit,
+    ]
+    const yarn: XYZ[] = []
+    for (let i = 0; i < restPath.length; i++) {
+      const stage01 = lerpXYZ(restPath[i]!, wrappedPath[i]!, w)
+      yarn.push(lerpXYZ(stage01, drawnPath[i]!, p))
     }
-    yarn.push([.33, .42, .16]); updateTube(working, yarn)
+    updatePliedTubeInPlace(working, yarn, WORKING_PLY)
+
+    // Newly drawn stitch loop: emerges smoothly through the slipped old loop collar
+    // with an open teardrop loop body and hugs snugly around the right needle shaft.
     drawnLoop.visible = pull > 0
-    updateTube(drawnLoop, [[.19, .40, .14], [tip.x - .055, tip.y + .015, tip.z + .04], [tip.x, tip.y + .06, tip.z], [tip.x + .06, tip.y -.015, tip.z -.04], [.34, .40, .16]])
-    updateTube(oldLoop, livePoints(.25, slip)); matrices()
+    if (pull > 0) {
+      const seatAlong = .535
+      const arcLift = .024 * Math.sin(p * Math.PI)
+      const rootL: XYZ = [.252, .472, .138]
+      const rootR: XYZ = [.308, .452, .136]
+      const shoulderL = lerpXYZ([.265, .525, .185], [.395, .460, .202 + arcLift], p)
+      const shoulderR = lerpXYZ([.315, .505, .170], [.425, .348, .172 + arcLift], p)
+      const drawnPts: XYZ[] = [
+        rootL,
+        shoulderL,
+        needlePoint(seatAlong + .018, -.048, .026),
+        needlePoint(seatAlong + .028, -.006, wrapRadius),
+        needlePoint(seatAlong + .014, .048, .020),
+        needlePoint(seatAlong - .014, .044, -.032),
+        shoulderR,
+        rootR,
+      ]
+      updatePliedTubeInPlace(drawnLoop, drawnPts, DRAWN_PLY)
+    }
+
+    updatePliedTubeInPlace(oldLoop, livePoints(ACTIVE_LOOP_X, insert, slip), ACTIVE_LOOP_PLY)
+    matrices()
   }
   const restore = () => pose(at > 0 ? 1 : 0, at >= 2 ? 1 : 0, at > 0 ? 1 : 0, at >= 2 ? 1 : 0)
   const enabled = (step: number) => () => inputActive() && !motion && at === step

@@ -1,15 +1,16 @@
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
-import { placementHit } from '../placement-hit'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
+import { createTopCordSim, TOP_AXLE, UNWIND_RELEASE_T, type CordMode } from './cord-sim'
 
 const COPY = {
   title: '木陀轻转', pull: '把木拉珠拖到木板右侧的浅色圆点，松开棉绳，让陀螺轻转。',
@@ -19,7 +20,7 @@ const COPY = {
   context: '拉绳起转，轻点木帽停稳，静看木身与棉绳。',
 } as const
 const HOME = new THREE.Vector3(.38, .34, .52), TARGET = new THREE.Vector3(1.08, .34, .52)
-const AXLE = new THREE.Vector3(-.42, .21, -.09)
+const AXLE = TOP_AXLE
 type Checkpoint = 0 | 1 | 2 | 3
 type Motion = { step: 0 | 1; time: number; from: THREE.Vector3 }
 const ease = (t: number) => t * t * (3 - 2 * t)
@@ -50,7 +51,7 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
   const wood = new THREE.MeshStandardMaterial({ color: 0xc3a074, roughness: .76 })
   const walnut = new THREE.MeshStandardMaterial({ color: 0x8b6445, roughness: .8 })
   const pale = new THREE.MeshStandardMaterial({ color: 0xe1c69e, roughness: .8 })
-  const cotton = new THREE.MeshStandardMaterial({ color: 0xeee2bd, roughness: 1 })
+  const cotton = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xeee2bd, roughness: .96 }), { kind: 'cord', scale: 2.2, strength: .34 })
   const sage = new THREE.MeshStandardMaterial({ color: 0x819d8d, roughness: .84 })
   const add = (geometry: THREE.BufferGeometry, material: THREE.Material, position: [number, number, number], name = '', parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.position.set(...position); mesh.name = name
@@ -75,28 +76,44 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
   }
   add(new THREE.CylinderGeometry(.08, .09, .31, 32), walnut, [0, .955, 0], 'top-spindle', rotor)
   const cap = oval([0, 1.14, 0], [.17, .095, .17], pale, 'top-cap', rotor)
-  const coils = new THREE.Group(); coils.name = 'top-wound-cotton'; coils.position.copy(AXLE); world.add(coils)
-  for (let i = 0; i < 6; i++) {
-    const coil = add(new THREE.TorusGeometry(.101, .022, 8, 40), cotton, [0, .853 + .033 * i, 0], `top-cotton-coil-${i}`, coils); coil.rotation.x = Math.PI / 2
-  }
+
   const bead = oval(HOME.toArray() as [number, number, number], [.13, .13, .13], walnut, 'top-pull-bead')
   const anchor = oval(TARGET.toArray() as [number, number, number], [.10, .09, .10], pale, 'top-pull-anchor')
   add(new THREE.CylinderGeometry(.077, .087, .1, 24), pale, [TARGET.x, .255, TARGET.z], 'top-anchor-foot')
-  // The cord remains a physical opaque tube; its end is rebuilt from the bead position, not a screen-space line.
-  const cordGeometry = () => new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
-    ...(checkpoint === 0 ? [new THREE.Vector3(AXLE.x + .10, 1.075, AXLE.z), new THREE.Vector3(-.06, .72, .25)] : [new THREE.Vector3(-.04, .235, .45), new THREE.Vector3(.21, .235, .65), new THREE.Vector3(.46, .235, .36), new THREE.Vector3(.74, .235, .41)]),
-    new THREE.Vector3(bead.position.x - .19, .29, bead.position.z), bead.position.clone(),
-  ]), 32, .021, 8, false)
-  const cord = add(cordGeometry(), cotton, [0, 0, 0], 'top-loose-cord')
-  const updateCord = () => { const old = cord.geometry; cord.geometry = cordGeometry(); old.dispose() }
+
+  // Continuous helical cotton coils + 2-ply cotton cord with Rapier unwind/whip/recoil dynamics.
+  const cordSim = createTopCordSim(cotton, { isActive: active, isReducedMotion: reduced })
+  const coils = cordSim.coilsGroup
+  const cord = cordSim.mesh
+  const beadKnot = cordSim.beadKnot
+  world.add(coils)
+  world.add(cord)
+  world.add(beadKnot)
+
+  const syncBeadKnot = () => {
+    beadKnot.position.set(bead.position.x - .124, bead.position.y - .008, bead.position.z)
+  }
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const restorePose = () => {
+  const currentCordMode = (): CordMode => {
+    if (motion && motion.step === 0) {
+      return ease(motion.time) < UNWIND_RELEASE_T ? 'unwinding' : 'released'
+    }
+    return checkpoint === 0 ? 'wound' : 'released'
+  }
+  const restorePose = (preserveLiveCord = false) => {
     bead.position.copy(checkpoint === 0 ? HOME : TARGET); bead.visible = true
-    cord.visible = true; coils.visible = checkpoint === 0
-    coils.children.forEach(child => { child.visible = true }); anchor.visible = checkpoint === 0
+    syncBeadKnot()
+    cord.visible = true
+    anchor.visible = checkpoint === 0
     rotor.rotation.x = rotor.rotation.z = 0
     if (checkpoint === 0) rotor.rotation.y = 0
-    updateCord(); matrices()
+    const mode: CordMode = checkpoint === 0 ? 'wound' : 'released'
+    if (!preserveLiveCord || reduced()) {
+      cordSim.snap(mode, bead.position, mode === 'released' ? 1 : 0)
+    } else {
+      cordSim.update(0, { mode, beadPos: bead.position, unwindProgress: 1, rotorAngleY: rotor.rotation.y })
+    }
+    matrices()
   }
   const cueActive = (at: number) => () => active() && !motion && checkpoint === at
   addInteractionCue(bead, { kind: 'drag', label: '拉动木珠松开棉绳', priority: 3, enabled: cueActive(0), destination: anchor, targetLabel: '木板浅色圆点' })
@@ -106,12 +123,12 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -HOME.y)
   const point = new THREE.Vector3(), offset = new THREE.Vector3(), down = new THREE.Vector2()
   // A target must be the nearest visible opaque surface. Only the held bead
-  // and its moving cord are excluded when testing the board drop destination.
+  // and its moving cord/knot are excluded when testing the board drop destination.
   const visibleHit = (x: number, y: number, target: THREE.Object3D, dropping = false) => {
     const meshes: THREE.Object3D[] = []
     scene.traverseVisible(object => {
       const mesh = object as THREE.Mesh
-      if (!mesh.isMesh || (dropping && (object === bead || object === cord))) return
+      if (!mesh.isMesh || (dropping && (object === bead || object === cord || object === beadKnot))) return
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       if (!materials.some(material => material.visible && !material.transparent && material.opacity > 0)) return
       meshes.push(object)
@@ -120,7 +137,7 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
   }
   const automaticReady = (x: number, y: number) => {
     const contact = projectTouchPoint(canvas, camera, bead)
-    return checkpoint === 0 && insideCanvas(canvas, x, y) && !!contact && !touchTarget.occluded(x,y,anchor,{ignore:[bead, cord]}) && touchTarget.hit(contact.x, contact.y, anchor, { ignore: [bead, cord] })
+    return checkpoint === 0 && insideCanvas(canvas, x, y) && !!contact && !touchTarget.occluded(x, y, anchor, { ignore: [bead, cord, beadKnot] }) && touchTarget.hit(contact.x, contact.y, anchor, { ignore: [bead, cord, beadKnot] })
   }
   const resetDrag = () => { dragging = false; maxTravel = 0; if (!motion) restorePose() }
   const pointer = createObjectPointer(ui.hitLayer, {
@@ -134,12 +151,15 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y))
       if (dragging && ray.aim(x, y).ray.intersectPlane(plane, point)) {
         bead.position.copy(point).add(offset); bead.position.x = THREE.MathUtils.clamp(bead.position.x, -.03, 1.27)
-        bead.position.z = THREE.MathUtils.clamp(bead.position.z, .3, .67); updateCord(); matrices()
+        bead.position.z = THREE.MathUtils.clamp(bead.position.z, .3, .67)
+        syncBeadKnot()
+        cordSim.update(0, { mode: 'wound', beadPos: bead.position, unwindProgress: 0, rotorAngleY: rotor.rotation.y })
+        matrices()
         if (automaticReady(x, y) && pointer.finish()) { dragging = false; begin(true) }
       }
     },
     onRelease(x, y) {
-      const moved = maxTravel; maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
+      maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
       const valid = checkpoint === 0 ? dragging && automaticReady(x, y) : maxTravel < 12 && visibleHit(x, y, cap)
       dragging = false
       if (!valid) { resetDrag(); return }
@@ -159,7 +179,11 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
   }
   function settled() {
     if (!active() || !motion) return
-    checkpoint = (motion.step + 1) as Checkpoint; motion = null; restorePose(); sync(); ctx.onProgress?.(checkpoint)
+    const wasPull = motion.step === 0
+    checkpoint = (motion.step + 1) as Checkpoint; motion = null
+    // Preserve live Rapier cord recoil/landing momentum across step 0 -> checkpoint 1!
+    restorePose(wasPull && !reduced())
+    sync(); ctx.onProgress?.(checkpoint)
     feedback.impact({ freqs: [392, 587.33], duration: .22, gain: .015, type: 'triangle' })
   }
   function begin(placed = false) {
@@ -170,7 +194,7 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || checkpoint !== 2) return
     if (!text.trim() && !ending.completing) return
-    const line = text.trim(); checkpoint = 3; restorePose(); sync()
+    const line = text.trim(); checkpoint = 3; restorePose(true); sync()
     if (line && !returning) ctx.saveWish?.(line)
     if (disposed) return; ctx.onProgress?.(3); if (!active()) return; feedback.impact({ freqs: [392, 493.88], duration: .26, gain: .015 })
     if (!active()) return; overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
@@ -189,6 +213,7 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
       started = true; const initial = ctx.initialProgress ?? 0
       checkpoint = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
       restorePose(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
+      cordSim.start(checkpoint === 0 ? 'wound' : 'released', bead.position)
       if (!returning) {
         writer = gestures.createWishWrite({ maxLen: 40, saves: ctx.saveWish !== undefined,
           onSubmit: text => { if (!active() || pointer.isBusy() || motion || checkpoint !== 2 || !text.trim()) return; feedback.prepare(); finish(text) } })
@@ -205,18 +230,31 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
       if (inactiveRendered) { inactiveRendered = false; sync() }
       writer?.setEnabled(checkpoint === 2 && !returning && !motion); writer?.update(dt)
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
+      let unwindProgress = checkpoint === 0 ? 0 : 1
       if (motion) {
         motion.time = reduced() ? 1 : Math.min(1, motion.time + delta / .75)
         const t = ease(motion.time)
         if (motion.step === 0) {
-          bead.position.lerpVectors(motion.from, TARGET, t); updateCord(); rotor.rotation.y += reduced() ? 0 : delta * 10
-          coils.children.forEach((child, i) => { child.visible = i / 6 >= t }); cord.visible = t < .86
-        } else { rotor.rotation.y += reduced() ? 0 : delta * 8 * (1 - t); rotor.rotation.x *= 1 - t; rotor.rotation.z *= 1 - t }
+          bead.position.lerpVectors(motion.from, TARGET, t)
+          syncBeadKnot()
+          rotor.rotation.y += reduced() ? 0 : delta * 10
+          unwindProgress = THREE.MathUtils.clamp(t / UNWIND_RELEASE_T, 0, 1)
+          cord.visible = true
+        } else {
+          rotor.rotation.y += reduced() ? 0 : delta * 8 * (1 - t)
+          rotor.rotation.x *= 1 - t; rotor.rotation.z *= 1 - t
+        }
         if (motion.time === 1) settled()
       } else if (checkpoint === 1 && !reduced()) {
         spinTime += delta; rotor.rotation.y += delta * 8
         rotor.rotation.x = Math.sin(spinTime * 3) * .012; rotor.rotation.z = Math.cos(spinTime * 3) * .012
       } else { rotor.rotation.x = rotor.rotation.z = 0 }
+      cordSim.update(delta, {
+        mode: currentCordMode(),
+        beadPos: bead.position,
+        unwindProgress,
+        rotorAngleY: rotor.rotation.y,
+      })
       ending.update(dt)
       if (disposed || !active()) return
       style.render()
@@ -224,7 +262,7 @@ export function createMinangkabauSpinningTop(ctx: SceneContext): SceneInstance {
     dispose() {
       if (disposed) return
       ending.dispose()
-      disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose()
+      disposed = true; cordSim.dispose(); pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose())
       scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')

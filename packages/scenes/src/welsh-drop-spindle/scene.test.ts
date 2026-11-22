@@ -33,8 +33,8 @@ vi.mock('@wbr/scene-runtime/debug-render-style', async () => {
 })
 const instances: SceneInstance[] = []
 afterEach(() => { instances.splice(0).forEach(s => s.dispose()); document.body.replaceChildren(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
-function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390) {
-  const height = width === 1280 ? 600 : width === 284 ? 390 : 408, left = 17, top = 91
+function mount(at = 0, extra: Partial<SceneContext> = {}, width = 390, customHeight?: number) {
+  const height = customHeight ?? (width === 1280 ? 600 : width === 284 ? 390 : 408), left = 17, top = 91
   const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
   host.append(canvas, overlay); document.body.append(host)
   Object.defineProperties(canvas, { clientWidth: { value: width }, clientHeight: { value: height } })
@@ -294,6 +294,12 @@ describe('Welsh drop spindle with turning whorl and suspended thread', () => {
       expect(windowAdded.mock.calls.filter(([t, l, o]) => t === type && l === listener && o === options)).toHaveLength(1)
       expect(windowRemoved.mock.calls.filter(([t, l, o]) => t === type && l === listener && o === options)).toHaveLength(1)
     }
+  })
+  it('preserves baseline auto-fit camera distance at official 346x332 framing', () => {
+    const s = mount(0, { isReducedMotion: () => true }, 346, 332)
+    expect(s.camera.position.x).toBeCloseTo(1.708, 3)
+    expect(s.camera.position.y).toBeCloseTo(3.952, 3)
+    expect(s.camera.position.z).toBeCloseTo(4.149, 3)
   })
   it('releases capture, geometry, materials, cues and DOM once and rejects retained inputs after disposal', () => {
     const s = mount(2), resources = new Set<THREE.BufferGeometry | THREE.Material | THREE.Texture>(), cued: THREE.Object3D[] = []

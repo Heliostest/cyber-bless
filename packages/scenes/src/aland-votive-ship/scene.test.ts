@@ -215,6 +215,112 @@ describe('Åland original wooden sailing model', () => {
     }
     const s = mount(0, { isReducedMotion: () => true }, width); drag(s); drag(s, 'ship-deck-handle', 'ship-cradle-target'); tap(s); expect(s.progress).toEqual([1, 2, 3])
   })
+  it('keeps sail panel seams proud on the cambered cloth, bolt-rope hem seated along edges, rigging clear, and reduced motion static', () => {
+    const s = mount(1, { isReducedMotion: () => true })
+    const sail = s.scene.getObjectByName('ship-cream-cloth-sail') as THREE.Mesh
+    const sailPos = sail.geometry.getAttribute('position') as THREE.BufferAttribute
+    const hemGroup = s.scene.getObjectByName('ship-sail-hem')!
+    const seamGroup = s.scene.getObjectByName('ship-sail-seam')!
+    const forestay = s.scene.getObjectByName('ship-forestay') as THREE.Mesh
+    expect(sail).toBeDefined(); expect(hemGroup).toBeDefined(); expect(seamGroup).toBeDefined(); expect(forestay).toBeDefined()
+    expect((sail.material as THREE.MeshStandardMaterial).userData.ritualOptics?.kind).toBe('cloth')
+    expect((sail.material as THREE.MeshStandardMaterial).map).toBeInstanceOf(THREE.DataTexture)
+
+    // Every horizontal panel seam centerline stays cleanly in front of the local cambered sail surface (zero mid-panel clipping).
+    const cols = 24, rows = 18
+    const seamMeshes: THREE.Mesh[] = []
+    seamGroup.traverse(o => { if ((o as THREE.Mesh).isMesh && o.name.startsWith('ship-sail-seam-')) seamMeshes.push(o as THREE.Mesh) })
+    expect(seamMeshes).toHaveLength(2)
+    for (const [idx, rIdx] of ([6, 12] as const).entries()) {
+      const seamMesh = seamMeshes[idx]!
+      const curve = (seamMesh.geometry as THREE.TubeGeometry).parameters.path as THREE.CatmullRomCurve3
+      for (let k = 0; k <= 10; k++) {
+        const pt = curve.getPointAt(k / 10)
+        // Linearly interpolate exact cloth Z at pt.x along the matching sail mesh row.
+        let clothZ = sailPos.getZ(rIdx * (cols + 1))
+        for (let c = 0; c < cols; c++) {
+          const i0 = rIdx * (cols + 1) + c, i1 = i0 + 1
+          const x0 = sailPos.getX(i0), x1 = sailPos.getX(i1)
+          if (pt.x >= x0 - 1e-5 && pt.x <= x1 + 1e-5) {
+            const frac = x1 > x0 ? THREE.MathUtils.clamp((pt.x - x0) / (x1 - x0), 0, 1) : 0
+            clothZ = THREE.MathUtils.lerp(sailPos.getZ(i0), sailPos.getZ(i1), frac)
+            break
+          }
+        }
+        expect(pt.z - clothZ, `seam ${idx} sample ${k}`).toBeGreaterThan(.002)
+        expect(pt.z - clothZ, `seam ${idx} sample ${k}`).toBeLessThan(.012)
+      }
+    }
+
+    // All 4 bolt-rope edges hug the actual sail boundary segments without Catmull-Rom corner overshoot.
+    const edgeVerts: Record<string, THREE.Vector3[]> = {
+      'ship-sail-hem-luff': Array.from({ length: rows + 1 }, (_, r) => new THREE.Vector3().fromBufferAttribute(sailPos, r * (cols + 1))),
+      'ship-sail-hem-leech': Array.from({ length: rows + 1 }, (_, r) => new THREE.Vector3().fromBufferAttribute(sailPos, r * (cols + 1) + cols)),
+      'ship-sail-hem-foot': Array.from({ length: cols + 1 }, (_, c) => new THREE.Vector3().fromBufferAttribute(sailPos, c)),
+      'ship-sail-hem-head': Array.from({ length: cols + 1 }, (_, c) => new THREE.Vector3().fromBufferAttribute(sailPos, rows * (cols + 1) + c)),
+    }
+    const seg = new THREE.Line3(), closest = new THREE.Vector3()
+    for (const [edgeName, poly] of Object.entries(edgeVerts)) {
+      const edge = hemGroup.getObjectByName(edgeName) as THREE.Mesh<THREE.TubeGeometry>
+      expect(edge, edgeName).toBeDefined()
+      const curve = edge.geometry.parameters.path as THREE.CatmullRomCurve3
+      for (let k = 0; k <= 12; k++) {
+        const pt = curve.getPointAt(k / 12)
+        let minDist = Infinity
+        for (let i = 0; i < poly.length - 1; i++) {
+          seg.set(poly[i]!, poly[i + 1]!)
+          seg.closestPointToPoint(pt, true, closest)
+          minDist = Math.min(minDist, pt.distanceTo(closest))
+        }
+        expect(minDist, `${edgeName} sample ${k}`).toBeLessThan(.002)
+      }
+    }
+
+    // Mast hoops and boom lashings physically connect the sail to mast and boom.
+    for (let i = 0; i < 6; i++) expect(s.scene.getObjectByName(`ship-mast-hoop-${i}`)).toBeDefined()
+    for (let i = 0; i < 5; i++) expect(s.scene.getObjectByName(`ship-boom-lashing-${i}`)).toBeDefined()
+    expect(s.scene.getObjectByName('ship-gaff')).toBeDefined()
+
+    // Forestay clears the cambered sail cloth in 3D without passing through it.
+    s.scene.updateMatrixWorld(true)
+    const stayCurve = (forestay.geometry as THREE.TubeGeometry).parameters.path as THREE.CatmullRomCurve3
+    let minStayClearance = Infinity
+    for (let k = 0; k <= 24; k++) {
+      const sp = stayCurve.getPointAt(k / 24).applyMatrix4(forestay.matrixWorld)
+      for (let i = 0; i < sailPos.count; i += 3) {
+        const vp = new THREE.Vector3().fromBufferAttribute(sailPos, i).applyMatrix4(sail.matrixWorld)
+        minStayClearance = Math.min(minStayClearance, sp.distanceTo(vp))
+      }
+    }
+    expect(minStayClearance).toBeGreaterThan(.02)
+
+    // Reduced motion keeps sail geometry completely static; normal mode breathes subtly while pinning luff/foot/head.
+    const reducedBefore = Array.from(sailPos.array)
+    s.run(.6)
+    expect(Array.from(sailPos.array)).toEqual(reducedBefore)
+    s.instance.dispose()
+
+    const live = mount(1, { isReducedMotion: () => false })
+    const liveSail = live.scene.getObjectByName('ship-cream-cloth-sail') as THREE.Mesh
+    const livePos = liveSail.geometry.getAttribute('position') as THREE.BufferAttribute
+    const liveInitial = Array.from(livePos.array)
+    live.run(.45)
+    const liveAfter = Array.from(livePos.array)
+    expect(liveAfter).not.toEqual(liveInitial)
+    for (let i = 0; i < liveAfter.length; i++) expect(Number.isFinite(liveAfter[i])).toBe(true)
+    // Luff (x=0), foot (y=0), and head (y=rows) remain pinned to mast/boom/gaff.
+    for (let y = 0; y <= rows; y++) {
+      const vi = y * (cols + 1) * 3
+      expect(liveAfter[vi + 2]).toBeCloseTo(liveInitial[vi + 2]!, 6)
+    }
+    for (let x = 0; x <= cols; x++) {
+      const footI = x * 3
+      const headI = (rows * (cols + 1) + x) * 3
+      expect(liveAfter[footI + 2]).toBeCloseTo(liveInitial[footI + 2]!, 6)
+      expect(liveAfter[headI + 2]).toBeCloseTo(liveInitial[headI + 2]!, 6)
+    }
+  })
+
   it('frees geometry, materials, cues, shadows, DOM, renderer and listeners exactly once', () => {
     const added = vi.spyOn(window, 'addEventListener'), removed = vi.spyOn(window, 'removeEventListener'), s = mount()
     const resources = new Set<THREE.BufferGeometry | THREE.Material>(), shadows: number[] = []

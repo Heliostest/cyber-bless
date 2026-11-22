@@ -376,6 +376,57 @@ describe('physical craft and owned resources', () => {
     expect(s.scene.getObjectByName('rug-back-weft')!.parent).toBe(rug)
     expect(s.scene.getObjectByName('rug-bound-edge')!.parent).toBe(rug)
   })
+  it('exposes warp threads across the unfinished gap, aligns knotted fringes and progressively weaves the finishing row', () => {
+    const s = mount(0), rug = s.scene.getObjectByName('rug-body')!
+    const warps: THREE.Object3D[] = [], knots: THREE.Object3D[] = [], whips: THREE.Object3D[] = [], coils: THREE.Object3D[] = []
+    s.scene.traverse(o => {
+      if (o.name === 'rug-warp-thread') warps.push(o)
+      if (o.name === 'rug-fringe-knot') knots.push(o)
+      if (o.name === 'rug-selvedge-whip') whips.push(o)
+      if (o.name === 'rug-shuttle-coil') coils.push(o)
+    })
+    expect(warps).toHaveLength(18)
+    expect(knots).toHaveLength(18)
+    expect(whips).toHaveLength(2)
+    expect(coils.length).toBeGreaterThanOrEqual(2)
+    expect(s.scene.getObjectByName('rug-live-weft')!.visible).toBe(false)
+    // Mid-weave step 0 shows progressive partial weft rows and live thread connecting shuttle.
+    s.button.click(); s.run(.40)
+    const finishing = rug.getObjectByName('rug-finished-row')!
+    const rowMeshes = finishing.children as THREE.Mesh[]
+    expect(finishing.visible).toBe(true)
+    expect(s.scene.getObjectByName('rug-live-weft')!.visible).toBe(true)
+    const visibleCount = rowMeshes.filter(m => m.visible).length
+    expect(visibleCount).toBeGreaterThan(0); expect(visibleCount).toBeLessThan(rowMeshes.length)
+    s.run(1.0)
+    expect(s.progress).toEqual([1])
+    expect(s.scene.getObjectByName('rug-live-weft')!.visible).toBe(false)
+    expect(rowMeshes.every(m => m.visible && m.geometry.drawRange.count > 0)).toBe(true)
+  })
+  it('sways knotted wool fringes during live carry transfer and keeps them strictly still in reduced motion', () => {
+    const live = mount(1)
+    const firstFringe = live.scene.getObjectByName('rug-fringe') as THREE.Mesh
+    const tipX = (m: THREE.Mesh) => {
+      const p = m.geometry.getAttribute('position')
+      return p.getX(p.count - 1)
+    }
+    const restTip = tipX(firstFringe)
+    live.button.click()
+    let maxDelta = 0
+    for (let i = 0; i < 24; i++) {
+      live.instance.update(.025)
+      maxDelta = Math.max(maxDelta, Math.abs(tipX(firstFringe) - restTip))
+    }
+    expect(maxDelta).toBeGreaterThan(.008)
+    live.run(2.5)
+    expect(Math.abs(tipX(firstFringe) - restTip)).toBeLessThan(.002)
+
+    const quiet = mount(1, { isReducedMotion: () => true })
+    const quietFringe = quiet.scene.getObjectByName('rug-fringe') as THREE.Mesh
+    const quietBefore = Array.from(quietFringe.geometry.getAttribute('position').array)
+    quiet.button.click(); quiet.run(1.2)
+    expect(Array.from(quietFringe.geometry.getAttribute('position').array)).toEqual(quietBefore)
+  })
   it.each([284, 350, 1280])('keeps every visible object vertex inside the actual canvas at width %i', width => {
     for (const at of [0, 1, 2]) {
       const s = mount(at, {}, width); s.scene.updateMatrixWorld(true)

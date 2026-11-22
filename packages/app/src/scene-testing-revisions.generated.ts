@@ -3,7 +3,7 @@
 export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "aland-votive-ship": "a9a70a24c2084089a2d116346d3af7eaed591c22866a00df49e4757d5eb148f7",
   "alasita-miniature-house": "9d70143caffdb543c68a6ee4fd3b6bb1db7bf062031b0bd9346267bf8edd8b72",
-  "amazigh-woven-rug": "2ec11e0afef84c9399b723fde383113ff0a95c48740334e53a202d63324a640b",
+  "amazigh-woven-rug": "eab98fd29275a7b1f6338b7a88d11e1428a8d26e8fe3b8a822abcadf6772c0fb",
   "andalusian-ceramic-tile": "e1213914ed1dd51cfce361f027867667c3861cdd9966de39030ac03b04643fcf",
   "bai-indigo-cloth": "b6d77d42d58c8042828ca63f23eb31c50571ec9d54c0f227a2e73457426bc3d6",
   "balinese-canang-sari": "076f669ea14bbaa91cc27698bad7d471c46641a0a62598fd7e86b2a1a383cd28",
@@ -59,7 +59,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "greek-vasilopita": "e7a0579c602056d94930e48c0edbaa8af718294de4ea9597e2e55e50ee157444",
   "hiiragi-iwashi": "5a66cac0b327538a4879fb617bac01d3f19c136e653eb0504899c28fbfaad86f",
   "hindu-coconut-offering": "6218f2eae5aa4e7f7b6983daea3883ba4bc511644f4a99bbb8d35db5d033f2a8",
-  "hongsheng-red-string": "7d6f239a398525951f190e1dfc4954e60d36a01a6cf500360c2b411ba98ab3f1",
+  "hongsheng-red-string": "ffaec7cfdd8c8a9873c45e48239b798fa9caa6a797267ad267ea77564299e58b",
   "horseshoe-doorway-luck": "9dca716a387c2d6a16c3ba061da3ebc110187a8f9e62a4f5011312bae20c9e47",
   "hungarian-embroidery-hoop": "a7e569ad12d11bf5e83d96312e5c4a89c4389e7a7844d72175633b3ba71a9144",
   "indian-charkha": "167113aa975c3a48859245ded2ebc57e78b79258d2d1fd75c82c0a9f1ab04d74",

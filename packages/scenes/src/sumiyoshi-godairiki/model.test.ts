@@ -117,3 +117,82 @@ it('deforms the closed cloth pouch and gravel-resting drawstrings under stone we
  expect(Array.from(pouchArr)).toEqual(loadedSnap)
  disposeTree(m.root)
 })
+
+it('preserves asymmetric mid-belly cloth folds, holonomy-free tube seams, woven texture disposal, and baseline auto-fit bounds', () => {
+ const m = createGodairikiModel()
+ const pouchPos = m.pouch.geometry.attributes.position!
+ const rim = m.root.getObjectByName('godairiki-soft-rim') as THREE.Mesh
+ const leftCord = m.root.getObjectByName('godairiki-cord--1') as THREE.Mesh
+ const rightCord = m.root.getObjectByName('godairiki-cord-1') as THREE.Mesh
+
+ // Measure radial fold modulation on the mid-belly (y in 0.30..0.55) in both empty and loaded poses.
+ for (const step of [0, 3]) {
+  m.pose(step, 0)
+  const radii: number[] = []
+  for (let i = 0; i < pouchPos.count; i++) {
+   const x = pouchPos.getX(i), y = pouchPos.getY(i), z = pouchPos.getZ(i)
+   const r = Math.hypot(x, z / 0.83)
+   if (y > 0.30 && y < 0.55 && r > 0.72) radii.push(r)
+  }
+  const minR = Math.min(...radii), maxR = Math.max(...radii)
+  // Asymmetric cloth pleats produce clear radial crest-to-trough depth on the mid-belly (not a smooth plastic dome).
+  expect(maxR - minR, `belly fold depth at step ${step}`).toBeGreaterThan(0.055)
+  expect(maxR - minR, `belly folds stay restrained at step ${step}`).toBeLessThan(0.24)
+ }
+
+ // Verify closed-loop rim and braided drawstrings have welded start/end seam positions and unit normals (zero holonomy twist).
+ m.pose(3, 0)
+ for (const tube of [rim, leftCord, rightCord]) {
+  const pos = tube.geometry.getAttribute('position')!
+  const norm = tube.geometry.getAttribute('normal')!
+  const radialStride = 9 // radialSegments = 8 -> 9 vertices per ring
+  const lastRingOffset = pos.count - radialStride
+  for (let j = 0; j < radialStride; j++) {
+   const p0 = new THREE.Vector3().fromBufferAttribute(pos, j)
+   const p1 = new THREE.Vector3().fromBufferAttribute(pos, lastRingOffset + j)
+   expect(p0.distanceTo(p1), `${tube.name} closed seam pos j=${j}`).toBeLessThan(1e-5)
+   const n0 = new THREE.Vector3().fromBufferAttribute(norm, j)
+   const n1 = new THREE.Vector3().fromBufferAttribute(norm, lastRingOffset + j)
+   expect(n0.dot(n1), `${tube.name} welded seam normal j=${j}`).toBeGreaterThan(0.999)
+  }
+ }
+
+ // Verify exact official 346x332 and portrait 390x844 auto-fit framing parity with baseline 0140f204.
+ const target = new THREE.Vector3(0, 0.35, 0), direction = new THREE.Vector3(0.5, 14, 5).normalize()
+ for (const [aspect, expected] of [
+  [346 / 332, [0.191, 5.711, 1.915]],
+  [390 / 844, [0.445, 12.806, 4.449]],
+ ] as const) {
+  const cam = new THREE.PerspectiveCamera(40, aspect, 0.1, 40)
+  cam.position.copy(target).add(direction); cam.lookAt(target); cam.updateMatrixWorld(true)
+  const inv = cam.quaternion.clone().invert(), tan = Math.tan(THREE.MathUtils.degToRad(20)), p = new THREE.Vector3()
+  let distance = 3.4
+  for (const [st, n] of [0, 1, 2].flatMap(s => Array.from({ length: 61 }, (_, k) => [s, k / 60])).concat([[3, 0]])) {
+   m.pose(st!, n!)
+   m.subject.traverse(o => {
+    const mesh = o as THREE.Mesh; if (!mesh.geometry) return
+    const v = mesh.geometry.getAttribute('position')
+    for (let i = 0; i < v.count; i++) {
+     p.fromBufferAttribute(v, i).applyMatrix4(mesh.matrixWorld).sub(target).applyQuaternion(inv)
+     distance = Math.max(distance, p.z + Math.abs(p.x) / (tan * aspect * 0.86), p.z + Math.abs(p.y) / (tan * 0.86))
+    }
+   })
+  }
+  const actual = target.clone().addScaledVector(direction, distance).toArray().map(v => Number(v.toFixed(3)))
+  expect(actual).toEqual([...expected])
+ }
+
+ // Procedural woven cloth & cord DataTextures (map + bumpMap) dispose cleanly once via disposeTree.
+ const textures = new Set<THREE.Texture>()
+ m.root.traverse(o => {
+  const mat = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined
+  if (mat?.map) textures.add(mat.map)
+  if (mat?.bumpMap) textures.add(mat.bumpMap)
+ })
+ expect(textures.size).toBeGreaterThanOrEqual(4)
+ const freed = new Map<THREE.Texture, number>()
+ textures.forEach(t => t.addEventListener('dispose', () => freed.set(t, (freed.get(t) ?? 0) + 1)))
+ disposeTree(m.root)
+ expect(freed.size).toBe(textures.size)
+ expect([...freed.values()].every(n => n === 1)).toBe(true)
+})

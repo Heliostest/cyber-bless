@@ -405,4 +405,104 @@ it.each([390,1280])('keeps each physical cluster drop playable at %ipx by 408px'
 
 it.each(['pointercancel', 'blur', 'pause'])('clears flower readiness after %s and keeps the current cluster', reason => {let active=true;const s=mount(0,{isActive:()=>active,isReducedMotion:()=>true}),from=s.flowerPoint('tray-flowers-0'),to=midway(from,s.target());pointer(s.hit,'pointerdown',from);pointer(s.hit,'pointermove',to);if(reason==='blur')window.dispatchEvent(new Event('blur'));else if(reason==='pause'){active=false;s.run(.05)}else pointer(s.hit,'pointercancel',to);pointer(s.hit,'pointerup',to);s.run();expect(s.progress).toEqual([]);expect(s.obj('cluster-0').scale.x).toBe(.52)})
 
+describe('Phuang Malai cord, bow and tassel craft', () => {
+  it('builds finite outward-oriented cord, bow and tassel attachment geometry connected to the ring', () => {
+    const s = mount(3, { isReducedMotion: () => true })
+    const cordNames = [
+      'garland-core-cord', 'garland-crown-wrap',
+      'top-tie-knot', 'top-tie-loop-mesh-left', 'top-tie-loop-mesh-right',
+      'top-tie-tail-left', 'top-tie-tail-right',
+      'tassel-ring-wrap-left', 'tassel-ring-wrap-right',
+      'tassel-cord-left', 'tassel-cord-right',
+      'tassel-collar-left', 'tassel-collar-right',
+      'tassel-end-knot-left', 'tassel-end-knot-right',
+    ]
+    for (const name of cordNames) {
+      const mesh = s.obj(name) as THREE.Mesh
+      expect(mesh, name).toBeDefined()
+      const pos = mesh.geometry.getAttribute('position')
+      const nrm = mesh.geometry.getAttribute('normal')
+      expect(pos.count, name).toBeGreaterThan(24)
+      for (let i = 0; i < pos.count; i++) {
+        expect(Number.isFinite(pos.getX(i)) && Number.isFinite(pos.getY(i)) && Number.isFinite(pos.getZ(i)), name).toBe(true)
+        expect(Number.isFinite(nrm.getX(i)) && Number.isFinite(nrm.getY(i)) && Number.isFinite(nrm.getZ(i)), name).toBe(true)
+      }
+    }
+    // Verify outward normals on the sculpted pinched knot and tassel stopper knots.
+    for (const knotName of ['top-tie-knot', 'tassel-end-knot-left', 'tassel-end-knot-right']) {
+      const mesh = s.obj(knotName) as THREE.Mesh
+      const pos = mesh.geometry.getAttribute('position')
+      const nrm = mesh.geometry.getAttribute('normal')
+      let dotSum = 0
+      for (let i = 0; i < pos.count; i++) {
+        dotSum += pos.getX(i) * nrm.getX(i) + pos.getY(i) * nrm.getY(i) + pos.getZ(i) * nrm.getZ(i)
+      }
+      expect(dotSum, `${knotName} outward normal dot`).toBeGreaterThan(0)
+    }
+    // Verify tassel suspension cord continuity from ring lashing to bottom stopper while clearing the pedestal.
+    const pedestalTopY = new THREE.Box3().setFromObject(s.obj('pedestal-top')).max.y
+    for (const label of ['left', 'right'] as const) {
+      const ringWrapPos = s.obj(`tassel-ring-wrap-${label}`).getWorldPosition(new THREE.Vector3())
+      const tasselCord = s.obj(`tassel-cord-${label}`) as THREE.Mesh
+      const pos = tasselCord.geometry.getAttribute('position')
+      let minDistToRingWrap = Infinity
+      let lowestY = Infinity
+      const v = new THREE.Vector3()
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(tasselCord.matrixWorld)
+        minDistToRingWrap = Math.min(minDistToRingWrap, v.distanceTo(ringWrapPos))
+        lowestY = Math.min(lowestY, v.y)
+      }
+      expect(minDistToRingWrap, `${label} cord joins ring lashing`).toBeLessThan(0.022)
+      expect(lowestY, `${label} tassel cord clears pedestal`).toBeGreaterThan(pedestalTopY + 0.02)
+      const endKnotBox = new THREE.Box3().setFromObject(s.obj(`tassel-end-knot-${label}`))
+      expect(endKnotBox.min.y, `${label} stopper knot clears pedestal`).toBeGreaterThan(pedestalTopY + 0.015)
+    }
+  })
+
+  it('cinches the top bow from untied to tied cleanly and keeps tassels strictly calm in reduced motion', () => {
+    const untied = mount(1, { isReducedMotion: () => true })
+    const tied = mount(2, { isReducedMotion: () => true })
+    expect(untied.obj('top-tie-loop-left').scale.x).toBeGreaterThan(tied.obj('top-tie-loop-left').scale.x)
+    expect(untied.obj('top-tie').position.y).toBeGreaterThan(tied.obj('top-tie').position.y)
+    // Verify reduced motion holds both tassels completely motionless across time.
+    tied.run(2)
+    for (const name of ['flower-tassel-left', 'flower-tassel-right']) {
+      expect(tied.obj(name).rotation.x).toBe(0)
+      expect(tied.obj(name).rotation.z).toBe(0)
+    }
+    // Verify normal mode after tying introduces subtle bounded sway that pauses when inactive and zeroes on reduced motion.
+    let isReduced = false
+    let isActive = true
+    const live = mount(2, { isReducedMotion: () => isReduced, isActive: () => isActive })
+    live.run(1.0)
+    const liveSway = Math.abs(live.obj('flower-tassel-left').rotation.z)
+    expect(liveSway).toBeGreaterThan(0.002)
+    expect(liveSway).toBeLessThan(0.05)
+    isActive = false
+    const frozenZ = live.obj('flower-tassel-left').rotation.z
+    live.run(0.8)
+    expect(live.obj('flower-tassel-left').rotation.z).toBe(frozenZ)
+    isActive = true
+    isReduced = true
+    live.run(0.2)
+    expect(live.obj('flower-tassel-left').rotation.z).toBe(0)
+    expect(live.obj('flower-tassel-left').rotation.x).toBe(0)
+  })
+
+  it('disposes procedural cord map and bump textures exactly once on dispose', () => {
+    const s = mount(2)
+    const core = s.obj('garland-core-cord') as THREE.Mesh
+    const mat = core.material as THREE.MeshStandardMaterial
+    expect(mat.map).toBeInstanceOf(THREE.DataTexture)
+    expect(mat.bumpMap).toBeInstanceOf(THREE.DataTexture)
+    const mapSpy = vi.spyOn(mat.map!, 'dispose')
+    const bumpSpy = vi.spyOn(mat.bumpMap!, 'dispose')
+    s.instance.dispose()
+    s.instance.dispose()
+    expect(mapSpy).toHaveBeenCalledTimes(1)
+    expect(bumpSpy).toHaveBeenCalledTimes(1)
+  })
+})
+
 function midway(a:readonly number[],b:readonly number[]):[number,number]{return[a[0]+(b[0]-a[0])*.2,a[1]+(b[1]-a[1])*.2]}

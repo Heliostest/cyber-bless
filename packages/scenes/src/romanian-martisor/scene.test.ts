@@ -384,3 +384,61 @@ describe('free object inspection without forced route checkpoints',()=>{
     expect(object.position.distanceTo(home)).toBeLessThan(1e-7);expect(object.quaternion.angleTo(rotation)).toBeLessThan(1e-7);expect(s.progress).toEqual([]);
   });
 });
+
+describe('martisor yarn craft camera parity and secondary tassel sway', () => {
+  it('preserves exact auto-fit camera coordinates at official and portrait viewports', () => {
+    const checkCam = (width: number, height: number, expected: [number, number, number]) => {
+      const host = document.createElement('div'), canvas = document.createElement('canvas'), overlay = document.createElement('div')
+      host.append(canvas, overlay); document.body.append(host)
+      Object.defineProperties(canvas, { clientWidth: { value: width }, clientHeight: { value: height } })
+      canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width, height }) as DOMRect
+      const inst = mod.create({ canvas, overlay, gestures: Gestures, shared: Shared, initialProgress: 3, isSoundEnabled: () => false })
+      instances.push(inst); inst.start(); inst.update(0.025)
+      const cam = rendered.camera as THREE.PerspectiveCamera
+      expect(cam.position.x).toBeCloseTo(expected[0], 3)
+      expect(cam.position.y).toBeCloseTo(expected[1], 3)
+      expect(cam.position.z).toBeCloseTo(expected[2], 3)
+      inst.dispose()
+    }
+    checkCam(346, 332, [2.887, 3.115, 4.130])
+    checkCam(390, 844, [6.004, 5.453, 8.806])
+  })
+
+  it('applies damped secondary tassel sway on flick in normal mode and keeps zero lag in reduced mode, pause, and completion', () => {
+    let active = true
+    const normal = mount(2, { isActive: () => active, isReducedMotion: () => false }, 390, false)
+    const flickBtn = normal.overlay.querySelector<HTMLButtonElement>('.scene-hanging-flick')!
+    const redPivot = normal.scene.getObjectByName('martisor-red-head-pivot')!
+    const whitePivot = normal.scene.getObjectByName('martisor-white-head-pivot')!
+    expect(redPivot.rotation.z).toBe(0)
+    flickBtn.click()
+    let peakRed = 0, peakWhite = 0
+    for (let i = 0; i < 16; i++) {
+      normal.instance.update(1 / 60)
+      peakRed = Math.max(peakRed, Math.abs(redPivot.rotation.z))
+      peakWhite = Math.max(peakWhite, Math.abs(whitePivot.rotation.z))
+    }
+    expect(peakRed).toBeGreaterThan(0.01)
+    expect(peakWhite).toBeGreaterThan(peakRed)
+
+    // Pause resets sway & tassel lag cleanly; resume stays calm until flicked again.
+    active = false; normal.instance.update(1 / 60)
+    expect(redPivot.rotation.z).toBe(0); expect(whitePivot.rotation.z).toBe(0)
+    active = true; normal.instance.update(1 / 60)
+    expect(redPivot.rotation.z).toBe(0)
+    flickBtn.click(); normal.instance.update(1 / 30); normal.instance.update(1 / 30)
+    expect(Math.abs(redPivot.rotation.z)).toBeGreaterThan(0.001)
+
+    // Finishing resets tassel lag strictly to zero.
+    normal.button.click()
+    expect(Math.abs(redPivot.rotation.z)).toBe(0); expect(Math.abs(whitePivot.rotation.z)).toBe(0)
+
+    // Reduced mode keeps tassel pivots strictly zero on flick.
+    const quiet = mount(2, { isReducedMotion: () => true }, 390, false)
+    const quietFlick = quiet.overlay.querySelector<HTMLButtonElement>('.scene-hanging-flick')!
+    const quietRed = quiet.scene.getObjectByName('martisor-red-head-pivot')!
+    quietFlick.click()
+    for (let i = 0; i < 12; i++) quiet.instance.update(1 / 60)
+    expect(quietRed.rotation.z).toBe(0)
+  })
+})

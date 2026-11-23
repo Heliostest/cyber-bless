@@ -363,4 +363,78 @@ describe('Polish seasonal family basket', () => {
     expect(Array.from(flapBuf)).toEqual(reducedFlap)
     expect(Array.from(stripeBuf)).toEqual(reducedStripe)
   })
+
+  it('preserves distinct vertical linen pleats in both calm and settled Rapier completed states, keeps embroidery flush, and disposes cloth textures once', async () => {
+    const { loadRapier } = await import('@wbr/scene-runtime/rapier-soft-body')
+    await loadRapier()
+
+    const measureSkirtPleatRange = (flap: THREE.Mesh) => {
+      const pos = flap.geometry.getAttribute('position') as THREE.BufferAttribute
+      const cols = 49
+      const midRow = 20 // lower-mid hanging skirt (j = 20 of 28)
+      const radii: number[] = []
+      for (let i = 0; i < cols; i++) {
+        const idx = midRow * cols + i
+        const x = pos.getX(idx), z = pos.getZ(idx)
+        radii.push(Math.hypot(x / 0.77, z / 0.51))
+      }
+      // Count interior local extrema along the skirt cross-section to confirm multiple vertical folds (not a flat panel).
+      let extrema = 0
+      for (let i = 2; i < radii.length - 2; i++) {
+        const prev = radii[i - 1]!, cur = radii[i]!, next = radii[i + 1]!
+        if ((cur > prev && cur > next) || (cur < prev && cur < next)) extrema++
+      }
+      const span = Math.max(...radii) - Math.min(...radii)
+      return { span, extrema }
+    }
+
+    // 1. Calm completed state
+    const calm = mount(3, { isReducedMotion: () => true })
+    const calmFlap = calm.scene.getObjectByName('basket-cloth-flap') as THREE.Mesh
+    const calmPleats = measureSkirtPleatRange(calmFlap)
+    expect(calmPleats.span).toBeGreaterThan(0.045)
+    expect(calmPleats.extrema).toBeGreaterThanOrEqual(5)
+
+    // 2. Active settled Rapier completed state (must NOT iron vertical pleats flat)
+    const live = mount(3, { isReducedMotion: () => false })
+    await new Promise((resolve) => setTimeout(resolve, 40))
+    for (let i = 0; i < 45; i++) live.instance.update(1 / 60)
+    const liveFlap = live.scene.getObjectByName('basket-cloth-flap') as THREE.Mesh
+    const livePleats = measureSkirtPleatRange(liveFlap)
+    expect(livePleats.span).toBeGreaterThan(0.042)
+    expect(livePleats.extrema).toBeGreaterThanOrEqual(5)
+
+    // Verify embroidery stripes stay flush against the pleated linen surface (no floating wire gap).
+    const flapPos = liveFlap.geometry.getAttribute('position') as THREE.BufferAttribute
+    const stripe0 = live.scene.getObjectByName('basket-cloth-embroidery-0') as THREE.Mesh
+    const sPos = stripe0.geometry.getAttribute('position') as THREE.BufferAttribute
+    const vS = new THREE.Vector3(), vF = new THREE.Vector3()
+    let maxDist = 0
+    for (let i = 0; i < sPos.count; i += 9) {
+      vS.fromBufferAttribute(sPos, i)
+      let bestSq = Infinity
+      for (let j = 0; j < flapPos.count; j++) {
+        vF.fromBufferAttribute(flapPos, j)
+        const dSq = vS.distanceToSquared(vF)
+        if (dSq < bestSq) bestSq = dSq
+      }
+      maxDist = Math.max(maxDist, Math.sqrt(bestSq))
+    }
+    expect(maxDist).toBeLessThan(0.025)
+
+    // Verify all cloth/lining/embroidery maps & bumpMaps dispose cleanly once.
+    const textures = new Set<THREE.Texture>()
+    for (const name of ['basket-cloth-flap', 'basket-cloth-lining', 'basket-cloth-embroidery-0']) {
+      const mat = (live.scene.getObjectByName(name) as THREE.Mesh).material as THREE.MeshStandardMaterial
+      if (mat.map) textures.add(mat.map)
+      if (mat.bumpMap) textures.add(mat.bumpMap)
+    }
+    expect(textures.size).toBe(6)
+    const freed = new Map<THREE.Texture, number>()
+    textures.forEach((tex) => tex.addEventListener('dispose', () => freed.set(tex, (freed.get(tex) ?? 0) + 1)))
+    live.instance.dispose()
+    live.instance.dispose()
+    expect(freed.size).toBe(6)
+    expect([...freed.values()].every((n) => n === 1)).toBe(true)
+  })
 })

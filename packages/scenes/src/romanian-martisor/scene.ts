@@ -30,7 +30,7 @@ export function createRomanianMartisor(ctx: SceneContext): SceneInstance {
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
   let motion: { step: 0 | 1 | 2; time: number; from: number; arrived?: boolean } | null = null
   let amount = 0, invalid = false, heldHanging = false, gestureMoved = false, handoffPending = false
-  let yaw = 0, committedYaw = 0, sway = 0, speed = 0
+  let yaw = 0, committedYaw = 0, sway = 0, speed = 0, tasselLag = 0, tasselVel = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
@@ -58,9 +58,11 @@ export function createRomanianMartisor(ctx: SceneContext): SceneInstance {
   const hangingPose = () => {
     const actor = model.cord
     actor.quaternion.setFromEuler(new THREE.Euler(0, yaw, sway))
-    actor.position.copy(home).add(contact).sub(contact.clone().applyQuaternion(actor.quaternion)); matrices()
+    actor.position.copy(home).add(contact).sub(contact.clone().applyQuaternion(actor.quaternion))
+    model.setTasselSway(tasselLag, tasselLag * 1.14)
+    matrices()
   }
-  const restore = () => { const step = at >= 2 ? 3 : at; pose(step, 0); placement.restoreCheckpoint(step); if (at === 2) hangingPose(); matrices() }
+  const restore = () => { const step = at >= 2 ? 3 : at; tasselLag = tasselVel = 0; pose(step, 0); placement.restoreCheckpoint(step); if (at === 2) hangingPose(); matrices() }
   const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', destination: () => placement.destination(2), targetLabel: '当前安放位置', label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && canPlace() && !motion && at < 2 && i === 2 }))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const nearest = (x: number, y: number) => {
@@ -68,7 +70,7 @@ export function createRomanianMartisor(ctx: SceneContext): SceneInstance {
     scene.traverseVisible(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; const materials = Array.isArray(m.material) ? m.material : [m.material]; if (materials.some(m => m.visible && (!m.transparent || m.opacity >= 1))) meshes.push(o) })
     return ray.aim(x, y).intersectObjects(meshes, false)[0]?.object
   }
-  const reset = () => { placement.cancel(); invalid = false; heldHanging = false; yaw = committedYaw; sway = speed = 0; if (!motion && !disposed) restore(); if (!disposed) sync() }
+  const reset = () => { placement.cancel(); invalid = false; heldHanging = false; yaw = committedYaw; sway = speed = tasselLag = tasselVel = 0; if (!motion && !disposed) restore(); if (!disposed) sync() }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
@@ -96,7 +98,7 @@ export function createRomanianMartisor(ctx: SceneContext): SceneInstance {
         if (!insideCanvas(canvas,x,y)) { reset(); return }
         heldHanging = false; committedYaw = yaw
         if (!gestureMoved) flick(true)
-        else if (ctx.isReducedMotion?.()) { sway = speed = 0; hangingPose() }
+        else if (ctx.isReducedMotion?.()) { sway = speed = tasselLag = tasselVel = 0; hangingPose() }
         return
       }
       const valid = !invalid && placement.move(x,y)
@@ -107,7 +109,7 @@ export function createRomanianMartisor(ctx: SceneContext): SceneInstance {
     onCancel: reset,
     onRotate(dx,dy) { if (at === 2) turnHanging(dx,dy); else placement.rotate(dx*.012,dy*.012) },
     onRebase(x,y) { if (at === 2) previous.set(x,y); else placement.rebase(x,y) },
-    onInspectEnd() { if (at === 2) { heldHanging = false; committedYaw = yaw; if (ctx.isReducedMotion?.()) { sway = speed = 0; hangingPose() } } else placement.release() },
+    onInspectEnd() { if (at === 2) { heldHanging = false; committedYaw = yaw; if (ctx.isReducedMotion?.()) { sway = speed = tasselLag = tasselVel = 0; hangingPose() } } else placement.release() },
   })
   const sync = () => {
     if (cueLayer) cueLayer.hidden = !active()
@@ -126,7 +128,7 @@ export function createRomanianMartisor(ctx: SceneContext): SceneInstance {
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
-    at = 2; motion = null; handoffPending = true; committedYaw = yaw = sway = speed = 0; restore()
+    at = 2; motion = null; handoffPending = true; committedYaw = yaw = sway = speed = tasselLag = tasselVel = 0; restore()
     withHostCallbacks(() => {
       ctx.onProgress?.(2); if (!callbackActive()) return
       feedback.impact({ freqs: [440], duration: .09, gain: .003, type: 'sine' })
@@ -145,7 +147,7 @@ export function createRomanianMartisor(ctx: SceneContext): SceneInstance {
   const action = (event: MouseEvent) => {
     if (event.detail > 1 || !inputActive() || !canPlace() || handoffPending || pointer.isBusy() || motion || at === 3 || !prepareInput()) return
     if (at === 2) {
-      at = 3; heldHanging = false; yaw = committedYaw = sway = speed = 0; restore()
+      at = 3; heldHanging = false; yaw = committedYaw = sway = speed = tasselLag = tasselVel = 0; restore()
       withHostCallbacks(() => {
         ctx.onProgress?.(3); if (!callbackActive()) return
         feedback.impact({ freqs: [440], duration: .09, gain: .003, type: 'sine' })
@@ -156,16 +158,16 @@ export function createRomanianMartisor(ctx: SceneContext): SceneInstance {
   const playKeyboard = (event: KeyboardEvent) => {
     if (at !== 2 || !inputActive() || handoffPending || pointer.isBusy() || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return
     const turns: Record<string,[number,number]> = { ArrowLeft: [-12,0], ArrowRight: [12,0], ArrowUp: [0,-12], ArrowDown: [0,12] }
-    if (event.key === 'Escape') { event.preventDefault(); committedYaw = yaw = sway = speed = 0; hangingPose(); return }
+    if (event.key === 'Escape') { event.preventDefault(); committedYaw = yaw = sway = speed = tasselLag = tasselVel = 0; hangingPose(); return }
     const turn = turns[event.key]; if (!turn) return
     event.preventDefault(); if (!prepareInput()) return
     turnHanging(...turn); committedYaw = yaw
-    if (ctx.isReducedMotion?.()) { sway = speed = 0; hangingPose() }
+    if (ctx.isReducedMotion?.()) { sway = speed = tasselLag = tasselVel = 0; hangingPose() }
   }
   const blur = () => { focused = false; lifecycleVersion++; closeInspection?.cancel(); pointer.cancel(); if (!motion) reset(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
     closeInspection?.cancel()
-    heldHanging = false; yaw = committedYaw; sway = speed = 0
+    heldHanging = false; yaw = committedYaw; sway = speed = tasselLag = tasselVel = 0
     if (!motion) { pointer.cancel(); placement.cancel(); restore() }
     const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(.2, 1.1, .1), direction = new THREE.Vector3(4, 3, 6).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target); camera.updateMatrixWorld(true)
@@ -205,8 +207,15 @@ export function createRomanianMartisor(ctx: SceneContext): SceneInstance {
       }
       if (!active()) return
       if (at === 2 && !motion && !heldHanging) {
-        if (ctx.isReducedMotion?.()) sway = speed = 0
-        else { speed += (-sway * 22 - speed * 2.8) * delta; sway = THREE.MathUtils.clamp(sway + speed * delta, -.16, .16) }
+        if (ctx.isReducedMotion?.()) { sway = speed = tasselLag = tasselVel = 0 }
+        else {
+          speed += (-sway * 22 - speed * 2.8) * delta
+          sway = THREE.MathUtils.clamp(sway + speed * delta, -.16, .16)
+          // Subtle analytical secondary pendulum lag on the two yarn tassels during branch sway.
+          const targetLag = -sway * 0.45 - speed * 0.085
+          tasselVel += ((targetLag - tasselLag) * 30 - tasselVel * 4.4) * delta
+          tasselLag = THREE.MathUtils.clamp(tasselLag + tasselVel * delta, -.22, .22)
+        }
         hangingPose()
       }
       feedback.update(); closeInspection.update(delta)
@@ -216,7 +225,7 @@ export function createRomanianMartisor(ctx: SceneContext): SceneInstance {
       if (disposed) return
       disposed = true; lifecycleVersion++; closeInspection?.dispose(); pointer.dispose(); stopInspection(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action); flickBtn.removeEventListener('click', flickAction); ui.actionBtn.removeEventListener('keydown', playKeyboard); flickBtn.removeEventListener('keydown', playKeyboard)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); model.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

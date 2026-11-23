@@ -41,25 +41,291 @@ const smooth = (t: number) => t * t * (3 - 2 * t)
 // Tabletop top surface is at world y=0.760 -> basket-local y=-0.030.
 const CLOTH_A_LEFT = 2.38
 const CLOTH_A_RIGHT = 1.54
-const FLAP_NX = 32
-const FLAP_NY = 26
+const FLAP_NX = 48
+const FLAP_NY = 28
 const FLAP_WRAP_ROWS = 8 // rows 0..8 smoothly wrap from basket interior over the top wicker rim
-const FLAP_SKIRT_ROWS = FLAP_NY - FLAP_WRAP_ROWS // rows 8..26 hang down outside the basket wall
+const FLAP_SKIRT_ROWS = FLAP_NY - FLAP_WRAP_ROWS // rows 8..28 hang down outside the basket wall
 const SIM_NU = 11
-const SIM_NV = 8 // 88 cloth particles for the free hanging linen skirt
+const SIM_NV = 8 // 88 cloth particles for the free hanging linen skirt carrier
 const FLAP_DROP = 0.365
 const RIM_CX = 0.77
 const RIM_CZ = 0.51
 const RIM_CY = 0.426
-const RIM_WRAP_RXZ = 0.041
-const RIM_WRAP_RY = 0.045
+const RIM_WRAP_RXZ = 0.043
+const RIM_WRAP_RY = 0.046
 const EMBROIDERY_US = [0.145, 0.225] as const
-const EMBROIDERY_SEGS = 24
-const EMBROIDERY_RADIAL = 6
-const EMBROIDERY_RADIUS = 0.0062
-const EMBROIDERY_OFFSET = 0.0052
-const LINING_RINGS = 14
+const EMBROIDERY_SEGS = 44
+const EMBROIDERY_RADIAL = 8
+const EMBROIDERY_RADIUS = 0.0052
+const EMBROIDERY_OFFSET = 0.0030
+const LINING_RINGS = 16
 const LINING_COLS = 64
+
+// Authored asymmetric vertical linen pleat valleys: [uCenter, halfWidth, depth, gravitySplay].
+// Produces four softly sculpted, hand-draped vertical folds across the front apron without
+// regular machine-corrugated symmetry or flat panel collapse.
+const LINEN_PLEAT_VALLEYS: readonly (readonly [number, number, number, number])[] = [
+  [0.065, 0.056, 0.011, -0.020],
+  [0.320, 0.068, 0.026, -0.014],
+  [0.575, 0.072, 0.029, 0.010],
+  [0.820, 0.064, 0.024, 0.024],
+] as const
+
+// Complementary soft convex linen ridges between valleys: [uCenter, halfWidth, swell, gravitySplay].
+const LINEN_PLEAT_RIDGES: readonly (readonly [number, number, number, number])[] = [
+  [0.185, 0.095, 0.013, -0.018],
+  [0.448, 0.088, 0.017, -0.003],
+  [0.700, 0.088, 0.018, 0.016],
+  [0.925, 0.072, 0.012, 0.026],
+] as const
+
+function linenHash(n: number): number {
+  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453123
+  return x - Math.floor(x)
+}
+
+let cachedFlapLinenPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
+let cachedLiningLinenPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
+let cachedEmbroideryPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
+
+/**
+ * Deterministic woven plain-linen texture for the front flap (512x512).
+ * Replaces coarse object-space waffle dots with fine 1/1 linen yarn interlacing,
+ * subtle per-thread flax slub irregularity, a neat folded bottom hem with faint
+ * running-stitch detail, and tidy hemmed side selvedges.
+ */
+function createFlapLinenTextures(): { map: THREE.DataTexture; bump: THREE.DataTexture } {
+  const size = 512
+  if (!cachedFlapLinenPixels) {
+    const colorData = new Uint8Array(size * size * 4)
+    const bumpData = new Uint8Array(size * size * 4)
+    const tau = Math.PI * 2
+    const threads = 128
+    const warpTone = new Float32Array(threads)
+    const weftTone = new Float32Array(threads)
+    for (let t = 0; t < threads; t++) {
+      warpTone[t] = (linenHash(t * 3 + 5) - 0.5) * 4.2 + (linenHash(t * 11 + 17) > 0.88 ? 2.6 : 0)
+      weftTone[t] = (linenHash(t * 7 + 29) - 0.5) * 4.2 + (linenHash(t * 13 + 43) > 0.88 ? 2.8 : 0)
+    }
+    for (let y = 0; y < size; y++) {
+      // Flap UVs map v = 0 at the bottom hem, v = 1 at the basket-interior tuck.
+      const v = y / (size - 1)
+      const weftPos = (y / size) * threads
+      const weftIdx = Math.floor(weftPos) % threads
+      const weftProfile = Math.sin((weftPos % 1) * tau)
+      const weftSlub = weftTone[weftIdx]!
+
+      // Folded bottom hem band (v in [0, 0.055]) with crisp topstitched seam line at v = 0.058.
+      const hemShadow = Math.exp(-(((v - 0.058) / 0.0085) ** 2))
+      const hemEdgeRoll = Math.exp(-(((v - 0.006) / 0.012) ** 2))
+      const hemBandTint = (1 - THREE.MathUtils.smoothstep(v, 0.048, 0.064)) * 3.5
+
+      for (let x = 0; x < size; x++) {
+        const u = x / (size - 1)
+        const warpPos = (x / size) * threads
+        const warpIdx = Math.floor(warpPos) % threads
+        const warpProfile = Math.sin((warpPos % 1) * tau)
+        const warpSlub = warpTone[warpIdx]!
+
+        const overWarp = ((warpIdx + weftIdx) & 1) === 0
+        const yarnHeight = overWarp
+          ? warpProfile * 0.65 + weftProfile * 0.18 + warpSlub * 0.12
+          : weftProfile * 0.65 + warpProfile * 0.18 + weftSlub * 0.12
+        const weave = yarnHeight * 4.0 + (warpSlub + weftSlub) * 0.45
+
+        // Delicate pale running-stitch line along the folded bottom hem and tidy side hems.
+        const hemDash = THREE.MathUtils.smoothstep(Math.sin(u * tau * 34), 0.20, 0.62)
+        const bottomStitch = Math.exp(-(((v - 0.058) / 0.0024) ** 2)) * hemDash
+        const leftSelvedge = Math.exp(-(((u - 0.028) / 0.0075) ** 2))
+        const rightSelvedge = Math.exp(-(((u - 0.972) / 0.0075) ** 2))
+        const sideDash = THREE.MathUtils.smoothstep(Math.sin(v * tau * 32), 0.25, 0.65)
+        const sideStitch = (Math.exp(-(((u - 0.028) / 0.0022) ** 2)) + Math.exp(-(((u - 0.972) / 0.0022) ** 2))) * sideDash * 0.7
+        const stitchMask = Math.min(1, bottomStitch + sideStitch)
+
+        const seamDip = hemShadow * 11.5 + hemEdgeRoll * 8.0 + (leftSelvedge + rightSelvedge) * 7.5 + hemBandTint
+        const baseR = THREE.MathUtils.clamp(249 + weave - seamDip * 0.90, 212, 255)
+        const baseG = THREE.MathUtils.clamp(246 + weave * 0.95 - seamDip * 0.95, 206, 255)
+        const baseB = THREE.MathUtils.clamp(237 + weave * 0.88 - seamDip * 1.05, 194, 252)
+
+        const r = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseR, 255, stitchMask * 0.72)), 210, 255)
+        const g = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseG, 252, stitchMask * 0.72)), 204, 255)
+        const b = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseB, 240, stitchMask * 0.68)), 192, 252)
+
+        const idx = (y * size + x) * 4
+        colorData[idx] = r; colorData[idx + 1] = g; colorData[idx + 2] = b; colorData[idx + 3] = 255
+
+        const h = THREE.MathUtils.clamp(
+          Math.round(128 + yarnHeight * 32 + (warpSlub + weftSlub) * 1.8 - hemShadow * 28 - (leftSelvedge + rightSelvedge) * 18 + stitchMask * 34),
+          32,
+          232,
+        )
+        bumpData[idx] = h; bumpData[idx + 1] = h; bumpData[idx + 2] = h; bumpData[idx + 3] = 255
+      }
+    }
+    cachedFlapLinenPixels = { color: colorData, bump: bumpData, size }
+  }
+  const map = new THREE.DataTexture(new Uint8Array(cachedFlapLinenPixels.color), size, size)
+  map.colorSpace = THREE.SRGBColorSpace
+  map.wrapS = map.wrapT = THREE.ClampToEdgeWrapping
+  map.magFilter = THREE.LinearFilter
+  map.minFilter = THREE.LinearMipmapLinearFilter
+  map.generateMipmaps = true
+  map.needsUpdate = true
+
+  const bump = new THREE.DataTexture(new Uint8Array(cachedFlapLinenPixels.bump), size, size)
+  bump.colorSpace = THREE.NoColorSpace
+  bump.wrapS = bump.wrapT = THREE.ClampToEdgeWrapping
+  bump.magFilter = THREE.LinearFilter
+  bump.minFilter = THREE.LinearMipmapLinearFilter
+  bump.generateMipmaps = true
+  bump.needsUpdate = true
+  return { map, bump }
+}
+
+/** Tileable plain-linen weave texture for the inner basket lining (no hem band). */
+function createLiningLinenTextures(): { map: THREE.DataTexture; bump: THREE.DataTexture } {
+  const size = 256
+  if (!cachedLiningLinenPixels) {
+    const colorData = new Uint8Array(size * size * 4)
+    const bumpData = new Uint8Array(size * size * 4)
+    const tau = Math.PI * 2
+    const threads = 64
+    const warpTone = new Float32Array(threads)
+    const weftTone = new Float32Array(threads)
+    for (let t = 0; t < threads; t++) {
+      warpTone[t] = (linenHash(t * 5 + 3) - 0.5) * 4.0
+      weftTone[t] = (linenHash(t * 9 + 21) - 0.5) * 4.0
+    }
+    for (let y = 0; y < size; y++) {
+      const weftPos = (y / size) * threads
+      const weftIdx = Math.floor(weftPos) % threads
+      const weftProfile = Math.sin((weftPos % 1) * tau)
+      const weftSlub = weftTone[weftIdx]!
+      for (let x = 0; x < size; x++) {
+        const warpPos = (x / size) * threads
+        const warpIdx = Math.floor(warpPos) % threads
+        const warpProfile = Math.sin((warpPos % 1) * tau)
+        const warpSlub = warpTone[warpIdx]!
+        const overWarp = ((warpIdx + weftIdx) & 1) === 0
+        const yarnHeight = overWarp
+          ? warpProfile * 0.65 + weftProfile * 0.18 + warpSlub * 0.12
+          : weftProfile * 0.65 + warpProfile * 0.18 + weftSlub * 0.12
+        const weave = yarnHeight * 4.0 + (warpSlub + weftSlub) * 0.45
+        const idx = (y * size + x) * 4
+        colorData[idx] = THREE.MathUtils.clamp(Math.round(248 + weave), 220, 255)
+        colorData[idx + 1] = THREE.MathUtils.clamp(Math.round(245 + weave * 0.95), 216, 255)
+        colorData[idx + 2] = THREE.MathUtils.clamp(Math.round(236 + weave * 0.88), 208, 252)
+        colorData[idx + 3] = 255
+        const h = THREE.MathUtils.clamp(Math.round(128 + yarnHeight * 30), 48, 212)
+        bumpData[idx] = h; bumpData[idx + 1] = h; bumpData[idx + 2] = h; bumpData[idx + 3] = 255
+      }
+    }
+    cachedLiningLinenPixels = { color: colorData, bump: bumpData, size }
+  }
+  const map = new THREE.DataTexture(new Uint8Array(cachedLiningLinenPixels.color), size, size)
+  map.colorSpace = THREE.SRGBColorSpace
+  map.wrapS = map.wrapT = THREE.RepeatWrapping
+  map.repeat.set(2, 2)
+  map.magFilter = THREE.LinearFilter
+  map.minFilter = THREE.LinearMipmapLinearFilter
+  map.generateMipmaps = true
+  map.needsUpdate = true
+
+  const bump = new THREE.DataTexture(new Uint8Array(cachedLiningLinenPixels.bump), size, size)
+  bump.colorSpace = THREE.NoColorSpace
+  bump.wrapS = bump.wrapT = THREE.RepeatWrapping
+  bump.repeat.set(2, 2)
+  bump.magFilter = THREE.LinearFilter
+  bump.minFilter = THREE.LinearMipmapLinearFilter
+  bump.generateMipmaps = true
+  bump.needsUpdate = true
+  return { map, bump }
+}
+
+/** Deterministic twisted embroidery thread texture for the two coral-red linen stripes. */
+function createEmbroideryThreadTextures(): { map: THREE.DataTexture; bump: THREE.DataTexture } {
+  const size = 128
+  if (!cachedEmbroideryPixels) {
+    const colorData = new Uint8Array(size * size * 4)
+    const bumpData = new Uint8Array(size * size * 4)
+    const tau = Math.PI * 2
+    for (let y = 0; y < size; y++) {
+      const v = y / size
+      for (let x = 0; x < size; x++) {
+        const u = x / size
+        const twist = Math.sin((u * 18 + v * 2) * tau)
+        const subPly = Math.sin((u * 36 + v * 4) * tau) * 0.25
+        const shade = (twist * 0.75 + subPly) * 16
+        const idx = (y * size + x) * 4
+        colorData[idx] = THREE.MathUtils.clamp(Math.round(244 + shade * 0.85), 196, 255)
+        colorData[idx + 1] = THREE.MathUtils.clamp(Math.round(238 + shade * 0.95), 186, 252)
+        colorData[idx + 2] = THREE.MathUtils.clamp(Math.round(236 + shade * 0.95), 184, 250)
+        colorData[idx + 3] = 255
+        const h = THREE.MathUtils.clamp(Math.round(128 + (twist * 0.78 + subPly) * 56), 28, 234)
+        bumpData[idx] = h; bumpData[idx + 1] = h; bumpData[idx + 2] = h; bumpData[idx + 3] = 255
+      }
+    }
+    cachedEmbroideryPixels = { color: colorData, bump: bumpData, size }
+  }
+  const map = new THREE.DataTexture(new Uint8Array(cachedEmbroideryPixels.color), size, size)
+  map.colorSpace = THREE.SRGBColorSpace
+  map.wrapS = map.wrapT = THREE.RepeatWrapping
+  map.repeat.set(3, 1)
+  map.magFilter = THREE.LinearFilter
+  map.minFilter = THREE.LinearMipmapLinearFilter
+  map.generateMipmaps = true
+  map.needsUpdate = true
+
+  const bump = new THREE.DataTexture(new Uint8Array(cachedEmbroideryPixels.bump), size, size)
+  bump.colorSpace = THREE.NoColorSpace
+  bump.wrapS = bump.wrapT = THREE.RepeatWrapping
+  bump.repeat.set(3, 1)
+  bump.magFilter = THREE.LinearFilter
+  bump.minFilter = THREE.LinearMipmapLinearFilter
+  bump.generateMipmaps = true
+  bump.needsUpdate = true
+  return { map, bump }
+}
+
+/**
+ * Evaluates the authored vertical linen pleat relief at cloth coordinates (u in [0,1], d in [0,1]).
+ * Returns outward normal offset, tangential gather offset, hem Y undulation, and normalized
+ * valley crease intensity [0,1] for restrained anime-cel fold-valley warmth.
+ */
+function evalPleatRelief(u: number, d: number) {
+  const dRamp = 0.30 + 0.70 * Math.pow(d, 0.82)
+  const troughRamp = THREE.MathUtils.smoothstep(d, 0.02, 0.24)
+  const hemRamp = Math.pow(d, 1.35)
+
+  let valleyDip = 0
+  let ridgeSwell = 0
+  let gatherTan = 0
+  for (const [uc, hw, depth, splay] of LINEN_PLEAT_VALLEYS) {
+    const du = u - (uc + splay * d)
+    const norm = du / hw
+    const g = Math.exp(-norm * norm)
+    // Sharper pinched linen fold trough with gentle tangential fabric gather toward each crease.
+    valleyDip += depth * Math.pow(g, 1.35)
+    gatherTan += -du * 0.095 * g * dRamp
+  }
+  for (const [uc, hw, swell, splay] of LINEN_PLEAT_RIDGES) {
+    const du = u - (uc + splay * d)
+    const norm = du / hw
+    const g = Math.exp(-norm * norm)
+    ridgeSwell += swell * g
+  }
+
+  // Soft inward curl at the far-left and far-right linen edges so borders feel naturally draped.
+  const leftTurn = Math.exp(-((u / 0.055) ** 2)) * 0.0085 * dRamp
+  const rightTurn = Math.exp(-(((1 - u) / 0.055) ** 2)) * 0.0085 * dRamp
+
+  // Near the wicker rim crest (small d), ridges bow gently outward while troughs stay clear of the rim;
+  // below the rim lip, as the oval basket wall tapers inward, valleys carve full shadowed depth.
+  const normalOffset = ridgeSwell * dRamp - valleyDip * (0.16 + 0.84 * troughRamp) - (leftTurn + rightTurn) * troughRamp
+  const hemWaveY = (ridgeSwell * 0.58 - valleyDip * 0.42) * hemRamp
+  const valleyShade = THREE.MathUtils.clamp((valleyDip / 0.029) * (0.34 + 0.66 * troughRamp), 0, 1)
+  return { normalOffset, gatherTan, hemWaveY, valleyShade }
+}
 
 function catmullRomWeights(t: number): [number, number, number, number] {
   const t2 = t * t, t3 = t2 * t
@@ -130,16 +396,27 @@ function rimFrame(u: number) {
   return { a, cx, cz, nx: rawNx * invLen, nz: rawNz * invLen }
 }
 
-/** Smooth analytical wrap over the double wicker rim for theta in [0, PI] (0=inside rim, PI/2=crest, PI=outer tangent). */
+/** Smooth analytical wrap over the double wicker rim for wrapFrac in [0, 1] (0=inside rim, 0.5=crest, 1=outer tangent). */
 function evalRimWrapPoint(u: number, wrapFrac: number, out: THREE.Vector3): THREE.Vector3 {
   const { cx, cz, nx, nz } = rimFrame(u)
+  const tx = nz, tz = -nx
   const theta = wrapFrac * Math.PI
-  const gather = (0.0085 * Math.sin(u * Math.PI * 3.25 + 0.45) + 0.0045 * Math.cos(u * Math.PI * 5.2 - 0.75)) * Math.sin(theta * 0.5)
-  const radial = -Math.cos(theta) * (RIM_WRAP_RXZ + gather)
+  const pleatAtRim = evalPleatRelief(u, 0)
+  // Smoothly blend in the rim-top gathering so the vertical folds begin organically over the wicker crest.
+  const rimBlend = Math.pow(THREE.MathUtils.smoothstep(wrapFrac, 0.28, 1.0), 1.15)
+  const radial = -Math.cos(theta) * (RIM_WRAP_RXZ + Math.max(0, pleatAtRim.normalOffset) * 0.85 * rimBlend)
+    + pleatAtRim.normalOffset * Math.pow(wrapFrac, 3.0)
   // Slightly tuck the inner start (theta=0) downward toward the lining so there is no gap inside the basket.
   const innerTuck = Math.pow(Math.max(0, 1 - wrapFrac * 2.5), 2) * 0.022
-  const y = RIM_CY + Math.sin(theta) * (RIM_WRAP_RY + gather * 0.45) - innerTuck
-  return out.set(cx + nx * radial, y, cz + nz * radial)
+  const y = RIM_CY + Math.sin(theta) * (RIM_WRAP_RY + Math.max(0, pleatAtRim.normalOffset) * 0.45 * rimBlend) - innerTuck
+  const tanShift = pleatAtRim.gatherTan * rimBlend
+  return out.set(cx + nx * radial + tx * tanShift, y, cz + nz * radial + tz * tanShift)
+}
+
+/** Smooth carrier rim anchor (without fine pleat offsets) for the 11x8 Rapier soft-body top row. */
+function evalCarrierRimAnchor(u: number, out: THREE.Vector3): THREE.Vector3 {
+  const { cx, cz, nx, nz } = rimFrame(u)
+  return out.set(cx + nx * RIM_WRAP_RXZ, RIM_CY, cz + nz * RIM_WRAP_RXZ)
 }
 
 /** Keeps any basket-local cloth point safely outside the tapered oval wicker basket wall and above the tabletop. */
@@ -159,34 +436,45 @@ function clampOutsideBasketWall(p: THREE.Vector3): void {
   }
 }
 
-/** Calm zero-WASM equilibrium drape for the hanging linen skirt (u in [0,1], d in [0,1] from rim outer tangent to hem). */
-function evalCalmSkirtPoint(u: number, d: number, out: THREE.Vector3): THREE.Vector3 {
+/**
+ * Smooth macro hanging linen carrier (u in [0,1], d in [0,1]) used as the equilibrium target for
+ * the 11x8 Rapier cloth so planar spring rest lengths drive live gravity/impact/breeze motion
+ * without ironing out the vertical pleats layered onto its surface frame.
+ */
+function evalCarrierSkirtPoint(u: number, d: number, out: THREE.Vector3): THREE.Vector3 {
   const { cx, cz, nx, nz } = rimFrame(u)
-  // Tangent along rim toward +u (rightward) for gentle side cloth taper/gather.
   const tx = nz, tz = -nx
-  const d11 = Math.pow(d, 1.1)
+  const d11 = Math.pow(d, 1.12)
   const d17 = Math.pow(d, 1.7)
   const edgeSoft = Math.sin(u * Math.PI)
-  // Subtle rounded bottom corners & natural linen drape length.
-  const dropLen = FLAP_DROP * (0.94 + 0.06 * Math.pow(edgeSoft, 0.45))
-  // Crisp, natural hand-draped vertical linen pleats so cel lighting catches clean fabric folds (not flat canvas).
-  const foldWave =
-    0.025 * Math.sin(u * Math.PI * 3.25 + 0.45) +
-    0.015 * Math.cos(u * Math.PI * 5.2 - 0.75) +
-    0.007 * Math.sin(u * Math.PI * 7.2 + 1.35)
-  const foldOut = foldWave * (0.28 + 0.72 * d11)
-  // Slight gentle inward drape as the basket tapers below the rim, resting softly clear of the wicker wall.
-  const taperIn = -0.018 * d11
-  const gentleBreezeOut = 0.018 * d17 * (0.65 + 0.35 * u)
-  const gatherTan = -(u - 0.5) * 0.026 * d11 + 0.008 * Math.cos(u * Math.PI * 3.25 + 0.45) * d11
-  const radial = RIM_WRAP_RXZ + taperIn + gentleBreezeOut + foldOut
-  const hemWaveY = 0.015 * Math.sin(u * Math.PI * 3.25 + 0.45) * d17
+  const dropLen = FLAP_DROP * (0.945 + 0.055 * Math.pow(edgeSoft, 0.45))
+  // Gentle natural linen drape: hangs cleanly just clear of the tapered oval basket wall so
+  // vertical pleat troughs carve shadowed depth without getting squashed against the wicker.
+  const wallEase = 0.014 * THREE.MathUtils.smoothstep(d, 0.05, 0.32)
+  const taperIn = -0.022 * d11
+  const naturalHangOut = 0.008 * d17 * (0.7 + 0.3 * u)
+  const gatherTan = -(u - 0.5) * 0.024 * d11
+  const radial = RIM_WRAP_RXZ + wallEase + taperIn + naturalHangOut
   out.set(
     cx + nx * radial + tx * gatherTan,
-    RIM_CY - d * dropLen + hemWaveY,
+    RIM_CY - d * dropLen,
     cz + nz * radial + tz * gatherTan,
   )
   clampOutsideBasketWall(out)
+  return out
+}
+
+/** Calm zero-WASM equilibrium drape combining the macro hanging carrier + sculpted vertical linen pleats. */
+function evalCalmSkirtPoint(u: number, d: number, out: THREE.Vector3): THREE.Vector3 {
+  const { nx, nz } = rimFrame(u)
+  const tx = nz, tz = -nx
+  evalCarrierSkirtPoint(u, d, out)
+  const pleat = evalPleatRelief(u, d)
+  out.x += nx * pleat.normalOffset + tx * pleat.gatherTan
+  out.y += pleat.hemWaveY
+  out.z += nz * pleat.normalOffset + tz * pleat.gatherTan
+  clampOutsideBasketWall(out)
+  if (out.x > 0.08) out.x = 0.08
   return out
 }
 
@@ -336,10 +624,34 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
   const oak = material(0xc7a57e), oakEdge = material(0xa98761), boardMat = material(0xe3c59b)
   const wicker = [0xc79561, 0xd8b27c, 0xe2c293].map(color => material(color))
   const cream = material(0xf4edd7, THREE.DoubleSide), stitch = material(0xc48174)
-  const clothMaterial=material(0xf4edd7,THREE.DoubleSide), embroidery=material(0xc48174)
+  const flapLinenTex = createFlapLinenTextures()
+  const liningLinenTex = createLiningLinenTextures()
+  const embroideryTex = createEmbroideryThreadTextures()
+  const clothMaterial = new THREE.MeshStandardMaterial({
+    color: 0xf8f3e4,
+    roughness: 0.92,
+    side: THREE.DoubleSide,
+    map: flapLinenTex.map,
+    bumpMap: flapLinenTex.bump,
+    bumpScale: 0.0022,
+    vertexColors: true,
+  })
+  const liningMaterial = new THREE.MeshStandardMaterial({
+    color: 0xf6f0de,
+    roughness: 0.93,
+    side: THREE.DoubleSide,
+    map: liningLinenTex.map,
+    bumpMap: liningLinenTex.bump,
+    bumpScale: 0.0018,
+  })
+  const embroidery = new THREE.MeshStandardMaterial({
+    color: 0xc48174,
+    roughness: 0.90,
+    map: embroideryTex.map,
+    bumpMap: embroideryTex.bump,
+    bumpScale: 0.0026,
+  })
   for(const timber of[oak,oakEdge,boardMat])applyCraftSurface(timber,{kind:'wood',strength:.4})
-  applyCraftSurface(clothMaterial,{kind:'fabric',strength:.25})
-  applyCraftSurface(embroidery,{kind:'cord',strength:.28})
   const crust = material(0xc79558), breadCut = material(0xf2d49b), sage = material(0x849f72), darkLeaf = material(0x627f59)
   const eggRose = material(0xc98173), eggCream = material(0xfaedce), eggBlue = material(0x91aeb7)
   const add = (geo: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
@@ -422,7 +734,7 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
   clothGeo.setAttribute('position', new THREE.Float32BufferAttribute(liningPositions, 3))
   clothGeo.setAttribute('uv', new THREE.Float32BufferAttribute(liningUvs, 2))
   clothGeo.setIndex(liningIndices)
-  const clothLiningMesh = add(clothGeo, clothMaterial, [0, 0, 0], cloth)
+  const clothLiningMesh = add(clothGeo, liningMaterial, [0, 0, 0], cloth)
   clothLiningMesh.name = 'basket-cloth-lining'
 
   let breadWeight = 0
@@ -440,8 +752,8 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
         const a = (col / LINING_COLS) * Math.PI * 2
         const x = Math.cos(a) * 0.728 * r
         const z = Math.sin(a) * 0.473 * r
-        // Soft natural cloth gathers inside the basket wall; always strictly below breadRest (0.375) and eggNest (0.405).
-        const gathers = (Math.sin(a * 7 + 0.4) * 0.010 + Math.cos(a * 11 - 0.8) * 0.005) * r
+        // Soft natural radial linen gathers radiating up the basket wall; strictly below breadRest (0.375) and eggNest (0.405).
+        const gathers = (Math.sin(a * 9 + 0.4) * 0.013 + Math.cos(a * 15 - 0.8) * 0.0055) * r * (0.45 + 0.55 * r)
         // Localized soft depression directly under the round bread (-0.33, 0.07) and egg nest (0.40, 0.15).
         const dBreadSq = (x + 0.33) * (x + 0.33) / 0.14 + (z - 0.07) * (z - 0.07) / 0.12
         const dEggSq = (x - 0.40) * (x - 0.40) / 0.09 + (z - 0.15) * (z - 0.15) / 0.08
@@ -458,31 +770,43 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     clothGeo.computeBoundingSphere()
   }
 
-  // 2. Continuous rim-wrapping linen overhang cloth (wrap over curved wicker rim + Rapier 2D hanging skirt).
+  // 2. Continuous rim-wrapping linen overhang cloth (wrap over curved wicker rim + Rapier 2D hanging carrier + sculpted pleats).
   const flapCols = FLAP_NX + 1
   const flapRows = FLAP_NY + 1
   const flapPositions = new Float32Array(flapCols * flapRows * 3)
+  const flapColors = new Float32Array(flapCols * flapRows * 3)
   const flapUvs = new Float32Array(flapCols * flapRows * 2)
   const flapIndices: number[] = []
   for (let j = 0; j <= FLAP_NY; j++) {
     const v = j / FLAP_NY
+    const isWrap = j <= FLAP_WRAP_ROWS
+    const wrapFrac = isWrap ? j / FLAP_WRAP_ROWS : 1
+    const d = isWrap ? 0 : (j - FLAP_WRAP_ROWS) / FLAP_SKIRT_ROWS
     for (let i = 0; i <= FLAP_NX; i++) {
       const u = i / FLAP_NX
       const idx = j * flapCols + i
       flapUvs[idx * 2] = u
       flapUvs[idx * 2 + 1] = 1 - v
+      const pleat = evalPleatRelief(u, d)
+      const valley = isWrap ? pleat.valleyShade * Math.pow(wrapFrac, 1.6) : pleat.valleyShade
+      const innerTuckShade = isWrap ? Math.pow(1 - wrapFrac, 1.8) * 0.045 : 0
+      // Restrained warm-linen crevice shading inside deepest vertical fold troughs; crests stay clean crisp cream-white.
+      flapColors[idx * 3] = 1 - valley * 0.078 - innerTuckShade * 0.85
+      flapColors[idx * 3 + 1] = 1 - valley * 0.098 - innerTuckShade * 0.95
+      flapColors[idx * 3 + 2] = 1 - valley * 0.132 - innerTuckShade * 1.05
       if (i < FLAP_NX && j < FLAP_NY) {
         const a = idx
         const b = a + 1
         const c = a + flapCols
-        const d = c + 1
+        const dIdx = c + 1
         // Outward winding: (+v downward) x (+u rightward) = +Z outward / +Y upward over rim crest.
-        flapIndices.push(a, c, b, b, c, d)
+        flapIndices.push(a, c, b, b, c, dIdx)
       }
     }
   }
   const flapGeo = new THREE.BufferGeometry()
   flapGeo.setAttribute('position', new THREE.Float32BufferAttribute(flapPositions, 3))
+  flapGeo.setAttribute('color', new THREE.Float32BufferAttribute(flapColors, 3))
   flapGeo.setAttribute('uv', new THREE.Float32BufferAttribute(flapUvs, 2))
   flapGeo.setIndex(flapIndices)
   const flap = add(flapGeo, clothMaterial, [0, 0, 0], cloth)
@@ -497,7 +821,9 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
   const tmpWrapP = new THREE.Vector3()
   const tmpU0 = new THREE.Vector3(), tmpU1 = new THREE.Vector3(), tmpV0 = new THREE.Vector3(), tmpV1 = new THREE.Vector3()
   const tmpN = new THREE.Vector3()
+  const tmpTu = new THREE.Vector3(), tmpTv = new THREE.Vector3()
   const simGridCopy = new Float32Array(SIM_NU * SIM_NV * 3)
+  const carrierGrid = new Float32Array(flapCols * (FLAP_SKIRT_ROWS + 1) * 3)
 
   function readFlapGridPoint(i: number, j: number, out: THREE.Vector3): THREE.Vector3 {
     const posAttr = flapGeo.getAttribute('position') as THREE.BufferAttribute
@@ -562,6 +888,12 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
         } else {
           const d = (j - FLAP_WRAP_ROWS) / FLAP_SKIRT_ROWS
           evalCalmSkirtPoint(u, d, tmpClothP)
+          if (j === FLAP_NY) {
+            const { nx, nz } = rimFrame(u)
+            tmpClothP.x -= nx * 0.0026
+            tmpClothP.z -= nz * 0.0026
+            clampOutsideBasketWall(tmpClothP)
+          }
         }
         posAttr.setXYZ(j * flapCols + i, tmpClothP.x, tmpClothP.y, tmpClothP.z)
       }
@@ -573,7 +905,7 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     syncEmbroideryToFlap()
   }
 
-  // Rapier 2D soft-body cloth for the hanging linen skirt (lazy-loaded ONLY when active & non-reduced).
+  // Rapier 2D soft-body cloth for the hanging linen skirt carrier (lazy-loaded ONLY when active & non-reduced).
   let flapBody: ReturnType<RapierSoftBodySession['createCloth']> | null = null
   let clothRapierReady = false
   let clothSimClock = 0
@@ -589,8 +921,8 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
       for (let j = 0; j < SIM_NV; j++) {
         const d = j / (SIM_NV - 1)
         const k = i * SIM_NV + j
-        if (j === 0) evalRimWrapPoint(u, 1, tmpWrapP)
-        else evalCalmSkirtPoint(u, d, tmpWrapP)
+        if (j === 0) evalCarrierRimAnchor(u, tmpWrapP)
+        else evalCarrierSkirtPoint(u, d, tmpWrapP)
         flapBody.setParticlePosition(k, { x: tmpWrapP.x, y: tmpWrapP.y, z: tmpWrapP.z })
         flapBody.setParticleVelocity(k, { x: 0, y: 0, z: 0 })
       }
@@ -608,15 +940,15 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     const pMass = Math.max(flapBody.mass() / (SIM_NU * SIM_NV), 1e-4)
     const t = clothSimClock
 
-    // Keep top row (j === 0) pinned strictly on the outer wicker rim curve.
+    // Keep top row (j === 0) pinned strictly on the smooth outer wicker rim curve.
     for (let i = 0; i < SIM_NU; i++) {
       const u = i / (SIM_NU - 1)
-      evalRimWrapPoint(u, 1, tmpWrapP)
+      evalCarrierRimAnchor(u, tmpWrapP)
       flapBody.setParticleKinematicTarget(i * SIM_NV, { x: tmpWrapP.x, y: tmpWrapP.y, z: tmpWrapP.z })
     }
 
     const impPhase = 1.0 - flapImpulseTimer
-    const impDecay = flapImpulseTimer > 0 ? Math.exp(-impPhase * 3.2) : 0
+    const impDecay = flapImpulseTimer > 0 ? Math.exp(-impPhase * 3.1) : 0
 
     for (let i = 0; i < SIM_NU; i++) {
       const u = i / (SIM_NU - 1)
@@ -630,13 +962,13 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
         const vx = vel[k * 3]!, vy = vel[k * 3 + 1]!, vz = vel[k * 3 + 2]!
         const dRamp = THREE.MathUtils.smoothstep(d, 0.08, 0.95)
 
-        // Gentle spring-garden veranda breeze lifting the lower linen hem softly outward along the basket normal.
+        // Subtle veranda air movement without blowing the cloth forward into a stiff flat panel.
         const gustA = Math.sin(t * 1.45 - u * 2.6 - d * 2.1)
         const gustB = Math.cos(t * 2.35 + u * 3.8 - d * 3.0)
-        const breezeOut = (0.72 + 0.58 * gustA + 0.28 * gustB) * dRamp
-        const breezeTan = (0.28 + 0.36 * Math.sin(t * 1.15 + d * 1.8)) * dRamp
+        const breezeOut = (0.14 + 0.34 * gustA + 0.16 * gustB) * dRamp
+        const breezeTan = (0.08 + 0.22 * Math.sin(t * 1.15 + d * 1.8)) * dRamp
 
-        // Subtle linen pleat structure & rim-tug wave from bread / egg settling into the basket!
+        // Lively rim-tug and skirt ripple when bread or egg settles into the basket.
         const foodWave = impDecay > 1e-4
           ? flapImpulseAmp * impDecay * Math.sin(impPhase * 15 - d * 4.2) * (0.45 + 0.55 * sideBias) * dRamp
           : 0
@@ -644,14 +976,12 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
           ? flapImpulseAmp * 0.45 * impDecay * Math.cos(impPhase * 11 - d * 2.4) * (1 - d * 0.5) * sideBias
           : 0
 
-        // Gentle radial outward bias preserves the hand-draped vertical linen pleats cleanly under Rapier motion.
-        const pleatOut = (0.95 * Math.sin(u * Math.PI * 3.25 + 0.45) + 0.52 * Math.cos(u * Math.PI * 5.2 - 0.75)) * (0.25 + 0.75 * dRamp)
-
-        // Soft restoring guide prevents wild horizontal collapse while leaving Rapier vertical/outward dynamics lively.
-        evalCalmSkirtPoint(u, d, tmpClothP)
-        const fx = (breezeOut + foodWave + pleatOut) * nx + breezeTan * tx + 8.5 * (tmpClothP.x - px) - 1.75 * vx
-        const fy = foodTugY + 3.8 * (tmpClothP.y - py) - 1.55 * vy
-        const fz = (breezeOut + foodWave + pleatOut) * nz + breezeTan * tz + 8.5 * (tmpClothP.z - pz) - 1.75 * vz
+        // Guide the 11x8 carrier gently around its natural hanging equilibrium; fine vertical pleats
+        // ride on top of the live Rapier surface frame so planar springs never iron out the folds.
+        evalCarrierSkirtPoint(u, d, tmpClothP)
+        const fx = (breezeOut + foodWave) * nx + breezeTan * tx + 7.8 * (tmpClothP.x - px) - 1.85 * vx
+        const fy = foodTugY + 3.8 * (tmpClothP.y - py) - 1.65 * vy
+        const fz = (breezeOut + foodWave) * nz + breezeTan * tz + 7.8 * (tmpClothP.z - pz) - 1.85 * vz
 
         flapBody.addParticleForce(k, { x: pMass * fx, y: pMass * fy, z: pMass * fz }, false)
       }
@@ -663,10 +993,10 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     const pos = flapBody.particlePositions()
     simGridCopy.set(pos)
 
-    // Enforce exact rim-pin boundary & safe basket-wall / tabletop clearance on the simulated grid.
+    // Enforce exact rim-pin boundary & safe basket-wall / tabletop clearance on the simulated carrier grid.
     for (let i = 0; i < SIM_NU; i++) {
       const u = i / (SIM_NU - 1)
-      evalRimWrapPoint(u, 1, tmpWrapP)
+      evalCarrierRimAnchor(u, tmpWrapP)
       simGridCopy[i * SIM_NV * 3] = tmpWrapP.x
       simGridCopy[i * SIM_NV * 3 + 1] = tmpWrapP.y
       simGridCopy[i * SIM_NV * 3 + 2] = tmpWrapP.z
@@ -674,12 +1004,11 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
         const k = (i * SIM_NV + j) * 3
         let x = simGridCopy[k]!, y = simGridCopy[k + 1]!, z = simGridCopy[k + 2]!
         if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
-          evalCalmSkirtPoint(u, j / (SIM_NV - 1), tmpClothP)
+          evalCarrierSkirtPoint(u, j / (SIM_NV - 1), tmpClothP)
           x = tmpClothP.x; y = tmpClothP.y; z = tmpClothP.z
         } else {
           tmpClothP.set(x, y, z)
           clampOutsideBasketWall(tmpClothP)
-          // Keep right edge well clear of the front flower medallion (x <= 0.08).
           if (tmpClothP.x > 0.08) tmpClothP.x = 0.08
           x = tmpClothP.x; y = tmpClothP.y; z = tmpClothP.z
         }
@@ -688,7 +1017,7 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     }
 
     const posAttr = flapGeo.getAttribute('position') as THREE.BufferAttribute
-    // Rows 0..FLAP_WRAP_ROWS smoothly wrap over the wicker rim from inside to the pinned skirt crest.
+    // Rows 0..FLAP_WRAP_ROWS smoothly wrap over the wicker rim from inside to the pleated rim crest.
     for (let j = 0; j <= FLAP_WRAP_ROWS; j++) {
       const wrapFrac = j / FLAP_WRAP_ROWS
       for (let i = 0; i <= FLAP_NX; i++) {
@@ -696,20 +1025,79 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
         posAttr.setXYZ(j * flapCols + i, tmpClothP.x, tmpClothP.y, tmpClothP.z)
       }
     }
-    // Rows FLAP_WRAP_ROWS+1..FLAP_NY sample the live Rapier 11x8 cloth via bicubic Catmull-Rom interpolation.
+
+    // Sample the smooth live Rapier carrier surface into a pre-allocated grid so local frames are smooth.
+    for (let i = 0; i <= FLAP_NX; i++) {
+      const u = i / FLAP_NX
+      evalCarrierRimAnchor(u, tmpClothP)
+      const cIdx = i * 3
+      carrierGrid[cIdx] = tmpClothP.x
+      carrierGrid[cIdx + 1] = tmpClothP.y
+      carrierGrid[cIdx + 2] = tmpClothP.z
+    }
     for (let s = 1; s <= FLAP_SKIRT_ROWS; s++) {
-      const j = FLAP_WRAP_ROWS + s
       const vRow = FLAP_V_TABLE[s]!
       const d = s / FLAP_SKIRT_ROWS
       for (let i = 0; i <= FLAP_NX; i++) {
         const u = i / FLAP_NX
         const uRow = FLAP_U_TABLE[i]!
         sampleSimCloth(simGridCopy, uRow, vRow, tmpClothP)
-        // Preserve soft rounded bottom corners so linen reads gently draped rather than stiff cardboard.
         const edgeSoft = Math.sin(u * Math.PI)
-        const cornerLift = (1 - Math.pow(edgeSoft, 0.45)) * 0.018 * d * d
-        tmpClothP.y += cornerLift
+        tmpClothP.y += (1 - Math.pow(edgeSoft, 0.45)) * 0.016 * d * d
+        const cIdx = (s * flapCols + i) * 3
+        carrierGrid[cIdx] = tmpClothP.x
+        carrierGrid[cIdx + 1] = tmpClothP.y
+        carrierGrid[cIdx + 2] = tmpClothP.z
+      }
+    }
+
+    // Layer authored asymmetric vertical linen pleats onto the live Rapier carrier tangent frame.
+    const livePleatBreath = 1 - 0.08 * THREE.MathUtils.clamp(flapImpulseTimer, 0, 1)
+    for (let s = 1; s <= FLAP_SKIRT_ROWS; s++) {
+      const j = FLAP_WRAP_ROWS + s
+      const d = s / FLAP_SKIRT_ROWS
+      const sPrev = Math.max(0, s - 1)
+      const sNext = Math.min(FLAP_SKIRT_ROWS, s + 1)
+      for (let i = 0; i <= FLAP_NX; i++) {
+        const u = i / FLAP_NX
+        const iPrev = Math.max(0, i - 1)
+        const iNext = Math.min(FLAP_NX, i + 1)
+        const cIdx = (s * flapCols + i) * 3
+        tmpClothP.set(carrierGrid[cIdx]!, carrierGrid[cIdx + 1]!, carrierGrid[cIdx + 2]!)
+
+        const iL = (s * flapCols + iPrev) * 3
+        const iR = (s * flapCols + iNext) * 3
+        tmpTu.set(carrierGrid[iR]! - carrierGrid[iL]!, carrierGrid[iR + 1]! - carrierGrid[iL + 1]!, carrierGrid[iR + 2]! - carrierGrid[iL + 2]!)
+        if (tmpTu.lengthSq() < 1e-10) {
+          const { nx, nz } = rimFrame(u)
+          tmpTu.set(nz, 0, -nx)
+        } else {
+          tmpTu.normalize()
+        }
+
+        const jU = (sPrev * flapCols + i) * 3
+        const jD = (sNext * flapCols + i) * 3
+        tmpTv.set(carrierGrid[jD]! - carrierGrid[jU]!, carrierGrid[jD + 1]! - carrierGrid[jU + 1]!, carrierGrid[jD + 2]! - carrierGrid[jU + 2]!)
+        if (tmpTv.lengthSq() < 1e-10) tmpTv.set(0, -1, 0)
+        else tmpTv.normalize()
+
+        tmpN.crossVectors(tmpTv, tmpTu)
+        if (tmpN.lengthSq() < 1e-10) {
+          const { nx, nz } = rimFrame(u)
+          tmpN.set(nx, 0, nz)
+        } else {
+          tmpN.normalize()
+        }
+
+        const pleat = evalPleatRelief(u, d)
+        tmpClothP.addScaledVector(tmpN, pleat.normalOffset * livePleatBreath)
+        tmpClothP.addScaledVector(tmpTu, pleat.gatherTan * livePleatBreath)
+        tmpClothP.y += pleat.hemWaveY * livePleatBreath
+        if (s === FLAP_SKIRT_ROWS) {
+          tmpClothP.addScaledVector(tmpN, -0.0026)
+        }
         clampOutsideBasketWall(tmpClothP)
+        if (tmpClothP.x > 0.08) tmpClothP.x = 0.08
         posAttr.setXYZ(j * flapCols + i, tmpClothP.x, tmpClothP.y, tmpClothP.z)
       }
     }
@@ -1049,6 +1437,9 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
       flapBody = null
       ending.dispose(); disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', onAction); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
+      flapLinenTex.map.dispose(); flapLinenTex.bump.dispose()
+      liningLinenTex.map.dispose(); liningLinenTex.bump.dispose()
+      embroideryTex.map.dispose(); embroideryTex.bump.dispose()
       style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose())
       scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

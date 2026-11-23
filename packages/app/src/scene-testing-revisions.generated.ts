@@ -62,7 +62,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "hongsheng-red-string": "ffaec7cfdd8c8a9873c45e48239b798fa9caa6a797267ad267ea77564299e58b",
   "horseshoe-doorway-luck": "9dca716a387c2d6a16c3ba061da3ebc110187a8f9e62a4f5011312bae20c9e47",
   "hungarian-embroidery-hoop": "f95baed05d88d40a83d354b28c2d709534e690dc2d0cd0590204b516033caa41",
-  "indian-charkha": "167113aa975c3a48859245ded2ebc57e78b79258d2d1fd75c82c0a9f1ab04d74",
+  "indian-charkha": "a1230a417ff9cf30240902f0a2b8100b4d8bbb6b35e3b0046a84f4a5319bc326",
   "indonesian-angklung": "3a841b512109c7d25dff5dff5556e0f446d24cf1e1c92ff7cefeeb2e83265dbf",
   "irish-bodhran": "2523ec16f6d637ac38da9dc7326c7ee278e622afc8aac0c51270cdc4c6fb2fbc",
   "italian-ex-voto": "361897225711972d80930cd99cc04ce7d1cae2f7e43004d7f1fa1ec400082a0d",

@@ -1,3 +1,6 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createBaciModel } from './model'
@@ -68,5 +71,61 @@ describe('Baci white cotton wrist blessing', () => {
       for(let j=0;j<vertices.count;j++){p.fromBufferAttribute(vertices,j).applyMatrix4(tube.matrixWorld);lowest=Math.min(lowest,p.y)}
     }
     expect(lowest).toBeGreaterThan(.008)
+  })
+  it('seats the interlocking knot snugly atop the wrist without thickening the 0.012 cord radius',()=>{
+    const m=createBaciModel();m.pose(2,1)
+    const points=m.threadPoints()
+    const maxY=Math.max(...points.map(p=>p.y))
+    // Seated overhand knot sits close to wrist crown (vs old floating 0.34+ wire pretzel).
+    expect(maxY-m.wrist.y).toBeLessThan(0.235)
+    expect(maxY-m.wrist.y).toBeGreaterThan(0.185)
+    // Verify both draped tails settle symmetrically along opposite wrist flanks.
+    expect(points[0]!.x).toBeLessThan(m.wrist.x-0.12)
+    expect(points.at(-1)!.x).toBeGreaterThan(m.wrist.x+0.12)
+    expect(points[0]!.y-m.wrist.y).toBeLessThan(0.165)
+    expect(points.at(-1)!.y-m.wrist.y).toBeLessThan(0.165)
+
+    // Verify finite outward-oriented normals and un-thickened ~0.012 mean radius on spun 2-ply strand.
+    const strand=m.thread.children[0] as THREE.Mesh
+    const pos=strand.geometry.getAttribute('position'),norm=strand.geometry.getAttribute('normal')
+    expect(norm).toBeTruthy()
+    const stride=13,rings=241
+    let radiusSum=0,radiusSamples=0,outwardOk=0
+    const center=new THREE.Vector3(),vtx=new THREE.Vector3(),nrm=new THREE.Vector3()
+    for(let i=4;i<rings-4;i+=4){
+      center.set(0,0,0)
+      for(let j=0;j<12;j++)center.add(vtx.fromBufferAttribute(pos,i*stride+j))
+      center.divideScalar(12)
+      for(let j=0;j<12;j++){
+        vtx.fromBufferAttribute(pos,i*stride+j)
+        nrm.fromBufferAttribute(norm,i*stride+j)
+        expect(Number.isFinite(vtx.x)&&Number.isFinite(nrm.x)).toBe(true)
+        const radial=vtx.clone().sub(center)
+        radiusSum+=radial.length();radiusSamples++
+        if(radial.dot(nrm)>0)outwardOk++
+      }
+    }
+    const meanR=radiusSum/radiusSamples
+    expect(meanR).toBeGreaterThan(0.0114)
+    expect(meanR).toBeLessThan(0.0126)
+    expect(outwardOk).toBe(radiusSamples)
+    m.dispose()
+  })
+  it('disposes procedural cotton textures exactly once and stays zero-WASM',()=>{
+    const m=createBaciModel()
+    const strand=m.thread.children[0] as THREE.Mesh
+    const mat=strand.material as THREE.MeshStandardMaterial
+    expect(mat.map).toBeTruthy();expect(mat.bumpMap).toBeTruthy()
+    let mapFreed=0,bumpFreed=0
+    mat.map!.addEventListener('dispose',()=>{mapFreed++})
+    mat.bumpMap!.addEventListener('dispose',()=>{bumpFreed++})
+    m.dispose();m.dispose()
+    expect(mapFreed).toBe(1);expect(bumpFreed).toBe(1)
+
+    const dir=path.dirname(fileURLToPath(import.meta.url))
+    for(const file of ['model.ts','scene.ts']){
+      const source=fs.readFileSync(path.join(dir,file),'utf8')
+      expect(source).not.toMatch(/rapier|@dimforge|\.wasm/i)
+    }
   })
 })

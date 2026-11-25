@@ -278,6 +278,81 @@ describe('omamori companion', () => {
     }
   })
 
+  it('seats flush gold piping, continuous braided neck-wrap bow, and calm reduced cord tails while disposing textures once', () => {
+    const s = mount(1)
+    for (const variant of ['coral', 'sage', 'indigo']) {
+      const body = s.scene.getObjectByName(`omamori-pouch-body-${variant}`) as THREE.Mesh
+      const piping = s.scene.getObjectByName(`omamori-piping-${variant}`) as THREE.Mesh<THREE.TubeGeometry>
+      const knot = s.scene.getObjectByName(`omamori-knot-${variant}`)!
+      const neckWrap = s.scene.getObjectByName(`omamori-neck-wrap-${variant}`) as THREE.Mesh<THREE.TubeGeometry>
+      const hangLoop = s.scene.getObjectByName(`omamori-hang-loop-${variant}`) as THREE.Mesh<THREE.TubeGeometry>
+      expect(body.geometry.userData.iconPouchFullness).toBe(true)
+      expect(piping).toBeDefined()
+      expect(neckWrap).toBeDefined()
+      expect(hangLoop.geometry).toBeInstanceOf(THREE.TubeGeometry)
+      expect(hangLoop.geometry.parameters.path.getPoint(0.5).distanceTo(new THREE.Vector3(0, 0.64, -0.015))).toBeLessThan(1e-8)
+
+      // Tied bow uses continuous sculpted cord tubes rather than detached torus rings or center spheres.
+      knot.traverse(child => {
+        const mesh = child as THREE.Mesh
+        if (!mesh.isMesh) return
+        expect(mesh.geometry).not.toBeInstanceOf(THREE.TorusGeometry)
+        expect(mesh.geometry).not.toBeInstanceOf(THREE.SphereGeometry)
+      })
+
+      // Flush piping: every centerline sample sits closely against the front pouch surface (no +0.035 floating gap).
+      const localBody = new THREE.Mesh(body.geometry, body.material)
+      localBody.updateMatrixWorld()
+      const ray = new THREE.Raycaster()
+      for (let k = 0; k <= 12; k++) {
+        const pt = piping.geometry.parameters.path.getPointAt(k / 12)
+        expect(Number.isFinite(pt.x) && Number.isFinite(pt.y) && Number.isFinite(pt.z)).toBe(true)
+        ray.set(new THREE.Vector3(pt.x, pt.y, 0.5), new THREE.Vector3(0, 0, -1))
+        const hit = ray.intersectObject(localBody)[0]
+        expect(hit, `${variant} piping sample ${k} hits pouch body`).toBeDefined()
+        expect(Math.abs(pt.z - hit!.point.z), `${variant} piping sample ${k} sits flush`).toBeLessThan(0.01)
+      }
+
+      // Neck wrap encloses both front and back sides cleanly without non-finite coordinates.
+      const wrapPos = neckWrap.geometry.getAttribute('position')!
+      let minZ = Infinity, maxZ = -Infinity
+      for (let i = 0; i < wrapPos.count; i++) {
+        const z = wrapPos.getZ(i)
+        expect(Number.isFinite(wrapPos.getX(i)) && Number.isFinite(wrapPos.getY(i)) && Number.isFinite(z)).toBe(true)
+        minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z)
+      }
+      expect(minZ).toBeLessThan(-0.08)
+      expect(maxZ).toBeGreaterThan(0.10)
+    }
+
+    // Normal placement induces subtle secondary cord-tail lag that decays; reduced mode stays strictly 0.
+    const tails = s.scene.getObjectByName('omamori-cord-tails-coral')!
+    s.button.click()
+    s.run(0.25)
+    expect(Math.abs(tails.rotation.z)).toBeGreaterThan(0.01)
+    s.run(1.0)
+    expect(Math.abs(tails.rotation.z)).toBeLessThan(0.05)
+
+    const quiet = mount(1, { isReducedMotion: () => true })
+    const quietTails = quiet.scene.getObjectByName('omamori-cord-tails-coral')!
+    quiet.button.click(); quiet.run(0.5)
+    expect(quietTails.rotation.z).toBe(0)
+
+    // Procedural DataTextures (brocade & braided cord maps + bumps) are disposed exactly once.
+    const textures = new Set<THREE.Texture>()
+    s.scene.traverse(obj => {
+      const mat = (obj as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined
+      if (mat?.map) textures.add(mat.map)
+      if (mat?.bumpMap) textures.add(mat.bumpMap)
+    })
+    expect(textures.size).toBeGreaterThanOrEqual(4)
+    const freed = new Map<THREE.Texture, number>()
+    textures.forEach(tex => tex.addEventListener('dispose', () => freed.set(tex, (freed.get(tex) ?? 0) + 1)))
+    s.instance.dispose(); s.instance.dispose()
+    expect(freed.size).toBe(textures.size)
+    expect([...freed.values()].every(n => n === 1)).toBe(true)
+  })
+
   it('disposes all geometry, materials, shadows and owned listeners exactly once', () => {
     const added = vi.spyOn(window, 'addEventListener'), removed = vi.spyOn(window, 'removeEventListener')
     const s = mount(), resources = new Set<THREE.BufferGeometry | THREE.Material>()

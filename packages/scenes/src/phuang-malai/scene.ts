@@ -1,4 +1,3 @@
-import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { bindSceneAttribute } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -12,6 +11,299 @@ import {
   createSceneFeedback, createStepOverlay, createWarmStage, disposeTree,
   observeCanvasResize, portraitBoost, setSafeText, sizeStage,
 } from '../procedural-kit'
+
+let cachedMalaiCordPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
+
+/** Deterministic 2-ply spun silk-cotton cord texture (128x128, seamless tiling) for the garland cord, bow and tassel bindings. */
+function createMalaiCordTextures(): { map: THREE.DataTexture; bump: THREE.DataTexture } {
+  const size = 128
+  if (!cachedMalaiCordPixels) {
+    const color = new Uint8Array(size * size * 4)
+    const bump = new Uint8Array(size * size * 4)
+    const tau = Math.PI * 2
+    for (let y = 0; y < size; y++) {
+      const v = y / size
+      for (let x = 0; x < size; x++) {
+        const u = x / size
+        const plyA = Math.sin((u * 8 + v * 2) * tau)
+        const plyB = Math.sin((u * 16 + v * 4) * tau) * 0.28
+        const twistGrain = Math.sin((u * 24 - v * 3) * tau) * 0.12
+        const fiber = plyA * 0.70 + plyB + twistGrain
+        const shade = fiber * 15
+        const idx = (y * size + x) * 4
+        color[idx] = THREE.MathUtils.clamp(Math.round(244 + shade * 0.88), 212, 255)
+        color[idx + 1] = THREE.MathUtils.clamp(Math.round(240 + shade * 0.94), 206, 255)
+        color[idx + 2] = THREE.MathUtils.clamp(Math.round(230 + shade), 196, 252)
+        color[idx + 3] = 255
+        const h = THREE.MathUtils.clamp(Math.round(128 + fiber * 56), 28, 232)
+        bump[idx] = h; bump[idx + 1] = h; bump[idx + 2] = h; bump[idx + 3] = 255
+      }
+    }
+    cachedMalaiCordPixels = { color, bump, size }
+  }
+  const map = new THREE.DataTexture(new Uint8Array(cachedMalaiCordPixels.color), size, size)
+  map.colorSpace = THREE.SRGBColorSpace
+  map.wrapS = map.wrapT = THREE.RepeatWrapping
+  map.magFilter = THREE.LinearFilter
+  map.minFilter = THREE.LinearMipmapLinearFilter
+  map.generateMipmaps = true
+  map.needsUpdate = true
+
+  const bump = new THREE.DataTexture(new Uint8Array(cachedMalaiCordPixels.bump), size, size)
+  bump.colorSpace = THREE.NoColorSpace
+  bump.wrapS = bump.wrapT = THREE.RepeatWrapping
+  bump.magFilter = THREE.LinearFilter
+  bump.minFilter = THREE.LinearMipmapLinearFilter
+  bump.generateMipmaps = true
+  bump.needsUpdate = true
+  return { map, bump }
+}
+
+/** Builds a closed 2-ply twisted cord ring in the XY plane with strictly outward-facing normals. */
+function buildTwistedRingGeometry(
+  majorRadius: number,
+  tubeRadius: number,
+  plyDepth: number,
+  tubularSegments: number,
+  radialSegments: number,
+  turns: number,
+): THREE.BufferGeometry {
+  const stride = radialSegments + 1
+  const positions = new Float32Array((tubularSegments + 1) * stride * 3)
+  const uvs = new Float32Array((tubularSegments + 1) * stride * 2)
+  const indices: number[] = []
+  for (let i = 0; i <= tubularSegments; i++) {
+    const u = i / tubularSegments
+    const phi = u * Math.PI * 2
+    const cphi = Math.cos(phi), sphi = Math.sin(phi)
+    // Right-handed frame: T = (-sphi, cphi, 0), N = (cphi, sphi, 0), B = T x N = (0, 0, -1).
+    for (let j = 0; j <= radialSegments; j++) {
+      const v = j / radialSegments
+      const theta = v * Math.PI * 2
+      const ply = 1 + plyDepth * Math.cos(theta * 2 - phi * turns)
+      const r = tubeRadius * ply
+      const ct = Math.cos(theta), st = Math.sin(theta)
+      const rr = majorRadius + r * ct
+      const k = i * stride + j
+      positions[k * 3] = rr * cphi
+      positions[k * 3 + 1] = rr * sphi
+      positions[k * 3 + 2] = -r * st
+      uvs[k * 2] = u * turns * 0.8
+      uvs[k * 2 + 1] = v
+      if (i < tubularSegments && j < radialSegments) {
+        const a = k, b = k + 1, c = k + stride, d = c + 1
+        indices.push(a, b, c, b, d, c)
+      }
+    }
+  }
+  const g = new THREE.BufferGeometry()
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+  g.setIndex(indices)
+  g.computeVertexNormals()
+  return g
+}
+
+/** Builds a smooth 2-ply twisted cord tube along a 3D curve using parallel-transport frames (zero Frenet flips). */
+function buildTwistedCordTube(
+  curve: THREE.CatmullRomCurve3,
+  tubularSegments: number,
+  radialSegments: number,
+  radius: number | ((u: number) => number),
+  turns: number,
+  plyDepth: number,
+  capEnds = false,
+): THREE.BufferGeometry {
+  const stride = radialSegments + 1
+  const points = curve.getSpacedPoints(tubularSegments)
+  const tangents: THREE.Vector3[] = []
+  for (let i = 0; i <= tubularSegments; i++) {
+    const prev = points[Math.max(0, i - 1)]!
+    const next = points[Math.min(tubularSegments, i + 1)]!
+    const t = new THREE.Vector3().subVectors(next, prev)
+    if (t.lengthSq() < 1e-12) t.set(0, 1, 0)
+    else t.normalize()
+    tangents.push(t)
+  }
+  const normals: THREE.Vector3[] = []
+  const binormals: THREE.Vector3[] = []
+  const t0 = tangents[0]!
+  const ref = Math.abs(t0.z) < 0.85 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(1, 0, 0)
+  let prevN = new THREE.Vector3().crossVectors(ref, t0).normalize()
+  let prevB = new THREE.Vector3().crossVectors(t0, prevN).normalize()
+  normals.push(prevN.clone())
+  binormals.push(prevB.clone())
+  const rotAxis = new THREE.Vector3()
+  const rotQ = new THREE.Quaternion()
+  for (let i = 1; i <= tubularSegments; i++) {
+    const a = tangents[i - 1]!
+    const b = tangents[i]!
+    const dot = THREE.MathUtils.clamp(a.dot(b), -1, 1)
+    rotAxis.crossVectors(a, b)
+    if (rotAxis.lengthSq() > 1e-10) {
+      rotAxis.normalize()
+      rotQ.setFromAxisAngle(rotAxis, Math.acos(dot))
+      prevN = prevN.clone().applyQuaternion(rotQ).normalize()
+    }
+    prevB = new THREE.Vector3().crossVectors(b, prevN).normalize()
+    prevN = new THREE.Vector3().crossVectors(prevB, b).normalize()
+    normals.push(prevN)
+    binormals.push(prevB)
+  }
+
+  const capVerts = capEnds ? 2 : 0
+  const bodyVerts = (tubularSegments + 1) * stride
+  const positions = new Float32Array((bodyVerts + capVerts) * 3)
+  const uvs = new Float32Array((bodyVerts + capVerts) * 2)
+  const indices: number[] = []
+  const rAt = typeof radius === 'function' ? radius : () => radius
+
+  for (let i = 0; i <= tubularSegments; i++) {
+    const u = i / tubularSegments
+    const p = points[i]!
+    const N = normals[i]!
+    const B = binormals[i]!
+    const baseR = rAt(u)
+    for (let j = 0; j <= radialSegments; j++) {
+      const v = j / radialSegments
+      const theta = v * Math.PI * 2
+      const ply = 1 + plyDepth * Math.cos(theta * 2 - u * Math.PI * 2 * turns)
+      const r = baseR * ply
+      const ct = Math.cos(theta), st = Math.sin(theta)
+      const k = i * stride + j
+      positions[k * 3] = p.x + r * (N.x * ct + B.x * st)
+      positions[k * 3 + 1] = p.y + r * (N.y * ct + B.y * st)
+      positions[k * 3 + 2] = p.z + r * (N.z * ct + B.z * st)
+      uvs[k * 2] = u * turns * 0.75
+      uvs[k * 2 + 1] = v
+      if (i < tubularSegments && j < radialSegments) {
+        const a = k, b = k + 1, c = k + stride, d = c + 1
+        indices.push(a, b, c, b, d, c)
+      }
+    }
+  }
+
+  if (capEnds) {
+    const startCenter = bodyVerts
+    const endCenter = bodyVerts + 1
+    const p0 = points[0]!, p1 = points[tubularSegments]!
+    positions[startCenter * 3] = p0.x; positions[startCenter * 3 + 1] = p0.y; positions[startCenter * 3 + 2] = p0.z
+    uvs[startCenter * 2] = 0; uvs[startCenter * 2 + 1] = 0.5
+    positions[endCenter * 3] = p1.x; positions[endCenter * 3 + 1] = p1.y; positions[endCenter * 3 + 2] = p1.z
+    uvs[endCenter * 2] = 1; uvs[endCenter * 2 + 1] = 0.5
+    const lastRow = tubularSegments * stride
+    for (let j = 0; j < radialSegments; j++) {
+      // Start cap faces -T; end cap faces +T.
+      indices.push(startCenter, j + 1, j)
+      indices.push(endCenter, lastRow + j, lastRow + j + 1)
+    }
+  }
+
+  const g = new THREE.BufferGeometry()
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+  g.setIndex(indices)
+  g.computeVertexNormals()
+  return g
+}
+
+/** Builds a merged multi-turn snug cord lashing collar around the local Y axis (outward normals verified). */
+function buildCordWrapCollar(
+  wrapRadius: number,
+  tubeRadius: number,
+  turns: number,
+  pitch: number,
+  axis: 'y' | 'x' = 'y',
+  segsPerTurn = 28,
+  sides = 8,
+): THREE.BufferGeometry {
+  const stride = sides + 1
+  const turnVerts = (segsPerTurn + 1) * stride
+  const positions = new Float32Array(turns * turnVerts * 3)
+  const uvs = new Float32Array(turns * turnVerts * 2)
+  const indices: number[] = []
+  for (let t = 0; t < turns; t++) {
+    const base = t * turnVerts
+    const offset = (t - (turns - 1) * 0.5) * pitch
+    const tilt = (t % 2 === 0 ? 1 : -1) * pitch * 0.16
+    for (let i = 0; i <= segsPerTurn; i++) {
+      const u = i / segsPerTurn
+      const phi = u * Math.PI * 2
+      const cphi = Math.cos(phi), sphi = Math.sin(phi)
+      for (let j = 0; j <= sides; j++) {
+        const v = j / sides
+        const theta = v * Math.PI * 2
+        const ply = 1 + 0.08 * Math.cos(theta * 2 - phi * 6)
+        const r = tubeRadius * ply
+        const ct = Math.cos(theta), st = Math.sin(theta)
+        const rr = wrapRadius + r * ct
+        const axial = offset + Math.sin(phi) * tilt + r * st
+        const k = base + i * stride + j
+        if (axis === 'y') {
+          // Horizontal ring in XZ plane: T=(-sphi,0,cphi), N=(cphi,0,sphi), B=T x N=(0,+1,0).
+          positions[k * 3] = rr * cphi
+          positions[k * 3 + 1] = axial
+          positions[k * 3 + 2] = rr * sphi
+        } else {
+          // Ring in YZ plane wrapping local X axis: T=(0,-sphi,cphi), N=(0,cphi,sphi), B=T x N=(-1,0,0).
+          positions[k * 3] = -axial
+          positions[k * 3 + 1] = rr * cphi
+          positions[k * 3 + 2] = rr * sphi
+        }
+        uvs[k * 2] = u * 5.0
+        uvs[k * 2 + 1] = v
+        if (i < segsPerTurn && j < sides) {
+          const a = k, b = k + 1, c = k + stride, d = c + 1
+          indices.push(a, b, c, b, d, c)
+        }
+      }
+    }
+  }
+  const g = new THREE.BufferGeometry()
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+  g.setIndex(indices)
+  g.computeVertexNormals()
+  return g
+}
+
+/** Builds a sculpted, pinched woven cord knot cushion (replacing a plain sphere). */
+function buildPinchedKnotGeometry(rx: number, ry: number, rz: number): THREE.BufferGeometry {
+  const lat = 14, lon = 24, stride = lon + 1
+  const positions = new Float32Array((lat + 1) * stride * 3)
+  const uvs = new Float32Array((lat + 1) * stride * 2)
+  const indices: number[] = []
+  for (let i = 0; i <= lat; i++) {
+    const v = i / lat
+    const phi = v * Math.PI
+    const sp = Math.sin(phi), cp = Math.cos(phi)
+    for (let j = 0; j <= lon; j++) {
+      const u = j / lon
+      const theta = u * Math.PI * 2
+      const ct = Math.cos(theta), st = Math.sin(theta)
+      // Subtle crossed-strand pinch crease + woven ridge so the knot reads as bound cord.
+      const waist = 1 - 0.10 * Math.pow(Math.abs(ct), 1.6) * sp
+      const ridge = 1 + 0.055 * Math.cos(theta * 2 + phi * 3) * sp
+      const k = i * stride + j
+      positions[k * 3] = ct * rx * sp * ridge
+      positions[k * 3 + 1] = cp * ry * waist
+      positions[k * 3 + 2] = st * rz * sp * ridge
+      uvs[k * 2] = u * 2.5
+      uvs[k * 2 + 1] = v * 1.5
+      if (i < lat && j < lon) {
+        const a = k, b = k + 1, c = k + stride, d = c + 1
+        // Outward winding: (+theta tangent) x (+phi downward) points radially outward.
+        indices.push(a, b, c, b, d, c)
+      }
+    }
+  }
+  const g = new THREE.BufferGeometry()
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+  g.setIndex(indices)
+  g.computeVertexNormals()
+  return g
+}
 
 const COPY = {
   title: '串花寄意', stepsAria: '步骤',
@@ -100,10 +392,23 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   garland.position.copy(HELD)
   world.add(garland)
 
+  const cordTex = createMalaiCordTextures()
   const cream = new THREE.MeshStandardMaterial({ color: 0xfff7e4, roughness: 0.94 })
   const rose = new THREE.MeshStandardMaterial({ color: 0xd98a9b, roughness: 0.96 })
-  const thread = new THREE.MeshStandardMaterial({ color: 0xd7c897, roughness: 1 })
-  applyCraftSurface(thread,{kind:'cord',strength:.28})
+  const thread = new THREE.MeshStandardMaterial({
+    color: 0xd7c897,
+    roughness: 0.92,
+    map: cordTex.map,
+    bumpMap: cordTex.bump,
+    bumpScale: 0.0024,
+  })
+  const threadWrap = new THREE.MeshStandardMaterial({
+    color: 0xc2ad75,
+    roughness: 0.90,
+    map: cordTex.map,
+    bumpMap: cordTex.bump,
+    bumpScale: 0.0028,
+  })
   const paleGold = new THREE.MeshStandardMaterial({ color: 0xe5c885, roughness: 0.9 })
   const pedestalMat = new THREE.MeshStandardMaterial({ color: 0xf5dfbf, roughness: 0.94 })
   const trayMat = new THREE.MeshStandardMaterial({ color: 0xbd956d, roughness: 1 })
@@ -195,8 +500,17 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
     cluster.group.rotation.z = trayRotation
     return { ...cluster, home, trayRotation }
   })
-  const core = new THREE.Mesh(new THREE.TorusGeometry(RADIUS, 0.008, 6, 72), thread)
+  // 2-ply twisted silk-cotton garland core cord replacing a plain 6-sided ring.
+  const core = new THREE.Mesh(buildTwistedRingGeometry(RADIUS, 0.0090, 0.12, 216, 12, 42), thread)
+  core.name = 'garland-core-cord'
   garland.add(core)
+  // Snug 3-turn crown binding wrap seated on the core ring beneath the top bow.
+  const crownWrap = new THREE.Mesh(buildCordWrapCollar(0.0124, 0.0042, 3, 0.0082, 'x'), threadWrap)
+  crownWrap.name = 'garland-crown-wrap'
+  crownWrap.position.set(0, RADIUS, 0)
+  crownWrap.userData.toonSurface = { outline: false }
+  garland.add(crownWrap)
+
   const nextSegment = new THREE.Group()
   nextSegment.name = 'next-segment'
   const guide = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.008, 6, 24), paleGold)
@@ -204,10 +518,65 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   nextSegment.add(guide)
   garland.add(nextSegment)
 
+  const ringAnchorY = -Math.sqrt(RADIUS * RADIUS - 0.23 * 0.23)
   const tassels = [-1, 1].map((side) => {
+    const label = side < 0 ? 'left' : 'right'
+    // 3-turn cord lashing collar seated directly on the wreath core ring where each tassel attaches.
+    const ringWrap = new THREE.Mesh(buildCordWrapCollar(0.0130, 0.0044, 3, 0.0082, 'x'), threadWrap)
+    ringWrap.name = `tassel-ring-wrap-${label}`
+    ringWrap.position.set(side * 0.23, ringAnchorY, 0)
+    // Align local X with ring tangent (-sin(a), cos(a), 0) at (side*0.23, ringAnchorY).
+    const ringAngle = Math.atan2(ringAnchorY, side * 0.23)
+    ringWrap.rotation.z = ringAngle + Math.PI / 2
+    ringWrap.userData.toonSurface = { outline: false }
+    garland.add(ringWrap)
+
     const tassel = new THREE.Group()
-    tassel.name = `flower-tassel-${side < 0 ? 'left' : 'right'}`
+    tassel.name = `flower-tassel-${label}`
     tassel.position.set(side * 0.23, -0.335, 0.045)
+
+    // Continuous 2-ply twisted suspension cord running from the ring lashing down the tassel's central axis,
+    // binding all 7 blossom tiers coherently without floppy flower deformation.
+    const cordPath = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, ringAnchorY - (-0.335), -0.045),
+      new THREE.Vector3(0, -0.018, -0.016),
+      new THREE.Vector3(0, -0.036, 0),
+      new THREE.Vector3(0, -0.26, 0),
+      new THREE.Vector3(0, -0.530, 0),
+    ])
+    const tasselCord = new THREE.Mesh(
+      buildTwistedCordTube(
+        cordPath,
+        44,
+        10,
+        (u) => (u < 0.14 ? THREE.MathUtils.lerp(0.0080, 0.0122, u / 0.14) : 0.0122),
+        16,
+        0.10,
+        true,
+      ),
+      thread,
+    )
+    tasselCord.name = `tassel-cord-${label}`
+    tasselCord.userData.toonSurface = { outline: false }
+
+    // Snug top binding collar just above the first tier of jasmine buds.
+    const topCollar = new THREE.Mesh(buildCordWrapCollar(0.0152, 0.0046, 2, 0.0082, 'y'), threadWrap)
+    topCollar.name = `tassel-collar-${label}`
+    topCollar.position.set(0, -0.028, 0)
+    topCollar.userData.toonSurface = { outline: false }
+
+    // Subtle mid-waist cord tie cinching the narrowed upper neck of the tassel.
+    const waistCollar = new THREE.Mesh(buildCordWrapCollar(0.0172, 0.0042, 2, 0.0078, 'y'), threadWrap)
+    waistCollar.name = `tassel-waist-collar-${label}`
+    waistCollar.position.set(0, -0.228, 0)
+    waistCollar.userData.toonSurface = { outline: false }
+
+    // Compact braided stopper knot tucked cleanly inside the bottom rose rosette (preserves pedestal clearance).
+    const endKnot = new THREE.Mesh(buildPinchedKnotGeometry(0.0150, 0.0130, 0.0150), threadWrap)
+    endKnot.name = `tassel-end-knot-${label}`
+    endKnot.position.set(0, -0.530, 0)
+    endKnot.userData.toonSurface = { outline: false }
+
     const buds = flowers(56, cream, `tassel-buds-${side}`)
     for (let row = 0; row < 7; row++) for (let column = 0; column < 8; column++) {
       const a = (column / 8) * Math.PI * 2 + (row % 2) * 0.25
@@ -222,7 +591,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
       const direction = new THREE.Vector3(Math.cos(a), -0.45, Math.sin(a))
       setBud(accent, row * 8 + column, new THREE.Vector3(Math.cos(a) * 0.055, -0.12 - row * 0.39, Math.sin(a) * 0.055), direction, row ? 0.85 : 0.72)
     }
-    tassel.add(buds, accent)
+    tassel.add(tasselCord, topCollar, waistCollar, endKnot, buds, accent)
     garland.add(tassel)
     return tassel
   })
@@ -231,24 +600,103 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   tie.name = 'top-tie'
   tie.position.set(0, 0.545, 0.02)
   garland.add(tie)
-  const loopGeo = new THREE.TorusGeometry(0.041, 0.007, 6, 24)
-  const loops = [-1, 1].map((side) => {
-    const loop = new THREE.Mesh(loopGeo, thread)
-    loop.position.set(side * 0.039, 0.025, 0)
-    loop.rotation.z = side * 0.35
-    tie.add(loop)
-    return loop
-  })
-  const cordGeo = new THREE.CylinderGeometry(0.006, 0.006, 0.13, 6)
+
+  // Braided twin-cord gathering stem bridging the bow cleanly down into the wreath crown wrap.
+  const tieStem = new THREE.Group()
+  tieStem.name = 'top-tie-stem'
+  tieStem.position.set(0, 0.026, 0.018)
+  tie.add(tieStem)
   for (const side of [-1, 1]) {
-    const tail = new THREE.Mesh(cordGeo, thread)
-    tail.position.set(side * 0.028, -0.067, 0)
-    tail.rotation.z = side * -0.25
-    tie.add(tail)
+    const stemCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(side * 0.005, -0.004, 0),
+      new THREE.Vector3(side * 0.008, -0.070, -0.018),
+      new THREE.Vector3(side * 0.006, -0.144, -0.038),
+    ])
+    const stemMesh = new THREE.Mesh(buildTwistedCordTube(stemCurve, 20, 8, 0.0060, 5, 0.10, true), thread)
+    stemMesh.name = `top-tie-stem-${side < 0 ? 'left' : 'right'}`
+    stemMesh.userData.toonSurface = { outline: false }
+    tieStem.add(stemMesh)
   }
-  const knot = new THREE.Mesh(new THREE.SphereGeometry(0.021, 10, 8), thread)
-  knot.scale.set(1.2, 0.75, 0.8)
-  tie.add(knot)
+
+  // Sculpted pinched center knot cushion + crossed binding wraps seated proudly above the upper jasmine buds.
+  const knotCenter = new THREE.Group()
+  knotCenter.name = 'top-tie-knot-center'
+  knotCenter.position.set(0, 0.026, 0.018)
+  tie.add(knotCenter)
+  const knot = new THREE.Mesh(buildPinchedKnotGeometry(0.0195, 0.0155, 0.0145), thread)
+  knot.name = 'top-tie-knot'
+  knotCenter.add(knot)
+  for (const [idx, tiltZ] of [0.38, -0.38].entries()) {
+    const knotWrap = new THREE.Mesh(buildCordWrapCollar(0.0152, 0.0042, 1, 0.0076, 'x', 24, 8), threadWrap)
+    knotWrap.name = `top-tie-knot-wrap-${idx}`
+    knotWrap.rotation.z = tiltZ
+    knotWrap.userData.toonSurface = { outline: false }
+    knotCenter.add(knotWrap)
+  }
+
+  // Two sculpted 3D teardrop 2-ply bow loops seated cleanly above/forward of the crown buds (unbroken silhouette).
+  const loops = [-1, 1].map((side) => {
+    const loopPivot = new THREE.Group()
+    loopPivot.name = `top-tie-loop-${side < 0 ? 'left' : 'right'}`
+    loopPivot.position.set(0, 0.026, 0.018)
+    const loopCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(side * 0.005, 0.002, 0.005),
+      new THREE.Vector3(side * 0.025, 0.034, 0.013),
+      new THREE.Vector3(side * 0.052, 0.039, 0.012),
+      new THREE.Vector3(side * 0.054, 0.014, 0.007),
+      new THREE.Vector3(side * 0.030, -0.002, 0.002),
+      new THREE.Vector3(side * 0.005, -0.004, -0.002),
+    ])
+    const loopMesh = new THREE.Mesh(
+      buildTwistedCordTube(
+        loopCurve,
+        44,
+        10,
+        (u) => 0.0066 + 0.0012 * Math.sin(u * Math.PI),
+        7.5,
+        0.10,
+      ),
+      thread,
+    )
+    loopMesh.name = `top-tie-loop-mesh-${side < 0 ? 'left' : 'right'}`
+    loopPivot.add(loopMesh)
+    tie.add(loopPivot)
+    return loopPivot
+  })
+
+  // Twin gracefully S-curved 2-ply cord tails resting neatly over the front crown with whipped end knots.
+  const tailPivots = [-1, 1].map((side) => {
+    const label = side < 0 ? 'left' : 'right'
+    const pivot = new THREE.Group()
+    pivot.name = `top-tie-tail-pivot-${label}`
+    pivot.position.set(side * 0.007, 0.018, 0.022)
+    const tailCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(side * 0.022, -0.024, 0.020),
+      new THREE.Vector3(side * 0.044, -0.056, 0.034),
+      new THREE.Vector3(side * 0.054, -0.092, 0.038),
+    ])
+    const tailMesh = new THREE.Mesh(
+      buildTwistedCordTube(
+        tailCurve,
+        24,
+        10,
+        (u) => THREE.MathUtils.lerp(0.0064, 0.0052, u),
+        5.5,
+        0.10,
+        true,
+      ),
+      thread,
+    )
+    tailMesh.name = `top-tie-tail-${label}`
+    const tipKnot = new THREE.Mesh(buildPinchedKnotGeometry(0.0076, 0.0088, 0.0076), threadWrap)
+    tipKnot.name = `top-tie-tip-${label}`
+    tipKnot.position.set(side * 0.054, -0.092, 0.038)
+    tipKnot.userData.toonSurface = { outline: false }
+    pivot.add(tailMesh, tipKnot)
+    tie.add(pivot)
+    return pivot
+  })
 
   // A plain display pedestal keeps this adaptation about social gratitude.
   const pedestal = new THREE.Group()
@@ -339,7 +787,14 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
     setSafeText(hintEl, hint, assertSafeCopy)
   }
   const setTie = () => {
-    loops.forEach((loop) => loop.scale.set(1 + (1 - tied) * 0.6, 1 + (1 - tied) * 0.5, 1))
+    const loose = 1 - tied
+    loops.forEach((loop) => loop.scale.set(1 + loose * 0.36, 1 + loose * 0.32, 1))
+    knotCenter.scale.setScalar(1 + loose * 0.08)
+    tieStem.scale.set(1, 0.58 + loose * 0.42, 1)
+    tailPivots.forEach((pivot, i) => {
+      const side = i === 0 ? -1 : 1
+      pivot.rotation.z = side * loose * 0.24
+    })
     tie.position.y = 0.545 - tied * 0.045
   }
   const checkpointReached = (next: number) => {
@@ -601,11 +1056,20 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
         }
         if (t === 1) finishMotion()
       }
-      // A little delayed weight in the two hanging strands after tying. It
-      // stops completely with reduced motion and while the host is paused.
+      // Gentle delayed pendulum weight in the two hanging flower tassels after tying,
+      // plus subtle inertial lag while tying or placing onto the pedestal. Stops completely
+      // with reduced motion and while paused.
+      const placeLag = !less && motion?.kind === 'place' ? Math.sin(Math.min(1, motion.elapsed / motion.duration) * Math.PI) * 0.095 : 0
+      const tieKick = !less && motion?.kind === 'tie' ? Math.sin(Math.min(1, motion.elapsed / motion.duration) * Math.PI) * 0.045 : 0
       tassels.forEach((tassel, i) => {
-        const target = less || checkpoint < 2 ? 0 : Math.sin(clock * 1.3 - i * 0.45) * 0.022
-        tassel.rotation.z = less ? 0 : THREE.MathUtils.lerp(tassel.rotation.z, target, 1 - Math.exp(-delta * 5))
+        const side = i === 0 ? -1 : 1
+        const targetZ = less
+          ? 0
+          : (checkpoint < 2 ? 0 : Math.sin(clock * 1.3 - i * 0.45) * 0.022) + side * tieKick
+        const targetX = less ? 0 : placeLag
+        const blend = 1 - Math.exp(-delta * 6)
+        tassel.rotation.z = less ? 0 : THREE.MathUtils.lerp(tassel.rotation.z, targetZ, blend)
+        tassel.rotation.x = less ? 0 : THREE.MathUtils.lerp(tassel.rotation.x, targetX, blend)
       })
       styleRenderer.render()
     },
@@ -634,6 +1098,8 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
       fx.dispose()
       styleRenderer.dispose()
       instances.forEach((mesh) => mesh.dispose())
+      cordTex.map.dispose()
+      cordTex.bump.dispose()
       disposeTree(world)
       lights.key.dispose()
       lights.rim.dispose()

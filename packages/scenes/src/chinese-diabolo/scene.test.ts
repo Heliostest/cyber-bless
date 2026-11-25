@@ -340,4 +340,49 @@ describe('Chinese hollow diabolo and handsticks', () => {
     expect(freed.size).toBe(resources.size); expect([...freed.values()].every(n => n === 1)).toBe(true); expect(renderer.dispose).toHaveBeenCalledOnce(); expect(renderer.forceContextLoss).toHaveBeenCalledOnce()
     expect(s.overlay.childElementCount).toBe(0); expect(s.host.querySelector('.scene-object-cues')).toBeNull(); for (const o of cued) expect(o.userData.interactionCues).toEqual([])
   })
+
+  it('never loads Rapier WASM in reduced motion and runs live Rapier toss/catch dynamics with pause and reduced-toggle safety', async () => {
+    const { isRapierLoaded, loadRapier, _resetRapierLoaderForTest } = await import('@wbr/scene-runtime/rapier-soft-body')
+    _resetRapierLoaderForTest()
+    const quiet = mount(1, { isReducedMotion: () => true })
+    const cordMidQ = quiet.scene.getObjectByName('diabolo-cord-16')!
+    const qy0 = cordMidQ.position.y
+    quiet.run(1.0)
+    expect(isRapierLoaded()).toBe(false)
+    expect(cordMidQ.position.y).toBe(qy0)
+    quiet.instance.dispose()
+
+    await loadRapier()
+    let isActive = true
+    let isReduced = false
+    const live = mount(1, { isActive: () => isActive, isReducedMotion: () => isReduced })
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    const cordMid = live.scene.getObjectByName('diabolo-cord-16')!
+    const restY = cordMid.position.y
+    live.button.click()
+    let maxLiftY = -Infinity
+    let minCatchY = Infinity
+    for (let i = 0; i < 65; i++) {
+      live.instance.update(1 / 60)
+      maxLiftY = Math.max(maxLiftY, cordMid.position.y)
+      if (i > 48) minCatchY = Math.min(minCatchY, cordMid.position.y)
+    }
+    expect(live.progress).toEqual([2])
+    expect(maxLiftY).toBeGreaterThan(restY + 0.25)
+    expect(minCatchY).toBeLessThan(restY)
+
+    // Pause freezes live cord motion cleanly.
+    isActive = false
+    const pausedY = cordMid.position.y
+    for (let i = 0; i < 10; i++) live.instance.update(1 / 60)
+    expect(cordMid.position.y).toBe(pausedY)
+
+    // Runtime reduced toggle snaps still and stays stationary.
+    isActive = true
+    isReduced = true
+    live.instance.update(1 / 60)
+    const redY = cordMid.position.y
+    for (let i = 0; i < 10; i++) live.instance.update(1 / 60)
+    expect(cordMid.position.y).toBe(redY)
+  })
 })

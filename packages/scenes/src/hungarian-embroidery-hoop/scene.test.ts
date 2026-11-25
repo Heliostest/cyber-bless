@@ -412,4 +412,49 @@ describe('physical craft and owned resources', () => {
     const capture = (o: boolean | EventListenerOptions | undefined) => typeof o === 'boolean' ? o : o?.capture ?? false
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), type).toBe(true)
   })
+  it('builds dense satin petals, embroidered herringbone leaves, helical spool winding, and seated loose thread', () => {
+    const s = mount(1, { isReducedMotion: () => true })
+    let petalCount = 0, leafCount = 0, veinCount = 0
+    s.scene.traverse(o => {
+      if (o.name === 'hoop-petal-stitch') petalCount++
+      if (o.name === 'hoop-leaf-stitch') leafCount++
+      if (o.name === 'hoop-leaf-vein') veinCount++
+    })
+    expect(petalCount).toBeGreaterThanOrEqual(150)
+    expect(leafCount).toBeGreaterThanOrEqual(30)
+    expect(veinCount).toBe(2)
+
+    const tail = s.scene.getObjectByName('hoop-spool-tail') as THREE.Mesh
+    const tailBox = new THREE.Box3().setFromObject(tail)
+    expect(tailBox.min.y).toBeGreaterThanOrEqual(0.758)
+    const pos = tail.geometry.getAttribute('position') as THREE.BufferAttribute
+    for (let i = 0; i < pos.count; i++) {
+      expect(Number.isFinite(pos.getX(i) + pos.getY(i) + pos.getZ(i))).toBe(true)
+    }
+  })
+  it('progressively reveals flourish stitches with a live connecting working thread during step-0 motion', () => {
+    const s = mount(0)
+    const flourish = s.scene.getObjectByName('hoop-completed-flourish')!
+    const tail = s.scene.getObjectByName('hoop-spool-tail') as THREE.Mesh
+    const tailGeo = tail.geometry
+    expect(flourish.visible).toBe(false)
+    s.button.click()
+    s.run(.42)
+    expect(flourish.visible).toBe(true)
+    expect(tail.geometry).toBe(tailGeo)
+    let hiddenCount = 0, visibleCount = 0
+    flourish.traverse(o => {
+      if (o.name === 'hoop-petal-stitch') {
+        if (o.visible) visibleCount++
+        else hiddenCount++
+      }
+    })
+    expect(visibleCount).toBeGreaterThan(0)
+    expect(hiddenCount).toBeGreaterThan(0)
+    s.run(1.0)
+    expect(s.progress).toEqual([1])
+    let finalVisible = 0
+    flourish.traverse(o => { if (o.name === 'hoop-petal-stitch' && o.visible) finalVisible++ })
+    expect(finalVisible).toBe(55)
+  })
 })

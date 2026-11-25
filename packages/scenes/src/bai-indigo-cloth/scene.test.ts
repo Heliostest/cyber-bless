@@ -365,6 +365,80 @@ describe('physical cloth and owned resources', () => {
     const capture = (o: boolean | EventListenerOptions | undefined) => typeof o === 'boolean' ? o : o?.capture ?? false
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), type).toBe(true)
   })
+  it('never loads Rapier WASM at entry (cloth hidden) or in reduced motion while keeping calm resting drape still', async () => {
+    const { isRapierLoaded, _resetRapierLoaderForTest } = await import('@wbr/scene-runtime/rapier-soft-body')
+    _resetRapierLoaderForTest()
+    const entry = mount(0)
+    entry.run(0.5)
+    expect(isRapierLoaded()).toBe(false)
+    entry.instance.dispose()
+
+    const quiet = mount(3, { isReducedMotion: () => true })
+    const body = quiet.scene.getObjectByName('indigo-cloth-body') as THREE.Mesh
+    const snap0 = Array.from(body.geometry.getAttribute('position').array)
+    quiet.run(0.8)
+    const snap1 = Array.from(body.geometry.getAttribute('position').array)
+    expect(isRapierLoaded()).toBe(false)
+    expect(snap1).toEqual(snap0)
+    expect(snap1.every(Number.isFinite)).toBe(true)
+    quiet.instance.dispose()
+  })
+  it('drives the hanging indigo cloth with lazy Rapier physics, preserves rod attachment & basin clearance, and respects pause & reduced toggle', async () => {
+    const { loadRapier } = await import('@wbr/scene-runtime/rapier-soft-body')
+    await loadRapier()
+    let isActive = true
+    let isReduced = false
+    const s = mount(3, { isActive: () => isActive, isReducedMotion: () => isReduced })
+    const body = s.scene.getObjectByName('indigo-cloth-body') as THREE.Mesh
+    const posBuf = body.geometry.getAttribute('position').array
+    const resting = Array.from(posBuf)
+
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    for (let i = 0; i < 40; i++) s.instance.update(1 / 60)
+    expect(body.geometry.getAttribute('position').array).toBe(posBuf)
+    const live = Array.from(posBuf)
+    expect(live.every(Number.isFinite)).toBe(true)
+    let maxDelta = 0
+    for (let i = 0; i < live.length; i++) maxDelta = Math.max(maxDelta, Math.abs(live[i]! - resting[i]!))
+    expect(maxDelta).toBeGreaterThan(0.015)
+
+    // Top rod wrap stays strictly attached to the drying rail cylinder (r = 0.070..0.076).
+    const railCenter = s.scene.getObjectByName('indigo-drying-rail')!.getWorldPosition(new THREE.Vector3())
+    const posAttr = body.geometry.getAttribute('position')
+    const foldRadii: number[] = []
+    for (let i = 0; i < posAttr.count; i++) {
+      const p = body.localToWorld(new THREE.Vector3().fromBufferAttribute(posAttr, i))
+      if (p.y > railCenter.y + 0.025) foldRadii.push(Math.hypot(p.y - railCenter.y, p.z - railCenter.z))
+    }
+    expect(foldRadii.length).toBeGreaterThan(500)
+    expect(Math.min(...foldRadii)).toBeCloseTo(0.070, 3)
+    expect(Math.max(...foldRadii)).toBeCloseTo(0.076, 3)
+
+    // Pause freezes simulation completely.
+    isActive = false
+    const paused0 = Array.from(posBuf)
+    for (let i = 0; i < 15; i++) s.instance.update(1 / 60)
+    expect(Array.from(posBuf)).toEqual(paused0)
+
+    // Runtime reduced-motion toggle returns to calm resting drape and stays bit-for-bit still.
+    isActive = true
+    isReduced = true
+    s.instance.update(1 / 60)
+    const red0 = Array.from(posBuf)
+    for (let i = 0; i < 15; i++) s.instance.update(1 / 60)
+    expect(Array.from(posBuf)).toEqual(red0)
+
+    // Toggling reduced-motion back off resumes live cloth motion.
+    isReduced = false
+    for (let i = 0; i < 30; i++) s.instance.update(1 / 60)
+    expect(Array.from(posBuf)).not.toEqual(red0)
+
+    s.instance.dispose()
+    // Further updates after disposal are safe no-ops.
+    const afterDispose = Array.from(posBuf)
+    s.instance.update(1 / 60)
+    expect(Array.from(posBuf)).toEqual(afterDispose)
+  })
 })
 
 // Cancellation happens before arrival; a completed placement already owns its result.

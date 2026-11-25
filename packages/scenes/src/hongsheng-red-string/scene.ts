@@ -2,6 +2,7 @@ import { createQuietEnding } from '../quiet-ending'
 import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
@@ -12,6 +13,17 @@ import { createPathSweep } from '../path-sweep'
 import { createTouchTarget } from '../touch-target'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
+import {
+  arcPoint,
+  CLASP_HOME_POS,
+  createBraidedBraceletStrandGeometry,
+  createHelicalSpoolLayerGeometry,
+  createRedStringCordSim,
+  RING_CENTER,
+  setBraceletArcReveal,
+  SOCKET_POS,
+  SPOOL_POS,
+} from './cord-sim'
 
 const COPY = {
   title: '红绳自持', wind: '从红绳端出发，沿支架上的浅色圆点顺序绕一圈。',
@@ -25,11 +37,9 @@ const COPY = {
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
 type Motion = { step: 0 | 1; time: number; guided: boolean; from: THREE.Vector3 }
-const CENTER = new THREE.Vector3(.3, 1.15, .31), RADIUS = .64
-const CLASP_HOME = new THREE.Vector3(.91, .54, .36)
-const SOCKET = new THREE.Vector3(.3, .51, .39)
-const arcPoint = (t: number) => new THREE.Vector3(CENTER.x + Math.sin(t * Math.PI * 2) * RADIUS,
-  CENTER.y - Math.cos(t * Math.PI * 2) * RADIUS, CENTER.z)
+const CENTER = RING_CENTER
+const CLASP_HOME = CLASP_HOME_POS
+const SOCKET = SOCKET_POS
 const smooth = (t: number) => t * t * (3 - 2 * t)
 
 /** Personal red-cord handwork, without a traditional ritual provenance claim. */
@@ -37,7 +47,7 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, gestures, shared } = ctx, safe = shared.assertSafeCopy
   Object.values(COPY).forEach(safe)
   let started = false, disposed = false, focused = true, inactiveRendered = false, checkpoint: Checkpoint = 0
-  let motion: Motion | null = null, dragging = false, nextBead = 1, maxTravel = 0
+  let motion: Motion | null = null, dragging = false, nextBead = 1, maxTravel = 0, currentWind = 0
   let writer: GestureHandle | null = null, stopResize = () => {}
   const returning = ctx.returning === true
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
@@ -65,8 +75,14 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
   lights.key.shadow.bias = -.0007; lights.key.shadow.normalBias = .025
   const world = new THREE.Group(); world.name = 'red-string-handwork'; scene.add(world)
   const mat = (color: number, roughness = .87) => new THREE.MeshStandardMaterial({ color, roughness })
-  const maple = mat(0xcdb08a), mapleLight = mat(0xe4cba4), cream = mat(0xf2dfbb), red = mat(0xbd4845), redLight = mat(0xd6645a), redShade = mat(0xa33d3e), brass = mat(0xcbad75, .48)
-  const add = (geometry: THREE.BufferGeometry, material: THREE.Material, p: THREE.Vector3 | [number, number, number], parent: THREE.Object3D = world, name = '') => {
+  const maple = applyCraftSurface(mat(0xcdb08a, .84), { kind: 'wood', scale: 1.25, strength: .30 })
+  const mapleLight = applyCraftSurface(mat(0xe4cba4, .82), { kind: 'wood', scale: 1.25, strength: .28 })
+  const padMat = applyCraftSurface(mat(0xd9c8ba, .94), { kind: 'fabric', scale: 2.1, strength: .25 })
+  const cream = mat(0xf2dfbb, .84)
+  const red = applyCraftSurface(mat(0xbd4845, .91), { kind: 'cord', scale: 2.1, strength: .30 })
+  const redTwist = applyCraftSurface(mat(0x9e3838, .92), { kind: 'cord', scale: 2.2, strength: .30 })
+  const brass = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xcbad75, roughness: .44, metalness: .42 }), { kind: 'metal', scale: 1.4, strength: .35 })
+  const add = (geometry: THREE.BufferGeometry, material: THREE.Material | THREE.Material[], p: THREE.Vector3 | [number, number, number], parent: THREE.Object3D = world, name = '') => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name
     if (Array.isArray(p)) mesh.position.set(...p); else mesh.position.copy(p)
     mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
@@ -75,63 +91,134 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
     const local = points.map(p => p.clone().sub(origin))
     return add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(local), Math.max(16, points.length * 2), radius, 8, false), material, origin, parent, name)
   }
+
   const plinth = add(new RoundedBoxGeometry(2.85, .17, 1.32, 5, .08), mapleLight, [0, .085, 0], world, 'red-string-workboard')
   for (const x of [-1.07, 1.07]) add(new RoundedBoxGeometry(.24, .075, .8, 3, .025), maple, [x, .013, 0])
-  const matPad = add(new RoundedBoxGeometry(.76, .025, .67, 4, .07), mat(0xd9c8ba), [-.96, .185, .08], world, 'red-string-spool-pad')
+  const matPad = add(new RoundedBoxGeometry(.76, .025, .67, 4, .07), padMat, [-.96, .185, .08], world, 'red-string-spool-pad')
   plinth.userData.toonSurface = matPad.userData.toonSurface = { outline: false }
-  const spool = new THREE.Group(); spool.name = 'red-string-spool'; spool.position.set(-.96, .199, .08); world.add(spool)
+
+  // Wooden spool with continuous cross-laid helical crimson cord windings that rotate on payout.
+  const spool = new THREE.Group(); spool.name = 'red-string-spool'; spool.position.copy(SPOOL_POS); world.add(spool)
   for (const y of [.036, .56]) add(new THREE.CylinderGeometry(.30, .30, .07, 40), mapleLight, [0, y, 0], spool)
   add(new THREE.CylinderGeometry(.12, .12, .49, 24), maple, [0, .29, 0], spool)
-  add(new THREE.CylinderGeometry(.242, .242, .43, 40), red, [0, .30, 0], spool)
-  for (let i = 0; i < 17; i++) {
-    const coil = add(new THREE.TorusGeometry(.244 + Math.sin(i * 1.8) * .004, .017, 7, 40), i % 3 ? redLight : redShade, [0, .097 + i * .025, 0], spool)
-    coil.rotation.x = Math.PI / 2; coil.userData.toonSurface = { outline: false }
-  }
+  const spoolWinding = new THREE.Group(); spoolWinding.name = 'red-string-spool-winding'; spool.add(spoolWinding)
+  add(new THREE.CylinderGeometry(.226, .226, .42, 36), redTwist, [0, .30, 0], spoolWinding)
+  const windingLayer0 = add(createHelicalSpoolLayerGeometry(0, 15, 220, 7), red, [0, 0, 0], spoolWinding, 'red-string-spool-helix-0')
+  const windingLayer1 = add(createHelicalSpoolLayerGeometry(1, 15, 220, 7), redTwist, [0, 0, 0], spoolWinding, 'red-string-spool-helix-1')
+  windingLayer0.userData.toonSurface = windingLayer1.userData.toonSurface = { outline: false, roughness: .92 }
   const spoolHole = add(new THREE.CylinderGeometry(.061, .061, .005, 20), mat(0x9d805e), [0, .598, 0], spool)
   spoolHole.userData.toonSurface = { outline: false }
+
   const holder = new THREE.Group(); holder.name = 'red-string-upright-holder'; holder.position.set(CENTER.x, CENTER.y, -.015); world.add(holder)
   add(new RoundedBoxGeometry(.83, .14, .71, 4, .06), maple, [0, -.91, 0], holder, 'red-string-holder-foot')
   add(new RoundedBoxGeometry(.19, .47, .20, 4, .06), maple, [0, -.66, -.09], holder)
   add(new THREE.TorusGeometry(.63, .125, 14, 72), mapleLight, [0, 0, .11], holder, 'red-string-rounded-upright')
   add(new THREE.TorusGeometry(.64, .055, 10, 72), maple, [0, 0, .255], holder, 'red-string-winding-groove')
   for (const x of [-.25, .25]) add(new THREE.SphereGeometry(.035, 10, 8), brass, [x, -.85, .31], holder)
-  const feed = tube([new THREE.Vector3(-.75, .42, .23), new THREE.Vector3(-.66, .24, .43), new THREE.Vector3(-.32, .215, .49), new THREE.Vector3(.03, .29, .40), arcPoint(0)], .031, red, world, 'red-string-feed')
+
+  // Lazy Rapier soft-body controller for the feed cord (p0) and dangling clasp tail (p1).
+  // Constructor never initializes WASM; active non-reduced start() triggers lazy loading.
+  const cordSim = createRedStringCordSim(red, redTwist, {
+    isActive: active,
+    isReducedMotion: reduced,
+  })
+  const feed = cordSim.feedGroup
+  world.add(feed)
+
   const guides = new THREE.Group(); guides.name = 'red-string-winding-guides'; world.add(guides)
   tube(Array.from({ length: 97 }, (_, i) => arcPoint(i / 96)), .012, cream, guides, 'red-string-guide-track')
   const beads = Array.from({ length: 12 }, (_, i) => add(new THREE.SphereGeometry(.057, 14, 10), cream.clone(), arcPoint((i + 1) / 12), guides, `red-string-guide-${i + 1}`))
+
+  // Seamless continuous 2-strand twisted crimson bracelet built across the 12 arc segments
+  // with identical global-frame boundary vertices/normals and smooth per-segment reveal.
   const ring = new THREE.Group(); ring.name = 'red-string-bracelet'; world.add(ring)
   const strands = Array.from({ length: 12 }, (_, i) => {
-    const mid = (i + .5) / 12, origin = arcPoint(mid)
-    return tube(Array.from({ length: 13 }, (_, j) => arcPoint((i + j / 12) / 12)), .037, i % 2 ? redLight : red, ring,
-      i === 2 ? 'red-string-quiet-strand' : `red-string-strand-${i + 1}`, origin)
+    const origin = arcPoint((i + .5) / 12)
+    const mesh = add(
+      createBraidedBraceletStrandGeometry(i, 0, 12, 22, 10, 24),
+      red,
+      origin,
+      ring,
+      i === 2 ? 'red-string-quiet-strand' : `red-string-strand-${i + 1}`,
+    )
+    mesh.userData.toonSurface = { outline: false, roughness: .91 }
+    return mesh
   })
-  const tip = add(new THREE.SphereGeometry(.082, 20, 14), red, arcPoint(0), world, 'red-string-tip')
+  const twistStrands = Array.from({ length: 12 }, (_, i) => {
+    const origin = arcPoint((i + .5) / 12)
+    const mesh = add(
+      createBraidedBraceletStrandGeometry(i, 1, 12, 22, 10, 24),
+      redTwist,
+      origin,
+      ring,
+      `red-string-twist-strand-${i + 1}`,
+    )
+    mesh.userData.toonSurface = { outline: false, roughness: .92 }
+    return mesh
+  })
+
+  // Crimson whipped cord binding wraps flanking the brass clasp union (visible once wound).
+  const claspWraps = new THREE.Group(); claspWraps.name = 'red-string-clasp-wraps'; ring.add(claspWraps)
+  for (const side of [-1, 1]) {
+    for (let k = 0; k < 3; k++) {
+      const wrap = add(
+        new THREE.TorusGeometry(.038, .0095, 7, 20),
+        k === 1 ? redTwist : red,
+        [SOCKET.x + side * (.112 + k * .018), SOCKET.y + .004, .312],
+        claspWraps,
+        `red-string-socket-wrap-${side > 0 ? 'r' : 'l'}-${k}`,
+      )
+      wrap.rotation.y = Math.PI / 2
+      wrap.userData.toonSurface = { outline: false, roughness: .92 }
+    }
+  }
+
+  // Compact braided stopper-knot tip for dragging the cord end cleanly around the groove.
+  const tip = add(new THREE.SphereGeometry(.062, 20, 14), red, arcPoint(0), world, 'red-string-tip')
+  for (const [rx, ry] of [[-.58, -.42], [.58, .42], [Math.PI * .5, .18]] as const) {
+    const band = add(new THREE.TorusGeometry(.051, .016, 8, 20), redTwist, [0, 0, 0], tip, 'red-string-tip-braid')
+    band.rotation.set(rx, ry, 0)
+    band.userData.toonSurface = { outline: false, roughness: .92 }
+  }
+
   const claspHead = add(new RoundedBoxGeometry(.17, .125, .09, 4, .035), brass, CLASP_HOME, world, 'red-string-clasp-head')
+  // Whipped cord collar seated cleanly at the lower underside entry where the braided tail joins the brass clasp.
+  const headWrap = add(new THREE.TorusGeometry(.024, .0095, 7, 20), redTwist, [-.012, -.058, 0], claspHead, 'red-string-clasp-ferrule')
+  headWrap.rotation.x = Math.PI / 2
+  headWrap.userData.toonSurface = { outline: false, roughness: .92 }
+
   const claspSocket = add(new RoundedBoxGeometry(.20, .14, .1, 4, .035), brass, SOCKET, world, 'red-string-clasp-socket')
-  const tail = new THREE.Group(); tail.name = 'red-string-loose-tail'; world.add(tail)
-  const tailPoints = () => {
-    const start = arcPoint(1), end = claspHead.position.clone()
-    return [start, start.clone().lerp(end, .34).add(new THREE.Vector3(0, -.18, 0)), start.clone().lerp(end, .7).add(new THREE.Vector3(0, -.17, 0)), end]
-  }
-  const tailStrand = tube(tailPoints(), .03, red, tail, 'red-string-clasp-tail')
-  function updateTail() {
-    const geometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(tailPoints()), 16, .03, 8, false)
-    tailStrand.geometry.dispose(); tailStrand.geometry = geometry
-  }
+  const tail = cordSim.tailGroup
+  world.add(tail)
+
   const activeCue = (at: number) => () => active() && !motion && checkpoint === at
   addInteractionCue(tip, { kind: 'drag', label: '沿支架绕红绳', enabled: activeCue(0), destination: () => beads[Math.min(nextBead - 1, 11)].getWorldPosition(new THREE.Vector3()), targetLabel: '沿弧线到这里' })
   addInteractionCue(claspHead, { kind: 'drag', label: '拖扣头收拢', enabled: activeCue(1), destination: claspSocket, targetLabel: '绳环合扣点' })
   addInteractionCue(strands[2], { kind: 'tap', label: '轻点红绳环静看', enabled: activeCue(2) })
   function matrices() { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   function winding(t: number) {
-    strands.forEach((strand, i) => { strand.visible = i < Math.floor(t * 12 + .001) })
-    tip.position.copy(arcPoint(t)); matrices()
+    currentWind = THREE.MathUtils.clamp(t, 0, 1)
+    strands.forEach((strand, i) => {
+      const frac = THREE.MathUtils.clamp(currentWind * 12 - i, 0, 1)
+      const shown = frac > .01
+      strand.visible = shown
+      setBraceletArcReveal(strand.geometry, frac)
+      const twin = twistStrands[i]!
+      twin.visible = shown
+      setBraceletArcReveal(twin.geometry, frac)
+    })
+    spoolWinding.rotation.y = -currentWind * Math.PI * 3.5
+    tip.position.copy(arcPoint(currentWind))
+    matrices()
   }
   function pose() {
     winding(checkpoint === 0 ? 0 : 1)
     tip.visible = checkpoint === 0; guides.visible = checkpoint === 0; feed.visible = checkpoint === 0
     claspHead.visible = checkpoint === 1; claspSocket.visible = checkpoint >= 1; tail.visible = checkpoint === 1
-    claspHead.position.copy(CLASP_HOME); updateTail(); matrices()
+    claspWraps.visible = checkpoint >= 1
+    claspHead.position.copy(CLASP_HOME)
+    cordSim.snap(checkpoint, claspHead.position, currentWind)
+    matrices()
   }
   const ending = createQuietEnding(ctx, { ui, isActive: active, duration: 3, motion: 'glow',
     targets: () => [ring], cancelInput: () => pointer.cancel(), complete: () => finish() })
@@ -151,7 +238,7 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
   const resetDrag = () => { dragging = false; windPath.reset(); nextBead = 1; maxTravel = 0; beads.forEach(bead => (bead.material as THREE.MeshStandardMaterial).color.setHex(0xf2dfbb)); if (!motion) { pose(); sync() } }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
-    canStart(x, y) { matrices(); return !motion && checkpoint < 3 && touch.hit(x, y, checkpoint === 0 ? [tip] : checkpoint === 1 ? [claspHead] : strands) },
+    canStart(x, y) { matrices(); return !motion && checkpoint < 3 && touch.hit(x, y, checkpoint === 0 ? [tip] : checkpoint === 1 ? [claspHead] : [...strands, ...twistStrands]) },
     onStart(x, y) {
       dragging = true; windPath.reset(); nextBead = 1; maxTravel = 0; down.set(x, y); feedback.prepare()
       if (checkpoint === 0) plane.set(new THREE.Vector3(0, 0, 1), -CENTER.z)
@@ -167,6 +254,7 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
         if (!ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) return
         windPath.sample([dragPoint.x, dragPoint.y]); nextBead = windPath.next
         winding(windPath.progress)
+        cordSim.update(0, { checkpoint, claspPos: claspHead.position, windProgress: currentWind, windingActive: true, claspMoving: false })
         beads.forEach((bead, i) => (bead.material as THREE.MeshStandardMaterial).color.setHex(i < nextBead - 1 ? 0x79ac82 : 0xf2dfbb))
         ui.hintEl.dataset.progress = 'true'
         setSafeText(ui.hintEl, windReady(x, y) ? '红绳已绕好，松手即可。' : windPath.progress === 1 ? '红绳已绕好，回到最后一处圆点附近松手。' : sceneTemplate("已绕好 {p0}%，沿浅色圆点继续。", { p0: Math.round(windPath.progress * 100) }), safe)
@@ -174,7 +262,9 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
       } else if (checkpoint === 1 && ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) {
         claspHead.position.copy(dragPoint).add(offset)
         claspHead.position.x = THREE.MathUtils.clamp(claspHead.position.x, -1.3, 1.3)
-        claspHead.position.y = THREE.MathUtils.clamp(claspHead.position.y, .25, 1.9); updateTail(); matrices()
+        claspHead.position.y = THREE.MathUtils.clamp(claspHead.position.y, .25, 1.9)
+        cordSim.update(0, { checkpoint, claspPos: claspHead.position, windProgress: currentWind, windingActive: false, claspMoving: true })
+        matrices()
         if (maxTravel > 0 && !touch.occluded(x,y,claspSocket,{ignore:claspHead}) && placementHit(canvas,camera,claspHead,x,y,(px,py)=>touch.hit(px,py,claspSocket,{ignore:claspHead})) && pointer.finish()) { dragging = false; begin(true,true) }
       }
     },
@@ -182,11 +272,12 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
       if (dragging && checkpoint === 1 && ray.aim(x,y).ray.intersectPlane(plane,dragPoint)) {
         claspHead.position.copy(dragPoint).add(offset)
         claspHead.position.x = THREE.MathUtils.clamp(claspHead.position.x, -1.3, 1.3)
-        claspHead.position.y = THREE.MathUtils.clamp(claspHead.position.y, .25, 1.9); updateTail()
+        claspHead.position.y = THREE.MathUtils.clamp(claspHead.position.y, .25, 1.9)
+        cordSim.update(0, { checkpoint, claspPos: claspHead.position, windProgress: currentWind, windingActive: false, claspMoving: true })
       }
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()
       const valid = Number.isFinite(x) && Number.isFinite(y) && dragging && !motion && (checkpoint === 0 ? windReady(x, y)
-        : checkpoint === 1 ? maxTravel > 0 && !touch.occluded(x,y,claspSocket,{ignore:claspHead}) && placementHit(canvas,camera,claspHead,x,y,(px,py)=>touch.hit(px,py,claspSocket,{ignore:claspHead})) : checkpoint === 2 && maxTravel < 12 && ray.hits(x, y, strands))
+        : checkpoint === 1 ? maxTravel > 0 && !touch.occluded(x,y,claspSocket,{ignore:claspHead}) && placementHit(canvas,camera,claspHead,x,y,(px,py)=>touch.hit(px,py,claspSocket,{ignore:claspHead})) : checkpoint === 2 && maxTravel < 12 && ray.hits(x, y, [...strands, ...twistStrands]))
       dragging = false
       if (valid) { if (checkpoint < 2) begin(true); else finish() } else resetDrag()
     },
@@ -229,6 +320,7 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
       const initial = ctx.initialProgress ?? 0
       checkpoint = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
       pose(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
+      cordSim.start(checkpoint, claspHead.position)
       if (!returning) {
         writer = gestures.createWishWrite({ maxLen: 40, saves: ctx.saveWish !== undefined,
           onSubmit: text => { if (!active() || pointer.isBusy() || motion || checkpoint !== 2 || !text.trim()) return; feedback.prepare(); finish(text) } })
@@ -245,23 +337,36 @@ export function createHongshengRedString(ctx: SceneContext): SceneInstance {
       }
       if (inactiveRendered) { inactiveRendered = false; sync() }
       writer?.setEnabled(checkpoint === 2 && !returning && !motion); writer?.update(dt)
+      const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       if (motion) {
-        const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
         motion.time = reduced() ? 1 : Math.min(1, motion.time + delta / (motion.step === 0 && !motion.guided ? 1.2 : .65))
         const t = smooth(motion.time)
         if (motion.step === 0) {
           if (motion.guided) tip.position.lerpVectors(motion.from, arcPoint(1), t)
           else winding(t)
-        } else { claspHead.position.lerpVectors(motion.from, SOCKET, t); updateTail() }
+        } else {
+          claspHead.position.lerpVectors(motion.from, SOCKET, t)
+        }
         matrices(); if (motion.time === 1) settled()
+      }
+      if (!disposed && active()) {
+        cordSim.update(delta, {
+          checkpoint,
+          claspPos: claspHead.position,
+          windProgress: currentWind,
+          windingActive: (checkpoint === 0 && (dragging || motion?.step === 0)),
+          claspMoving: (checkpoint === 1 && (dragging || motion?.step === 1)),
+        })
       }
       ending.update(dt)
       if (disposed || !active()) return
+      matrices()
       style.render()
     },
     dispose() {
       if (disposed) return
       ending.dispose()
+      cordSim.dispose()
       disposed = true; pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       style.dispose(); disposeTree(scene); Object.values(lights).forEach(l => l.dispose()); renderer.dispose(); renderer.forceContextLoss()

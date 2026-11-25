@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest'
 import * as THREE from 'three'
+import { isRapierLoaded, _resetRapierLoaderForTest } from '@wbr/scene-runtime/rapier-soft-body'
 import {createDiaboloModel} from './model'
 import {disposeTree} from '../procedural-kit'
 
@@ -53,6 +54,79 @@ describe('hollow double-wheel diabolo on a two-stick cord',()=>{
     m.subject.traverse(o=>{if((o as THREE.Mesh).geometry)resources.set(o as THREE.Mesh,(o as THREE.Mesh).geometry)})
     m.pose(3,0);expect(rotor.position.y).toBeLessThan(start-.15);expect(right.position.y).toBeLessThan(hand-.3)
     for(const at of [0,1,2,3])for(const n of [0,.3,.7,1]){m.pose(at,n);for(const [mesh,g] of resources){expect(mesh.geometry).toBe(g);expect(mesh.matrixWorld.elements.every(Number.isFinite)).toBe(true)}}
+    m.dispose()
     disposeTree(m.subject)
+  })
+  it('forms a smooth downward free catenary in mid-flight without a phantom mid-air axle kink',()=>{
+    const m=createDiaboloModel()
+    m.pose(1,.5)
+    // Segment midpoints must form a smooth strictly-convex catenary descending to a single low point
+    // (slightly left of center since right stick is still higher at n=0.5) and rising smoothly to the right tip,
+    // with no sharp V-kink or upward phantom-axle bulge.
+    const ys=Array.from({length:32},(_,i)=>m.subject.getObjectByName('diabolo-cord-'+i)!.position.y)
+    let minIdx=0
+    for(let i=1;i<ys.length;i++) if(ys[i]!<ys[minIdx]!) minIdx=i
+    expect(minIdx).toBeGreaterThanOrEqual(11)
+    expect(minIdx).toBeLessThanOrEqual(20)
+    for(let i=0;i<minIdx;i++) expect(ys[i+1]!).toBeLessThanOrEqual(ys[i]!+1e-6)
+    for(let i=minIdx;i<31;i++) expect(ys[i+1]!).toBeGreaterThanOrEqual(ys[i]!-1e-6)
+    // Positive discrete second derivative along the entire span confirms smooth curved catenary (never straight-line V).
+    for(let i=1;i<31;i++) expect(ys[i-1]!-2*ys[i]!+ys[i+1]!).toBeGreaterThan(1e-4)
+    expect(Math.min(ys[0]!,ys[31]!)-ys[minIdx]!).toBeGreaterThan(.4)
+    m.dispose()
+    disposeTree(m.subject)
+  })
+  it('never loads Rapier WASM on construction or in reduced motion, and simulates dynamic cord motion when active',async()=>{
+    _resetRapierLoaderForTest()
+    const quiet=createDiaboloModel({isReducedMotion:()=>true})
+    expect(isRapierLoaded()).toBe(false)
+    await quiet.startPhysics()
+    expect(isRapierLoaded()).toBe(false)
+    expect(quiet.rapierReady).toBe(false)
+    const snapY=quiet.subject.getObjectByName('diabolo-cord-16')!.position.y
+    expect(quiet.stepPhysics(1/60)).toBe(false)
+    expect(quiet.subject.getObjectByName('diabolo-cord-16')!.position.y).toBe(snapY)
+    quiet.dispose()
+    disposeTree(quiet.subject)
+
+    let active=true, reduced=false
+    const live=createDiaboloModel({isActive:()=>active,isReducedMotion:()=>reduced})
+    expect(isRapierLoaded()).toBe(false)
+    live.pose(1,.5)
+    const analyticMidY=live.subject.getObjectByName('diabolo-cord-16')!.position.y
+    await live.startPhysics()
+    expect(live.rapierReady).toBe(true)
+    for(let i=0;i<24;i++) live.stepPhysics(1/60)
+    const simMidY=live.subject.getObjectByName('diabolo-cord-16')!.position.y
+    expect(Number.isFinite(simMidY)).toBe(true)
+    expect(Math.abs(simMidY-analyticMidY)).toBeGreaterThan(.002)
+    // Verify live Rapier airborne cord remains smooth with no sharp angular bend (max angle between adjacent segments < 22 deg).
+    const dirs=Array.from({length:32},(_,i)=>new THREE.Vector3(0,1,0).applyQuaternion(live.subject.getObjectByName('diabolo-cord-'+i)!.quaternion))
+    for(let i=0;i<31;i++) expect(dirs[i]!.angleTo(dirs[i+1]!)).toBeLessThan(.38)
+
+    // Verify stick-tip pins remain exact (< 1e-5) under live Rapier simulation.
+    const v=new THREE.Vector3()
+    for(const [side,index,end] of [['left',0,-.5],['right',31,.5]] as const){
+      const seg=live.subject.getObjectByName('diabolo-cord-'+index)!,stick=live.subject.getObjectByName('diabolo-'+side+'-stick')!
+      const tip=stick.localToWorld(new THREE.Vector3(0,0,-.5));seg.localToWorld(v.set(0,end,0))
+      expect(v.distanceTo(tip)).toBeLessThan(1e-5)
+    }
+
+    // Pause freezes simulation completely.
+    active=false
+    const pausedY=live.subject.getObjectByName('diabolo-cord-16')!.position.y
+    for(let i=0;i<10;i++) live.stepPhysics(1/60)
+    expect(live.subject.getObjectByName('diabolo-cord-16')!.position.y).toBe(pausedY)
+
+    // Runtime reduced toggle snaps back cleanly to analytical pose and stays still.
+    active=true; reduced=true
+    live.stepPhysics(1/60)
+    expect(live.subject.getObjectByName('diabolo-cord-16')!.position.y).toBeCloseTo(analyticMidY, 6)
+    for(let i=0;i<10;i++) live.stepPhysics(1/60)
+    expect(live.subject.getObjectByName('diabolo-cord-16')!.position.y).toBeCloseTo(analyticMidY, 6)
+
+    live.dispose()
+    expect(live.stepPhysics(1/60)).toBe(false)
+    disposeTree(live.subject)
   })
 })

@@ -285,4 +285,54 @@ describe('one connected wool stitch on an original cream and grey swatch', () =>
     expect(freed.size).toBe(resources.size); expect([...freed.values()].every(n => n === 1)).toBe(true); expect(renderer.dispose).toHaveBeenCalledOnce(); expect(renderer.forceContextLoss).toHaveBeenCalledOnce()
     expect(s.overlay.childElementCount).toBe(0); expect(s.host.querySelector('.scene-object-cues')).toBeNull(); for (const o of cued) expect(o.userData.interactionCues).toEqual([])
   })
+  it('sculpts 2-ply twisted wool geometry with finite bounds, interlocking depth and smooth handoff without reallocating dynamic yarn buffers', () => {
+    const s = mount(0)
+    const stitch = s.scene.getObjectByName('wool-stitch-3-3') as THREE.Mesh<THREE.TubeGeometry>
+    const pos = stitch.geometry.getAttribute('position') as THREE.BufferAttribute
+    const norm = stitch.geometry.getAttribute('normal') as THREE.BufferAttribute
+    for (let i = 0; i < pos.count; i++) {
+      expect(Number.isFinite(pos.getX(i))).toBe(true)
+      expect(Number.isFinite(pos.getY(i))).toBe(true)
+      expect(Number.isFinite(pos.getZ(i))).toBe(true)
+      expect(Number.isFinite(norm.getX(i))).toBe(true)
+    }
+    // Verify genuine 2-ply radial modulation around a cross-section ring (not a uniform smooth cylinder).
+    const { tubularSegments, radialSegments, path } = stitch.geometry.parameters
+    const midRing = Math.floor(tubularSegments / 2)
+    const center = path.getPointAt(midRing / tubularSegments)
+    const radii: number[] = []
+    for (let j = 0; j < radialSegments; j++) {
+      const idx = midRing * (radialSegments + 1) + j
+      radii.push(new THREE.Vector3(pos.getX(idx), pos.getY(idx), pos.getZ(idx)).distanceTo(center))
+    }
+    const spread = Math.max(...radii) - Math.min(...radii)
+    expect(spread).toBeGreaterThan(.004)
+    expect(spread).toBeLessThan(.015)
+
+    // Interlocking over/under check: stitch legs rise in front of the dipped crown.
+    const legPt = path.getPointAt(.33), crownPt = path.getPointAt(.5)
+    expect(legPt.z - crownPt.z).toBeGreaterThan(.05)
+
+    // Dynamic yarn & loops update in-place across step 0 and step 1 without reallocating geometries.
+    const working = s.scene.getObjectByName('wool-working-yarn') as THREE.Mesh<THREE.TubeGeometry>
+    const oldLoop = s.scene.getObjectByName('wool-active-old-loop') as THREE.Mesh<THREE.TubeGeometry>
+    const drawnLoop = s.scene.getObjectByName('wool-drawn-loop') as THREE.Mesh<THREE.TubeGeometry>
+    const workingGeo = working.geometry, oldGeo = oldLoop.geometry, drawnGeo = drawnLoop.geometry
+    step(s, 0); step(s, 1)
+    expect(working.geometry).toBe(workingGeo)
+    expect(oldLoop.geometry).toBe(oldGeo)
+    expect(drawnLoop.geometry).toBe(drawnGeo)
+    // At completed draw (p=2), working yarn terminates cleanly at the right needle feed exit instead of looping back to column 8.
+    const needle = s.scene.getObjectByName('wool-right-needle')!
+    const workingEnd = working.geometry.parameters.path.getPoint(1)
+    const needleSeat = new THREE.Vector3(.576, .271, .235)
+    expect(workingEnd.distanceTo(needleSeat)).toBeLessThan(.14)
+    expect(needle.position.distanceTo(new THREE.Vector3(.93, -.15, .235))).toBeLessThan(.001)
+    // Reduced mode keeps identical finite geometry across repeated updates.
+    const r = mount(3, { isReducedMotion: () => true })
+    const rWorking = r.scene.getObjectByName('wool-working-yarn') as THREE.Mesh
+    const snap = Float32Array.from(rWorking.geometry.getAttribute('position').array as Float32Array)
+    r.run(1)
+    expect(Array.from(rWorking.geometry.getAttribute('position').array as Float32Array)).toEqual(Array.from(snap))
+  })
 })

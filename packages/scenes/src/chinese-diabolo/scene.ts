@@ -41,7 +41,10 @@ export function createChineseDiabolo(ctx: SceneContext): SceneInstance {
   const lights = addStageLights(scene, ctx.stage, { sky: 0xeaf4ed, ground: 0xa39c74, key: 0xffedca, rim: 0xd6f3ff, keyPosition: [-3, 5, 4], keyIntensity: 2.0, rimIntensity: .8 })
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3, near: .1, far: 15 })
-  const model = createDiaboloModel(); scene.add(model.subject)
+  const model = createDiaboloModel({
+    isActive: active,
+    isReducedMotion: () => !!ctx.isReducedMotion?.(),
+  }); scene.add(model.subject)
   const rotor = model.subject.getObjectByName('diabolo-rotor')!
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number, repeat = false) => {
@@ -102,8 +105,11 @@ export function createChineseDiabolo(ctx: SceneContext): SceneInstance {
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
-    const next = Math.max(at, motion.step + 1) as Checkpoint, changed = next !== at
+    const finishedStep = motion.step
+    const next = Math.max(at, finishedStep + 1) as Checkpoint, changed = next !== at
     at = next; motion = null; if (at === 3) spin = 0; restore()
+    if (finishedStep === 1 && !ctx.isReducedMotion?.()) model.triggerCatchImpulse()
+    if (at === 3) model.snapToCalmPose()
     withHostCallbacks(() => {
       if (changed) ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [523.25], duration: .09, gain: .003, type: 'sine' })
@@ -140,6 +146,7 @@ export function createChineseDiabolo(ctx: SceneContext): SceneInstance {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
       restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
+      if (!ctx.isReducedMotion?.() && active()) void model.startPhysics()
       ui.actionBtn.addEventListener('click', action); repeatBtn.addEventListener('click', repeatAction); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {
@@ -156,10 +163,13 @@ export function createChineseDiabolo(ctx: SceneContext): SceneInstance {
       } else if ((at === 1 || at === 2) && !pointer.isBusy() && !ctx.isReducedMotion?.()) {
         spin = (spin + delta * 12) % (Math.PI * 2); restore()
       }
+      if (!active()) return
+      if (!pointer.isBusy()) model.stepPhysics(delta)
       if (active()) { matrices(); style.render() }
     },
     dispose() {
       if (disposed) return
+      model.dispose()
       disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action); repeatBtn.removeEventListener('click', repeatAction)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.subject); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')

@@ -15,7 +15,7 @@ import { createToonCloudBackdrop } from "./toon-cloud-backdrop";
 import { createEnvironmentTone, DELIVERY_PALETTE, KOMOREBI_PALETTE } from './environment-tone';
 import type { EnvironmentTone } from './debug-environment-tone';
 import { DEFAULT_ENVIRONMENT_TONE, DEFAULT_GRASS_METHOD } from './environment-defaults';
-import { createKomorebiMeadow } from './komorebi-meadow';
+import { createKomorebiMeadow, decorateMeadowGround } from './komorebi-meadow';
 import type { GrassRenderMethod } from './debug-grass';
 import { createKomorebiSurface } from './komorebi-surface';
 import { createCourtyardStonePath } from './courtyard-stone-path';
@@ -358,7 +358,11 @@ export function createCozyEnvironment(
     grassMethod = next; meadow.mesh.visible = next === 'original';
     if (komorebiMeadow) komorebiMeadow.root.visible = next === 'komorebi';
     grass.map = next === 'komorebi' ? komorebiMeadow!.groundMap : meadow.groundMap;
-    if (next === 'komorebi' && !komorebiGround) { komorebiGround=createKomorebiSurface(); materials.add(komorebiGround); }
+    if (next === 'komorebi' && !komorebiGround) {
+      komorebiGround = decorateMeadowGround(createKomorebiSurface(), komorebiMeadow!.groundStrokes);
+      komorebiGround.name = 'Komorebi meadow ground';
+      materials.add(komorebiGround);
+    }
     if (komorebiGround) {
       komorebiGround.map=komorebiMeadow!.groundMap;
       root.traverse(object=>{

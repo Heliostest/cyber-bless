@@ -8,6 +8,7 @@ import { createEnvironmentTone } from './environment-tone';
 import { createKomorebiSurface } from './komorebi-surface';
 import { createKomorebiMeadow, decorateMeadowGround, meadowCalm } from './komorebi-meadow';
 import { createToonSurfaces } from './toon-surfaces';
+import * as sceneMotion from './scene-motion';
 
 it('offers Komorebi trees through the existing bundled model resolver', () => {
   expect(resolveTreeModelSet('komorebi')).toEqual({ round: 'komorebi/round.glb', cluster: 'komorebi/cluster.glb' });
@@ -69,15 +70,23 @@ it('uses source daylight levels and restores ground material and sky direction f
   const world=createCozyEnvironment(scene,{id:'woodfish',loadSky:async()=>new THREE.DataTexture()})!;await world.ready;
   const renderer={shadowMap:{enabled:false,type:THREE.PCFShadowMap}} as THREE.WebGLRenderer;
   const prepare=()=>world.prepare(renderer,'toon-soft',{advanceMotion:false});prepare();
-  const ground=scene.getObjectByName('meadow-ground') as THREE.Mesh,original=ground.material;
+  const ground=scene.getObjectByName('meadow-ground') as THREE.Mesh,original=ground.material as THREE.MeshPhongMaterial;
   world.setGrassMethod('komorebi');world.setTone('komorebi');prepare();
   expect(ground.material).toBeInstanceOf(THREE.MeshPhongMaterial);
+  expect(original.name).toBe('Komorebi meadow ground');
+  expect(original.customProgramCacheKey()).toBe('komorebi-meadow-ground-v1');
+  const strokes = original.userData.komorebiGroundStrokes as THREE.Texture;
+  expect(strokes).toBeInstanceOf(THREE.DataTexture);
+  expect(strokes.name).toBe('komorebi-ground-strokes');
+  const strokesDispose = vi.spyOn(strokes, 'dispose');
   expect(sky.intensity).toBeCloseTo(.64*Math.PI);expect(sun.intensity).toBeCloseTo(1.12*Math.PI);expect(ambient.intensity).toBe(0);
   expect(sky.position.toArray()).toEqual([.2,1,.3]);
   world.setGrassMethod('original');expect(ground.material).not.toBe(original);
+  expect((ground.material as THREE.MeshStandardMaterial).color.getHex()).toBe(0xffffff);
   const restore=world.captureDefaultGrass();expect(ground.material).toBe(original);restore?.();expect(ground.material).not.toBe(original);
   world.setTone('tiny-delivery');prepare();expect(sky.position).toEqual(direction);
   world.setTone('komorebi');prepare();world.dispose();expect(sky.position).toEqual(direction);
+  expect(strokesDispose).toHaveBeenCalledOnce();
 });
 
 it('switches grass in place, keeps the workbench clear and restores captures', async () => {
@@ -119,9 +128,24 @@ it('calms Komorebi meadow tufts near the workbench and owns disposable ground st
 
   const batch = meadow.root.getObjectByName('komorebi-grass-0') as THREE.InstancedMesh;
   expect(batch.geometry.getAttribute('kmCalm')).toBeInstanceOf(THREE.InstancedBufferAttribute);
+  const ribbonMat = batch.material as THREE.MeshPhongMaterial;
+  expect(ribbonMat.customProgramCacheKey()).toBe('komorebi-meadow-v2');
+  const grassShader = {
+    uniforms: {} as Record<string, { value: unknown }>,
+    vertexShader: '#include <begin_vertex>',
+    fragmentShader: '#include <color_fragment>\n#include <normal_fragment_begin>\n#include <lights_phong_fragment>\nvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\n#include <opaque_fragment>',
+  };
+  ribbonMat.onBeforeCompile(grassShader as never, {} as never);
+  expect(grassShader.vertexShader).toContain('* .045 * kmTip * (1.0 - .55 * kmCalm);');
+  expect(grassShader.uniforms.kmGrassTime?.value).toBe(0);
+  meadow.update(1.25);
+  expect(grassShader.uniforms.kmGrassTime?.value).toBe(1.25);
+  meadow.update(0);
+  expect(grassShader.uniforms.kmGrassTime?.value).toBe(0);
 
   const surface = decorateMeadowGround(createKomorebiSurface(), meadow.groundStrokes);
   expect(surface.customProgramCacheKey()).toBe('komorebi-meadow-ground-v1');
+  expect(surface.userData.komorebiGroundStrokes).toBe(meadow.groundStrokes);
   const shader = {
     uniforms: {} as Record<string, { value: unknown }>,
     vertexShader: '#include <begin_vertex>',
@@ -135,4 +159,35 @@ it('calms Komorebi meadow tufts near the workbench and owns disposable ground st
   meadow.dispose();
   meadow.dispose();
   expect(strokeDispose).toHaveBeenCalledOnce();
+});
+
+it('keeps Komorebi grass static under reduced motion while advancing wind normally when active', async () => {
+  const motion = vi.spyOn(sceneMotion, 'readSceneMotion').mockReturnValue({ active: true, reducedMotion: false });
+  const clock = vi.spyOn(performance, 'now').mockReturnValue(1000);
+  const scene = new THREE.Scene();
+  const world = createCozyEnvironment(scene, { id: 'woodfish', loadSky: async () => new THREE.DataTexture() })!;
+  const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
+  try {
+    await world.ready;
+    const grass = scene.getObjectByName('komorebi-grass-0') as THREE.InstancedMesh;
+    const shader = {
+      uniforms: {} as Record<string, { value: unknown }>,
+      vertexShader: '#include <begin_vertex>',
+      fragmentShader: '#include <color_fragment>\n#include <normal_fragment_begin>\n#include <lights_phong_fragment>\nvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\n#include <opaque_fragment>',
+    };
+    (grass.material as THREE.MeshPhongMaterial).onBeforeCompile(shader as never, {} as never);
+    world.prepare(renderer);
+    clock.mockReturnValue(1030);
+    world.prepare(renderer);
+    expect(shader.uniforms.kmGrassTime?.value).toBeCloseTo(0.03);
+
+    motion.mockReturnValue({ active: true, reducedMotion: true });
+    clock.mockReturnValue(1060);
+    world.prepare(renderer);
+    expect(shader.uniforms.kmGrassTime?.value).toBe(0);
+  } finally {
+    world.dispose();
+    motion.mockRestore();
+    clock.mockRestore();
+  }
 });

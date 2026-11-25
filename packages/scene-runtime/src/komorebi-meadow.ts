@@ -58,6 +58,7 @@ export function decorateMeadowGround(material: THREE.MeshPhongMaterial, strokes:
         vec3 outgoingLight=clamp(`);
   };
   material.customProgramCacheKey = () => 'komorebi-meadow-ground-v1';
+  material.userData.komorebiGroundStrokes = strokes;
   return material;
 }
 
@@ -76,12 +77,12 @@ export function createKomorebiMeadow({ kind, floor, id }: { kind: GardenKind; fl
     shader.vertexShader = 'uniform float kmGrassTime;\nattribute float kmCalm;\nvarying float kmTipCalm;\n' + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', `
       #include <begin_vertex>
-      // Near the workbench, quieter tips keep small props legible; the far meadow is unchanged.
+      // Near the workbench, quieter tips and gentler sway keep small props legible; the far meadow is unchanged.
       kmTipCalm = kmCalm * smoothstep(.04,.22,position.y);
       vec3 kmOrigin = (modelMatrix * instanceMatrix * vec4(0.0,0.0,0.0,1.0)).xyz;
       float kmTip = pow(clamp(position.y / .35,0.0,1.0),2.0);
       transformed.xz += vec2(sin(kmGrassTime*.85+kmOrigin.x*.57+kmOrigin.z*.31),
-        cos(kmGrassTime*.71+kmOrigin.z*.43)) * .045 * kmTip;
+        cos(kmGrassTime*.71+kmOrigin.z*.43)) * .045 * kmTip * (1.0 - .55 * kmCalm);
     `);
     // Preserve the source's upward, soft normals on both sides of each ribbon.
     shader.fragmentShader = 'varying float kmTipCalm;\n' + shader.fragmentShader.replace('#include <normal_fragment_begin>', THREE.ShaderChunk.normal_fragment_begin.replace('normal *= faceDirection;', 'normal *= 1.0;'))

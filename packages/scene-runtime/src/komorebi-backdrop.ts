@@ -30,6 +30,31 @@ function isBackdropRole(value: unknown): value is BackdropRole {
   return typeof value === 'string' && Object.hasOwn(KOMOREBI_BACKDROP_PIGMENTS, value);
 }
 
+const FLOWER_CALIBRATION_ROLES = new Set<BackdropRole>(['flower', 'bloom', 'blossomHeart']);
+
+/**
+ * Soften Kenney flower petal/centre shadows under Komorebi's ambient-free daylight rig:
+ * thin Kenney petals carry many downward normals that otherwise crush too dark against
+ * the dark hemisphere ground. Sunlit faces (light = 1) stay exact; bushes (`foliage`)
+ * and rocks (`stone`) keep the base Komorebi diffuse response.
+ */
+function calibratePropSurface(surface: THREE.MeshPhongMaterial, role: BackdropRole) {
+  if (!FLOWER_CALIBRATION_ROLES.has(role)) return;
+  const compileSurface = surface.onBeforeCompile;
+  surface.onBeforeCompile = (shader, renderer) => {
+    compileSurface.call(surface, shader, renderer);
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <beginnormal_vertex>',
+      '#include <beginnormal_vertex>\nobjectNormal = normalize(vec3(objectNormal.x * 0.55, abs(objectNormal.y) * 0.5 + 0.55, objectNormal.z * 0.55));',
+    );
+    shader.fragmentShader = shader.fragmentShader.replace(
+      'vec3 outgoingLight=clamp(reflectedLight.directDiffuse+reflectedLight.indirectDiffuse,0.0,1.0)*kmPigment',
+      'vec3 outgoingLight=mix(vec3(.38,.44,.48),vec3(1.0),clamp(reflectedLight.directDiffuse+reflectedLight.indirectDiffuse,0.0,1.0))*kmPigment',
+    );
+  };
+  surface.customProgramCacheKey = () => 'komorebi-backdrop-flower-v1';
+}
+
 /**
  * Komorebi daylight paints tagged backdrop materials (`userData.backdropRole`) with the
  * meadow's clamped diffuse response. Their PBR sources are kept and restored for other
@@ -49,6 +74,7 @@ export function createKomorebiBackdrop(root: THREE.Object3D) {
       // An optional linear multiplier (grain, worn edges) owned by the environment, daylight only.
       const detail = source.userData.komorebiDetailMap;
       if (detail instanceof THREE.Texture) surface.map = detail;
+      calibratePropSurface(surface, role);
       surfaces.set(source, surface);
     }
     return surface;
@@ -58,7 +84,7 @@ export function createKomorebiBackdrop(root: THREE.Object3D) {
       if (!(object instanceof THREE.Mesh) || Array.isArray(object.material) || swapped.has(object)) return;
       if (object.userData.stonePath) return;
       const source = object.material, role = source.userData.backdropRole;
-      if (!(source instanceof THREE.MeshStandardMaterial) || !isBackdropRole(role)) return;
+      if (!(source instanceof THREE.MeshStandardMaterial) || source.userData.komorebiPigment || !isBackdropRole(role)) return;
       swapped.set(object, source);
       object.material = surfaceFor(source, role);
     });

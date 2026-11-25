@@ -33,7 +33,13 @@ const CLOTH_ANCHOR: [number, number, number] = [-.50, -.35, .085]
 const CLOTH_NX = 72, CLOTH_NY = 120, CLOTH_W = 1.24, ROD_RADIUS = .073, HALF_THICK = .003
 const FRONT_LEN = .67, BACK_LEN = .49, WRAP_LEN = Math.PI * ROD_RADIUS, TOTAL_LEN = FRONT_LEN + WRAP_LEN + BACK_LEN
 const SIM_NU = 13, SIM_FRONT_NV = 10, SIM_BACK_NV = 8 // 130 + 104 = 234 particles
+const BASIN_UNFOLD_DURATION = .90
+const OVER_ROD_DURATION = .90
 const ease = (t: number) => t * t * (3 - 2 * t)
+const smoothstep01 = (t: number) => {
+  const c = THREE.MathUtils.clamp(t, 0, 1)
+  return c * c * (3 - 2 * c)
+}
 
 function catmullRomWeights(t: number): [number, number, number, number] {
   const t2 = t * t, t3 = t2 * t
@@ -103,17 +109,14 @@ function evalRestingMidsurface(u: number, v: number, isWet: boolean, out: THREE.
   if (s < FRONT_LEN) {
     const d = (FRONT_LEN - s) / FRONT_LEN // 0 at rod tangent, 1 at front bottom hem
     const d13 = Math.pow(d, 1.3), d16 = Math.pow(d, 1.6), d2 = d * d
-    // Broad, clean anime vertical/diagonal drape folds (3-4 asymmetric soft lobes, not a uniform ripple).
     const foldWave =
       .058 * Math.sin(u * Math.PI * 3.1 + .45) +
       .038 * Math.cos(u * Math.PI * 5.0 - .95) +
       .020 * Math.sin(u * Math.PI * 7.0 + 1.85)
     const breeze = isWet ? .042 : .135
-    // Gentle inward fabric softening along sides + subtle sunlit rightward drift.
     const gatherIn = -(u - .5) * (isWet ? .055 : .072) * d13
     const swayX = (isWet ? .020 : .078) * d16 * (.55 + .45 * u)
     const x = xBase + gatherIn + swayX
-    // Graceful diagonal hem sweep: left-center hangs fuller/lower while sunlit right edge lifts softly.
     const diagLift = (isWet ? .022 : .082) * d2 * Math.pow(u, 1.35)
     const foldHem = (isWet ? .022 : .034) * Math.sin(u * Math.PI * 3.1 + .45) * d2
     const y = Math.min(0, -d * FRONT_LEN + diagLift + foldHem)
@@ -130,7 +133,6 @@ function evalRestingMidsurface(u: number, v: number, isWet: boolean, out: THREE.
   const x = xBase + gatherIn + swayX
   const diagLift = (isWet ? .012 : .048) * d2 * Math.pow(u, 1.35)
   const y = Math.min(0, -d * BACK_LEN + diagLift + .018 * Math.sin(u * Math.PI * 3.1 + 1.35) * d2)
-  // On low rinse rest, stay well clear of ceramic basin behind; high on drying rail, lag visibly behind front layer.
   const zBias = isWet ? .024 * d13 : .038 * d16 * (.45 + .65 * u) - .042 * d13 * (1 - u)
   const z = -ROD_RADIUS + zBias + foldWave * d13 * (isWet ? .70 : 1.0)
   return out.set(x, y, z)
@@ -182,7 +184,34 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   Object.values(COPY).forEach(safe)
   let started = false, disposed = false, focused = true, at: Checkpoint = 0, inactiveRendered = false
   let dragging = false, travel = 0, stopResize = () => {}, writer: GestureHandle | null = null
-  let motion: { step: 0 | 1; time: number; from: THREE.Vector3 } | null = null
+  let motion: {
+    step: 0 | 1
+    time: number
+    from: THREE.Vector3
+    startCarryBlend: number
+    startGrabU: number
+    startSwayX: number
+    startSwayZ: number
+    unfoldSpawned?: boolean
+  } | null = null
+  // Product choreography state: basin wet-unfold, pinched air carry, over-rod wrap & optional smoothing.
+  let rodWrapBlend = 1
+  let carryBlend = 0
+  let carryGrabU = 0.16
+  let carrySwayX = 0
+  let carrySwayZ = 0
+  let unfoldAmount = 1 // 0 = gathered emerging from basin, 1 = full width
+  let hungSmoothness = 1 // 0.18 right after hanging onto rail -> 1.0 when smoothed/settled
+  let smoothingPointer = false
+  const smoothLastLocal = new THREE.Vector2()
+  let hasSmoothLast = false
+  const lastDragPos = new THREE.Vector3()
+  // Dirty-render tracking so settled reduced-motion views stay completely idle without redundant WebGL swaps.
+  let renderDirty = true
+  const lastCamPos = new THREE.Vector3(NaN, NaN, NaN), lastCamQuat = new THREE.Quaternion(NaN, NaN, NaN, NaN)
+  let lastCamFov = -1
+  const markDirty = () => { renderDirty = true }
+
   const returning = ctx.returning === true, active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
   const reduced = () => ctx.isReducedMotion?.() ?? false, feedback = createSceneFeedback(ctx)
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: COPY.rinseAction }, safe)
@@ -191,7 +220,7 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   const { scene, renderer } = createWarmStage(canvas)
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const camera = new THREE.PerspectiveCamera(40, 1, .1, 40)
-  const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'bai-indigo-cloth', label: COPY.title }); style.setStyle(CEL_STYLE)
+  const style = createDebugRenderStyle(renderer, scene, camera, { id: ctx.sceneId ?? 'bai-indigo-cloth', label: COPY.title, invalidate: markDirty }); style.setStyle(CEL_STYLE)
   const lights = addStageLights(scene, ctx.stage, { sky: 0xf0efdf, ground: 0xa5ac98, key: 0xffefdc, rim: 0xc6e4ea,
     keyPosition: [-3, 5, 4], keyIntensity: 1.25, rimIntensity: .42 })
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(512, 512)
@@ -215,6 +244,9 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   const basin = add('indigo-rinse-basin', new THREE.LatheGeometry(profile.map(p => new THREE.Vector2(p[0], p[1])), 64), ceramic, [-.78, .04, -.10])
   basin.userData.toonSurface = { outline: false }
   const water = add('indigo-rinse-water', new THREE.CylinderGeometry(.384, .384, .012, 56), createRitualMaterial({ color: 0x749da3, roughness: .24, transparent: true, opacity: .72, depthWrite: false }, { kind: 'water', strength: .3 }), [-.78, .44, -.10]); water.castShadow = false
+  const rippleMat = new THREE.MeshStandardMaterial({ color: 0xdaf0f2, roughness: .25, transparent: true, opacity: .38, depthWrite: false, side: THREE.DoubleSide })
+  const waterRipple = add('indigo-rinse-ripple', new THREE.RingGeometry(.09, .14, 40), rippleMat, [-.78, .451, -.10])
+  waterRipple.rotation.x = -Math.PI / 2; waterRipple.castShadow = false; waterRipple.receiveShadow = false; waterRipple.visible = false
   rod('indigo-rinse-rest', .07, 1.42, [RINSED.x, RINSED.y, RINSED.z])
   for (const x of [-1.45, -.11]) {
     box('indigo-rinse-rest-foot', [.16, .07, .40], [x, .035, .49], walnut)
@@ -246,11 +278,13 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
 
   // ---------------------------------------------------------------------------
   // Precomputed grid tables & scratch buffers for closed 2-manifold writeback.
-  // Preserves exact 72x120 closed topology, vertex colors, and exact rod-wrap radius.
+  // Preserves exact 72x120 closed topology & vertex colors; unlocks top crown
+  // whenever rodWrapBlend < 1 (basin unfold, pinched air carry, over-rod arc).
   // ---------------------------------------------------------------------------
   const layerCount = (CLOTH_NX + 1) * (CLOTH_NY + 1)
   const midGrid = new Float32Array(layerCount * 3)
-  const rowRegion = new Uint8Array(CLOTH_NY + 1) // 0 = front skirt, 1 = rod wrap, 2 = back skirt
+  const rowRegion = new Uint8Array(CLOTH_NY + 1) // 0 = front skirt, 1 = top fold/crown, 2 = back skirt
+  const rowWrapAngle = new Float32Array(CLOTH_NY + 1)
   const rowWrapSin = new Float32Array(CLOTH_NY + 1)
   const rowWrapCos = new Float32Array(CLOTH_NY + 1)
   const frontVTable: (InterpRow | null)[] = new Array(CLOTH_NY + 1).fill(null)
@@ -267,6 +301,7 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
     } else if (s <= FRONT_LEN + WRAP_LEN) {
       rowRegion[j] = 1
       const angle = (s - FRONT_LEN) / ROD_RADIUS
+      rowWrapAngle[j] = angle
       rowWrapSin[j] = Math.sin(angle)
       rowWrapCos[j] = Math.cos(angle)
     } else {
@@ -280,36 +315,153 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   }
 
   const tmpSample = new THREE.Vector3()
+  const tmpCrown = new THREE.Vector3()
   const frontSimCopy = new Float32Array(SIM_NU * SIM_FRONT_NV * 3)
   const backSimCopy = new Float32Array(SIM_NU * SIM_BACK_NV * 3)
+
+  /**
+   * Evaluates the top-fold crown curve for column u in [0, 1] and wrap angle in [0, PI].
+   * - When rodWrapBlend === 1 and carryBlend === 0: exact r = 0.073 wooden-rod wrap.
+   * - When carried in midair (carryBlend > 0, rodWrapBlend < 1): pinches around carryGrabU
+   *   with a collapsed soft cotton fold (r ~ 0.018..0.028) and wet gravity droop — NO hollow rod cylinder!
+   * - When emerging from rinse basin (unfoldAmount < 1): compacts smoothly into a wet gathered bundle.
+   */
+  function evalCrownPoint(u: number, angle: number, out: THREE.Vector3): THREE.Vector3 {
+    const xBase = (u - .5) * CLOTH_W
+    const sAng = Math.sin(angle), cAng = Math.cos(angle)
+    if (rodWrapBlend >= 0.999 && carryBlend <= 0.001 && unfoldAmount >= 0.999) {
+      return out.set(xBase, ROD_RADIUS * sAng, ROD_RADIUS * cAng)
+    }
+    const rodX = xBase, rodY = ROD_RADIUS * sAng, rodZ = ROD_RADIUS * cAng
+
+    // Pinched hand-carry crown around carryGrabU (collapses hollow cylinder into soft folded wet cloth).
+    const grabX = (carryGrabU - .5) * CLOTH_W
+    const dx = xBase - grabX
+    const dNorm = Math.abs(dx) / (CLOTH_W * 0.65)
+    const gatherScale = 1 - 0.34 * carryBlend
+    const pinchR = THREE.MathUtils.lerp(0.028 + 0.010 * Math.min(1, dNorm), ROD_RADIUS, rodWrapBlend)
+    const pinchPeak = 0.072 * Math.exp(-dNorm * dNorm * 4.8)
+    const sideDroop = -0.205 * (1 - Math.exp(-dNorm * dNorm * 2.0))
+    const pleatZ = (0.020 * Math.sin(u * Math.PI * 4.8 + .55) + 0.012 * Math.cos(u * Math.PI * 3.0 - .4)) * Math.min(1, dNorm * 1.4)
+
+    const carryX = grabX + dx * gatherScale + carrySwayX * 0.055 * dNorm
+    const carryY = pinchPeak + sideDroop + pinchR * sAng
+    const carryZ = pinchR * cAng + pleatZ + carrySwayZ * 0.075 * dNorm
+
+    let x = THREE.MathUtils.lerp(rodX, carryX, carryBlend)
+    let y = THREE.MathUtils.lerp(rodY, carryY, carryBlend)
+    let z = THREE.MathUtils.lerp(rodZ, carryZ, carryBlend)
+
+    // When rodWrapBlend < 1 even with carryBlend == 0 (e.g. basin unfold or mid over-rod spread),
+    // keep the crown radius softly folded rather than locked to a wide hollow cylinder.
+    if (carryBlend < 0.999 && rodWrapBlend < 0.999) {
+      const rSoft = THREE.MathUtils.lerp(0.022, ROD_RADIUS, rodWrapBlend)
+      const softY = rSoft * sAng + 0.024 * (1 - rodWrapBlend) * Math.sin(Math.PI * u)
+      const softZ = rSoft * cAng + 0.018 * (1 - rodWrapBlend) * Math.sin(u * Math.PI * 4.0)
+      const wUnwrap = (1 - carryBlend) * (1 - rodWrapBlend)
+      y = THREE.MathUtils.lerp(y, softY, wUnwrap)
+      z = THREE.MathUtils.lerp(z, softZ, wUnwrap)
+    }
+
+    // Basin wet-unfold compression (unfoldAmount 0 -> 1 smoothly fans width out from rinse water).
+    if (unfoldAmount < 0.999) {
+      const uOpen = smoothstep01(unfoldAmount)
+      const wScale = THREE.MathUtils.lerp(0.24, 1.0, uOpen)
+      const wetRipple = (1 - uOpen) * 0.032 * Math.sin(u * Math.PI * 5.0 + 0.4)
+      x *= wScale
+      y = THREE.MathUtils.lerp(y * 0.55 - 0.04 * (1 - Math.sin(Math.PI * u)), y, uOpen)
+      z = z * THREE.MathUtils.lerp(0.42, 1.0, uOpen) + wetRipple
+    }
+    return out.set(x, y, z)
+  }
+
+  /** Authored zero-WASM cloth evaluator for basin unfold, pinched air carry, and resting rod drape. */
+  function evalAuthoredMidsurface(u: number, v: number, isWet: boolean, out: THREE.Vector3): THREE.Vector3 {
+    const s = v * TOTAL_LEN
+    if (rodWrapBlend >= 0.999 && carryBlend <= 0.001 && unfoldAmount >= 0.999) {
+      return evalRestingMidsurface(u, v, isWet, out)
+    }
+    if (s >= FRONT_LEN && s <= FRONT_LEN + WRAP_LEN) {
+      return evalCrownPoint(u, (s - FRONT_LEN) / ROD_RADIUS, out)
+    }
+    const isFront = s < FRONT_LEN
+    const d = isFront ? (FRONT_LEN - s) / FRONT_LEN : (s - FRONT_LEN - WRAP_LEN) / BACK_LEN
+    const len = isFront ? FRONT_LEN : BACK_LEN
+    evalCrownPoint(u, isFront ? 0 : Math.PI, tmpCrown)
+    const cx = tmpCrown.x, cy = tmpCrown.y, cz = tmpCrown.z
+
+    const uOpen = smoothstep01(unfoldAmount)
+    const lenScale = THREE.MathUtils.lerp(0.24, 1.0, uOpen)
+    const d13 = Math.pow(d, 1.3), d16 = Math.pow(d, 1.6)
+    const grabX = (carryGrabU - .5) * CLOTH_W
+    const distGrab = Math.abs((u - .5) * CLOTH_W - grabX) / (CLOTH_W * 0.65)
+    // Fan slightly wider near hem than pinched hand grip while keeping natural wet vertical pleats.
+    const hemFan = (cx - grabX) * (0.20 * d13 * carryBlend)
+    const swayDragX = carrySwayX * (0.14 + 0.24 * d16) * carryBlend
+    const swayDragZ = carrySwayZ * (0.12 + 0.22 * d16) * carryBlend
+    const foldWave = (
+      .042 * Math.sin(u * Math.PI * 3.5 + (isFront ? .45 : 1.35)) +
+      .024 * Math.cos(u * Math.PI * 5.4 - (isFront ? .85 : .25))
+    ) * d13 * THREE.MathUtils.lerp(0.55, 1.05, uOpen)
+    const separation = (isFront ? 1 : -1) * (0.020 + 0.024 * d13) * (1 - rodWrapBlend * 0.45)
+    const x = cx + hemFan + swayDragX
+    const y = cy - d * len * lenScale + 0.024 * Math.sin(u * Math.PI * 3.1) * d * d * uOpen
+    const z = cz + separation + foldWave + swayDragZ + (isFront ? 0.022 : -0.012) * d16 * distGrab * carryBlend
+    return out.set(x, y, z)
+  }
 
   function flushMidGridToClothGeometry() {
     const posAttr = clothGeo.getAttribute('position') as THREE.BufferAttribute
     const clothX = cloth.position.x, clothY = cloth.position.y, clothZ = cloth.position.z
-    const nearBasin = Math.abs(clothX - RINSED.x) < 0.75 && clothY < 1.35
-
-    // Safety clearance against the ceramic basin exterior wall & floor for hanging curtains only
-    // (rod wrap region 1 stays strictly untouched on radius 0.073).
+    const lockedOnRod = rodWrapBlend >= 0.999 && carryBlend <= 0.001 && unfoldAmount >= 0.999
+    const nearBasin = Math.abs(clothX - BASIN_CENTER.x) < 0.85 && clothY < 1.85
     const minLocalY = Math.max(-0.675, 0.095 - clothY)
+
     for (let j = 0; j <= CLOTH_NY; j++) {
       const region = rowRegion[j]!
-      if (region === 1) continue
+      if (lockedOnRod && region === 1) continue
       for (let i = 0; i <= CLOTH_NX; i++) {
         const idx = (j * (CLOTH_NX + 1) + i) * 3
         let lx = midGrid[idx]!, ly = midGrid[idx + 1]!, lz = midGrid[idx + 2]!
         if (ly < minLocalY) ly = minLocalY
-        // Keep hanging curtains safely outside the solid wooden rod cylinder (r = 0.070).
-        if (ly > -0.10 && ly < 0.024) {
-          const r2 = ly * ly + lz * lz
-          const minR = ROD_RADIUS + 0.001
-          if (r2 < minR * minR) {
+
+        if (lockedOnRod) {
+          // Seated on rod: keep front & back curtains strictly outside solid wooden rod cylinder (r = 0.070).
+          if (ly > 0.014) ly = 0.014
+          if (ly > -0.14) {
             const signZ = region === 0 ? 1 : -1
-            const neededZ = Math.sqrt(Math.max(0, minR * minR - ly * ly))
-            lz = signZ * Math.max(Math.abs(lz), neededZ)
+            const minZ = ROD_RADIUS + 0.002
+            if (signZ * lz < minZ && ly > -0.06) lz = signZ * minZ
+            const r2 = ly * ly + lz * lz
+            const minR = ROD_RADIUS + 0.004
+            if (r2 < minR * minR) {
+              const neededZ = Math.sqrt(Math.max(0, minR * minR - ly * ly))
+              lz = signZ * Math.max(Math.abs(lz), neededZ)
+            }
+          }
+        } else {
+          // Unlocked carry / unfold / over-rod: explicit world-space clearance against BOTH wooden rods!
+          const wx = clothX + lx, wy = clothY + ly, wz = clothZ + lz
+          for (const [rodPos, halfLen] of [[RINSED, 0.71], [HUNG, 0.79]] as const) {
+            if (Math.abs(wx - rodPos.x) <= halfLen + 0.02) {
+              const dy = wy - rodPos.y, dz = wz - rodPos.z
+              const r = Math.hypot(dy, dz)
+              const safeR = ROD_RADIUS + 0.005
+              if (r < safeR) {
+                if (region === 1 || dy >= -0.01) {
+                  const targetDy = Math.sqrt(Math.max(0, safeR * safeR - dz * dz))
+                  ly = rodPos.y + Math.max(dy, targetDy) - clothY
+                } else {
+                  const signZ = region === 0 ? 1 : -1
+                  const targetDz = Math.sqrt(Math.max(0, safeR * safeR - dy * dy))
+                  lz = rodPos.z + signZ * Math.max(Math.abs(dz), targetDz) - clothZ
+                }
+              }
+            }
           }
         }
-        // Keep below the top-fold support radius test band (p.y > center.y + 0.025).
-        if (ly > 0.018) ly = 0.018
+
+        // Ceramic basin exterior & rim wall clearance (protects both rinsed pose and entire basin unfold lift!).
         if (nearBasin) {
           const wx = clothX + lx, wy = clothY + ly, wz = clothZ + lz
           const bY = wy - BASIN_CENTER.y
@@ -317,10 +469,19 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
           if (outerR > 0) {
             const dx = wx - BASIN_CENTER.x, dz = wz - BASIN_CENTER.z
             const dist = Math.hypot(dx, dz)
-            const safeR = outerR + 0.022
-            if (dist < safeR) {
-              const targetDz = Math.sqrt(Math.max(0, safeR * safeR - dx * dx))
-              lz = BASIN_CENTER.z + targetDz - clothZ
+            const safeR = outerR + 0.026
+            if (unfoldAmount < 0.25 && dist < 0.34) {
+              // Inside water hollow at start of rise: keep strictly above water surface and inside inner rim.
+              if (wy < 0.43) ly = 0.43 - clothY
+            } else if (dist < safeR) {
+              if (clothY >= 0.92 && bY >= 0.32) {
+                // Lifting high over the basin: clear cleanly above the 0.57m ceramic rim.
+                ly = Math.max(ly, (BASIN_CENTER.y + 0.56) - clothY)
+              } else {
+                // Draped in front of basin: push strictly forward outside the outer ceramic wall.
+                const targetDz = Math.sqrt(Math.max(0, safeR * safeR - dx * dx))
+                lz = BASIN_CENTER.z + targetDz - clothZ
+              }
             }
           }
         }
@@ -336,8 +497,8 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
         const k = j * (CLOTH_NX + 1) + i
         const mx = midGrid[k * 3]!, my = midGrid[k * 3 + 1]!, mz = midGrid[k * 3 + 2]!
         let nx = 0, ny = 0, nz = 1
-        if (region === 1) {
-          // Exact cylindrical radial normal on the wooden rod wrap -> radii stay exactly 0.070..0.076.
+        if (lockedOnRod && region === 1) {
+          // Exact cylindrical radial normal when seated on the wooden rod -> radii stay strictly 0.070..0.076.
           ny = rowWrapSin[j]!
           nz = rowWrapCos[j]!
         } else {
@@ -363,13 +524,14 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   }
 
   let lastRestingWet: boolean | null = null
-  function writeRestingCloth(force = false) {
+  function writeAuthoredCloth(force = false) {
     const isWet = at <= 1
-    if (!force && lastRestingWet === isWet && !physicsStepped) return
+    const isStandardPose = rodWrapBlend >= 0.999 && carryBlend <= 0.001 && unfoldAmount >= 0.999
+    if (!force && isStandardPose && lastRestingWet === isWet && !physicsStepped) return
     for (let j = 0; j <= CLOTH_NY; j++) {
       const v = j / CLOTH_NY
       for (let i = 0; i <= CLOTH_NX; i++) {
-        evalRestingMidsurface(i / CLOTH_NX, v, isWet, tmpSample)
+        evalAuthoredMidsurface(i / CLOTH_NX, v, isWet, tmpSample)
         const k = (j * (CLOTH_NX + 1) + i) * 3
         midGrid[k] = tmpSample.x
         midGrid[k + 1] = tmpSample.y
@@ -377,17 +539,20 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
       }
     }
     flushMidGridToClothGeometry()
-    lastRestingWet = isWet
+    lastRestingWet = isStandardPose ? isWet : null
+    markDirty()
   }
 
   // ---------------------------------------------------------------------------
   // Lazy-loaded Rapier soft-body simulation (234 particles in cloth-local space):
-  // front curtain (13x10) + back curtain (13x8) pinned along rod tangent lines,
-  // with rod/post/basin/floor rigid colliders, sunny verandah breeze & carry inertia.
+  // front curtain (13x10) + back curtain (13x8) pinned along dynamic crown lines,
+  // with KINEMATIC real-world rod/basin/floor colliders, breeze, carry inertia,
+  // over-rod landing swing, and optional smoothing impulses.
   // Never initializes WASM on construction, at entry (p=0), or in reducedMotion.
   // ---------------------------------------------------------------------------
   let frontBody: ReturnType<RapierSoftBodySession['createCloth']> | null = null
   let backBody: ReturnType<RapierSoftBodySession['createCloth']> | null = null
+  let rodCollider: ReturnType<RapierSoftBodySession['addKinematicCylinder']> | null = null
   let basinCollider: ReturnType<RapierSoftBodySession['addKinematicCylinder']> | null = null
   let floorCollider: ReturnType<RapierSoftBodySession['addKinematicBox']> | null = null
   let rapierReady = false
@@ -397,6 +562,8 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   const prevClothPos = new THREE.Vector3().copy(RINSED)
   const prevClothVel = new THREE.Vector3()
   const inertialAccel = new THREE.Vector3()
+  const rotZ90 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2)
+  const rotZ90Like = { x: rotZ90.x, y: rotZ90.y, z: rotZ90.z, w: rotZ90.w }
 
   const pinnedFrontTop: number[] = []
   const pinnedBackTop: number[] = []
@@ -406,8 +573,18 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   }
 
   function syncKinematicColliders() {
+    if (rodCollider) {
+      // Engage the solid wooden rod collider at cloth-local (0,0,0) only once the crown has opened
+      // around the bar (rodWrapBlend >= 0.85). Parking it out of the way while pinched in midair
+      // or cresting prevents the 0.14m cylinder from sweeping up through the pinched skirt and snagging
+      // mid-curtain particles, while flushMidGridToClothGeometry() enforces exact world-space rod clearance.
+      if (rodWrapBlend >= 0.85) {
+        rodCollider.setPose({ x: 0, y: 0, z: 0 }, rotZ90Like)
+      } else {
+        rodCollider.setPose({ x: 0, y: -12, z: 0 }, rotZ90Like)
+      }
+    }
     if (basinCollider) {
-      // Position basin collider in cloth-local space (active near RINSED, parked far away when hung).
       const bx = BASIN_CENTER.x - cloth.position.x
       const by = (BASIN_CENTER.y + 0.25) - cloth.position.y
       const bz = BASIN_CENTER.z - cloth.position.z
@@ -418,7 +595,7 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
     }
   }
 
-  function resetSoftBodiesToRestingPose() {
+  function resetSoftBodiesToCurrentAuthored() {
     const isWet = at <= 1
     if (frontBody && frontBody.isValid()) {
       for (let i = 0; i < SIM_NU; i++) {
@@ -426,7 +603,7 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
         for (let j = 0; j < SIM_FRONT_NV; j++) {
           const d = j / (SIM_FRONT_NV - 1)
           const v = ((1 - d) * FRONT_LEN) / TOTAL_LEN
-          evalRestingMidsurface(u, v, isWet, tmpSample)
+          evalAuthoredMidsurface(u, v, isWet, tmpSample)
           const k = i * SIM_FRONT_NV + j
           frontBody.setParticlePosition(k, { x: tmpSample.x, y: tmpSample.y, z: tmpSample.z })
           frontBody.setParticleVelocity(k, { x: 0, y: 0, z: 0 })
@@ -439,7 +616,7 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
         for (let j = 0; j < SIM_BACK_NV; j++) {
           const d = j / (SIM_BACK_NV - 1)
           const v = (FRONT_LEN + WRAP_LEN + d * BACK_LEN) / TOTAL_LEN
-          evalRestingMidsurface(u, v, isWet, tmpSample)
+          evalAuthoredMidsurface(u, v, isWet, tmpSample)
           const k = i * SIM_BACK_NV + j
           backBody.setParticlePosition(k, { x: tmpSample.x, y: tmpSample.y, z: tmpSample.z })
           backBody.setParticleVelocity(k, { x: 0, y: 0, z: 0 })
@@ -452,36 +629,52 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   function applyClothForces(_session: RapierSoftBodySession, subDt: number) {
     simClock += subDt
     const t = simClock
-    const isWet = at <= 1 && !motion
-    // Sun-drying cotton high on the verandah rail catches a warm diagonal courtyard breeze;
-    // freshly rinsed cotton on the low rest is heavier and drapes with deeper calm gravity pleats.
-    const breezeScale = isWet ? 0.38 : 1.0
+    const isWet = at <= 1 && motion?.step !== 1
+    const isCarrying = carryBlend > 0.05 || rodWrapBlend < 0.95
+    // Freshly hung cloth starts with fuller newly-draped folds (smoothness ~0.2) that open smoothly when stroked.
+    const newlyHungBunch = at === 2 ? (1 - hungSmoothness) : 0
+    const breezeScale = isCarrying ? 0.35 : isWet ? 0.38 : 1.0
 
     if (frontBody && frontBody.isValid()) {
       frontBody.resetForces(false)
+      const pos = frontBody.particlePositions()
       const vel = frontBody.particleVelocities()
       const pMass = Math.max(frontBody.mass() / (SIM_NU * SIM_FRONT_NV), 1e-4)
       for (let i = 0; i < SIM_NU; i++) {
         const u = i / (SIM_NU - 1)
-        const xPin = (u - .5) * CLOTH_W
-        frontBody.setParticleKinematicTarget(i * SIM_FRONT_NV, { x: xPin, y: 0, z: ROD_RADIUS })
+        evalCrownPoint(u, 0, tmpCrown)
+        frontBody.setParticleKinematicTarget(i * SIM_FRONT_NV, { x: tmpCrown.x, y: tmpCrown.y, z: tmpCrown.z })
         for (let j = 1; j < SIM_FRONT_NV; j++) {
           const d = j / (SIM_FRONT_NV - 1)
-          const dRamp = THREE.MathUtils.smoothstep(d, 0.05, 0.90)
+          const dRamp = THREE.MathUtils.smoothstep(d, 0.08, 0.90)
+          const pleatRamp = THREE.MathUtils.smoothstep(d, 0.18, 0.92)
           const k = i * SIM_FRONT_NV + j
           const vx = vel[k * 3]!, vy = vel[k * 3 + 1]!, vz = vel[k * 3 + 2]!
           const phase1 = t * 1.95 - u * 3.6 - d * 2.9
           const phase2 = t * 3.15 - u * 5.8 + d * 2.2
-          // Diagonal courtyard gust: catches the middle-right & corner more strongly while left drapes fuller.
           const gustEnvelope = 0.42 + 0.85 * Math.pow(u, 1.15)
           const windZ = (3.45 + 3.25 * Math.sin(phase1) + 1.35 * Math.cos(phase2)) * breezeScale * dRamp * gustEnvelope
           const windX = (1.65 + 1.85 * Math.cos(phase1 * 0.82 + 0.35)) * breezeScale * dRamp * (0.55 + 0.55 * u)
           const windY = (0.85 + 1.15 * Math.sin(phase1 + 0.45)) * breezeScale * dRamp * Math.pow(u, 1.2)
-          // Sculptural broad vertical cloth pleats so clean anime cel-shading bands read clearly from official view.
-          const pleatZ = (1.95 * Math.sin(u * Math.PI * 3.1 + .45) + 1.25 * Math.cos(u * Math.PI * 5.0 - .95)) * dRamp * (isWet ? 1.15 : 0.95)
-          const fx = windX + inertialAccel.x * dRamp - 1.15 * vx
-          const fy = windY + inertialAccel.y * dRamp - 1.05 * vy
-          const fz = windZ + pleatZ + inertialAccel.z * dRamp - 1.20 * vz
+          const pleatAmp = (isWet ? 1.15 : 0.95) * (1 + 0.65 * newlyHungBunch)
+          const pleatZ = (1.95 * Math.sin(u * Math.PI * 3.1 + .45) + 1.25 * Math.cos(u * Math.PI * 5.0 - .95)) * pleatRamp * pleatAmp
+          // Gentle inward gathering on carried wet cloth or newly-hung creases before smoothing (never pinching at rod tangent!).
+          let gatherFx = 0
+          if (carryBlend > 0.02) {
+            const grabX = (carryGrabU - .5) * CLOTH_W
+            const targetX = grabX + ((u - .5) * CLOTH_W - grabX) * (1 - 0.24 * carryBlend * (1 - 0.35 * d))
+            gatherFx = (targetX - pos[k * 3]!) * 14 * carryBlend * dRamp
+          } else if (newlyHungBunch > 0.01) {
+            gatherFx = -(u - .5) * 1.45 * newlyHungBunch * pleatRamp
+          }
+          // Guide upper front skirt cleanly onto the +Z side of the wooden rod while opening/wrapping.
+          let rodPushZ = 0
+          if (rodWrapBlend > 0.15 && j <= 4 && pos[k * 3 + 2]! < ROD_RADIUS + 0.016) {
+            rodPushZ = (ROD_RADIUS + 0.016 - pos[k * 3 + 2]!) * 75 * rodWrapBlend
+          }
+          const fx = windX + gatherFx + inertialAccel.x * dRamp - 1.25 * vx
+          const fy = windY + inertialAccel.y * dRamp - 1.15 * vy
+          const fz = windZ + pleatZ + rodPushZ + inertialAccel.z * dRamp - 1.25 * vz
           frontBody.addParticleForce(k, { x: pMass * fx, y: pMass * fy, z: pMass * fz }, false)
         }
       }
@@ -489,12 +682,13 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
 
     if (backBody && backBody.isValid()) {
       backBody.resetForces(false)
+      const pos = backBody.particlePositions()
       const vel = backBody.particleVelocities()
       const pMass = Math.max(backBody.mass() / (SIM_NU * SIM_BACK_NV), 1e-4)
       for (let i = 0; i < SIM_NU; i++) {
         const u = i / (SIM_NU - 1)
-        const xPin = (u - .5) * CLOTH_W
-        backBody.setParticleKinematicTarget(i * SIM_BACK_NV, { x: xPin, y: 0, z: -ROD_RADIUS })
+        evalCrownPoint(u, Math.PI, tmpCrown)
+        backBody.setParticleKinematicTarget(i * SIM_BACK_NV, { x: tmpCrown.x, y: tmpCrown.y, z: tmpCrown.z })
         for (let j = 1; j < SIM_BACK_NV; j++) {
           const d = j / (SIM_BACK_NV - 1)
           const dRamp = THREE.MathUtils.smoothstep(d, 0.06, 0.90)
@@ -502,14 +696,104 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
           const vx = vel[k * 3]!, vy = vel[k * 3 + 1]!, vz = vel[k * 3 + 2]!
           const phase1 = t * 1.95 - u * 3.6 - d * 2.6 - 1.05
           const phase2 = t * 3.05 - u * 5.1 + d * 1.8
-          // Sheltered behind the front layer: lags out of phase & billows slightly behind/right so two cloth layers read cleanly!
           const windZ = (isWet ? 0.65 : (-0.75 + 2.35 * Math.sin(phase1) + 0.90 * Math.cos(phase2))) * breezeScale * dRamp
           const windX = (1.35 + 1.45 * Math.cos(phase1 * 0.85 + 0.85)) * breezeScale * dRamp
           const pleatZ = (1.15 * Math.sin(u * Math.PI * 3.1 + 1.35)) * dRamp * (isWet ? 0.75 : 0.95)
-          const fx = windX + inertialAccel.x * dRamp - 1.25 * vx
-          const fy = inertialAccel.y * dRamp - 1.15 * vy
-          const fz = windZ + pleatZ + inertialAccel.z * dRamp - 1.30 * vz
+          let gatherFx = 0
+          if (carryBlend > 0.02) {
+            const grabX = (carryGrabU - .5) * CLOTH_W
+            const targetX = grabX + ((u - .5) * CLOTH_W - grabX) * (1 - 0.24 * carryBlend * (1 - 0.35 * d))
+            gatherFx = (targetX - pos[k * 3]!) * 14 * carryBlend * dRamp
+          }
+          // Guide upper back skirt cleanly onto the -Z side of the wooden rod while opening/wrapping.
+          let rodPushZ = 0
+          if (rodWrapBlend > 0.15 && j <= 4 && pos[k * 3 + 2]! > -(ROD_RADIUS + 0.016)) {
+            rodPushZ = (-(ROD_RADIUS + 0.016) - pos[k * 3 + 2]!) * 75 * rodWrapBlend
+          }
+          const fx = windX + gatherFx + inertialAccel.x * dRamp - 1.30 * vx
+          const fy = inertialAccel.y * dRamp - 1.20 * vy
+          const fz = windZ + pleatZ + rodPushZ + inertialAccel.z * dRamp - 1.35 * vz
           backBody.addParticleForce(k, { x: pMass * fx, y: pMass * fy, z: pMass * fz }, false)
+        }
+      }
+    }
+  }
+
+  /**
+   * Post-substep solver invariant guard: prevents frontBody & backBody from ever crossing or
+   * interlocking inside Rapier during fast carry/over-rod arcs, and keeps upper wrapped rows
+   * monotonically descending so no folded pocket can form inside the soft-body state.
+   */
+  function enforceRapierClothInvariants() {
+    if (!frontBody || !frontBody.isValid() || !backBody || !backBody.isValid()) return
+    const fPos = frontBody.particlePositions()
+    const fVel = frontBody.particleVelocities()
+    const bPos = backBody.particlePositions()
+    const bVel = backBody.particleVelocities()
+    const minSep = THREE.MathUtils.lerp(0.040, 0.036, rodWrapBlend)
+    const minDropF = (FRONT_LEN / (SIM_FRONT_NV - 1)) * 0.48 * rodWrapBlend
+    const minDropB = (BACK_LEN / (SIM_BACK_NV - 1)) * 0.48 * rodWrapBlend
+
+    for (let i = 0; i < SIM_NU; i++) {
+      if (rodWrapBlend > 0.45) {
+        let prevFY = fPos[i * SIM_FRONT_NV * 3 + 1]!
+        for (let j = 1; j < SIM_FRONT_NV; j++) {
+          const k = i * SIM_FRONT_NV + j
+          let x = fPos[k * 3]!, y = fPos[k * 3 + 1]!, z = fPos[k * 3 + 2]!
+          let vx = fVel[k * 3]!, vy = fVel[k * 3 + 1]!, vz = fVel[k * 3 + 2]!
+          let changed = false
+          if (y > prevFY - minDropF) {
+            y = prevFY - minDropF
+            if (vy > 0) vy *= 0.25
+            changed = true
+          }
+          if (j <= 3 && y > -0.18 && z < ROD_RADIUS + 0.008) {
+            z = ROD_RADIUS + 0.008
+            if (vz < 0) vz = 0
+            changed = true
+          }
+          if (changed) {
+            frontBody.setParticlePosition(k, { x, y, z })
+            frontBody.setParticleVelocity(k, { x: vx, y: vy, z: vz })
+          }
+          prevFY = y
+        }
+        let prevBY = bPos[i * SIM_BACK_NV * 3 + 1]!
+        for (let j = 1; j < SIM_BACK_NV; j++) {
+          const k = i * SIM_BACK_NV + j
+          let x = bPos[k * 3]!, y = bPos[k * 3 + 1]!, z = bPos[k * 3 + 2]!
+          let vx = bVel[k * 3]!, vy = bVel[k * 3 + 1]!, vz = bVel[k * 3 + 2]!
+          let changed = false
+          if (y > prevBY - minDropB) {
+            y = prevBY - minDropB
+            if (vy > 0) vy *= 0.25
+            changed = true
+          }
+          if (j <= 3 && y > -0.18 && z > -(ROD_RADIUS + 0.008)) {
+            z = -(ROD_RADIUS + 0.008)
+            if (vz > 0) vz = 0
+            changed = true
+          }
+          if (changed) {
+            backBody.setParticlePosition(k, { x, y, z })
+            backBody.setParticleVelocity(k, { x: vx, y: vy, z: vz })
+          }
+          prevBY = y
+        }
+      }
+
+      // Keep backBody strictly behind frontBody inside the physics world so surface colliders never snag.
+      const fPosCur = frontBody.particlePositions()
+      const bPosCur = backBody.particlePositions()
+      for (let j = 1; j < SIM_BACK_NV; j++) {
+        const jf = Math.min(SIM_FRONT_NV - 1, Math.round((j / (SIM_BACK_NV - 1)) * (BACK_LEN / FRONT_LEN) * (SIM_FRONT_NV - 1)))
+        const frontZ = fPosCur[(i * SIM_FRONT_NV + jf) * 3 + 2]!
+        const kb = i * SIM_BACK_NV + j
+        const bz = bPosCur[kb * 3 + 2]!
+        if (bz > frontZ - minSep) {
+          backBody.setParticlePosition(kb, { x: bPosCur[kb * 3]!, y: bPosCur[kb * 3 + 1]!, z: frontZ - minSep })
+          const bvz = bVel[kb * 3 + 2]!
+          if (bvz > 0) backBody.setParticleVelocity(kb, { x: bVel[kb * 3]!, y: bVel[kb * 3 + 1]!, z: 0 })
         }
       }
     }
@@ -520,21 +804,47 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
     frontSimCopy.set(frontBody.particlePositions())
     backSimCopy.set(backBody.particlePositions())
 
-    // Pin exact rod-tangent top rows & keep front/back curtains cleanly separated by at least 2*HALF_THICK.
+    // Pin top rows to the live dynamic crown (pinched fold in air, exact rod tangent when seated!)
+    // and enforce strict front/back Z separation so the dual curtains never self-intersect.
+    const minSep = THREE.MathUtils.lerp(0.028, 0.022, rodWrapBlend)
     for (let i = 0; i < SIM_NU; i++) {
-      const xPin = (i / (SIM_NU - 1) - .5) * CLOTH_W
+      const u = i / (SIM_NU - 1)
+      evalCrownPoint(u, 0, tmpCrown)
       const kf = i * SIM_FRONT_NV * 3
-      frontSimCopy[kf] = xPin; frontSimCopy[kf + 1] = 0; frontSimCopy[kf + 2] = ROD_RADIUS
-      const kb = i * SIM_BACK_NV * 3
-      backSimCopy[kb] = xPin; backSimCopy[kb + 1] = 0; backSimCopy[kb + 2] = -ROD_RADIUS
+      frontSimCopy[kf] = tmpCrown.x; frontSimCopy[kf + 1] = tmpCrown.y; frontSimCopy[kf + 2] = tmpCrown.z
 
-      // Prevent front & back sheets from ever interpenetrating mid-swing.
+      evalCrownPoint(u, Math.PI, tmpCrown)
+      const kb = i * SIM_BACK_NV * 3
+      backSimCopy[kb] = tmpCrown.x; backSimCopy[kb + 1] = tmpCrown.y; backSimCopy[kb + 2] = tmpCrown.z
+
+      // Keep top-adjacent simulation rows strictly clear of the wooden rod and monotonically descending
+      // when wrapped/seated so landing deceleration or smoothing strokes never fold rows upward over each other.
+      if (rodWrapBlend > 0.5) {
+        const minZ = ROD_RADIUS + 0.004
+        const minDropF = (FRONT_LEN / (SIM_FRONT_NV - 1)) * 0.52 * rodWrapBlend
+        const minDropB = (BACK_LEN / (SIM_BACK_NV - 1)) * 0.52 * rodWrapBlend
+        for (let j = 1; j < SIM_FRONT_NV; j++) {
+          const prevY = frontSimCopy[(i * SIM_FRONT_NV + (j - 1)) * 3 + 1]!
+          const fyIdx = (i * SIM_FRONT_NV + j) * 3 + 1
+          const fzIdx = (i * SIM_FRONT_NV + j) * 3 + 2
+          if (frontSimCopy[fyIdx]! > prevY - minDropF) frontSimCopy[fyIdx] = prevY - minDropF
+          if (j <= 2 && frontSimCopy[fyIdx]! > -0.14 && frontSimCopy[fzIdx]! < minZ) frontSimCopy[fzIdx] = minZ
+        }
+        for (let j = 1; j < SIM_BACK_NV; j++) {
+          const prevY = backSimCopy[(i * SIM_BACK_NV + (j - 1)) * 3 + 1]!
+          const byIdx = (i * SIM_BACK_NV + j) * 3 + 1
+          const bzIdx = (i * SIM_BACK_NV + j) * 3 + 2
+          if (backSimCopy[byIdx]! > prevY - minDropB) backSimCopy[byIdx] = prevY - minDropB
+          if (j <= 2 && backSimCopy[byIdx]! > -0.14 && backSimCopy[bzIdx]! > -minZ) backSimCopy[bzIdx] = -minZ
+        }
+      }
+
       for (let j = 1; j < SIM_BACK_NV; j++) {
         const jf = Math.min(SIM_FRONT_NV - 1, Math.round((j / (SIM_BACK_NV - 1)) * (BACK_LEN / FRONT_LEN) * (SIM_FRONT_NV - 1)))
         const frontZ = frontSimCopy[(i * SIM_FRONT_NV + jf) * 3 + 2]!
         const bIdx = (i * SIM_BACK_NV + j) * 3 + 2
-        if (backSimCopy[bIdx]! > frontZ - 0.022) {
-          backSimCopy[bIdx] = frontZ - 0.022
+        if (backSimCopy[bIdx]! > frontZ - minSep) {
+          backSimCopy[bIdx] = frontZ - minSep
         }
       }
     }
@@ -542,12 +852,13 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
     for (let j = 0; j <= CLOTH_NY; j++) {
       const region = rowRegion[j]!
       if (region === 1) {
-        const ry = ROD_RADIUS * rowWrapSin[j]!, rz = ROD_RADIUS * rowWrapCos[j]!
+        const angle = rowWrapAngle[j]!
         for (let i = 0; i <= CLOTH_NX; i++) {
+          evalCrownPoint(i / CLOTH_NX, angle, tmpCrown)
           const k = (j * (CLOTH_NX + 1) + i) * 3
-          midGrid[k] = (i / CLOTH_NX - .5) * CLOTH_W
-          midGrid[k + 1] = ry
-          midGrid[k + 2] = rz
+          midGrid[k] = tmpCrown.x
+          midGrid[k + 1] = tmpCrown.y
+          midGrid[k + 2] = tmpCrown.z
         }
       } else if (region === 0) {
         const vRow = frontVTable[j]!
@@ -579,14 +890,13 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
     isReducedMotion: reduced,
     onReady(session) {
       if (disposed) return
-      // Fixed cylindrical wooden rod collider along X axis in cloth-local space.
-      const rotZ90 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2)
-      session.addFixedCylinder({ x: 0, y: 0, z: 0 }, 0.068, 1.62, {
-        rotation: { x: rotZ90.x, y: rotZ90.y, z: rotZ90.z, w: rotZ90.w },
+      // Kinematic wooden rod collider tracks actual wooden support in cloth-local space
+      // (zero phantom cylinder during midair carry; real cylindrical collision over the drying rail!).
+      rodCollider = session.addKinematicCylinder({ x: 0, y: 0, z: 0 }, 0.068, 1.62, {
+        rotation: rotZ90Like,
         friction: 0.72,
         restitution: 0.02,
       })
-      // Kinematic rinse-basin & verandah floor colliders updated as cloth moves between rests.
       basinCollider = session.addKinematicCylinder({ x: 0, y: -0.50, z: -0.59 }, 0.48, 0.56, {
         friction: 0.65,
         restitution: 0.02,
@@ -596,8 +906,6 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
         restitution: 0.02,
       })
 
-      // Give the cloth ~5% horizontal fabric fullness in rest edges while pinning top row across CLOTH_W,
-      // and use tensionOnly:true so the broad pinned cotton forms graceful vertical/diagonal folds without stiffness.
       const simWidth = CLOTH_W * 1.05
       frontBody = session.createCloth({
         origin: { x: -simWidth / 2, y: 0, z: ROD_RADIUS },
@@ -641,9 +949,10 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
       prevClothPos.copy(cloth.position)
       prevClothVel.set(0, 0, 0)
       inertialAccel.set(0, 0, 0)
-      resetSoftBodiesToRestingPose()
-      if (!reduced() && at >= 1) {
-        host.settle(42, applyClothForces)
+      resetSoftBodiesToCurrentAuthored()
+      const clothActive = at >= 1 || (motion?.step === 0 && motion.time >= 0.30)
+      if (!reduced() && clothActive) {
+        if (!motion) host.settle(42, applyClothForces)
         physicsStepped = true
         writeClothFromRapier()
       }
@@ -651,68 +960,201 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   })
 
   function ensureRapierStarted() {
-    if (!started || disposed || at < 1 || reduced()) return
+    const clothActive = at >= 1 || (motion?.step === 0 && motion.time >= 0.30)
+    if (!started || disposed || !clothActive || reduced()) return
     void host.start()
   }
 
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const restore = (reseedPhysics = true) => {
+  const clearHandlingState = (seatedSmoothness = 1) => {
+    rodWrapBlend = 1
+    carryBlend = 0
+    carrySwayX = 0
+    carrySwayZ = 0
+    unfoldAmount = 1
+    hungSmoothness = seatedSmoothness
+    smoothingPointer = false
+    hasSmoothLast = false
+    bundle.scale.set(1, 1, 1)
+    waterRipple.visible = false
+  }
+  const restore = (reseedPhysics = true, seatedSmoothness = 1) => {
+    clearHandlingState(seatedSmoothness)
     bundle.position.copy(BUNDLE_HOME); bundle.visible = at === 0
     cloth.visible = at >= 1; cloth.position.copy(at >= 2 ? HUNG : RINSED)
     prevClothPos.copy(cloth.position); prevClothVel.set(0, 0, 0); inertialAccel.set(0, 0, 0)
+    lastDragPos.copy(cloth.position)
     if (at >= 1) {
       if (reseedPhysics && rapierReady && !reduced()) {
-        resetSoftBodiesToRestingPose()
+        resetSoftBodiesToCurrentAuthored()
         host.settle(24, applyClothForces)
         physicsStepped = true
         writeClothFromRapier()
       } else if (!physicsStepped || reduced()) {
         physicsStepped = false
-        writeRestingCloth(true)
+        writeAuthoredCloth(true)
       }
       ensureRapierStarted()
     } else {
-      writeRestingCloth(false)
+      writeAuthoredCloth(false)
     }
     matrices()
+    markDirty()
   }
+
   const enabled = (step: number) => () => active() && !motion && at === step
   addInteractionCue(tiedBody, { kind: 'drag', label: '握住扎布', priority: 3, enabled: enabled(0), destination: water, targetLabel: '漂洗盆' })
   addInteractionCue(body, { kind: 'drag', label: '握住蓝白布边', priority: 3, anchor: CLOTH_ANCHOR, enabled: enabled(1), destination: rail, targetLabel: '木晾杆' })
   addInteractionCue(body, { kind: 'tap', label: '轻点布面静看', priority: 3, anchor: CLOTH_ANCHOR, enabled: enabled(2) })
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), plane = new THREE.Plane(), point = new THREE.Vector3(), offset = new THREE.Vector3()
+  const smoothPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -(HUNG.z + 0.14))
   const moving = () => at === 0 ? bundle : cloth
   const touch = createTouchTarget(canvas, camera, scene), dropFeedback = createDropFeedback(ui.hintEl, safe)
   const visibleHit = (x: number, y: number, targets: THREE.Object3D | THREE.Object3D[], held?: THREE.Object3D) => touch.hit(x, y, targets, { ignore: held })
   const placementReady = (x: number, y: number) => at < 2 && travel > 0
-    // A higher grab on the tied knot can overlap the basin or its rest while
-    // the cloth's contact anchor reaches the water. They are one destination
-    // assembly; unrelated foreground objects still block the carried cloth.
     && !touch.occluded(x, y, at === 0 ? [water, basin, scene.getObjectByName('indigo-rinse-rest')!] : rail, { ignore: moving() })
     && placementHit(canvas, camera, at === 0 ? tiedBody : body, x, y, (px, py) => visibleHit(px, py, at === 0 ? water : rail, moving()), at === 0 ? [0, 0, 0] : CLOTH_ANCHOR)
-  const reset = () => { dropFeedback.clear(); dragging = false; travel = 0; if (!motion) restore(false) }
+
+  function pickClothGrabU(x: number, y: number): number {
+    matrices()
+    const hit = ray.aim(x, y).intersectObject(body, false)[0]
+    if (!hit) return 0.16
+    const local = cloth.worldToLocal(hit.point.clone())
+    return THREE.MathUtils.clamp(local.x / CLOTH_W + 0.5, 0.12, 0.88)
+  }
+
+  function applySmoothingStroke(x: number, y: number) {
+    if (at !== 2 || motion || reduced()) return
+    matrices()
+    if (!ray.aim(x, y).ray.intersectPlane(smoothPlane, point)) return
+    const lx = point.x - cloth.position.x
+    const ly = point.y - cloth.position.y
+    if (Math.abs(lx) > CLOTH_W * 0.62 || ly > 0.08 || ly < -FRONT_LEN - 0.12) {
+      hasSmoothLast = false
+      return
+    }
+    if (!hasSmoothLast) {
+      smoothLastLocal.set(lx, ly)
+      hasSmoothLast = true
+      return
+    }
+    const dx = lx - smoothLastLocal.x
+    const dy = ly - smoothLastLocal.y
+    const dist = Math.hypot(dx, dy)
+    if (dist < 0.008) return
+    const ux = dx / dist, uy = dy / dist
+    const stepGain = Math.min(dist, 0.08) / 0.08
+    hungSmoothness = Math.min(1, hungSmoothness + dist * 0.90)
+    if (rapierReady && frontBody && frontBody.isValid()) {
+      host.wakeUp()
+      const pos = frontBody.particlePositions()
+      const vel = frontBody.particleVelocities()
+      const pMass = Math.max(frontBody.mass() / (SIM_NU * SIM_FRONT_NV), 1e-4)
+      for (let i = 0; i < SIM_NU; i++) {
+        const u = i / (SIM_NU - 1)
+        const restX = (u - 0.5) * CLOTH_W
+        // Leave upper rod-tangent rows (j = 0, 1) untouched and spread gentle tensile smoothing
+        // smoothly down toward the hem so sweeping across the cloth irons creases out cleanly
+        // without creating horizontal/vertical compression buckles.
+        for (let j = 2; j < SIM_FRONT_NV; j++) {
+          const d = j / (SIM_FRONT_NV - 1)
+          const dRamp = THREE.MathUtils.smoothstep(d, 0.16, 0.92)
+          const k = i * SIM_FRONT_NV + j
+          const px = pos[k * 3]!, py = pos[k * 3 + 1]!, pz = pos[k * 3 + 2]!
+          const vx = vel[k * 3]!, vy = vel[k * 3 + 1]!, vz = vel[k * 3 + 2]!
+          const wx = Math.exp(-(((px - lx) / 0.34) ** 2))
+          const wy = py >= ly
+            ? Math.exp(-(((py - ly) / 0.18) ** 2))
+            : Math.exp(-(((ly - py) / 0.48) ** 2))
+          const pressure = wx * wy * stepGain
+          if (pressure > 0.03) {
+            // Smooth tensile straightening: relax lateral bunching toward flat width + tiny follow-through,
+            // monotonically increasing downward tension toward hem (never pushing upper rows into lower rows),
+            // and gentle soft Z ripple settling toward the smooth front hanging plane.
+            const flattenX = THREE.MathUtils.clamp((restX - px) * 1.35, -0.24, 0.24)
+            const dvx = THREE.MathUtils.clamp((ux * 0.18 + flattenX) * dRamp * pressure - vx * 0.12 * pressure, -0.22, 0.22)
+            const dvy = THREE.MathUtils.clamp((Math.min(0.04, uy * 0.06) - 0.10 * dRamp) * dRamp * pressure - vy * 0.12 * pressure, -0.18, 0.06)
+            const targetZ = ROD_RADIUS + 0.022 + 0.018 * dRamp
+            const dvz = THREE.MathUtils.clamp(((targetZ - pz) * 0.65 + 0.06 * dRamp) * pressure - vz * 0.18 * pressure, -0.14, 0.14)
+            frontBody.applyParticleImpulse(
+              k,
+              { x: pMass * dvx, y: pMass * dvy, z: pMass * dvz },
+              true,
+            )
+          }
+        }
+      }
+    }
+    smoothLastLocal.set(lx, ly)
+    markDirty()
+  }
+
+  const reset = () => { dropFeedback.clear(); dragging = false; smoothingPointer = false; hasSmoothLast = false; travel = 0; if (!motion) restore(false) }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (motion || at === 3) return false; matrices(); return visibleHit(x, y, at === 0 ? bundle : body) },
-    onStart(x, y) { dropFeedback.clear(); feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (at === 0 ? tiedBody : body).localToWorld(new THREE.Vector3(...(at === 0 ? [0,0,0] : CLOTH_ANCHOR)))); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
+    onStart(x, y) {
+      dropFeedback.clear(); feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2
+      smoothingPointer = at === 2; hasSmoothLast = false
+      if (at === 1) {
+        carryGrabU = pickClothGrabU(x, y)
+        lastDragPos.copy(cloth.position)
+      }
+      plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (at === 0 ? tiedBody : body).localToWorld(new THREE.Vector3(...(at === 0 ? [0, 0, 0] : CLOTH_ANCHOR))))
+      if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point)
+    },
     onMove(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
+      if (smoothingPointer && at === 2) {
+        if (travel >= 12) applySmoothingStroke(x, y)
+        return
+      }
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
-      moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .22, 2.4); matrices()
+      moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .22, 2.4)
+      if (at === 1) {
+        const dx = cloth.position.x - lastDragPos.x
+        const dz = cloth.position.z - lastDragPos.z
+        lastDragPos.copy(cloth.position)
+        const liftDist = cloth.position.distanceTo(RINSED)
+        const liftFactor = smoothstep01(liftDist / 0.28)
+        carryBlend = Math.max(0.32, liftFactor)
+        rodWrapBlend = 1 - carryBlend
+        if (!reduced()) {
+          carrySwayX = THREE.MathUtils.clamp(carrySwayX * 0.72 - dx * 2.2, -0.45, 0.45)
+          carrySwayZ = THREE.MathUtils.clamp(carrySwayZ * 0.72 - dz * 1.8, -0.40, 0.40)
+        } else {
+          carrySwayX = 0; carrySwayZ = 0
+        }
+        if (!rapierReady || reduced()) writeAuthoredCloth(true)
+        else writeClothFromRapier()
+      }
+      matrices()
+      markDirty()
       dropFeedback.setReady(dragging && placementReady(x, y))
-          if (dragging && at < 2 && placementReady(x, y) && pointer.finish()) { dragging = false; begin(true) }
+      if (dragging && at < 2 && placementReady(x, y) && pointer.finish()) { dragging = false; begin(true) }
     },
     onRelease(x, y) {
       matrices()
-      const valid = at < 2 ? dragging && placementReady(x, y)
-        : at === 2 && travel < 12 - 1e-6 && Math.hypot(x - down.x, y - down.y) < 12 - 1e-6 && visibleHit(x, y, body)
-      dropFeedback.clear(); dragging = false
-      if (valid) { if (at < 2) begin(); else finish() } else reset()
-    }, onCancel: reset,
+      if (at === 2) {
+        const isTap = travel < 12 - 1e-6 && Math.hypot(x - down.x, y - down.y) < 12 - 1e-6 && visibleHit(x, y, body)
+        const didSmooth = smoothingPointer && travel >= 12
+        dropFeedback.clear(); dragging = false; smoothingPointer = false; hasSmoothLast = false
+        if (isTap) finish()
+        else if (!didSmooth) reset()
+        return
+      }
+      const valid = dragging && placementReady(x, y)
+      dropFeedback.clear(); dragging = false; smoothingPointer = false; hasSmoothLast = false
+      if (valid) begin(); else reset()
+    },
+    onCancel: reset,
   })
   const ending = createQuietEnding(ctx, { ui, isActive: active, duration: 3, motion: 'glow',
     targets: () => [cloth], cancelInput: () => pointer.cancel(), complete: () => finish() })
   const sync = () => {
+    markDirty()
+    const phase = at === 3 ? 'done' : motion ? (motion.step === 0 ? 'rinsing' : 'hanging') : at === 0 ? 'bundle' : at === 1 ? (dragging ? 'carrying' : 'rinsed') : 'hung'
+    overlay.dataset.indigoPhase = phase
     dropFeedback.clear()
     ui.renderDots(at, 3); ui.actionBtn.hidden = at === 3; ui.actionBtn.disabled = !active() || !!motion || at === 3
     ui.actionBtn.setAttribute('aria-disabled', String(ui.actionBtn.disabled)); ui.hitLayer.style.pointerEvents = !motion && at < 3 ? 'auto' : 'none'
@@ -725,18 +1167,32 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
     if (!active() || !motion) return
     const prevStep = motion.step
     at = (prevStep + 1) as Checkpoint; motion = null
-    // Preserve live swing momentum when landing from rinse rest onto the drying rail!
-    restore(prevStep === 0 || reduced())
+    // Preserve live swing momentum on drying rail with newly-hung folds ready for optional smoothing!
+    const nextSmoothness = prevStep === 1 && !reduced() ? 0.18 : 1
+    restore(prevStep === 0 || reduced(), nextSmoothness)
     sync(); ctx.onProgress?.(at); if (!active()) return
     feedback.impact({ freqs: [392, 523.25], duration: .19, gain: .012, type: 'triangle' })
   }
-  function begin(arrived = false) { if (!active() || (pointer.isBusy() && !arrived) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
+  function begin(arrived = false) {
+    if (!active() || (pointer.isBusy() && !arrived) || motion || at >= 2) return
+    const step = at as 0 | 1
+    motion = {
+      step,
+      time: 0,
+      from: moving().position.clone(),
+      startCarryBlend: step === 1 ? Math.max(carryBlend, 0.72) : 0,
+      startGrabU: step === 1 ? carryGrabU : 0.5,
+      startSwayX: carrySwayX,
+      startSwayZ: carrySwayZ,
+    }
+    sync()
+    if (reduced()) settle()
+  }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || at !== 2) return
     if (!text.trim() && !ending.completing) return
-    at = 3; restore(false); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()
+    at = 3; restore(false, 1); writer?.dispose(); writer = null; wishSlot.replaceChildren(); sync()
     if (text.trim() && !returning) ctx.saveWish?.(text.trim())
-    // An accepted save and its checkpoint stay atomic across pause, but not disposal.
     if (disposed) return
     ctx.onProgress?.(3)
     if (!active()) return
@@ -745,8 +1201,8 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   }
   const action = () => { if (!active() || pointer.isBusy() || motion || at === 3) return; feedback.prepare(); if (at < 2) begin(); else finish() }
   const blur = () => { focused = false; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
-  const resize = () => { const aspect = sizeStage(canvas, renderer, style, camera); camera.position.set(0, 3.20, 6.05 + portraitBoost(aspect, 9)); camera.lookAt(0, 1.0, .08); matrices() }
-  writeRestingCloth(true); restore(false); sync()
+  const resize = () => { const aspect = sizeStage(canvas, renderer, style, camera); camera.position.set(0, 3.20, 6.05 + portraitBoost(aspect, 9)); camera.lookAt(0, 1.0, .08); matrices(); markDirty() }
+  writeAuthoredCloth(true); restore(false); sync()
   return {
     start() {
       if (started || disposed) return
@@ -768,24 +1224,135 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
         wasReduced = isReduced
         if (isReduced) {
           physicsStepped = false
-          writeRestingCloth(true)
+          clearHandlingState(1)
+          writeAuthoredCloth(true)
         } else if (at >= 1) {
           ensureRapierStarted()
           if (rapierReady) {
             host.wakeUp()
-            resetSoftBodiesToRestingPose()
+            resetSoftBodiesToCurrentAuthored()
           }
         }
+        markDirty()
       }
+      let geometryUpdated = false
       if (motion) {
-        motion.time = isReduced ? 1 : Math.min(1, motion.time + delta / .8); const t = ease(motion.time)
-        if (motion.step === 0) bundle.position.lerpVectors(motion.from, water.position.clone().add(new THREE.Vector3(0, .10, 0)), t)
-        else { cloth.position.lerpVectors(motion.from, HUNG, t); if (!isReduced) cloth.position.y += .10 * Math.sin(Math.PI * t) }
+        const dur = motion.step === 0 ? BASIN_UNFOLD_DURATION : OVER_ROD_DURATION
+        motion.time = isReduced ? 1 : Math.min(1, motion.time + delta / dur)
+        const u = motion.time
+        if (motion.step === 0) {
+          // Continuous basin dip -> lift high out of water -> sweep cleanly over low rest bar (zero basin/bar clip!).
+          const waterTarget = new THREE.Vector3(BASIN_CENTER.x, 0.43, BASIN_CENTER.z)
+          if (u < 0.30) {
+            const p = ease(u / 0.30)
+            bundle.visible = true
+            cloth.visible = false
+            bundle.position.lerpVectors(motion.from, waterTarget, p)
+            bundle.position.y += Math.sin(Math.PI * p) * 0.28
+            const dip = smoothstep01((u - 0.16) / 0.14)
+            bundle.scale.set(1 + 0.14 * dip, 1 - 0.26 * dip, 1 + 0.14 * dip)
+            if (dip > 0.05) {
+              waterRipple.visible = true
+              const rScale = 0.65 + 1.55 * dip
+              waterRipple.scale.set(rScale, rScale, 1)
+              rippleMat.opacity = 0.42 * (1 - 0.3 * dip)
+            }
+          } else {
+            const bundleFade = 1 - smoothstep01((u - 0.30) / 0.12)
+            if (bundleFade > 0.02) {
+              bundle.visible = true
+              bundle.position.copy(waterTarget)
+              bundle.scale.setScalar(bundleFade)
+            } else {
+              bundle.visible = false
+              bundle.scale.set(1, 1, 1)
+            }
+            const rippleFade = 1 - smoothstep01((u - 0.30) / 0.24)
+            waterRipple.visible = rippleFade > 0.02
+            if (waterRipple.visible) {
+              const rScale = 2.2 + 0.9 * (1 - rippleFade)
+              waterRipple.scale.set(rScale, rScale, 1)
+              rippleMat.opacity = 0.30 * rippleFade
+            }
+
+            cloth.visible = true
+            if (u < 0.62) {
+              // Phase 2: Lift straight UP cleanly above the ceramic basin rim (0.57m) & low bar (0.79m) while opening.
+              const lift = smoothstep01((u - 0.30) / 0.32)
+              unfoldAmount = THREE.MathUtils.lerp(0.0, 0.72, lift)
+              carryBlend = 0.44 * smoothstep01(lift)
+              carryGrabU = 0.5
+              rodWrapBlend = 0
+              cloth.position.set(
+                BASIN_CENTER.x,
+                THREE.MathUtils.lerp(0.58, 1.34, lift),
+                THREE.MathUtils.lerp(BASIN_CENTER.z + 0.04, 0.22, lift),
+              )
+            } else {
+              // Phase 3: Carry forward OVER the low wooden bar & wrap cleanly down onto RINSED.
+              const place = smoothstep01((u - 0.62) / 0.38)
+              const startLift = new THREE.Vector3(BASIN_CENTER.x, 1.34, 0.22)
+              const apexLow = new THREE.Vector3(RINSED.x, 1.32, RINSED.z + 0.02)
+              const inv = 1 - place
+              cloth.position.set(
+                inv * inv * startLift.x + 2 * inv * place * apexLow.x + place * place * RINSED.x,
+                inv * inv * startLift.y + 2 * inv * place * apexLow.y + place * place * RINSED.y,
+                inv * inv * startLift.z + 2 * inv * place * apexLow.z + place * place * RINSED.z,
+              )
+              unfoldAmount = THREE.MathUtils.lerp(0.72, 1.0, smoothstep01(place / 0.65))
+              carryBlend = 0.44 * (1 - smoothstep01(place / 0.72))
+              carryGrabU = 0.5
+              rodWrapBlend = smoothstep01((place - 0.48) / 0.52)
+            }
+            if (!motion.unfoldSpawned) {
+              motion.unfoldSpawned = true
+              prevClothPos.copy(cloth.position)
+              prevClothVel.set(0, 0, 0)
+              ensureRapierStarted()
+              if (rapierReady && !isReduced) resetSoftBodiesToCurrentAuthored()
+            }
+            writeAuthoredCloth(true)
+            if (rapierReady && !isReduced && rodWrapBlend > 0.05) {
+              resetSoftBodiesToCurrentAuthored()
+            }
+          }
+          geometryUpdated = true
+        } else {
+          // Over-rod arc & wrap settle: lift gathered cloth OVER the high drying rail, open width, and wrap smoothly down.
+          const arcT = ease(THREE.MathUtils.clamp(u / 0.84, 0, 1))
+          const apex = new THREE.Vector3(
+            THREE.MathUtils.lerp(motion.from.x, HUNG.x, 0.58),
+            Math.max(motion.from.y, HUNG.y) + 0.34,
+            HUNG.z + 0.08,
+          )
+          const inv = 1 - arcT
+          cloth.position.set(
+            inv * inv * motion.from.x + 2 * inv * arcT * apex.x + arcT * arcT * HUNG.x,
+            inv * inv * motion.from.y + 2 * inv * arcT * apex.y + arcT * arcT * HUNG.y,
+            inv * inv * motion.from.z + 2 * inv * arcT * apex.z + arcT * arcT * HUNG.z,
+          )
+          const spreadT = smoothstep01((u - 0.14) / 0.56)
+          const wrapT = smoothstep01((u - 0.52) / 0.34)
+          carryBlend = motion.startCarryBlend * (1 - spreadT)
+          carryGrabU = THREE.MathUtils.lerp(motion.startGrabU, 0.5, spreadT)
+          carrySwayX = motion.startSwayX * (1 - spreadT)
+          carrySwayZ = motion.startSwayZ * (1 - spreadT) + 0.14 * Math.sin(Math.PI * arcT) * (1 - wrapT)
+          rodWrapBlend = wrapT
+          unfoldAmount = 1
+          if (!rapierReady || isReduced) writeAuthoredCloth(true)
+          geometryUpdated = true
+        }
         if (motion.time === 1) settle()
+      }
+      if (!motion && !isReduced && dragging && at === 1) {
+        const damp = Math.exp(-delta * 6)
+        carrySwayX *= damp
+        carrySwayZ *= damp
       }
       ending.update(dt)
       if (disposed || !active()) return
-      if (!isReduced && at >= 1) {
+      const clothCanSimulate = at >= 1 || (motion?.step === 0 && motion.time >= 0.80)
+      if (!isReduced && clothCanSimulate) {
         ensureRapierStarted()
         if (rapierReady && frontBody && backBody && delta > 0) {
           syncKinematicColliders()
@@ -795,29 +1362,39 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
           const ax = THREE.MathUtils.clamp((vx - prevClothVel.x) / delta, -16, 16)
           const ay = THREE.MathUtils.clamp((vy - prevClothVel.y) / delta, -16, 16)
           const az = THREE.MathUtils.clamp((vz - prevClothVel.z) / delta, -16, 16)
-          // Combine aerodynamic air drag (-v) and D'Alembert carry inertia (-a) so carried cloth streams gracefully.
+          const xzLimit = motion ? 5.5 : 10.0
           inertialAccel.set(
-            THREE.MathUtils.clamp(-vx * 2.4 - ax * 0.48, -14, 14),
-            THREE.MathUtils.clamp(-vy * 1.6 - ay * 0.35, -10, 10),
-            THREE.MathUtils.clamp(-vz * 2.4 - az * 0.48, -14, 14),
+            THREE.MathUtils.clamp(-vx * 2.0 - ax * 0.36, -xzLimit, xzLimit),
+            THREE.MathUtils.clamp(-vy * 1.2 - ay * 0.22, -4.5, 1.8),
+            THREE.MathUtils.clamp(-vz * 2.0 - az * 0.36, -xzLimit, xzLimit),
           )
           prevClothPos.copy(cloth.position)
           prevClothVel.set(vx, vy, vz)
-          const stepped = host.step(delta, applyClothForces)
+          const stepped = host.step(delta, applyClothForces, enforceRapierClothInvariants)
           if (stepped) {
             physicsStepped = true
             writeClothFromRapier()
+            geometryUpdated = true
           }
         }
       }
-      if (active()) { matrices(); style.render() }
+      if (active()) {
+        const camChanged = !camera.position.equals(lastCamPos) || !camera.quaternion.equals(lastCamQuat) || camera.fov !== lastCamFov
+        const envPending = !!canvas.dataset.environment && (canvas.dataset.environmentReady !== 'true' || canvas.dataset.treeStatus === 'loading')
+        const needsRender = !isReduced || renderDirty || geometryUpdated || camChanged || envPending || !!motion || dragging || ending.running
+        if (needsRender) {
+          matrices(); style.render()
+          renderDirty = false
+          lastCamPos.copy(camera.position); lastCamQuat.copy(camera.quaternion); lastCamFov = camera.fov
+        }
+      }
     },
     dispose() {
       if (disposed) return
       ending.dispose(); disposed = true
-      frontBody = null; backBody = null; basinCollider = null; floorCollider = null; rapierReady = false; physicsStepped = false
+      frontBody = null; backBody = null; rodCollider = null; basinCollider = null; floorCollider = null; rapierReady = false; physicsStepped = false
       host.dispose()
-      pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage'); delete overlay.dataset.indigoPhase
     },
   }
 }

@@ -154,4 +154,89 @@ describe('Khata supported transfer', () => {
     expect(live.stepPhysics(1 / 60)).toBe(false)
     disposeTree(live.root)
   })
+
+  it('enforces four-palm ellipsoidal clearance, no ground contact, and no neck drape across overlap & handoff', () => {
+    const m = createKhataModel()
+    const pos = m.cloth.geometry.getAttribute('position')
+    const v = new THREE.Vector3()
+    const handWorld = new THREE.Vector3()
+
+    const checkAllFourPalms = (label: string) => {
+      m.root.updateMatrixWorld(true)
+      const hands = [...m.people[0]!.arms.map((a) => a.hand), ...m.people[1]!.arms.map((a) => a.hand)]
+      let minY = Infinity
+      let maxX = -Infinity
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(m.cloth.matrixWorld)
+        expect(Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z), label).toBe(true)
+        minY = Math.min(minY, v.y)
+        maxX = Math.max(maxX, v.x)
+        for (const hand of hands) {
+          hand.getWorldPosition(handWorld)
+          const dx = (v.x - handWorld.x) / 0.069
+          const dy = (v.y - handWorld.y) / 0.047
+          const dz = (v.z - handWorld.z) / 0.055
+          const d2 = dx * dx + dy * dy + dz * dz
+          expect(d2, `${label} vertex ${i} clipped ${hand.name}`).toBeGreaterThan(0.95)
+        }
+      }
+      expect(minY, `${label} ground clearance`).toBeGreaterThan(0.35)
+      // Guest neck sits at x = 0.83 (front face 0.762); scarf must stay strictly hand-held, never draped on neck.
+      expect(maxX, `${label} no neck drape`).toBeLessThan(0.55)
+    }
+
+    // 1. Canonical handoff sweep (overlap occurs around t = 0.20..0.45)
+    for (const t of [0, 0.15, 0.24, 0.30, 0.40, 0.55, 0.75, 1]) {
+      m.pose(2, t)
+      checkAllFourPalms(`pose(2, ${t})`)
+    }
+
+    // 2. Interactive palm handoff sweep + post-arrival settle/withdraw
+    m.pose(2, 0)
+    for (const p of [0.2, 0.5, 0.75, 1.0]) {
+      m.scarf.position.set(0.35 * p, 1.16, 0)
+      m.setInteractiveHandoff(p, 0.012)
+      checkAllFourPalms(`interactive(${p})`)
+    }
+    const handsAtArrival = m.getHandPositions()
+    const fromPos = m.scarf.position.clone()
+    const fromSpan = m.activeSpan
+    for (const t of [0.1, 0.3, 0.55, 0.8, 1.0]) {
+      m.setHandoffSettle(t, fromPos, fromSpan, handsAtArrival.giver, handsAtArrival.guest)
+      checkAllFourPalms(`settle(${t})`)
+    }
+
+    m.dispose()
+    disposeTree(m.root)
+  })
+
+  it('caps giver arm reach during wide drags and deepens center bridge sag under live carry feel', () => {
+    const m = createKhataModel()
+    m.pose(0, 0)
+    const restMidY = (m.cloth.geometry.getAttribute('position') as THREE.BufferAttribute).getY(28 * 2)
+    m.setCarryFeel({ weight: 0.9, gather: -0.02, bridgeSag: 0.022, bridgeBowX: 0.01 })
+    const carryMidY = (m.cloth.geometry.getAttribute('position') as THREE.BufferAttribute).getY(28 * 2)
+    expect(carryMidY).toBeLessThan(restMidY - 0.005)
+
+    // Extreme off-envelope drags stay clamped to natural arm reach, off the ground, and clear of guest neck.
+    const extreme = new THREE.Vector3(1.8, 2.5, 1.2)
+    m.clampCarryPosition(extreme, false)
+    expect(extreme.x).toBeLessThanOrEqual(0.14)
+    expect(extreme.y).toBeLessThanOrEqual(1.32)
+    expect(extreme.y).toBeGreaterThanOrEqual(0.84)
+
+    const lowDrag = new THREE.Vector3(0.95, 0.05, 0)
+    m.clampCarryPosition(lowDrag, true)
+    expect(lowDrag.x).toBeLessThanOrEqual(0.37)
+    expect(lowDrag.y).toBeGreaterThanOrEqual(0.96)
+
+    // Direct setHands reach cap prevents cylindrical arms from over-elongating even on forced far targets.
+    m.people[0]!.setHands([new THREE.Vector3(2.0, 2.0, -1.0), new THREE.Vector3(2.0, 2.0, 1.0)])
+    for (const arm of m.people[0]!.arms) {
+      expect(arm.hand.position.distanceTo(arm.shoulder)).toBeLessThanOrEqual(0.925)
+    }
+
+    m.dispose()
+    disposeTree(m.root)
+  })
 })

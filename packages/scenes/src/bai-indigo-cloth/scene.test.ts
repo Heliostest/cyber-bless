@@ -9,6 +9,7 @@ vi.mock('../quiet-ending', () => ({ createQuietEnding: () => ({
 import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
+import { APP_HIDDEN_SCENE_IDS, builtInScenes, isSceneVisibleInApp } from '../../../core/src/daily-scenes'
 import type { SceneContext, SceneInstance } from '../contract'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 import * as mod from './index'
@@ -438,6 +439,137 @@ describe('physical cloth and owned resources', () => {
     const afterDispose = Array.from(posBuf)
     s.instance.update(1 / 60)
     expect(Array.from(posBuf)).toEqual(afterDispose)
+  })
+  it('keeps bai-indigo-cloth hidden in APP_HIDDEN_SCENE_IDS', () => {
+    expect(APP_HIDDEN_SCENE_IDS).toContain('bai-indigo-cloth')
+    const entry = builtInScenes.find(s => s.id === 'bai-indigo-cloth')
+    expect(entry).toBeDefined()
+    expect(isSceneVisibleInApp(entry!)).toBe(false)
+  })
+  it('transitions from basin dip to wet cloth unfold continuously without an instant bundle/cloth swap', async () => {
+    const { loadRapier } = await import('@wbr/scene-runtime/rapier-soft-body')
+    await loadRapier()
+    const s = mount(0)
+    const bundle = s.scene.getObjectByName('indigo-tied-cloth')!
+    const cloth = s.scene.getObjectByName('indigo-open-cloth')!
+    const body = s.scene.getObjectByName('indigo-cloth-body') as THREE.Mesh
+    const basin = s.scene.getObjectByName('indigo-rinse-basin') as THREE.Mesh<THREE.LatheGeometry>
+    const profile = basin.geometry.parameters.points
+    const countBasinIntrusions = () => {
+      const vertices = body.geometry.getAttribute('position')
+      let intruding = 0
+      for (let v = 0; v < vertices.count; v++) {
+        const p = basin.worldToLocal(body.localToWorld(new THREE.Vector3().fromBufferAttribute(vertices, v)))
+        const radius = Math.hypot(p.x, p.z)
+        let inside = false
+        for (let i = 0, j = profile.length - 1; i < profile.length; j = i++) {
+          const a = profile[i], b = profile[j]
+          if ((a.y > p.y) !== (b.y > p.y) && radius < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x) inside = !inside
+        }
+        if (inside) intruding++
+      }
+      return intruding
+    }
+    expect(bundle.visible).toBe(true)
+    expect(cloth.visible).toBe(false)
+
+    const a = s.point('indigo-bundle-body'), b = s.point('indigo-rinse-water')
+    event(s.hit, 'pointerdown', a); event(s.hit, 'pointermove', b); event(s.hit, 'pointerup', b)
+
+    // Early dip (~0.18s): bundle is still dipping into the basin before wet cloth lifts out.
+    for (let i = 0; i < 7; i++) s.instance.update(0.025)
+    expect(bundle.visible).toBe(true)
+    expect(cloth.visible).toBe(false)
+
+    // Mid unfold (~0.45s): cloth lifts out above the basin rim, narrower than full resting width, with zero basin wall intrusion.
+    for (let i = 0; i < 11; i++) s.instance.update(0.025)
+    expect(cloth.visible).toBe(true)
+    const midBox = new THREE.Box3().setFromObject(body)
+    const widthMid = midBox.max.x - midBox.min.x
+    expect(widthMid).toBeGreaterThan(0.25)
+    expect(widthMid).toBeLessThan(1.05)
+    expect(countBasinIntrusions()).toBe(0)
+
+    // Finishes cleanly within 1.0s budget on the low rinse rest with full unfolded width and zero basin intrusion.
+    for (let i = 0; i < 22; i++) s.instance.update(0.025)
+    expect(s.progress).toEqual([1])
+    expect(cloth.visible).toBe(true)
+    const finalBox = new THREE.Box3().setFromObject(body)
+    expect(finalBox.max.x - finalBox.min.x).toBeGreaterThan(widthMid + 0.15)
+    expect(countBasinIntrusions()).toBe(0)
+    s.instance.dispose()
+  })
+  it('unlocks the rod cylinder during midair carry, arcs over the drying rail, and supports optional smoothing strokes', async () => {
+    const { loadRapier } = await import('@wbr/scene-runtime/rapier-soft-body')
+    await loadRapier()
+    const s = mount(1)
+    const cloth = s.scene.getObjectByName('indigo-open-cloth')!
+    const body = s.scene.getObjectByName('indigo-cloth-body') as THREE.Mesh
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    for (let i = 0; i < 10; i++) s.instance.update(1 / 60)
+
+    const a = s.point('indigo-cloth-body'), b = s.point('indigo-drying-rail')
+    event(s.hit, 'pointerdown', a)
+    event(s.hit, 'pointermove', [a[0] + (b[0] - a[0]) * 0.55, a[1] + (b[1] - a[1]) * 0.55 - 18])
+    for (let i = 0; i < 6; i++) s.instance.update(1 / 60)
+
+    // Midair carried cloth must NOT stay locked to a 1.24m wide flat horizontal rod cylinder!
+    const posAttr = body.geometry.getAttribute('position')
+    let minX = Infinity, maxX = -Infinity
+    let crownMinY = Infinity, crownMaxY = -Infinity
+    const rowLen = 73
+    const crownMidRow = 66 // inside rowRegion === 1
+    for (let i = 0; i < rowLen; i++) {
+      const k = crownMidRow * rowLen + i
+      const x = posAttr.getX(k), y = posAttr.getY(k)
+      expect(Number.isFinite(x) && Number.isFinite(y)).toBe(true)
+      minX = Math.min(minX, x); maxX = Math.max(maxX, x)
+      crownMinY = Math.min(crownMinY, y); crownMaxY = Math.max(crownMaxY, y)
+    }
+    expect(maxX - minX).toBeLessThan(1.06)
+    expect(crownMaxY - crownMinY).toBeGreaterThan(0.08)
+
+    // Finish drag to drying rail and verify the over-rod arc crests cleanly ABOVE HUNG.y (1.90) before wrapping down!
+    event(s.hit, 'pointermove', b); event(s.hit, 'pointerup', b)
+    let peakY = -Infinity
+    for (let i = 0; i < 40; i++) {
+      s.instance.update(0.025)
+      peakY = Math.max(peakY, cloth.position.y)
+    }
+    expect(peakY).toBeGreaterThan(2.04)
+    expect(s.progress).toEqual([2])
+
+    // Optional smoothing stroke (>= 12px drag) across the newly-hung front curtain moves cloth cleanly
+    // without prematurely completing or creating sharp row-inversion buckling folds.
+    const posBuf = body.geometry.getAttribute('position').array
+    const beforeSmooth = Array.from(posBuf)
+    const pL = s.point('indigo-cloth-body', [-0.45, -0.22, 0.14])
+    const pR = s.point('indigo-cloth-body', [0.45, -0.22, 0.14])
+    event(s.hit, 'pointerdown', pL)
+    for (let i = 1; i <= 10; i++) {
+      event(s.hit, 'pointermove', [pL[0] + (pR[0] - pL[0]) * i / 10, pL[1] + (pR[1] - pL[1]) * i / 10])
+      s.instance.update(1 / 60)
+    }
+    event(s.hit, 'pointerup', pR)
+    for (let i = 0; i < 8; i++) s.instance.update(1 / 60)
+    expect(s.progress).toEqual([2])
+    expect(Array.from(posBuf)).not.toEqual(beforeSmooth)
+    // Verify front curtain stays monotonically ordered vertically above the bottom hem clamp with smooth adjacent-row Z transitions.
+    let maxRowJumpZ = 0
+    for (let i = 0; i < rowLen; i++) {
+      for (let j = 2; j <= 56; j++) {
+        const kPrev = (j - 1) * rowLen + i
+        const kCur = j * rowLen + i
+        expect(posAttr.getY(kCur)).toBeGreaterThan(posAttr.getY(kPrev) - 0.005)
+        maxRowJumpZ = Math.max(maxRowJumpZ, Math.abs(posAttr.getZ(kCur) - posAttr.getZ(kPrev)))
+      }
+    }
+    expect(maxRowJumpZ).toBeLessThan(0.03)
+    // A subsequent short tap still finishes cleanly once.
+    tap(s)
+    expect(s.progress).toEqual([2, 3])
+    expect(s.complete).toHaveBeenCalledOnce()
+    s.instance.dispose()
   })
 })
 

@@ -100,7 +100,7 @@ describe('Khata welcoming gift', () => {
     const s=mount()
     expect(s.overlay.querySelector('.scene-title')?.textContent).toBe('白绢迎客')
     expect(s.overlay.querySelector('[aria-label="白绢迎客步骤"]')).not.toBeNull()
-    expect(rendered.metadata).toEqual({id:'tibetan-khata-greeting',label:'白绢迎客'})
+    expect(rendered.metadata).toMatchObject({id:'tibetan-khata-greeting',label:'白绢迎客'})
   })
   it.each([false,true])('lifts and transfers a scarf to the guest, reduced=%s', reduced => {
     const s=mount(0,{isReducedMotion:()=>reduced})
@@ -335,5 +335,34 @@ describe('khata soft-body WASM gating & reduced-motion stillness', () => {
     expect(isRapierLoaded()).toBe(false)
     expect(Array.from(cloth.geometry.getAttribute('position').array)).toEqual(c0)
     expect(Array.from(fringe.geometry.getAttribute('position').array)).toEqual(f0)
+  })
+
+  it('guides the scarf interactively into rising guest palms at step 2 and stays idle without redundant renders in reduced motion', () => {
+    const s = mount(2)
+    const scarf = s.scene.getObjectByName('khata-scarf')!
+    const guestHand = s.scene.getObjectByName('khata-guest-hand-0')!
+    const guestRestY = guestHand.getWorldPosition(new THREE.Vector3()).y
+    const p = s.point('khata-scarf', [0, .025, 0])
+    const [dx, dy] = spatialDelta(s, 2)
+    // Halfway interactive drag raises guest palms live and advances scarf toward guest without premature completion.
+    event(s.hit, 'pointerdown', p)
+    event(s.hit, 'pointermove', [p[0] + dx * 0.65, p[1] + dy * 0.65])
+    expect(s.progress).toEqual([])
+    expect(scarf.position.x).toBeGreaterThan(0.12)
+    expect(guestHand.getWorldPosition(new THREE.Vector3()).y).toBeGreaterThan(guestRestY + 0.15)
+    // Completing drag into guest palms settles to checkpoint 3 cleanly.
+    event(s.hit, 'pointermove', [p[0] + dx, p[1] + dy])
+    event(s.hit, 'pointerup', [p[0] + dx, p[1] + dy])
+    s.run(2.0)
+    expect(s.progress).toEqual([3])
+    s.instance.dispose()
+
+    // Reduced-motion dirty-render gating avoids redundant WebGL draws when settled.
+    const quiet = mount(3, { isReducedMotion: () => true })
+    quiet.instance.update(1 / 60)
+    const callsAfterSettle = rendered.render.mock.calls.length
+    for (let i = 0; i < 20; i++) quiet.instance.update(1 / 60)
+    expect(rendered.render.mock.calls.length).toBe(callsAfterSettle)
+    quiet.instance.dispose()
   })
 })

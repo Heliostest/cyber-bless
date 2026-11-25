@@ -7,7 +7,8 @@
  * Changes: sky depth, viewport-anchored ceiling, open vertical layer spacing,
  * luminous daylight and muted night palettes, depth softness, layer spacing,
  * layered breeze and subtle vertical breathing,
- * motion lifecycle and no input.
+ * motion lifecycle and no input; 2026-11-13: display-referred Komorebi daylight
+ * crests and a cool lower shade beneath each local crest (Komorebi daylight only).
  * The adapted cloud shader retains CC BY-NC-SA 4.0.
  * No commercial permission or author endorsement is implied.
  * Full notice is also bundled in environments/LICENSE.txt.
@@ -30,6 +31,25 @@ const LAYER_STYLES = [
 ];
 // Colour alone changes at night; alpha, contours and fitted spacing stay shared.
 const NIGHT_COLORS = [0x26395f, 0x304569, 0x3c5277, 0x4a6289, 0x5c769d, 0x708eb7];
+// Komorebi daylight has no ACES pass (see komorebi-grade.ts), so the radiances above clip
+// to white there. Display-referred crests keep the near crest near L*95 and the distant
+// bands bluer; beneath each local crest the body turns to a cool base.
+const KOMOREBI_DAY = [
+  { crest: 0xb5d2e8, base: 0xa3bfd8 },
+  { crest: 0xc2dbec, base: 0xa9c4da },
+  { crest: 0xcfe2ef, base: 0xafc8dc },
+  { crest: 0xdae8f1, base: 0xb5ccde },
+  { crest: 0xe4edf1, base: 0xbbd0df },
+  { crest: 0xf0f1ec, base: 0xc2d3df },
+];
+/** Lit crest stays clear for SHADE_START, then reaches the base colour by SHADE_END (CSS px). */
+const SHADE_START = 6, SHADE_END = 42, SHADE_AMOUNT = .82;
+export type ToonCloudDaylight = { color: THREE.Color; shade: THREE.Color; amount: number };
+/** Komorebi's grade first applies pow(x * .97, 1 / 2.2); invert it for a display-referred colour. */
+function komorebiInput(hex: number) {
+  const color = new THREE.Color().setHex(hex, THREE.LinearSRGBColorSpace);
+  return new THREE.Color(color.r ** 2.2 / .97, color.g ** 2.2 / .97, color.b ** 2.2 / .97);
+}
 
 const vertexShader = /* glsl */ `
 varying vec2 vUv;
@@ -51,6 +71,9 @@ uniform float uTopInset;
 uniform float uPixelScale;
 uniform float uSoftness;
 uniform float uOpacity;
+uniform vec3 uShade;
+uniform float uShadeAmount;
+uniform vec2 uShadeRange;
 varying vec2 vUv;
 const float TAU = 6.28318530718;
 float Func(float pX) {
@@ -74,6 +97,23 @@ float Layer(vec2 pQ, float pT) {
   D = min(D,length(C)-FuncR(Xi-1.0+pT/80.0));
   return min(1.0,D);
 }
+// Cyber Bless addition: depth below the local crest of the same contour (baseline and
+// three neighbouring disks), so each band keeps a lit top above a cool base.
+float CrestDepth(vec2 pQ, float pT) {
+  vec2 Qt = 3.5*pQ;
+  pT *= 0.5;
+  Qt.x += pT;
+  float Xi = floor(Qt.x);
+  float Xf = Qt.x-Xi-0.5;
+  float top = Func(Qt.x);
+  for (int k = -1; k <= 1; k++) {
+    float offset = float(k);
+    float radius = FuncR(Xi+offset+pT/80.0);
+    float chord = radius*radius-(Xf-offset)*(Xf-offset);
+    if (chord > 0.0) top = max(top, Func(Xi+offset+0.5)+sqrt(chord));
+  }
+  return top-Qt.y;
+}
 void main() {
   float J = uLayer;
   float layerTime = uTime*${DRIFT_SPEED.toFixed(2)}*(0.5+2.0*J)*(1.0+0.1*sin(226.0*J))+17.0*J;
@@ -85,7 +125,12 @@ void main() {
   float softness = max(uSoftness,3.5/uPixelScale);
   float alpha = 1.0-smoothstep(0.0,max(softness,0.0001),distance);
   if (alpha < 0.001) discard;
-  gl_FragColor = vec4(uColor,alpha*uOpacity);
+  vec3 color = uColor;
+  if (uShadeAmount > 0.0) {
+    float depth = CrestDepth(point,layerTime)*uPixelScale/3.5;
+    color = mix(uColor,uShade,uShadeAmount*smoothstep(uShadeRange.x,uShadeRange.y,depth));
+  }
+  gl_FragColor = vec4(color,alpha*uOpacity);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
@@ -153,11 +198,17 @@ export function createToonCloudBackdrop(palette: "day" | "night" = "day") {
         uOpacity: { value: style.opacity }, uSoftness: { value: 3.5 * style.softness / PIXELS_PER_UNIT },
         uViewport: { value: viewport }, uCeiling: { value: 0 },
         uTopInset: { value: TOP_INSET }, uPixelScale: { value: PIXELS_PER_UNIT },
+        // Off unless the shared environment applies the Komorebi daylight response.
+        uShade: { value: new THREE.Color() }, uShadeAmount: { value: 0 },
+        uShadeRange: { value: new THREE.Vector2(SHADE_START, SHADE_END) },
       },
       vertexShader, fragmentShader,
       transparent: true, depthWrite: false, depthTest: true,
       side: THREE.DoubleSide, premultipliedAlpha: false, fog: false,
     });
+    if (palette === 'day') material.userData.komorebiDaylight = {
+      color: komorebiInput(KOMOREBI_DAY[i].crest), shade: komorebiInput(KOMOREBI_DAY[i].base), amount: SHADE_AMOUNT,
+    } satisfies ToonCloudDaylight;
     const layer = new THREE.Mesh(geometry, material);
     layer.name = `toon-cloud-layer-${i}`;
     // Outline/depth passes may replace the vertex shader with MeshDepthMaterial.

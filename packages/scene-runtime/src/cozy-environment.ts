@@ -19,6 +19,7 @@ import { createKomorebiMeadow } from './komorebi-meadow';
 import type { GrassRenderMethod } from './debug-grass';
 import { createKomorebiSurface } from './komorebi-surface';
 import { createCourtyardStonePath } from './courtyard-stone-path';
+import { createKomorebiBackdrop, type BackdropRole } from './komorebi-backdrop';
 
 import { assetUrl } from './asset-urls';
 import { environmentProfiles } from './environment-profiles';
@@ -77,6 +78,7 @@ export function createCozyEnvironment(
   scene.add(root);
   scene.userData.environmentNight = night;
   const toneSurfaces = createEnvironmentTone(root, night);
+  const calibrated = createKomorebiBackdrop(root);
   let tone: EnvironmentTone = 'original', toneDirty = false;
   let deliveryBackdrop: THREE.DataTexture | undefined;
   let komorebiBackdrop: THREE.DataTexture | undefined;
@@ -89,8 +91,6 @@ export function createCozyEnvironment(
   let meadow: ReturnType<typeof createStylizedMeadow> | undefined;
   let komorebiMeadow: ReturnType<typeof createKomorebiMeadow> | undefined;
   let stonePath: ReturnType<typeof createCourtyardStonePath> | undefined;
-  let gardenPath: THREE.Mesh | undefined;
-  let komorebiSand: THREE.MeshPhongMaterial | undefined;
   let grassMethod: GrassRenderMethod = 'original';
   let treeCanopies: ReturnType<typeof createStylizedTrees> | undefined;
   const originalTrees: THREE.Object3D[] = [];
@@ -119,6 +119,7 @@ export function createCozyEnvironment(
   const grass = makeMaterial(night ? 0x718e82 : 0x90c65b, 'grass');
   let komorebiGround: THREE.MeshPhongMaterial | undefined;
   const sand = makeMaterial(night ? 0x9e9b83 : 0xecdfbd, 'sand');
+  sand.userData.backdropRole = 'sand';
   const wood = makeMaterial(night ? 0xa78e70 : 0xd9b98c, 'wood');
   const trim = makeMaterial(night ? 0x8c846e : 0xbfa07a, 'trim');
   const addMesh = (geometry: THREE.BufferGeometry, material: THREE.Material, x: number, y: number, z: number) => {
@@ -156,6 +157,7 @@ export function createCozyEnvironment(
   if (!night && !coastal) {
     // Two broad meadow silhouettes give depth without adding small visual detail.
     const meadow = makeMaterial(0x86b95c, 'hill'), distantMeadow = makeMaterial(0xa3cb7a, 'distantHill');
+    meadow.userData.backdropRole = 'hill'; distantMeadow.userData.backdropRole = 'distantHill';
     const left = addMesh(new THREE.SphereGeometry(1, 32, 12), meadow, kind === "river" ? -15 : -8, groundY - 1.0, -19);
     left.scale.set(12, 2.1, 6);
     const right = addMesh(new THREE.SphereGeometry(1, 32, 12), distantMeadow, kind === "river" ? 17 : 10, groundY - 1.3, -26);
@@ -189,10 +191,10 @@ export function createCozyEnvironment(
       const hole = new THREE.Path(); hole.absarc(0, 0, 1.36, 0, Math.PI * 2, true); shape.holes.push(hole);
       pathGeometry = new THREE.ShapeGeometry(shape, 48);
     }
-    gardenPath = addMesh(pathGeometry, sand, 0, floor + 0.008, 0);
-    gardenPath.name = "garden-path";
-    gardenPath.rotation.x = -Math.PI / 2;
-    if (!spring) gardenPath.scale.set(1.15, 0.86, 1);
+    const path = addMesh(pathGeometry, sand, 0, floor + 0.008, 0);
+    path.name = "garden-path";
+    path.rotation.x = -Math.PI / 2;
+    if (!spring) path.scale.set(1.15, 0.86, 1);
   }
 
   const propParts = (name: string) => {
@@ -212,14 +214,17 @@ export function createCozyEnvironment(
     }
     return parts;
   };
-  const propMaterial = (name: string, part: Part) => {
+  const propMaterial = (name: string, part: Part, index: number) => {
     const color = new THREE.Color().setRGB(part.color[0], part.color[1], part.color[2]);
+    const backdropRole: BackdropRole = name.startsWith('rock') ? 'stone' : !name.startsWith('flowers') || index === 0 ? 'foliage'
+      : index === 1 ? (name === 'flowers' ? 'flower' : 'bloom') : 'blossomHeart';
     if (name.startsWith("rock")) color.lerp(new THREE.Color(night ? 0x91a9a4 : 0xc3c6aa), 0.72);
     else if (color.g > color.r * 1.1) color.lerp(new THREE.Color(night ? 0x729988 : 0x6fa84c), night ? 0.48 : 0.65);
     else if (name.startsWith("tree")) color.lerp(new THREE.Color(night ? 0xa78e70 : 0xb5906c), 0.65);
     const material = new THREE.MeshStandardMaterial({ color, roughness: 1 });
     if (name.startsWith('rock')) material.userData.environmentRole = 'stone';
     else if (name === 'flowers') material.userData.environmentRole = color.g > color.r * 1.1 ? 'foliage' : 'flower';
+    material.userData.backdropRole = backdropRole;
     materials.add(material);
     return material;
   };
@@ -230,7 +235,7 @@ export function createCozyEnvironment(
     group.scale.setScalar(scale);
     group.rotation.y = rotation;
     models[name].parts.forEach((part, index) => {
-      const mesh = new THREE.Mesh(parts[index], propMaterial(name, part));
+      const mesh = new THREE.Mesh(parts[index], propMaterial(name, part, index));
       mesh.userData.toonSurface = { outline: false, shading: "smooth" };
       mesh.castShadow = mesh.receiveShadow = true;
       group.add(mesh);
@@ -263,12 +268,14 @@ export function createCozyEnvironment(
     const layout = gardenLayout(kind, id).filter(item => id !== "chinowa-kuguri" || Math.abs(item.x) > 7.8 || item.z < -5.5), transform = new THREE.Object3D();
     treePlacements = layout.filter(item => item.model.startsWith('tree-'));
     treeCanopies = createStylizedTrees(treePlacements, groundY);
+    // Daylight's distant broadleaf crowns join the meadow's yellow-green family (not imported or night trees).
+    treeCanopies.root.traverse(object => { if (object.userData.treeRole === 'leaves') object.userData.backdropCanopy = true; });
     originalTrees.push(treeCanopies.root);
     planting.add(treeCanopies.root);
     for (const name of new Set(layout.filter(item => !item.model.startsWith("tree-")).map(item => item.model))) {
       const placements = layout.filter(item => item.model === name), parts = propParts(name);
       models[name].parts.forEach((part, index) => {
-        const mesh = new THREE.InstancedMesh(parts[index], propMaterial(name, part), placements.length);
+        const mesh = new THREE.InstancedMesh(parts[index], propMaterial(name, part, index), placements.length);
         mesh.name = `nature-${name}`;
         mesh.userData.toonSurface = { outline: false, shading: "smooth" };
         mesh.castShadow = mesh.receiveShadow = true;
@@ -318,20 +325,10 @@ export function createCozyEnvironment(
     if (disposed || next === tone) return;
     tone = next;
     stonePath?.setTone(next);
-    if (gardenPath && !night) {
-      if (next === 'komorebi') {
-        if (!komorebiSand) {
-          komorebiSand = createKomorebiSurface();
-          komorebiSand.color.setRGB(0xc2 / 255, 0xb1 / 255, 0x90 / 255);
-          komorebiSand.name = 'Komorebi garden sand pad';
-          materials.add(komorebiSand);
-        }
-        gardenPath.material = komorebiSand;
-      } else {
-        gardenPath.material = sand;
-      }
-    }
+    // Restore PBR sources first, so the shared palette remap also visits them.
+    calibrated.setEnabled(false);
     toneSurfaces.setTone(next); meadow?.setTone(next); komorebiMeadow?.setTone(next);
+    calibrated.setEnabled(next === 'komorebi' && !night);
     if (next === 'tiny-delivery') {
       deliveryBackdrop ??= createSkyBackdrop(clearDay, night, true);
       scene.background = deliveryBackdrop;
@@ -482,6 +479,7 @@ export function createCozyEnvironment(
       restorePreviewShadows();
       hemiDirections.forEach((position,light)=>light.position.copy(position)); hemiDirections.clear();
       root.removeFromParent();
+      calibrated.dispose();
       meadow?.dispose();
       komorebiMeadow?.dispose();
       stonePath?.dispose();

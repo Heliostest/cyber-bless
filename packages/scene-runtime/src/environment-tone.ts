@@ -1,16 +1,19 @@
 import * as THREE from 'three';
 import type { EnvironmentTone } from './debug-environment-tone';
+import type { ToonCloudDaylight } from './toon-cloud-backdrop';
 
 // Art direction inferred from the reference's outdoor screenshots, not extracted assets.
 export const DELIVERY_PALETTE = {
   grass: 0x83bf3b, sand: 0xe5d4ad, wood: 0xc5a076, trim: 0x9d805e,
   hill: 0x71ad3d, distantHill: 0x98c65e, stone: 0xb7b6a0,
-  foliage: 0x63ab38, flower: 0xe9b8a4, horizon: 0x67caff, zenith: 0x248fe6,
+  foliage: 0x63ab38, canopy: 0x63ab38, flower: 0xe9b8a4, horizon: 0x67caff, zenith: 0x248fe6,
 };
 export const KOMOREBI_PALETTE: typeof DELIVERY_PALETTE = {
   grass: 0x74a951, sand: 0xcab68e, wood: 0xaa8968, trim: 0x877663,
   hill: 0x548346, distantHill: 0x8aa980, stone: 0xa4a6b0,
-  foliage: 0x246d4f, flower: 0xe4c5a5, horizon: 0xa3cadb, zenith: 0x6e9fcd,
+  // Daylight's original broadleaf crowns stay PBR-lit; this pigment lands in the meadow's
+  // yellow-green family on screen. Imported, regional and night trees keep `foliage`.
+  foliage: 0x246d4f, canopy: 0x4b6c2c, flower: 0xe4c5a5, horizon: 0xa3cadb, zenith: 0x6e9fcd,
 };
 
 /** Only background-owned surfaces are visited. Source maps and geometry stay owned by their loaders. */
@@ -23,7 +26,7 @@ export function createEnvironmentTone(root: THREE.Group, night = false) {
   function remap(color: THREE.Color, role?: keyof typeof DELIVERY_PALETTE) {
     const green = color.g > color.r * 1.08 && color.g > color.b * 1.1;
     // Pink blossoms and other authored foliage accents keep their identity.
-    if (role === 'foliage' && !green) return color;
+    if ((role === 'foliage' || role === 'canopy') && !green) return color;
     const neutral = Math.max(color.r, color.g, color.b) - Math.min(color.r, color.g, color.b) < .12;
     target.setHex((tone === 'komorebi' ? KOMOREBI_PALETTE : DELIVERY_PALETTE)[role ?? (green ? 'foliage' : neutral ? 'stone' : 'wood')]);
     if (night) target.multiplyScalar(.62);
@@ -43,7 +46,11 @@ export function createEnvironmentTone(root: THREE.Group, night = false) {
           const color = material.uniforms.uColor.value as THREE.Color;
           if (!cloudColors.has(material)) cloudColors.set(material, color.clone());
           color.copy(cloudColors.get(material)!);
-          if (tone !== 'original') color.lerp(new THREE.Color(night ? 0x648093 : 0xfff4d9).multiplyScalar(night ? .7 : 2.4), night ? .3 : .18);
+          // Komorebi daylight has no ACES pass: display-referred crests and a cool base avoid clipping.
+          const daylight = tone === 'komorebi' && !night ? material.userData.komorebiDaylight as ToonCloudDaylight | undefined : undefined;
+          if (material.uniforms.uShadeAmount) material.uniforms.uShadeAmount.value = daylight ? daylight.amount : 0;
+          if (daylight) { color.copy(daylight.color); material.uniforms.uShade.value.copy(daylight.shade); }
+          else if (tone !== 'original') color.lerp(new THREE.Color(night ? 0x648093 : 0xfff4d9).multiplyScalar(night ? .7 : 2.4), night ? .3 : .18);
         }
         if (!(material instanceof THREE.MeshStandardMaterial)) continue;
         if (!colors.has(material)) colors.set(material, material.color.clone());
@@ -68,7 +75,8 @@ export function createEnvironmentTone(root: THREE.Group, night = false) {
       const original = vertices.get(attribute)!;
       for (let i = 0; i < attribute.count; i++) {
         source.fromArray(original, i * attribute.itemSize);
-        if (tone !== 'original' && !(tone === 'komorebi' && surfaces.some(material => material.userData.komorebiPigment))) remap(source, object.userData.treeRole === 'leaves' ? 'foliage' : undefined);
+        const leaves = object.userData.treeRole === 'leaves' ? (object.userData.backdropCanopy ? 'canopy' : 'foliage') : undefined;
+        if (tone !== 'original' && !(tone === 'komorebi' && surfaces.some(material => material.userData.komorebiPigment))) remap(source, leaves);
         attribute.setXYZ(i, source.r, source.g, source.b);
       }
       attribute.needsUpdate = true;

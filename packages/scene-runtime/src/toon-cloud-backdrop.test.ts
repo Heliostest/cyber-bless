@@ -37,4 +37,36 @@ describe("viewport-anchored distant clouds", () => {
     clouds.dispose(); clouds.dispose();
     expect(geometry).toHaveBeenCalledOnce(); expect(material).toHaveBeenCalledOnce();
   });
+
+  it("attaches display-referred Komorebi daylight shade parameters only on day clouds", () => {
+    const day = createToonCloudBackdrop("day");
+    const night = createToonCloudBackdrop("night");
+    try {
+      const dayLayers = day.root.children as THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>[];
+      const nightLayers = night.root.children as THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>[];
+      expect(dayLayers).toHaveLength(6);
+      dayLayers.forEach(layer => {
+        expect(layer.material.uniforms.uShadeAmount?.value).toBe(0);
+        expect(layer.material.uniforms.uShade?.value).toBeInstanceOf(THREE.Color);
+        expect(layer.material.uniforms.uShadeRange?.value).toEqual(new THREE.Vector2(6, 42));
+        const daylight = layer.material.userData.komorebiDaylight;
+        expect(daylight).toBeDefined();
+        expect(daylight.amount).toBeGreaterThan(0);
+        // Base shade stays darker than its sunlit crest on every band.
+        expect(daylight.shade.r).toBeLessThan(daylight.color.r);
+        expect(daylight.shade.g).toBeLessThan(daylight.color.g);
+        expect(daylight.shade.b).toBeLessThan(daylight.color.b);
+      });
+      // Near crest is brighter than the farthest distant crest.
+      expect(dayLayers[5]!.material.userData.komorebiDaylight.color.r)
+        .toBeGreaterThan(dayLayers[0]!.material.userData.komorebiDaylight.color.r);
+      nightLayers.forEach(layer => {
+        expect(layer.material.uniforms.uShadeAmount?.value).toBe(0);
+        expect(layer.material.userData.komorebiDaylight).toBeUndefined();
+      });
+    } finally {
+      day.dispose();
+      night.dispose();
+    }
+  });
 });

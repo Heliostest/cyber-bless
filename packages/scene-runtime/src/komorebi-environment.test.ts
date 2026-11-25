@@ -6,6 +6,7 @@ import { createDebugEnvironmentTone } from './debug-environment-tone';
 import { resolveTreeModelSet } from './tree-models';
 import { createEnvironmentTone } from './environment-tone';
 import { createKomorebiSurface } from './komorebi-surface';
+import { createKomorebiMeadow, decorateMeadowGround, meadowCalm } from './komorebi-meadow';
 import { createToonSurfaces } from './toon-surfaces';
 
 it('offers Komorebi trees through the existing bundled model resolver', () => {
@@ -103,4 +104,35 @@ it('switches grass in place, keeps the workbench clear and restores captures', a
   restore?.(); expect(original.visible).toBe(true);expect(grass.visible).toBe(false);
   world.setGrassMethod('komorebi'); expect(grass.visible).toBe(true);
   world.dispose(); expect(grass.parent).toBeNull();
+});
+
+it('calms Komorebi meadow tufts near the workbench and owns disposable ground strokes', () => {
+  expect(meadowCalm(0, 0)).toBe(1);
+  expect(meadowCalm(2.4, 0)).toBe(1);
+  expect(meadowCalm(6, -10)).toBe(0);
+
+  const meadow = createKomorebiMeadow({ kind: 'garden', floor: 0, id: 'woodfish' });
+  const strokeDispose = vi.spyOn(meadow.groundStrokes, 'dispose');
+  expect(meadow.groundStrokes.name).toBe('komorebi-ground-strokes');
+  expect(meadow.groundStrokes.colorSpace).toBe(THREE.NoColorSpace);
+  expect(meadow.groundStrokes.wrapS).toBe(THREE.RepeatWrapping);
+
+  const batch = meadow.root.getObjectByName('komorebi-grass-0') as THREE.InstancedMesh;
+  expect(batch.geometry.getAttribute('kmCalm')).toBeInstanceOf(THREE.InstancedBufferAttribute);
+
+  const surface = decorateMeadowGround(createKomorebiSurface(), meadow.groundStrokes);
+  expect(surface.customProgramCacheKey()).toBe('komorebi-meadow-ground-v1');
+  const shader = {
+    uniforms: {} as Record<string, { value: unknown }>,
+    vertexShader: '#include <begin_vertex>',
+    fragmentShader: '#include <color_fragment>\n#include <normal_fragment_begin>\n#include <lights_phong_fragment>\nvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\n#include <opaque_fragment>',
+  };
+  surface.onBeforeCompile(shader as never, {} as never);
+  expect(shader.uniforms.kmGroundStrokes?.value).toBe(meadow.groundStrokes);
+  expect(shader.fragmentShader).toContain('kmGroundStrokes');
+
+  surface.dispose();
+  meadow.dispose();
+  meadow.dispose();
+  expect(strokeDispose).toHaveBeenCalledOnce();
 });

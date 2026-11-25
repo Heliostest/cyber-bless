@@ -12,7 +12,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "blang-tea": "86e2a603cd56053da054ab6deeb2150cbe0c6b7939b362e4409e695a901c1a29",
   "bokjori": "6ea60a868250c191b150d8a30a149976b61e40fb402822c9d3563a304d5bedfb",
   "bonfim-ribbon": "dc474e25c12ff4f7ff245bbfd889da114ac903e36b607ffd098cd73d9624afe2",
-  "brat-bride-cloth": "b6222d37de2831655173c665890687604df1a807efed6df985e5f15d75e60fbe",
+  "brat-bride-cloth": "fd3cb7367184477627f39c33a83b1d8fed848e5b971b7c5a8daf8a5ead5ef610",
   "breton-banner": "98c9b74edfbad5201d3530b9c2a844e19370b7da66942d6ca989fc5842842f73",
   "bulgarian-survakane": "cbf3e7b84eb6a984b9f1dfa036d7cb71bc300130604c7297374fa7a8c531e37a",
   "catalan-festival-giant": "a974734bc6879fe984449e49de2749ec127745de458790ff18bf7663f784b7c2",

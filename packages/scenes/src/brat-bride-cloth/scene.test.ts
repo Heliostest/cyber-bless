@@ -182,6 +182,48 @@ describe('Outdoor windowsill cloth placement and smoothing',()=>{
     expect(positions(restored)).toEqual(positions(fresh));expect(restored.progress).toEqual([])
     expect(restored.button.hidden).toBe(true);expect(restored.complete).not.toHaveBeenCalled()
   })
+  it('drapes the cloth under gravity while lifted/carried and expands gathered folds when stretched on the sill',()=>{
+    const s=mount(0,{isReducedMotion:()=>false}),cloth=s.scene.getObjectByName('brat-cloth') as THREE.Mesh
+    const entryVerts=positions(s)
+    const p=s.point('brat-cloth',anchor(0)),[dx,dy]=placementDelta(s,0)
+    event(s.hit,'pointerdown',p)
+    event(s.hit,'pointermove',[p[0]+dx*.45,p[1]+dy*.45])
+    s.instance.update(.025)
+    // Held cloth deforms locally with hanging gravity drape rather than translating as a flat tile.
+    expect(positions(s)).not.toEqual(entryVerts)
+    cloth.geometry.computeBoundingBox()
+    const liftedSize=cloth.geometry.boundingBox!.getSize(new THREE.Vector3())
+    expect(liftedSize.y).toBeGreaterThan(.10)
+    // Arrive and settle onto the sill -> enters gathered smoothing stage without popping flat.
+    event(s.hit,'pointermove',[p[0]+dx,p[1]+dy]);event(s.hit,'pointerup',[p[0]+dx,p[1]+dy])
+    s.run(2.2)
+    expect(s.overlay.dataset.clothPhase).toBe('smoothing')
+    cloth.geometry.computeBoundingBox()
+    const seatedSize=cloth.geometry.boundingBox!.getSize(new THREE.Vector3())
+    expect(seatedSize.x).toBeLessThan(1.60)
+    expect(seatedSize.y).toBeGreaterThan(.07)
+    // Stretch & smooth flat -> expands to full width and flattens onto the sill.
+    smooth(s);s.run(1.0)
+    expect(s.progress).toEqual([3])
+    cloth.geometry.computeBoundingBox()
+    const flatSize=cloth.geometry.boundingBox!.getSize(new THREE.Vector3())
+    expect(flatSize.x).toBeCloseTo(1.65,3)
+    expect(flatSize.y).toBeLessThan(.015)
+  })
+  it('stays completely idle without redundant renders once settled in reduced motion, and redraws on camera or mode change',()=>{
+    let reduced=true
+    const s=mount(3,{isReducedMotion:()=>reduced})
+    const afterMount=rendered.render.mock.calls.length
+    s.run(.5)
+    expect(rendered.render.mock.calls.length).toBe(afterMount)
+    // External camera adjustment or leaving reduced motion immediately triggers fresh renders.
+    s.camera.position.x+=.25
+    s.instance.update(.025)
+    expect(rendered.render.mock.calls.length).toBe(afterMount+1)
+    reduced=false
+    s.instance.update(.025)
+    expect(rendered.render.mock.calls.length).toBe(afterMount+2)
+  })
   it.each([284,350,440,1280])('keeps the full cloth visible and touchable in close-up at width %i',width=>{
     const s=mount(0,{isReducedMotion:()=>true},width);step(s,0)
     const cloth=s.scene.getObjectByName('brat-cloth') as THREE.Mesh,p=cloth.geometry.getAttribute('position'),bounds=new THREE.Box3()

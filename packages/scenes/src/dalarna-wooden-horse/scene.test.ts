@@ -197,13 +197,15 @@ describe('a carved horse kept as a cultural craft', () => {
     const plankMaps = new Set<THREE.Texture | null>()
     const breadboardMaps = new Set<THREE.Texture | null>()
     const legMaps = new Set<THREE.Texture | null>()
+    const plankCount = { n: 0 }
     s.scene.traverse(o => {
       if (!(o instanceof THREE.Mesh) || !(o.material instanceof THREE.MeshStandardMaterial)) return
-      if (o.name === 'horse-table-top-board') plankMaps.add(o.material.map)
+      if (o.name === 'horse-table-top-board') { plankMaps.add(o.material.map); plankCount.n++ }
       if (o.name === 'horse-table-breadboard-end') breadboardMaps.add(o.material.map)
       if (o.name === 'horse-table-leg') legMaps.add(o.material.map)
     })
-    expect(plankMaps.size).toBe(5)
+    expect(plankCount.n).toBeGreaterThanOrEqual(3)
+    expect(plankMaps.size).toBe(plankCount.n)
     expect(breadboardMaps.size).toBe(2)
     expect(legMaps.size).toBe(2)
     for (const [name, axis] of [

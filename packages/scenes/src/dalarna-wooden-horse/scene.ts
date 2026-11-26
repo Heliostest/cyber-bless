@@ -218,7 +218,7 @@ export function createDalarnaWoodenHorse(ctx: SceneContext): SceneInstance {
         projectWoodBlockUVs(mesh.geometry, 'x', { tilt: 0.34 })
         projectedGeos.add(mesh.geometry)
       }
-      if (!mat.map) attachOrganicWood(mat, boardSpecs[idx % boardSpecs.length]!, .0044)
+      attachOrganicWood(mat, boardSpecs[idx % boardSpecs.length]!, .0044)
       if (!mat.userData.craftSurface) applyCraftSurface(mat, { kind: 'wood', axis: 'x', scale: .62 + (idx % 5) * .08, strength: .13 })
     } else if (mesh.name === 'horse-table-breadboard-end') {
       const idx = breadboardIdx++
@@ -229,7 +229,7 @@ export function createDalarnaWoodenHorse(ctx: SceneContext): SceneInstance {
         projectWoodBlockUVs(mesh.geometry, 'z', { tilt: 0.42 })
         projectedGeos.add(mesh.geometry)
       }
-      if (!mat.map) attachOrganicWood(mat, {
+      attachOrganicWood(mat, {
         id: `dalarna-table-breadboard-${idx}-v1`, aspect: 6.5, ringFreq: 5.8 + idx * 1.1, archSlope: 0.42,
         pithV: idx === 0 ? 0.36 : 0.64, pithU: idx === 0 ? 0.34 : 0.66, pithDepth: 0.32, flowAmp: 0.20,
         contrast: 0.18, warmth: 0.84, toneVariation: 0.055, fiberStrength: 0.025, seed: 167.3 + idx * 23.5,
@@ -245,7 +245,7 @@ export function createDalarnaWoodenHorse(ctx: SceneContext): SceneInstance {
         projectWoodBlockUVs(mesh.geometry, 'y', { tilt: 0.72 })
         projectedGeos.add(mesh.geometry)
       }
-      if (!mat.map) attachOrganicWood(mat, {
+      attachOrganicWood(mat, {
         id: `dalarna-table-leg-${idx}-v1`, aspect: 1.35, ringFreq: 5.4 + idx * 1.3, archSlope: 0.44,
         pithV: idx === 0 ? 0.62 : 0.34, pithU: idx === 0 ? 0.42 : 0.58, pithDepth: 0.32, flowAmp: 0.20,
         contrast: 0.19, warmth: 0.84, toneVariation: 0.06, fiberStrength: 0.026, seed: 199.1 + idx * 29.3,
@@ -260,7 +260,7 @@ export function createDalarnaWoodenHorse(ctx: SceneContext): SceneInstance {
         projectWoodBlockUVs(mesh.geometry, 'x', { tilt: 0.55 })
         projectedGeos.add(mesh.geometry)
       }
-      if (!mat.map) attachOrganicWood(mat, {
+      attachOrganicWood(mat, {
         id: 'dalarna-table-stretcher-v1', aspect: 9.0, ringFreq: 6.4, archSlope: 0.26, pithV: 0.44, pithU: 0.5,
         pithDepth: 0.38, flowAmp: 0.16, contrast: 0.18, warmth: 0.82, toneVariation: 0.05, fiberStrength: 0.026, seed: 233.7,
       }, .0048)
@@ -274,7 +274,7 @@ export function createDalarnaWoodenHorse(ctx: SceneContext): SceneInstance {
         projectWoodBlockUVs(mesh.geometry, 'y', { tilt: 0.52 })
         projectedGeos.add(mesh.geometry)
       }
-      if (!mat.map) attachOrganicWood(mat, {
+      attachOrganicWood(mat, {
         id: `dalarna-table-wedge-${idx}-v1`, aspect: 1.3, ringFreq: 6.8 + idx * 0.8, archSlope: 0.24, pithV: 0.5, pithU: 0.45,
         pithDepth: 0.42, flowAmp: 0.15, contrast: 0.17, warmth: 0.82, toneVariation: 0.045, fiberStrength: 0.025, seed: 257.4 + idx * 17.2,
       }, .0044)

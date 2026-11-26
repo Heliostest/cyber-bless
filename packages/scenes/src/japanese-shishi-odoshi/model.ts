@@ -1,34 +1,65 @@
+import {applyCraftSurface} from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import {createStylizedWater} from '@wbr/scene-runtime/stylized-water'
 
 export function createShishiOdoshiModel(){
  const subject=new THREE.Group(),fixed=new THREE.Group(),pivot=new THREE.Group(),feed=new THREE.Group()
  subject.name='sozu-subject';fixed.name='sozu-fixed';pivot.name='sozu-pivot';feed.name='sozu-feed';subject.add(fixed,pivot,feed);pivot.position.y=1.15
- const bamboo=new THREE.MeshStandardMaterial({color:'#9aa557',roughness:.82,vertexColors:true}),cut=new THREE.MeshStandardMaterial({color:'#ded19b',roughness:.9}),node=new THREE.MeshStandardMaterial({color:'#788342',roughness:.88}),stone=new THREE.MeshStandardMaterial({color:'#8c9a98',roughness:.98,vertexColors:true}),pinMat=new THREE.MeshStandardMaterial({color:'#b99b6a',roughness:.8})
+ const bambooWet=applyCraftSurface(new THREE.MeshPhysicalMaterial({color:'#93a655',roughness:.46,clearcoat:.32,clearcoatRoughness:.28,specularIntensity:.68,vertexColors:true}),{kind:'bamboo',strength:.48,scale:.85,axis:'x'})
+ const bambooUpright=applyCraftSurface(new THREE.MeshPhysicalMaterial({color:'#8ca050',roughness:.54,clearcoat:.25,clearcoatRoughness:.34,specularIntensity:.62,vertexColors:true}),{kind:'bamboo',strength:.48,scale:.85,axis:'y'})
+ const cut=applyCraftSurface(new THREE.MeshStandardMaterial({color:'#e5d8a1',roughness:.86}),{kind:'bamboo',strength:.30,scale:.9,axis:'x'})
+ const node=applyCraftSurface(new THREE.MeshPhysicalMaterial({color:'#6f7f3d',roughness:.56,clearcoat:.22,clearcoatRoughness:.36,specularIntensity:.56}),{kind:'bamboo',strength:.40,scale:.9,axis:'x'})
+ const stone=new THREE.MeshStandardMaterial({color:'#8c9a98',roughness:.98,vertexColors:true})
+ const pinMat=applyCraftSurface(new THREE.MeshPhysicalMaterial({color:'#bd9e6b',roughness:.66,clearcoat:.14,clearcoatRoughness:.42,specularIntensity:.50}),{kind:'wood',strength:.45,scale:.8,axis:'y'})
  const waterMat=new THREE.MeshPhysicalMaterial({color:'#70c9c5',transparent:true,opacity:.70,roughness:.20,depthWrite:false,side:THREE.DoubleSide})
  waterMat.userData.waterRendering=true
+ const tintBamboo=(g:THREE.BufferGeometry,axis:'x'|'y',waterlineY?:number,nodes:number[]=[])=>{
+  const p=g.attributes.position!,a=new Float32Array(p.count*3),c=new THREE.Color(),damp=new THREE.Color('#779654'),bloom=new THREE.Color('#eef4dc')
+  for(let i=0;i<p.count;i++){
+   const px=p.getX(i),py=p.getY(i),pz=p.getZ(i)
+   const angle=axis==='x'?Math.atan2(pz,py):Math.atan2(pz,px)
+   const striation=.985+.025*Math.sin(angle*7)+.016*Math.cos(angle*13+.8)
+   c.setRGB(striation,striation,striation)
+   for(const nx of nodes){
+    const d=px-nx
+    const bloomAmt=Math.exp(-(((d-.045)/.045)**2))
+    c.lerp(bloom,bloomAmt*.24)
+    if(Math.abs(d)<.04)c.multiplyScalar(.92+.08*(Math.abs(d)/.04))
+   }
+   if(axis==='x'&&px>.55)c.lerp(damp,THREE.MathUtils.clamp((px-.55)/.75,0,1)*.18)
+   if(waterlineY!==undefined&&py<waterlineY)c.lerp(damp,THREE.MathUtils.clamp((waterlineY-py)/.28,0,1)*.30)
+   a.set([Math.min(1,c.r),Math.min(1,c.g),Math.min(1,c.b)],i*3)
+  }
+  g.setAttribute('color',new THREE.BufferAttribute(a,3))
+ }
  const mesh=(name:string,g:THREE.BufferGeometry,mat:THREE.Material|THREE.Material[],parent:THREE.Object3D,x=0,y=0,z=0)=>{
-  if((mat as THREE.MeshStandardMaterial).vertexColors){const p=g.attributes.position!,a=new Float32Array(p.count*3);for(let i=0;i<p.count;i++){const v=.94+.035*Math.sin(p.getX(i)*31+p.getY(i)*8+p.getZ(i)*17);a.set([v,v,v],i*3)}g.setAttribute('color',new THREE.BufferAttribute(a,3))}
+  if((mat as THREE.MeshStandardMaterial).vertexColors&&!g.attributes.color){const p=g.attributes.position!,a=new Float32Array(p.count*3);for(let i=0;i<p.count;i++){const v=.94+.035*Math.sin(p.getX(i)*31+p.getY(i)*8+p.getZ(i)*17);a.set([v,v,v],i*3)}g.setAttribute('color',new THREE.BufferAttribute(a,3))}
   const m=new THREE.Mesh(g,mat);m.name=name;m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;parent.add(m);return m
  }
  // Closed wall, solid tail and internal node. The upward-facing mouth is a real opening.
- const positions:number[]=[],tri=(a:number[],b:number[],c:number[])=>positions.push(...a,...b,...c),quad=(a:number[],b:number[],c:number[],d:number[])=>{tri(a,b,c);tri(a,c,d)}
+ const positions:number[]=[],normals:number[]=[]
+ const lipN=new THREE.Vector3(1,.6,0).normalize().toArray()
+ const triN=(a:number[],b:number[],c:number[],na:number[],nb:number[],nc:number[])=>{positions.push(...a,...b,...c);normals.push(...na,...nb,...nc)}
+ const quadN=(a:number[],b:number[],c:number[],d:number[],na:number[],nb:number[],nc:number[],nd:number[])=>{triN(a,b,c,na,nb,nc);triN(a,c,d,na,nc,nd)}
  const ring=(r:number,t:number,x:number|null)=>{const y=r*Math.cos(t);return[x??1.2-.6*y,y,r*Math.sin(t)]}
  for(let i=0;i<32;i++){
   const a=i*Math.PI/16,b=(i+1)*Math.PI/16,oa=ring(.16,a,-.9),ob=ring(.16,b,-.9),oc=ring(.16,b,null),od=ring(.16,a,null),ia=ring(.125,a,-.08),ib=ring(.125,b,-.08),ic=ring(.125,b,null),id=ring(.125,a,null)
-  quad(oa,ob,oc,od);quad(ia,id,ic,ib);quad(od,oc,ic,id);tri([-.9,0,0],ob,oa);tri([-.08,0,0],ia,ib)
+  const noa=[0,Math.cos(a),Math.sin(a)],nob=[0,Math.cos(b),Math.sin(b)],nia=[0,-Math.cos(a),-Math.sin(a)],nib=[0,-Math.cos(b),-Math.sin(b)]
+  quadN(oa,ob,oc,od,noa,nob,nob,noa);quadN(ia,id,ic,ib,nia,nia,nib,nib);quadN(od,oc,ic,id,lipN,lipN,lipN,lipN)
+  triN([-.9,0,0],ob,oa,[-1,0,0],[-1,0,0],[-1,0,0]);triN([-.08,0,0],ia,ib,[1,0,0],[1,0,0],[1,0,0])
  }
- const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.computeVertexNormals()
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3))
+ tintBamboo(geometry,'x',undefined,[-.48,.30])
  for(let i=0;i<32;i++){geometry.addGroup(i*24,6,0);geometry.addGroup(i*24+6,18,1)}
- const tube=mesh('sozu-tube',geometry,bamboo,pivot);tube.material=[bamboo,cut]
- for(const [i,x]of[-.48,.30].entries()){const band=mesh('sozu-node-band-'+i,new THREE.TorusGeometry(.162,.010,6,32),node,pivot,x);band.rotation.y=Math.PI/2}
+ const tube=mesh('sozu-tube',geometry,bambooWet,pivot);tube.material=[bambooWet,cut]
+ for(const [i,x]of[-.48,.30].entries()){const band=mesh('sozu-node-band-'+i,new THREE.TorusGeometry(.162,.010,8,32),node,pivot,x);band.rotation.y=Math.PI/2}
  // Axle and two legs are the required fulcrum; no added furniture or panel.
- for(const[i,z]of[-.25,.25].entries())mesh('sozu-support-'+i,new THREE.CylinderGeometry(.045,.065,1.15,16),bamboo,fixed,0,.575,z)
+ for(const[i,z]of[-.25,.25].entries()){const legGeo=new THREE.CylinderGeometry(.045,.065,1.15,20,8);tintBamboo(legGeo,'y',-.28);mesh('sozu-support-'+i,legGeo,bambooUpright,fixed,0,.575,z)}
  const axle=mesh('sozu-axle',new THREE.CylinderGeometry(.033,.033,.66,16),pinMat,fixed,0,1.15,0);axle.rotation.x=Math.PI/2
- mesh('sozu-feed-stem',new THREE.CylinderGeometry(.07,.08,1.65,16),bamboo,fixed,2.65,.825,0)
- const supplyGeometry=new THREE.LatheGeometry([new THREE.Vector2(.043,-.525),new THREE.Vector2(.061,-.525),new THREE.Vector2(.061,.525),new THREE.Vector2(.043,.525),new THREE.Vector2(.043,-.525)],32);supplyGeometry.rotateZ(-Math.PI/2);mesh('sozu-feed-supply',supplyGeometry,bamboo,fixed,2.125,1.65,0)
- const sleeveGeometry=new THREE.LatheGeometry([new THREE.Vector2(.065,-.35),new THREE.Vector2(.09,-.35),new THREE.Vector2(.09,.35),new THREE.Vector2(.065,.35),new THREE.Vector2(.065,-.35)],32);sleeveGeometry.rotateZ(-Math.PI/2)
- const sleeve=mesh('sozu-feed-sleeve',sleeveGeometry,bamboo,feed,1.52,1.65,0)
+ const stemGeo=new THREE.CylinderGeometry(.07,.08,1.65,20,8);tintBamboo(stemGeo,'y',-.58);mesh('sozu-feed-stem',stemGeo,bambooUpright,fixed,2.65,.825,0)
+ const supplyGeometry=new THREE.LatheGeometry([new THREE.Vector2(.043,-.525),new THREE.Vector2(.061,-.525),new THREE.Vector2(.061,.525),new THREE.Vector2(.043,.525),new THREE.Vector2(.043,-.525)],32);supplyGeometry.rotateZ(-Math.PI/2);tintBamboo(supplyGeometry,'x');mesh('sozu-feed-supply',supplyGeometry,bambooWet,fixed,2.125,1.65,0)
+ const sleeveGeometry=new THREE.LatheGeometry([new THREE.Vector2(.065,-.35),new THREE.Vector2(.09,-.35),new THREE.Vector2(.09,.35),new THREE.Vector2(.065,.35),new THREE.Vector2(.065,-.35)],32);sleeveGeometry.rotateZ(-Math.PI/2);tintBamboo(sleeveGeometry,'x')
+ const sleeve=mesh('sozu-feed-sleeve',sleeveGeometry,bambooWet,feed,1.52,1.65,0)
  const strikePoint=new THREE.Vector3(-.9*Math.cos(.2)+.16*Math.sin(.2),1.15-.9*Math.sin(.2)-.16*Math.cos(.2),0)
  const strike=mesh('sozu-strike-stone',new THREE.SphereGeometry(1,32,24),stone,fixed,strikePoint.x,strikePoint.y/2,0);strike.scale.set(.38,strikePoint.y/2,.32)
  const basinProfile=[[1.16,.02],[1.18,.30],[1.43,.32],[1.50,0],[1.16,0],[1.16,.02]].map(([x,y])=>new THREE.Vector2(x,y))

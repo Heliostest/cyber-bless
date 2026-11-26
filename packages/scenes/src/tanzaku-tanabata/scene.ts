@@ -117,36 +117,103 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group()
   scene.add(world)
 
-  // Procedural bamboo: segmented stalks with node rings and a few leaves.
+  // Procedural bamboo: segmented stalks with waxy epidermis sheen, subtle
+  // internode color rhythm, crisp node ridges, and a few leaves.
   const bamboo = new THREE.Group()
   bamboo.name = 'tanzaku-bamboo'
   world.add(bamboo)
-  // Flat, matte greens read as painted cel bands; darker nodes mark the rhythm.
-  const stalkMat = new THREE.MeshStandardMaterial({ color: 0x9cc66e, roughness: 0.9 })
-  const nodeMat = new THREE.MeshStandardMaterial({ color: 0x5f9147, roughness: 0.9 })
-  applyCraftSurface(stalkMat, { kind: 'bamboo', strength: .38, axis: 'y' })
-  applyCraftSurface(nodeMat, { kind: 'bamboo', strength: .38, axis: 'y' })
+  const stalkPalette = [0x82b45a, 0x8dbd62, 0x79ab53, 0x94c169]
+  const stalkMats = stalkPalette.map((color, idx) => {
+    const mat = new THREE.MeshPhysicalMaterial({
+      color,
+      roughness: 0.60 + (idx % 2) * 0.04,
+      clearcoat: 0.24,
+      clearcoatRoughness: 0.38,
+      specularIntensity: 0.45,
+      vertexColors: true,
+    })
+    return applyCraftSurface(mat, { kind: 'bamboo', strength: 0.46, scale: 0.9, axis: 'y' })
+  })
+  const nodeMat = applyCraftSurface(
+    new THREE.MeshPhysicalMaterial({
+      color: 0x527d3c,
+      roughness: 0.62,
+      clearcoat: 0.20,
+      clearcoatRoughness: 0.40,
+      specularIntensity: 0.45,
+    }),
+    { kind: 'bamboo', strength: 0.42, scale: 0.9, axis: 'y' },
+  )
+  const nodeBloomMat = applyCraftSurface(
+    new THREE.MeshPhysicalMaterial({
+      color: 0xb6cd8d,
+      roughness: 0.66,
+      clearcoat: 0.18,
+      clearcoatRoughness: 0.42,
+      specularIntensity: 0.40,
+    }),
+    { kind: 'bamboo', strength: 0.36, scale: 0.9, axis: 'y' },
+  )
 
-  const leafMat = new THREE.MeshStandardMaterial({
-    color: 0x7fbc5c,
-    roughness: 0.9,
+  const leafMat = new THREE.MeshPhysicalMaterial({
+    color: 0x73b052,
+    roughness: 0.74,
+    clearcoat: 0.10,
+    clearcoatRoughness: 0.50,
+    specularIntensity: 0.36,
     side: THREE.DoubleSide,
   })
-  const segGeo = new THREE.CylinderGeometry(0.05, 0.056, 0.5, 16)
-  const nodeGeo = new THREE.TorusGeometry(0.057, 0.014, 8, 20)
+  // Keep CylinderGeometry(0.05, 0.056, 0.5) parameters for hanging-support contract.
+  const segGeo = new THREE.CylinderGeometry(0.05, 0.056, 0.5, 24, 8)
+  {
+    const pos = segGeo.getAttribute('position')
+    const colors = new Float32Array(pos.count * 3)
+    const base = new THREE.Color()
+    const shade = new THREE.Color(0xd6e5c5)
+    const sun = new THREE.Color(0xf8f9df)
+    const bloom = new THREE.Color(0xeef5da)
+    for (let i = 0; i < pos.count; i++) {
+      const px = pos.getX(i), py = pos.getY(i), pz = pos.getZ(i)
+      const v = THREE.MathUtils.clamp((py + 0.25) / 0.5, 0, 1)
+      const angle = Math.atan2(pz, px)
+      const striation = 1 + 0.024 * Math.sin(angle * 7) + 0.016 * Math.cos(angle * 13 + 0.9)
+      base.setRGB(1, 1, 1)
+      if (v < 0.24) base.lerp(shade, (1 - v / 0.24) * 0.24)
+      else if (v < 0.80) base.lerp(sun, Math.sin(((v - 0.24) / 0.56) * Math.PI) * 0.06)
+      const bloomBand = Math.exp(-(((v - 0.91) / 0.065) ** 2))
+      base.lerp(bloom, bloomBand * 0.26)
+      if (v > 0.96) base.multiplyScalar(1 - ((v - 0.96) / 0.04) * 0.15)
+      else if (v < 0.05) base.multiplyScalar(0.88 + (v / 0.05) * 0.12)
+      base.multiplyScalar(striation)
+      colors[i * 3] = Math.min(1, base.r)
+      colors[i * 3 + 1] = Math.min(1, base.g)
+      colors[i * 3 + 2] = Math.min(1, base.b)
+    }
+    segGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+  }
+  const nodeGeo = new THREE.TorusGeometry(0.0545, 0.0082, 10, 24)
+  const nodeBloomGeo = new THREE.TorusGeometry(0.0552, 0.0046, 8, 24)
   // Slim lens-shaped blade instead of a flat rectangle: cleaner anime silhouette.
   const leafGeo = new THREE.CircleGeometry(0.17, 12).scale(1, 0.26, 1)
   const stalkXs = [-0.35, 0.05, 0.4]
   stalkXs.forEach((x, s) => {
     const segments = 5 + (s % 2)
     for (let i = 0; i < segments; i++) {
-      const seg = new THREE.Mesh(segGeo, stalkMat)
+      const seg = new THREE.Mesh(segGeo, stalkMats[(s * 3 + i) % stalkMats.length]!)
       seg.position.set(x, 0.25 + i * 0.5, -0.2 + s * 0.12)
+      seg.rotation.y = s * 1.1 + i * 0.7
       bamboo.add(seg)
       const node = new THREE.Mesh(nodeGeo, nodeMat)
       node.rotation.x = Math.PI / 2
+      node.scale.set(1, 1, 0.76)
       node.position.set(x, 0.5 + i * 0.5, -0.2 + s * 0.12)
       bamboo.add(node)
+      const bloom = new THREE.Mesh(nodeBloomGeo, nodeBloomMat)
+      bloom.rotation.x = Math.PI / 2
+      bloom.scale.set(1, 1, 0.68)
+      bloom.position.set(x, 0.484 + i * 0.5, -0.2 + s * 0.12)
+      bloom.userData.toonSurface = { outline: false }
+      bamboo.add(bloom)
       if (i >= 2) {
         const leaf = new THREE.Mesh(leafGeo, leafMat)
         const side = i % 2 === 0 ? 1 : -1

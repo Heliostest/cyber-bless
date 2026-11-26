@@ -73,11 +73,34 @@ function ribbon(points: THREE.Vector3[], width: number, vertical: boolean, mater
 function makeScoop() {
   const scoop = new THREE.Group(); scoop.name = 'bokjori-scoop'
   const bowl = new THREE.Group(); bowl.name = 'bokjori-woven-bowl'; scoop.add(bowl)
-  const bamboo = [0xe0bd7a, 0xe9ce93, 0xcfa866, 0xe4c68a].map(color => new THREE.MeshStandardMaterial({ color, roughness: 0.91, side: THREE.DoubleSide }))
-  const accent = new THREE.MeshStandardMaterial({ color: 0x78977d, roughness: 0.94, side: THREE.DoubleSide })
+  const bambooPalette = [0xdcb770, 0xe8cb8c, 0xc89f5c, 0xe2c182]
+  const makeBamboo = (color: number, axis: 'x' | 'y', doubleSide = true) => applyCraftSurface(
+    new THREE.MeshPhysicalMaterial({
+      color,
+      roughness: doubleSide ? 0.54 : 0.48,
+      clearcoat: doubleSide ? 0.26 : 0.30,
+      clearcoatRoughness: doubleSide ? 0.35 : 0.32,
+      specularIntensity: 0.60,
+      ...(doubleSide ? { side: THREE.DoubleSide } : {}),
+    }),
+    { kind: 'bamboo', strength: 0.48, scale: 0.9, axis },
+  )
+  const bambooWeft = bambooPalette.map(color => makeBamboo(color, 'x', true))
+  const bambooWarp = bambooPalette.map(color => makeBamboo(color, 'y', true))
+  const bambooRim = makeBamboo(0xe6c88a, 'y', false)
+  const accent = applyCraftSurface(
+    new THREE.MeshPhysicalMaterial({
+      color: 0x76967a,
+      roughness: 0.58,
+      clearcoat: 0.22,
+      clearcoatRoughness: 0.38,
+      specularIntensity: 0.56,
+      side: THREE.DoubleSide,
+    }),
+    { kind: 'bamboo', strength: 0.48, scale: 0.9, axis: 'y' },
+  )
   const red = new THREE.MeshStandardMaterial({ color: 0xb96755, roughness: 1 })
   const cord = new THREE.MeshStandardMaterial({ color: 0xe4d4a5, roughness: 1 })
-  ;[...bamboo, accent].forEach(mat => applyCraftSurface(mat, { kind: 'bamboo', strength: .4, axis: 'y' }))
   ;[red, cord].forEach(mat => applyCraftSurface(mat, { kind: 'cord', strength: .3 }))
   for (const vertical of [false, true]) for (let i = -8; i <= 8; i++) {
     const fixed = i / 9, extent = Math.sqrt(1 - fixed * fixed)
@@ -88,7 +111,8 @@ function makeScoop() {
       const weave = Math.cos(along * 9 * Math.PI + i * Math.PI) * (vertical ? 0.006 : -0.006)
       points.push(new THREE.Vector3(u * 0.43, v * 0.365, -0.18 + 0.25 * (u * u + v * v) + weave))
     }
-    const strip = ribbon(points, 0.024, vertical, vertical && i % 4 === 0 ? accent : bamboo[(i + 8) % bamboo.length])
+    const strips = vertical ? bambooWarp : bambooWeft
+    const strip = ribbon(points, 0.024, vertical, vertical && i % 4 === 0 ? accent : strips[(i + 8) % strips.length]!)
     strip.name = `bokjori-${vertical ? 'warp' : 'weft'}-${i + 8}`; bowl.add(strip)
   }
   for (const radius of [0.98, 1.025]) {
@@ -96,13 +120,13 @@ function makeScoop() {
       const t = i / 64 * Math.PI * 2
       return new THREE.Vector3(Math.cos(t) * 0.43 * radius, Math.sin(t) * 0.365 * radius, 0.073)
     })
-    const rim = tube(points, 0.018, bamboo[1], true); rim.name = 'bokjori-rolled-bamboo-rim'; bowl.add(rim)
+    const rim = tube(points, 0.018, bambooRim, true); rim.name = 'bokjori-rolled-bamboo-rim'; bowl.add(rim)
   }
   for (const side of [-1, 1]) {
     const handle = tube([
       new THREE.Vector3(side * 0.145, 0.25, 0.02), new THREE.Vector3(side * 0.092, 0.52, 0.04),
       new THREE.Vector3(side * 0.033, 0.86, 0.06), new THREE.Vector3(side * 0.03, 1.12, 0.072),
-    ], 0.025, bamboo[side < 0 ? 0 : 1])
+    ], 0.025, bambooWarp[side < 0 ? 0 : 1]!)
     handle.name = `bokjori-bamboo-handle-${side < 0 ? 'left' : 'right'}`; scoop.add(handle)
     for (const y of [0.56, 0.91, 1.075]) {
       const wrap = new THREE.Mesh(new THREE.TorusGeometry(y < 0.7 ? 0.045 : 0.032, 0.009, 6, 18), red)
@@ -153,16 +177,19 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
   Object.assign(lights.key.shadow.camera, { left: -2, right: 2, top: 3, bottom: -1, near: 0.1, far: 12 })
   lights.key.shadow.bias = -0.0008; lights.key.shadow.normalBias = 0.025
   const world = new THREE.Group(); world.name = 'bokjori-veranda-work'; scene.add(world)
-  const wood = new THREE.MeshStandardMaterial({ color: 0xb5966d, roughness: 1 })
-  const paleWood = new THREE.MeshStandardMaterial({ color: 0xc8ad85, roughness: 1 })
-  ;[wood, paleWood].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: .4, axis: 'y' }))
+  const wood = new THREE.MeshStandardMaterial({ color: 0xb5956a, roughness: 0.76 })
+  const paleWood = new THREE.MeshStandardMaterial({ color: 0xc8ab82, roughness: 0.76 })
+  const railWood = new THREE.MeshStandardMaterial({ color: 0xaf8e63, roughness: 0.74 })
+  const shelfWood = new THREE.MeshStandardMaterial({ color: 0xc4a57b, roughness: 0.76 })
+  ;[wood, paleWood].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: 0.50, scale: 0.72, axis: 'y' }))
+  ;[railWood, shelfWood].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: 0.50, scale: 0.72, axis: 'x' }))
   const wall = new THREE.Group(); wall.name = 'bokjori-timber-wall'; world.add(wall)
   for (let i = 0; i < 7; i++) {
     const slat = new THREE.Mesh(new THREE.BoxGeometry(0.305, 2.48, 0.095), i % 2 ? paleWood : wood)
     slat.position.set((i - 3) * 0.312, 1.27, -0.54); slat.receiveShadow = true; wall.add(slat)
   }
   for (const y of [0.22, 2.47]) {
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(2.27, 0.13, 0.13), wood)
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(2.27, 0.13, 0.13), railWood)
     rail.position.set(0, y, -0.48); rail.castShadow = rail.receiveShadow = true; wall.add(rail)
   }
   const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.055, 0.23, 16), wood)
@@ -170,14 +197,17 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
   peg.castShadow = true; world.add(peg)
   const pegCap = new THREE.Mesh(new THREE.SphereGeometry(0.066, 14, 8), paleWood)
   pegCap.scale.set(1, 1, 0.45); pegCap.position.copy(PEG).add(new THREE.Vector3(0, 0, 0.12)); world.add(pegCap)
-  const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.07, 0.1, 0.84), paleWood)
+  const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.07, 0.1, 0.84), shelfWood)
   shelf.position.set(0.59, 0.25, 0.43); shelf.castShadow = shelf.receiveShadow = true; world.add(shelf)
   for (const x of [0.18, 1]) {
     const leg = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.2, 0.12), wood)
     leg.position.set(x, 0.1, 0.46); world.add(leg)
   }
   const tray = new THREE.Group(); tray.name = 'bokjori-rice-tray'; tray.position.set(0.59, 0.36, 0.48); world.add(tray)
-  const trayMat = new THREE.MeshStandardMaterial({ color: 0xceb38e, roughness: 1 })
+  const trayMat = applyCraftSurface(
+    new THREE.MeshPhysicalMaterial({ color: 0xc9ab80, roughness: 0.70, clearcoat: 0.10, clearcoatRoughness: 0.46, specularIntensity: 0.48 }),
+    { kind: 'wood', strength: 0.46, scale: 0.76, axis: 'x' },
+  )
   const trayBase = new THREE.Mesh(new THREE.CylinderGeometry(0.41, 0.38, 0.085, 40), trayMat)
   trayBase.scale.z = 0.78; trayBase.castShadow = trayBase.receiveShadow = true; tray.add(trayBase)
   const trayRim = new THREE.Mesh(new THREE.TorusGeometry(0.405, 0.028, 7, 48), trayMat)

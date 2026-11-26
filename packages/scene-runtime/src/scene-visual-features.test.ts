@@ -36,6 +36,9 @@ describe('scene visual inventory', () => {
     expect(getSceneVisualFeatures('votive-candle-catholic')).toContain('cypress');
     expect(getSceneVisualFeatures('japanese-kendama')).toContain('broadleaf');
     expect(getSceneVisualFeatures('japanese-kendama')).not.toContain('cherry');
+    expect(getSceneVisualFeatures('furin-wind-chime')).toContain('acer');
+    expect(getSceneVisualFeatures('shichigosan-chitose-ame')).toContain('maple');
+    expect(getSceneVisualFeatures('slavic-wreath')).toContain('willow');
     expect(getSceneVisualFeatures('tanzaku-tanabata')).toContain('bamboo');
   });
 

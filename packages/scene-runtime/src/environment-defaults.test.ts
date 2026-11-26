@@ -14,7 +14,7 @@ it.each(['woodfish','shinto-torii','diya-oil-lamp','udo-undama'])('uses Komorebi
   world.setTone('komorebi'); expect(scene.background).toBe(approved);
   expect(world.captureDefaultTone()).toBeUndefined();expect(world.captureDefaultGrass()).toBeUndefined();expect(world.captureDefaultTrees()).toBeUndefined();
   if(world.hasGrass)expect(scene.getObjectByName('komorebi-meadow')?.visible).toBe(true);
-  if(world.treeRecommendation !== 'original')expect(report).toHaveBeenLastCalledWith({count:world.treeCount,actual:'scene',status:'ready'});
+  if(world.treeCount)expect(report).toHaveBeenLastCalledWith({count:world.treeCount,actual:'scene',status:'ready'});
   if(!world.treeCount)expect(scene.getObjectByName('komorebi-meadow')).toBeUndefined();
   world.setTone('original'); expect(scene.background).not.toBe(approved);
   const restore = world.captureDefaultTone(); expect(scene.background).toBe(approved);

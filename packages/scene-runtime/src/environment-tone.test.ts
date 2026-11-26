@@ -4,22 +4,110 @@ import { createEnvironmentTone, KOMOREBI_PALETTE } from './environment-tone';
 import { createToonCloudBackdrop } from './toon-cloud-backdrop';
 import { readFileSync } from 'node:fs';
 
-it.each(['cherry-round', 'cherry-cluster', 'maple-round', 'maple-cluster'])('keeps %s authored accent color with grey AO vertices in the delivery palette', name => {
-  const file = readFileSync(new URL(`../../../assets/environments/trees/simple-tree/${name}.glb`, import.meta.url));
+function readGlbMaterialRgba(fileName: string, materialName: string): [number, number, number, number] {
+  const file = readFileSync(new URL(`../../../assets/environments/trees/simple-tree/${fileName}.glb`, import.meta.url));
   const gltf = JSON.parse(file.subarray(20, 20 + file.readUInt32LE(12)).toString('utf8'));
-  const rgba = gltf.materials.find((material: { name: string }) => material.name === 'leaves').pbrMetallicRoughness.baseColorFactor;
+  return gltf.materials.find((material: { name: string }) => material.name === materialName).pbrMetallicRoughness.baseColorFactor;
+}
+
+it.each(['cherry-round', 'cherry-cluster', 'maple-round', 'maple-cluster'])('keeps %s authored accent color with grey AO vertices across tones', name => {
+  const rgba = readGlbMaterialRgba(name, 'leaves');
   const root = new THREE.Group(), geometry = new THREE.BufferGeometry(), map = new THREE.Texture();
   geometry.setAttribute('color', new THREE.Float32BufferAttribute([.6, .6, .6], 3));
   const material = new THREE.MeshStandardMaterial({ color: new THREE.Color().setRGB(rgba[0], rgba[1], rgba[2]), vertexColors: true, map, alphaTest: .5 });
-  const mesh = new THREE.Mesh(geometry, material); mesh.userData.treeRole = 'leaves'; root.add(mesh);
-  const pink = material.color.clone(), ao = Array.from(geometry.attributes.color.array);
-  expect(pink.r).toBeGreaterThan(pink.g);
-  const tone = createEnvironmentTone(root); tone.setTone('tiny-delivery'); tone.refresh();
-  expect(material.color).toEqual(pink);
-  expect(Array.from(geometry.attributes.color.array)).toEqual(ao);
+  const mesh = new THREE.Mesh(geometry, material); mesh.userData.treeRole = 'leaves'; mesh.userData.simpleTree = true; root.add(mesh);
+  const accent = material.color.clone(), ao = Array.from(geometry.attributes.color.array);
+  expect(accent.r).toBeGreaterThan(accent.g);
+  const tone = createEnvironmentTone(root);
+  for (const next of ['komorebi', 'tiny-delivery', 'original'] as const) {
+    tone.setTone(next); tone.refresh();
+    expect(material.color).toEqual(accent);
+    expect(Array.from(geometry.attributes.color.array)).toEqual(ao);
+  }
   expect(material.map).toBe(map); expect(material.alphaTest).toBe(.5);
-  tone.setTone('original'); expect(material.color).toEqual(pink);
   geometry.dispose(); material.dispose(); map.dispose();
+});
+
+it.each(['cypress-round', 'willow-round', 'pine-round', 'round'])('honors userData.treeRole === "wood" so low-chroma %s trunks stay warm brown wood instead of stone grey', name => {
+  const rgba = readGlbMaterialRgba(name, 'bark');
+  // Verify the regression precondition: linear chroma < 0.12 previously triggered stone classification.
+  expect(Math.max(rgba[0], rgba[1], rgba[2]) - Math.min(rgba[0], rgba[1], rgba[2])).toBeLessThan(.12);
+  const root = new THREE.Group();
+  const woodMat = new THREE.MeshStandardMaterial({ color: new THREE.Color().setRGB(rgba[0], rgba[1], rgba[2]) });
+  const woodMesh = new THREE.Mesh(new THREE.BoxGeometry(), woodMat);
+  woodMesh.userData.treeRole = 'wood';
+  woodMesh.userData.simpleTree = true;
+  const stoneMat = new THREE.MeshStandardMaterial({ color: new THREE.Color().setRGB(rgba[0], rgba[1], rgba[2]) });
+  const stoneMesh = new THREE.Mesh(new THREE.BoxGeometry(), stoneMat);
+  root.add(woodMesh, stoneMesh);
+
+  const original = woodMat.color.clone();
+  const tone = createEnvironmentTone(root, false);
+  tone.setTone('komorebi');
+  // Warm brown wood retains R > G > B; lavender-grey stone flips to B > R.
+  expect(woodMat.color.r).toBeGreaterThan(woodMat.color.g);
+  expect(woodMat.color.g).toBeGreaterThan(woodMat.color.b);
+  expect(stoneMat.color.b).toBeGreaterThan(stoneMat.color.r);
+
+  tone.setTone('original');
+  expect(woodMat.color.equals(original)).toBe(true);
+  woodMesh.geometry.dispose(); woodMat.dispose();
+  stoneMesh.geometry.dispose(); stoneMat.dispose();
+});
+
+it('calibrates daylight Simple Tree green leaves into warm meadow green while preserving species depth and avoiding dark teal crush', () => {
+  const root = new THREE.Group();
+  const makeLeaf = (name: string) => {
+    const rgba = readGlbMaterialRgba(name, 'leaves');
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute([.65, .65, .65], 3));
+    const material = new THREE.MeshStandardMaterial({ color: new THREE.Color().setRGB(rgba[0], rgba[1], rgba[2]), vertexColors: true });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.userData.treeRole = 'leaves';
+    mesh.userData.simpleTree = true;
+    root.add(mesh);
+    return { geometry, material };
+  };
+  const oak = makeLeaf('round'), cypress = makeLeaf('cypress-round'), acer = makeLeaf('acer-round'), toona = makeLeaf('toona-round');
+  const oldTeal = new THREE.Color(KOMOREBI_PALETTE.foliage);
+
+  const tone = createEnvironmentTone(root, false);
+  tone.setTone('komorebi');
+  // All green species move into warm yellow-green (R > B), unlike cold teal KOMOREBI_PALETTE.foliage (B > R).
+  expect(oldTeal.b).toBeGreaterThan(oldTeal.r);
+  for (const sample of [oak, cypress, acer, toona]) {
+    expect(sample.material.color.r).toBeGreaterThan(sample.material.color.b);
+    expect(sample.material.color.g).toBeGreaterThan(sample.material.color.r);
+  }
+  // Lighter broadleaf oak remains visibly brighter than deep evergreen cypress.
+  expect(oak.material.color.g).toBeGreaterThan(cypress.material.color.g);
+
+  for (const sample of [oak, cypress, acer, toona]) { sample.geometry.dispose(); sample.material.dispose(); }
+});
+
+it('keeps night Simple Tree green leaves legible instead of crushing them to near-black teal', () => {
+  const root = new THREE.Group();
+  const makeNightLeaf = (name: string) => {
+    const rgba = readGlbMaterialRgba(name, 'leaves');
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute([.77, .77, .77], 3));
+    const material = new THREE.MeshStandardMaterial({ color: new THREE.Color().setRGB(rgba[0], rgba[1], rgba[2]), vertexColors: true });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.userData.treeRole = 'leaves';
+    mesh.userData.simpleTree = true;
+    root.add(mesh);
+    return { geometry, material };
+  };
+  const toona = makeNightLeaf('toona-round'), acer = makeNightLeaf('acer-round'), cypress = makeNightLeaf('cypress-round');
+  const oldNightTeal = new THREE.Color(KOMOREBI_PALETTE.foliage).multiplyScalar(.62);
+
+  const tone = createEnvironmentTone(root, true);
+  tone.setTone('komorebi');
+  for (const sample of [toona, acer, cypress]) {
+    expect(sample.material.color.g).toBeGreaterThan(oldNightTeal.g * 1.7);
+    expect(sample.material.color.r).toBeGreaterThan(oldNightTeal.r * 3);
+  }
+  for (const sample of [toona, acer, cypress]) { sample.geometry.dispose(); sample.material.dispose(); }
 });
 
 it('retains flowering tree colors when a palette is applied after the tree loads', () => {
@@ -90,7 +178,6 @@ it('routes backdropCanopy leaves to KOMOREBI_PALETTE.canopy while keeping non-ca
   const root = new THREE.Group();
   const makeLeaves = (backdropCanopy: boolean) => {
     const geometry = new THREE.BufferGeometry();
-    // Vertex 0: green leaf; Vertex 1: pink blossom accent.
     geometry.setAttribute('color', new THREE.Float32BufferAttribute([0.2, 0.55, 0.15, 0.85, 0.35, 0.55], 3));
     const material = new THREE.MeshStandardMaterial({ vertexColors: true });
     const mesh = new THREE.Mesh(geometry, material);
@@ -103,7 +190,6 @@ it('routes backdropCanopy leaves to KOMOREBI_PALETTE.canopy while keeping non-ca
   const foliage = makeLeaves(false);
   const original = Array.from(canopy.geometry.attributes.color.array);
 
-  expect(KOMOREBI_PALETTE.canopy).toBe(0x4b6c2c);
   const tone = createEnvironmentTone(root, false);
   tone.setTone('komorebi');
 
@@ -111,10 +197,8 @@ it('routes backdropCanopy leaves to KOMOREBI_PALETTE.canopy while keeping non-ca
   const foliageGreen = new THREE.Color().fromBufferAttribute(foliage.geometry.attributes.color, 0);
   const canopyPink = new THREE.Color().fromBufferAttribute(canopy.geometry.attributes.color, 1);
 
-  // Canopy (#4b6c2c) is warmer yellow-green than foliage (#246d4f): higher red, lower blue.
   expect(canopyGreen.r).toBeGreaterThan(foliageGreen.r);
   expect(canopyGreen.b).toBeLessThan(foliageGreen.b);
-  // Pink blossom accent remains untouched even on backdropCanopy.
   expect(canopyPink.r).toBeCloseTo(0.85);
   expect(canopyPink.g).toBeCloseTo(0.35);
   expect(canopyPink.b).toBeCloseTo(0.55);

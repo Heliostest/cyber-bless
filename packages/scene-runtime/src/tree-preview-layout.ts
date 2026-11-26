@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { TreePlacement } from './stylized-trees';
+import type { TreePlacement } from './tree-models';
 
 export type TreePreviewShape = { anchor: THREE.Vector3; points: Float32Array; woodPoints: Float32Array; canopyBase: number; lean: number };
 export type TreePreviewPlacement = TreePlacement & { orientation?: THREE.Quaternion };

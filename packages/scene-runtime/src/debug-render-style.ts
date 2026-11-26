@@ -62,10 +62,10 @@ export function createDebugRenderStyle(
     if (rendered) { environment?.prepare(renderer, style.getStyle(), { advanceMotion: false }); draw(); }
   } });
   if (environment?.treeCount) {
-    renderer.domElement.dataset.treeMethod = treeReport?.actual ?? 'original';
+    renderer.domElement.dataset.treeMethod = treeReport?.actual ?? 'none';
     renderer.domElement.dataset.treeStatus = treeReport?.status ?? 'ready';
     treeRegistration = debugTrees.register(id, label, method => { void environment.setTreeMethod(method); }, renderer.domElement.closest?.('.app-shell') ?? undefined, environment.treeRecommendation);
-    treeRegistration.report(treeReport ?? { count: environment.treeCount, actual: 'original', status: 'ready' });
+    treeRegistration.report(treeReport ?? { count: environment.treeCount, actual: 'none', status: 'ready' });
   }
   if (environment) {
     renderer.domElement.dataset.environment = environment.kind;

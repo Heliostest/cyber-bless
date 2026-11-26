@@ -42,7 +42,7 @@ export function getSceneVisualFeatures(id: string): SceneVisualFeature[] {
   if (smoke.has(id)) features.push('smoke');
   if (!profile.coastal) {
     const tree = getSceneTreeDefault(id);
-    features.push(tree === 'original' ? (profile.night ? 'mixed-trees' : 'broadleaf') : tree);
+    features.push(tree === 'oak' ? 'broadleaf' : tree);
   }
   if (id === 'tanzaku-tanabata' || id === 'japanese-kadomatsu') features.push('bamboo');
   if (id === 'sri-lankan-bodhi-puja') features.push('bodhi');

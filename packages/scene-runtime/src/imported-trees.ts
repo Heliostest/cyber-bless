@@ -1,15 +1,22 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import type { TreePlacement } from './stylized-trees';
 import type { TreeRenderMethod, TreeRenderReport } from './debug-trees';
-import { resolveTreeModelSet, type TreeSpecies } from './tree-models';
+import { resolveTreeModelSet, type TreePlacement, type TreeSpecies } from './tree-models';
 import { treePreviewLayout, type TreePreviewShape, type TreePreviewPlacement } from './tree-preview-layout';
 import { softenTreeFoliage } from './tree-foliage';
 import { applyKomorebiTreeWind } from './komorebi-tree-wind';
 import { adaptKomorebiModel } from './komorebi-surface';
-
 import { assetUrl } from './asset-urls';
-type Options = { load?: (url: string) => Promise<THREE.Group>; onChange?: (report: TreeRenderReport) => void; invalidate?: () => void; recommendation?: TreeSpecies; camera?: THREE.Camera };
+
+type Options = {
+  load?: (url: string) => Promise<THREE.Group>;
+  onChange?: (report: TreeRenderReport) => void;
+  invalidate?: () => void;
+  recommendation?: TreeSpecies;
+  camera?: THREE.Camera;
+  /** Enable camera-aware near framing strictly for explicit debug previews, never production defaults. */
+  previewLayout?: boolean;
+};
 
 function resources(objects: THREE.Object3D[]) {
   const geometry = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>(), textures = new Set<THREE.Texture>();
@@ -28,10 +35,10 @@ function resources(objects: THREE.Object3D[]) {
 }
 
 /** Replaces only environment trees. Loads are transactional and own all imported GPU resources. */
-export function createTreeRendering(originals: THREE.Object3D[], placements: readonly TreePlacement[], groundY: number, options: Options = {}) {
+export function createTreeRendering(placements: readonly TreePlacement[], groundY: number, options: Options = {}) {
   const root = new THREE.Group(); root.name = 'alternative-environment-trees';
   const load = options.load ?? (async url => (await new GLTFLoader().loadAsync(url)).scene);
-  let disposed = false, generation = 0, actual: TreeRenderMethod = 'original', requested: TreeRenderMethod = 'original';
+  let disposed = false, generation = 0, actual: TreeRenderMethod | 'none' = 'none', requested: TreeRenderMethod | 'none' = 'none';
   let status: TreeRenderReport['status'] = 'ready', release: (() => void) | undefined;
   type Request = { cancelled: boolean; owned: Map<THREE.Group, () => void> };
   let pending: Request | undefined;
@@ -41,19 +48,18 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
     mesh.customDepthMaterial?.dispose(); mesh.customDistanceMaterial?.dispose(); mesh.dispose();
   }
   let projection = '';
-  const originalVisibility = originals.map(object => object.visible), matrix = new THREE.Matrix4(), transform = new THREE.Object3D();
+  const matrix = new THREE.Matrix4(), transform = new THREE.Object3D();
   function report() { if (!disposed) options.onChange?.({ count: placements.length, actual, status }); }
   function clear() {
     batches.forEach(disposeBatch); batches = [];
     release?.(); release = undefined; root.clear();
   }
-  function restore() { originals.forEach((object, index) => { object.visible = originalVisibility[index]; }); }
   function releaseRequest(request: Request) {
     request.cancelled = true; request.owned.forEach(dispose => dispose()); request.owned.clear();
   }
   function cancelPending() { if (pending) releaseRequest(pending); pending = undefined; }
   function reframe(force = false) {
-    const camera = options.camera;
+    const camera = options.previewLayout ? options.camera : undefined;
     if (!camera || !batches.length) return;
     const nextProjection = camera.projectionMatrix.elements.join(',');
     // Keep trees planted during authored walks/orbits. A viewport change gets
@@ -82,25 +88,19 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
   return {
     root,
     reframe,
-    isPreviewVisible() { return !disposed && actual !== 'original' && root.visible; },
-    captureOriginal() {
-      if (disposed || actual === 'original') return undefined;
-      const previewVisible = root.visible, previousVisibility = originals.map(object => object.visible);
-      root.visible = false; restore();
-      let restored = false;
-      return () => {
-        if (restored) return; restored = true;
-        root.visible = previewVisible;
-        originals.forEach((object, index) => { object.visible = previousVisibility[index]; });
-      };
+    isPreviewVisible() { return !disposed && actual !== 'none' && root.visible && !!options.previewLayout && !!options.camera; },
+    unload() {
+      if (disposed) return;
+      requested = 'none'; generation++; cancelPending();
+      clear(); actual = 'none'; status = 'ready'; report(); options.invalidate?.();
     },
     async select(method: TreeRenderMethod) {
       if (disposed || (method === requested && status !== 'error')) return;
       requested = method; const token = ++generation; cancelPending();
-      const models = resolveTreeModelSet(method, options.recommendation);
-      if (!models) {
-        clear(); restore(); actual = 'original'; status = 'ready'; report(); options.invalidate?.(); return;
+      if (!placements.length) {
+        clear(); actual = 'none'; status = 'ready'; report(); options.invalidate?.(); return;
       }
+      const models = resolveTreeModelSet(method, options.recommendation);
       status = 'loading'; report();
       const variants = [...new Set(placements.map((item, index) => item.variant ?? (index % 2 ? 'round' : 'cluster')))];
       const request: Request = { cancelled: false, owned: new Map() }; pending = request;
@@ -120,6 +120,7 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
         }));
         if (disposed || request.cancelled || token !== generation) return;
         const group = new THREE.Group();
+        const isSimpleTree = models.round.startsWith('simple-tree/');
         loaded.forEach((model, variantIndex) => {
           model.updateMatrixWorld(true);
           const bounds = new THREE.Box3().setFromObject(model), height = bounds.max.y - bounds.min.y;
@@ -145,7 +146,7 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
           });
           if (rootVertices) anchor.divideScalar(rootVertices).applyMatrix4(normalize);
           const canopyBase = Number.isFinite(leafLow) ? THREE.MathUtils.clamp(leafLow + (leafHigh - leafLow) * .2, .30, .65) : .42;
-          const selected = method === 'scene' ? options.recommendation : method;
+          const selected = method === 'scene' ? (options.recommendation ?? 'oak') : method;
           const shape = { anchor, points: new Float32Array(points), woodPoints: new Float32Array(woodPoints), canopyBase, lean: selected === 'cypress' || selected === 'conifer' ? 0 : .24 };
           model.traverse(object => {
             if (!(object instanceof THREE.Mesh)) return;
@@ -156,11 +157,12 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
               if (foliage) softenTreeFoliage(item);
               applyKomorebiTreeWind(item, windTime);
             });
-            if (foliage && models.round.startsWith('simple-tree/')) {
+            if (foliage && isSimpleTree) {
               (Array.isArray(material) ? material : [material]).forEach(softenTreeFoliage);
             }
             const mesh = new THREE.InstancedMesh(object.geometry, material, trees.length);
             mesh.userData.komorebiTree = method === 'komorebi';
+            mesh.userData.simpleTree = isSimpleTree;
             if (method === 'komorebi' && object.geometry.hasAttribute('_tree_wind')) {
               const side = (Array.isArray(material) ? material[0] : material).side;
               mesh.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, side });
@@ -182,7 +184,7 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
               transform.rotation.set(0, item.turn, 0); transform.scale.setScalar(item.scale); transform.updateMatrix();
               const initial = transform.matrix.clone().multiply(local); matrices.push(initial); mesh.setMatrixAt(index, initial);
             });
-            if (foliage || options.camera) mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+            if (foliage || (options.previewLayout && options.camera)) mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
             mesh.computeBoundingSphere();
             if (mesh.boundingSphere) mesh.boundingSphere.radius += Math.max(0, ...trees.map(item => item.scale)) * (method === 'komorebi' ? .04 : .02);
             next.push({ mesh, placements: trees, originals: trees, indices, local, shape, matrices, foliage }); group.add(mesh);
@@ -191,12 +193,12 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
         if (!next.length) throw Error('Tree has no meshes');
         clear(); release = () => releaseRequest(request); pending = undefined; batches = next;
         reframe(true);
-        root.add(...group.children.slice()); originals.forEach(object => { object.visible = false; });
+        root.add(...group.children.slice());
         actual = method; status = 'ready';
       } catch {
         if (disposed || token !== generation) return;
         cancelPending(); next.forEach(disposeBatch);
-        clear(); restore(); actual = 'original'; status = 'error';
+        clear(); actual = 'none'; requested = 'none'; status = 'error';
       }
       report(); options.invalidate?.();
     },
@@ -214,6 +216,6 @@ export function createTreeRendering(originals: THREE.Object3D[], placements: rea
         batch.mesh.instanceMatrix.needsUpdate = true;
       });
     },
-    dispose() { if (disposed) return; disposed = true; generation++; cancelPending(); clear(); restore(); root.removeFromParent(); },
+    dispose() { if (disposed) return; disposed = true; generation++; cancelPending(); clear(); root.removeFromParent(); },
   };
 }

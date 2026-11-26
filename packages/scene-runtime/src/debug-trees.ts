@@ -2,7 +2,7 @@ import { TREE_RENDER_METHODS, type TreeRenderMethod, type TreeSpecies } from './
 import { DEFAULT_TREE_METHOD } from './environment-defaults';
 export { DEFAULT_TREE_METHOD } from './environment-defaults';
 export type { TreeRenderMethod, TreeSpecies } from './tree-models';
-export type TreeRenderReport = { count: number; actual: TreeRenderMethod; status: 'ready' | 'loading' | 'error' };
+export type TreeRenderReport = { count: number; actual: TreeRenderMethod | 'none'; status: 'ready' | 'loading' | 'error' };
 export type DebugTreeScene = TreeRenderReport & { id: string; label: string; scope?: object; method: TreeRenderMethod; recommendation: TreeSpecies };
 
 /** App-scoped, session-only choices; never changes production preferences. */
@@ -39,8 +39,8 @@ export function createDebugTrees() {
       const group = choices.get(scope) ?? new Map<string, TreeRenderMethod>();
       group.set(id, method); choices.set(scope, group); applyScope(scope);
     },
-    register(id: string, label: string, onMethod: Entry['apply'], scope?: object, recommendation: TreeSpecies = 'original') {
-      const token = Symbol(id), entry: Entry = { state: { id, label, scope, recommendation, count: 0, method: DEFAULT_TREE_METHOD, actual: 'original', status: 'ready' }, apply: onMethod };
+    register(id: string, label: string, onMethod: Entry['apply'], scope?: object, recommendation: TreeSpecies = 'oak') {
+      const token = Symbol(id), entry: Entry = { state: { id, label, scope, recommendation, count: 0, method: DEFAULT_TREE_METHOD, actual: 'none', status: 'ready' }, apply: onMethod };
       entries.set(token, entry); apply(entry, true); publish();
       return {
         report(report: TreeRenderReport) {

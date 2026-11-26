@@ -144,9 +144,9 @@ describe('Komorebi daylight backdrop calibration', () => {
       const cloud = scene.getObjectByName('toon-cloud-layer-0') as THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
       expect(cloud.material.uniforms.uShadeAmount.value).toBeGreaterThan(0);
 
-      // Daylight broadleaf fallback canopies are tagged for the canopy role.
-      const canopy = scene.getObjectByName('trees-round-leaves') as THREE.Mesh;
-      expect(canopy.userData.backdropCanopy).toBe(true);
+      // KayKit stylized-trees fallback is retired; default trees come from Simple Tree.
+      expect(scene.getObjectByName('trees-round-leaves')).toBeUndefined();
+      expect(scene.getObjectByName('recommended-environment-trees')).toBeDefined();
 
       // Kenney planting props use Komorebi backdrop surfaces in daylight Komorebi tone,
       // with sky-bounce + softened normals applied strictly to flower petals and centres.
@@ -205,8 +205,7 @@ describe('Komorebi daylight backdrop calibration', () => {
       expect(road.userData.stonePath).toBe(true);
       const cloud = scene.getObjectByName('toon-cloud-layer-0') as THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
       expect(cloud.material.uniforms.uShadeAmount.value).toBe(0);
-      const canopy = scene.getObjectByName('trees-round-leaves') as THREE.Mesh;
-      expect(canopy.userData.backdropCanopy).toBeUndefined();
+      expect(scene.getObjectByName('trees-round-leaves')).toBeUndefined();
       // Night backdrop props remain PBR MeshStandardMaterial.
       const root = scene.getObjectByName('cozy-environment')!;
       let backdropProps = 0;

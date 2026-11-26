@@ -5,8 +5,7 @@ import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import nature from "./nature-kit.data.json";
 import { gardenLayout } from "./garden-layout";
 import { createStylizedMeadow } from "./stylized-meadow";
-import { createStylizedTrees } from "./stylized-trees";
-import type { TreePlacement } from './stylized-trees';
+import type { TreePlacement } from './tree-models';
 import { createEnvironmentTrees } from './environment-trees';
 import type { TreeRenderMethod, TreeRenderReport } from './debug-trees';
 import { getSceneTreeDefault } from './tree-profiles';
@@ -92,8 +91,6 @@ export function createCozyEnvironment(
   let komorebiMeadow: ReturnType<typeof createKomorebiMeadow> | undefined;
   let stonePath: ReturnType<typeof createCourtyardStonePath> | undefined;
   let grassMethod: GrassRenderMethod = 'original';
-  let treeCanopies: ReturnType<typeof createStylizedTrees> | undefined;
-  const originalTrees: THREE.Object3D[] = [];
   let treePlacements: readonly TreePlacement[] = [];
   const clouds = !coastal && isSceneVisibleInApp({ id }) ? createToonCloudBackdrop(night ? "night" : "day") : undefined;
   if (clouds) root.add(clouds.root);
@@ -249,11 +246,7 @@ export function createCozyEnvironment(
       [-6.8, -6.5, 3.7], [7.0, -7.5, 3.4], [-7.0, -8.8, 3.9],
       [7.4, -10, 5.5], [-4.4, -11, 2.7], [4.6, -13, 3.1], [-10, -15, 6.3], [10.4, -16, 5.3],
     ];
-    // Use the same detailed, asymmetric KayKit fallback as daylight. Retired
-    // sphere/cone trees must not reappear on original selection or a failed load.
     treePlacements = trees.map(([x, z, scale], index) => ({ x, z, scale, turn: index * .8 }));
-    treeCanopies = createStylizedTrees(treePlacements, groundY);
-    originalTrees.push(treeCanopies.root); root.add(treeCanopies.root);
     for (const [x, z, scale] of [[-2.8, -2.3, 1.3], [3.0, -3.3, 1.1], [-5.2, -6.6, 1.8], [4, -7, 1.5]]) {
       prop("bush", x, z, scale, x);
     }
@@ -267,11 +260,6 @@ export function createCozyEnvironment(
     const planting = new THREE.Group(); planting.name = "daylight-planting"; root.add(planting);
     const layout = gardenLayout(kind, id).filter(item => id !== "chinowa-kuguri" || Math.abs(item.x) > 7.8 || item.z < -5.5), transform = new THREE.Object3D();
     treePlacements = layout.filter(item => item.model.startsWith('tree-'));
-    treeCanopies = createStylizedTrees(treePlacements, groundY);
-    // Daylight's distant broadleaf crowns join the meadow's yellow-green family (not imported or night trees).
-    treeCanopies.root.traverse(object => { if (object.userData.treeRole === 'leaves') object.userData.backdropCanopy = true; });
-    originalTrees.push(treeCanopies.root);
-    planting.add(treeCanopies.root);
     for (const name of new Set(layout.filter(item => !item.model.startsWith("tree-")).map(item => item.model))) {
       const placements = layout.filter(item => item.model === name), parts = propParts(name);
       models[name].parts.forEach((part, index) => {
@@ -298,8 +286,12 @@ export function createCozyEnvironment(
   }
 
   const treeRecommendation = getSceneTreeDefault(id);
-  const treeRendering = createEnvironmentTrees(originalTrees, treePlacements, groundY, { load: loadTree,
-    onChange: report => { toneDirty = true; onTrees?.(report); }, invalidate, recommendation: treeRecommendation, camera });
+  const treeRendering = createEnvironmentTrees(treePlacements, groundY, { load: loadTree,
+    onChange: report => {
+      toneDirty = true;
+      if (report.status === 'ready') { toneSurfaces.refresh(); toneDirty = false; }
+      onTrees?.(report);
+    }, invalidate, recommendation: treeRecommendation, camera });
   root.add(treeRendering.root);
   const file = night ? "kloppenheim-02-night-1k.hdr" : "kloppenheim-06-sky-1k.hdr";
   const skyReady = loadSky(assetUrl(`environments/${file}`))
@@ -411,7 +403,6 @@ export function createCozyEnvironment(
         lastFrame = now;
         meadow?.update(windTime);
         if (grassMethod === 'komorebi') komorebiMeadow?.update(windTime);
-        if (treeCanopies?.root.visible) treeCanopies.update(windTime, motion.reducedMotion);
         treeRendering.update(windTime, motion.reducedMotion);
         clouds?.update(windTime);
       }
@@ -488,7 +479,6 @@ export function createCozyEnvironment(
       komorebiMeadow?.dispose();
       stonePath?.dispose();
       treeRendering.dispose();
-      treeCanopies?.dispose();
       clouds?.dispose();
       instances.forEach(mesh => mesh.dispose());
       geometries.forEach(geometry => geometry.dispose());

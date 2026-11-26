@@ -12,34 +12,53 @@ const createCozyEnvironment: typeof createEnvironment = (scene, options) => crea
 });
 
 describe("a scene's surrounding world", () => {
-  it.each(['brat-bride-cloth', 'scottish-first-footing', 'chinese-shadow-puppet', 'diya-oil-lamp', 'votive-candle-catholic', 'lantern', 'yeondeunghoe'])('never restores primitive night trees, including when imported assets fail: %s', async id => {
+  it.each(['woodfish', 'shinto-torii', 'neapolitan-cornicello', 'diya-oil-lamp', 'yeondeunghoe'])('retires KayKit stylized-trees completely, even when imported assets fail: %s', async id => {
     const scene = new THREE.Scene(), loadTree = vi.fn(async () => { throw Error('unavailable'); });
     const world = createCozyEnvironment(scene, { id, loadTree, loadSky: async () => new THREE.DataTexture() })!;
     try {
       await world.ready;
       expect(loadTree).toHaveBeenCalled();
-      const fallback = scene.getObjectByName('stylized-trees');
-      expect(fallback).toBeDefined(); expect(fallback?.visible).toBe(true);
-      expect(fallback?.children.some(tree => tree.userData.treeRole === 'leaves')).toBe(true);
-      await world.setTreeMethod('original'); expect(fallback?.visible).toBe(true);
-      const restore = world.captureDefaultTrees(); expect(fallback?.visible).toBe(true); restore?.();
+      expect(scene.getObjectByName('stylized-trees')).toBeUndefined();
+      expect(scene.getObjectByName('trees-round-leaves')).toBeUndefined();
+      expect(scene.getObjectByName('trees-cluster-leaves')).toBeUndefined();
     } finally { world.dispose(); }
   });
-  it.each(['woodfish', 'diya-oil-lamp'])('softens preview shadows and restores their strength for captures and teardown: %s', async id => {
+  it.each(['shinto-torii', 'neapolitan-cornicello', 'woodfish', 'diya-oil-lamp'])('keeps far garden placements and full contact-shadow strength on production defaults, softening shadows only for explicit debug previews: %s', async id => {
+    const camera = new THREE.PerspectiveCamera(42, 1.5, .1, 100);
+    camera.position.set(0, 1.45, 7.6); camera.lookAt(0, 1.55, 0); camera.updateMatrixWorld(true);
     const scene = new THREE.Scene(), sun = new THREE.DirectionalLight(); sun.shadow.intensity = .8; scene.add(sun);
-    const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture(), loadTree: async () => {
-      const model = new THREE.Group(); model.add(new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshStandardMaterial())); return model;
+    const world = createCozyEnvironment(scene, { id, camera, loadSky: async () => new THREE.DataTexture(), loadTree: async () => {
+      const model = new THREE.Group();
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshStandardMaterial({ alphaTest: .5 }));
+      mesh.position.y = 1; model.add(mesh); return model;
     } })!;
     const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
-    await world.ready;await world.setTreeMethod('original');world.prepare(renderer); const radius = sun.shadow.radius;
+    await world.ready;
+    world.prepare(renderer);
+    const defaultRadius = sun.shadow.radius;
+    // Production default must never halve main shadow intensity or blur radius to 12.
+    expect(sun.shadow.intensity).toBeCloseTo(.8);
+    expect(defaultRadius).toBeLessThan(12);
+    // Production default trees stay at far authored z <= -6.5 (no camera-aware treePreviewLayout).
+    const baseline = scene.getObjectByName('recommended-environment-trees')!;
+    expect(baseline.children.length).toBeGreaterThan(0);
+    baseline.traverse(obj => {
+      if (!(obj instanceof THREE.InstancedMesh)) return;
+      const m = new THREE.Matrix4(), p = new THREE.Vector3();
+      for (let i = 0; i < obj.count; i++) {
+        obj.getMatrixAt(i, m); p.setFromMatrixPosition(m);
+        expect(p.z).toBeLessThanOrEqual(-6.4);
+      }
+    });
+    // Explicit debug preview softens shadows temporarily and restores full strength for captures & reset.
     await world.setTreeMethod('cherry'); world.prepare(renderer);
-    expect(sun.shadow.intensity).toBeLessThan(.8); expect(sun.shadow.radius).toBeGreaterThan(radius);
-    expect(renderer.shadowMap.type).toBe(THREE.PCFShadowMap);
+    expect(sun.shadow.intensity).toBeCloseTo(.8 * .52); expect(sun.shadow.radius).toBe(12);
     const restore = world.captureDefaultTrees(); world.prepare(renderer);
-    expect(sun.shadow.intensity).toBeCloseTo(id === 'diya-oil-lamp' ? .8 * .52 : .8);
-    expect(sun.shadow.radius).toBe(id === 'diya-oil-lamp' ? 12 : radius);
-    restore?.(); world.prepare(renderer); expect(sun.shadow.intensity).toBeLessThan(.8);
-    await world.ready; world.dispose(); expect(sun.shadow.intensity).toBe(.8); expect(sun.shadow.radius).toBe(radius);
+    expect(sun.shadow.intensity).toBeCloseTo(.8); expect(sun.shadow.radius).toBe(defaultRadius);
+    restore?.(); world.prepare(renderer); expect(sun.shadow.intensity).toBeCloseTo(.8 * .52);
+    await world.setTreeMethod('scene'); world.prepare(renderer);
+    expect(sun.shadow.intensity).toBeCloseTo(.8); expect(sun.shadow.radius).toBe(defaultRadius);
+    world.dispose(); expect(sun.shadow.intensity).toBe(.8); expect(sun.shadow.radius).toBe(defaultRadius);
   });
   it('keeps scene trees as the default and loads both Komorebi variants only when selected', async () => {
     const scene = new THREE.Scene(), loadTree = vi.fn(async () => {
@@ -67,22 +86,14 @@ describe("a scene's surrounding world", () => {
     });
     const report = vi.fn(), world = createCozyEnvironment(scene, { id, loadTree, onTrees: report, loadSky: async () => new THREE.DataTexture() })!;
     const originalRoot = scene.getObjectByName('cozy-environment');
-    const nightTree = originalRoot!.children.find(child => child.position.x === -6.8 && child.position.z === -6.5);
-    const nightHeight = nightTree ? new THREE.Box3().setFromObject(nightTree).getSize(new THREE.Vector3()).y : undefined;
     expect(world.treeCount).toBeGreaterThan(0);
-    if (id === 'woodfish') expect(loadTree).not.toHaveBeenCalled();
-    else { await world.ready; expect(loadTree).toHaveBeenCalledTimes(2); }
+    await world.ready; expect(loadTree).toHaveBeenCalledTimes(2);
     await world.setTreeMethod('quaternius');
     expect(report).toHaveBeenLastCalledWith({ count: world.treeCount, actual: 'quaternius', status: 'ready' });
     expect(scene.getObjectByName('alternative-environment-trees')!.children.length).toBeGreaterThan(0);
-    if (nightHeight) {
-      const imported = scene.getObjectByName('alternative-environment-trees')!.children.find(child => child.name.includes('cluster')) as THREE.InstancedMesh;
-      const transform = new THREE.Matrix4(); imported.getMatrixAt(0, transform);
-      imported.geometry.computeBoundingBox();
-      expect(imported.geometry.boundingBox!.clone().applyMatrix4(transform).getSize(new THREE.Vector3()).y).toBeCloseTo(nightHeight);
-    }
     expect(scene.getObjectByName('cozy-environment')).toBe(originalRoot); expect(subject.visible).toBe(true);
-    await world.setTreeMethod('original'); expect(scene.getObjectByName('alternative-environment-trees')!.children).toHaveLength(0);
+    await world.setTreeMethod('scene'); expect(scene.getObjectByName('alternative-environment-trees')!.children).toHaveLength(0);
+    expect(report).toHaveBeenLastCalledWith({ count: world.treeCount, actual: 'scene', status: 'ready' });
     await world.ready; world.dispose(); expect(subject.parent).toBe(scene);
     subject.geometry.dispose(); (subject.material as THREE.Material).dispose();
   });
@@ -203,13 +214,18 @@ describe("a scene's surrounding world", () => {
     const motion = vi.spyOn(sceneMotion, "readSceneMotion").mockReturnValue({ active: true, reducedMotion: false });
     const clock = vi.spyOn(performance, "now").mockReturnValue(1000);
     const scene = new THREE.Scene(), sun = new THREE.DirectionalLight(); scene.add(sun);
-    const world = createCozyEnvironment(scene, { id: "woodfish", loadSky: async () => new THREE.DataTexture() })!;
+    const world = createCozyEnvironment(scene, { id: "woodfish", loadSky: async () => new THREE.DataTexture(), loadTree: async () => {
+      const root = new THREE.Group();
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshStandardMaterial({ alphaTest: .5 }));
+      mesh.position.y = 1; root.add(mesh); return root;
+    } })!;
+    await world.ready;
     world.setTone('original');
     const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
     try {
       world.prepare(renderer); clock.mockReturnValue(1020); world.prepare(renderer);
       const meadow = scene.getObjectByName("windswept-meadow") as THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
-      const foliage = scene.getObjectByName("trees-round-leaves") as THREE.InstancedMesh;
+      const foliage = scene.getObjectByName("recommended-environment-trees")!.children[0] as THREE.InstancedMesh;
       const matrices = foliage.instanceMatrix.array.slice(), intensity = sun.intensity;
       expect(meadow.material.uniforms.meadowTime.value).toBeCloseTo(.02);
       clock.mockReturnValue(1030); world.prepare(renderer, "gouache", { advanceMotion: false });
@@ -493,7 +509,7 @@ describe("a scene's surrounding world", () => {
   });
 });
 
-it('keeps the undama coastal horizon free of a river garden and disposes it',async()=>{const s=new THREE.Scene(),env=createCozyEnvironment(s,{id:'udo-undama',loadSky:async()=>new THREE.DataTexture()});expect(env).not.toBeNull();await env!.ready;expect(s.getObjectByName('daylight-planting')).toBeUndefined();expect(s.getObjectByName('stylized-meadow')).toBeUndefined();env!.dispose();expect(s.children).toHaveLength(0)})
+it('keeps the undama coastal horizon free of a river garden and environment trees and disposes it',async()=>{const loadTree=vi.fn();const s=new THREE.Scene(),env=createCozyEnvironment(s,{id:'udo-undama',loadTree,loadSky:async()=>new THREE.DataTexture()});expect(env).not.toBeNull();await env!.ready;expect(env!.treeCount).toBe(0);expect(loadTree).not.toHaveBeenCalled();expect(s.getObjectByName('daylight-planting')).toBeUndefined();expect(s.getObjectByName('stylized-meadow')).toBeUndefined();env!.dispose();expect(s.children).toHaveLength(0)})
 
 it('keeps the complete Chinowa walking corridor clear of surrounding solids',async()=>{
  const scene=new THREE.Scene(),world=createCozyEnvironment(scene,{id:'chinowa-kuguri',loadSky:async()=>new THREE.DataTexture()});expect(world).not.toBeNull();scene.updateMatrixWorld(true)

@@ -89,10 +89,10 @@ describe("mounted renderer shader thumbnail readiness", () => {
   it('preserves the loading status of a retained tree choice when its scene remounts', () => {
     hooks.treeCount = 6;
     const release = debugTrees.enable(); debugTrees.select('tea', 'quaternius');
-    hooks.treeMethod.mockImplementation(() => hooks.treeReport?.({ count: 6, actual: 'original', status: 'loading' }));
+    hooks.treeMethod.mockImplementation(() => hooks.treeReport?.({ count: 6, actual: 'scene', status: 'loading' }));
     const ui = setup();
     try {
-      expect(debugTrees.getSnapshot().find(entry => entry.id === 'tea')).toMatchObject({ method: 'quaternius', actual: 'original', status: 'loading' });
+      expect(debugTrees.getSnapshot().find(entry => entry.id === 'tea')).toMatchObject({ method: 'quaternius', actual: 'scene', status: 'loading' });
     } finally { ui.style.dispose(); release(); }
   });
   it("exports a current scene frame only after readiness and unregisters it before renderer teardown", () => {

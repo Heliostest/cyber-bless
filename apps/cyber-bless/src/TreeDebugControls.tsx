@@ -4,7 +4,7 @@ import { message, translateScene } from '@wbr/i18n';
 
 export function TreeDebugControls({ anchor, hidden }: { anchor: RefObject<HTMLElement | null>; hidden: boolean }) {
   const names: Record<TreeSpecies, string> = {
-    original: message('developer.trees.keep'), cherry: message('developer.trees.cherry'),
+    oak: message('app.sceneVisual.broadleaf'), cherry: message('developer.trees.cherry'),
     cypress: message('developer.trees.cypress'), willow: message('developer.trees.willow'), conifer: message('developer.trees.conifer'),
     toona: message('developer.trees.toona'), acer: message('developer.trees.acer'), maple: message('developer.trees.maple'),
   };
@@ -28,7 +28,6 @@ export function TreeDebugControls({ anchor, hidden }: { anchor: RefObject<HTMLEl
       <span>{translateScene(entry.label)}</span>
       <select aria-label={message('developer.trees.title')} data-tree-scene={entry.id} value={entry.method}
         onChange={event => select(entry.id, event.target.value as TreeRenderMethod)}>
-        <option value="original">{message('developer.trees.original')}</option>
         <option value="scene">{message('developer.trees.recommended', { species: names[entry.recommendation] })}</option>
         <optgroup label={message('developer.trees.bySource')}>
           <option value="quaternius">{message('developer.trees.quaternius')}</option>
@@ -36,6 +35,7 @@ export function TreeDebugControls({ anchor, hidden }: { anchor: RefObject<HTMLEl
           <option value="komorebi">{message('developer.trees.komorebi')}</option>
         </optgroup>
         <optgroup label={message('developer.trees.bySpecies')}>
+          <option value="oak">{names.oak}</option>
           <option value="cherry">{names.cherry}</option>
           <option value="cypress">{names.cypress}</option>
           <option value="willow">{names.willow}</option>

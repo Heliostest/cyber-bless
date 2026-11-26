@@ -13,11 +13,11 @@ it('offers both real tree sources, keeps collapsed previews and restores on cons
   const ui = renderUI(createElement(Fixture)), scope = ui.host.querySelector('.app-shell')!, apply = vi.fn();
   let entry!: ReturnType<typeof debugTrees.register>;
   try {
-    await act(async () => { entry = debugTrees.register('tea', '茶', apply, scope, 'cherry'); entry.report({ count: 12, actual: 'original', status: 'ready' }); });
+    await act(async () => { entry = debugTrees.register('tea', '茶', apply, scope, 'cherry'); entry.report({ count: 12, actual: 'scene', status: 'ready' }); });
     await settle();
     const select = ui.host.querySelector('select')!;
-    expect([...select.options].map(option => option.value)).toEqual(['original', 'scene', 'quaternius', 'simple-tree', 'komorebi', 'cherry', 'cypress', 'willow', 'conifer', 'toona', 'acer', 'maple']);
-    expect(select.options[1].textContent).toContain('樱花');
+    expect([...select.options].map(option => option.value)).toEqual(['scene', 'quaternius', 'simple-tree', 'komorebi', 'oak', 'cherry', 'cypress', 'willow', 'conifer', 'toona', 'acer', 'maple']);
+    expect(select.options[0].textContent).toContain('樱花');
     for (const [id, label] of [['toona', '椿树'], ['acer', '槭树'], ['maple', '枫树']]) {
       expect([...select.options].find(option => option.value === id)?.textContent).toContain(label);
     }
@@ -30,7 +30,7 @@ it('offers both real tree sources, keeps collapsed previews and restores on cons
     expect(ui.host.querySelector('[data-tree-attribution]')).toBeNull();
     await act(async () => entry.report({ count: 12, actual: 'cypress', status: 'ready' }));
     expect(ui.host.querySelector('[data-tree-attribution]')).toBeNull();
-    for (const method of ['cherry', 'cypress', 'willow', 'conifer', 'toona', 'acer', 'maple']) {
+    for (const method of ['oak', 'cherry', 'cypress', 'willow', 'conifer', 'toona', 'acer', 'maple']) {
       await act(async () => { select.value = method; select.dispatchEvent(new Event('change', { bubbles: true })); });
       expect(apply).toHaveBeenLastCalledWith(method);
     }
@@ -38,7 +38,7 @@ it('offers both real tree sources, keeps collapsed previews and restores on cons
       await act(async () => { select.value = method; select.dispatchEvent(new Event('change', { bubbles: true })); });
       expect(apply).toHaveBeenLastCalledWith(method);
     }
-    await act(async () => entry.report({ count: 12, actual: 'original', status: 'loading' }));
+    await act(async () => entry.report({ count: 12, actual: 'scene', status: 'loading' }));
     expect(ui.host.querySelector('[role="status"]')!.textContent).toContain('加载');
     ui.rerender(createElement(Fixture, { hidden: true }));
     expect(apply).toHaveBeenLastCalledWith('simple-tree'); expect(ui.host.querySelector('section')!.hidden).toBe(true);

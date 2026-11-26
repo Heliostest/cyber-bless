@@ -11,10 +11,11 @@ export const DELIVERY_PALETTE = {
 export const KOMOREBI_PALETTE: typeof DELIVERY_PALETTE = {
   grass: 0x74a951, sand: 0xcab68e, wood: 0xaa8968, trim: 0x877663,
   hill: 0x548346, distantHill: 0x8aa980, stone: 0xa4a6b0,
-  // Daylight's original broadleaf crowns stay PBR-lit; this pigment lands in the meadow's
-  // yellow-green family on screen. Imported, regional and night trees keep `foliage`.
-  foliage: 0x246d4f, canopy: 0x4b6c2c, flower: 0xe4c5a5, horizon: 0xa3cadb, zenith: 0x6e9fcd,
+  // Non-tree greenery uses `foliage`; Simple Tree green canopies use `canopy` in daylight
+  // and a lifted moonlit green at night so crowns harmonize with the meadow and stay legible.
+  foliage: 0x246d4f, canopy: 0x588233, flower: 0xe4c5a5, horizon: 0xa3cadb, zenith: 0x6e9fcd,
 };
+export const KOMOREBI_NIGHT_CANOPY = 0x56824b;
 
 /** Only background-owned surfaces are visited. Source maps and geometry stay owned by their loaders. */
 export function createEnvironmentTone(root: THREE.Group, night = false) {
@@ -23,16 +24,21 @@ export function createEnvironmentTone(root: THREE.Group, night = false) {
   const vertices = new WeakMap<THREE.BufferAttribute, Float32Array>();
   const cloudColors = new WeakMap<THREE.Material, THREE.Color>();
   const source = new THREE.Color(), target = new THREE.Color();
-  function remap(color: THREE.Color, role?: keyof typeof DELIVERY_PALETTE) {
+  function remap(color: THREE.Color, role?: keyof typeof DELIVERY_PALETTE, options?: { amount?: number; treeCanopy?: boolean }) {
     const green = color.g > color.r * 1.08 && color.g > color.b * 1.1;
-    // Pink blossoms and other authored foliage accents keep their identity.
+    // Pink blossoms and autumn foliage accents keep their authored identity.
     if ((role === 'foliage' || role === 'canopy') && !green) return color;
     const neutral = Math.max(color.r, color.g, color.b) - Math.min(color.r, color.g, color.b) < .12;
-    target.setHex((tone === 'komorebi' ? KOMOREBI_PALETTE : DELIVERY_PALETTE)[role ?? (green ? 'foliage' : neutral ? 'stone' : 'wood')]);
-    if (night) target.multiplyScalar(.62);
+    if (options?.treeCanopy && night && tone === 'komorebi') {
+      target.setHex(KOMOREBI_NIGHT_CANOPY).multiplyScalar(.8);
+    } else {
+      target.setHex((tone === 'komorebi' ? KOMOREBI_PALETTE : DELIVERY_PALETTE)[role ?? (green ? 'foliage' : neutral ? 'stone' : 'wood')]);
+      if (night) target.multiplyScalar(options?.treeCanopy ? .72 : .62);
+    }
     // Preserve source variation so tree crowns and small stones retain their facets.
     const brightness = THREE.MathUtils.clamp(.8 + color.r * .15 + color.g * .3 + color.b * .05, .8, 1.3);
-    return color.lerp(target.multiplyScalar(brightness), role ? .9 : .72);
+    const amount = options?.amount ?? (role ? .9 : .72);
+    return color.lerp(target.multiplyScalar(brightness), amount);
   }
   function refresh() {
     const seenMaterials = new Set<THREE.Material>(), seenAttributes = new Set<THREE.BufferAttribute>();
@@ -58,16 +64,26 @@ export function createEnvironmentTone(root: THREE.Group, night = false) {
         // The meadow owns its painted ground texture and per-blade palette.
         if (tone !== 'original' && material.map?.name !== 'painted-meadow-patches' && !(tone === 'komorebi' && material.userData.komorebiPigment)) {
           if (material.vertexColors) {
-            // Simple Tree keeps its pink/green tint in the base material; its
-            // vertex colors mostly hold AO. White would erase the blossom hue.
-            if (object.userData.treeRole === 'leaves') remap(material.color, 'foliage');
-          } else remap(material.color, material.userData.environmentRole);
+            // Simple Tree keeps its pink/autumn/green tint in the base material; its
+            // vertex colors mostly hold AO. White would erase authored foliage hues.
+            if (object.userData.treeRole === 'leaves') {
+              remap(material.color, 'canopy', { amount: tone === 'komorebi' ? .68 : .72, treeCanopy: true });
+            } else if (object.userData.treeRole === 'wood') {
+              remap(material.color, 'wood', { amount: .65 });
+            }
+          } else if (object.userData.treeRole === 'wood') {
+            // Honor explicit tree wood role so low-chroma trunks are never mistaken for stone.
+            remap(material.color, 'wood', { amount: .65 });
+          } else {
+            remap(material.color, material.userData.environmentRole);
+          }
         }
       }
       // This meadow owns both root-to-tip vertex pigment and its per-instance
       // palette. Shared remapping would recolor it a second time after captures
       // or palette changes, making the result depend on selection order.
-      if (object.userData.komorebiGrass || object.userData.stonePath) return;
+      // Simple Tree vertex colors hold AO only and must not be hue-remapped.
+      if (object.userData.komorebiGrass || object.userData.stonePath || object.userData.simpleTree) return;
       const attribute = object.geometry.getAttribute('color');
       if (!(attribute instanceof THREE.BufferAttribute) || seenAttributes.has(attribute)) return;
       seenAttributes.add(attribute);
@@ -75,8 +91,10 @@ export function createEnvironmentTone(root: THREE.Group, night = false) {
       const original = vertices.get(attribute)!;
       for (let i = 0; i < attribute.count; i++) {
         source.fromArray(original, i * attribute.itemSize);
-        const leaves = object.userData.treeRole === 'leaves' ? (object.userData.backdropCanopy ? 'canopy' : 'foliage') : undefined;
-        if (tone !== 'original' && !(tone === 'komorebi' && surfaces.some(material => material.userData.komorebiPigment))) remap(source, leaves);
+        const role = object.userData.treeRole === 'leaves'
+          ? (object.userData.backdropCanopy ? 'canopy' : 'foliage')
+          : object.userData.treeRole === 'wood' ? 'wood' : undefined;
+        if (tone !== 'original' && !(tone === 'komorebi' && surfaces.some(material => material.userData.komorebiPigment))) remap(source, role);
         attribute.setXYZ(i, source.r, source.g, source.b);
       }
       attribute.needsUpdate = true;

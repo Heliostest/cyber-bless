@@ -120,7 +120,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "scottish-first-footing": "547c3fbe02d7f09ebdf1cf54637a1254dec189eb7d8a4d4f66bf762d9dd3812e",
   "scottish-plunge-churn": "5a2bc69e6e620f4373469e3d578e40100fa190ba2267d8fab5fa76b25dc17ec9",
   "setsubun-mamemaki": "d2936685bc1b1cd3d96462dfc7c2e1f417e8856c478193b5885c923372ed3867",
-  "shichigosan-chitose-ame": "999db3875e38bc5f157dc38db00638d796a422f96ada722c07df0e3fd683fcb8",
+  "shichigosan-chitose-ame": "00b3f266253449d2cc6997374fa380650824538eb12734016fadb569181c2809",
   "shinto-torii": "c5209f29ccbaeb2f6990d6ed49b94d1599ea4def75a822638f342830ae9ce8b4",
   "shrine-suzu-bell": "f5ba35eb28f79da905f51802d4a6bc3f31ca5c5ab25efbbad8d5a99779b4e104",
   "sicilian-painted-cart": "3fa99549765adc63f6fd19494ceb8e24f4fa3d925b0b03192ac0f7344841acca",

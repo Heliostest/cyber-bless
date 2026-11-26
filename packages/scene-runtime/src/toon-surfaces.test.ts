@@ -255,4 +255,26 @@ describe("official toon material adaptation", () => {
     frame.restore(); surfaces.dispose();
     [wood, bamboo, hintedBamboo].forEach(m => m.dispose());
   });
+
+  it("gives straw a soft dry-cane sheen between waxy bamboo and dry wood while respecting explicit roughness hints", () => {
+    const scene = new THREE.Scene();
+    const straw = new THREE.MeshStandardMaterial({ color: 0xdabb78, roughness: .88, envMapIntensity: 1 });
+    straw.userData.craftSurface = { kind: 'straw', scale: 1, strength: .3, axis: 'y', pattern: 'stalk' };
+    const hintedStraw = new THREE.MeshStandardMaterial({ color: 0xdabb78, roughness: .88, envMapIntensity: 1 });
+    hintedStraw.userData.craftSurface = { kind: 'straw', scale: 1, strength: .3, axis: 'y', pattern: 'woven' };
+    const strawMesh = new THREE.Mesh(new THREE.BoxGeometry(), straw);
+    const hintedMesh = new THREE.Mesh(new THREE.BoxGeometry(), hintedStraw);
+    hintedMesh.userData.toonSurface = { roughness: .86 };
+    scene.add(strawMesh, hintedMesh);
+    const surfaces = createToonSurfaces("toon-soft"), frame = surfaces.apply(scene);
+    const styledStraw = strawMesh.material as THREE.MeshStandardMaterial;
+    const styledHinted = hintedMesh.material as THREE.MeshStandardMaterial;
+    expect(styledStraw.roughness).toBeCloseTo(.72, 5);
+    expect(styledStraw.roughness).toBeGreaterThan(.50);
+    expect(styledStraw.roughness).toBeLessThan(.78);
+    expect(styledStraw.envMapIntensity).toBeCloseTo(.55, 5);
+    expect(styledHinted.roughness).toBe(.86);
+    frame.restore(); surfaces.dispose();
+    [straw, hintedStraw].forEach(m => m.dispose());
+  });
 });

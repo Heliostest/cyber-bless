@@ -10,6 +10,7 @@ import { createObjectPointer } from '../object-pointer'
 import { createTouchTarget } from '../touch-target'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
+import { createWoodGrainTexture, projectHexPrismWoodUVs, projectWoodUVs, type WoodGrainOptions } from './wood-grain'
 
 const COPY = {
   title: '签纸慢读', steps: '步骤', shake: '轻摇签筒', draw: '抽出并展开', keep: '将纸签收好',
@@ -65,10 +66,64 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
   Object.assign(lights.key.shadow.camera, { left: -2, right: 2, top: 3, bottom: -1, near: 0.1, far: 12 })
   lights.key.shadow.bias = -0.0008; lights.key.shadow.normalBias = 0.02
   const world = new THREE.Group(); world.name = 'omikuji-courtyard-work'; scene.add(world)
-  const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: 0.91 })
-  const honey = material(0xd5af74), pale = material(0xe9c992), edge = material(0xb88c5d)
-  const timber = material(0xb39170), cream = material(0xffefd2), paperEdge = material(0xe6d5b3)
-  for(const timberPart of[honey,pale,edge,timber])applyCraftSurface(timberPart,{kind:'wood',strength:.3,axis:'y'})
+  const material = (color: number, roughness = 0.91) => new THREE.MeshStandardMaterial({ color, roughness })
+  const woodTextures: THREE.DataTexture[] = []
+  const woodMat = (
+    color: number,
+    roughness: number,
+    axis: 'x' | 'y' | 'z',
+    scale: number,
+    strength: number,
+    grainOpts: WoodGrainOptions,
+    offsetU = 0,
+    offsetV = 0,
+  ) => {
+    const map = createWoodGrainTexture(grainOpts, offsetU, offsetV)
+    woodTextures.push(map)
+    return applyCraftSurface(new THREE.MeshStandardMaterial({ color, roughness, map }), { kind: 'wood', strength, scale, axis })
+  }
+  const honey = woodMat(0xd9ad6e, 0.78, 'y', 0.78, 0.2, {
+    seed: 11, rings: 5.8, drift: 0.088, arch: 0.068, contrast: 0.165, wash: 0.048,
+    knots: [
+      { u: 0.24, v: 0.30, rx: 0.068, ry: 0.036, pull: 0.76, depth: 0.84 },
+      { u: 0.75, v: 0.74, rx: 0.056, ry: 0.032, pull: 0.72, depth: 0.78 },
+    ],
+  })
+  const rimWoodTop = woodMat(0xdeb579, 0.81, 'x', 0.66, 0.18, {
+    seed: 19, rings: 5.2, drift: 0.075, arch: 0.055, contrast: 0.135, wash: 0.038,
+    knots: [{ u: 0.74, v: 0.28, rx: 0.062, ry: 0.034, pull: 0.70, depth: 0.68 }],
+  })
+  const rimWoodBottom = woodMat(0xd2a66a, 0.82, 'x', 0.82, 0.2, {
+    seed: 23, rings: 6.2, drift: 0.082, arch: 0.052, contrast: 0.15, wash: 0.042,
+  }, 0.24, 0.41)
+  const stickWood = woodMat(0xe2b778, 0.79, 'y', 0.9, 0.2, {
+    seed: 31, rings: 5.6, drift: 0.065, arch: 0.042, contrast: 0.125, wash: 0.032,
+  })
+  const edge = woodMat(0xb27e49, 0.82, 'y', 0.86, 0.22, {
+    seed: 37, rings: 6.8, drift: 0.078, arch: 0.048, contrast: 0.155, wash: 0.04,
+  })
+  const grainAccent = material(0xc0905b, 0.86)
+  const standTop = woodMat(0xbe9265, 0.78, 'x', 0.62, 0.2, {
+    seed: 43, rings: 5.8, drift: 0.092, arch: 0.076, contrast: 0.175, wash: 0.052,
+    knots: [
+      { u: 0.48, v: 0.78, rx: 0.056, ry: 0.036, pull: 0.78, depth: 0.92 },
+      { u: 0.21, v: 0.50, rx: 0.052, ry: 0.026, pull: 0.74, depth: 0.84 },
+      { u: 0.79, v: 0.25, rx: 0.058, ry: 0.034, pull: 0.72, depth: 0.8 },
+    ],
+  })
+  const standApron = woodMat(0xaa7b4f, 0.82, 'x', 0.84, 0.22, {
+    seed: 53, rings: 6.6, drift: 0.08, arch: 0.058, contrast: 0.16, wash: 0.044,
+    knots: [{ u: 0.64, v: 0.48, rx: 0.054, ry: 0.028, pull: 0.72, depth: 0.78 }],
+  })
+  const standLegA = woodMat(0xb88b5f, 0.81, 'y', 0.72, 0.2, {
+    seed: 61, rings: 5.6, drift: 0.088, arch: 0.06, contrast: 0.165, wash: 0.048,
+    knots: [{ u: 0.46, v: 0.54, rx: 0.072, ry: 0.042, pull: 0.76, depth: 0.84 }],
+  })
+  const standLegB = woodMat(0xac7f55, 0.83, 'y', 0.88, 0.22, {
+    seed: 71, rings: 6.4, drift: 0.084, arch: 0.055, contrast: 0.17, wash: 0.046,
+    knots: [{ u: 0.68, v: 0.44, rx: 0.066, ry: 0.038, pull: 0.72, depth: 0.8 }],
+  })
+  const cream = material(0xffefd2), paperEdge = material(0xe6d5b3)
   const sage = material(0x829a80), sageLight = material(0xafb9a0), ink = material(0x947a60), coral = material(0xc77e65)
   // Paper-only optics: the slip and envelope keep a soft fibrous body, while the
   // badge, seal and decorative marks stay flat pigment.
@@ -85,17 +140,27 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     mesh.userData.toonSurface = { outline: false }; return mesh
   }
   // A low stand keeps the box and the open envelope grounded in the courtyard.
-  add(new RoundedBoxGeometry(2.16, 0.14, 1.05, 3, 0.045), timber, 'omikuji-stand-top', [0, 0.44, 0.13])
-  add(new RoundedBoxGeometry(2.05, 0.055, 0.96, 3, 0.022), edge, 'omikuji-stand-apron', [0, 0.345, 0.13])
-  for (const x of [-0.83, 0.83]) for (const z of [-0.22, 0.47]) {
-    add(new RoundedBoxGeometry(0.14, 0.33, 0.16, 3, 0.027), timber, 'omikuji-stand-leg', [x, 0.165, z])
+  add(projectWoodUVs(new RoundedBoxGeometry(2.16, 0.14, 1.05, 3, 0.045), 'x', 0.46, 0.88, 0.5, 0.5), standTop, 'omikuji-stand-top', [0, 0.44, 0.13])
+  add(projectWoodUVs(new RoundedBoxGeometry(2.05, 0.055, 0.96, 3, 0.022), 'x', 0.5, 1.2, 0.38, 0.5), standApron, 'omikuji-stand-apron', [0, 0.345, 0.13])
+  const legSpecs: [number, number, THREE.Material, number, number][] = [
+    [-0.83, -0.22, standLegB, 0.28, 0.62],
+    [-0.83, 0.47, standLegA, 0.5, 0.5],
+    [0.83, -0.22, standLegA, 0.16, 0.32],
+    [0.83, 0.47, standLegB, 0.44, 0.48],
+  ]
+  for (const [x, z, legMat, offU, offV] of legSpecs) {
+    add(projectWoodUVs(new RoundedBoxGeometry(0.14, 0.33, 0.16, 3, 0.027), 'y', 2.2, 2.6, offU, offV), legMat, 'omikuji-stand-leg', [x, 0.165, z])
   }
-  for (const z of [-0.24, 0.04, 0.34]) tube([[-0.98, 0.515, z], [-0.2, 0.515, z + 0.018], [0.98, 0.515, z]], 0.0028, edge, world)
+  for (const [z, bend] of [[-0.24, 0.022], [0.04, -0.016], [0.34, 0.019]] as const) {
+    tube([[-0.98, 0.514, z], [-0.24, 0.514, z + bend], [0.32, 0.514, z - bend * 0.6], [0.98, 0.514, z]], 0.0021, grainAccent, world)
+  }
   const box = new THREE.Group(); box.name = 'omikuji-box'; world.add(box)
-  const body = add(hexagon(0.315, 0.8), honey, 'omikuji-box-body', [0, 0, 0], box)
+  const body = add(projectHexPrismWoodUVs(hexagon(0.315, 0.8), 1.15, 1.75, 0.5, 0.5), honey, 'omikuji-box-body', [0, 0, 0], box)
   for (const y of [-0.42, 0.42]) {
-    add(hexagon(0.335, 0.09), pale, 'omikuji-box-rim', [0, y, 0], box)
-    add(hexagon(0.34, 0.022, 0.005), edge, 'omikuji-box-band', [0, y + (y > 0 ? -0.044 : 0.044), 0], box)
+    const rimMat = y > 0 ? rimWoodTop : rimWoodBottom
+    const rimGeo = projectWoodUVs(hexagon(0.335, 0.09), 'x', 1.1, 1.2, y > 0 ? 0.5 : 0.18, y > 0 ? 0.5 : 0.64)
+    add(rimGeo, rimMat, 'omikuji-box-rim', [0, y, 0], box)
+    add(projectWoodUVs(hexagon(0.34, 0.022, 0.005), 'x', 1.2, 1.4, y > 0 ? 0.32 : 0.71, 0.5), edge, 'omikuji-box-band', [0, y + (y > 0 ? -0.044 : 0.044), 0], box)
   }
   // A small round opening in the lid: the stick visibly rises out of a real hole.
   const slot = add(new THREE.CylinderGeometry(0.056, 0.05, 0.012, 28), hole, 'omikuji-box-slot', [0, 0.466, 0], box)
@@ -105,8 +170,11 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
   const grain = new THREE.Group(); grain.name = 'omikuji-wood-grain'; box.add(grain)
   for (let face = 0; face < 6; face++) {
     for (let line = 0; line < 4; line++) {
-      const x = (line - 1.5) * 0.065
-      const lineMesh = tube([[x, -0.34, 0.287], [x + 0.012, -0.13, 0.287], [x - 0.006, 0.09, 0.287], [x + 0.008, 0.34, 0.287]], 0.0025, edge, grain)
+      const shift = Math.sin(face * 2.1 + line * 1.3) * 0.014
+      const x = (line - 1.5) * 0.064 + shift
+      const w1 = Math.sin(face * 1.7 + line * 2.3) * 0.016
+      const w2 = Math.cos(face * 1.3 - line * 1.9) * 0.014
+      const lineMesh = tube([[x, -0.34, 0.286], [x + w1, -0.11, 0.286], [x + w2, 0.11, 0.286], [x - w1 * 0.45, 0.34, 0.286]], 0.0017, grainAccent, grain)
       lineMesh.rotation.y = face * Math.PI / 3
     }
   }
@@ -119,7 +187,7 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
   }
   // A readable stick: rounded body, painted coral tip band and three abstract
   // engraved dots for its number, never a real shrine numeral or verse.
-  const stick = add(new RoundedBoxGeometry(0.088, 0.6, 0.062, 4, 0.024), pale, 'omikuji-draw-stick', [...STICK.toArray()] as [number, number, number])
+  const stick = add(projectWoodUVs(new RoundedBoxGeometry(0.088, 0.6, 0.062, 4, 0.024), 'y', 1.4, 2.4, 0.5, 0.5), stickWood, 'omikuji-draw-stick', [...STICK.toArray()] as [number, number, number])
   const stickMark = add(new RoundedBoxGeometry(0.094, 0.072, 0.068, 3, 0.022), coral, 'omikuji-stick-mark', [0, 0.248, 0], stick)
   stickMark.userData.toonSurface = { outline: false }
   for (const y of [0.15, 0.1, 0.05]) {
@@ -317,6 +385,7 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
       disposed = true; pointer.dispose(); stopResize(); ui.actionBtn.removeEventListener('click', action)
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       feedback.dispose(); style.dispose(); disposeTree(scene)
+      woodTextures.forEach(tex => tex.dispose()); woodTextures.length = 0
       Object.values(lights).forEach(light => light.dispose())
       scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren()
       overlay.classList.remove('scene-overlay', 'scene-overlay--stage')

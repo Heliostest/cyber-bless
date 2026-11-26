@@ -342,6 +342,36 @@ describe('omikuji original reflection practice', () => {
     expect(object('omikuji-envelope-open-flap').rotation.x).toBeLessThan(-0.2)
   })
 
+  it('splits horizontal stand wood grain from the vertical box and stick while differentiating per-piece wood grain and taming pale rim luminance', () => {
+    mount()
+    const surface = (name: string) => ((object(name) as THREE.Mesh).material as THREE.Material).userData.craftSurface
+    expect(surface('omikuji-stand-top')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surface('omikuji-stand-apron')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surface('omikuji-stand-leg')).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(surface('omikuji-box-body')).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(surface('omikuji-box-rim')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surface('omikuji-draw-stick')).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect((object('omikuji-stand-top') as THREE.Mesh).material).not.toBe((object('omikuji-box-body') as THREE.Mesh).material)
+    const rims: THREE.Mesh[] = []
+    const legs: THREE.Mesh[] = []
+    drawn.scene!.traverse(o => {
+      if (o.name === 'omikuji-box-rim') rims.push(o as THREE.Mesh)
+      if (o.name === 'omikuji-stand-leg') legs.push(o as THREE.Mesh)
+    })
+    expect(rims).toHaveLength(2)
+    expect(rims[0]!.material).not.toBe(rims[1]!.material)
+    expect(new Set(legs.map(l => l.material)).size).toBeGreaterThanOrEqual(2)
+    for (const rim of rims) {
+      const mat = rim.material as THREE.MeshStandardMaterial
+      expect(mat.map).toBeInstanceOf(THREE.DataTexture)
+      const rimHsl = { h: 0, s: 0, l: 0 }
+      mat.color.getHSL(rimHsl, THREE.SRGBColorSpace)
+      expect(rimHsl.l).toBeLessThan(0.71)
+    }
+    expect(((object('omikuji-stand-top') as THREE.Mesh).material as THREE.MeshStandardMaterial).map).toBeInstanceOf(THREE.DataTexture)
+    expect(((object('omikuji-box-body') as THREE.Mesh).material as THREE.MeshStandardMaterial).map).toBeInstanceOf(THREE.DataTexture)
+  })
+
   it('frames the box, stick, slip and envelope large enough to handle on a phone stage', () => {
     const s = mount(0, {}, 346)
     const bounds = (name: string) => {
@@ -363,7 +393,11 @@ describe('omikuji original reflection practice', () => {
       const mesh = o as THREE.Mesh
       if (mesh.geometry) resources.add(mesh.geometry)
       const mats = mesh.material ? Array.isArray(mesh.material) ? mesh.material : [mesh.material] : []
-      mats.forEach(mat => resources.add(mat))
+      mats.forEach(mat => {
+        resources.add(mat)
+        const map = (mat as THREE.MeshStandardMaterial).map
+        if (map) resources.add(map)
+      })
       if ((o as THREE.Light).isLight) resources.add(o as THREE.Light)
       const shadow = (o as THREE.DirectionalLight).shadow
       if (shadow) resources.add(shadow)

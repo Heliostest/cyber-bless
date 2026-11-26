@@ -11,6 +11,7 @@ import {
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage,
 } from '../procedural-kit'
 import { createObjectPointer } from '../object-pointer'
+import { createWoodGrainTexture, projectCylinderWoodUVs, projectWoodUVs, type WoodGrainOptions } from './wood-grain'
 
 const COPY = {
   title: '木牌记愿', flip: '翻到背面', blank: '先留白', acknowledge: '留一份感谢', hang: '挂上木牌',
@@ -74,10 +75,65 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
   const lights = addStageLights(scene, ctx.stage, { sky: 0xfff4e3, ground: 0xc4ad8e, key: 0xffe6c1, rim: 0xd8ede0 })
   const world = new THREE.Group(); scene.add(world)
   const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: 0.91 })
-  const wood = createCraftMaterial({ color: 0xd5af7b, roughness: .91 }, { kind: 'wood' })
-  const timber = createCraftMaterial({ color: 0xb58b64, roughness: .91 }, { kind: 'wood' })
-  const postTimber = createCraftMaterial({ color: 0xb58b64, roughness: .91 }, { kind: 'wood', axis: 'y' })
-  const edgeWood = createCraftMaterial({ color: 0x966e4e, roughness: .91 }, { kind: 'wood' })
+  const woodTextures: THREE.DataTexture[] = []
+  const woodMat = (
+    color: number,
+    roughness: number,
+    axis: 'x' | 'y' | 'z',
+    scale: number,
+    strength: number,
+    grainOpts: WoodGrainOptions,
+    offsetU = 0,
+    offsetV = 0,
+  ) => {
+    const map = createWoodGrainTexture(grainOpts, offsetU, offsetV)
+    woodTextures.push(map)
+    return createCraftMaterial({ color, roughness, map }, { kind: 'wood', axis, strength, scale })
+  }
+  const wood = woodMat(0xddb47b, 0.74, 'x', 0.56, 0.16, {
+    seed: 13, rings: 5.4, drift: 0.085, arch: 0.072, contrast: 0.145, wash: 0.044,
+    knots: [
+      { u: 0.81, v: 0.53, rx: 0.056, ry: 0.030, pull: 0.76, depth: 0.82 },
+      { u: 0.17, v: 0.23, rx: 0.048, ry: 0.026, pull: 0.72, depth: 0.74 },
+    ],
+  })
+  const neighborWoodLeft = woodMat(0xdfb880, 0.75, 'x', 0.44, 0.18, {
+    seed: 21, rings: 4.8, drift: 0.082, arch: 0.062, contrast: 0.16, wash: 0.046,
+    knots: [{ u: 0.28, v: 0.62, rx: 0.068, ry: 0.038, pull: 0.74, depth: 0.8 }],
+  }, 0.14, 0.08)
+  const neighborWoodRight = woodMat(0xcfa76f, 0.77, 'x', 0.34, 0.2, {
+    seed: 29, rings: 5.8, drift: 0.088, arch: 0.066, contrast: 0.165, wash: 0.048,
+    knots: [{ u: 0.73, v: 0.34, rx: 0.064, ry: 0.036, pull: 0.72, depth: 0.78 }],
+  }, -0.22, 0.31)
+  const beamUpper = woodMat(0xbe8753, 0.75, 'x', 0.6, 0.2, {
+    seed: 37, rings: 5.6, drift: 0.09, arch: 0.07, contrast: 0.17, wash: 0.05,
+    knots: [
+      { u: 0.36, v: 0.52, rx: 0.054, ry: 0.032, pull: 0.78, depth: 0.88 },
+      { u: 0.78, v: 0.44, rx: 0.048, ry: 0.028, pull: 0.72, depth: 0.78 },
+    ],
+  })
+  const beamLower = woodMat(0xab7645, 0.78, 'x', 0.74, 0.22, {
+    seed: 43, rings: 6.4, drift: 0.082, arch: 0.064, contrast: 0.165, wash: 0.048,
+    knots: [{ u: 0.22, v: 0.48, rx: 0.056, ry: 0.032, pull: 0.76, depth: 0.84 }],
+  })
+  const postTimberLeft = woodMat(0xb9824f, 0.76, 'y', 0.62, 0.2, {
+    seed: 53, rings: 5.8, drift: 0.086, arch: 0.065, contrast: 0.17, wash: 0.05,
+    knots: [{ u: 0.38, v: 0.52, rx: 0.056, ry: 0.034, pull: 0.76, depth: 0.86 }],
+  })
+  const postTimberRight = woodMat(0xad7746, 0.78, 'y', 0.78, 0.22, {
+    seed: 61, rings: 6.6, drift: 0.084, arch: 0.06, contrast: 0.165, wash: 0.046,
+    knots: [{ u: 0.71, v: 0.46, rx: 0.052, ry: 0.032, pull: 0.74, depth: 0.82 }],
+  })
+  const footWoodLeft = woodMat(0xa3724a, 0.8, 'z', 0.68, 0.2, {
+    seed: 71, rings: 6.2, drift: 0.08, arch: 0.055, contrast: 0.16, wash: 0.044,
+    knots: [{ u: 0.62, v: 0.48, rx: 0.062, ry: 0.036, pull: 0.72, depth: 0.8 }],
+  })
+  const footWoodRight = woodMat(0x956640, 0.82, 'z', 0.82, 0.22, {
+    seed: 79, rings: 6.8, drift: 0.076, arch: 0.052, contrast: 0.155, wash: 0.042,
+  }, 0.28, 0.44)
+  const pegWood = woodMat(0x9d6d46, 0.78, 'y', 0.86, 0.22, {
+    seed: 89, rings: 6.0, drift: 0.07, arch: 0.045, contrast: 0.145, wash: 0.038,
+  })
   const ropeMat = createCraftMaterial({ color: 0xe5d9b8 }, { kind: 'cord' }), green = material(0x84ab88), coral = material(0xd99077)
   const cream = material(0xf3ddb3), gold = material(0xd4ae63), ink = material(0x776951)
   const add = (geometry: THREE.BufferGeometry, mat: THREE.Material, position: [number, number, number], parent: THREE.Object3D = world) => {
@@ -86,12 +142,21 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
   const paint = (mesh: THREE.Mesh) => { mesh.userData.toonSurface = { outline: false }; return mesh }
   const rack = new THREE.Group(); rack.name = 'ema-rack'; world.add(rack)
   for (const x of [-1.08, 1.08]) {
-    add(new RoundedBoxGeometry(0.18, 2.16, 0.23, 3, 0.04), postTimber, [x, 1.08, -0.2], rack)
-    add(new RoundedBoxGeometry(0.35, 0.09, 0.68, 3, 0.035), edgeWood, [x, 0.045, -0.14], rack)
+    const isLeft = x < 0
+    const postGeo = projectWoodUVs(new RoundedBoxGeometry(0.18, 2.16, 0.23, 3, 0.04), 'y', isLeft ? 0.45 : 0.48, isLeft ? 1.35 : 1.45, isLeft ? 0.5 : 0.22, isLeft ? 0.5 : 0.34)
+    add(postGeo, isLeft ? postTimberLeft : postTimberRight, [x, 1.08, -0.2], rack).name = 'ema-rack-post'
+    const footGeo = projectWoodUVs(new RoundedBoxGeometry(0.35, 0.09, 0.68, 3, 0.035), 'z', isLeft ? 1.3 : 1.45, isLeft ? 1.6 : 1.75, isLeft ? 0.5 : 0.24, 0.5)
+    add(footGeo, isLeft ? footWoodLeft : footWoodRight, [x, 0.045, -0.14], rack).name = 'ema-rack-foot'
   }
-  for (const y of [0.64, 1.87]) add(new RoundedBoxGeometry(2.38, 0.17, 0.23, 3, 0.04), timber, [0, y, -0.11], rack)
-  for (const x of [-0.82, 0, 0.82]) {
-    const peg = add(new THREE.CylinderGeometry(0.027, 0.029, 0.16, 12), edgeWood, [x, 1.84, 0.06], rack)
+  for (const y of [0.64, 1.87]) {
+    const isUpper = y > 1
+    const beamGeo = projectWoodUVs(new RoundedBoxGeometry(2.38, 0.17, 0.23, 3, 0.04), 'x', isUpper ? 0.42 : 0.46, isUpper ? 1.65 : 1.75, isUpper ? 0.5 : 0.18, isUpper ? 0.5 : 0.62)
+    add(beamGeo, isUpper ? beamUpper : beamLower, [0, y, -0.11], rack).name = 'ema-rack-beam'
+  }
+  for (const [idx, x] of ([-0.82, 0, 0.82] as const).entries()) {
+    const pegGeo = projectCylinderWoodUVs(new THREE.CylinderGeometry(0.027, 0.029, 0.16, 12), Math.PI * 2 * 0.028, 0.16, 2.5, 4.0, idx * 0.31, idx * 0.23)
+    const peg = add(pegGeo, pegWood, [x, 1.84, 0.06], rack)
+    peg.name = 'ema-rack-peg'
     peg.rotation.x = Math.PI / 2
   }
   const target = add(new THREE.SphereGeometry(0.18, 16, 12), new THREE.MeshBasicMaterial({ visible: false }), [0, 1.84, 0.09], rack)
@@ -109,6 +174,7 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
   const bodyGeometry = new THREE.ExtrudeGeometry(plaqueShape(), { depth: 0.1, bevelEnabled: true,
     bevelSize: 0.012, bevelThickness: 0.012, bevelSegments: 3, curveSegments: 24, steps: 1 })
   bodyGeometry.translate(0, 0, -0.05)
+  projectWoodUVs(bodyGeometry, 'x', 0.68, 0.85, 0.5, 0.46)
   const body = add(bodyGeometry, wood, [0, 0, 0], plaque); body.name = 'ema-plaque-body'
   addInteractionCue(body, {
     kind: 'rotate', label: '左右拖木牌翻面', priority: 2,
@@ -146,9 +212,12 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
     paint(add(new THREE.CircleGeometry(0.049 * scale, 24), gold, [cx, cy, 0.07], painting))
   }
   // A few shallow grain lines continue across the wood; the flower has no sacred lettering.
-  const grain = new THREE.MeshStandardMaterial({ color: 0xb18e65, transparent: true, opacity: 0.2, roughness: 1 })
-  for (const z of [-0.064, 0.064]) for (const y of [-0.39, -0.3, -0.03, 0.17]) {
-    plaque.add(paint(tube([[-0.6, y, z], [-0.21, y + 0.008, z], [0.25, y - 0.008, z], [0.6, y, z]], 0.002, grain)))
+  const grain = new THREE.MeshStandardMaterial({ color: 0xb18e65, transparent: true, opacity: 0.12, roughness: 1 })
+  for (const z of [-0.064, 0.064]) {
+    const sign = z > 0 ? 1 : -1
+    for (const [y, a, b] of [[-0.39, 0.014, -0.008], [-0.28, -0.01, 0.013], [-0.03, 0.012, -0.011], [0.16, -0.009, 0.014]] as const) {
+      plaque.add(paint(tube([[-0.6, y, z], [-0.21, y + a * sign, z], [0.25, y + b * sign, z], [0.6, y, z]], 0.0018, grain)))
+    }
   }
   const written = new THREE.Group(); written.name = 'ema-written-lines'; written.visible = false; plaque.add(written)
   for (const [y, width] of [[0.04, 0.76], [-0.1, 0.57], [-0.24, 0.66]]) {
@@ -158,7 +227,8 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
   for (const [i, x] of [-0.82, 0.82].entries()) {
     const neighbor = new THREE.Group(); neighbor.position.set(x, 1.576, 0.02); neighbor.scale.setScalar(0.33)
     neighbor.rotation.z = i === 0 ? -0.05 : 0.06; rack.add(neighbor)
-    add(bodyGeometry, wood, [0, 0, 0], neighbor)
+    const neighborPlaque = add(bodyGeometry, i === 0 ? neighborWoodLeft : neighborWoodRight, [0, 0, 0], neighbor)
+    neighborPlaque.name = i === 0 ? 'ema-neighbor-plaque-left' : 'ema-neighbor-plaque-right'
     neighbor.add(new THREE.Mesh(rope.geometry, ropeMat))
     paint(add(new THREE.CircleGeometry(0.13, 20), i === 0 ? green : coral, [0, -0.03, 0.067], neighbor))
   }
@@ -299,6 +369,7 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
       ui.actionBtn.removeEventListener('click', action)
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       style.dispose(); disposeTree(world); lights.key.dispose(); lights.rim.dispose()
+      woodTextures.forEach(tex => tex.dispose()); woodTextures.length = 0
       scene.clear(); renderer.dispose(); renderer.forceContextLoss()
       overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },

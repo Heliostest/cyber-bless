@@ -149,6 +149,28 @@ describe('shrine suzu object actions', () => {
     expect(size('suzu-rope-grip')[0]).toBeGreaterThan(30)
   })
 
+  it('aligns vertical wood grain on the rope grip and posts, and differentiates timber across left/right posts, bases, lintel and grip', () => {
+    const s = mount()
+    const surface = (name: string) => ((s.object(name) as THREE.Mesh).material as THREE.Material).userData.craftSurface
+    expect(surface('suzu-rope-grip')).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(surface('suzu-column-post')).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(surface('suzu-lintel')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surface('suzu-column-base')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surface('suzu-column-capital')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surface('suzu-eave-cap')).toMatchObject({ kind: 'wood', axis: 'x' })
+    const posts: THREE.Mesh[] = [], bases: THREE.Mesh[] = [], capitals: THREE.Mesh[] = []
+    drawn.scene!.traverse(o => {
+      if (o.name === 'suzu-column-post') posts.push(o as THREE.Mesh)
+      if (o.name === 'suzu-column-base') bases.push(o as THREE.Mesh)
+      if (o.name === 'suzu-column-capital') capitals.push(o as THREE.Mesh)
+    })
+    expect(posts).toHaveLength(2); expect(posts[0]!.material).not.toBe(posts[1]!.material)
+    expect(bases).toHaveLength(2); expect(bases[0]!.material).not.toBe(bases[1]!.material)
+    expect(capitals).toHaveLength(2); expect(capitals[0]!.material).not.toBe(capitals[1]!.material)
+    expect(((s.object('suzu-lintel') as THREE.Mesh).material as THREE.MeshStandardMaterial).map).toBeInstanceOf(THREE.DataTexture)
+    expect(((s.object('suzu-rope-grip') as THREE.Mesh).material as THREE.MeshStandardMaterial).map).toBeInstanceOf(THREE.DataTexture)
+  })
+
   it('creates an accessible auxiliary action for pulling the actual rope', () => {
     const s = mount()
     expect(s.button).not.toBeNull()
@@ -334,7 +356,11 @@ describe('shrine suzu object actions', () => {
     drawn.scene!.traverse(o => {
       const mesh = o as THREE.Mesh
       if (mesh.geometry) resources.add(mesh.geometry)
-      for (const mat of mesh.material ? Array.isArray(mesh.material) ? mesh.material : [mesh.material] : []) resources.add(mat)
+      for (const mat of mesh.material ? Array.isArray(mesh.material) ? mesh.material : [mesh.material] : []) {
+        resources.add(mat)
+        const map = (mat as THREE.MeshStandardMaterial).map
+        if (map) resources.add(map)
+      }
       if ((o as THREE.Light).isLight) resources.add(o as THREE.Light)
       if ((o as THREE.DirectionalLight).shadow) resources.add((o as THREE.DirectionalLight).shadow)
     })

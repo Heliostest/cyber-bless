@@ -87,18 +87,79 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
     }
     pigment.needsUpdate = true
   }
-  const plane = () => new THREE.PlaneGeometry(W, D, 32, 24)
+  const COLS = 32, ROWS = 24
+  const plane = () => new THREE.PlaneGeometry(W, D, COLS, ROWS)
   const waterGeometry = plane(); waterGeometry.rotateX(-Math.PI / 2)
   const waterMaterial = new THREE.MeshStandardMaterial({ map: pigment, roughness: .28, metalness: .03 })
   const water = add('ebru-floating-pattern', waterGeometry, waterMaterial, [0, WATER_Y, 0]); water.castShadow = false; water.userData.toonSurface = { outline: false, shading: 'smooth' }
   const paperGeometry = plane(), paperPosition = paperGeometry.getAttribute('position'), paperUV = paperGeometry.getAttribute('uv')
-  const blankMaterial = new THREE.MeshStandardMaterial({ color: 0xfff2d7, roughness: .95, side: THREE.FrontSide })
-  const printMaterial = new THREE.MeshStandardMaterial({ color: 0xfff6e7, roughness: .93, side: THREE.BackSide })
-  const transferredMaterial = new THREE.MeshStandardMaterial({ color: 0xfff6e7, map: pigment, roughness: .93, side: THREE.BackSide })
+  const paperColors = new Float32Array(paperPosition.count * 3)
+  for (let i = 0; i < paperPosition.count; i++) {
+    const u = paperUV.getX(i), v = paperUV.getY(i)
+    const edgeDist = Math.min(Math.min(u, 1 - u) * (W / D), Math.min(v, 1 - v))
+    const deckle = THREE.MathUtils.lerp(.928, 1, THREE.MathUtils.smoothstep(edgeDist, 0, .085))
+    const cloud = 1 + .020 * Math.sin(u * 7.3 + v * 4.1) * Math.cos(v * 6.7 - u * 3.9) + .010 * Math.sin(u * 15.1 - v * 11.7)
+    const tone = deckle * cloud
+    paperColors[i * 3] = tone; paperColors[i * 3 + 1] = tone * .995; paperColors[i * 3 + 2] = tone * .984
+  }
+  paperGeometry.setAttribute('color', new THREE.BufferAttribute(paperColors, 3))
+  const sheetOptics = (grain: number, fibers: number, edge: number, highlightGuard: number) => ({
+    kind: 'paper' as const,
+    strength: .24,
+    fiber: 'paper' as const,
+    paper: { layout: 'sheet' as const, aspect: W / D, grainScale: 2.05, grain, fibers, edge, highlightGuard },
+  })
+  const blankMaterial = createRitualMaterial({ color: 0xe8dbc0, roughness: .96, side: THREE.FrontSide, vertexColors: true }, sheetOptics(1, .44, .62, .86))
+  const printMaterial = createRitualMaterial({ color: 0xecdfc6, roughness: .95, side: THREE.BackSide, vertexColors: true }, sheetOptics(1, .40, .56, .88))
+  const transferredMaterial = createRitualMaterial({ color: 0xf1e5cc, map: pigment, roughness: .95, side: THREE.BackSide, vertexColors: true }, sheetOptics(.98, .30, .60, .88))
+  const edgeMaterial = createRitualMaterial({ color: 0xede0c4, roughness: .97, vertexColors: true }, {
+    kind: 'paper', strength: .20, fiber: 'paper',
+    paper: { layout: 'sheet', aspect: 12, grainScale: 1.6, grain: .90, fibers: .22, edge: .24, highlightGuard: .90 },
+  })
   const blank = add('ebru-paper-blank', paperGeometry, blankMaterial), print = add('ebru-paper-print', paperGeometry, printMaterial)
   for (const mesh of [blank, print]) mesh.userData.toonSurface = { outline: false, shading: 'smooth' }
-  const paperEdge = box('ebru-paper-edge', [.82, .042, .14], [0, 0, 0], blankMaterial)
-  paperEdge.userData.toonSurface = { outline: false }
+  // Build a thin continuous 4-sided cut-paper rim wrapping the actual sheet perimeter
+  // (blank-side deckle lip, cut paper core edge, and print-side lip) with split strip normals.
+  const stride = COLS + 1
+  const rimSides: number[][] = [
+    Array.from({ length: COLS + 1 }, (_, ix) => ROWS * stride + ix), // front / top (v=0)
+    Array.from({ length: ROWS + 1 }, (_, k) => (ROWS - k) * stride + COLS), // right (u=1)
+    Array.from({ length: COLS + 1 }, (_, k) => COLS - k), // far / bottom (v=1)
+    Array.from({ length: ROWS + 1 }, (_, iy) => iy * stride), // left (u=0)
+  ]
+  const edgeVertCount = rimSides.reduce((sum, side) => sum + side.length * 6, 0)
+  const edgePositions = new Float32Array(edgeVertCount * 3), edgeUVs = new Float32Array(edgeVertCount * 2), edgeColors = new Float32Array(edgeVertCount * 3)
+  const edgeIndices: number[] = []
+  let edgeCursor = 0
+  const stripTones: readonly [number, number, number][] = [[1, .98, .94], [.96, .93, .87], [1, .98, .94]]
+  for (const side of rimSides) {
+    const n = side.length
+    for (let s = 0; s < 3; s++) {
+      const base = edgeCursor, tone = stripTones[s]!
+      for (let k = 0; k < n; k++) {
+        const u = k / (n - 1)
+        for (let r = 0; r < 2; r++) {
+          const vi = base + k * 2 + r
+          edgeUVs[vi * 2] = u; edgeUVs[vi * 2 + 1] = (s + r) / 3
+          edgeColors[vi * 3] = tone[0]; edgeColors[vi * 3 + 1] = tone[1]; edgeColors[vi * 3 + 2] = tone[2]
+        }
+        if (k < n - 1) {
+          const a = base + k * 2, b = a + 1, c = a + 2, d = a + 3
+          edgeIndices.push(a, b, d, a, d, c)
+        }
+      }
+      edgeCursor += n * 2
+    }
+  }
+  const edgeGeometry = new THREE.BufferGeometry()
+  edgeGeometry.setAttribute('position', new THREE.BufferAttribute(edgePositions, 3))
+  edgeGeometry.setAttribute('uv', new THREE.BufferAttribute(edgeUVs, 2))
+  edgeGeometry.setAttribute('color', new THREE.BufferAttribute(edgeColors, 3))
+  edgeGeometry.setIndex(edgeIndices)
+  const paperEdge = add('ebru-paper-edge', edgeGeometry, edgeMaterial)
+  paperEdge.userData.toonSurface = { outline: false, shading: 'smooth' }
+  const edgeAnchor = new THREE.Vector3(), tmpP = new THREE.Vector3(), tmpN = new THREE.Vector3(), tmpT = new THREE.Vector3(), tmpO = new THREE.Vector3(), tmpOAdj = new THREE.Vector3()
+  const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), tmpC = new THREE.Vector3(), tmpD = new THREE.Vector3()
   const comb = new THREE.Group(); comb.name = 'ebru-comb'; world.add(comb)
   box('ebru-comb-spine', [.13, .12, 1.86], [0, .11, -.03], timber, comb)
   const grip = add('ebru-comb-grip', new THREE.CapsuleGeometry(.095, .31, 8, 16), timber, [0, .23, 1.02], comb); grip.rotation.x = Math.PI / 2
@@ -108,15 +169,69 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
   comb.traverse(object => { object.userData.toonSurface = { outline: false, shading: 'smooth' } })
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const sheetPoint = (u: number, t: number) => {
+    const sx = 2 * u - 1, uEdge = sx * sx, uncontact = 1 - contactAmount
     // Prepared blank sheet curls above the far rim, then lies fully in contact.
-    const curlY = .66 + .78 * Math.sin(t * Math.PI * .88), curlZ = -1.02 - .14 * Math.sin(t * Math.PI * 1.3)
+    const curlY = .66 + .78 * Math.sin(t * Math.PI * .88) + uncontact * (-.022 * uEdge * Math.sin(t * Math.PI * .95) + .008 * Math.sin(u * Math.PI * 3) * Math.sin(t * Math.PI))
+    const curlZ = -1.02 - .14 * Math.sin(t * Math.PI * 1.3) + uncontact * .028 * uEdge * (t - .5)
     const flatZ = D / 2 - D * t
     // Peeling progresses from the held front edge. The far strip remains on
     // the bath during the first part of the pull instead of levitating whole.
     const peel = ease(THREE.MathUtils.clamp((peelAmount - .65 * t) / (1 - .65 * t), 0, 1))
-    const y = THREE.MathUtils.lerp(curlY, WATER_Y, contactAmount) + peel * (.2 + (1 - t) * D)
-    const z = THREE.MathUtils.lerp(curlZ, flatZ, contactAmount) * (1 - peel) + peel * (.12 + .16 * Math.sin(t * Math.PI))
-    return new THREE.Vector3((u - .5) * W, y, z)
+    const topSag = -.042 * peel * uEdge * (1 - t) * (1 - t)
+    const cornerCurlZ = peel * uEdge * (-.048 * (1 - t) * (1 - t) + .058 * t * t)
+    const dampRippleZ = peel * .015 * Math.sin(u * Math.PI * 3 - .35) * Math.sin(t * Math.PI) * uEdge
+    const x = (u - .5) * W * (1 - .008 * peel * uEdge * (1 - .5 * Math.sin(t * Math.PI)))
+    const y = THREE.MathUtils.lerp(curlY, WATER_Y, contactAmount) + peel * (.2 + (1 - t) * D) + topSag
+    const z = THREE.MathUtils.lerp(curlZ, flatZ, contactAmount) * (1 - peel) + peel * (.12 + .16 * Math.sin(t * Math.PI)) + cornerCurlZ + dampRippleZ
+    return new THREE.Vector3(x, y, z)
+  }
+  const updatePaperEdge = () => {
+    const paperNormal = paperGeometry.getAttribute('normal')
+    const edgePosAttr = edgeGeometry.getAttribute('position') as THREE.BufferAttribute
+    edgeAnchor.copy(sheetPoint(.5, 0))
+    paperEdge.position.copy(edgeAnchor); paperEdge.rotation.set(0, 0, 0)
+    const topN = THREE.MathUtils.lerp(0, .013, peelAmount)
+    const botN = THREE.MathUtils.lerp(-.009, -.001, peelAmount)
+    const lip = .008
+    const sideTangent = (side: number[], k: number, out: THREE.Vector3) => {
+      const i0 = side[Math.max(0, k - 1)]!, i1 = side[Math.min(side.length - 1, k + 1)]!
+      out.set(
+        paperPosition.getX(i1) - paperPosition.getX(i0),
+        paperPosition.getY(i1) - paperPosition.getY(i0),
+        paperPosition.getZ(i1) - paperPosition.getZ(i0),
+      ).normalize()
+    }
+    let cursor = 0
+    for (let sIdx = 0; sIdx < rimSides.length; sIdx++) {
+      const side = rimSides[sIdx]!, n = side.length
+      const prevSide = rimSides[(sIdx + 3) % 4]!, nextSide = rimSides[(sIdx + 1) % 4]!
+      for (let k = 0; k < n; k++) {
+        const pi = side[k]!
+        tmpP.fromBufferAttribute(paperPosition, pi).sub(edgeAnchor)
+        tmpN.fromBufferAttribute(paperNormal, pi).normalize()
+        sideTangent(side, k, tmpT)
+        tmpO.crossVectors(tmpT, tmpN).normalize()
+        if (k === 0) {
+          sideTangent(prevSide, prevSide.length - 1, tmpT)
+          tmpOAdj.crossVectors(tmpT, tmpN).normalize()
+          tmpO.add(tmpOAdj)
+        } else if (k === n - 1) {
+          sideTangent(nextSide, 0, tmpT)
+          tmpOAdj.crossVectors(tmpT, tmpN).normalize()
+          tmpO.add(tmpOAdj)
+        }
+        tmpA.copy(tmpP).addScaledVector(tmpN, topN)
+        tmpB.copy(tmpA).addScaledVector(tmpO, lip)
+        tmpC.copy(tmpP).addScaledVector(tmpN, botN).addScaledVector(tmpO, lip)
+        tmpD.copy(tmpP).addScaledVector(tmpN, botN)
+        const i0 = cursor + k * 2, i1 = cursor + n * 2 + k * 2, i2 = cursor + n * 4 + k * 2
+        edgePosAttr.setXYZ(i0, tmpA.x, tmpA.y, tmpA.z); edgePosAttr.setXYZ(i0 + 1, tmpB.x, tmpB.y, tmpB.z)
+        edgePosAttr.setXYZ(i1, tmpB.x, tmpB.y, tmpB.z); edgePosAttr.setXYZ(i1 + 1, tmpC.x, tmpC.y, tmpC.z)
+        edgePosAttr.setXYZ(i2, tmpC.x, tmpC.y, tmpC.z); edgePosAttr.setXYZ(i2 + 1, tmpD.x, tmpD.y, tmpD.z)
+      }
+      cursor += n * 6
+    }
+    edgePosAttr.needsUpdate = true; edgeGeometry.computeVertexNormals(); edgeGeometry.computeBoundingBox(); edgeGeometry.computeBoundingSphere()
   }
   const setShape = () => {
     updatePigment(combAmount)
@@ -127,7 +242,7 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
     }
     paperPosition.needsUpdate = true; paperGeometry.computeVertexNormals(); paperGeometry.computeBoundingBox(); paperGeometry.computeBoundingSphere()
     sheetPoint(.5, .125).toArray(peelAnchor)
-    paperEdge.position.copy(sheetPoint(.5, 0)); paperEdge.rotation.x = -peelAmount * Math.PI / 2
+    updatePaperEdge()
     // The host caches styled maps by material identity. Switch the physical
     // underside only after contact instead of mutating a cached map in place.
     print.material = contactAmount === 1 ? transferredMaterial : printMaterial

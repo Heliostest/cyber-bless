@@ -1,25 +1,33 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import {
+ applyBasketBaseGroupsAndShading,
+ applyBasketRingShading,
+ applyBasketUprightShading,
+ applyWillowTwigShading,
+ createVirpominenWillowMaterials,
+} from './willow-craft'
 
 /** Original doorway, decorated willow and gift; no named person's likeness or copied patterns. */
 export function createVirpominenModel(){
  const root=new THREE.Group();root.name='virpominen-subject'
  const material=(color:number,roughness=.85,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness})
- const bark=material(0x806746),willow=material(0xe4e2ce),blue=material(0x699b9a),wood=material(0xb3a27b),stone=material(0xc8c9b5),inside=material(0xe3dcc1),skin=material(0xe9b18a),yellow=material(0xf2ce78),pink=material(0xea918e),paper=material(0xf1e8bf),foil=material(0xd75e79,.5,.15)
- // Basket fibers and paper flowers keep their original shared palette.
- const doorWood=applyCraftSurface(wood.clone(),{kind:'wood',strength:.4,axis:'y'})
+ const willow=material(0xe4e2ce),blue=material(0x699b9a),stone=material(0xc8c9b5),inside=material(0xe3dcc1),skin=material(0xe9b18a),yellow=material(0xf2ce78),pink=material(0xea918e),paper=material(0xf1e8bf),foil=material(0xd75e79,.5,.15)
+ // Woven willow basket & pussy-willow twigs use stylized DataTexture craft materials; paper flowers, ties and buds keep their original palette.
+ const willowCraft=createVirpominenWillowMaterials()
+ const doorWood=applyCraftSurface(material(0xb3a27b),{kind:'wood',strength:.4,axis:'y'})
  const yellowCuff=applyCraftSurface(yellow.clone(),{kind:'fabric',strength:.25}),blueCuff=applyCraftSurface(blue.clone(),{kind:'fabric',strength:.25})
  applyCraftSurface(foil,{kind:'metal',strength:.4})
  applyCraftSurface(stone,{kind:'stone',strength:.45})
- const clean=(source:THREE.BufferGeometry)=>{const raw=source.index?source.toNonIndexed():source,p=raw.getAttribute('position'),v:number[]=[];for(let i=0;i<p.count;i+=3){const a=new THREE.Vector3().fromBufferAttribute(p,i),b=new THREE.Vector3().fromBufferAttribute(p,i+1),c=new THREE.Vector3().fromBufferAttribute(p,i+2);if(new THREE.Triangle(a,b,c).getArea()>1e-12)v.push(...a.toArray(),...b.toArray(),...c.toArray())}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.computeVertexNormals();if(raw!==source)raw.dispose();source.dispose();return g}
- const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D=root)=>{const o=new THREE.Mesh(clean(g),m);o.name=name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
+ const clean=(source:THREE.BufferGeometry)=>{const raw=source.index?source.toNonIndexed():source,p=raw.getAttribute('position'),uvAttr=raw.getAttribute('uv'),v:number[]=[],uvs:number[]=[];for(let i=0;i<p.count;i+=3){const a=new THREE.Vector3().fromBufferAttribute(p,i),b=new THREE.Vector3().fromBufferAttribute(p,i+1),c=new THREE.Vector3().fromBufferAttribute(p,i+2);if(new THREE.Triangle(a,b,c).getArea()>1e-12){v.push(...a.toArray(),...b.toArray(),...c.toArray());if(uvAttr)uvs.push(uvAttr.getX(i),uvAttr.getY(i),uvAttr.getX(i+1),uvAttr.getY(i+1),uvAttr.getX(i+2),uvAttr.getY(i+2))}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));if(uvAttr)g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.computeVertexNormals();if(raw!==source)raw.dispose();source.dispose();return g}
+ const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material|THREE.Material[],parent:THREE.Object3D=root)=>{const o=new THREE.Mesh(clean(g),m);o.name=name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  const ball=(name:string,p:number[],s:number[],mat:THREE.Material,parent:THREE.Object3D=root)=>{const o=mesh(name,new THREE.SphereGeometry(1,20,12),mat,parent);o.position.set(...p as [number,number,number]);o.scale.set(...s as [number,number,number]);return o}
  const box=(name:string,p:number[],s:number[],mat:THREE.Material)=>{const o=mesh(name,new THREE.BoxGeometry(...s as [number,number,number]),mat);o.position.set(...p as [number,number,number]);return o}
  const tube=(name:string,curve:THREE.Curve<THREE.Vector3>,radius:number,mat:THREE.Material,parent:THREE.Object3D=root,segments=24)=>{
-  const radial=10,source=new THREE.TubeGeometry(curve,segments,radius,radial,false),positions=source.getAttribute('position'),raw=source.toNonIndexed(),values=Array.from(raw.getAttribute('position').array)
-  const face=(a:THREE.Vector3,b:THREE.Vector3,c:THREE.Vector3)=>values.push(...a.toArray(),...b.toArray(),...c.toArray())
-  for(let j=0;j<radial;j++){face(curve.getPoint(0),new THREE.Vector3().fromBufferAttribute(positions,j),new THREE.Vector3().fromBufferAttribute(positions,j+1));face(curve.getPoint(1),new THREE.Vector3().fromBufferAttribute(positions,segments*(radial+1)+j+1),new THREE.Vector3().fromBufferAttribute(positions,segments*(radial+1)+j))}
-  source.dispose();raw.dispose();const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(values,3));return mesh(name,g,mat,parent)
+  const radial=10,source=new THREE.TubeGeometry(curve,segments,radius,radial,false),positions=source.getAttribute('position'),raw=source.toNonIndexed(),values=Array.from(raw.getAttribute('position').array),uvs=Array.from(raw.getAttribute('uv').array)
+  const face=(a:THREE.Vector3,b:THREE.Vector3,c:THREE.Vector3,ua:number,va:number,ub:number,vb:number,uc:number,vc:number)=>{values.push(...a.toArray(),...b.toArray(),...c.toArray());uvs.push(ua,va,ub,vb,uc,vc)}
+  for(let j=0;j<radial;j++){face(curve.getPoint(0),new THREE.Vector3().fromBufferAttribute(positions,j),new THREE.Vector3().fromBufferAttribute(positions,j+1),0,.5,0,j/radial,0,(j+1)/radial);face(curve.getPoint(1),new THREE.Vector3().fromBufferAttribute(positions,segments*(radial+1)+j+1),new THREE.Vector3().fromBufferAttribute(positions,segments*(radial+1)+j),1,.5,1,(j+1)/radial,1,j/radial)}
+  source.dispose();raw.dispose();const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(values,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));return mesh(name,g,mat,parent)
  }
  const threshold=box('stone-doorstep',[.40,.07,-.31],[2.12,.14,1.12],stone)
  for(const x of[-.46,1.26])box('painted-door-jamb-'+x,[x,1.14,-.59],[.13,2.0,.17],blue)
@@ -29,10 +37,10 @@ export function createVirpominenModel(){
  for(const x of[-.33,1.13])box('door-inset-shadow-'+x,[x,1.12,-.75],[.045,1.9,.10],doorWood)
 
  const branch=new THREE.Group();branch.name='decorated-willow';root.add(branch)
- const stem=mesh('willow-stem',new THREE.CylinderGeometry(.012,.018,1.10,12),bark,branch);stem.position.y=.30
+ const stem=mesh('willow-stem',new THREE.CylinderGeometry(.012,.018,1.10,12),willowCraft.barkStem,branch);stem.position.y=.30;applyWillowTwigShading(stem.geometry,'stem')
  for(const [i,side,height]of[[0,-1,.40],[1,1,.49],[2,-1,.64]]){
   const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(0,height,0),new THREE.Vector3(side*.11,height+.12,.01),new THREE.Vector3(side*.21,height+.30,.02)])
-  tube('willow-fork-'+i,curve,.008,bark,branch,14)
+  const fork=tube('willow-fork-'+i,curve,.008,willowCraft.barkFork,branch,14);applyWillowTwigShading(fork.geometry,'fork',i)
   for(let n=0;n<3;n++){const q=curve.getPoint(.40+n*.27);const bud=ball(`pussy-willow-${i}-${n}`,[q.x+side*.014,q.y,q.z+.014],[.025,.042,.022],willow,branch);bud.rotation.z=-side*.35}
  }
  for(const [i,y]of[[0,.46],[1,.79]]){
@@ -57,9 +65,10 @@ export function createVirpominenModel(){
  const childOrigin=new THREE.Vector3(-.68,.78,.66),childOffset=new THREE.Vector3(0,-.09,0),childRest=new THREE.Vector3(-1.02,.66,1.15),receiveOrigin=new THREE.Vector3(.73,.78,-.02),giftStart=new THREE.Vector3(.99,.83,.31)
  const receivingGrip=receiveOrigin.clone().add(new THREE.Vector3(0,.24,0)),receivingWait=receivingGrip.clone().add(new THREE.Vector3(0,0,-.30))
  const basket=new THREE.Group();basket.name='visitor-basket';basket.position.set(-.65,0,.82);root.add(basket)
- const base=mesh('basket-solid-base',new THREE.CylinderGeometry(1,1,.08,40),wood,basket);base.position.y=.06;base.scale.set(.40,1,.30)
- for(let i=0;i<32;i++){const a=i/32*Math.PI*2,o=mesh('basket-upright-'+i,new THREE.CylinderGeometry(.012,.013,.20,8),wood,basket);o.position.set(.41*Math.cos(a),.20,.31*Math.sin(a))}
- for(let i=0;i<4;i++){const rim=mesh('basket-woven-ring-'+i,new THREE.TorusGeometry(.41,.014,8,48),wood,basket);rim.rotation.x=Math.PI/2;rim.scale.y=.31/.41;rim.position.y=.13+i*.055}
+ const base=mesh('basket-solid-base',new THREE.CylinderGeometry(1,1,.08,40),[willowCraft.baseSide,willowCraft.baseFloor],basket);base.position.y=.06;base.scale.set(.40,1,.30);applyBasketBaseGroupsAndShading(base.geometry)
+ const uprightOrder=[0,1,2,1,0,2] as const
+ for(let i=0;i<32;i++){const a=i/32*Math.PI*2,o=mesh('basket-upright-'+i,new THREE.CylinderGeometry(.012,.013,.20,8),willowCraft.uprights[uprightOrder[i%uprightOrder.length]!]!,basket);o.position.set(.41*Math.cos(a),.20,.31*Math.sin(a));applyBasketUprightShading(o.geometry,i)}
+ for(let i=0;i<4;i++){const rim=mesh('basket-woven-ring-'+i,new THREE.TorusGeometry(.41,.014,8,48),willowCraft.rings[i]!,basket);rim.rotation.x=Math.PI/2;rim.scale.y=.31/.41;rim.position.y=.13+i*.055;applyBasketRingShading(rim.geometry,i)}
  const egg=new THREE.Group();egg.name='wrapped-chocolate-egg';root.add(egg)
  const eggBody=ball('foil-egg-body',[0,0,0],[.09,.13,.09],foil,egg)
  const seam=mesh('foil-egg-seam',new THREE.TorusGeometry(.0903,.003,6,40),paper,egg);seam.rotation.x=Math.PI/2

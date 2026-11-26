@@ -7,9 +7,113 @@ import { animate, createTimeline } from "animejs";
 import { swingPose } from "./woodfish-motion";
 import { parseWoodfishModel } from "./woodfish-model";
 import { createDebugRenderStyle } from "@wbr/scene-runtime/debug-render-style";
-import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces';
+import { debugStyles } from "@wbr/scene-runtime/debug-styles";
 import { addInteractionCue } from "@wbr/scenes";
 type Options = WoodfishContext & SceneMountOptions;
+type WoodCalibration = {
+    base: readonly [number, number, number];
+    latewood: readonly [number, number, number];
+    earlywood: readonly [number, number, number];
+    chromaRetention: number;
+};
+const BODY_WOOD_CALIBRATION: WoodCalibration = {
+    base: [224 / 255, 164 / 255, 104 / 255],
+    latewood: [184 / 255, 120 / 255, 67 / 255],
+    earlywood: [239 / 255, 189 / 255, 130 / 255],
+    chromaRetention: 0.30,
+};
+const MALLET_WOOD_CALIBRATION: WoodCalibration = {
+    base: [227 / 255, 168 / 255, 108 / 255],
+    latewood: [188 / 255, 125 / 255, 72 / 255],
+    earlywood: [241 / 255, 193 / 255, 135 / 255],
+    chromaRetention: 0.28,
+};
+/** Recolor the GLB's baked wood grain into Cyber Bless's warm creamy-amber palette while keeping organic grain contours intact. */
+function calibrateBakedWoodMap(
+    source: THREE.Texture,
+    palette: WoodCalibration,
+    maxAnisotropy: number,
+): THREE.CanvasTexture | null {
+    const image = source.image as (CanvasImageSource & { width?: number; height?: number }) | undefined;
+    const rawW = image?.width ?? 0;
+    const rawH = image?.height ?? 0;
+    if (!image || rawW <= 0 || rawH <= 0 || typeof document === "undefined")
+        return null;
+    const scale = Math.min(1, 1024 / Math.max(rawW, rawH));
+    const width = Math.max(1, Math.round(rawW * scale));
+    const height = Math.max(1, Math.round(rawH * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx)
+        return null;
+    ctx.drawImage(image, 0, 0, width, height);
+    const frame = ctx.getImageData(0, 0, width, height);
+    const data = frame.data;
+    let sumR = 0, sumG = 0, sumB = 0, sumL = 0, count = 0;
+    for (let i = 0; i < data.length; i += 16) {
+        const r = data[i] / 255, g = data[i + 1] / 255, b = data[i + 2] / 255;
+        const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        if (luma <= 0.25)
+            continue;
+        sumR += r;
+        sumG += g;
+        sumB += b;
+        sumL += luma;
+        count++;
+    }
+    if (!count)
+        return null;
+    const meanR = sumR / count, meanG = sumG / count, meanB = sumB / count, meanL = sumL / count;
+    const meanCR = meanR - meanL, meanCG = meanG - meanL, meanCB = meanB - meanL;
+    const [bR, bG, bB] = palette.base;
+    const [lR, lG, lB] = palette.latewood;
+    const [eR, eG, eB] = palette.earlywood;
+    const retain = palette.chromaRetention;
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i] / 255, g = data[i + 1] / 255, b = data[i + 2] / 255;
+        if (r + g + b < 0.04)
+            continue;
+        const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        // Soft hyperbolic shoulder keeps macro carved grain crisp while taming harsh noisy spikes.
+        const grain = Math.tanh((luma - meanL) / 0.135) * 1.12;
+        let tR: number, tG: number, tB: number;
+        if (grain < 0) {
+            const k = -grain;
+            tR = bR + (lR - bR) * k;
+            tG = bG + (lG - bG) * k;
+            tB = bB + (lB - bB) * k;
+        }
+        else {
+            tR = bR + (eR - bR) * grain;
+            tG = bG + (eG - bG) * grain;
+            tB = bB + (eB - bB) * grain;
+        }
+        const dCR = (r - luma) - meanCR;
+        const dCG = (g - luma) - meanCG;
+        const dCB = (b - luma) - meanCB;
+        const edge = THREE.MathUtils.clamp((luma - 0.05) / 0.2, 0, 1);
+        const outR = THREE.MathUtils.lerp(r, THREE.MathUtils.clamp(tR + dCR * retain, 0, 0.95), edge);
+        const outG = THREE.MathUtils.lerp(g, THREE.MathUtils.clamp(tG + dCG * retain, 0, 0.88), edge);
+        const outB = THREE.MathUtils.lerp(b, THREE.MathUtils.clamp(tB + dCB * retain, 0, 0.76), edge);
+        data[i] = Math.round(outR * 255);
+        data[i + 1] = Math.round(outG * 255);
+        data[i + 2] = Math.round(outB * 255);
+    }
+    ctx.putImageData(frame, 0, 0);
+    const calibrated = new THREE.CanvasTexture(canvas);
+    calibrated.colorSpace = source.colorSpace;
+    calibrated.flipY = source.flipY;
+    calibrated.wrapS = source.wrapS;
+    calibrated.wrapT = source.wrapT;
+    calibrated.minFilter = source.minFilter;
+    calibrated.magFilter = source.magFilter;
+    calibrated.generateMipmaps = source.generateMipmaps;
+    calibrated.anisotropy = Math.min(maxAnisotropy, 4);
+    calibrated.needsUpdate = true;
+    return calibrated;
+}
 export const woodfishEngine: SceneEngine<WoodfishContext, WoodfishController> = {
     create: (host, context, options) => createWoodfishScene(host, { ...context, ...options }),
 };
@@ -164,13 +268,62 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
     contact.rotation.x = -Math.PI / 2;
     contact.position.set(-0.12, -0.925, 0);
     contact.castShadow = false;
+    const sceneId = options.sceneId ?? "woodfish";
+    const styleScope = renderer.domElement.closest?.(".app-shell") ?? undefined;
     const styleRenderer = createDebugRenderStyle(renderer, scene, camera, {
-        id: options.sceneId ?? "woodfish", label: tr("\u6728\u9C7C"), invalidate: () => requestRender(true),
+        id: sceneId, label: tr("\u6728\u9C7C"), invalidate: () => requestRender(true),
+    });
+    type WoodSurfaceBinding = {
+        material: THREE.MeshStandardMaterial;
+        rawMap: THREE.Texture;
+        calibratedMap: THREE.Texture | null;
+    };
+    let surfaceBindings: WoodSurfaceBinding[] = [];
+    let activeBodyMesh: THREE.Mesh | null = null;
+    let activeMalletMesh: THREE.Mesh | null = null;
+    function resolveStyle(): RenderStyleId {
+        const snapshot = debugStyles.getSnapshot();
+        const entry = snapshot.find((item) => item.id === sceneId && item.scope === styleScope)
+            ?? snapshot.find((item) => item.id === sceneId);
+        return entry?.actual ?? selectedStyle;
+    }
+    function syncWoodfishSurfaceStyle(style: RenderStyleId) {
+        if (!activeBodyMesh || !activeMalletMesh)
+            return;
+        const useRaw = style === "original";
+        const simplifyCel = style === "toon-ink" || style === "toon-outline";
+        let mapChanged = false;
+        for (const binding of surfaceBindings) {
+            const nextMap = useRaw ? binding.rawMap : (binding.calibratedMap ?? binding.rawMap);
+            if (binding.material.map !== nextMap) {
+                binding.material.map = nextMap;
+                binding.material.needsUpdate = true;
+                mapChanged = true;
+            }
+        }
+        activeBodyMesh.userData.toonSurface = simplifyCel
+            ? { color: 0xe2aa6c, simplifyMap: true, aoIntensity: 0.72 }
+            : { simplifyMap: false, aoIntensity: 0.72 };
+        activeMalletMesh.userData.toonSurface = simplifyCel
+            ? { color: 0xdfae73, simplifyMap: true, aoIntensity: 0.4 }
+            : { simplifyMap: false, aoIntensity: 0.4 };
+        if (mapChanged)
+            requestRender(true);
+    }
+    const unsubscribeStyles = debugStyles.subscribe(() => {
+        if (disposed)
+            return;
+        const nextStyle = resolveStyle();
+        if (nextStyle !== selectedStyle) {
+            selectedStyle = nextStyle;
+            syncWoodfishSurfaceStyle(nextStyle);
+        }
     });
     options.content
         .load(async (pack, bytes, soundBytes) => {
         const asset = await parseWoodfishModel(bytes, pack.bindings);
         const previousStyle = selectedStyle;
+        const createdMaps: THREE.Texture[] = [];
         try {
             const decoded = soundBytes
                 ? await options.decodeSound(soundBytes)
@@ -182,16 +335,27 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
             key.intensity = parameters.keyIntensity;
             fill.intensity = parameters.fillIntensity;
             rim.intensity = parameters.rimIntensity;
-            for (const mesh of [asset.body, asset.mallet]) {
-                for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
-                    if (material instanceof THREE.MeshStandardMaterial)
-                        applyCraftSurface(material, { kind: 'wood', strength: .5, scale: .42 });
+            const maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
+            const bindings: WoodSurfaceBinding[] = [];
+            for (const [part, palette] of [
+                [asset.body, BODY_WOOD_CALIBRATION],
+                [asset.mallet, MALLET_WOOD_CALIBRATION],
+            ] as const) {
+                for (const material of Array.isArray(part.material) ? part.material : [part.material]) {
+                    if (material instanceof THREE.MeshStandardMaterial && material.map) {
+                        const calibratedMap = calibrateBakedWoodMap(material.map, palette, maxAnisotropy);
+                        if (calibratedMap)
+                            createdMaps.push(calibratedMap);
+                        bindings.push({ material, rawMap: material.map, calibratedMap });
+                    }
                 }
             }
+            surfaceBindings = bindings;
+            activeBodyMesh = asset.body;
+            activeMalletMesh = asset.mallet;
             bodyGroup.add(asset.body);
-            // Anime painted-wood palette for toon presets; original GLB/PBR maps remain intact.
-            asset.body.userData.toonSurface = { color: 0xe0ae72, simplifyMap: true, aoIntensity: 0.95 };
-            asset.mallet.userData.toonSurface = { color: 0xdcb37c, simplifyMap: true, aoIntensity: 0.45 };
+            // Keep calibrated GLB carved grain in toon-soft; cel/ink modes still simplify cleanly.
+            syncWoodfishSurfaceStyle("toon-soft");
             bodyGroup.position.y = -0.91;
             asset.body.position.y = 0.91;
             mallet.add(asset.mallet);
@@ -204,13 +368,19 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
             if (shaderFailed)
                 throw Error("Scene shader failed");
             styleRenderer.setStyle("toon-soft");
+            selectedStyle = resolveStyle();
+            syncWoodfishSurfaceStyle(selectedStyle);
             styleRenderer.render();
             if (shaderFailed)
                 throw Error("Scene shader failed");
-            selectedStyle = "toon-soft";
+            textures.push(...createdMaps);
             return { asset, decoded };
         }
         catch (error) {
+            surfaceBindings = [];
+            activeBodyMesh = null;
+            activeMalletMesh = null;
+            createdMaps.forEach((t) => t.dispose());
             bodyGroup.remove(asset.body);
             mallet.remove(asset.mallet);
             asset.dispose();
@@ -530,6 +700,10 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
             if (disposed)
                 return;
             disposed = true;
+            unsubscribeStyles();
+            surfaceBindings = [];
+            activeBodyMesh = null;
+            activeMalletMesh = null;
             void releaseContent?.();
             stopFollowing();
             strikeAnimation?.cancel();

@@ -8,6 +8,7 @@ import { createObjectPointer } from '../object-pointer'
 import { placementHit } from '../placement-hit'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
+import { createFijianFanMaterials, writePandanusStripVertexColor } from './fan-materials'
 
 const COPY = {
   title: '叶扇纳凉', assemble: '拿起桌前的收口绑带，接到木柄上端。',
@@ -47,13 +48,16 @@ export function createFijianWovenFan(ctx: SceneContext): SceneInstance {
   lights.key.shadow.bias = -.0007; lights.key.shadow.normalBias = .018
   const world = new THREE.Group(); world.name = 'fan-workbench'; scene.add(world)
   const material = (color: number, roughness = .83) => new THREE.MeshStandardMaterial({ color, roughness })
-  const straw = material(0xd9bd7f), pale = material(0xe3cc99), reed = material(0xad8751), sage = material(0x788b63)
-  const sienna = material(0xa86240), oak = material(0xcbb18b), walnut = material(0x8c7051), wood = material(0xaa7e4b, .68)
+  const sage = material(0x788b63)
+  const {
+    warpStrip, weftStrip, reedStrip, bladeCore, reedFrame, reedCollar, edgeTie,
+    bindingLeaf, siennaLeaf, handleWood, walnutHorizontal, walnutVertical,
+  } = createFijianFanMaterials()
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: XYZ, parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p)
     mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
-  const box = (name: string, size: XYZ, p: XYZ, mat: THREE.Material = oak, parent: THREE.Object3D = world) =>
+  const box = (name: string, size: XYZ, p: XYZ, mat: THREE.Material, parent: THREE.Object3D = world) =>
     add(name, new RoundedBoxGeometry(...size, 3, Math.min(.02, ...size.map(v => v / 3))), mat, p, parent)
   const tube = (name: string, points: XYZ[], radius: number, mat: THREE.Material, parent: THREE.Object3D, closed = false, segments = 64) => {
     const mesh = add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)), closed, 'centripetal'), segments, radius, 6, closed), mat, [0, 0, 0], parent)
@@ -62,26 +66,26 @@ export function createFijianWovenFan(ctx: SceneContext): SceneInstance {
   addCraftTable(world, { name: 'fan-table', topName: 'fan-table', width: 3.58, depth: 1.64, surfaceY: .76, thickness: .12, center: [0,.03], support: 'trestle', finish: 'honey' })
   const shadow = add('fan-contact-shadow', new THREE.PlaneGeometry(4, 2.2), new THREE.ShadowMaterial({ opacity: .12 }), [0, .003, .1]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box('fan-home-seat', [.67, .04, .45], [-.64, .78, 0], sage)
-  box('fan-home-back-rest', [.17, .57, .09], [-.64, 1.085, -.088], walnut)
+  box('fan-home-back-rest', [.17, .57, .09], [-.64, 1.085, -.088], walnutVertical)
   box('fan-binding-pad', [.40, .04, .35], [-.90, .78, .64], sage)
-  box('fan-display-base', [.90, .06, .58], [.69, .79, 0], walnut)
-  box('fan-display-post', [.54, .11, .38], [.69, .875, 0], walnut)
+  box('fan-display-base', [.90, .06, .58], [.69, .79, 0], walnutHorizontal)
+  box('fan-display-post', [.54, .11, .38], [.69, .875, 0], walnutHorizontal)
   const seat = box('fan-display-seat', [.78, .06, .48], [.69, .96, 0], sage)
-  box('fan-display-back-rest', [.17, .59, .09], [.69, 1.285, -.088], walnut)
+  box('fan-display-back-rest', [.17, .59, .09], [.69, 1.285, -.088], walnutVertical)
   const fan = new THREE.Group(); fan.name = 'fan-body'; world.add(fan)
-  const grip = box('fan-handle-grip', [.15, .70, .14], [0, .35, .028], wood, fan)
-  box('fan-handle-upper', [.14, .33, .14], [0, .76, .028], wood, fan)
+  const grip = box('fan-handle-grip', [.15, .70, .14], [0, .35, .028], handleWood, fan)
+  box('fan-handle-upper', [.14, .33, .14], [0, .76, .028], handleWood, fan)
   // Split handle forks overlap the blade and frame; no detached ornament.
-  for (const z of [-.02, .072]) box('fan-handle-split', [.13, .35, .045], [0, 1.025, z], wood, fan)
-  const joint = box('fan-neck-joint', [.205, .22, .17], [0, .86, .03], reed, fan)
+  for (const z of [-.02, .072]) box('fan-handle-split', [.13, .35, .045], [0, 1.025, z], handleWood, fan)
+  const joint = box('fan-neck-joint', [.205, .22, .17], [0, .86, .03], reedCollar, fan)
   // Freely drawn spade-shaped leaf. Its over/under weave is a contemporary
   // simplification, not the coiled construction or decoration of a museum item.
   const outline: [number, number][] = [[0, .92], [-.23, 1.04], [-.50, 1.29], [-.68, 1.61], [-.67, 1.87], [-.48, 2.09], [-.20, 2.28], [0, 2.43], [.20, 2.28], [.48, 2.09], [.67, 1.87], [.68, 1.61], [.50, 1.29], [.23, 1.04]]
   const outlineCurve = new THREE.CatmullRomCurve3(outline.map(([x, y]) => new THREE.Vector3(x, y, 0)), true, 'centripetal')
   const boundary = outlineCurve.getPoints(168).map(p => new THREE.Vector2(p.x, p.y))
-  const blade = add('fan-woven-core', new THREE.ExtrudeGeometry(new THREE.Shape(boundary), { depth: .038, bevelEnabled: false, steps: 1 }), straw, [0, 0, -.014], fan)
+  const blade = add('fan-woven-core', new THREE.ExtrudeGeometry(new THREE.Shape(boundary), { depth: .038, bevelEnabled: false, steps: 1 }), bladeCore, [0, 0, -.014], fan)
   blade.userData.toonSurface = { outline: false }
-  tube('fan-bound-edge', outline.map(([x, y]) => [x, y, .018]), .035, reed, fan, true, 120)
+  tube('fan-bound-edge', outline.map(([x, y]) => [x, y, .018]), .035, reedFrame, fan, true, 120)
   const intersections = (level: number, direction: number) => {
     const points: THREE.Vector2[] = []
     for (let i = 0; i < boundary.length - 1; i++) {
@@ -97,12 +101,19 @@ export function createFijianWovenFan(ctx: SceneContext): SceneInstance {
     if (points.length < 2) continue
     const a = points[0], b = points[points.length - 1], length = a.distanceTo(b)
     if (length < .045) continue
-    const segments = Math.max(2, Math.ceil(length / .043)), positions: number[] = [], indices: number[] = []
+    const segments = Math.max(2, Math.ceil(length / .043)), positions: number[] = [], uvs: number[] = [], colors: number[] = [], indices: number[] = []
     const nx = -(b.y - a.y) / length, ny = (b.x - a.x) / length
+    const uOffset = row * 0.23 + (direction > 0 ? 0.05 : 0.41)
     for (let i = 0; i <= segments; i++) {
       const t = i / segments, x = THREE.MathUtils.lerp(a.x, b.x, t), y = THREE.MathUtils.lerp(a.y, b.y, t)
-      const z = .029 + .008 * Math.sin((y + direction * x - .64) / .061 * Math.PI + (direction < 0 ? Math.PI : 0))
-      for (const [side, depth] of [[-1, 0], [1, 0], [-1, -.014], [1, -.014]]) positions.push(x + nx * .019 * side, y + ny * .019 * side, z + depth)
+      const weaveSin = Math.sin((y + direction * x - .64) / .061 * Math.PI + (direction < 0 ? Math.PI : 0))
+      const z = .029 + .008 * weaveSin
+      const u = t * length * 2.1 + uOffset
+      for (const [side, depth] of [[-1, 0], [1, 0], [-1, -.014], [1, -.014]] as const) {
+        positions.push(x + nx * .019 * side, y + ny * .019 * side, z + depth)
+        uvs.push(u, side < 0 ? .10 : .90)
+        writePandanusStripVertexColor(colors, weaveSin, depth < 0, row * 0.67 + t * 2.4)
+      }
       if (i < segments) {
         const n = i * 4
         indices.push(n, n + 1, n + 5, n, n + 5, n + 4, n + 2, n + 6, n + 7, n + 2, n + 7, n + 3,
@@ -111,20 +122,24 @@ export function createFijianWovenFan(ctx: SceneContext): SceneInstance {
     }
     indices.push(0, 2, 3, 0, 3, 1); const end = segments * 4; indices.push(end, end + 1, end + 3, end, end + 3, end + 2)
     for (let i = 0; i < indices.length; i += 3) [indices[i + 1], indices[i + 2]] = [indices[i + 2], indices[i + 1]]
-    const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setIndex(indices); geometry.computeVertexNormals()
-    const strip = add('fan-woven-strip', geometry, row % 5 === 0 ? reed : direction > 0 ? pale : straw, [0, 0, 0], fan)
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+    geometry.setIndex(indices); geometry.computeVertexNormals()
+    const strip = add('fan-woven-strip', geometry, row % 5 === 0 ? reedStrip : direction > 0 ? warpStrip : weftStrip, [0, 0, 0], fan)
     strip.userData.toonSurface = { outline: false }
   }
-  for (const x of [-.48, 0, .48]) tube('fan-reed-rib', [[0, .96, -.022], [x * .7, 1.54, -.031], [x, x === 0 ? 2.40 : 2.09, -.014]], .018, reed, fan)
+  for (const x of [-.48, 0, .48]) tube('fan-reed-rib', [[0, .96, -.022], [x * .7, 1.54, -.031], [x, x === 0 ? 2.40 : 2.09, -.014]], .018, reedFrame, fan)
   for (let i = 0; i < 50; i++) {
     const p = outlineCurve.getPointAt(i / 50), tangent = outlineCurve.getTangentAt(i / 50), nx = -tangent.y, ny = tangent.x
-    tube('fan-edge-tie', [[p.x - nx * .031, p.y - ny * .031, -.012], [p.x, p.y, -.019], [p.x + nx * .033, p.y + ny * .033, .018], [p.x, p.y, .055], [p.x - nx * .031, p.y - ny * .031, .039]], .006, straw, fan, false, 12)
+    tube('fan-edge-tie', [[p.x - nx * .031, p.y - ny * .031, -.012], [p.x, p.y, -.019], [p.x + nx * .033, p.y + ny * .033, .018], [p.x, p.y, .055], [p.x - nx * .031, p.y - ny * .031, .039]], .006, edgeTie, fan, false, 12)
   }
   const binding = new THREE.Group(); binding.name = 'fan-loose-binding'; world.add(binding)
-  const bindingGrip = box('fan-binding-grip', [.255, .22, .032], [0, 0, .099], sienna, binding)
-  box('fan-binding-back', [.255, .22, .032], [0, 0, -.099], straw, binding)
-  for (const x of [-.114, .114]) box('fan-binding-side', [.027, .22, .20], [x, 0, 0], straw, binding)
-  for (const y of [-.077, -.036, .046, .087]) box('fan-binding-strand', [.255, .009, .007], [0, y, .116], reed, binding)
+  const bindingGrip = box('fan-binding-grip', [.255, .22, .032], [0, 0, .099], siennaLeaf, binding)
+  box('fan-binding-back', [.255, .22, .032], [0, 0, -.099], bindingLeaf, binding)
+  for (const x of [-.114, .114]) box('fan-binding-side', [.027, .22, .20], [x, 0, 0], bindingLeaf, binding)
+  for (const y of [-.077, -.036, .046, .087]) box('fan-binding-strand', [.255, .009, .007], [0, y, .116], reedCollar, binding)
 
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restore = () => {

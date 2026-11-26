@@ -8,6 +8,7 @@ import { createObjectPointer } from '../object-pointer'
 import { placementHit } from '../placement-hit'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
+import { applyBirchHandleArchUvs, createBirchBasketMaterials, writeBirchStripVertexColor } from './birch-materials'
 
 const COPY = {
   title: '桦篮拾光', attach: '把台前弯曲的提柄拖到篮沿，装好提柄。',
@@ -40,8 +41,7 @@ export function createFinnishBirchBasket(ctx: SceneContext): SceneInstance {
   lights.key.shadow.bias = -.0007; lights.key.shadow.normalBias = .018
   const world = new THREE.Group(); world.name = 'birch-veranda-workbench'; scene.add(world)
   const material = (color: number, roughness = .91) => new THREE.MeshStandardMaterial({ color, roughness })
-  const bark = [material(0xc08b48), material(0xdbac66), material(0xe5bf7c), material(0xb57d40)]
-  const edge = material(0xa9763e), wood = material(0xc2a680), endGrain = material(0x977d5c), paleWood = material(0xdfc7a0)
+  const { barkStrip, barkSolid, rimBark, footBark, scoopWood } = createBirchBasketMaterials()
   const linen = material(0x81988b), stitch = material(0xc2cbb4), grainMat = material(0xe2c280), darkGrain = material(0xba9459)
   const add = (geo: THREE.BufferGeometry, mat: THREE.Material, xyz: [number, number, number], name = '', parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geo, mat); mesh.position.set(...xyz); mesh.name = name; mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
@@ -65,7 +65,7 @@ export function createFinnishBirchBasket(ctx: SceneContext): SceneInstance {
   bottom.lineTo(bx, bz - br); bottom.quadraticCurveTo(bx, bz, bx - br, bz); bottom.lineTo(-bx + br, bz)
   bottom.quadraticCurveTo(-bx, bz, -bx, bz - br); bottom.lineTo(-bx, -bz + br); bottom.quadraticCurveTo(-bx, -bz, -bx + br, -bz)
   const bottomGeometry = new THREE.ExtrudeGeometry(bottom, { depth: .042, bevelEnabled: false, curveSegments: 8 }); bottomGeometry.rotateX(-Math.PI / 2)
-  add(bottomGeometry, bark[1], [0, 0, 0], 'birch-basket-base', basket)
+  add(bottomGeometry, barkSolid[1], [0, 0, 0], 'birch-basket-base', basket)
   // A rounded rectangular perimeter, stretched gently outwards towards the rim.
   const segments = [1.0, Math.PI * .13 / 2, .48, Math.PI * .13 / 2, 1.0, Math.PI * .13 / 2, .48, Math.PI * .13 / 2]
   const perimeter = segments.reduce((a, b) => a + b, 0), stripCount = 28, spacing = perimeter / stripCount
@@ -87,11 +87,21 @@ export function createFinnishBirchBasket(ctx: SceneContext): SceneInstance {
   }
   // Each diagonal strip has thickness. The two directions alternate over/under at crossings.
   for (const direction of [-1, 1]) for (let strip = 0; strip < stripCount; strip++) {
-    const vertices: number[] = [], indices: number[] = [], subdivisions = 30
+    const vertices: number[] = [], uvs: number[] = [], colors: number[] = [], indices: number[] = [], subdivisions = 30
+    const uOffset = strip * 0.17 + (direction > 0 ? 0 : 0.37)
     for (let j = 0; j <= subdivisions; j++) {
-      const y = .022 + j / subdivisions * .423, along = strip * spacing + direction * y
-      const weave = direction * .010 * Math.cos(2 * Math.PI * y / spacing)
-      for (const depth of [weave - .005, weave + .005]) for (const across of [-.058, .058]) vertices.push(...surface(along + across, y, depth).toArray())
+      const t = j / subdivisions
+      const y = .022 + t * .423, along = strip * spacing + direction * y
+      const overWave = direction * Math.cos(2 * Math.PI * y / spacing)
+      const weave = .010 * overWave
+      const u = t * 2.05 + uOffset
+      for (const [depthIdx, depth] of ([weave - .005, weave + .005] as const).entries()) {
+        for (const across of [-.058, .058]) {
+          vertices.push(...surface(along + across, y, depth).toArray())
+          uvs.push(u, across < 0 ? .08 : .92)
+          writeBirchStripVertexColor(colors, overWave, t, depthIdx === 0, strip * 0.73 + direction * 0.9)
+        }
+      }
     }
     for (let j = 0; j < subdivisions; j++) {
       const n = j * 4
@@ -99,18 +109,21 @@ export function createFinnishBirchBasket(ctx: SceneContext): SceneInstance {
     }
     indices.push(0, 2, 3, 0, 3, 1)
     const n = subdivisions * 4; indices.push(n, n + 1, n + 3, n, n + 3, n + 2)
-    const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3)); geometry.setIndex(indices); geometry.computeVertexNormals()
-    const mesh = add(geometry, bark[(strip + (direction > 0 ? 0 : 1)) % bark.length], [0, 0, 0], `birch-weave-${direction}-${strip}`, basket)
-    mesh.material.side = THREE.DoubleSide
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+    geometry.setIndex(indices); geometry.computeVertexNormals()
+    add(geometry, barkStrip[(strip + (direction > 0 ? 0 : 1)) % barkStrip.length]!, [0, 0, 0], `birch-weave-${direction}-${strip}`, basket)
   }
   const rim = new THREE.Group(); rim.name = 'birch-rim'; basket.add(rim)
   for (const y of [.435, .474]) {
     const points = Array.from({ length: 65 }, (_, i) => surface(i / 65 * perimeter, y))
-    tube(points, .024, edge, rim, true)
+    tube(points, .024, rimBark, rim, true)
   }
   // The exposed front finishing strip is a real grip and the visible interaction anchor.
-  const rimGrip = box(.34, .084, .052, bark[2], [0, .465, .38], 'birch-rim-grip', rim)
-  for (const x of [-.4, -.2, .2, .4]) box(.027, .06, .050, bark[1], [x, .454, .373], '', rim)
+  const rimGrip = box(.34, .084, .052, barkSolid[2], [0, .465, .38], 'birch-rim-grip', rim)
+  for (const x of [-.4, -.2, .2, .4]) box(.027, .06, .050, barkSolid[1], [x, .454, .373], '', rim)
   for (let i = 0; i < 24; i++) {
     const x = -.37 + (i % 6) * .136, z = -.17 + Math.floor(i / 6) * .11
     const grain = add(new THREE.SphereGeometry(1, 10, 6), i % 4 ? grainMat : darkGrain, [x, .063, z], `birch-grain-${i}`, basket)
@@ -129,20 +142,21 @@ export function createFinnishBirchBasket(ctx: SceneContext): SceneInstance {
     const geometry = new THREE.ExtrudeGeometry(shape, { depth: .03, bevelEnabled: false, curveSegments: 8 }); geometry.translate(0, 0, -.015)
     const originY = name === 'birch-handle-grip' ? .549 : 0
     geometry.translate(0, -originY, 0)
-    return add(geometry, bark[2], [0, originY, 0], name, handle)
+    applyBirchHandleArchUvs(geometry, originY)
+    return add(geometry, barkSolid[2], [0, originY, 0], name, handle)
   }
   arch(-Math.PI / 2, -.20, 'birch-handle-left'); arch(-.20, .20, 'birch-handle-grip'); arch(.20, Math.PI / 2, 'birch-handle-right')
-  for (const [x, name] of [[-.63, 'left'], [.63, 'right']] as const) box(.05, .08, .03, edge, [x, .014, 0], `birch-handle-foot-${name}`, handle)
+  for (const [x, name] of [[-.63, 'left'], [.63, 'right']] as const) box(.05, .08, .03, footBark, [x, .014, 0], `birch-handle-foot-${name}`, handle)
 
   // A hollow wooden scoop and a few offcuts make this a working still life.
   const scoop = new THREE.Group(); scoop.name = 'birch-grain-scoop'; scoop.position.set(.76, .72, .69); scoop.rotation.y = -.18; world.add(scoop)
   const profile = [[0, 0], [.10, 0], [.18, .038], [.22, .11], [.22, .14], [.195, .14], [.16, .055], [.08, .028], [0, .028]].map(([x, y]) => new THREE.Vector2(x, y))
-  add(new THREE.LatheGeometry(profile, 24), paleWood, [0, 0, 0], 'birch-scoop-bowl', scoop)
-  box(.37, .055, .085, paleWood, [.32, .1125, 0], 'birch-scoop-stem', scoop)
+  add(new THREE.LatheGeometry(profile, 24), scoopWood, [0, 0, 0], 'birch-scoop-bowl', scoop)
+  box(.37, .055, .085, scoopWood, [.32, .1125, 0], 'birch-scoop-stem', scoop)
   for (let i = 0; i < 8; i++) {
     const seed = add(new THREE.SphereGeometry(1, 8, 6), grainMat, [-.07 + i % 3 * .065, .05, -.06 + Math.floor(i / 3) * .053], '', scoop); seed.scale.set(.027, .015, .015)
   }
-  for (let i = 0; i < 3; i++) { const offcut = box(.47, .012, .055, bark[i], [.02, .727 + i * .012, -.85]); offcut.rotation.y = -.12 + i * .09 }
+  for (let i = 0; i < 3; i++) { const offcut = box(.47, .012, .055, barkSolid[i]!, [.02, .727 + i * .012, -.85]); offcut.rotation.y = -.12 + i * .09 }
 
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restore = () => {

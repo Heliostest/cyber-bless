@@ -62,3 +62,7 @@ The no-op scaffold produced an observed RED behavioral assertion (`[]` rather th
 核查重点：博物馆主图是西芬兰白杨板，不能称其为桦篮复刻；机械年代不是桦编起源；弯柄拼装与灰绿垫无祈愿程序。
 
 逐项证据、实际阅读位置和访问状态见[本轮介绍研究记录](../../../../docs/research/2026-10-20-scene-narratives-a.md#finnish-birch-basket)。
+
+## 2026-11-26 桦皮编篮与木谷勺材质风格化升级
+
+将平涂纯色的桦皮编织条、口沿箍条、弯曲提柄与余料升级为确定性风格化桦树皮贴图套件（`birch-materials.ts`，零 DOM 依赖，256×256 sRGB＋凹凸＋粗糙度贴图，呈现蜂蜜暖棕分层色阶与稀疏横向皮孔短纹），为斜编条补齐沿条 UV 与压挑交错暖焦糖顶点遮蔽，并沿弯柄弧线重映射 UV；同时为右侧浅木谷勺接入沿 `axis: 'x'` 的浅桦木 `kind: 'wood'` 程序木纹。下方已升级的 `addCraftTable` 工作桌、编篮几何拓扑与三步交互全部保持不变；本轮仅为产品表面美术提升，不新增芬兰桦编传统、产地或仪式主张，文案、来源身份（`finnish-birch-bark-craft`）、技术 ID 与存档兼容性保持不变，沿用既有核查记录，外链未重读。

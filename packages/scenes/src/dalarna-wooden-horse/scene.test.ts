@@ -172,6 +172,37 @@ describe('a carved horse kept as a cultural craft', () => {
     }
     expect(s.progress).toEqual([1, 2, 3])
   })
+  it('gives the painted horse satin lacquer over restrained wood grain and proper wood axes on plinth and table', () => {
+    const s = mount(0, { isReducedMotion: () => true })
+    const matOf = (name: string) => (s.scene.getObjectByName(name) as THREE.Mesh).material as THREE.MeshStandardMaterial
+    const body = matOf('horse-carved-body') as THREE.MeshPhysicalMaterial
+    const saddle = matOf('horse-painted-saddle') as THREE.MeshPhysicalMaterial
+    const cloth = matOf('horse-polishing-cloth')
+    expect(body).toBeInstanceOf(THREE.MeshPhysicalMaterial)
+    expect(body.clearcoat).toBeGreaterThanOrEqual(.25); expect(body.clearcoat).toBeLessThanOrEqual(.38)
+    expect(body.clearcoatRoughness).toBeGreaterThanOrEqual(.28); expect(body.clearcoatRoughness).toBeLessThanOrEqual(.38)
+    expect(body.userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(body.userData.craftSurface.strength).toBeLessThanOrEqual(.4)
+    expect(saddle).toBeInstanceOf(THREE.MeshPhysicalMaterial)
+    expect(saddle.userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(saddle.userData.craftSurface.strength).toBeLessThan(.25)
+    expect(cloth.userData.craftSurface).toBeUndefined()
+    expect(matOf('horse-plinth').userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(matOf('horse-plinth-inset').userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'x' })
+    for (const [name, axis] of [
+      ['horse-table-top-board', 'x'],
+      ['horse-table-breadboard-end', 'z'],
+      ['horse-table-leg', 'y'],
+      ['horse-table-through-stretcher', 'x'],
+      ['horse-table-stretcher-wedge', 'y'],
+    ] as const) {
+      expect(matOf(name).userData.craftSurface, name).toMatchObject({ kind: 'wood', axis })
+    }
+    const beforeClearcoat = saddle.clearcoat
+    drag(s, 'horse-polishing-cloth', 'horse-painted-saddle')
+    expect(saddle.clearcoat).toBeGreaterThan(beforeClearcoat)
+    expect(saddle.clearcoat).toBeLessThanOrEqual(.38)
+  })
   it('disposes all mesh resources and owned window listeners once', () => {
     const added = vi.spyOn(window, 'addEventListener'), removed = vi.spyOn(window, 'removeEventListener'), s = mount()
     const resources = new Set<THREE.BufferGeometry | THREE.Material>(), freed = new Map<unknown, number>()

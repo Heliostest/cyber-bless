@@ -51,4 +51,23 @@ describe('real wooden cog and free-frame tongue',()=>{
   for(let step=0;step<3;step++){m.pose(step,1);const end=snap();m.pose(step+1,0);expect(snap()).toEqual(end)}
   expect(snap()).toEqual(home);m.pose(0,-1);expect(snap()).toEqual(home);disposeTree(m.subject)
  })
+ it('applies stylized wood surfaces with accurate per-part grain axes and warm hardwood-to-softwood tone contrast',()=>{
+  const m=createRatchetModel()
+  const matOf=(name:string)=>(m.subject.getObjectByName(name) as THREE.Mesh).material as THREE.MeshStandardMaterial
+  for(const [name,axis]of[
+   ['ratchet-handle','z'],['ratchet-axle','z'],['ratchet-wheel-hub','z'],
+   ['ratchet-front-retainer','z'],['ratchet-back-retainer','z'],
+   ['ratchet-front-cheek','y'],['ratchet-back-cheek','y'],
+   ['ratchet-wood-tongue','y'],['ratchet-tongue-rounded-end','y'],
+   ['ratchet-frame-grip','x'],['ratchet-cog-wheel','x'],['ratchet-grip-accent','x'],
+  ]as const){
+   expect(matOf(name).userData.craftSurface,name).toMatchObject({kind:'wood',axis})
+  }
+  const hsl=(name:string)=>matOf(name).color.getHSL({h:0,s:0,l:0},THREE.SRGBColorSpace).l
+  expect(hsl('ratchet-wood-tongue')).toBeGreaterThan(hsl('ratchet-front-cheek'))
+  expect(hsl('ratchet-front-cheek')).toBeGreaterThan(hsl('ratchet-handle'))
+  expect(hsl('ratchet-handle')).toBeGreaterThan(hsl('ratchet-cog-wheel'))
+  expect(hsl('ratchet-cog-wheel')).toBeGreaterThan(hsl('ratchet-axle'))
+  disposeTree(m.subject)
+ })
 })

@@ -2,6 +2,7 @@ import { createQuietEnding } from '../quiet-ending'
 import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -40,18 +41,78 @@ export function createDalarnaWoodenHorse(ctx: SceneContext): SceneInstance {
   Object.assign(lights.key.shadow.camera, { left: -2, right: 2, top: 3, bottom: -1, near: .1, far: 12 })
   lights.key.shadow.bias = -.0007; lights.key.shadow.normalBias = .022
   const world = new THREE.Group(); world.name = 'horse-workbench'; scene.add(world)
-  const mat = (color: number, roughness = .86) => new THREE.MeshStandardMaterial({ color, roughness })
-  const red = mat(0xbd5e4d), darkRed = mat(0x994c43), cream = mat(0xeee2bd), blue = mat(0x809c9c), gold = mat(0xc6a467)
-  const oak = mat(0xc3a074), darkOak = mat(0xa68463), clothMat = mat(0x8ca797), ink = mat(0x5e594d)
+  const paintedWood = (color: number, options: { roughness?: number; clearcoat?: number; clearcoatRoughness?: number; grain?: number; scale?: number } = {}) => {
+    const material = new THREE.MeshPhysicalMaterial({
+      color,
+      roughness: options.roughness ?? .60,
+      clearcoat: options.clearcoat ?? .32,
+      clearcoatRoughness: options.clearcoatRoughness ?? .33,
+    })
+    if (options.grain) applyCraftSurface(material, { kind: 'wood', axis: 'y', scale: options.scale ?? .62, strength: options.grain })
+    return material
+  }
+  const bareWood = (color: number, axis: 'x' | 'y' | 'z', scale: number, strength: number, roughness = .76) =>
+    applyCraftSurface(new THREE.MeshStandardMaterial({ color, roughness }), { kind: 'wood', axis, scale, strength })
+  // Restrained grain under light satin lacquer keeps the folk painted horse warm and crisp.
+  const red = paintedWood(0xbd5e4d, { roughness: .58, clearcoat: .33, clearcoatRoughness: .32, grain: .34, scale: .58 })
+  const darkRed = paintedWood(0x994c43, { roughness: .60, clearcoat: .30, clearcoatRoughness: .34, grain: .28, scale: .64 })
+  const saddleCream = paintedWood(0xeee2bd, { roughness: .68, clearcoat: .26, clearcoatRoughness: .36, grain: .18, scale: .66 })
+  const blue = paintedWood(0x809c9c, { roughness: .58, clearcoat: .30, clearcoatRoughness: .33 })
+  const gold = paintedWood(0xc6a467, { roughness: .54, clearcoat: .32, clearcoatRoughness: .32 })
+  const ink = paintedWood(0x5e594d, { roughness: .52, clearcoat: .34, clearcoatRoughness: .30 })
+  const darkOak = bareWood(0xa27e5b, 'x', .78, .58, .74)
+  const plinthInset = bareWood(0xdec99a, 'x', .84, .56, .76)
+  const brushWood = bareWood(0xc69f68, 'y', .88, .48, .76)
+  const clothMat = new THREE.MeshStandardMaterial({ color: 0x8ca797, roughness: .88 })
+  const clothStripe = new THREE.MeshStandardMaterial({ color: 0xeee2bd, roughness: .90 })
   const add = (geo: THREE.BufferGeometry, material: THREE.Material, xyz: [number, number, number], name = '', parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geo, material); mesh.position.set(...xyz); mesh.name = name; mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
   const box = (w: number, h: number, d: number, material: THREE.Material, xyz: [number, number, number], name = '', parent: THREE.Object3D = world) => add(new RoundedBoxGeometry(w, h, d, 3, Math.min(.035, h / 3, d / 3)), material, xyz, name, parent)
   const tube = (points: number[][], radius: number, material: THREE.Material, parent: THREE.Object3D = world) => add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p as [number, number, number]))), 24, radius, 7, false), material, [0, 0, 0], '', parent)
-  addCraftTable(world, { name: 'horse-table', topName: 'horse-table', width: 3.25, depth: 1.7, surfaceY: .72, thickness: .12, center: [0,0], support: 'arched', finish: 'birch' })
+  const table = addCraftTable(world, { name: 'horse-table', topName: 'horse-table', width: 3.25, depth: 1.7, surfaceY: .72, thickness: .12, center: [0,0], support: 'arched', finish: 'birch' })
+  // Give the birch workbench clean per-part wood axes unless the shared furniture already authored craft surfaces.
+  let tableHasCraft = false
+  table.root.traverse(object => {
+    if (object instanceof THREE.Mesh && object.material instanceof THREE.MeshStandardMaterial && object.material.userData.craftSurface) tableHasCraft = true
+  })
+  if (!tableHasCraft) {
+    const tableGrain = (meshName: string): { axis: 'x' | 'y' | 'z'; scale: number; strength: number; split?: boolean } | null => {
+      if (meshName === 'horse-table-top-board') return { axis: 'x', scale: .82, strength: .54 }
+      if (meshName === 'horse-table-breadboard-end') return { axis: 'z', scale: .82, strength: .54 }
+      if (meshName === 'horse-table-leg') return { axis: 'y', scale: .78, strength: .56 }
+      if (meshName === 'horse-table-through-stretcher') return { axis: 'x', scale: .78, strength: .56, split: true }
+      if (meshName === 'horse-table-stretcher-wedge') return { axis: 'y', scale: .88, strength: .52, split: true }
+      return null
+    }
+    const splitMats = new Map<string, THREE.MeshStandardMaterial>()
+    const tableMeshes: { mesh: THREE.Mesh; spec: NonNullable<ReturnType<typeof tableGrain>> }[] = []
+    table.root.traverse(object => {
+      if (!(object instanceof THREE.Mesh) || !(object.material instanceof THREE.MeshStandardMaterial)) return
+      const spec = tableGrain(object.name)
+      if (!spec) return
+      if (spec.split) {
+        let cloned = splitMats.get(object.name)
+        if (!cloned) {
+          cloned = object.material.clone()
+          splitMats.set(object.name, cloned)
+        }
+        object.material = cloned
+      }
+      tableMeshes.push({ mesh: object, spec })
+    })
+    let boardIdx = 0
+    for (const { mesh, spec } of tableMeshes) {
+      const material = mesh.material as THREE.MeshStandardMaterial
+      if (material.userData.craftSurface) continue
+      const shift = mesh.name === 'horse-table-top-board' ? ((boardIdx++ % 4) - 1.5) * .04 : 0
+      material.roughness = Math.min(material.roughness, .78)
+      applyCraftSurface(material, { kind: 'wood', axis: spec.axis, scale: spec.scale + shift, strength: spec.strength })
+    }
+  }
   const shadow = add(new THREE.PlaneGeometry(3.8, 2.5), new THREE.ShadowMaterial({ opacity: .12 }), [0, .004, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box(1.45, .10, .90, darkOak, [.72, .77, -.1], 'horse-plinth')
-  const plinth = box(1.39, .022, .84, cream, [.72, .831, -.1], 'horse-plinth-inset')
+  const plinth = box(1.39, .022, .84, plinthInset, [.72, .831, -.1], 'horse-plinth-inset')
   // Four distinct legs and an extruded carved silhouette retain a wooden toy's broad planes.
   const horse = new THREE.Group(); horse.name = 'dalarna-horse'; world.add(horse)
   const profile = new THREE.Shape()
@@ -68,8 +129,8 @@ export function createDalarnaWoodenHorse(ctx: SceneContext): SceneInstance {
     add(new THREE.CylinderGeometry(.10, .13, .55, 8), red, [x, .275, z], `horse-leg-${i++}`, horse)
     box(.19, .07, .19, darkRed, [x, .05, z], '', horse)
   }
-  const saddle = box(.46, .28, .022, cream, [-.12, .83, .229], 'horse-painted-saddle', horse)
-  box(.46, .28, .022, cream, [-.12, .83, -.229], '', horse)
+  const saddle = box(.46, .28, .022, saddleCream, [-.12, .83, .229], 'horse-painted-saddle', horse)
+  box(.46, .28, .022, saddleCream, [-.12, .83, -.229], '', horse)
   // Simple invented leaf strokes avoid copying a maker's decorative pattern.
   for (const z of [-.247, .247]) {
     for (const x of [-.27, .03]) {
@@ -82,13 +143,22 @@ export function createDalarnaWoodenHorse(ctx: SceneContext): SceneInstance {
   tube([[-.56, .85, 0], [-.73, .74, 0], [-.68, .56, 0]], .045, darkRed, horse)
   tube([[.50, 1.18, .218], [.64, 1.14, .218], [.78, 1.09, .218]], .012, gold, horse)
   const cloth = box(.34, .036, .26, clothMat, [0, 0, 0], 'horse-polishing-cloth')
-  for (const z of [-.085, .085]) box(.28, .006, .008, cream, [0, .020, z], '', cloth)
+  for (const z of [-.085, .085]) box(.28, .006, .008, clothStripe, [0, .020, z], '', cloth)
   cloth.rotation.y = -.12
   // Small bench accessories are ordinary workshop objects, not ritual apparatus.
   box(.44, .038, .22, darkOak, [-1.06, .741, -.63])
-  const brush = add(new THREE.CylinderGeometry(.023, .023, .40, 12), gold, [-1.06, .79, -.63]); brush.rotation.z = Math.PI / 2
+  const brush = add(new THREE.CylinderGeometry(.023, .023, .40, 12), brushWood, [-1.06, .79, -.63]); brush.rotation.z = Math.PI / 2
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const restore = () => { horse.position.copy(checkpoint >= 2 ? HORSE_REST : HORSE_HOME); cloth.position.copy(CLOTH_HOME); cream.roughness = checkpoint >= 1 ? .60 : .9; matrices() }
+  const restore = () => {
+    horse.position.copy(checkpoint >= 2 ? HORSE_REST : HORSE_HOME); cloth.position.copy(CLOTH_HOME)
+    const polished = checkpoint >= 1
+    saddleCream.roughness = polished ? .48 : .68
+    saddleCream.clearcoat = polished ? .37 : .26
+    saddleCream.clearcoatRoughness = polished ? .28 : .36
+    red.clearcoat = polished ? .37 : .33
+    red.clearcoatRoughness = polished ? .29 : .32
+    matrices()
+  }
   const enabled = (at: number) => () => active() && !transition && checkpoint === at
   const seatGripGoal = () => {
     matrices()

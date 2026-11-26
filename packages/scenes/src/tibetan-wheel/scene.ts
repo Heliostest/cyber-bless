@@ -160,13 +160,18 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group()
   scene.add(world)
 
-  const frameMat = new THREE.MeshStandardMaterial({ color: 0xa3442f, roughness: 0.9 })
-  const eaveMat = new THREE.MeshStandardMaterial({ color: 0x5b3526, roughness: 0.9 })
+  const beamMat = new THREE.MeshStandardMaterial({ color: 0xa3442f, roughness: 0.72 })
+  const postMat = new THREE.MeshStandardMaterial({ color: 0xa3442f, roughness: 0.74 })
+  const eaveMat = new THREE.MeshStandardMaterial({ color: 0x5b3526, roughness: 0.74 })
   const axleMat = new THREE.MeshStandardMaterial({ color: 0x6d5a45, metalness: 0.3, roughness: 0.6 })
   const goldMat = new THREE.MeshStandardMaterial({ color: 0xe0ac4c, metalness: 0.35, roughness: 0.45 })
   const copperMat = new THREE.MeshStandardMaterial({ color: 0xc97a45, metalness: 0.3, roughness: 0.5 })
-  const lacquerMat = new THREE.MeshStandardMaterial({ color: 0xb2402f, roughness: 0.7 })
+  const lacquerMat = new THREE.MeshStandardMaterial({ color: 0xb2402f, roughness: 0.62 })
   const bronzeMat = new THREE.MeshStandardMaterial({ color: 0x9f6f3a, metalness: 0.3, roughness: 0.55 })
+  applyCraftSurface(beamMat, { kind: 'wood', axis: 'x', scale: 1.05, strength: 0.36 })
+  applyCraftSurface(postMat, { kind: 'wood', axis: 'y', scale: 1.05, strength: 0.36 })
+  applyCraftSurface(eaveMat, { kind: 'wood', axis: 'x', scale: 1.25, strength: 0.54 })
+  applyCraftSurface(lacquerMat, { kind: 'wood', axis: 'y', scale: 0.95, strength: 0.36 })
   applyCraftSurface(goldMat, { kind: 'metal', strength: .45 })
   applyCraftSurface(copperMat, { kind: 'metal', strength: .45 })
   applyCraftSurface(bronzeMat, { kind: 'metal', strength: .45 })
@@ -196,16 +201,19 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
   const buildUnit = (): Unit => {
     const unit = new THREE.Group()
     for (const y of [0.3, 2.3]) {
-      const beam = new THREE.Mesh(beamGeo, frameMat)
+      const beam = new THREE.Mesh(beamGeo, beamMat)
+      beam.name = 'tibetan-wheel-beam'
       beam.position.y = y
       unit.add(beam)
     }
     for (const x of [-0.5, 0.5]) {
-      const post = new THREE.Mesh(postGeo, frameMat)
+      const post = new THREE.Mesh(postGeo, postMat)
+      post.name = 'tibetan-wheel-post'
       post.position.set(x, 1.3, 0)
       unit.add(post)
     }
     const eave = new THREE.Mesh(eaveGeo, eaveMat)
+    eave.name = 'tibetan-wheel-eave'
     eave.position.set(0, 2.4, 0.05)
     unit.add(eave)
     const axle = new THREE.Mesh(axleGeo, axleMat)
@@ -218,6 +226,7 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
     panelGeos.forEach((g, i) => drum.add(new THREE.Mesh(g, i % 2 ? copperMat : goldMat)))
     for (const side of [-1, 1]) {
       const band = new THREE.Mesh(bandGeo, lacquerMat)
+      band.name = 'tibetan-wheel-band'
       band.position.y = side * (panelH / 2 + bandH / 2)
       drum.add(band)
       for (const edge of [panelH / 2, DRUM_H / 2]) {

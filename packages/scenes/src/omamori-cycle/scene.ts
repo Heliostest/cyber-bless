@@ -538,7 +538,10 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'omamori-world'; scene.add(world)
   const material = (color: number, roughness = 0.9) => new THREE.MeshStandardMaterial({ color, roughness })
   const wood = createCraftMaterial({ color: 0xd4ae7d, roughness: .9 }, { kind: 'wood' })
-  const woodEdge = material(0xb89164), cream = material(0xf5e8c8), gold = material(0xd0b56e, 0.62)
+  const woodEdge = createCraftMaterial({ color: 0xb89164, roughness: 0.85 }, { kind: 'wood', axis: 'x', scale: 0.86, strength: 0.54 })
+  const woodLeg = createCraftMaterial({ color: 0xb89164, roughness: 0.85 }, { kind: 'wood', axis: 'y', scale: 0.92, strength: 0.52 })
+  const woodTrim = createCraftMaterial({ color: 0xd4ae7d, roughness: 0.88 }, { kind: 'wood', axis: 'y', scale: 1.0, strength: 0.52 })
+  const cream = material(0xf5e8c8), gold = material(0xd0b56e, 0.62)
   const brocadeTex = createBrocadeTextures()
   const cordTex = createBraidedCordTextures()
   const rope = createRitualMaterial(
@@ -570,8 +573,8 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
   // A small office table keeps the three closed bags within reach.
   const table = new THREE.Group(); table.name = 'omamori-office-table'; world.add(table)
   add(new RoundedBoxGeometry(2.78, 0.14, 1.26, 3, 0.065), wood, [0, 0.7, -0.06], table)
-  add(new RoundedBoxGeometry(2.65, 0.07, 1.15, 3, 0.03), woodEdge, [0, 0.625, -0.06], table)
-  for (const x of [-1.1, 1.1]) for (const z of [-0.43, 0.32]) add(new RoundedBoxGeometry(0.16, 0.63, 0.16, 2, 0.026), woodEdge, [x, 0.32, z], table)
+  add(new RoundedBoxGeometry(2.65, 0.07, 1.15, 3, 0.03), woodEdge, [0, 0.625, -0.06], table).name = 'omamori-table-apron'
+  for (const x of [-1.1, 1.1]) for (const z of [-0.43, 0.32]) add(new RoundedBoxGeometry(0.16, 0.63, 0.16, 2, 0.026), woodLeg, [x, 0.32, z], table).name = 'omamori-table-leg'
   const tray = add(new RoundedBoxGeometry(1.83, 0.04, 0.48, 3, 0.022), cream, [-0.45, 0.795, 0.38], table)
   tray.name = 'omamori-display-tray'
 
@@ -591,7 +594,7 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
   add(new RoundedBoxGeometry(1.07, 0.09, 0.79, 3, 0.035), wood, [0.6, 1.39, -0.03], returnBox)
   const returnSlot = add(new RoundedBoxGeometry(0.6, 0.028, 0.28, 3, 0.018), cream, [0.58, 1.448, 0.12], returnBox)
   returnSlot.name = 'omamori-return-slot'
-  for (const x of [0.21, 0.99]) add(new RoundedBoxGeometry(0.035, 0.43, 0.025, 2, 0.01), wood, [x, 1.1, 0.345], returnBox)
+  for (const x of [0.21, 0.99]) add(new RoundedBoxGeometry(0.035, 0.43, 0.025, 2, 0.01), woodTrim, [x, 1.1, 0.345], returnBox).name = 'omamori-return-box-trim'
   // An original little flower on the return box takes the place of ritual lettering.
   for (let i = 0; i < 5; i++) {
     const a = i / 5 * Math.PI * 2

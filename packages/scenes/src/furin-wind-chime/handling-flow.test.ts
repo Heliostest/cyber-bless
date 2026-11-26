@@ -126,4 +126,15 @@ describe('handle, hang and listen', () => {
     expect(s.saved).toEqual([2])
     s.button().click(); expect(s.saved).toEqual([2, 3, 4])
   })
+  it('applies axis-aligned stylized wood surfaces to the preparation rack and clapper while preserving glass bell and washi paper', () => {
+    const s = mount(0)
+    const surfaceOf = (name: string) => ((s.object(name) as THREE.Mesh).material as THREE.Material).userData.craftSurface
+    expect(surfaceOf('furin-eave')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surfaceOf('furin-rack-base')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surfaceOf('furin-rack-post')).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(surfaceOf('furin-rack-arm')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surfaceOf('furin-clapper')).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(((s.object('furin-bell') as THREE.Mesh).material as THREE.Material).userData.ritualOptics?.kind).toBe('glass')
+    expect(((s.object('furin-ribbon-strip') as THREE.Mesh).material as THREE.Material).userData.ritualOptics?.kind).toBe('paper')
+  })
 })

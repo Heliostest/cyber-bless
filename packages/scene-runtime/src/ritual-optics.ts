@@ -2,12 +2,31 @@ import * as THREE from 'three';
 import fibers from './ritual-fibers.data.json';
 
 export type RitualSurfaceKind = 'paper' | 'cloth' | 'leaf' | 'wax' | 'jade' | 'skin' | 'fruit' | 'glass' | 'water' | 'tea' | 'honey' | 'wet';
-/** Local-space support projection; an art-directed thin-paper approximation. */
-export type RitualPaperStructure = { layout: 'radial' | 'bands'; spacing: number; width: number; contrast: number; halfHeight?: number };
+/** Local-space support projection or UV-anchored thin-sheet paper structure. */
+export type RitualPaperStructure =
+  | { layout: 'radial' | 'bands'; spacing: number; width: number; contrast: number; halfHeight?: number }
+  | {
+      layout: 'sheet';
+      /** UV repeat scale for pulp and washi fiber detail (higher = finer grain). Default 2.4. */
+      grainScale?: number;
+      /** Sheet width / height aspect ratio so UV fiber stays isotropic on narrow slips. Default 1. */
+      aspect?: number;
+      /** Multi-scale pulp & paper-tooth grain contrast (0..1). Default 0.55. */
+      grain?: number;
+      /** Subtle interlaced kozo / washi fiber strands (0..1). Default 0.44. */
+      fibers?: number;
+      /** Subtle cut-edge / deckle border density contrast (0..1). Default 0.28. */
+      edge?: number;
+      /** Highlight roll-off guard to keep sunlit pale paper from clipping to flat white (0..1). Default 0.42. */
+      highlightGuard?: number;
+    };
 export type RitualSurfaceOptions = { kind: RitualSurfaceKind; strength?: number; thickness?: number; fiber?: 'paper' | 'linen' | false; paper?: RitualPaperStructure };
 
 type Fiber = 'paper' | 'linen';
-type Optics = { kind: RitualSurfaceKind; strength: number; fiber: Fiber | false; paper?: RitualPaperStructure };
+type SupportPaper = { layout: 'radial' | 'bands'; spacing: number; width: number; contrast: number; halfHeight?: number };
+type SheetPaper = { layout: 'sheet'; grainScale: number; aspect: number; grain: number; fibers: number; edge: number; highlightGuard: number };
+type NormalizedPaper = SupportPaper | SheetPaper;
+type Optics = { kind: RitualSurfaceKind; strength: number; fiber: Fiber | false; paper?: NormalizedPaper };
 const states = new WeakMap<THREE.Material, Optics>();
 const textures = new Map<Fiber, { texture: THREE.DataTexture; owners: number }>();
 const scatterStrength: Partial<Record<RitualSurfaceKind, number>> = {
@@ -65,7 +84,7 @@ float ritualFiber() {
 }
 `;
 
-function paperHeader(paper: RitualPaperStructure) {
+function paperHeader(paper: SupportPaper) {
   return `
 uniform float ritualPaperSpacing;
 uniform float ritualPaperWidth;
@@ -86,11 +105,72 @@ float ritualPaperViewTransmission(const in vec3 surfaceNormal, const in vec3 vie
 `;
 }
 
+// UV-anchored handmade sheet detail: combines multi-scale CC0 paper roughness
+// sampling with subtle laid screen lines and oblique kozo fiber wisps (inspired
+// by the layered pulp/fiber concept of MIT ittybitty paper shader), so bending
+// meshes never swim and pale sunlit paper resists white blowout.
+function sheetPaperHeader(hasFiber: boolean) {
+  return `
+uniform float ritualSheetScale;
+uniform float ritualSheetAspect;
+uniform float ritualSheetGrain;
+uniform float ritualSheetFibers;
+uniform float ritualSheetEdge;
+uniform float ritualSheetHighlightGuard;
+vec2 ritualSheetCoord() {
+  return vec2(ritualSheetUv.x * ritualSheetAspect, ritualSheetUv.y) * ritualSheetScale;
+}
+vec4 ritualSheetDetail() {
+  vec2 su = ritualSheetCoord();
+  ${hasFiber ? `
+  float rawMacro = texture2D(ritualFiberMap, su * 0.62).r - 0.5;
+  float rawTooth = texture2D(ritualFiberMap, su * 2.45 + vec2(0.37, 0.71)).r - 0.5;
+  float pulp = clamp(rawMacro * 3.1, -0.46, 0.46);
+  float tooth = clamp(rawTooth * 2.6, -0.42, 0.42);` : `
+  float pulp = sin(su.x * 5.2 + cos(su.y * 4.7)) * cos(su.y * 6.1 - sin(su.x * 3.8)) * 0.24;
+  float tooth = sin(su.x * 29.0 + su.y * 17.0) * cos(su.y * 31.0 - su.x * 19.0) * 0.16;`}
+  float laid = sin(su.y * 54.0 + pulp * 3.4) * 0.048;
+  vec2 f1 = mat2(0.84, 0.54, -0.54, 0.84) * (su * 6.8);
+  vec2 f2 = mat2(0.38, -0.92, 0.92, 0.38) * (su * 9.8 + vec2(1.4, 0.8));
+  float w1 = smoothstep(0.60, 0.95, sin(f1.x * 2.1 + sin(f1.y * 1.3) * 1.7) * sin(f1.y * 0.68 + 0.35));
+  float w2 = smoothstep(0.66, 0.96, sin(f2.x * 1.9 + sin(f2.y * 1.5) * 1.4) * sin(f2.y * 0.74 + 1.2));
+  float kozo = (w1 * 0.64 + w2 * 0.52) * ritualSheetFibers;
+  float ex = min(ritualSheetUv.x, 1.0 - ritualSheetUv.x) * ritualSheetAspect;
+  float ey = min(ritualSheetUv.y, 1.0 - ritualSheetUv.y);
+  float edgeDist = min(ex, ey);
+  float rimLight = (1.0 - smoothstep(0.0, 0.015, edgeDist)) * ritualSheetEdge;
+  float innerBorder = smoothstep(0.008, 0.022, edgeDist) * (1.0 - smoothstep(0.022, 0.068, edgeDist)) * ritualSheetEdge;
+  return vec4(pulp, tooth + laid, kozo, rimLight - innerBorder * 0.45);
+}
+`;
+}
+
+const SHEET_SCATTER = `
+uniform float ritualScatterStrength;
+void ritualScatter(const in IncidentLight directLight, const in vec3 surfaceNormal,
+  const in vec3 viewDirection, const in vec3 pigment, const in float pulpDensity,
+  inout ReflectedLight reflectedLight) {
+  float back = max(0.0, dot(-surfaceNormal, directLight.direction));
+  vec3 throughDirection = normalize(directLight.direction + surfaceNormal * 0.18);
+  float forward = pow(max(0.0, dot(viewDirection, -throughDirection)), 2.8);
+  float pulpTrans = clamp(1.0 - pulpDensity * 0.85, 0.68, 1.32);
+  float backLobe = back * (0.76 + forward * 0.32) * pulpTrans;
+  float frontDot = dot(surfaceNormal, directLight.direction);
+  float luma = dot(pigment, vec3(0.299, 0.587, 0.114));
+  float headroom = clamp(1.0 - luma * ritualSheetHighlightGuard * 0.68, 0.30, 1.0);
+  float wrapLobe = 0.24 * smoothstep(-0.24, 0.62, frontDot) * headroom;
+  vec3 warmPigment = mix(pigment, pigment * vec3(1.04, 1.00, 0.93), 0.35);
+  reflectedLight.directDiffuse += warmPigment * directLight.color
+    * (ritualScatterStrength * (backLobe + wrapLobe) * 0.31830988618);
+}
+`;
+
 function attach(material: THREE.Material, options: Optics) {
   if (states.has(material)) return;
   states.set(material, options);
   material.userData.ritualOptics = { ...options, ...(options.paper ? { paper: { ...options.paper } } : {}) };
   const fiber = options.fiber ? ownFiber(options.fiber) : undefined;
+  const isSheet = options.paper?.layout === 'sheet';
   const previousCompile = material.onBeforeCompile;
   const previousKey = material.customProgramCacheKey.bind(material);
   // Capture the old key before replacing onBeforeCompile: Three's default key
@@ -101,28 +181,33 @@ function attach(material: THREE.Material, options: Optics) {
     if (shader.fragmentShader.includes('WBR_RITUAL_OPTICS')) return;
     shader.fragmentShader = '#define WBR_RITUAL_OPTICS\n' + shader.fragmentShader;
     if (fiber || options.kind === 'water' || options.paper) {
-      const varyings = 'varying vec3 ritualLocalPosition;\nvarying vec3 ritualLocalNormal;\n';
+      const varyings = `varying vec3 ritualLocalPosition;\nvarying vec3 ritualLocalNormal;\n${isSheet ? 'varying vec2 ritualSheetUv;\n' : ''}`;
       shader.vertexShader = varyings + shader.vertexShader;
       shader.fragmentShader = varyings + shader.fragmentShader;
       shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', `
         #include <begin_vertex>
         ritualLocalPosition = transformed;
         ritualLocalNormal = normal;
+        ${isSheet ? 'ritualSheetUv = uv;' : ''}
       `);
     }
     if (fiber) {
       shader.uniforms.ritualFiberMap = { value: fiber.texture };
-      shader.fragmentShader = shader.fragmentShader.replace('void main() {', FIBER_HEADER + '\nvoid main() {');
-      shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
-        #include <color_fragment>
-        float ritualGrain = ritualFiber() - 0.5;
-        diffuseColor.rgb *= 1.0 + ritualGrain * ${options.paper ? '0.38' : '0.10'};
-      `).replace('#include <roughnessmap_fragment>', `
-        #include <roughnessmap_fragment>
-        roughnessFactor = clamp(roughnessFactor + ritualGrain * 0.12, 0.06, 1.0);
-      `);
+      if (!isSheet) {
+        shader.fragmentShader = shader.fragmentShader.replace('void main() {', FIBER_HEADER + '\nvoid main() {');
+        shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
+          #include <color_fragment>
+          float ritualGrain = ritualFiber() - 0.5;
+          diffuseColor.rgb *= 1.0 + ritualGrain * ${options.paper ? '0.38' : '0.10'};
+        `).replace('#include <roughnessmap_fragment>', `
+          #include <roughnessmap_fragment>
+          roughnessFactor = clamp(roughnessFactor + ritualGrain * 0.12, 0.06, 1.0);
+        `);
+      } else {
+        shader.fragmentShader = shader.fragmentShader.replace('void main() {', 'uniform sampler2D ritualFiberMap;\nvoid main() {');
+      }
     }
-    if (options.paper) {
+    if (options.paper && options.paper.layout !== 'sheet') {
       const paper = options.paper;
       Object.assign(shader.uniforms, {
         ritualPaperSpacing: { value: paper.spacing }, ritualPaperWidth: { value: paper.width },
@@ -144,6 +229,47 @@ function attach(material: THREE.Material, options: Optics) {
           * mix(1.0 - ritualPaperContrast, 1.0, ritualClearance)
           ${fiber ? '* (1.0 + ritualGrain * 0.38)' : ''};
       `);
+    } else if (options.paper && options.paper.layout === 'sheet') {
+      const sheet = options.paper;
+      Object.assign(shader.uniforms, {
+        ritualSheetScale: { value: sheet.grainScale },
+        ritualSheetAspect: { value: sheet.aspect },
+        ritualSheetGrain: { value: sheet.grain },
+        ritualSheetFibers: { value: sheet.fibers },
+        ritualSheetEdge: { value: sheet.edge },
+        ritualSheetHighlightGuard: { value: sheet.highlightGuard },
+      });
+      shader.fragmentShader = shader.fragmentShader.replace('void main() {', sheetPaperHeader(!!fiber) + '\nvoid main() {');
+      shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
+        #include <color_fragment>
+        vec4 ritualSheet = ritualSheetDetail();
+        float ritualSheetDensity = (ritualSheet.x * 0.56 + ritualSheet.y * 0.44) * ritualSheetGrain;
+        vec3 ritualWarmPaper = vec3(0.99, 0.96, 0.90);
+        diffuseColor.rgb *= 1.0 + ritualSheetDensity * 0.38;
+        diffuseColor.rgb = mix(diffuseColor.rgb, mix(diffuseColor.rgb, ritualWarmPaper, 0.44), clamp(ritualSheet.z * 0.62, 0.0, 0.42));
+        diffuseColor.rgb = mix(diffuseColor.rgb, mix(diffuseColor.rgb, ritualWarmPaper, 0.36), max(0.0, ritualSheet.w) * 0.58);
+        diffuseColor.rgb *= 1.0 + min(0.0, ritualSheet.w) * 0.16;
+      `).replace('#include <roughnessmap_fragment>', `
+        #include <roughnessmap_fragment>
+        roughnessFactor = clamp(roughnessFactor + ritualSheet.y * 0.14 - ritualSheet.z * 0.05, 0.45, 1.0);
+      `).replace('#include <normal_fragment_maps>', `
+        #include <normal_fragment_maps>
+        ${fiber ? `vec2 ritualToothUv = ritualSheetCoord() * 2.45 + vec2(0.37, 0.71);
+        float ritualH0 = texture2D(ritualFiberMap, ritualToothUv).r;
+        float ritualHx = texture2D(ritualFiberMap, ritualToothUv + vec2(0.025, 0.0)).r - ritualH0;
+        float ritualHy = texture2D(ritualFiberMap, ritualToothUv + vec2(0.0, 0.025)).r - ritualH0;
+        normal = normalize(normal + vec3(ritualHx, ritualHy, 0.0) * (ritualSheetGrain * 0.52));` : ''}
+      `).replace('#include <opaque_fragment>', `
+        if (ritualSheetHighlightGuard > 0.001) {
+          float ritualPeak = max(outgoingLight.r, max(outgoingLight.g, outgoingLight.b));
+          if (ritualPeak > 0.80) {
+            float ritualExcess = ritualPeak - 0.80;
+            float ritualTarget = 0.80 + ritualExcess / (1.0 + ritualExcess * (1.85 * ritualSheetHighlightGuard));
+            outgoingLight *= ritualTarget / ritualPeak;
+          }
+        }
+        #include <opaque_fragment>
+      `);
     }
     if (options.kind === 'water') {
       shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `
@@ -158,19 +284,23 @@ function attach(material: THREE.Material, options: Optics) {
     }
     if (options.strength > 0 && scatterStrength[options.kind] !== undefined) {
       shader.uniforms.ritualScatterStrength = { value: options.strength };
-      const scatter = options.paper ? SCATTER.replace(
-        'reflectedLight.directDiffuse +=',
-        `// Thin paper also wraps front light into its shallow body. The support
-         // projection reduces this response before light is accumulated.
-         transmissionLobe = (transmissionLobe + 0.60 * max(0.0, dot(surfaceNormal, directLight.direction)) + 0.14)
-           * ritualPaperClearance() * ritualPaperInternalProfile()
-           * ritualPaperViewTransmission(surfaceNormal, viewDirection);
-         reflectedLight.directDiffuse +=`,
-      ) : SCATTER;
+      const scatter = isSheet
+        ? SHEET_SCATTER
+        : options.paper ? SCATTER.replace(
+          'reflectedLight.directDiffuse +=',
+          `// Thin paper also wraps front light into its shallow body. The support
+           // projection reduces this response before light is accumulated.
+           transmissionLobe = (transmissionLobe + 0.60 * max(0.0, dot(surfaceNormal, directLight.direction)) + 0.14)
+             * ritualPaperClearance() * ritualPaperInternalProfile()
+             * ritualPaperViewTransmission(surfaceNormal, viewDirection);
+           reflectedLight.directDiffuse +=`,
+        ) : SCATTER;
       shader.fragmentShader = shader.fragmentShader.replace('void main() {', scatter + '\nvoid main() {');
       const direct = 'RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );';
-      const lights = THREE.ShaderChunk.lights_fragment_begin.split(direct).join(`${direct}
-        ritualScatter(directLight, geometryNormal, geometryViewDir, diffuseColor.rgb, reflectedLight);`);
+      const call = isSheet
+        ? 'ritualScatter(directLight, geometryNormal, geometryViewDir, diffuseColor.rgb, ritualSheet.x, reflectedLight);'
+        : 'ritualScatter(directLight, geometryNormal, geometryViewDir, diffuseColor.rgb, reflectedLight);';
+      const lights = THREE.ShaderChunk.lights_fragment_begin.split(direct).join(`${direct}\n        ${call}`);
       shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_begin>', lights);
     }
   };
@@ -225,13 +355,25 @@ export function createRitualMaterial(parameters: THREE.MeshStandardMaterialParam
   }
   const fiber = options.fiber ?? (kind === 'paper' ? 'paper' : kind === 'cloth' ? 'linen' : false);
   const structure = kind === 'paper' ? options.paper : undefined;
-  const paper = structure ? {
-    layout: structure.layout,
-    spacing: finite(structure.spacing, .1, .0001, 10),
-    width: finite(structure.width, .1, .001, .49),
-    contrast: finite(structure.contrast, .5),
-    ...(structure.halfHeight === undefined ? {} : { halfHeight: finite(structure.halfHeight, 1, .0001, 10) }),
-  } : undefined;
+  const paper: NormalizedPaper | undefined = structure
+    ? structure.layout === 'sheet'
+      ? {
+          layout: 'sheet',
+          grainScale: finite(structure.grainScale, 2.4, .2, 20),
+          aspect: finite(structure.aspect, 1, .05, 20),
+          grain: finite(structure.grain, .55, 0, 1),
+          fibers: finite(structure.fibers, .44, 0, 1),
+          edge: finite(structure.edge, .28, 0, 1),
+          highlightGuard: finite(structure.highlightGuard, .42, 0, 1),
+        }
+      : {
+          layout: structure.layout,
+          spacing: finite(structure.spacing, .1, .0001, 10),
+          width: finite(structure.width, .1, .001, .49),
+          contrast: finite(structure.contrast, .5),
+          ...(structure.halfHeight === undefined ? {} : { halfHeight: finite(structure.halfHeight, 1, .0001, 10) }),
+        }
+    : undefined;
   attach(material, { kind, fiber, strength: finite(options.strength, scatterStrength[kind] ?? 0), ...(paper ? { paper } : {}) });
   return material;
 }
@@ -239,5 +381,5 @@ export function createRitualMaterial(parameters: THREE.MeshStandardMaterialParam
 /** Rebuild the patch on a styled clone, with its own shader hook and texture lifetime. */
 export function copyRitualOptics(source: THREE.Material, target: THREE.Material): void {
   const options = states.get(source);
-  if (options) attach(target, { ...options });
+  if (options) attach(target, { ...options, ...(options.paper ? { paper: { ...options.paper } } : {}) });
 }

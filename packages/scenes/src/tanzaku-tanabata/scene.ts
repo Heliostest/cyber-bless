@@ -2,6 +2,12 @@ import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import {
+  createHangingPaperRig,
+  createPaperStripSurface,
+  poseRestingPaperStrip,
+  type PaperStripSurface,
+} from '@wbr/scene-runtime/paper-sheet'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
@@ -160,46 +166,213 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
   world.add(hangZone)
 
   // Paper strips: a few already hanging + one loose at the bamboo's foot.
-  const stripGeo = new THREE.PlaneGeometry(0.12, 0.42)
-  stripGeo.translate(0, -0.21, 0) // pivot at the top so it sways like paper on string
-  const hangingStrips: THREE.Mesh[] = []
-  const presetHangs = [
-    new THREE.Vector3(-0.2, 2.3, 0.0),
-    new THREE.Vector3(0.25, 2.0, 0.05),
-    new THREE.Vector3(-0.5, 1.7, -0.1),
-  ]
-  presetHangs.forEach((p, i) => {
-    const strip = new THREE.Mesh(
-      stripGeo,
-      createRitualMaterial({
-        color: STRIP_COLORS[i % STRIP_COLORS.length],
-        roughness: 0.95,
-        side: THREE.DoubleSide,
-      }, { kind: 'paper', strength: .22, fiber: 'paper' }),
-    )
-    strip.position.copy(p)
-    strip.name = `tanzaku-preset-strip-${i}`
-    bamboo.add(strip)
-    hangingStrips.push(strip)
+  // Each strip uses a subdivided PlaneGeometry(0.12, 0.42) with structured
+  // sheet washi optics, a synchronized warm paper-core cut edge, top punch
+  // hole, and cream koyori hanging cord tied to the bamboo above.
+  const STRIP_W = 0.12
+  const STRIP_H = 0.42
+  const STRIP_SEG_X = 4
+  const STRIP_SEG_Y = 14
+  const STRIP_THICKNESS = 0.0028
+  const HOLE_ROW = 1
+  const HOLE_COL = STRIP_SEG_X / 2
+
+  const makeStripMaterial = (color: number, extra: THREE.MeshStandardMaterialParameters = {}) => createRitualMaterial({
+    color,
+    roughness: 0.94,
+    side: THREE.DoubleSide,
+    ...extra,
+  }, {
+    kind: 'paper',
+    strength: 0.36,
+    fiber: 'paper',
+    paper: {
+      layout: 'sheet',
+      aspect: STRIP_W / STRIP_H,
+      grainScale: 3.1,
+      grain: 0.64,
+      fibers: 0.52,
+      edge: 0.34,
+      highlightGuard: 0.58,
+    },
   })
 
-  const looseMat = createRitualMaterial({
-    color: STRIP_COLORS[4],
+  const makeEdgeMaterial = (color: number) => new THREE.MeshStandardMaterial({
+    color: new THREE.Color(color).lerp(new THREE.Color(0xfbf1de), 0.62),
+    roughness: 0.96,
+    side: THREE.DoubleSide,
+  })
+
+  const cordMat = new THREE.MeshStandardMaterial({ color: 0xe8d7b6, roughness: 0.92 })
+  applyCraftSurface(cordMat, { kind: 'cord', strength: 0.28 })
+  const holeBoreMat = new THREE.MeshStandardMaterial({ color: 0x3b332d, roughness: 0.95 })
+  const holeBoreGeo = new THREE.CircleGeometry(0.0068, 12)
+  const holeKnotGeo = new THREE.TorusGeometry(0.0078, 0.0025, 6, 14)
+
+  type StripVisual = {
+    mesh: THREE.Mesh
+    surface: PaperStripSurface
+    holeAnchor: THREE.Group
+  }
+
+  const createStripVisual = (name: string, color: number, material: THREE.MeshStandardMaterial): StripVisual => {
+    const surface = createPaperStripSurface(STRIP_W, STRIP_H, {
+      segX: STRIP_SEG_X,
+      segY: STRIP_SEG_Y,
+      thickness: STRIP_THICKNESS,
+    })
+    const mesh = new THREE.Mesh(surface.geometry, material)
+    mesh.name = name
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+
+    const edgeMesh = new THREE.Mesh(surface.edgeGeometry, makeEdgeMaterial(color))
+    edgeMesh.name = `${name}-edge`
+    edgeMesh.userData.toonSurface = { outline: false }
+    mesh.add(edgeMesh)
+
+    const holeAnchor = new THREE.Group()
+    holeAnchor.name = `${name}-hole`
+    const frontBore = new THREE.Mesh(holeBoreGeo, holeBoreMat)
+    frontBore.position.z = STRIP_THICKNESS * 0.56
+    frontBore.userData.toonSurface = { outline: false }
+    const backBore = new THREE.Mesh(holeBoreGeo, holeBoreMat)
+    backBore.position.z = -STRIP_THICKNESS * 0.56
+    backBore.rotation.y = Math.PI
+    backBore.userData.toonSurface = { outline: false }
+    const knot = new THREE.Mesh(holeKnotGeo, cordMat)
+    knot.rotation.y = Math.PI / 2
+    knot.position.y = 0.006
+    knot.userData.toonSurface = { outline: false }
+    holeAnchor.add(frontBore, backBore, knot)
+    mesh.add(holeAnchor)
+
+    return { mesh, surface, holeAnchor }
+  }
+
+  const createHangingCord = (name: string, stripTop: THREE.Vector3, bambooTie: THREE.Vector3, tieRingAxis: 'x' | 'y' | 'z') => {
+    const group = new THREE.Group()
+    group.name = name
+    const hole = stripTop.clone().add(new THREE.Vector3(0, -0.028, 0))
+    const mid = stripTop.clone().lerp(bambooTie, 0.55)
+    mid.z = THREE.MathUtils.lerp(stripTop.z, bambooTie.z, 0.45) + 0.012
+    const curve = new THREE.CatmullRomCurve3([
+      hole,
+      stripTop.clone().add(new THREE.Vector3(0, 0.004, 0)),
+      mid,
+      bambooTie,
+    ])
+    const cordMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 14, 0.0034, 6, false), cordMat)
+    cordMesh.name = `${name}-strand`
+    cordMesh.userData.toonSurface = { outline: false }
+    group.add(cordMesh)
+
+    const tieLoop = new THREE.Mesh(new THREE.TorusGeometry(tieRingAxis === 'y' ? 0.062 : 0.015, 0.0034, 6, 16), cordMat)
+    tieLoop.name = `${name}-tie`
+    tieLoop.position.copy(bambooTie)
+    if (tieRingAxis === 'y') tieLoop.rotation.x = Math.PI / 2
+    else if (tieRingAxis === 'x') tieLoop.rotation.y = Math.PI / 2
+    tieLoop.userData.toonSurface = { outline: false }
+    group.add(tieLoop)
+    return group
+  }
+
+  const stripVisuals: StripVisual[] = []
+  // Forward-biased curl keeps every strip clear of the bamboo leaves behind it
+  // while varied yaw and breeze phase give each strip an individual curved silhouette.
+  const presetHangs: { pos: THREE.Vector3; tie: THREE.Vector3; axis: 'x' | 'y' | 'z'; yaw: number; curl: number }[] = [
+    { pos: new THREE.Vector3(-0.2, 2.3, 0.0), tie: new THREE.Vector3(-0.21, 2.48, -0.19), axis: 'x', yaw: 0.26, curl: 0.78 },
+    { pos: new THREE.Vector3(0.25, 2.0, 0.05), tie: new THREE.Vector3(0.25, 2.03, 0.04), axis: 'x', yaw: -0.28, curl: 0.64 },
+    { pos: new THREE.Vector3(-0.5, 1.7, -0.1), tie: new THREE.Vector3(-0.50, 1.98, -0.20), axis: 'x', yaw: 0.28, curl: 0.72 },
+  ]
+  presetHangs.forEach((entry, i) => {
+    const color = STRIP_COLORS[i % STRIP_COLORS.length]!
+    const visual = createStripVisual(`tanzaku-preset-strip-${i}`, color, makeStripMaterial(color))
+    visual.mesh.position.copy(entry.pos)
+    bamboo.add(visual.mesh)
+    bamboo.add(createHangingCord(`tanzaku-preset-cord-${i}`, entry.pos, entry.tie, entry.axis))
+    stripVisuals.push(visual)
+  })
+
+  const looseMat = makeStripMaterial(STRIP_COLORS[4]!, {
     emissive: 0x6a2a3a,
     emissiveIntensity: 0.15,
-    roughness: 0.95,
-    side: THREE.DoubleSide,
-  }, { kind: 'paper', strength: .22, fiber: 'paper' })
-  const loose = new THREE.Mesh(stripGeo, looseMat)
-  loose.name = 'tanzaku-loose-strip'
+  })
+  const looseVisual = createStripVisual('tanzaku-loose-strip', STRIP_COLORS[4]!, looseMat)
+  const loose = looseVisual.mesh
   const looseHome = new THREE.Vector3(1.15, 0.45, 1.0)
   const looseHangPos = new THREE.Vector3(0.45, 1.75, 0.12)
+  const looseTiePos = new THREE.Vector3(0.40, 2.00, 0.04)
   const hungPoint = new THREE.Vector3()
   const seatingFrom = new THREE.Vector3()
   let seating = 1
   loose.position.copy(looseHome)
   loose.rotation.z = 0.5
   world.add(loose)
+
+  // Small carried paper-cord loop visible while the loose strip rests on the ground or is dragged.
+  const looseCarryLoopCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(-0.015, 0.042, 0.004),
+    new THREE.Vector3(0, 0.072, 0.006),
+    new THREE.Vector3(0.015, 0.042, 0.004),
+    new THREE.Vector3(0, 0, 0),
+  ], true)
+  const looseCarryLoop = new THREE.Mesh(new THREE.TubeGeometry(looseCarryLoopCurve, 18, 0.0032, 6, true), cordMat)
+  looseCarryLoop.name = 'tanzaku-loose-carry-loop'
+  looseCarryLoop.userData.toonSurface = { outline: false }
+  looseVisual.holeAnchor.add(looseCarryLoop)
+
+  // Tied bamboo cord shown once the loose strip settles onto Stalk 2's node.
+  const looseHangCord = createHangingCord('tanzaku-loose-cord', looseHangPos, looseTiePos, 'y')
+  looseHangCord.visible = false
+  bamboo.add(looseHangCord)
+
+  stripVisuals.push(looseVisual)
+
+  const syncHoleAnchor = (visual: StripVisual) => {
+    const pos = visual.surface.geometry.getAttribute('position') as THREE.BufferAttribute
+    const norm = visual.surface.geometry.getAttribute('normal') as THREE.BufferAttribute | undefined
+    const cols = STRIP_SEG_X + 1
+    const idx = HOLE_ROW * cols + HOLE_COL
+    visual.holeAnchor.position.set(pos.getX(idx), pos.getY(idx), pos.getZ(idx))
+    if (norm) {
+      const nx = norm.getX(idx), ny = norm.getY(idx), nz = norm.getZ(idx)
+      if (nx * nx + ny * ny + nz * nz > 1e-6) {
+        visual.holeAnchor.quaternion.setFromUnitVectors(_anchorUpZ, _anchorNorm.set(nx, ny, nz).normalize())
+      }
+    }
+  }
+  const _anchorUpZ = new THREE.Vector3(0, 0, 1)
+  const _anchorNorm = new THREE.Vector3()
+
+  // Initial graceful stiff-paper resting arch for the unhung loose strip.
+  poseRestingPaperStrip(looseVisual.surface, { yaw: 0.22, bendZ: 0.30, twist: 0.10, camber: 0.0038 })
+
+  const paperRig = createHangingPaperRig({
+    strips: [
+      ...presetHangs.map((entry, i) => ({
+        surface: stripVisuals[i]!.surface,
+        phase: i * 1.65 + 0.3,
+        baseYaw: entry.yaw,
+        curlBias: entry.curl,
+        breezeScale: 1,
+      })),
+      {
+        surface: looseVisual.surface,
+        phase: 5.1,
+        baseYaw: -0.22,
+        curlBias: 0.72,
+        breezeScale: 1.05,
+        isHanging: () => step === 'wish' || step === 'done',
+      },
+    ],
+    isActive: () => started && !disposed && canAct(),
+    isReducedMotion: () => ctx.isReducedMotion?.() ?? false,
+    settleSteps: 40,
+    breezeStrength: 1.0,
+  })
+  stripVisuals.forEach(syncHoleAnchor)
   // Generous pick target around the loose strip.
   const pickZone = new THREE.Mesh(
     new THREE.SphereGeometry(0.45, 12, 8),
@@ -329,8 +502,10 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     looseMat.emissiveIntensity = 0.05
     wishHandle?.setEnabled(true)
     if (!restoring) {
-      loose.rotation.z = 0.35
+      loose.rotation.z = 0
       sparkle = 1
+      paperRig.resetStrip(3, 0.25, 0.18)
+      paperRig.impulse(3, 2.8, 2.2)
       const reduced = ctx.isReducedMotion?.() ?? false
       fx.impact({
         freqs: [1318.5, 1975.5, 2637],
@@ -341,6 +516,9 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     } else {
       loose.position.copy(looseHangPos)
       loose.rotation.z = 0
+      looseCarryLoop.visible = false
+      looseHangCord.visible = true
+      paperRig.resetStrip(3)
     }
     syncOverlayForStep()
   }
@@ -452,6 +630,7 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
       if ((ctx.initialProgress ?? 0) >= 2) goWish()
       if ((ctx.initialProgress ?? 0) >= 3) completeScene()
       restoring = false
+      if (!ctx.isReducedMotion?.()) void paperRig.start()
       syncOverlayForStep()
     },
     update(dt: number) {
@@ -466,26 +645,43 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
       const reduced = ctx.isReducedMotion?.() ?? false
       const t = reduced ? 0 : performance.now() * 0.001
 
-      hangingStrips.forEach((s, i) => {
-        s.rotation.z = Math.sin(t * 1.3 + i * 1.7) * 0.12
-        s.rotation.y = Math.sin(t * 0.7 + i) * 0.2
-      })
       bamboo.rotation.z = Math.sin(t * 0.5) * 0.008
+      paperRig.update(dt, t)
 
       const follow = reduced ? 1 : 1 - Math.exp(-dt * 12)
       if (step === 'hang') {
+        const prevX = loose.position.x
         loose.position.lerp(dragTarget, follow)
         loose.rotation.z = THREE.MathUtils.lerp(loose.rotation.z, 0, follow)
         pickZone.position.set(loose.position.x, loose.position.y - 0.2, loose.position.z)
+        const dragBend = THREE.MathUtils.clamp((loose.position.x - prevX) * 6, -0.22, 0.22)
+        poseRestingPaperStrip(looseVisual.surface, {
+          yaw: reduced ? -0.1 : Math.sin(t * 1.4) * 0.12 - 0.1,
+          swingZ: -dragBend * 0.55,
+          bendZ: 0.18 + Math.abs(dragBend) * 0.65,
+          twist: 0.05,
+          camber: 0.0028,
+        })
+        looseCarryLoop.visible = true
+        looseHangCord.visible = false
       } else if (step === 'wish' || step === 'done') {
         loose.rotation.z = THREE.MathUtils.lerp(
           loose.rotation.z,
-          Math.sin(t * 1.5) * 0.14,
-          reduced ? 1 : 1 - Math.exp(-dt * 3),
+          0,
+          reduced ? 1 : 1 - Math.exp(-dt * 8),
         )
       } else {
         looseMat.emissiveIntensity = 0.15 + Math.sin(t * 2.4) * 0.1
+        poseRestingPaperStrip(looseVisual.surface, {
+          yaw: 0.22,
+          bendZ: 0.30 + (reduced ? 0 : Math.sin(t * 1.2) * 0.03),
+          twist: 0.10,
+          camber: 0.0038,
+        })
+        looseCarryLoop.visible = true
+        looseHangCord.visible = false
       }
+      stripVisuals.forEach(syncHoleAnchor)
       const scaleTarget = 1
       loose.scale.setScalar(
         THREE.MathUtils.lerp(loose.scale.x, scaleTarget, 1 - Math.exp(-dt * 12)),
@@ -511,6 +707,9 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
         seating = reduced ? 1 : Math.min(1, seating + Math.max(0, dt) / .18)
         loose.position.lerpVectors(seatingFrom, hungPoint, seating * seating * (3 - 2 * seating))
         loose.getWorldPosition(sparkleLight.position)
+        const seated = seating >= 0.85
+        looseCarryLoop.visible = !seated
+        looseHangCord.visible = seated
       }
       styleRenderer.render()
     },
@@ -518,6 +717,7 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
       if (disposed) return
       ending.dispose()
       disposed = true
+      paperRig.dispose()
       resizeObserver?.disconnect()
       resizeObserver = null
       stopClaim()

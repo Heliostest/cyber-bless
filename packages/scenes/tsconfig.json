@@ -10,7 +10,11 @@
     "declaration": true,
     "isolatedModules": true,
     "esModuleInterop": true,
-    "lib": ["ES2022", "DOM"]
+    "lib": ["ES2022", "DOM"],
+    "paths": {
+      "@wbr/scene-runtime": ["../scene-runtime/src/index.ts"],
+      "@wbr/scene-runtime/*": ["../scene-runtime/src/*.ts"]
+    }
   },
   "include": ["src"]
 }

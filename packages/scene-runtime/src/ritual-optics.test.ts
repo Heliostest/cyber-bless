@@ -35,14 +35,34 @@ describe('ritual optical surfaces', () => {
     paper.dispose(); mesh.geometry.dispose();
   });
 
-  it('separates radial, banded and ordinary paper shader topology without changing ordinary paper', () => {
+  it('separates radial, banded, sheet and ordinary paper shader topology without changing ordinary paper', () => {
     const ordinary = createRitualMaterial({}, { kind: 'paper', fiber: false });
     const bands = createRitualMaterial({}, { kind: 'paper', fiber: false, paper: { layout: 'bands', spacing: .1, width: .1, contrast: .6 } });
     const radial = createRitualMaterial({}, { kind: 'paper', fiber: false, paper: { layout: 'radial', spacing: Math.PI / 12, width: .1, contrast: .48 } });
-    expect(new Set([ordinary, bands, radial].map(m => m.customProgramCacheKey())).size).toBe(3);
+    const sheet = createRitualMaterial({ color: 0xf6cc58 }, { kind: 'paper', paper: { layout: 'sheet', aspect: .28, grainScale: 3.2, grain: .6, fibers: .45, edge: .3, highlightGuard: .45 } });
+    expect(new Set([ordinary, bands, radial, sheet].map(m => m.customProgramCacheKey())).size).toBe(4);
     expect(compile(ordinary).fragmentShader).not.toContain('ritualPaperClearance');
+    expect(compile(ordinary).fragmentShader).not.toContain('ritualSheetDetail');
     expect(compile(radial).fragmentShader).toContain('atan(ritualLocalPosition.z, ritualLocalPosition.x)');
-    [ordinary, bands, radial].forEach(m => m.dispose());
+    const sheetShader = compile(sheet);
+    expect(sheetShader.vertexShader).toContain('ritualSheetUv = uv;');
+    expect(sheetShader.fragmentShader).toContain('ritualSheetDetail');
+    expect(sheetShader.fragmentShader).toContain('ritualSheetHighlightGuard');
+    expect(sheetShader.uniforms.ritualSheetAspect?.value).toBeCloseTo(.28);
+    expect(sheetShader.uniforms.ritualSheetScale?.value).toBeCloseTo(3.2);
+    // Styled toon clones preserve sheet uniforms and stay opaque.
+    const scene = new THREE.Scene(), mesh = new THREE.Mesh(new THREE.PlaneGeometry(), sheet); scene.add(mesh);
+    for (const style of ['toon-soft', 'toon-ink', 'gouache'] as const) {
+      const adapter = createToonSurfaces(style), frame = adapter.apply(scene);
+      const styled = mesh.material as THREE.MeshStandardMaterial;
+      const styledShader = compile(styled, styled instanceof THREE.MeshToonMaterial ? 'toon' : 'standard');
+      expect(styledShader.fragmentShader).toContain('ritualSheetDetail');
+      expect(styledShader.uniforms.ritualSheetAspect?.value).toBeCloseTo(.28);
+      expect([styled.transparent, styled.opacity]).toEqual([false, 1]);
+      frame.restore(); adapter.dispose();
+    }
+    mesh.geometry.dispose();
+    [ordinary, bands, radial, sheet].forEach(m => m.dispose());
   });
 
   it('adds light-driven paper scattering without see-through alpha or emissive', () => {

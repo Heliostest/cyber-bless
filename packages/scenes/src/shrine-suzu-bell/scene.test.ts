@@ -149,6 +149,17 @@ describe('shrine suzu object actions', () => {
     expect(size('suzu-rope-grip')[0]).toBeGreaterThan(30)
   })
 
+  it('aligns vertical wood grain on the rope grip and posts, and applies wood grain to column bases and lintel', () => {
+    const s = mount()
+    const surface = (name: string) => ((s.object(name) as THREE.Mesh).material as THREE.Material).userData.craftSurface
+    expect(surface('suzu-rope-grip')).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(surface('suzu-column-post')).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(surface('suzu-lintel')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surface('suzu-column-base')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surface('suzu-column-capital')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surface('suzu-eave-cap')).toMatchObject({ kind: 'wood', axis: 'x' })
+  })
+
   it('creates an accessible auxiliary action for pulling the actual rope', () => {
     const s = mount()
     expect(s.button).not.toBeNull()

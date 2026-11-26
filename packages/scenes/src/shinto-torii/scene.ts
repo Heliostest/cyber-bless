@@ -166,12 +166,32 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
   // Proportions are an art choice, not a survey of any one shrine.
   const torii = new THREE.Group()
   world.add(torii)
-  const vermilion = new THREE.MeshStandardMaterial({ color: 0xe25a32, roughness: 0.9 })
-  const ink = new THREE.MeshStandardMaterial({ color: 0x2f2a2a, roughness: 0.85 })
+  const lacquer = (axis: 'x' | 'y') => applyCraftSurface(
+    new THREE.MeshPhysicalMaterial({
+      color: 0xe25a32,
+      roughness: 0.56,
+      clearcoat: 0.38,
+      clearcoatRoughness: 0.27,
+    }),
+    { kind: 'wood', axis, strength: 0.46, scale: 0.48 },
+  )
+  const vermilionPost = lacquer('y')
+  const vermilionBeam = lacquer('x')
+  const ink = new THREE.MeshStandardMaterial({ color: 0x2f2a2a, roughness: 0.84 })
+  const inkCap = applyCraftSurface(
+    new THREE.MeshPhysicalMaterial({
+      color: 0x2f2a2a,
+      roughness: 0.68,
+      clearcoat: 0.24,
+      clearcoatRoughness: 0.36,
+    }),
+    { kind: 'wood', axis: 'x', strength: 0.22, scale: 0.6 },
+  )
   const pillarGeo = new THREE.CylinderGeometry(0.1, 0.115, 2.4, 24)
   const baseGeo = new THREE.CylinderGeometry(0.135, 0.14, 0.26, 24)
   for (const side of [-1, 1]) {
-    const pillar = new THREE.Mesh(pillarGeo, vermilion)
+    const pillar = new THREE.Mesh(pillarGeo, vermilionPost)
+    pillar.name = side < 0 ? 'torii-pillar-left' : 'torii-pillar-right'
     pillar.position.set(side * 0.92, 1.2, 0)
     pillar.rotation.z = side * 0.025 // slight inward lean
     torii.add(pillar)
@@ -179,19 +199,24 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
     base.position.set(side * 0.935, 0.13, 0)
     torii.add(base)
   }
-  const nuki = new THREE.Mesh(new RoundedBoxGeometry(2.5, 0.13, 0.1, 2, 0.02), vermilion)
+  const nuki = new THREE.Mesh(new RoundedBoxGeometry(2.5, 0.13, 0.1, 2, 0.02), vermilionBeam)
+  nuki.name = 'torii-nuki'
   nuki.position.y = 1.86
   torii.add(nuki)
-  const gakuzuka = new THREE.Mesh(new RoundedBoxGeometry(0.12, 0.3, 0.09, 2, 0.015), vermilion)
+  const gakuzuka = new THREE.Mesh(new RoundedBoxGeometry(0.12, 0.3, 0.09, 2, 0.015), vermilionPost)
+  gakuzuka.name = 'torii-gakuzuka'
   gakuzuka.position.y = 2.07
   torii.add(gakuzuka)
-  const shimaki = new THREE.Mesh(new RoundedBoxGeometry(2.62, 0.12, 0.17, 2, 0.02), vermilion)
+  const shimaki = new THREE.Mesh(new RoundedBoxGeometry(2.62, 0.12, 0.17, 2, 0.02), vermilionBeam)
+  shimaki.name = 'torii-shimaki'
   shimaki.position.y = 2.28
   torii.add(shimaki)
-  const kasagi = new THREE.Mesh(upswept(3.0, 0.13, 0.2, 0.13), vermilion)
+  const kasagi = new THREE.Mesh(upswept(3.0, 0.13, 0.2, 0.13), vermilionBeam)
+  kasagi.name = 'torii-kasagi'
   kasagi.position.y = 2.41
   torii.add(kasagi)
-  const kasagiTop = new THREE.Mesh(upswept(3.12, 0.055, 0.25, 0.15), ink)
+  const kasagiTop = new THREE.Mesh(upswept(3.12, 0.055, 0.25, 0.15), inkCap)
+  kasagiTop.name = 'torii-kasagi-top'
   kasagiTop.position.y = 2.5
   torii.add(kasagiTop)
 
@@ -211,24 +236,34 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
   rack.position.set(1.95, 0, -1.1)
   rack.rotation.y = -0.5
   world.add(rack)
-  const rackWood = new THREE.MeshStandardMaterial({ color: 0x8e6444, roughness: 0.95 })
-  applyCraftSurface(rackWood, { kind: 'wood', strength: .4 })
+  const rackPostWood = applyCraftSurface(
+    new THREE.MeshStandardMaterial({ color: 0x8e6444, roughness: 0.82 }),
+    { kind: 'wood', axis: 'y', strength: 0.54, scale: 0.52 },
+  )
+  const rackBarWood = applyCraftSurface(
+    new THREE.MeshStandardMaterial({ color: 0x8e6444, roughness: 0.82 }),
+    { kind: 'wood', axis: 'x', strength: 0.54, scale: 0.52 },
+  )
 
   for (const x of [-0.45, 0.45]) {
-    const post = new THREE.Mesh(new RoundedBoxGeometry(0.06, 1.3, 0.06, 2, 0.015), rackWood)
+    const post = new THREE.Mesh(new RoundedBoxGeometry(0.06, 1.3, 0.06, 2, 0.015), rackPostWood)
+    post.name = x < 0 ? 'torii-rack-post-left' : 'torii-rack-post-right'
     post.position.set(x, 0.65, 0)
     rack.add(post)
   }
   for (const y of [1.2, 0.9]) {
-    const bar = new THREE.Mesh(new RoundedBoxGeometry(1.0, 0.04, 0.05, 2, 0.012), rackWood)
+    const bar = new THREE.Mesh(new RoundedBoxGeometry(1.0, 0.04, 0.05, 2, 0.012), rackBarWood)
+    bar.name = y > 1 ? 'torii-rack-bar-top' : 'torii-rack-bar-bottom'
     bar.position.set(0, y, 0)
     rack.add(bar)
   }
   const emaGeo = emaGeometry()
   // The apex remains on the rack while the lower board stirs in the breeze.
   emaGeo.translate(0, -.09, 0)
-  const emaMat = new THREE.MeshStandardMaterial({ color: 0xe8cda2, roughness: 0.9 })
-  applyCraftSurface(emaMat, { kind: 'wood', strength: .4 })
+  const emaMat = applyCraftSurface(
+    new THREE.MeshStandardMaterial({ color: 0xdfbf90, roughness: 0.78 }),
+    { kind: 'wood', axis: 'x', strength: 0.52, scale: 0.34 },
+  )
 
   const emaSpots: [number, number][] = [
     [-0.3, 1.1], [-0.08, 1.1], [0.2, 1.1], [-0.2, 0.8], [0.3, 0.8],
@@ -242,13 +277,15 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
     emas.push(ema)
   }
   // The visitor's own board: appears on the rack once written.
-  const ownEmaMat = new THREE.MeshStandardMaterial({
-    color: 0xf0d8ae,
-    emissive: 0xffb060,
-    emissiveIntensity: 0,
-    roughness: 0.9,
-  })
-  applyCraftSurface(ownEmaMat, { kind: 'wood', strength: .4 })
+  const ownEmaMat = applyCraftSurface(
+    new THREE.MeshStandardMaterial({
+      color: 0xe6c89a,
+      emissive: 0xffb060,
+      emissiveIntensity: 0,
+      roughness: 0.78,
+    }),
+    { kind: 'wood', axis: 'x', strength: 0.52, scale: 0.34 },
+  )
   const ownEma = new THREE.Mesh(emaGeo, ownEmaMat)
   ownEma.name = 'torii-own-ema'
   ownEma.position.set(0.05, 0.89, 0.05)

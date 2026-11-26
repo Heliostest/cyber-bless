@@ -74,10 +74,12 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
   const lights = addStageLights(scene, ctx.stage, { sky: 0xfff4e3, ground: 0xc4ad8e, key: 0xffe6c1, rim: 0xd8ede0 })
   const world = new THREE.Group(); scene.add(world)
   const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: 0.91 })
-  const wood = createCraftMaterial({ color: 0xd5af7b, roughness: .91 }, { kind: 'wood' })
-  const timber = createCraftMaterial({ color: 0xb58b64, roughness: .91 }, { kind: 'wood' })
-  const postTimber = createCraftMaterial({ color: 0xb58b64, roughness: .91 }, { kind: 'wood', axis: 'y' })
-  const edgeWood = createCraftMaterial({ color: 0x966e4e, roughness: .91 }, { kind: 'wood' })
+  const wood = createCraftMaterial({ color: 0xd5af7b, roughness: 0.74 }, { kind: 'wood', axis: 'x', strength: 0.44, scale: 0.62 })
+  const neighborWood = createCraftMaterial({ color: 0xd2ab76, roughness: 0.76 }, { kind: 'wood', axis: 'x', strength: 0.48, scale: 0.38 })
+  const timber = createCraftMaterial({ color: 0xb1855c, roughness: 0.76 }, { kind: 'wood', axis: 'x', strength: 0.56, scale: 0.68 })
+  const postTimber = createCraftMaterial({ color: 0xb1855c, roughness: 0.76 }, { kind: 'wood', axis: 'y', strength: 0.56, scale: 0.68 })
+  const footWood = createCraftMaterial({ color: 0x946c4c, roughness: 0.8 }, { kind: 'wood', axis: 'z', strength: 0.54, scale: 0.7 })
+  const pegWood = createCraftMaterial({ color: 0x946c4c, roughness: 0.78 }, { kind: 'wood', axis: 'y', strength: 0.52, scale: 0.82 })
   const ropeMat = createCraftMaterial({ color: 0xe5d9b8 }, { kind: 'cord' }), green = material(0x84ab88), coral = material(0xd99077)
   const cream = material(0xf3ddb3), gold = material(0xd4ae63), ink = material(0x776951)
   const add = (geometry: THREE.BufferGeometry, mat: THREE.Material, position: [number, number, number], parent: THREE.Object3D = world) => {
@@ -86,12 +88,13 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
   const paint = (mesh: THREE.Mesh) => { mesh.userData.toonSurface = { outline: false }; return mesh }
   const rack = new THREE.Group(); rack.name = 'ema-rack'; world.add(rack)
   for (const x of [-1.08, 1.08]) {
-    add(new RoundedBoxGeometry(0.18, 2.16, 0.23, 3, 0.04), postTimber, [x, 1.08, -0.2], rack)
-    add(new RoundedBoxGeometry(0.35, 0.09, 0.68, 3, 0.035), edgeWood, [x, 0.045, -0.14], rack)
+    add(new RoundedBoxGeometry(0.18, 2.16, 0.23, 3, 0.04), postTimber, [x, 1.08, -0.2], rack).name = 'ema-rack-post'
+    add(new RoundedBoxGeometry(0.35, 0.09, 0.68, 3, 0.035), footWood, [x, 0.045, -0.14], rack).name = 'ema-rack-foot'
   }
-  for (const y of [0.64, 1.87]) add(new RoundedBoxGeometry(2.38, 0.17, 0.23, 3, 0.04), timber, [0, y, -0.11], rack)
+  for (const y of [0.64, 1.87]) add(new RoundedBoxGeometry(2.38, 0.17, 0.23, 3, 0.04), timber, [0, y, -0.11], rack).name = 'ema-rack-beam'
   for (const x of [-0.82, 0, 0.82]) {
-    const peg = add(new THREE.CylinderGeometry(0.027, 0.029, 0.16, 12), edgeWood, [x, 1.84, 0.06], rack)
+    const peg = add(new THREE.CylinderGeometry(0.027, 0.029, 0.16, 12), pegWood, [x, 1.84, 0.06], rack)
+    peg.name = 'ema-rack-peg'
     peg.rotation.x = Math.PI / 2
   }
   const target = add(new THREE.SphereGeometry(0.18, 16, 12), new THREE.MeshBasicMaterial({ visible: false }), [0, 1.84, 0.09], rack)
@@ -146,7 +149,7 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
     paint(add(new THREE.CircleGeometry(0.049 * scale, 24), gold, [cx, cy, 0.07], painting))
   }
   // A few shallow grain lines continue across the wood; the flower has no sacred lettering.
-  const grain = new THREE.MeshStandardMaterial({ color: 0xb18e65, transparent: true, opacity: 0.2, roughness: 1 })
+  const grain = new THREE.MeshStandardMaterial({ color: 0xb18e65, transparent: true, opacity: 0.15, roughness: 1 })
   for (const z of [-0.064, 0.064]) for (const y of [-0.39, -0.3, -0.03, 0.17]) {
     plaque.add(paint(tube([[-0.6, y, z], [-0.21, y + 0.008, z], [0.25, y - 0.008, z], [0.6, y, z]], 0.002, grain)))
   }
@@ -158,7 +161,7 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
   for (const [i, x] of [-0.82, 0.82].entries()) {
     const neighbor = new THREE.Group(); neighbor.position.set(x, 1.576, 0.02); neighbor.scale.setScalar(0.33)
     neighbor.rotation.z = i === 0 ? -0.05 : 0.06; rack.add(neighbor)
-    add(bodyGeometry, wood, [0, 0, 0], neighbor)
+    add(bodyGeometry, neighborWood, [0, 0, 0], neighbor)
     neighbor.add(new THREE.Mesh(rope.geometry, ropeMat))
     paint(add(new THREE.CircleGeometry(0.13, 20), i === 0 ? green : coral, [0, -0.03, 0.067], neighbor))
   }

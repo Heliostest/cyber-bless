@@ -65,10 +65,15 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
   Object.assign(lights.key.shadow.camera, { left: -2, right: 2, top: 3, bottom: -1, near: 0.1, far: 12 })
   lights.key.shadow.bias = -0.0008; lights.key.shadow.normalBias = 0.02
   const world = new THREE.Group(); world.name = 'omikuji-courtyard-work'; scene.add(world)
-  const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: 0.91 })
-  const honey = material(0xd5af74), pale = material(0xe9c992), edge = material(0xb88c5d)
-  const timber = material(0xb39170), cream = material(0xffefd2), paperEdge = material(0xe6d5b3)
-  for(const timberPart of[honey,pale,edge,timber])applyCraftSurface(timberPart,{kind:'wood',strength:.3,axis:'y'})
+  const material = (color: number, roughness = 0.91) => new THREE.MeshStandardMaterial({ color, roughness })
+  const honey = applyCraftSurface(material(0xcfa66c, 0.78), { kind: 'wood', strength: 0.5, scale: 0.76, axis: 'y' })
+  const rimWood = applyCraftSurface(material(0xdfb982, 0.82), { kind: 'wood', strength: 0.44, scale: 0.74, axis: 'x' })
+  const stickWood = applyCraftSurface(material(0xe0bc86, 0.8), { kind: 'wood', strength: 0.46, scale: 0.82, axis: 'y' })
+  const edge = applyCraftSurface(material(0xb28557, 0.82), { kind: 'wood', strength: 0.48, scale: 0.8, axis: 'y' })
+  const standTop = applyCraftSurface(material(0xb08a65, 0.8), { kind: 'wood', strength: 0.56, scale: 0.72, axis: 'x' })
+  const standApron = applyCraftSurface(material(0xb28557, 0.82), { kind: 'wood', strength: 0.52, scale: 0.75, axis: 'x' })
+  const standLeg = applyCraftSurface(material(0xb08a65, 0.82), { kind: 'wood', strength: 0.52, scale: 0.75, axis: 'y' })
+  const cream = material(0xffefd2), paperEdge = material(0xe6d5b3)
   const sage = material(0x829a80), sageLight = material(0xafb9a0), ink = material(0x947a60), coral = material(0xc77e65)
   // Paper-only optics: the slip and envelope keep a soft fibrous body, while the
   // badge, seal and decorative marks stay flat pigment.
@@ -85,16 +90,16 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     mesh.userData.toonSurface = { outline: false }; return mesh
   }
   // A low stand keeps the box and the open envelope grounded in the courtyard.
-  add(new RoundedBoxGeometry(2.16, 0.14, 1.05, 3, 0.045), timber, 'omikuji-stand-top', [0, 0.44, 0.13])
-  add(new RoundedBoxGeometry(2.05, 0.055, 0.96, 3, 0.022), edge, 'omikuji-stand-apron', [0, 0.345, 0.13])
+  add(new RoundedBoxGeometry(2.16, 0.14, 1.05, 3, 0.045), standTop, 'omikuji-stand-top', [0, 0.44, 0.13])
+  add(new RoundedBoxGeometry(2.05, 0.055, 0.96, 3, 0.022), standApron, 'omikuji-stand-apron', [0, 0.345, 0.13])
   for (const x of [-0.83, 0.83]) for (const z of [-0.22, 0.47]) {
-    add(new RoundedBoxGeometry(0.14, 0.33, 0.16, 3, 0.027), timber, 'omikuji-stand-leg', [x, 0.165, z])
+    add(new RoundedBoxGeometry(0.14, 0.33, 0.16, 3, 0.027), standLeg, 'omikuji-stand-leg', [x, 0.165, z])
   }
-  for (const z of [-0.24, 0.04, 0.34]) tube([[-0.98, 0.515, z], [-0.2, 0.515, z + 0.018], [0.98, 0.515, z]], 0.0028, edge, world)
+  for (const z of [-0.24, 0.04, 0.34]) tube([[-0.98, 0.515, z], [-0.2, 0.515, z + 0.018], [0.98, 0.515, z]], 0.0028, standApron, world)
   const box = new THREE.Group(); box.name = 'omikuji-box'; world.add(box)
   const body = add(hexagon(0.315, 0.8), honey, 'omikuji-box-body', [0, 0, 0], box)
   for (const y of [-0.42, 0.42]) {
-    add(hexagon(0.335, 0.09), pale, 'omikuji-box-rim', [0, y, 0], box)
+    add(hexagon(0.335, 0.09), rimWood, 'omikuji-box-rim', [0, y, 0], box)
     add(hexagon(0.34, 0.022, 0.005), edge, 'omikuji-box-band', [0, y + (y > 0 ? -0.044 : 0.044), 0], box)
   }
   // A small round opening in the lid: the stick visibly rises out of a real hole.
@@ -119,7 +124,7 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
   }
   // A readable stick: rounded body, painted coral tip band and three abstract
   // engraved dots for its number, never a real shrine numeral or verse.
-  const stick = add(new RoundedBoxGeometry(0.088, 0.6, 0.062, 4, 0.024), pale, 'omikuji-draw-stick', [...STICK.toArray()] as [number, number, number])
+  const stick = add(new RoundedBoxGeometry(0.088, 0.6, 0.062, 4, 0.024), stickWood, 'omikuji-draw-stick', [...STICK.toArray()] as [number, number, number])
   const stickMark = add(new RoundedBoxGeometry(0.094, 0.072, 0.068, 3, 0.022), coral, 'omikuji-stick-mark', [0, 0.248, 0], stick)
   stickMark.userData.toonSurface = { outline: false }
   for (const y of [0.15, 0.1, 0.05]) {

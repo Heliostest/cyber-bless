@@ -222,9 +222,11 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   })
   const world = new THREE.Group(); world.name = 'suzu-timber-and-bell'; scene.add(world)
   const mat = (color: number, roughness = 0.91) => new THREE.MeshStandardMaterial({ color, roughness })
-  const wood = createCraftMaterial({ color: 0xb9936c, roughness: .91 }, { kind: 'wood' })
-  const postWood = createCraftMaterial({ color: 0xb9936c, roughness: .91 }, { kind: 'wood', axis: 'y' })
-  const endWood = mat(0x997755), woodGrain = mat(0xa98560)
+  const wood = createCraftMaterial({ color: 0xb9936c, roughness: 0.76 }, { kind: 'wood', axis: 'x', strength: 0.6, scale: 0.74 })
+  const postWood = createCraftMaterial({ color: 0xb9936c, roughness: 0.76 }, { kind: 'wood', axis: 'y', strength: 0.6, scale: 0.74 })
+  const gripWood = createCraftMaterial({ color: 0xba936b, roughness: 0.68 }, { kind: 'wood', axis: 'y', strength: 0.56, scale: 0.8 })
+  const endWood = createCraftMaterial({ color: 0x997755, roughness: 0.8 }, { kind: 'wood', axis: 'x', strength: 0.56, scale: 0.76 })
+  const woodGrain = mat(0xa98560)
   const cream = createCraftMaterial({ color: 0xe8deba }, { kind: 'cord' })
   const rust = createCraftMaterial({ color: 0xb16f53 }, { kind: 'cord' }), green = createCraftMaterial({ color: 0x819a76 }, { kind: 'cord' })
   const gold = createCraftMaterial({ color: 0xe6bc5c, roughness: .34, metalness: .55, emissive: 0x6a4410, emissiveIntensity: BELL_GLOW }, { kind: 'metal' })
@@ -236,12 +238,12 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   const detail = (mesh: THREE.Mesh) => { mesh.userData.toonSurface = { outline: false }; return mesh }
   const timber = new THREE.Group(); timber.name = 'suzu-original-timber-lintel'; world.add(timber)
   for (const x of [-1.02, 1.02]) {
-    add(new RoundedBoxGeometry(0.18, 2.6, 0.25, 3, 0.035), postWood, [x, 1.3, -0.21], timber)
-    add(new RoundedBoxGeometry(0.31, 0.13, 0.4, 3, 0.04), endWood, [x, 0.065, -0.2], timber)
-    add(new RoundedBoxGeometry(0.23, 0.19, 0.31, 3, 0.035), endWood, [x, 2.49, -0.2], timber)
+    add(new RoundedBoxGeometry(0.18, 2.6, 0.25, 3, 0.035), postWood, [x, 1.3, -0.21], timber).name = 'suzu-column-post'
+    add(new RoundedBoxGeometry(0.31, 0.13, 0.4, 3, 0.04), endWood, [x, 0.065, -0.2], timber).name = 'suzu-column-base'
+    add(new RoundedBoxGeometry(0.23, 0.19, 0.31, 3, 0.035), endWood, [x, 2.49, -0.2], timber).name = 'suzu-column-capital'
   }
-  add(new RoundedBoxGeometry(2.48, 0.23, 0.36, 4, 0.048), wood, [0, 2.66, -0.16], timber)
-  add(new RoundedBoxGeometry(2.57, 0.08, 0.43, 3, 0.027), endWood, [0, 2.815, -0.16], timber)
+  add(new RoundedBoxGeometry(2.48, 0.23, 0.36, 4, 0.048), wood, [0, 2.66, -0.16], timber).name = 'suzu-lintel'
+  add(new RoundedBoxGeometry(2.57, 0.08, 0.43, 3, 0.027), endWood, [0, 2.815, -0.16], timber).name = 'suzu-eave-cap'
   // Original shallow grain and inset end pins keep the lintel plain, without shrine text or seals.
   for (const y of [2.6, 2.7]) detail(add(new RoundedBoxGeometry(1.96, 0.008, 0.012, 2, 0.002), woodGrain, [0, y, 0.028], timber))
   for (const x of [-1.02, 1.02]) detail(add(new THREE.SphereGeometry(0.037, 12, 8), endWood, [x, 2.66, 0.03], timber))
@@ -292,7 +294,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   gripAssembly.position.set(0, BRAID_END_Y, 0); rope.add(gripAssembly)
   const neck = add(new THREE.TorusGeometry(0.092, 0.032, 10, 32), cream, [0, NECK_OFFSET_Y, 0], gripAssembly)
   neck.rotation.x = Math.PI / 2; ropeMeshes.push(neck)
-  const grip = add(new RoundedBoxGeometry(0.23, 0.28, 0.2, 4, 0.037), wood, [0, GRIP_LOCAL_Y, 0.01], gripAssembly)
+  const grip = add(new RoundedBoxGeometry(0.23, 0.28, 0.2, 4, 0.037), gripWood, [0, GRIP_LOCAL_Y, 0.01], gripAssembly)
   grip.name = 'suzu-rope-grip'; ropeMeshes.push(grip)
   const collar = add(new THREE.TorusGeometry(0.099, 0.032, 9, 32), cream, [0, COLLAR_LOCAL_Y, 0], gripAssembly)
   collar.rotation.x = Math.PI / 2; ropeMeshes.push(collar)

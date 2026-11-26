@@ -157,6 +157,17 @@ describe('ema plaque', () => {
     expect(hits(0.32, 0.28)).toBe(0)
   })
 
+  it('assigns accurate local wood grain axes across rack posts, beams, feet, pegs and plaque', () => {
+    const s = mount()
+    const surface = (name: string) => ((s.scene.getObjectByName(name) as THREE.Mesh).material as THREE.Material).userData.craftSurface
+    expect(surface('ema-rack-post')).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(surface('ema-rack-beam')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surface('ema-rack-foot')).toMatchObject({ kind: 'wood', axis: 'z' })
+    expect(surface('ema-rack-peg')).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(surface('ema-plaque-body')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surface('ema-plaque-body').strength).toBeLessThanOrEqual(0.5)
+  })
+
   it('turns only from a plaque-started horizontal drag and hangs from a real ray hit on the rack', () => {
     const s = mount(0, { isReducedMotion: () => true })
     const plaque = s.point('ema-plaque-body')

@@ -156,7 +156,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "welsh-drop-spindle": "54fe32b825bb5a85bf3907a4c619936595c2099b7b7eb6f78258b5af9999966f",
   "welsh-love-spoon": "98261bb2d94ae65d643b50d3519466d5db52280960156c9a710239e692de98dc",
   "woodfish": "0908468e3bd654fa179d5f4e23b1ffe0339ed49acf54e5ed53c58767d634aa7e",
-  "yeondeunghoe": "11065c8f1e5902f01e87c4cc8142f3d20d6d4f01aef69ada75647b68fd7b1e2d",
+  "yeondeunghoe": "a72ede89f09fa437b19cf70c2dbf0375c41e376c1f84b4aa1457a994eb8947ce",
   "yusheng-lohei": "2ca60f97470ba5da1a92e7b9e5e29a724237839f34858ad1e7b68639a37c377d",
   "zeniarai-coin-washing": "d8dbb4364fb49735191b15193cace6043ea0a989cb8c9fab7ec8d9bda7787f43"
 };

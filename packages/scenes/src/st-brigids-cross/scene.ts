@@ -1,5 +1,11 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
+import {
+  applyArmRushShading,
+  applyCenterInterlockShading,
+  applyLooseRushShading,
+  createBrigidRushMaterials,
+} from './rush-material'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -39,12 +45,15 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
   const lights=addStageLights(scene,ctx.stage,{sky:0xfff2d6,ground:0xc1c8a1,key:0xffe3bd,rim:0xe2ead2})
   const world=new THREE.Group(); scene.add(world)
   const mat=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.94})
-  const timber=mat(0xbe916e), edge=mat(0x947657), cream=mat(0xf4e6c1), cord=mat(0xd4ba8c)
+  const timber=mat(0xbe916e), postTimber=mat(0xbe916e), edge=mat(0x947657), postEdge=mat(0x947657), cream=mat(0xf4e6c1), cord=mat(0xd4ba8c)
   applyCraftSurface(timber, { kind: 'wood', strength: .4 })
+  applyCraftSurface(postTimber, { kind: 'wood', strength: .4, axis: 'y' })
   applyCraftSurface(edge, { kind: 'wood', strength: .4 })
+  applyCraftSurface(postEdge, { kind: 'wood', strength: .4, axis: 'y' })
   applyCraftSurface(cord, { kind: 'cord', strength: .3 })
 
-  const rushes=[mat(0x819568),mat(0xa4b07b),mat(0x91a36c)]
+  const rushSuite=createBrigidRushMaterials()
+  const rushes=rushSuite.rushes
   const add=(geometry:THREE.BufferGeometry,material:THREE.Material,p:[number,number,number],parent:THREE.Object3D=world)=>{
     const mesh=new THREE.Mesh(geometry,material); mesh.position.set(...p); parent.add(mesh); return mesh
   }
@@ -57,9 +66,9 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
   add(new RoundedBoxGeometry(2.58,.14,1.3,3,.05),timber,[0,.27,.3])
   add(new RoundedBoxGeometry(2.4,.022,1.14,2,.015),cream,[0,.35,.32]).userData.toonSurface={outline:false}
   for(const x of [-1.05,1.05]) {
-    add(new RoundedBoxGeometry(.17,2.2,.2,3,.04),timber,[x,1.1,-.18])
+    add(new RoundedBoxGeometry(.17,2.2,.2,3,.04),postTimber,[x,1.1,-.18])
     add(new RoundedBoxGeometry(.28,.07,.52,2,.02),edge,[x,.035,-.1])
-    add(new RoundedBoxGeometry(.14,.27,.14,2,.035),edge,[x,.13,.25])
+    add(new RoundedBoxGeometry(.14,.27,.14,2,.035),postEdge,[x,.13,.25])
   }
   add(new RoundedBoxGeometry(2.35,.2,.25,3,.045),timber,[0,2.07,-.13])
   const peg=add(new THREE.CylinderGeometry(.025,.028,.15,12),edge,[0,1.98,.065]); peg.rotation.x=Math.PI/2
@@ -73,21 +82,26 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
   // Raised concentric interlocks and four offset rush bundles follow the local reference.
   for(let i=0;i<6;i++) {
     const r=.06+i*.028, z=.018+(i%2)*.012
-    stalk([[-r,-r,z],[r,-r,z],[r,r,z],[-r,r,z],[-r,-r,z]],rushes[i%3],center,.017)
+    const mesh=stalk([[-r,-r,z],[r,-r,z],[r,r,z],[-r,r,z],[-r,-r,z]],rushes[i%3]!,center,.017)
+    applyCenterInterlockShading(mesh.geometry,i)
   }
   const arms:THREE.Group[]=[]
   for(let side=0;side<4;side++) {
     const arm=new THREE.Group(); arm.rotation.z=side*Math.PI/2; cross.add(arm); arms.push(arm)
     for(let i=0;i<7;i++) {
       const y=-.16+i*.044
-      stalk([[.13,y,.01],[.48,y*.74,.01+(i%2)*.008],[.86+(i%3)*.012,y*.55,.01]],rushes[(side+i)%3],arm)
+      const mesh=stalk([[.13,y,.01],[.48,y*.74,.01+(i%2)*.008],[.86+(i%3)*.012,y*.55,.01]],rushes[(side+i)%3]!,arm)
+      applyArmRushShading(mesh.geometry,i)
     }
     for(const x of [.66,.70]) stalk([[x,-.12,.04],[x,.09,.04],[x,.09,-.04],[x,-.12,-.04],[x,-.12,.04]],cord,arm,.013)
   }
   const loop=stalk([[-.12,.66,.05],[-.13,.91,.02],[0,.98,.02],[.13,.91,.02],[.12,.66,.05]],cord,cross,.012)
   const crossHit=add(new THREE.SphereGeometry(.27,16,12),invisible,[0,0,.065],cross); crossHit.name='brigid-cross-hit'
   const loose=new THREE.Group(); loose.name='brigid-loose-rush'; world.add(loose)
-  for(let i=0;i<5;i++) stalk([[-.34,i*.028-.056,0],[0,i*.028-.056,.007],[.36,i*.023-.046,.016]],rushes[i%3],loose,.018)
+  for(let i=0;i<5;i++) {
+    const mesh=stalk([[-.34,i*.028-.056,0],[0,i*.028-.056,.007],[.36,i*.023-.046,.016]],rushes[i%3]!,loose,.018)
+    applyLooseRushShading(mesh.geometry,i)
+  }
   const looseHit=add(new THREE.SphereGeometry(.23,16,12),invisible,[0,0,.025],loose); looseHit.name='brigid-reed-hit'
   const weaveTarget=add(new THREE.SphereGeometry(.18,16,12),invisible,[0,0,0]); weaveTarget.name='brigid-weave-target'
   const guide=add(new THREE.TorusGeometry(.075,.009,6,24),new THREE.MeshBasicMaterial({color:0xb8d6b3,transparent:true,opacity:.65,depthWrite:false}),[0,0,0])
@@ -189,7 +203,7 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
     dispose() {
       if(disposed)return
       ending.dispose(); disposed=true;pointer.dispose();stopResize();ui.actionBtn.removeEventListener('click',action);feedback.dispose()
-      style.dispose();disposeTree(world)
+      style.dispose();disposeTree(world);rushSuite.dispose()
       for(const light of Object.values(lights))light.dispose()
       scene.clear();renderer.dispose();renderer.forceContextLoss()
       overlay.replaceChildren();overlay.classList.remove('scene-overlay','scene-overlay--stage')

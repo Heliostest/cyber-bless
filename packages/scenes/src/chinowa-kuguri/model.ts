@@ -1,5 +1,6 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { createChinowaKayaMaterial } from './kaya-material'
 
 const UP = new THREE.Vector3(0, 1, 0), EYE = 1.664
 const smooth = (t: number) => t * t * (3 - 2 * t)
@@ -49,20 +50,10 @@ export function chinowaView(step: number, amount: number, front: number) {
   return { position, quaternion }
 }
 
-function kayaTexture() {
-  const width = 256, height = 64, pixels = new Uint8Array(width * height * 4)
-  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
-    const u = x / width, binding = (u * 6) % 1 < .035, fiber = Math.sin(y * 2.72 + Math.sin(x * .09) * .2) * 8 + Math.sin(x * .73 + y * 5.1) * 2, at = (y * width + x) * 4
-    pixels[at] = binding ? 128 : 168 + fiber; pixels[at + 1] = binding ? 114 : 184 + fiber; pixels[at + 2] = binding ? 72 : 83 + fiber; pixels[at + 3] = 255
-  }
-  const texture = new THREE.DataTexture(pixels, width, height); texture.colorSpace = THREE.SRGBColorSpace; texture.wrapS = texture.wrapT = THREE.RepeatWrapping; texture.needsUpdate = true
-  return texture
-}
-
 export function createChinowaModel() {
   const root = new THREE.Group(); root.name = 'chinowa-world'
   const subject = new THREE.Group(); subject.name = 'chinowa-subject'; root.add(subject)
-  const texture = kayaTexture(), kaya = new THREE.MeshStandardMaterial({ color: 0xffffff, map: texture, roughness: .96 }), wood = new THREE.MeshStandardMaterial({ color: 0xae8053, roughness: .87 }), rope = new THREE.MeshStandardMaterial({ color: 0xd1bd88, roughness: 1 })
+  const kayaSuite = createChinowaKayaMaterial(), kaya = kayaSuite.material, wood = new THREE.MeshStandardMaterial({ color: 0xae8053, roughness: .87 }), rope = new THREE.MeshStandardMaterial({ color: 0xd1bd88, roughness: 1 })
   applyCraftSurface(wood, { kind: 'wood', strength: .4, axis: 'y' })
   applyCraftSurface(rope, { kind: 'cord', strength: .3 })
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, x: number, y: number, z: number) => {
@@ -79,6 +70,6 @@ export function createChinowaModel() {
   const pose = (_step: number, _amount: number) => root.updateMatrixWorld(true)
   pose(0, 0)
   let disposed = false
-  const dispose = () => { if (!disposed) { disposed = true; texture.dispose() } }
+  const dispose = () => { if (!disposed) { disposed = true; kayaSuite.dispose() } }
   return { root, subject, hoop, targets: [hoop, hoop, hoop], roots: [hoop, hoop, hoop], anchors: [[0, 1.38, .15], [0, 1.38, .15], [0, 1.38, .15]] as [number, number, number][], pose, dispose }
 }

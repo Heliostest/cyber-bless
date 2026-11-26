@@ -1,5 +1,6 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { createBojagiMatMaterials } from './mat-material'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import {
   createRapierSoftBodyHost,
@@ -98,21 +99,21 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
   const lights = addStageLights(scene, ctx.stage, { sky: 0xe8e4d5, ground: 0x877c68, key: 0xffe6bd, rim: 0xcae9ee, keyPosition: [-3, 6, 4], keyIntensity: 1.5, rimIntensity: .5 })
   const world = new THREE.Group(); world.name = 'bojagi-subject'; scene.add(world)
   const mat = (color: number, roughness = .8, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness })
-  const cream = mat(0xeacfa5), coral = mat(0xc96d5c), straw = mat(0xb58e55)
-  for (const textile of [coral, straw]) applyCraftSurface(textile, { kind: 'fabric', strength: .22 })
+  const cream = mat(0xeacfa5, .86), coral = mat(0xc96d5c)
+  applyCraftSurface(cream, { kind: 'wood', scale: 1.05, strength: .20 })
+  applyCraftSurface(coral, { kind: 'fabric', strength: .22 })
+  const matSuite = createBojagiMatMaterials()
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: XYZ = [0, 0, 0]) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p)
     mesh.castShadow = mesh.receiveShadow = true; world.add(mesh); return mesh
   }
   const box = (name: string, size: XYZ, p: XYZ, material: THREE.Material) => add(name, new RoundedBoxGeometry(...size, 3, Math.min(.04, ...size.map(n => n / 3))), material, p)
   // Only a low woven floor mat supports the cloth and little rounded parcel.
-  const floorMat = box('bojagi-woven-mat', [2.05, .055, 2.35], [0, .028, .1], straw)
+  const floorMat = box('bojagi-woven-mat', [2.05, .055, 2.35], [0, .028, .1], matSuite.base)
   floorMat.userData.toonSurface = { outline: false }
-  const weave = mat(0xb99b69)
-  applyCraftSurface(weave, { kind: 'fabric', strength: .2 })
   for (let n = 0; n < 19; n++) {
-    const weft = box(`bojagi-weft-${n}`, [1.96, .006, .010], [0, .058, -1.02 + n * .125], weave)
-    const warp = box(`bojagi-warp-${n}`, [.008, .005, 2.24], [-.97 + n * .108, .057, .1], weave)
+    const weft = box(`bojagi-weft-${n}`, [1.96, .006, .010], [0, .058, -1.02 + n * .125], matSuite.weft)
+    const warp = box(`bojagi-warp-${n}`, [.008, .005, 2.24], [-.97 + n * .108, .057, .1], matSuite.warp)
     for (const strand of [weft, warp]) {
       strand.castShadow = false
       // Hidden outline edges would otherwise project the mat grid through
@@ -120,8 +121,10 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
       strand.userData.toonSurface = { outline: false }
     }
   }
-  box('bojagi-parcel', [1, .58, 1], [0, .4, 0], cream)
-  box('bojagi-parcel-lid', [1.015, .055, 1.015], [0, .672, 0], cream)
+  const parcel = box('bojagi-parcel', [1, .58, 1], [0, .4, 0], cream)
+  const parcelLid = box('bojagi-parcel-lid', [1.015, .055, 1.015], [0, .672, 0], cream)
+  parcel.userData.toonSurface = { roughness: 0.85 }
+  parcelLid.userData.toonSurface = { roughness: 0.85 }
 
   // An original stitched patchwork, authored once in cloth UV space. The same
   // immutable map stays on one indexed surface throughout folding and tying.
@@ -1082,7 +1085,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
       pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world)
-      patchwork.dispose(); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      patchwork.dispose(); matSuite.dispose(); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

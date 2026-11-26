@@ -45,7 +45,8 @@ export function createChineseRuyiScepterModel(){
  // Small product motions live here, never on the placement root above.
  const motion=new THREE.Group();motion.name='ruyi-scepter-motion';scepter.add(motion)
  const jade=createRuyiToonMaterial('ruyi-celadon-toon',RUYI_COLORS.jade,{jade:true})
- const wood=createRuyiToonMaterial('ruyi-stand-wood-toon',RUYI_COLORS.wood,{bands:[.40,.86]})
+ const woodPlank=createRuyiToonMaterial('ruyi-stand-wood-toon',RUYI_COLORS.wood,{bands:[.40,.86],wood:'x'})
+ const woodPost=createRuyiToonMaterial('ruyi-stand-wood-post-toon',RUYI_COLORS.wood,{bands:[.40,.86],wood:'y'})
  const pad=createRuyiToonMaterial('ruyi-stand-pad-toon',RUYI_COLORS.pad,{bands:[.40,.84]})
  const stone=new THREE.MeshStandardMaterial({color:RUYI_COLORS.stone,roughness:.96})
  applyCraftSurface(stone,{kind:'stone',strength:.35})
@@ -58,11 +59,11 @@ export function createChineseRuyiScepterModel(){
  // One-piece dark wooden supports: a plank, two round posts, collars and soft pads.
  const support=(kind:'low'|'high',x0:number,floor:number,top:number,z:number)=>{
   const span=right-left,baseH=kind==='high'?.075:.05,width=span+(kind==='high'?.36:.26),depth=kind==='high'?.30:.22
-  lined(subject,'ruyi-'+kind+'-base',new RoundedBoxGeometry(width,baseH,depth,2,.022),wood,RUYI_COLORS.wood.line,x0+(left+right)/2,floor+baseH/2,z)
+  lined(subject,'ruyi-'+kind+'-base',new RoundedBoxGeometry(width,baseH,depth,2,.022),woodPlank,RUYI_COLORS.wood.line,x0+(left+right)/2,floor+baseH/2,z)
   for(const[i,x]of[left,right].entries()){
    const padH=.03,collarH=.026,postH=top-padH-collarH-floor-baseH
-   lined(subject,'ruyi-'+kind+'-post-'+i,new THREE.CylinderGeometry(.040,.050,postH,24),wood,RUYI_COLORS.wood.line,x0+x,floor+baseH+postH/2,z)
-   lined(subject,'ruyi-'+kind+'-seat-'+i,new THREE.CylinderGeometry(.078,.062,collarH,28),wood,RUYI_COLORS.wood.line,x0+x,top-padH-collarH/2,z)
+   lined(subject,'ruyi-'+kind+'-post-'+i,new THREE.CylinderGeometry(.040,.050,postH,24),woodPost,RUYI_COLORS.wood.line,x0+x,floor+baseH+postH/2,z)
+   lined(subject,'ruyi-'+kind+'-seat-'+i,new THREE.CylinderGeometry(.078,.062,collarH,28),woodPost,RUYI_COLORS.wood.line,x0+x,top-padH-collarH/2,z)
    lined(subject,'ruyi-'+kind+'-pad-'+i,cushion(.084,padH),pad,RUYI_COLORS.pad.line,x0+x,top-padH,z)
   }
   const shadow=createContactShadow('ruyi-'+kind+'-contact-shadow',width+.30,depth+.26,kind==='high'?.40:.30)

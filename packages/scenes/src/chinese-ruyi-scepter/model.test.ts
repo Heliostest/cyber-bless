@@ -23,4 +23,16 @@ describe('A solid cloud-headed ruyi placed on actual supports',()=>{
  it('keeps its authored cel shading, outlines and contact shadows out of the shared toon adapter and picking',()=>{const m=make(),scene=new THREE.Scene();scene.add(m.root);const before=new Map<THREE.Mesh,THREE.Material>();m.root.traverse(o=>{const mesh=o as THREE.Mesh;if(mesh.isMesh&&(mesh.material as THREE.Material).userData.ruyiToon)before.set(mesh,mesh.material as THREE.Material)});const surfaces=createToonSurfaces('toon-soft','chinese-ruyi-scepter'),frame=surfaces.apply(scene);try{for(const[mesh,material]of before)expect(mesh.material,mesh.name).toBe(material)}finally{frame.restore();surfaces.dispose()}
   const lines=[...before.keys()].filter(mesh=>(mesh.material as THREE.Material).userData.ruyiToon==='outline');expect(lines.map(l=>l.name)).toContain('ruyi-jade-line');for(const line of lines){expect(line.castShadow).toBe(false);const hits:THREE.Intersection[]=[];line.raycast(new THREE.Raycaster(new THREE.Vector3(0,5,0),new THREE.Vector3(0,-1,0)),hits);expect(hits).toEqual([]);expect((line.parent as THREE.Mesh).isMesh,line.name).toBe(true);expect((line as THREE.Mesh).geometry.boundingBox!.equals(((line.parent as THREE.Mesh).geometry.boundingBox??(line.parent as THREE.Mesh).geometry.computeBoundingBox(),(line.parent as THREE.Mesh).geometry.boundingBox!)),line.name).toBe(true)}
   for(const kind of['low','high'])expect((m.root.getObjectByName('ruyi-'+kind+'-contact-shadow') as THREE.Mesh).castShadow).toBe(false)})
+ it('applies stylized cel wood grain with axis-aligned planks and turned posts while keeping the jade shader untouched',()=>{const m=make()
+  for(const kind of['low','high']){
+   const baseMat=(m.root.getObjectByName('ruyi-'+kind+'-base') as THREE.Mesh).material as THREE.ShaderMaterial
+   expect(baseMat.defines).toMatchObject({RUYI_WOOD:''});expect(baseMat.userData).toMatchObject({ruyiToon:'wood',ruyiWoodAxis:'x'});expect(baseMat.uniforms.uWoodVertical?.value).toBe(0)
+   for(const i of[0,1])for(const part of['post','seat']){
+    const mat=(m.root.getObjectByName(`ruyi-${kind}-${part}-${i}`) as THREE.Mesh).material as THREE.ShaderMaterial
+    expect(mat.defines).toMatchObject({RUYI_WOOD:''});expect(mat.userData).toMatchObject({ruyiToon:'wood',ruyiWoodAxis:'y'});expect(mat.uniforms.uWoodVertical?.value).toBe(1)
+   }
+  }
+  const jadeMat=(m.scepter.getObjectByName('ruyi-jade-body') as THREE.Mesh).material as THREE.ShaderMaterial
+  expect(jadeMat.defines).toMatchObject({RUYI_JADE:''});expect(jadeMat.defines?.RUYI_WOOD).toBeUndefined();expect(jadeMat.userData.ruyiToon).toBe('jade')
+ })
 })

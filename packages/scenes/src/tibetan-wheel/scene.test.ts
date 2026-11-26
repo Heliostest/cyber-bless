@@ -85,4 +85,29 @@ describe('Continuous clockwise prayer wheel', () => {
     expect(done.overlay.querySelector<HTMLButtonElement>('.scene-continuous-finish')!.hidden).toBe(true)
     done.run(20); expect(done.progress).toEqual([]); expect(done.complete).not.toHaveBeenCalled()
   })
+  it('applies axis-aligned stylized wood surfaces to corridor timbers and lacquer bands while keeping metal cylinders intact', () => {
+    const s = mount()
+    const surfacesByName = (name: string) => {
+      const found: Record<string, unknown>[] = []
+      s.scene.traverse(obj => {
+        const mesh = obj as THREE.Mesh
+        if (mesh.isMesh && mesh.name === name) found.push((mesh.material as THREE.Material).userData.craftSurface)
+      })
+      return found
+    }
+    expect(surfacesByName('tibetan-wheel-beam')).toHaveLength(6)
+    expect(surfacesByName('tibetan-wheel-post')).toHaveLength(6)
+    expect(surfacesByName('tibetan-wheel-eave')).toHaveLength(3)
+    expect(surfacesByName('tibetan-wheel-band')).toHaveLength(6)
+    for (const surface of surfacesByName('tibetan-wheel-beam')) expect(surface).toMatchObject({ kind: 'wood', axis: 'x' })
+    for (const surface of surfacesByName('tibetan-wheel-post')) expect(surface).toMatchObject({ kind: 'wood', axis: 'y' })
+    for (const surface of surfacesByName('tibetan-wheel-eave')) expect(surface).toMatchObject({ kind: 'wood', axis: 'x' })
+    for (const surface of surfacesByName('tibetan-wheel-band')) expect(surface).toMatchObject({ kind: 'wood', axis: 'y' })
+    let metalMeshes = 0
+    s.scene.traverse(obj => {
+      const mesh = obj as THREE.Mesh
+      if (mesh.isMesh && (mesh.material as THREE.Material).userData.craftSurface?.kind === 'metal') metalMeshes++
+    })
+    expect(metalMeshes).toBeGreaterThan(60)
+  })
 })

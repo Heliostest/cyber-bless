@@ -1,4 +1,6 @@
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createCloseInspection } from '../close-inspection'
 import { createObjectPointer } from '../object-pointer'
 import { addInteractionCue } from '../scene-localization'
@@ -40,13 +42,17 @@ export function createFurinHandling(options: Options) {
   target.name = 'furin-hanging-target'; target.position.z = .04; hook.add(target)
   // A temporary product display rack supports the loose chime before pickup.
   const rack = new THREE.Group(); rack.name = 'furin-preparation-rack'; world.add(rack)
-  const wood = new THREE.MeshStandardMaterial({ color: 0xc8a77a, roughness: .85 })
-  for (const [size, position] of [
-    [[.48, .08, .44], [loose.x - .22, .04, loose.z]],
-    [[.045, loose.y, .045], [loose.x - .35, loose.y / 2, loose.z]],
-    [[.4, .045, .065], [loose.x - .18, loose.y, loose.z]],
-  ]) {
-    const part = new THREE.Mesh(new THREE.BoxGeometry(...size as [number, number, number]), wood)
+  const rackBaseWood = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xc8a77a, roughness: 0.80 }), { kind: 'wood', axis: 'x', scale: 1.05, strength: 0.44 })
+  const rackPostWood = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xc8a77a, roughness: 0.78 }), { kind: 'wood', axis: 'y', scale: 1.65, strength: 0.48 })
+  const rackArmWood = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xc8a77a, roughness: 0.78 }), { kind: 'wood', axis: 'x', scale: 1.55, strength: 0.46 })
+  for (const [name, size, position, mat] of [
+    ['furin-rack-base', [.48, .08, .44], [loose.x - .22, .04, loose.z], rackBaseWood],
+    ['furin-rack-post', [.045, loose.y, .045], [loose.x - .35, loose.y / 2, loose.z], rackPostWood],
+    ['furin-rack-arm', [.4, .045, .065], [loose.x - .18, loose.y, loose.z], rackArmWood],
+  ] as const) {
+    const radius = Math.min(0.011, size[0] / 4, size[1] / 4, size[2] / 4)
+    const part = new THREE.Mesh(new RoundedBoxGeometry(size[0], size[1], size[2], 2, radius), mat)
+    part.name = name
     part.position.fromArray(position); rack.add(part)
   }
   actor.position.copy(loose)

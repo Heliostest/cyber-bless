@@ -223,10 +223,13 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   )
   clapperString.position.y = -0.225
   clapperPivot.add(clapperString)
+  const clapperMat = new THREE.MeshStandardMaterial({ color: 0x94704c, roughness: 0.72 })
+  applyCraftSurface(clapperMat, { kind: 'wood', axis: 'y', scale: 1.55, strength: 0.56 })
   const clapper = new THREE.Mesh(
     new THREE.CylinderGeometry(0.03, 0.03, 0.05, 12),
-    new THREE.MeshStandardMaterial({ color: 0x94704c, roughness: 0.9 }),
+    clapperMat,
   )
+  clapper.name = 'furin-clapper'
   clapper.position.y = -0.2
   clapperPivot.add(clapper)
 

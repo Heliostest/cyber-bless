@@ -15,6 +15,10 @@ const vertex = /* glsl */`
 attribute vec4 ruyiMask;
 varying vec4 vMask;
 #endif
+#ifdef RUYI_WOOD
+varying vec3 vLocal;
+varying vec3 vWoodSeed;
+#endif
 varying vec3 vNormalW;
 varying vec3 vWorld;
 void main() {
@@ -23,6 +27,15 @@ void main() {
   vNormalW = normalize(mat3(modelMatrix) * normal);
 #ifdef RUYI_JADE
   vMask = ruyiMask;
+#endif
+#ifdef RUYI_WOOD
+  vLocal = position;
+  vec3 origin = modelMatrix[3].xyz;
+  vWoodSeed = vec3(
+    sin(dot(origin, vec3(4.17, 2.83, 5.13)) + 0.71) * 0.65 + sin(dot(origin, vec3(-2.41, 6.19, 3.37)) + 2.34) * 0.35,
+    sin(dot(origin, vec3(3.29, -4.71, 4.61)) + 1.93) * 0.65 + sin(dot(origin, vec3(5.83, 2.11, -3.79)) + 0.47) * 0.35,
+    sin(dot(origin, vec3(-5.03, 3.67, 2.93)) + 3.41) * 0.65 + sin(dot(origin, vec3(2.77, -4.39, 5.57)) + 4.89) * 0.35
+  );
 #endif
   gl_Position = projectionMatrix * viewMatrix * world;
 }`
@@ -39,6 +52,11 @@ uniform float uSweep;
 uniform float uSweepGain;
 varying vec4 vMask;
 #endif
+#ifdef RUYI_WOOD
+uniform float uWoodVertical;
+varying vec3 vLocal;
+varying vec3 vWoodSeed;
+#endif
 varying vec3 vNormalW;
 varying vec3 vWorld;
 void main() {
@@ -49,6 +67,34 @@ void main() {
   // Three flat tones with short joins rather than continuous falloff.
   vec3 color = mix(uShade, uBase, smoothstep(uBands.x - 0.03, uBands.x + 0.03, light));
   color = mix(color, uLit, smoothstep(uBands.y - 0.025, uBands.y + 0.025, light));
+#ifdef RUYI_WOOD
+  // Soft, analytically anti-aliased stylized rosewood grain along the plank (X) or turned post (Y).
+  float along = mix(vLocal.x, vLocal.y, uWoodVertical);
+  vec2 across = mix(vLocal.zy, vLocal.xz, uWoodVertical);
+  float sX = vWoodSeed.x;
+  vec2 pith = mix(vec2(0.18, -0.09), vec2(0.025, -0.020), uWoodVertical)
+            + vWoodSeed.yz * mix(vec2(0.05, 0.03), vec2(0.015, 0.015), uWoodVertical);
+  float driftA = sin(along * mix(3.4, 7.8, uWoodVertical) + sX * 3.1 + 0.6);
+  float driftB = cos(along * mix(6.8, 15.2, uWoodVertical) - vWoodSeed.y * 2.7 + across.x * 4.5);
+  vec2 warp = vec2(driftA * 0.028 + driftB * 0.010, driftA * 0.017 - driftB * 0.007)
+            * mix(1.0, 0.45, uWoodVertical);
+  vec2 radial = (across - pith + warp) * vec2(1.0, 0.88);
+  float r = length(radial) + 0.009 * sin(along * 2.3 + radial.x * 11.0 + vWoodSeed.z * 2.9);
+  float freq = mix(88.0, 126.0, uWoodVertical);
+  float phase = r * freq;
+  float fw = fwidth(phase);
+  float ring = 0.68 * cos(phase) * exp(-0.42 * fw * fw)
+             + 0.24 * cos(2.0 * phase - 0.55) * exp(-1.68 * fw * fw);
+  float wash = sin(along * mix(2.4, 5.5, uWoodVertical) + across.x * 6.0 + vWoodSeed.z * 3.0) * 0.5
+             + cos(along * mix(4.9, 10.4, uWoodVertical) - across.y * 5.2 + sX * 2.1) * 0.5;
+  // Calm modulation inside deep cel shadows while keeping rosewood ribbons warm and legible.
+  float litMask = mix(0.62, 1.0, smoothstep(uBands.x - 0.05, uBands.x + 0.12, light));
+  float grain = (-ring * mix(0.84, 0.96, uWoodVertical) + wash * 0.24) * litMask;
+  float late = clamp(-grain, 0.0, 1.0);
+  float early = clamp(grain, 0.0, 1.0);
+  color *= mix(vec3(1.0), vec3(0.68, 0.56, 0.48), late * mix(0.84, 0.92, uWoodVertical));
+  color *= vec3(1.0) + early * vec3(0.26, 0.20, 0.12) * mix(1.0, 1.14, uWoodVertical);
+#endif
 #ifdef RUYI_JADE
   float facing = max(dot(n, v), 0.0);
   float rim = 1.0 - facing;
@@ -72,14 +118,22 @@ void main() {
   #include <colorspace_fragment>
 }`
 
-export function createRuyiToonMaterial(name: string, tone: RuyiTone, options: { jade?: boolean; bands?: [number, number] } = {}) {
+export function createRuyiToonMaterial(name: string, tone: RuyiTone, options: { jade?: boolean; wood?: 'x' | 'y'; bands?: [number, number] } = {}) {
   const uniforms: Record<string, THREE.IUniform> = {
     uLit: { value: new THREE.Color(tone.lit) }, uBase: { value: new THREE.Color(tone.base) }, uShade: { value: new THREE.Color(tone.shade) },
     uKey: { value: KEY.clone() }, uBands: { value: new THREE.Vector2(...(options.bands ?? [.42, .80])) },
   }
-  if (options.jade) Object.assign(uniforms, { uGlow: { value: new THREE.Color(0xf2fff8) }, uSweep: { value: -1 }, uSweepGain: { value: 0 } })
-  const material = new THREE.ShaderMaterial({ name, uniforms, vertexShader: vertex, fragmentShader: fragment, defines: options.jade ? { RUYI_JADE: '' } : {} })
-  material.userData.ruyiToon = options.jade ? 'jade' : 'solid'
+  const defines: Record<string, string> = {}
+  if (options.jade) {
+    defines.RUYI_JADE = ''
+    Object.assign(uniforms, { uGlow: { value: new THREE.Color(0xf2fff8) }, uSweep: { value: -1 }, uSweepGain: { value: 0 } })
+  } else if (options.wood) {
+    defines.RUYI_WOOD = ''
+    uniforms.uWoodVertical = { value: options.wood === 'y' ? 1 : 0 }
+  }
+  const material = new THREE.ShaderMaterial({ name, uniforms, vertexShader: vertex, fragmentShader: fragment, defines })
+  material.userData.ruyiToon = options.jade ? 'jade' : options.wood ? 'wood' : 'solid'
+  if (options.wood) material.userData.ruyiWoodAxis = options.wood
   return material
 }
 

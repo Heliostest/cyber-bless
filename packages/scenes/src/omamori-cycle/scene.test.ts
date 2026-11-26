@@ -373,4 +373,29 @@ describe('omamori companion', () => {
     const capture = (options: boolean | EventListenerOptions | undefined) => typeof options === 'boolean' ? options : options?.capture ?? false
     for (const [type, listener, options] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(options)), `owned ${type} listener`).toBe(true)
   })
+
+  it('unifies stylized wood surfaces across table apron, vertical legs and return box while keeping brocade pouches intact', () => {
+    const s = mount(0, { returning: true })
+    const byName = (name: string) => {
+      const mats: THREE.Material[] = []
+      s.scene.traverse(obj => {
+        const mesh = obj as THREE.Mesh
+        if (mesh.isMesh && mesh.name === name) mats.push(mesh.material as THREE.Material)
+      })
+      return mats
+    }
+    expect(byName('omamori-table-apron')[0]?.userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(byName('omamori-return-box-body')[0]?.userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'x' })
+    const legs = byName('omamori-table-leg')
+    expect(legs).toHaveLength(4)
+    for (const mat of legs) expect(mat.userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'y' })
+    const trims = byName('omamori-return-box-trim')
+    expect(trims).toHaveLength(2)
+    for (const mat of trims) expect(mat.userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'y' })
+    for (const variant of ['coral', 'sage', 'indigo']) {
+      const pouchMat = (s.scene.getObjectByName(`omamori-pouch-body-${variant}`) as THREE.Mesh).material as THREE.Material
+      expect(pouchMat.userData.ritualOptics?.kind).toBe('cloth')
+      expect(pouchMat.userData.craftSurface).toBeUndefined()
+    }
+  })
 })

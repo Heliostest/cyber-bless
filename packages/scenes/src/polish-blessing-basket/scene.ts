@@ -18,6 +18,10 @@ import {
   addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage,
 } from '../procedural-kit'
+import {
+  applyHandleShading, applyRimGrooveShading, applyTieRingShading,
+  applyWarpRecessShading, applyWeftRecessShading, createBasketWillowMaterials,
+} from './willow-material'
 
 const COPY = {
   title: '一篮春食', breadAction: '放入圆面包', eggAction: '安放彩蛋', quietAction: '静看备好的篮子',
@@ -1038,7 +1042,7 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     },
     { axis: 'x', roughness: 0.60, clearcoat: 0.16, clearcoatRoughness: 0.40, bumpScale: 0.0024, scale: 0.90, strength: 0.14 },
   )
-  const wicker = [0xc79561, 0xd8b27c, 0xe2c293].map(color => material(color))
+  const willow = createBasketWillowMaterials()
   const cream = material(0xf4edd7, THREE.DoubleSide), stitch = material(0xc48174)
   const flapLinenTex = createFlapLinenTextures()
   const liningLinenTex = createLiningLinenTextures()
@@ -1098,7 +1102,9 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
       const a = i / 80 * Math.PI * 2, over = Math.cos(a * 32 + row * Math.PI) * 0.007
       return new THREE.Vector3(Math.cos(a) * (rx + over), 0.035 + h * 0.38, Math.sin(a) * (rz + over))
     })
-    weave.add(tube(points, 0.017, wicker[row % 3], true))
+    const weftMesh = tube(points, 0.017, willow.weft[row % 3]!, true)
+    applyWeftRecessShading(weftMesh.geometry, row, 12, rx, rz)
+    weave.add(weftMesh)
   }
   for (let col = 0; col < 32; col++) {
     const a = col / 32 * Math.PI * 2
@@ -1106,12 +1112,16 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
       const h = i / 16, over = Math.cos(h * 11 * Math.PI + col * Math.PI) * 0.009
       return new THREE.Vector3(Math.cos(a) * (0.58 + h * 0.18 + over), 0.025 + h * 0.40, Math.sin(a) * (0.33 + h * 0.17 + over))
     })
-    weave.add(tube(points, 0.016, wicker[(col + 1) % 3]))
+    const warpMesh = tube(points, 0.016, willow.warp[(col + 1) % 3]!)
+    applyWarpRecessShading(warpMesh.geometry, col)
+    weave.add(warpMesh)
   }
-  const bottom = add(new THREE.CylinderGeometry(0.58, 0.56, 0.045, 48), wicker[0], [0, 0.025, 0], basket); bottom.scale.z = 0.58
-  for (const y of [0.405, 0.433]) {
+  const bottom = add(new THREE.CylinderGeometry(0.58, 0.56, 0.045, 48), willow.bottom, [0, 0.025, 0], basket); bottom.scale.z = 0.58
+  for (const [rimIdx, y] of ([0.405, 0.433] as const).entries()) {
     const points = Array.from({ length: 80 }, (_, i) => { const a = i / 80 * Math.PI * 2; return new THREE.Vector3(Math.cos(a) * 0.77, y, Math.sin(a) * 0.51) })
-    basket.add(tube(points, 0.027, wicker[1], true))
+    const rimMesh = tube(points, 0.027, willow.rim[rimIdx]!, true)
+    applyRimGrooveShading(rimMesh.geometry, rimIdx === 1)
+    basket.add(rimMesh)
   }
   const handle = new THREE.Group(); handle.name = 'basket-handle'; basket.add(handle)
   for (const offset of [-0.023, 0.023]) {
@@ -1119,11 +1129,15 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
       const a = i / 40 * Math.PI
       return new THREE.Vector3(Math.cos(a) * (0.74 + offset), 0.30 + Math.sin(a) * 1.18, -0.15 + offset)
     })
-    handle.add(tube(points, 0.028, wicker[offset < 0 ? 0 : 2]))
+    const isOuter = offset > 0
+    const handleMesh = tube(points, 0.028, willow.handle[isOuter ? 1 : 0])
+    applyHandleShading(handleMesh.geometry, isOuter)
+    handle.add(handleMesh)
   }
   for (const sign of [-1, 1]) for (let i = 0; i < 5; i++) {
-    const tie = add(new THREE.TorusGeometry(0.05, 0.008, 6, 16), wicker[0], [sign * 0.72, 0.35 + i * 0.022, -0.15], handle)
+    const tie = add(new THREE.TorusGeometry(0.05, 0.008, 6, 16), willow.tie, [sign * 0.72, 0.35 + i * 0.022, -0.15], handle)
     tie.rotation.x = Math.PI / 2
+    applyTieRingShading(tie.geometry, i)
   }
 
   const cloth = new THREE.Group(); cloth.name = 'basket-cloth'; basket.add(cloth)
@@ -1596,7 +1610,7 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     const ring = add(new THREE.TorusGeometry(0.18 + i * 0.012, 0.014, 7, 40), cream, [0.85, 1.20 + i * 0.012, 0.13])
     ring.rotation.x = -Math.PI / 2; ring.scale.y = 0.9
   }
-  const medallion = pebble([0.23, 0.23, 0.481], [0.115, 0.103, 0.027], wicker[2], basket); medallion.name = 'basket-quiet-medallion'
+  const medallion = pebble([0.23, 0.23, 0.481], [0.115, 0.103, 0.027], willow.medallion, basket); medallion.name = 'basket-quiet-medallion'
   for (let i = 0; i < 5; i++) {
     const a = i / 5 * Math.PI * 2
     const petal = pebble([0.23 + Math.cos(a) * 0.033, 0.23 + Math.sin(a) * 0.033, 0.51], [0.023, 0.016, 0.006], cream, basket)

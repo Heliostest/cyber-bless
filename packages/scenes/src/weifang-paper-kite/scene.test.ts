@@ -198,6 +198,37 @@ describe('an original connected paper swallow kite', () => {
     s.run(2)
     expect(line.geometry).toBe(geometry); expect(geometry.getAttribute('position').array).not.toEqual(before)
   })
+  it('uses thin sheet-paper optics, swaps mounted backlight on attachment, and billows wing bays in place during wind', () => {
+    const s0 = mount(0, { isReducedMotion: () => true })
+    const left = s0.scene.getObjectByName('kite-paper-left') as THREE.Mesh
+    const right = s0.scene.getObjectByName('kite-paper-right') as THREE.Mesh
+    const body = s0.scene.getObjectByName('kite-body-paper') as THREE.Mesh
+    for (const mesh of [left, right, body]) {
+      const mat = mesh.material as THREE.MeshStandardMaterial
+      expect(mat.userData.ritualOptics?.kind).toBe('paper')
+      expect(mat.userData.ritualOptics?.paper?.layout).toBe('sheet')
+      expect(mat.map).toBeInstanceOf(THREE.DataTexture)
+      expect(mat.emissiveMap).toBeInstanceOf(THREE.DataTexture)
+    }
+    const rightMat = right.material as THREE.MeshStandardMaterial
+    const unmountedMap = rightMat.map, unmountedBacklight = rightMat.emissiveMap
+    step(s0, 0)
+    expect(rightMat.map).not.toBe(unmountedMap)
+    expect(rightMat.emissiveMap).not.toBe(unmountedBacklight)
+    const mountedBox = new THREE.Box3().setFromBufferAttribute(left.geometry.getAttribute('position') as THREE.BufferAttribute)
+    expect(mountedBox.max.z - mountedBox.min.z).toBeLessThan(.01)
+
+    const s2 = mount(2), left2 = s2.scene.getObjectByName('kite-paper-left') as THREE.Mesh
+    const wingGeo = left2.geometry, wingBefore = wingGeo.getAttribute('position').array.slice()
+    s2.run(1.2)
+    expect(left2.geometry).toBe(wingGeo)
+    expect(wingGeo.getAttribute('position').array).not.toEqual(wingBefore)
+
+    const r2 = mount(2, { isReducedMotion: () => true }), rLeft = r2.scene.getObjectByName('kite-paper-left') as THREE.Mesh
+    const rBefore = rLeft.geometry.getAttribute('position').array.slice()
+    r2.run(1.2)
+    expect(rLeft.geometry.getAttribute('position').array).toEqual(rBefore)
+  })
   it.each(['pointercancel', 'lostpointercapture', 'blur', 'pause'])('cancels %s without progress or a stale object pose', kind => {
     for (const at of [0, 1]) {
       let active = true; const s = mount(at, { isActive: () => active }), needle = s.scene.getObjectByName(at === 0 ? 'kite-prepared-wing' : 'kite-reel')!, home = needle.position.clone(), p = s.point(targetName(at), anchor(at)), [dx, dy] = delta(at,s)

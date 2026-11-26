@@ -1,6 +1,5 @@
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
-import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
@@ -9,9 +8,12 @@ import { createObjectPointer } from '../object-pointer'
 import { createPosePlacement } from '../pose-placement'
 import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
+import {
+  bodyBackRibPoints, createBodyPaperSheet, createBodyPaperTextures, createKitePaperMaterial,
+  createWingPaperSheet, createWingPaperTextures, spinePoints, SPINE_Z, tailPoints,
+  wingBackRibPoints, wingDiagPoints, wingLeadPoints, WING_LEAD_Z, wingLowerPoints, type XYZ,
+} from './paper-craft'
 
-type XYZ = [number, number, number]
-type XY = [number, number]
 type Checkpoint = 0 | 1 | 2 | 3
 const COPY = {
   title: '纸鸢乘风', fit: '拿住右边备好的纸翼，移到竹骨上的提示位置，到位会自动贴合。',
@@ -49,9 +51,13 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
   const subject = new THREE.Group(); subject.name = 'kite-subject'; world.add(subject)
   const kite = new THREE.Group(); kite.name = 'kite-airframe'; subject.add(kite)
   const mat = (color: number, roughness = .9) => new THREE.MeshStandardMaterial({ color, roughness })
-  const bamboo = mat(0xe1b86c, .76), bambooEdge = mat(0x9a6e3e, .84), cord = mat(0xe8dfbd, .98)
-  const red = mat(0xc45d45, .97), ink = mat(0x355955, .95)
-  const paperTeal = createRitualMaterial({ color: 0x3b8a8a, roughness: .97 }, { kind: 'paper', strength: .16, fiber: 'paper' }), paperRed = createRitualMaterial({ color: 0xc45d45, roughness: .97 }, { kind: 'paper', strength: .12, fiber: 'paper' }), paperOchre = createRitualMaterial({ color: 0xe5b453, roughness: .97 }, { kind: 'paper', strength: .16, fiber: 'paper' }), paperCream = createRitualMaterial({ color: 0xf3e5bf, roughness: .98 }, { kind: 'paper', strength: .24, fiber: 'paper' })
+  const bamboo = mat(0xe1b86c, .76), bambooEdge = mat(0x9a6e3e, .84), backBamboo = mat(0xc49a57, .82), cord = mat(0xe8dfbd, .98)
+  const red = mat(0xc45d45, .97)
+  const wingTextures = createWingPaperTextures()
+  const bodyTextures = createBodyPaperTextures()
+  const wingLeftMat = createKitePaperMaterial(wingTextures.mountedAlbedo, wingTextures.mountedBacklight, 1.60)
+  const wingRightMat = createKitePaperMaterial(wingTextures.unmountedAlbedo, wingTextures.unmountedBacklight, 1.60)
+  const bodyMat = createKitePaperMaterial(bodyTextures.albedo, bodyTextures.backlight, 0.58)
   const wood = mat(0xb47e49, .72), woodEnd = mat(0xdfb575, .8)
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: XYZ, parent: THREE.Object3D = subject) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
@@ -60,50 +66,37 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
     const mesh = add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(vectors(points)), segments, radius, 7, false), material, [0, 0, 0], parent)
     mesh.userData.toonSurface = { outline: false, roughness: .9 }; return mesh as THREE.Mesh<THREE.TubeGeometry>
   }
-  const paper = (name: string, outline: XY[], material: THREE.Material, parent: THREE.Object3D, depth = .024) => {
-    const shape = new THREE.Shape(); outline.forEach(([x, y], i) => i ? shape.lineTo(x, y) : shape.moveTo(x, y)); shape.closePath()
-    const geometry = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, steps: 1 }); geometry.translate(0, 0, -depth / 2)
-    const mesh = add(name, geometry, material, [0, 0, 0], parent); mesh.userData.toonSurface = { outline: false, roughness: .97 }; return mesh
-  }
-  const wing: XY[] = [[.13, .46], [.56, .72], [1.8, .64], [1.4, .18], [1.05, -.15], [.32, -.28], [.13, -.12]]
   const prepared = new THREE.Group(); prepared.name = 'kite-prepared-wing'; kite.add(prepared)
   const left = new THREE.Group(); left.name = 'kite-left-wing'; kite.add(left)
-  let rightSkin!: THREE.Mesh
-  for (const sign of [-1, 1]) {
-    const side = sign < 0 ? 'left' : 'right', parent = sign < 0 ? left : prepared
-    const mirror = (outline: XY[]) => outline.map(([x, y]) => [x * sign, y] as XY)
-    const skin = paper(`kite-paper-${side}`, mirror(wing), paperTeal, parent)
-    if (sign > 0) rightSkin = skin
-    // The broad original colour blocks follow the feathers; no borrowed motif.
-    const stripe = paper(`kite-cream-feather-${side}`, mirror([[.48, .57], [1.63, .59], [1.43, .43], [.59, .40]]), paperCream, parent, .004); stripe.position.z = .015
-    const feather = paper(`kite-red-feather-${side}`, mirror([[.38, .25], [1.29, .23], [1.05, -.08], [.40, -.20]]), paperRed, parent, .004); feather.position.z = .015
-    const tip = paper(`kite-ochre-tip-${side}`, mirror([[1.49, .57], [1.73, .60], [1.43, .26], [1.28, .24]]), paperOchre, parent, .004); tip.position.z = .02
-    for (let i = 0; i < 3; i++) {
-      const x = .52 + i * .19
-      const mark = paper(`kite-feather-mark-${side}-${i}`, mirror([[x, .18], [x + .055, .18], [x + .12, -.01], [x + .07, -.04]]), paperCream, parent, .003); mark.position.z = .02
-    }
+  const leftSheet = createWingPaperSheet(-1), rightSheet = createWingPaperSheet(1), bodySheet = createBodyPaperSheet()
+  const leftSkin = add('kite-paper-left', leftSheet.geometry, wingLeftMat, [0, 0, 0], left)
+  const rightSkin = add('kite-paper-right', rightSheet.geometry, wingRightMat, [0, 0, 0], prepared)
+  const body = add('kite-body-paper', bodySheet.geometry, bodyMat, [0, 0, 0], kite)
+  for (const sheetMesh of [leftSkin, rightSkin, body]) sheetMesh.userData.toonSurface = { outline: false, roughness: .95, shading: 'smooth' }
+  for (const sign of [-1, 1] as const) {
+    const side = sign < 0 ? 'left' : 'right'
     // Bamboo stays on the airframe while the prepared skin slides into place.
-    tube(`kite-bamboo-${side}`, [[0, .43, .048], [sign * .57, .70, .048], [sign * 1.8, .64, .048]], .021, bamboo, kite)
-    tube(`kite-bamboo-diagonal-${side}`, [[0, -.25, .048], [sign * .80, .13, .048], [sign * 1.8, .64, .048]], .018, bamboo, kite)
-    tube(`kite-bamboo-lower-${side}`, [[sign * .13, -.12, .045], [sign * .32, -.28, .045], [sign * 1.05, -.15, .045], [sign * 1.4, .18, .045], [sign * 1.8, .64, .045]], .014, bambooEdge, kite, 48)
+    tube(`kite-bamboo-${side}`, wingLeadPoints(sign), .0185, bamboo, kite)
+    tube(`kite-bamboo-diagonal-${side}`, wingDiagPoints(sign), .0155, bamboo, kite)
+    tube(`kite-bamboo-lower-${side}`, wingLowerPoints(sign), .0125, bambooEdge, kite, 48)
+    wingBackRibPoints(sign).forEach((pts, idx) => {
+      tube(`kite-bamboo-rib-${side}-${idx}`, pts, .0055, backBamboo, kite, 18)
+    })
+    tube(`kite-bamboo-tail-${sign}`, tailPoints(sign), .0145, bamboo, kite)
   }
-  const body = paper('kite-body-paper', [[0, .98], [.19, .78], [.17, .30], [.29, -.14], [.58, -1.10], [0, -.73], [-.58, -1.10], [-.29, -.14], [-.17, .30], [-.19, .78]], paperCream, kite, .028)
-  const crown = paper('kite-red-crown', [[0, .98], [.19, .78], [.17, .52], [0, .61], [-.17, .52], [-.19, .78]], paperRed, kite, .004); crown.position.z = .018
-  const tail = paper('kite-teal-tail', [[0, -.16], [.22, -.22], [.48, -.97], [0, -.65], [-.48, -.97], [-.22, -.22]], paperTeal, kite, .004); tail.position.z = .018
-  for (const sign of [-1, 1]) {
-    const eye = add(`kite-eye-${sign}`, new THREE.SphereGeometry(.027, 14, 10), ink, [sign * .09, .76, .026], kite); eye.scale.z = .35
-    tube(`kite-bamboo-tail-${sign}`, [[0, -.20, .050], [sign * .24, -.50, .050], [sign * .58, -1.10, .050]], .016, bamboo, kite)
-  }
-  tube('kite-bamboo-spine', [[0, .96, .047], [0, .25, .047], [0, -.73, .047]], .019, bamboo, kite)
+  tube('kite-bamboo-spine', spinePoints(), .0175, bamboo, kite)
+  bodyBackRibPoints().forEach((pts, idx) => {
+    tube(`kite-bamboo-body-rib-${idx}`, pts, .0052, backBamboo, kite, 12)
+  })
   for (const [i, y] of [.69, .43, -.20, -.69].entries()) {
-    tube(`kite-spine-lashing-${i}`, [[-.035, y - .025, .049], [.035, y - .012, .067], [-.035, y, .071], [.035, y + .014, .067], [-.035, y + .025, .049]], .008, red, kite, 16)
+    tube(`kite-spine-lashing-${i}`, [[-.034, y - .024, SPINE_Z - .002], [.034, y - .012, SPINE_Z + .018], [-.034, y, SPINE_Z + .022], [.034, y + .013, SPINE_Z + .018], [-.034, y + .024, SPINE_Z - .002]], .008, red, kite, 16)
   }
   // Three physical bridle legs tie to the bamboo. Their knot carries the reel line.
   const bridle = new THREE.Group(); bridle.name = 'kite-bridle'; kite.add(bridle)
-  for (const [name, tie] of [['left', [-.48, .66, .048]], ['right', [.48, .66, .048]], ['bottom', [0, -.47, .048]]] as [string, XYZ][]) {
+  for (const [name, tie] of [['left', [-.48, .66, WING_LEAD_Z]], ['right', [.48, .66, WING_LEAD_Z]], ['bottom', [0, -.47, SPINE_Z]]] as [string, XYZ][]) {
     const tieNode = new THREE.Object3D(); tieNode.name = `kite-bridle-tie-${name}`; tieNode.position.set(...tie); bridle.add(tieNode)
-    tube(`kite-bridle-${name}`, [tie, [(tie[0] + KNOT[0]) / 2, (tie[1] + KNOT[1]) / 2, .21], KNOT], .009, cord, bridle, 20)
-    const fastening = add(`kite-tie-wrap-${name}`, new THREE.TorusGeometry(.028, .007, 6, 14), red, tie, bridle); fastening.rotation.x = Math.PI / 2
+    tube(`kite-bridle-${name}`, [tie, [(tie[0] + KNOT[0]) / 2, (tie[1] + KNOT[1]) / 2, .20], KNOT], .009, cord, bridle, 20)
+    const fastening = add(`kite-tie-wrap-${name}`, new THREE.TorusGeometry(.026, .007, 6, 14), red, tie, bridle); fastening.rotation.x = Math.PI / 2
   }
   add('kite-bridle-knot', new THREE.SphereGeometry(.027, 12, 8), cord, KNOT, bridle)
   const reel = new THREE.Group(); reel.name = 'kite-reel'; subject.add(reel)
@@ -142,8 +135,18 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
     }
     linePosition.needsUpdate = lineNormal.needsUpdate = true; line.geometry.computeBoundingBox(); line.geometry.computeBoundingSphere()
   }
+  let rightWingMounted = false
   const pose = (fit: number, lift: number, wind = 0) => {
     fitAmount = fit; liftAmount = lift
+    const mounted = fit >= .96
+    if (mounted !== rightWingMounted) {
+      rightWingMounted = mounted
+      wingRightMat.map = mounted ? wingTextures.mountedAlbedo : wingTextures.unmountedAlbedo
+      wingRightMat.emissiveMap = mounted ? wingTextures.mountedBacklight : wingTextures.unmountedBacklight
+    }
+    leftSheet.deform({ fit: 1, lift, wind })
+    rightSheet.deform({ fit, lift, wind })
+    bodySheet.deform({ fit: 1, lift, wind })
     prepared.position.copy(PREPARED).multiplyScalar(1 - fit)
     kite.position.set(-.12 + Math.sin(wind) * .015, 1.61 + lift * .76 + Math.sin(wind * 1.3) * .012, 0)
     kite.rotation.z = Math.sin(wind * .85) * .018; kite.rotation.y = Math.sin(wind * .6) * .026
@@ -258,7 +261,10 @@ export function createWeifangPaperKite(ctx: SceneContext): SceneInstance {
       if (disposed) return
       ending.dispose(); disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world)
+      wingTextures.mountedAlbedo.dispose(); wingTextures.unmountedAlbedo.dispose(); wingTextures.mountedBacklight.dispose(); wingTextures.unmountedBacklight.dispose()
+      bodyTextures.albedo.dispose(); bodyTextures.backlight.dispose()
+      Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

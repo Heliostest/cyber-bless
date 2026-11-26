@@ -189,6 +189,23 @@ describe('a carved horse kept as a cultural craft', () => {
     expect(cloth.userData.craftSurface).toBeUndefined()
     expect(matOf('horse-plinth').userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'x' })
     expect(matOf('horse-plinth-inset').userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(matOf('horse-plinth').userData.craftSurface.scale).not.toBe(matOf('horse-plinth-inset').userData.craftSurface.scale)
+    expect(body.map).toBeInstanceOf(THREE.DataTexture)
+    expect(body.bumpMap).toBeInstanceOf(THREE.DataTexture)
+    expect(matOf('horse-plinth-inset').map).toBeInstanceOf(THREE.DataTexture)
+    expect(matOf('horse-plinth-inset').map).not.toBe(matOf('horse-plinth').map)
+    const plankMaps = new Set<THREE.Texture | null>()
+    const breadboardMaps = new Set<THREE.Texture | null>()
+    const legMaps = new Set<THREE.Texture | null>()
+    s.scene.traverse(o => {
+      if (!(o instanceof THREE.Mesh) || !(o.material instanceof THREE.MeshStandardMaterial)) return
+      if (o.name === 'horse-table-top-board') plankMaps.add(o.material.map)
+      if (o.name === 'horse-table-breadboard-end') breadboardMaps.add(o.material.map)
+      if (o.name === 'horse-table-leg') legMaps.add(o.material.map)
+    })
+    expect(plankMaps.size).toBe(5)
+    expect(breadboardMaps.size).toBe(2)
+    expect(legMaps.size).toBe(2)
     for (const [name, axis] of [
       ['horse-table-top-board', 'x'],
       ['horse-table-breadboard-end', 'z'],
@@ -205,8 +222,17 @@ describe('a carved horse kept as a cultural craft', () => {
   })
   it('disposes all mesh resources and owned window listeners once', () => {
     const added = vi.spyOn(window, 'addEventListener'), removed = vi.spyOn(window, 'removeEventListener'), s = mount()
-    const resources = new Set<THREE.BufferGeometry | THREE.Material>(), freed = new Map<unknown, number>()
-    s.scene.traverse(o => { const m = o as THREE.Mesh; if (m.geometry) resources.add(m.geometry); for (const mat of Array.isArray(m.material) ? m.material : m.material ? [m.material] : []) resources.add(mat) })
+    const resources = new Set<THREE.BufferGeometry | THREE.Material | THREE.Texture>(), freed = new Map<unknown, number>()
+    s.scene.traverse(o => {
+      const m = o as THREE.Mesh
+      if (m.geometry) resources.add(m.geometry)
+      for (const mat of Array.isArray(m.material) ? m.material : m.material ? [m.material] : []) {
+        resources.add(mat)
+        const std = mat as THREE.MeshStandardMaterial
+        if (std.map) resources.add(std.map)
+        if (std.bumpMap) resources.add(std.bumpMap)
+      }
+    })
     resources.forEach(r => r.addEventListener('dispose', () => freed.set(r, (freed.get(r) ?? 0) + 1)))
     const registrations = [...added.mock.calls], renderer = rendered.renderer as THREE.WebGLRenderer
     s.instance.dispose(); s.instance.dispose(); s.button.click()

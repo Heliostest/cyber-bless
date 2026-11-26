@@ -68,6 +68,15 @@ describe('real wooden cog and free-frame tongue',()=>{
   expect(hsl('ratchet-front-cheek')).toBeGreaterThan(hsl('ratchet-handle'))
   expect(hsl('ratchet-handle')).toBeGreaterThan(hsl('ratchet-cog-wheel'))
   expect(hsl('ratchet-cog-wheel')).toBeGreaterThan(hsl('ratchet-axle'))
-  disposeTree(m.subject)
+  const distinctParts=['ratchet-front-cheek','ratchet-back-cheek','ratchet-frame-grip','ratchet-wood-tongue','ratchet-handle','ratchet-cog-wheel','ratchet-axle']
+  const maps=new Set(distinctParts.map(name=>matOf(name).map))
+  const scales=new Set(distinctParts.map(name=>matOf(name).userData.craftSurface.scale))
+  expect(maps.size).toBe(distinctParts.length)
+  expect(scales.size).toBe(distinctParts.length)
+  for(const name of distinctParts){
+   expect(matOf(name).map,name).toBeInstanceOf(THREE.DataTexture)
+   expect(matOf(name).bumpMap,name).toBeInstanceOf(THREE.DataTexture)
+  }
+  disposeTree(m.subject);m.disposeTextures()
  })
 })

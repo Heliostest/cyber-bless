@@ -82,7 +82,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "korean-sotdae": "62265519bb43dc2feb6aa37361dd5c8095cc442d7f82989a7f830f39c302512c",
   "korean-yutnori": "859805f7b0205efc8ce4e7a2b1ab351ce829d1ee5f4ed32afe0db4be838e4459",
   "lam-tsuen-wishing-tree": "70f97900f5f8bf914277e72ebbf41831dc9bd8d7d43b100917f4e7cb4a77f459",
-  "lanna-sand-pagoda": "dc015506be86ff130ffe5059c6bd6597ef2a840c458fbf952d3fd7de17f1ef4c",
+  "lanna-sand-pagoda": "506e2949c56c90f56918658bfdcdc704ee3670172e033ce1b201ea189fc2da30",
   "lantern": "bb8065dda8e0d94e869061b263e7fe49d23815bfe1977fc2f7fa33ac5d09ec0e",
   "lao-baci-wrist": "a7a1ab87dfb419427a170a07a3a55baeb3bd33a2ac40b807650ceeb304020daa",
   "lithuanian-straw-garden": "989ed1c7ae50d0062c9461d0b5c994d8b424f8c134a4b5120fad056253ee0d01",

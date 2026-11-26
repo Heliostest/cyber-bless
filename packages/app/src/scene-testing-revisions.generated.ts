@@ -93,7 +93,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "mezuzah-doorpost": "c9e805479498bbd6e0cd3115159661275e84ceb547e54705c1a7c0724b0b51d8",
   "milagros": "f86f92b2ede9c20b2145b7f44e69e58d8d8650dc91ba5c3c0533d1912473b9bd",
   "minangkabau-spinning-top": "4857aa1c201af9eb6de53c3878a6af410810575f71aa4616162cf130f83889f8",
-  "mizuhiki": "7bcfe2afbc82c3a355e750f3da6ecaca3bbd777bf723e87be7ff4cea1f164646",
+  "mizuhiki": "e1db68693381c0bf7730ff426920c600e154e13f39b9437ad4a9014ce657e8b3",
   "mochigase-nagashibina": "a654d3ef56e6f7888e8035ecc6e53d259611b380f1691d6ad69d305721c7a60c",
   "mongolian-felt-ger": "6eb1cbfd2002e5ede1f41ebdaedb65ad848d94a68a787157edb7db2450de6fbc",
   "mongolian-ovoo": "5ec9eb2be1e50593aaf409dcdf15d4cc5cec0240ff06cdc4745cf3a6d93200b3",

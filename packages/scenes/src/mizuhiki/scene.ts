@@ -1,4 +1,5 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 import { getLocale, subscribeLocale } from '@wbr/i18n'
 import { bindSceneText, sceneCopy, sceneTemplate } from '../scene-localization'
@@ -108,34 +109,231 @@ function ease(t: number) {
   return x * x * (3 - 2 * x)
 }
 
-/** Fine washi fibers, generated locally and shared by all paper layers. */
-function paperTexture() {
-  const size = 96, data = new Uint8Array(size * size * 4)
-  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-    const fiber = ((x * 19 + y * 31) % 17) + (y % 7 === 0 ? -8 : 0)
-    const i = (y * size + x) * 4
-    data[i] = 246 + Math.floor(fiber / 4)
-    data[i + 1] = 239 + Math.floor(fiber / 4)
-    data[i + 2] = 218 + Math.floor(fiber / 3)
-    data[i + 3] = 255
+/**
+ * Evaluates a closed, outward-wound subdivided folded washi panel over a 4-corner
+ * XZ trapezoid with normalized [0, 1] UVs and separate perimeter wall normals so
+ * `ritual-optics` `layout: 'sheet'` frames each folded paper edge cleanly without
+ * flat-polygon Z-fighting or shadow acne.
+ */
+function createFoldedWashiPanel(opts: {
+  xTopLeft: number
+  xTopRight: number
+  xBotLeft: number
+  xBotRight: number
+  zTop: number
+  zBot: number
+  cols: number
+  rows: number
+  cornerRadius?: number
+  evalSurface: (x: number, z: number, u: number, v: number) => { yTop: number; yBot: number; shade: number }
+}): THREE.BufferGeometry {
+  const { xTopLeft, xTopRight, xBotLeft, xBotRight, zTop, zBot, cols, rows, evalSurface } = opts
+  const cornerR = opts.cornerRadius ?? 0
+  const stride = cols + 1
+  const gridVerts = (cols + 1) * (rows + 1)
+
+  const positions: number[] = []
+  const uvs: number[] = []
+  const colors: number[] = []
+  const indices: number[] = []
+
+  const topPts: [number, number, number][] = new Array(gridVerts)
+  const botPts: [number, number, number][] = new Array(gridVerts)
+  const shades: number[] = new Array(gridVerts)
+
+  for (let iv = 0; iv <= rows; iv++) {
+    const v = iv / rows
+    const zRaw = THREE.MathUtils.lerp(zTop, zBot, v)
+    const xL = THREE.MathUtils.lerp(xTopLeft, xBotLeft, v)
+    const xR = THREE.MathUtils.lerp(xTopRight, xBotRight, v)
+    const zEdge = Math.min(v, 1 - v) * Math.abs(zBot - zTop)
+    for (let iu = 0; iu <= cols; iu++) {
+      const u = iu / cols
+      let x = THREE.MathUtils.lerp(xL, xR, u)
+      let z = zRaw
+      if (cornerR > 0) {
+        const wSpan = Math.abs(xR - xL)
+        const xEdge = Math.min(u, 1 - u) * wSpan
+        if (xEdge < cornerR && zEdge < cornerR) {
+          const dx = cornerR - xEdge
+          const dz = cornerR - zEdge
+          const d = Math.hypot(dx, dz)
+          if (d > cornerR) {
+            const pull = d - cornerR
+            x += (u < 0.5 ? 1 : -1) * (dx / d) * pull
+            z += (v < 0.5 ? 1 : -1) * (dz / d) * pull
+          }
+        }
+      }
+      const { yTop, yBot, shade } = evalSurface(x, z, u, v)
+      const idx = iv * stride + iu
+      topPts[idx] = [x, yTop, z]
+      botPts[idx] = [x, yBot, z]
+      shades[idx] = shade
+    }
   }
-  const map = new THREE.DataTexture(data, size, size)
-  map.colorSpace = THREE.SRGBColorSpace
-  map.wrapS = map.wrapT = THREE.RepeatWrapping
-  map.repeat.set(3, 4)
-  map.magFilter = map.minFilter = THREE.LinearFilter
-  map.needsUpdate = true
-  return map
+
+  // Top face vertices (indices 0 .. gridVerts - 1).
+  for (let iv = 0; iv <= rows; iv++) {
+    const v = iv / rows
+    for (let iu = 0; iu <= cols; iu++) {
+      const u = iu / cols
+      const idx = iv * stride + iu
+      const p = topPts[idx]!
+      const s = shades[idx]!
+      positions.push(p[0], p[1], p[2])
+      uvs.push(u, v)
+      colors.push(s, s, s)
+    }
+  }
+  for (let iv = 0; iv < rows; iv++) {
+    for (let iu = 0; iu < cols; iu++) {
+      const a = iv * stride + iu
+      const b = a + 1
+      const c = a + stride + 1
+      const d = a + stride
+      indices.push(a, d, b, b, d, c)
+    }
+  }
+
+  // Bottom face vertices (indices gridVerts .. 2 * gridVerts - 1).
+  const botBase = gridVerts
+  for (let iv = 0; iv <= rows; iv++) {
+    const v = iv / rows
+    for (let iu = 0; iu <= cols; iu++) {
+      const u = iu / cols
+      const idx = iv * stride + iu
+      const p = botPts[idx]!
+      const s = shades[idx]! * 0.92
+      positions.push(p[0], p[1], p[2])
+      uvs.push(u, v)
+      colors.push(s, s, s)
+    }
+  }
+  for (let iv = 0; iv < rows; iv++) {
+    for (let iu = 0; iu < cols; iu++) {
+      const a = botBase + iv * stride + iu
+      const b = a + 1
+      const c = a + stride + 1
+      const d = a + stride
+      indices.push(a, b, d, b, c, d)
+    }
+  }
+
+  // Closed CCW perimeter walls (separate vertices for crisp paper-thickness edge normals).
+  const ring: number[] = []
+  for (let iv = 0; iv < rows; iv++) ring.push(iv * stride) // Left edge (+Z)
+  for (let iu = 0; iu < cols; iu++) ring.push(rows * stride + iu) // Bottom edge (+X)
+  for (let iv = rows; iv > 0; iv--) ring.push(iv * stride + cols) // Right edge (-Z)
+  for (let iu = cols; iu > 0; iu--) ring.push(iu) // Top edge (-X)
+
+  for (let k = 0; k < ring.length; k++) {
+    const i0 = ring[k]!
+    const i1 = ring[(k + 1) % ring.length]!
+    const t0 = topPts[i0]!, b0 = botPts[i0]!, b1 = botPts[i1]!, t1 = topPts[i1]!
+    const s0 = shades[i0]! * 0.96, s1 = shades[i1]! * 0.96
+    const base = positions.length / 3
+    positions.push(
+      t0[0], t0[1], t0[2],
+      b0[0], b0[1], b0[2],
+      b1[0], b1[1], b1[2],
+      t1[0], t1[1], t1[2],
+    )
+    uvs.push(0.02, 0.5, 0.02, 0.5, 0.04, 0.5, 0.04, 0.5)
+    colors.push(s0, s0, s0, s0 * 0.90, s0 * 0.90, s0 * 0.90, s1 * 0.90, s1 * 0.90, s1 * 0.90, s1, s1, s1)
+    indices.push(base, base + 1, base + 3, base + 1, base + 2, base + 3)
+  }
+
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+  geometry.setIndex(indices)
+  geometry.computeVertexNormals()
+  return geometry
 }
 
-function paperPolygon(points: readonly (readonly [number, number])[], y: number, material: THREE.Material) {
-  const shape = new THREE.Shape()
-  points.forEach(([x, z], i) => i ? shape.lineTo(x, -z) : shape.moveTo(x, -z))
-  shape.closePath()
-  const mesh = new THREE.Mesh(new THREE.ShapeGeometry(shape), material)
-  mesh.rotation.x = -Math.PI / 2
-  mesh.position.y = y
-  return mesh
+/**
+ * Closed thin folded-paper polygon slab for decorative folded corner accents.
+ * Automatically orients the contour CCW viewed from +Y for clean outward normals.
+ */
+function createFoldedAccentSlab(
+  rawPoints: readonly (readonly [number, number])[],
+  yBot: number,
+  yTop: number,
+  ridgeLift = 0,
+): THREE.BufferGeometry {
+  // Compute signed area in XZ: positive means CW viewed from +Y (since +Z points down on screen).
+  let area2 = 0
+  for (let i = 0; i < rawPoints.length; i++) {
+    const [x0, z0] = rawPoints[i]!
+    const [x1, z1] = rawPoints[(i + 1) % rawPoints.length]!
+    area2 += x0 * z1 - x1 * z0
+  }
+  const pts = area2 < 0 ? [...rawPoints] : [...rawPoints].reverse()
+  const n = pts.length
+  let cx = 0, cz = 0
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity
+  for (const [x, z] of pts) {
+    cx += x; cz += z
+    if (x < minX) minX = x; if (x > maxX) maxX = x
+    if (z < minZ) minZ = z; if (z > maxZ) maxZ = z
+  }
+  cx /= n; cz /= n
+  const spanX = Math.max(1e-4, maxX - minX)
+  const spanZ = Math.max(1e-4, maxZ - minZ)
+
+  const positions: number[] = []
+  const uvs: number[] = []
+  const colors: number[] = []
+  const indices: number[] = []
+
+  // Top fan with optional subtle origami fold ridge at centroid.
+  const topCenter = 0
+  positions.push(cx, yTop + ridgeLift, cz)
+  uvs.push((cx - minX) / spanX, (cz - minZ) / spanZ)
+  colors.push(1.02, 1.02, 1.02)
+  for (const [x, z] of pts) {
+    positions.push(x, yTop, z)
+    uvs.push((x - minX) / spanX, (z - minZ) / spanZ)
+    colors.push(0.95, 0.95, 0.95)
+  }
+  for (let i = 0; i < n; i++) {
+    indices.push(topCenter, 1 + i, 1 + ((i + 1) % n))
+  }
+
+  // Bottom fan.
+  const botCenter = positions.length / 3
+  positions.push(cx, yBot, cz)
+  uvs.push(0.5, 0.5)
+  colors.push(0.88, 0.88, 0.88)
+  for (const [x, z] of pts) {
+    positions.push(x, yBot, z)
+    uvs.push((x - minX) / spanX, (z - minZ) / spanZ)
+    colors.push(0.86, 0.86, 0.86)
+  }
+  for (let i = 0; i < n; i++) {
+    indices.push(botCenter, botCenter + 1 + ((i + 1) % n), botCenter + 1 + i)
+  }
+
+  // Outward perimeter walls.
+  for (let i = 0; i < n; i++) {
+    const [x0, z0] = pts[i]!
+    const [x1, z1] = pts[(i + 1) % n]!
+    const base = positions.length / 3
+    positions.push(x0, yTop, z0, x0, yBot, z0, x1, yBot, z1, x1, yTop, z1)
+    uvs.push(0.05, 0.5, 0.05, 0.5, 0.1, 0.5, 0.1, 0.5)
+    colors.push(0.92, 0.92, 0.92, 0.84, 0.84, 0.84, 0.84, 0.84, 0.84, 0.92, 0.92, 0.92)
+    indices.push(base, base + 1, base + 3, base + 1, base + 2, base + 3)
+  }
+
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+  geometry.setIndex(indices)
+  geometry.computeVertexNormals()
+  return geometry
 }
 
 /**
@@ -369,39 +567,205 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   const envelope = new THREE.Group()
   envelope.name = 'mizuhiki-envelope'
   world.add(envelope)
-  const paperMap = paperTexture()
-  const paper = new THREE.MeshStandardMaterial({ color: 0xfffcf0, map: paperMap, roughness: 0.96 })
-  const foldedPaper = new THREE.MeshStandardMaterial({ color: 0xf3e6cb, map: paperMap, roughness: 0.98, side: THREE.DoubleSide })
-  const topPaper = new THREE.MeshStandardMaterial({ color: 0xfff9e8, map: paperMap, roughness: 0.96, side: THREE.DoubleSide })
-  const gold = new THREE.MeshStandardMaterial({ color: 0xc89c45, roughness: 0.52, metalness: 0.32 })
+
+  // Shared handmade washi materials via ritual-optics (`layout: 'sheet'`) with
+  // Komorebi highlight guard so pale folded washi shows crisp paper tooth and
+  // layered folds without clipping to flat #FFFFFF.
+  const backWashiMat = createRitualMaterial({
+    color: 0xefe1c4,
+    roughness: 0.97,
+    vertexColors: true,
+  }, {
+    kind: 'paper',
+    strength: 0.26,
+    fiber: 'paper',
+    paper: { layout: 'sheet', aspect: 0.72, grainScale: 2.35, grain: 1.0, fibers: 0.14, edge: 0.42, highlightGuard: 0.92 },
+  })
+  const midLeafMat = createRitualMaterial({
+    color: 0xe2cfa9,
+    roughness: 0.98,
+    vertexColors: true,
+  }, {
+    kind: 'paper',
+    strength: 0.22,
+    fiber: 'paper',
+    paper: { layout: 'sheet', aspect: 0.72, grainScale: 2.5, grain: 0.96, fibers: 0.12, edge: 0.44, highlightGuard: 0.92 },
+  })
+  const slipWashiMat = createRitualMaterial({
+    color: 0xfcf6e8,
+    roughness: 0.96,
+    vertexColors: true,
+  }, {
+    kind: 'paper',
+    strength: 0.24,
+    fiber: 'paper',
+    paper: { layout: 'sheet', aspect: 0.46, grainScale: 2.3, grain: 0.94, fibers: 0.12, edge: 0.44, highlightGuard: 0.94 },
+  })
+  const leftWingMat = createRitualMaterial({
+    color: 0xf4e7cc,
+    roughness: 0.96,
+    vertexColors: true,
+  }, {
+    kind: 'paper',
+    strength: 0.28,
+    fiber: 'paper',
+    paper: { layout: 'sheet', aspect: 0.56, grainScale: 2.35, grain: 1.0, fibers: 0.14, edge: 0.46, highlightGuard: 0.92 },
+  })
+  const rightWingMat = createRitualMaterial({
+    color: 0xf7ecd5,
+    roughness: 0.96,
+    vertexColors: true,
+  }, {
+    kind: 'paper',
+    strength: 0.28,
+    fiber: 'paper',
+    paper: { layout: 'sheet', aspect: 0.56, grainScale: 2.35, grain: 1.0, fibers: 0.14, edge: 0.48, highlightGuard: 0.92 },
+  })
+  const redAccentMat = createRitualMaterial({
+    color: 0xc24844,
+    roughness: 0.92,
+    vertexColors: true,
+  }, {
+    kind: 'paper',
+    strength: 0.26,
+    fiber: 'paper',
+    paper: { layout: 'sheet', aspect: 0.60, grainScale: 3.0, grain: 0.92, fibers: 0.12, edge: 0.44, highlightGuard: 0.65 },
+  })
+  const goldAccentMat = new THREE.MeshStandardMaterial({ color: 0xd4a84a, roughness: 0.42, metalness: 0.30, vertexColors: true })
+  const collarAccentMat = createRitualMaterial({
+    color: 0xf6ebd0,
+    roughness: 0.95,
+    vertexColors: true,
+  }, {
+    kind: 'paper',
+    strength: 0.22,
+    fiber: 'paper',
+    paper: { layout: 'sheet', aspect: 1.0, grainScale: 2.8, grain: 0.90, fibers: 0.10, edge: 0.36, highlightGuard: 0.92 },
+  })
   const red = new THREE.MeshStandardMaterial({ color: 0xb74743, roughness: 0.82 })
 
-  const outline = new THREE.Shape()
-  const w = 0.75, h = 1.06, r = 0.035
-  outline.moveTo(-w + r, -h)
-  outline.lineTo(w - r, -h)
-  outline.quadraticCurveTo(w, -h, w, -h + r)
-  outline.lineTo(w, h - r)
-  outline.quadraticCurveTo(w, h, w - r, h)
-  outline.lineTo(-w + r, h)
-  outline.quadraticCurveTo(-w, h, -w, h - r)
-  outline.lineTo(-w, -h + r)
-  outline.quadraticCurveTo(-w, -h, -w + r, -h)
-  const base = new THREE.Mesh(new THREE.ExtrudeGeometry(outline, { depth: 0.04, bevelEnabled: true, bevelSize: 0.012, bevelThickness: 0.007, bevelSegments: 2, steps: 1 }), paper)
-  base.rotation.x = -Math.PI / 2
-  base.position.y = 0.035
-  envelope.add(base)
-  envelope.add(paperPolygon([[-0.742, -1.045], [0.11, -1.045], [-0.06, 1.045], [-0.742, 1.045]], 0.087, topPaper))
-  envelope.add(paperPolygon([[0.18, -1.045], [0.742, -1.045], [0.742, 1.045], [-0.06, 1.045]], 0.101, topPaper))
-  envelope.add(paperPolygon([[-0.725, -1.025], [0.725, -1.025], [0.105, -0.62]], 0.112, foldedPaper))
-  envelope.add(paperPolygon([[-0.725, 1.025], [0.725, 1.025], [0.105, 0.67]], 0.113, topPaper))
-  // The raised ivory slip and folded accent echo the photograph's layering
+  // Diagonal front-fold seam lines echoing layered shugibukuro wrapping (right wing over left wing).
+  const rightSeamX = (z: number) => THREE.MathUtils.lerp(0.18, -0.165, (z + 1.056) / 2.112)
+  const leftSeamX = (z: number) => THREE.MathUtils.lerp(-0.18, 0.21, (z + 1.056) / 2.112)
+  const bandWaistDip = (z: number) => -0.0017 * Math.exp(-Math.pow(z / 0.12, 2))
+  const paperPillow = (x: number, z: number) =>
+    0.0012 * Math.sin(x * 2.8 + 0.4) * Math.cos(z * 2.1 - 0.2)
+    + 0.00038 * Math.sin(z * 22.0 + Math.sin(x * 7.5) * 0.6)
+    + bandWaistDip(z)
+
+  // 1. Back folded washi packet (crisp paper-folded corners, y = 0.032..0.070).
+  const backMesh = new THREE.Mesh(
+    createFoldedWashiPanel({
+      xTopLeft: -0.748, xTopRight: 0.748, xBotLeft: -0.748, xBotRight: 0.748,
+      zTop: -1.054, zBot: 1.054, cols: 16, rows: 20, cornerRadius: 0.011,
+      evalSurface: (_x, _z, u, v) => {
+        const edgeDark = 1 - 0.05 * Math.max(Math.pow(Math.abs(u * 2 - 1), 4), Math.pow(Math.abs(v * 2 - 1), 4))
+        return { yTop: 0.070, yBot: 0.032, shade: edgeDark }
+      },
+    }),
+    backWashiMat,
+  )
+  backMesh.userData.toonSurface = { shading: 'smooth' }
+  envelope.add(backMesh)
+
+  // 2. Recessed middle folded paper leaf so front & side views show stacked paper plies (y = 0.070..0.083).
+  const midLeafMesh = new THREE.Mesh(
+    createFoldedWashiPanel({
+      xTopLeft: -0.741, xTopRight: 0.741, xBotLeft: -0.741, xBotRight: 0.741,
+      zTop: -1.047, zBot: 1.047, cols: 12, rows: 16, cornerRadius: 0.010,
+      evalSurface: () => ({ yTop: 0.083, yBot: 0.070, shade: 0.96 }),
+    }),
+    midLeafMat,
+  )
+  midLeafMesh.userData.toonSurface = { shading: 'smooth' }
+  envelope.add(midLeafMesh)
+
+  // 3. Recessed inner ivory centerpiece slip visible through the upper V-throat (no ceremonial inscription).
+  const innerSlipMesh = new THREE.Mesh(
+    createFoldedWashiPanel({
+      xTopLeft: -0.24, xTopRight: 0.24, xBotLeft: -0.24, xBotRight: 0.24,
+      zTop: -1.052, zBot: 0.02, cols: 12, rows: 14, cornerRadius: 0.004,
+      evalSurface: (x, z, _u, v) => {
+        const dLeft = x - leftSeamX(z)
+        const dRight = rightSeamX(z) - x
+        const underShadowL = 1 - 0.21 * (1 - THREE.MathUtils.smoothstep(dLeft, -0.015, 0.068))
+        const underShadowR = 1 - 0.21 * (1 - THREE.MathUtils.smoothstep(dRight, -0.015, 0.068))
+        const topRoll = -0.0014 * Math.pow(1 - v, 4)
+        return { yTop: 0.0942 + topRoll, yBot: 0.083, shade: Math.min(underShadowL, underShadowR) }
+      },
+    }),
+    slipWashiMat,
+  )
+  innerSlipMesh.userData.toonSurface = { shading: 'smooth' }
+  envelope.add(innerSlipMesh)
+
+  // 4. Left front folded washi wing: wraps smoothly from the left spine and tucks beneath the right wing.
+  const leftWingMesh = new THREE.Mesh(
+    createFoldedWashiPanel({
+      xTopLeft: -0.752, xTopRight: -0.18, xBotLeft: -0.752, xBotRight: 0.21,
+      zTop: -1.056, zBot: 1.056, cols: 20, rows: 26, cornerRadius: 0.010,
+      evalSurface: (x, z, u, v) => {
+        const seamDist = rightSeamX(z) - x
+        // Tuck cleanly underneath rightWing as the left wing crosses behind the diagonal overlap edge.
+        const tuck = 1 - THREE.MathUtils.smoothstep(seamDist, -0.015, 0.13)
+        const spineRoll = Math.pow(Math.max(0, 1 - u / 0.12), 2)
+        const endRoll = Math.pow(Math.max(0, 1 - Math.min(v, 1 - v) / 0.05), 2)
+        const yTop = 0.1032 + paperPillow(x, z) - tuck * 0.0068 - spineRoll * 0.0038 - endRoll * 0.0016
+        const yBot = Math.min(yTop - 0.0062, 0.0945 - tuck * 0.0060 - spineRoll * 0.012)
+        const overlapAO = 1 - 0.23 * (1 - THREE.MathUtils.smoothstep(seamDist, -0.004, 0.062))
+        const bandAO = 1 - 0.055 * Math.exp(-Math.pow(z / 0.065, 2))
+        const spineShade = 1 - 0.07 * spineRoll
+        return { yTop, yBot, shade: overlapAO * bandAO * spineShade }
+      },
+    }),
+    leftWingMat,
+  )
+  leftWingMesh.userData.toonSurface = { shading: 'smooth' }
+  envelope.add(leftWingMesh)
+
+  // 5. Right front folded washi wing: overlaps cleanly over the left wing along the diagonal fold seam.
+  const rightWingMesh = new THREE.Mesh(
+    createFoldedWashiPanel({
+      xTopLeft: 0.18, xTopRight: 0.752, xBotLeft: -0.165, xBotRight: 0.752,
+      zTop: -1.056, zBot: 1.056, cols: 20, rows: 26, cornerRadius: 0.010,
+      evalSurface: (x, z, u, v) => {
+        const spineRoll = Math.pow(Math.max(0, (u - 0.88) / 0.12), 2)
+        const endRoll = Math.pow(Math.max(0, 1 - Math.min(v, 1 - v) / 0.05), 2)
+        // Subtle crisp paper lift right along the overlapping left edge for authentic folded-sheet relief.
+        const seamLift = 0.0008 * Math.exp(-Math.pow(u / 0.06, 2)) * THREE.MathUtils.smoothstep(z, -0.85, 0.85)
+        const yTop = 0.1052 + paperPillow(x, z) + seamLift - spineRoll * 0.0038 - endRoll * 0.0016
+        const yBot = Math.min(yTop - 0.0064, 0.0972 - spineRoll * 0.014)
+        const bandAO = 1 - 0.055 * Math.exp(-Math.pow(z / 0.065, 2))
+        const spineShade = 1 - 0.07 * spineRoll
+        const seamEdgeRim = 1 + 0.024 * Math.exp(-Math.pow(u / 0.022, 2)) - 0.032 * Math.exp(-Math.pow((u - 0.038) / 0.03, 2))
+        return { yTop, yBot, shade: bandAO * spineShade * seamEdgeRim }
+      },
+    }),
+    rightWingMat,
+  )
+  rightWingMesh.userData.toonSurface = { shading: 'smooth' }
+  envelope.add(rightWingMesh)
+
+  // 6. Layered folded red & gold paper corner accent echoing the envelope's decorative folding
   // without reproducing an etiquette-specific inscription.
-  envelope.add(paperPolygon([[-0.19, -0.97], [0.17, -0.97], [0.11, -0.47], [-0.14, -0.47]], 0.121, paper))
-  envelope.add(paperPolygon([[0.53, -0.94], [0.66, -0.87], [0.50, -0.57], [0.46, -0.73]], 0.121, red))
-  envelope.add(paperPolygon([[0.54, -0.94], [0.65, -0.87], [0.48, -0.75]], 0.128, gold))
-  const seamMat = new THREE.LineBasicMaterial({ color: 0xd4c29f, transparent: true, opacity: 0.55 })
-  envelope.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0.13, 0.116, -0.57), new THREE.Vector3(-0.06, 0.116, 1.01)]), seamMat))
+  const redAccentMesh = new THREE.Mesh(
+    createFoldedAccentSlab([[0.53, -0.94], [0.66, -0.87], [0.60, -0.70], [0.50, -0.57], [0.46, -0.74]], 0.1058, 0.1112, 0.0018),
+    redAccentMat,
+  )
+  redAccentMesh.userData.toonSurface = { shading: 'smooth' }
+  envelope.add(redAccentMesh)
+  const goldAccentMesh = new THREE.Mesh(
+    createFoldedAccentSlab([[0.545, -0.935], [0.648, -0.872], [0.585, -0.755], [0.488, -0.768]], 0.1112, 0.1146, 0.0010),
+    goldAccentMat,
+  )
+  goldAccentMesh.userData.toonSurface = { shading: 'smooth' }
+  envelope.add(goldAccentMesh)
+  const collarAccentMesh = new THREE.Mesh(
+    createFoldedAccentSlab([[0.478, -0.780], [0.610, -0.750], [0.602, -0.725], [0.471, -0.755]], 0.1118, 0.1158, 0.0006),
+    collarAccentMat,
+  )
+  collarAccentMesh.userData.toonSurface = { shading: 'smooth' }
+  envelope.add(collarAccentMesh)
 
   const wishCanvas = document.createElement('canvas')
   wishCanvas.width = 768
@@ -409,10 +773,13 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   const wishInk = wishCanvas.getContext('2d')
   const wishMap = new THREE.CanvasTexture(wishCanvas)
   wishMap.colorSpace = THREE.SRGBColorSpace
-  const wishMark = new THREE.Mesh(new THREE.PlaneGeometry(1.08, 0.32), new THREE.MeshBasicMaterial({ map: wishMap, transparent: true, depthWrite: false }))
+  const wishMark = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.08, 0.32),
+    new THREE.MeshBasicMaterial({ map: wishMap, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
+  )
   wishMark.name = 'mizuhiki-written-wish'
   wishMark.rotation.x = -Math.PI / 2
-  wishMark.position.set(0, 0.126, 0.82)
+  wishMark.position.set(0, 0.1078, 0.81)
   envelope.add(wishMark)
   const reading = document.createElement('details'); reading.className = 'scene-written-wish-reading scene-wish-slot'
   reading.style.gridArea = 'wish'; reading.style.gridColumn = '1 / -1'
@@ -424,7 +791,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
     if (!wishInk) return
     const text = productDefault ? sceneCopy(writtenText) : writtenText
     wishInk.clearRect(0, 0, 768, 256)
-    wishInk.fillStyle = '#72583d'
+    wishInk.fillStyle = '#684c30'
     wishInk.textAlign = 'center'
     wishInk.textBaseline = 'middle'
     const locale = getLocale()
@@ -880,7 +1247,6 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
       feedback.dispose()
       styleRenderer.dispose()
       disposeTree(scene)
-      paperMap.dispose()
       wishMap.dispose()
       renderer.dispose()
       renderer.forceContextLoss()

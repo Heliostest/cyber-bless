@@ -134,4 +134,19 @@ describe('craft material style compatibility', () => {
     expect(compile(unpatched).uniforms.craftStrength).toBeUndefined();
     [source, target, ordinary, unpatched].forEach(material => material.dispose());
   });
+
+  it('uses mean-attenuated 3D wood rings with warm hue shift, highlight shoulder, and non-zero bamboo fiber pigment', () => {
+    const wood = createCraftMaterial({ color: 0xd5af7b }, { kind: 'wood', strength: .4 });
+    const bamboo = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0x9cc66e, roughness: .9 }), { kind: 'bamboo', strength: .38, axis: 'y' });
+    const stone = createCraftMaterial({ color: 0xb9b9a5 }, { kind: 'stone', strength: .4 });
+    const woodShader = compile(wood), bambooShader = compile(bamboo), stoneShader = compile(stone);
+    expect(woodShader.fragmentShader).toContain('craftWoodRing');
+    expect(woodShader.fragmentShader).not.toMatch(/smoothstep\s*\(\s*0\.45/);
+    expect(woodShader.fragmentShader).toContain('craftPeak > 0.72');
+    expect(bambooShader.fragmentShader).toContain('craftBambooStriation');
+    expect(bambooShader.fragmentShader).toContain('0.22');
+    expect(bambooShader.fragmentShader).toContain('craftPeak > 0.78');
+    expect(stoneShader.fragmentShader).not.toContain('craftPeak');
+    [wood, bamboo, stone].forEach(material => material.dispose());
+  });
 });

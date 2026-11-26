@@ -227,4 +227,32 @@ describe("official toon material adaptation", () => {
     expect(lantern.material).toBe(glowMaterial);
     surfaces.dispose();
   });
+
+  it("gives bamboo a subtle waxy sheen distinct from dry wood while respecting explicit roughness hints", () => {
+    const scene = new THREE.Scene();
+    const wood = new THREE.MeshStandardMaterial({ color: 0xb9936c, roughness: .91, envMapIntensity: 1 });
+    wood.userData.craftSurface = { kind: 'wood', scale: 1, strength: .4, axis: 'x' };
+    const bamboo = new THREE.MeshStandardMaterial({ color: 0x9cc66e, roughness: .9, envMapIntensity: 1 });
+    bamboo.userData.craftSurface = { kind: 'bamboo', scale: 1, strength: .38, axis: 'y' };
+    const hintedBamboo = new THREE.MeshStandardMaterial({ color: 0x9cc66e, roughness: .9, envMapIntensity: 1 });
+    hintedBamboo.userData.craftSurface = { kind: 'bamboo', scale: 1, strength: .38, axis: 'y' };
+    const woodMesh = new THREE.Mesh(new THREE.BoxGeometry(), wood);
+    const bambooMesh = new THREE.Mesh(new THREE.BoxGeometry(), bamboo);
+    const hintedMesh = new THREE.Mesh(new THREE.BoxGeometry(), hintedBamboo);
+    hintedMesh.userData.toonSurface = { roughness: .82 };
+    scene.add(woodMesh, bambooMesh, hintedMesh);
+    const surfaces = createToonSurfaces("toon-soft"), frame = surfaces.apply(scene);
+    const styledWood = woodMesh.material as THREE.MeshStandardMaterial;
+    const styledBamboo = bambooMesh.material as THREE.MeshStandardMaterial;
+    const styledHinted = hintedMesh.material as THREE.MeshStandardMaterial;
+    expect(styledWood.roughness).toBe(.78);
+    expect(styledWood.envMapIntensity).toBe(.55);
+    expect(styledBamboo.roughness).toBeLessThan(styledWood.roughness);
+    expect(styledBamboo.roughness).toBeCloseTo(.50, 5);
+    expect(styledBamboo.envMapIntensity).toBeGreaterThan(styledWood.envMapIntensity);
+    expect(styledBamboo.envMapIntensity).toBeCloseTo(.74, 5);
+    expect(styledHinted.roughness).toBe(.82);
+    frame.restore(); surfaces.dispose();
+    [wood, bamboo, hintedBamboo].forEach(m => m.dispose());
+  });
 });

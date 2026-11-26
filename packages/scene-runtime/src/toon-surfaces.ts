@@ -178,13 +178,16 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">, sc
               if (style === 'toon-soft' && source instanceof THREE.MeshStandardMaterial && toon instanceof THREE.MeshStandardMaterial) {
                 for (const key of mapFields) toon[key] = key === 'map' && hint.simplifyMap ? null : source[key];
                 toon.roughness = hint.roughness ?? source.roughness;
-                if (source.userData.craftSurface?.kind === 'wood' && hint.roughness === undefined) toon.roughness = Math.min(toon.roughness, .78);
+                const craftKind = source.userData.craftSurface?.kind;
+                if (craftKind === 'wood' && hint.roughness === undefined) toon.roughness = Math.min(toon.roughness, .78);
+                if (craftKind === 'bamboo' && hint.roughness === undefined) toon.roughness = Math.min(toon.roughness, .50);
                 toon.metalness = hint.metalness ?? source.metalness;
                 toon.normalScale.copy(source.normalScale); toon.bumpScale = source.bumpScale;
                 toon.normalMapType = source.normalMapType;
                 toon.aoMapIntensity = hint.aoIntensity ?? source.aoMapIntensity;
                 toon.lightMapIntensity = source.lightMapIntensity;
-                toon.envMapIntensity = Math.min(source.envMapIntensity, source instanceof THREE.MeshPhysicalMaterial || hasCraftFinish(source) ? .85 : .55);
+                const envCap = source instanceof THREE.MeshPhysicalMaterial || hasCraftFinish(source) ? .85 : craftKind === 'bamboo' ? .74 : .55;
+                toon.envMapIntensity = Math.min(source.envMapIntensity, envCap);
                 toon.displacementScale = source.displacementScale; toon.displacementBias = source.displacementBias;
               }
               if ((style === 'toon-soft' || source.userData.ritualOptics || source.userData.craftSurface) && source instanceof THREE.MeshStandardMaterial && toon instanceof THREE.MeshStandardMaterial) {

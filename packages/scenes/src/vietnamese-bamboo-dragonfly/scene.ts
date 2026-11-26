@@ -1,3 +1,4 @@
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { bindSceneAttribute } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -45,9 +46,26 @@ export function createVietnameseBambooDragonfly(ctx: SceneContext): SceneInstanc
   const world = new THREE.Group(); world.name = 'dragonfly-world'; scene.add(world)
   const subject = new THREE.Group(); subject.name = 'dragonfly-subject'; world.add(subject)
   const pivot = new THREE.Group(); pivot.name = 'dragonfly-balance-pivot'; subject.add(pivot)
-  const mat = (color: number, roughness = .85) => new THREE.MeshStandardMaterial({ color, roughness })
-  const bamboo = mat(0xd9b36b), cut = mat(0xf4d99a), node = mat(0x9a7a43), teal = mat(0x427e75), coral = mat(0xd96f50), ink = mat(0x344d44), stone = mat(0xa9afa0, .97)
-  const wingPaint = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .83 })
+  const bambooSatin = (color: number, axis: 'x' | 'y' | 'z', roughness = .56, clearcoat = .24, strength = .46) => applyCraftSurface(
+    new THREE.MeshPhysicalMaterial({ color, roughness, clearcoat, clearcoatRoughness: .36, specularIntensity: .58 }),
+    { kind: 'bamboo', strength, scale: .9, axis },
+  )
+  const bamboo = bambooSatin(0xd9b36b, 'y', .56, .24, .46)
+  const tailBamboo = applyCraftSurface(
+    new THREE.MeshPhysicalMaterial({ color: 0xdcb76f, roughness: .52, clearcoat: .26, clearcoatRoughness: .34, specularIntensity: .60, vertexColors: true }),
+    { kind: 'bamboo', strength: .46, scale: .9, axis: 'z' },
+  )
+  const beakBamboo = bambooSatin(0xf1d594, 'y', .64, .18, .38)
+  const glintMat = new THREE.MeshStandardMaterial({ color: 0xf4d99a, roughness: .55 })
+  const node = bambooSatin(0x997942, 'y', .60, .20, .40)
+  const teal = bambooSatin(0x427e75, 'z', .62, .20, .22)
+  const coral = bambooSatin(0xd96f50, 'z', .62, .20, .22)
+  const ink = new THREE.MeshPhysicalMaterial({ color: 0x344d44, roughness: .44, clearcoat: .30, clearcoatRoughness: .28, specularIntensity: .60 })
+  const stone = new THREE.MeshStandardMaterial({ color: 0xa9afa0, roughness: .97 })
+  const wingPaint = applyCraftSurface(
+    new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .66, clearcoat: .22, clearcoatRoughness: .36, specularIntensity: .58 }),
+    { kind: 'bamboo', strength: .30, scale: .9, axis: 'x' },
+  )
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: XYZ, parent: THREE.Object3D = pivot) => {
     const m = new THREE.Mesh(geometry, material); m.name = name; m.position.set(...p); m.castShadow = m.receiveShadow = true; parent.add(m); return m
   }
@@ -68,11 +86,11 @@ export function createVietnameseBambooDragonfly(ctx: SceneContext): SceneInstanc
   }
   marker('dragonfly-support-tip', [0, 1.58, .10], subject)
   marker('dragonfly-beak-contact', [0, 0, 0], pivot)
-  rod('dragonfly-beak', [0, 0, 0], [0, .125, -.065], 0, .055, cut, pivot)
+  rod('dragonfly-beak', [0, 0, 0], [0, .125, -.065], 0, .055, beakBamboo, pivot)
   const head = add('dragonfly-head', new THREE.SphereGeometry(.145, 28, 20), coral, [0, .145, -.067]); head.scale.set(1, .77, 1)
   for (const side of [-1, 1]) {
     const eye = add(`dragonfly-eye-${side < 0 ? 'left' : 'right'}`, sphere, ink, [side * .105, .205, .015]); eye.scale.set(.052, .048, .050)
-    const glint = add(`dragonfly-eye-glint-${side}`, sphere, cut, [side * .11, .226, .052]); glint.scale.setScalar(.013); glint.userData.toonSurface = { outline: false }
+    const glint = add(`dragonfly-eye-glint-${side}`, sphere, glintMat, [side * .11, .226, .052]); glint.scale.setScalar(.013); glint.userData.toonSurface = { outline: false }
   }
   const thorax = add('dragonfly-thorax', sphere, teal, [0, .155, -.34]); thorax.scale.set(.104, .066, .25)
   const tailPositions: number[] = [], tailIndices: number[] = [], rings = 30, sides = 12
@@ -86,7 +104,18 @@ export function createVietnameseBambooDragonfly(ctx: SceneContext): SceneInstanc
   tailPositions.push(0, .158, -.39); const baseIndex = tailPositions.length / 3 - 1
   for (let j = 0; j < sides; j++) tailIndices.push(baseIndex, j, (j + 1) % sides)
   const tailGeometry = new THREE.BufferGeometry(); tailGeometry.setAttribute('position', new THREE.Float32BufferAttribute(tailPositions, 3)); tailGeometry.setIndex(tailIndices); tailGeometry.computeVertexNormals()
-  add('dragonfly-tail', tailGeometry, bamboo, [0, 0, 0])
+  {
+    const tp = tailGeometry.getAttribute('position'), tc = new Float32Array(tp.count * 3)
+    for (let i = 0; i < tp.count; i++) {
+      const px = tp.getX(i), py = tp.getY(i), pz = tp.getZ(i)
+      const along = THREE.MathUtils.clamp((-pz - .39) / 1.19, 0, 1)
+      const angle = Math.atan2(py - (.158 + .035 * along), px)
+      const tone = (.95 + .07 * along) * (1 + .022 * Math.sin(angle * 7))
+      tc[i * 3] = Math.min(1, tone); tc[i * 3 + 1] = Math.min(1, tone * .99); tc[i * 3 + 2] = Math.min(1, tone * .95)
+    }
+    tailGeometry.setAttribute('color', new THREE.BufferAttribute(tc, 3))
+  }
+  add('dragonfly-tail', tailGeometry, tailBamboo, [0, 0, 0])
   for (let i = 0; i < 7; i++) {
     const t = .1 + i * .11, radius = .066 * (1 - t) + .007, band = add(`dragonfly-tail-painted-band-${i}`, new THREE.TorusGeometry(radius, .005, 6, 24), i % 2 ? coral : teal, [0, .158 + .035 * t, -.39 - 1.19 * t]); band.scale.y = .57
   }
@@ -94,7 +123,7 @@ export function createVietnameseBambooDragonfly(ctx: SceneContext): SceneInstanc
   // Paint is stored in the surface colours, so it cannot intercept the object's cue.
   const wing = (side: number, front: boolean) => {
     const positions: number[] = [], colors: number[] = [], indices: number[] = [], steps = 48, across = 8
-    const base = new THREE.Color(front ? 0x469b94 : 0xd87957), dark = new THREE.Color(front ? 0x346e70 : 0xb9563f), gold = new THREE.Color(0xf4ce76), raw = new THREE.Color(0xd4aa60)
+    const base = new THREE.Color(front ? 0x469b94 : 0xd87957), dark = new THREE.Color(front ? 0x346e70 : 0xb9563f), gold = new THREE.Color(0xf4ce76), raw = new THREE.Color(0xd4aa60), rawTip = new THREE.Color(0xe4c27c), rawShade = new THREE.Color()
     for (let layer = 0; layer < 2; layer++) for (let i = 0; i <= steps; i++) {
       const t = i / steps, x = .075 + (front ? 1.525 : 1.30) * t, z = (front ? -.31 : -.61) + (front ? 1.18 : .88) * t, y = .15 - (front ? .50 : .48) * t ** 1.5
       // The visible outer bamboo carries more material, like a carved balancing toy.
@@ -102,7 +131,7 @@ export function createVietnameseBambooDragonfly(ctx: SceneContext): SceneInstanc
       for (let j = 0; j <= across; j++) {
         const cross = j / across * 2 - 1
         positions.push(side * (x - cross * width * .36), y + (layer ? -thickness / 2 : thickness / 2) + (1 - cross * cross) * .009, z + cross * width)
-        let color = layer ? raw : Math.abs(cross) > .82 ? gold : t > .88 ? dark : base
+        let color = layer ? rawShade.copy(raw).lerp(rawTip, t * .65).multiplyScalar(.97 + .03 * Math.cos(cross * 7)) : Math.abs(cross) > .82 ? gold : t > .88 ? dark : base
         if (!layer && Math.abs(cross) < .60 && [.25, .49, .73].some(center => ((t - center) / .043) ** 2 + (cross / .54) ** 2 < 1)) color = gold
         if (!layer && Math.abs(cross) < .16 && t > .12 && t < .83) color = dark
         colors.push(color.r, color.g, color.b)

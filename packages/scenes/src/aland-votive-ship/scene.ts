@@ -210,6 +210,133 @@ function writeTwistedCordInPlace(
   geometry.computeBoundingSphere()
 }
 
+function woodHash(ix: number, iy: number, seed: number): number {
+  let h = (ix * 374761393 + iy * 668265263 + seed * 1442695041) | 0
+  h = Math.imul(h ^ (h >>> 13), 1274126177)
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967295
+}
+
+function periodicWoodNoise(x: number, y: number, px: number, py: number, seed: number): number {
+  const xi = Math.floor(x), yi = Math.floor(y)
+  const fx = x - xi, fy = y - yi
+  const ux = fx * fx * fx * (fx * (fx * 6 - 15) + 10)
+  const uy = fy * fy * fy * (fy * (fy * 6 - 15) + 10)
+  const x0 = ((xi % px) + px) % px, x1 = (x0 + 1) % px
+  const y0 = ((yi % py) + py) % py, y1 = (y0 + 1) % py
+  const a = woodHash(x0, y0, seed), b = woodHash(x1, y0, seed)
+  const c = woodHash(x0, y1, seed), d = woodHash(x1, y1, seed)
+  return (a + (b - a) * ux) + ((c + (d - c) * ux) - (a + (b - a) * ux)) * uy
+}
+
+type StylizedWoodSpec = {
+  key: string
+  light: readonly [number, number, number]
+  dark: readonly [number, number, number]
+  warm: readonly [number, number, number]
+  orientation: 'u' | 'v'
+  rings: number
+  arch: number
+  wobble: number
+  strakes?: number
+  keelWarmth?: boolean
+  repeat?: readonly [number, number]
+  seed: number
+}
+
+const cachedShipWoodPixels = new Map<string, { color: Uint8Array; bump: Uint8Array; size: number }>()
+
+/**
+ * Deterministic stylized oiled-timber DataTexture (256x256, zero DOM/Canvas2D dependency):
+ * soft asymmetric earlywood/latewood sweeps, warm hue-shifted grain, gentle wood fibers,
+ * and optional subtle clinker/carvel plank strake shading for the lofted hull.
+ */
+function createStylizedWoodTextures(spec: StylizedWoodSpec): { map: THREE.DataTexture; bump: THREE.DataTexture } {
+  const size = 128
+  let cached = cachedShipWoodPixels.get(spec.key)
+  if (!cached) {
+    const color = new Uint8Array(size * size * 4)
+    const bump = new Uint8Array(size * size * 4)
+    const tau = Math.PI * 2
+    for (let y = 0; y < size; y++) {
+      const v = y / size
+      for (let x = 0; x < size; x++) {
+        const u = x / size
+        const along = spec.orientation === 'u' ? u : v
+        const across = spec.orientation === 'u' ? v : u
+
+        const wash = periodicWoodNoise(along * 2, across * 2, 2, 2, spec.seed + 11)
+        const flow = (periodicWoodNoise(along * 2, across * 3, 2, 3, spec.seed + 23) - 0.5) * spec.wobble
+        const fineWarp = (periodicWoodNoise(along * 4, across * 6, 4, 6, spec.seed + 37) - 0.5) * spec.wobble * 0.36
+        const bow = Math.sin((along + spec.seed * 0.13) * tau) * spec.arch
+        const ringPos = across * spec.rings + bow + flow + fineWarp
+        const frac = ringPos - Math.floor(ringPos)
+        // Asymmetric earlywood -> steeper warm latewood transition (avoids mechanical sine stripes).
+        const rampUp = THREE.MathUtils.smoothstep(frac, 0.06, 0.76)
+        const rampDown = 1 - THREE.MathUtils.smoothstep(frac, 0.76, 0.99)
+        const primaryRing = Math.pow(Math.min(rampUp, rampDown), 1.32)
+        const softMod = 0.66 + 0.48 * periodicWoodNoise(along * 2, across * 4, 2, 4, spec.seed + 59)
+        const fiber = periodicWoodNoise(along * 4, across * 36, 4, 36, spec.seed + 71) - 0.5
+
+        let strakeShade = 0
+        let strakeTint = 0
+        if (spec.strakes) {
+          const sp = across * spec.strakes
+          const sIdx = Math.floor(sp)
+          const sFrac = sp - sIdx
+          const seam = Math.exp(-(((sFrac - 0.02) / 0.036) ** 2)) + Math.exp(-(((1 - sFrac) / 0.036) ** 2))
+          strakeShade = Math.min(1, seam) * 0.24
+          strakeTint = (woodHash(sIdx, 3, spec.seed + 91) - 0.5) * 0.14
+        }
+        // Subtle oiled-timber lower-hull depth near the keel (v ~ 0.5) and warm sheer highlight.
+        const keelDepth = spec.keelWarmth ? (1 - Math.abs(across - 0.5) * 2) * 0.10 : 0
+
+        const grainMix = THREE.MathUtils.clamp(primaryRing * 0.74 * softMod + fiber * 0.14 + strakeShade + keelDepth, 0, 1)
+        const warmMix = THREE.MathUtils.clamp(wash * 0.44 + strakeTint, 0, 1)
+        const baseR = THREE.MathUtils.lerp(spec.light[0], spec.warm[0], warmMix)
+        const baseG = THREE.MathUtils.lerp(spec.light[1], spec.warm[1], warmMix)
+        const baseB = THREE.MathUtils.lerp(spec.light[2], spec.warm[2], warmMix)
+
+        const i = (y * size + x) * 4
+        color[i] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseR, spec.dark[0], grainMix)), 0, 255)
+        color[i + 1] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseG, spec.dark[1], grainMix)), 0, 255)
+        color[i + 2] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseB, spec.dark[2], grainMix)), 0, 255)
+        color[i + 3] = 255
+
+        const h = THREE.MathUtils.clamp(
+          Math.round(128 - primaryRing * 20 * softMod + fiber * 14 - strakeShade * 75),
+          64,
+          192,
+        )
+        bump[i] = h; bump[i + 1] = h; bump[i + 2] = h; bump[i + 3] = 255
+      }
+    }
+    cached = { color, bump, size }
+    cachedShipWoodPixels.set(spec.key, cached)
+  }
+
+  const map = new THREE.DataTexture(new Uint8Array(cached.color), size, size)
+  map.colorSpace = THREE.SRGBColorSpace
+  map.wrapS = map.wrapT = THREE.RepeatWrapping
+  if (spec.repeat) map.repeat.set(spec.repeat[0], spec.repeat[1])
+  map.magFilter = THREE.LinearFilter
+  map.minFilter = THREE.LinearMipmapLinearFilter
+  map.generateMipmaps = true
+  map.anisotropy = 4
+  map.needsUpdate = true
+
+  const bump = new THREE.DataTexture(new Uint8Array(cached.bump), size, size)
+  bump.colorSpace = THREE.NoColorSpace
+  bump.wrapS = bump.wrapT = THREE.RepeatWrapping
+  if (spec.repeat) bump.repeat.set(spec.repeat[0], spec.repeat[1])
+  bump.magFilter = THREE.LinearFilter
+  bump.minFilter = THREE.LinearMipmapLinearFilter
+  bump.generateMipmaps = true
+  bump.anisotropy = 4
+  bump.needsUpdate = true
+
+  return { map, bump }
+}
+
 /** A contemporary, original craft model; no church donation or sacrament is enacted. */
 export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared, gestures } = ctx, safe = shared.assertSafeCopy
@@ -236,14 +363,89 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
   lights.key.shadow.bias = -.0007; lights.key.shadow.normalBias = .025
   const world = new THREE.Group(); world.name = 'ship-workshop'; scene.add(world)
   const material = (color: number, roughness = .82) => new THREE.MeshStandardMaterial({ color, roughness })
-  const oak = material(0xc3a074), dark = material(0x8d6248), honey = material(0xd5b58b)
+  const makeWood = (
+    spec: StylizedWoodSpec,
+    opts: { axis: 'x' | 'y' | 'z'; roughness: number; clearcoat?: number; clearcoatRoughness?: number; bumpScale: number; scale?: number; strength?: number; side?: THREE.Side },
+  ) => {
+    const tex = createStylizedWoodTextures(spec)
+    const mat = opts.clearcoat
+      ? new THREE.MeshPhysicalMaterial({
+        color: 0xffffff,
+        map: tex.map,
+        bumpMap: tex.bump,
+        bumpScale: opts.bumpScale,
+        roughness: opts.roughness,
+        metalness: 0,
+        clearcoat: opts.clearcoat,
+        clearcoatRoughness: opts.clearcoatRoughness ?? .36,
+        envMapIntensity: .84,
+        side: opts.side ?? THREE.FrontSide,
+      })
+      : new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        map: tex.map,
+        bumpMap: tex.bump,
+        bumpScale: opts.bumpScale,
+        roughness: opts.roughness,
+        metalness: 0,
+        side: opts.side ?? THREE.FrontSide,
+      })
+    const release = () => {
+      mat.removeEventListener('dispose', release)
+      tex.map.dispose()
+      tex.bump.dispose()
+    }
+    mat.addEventListener('dispose', release)
+    return applyCraftSurface(mat, { kind: 'wood', axis: opts.axis, scale: opts.scale ?? .65, strength: opts.strength ?? .26 })
+  }
+  // Distinct stylized oiled/painted timber finishes: luminous waxed amber-cedar hull, sunlit honey pine deck,
+  // deep oiled walnut trim, warm varnished larch spars (mast vertical / boom & gaff horizontal), and smoked oak cradle.
+  const hullWood = makeWood(
+    { key: 'hull-cedar-v2', light: [216, 152, 92], dark: [152, 94, 48], warm: [230, 168, 108], orientation: 'u', rings: 5.0, arch: .24, wobble: .34, strakes: 8, keelWarmth: true, seed: 13 },
+    { axis: 'x', roughness: .54, clearcoat: .32, clearcoatRoughness: .32, bumpScale: .0030, scale: .60, strength: .26, side: THREE.DoubleSide },
+  )
+  const deckWood = makeWood(
+    { key: 'deck-pine', light: [208, 168, 114], dark: [176, 132, 82], warm: [218, 180, 128], orientation: 'u', rings: 4.8, arch: .22, wobble: .28, repeat: [.55, 1.35], seed: 29 },
+    { axis: 'x', roughness: .64, bumpScale: .0018, scale: .68, strength: .24 },
+  )
+  const strakeWood = makeWood(
+    { key: 'strake-cream', light: [226, 192, 138], dark: [198, 160, 106], warm: [236, 204, 152], orientation: 'u', rings: 4.0, arch: .14, wobble: .20, seed: 41 },
+    { axis: 'x', roughness: .58, bumpScale: .0014, scale: .72, strength: .22 },
+  )
+  const trimWood = makeWood(
+    { key: 'trim-walnut', light: [116, 72, 46], dark: [82, 48, 30], warm: [132, 86, 56], orientation: 'u', rings: 4.5, arch: .16, wobble: .24, seed: 53 },
+    { axis: 'x', roughness: .52, bumpScale: .0020, scale: .72, strength: .26 },
+  )
+  const seamWood = applyCraftSurface(material(0x9a7046, .72), { kind: 'wood', axis: 'z', scale: .75, strength: .26 })
+  const sparSpec: StylizedWoodSpec = { key: 'spar-larch-v2', light: [178, 126, 74], dark: [130, 84, 44], warm: [194, 140, 86], orientation: 'u', rings: 4.8, arch: .16, wobble: .24, seed: 73 }
+  const mastWood = makeWood(sparSpec, { axis: 'y', roughness: .52, clearcoat: .30, clearcoatRoughness: .32, bumpScale: .0022, scale: .80, strength: .32 })
+  const sparWood = makeWood(sparSpec, { axis: 'x', roughness: .52, clearcoat: .26, clearcoatRoughness: .34, bumpScale: .0022, scale: .80, strength: .30 })
+  const mastGripWood = makeWood(
+    { key: 'grip-beech', light: [204, 154, 98], dark: [164, 116, 68], warm: [216, 168, 112], orientation: 'v', rings: 5.0, arch: .18, wobble: .26, seed: 89 },
+    { axis: 'y', roughness: .56, bumpScale: .0020, scale: .85, strength: .28 },
+  )
+  const cradleBaseWood = makeWood(
+    { key: 'cradle-smoked-oak', light: [108, 74, 52], dark: [76, 49, 34], warm: [122, 86, 62], orientation: 'u', rings: 5.2, arch: .24, wobble: .30, seed: 101 },
+    { axis: 'x', roughness: .56, bumpScale: .0024, scale: .68, strength: .28 },
+  )
+  const cradlePostWood = makeWood(
+    { key: 'cradle-post-oak', light: [162, 116, 76], dark: [124, 84, 52], warm: [176, 130, 88], orientation: 'v', rings: 5.0, arch: .18, wobble: .24, seed: 109 },
+    { axis: 'y', roughness: .60, bumpScale: .0020, scale: .85, strength: .34 },
+  )
+  const cradleSaddleWood = makeWood(
+    { key: 'cradle-saddle-maple', light: [198, 154, 102], dark: [162, 120, 74], warm: [210, 168, 116], orientation: 'u', rings: 4.8, arch: .16, wobble: .24, seed: 117 },
+    { axis: 'z', roughness: .62, bumpScale: .0018, scale: .75, strength: .28 },
+  )
   const cream = material(0xeee2bd), rope = material(0x5e594d, .90), teal = material(0x819d8d), brass = material(0xc6a467, .55)
+  const cabinWood = applyCraftSurface(
+    new THREE.MeshStandardMaterial({ color: 0x7a9a8b, roughness: .62, metalness: 0 }),
+    { kind: 'wood', axis: 'x', scale: .80, strength: .24 },
+  )
   // Split sail stitching, bolt-rope hem, lashing cord and felt from the ship's wood/metal paint palette.
   const sailSeam = material(0xc9a878, .88)
   const sailHem = material(0xc5a268, .86)
   const lashingCord = material(0x9a7d58, .90)
   const felt = teal.clone()
-  ;[oak, dark, honey].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: .42 }))
   applyCraftSurface(brass, { kind: 'metal', strength: .45 })
   applyCraftSurface(rope, { kind: 'cord', scale: 2.2, strength: .36 })
   applyCraftSurface(sailHem, { kind: 'cord', scale: 2.4, strength: .34 })
@@ -253,7 +455,7 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
-  const box = (name: string, size: [number, number, number], p: [number, number, number], mat = oak, parent: THREE.Object3D = world) =>
+  const box = (name: string, size: [number, number, number], p: [number, number, number], mat: THREE.Material = hullWood, parent: THREE.Object3D = world) =>
     add(name, new RoundedBoxGeometry(...size, 3, Math.min(.035, ...size.map(v => v / 3))), mat, p, parent)
   const oval = (name: string, p: [number, number, number], scale: [number, number, number], mat: THREE.Material, parent: THREE.Object3D = world) => {
     const m = add(name, new THREE.SphereGeometry(1, 24, 16), mat, p, parent); m.scale.set(...scale); return m
@@ -289,10 +491,10 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
   // Both work positions have real support: a soft keel rest and a two-post V cradle.
   box('ship-work-rest', [1.30, .035, .42], [-.12, .755, .38], felt)
   const cradle = new THREE.Group(); cradle.name = 'ship-two-post-cradle'; world.add(cradle)
-  box('ship-cradle-base', [1.76, .065, .62], [.42, .777, -.35], dark, cradle)
+  box('ship-cradle-base', [1.76, .065, .62], [.42, .777, -.35], cradleBaseWood, cradle)
   for (const x of [-.06, .90]) {
-    box('ship-cradle-post', [.16, .12, .22], [x, .87, -.35], oak, cradle)
-    line('ship-cradle-saddle', [[x, 1.089, -.57], [x, .963, -.46], [x, .929, -.35], [x, .963, -.24], [x, 1.089, -.13]], .035, honey, cradle)
+    box('ship-cradle-post', [.16, .12, .22], [x, .87, -.35], cradlePostWood, cradle)
+    line('ship-cradle-saddle', [[x, 1.089, -.57], [x, .963, -.46], [x, .929, -.35], [x, .963, -.24], [x, 1.089, -.13]], .035, cradleSaddleWood, cradle)
     line('ship-cradle-felt', [[x, 1.105, -.57], [x, .979, -.46], [x, .945, -.35], [x, .979, -.24], [x, 1.105, -.13]], .019, felt, cradle)
   }
   const cradleTarget = oval('ship-cradle-target', [1.15, .836, -.09], [.115, .026, .10], brass, cradle)
@@ -300,45 +502,49 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
 
   const ship = new THREE.Group(); ship.name = 'ship-model'; world.add(ship)
   // Lofted bent hull: tapered ends, curved belly, raised sheer. This is not an elongated box.
-  const vertices: number[] = [], indices: number[] = [], nx = 40, nt = 24
+  const vertices: number[] = [], hullUvs: number[] = [], indices: number[] = [], nx = 40, nt = 24
   for (let i = 0; i <= nx; i++) {
     const x = -1 + 2 * i / nx, width = .33 * Math.sqrt(Math.max(.0001, 1 - x * x))
     const bottom = -.24 + .39 * Math.pow(Math.abs(x), 3), top = .24 + .07 * x * x
     for (let j = 0; j <= nt; j++) {
       const angle = -Math.PI / 2 + Math.PI * j / nt
       vertices.push(x, bottom + (1 - Math.cos(angle)) * (top - bottom), Math.sin(angle) * width)
+      hullUvs.push(i / nx, j / nt)
       if (i < nx && j < nt) { const n = i * (nt + 1) + j; indices.push(n, n + 1, n + nt + 1, n + 1, n + nt + 2, n + nt + 1) }
     }
   }
-  const hullGeometry = new THREE.BufferGeometry(); hullGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3)); hullGeometry.setIndex(indices); hullGeometry.computeVertexNormals()
-  const hull = add('ship-curved-wooden-hull', hullGeometry, oak, [0, 0, 0], ship); hull.material.side = THREE.DoubleSide
+  const hullGeometry = new THREE.BufferGeometry()
+  hullGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+  hullGeometry.setAttribute('uv', new THREE.Float32BufferAttribute(hullUvs, 2))
+  hullGeometry.setIndex(indices); hullGeometry.computeVertexNormals()
+  add('ship-curved-wooden-hull', hullGeometry, hullWood, [0, 0, 0], ship)
   const deckShape = new THREE.Shape(); deckShape.moveTo(-.99, 0); deckShape.bezierCurveTo(-.68, -.42, .69, -.42, .99, 0); deckShape.bezierCurveTo(.69, .42, -.68, .42, -.99, 0)
-  const deck = add('ship-inlaid-deck', new THREE.ExtrudeGeometry(deckShape, { depth: .045, bevelEnabled: false, curveSegments: 24 }), honey, [0, .245, 0], ship)
+  const deck = add('ship-inlaid-deck', new THREE.ExtrudeGeometry(deckShape, { depth: .045, bevelEnabled: false, curveSegments: 24 }), deckWood, [0, .245, 0], ship)
   deck.rotation.x = Math.PI / 2
   for (const side of [-1, 1]) {
-    line('ship-rounded-gunwale', [[-.98, .31, 0], [-.58, .275, side * .28], [0, .268, side * .32], [.58, .275, side * .28], [.98, .31, 0]], .023, dark, ship)
-    line('ship-plank-stripe', [[-.91, .15, 0], [-.50, -.02, side * .29], [0, -.08, side * .28], [.50, -.02, side * .29], [.91, .15, 0]], .012, honey, ship)
+    line('ship-rounded-gunwale', [[-.98, .31, 0], [-.58, .275, side * .28], [0, .268, side * .32], [.58, .275, side * .28], [.98, .31, 0]], .023, trimWood, ship)
+    line('ship-plank-stripe', [[-.91, .15, 0], [-.50, -.02, side * .29], [0, -.08, side * .28], [.50, -.02, side * .29], [.91, .15, 0]], .012, strakeWood, ship)
   }
-  line('ship-keel', [[-.86, .05, 0], [-.47, -.21, 0], [0, -.24, 0], [.47, -.21, 0], [.86, .05, 0]], .024, dark, ship)
-  for (const x of [-.66, -.42, -.19, .19, .42, .66]) line('ship-deck-seam', [[x, .248, -.19], [x, .248, .19]], .006, oak, ship)
-  box('ship-cabin', [.35, .14, .28], [-.49, .325, -.055], teal, ship)
+  line('ship-keel', [[-.86, .05, 0], [-.47, -.21, 0], [0, -.24, 0], [.47, -.21, 0], [.86, .05, 0]], .024, trimWood, ship)
+  for (const x of [-.66, -.42, -.19, .19, .42, .66]) line('ship-deck-seam', [[x, .248, -.19], [x, .248, .19]], .006, seamWood, ship)
+  box('ship-cabin', [.35, .14, .28], [-.49, .325, -.055], cabinWood, ship)
   box('ship-cabin-roof', [.40, .055, .33], [-.49, .418, -.055], cream, ship)
-  const socket = add('ship-mast-socket', new THREE.CylinderGeometry(.090, .090, .012, 28), dark, [0, .30, .19], ship)
+  const socket = add('ship-mast-socket', new THREE.CylinderGeometry(.090, .090, .012, 28), cradleBaseWood, [0, .30, .19], ship)
   const collar = add('ship-mast-collar', new THREE.TorusGeometry(.110, .014, 12, 32), brass, [0, .315, .19], ship)
   collar.rotation.x = Math.PI / 2
   add('ship-mast-socket-housing', new THREE.CylinderGeometry(.110, .110, .06, 32, 1, true), brass, [0, .285, .19], ship)
-  const handle = oval('ship-deck-handle', [.48, .31, .27], [.13, .065, .075], dark, ship)
-  for (const x of [.40, .56]) box('ship-handle-foot', [.045, .06, .055], [x, .275, .25], dark, ship)
-  line('ship-bowsprit', [[.79, .30, 0], [1.16, .40, 0]], .023, dark, ship)
+  const handle = oval('ship-deck-handle', [.48, .31, .27], [.13, .065, .075], trimWood, ship)
+  for (const x of [.40, .56]) box('ship-handle-foot', [.045, .06, .055], [x, .275, .25], trimWood, ship)
+  line('ship-bowsprit', [[.79, .30, 0], [1.16, .40, 0]], .023, sparWood, ship)
 
   // Mast, boom, headyard/gaff, taut linen sail, flush stitched seams, bolt-rope hem & spar lashings.
   const mast = new THREE.Group(); mast.name = 'ship-mast-assembly'; world.add(mast)
-  line('ship-mast-pole', [[0, 0, 0], [0, 1.12, 0]], .029, dark, mast)
-  const grip = oval('ship-mast-grip', [0, .13, .09], [.095, .09, .085], oak, mast)
+  line('ship-mast-pole', [[0, 0, 0], [0, 1.12, 0]], .029, mastWood, mast)
+  const grip = oval('ship-mast-grip', [0, .13, .09], [.095, .09, .085], mastGripWood, mast)
   line('ship-mast-grip-collar', [[-.06, .09, .04], [0, .07, .075], [.06, .09, .04]], .013, brass, mast)
-  line('ship-boom', [[-.025, .30, 0], [.69, .30, .026]], .024, dark, mast)
+  line('ship-boom', [[-.025, .30, 0], [.69, .30, .026]], .024, sparWood, mast)
   // Slim wooden head spar (gaff) seated cleanly at the sail head with brass jaws at the mast.
-  line('ship-gaff', [[.018, 1.046, .014], [.225, 1.046, .026]], .015, dark, mast)
+  line('ship-gaff', [[.018, 1.046, .014], [.225, 1.046, .026]], .015, sparWood, mast)
   const gaffJaw = add('ship-gaff-collar', new THREE.TorusGeometry(.035, .007, 8, 20), brass, [0, 1.046, 0], mast)
   gaffJaw.rotation.x = Math.PI / 2
   const boomJaw = add('ship-boom-collar', new THREE.TorusGeometry(.036, .007, 8, 20), brass, [0, .30, 0], mast)

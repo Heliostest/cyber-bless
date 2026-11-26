@@ -87,6 +87,111 @@ function linenHash(n: number): number {
 let cachedFlapLinenPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
 let cachedLiningLinenPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
 let cachedEmbroideryPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
+const cachedBasketWoodPixels = new Map<string, { color: Uint8Array; bump: Uint8Array; size: number }>()
+
+function woodHash(ix: number, iy: number, seed: number): number {
+  let h = (ix * 374761393 + iy * 668265263 + seed * 1442695041) | 0
+  h = Math.imul(h ^ (h >>> 13), 1274126177)
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967295
+}
+
+function periodicWoodNoise(x: number, y: number, px: number, py: number, seed: number): number {
+  const xi = Math.floor(x), yi = Math.floor(y)
+  const fx = x - xi, fy = y - yi
+  const ux = fx * fx * fx * (fx * (fx * 6 - 15) + 10)
+  const uy = fy * fy * fy * (fy * (fy * 6 - 15) + 10)
+  const x0 = ((xi % px) + px) % px, x1 = (x0 + 1) % px
+  const y0 = ((yi % py) + py) % py, y1 = (y0 + 1) % py
+  const a = woodHash(x0, y0, seed), b = woodHash(x1, y0, seed)
+  const c = woodHash(x0, y1, seed), d = woodHash(x1, y1, seed)
+  return (a + (b - a) * ux) + ((c + (d - c) * ux) - (a + (b - a) * ux)) * uy
+}
+
+type BasketWoodSpec = {
+  key: string
+  light: readonly [number, number, number]
+  dark: readonly [number, number, number]
+  warm: readonly [number, number, number]
+  orientation: 'u' | 'v'
+  rings: number
+  arch: number
+  wobble: number
+  repeat?: readonly [number, number]
+  offset?: readonly [number, number]
+  seed: number
+}
+
+/** Deterministic stylized warm oak/beech DataTexture for the table planks, vertical legs and bread board. */
+function createBasketWoodTextures(spec: BasketWoodSpec): { map: THREE.DataTexture; bump: THREE.DataTexture } {
+  const size = 128
+  let cached = cachedBasketWoodPixels.get(spec.key)
+  if (!cached) {
+    const color = new Uint8Array(size * size * 4)
+    const bump = new Uint8Array(size * size * 4)
+    const tau = Math.PI * 2
+    for (let y = 0; y < size; y++) {
+      const v = y / size
+      for (let x = 0; x < size; x++) {
+        const u = x / size
+        const along = spec.orientation === 'u' ? u : v
+        const across = spec.orientation === 'u' ? v : u
+
+        const wash = periodicWoodNoise(along * 2, across * 2, 2, 2, spec.seed + 11)
+        const flow = (periodicWoodNoise(along * 2, across * 3, 2, 3, spec.seed + 23) - 0.5) * spec.wobble
+        const fineWarp = (periodicWoodNoise(along * 4, across * 6, 4, 6, spec.seed + 41) - 0.5) * spec.wobble * 0.35
+        const bow = Math.sin((along + spec.seed * 0.17) * tau) * spec.arch
+        const ringPos = across * spec.rings + bow + flow + fineWarp
+        const frac = ringPos - Math.floor(ringPos)
+        const rampUp = THREE.MathUtils.smoothstep(frac, 0.06, 0.76)
+        const rampDown = 1 - THREE.MathUtils.smoothstep(frac, 0.76, 0.99)
+        const primaryRing = Math.pow(Math.min(rampUp, rampDown), 1.32)
+        const softMod = 0.66 + 0.48 * periodicWoodNoise(along * 2, across * 4, 2, 4, spec.seed + 59)
+        const fiber = periodicWoodNoise(along * 4, across * 36, 4, 36, spec.seed + 73) - 0.5
+
+        const grainMix = THREE.MathUtils.clamp(primaryRing * 0.74 * softMod + fiber * 0.14, 0, 1)
+        const warmMix = THREE.MathUtils.clamp(wash * 0.42, 0, 1)
+        const baseR = THREE.MathUtils.lerp(spec.light[0], spec.warm[0], warmMix)
+        const baseG = THREE.MathUtils.lerp(spec.light[1], spec.warm[1], warmMix)
+        const baseB = THREE.MathUtils.lerp(spec.light[2], spec.warm[2], warmMix)
+
+        const idx = (y * size + x) * 4
+        color[idx] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseR, spec.dark[0], grainMix)), 0, 255)
+        color[idx + 1] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseG, spec.dark[1], grainMix)), 0, 255)
+        color[idx + 2] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseB, spec.dark[2], grainMix)), 0, 255)
+        color[idx + 3] = 255
+
+        const h = THREE.MathUtils.clamp(Math.round(128 - primaryRing * 20 * softMod + fiber * 14), 72, 188)
+        bump[idx] = h; bump[idx + 1] = h; bump[idx + 2] = h; bump[idx + 3] = 255
+      }
+    }
+    cached = { color, bump, size }
+    cachedBasketWoodPixels.set(spec.key, cached)
+  }
+
+  const map = new THREE.DataTexture(new Uint8Array(cached.color), size, size)
+  map.colorSpace = THREE.SRGBColorSpace
+  map.wrapS = map.wrapT = THREE.RepeatWrapping
+  if (spec.repeat) map.repeat.set(spec.repeat[0], spec.repeat[1])
+  if (spec.offset) map.offset.set(spec.offset[0], spec.offset[1])
+  map.magFilter = THREE.LinearFilter
+  map.minFilter = THREE.LinearMipmapLinearFilter
+  map.generateMipmaps = true
+  map.anisotropy = 4
+  map.needsUpdate = true
+
+  const bump = new THREE.DataTexture(new Uint8Array(cached.bump), size, size)
+  bump.colorSpace = THREE.NoColorSpace
+  bump.wrapS = bump.wrapT = THREE.RepeatWrapping
+  if (spec.repeat) bump.repeat.set(spec.repeat[0], spec.repeat[1])
+  if (spec.offset) bump.offset.set(spec.offset[0], spec.offset[1])
+  bump.magFilter = THREE.LinearFilter
+  bump.minFilter = THREE.LinearMipmapLinearFilter
+  bump.generateMipmaps = true
+  bump.anisotropy = 4
+  bump.needsUpdate = true
+
+  return { map, bump }
+}
 
 /**
  * Deterministic woven plain-linen texture for the front flap (512x512).
@@ -621,7 +726,53 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
   lights.key.shadow.bias = -0.0007; lights.key.shadow.normalBias = 0.025
   const world = new THREE.Group(); world.name = 'polish-basket-world'; scene.add(world)
   const material = (color: number, side: THREE.Side = THREE.FrontSide) => new THREE.MeshStandardMaterial({ color, roughness: 0.93, side })
-  const oak = material(0xc7a57e), oakEdge = material(0xa98761), boardMat = material(0xe3c59b)
+  const makeBasketWood = (
+    spec: BasketWoodSpec,
+    opts: { axis: 'x' | 'y' | 'z'; roughness: number; bumpScale: number; scale?: number; strength?: number },
+  ) => {
+    const tex = createBasketWoodTextures(spec)
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: tex.map,
+      bumpMap: tex.bump,
+      bumpScale: opts.bumpScale,
+      roughness: opts.roughness,
+      metalness: 0,
+    })
+    const release = () => {
+      mat.removeEventListener('dispose', release)
+      tex.map.dispose()
+      tex.bump.dispose()
+    }
+    mat.addEventListener('dispose', release)
+    return applyCraftSurface(mat, { kind: 'wood', axis: opts.axis, scale: opts.scale ?? 0.65, strength: opts.strength ?? 0.26 })
+  }
+  // Calmed warm honey-oak tabletop planks (taming Komorebi sun blowout), distinct oiled beech bread board,
+  // horizontal aprons (axis:'x') and split vertical legs (axis:'y').
+  const oak = makeBasketWood(
+    { key: 'basket-plank-mid', light: [188, 144, 96], dark: [154, 112, 68], warm: [198, 156, 108], orientation: 'u', rings: 4.2, arch: 0.22, wobble: 0.28, repeat: [1.0, 0.45], offset: [0.12, 0.22], seed: 17 },
+    { axis: 'x', roughness: 0.72, bumpScale: 0.0020, scale: 0.65, strength: 0.26 },
+  )
+  const boardMat = makeBasketWood(
+    { key: 'basket-plank-light', light: [204, 162, 112], dark: [172, 130, 82], warm: [214, 174, 124], orientation: 'u', rings: 4.4, arch: 0.24, wobble: 0.30, repeat: [1.0, 0.45], offset: [0.42, 0.08], seed: 31 },
+    { axis: 'x', roughness: 0.72, bumpScale: 0.0020, scale: 0.65, strength: 0.26 },
+  )
+  const boardMatAlt = makeBasketWood(
+    { key: 'basket-plank-light-alt', light: [200, 158, 108], dark: [168, 126, 78], warm: [210, 170, 120], orientation: 'u', rings: 4.0, arch: 0.20, wobble: 0.26, repeat: [1.0, 0.45], offset: [0.68, 0.54], seed: 47 },
+    { axis: 'x', roughness: 0.72, bumpScale: 0.0020, scale: 0.65, strength: 0.26 },
+  )
+  const oakEdge = makeBasketWood(
+    { key: 'basket-apron-oak', light: [158, 118, 80], dark: [126, 90, 56], warm: [170, 130, 90], orientation: 'u', rings: 4.6, arch: 0.18, wobble: 0.24, repeat: [1.0, 0.45], seed: 61 },
+    { axis: 'x', roughness: 0.74, bumpScale: 0.0020, scale: 0.70, strength: 0.30 },
+  )
+  const oakLeg = makeBasketWood(
+    { key: 'basket-leg-oak', light: [158, 118, 80], dark: [126, 90, 56], warm: [170, 130, 90], orientation: 'v', rings: 4.8, arch: 0.16, wobble: 0.24, repeat: [0.65, 1.0], seed: 73 },
+    { axis: 'y', roughness: 0.74, bumpScale: 0.0022, scale: 0.85, strength: 0.38 },
+  )
+  const breadBoardMat = makeBasketWood(
+    { key: 'basket-bread-beech', light: [192, 142, 92], dark: [156, 108, 62], warm: [204, 156, 104], orientation: 'u', rings: 5.2, arch: 0.28, wobble: 0.32, repeat: [0.95, 0.75], seed: 89 },
+    { axis: 'x', roughness: 0.66, bumpScale: 0.0022, scale: 0.72, strength: 0.26 },
+  )
   const wicker = [0xc79561, 0xd8b27c, 0xe2c293].map(color => material(color))
   const cream = material(0xf4edd7, THREE.DoubleSide), stitch = material(0xc48174)
   const flapLinenTex = createFlapLinenTextures()
@@ -651,7 +802,6 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     bumpMap: embroideryTex.bump,
     bumpScale: 0.0026,
   })
-  for(const timber of[oak,oakEdge,boardMat])applyCraftSurface(timber,{kind:'wood',strength:.4})
   const crust = material(0xc79558), breadCut = material(0xf2d49b), sage = material(0x849f72), darkLeaf = material(0x627f59)
   const eggRose = material(0xc98173), eggCream = material(0xfaedce), eggBlue = material(0x91aeb7)
   const add = (geo: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
@@ -662,16 +812,17 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     const mesh = add(sphere, mat, p, parent); mesh.scale.set(...scale); return mesh
   }
   const table = new THREE.Group(); table.name = 'basket-table'; world.add(table)
-  for (let i = 0; i < 5; i++) add(new RoundedBoxGeometry(3.05, 0.13, 0.31, 3, 0.035), i % 2 ? oak : boardMat, [0, 0.695, (i - 2) * 0.302], table)
+  const plankMats = [boardMat, oak, boardMatAlt, oak, boardMat] as const
+  for (let i = 0; i < 5; i++) add(new RoundedBoxGeometry(3.05, 0.13, 0.31, 3, 0.035), plankMats[i]!, [0, 0.695, (i - 2) * 0.302], table)
   for (const x of [-1.16, 1.16]) for (const z of [-0.5, 0.5]) {
-    add(new RoundedBoxGeometry(0.15, 0.63, 0.15, 2, 0.025), oakEdge, [x, 0.315, z], table)
+    add(new RoundedBoxGeometry(0.15, 0.63, 0.15, 2, 0.025), oakLeg, [x, 0.315, z], table)
   }
   for (const z of [-0.52, 0.52]) add(new RoundedBoxGeometry(2.5, 0.19, 0.10, 2, 0.018), oakEdge, [0, 0.57, z], table)
   const shadow = add(new THREE.PlaneGeometry(3.8, 2.25), new THREE.ShadowMaterial({ opacity: 0.13 }), [0, 0.005, 0])
   shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
 
-  const board = add(new RoundedBoxGeometry(0.94, 0.045, 0.74, 4, 0.09), oak, [-0.91, 0.79, 0.43]); board.name = 'basket-bread-board'
-  add(new RoundedBoxGeometry(0.24, 0.035, 0.20, 3, 0.05), oak, [-1.41, 0.79, 0.43])
+  const board = add(new RoundedBoxGeometry(0.94, 0.045, 0.74, 4, 0.09), breadBoardMat, [-0.91, 0.79, 0.43]); board.name = 'basket-bread-board'
+  add(new RoundedBoxGeometry(0.24, 0.035, 0.20, 3, 0.05), breadBoardMat, [-1.41, 0.79, 0.43])
   const saucer = add(new THREE.CylinderGeometry(0.255, 0.24, 0.035, 32), cream, [-1.01, 0.795, -0.43]); saucer.name = 'basket-egg-saucer'
 
   const basket = new THREE.Group(); basket.name = 'basket-woven'; basket.position.set(0.45, 0.79, -0.02); world.add(basket)

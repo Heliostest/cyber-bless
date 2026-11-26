@@ -5,6 +5,7 @@ import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
+import { createAngklungMaterials, type ResonatorFaceRole, writeResonatorVertexColor } from './angklung-materials'
 
 type XYZ = [number, number, number]
 type Checkpoint = 0 | 1 | 2 | 3
@@ -44,9 +45,7 @@ export function createIndonesianAngklung(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'angklung-world'; scene.add(world)
   const subject = new THREE.Group(); subject.name = 'angklung-subject'; world.add(subject)
   const frame = new THREE.Group(); frame.name = 'angklung-frame'; subject.add(frame)
-  const mat = (color: number, roughness = .84) => new THREE.MeshStandardMaterial({ color, roughness })
-  const bamboo = mat(0xc7a05b), fresh = mat(0xe8c981), node = mat(0x9a793e), rattan = mat(0x80613c, .97), grain = mat(0xb28a49, .93), inside = mat(0x73532b, .97)
-  const shellMaterial = mat(0xdab775, .9); shellMaterial.side = THREE.DoubleSide
+  const { bamboo, fresh, gripBamboo, node, tubeNode, socketBamboo, footBamboo, inside, grain, shellMaterial, rattan, rattanRing } = createAngklungMaterials()
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: XYZ, parent: THREE.Object3D = frame) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
@@ -58,7 +57,7 @@ export function createIndonesianAngklung(ctx: SceneContext): SceneInstance {
   const tube = (name: string, points: XYZ[], radius: number, material: THREE.Material, parent: THREE.Object3D, segments = 20) => {
     const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)))
     const mesh = add(name, new THREE.TubeGeometry(curve, segments, radius, 6, false), material, [0, 0, 0], parent)
-    mesh.userData.toonSurface = { outline: false, roughness: .95 }; return mesh as THREE.Mesh<THREE.TubeGeometry>
+    mesh.userData.toonSurface = material === grain ? { outline: false, roughness: .92 } : { outline: false }; return mesh as THREE.Mesh<THREE.TubeGeometry>
   }
   const marker = (name: string, p: XYZ, parent: THREE.Object3D) => { const o = new THREE.Object3D(); o.name = name; o.position.set(...p); parent.add(o); return o }
   const ring = (name: string, y: number, radius: number, parent: THREE.Object3D, material = node, thickness = .012) => {
@@ -67,21 +66,29 @@ export function createIndonesianAngklung(ctx: SceneContext): SceneInstance {
   // Slotted resonator shell: lower chamber is annular; the upper front half is cut away.
   // The back tongue and two exposed cut edges remain real thick geometry.
   const resonator = (height: number) => {
-    const positions: number[] = [], outer = .19, inner = .153, slot = height * .57, low = .12, steps = 64
+    const positions: number[] = [], colors: number[] = [], outer = .19, inner = .153, slot = height * .57, low = .12, steps = 64
     const pt = (a: number, y: number, r: number): XYZ => [Math.sin(a) * r, y, Math.cos(a) * r]
-    const quad = (a: XYZ, b: XYZ, c: XYZ, d: XYZ) => positions.push(...a, ...b, ...d, ...b, ...c, ...d)
+    const quad = (a: XYZ, b: XYZ, c: XYZ, d: XYZ, role: ResonatorFaceRole) => {
+      for (const p of [a, b, d, b, c, d]) {
+        positions.push(...p)
+        writeResonatorVertexColor(colors, p[0], p[1], p[2], height, role)
+      }
+    }
     const section = (lo: number, hi: number, start: number, end: number) => {
       for (let i = start; i < end; i++) {
         const a = i / steps * Math.PI * 2, b = (i + 1) / steps * Math.PI * 2
-        quad(pt(a, lo, outer), pt(a, hi, outer), pt(b, hi, outer), pt(b, lo, outer))
-        quad(pt(b, lo, inner), pt(b, hi, inner), pt(a, hi, inner), pt(a, lo, inner))
-        quad(pt(a, hi, outer), pt(a, hi, inner), pt(b, hi, inner), pt(b, hi, outer))
-        quad(pt(a, lo, inner), pt(a, lo, outer), pt(b, lo, outer), pt(b, lo, inner))
+        quad(pt(a, lo, outer), pt(a, hi, outer), pt(b, hi, outer), pt(b, lo, outer), 'outer')
+        quad(pt(b, lo, inner), pt(b, hi, inner), pt(a, hi, inner), pt(a, lo, inner), 'inner')
+        quad(pt(a, hi, outer), pt(a, hi, inner), pt(b, hi, inner), pt(b, hi, outer), 'rim')
+        quad(pt(a, lo, inner), pt(a, lo, outer), pt(b, lo, outer), pt(b, lo, inner), 'rim')
       }
     }
     section(low, slot, 0, steps); section(slot, height, steps / 4, steps * 3 / 4)
-    for (const a of [Math.PI / 2, Math.PI * 1.5]) quad(pt(a, slot, outer), pt(a, height, outer), pt(a, height, inner), pt(a, slot, inner))
-    const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.computeVertexNormals(); return geometry
+    for (const a of [Math.PI / 2, Math.PI * 1.5]) quad(pt(a, slot, outer), pt(a, height, outer), pt(a, height, inner), pt(a, slot, inner), 'cutEdge')
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+    geometry.computeVertexNormals(); return geometry
   }
   for (const [side, x] of [['left', -.94], ['right', .94]] as const) {
     rod(`angklung-upright-${side}`, [x, .22, -.04], [x, 3.13, -.04], .069)
@@ -90,7 +97,7 @@ export function createIndonesianAngklung(ctx: SceneContext): SceneInstance {
     }
   }
   rod('angklung-top-rail', [-1.01, 3.02, -.025], [1.01, 3.02, -.025], .074, fresh)
-  const grip = add('angklung-frame-grip', new RoundedBoxGeometry(.72, .18, .2, 3, .055), fresh, [0, 3.02, 0])
+  const grip = add('angklung-frame-grip', new RoundedBoxGeometry(.72, .18, .2, 3, .055), gripBamboo, [0, 3.02, 0])
   for (const sign of [-1, 1]) {
     const points: XYZ[] = []
     for (let i = 0; i <= 96; i++) { const a = i / 96 * Math.PI * 2 * 5; points.push([sign * .34 + i / 96 * .09, 3.02 + Math.cos(a) * .094, Math.sin(a) * .105]) }
@@ -107,14 +114,14 @@ export function createIndonesianAngklung(ctx: SceneContext): SceneInstance {
   const resonators: THREE.Group[] = []
   for (const [size, x, height, railY] of [['long', -.43, 2.3, 2.82], ['short', .43, 1.78, 2.30]] as const) {
     const socket = new THREE.Group(); socket.name = `angklung-socket-${size}`; socket.position.set(x, .38, 0); frame.add(socket)
-    add(`angklung-socket-floor-${size}`, new RoundedBoxGeometry(.36, .07, .41, 2, .015), node, [0, -.1, 0], socket)
+    add(`angklung-socket-floor-${size}`, new RoundedBoxGeometry(.36, .07, .41, 2, .015), socketBamboo, [0, -.1, 0], socket)
     const group = new THREE.Group(); group.name = `angklung-tube-${size}`; group.position.set(x, .38, 0); frame.add(group); resonators.push(group)
-    add(`angklung-foot-${size}`, new THREE.SphereGeometry(.065, 16, 12), fresh, [0, 0, 0], group)
+    add(`angklung-foot-${size}`, new THREE.SphereGeometry(.065, 16, 12), footBamboo, [0, 0, 0], group)
     rod(`angklung-foot-neck-${size}`, [0, .01, 0], [0, .17, 0], .064, fresh, group)
     add(`angklung-tube-${size}-body`, resonator(height), shellMaterial, [0, 0, 0], group)
     add(`angklung-diaphragm-${size}`, new THREE.CylinderGeometry(.153, .153, .035, 40), inside, [0, .12, 0], group)
     ring(`angklung-tube-${size}-basal-node`, .16, .194, group, node, .015)
-    ring(`angklung-tube-${size}-node`, height * .48, .194, group, fresh, .015)
+    ring(`angklung-tube-${size}-node`, height * .48, .194, group, tubeNode, .015)
     for (const [i, a] of [.35, 1.02, 1.8, 2.8, 3.7, 4.7, 5.6].entries()) {
       const r = .191, end = Math.cos(a) <= 0 ? height - .06 : height * .56
       tube(`angklung-grain-${size}-${i}`, [[Math.sin(a) * r, .21, Math.cos(a) * r], [Math.sin(a + .012) * r, end / 2, Math.cos(a + .012) * r], [Math.sin(a) * r, end, Math.cos(a) * r]], .0026, grain, group, 14)
@@ -122,8 +129,8 @@ export function createIndonesianAngklung(ctx: SceneContext): SceneInstance {
     for (const [side, sign] of [['front', -1], ['back', 1]] as const) {
       const a = marker(`angklung-suspension-${size}-frame-${side}`, [x + sign * .12, railY, -.16], frame)
       const b = marker(`angklung-suspension-${size}-tube-${side}`, [sign * .12, height - .12, -.147], group)
-      const fastening = add(`angklung-tie-${size}-${side}`, new THREE.TorusGeometry(.032, .012, 7, 16), rattan, [sign * .12, height - .12, -.147], group); fastening.rotation.y = sign * .6
-      const railWrap = add(`angklung-rail-wrap-${size}-${side}`, new THREE.TorusGeometry(.054, .011, 7, 16), rattan, [x + sign * .12, railY, -.21]); railWrap.rotation.y = Math.PI / 2
+      const fastening = add(`angklung-tie-${size}-${side}`, new THREE.TorusGeometry(.032, .012, 7, 16), rattanRing, [sign * .12, height - .12, -.147], group); fastening.rotation.y = sign * .6
+      const railWrap = add(`angklung-rail-wrap-${size}-${side}`, new THREE.TorusGeometry(.054, .011, 7, 16), rattanRing, [x + sign * .12, railY, -.21]); railWrap.rotation.y = Math.PI / 2
       const mesh = tube(`angklung-lashing-${size}-${side}`, [[0, 0, 0], [0, .1, 0], [0, .2, 0]], .011, rattan, frame)
       const position = mesh.geometry.getAttribute('position') as THREE.BufferAttribute
       const normal = mesh.geometry.getAttribute('normal') as THREE.BufferAttribute

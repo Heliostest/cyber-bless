@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { applyYutStickVertexColors, createYutCraftMaterials } from './yut-materials'
 
 export type YutPoseOptions = { mask?: number; fromMask?: number; position?: number; steps?: number; repeat?: boolean }
 
@@ -6,7 +7,8 @@ export type YutPoseOptions = { mask?: number; fromMask?: number; position?: numb
 export function createYutnoriModel() {
   const subject=new THREE.Group();subject.name='yut-subject'
   const material=(color:number,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness})
-  const reed=material(0xc69357),weave=material(0xd6ab6b),cloth=material(0xd6e5dc,1),ink=material(0x287680),ivory=material(0xf7e2b4),blue=material(0x379cb2,.42)
+  const { reed, weave, stickWoods, mark } = createYutCraftMaterials()
+  const cloth=material(0xd6e5dc,1),ink=material(0x287680),ivory=material(0xf7e2b4),blue=material(0x379cb2,.42)
   const add=(parent:THREE.Object3D,name:string,geometry:THREE.BufferGeometry,mat:THREE.Material)=>{
     const m=new THREE.Mesh(geometry,mat);m.name=name;m.castShadow=m.receiveShadow=true;parent.add(m);return m
   }
@@ -43,19 +45,12 @@ export function createYutnoriModel() {
   const sticksGroup=new THREE.Group();sticksGroup.name='yut-sticks';subject.add(sticksGroup)
   const sticks:THREE.Group[]=[],shells:THREE.Mesh[]=[]
   const shape=new THREE.Shape();shape.moveTo(-.12,0);shape.absarc(0,0,.12,Math.PI,0,true);shape.closePath()
-  const wood=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.69}),mark=material(0xa3693b)
   for(let i=0;i<4;i++){
     const stick=new THREE.Group();stick.name=`yut-stick-${i}`;sticksGroup.add(stick);sticks.push(stick)
     const geometry=new THREE.ExtrudeGeometry(shape,{depth:.94,steps:1,curveSegments:18,bevelEnabled:true,bevelThickness:.006,bevelSize:.006,bevelSegments:2})
     geometry.translate(0,-.06,-.47)
-    const normals=geometry.getAttribute('normal'),positions=geometry.getAttribute('position'),colors=[] as number[]
-    const flatColor=new THREE.Color(0xf2d197),roundColor=new THREE.Color(0xd6a15d),endColor=new THREE.Color(0xbb854e)
-    for(let v=0;v<positions.count;v++){
-      const color=Math.abs(normals.getZ(v))>.9?endColor:normals.getY(v)<-.85?flatColor:roundColor
-      colors.push(color.r,color.g,color.b)
-    }
-    geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3))
-    const shell=add(stick,`yut-stick-${i}-shell`,geometry,wood);shells.push(shell)
+    applyYutStickVertexColors(geometry, i)
+    const shell=add(stick,`yut-stick-${i}-shell`,geometry,stickWoods[i]!);shells.push(shell)
     // Original simple end marks distinguish flat faces without copying a regional set.
     for(const z of [-.28,.28])box(stick,`yut-stick-${i}-flat-mark-${z}`,.15,.002,.018,mark,0,-.067,z)
   }

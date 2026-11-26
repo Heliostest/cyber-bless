@@ -135,14 +135,20 @@ describe('craft material style compatibility', () => {
     [source, target, ordinary, unpatched].forEach(material => material.dispose());
   });
 
-  it('uses mean-attenuated 3D wood rings with warm hue shift, highlight shoulder, and non-zero bamboo fiber pigment', () => {
+  it('uses mean-attenuated 3D wood rings with per-mesh seed, sparse knots, highlight shoulder, and non-zero bamboo fiber pigment', () => {
     const wood = createCraftMaterial({ color: 0xd5af7b }, { kind: 'wood', strength: .4 });
     const bamboo = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0x9cc66e, roughness: .9 }), { kind: 'bamboo', strength: .38, axis: 'y' });
     const stone = createCraftMaterial({ color: 0xb9b9a5 }, { kind: 'stone', strength: .4 });
     const woodShader = compile(wood), bambooShader = compile(bamboo), stoneShader = compile(stone);
+    expect(woodShader.vertexShader).toContain('modelMatrix[3].xyz');
+    expect(woodShader.vertexShader).toContain('craftMeshSeed');
+    expect(woodShader.vertexShader.split('\n').filter(line => /\S.*#/.test(line))).toEqual([]);
     expect(woodShader.fragmentShader).toContain('craftWoodRing');
+    expect(woodShader.fragmentShader).toContain('craftWoodKnotField');
+    expect(woodShader.fragmentShader).toContain('craftKnotAmber');
     expect(woodShader.fragmentShader).not.toMatch(/smoothstep\s*\(\s*0\.45/);
     expect(woodShader.fragmentShader).toContain('craftPeak > 0.72');
+    expect(bambooShader.vertexShader).not.toContain('craftMeshSeed');
     expect(bambooShader.fragmentShader).toContain('craftBambooStriation');
     expect(bambooShader.fragmentShader).toContain('0.22');
     expect(bambooShader.fragmentShader).toContain('craftPeak > 0.78');

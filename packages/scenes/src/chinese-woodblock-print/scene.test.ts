@@ -278,4 +278,31 @@ describe('a rubbing and peeling woodblock print', () => {
     expect(s.progress).toEqual([]);expect(s.saveWish).not.toHaveBeenCalled();expect(rendered.render.mock.calls.length).toBe(frames);expect(freed.size).toBe(resources.size);expect([...freed.values()].every(n=>n===1)).toBe(true);expect(renderer.dispose).toHaveBeenCalledOnce();expect(renderer.forceContextLoss).toHaveBeenCalledOnce();expect(s.overlay.childElementCount).toBe(0)
     expect(s.host.querySelector('.scene-object-cues')).toBeNull();for(const o of cued)expect(o.userData.interactionCues).toEqual([])
   })
+  it('renders flat matte sheet-paper print ink, switches clean-to-rubbed back maps, and disposes textures once', () => {
+    const s = mount(0, { isReducedMotion: () => true })
+    const back = s.scene.getObjectByName('woodblock-paper-back') as THREE.Mesh
+    const face = s.scene.getObjectByName('woodblock-print-face') as THREE.Mesh
+    const carving = s.scene.getObjectByName('woodblock-carved-branches')!
+    const backMat = back.material as THREE.MeshStandardMaterial
+    const faceMat = face.material as THREE.MeshStandardMaterial
+    expect(face.children).toHaveLength(0)
+    expect(carving.children.length).toBeGreaterThan(0)
+    expect(backMat.userData.ritualOptics?.paper?.layout).toBe('sheet')
+    expect(faceMat.userData.ritualOptics?.paper?.layout).toBe('sheet')
+    const cleanBackMap = backMat.map
+    const printFaceMap = faceMat.map
+    expect(cleanBackMap).toBeInstanceOf(THREE.DataTexture)
+    expect(printFaceMap).toBeInstanceOf(THREE.DataTexture)
+    rub(s)
+    const rubbedBackMap = backMat.map
+    expect(rubbedBackMap).toBeInstanceOf(THREE.DataTexture)
+    expect(rubbedBackMap).not.toBe(cleanBackMap)
+    const texFreed = new Map<THREE.Texture, number>()
+    for (const tex of [cleanBackMap!, rubbedBackMap!, printFaceMap!]) {
+      tex.addEventListener('dispose', () => texFreed.set(tex, (texFreed.get(tex) ?? 0) + 1))
+    }
+    s.instance.dispose(); s.instance.dispose()
+    expect(texFreed.size).toBe(3)
+    expect([...texFreed.values()].every(n => n === 1)).toBe(true)
+  })
 })

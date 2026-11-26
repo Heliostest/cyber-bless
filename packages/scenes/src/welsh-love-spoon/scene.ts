@@ -12,6 +12,7 @@ import { createDropFeedback } from '../drop-feedback'
 import { addCraftTable } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
+import { applyCarvedSpoonUVs, applyStandBoxWoodUVs, createSpoonWoodTextures } from './wood-grain'
 
 const COPY = {
   title: '木勺寄情', decorateAction: '轻拭木勺', hangAction: '把木勺安放在展托', quietAction: '轻点木勺细看',
@@ -58,13 +59,47 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
   lights.key.shadow.bias = -.0007; lights.key.shadow.normalBias = .02
   const world = new THREE.Group(); world.name = 'spoon-veranda-workbench'; scene.add(world)
   const material = (color: number, roughness = .82) => new THREE.MeshStandardMaterial({ color, roughness })
-  const carved = new THREE.MeshPhysicalMaterial({ color: 0xc28647, roughness: .54, clearcoat: .19, clearcoatRoughness: .43, envMapIntensity: .8 })
-  const grain = new THREE.MeshPhysicalMaterial({ color: 0xdca96a, roughness: .54, clearcoat: .18, clearcoatRoughness: .44, envMapIntensity: .76 })
-  const walnut = material(0x80634b, .70), walnutPeg = material(0x80634b, .70), linen = material(0x94b4ad)
-  applyCraftSurface(carved, { kind: 'wood', strength: .44, scale: .82, axis: 'y' })
-  applyCraftSurface(grain, { kind: 'wood', strength: .38, scale: .82, axis: 'y' })
-  applyCraftSurface(walnut, { kind: 'wood', strength: .5, scale: .85, axis: 'x' })
-  applyCraftSurface(walnutPeg, { kind: 'wood', strength: .5, scale: .85, axis: 'y' })
+  // Distinct warm oiled-wood grain scales, organic flow & sparse knots across spoon, peg & stand base.
+  const carvedTex = createSpoonWoodTextures({
+    key: 'welsh-spoon-carved-v3', seed: 23, grainAxis: 'v',
+    earlywood: '#d6954c', latewood: '#a86b2e', knotCore: '#7a491d', knotHalo: '#e5ac64',
+    ringFreq: 5.2, flowAmp: 0.175, archAmp: 0.38, washStrength: 0.08, roughnessRange: [0.80, 0.98],
+    knots: [
+      { along: 0.82, across: 0.26, radiusAlong: 0.036, radiusAcross: 0.036, deflect: 0.072, strength: 0.76 },
+      { along: 0.19, across: 0.69, radiusAlong: 0.040, radiusAcross: 0.038, deflect: 0.076, strength: 0.72 },
+    ],
+  })
+  const grainTex = createSpoonWoodTextures({
+    key: 'welsh-spoon-inlay-v3', seed: 61, grainAxis: 'v',
+    earlywood: '#ecb876', latewood: '#cf9552', knotCore: '#a56f34',
+    ringFreq: 6.8, flowAmp: 0.10, archAmp: 0.22, washStrength: 0.05, roughnessRange: [0.78, 0.94],
+  })
+  const walnutBaseTex = createSpoonWoodTextures({
+    key: 'welsh-stand-base-v3', seed: 103, grainAxis: 'u',
+    earlywood: '#8b6346', latewood: '#64442c', knotCore: '#4c301c', knotHalo: '#9e7556',
+    ringFreq: 4.9, flowAmp: 0.16, archAmp: 0.38, washStrength: 0.08, roughnessRange: [0.82, 1.0],
+    knots: [
+      { along: 0.76, across: 0.84, radiusAlong: 0.068, radiusAcross: 0.044, deflect: 0.066, strength: 0.80 },
+    ],
+  })
+  const walnutPegTex = createSpoonWoodTextures({
+    key: 'welsh-stand-peg-v3', seed: 149, grainAxis: 'u',
+    earlywood: '#a37855', latewood: '#785437', knotCore: '#5c3c24', knotHalo: '#b68a65',
+    ringFreq: 7.4, flowAmp: 0.14, archAmp: 0.30, washStrength: 0.075, roughnessRange: [0.82, 1.0],
+    knots: [
+      { along: 0.62, across: 0.50, radiusAlong: 0.084, radiusAcross: 0.080, deflect: 0.105, strength: 0.78 },
+    ],
+  })
+  const woodTextures = [carvedTex, grainTex, walnutBaseTex, walnutPegTex]
+  const carved = new THREE.MeshPhysicalMaterial({ color: 0xffffff, map: carvedTex.map, bumpMap: carvedTex.bumpMap, bumpScale: .0045, roughnessMap: carvedTex.roughnessMap, roughness: .54, clearcoat: .19, clearcoatRoughness: .43, envMapIntensity: .8 })
+  const grain = new THREE.MeshPhysicalMaterial({ color: 0xffffff, map: grainTex.map, bumpMap: grainTex.bumpMap, bumpScale: .0025, roughnessMap: grainTex.roughnessMap, roughness: .52, clearcoat: .18, clearcoatRoughness: .44, envMapIntensity: .76 })
+  const walnut = new THREE.MeshStandardMaterial({ color: 0xffffff, map: walnutBaseTex.map, bumpMap: walnutBaseTex.bumpMap, bumpScale: .0048, roughnessMap: walnutBaseTex.roughnessMap, roughness: .64 })
+  const walnutPeg = new THREE.MeshStandardMaterial({ color: 0xffffff, map: walnutPegTex.map, bumpMap: walnutPegTex.bumpMap, bumpScale: .0045, roughnessMap: walnutPegTex.roughnessMap, roughness: .66 })
+  const linen = material(0x94b4ad)
+  applyCraftSurface(carved, { kind: 'wood', strength: .12, scale: .64, axis: 'y' })
+  applyCraftSurface(grain, { kind: 'wood', strength: .10, scale: 1.15, axis: 'y' })
+  applyCraftSurface(walnut, { kind: 'wood', strength: .12, scale: .58, axis: 'x' })
+  applyCraftSurface(walnutPeg, { kind: 'wood', strength: .12, scale: .94, axis: 'y' })
   applyCraftSurface(linen, { kind: 'fabric', strength: .26 })
 
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
@@ -79,11 +114,14 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
   addCraftTable(world, { name: 'spoon-table', topName: 'spoon-table-top', width: 3.12, depth: 1.62, surfaceY: .76, thickness: .12, center: [0,.04], support: 'trestle', finish: 'honey' })
   const ground = add('spoon-contact-shadow', new THREE.PlaneGeometry(3.8, 2.1), new THREE.ShadowMaterial({ opacity: .13 }), [0, .002, .1]); ground.rotation.x = -Math.PI / 2; ground.castShadow = false
   box('spoon-home-pad', [.9, .04, .5], [-.72, .78, .02], linen)
-  box('spoon-home-back-rest', [.22, .44, .08], [-.72, 1.02, -.13], walnutPeg)
+  const homePeg = box('spoon-home-back-rest', [.22, .44, .08], [-.72, 1.02, -.13], walnutPeg)
+  applyStandBoxWoodUVs(homePeg.geometry, [.22, .44, .08], 'y', { flipX: true, uShift: -.08 })
   const stand = new THREE.Group(); stand.name = 'spoon-display-stand'; world.add(stand)
-  box('spoon-stand-base', [.95, .08, .66], [.78, .80, .02], walnut, stand)
+  const standBase = box('spoon-stand-base', [.95, .08, .66], [.78, .80, .02], walnut, stand)
+  applyStandBoxWoodUVs(standBase.geometry, [.95, .08, .66], 'x')
   const seat = box('spoon-display-seat', [.76, .04, .43], [.78, .86, .02], linen, stand)
-  box('spoon-display-back-rest', [.19, .54, .08], [.78, 1.15, -.13], walnutPeg, stand)
+  const displayPeg = box('spoon-display-back-rest', [.19, .54, .08], [.78, 1.15, -.13], walnutPeg, stand)
+  applyStandBoxWoodUVs(displayPeg.geometry, [.19, .54, .08], 'y')
   const spoon = new THREE.Group(); spoon.name = 'spoon-body'; world.add(spoon)
   // A closed profile gives the spoon a concave front and a convex, thick wooden back.
   const profile = [[0, 0], [.28, .009], [.55, .035], [.8, .085], [.98, .155], [1, .17], [1.06, .15], [1.06, .10], [.95, .005], [.6, -.095], [0, -.125]]
@@ -103,7 +141,7 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
   }
   const lastRing = 1 + (rings - 1) * segments
   for (let j = 0; j < segments; j++) indices.push(lastRing + j, backPole, lastRing + (j + 1) % segments)
-  const bowlGeometry = new THREE.BufferGeometry(); bowlGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); bowlGeometry.setIndex(indices); bowlGeometry.computeVertexNormals()
+  const bowlGeometry = new THREE.BufferGeometry(); bowlGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); bowlGeometry.setIndex(indices); bowlGeometry.computeVertexNormals(); applyCarvedSpoonUVs(bowlGeometry, .477)
   const bowl = add('spoon-bowl', bowlGeometry, carved, [0, .477, 0], spoon)
   bowl.userData.toonSurface = { outline: false }
   const handleShape = new THREE.Shape()
@@ -112,10 +150,10 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
   handleShape.bezierCurveTo(.34, 1.58, .16, 1.40, .12, 1.30); handleShape.lineTo(.115, .79); handleShape.closePath()
   const hole = new THREE.Path(); hole.moveTo(0, 1.58); hole.bezierCurveTo(-.07, 1.66, -.23, 1.77, -.19, 1.87)
   hole.bezierCurveTo(-.15, 1.99, -.03, 1.87, 0, 1.81); hole.bezierCurveTo(.03, 1.87, .15, 1.99, .19, 1.87); hole.bezierCurveTo(.23, 1.77, .07, 1.66, 0, 1.58); handleShape.holes.push(hole)
-  const handleGeometry = new THREE.ExtrudeGeometry(handleShape, { depth: .14, bevelEnabled: true, bevelThickness: .018, bevelSize: .018, bevelSegments: 3, curveSegments: 24 }); handleGeometry.translate(0, 0, -.07)
+  const handleGeometry = new THREE.ExtrudeGeometry(handleShape, { depth: .14, bevelEnabled: true, bevelThickness: .018, bevelSize: .018, bevelSegments: 3, curveSegments: 24 }); handleGeometry.translate(0, 0, -.07); applyCarvedSpoonUVs(handleGeometry, 0)
   const handle = add('spoon-carved-handle', handleGeometry, carved, [0, 0, 0], spoon)
   // The small raised lozenge is part of the carved handle, not a transparent touch proxy.
-  const grip = box('spoon-handle-grip', [.105, .105, .022], [0, 1.18, .096], grain, spoon); grip.rotation.z = Math.PI / 4
+  const grip = box('spoon-handle-grip', [.105, .105, .022], [0, 1.18, .096], grain, spoon); applyStandBoxWoodUVs(grip.geometry, [.105, .105, .022], 'y'); grip.rotation.z = Math.PI / 4
   const polished = new THREE.Group(); polished.name = 'spoon-polished-grain'; spoon.add(polished)
   for (const side of [-1, 1]) tube('spoon-grain-stroke', [[side * .065, .91, .087], [side * .074, 1.04, .087], [side * .068, 1.19, .087], [side * .08, 1.32, .087]].map(p => new THREE.Vector3(...p as [number, number, number])), .0035, grain, polished)
   const home = new THREE.Vector3(-.72, .80, .02)
@@ -229,6 +267,6 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
       ending.update(dt)
       if (!disposed && active()) { matrices(); style.render() }
     },
-    dispose() { if (disposed) return; ending.dispose(); disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() { if (disposed) return; ending.dispose(); disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); woodTextures.forEach(t => t.dispose()); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }
 }

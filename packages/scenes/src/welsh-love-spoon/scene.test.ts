@@ -320,11 +320,27 @@ describe('physical craft and owned resources', () => {
     expect(carvedMat.clearcoat).toBeGreaterThanOrEqual(.16); expect(carvedMat.clearcoat).toBeLessThanOrEqual(.24)
     expect(carvedMat.clearcoatRoughness).toBeGreaterThanOrEqual(.38); expect(carvedMat.clearcoatRoughness).toBeLessThanOrEqual(.48)
     expect(carvedMat.userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'y' })
+    const baseMat = base.material as THREE.MeshStandardMaterial
+    const pegMat = displayPeg.material as THREE.MeshStandardMaterial
+    expect(new Set([carvedMat.userData.craftSurface.scale, baseMat.userData.craftSurface.scale, pegMat.userData.craftSurface.scale]).size).toBe(3)
+    for (const mat of [carvedMat, baseMat, pegMat]) {
+      expect(mat.map).toBeInstanceOf(THREE.DataTexture)
+      expect(mat.bumpMap).toBeInstanceOf(THREE.DataTexture)
+      expect(mat.roughnessMap).toBeInstanceOf(THREE.DataTexture)
+    }
+    expect(carvedMat.map).not.toBe(baseMat.map); expect(baseMat.map).not.toBe(pegMat.map)
+    for (const mesh of [bowl, handle, base, displayPeg, homePeg]) expect(mesh.geometry.getAttribute('uv')).toBeDefined()
     const normals = bowl.geometry.getAttribute('normal'), v = new THREE.Vector3()
     for (let i = 0; i < normals.count; i++) {
       v.fromBufferAttribute(normals, i)
       expect(Math.abs(v.length() - 1)).toBeLessThan(1e-4)
     }
+    const textures = new Set<THREE.Texture>()
+    for (const mat of [carvedMat, baseMat, pegMat]) for (const tex of [mat.map, mat.bumpMap, mat.roughnessMap]) if (tex) textures.add(tex)
+    const disposed = new Map<THREE.Texture, number>()
+    textures.forEach(tex => tex.addEventListener('dispose', () => disposed.set(tex, (disposed.get(tex) ?? 0) + 1)))
+    s.instance.dispose(); s.instance.dispose()
+    expect(disposed.size).toBe(textures.size); expect([...disposed.values()].every(n => n === 1)).toBe(true)
   })
   it('frees geometry, materials, cues, shadows, DOM and owned listeners exactly once', () => {
     const added = vi.spyOn(window, 'addEventListener'), removed = vi.spyOn(window, 'removeEventListener'), s = mount()

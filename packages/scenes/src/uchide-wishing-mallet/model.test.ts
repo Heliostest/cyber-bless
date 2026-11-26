@@ -28,5 +28,21 @@ describe('supported wish-shaking mallet',()=>{
   expect((m.handleRest.material as THREE.Material).userData.craftSurface).toMatchObject({kind:'wood',axis:'y'})
   expect((m.handle.material as THREE.Material).userData.craftSurface).toMatchObject({kind:'wood',axis:'z'})
   expect(pommelMat.userData.craftSurface).toMatchObject({kind:'wood',axis:'z'})
+  const headRestMat=m.headRest.material as THREE.MeshStandardMaterial,handleRestMat=m.handleRest.material as THREE.MeshStandardMaterial,handleMat=m.handle.material as THREE.MeshPhysicalMaterial
+  expect(new Set([headRestMat.userData.craftSurface.scale,handleRestMat.userData.craftSurface.scale,handleMat.userData.craftSurface.scale]).size).toBe(3)
+  expect(barrelMat.map).toBeNull();expect(barrelMat.userData.craftSurface.strength).toBeLessThanOrEqual(.15)
+  for(const mat of[headRestMat,handleRestMat,handleMat,pommelMat]){
+   expect(mat.map).toBeInstanceOf(THREE.DataTexture)
+   expect(mat.bumpMap).toBeInstanceOf(THREE.DataTexture)
+   expect(mat.roughnessMap).toBeInstanceOf(THREE.DataTexture)
+  }
+  expect(headRestMat.map).not.toBe(handleRestMat.map);expect(handleMat.map).not.toBe(headRestMat.map)
+  for(const mesh of[m.headRest,m.handleRest,m.handle,m.pommel])expect(mesh.geometry.getAttribute('uv')).toBeDefined()
+  const textures=new Set<THREE.Texture>()
+  for(const mat of[headRestMat,handleRestMat,handleMat,pommelMat])for(const tex of[mat.map,mat.bumpMap,mat.roughnessMap])if(tex)textures.add(tex)
+  const counts=new Map<THREE.Texture,number>()
+  textures.forEach(t=>t.addEventListener('dispose',()=>counts.set(t,(counts.get(t)??0)+1)))
+  m.dispose();m.dispose()
+  expect(counts.size).toBe(textures.size);expect([...counts.values()].every(n=>n===1)).toBe(true)
  })
 })

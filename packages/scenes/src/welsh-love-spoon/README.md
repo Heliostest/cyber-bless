@@ -96,3 +96,7 @@ Only the first opaque scene hit counts; held descendants are excluded when check
 ## 2026-11-26 木托立柱纹向与木勺打蜡丝光优化
 
 拆分 `walnut` 材质，使右侧展托立柱（`spoon-display-back-rest`）与左侧立托（`spoon-home-back-rest`）沿竖向 `axis: 'y'` 显示木纹，横向底座（`spoon-stand-base`）保持 `axis: 'x'`。为雕刻木勺与柄饰接入克制的 `MeshPhysicalMaterial` 温润油蜡丝光，并缝合勺膛中心极点与接缝法线，消除高光接缝。以上为纯产品材质与网格法线优化，沿用本 README 既有来源核查与读取状态，不新增树种、传统涂装技法、起源或寓意主张；动作、文案、来源 slug、技术 ID 与存档兼容性保持不变。
+
+## 2026-11-26 风格化自然木纹流动与稀疏木眼（Round 2）
+
+新增场景内确定性程序木纹贴图（`wood-grain.ts`），为雕刻木勺（`spoon-bowl` 与 `spoon-carved-handle` 共用整木连续 UV，勺膛凹面随雕深自然弯曲年轮）、镶饰菱格、深色油润展托底座（`spoon-stand-base`）与较暖中深色竖向立柱（`spoon-display-back-rest`／`spoon-home-back-rest`）分别赋予差异化油木色调、木纹尺度、柔和流动曲纹及稀疏木眼，消除均匀平行条纹感；新增程序贴图均在 `dispose()` 中单次释放。以上属于产品材质美术微调，沿用本 README 既有来源核查与读取状态，不新增树种、工艺起源或文化主张；动作、文案、来源 slug、技术 ID 与存档兼容性保持不变。

@@ -1,5 +1,9 @@
 # 木版留春
 
+## 2026-11-26 木版、棕擦木件与工作台风格化木纹更新
+
+木版外框拆分为四条独立拼合边框（`woodblock-frame-rail`，前后 `x`、左右 `z` 纹向），并与内芯雕版（`woodblock-carved-block`）、挖刻版面（`woodblock-cut-field`）、不等距手刻刀痕（`woodblock-carving-gouge`）、压纸木条（`woodblock-paper-hinge-clamp`）、棕擦木盖与木柄（`woodblock-rubbing-cap` / `woodblock-rubbing-grip`）以及共享工作台（`cozy-furniture.ts` 的不等宽微倒角拼板桌面、端头横木、立腿、围板与拉档）共同配置差异化的木纹尺度（`scale`）、温润木色、粗糙度与局部空间相位，打破相邻木件的机械重复感并配合流纹／木眼木质着色；宣纸（`woodblock-paper-back`、`woodblock-paper-corner`、`woodblock-print-face`、`woodblock-paper-edge`）与平印渗墨贴图保持完全不变。本次仅为产品表面渲染与几何细节优化，不新增特定树种、传统材质或工艺文化主张；交互步骤、原创枝叶图、来源归属（`chinese-woodblock-print`）、标题、技术 ID 与存档兼容性均保持不变，未重读外链。
+
 ## 2026-11-26 宣纸薄纸光学与平印渗墨更新
 
 纸背（`woodblock-paper-back`）、可捏纸角（`woodblock-paper-corner`）与印刷面（`woodblock-print-face`）接入共享 `ritual-optics` 片状薄纸光学（`layout: 'sheet'`，UV 锚定宣纸纤维、帘纹与 Komorebi 日光高光收敛），缓和平铺态纸背在顶光下的过曝发白，并保持揭起态原有弧度与纤维可读性；右下纸角改为与纸背 UV 连续对齐的自然微翘薄纸角。移除印面上浮凸的 3D 立体枝叶管／挤出片，改为与木版雕刻浮雕（`woodblock-carved-branches` 保持 3D 阳纹）1:1 对位的确定性 `768×672` `DataTexture` 平印渗墨贴图，使墨色落入并微渗宣纸纤维，并在刷印完成后的纸背（`p1`）呈现克制的薄纸透墨反馈（`p0` 保持洁净未刷）。本次仅为既有纸材与墨印的产品渲染优化；原创枝叶图案、棕擦刷印与卷揭动作、木版部件、来源归属（`chinese-woodblock-print`）、标题、技术 ID 与存档兼容性均保持不变，未新增文化主张，未重读外链。

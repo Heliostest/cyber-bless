@@ -1,6 +1,7 @@
 import { sceneTemplate } from '../scene-localization'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
+import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -338,7 +339,32 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
   Object.assign(lights.key.shadow.camera, { left: -3, right: 3, top: 4, bottom: -2, near: .1, far: 12 })
   const world = new THREE.Group(); world.name = 'woodblock-workbench'; scene.add(world)
   const mat = (color: number, roughness = .9) => new THREE.MeshStandardMaterial({ color, roughness })
-  const wood = mat(0xb59467), darkWood = mat(0x836348), cutWood = mat(0x9b784f), paleWood = mat(0xc4a575)
+  const satinWood = (
+    color: number,
+    axis: 'x' | 'y' | 'z',
+    {
+      roughness = .68,
+      clearcoat = .14,
+      clearcoatRoughness = .5,
+      scale = .9,
+      strength = .5,
+    }: { roughness?: number; clearcoat?: number; clearcoatRoughness?: number; scale?: number; strength?: number } = {},
+  ) =>
+    applyCraftSurface(
+      new THREE.MeshPhysicalMaterial({ color, roughness, clearcoat, clearcoatRoughness }),
+      { kind: 'wood', axis, scale, strength },
+    )
+  const blockWood = satinWood(0x7f5b3f, 'x', { roughness: .69, clearcoat: .14, clearcoatRoughness: .50, scale: .64, strength: .54 })
+  const railFrontWood = satinWood(0x7a5438, 'x', { roughness: .65, clearcoat: .17, clearcoatRoughness: .45, scale: .66, strength: .58 })
+  const railBackWood = satinWood(0x8c6546, 'x', { roughness: .71, clearcoat: .13, clearcoatRoughness: .52, scale: .94, strength: .50 })
+  const railLeftWood = satinWood(0x734e34, 'z', { roughness: .68, clearcoat: .15, clearcoatRoughness: .48, scale: .76, strength: .56 })
+  const railRightWood = satinWood(0x865f41, 'z', { roughness: .64, clearcoat: .18, clearcoatRoughness: .44, scale: 1.04, strength: .52 })
+  const cutWood = satinWood(0xa98053, 'x', { roughness: .71, clearcoat: .09, clearcoatRoughness: .58, scale: .46, strength: .54 })
+  const gougeWoodA = applyCraftSurface(mat(0xb28a5d, .77), { kind: 'wood', axis: 'x', scale: .60, strength: .30 })
+  const gougeWoodB = applyCraftSurface(mat(0xa37b4f, .81), { kind: 'wood', axis: 'x', scale: .84, strength: .35 })
+  const clampWood = satinWood(0xc49f6f, 'x', { roughness: .72, clearcoat: .12, clearcoatRoughness: .52, scale: 1.14, strength: .44 })
+  const barenCapWood = satinWood(0x724e35, 'x', { roughness: .61, clearcoat: .20, clearcoatRoughness: .40, scale: .82, strength: .56 })
+  const gripWood = satinWood(0xc7a06c, 'x', { roughness: .67, clearcoat: .14, clearcoatRoughness: .48, scale: 1.38, strength: .46 })
   const paperBuffers = getWoodblockPaperBuffers()
   const printFaceMap = makePaperDataTexture(paperBuffers.face)
   const cleanBackMap = makePaperDataTexture(paperBuffers.cleanBack)
@@ -380,26 +406,69 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
   }
   facePaperMat.addEventListener('dispose', releaseFaceMap)
   const paperEdge = createRitualMaterial({ color: 0xd9cbb0, roughness: .95 }, { kind: 'paper', strength: .14, fiber: 'paper' })
-  const ink = mat(0x334c5b), sage = mat(0x91a89a), bristle = mat(0x8f754d)
+  const ink = applyCraftSurface(mat(0x334c5b, .68), { kind: 'wood', axis: 'x', scale: 1.05, strength: .24 })
+  const sage = mat(0x91a89a), bristle = mat(0x8f754d), palmFibre = mat(0xa98a5d, .88)
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: XYZ, parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
-  const box = (name: string, size: XYZ, p: XYZ, material: THREE.Material, parent = world as THREE.Object3D) => add(name, new RoundedBoxGeometry(...size, 3, Math.min(.025, ...size.map(v => v / 3))), material, p, parent)
+  const box = (
+    name: string,
+    size: XYZ,
+    p: XYZ,
+    material: THREE.Material,
+    parent = world as THREE.Object3D,
+    { offset, flipY = false, radius = .025 }: { offset?: XYZ; flipY?: boolean; radius?: number } = {},
+  ) => {
+    const geom = new RoundedBoxGeometry(...size, 3, Math.min(radius, ...size.map(v => v / 3)))
+    if (flipY) geom.rotateY(Math.PI)
+    if (offset) {
+      geom.translate(offset[0], offset[1], offset[2])
+      return add(name, geom, material, [p[0] - offset[0], p[1] - offset[1], p[2] - offset[2]], parent)
+    }
+    return add(name, geom, material, p, parent)
+  }
   const tube = (name: string, points: XYZ[], radius: number, material: THREE.Material, parent = world as THREE.Object3D) => {
     const mesh = add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), Math.max(8, points.length * 8), radius, 5, false), material, [0, 0, 0], parent)
     mesh.userData.toonSurface = { outline: false }; return mesh
   }
   addCraftTable(world, { name: 'woodblock-table', topName: 'woodblock-table', width: 3.55, depth: 2.45, surfaceY: .745, thickness: .13, center: [0,.08], support: 'trestle', finish: 'chestnut' })
   const shadow = add('woodblock-contact-shadow', new THREE.PlaneGeometry(3.8, 2.75), new THREE.ShadowMaterial({ opacity: .13 }), [0, .003, .1]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
-  box('woodblock-carved-block', [2.12, .14, 1.94], [.1, .824, .08], darkWood)
-  box('woodblock-cut-field', [1.99, .035, 1.81], [.1, .906, .08], cutWood)
+  // Inner pearwood slab surrounded by four crisp butt-joined perimeter frame rails
+  // with separated grain axes (X front/back, Z left/right), scales, tones, and local phases.
+  box('woodblock-carved-block', [1.976, .14, 1.796], [.1, .824, .08], blockWood, world, { offset: [-.24, .16, .31], radius: .012 })
+  box('woodblock-frame-rail', [2.12, .142, .072], [.1, .825, 1.014], railFrontWood, world, { offset: [.38, -.19, .24], radius: .011 })
+  box('woodblock-frame-rail', [2.12, .142, .072], [.1, .825, -.854], railBackWood, world, { offset: [-.52, .27, -.33], flipY: true, radius: .011 })
+  box('woodblock-frame-rail', [.072, .142, 1.796], [-.924, .825, .08], railLeftWood, world, { offset: [.19, .34, -.46], radius: .011 })
+  box('woodblock-frame-rail', [.072, .142, 1.796], [1.124, .825, .08], railRightWood, world, { offset: [-.27, -.28, .55], flipY: true, radius: .011 })
+  box('woodblock-cut-field', [1.99, .035, 1.81], [.1, .906, .08], cutWood, world, { offset: [.33, .21, -.44] })
   for (const x of [-.91, 1.11]) box('woodblock-inked-border', [.028, .038, 1.82], [x, .93, .08], ink)
   for (const z of [-.82, .98]) box('woodblock-inked-border', [2.02, .038, .028], [.1, .93, z], ink)
-  // Paired narrow cuts in the exposed wood field make the matrix readable as a carved block.
-  for (let i = 0; i < 17; i++) {
-    const x = -.8 + i * .11
-    tube('woodblock-carving-gouge', [[x, .927, -.70], [x + .016, .927, -.30], [x - .011, .927, .2], [x + .01, .927, .82]], .006, paleWood)
-  }
+  // Staggered, shorter hand-chiseled clearing passes in the open pearwood margins
+  // read as authentic relief carving without forming a uniform vertical grid.
+  const gougePasses: readonly [x: number, z0: number, z1: number, w1: number, w2: number, w3: number, r: number][] = [
+    [-.80, -.64, -.08, .016, .005, -.009, .0034],
+    [-.77, .24, .82, -.011, .014, .006, .0038],
+    [-.63, -.70, -.26, .013, -.008, .009, .0032],
+    [-.56, .42, .85, -.014, -.004, .012, .0036],
+    [-.37, -.68, -.18, .018, -.006, -.013, .0035],
+    [-.28, .48, .84, -.010, .015, -.005, .0037],
+    [-.09, -.66, -.12, .012, .014, -.008, .0033],
+    [.06, .52, .86, -.015, .007, .011, .0036],
+    [.24, -.71, -.16, .014, -.012, .007, .0034],
+    [.36, .18, .66, -.012, .016, -.007, .0037],
+    [.53, -.67, -.10, .017, -.005, -.011, .0035],
+    [.64, .34, .85, -.013, .010, .009, .0038],
+    [.79, -.69, -.14, .011, .015, -.006, .0033],
+    [.85, .20, .81, -.015, -.008, .012, .0036],
+    [.98, -.58, .04, .014, -.009, .005, .0035],
+    [.95, .36, .83, -.010, .013, -.006, .0034],
+  ]
+  gougePasses.forEach(([x, z0, z1, w1, w2, w3, r], idx) => {
+    const zm1 = THREE.MathUtils.lerp(z0, z1, .34)
+    const zm2 = THREE.MathUtils.lerp(z0, z1, .68)
+    const gouge = tube('woodblock-carving-gouge', [[x, .9242, z0], [x + w1, .9242, zm1], [x + w2, .9242, zm2], [x + w3, .9242, z1]], r, idx % 2 === 0 ? gougeWoodA : gougeWoodB)
+    gouge.castShadow = false
+  })
   const paper = new THREE.Group(); paper.name = 'woodblock-paper'; paper.position.set(.1, .994, -.72); world.add(paper)
   const backGeometry = new THREE.PlaneGeometry(PAPER_W, PAPER_H, 36, 32); backGeometry.rotateX(-Math.PI / 2)
   {
@@ -474,17 +543,19 @@ export function createChineseWoodblockPrint(ctx: SceneContext): SceneInstance {
     geometry.rotateX(Math.PI / 2); geometry.rotateY(angle)
     const leaf = add('woodblock-relief-leaf', geometry, ink, [x, .009, z], carving); leaf.userData.toonSurface = { outline: false }
   }
-  box('woodblock-paper-hinge-clamp', [1.45, .045, .11], [.1, 1.0, -.77], paleWood)
+  box('woodblock-paper-hinge-clamp', [1.45, .045, .11], [.1, 1.0, -.77], clampWood, world, { offset: [-.36, .18, .22] })
   box('woodblock-pad-rest', [.52, .025, .58], [-1.34, .761, .60], sage)
   const pad = new THREE.Group(); pad.name = 'woodblock-rubbing-pad'; world.add(pad)
   add('woodblock-rubbing-bristles', new THREE.CylinderGeometry(.205, .222, .11, 40), bristle, [0, -.043, 0], pad)
-  add('woodblock-rubbing-cap', new THREE.CylinderGeometry(.178, .201, .075, 40), darkWood, [0, .049, 0], pad)
+  const capGeom = new THREE.CylinderGeometry(.178, .201, .075, 40)
+  capGeom.rotateY(.52)
+  add('woodblock-rubbing-cap', capGeom, barenCapWood, [0, .049, 0], pad)
   // Concentric bindings and individual bristle ridges are attached to the tool.
   for (let i = 0; i < 36; i++) {
     const a = i * Math.PI * 2 / 36
-    tube('woodblock-palm-fibre', [[Math.cos(a) * .20, -.09, Math.sin(a) * .20], [Math.cos(a) * .211, -.035, Math.sin(a) * .211]], .006, paleWood, pad)
+    tube('woodblock-palm-fibre', [[Math.cos(a) * .20, -.09, Math.sin(a) * .20], [Math.cos(a) * .211, -.035, Math.sin(a) * .211]], .006, palmFibre, pad)
   }
-  const grip = box('woodblock-rubbing-grip', [.27, .08, .09], [0, .12, 0], paleWood, pad)
+  const grip = box('woodblock-rubbing-grip', [.27, .08, .09], [0, .12, 0], gripWood, pad)
   const paperMeshes = [back, face, corner, ...edges]
   const originals = new Map<THREE.BufferGeometry, Float32Array>()
   for (const m of paperMeshes) originals.set(m.geometry, Float32Array.from(m.geometry.getAttribute('position').array))

@@ -305,9 +305,14 @@ describe('a rubbing and peeling woodblock print', () => {
     expect(texFreed.size).toBe(3)
     expect([...texFreed.values()].every(n => n === 1)).toBe(true)
   })
-  it('applies stylized wood surfaces with separated axes to the woodblock, baren, and craft table without altering xuan paper', () => {
+  it('applies stylized wood surfaces with varied scales, tones, and axes to the woodblock, baren, and craft table without altering xuan paper', () => {
     const s = mount(0, { isReducedMotion: () => true })
     const matOf = (name: string) => (s.scene.getObjectByName(name) as THREE.Mesh).material as THREE.MeshStandardMaterial
+    const allNamed = (name: string) => {
+      const list: THREE.Mesh[] = []
+      s.scene.traverse(o => { if ((o as THREE.Mesh).isMesh && o.name === name) list.push(o as THREE.Mesh) })
+      return list
+    }
     for (const name of ['woodblock-carved-block', 'woodblock-cut-field', 'woodblock-paper-hinge-clamp', 'woodblock-rubbing-cap', 'woodblock-rubbing-grip']) {
       const mat = matOf(name) as THREE.MeshPhysicalMaterial
       expect(mat, name).toBeInstanceOf(THREE.MeshPhysicalMaterial)
@@ -316,6 +321,24 @@ describe('a rubbing and peeling woodblock print', () => {
       expect(mat.userData.craftSurface?.kind, name).toBe('wood')
       expect(mat.userData.craftSurface?.axis, name).toBe('x')
     }
+    // Frame rails have separated X/Z grain axes, distinct scales, and warm wood variation.
+    const rails = allNamed('woodblock-frame-rail')
+    expect(rails).toHaveLength(4)
+    const railMats = rails.map(m => m.material as THREE.MeshPhysicalMaterial)
+    expect(new Set(railMats.map(m => m.userData.craftSurface?.axis))).toEqual(new Set(['x', 'z']))
+    expect(new Set(railMats.map(m => m.userData.craftSurface?.scale)).size).toBe(4)
+    expect(new Set(railMats.map(m => m.color.getHex())).size).toBe(4)
+    // Carved field, clamp, baren cap, and baren handle all use distinct grain scales & wood tones.
+    const adjacentWood = ['woodblock-cut-field', 'woodblock-paper-hinge-clamp', 'woodblock-rubbing-cap', 'woodblock-rubbing-grip'].map(matOf)
+    expect(new Set(adjacentWood.map(m => m.userData.craftSurface?.scale)).size).toBe(4)
+    expect(new Set(adjacentWood.map(m => m.color.getHex())).size).toBe(4)
+    // Tabletop planks vary scale, warm tone, and roughness so the surface never repeats identically.
+    const planks = allNamed('woodblock-table-top-board')
+    expect(planks.length).toBeGreaterThanOrEqual(3)
+    const plankMats = planks.map(m => m.material as THREE.MeshStandardMaterial)
+    expect(new Set(plankMats.map(m => m.userData.craftSurface?.scale)).size).toBe(planks.length)
+    expect(new Set(plankMats.map(m => m.color.getHex())).size).toBe(planks.length)
+    expect(new Set(plankMats.map(m => m.roughness)).size).toBe(planks.length)
     expect(matOf('woodblock-carving-gouge').userData.craftSurface?.kind).toBe('wood')
     expect(matOf('woodblock-table-top-board').userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'x' })
     expect(matOf('woodblock-table-breadboard-end').userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'z' })

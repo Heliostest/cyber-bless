@@ -92,3 +92,11 @@ Only the first opaque scene hit counts; held descendants are excluded when check
 本次产品显示范围：`carved` 的木面（勺体和柄，局部轴 y）；`grain` 的木面（原创浅纹弱强度 .35、局部轴 y）；`walnut` 的木面（展示木架）；`linen` 的布面（垫与擦拭布）。保留：原创孔洞及几何纹样；共享工艺桌与原安放动作。
 
 程序纹理是产品美术表达，沿用本 README 的既有来源核查；本轮未重读外部链接，不新增木种、釉种、合金、纤维种类、传统技法或功效主张。保持原材质类型、贴图、反射参数和相关光学效果；器形、动作、文案、来源身份、技术 ID 与存档不变。[逐场映射、保留边界与验证记录](../../../../docs/research/2026-11-05-craft-material-rollout.md)。
+
+## 2026-11-26 木托立柱纹向与木勺打蜡丝光优化
+
+拆分 `walnut` 材质，使右侧展托立柱（`spoon-display-back-rest`）与左侧立托（`spoon-home-back-rest`）沿竖向 `axis: 'y'` 显示木纹，横向底座（`spoon-stand-base`）保持 `axis: 'x'`。为雕刻木勺与柄饰接入克制的 `MeshPhysicalMaterial` 温润油蜡丝光，并缝合勺膛中心极点与接缝法线，消除高光接缝。以上为纯产品材质与网格法线优化，沿用本 README 既有来源核查与读取状态，不新增树种、传统涂装技法、起源或寓意主张；动作、文案、来源 slug、技术 ID 与存档兼容性保持不变。
+
+## 2026-11-26 风格化自然木纹流动与稀疏木眼（Round 2）
+
+新增场景内确定性程序木纹贴图（`wood-grain.ts`），为雕刻木勺（`spoon-bowl` 与 `spoon-carved-handle` 共用整木连续 UV，勺膛凹面随雕深自然弯曲年轮）、镶饰菱格、深色油润展托底座（`spoon-stand-base`）与较暖中深色竖向立柱（`spoon-display-back-rest`／`spoon-home-back-rest`）分别赋予差异化油木色调、木纹尺度、柔和流动曲纹及稀疏木眼，消除均匀平行条纹感；新增程序贴图均在 `dispose()` 中单次释放。以上属于产品材质美术微调，沿用本 README 既有来源核查与读取状态，不新增树种、工艺起源或文化主张；动作、文案、来源 slug、技术 ID 与存档兼容性保持不变。

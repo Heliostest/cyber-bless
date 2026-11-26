@@ -228,18 +228,48 @@ function periodicWoodNoise(x: number, y: number, px: number, py: number, seed: n
   return (a + (b - a) * ux) + ((c + (d - c) * ux) - (a + (b - a) * ux)) * uy
 }
 
+function wrapPeriodicDelta(a: number, b: number): number {
+  let d = a - b
+  if (d > 0.5) d -= 1
+  else if (d < -0.5) d += 1
+  return d
+}
+
+type WoodCathedral = {
+  along: number
+  across: number
+  widthAlong: number
+  widthAcross: number
+  lift: number
+}
+
+type WoodKnot = {
+  along: number
+  across: number
+  ra: number
+  rc: number
+  deflect: number
+  depth: number
+  tilt?: number
+}
+
 type StylizedWoodSpec = {
   key: string
   light: readonly [number, number, number]
   dark: readonly [number, number, number]
   warm: readonly [number, number, number]
+  knot?: readonly [number, number, number]
   orientation: 'u' | 'v'
   rings: number
+  spread: number
   arch: number
   wobble: number
+  cathedrals?: readonly WoodCathedral[]
+  knots?: readonly WoodKnot[]
   strakes?: number
   keelWarmth?: boolean
   repeat?: readonly [number, number]
+  offset?: readonly [number, number]
   seed: number
 }
 
@@ -247,16 +277,23 @@ const cachedShipWoodPixels = new Map<string, { color: Uint8Array; bump: Uint8Arr
 
 /**
  * Deterministic stylized oiled-timber DataTexture (256x256, zero DOM/Canvas2D dependency):
- * soft asymmetric earlywood/latewood sweeps, warm hue-shifted grain, gentle wood fibers,
- * and optional subtle clinker/carvel plank strake shading for the lofted hull.
+ * non-uniform growth-ring spacing, flowing S-curves and cathedral arches, sparse stylized
+ * wood knots ("木眼") with organic grain parting, and per-strake timber variation for the hull.
  */
 function createStylizedWoodTextures(spec: StylizedWoodSpec): { map: THREE.DataTexture; bump: THREE.DataTexture } {
-  const size = 128
+  const size = 256
   let cached = cachedShipWoodPixels.get(spec.key)
   if (!cached) {
     const color = new Uint8Array(size * size * 4)
     const bump = new Uint8Array(size * size * 4)
     const tau = Math.PI * 2
+    const knotRgb: readonly [number, number, number] = spec.knot ?? [
+      Math.max(24, Math.round(spec.dark[0] * 0.72)),
+      Math.max(18, Math.round(spec.dark[1] * 0.68)),
+      Math.max(12, Math.round(spec.dark[2] * 0.65)),
+    ]
+    const phaseA = woodHash(spec.seed, 17, 3)
+    const phaseB = woodHash(spec.seed, 29, 7)
     for (let y = 0; y < size; y++) {
       const v = y / size
       for (let x = 0; x < size; x++) {
@@ -264,48 +301,109 @@ function createStylizedWoodTextures(spec: StylizedWoodSpec): { map: THREE.DataTe
         const along = spec.orientation === 'u' ? u : v
         const across = spec.orientation === 'u' ? v : u
 
-        const wash = periodicWoodNoise(along * 2, across * 2, 2, 2, spec.seed + 11)
-        const flow = (periodicWoodNoise(along * 2, across * 3, 2, 3, spec.seed + 23) - 0.5) * spec.wobble
-        const fineWarp = (periodicWoodNoise(along * 4, across * 6, 4, 6, spec.seed + 37) - 0.5) * spec.wobble * 0.36
-        const bow = Math.sin((along + spec.seed * 0.13) * tau) * spec.arch
-        const ringPos = across * spec.rings + bow + flow + fineWarp
-        const frac = ringPos - Math.floor(ringPos)
-        // Asymmetric earlywood -> steeper warm latewood transition (avoids mechanical sine stripes).
-        const rampUp = THREE.MathUtils.smoothstep(frac, 0.06, 0.76)
-        const rampDown = 1 - THREE.MathUtils.smoothstep(frac, 0.76, 0.99)
-        const primaryRing = Math.pow(Math.min(rampUp, rampDown), 1.32)
-        const softMod = 0.66 + 0.48 * periodicWoodNoise(along * 2, across * 4, 2, 4, spec.seed + 59)
-        const fiber = periodicWoodNoise(along * 4, across * 36, 4, 36, spec.seed + 71) - 0.5
-
+        // Optional hull clinker/carvel plank strakes: give each plank its own flow phase and oiled timber tone.
         let strakeShade = 0
         let strakeTint = 0
+        let plankAlong = along
+        let plankSeedShift = 0
         if (spec.strakes) {
           const sp = across * spec.strakes
           const sIdx = Math.floor(sp)
           const sFrac = sp - sIdx
-          const seam = Math.exp(-(((sFrac - 0.02) / 0.036) ** 2)) + Math.exp(-(((1 - sFrac) / 0.036) ** 2))
-          strakeShade = Math.min(1, seam) * 0.24
-          strakeTint = (woodHash(sIdx, 3, spec.seed + 91) - 0.5) * 0.14
+          const seam = Math.exp(-(((sFrac - 0.018) / 0.032) ** 2)) + Math.exp(-(((1 - sFrac) / 0.032) ** 2))
+          const bevelGlow = Math.exp(-(((sFrac - 0.075) / 0.048) ** 2)) * 0.08
+          strakeShade = Math.min(1, seam) * 0.30 - bevelGlow
+          strakeTint = (woodHash(sIdx, 3, spec.seed + 91) - 0.5) * 0.42
+          plankAlong = (along + woodHash(sIdx, 11, spec.seed + 97) * 0.73) % 1
+          plankSeedShift = (woodHash(sIdx, 19, spec.seed + 103) - 0.5) * 0.55
         }
-        // Subtle oiled-timber lower-hull depth near the keel (v ~ 0.5) and warm sheer highlight.
-        const keelDepth = spec.keelWarmth ? (1 - Math.abs(across - 0.5) * 2) * 0.10 : 0
 
-        const grainMix = THREE.MathUtils.clamp(primaryRing * 0.74 * softMod + fiber * 0.14 + strakeShade + keelDepth, 0, 1)
-        const warmMix = THREE.MathUtils.clamp(wash * 0.44 + strakeTint, 0, 1)
+        // Monotonic non-uniform ring spacing breaks mechanical parallel stripes.
+        const acrossVar = across
+          + (spec.spread / tau) * Math.sin((across + phaseA) * tau)
+          + ((spec.spread * 0.42) / tau) * Math.sin((across * 2 + phaseB) * tau)
+
+        const wash = periodicWoodNoise(plankAlong * 2, across * 2, 2, 2, spec.seed + 11)
+        const broadFlow = (periodicWoodNoise(plankAlong * 2, across * 2, 2, 2, spec.seed + 23) - 0.5) * spec.wobble
+        const midFlow = (periodicWoodNoise(plankAlong * 3, across * 5, 3, 5, spec.seed + 37) - 0.5) * spec.wobble * 0.45
+        const bow = Math.sin((plankAlong + phaseA) * tau) * spec.arch
+          + Math.sin((plankAlong * 2 + phaseB) * tau) * spec.arch * 0.34
+
+        let cathedralLift = 0
+        if (spec.cathedrals) {
+          for (const c of spec.cathedrals) {
+            const da = wrapPeriodicDelta(along, c.along)
+            const dc = wrapPeriodicDelta(across, c.across)
+            const env = Math.exp(-((da / c.widthAlong) ** 2 + (dc / c.widthAcross) ** 2))
+            cathedralLift += c.lift * env
+          }
+        }
+
+        let knotDeflect = 0
+        let knotTone = 0
+        let knotGlow = 0
+        if (spec.knots) {
+          for (let ki = 0; ki < spec.knots.length; ki++) {
+            const k = spec.knots[ki]!
+            const da0 = wrapPeriodicDelta(along, k.along)
+            const dc0 = wrapPeriodicDelta(across, k.across)
+            const tilt = k.tilt ?? 0
+            const cosT = Math.cos(tilt), sinT = Math.sin(tilt)
+            const da = da0 * cosT + dc0 * sinT
+            const dc = -da0 * sinT + dc0 * cosT
+            const wakeA = da / (k.ra * 2.8)
+            const wakeC = dc / (k.rc * 2.2)
+            const wake = Math.exp(-(wakeA * wakeA + wakeC * wakeC))
+            knotDeflect -= k.deflect * Math.tanh(dc / Math.max(k.rc * 0.85, 0.005)) * wake
+
+            const ell = Math.hypot(da / k.ra, dc / k.rc)
+            if (ell < 1.75) {
+              const kw = (periodicWoodNoise(along * 6, across * 6, 6, 6, spec.seed + 131 + ki * 17) - 0.5) * 0.14
+              const ed = Math.max(0, ell + kw * THREE.MathUtils.smoothstep(ell, 0.15, 0.92))
+              const collar = Math.exp(-(((ed - 0.96) / 0.25) ** 2)) * 0.36 * k.depth
+              const inside = 1 - THREE.MathUtils.smoothstep(ed, 0.78, 1.08)
+              const swirl = 0.5 + 0.5 * Math.sin(ed * 15.0 + (da / Math.max(k.ra, 0.01)) * 0.55)
+              const core = 1 - THREE.MathUtils.smoothstep(ed, 0.14, 0.56)
+              knotTone = Math.max(knotTone, Math.min(1, inside * (0.44 + 0.30 * swirl + 0.44 * core) * k.depth + collar))
+              knotGlow = Math.max(knotGlow, Math.exp(-(((ed - 1.24) / 0.28) ** 2)) * 0.18 * k.depth)
+            }
+          }
+        }
+
+        const ringPos = acrossVar * spec.rings + bow + broadFlow + midFlow + cathedralLift + knotDeflect + plankSeedShift
+        const frac = ringPos - Math.floor(ringPos)
+        // Asymmetric earlywood -> warm latewood sweep plus softer secondary harmonic band.
+        const rampUp = THREE.MathUtils.smoothstep(frac, 0.07, 0.74)
+        const rampDown = 1 - THREE.MathUtils.smoothstep(frac, 0.74, 0.98)
+        const primaryRing = Math.pow(Math.min(rampUp, rampDown), 1.28)
+        const secFrac = (ringPos * 2.0 + 0.28) - Math.floor(ringPos * 2.0 + 0.28)
+        const secondaryRing = Math.pow(Math.min(THREE.MathUtils.smoothstep(secFrac, 0.12, 0.65), 1 - THREE.MathUtils.smoothstep(secFrac, 0.65, 0.96)), 1.6) * 0.22
+        const softMod = 0.62 + 0.52 * periodicWoodNoise(plankAlong * 2, across * 3, 2, 3, spec.seed + 59)
+        const fiber = periodicWoodNoise(plankAlong * 4, across * 28, 4, 28, spec.seed + 71) - 0.5
+
+        // Subtle oiled-timber lower-hull depth near the keel (v ~ 0.5) and warm sheer highlight.
+        const keelDepth = spec.keelWarmth ? (1 - Math.abs(across - 0.5) * 2) * 0.11 : 0
+
+        const grainMix = THREE.MathUtils.clamp((primaryRing * 0.78 + secondaryRing) * softMod + fiber * 0.09 + strakeShade + keelDepth, 0, 1)
+        const warmMix = THREE.MathUtils.clamp(wash * 0.50 + strakeTint + knotGlow, 0, 1)
         const baseR = THREE.MathUtils.lerp(spec.light[0], spec.warm[0], warmMix)
         const baseG = THREE.MathUtils.lerp(spec.light[1], spec.warm[1], warmMix)
         const baseB = THREE.MathUtils.lerp(spec.light[2], spec.warm[2], warmMix)
 
+        const gR = THREE.MathUtils.lerp(baseR, spec.dark[0], grainMix)
+        const gG = THREE.MathUtils.lerp(baseG, spec.dark[1], grainMix)
+        const gB = THREE.MathUtils.lerp(baseB, spec.dark[2], grainMix)
+
         const i = (y * size + x) * 4
-        color[i] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseR, spec.dark[0], grainMix)), 0, 255)
-        color[i + 1] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseG, spec.dark[1], grainMix)), 0, 255)
-        color[i + 2] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseB, spec.dark[2], grainMix)), 0, 255)
+        color[i] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(gR, knotRgb[0], knotTone)), 0, 255)
+        color[i + 1] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(gG, knotRgb[1], knotTone)), 0, 255)
+        color[i + 2] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(gB, knotRgb[2], knotTone)), 0, 255)
         color[i + 3] = 255
 
         const h = THREE.MathUtils.clamp(
-          Math.round(128 - primaryRing * 20 * softMod + fiber * 14 - strakeShade * 75),
-          64,
-          192,
+          Math.round(128 - primaryRing * 20 * softMod + fiber * 10 - strakeShade * 72 - knotTone * 22),
+          56,
+          196,
         )
         bump[i] = h; bump[i + 1] = h; bump[i + 2] = h; bump[i + 3] = 255
       }
@@ -318,6 +416,7 @@ function createStylizedWoodTextures(spec: StylizedWoodSpec): { map: THREE.DataTe
   map.colorSpace = THREE.SRGBColorSpace
   map.wrapS = map.wrapT = THREE.RepeatWrapping
   if (spec.repeat) map.repeat.set(spec.repeat[0], spec.repeat[1])
+  if (spec.offset) map.offset.set(spec.offset[0], spec.offset[1])
   map.magFilter = THREE.LinearFilter
   map.minFilter = THREE.LinearMipmapLinearFilter
   map.generateMipmaps = true
@@ -328,6 +427,7 @@ function createStylizedWoodTextures(spec: StylizedWoodSpec): { map: THREE.DataTe
   bump.colorSpace = THREE.NoColorSpace
   bump.wrapS = bump.wrapT = THREE.RepeatWrapping
   if (spec.repeat) bump.repeat.set(spec.repeat[0], spec.repeat[1])
+  if (spec.offset) bump.offset.set(spec.offset[0], spec.offset[1])
   bump.magFilter = THREE.LinearFilter
   bump.minFilter = THREE.LinearMipmapLinearFilter
   bump.generateMipmaps = true
@@ -398,43 +498,144 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
     mat.addEventListener('dispose', release)
     return applyCraftSurface(mat, { kind: 'wood', axis: opts.axis, scale: opts.scale ?? .65, strength: opts.strength ?? .26 })
   }
-  // Distinct stylized oiled/painted timber finishes: luminous waxed amber-cedar hull, sunlit honey pine deck,
-  // deep oiled walnut trim, warm varnished larch spars (mast vertical / boom & gaff horizontal), and smoked oak cradle.
+  // Distinct stylized oiled/painted timber finishes with varied per-part grain scales, flowing cathedral
+  // grain, and sparse stylized knots: luminous waxed amber-cedar hull planks, sunlit honey pine deck,
+  // deep oiled walnut trim, distinct vertical larch mast vs horizontal spars, and rich walnut cradle.
   const hullWood = makeWood(
-    { key: 'hull-cedar-v2', light: [216, 152, 92], dark: [152, 94, 48], warm: [230, 168, 108], orientation: 'u', rings: 5.0, arch: .24, wobble: .34, strakes: 8, keelWarmth: true, seed: 13 },
-    { axis: 'x', roughness: .54, clearcoat: .32, clearcoatRoughness: .32, bumpScale: .0030, scale: .60, strength: .26, side: THREE.DoubleSide },
+    {
+      key: 'hull-cedar-v4',
+      light: [222, 160, 98],
+      dark: [146, 88, 46],
+      warm: [236, 178, 116],
+      knot: [106, 58, 28],
+      orientation: 'u',
+      rings: 11.8,
+      spread: 0.40,
+      arch: 0.34,
+      wobble: 0.58,
+      cathedrals: [
+        { along: 0.48, across: 0.86, widthAlong: 0.26, widthAcross: 0.13, lift: 0.92 },
+        { along: 0.22, across: 0.66, widthAlong: 0.24, widthAcross: 0.11, lift: -0.78 },
+      ],
+      knots: [
+        // Two petite warm knots on the sunlit visible front (+Z) cedar flank above the cream stripe.
+        { along: 0.29, across: 0.85, ra: 0.032, rc: 0.022, deflect: 0.72, depth: 0.76, tilt: 0.06 },
+        { along: 0.73, across: 0.82, ra: 0.028, rc: 0.019, deflect: 0.64, depth: 0.72, tilt: -0.06 },
+      ],
+      strakes: 10,
+      keelWarmth: true,
+      seed: 13,
+    },
+    { axis: 'x', roughness: .52, clearcoat: .30, clearcoatRoughness: .32, bumpScale: .0028, scale: .44, strength: .14, side: THREE.DoubleSide },
   )
   const deckWood = makeWood(
-    { key: 'deck-pine', light: [208, 168, 114], dark: [176, 132, 82], warm: [218, 180, 128], orientation: 'u', rings: 4.8, arch: .22, wobble: .28, repeat: [.55, 1.35], seed: 29 },
-    { axis: 'x', roughness: .64, bumpScale: .0018, scale: .68, strength: .24 },
+    {
+      key: 'deck-pine-v3',
+      light: [224, 186, 128],
+      dark: [172, 128, 76],
+      warm: [235, 200, 146],
+      knot: [128, 86, 46],
+      orientation: 'u',
+      rings: 7.4,
+      spread: 0.36,
+      arch: 0.42,
+      wobble: 0.68,
+      cathedrals: [{ along: 0.58, across: 0.46, widthAlong: 0.28, widthAcross: 0.24, lift: 1.20 }],
+      knots: [{ along: 0.34, across: 0.56, ra: 0.042, rc: 0.028, deflect: 0.75, depth: 0.72, tilt: 0.05 }],
+      strakes: 6,
+      repeat: [.46, 1.08],
+      offset: [.50, .50],
+      seed: 29,
+    },
+    { axis: 'x', roughness: .66, bumpScale: .0018, scale: .82, strength: .14 },
   )
   const strakeWood = makeWood(
-    { key: 'strake-cream', light: [226, 192, 138], dark: [198, 160, 106], warm: [236, 204, 152], orientation: 'u', rings: 4.0, arch: .14, wobble: .20, seed: 41 },
-    { axis: 'x', roughness: .58, bumpScale: .0014, scale: .72, strength: .22 },
+    { key: 'strake-cream-v3', light: [230, 198, 144], dark: [194, 156, 102], warm: [240, 210, 158], orientation: 'u', rings: 4.6, spread: 0.30, arch: .24, wobble: .36, seed: 41 },
+    { axis: 'x', roughness: .58, bumpScale: .0014, scale: .78, strength: .14 },
   )
   const trimWood = makeWood(
-    { key: 'trim-walnut', light: [116, 72, 46], dark: [82, 48, 30], warm: [132, 86, 56], orientation: 'u', rings: 4.5, arch: .16, wobble: .24, seed: 53 },
-    { axis: 'x', roughness: .52, bumpScale: .0020, scale: .72, strength: .26 },
+    {
+      key: 'trim-walnut-v3',
+      light: [118, 74, 46],
+      dark: [74, 42, 26],
+      warm: [136, 88, 56],
+      orientation: 'u',
+      rings: 6.2,
+      spread: 0.40,
+      arch: .36,
+      wobble: .54,
+      seed: 53,
+    },
+    { axis: 'x', roughness: .50, clearcoat: .16, clearcoatRoughness: .38, bumpScale: .0022, scale: .92, strength: .16 },
   )
-  const seamWood = applyCraftSurface(material(0x9a7046, .72), { kind: 'wood', axis: 'z', scale: .75, strength: .26 })
-  const sparSpec: StylizedWoodSpec = { key: 'spar-larch-v2', light: [178, 126, 74], dark: [130, 84, 44], warm: [194, 140, 86], orientation: 'u', rings: 4.8, arch: .16, wobble: .24, seed: 73 }
-  const mastWood = makeWood(sparSpec, { axis: 'y', roughness: .52, clearcoat: .30, clearcoatRoughness: .32, bumpScale: .0022, scale: .80, strength: .32 })
-  const sparWood = makeWood(sparSpec, { axis: 'x', roughness: .52, clearcoat: .26, clearcoatRoughness: .34, bumpScale: .0022, scale: .80, strength: .30 })
+  const seamWood = applyCraftSurface(material(0x986d44, .72), { kind: 'wood', axis: 'z', scale: .85, strength: .16 })
+  const mastWood = makeWood(
+    {
+      key: 'mast-larch-v3',
+      light: [194, 138, 80],
+      dark: [132, 82, 42],
+      warm: [210, 156, 96],
+      knot: [96, 56, 26],
+      orientation: 'v',
+      rings: 6.4,
+      spread: 0.34,
+      arch: .34,
+      wobble: .56,
+      knots: [{ along: 0.56, across: 0.44, ra: 0.055, rc: 0.032, deflect: 0.72, depth: 0.76 }],
+      seed: 73,
+    },
+    { axis: 'y', roughness: .50, clearcoat: .30, clearcoatRoughness: .32, bumpScale: .0022, scale: 1.18, strength: .20 },
+  )
+  const sparWood = makeWood(
+    {
+      key: 'spar-larch-v3',
+      light: [208, 156, 96],
+      dark: [148, 98, 52],
+      warm: [222, 170, 110],
+      orientation: 'u',
+      rings: 5.4,
+      spread: 0.38,
+      arch: .32,
+      wobble: .52,
+      seed: 83,
+    },
+    { axis: 'x', roughness: .54, clearcoat: .24, clearcoatRoughness: .36, bumpScale: .0020, scale: 1.02, strength: .18 },
+  )
   const mastGripWood = makeWood(
-    { key: 'grip-beech', light: [204, 154, 98], dark: [164, 116, 68], warm: [216, 168, 112], orientation: 'v', rings: 5.0, arch: .18, wobble: .26, seed: 89 },
-    { axis: 'y', roughness: .56, bumpScale: .0020, scale: .85, strength: .28 },
+    { key: 'grip-beech-v3', light: [216, 168, 110], dark: [162, 114, 66], warm: [228, 182, 124], orientation: 'v', rings: 6.0, spread: 0.36, arch: .30, wobble: .48, seed: 89 },
+    { axis: 'y', roughness: .54, clearcoat: .16, clearcoatRoughness: .38, bumpScale: .0020, scale: 1.28, strength: .20 },
   )
   const cradleBaseWood = makeWood(
-    { key: 'cradle-smoked-oak', light: [108, 74, 52], dark: [76, 49, 34], warm: [122, 86, 62], orientation: 'u', rings: 5.2, arch: .24, wobble: .30, seed: 101 },
-    { axis: 'x', roughness: .56, bumpScale: .0024, scale: .68, strength: .28 },
+    {
+      key: 'cradle-walnut-v4',
+      light: [128, 84, 56],
+      dark: [74, 44, 26],
+      warm: [152, 106, 72],
+      knot: [52, 28, 16],
+      orientation: 'u',
+      rings: 5.8,
+      spread: 0.48,
+      arch: .52,
+      wobble: .84,
+      cathedrals: [
+        { along: 0.72, across: 0.36, widthAlong: 0.22, widthAcross: 0.24, lift: 1.65 },
+        { along: 0.28, across: 0.68, widthAlong: 0.24, widthAcross: 0.22, lift: -1.35 },
+      ],
+      knots: [
+        { along: 0.82, across: 0.24, ra: 0.054, rc: 0.042, deflect: 0.90, depth: 0.84, tilt: -0.08 },
+        { along: 0.36, across: 0.28, ra: 0.046, rc: 0.036, deflect: 0.76, depth: 0.76, tilt: 0.06 },
+      ],
+      seed: 101,
+    },
+    { axis: 'x', roughness: .52, clearcoat: .20, clearcoatRoughness: .36, bumpScale: .0026, scale: .50, strength: .15 },
   )
   const cradlePostWood = makeWood(
-    { key: 'cradle-post-oak', light: [162, 116, 76], dark: [124, 84, 52], warm: [176, 130, 88], orientation: 'v', rings: 5.0, arch: .18, wobble: .24, seed: 109 },
-    { axis: 'y', roughness: .60, bumpScale: .0020, scale: .85, strength: .34 },
+    { key: 'cradle-post-oak-v3', light: [160, 112, 72], dark: [108, 68, 40], warm: [176, 128, 86], orientation: 'v', rings: 6.2, spread: 0.40, arch: .34, wobble: .58, seed: 109 },
+    { axis: 'y', roughness: .58, bumpScale: .0022, scale: .96, strength: .22 },
   )
   const cradleSaddleWood = makeWood(
-    { key: 'cradle-saddle-maple', light: [198, 154, 102], dark: [162, 120, 74], warm: [210, 168, 116], orientation: 'u', rings: 4.8, arch: .16, wobble: .24, seed: 117 },
-    { axis: 'z', roughness: .62, bumpScale: .0018, scale: .75, strength: .28 },
+    { key: 'cradle-saddle-maple-v3', light: [210, 166, 112], dark: [158, 114, 68], warm: [222, 180, 126], orientation: 'u', rings: 5.6, spread: 0.34, arch: .28, wobble: .44, seed: 117 },
+    { axis: 'z', roughness: .60, bumpScale: .0018, scale: .88, strength: .18 },
   )
   const cream = material(0xeee2bd), rope = material(0x5e594d, .90), teal = material(0x819d8d), brass = material(0xc6a467, .55)
   const cabinWood = applyCraftSurface(

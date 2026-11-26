@@ -50,29 +50,70 @@ function periodicWoodNoise(x: number, y: number, px: number, py: number, seed: n
   return (a + (b - a) * ux) + ((c + (d - c) * ux) - (a + (b - a) * ux)) * uy
 }
 
+function wrapPeriodicDelta(a: number, b: number): number {
+  let d = a - b
+  if (d > 0.5) d -= 1
+  else if (d < -0.5) d += 1
+  return d
+}
+
+type IncenseWoodCathedral = {
+  along: number
+  across: number
+  widthAlong: number
+  widthAcross: number
+  lift: number
+}
+
+type IncenseWoodKnot = {
+  along: number
+  across: number
+  ra: number
+  rc: number
+  deflect: number
+  depth: number
+  tilt?: number
+}
+
 type IncenseWoodSpec = {
   key: string
   light: readonly [number, number, number]
   dark: readonly [number, number, number]
   warm: readonly [number, number, number]
+  knot?: readonly [number, number, number]
   orientation: 'u' | 'v'
   rings: number
+  spread: number
   arch: number
   wobble: number
+  cathedrals?: readonly IncenseWoodCathedral[]
+  knots?: readonly IncenseWoodKnot[]
   repeat?: readonly [number, number]
+  offset?: readonly [number, number]
   seed: number
 }
 
 const cachedIncenseWoodPixels = new Map<string, { color: Uint8Array; bump: Uint8Array; size: number }>()
 
-/** Deterministic calm stylized wood DataTexture for the low incense table and wooden incense tray. */
+/**
+ * Deterministic calm stylized elm/walnut DataTexture (256x256, zero DOM/Canvas2D dependency):
+ * non-uniform growth-ring spacing, flowing elm cathedral sweeps, and sparse stylized knots ("木眼")
+ * with organic grain parting for the low table, vertical legs and walnut incense tray.
+ */
 function createIncenseWoodTextures(spec: IncenseWoodSpec): { map: THREE.DataTexture; bump: THREE.DataTexture } {
-  const size = 128
+  const size = 256
   let cached = cachedIncenseWoodPixels.get(spec.key)
   if (!cached) {
     const color = new Uint8Array(size * size * 4)
     const bump = new Uint8Array(size * size * 4)
     const tau = Math.PI * 2
+    const knotRgb: readonly [number, number, number] = spec.knot ?? [
+      Math.max(26, Math.round(spec.dark[0] * 0.72)),
+      Math.max(18, Math.round(spec.dark[1] * 0.68)),
+      Math.max(12, Math.round(spec.dark[2] * 0.64)),
+    ]
+    const phaseA = hash2(spec.seed, 19, 5)
+    const phaseB = hash2(spec.seed, 37, 13)
     for (let y = 0; y < size; y++) {
       const v = y / size
       for (let x = 0; x < size; x++) {
@@ -80,31 +121,83 @@ function createIncenseWoodTextures(spec: IncenseWoodSpec): { map: THREE.DataText
         const along = spec.orientation === 'u' ? u : v
         const across = spec.orientation === 'u' ? v : u
 
-        const wash = periodicWoodNoise(along * 2, across * 2, 2, 2, spec.seed + 13)
-        const flow = (periodicWoodNoise(along * 2, across * 3, 2, 3, spec.seed + 29) - 0.5) * spec.wobble
-        const fineWarp = (periodicWoodNoise(along * 4, across * 6, 4, 6, spec.seed + 43) - 0.5) * spec.wobble * 0.35
-        const bow = Math.sin((along + spec.seed * 0.15) * tau) * spec.arch
-        const ringPos = across * spec.rings + bow + flow + fineWarp
-        const frac = ringPos - Math.floor(ringPos)
-        const rampUp = THREE.MathUtils.smoothstep(frac, 0.06, 0.76)
-        const rampDown = 1 - THREE.MathUtils.smoothstep(frac, 0.76, 0.99)
-        const primaryRing = Math.pow(Math.min(rampUp, rampDown), 1.35)
-        const softMod = 0.65 + 0.48 * periodicWoodNoise(along * 2, across * 4, 2, 4, spec.seed + 59)
-        const fiber = periodicWoodNoise(along * 4, across * 36, 4, 36, spec.seed + 71) - 0.5
+        const acrossVar = across
+          + (spec.spread / tau) * Math.sin((across + phaseA) * tau)
+          + ((spec.spread * 0.44) / tau) * Math.sin((across * 2 + phaseB) * tau)
 
-        const grainMix = THREE.MathUtils.clamp(primaryRing * 0.72 * softMod + fiber * 0.13, 0, 1)
-        const warmMix = THREE.MathUtils.clamp(wash * 0.42, 0, 1)
+        const wash = periodicWoodNoise(along * 2, across * 2, 2, 2, spec.seed + 13)
+        const broadFlow = (periodicWoodNoise(along * 2, across * 2, 2, 2, spec.seed + 29) - 0.5) * spec.wobble
+        const midFlow = (periodicWoodNoise(along * 3, across * 5, 3, 5, spec.seed + 43) - 0.5) * spec.wobble * 0.44
+        const bow = Math.sin((along + phaseA) * tau) * spec.arch
+          + Math.sin((along * 2 + phaseB) * tau) * spec.arch * 0.36
+
+        let cathedralLift = 0
+        if (spec.cathedrals) {
+          for (const c of spec.cathedrals) {
+            const da = wrapPeriodicDelta(along, c.along)
+            const dc = wrapPeriodicDelta(across, c.across)
+            cathedralLift += c.lift * Math.exp(-((da / c.widthAlong) ** 2 + (dc / c.widthAcross) ** 2))
+          }
+        }
+
+        let knotDeflect = 0
+        let knotTone = 0
+        let knotGlow = 0
+        if (spec.knots) {
+          for (let ki = 0; ki < spec.knots.length; ki++) {
+            const k = spec.knots[ki]!
+            const da0 = wrapPeriodicDelta(along, k.along)
+            const dc0 = wrapPeriodicDelta(across, k.across)
+            const tilt = k.tilt ?? 0
+            const cosT = Math.cos(tilt), sinT = Math.sin(tilt)
+            const da = da0 * cosT + dc0 * sinT
+            const dc = -da0 * sinT + dc0 * cosT
+            const wakeA = da / (k.ra * 2.8)
+            const wakeC = dc / (k.rc * 2.2)
+            const wake = Math.exp(-(wakeA * wakeA + wakeC * wakeC))
+            knotDeflect -= k.deflect * Math.tanh(dc / Math.max(k.rc * 0.85, 0.005)) * wake
+
+            const ell = Math.hypot(da / k.ra, dc / k.rc)
+            if (ell < 1.75) {
+              const kw = (periodicWoodNoise(along * 6, across * 6, 6, 6, spec.seed + 137 + ki * 19) - 0.5) * 0.14
+              const ed = Math.max(0, ell + kw * THREE.MathUtils.smoothstep(ell, 0.15, 0.92))
+              const collar = Math.exp(-(((ed - 0.96) / 0.25) ** 2)) * 0.36 * k.depth
+              const inside = 1 - THREE.MathUtils.smoothstep(ed, 0.78, 1.08)
+              const swirl = 0.5 + 0.5 * Math.sin(ed * 15.0 + (da / Math.max(k.ra, 0.01)) * 0.55)
+              const core = 1 - THREE.MathUtils.smoothstep(ed, 0.14, 0.56)
+              knotTone = Math.max(knotTone, Math.min(1, inside * (0.44 + 0.30 * swirl + 0.44 * core) * k.depth + collar))
+              knotGlow = Math.max(knotGlow, Math.exp(-(((ed - 1.24) / 0.28) ** 2)) * 0.18 * k.depth)
+            }
+          }
+        }
+
+        const ringPos = acrossVar * spec.rings + bow + broadFlow + midFlow + cathedralLift + knotDeflect
+        const frac = ringPos - Math.floor(ringPos)
+        const rampUp = THREE.MathUtils.smoothstep(frac, 0.07, 0.74)
+        const rampDown = 1 - THREE.MathUtils.smoothstep(frac, 0.74, 0.98)
+        const primaryRing = Math.pow(Math.min(rampUp, rampDown), 1.32)
+        const secFrac = (ringPos * 2.0 + 0.27) - Math.floor(ringPos * 2.0 + 0.27)
+        const secondaryRing = Math.pow(Math.min(THREE.MathUtils.smoothstep(secFrac, 0.12, 0.65), 1 - THREE.MathUtils.smoothstep(secFrac, 0.65, 0.96)), 1.6) * 0.20
+        const softMod = 0.62 + 0.52 * periodicWoodNoise(along * 2, across * 3, 2, 3, spec.seed + 59)
+        const fiber = periodicWoodNoise(along * 4, across * 28, 4, 28, spec.seed + 71) - 0.5
+
+        const grainMix = THREE.MathUtils.clamp((primaryRing * 0.74 + secondaryRing) * softMod + fiber * 0.09, 0, 1)
+        const warmMix = THREE.MathUtils.clamp(wash * 0.46 + knotGlow, 0, 1)
         const baseR = THREE.MathUtils.lerp(spec.light[0], spec.warm[0], warmMix)
         const baseG = THREE.MathUtils.lerp(spec.light[1], spec.warm[1], warmMix)
         const baseB = THREE.MathUtils.lerp(spec.light[2], spec.warm[2], warmMix)
 
+        const gR = THREE.MathUtils.lerp(baseR, spec.dark[0], grainMix)
+        const gG = THREE.MathUtils.lerp(baseG, spec.dark[1], grainMix)
+        const gB = THREE.MathUtils.lerp(baseB, spec.dark[2], grainMix)
+
         const idx = (y * size + x) * 4
-        color[idx] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseR, spec.dark[0], grainMix)), 0, 255)
-        color[idx + 1] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseG, spec.dark[1], grainMix)), 0, 255)
-        color[idx + 2] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(baseB, spec.dark[2], grainMix)), 0, 255)
+        color[idx] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(gR, knotRgb[0], knotTone)), 0, 255)
+        color[idx + 1] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(gG, knotRgb[1], knotTone)), 0, 255)
+        color[idx + 2] = THREE.MathUtils.clamp(Math.round(THREE.MathUtils.lerp(gB, knotRgb[2], knotTone)), 0, 255)
         color[idx + 3] = 255
 
-        const h = THREE.MathUtils.clamp(Math.round(128 - primaryRing * 18 * softMod + fiber * 13), 74, 186)
+        const h = THREE.MathUtils.clamp(Math.round(128 - primaryRing * 19 * softMod + fiber * 10 - knotTone * 22), 62, 192)
         bump[idx] = h; bump[idx + 1] = h; bump[idx + 2] = h; bump[idx + 3] = 255
       }
     }
@@ -116,6 +209,7 @@ function createIncenseWoodTextures(spec: IncenseWoodSpec): { map: THREE.DataText
   map.colorSpace = THREE.SRGBColorSpace
   map.wrapS = map.wrapT = THREE.RepeatWrapping
   if (spec.repeat) map.repeat.set(spec.repeat[0], spec.repeat[1])
+  if (spec.offset) map.offset.set(spec.offset[0], spec.offset[1])
   map.magFilter = THREE.LinearFilter
   map.minFilter = THREE.LinearMipmapLinearFilter
   map.generateMipmaps = true
@@ -126,6 +220,7 @@ function createIncenseWoodTextures(spec: IncenseWoodSpec): { map: THREE.DataText
   bump.colorSpace = THREE.NoColorSpace
   bump.wrapS = bump.wrapT = THREE.RepeatWrapping
   if (spec.repeat) bump.repeat.set(spec.repeat[0], spec.repeat[1])
+  if (spec.offset) bump.offset.set(spec.offset[0], spec.offset[1])
   bump.magFilter = THREE.LinearFilter
   bump.minFilter = THREE.LinearMipmapLinearFilter
   bump.generateMipmaps = true
@@ -450,43 +545,140 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   const clay = material(0xba9676), cream = material(0xf0e2c3)
   const makeIncenseWood = (
     spec: IncenseWoodSpec,
-    opts: { axis: 'x' | 'y' | 'z'; roughness: number; bumpScale: number; scale?: number; strength?: number },
+    opts: { axis: 'x' | 'y' | 'z'; roughness: number; clearcoat?: number; clearcoatRoughness?: number; bumpScale: number; scale?: number; strength?: number },
   ) => {
     const tex = createIncenseWoodTextures(spec)
-    const mat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      map: tex.map,
-      bumpMap: tex.bump,
-      bumpScale: opts.bumpScale,
-      roughness: opts.roughness,
-      metalness: 0,
-    })
+    const mat = opts.clearcoat
+      ? new THREE.MeshPhysicalMaterial({
+        color: 0xffffff,
+        map: tex.map,
+        bumpMap: tex.bump,
+        bumpScale: opts.bumpScale,
+        roughness: opts.roughness,
+        metalness: 0,
+        clearcoat: opts.clearcoat,
+        clearcoatRoughness: opts.clearcoatRoughness ?? .38,
+        envMapIntensity: .74,
+      })
+      : new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        map: tex.map,
+        bumpMap: tex.bump,
+        bumpScale: opts.bumpScale,
+        roughness: opts.roughness,
+        metalness: 0,
+      })
     const release = () => {
       mat.removeEventListener('dispose', release)
       tex.map.dispose()
       tex.bump.dispose()
     }
     mat.addEventListener('dispose', release)
-    return applyCraftSurface(mat, { kind: 'wood', axis: opts.axis, scale: opts.scale ?? .62, strength: opts.strength ?? .26 })
+    return applyCraftSurface(mat, { kind: 'wood', axis: opts.axis, scale: opts.scale ?? .62, strength: opts.strength ?? .14 })
   }
-  // Calm warm elm/cedar tabletop (tamed against Komorebi sun blowout), split horizontal apron & vertical legs,
-  // quiet inlay tone, and warm oiled walnut wooden tray under the incense paper holder.
+  // Distinct warm elm/walnut differentiation: flowing single-slab honey-elm tabletop with sparse visible knots,
+  // deeper smoked-elm apron, two subtly varied walnut-elm vertical legs, and rich oiled dark-walnut incense tray.
   const woodLight = makeIncenseWood(
-    { key: 'incense-table-top', light: [194, 152, 108], dark: [164, 122, 80], warm: [204, 164, 120], orientation: 'u', rings: 5.0, arch: .17, wobble: .36, repeat: [1.0, .82], seed: 23 },
-    { axis: 'x', roughness: .72, bumpScale: .0020, scale: .60, strength: .26 },
+    {
+      key: 'incense-table-top-v4',
+      light: [198, 154, 106],
+      dark: [152, 108, 66],
+      warm: [212, 170, 120],
+      knot: [108, 70, 38],
+      orientation: 'u',
+      rings: 6.8,
+      spread: 0.50,
+      arch: .60,
+      wobble: .96,
+      cathedrals: [
+        { along: 0.28, across: 0.22, widthAlong: 0.24, widthAcross: 0.22, lift: 1.95 },
+        { along: 0.78, across: 0.72, widthAlong: 0.24, widthAcross: 0.22, lift: -1.55 },
+      ],
+      knots: [
+        // Unobstructed front-left & front-center-left elm tabletop zones (v near 0.08..0.20 is front edge +Z).
+        { along: 0.16, across: 0.13, ra: 0.042, rc: 0.030, deflect: 0.98, depth: 0.82, tilt: 0.08 },
+        { along: 0.36, across: 0.18, ra: 0.034, rc: 0.024, deflect: 0.82, depth: 0.74, tilt: -0.07 },
+        { along: 0.86, across: 0.80, ra: 0.038, rc: 0.028, deflect: 0.80, depth: 0.76, tilt: 0.05 },
+      ],
+      repeat: [.96, .94],
+      offset: [.02, .02],
+      seed: 23,
+    },
+    { axis: 'x', roughness: .68, bumpScale: .0024, scale: .42, strength: .11 },
   )
   const wood = makeIncenseWood(
-    { key: 'incense-table-apron', light: [158, 118, 82], dark: [126, 90, 58], warm: [170, 130, 92], orientation: 'u', rings: 4.8, arch: .18, wobble: .24, repeat: [1.0, .45], seed: 37 },
-    { axis: 'x', roughness: .72, bumpScale: .0020, scale: .68, strength: .28 },
+    {
+      key: 'incense-table-apron-v3',
+      light: [152, 110, 74],
+      dark: [108, 72, 42],
+      warm: [166, 124, 86],
+      orientation: 'u',
+      rings: 5.2,
+      spread: 0.42,
+      arch: .36,
+      wobble: .58,
+      repeat: [1.0, .45],
+      seed: 37,
+    },
+    { axis: 'x', roughness: .72, bumpScale: .0022, scale: .68, strength: .16 },
   )
-  const woodLeg = makeIncenseWood(
-    { key: 'incense-table-leg', light: [158, 118, 82], dark: [126, 90, 58], warm: [170, 130, 92], orientation: 'v', rings: 4.8, arch: .16, wobble: .24, repeat: [.65, 1.0], seed: 53 },
-    { axis: 'y', roughness: .72, bumpScale: .0020, scale: .80, strength: .36 },
+  const woodLegA = makeIncenseWood(
+    {
+      key: 'incense-table-leg-a-v3',
+      light: [142, 100, 66],
+      dark: [96, 62, 36],
+      warm: [156, 114, 78],
+      knot: [70, 42, 22],
+      orientation: 'v',
+      rings: 5.8,
+      spread: 0.40,
+      arch: .32,
+      wobble: .56,
+      knots: [{ along: 0.48, across: 0.48, ra: 0.055, rc: 0.045, deflect: 0.76, depth: 0.78 }],
+      repeat: [.68, 1.0],
+      seed: 53,
+    },
+    { axis: 'y', roughness: .72, bumpScale: .0022, scale: 1.08, strength: .22 },
   )
-  const woodGrainInlay = applyCraftSurface(material(0xab8258, .78), { kind: 'wood', axis: 'x', scale: .70, strength: .24 })
+  const woodLegB = makeIncenseWood(
+    {
+      key: 'incense-table-leg-b-v3',
+      light: [152, 108, 72],
+      dark: [104, 68, 40],
+      warm: [166, 122, 84],
+      knot: [76, 46, 24],
+      orientation: 'v',
+      rings: 6.4,
+      spread: 0.44,
+      arch: .36,
+      wobble: .62,
+      knots: [{ along: 0.62, across: 0.42, ra: 0.048, rc: 0.040, deflect: 0.72, depth: 0.76 }],
+      repeat: [.74, .96],
+      offset: [.26, .18],
+      seed: 59,
+    },
+    { axis: 'y', roughness: .72, bumpScale: .0022, scale: 1.24, strength: .22 },
+  )
+  const woodGrainInlay = applyCraftSurface(material(0x9e744c, .74), { kind: 'wood', axis: 'x', scale: .78, strength: .14 })
   const woodTray = makeIncenseWood(
-    { key: 'incense-wood-tray', light: [150, 108, 74], dark: [116, 78, 50], warm: [162, 120, 84], orientation: 'u', rings: 5.0, arch: .24, wobble: .30, repeat: [.85, .75], seed: 67 },
-    { axis: 'x', roughness: .64, bumpScale: .0022, scale: .72, strength: .26 },
+    {
+      key: 'incense-wood-tray-v3',
+      light: [132, 88, 56],
+      dark: [84, 50, 30],
+      warm: [148, 102, 66],
+      knot: [58, 32, 18],
+      orientation: 'u',
+      rings: 7.2,
+      spread: 0.46,
+      arch: .52,
+      wobble: .84,
+      cathedrals: [{ along: 0.42, across: 0.24, widthAlong: 0.26, widthAcross: 0.24, lift: 1.55 }],
+      knots: [{ along: 0.76, across: 0.16, ra: 0.058, rc: 0.038, deflect: 0.92, depth: 0.88, tilt: -0.06 }],
+      repeat: [.94, .88],
+      offset: [.02, .02],
+      seed: 67,
+    },
+    { axis: 'x', roughness: .56, clearcoat: .18, clearcoatRoughness: .38, bumpScale: .0024, scale: .94, strength: .15 },
   )
   const sleevePrintMap = createIncenseSleevePrintMap(512, 256)
   const paperMat = createRitualMaterial({
@@ -534,7 +726,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   const table = new THREE.Group(); table.name = 'incense-table'; world.add(table)
   add(new RoundedBoxGeometry(3.25, .14, 1.8, 4, .085), woodLight, [0, .48, 0], table)
   for (const x of [-1.22, 1.22]) for (const z of [-.58, .58]) {
-    const foot = add(new RoundedBoxGeometry(.18, .44, .18, 3, .045), woodLeg, [x, .22, z], table)
+    const foot = add(new RoundedBoxGeometry(.18, .44, .18, 3, .045), (x < 0) === (z > 0) ? woodLegA : woodLegB, [x, .22, z], table)
     foot.rotation.z = x > 0 ? -.025 : .025
   }
   for (const z of [-.64, .64]) add(new RoundedBoxGeometry(2.64, .16, .08, 3, .025), wood, [0, .38, z], table)

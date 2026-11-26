@@ -32,6 +32,299 @@ type Checkpoint = 0 | 1 | 2 | 3
 type Placement = { step: 0 | 1; time: number; from: THREE.Vector3; paperFrom: THREE.Vector3 }
 const smooth = (t: number) => t * t * (3 - 2 * t)
 
+function hash2(ix: number, iy: number, seed: number): number {
+  let h = (ix * 374761393 + iy * 668265263 + seed * 1442695041) | 0
+  h = Math.imul(h ^ (h >>> 13), 1274126177)
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967295
+}
+
+/**
+ * Deterministic 512x256 DataTexture (WebGL + jsdom safe) for the hollow folded paper incense sleeve:
+ * - u in [0.00, 0.50]: outer front terracotta paper with sand-cream top folded cuff, subtle left lap seam,
+ *   and matte cream-printed botanical sprig (preserving the original non-prescribed sprig motif).
+ * - u in [0.50, 0.85]: outer back & folded side edges (terracotta + sand-cream top cuff).
+ * - u in [0.85, 1.00]: pale unbleached parchment inner pocket lining & paper rim edge.
+ */
+function createIncenseSleevePrintMap(width = 512, height = 256): THREE.DataTexture {
+  const data = new Uint8Array(width * height * 4)
+  // Original terracotta paper (0xc98468), sand-cream cuff/seam (0xe6b995), cream sprig ink (0xf2e4c7), inner lining.
+  const terraR = 204, terraG = 132, terraB = 104
+  const cuffR = 232, cuffG = 188, cuffB = 152
+  const inkR = 244, inkG = 232, inkB = 204
+  const innerR = 236, innerG = 218, innerB = 186
+
+  // Evaluate distance from a point to a 2D line segment for crisp matte ink strokes.
+  const segDist = (px: number, py: number, ax: number, ay: number, bx: number, by: number) => {
+    const abx = bx - ax, aby = by - ay
+    const t = THREE.MathUtils.clamp(((px - ax) * abx + (py - ay) * aby) / Math.max(1e-8, abx * abx + aby * aby), 0, 1)
+    return Math.hypot(px - (ax + abx * t), py - (ay + aby * t))
+  }
+
+  for (let iy = 0; iy < height; iy++) {
+    const v = iy / (height - 1) // 0 = bottom, 1 = top
+    const yWorld = 0.01 + v * 0.61
+    for (let ix = 0; ix < width; ix++) {
+      const u = ix / (width - 1)
+      const grain = (hash2(ix, iy, 53) - 0.5) * 0.055
+      let r = terraR, g = terraG, b = terraB
+
+      if (u >= 0.85) {
+        // Inner lining & thin cut rim.
+        r = innerR; g = innerG; b = innerB
+      } else {
+        // Sand-cream folded top cuff band (v in [0.905, 1.0]) with soft fold shadow line beneath it.
+        const cuffAlpha = THREE.MathUtils.smoothstep(v, 0.900, 0.916)
+        if (cuffAlpha > 0.001) {
+          r = THREE.MathUtils.lerp(r, cuffR, cuffAlpha)
+          g = THREE.MathUtils.lerp(g, cuffR ? cuffG : g, cuffAlpha)
+          b = THREE.MathUtils.lerp(b, cuffB, cuffAlpha)
+        }
+        const cuffLine = 1 - 0.14 * Math.exp(-Math.pow((v - 0.896) / 0.010, 2))
+        r *= cuffLine; g *= cuffLine; b *= cuffLine
+
+        if (u < 0.50) {
+          // Front panel coordinates: x in [-0.295, +0.295].
+          const uf = u / 0.50
+          const xWorld = (uf - 0.5) * 0.59
+
+          // Left vertical folded-paper lap seam stripe (echoing original paperSeam at x = -0.23).
+          const seamAlpha = (1 - THREE.MathUtils.smoothstep(Math.abs(xWorld - (-0.225)), 0.011, 0.016))
+            * THREE.MathUtils.smoothstep(v, 0.02, 0.05) * (1 - THREE.MathUtils.smoothstep(v, 0.89, 0.91))
+          if (seamAlpha > 0.001) {
+            r = THREE.MathUtils.lerp(r, cuffR, seamAlpha * 0.88)
+            g = THREE.MathUtils.lerp(g, cuffG, seamAlpha * 0.88)
+            b = THREE.MathUtils.lerp(b, cuffB, seamAlpha * 0.88)
+          }
+          // Fine crease shadow right beside the paper lap edge.
+          const lapShadow = 1 - 0.16 * Math.exp(-Math.pow((xWorld - (-0.205)) / 0.008, 2)) * (1 - cuffAlpha)
+          r *= lapShadow; g *= lapShadow; b *= lapShadow
+
+          // Original minimalist botanical sprig printed directly onto the paper (stem + 3 small tilted leaves).
+          const dStem1 = segDist(xWorld, yWorld, 0.045, 0.125, 0.026, 0.23)
+          const dStem2 = segDist(xWorld, yWorld, 0.026, 0.23, 0.047, 0.34)
+          let inkAlpha = 1 - THREE.MathUtils.smoothstep(Math.min(dStem1, dStem2), 0.0042, 0.0072)
+          const leaves: readonly [number, number, number][] = [
+            [0.004, 0.19, -0.65],
+            [0.055, 0.255, 0.65],
+            [0.020, 0.30, -0.60],
+          ]
+          for (const [lx, ly, tilt] of leaves) {
+            const dx = xWorld - lx, dy = yWorld - ly
+            const c = Math.cos(-tilt), s = Math.sin(-tilt)
+            const rx = dx * c - dy * s
+            const ry = dx * s + dy * c
+            // Pointed leaf silhouette matching the original sprig's proportion.
+            const pinch = 1 + 0.35 * Math.pow(Math.abs(ry) / 0.036, 1.5)
+            const ell = Math.hypot((rx * pinch) / 0.013, ry / 0.035)
+            const a = 1 - THREE.MathUtils.smoothstep(ell, 0.88, 1.06)
+            if (a > inkAlpha) inkAlpha = a
+          }
+          if (inkAlpha > 0.001) {
+            const a = THREE.MathUtils.clamp(inkAlpha * (0.94 + grain), 0, 1)
+            r = THREE.MathUtils.lerp(r, inkR, a)
+            g = THREE.MathUtils.lerp(g, inkG, a)
+            b = THREE.MathUtils.lerp(b, inkB, a)
+          }
+        }
+      }
+
+      const mult = 1 + grain * 0.45
+      const idx = (iy * width + ix) * 4
+      data[idx] = THREE.MathUtils.clamp(Math.round(r * mult), 0, 255)
+      data[idx + 1] = THREE.MathUtils.clamp(Math.round(g * mult), 0, 255)
+      data[idx + 2] = THREE.MathUtils.clamp(Math.round(b * mult), 0, 255)
+      data[idx + 3] = 255
+    }
+  }
+
+  const tex = new THREE.DataTexture(data, width, height, THREE.RGBAFormat)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping
+  tex.magFilter = tex.minFilter = THREE.LinearFilter
+  tex.generateMipmaps = false
+  tex.needsUpdate = true
+  return tex
+}
+
+/**
+ * Watertight hollow folded paper incense sleeve geometry (origin at [0, 0.315, 0.035] inside `paper`).
+ * Uses a flattened-pillow folded envelope cross-section with creased left/right paper edges,
+ * thin 0.0085 walls, a subtle stepped vertical lap ridge on the front-left, a closed folded bottom,
+ * and an open hollow top mouth whose back lip rises slightly taller than the front lip so the incense
+ * stick sits cleanly inside the hollow paper pocket with zero intersection.
+ */
+function createIncenseSleeveGeometry(): THREE.BufferGeometry {
+  const segS = 48 // CCW perimeter loop: 0..24 front (-X -> +X), 24..48 back (+X -> -X)
+  const segV = 18
+  const stride = segS + 1
+  const gridVerts = (segS + 1) * (segV + 1)
+
+  const positions: number[] = []
+  const uvs: number[] = []
+  const colors: number[] = []
+  const indices: number[] = []
+
+  const halfW = 0.295
+  const yBot = -0.305
+  const zCenter = -0.020 // In paper-space: +0.035 - 0.020 = +0.015 (stick at z_paper = 0 -> z_local = -0.035).
+  const wallT = 0.0082
+
+  const outerPts: [number, number, number][] = new Array(gridVerts)
+  const innerPts: [number, number, number][] = new Array(gridVerts)
+  const outShades: number[] = new Array(gridVerts)
+  const inShades: number[] = new Array(gridVerts)
+  const outU: number[] = new Array(segS + 1)
+
+  for (let is = 0; is <= segS; is++) {
+    const s = is / segS // 0..0.5 front (-X -> +X), 0.5..1 back (+X -> -X)
+    const isFront = s <= 0.5
+    const f = isFront ? s * 2 : (s - 0.5) * 2 // 0..1 along half-side
+    // Map UV: front [0..0.50], back [0.50..0.84].
+    outU[is] = isFront ? f * 0.495 : 0.505 + f * 0.335
+  }
+
+  for (let iv = 0; iv <= segV; iv++) {
+    const v = iv / segV
+    const taper = THREE.MathUtils.lerp(1.005, 0.992, v)
+    // Open slightly more at the middle/top mouth while pressing flatter along the folded bottom seam.
+    const mouthOpen = THREE.MathUtils.lerp(0.68, 1.0, Math.pow(v, 0.55))
+    const cuffExtra = THREE.MathUtils.smoothstep(v, 0.89, 0.92) * 0.0020
+
+    for (let is = 0; is <= segS; is++) {
+      const s = is / segS
+      const isFront = s <= 0.5
+      const f = isFront ? s * 2 : (s - 0.5) * 2
+      // x goes -halfW -> +halfW on front, +halfW -> -halfW on back (CCW viewed from +Y).
+      const xNorm = isFront ? f * 2 - 1 : 1 - f * 2
+      const x = xNorm * halfW * taper
+
+      // Flattened-pillow cross-section: crisp thin folded side creases at |xNorm|=1, gently open pocket around center.
+      const arch = Math.pow(Math.max(0, 1 - xNorm * xNorm), 0.62)
+      const halfD = (0.011 + 0.046 * arch) * mouthOpen
+      // Subtle real stepped vertical paper lap ridge on the front left (around x = -0.21).
+      const lapBump = isFront ? 0.0024 * THREE.MathUtils.smoothstep(-0.206 - x, 0, 0.014) : 0
+      const zSign = isFront ? 1 : -1
+      const zOut = zCenter + zSign * (halfD + lapBump)
+      const zIn = zCenter + zSign * Math.max(0.0035, halfD - wallT - cuffExtra)
+
+      // Back lip rises 1.4cm taller than the subtly dipped front mouth so the hollow opening reads immediately.
+      const frontMouthDip = isFront ? -0.012 - 0.007 * Math.pow(Math.max(0, 1 - xNorm * xNorm), 1.4) : 0.004
+      const yTop = 0.305 + frontMouthDip
+      const y = THREE.MathUtils.lerp(yBot, yTop, v)
+
+      const xIn = x * (1 - (wallT / halfW) * (1 - 0.55 * arch))
+      const edgeCreaseAO = 1 - 0.10 * Math.pow(Math.abs(xNorm), 6)
+      const botFoldAO = 1 - 0.09 * Math.pow(1 - v, 7)
+      const inDepthShade = THREE.MathUtils.lerp(0.34, 0.94, Math.pow(v, 1.35))
+
+      const idx = iv * stride + is
+      outerPts[idx] = [x, y, zOut]
+      innerPts[idx] = [xIn, Math.max(yBot + 0.010, y), zIn]
+      outShades[idx] = edgeCreaseAO * botFoldAO
+      inShades[idx] = inDepthShade
+    }
+  }
+
+  // 1. Outer sleeve surface (0 .. gridVerts - 1).
+  for (let iv = 0; iv <= segV; iv++) {
+    const v = iv / segV
+    for (let is = 0; is <= segS; is++) {
+      const idx = iv * stride + is
+      const p = outerPts[idx]!
+      const sh = outShades[idx]!
+      positions.push(p[0], p[1], p[2])
+      uvs.push(outU[is]!, v)
+      colors.push(sh, sh, sh)
+    }
+  }
+  for (let iv = 0; iv < segV; iv++) {
+    for (let is = 0; is < segS; is++) {
+      const a = iv * stride + is
+      const b = a + 1
+      const c = a + stride + 1
+      const d = a + stride
+      indices.push(a, b, c, a, c, d)
+    }
+  }
+
+  // 2. Inner hollow pocket lining (gridVerts .. 2 * gridVerts - 1).
+  const inBase = gridVerts
+  for (let iv = 0; iv <= segV; iv++) {
+    const v = iv / segV
+    for (let is = 0; is <= segS; is++) {
+      const idx = iv * stride + is
+      const p = innerPts[idx]!
+      const sh = inShades[idx]!
+      positions.push(p[0], p[1], p[2])
+      uvs.push(0.87 + (is / segS) * 0.11, v)
+      colors.push(sh, sh, sh)
+    }
+  }
+  for (let iv = 0; iv < segV; iv++) {
+    for (let is = 0; is < segS; is++) {
+      const a = inBase + iv * stride + is
+      const b = a + 1
+      const c = a + stride + 1
+      const d = a + stride
+      indices.push(a, c, b, a, d, c)
+    }
+  }
+
+  // 3. Crisp thin folded top open mouth rim connecting outer top ring to inner top ring (+Y normal).
+  for (let is = 0; is < segS; is++) {
+    const i0 = segV * stride + is
+    const i1 = i0 + 1
+    const o0 = outerPts[i0]!, o1 = outerPts[i1]!, n1 = innerPts[i1]!, n0 = innerPts[i0]!
+    const base = positions.length / 3
+    positions.push(
+      o0[0], o0[1], o0[2],
+      o1[0], o1[1], o1[2],
+      n1[0], n1[1], n1[2],
+      n0[0], n0[1], n0[2],
+    )
+    uvs.push(0.90, 0.98, 0.94, 0.98, 0.94, 0.96, 0.90, 0.96)
+    colors.push(0.98, 0.98, 0.98, 0.98, 0.98, 0.98, 0.92, 0.92, 0.92, 0.92, 0.92, 0.92)
+    indices.push(base, base + 1, base + 2, base, base + 2, base + 3)
+  }
+
+  // 4. Closed outer bottom fold (-Y normal) & inner pocket floor (+Y normal).
+  const botCenterIdx = positions.length / 3
+  positions.push(0, yBot, zCenter)
+  uvs.push(0.65, 0.02)
+  colors.push(0.86, 0.86, 0.86)
+  for (let is = 0; is <= segS; is++) {
+    const p = outerPts[is]!
+    positions.push(p[0], p[1], p[2])
+    uvs.push(outU[is]!, 0.01)
+    colors.push(0.86, 0.86, 0.86)
+  }
+  for (let is = 0; is < segS; is++) {
+    indices.push(botCenterIdx, botCenterIdx + 1 + is + 1, botCenterIdx + 1 + is)
+  }
+
+  const floorCenterIdx = positions.length / 3
+  positions.push(0, yBot + 0.010, zCenter)
+  uvs.push(0.92, 0.05)
+  colors.push(0.30, 0.30, 0.30)
+  for (let is = 0; is <= segS; is++) {
+    const p = innerPts[is]!
+    positions.push(p[0], p[1], p[2])
+    uvs.push(0.92, 0.05)
+    colors.push(0.32, 0.32, 0.32)
+  }
+  for (let is = 0; is < segS; is++) {
+    indices.push(floorCenterIdx, floorCenterIdx + 1 + is, floorCenterIdx + 1 + is + 1)
+  }
+
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+  geometry.setIndex(indices)
+  geometry.computeVertexNormals()
+  return geometry
+}
+
 /** Original ceramic still life: a cultural tribute, without an altar, deity or ancestral rite. */
 export function createChineseIncense(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx, safe = shared.assertSafeCopy
@@ -58,7 +351,24 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   const material = (color: number, roughness = .86) => new THREE.MeshStandardMaterial({ color, roughness })
   const jade = material(0x9db9a8, .66), jadeLight = material(0xc0d2bd, .71), jadeDark = material(0x718d7c)
   const clay = material(0xba9676), cream = material(0xf0e2c3), wood = material(0xbb8e68), woodLight = material(0xd9b68a)
-  const paperMat = material(0xc98468), paperSeam = material(0xe6b995), stickMat = material(0x88624c), bamboo = material(0xcbab73)
+  const sleevePrintMap = createIncenseSleevePrintMap(512, 256)
+  const paperMat = createRitualMaterial({
+    color: 0xffffff,
+    map: sleevePrintMap,
+    roughness: 0.96,
+    vertexColors: true,
+  }, {
+    kind: 'paper',
+    strength: 0.26,
+    fiber: 'paper',
+    paper: { layout: 'sheet', aspect: 1.9, grainScale: 2.6, grain: 0.98, fibers: 0.16, edge: 0.34, highlightGuard: 0.86 },
+  })
+  const releaseSleeveMap = () => {
+    paperMat.removeEventListener('dispose', releaseSleeveMap)
+    sleevePrintMap.dispose()
+  }
+  paperMat.addEventListener('dispose', releaseSleeveMap)
+  const stickMat = material(0x88624c), bamboo = material(0xcbab73)
   const ash = material(0xd4c9b3), dark = material(0x625f50), teaMat = createRitualMaterial({ color: 0x8f713e, roughness: .3, transmission: .18, attenuationColor: 0x8f713e, attenuationDistance: .15 }, { kind: 'tea', thickness: .012, strength: .22 })
   const emberMat = new THREE.MeshStandardMaterial({ color: 0xcd7853, emissive: 0x8b381c, emissiveIntensity: .28, roughness: 1 })
   // Cream/clay also appear in ash, paper printing and the woven pad.
@@ -139,14 +449,10 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   ring(.566, .012, [1.035, .63, .36], clay)
 
   const paper = new THREE.Group(); paper.name = 'incense-paper-holder'; world.add(paper)
-  const grip = add(new RoundedBoxGeometry(.59, .61, .09, 4, .035), paperMat, [0, .315, .035], paper, 'incense-paper-grip')
-  add(new RoundedBoxGeometry(.034, .58, .012, 2, .006), paperSeam, [-.23, .315, .088], paper)
-  add(new RoundedBoxGeometry(.59, .045, .09, 2, .012), paperSeam, [0, .604, .035], paper)
-  // A small printed sprig helps the broad, honest paper grip read as a material object.
-  tube([new THREE.Vector3(.045, .12, .089), new THREE.Vector3(.026, .23, .089), new THREE.Vector3(.047, .34, .089)], .006, cream, paper)
-  for (const [x, y, tilt] of [[.004, .19, -.65], [.055, .255, .65], [.02, .30, -.6]]) {
-    const leaf = pebble([x, y, .09], [.012, .034, .007], cream, paper); leaf.rotation.z = tilt; leaf.userData.toonSurface = { outline: false }
-  }
+  // Hollow folded paper sleeve cradling the fine incense stick; front lap seam, cream top cuff,
+  // and minimalist sprig are printed directly into handmade terracotta paper fiber tooth.
+  const grip = add(createIncenseSleeveGeometry(), paperMat, [0, .315, .035], paper, 'incense-paper-grip')
+  grip.userData.toonSurface = { shading: 'smooth' }
   const tray = add(new RoundedBoxGeometry(.70, .045, .56, 4, .10), clay, [-1, .5825, .22], world, 'incense-stick-tray')
   tray.userData.toonSurface = { outline: false }
   const stick = new THREE.Group(); stick.name = 'incense-stick'; world.add(stick)

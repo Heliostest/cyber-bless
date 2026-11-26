@@ -19,7 +19,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "celtic-folk-spring": "f588ec0a8a1a34971b7994e9e3129cfec6352c7b1a0ccff05621b8c585243cb7",
   "chinese-diabolo": "9212a56676b91990e0579bd6aae250e6da76307dec0eb9cdbe801d3be37405db",
   "chinese-fu-paper": "79916e2e520f704ac063a7bf2b4da8e267d4553e641d9db488fefa4cf65b982a",
-  "chinese-incense": "87fc9cc9bed325b822ecf3f8aa74248f5b03bd9c08ae06b962a81eef4f03bb6b",
+  "chinese-incense": "b74080c4f52a828f34c78619de227e484194f79bd79363ed9a466d1f358ce673",
   "chinese-longevity-lock": "8e87b8e956b1f7e77698db4d4d5bdcf5e3e7562f2b85561706926e7bfbaeb838",
   "chinese-rattle-drum": "38a816f20bf53f91c7146c91a38019e6cd9ebc2e28ff264c2ca3ad170776998b",
   "chinese-ruyi-scepter": "bb600579ea39815aa6890c6318505f18db67ea1de4729b8bbb0d5c40fb54f63b",

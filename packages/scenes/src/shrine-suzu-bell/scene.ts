@@ -14,6 +14,7 @@ import {
   addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage,
 } from '../procedural-kit'
+import { createWoodGrainTexture, projectWoodUVs, type WoodGrainOptions } from './wood-grain'
 
 const COPY = {
   title: '庭前一铃', steps: '步骤', pull: '向下轻拉铃绳', settle: '轻收铃绳', greet: '轻点铃身问安',
@@ -222,11 +223,59 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   })
   const world = new THREE.Group(); world.name = 'suzu-timber-and-bell'; scene.add(world)
   const mat = (color: number, roughness = 0.91) => new THREE.MeshStandardMaterial({ color, roughness })
-  const wood = createCraftMaterial({ color: 0xb9936c, roughness: 0.76 }, { kind: 'wood', axis: 'x', strength: 0.6, scale: 0.74 })
-  const postWood = createCraftMaterial({ color: 0xb9936c, roughness: 0.76 }, { kind: 'wood', axis: 'y', strength: 0.6, scale: 0.74 })
-  const gripWood = createCraftMaterial({ color: 0xba936b, roughness: 0.68 }, { kind: 'wood', axis: 'y', strength: 0.56, scale: 0.8 })
-  const endWood = createCraftMaterial({ color: 0x997755, roughness: 0.8 }, { kind: 'wood', axis: 'x', strength: 0.56, scale: 0.76 })
-  const woodGrain = mat(0xa98560)
+  const woodTextures: THREE.DataTexture[] = []
+  const woodMat = (
+    color: number,
+    roughness: number,
+    axis: 'x' | 'y' | 'z',
+    scale: number,
+    strength: number,
+    grainOpts: WoodGrainOptions,
+    offsetU = 0,
+    offsetV = 0,
+  ) => {
+    const map = createWoodGrainTexture(grainOpts, offsetU, offsetV)
+    woodTextures.push(map)
+    return createCraftMaterial({ color, roughness, map }, { kind: 'wood', axis, strength, scale })
+  }
+  const wood = woodMat(0xc49460, 0.75, 'x', 0.62, 0.2, {
+    seed: 17, rings: 5.8, drift: 0.09, arch: 0.072, contrast: 0.175, wash: 0.05,
+    knots: [
+      { u: 0.29, v: 0.52, rx: 0.052, ry: 0.032, pull: 0.78, depth: 0.88 },
+      { u: 0.74, v: 0.45, rx: 0.048, ry: 0.03, pull: 0.74, depth: 0.84 },
+    ],
+  })
+  const postWoodLeft = woodMat(0xc1905c, 0.75, 'y', 0.66, 0.2, {
+    seed: 29, rings: 5.6, drift: 0.092, arch: 0.068, contrast: 0.175, wash: 0.05,
+    knots: [{ u: 0.38, v: 0.52, rx: 0.054, ry: 0.034, pull: 0.78, depth: 0.88 }],
+  })
+  const postWoodRight = woodMat(0xb48453, 0.78, 'y', 0.8, 0.22, {
+    seed: 41, rings: 6.5, drift: 0.086, arch: 0.064, contrast: 0.17, wash: 0.048,
+    knots: [{ u: 0.66, v: 0.46, rx: 0.052, ry: 0.032, pull: 0.76, depth: 0.85 }],
+  })
+  const gripWood = woodMat(0xc59562, 0.66, 'y', 0.84, 0.18, {
+    seed: 53, rings: 5.2, drift: 0.085, arch: 0.062, contrast: 0.155, wash: 0.044,
+    knots: [{ u: 0.37, v: 0.61, rx: 0.072, ry: 0.042, pull: 0.74, depth: 0.8 }],
+  })
+  const eaveWood = woodMat(0x9a7149, 0.81, 'x', 0.78, 0.22, {
+    seed: 67, rings: 6.4, drift: 0.082, arch: 0.056, contrast: 0.165, wash: 0.044,
+    knots: [{ u: 0.63, v: 0.5, rx: 0.05, ry: 0.03, pull: 0.72, depth: 0.8 }],
+  })
+  const baseWoodLeft = woodMat(0xa27950, 0.8, 'x', 0.7, 0.2, {
+    seed: 73, rings: 6.0, drift: 0.084, arch: 0.055, contrast: 0.165, wash: 0.044,
+    knots: [{ u: 0.36, v: 0.48, rx: 0.066, ry: 0.038, pull: 0.74, depth: 0.82 }],
+  })
+  const baseWoodRight = woodMat(0x946d47, 0.82, 'x', 0.84, 0.22, {
+    seed: 83, rings: 6.8, drift: 0.078, arch: 0.05, contrast: 0.16, wash: 0.042,
+  }, 0.26, 0.38)
+  const capitalWoodLeft = woodMat(0xa87e54, 0.79, 'x', 0.74, 0.2, {
+    seed: 97, rings: 5.8, drift: 0.08, arch: 0.054, contrast: 0.16, wash: 0.044,
+  }, 0.12, 0.24)
+  const capitalWoodRight = woodMat(0x9a724b, 0.81, 'x', 0.86, 0.22, {
+    seed: 109, rings: 6.6, drift: 0.076, arch: 0.05, contrast: 0.16, wash: 0.042,
+    knots: [{ u: 0.58, v: 0.52, rx: 0.068, ry: 0.04, pull: 0.72, depth: 0.78 }],
+  }, 0.34, 0.52)
+  const woodGrain = mat(0xb88a5a, 0.86)
   const cream = createCraftMaterial({ color: 0xe8deba }, { kind: 'cord' })
   const rust = createCraftMaterial({ color: 0xb16f53 }, { kind: 'cord' }), green = createCraftMaterial({ color: 0x819a76 }, { kind: 'cord' })
   const gold = createCraftMaterial({ color: 0xe6bc5c, roughness: .34, metalness: .55, emissive: 0x6a4410, emissiveIntensity: BELL_GLOW }, { kind: 'metal' })
@@ -238,15 +287,19 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   const detail = (mesh: THREE.Mesh) => { mesh.userData.toonSurface = { outline: false }; return mesh }
   const timber = new THREE.Group(); timber.name = 'suzu-original-timber-lintel'; world.add(timber)
   for (const x of [-1.02, 1.02]) {
-    add(new RoundedBoxGeometry(0.18, 2.6, 0.25, 3, 0.035), postWood, [x, 1.3, -0.21], timber).name = 'suzu-column-post'
-    add(new RoundedBoxGeometry(0.31, 0.13, 0.4, 3, 0.04), endWood, [x, 0.065, -0.2], timber).name = 'suzu-column-base'
-    add(new RoundedBoxGeometry(0.23, 0.19, 0.31, 3, 0.035), endWood, [x, 2.49, -0.2], timber).name = 'suzu-column-capital'
+    const isLeft = x < 0
+    const postGeo = projectWoodUVs(new RoundedBoxGeometry(0.18, 2.6, 0.25, 3, 0.035), 'y', isLeft ? 0.38 : 0.42, isLeft ? 1.6 : 1.75, 0.5, 0.5)
+    add(postGeo, isLeft ? postWoodLeft : postWoodRight, [x, 1.3, -0.21], timber).name = 'suzu-column-post'
+    const baseGeo = projectWoodUVs(new RoundedBoxGeometry(0.31, 0.13, 0.4, 3, 0.04), 'x', isLeft ? 1.55 : 1.7, isLeft ? 1.8 : 2.0, isLeft ? 0.5 : 0.24, 0.5)
+    add(baseGeo, isLeft ? baseWoodLeft : baseWoodRight, [x, 0.065, -0.2], timber).name = 'suzu-column-base'
+    const capGeo = projectWoodUVs(new RoundedBoxGeometry(0.23, 0.19, 0.31, 3, 0.035), 'x', isLeft ? 1.7 : 1.85, isLeft ? 1.8 : 1.95, isLeft ? 0.46 : 0.62, 0.5)
+    add(capGeo, isLeft ? capitalWoodLeft : capitalWoodRight, [x, 2.49, -0.2], timber).name = 'suzu-column-capital'
   }
-  add(new RoundedBoxGeometry(2.48, 0.23, 0.36, 4, 0.048), wood, [0, 2.66, -0.16], timber).name = 'suzu-lintel'
-  add(new RoundedBoxGeometry(2.57, 0.08, 0.43, 3, 0.027), endWood, [0, 2.815, -0.16], timber).name = 'suzu-eave-cap'
+  add(projectWoodUVs(new RoundedBoxGeometry(2.48, 0.23, 0.36, 4, 0.048), 'x', 0.4, 1.45, 0.5, 0.5), wood, [0, 2.66, -0.16], timber).name = 'suzu-lintel'
+  add(projectWoodUVs(new RoundedBoxGeometry(2.57, 0.08, 0.43, 3, 0.027), 'x', 0.44, 1.7, 0.22, 0.48), eaveWood, [0, 2.815, -0.16], timber).name = 'suzu-eave-cap'
   // Original shallow grain and inset end pins keep the lintel plain, without shrine text or seals.
-  for (const y of [2.6, 2.7]) detail(add(new RoundedBoxGeometry(1.96, 0.008, 0.012, 2, 0.002), woodGrain, [0, y, 0.028], timber))
-  for (const x of [-1.02, 1.02]) detail(add(new THREE.SphereGeometry(0.037, 12, 8), endWood, [x, 2.66, 0.03], timber))
+  for (const y of [2.6, 2.7]) detail(add(new RoundedBoxGeometry(1.96, 0.0045, 0.007, 2, 0.0015), woodGrain, [0, y, 0.022], timber))
+  for (const x of [-1.02, 1.02]) detail(add(new THREE.SphereGeometry(0.037, 12, 8), x < 0 ? capitalWoodLeft : capitalWoodRight, [x, 2.66, 0.03], timber))
 
   const suspension = add(new THREE.TorusGeometry(0.102, 0.024, 9, 32), darkGold, [0, 2.52, 0.07])
   suspension.scale.set(0.75, 1, 1)
@@ -294,7 +347,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   gripAssembly.position.set(0, BRAID_END_Y, 0); rope.add(gripAssembly)
   const neck = add(new THREE.TorusGeometry(0.092, 0.032, 10, 32), cream, [0, NECK_OFFSET_Y, 0], gripAssembly)
   neck.rotation.x = Math.PI / 2; ropeMeshes.push(neck)
-  const grip = add(new RoundedBoxGeometry(0.23, 0.28, 0.2, 4, 0.037), gripWood, [0, GRIP_LOCAL_Y, 0.01], gripAssembly)
+  const grip = add(projectWoodUVs(new RoundedBoxGeometry(0.23, 0.28, 0.2, 4, 0.037), 'y', 2.4, 2.2, 0.5, 0.5), gripWood, [0, GRIP_LOCAL_Y, 0.01], gripAssembly)
   grip.name = 'suzu-rope-grip'; ropeMeshes.push(grip)
   const collar = add(new THREE.TorusGeometry(0.099, 0.032, 9, 32), cream, [0, COLLAR_LOCAL_Y, 0], gripAssembly)
   collar.rotation.x = Math.PI / 2; ropeMeshes.push(collar)
@@ -935,6 +988,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
       ui.actionBtn.removeEventListener('click', action)
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       style.dispose(); disposeTree(scene)
+      woodTextures.forEach(tex => tex.dispose()); woodTextures.length = 0
       Object.values(lights).forEach(light => light.dispose())
       scene.clear(); renderer.dispose(); renderer.forceContextLoss()
       overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')

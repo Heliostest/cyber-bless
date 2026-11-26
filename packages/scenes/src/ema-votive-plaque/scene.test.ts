@@ -157,7 +157,7 @@ describe('ema plaque', () => {
     expect(hits(0.32, 0.28)).toBe(0)
   })
 
-  it('assigns accurate local wood grain axes across rack posts, beams, feet, pegs and plaque', () => {
+  it('assigns accurate local wood grain axes and differentiates adjacent posts, beams, feet and plaques', () => {
     const s = mount()
     const surface = (name: string) => ((s.scene.getObjectByName(name) as THREE.Mesh).material as THREE.Material).userData.craftSurface
     expect(surface('ema-rack-post')).toMatchObject({ kind: 'wood', axis: 'y' })
@@ -166,6 +166,20 @@ describe('ema plaque', () => {
     expect(surface('ema-rack-peg')).toMatchObject({ kind: 'wood', axis: 'y' })
     expect(surface('ema-plaque-body')).toMatchObject({ kind: 'wood', axis: 'x' })
     expect(surface('ema-plaque-body').strength).toBeLessThanOrEqual(0.5)
+    const posts: THREE.Mesh[] = [], beams: THREE.Mesh[] = [], feet: THREE.Mesh[] = []
+    s.scene.traverse(o => {
+      if (o.name === 'ema-rack-post') posts.push(o as THREE.Mesh)
+      if (o.name === 'ema-rack-beam') beams.push(o as THREE.Mesh)
+      if (o.name === 'ema-rack-foot') feet.push(o as THREE.Mesh)
+    })
+    expect(posts).toHaveLength(2); expect(posts[0]!.material).not.toBe(posts[1]!.material)
+    expect(beams).toHaveLength(2); expect(beams[0]!.material).not.toBe(beams[1]!.material)
+    expect(feet).toHaveLength(2); expect(feet[0]!.material).not.toBe(feet[1]!.material)
+    const leftN = s.scene.getObjectByName('ema-neighbor-plaque-left') as THREE.Mesh
+    const rightN = s.scene.getObjectByName('ema-neighbor-plaque-right') as THREE.Mesh
+    expect(leftN.material).not.toBe(rightN.material)
+    expect((s.scene.getObjectByName('ema-plaque-body') as THREE.Mesh).material).not.toBe(leftN.material)
+    expect(((s.scene.getObjectByName('ema-plaque-body') as THREE.Mesh).material as THREE.MeshStandardMaterial).map).toBeInstanceOf(THREE.DataTexture)
   })
 
   it('turns only from a plaque-started horizontal drag and hangs from a real ray hit on the rack', () => {
@@ -241,11 +255,15 @@ describe('ema plaque', () => {
   it('removes owned listeners and releases every geometry/material on disposal', () => {
     const added = vi.spyOn(window, 'addEventListener'), removed = vi.spyOn(window, 'removeEventListener')
     const s = mount()
-    const resources = new Set<THREE.BufferGeometry | THREE.Material>()
+    const resources = new Set<THREE.BufferGeometry | THREE.Material | THREE.Texture>()
     s.scene.traverse(object => {
       const mesh = object as THREE.Mesh
       if (mesh.geometry) resources.add(mesh.geometry)
-      for (const material of Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : []) resources.add(material)
+      for (const material of Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : []) {
+        resources.add(material)
+        const map = (material as THREE.MeshStandardMaterial).map
+        if (map) resources.add(map)
+      }
     })
     const freed = new Set<unknown>()
     resources.forEach(resource => resource.addEventListener('dispose', () => freed.add(resource)))

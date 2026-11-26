@@ -63,5 +63,29 @@ describe('shinto-torii lacquered timber finish', () => {
     expect((mesh('torii-rack-post-left').material as THREE.Material).userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'y' })
     expect((mesh('torii-rack-bar-top').material as THREE.Material).userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'x' })
     expect((mesh('torii-rack-ema-0').material as THREE.Material).userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'x' })
+    // Adjacent pillars, beams and hanging rack plaques carry distinct materials and flowing wood textures.
+    expect(mesh('torii-pillar-left').material).not.toBe(mesh('torii-pillar-right').material)
+    expect(mesh('torii-nuki').material).not.toBe(mesh('torii-kasagi').material)
+    expect(mesh('torii-shimaki').material).not.toBe(mesh('torii-nuki').material)
+    expect(mesh('torii-rack-post-left').material).not.toBe(mesh('torii-rack-post-right').material)
+    expect(mesh('torii-rack-bar-top').material).not.toBe(mesh('torii-rack-bar-bottom').material)
+    const emaMats = new Set([0, 1, 2, 3, 4].map(i => mesh(`torii-rack-ema-${i}`).material))
+    expect(emaMats.size).toBe(5)
+    expect((mesh('torii-pillar-left').material as THREE.MeshPhysicalMaterial).map).toBeInstanceOf(THREE.DataTexture)
+    expect((mesh('torii-rack-ema-0').material as THREE.MeshStandardMaterial).map).toBeInstanceOf(THREE.DataTexture)
+  })
+
+  it('disposes all generated wood DataTextures cleanly once', () => {
+    const { instance, scene } = mount()
+    const maps = new Set<THREE.Texture>()
+    scene.traverse(o => {
+      const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined
+      if (m?.map) maps.add(m.map)
+    })
+    expect(maps.size).toBeGreaterThan(5)
+    const spies = [...maps].map(t => vi.spyOn(t, 'dispose'))
+    instance.dispose()
+    instance.dispose()
+    spies.forEach(spy => expect(spy).toHaveBeenCalledOnce())
   })
 })

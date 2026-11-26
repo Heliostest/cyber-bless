@@ -8,4 +8,25 @@ describe('supported wish-shaking mallet',()=>{
  it('swings the actual head right then left in the air, with a solid capped barrel and attached shaft',()=>{const m=createWishingMalletModel(),center=new THREE.Vector3(0,.36,-1.15),position=()=>m.actor.localToWorld(center.clone());m.pose(1,0);const home=position();m.pose(1,.25);expect(position().x-home.x).toBeGreaterThan(.3);m.pose(1,.75);expect(position().x-home.x).toBeLessThan(-.3);m.pose(1,1);expect(position().distanceTo(home)).toBeLessThan(1e-10);m.head.updateWorldMatrix(true,false);const ray=new THREE.Raycaster(m.actor.localToWorld(new THREE.Vector3(2,.36,-1.15)),new THREE.Vector3(-1,0,0));expect(m.actor.worldToLocal(ray.intersectObject(m.head,false)[0]!.point).x).toBeCloseTo(.68,5);expect(new THREE.Box3().setFromObject(m.handle).intersectsBox(new THREE.Box3().setFromObject(m.head))).toBe(true)})
  it('keeps all checkpoints continuous without reallocating or deforming geometry',()=>{const m=createWishingMalletModel(),buffers=new Map<THREE.Mesh,{geometry:THREE.BufferGeometry;data:THREE.BufferAttribute;values:number[]}>();m.root.traverse(o=>{const p=o as THREE.Mesh;if(p.isMesh){const data=p.geometry.getAttribute('position') as THREE.BufferAttribute;buffers.set(p,{geometry:p.geometry,data,values:Array.from(data.array)})}});for(let step=0;step<3;step++){m.pose(step,1);const a=points(m.actor);m.pose(step+1,0);points(m.actor).forEach((p,i)=>expect(p.distanceTo(a[i]!)).toBeLessThan(1e-10))}for(const[p,old]of buffers){expect(p.geometry).toBe(old.geometry);expect(p.geometry.getAttribute('position')).toBe(old.data);expect(Array.from(old.data.array)).toEqual(old.values)}})
  it('uses finite closed outward triangle meshes, unit normals and FrontSide surfaces',()=>{const m=createWishingMalletModel();m.root.traverse(o=>{const mesh=o as THREE.Mesh;if(!mesh.isMesh)return;const p=mesh.geometry.getAttribute('position'),n=mesh.geometry.getAttribute('normal'),edges=new Map<string,number>();expect(mesh.geometry.index).toBeNull();const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3(),key=(v:THREE.Vector3)=>v.toArray().map(x=>Math.round(x*1e6)).join(',');let volume=0;for(let i=0;i<p.count;i+=3){a.fromBufferAttribute(p,i);b.fromBufferAttribute(p,i+1);c.fromBufferAttribute(p,i+2);if(![...a.toArray(),...b.toArray(),...c.toArray()].every(Number.isFinite))throw Error('nonfinite '+mesh.name);if(b.clone().sub(a).cross(c.clone().sub(a)).lengthSq()<1e-20)throw Error('degenerate '+mesh.name);volume+=a.dot(b.clone().cross(c))/6;for(const[u,v]of[[a,b],[b,c],[c,a]]){const k=[key(u!),key(v!)].sort().join('|');edges.set(k,(edges.get(k)??0)+1)}}expect(volume,mesh.name).toBeGreaterThan(0);expect([...edges.values()].every(v=>v===2),mesh.name).toBe(true);for(let i=0;i<n.count;i++)if(Math.abs(new THREE.Vector3().fromBufferAttribute(n,i).length()-1)>1e-5)throw Error('invalid normal');for(const mat of Array.isArray(mesh.material)?mesh.material:[mesh.material])expect(mat.side).toBe(THREE.FrontSide)})})
+ it('preserves smooth curved normals, restrained lacquer finish, and part-aligned wood grain axes',()=>{
+  const m=createWishingMalletModel()
+  for(const mesh of[m.head,m.handle,m.pommel]){
+   const n=mesh.geometry.getAttribute('normal'),a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3()
+   let smoothTriangles=0
+   for(let i=0;i<n.count;i+=3){a.fromBufferAttribute(n,i);b.fromBufferAttribute(n,i+1);c.fromBufferAttribute(n,i+2);if(a.distanceTo(b)>1e-3||b.distanceTo(c)>1e-3)smoothTriangles++}
+   expect(smoothTriangles,mesh.name).toBeGreaterThanOrEqual(n.count/6)
+  }
+  const barrelMat=m.head.material as THREE.MeshPhysicalMaterial,pommelMat=m.pommel.material as THREE.MeshPhysicalMaterial
+  expect(barrelMat).toBeInstanceOf(THREE.MeshPhysicalMaterial)
+  expect(barrelMat.clearcoat).toBeGreaterThanOrEqual(.35);expect(barrelMat.clearcoat).toBeLessThanOrEqual(.48)
+  expect(barrelMat.clearcoatRoughness).toBeGreaterThanOrEqual(.22);expect(barrelMat.clearcoatRoughness).toBeLessThanOrEqual(.32)
+  expect(barrelMat.userData.craftSurface).toMatchObject({kind:'wood',axis:'x'})
+  expect(pommelMat).toBeInstanceOf(THREE.MeshPhysicalMaterial)
+  expect(pommelMat.clearcoat).toBeGreaterThanOrEqual(.35);expect(pommelMat.clearcoat).toBeLessThanOrEqual(.48)
+  expect(pommelMat.clearcoatRoughness).toBeGreaterThanOrEqual(.22);expect(pommelMat.clearcoatRoughness).toBeLessThanOrEqual(.32)
+  expect((m.headRest.material as THREE.Material).userData.craftSurface).toMatchObject({kind:'wood',axis:'x'})
+  expect((m.handleRest.material as THREE.Material).userData.craftSurface).toMatchObject({kind:'wood',axis:'y'})
+  expect((m.handle.material as THREE.Material).userData.craftSurface).toMatchObject({kind:'wood',axis:'z'})
+  expect(pommelMat.userData.craftSurface).toMatchObject({kind:'wood',axis:'z'})
+ })
 })

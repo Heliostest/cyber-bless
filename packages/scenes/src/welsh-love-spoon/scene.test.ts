@@ -303,6 +303,29 @@ describe('physical craft and owned resources', () => {
     const p = s.point('spoon-handle-grip'); event(s.hit, 'pointerdown', p); s.write('手势期间'); expect(s.saveWish).not.toHaveBeenCalled()
     event(s.hit, 'pointercancel', p); s.write('春天安好'); expect(s.saveWish).toHaveBeenCalledExactlyOnceWith('春天安好'); expect(s.progress).toEqual([1, 2, 3])
   })
+  it('aligns vertical walnut pegs on the y axis and gives the carved spoon a restrained waxed luster', () => {
+    const s = mount(0)
+    const base = s.scene.getObjectByName('spoon-stand-base') as THREE.Mesh
+    const displayPeg = s.scene.getObjectByName('spoon-display-back-rest') as THREE.Mesh
+    const homePeg = s.scene.getObjectByName('spoon-home-back-rest') as THREE.Mesh
+    const bowl = s.scene.getObjectByName('spoon-bowl') as THREE.Mesh
+    const handle = s.scene.getObjectByName('spoon-carved-handle') as THREE.Mesh
+    expect((base.material as THREE.Material).userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect((displayPeg.material as THREE.Material).userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect((homePeg.material as THREE.Material).userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(displayPeg.material).not.toBe(base.material)
+    const carvedMat = bowl.material as THREE.MeshPhysicalMaterial
+    expect(carvedMat).toBeInstanceOf(THREE.MeshPhysicalMaterial)
+    expect(handle.material).toBe(carvedMat)
+    expect(carvedMat.clearcoat).toBeGreaterThanOrEqual(.16); expect(carvedMat.clearcoat).toBeLessThanOrEqual(.24)
+    expect(carvedMat.clearcoatRoughness).toBeGreaterThanOrEqual(.38); expect(carvedMat.clearcoatRoughness).toBeLessThanOrEqual(.48)
+    expect(carvedMat.userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'y' })
+    const normals = bowl.geometry.getAttribute('normal'), v = new THREE.Vector3()
+    for (let i = 0; i < normals.count; i++) {
+      v.fromBufferAttribute(normals, i)
+      expect(Math.abs(v.length() - 1)).toBeLessThan(1e-4)
+    }
+  })
   it('frees geometry, materials, cues, shadows, DOM and owned listeners exactly once', () => {
     const added = vi.spyOn(window, 'addEventListener'), removed = vi.spyOn(window, 'removeEventListener'), s = mount()
     const resources = new Set<THREE.BufferGeometry | THREE.Material>(), shadows: number[] = []

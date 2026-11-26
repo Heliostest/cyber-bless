@@ -58,16 +58,19 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
   lights.key.shadow.bias = -.0007; lights.key.shadow.normalBias = .02
   const world = new THREE.Group(); world.name = 'spoon-veranda-workbench'; scene.add(world)
   const material = (color: number, roughness = .82) => new THREE.MeshStandardMaterial({ color, roughness })
-  const carved = material(0xc69050, .62), grain = material(0xe1b579, .62), oak = material(0xc5ac80), walnut = material(0x80634b), linen = material(0x94b4ad)
-  applyCraftSurface(carved, { kind: 'wood', strength: .4, axis: 'y' })
-  applyCraftSurface(grain, { kind: 'wood', strength: .35, axis: 'y' })
-  applyCraftSurface(walnut, { kind: 'wood', strength: .4 })
+  const carved = new THREE.MeshPhysicalMaterial({ color: 0xc28647, roughness: .54, clearcoat: .19, clearcoatRoughness: .43, envMapIntensity: .8 })
+  const grain = new THREE.MeshPhysicalMaterial({ color: 0xdca96a, roughness: .54, clearcoat: .18, clearcoatRoughness: .44, envMapIntensity: .76 })
+  const walnut = material(0x80634b, .70), walnutPeg = material(0x80634b, .70), linen = material(0x94b4ad)
+  applyCraftSurface(carved, { kind: 'wood', strength: .44, scale: .82, axis: 'y' })
+  applyCraftSurface(grain, { kind: 'wood', strength: .38, scale: .82, axis: 'y' })
+  applyCraftSurface(walnut, { kind: 'wood', strength: .5, scale: .85, axis: 'x' })
+  applyCraftSurface(walnutPeg, { kind: 'wood', strength: .5, scale: .85, axis: 'y' })
   applyCraftSurface(linen, { kind: 'fabric', strength: .26 })
 
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
-  const box = (name: string, size: [number, number, number], p: [number, number, number], mat: THREE.Material = oak, parent: THREE.Object3D = world) =>
+  const box = (name: string, size: [number, number, number], p: [number, number, number], mat: THREE.Material, parent: THREE.Object3D = world) =>
     add(name, new RoundedBoxGeometry(...size, 3, Math.min(.025, ...size.map(v => v / 3))), mat, p, parent)
   const tube = (name: string, points: THREE.Vector3[], radius: number, mat: THREE.Material, parent: THREE.Object3D, closed = false) => {
     const mesh = add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, closed), 64, radius, 8, closed), mat, [0, 0, 0], parent)
@@ -76,21 +79,30 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
   addCraftTable(world, { name: 'spoon-table', topName: 'spoon-table-top', width: 3.12, depth: 1.62, surfaceY: .76, thickness: .12, center: [0,.04], support: 'trestle', finish: 'honey' })
   const ground = add('spoon-contact-shadow', new THREE.PlaneGeometry(3.8, 2.1), new THREE.ShadowMaterial({ opacity: .13 }), [0, .002, .1]); ground.rotation.x = -Math.PI / 2; ground.castShadow = false
   box('spoon-home-pad', [.9, .04, .5], [-.72, .78, .02], linen)
-  box('spoon-home-back-rest', [.22, .44, .08], [-.72, 1.02, -.13], walnut)
+  box('spoon-home-back-rest', [.22, .44, .08], [-.72, 1.02, -.13], walnutPeg)
   const stand = new THREE.Group(); stand.name = 'spoon-display-stand'; world.add(stand)
   box('spoon-stand-base', [.95, .08, .66], [.78, .80, .02], walnut, stand)
   const seat = box('spoon-display-seat', [.76, .04, .43], [.78, .86, .02], linen, stand)
-  box('spoon-display-back-rest', [.19, .54, .08], [.78, 1.15, -.13], walnut, stand)
+  box('spoon-display-back-rest', [.19, .54, .08], [.78, 1.15, -.13], walnutPeg, stand)
   const spoon = new THREE.Group(); spoon.name = 'spoon-body'; world.add(spoon)
   // A closed profile gives the spoon a concave front and a convex, thick wooden back.
   const profile = [[0, 0], [.28, .009], [.55, .035], [.8, .085], [.98, .155], [1, .17], [1.06, .15], [1.06, .10], [.95, .005], [.6, -.095], [0, -.125]]
-  const positions: number[] = [], indices: number[] = [], segments = 64
-  for (const [r, z] of profile) for (let j = 0; j <= segments; j++) {
-    const angle = j / segments * Math.PI * 2; positions.push(.33 * r * Math.cos(angle), .45 * r * Math.sin(angle), z)
+  const positions: number[] = [0, 0, profile[0]![1]!], indices: number[] = [], segments = 64, rings = profile.length - 2
+  for (let i = 1; i <= rings; i++) {
+    const [r, z] = profile[i]!
+    for (let j = 0; j < segments; j++) {
+      const angle = j / segments * Math.PI * 2; positions.push(.33 * r! * Math.cos(angle), .45 * r! * Math.sin(angle), z!)
+    }
   }
-  for (let i = 0; i < profile.length - 1; i++) for (let j = 0; j < segments; j++) {
-    const a = i * (segments + 1) + j, b = a + segments + 1; indices.push(a, b, b + 1, a, b + 1, a + 1)
+  const backPole = 1 + rings * segments
+  positions.push(0, 0, profile[profile.length - 1]![1]!)
+  for (let j = 0; j < segments; j++) indices.push(0, 1 + j, 1 + (j + 1) % segments)
+  for (let i = 0; i < rings - 1; i++) for (let j = 0; j < segments; j++) {
+    const next = (j + 1) % segments, a = 1 + i * segments + j, a1 = 1 + i * segments + next, b = a + segments, b1 = a1 + segments
+    indices.push(a, b, b1, a, b1, a1)
   }
+  const lastRing = 1 + (rings - 1) * segments
+  for (let j = 0; j < segments; j++) indices.push(lastRing + j, backPole, lastRing + (j + 1) % segments)
   const bowlGeometry = new THREE.BufferGeometry(); bowlGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); bowlGeometry.setIndex(indices); bowlGeometry.computeVertexNormals()
   const bowl = add('spoon-bowl', bowlGeometry, carved, [0, .477, 0], spoon)
   bowl.userData.toonSurface = { outline: false }
@@ -112,7 +124,7 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
   box('spoon-cloth-fold', [.48, .018, .11], [0, .057, -.07], linen, cloth)
 
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const restore = () => { spoon.position.copy(at >= 2 ? REST : home); cloth.position.copy(CLOTH_HOME); polished.visible = at >= 1; matrices() }
+  const restore = () => { spoon.position.copy(at >= 2 ? REST : home); cloth.position.copy(CLOTH_HOME); polished.visible = at >= 1; carved.clearcoat = at >= 1 ? .23 : .19; carved.clearcoatRoughness = at >= 1 ? .39 : .43; matrices() }
   const enabled = (step: number) => () => active() && !motion && at === step
   const bowlPoint = () => bowl.getWorldPosition(new THREE.Vector3())
   addInteractionCue(clothGrip, { kind: 'drag', label: '拿起软布', priority: 3, enabled: enabled(0), destination: bowl, targetLabel: '木勺凹面' })
@@ -208,6 +220,9 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
           if (t < .66) { cloth.position.lerpVectors(motion.from, target, Math.min(1, t / .3)); cloth.position.y += Math.sin(t / .66 * Math.PI * 2) * .065 }
           else cloth.position.lerpVectors(target, CLOTH_HOME, (t - .66) / .34)
           polished.visible = t > .35
+          const sheen = THREE.MathUtils.clamp((t - .2) / .5, 0, 1)
+          carved.clearcoat = THREE.MathUtils.lerp(.19, .23, sheen)
+          carved.clearcoatRoughness = THREE.MathUtils.lerp(.43, .39, sheen)
         } else { spoon.position.lerpVectors(motion.from, REST, t); if (!reduced()) spoon.position.y += .14 * Math.sin(Math.PI * t) }
         if (motion.time === 1) settle()
       }

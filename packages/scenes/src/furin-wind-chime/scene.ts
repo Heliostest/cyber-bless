@@ -3,6 +3,10 @@ import { createFurinHandling } from './handling'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import {
+  createHangingPaperRig,
+  createPaperStripSurface,
+} from '@wbr/scene-runtime/paper-sheet'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -211,12 +215,13 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   clapperPivot.name = 'furin-clapper-pivot'
   clapperPivot.position.y = -0.45
   pivot.add(clapperPivot)
+  const clapperStringMat = new THREE.MeshStandardMaterial({ color: 0xf2efe8, roughness: 0.9 })
+  applyCraftSurface(clapperStringMat, { kind: 'cord', strength: .28 })
   const clapperString = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.004, 0.004, 0.42, 4),
-    new THREE.MeshStandardMaterial({ color: 0xf2efe8, roughness: 0.9 }),
+    new THREE.CylinderGeometry(0.004, 0.004, 0.45, 6),
+    clapperStringMat,
   )
-  applyCraftSurface(clapperString.material, { kind: 'cord', strength: .28 })
-  clapperString.position.y = -0.21
+  clapperString.position.y = -0.225
   clapperPivot.add(clapperString)
   const clapper = new THREE.Mesh(
     new THREE.CylinderGeometry(0.03, 0.03, 0.05, 12),
@@ -225,28 +230,117 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   clapper.position.y = -0.2
   clapperPivot.add(clapper)
 
-  // Paper ribbon (tanzaku-style) as a chain of segments for flutter.
-  const ribbonMat = new THREE.MeshStandardMaterial({
-    color: 0xf0a8b6,
-    roughness: 0.95,
-    side: THREE.DoubleSide,
-  })
-  const segGeo = new THREE.PlaneGeometry(0.14, 0.13)
-  segGeo.translate(0, -0.065, 0)
+  // Retain the four kinematic follow-through joints for display-motion tests and
+  // swipe cue anchoring, while rendering one continuous, seamless washi tanzaku
+  // strip driven by stiff Rapier hanging-paper physics (no segmented stair-step tears).
+  const RIBBON_W = 0.14
+  const RIBBON_H = 0.52
+  const RIBBON_SEG_X = 6
+  const RIBBON_SEG_Y = 16
+  const RIBBON_THICKNESS = 0.0028
+  const HOLE_ROW = 1
+  const HOLE_COL = RIBBON_SEG_X / 2
+
   const ribbonJoints: THREE.Group[] = []
-  const ribbonSegments: THREE.Mesh[] = []
   let parent: THREE.Object3D = clapperPivot
   for (let i = 0; i < RIBBON_SEGMENTS; i++) {
     const joint = new THREE.Group()
     joint.name = `furin-ribbon-joint-${i}`
     joint.position.y = i === 0 ? -0.42 : -0.13
     parent.add(joint)
-    const segment = new THREE.Mesh(segGeo, ribbonMat)
-    joint.add(segment)
-    ribbonSegments.push(segment)
     ribbonJoints.push(joint)
     parent = joint
   }
+
+  const ribbonMat = createRitualMaterial({
+    color: 0xf0a8b6,
+    roughness: 0.94,
+    side: THREE.DoubleSide,
+  }, {
+    kind: 'paper',
+    strength: 0.28,
+    fiber: 'paper',
+    paper: {
+      layout: 'sheet',
+      aspect: RIBBON_W / RIBBON_H,
+      grainScale: 6.4,
+      grain: 0.74,
+      fibers: 0.22,
+      edge: 0.42,
+      highlightGuard: 0.76,
+    },
+  })
+  const ribbonEdgeMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(0xf0a8b6).lerp(new THREE.Color(0xfbf1e6), 0.62),
+    roughness: 0.96,
+    side: THREE.DoubleSide,
+  })
+  const holeBoreMat = new THREE.MeshStandardMaterial({ color: 0x45353a, roughness: 0.95 })
+
+  const ribbonSurface = createPaperStripSurface(RIBBON_W, RIBBON_H, {
+    segX: RIBBON_SEG_X,
+    segY: RIBBON_SEG_Y,
+    thickness: RIBBON_THICKNESS,
+  })
+  const ribbonMesh = new THREE.Mesh(ribbonSurface.geometry, ribbonMat)
+  ribbonMesh.name = 'furin-ribbon-strip'
+  ribbonMesh.position.y = -0.42
+  ribbonMesh.castShadow = true
+  ribbonMesh.receiveShadow = true
+  clapperPivot.add(ribbonMesh)
+
+  const ribbonEdge = new THREE.Mesh(ribbonSurface.edgeGeometry, ribbonEdgeMat)
+  ribbonEdge.name = 'furin-ribbon-strip-edge'
+  ribbonEdge.userData.toonSurface = { outline: false }
+  ribbonMesh.add(ribbonEdge)
+
+  const holeAnchor = new THREE.Group()
+  holeAnchor.name = 'furin-ribbon-hole'
+  const holeGeo = new THREE.CircleGeometry(0.0072, 12)
+  const frontBore = new THREE.Mesh(holeGeo, holeBoreMat)
+  frontBore.position.z = RIBBON_THICKNESS * 0.56
+  frontBore.userData.toonSurface = { outline: false }
+  const backBore = new THREE.Mesh(holeGeo, holeBoreMat)
+  backBore.position.z = -RIBBON_THICKNESS * 0.56
+  backBore.rotation.y = Math.PI
+  backBore.userData.toonSurface = { outline: false }
+  const stringKnot = new THREE.Mesh(new THREE.TorusGeometry(0.0082, 0.0026, 6, 14), clapperStringMat)
+  stringKnot.rotation.y = Math.PI / 2
+  stringKnot.position.y = 0.006
+  stringKnot.userData.toonSurface = { outline: false }
+  holeAnchor.add(frontBore, backBore, stringKnot)
+  ribbonMesh.add(holeAnchor)
+
+  const _holeUpZ = new THREE.Vector3(0, 0, 1)
+  const _holeNorm = new THREE.Vector3()
+  const syncRibbonHole = () => {
+    const pos = ribbonSurface.geometry.getAttribute('position') as THREE.BufferAttribute
+    const norm = ribbonSurface.geometry.getAttribute('normal') as THREE.BufferAttribute | undefined
+    const cols = RIBBON_SEG_X + 1
+    const idx = HOLE_ROW * cols + HOLE_COL
+    holeAnchor.position.set(pos.getX(idx), pos.getY(idx), pos.getZ(idx))
+    if (norm) {
+      const nx = norm.getX(idx), ny = norm.getY(idx), nz = norm.getZ(idx)
+      if (nx * nx + ny * ny + nz * nz > 1e-6) {
+        holeAnchor.quaternion.setFromUnitVectors(_holeUpZ, _holeNorm.set(nx, ny, nz).normalize())
+      }
+    }
+  }
+
+  const paperRig = createHangingPaperRig({
+    strips: [{
+      surface: ribbonSurface,
+      phase: 0.7,
+      baseYaw: 0.28,
+      curlBias: 0.92,
+      breezeScale: 1.12,
+    }],
+    isActive: () => started && !disposed && canAct(),
+    isReducedMotion: () => ctx.isReducedMotion?.() ?? false,
+    settleSteps: 40,
+    breezeStrength: 1.0,
+  })
+  syncRibbonHole()
 
   // Generous invisible hit target covering bell + ribbon.
   const tapZone = new THREE.Mesh(
@@ -299,6 +393,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   const strike = (strength: number) => {
     const reduced = ctx.isReducedMotion?.() ?? false
     swingVel += (reduced ? 0.4 : 2.6) * strength
+    if (!reduced) paperRig.impulse(0, -strength * 4.2, strength * 1.8)
   }
 
   const canAct = () => !disposed && !preparingFeedback && (restoring || !ctx.isActive || ctx.isActive())
@@ -335,9 +430,9 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   const canCue = () => !!handling?.isHung() && started && !disposed && !restoring && canAct() && step === 'idle'
   const removeCues = [
     addInteractionCue(bell, { kind: 'tap', label: '点按铃身', enabled: canCue, priority: 2 }),
-    addInteractionCue(ribbonSegments[1], {
+    addInteractionCue(ribbonJoints[1]!, {
       kind: 'drag', label: '向上拂动纸条', anchor: [0, -0.065, 0],
-      destination: () => ribbonSegments[1].localToWorld(new THREE.Vector3(0, 0.5, 0)),
+      destination: () => ribbonJoints[1]!.localToWorld(new THREE.Vector3(0, 0.5, 0)),
       targetLabel: '向上轻拂', enabled: canCue, priority: 1,
     }),
     addInteractionCue(bell, {
@@ -469,6 +564,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
       if (initial >= 4) goListen()
       if (initial >= 5) completeScene()
       restoring = false
+      if (!ctx.isReducedMotion?.()) void paperRig.start()
       syncOverlayForStep()
     },
     tapPreview() {
@@ -479,6 +575,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
       } else {
         previewElapsed = 0
         previewVel = Math.min(1.1, previewVel + 0.95)
+        paperRig.impulse(0, -3.0, 1.5)
       }
       return true
     },
@@ -521,8 +618,14 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
           }
         }
       }
-      // The bell carries the cord; its clapper and segmented ribbon lag.
+      // The bell carries the cord; its clapper and continuous stiff washi ribbon lag.
       posePendulum(reduced, t)
+      const displayVel = swingVel + (previewElapsed < PREVIEW_SECONDS ? previewVel : 0)
+      if (!reduced && Math.abs(displayVel) > 0.12) {
+        paperRig.impulse(0, -displayVel * 0.45 * Math.min(dt, 0.05) * 60, Math.abs(displayVel) * 0.22 * Math.min(dt, 0.05) * 60)
+      }
+      paperRig.update(dt, t)
+      syncRibbonHole()
 
       if (!handling!.isInspecting()) camera.position.set(
         cameraHome.x + Math.sin(t * 0.12) * 0.08,
@@ -539,6 +642,7 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
       if (disposed) return
       ending.dispose()
       disposed = true
+      paperRig.dispose()
       handling?.dispose()
       resetPreview()
       resizeObserver?.disconnect()

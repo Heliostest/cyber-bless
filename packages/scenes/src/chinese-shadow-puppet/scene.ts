@@ -8,6 +8,7 @@ import { createObjectPointer } from '../object-pointer'
 import { createQuietEnding } from '../quiet-ending'
 import { completesDirectionalDrag } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
+import { addCrescentHole, addLeafHole, createCutPaperGeometry, createPaperCraftTextures, createPiercedPaperMaterial, type CutPaperGeometryOptions } from './paper-craft'
 
 const COPY = {
   title: '影偶小戏', lift: '握住下方主杆，向上轻提，让彩色小鸟的影子登上布幕。',
@@ -45,7 +46,12 @@ export function createChineseShadowPuppet(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'shadow-theatre'; scene.add(world)
   const rig = new THREE.Group(); rig.name = 'shadow-puppet-rig'; world.add(rig)
   const mat = (color: number, roughness = .84, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness, side: THREE.DoubleSide })
-  const timber = mat(0x614336), edges = mat(0x9c6540), gold = mat(0xe0a43d), teal = mat(0x248d8a), red = mat(0xc84e3b), amber = mat(0xe6ad45), brass = mat(0xbd8f48, .46, .35)
+  const paperTextures = createPaperCraftTextures(256)
+  const timber = mat(0x614336), edges = mat(0x9c6540), gold = mat(0xe0a43d), bambooRod = mat(0xc7954a, .74, 0), brass = mat(0xbd8f48, .44, .38)
+  // Thin dyed pierced-paper materials using shared ritual-optics sheet paper shading + subtle night backlighting.
+  const tealPaper = createPiercedPaperMaterial(paperTextures, 0x248682, 0x317d6f, .14, .48)
+  const redPaper = createPiercedPaperMaterial(paperTextures, 0xc74b39, 0xbe482e, .17, .52)
+  const amberPaper = createPiercedPaperMaterial(paperTextures, 0xe3a845, 0xd48a30, .18, .54)
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: XYZ, parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
@@ -59,17 +65,20 @@ export function createChineseShadowPuppet(ctx: SceneContext): SceneInstance {
   box('shadow-top-beam', [3.56, .22, .24], [0, 3.18, -.18], timber)
   box('shadow-top-inlay', [3.28, .035, .026], [0, 3.20, -.047], gold)
   box('shadow-bottom-beam', [3.24, .14, .20], [0, .64, -.18], timber)
-  // An unlit textile gradient avoids the host's cel band swallowing the shadow.
+  // An unlit woven textile gradient avoids the host's cel band swallowing the shadow.
   const clothGeometry = new THREE.PlaneGeometry(3.10, 2.36, 28, 24), clothColors: number[] = []
-  const clothPositions = clothGeometry.getAttribute('position'), centerColor = new THREE.Color(0xffe9b5), edgeColor = new THREE.Color(0xc7a478)
+  const clothPositions = clothGeometry.getAttribute('position'), centerColor = new THREE.Color(0xffedb9), edgeColor = new THREE.Color(0xc59f72)
   for (let i = 0; i < clothPositions.count; i++) {
-    const distance = Math.min(1, Math.hypot(clothPositions.getX(i) / 1.8, clothPositions.getY(i) / 1.6))
-    // A restrained procedural weave keeps the authored unlit light field and opaque projection.
-    const weave = .003 * Math.sin(clothPositions.getX(i) * 37) * Math.sin(clothPositions.getY(i) * 41)
-    const color = centerColor.clone().lerp(edgeColor, distance * .35 + Math.sin(i * 13.2) * .012 + weave); clothColors.push(color.r, color.g, color.b)
+    const cx = clothPositions.getX(i), cy = clothPositions.getY(i)
+    const beamDist = Math.min(1, Math.hypot((cx + .14) / 1.72, (cy + .02) / 1.48))
+    const frameEdge = Math.max(Math.abs(cx) / 1.55, Math.abs(cy) / 1.18)
+    const hemShade = THREE.MathUtils.smoothstep(frameEdge, .82, 1.0) * .18
+    const weave = .003 * Math.sin(cx * 37) * Math.sin(cy * 41)
+    const color = centerColor.clone().lerp(edgeColor, THREE.MathUtils.clamp(beamDist * .36 + hemShade + Math.sin(i * 13.2) * .01 + weave, 0, .92))
+    clothColors.push(color.r, color.g, color.b)
   }
   clothGeometry.setAttribute('color', new THREE.Float32BufferAttribute(clothColors, 3))
-  const cloth = add('shadow-cloth', clothGeometry, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }), [0, 1.89, SCREEN_Z - .012]); cloth.userData.toonSurface = { outline: false }; cloth.castShadow = false
+  const cloth = add('shadow-cloth', clothGeometry, new THREE.MeshBasicMaterial({ vertexColors: true, map: paperTextures.clothWeaveMap, side: THREE.DoubleSide }), [0, 1.89, SCREEN_Z - .012]); cloth.userData.toonSurface = { outline: false }; cloth.castShadow = false
   const stitchMat = new THREE.MeshBasicMaterial({ color: 0xbda27d })
   for (let i = 0; i < 27; i++) for (const y of [.76, 3.02]) box(`shadow-stitch-${i}-${y}`, [.035, .006, .004], [-1.44 + i * .11, y, SCREEN_Z - .006], stitchMat)
   // The visible luminous aperture is the mathematical projection origin.
@@ -79,51 +88,131 @@ export function createChineseShadowPuppet(ctx: SceneContext): SceneInstance {
   const lamp = new THREE.Group(); lamp.name = 'shadow-lamp'; lamp.position.copy(lightPosition); world.add(lamp)
   const shade = add('shadow-lamp-shade', new THREE.CylinderGeometry(.22, .13, .30, 24, 1, true), brass, [0, 0, .11], lamp); shade.rotation.x = Math.PI / 2
   const source = add('shadow-light-source', new THREE.SphereGeometry(.085, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffe6a0 }), [0, 0, 0], lamp); source.castShadow = false
-  const lampLight = new THREE.PointLight(0xffd493, .75, 3, 2); lampLight.position.copy(lightPosition); world.add(lampLight)
+  // Warm backstage lamp reaches the pierced paper bird and rim-lights its thin cut edges without washing out the night courtyard.
+  const lampLight = new THREE.PointLight(0xffd493, 2.2, 6.2, 1.7); lampLight.position.copy(lightPosition); world.add(lampLight)
+  // Soft local screen-bounce backlight behind the puppet drives ritual-optics thin-paper diffuse transmission.
+  const screenGlowLight = new THREE.PointLight(0xffd89c, 1.35, 2.6, 2.0); screenGlowLight.position.set(-.18, 1.82, .05); world.add(screenGlowLight)
   const bird = new THREE.Group(); bird.name = 'shadow-bird'; rig.add(bird)
   const shape = (points: [number, number][]) => { const s = new THREE.Shape(); points.forEach(([x, y], i) => i ? s.lineTo(x, y) : s.moveTo(x, y)); s.closePath(); return s }
   const hole = (s: THREE.Shape, x: number, y: number, rx: number, ry = rx, angle = 0) => { const h = new THREE.Path(); h.absellipse(x, y, rx, ry, 0, Math.PI * 2, true, angle); s.holes.push(h) }
-  const cut = (name: string, s: THREE.Shape, material: THREE.Material, p: XYZ, parent: THREE.Object3D = bird) => {
-    const mesh = add(name, new THREE.ExtrudeGeometry(s, { depth: .026, bevelEnabled: false, curveSegments: 18 }), material, p, parent); mesh.userData.toonSurface = { outline: false, shading: 'smooth' }; return mesh
+  type ShadowTone = { layer: number; core: THREE.Color; edge: THREE.Color }
+  const shadowTones = new Map<THREE.Mesh, ShadowTone>()
+  const PAPER_MAIN_T = .0044, PAPER_LAYER_T = .0034
+  // Cohesive warm-lamp shadow family: thin colored paper passes a faint warm undertone, while solid rods/grips cast deeper opaque umber.
+  const paperShadow = {
+    teal: { core: new THREE.Color(0x4b483b), edge: new THREE.Color(0x3e3b30) },
+    red: { core: new THREE.Color(0x6d3e2d), edge: new THREE.Color(0x573224) },
+    amber: { core: new THREE.Color(0x7d5a34), edge: new THREE.Color(0x634627) },
+    opaque: { core: new THREE.Color(0x3d2c20), edge: new THREE.Color(0x302218) },
+  }
+  const tagShadow = (mesh: THREE.Mesh, layer: number, kind: keyof typeof paperShadow) => {
+    shadowTones.set(mesh, { layer, ...paperShadow[kind] }); return mesh
+  }
+  const cut = (
+    name: string,
+    s: THREE.Shape,
+    material: THREE.Material,
+    p: XYZ,
+    parent: THREE.Object3D = bird,
+    options: Partial<CutPaperGeometryOptions> = {},
+  ) => {
+    const geometry = createCutPaperGeometry(s, { depth: options.depth ?? PAPER_MAIN_T, ...options })
+    const mesh = add(name, geometry, material, p, parent); mesh.userData.toonSurface = { outline: false, shading: 'smooth' }; return mesh
   }
   const bodyShape = new THREE.Shape()
   bodyShape.moveTo(-.57, .06); bodyShape.bezierCurveTo(-.37, -.32, .16, -.33, .37, -.06)
   bodyShape.quadraticCurveTo(.46, .02, .47, .13); bodyShape.quadraticCurveTo(.67, .09, .70, .28)
   bodyShape.lineTo(.92, .28); bodyShape.lineTo(.70, .39); bodyShape.bezierCurveTo(.64, .59, .38, .59, .32, .37)
   bodyShape.bezierCurveTo(.10, .36, -.17, .30, -.57, .06); bodyShape.closePath()
-  for (const [x, y, rx, ry] of [[-.34, -.05, .037, .065], [-.19, -.13, .04, .035], [-.02, -.13, .04, .035], [.13, -.12, .035, .03], [.02, .15, .034, .048], [.20, .22, .035, .045], [.53, .36, .04, .04]]) hole(bodyShape, x!, y!, rx!, ry!)
-  const body = cut('shadow-bird-body', bodyShape, teal, [0, 0, 0])
-  cut('shadow-bird-chest', shape([[.34, .18], [.43, .12], [.37, -.04], [.25, -.15], [.25, .04]]), red, [0, 0, .028])
-  cut('shadow-bird-beak', shape([[.70, .28], [.92, .28], [.70, .39]]), amber, [0, 0, .028])
+  hole(bodyShape, .53, .36, .042, .042)
+  addCrescentHole(bodyShape, -.34, -.04, .068, .028, .22)
+  for (const [x, y, hl, hw, angle] of [
+    [-.19, -.13, .052, .028, -.16],
+    [-.02, -.14, .054, .029, .05],
+    [.13, -.12, .046, .025, .36],
+    [.01, .16, .058, .029, .18],
+    [.20, .22, .056, .028, .35],
+    [.37, .28, .036, .019, .58],
+  ]) addLeafHole(bodyShape, x!, y!, hl!, hw!, angle!)
+  const body = tagShadow(cut('shadow-bird-body', bodyShape, tealPaper, [0, 0, 0], bird, {
+    depth: PAPER_MAIN_T,
+    uvOffset: [2.1, 1.7],
+    pinShadows: [[-.22, .07, .11, .15], [.12, -.13, .085, .13]],
+    curl: (x, y) => -.0025 * Math.pow(Math.max(0, -.15 - x), 1.6) + .0016 * Math.sin((x + .2) * 3.1) * Math.cos(y * 2.8),
+  }), 4, 'teal')
+  const chestShape = new THREE.Shape()
+  chestShape.moveTo(.34, .18); chestShape.quadraticCurveTo(.41, .15, .43, .12)
+  chestShape.quadraticCurveTo(.41, .03, .37, -.04); chestShape.quadraticCurveTo(.32, -.10, .25, -.15)
+  chestShape.quadraticCurveTo(.23, -.05, .25, .04); chestShape.quadraticCurveTo(.28, .12, .34, .18); chestShape.closePath()
+  addLeafHole(chestShape, .33, .03, .034, .015, 1.05)
+  tagShadow(cut('shadow-bird-chest', chestShape, redPaper, [0, 0, .0049], bird, {
+    depth: PAPER_LAYER_T,
+    uvOffset: [3.4, 2.2],
+  }), 5, 'red')
+  tagShadow(cut('shadow-bird-beak', shape([[.70, .28], [.92, .28], [.70, .39]]), amberPaper, [0, 0, .0049], bird, {
+    depth: .0032,
+    uvOffset: [1.5, 2.9],
+  }), 5, 'amber')
   for (let i = 0; i < 3; i++) {
-    const feather = shape([[-.42, .03], [-1.02 + i * .06, -.09 - i * .16], [-.91 + i * .08, -.26 - i * .15], [-.32, -.12]])
-    hole(feather, -.71 + i * .055, -.145 - i * .13, .085, .018, .3 + i * .22)
-    cut(`shadow-tail-${i}`, feather, i % 2 ? red : amber, [0, 0, -.012 - i * .007])
+    const feather = shape([
+      [-.42, .03],
+      [-1.02 + i * .06, -.09 - i * .16],
+      [-.93 + i * .07, -.17 - i * .155],
+      [-.91 + i * .08, -.26 - i * .15],
+      [-.32, -.12],
+    ])
+    addLeafHole(feather, -.70 + i * .055, -.145 - i * .13, .092, .020, .30 + i * .22)
+    tagShadow(cut(`shadow-tail-${i}`, feather, i % 2 ? redPaper : amberPaper, [0, 0, -.0038 - i * .0036], bird, {
+      depth: PAPER_LAYER_T,
+      uvOffset: [2.7 + i * .6, 1.2 + i * .4],
+      curl: x => (-.0075 - i * .002) * Math.pow(THREE.MathUtils.clamp((-.42 - x) / .60, 0, 1), 1.8),
+    }), 2 - i, i % 2 ? 'red' : 'amber')
   }
-  for (let i = 0; i < 3; i++) cut(`shadow-crest-${i}`, shape([[.39 + i * .07, .48], [.28 + i * .09, .72 - i * .015], [.39 + i * .08, .66], [.47 + i * .07, .48]]), amber, [0, 0, -.009])
-  const wing = new THREE.Group(); wing.name = 'shadow-wing'; wing.position.set(-.22, .07, .055); bird.add(wing)
+  for (let i = 0; i < 3; i++) {
+    const crest = shape([[.39 + i * .07, .48], [.28 + i * .09, .72 - i * .015], [.39 + i * .08, .66], [.47 + i * .07, .48]])
+    if (i === 1) addLeafHole(crest, .44, .585, .042, .011, 1.38)
+    tagShadow(cut(`shadow-crest-${i}`, crest, amberPaper, [0, 0, -.0038 - i * .0018], bird, {
+      depth: .0032,
+      uvOffset: [4.1 + i * .5, 2.4],
+      curl: (_x, y) => (.005 + i * .0012) * Math.pow(THREE.MathUtils.clamp((y - .48) / .24, 0, 1), 1.7),
+    }), 3, 'amber')
+  }
+  const wing = new THREE.Group(); wing.name = 'shadow-wing'; wing.position.set(-.22, .07, .0115); bird.add(wing)
   const wingShape = new THREE.Shape(); wingShape.moveTo(.09, .04); wingShape.quadraticCurveTo(-.12, .15, -.36, -.04)
   wingShape.lineTo(-.77, -.28); wingShape.lineTo(-.61, -.31); wingShape.lineTo(-.70, -.40); wingShape.lineTo(-.53, -.38); wingShape.lineTo(-.58, -.48)
   wingShape.bezierCurveTo(-.28, -.45, -.05, -.28, .09, .04); wingShape.closePath()
-  for (const [x, y, rx, ry, angle] of [[-.21, -.10, .075, .024, .42], [-.36, -.19, .10, .023, .42], [-.48, -.29, .10, .023, .32]]) hole(wingShape, x!, y!, rx!, ry!, angle!)
-  cut('shadow-wing-feather', wingShape, red, [0, 0, 0], wing)
-  const hinge = add('shadow-wing-hinge', new THREE.CylinderGeometry(.045, .045, .075, 16), brass, [0, 0, .015], wing); hinge.rotation.x = Math.PI / 2; hinge.userData.toonSurface = { outline: false }
-  const mainJoint = add('shadow-main-joint', new THREE.SphereGeometry(.033, 12, 8), brass, [.12, -.13, .060], bird)
-  const wingJoint = add('shadow-wing-joint', new THREE.SphereGeometry(.031, 12, 8), brass, [-.43, -.23, .060], wing)
-  const mainGrip = add('shadow-main-grip', new THREE.CapsuleGeometry(.075, .17, 6, 12), edges, [0, 0, 0], rig)
-  const wingGrip = add('shadow-wing-grip', new THREE.CapsuleGeometry(.075, .17, 6, 12), edges, [0, 0, 0], rig)
-  const rodGeometry = new THREE.CylinderGeometry(.017, .019, 1, 8)
-  const mainRod = add('shadow-main-rod', rodGeometry, amber, [0, 0, 0], rig), wingRod = add('shadow-wing-rod', rodGeometry, amber, [0, 0, 0], rig)
+  addLeafHole(wingShape, -.08, -.02, .032, .015, .44)
+  for (const [x, y, hl, hw, angle] of [[-.22, -.10, .086, .025, .42], [-.37, -.19, .106, .024, .42], [-.49, -.29, .104, .024, .32]]) {
+    addLeafHole(wingShape, x!, y!, hl!, hw!, angle!)
+  }
+  tagShadow(cut('shadow-wing-feather', wingShape, redPaper, [0, 0, 0], wing, {
+    depth: PAPER_MAIN_T,
+    uvOffset: [1.3, 3.2],
+    pinShadows: [[0, 0, .095, .17], [-.43, -.23, .08, .13]],
+    curl: (x, y) => .0065 * Math.pow(THREE.MathUtils.clamp((-.08 - x - y * .25) / .72, 0, 1), 1.85),
+  }), 6, 'red')
+  const hinge = tagShadow(add('shadow-wing-hinge', new THREE.CylinderGeometry(.024, .024, .024, 16), brass, [0, 0, -.003], wing), 8, 'opaque'); hinge.rotation.x = Math.PI / 2; hinge.userData.toonSurface = { outline: false }
+  const mainJoint = tagShadow(add('shadow-main-joint', new THREE.SphereGeometry(.021, 12, 8), brass, [.12, -.13, .016], bird), 8, 'opaque')
+  const wingJoint = tagShadow(add('shadow-wing-joint', new THREE.SphereGeometry(.020, 12, 8), brass, [-.43, -.23, .014], wing), 8, 'opaque')
+  const mainGrip = tagShadow(add('shadow-main-grip', new THREE.CapsuleGeometry(.075, .17, 6, 12), edges, [0, 0, 0], rig), 7, 'opaque')
+  const wingGrip = tagShadow(add('shadow-wing-grip', new THREE.CapsuleGeometry(.075, .17, 6, 12), edges, [0, 0, 0], rig), 7, 'opaque')
+  const rodGeometry = new THREE.CylinderGeometry(.013, .015, 1, 8)
+  const mainRod = tagShadow(add('shadow-main-rod', rodGeometry, bambooRod, [0, 0, 0], rig), 7, 'opaque'), wingRod = tagShadow(add('shadow-wing-rod', rodGeometry, bambooRod, [0, 0, 0], rig), 7, 'opaque')
   for (const mesh of [mainJoint, wingJoint, mainGrip, wingGrip, mainRod, wingRod]) mesh.userData.toonSurface = { outline: false, shading: 'smooth' }
   const sources: THREE.Mesh[] = []; rig.traverse(o => { if ((o as THREE.Mesh).isMesh) sources.push(o as THREE.Mesh) })
   // Project actual triangles through the lamp, preserving cutouts and articulation.
-  // Clip at the cloth hems; a single opaque material prevents doubled front/back opacity.
+  // Clip at the cloth hems; a single opaque material with micro-Z layering avoids doubled opacity and Z-fighting.
   const projectionGeometry = new THREE.BufferGeometry()
   // A triangle clipped to four sides has at most seven corners (five triangles).
   const maxProjectedVertices = sources.reduce((sum, mesh) => sum + (mesh.geometry.index?.count ?? mesh.geometry.getAttribute('position').count) * 5, 0)
   const projectedBuffer = new Float32Array(maxProjectedVertices * 3)
-  projectionGeometry.setAttribute('position', new THREE.BufferAttribute(projectedBuffer, 3)); projectionGeometry.setDrawRange(0, 0)
-  const projection = add('shadow-projection', projectionGeometry, new THREE.MeshBasicMaterial({ color: 0x624630, side: THREE.DoubleSide }), [0, 0, 0]); projection.castShadow = projection.receiveShadow = false; projection.userData.toonSurface = { outline: false }
+  const projectedColorBuffer = new Float32Array(maxProjectedVertices * 3)
+  const projectedUvBuffer = new Float32Array(maxProjectedVertices * 2)
+  projectionGeometry.setAttribute('position', new THREE.BufferAttribute(projectedBuffer, 3))
+  projectionGeometry.setAttribute('color', new THREE.BufferAttribute(projectedColorBuffer, 3))
+  projectionGeometry.setAttribute('uv', new THREE.BufferAttribute(projectedUvBuffer, 2))
+  projectionGeometry.setDrawRange(0, 0)
+  const projection = add('shadow-projection', projectionGeometry, new THREE.MeshBasicMaterial({ vertexColors: true, map: paperTextures.shadowWeaveMap, side: THREE.DoubleSide }), [0, 0, 0]); projection.castShadow = projection.receiveShadow = false; projection.userData.toonSurface = { outline: false }
   const clip = (points: THREE.Vector3[], axis: 'x' | 'y', limit: number, positive: boolean) => {
     const result: THREE.Vector3[] = []
     for (let i = 0; i < points.length; i++) {
@@ -133,9 +222,12 @@ export function createChineseShadowPuppet(ctx: SceneContext): SceneInstance {
     }
     return result
   }
+  const shadowColor = new THREE.Color()
   const updateProjection = () => {
-    let count = 0
+    let posCount = 0, uvCount = 0
     for (const sourceMesh of sources) {
+      const tone = shadowTones.get(sourceMesh) ?? { layer: 7, ...paperShadow.opaque }
+      const zPlane = SCREEN_Z + tone.layer * .00028
       const position = sourceMesh.geometry.getAttribute('position'), index = sourceMesh.geometry.index, length = index?.count ?? position.count
       const points = Array.from({ length: position.count }, (_, i) => {
         const p = new THREE.Vector3().fromBufferAttribute(position, i).applyMatrix4(sourceMesh.matrixWorld).sub(lightPosition)
@@ -144,11 +236,22 @@ export function createChineseShadowPuppet(ctx: SceneContext): SceneInstance {
       for (let i = 0; i < length; i += 3) {
         let polygon = [points[index ? index.getX(i) : i]!, points[index ? index.getX(i + 1) : i + 1]!, points[index ? index.getX(i + 2) : i + 2]!]
         polygon = clip(clip(clip(clip(polygon, 'x', -1.54, true), 'x', 1.54, false), 'y', .72, true), 'y', 3.06, false)
-        for (let j = 1; j < polygon.length - 1; j++) for (const p of [polygon[0]!, polygon[j]!, polygon[j + 1]!]) { projectedBuffer[count++] = p.x; projectedBuffer[count++] = p.y; projectedBuffer[count++] = SCREEN_Z }
+        for (let j = 1; j < polygon.length - 1; j++) for (const p of [polygon[0]!, polygon[j]!, polygon[j + 1]!]) {
+          const beamDist = Math.min(1, Math.hypot((p.x + .14) / 1.72, (p.y - 1.89) / 1.48))
+          shadowColor.copy(tone.core).lerp(tone.edge, beamDist * .72)
+          projectedBuffer[posCount] = p.x; projectedColorBuffer[posCount] = shadowColor.r; posCount++
+          projectedBuffer[posCount] = p.y; projectedColorBuffer[posCount] = shadowColor.g; posCount++
+          projectedBuffer[posCount] = zPlane; projectedColorBuffer[posCount] = shadowColor.b; posCount++
+          projectedUvBuffer[uvCount++] = (p.x + 1.55) / 3.10
+          projectedUvBuffer[uvCount++] = (p.y - .71) / 2.36
+        }
       }
     }
-    projectionGeometry.setDrawRange(0, count / 3); projectionGeometry.getAttribute('position').needsUpdate = true
-    projectionGeometry.boundingBox = new THREE.Box3(new THREE.Vector3(-1.54, .72, SCREEN_Z), new THREE.Vector3(1.54, 3.06, SCREEN_Z)); projectionGeometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 1.89, SCREEN_Z), 2)
+    projectionGeometry.setDrawRange(0, posCount / 3)
+    projectionGeometry.getAttribute('position').needsUpdate = true
+    projectionGeometry.getAttribute('color').needsUpdate = true
+    projectionGeometry.getAttribute('uv').needsUpdate = true
+    projectionGeometry.boundingBox = new THREE.Box3(new THREE.Vector3(-1.54, .72, SCREEN_Z), new THREE.Vector3(1.54, 3.06, SCREEN_Z + .003)); projectionGeometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 1.89, SCREEN_Z), 2)
   }
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const connect = (rod: THREE.Mesh, joint: THREE.Object3D, grip: THREE.Mesh, offset: THREE.Vector3) => {
@@ -301,7 +404,7 @@ export function createChineseShadowPuppet(ctx: SceneContext): SceneInstance {
       if (disposed) return
       ending.dispose(); disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); lampLight.dispose(); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); paperTextures.dispose(); lampLight.dispose(); screenGlowLight.dispose(); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

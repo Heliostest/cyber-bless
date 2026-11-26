@@ -110,7 +110,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "phuang-malai": "4a2c7a3b06c13eb0f1d4da4e1a6109f66bc11606f0700e068674201f9b47340c",
   "polish-blessing-basket": "b14999a6794ff9acd173eab203b0cacd5453b072abbe5e6ae9b2e82e683d51a0",
   "polish-oplatek-sharing": "6db58b52974888262fd3ce4e53fffbe76939dd471772177193bf59b30b6e2419",
-  "polish-paper-cut": "ab598eea10537b32408a45872f89eecc299329d638467577dd2ca73dcb4c93a8",
+  "polish-paper-cut": "d9f2809a6ae22a827dd493741a8c2143846c86fda018648daccff0ad406cc7c6",
   "pucara-rooftop-bulls": "f8e6707fdebae0c87ef86a552b95cb44902284a6db05677d91bf289e8a0442be",
   "puerto-rican-guiro": "4ae91bc12bfeade79f93cb3381edd8ad68e80203f38eb6bdb24e6c5c40b8c4c3",
   "purepecha-copper-bowl": "acb1bdadb2bd8f2e9e979e1f8cc22a4796849e2d0c07d2549dfd78bef7c955a3",

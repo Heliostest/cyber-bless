@@ -81,7 +81,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "korean-bojagi-wrap": "f0b984f4beee4cd573cb5db77b18be0258894fa3df5b9495bdabc507649c076b",
   "korean-sotdae": "62265519bb43dc2feb6aa37361dd5c8095cc442d7f82989a7f830f39c302512c",
   "korean-yutnori": "859805f7b0205efc8ce4e7a2b1ab351ce829d1ee5f4ed32afe0db4be838e4459",
-  "lam-tsuen-wishing-tree": "73d169a91beb41cc393efb2c1879f152c4e236b403ddc3b4d57085d5fcbfd18f",
+  "lam-tsuen-wishing-tree": "70f97900f5f8bf914277e72ebbf41831dc9bd8d7d43b100917f4e7cb4a77f459",
   "lanna-sand-pagoda": "dc015506be86ff130ffe5059c6bd6597ef2a840c458fbf952d3fd7de17f1ef4c",
   "lantern": "bb8065dda8e0d94e869061b263e7fe49d23815bfe1977fc2f7fa33ac5d09ec0e",
   "lao-baci-wrist": "a7a1ab87dfb419427a170a07a3a55baeb3bd33a2ac40b807650ceeb304020daa",

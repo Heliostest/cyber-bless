@@ -305,4 +305,25 @@ describe('a rubbing and peeling woodblock print', () => {
     expect(texFreed.size).toBe(3)
     expect([...texFreed.values()].every(n => n === 1)).toBe(true)
   })
+  it('applies stylized wood surfaces with separated axes to the woodblock, baren, and craft table without altering xuan paper', () => {
+    const s = mount(0, { isReducedMotion: () => true })
+    const matOf = (name: string) => (s.scene.getObjectByName(name) as THREE.Mesh).material as THREE.MeshStandardMaterial
+    for (const name of ['woodblock-carved-block', 'woodblock-cut-field', 'woodblock-paper-hinge-clamp', 'woodblock-rubbing-cap', 'woodblock-rubbing-grip']) {
+      const mat = matOf(name) as THREE.MeshPhysicalMaterial
+      expect(mat, name).toBeInstanceOf(THREE.MeshPhysicalMaterial)
+      expect(mat.clearcoat, name).toBeGreaterThan(0)
+      expect(mat.clearcoat, name).toBeLessThanOrEqual(.25)
+      expect(mat.userData.craftSurface?.kind, name).toBe('wood')
+      expect(mat.userData.craftSurface?.axis, name).toBe('x')
+    }
+    expect(matOf('woodblock-carving-gouge').userData.craftSurface?.kind).toBe('wood')
+    expect(matOf('woodblock-table-top-board').userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(matOf('woodblock-table-breadboard-end').userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'z' })
+    expect(matOf('woodblock-table-leg').userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(matOf('woodblock-table-through-stretcher').userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(matOf('woodblock-paper-back').userData.craftSurface).toBeUndefined()
+    expect(matOf('woodblock-print-face').userData.craftSurface).toBeUndefined()
+    expect(matOf('woodblock-paper-back').userData.ritualOptics?.paper?.layout).toBe('sheet')
+    expect(matOf('woodblock-print-face').userData.ritualOptics?.paper?.layout).toBe('sheet')
+  })
 })

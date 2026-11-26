@@ -262,9 +262,15 @@ function attach(material: THREE.Material, options: Optics) {
       `).replace('#include <opaque_fragment>', `
         if (ritualSheetHighlightGuard > 0.001) {
           float ritualPeak = max(outgoingLight.r, max(outgoingLight.g, outgoingLight.b));
-          if (ritualPeak > 0.80) {
-            float ritualExcess = ritualPeak - 0.80;
-            float ritualTarget = 0.80 + ritualExcess / (1.0 + ritualExcess * (1.85 * ritualSheetHighlightGuard));
+          // Komorebi daylight skips ACES and clips linear > ~1.03 to flat white;
+          // a C1 asymptotic shoulder preserves fiber and fold shading on sunlit white paper.
+          float ritualGuardSq = ritualSheetHighlightGuard * ritualSheetHighlightGuard;
+          float ritualKnee = mix(0.84, 0.56, ritualGuardSq);
+          float ritualCeil = mix(0.99, 0.89, ritualGuardSq);
+          float ritualHeadroom = max(0.06, ritualCeil - ritualKnee);
+          if (ritualPeak > ritualKnee) {
+            float ritualExcess = ritualPeak - ritualKnee;
+            float ritualTarget = ritualKnee + ritualHeadroom * (ritualExcess / (ritualExcess + ritualHeadroom));
             outgoingLight *= ritualTarget / ritualPeak;
           }
         }

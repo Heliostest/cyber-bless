@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import type { RenderStyleId } from "@wbr/content";
 import { isSceneVisibleInApp } from "@wbr/core/daily-scenes";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
@@ -19,6 +20,7 @@ import type { GrassRenderMethod } from './debug-grass';
 import { createKomorebiSurface } from './komorebi-surface';
 import { createCourtyardStonePath } from './courtyard-stone-path';
 import { createKomorebiBackdrop, type BackdropRole } from './komorebi-backdrop';
+import { applyCraftSurface } from './craft-surfaces';
 
 import { assetUrl } from './asset-urls';
 import { environmentProfiles } from './environment-profiles';
@@ -26,6 +28,45 @@ import { environmentProfiles } from './environment-profiles';
 type Part = { positions: number[]; normals: number[]; indices: number[]; color: number[] };
 type NatureModel = { parts: Part[] };
 const models = nature as Record<string, NatureModel>;
+
+type WoodAxis = 'x' | 'y' | 'z';
+type WoodFlip = 'none' | 'x' | 'y' | 'z';
+type DeckPlankRecipe = {
+  dh: number;
+  ds: number;
+  dl: number;
+  scale: number;
+  strength: number;
+  roughness: number;
+  flip: WoodFlip;
+  offset: readonly [number, number, number];
+};
+
+// Keep the shared veranda/table wood noticeably quieter, softer and more matte
+// than foreground hero craft furniture (strength 0.35-0.48, roughness 0.72-0.82),
+// while letting environment-tone remap day Komorebi, Delivery, and Night palettes.
+const DECK_PLANK_RECIPES: readonly DeckPlankRecipe[] = [
+  { dh: 0.005, ds: -0.020, dl: 0.032, scale: 0.50, strength: 0.13, roughness: 0.90, flip: 'none', offset: [0.31, 0.14, 0.47] },
+  { dh: -0.006, ds: 0.024, dl: -0.042, scale: 0.62, strength: 0.15, roughness: 0.93, flip: 'y', offset: [-0.47, -0.21, 0.83] },
+  { dh: 0.002, ds: -0.010, dl: 0.008, scale: 0.56, strength: 0.12, roughness: 0.91, flip: 'x', offset: [0.64, 0.27, -0.52] },
+  { dh: -0.004, ds: 0.018, dl: -0.024, scale: 0.66, strength: 0.14, roughness: 0.92, flip: 'z', offset: [-0.29, -0.17, -0.74] },
+  { dh: 0.004, ds: -0.015, dl: 0.020, scale: 0.48, strength: 0.12, roughness: 0.89, flip: 'none', offset: [0.53, -0.24, 0.29] },
+];
+
+// Asymmetric plank widths summing to exact outer widths (12.00m veranda, 5.80m table)
+// with a center plank straddling x = 0 so no hard seam bisects the focal prop.
+const VERANDA_PLANK_WIDTHS = [0.82, 0.75, 0.85, 0.76, 0.83, 0.74, 0.84, 0.81, 0.76, 0.85, 0.75, 0.83, 0.78, 0.84, 0.79] as const;
+const TABLE_PLANK_WIDTHS = [0.84, 0.79, 0.86, 0.82, 0.85, 0.78, 0.86] as const;
+
+function tintWoodColor(hex: number, dh: number, ds: number, dl: number) {
+  return new THREE.Color(hex).offsetHSL(dh, ds, dl);
+}
+
+function orientWoodGeometry(geometry: THREE.BufferGeometry, flip: WoodFlip) {
+  if (flip === 'x') geometry.rotateX(Math.PI);
+  else if (flip === 'y') geometry.rotateY(Math.PI);
+  else if (flip === 'z') geometry.rotateZ(Math.PI);
+}
 
 /** A clear painted sky, independent of the photographic panorama used for lighting. */
 function createSkyBackdrop(clear = false, night = false, delivery = false, komorebi = false) {
@@ -117,8 +158,6 @@ export function createCozyEnvironment(
   let komorebiGround: THREE.MeshPhongMaterial | undefined;
   const sand = makeMaterial(night ? 0x9e9b83 : 0xecdfbd, 'sand');
   sand.userData.backdropRole = 'sand';
-  const wood = makeMaterial(night ? 0xa78e70 : 0xd9b98c, 'wood');
-  const trim = makeMaterial(night ? 0x8c846e : 0xbfa07a, 'trim');
   const addMesh = (geometry: THREE.BufferGeometry, material: THREE.Material, x: number, y: number, z: number) => {
     geometries.add(geometry);
     const mesh = new THREE.Mesh(geometry, material);
@@ -130,6 +169,95 @@ export function createCozyEnvironment(
   };
   const box = (w: number, h: number, d: number, material: THREE.Material, x: number, y: number, z: number) =>
     addMesh(new THREE.BoxGeometry(w, h, d), material, x, y, z);
+  const makeWoodMaterial = (
+    role: 'wood' | 'trim',
+    axis: WoodAxis,
+    { dh = 0, ds = 0, dl = 0, scale = 0.56, strength = 0.14, roughness = 0.91 }: {
+      dh?: number; ds?: number; dl?: number; scale?: number; strength?: number; roughness?: number;
+    } = {},
+  ) => {
+    const baseHex = role === 'wood' ? (night ? 0xa78e70 : 0xd9b98c) : (night ? 0x8c846e : 0xbfa07a);
+    const material = new THREE.MeshStandardMaterial({
+      color: tintWoodColor(baseHex, dh, ds, dl),
+      roughness,
+      metalness: 0,
+    });
+    material.userData.environmentRole = role;
+    applyCraftSurface(material, { kind: 'wood', axis, scale, strength });
+    materials.add(material);
+    return material;
+  };
+  const woodBox = (
+    name: string,
+    w: number,
+    h: number,
+    d: number,
+    material: THREE.MeshStandardMaterial,
+    x: number,
+    y: number,
+    z: number,
+    radius = 0.015,
+    { flip = 'none', offset }: { flip?: WoodFlip; offset?: readonly [number, number, number] } = {},
+  ) => {
+    const geometry = new RoundedBoxGeometry(w, h, d, 2, Math.min(radius, w / 3, h / 3, d / 3));
+    orientWoodGeometry(geometry, flip);
+    let px = x, py = y, pz = z;
+    if (offset) {
+      // Shift local-space vertices and compensate on mesh.position so world bounds stay
+      // exact while each plank/post samples an independent region of 3D wood grain.
+      geometry.translate(offset[0], offset[1], offset[2]);
+      px -= offset[0];
+      py -= offset[1];
+      pz -= offset[2];
+    }
+    const mesh = addMesh(geometry, material, px, py, pz);
+    mesh.name = name;
+    // Pin matte roughness explicitly so toon-soft keeps background deck calmer than hero wood.
+    mesh.userData.toonSurface = { outline: false, shading: "smooth", roughness: material.roughness };
+    return mesh;
+  };
+  const buildPlankDeck = (
+    prefix: string,
+    widths: readonly number[],
+    totalWidth: number,
+    height: number,
+    depth: number,
+    yCenter: number,
+    zCenter: number,
+    seamGap: number,
+    chamfer: number,
+  ) => {
+    const plankMaterials = DECK_PLANK_RECIPES.map(recipe =>
+      makeWoodMaterial('wood', 'z', {
+        dh: recipe.dh,
+        ds: recipe.ds,
+        dl: recipe.dl,
+        scale: recipe.scale,
+        strength: recipe.strength,
+        roughness: recipe.roughness,
+      }),
+    );
+    let cursorX = -totalWidth / 2;
+    widths.forEach((slotWidth, index) => {
+      const isFirst = index === 0;
+      const isLast = index === widths.length - 1;
+      const leftInset = isFirst ? 0 : seamGap / 2;
+      const rightInset = isLast ? 0 : seamGap / 2;
+      const boardWidth = slotWidth - leftInset - rightInset;
+      const xCenter = cursorX + leftInset + boardWidth / 2;
+      const recipe = DECK_PLANK_RECIPES[index % DECK_PLANK_RECIPES.length]!;
+      const mat = plankMaterials[index % plankMaterials.length]!;
+      woodBox(`${prefix}-plank`, boardWidth, height, depth, mat, xCenter, yCenter, zCenter, chamfer, {
+        flip: recipe.flip,
+        offset: [
+          recipe.offset[0] + index * 0.37,
+          recipe.offset[1] + ((index % 3) - 1) * 0.11,
+          recipe.offset[2] + ((index * 5) % 7 - 3) * 0.29,
+        ],
+      });
+      cursorX += slotWidth;
+    });
+  };
   const groundY = kind === "table" ? floor - 0.14 : floor;
   const spring = id === "celtic-folk-spring";
   let groundGeometry: THREE.BufferGeometry = new THREE.PlaneGeometry(100, 100);
@@ -166,17 +294,67 @@ export function createCozyEnvironment(
     root.add(stonePath.mesh);
     if (stonePath.mossMesh) root.add(stonePath.mossMesh);
   } else if (kind === "veranda") {
-    box(12, 0.12, 5.3, wood, 0, floor - 0.055, 0.2);
-    for (let i = -5; i <= 5; i++) box(0.018, 0.003, 5.3, trim, i, floor + 0.01, 0.2);
+    const deckHeight = 0.12;
+    const deckY = floor - 0.055;
+    const seamGap = 0.010;
+    const edgeDepth = 0.18;
+    const plankDepth = 5.3 - edgeDepth - seamGap;
+    const plankZ = 0.2 + (edgeDepth + seamGap) / 2;
+    const edgeZ = 0.2 - 5.3 / 2 + edgeDepth / 2;
+    const seamBacking = makeMaterial(night ? 0x8c846e : 0xbfa07a, 'trim');
+    seamBacking.color.copy(tintWoodColor(night ? 0x8c846e : 0xbfa07a, -0.005, 0.015, -0.14));
+    seamBacking.roughness = 0.96;
+    // Continuous recessed sub-deck strictly above meadow-ground (y = floor) and below
+    // deck top (floor + 0.005) prevents green ground bleed while keeping a warm seam valley.
+    const backing = box(11.97, 0.098, 5.27, seamBacking, 0, floor - 0.0462, 0.2);
+    backing.name = 'veranda-deck-backing';
+    backing.userData.toonSurface = { outline: false, shading: "smooth", roughness: 0.96 };
+    buildPlankDeck('veranda-deck', VERANDA_PLANK_WIDTHS, 12, deckHeight, plankDepth, deckY, plankZ, seamGap, 0.012);
+    const edgeMat = makeWoodMaterial('wood', 'x', { dh: -0.004, ds: 0.014, dl: -0.022, scale: 0.54, strength: 0.15, roughness: 0.90 });
+    woodBox('veranda-deck-edge', 12, deckHeight, edgeDepth, edgeMat, 0, deckY, edgeZ, 0.012, { offset: [0.42, -0.15, 0.23] });
     // A low rail anchors the eye without surrounding the subject with a box.
-    for (const x of [-4.6, -2.3, 2.3, 4.6]) box(0.12, 0.66, 0.12, wood, x, floor + 0.32, -2.5);
-    for (const x of [-3.5, 3.5]) box(3, 0.10, 0.1, wood, x, floor + 0.58, -2.5);
+    const postMats = [
+      makeWoodMaterial('wood', 'y', { dh: -0.004, ds: 0.016, dl: -0.026, scale: 0.72, strength: 0.21, roughness: 0.88 }),
+      makeWoodMaterial('wood', 'y', { dh: 0.004, ds: -0.010, dl: -0.010, scale: 0.84, strength: 0.20, roughness: 0.87 }),
+    ];
+    const capMat = makeWoodMaterial('trim', 'x', { scale: 0.80, strength: 0.16, roughness: 0.89 });
+    const railMat = makeWoodMaterial('wood', 'x', { dh: -0.003, ds: 0.012, dl: -0.018, scale: 0.68, strength: 0.20, roughness: 0.87 });
+    const postFlips: readonly WoodFlip[] = ['none', 'y', 'x', 'z'];
+    ([-4.6, -2.3, 2.3, 4.6] as const).forEach((x, index) => {
+      woodBox('veranda-rail-post', 0.12, 0.66, 0.12, postMats[index % 2]!, x, floor + 0.32, -2.5, 0.016, {
+        flip: postFlips[index % 4]!,
+        offset: [0.18 * (index - 1.5), 0.31 * (index % 2 ? -1 : 1), 0.22 * (index - 1)],
+      });
+      woodBox('veranda-rail-cap', 0.146, 0.026, 0.146, capMat, x, floor + 0.653, -2.5, 0.007, {
+        flip: index % 2 ? 'y' : 'none',
+        offset: [0.24 * (index - 1.5), 0.08, -0.19 * (index % 2 ? 1 : -1)],
+      });
+    });
+    ([-3.5, 3.5] as const).forEach((x, index) => {
+      woodBox('veranda-rail-bar', 3, 0.10, 0.10, railMat, x, floor + 0.58, -2.5, 0.016, {
+        flip: index === 0 ? 'none' : 'y',
+        offset: index === 0 ? [0.46, 0.14, -0.18] : [-0.58, -0.16, 0.25],
+      });
+    });
   } else if (kind === "table") {
-    box(5.8, 0.13, 3.4, wood, 0, floor - 0.08, 0.35);
-    for (let i = -2; i <= 2; i++) box(0.012, 0.003, 3.4, trim, i * 0.85, floor - 0.01, 0.35);
+    const seamBacking = makeMaterial(night ? 0x8c846e : 0xbfa07a, 'trim');
+    seamBacking.color.copy(tintWoodColor(night ? 0x8c846e : 0xbfa07a, -0.005, 0.015, -0.14));
+    seamBacking.roughness = 0.96;
+    const backing = box(5.77, 0.104, 3.37, seamBacking, 0, floor - 0.073, 0.35);
+    backing.name = 'table-deck-backing';
+    backing.userData.toonSurface = { outline: false, shading: "smooth", roughness: 0.96 };
+    buildPlankDeck('table-deck', TABLE_PLANK_WIDTHS, 5.8, 0.13, 3.4, floor - 0.08, 0.35, 0.010, 0.013);
     // The paper's existing folding/lifting motion stays unobstructed.
-    box(0.15, 0.68, 0.15, wood, -2.1, floor - 0.43, 1.25);
-    box(0.15, 0.68, 0.15, wood, 2.1, floor - 0.43, 1.25);
+    const legMats = [
+      makeWoodMaterial('wood', 'y', { dh: -0.004, ds: 0.015, dl: -0.024, scale: 0.70, strength: 0.20, roughness: 0.88 }),
+      makeWoodMaterial('wood', 'y', { dh: 0.004, ds: -0.010, dl: -0.008, scale: 0.82, strength: 0.19, roughness: 0.87 }),
+    ];
+    ([-2.1, 2.1] as const).forEach((x, index) => {
+      woodBox('table-front-post', 0.15, 0.68, 0.15, legMats[index]!, x, floor - 0.43, 1.25, 0.018, {
+        flip: index === 0 ? 'none' : 'y',
+        offset: index === 0 ? [0.22, 0.28, -0.16] : [-0.26, -0.31, 0.21],
+      });
+    });
   } else if (kind === "river") {
     ground.material = makeMaterial(coastal ? 0x9ab8ad : 0xb3c39b);
     for (const x of coastal ? [] : [-5, 5]) box(5, 0.10, 46, grass, x, floor + 0.025, -13);

@@ -517,3 +517,171 @@ it('keeps the complete Chinowa walking corridor clear of surrounding solids',asy
  planting.traverse(o=>{const m=o as THREE.InstancedMesh;if(!m.isInstancedMesh)return;m.geometry.computeBoundingBox();for(let i=0;i<m.count;i++){const matrix=new THREE.Matrix4();m.getMatrixAt(i,matrix);matrix.premultiply(m.matrixWorld);expect(m.geometry.boundingBox!.clone().applyMatrix4(matrix).intersectsBox(corridor),m.name).toBe(false)}})
  await world!.ready;world!.dispose()
 })
+
+describe('stylized veranda and table timber deck and railing', () => {
+  it('builds calm planked veranda deck and railing with preserved bounds, proper grain axes, tone switching and night harmony', async () => {
+    const dayScene = new THREE.Scene();
+    const nightScene = new THREE.Scene();
+    const dayWorld = createCozyEnvironment(dayScene, { id: 'polish-blessing-basket', loadSky: async () => new THREE.DataTexture() })!;
+    const nightWorld = createCozyEnvironment(nightScene, { id: 'lantern', loadSky: async () => new THREE.DataTexture() })!;
+    try {
+      await Promise.all([dayWorld.ready, nightWorld.ready]);
+      dayScene.updateMatrixWorld(true);
+      nightScene.updateMatrixWorld(true);
+
+      const collect = (scene: THREE.Scene, name: string) => {
+        const found: THREE.Mesh[] = [];
+        scene.traverse(obj => { if (obj instanceof THREE.Mesh && obj.name === name) found.push(obj); });
+        return found;
+      };
+
+      const planks = collect(dayScene, 'veranda-deck-plank');
+      const edge = collect(dayScene, 'veranda-deck-edge');
+      const backing = collect(dayScene, 'veranda-deck-backing');
+      const posts = collect(dayScene, 'veranda-rail-post');
+      const caps = collect(dayScene, 'veranda-rail-cap');
+      const bars = collect(dayScene, 'veranda-rail-bar');
+      expect(planks.length).toBe(15);
+      expect(edge.length).toBe(1);
+      expect(backing.length).toBe(1);
+      expect(posts.length).toBe(4);
+      expect(caps.length).toBe(4);
+      expect(bars.length).toBe(2);
+
+      // Exact outer deck dimensions preserved (floor = -0.04 => top -0.035, bottom -0.155).
+      const deckBounds = new THREE.Box3();
+      for (const mesh of [...planks, ...edge]) deckBounds.expandByObject(mesh);
+      expect(deckBounds.min.x).toBeCloseTo(-6, 3);
+      expect(deckBounds.max.x).toBeCloseTo(6, 3);
+      expect(deckBounds.min.z).toBeCloseTo(-2.45, 3);
+      expect(deckBounds.max.z).toBeCloseTo(2.85, 3);
+      expect(deckBounds.min.y).toBeCloseTo(-0.155, 3);
+      expect(deckBounds.max.y).toBeCloseTo(-0.035, 3);
+
+      const backingBounds = new THREE.Box3().setFromObject(backing[0]!);
+      const meadowGround = dayScene.getObjectByName('meadow-ground')!;
+      // Backing sits strictly above meadow-ground (preventing green bleed through seams) and below plank tops.
+      expect(backingBounds.max.y).toBeGreaterThan(meadowGround.position.y + 0.001);
+      expect(backingBounds.max.y).toBeLessThan(-0.036);
+
+      // Rail placements stay centered at authored x and z coordinates.
+      const postXs = posts.map(m => new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()).x).sort((a, b) => a - b);
+      expect(postXs).toEqual([-4.6, -2.3, 2.3, 4.6].map(x => expect.closeTo(x, 3)));
+      for (const m of [...posts, ...bars]) {
+        expect(new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()).z).toBeCloseTo(-2.5, 3);
+      }
+
+      // Grain axes, calmness (quieter & more matte than hero tables), shadow receiving, and environmentRole.
+      const plankColors = new Set<number>();
+      for (const mesh of planks) {
+        const mat = mesh.material as THREE.MeshStandardMaterial;
+        expect(mesh.receiveShadow).toBe(true);
+        expect(mesh.userData.toonSurface?.outline).toBe(false);
+        expect(mesh.userData.toonSurface?.roughness).toBeGreaterThanOrEqual(0.85);
+        expect(mat.userData.environmentRole).toBe('wood');
+        expect(mat.userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'z' });
+        expect(mat.userData.craftSurface.strength).toBeLessThanOrEqual(0.2);
+        plankColors.add(mat.color.getHex());
+      }
+      expect(plankColors.size).toBeGreaterThan(2);
+
+      for (const mesh of posts) {
+        const mat = mesh.material as THREE.MeshStandardMaterial;
+        expect(mat.userData.environmentRole).toBe('wood');
+        expect(mat.userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'y' });
+        expect(mat.userData.craftSurface.strength).toBeLessThanOrEqual(0.25);
+      }
+      for (const mesh of [...bars, ...edge]) {
+        const mat = mesh.material as THREE.MeshStandardMaterial;
+        expect(mat.userData.environmentRole).toBe('wood');
+        expect(mat.userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'x' });
+      }
+      expect((backing[0]!.material as THREE.MeshStandardMaterial).userData.environmentRole).toBe('trim');
+      for (const mesh of caps) {
+        expect((mesh.material as THREE.MeshStandardMaterial).userData.environmentRole).toBe('trim');
+      }
+
+      // Tone switching updates veranda planks cleanly across komorebi, tiny-delivery, and original; night stays darker.
+      const daySample = (planks[0]!.material as THREE.MeshStandardMaterial).color;
+      const nightPlank = collect(nightScene, 'veranda-deck-plank')[0]!;
+      const nightSample = (nightPlank.material as THREE.MeshStandardMaterial).color;
+      const komorebiDay = daySample.getHex();
+      const komorebiNight = nightSample.getHex();
+      expect(nightSample.getHSL({ h: 0, s: 0, l: 0 }).l).toBeLessThan(daySample.getHSL({ h: 0, s: 0, l: 0 }).l);
+
+      dayWorld.setTone('tiny-delivery');
+      nightWorld.setTone('tiny-delivery');
+      const deliveryDay = daySample.getHex();
+      expect(deliveryDay).not.toBe(komorebiDay);
+      expect(nightSample.getHex()).not.toBe(komorebiNight);
+      expect(nightSample.getHSL({ h: 0, s: 0, l: 0 }).l).toBeLessThan(daySample.getHSL({ h: 0, s: 0, l: 0 }).l);
+
+      dayWorld.setTone('original');
+      nightWorld.setTone('original');
+      expect(daySample.getHex()).not.toBe(deliveryDay);
+      expect(daySample.getHex()).not.toBe(komorebiDay);
+      expect(nightSample.getHSL({ h: 0, s: 0, l: 0 }).l).toBeLessThan(daySample.getHSL({ h: 0, s: 0, l: 0 }).l);
+
+      dayWorld.setTone('komorebi');
+      nightWorld.setTone('komorebi');
+      expect(daySample.getHex()).toBe(komorebiDay);
+      expect(nightSample.getHex()).toBe(komorebiNight);
+    } finally {
+      dayWorld.dispose();
+      nightWorld.dispose();
+    }
+  });
+
+  it('builds calm planked table surface and vertical front posts for crane with preserved bounds and clean disposal', async () => {
+    const scene = new THREE.Scene();
+    const world = createCozyEnvironment(scene, { id: 'crane', loadSky: async () => new THREE.DataTexture() })!;
+    try {
+      await world.ready;
+      scene.updateMatrixWorld(true);
+      const planks: THREE.Mesh[] = [];
+      const posts: THREE.Mesh[] = [];
+      let backing: THREE.Mesh | undefined;
+      scene.traverse(obj => {
+        if (!(obj instanceof THREE.Mesh)) return;
+        if (obj.name === 'table-deck-plank') planks.push(obj);
+        else if (obj.name === 'table-front-post') posts.push(obj);
+        else if (obj.name === 'table-deck-backing') backing = obj;
+      });
+      expect(planks.length).toBe(7);
+      expect(posts.length).toBe(2);
+      expect(backing).toBeDefined();
+
+      // Crane floor = -0.65 => slab top = -0.665, bottom = -0.795, width = 5.8, depth = 3.4 centered at z = 0.35.
+      const deckBounds = new THREE.Box3();
+      for (const mesh of planks) deckBounds.expandByObject(mesh);
+      expect(deckBounds.min.x).toBeCloseTo(-2.9, 3);
+      expect(deckBounds.max.x).toBeCloseTo(2.9, 3);
+      expect(deckBounds.min.z).toBeCloseTo(-1.35, 3);
+      expect(deckBounds.max.z).toBeCloseTo(2.05, 3);
+      expect(deckBounds.min.y).toBeCloseTo(-0.795, 3);
+      expect(deckBounds.max.y).toBeCloseTo(-0.665, 3);
+      expect(new THREE.Box3().setFromObject(backing!).max.y).toBeLessThan(-0.666);
+
+      const postXs = posts.map(m => new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()).x).sort((a, b) => a - b);
+      expect(postXs).toEqual([-2.1, 2.1].map(x => expect.closeTo(x, 3)));
+      for (const post of posts) {
+        const mat = post.material as THREE.MeshStandardMaterial;
+        expect(mat.userData.environmentRole).toBe('wood');
+        expect(mat.userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'y' });
+      }
+      for (const plank of planks) {
+        const mat = plank.material as THREE.MeshStandardMaterial;
+        expect(mat.userData.environmentRole).toBe('wood');
+        expect(mat.userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'z' });
+        expect(mat.userData.craftSurface.strength).toBeLessThanOrEqual(0.2);
+      }
+
+      const geoDisposals = [...planks, ...posts, backing!].map(m => vi.spyOn(m.geometry, 'dispose'));
+      world.dispose();
+      world.dispose();
+      geoDisposals.forEach(spy => expect(spy).toHaveBeenCalledOnce());
+    } finally {
+      world.dispose();
+    }
+  });
+});

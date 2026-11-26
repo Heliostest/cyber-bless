@@ -1,6 +1,7 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { createBaciMatMaterials } from './mat-material'
 
 let cachedCottonPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
 
@@ -184,7 +185,8 @@ export function createBaciModel() {
   const root = new THREE.Group(); root.name = 'baci-root'
   const subject = new THREE.Group(); subject.name = 'baci-subject'; root.add(subject)
   const mat = (color: number, roughness = .85) => new THREE.MeshStandardMaterial({ color, roughness })
-  const skin = mat(0xc78d68), handSkin = createRitualMaterial({ color: 0xc78d68, roughness: .85 }, { kind: 'skin', strength: .10, fiber: false }), nail = mat(0xe1b899), cloth = mat(0x57938b), hem = mat(0xe4b976), straw = mat(0xc7ae79)
+  const skin = mat(0xc78d68), handSkin = createRitualMaterial({ color: 0xc78d68, roughness: .85 }, { kind: 'skin', strength: .10, fiber: false }), nail = mat(0xe1b899), cloth = mat(0x57938b), hem = mat(0xe4b976)
+  const baciMat = createBaciMatMaterials()
   const cottonTex = createSpunCottonTextures()
   const cotton = new THREE.MeshStandardMaterial({
     color: 0xfff9e9,
@@ -195,18 +197,18 @@ export function createBaciModel() {
   })
   applyCraftSurface(cotton, { kind: 'cord', strength: .15 })
   for (const sleeve of [cloth, hem]) applyCraftSurface(sleeve, { kind: 'fabric', strength: .25 })
-  const mesh = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, parent: THREE.Object3D = subject) => {
+  const mesh = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material | THREE.Material[], parent: THREE.Object3D = subject) => {
     const m = new THREE.Mesh(geometry, material); m.name = name; m.castShadow = true; m.receiveShadow = true; parent.add(m); return m
   }
   const ball = (name: string, position: number[], scale: number[], material: THREE.Material) => {
     const m = mesh(name, new THREE.SphereGeometry(1, 24, 16), material); m.position.fromArray(position); m.scale.fromArray(scale); return m
   }
   const wrist = new THREE.Vector3(.25, .47, 0)
-  const ground = mesh('baci-woven-mat', new THREE.CylinderGeometry(1.45, 1.49, .055, 64), straw); ground.scale.z = .77; ground.position.y = -.0275
+  const ground = mesh('baci-woven-mat', new THREE.CylinderGeometry(1.45, 1.49, .055, 64), baciMat.matMaterials); ground.scale.z = .77; ground.position.y = -.0275
   // Recessed parallel strands give the mat a modest woven surface without a table.
   for (let i = -10; i <= 10; i++) {
     const z = i * .09, length = 2.72 * Math.sqrt(Math.max(0, 1 - z * z / 1.12 ** 2))
-    const line = mesh('baci-mat-weft-' + i, new THREE.CylinderGeometry(.004, .004, length, 6), mat(i % 2 ? 0xb89c69 : 0xd9c08e))
+    const line = mesh('baci-mat-weft-' + i, new THREE.CylinderGeometry(.004, .004, length, 6), i % 2 ? baciMat.weftWarm : baciMat.weftPale)
     line.rotation.z = Math.PI / 2; line.position.set(0, .004, z)
   }
   ball('baci-sleeve', [-.88, .47, 0], [.47, .24, .29], cloth)
@@ -387,6 +389,7 @@ export function createBaciModel() {
     disposed = true
     cottonTex.map.dispose()
     cottonTex.bump.dispose()
+    baciMat.dispose()
   }
   return {
     root, subject, thread, wrist, pose,

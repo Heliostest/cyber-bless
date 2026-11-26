@@ -1,12 +1,14 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { createCanangTrayMaterials } from './canang-material'
 
 const V=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
 /** A source-bounded offering, on an original simplified field-shrine support. */
 export function createCanangModel(){
  const root=new THREE.Group();root.name='canang-subject'
  const mat=(color:number,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness})
- const leaf=mat(0xbacb76,.87),leafEdge=mat(0x879d4f),leafLight=mat(0xdbd69a),stone=mat(0xbfc2ac),cap=mat(0xd5d4ba),joint=mat(0x999d85),white=mat(0xfff7de),red=mat(0xd96174),yellow=mat(0xf0c257),blue=mat(0x7895ce),pandan=mat(0x718f4c),cakeMat=mat(0xe3b87c),bananaMat=mat(0xf1d47d),wood=mat(0x947057)
+ const trayMats=createCanangTrayMaterials()
+ const leafEdge=mat(0x879d4f),stone=mat(0xbfc2ac),cap=mat(0xd5d4ba),joint=mat(0x999d85),white=mat(0xfff7de),red=mat(0xd96174),yellow=mat(0xf0c257),blue=mat(0x7895ce),pandan=mat(0x718f4c),cakeMat=mat(0xe3b87c),bananaMat=mat(0xf1d47d),betelNut=mat(0x947057)
  ;[stone,cap,joint].forEach(material=>applyCraftSurface(material,{kind:'stone',strength:.45}))
  const make=(name:string,geometry:THREE.BufferGeometry,material:THREE.Material,parent:THREE.Object3D=root)=>{const m=new THREE.Mesh(geometry,material);m.name=name;m.castShadow=m.receiveShadow=true;parent.add(m);return m}
  const box=(name:string,size:[number,number,number],pos:[number,number,number],material:THREE.Material,parent:THREE.Object3D=root)=>{const m=make(name,new THREE.BoxGeometry(...size),material,parent);m.position.set(...pos);return m}
@@ -20,19 +22,19 @@ export function createCanangModel(){
  box('canang-shrine-ledge',[1.56,.08,1.50],[-.65,.86,-.5],cap)
  for(const side of[-1,1])box('canang-shrine-recess-'+side,[.018,.22,.46],[-.65+side*.574,.59,-.5],joint)
  const tray=new THREE.Group();tray.name='canang-tray';root.add(tray)
- box('canang-ceper-floor',[1.25,.06,1.25],[0,.03,0],leaf,tray)
+ box('canang-ceper-floor',[1.25,.06,1.25],[0,.03,0],trayMats.ceperFloor,tray)
  for(const side of[-1,1]){
-  box('canang-ceper-side-x-'+side,[.04,.16,1.25],[side*.605,.10,0],leaf,tray)
-  box('canang-ceper-side-z-'+side,[1.17,.16,.04],[0,.10,side*.605],leaf,tray)
-  for(const n of[-1,0,1])box('canang-leaf-seam-'+side+'-'+n,[.012,.006,1.17],[n*.31,.063,side*.003],leafLight,tray)
+  box('canang-ceper-side-x-'+side,[.04,.16,1.25],[side*.605,.10,0],trayMats.ceperWall,tray)
+  box('canang-ceper-side-z-'+side,[1.17,.16,.04],[0,.10,side*.605],trayMats.ceperWall,tray)
+  for(const n of[-1,0,1])box('canang-leaf-seam-'+side+'-'+n,[.012,.006,1.17],[n*.31,.063,side*.003],trayMats.leafSeam,tray)
  }
  // Narrow woven ribs are attached to the rim rather than floating above it.
- for(const x of[-.48,-.24,0,.24,.48])for(const z of[-.628,.628])box('canang-rim-stitch-'+x+'-'+z,[.025,.08,.009],[x,.125,z],wood,tray)
- const sampiyan=make('canang-sampiyan',new THREE.CylinderGeometry(.49,.49,.025,32),leafLight,tray);sampiyan.position.set(0,.075,-.08)
- for(let i=0;i<12;i++){const a=i*Math.PI/6,m=box('canang-sampiyan-weave-'+i,[.073,.009,.44],[Math.sin(a)*.245,.092,Math.cos(a)*.245-.08],i%2?leaf:leafLight,tray);m.rotation.y=a}
+ for(const x of[-.48,-.24,0,.24,.48])for(const z of[-.628,.628])box('canang-rim-stitch-'+x+'-'+z,[.025,.08,.009],[x,.125,z],trayMats.rimStitch,tray)
+ const sampiyan=make('canang-sampiyan',new THREE.CylinderGeometry(.49,.49,.025,32),trayMats.sampiyanDisk,tray);sampiyan.position.set(0,.075,-.08)
+ for(let i=0;i<12;i++){const a=i*Math.PI/6,m=box('canang-sampiyan-weave-'+i,[.073,.009,.44],[Math.sin(a)*.245,.092,Math.cos(a)*.245-.08],i%2?trayMats.sampiyanStripBud:trayMats.sampiyanStripLight,tray);m.rotation.y=a}
  const porosan=new THREE.Group();porosan.name='canang-porosan';tray.add(porosan);porosan.position.set(-.45,.065,.22)
  const wrap=solid('canang-porosan-leaf',[.07,.06,.115],[0,.055,0],pandan,porosan);wrap.rotation.y=.3
- solid('canang-betel-nut',[.025,.025,.028],[.014,.115,.018],wood,porosan)
+ solid('canang-betel-nut',[.025,.025,.028],[.014,.115,.018],betelNut,porosan)
  solid('canang-lime',[.018,.012,.02],[-.015,.112,-.025],white,porosan)
  const cane=make('canang-sugarcane',new THREE.CylinderGeometry(.09,.09,.065,16),bananaMat,tray);cane.position.set(-.32,.0925,.44)
  const caneEdge=make('canang-sugarcane-rind',new THREE.TorusGeometry(.084,.008,6,24),pandan,tray);caneEdge.rotation.x=Math.PI/2;caneEdge.position.set(-.32,.125,.44)
@@ -41,7 +43,7 @@ export function createCanangModel(){
  const coinMat=mat(0xc5a767,.45);coinMat.metalness=.45;applyCraftSurface(coinMat,{kind:'metal',strength:.45})
  const coin=make('canang-coin',new THREE.CylinderGeometry(.037,.037,.012,20),coinMat,tray);coin.position.set(.48,.066,.38)
  for(let i=0;i<5;i++){const m=solid('canang-rice-'+i,[.012,.007,.023],[.15+i%3*.022,.067,.36+Math.floor(i/3)*.03],white,tray);m.rotation.y=i*.6}
- for(const x of[.51,.55])box('canang-incense-'+x,[.012,.014,.86],[x,.067,-.06],wood,tray)
+ for(const x of[.51,.55])box('canang-incense-'+x,[.012,.014,.86],[x,.067,-.06],trayMats.incenseStick,tray)
  function flower(name:string,color:THREE.Material,x:number,z:number){
   const f=new THREE.Group();f.name=name;tray.add(f);f.position.set(x,.096,z)
   const base=make(name+'-calyx',new THREE.CylinderGeometry(.045,.035,.016,12),leafEdge,f);base.position.y=.008
@@ -64,5 +66,5 @@ export function createCanangModel(){
   root.updateMatrixWorld(true)
  }
  pose(0,0)
- return {root,tray,flower:flowerWhite,targets:[flowerWhite,tray,tray],roots:[flowerWhite,tray,tray],anchors:[[0,.05,0],[0,.13,.55],[0,.13,.55]] as [number,number,number][],pose,dispose(){}}
+ return {root,tray,flower:flowerWhite,targets:[flowerWhite,tray,tray],roots:[flowerWhite,tray,tray],anchors:[[0,.05,0],[0,.13,.55],[0,.13,.55]] as [number,number,number][],pose,dispose(){trayMats.dispose()}}
 }

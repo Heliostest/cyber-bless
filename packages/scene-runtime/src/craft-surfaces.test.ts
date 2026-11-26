@@ -155,4 +155,61 @@ describe('craft material style compatibility', () => {
     expect(stoneShader.fragmentShader).not.toContain('craftPeak');
     [wood, bamboo, stone].forEach(material => material.dispose());
   });
+
+  it('upgrades straw with stylized longitudinal fibers, culm nodes, warm/dry hue shift, highlight shoulder, and optional woven/reed patterns', () => {
+    const stalk = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xdabb78, roughness: .85 }), { kind: 'straw', strength: .3, axis: 'y' });
+    const woven = createCraftMaterial({ color: 0xc5a15b }, { kind: 'straw', pattern: 'woven', strength: .42, axis: 'y' });
+    const reed = createCraftMaterial({ color: 0x91a36c }, { kind: 'straw', pattern: 'reed', strength: .36, axis: 'y' });
+    const stalkShader = compile(stalk), wovenShader = compile(woven), reedShader = compile(reed);
+
+    // Default kind: 'straw' stays backward compatible while lifting fiber relief, hue variation, and Komorebi highlight protection.
+    expect(stalk.userData.craftSurface).toEqual({ kind: 'straw', scale: 1, strength: .3, axis: 'y', pattern: 'stalk' });
+    expect(stalkShader.vertexShader).toContain('craftStrawSeed');
+    expect(stalkShader.vertexShader.split('\n').filter(line => /\S.*#/.test(line))).toEqual([]);
+    expect(stalkShader.fragmentShader.split('\n').filter(line => /\S.*#/.test(line))).toEqual([]);
+    expect(stalkShader.fragmentShader).toContain('craftStrawStalkField');
+    expect(stalkShader.fragmentShader).toContain('craftStrawTint');
+    expect(stalkShader.fragmentShader).toContain('craftStrawFurrow');
+    expect(stalkShader.fragmentShader).toContain('craftPeak > 0.70');
+    expect(stalkShader.fragmentShader).not.toContain('craftGrain * 0.08');
+
+    // Optional woven and reed modes compile cleanly with distinct program cache keys and derivative-free height fields.
+    expect(woven.roughness).toBeCloseTo(.72, 5);
+    expect(woven.userData.craftSurface).toMatchObject({ kind: 'straw', pattern: 'woven' });
+    expect(reed.userData.craftSurface).toMatchObject({ kind: 'straw', pattern: 'reed' });
+    expect(new Set([stalk.customProgramCacheKey(), woven.customProgramCacheKey(), reed.customProgramCacheKey()]).size).toBe(3);
+    expect(wovenShader.fragmentShader).toContain('craftStrawWovenField');
+    expect(wovenShader.fragmentShader).toContain('craftPeak > 0.70');
+    expect(reedShader.fragmentShader).toContain('164.0');
+    expect(reedShader.fragmentShader).toContain('13.5');
+
+    // Verify woven and reed height fields stay free of screen-space derivatives before normal gradient evaluation.
+    for (const shader of [wovenShader, reedShader]) {
+      const visited = new Set<string>();
+      const check = (name: string) => {
+        if (visited.has(name)) return;
+        visited.add(name);
+        const start = shader.fragmentShader.indexOf(`float ${name}(`);
+        expect(start, `Missing height function ${name}`).toBeGreaterThanOrEqual(0);
+        const open = shader.fragmentShader.indexOf('{', start);
+        let end = open + 1, depth = 1;
+        for (; depth && end < shader.fragmentShader.length; end++) {
+          if (shader.fragmentShader[end] === '{') depth++;
+          if (shader.fragmentShader[end] === '}') depth--;
+        }
+        const body = shader.fragmentShader.slice(open + 1, end - 1);
+        expect(body).not.toMatch(/\b(?:fwidth|dFdx|dFdy)\s*\(/);
+        for (const match of body.matchAll(/\b(craft\w+)\s*\(/g)) check(match[1]);
+      };
+      check('craftHeightPattern');
+    }
+
+    // Style adapter copy preserves optional straw pattern mode.
+    const copied = new THREE.MeshStandardMaterial();
+    copyCraftSurface(woven, copied);
+    expect(copied.userData.craftSurface).toEqual(woven.userData.craftSurface);
+    expect(compile(copied).fragmentShader).toContain('craftStrawWovenField');
+
+    [stalk, woven, reed, copied].forEach(material => material.dispose());
+  });
 });

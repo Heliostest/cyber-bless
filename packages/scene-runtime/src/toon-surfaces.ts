@@ -181,6 +181,7 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">, sc
                 const craftKind = source.userData.craftSurface?.kind;
                 if (craftKind === 'wood' && hint.roughness === undefined) toon.roughness = Math.min(toon.roughness, .78);
                 if (craftKind === 'bamboo' && hint.roughness === undefined) toon.roughness = Math.min(toon.roughness, .50);
+                if (craftKind === 'straw' && hint.roughness === undefined) toon.roughness = Math.min(toon.roughness, .72);
                 toon.metalness = hint.metalness ?? source.metalness;
                 toon.normalScale.copy(source.normalScale); toon.bumpScale = source.bumpScale;
                 toon.normalMapType = source.normalMapType;

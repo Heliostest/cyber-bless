@@ -75,7 +75,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "japanese-shishi-odoshi": "ff31fab2a90a52431d25a0d3673a75a7817cdd1af1aeb98ce925b590a0cc1a2d",
   "japanese-wagasa": "ec36921d9d056de9487908ee66e9abea0fdb0e91d4d89cd3f72fc299c415640d",
   "kagami-biraki-sake": "033f3995718843df088968561aac4229b8aaac33a51d5cb7eff1c397648420a2",
-  "kagami-mochi-offering": "76c22171a9ff40ce1e06666b94117c3c7ec07f8165fa4b11c509ad0e3b43a6a8",
+  "kagami-mochi-offering": "f749739695715e274761309d5f52b6029ca1947de4ab12036de55bee5ced8df2",
   "kameido-usokae": "efaa1720c5f8ef62ce646839c27a3d2e00996c4a5079a18419779f84f5f6790c",
   "kitano-nadeushi": "41050e8085a8dc065083df61bc59a6e44373990dc0f89ce5d29098c51be51561",
   "korean-bojagi-wrap": "f0b984f4beee4cd573cb5db77b18be0258894fa3df5b9495bdabc507649c076b",

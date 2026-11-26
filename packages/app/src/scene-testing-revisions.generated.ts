@@ -100,7 +100,7 @@ export const sceneTestingRevisions: Readonly<Record<string, string>> = {
   "nanakusa-gayu": "ab56423364d8927338c231c34541d01e14fd231ecd92ae0c7dae861a9bc5cfd5",
   "navruz-sumalak": "d4a7b535d23bff38c62cb27459dc67a5ba0156a7a2f10795906f72aef17c1447",
   "ndebele-painted-house": "0dd2498b9d470dbb1e369e2c38fd9e7e731e9f4b07f60957cf32ca6c82e9b243",
-  "neapolitan-cornicello": "adc357fe528bf9967ddee84eaab6fe42a9156b7205e84630a10b7ac25f809d36",
+  "neapolitan-cornicello": "b507cadb40312c2645bda473eec84c0508d24ff4072609d623bdad19b2eaf040",
   "niue-shell-necklace": "dbc9dcec8ce0d674bd069373a90aea054b106503a4ed5947bf49e30e0c1f6605",
   "omamori-cycle": "7d798077913c30f37354990975f4ea757e5a9a44a6bb702619b77674336e2bc9",
   "omikuji": "b8cca258035c6dc27556c445b5d2c8f75dd198f5af8c5cf5586fd86600684d80",

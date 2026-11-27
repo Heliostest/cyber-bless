@@ -7,6 +7,7 @@ import { createObjectPointer } from '../object-pointer'
 import { createPosePlacement } from '../pose-placement'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createWaterBowlsModel } from './model'
+import { createSurfaceRipple } from '@wbr/scene-runtime/soft-plume'
 
 const TOTAL_STEPS = 9
 // Build a template when it is used; cached modules outlive the bounded composition registry.
@@ -38,6 +39,8 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
   const model = createWaterBowlsModel(); scene.add(model.root)
+  const ripple = createSurfaceRipple({ radius: .12, maxRings: 4, color: 0xeef9fb, opacity: .52, duration: .95 })
+  scene.add(ripple.root)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const phase = (step: number) => step === 0 ? 0 : step < 8 ? 1 : step === 8 ? 2 : 3
   const pose = (step: number, n: number) => { amount = n; model.pose(phase(step), phase(step) === 1 ? (step - 1 + n) / 7 : n); matrices() }
@@ -86,13 +89,33 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
     // Only accepted motion observes the stream: resize/restore also call pose.
     if ((short || model.stream.visible) && !motion.sounded) {
       motion.sounded = true
-      withHostCallbacks(() => feedback.sound('water', { duration: short ? .12 : .8, strength: .55 }))
+      withHostCallbacks(() => {
+        feedback.sound('water', { duration: short ? .12 : .8, strength: .55 })
+        feedback.sound('metal', { duration: short ? .10 : .38, strength: .18 })
+      })
     }
     if (!model.stream.visible && motion.flowing) feedback.stop()
     motion.flowing = model.stream.visible
   }
+  function syncRipple() {
+    const quiet = ctx.isReducedMotion?.() ?? false
+    if (!quiet && motion && phase(motion.step) === 1 && model.stream.visible) {
+      const idx = THREE.MathUtils.clamp(motion.step - 1, 0, model.waters.length - 1)
+      const w = model.waters[idx]!
+      w.geometry.computeBoundingBox()
+      const box = w.geometry.boundingBox!
+      const topY = w.position.y + box.max.y + model.root.position.y + .002
+      const waterRadius = Math.max(.07, (box.max.x - box.min.x) * .5)
+      ripple.root.position.set((idx - 3) * .394, topY, .2)
+      ripple.root.scale.setScalar(THREE.MathUtils.clamp((waterRadius - .006) / .12, .72, 1.32))
+      ripple.setContinuous(true, 0, 0)
+    } else {
+      ripple.setContinuous(false)
+    }
+  }
   function settle() {
     if (!inputActive() || !motion) return
+    ripple.setContinuous(false)
     placement.cancel(); at = motion.step + 1; motion = null; restore()
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
@@ -135,15 +158,18 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
           else { placement.settle(1); pose(motion.step, .12 + .88 * ease((motion.time - .2) / .8)) }
         } else { pose(motion.step, motion.from + (1 - motion.from) * eased); placement.settle(eased) }
         soundWater()
+        syncRipple()
         if (motion.time === 1) settle()
+      } else {
+        ripple.setContinuous(false)
       }
-      if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) { ripple.update(delta, ctx.isReducedMotion?.() ?? false); matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); model.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); ripple.dispose(); model.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

@@ -1,5 +1,7 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
+import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -156,46 +158,78 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group()
   scene.add(world)
 
-  const red = new THREE.MeshStandardMaterial({ color: 0xb82f29, roughness: 0.68, vertexColors: true })
+  const red = new THREE.MeshPhysicalMaterial({
+    color: 0xb82f29, roughness: 0.48, metalness: 0.02, clearcoat: 0.42, clearcoatRoughness: 0.28, vertexColors: true,
+  })
+  applyCraftSurface(red, { kind: 'lacquer', strength: 0.28 })
   const cream = new THREE.MeshStandardMaterial({ color: 0xffebcf, roughness: 0.9, side: THREE.DoubleSide })
   const white = new THREE.MeshStandardMaterial({ color: 0xfffbeb, roughness: 0.91, side: THREE.DoubleSide })
   const ink = new THREE.MeshStandardMaterial({ color: 0x24201c, roughness: 0.91, side: THREE.DoubleSide })
-  const gold = new THREE.MeshStandardMaterial({ color: 0xd9aa4c, roughness: 0.64, metalness: 0.12, side: THREE.DoubleSide })
+  const gold = new THREE.MeshStandardMaterial({ color: 0xd9aa4c, roughness: 0.34, metalness: 0.56, side: THREE.DoubleSide })
+  applyCraftSurface(gold, { kind: 'metal', scale: 3.2, strength: 0.42 })
   const redPaint = new THREE.MeshStandardMaterial({ color: 0xa42a25, roughness: 0.86 })
-  const wood = new THREE.MeshStandardMaterial({ color: 0xa8794f, roughness: 0.9 })
-  const darkWood = new THREE.MeshStandardMaterial({ color: 0x78523b, roughness: 0.92 })
+  const wood = new THREE.MeshStandardMaterial({ color: 0xa8794f, roughness: 0.88, vertexColors: true })
+  const darkWood = new THREE.MeshStandardMaterial({ color: 0x78523b, roughness: 0.9, vertexColors: true })
+  const inkstoneMat = new THREE.MeshStandardMaterial({ color: 0x3b3a3d, roughness: 0.88, vertexColors: true })
+  const wetInkMat = createRitualMaterial({ color: 0x1d1a18, roughness: 0.14, metalness: 0.02 }, { kind: 'wet', strength: 0.45 })
 
   ;[wood, darkWood].forEach(material => applyCraftSurface(material, { kind: 'wood', strength: .4 }))
-  const stand = new THREE.Mesh(new RoundedBoxGeometry(1.72, 0.13, 1.04, 3, 0.055), wood)
+  applyCraftSurface(inkstoneMat, { kind: 'stone', scale: 2.2, strength: 0.46 })
+  const standGeo = bakeCreviceAO(new RoundedBoxGeometry(1.72, 0.13, 1.04, 3, 0.055), { groundY: -0.065, groundRange: 0.045, strength: 0.26, tint: 0x523b2c })
+  const stand = new THREE.Mesh(standGeo, wood)
   stand.name = 'daruma-stand'
   stand.position.y = 0.065
   world.add(stand)
   const floorY = getEnvironmentSurfaceY('daruma-eye-painting')
   const footH = 0.045 - floorY
   for (const x of [-0.59, 0.59]) {
-    const foot = new THREE.Mesh(new RoundedBoxGeometry(0.18, footH, 0.64, 2, 0.02), darkWood)
+    const footGeo = bakeCreviceAO(new RoundedBoxGeometry(0.18, footH, 0.64, 2, 0.02), { groundY: -footH / 2, groundRange: 0.05, strength: 0.32, tint: 0x4b3528 })
+    const foot = new THREE.Mesh(footGeo, darkWood)
     foot.position.set(x, floorY + footH / 2, 0)
     world.add(foot)
   }
   // Sparse, shallow wood-grain lines remain legible on small screens.
   for (let i = 0; i < 4; i++) {
-    const line = new THREE.Mesh(new RoundedBoxGeometry(0.24 + i * 0.08, 0.003, 0.006, 2, 0.002), darkWood)
+    const lineGeo = bakeCreviceAO(new RoundedBoxGeometry(0.24 + i * 0.08, 0.003, 0.006, 2, 0.002), { strength: 0.15, tint: 0x4b3528 })
+    const line = new THREE.Mesh(lineGeo, darkWood)
     line.position.set(-0.37 + i * 0.24, 0.132, 0.39 - i * 0.045)
     world.add(line)
   }
   const shadowMap = makeShadow()
-  const groundShadow = new THREE.Mesh(new THREE.PlaneGeometry(2.28, 1.52), new THREE.MeshBasicMaterial({
-    map: shadowMap, color: 0x49362a, opacity: 0.25, transparent: true, depthWrite: false,
-  }))
-  groundShadow.rotation.x = -Math.PI / 2
-  groundShadow.position.y = floorY + 0.001
-  world.add(groundShadow)
-  const contactShadow = new THREE.Mesh(new THREE.PlaneGeometry(1.24, 0.91), new THREE.MeshBasicMaterial({
-    map: shadowMap, color: 0x362820, opacity: 0.37, transparent: true, depthWrite: false,
-  }))
-  contactShadow.rotation.x = -Math.PI / 2
-  contactShadow.position.y = 0.134
-  world.add(contactShadow)
+  const makeShadowPlane = (name: string, width: number, depth: number, y: number, opacity: number, x = 0, z = 0) => {
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), new THREE.MeshBasicMaterial({
+      map: shadowMap, color: 0x3f2f2b, opacity, transparent: true, depthWrite: false,
+      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2, toneMapped: false,
+    }))
+    mesh.name = name
+    mesh.rotation.x = -Math.PI / 2
+    mesh.position.set(x, y, z)
+    mesh.raycast = () => {}
+    mesh.userData.effect = true
+    mesh.userData.keepInOutdoorEnvironment = true
+    mesh.userData.toonSurface = { outline: false }
+    mesh.castShadow = mesh.receiveShadow = false
+    world.add(mesh)
+    return mesh
+  }
+  makeShadowPlane('daruma-ground-shadow', 2.28, 1.52, floorY + 0.0018, 0.24)
+  const contactShadow = makeShadowPlane('daruma-contact-shadow', 1.24, 0.91, 0.132, 0.36)
+  // Compact dark-slate inkstone with wet sumi ink pool beside the doll on the stand's front-left.
+  const inkstoneGeo = bakeCreviceAO(new RoundedBoxGeometry(0.24, 0.036, 0.30, 3, 0.010), {
+    groundY: -0.018, groundRange: 0.016, cavityCenter: [0, 0.02], cavityRadius: 0.085, cavityTopY: 0.018, strength: 0.38, tint: 0x222024,
+  })
+  const inkstone = new THREE.Mesh(inkstoneGeo, inkstoneMat)
+  inkstone.name = 'daruma-inkstone'
+  inkstone.position.set(-0.62, 0.148, 0.34)
+  world.add(inkstone)
+  const inkPool = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.064, 0.004, 24), wetInkMat)
+  inkPool.name = 'daruma-ink-pool'
+  inkPool.scale.set(1, 1, 1.18)
+  inkPool.position.set(-0.62, 0.165, 0.36)
+  inkPool.userData.toonSurface = { outline: false }
+  world.add(inkPool)
+  makeShadowPlane('daruma-inkstone-shadow', 0.30, 0.36, 0.1318, 0.24, -0.62, 0.34)
+  makeShadowPlane('daruma-brush-rest-shadow', 0.20, 0.20, 0.1318, 0.22, 0.66, 0.455)
 
   const doll = new THREE.Group()
   doll.name = 'daruma-doll'
@@ -214,6 +248,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     colors.push(shade, shade, shade)
   }
   bodyGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+  bakeCreviceAO(bodyGeometry, { groundY: 0, groundRange: 0.34, strength: 0.36, tint: 0x4b1d1a })
   const shell = new THREE.Mesh(bodyGeometry, red)
   shell.name = 'daruma-shell'
   doll.add(shell)
@@ -292,7 +327,8 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
 
   // The brush rests on a small wooden block at the stand's front-right, inside a
   // phone-width frame, its inked tip already pointing toward the face.
-  const rest = new THREE.Mesh(new RoundedBoxGeometry(0.13, 0.081, 0.13, 2, 0.022), darkWood)
+  const restGeo = bakeCreviceAO(new RoundedBoxGeometry(0.13, 0.081, 0.13, 2, 0.022), { groundY: -0.0405, groundRange: 0.03, strength: 0.28, tint: 0x4b3528 })
+  const rest = new THREE.Mesh(restGeo, darkWood)
   rest.name = 'daruma-brush-rest'
   rest.position.set(0.66, 0.1705, 0.455)
   world.add(rest)
@@ -302,22 +338,26 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
   brush.position.copy(brushHome)
   brush.rotation.z = BRUSH_REST_TILT
   world.add(brush)
-  const bamboo = new THREE.MeshStandardMaterial({ color: 0xcaa56c, roughness: 0.84 })
-  applyCraftSurface(bamboo, { kind: 'bamboo', strength: .35, axis: 'y' })
+  const bamboo = new THREE.MeshStandardMaterial({ color: 0xcaa56c, roughness: 0.72, vertexColors: true })
+  applyCraftSurface(bamboo, { kind: 'bamboo', strength: .42, axis: 'y' })
   const hair = new THREE.MeshStandardMaterial({ color: 0xf2e8d2, roughness: 0.95 })
-  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.034, 0.5, 18), bamboo)
+  const shaftGeo = bakeCreviceAO(new THREE.CylinderGeometry(0.03, 0.034, 0.5, 18), { strength: 0.18, tint: 0x5c4630 })
+  const shaft = new THREE.Mesh(shaftGeo, bamboo)
   shaft.name = 'daruma-brush-shaft'
   brush.add(shaft)
   for (const y of [-0.07, 0.12]) {
-    const node = new THREE.Mesh(new THREE.TorusGeometry(0.032, 0.006, 6, 20), bamboo)
+    const nodeGeo = bakeCreviceAO(new THREE.TorusGeometry(0.032, 0.006, 6, 20), { strength: 0.22, tint: 0x5c4630 })
+    const node = new THREE.Mesh(nodeGeo, bamboo)
     node.rotation.x = Math.PI / 2
     node.position.y = y
     brush.add(node)
   }
-  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.034, 14, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), darkWood)
+  const capGeo = bakeCreviceAO(new THREE.SphereGeometry(0.034, 14, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), { strength: 0.20, tint: 0x4b3528 })
+  const cap = new THREE.Mesh(capGeo, darkWood)
   cap.position.y = -0.25
   brush.add(cap)
-  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.043, 0.035, 0.07, 18), darkWood)
+  const collarGeo = bakeCreviceAO(new THREE.CylinderGeometry(0.043, 0.035, 0.07, 18), { strength: 0.22, tint: 0x4b3528 })
+  const collar = new THREE.Mesh(collarGeo, darkWood)
   collar.position.y = 0.282
   brush.add(collar)
   // A soft hair head whose upper half is already dipped in ink.
@@ -329,7 +369,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
   const hairBase = head(0, 0.5, hair)
   hairBase.position.y = 0.315
   brush.add(hairBase)
-  const bristles = head(0.5, 1, ink)
+  const bristles = head(0.5, 1, wetInkMat)
   bristles.name = 'daruma-brush-ink-tip'
   bristles.position.y = 0.315
   brush.add(bristles)
@@ -437,6 +477,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     brush.visible = false
     cancelDrag()
     wobbleVelocity = reduced() ? 0 : 0.42
+    fx.sound('fabric', { duration: reduced() ? 0.12 : 0.28, strength: 0.45 })
     fx.impact({ freqs: [523.25, 783.99], duration: 0.23, gain: 0.025, type: 'triangle' })
     ctx.onProgress?.(1)
     syncOverlay()
@@ -462,6 +503,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     doll.position.set(0,REST_Y,0)
     doll.rotation.z = 0
     ctx.onProgress?.(3)
+    fx.sound('woodTap', { duration: reduced() ? 0.10 : 0.16, strength: 0.44 })
     fx.impact({ freqs: [392, 587.33], duration: 0.3, gain: 0.025 })
     syncOverlay()
     overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
@@ -472,6 +514,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     settleK = 0
     cancelDrag()
     wobbleVelocity = reduced() ? 0 : -0.55
+    if (!reduced()) fx.sound('woodTap', { duration: 0.18, strength: 0.36 })
     syncOverlay()
     if (reduced()) { settleK = 1; complete() }
   }
@@ -608,6 +651,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
+      fx.update()
       if (!canAct()) {
         pointers.clear()
         blockedMulti = false

@@ -400,7 +400,7 @@ describe('omikuji original reflection practice', () => {
       const mats = mesh.material ? Array.isArray(mesh.material) ? mesh.material : [mesh.material] : []
       mats.forEach(mat => {
         resources.add(mat)
-        const map = (mat as THREE.MeshStandardMaterial).map
+        const map = o.userData?.effect ? null : (mat as THREE.MeshStandardMaterial).map
         if (map) resources.add(map)
       })
       if ((o as THREE.Light).isLight) resources.add(o as THREE.Light)
@@ -416,6 +416,15 @@ describe('omikuji original reflection practice', () => {
     }
     button.click(); s.instance.update(5)
     expect(s.progress).toEqual([]); expect(s.overlay.childElementCount).toBe(0); expect(drawn.scene!.children).toHaveLength(0)
+  })
+
+  it('bakes crevice AO onto the hexagonal box and stand and seats contact shadows beneath box and legs', () => {
+    mount()
+    expect((object('omikuji-box-body') as THREE.Mesh).geometry.getAttribute('color')).toBeDefined()
+    expect((object('omikuji-stand-top') as THREE.Mesh).geometry.getAttribute('color')).toBeDefined()
+    expect(object('omikuji-box-contact-ao').userData.effect).toBe(true)
+    expect(object('omikuji-stand-contact-ao').userData.effect).toBe(true)
+    for (let i = 0; i < 4; i++) expect(object(`omikuji-stand-leg-contact-ao-${i}`).userData.effect).toBe(true)
   })
 })
 

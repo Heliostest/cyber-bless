@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { createCozyEnvironment as createEnvironment } from "./cozy-environment";
+import { readEnvironmentWind } from "./environment-wind";
 import { getEnvironmentRiverbedY, getEnvironmentSurfaceY } from "./environment-profiles";
 import * as sceneMotion from "./scene-motion";
 import { builtInScenes, isSceneVisibleInApp } from "@wbr/core/daily-scenes";
@@ -798,6 +799,402 @@ describe('environment surface metadata and outdoor ShadowMaterial suppression', 
         const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
         mats.forEach(mat => mat.dispose());
       }
+    }
+  });
+});
+
+describe('directional painted sky, layered mountain ridges, shared wind bus, light motes, tight shadows, and night lamp pool', () => {
+  it('mounts scene.userData.environmentWind, advances/freezes/zeroes with motion state, and restores cleanly on dispose', async () => {
+    const motion = vi.spyOn(sceneMotion, 'readSceneMotion').mockReturnValue({ active: true, reducedMotion: false });
+    const clock = vi.spyOn(performance, 'now').mockReturnValue(2000);
+    const scene = new THREE.Scene();
+    const priorWind = { sentinel: true };
+    scene.userData.environmentWind = priorWind;
+    const world = createCozyEnvironment(scene, { id: 'woodfish', loadSky: async () => new THREE.DataTexture() })!;
+    const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
+    try {
+      await world.ready;
+      const wind = readEnvironmentWind(scene);
+      expect(wind).toBeDefined();
+      expect(wind!.strength).toBeGreaterThan(0);
+
+      wind!.triggerGust(0.9);
+      const peakGust = wind!.gust;
+      expect(peakGust).toBeCloseTo(0.9, 6);
+
+      world.prepare(renderer);
+      clock.mockReturnValue(2030);
+      world.prepare(renderer);
+      expect(wind!.time).toBeCloseTo(0.03, 5);
+      expect(wind!.gust).toBeLessThan(peakGust);
+      expect(wind!.gust).toBeGreaterThan(0);
+
+      // advanceMotion: false freezes both wind clock and gust decay.
+      const frozenTime = wind!.time;
+      const frozenGust = wind!.gust;
+      clock.mockReturnValue(2070);
+      world.prepare(renderer, 'toon-soft', { advanceMotion: false });
+      expect(wind!.time).toBeCloseTo(frozenTime, 6);
+      expect(wind!.gust).toBeCloseTo(frozenGust, 6);
+
+      // Paused scene (!motion.active) freezes time and gust.
+      motion.mockReturnValue({ active: false, reducedMotion: false });
+      clock.mockReturnValue(2100);
+      world.prepare(renderer);
+      expect(wind!.time).toBeCloseTo(frozenTime, 6);
+      expect(wind!.gust).toBeCloseTo(frozenGust, 6);
+
+      // reducedMotion zeroes strength, gust, time, and sampled wind vector.
+      motion.mockReturnValue({ active: true, reducedMotion: true });
+      clock.mockReturnValue(2130);
+      world.prepare(renderer);
+      expect(wind!.time).toBe(0);
+      expect(wind!.strength).toBe(0);
+      expect(wind!.gust).toBe(0);
+      expect(wind!.sample(0, 1, 0).toArray()).toEqual([0, 0, 0]);
+
+      world.dispose();
+      expect(scene.userData.environmentWind).toBe(priorWind);
+    } finally {
+      world.dispose();
+      motion.mockRestore();
+      clock.mockRestore();
+    }
+
+    const cleanScene = new THREE.Scene();
+    const cleanWorld = createCozyEnvironment(cleanScene, { id: 'woodfish', loadSky: async () => new THREE.DataTexture() })!;
+    expect(readEnvironmentWind(cleanScene)).toBeDefined();
+    await cleanWorld.ready;
+    cleanWorld.dispose();
+    expect(cleanScene.userData.environmentWind).toBeUndefined();
+  });
+
+  it('paints a 128x64 sun/moon-directional equirectangular sky DataTexture and disposes all tone variants once', async () => {
+    const samplePixel = (texture: THREE.DataTexture, x: number, y: number) => {
+      const { data, width } = texture.image as { data: Uint8Array; width: number; height: number };
+      const at = (y * width + x) * 4;
+      return [data[at]!, data[at + 1]!, data[at + 2]!] as const;
+    };
+    const colForWorldPhi = (phiWorld: number, width: number) => {
+      const phiTex = phiWorld + 2.2;
+      const wrapped = ((((phiTex + Math.PI) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) - Math.PI;
+      const u = wrapped / (Math.PI * 2) + 0.5;
+      return Math.min(width - 1, Math.max(0, Math.floor(u * width)));
+    };
+
+    const dayScene = new THREE.Scene();
+    const dayWorld = createCozyEnvironment(dayScene, { id: 'shinto-torii', loadSky: async () => new THREE.DataTexture() })!;
+    const nightScene = new THREE.Scene();
+    const nightWorld = createCozyEnvironment(nightScene, { id: 'yeondeunghoe', loadSky: async () => new THREE.DataTexture() })!;
+    try {
+      await Promise.all([dayWorld.ready, nightWorld.ready]);
+      const komorebiSky = dayScene.background as THREE.DataTexture;
+      expect(komorebiSky).toBeInstanceOf(THREE.DataTexture);
+      expect(komorebiSky.image.width).toBe(128);
+      expect(komorebiSky.image.height).toBe(64);
+      expect(komorebiSky.colorSpace).toBe(THREE.SRGBColorSpace);
+      expect(komorebiSky.mapping).toBe(THREE.EquirectangularReflectionMapping);
+
+      // Sun azimuth (-6, 12, 6) has a warmer horizon bloom than the opposite cool counter-sky.
+      const sunPhi = Math.atan2(6, -6);
+      const sunCol = colForWorldPhi(sunPhi, 128);
+      const antiSunCol = colForWorldPhi(sunPhi + Math.PI, 128);
+      const [sr, , sb] = samplePixel(komorebiSky, sunCol, 34);
+      const [ar, , ab] = samplePixel(komorebiSky, antiSunCol, 34);
+      expect(sr - sb).toBeGreaterThan(ar - ab + 30);
+
+      // Switching through tiny-delivery and original also produces 128x64 DataTextures and disposes each once.
+      dayWorld.setTone('tiny-delivery');
+      const deliverySky = dayScene.background as THREE.DataTexture;
+      expect(deliverySky).toBeInstanceOf(THREE.DataTexture);
+      expect(deliverySky.image.width).toBe(128);
+      expect(deliverySky.image.height).toBe(64);
+
+      dayWorld.setTone('original');
+      const originalSky = dayScene.background as THREE.DataTexture;
+      expect(originalSky).toBeInstanceOf(THREE.DataTexture);
+      expect(originalSky.image.width).toBe(128);
+      expect(originalSky.image.height).toBe(64);
+
+      const spies = [komorebiSky, deliverySky, originalSky].map(tex => vi.spyOn(tex, 'dispose'));
+
+      // Night sky has a subtle cool silver-blue moonlit glow near upper-right (2.5, 4, 2).
+      const nightSky = nightScene.background as THREE.DataTexture;
+      expect(nightSky).toBeInstanceOf(THREE.DataTexture);
+      expect(nightSky.image.width).toBe(128);
+      expect(nightSky.image.height).toBe(64);
+      const moonPhi = Math.atan2(2, 2.5);
+      const moonCol = colForWorldPhi(moonPhi, 128);
+      const antiMoonCol = colForWorldPhi(moonPhi + Math.PI, 128);
+      const [mr, mg, mb] = samplePixel(nightSky, moonCol, 50);
+      const [dr, dg, db] = samplePixel(nightSky, antiMoonCol, 50);
+      expect(mr + mg + mb).toBeGreaterThan(dr + dg + db + 40);
+      expect(mb).toBeGreaterThan(mr);
+
+      const nightSpy = vi.spyOn(nightSky, 'dispose');
+      dayWorld.dispose();
+      dayWorld.dispose();
+      nightWorld.dispose();
+      nightWorld.dispose();
+      spies.forEach(spy => expect(spy).toHaveBeenCalledOnce());
+      expect(nightSpy).toHaveBeenCalledOnce();
+    } finally {
+      dayWorld.dispose();
+      nightWorld.dispose();
+    }
+  });
+
+  it('builds 3 layered vertex-colored mountain ridge silhouettes in daylight, keeps vertex colors across tones, and omits them at night/coast', async () => {
+    const dayScene = new THREE.Scene();
+    const dayWorld = createCozyEnvironment(dayScene, { id: 'shinto-torii', loadSky: async () => new THREE.DataTexture() })!;
+    const nightScene = new THREE.Scene();
+    const nightWorld = createCozyEnvironment(nightScene, { id: 'diya-oil-lamp', loadSky: async () => new THREE.DataTexture() })!;
+    const coastScene = new THREE.Scene();
+    const coastWorld = createCozyEnvironment(coastScene, { id: 'udo-undama', loadSky: async () => new THREE.DataTexture() })!;
+    try {
+      await Promise.all([dayWorld.ready, nightWorld.ready, coastWorld.ready]);
+      const names = ['distant-ridge-near', 'distant-ridge-mid', 'distant-ridge-far'] as const;
+      const expectedMaterialNames = [
+        'Komorebi backdrop hill',
+        'Komorebi backdrop distantHill',
+        'Komorebi backdrop farRidge',
+      ] as const;
+
+      dayScene.updateMatrixWorld(true);
+      const originalColorSnapshots: number[][] = [];
+      names.forEach((name, idx) => {
+        const ridge = dayScene.getObjectByName(name) as THREE.Mesh | undefined;
+        expect(ridge, name).toBeInstanceOf(THREE.Mesh);
+        const mat = ridge!.material as THREE.MeshPhongMaterial;
+        expect(mat).toBeInstanceOf(THREE.MeshPhongMaterial);
+        expect(mat.name).toBe(expectedMaterialNames[idx]);
+        expect(mat.vertexColors).toBe(true);
+        expect(mat.customProgramCacheKey()).toBe('komorebi-backdrop-atmosphere-v1');
+        expect(ridge!.castShadow).toBe(false);
+
+        const colorAttr = ridge!.geometry.getAttribute('color') as THREE.BufferAttribute;
+        expect(colorAttr).toBeDefined();
+        const cols = Math.round(colorAttr.count / 5) - 1;
+        expect(cols).toBeGreaterThanOrEqual(48);
+        expect(cols).toBeLessThanOrEqual(64);
+
+        // Crests are warmer (higher R - B) than misty blue-sage bases.
+        const rowStride = cols + 1;
+        const baseIdx = Math.floor(cols / 2);
+        const crestIdx = 4 * rowStride + Math.floor(cols / 2);
+        const baseWarmth = colorAttr.getX(baseIdx) - colorAttr.getZ(baseIdx);
+        const crestWarmth = colorAttr.getX(crestIdx) - colorAttr.getZ(crestIdx);
+        expect(crestWarmth).toBeGreaterThan(baseWarmth + 0.12);
+
+        // Ridges remain well behind the foreground interaction space.
+        const box = new THREE.Box3().setFromObject(ridge!);
+        expect(box.max.z).toBeLessThan(-14);
+        originalColorSnapshots.push(Array.from(colorAttr.array));
+      });
+
+      // Tone round-trip preserves authored ridge vertex colors intact.
+      dayWorld.setTone('tiny-delivery');
+      dayWorld.setTone('original');
+      dayWorld.setTone('komorebi');
+      names.forEach((name, idx) => {
+        const ridge = dayScene.getObjectByName(name) as THREE.Mesh;
+        expect(Array.from(ridge.geometry.getAttribute('color').array)).toEqual(originalColorSnapshots[idx]);
+      });
+
+      // Night and coastal scenes omit daylight mountain ridges.
+      for (const name of names) {
+        expect(nightScene.getObjectByName(name)).toBeUndefined();
+        expect(coastScene.getObjectByName(name)).toBeUndefined();
+      }
+    } finally {
+      dayWorld.dispose();
+      nightWorld.dispose();
+      coastWorld.dispose();
+    }
+  });
+
+  it('adds raycast-transparent Komorebi light motes on root, hides on reducedMotion, holds on stills, and disposes once', async () => {
+    const motion = vi.spyOn(sceneMotion, 'readSceneMotion').mockReturnValue({ active: true, reducedMotion: false });
+    const clock = vi.spyOn(performance, 'now').mockReturnValue(1000);
+    const dayScene = new THREE.Scene();
+    const dayWorld = createCozyEnvironment(dayScene, { id: 'shinto-torii', loadSky: async () => new THREE.DataTexture() })!;
+    const nightScene = new THREE.Scene();
+    const nightWorld = createCozyEnvironment(nightScene, { id: 'yeondeunghoe', loadSky: async () => new THREE.DataTexture() })!;
+    const coastScene = new THREE.Scene();
+    const coastWorld = createCozyEnvironment(coastScene, { id: 'udo-undama', loadSky: async () => new THREE.DataTexture() })!;
+    const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
+    try {
+      await Promise.all([dayWorld.ready, nightWorld.ready, coastWorld.ready]);
+      const dayMotes = dayScene.getObjectByName('komorebi-light-motes') as THREE.InstancedMesh;
+      const nightMotes = nightScene.getObjectByName('komorebi-light-motes') as THREE.InstancedMesh;
+      expect(dayMotes).toBeInstanceOf(THREE.InstancedMesh);
+      expect(dayMotes.count).toBe(28);
+      expect(dayMotes.parent?.name).toBe('cozy-environment');
+      expect(dayScene.getObjectByName('daylight-planting')?.getObjectByName('komorebi-light-motes')).toBeUndefined();
+      expect(dayMotes.userData.effect).toBe(true);
+      expect(dayMotes.userData.toonSurface).toEqual({ outline: false });
+      expect(dayMotes.frustumCulled).toBe(false);
+      const moteMat = dayMotes.material as THREE.ShaderMaterial;
+      expect(moteMat.transparent).toBe(true);
+      expect(moteMat.depthWrite).toBe(false);
+      expect(moteMat.blending).toBe(THREE.AdditiveBlending);
+
+      expect(nightMotes).toBeInstanceOf(THREE.InstancedMesh);
+      expect(nightMotes.count).toBe(18);
+      expect(coastScene.getObjectByName('komorebi-light-motes')).toBeUndefined();
+
+      // Raycaster never intercepts floating motes.
+      dayScene.updateMatrixWorld(true);
+      const ray = new THREE.Raycaster(new THREE.Vector3(0, 1.5, 4), new THREE.Vector3(0, 0, -1));
+      expect(ray.intersectObject(dayMotes, true)).toHaveLength(0);
+
+      // Still capture (advanceMotion: false) keeps motes visible and static at deterministic initial positions.
+      const initialMatrices = dayMotes.instanceMatrix.array.slice();
+      dayWorld.prepare(renderer, 'toon-soft', { advanceMotion: false });
+      expect(dayMotes.visible).toBe(true);
+      expect(dayMotes.instanceMatrix.array).toEqual(initialMatrices);
+
+      // Active motion drifts motes smoothly.
+      dayWorld.prepare(renderer);
+      clock.mockReturnValue(1050);
+      dayWorld.prepare(renderer);
+      expect(dayMotes.visible).toBe(true);
+      expect(moteMat.uniforms.uTime.value).toBeCloseTo(0.05, 5);
+      expect(dayMotes.instanceMatrix.array).not.toEqual(initialMatrices);
+
+      // reducedMotion hides motes; turning reducedMotion off shows them again.
+      motion.mockReturnValue({ active: true, reducedMotion: true });
+      clock.mockReturnValue(1100);
+      dayWorld.prepare(renderer);
+      expect(dayMotes.visible).toBe(false);
+
+      motion.mockReturnValue({ active: true, reducedMotion: false });
+      clock.mockReturnValue(1130);
+      dayWorld.prepare(renderer);
+      expect(dayMotes.visible).toBe(true);
+
+      const geoSpy = vi.spyOn(dayMotes.geometry, 'dispose');
+      const matSpy = vi.spyOn(moteMat, 'dispose');
+      const texSpy = vi.spyOn(moteMat.uniforms.uSprite.value as THREE.DataTexture, 'dispose');
+      dayWorld.dispose();
+      dayWorld.dispose();
+      expect(geoSpy).toHaveBeenCalledOnce();
+      expect(matSpy).toHaveBeenCalledOnce();
+      expect(texSpy).toHaveBeenCalledOnce();
+    } finally {
+      dayWorld.dispose();
+      nightWorld.dispose();
+      coastWorld.dispose();
+      motion.mockRestore();
+      clock.mockRestore();
+    }
+  });
+
+  it('tightens foreground shadow frustum to [-2.85, 2.85], snaps target to texels, uses radius 2.4, and restores target on dispose', async () => {
+    const scene = new THREE.Scene();
+    const sun = new THREE.DirectionalLight();
+    sun.target.position.set(0.5, 0.25, -0.75);
+    scene.add(sun);
+    const world = createCozyEnvironment(scene, { id: 'shinto-torii', loadSky: async () => new THREE.DataTexture() })!;
+    const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
+    try {
+      await world.ready;
+      world.prepare(renderer, 'toon-soft', { advanceMotion: false });
+
+      expect(sun.shadow.camera.left).toBeCloseTo(-2.85, 5);
+      expect(sun.shadow.camera.right).toBeCloseTo(2.85, 5);
+      expect(sun.shadow.camera.top).toBeCloseTo(2.85, 5);
+      expect(sun.shadow.camera.bottom).toBeCloseTo(-2.85, 5);
+      expect(sun.shadow.camera.near).toBeCloseTo(0.5, 5);
+      expect(sun.shadow.camera.far).toBeCloseTo(28, 5);
+      expect(sun.shadow.radius).toBeCloseTo(2.4, 5);
+      expect(sun.shadow.normalBias).toBeCloseTo(0.012, 5);
+      expect(sun.shadow.bias).toBeCloseTo(-0.00025, 6);
+
+      // Sun offset relative to snapped target preserves exact (-6, 12, 6) direction.
+      const offset = sun.position.clone().sub(sun.target.position);
+      expect(offset.x).toBeCloseTo(-6, 4);
+      expect(offset.y).toBeCloseTo(12, 4);
+      expect(offset.z).toBeCloseTo(6, 4);
+
+      // Target is snapped to integer light-space shadow texel increments.
+      const dir = offset.clone().normalize();
+      const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), dir).normalize();
+      const upLight = new THREE.Vector3().crossVectors(dir, right);
+      const texel = (2.85 * 2) / sun.shadow.mapSize.x;
+      expect(Math.abs(sun.target.position.dot(right) / texel - Math.round(sun.target.position.dot(right) / texel))).toBeLessThan(1e-5);
+      expect(Math.abs(sun.target.position.dot(upLight) / texel - Math.round(sun.target.position.dot(upLight) / texel))).toBeLessThan(1e-5);
+
+      world.dispose();
+      expect(sun.target.position.toArray()).toEqual([0.5, 0.25, -0.75]);
+    } finally {
+      world.dispose();
+    }
+  });
+
+  it('tracks active night PointLights with a zero-raycast warm ground lamp pool and omits it by day', async () => {
+    const dayScene = new THREE.Scene();
+    const dayWorld = createCozyEnvironment(dayScene, { id: 'woodfish', loadSky: async () => new THREE.DataTexture() })!;
+    expect(dayScene.getObjectByName('night-lamp-pool')).toBeUndefined();
+    await dayWorld.ready;
+    dayWorld.dispose();
+
+    const nightScene = new THREE.Scene();
+    const lamp = new THREE.PointLight(0xffaa44, 0);
+    lamp.position.set(0.45, 0.55, -0.25);
+    nightScene.add(lamp);
+    const nightWorld = createCozyEnvironment(nightScene, { id: 'diya-oil-lamp', loadSky: async () => new THREE.DataTexture() })!;
+    const renderer = { shadowMap: { enabled: false, type: THREE.PCFSoftShadowMap } } as THREE.WebGLRenderer;
+    try {
+      await nightWorld.ready;
+      const pool = nightScene.getObjectByName('night-lamp-pool') as THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>;
+      expect(pool).toBeInstanceOf(THREE.Mesh);
+      expect(pool.userData.effect).toBe(true);
+      expect(pool.userData.toonSurface).toEqual({ outline: false });
+      expect(pool.material.transparent).toBe(true);
+      expect(pool.material.depthWrite).toBe(false);
+      expect(pool.material.polygonOffset).toBe(true);
+      expect(pool.material.blending).toBe(THREE.AdditiveBlending);
+      expect(pool.material.map).toBeInstanceOf(THREE.DataTexture);
+
+      // Zero-intensity lamp keeps pool hidden.
+      nightWorld.prepare(renderer, 'toon-soft', { advanceMotion: false });
+      expect(pool.visible).toBe(false);
+      expect(pool.material.opacity).toBe(0);
+
+      // Lit lamp reveals pool positioned beneath lamp at surfaceY + 0.003 and fades proportionally with intensity.
+      lamp.intensity = 0.4;
+      nightWorld.prepare(renderer, 'toon-soft', { advanceMotion: false });
+      expect(pool.visible).toBe(true);
+      expect(pool.position.x).toBeCloseTo(0.45, 4);
+      expect(pool.position.y).toBeCloseTo(getEnvironmentSurfaceY('diya-oil-lamp') + 0.003, 5);
+      expect(pool.position.z).toBeCloseTo(-0.25, 4);
+      const lowOpacity = pool.material.opacity;
+      expect(lowOpacity).toBeGreaterThan(0);
+
+      lamp.intensity = 1.0;
+      lamp.position.set(-0.3, 0.7, 0.2);
+      nightWorld.prepare(renderer, 'toon-soft', { advanceMotion: false });
+      expect(pool.position.x).toBeCloseTo(-0.3, 4);
+      expect(pool.position.z).toBeCloseTo(0.2, 4);
+      expect(pool.material.opacity).toBeGreaterThan(lowOpacity);
+      expect(lamp.intensity).toBe(1.0);
+
+      // Zero-raycast guarantee even when visible.
+      nightScene.updateMatrixWorld(true);
+      const ray = new THREE.Raycaster(new THREE.Vector3(-0.3, 2, 0.2), new THREE.Vector3(0, -1, 0));
+      expect(ray.intersectObject(pool, true)).toHaveLength(0);
+
+      const geoSpy = vi.spyOn(pool.geometry, 'dispose');
+      const matSpy = vi.spyOn(pool.material, 'dispose');
+      const texSpy = vi.spyOn(pool.material.map!, 'dispose');
+      nightWorld.dispose();
+      nightWorld.dispose();
+      expect(geoSpy).toHaveBeenCalledOnce();
+      expect(matSpy).toHaveBeenCalledOnce();
+      expect(texSpy).toHaveBeenCalledOnce();
+    } finally {
+      nightWorld.dispose();
     }
   });
 });

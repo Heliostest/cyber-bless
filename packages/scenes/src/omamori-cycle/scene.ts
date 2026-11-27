@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -34,7 +35,7 @@ const HELD = new THREE.Vector3(-0.62, 1.66, 0.56)
 const HANG_ANCHOR = new THREE.Vector3(0, 0.64, -0.015)
 const HANG_POINT = new THREE.Vector3(0.58, 1.68, 0.25)
 const HUNG = HANG_POINT.clone().addScaledVector(HANG_ANCHOR, -0.9)
-const RETURNED = new THREE.Vector3(0.58, 1.32, 0.42)
+const RETURNED = new THREE.Vector3(0.58, 1.30, 0.42)
 const DISPLAY = [-1.0, -0.43, 0.14] as const
 
 const POUCH_CAP_Z = 0.11
@@ -571,11 +572,13 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
   const paint = (mesh: THREE.Mesh) => { mesh.userData.toonSurface = { outline: false }; return mesh }
 
   // A small office table keeps the three closed bags within reach.
+  const floorY = getEnvironmentSurfaceY('omamori-cycle')
   const table = new THREE.Group(); table.name = 'omamori-office-table'; world.add(table)
   add(new RoundedBoxGeometry(2.78, 0.14, 1.26, 3, 0.065), wood, [0, 0.7, -0.06], table)
   add(new RoundedBoxGeometry(2.65, 0.07, 1.15, 3, 0.03), woodEdge, [0, 0.625, -0.06], table).name = 'omamori-table-apron'
-  for (const x of [-1.1, 1.1]) for (const z of [-0.43, 0.32]) add(new RoundedBoxGeometry(0.16, 0.63, 0.16, 2, 0.026), woodLeg, [x, 0.32, z], table).name = 'omamori-table-leg'
-  const tray = add(new RoundedBoxGeometry(1.83, 0.04, 0.48, 3, 0.022), cream, [-0.45, 0.795, 0.38], table)
+  const legH = 0.635 - floorY
+  for (const x of [-1.1, 1.1]) for (const z of [-0.43, 0.32]) add(new RoundedBoxGeometry(0.16, legH, 0.16, 2, 0.026), woodLeg, [x, floorY + legH / 2, z], table).name = 'omamori-table-leg'
+  const tray = add(new RoundedBoxGeometry(1.83, 0.04, 0.48, 3, 0.022), cream, [-0.45, 0.79, 0.33], table)
   tray.name = 'omamori-display-tray'
 
   const travelBag = new THREE.Group(); travelBag.name = 'omamori-travel-bag'; travelBag.visible = !returning; world.add(travelBag)
@@ -588,7 +591,7 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
   add(new THREE.TorusGeometry(0.072, 0.012, 7, 24), gold, [0.58, 1.68, 0.25], travelBag)
   for (const x of [0.35, 0.87]) add(new THREE.SphereGeometry(0.022, 10, 8), gold, [x, 1.54, 0.205], travelBag)
 
-  const returnBox = new THREE.Group(); returnBox.name = 'omamori-return-box'; returnBox.visible = returning; world.add(returnBox)
+  const returnBox = new THREE.Group(); returnBox.name = 'omamori-return-box'; returnBox.position.y = -0.02; returnBox.visible = returning; world.add(returnBox)
   const boxBody = add(new RoundedBoxGeometry(1.0, 0.56, 0.73, 3, 0.055), woodEdge, [0.6, 1.07, -0.03], returnBox)
   boxBody.name = 'omamori-return-box-body'
   add(new RoundedBoxGeometry(1.07, 0.09, 0.79, 3, 0.035), wood, [0.6, 1.39, -0.03], returnBox)
@@ -798,7 +801,7 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
       suspension.position.set(0, 0, 0); suspension.rotation.set(0, 0, 0)
       tailPivot.rotation.set(0, 0, 0)
       const isSelected = i === selected && step > 0
-      root.position.set(DISPLAY[i], 1.075, 0.38); root.scale.setScalar(0.72); root.rotation.set(0, 0, i === 1 ? 0.04 : -0.035)
+      root.position.set(DISPLAY[i], 1.07, 0.33); root.scale.setScalar(0.72); root.rotation.set(0, 0, i === 1 ? 0.04 : -0.035)
       if (isSelected) {
         root.position.copy(step >= 2 ? destination : HELD); root.scale.setScalar(0.9); root.rotation.set(0, 0, 0)
         if (step >= 2 && !returning) {

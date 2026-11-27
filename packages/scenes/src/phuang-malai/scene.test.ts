@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -502,6 +503,18 @@ describe('Phuang Malai cord, bow and tassel craft', () => {
     s.instance.dispose()
     expect(mapSpy).toHaveBeenCalledTimes(1)
     expect(bumpSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('grounds the pedestal and prep tray on the garden surface and supports the placed garland without obstructing tassels', () => {
+    const s = mount(0, { isReducedMotion: () => true })
+    const sceneBox = new THREE.Box3().setFromObject(built.scene as THREE.Scene)
+    expect(sceneBox.min.y).toBeLessThanOrEqual(getEnvironmentSurfaceY('phuang-malai') + 0.002)
+    const standBox = new THREE.Box3().setFromObject(s.obj('garland-display-stand'))
+    const pedestalTopY = new THREE.Box3().setFromObject(s.obj('pedestal-top')).max.y
+    expect(standBox.min.y).toBeLessThanOrEqual(pedestalTopY + 0.005)
+    expect(standBox.max.y).toBeGreaterThan(0.65)
+    expect(Math.abs(standBox.min.x)).toBeLessThan(0.16)
+    expect(Math.abs(standBox.max.x)).toBeLessThan(0.16)
   })
 
   it('keeps a single shared bud geometry across all 12 batches (592 buds)', () => {

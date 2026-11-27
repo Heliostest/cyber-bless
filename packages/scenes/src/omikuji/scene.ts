@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { placementHit } from '../placement-hit'
@@ -148,8 +149,10 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     [0.83, -0.22, standLegA, 0.16, 0.32],
     [0.83, 0.47, standLegB, 0.44, 0.48],
   ]
+  const floorY = getEnvironmentSurfaceY('omikuji')
+  const legH = 0.33 - floorY
   for (const [x, z, legMat, offU, offV] of legSpecs) {
-    add(projectWoodUVs(new RoundedBoxGeometry(0.14, 0.33, 0.16, 3, 0.027), 'y', 2.2, 2.6, offU, offV), legMat, 'omikuji-stand-leg', [x, 0.165, z])
+    add(projectWoodUVs(new RoundedBoxGeometry(0.14, legH, 0.16, 3, 0.027), 'y', 2.2, 2.6, offU, offV), legMat, 'omikuji-stand-leg', [x, floorY + legH / 2, z])
   }
   for (const [z, bend] of [[-0.24, 0.022], [0.04, -0.016], [0.34, 0.019]] as const) {
     tube([[-0.98, 0.514, z], [-0.24, 0.514, z + bend], [0.32, 0.514, z - bend * 0.6], [0.98, 0.514, z]], 0.0021, grainAccent, world)

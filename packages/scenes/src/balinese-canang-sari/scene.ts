@@ -97,7 +97,7 @@ export function createBalineseCanangSari(ctx: SceneContext): SceneInstance {
     camera.position.copy(target).add(direction); camera.lookAt(target);camera.updateMatrixWorld(true)
     const inverse=camera.quaternion.clone().invert(),tangent=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));let distance=3.4
     // Framing includes the paving, both tray locations and the raised flower arc.
-    for(const x of[-1.95,1.95])for(const y of[0,1.6])for(const z of[-1.30,1.60]){const p=new THREE.Vector3(x,y,z).sub(target).applyQuaternion(inverse);distance=Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86))}
+    for(const x of[-1.95,1.95])for(const y of[-.065,1.6])for(const z of[-1.30,1.60]){const p=new THREE.Vector3(x,y,z).sub(target).applyQuaternion(inverse);distance=Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86))}
     camera.position.copy(target).addScaledVector(direction,distance);camera.lookAt(target);matrices()
   }
   restore(); sync()

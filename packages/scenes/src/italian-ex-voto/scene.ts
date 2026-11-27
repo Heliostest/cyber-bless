@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { sceneTemplate } from '../scene-localization'
@@ -82,18 +83,20 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
   }
   const rounded = (w: number, h: number, d: number, p: [number, number, number], material: THREE.Material, parent: THREE.Object3D = world, r = .04) =>
     add(new RoundedBoxGeometry(w, h, d, 4, Math.min(r, w / 3, h / 3, d / 3)), material, p, parent)
+  const floorY = getEnvironmentSurfaceY('italian-ex-voto')
   const table = new THREE.Group(); table.name = 'exvoto-table'; world.add(table)
   rounded(2.78, .14, 1.22, [0, .64, .05], board, table)
-  for (const x of [-1.12, 1.12]) for (const z of [-.4, .48]) rounded(.14, .58, .14, [x, .29, z], oak, table)
+  const legH = .58 - floorY
+  for (const x of [-1.12, 1.12]) for (const z of [-.4, .48]) rounded(.14, legH, .14, [x, floorY + legH / 2, z], oak, table)
   for (const z of [-.43, .47]) rounded(2.36, .14, .10, [0, .51, z], oak, table)
-  const shadow = add(new THREE.PlaneGeometry(3.5, 2.0), new THREE.ShadowMaterial({ opacity: .13 }), [0, .004, .03])
+  const shadow = add(new THREE.PlaneGeometry(3.5, 2.0), new THREE.ShadowMaterial({ opacity: .13 }), [0, floorY + .001, .03])
   shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   const easel = new THREE.Group(); easel.name = 'exvoto-easel'; world.add(easel)
   for (const x of [-.61, .61]) {
     const leg = rounded(.105, 2.11, .13, [x, 1.70, -.13], oak, easel); leg.rotation.z = x < 0 ? -.11 : .11
   }
   rounded(.12, 2.18, .13, [0, 1.74, -.19], edge, easel)
-  const backLeg = rounded(.11, 1.95, .13, [0, 1.60, -.49], edge, easel); backLeg.rotation.x = -.22
+  const backLeg = rounded(.11, 1.38, .13, [0, 1.368, -.34], edge, easel); backLeg.name = 'exvoto-easel-back-leg'; backLeg.rotation.x = .22
   rounded(1.94, .12, .38, [0, .91, -.02], oak, easel)
   rounded(.43, .12, .20, [0, 2.70, -.02], oak, easel)
   const plaque = rounded(1.70, 1.71, .20, [0, 1.80, .025], ceramic, world, .15); plaque.name = 'exvoto-ceramic-plaque'

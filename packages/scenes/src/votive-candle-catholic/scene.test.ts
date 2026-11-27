@@ -7,6 +7,7 @@ vi.mock('../quiet-ending', () => ({ createQuietEnding: () => ({
 }) }))
 
 import * as THREE from 'three'
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -117,6 +118,42 @@ it('uses real object rays for placement and lighting and rejects cancellation', 
   pointer(s.hit, 'pointerdown', s.point('votive-wick-target'))
   pointer(s.hit, 'pointerup', s.point('votive-wick-target'))
   expect(s.onProgress.mock.calls.map(([n]) => n)).toEqual([1, 2])
+})
+it('grounds the stone base, steps the two candle tiers clear of each other, and seats the placed candle inside the upper shelf', () => {
+  mount(1)
+  const scene = rendered.scene as THREE.Scene
+  scene.updateMatrixWorld(true)
+  const visibleBox = (root: THREE.Object3D) => {
+    const box = new THREE.Box3()
+    root.traverse(object => {
+      const mesh = object as THREE.Mesh
+      if (!mesh.isMesh || !mesh.visible) return
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+      if (mats.every(m => !m.visible)) return
+      box.expandByObject(mesh)
+    })
+    return box
+  }
+  const lowerShelf = scene.getObjectByName('votive-lower-shelf')!
+  const upperShelf = scene.getObjectByName('votive-upper-shelf')!
+  const mainCandle = scene.getObjectByName('votive-main-candle')!
+  const worldBox = visibleBox(scene)
+  const lowerBox = new THREE.Box3().setFromObject(lowerShelf)
+  const upperBox = new THREE.Box3().setFromObject(upperShelf)
+  const mainBox = visibleBox(mainCandle)
+  expect(worldBox.min.y).toBeLessThanOrEqual(getEnvironmentSurfaceY('votive-candle-catholic') + 0.002)
+  expect(lowerBox.min.z).toBeGreaterThan(upperBox.max.z - 0.02)
+  expect(mainBox.min.z).toBeGreaterThanOrEqual(upperBox.min.z)
+  expect(mainBox.max.z).toBeLessThanOrEqual(upperBox.max.z)
+  // Background candles on the lower tier sit strictly forward of the upper steel shelf so flames never pierce it.
+  const world = scene.children.find(c => c instanceof THREE.Group)!
+  const bgCandles = world.children.filter(c => c instanceof THREE.Group && c !== mainCandle)
+  expect(bgCandles).toHaveLength(4)
+  for (const bg of bgCandles) {
+    const bgBox = visibleBox(bg)
+    expect(bgBox.min.z).toBeGreaterThan(upperBox.max.z + 0.05)
+    expect(bgBox.min.y).toBeCloseTo(lowerBox.max.y, 2)
+  }
 })
 it('does not accept paused writing, button input or callbacks after disposal', () => {
   const s = mount(2); expect(s.button).not.toBeNull(); s.pause(); s.instance.update(0)

@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { bindSceneAttribute } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -689,22 +690,45 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   })
 
   // A plain display pedestal keeps this adaptation about social gratitude.
+  const baseY = Math.min(getEnvironmentSurfaceY('phuang-malai'), -0.04)
   const pedestal = new THREE.Group()
-  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.59, 0.16, 40), pedestalMat)
-  foot.position.y = 0.08
+  const footH = 0.16 - baseY
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.59, footH, 40), pedestalMat)
+  foot.position.y = baseY + footH / 2
   const top = new THREE.Mesh(new THREE.CylinderGeometry(0.64, 0.63, 0.07, 48), pedestalMat)
   top.name = 'pedestal-top'
   top.position.y = 0.195
   const rim = new THREE.Mesh(new THREE.TorusGeometry(0.61, 0.014, 6, 48), paleGold)
   rim.rotation.x = Math.PI / 2
   rim.position.y = 0.233
-  pedestal.add(foot, top, rim)
+  // Raised cradle mounted on the pedestal top physically supports the garland at rest, clear of both tassels.
+  const stand = new THREE.Group()
+  stand.name = 'garland-display-stand'
+  const standBase = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.105, 0.03, 24), pedestalMat)
+  standBase.position.set(0, 0.245, 0.088)
+  const standStem = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.042, 0.38, 20), pedestalMat)
+  standStem.position.set(0, 0.44, 0.088)
+  const standCollar = new THREE.Mesh(new THREE.TorusGeometry(0.032, 0.008, 6, 20), paleGold)
+  standCollar.rotation.x = Math.PI / 2
+  standCollar.position.set(0, 0.618, 0.088)
+  const standCradle = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.016, 10, 28, Math.PI), pedestalMat)
+  standCradle.rotation.z = Math.PI
+  standCradle.position.set(0, 0.735, 0.092)
+  stand.add(standBase, standStem, standCollar, standCradle)
+  pedestal.add(foot, top, rim, stand)
   world.add(pedestal)
   const tray = new THREE.Group()
   const trayBase = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.46, 0.045, 32), trayMat)
   trayBase.scale.set(1.25, 1, 0.4)
   trayBase.position.set(0, 0.27, 0.68)
-  tray.add(trayBase)
+  const trayColumnH = 0.252 - baseY
+  const trayColumn = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, trayColumnH, 28), trayMat)
+  trayColumn.scale.set(1.2, 1, 0.42)
+  trayColumn.position.set(0, baseY + trayColumnH / 2, 0.68)
+  const trayFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.35, 0.04, 28), trayMat)
+  trayFoot.scale.set(1.2, 1, 0.44)
+  trayFoot.position.set(0, baseY + 0.02, 0.68)
+  tray.add(trayBase, trayColumn, trayFoot)
   world.add(tray)
 
   const ray = createPointerRay(canvas, camera)
@@ -752,7 +776,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   }
   const onPedestal = (x: number, y: number) => {
     updateMatrices()
-    return touch.hit(x, y, top, { ignore: garland })
+    return touch.hit(x, y, [top, stand], { ignore: garland })
   }
   const nearTie = (x: number, y: number) => {
     updateMatrices()

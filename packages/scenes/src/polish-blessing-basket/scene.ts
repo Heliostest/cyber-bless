@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
@@ -38,17 +39,17 @@ const COPY = {
   placingBread: '圆面包轻轻落在衬布上…', placingEgg: '彩蛋在小窝里安稳落定…',
   done: '复活节食物篮的准备在此告一段落，留一份对食粮与家人的感谢。',
 } as const
-const BREAD_HOME = new THREE.Vector3(-0.91, 1.035, 0.45)
-const BREAD_REST = new THREE.Vector3(0.12, 1.395, 0.05)
-const EGG_HOME = new THREE.Vector3(-1.01, 1.035, -0.43)
-const EGG_REST = new THREE.Vector3(0.85, 1.45, 0.13)
+const BREAD_HOME = new THREE.Vector3(-0.91, 1.0275, 0.45)
+const BREAD_REST = new THREE.Vector3(0.12, 1.3625, 0.05)
+const EGG_HOME = new THREE.Vector3(-1.01, 1.0175, -0.43)
+const EGG_REST = new THREE.Vector3(0.85, 1.4175, 0.13)
 type Checkpoint = 0 | 1 | 2 | 3
 type Placement = { step: 0 | 1; time: number; from: THREE.Vector3 }
 const smooth = (t: number) => t * t * (3 - 2 * t)
 
 // Rim-draped linen cloth & Rapier 2D soft-body grid constants (basket-local coordinates).
 // Basket double upper rim sits on ellipse (rx=0.77, rz=0.51), tube radius 0.027, top at y=0.460.
-// Tabletop top surface is at world y=0.760 -> basket-local y=-0.030.
+// Tabletop top surface is at world y=0.760 -> basket-local y=+0.0025.
 const CLOTH_A_LEFT = 2.38
 const CLOTH_A_RIGHT = 1.54
 const FLAP_NX = 48
@@ -628,7 +629,7 @@ function evalCarrierRimAnchor(u: number, out: THREE.Vector3): THREE.Vector3 {
 
 /** Keeps any basket-local cloth point safely outside the tapered oval wicker basket wall and above the tabletop. */
 function clampOutsideBasketWall(p: THREE.Vector3): void {
-  if (p.y < -0.006) p.y = -0.006
+  if (p.y < 0.006) p.y = 0.006
   if (p.y < 0.455) {
     const h = THREE.MathUtils.clamp((p.y - 0.035) / 0.38, 0, 1)
     const rimBoost = THREE.MathUtils.smoothstep(p.y, 0.355, 0.425) * 0.015
@@ -1088,20 +1089,22 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
   const pebble = (p: [number, number, number], scale: [number, number, number], mat: THREE.Material, parent: THREE.Object3D) => {
     const mesh = add(sphere, mat, p, parent); mesh.scale.set(...scale); return mesh
   }
+  const floorY = getEnvironmentSurfaceY('polish-blessing-basket')
   const table = new THREE.Group(); table.name = 'basket-table'; world.add(table)
   for (let i = 0; i < 5; i++) add(new RoundedBoxGeometry(3.05, 0.13, 0.31, 3, 0.035), plankMats[i]!, [0, 0.695, (i - 2) * 0.302], table)
+  const legH = 0.63 - floorY
   for (const x of [-1.16, 1.16]) for (const z of [-0.5, 0.5]) {
-    add(new RoundedBoxGeometry(0.15, 0.63, 0.15, 2, 0.025), (x < 0) === (z > 0) ? oakLegA : oakLegB, [x, 0.315, z], table)
+    add(new RoundedBoxGeometry(0.15, legH, 0.15, 2, 0.025), (x < 0) === (z > 0) ? oakLegA : oakLegB, [x, floorY + legH / 2, z], table)
   }
   for (const z of [-0.52, 0.52]) add(new RoundedBoxGeometry(2.5, 0.19, 0.10, 2, 0.018), oakEdge, [0, 0.57, z], table)
-  const shadow = add(new THREE.PlaneGeometry(3.8, 2.25), new THREE.ShadowMaterial({ opacity: 0.13 }), [0, 0.005, 0])
+  const shadow = add(new THREE.PlaneGeometry(3.8, 2.25), new THREE.ShadowMaterial({ opacity: 0.13 }), [0, floorY + 0.001, 0])
   shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
 
-  const board = add(new RoundedBoxGeometry(0.94, 0.045, 0.74, 4, 0.09), breadBoardMat, [-0.91, 0.79, 0.43]); board.name = 'basket-bread-board'
-  add(new RoundedBoxGeometry(0.24, 0.035, 0.20, 3, 0.05), breadBoardMat, [-1.41, 0.79, 0.43])
-  const saucer = add(new THREE.CylinderGeometry(0.255, 0.24, 0.035, 32), cream, [-1.01, 0.795, -0.43]); saucer.name = 'basket-egg-saucer'
+  const board = add(new RoundedBoxGeometry(0.94, 0.045, 0.74, 4, 0.09), breadBoardMat, [-0.91, 0.7825, 0.43]); board.name = 'basket-bread-board'
+  add(new RoundedBoxGeometry(0.24, 0.035, 0.20, 3, 0.05), breadBoardMat, [-1.41, 0.7825, 0.43])
+  const saucer = add(new THREE.CylinderGeometry(0.255, 0.24, 0.035, 32), cream, [-1.01, 0.7775, -0.43]); saucer.name = 'basket-egg-saucer'
 
-  const basket = new THREE.Group(); basket.name = 'basket-woven'; basket.position.set(0.45, 0.79, -0.02); world.add(basket)
+  const basket = new THREE.Group(); basket.name = 'basket-woven'; basket.position.set(0.45, 0.7575, -0.02); world.add(basket)
   const weave = new THREE.Group(); weave.name = 'basket-weave'; basket.add(weave)
   // Alternating willow strands follow an oval, slightly flared basket wall.
   for (let row = 0; row < 12; row++) {
@@ -1580,7 +1583,7 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
       if (disposed) return
       // Fixed oval-approximated basket core collider + oak tabletop collider prevent cloth penetration in solver space.
       session.addFixedCylinder({ x: 0, y: 0.22, z: 0 }, 0.46, 0.42, { friction: 0.55, restitution: 0.02 })
-      session.addFixedBox({ x: 0, y: -0.055, z: 0.35 }, { x: 2.2, y: 0.05, z: 1.4 }, { friction: 0.65, restitution: 0.02 })
+      session.addFixedBox({ x: 0, y: -0.0225, z: 0.35 }, { x: 2.2, y: 0.05, z: 1.4 }, { friction: 0.65, restitution: 0.02 })
 
       const pinnedTop: number[] = []
       for (let i = 0; i < SIM_NU; i++) pinnedTop.push(i * SIM_NV)
@@ -1612,10 +1615,10 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
 
   updateInnerLining()
   writeCalmFlapDrape()
-  const breadRest = pebble([0.12, 1.165, 0.05], [0.33, 0.035, 0.30], cream, world); breadRest.name = 'basket-bread-rest'
-  const nest = pebble([0.85, 1.195, 0.13], [0.23, 0.038, 0.21], cream, world); nest.name = 'basket-egg-nest'
+  const breadRest = pebble([0.12, 1.1325, 0.05], [0.33, 0.035, 0.30], cream, world); breadRest.name = 'basket-bread-rest'
+  const nest = pebble([0.85, 1.1625, 0.13], [0.23, 0.038, 0.21], cream, world); nest.name = 'basket-egg-nest'
   for (let i = 0; i < 3; i++) {
-    const ring = add(new THREE.TorusGeometry(0.18 + i * 0.012, 0.014, 7, 40), cream, [0.85, 1.20 + i * 0.012, 0.13])
+    const ring = add(new THREE.TorusGeometry(0.18 + i * 0.012, 0.014, 7, 40), cream, [0.85, 1.1675 + i * 0.012, 0.13])
     ring.rotation.x = -Math.PI / 2; ring.scale.y = 0.9
   }
   const medallion = pebble([0.23, 0.23, 0.481], [0.115, 0.103, 0.027], willow.medallion, basket); medallion.name = 'basket-quiet-medallion'
@@ -1674,7 +1677,7 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
   }
   const { root: egg, body: eggBody } = makeEgg(eggRose, 'basket-egg'); eggBody.name = 'basket-egg-body'; world.add(egg)
   const companion = makeEgg(eggBlue, 'basket-blue-egg').root
-  companion.position.set(0.54, 1.385, -0.29); companion.rotation.z = -0.21; companion.scale.setScalar(0.8); world.add(companion)
+  companion.position.set(0.54, 1.3525, -0.29); companion.rotation.z = -0.21; companion.scale.setScalar(0.8); world.add(companion)
   const herbs = new THREE.Group(); herbs.name = 'basket-spring-herbs'; basket.add(herbs)
   const matureLeafGeo = createBoxwoodLeafGeometry('mature')
   const youngLeafGeo = createBoxwoodLeafGeometry('young')

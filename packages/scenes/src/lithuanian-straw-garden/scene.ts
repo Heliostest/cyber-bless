@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
@@ -20,7 +21,7 @@ const COPY = {
 } as const
 const HOME = new THREE.Vector3(-.66, 1.88, 0), REST = new THREE.Vector3(.72, 2.12, 0)
 const HANG_ANCHOR = new THREE.Vector3(0, .77, .12)
-const PENDANT_HOME = new THREE.Vector3(-1.05, 1.02, .60), JOIN = new THREE.Vector3(0, -.84, 0)
+const PENDANT_HOME = new THREE.Vector3(-1.05, 1.012, .60), JOIN = new THREE.Vector3(0, -.84, 0)
 type Checkpoint = 0 | 1 | 2 | 3
 const ease = (t: number) => t * t * (3 - 2 * t)
 
@@ -60,12 +61,12 @@ export function createLithuanianStrawGarden(ctx: SceneContext): SceneInstance {
     mesh.position.copy(a).add(b).multiplyScalar(.5); mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); return mesh
   }
   addCraftTable(world, { name: 'straw-table', topName: 'straw-table', width: 3.3, depth: 1.75, surfaceY: .72, thickness: .12, center: [0,0], support: 'joined', finish: 'birch' })
-  const shadow = add(new THREE.PlaneGeometry(3.8, 2.5), new THREE.ShadowMaterial({ opacity: .12 }), [0, .004, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
+  const shadow = add(new THREE.PlaneGeometry(3.8, 2.5), new THREE.ShadowMaterial({ opacity: .12 }), [0, getEnvironmentSurfaceY('lithuanian-straw-garden') + .001, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   // A low temporary jig supports the unfinished garden, and a taller stand receives it.
   box(.55, .07, .50, walnut, [-1.36, .755, -.32])
-  box(.075, 1.80, .075, walnut, [-1.43, 1.62, -.10])
-  box(.81, .075, .075, walnut, [-1.06, 2.51, -.10])
-  stem(new THREE.Vector3(-.66, 2.51, -.1), new THREE.Vector3(-.66, 2.51, .12), .012, thread, world)
+  box(.075, 1.80, .075, walnut, [-1.43, 1.62, -.14])
+  box(.82, .075, .075, walnut, [-1.0575, 2.51, -.14])
+  stem(new THREE.Vector3(-.66, 2.51, -.14), new THREE.Vector3(-.66, 2.51, .12), .012, thread, world)
   box(.62, .08, .60, walnut, [1.22, .76, -.3])
   box(.095, 2.15, .095, oak, [1.42, 1.835, -.14])
   box(.87, .095, .095, oak, [1.04, 2.90, -.14])
@@ -96,7 +97,7 @@ export function createLithuanianStrawGarden(ctx: SceneContext): SceneInstance {
   const pendant = diamond(world, .20, .28, [0, 0, 0], 'straw-pendant')
   const grip = bead(.085, [0, 0, .20], 'straw-pendant-grip', pendant, sage)
   const link = stem(new THREE.Vector3(0, -.56, 0), new THREE.Vector3(0, -.56, .055), .009, thread, mobile)
-  const cloth = box(.70, .012, .58, clothMaterial, [-1.05, .733, .55])
+  const cloth = box(.70, .012, .58, clothMaterial, [-1.05, .726, .55])
   for (let i = 0; i < 5; i++) stem(new THREE.Vector3(.20 + i * .055, .74, .45), new THREE.Vector3(.45 + i * .055, .74, .63), .014, straw, world)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restore = () => {

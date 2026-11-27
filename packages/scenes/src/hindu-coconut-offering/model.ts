@@ -136,11 +136,11 @@ export function createCoconutOfferingModel() {
   })
 
   const ringInner = RX * Math.sin(Math.PI / 8)
-  const preparationRing = add(root, 'coconut-preparation-ring', horizontalSurface([[ringInner, .025], [.34, .025], [.34, .1], [ringInner, .1]], true), ringMaterial)
+  const preparationRing = add(root, 'coconut-preparation-ring', horizontalSurface([[ringInner, .001], [.34, .001], [.34, .1], [ringInner, .1]], true), ringMaterial)
   preparationRing.position.set(-1, 0, .4)
   const basin = add(root, 'coconut-catch-basin', horizontalSurface([[0, .012], [.73, .012], [.91, .065], [.95, .105], [.94, .14], [.89, .16], [.83, .16], [.73, .095], [0, .095]]), stone)
   basin.position.set(.65, 0, .4); basin.scale.set(1.26, 1, .81)
-  const strikingStone = add(root, 'coconut-striking-stone', horizontalSurface([[0, .14], [.74, .14], [.81, .17], [.8, .30], [.77, STONE_TOP], [0, STONE_TOP]]), stone)
+  const strikingStone = add(root, 'coconut-striking-stone', horizontalSurface([[0, .095], [.74, .095], [.81, .17], [.8, .30], [.77, STONE_TOP], [0, STONE_TOP]]), stone)
   strikingStone.position.set(.65, 0, .4); strikingStone.scale.set(1.30, 1, .83)
   const water = add(root, 'coconut-water-spill', new THREE.CylinderGeometry(.43, .43, .005, 64), waterMaterial)
   water.position.set(.65, .342, .4); water.castShadow = false

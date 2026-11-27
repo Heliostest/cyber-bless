@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { sceneTemplate } from '../scene-localization'
@@ -28,7 +29,7 @@ const ORBIT_RADIUS = 0.60
 const ORBIT_Y = 0.84
 const ORBIT_START = Math.PI / 2
 const HELD = new THREE.Vector3(0, 0.72, ORBIT_RADIUS)
-const HOMES = [new THREE.Vector3(-0.44, 0.105, -0.29), new THREE.Vector3(0.44, 0.105, -0.29), new THREE.Vector3(0, 0.105, 0.36)]
+const HOMES = [new THREE.Vector3(-0.44, 0.059, -0.29), new THREE.Vector3(0.44, 0.059, -0.29), new THREE.Vector3(0, 0.059, 0.36)]
 const smooth = (t: number) => t * t * (3 - 2 * t)
 type Checkpoint = 0 | 1 | 2 | 3
 type Drag = { kind: 'light'; visited: Set<number> } | { kind: 'spin' } | { kind: 'place' }
@@ -119,6 +120,11 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   const plate = new THREE.Group()
   plate.name = 'diya-plate'
   world.add(plate)
+  const floorY = getEnvironmentSurfaceY('diya-oil-lamp')
+  const plateFootH = 0.006 - floorY
+  const plateFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.94, 0.90, plateFootH, 64), plateMat)
+  plateFoot.position.y = floorY + plateFootH / 2
+  plate.add(plateFoot)
   const plateBody = new THREE.Mesh(new THREE.CylinderGeometry(1.02, 0.96, 0.07, 64), plateMat)
   plateBody.position.y = 0.038
   plate.add(plateBody)
@@ -243,7 +249,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   orbitGuide.add(orbitLine)
   const returnGuide = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.013, 8, 48), guideMat)
   returnGuide.name = 'diya-return-guide'
-  returnGuide.position.copy(HOMES[2]).add(new THREE.Vector3(0, 0.008, 0))
+  returnGuide.position.copy(HOMES[2]).add(new THREE.Vector3(0, 0.022, 0))
   returnGuide.rotation.x = -Math.PI / 2
   world.add(returnGuide)
 
@@ -350,7 +356,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
         updateMatrices()
       } else if (ray.aim(x, y).ray.intersectPlane(placePlane, point)) {
         heldLamp.group.position.copy(point).add(placeOffset)
-        heldLamp.group.position.y = Math.max(0.10, heldLamp.group.position.y)
+        heldLamp.group.position.y = Math.max(0.059, heldLamp.group.position.y)
         updateMatrices()
         if ((x!==placeDown.x||y!==placeDown.y) && placementHit(canvas,camera,heldTarget,x,y,(px,py)=>ray.hits(px,py,[plateTarget])) && pointer.finish()) { drag=null; beginMotion('place') }
       }
@@ -370,7 +376,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
       } else {
         if(ray.aim(x,y).ray.intersectPlane(placePlane,point)) {
           heldLamp.group.position.copy(point).add(placeOffset)
-          heldLamp.group.position.y=Math.max(.10,heldLamp.group.position.y)
+          heldLamp.group.position.y=Math.max(.059,heldLamp.group.position.y)
         }
         updateMatrices()
         if ((x!==placeDown.x||y!==placeDown.y) && placementHit(canvas,camera,heldTarget,x,y,(px,py)=>ray.hits(px,py,[plateTarget]))) beginMotion('place')

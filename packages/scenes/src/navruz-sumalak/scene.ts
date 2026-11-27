@@ -27,7 +27,7 @@ type Checkpoint = 0 | 1 | 2 | 3
 type Motion = { step: 0 | 1 | 2; time: number; from: THREE.Vector3; guided: boolean }
 const POT_X = -.45, POT_Z = -.14, ARC_RADIUS = .62, ARC_Y = 1.09
 const BOWL = new THREE.Vector3(.85, .0045, .59)
-const SHARED = new THREE.Vector3(.79, .061, -.62)
+const SHARED = new THREE.Vector3(.79, .052, -.62)
 const PARKED = new THREE.Vector3(-1.07, 1.09, -.14)
 const arcPoint = (t: number) => new THREE.Vector3(POT_X + Math.cos(Math.PI * (1 - t)) * ARC_RADIUS, ARC_Y, POT_Z + Math.sin(Math.PI * (1 - t)) * ARC_RADIUS)
 const smooth = (t: number) => t * t * (3 - 2 * t)
@@ -80,7 +80,7 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
   const ground = add(new THREE.CylinderGeometry(1.67, 1.7, .045, 64), mat(0xdcc5a5), [0, -.018, 0], world, 'navruz-courtyard-plinth')
   ground.scale.z = .84
   // A low clay hearth supports the broad round kazan. No ceremonial fire.
-  add(new THREE.CylinderGeometry(.69, .76, .42, 40), clay, [POT_X, .23, POT_Z], world, 'navruz-clay-hearth')
+  add(new THREE.CylinderGeometry(.69, .76, .4355, 40), clay, [POT_X, .22225, POT_Z], world, 'navruz-clay-hearth')
   for (let i = 0; i < 12; i++) {
     const a = i / 12 * Math.PI * 2
     const brick = add(new RoundedBoxGeometry(.3, .12, .18, 2, .025), i % 2 ? clayLight : clay, [POT_X + Math.cos(a) * .65, .44, POT_Z + Math.sin(a) * .65])
@@ -106,13 +106,13 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
     })
     tube(points, .012, swirlMat, swirls, `navruz-food-swirl-${i}`).userData.toonSurface = { outline: false }
   }
-  const sharingMat = add(new RoundedBoxGeometry(.86, .043, .9, 3, .06), weave, [.79, .035, -.62], world, 'navruz-sharing-mat')
+  const sharingMat = add(new RoundedBoxGeometry(.86, .043, .9, 3, .06), weave, [.79, .026, -.62], world, 'navruz-sharing-mat')
   sharingMat.userData.toonSurface = { outline: false }
   for (let i = 0; i < 13; i++) {
-    const stripe = add(new THREE.BoxGeometry(.76, .005, .013), i % 3 ? matStripe : terracotta, [.79, .059, -.98 + i * .06])
+    const stripe = add(new THREE.BoxGeometry(.76, .005, .013), i % 3 ? matStripe : terracotta, [.79, .050, -.98 + i * .06])
     stripe.userData.toonSurface = { outline: false }
   }
-  for (const x of [.46, 1.12]) add(new THREE.BoxGeometry(.025, .006, .75), terracotta, [x, .06, -.62]).userData.toonSurface = { outline: false }
+  for (const x of [.46, 1.12]) add(new THREE.BoxGeometry(.025, .006, .75), terracotta, [x, .051, -.62]).userData.toonSurface = { outline: false }
   function makeBowl(name: string, position: THREE.Vector3, scale = 1) {
     const bowl = new THREE.Group(); bowl.name = name; bowl.position.copy(position); bowl.scale.setScalar(scale); world.add(bowl)
     const profile = [[0, 0], [.12, 0], [.15, .04], [.23, .09], [.285, .20], [.278, .224], [.25, .215], [.2, .115], [.1, .065], [0, .065]].map(([x, y]) => new THREE.Vector2(x, y))

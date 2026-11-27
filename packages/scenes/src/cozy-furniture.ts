@@ -19,6 +19,31 @@ export interface StandBuildResult {
   groundY: number
 }
 
+export type ContactShadowShape = 'ellipse' | 'rounded-rect'
+
+export interface ContactShadowOptions {
+  /** Mesh name (defaults to `<prefix>-contact-ao` or `contact-ao`). */
+  name?: string
+  /** Naming prefix when `name` is omitted. */
+  prefix?: string
+  /** Footprint width along X. */
+  width: number
+  /** Footprint depth along Z. */
+  depth: number
+  /** Local Y elevation above the ground plane (defaults to `0.0018`). */
+  y?: number
+  /** Local XZ offset `[x, z]` (defaults to `[0, 0]`). */
+  center?: [number, number]
+  /** Soft falloff silhouette: `'ellipse'` (default) or `'rounded-rect'`. */
+  shape?: ContactShadowShape
+  /** Warm purple-umber AO tint (defaults to `0x3f2f2b`). */
+  color?: THREE.ColorRepresentation
+  /** Peak opacity in `[0, 1]` (defaults to `0.24`). */
+  opacity?: number
+  /** Optional Y rotation in radians (defaults to `0`). */
+  rotationY?: number
+}
+
 export interface CraftTableOptions {
   name: string
   /** Retains the scene's existing named support for grounding checks. */
@@ -315,6 +340,101 @@ function createStandMaterial(
     })
   }
   return mat
+}
+
+const contactShadowTextures: Partial<Record<ContactShadowShape, THREE.DataTexture>> = {}
+
+function createContactShadowTexture(shape: ContactShadowShape): THREE.DataTexture {
+  const size = 64
+  const data = new Uint8Array(size * size * 4)
+  for (let iy = 0; iy < size; iy++) {
+    const ny = ((iy + 0.5) / size) * 2 - 1
+    for (let ix = 0; ix < size; ix++) {
+      const nx = ((ix + 0.5) / size) * 2 - 1
+      let alpha = 0
+      if (shape === 'ellipse') {
+        const r = Math.hypot(nx, ny)
+        if (r < 1) {
+          const edge = 1 - r
+          alpha = Math.exp(-2.4 * r * r) * Math.pow(edge, 1.35)
+        }
+      } else {
+        // Rounded-rectangle signed distance field in [-1, 1]^2 fading cleanly to 0 at border.
+        const boxHalf = 0.50
+        const cornerR = 0.16
+        const feather = 1 - (boxHalf + cornerR)
+        const qx = Math.max(0, Math.abs(nx) - boxHalf)
+        const qy = Math.max(0, Math.abs(ny) - boxHalf)
+        const dist = Math.hypot(qx, qy) - cornerR
+        const u = THREE.MathUtils.clamp(dist / feather, 0, 1)
+        const edge = 1 - u
+        alpha = edge * edge * (3 - 2 * edge) * Math.exp(-0.45 * u * u)
+      }
+      const offset = (iy * size + ix) * 4
+      data[offset] = 255
+      data[offset + 1] = 255
+      data[offset + 2] = 255
+      data[offset + 3] = Math.round(THREE.MathUtils.clamp(alpha, 0, 1) * 255)
+    }
+  }
+  const texture = new THREE.DataTexture(data, size, size)
+  texture.magFilter = texture.minFilter = THREE.LinearFilter
+  texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping
+  texture.generateMipmaps = false
+  texture.needsUpdate = true
+  return texture
+}
+
+function getContactShadowTexture(shape: ContactShadowShape): THREE.DataTexture {
+  let texture = contactShadowTextures[shape]
+  if (!texture) {
+    texture = createContactShadowTexture(shape)
+    contactShadowTextures[shape] = texture
+  }
+  return texture
+}
+
+/**
+ * Adds a lightweight warm purple-umber procedural contact AO plane slightly above
+ * the local ground plane. Excluded from grounding sweeps, outlines, outdoor hiding,
+ * and pointer/grounding raycasts.
+ */
+export function addContactShadow(parent: THREE.Object3D, options: ContactShadowOptions): THREE.Mesh {
+  const {
+    width,
+    depth,
+    y = 0.0018,
+    center = [0, 0],
+    shape = 'ellipse',
+    color = 0x3f2f2b,
+    opacity = 0.24,
+    rotationY = 0,
+  } = options
+  const geom = new THREE.PlaneGeometry(Math.max(0.01, width), Math.max(0.01, depth))
+  geom.rotateX(-Math.PI / 2)
+  const mat = new THREE.MeshBasicMaterial({
+    color,
+    map: getContactShadowTexture(shape),
+    transparent: true,
+    opacity: THREE.MathUtils.clamp(opacity, 0, 1),
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -2,
+    toneMapped: false,
+  })
+  const mesh = new THREE.Mesh(geom, mat)
+  mesh.name = options.name ?? (options.prefix ? `${options.prefix}-contact-ao` : 'contact-ao')
+  mesh.position.set(center[0], y, center[1])
+  if (rotationY) mesh.rotation.y = rotationY
+  mesh.userData.effect = true
+  mesh.userData.keepInOutdoorEnvironment = true
+  mesh.userData.toonSurface = { outline: false }
+  mesh.castShadow = false
+  mesh.receiveShadow = false
+  mesh.raycast = () => {}
+  parent.add(mesh)
+  return mesh
 }
 
 function addStandMesh(
@@ -616,6 +736,56 @@ export function addCraftTable(parent: THREE.Object3D, options: CraftTableOptions
       offset: [-.36 + phaseJitter, .16, .21],
     })
   }
+
+  // Warm purple-umber contact AO footprint under the craft table and its supports.
+  addContactShadow(root, {
+    prefix: name,
+    width: w * .96,
+    depth: d * .96,
+    y: .0018,
+    shape: 'rounded-rect',
+    opacity: .21,
+  })
+  if (support === 'trestle') {
+    const footPadW = Math.min(.36, Math.max(.22, w - span * 2))
+    for (const x of [-span, span] as const) {
+      addContactShadow(root, {
+        name: `${name}-foot-contact-ao`,
+        width: footPadW,
+        depth: d * .88,
+        y: .002,
+        center: [x, 0],
+        shape: 'rounded-rect',
+        opacity: .22,
+      })
+    }
+  } else if (support === 'arched') {
+    const panelPadW = Math.min(.32, Math.max(.20, w - span * 2))
+    for (const x of [-span, span] as const) {
+      addContactShadow(root, {
+        name: `${name}-panel-contact-ao`,
+        width: panelPadW,
+        depth: d * .82,
+        y: .002,
+        center: [x, 0],
+        shape: 'rounded-rect',
+        opacity: .22,
+      })
+    }
+  } else {
+    const legPad = Math.min(.32, Math.max(.16, (w / 2 - span * 1.035) * 1.9), Math.max(.16, (d / 2 - railZ * 1.055) * 1.9))
+    for (const x of [-span, span] as const) for (const z of [-railZ, railZ] as const) {
+      addContactShadow(root, {
+        name: `${name}-leg-contact-ao`,
+        width: legPad,
+        depth: legPad,
+        y: .002,
+        center: [x * 1.035, z * 1.055],
+        shape: 'ellipse',
+        opacity: .22,
+      })
+    }
+  }
   return { root, top, surfaceY, groundY }
 }
 
@@ -813,6 +983,33 @@ export function addOfferingTable(parent: THREE.Object3D, options: OfferingTableO
     })
   }
 
+  addContactShadow(root, {
+    prefix: name,
+    width: w * .96,
+    depth: d * .96,
+    y: .0018,
+    shape: 'rounded-rect',
+    opacity: .22,
+  })
+  const legPad = Math.min(
+    legSize * 2.2,
+    Math.max(legSize, (w / 2 - legX) * 1.95),
+    Math.max(legSize, (d / 2 - legZ) * 1.95),
+  )
+  for (const sx of [-1, 1] as const) {
+    for (const sz of [-1, 1] as const) {
+      addContactShadow(root, {
+        name: `${name}-leg-contact-ao`,
+        width: legPad,
+        depth: legPad,
+        y: .002,
+        center: [sx * legX, sz * legZ],
+        shape: 'ellipse',
+        opacity: .20,
+      })
+    }
+  }
+
   return { root, top, surfaceY, groundY }
 }
 
@@ -946,6 +1143,27 @@ export function addRoundLowTable(parent: THREE.Object3D, options: RoundLowTableO
         bar.rotation.y = -Math.atan2(lz, lx)
       }
     }
+  }
+
+  addContactShadow(root, {
+    prefix: name,
+    width: rx * 1.94,
+    depth: rz * 1.94,
+    y: .0018,
+    shape: 'ellipse',
+    opacity: .23,
+  })
+  const legPad = Math.min(legR * 2.8, rx * .30, rz * .30)
+  for (const [lx, lz] of legCoords) {
+    addContactShadow(root, {
+      name: `${name}-leg-contact-ao`,
+      width: legPad,
+      depth: legPad,
+      y: .002,
+      center: [lx, lz],
+      shape: 'ellipse',
+      opacity: .18,
+    })
   }
 
   return { root, top, surfaceY, groundY }
@@ -1107,6 +1325,15 @@ export function addObjectCradle(parent: THREE.Object3D, options: ObjectCradleOpt
     }
   }
 
+  addContactShadow(root, {
+    prefix: name,
+    width: w,
+    depth: d,
+    y: Math.min(.0018, h * .25),
+    shape: 'rounded-rect',
+    opacity: .22,
+  })
+
   return { root, top, surfaceY, groundY }
 }
 
@@ -1245,11 +1472,22 @@ export function addSteppedPedestal(parent: THREE.Object3D, options: SteppedPedes
       )
       cursorY += tier.h
     })
+    const baseTier = tiers[0]
+    addContactShadow(root, {
+      prefix: name,
+      width: baseTier ? baseTier.w : baseW,
+      depth: baseTier ? baseTier.d : baseD,
+      y: .0018,
+      shape: 'rounded-rect',
+      opacity: .24,
+    })
   } else {
     const rx = options.radius ?? (options.width ? options.width / 2 : .45)
     const rz = options.radiusZ ?? (options.depth ? options.depth / 2 : rx)
     const scaleZ = rz / rx
     const segments = Math.max(20, Math.round(options.segments ?? 44))
+    let baseShadowW = rx * 2
+    let baseShadowD = rz * 2
 
     if (explicitTiers) {
       const rawTotal = explicitTiers.reduce((sum, tier) => sum + Math.max(.005, tier.height), 0)
@@ -1260,6 +1498,10 @@ export function addSteppedPedestal(parent: THREE.Object3D, options: SteppedPedes
         const owner = isTop ? top : root
         const tr = tier.radius ?? (tier.width ? tier.width / 2 : rx)
         const trz = tier.radiusZ ?? (tier.depth ? tier.depth / 2 : tr * scaleZ)
+        if (idx === 0) {
+          baseShadowW = tr * 2
+          baseShadowD = trz * 2
+        }
         const th = Math.max(.005, tier.height) * scaleY
         const tb = Math.min(tier.bevel ?? options.bevel ?? .012, th * .28, tr * .12)
         const pts = [
@@ -1321,6 +1563,15 @@ export function addSteppedPedestal(parent: THREE.Object3D, options: SteppedPedes
       const capMesh = addStandMesh(name, 'cap', new THREE.LatheGeometry(capPts, segments), capMat, [0, 0, 0], top)
       capMesh.scale.set(1, 1, scaleZ)
     }
+
+    addContactShadow(root, {
+      prefix: name,
+      width: baseShadowW,
+      depth: baseShadowD,
+      y: .0018,
+      shape: 'ellipse',
+      opacity: .24,
+    })
   }
 
   return { root, top, surfaceY, groundY }

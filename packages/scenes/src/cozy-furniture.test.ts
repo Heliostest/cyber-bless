@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { getEnvironmentProfile, getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import {
   CRAFT_TABLE_SCENE_IDS,
+  addContactShadow,
   addCraftTable,
   addObjectCradle,
   addOfferingTable,
@@ -453,6 +454,92 @@ describe('shared chamfered stand primitives', () => {
     expect(((turnedOvalNeutral.root.getObjectByName('oval-neutral-base-shaft') as THREE.Mesh).material as THREE.MeshStandardMaterial).userData.craftSurface).toBeUndefined()
 
     assertFiniteGeometry(parent)
+    disposeTree(parent)
+  })
+})
+
+describe('warm purple-umber contact AO grounding', () => {
+  it('builds cached 64x64 procedural contact shadow textures with non-blocking flags and zero raycast hits', () => {
+    const parent = new THREE.Group()
+    const a = addContactShadow(parent, { prefix: 'bowl', width: 0.6, depth: 0.6, shape: 'ellipse' })
+    const b = addContactShadow(parent, { prefix: 'tray', width: 0.8, depth: 0.5, shape: 'rounded-rect' })
+    const c = addContactShadow(parent, { prefix: 'bowl-2', width: 0.4, depth: 0.4, shape: 'ellipse' })
+
+    expect(a.name).toBe('bowl-contact-ao')
+    expect(b.name).toBe('tray-contact-ao')
+    expect(a.position.y).toBeCloseTo(0.0018, 6)
+
+    const matA = a.material as THREE.MeshBasicMaterial
+    const matB = b.material as THREE.MeshBasicMaterial
+    const matC = c.material as THREE.MeshBasicMaterial
+    expect(matA).toBeInstanceOf(THREE.MeshBasicMaterial)
+    expect(matA.color.getHex()).toBe(0x3f2f2b)
+    expect(matA.transparent).toBe(true)
+    expect(matA.depthWrite).toBe(false)
+    expect(matA.polygonOffset).toBe(true)
+    expect(matA.toneMapped).toBe(false)
+    // Shared immutable DataTexture singletons per shape
+    expect(matA.map).toBe(matC.map)
+    expect(matA.map).not.toBe(matB.map)
+
+    for (const shadow of [a, b]) {
+      expect(shadow.userData.effect).toBe(true)
+      expect(shadow.userData.keepInOutdoorEnvironment).toBe(true)
+      expect(shadow.userData.toonSurface).toEqual({ outline: false })
+      expect(shadow.castShadow).toBe(false)
+      expect(shadow.receiveShadow).toBe(false)
+
+      const tex = (shadow.material as THREE.MeshBasicMaterial).map as THREE.DataTexture
+      const { width, height, data } = tex.image as { width: number; height: number; data: Uint8Array }
+      expect(width).toBe(64)
+      expect(height).toBe(64)
+      const centerAlpha = data[(32 * 64 + 32) * 4 + 3]!
+      const cornerAlpha = data[3]!
+      expect(centerAlpha).toBeGreaterThan(200)
+      expect(cornerAlpha).toBe(0)
+    }
+
+    // Contact shadows must never intercept pointer or grounding raycasts.
+    parent.updateMatrixWorld(true)
+    const ray = new THREE.Raycaster(new THREE.Vector3(0, 2, 0), new THREE.Vector3(0, -1, 0))
+    expect(ray.intersectObjects([a, b, c], true)).toHaveLength(0)
+
+    assertFiniteGeometry(parent)
+    disposeTree(parent)
+  })
+
+  it('automatically attaches non-blocking contact AO planes across all five furniture builders', () => {
+    const parent = new THREE.Group()
+    const builds = [
+      addCraftTable(parent, { name: 'ao-trestle', width: 3.1, depth: 1.6, surfaceY: 0.74, thickness: 0.12, support: 'trestle', groundY: 0 }),
+      addCraftTable(parent, { name: 'ao-arched', width: 3.1, depth: 1.6, surfaceY: 0.74, thickness: 0.12, support: 'arched', groundY: 0 }),
+      addCraftTable(parent, { name: 'ao-joined', width: 3.1, depth: 1.6, surfaceY: 0.74, thickness: 0.12, support: 'joined', groundY: 0 }),
+      addOfferingTable(parent, { name: 'ao-offering', width: 2.0, depth: 1.1, surfaceY: 0.72, groundY: -0.02 }),
+      addRoundLowTable(parent, { name: 'ao-round', radius: 0.9, surfaceY: 0.24, groundY: -0.03 }),
+      addObjectCradle(parent, { name: 'ao-cradle', width: 0.6, depth: 0.4, groundY: 0.01, height: 0.03 }),
+      addSteppedPedestal(parent, { name: 'ao-rect-ped', shape: 'rect', width: 1.2, depth: 0.9, groundY: -0.04, surfaceY: 0.32 }),
+      addSteppedPedestal(parent, { name: 'ao-round-ped', shape: 'round', radius: 0.45, groundY: -0.02, surfaceY: 0.22 }),
+    ]
+    parent.updateMatrixWorld(true)
+
+    for (const build of builds) {
+      const shadows: THREE.Mesh[] = []
+      build.root.traverse(obj => {
+        if (obj instanceof THREE.Mesh && obj.name.endsWith('-contact-ao')) shadows.push(obj)
+      })
+      expect(shadows.length, build.root.name).toBeGreaterThan(0)
+      for (const shadow of shadows) {
+        expect(shadow.position.y).toBeGreaterThan(0)
+        expect(shadow.userData.effect).toBe(true)
+        expect(shadow.userData.keepInOutdoorEnvironment).toBe(true)
+        expect(shadow.userData.toonSurface).toEqual({ outline: false })
+        const mat = shadow.material as THREE.MeshBasicMaterial
+        expect(mat).toBeInstanceOf(THREE.MeshBasicMaterial)
+        expect(mat.transparent).toBe(true)
+        expect(mat.depthWrite).toBe(false)
+      }
+    }
+
     disposeTree(parent)
   })
 })

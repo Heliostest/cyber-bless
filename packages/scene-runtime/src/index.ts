@@ -7,6 +7,11 @@ export {
   getEnvironmentRiverbedY,
   type EnvironmentProfile,
 } from "./environment-profiles";
+export {
+  getCourtyardSkin,
+  courtyardSkinAssignments,
+  type CourtyardSkinId,
+} from "./courtyard-skins";
 
 export type SceneSettings = { active: boolean; reducedMotion: boolean };
 export type SceneMountOptions = SceneSettings & {

@@ -99,11 +99,11 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
-    const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(0,.8,0), direction = new THREE.Vector3(2,4.8,7).normalize()
+    const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(-0.08,.88,.12), direction = new THREE.Vector3(2,4.8,7).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target);camera.updateMatrixWorld(true)
     const inverse=camera.quaternion.clone().invert(),tangent=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));let distance=3.4
-    // Frame the cask, supported lid halves and complete mallet paths.
-    for(const x of[-1.4,1.15])for(const y of[-.012,2.0])for(const z of[-.95,1.5]){const p=new THREE.Vector3(x,y,z).sub(target).applyQuaternion(inverse);distance=Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86))}
+    // Frame the cask stand, cask, supported lid halves, wooden mallet tray, and complete mallet paths.
+    for(const x of[-1.52,1.18])for(const y of[-.012,2.14])for(const z of[-.95,1.50]){const p=new THREE.Vector3(x,y,z).sub(target).applyQuaternion(inverse);distance=Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86))}
     camera.position.copy(target).addScaledVector(direction,distance);camera.lookAt(target);matrices()
   }
   restore(); sync()

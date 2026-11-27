@@ -1,6 +1,8 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import { addObjectCradle, addOfferingTable } from '../cozy-furniture'
 
 let cachedKomoPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
 let cachedRopePixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
@@ -476,10 +478,38 @@ function buildRibbonTailGeometry(side: -1 | 1, length = 0.185): THREE.BufferGeom
   return g
 }
 
-// A finite kagami-biraki fragment. Lid partition, sliding and mallet return are product staging.
+// A finite kagami-biraki fragment. Lid partition, sliding, wooden cask stand, and mallet tray are product staging.
 export function createKagamiBirakiModel(){
- const root=new THREE.Group();root.name='kagami-biraki-root';root.position.y=-.012
+ const surfaceY=getEnvironmentSurfaceY('kagami-biraki-sake')
+ const caskStandH=.14
+ const traySurfaceY=.064
+ const handleGrooveY=traySurfaceY+.040
+ const root=new THREE.Group();root.name='kagami-biraki-root';root.position.y=surfaceY
  const subject=new THREE.Group();subject.name='kagami-biraki-subject';root.add(subject)
+ const deduplicateNames=(group:THREE.Object3D)=>{
+  const seen=new Map<string,number>()
+  group.traverse(o=>{const n=seen.get(o.name)??0;seen.set(o.name,n+1);if(n>0)o.name=`${o.name}-${n}`})
+ }
+ // Compact chamfered square cedar cask stand grounded on the garden surface (product display staging).
+ const caskStandBuild=addOfferingTable(subject,{
+  name:'cask-stand',topName:'cask-stand-top',width:1.46,depth:1.46,surfaceY:caskStandH,thickness:.042,
+  center:[.35,0],groundY:0,finish:'cedar',color:'#b88552',frameColor:'#8d5f39',
+  planks:3,breadboardEnds:true,legThickness:.095,legInset:.075,apron:true,stretchers:false,bevel:.012,
+ })
+ deduplicateNames(caskStandBuild.root)
+ // Chamfered footed wooden mallet tray with concave handle cradle beside the cask (product display staging).
+ const malletTrayBuild=addObjectCradle(subject,{
+  name:'mallet-tray',topName:'mallet-tray-top',width:.72,depth:1.24,center:[-1.1,.46],
+  groundY:0,surfaceY:traySurfaceY,style:'tray',lip:true,lipHeight:.022,lipThickness:.032,
+  kind:'wood',finish:'cedar',color:'#c89b67',accentColor:'#9b6e44',footed:true,bevel:.009,
+ })
+ deduplicateNames(malletTrayBuild.root)
+ const handleCradleBuild=addObjectCradle(subject,{
+  name:'mallet-handle-cradle',topName:'mallet-handle-cradle-top',width:.24,depth:.16,center:[-1.1,.76],
+  groundY:traySurfaceY,surfaceY:handleGrooveY,style:'groove',groove:true,grooveAxis:'z',
+  kind:'wood',finish:'cedar',color:'#a97b4d',grooveDepth:.018,grooveWidth:.090,bevel:.006,
+ })
+ deduplicateNames(handleCradleBuild.root)
  const mat=(color:string,roughness=.75)=>new THREE.MeshStandardMaterial({color,roughness,metalness:0})
  const komoTex=createKomoWeaveTextures()
  const ropeTex=createStrawRopeTextures()
@@ -500,7 +530,7 @@ export function createKagamiBirakiModel(){
  }
  const mesh=(name:string,geometry:THREE.BufferGeometry,material:THREE.Material,parent:THREE.Object3D,smooth=false)=>{const o=new THREE.Mesh(finish(geometry,smooth),material);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
  const lathe=(points:number[][],segments=64)=>new THREE.LatheGeometry(points.map(p=>new THREE.Vector2(p[0]!,p[1]!)),segments)
- const cask=new THREE.Group();cask.name='prepared-sake-cask';cask.position.x=.35;subject.add(cask)
+ const cask=new THREE.Group();cask.name='prepared-sake-cask';cask.position.set(.35,caskStandH,0);subject.add(cask)
  const barrel=mesh('cedar-barrel',lathe([[0,0],[.55,0],[.62,.06],[.65,.5],[.62,1.08],[.53,1.08],[.55,.5],[.50,.12],[0,.12]]),cedar,cask)
  const radius=(y:number)=>y<=.5?.62+.03*(y-.06)/.44:.65-.03*(y-.5)/.58
  // Smooth C1-continuous barrel curve matching the cask bulge without a mid-height shading crease at y=0.50.
@@ -571,26 +601,30 @@ export function createKagamiBirakiModel(){
   return pivot
  })
  const lerp=THREE.MathUtils.lerp
+ const lidMalletY=1.235+caskStandH
+ const liftY=1.8+caskStandH
+ const reboundY=1.65+caskStandH
+ const restMalletY=traySurfaceY+.11
  const pose=(step:number,amount:number)=>{
   const t=THREE.MathUtils.clamp(Number.isFinite(amount)?amount:0,0,1)
   let opening=step>1?1:step===1?THREE.MathUtils.clamp((t-.4)/.6,0,1):0
   lids.forEach((o,i)=>o.position.x=(i===0?-1:1)*lerp(.002,.15,opening))
   let trailPitch=0,trailYaw=0
   if(step===0){
-   if(t<.5){mallet.position.set(.35,lerp(1.235,1.8,t/.5),0);trailPitch=.15*Math.sin(Math.PI*(t/.5))}
-   else{mallet.position.set(.35,1.8,lerp(0,.45,(t-.5)/.5));trailPitch=-.08*Math.sin(Math.PI*((t-.5)/.5))}
+   if(t<.5){mallet.position.set(.35,lerp(lidMalletY,liftY,t/.5),0);trailPitch=.15*Math.sin(Math.PI*(t/.5))}
+   else{mallet.position.set(.35,liftY,lerp(0,.45,(t-.5)/.5));trailPitch=-.08*Math.sin(Math.PI*((t-.5)/.5))}
   }
   else if(step===1){
-   mallet.position.set(.35,t<.4?lerp(1.8,1.235,t/.4):lerp(1.235,1.65,(t-.4)/.6),.45)
+   mallet.position.set(.35,t<.4?lerp(liftY,lidMalletY,t/.4):lerp(lidMalletY,reboundY,(t-.4)/.6),.45)
    trailPitch=t<.4?-.22*Math.sin(Math.PI*(t/.4)):.13*Math.sin(Math.PI*((t-.4)/.6))
   }
   else if(step===2){
-   if(t<.25)mallet.position.set(.35,lerp(1.65,1.8,t/.25),.45)
-   else if(t<.75){const u=(t-.25)/.5;mallet.position.set(lerp(.35,-1.1,u),1.8,lerp(.45,.10,u))}
-   else mallet.position.set(-1.1,lerp(1.8,.11,(t-.75)/.25),.10)
+   if(t<.25)mallet.position.set(.35,lerp(reboundY,liftY,t/.25),.45)
+   else if(t<.75){const u=(t-.25)/.5;mallet.position.set(lerp(.35,-1.1,u),liftY,lerp(.45,.10,u))}
+   else mallet.position.set(-1.1,lerp(liftY,restMalletY,(t-.75)/.25),.10)
    const s=Math.sin(Math.PI*t);trailPitch=.09*s;trailYaw=-.12*s
   }
-  else mallet.position.set(-1.1,.11,.10)
+  else mallet.position.set(-1.1,restMalletY,.10)
   // Enforce exact 0 rotation at checkpoint boundaries (t===0, t===1, step>=3) for checkpoint & reduced parity.
   if(t<=0||t>=1||step>=3){trailPitch=0;trailYaw=0}
   tailPivots[0]!.rotation.set(trailPitch,trailYaw*.85,-trailYaw*.32)
@@ -600,7 +634,7 @@ export function createKagamiBirakiModel(){
  pose(0,0)
  let disposed=false
  return {
-  root,subject,cask,barrel,wrap,liquid,lids,mallet,head,handle,
+  root,subject,cask,caskStand:caskStandBuild.root,malletTray:malletTrayBuild.root,handleCradle:handleCradleBuild.root,barrel,wrap,liquid,lids,mallet,head,handle,
   targets:[mallet,mallet,mallet],roots:[mallet,mallet,mallet],anchors:[[0,.11,.04],[0,.11,.04],[0,.11,.04]] as [number,number,number][],
   pose,
   dispose:()=>{

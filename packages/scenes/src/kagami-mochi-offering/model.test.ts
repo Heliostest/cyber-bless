@@ -9,6 +9,8 @@ describe('Kagami offering physical assembly',()=>{
   expect(box('kagami-large').min.y).toBeCloseTo(.016,6)
   expect(box('kagami-small').min.y).toBeCloseTo(box('kagami-large').max.y,6)
   expect(box('kagami-orange').min.y).toBeCloseTo(box('kagami-small').max.y,6)
+  expect(box('kagami-low-wood-base-furniture').min.y).toBeCloseTo(-0.1025,4)
+  expect(box('kagami-low-wood-base').max.y).toBeCloseTo(0,4)
  })
  it('moves only the current ingredient and keeps settled checkpoints continuous',()=>{
   const m=createKagamiModel()

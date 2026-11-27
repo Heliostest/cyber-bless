@@ -1,5 +1,7 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
+import { createSoftPlume } from '@wbr/scene-runtime/soft-plume'
 import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
@@ -7,6 +9,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
+import { addContactShadow } from '../cozy-furniture'
 import { createObjectPointer } from '../object-pointer'
 import { createTouchTarget } from '../touch-target'
 import { createDropFeedback } from '../drop-feedback'
@@ -700,11 +703,15 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   paperMat.addEventListener('dispose', releaseSleeveMap)
   const stickMat = material(0x88624c), bamboo = material(0xcbab73)
   const ash = material(0xd4c9b3), dark = material(0x625f50), teaMat = createRitualMaterial({ color: 0x8f713e, roughness: .3, transmission: .18, attenuationColor: 0x8f713e, attenuationDistance: .15 }, { kind: 'tea', thickness: .012, strength: .22 })
-  const emberMat = new THREE.MeshStandardMaterial({ color: 0xcd7853, emissive: 0x8b381c, emissiveIntensity: .28, roughness: 1 })
+  const emberMat = new THREE.MeshStandardMaterial({ color: 0xd96b38, emissive: 0xff5a1f, emissiveIntensity: 1.35, roughness: .9 })
   // Cream/clay also appear in ash, paper printing and the woven pad.
   const matFabric = applyCraftSurface(cream.clone(), { kind: 'fabric', strength: .25 })
   const matThread = applyCraftSurface(clay.clone(), { kind: 'fabric', strength: .25 })
   const creamCeramic = applyCraftSurface(cream.clone(), { kind: 'ceramic', strength: .45 })
+  const jadeCenserBody = applyCraftSurface(material(0x9db9a8, .66), { kind: 'ceramic', strength: .45 })
+  jadeCenserBody.vertexColors = true
+  const creamCupBody = applyCraftSurface(cream.clone(), { kind: 'ceramic', strength: .45 })
+  creamCupBody.vertexColors = true
   ;[jade, jadeLight, jadeDark, clay, dark].forEach(mat => applyCraftSurface(mat, { kind: 'ceramic', strength: .45 }))
   applyCraftSurface(bamboo, { kind: 'bamboo', strength: .35, axis: 'y' })
   const add = (geo: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world, name = '') => {
@@ -753,7 +760,8 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
     foot.rotation.y = -angle
   }
   const body = lathe([[0, .015], [.20, .015], [.36, .045], [.47, .13], [.56, .29], [.574, .40], [.55, .48], [.49, .55],
-    [.495, .60], [.52, .62], [.52, .65], [.47, .655], [.448, .62], [.45, .55], [.494, .45], [.51, .36], [.46, .20], [.33, .115], [0, .10]], jade, censer, 'incense-censer-body')
+    [.495, .60], [.52, .62], [.52, .65], [.47, .655], [.448, .62], [.45, .55], [.494, .45], [.51, .36], [.46, .20], [.33, .115], [0, .10]], jadeCenserBody, censer, 'incense-censer-body')
+  bakeCreviceAO(body.geometry, { groundY: .015, groundRange: .16, cavityCenter: [0, 0], cavityRadius: .51, cavityTopY: .655, strength: .36 })
   ring(.505, .025, [0, .635, 0], jadeLight, censer)
   ring(.352, .012, [0, .085, 0], clay, censer)
   // Two restrained scroll ears are ceramic handles, not an inherited pot silhouette.
@@ -792,21 +800,25 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   add(new THREE.CylinderGeometry(.022, .022, .80, 14), stickMat, [0, .65, 0], stick, 'incense-fine-stick')
   const ember = pebble([0, 1.055, 0], [.023, .026, .023], emberMat, stick, 'incense-ember')
   const smoke = new THREE.Group(); smoke.name = 'incense-smoke'; smoke.position.set(.12, 2.465, -.22); world.add(smoke)
-  const smokeMat = new THREE.MeshStandardMaterial({ color: 0xd6d9c9, transparent: true, opacity: .30, depthWrite: false, roughness: 1 })
-  for (let i = 0; i < 2; i++) {
-    tube(Array.from({ length: 16 }, (_, j) => {
-      const t = j / 15
-      return new THREE.Vector3(Math.sin(t * Math.PI * 2.3 + i * .7) * (.015 + t * .052), t * .46, Math.sin(t * 3 + i) * .024)
-    }), i ? .009 : .016, smokeMat, smoke, `incense-smoke-thread-${i}`)
-  }
+  const incensePlume = createSoftPlume({ kind: 'incense', height: .72, width: .085, opacity: .46, strands: 2, wisps: 4, seed: 17 })
+  smoke.add(incensePlume.root)
 
   const tea = new THREE.Group(); tea.name = 'incense-tea'; tea.position.set(-.04, .55, .64); world.add(tea)
   const saucer = add(new THREE.CylinderGeometry(.29, .26, .038, 48), jadeLight, [0, .022, 0], tea, 'incense-tea-saucer')
   ring(.276, .012, [0, .043, 0], creamCeramic, tea)
   const cup = new THREE.Group(); cup.name = 'incense-teacup'; cup.position.set(0, .04, -.075); tea.add(cup)
-  lathe([[0, 0], [.11, 0], [.14, .03], [.184, .13], [.191, .20], [.177, .21], [.167, .18], [.14, .065], [.09, .035], [0, .035]], creamCeramic, cup, 'incense-teacup-body')
+  const cupBody = lathe([[0, 0], [.11, 0], [.14, .03], [.184, .13], [.191, .20], [.177, .21], [.167, .18], [.14, .065], [.09, .035], [0, .035]], creamCupBody, cup, 'incense-teacup-body')
+  bakeCreviceAO(cupBody.geometry, { groundY: 0, groundRange: .06, cavityCenter: [0, 0], cavityRadius: .172, cavityTopY: .21, strength: .36 })
   ring(.181, .009, [0, .202, 0], clay, cup)
   add(new THREE.CylinderGeometry(.164, .151, .012, 40), teaMat, [0, .174, 0], cup, 'incense-tea-surface')
+  const teaPlume = createSoftPlume({ kind: 'steam', height: .22, width: .09, opacity: .22, strands: 2, wisps: 5, seed: 31 })
+  teaPlume.root.position.set(-.04, .775, .565); world.add(teaPlume.root)
+
+  addContactShadow(world, { prefix: 'incense-table', width: 3.15, depth: 1.72, y: floorY + .002, shape: 'rounded-rect', opacity: .22 })
+  addContactShadow(world, { prefix: 'incense-censer', width: 1.02, depth: 1.02, y: .582, center: [.12, -.22], shape: 'ellipse', opacity: .24 })
+  addContactShadow(world, { prefix: 'incense-lid-rest', width: 1.24, depth: 1.24, y: .552, center: [1.035, .36], shape: 'ellipse', opacity: .22 })
+  addContactShadow(world, { prefix: 'incense-tea-saucer', width: .66, depth: .66, y: .552, center: [-.04, .64], shape: 'ellipse', opacity: .22 })
+  addContactShadow(world, { prefix: 'incense-stick-tray', width: .78, depth: .64, y: .552, center: [-1, .22], shape: 'rounded-rect', opacity: .22 })
 
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   function pose() {
@@ -814,6 +826,8 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
     stick.position.copy(checkpoint >= 2 ? STICK_REST : STICK_HOME)
     paper.position.copy(STICK_HOME); paper.rotation.set(0, 0, checkpoint >= 2 ? -.15 : 0)
     ember.visible = smoke.visible = checkpoint >= 2
+    incensePlume.setIntensity(checkpoint >= 2 ? 1 : 0)
+    emberMat.emissiveIntensity = checkpoint >= 2 ? 1.35 : 0
     matrices()
   }
   const source = () => checkpoint === 0 ? knob : checkpoint === 1 ? grip : saucer
@@ -884,18 +898,27 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   function placed() {
     if (!active() || !placement) return
     checkpoint = (placement.step + 1) as Checkpoint; placement = null; pose(); sync(); ctx.onProgress?.(checkpoint)
-    feedback.impact({ freqs: checkpoint === 1 ? [330, 495] : [392, 587.33], duration: .20, gain: .014, type: 'triangle' })
+    feedback.impact({
+      freqs: checkpoint === 1 ? [330, 495] : [392, 587.33],
+      duration: .20,
+      gain: .014,
+      type: 'triangle',
+      cue: checkpoint === 1 ? 'ceramic' : 'woodTap',
+      cueStrength: checkpoint === 1 ? .64 : .56,
+    })
   }
   function beginPlacement(arrived = false) {
     if (!active() || (pointer.isBusy() && !arrived) || placement || checkpoint >= 2) return
     placement = { step: checkpoint as 0 | 1, time: 0, from: carried().position.clone(), paperFrom: paper.position.clone() }
-    dragging = false; sync(); if (reduced()) placed()
+    dragging = false; sync()
+    if (placement.step === 1 && !reduced()) feedback.sound('paper', { duration: .22, strength: .36 })
+    if (reduced()) placed()
   }
   function finish() {
     if (!active() || pointer.isBusy() || placement || checkpoint !== 2) return
     if (!ending.completing) return
     checkpoint = 3; pose(); sync(); if (disposed) return; ctx.onProgress?.(3)
-    feedback.impact({ freqs: [330, 495], duration: .28, gain: .012 })
+    feedback.impact({ freqs: [330, 495], duration: .28, gain: .012, cue: 'ceramic', cueStrength: .50 })
     if (!active()) return; overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
   const action = () => { if (!active() || pointer.isBusy() || placement || checkpoint === 3) return; feedback.prepare(); if (checkpoint < 2) beginPlacement(); else finish() }
@@ -924,6 +947,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
       }
       if (inactiveRendered) { inactiveRendered = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
+      feedback.update()
       if (placement) {
         placement.time = reduced() ? 1 : Math.min(1, placement.time + delta / .75)
         const t = placement.time, ease = smooth(t)
@@ -933,7 +957,15 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
         if (placement.step === 1) { paper.position.lerpVectors(placement.paperFrom, STICK_HOME, ease); paper.rotation.z = -.15 * ease }
         if (t === 1) placed()
       }
-      if (!reduced() && checkpoint >= 2) { elapsed += delta; smoke.rotation.y = Math.sin(elapsed * .36) * .24 }
+      if (!reduced()) elapsed += delta
+      if (checkpoint >= 2) {
+        emberMat.emissiveIntensity = reduced() ? 1.35 : 1.35 + .25 * Math.sin(elapsed * 2.8)
+        incensePlume.setIntensity(1)
+        incensePlume.update(delta, camera, { reducedMotion: reduced(), scene })
+      } else {
+        incensePlume.setIntensity(0)
+      }
+      teaPlume.update(delta, camera, { reducedMotion: reduced(), scene })
       ending.update(dt)
       if (disposed || !active()) return
       style.render()
@@ -943,7 +975,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
       ending.dispose()
       disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
-      style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose())
+      style.dispose(); incensePlume.dispose(); teaPlume.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose())
       scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }

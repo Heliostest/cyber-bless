@@ -1,17 +1,19 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
-import { addOfferingTable } from '../cozy-furniture'
+import { addContactShadow, addOfferingTable } from '../cozy-furniture'
 
 /** Closed original vessels and serving motion; not a traditional utensil specification. */
 export function createNanakusaModel() {
  const root=new THREE.Group();root.name='nanakusa-subject'
  const material=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.78})
  const porridge=createRitualMaterial({color:0xf2ead0,roughness:.42,clearcoat:.38,clearcoatRoughness:.24},{kind:'wet',strength:.35})
- const ceramic=material(0x48695e),cream=material(0xf2ead0),leaf=material(0x547d48),wood=material(0xb47c46),bowlMat=material(0x679c98),light=material(0xd7e0cc)
- applyCraftSurface(wood,{kind:'wood',strength:.35,axis:'y'})
- for(const vessel of[ceramic,bowlMat])applyCraftSurface(vessel,{kind:'ceramic',strength:.45})
+ const ceramic=material(0x48695e),potCeramic=material(0x48695e),cream=material(0xf2ead0),leaf=material(0x547d48),wood=material(0xb47c46),ladleHeadWood=material(0xb47c46),bowlMat=material(0x679c98),light=material(0xd7e0cc)
+ potCeramic.vertexColors=true;bowlMat.vertexColors=true;ladleHeadWood.vertexColors=true
+ for(const timber of[wood,ladleHeadWood])applyCraftSurface(timber,{kind:'wood',strength:.35,axis:'y'})
+ for(const vessel of[ceramic,potCeramic,bowlMat])applyCraftSurface(vessel,{kind:'ceramic',strength:.45})
  const closed=(source:THREE.BufferGeometry)=>{
   const g=source.index?source.toNonIndexed():source,p=g.getAttribute('position'),values:number[]=[];let volume=0
   for(let i=0;i<p.count;i+=3){const a=new THREE.Vector3().fromBufferAttribute(p,i),b=new THREE.Vector3().fromBufferAttribute(p,i+1),c=new THREE.Vector3().fromBufferAttribute(p,i+2);if(new THREE.Triangle(a,b,c).getArea()<=1e-12)continue;values.push(...a.toArray(),...b.toArray(),...c.toArray());volume+=a.dot(b.clone().cross(c))/6}
@@ -31,10 +33,12 @@ export function createNanakusaModel() {
  const seenBoardNames=new Map<string,number>()
  tableBuild.root.traverse(o=>{const n=seenBoardNames.get(o.name)??0;seenBoardNames.set(o.name,n+1);if(n>0)o.name=`${o.name}-${n}`})
  const board=tableBuild.top
- const pot=lathe('porridge-pot',[[0,0],[.50,0],[.68,.10],[.74,.52],[.72,.70],[.65,.70],[.67,.51],[.61,.13],[0,.13]],ceramic);pot.position.set(-.55,.07,-.36)
+ const pot=lathe('porridge-pot',[[0,0],[.50,0],[.68,.10],[.74,.52],[.72,.70],[.65,.70],[.67,.51],[.61,.13],[0,.13]],potCeramic);pot.position.set(-.55,.07,-.36)
+ bakeCreviceAO(pot.geometry,{groundY:0,groundRange:.16,cavityCenter:[0,0],cavityRadius:.67,cavityTopY:.70,strength:.36})
  for(const sign of[-1,1])box(`pot-handle-${sign}`,[.25,.11,.24],[-.55+sign*.82,.55,-.36],ceramic)
  const potBand=mesh('pot-rim-band',new THREE.TorusGeometry(.69,.012,6,48),light);potBand.rotation.x=Math.PI/2;potBand.position.set(-.55,.771,-.36)
  const bowl=lathe('receiving-bowl',[[0,0],[.25,0],[.40,.06],[.48,.25],[.50,.37],[.46,.37],[.43,.25],[.34,.10],[0,.10]],bowlMat);bowl.position.set(.70,.07,.62)
+ bakeCreviceAO(bowl.geometry,{groundY:0,groundRange:.08,cavityCenter:[0,0],cavityRadius:.46,cavityTopY:.37,strength:.36})
  const bowlBand=mesh('bowl-rim-band',new THREE.TorusGeometry(.48,.012,6,40),light);bowlBand.rotation.x=Math.PI/2;bowlBand.position.set(.70,.441,.62)
  const stock=mesh('pot-porridge',new THREE.CylinderGeometry(.61,.61,1,32),porridge);stock.position.set(-.55,.39,-.36)
  const potGarnish=new THREE.Group();potGarnish.name='pot-rice-and-greens';root.add(potGarnish);potGarnish.position.set(-.55,.58,-.36)
@@ -43,7 +47,8 @@ export function createNanakusaModel() {
  }
  garnish(potGarnish,'pot',.565,44,23)
  const ladle=new THREE.Group();ladle.name='serving-ladle';root.add(ladle)
- const head=lathe('ladle-head',[[0,-.09],[.10,-.09],[.17,-.05],[.21,.025],[.22,.08],[.185,.08],[.17,.025],[.12,-.04],[0,-.055]],wood,ladle)
+ const head=lathe('ladle-head',[[0,-.09],[.10,-.09],[.17,-.05],[.21,.025],[.22,.08],[.185,.08],[.17,.025],[.12,-.04],[0,-.055]],ladleHeadWood,ladle)
+ bakeCreviceAO(head.geometry,{groundY:-.09,groundRange:.045,cavityCenter:[0,0],cavityRadius:.185,cavityTopY:.08,strength:.34})
  const handle=tube('ladle-handle',new THREE.Vector3(0,.02,.16),new THREE.Vector3(0,.60,.98),.035,wood,ladle)
  const grip=mesh('ladle-grip',new THREE.SphereGeometry(1,8,6),wood,ladle);grip.position.set(0,.60,.98);grip.scale.set(.050,.045,.075);grip.quaternion.copy(handle.quaternion)
  const payload=new THREE.Group();payload.name='ladle-porridge';ladle.add(payload)
@@ -80,6 +85,10 @@ export function createNanakusaModel() {
   const o=mesh(name,g,light);o.position.set(p.x,.07,p.z);return o
  }
  const headRest=rest('ladle-head-rest',headPoint,.24),tailRest=rest('ladle-tail-rest',tailPoint,.20)
+ addContactShadow(root,{name:'porridge-pot-contact-ao',width:1.34,depth:1.34,y:.0718,center:[-.55,-.36],shape:'ellipse',opacity:.24})
+ addContactShadow(root,{name:'receiving-bowl-contact-ao',width:.88,depth:.88,y:.0718,center:[.70,.62],shape:'ellipse',opacity:.22})
+ addContactShadow(root,{name:'ladle-head-rest-contact-ao',width:.30,depth:.24,y:.0718,center:[headPoint.x,headPoint.z],shape:'rounded-rect',opacity:.18})
+ addContactShadow(root,{name:'ladle-tail-rest-contact-ao',width:.26,depth:.24,y:.0718,center:[tailPoint.x,tailPoint.z],shape:'rounded-rect',opacity:.18})
  const potHead=new THREE.Vector3(-.55,.52,-.36),ready=new THREE.Vector3(.70,1.04,.62),parkHigh=new THREE.Vector3(park.x,1.12,park.z),v=new THREE.Vector3()
  const clamp=(n:number)=>THREE.MathUtils.clamp(n,0,1),mix=(a:THREE.Vector3,b:THREE.Vector3,t:number)=>ladle.position.copy(a).lerp(b,clamp(t))
  let received=0

@@ -298,7 +298,7 @@ describe('Persian household Esfand seed smoke', () => {
   })
   it('releases capture, geometry, materials, cues and DOM once and rejects retained inputs after disposal', () => {
     const s = mount(2), resources = new Set<THREE.BufferGeometry | THREE.Material | THREE.Texture>(), cued: THREE.Object3D[] = []
-    s.scene.traverse(o => { if (o.userData.interactionCues?.length) cued.push(o); const m = o as THREE.Mesh; if (m.geometry) resources.add(m.geometry); for (const mat of Array.isArray(m.material) ? m.material : m.material ? [m.material] : []) { resources.add(mat); const map = (mat as THREE.MeshStandardMaterial).map; if (map) resources.add(map) } })
+    s.scene.traverse(o => { if (o.userData.interactionCues?.length) cued.push(o); const m = o as THREE.Mesh; if (m.geometry) resources.add(m.geometry); for (const mat of Array.isArray(m.material) ? m.material : m.material ? [m.material] : []) { resources.add(mat); const map = (mat as THREE.MeshStandardMaterial).map; if (map && !m.name.includes('contact-ao')) resources.add(map) } })
     const freed = new Map<unknown, number>(); resources.forEach(r => r.addEventListener('dispose', () => freed.set(r, (freed.get(r) ?? 0) + 1)))
     const p = s.point(targetName(2), anchor(2)), release = vi.fn(); s.hit.releasePointerCapture = release; event(s.hit, 'pointerdown', p)
     const renderer = rendered.renderer as THREE.WebGLRenderer, frames = rendered.render.mock.calls.length; s.instance.dispose(); s.instance.dispose(); s.button.click(); event(s.hit, 'pointerup', p); s.instance.start(); s.instance.update(10)
@@ -338,4 +338,21 @@ describe('free object inspection without forced route checkpoints',()=>{
     if(kind==='blur')window.dispatchEvent(new Event('blur'));else if(kind==='pause'){active=false;s.instance.update(.025)}else resized();
     expect(object.position.distanceTo(home)).toBeLessThan(1e-7);expect(object.quaternion.angleTo(rotation)).toBeLessThan(1e-7);expect(s.progress).toEqual([]);
   });
+
+  it('equips pan crevice AO, brazier glow, contact shadows, and living aromatic smoke plume when heated', () => {
+    const s = mount(2)
+    s.run(.4)
+    const pan = s.scene.getObjectByName('esfand-pan') as THREE.Mesh
+    expect(pan.geometry.getAttribute('color')).toBeTruthy()
+    expect((pan.material as THREE.MeshStandardMaterial).vertexColors).toBe(true)
+    const glow = s.scene.getObjectByName('esfand-burner-glow') as THREE.Mesh
+    expect(glow.visible).toBe(true)
+    expect((glow.material as THREE.MeshStandardMaterial).emissiveIntensity).toBeGreaterThan(1)
+    const aroma = s.scene.getObjectByName('soft-plume-aroma')!
+    expect(aroma).toBeTruthy()
+    expect(aroma.visible).toBe(true)
+    for (const shadow of ['esfand-stove-contact-ao', 'esfand-pan-contact-ao', 'esfand-cloth-contact-ao']) {
+      expect(s.scene.getObjectByName(shadow), shadow).toBeTruthy()
+    }
+  })
 });

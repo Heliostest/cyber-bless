@@ -271,12 +271,28 @@ describe('Nanakusa porridge serving', () => {
   })
   it('releases capture, geometry, materials, cues and DOM once and rejects retained inputs after disposal', () => {
     const s = mount(2), resources = new Set<THREE.BufferGeometry | THREE.Material | THREE.Texture>(), cued: THREE.Object3D[] = []
-    s.scene.traverse(o => { if (o.userData.interactionCues?.length) cued.push(o); const m = o as THREE.Mesh; if (m.geometry) resources.add(m.geometry); for (const mat of Array.isArray(m.material) ? m.material : m.material ? [m.material] : []) { resources.add(mat); const map = (mat as THREE.MeshStandardMaterial).map; if (map) resources.add(map) } })
+    s.scene.traverse(o => { if (o.userData.interactionCues?.length) cued.push(o); const m = o as THREE.Mesh; if (m.geometry) resources.add(m.geometry); for (const mat of Array.isArray(m.material) ? m.material : m.material ? [m.material] : []) { resources.add(mat); const map = (mat as THREE.MeshStandardMaterial).map; if (map && !m.name.includes('contact-ao')) resources.add(map) } })
     const freed = new Map<unknown, number>(); resources.forEach(r => r.addEventListener('dispose', () => freed.set(r, (freed.get(r) ?? 0) + 1)))
     const p = s.point(targetName(2), anchor(2)), release = vi.fn(); s.hit.releasePointerCapture = release; event(s.hit, 'pointerdown', p)
     const renderer = rendered.renderer as THREE.WebGLRenderer, frames = rendered.render.mock.calls.length; s.instance.dispose(); s.instance.dispose(); s.button.click(); event(s.hit, 'pointerup', p); s.instance.start(); s.instance.update(10)
     expect(release).toHaveBeenCalledExactlyOnceWith(1); expect(s.progress).toEqual([]); expect(s.saveWish).not.toHaveBeenCalled(); expect(rendered.render.mock.calls.length).toBe(frames)
     expect(freed.size).toBe(resources.size); expect([...freed.values()].every(n => n === 1)).toBe(true); expect(renderer.dispose).toHaveBeenCalledOnce(); expect(renderer.forceContextLoss).toHaveBeenCalledOnce()
     expect(s.overlay.childElementCount).toBe(0); expect(s.host.querySelector('.scene-object-cues')).toBeNull(); for (const o of cued) expect(o.userData.interactionCues).toEqual([])
+  })
+
+  it('bakes crevice AO on vessels and ladle head, grounds props with contact shadows, and mounts rising porridge steam plumes', () => {
+    const s = mount(3)
+    s.run(.4)
+    for (const name of ['porridge-pot', 'receiving-bowl', 'ladle-head']) {
+      const mesh = s.scene.getObjectByName(name) as THREE.Mesh
+      expect(mesh.geometry.getAttribute('color'), name).toBeTruthy()
+      expect((mesh.material as THREE.MeshStandardMaterial).vertexColors, name).toBe(true)
+    }
+    for (const shadow of ['porridge-pot-contact-ao', 'receiving-bowl-contact-ao', 'ladle-head-rest-contact-ao', 'ladle-tail-rest-contact-ao']) {
+      expect(s.scene.getObjectByName(shadow), shadow).toBeTruthy()
+    }
+    let steamCount = 0
+    s.scene.traverse(o => { if (o.name === 'soft-plume-steam') steamCount++ })
+    expect(steamCount).toBe(2)
   })
 })

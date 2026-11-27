@@ -1,6 +1,12 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { disposeTree } from '../procedural-kit'
+import {
+  createCurvedAwnGeometry,
+  createWheatKernelGeometry,
+  createWheatKernelMaterial,
+  wheatKernelInstanceColor,
+} from './wheat-craft'
 
 /** An original wheat rendering; the gathering, ribbon motion and room are product staging. */
 export function createDidukhModel() {
@@ -12,7 +18,7 @@ export function createDidukhModel() {
 
   const straw = new THREE.MeshStandardMaterial({ color: 0xc99d4c, roughness: .86 })
   const stalkGold = new THREE.MeshStandardMaterial({ color: 0xddb65b, roughness: .84 })
-  const grainGold = new THREE.MeshStandardMaterial({ color: 0xe8be64, roughness: .78 })
+  const grainGold = createWheatKernelMaterial()
   const awnGold = new THREE.MeshStandardMaterial({ color: 0xd6a957, roughness: .9 })
   const blue = new THREE.MeshStandardMaterial({ color: 0x4c85a1, roughness: .76 })
   const coral = new THREE.MeshStandardMaterial({ color: 0xc87863, roughness: .8 })
@@ -72,21 +78,38 @@ export function createDidukhModel() {
     return geometry
   }
 
-  const grainGeometry = new THREE.SphereGeometry(1, 8, 6)
-  const awnGeometry = new THREE.CylinderGeometry(.0022, .0032, 1, 5, 1, false)
+  const grainGeometry = createWheatKernelGeometry()
+  const knotGeometry = new THREE.SphereGeometry(1, 10, 8)
+  const awnGeometry = createCurvedAwnGeometry()
   const connectorGeometry = new THREE.CylinderGeometry(.003, .003, 1, 5, 1, false)
   const transform = new THREE.Object3D()
   const up = new THREE.Vector3(0, 1, 0)
-  function instanceBetween(mesh: THREE.InstancedMesh, index: number, a: THREE.Vector3, b: THREE.Vector3) {
+  const instanceColor = new THREE.Color()
+  const basisMatrix = new THREE.Matrix4()
+  const axisX = new THREE.Vector3()
+  const axisY = new THREE.Vector3()
+  const axisZ = new THREE.Vector3()
+  function instanceBetween(mesh: THREE.InstancedMesh, index: number, a: THREE.Vector3, b: THREE.Vector3, outward?: THREE.Vector3) {
     const direction = b.clone().sub(a)
+    const length = direction.length()
     transform.position.copy(a).add(b).multiplyScalar(.5)
-    transform.quaternion.setFromUnitVectors(up, direction.clone().normalize())
-    transform.scale.set(1, direction.length(), 1)
+    axisY.copy(direction).divideScalar(length || 1)
+    if (outward) {
+      axisX.copy(outward).addScaledVector(axisY, -outward.dot(axisY))
+      if (axisX.lengthSq() < 1e-8) axisX.set(1, 0, 0)
+      else axisX.normalize()
+      axisZ.crossVectors(axisX, axisY).normalize()
+      basisMatrix.makeBasis(axisX, axisY, axisZ)
+      transform.quaternion.setFromRotationMatrix(basisMatrix)
+    } else {
+      transform.quaternion.setFromUnitVectors(up, axisY)
+    }
+    transform.scale.set(1, length, 1)
     transform.updateMatrix()
     mesh.setMatrixAt(index, transform.matrix)
   }
 
-  // Intact paired kernels sit beside the central rachis; short glumes join them.
+  // Intact 3D four-ranked spiral kernels hug the central rachis; short glumes join them.
   // Repeated kernels/awns use instances to keep the mobile draw count restrained.
   function wheatEar(index: number) {
     const ear = new THREE.Group()
@@ -102,19 +125,57 @@ export function createDidukhModel() {
       mesh.castShadow = mesh.receiveShadow = true
       ear.add(mesh)
     }
+    const earPhase = ((index * 5) % 7) / 6
     for (let row = 0; row < 6; row++) for (const [sideIndex, sign] of [-1, 1].entries()) {
       const i = row * 2 + sideIndex
       const taper = 1 - row * .035
-      const y = .065 + row * .052
-      const x = sign * .063 * taper
-      transform.position.set(x, y, 0)
-      transform.rotation.set(0, 0, -sign * .35)
-      transform.scale.set(.025 * taper, .055 * taper, .025 * taper)
+      // Four staggered 3D ranks alternate front/back around ±X while keeping every grain clear of the rachis.
+      const zSign = ((row + sideIndex) % 2 === 0) ? 1 : -1
+      const phi = .50 + .07 * ((row + index) % 3) / 2
+      const dirX = sign * Math.cos(phi)
+      const dirZ = zSign * Math.sin(phi)
+      const yaw = Math.atan2(dirZ, dirX)
+      const radial = .072 * taper
+      const staggerY = (zSign > 0 ? .008 : -.004) + (earPhase - .5) * .004
+      const y = .066 + row * .051 + staggerY
+      const cx = dirX * radial
+      const cz = dirZ * radial
+      const tilt = .31 + .02 * (row / 5)
+      const sx = .026 * taper
+      const sy = .056 * taper
+      const sz = .024 * taper
+
+      // Align local +Y outward along the radial plane and local -X toward the rachis (belly groove inward).
+      const cosT = Math.cos(tilt), sinT = Math.sin(tilt)
+      const cosY = Math.cos(yaw), sinY = Math.sin(yaw)
+      axisX.set(cosT * cosY, -sinT, cosT * sinY)
+      axisY.set(sinT * cosY, cosT, sinT * sinY)
+      axisZ.set(-sinY, 0, cosY)
+      basisMatrix.makeBasis(axisX, axisY, axisZ)
+      transform.position.set(cx, y, cz)
+      transform.quaternion.setFromRotationMatrix(basisMatrix)
+      transform.scale.set(sx, sy, sz)
       transform.updateMatrix()
       kernels.setMatrixAt(i, transform.matrix)
-      instanceBetween(glumes, i, new THREE.Vector3(sign * .008, y - .03, 0), new THREE.Vector3(sign * .041 * taper, y - .022, 0))
-      instanceBetween(awns, i, new THREE.Vector3(sign * .080 * taper, y + .035, 0), new THREE.Vector3(sign * (.11 + row * .005), y + .19, -.008))
+      kernels.setColorAt(i, wheatKernelInstanceColor(index, row, sideIndex, instanceColor))
+
+      const kernelBase = new THREE.Vector3(
+        cx - axisY.x * sy * .62,
+        y - axisY.y * sy * .62,
+        cz - axisY.z * sy * .62,
+      )
+      instanceBetween(glumes, i, new THREE.Vector3(dirX * .008, y - .030, dirZ * .008), kernelBase)
+
+      const awnStart = new THREE.Vector3(
+        cx + axisY.x * sy * .60 + axisX.x * sx * .18,
+        y + axisY.y * sy * .60,
+        cz + axisY.z * sy * .60 + axisX.z * sx * .18,
+      )
+      const awnReach = .104 + row * .0045
+      const awnEnd = new THREE.Vector3(dirX * awnReach, y + .176, dirZ * (awnReach * .92) - .006)
+      instanceBetween(awns, i, awnStart, awnEnd, new THREE.Vector3(dirX, 0, dirZ))
     }
+    if (kernels.instanceColor) kernels.instanceColor.needsUpdate = true
     for (const mesh of [kernels, awns, glumes]) mesh.instanceMatrix.needsUpdate = true
     return ear
   }
@@ -159,7 +220,7 @@ export function createDidukhModel() {
     new THREE.Vector2(.13, .043), new THREE.Vector2(.112, .043), new THREE.Vector2(.112, -.043),
   ], 32)
   const band = add(actor, 'didukh-blue-waist-band', bandGeometry, blue, 0, .9, 0)
-  const knot = add(actor, 'didukh-coral-knot', grainGeometry, coral, 0, .9, .196)
+  const knot = add(actor, 'didukh-coral-knot', knotGeometry, coral, 0, .9, .196)
   knot.scale.set(.055, .042, .027)
 
   function loopGeometry() {

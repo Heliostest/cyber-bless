@@ -20,7 +20,9 @@
     "./craft-surfaces": "./src/craft-surfaces.ts",
     "./soft-pouch-geometry": "./src/soft-pouch-geometry.ts",
     "./rapier-soft-body": "./src/rapier-soft-body.ts",
-    "./paper-sheet": "./src/paper-sheet.ts"
+    "./paper-sheet": "./src/paper-sheet.ts",
+    "./botanical-surfaces": "./src/botanical-surfaces.ts",
+    "./botanical-kit": "./src/botanical-kit.ts"
   },
   "dependencies": {
     "@dimforge/rapier3d-simd": "^0.21.0",

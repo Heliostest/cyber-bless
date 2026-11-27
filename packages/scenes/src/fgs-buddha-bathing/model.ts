@@ -1,13 +1,20 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import {
+  createBathingFlowerHeartGeometry,
+  createBathingPetalGeometry,
+  createBathingPetalMaterial,
+  createBathingStemMaterial,
+} from './flower-detail'
 
 /** Original basin, ladle and infant Buddha composition for FGS's public three-pour example. */
 export function createBuddhaBathingModel() {
   const root=new THREE.Group();root.name='bathing-root'
   const subject=new THREE.Group();subject.name='bathing-subject';root.add(subject)
   const mat=(color:number,roughness=.75,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness})
-  const stone=mat(0xc9c5aa),ceramic=mat(0x689b9e,.38),rimMat=mat(0xa8c3b5,.46),gold=mat(0xd6a749,.4,.3),dark=mat(0x846238),wood=mat(0xae7947),petal=mat(0xe5b9a7),leaf=mat(0x71906a)
+  const stone=mat(0xc9c5aa),ceramic=mat(0x689b9e,.38),rimMat=mat(0xa8c3b5,.46),gold=mat(0xd6a749,.4,.3),dark=mat(0x846238),wood=mat(0xae7947)
+  const petal=createBathingPetalMaterial(),leaf=createBathingStemMaterial()
   const gripWood=applyCraftSurface(dark.clone(),{kind:'wood',strength:.4,axis:'y'})
   ;[ceramic,rimMat].forEach(material=>applyCraftSurface(material,{kind:'ceramic',strength:.45}))
   applyCraftSurface(wood,{kind:'wood',strength:.4,axis:'y'})
@@ -53,10 +60,12 @@ export function createBuddhaBathingModel() {
   ball('bathing-down-hand',[.31,1.02,.03],[.045,.06,.035],gold,statue)
   rod('bathing-down-finger',[.32,.98,.03],[.32,.89,.03],.016,gold,statue)
   // A small flower border sits on the paving, outside the vessel and the moving ladle path.
+  const flowerPetalGeo=createBathingPetalGeometry()
+  const flowerHeartGeo=createBathingFlowerHeartGeometry()
   for(const [i,x,z] of [[0,-.84,-.59],[1,.78,-.68],[2,.30,-1.02]]){
     const stem=rod('bathing-flower-stem-'+i,[x!, .035,z!],[x!, .25,z!],.016,leaf)
-    for(let j=0;j<5;j++){const a=j/5*Math.PI*2;ball('bathing-flower-'+i+'-'+j,[x!+Math.cos(a)*.065,.25,z!+Math.sin(a)*.065],[.062,.028,.045],petal)}
-    ball('bathing-flower-heart-'+i,[x!,.27,z!],[.035,.025,.035],gold)
+    for(let j=0;j<5;j++){const a=j/5*Math.PI*2+i!*.35;const p=mesh(flowerPetalGeo,petal,subject,'bathing-flower-'+i+'-'+j);p.position.set(x!,.245,z!);p.rotation.y=a}
+    const heart=mesh(flowerHeartGeo,petal,subject,'bathing-flower-heart-'+i);heart.position.set(x!,.266,z!)
     stem.userData.support='paving'
   }
   const ladle=new THREE.Group();ladle.name='bathing-ladle-root';subject.add(ladle)

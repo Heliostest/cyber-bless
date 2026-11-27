@@ -1,5 +1,13 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import {
+  createLivingBarkMaterial,
+  createSpringBlossomMaterial,
+  createSpringBlossomPetalGeometry,
+  createSpringLeafMaterial,
+  createSpringPollenGeometry,
+  createYoungBranchLeafGeometry,
+} from './blossom-detail'
 
 let cachedYarnPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
 
@@ -353,16 +361,14 @@ export function createMartisorModel() {
   const red = yarnMat(0xc43c54), white = yarnMat(0xffedce)
   // Subtle deeper-crimson & warm-cream collar shades preserve the red/white palette while defining the wrapped bindings.
   const redCollar = yarnMat(0xa52d43, 0.90), whiteCollar = yarnMat(0xecd6b2, 0.90)
-  const bark = material(0x805f44), cut = material(0xc9a77b)
-  // The living bark retains its authored surface; only the exposed cut end gets grain.
+  const bark = createLivingBarkMaterial(), cut = material(0xc9a77b)
+  // Exposed cut end keeps sawn wood grain; living branch bark uses a quiet fruit-tree bark hint.
   applyCraftSurface(cut,{kind:'wood',strength:.35,axis:'z'})
-  const petal = material(0xffd8d8), pale = material(0xfff1df), pollen = material(0xe2ad42), leaf = material(0x80a468)
+  const blossomMat = createSpringBlossomMaterial()
+  const leafMat = createSpringLeafMaterial()
   let serial = 0
   const mesh = (geometry: THREE.BufferGeometry, mat: THREE.Material, parent: THREE.Object3D, name?: string) => {
     const m = new THREE.Mesh(geometry, mat); m.name = name ?? `martisor-detail-${serial++}`; m.castShadow = true; m.receiveShadow = true; parent.add(m); return m
-  }
-  const ellipsoid = (parent: THREE.Object3D, mat: THREE.Material, pos: number[], scale: number[], name?: string) => {
-    const m = mesh(new THREE.SphereGeometry(1, 16, 12), mat, parent, name); m.position.set(pos[0]!,pos[1]!,pos[2]!); m.scale.set(scale[0]!,scale[1]!,scale[2]!); return m
   }
   const rod = (a: number[], b: number[], radius: number, mat = bark, parent = subject, name?: string) => {
     const start = new THREE.Vector3(...a as [number,number,number]), end = new THREE.Vector3(...b as [number,number,number]), d = end.clone().sub(start)
@@ -376,13 +382,32 @@ export function createMartisorModel() {
   rod([.55,1.52,-.65],[1.12,2.18,-.7],.035)
   rod([-.16,1.88,-.70],[-.55,2.27,-.65],.022)
   rod([.88,1.90,-.68],[1.42,2.02,-.75],.023)
-  const bloom=(x:number,y:number,z:number,large=false)=>{
-    const s=large ? .105 : .078
-    for(let i=0;i<5;i++){const a=i*Math.PI*2/5;const p=ellipsoid(subject,i%2?petal:pale,[x+Math.cos(a)*s*.55,y+Math.sin(a)*s*.55,z+.013],[s*.62,s*.37,.022]);p.rotation.z=a}
-    ellipsoid(subject,pollen,[x,y,z+.037],[.024,.024,.018])
+  const largeBlushPetal = createSpringBlossomPetalGeometry(true, 'blush')
+  const largeCreamPetal = createSpringBlossomPetalGeometry(true, 'cream')
+  const smallBlushPetal = createSpringBlossomPetalGeometry(false, 'blush')
+  const smallCreamPetal = createSpringBlossomPetalGeometry(false, 'cream')
+  const largePollenGeo = createSpringPollenGeometry(true)
+  const smallPollenGeo = createSpringPollenGeometry(false)
+  const youngLeafGeo = createYoungBranchLeafGeometry()
+  const bloom=(x:number,y:number,z:number,large=false,index=0)=>{
+    const group=new THREE.Group(); group.name=`martisor-blossom-${index}`; group.position.set(x,y,z); subject.add(group)
+    // Keep rightmost blossom (index 4) aligned with original +X petal axis for exact auto-fit camera parity.
+    const spin=index===4?-Math.PI/2:index*.48+.12
+    const blushGeo=large?largeBlushPetal:smallBlushPetal
+    const creamGeo=large?largeCreamPetal:smallCreamPetal
+    for(let i=0;i<5;i++){
+      const a=i*Math.PI*2/5+spin
+      const p=mesh(i%2?blushGeo:creamGeo,blossomMat,group)
+      p.rotation.z=a
+    }
+    const heart=mesh(large?largePollenGeo:smallPollenGeo,blossomMat,group)
+    heart.position.set(0,0,.024)
   }
-  ;[[-.38,2.05,-.72],[-.55,2.27,-.65],[.08,1.73,-.68],[1.12,2.18,-.7],[1.42,2.02,-.75],[.79,1.80,-.69]].forEach(([x,y,z],i)=>bloom(x!,y!,z!,i%2===0))
-  for(const [x,y,z,angle] of [[-.43,2.15,-.665,.6],[1.25,2.03,-.73,-.7],[.95,2.05,-.67,.6]]){const m=ellipsoid(subject,leaf,[x!,y!,z!],[.03,.105,.014]);m.rotation.z=angle!}
+  ;[[-.38,2.05,-.72],[-.55,2.27,-.65],[.08,1.73,-.68],[1.12,2.18,-.7],[1.42,2.02,-.75],[.79,1.80,-.69]].forEach(([x,y,z],i)=>bloom(x!,y!,z!,i%2===0,i))
+  for(const [i,[x,y,z,angle]] of ([[-.43,2.15,-.665,.6],[1.25,2.03,-.73,-.7],[.95,2.05,-.67,.6]] as const).entries()){
+    const m=mesh(youngLeafGeo,leafMat,subject,`martisor-leaf-${i}`)
+    m.position.set(x,y,z); m.rotation.set(.14,angle>0?.18:-.18,angle)
+  }
   const ground=mesh(new THREE.CylinderGeometry(1.42,1.38,.075,64),material(0xd5dfab),root,'martisor-ground'); ground.position.set(.15,-.0375,.10)
 
   // Two tightly plied radial/z yarn tubes twist snugly around the open loop (helixR=0.0094, tubeR=0.0120,

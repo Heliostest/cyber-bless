@@ -143,3 +143,25 @@ it.each([1,2])('keeps the complete cross clear of the worktop at phase %i',phase
   const bounds=new THREE.Box3().setFromObject(cross)
   expect(bounds.min.y).toBeGreaterThan(.35)
 })
+it('grounds all four table legs and doorway posts, seats loose rushes on the pad, and extends the lintel peg to the hung loop',()=>{
+  const s0=mount(0)
+  const legs:THREE.Box3[]=[], posts:THREE.Box3[]=[], feet:THREE.Box3[]=[]
+  s0.scene.traverse(o=>{
+    if(o.name==='brigid-table-leg')legs.push(new THREE.Box3().setFromObject(o))
+    if(o.name==='brigid-door-post')posts.push(new THREE.Box3().setFromObject(o))
+    if(o.name==='brigid-door-foot')feet.push(new THREE.Box3().setFromObject(o))
+  })
+  expect(legs).toHaveLength(4); expect(posts).toHaveLength(2); expect(feet).toHaveLength(2)
+  for(const box of [...legs,...posts,...feet]) expect(box.min.y).toBeCloseTo(-.035,4)
+  const looseBox=new THREE.Box3()
+  s0.scene.getObjectByName('brigid-loose-rush')!.traverse(o=>{
+    const m=o as THREE.Mesh
+    if(m.isMesh && m.name!=='brigid-reed-hit') looseBox.expandByObject(m)
+  })
+  expect(Math.abs(looseBox.min.y-.361)).toBeLessThan(.002)
+  const s2=mount(2)
+  const pegBox=new THREE.Box3().setFromObject(s2.scene.getObjectByName('brigid-lintel-peg')!)
+  const loop=s2.scene.getObjectByName('brigid-cross')!.localToWorld(new THREE.Vector3(0,.98,.02))
+  expect(pegBox.max.z).toBeGreaterThan(loop.z)
+  expect(pegBox.min.z).toBeLessThan(.03)
+})

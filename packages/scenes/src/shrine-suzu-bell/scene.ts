@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { getEnvironmentProfile } from '@wbr/scene-runtime'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { createCraftMaterial } from '@wbr/scene-runtime/craft-surfaces'
 import {
@@ -285,13 +286,21 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
     const mesh = new THREE.Mesh(geometry, material); mesh.position.set(...xyz); parent.add(mesh); return mesh
   }
   const detail = (mesh: THREE.Mesh) => { mesh.userData.toonSurface = { outline: false }; return mesh }
+  const floorY = getEnvironmentProfile('shrine-suzu-bell')?.floor ?? -0.04
+  const baseTop = 0.13
+  const baseH = baseTop - floorY
+  const baseY = (floorY + baseTop) / 2
+  const postBottom = -0.01
+  const postTop = 2.6
+  const postH = postTop - postBottom
+  const postY = (postBottom + postTop) / 2
   const timber = new THREE.Group(); timber.name = 'suzu-original-timber-lintel'; world.add(timber)
   for (const x of [-1.02, 1.02]) {
     const isLeft = x < 0
-    const postGeo = projectWoodUVs(new RoundedBoxGeometry(0.18, 2.6, 0.25, 3, 0.035), 'y', isLeft ? 0.38 : 0.42, isLeft ? 1.6 : 1.75, 0.5, 0.5)
-    add(postGeo, isLeft ? postWoodLeft : postWoodRight, [x, 1.3, -0.21], timber).name = 'suzu-column-post'
-    const baseGeo = projectWoodUVs(new RoundedBoxGeometry(0.31, 0.13, 0.4, 3, 0.04), 'x', isLeft ? 1.55 : 1.7, isLeft ? 1.8 : 2.0, isLeft ? 0.5 : 0.24, 0.5)
-    add(baseGeo, isLeft ? baseWoodLeft : baseWoodRight, [x, 0.065, -0.2], timber).name = 'suzu-column-base'
+    const postGeo = projectWoodUVs(new RoundedBoxGeometry(0.18, postH, 0.25, 3, 0.035), 'y', isLeft ? 0.38 : 0.42, isLeft ? 1.6 : 1.75, 0.5, 0.5)
+    add(postGeo, isLeft ? postWoodLeft : postWoodRight, [x, postY, -0.21], timber).name = 'suzu-column-post'
+    const baseGeo = projectWoodUVs(new RoundedBoxGeometry(0.31, baseH, 0.4, 3, 0.04), 'x', isLeft ? 1.55 : 1.7, isLeft ? 1.8 : 2.0, isLeft ? 0.5 : 0.24, 0.5)
+    add(baseGeo, isLeft ? baseWoodLeft : baseWoodRight, [x, baseY, -0.2], timber).name = 'suzu-column-base'
     const capGeo = projectWoodUVs(new RoundedBoxGeometry(0.23, 0.19, 0.31, 3, 0.035), 'x', isLeft ? 1.7 : 1.85, isLeft ? 1.8 : 1.95, isLeft ? 0.46 : 0.62, 0.5)
     add(capGeo, isLeft ? capitalWoodLeft : capitalWoodRight, [x, 2.49, -0.2], timber).name = 'suzu-column-capital'
   }
@@ -301,7 +310,14 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   for (const y of [2.6, 2.7]) detail(add(new RoundedBoxGeometry(1.96, 0.0045, 0.007, 2, 0.0015), woodGrain, [0, y, 0.022], timber))
   for (const x of [-1.02, 1.02]) detail(add(new THREE.SphereGeometry(0.037, 12, 8), x < 0 ? capitalWoodLeft : capitalWoodRight, [x, 2.66, 0.03], timber))
 
+  // Metal eye-bolt bracket anchoring the bell suspension ring solidly into the wooden crossbeam.
+  add(new RoundedBoxGeometry(0.14, 0.19, 0.045, 2, 0.012), darkGold, [0, 2.645, 0.018], timber).name = 'suzu-bracket-plate'
+  add(new RoundedBoxGeometry(0.07, 0.045, 0.09, 2, 0.01), darkGold, [0, 2.55, 0.015], timber).name = 'suzu-bracket-gusset'
+  const bracketArm = add(new THREE.CylinderGeometry(0.022, 0.026, 0.13, 14), darkGold, [0, 2.62, 0.035], timber)
+  bracketArm.rotation.x = Math.PI / 2; bracketArm.name = 'suzu-bracket-arm'
+  add(new THREE.SphereGeometry(0.028, 12, 8), darkGold, [0, 2.62, 0.098], timber).name = 'suzu-bracket-cap'
   const suspension = add(new THREE.TorusGeometry(0.102, 0.024, 9, 32), darkGold, [0, 2.52, 0.07])
+  suspension.name = 'suzu-suspension-ring'
   suspension.scale.set(0.75, 1, 1)
   const pivot = new THREE.Group(); pivot.name = 'suzu-suspension-pivot'; pivot.position.set(0, 2.48, 0.11); world.add(pivot)
   const hanging = new THREE.Group(); hanging.name = 'suzu-hanging-object'; hanging.position.set(0, -.31 * HANGING_SCALE, 0)

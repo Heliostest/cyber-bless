@@ -1,5 +1,6 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
-﻿import * as THREE from 'three'
+import * as THREE from 'three'
 import { disposeTree } from '../procedural-kit'
 
 /** Original closed case and residential doorway; the scroll is already prepared inside. */
@@ -15,8 +16,10 @@ export function createMezuzahModel() {
   const wood = new THREE.MeshStandardMaterial({ color: 0x795840, roughness: .82 })
   const panelWood = new THREE.MeshStandardMaterial({ color: 0x9b7550, roughness: .78 })
   const insetWood = new THREE.MeshStandardMaterial({ color: 0x8d6747, roughness: .84 })
+  const stone = new THREE.MeshStandardMaterial({ color: 0xc4b8a1, roughness: .92 })
   const adhesive = new THREE.MeshStandardMaterial({ color: 0xccc4ae, roughness: .93 })
   for(const timber of[wood,panelWood,insetWood])applyCraftSurface(timber,{kind:'wood',strength:.4,axis:'y'})
+  applyCraftSurface(stone,{kind:'stone',strength:.4})
   applyCraftSurface(brass,{kind:'metal',strength:.45})
 
   const add = (parent: THREE.Object3D, name: string, geometry: THREE.BufferGeometry, material: THREE.Material, x = 0, y = 0, z = 0) => {
@@ -65,6 +68,8 @@ export function createMezuzahModel() {
   box(actor, 'mezuzah-adhesive-backing', .17, .59, .02, adhesive, 0, 0, -.10)
 
   // Seen from outside: the opening is to the left of the entrance's right post.
+  const sillTop = getEnvironmentSurfaceY('mezuzah-doorpost') + .0375
+  box(root, 'mezuzah-threshold-sill', 2.84, sillTop, .62, stone, 0, sillTop / 2, -.06)
   box(root, 'mezuzah-left-jamb', .52, 2.92, .56, wood, -1.15, 1.46, -.06)
   box(root, 'mezuzah-right-jamb', .52, 2.92, .56, wood, 1.15, 1.46, -.06)
   box(root, 'mezuzah-lintel', 2.82, .18, .56, wood, 0, 3.01, -.06)
@@ -73,9 +78,12 @@ export function createMezuzahModel() {
   door.position.set(-.86, 0, -.065)
   door.rotation.y = .30
   root.add(door)
-  box(door, 'mezuzah-door-panel', 1.68, 2.86, .10, panelWood, .84, 1.43, 0)
+  const doorBottom = sillTop + .01
+  const doorTop = 2.905
+  const doorH = doorTop - doorBottom
+  box(door, 'mezuzah-door-panel', 1.68, doorH, .10, panelWood, .84, (doorBottom + doorTop) / 2, 0)
   box(door, 'mezuzah-door-upper-inset', 1.32, 1.27, .012, insetWood, .84, 2.08, .052)
-  box(door, 'mezuzah-door-lower-inset', 1.32, .99, .012, insetWood, .84, .68, .052)
+  box(door, 'mezuzah-door-lower-inset', 1.32, .99, .012, insetWood, .84, .72, .052)
   box(door, 'mezuzah-door-handle', .11, .035, .065, brass, 1.47, 1.35, .09)
 
   // Low preparation seats meet the actual flat side of the horizontal case at y=.17.

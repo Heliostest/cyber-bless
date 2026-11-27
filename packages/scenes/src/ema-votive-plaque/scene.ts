@@ -1,6 +1,7 @@
 import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { createCraftMaterial } from '@wbr/scene-runtime/craft-surfaces'
 import { addInteractionCue } from '../scene-localization'
@@ -140,13 +141,17 @@ export function createEmaVotivePlaque(ctx: SceneContext): SceneInstance {
     const mesh = new THREE.Mesh(geometry, mat); mesh.position.set(...position); parent.add(mesh); return mesh
   }
   const paint = (mesh: THREE.Mesh) => { mesh.userData.toonSurface = { outline: false }; return mesh }
+  const groundY = getEnvironmentSurfaceY('ema-votive-plaque')
+  const footTop = 0.09
+  const footH = footTop - groundY
+  const footY = (groundY + footTop) / 2
   const rack = new THREE.Group(); rack.name = 'ema-rack'; world.add(rack)
   for (const x of [-1.08, 1.08]) {
     const isLeft = x < 0
     const postGeo = projectWoodUVs(new RoundedBoxGeometry(0.18, 2.16, 0.23, 3, 0.04), 'y', isLeft ? 0.45 : 0.48, isLeft ? 1.35 : 1.45, isLeft ? 0.5 : 0.22, isLeft ? 0.5 : 0.34)
     add(postGeo, isLeft ? postTimberLeft : postTimberRight, [x, 1.08, -0.2], rack).name = 'ema-rack-post'
-    const footGeo = projectWoodUVs(new RoundedBoxGeometry(0.35, 0.09, 0.68, 3, 0.035), 'z', isLeft ? 1.3 : 1.45, isLeft ? 1.6 : 1.75, isLeft ? 0.5 : 0.24, 0.5)
-    add(footGeo, isLeft ? footWoodLeft : footWoodRight, [x, 0.045, -0.14], rack).name = 'ema-rack-foot'
+    const footGeo = projectWoodUVs(new RoundedBoxGeometry(0.35, footH, 0.68, 3, 0.035), 'z', isLeft ? 1.3 : 1.45, isLeft ? 1.6 : 1.75, isLeft ? 0.5 : 0.24, 0.5)
+    add(footGeo, isLeft ? footWoodLeft : footWoodRight, [x, footY, -0.14], rack).name = 'ema-rack-foot'
   }
   for (const y of [0.64, 1.87]) {
     const isUpper = y > 1

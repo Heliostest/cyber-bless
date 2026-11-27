@@ -110,4 +110,25 @@ describe('Continuous clockwise prayer wheel', () => {
     })
     expect(metalMeshes).toBeGreaterThan(60)
   })
+  it('grounds all prayer-wheel posts, sills, feet and lower axle sockets onto the veranda deck', () => {
+    const s = mount()
+    const boxesByName = (name: string) => {
+      const boxes: THREE.Box3[] = []
+      s.scene.traverse(obj => {
+        if (obj.name === name) boxes.push(new THREE.Box3().setFromObject(obj))
+      })
+      return boxes
+    }
+    const posts = boxesByName('tibetan-wheel-post')
+    const sills = boxesByName('tibetan-wheel-sill')
+    const feet = boxesByName('tibetan-wheel-foot')
+    const sockets = boxesByName('tibetan-wheel-axle-socket')
+    expect(posts).toHaveLength(6)
+    expect(sills).toHaveLength(3)
+    expect(feet).toHaveLength(6)
+    expect(sockets).toHaveLength(9)
+    for (const box of [...posts, ...sills, ...feet]) {
+      expect(box.min.y).toBeCloseTo(-0.03, 4)
+    }
+  })
 })

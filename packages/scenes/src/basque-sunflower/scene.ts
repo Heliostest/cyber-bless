@@ -1,3 +1,4 @@
+import { getEnvironmentProfile } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
@@ -73,7 +74,12 @@ export function createBasqueSunflower(ctx: SceneContext): SceneInstance {
   }
 
   // A small standing door display and a low craft shelf share the courtyard ground.
-  box('sunflower-display-foot', [1.83, .10, .67], [.78, .05, -.12], stone)
+  const floorY = getEnvironmentProfile('basque-sunflower')?.floor ?? -0.04
+  const displayFootTop = .10
+  const displayFootH = displayFootTop - floorY
+  const workFootTop = .16
+  const workFootH = workFootTop - floorY
+  box('sunflower-display-foot', [1.83, displayFootH, .67], [.78, (floorY + displayFootTop) / 2, -.12], stone)
   box('sunflower-mount-board', [1.40, 2.18, .15], [.78, 1.20, -.06], walnut)
   for (const x of [.02, 1.54]) box('sunflower-door-jamb', [.14, 2.38, .22], [x, 1.27, -.04], oak)
   box('sunflower-door-lintel', [1.76, .16, .25], [.78, 2.45, -.02], oak)
@@ -85,12 +91,12 @@ export function createBasqueSunflower(ctx: SceneContext): SceneInstance {
   const endGrain = add('sunflower-peg-end-ring', new THREE.TorusGeometry(.052, .003, 6, 32), grain, [.78, 1.85, .286])
   endGrain.userData.toonSurface = { outline: false }
   box('sunflower-work-shelf', [1.63, .09, .82], [-.83, .205, .45], oak)
-  for (const x of [-1.49, -.19]) box('sunflower-work-foot', [.15, .16, .58], [x, .08, .44], walnut)
+  for (const x of [-1.49, -.19]) box('sunflower-work-foot', [.15, workFootH, .58], [x, (floorY + workFootTop) / 2, .44], walnut)
   box('sunflower-center-rest', [.55, .035, .27], [-1.27, .2675, .60], sage)
   box('sunflower-center-rest-back', [.34, .27, .06], [-1.27, .40, .50], grain)
   box('sunflower-work-easel', [.085, 1.11, .085], [-.59, .80, .235], walnut)
   box('sunflower-easel-crossbar', [.93, .07, .21], [-.59, .76, .325], grain)
-  const ground = add('sunflower-contact-shadow', new THREE.PlaneGeometry(3.7, 1.8), new THREE.ShadowMaterial({ opacity: .12 }), [0, .002, .13])
+  const ground = add('sunflower-contact-shadow', new THREE.PlaneGeometry(3.7, 1.8), new THREE.ShadowMaterial({ opacity: .12 }), [0, floorY + .001, .13])
   ground.rotation.x = -Math.PI / 2; ground.castShadow = false
 
   const flower = new THREE.Group(); flower.name = 'sunflower-ornament'; world.add(flower)

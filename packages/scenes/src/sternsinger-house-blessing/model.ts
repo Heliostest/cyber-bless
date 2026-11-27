@@ -1,3 +1,4 @@
+import { getEnvironmentProfile } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 
@@ -35,7 +36,8 @@ export function createSternsingerModel(){
 
  const box=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat:THREE.Material)=>{const o=make(name,new THREE.BoxGeometry(w,h,d),mat);o.position.set(x,y,z);return o}
  const floor=.14
- box('sternsinger-threshold',3.5,floor,1.5,0,floor/2,.34,stone)
+ const groundY=getEnvironmentProfile('sternsinger-house-blessing')?.floor??-.065
+ box('sternsinger-threshold',3.5,floor-groundY,1.5,0,(floor+groundY)/2,.34,stone)
  // The surround is a real upright doorway; the inscription belongs to its lintel.
  for(const side of[-1,1]){
   box('sternsinger-wall-'+side,.44,2.52,.3,side*1.47,floor+1.26,-.12,plaster)

@@ -1,6 +1,8 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -30,7 +32,7 @@ type Checkpoint = 0 | 1 | 2 | 3
 type Motion = { step: 0 | 1 | 2; time: number; from: THREE.Vector3; rotation: THREE.Euler }
 const READY = new THREE.Vector3(-0.5, 0.72, 0.38)
 const LOADED = new THREE.Vector3(-0.44, 0.79, 0.34)
-const DIP = new THREE.Vector3(0.59, 0.59, 0.5)
+const DIP = new THREE.Vector3(0.59, 0.5725, 0.5)
 const PEG = new THREE.Vector3(0.5, 2.09, -0.245)
 const HUNG = new THREE.Vector3(0.5, 0.86, -0.32)
 const HANG_ANCHOR = new THREE.Vector3(0, 1.23, 0.075)
@@ -183,27 +185,47 @@ export function createBokjori(ctx: SceneContext): SceneInstance {
   const shelfWood = new THREE.MeshStandardMaterial({ color: 0xc4a57b, roughness: 0.76 })
   ;[wood, paleWood].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: 0.50, scale: 0.72, axis: 'y' }))
   ;[railWood, shelfWood].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: 0.50, scale: 0.72, axis: 'x' }))
+  const groundY = getEnvironmentSurfaceY('bokjori')
+  const wallTop = 2.51
+  const slatH = wallTop - groundY
+  const slatY = (groundY + wallTop) / 2
+  const sillH = 0.11
   const wall = new THREE.Group(); wall.name = 'bokjori-timber-wall'; world.add(wall)
   for (let i = 0; i < 7; i++) {
-    const slat = new THREE.Mesh(new THREE.BoxGeometry(0.305, 2.48, 0.095), i % 2 ? paleWood : wood)
-    slat.position.set((i - 3) * 0.312, 1.27, -0.54); slat.receiveShadow = true; wall.add(slat)
+    const slat = new THREE.Mesh(new THREE.BoxGeometry(0.305, slatH, 0.095), i % 2 ? paleWood : wood)
+    slat.position.set((i - 3) * 0.312, slatY, -0.54); slat.receiveShadow = true; wall.add(slat)
   }
+  const wallSill = new THREE.Mesh(new RoundedBoxGeometry(2.3, sillH, 0.18, 2, 0.018), railWood)
+  wallSill.name = 'bokjori-wall-sill'
+  wallSill.position.set(0, groundY + sillH / 2, -0.5); wallSill.castShadow = wallSill.receiveShadow = true; wall.add(wallSill)
   for (const y of [0.22, 2.47]) {
     const rail = new THREE.Mesh(new THREE.BoxGeometry(2.27, 0.13, 0.13), railWood)
     rail.position.set(0, y, -0.48); rail.castShadow = rail.receiveShadow = true; wall.add(rail)
   }
-  const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.055, 0.23, 16), wood)
+  const pegMount = new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.095, 0.025, 16), railWood)
+  pegMount.name = 'bokjori-wall-peg-mount'; pegMount.rotation.x = Math.PI / 2
+  pegMount.position.set(PEG.x, PEG.y, -0.485); pegMount.castShadow = pegMount.receiveShadow = true; wall.add(pegMount)
+  // Extend the peg geometry back into the wall face (z = -0.52) while keeping peg.position at PEG.
+  const pegGeo = new THREE.CylinderGeometry(0.062, 0.055, 0.39, 16)
+  pegGeo.translate(0, -0.08, 0)
+  const peg = new THREE.Mesh(pegGeo, wood)
   peg.name = 'bokjori-wall-peg'; peg.rotation.x = Math.PI / 2; peg.position.copy(PEG)
   peg.castShadow = true; world.add(peg)
   const pegCap = new THREE.Mesh(new THREE.SphereGeometry(0.066, 14, 8), paleWood)
   pegCap.scale.set(1, 1, 0.45); pegCap.position.copy(PEG).add(new THREE.Vector3(0, 0, 0.12)); world.add(pegCap)
   const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.07, 0.1, 0.84), shelfWood)
   shelf.position.set(0.59, 0.25, 0.43); shelf.castShadow = shelf.receiveShadow = true; world.add(shelf)
+  const standLegTop = 0.21
+  const standLegH = standLegTop - groundY
+  const standFootH = 0.055
   for (const x of [0.18, 1]) {
-    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.2, 0.12), wood)
-    leg.position.set(x, 0.1, 0.46); world.add(leg)
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.1, standLegH, 0.12), wood)
+    leg.position.set(x, (groundY + standLegTop) / 2, 0.43); leg.castShadow = leg.receiveShadow = true; world.add(leg)
+    const foot = new THREE.Mesh(new RoundedBoxGeometry(0.15, standFootH, 0.68, 2, 0.014), railWood)
+    foot.name = 'bokjori-stand-foot'
+    foot.position.set(x, groundY + standFootH / 2, 0.43); foot.castShadow = foot.receiveShadow = true; world.add(foot)
   }
-  const tray = new THREE.Group(); tray.name = 'bokjori-rice-tray'; tray.position.set(0.59, 0.36, 0.48); world.add(tray)
+  const tray = new THREE.Group(); tray.name = 'bokjori-rice-tray'; tray.position.set(0.59, 0.3425, 0.48); world.add(tray)
   const trayMat = applyCraftSurface(
     new THREE.MeshPhysicalMaterial({ color: 0xc9ab80, roughness: 0.70, clearcoat: 0.10, clearcoatRoughness: 0.46, specularIntensity: 0.48 }),
     { kind: 'wood', strength: 0.46, scale: 0.76, axis: 'x' },

@@ -98,7 +98,7 @@ export function createSternsingerHouseBlessing(ctx: SceneContext): SceneInstance
     camera.position.copy(target).add(direction); camera.lookAt(target);camera.updateMatrixWorld(true)
     const inverse=camera.quaternion.clone().invert(),tangent=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));let distance=3.4
     // Conservative envelope contains the doorway, writing strokes and every chalk pose.
-    for(const x of[-1.8,1.8])for(const y of[0,2.74])for(const z of[-.4,1.2]){const p=new THREE.Vector3(x,y,z).sub(target).applyQuaternion(inverse);distance=Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86))}
+    for(const x of[-1.8,1.8])for(const y of[-.07,2.74])for(const z of[-.42,1.2]){const p=new THREE.Vector3(x,y,z).sub(target).applyQuaternion(inverse);distance=Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86))}
     camera.position.copy(target).addScaledVector(direction,distance);camera.lookAt(target);matrices()
   }
   restore(); sync()

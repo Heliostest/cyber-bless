@@ -1,20 +1,48 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { addObjectCradle } from '../cozy-furniture'
 /** Original compact digital mounting; counts and dimensions are product choices. */
 export function createHorseshoeDoorwayLuckModel(){
  const root=new THREE.Group();root.name='horseshoe-doorway-luck-root'
  const subject=new THREE.Group();subject.name='horseshoe-doorway-luck-subject';root.add(subject)
- const iron=new THREE.MeshStandardMaterial({color:0x596967,metalness:.65,roughness:.4}),wood=new THREE.MeshStandardMaterial({color:0x9c6c42,roughness:.85}),stone=new THREE.MeshStandardMaterial({color:0xb6b2a1,roughness:.95})
+ const iron=new THREE.MeshStandardMaterial({color:0x596967,metalness:.65,roughness:.4}),woodX=new THREE.MeshStandardMaterial({color:0x9c6c42,roughness:.85}),woodY=new THREE.MeshStandardMaterial({color:0x9c6c42,roughness:.85}),stone=new THREE.MeshStandardMaterial({color:0xb6b2a1,roughness:.95})
  applyCraftSurface(iron,{kind:'metal',strength:.45})
- applyCraftSurface(wood,{kind:'wood',strength:.4})
+ applyCraftSurface(woodX,{kind:'wood',strength:.4,axis:'x'})
+ applyCraftSurface(woodY,{kind:'wood',strength:.4,axis:'y'})
  applyCraftSurface(stone,{kind:'stone',strength:.45})
  function mesh(name:string,g:THREE.BufferGeometry,mat:THREE.Material,x:number,y:number,z:number){const m=new THREE.Mesh(g,mat);m.name=name;m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;subject.add(m);return m}
- const block=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat=wood)=>mesh(name,new THREE.BoxGeometry(w,h,d),mat,x,y,z)
- block('horseshoe-stone-base',4.6,.12,2,0,-.06,.15,stone)
- block('horseshoe-preparation-base',1.99,.10,.5,-1.02,.05,.60)
- block('horseshoe-post-left',.14,1.05,.25,-.15,.525,-.30)
- block('horseshoe-post-right',.14,1.05,.25,1.85,.525,-.30)
- block('horseshoe-crossbeam',2.25,.70,.25,.85,1.40,-.30)
+ const block=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat=woodX,bevel=.018)=>mesh(name,new RoundedBoxGeometry(w,h,d,2,Math.min(bevel,w/3,h/3,d/3)),mat,x,y,z)
+ // Compact chamfered stone threshold curb under the doorway (replaces the 4.6×2.0 m giant stone slab).
+ block('horseshoe-stone-base',2.36,.12,.48,.85,-.06,-.30,stone,.018)
+ // Slotted chamfered wooden cradle grounded on the courtyard holds the 3 horseshoes in a clean perimeter slot.
+ const prepCradle=addObjectCradle(subject,{
+  name:'horseshoe-prep',
+  topName:'horseshoe-preparation-base',
+  width:2.06,
+  depth:.24,
+  center:[-1.02,.58],
+  groundY:-.12,
+  surfaceY:.10,
+  style:'tray',
+  lipHeight:.030,
+  lipThickness:.055,
+  footed:true,
+  kind:'wood',
+  color:0x9c6c42,
+  accentColor:0x7d5432,
+  bevel:.014,
+ })
+ const seenPrepNames=new Map<string,number>()
+ prepCradle.root.traverse(child=>{
+  if(child===prepCradle.root||!child.name)return
+  const count=seenPrepNames.get(child.name)??0
+  seenPrepNames.set(child.name,count+1)
+  if(count>0)child.name=`${child.name}-${count}`
+ })
+ block('horseshoe-post-left',.14,1.05,.25,-.15,.525,-.30,woodY,.016)
+ block('horseshoe-post-right',.14,1.05,.25,1.85,.525,-.30,woodY,.016)
+ block('horseshoe-crossbeam',2.25,.70,.25,.85,1.40,-.30,woodX,.020)
  const shape=new THREE.Shape();shape.moveTo(-.29,.60);shape.lineTo(-.29,.28);shape.bezierCurveTo(-.29,.10,-.20,0,-.09,0);shape.lineTo(.09,0);shape.bezierCurveTo(.20,0,.29,.10,.29,.28);shape.lineTo(.29,.60);shape.lineTo(.17,.60);shape.lineTo(.17,.29);shape.bezierCurveTo(.17,.20,.10,.14,0,.14);shape.bezierCurveTo(-.10,.14,-.17,.20,-.17,.29);shape.lineTo(-.17,.60);shape.closePath()
  for(const x of[-.23,.23])for(const [y,r]of [[.53,.03],[.36,.022]]){const hole=new THREE.Path();hole.absarc(x,y!,r!,0,Math.PI*2,true);shape.holes.push(hole)}
  const geometry=new THREE.ExtrudeGeometry(shape,{depth:.06,bevelEnabled:false,steps:1,curveSegments:16})

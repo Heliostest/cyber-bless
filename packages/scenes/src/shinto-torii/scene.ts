@@ -1,4 +1,4 @@
-import { getEnvironmentProfile, getEnvironmentSurfaceY } from '@wbr/scene-runtime'
+import { getEnvironmentProfile } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { bindSceneAttribute } from '../scene-localization'
@@ -251,7 +251,6 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
     { kind: 'wood', axis: 'x', strength: 0.18, scale: 0.58 },
   )
   const floorY = getEnvironmentProfile('shinto-torii')?.floor ?? -0.035
-  const stoneSurfaceY = getEnvironmentSurfaceY('shinto-torii')
   const baseTop = 0.26
   const baseH = baseTop - floorY
   const baseY = (floorY + baseTop) / 2
@@ -259,7 +258,13 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
   const pillarTop = 2.4
   const pillarH = pillarTop - pillarBottom
   const pillarY = (pillarBottom + pillarTop) / 2
-  const baseGeo = new THREE.CylinderGeometry(0.135, 0.14, baseH, 24)
+  const baseGeo = new THREE.LatheGeometry([
+    new THREE.Vector2(0, -baseH / 2),
+    new THREE.Vector2(0.145, -baseH / 2),
+    new THREE.Vector2(0.142, baseH / 2 - 0.014),
+    new THREE.Vector2(0.132, baseH / 2),
+    new THREE.Vector2(0, baseH / 2),
+  ], 24)
   for (const side of [-1, 1]) {
     const isLeft = side < 0
     const pillarGeo = projectCylinderWoodUVs(
@@ -301,21 +306,6 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
   kasagiTop.name = 'torii-kasagi-top'
   kasagiTop.position.y = 2.5
   torii.add(kasagiTop)
-
-  // A few approach-path stones (参道) mark entrance → path; no hall is modelled.
-  const stoneMat = new THREE.MeshStandardMaterial({ color: 0xcfc5b6, roughness: 0.95 })
-  applyCraftSurface(stoneMat, { kind: 'stone', strength: .4 })
-
-  const stoneBottom = stoneSurfaceY - 0.0025
-  const stoneTop = 0.035
-  const stoneH = stoneTop - stoneBottom
-  const stoneY = (stoneBottom + stoneTop) / 2
-  const stoneGeo = new RoundedBoxGeometry(0.72, stoneH, 0.42, 2, 0.02)
-  for (let i = 0; i < 6; i++) {
-    const stone = new THREE.Mesh(stoneGeo, stoneMat)
-    stone.position.set((i % 2 ? 0.03 : -0.03), stoneY, 3.2 - i * 0.62)
-    world.add(stone)
-  }
 
   // Plain ema rack to the right, past the torii.
   const rack = new THREE.Group()

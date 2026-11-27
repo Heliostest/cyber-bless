@@ -1,6 +1,7 @@
 import { getEnvironmentProfile } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 
 type Point = [number, number]
 const glyphs: Record<string, Point[][]> = {
@@ -28,31 +29,35 @@ export function createSternsingerModel(){
  const root=new THREE.Group();root.name='sternsinger-subject'
  const make=(name:string,g:THREE.BufferGeometry,mat:THREE.Material,parent:THREE.Object3D=root)=>{const o=new THREE.Mesh(g,mat);o.name=name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  const material=(color:number,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness})
- const stone=material(0xc7ba9d),plaster=material(0xf3d9aa),wood=material(0x366c79,.85),dark=material(0x234955,.92),edge=material(0x60959a,.83),chalkMaterial=material(0xfff9df),metal=material(0xa98a4c,.43)
+ const stone=material(0xc7ba9d),plaster=material(0xf3d9aa),woodY=material(0x366c79,.85),darkX=material(0x234955,.92),darkY=material(0x234955,.92),edgeX=material(0x60959a,.83),edgeY=material(0x60959a,.83),chalkMaterial=material(0xfff9df),metal=material(0xa98a4c,.43)
  metal.metalness=.6
- applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+ applyCraftSurface(woodY, { kind: 'wood', axis: 'y', strength: .4 })
+ applyCraftSurface(darkX, { kind: 'wood', axis: 'x', strength: .22 })
+ applyCraftSurface(darkY, { kind: 'wood', axis: 'y', strength: .22 })
+ applyCraftSurface(edgeX, { kind: 'wood', axis: 'x', strength: .22 })
+ applyCraftSurface(edgeY, { kind: 'wood', axis: 'y', strength: .22 })
  applyCraftSurface(metal, { kind: 'metal', strength: .45 })
  applyCraftSurface(stone, { kind: 'stone', strength: .4 })
 
- const box=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat:THREE.Material)=>{const o=make(name,new THREE.BoxGeometry(w,h,d),mat);o.position.set(x,y,z);return o}
+ const rbox=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat:THREE.Material,radius=.014)=>{const o=make(name,new RoundedBoxGeometry(w,h,d,2,Math.min(radius,w/3,h/3,d/3)),mat);o.position.set(x,y,z);return o}
  const floor=.14
  const groundY=getEnvironmentProfile('sternsinger-house-blessing')?.floor??-.065
- box('sternsinger-threshold',3.5,floor-groundY,1.5,0,(floor+groundY)/2,.34,stone)
+ rbox('sternsinger-threshold',3.46,floor-groundY,1.32,0,(floor+groundY)/2,.29,stone,.022)
  // The surround is a real upright doorway; the inscription belongs to its lintel.
  for(const side of[-1,1]){
-  box('sternsinger-wall-'+side,.44,2.52,.3,side*1.47,floor+1.26,-.12,plaster)
-  box('sternsinger-jamb-'+side,.17,1.98,.28,side*1.16,floor+.99,.07,wood)
-  box('sternsinger-jamb-edge-'+side,.04,1.98,.045,side*1.055,floor+.99,.2175,edge)
+  rbox('sternsinger-wall-'+side,.44,2.52,.3,side*1.47,floor+1.26,-.12,plaster,.016)
+  rbox('sternsinger-jamb-'+side,.17,1.98,.28,side*1.16,floor+.99,.07,woodY,.014)
+  rbox('sternsinger-jamb-edge-'+side,.04,1.98,.045,side*1.055,floor+.99,.2175,edgeY,.008)
  }
- const door=box('sternsinger-door',2.10,1.97,.15,0,floor+.985,-.035,wood)
- const header=box('sternsinger-lintel',2.66,.48,.30,0,2.36,.08,dark)
- box('sternsinger-cornice',2.96,.11,.41,0,2.655,.065,edge)
+ const door=rbox('sternsinger-door',2.10,1.97,.15,0,floor+.985,-.035,woodY,.014)
+ const header=rbox('sternsinger-lintel',2.66,.48,.30,0,2.36,.08,darkX,.014)
+ rbox('sternsinger-cornice',2.96,.11,.41,0,2.655,.065,edgeX,.014)
  // Quiet inset panels, a narrow glass transom and brass hardware differentiate the materials.
- box('sternsinger-upper-panel',1.75,.93,.035,0,1.41,.0575,dark)
- box('sternsinger-lower-panel',1.75,.47,.035,0,.55,.0575,dark)
- box('sternsinger-upper-field',1.62,.80,.015,0,1.41,.0825,wood)
- box('sternsinger-lower-field',1.62,.34,.015,0,.55,.0825,wood)
- const plate=box('sternsinger-handle-plate',.085,.21,.018,.82,1.02,.099,metal)
+ rbox('sternsinger-upper-panel',1.75,.93,.035,0,1.41,.0575,darkY,.008)
+ rbox('sternsinger-lower-panel',1.75,.47,.035,0,.55,.0575,darkY,.008)
+ rbox('sternsinger-upper-field',1.62,.80,.015,0,1.41,.0825,woodY,.004)
+ rbox('sternsinger-lower-field',1.62,.34,.015,0,.55,.0825,woodY,.004)
+ const plate=rbox('sternsinger-handle-plate',.085,.21,.018,.82,1.02,.099,metal,.004)
  const handle=make('sternsinger-handle',new THREE.SphereGeometry(.042,16,10),metal);handle.position.set(.82,1.02,.15)
  const chalk=new THREE.Group();chalk.name='sternsinger-chalk';root.add(chalk)
  // Bevelled tip contacts the surface; the barrel stays wholly in front of it.

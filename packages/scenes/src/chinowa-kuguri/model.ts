@@ -1,5 +1,6 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createChinowaKayaMaterial } from './kaya-material'
 
 const UP = new THREE.Vector3(0, 1, 0), EYE = 1.664
@@ -53,19 +54,41 @@ export function chinowaView(step: number, amount: number, front: number) {
 export function createChinowaModel() {
   const root = new THREE.Group(); root.name = 'chinowa-world'
   const subject = new THREE.Group(); subject.name = 'chinowa-subject'; root.add(subject)
-  const kayaSuite = createChinowaKayaMaterial(), kaya = kayaSuite.material, wood = new THREE.MeshStandardMaterial({ color: 0xae8053, roughness: .87 }), rope = new THREE.MeshStandardMaterial({ color: 0xd1bd88, roughness: 1 })
-  applyCraftSurface(wood, { kind: 'wood', strength: .4, axis: 'y' })
+  const kayaSuite = createChinowaKayaMaterial(), kaya = kayaSuite.material
+  const postWood = new THREE.MeshStandardMaterial({ color: 0xae8053, roughness: .87 })
+  const footWood = new THREE.MeshStandardMaterial({ color: 0x9c7249, roughness: .89 })
+  const rope = new THREE.MeshStandardMaterial({ color: 0xd1bd88, roughness: 1 })
+  applyCraftSurface(postWood, { kind: 'wood', strength: .4, axis: 'y' })
+  applyCraftSurface(footWood, { kind: 'wood', strength: .4, axis: 'z' })
   applyCraftSurface(rope, { kind: 'cord', strength: .3 })
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, x: number, y: number, z: number) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(x, y, z); mesh.castShadow = mesh.receiveShadow = true; subject.add(mesh); return mesh
   }
   const hoop = add('chinowa-hoop', new THREE.TorusGeometry(1.38, .15, 12, 96), kaya, 0, 1.55, 0)
   for (const [i, x] of [-1.49, 1.49].entries()) {
-    add('chinowa-foot-' + i, new THREE.BoxGeometry(.5, .12, .8), wood, x, .06, -.32)
-    add('chinowa-post-' + i, new THREE.BoxGeometry(.14, 3.04, .18), wood, x, 1.64, -.32)
-    const g = new THREE.CylinderGeometry(.03, .03, .11, 12); g.rotateX(Math.PI / 2)
-    // Short rope ends enter bundle/post as explicit attachment sockets.
-    add('chinowa-tie-' + i, g, rope, Math.sign(x) * 1.4, 1.55, -.19)
+    const side = Math.sign(x)
+    add('chinowa-foot-' + i, new RoundedBoxGeometry(.5, .12, .8, 2, .02), footWood, x, .06, -.32)
+    add('chinowa-post-' + i, new RoundedBoxGeometry(.14, 3.06, .18, 2, .018), postWood, x, 1.63, -.32)
+    // Continuous curved rope lashing wrapping around both the wooden post and the reed ring.
+    const wrap = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(side * .09, .028, -.105),
+      new THREE.Vector3(0, .032, -.228),
+      new THREE.Vector3(-side * .088, .024, -.13),
+      new THREE.Vector3(-side * .05, .008, .015),
+      new THREE.Vector3(-side * .18, -.026, .185),
+      new THREE.Vector3(-side * .01, -.034, .348),
+      new THREE.Vector3(side * .13, -.024, .21),
+      new THREE.Vector3(side * .06, -.004, .02),
+      new THREE.Vector3(side * .092, -.022, -.12),
+      new THREE.Vector3(0, -.028, -.228),
+      new THREE.Vector3(-side * .09, -.024, -.125),
+      new THREE.Vector3(-side * .045, -.006, .018),
+      new THREE.Vector3(-side * .175, .028, .195),
+      new THREE.Vector3(-side * .01, .034, .348),
+      new THREE.Vector3(side * .13, .024, .205),
+      new THREE.Vector3(side * .055, .010, .015),
+    ], true, 'centripetal')
+    add('chinowa-tie-' + i, new THREE.TubeGeometry(wrap, 72, .018, 8, true), rope, x, 1.55, -.19)
   }
   const pose = (_step: number, _amount: number) => root.updateMatrixWorld(true)
   pose(0, 0)

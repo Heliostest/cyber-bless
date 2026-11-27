@@ -4,6 +4,7 @@ import {
   type RapierSoftBodySession,
 } from '@wbr/scene-runtime/rapier-soft-body'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 
 const centers = [1.55, 1.10, .65], start = .27, end = 2 * Math.PI - .27
 const point = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z)
@@ -78,12 +79,30 @@ function clothTexture() {
 export function createBonfimModel(options: BonfimModelOptions = {}) {
   const root = new THREE.Group(); root.name = 'bonfim-subject'
   const metal = new THREE.MeshStandardMaterial({ color: 0x477f7a, metalness: .48, roughness: .65 }), texture = clothTexture(), cloth = new THREE.MeshStandardMaterial({ color: 0xffffff, map: texture, roughness: .93 })
+  const stone = new THREE.MeshStandardMaterial({ color: 0xc2b8a8, roughness: .91 })
   applyCraftSurface(metal, { kind: 'metal', strength: .45 })
+  applyCraftSurface(stone, { kind: 'stone', strength: .40 })
   const make = (name: string, g: THREE.BufferGeometry, mat: THREE.Material) => {
     const m = new THREE.Mesh(g, mat); m.name = name; m.castShadow = m.receiveShadow = true; root.add(m); return m
   }
-  const bars = [-1.35, 0, 1.35].map((x, i) => { const m = make('bonfim-bar-' + i, new THREE.CylinderGeometry(.055, .055, 2.8, 16), metal); m.position.set(x, 1.4, 0); return m })
-  const rails = [.15, 2.65].map((y, i) => { const m = make('bonfim-rail-' + i, new THREE.BoxGeometry(2.8, .085, .085), metal); m.position.y = y; return m })
+  const plinthGeo = new RoundedBoxGeometry(.24, .10, .24, 2, .020)
+  const finialGeo = new THREE.LatheGeometry([
+    new THREE.Vector2(0, 0),
+    new THREE.Vector2(.072, 0),
+    new THREE.Vector2(.074, .016),
+    new THREE.Vector2(.048, .028),
+    new THREE.Vector2(.062, .054),
+    new THREE.Vector2(.054, .082),
+    new THREE.Vector2(.028, .102),
+    new THREE.Vector2(0, .110),
+  ], 18)
+  const bars = [-1.35, 0, 1.35].map((x, i) => {
+    const plinth = make('bonfim-plinth-' + i, plinthGeo, stone); plinth.position.set(x, .05, 0)
+    const m = make('bonfim-bar-' + i, new THREE.CylinderGeometry(.055, .055, 2.8, 16), metal); m.position.set(x, 1.4, 0)
+    const finial = make('bonfim-finial-' + i, finialGeo, metal); finial.position.set(x, 2.79, 0)
+    return m
+  })
+  const rails = [.15, 2.65].map((y, i) => { const m = make('bonfim-rail-' + i, new RoundedBoxGeometry(2.8, .085, .085, 2, .024), metal); m.position.y = y; return m })
   const initial = path([0, 0, 0]), count = initial.points.length, position = new Float32Array(count * 12), uv = new Float32Array(count * 8), indices: number[] = []
   for (let i = 0; i < count; i++) for (let j = 0; j < 4; j++) { uv[i * 8 + j * 2] = i / count * 12; uv[i * 8 + j * 2 + 1] = j === 0 || j === 3 ? 1 : 0 }
   for (let i = 0; i < count - 1; i++) for (let j = 0; j < 4; j++) { const a = i * 4 + j, b = i * 4 + (j + 1) % 4, c = (i + 1) * 4 + (j + 1) % 4, d = (i + 1) * 4 + j; indices.push(a, b, c, a, c, d) }

@@ -1,5 +1,6 @@
 import { applyCraftSurface, type CraftSurfaceOptions } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { buildKadomatsuPineNeedlesGeometry, createKadomatsuPineMaterial } from './pine-botanical'
 
 function solid(source:THREE.BufferGeometry,smooth=false){
@@ -46,14 +47,16 @@ export function createKadomatsuModel(){
   if(/^kadomatsu-(left|right)-straw-/.test(name))return{kind:'straw',strength:.3,axis:'y'}
   if(/^kadomatsu-(left|right)-cord-/.test(name))return{kind:'cord',strength:.3}
   if(/^kadomatsu-(left|right)-pine-branch-/.test(name))return{kind:'wood',strength:.4,axis:'y'}
-  if(/^kadomatsu-(jamb-|door-slat-)/.test(name))return{kind:'wood',strength:.58,scale:.68,axis:'y'}
-  if(['kadomatsu-lintel','kadomatsu-threshold','kadomatsu-preparation-tray'].includes(name))return{kind:'wood',strength:.58,scale:.68,axis:'x'}
+  if(/^kadomatsu-(jamb-|door-slat-|tray-foot-)/.test(name))return{kind:'wood',strength:.58,scale:.68,axis:'y'}
+  if(/^kadomatsu-tray-rail-(left|right)$/.test(name))return{kind:'wood',strength:.58,scale:.68,axis:'z'}
+  if(['kadomatsu-lintel','kadomatsu-threshold','kadomatsu-preparation-tray','kadomatsu-tray-rail-front','kadomatsu-tray-rail-back'].includes(name))return{kind:'wood',strength:.58,scale:.68,axis:'x'}
  }
- const finishFor=(name:string):'matte'|'wood-satin'|'bamboo-node'=>/^kadomatsu-(left|right)-bamboo-.*-node-/.test(name)?'bamboo-node':/^kadomatsu-(jamb-|door-slat-|lintel|threshold|preparation-tray)/.test(name)?'wood-satin':'matte'
+ const finishFor=(name:string):'matte'|'wood-satin'|'bamboo-node'=>/^kadomatsu-(left|right)-bamboo-.*-node-/.test(name)?'bamboo-node':/^kadomatsu-(jamb-|door-slat-|lintel|threshold|preparation-tray|tray-)/.test(name)?'wood-satin':'matte'
  const mesh=(parent:THREE.Object3D,name:string,source:THREE.BufferGeometry,color:string,p:[number,number,number],smooth=false)=>{const m=new THREE.Mesh(solid(source,smooth),material(color,surfaceFor(name),finishFor(name)));m.name=name;m.position.set(...p);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
- const paving=mesh(root,'kadomatsu-paving',new THREE.BoxGeometry(3.8,.08,2.9),'#c8bca3',[0,.04,.15])
+ // Compact chamfered entrance threshold step grounded on the courtyard (replaces the 3.8×2.9 m giant slab).
+ const paving=mesh(root,'kadomatsu-paving',new RoundedBoxGeometry(3.32,.08,1.32,2,.018),'#c8bca3',[0,.04,-.24],true)
  const door=new THREE.Group();door.name='kadomatsu-door';root.add(door)
- mesh(door,'kadomatsu-wall',new THREE.BoxGeometry(2.3,2.25,.12),'#d6c7a6',[0,1.205,-.80])
+ mesh(door,'kadomatsu-wall',new RoundedBoxGeometry(2.3,2.25,.12,2,.016),'#d6c7a6',[0,1.205,-.80],true)
  // Warm stylized plank-toned cedar door panel behind the vertical battens.
  {
   const doorGeo=solid(new THREE.BoxGeometry(1.60,1.98,.06,14,4,1))
@@ -68,12 +71,18 @@ export function createKadomatsuModel(){
   doorGeo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3))
   const doorMesh=new THREE.Mesh(doorGeo,doorPanelMat);doorMesh.name='kadomatsu-wood-door';doorMesh.position.set(0,1.19,-.70);doorMesh.castShadow=doorMesh.receiveShadow=true;door.add(doorMesh)
  }
- for(const side of[-1,1])mesh(door,`kadomatsu-jamb-${side}`,new THREE.BoxGeometry(.14,2.16,.16),'#aa8357',[side*.89,1.16,-.68])
- mesh(door,'kadomatsu-lintel',new THREE.BoxGeometry(1.92,.14,.20),'#a57e52',[0,2.31,-.68])
- mesh(door,'kadomatsu-threshold',new THREE.BoxGeometry(1.92,.12,.24),'#a57e52',[0,.14,-.68])
- for(let i=0;i<7;i++)mesh(door,`kadomatsu-door-slat-${i}`,new THREE.BoxGeometry(.025,1.88,.025),i%2===0?'#9f7a52':'#96724c',[-.70+i*.23,1.19,-.659])
- mesh(door,'kadomatsu-door-handle',new THREE.BoxGeometry(.055,.21,.045),'#554b3a',[.52,1.10,-.62])
- const tray=mesh(root,'kadomatsu-preparation-tray',new THREE.BoxGeometry(.72,.12,.72),'#b89266',[-.55,.14,1.2])
+ for(const side of[-1,1])mesh(door,`kadomatsu-jamb-${side}`,new RoundedBoxGeometry(.14,2.16,.16,2,.016),'#aa8357',[side*.89,1.16,-.68],true)
+ mesh(door,'kadomatsu-lintel',new RoundedBoxGeometry(1.92,.14,.20,2,.016),'#a57e52',[0,2.31,-.68],true)
+ mesh(door,'kadomatsu-threshold',new RoundedBoxGeometry(1.92,.12,.24,2,.016),'#a57e52',[0,.14,-.68],true)
+ for(let i=0;i<7;i++)mesh(door,`kadomatsu-door-slat-${i}`,new RoundedBoxGeometry(.025,1.88,.025,1,.004),i%2===0?'#9f7a52':'#96724c',[-.70+i*.23,1.19,-.659],true)
+ mesh(door,'kadomatsu-door-handle',new RoundedBoxGeometry(.055,.21,.045,2,.008),'#554b3a',[.52,1.10,-.62],true)
+ // Chamfered bordered wooden preparation tray grounded directly on the courtyard.
+ const tray=mesh(root,'kadomatsu-preparation-tray',new RoundedBoxGeometry(.76,.14,.76,2,.016),'#b89266',[-.55,.13,1.2],true)
+ for(const sx of[-1,1])for(const sz of[-1,1])mesh(root,`kadomatsu-tray-foot-${sx}-${sz}`,new RoundedBoxGeometry(.08,.07,.08,2,.012),'#98724b',[-.55+sx*.30,.035,1.2+sz*.30],true)
+ mesh(root,'kadomatsu-tray-rail-front',new RoundedBoxGeometry(.80,.034,.034,2,.008),'#a47e54',[-.55,.208,1.2+.378],true)
+ mesh(root,'kadomatsu-tray-rail-back',new RoundedBoxGeometry(.80,.034,.034,2,.008),'#a47e54',[-.55,.208,1.2-.378],true)
+ mesh(root,'kadomatsu-tray-rail-left',new RoundedBoxGeometry(.034,.034,.724,2,.008),'#a47e54',[-.55-.378,.208,1.2],true)
+ mesh(root,'kadomatsu-tray-rail-right',new RoundedBoxGeometry(.034,.034,.724,2,.008),'#a47e54',[-.55+.378,.208,1.2],true)
  const rimNormal=new THREE.Vector3(0,1,.75).normalize()
  const stalkTints=['#629548','#699c4d','#5d8f44']
  function bundle(name:string){

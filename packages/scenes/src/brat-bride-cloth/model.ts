@@ -1,5 +1,6 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import {
   CLOTH_D,
   CLOTH_W,
@@ -17,26 +18,53 @@ const THICKNESS = 0.0088
 export function createBratBrideModel(options: ClothSmoothingOptions = {}) {
   const root = new THREE.Group(); root.name = 'brat-cloth-subject'
   const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: .86 })
-  const stone = material(0xaaa6b1), wood = material(0x80584d), glass = material(0x35435f), benchMat = material(0xb18061), base = material(0x586775)
-  ;[wood, benchMat].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: .4 }))
+  const stone = material(0xaaa6b1), woodY = material(0x80584d), woodX = material(0x80584d), glass = material(0x35435f), benchMat = material(0xb18061), benchSideMat = material(0x9b6e53)
+  applyCraftSurface(woodY, { kind: 'wood', strength: .4, axis: 'y' })
+  applyCraftSurface(woodX, { kind: 'wood', strength: .4, axis: 'x' })
+  applyCraftSurface(benchMat, { kind: 'wood', strength: .4, axis: 'x' })
+  applyCraftSurface(benchSideMat, { kind: 'wood', strength: .4, axis: 'z' })
   applyCraftSurface(stone, { kind: 'stone', strength: .45 })
-  const box = (name: string, size: [number, number, number], at: [number, number, number], mat: THREE.Material) => {
-    const g = new THREE.BoxGeometry(...size).toNonIndexed(), mesh = new THREE.Mesh(g, mat)
+  const box = (name: string, size: [number, number, number], at: [number, number, number], mat: THREE.Material, bevel = .016) => {
+    const r = Math.min(bevel, size[0] / 3, size[1] / 3, size[2] / 3)
+    const g = new RoundedBoxGeometry(size[0], size[1], size[2], 2, r).toNonIndexed(), mesh = new THREE.Mesh(g, mat)
     mesh.name = name; mesh.position.set(...at); mesh.castShadow = mesh.receiveShadow = true; root.add(mesh); return mesh
   }
-  const board = box('window-plinth', [3.6, .08, 3.35], [0, .04, .80], base)
-  box('window-lower-wall', [2.70, .68, .36], [0, .42, -.22], stone)
-  box('window-left-pier', [.28, 2.12, .36], [-1.47, 1.14, -.22], stone)
-  box('window-right-pier', [.28, 2.12, .36], [1.47, 1.14, -.22], stone)
-  box('window-lintel', [3.22, .16, .36], [0, 2.12, -.22], stone)
-  const sill = box('outside-windowsill', [3.25, .12, 1.30], [0, .82, .30], stone)
-  box('window-night-pane', [2.62, 1.12, .06], [0, 1.49, -.31], glass)
-  for (const x of [-1.27, 1.27]) box(`window-frame-${x}`, [.065, 1.18, .10], [x, 1.49, -.24], wood)
-  for (const y of [.91, 2.07]) box(`window-crossbar-${y}`, [2.60, .065, .10], [0, y, -.24], wood)
-  box('window-mullion', [.035, 1.16, .10], [0, 1.49, -.24], wood)
-  box('window-middle-bar', [2.60, .035, .10], [0, 1.49, -.24], wood)
-  const bench = box('preparing-bench', [2.12, .06, .98], [0, .29, 1.75], benchMat)
-  for (const x of [-.83, .83]) for (const z of [1.42, 2.08]) box(`bench-leg-${x}-${z}`, [.12, .18, .12], [x, .17, z], wood)
+  // Compact chamfered stone wall footing grounded on the courtyard without a giant 3.6×3.35 m slab.
+  const board = box('window-plinth', [3.32, .08, .50], [0, .04, -.22], stone, .016)
+  box('window-lower-wall', [2.66, .68, .34], [0, .42, -.22], stone, .016)
+  // Piers meet the lintel underside at y = 2.04 with distinct lintel depth so no faces are coplanar.
+  box('window-left-pier', [.28, 1.96, .36], [-1.47, 1.06, -.22], stone, .018)
+  box('window-right-pier', [.28, 1.96, .36], [1.47, 1.06, -.22], stone, .018)
+  box('window-lintel', [3.26, .17, .40], [0, 2.125, -.22], stone, .018)
+  const sill = box('outside-windowsill', [3.25, .12, 1.30], [0, .82, .30], stone, .018)
+  // Sculpted stone corbels support the cantilevered sill against the lower wall.
+  const corbelShape = new THREE.Shape()
+  corbelShape.moveTo(-.05, .76)
+  corbelShape.lineTo(.80, .76)
+  corbelShape.lineTo(.80, .64)
+  corbelShape.quadraticCurveTo(.42, .60, .20, .42)
+  corbelShape.quadraticCurveTo(.10, .34, -.05, .34)
+  corbelShape.closePath()
+  const corbelGeo = new THREE.ExtrudeGeometry(corbelShape, { depth: .18, steps: 1, curveSegments: 8, bevelEnabled: true, bevelThickness: .012, bevelSize: .010, bevelSegments: 2 })
+  corbelGeo.rotateY(-Math.PI / 2)
+  corbelGeo.translate(.09, 0, 0)
+  for (const [label, x] of [['left', -1.16], ['right', 1.16]] as const) {
+    const corbel = new THREE.Mesh(corbelGeo.toNonIndexed(), stone)
+    corbel.name = `window-corbel-${label}`
+    corbel.position.set(x, 0, 0)
+    corbel.castShadow = corbel.receiveShadow = true
+    root.add(corbel)
+  }
+  corbelGeo.dispose()
+  box('window-night-pane', [2.62, 1.12, .06], [0, 1.49, -.31], glass, .008)
+  for (const x of [-1.27, 1.27]) box(`window-frame-${x}`, [.065, 1.18, .10], [x, 1.49, -.24], woodY, .010)
+  for (const y of [.91, 2.07]) box(`window-crossbar-${y}`, [2.60, .065, .10], [0, y, -.24], woodX, .010)
+  box('window-mullion', [.035, 1.16, .10], [0, 1.49, -.24], woodY, .006)
+  box('window-middle-bar', [2.60, .035, .10], [0, 1.49, -.24], woodX, .006)
+  const bench = box('preparing-bench', [2.12, .06, .98], [0, .29, 1.75], benchMat, .016)
+  for (const x of [-.83, .83]) for (const z of [1.42, 2.08]) box(`bench-leg-${x}-${z}`, [.11, .265, .11], [x, .1325, z], woodY, .016)
+  for (const z of [1.42, 2.08]) box(`bench-apron-${z}`, [1.66, .055, .048], [0, .238, z], benchMat, .010)
+  for (const x of [-.83, .83]) box(`bench-stretcher-${x}`, [.055, .048, .66], [x, .11, 1.75], benchSideMat, .010)
 
   // Top and underside share the same curved 3D parameterization; all four sides remain sealed.
   // Non-uniform edge clustering gives a crisp woven selvage hem rather than a wide mat-like bevel.

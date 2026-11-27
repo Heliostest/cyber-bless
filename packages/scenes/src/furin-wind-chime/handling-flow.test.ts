@@ -130,6 +130,9 @@ describe('handle, hang and listen', () => {
     const s = mount(0)
     const surfaceOf = (name: string) => ((s.object(name) as THREE.Mesh).material as THREE.Material).userData.craftSurface
     expect(surfaceOf('furin-eave')).toMatchObject({ kind: 'wood', axis: 'x' })
+    expect(surfaceOf('furin-eave-bracket-left')).toMatchObject({ kind: 'wood', axis: 'y' })
+    expect(surfaceOf('furin-eave-rafter-0')).toMatchObject({ kind: 'wood', axis: 'z' })
+    expect(surfaceOf('furin-eave-hook-ring')).toMatchObject({ kind: 'metal' })
     expect(surfaceOf('furin-rack-base')).toMatchObject({ kind: 'wood', axis: 'x' })
     expect(surfaceOf('furin-rack-post')).toMatchObject({ kind: 'wood', axis: 'y' })
     expect(surfaceOf('furin-rack-arm')).toMatchObject({ kind: 'wood', axis: 'x' })

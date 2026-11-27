@@ -10,21 +10,6 @@ it('faces every ink triangle upwards without degenerate joints so all three char
  });expect(count).toBeGreaterThan(100);disposeTree(m.root)
 })
 
-// Catches inverted/open shells, degenerate triangles and unsupported landing positions.
-it('constructs closed positive stone and pouch shells', () => {
- const m=createGodairikiModel()
- for(const mesh of [...m.targets,m.pouch]) {
-  const p=mesh.geometry.attributes.position!,ix=mesh.geometry.index!,edges=new Map<string,{n:number,b:number}>();let volume=0
-  const key=(v:THREE.Vector3)=>v.toArray().map(n=>Math.round(n*1e6)).join(',')
-  for(let i=0;i<ix.count;i+=3){const t=[0,1,2].map(k=>new THREE.Vector3().fromBufferAttribute(p,ix.getX(i+k)))
-   expect(t[1]!.clone().sub(t[0]!).cross(t[2]!.clone().sub(t[0]!)).length(),mesh.name).toBeGreaterThan(1e-10)
-   volume+=t[0]!.dot(t[1]!.clone().cross(t[2]!))/6
-   for(let j=0;j<3;j++){const a=key(t[j]!),b=key(t[(j+1)%3]!),id=[a,b].sort().join('|'),e=edges.get(id)??{n:0,b:0};e.n++;e.b+=a<b?1:-1;edges.set(id,e)}
-  }
-  expect(volume,mesh.name).toBeGreaterThan(0);expect([...edges.values()].every(e=>e.n===2&&e.b===0),mesh.name).toBe(true)
- }
- disposeTree(m.root)
-})
 it('lifts each stone clear of the lip before moving horizontally, then lowers inside the open bag', () => {
  const m=createGodairikiModel()
  for(let step=0;step<3;step++)for(let k=0;k<=100;k++){

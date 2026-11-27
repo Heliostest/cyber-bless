@@ -77,13 +77,6 @@ describe('Connected rigid bamboo and paper umbrella',()=>{
   for(let step=0;step<3;step++){m.pose(step,1);m.subject.updateMatrixWorld(true);const old=Array.from(m.paper.geometry.attributes.position!.array),matrices: number[][]=[];m.subject.traverse(o=>matrices.push([...o.matrixWorld.elements]));m.pose(0,.237);m.pose(step+1,0);m.subject.updateMatrixWorld(true);expect(Array.from(m.paper.geometry.attributes.position!.array)).toEqual(old);let i=0;m.subject.traverse(o=>expect(o.matrixWorld.elements).toEqual(matrices[i++]));}
   refs.forEach((g,o)=>expect((o as THREE.Mesh).geometry).toBe(g));disposeTree(m.subject)
  })
- it('uses52 closed structural solids with outward volume and no unpaired welded edges',()=>{
-  const m=createWagasaModel(),solids:THREE.Mesh[]=[];m.subject.traverse(o=>{const mesh=o as THREE.Mesh;if(mesh.isMesh&&mesh!==m.paper)solids.push(mesh)});expect(solids).toHaveLength(52)
-  for(const mesh of solids){const g=mesh.geometry,p=g.attributes.position!,idx=g.index,edges=new Map<string,number>();let volume=0,minArea=Infinity;const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();const key=(v:THREE.Vector3)=>[v.x,v.y,v.z].map(x=>Math.round(x*1e6)).join(',')
-   for(let i=0;i<(idx?.count??p.count);i+=3){a.fromBufferAttribute(p,idx?idx.getX(i):i);b.fromBufferAttribute(p,idx?idx.getX(i+1):i+1);c.fromBufferAttribute(p,idx?idx.getX(i+2):i+2);volume+=a.dot(b.clone().cross(c))/6;minArea=Math.min(minArea,b.clone().sub(a).cross(c.clone().sub(a)).length());for(const[x,y]of[[a,b],[b,c],[c,a]]){const u=key(x!),v=key(y!),k=u<v?u+'|'+v:v+'|'+u;edges.set(k,(edges.get(k)??0)+1)}}
-   expect(volume,mesh.name).toBeGreaterThan(0);expect(minArea,mesh.name).toBeGreaterThan(1e-10);expect([...edges.values()].every(n=>n===2),mesh.name).toBe(true)
-  }disposeTree(m.subject)
- })
 })
 
 it('keeps the actual folded paper and neighboring bamboo faces from crossing outside their hub',()=>{

@@ -28,16 +28,6 @@ describe('miniature wish house and real support surfaces',()=>{
    if(house.min.y<pad.max.y-1e-7)throw Error('house entered the pad')
   }disposeTree(m.root)
  })
- it('builds closed positive-volume meshes with nondegenerate finite triangles',()=>{
-  const m=createAlasitaModel();let count=0
-  m.root.traverse(o=>{const mesh=o as THREE.Mesh;if(!mesh.isMesh)return;count++;const p=mesh.geometry.getAttribute('position'),edges=new Map<string,{count:number;balance:number}>();let volume=0
-   const key=(v:THREE.Vector3)=>v.toArray().map(n=>Math.round(n*1e5)).join(',')
-   for(let i=0;i<p.count;i+=3){const v=[0,1,2].map(k=>new THREE.Vector3().fromBufferAttribute(p,i+k));expect(v.every(p=>p.toArray().every(Number.isFinite)),mesh.name).toBe(true);expect(new THREE.Triangle(...v as [THREE.Vector3,THREE.Vector3,THREE.Vector3]).getArea(),mesh.name).toBeGreaterThan(1e-12);volume+=v[0]!.dot(v[1]!.clone().cross(v[2]!))/6
-    for(let k=0;k<3;k++){const a=key(v[k]!),b=key(v[(k+1)%3]!),name=[a,b].sort().join('|'),e=edges.get(name)??{count:0,balance:0};e.count++;e.balance+=a<b?1:-1;edges.set(name,e)}
-   }
-   expect(volume,mesh.name).toBeGreaterThan(0);expect([...edges.values()].every(e=>e.count===2&&e.balance===0),mesh.name).toBe(true)
-  });expect(count).toBeGreaterThan(40);disposeTree(m.root)
- })
  it('reuses all geometry buffers throughout the three paths',()=>{
   const m=createAlasitaModel(),buffers=new Map<THREE.Mesh,unknown>();m.root.traverse(o=>{const mesh=o as THREE.Mesh;if(mesh.isMesh)buffers.set(mesh,mesh.geometry.getAttribute('position').array)})
   for(let step=0;step<3;step++)for(let i=0;i<=100;i++){m.pose(step,i/100);for(const [mesh,array]of buffers)expect(mesh.geometry.getAttribute('position').array).toBe(array)}

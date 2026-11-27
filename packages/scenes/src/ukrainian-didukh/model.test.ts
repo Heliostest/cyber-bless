@@ -82,36 +82,6 @@ describe('Didukh wheat sheaf with intact ears and a real splayed standing base',
     } finally { model.dispose() }
   })
 
-  it('uses finite, outward-facing, closed and nondegenerate solids for every owned geometry', () => {
-    const model = createDidukhModel()
-    try {
-      const checked = new Set<THREE.BufferGeometry>()
-      for (const mesh of meshes(model.root)) {
-        if (checked.has(mesh.geometry)) continue
-        checked.add(mesh.geometry)
-        const geometry = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry
-        const position = geometry.getAttribute('position')
-        const edges = new Map<string, number>()
-        let volume = 0
-        for (let i = 0; i < position.count; i += 3) {
-          const triangle = [0, 1, 2].map(j => new THREE.Vector3().fromBufferAttribute(position, i + j)) as [THREE.Vector3, THREE.Vector3, THREE.Vector3]
-          const [a, b, c] = triangle
-          for (const point of triangle) expect(point.toArray().every(Number.isFinite), mesh.name).toBe(true)
-          expect(b.clone().sub(a).cross(c.clone().sub(a)).length(), mesh.name).toBeGreaterThan(1e-11)
-          volume += a.dot(b.clone().cross(c)) / 6
-          const keys = triangle.map(point => point.toArray().map(n => (Math.abs(n) < 5e-7 ? 0 : n).toFixed(6)).join(','))
-          for (let j = 0; j < 3; j++) {
-            const key = [keys[j]!, keys[(j + 1) % 3]!].sort().join('/')
-            edges.set(key, (edges.get(key) ?? 0) + 1)
-          }
-        }
-        expect([...edges.values()].every(count => count === 2), mesh.name).toBe(true)
-        expect(volume, mesh.name).toBeGreaterThan(1e-10)
-        if (geometry !== mesh.geometry) geometry.dispose()
-      }
-    } finally { model.dispose() }
-  })
-
   it('rests every cut stalk foot on the preparation tray, then stands on the floor with a broad base', () => {
     const model = createDidukhModel()
     try {

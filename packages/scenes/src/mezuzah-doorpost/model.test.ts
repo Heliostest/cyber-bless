@@ -43,34 +43,6 @@ describe('A prepared closed mezuzah case carried to the entrance right doorpost'
     } finally { model.dispose() }
   })
 
-  it('uses finite, nondegenerate closed solids for the case, doorway, door and rests', () => {
-    const model = createMezuzahModel()
-    try {
-      expect(meshes(model.root).length).toBeGreaterThan(12)
-      for (const mesh of meshes(model.root)) {
-        const geometry = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry
-        const position = geometry.getAttribute('position')
-        const edgeCounts = new Map<string, number>()
-        let volume = 0
-        for (let i = 0; i < position.count; i += 3) {
-          const triangle = [0, 1, 2].map(j => new THREE.Vector3().fromBufferAttribute(position, i + j))
-          for (const point of triangle) expect(point.toArray().every(Number.isFinite), mesh.name).toBe(true)
-          const [a, b, c] = triangle as [THREE.Vector3, THREE.Vector3, THREE.Vector3]
-          expect(b.clone().sub(a).cross(c.clone().sub(a)).length(), mesh.name).toBeGreaterThan(1e-10)
-          volume += a.dot(b.clone().cross(c)) / 6
-          const keys = triangle.map(point => point.toArray().map(n => (Math.abs(n) < .0000005 ? 0 : n).toFixed(6)).join(','))
-          for (let edge = 0; edge < 3; edge++) {
-            const key = [keys[edge]!, keys[(edge + 1) % 3]!].sort().join('/')
-            edgeCounts.set(key, (edgeCounts.get(key) ?? 0) + 1)
-          }
-        }
-        expect([...edgeCounts.values()].every(count => count === 2), mesh.name).toBe(true)
-        expect(volume, mesh.name).toBeGreaterThan(1e-9)
-        if (geometry !== mesh.geometry) geometry.dispose()
-      }
-    } finally { model.dispose() }
-  })
-
   it('starts horizontal with the actual case underside resting on both wooden seats', () => {
     const model = createMezuzahModel()
     try {

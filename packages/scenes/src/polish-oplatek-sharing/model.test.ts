@@ -1,11 +1,28 @@
 import {describe,it,expect} from 'vitest'
 import * as THREE from 'three'
+import {getEnvironmentSurfaceY} from '@wbr/scene-runtime'
 import {createOplatekModel,mainOutline,pieceOutline} from './model'
 import {disposeTree} from '../procedural-kit'
 
 const area=(p:[number,number][])=>Math.abs(p.reduce((s,[x,z],i)=>{const q=p[(i+1)%p.length]!;return s+x*q[1]-q[0]*z},0))/2
 const snapshot=(m:ReturnType<typeof createOplatekModel>)=>{m.root.updateMatrixWorld(true);const out:number[]=[];m.root.traverse(o=>out.push(...o.matrixWorld.elements));return out}
 describe('Oplatek physical sharing',()=>{
+  it('grounds the wooden dining table on the courtyard surface with a woven linen runner and balanced hand proportions',()=>{
+    const m=createOplatekModel(),ground=getEnvironmentSurfaceY('polish-oplatek-sharing')
+    const tableBox=new THREE.Box3().setFromObject(m.table,true),runnerBox=new THREE.Box3().setFromObject(m.runner,true)
+    expect(tableBox.min.y).toBeCloseTo(ground,6)
+    expect(runnerBox.min.y).toBeCloseTo(tableBox.max.y,6)
+    const giverPalm=new THREE.Box3().setFromObject(m.root.getObjectByName('oplatek-giver-palm')!,true).getSize(new THREE.Vector3())
+    const receiverPalm=new THREE.Box3().setFromObject(m.root.getObjectByName('oplatek-receiver-palm')!,true).getSize(new THREE.Vector3())
+    expect(giverPalm.x/receiverPalm.x).toBeGreaterThan(.95)
+    expect(giverPalm.x/receiverPalm.x).toBeLessThan(1.35)
+    // Keep wrists, forearms, and sleeves strictly below the wafer underside so they never pierce the wafer.
+    const waferBottom=new THREE.Box3().setFromObject(m.main,true).min.y
+    for(const part of ['wrist','forearm','sleeve']){
+      expect(new THREE.Box3().setFromObject(m.root.getObjectByName(`oplatek-giver-${part}`)!,true).max.y).toBeLessThan(waferBottom)
+    }
+    disposeTree(m.root)
+  })
   it('clears the receiving fingertips before lifting and detects the former immediate-lift penetration',()=>{
     const m=createOplatekModel(),ray=new THREE.Raycaster()
     const penetrations=()=>{let count=0;m.root.updateMatrixWorld(true);m.recipientHand.traverse(o=>{const mesh=o as THREE.Mesh;if(!mesh.isMesh||!mesh.name.includes('finger-'))return

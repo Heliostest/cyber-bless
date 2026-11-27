@@ -1,21 +1,82 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { addObjectCradle, addOfferingTable } from '../cozy-furniture'
 
 const V=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
 function panGeometry(){return new THREE.LatheGeometry([[0,0],[.285,0],[.32,.025],[.335,.12],[.315,.12],[.299,.03],[.28,.022],[0,.022]].map(([x,y])=>new THREE.Vector2(x!,y!)),64)}
+function dedupeNames(root:THREE.Object3D){
+ const seen=new Map<string,number>()
+ root.traverse(o=>{const n=seen.get(o.name)??0;seen.set(o.name,n+1);if(n>0)o.name=`${o.name}-${n}`})
+}
 
 /** A filled household pan, a single stove and a real cloth; smoke is an explicitly separate effect. */
 export function createEsfandModel(){
  const root=new THREE.Group();root.name='esfand-subject';const subject=root
- const metal=new THREE.MeshStandardMaterial({color:0x535e64,metalness:.55,roughness:.4}),wood=new THREE.MeshStandardMaterial({color:0xc39558,roughness:.88}),tile=new THREE.MeshStandardMaterial({color:0xf0e8d4,roughness:.7}),blue=new THREE.MeshStandardMaterial({color:0x579da0,roughness:.85}),stainless=new THREE.MeshStandardMaterial({color:0xc1c8c5,metalness:.6,roughness:.4}),black=new THREE.MeshStandardMaterial({color:0x34383c,roughness:.86})
+ const GROUND_Y=getEnvironmentSurfaceY('persian-esfand')
+ const metal=new THREE.MeshStandardMaterial({color:0x535e64,metalness:.55,roughness:.4}),wood=new THREE.MeshStandardMaterial({color:0xc39558,roughness:.88}),drawerWood=new THREE.MeshStandardMaterial({color:0x8c603c,roughness:.82}),shelfWood=new THREE.MeshStandardMaterial({color:0x966943,roughness:.83}),stainless=new THREE.MeshStandardMaterial({color:0xc1c8c5,metalness:.6,roughness:.4}),black=new THREE.MeshStandardMaterial({color:0x34383c,roughness:.86})
  for(const cookware of[metal,stainless])applyCraftSurface(cookware,{kind:'metal',strength:.45})
  applyCraftSurface(wood,{kind:'wood',strength:.4,axis:'z'})
+ applyCraftSurface(drawerWood,{kind:'wood',strength:.38,axis:'x'})
+ applyCraftSurface(shelfWood,{kind:'wood',strength:.38,axis:'x'})
  const make=(name:string,g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D=root)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
- const cabinet=make('esfand-kitchen-cabinet',new THREE.BoxGeometry(2.18,.66,1.72),blue);cabinet.position.set(0,.33,.12)
- const counter=make('esfand-counter',new THREE.BoxGeometry(2.30,.06,1.84),tile);counter.position.set(0,.69,.12)
- const door=make('esfand-cabinet-inset',new THREE.BoxGeometry(1.98,.48,.015),blue);door.position.set(0,.34,.9875)
- const rail=make('esfand-cabinet-pull',new THREE.CylinderGeometry(.018,.018,.30,12),stainless);rail.rotation.z=Math.PI/2;rail.position.set(0,.46,1.013)
- const stove=make('esfand-stove',new THREE.BoxGeometry(.81,.08,.72),stainless);stove.position.set(.48,.76,-.18)
+ // Village-harmonious chamfered warm timber hearth table + stone hearth top pad (product staging only).
+ const hearthTable=addOfferingTable(root,{
+  name:'esfand-hearth-table',
+  topName:'esfand-hearth-table-top',
+  width:2.40,
+  depth:1.96,
+  surfaceY:.665,
+  thickness:.075,
+  center:[0,.12],
+  groundY:GROUND_Y,
+  finish:'chestnut',
+  color:0xa47449,
+  frameColor:0x7b5436,
+  planks:3,
+  breadboardEnds:true,
+  legThickness:.13,
+  legInset:.11,
+  apron:true,
+  stretchers:true,
+  bevel:.016,
+ })
+ const cabinet=hearthTable.root
+ // Add a slatted lower timber shelf resting cleanly on the hearth table's side stretchers.
+ const underside=.665-GROUND_Y-.075
+ const shelfY=GROUND_Y+Math.max(.036+.018,underside*.28)+.044
+ for(let i=0;i<3;i++){
+  const slat=make(`esfand-hearth-shelf-${i}`,new RoundedBoxGeometry(2.04,.028,.40,2,.008),shelfWood,cabinet)
+  slat.position.set(0,shelfY-GROUND_Y,(i-1)*.46)
+ }
+ dedupeNames(hearthTable.root)
+ const hearthPad=addObjectCradle(root,{
+  name:'esfand-counter',
+  topName:'esfand-counter',
+  width:2.28,
+  depth:1.84,
+  center:[0,.12],
+  groundY:.665,
+  surfaceY:.72,
+  style:'pad',
+  kind:'stone',
+  color:0xd1c3aa,
+  bevel:.014,
+  roughness:.90,
+  surfaceScale:.92,
+  surfaceStrength:.42,
+ })
+ dedupeNames(hearthPad.root)
+ const counter=hearthPad.top
+ // Recessed warm timber apron drawer face + brushed pull bar seated flush against the front apron.
+ const door=make('esfand-cabinet-inset',new RoundedBoxGeometry(1.40,.098,.022,2,.006),drawerWood);door.position.set(0,.53,.9685)
+ const rail=make('esfand-cabinet-pull',new THREE.CylinderGeometry(.015,.015,.28,12),stainless);rail.rotation.z=Math.PI/2;rail.position.set(0,.53,.9945)
+ for(const side of[-1,1]as const){
+  const post=make(`esfand-cabinet-pull-mount-${side<0?'l':'r'}`,new THREE.CylinderGeometry(.010,.010,.018,10),stainless)
+  post.rotation.x=Math.PI/2;post.position.set(side*.105,.53,.9855)
+ }
+ const stove=make('esfand-stove',new RoundedBoxGeometry(.81,.08,.72,2,.012),stainless);stove.position.set(.48,.76,-.18)
  const burner=make('esfand-burner',new THREE.CylinderGeometry(.26,.26,.025,48),black);burner.position.set(.48,.8125,-.18)
  const dial=make('esfand-stove-dial',new THREE.CylinderGeometry(.055,.055,.035,24),black);dial.rotation.x=Math.PI/2;dial.position.set(.72,.78,.1975)
  const pan=new THREE.Group();pan.name='esfand-pan-root';root.add(pan)

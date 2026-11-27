@@ -1,5 +1,6 @@
 import {describe,expect,it} from 'vitest'
 import * as THREE from 'three'
+import {getEnvironmentSurfaceY} from '@wbr/scene-runtime'
 import {createSurvakaneModel} from './model'
 import {disposeTree} from '../procedural-kit'
 
@@ -48,13 +49,26 @@ describe('Survakane physical contact and support',()=>{
     expect(m.targets.every(o=>o===m.root.getObjectByName('surva-grip'))).toBe(true)
     disposeTree(m.root)
   })
-  it('grounds the stool and shoes, supports the hips, and keeps the whole branch outside the back',()=>{
-    const m=createSurvakaneModel();m.pose(2,.5)
-    const bounds=(name:string)=>new THREE.Box3().setFromObject(m.root.getObjectByName(name)!)
-    const ground=bounds('surva-paving').max.y,seat=bounds('surva-stool-seat')
-    for(let i=0;i<4;i++){const leg=bounds('surva-stool-leg-'+i);expect(leg.min.y).toBeCloseTo(ground,6);expect(leg.max.y).toBeCloseTo(seat.min.y,6)}
+  it('grounds the stool, shoes, and branch stand on the courtyard surface, supports the hips and resting branch, and keeps the whole branch outside the back',()=>{
+    const m=createSurvakaneModel()
+    const bounds=(name:string)=>new THREE.Box3().setFromObject(m.root.getObjectByName(name)!,true)
+    const ground=getEnvironmentSurfaceY('bulgarian-survakane'),seat=bounds('surva-stool-seat')
+    expect(m.root.getObjectByName('surva-paving')).toBeUndefined()
+    for(let i=0;i<4;i++){
+      const legMesh=m.root.getObjectByName('surva-stool-leg-'+i) as THREE.Mesh
+      const leg=new THREE.Box3().setFromObject(legMesh,true)
+      expect(leg.min.y).toBeCloseTo(ground,6);expect(leg.max.y).toBeCloseTo(seat.min.y,6)
+      expect((legMesh.material as THREE.MeshStandardMaterial).userData.craftSurface).toMatchObject({kind:'wood',axis:'y'})
+    }
     for(let i=0;i<2;i++)expect(bounds('surva-shoe-'+i).min.y).toBeCloseTo(ground,6)
     expect(bounds('surva-hips').min.y).toBeCloseTo(seat.max.y,6)
+    const standBox=new THREE.Box3().setFromObject(m.stand,true),standTop=bounds('surva-branch-stand-top')
+    expect(standBox.min.y).toBeCloseTo(ground,6)
+    for(const at of [0,3]){
+      m.pose(at,0)
+      expect(bounds('surva-stem').min.y).toBeCloseTo(standTop.max.y,6)
+    }
+    m.pose(2,.5)
     // Back geometry is a transformed unit sphere. Requiring every branch vertex outside
     // its enclosing smooth ellipsoid also excludes penetration of the faceted surface.
     const inv=m.back.matrixWorld.clone().invert(),p=new THREE.Vector3();let minimum=Infinity

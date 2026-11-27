@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import * as THREE from "three";
 import { createToonSurfaces } from "./toon-surfaces";
 import { calibrateIconPigment } from './icon-style';
+import { createBotanicalMaterial } from './botanical-surfaces';
 
 describe("official toon material adaptation", () => {
   it('calibrates only untextured subject pigment and keeps animated source colors live', () => {
@@ -276,5 +277,28 @@ describe("official toon material adaptation", () => {
     expect(styledHinted.roughness).toBe(.86);
     frame.restore(); surfaces.dispose();
     [straw, hintedStraw].forEach(m => m.dispose());
+  });
+
+  it("preserves botanical surface hooks and syncs roughness across toon clones", () => {
+    const scene = new THREE.Scene();
+    const petal = createBotanicalMaterial({ color: 0xffe4e4, roughness: .86 }, { kind: 'petal', strength: .45 });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(), petal);
+    scene.add(mesh);
+    const surfaces = createToonSurfaces("toon-soft");
+    let frame = surfaces.apply(scene);
+    const styled = mesh.material as THREE.MeshStandardMaterial;
+    expect(styled).not.toBe(petal);
+    expect(styled.userData.botanicalSurface).toMatchObject({ kind: 'petal', strength: .45 });
+    expect(styled.customProgramCacheKey()).toContain('wbr-botanical-v1:petal');
+    expect(styled.roughness).toBeCloseTo(.86, 5);
+    frame.restore();
+    petal.roughness = .74;
+    frame = surfaces.apply(scene);
+    expect(mesh.material).toBe(styled);
+    expect(styled.roughness).toBeCloseTo(.74, 5);
+    frame.restore();
+    surfaces.dispose();
+    petal.dispose();
+    mesh.geometry.dispose();
   });
 });

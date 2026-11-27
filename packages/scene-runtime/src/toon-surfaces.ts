@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { RenderStyleId } from "@wbr/content";
 import { copyRitualOptics } from './ritual-optics';
 import { copyCraftSurface, hasCraftFinish } from './craft-surfaces';
+import { copyBotanicalSurface } from './botanical-surfaces';
 import { softenTreeFoliage } from './tree-foliage';
 import { calibrateIconPigment, isSceneEnvironment } from './icon-style';
 import { copyKomorebiTreeWind } from './komorebi-tree-wind';
@@ -41,8 +42,10 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">, sc
   function signature(members: THREE.Material[], hint: ToonSurface) {
     return JSON.stringify(hint) + members.map(material => {
       const pbr = material as THREE.MeshPhysicalMaterial;
+      const botanical = material.userData.botanicalSurface;
+      const botanicalSig = botanical ? `${botanical.kind}:${botanical.venation ?? botanical.peel ?? ''}` : '';
       return [material.version, material.transparent, material.side, material.alphaTest > 0, material.alphaHash,
-        pbr.vertexColors, pbr.metalness >= .3, pbr.roughness <= .4, ...mapFields.map(key => !!pbr[key]), pbr.transmission > 0, pbr.clearcoat > 0, pbr.sheen > 0, pbr.iridescence > 0, pbr.anisotropy > 0].join(':');
+        pbr.vertexColors, pbr.metalness >= .3, pbr.roughness <= .4, ...mapFields.map(key => !!pbr[key]), pbr.transmission > 0, pbr.clearcoat > 0, pbr.sheen > 0, pbr.iridescence > 0, pbr.anisotropy > 0, botanicalSig].join(':');
     }).join('|');
   }
 
@@ -100,6 +103,7 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">, sc
     toon.name = `${source.name || "surface"} / ${style}`;
     copyRitualOptics(source, toon);
     copyCraftSurface(source, toon);
+    copyBotanicalSurface(source, toon);
     if (style === 'toon-soft' && glass) {
       const before = toon.onBeforeCompile, baseKey = toon.customProgramCacheKey();
       toon.onBeforeCompile = function(shader, renderer) {
@@ -191,7 +195,7 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">, sc
                 toon.envMapIntensity = Math.min(source.envMapIntensity, envCap);
                 toon.displacementScale = source.displacementScale; toon.displacementBias = source.displacementBias;
               }
-              if ((style === 'toon-soft' || source.userData.ritualOptics || source.userData.craftSurface) && source instanceof THREE.MeshStandardMaterial && toon instanceof THREE.MeshStandardMaterial) {
+              if ((style === 'toon-soft' || source.userData.ritualOptics || source.userData.craftSurface || source.userData.botanicalSurface) && source instanceof THREE.MeshStandardMaterial && toon instanceof THREE.MeshStandardMaterial) {
                 if (style !== 'toon-soft') {
                 toon.roughness = (object.userData.toonSurface as ToonSurface | undefined)?.roughness ?? source.roughness;
                 toon.metalness = (object.userData.toonSurface as ToonSurface | undefined)?.metalness ?? source.metalness;

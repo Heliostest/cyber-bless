@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import fibers from './ritual-fibers.data.json';
 
-export type RitualSurfaceKind = 'paper' | 'cloth' | 'leaf' | 'wax' | 'jade' | 'skin' | 'fruit' | 'glass' | 'water' | 'tea' | 'honey' | 'wet';
+export type RitualSurfaceKind = 'paper' | 'cloth' | 'leaf' | 'petal' | 'wax' | 'jade' | 'skin' | 'fruit' | 'glass' | 'water' | 'tea' | 'honey' | 'wet';
 /** Local-space support projection or UV-anchored thin-sheet paper structure. */
 export type RitualPaperStructure =
   | { layout: 'radial' | 'bands'; spacing: number; width: number; contrast: number; halfHeight?: number }
@@ -30,7 +30,7 @@ type Optics = { kind: RitualSurfaceKind; strength: number; fiber: Fiber | false;
 const states = new WeakMap<THREE.Material, Optics>();
 const textures = new Map<Fiber, { texture: THREE.DataTexture; owners: number }>();
 const scatterStrength: Partial<Record<RitualSurfaceKind, number>> = {
-  paper: .24, cloth: .16, leaf: .19, wax: .17, jade: .10, skin: .08, fruit: .14,
+  paper: .24, cloth: .16, leaf: .19, petal: .22, wax: .17, jade: .10, skin: .08, fruit: .14,
 };
 
 function finite(value: number | undefined, fallback: number, min = 0, max = 1) {
@@ -165,12 +165,38 @@ void ritualScatter(const in IncidentLight directLight, const in vec3 surfaceNorm
 }
 `;
 
+// Dedicated botanical scatter kernel for leaf, fruit, and thin petal surfaces:
+// preserves back-facing transmission while adding a front-wrap lobe for top-front
+// Komorebi daylight, warm biological pigment shift, and subtle cuticle rim sheen.
+const LEAF_FRUIT_SCATTER = `
+uniform float ritualScatterStrength;
+uniform vec3 ritualScatterTint;
+uniform float ritualCuticleRim;
+void ritualScatter(const in IncidentLight directLight, const in vec3 surfaceNormal,
+  const in vec3 viewDirection, const in vec3 pigment, inout ReflectedLight reflectedLight) {
+  float back = max(0.0, dot(-surfaceNormal, directLight.direction));
+  vec3 throughDirection = normalize(directLight.direction + surfaceNormal * 0.18);
+  float forward = pow(max(0.0, dot(viewDirection, -throughDirection)), 3.0);
+  float transmissionLobe = back * (0.72 + forward * 0.28);
+  float frontDot = dot(surfaceNormal, directLight.direction);
+  float wrapLobe = 0.28 * smoothstep(-0.32, 0.65, frontDot);
+  float grazing = pow(clamp(1.0 - abs(dot(surfaceNormal, viewDirection)), 0.0, 1.0), 3.0);
+  float rimLobe = grazing * ritualCuticleRim * smoothstep(-0.30, 0.70, frontDot);
+  vec3 warmPigment = pigment * ritualScatterTint;
+  reflectedLight.directDiffuse += warmPigment * directLight.color
+    * (ritualScatterStrength * (transmissionLobe + wrapLobe) * 0.31830988618);
+  reflectedLight.directDiffuse += mix(warmPigment, vec3(1.0), 0.22) * directLight.color
+    * (rimLobe * 0.31830988618);
+}
+`;
+
 function attach(material: THREE.Material, options: Optics) {
   if (states.has(material)) return;
   states.set(material, options);
   material.userData.ritualOptics = { ...options, ...(options.paper ? { paper: { ...options.paper } } : {}) };
   const fiber = options.fiber ? ownFiber(options.fiber) : undefined;
   const isSheet = options.paper?.layout === 'sheet';
+  const isBotanical = options.kind === 'leaf' || options.kind === 'fruit' || options.kind === 'petal';
   const previousCompile = material.onBeforeCompile;
   const previousKey = material.customProgramCacheKey.bind(material);
   // Capture the old key before replacing onBeforeCompile: Three's default key
@@ -288,19 +314,46 @@ function attach(material: THREE.Material, options: Optics) {
         diffuseColor.a = min(1.0, diffuseColor.a * (1.0 + ritualFresnel * 0.18));
       `);
     }
+    if (isBotanical && !shader.fragmentShader.includes('WBR_BOTANICAL_SHOULDER')) {
+      shader.fragmentShader = '#define WBR_BOTANICAL_SHOULDER\n' + shader.fragmentShader;
+      shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
+        vec3 ritualBotanicalLit = max(outgoingLight - totalEmissiveRadiance, vec3(0.0));
+        float ritualBotanicalPeak = max(ritualBotanicalLit.r, max(ritualBotanicalLit.g, ritualBotanicalLit.b));
+        // C1 asymptotic highlight shoulder (knee = 0.74, headroom = 0.24) keeps sunlit
+        // pale leaves, fruit, and petals soft and readable without clipping to flat white.
+        if (ritualBotanicalPeak > 0.74) {
+          float ritualBotanicalExcess = ritualBotanicalPeak - 0.74;
+          float ritualBotanicalTarget = 0.74 + 0.24 * (ritualBotanicalExcess / (ritualBotanicalExcess + 0.24));
+          outgoingLight = ritualBotanicalLit * (ritualBotanicalTarget / ritualBotanicalPeak) + totalEmissiveRadiance;
+        }
+        #include <opaque_fragment>
+      `);
+    }
     if (options.strength > 0 && scatterStrength[options.kind] !== undefined) {
       shader.uniforms.ritualScatterStrength = { value: options.strength };
+      if (isBotanical) {
+        shader.uniforms.ritualScatterTint = {
+          value: options.kind === 'leaf'
+            ? new THREE.Vector3(1.06, 1.12, 0.74)
+            : new THREE.Vector3(1.10, 0.96, 0.86),
+        };
+        shader.uniforms.ritualCuticleRim = {
+          value: options.kind === 'leaf' ? 0.14 : options.kind === 'fruit' ? 0.16 : 0.07,
+        };
+      }
       const scatter = isSheet
         ? SHEET_SCATTER
-        : options.paper ? SCATTER.replace(
-          'reflectedLight.directDiffuse +=',
-          `// Thin paper also wraps front light into its shallow body. The support
-           // projection reduces this response before light is accumulated.
-           transmissionLobe = (transmissionLobe + 0.60 * max(0.0, dot(surfaceNormal, directLight.direction)) + 0.14)
-             * ritualPaperClearance() * ritualPaperInternalProfile()
-             * ritualPaperViewTransmission(surfaceNormal, viewDirection);
-           reflectedLight.directDiffuse +=`,
-        ) : SCATTER;
+        : isBotanical
+          ? LEAF_FRUIT_SCATTER
+          : options.paper ? SCATTER.replace(
+            'reflectedLight.directDiffuse +=',
+            `// Thin paper also wraps front light into its shallow body. The support
+             // projection reduces this response before light is accumulated.
+             transmissionLobe = (transmissionLobe + 0.60 * max(0.0, dot(surfaceNormal, directLight.direction)) + 0.14)
+               * ritualPaperClearance() * ritualPaperInternalProfile()
+               * ritualPaperViewTransmission(surfaceNormal, viewDirection);
+             reflectedLight.directDiffuse +=`,
+          ) : SCATTER;
       shader.fragmentShader = shader.fragmentShader.replace('void main() {', scatter + '\nvoid main() {');
       const direct = 'RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );';
       const call = isSheet
@@ -357,7 +410,7 @@ export function createRitualMaterial(parameters: THREE.MeshStandardMaterialParam
       ...parameters, metalness: 0,
     });
   } else {
-    material = new THREE.MeshStandardMaterial({ roughness: .9, ...parameters });
+    material = new THREE.MeshStandardMaterial({ roughness: kind === 'petal' ? .86 : .9, ...parameters });
   }
   const fiber = options.fiber ?? (kind === 'paper' ? 'paper' : kind === 'cloth' ? 'linen' : false);
   const structure = kind === 'paper' ? options.paper : undefined;

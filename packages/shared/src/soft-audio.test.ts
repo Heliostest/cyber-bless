@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createSoftSoundPlayer, type SoftSound } from './soft-audio'
+import { createContinuousBed, createSoftSoundPlayer, type ContinuousBedKind, type SoftSound } from './soft-audio'
 
 type Automation = { kind: 'set' | 'linear' | 'exponential'; value: number; time: number }
 class AudioParamBoundary {
@@ -285,5 +285,115 @@ describe('createSoftSoundPlayer', () => {
       expect(() => player.play('complete')).not.toThrow()
     }
     expect(context.sources).toHaveLength(0)
+  })
+
+  it('synthesizes 4-mode modal overtones and courtyard micro-reflections inside resonant buffers', () => {
+    const context = new AudioContextBoundary()
+    playerFor(context).play('chime')
+    const samples = context.buffers[0]
+    const energyAt = (pitch: number) => {
+      let real = 0, imaginary = 0
+      for (let index = 0; index < samples.length; index++) {
+        const phase = Math.PI * 2 * pitch * index / 48000
+        real += samples[index] * Math.cos(phase)
+        imaginary += samples[index] * Math.sin(phase)
+      }
+      return Math.hypot(real, imaginary)
+    }
+    // 2.756 and 4.18 modal shimmer partials carry distinct energy over off-mode frequencies.
+    expect(energyAt(1480 * 2.756)).toBeGreaterThan(energyAt(1480 * 2.756 + 270) * 3)
+    expect(energyAt(1480 * 4.18)).toBeGreaterThan(energyAt(1480 * 4.18 + 270) * 2)
+    // Short ceramic knock retains a gentle low-passed courtyard early reflection around ~47-79ms.
+    const ceramicCtx = new AudioContextBoundary()
+    playerFor(ceramicCtx).play('ceramic')
+    const ceramicSamples = ceramicCtx.buffers[0]
+    const echoWindow = ceramicSamples.slice(Math.round(.045 * 48000), Math.round(.095 * 48000))
+    const echoEnergy = echoWindow.reduce((sum, s) => sum + s * s, 0) / echoWindow.length
+    expect(echoEnergy).toBeGreaterThan(1e-5)
+    expect(Math.abs(ceramicSamples.at(-1)!)).toBeLessThan(.001)
+  })
+})
+
+describe('createContinuousBed and player.bed', () => {
+  const bedKinds: ContinuousBedKind[] = ['paper', 'water', 'fabric', 'woodRub']
+
+  it.each(bedKinds)('lazily starts %s bed above 0.02 speed, modulates cutoff/gain <= 0.045, and disconnects cleanly', kind => {
+    const context = new AudioContextBoundary()
+    let requests = 0
+    const bed = createContinuousBed({
+      context: () => { requests++; return context.asContext() },
+      enabled: () => true,
+      kind,
+    })
+
+    // Below threshold: silent no-op without touching AudioContext.
+    bed.setSpeed(0)
+    bed.setSpeed(0.02)
+    expect(requests).toBe(0)
+    expect(context.sources).toHaveLength(0)
+
+    // Above threshold: lazily creates one looped buffer source + bandpass filter + quiet gain.
+    bed.setSpeed(0.25)
+    expect(requests).toBe(1)
+    expect(context.sources).toHaveLength(1)
+    const source = context.sources[0] as BufferSourceBoundary
+    expect(source.loop).toBe(true)
+    expect(context.filters).toHaveLength(1)
+    expect(context.filters[0].type).toBe('bandpass')
+    expect(context.gains).toHaveLength(1)
+    const gain = context.gains[0]
+    expect(gain.gain.events[0].value).toBe(0)
+    const slowFreq = context.filters[0].frequency.events.at(-1)!.value
+    const slowGain = gain.gain.events.at(-1)!.value
+    expect(slowGain).toBeGreaterThan(0)
+    expect(slowGain).toBeLessThanOrEqual(.045)
+
+    // Higher speed raises both cutoff frequency and quiet gain (bounded <= 0.045) without creating new nodes.
+    context.currentTime = 3.2
+    bed.setSpeed(1)
+    expect(context.sources).toHaveLength(1)
+    const fastFreq = context.filters[0].frequency.events.at(-1)!.value
+    const fastGain = gain.gain.events.at(-1)!.value
+    expect(fastFreq).toBeGreaterThan(slowFreq)
+    expect(fastGain).toBeGreaterThan(slowGain)
+    expect(fastGain).toBeLessThanOrEqual(.045)
+
+    // Setting speed to 0 fades to 0 and disconnects all owned nodes cleanly.
+    context.currentTime = 3.4
+    bed.setSpeed(0)
+    expect(gain.gain.events.at(-1)!.value).toBe(0)
+    expect(source.disconnected).toBe(true)
+    expect(context.filters[0].disconnected).toBe(true)
+    expect(gain.disconnected).toBe(true)
+
+    // Can restart cleanly before disposal, and becomes inert after dispose.
+    context.currentTime = 3.6
+    bed.setSpeed(0.6)
+    expect(context.sources).toHaveLength(2)
+    bed.dispose()
+    bed.dispose()
+    bed.setSpeed(0.8)
+    expect(context.sources).toHaveLength(2)
+    expect(context.gains.every(g => g.disconnected)).toBe(true)
+  })
+
+  it('automatically stops and disposes player.bed handles with the parent player', () => {
+    const context = new AudioContextBoundary()
+    const player = playerFor(context)
+    const bed = player.bed('water')
+    bed.setSpeed(0.5)
+    expect(context.sources).toHaveLength(1)
+
+    player.stop()
+    expect(context.sources[0].disconnected).toBe(true)
+    expect(context.gains[0].disconnected).toBe(true)
+
+    // Restarting works after player.stop(), then player.dispose() permanently releases it.
+    bed.setSpeed(0.7)
+    expect(context.sources).toHaveLength(2)
+    player.dispose()
+    expect(context.sources.every(s => s.disconnected)).toBe(true)
+    bed.setSpeed(0.9)
+    expect(context.sources).toHaveLength(2)
   })
 })

@@ -267,7 +267,7 @@ describe('Bodhi root watering model', () => {
     const resources = () => new Set(meshes(model.root).flatMap(mesh => [mesh.geometry, ...(Array.isArray(mesh.material) ? mesh.material : [mesh.material])]))
     const owned = resources()
     const batches = meshes(model.root).filter((mesh): mesh is THREE.InstancedMesh => mesh instanceof THREE.InstancedMesh)
-    expect(batches).toHaveLength(5)
+    expect(batches).toHaveLength(4)
     const releases = new Map<object, number>()
     for (const resource of owned) resource.addEventListener('dispose', () => releases.set(resource, (releases.get(resource) ?? 0) + 1))
     for (const resource of batches) resource.addEventListener('dispose', () => releases.set(resource, (releases.get(resource) ?? 0) + 1))

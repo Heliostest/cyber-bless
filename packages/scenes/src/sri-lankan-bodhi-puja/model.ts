@@ -1,6 +1,13 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { disposeTree } from '../procedural-kit'
+import {
+  applyBodhiBarkShading,
+  bodhiLeafInstanceColor,
+  createBodhiBarkMaterials,
+  createBodhiLeafGeometry,
+  createBodhiLeafMaterials,
+} from './bodhi-materials'
 
 /** Generic temple tree and original pitcher/staging, not a particular sacred-tree monument. */
 export function createBodhiPujaModel() {
@@ -10,8 +17,8 @@ export function createBodhiPujaModel() {
   actor.name = 'bodhi-water-pitcher'
   root.add(actor)
 
-  const bark = new THREE.MeshStandardMaterial({ color: 0xaaa995, roughness: .95 })
-  const barkLight = new THREE.MeshStandardMaterial({ color: 0xbdbba7, roughness: .94 })
+  const { bark, barkLight } = createBodhiBarkMaterials()
+  const petioleMaterial = new THREE.MeshStandardMaterial({ color: 0xaab484, roughness: .88 })
   const stone = new THREE.MeshStandardMaterial({ color: 0xc4baa1, roughness: .98 })
   const stoneShade = new THREE.MeshStandardMaterial({ color: 0xa89e87, roughness: .98 })
   const soil = new THREE.MeshStandardMaterial({ color: 0x93724f, roughness: 1 })
@@ -25,8 +32,7 @@ export function createBodhiPujaModel() {
 
   const water = new THREE.MeshStandardMaterial({ color: 0x9bcbd0, roughness: .2, metalness: .03, transparent: true, opacity: .8 })
   water.userData.waterRendering = true
-  const leaves = [0x668743, 0x79994a, 0x8caa58].map(color => new THREE.MeshStandardMaterial({ color, roughness: .77 }))
-  const veinMaterial = new THREE.MeshStandardMaterial({ color: 0xa8b77b, roughness: .9 })
+  const leaves = createBodhiLeafMaterials()
 
   function add(parent: THREE.Object3D, name: string, geometry: THREE.BufferGeometry, material: THREE.Material, x = 0, y = 0, z = 0) {
     const mesh = new THREE.Mesh(geometry, material)
@@ -36,7 +42,7 @@ export function createBodhiPujaModel() {
     parent.add(mesh)
     return mesh
   }
-  function solid(positions: number[], indices: number[]) {
+  function solid(positions: number[], indices: number[], uvs?: number[]) {
     // Normalize the winding once; every custom solid has a closed shell.
     let volume = 0
     for (let i = 0; i < indices.length; i += 3) {
@@ -48,21 +54,28 @@ export function createBodhiPujaModel() {
     if (volume < 0) for (let i = 0; i < indices.length; i += 3) [indices[i + 1], indices[i + 2]] = [indices[i + 2]!, indices[i + 1]!]
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+    if (uvs) geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
     geometry.setIndex(indices)
     geometry.computeVertexNormals()
     return geometry
   }
-  function tube(points: [number, number, number][], radii: number[], sides = 10) {
-    const positions: number[] = [], indices: number[] = []
+  function tube(points: [number, number, number][], radii: number[], sides = 10, shadeKind?: 'trunk' | 'root' | 'branch') {
+    const positions: number[] = [], uvs: number[] = [], indices: number[] = []
     const path = points.map(point => new THREE.Vector3(...point))
+    const lengths: number[] = [0]
+    for (let i = 1; i < path.length; i++) lengths.push(lengths[i - 1]! + path[i]!.distanceTo(path[i - 1]!))
+    const totalLength = Math.max(lengths[lengths.length - 1]!, 1e-4)
     for (let ring = 0; ring < path.length; ring++) {
       const tangent = path[Math.min(ring + 1, path.length - 1)]!.clone().sub(path[Math.max(ring - 1, 0)]!).normalize()
       const u = new THREE.Vector3(0, 0, 1).cross(tangent).normalize()
       const v = tangent.clone().cross(u).normalize()
+      const texV = lengths[ring]! / totalLength
       for (let side = 0; side < sides; side++) {
         const angle = side * Math.PI * 2 / sides
         const point = path[ring]!.clone().addScaledVector(u, Math.cos(angle) * radii[ring]!).addScaledVector(v, Math.sin(angle) * radii[ring]!)
         positions.push(...point.toArray())
+        // Symmetric triangle-wave U prevents UV wrap seams without duplicating manifold vertices.
+        uvs.push(1 - Math.abs((side / sides) * 2 - 1), texV)
       }
     }
     for (let ring = 0; ring < path.length - 1; ring++) for (let side = 0; side < sides; side++) {
@@ -72,14 +85,18 @@ export function createBodhiPujaModel() {
     }
     const bottom = positions.length / 3
     positions.push(...points[0]!)
+    uvs.push(0.5, 0)
     const top = positions.length / 3
     positions.push(...points[points.length - 1]!)
+    uvs.push(0.5, 1)
     const last = (path.length - 1) * sides
     for (let side = 0; side < sides; side++) {
       const next = (side + 1) % sides
       indices.push(bottom, next, side, top, last + side, last + next)
     }
-    return solid(positions, indices)
+    const geometry = solid(positions, indices, uvs)
+    if (shadeKind) applyBodhiBarkShading(geometry, shadeKind)
+    return geometry
   }
   function brick(start: number, end: number) {
     const points = [[.79, start], [.95, start], [.95, end], [.79, end]].map(([radius, angle]) => [
@@ -107,27 +124,19 @@ export function createBodhiPujaModel() {
   const damp = add(root, 'bodhi-damp-soil', new THREE.CylinderGeometry(.22, .22, .006, 32), wetSoil, .07, .173, .26)
   damp.scale.z = .72
 
-  add(root, 'bodhi-pale-forked-trunk', tube([[.28, .17, -.25], [.22, .83, -.24], [.22, 1.39, -.27], [.05, 1.84, -.28]], [.145, .105, .074, .031]), bark)
-  add(root, 'bodhi-trunk-fork-right', tube([[.22, 1.05, -.25], [.40, 1.56, -.22], [.63, 1.98, -.25]], [.074, .056, .026]), barkLight)
+  add(root, 'bodhi-pale-forked-trunk', tube([[.28, .17, -.25], [.22, .83, -.24], [.22, 1.39, -.27], [.05, 1.84, -.28]], [.145, .105, .074, .031], 10, 'trunk'), bark)
+  add(root, 'bodhi-trunk-fork-right', tube([[.22, 1.05, -.25], [.40, 1.56, -.22], [.63, 1.98, -.25]], [.074, .056, .026], 10, 'trunk'), barkLight)
   for (let i = 0; i < 7; i++) {
     const angle = i * Math.PI * 2 / 7 + .2
     const radius = .50 + .08 * Math.sin(i * 2)
     add(root, `bodhi-visible-root-${i}`, tube([
       [.28, .35, -.25], [.28 + Math.cos(angle) * .23, .205, -.25 + Math.sin(angle) * .23],
       [.28 + Math.cos(angle) * radius, .184, -.25 + Math.sin(angle) * radius],
-    ], [.067, .037, .012]), i % 2 ? bark : barkLight)
+    ], [.067, .037, .012], 10, 'root'), i % 2 ? bark : barkLight)
   }
 
-  // Cordate bases and conspicuously long, slender drip tips are solid thin leaves.
-  const leafShape = new THREE.Shape()
-  leafShape.moveTo(0, .115)
-  leafShape.bezierCurveTo(-.055, .205, -.145, .165, -.135, .055)
-  leafShape.bezierCurveTo(-.13, -.075, -.067, -.17, -.025, -.265)
-  leafShape.lineTo(0, -.445)
-  leafShape.lineTo(.025, -.265)
-  leafShape.bezierCurveTo(.067, -.17, .13, -.075, .135, .055)
-  leafShape.bezierCurveTo(.145, .165, .055, .205, 0, .115)
-  const leafGeometry = new THREE.ExtrudeGeometry(leafShape, { depth: .009, bevelEnabled: false, curveSegments: 8, steps: 1 })
+  // Gently arched, midrib-folded watertight cordate leaves with slender drip tips and textured veins.
+  const leafGeometry = createBodhiLeafGeometry()
   const leafBatches = leaves.map((material, i) => {
     const mesh = new THREE.InstancedMesh(leafGeometry, material, 48)
     mesh.name = `bodhi-cordate-drip-tip-leaves-${i}`
@@ -135,11 +144,7 @@ export function createBodhiPujaModel() {
     root.add(mesh)
     return mesh
   })
-  const veinGeometry = new THREE.CylinderGeometry(.0028, .0028, 1, 5)
-  const veins = new THREE.InstancedMesh(veinGeometry, veinMaterial, 144)
-  veins.name = 'bodhi-leaf-midribs'
-  root.add(veins)
-  const petioles = new THREE.InstancedMesh(new THREE.CylinderGeometry(.004, .004, 1, 6), barkLight, 144)
+  const petioles = new THREE.InstancedMesh(new THREE.CylinderGeometry(.004, .004, 1, 6), petioleMaterial, 144)
   petioles.name = 'bodhi-attached-leaf-petioles'
   petioles.castShadow = petioles.receiveShadow = true
   root.add(petioles)
@@ -148,10 +153,7 @@ export function createBodhiPujaModel() {
   const petioleDirection = new THREE.Vector3()
   const transform = new THREE.Object3D()
   const up = new THREE.Vector3(0, 1, 0)
-  const veinTransform = new THREE.Object3D()
-  veinTransform.position.set(0, -.09, .011)
-  veinTransform.scale.set(1, .37, 1)
-  veinTransform.updateMatrix()
+  const leafTint = new THREE.Color()
   for (let branch = 0; branch < 12; branch++) {
     const angle = branch * Math.PI * 2 / 12 + .11
     const reach = .77 + .10 * Math.sin(branch * 2.1)
@@ -159,7 +161,7 @@ export function createBodhiPujaModel() {
     const y = 2.35 + .25 * Math.sin(branch * 1.7)
     const z = -.25 + Math.sin(angle) * .53
     const fork: [number, number, number] = branch % 2 ? [.38, 1.58, -.24] : [.06, 1.76, -.28]
-    add(root, `bodhi-canopy-branch-${branch}`, tube([fork, [.28 + Math.cos(angle) * .47, y - .22, -.25 + Math.sin(angle) * .33], [x, y, z]], [.032, .019, .008], 8), bark)
+    add(root, `bodhi-canopy-branch-${branch}`, tube([fork, [.28 + Math.cos(angle) * .47, y - .22, -.25 + Math.sin(angle) * .33], [x, y, z]], [.032, .019, .008], 8, 'branch'), bark)
     for (let leaf = 0; leaf < 12; leaf++) {
       const leafAngle = leaf * 2.39996323 + branch * .45
       const spread = .10 + .18 * Math.sqrt((leaf + .5) / 12)
@@ -172,8 +174,11 @@ export function createBodhiPujaModel() {
       transform.scale.setScalar(scale)
       transform.updateMatrix()
       const index = branch * 12 + leaf
-      leafBatches[index % 3]!.setMatrixAt(Math.floor(index / 3), transform.matrix)
-      veins.setMatrixAt(index, transform.matrix.clone().multiply(veinTransform.matrix))
+      const batch = leafBatches[index % 3]!
+      const slot = Math.floor(index / 3)
+      batch.setMatrixAt(slot, transform.matrix)
+      const heightNorm = THREE.MathUtils.clamp((py - 2.15) / 0.72, 0, 1)
+      batch.setColorAt(slot, bodhiLeafInstanceColor(branch, leaf, heightNorm, leafTint))
       leafBase.set(0, .115, .0045).applyMatrix4(transform.matrix)
       petioleDirection.copy(leafBase).sub(new THREE.Vector3(x, y, z))
       petioleTransform.position.set(x, y, z).add(leafBase).multiplyScalar(.5)
@@ -183,7 +188,8 @@ export function createBodhiPujaModel() {
       petioles.setMatrixAt(index, petioleTransform.matrix)
     }
   }
-  for (const mesh of [...leafBatches, veins, petioles]) mesh.instanceMatrix.needsUpdate = true
+  for (const mesh of leafBatches) if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+  for (const mesh of [...leafBatches, petioles]) mesh.instanceMatrix.needsUpdate = true
 
   // A watertight ceramic shell has an interior floor, inner wall, rounded belly,
   // open neck, and an integral extended pouring lip. No disk seals the opening.

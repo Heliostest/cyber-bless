@@ -1,6 +1,7 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import { createReplicaCanopyClusterGeometry, createReplicaCanopyMaterials } from './canopy-craft'
 
 const PAPER_W = 0.55
 const PAPER_H = 0.85
@@ -300,7 +301,8 @@ export function createLamTsuenModel() {
  const root=new THREE.Group();root.name='lamtsuen-root'
  const subject=new THREE.Group();subject.name='lamtsuen-subject';root.add(subject)
  const mat=(color:number,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness})
- const bark=mat(0x987456,.72),leaf=mat(0x79a45c),lightLeaf=mat(0xa3bd67),stone=mat(0xd8c7a1),orange=mat(0xf79831,.4),cordMat=mat(0xc54230),green=mat(0x557b49)
+ const bark=mat(0x987456,.72),stone=mat(0xd8c7a1),orange=mat(0xf79831,.4),cordMat=mat(0xc54230),green=mat(0x557b49)
+ const {leaf,lightLeaf}=createReplicaCanopyMaterials()
  // Traditional crimson-red xuan/wishing paper with fine UV-anchored pulp tooth,
  // restrained fibers (fine dyed xuan paper, not coarse raw-bark flecks), and highlight guard.
  const redPaper=createRitualMaterial({color:0xd4493b,roughness:.94,vertexColors:true}, {
@@ -327,8 +329,9 @@ export function createLamTsuenModel() {
  const branch=link(v(-.78,1.55,-.10),v(.82,1.55,-.10),.07,bark,subject,'lamtsuen-wish-branch')
  link(v(-.78,1.45,-.85),v(-.52,2.12,-.95),.075,bark,subject,'lamtsuen-crown-stem')
  link(v(-.55,1.99,-.95),v(.65,2.02,-.95),.045,bark,subject,'lamtsuen-crown-bough')
+ const replicaCrownGeo=createReplicaCanopyClusterGeometry()
  for(const [i,p] of [[-.83,2.12,-.95],[-.40,2.23,-1.0],[.08,2.19,-.95],[.52,2.15,-.95],[.83,2.03,-.95]].entries()){
-  const o=mesh(new THREE.IcosahedronGeometry(1,1),i%2?lightLeaf:leaf,subject,`lamtsuen-leaf-cluster-${i}`);o.scale.set(.39,.24,.30);o.position.set(...p as [number,number,number])
+  const o=mesh(replicaCrownGeo,i%2?lightLeaf:leaf,subject,`lamtsuen-leaf-cluster-${i}`);o.rotation.y=i*1.15;o.scale.set(.39,.24,.30);o.position.set(...p as [number,number,number])
  }
  const paperRoot=new THREE.Group();paperRoot.name='lamtsuen-paper-root';subject.add(paperRoot)
  const paperSheet=createWishingPaperGeometry()

@@ -16,6 +16,14 @@ import {
   createStepOverlay, createWarmStage, disposeTree, observeCanvasResize,
   portraitBoost, setSafeText, sizeStage,
 } from '../procedural-kit'
+import {
+  applyOldTreeBarkShading,
+  createCanopyClusterGeometry,
+  createCanopyMaterials,
+  createMossClusterGeometry,
+  createMossMaterial,
+  createOldTreeBarkMaterials,
+} from './tree-materials'
 
 const COPY = {
   title: '井边放下', stepsAria: '步骤',
@@ -139,7 +147,9 @@ function softShadowTexture() {
 
 function tube(points: number[][], radius: number, material: THREE.Material, segments = 30) {
   const curve = new THREE.CatmullRomCurve3(points.map(([x, y, z]) => new THREE.Vector3(x, y, z)), false, 'centripetal')
-  const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, segments, radius, 9, false), material)
+  const geometry = new THREE.TubeGeometry(curve, segments, radius, 9, false)
+  applyOldTreeBarkShading(geometry)
+  const mesh = new THREE.Mesh(geometry, material)
   mesh.castShadow = mesh.receiveShadow = true
   return mesh
 }
@@ -178,11 +188,9 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group()
   world.name = 'clootie-well-and-tree'
   scene.add(world)
-  const bark = new THREE.MeshStandardMaterial({ color: 0x937259, roughness: 1 })
-  const barkHighlight = new THREE.MeshStandardMaterial({ color: 0xb69771, roughness: 1 })
-  const mint = new THREE.MeshStandardMaterial({ color: 0x9cbfa3, roughness: 1 })
-  const sage = new THREE.MeshStandardMaterial({ color: 0xb5c7a4, roughness: 1 })
-  const mossMat = new THREE.MeshStandardMaterial({ color: 0x9aaf7e, roughness: 1 })
+  const { bark, barkHighlight } = createOldTreeBarkMaterials()
+  const { mint, sage } = createCanopyMaterials()
+  const mossMat = createMossMaterial()
   const stoneColors = [0xc8bfaa, 0xd9cdb6, 0xbabba6, 0xc6c4b2].map((color) => new THREE.MeshStandardMaterial({ color, roughness: 1 }))
 
   stoneColors.forEach(material => applyCraftSurface(material, { kind: 'stone', strength: .45 }))
@@ -254,24 +262,29 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   tree.add(tube([[0.86, 1.9, -0.15], [0.53, 2.13, -0.22], [0.26, 2.28, -0.21]], 0.043, bark))
   // Sparse bark ridges and a rounded knot mark the tree's age gently.
   tree.add(tube([[0.83, 0.42, 0.035], [0.89, 0.8, 0.035], [0.85, 1.1, 0.012]], 0.008, barkHighlight))
-  const treeKnot = new THREE.Mesh(new THREE.TorusGeometry(0.049, 0.012, 7, 20), barkHighlight)
+  const treeKnotGeo = new THREE.TorusGeometry(0.049, 0.012, 7, 20)
+  applyOldTreeBarkShading(treeKnotGeo)
+  const treeKnot = new THREE.Mesh(treeKnotGeo, barkHighlight)
   treeKnot.position.set(0.83, 0.89, 0.042)
   treeKnot.scale.set(0.75, 1.28, 1)
   tree.add(treeKnot)
-  const crownGeo = new THREE.IcosahedronGeometry(1, 2)
+  const crownGeo = createCanopyClusterGeometry()
   for (const [i, [x, y, z, scale]] of [
     [0.43, 2.3, -0.23, 0.39], [0.82, 2.42, -0.27, 0.42],
     [1.13, 2.27, -0.19, 0.34], [0.91, 2.08, -0.3, 0.29],
   ].entries()) {
     const crown = new THREE.Mesh(crownGeo, i % 2 ? mint : sage)
     crown.position.set(x, y, z)
+    crown.rotation.y = i * 1.35
     crown.scale.set(scale, scale * 0.77, scale * 0.8)
     crown.castShadow = crown.receiveShadow = true
     tree.add(crown)
   }
+  const mossGeo = createMossClusterGeometry()
   for (let i = 0; i < 4; i++) {
-    const moss = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 6), mossMat)
+    const moss = new THREE.Mesh(mossGeo, mossMat)
     moss.position.set(0.77 + Math.cos(i * 1.7) * 0.23, 0.032, -0.02 + Math.sin(i * 1.7) * 0.17)
+    moss.rotation.y = i * 1.1
     moss.scale.set(0.12, 0.03, 0.085)
     world.add(moss)
   }

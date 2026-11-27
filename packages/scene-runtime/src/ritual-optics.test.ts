@@ -165,4 +165,68 @@ describe('ritual optical surfaces', () => {
     expect([styled.transmission, styled.roughness, styled.clearcoat, styled.attenuationColor.getHex()]).toEqual([.42, .17, .58, 0xddaa33]);
     frame.restore(); surfaces.dispose(); source.dispose(); mesh.geometry.dispose();
   });
+
+  it('uses dedicated LEAF_FRUIT_SCATTER with front-wrap lobe, warm tint, cuticle rim, and C1 shoulder on leaf, fruit, and petal without altering paper/cloth', () => {
+    const leaf = createRitualMaterial({ color: 0x608c49, roughness: .77 }, { kind: 'leaf', strength: .12, fiber: false });
+    const fruit = createRitualMaterial({ color: 0xbb2850, roughness: .32 }, { kind: 'fruit', strength: .16, fiber: false });
+    const petal = createRitualMaterial({ color: 0xfff7e4 }, { kind: 'petal' });
+    const paper = createRitualMaterial({ color: 0xfaf3e4 }, { kind: 'paper', fiber: false });
+    const sheet = createRitualMaterial({ color: 0xfaf3e4 }, { kind: 'paper', paper: { layout: 'sheet', highlightGuard: .6 } });
+    const cloth = createRitualMaterial({ color: 0x99b6a8 }, { kind: 'cloth', fiber: false });
+
+    expect(petal.roughness).toBeCloseTo(.86, 5);
+    expect(petal.userData.ritualOptics.strength).toBeCloseTo(.22, 5);
+    expect(petal.userData.ritualOptics.fiber).toBe(false);
+    expect(leaf.userData.ritualOptics.strength).toBeCloseTo(.12, 5);
+    expect(fruit.userData.ritualOptics.strength).toBeCloseTo(.16, 5);
+
+    const leafShader = compile(leaf);
+    const fruitShader = compile(fruit);
+    const petalShader = compile(petal);
+    const paperShader = compile(paper);
+    const sheetShader = compile(sheet);
+    const clothShader = compile(cloth);
+
+    // Leaf, fruit, and petal use the front-wrap lobe + cuticle rim + C1 highlight shoulder (0.74, 0.24).
+    for (const shader of [leafShader, fruitShader, petalShader]) {
+      expect(shader.fragmentShader).toContain('smoothstep(-0.32, 0.65, frontDot)');
+      expect(shader.fragmentShader).toContain('ritualScatterTint');
+      expect(shader.fragmentShader).toContain('ritualCuticleRim');
+      expect(shader.fragmentShader).toContain('WBR_BOTANICAL_SHOULDER');
+      expect(shader.fragmentShader).toContain('ritualBotanicalPeak > 0.74');
+      expect(shader.fragmentShader).toContain('0.24 * (ritualBotanicalExcess / (ritualBotanicalExcess + 0.24))');
+      expect(shader.fragmentShader.split('\n').filter(line => /\S.*#/.test(line))).toEqual([]);
+    }
+    expect((leafShader.uniforms.ritualScatterTint.value as THREE.Vector3).toArray()).toEqual([1.06, 1.12, 0.74]);
+    expect((fruitShader.uniforms.ritualScatterTint.value as THREE.Vector3).toArray()).toEqual([1.10, 0.96, 0.86]);
+    expect((petalShader.uniforms.ritualScatterTint.value as THREE.Vector3).toArray()).toEqual([1.10, 0.96, 0.86]);
+    expect(leafShader.uniforms.ritualCuticleRim.value).toBeGreaterThan(0);
+    expect(fruitShader.uniforms.ritualCuticleRim.value).toBeGreaterThan(0);
+    expect(petalShader.uniforms.ritualCuticleRim.value).toBeGreaterThan(0);
+    expect(petalShader.uniforms.ritualCuticleRim.value).toBeLessThan(leafShader.uniforms.ritualCuticleRim.value);
+
+    // Paper, sheet-paper, and cloth paths remain completely untouched.
+    for (const shader of [paperShader, sheetShader, clothShader]) {
+      expect(shader.fragmentShader).not.toContain('ritualScatterTint');
+      expect(shader.fragmentShader).not.toContain('ritualCuticleRim');
+      expect(shader.fragmentShader).not.toContain('WBR_BOTANICAL_SHOULDER');
+      expect(shader.fragmentShader).not.toContain('smoothstep(-0.32, 0.65');
+    }
+    expect(sheetShader.fragmentShader).toContain('ritualSheetHighlightGuard');
+    expect(new Set([leaf, fruit, petal, paper, sheet, cloth].map(m => m.customProgramCacheKey())).size).toBe(6);
+
+    // Styled clones retain leaf/fruit/petal wrap scatter and shoulder.
+    const scene = new THREE.Scene(), mesh = new THREE.Mesh(new THREE.SphereGeometry(), leaf); scene.add(mesh);
+    for (const style of ['toon-soft', 'toon-ink', 'gouache'] as const) {
+      const adapter = createToonSurfaces(style), frame = adapter.apply(scene);
+      const styled = mesh.material as THREE.Material;
+      const styledShader = compile(styled, styled instanceof THREE.MeshToonMaterial ? 'toon' : 'standard');
+      expect(styledShader.fragmentShader).toContain('smoothstep(-0.32, 0.65, frontDot)');
+      expect(styledShader.fragmentShader).toContain('WBR_BOTANICAL_SHOULDER');
+      expect((styledShader.uniforms.ritualScatterTint.value as THREE.Vector3).toArray()).toEqual([1.06, 1.12, 0.74]);
+      frame.restore(); adapter.dispose();
+    }
+    mesh.geometry.dispose();
+    [leaf, fruit, petal, paper, sheet, cloth].forEach(m => m.dispose());
+  });
 });

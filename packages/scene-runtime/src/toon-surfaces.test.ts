@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { createToonSurfaces } from "./toon-surfaces";
 import { calibrateIconPigment } from './icon-style';
 import { createBotanicalMaterial } from './botanical-surfaces';
+import { createCraftMaterial } from './craft-surfaces';
 
 describe("official toon material adaptation", () => {
   it('calibrates only untextured subject pigment and keeps animated source colors live', () => {
@@ -300,5 +301,58 @@ describe("official toon material adaptation", () => {
     surfaces.dispose();
     petal.dispose();
     mesh.geometry.dispose();
+  });
+
+  it("preserves lacquer, ceramic, metal, and terracotta roughness/envMapIntensity caps and invalidates cache when craftSurface kind changes", () => {
+    const scene = new THREE.Scene();
+    const lacquer = createCraftMaterial({ color: 0x801a16, envMapIntensity: 1 }, { kind: 'lacquer' });
+    const ceramic = createCraftMaterial({ color: 0xc2d4c2, roughness: 0.44, envMapIntensity: 1 }, { kind: 'ceramic' });
+    const metal = createCraftMaterial({ color: 0xd4ad5a, roughness: 0.36, envMapIntensity: 1 }, { kind: 'metal' });
+    const terracotta = createCraftMaterial({ color: 0xbc6c48, envMapIntensity: 1 }, { kind: 'terracotta' });
+
+    const lacquerMesh = new THREE.Mesh(new THREE.BoxGeometry(), lacquer);
+    const ceramicMesh = new THREE.Mesh(new THREE.BoxGeometry(), ceramic);
+    const metalMesh = new THREE.Mesh(new THREE.BoxGeometry(), metal);
+    const terracottaMesh = new THREE.Mesh(new THREE.BoxGeometry(), terracotta);
+    scene.add(lacquerMesh, ceramicMesh, metalMesh, terracottaMesh);
+
+    const surfaces = createToonSurfaces("toon-soft");
+    let frame = surfaces.apply(scene);
+
+    const styledLacquer = lacquerMesh.material as THREE.MeshPhysicalMaterial;
+    const styledCeramic = ceramicMesh.material as THREE.MeshStandardMaterial;
+    const styledMetal = metalMesh.material as THREE.MeshStandardMaterial;
+    const styledTerra = terracottaMesh.material as THREE.MeshStandardMaterial;
+
+    expect(styledLacquer).toBeInstanceOf(THREE.MeshPhysicalMaterial);
+    expect(styledLacquer.clearcoat).toBeCloseTo(0.76, 5);
+    expect(styledLacquer.clearcoatRoughness).toBeCloseTo(0.16, 5);
+    expect(styledLacquer.roughness).toBeCloseTo(0.32, 5);
+    expect(styledLacquer.envMapIntensity).toBeCloseTo(0.88, 5);
+
+    expect(styledCeramic.roughness).toBeCloseTo(0.44, 5);
+    expect(styledCeramic.envMapIntensity).toBeCloseTo(0.88, 5);
+
+    expect(styledMetal.roughness).toBeCloseTo(0.36, 5);
+    expect(styledMetal.envMapIntensity).toBeCloseTo(0.88, 5);
+
+    expect(styledTerra.roughness).toBeCloseTo(0.88, 5);
+    expect(styledTerra.envMapIntensity).toBeCloseTo(0.50, 5);
+
+    frame.restore();
+
+    // Switching craftSurface.kind on a material invalidates the cached clone cleanly.
+    const disposedPrev = vi.fn();
+    styledTerra.addEventListener('dispose', disposedPrev);
+    terracotta.userData.craftSurface = { kind: 'ceramic', scale: 1, strength: 0.65, axis: 'x' };
+    frame = surfaces.apply(scene);
+    expect(disposedPrev).toHaveBeenCalledTimes(1);
+    expect(terracottaMesh.material).not.toBe(styledTerra);
+    expect((terracottaMesh.material as THREE.MeshStandardMaterial).envMapIntensity).toBeCloseTo(0.88, 5);
+
+    frame.restore();
+    surfaces.dispose();
+    [lacquer, ceramic, metal, terracotta].forEach(m => m.dispose());
+    [lacquerMesh, ceramicMesh, metalMesh, terracottaMesh].forEach(m => m.geometry.dispose());
   });
 });

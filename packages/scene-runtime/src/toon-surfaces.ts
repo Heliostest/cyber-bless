@@ -44,8 +44,10 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">, sc
       const pbr = material as THREE.MeshPhysicalMaterial;
       const botanical = material.userData.botanicalSurface;
       const botanicalSig = botanical ? `${botanical.kind}:${botanical.venation ?? botanical.peel ?? ''}` : '';
+      const craft = material.userData.craftSurface;
+      const craftSig = craft ? `${craft.kind}:${craft.axis ?? ''}:${craft.pattern ?? ''}` : '';
       return [material.version, material.transparent, material.side, material.alphaTest > 0, material.alphaHash,
-        pbr.vertexColors, pbr.metalness >= .3, pbr.roughness <= .4, ...mapFields.map(key => !!pbr[key]), pbr.transmission > 0, pbr.clearcoat > 0, pbr.sheen > 0, pbr.iridescence > 0, pbr.anisotropy > 0, botanicalSig].join(':');
+        pbr.vertexColors, pbr.metalness >= .3, pbr.roughness <= .4, ...mapFields.map(key => !!pbr[key]), pbr.transmission > 0, pbr.clearcoat > 0, pbr.sheen > 0, pbr.iridescence > 0, pbr.anisotropy > 0, botanicalSig, craftSig].join(':');
     }).join('|');
   }
 
@@ -191,7 +193,16 @@ export function createToonSurfaces(style: Exclude<RenderStyleId, "original">, sc
                 toon.normalMapType = source.normalMapType;
                 toon.aoMapIntensity = hint.aoIntensity ?? source.aoMapIntensity;
                 toon.lightMapIntensity = source.lightMapIntensity;
-                const envCap = source instanceof THREE.MeshPhysicalMaterial || hasCraftFinish(source) ? .85 : craftKind === 'bamboo' ? .74 : .55;
+                const isCraftFinish = hasCraftFinish(source) || craftKind === 'lacquer' || craftKind === 'ceramic' || craftKind === 'metal';
+                const envCap = isCraftFinish
+                  ? .88
+                  : source instanceof THREE.MeshPhysicalMaterial
+                    ? .85
+                    : craftKind === 'bamboo'
+                      ? .74
+                      : craftKind === 'terracotta'
+                        ? .50
+                        : .55;
                 toon.envMapIntensity = Math.min(source.envMapIntensity, envCap);
                 toon.displacementScale = source.displacementScale; toon.displacementBias = source.displacementBias;
               }

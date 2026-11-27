@@ -1,5 +1,6 @@
 import { applyCraftSurface, type CraftSurfaceOptions } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { buildKadomatsuPineNeedlesGeometry, createKadomatsuPineMaterial } from './pine-botanical'
 
 function solid(source:THREE.BufferGeometry,smooth=false){
  if(smooth&&!source.getAttribute('normal'))source.computeVertexNormals()
@@ -37,6 +38,7 @@ export function createKadomatsuModel(){
  const bambooSkinMat=applyCraftSurface(new THREE.MeshPhysicalMaterial({color:'#ffffff',roughness:.48,clearcoat:.30,clearcoatRoughness:.32,specularIntensity:.66,vertexColors:true}),{kind:'bamboo',strength:.48,scale:.85,axis:'y'})
  const bambooCutMat=applyCraftSurface(new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.88,vertexColors:true}),{kind:'bamboo',strength:.30,scale:.9,axis:'y'})
  const doorPanelMat=applyCraftSurface(new THREE.MeshPhysicalMaterial({color:'#ffffff',roughness:.72,clearcoat:.10,clearcoatRoughness:.46,specularIntensity:.46,vertexColors:true}),{kind:'wood',strength:.60,scale:.68,axis:'y'})
+ const pineNeedlesMat=createKadomatsuPineMaterial()
  // Cache by authored part family as well as colour: bamboo, straw and cord stay distinct.
  const surfaceFor=(name:string):CraftSurfaceOptions|undefined=>{
   if(name==='kadomatsu-paving')return{kind:'stone',strength:.4}
@@ -143,13 +145,12 @@ export function createKadomatsuModel(){
    for(const y of nodeYs){const ring=mesh(group,`${name}-bamboo-${i}-node-${y.toFixed(2)}`,new THREE.TorusGeometry(.0955,.0065,8,28),'#8db264',[x!,y,z!],true);ring.rotation.x=Math.PI/2}
    return stalk
   })
-  // Merge closed needle cones into one draw call; each cone remains a real solid.
-  const needleData:number[]=[],needleSource=new THREE.ConeGeometry(1,1,4).toNonIndexed(),needlePositions=needleSource.getAttribute('position'),q=new THREE.Quaternion(),matrix=new THREE.Matrix4(),v=new THREE.Vector3()
+  // Merge closed arched slender 5-sided pine needles with basal fascicle sheaths into one draw call.
   for(let i=0;i<7;i++){
-   const a=i*Math.PI*2/7,from=new THREE.Vector3(Math.cos(a)*.10,.30,Math.sin(a)*.10),end=new THREE.Vector3(Math.cos(a)*.33,.55+(i%3)*.13,Math.sin(a)*.33),branch=mesh(group,`${name}-pine-branch-${i}`,new THREE.CylinderGeometry(.012,.018,from.distanceTo(end),6),'#71523b',from.clone().add(end).multiplyScalar(.5).toArray() as[number,number,number]);branch.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),end.clone().sub(from).normalize())
-   for(let j=0;j<3;j++)for(let k=0;k<8;k++){const phi=k*Math.PI*2/8,origin=from.clone().lerp(end,.60+j*.20).add(new THREE.Vector3(Math.cos(phi)*.012,k*.0015,Math.sin(phi)*.012)),direction=new THREE.Vector3(Math.cos(a)*.65+Math.cos(phi)*.55,.65+.15*Math.sin(phi),Math.sin(a)*.65+Math.sin(phi)*.55).normalize();q.setFromUnitVectors(new THREE.Vector3(0,1,0),direction);matrix.compose(origin.addScaledVector(direction,.075),q,new THREE.Vector3(.007,.15,.007));for(let n=0;n<needlePositions.count;n++){v.fromBufferAttribute(needlePositions,n).applyMatrix4(matrix);needleData.push(v.x,v.y,v.z)}}
+   const a=i*Math.PI*2/7,from=new THREE.Vector3(Math.cos(a)*.10,.30,Math.sin(a)*.10),end=new THREE.Vector3(Math.cos(a)*.33,.55+(i%3)*.13,Math.sin(a)*.33),branch=mesh(group,`${name}-pine-branch-${i}`,new THREE.CylinderGeometry(.0095,.0145,from.distanceTo(end),8),'#7b5b42',from.clone().add(end).multiplyScalar(.5).toArray() as[number,number,number],true);branch.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),end.clone().sub(from).normalize())
   }
-  needleSource.dispose();const needles=new THREE.BufferGeometry();needles.setAttribute('position',new THREE.Float32BufferAttribute(needleData,3));mesh(group,`${name}-pine-needles`,needles,'#2f684d',[0,0,0])
+  const needlesMesh=new THREE.Mesh(buildKadomatsuPineNeedlesGeometry(),pineNeedlesMat)
+  needlesMesh.name=`${name}-pine-needles`;needlesMesh.castShadow=needlesMesh.receiveShadow=true;group.add(needlesMesh)
   return{group,base,stalks}
  }
  const left=bundle('kadomatsu-left'),right=bundle('kadomatsu-right'),actor=right.group,fixed=left.group;fixed.position.set(-1.20,.08,0)

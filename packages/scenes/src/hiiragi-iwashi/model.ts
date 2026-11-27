@@ -1,12 +1,15 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createHollyLeafMaterial, createSpinyHollyLeafGeometry } from './holly-botanical'
 const smooth=(x:number)=>{const t=THREE.MathUtils.clamp(x,0,1);return t*t*(3-2*t)}
 export function createHiiragiModel(){
  const root=new THREE.Group();root.name='hiiragi-subject';root.position.y=-.012
  const material=(color:number,roughness=.75,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness})
- const wood=material(0x966746),bark=material(0x776044),leafmat=createHollyLeafMaterial(),stone=material(0xc6c6af),roast=material(0x928b75,.64,.18),dark=material(0x4c493e),eye=material(0x323e3a,.35),rim=material(0xc8b98c)
+ const wood=material(0x966746),frameWoodY=material(0x776044,.78),frameWoodX=material(0x776044,.78),bark=material(0x776044),leafmat=createHollyLeafMaterial(),stone=material(0xc6c6af),roast=material(0x928b75,.64,.18),dark=material(0x4c493e),eye=material(0x323e3a,.35),rim=material(0xc8b98c)
  applyCraftSurface(wood,{kind:'wood',strength:.4,axis:'y'})
+ applyCraftSurface(frameWoodY,{kind:'wood',strength:.4,axis:'y'})
+ applyCraftSurface(frameWoodX,{kind:'wood',strength:.4,axis:'x'})
  applyCraftSurface(stone,{kind:'stone',strength:.45})
  const finish=(source:THREE.BufferGeometry)=>{
   const raw=source.index?source.toNonIndexed():source,p=raw.getAttribute('position'),faces:number[]=[]
@@ -15,17 +18,17 @@ export function createHiiragiModel(){
  }
  const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D=root,x=0,y=0,z=0)=>{const o=new THREE.Mesh(finish(g),m);o.name=name;o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
  const ball=(name:string,x:number,y:number,z:number,sx:number,sy:number,sz:number,m:THREE.Material,parent:THREE.Object3D=root)=>{const o=mesh(name,new THREE.SphereGeometry(1,20,12),m,parent,x,y,z);o.scale.set(sx,sy,sz);return o}
- const box=(name:string,x:number,y:number,z:number,sx:number,sy:number,sz:number,m:THREE.Material)=>mesh(name,new THREE.BoxGeometry(sx,sy,sz),m,root,x,y,z)
+ const box=(name:string,x:number,y:number,z:number,sx:number,sy:number,sz:number,m:THREE.Material,bevel=.016)=>mesh(name,new RoundedBoxGeometry(sx,sy,sz,2,Math.min(bevel,sx/3,sy/3,sz/3)),m,root,x,y,z)
  const lathe=(p:number[][])=>new THREE.LatheGeometry(p.map(([x,y])=>new THREE.Vector2(x!,y!)),40)
- const threshold=box('stone-threshold',0,.0775,.10,2.8,.155,1.9,stone)
- const door=box('door-panel',0,1.25,-.80,1.54,2.19,.12,wood)
- for(const x of[-.83,.83])box('door-post-'+x,x,1.25,-.75,.12,2.19,.2,bark)
- box('door-lintel',0,2.4,-.75,1.78,.12,.2,bark)
- for(const x of[-.51,-.25,0,.25,.51])box('door-board-line-'+x,x,1.25,-.7341,.011,2.1,.012,bark)
+ const threshold=box('stone-threshold',0,.0775,.10,2.8,.155,1.9,stone,.022)
+ const door=box('door-panel',0,1.25,-.80,1.54,2.19,.12,wood,.014)
+ for(const x of[-.83,.83])box('door-post-'+x,x,1.25,-.75,.12,2.19,.2,frameWoodY,.016)
+ box('door-lintel',0,2.4,-.75,1.78,.12,.2,frameWoodX,.016)
+ for(const x of[-.51,-.25,0,.25,.51])box('door-board-line-'+x,x,1.25,-.7341,.011,2.1,.012,frameWoodY,.003)
  const knob=mesh('door-handle',new THREE.TorusGeometry(.07,.016,10,24),dark,root,-.5,1.17,-.70)
  ball('door-ring-mount',-.5,1.24,-.724,.024,.024,.032,dark)
- box('holder-backplate',.83,.89,-.62,.15,.2,.14,bark)
- const holder=mesh('branch-holder',lathe([[0,0],[.07,0],[.075,.18],[.052,.18],[.05,.08],[0,.08]]),bark,root,.83,.80,-.50)
+ box('holder-backplate',.83,.89,-.62,.15,.2,.14,frameWoodY,.016)
+ const holder=mesh('branch-holder',lathe([[0,0],[.062,0],[.071,.012],[.075,.166],[.066,.18],[.054,.18],[.05,.17],[.05,.08],[0,.08]]),frameWoodY,root,.83,.80,-.50)
  const twig=new THREE.Group();twig.name='holly-twig';root.add(twig)
  const stem=mesh('holly-stem',new THREE.CylinderGeometry(.014,.025,1.08,16),bark,twig,0,.54,0)
  const collar=mesh('branch-head-bearing',new THREE.CylinderGeometry(.033,.027,.025,16),bark,twig,0,.8875,0)

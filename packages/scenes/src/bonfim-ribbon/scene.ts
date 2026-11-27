@@ -93,8 +93,8 @@ export function createBonfimRibbon(ctx: SceneContext): SceneInstance {
     const aspect = sizeStage(canvas, renderer, style, camera), target = new THREE.Vector3(.18,1.38,.45), direction = new THREE.Vector3(2.7,2.1,7).normalize()
     camera.position.copy(target).add(direction); camera.lookAt(target);camera.updateMatrixWorld(true)
     const inverse=camera.quaternion.clone().invert(),tangent=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));let distance=3.4
-    // Conservative convex envelope contains the fixed fence and every tightening pose.
-    for(const x of[-1.45,1.45])for(const y of[0,2.85])for(const z of[-.2,1.6]){const p=new THREE.Vector3(x,y,z).sub(target).applyQuaternion(inverse);distance=Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86))}
+    // Conservative convex envelope contains the fixed fence, plinths, finials, and every tightening pose.
+    for(const x of[-1.50,1.50])for(const y of[0,2.94])for(const z of[-.2,1.6]){const p=new THREE.Vector3(x,y,z).sub(target).applyQuaternion(inverse);distance=Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86))}
     camera.position.copy(target).addScaledVector(direction,distance);camera.lookAt(target);matrices()
   }
   restore(); sync()

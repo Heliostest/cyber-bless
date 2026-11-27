@@ -1,5 +1,7 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
 const PAPER_W = 1.01
@@ -296,43 +298,50 @@ export function createSetsubunModel() {
   paper.addEventListener('dispose', releaseBacklight)
 
   const stone=mat(0xc5c6ab),floor=mat(0xc99560),beanMat=mat(0xd9b667,.7),hilumMat=mat(0x94714b)
-  applyCraftSurface(wood, { kind: 'wood', strength: .4 })
-  applyCraftSurface(lightWood, { kind: 'wood', strength: .4 })
-  applyCraftSurface(floor, { kind: 'wood', strength: .4 })
+  const woodY=mat(0xae7b4c),woodZ=mat(0xae7b4c),lightWoodY=mat(0xd7ad73),lightWoodZ=mat(0xd7ad73)
+  applyCraftSurface(wood, { kind: 'wood', axis: 'x', strength: .4 })
+  applyCraftSurface(woodY, { kind: 'wood', axis: 'y', strength: .4 })
+  applyCraftSurface(woodZ, { kind: 'wood', axis: 'z', strength: .4 })
+  applyCraftSurface(lightWood, { kind: 'wood', axis: 'x', strength: .4 })
+  applyCraftSurface(lightWoodY, { kind: 'wood', axis: 'y', strength: .4 })
+  applyCraftSurface(lightWoodZ, { kind: 'wood', axis: 'z', strength: .4 })
+  applyCraftSurface(floor, { kind: 'wood', axis: 'z', strength: .4 })
   applyCraftSurface(stone, { kind: 'stone', strength: .4 })
 
   const mesh=(g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D,name:string)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
   const box=(name:string,size:[number,number,number],p:[number,number,number],m:THREE.Material,parent:THREE.Object3D=subject)=>{const o=mesh(new THREE.BoxGeometry(...size),m,parent,name);o.position.set(...p);return o}
-  const inside=box('beans-inside-floor',[3,.16,2.5],[0,.015,.70],floor)
-  const outside=box('beans-outside-stone',[3,.10,1.8],[0,-.015,-1.45],stone)
-  box('beans-threshold',[3,.06,.35],[0,.065,-.725],stone)
+  const rbox=(name:string,size:[number,number,number],p:[number,number,number],m:THREE.Material,parent:THREE.Object3D=subject,radius=.014)=>{const o=mesh(new RoundedBoxGeometry(size[0],size[1],size[2],2,Math.min(radius,size[0]/3,size[1]/3,size[2]/3)),m,parent,name);o.position.set(...p);return o}
+  const inside=rbox('beans-inside-floor',[3,.16,2.5],[0,.015,.70],floor,subject,.016)
+  // Ground the carved stone threshold directly into the courtyard floor; scattered outdoor beans land on the courtyard path itself.
+  const outside=rbox('beans-threshold',[3,.16,.35],[0,.015,-.725],stone,subject,.016)
   // Thin seams sit in the floor surface; they do not add a raised support plane.
-  for(let i=0;i<7;i++)box('beans-floor-seam-'+i,[.012,.004,2.48],[-1.28+i*.42,.093,.70],wood)
-  for(const x of [-1.25,1.25])box('beans-post-'+x,[.12,2.2,.46],[x,1.195,-.61],wood)
-  box('beans-header',[2.62,.12,.46],[0,2.355,-.61],wood)
-  const bottomTrack=box('beans-bottom-track',[2.62,.05,.42],[0,.12,-.61],lightWood)
-  const topTrack=box('beans-top-track',[2.62,.05,.42],[0,2.27,-.61],lightWood)
+  for(let i=0;i<7;i++)box('beans-floor-seam-'+i,[.012,.004,2.48],[-1.28+i*.42,.093,.70],woodZ)
+  for(const x of [-1.25,1.25])rbox('beans-post-'+x,[.12,2.2,.46],[x,1.195,-.61],woodY,subject,.014)
+  rbox('beans-header',[2.62,.12,.46],[0,2.355,-.61],wood,subject,.014)
+  const bottomTrack=rbox('beans-bottom-track',[2.62,.05,.42],[0,.12,-.61],lightWood,subject,.008)
+  const topTrack=rbox('beans-top-track',[2.62,.05,.42],[0,2.27,-.61],lightWood,subject,.008)
   const shojiPaperGeo = createShojiPaperGeometry()
   const panel=(name:string,z:number)=>{
     const g=new THREE.Group();g.name=name+'-root';g.position.set(name==='beans-door'?-.57:.57,.145,z);subject.add(g)
     const face=mesh(shojiPaperGeo,paper,g,name)
     face.position.set(0,1.05,0)
     face.userData.toonSurface = { shading: 'smooth' }
-    for(const x of [-.53,.53])box(name+'-edge-'+x,[.06,2.1,.09],[x,1.05,0],wood,g)
-    for(const y of [.03,.55,1.05,1.55,2.07])box(name+'-rail-'+y,[1.12,.06,.09],[0,y,0],lightWood,g)
-    box(name+'-vertical',[.04,2.1,.09],[0,1.05,0],lightWood,g)
+    for(const x of [-.53,.53])rbox(name+'-edge-'+x,[.06,2.1,.09],[x,1.05,0],woodY,g,.008)
+    for(const y of [.03,.55,1.05,1.55,2.07])rbox(name+'-rail-'+y,[1.12,.06,.09],[0,y,0],lightWood,g,.007)
+    rbox(name+'-vertical',[.04,2.1,.09],[0,1.05,0],lightWoodY,g,.006)
     return {g,face}
   }
   panel('beans-fixed-panel',-.72)
   const door=panel('beans-door',-.50)
   // A solid bottom and four separate wooden walls make the masu visibly hollow.
   const cup=new THREE.Group();cup.name='beans-masu';cup.position.set(-.62,.095,.55);subject.add(cup)
-  box('beans-masu-bottom',[.82,.04,.72],[0,.02,0],lightWood,cup)
-  for(const x of [-.39,.39])box('beans-masu-side-'+x,[.04,.25,.72],[x,.165,0],lightWood,cup)
-  for(const z of [-.34,.34])box('beans-masu-end-'+z,[.74,.25,.04],[0,.165,z],wood,cup)
+  rbox('beans-masu-bottom',[.82,.04,.72],[0,.02,0],lightWood,cup,.006)
+  for(const x of [-.39,.39])rbox('beans-masu-side-'+x,[.04,.25,.72],[x,.165,0],lightWoodZ,cup,.006)
+  for(const z of [-.34,.34])rbox('beans-masu-end-'+z,[.74,.25,.04],[0,.165,z],wood,cup,.006)
   const groups:THREE.Group[]=[],bodies:THREE.Mesh[][]=[],targets:THREE.Mesh[]=[door.face]
   const starts=[new THREE.Vector3(-.79,.218,.55),new THREE.Vector3(-.45,.218,.55)]
-  const ends=[new THREE.Vector3(-.64,.118,-1.60),new THREE.Vector3(-.12,.178,1.48)]
+  const outdoorSurfaceY=getEnvironmentSurfaceY('setsubun-mamemaki')
+  const ends=[new THREE.Vector3(-.64,outdoorSurfaceY+.083,-1.60),new THREE.Vector3(-.12,.178,1.48)]
   for(const [batch,label] of ['out','in'].entries()){
     const g=new THREE.Group();g.name='beans-'+label+'-root';subject.add(g);groups.push(g);const list:THREE.Mesh[]=[]
     for(let i=0;i<3;i++){

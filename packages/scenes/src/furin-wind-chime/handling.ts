@@ -33,9 +33,14 @@ export function createFurinHandling(options: Options) {
   const offset = new THREE.Vector3(), intersection = new THREE.Vector3()
   const active = () => !disposed && focused && !notifying && options.isActive()
   const hook = new THREE.Group(); hook.name = 'furin-eave-hook'; hook.position.copy(home); world.add(hook)
-  const brass = new THREE.MeshStandardMaterial({ color: 0xcfb071, roughness: .45, metalness: .5 })
+  const brass = applyCraftSurface(
+    new THREE.MeshStandardMaterial({ color: 0xcfb071, roughness: .45, metalness: .5 }),
+    { kind: 'metal', strength: .42 },
+  )
+  const hookMount = new THREE.Mesh(new THREE.CylinderGeometry(.014, .018, .026, 12), brass)
+  hookMount.name = 'furin-eave-hook-mount'; hookMount.position.y = .018; hook.add(hookMount)
   const hookRing = new THREE.Mesh(new THREE.TorusGeometry(.035, .007, 8, 24, Math.PI * 1.7), brass)
-  hookRing.position.y = -.006; hook.add(hookRing)
+  hookRing.name = 'furin-eave-hook-ring'; hookRing.position.y = -.006; hook.add(hookRing)
   const loop = new THREE.Mesh(new THREE.TorusGeometry(.023, .005, 8, 24), brass)
   loop.name = 'furin-hanging-loop'; loop.position.y = -.015; actor.add(loop)
   const targetMat = new THREE.MeshBasicMaterial({ color: 0x80cdb9, transparent: true, opacity: .55, depthTest: false, depthWrite: false })

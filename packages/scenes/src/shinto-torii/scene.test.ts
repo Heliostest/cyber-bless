@@ -101,5 +101,11 @@ describe('shinto-torii lacquered timber finish', () => {
     }
     expect(scene.getObjectByName('torii-own-ema-peg')).toBeInstanceOf(THREE.Mesh)
     expect(scene.getObjectByName('torii-own-ema-cord')).toBeInstanceOf(THREE.Mesh)
+    // Shared courtyard flagstone path handles the approach without redundant overlapping stepping stones.
+    let approachStones = 0
+    scene.traverse(obj => {
+      if (obj instanceof THREE.Mesh && (obj.material as THREE.Material).userData.craftSurface?.kind === 'stone') approachStones++
+    })
+    expect(approachStones).toBe(0)
   })
 })

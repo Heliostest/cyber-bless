@@ -3,8 +3,9 @@ import * as THREE from 'three'
 import {createBonfimModel} from './model'
 import {disposeTree} from '../procedural-kit'
 const items=(r:THREE.Object3D)=>{const a:THREE.Mesh[]=[];r.traverse(o=>{if((o as THREE.Mesh).isMesh)a.push(o as THREE.Mesh)});return a}
-it('builds five necessary fence solids and one continuous ribbon',()=>{
- const m=createBonfimModel();expect(items(m.root).map(o=>o.name).sort()).toEqual(['bonfim-bar-0','bonfim-bar-1','bonfim-bar-2','bonfim-rail-0','bonfim-rail-1','bonfim-ribbon'].sort())
+it('builds grounded fence plinths, posts, rounded rails, finials, and one continuous ribbon',()=>{
+ const m=createBonfimModel();expect(items(m.root).map(o=>o.name).sort()).toEqual(['bonfim-bar-0','bonfim-bar-1','bonfim-bar-2','bonfim-finial-0','bonfim-finial-1','bonfim-finial-2','bonfim-plinth-0','bonfim-plinth-1','bonfim-plinth-2','bonfim-rail-0','bonfim-rail-1','bonfim-ribbon'].sort())
+ for(let i=0;i<3;i++){const plinth=m.root.getObjectByName('bonfim-plinth-'+i) as THREE.Mesh;expect(new THREE.Box3().setFromObject(plinth).min.y).toBeCloseTo(0,4);expect((plinth.material as THREE.Material).userData.craftSurface?.kind).toBe('stone')}
  m.dispose();disposeTree(m.root)
 })
 it('tightens only the current preformed knot and exactly restores every endpoint',()=>{

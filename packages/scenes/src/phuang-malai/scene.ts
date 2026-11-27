@@ -11,6 +11,7 @@ import {
   createSceneFeedback, createStepOverlay, createWarmStage, disposeTree,
   observeCanvasResize, portraitBoost, setSafeText, sizeStage,
 } from '../procedural-kit'
+import { createJasmineBudGeometry, createMalaiBudMaterial } from './bud-craft'
 
 let cachedMalaiCordPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
 
@@ -393,8 +394,8 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   world.add(garland)
 
   const cordTex = createMalaiCordTextures()
-  const cream = new THREE.MeshStandardMaterial({ color: 0xfff7e4, roughness: 0.94 })
-  const rose = new THREE.MeshStandardMaterial({ color: 0xd98a9b, roughness: 0.96 })
+  const cream = createMalaiBudMaterial('jasmine')
+  const rose = createMalaiBudMaterial('rose')
   const thread = new THREE.MeshStandardMaterial({
     color: 0xd7c897,
     roughness: 0.92,
@@ -412,26 +413,14 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   const paleGold = new THREE.MeshStandardMaterial({ color: 0xe5c885, roughness: 0.9 })
   const pedestalMat = new THREE.MeshStandardMaterial({ color: 0xf5dfbf, roughness: 0.94 })
   const trayMat = new THREE.MeshStandardMaterial({ color: 0xbd956d, roughness: 1 })
-  // A tapered, closed jasmine bud, with three very subtle petal ridges. The
-  // same geometry is instanced for the dense ring, loose clusters and tassels.
-  const budGeo = new THREE.LatheGeometry([
-    new THREE.Vector2(0, -0.043), new THREE.Vector2(0.013, -0.04),
-    new THREE.Vector2(0.025, -0.026), new THREE.Vector2(0.03, -0.005),
-    new THREE.Vector2(0.026, 0.023), new THREE.Vector2(0.015, 0.047),
-    new THREE.Vector2(0.004, 0.055), new THREE.Vector2(0, 0.056),
-  ], 12)
-  const positions = budGeo.getAttribute('position')
-  for (let i = 0; i < positions.count; i++) {
-    const a = Math.atan2(positions.getZ(i), positions.getX(i))
-    const ridge = 1 + Math.cos(a * 3) * 0.07
-    positions.setX(i, positions.getX(i) * ridge)
-    positions.setZ(i, positions.getZ(i) * ridge)
-  }
-  budGeo.computeVertexNormals()
+  // A tapered, closed watertight jasmine bud with subtle spiral petal ridges and
+  // calyx base. One shared geometry is instanced for the ring, clusters and tassels.
+  const budGeo = createJasmineBudGeometry()
   const dummy = new THREE.Object3D()
   const instances: THREE.InstancedMesh[] = []
   const yAxis = new THREE.Vector3(0, 1, 0)
-  const whiteColors = [0xfffae9, 0xf5efd5, 0xfff5df].map((color) => new THREE.Color(color))
+  const whiteColors = [0xfff9ea, 0xf6f0d8, 0xfff4df, 0xfcf6e4, 0xf4efdb, 0xfff7e6, 0xf8f1dc].map((color) => new THREE.Color(color))
+  const roseColors = [0xfff8fa, 0xf6e6ec, 0xfff1ef, 0xfbeaf0, 0xf2e3e8].map((color) => new THREE.Color(color))
   const flowers = (count: number, material: THREE.Material, name: string) => {
     const mesh = new THREE.InstancedMesh(budGeo, material, count)
     mesh.name = name
@@ -447,7 +436,8 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
     dummy.scale.setScalar(scale)
     dummy.updateMatrix()
     mesh.setMatrixAt(index, dummy.matrix)
-    if (mesh.material === cream) mesh.setColorAt(index, whiteColors[index % whiteColors.length])
+    if (mesh.material === cream) mesh.setColorAt(index, whiteColors[(index * 3 + Math.floor(index / 8)) % whiteColors.length])
+    else if (mesh.material === rose) mesh.setColorAt(index, roseColors[(index * 2 + 1) % roseColors.length])
   }
   const segmentPoint = (a: number) => new THREE.Vector3(Math.cos(a) * RADIUS, Math.sin(a) * RADIUS, 0)
   const buildSegment = (segment: number, name: string) => {

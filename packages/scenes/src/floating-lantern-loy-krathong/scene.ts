@@ -11,6 +11,13 @@ import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { addStageLights, CEL_STYLE, createLampHalo, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
+import {
+  createBananaLeafMaterial,
+  createFoldedBananaLeafGeometry,
+  createKrathongFlowerMaterial,
+  createKrathongPetalGeometry,
+  createOrganicFlowerHeartGeometry,
+} from './botanical-craft'
 
 const TITLE = '叶舟寄意'
 const HINTS = ['把花朵拖到折叶灯的花座。', '轻点烛芯，让叶舟亮起一点光。',
@@ -51,7 +58,15 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   waterEffect.surface.position.set(0, -.045, -13)
   world.add(waterEffect.surface)
   const mat = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: .92 })
-  const wood = mat(0xb39471), endgrain = mat(0xd4b992), green = [mat(0x6f9f72), mat(0x90b381), mat(0xa3ba85)]
+  const wood = mat(0xb39471), endgrain = mat(0xd4b992)
+  const leafFolds = [
+    createBananaLeafMaterial('fold-0'),
+    createBananaLeafMaterial('fold-1'),
+    createBananaLeafMaterial('fold-2'),
+  ]
+  const leafBaseMat = createBananaLeafMaterial('base')
+  const leafLinerMat = createBananaLeafMaterial('liner')
+  const leafBindingMat = createBananaLeafMaterial('binding')
   ;[wood, endgrain].forEach(material => applyCraftSurface(material, { kind: 'wood', strength: .4 }))
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: THREE.Vector3, parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.copy(p)
@@ -61,33 +76,36 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   for (let i = 0; i < 6; i++) add('krathong-dock-board', new RoundedBoxGeometry(1.91, .12, .205, 3, .025), i % 2 ? wood : endgrain, new THREE.Vector3(-.45, .29, .28 + i * .213))
   for (const x of [-1.21, .30]) for (const z of [.36, 1.23]) add('krathong-dock-post', new THREE.CylinderGeometry(.066, .084, .42, 12), wood, new THREE.Vector3(x, .14, z))
   const boat = new THREE.Group(); boat.name = 'krathong-boat'; world.add(boat)
-  add('krathong-banana-base', new THREE.CylinderGeometry(.40, .36, .105, 48), green[0], new THREE.Vector3(0, .055, 0), boat)
-  // Each leaf is a folded closed triangular fan with a raised central ridge.
-  const leafGeometry = () => {
-    const geometry = new THREE.BufferGeometry()
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute([
-      -.15, .01, -.11, .15, .01, -.11, 0, .32, .07, 0, .09, .16,
-      -.15, -.005, -.11, .15, -.005, -.11, 0, .30, .065, 0, .075, .16,
-    ], 3))
-    geometry.setIndex([0,2,3, 3,2,1, 4,7,6, 7,5,6, 0,4,2, 2,4,6, 2,6,1, 1,6,5, 1,5,3, 3,5,7, 3,7,0, 0,7,4])
-    geometry.computeVertexNormals(); return geometry
-  }
-  const leafGeo = leafGeometry()
+  add('krathong-banana-base', new THREE.CylinderGeometry(.40, .36, .105, 48), leafBaseMat, new THREE.Vector3(0, .055, 0), boat)
+  // Each folded Bai Tong corner is a watertight thin shell with a supple central midrib ridge.
+  const leafGeo = createFoldedBananaLeafGeometry()
   for (let i = 0; i < 14; i++) {
     const a = i / 14 * Math.PI * 2
-    const leaf = add(`krathong-folded-leaf-${i}`, leafGeo, green[i % 3], new THREE.Vector3(Math.sin(a)*.355,.09,Math.cos(a)*.355), boat)
+    const leaf = add(`krathong-folded-leaf-${i}`, leafGeo, leafFolds[i % 3], new THREE.Vector3(Math.sin(a)*.355,.09,Math.cos(a)*.355), boat)
     leaf.rotation.y = a
   }
-  const inner = add('krathong-leaf-liner', new THREE.CylinderGeometry(.31,.32,.06,40), green[2], new THREE.Vector3(0,.14,0), boat)
+  const inner = add('krathong-leaf-liner', new THREE.CylinderGeometry(.31,.32,.06,40), leafLinerMat, new THREE.Vector3(0,.14,0), boat)
   inner.userData.toonSurface = { outline: false }
   const ivory = mat(0xf8e9c9), amber = mat(0xe0a75b)
+  const outerPetalMat = createKrathongFlowerMaterial('outer')
+  const innerPetalMat = createKrathongFlowerMaterial('inner')
+  const heartMat = createKrathongFlowerMaterial('heart')
+  const outerPetalGeo = createKrathongPetalGeometry({
+    length: 0.158, maxWidth: 0.118, cupDepth: 0.022, lift: 0.062, tipCurl: 0.011, thickness: 0.0082,
+  })
+  const innerPetalGeo = createKrathongPetalGeometry({
+    length: 0.120, maxWidth: 0.092, cupDepth: 0.020, lift: 0.078, tipCurl: 0.009, thickness: 0.0072,
+  })
   const flower = new THREE.Group(); flower.name = 'krathong-flower'; world.add(flower)
   for (let ring = 0; ring < 2; ring++) for (let i = 0; i < 9; i++) {
-    const a = i / 9 * Math.PI * 2 + ring*.28, r = ring ? .065 : .12
-    const petal = add('krathong-flower-petal', new THREE.SphereGeometry(1,12,8), ring ? amber : ivory, new THREE.Vector3(Math.sin(a)*r,.05+ring*.03,Math.cos(a)*r), flower)
-    petal.scale.set(.055,.038,.103-ring*.024); petal.rotation.y = a; petal.rotation.x = -.12
+    const a = i / 9 * Math.PI * 2 + ring * (Math.PI / 9)
+    const r = ring ? 0.032 : 0.044
+    const y = ring ? 0.040 : 0.025
+    const petal = add('krathong-flower-petal', ring ? innerPetalGeo : outerPetalGeo, ring ? innerPetalMat : outerPetalMat, new THREE.Vector3(Math.sin(a) * r, y, Math.cos(a) * r), flower)
+    petal.rotation.y = a
+    petal.rotation.x = ring ? -0.10 : 0.04
   }
-  const flowerSource = add('krathong-flower-source', new THREE.SphereGeometry(.067,16,10), amber, new THREE.Vector3(0,.083,0), flower)
+  const flowerSource = add('krathong-flower-source', createOrganicFlowerHeartGeometry(), heartMat, new THREE.Vector3(0,.083,0), flower)
   const flowerSeat = add('krathong-flower-seat', new THREE.CylinderGeometry(.13,.11,.028,24), amber, SEAT.clone(), boat)
   const candle = add('krathong-candle', new THREE.CylinderGeometry(.045,.052,.45,20), ivory, new THREE.Vector3(.10,.36,-.07), boat)
   const wickSource = add('krathong-wick-source', new THREE.CylinderGeometry(.012,.016,.047,12), mat(0x6d5c49), new THREE.Vector3(.10,.606,-.07), boat)
@@ -98,7 +116,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   halo.sprite.name = 'krathong-flame-halo'; halo.sprite.position.copy(flame.position); boat.add(halo.sprite)
   const glow = new THREE.PointLight(0xffcb82, 0, 2.3); glow.position.set(.10,.71,-.07); boat.add(glow)
   // A visible leaf binding offers a stable contact on the near folded face.
-  const boatSource = add('krathong-boat-source', new RoundedBoxGeometry(.115,.049,.025,3,.012), green[2], new THREE.Vector3(0,.20,.52), boat)
+  const boatSource = add('krathong-boat-source', new RoundedBoxGeometry(.115,.049,.025,3,.012), leafBindingMat, new THREE.Vector3(0,.20,.52), boat)
   const waterTarget = add('krathong-water-target', new THREE.SphereGeometry(.30,40,12), new THREE.MeshBasicMaterial({color:0xc6e9dc,transparent:true,opacity:.26,depthWrite:false}), WATER.clone().add(new THREE.Vector3(0,.006,0)), world)
   // A shallow lens has a continuous raycast surface at the center of the ripple.
   waterTarget.scale.y = .007; waterTarget.castShadow = false

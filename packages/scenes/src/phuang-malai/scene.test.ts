@@ -503,6 +503,36 @@ describe('Phuang Malai cord, bow and tassel craft', () => {
     expect(mapSpy).toHaveBeenCalledTimes(1)
     expect(bumpSpy).toHaveBeenCalledTimes(1)
   })
+
+  it('keeps a single shared watertight FrontSide bud geometry across all 12 batches (592 buds)', () => {
+    const s = mount(2, { isReducedMotion: () => true })
+    const instanced: THREE.InstancedMesh[] = []
+    ;(built.scene as THREE.Scene).traverse((obj) => {
+      if (obj instanceof THREE.InstancedMesh) instanced.push(obj)
+    })
+    expect(instanced).toHaveLength(12)
+    const totalBuds = instanced.reduce((sum, mesh) => sum + mesh.count, 0)
+    expect(totalBuds).toBe(592)
+    const sharedGeo = instanced[0]!.geometry
+    for (const mesh of instanced) {
+      expect(mesh.geometry).toBe(sharedGeo)
+      const mat = mesh.material as THREE.MeshStandardMaterial
+      expect(mat.side).toBe(THREE.FrontSide)
+      expect(mat.customProgramCacheKey()).toContain('wbr-malai-bud-v1')
+      const cloned = mat.clone()
+      expect(cloned.customProgramCacheKey()).toContain('wbr-malai-bud-v1')
+      cloned.dispose()
+    }
+    const pos = sharedGeo.getAttribute('position')
+    const nrm = sharedGeo.getAttribute('normal')
+    let dotSum = 0
+    for (let i = 0; i < pos.count; i++) {
+      expect(Number.isFinite(pos.getX(i)) && Number.isFinite(pos.getY(i)) && Number.isFinite(pos.getZ(i))).toBe(true)
+      expect(Number.isFinite(nrm.getX(i)) && Number.isFinite(nrm.getY(i)) && Number.isFinite(nrm.getZ(i))).toBe(true)
+      dotSum += pos.getX(i) * nrm.getX(i) + pos.getY(i) * nrm.getY(i) + pos.getZ(i) * nrm.getZ(i)
+    }
+    expect(dotSum).toBeGreaterThan(0)
+  })
 })
 
 function midway(a:readonly number[],b:readonly number[]):[number,number]{return[a[0]+(b[0]-a[0])*.2,a[1]+(b[1]-a[1])*.2]}

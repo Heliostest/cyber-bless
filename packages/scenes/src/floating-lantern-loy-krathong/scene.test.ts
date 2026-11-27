@@ -226,6 +226,58 @@ describe('Loy Krathong leaf float', () => {
     s.button.click(); s.instance.update(4); expect(s.progress).toEqual([])
     expect(s.overlay.childElementCount).toBe(0); expect(drawn.scene!.children).toHaveLength(0)
   })
+  it('uses watertight FrontSide cupped petals, organic flower heart and veined satin banana leaves', () => {
+    const s = mount()
+    const checkWatertight = (geo: THREE.BufferGeometry, label: string) => {
+      const pos = geo.getAttribute('position')
+      const idx = geo.getIndex()
+      expect(idx, `${label} indexed`).not.toBeNull()
+      const edges = new Map<string, number>()
+      let volume = 0
+      const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), cross = new THREE.Vector3()
+      for (let i = 0; i < idx!.count; i += 3) {
+        const i0 = idx!.getX(i), i1 = idx!.getX(i + 1), i2 = idx!.getX(i + 2)
+        a.fromBufferAttribute(pos, i0); b.fromBufferAttribute(pos, i1); c.fromBufferAttribute(pos, i2)
+        volume += a.dot(cross.crossVectors(b, c)) / 6
+        for (const [u, v] of [[i0, i1], [i1, i2], [i2, i0]]) {
+          const key = u < v ? `${u}:${v}` : `${v}:${u}`
+          edges.set(key, (edges.get(key) ?? 0) + 1)
+        }
+      }
+      expect(volume, `${label} positive volume`).toBeGreaterThan(0)
+      for (const count of edges.values()) expect(count, `${label} manifold edge`).toBe(2)
+    }
+    const leaf0 = object('krathong-folded-leaf-0') as THREE.Mesh
+    checkWatertight(leaf0.geometry, 'krathong-folded-leaf-0')
+    const leafMat = leaf0.material as THREE.MeshStandardMaterial
+    expect(leafMat.side).toBe(THREE.FrontSide)
+    expect(leafMat.roughness).toBeGreaterThan(0.45)
+    expect(leafMat.roughness).toBeLessThan(0.62)
+    expect(leafMat.customProgramCacheKey()).toContain('wbr-krathong-banana-v1')
+    const clonedLeafMat = leafMat.clone()
+    expect(clonedLeafMat.customProgramCacheKey()).toContain('wbr-krathong-banana-v1')
+    clonedLeafMat.dispose()
+
+    const flower = object('krathong-flower')
+    const petals: THREE.Mesh[] = []
+    flower.traverse(o => { if (o instanceof THREE.Mesh && o.name === 'krathong-flower-petal') petals.push(o) })
+    expect(petals).toHaveLength(18)
+    const seenPetalGeos = new Set<THREE.BufferGeometry>()
+    for (const petal of petals) {
+      expect((petal.material as THREE.MeshStandardMaterial).side).toBe(THREE.FrontSide)
+      seenPetalGeos.add(petal.geometry)
+    }
+    for (const geo of seenPetalGeos) checkWatertight(geo, 'krathong-flower-petal')
+
+    const heart = object('krathong-flower-source') as THREE.Mesh
+    expect((heart.material as THREE.MeshStandardMaterial).side).toBe(THREE.FrontSide)
+    expect(heart.position.y).toBeCloseTo(0.083, 5)
+    // Verify off-center drag pick [-0.06, 0, 0] still hits krathong-flower-source cleanly.
+    const box = new THREE.Box3().setFromBufferAttribute(heart.geometry.getAttribute('position') as THREE.BufferAttribute)
+    expect(box.min.x).toBeLessThan(-0.06)
+    expect(box.max.x).toBeGreaterThan(0.06)
+    expect(s.progress).toEqual([])
+  })
 })
 
 // Cancellation happens before arrival; a completed placement already owns its result.

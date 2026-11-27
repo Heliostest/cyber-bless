@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { createSoftPlume } from '@wbr/scene-runtime/soft-plume'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createFreePlacementPointer } from '../free-placement-pointer'
@@ -41,10 +42,21 @@ export function createEsfand(ctx: SceneContext): SceneInstance {
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
   const model = createEsfandModel(); scene.add(model.root)
+  const aromaPlume = createSoftPlume({ kind: 'aroma', height: .66, width: .22, opacity: .44, curl: 1.25, strands: 2, wisps: 9, seed: 37 })
+  scene.add(aromaPlume.root)
+  const syncAroma = () => {
+    const spread = model.smokeUniforms.spread.value
+    const activeSmoke = model.smoke.visible
+    aromaPlume.root.visible = activeSmoke
+    aromaPlume.root.position.set(model.heated.x - .015 - spread * .12, model.heated.y + .048, model.heated.z)
+    aromaPlume.root.rotation.z = spread * .24
+    const billow = at === 2 && amount > .20 && amount < .80 ? Math.sin(((amount - .20) / .60) * Math.PI) * .35 : 0
+    aromaPlume.setIntensity(activeSmoke ? Math.max(.68, 1 - spread * .22) + billow : 0)
+  }
   const placementSteps = new Set([0,1])
   const placement = createPosePlacement(canvas, camera, { ...model, anchors: model.anchors.map(anchor => anchor.toArray()) as [number,number,number][] }, scene)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
+  const pose = (step: number, n: number) => { amount = n; model.pose(step,n); syncAroma(); matrices() }
   const restore = () => { pose(at, 0);; placement.restoreCheckpoint(at); matrices() }
   const carryStep = () => (at < 2 ? 1 : 2) as 1 | 2
   const carrying = () => at < 2
@@ -98,11 +110,17 @@ export function createEsfand(ctx: SceneContext): SceneInstance {
     at = (motion.step + 1) as Checkpoint; motion = null; restore(); resize()
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
-      feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
+      feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine', cue: at === 2 ? 'metal' : 'fabric', cueStrength: .60 })
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: carryStep(), time: 0, from: amount, arrived: placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(placed = false) {
+    if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return
+    const step = carryStep()
+    motion = { step, time: 0, from: amount, arrived: placed }; sync()
+    if (step === 2 && !(ctx.isReducedMotion?.())) feedback.sound('fabric', { duration: .38, strength: .46 })
+    if (ctx.isReducedMotion?.()) settle()
+  }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; if (carrying()) { placement.capture(carryStep()); advance(true) } else advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); if (!motion) { placement.cancel(); restore() }; sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
@@ -134,18 +152,24 @@ export function createEsfand(ctx: SceneContext): SceneInstance {
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
+      feedback.update()
       if (motion) {
         motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.arrived ? .32 : .85))
         const eased=ease(motion.time)
         pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); if (motion.time === 1) settle()
       }
-      if (active()) { if (!ctx.isReducedMotion?.()) model.tick(delta); matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) {
+        const reduced = ctx.isReducedMotion?.() ?? false
+        if (!reduced) model.tick(delta)
+        aromaPlume.update(delta, camera, { reducedMotion: reduced, scene })
+        matrices(); lights.key.shadow.normalBias = .03; style.render()
+      }
     },
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++; pointer.dispose(); stopInspection(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); aromaPlume.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

@@ -1,5 +1,6 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { placementHit } from '../placement-hit'
 import * as THREE from 'three'
@@ -8,7 +9,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
-import { addObjectCradle } from '../cozy-furniture'
+import { addContactShadow, addObjectCradle } from '../cozy-furniture'
 import { createTouchTarget } from '../touch-target'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
@@ -24,7 +25,7 @@ const COPY = {
   shaking: '木筒轻轻摇动，留一点从容…', drawing: '慢慢抽出，展开一张纸签…', keeping: '把读过的纸签轻轻收好…',
 } as const
 type Checkpoint = 0 | 1 | 2 | 3
-type Motion = { step: 0 | 1 | 2; time: number; from: THREE.Vector3; rotation: THREE.Euler }
+type Motion = { step: 0 | 1 | 2; time: number; from: THREE.Vector3; rotation: THREE.Euler; sounded?: boolean; soundedMid?: boolean }
 const READY = new THREE.Vector3(-0.52, 0.975, 0.08)
 const TILT = new THREE.Vector3(0.37, 1.28, 0.08)
 const STICK = new THREE.Vector3(-0.52, 1.655, 0.08)
@@ -79,10 +80,11 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     grainOpts: WoodGrainOptions,
     offsetU = 0,
     offsetV = 0,
+    vertexColors = false,
   ) => {
     const map = createWoodGrainTexture(grainOpts, offsetU, offsetV)
     woodTextures.push(map)
-    return applyCraftSurface(new THREE.MeshStandardMaterial({ color, roughness, map }), { kind: 'wood', strength, scale, axis })
+    return applyCraftSurface(new THREE.MeshStandardMaterial({ color, roughness, map, vertexColors }), { kind: 'wood', strength, scale, axis })
   }
   const honey = woodMat(0xd9ad6e, 0.78, 'y', 0.78, 0.2, {
     seed: 11, rings: 5.8, drift: 0.088, arch: 0.068, contrast: 0.165, wash: 0.048,
@@ -90,14 +92,14 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
       { u: 0.24, v: 0.30, rx: 0.068, ry: 0.036, pull: 0.76, depth: 0.84 },
       { u: 0.75, v: 0.74, rx: 0.056, ry: 0.032, pull: 0.72, depth: 0.78 },
     ],
-  })
+  }, 0, 0, true)
   const rimWoodTop = woodMat(0xdeb579, 0.81, 'x', 0.66, 0.18, {
     seed: 19, rings: 5.2, drift: 0.075, arch: 0.055, contrast: 0.135, wash: 0.038,
     knots: [{ u: 0.74, v: 0.28, rx: 0.062, ry: 0.034, pull: 0.70, depth: 0.68 }],
-  })
+  }, 0, 0, true)
   const rimWoodBottom = woodMat(0xd2a66a, 0.82, 'x', 0.82, 0.2, {
     seed: 23, rings: 6.2, drift: 0.082, arch: 0.052, contrast: 0.15, wash: 0.042,
-  }, 0.24, 0.41)
+  }, 0.24, 0.41, true)
   const stickWood = woodMat(0xe2b778, 0.79, 'y', 0.9, 0.2, {
     seed: 31, rings: 5.6, drift: 0.065, arch: 0.042, contrast: 0.125, wash: 0.032,
   })
@@ -112,19 +114,19 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
       { u: 0.21, v: 0.50, rx: 0.052, ry: 0.026, pull: 0.74, depth: 0.84 },
       { u: 0.79, v: 0.25, rx: 0.058, ry: 0.034, pull: 0.72, depth: 0.8 },
     ],
-  })
+  }, 0, 0, true)
   const standApron = woodMat(0xaa7b4f, 0.82, 'x', 0.84, 0.22, {
     seed: 53, rings: 6.6, drift: 0.08, arch: 0.058, contrast: 0.16, wash: 0.044,
     knots: [{ u: 0.64, v: 0.48, rx: 0.054, ry: 0.028, pull: 0.72, depth: 0.78 }],
-  })
+  }, 0, 0, true)
   const standLegA = woodMat(0xb88b5f, 0.81, 'y', 0.72, 0.2, {
     seed: 61, rings: 5.6, drift: 0.088, arch: 0.06, contrast: 0.165, wash: 0.048,
     knots: [{ u: 0.46, v: 0.54, rx: 0.072, ry: 0.042, pull: 0.76, depth: 0.84 }],
-  })
+  }, 0, 0, true)
   const standLegB = woodMat(0xac7f55, 0.83, 'y', 0.88, 0.22, {
     seed: 71, rings: 6.4, drift: 0.084, arch: 0.055, contrast: 0.17, wash: 0.046,
     knots: [{ u: 0.68, v: 0.44, rx: 0.066, ry: 0.038, pull: 0.72, depth: 0.8 }],
-  })
+  }, 0, 0, true)
   const cream = material(0xffefd2), paperEdge = material(0xe6d5b3)
   const sage = material(0x829a80), sageLight = material(0xafb9a0), ink = material(0x947a60), coral = material(0xc77e65)
   // Paper-only optics: the slip and envelope keep a soft fibrous body, while the
@@ -142,8 +144,10 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     mesh.userData.toonSurface = { outline: false }; return mesh
   }
   // A low stand keeps the box and the open envelope grounded in the courtyard.
-  add(projectWoodUVs(new RoundedBoxGeometry(2.16, 0.14, 1.05, 3, 0.045), 'x', 0.46, 0.88, 0.5, 0.5), standTop, 'omikuji-stand-top', [0, 0.44, 0.13])
-  add(projectWoodUVs(new RoundedBoxGeometry(2.05, 0.055, 0.96, 3, 0.022), 'x', 0.5, 1.2, 0.38, 0.5), standApron, 'omikuji-stand-apron', [0, 0.345, 0.13])
+  const standTopGeo = bakeCreviceAO(projectWoodUVs(new RoundedBoxGeometry(2.16, 0.14, 1.05, 3, 0.045), 'x', 0.46, 0.88, 0.5, 0.5), { groundY: -0.07, groundRange: 0.045, strength: 0.22, tint: 0x563f31 })
+  add(standTopGeo, standTop, 'omikuji-stand-top', [0, 0.44, 0.13])
+  const standApronGeo = bakeCreviceAO(projectWoodUVs(new RoundedBoxGeometry(2.05, 0.055, 0.96, 3, 0.022), 'x', 0.5, 1.2, 0.38, 0.5), { strength: 0.24, tint: 0x563f31 })
+  add(standApronGeo, standApron, 'omikuji-stand-apron', [0, 0.345, 0.13])
   const legSpecs: [number, number, THREE.Material, number, number][] = [
     [-0.83, -0.22, standLegB, 0.28, 0.62],
     [-0.83, 0.47, standLegA, 0.5, 0.5],
@@ -152,14 +156,20 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
   ]
   const floorY = getEnvironmentSurfaceY('omikuji')
   const legH = 0.35 - floorY
-  for (const [x, z, legMat, offU, offV] of legSpecs) {
-    add(projectWoodUVs(new RoundedBoxGeometry(0.14, legH, 0.16, 3, 0.027), 'y', 2.2, 2.6, offU, offV), legMat, 'omikuji-stand-leg', [x, floorY + legH / 2, z])
+  addContactShadow(world, { name: 'omikuji-stand-contact-ao', width: 2.08, depth: 1.02, y: floorY + 0.0018, center: [0, 0.13], shape: 'rounded-rect', opacity: 0.20 })
+  for (const [idx, [x, z, legMat, offU, offV]] of legSpecs.entries()) {
+    const legGeo = bakeCreviceAO(projectWoodUVs(new RoundedBoxGeometry(0.14, legH, 0.16, 3, 0.027), 'y', 2.2, 2.6, offU, offV), { groundY: -legH / 2, groundRange: 0.12, strength: 0.34, tint: 0x513b2d })
+    add(legGeo, legMat, 'omikuji-stand-leg', [x, floorY + legH / 2, z])
+    addContactShadow(world, { name: `omikuji-stand-leg-contact-ao-${idx}`, width: 0.28, depth: 0.30, y: floorY + 0.0022, center: [x, z], shape: 'ellipse', opacity: 0.24 })
   }
   const stretcherY = floorY + 0.11
   for (const [idx, x] of ([-0.83, 0.83] as const).entries()) {
-    add(projectWoodUVs(new RoundedBoxGeometry(0.065, 0.055, 0.69, 2, 0.012), 'z', 1.2, 2.0, idx ? 0.62 : 0.28, 0.5), standApron, 'omikuji-stand-side-stretcher', [x, stretcherY, 0.125])
+    const sideGeo = bakeCreviceAO(projectWoodUVs(new RoundedBoxGeometry(0.065, 0.055, 0.69, 2, 0.012), 'z', 1.2, 2.0, idx ? 0.62 : 0.28, 0.5), { strength: 0.24, tint: 0x563f31 })
+    add(sideGeo, standApron, 'omikuji-stand-side-stretcher', [x, stretcherY, 0.125])
   }
-  add(projectWoodUVs(new RoundedBoxGeometry(1.66, 0.052, 0.065, 2, 0.012), 'x', 0.55, 1.4, 0.44, 0.5), standApron, 'omikuji-stand-cross-stretcher', [0, stretcherY, 0.125])
+  const crossGeo = bakeCreviceAO(projectWoodUVs(new RoundedBoxGeometry(1.66, 0.052, 0.065, 2, 0.012), 'x', 0.55, 1.4, 0.44, 0.5), { strength: 0.24, tint: 0x563f31 })
+  add(crossGeo, standApron, 'omikuji-stand-cross-stretcher', [0, stretcherY, 0.125])
+  const boxShadow = addContactShadow(world, { name: 'omikuji-box-contact-ao', width: 0.74, depth: 0.74, y: 0.5118, center: [READY.x, READY.z], shape: 'ellipse', opacity: 0.26 })
   addObjectCradle(world, {
     name: 'omikuji-envelope-slot',
     topName: 'omikuji-envelope-slot',
@@ -183,10 +193,11 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     tube([[-0.98, 0.514, z], [-0.24, 0.514, z + bend], [0.32, 0.514, z - bend * 0.6], [0.98, 0.514, z]], 0.0021, grainAccent, world)
   }
   const box = new THREE.Group(); box.name = 'omikuji-box'; world.add(box)
-  const body = add(projectHexPrismWoodUVs(hexagon(0.315, 0.8), 1.15, 1.75, 0.5, 0.5), honey, 'omikuji-box-body', [0, 0, 0], box)
+  const bodyGeo = bakeCreviceAO(projectHexPrismWoodUVs(hexagon(0.315, 0.8), 1.15, 1.75, 0.5, 0.5), { groundY: -0.4, groundRange: 0.14, strength: 0.30, tint: 0x5c4333 })
+  const body = add(bodyGeo, honey, 'omikuji-box-body', [0, 0, 0], box)
   for (const y of [-0.42, 0.42]) {
     const rimMat = y > 0 ? rimWoodTop : rimWoodBottom
-    const rimGeo = projectWoodUVs(hexagon(0.335, 0.09), 'x', 1.1, 1.2, y > 0 ? 0.5 : 0.18, y > 0 ? 0.5 : 0.64)
+    const rimGeo = bakeCreviceAO(projectWoodUVs(hexagon(0.335, 0.09), 'x', 1.1, 1.2, y > 0 ? 0.5 : 0.18, y > 0 ? 0.5 : 0.64), { groundY: -0.045, groundRange: 0.035, strength: 0.24, tint: 0x5c4333 })
     add(rimGeo, rimMat, 'omikuji-box-rim', [0, y, 0], box)
     add(projectWoodUVs(hexagon(0.34, 0.022, 0.005), 'x', 1.2, 1.4, y > 0 ? 0.32 : 0.71, 0.5), edge, 'omikuji-box-band', [0, y + (y > 0 ? -0.044 : 0.044), 0], box)
   }
@@ -293,6 +304,11 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     setSafeText(ui.actionBtn, [COPY.shake, COPY.draw, COPY.keep, COPY.keep][checkpoint], safe)
     setSafeText(ui.hintEl, motion ? [COPY.shaking, COPY.drawing, COPY.keeping][motion.step] : [COPY.ready, COPY.stick, COPY.read, COPY.done][checkpoint], safe)
   }
+  const syncBoxShadow = () => {
+    const lift = Math.max(0, box.position.y - READY.y)
+    const drift = Math.hypot(box.position.x - READY.x, box.position.z - READY.z)
+    ;(boxShadow.material as THREE.MeshBasicMaterial).opacity = 0.26 * THREE.MathUtils.clamp(1 - lift * 2.4 - drift * 1.4, 0, 1)
+  }
   const restore = () => {
     box.position.copy(READY); box.rotation.set(0, 0, 0)
     stick.position.copy(STICK); stick.rotation.set(0, 0, 0); stick.visible = checkpoint === 1
@@ -302,6 +318,7 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     upper.rotation.x = checkpoint === 3 ? Math.PI : 0; lower.rotation.x = checkpoint === 3 ? -Math.PI : 0
     upper.position.z = checkpoint === 3 ? 0.018 : 0; lower.position.z = checkpoint === 3 ? 0.036 : 0
     tiltTarget.visible = checkpoint === 0; drawTarget.visible = checkpoint === 1
+    syncBoxShadow()
     matrix()
   }
   const finish = () => {
@@ -317,7 +334,17 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     if (!active() || motion || checkpoint === 3) return
     motion = { step: checkpoint, time: 0, from: carried().position.clone(), rotation: carried().rotation.clone() }
     dragging = false; tiltTarget.visible = drawTarget.visible = false
-    if (reduced()) finish(); else sync()
+    if (reduced()) {
+      if (motion.step === 0) {
+        feedback.sound('beans', { duration: 0.14, strength: 0.42 })
+        feedback.sound('woodTap', { duration: 0.10, strength: 0.34 })
+      } else if (motion.step === 1) {
+        feedback.sound('paper', { duration: 0.14, strength: 0.46 })
+      } else {
+        feedback.sound('paper', { duration: 0.14, strength: 0.36 })
+      }
+      finish()
+    } else sync()
   }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
@@ -339,7 +366,10 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
         else {
           carried().position.x = THREE.MathUtils.clamp(carried().position.x, -1, 1)
           carried().position.y = THREE.MathUtils.clamp(carried().position.y, 0.72, 2)
-          if (checkpoint === 0) box.rotation.z = -0.42 * THREE.MathUtils.clamp((box.position.x - READY.x) / (TILT.x - READY.x), 0, 1)
+          if (checkpoint === 0) {
+            box.rotation.z = -0.42 * THREE.MathUtils.clamp((box.position.x - READY.x) / (TILT.x - READY.x), 0, 1)
+            syncBoxShadow()
+          }
         }
         matrix()
       }
@@ -376,6 +406,7 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
+      feedback.update()
       if (!active()) { pointer.cancel(); ui.actionBtn.disabled = true; style.render(); return }
       ui.actionBtn.disabled = !!motion || checkpoint === 3
       const delta = Number.isFinite(dt) ? Math.max(0, dt) : 0
@@ -391,18 +422,40 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
           else box.position.copy(TILT)
           const shake = t > 0.3 && t < 0.72 ? Math.sin((t - 0.3) / 0.42 * Math.PI * 4) * 0.07 : 0
           box.rotation.z = t < 0.3 ? THREE.MathUtils.lerp(motion.rotation.z, -0.42, smooth(t / 0.3)) : t > 0.72 ? -0.42 * (1 - smooth((t - 0.72) / 0.28)) : -0.42 + shake
+          syncBoxShadow()
+          if (t >= 0.3 && !motion.sounded) {
+            motion.sounded = true
+            feedback.sound('beans', { duration: 0.48, strength: 0.48 })
+            feedback.sound('woodTap', { duration: 0.16, strength: 0.34 })
+          }
+          if (t >= 0.72 && !motion.soundedMid) {
+            motion.soundedMid = true
+            feedback.sound('woodTap', { duration: 0.14, strength: 0.30 })
+          }
         } else if (motion.step === 1) {
           stick.visible = t < 0.45; stick.position.lerpVectors(motion.from, DRAW, smooth(t / 0.45))
           paper.visible = t >= 0.38
           const unfold = smooth((t - 0.38) / 0.62)
           paper.position.lerpVectors(new THREE.Vector3(-0.34, 1.82, 0.4), READ, unfold)
           upper.rotation.x = Math.PI * 0.94 * (1 - unfold); lower.rotation.x = -Math.PI * 0.94 * (1 - unfold)
+          if (t >= 0.05 && !motion.sounded) {
+            motion.sounded = true
+            feedback.sound('woodTap', { duration: 0.12, strength: 0.24 })
+          }
+          if (t >= 0.38 && !motion.soundedMid) {
+            motion.soundedMid = true
+            feedback.sound('paper', { duration: 0.42, strength: 0.52 })
+          }
         } else {
           paper.position.lerpVectors(motion.from, KEEP, p)
           const fold = smooth(t / 0.72)
           upper.rotation.x = Math.PI * fold; lower.rotation.x = -Math.PI * fold
           upper.position.z = 0.018 * fold; lower.position.z = 0.036 * fold
           paper.rotation.z = motion.rotation.z * (1 - p)
+          if (t >= 0.12 && !motion.sounded) {
+            motion.sounded = true
+            feedback.sound('paper', { duration: 0.38, strength: 0.40 })
+          }
         }
         matrix(); if (t === 1) finish()
       }

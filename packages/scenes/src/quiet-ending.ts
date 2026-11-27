@@ -32,7 +32,7 @@ export function createQuietEnding(ctx: Context, options: Options) {
   const composing = new Set<EventTarget>()
   const poses: { object: THREE.Object3D; y: number; quaternion: THREE.Quaternion }[] = []
   const materials = new Map<EmissiveMaterial, { color: THREE.Color; intensity: number }>()
-  const warm = new THREE.Color(0xffdca6), turn = new THREE.Quaternion(), axis = new THREE.Vector3(0, 0, 1)
+  const warm = new THREE.Color(0xffe3ba), turn = new THREE.Quaternion(), axis = new THREE.Vector3(0, 0, 1)
   const active = () => !disposed && focused && document.visibilityState !== 'hidden' && (ctx.isActive?.() ?? true) && (options.isActive?.() ?? true)
   function restore() {
     for (const pose of poses) {
@@ -110,14 +110,16 @@ export function createQuietEnding(ctx: Context, options: Options) {
       const duration = reduced ? .6 : options.duration ?? 3
       elapsed = Math.min(duration, elapsed + (Number.isFinite(dt) ? Math.max(0, Math.min(dt, .05)) : 0))
       const p = Math.min(1, elapsed / duration), envelope = Math.sin(Math.PI * p), shimmer = envelope * envelope
+      const swayAngle = reduced ? 0 : (Math.sin(p * Math.PI * 4) * .74 + Math.sin(p * Math.PI * 2) * .26) * envelope * .052
+      const bobOffset = reduced ? 0 : (Math.sin(p * Math.PI * 2) * .76 + Math.sin(p * Math.PI * 4) * .24) * envelope * .062
       progress.value = p
       for (const pose of poses) {
-        if (options.motion === 'sway') pose.object.quaternion.copy(pose.quaternion).multiply(turn.setFromAxisAngle(axis, reduced ? 0 : Math.sin(p * Math.PI * 4) * envelope * .055))
-        if (options.motion === 'bob') pose.object.position.y = pose.y + (reduced ? 0 : Math.sin(p * Math.PI * 2) * envelope * .07)
+        if (options.motion === 'sway') pose.object.quaternion.copy(pose.quaternion).multiply(turn.setFromAxisAngle(axis, swayAngle))
+        if (options.motion === 'bob') pose.object.position.y = pose.y + bobOffset
       }
       for (const [material, base] of materials) {
-        material.emissive.copy(base.color).lerp(warm, shimmer * (reduced ? .045 : .12))
-        material.emissiveIntensity = base.intensity + shimmer * .12
+        material.emissive.copy(base.color).lerp(warm, shimmer * (reduced ? .04 : .1))
+        material.emissiveIntensity = base.intensity + shimmer * .085
       }
       options.onFrame?.(p, elapsed, reduced)
       if (!active() || phase !== 'running' || p < 1) return

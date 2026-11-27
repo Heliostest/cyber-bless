@@ -134,4 +134,43 @@ describe('physical pose placement', () => {
     expect(s.source()[0]).toBeCloseTo(a[0], 5)
     expect(s.source()[1]).toBeCloseTo(a[1], 5)
   })
+  it('applies cushioned spring overshoot and subtle Y arc lift during settle while keeping rigid scale and exact endpoints', () => {
+    const s = mount()
+    const fromPos = s.root.position.clone()
+    const fromQuat = s.root.quaternion.clone()
+    const fromScale = s.root.scale.clone()
+    const endPos = new THREE.Vector3(1, .3, 0)
+    const endQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), .3)
+
+    s.placement.capture(0)
+
+    // Exact start at t = 0
+    s.placement.settle(0)
+    expect(s.root.position.distanceTo(fromPos)).toBeLessThan(1e-8)
+    expect(s.root.quaternion.angleTo(fromQuat)).toBeLessThan(1e-8)
+    expect(s.root.scale.distanceTo(fromScale)).toBeLessThan(1e-8)
+
+    // Mid-journey arc lift raises Y slightly above linear interpolation
+    s.placement.settle(0.5)
+    const linearMidY = THREE.MathUtils.lerp(fromPos.y, endPos.y, 0.5)
+    expect(s.root.position.y).toBeGreaterThan(linearMidY + 0.01)
+    expect(s.root.scale.distanceTo(fromScale)).toBeLessThan(1e-8)
+
+    // Cushioned spring overshoot around t = 0.72 while rigid carrier scale stays invariant
+    s.placement.settle(0.72)
+    expect(s.root.position.x).toBeGreaterThan(endPos.x + 0.02)
+    expect(s.root.position.x).toBeLessThan(endPos.x + 0.12)
+    expect(s.root.scale.distanceTo(fromScale)).toBeLessThan(1e-8)
+
+    // Exact canonical end at t = 1 and settling clears
+    s.placement.settle(1)
+    expect(s.root.position.distanceTo(endPos)).toBeLessThan(1e-8)
+    expect(s.root.quaternion.angleTo(endQuat)).toBeLessThan(1e-7)
+    expect(s.root.scale.distanceTo(new THREE.Vector3(1, 1, 1))).toBeLessThan(1e-8)
+
+    // No-op once settled
+    s.root.position.set(4, 5, 6)
+    s.placement.settle(0.5)
+    expect(s.root.position.distanceTo(new THREE.Vector3(4, 5, 6))).toBeLessThan(1e-8)
+  })
 })

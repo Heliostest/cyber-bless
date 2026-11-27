@@ -18,11 +18,15 @@
     "./stylized-water": "./src/stylized-water.ts",
     "./ritual-optics": "./src/ritual-optics.ts",
     "./craft-surfaces": "./src/craft-surfaces.ts",
+    "./procedural-noise-atlas": "./src/procedural-noise-atlas.ts",
+    "./soft-plume": "./src/soft-plume.ts",
+    "./prop-geometry": "./src/prop-geometry.ts",
     "./soft-pouch-geometry": "./src/soft-pouch-geometry.ts",
     "./rapier-soft-body": "./src/rapier-soft-body.ts",
     "./paper-sheet": "./src/paper-sheet.ts",
     "./botanical-surfaces": "./src/botanical-surfaces.ts",
-    "./botanical-kit": "./src/botanical-kit.ts"
+    "./botanical-kit": "./src/botanical-kit.ts",
+    "./environment-wind": "./src/environment-wind.ts"
   },
   "dependencies": {
     "@dimforge/rapier3d-simd": "^0.21.0",

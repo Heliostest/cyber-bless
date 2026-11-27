@@ -3,12 +3,14 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { getEnvironmentProfile } from '@wbr/scene-runtime'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { createCraftMaterial } from '@wbr/scene-runtime/craft-surfaces'
+import { readEnvironmentWind } from '@wbr/scene-runtime/environment-wind'
 import {
   createRapierSoftBodyHost,
   type RapierSoftBodySession,
 } from '@wbr/scene-runtime/rapier-soft-body'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
+import { addContactShadow } from '../cozy-furniture'
 import { createObjectPointer } from '../object-pointer'
 import { createTouchTarget } from '../touch-target'
 import {
@@ -36,8 +38,8 @@ const smooth = (t: number) => {
 }
 /** The bell, braid and tassel hang a little larger so the bell reads and the rope is easy to hold on a phone. */
 const HANGING_SCALE = 1.12
-/** Warm base glow keeps the toon-lit metal golden on small screens; a ring adds a brief swell. */
-const BELL_GLOW = 0.2
+/** Subtle warm metallic undertone lets real directional speculars & Bloom carry the brass bell gleam. */
+const BELL_GLOW = 0.08
 
 // Thick 3-strand braided shrine cotton rope geometry & Rapier particle layout (hanging-local coordinates).
 const BRAID_TOP_Y = -0.265
@@ -207,7 +209,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   let started = false, disposed = false, focused = true, completed = false
   let checkpoint: Checkpoint = 0, motion: Motion | null = null
   let wasActive = false, wasReduced = false
-  let downX = 0, downY = 0, pullAmount = 0, pullSide = 0
+  let downX = 0, downY = 0, pullAmount = 0, pullSide = 0, pullSlideSounded = false
   let stopResize = () => {}
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
   const reduced = () => ctx.isReducedMotion?.() ?? false
@@ -279,9 +281,9 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   const woodGrain = mat(0xb88a5a, 0.86)
   const cream = createCraftMaterial({ color: 0xe8deba }, { kind: 'cord' })
   const rust = createCraftMaterial({ color: 0xb16f53 }, { kind: 'cord' }), green = createCraftMaterial({ color: 0x819a76 }, { kind: 'cord' })
-  const gold = createCraftMaterial({ color: 0xe6bc5c, roughness: .34, metalness: .55, emissive: 0x6a4410, emissiveIntensity: BELL_GLOW }, { kind: 'metal' })
-  const goldLight = createCraftMaterial({ color: 0xf2d590, roughness: .32, metalness: .45, emissive: 0x6a4410, emissiveIntensity: BELL_GLOW }, { kind: 'metal' })
-  const darkGold = createCraftMaterial({ color: 0x75583d, roughness: .68 }, { kind: 'metal', strength: .4 })
+  const gold = createCraftMaterial({ color: 0xe8be5a, roughness: .26, metalness: .72, emissive: 0x6a4410, emissiveIntensity: BELL_GLOW }, { kind: 'metal', scale: 2.4, strength: .42 })
+  const goldLight = createCraftMaterial({ color: 0xf4d88c, roughness: .24, metalness: .64, emissive: 0x6a4410, emissiveIntensity: BELL_GLOW }, { kind: 'metal', scale: 2.6, strength: .36 })
+  const darkGold = createCraftMaterial({ color: 0x75583d, roughness: .56, metalness: .42 }, { kind: 'metal', strength: .42 })
   const add = (geometry: THREE.BufferGeometry, material: THREE.Material, xyz: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.position.set(...xyz); parent.add(mesh); return mesh
   }
@@ -301,6 +303,15 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
     add(postGeo, isLeft ? postWoodLeft : postWoodRight, [x, postY, -0.21], timber).name = 'suzu-column-post'
     const baseGeo = projectWoodUVs(new RoundedBoxGeometry(0.31, baseH, 0.4, 3, 0.04), 'x', isLeft ? 1.55 : 1.7, isLeft ? 1.8 : 2.0, isLeft ? 0.5 : 0.24, 0.5)
     add(baseGeo, isLeft ? baseWoodLeft : baseWoodRight, [x, baseY, -0.2], timber).name = 'suzu-column-base'
+    addContactShadow(timber, {
+      name: `suzu-column-base-contact-ao-${isLeft ? 'left' : 'right'}`,
+      width: 0.44,
+      depth: 0.54,
+      y: floorY + 0.002,
+      center: [x, -0.2],
+      shape: 'rounded-rect',
+      opacity: 0.24,
+    })
     const capGeo = projectWoodUVs(new RoundedBoxGeometry(0.23, 0.19, 0.31, 3, 0.035), 'x', isLeft ? 1.7 : 1.85, isLeft ? 1.8 : 1.95, isLeft ? 0.46 : 0.62, 0.5)
     add(capGeo, isLeft ? capitalWoodLeft : capitalWoodRight, [x, 2.49, -0.2], timber).name = 'suzu-column-capital'
   }
@@ -415,6 +426,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   const tmpGripDown = new THREE.Vector3()
   const tmpTasselOffset = new THREE.Vector3()
   const tmpTasselMidOffset = new THREE.Vector3()
+  const envWindVec = new THREE.Vector3()
   const downRef = new THREE.Vector3(0, -1, 0)
   const braidRadiusFn = (u: number) => BRAID_TUBE_R * (1 + 0.045 * Math.sin(u * Math.PI))
   const tasselRadiusFn = (u: number) => THREE.MathUtils.lerp(0.012, 0.0082, Math.pow(u, 1.5))
@@ -678,6 +690,10 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
     const draggingNow = pointer.isBusy() && checkpoint === 0
     const ringingNow = motion?.kind === 'ring'
     const settlingNow = motion?.kind === 'settle'
+    const envWind = !reduced() ? readEnvironmentWind(scene) : undefined
+    const hasIdleWind = Boolean(envWind && envWind.strength > 0 && !draggingNow && !ringingNow)
+    if (hasIdleWind) envWind!.sample(0, 1.0, 0.11, envWindVec)
+    else envWindVec.set(0, 0, 0)
 
     for (let i = 1; i < SIM_TOTAL; i++) {
       const px = pos[i * 3]!, py = pos[i * 3 + 1]!, pz = pos[i * 3 + 2]!
@@ -749,6 +765,15 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
         const u = i / (SIM_TOTAL - 1)
         const sWave = Math.sin((motion?.time ?? 0) * Math.PI * 2.4 - u * 2.0) * (1 - (motion?.time ?? 0))
         ax += sWave * 7.2 * u
+      }
+
+      if (hasIdleWind) {
+        const u = i / (SIM_TOTAL - 1)
+        // Heavy wooden grip stays calm; 28-strand cotton tassel breathes smoothly in sync with courtyard trees.
+        const breezeGain = isTassel ? 3.4 * (0.65 + 0.35 * u) : isGrip ? 0.32 : 0.72 * u
+        const phaseWave = 0.85 + 0.15 * Math.sin(envWind!.time * 2.2 - i * 0.45)
+        ax += envWindVec.x * breezeGain * phaseWave
+        az += envWindVec.z * breezeGain * phaseWave * 0.85
       }
 
       ropeBody.addParticleForce(i, { x: ax * pMass, y: ay * pMass, z: az * pMass }, false)
@@ -859,7 +884,16 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
       advance(1)
       // Only the first pull rings. Settling and greeting stay quiet; repeats never score.
       feedback.impact({ freqs: [587.33, 1174.66, 1762], duration: 0.7, gain: 0.035 })
-    } else motion = { kind: checkpoint === 1 ? 'settle' : 'greet', time: 0, from: pullAmount, sway: 0 }
+      feedback.sound('chime', { duration: reduced() ? 0.24 : 0.95, strength: 0.62 })
+      feedback.sound('metal', { duration: reduced() ? 0.16 : 0.44, strength: 0.44 })
+    } else if (checkpoint === 1) {
+      motion = { kind: 'settle', time: 0, from: pullAmount, sway: 0 }
+      feedback.sound('fabric', { duration: reduced() ? 0.14 : 0.36, strength: 0.32 })
+    } else {
+      motion = { kind: 'greet', time: 0, from: pullAmount, sway: 0 }
+      feedback.sound('woodTap', { duration: reduced() ? 0.10 : 0.16, strength: 0.24 })
+      feedback.sound('chime', { duration: reduced() ? 0.18 : 0.55, strength: 0.22 })
+    }
     if (reduced()) finishMotion()
     else {
       host.wakeUp()
@@ -869,16 +903,21 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { matrices(); return !motion && checkpoint < 3 && touchTarget.hit(x, y, sources()) },
-    onStart(x, y) { downX = x; downY = y; feedback.prepare(); if (!reduced()) host.wakeUp() },
+    onStart(x, y) { downX = x; downY = y; pullSlideSounded = false; feedback.prepare(); if (!reduced()) host.wakeUp() },
     onMove(x, y) {
       if (checkpoint === 0 && !reduced()) {
         const amt = THREE.MathUtils.clamp((y - downY) / 90, 0, 1)
         const side = THREE.MathUtils.clamp((x - downX) / 520, -0.07, 0.07)
+        if (!pullSlideSounded && amt >= 0.22) {
+          pullSlideSounded = true
+          feedback.sound('fabric', { duration: 0.26, strength: 0.24 })
+        }
         pose(amt, side, 0, side)
         host.wakeUp()
       }
     },
     onRelease(x, y) {
+      pullSlideSounded = false
       const dx = x - downX, dy = y - downY
       matrices()
       const valid = checkpoint === 0 ? dy >= 45 && dy > Math.abs(dx) * 1.1 : Math.hypot(dx, dy) < 12 && touchTarget.hit(x, y, sources())
@@ -891,7 +930,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
         }
       }
     },
-    onCancel() { if (!motion) restorePose() },
+    onCancel() { pullSlideSounded = false; if (!motion) restorePose() },
   })
   const action = () => {
     if (!active() || pointer.isBusy() || motion || checkpoint === 3) return
@@ -921,6 +960,7 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
     },
     update(dt) {
       if (!started || disposed) return
+      feedback.update()
       const isActive = active()
       if (wasActive !== isActive) { wasActive = isActive; sync() }
       if (!isActive) { pointer.cancel(); style.render(); return }
@@ -977,14 +1017,16 @@ export function createShrineSuzuBell(ctx: SceneContext): SceneInstance {
         prevPivotVelZ = velZ
         prevPivotVelX = velX
 
-        const needsSim = Boolean(motion && motion.kind !== 'greet') || pointer.isBusy() || settleDampClock > 0
+        const envWind = readEnvironmentWind(scene)
+        const hasWind = Boolean(envWind && envWind.strength > 0)
+        const needsSim = Boolean(motion && motion.kind !== 'greet') || pointer.isBusy() || settleDampClock > 0 || hasWind
         if (needsSim) {
           if (!motion && !pointer.isBusy() && settleDampClock > 0) {
             settleDampClock = Math.max(0, settleDampClock - delta)
           }
           host.wakeUp()
           host.step(delta, applyRopeForces, () => syncFromRapier())
-          if (!motion && !pointer.isBusy() && settleDampClock === 0) {
+          if (!motion && !pointer.isBusy() && settleDampClock === 0 && !hasWind) {
             // Settle neatly to calm held/rest equilibrium once residual swing finishes.
             const restAmt = checkpoint === 1 ? 0.32 : 0
             resetRopeParticlesToCalm(restAmt, 0)

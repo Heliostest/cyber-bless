@@ -72,3 +72,7 @@ Moebius 与卡通描边也支持实时调参：前者可调粗细、亮度色阶
 ## 2026-10-28 材质光效接入
 
 茶面与倒茶流接入有色 Physical 透射和厚度吸收；陶杯保持实体。 仅调整已审查部件的技术光学表现，器物、材料身份、动作、文案、来源、技术 ID 与存档不变；文化边界沿用本 README 既有核查及[逐场材质审查](../../../../docs/research/2026-10-28-material-lighting-audit.md)，不新增传统主张。实现与验证见[集中记录](../../../../docs/research/2026-10-28-ritual-optics-integration.md)。
+
+## 2026-11-28 视觉材质与视听微动润色
+
+为陶壶接入暖陶质感（`terracotta`）与内腔缝隙遮蔽（`bakeCreviceAO`），为茶杯、杯托与盖托接入釉陶质感（`ceramic`）与内腔遮蔽，为木茶盘与茶匙补充木纹表面（`wood`）；将茶匙与壶内茶叶升级为带羽状叶脉的折叶几何（`createBladeLeafGeometry` + `applyBotanicalSurface`）；将 `tea-stream` 倒茶柱升级为连续收束流柱（`createCurvedStreamGeometry` / `updateCurvedStream`），补充杯面细纹涟漪（`createSurfaceRipple`）、敞口壶与茶杯热气（`createSoftPlume`）及茶盘上四件器物的接触阴影（`addContactShadow`）；同步接入添叶木触、倾茶水声与落稳陶声等程序化材质反馈。以上改动均为产品物理表现与材质美术润色，器物定位、三步操作、文案、布朗茶山生态欣赏边界（`jingmai-tea-forest`）、技术 ID 与存档兼容性均保持不变，沿用既有核查记录，外链未重读。

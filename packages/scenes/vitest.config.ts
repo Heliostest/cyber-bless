@@ -14,6 +14,12 @@ export default defineConfig({
     // Geometry sweeps cover thousands of poses; bound CPU contention and allow their full assertions to finish.
     maxWorkers: 4,
     testTimeout: 30_000,
+    setupFiles: [path.resolve(import.meta.dirname, './vitest.setup.ts')],
+    poolOptions: {
+      forks: {
+        execArgv: ['--max-old-space-size=6144'],
+      },
+    },
     server: {
       deps: {
         inline: ['@dimforge/rapier3d-simd'],

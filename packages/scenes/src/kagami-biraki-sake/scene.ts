@@ -7,6 +7,7 @@ import { createPosePlacement } from '../pose-placement'
 import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createKagamiBirakiModel } from './model'
+import { createSurfaceRipple } from '@wbr/scene-runtime/soft-plume'
 
 type Checkpoint = 0 | 1 | 2 | 3
 const ACTIONS = ['取起木槌', '轻叩盖缝', '收回木槌']
@@ -19,7 +20,7 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number; arrived?: boolean; sounded?: boolean } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; arrived?: boolean; sounded?: boolean; echoRipple?: boolean } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
@@ -34,6 +35,10 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
   const model = createKagamiBirakiModel(); scene.add(model.root)
+  const ripple = createSurfaceRipple({ radius: .49, maxRings: 4, color: 0xfff5d6, opacity: .56, duration: 1.8 })
+  model.root.updateMatrixWorld(true)
+  ripple.root.position.copy(model.cask.localToWorld(new THREE.Vector3(0, .833, 0)))
+  scene.add(ripple.root)
   const placementSteps = new Set([0,2])
   const placement = createPosePlacement(canvas, camera, model, scene)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
@@ -82,9 +87,21 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function soundMallet(short = false) {
-    if (!motion || motion.step !== 1 || motion.sounded || (!short && amount < .4)) return
-    motion.sounded = true
-    withHostCallbacks(() => feedback.sound('woodTap', { duration: short ? .1 : .18, strength: .55 }))
+    if (!motion || motion.step !== 1) return
+    const quiet = ctx.isReducedMotion?.() ?? false
+    if (!motion.sounded && (short || amount >= .4)) {
+      motion.sounded = true
+      if (!short && !quiet) ripple.trigger(0, .14, 1)
+      withHostCallbacks(() => {
+        feedback.sound('woodTap', { duration: short ? .10 : .18, strength: .55 })
+        feedback.sound('hollow', { duration: short ? .12 : .28, strength: .42 })
+        feedback.sound('water', { duration: short ? .12 : .55, strength: .28 })
+      })
+    }
+    if (!short && !quiet && motion.sounded && !motion.echoRipple && amount >= .56) {
+      motion.echoRipple = true
+      ripple.trigger(0, 0, .62)
+    }
   }
   function settle() {
     if (!inputActive() || !motion) return
@@ -126,13 +143,13 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
         const eased=ease(motion.time)
         pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); soundMallet(); if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) { ripple.update(delta, ctx.isReducedMotion?.() ?? false); matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); model.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); ripple.dispose(); model.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

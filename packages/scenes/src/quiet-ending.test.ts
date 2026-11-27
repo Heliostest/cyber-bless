@@ -56,3 +56,32 @@ it('does not override the scene terminal button state or grant completion outsid
   s.ending.sync(true); s.actionBtn.hidden = true; s.actionBtn.disabled = true; s.ending.sync(false)
   expect(s.actionBtn.hidden).toBe(true); expect(s.actionBtn.disabled).toBe(true); s.run(5); expect(s.complete).not.toHaveBeenCalled()
 })
+it('applies gentle candlelight emissive shimmer (<= +0.085) and smooth dual-sine bob, restoring cleanly on finish', () => {
+  const overlay = document.createElement('div'), hitLayer = document.createElement('div'), actionBtn = document.createElement('button'), hintEl = document.createElement('div')
+  overlay.append(hitLayer, actionBtn, hintEl); document.body.append(overlay)
+  const mat = new THREE.MeshStandardMaterial({ emissive: 0x101010, emissiveIntensity: 0.2 })
+  const object = new THREE.Mesh(new THREE.BoxGeometry(), mat)
+  object.position.y = 0.5
+  const complete = vi.fn()
+  const ending = createQuietEnding({ overlay, isActive: () => true, isReducedMotion: () => false }, {
+    ui: { hitLayer, actionBtn, hintEl }, duration: 3, motion: 'bob', targets: () => [object], complete,
+  })
+  endings.push(ending)
+  ending.sync(true)
+  let maxEmissiveIntensity = 0
+  let maxBobDelta = 0
+  for (let i = 0; i < 30; i++) {
+    ending.update(.05)
+    maxEmissiveIntensity = Math.max(maxEmissiveIntensity, mat.emissiveIntensity)
+    maxBobDelta = Math.max(maxBobDelta, Math.abs(object.position.y - 0.5))
+  }
+  expect(maxEmissiveIntensity).toBeGreaterThan(0.25)
+  expect(maxEmissiveIntensity).toBeLessThanOrEqual(0.2 + 0.0851)
+  expect(maxBobDelta).toBeGreaterThan(0.02)
+  // Run to completion and verify exact material & position restoration.
+  for (let i = 0; i < 35; i++) ending.update(.05)
+  expect(complete).toHaveBeenCalledOnce()
+  expect(object.position.y).toBeCloseTo(0.5, 6)
+  expect(mat.emissiveIntensity).toBeCloseTo(0.2, 6)
+  expect(mat.emissive.getHex()).toBe(0x101010)
+})

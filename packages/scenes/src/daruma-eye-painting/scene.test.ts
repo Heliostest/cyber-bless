@@ -506,4 +506,21 @@ describe('Daruma eye painting', () => {
       ), `scene-owned ${type} listener must be released`).toBe(true)
     }
   })
+
+  it('applies satin lacquer craft surface to the shell, stone/wet inkstone, and non-raycast contact shadows', async () => {
+    const s = await mount()
+    const shell = s.scene.getObjectByName('daruma-shell') as THREE.Mesh
+    const shellMat = shell.material as THREE.MeshPhysicalMaterial
+    expect(shellMat).toBeInstanceOf(THREE.MeshPhysicalMaterial)
+    expect(shellMat.clearcoat).toBeCloseTo(0.42, 4)
+    expect(shellMat.userData.craftSurface).toMatchObject({ kind: 'lacquer' })
+    const inkstone = s.scene.getObjectByName('daruma-inkstone') as THREE.Mesh
+    const inkPool = s.scene.getObjectByName('daruma-ink-pool') as THREE.Mesh
+    expect((inkstone.material as THREE.Material).userData.craftSurface).toMatchObject({ kind: 'stone' })
+    expect((inkPool.material as THREE.Material).userData.ritualOptics).toMatchObject({ kind: 'wet' })
+    const contactShadow = s.scene.getObjectByName('daruma-contact-shadow') as THREE.Mesh
+    expect(contactShadow.userData.effect).toBe(true)
+    const ray = new THREE.Raycaster(new THREE.Vector3(0, 2, 0), new THREE.Vector3(0, -1, 0))
+    expect(ray.intersectObject(contactShadow, false)).toHaveLength(0)
+  })
 })

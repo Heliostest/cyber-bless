@@ -1,5 +1,11 @@
 import * as THREE from 'three'
-import { createSoftSoundPlayer, type SoftSound, type SoftSoundOptions } from '@wbr/shared'
+import {
+  createSoftSoundPlayer,
+  type ContinuousBed,
+  type ContinuousBedKind,
+  type SoftSound,
+  type SoftSoundOptions,
+} from '@wbr/shared'
 import type { SceneContext } from './contract'
 import { bindSceneAttribute, bindSceneText } from './scene-localization'
 
@@ -164,16 +170,17 @@ export function addStageLights(
   return addCelLights(scene, stage === 'night' ? NIGHT_CEL_LIGHTS : day)
 }
 
-/** A white radial falloff, in alpha only. */
-function glowTexture(size = 64) {
+/** A silky, zero-ringing Gaussian-cubic warm radial aureole, in alpha only. */
+function glowTexture(size = 128) {
   const data = new Uint8Array(size * size * 4)
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const d = Math.hypot(x + 0.5 - size / 2, y + 0.5 - size / 2) / (size / 2)
-      const a = Math.max(0, 1 - d)
+      const edge = Math.max(0, 1 - d)
+      const a = edge > 0 ? Math.exp(-3.6 * d * d) * Math.pow(edge, 1.6) : 0
       const i = (y * size + x) * 4
       data[i] = data[i + 1] = data[i + 2] = 255
-      data[i + 3] = Math.round(a * a * 255)
+      data[i + 3] = Math.round(Math.min(1, a) * 255)
     }
   }
   const map = new THREE.DataTexture(data, size, size)
@@ -228,12 +235,39 @@ export function disposeTree(root: THREE.Object3D) {
   materials.forEach((m) => m.dispose())
 }
 
+/** Closed-form damped spring impulse response (0 for t <= 0). */
+export function dampedRing(t: number, freq = 3.2, damp = 6.5): number {
+  if (!Number.isFinite(t) || t <= 0) return 0
+  return Math.exp(-damp * t) * Math.sin(Math.PI * 2 * freq * t)
+}
+
+/**
+ * C1-smooth physical settle curve on [0, 1] with exact endpoints (0 -> 0, 1 -> 1)
+ * and a gentle cushioned arrival overshoot around t ≈ 0.72.
+ */
+export function springSettleEase(t: number, overshoot = 0.036): number {
+  const u = THREE.MathUtils.clamp(Number.isFinite(t) ? t : 0, 0, 1)
+  if (u === 0 || u === 1) return u
+  const amp = Math.max(0, Number.isFinite(overshoot) ? overshoot : 0.036)
+  const oneMinus = 1 - u
+  const settle = 1 - Math.pow(oneMinus, 5) * (1 + 5 * u)
+  if (amp === 0) return settle
+  // u^3 * (1 - u)^2 vanishes with zero slope at u = 0 and u = 1; combined with
+  // settle it peaks around u ≈ 0.72 at ~1 + amp before settling smoothly to 1.
+  const bump = (u * u * u * oneMinus * oneMinus) / 0.03456
+  const blend = Math.min(1, amp / 0.015)
+  const lift = (amp + (1 - 0.9921) * blend) / 0.847
+  return settle + lift * bump
+}
+
 type ToneOpts = {
   /** Fundamental frequencies (Hz) layered together. */
-  freqs: number[]
-  duration: number
+  freqs?: number[]
+  duration?: number
   gain?: number
   type?: OscillatorType
+  cue?: SoftSound
+  cueStrength?: number
 }
 
 /**
@@ -244,6 +278,7 @@ export function createChimeAudio(enabled: () => boolean = () => true) {
   let ac: AudioContext | null = null
   let closed = false
   const tones = new Set<OscillatorNode>()
+  const cleanupNodes = new Set<AudioNode>()
 
   const ensure = (): AudioContext | null => {
     if (closed) return null
@@ -267,9 +302,13 @@ export function createChimeAudio(enabled: () => boolean = () => true) {
   const stop = () => {
     soft.stop()
     for (const osc of tones) {
-      try { osc.stop(); osc.disconnect?.() } catch { /* already ended */ }
+      try { osc.onended = null; osc.stop(); osc.disconnect?.() } catch { /* already ended */ }
     }
     tones.clear()
+    for (const node of cleanupNodes) {
+      try { node.disconnect?.() } catch { /* already disconnected */ }
+    }
+    cleanupNodes.clear()
   }
 
   return {
@@ -279,29 +318,79 @@ export function createChimeAudio(enabled: () => boolean = () => true) {
       const a = ensure()
       if (a?.state === 'suspended') void a.resume().catch(() => {})
     },
-    play({ freqs, duration, gain = 0.12, type = 'sine' }: ToneOpts) {
+    play({ freqs, duration, gain = 0.12, type = 'sine', cue, cueStrength }: ToneOpts) {
       if (!enabled()) { stop(); return }
+      if (cue) {
+        const a = ensure()
+        if (a?.state === 'suspended') void a.resume().catch(() => {})
+        soft.play(cue, { duration, strength: cueStrength })
+      }
+      if (!freqs || freqs.length === 0) return
       const a = ensure()
       if (!a) return
       try {
         if (a.state === 'suspended') void a.resume().catch(() => {})
         const now = a.currentTime
+        const dur = typeof duration === 'number' && Number.isFinite(duration) && duration > 0 ? duration : 0.32
         const master = a.createGain()
+        const hasFilter = typeof a.createBiquadFilter === 'function'
+        const attack = hasFilter ? Math.min(0.008, dur * 0.25) : Math.min(0.015, dur * 0.25)
         master.gain.setValueAtTime(0.0001, now)
-        master.gain.exponentialRampToValueAtTime(gain, now + 0.015)
-        master.gain.exponentialRampToValueAtTime(0.0001, now + duration)
-        master.connect(a.destination)
+        master.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain), now + attack)
+        master.gain.exponentialRampToValueAtTime(0.0001, now + dur)
+        let filter: BiquadFilterNode | undefined
+        if (hasFilter) {
+          const maxFreq = Math.max(...freqs.filter((f) => Number.isFinite(f) && f > 0), 440)
+          const startCutoff = Math.min(3200, maxFreq * 3.2)
+          const endCutoff = Math.max(80, Math.min(1100, maxFreq * 1.45))
+          filter = a.createBiquadFilter()
+          filter.type = 'lowpass'
+          filter.frequency.setValueAtTime(startCutoff, now)
+          if (typeof filter.frequency.exponentialRampToValueAtTime === 'function') {
+            filter.frequency.exponentialRampToValueAtTime(endCutoff, now + dur)
+          }
+          filter.Q.setValueAtTime(0.75, now)
+          master.connect(filter)
+          filter.connect(a.destination)
+          cleanupNodes.add(filter)
+        } else {
+          master.connect(a.destination)
+        }
+        cleanupNodes.add(master)
+        let remaining = freqs.length
         freqs.forEach((f, i) => {
           const osc = a.createOscillator()
-          osc.type = type
-          osc.frequency.setValueAtTime(f, now)
+          // Warm acoustic shaping when a lowpass filter is present: gentle triangle
+          // overtones swept through the filter sound like plucked wood-harp/kalimba
+          // rather than a sterile sine beep.
+          osc.type = hasFilter && type === 'sine' ? 'triangle' : type
+          const warmFreq = hasFilter && i > 0 ? f * (1 + (i % 2 === 1 ? 0.0018 : -0.0014)) : f
+          if (hasFilter && warmFreq > 0 && typeof osc.frequency.exponentialRampToValueAtTime === 'function') {
+            osc.frequency.setValueAtTime(warmFreq * 1.003, now)
+            osc.frequency.exponentialRampToValueAtTime(warmFreq, now + Math.min(0.014, dur * 0.2))
+          } else {
+            osc.frequency.setValueAtTime(warmFreq, now)
+          }
           const g = a.createGain()
           g.gain.value = 1 / (i + 1)
           osc.connect(g).connect(master)
           tones.add(osc)
-          osc.onended = () => { tones.delete(osc); osc.disconnect?.(); g.disconnect?.() }
+          cleanupNodes.add(g)
+          osc.onended = () => {
+            tones.delete(osc)
+            cleanupNodes.delete(g)
+            try { osc.disconnect?.(); g.disconnect?.() } catch { /* already disconnected */ }
+            if (--remaining <= 0) {
+              cleanupNodes.delete(master)
+              try { master.disconnect?.() } catch { /* already disconnected */ }
+              if (filter) {
+                cleanupNodes.delete(filter)
+                try { filter.disconnect?.() } catch { /* already disconnected */ }
+              }
+            }
+          }
           osc.start(now)
-          osc.stop(now + duration + 0.05)
+          osc.stop(now + dur + 0.05)
         })
       } catch {
         // audio is decorative; ignore failures
@@ -313,6 +402,22 @@ export function createChimeAudio(enabled: () => boolean = () => true) {
       const a = ensure()
       if (a?.state === 'suspended') void a.resume().catch(() => {})
       soft.play(cue, options)
+    },
+    /** Continuous velocity-modulated friction/flow sound bed tied to this audio lifecycle. */
+    bed(kind: ContinuousBedKind): ContinuousBed {
+      const inner = soft.bed(kind)
+      return {
+        setSpeed(speed01: number) {
+          if (!enabled()) { inner.stop(); return }
+          if (speed01 > 0.02) {
+            const a = ensure()
+            if (a?.state === 'suspended') void a.resume().catch(() => {})
+          }
+          inner.setSpeed(speed01)
+        },
+        stop() { inner.stop() },
+        dispose() { inner.dispose() },
+      }
     },
     stop,
     dispose() {
@@ -359,6 +464,8 @@ export function createSceneFeedback(
     },
     /** Material feedback never adds a second haptic tick. */
     sound(cue: SoftSound, options?: SoftSoundOptions) { audio.sound(cue, options) },
+    /** Continuous friction/flow sound bed tied to mute, blur, visibility, and disposal. */
+    bed(kind: ContinuousBedKind): ContinuousBed { return audio.bed(kind) },
     stop() { audio.stop() },
     /** Scene updates observe mute/pause changes even while no new cue fires. */
     update() { if (!soundOn()) audio.stop() },

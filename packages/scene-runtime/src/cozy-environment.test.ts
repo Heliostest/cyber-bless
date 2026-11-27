@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { createCozyEnvironment as createEnvironment } from "./cozy-environment";
+import { getEnvironmentRiverbedY, getEnvironmentSurfaceY } from "./environment-profiles";
 import * as sceneMotion from "./scene-motion";
 import { builtInScenes, isSceneVisibleInApp } from "@wbr/core/daily-scenes";
 
@@ -682,6 +683,121 @@ describe('stylized veranda and table timber deck and railing', () => {
       geoDisposals.forEach(spy => expect(spy).toHaveBeenCalledOnce());
     } finally {
       world.dispose();
+    }
+  });
+});
+
+describe('environment surface metadata and outdoor ShadowMaterial suppression', () => {
+  it('records environmentId and environmentSurfaceY on scene.userData and restores previous values on dispose', async () => {
+    const cleanScene = new THREE.Scene();
+    const cleanWorld = createCozyEnvironment(cleanScene, { id: 'welsh-love-spoon', loadSky: async () => new THREE.DataTexture() })!;
+    expect(cleanScene.userData.environmentId).toBe('welsh-love-spoon');
+    expect(cleanScene.userData.environmentSurfaceY).toBeCloseTo(-0.035, 6);
+    await cleanWorld.ready;
+    cleanWorld.dispose();
+    expect(cleanScene.userData.environmentId).toBeUndefined();
+    expect(cleanScene.userData.environmentSurfaceY).toBeUndefined();
+
+    const presetScene = new THREE.Scene();
+    presetScene.userData.environmentId = 'prior-id';
+    presetScene.userData.environmentSurfaceY = 0.25;
+    const presetWorld = createCozyEnvironment(presetScene, { id: 'croatian-licitar-heart', loadSky: async () => new THREE.DataTexture() })!;
+    expect(presetScene.userData.environmentId).toBe('croatian-licitar-heart');
+    expect(presetScene.userData.environmentSurfaceY).toBeCloseTo(-0.0225, 6);
+    await presetWorld.ready;
+    presetWorld.dispose();
+    expect(presetScene.userData.environmentId).toBe('prior-id');
+    expect(presetScene.userData.environmentSurfaceY).toBe(0.25);
+  });
+
+  it('matches actual built environment surface geometry across all five environment kinds', async () => {
+    const cases: readonly [string, (scene: THREE.Scene) => number][] = [
+      ['welsh-love-spoon', scene => new THREE.Box3().setFromObject(scene.getObjectByName('veranda-deck-plank')!).max.y],
+      ['phuang-malai', scene => scene.getObjectByName('garden-path')!.position.y],
+      ['shrine-suzu-bell', scene => {
+        const path = scene.getObjectByName('courtyard-stone-path') as THREE.Mesh;
+        const hits = new THREE.Raycaster(new THREE.Vector3(0, 2, 0), new THREE.Vector3(0, -1, 0)).intersectObject(path);
+        return hits[0]!.point.y;
+      }],
+      ['crane', scene => new THREE.Box3().setFromObject(scene.getObjectByName('table-deck-plank')!).max.y],
+      ['floating-lantern-loy-krathong', scene => {
+        const root = scene.getObjectByName('cozy-environment')!;
+        let maxBankY = -Infinity;
+        root.traverse(obj => {
+          if (obj instanceof THREE.Mesh && obj.position.x === -5) {
+            maxBankY = Math.max(maxBankY, new THREE.Box3().setFromObject(obj).max.y);
+          }
+        });
+        return maxBankY;
+      }],
+    ];
+
+    for (const [id, measureY] of cases) {
+      const scene = new THREE.Scene();
+      const world = createCozyEnvironment(scene, { id, loadSky: async () => new THREE.DataTexture() })!;
+      try {
+        await world.ready;
+        scene.updateMatrixWorld(true);
+        expect(Math.abs(measureY(scene) - getEnvironmentSurfaceY(id)), id).toBeLessThan(0.0025);
+        if (id === 'floating-lantern-loy-krathong') {
+          expect(scene.getObjectByName('meadow-ground')!.position.y).toBeCloseTo(getEnvironmentRiverbedY(id), 6);
+        }
+      } finally {
+        world.dispose();
+      }
+    }
+  });
+
+  it('hides outdoor ShadowMaterial planes during prepare and restores original visibility on dispose', async () => {
+    const scene = new THREE.Scene();
+    const visibleShadow = new THREE.Mesh(new THREE.PlaneGeometry(4, 2), new THREE.ShadowMaterial({ opacity: 0.13 }));
+    visibleShadow.name = 'legacy-shadow-plane';
+    const hiddenShadow = new THREE.Mesh(new THREE.PlaneGeometry(4, 2), new THREE.ShadowMaterial({ opacity: 0.12 }));
+    hiddenShadow.visible = false;
+    const optedInShadow = new THREE.Mesh(new THREE.PlaneGeometry(4, 2), new THREE.ShadowMaterial({ opacity: 0.12 }));
+    optedInShadow.userData.keepInOutdoorEnvironment = true;
+    const arrayShadow = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), [new THREE.ShadowMaterial({ opacity: 0.1 })]);
+    const solidProp = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xaa8866 }));
+    scene.add(visibleShadow, hiddenShadow, optedInShadow, arrayShadow, solidProp);
+
+    const world = createCozyEnvironment(scene, { id: 'welsh-love-spoon', loadSky: async () => new THREE.DataTexture() })!;
+    const renderer = { shadowMap: { enabled: false, type: THREE.PCFShadowMap } } as THREE.WebGLRenderer;
+    try {
+      await world.ready;
+      world.prepare(renderer);
+
+      expect(visibleShadow.visible).toBe(false);
+      expect(hiddenShadow.visible).toBe(false);
+      expect(optedInShadow.visible).toBe(true);
+      expect(arrayShadow.visible).toBe(false);
+      expect(solidProp.visible).toBe(true);
+
+      // Re-showing a shadow plane during an animation tick is re-suppressed on the next prepare.
+      visibleShadow.visible = true;
+      const lateShadow = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShadowMaterial({ opacity: 0.08 }));
+      scene.add(lateShadow);
+      world.prepare(renderer);
+      expect(visibleShadow.visible).toBe(false);
+      expect(lateShadow.visible).toBe(false);
+
+      world.dispose();
+      world.dispose();
+      expect(visibleShadow.visible).toBe(true);
+      expect(hiddenShadow.visible).toBe(false);
+      expect(optedInShadow.visible).toBe(true);
+      expect(arrayShadow.visible).toBe(true);
+      expect(lateShadow.visible).toBe(true);
+      expect(solidProp.visible).toBe(true);
+
+      lateShadow.geometry.dispose();
+      (lateShadow.material as THREE.Material).dispose();
+    } finally {
+      world.dispose();
+      for (const mesh of [visibleShadow, hiddenShadow, optedInShadow, arrayShadow, solidProp]) {
+        mesh.geometry.dispose();
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        mats.forEach(mat => mat.dispose());
+      }
     }
   });
 });

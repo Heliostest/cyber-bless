@@ -2,8 +2,14 @@ import type { GardenKind } from './garden-layout';
 type Kind = GardenKind;
 
 /** Shared authored environment settings; safe to read without loading Three.js. */
-type Profile = { kind: Kind; floor: number; night?: boolean; warmLight?: boolean; coastal?: boolean };
-export const environmentProfiles: Readonly<Record<string, Profile>> = {
+export type EnvironmentProfile = {
+  readonly kind: Kind;
+  readonly floor: number;
+  readonly night?: boolean;
+  readonly warmLight?: boolean;
+  readonly coastal?: boolean;
+};
+export const environmentProfiles: Readonly<Record<string, EnvironmentProfile>> = {
   "ukrainian-didukh": {kind:"courtyard",floor:-.15,warmLight:true},
   "sri-lankan-bodhi-puja": {kind:"garden",floor:-.14},
   "nanakusa-gayu": {kind:"courtyard",floor:0},
@@ -163,3 +169,44 @@ export const environmentProfiles: Readonly<Record<string, Profile>> = {
   lantern: { kind: "veranda", floor: -0.04, night: true },
   yeondeunghoe: { kind: "garden", floor: -0.04, night: true },
 };
+
+/** Return the authored environment profile for a known scene ID, or undefined. */
+export function getEnvironmentProfile(id: string): EnvironmentProfile | undefined {
+  return Object.hasOwn(environmentProfiles, id) ? environmentProfiles[id] : undefined;
+}
+
+/**
+ * Shared environment surface elevation matching cozy-environment.ts and courtyard-stone-path.ts:
+ * - veranda: floor + 0.005 (deck plank top)
+ * - garden: floor + 0.008 (garden-path sand oval top)
+ * - courtyard: floor + 0.0175 (courtyard flagstone mean top, floor + 0.0162..0.0192)
+ * - table: floor - 0.015 (table-deck top: (floor - 0.08) + 0.13 / 2)
+ * - river: floor + 0.075 (bank top when non-coastal) or floor (coastal)
+ * Falls back to 0 only if id is unknown.
+ */
+export function getEnvironmentSurfaceY(id: string): number {
+  const profile = getEnvironmentProfile(id);
+  if (!profile) return 0;
+  switch (profile.kind) {
+    case "veranda":
+      return profile.floor + 0.005;
+    case "garden":
+      return profile.floor + 0.008;
+    case "courtyard":
+      return profile.floor + 0.0175;
+    case "table":
+      return profile.floor - 0.015;
+    case "river":
+      return profile.coastal ? profile.floor : profile.floor + 0.075;
+  }
+}
+
+/**
+ * Shared riverbed elevation for river environments (floor - 0.30, matching meadow-ground).
+ * Returns getEnvironmentSurfaceY(id) for non-river profiles and 0 for unknown IDs.
+ */
+export function getEnvironmentRiverbedY(id: string): number {
+  const profile = getEnvironmentProfile(id);
+  if (!profile) return 0;
+  return profile.kind === "river" ? profile.floor - 0.3 : getEnvironmentSurfaceY(id);
+}

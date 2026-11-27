@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 import { readSceneMotion } from "./scene-motion";
 import {
   createSceneRegistry,
+  getEnvironmentProfile,
+  getEnvironmentRiverbedY,
+  getEnvironmentSurfaceY,
   mountScene,
   type SceneMountOptions,
 } from "./index";
@@ -177,5 +180,42 @@ describe("engine registry", () => {
     await expect(registry.load("one@1")).rejects.toThrow();
     expect(await registry.load("one@1")).toBe(s.engine);
     expect(second).not.toHaveBeenCalled();
+  });
+});
+
+describe("environment surface height contract", () => {
+  it("resolves exact surface and riverbed heights across all five environment kinds", () => {
+    expect(getEnvironmentProfile("woodfish")).toEqual({ kind: "veranda", floor: -0.95 });
+    expect(getEnvironmentSurfaceY("woodfish")).toBeCloseTo(-0.945, 6);
+    expect(getEnvironmentSurfaceY("milagros")).toBeCloseTo(-0.035, 6);
+    expect(getEnvironmentSurfaceY("tibetan-wheel")).toBeCloseTo(-0.03, 6);
+
+    expect(getEnvironmentSurfaceY("phuang-malai")).toBeCloseTo(-0.032, 6);
+    expect(getEnvironmentSurfaceY("mochigase-nagashibina")).toBeCloseTo(-0.282, 6);
+
+    expect(getEnvironmentSurfaceY("shinto-torii")).toBeCloseTo(-0.0175, 6);
+    expect(getEnvironmentSurfaceY("shrine-suzu-bell")).toBeCloseTo(-0.0225, 6);
+    expect(getEnvironmentSurfaceY("mezuzah-doorpost")).toBeCloseTo(0.0175, 6);
+
+    expect(getEnvironmentSurfaceY("crane")).toBeCloseTo(-0.665, 6);
+
+    // Non-coastal river scenes expose bank top (floor + 0.075) and riverbed (floor - 0.30).
+    expect(getEnvironmentSurfaceY("floating-lantern-loy-krathong")).toBeCloseTo(0.035, 6);
+    expect(getEnvironmentRiverbedY("floating-lantern-loy-krathong")).toBeCloseTo(-0.34, 6);
+    expect(getEnvironmentSurfaceY("slavic-wreath")).toBeCloseTo(0.02, 6);
+    expect(getEnvironmentRiverbedY("slavic-wreath")).toBeCloseTo(-0.355, 6);
+
+    // Coastal river scene (udo-undama) uses floor directly for surface and floor - 0.30 for bed.
+    expect(getEnvironmentSurfaceY("udo-undama")).toBeCloseTo(-0.04, 6);
+    expect(getEnvironmentRiverbedY("udo-undama")).toBeCloseTo(-0.34, 6);
+  });
+
+  it("falls back safely for unknown IDs and prototype property names", () => {
+    expect(getEnvironmentProfile("unknown-scene-id")).toBeUndefined();
+    expect(getEnvironmentProfile("toString")).toBeUndefined();
+    expect(getEnvironmentSurfaceY("unknown-scene-id")).toBe(0);
+    expect(getEnvironmentSurfaceY("constructor")).toBe(0);
+    expect(getEnvironmentRiverbedY("unknown-scene-id")).toBe(0);
+    expect(getEnvironmentRiverbedY("woodfish")).toBeCloseTo(-0.945, 6);
   });
 });

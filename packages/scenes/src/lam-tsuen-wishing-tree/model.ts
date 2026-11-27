@@ -1,7 +1,13 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
-import { createReplicaCanopyClusterGeometry, createReplicaCanopyMaterials } from './canopy-craft'
+import {
+ createMoldedLimbGeometry,
+ createReplicaBarkMaterial,
+ createReplicaCanopyClusterGeometry,
+ createReplicaCanopyMaterials,
+ createReplicaLeafRosetteGeometry,
+} from './canopy-craft'
 
 const PAPER_W = 0.55
 const PAPER_H = 0.85
@@ -301,8 +307,8 @@ export function createLamTsuenModel() {
  const root=new THREE.Group();root.name='lamtsuen-root'
  const subject=new THREE.Group();subject.name='lamtsuen-subject';root.add(subject)
  const mat=(color:number,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness})
- const bark=mat(0x987456,.72),stone=mat(0xd8c7a1),orange=mat(0xf79831,.4),cordMat=mat(0xc54230),green=mat(0x557b49)
- const {leaf,lightLeaf}=createReplicaCanopyMaterials()
+ const bark=createReplicaBarkMaterial(),stone=mat(0xd8c7a1),orange=mat(0xf79831,.4),cordMat=mat(0xc54230),green=mat(0x557b49)
+ const {deepLeaf,midLeaf,sunLeaf}=createReplicaCanopyMaterials()
  // Traditional crimson-red xuan/wishing paper with fine UV-anchored pulp tooth,
  // restrained fibers (fine dyed xuan paper, not coarse raw-bark flecks), and highlight guard.
  const redPaper=createRitualMaterial({color:0xd4493b,roughness:.94,vertexColors:true}, {
@@ -321,18 +327,212 @@ export function createLamTsuenModel() {
  applyCraftSurface(cordMat,{kind:'cord',strength:.3})
  applyCraftSurface(stone,{kind:'stone',strength:.4})
  const mesh=(g:THREE.BufferGeometry,m:THREE.Material,p:THREE.Object3D,name:string)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;p.add(o);return o}
- const link=(a:THREE.Vector3,b:THREE.Vector3,r:number,m:THREE.Material,p:THREE.Object3D,name:string)=>{const o=mesh(new THREE.CylinderGeometry(r,r,a.distanceTo(b),12),m,p,name);o.position.copy(a).add(b).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());return o}
  const v=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
  const paving=mesh(new THREE.BoxGeometry(2.4,.1,2.5),stone,subject,'lamtsuen-paving');paving.position.set(0,-.015,.20)
- link(v(-.78,.035,-.85),v(-.78,1.55,-.85),.14,bark,subject,'lamtsuen-trunk')
- link(v(-.78,1.50,-.85),v(-.78,1.55,-.10),.09,bark,subject,'lamtsuen-fork')
- const branch=link(v(-.78,1.55,-.10),v(.82,1.55,-.10),.07,bark,subject,'lamtsuen-wish-branch')
- link(v(-.78,1.45,-.85),v(-.52,2.12,-.95),.075,bark,subject,'lamtsuen-crown-stem')
- link(v(-.55,1.99,-.95),v(.65,2.02,-.95),.045,bark,subject,'lamtsuen-crown-bough')
- const replicaCrownGeo=createReplicaCanopyClusterGeometry()
- for(const [i,p] of [[-.83,2.12,-.95],[-.40,2.23,-1.0],[.08,2.19,-.95],[.52,2.15,-.95],[.83,2.03,-.95]].entries()){
-  const o=mesh(replicaCrownGeo,i%2?lightLeaf:leaf,subject,`lamtsuen-leaf-cluster-${i}`);o.rotation.y=i*1.15;o.scale.set(.39,.24,.30);o.position.set(...p as [number,number,number])
+
+ // Modern conservation molded-fiberglass replica wishing tree skeleton:
+ // gently curved tapering limbs with root-buttress base, cast fork collars,
+ // and short crown twigs — preserving exact wish-branch clearance (y=1.55, z=-0.10, r=0.07).
+ const limb=(
+  name:string,
+  points:readonly THREE.Vector3[],
+  radiusAt:(t:number,angle:number)=>number,
+  opts:{tubularSegments?:number;radialSegments?:number;startCap?:'flat'|'dome';endCap?:'flat'|'dome';startDomeScale?:number;endDomeScale?:number;shadeAt?:(t:number,ny:number)=>readonly [number,number,number]}={},
+ )=>mesh(createMoldedLimbGeometry({points,radiusAt,...opts}),bark,subject,name)
+
+ limb(
+  'lamtsuen-trunk',
+  [v(-.76,.035,-.82),v(-.76,.18,-.825),v(-.79,.58,-.84),v(-.80,1.04,-.85),v(-.76,1.42,-.86),v(-.69,1.69,-.89)],
+  (t,a)=>{
+   const rootFlare=Math.pow(Math.max(0,1-t/.20),2.0)*(.048+.016*Math.cos(a*5+.4))
+   const flute=.0045*Math.cos(a*4+t*2.4)*(1-t*.4)
+   const collarSwell=Math.exp(-Math.pow((t-.78)*7.5,2))*.010
+   return THREE.MathUtils.lerp(.134,.086,Math.pow(t,.88))+rootFlare+flute+collarSwell
+  },
+  {
+   tubularSegments:15,radialSegments:12,startCap:'flat',endCap:'dome',endDomeScale:.55,
+   shadeAt:(t,ny)=>{
+    const rootAO=THREE.MathUtils.lerp(.83,1.02,THREE.MathUtils.smoothstep(t,0,.28))
+    const crownAO=THREE.MathUtils.lerp(1,.93,THREE.MathUtils.smoothstep(t,.76,1))
+    const sky=1+ny*.05
+    return [rootAO*crownAO*sky,rootAO*crownAO*sky*.99,rootAO*crownAO*sky*.96] as const
+   },
+  },
+ )
+
+ // Molded fiberglass collar transitioning trunk into the sweeping wish-branch arm.
+ limb(
+  'lamtsuen-fork-collar-wish',
+  [v(-.77,1.18,-.85),v(-.70,1.29,-.74),v(-.61,1.38,-.60)],
+  (t,a)=>THREE.MathUtils.lerp(.104,.084,t)+.006*Math.sin(Math.PI*t)+.0025*Math.cos(a*4),
+  {tubularSegments:6,radialSegments:10,startCap:'dome',endCap:'dome',startDomeScale:.25,endDomeScale:.35},
+ )
+
+ // Smoothly sweeping diagonal arm from trunk crotch into the horizontal wish branch
+ // (no 90-degree pipe elbow and no leftward hairpin loop from the camera angle).
+ limb(
+  'lamtsuen-fork',
+  [v(-.75,1.18,-.84),v(-.62,1.36,-.60),v(-.46,1.49,-.34),v(-.28,1.545,-.14),v(-.14,1.55,-.10)],
+  (t,a)=>{
+   const collar=Math.exp(-t*7.5)*.014
+   const flute=.002*Math.cos(a*4+t*2)*(1-t)
+   return THREE.MathUtils.lerp(.088,.070,THREE.MathUtils.smoothstep(t,0,.84))+collar+flute
+  },
+  {tubularSegments:12,radialSegments:10,startCap:'dome',endCap:'dome',startDomeScale:.45,endDomeScale:.35},
+ )
+
+ // Primary wish-throwing branch: strictly centered at y=1.55, z=-0.10, r=0.070 through the
+ // entire landing/cord zone (x <= 0.64), softly tapering into a rounded molded tip beyond x=0.66.
+ const branch=limb(
+  'lamtsuen-wish-branch',
+  [v(-.20,1.55,-.10),v(.10,1.55,-.10),v(.35,1.55,-.10),v(.64,1.55,-.10),v(.80,1.55,-.10)],
+  (t)=>{
+   const tipTaper=THREE.MathUtils.smoothstep(t,.78,1)
+   return THREE.MathUtils.lerp(.070,.044,tipTaper)
+  },
+  {tubularSegments:12,radialSegments:12,startCap:'dome',endCap:'dome',startDomeScale:.35,endDomeScale:.75},
+ )
+
+ // Molded fiberglass collar at the upper crown split (trunk -> crown stem & left twig).
+ limb(
+  'lamtsuen-fork-collar-crown',
+  [v(-.73,1.54,-.87),v(-.69,1.66,-.89),v(-.63,1.76,-.91)],
+  (t,a)=>THREE.MathUtils.lerp(.094,.072,t)+.006*Math.sin(Math.PI*t)+.002*Math.cos(a*4),
+  {tubularSegments:6,radialSegments:10,startCap:'dome',endCap:'dome',startDomeScale:.3,endDomeScale:.35},
+ )
+
+ // Ascending molded crown stem curving organically into the main upper dome.
+ limb(
+  'lamtsuen-crown-stem',
+  [v(-.71,1.56,-.87),v(-.58,1.78,-.92),v(-.38,1.98,-.96),v(-.16,2.11,-.98)],
+  (t,a)=>THREE.MathUtils.lerp(.086,.034,Math.pow(t,.85))+Math.exp(-t*7)*.010+.002*Math.cos(a*3+t*2),
+  {tubularSegments:10,radialSegments:10,startCap:'dome',endCap:'dome',startDomeScale:.4,endDomeScale:.6},
+ )
+
+ // Molded collar where the arching right crown bough splits off the crown stem.
+ limb(
+  'lamtsuen-fork-collar-bough',
+  [v(-.60,1.77,-.92),v(-.51,1.83,-.93),v(-.40,1.88,-.94)],
+  (t)=>THREE.MathUtils.lerp(.072,.054,t)+.005*Math.sin(Math.PI*t),
+  {tubularSegments:5,radialSegments:9,startCap:'dome',endCap:'dome',startDomeScale:.35,endDomeScale:.35},
+ )
+
+ // Arching tapering right crown bough (replaces straight horizontal curtain-rod pipe).
+ limb(
+  'lamtsuen-crown-bough',
+  [v(-.56,1.80,-.92),v(-.18,1.92,-.95),v(.24,1.95,-.96),v(.64,1.89,-.95)],
+  (t)=>THREE.MathUtils.lerp(.060,.026,Math.pow(t,.9))+Math.exp(-t*8)*.008,
+  {tubularSegments:11,radialSegments:9,startCap:'dome',endCap:'dome',startDomeScale:.4,endDomeScale:.65},
+ )
+
+ // Three short molded crown twigs cradling the staggered left, upper-mid, and far-right clusters.
+ const crownTwigs:readonly {name:string;pts:readonly THREE.Vector3[];r0:number;r1:number}[]=[
+  {name:'lamtsuen-crown-twig-0',pts:[v(-.68,1.67,-.89),v(-.82,1.84,-.93),v(-.94,1.96,-.95)],r0:.048,r1:.022},
+  {name:'lamtsuen-crown-twig-1',pts:[v(-.10,1.93,-.95),v(.02,2.08,-1.00),v(.14,2.18,-1.02)],r0:.038,r1:.019},
+  {name:'lamtsuen-crown-twig-2',pts:[v(.34,1.94,-.96),v(.58,2.00,-.93),v(.80,2.00,-.90)],r0:.034,r1:.018},
+ ]
+ for(const twig of crownTwigs){
+  limb(twig.name,twig.pts,(t)=>THREE.MathUtils.lerp(twig.r0,twig.r1,t)+Math.exp(-t*7)*.005,{
+   tubularSegments:7,radialSegments:8,startCap:'dome',endCap:'dome',startDomeScale:.4,endDomeScale:.65,
+  })
  }
+
+ // Asymmetric two-mass stylized replica banyan crown: fuller domed main canopy over the trunk
+ // stepping down into a sweeping right sub-crown, with global-crown normal transfer and
+ // 28 molded 5-leaf banyan rosette tufts breaking every smooth contour (outline: false).
+ type CanopyClusterSpec={
+  pos:readonly [number,number,number]
+  scale:readonly [number,number,number]
+  rot:readonly [number,number,number]
+  tier:'deep'|'mid'|'sun'
+  variant:number
+ }
+ const crownCenter=v(-.14,2.05,-.95)
+ const crownRadii=v(1.18,.44,.32)
+ const canopyClusters:readonly CanopyClusterSpec[]=[
+  // Main left-center banyan dome: deep shaded under-clusters & lush volumetric body
+  {pos:[-.90,1.94,-.96],scale:[.26,.20,.23],rot:[.05,.40,-.08],tier:'deep',variant:2},
+  {pos:[-.52,1.95,-.98],scale:[.29,.22,.24],rot:[-.04,1.35,.04],tier:'deep',variant:0},
+  {pos:[-.10,1.97,-.97],scale:[.28,.20,.24],rot:[.04,2.45,-.05],tier:'deep',variant:1},
+  {pos:[.44,1.93,-.96],scale:[.26,.18,.22],rot:[-.05,3.70,.07],tier:'deep',variant:2},
+  // Primary mid-crown volumetric puffs (rounder proportions -> cohesive tree mass, no flat pancakes)
+  {pos:[-.88,2.11,-.92],scale:[.28,.22,.23],rot:[.08,.95,-.10],tier:'mid',variant:1},
+  {pos:[-.54,2.21,-.95],scale:[.31,.25,.25],rot:[-.04,2.05,.04],tier:'mid',variant:0},
+  {pos:[-.14,2.20,-.99],scale:[.30,.24,.24],rot:[.06,3.15,-.04],tier:'mid',variant:2},
+  {pos:[.24,2.11,-.94],scale:[.28,.21,.23],rot:[-.05,4.30,.06],tier:'mid',variant:0},
+  {pos:[.64,2.05,-.98],scale:[.28,.21,.23],rot:[.07,5.25,-.07],tier:'mid',variant:1},
+  {pos:[.92,1.97,-.91],scale:[.23,.18,.20],rot:[-.06,.60,.10],tier:'mid',variant:3},
+  // Upper sunlit asymmetric dome crest & front fullness (peaking cleanly at y <= 2.47)
+  {pos:[-.68,2.28,-.89],scale:[.23,.18,.19],rot:[.10,1.75,-.06],tier:'sun',variant:3},
+  {pos:[-.32,2.30,-.93],scale:[.26,.18,.21],rot:[-.05,2.85,.04],tier:'sun',variant:1},
+  {pos:[.04,2.25,-.96],scale:[.24,.18,.20],rot:[.06,4.05,-.05],tier:'sun',variant:3},
+  {pos:[.60,2.14,-.90],scale:[.22,.16,.18],rot:[-.04,5.15,.08],tier:'sun',variant:0},
+ ]
+ const leafMats={deep:deepLeaf,mid:midLeaf,sun:sunLeaf}
+ canopyClusters.forEach((c,i)=>{
+  const worldPos=v(c.pos[0],c.pos[1],c.pos[2])
+  const worldScale=v(c.scale[0],c.scale[1],c.scale[2])
+  const worldRot=new THREE.Euler(c.rot[0],c.rot[1],c.rot[2])
+  const geo=createReplicaCanopyClusterGeometry({
+   variant:c.variant,
+   crown:{worldPos,worldScale,worldRot,crownCenter,crownRadii},
+  })
+  const o=mesh(geo,leafMats[c.tier],subject,`lamtsuen-leaf-cluster-${i}`)
+  o.position.copy(worldPos)
+  o.rotation.copy(worldRot)
+  o.scale.copy(worldScale)
+  o.receiveShadow=false
+  o.userData.toonSurface={outline:false}
+ })
+
+ // Molded 5-leaf stylized replica banyan rosette tufts wrapping the visible dome, silhouette
+ // crest, sides, and lower fringe so the canopy reads as crisp Komorebi leaf clusters.
+ const rosetteSpecs:readonly {pos:readonly [number,number,number];rot:readonly [number,number,number];scale:number;tier:'deep'|'mid'|'sun'}[]=[
+  // Upper sunlit main dome & asymmetric rounded crest
+  {pos:[-.86,2.21,-.88],rot:[.30,-.65,.18],scale:1.08,tier:'sun'},
+  {pos:[-.62,2.35,-.90],rot:[.12,-.25,-.10],scale:1.14,tier:'sun'},
+  {pos:[-.40,2.42,-.92],rot:[.06,.08,.05],scale:1.16,tier:'sun'},
+  {pos:[-.10,2.34,-.95],rot:[.12,.38,-.08],scale:1.10,tier:'sun'},
+  {pos:[.20,2.25,-.92],rot:[.22,.58,.12],scale:1.05,tier:'sun'},
+  {pos:[.54,2.25,-.91],rot:[.16,.42,-.10],scale:1.10,tier:'sun'},
+  {pos:[.78,2.16,-.89],rot:[.26,.78,.14],scale:1.04,tier:'sun'},
+  // Front-facing dome & mid-tier texture breakup (kept strictly behind original z <= -0.64)
+  {pos:[-.94,2.08,-.89],rot:[.56,-.88,.20],scale:1.04,tier:'mid'},
+  {pos:[-.72,2.15,-.88],rot:[.48,-.36,-.12],scale:1.08,tier:'mid'},
+  {pos:[-.44,2.24,-.88],rot:[.44,-.06,.10],scale:1.10,tier:'sun'},
+  {pos:[-.16,2.16,-.89],rot:[.50,.18,-.08],scale:1.06,tier:'mid'},
+  {pos:[.12,2.10,-.89],rot:[.52,.32,.12],scale:1.05,tier:'mid'},
+  {pos:[.42,2.11,-.89],rot:[.50,.46,-.10],scale:1.05,tier:'mid'},
+  {pos:[.68,2.05,-.89],rot:[.52,.72,.14],scale:1.03,tier:'mid'},
+  {pos:[.92,1.99,-.90],rot:[.48,1.02,-.12],scale:1.02,tier:'mid'},
+  // Far-left, far-right, and upper-back silhouette edge tufts
+  {pos:[-1.00,2.00,-.95],rot:[.42,-1.35,-.14],scale:1.02,tier:'mid'},
+  {pos:[-.78,2.28,-.99],rot:[-.28,-2.45,.12],scale:1.04,tier:'mid'},
+  {pos:[-.40,2.35,-1.01],rot:[-.24,3.05,-.10],scale:1.06,tier:'sun'},
+  {pos:[.04,2.27,-1.02],rot:[-.26,2.65,.12],scale:1.02,tier:'mid'},
+  {pos:[.56,2.15,-1.00],rot:[-.24,2.25,-.10],scale:1.02,tier:'mid'},
+  {pos:[1.01,1.95,-.95],rot:[.42,1.35,.16],scale:.98,tier:'mid'},
+  // Softly pitched lower scalloped skirt tufts smoothing the canopy-to-bough transition
+  {pos:[-.94,1.88,-.90],rot:[.62,-.75,-.16],scale:1.02,tier:'deep'},
+  {pos:[-.64,1.92,-.89],rot:[.58,-.25,.12],scale:1.04,tier:'deep'},
+  {pos:[-.32,1.96,-.89],rot:[.56,.08,-.10],scale:1.02,tier:'deep'},
+  {pos:[.02,1.93,-.89],rot:[.58,.26,.12],scale:1.00,tier:'deep'},
+  {pos:[.36,1.90,-.89],rot:[.58,.48,-.12],scale:1.00,tier:'deep'},
+  {pos:[.72,1.88,-.89],rot:[.60,.84,.14],scale:.98,tier:'deep'},
+  {pos:[.92,1.89,-.92],rot:[.56,1.12,-.14],scale:.94,tier:'deep'},
+ ]
+ rosetteSpecs.forEach((sp,i)=>{
+  const worldPos=v(sp.pos[0],sp.pos[1],sp.pos[2])
+  const worldScale=v(sp.scale,sp.scale,sp.scale)
+  const worldRot=new THREE.Euler(sp.rot[0],sp.rot[1],sp.rot[2])
+  const geo=createReplicaLeafRosetteGeometry({worldPos,worldScale,worldRot,crownCenter,crownRadii})
+  const o=mesh(geo,leafMats[sp.tier],subject,`lamtsuen-leaf-tuft-${i}`)
+  o.position.copy(worldPos)
+  o.rotation.copy(worldRot)
+  o.scale.copy(worldScale)
+  o.receiveShadow=false
+  o.userData.toonSurface={outline:false}
+ })
  const paperRoot=new THREE.Group();paperRoot.name='lamtsuen-paper-root';subject.add(paperRoot)
  const paperSheet=createWishingPaperGeometry()
  const paper=mesh(paperSheet.geometry,redPaper,paperRoot,'lamtsuen-paper')

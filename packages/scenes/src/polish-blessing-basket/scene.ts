@@ -22,6 +22,12 @@ import {
   applyHandleShading, applyRimGrooveShading, applyTieRingShading,
   applyWarpRecessShading, applyWeftRecessShading, createBasketWillowMaterials,
 } from './willow-material'
+import {
+  createBasketHerbLeafMaterial,
+  createBasketHerbStemMaterial,
+  createBoxwoodLeafGeometry,
+  createHerbSprigStemGeometry,
+} from './herb-detail'
 
 const COPY = {
   title: '一篮春食', breadAction: '放入圆面包', eggAction: '安放彩蛋', quietAction: '静看备好的篮子',
@@ -1071,7 +1077,9 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
     bumpMap: embroideryTex.bump,
     bumpScale: 0.0026,
   })
-  const crust = material(0xc79558), breadCut = material(0xf2d49b), sage = material(0x849f72), darkLeaf = material(0x627f59)
+  const crust = material(0xc79558), breadCut = material(0xf2d49b), sage = material(0x849f72)
+  const herbStemMat = createBasketHerbStemMaterial()
+  const herbLeafMat = createBasketHerbLeafMaterial()
   const eggRose = material(0xc98173), eggCream = material(0xfaedce), eggBlue = material(0x91aeb7)
   const add = (geo: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geo, mat); mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
@@ -1668,13 +1676,36 @@ export function createPolishBlessingBasket(ctx: SceneContext): SceneInstance {
   const companion = makeEgg(eggBlue, 'basket-blue-egg').root
   companion.position.set(0.54, 1.385, -0.29); companion.rotation.z = -0.21; companion.scale.setScalar(0.8); world.add(companion)
   const herbs = new THREE.Group(); herbs.name = 'basket-spring-herbs'; basket.add(herbs)
+  const matureLeafGeo = createBoxwoodLeafGeometry('mature')
+  const youngLeafGeo = createBoxwoodLeafGeometry('young')
+  const stemSample = new THREE.Vector3()
   for (let sprig = 0; sprig < 3; sprig++) {
     const x = 0.3 + sprig * 0.09, lean = sprig * 0.10 - 0.08
-    herbs.add(tube([new THREE.Vector3(x, 0.23, -0.25), new THREE.Vector3(x + lean * 0.6, 0.62, -0.32), new THREE.Vector3(x + lean, 0.99 - sprig * 0.07, -0.34)], 0.008, darkLeaf))
+    const sprigCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(x, 0.23, -0.25),
+      new THREE.Vector3(x + lean * 0.6, 0.62, -0.32),
+      new THREE.Vector3(x + lean, 0.99 - sprig * 0.07, -0.34),
+    ])
+    const stemMesh = new THREE.Mesh(createHerbSprigStemGeometry(sprigCurve), herbStemMat)
+    stemMesh.name = `basket-herb-stem-${sprig}`
+    stemMesh.castShadow = stemMesh.receiveShadow = true
+    stemMesh.userData.toonSurface = { outline: false }
+    herbs.add(stemMesh)
     for (let i = 0; i < 6; i++) {
-      const y = 0.44 + i * 0.076, side = i % 2 ? -1 : 1
-      const leaf = pebble([x + lean * (y - 0.2) + side * 0.045, y, -0.30], [0.034, 0.081, 0.013], i % 2 ? sage : darkLeaf, herbs)
-      leaf.rotation.z = side * -0.77; leaf.rotation.y = side * 0.4; leaf.userData.toonSurface = { outline: false }
+      const t = 0.30 + i * 0.118
+      const side = i % 2 ? -1 : 1
+      sprigCurve.getPointAt(t, stemSample)
+      const isYoung = i >= 4 || (sprig === 1 && i === 3)
+      const leaf = new THREE.Mesh(isYoung ? youngLeafGeo : matureLeafGeo, herbLeafMat)
+      leaf.name = `basket-herb-leaf-${sprig}-${i}`
+      leaf.position.set(stemSample.x + side * 0.005, stemSample.y, stemSample.z + 0.003)
+      const splay = 0.72 + (i % 3) * 0.06 - (i >= 4 ? 0.18 : 0)
+      leaf.rotation.set(0.18 + (i % 2) * 0.08, side * (0.44 + sprig * 0.06), side * -splay)
+      const scale = 1.02 - i * 0.04
+      leaf.scale.setScalar(scale)
+      leaf.castShadow = leaf.receiveShadow = true
+      leaf.userData.toonSurface = { outline: false }
+      herbs.add(leaf)
     }
   }
 

@@ -75,7 +75,7 @@ export function createVirpominenModel(){
  const visitor=makeHand('visitor-hand','stem',yellowCuff),receiver=makeHand('receiving-hand','stem',blueCuff),giver=makeHand('gift-hand','egg',blueCuff)
  const childOrigin=new THREE.Vector3(-.68,.78,.66),childOffset=new THREE.Vector3(0,-.09,0),childRest=new THREE.Vector3(-1.02,.66,1.15),receiveOrigin=new THREE.Vector3(.73,.78,-.02),giftStart=new THREE.Vector3(.99,.83,.31)
  const receivingGrip=receiveOrigin.clone().add(new THREE.Vector3(0,.24,0)),receivingWait=receivingGrip.clone().add(new THREE.Vector3(0,0,-.30))
- const basket=new THREE.Group();basket.name='visitor-basket';basket.position.set(-.65,0,.82);root.add(basket)
+ const basket=new THREE.Group();basket.name='visitor-basket';basket.position.set(-.65,-.02,.82);root.add(basket)
  const base=mesh('basket-solid-base',new THREE.CylinderGeometry(1,1,.08,40),[willowCraft.baseSide,willowCraft.baseFloor],basket);base.position.y=.06;base.scale.set(.40,1,.30);applyBasketBaseGroupsAndShading(base.geometry)
  const uprightOrder=[0,1,2,1,0,2] as const
  for(let i=0;i<32;i++){const a=i/32*Math.PI*2,o=mesh('basket-upright-'+i,new THREE.CylinderGeometry(.012,.013,.20,8),willowCraft.uprights[uprightOrder[i%uprightOrder.length]!]!,basket);o.position.set(.41*Math.cos(a),.20,.31*Math.sin(a));applyBasketUprightShading(o.geometry,i)}
@@ -83,7 +83,7 @@ export function createVirpominenModel(){
  const egg=new THREE.Group();egg.name='wrapped-chocolate-egg';root.add(egg)
  const eggBody=ball('foil-egg-body',[0,0,0],[.09,.13,.09],foil,egg)
  const seam=mesh('foil-egg-seam',new THREE.TorusGeometry(.0903,.003,6,40),paper,egg);seam.rotation.x=Math.PI/2
- const floorY=.10,eggEnd=new THREE.Vector3(basket.position.x,floorY+.13,basket.position.z)
+ const floorY=.08,eggEnd=new THREE.Vector3(basket.position.x,floorY+.13,basket.position.z)
  const lerp=(a:THREE.Vector3,b:THREE.Vector3,n:number)=>a.clone().lerp(b,THREE.MathUtils.clamp(n,0,1))
  const pose=(step:number,amount:number)=>{
   const t=step>=3?1:THREE.MathUtils.clamp(amount,0,1)

@@ -271,12 +271,12 @@ export function createLannaSandPagodaModel() {
  applyCraftSurface(binding,{kind:'cord',strength:.3})
  let serial=0
  const mesh=(g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D,name?:string)=>{const o=new THREE.Mesh(g,m);o.name=name??`lanna-detail-${serial++}`;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
- const ground=mesh(new THREE.CylinderGeometry(1.13,1.17,.08,64),sand,root,'lanna-sand-bed');ground.position.y=-.04
+ const ground=mesh(new THREE.CylinderGeometry(1.38,1.43,.08,64),sand,root,'lanna-sand-bed');ground.position.y=-.04
  const tower=new THREE.Group();tower.name='lanna-tower';tower.position.set(-.16,0,-.18);subject.add(tower)
  // A continuous, capped lathe surface with stepped sand mouldings, not stacked floating solids.
  const profile=[[0,0],[.49,0],[.49,.09],[.44,.11],[.44,.17],[.39,.19],[.39,.25],[.34,.27],[.31,.34],[.30,.46],[.27,.57],[.22,.68],[.16,.76],[.12,.78],[.12,.82],[.09,.84],[.065,.91],[.045,.98],[0,1.06]]
  const g=new THREE.LatheGeometry(profile.map(([r,y])=>new THREE.Vector2(r!,y!)),48);g.computeVertexNormals();mesh(g,sandLight,tower,'lanna-sand-tower')
- const base=mesh(new THREE.CylinderGeometry(.13,.15,.035,24),wood,subject,'lanna-holder-base');base.position.set(-1.02,.0175,.58)
+ const base=mesh(new THREE.CylinderGeometry(.13,.15,.04,24),wood,subject,'lanna-holder-base');base.position.set(-1.02,.02,.58)
  const holder=mesh(new THREE.TorusGeometry(.055,.018,8,24),wood,subject,'lanna-holder-ring');holder.rotation.x=Math.PI/2;holder.position.set(-1.02,.095,.58)
  for(const dx of[-.055,.055]){const foot=mesh(new THREE.CylinderGeometry(.012,.014,.06,8),wood,subject);foot.position.set(-1.02+dx,.06,.58)}
  const pole=mesh(new THREE.CylinderGeometry(.016,.019,1.52,12),bamboo,flag,'lanna-pole');pole.position.y=.76

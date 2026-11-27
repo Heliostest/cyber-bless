@@ -221,7 +221,8 @@ describe('clootie real object gestures', () => {
   it.each([320, 390, 1280])('dips in water, ties to the low branch and releases the cloth in a %ipx frame', (width) => {
     const s = mount(0, {}, width)
     const bounds = new THREE.Box3().setFromObject(object('clootie-well-and-tree'))
-    expect(bounds.min.y).toBeGreaterThanOrEqual(0)
+    expect(bounds.min.y).toBeGreaterThanOrEqual(-0.045)
+    expect(bounds.min.y).toBeLessThanOrEqual(-0.025)
     for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) {
       const p = new THREE.Vector3(x, y, bounds.min.z).project(drawn.camera!)
       expect(Math.abs(p.x), JSON.stringify({ width, min: bounds.min.toArray(), max: bounds.max.toArray(), camera: drawn.camera!.position.toArray() })).toBeLessThan(0.99)
@@ -541,7 +542,7 @@ describe('clootie real object gestures', () => {
     }
     expect(woodCount).toBeGreaterThanOrEqual(14)
 
-    // Verify grounded irregular moss cushions stay above y >= 0 and outline-free.
+    // Verify grounded irregular moss cushions sit flush on the garden sand (-0.032) and stay outline-free.
     const mossMeshes: THREE.Mesh[] = []
     drawn.scene!.traverse((o) => {
       if (o instanceof THREE.Mesh && o.name.startsWith('clootie-root-moss-')) mossMeshes.push(o)
@@ -550,7 +551,8 @@ describe('clootie real object gestures', () => {
     for (const moss of mossMeshes) {
       expect(moss.userData.toonSurface?.outline).toBe(false)
       const mb = new THREE.Box3().setFromObject(moss)
-      expect(mb.min.y).toBeGreaterThanOrEqual(0)
+      expect(mb.min.y).toBeGreaterThanOrEqual(-0.04)
+      expect(mb.min.y).toBeLessThanOrEqual(-0.025)
     }
   })
 })

@@ -204,12 +204,13 @@ export function createBaciModel() {
     const m = mesh(name, new THREE.SphereGeometry(1, 24, 16), material); m.position.fromArray(position); m.scale.fromArray(scale); return m
   }
   const wrist = new THREE.Vector3(.25, .47, 0)
-  const ground = mesh('baci-woven-mat', new THREE.CylinderGeometry(1.45, 1.49, .055, 64), baciMat.matMaterials); ground.scale.z = .77; ground.position.y = -.0275
+  // Seat the oval woven mat flush onto the courtyard flagstones (-0.0375) with weft crest at +0.008.
+  const ground = mesh('baci-woven-mat', new THREE.CylinderGeometry(1.45, 1.49, .043, 64), baciMat.matMaterials); ground.scale.z = .77; ground.position.y = -.0175
   // Recessed parallel strands give the mat a modest woven surface without a table.
   for (let i = -10; i <= 10; i++) {
     const z = i * .09, length = 2.72 * Math.sqrt(Math.max(0, 1 - z * z / 1.12 ** 2))
-    const line = mesh('baci-mat-weft-' + i, new THREE.CylinderGeometry(.004, .004, length, 6), i % 2 ? baciMat.weftWarm : baciMat.weftPale)
-    line.rotation.z = Math.PI / 2; line.position.set(0, .004, z)
+    const line = mesh('baci-mat-weft-' + i, new THREE.CylinderGeometry(.0035, .0035, length, 6), i % 2 ? baciMat.weftWarm : baciMat.weftPale)
+    line.rotation.z = Math.PI / 2; line.position.set(0, .0045, z)
   }
   ball('baci-sleeve', [-.88, .47, 0], [.47, .24, .29], cloth)
   const cuff = mesh('baci-cuff', new THREE.CylinderGeometry(.245, .245, .085, 32), hem); cuff.rotation.z = Math.PI / 2; cuff.scale.z = 1.16; cuff.position.set(-.53, .47, 0)
@@ -340,7 +341,7 @@ export function createBaciModel() {
     // Carry the open loop above the offered hand, lower it beyond the fingers,
     // then bring it back to the wrist before gathering the ends. The generous
     // opening clears the thumb; no part is interpolated through the body.
-    thread.position.set(THREE.MathUtils.lerp(-.57, 1.5, approach) + (wrist.x - 1.5) * slide, THREE.MathUtils.lerp(.028, .88, lift) + (wrist.y - .88) * lower, .65 * (1 - approach))
+    thread.position.set(THREE.MathUtils.lerp(-.57, 1.5, approach) + (wrist.x - 1.5) * slide, THREE.MathUtils.lerp(.0215, .88, lift) + (wrist.y - .88) * lower, .65 * (1 - approach))
     thread.scale.z = 1 + 1.5 * approach * (1 - snug)
     thread.rotation.z = -(1 - lift) * Math.PI / 2
     if (tie === previousTie && lift === previousLift) { root.updateMatrixWorld(true); return }

@@ -58,8 +58,8 @@ export function createNagashibinaModel() {
   for(const [i,x,y,z,ry,rx] of [[0,.26,.106,.20,2.25,-.24],[1,.36,.108,.12,-0.65,-.20]] as const){
     const leaf=mesh('peach-leaf-'+i,peachLeafGeo,peachLeafMat,tray);leaf.position.set(x,y,z);leaf.rotation.set(rx,ry,0)
   }
-  const shore=mesh('riverbank',new THREE.BoxGeometry(2.1,.32,4.5),bank,root);shore.position.set(-1.26,-.10,0)
-  const shoreLip=mesh('bank-stone-edge',new THREE.BoxGeometry(.16,.12,4.5),applyCraftSurface(mat('#c9c6a5'),{kind:'stone',strength:.4}),root);shoreLip.position.set(-.25,0,0)
+  const shore=mesh('riverbank',new THREE.BoxGeometry(2.0,.352,4.5),bank,root);shore.position.set(-1.31,-.116,0)
+  const shoreLip=mesh('bank-stone-edge',new THREE.BoxGeometry(.15,.358,4.52),applyCraftSurface(mat('#c9c6a5'),{kind:'stone',strength:.4}),root);shoreLip.position.set(-.237,-.113,0)
   const water=createStylizedWater({geometry:new THREE.PlaneGeometry(5.0,4.5).rotateX(-Math.PI/2),normal:'y',depth:.22,color:'#7fc6bb',bedColor:'#afc4a2',opacity:.56,waveScale:3.5,causticScale:3})
   water.surface.position.set(1.65,0,0);root.add(water.surface)
   const pose=(step:number,amount:number)=>{

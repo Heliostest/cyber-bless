@@ -6,6 +6,7 @@ import type { WoodfishContext, WoodfishController } from "./scene-engines";
 import { animate, createTimeline } from "animejs";
 import { swingPose } from "./woodfish-motion";
 import { parseWoodfishModel } from "./woodfish-model";
+import { applyCraftSurface } from "@wbr/scene-runtime/craft-surfaces";
 import { createDebugRenderStyle } from "@wbr/scene-runtime/debug-render-style";
 import { debugStyles } from "@wbr/scene-runtime/debug-styles";
 import { addInteractionCue } from "@wbr/scenes";
@@ -243,7 +244,7 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
     materials.push(floorMaterial);
     const floor = mesh(new THREE.PlaneGeometry(200, 200), floorMaterial, scene);
     floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -0.94;
+    floor.position.y = -0.945;
     floor.castShadow = false;
     // A soft, local contact shadow, independent of directional shadow resolution.
     const shadowCanvas = document.createElement("canvas");
@@ -266,8 +267,51 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
     materials.push(contactMaterial);
     const contact = mesh(new THREE.PlaneGeometry(3.0, 1.95), contactMaterial, scene);
     contact.rotation.x = -Math.PI / 2;
-    contact.position.set(-0.12, -0.925, 0);
+    contact.position.set(-0.12, -0.944, 0);
     contact.castShadow = false;
+    // Low product-staging base cushion bridging the veranda deck (-0.945) to the woodfish base (-0.91)
+    // without altering WoodfishBody world coordinates, strike raycasts, or swingPose.
+    const baseCushion = new THREE.Group();
+    baseCushion.name = "woodfish-base-cushion";
+    baseCushion.position.set(-0.18, -0.945, 0);
+    model.add(baseCushion);
+    const cushionRx = 1.04;
+    const cushionScaleZ = 0.62 / cushionRx;
+    const cushionProfile = [
+        new THREE.Vector2(0, 0),
+        new THREE.Vector2(cushionRx * 0.94, 0),
+        new THREE.Vector2(cushionRx * 0.99, 0.008),
+        new THREE.Vector2(cushionRx, 0.020),
+        new THREE.Vector2(cushionRx * 0.97, 0.034),
+        new THREE.Vector2(cushionRx * 0.90, 0.039),
+        new THREE.Vector2(cushionRx * 0.80, 0.035),
+        new THREE.Vector2(0, 0.035),
+    ];
+    const cushionMaterial = new THREE.MeshStandardMaterial({
+        color: 0xa45d48,
+        roughness: 0.92,
+        metalness: 0,
+    });
+    applyCraftSurface(cushionMaterial, { kind: "fabric", scale: 1.45, strength: 0.30 });
+    materials.push(cushionMaterial);
+    const cushionBody = mesh(new THREE.LatheGeometry(cushionProfile, 48), cushionMaterial, baseCushion);
+    cushionBody.name = "woodfish-base-cushion-body";
+    cushionBody.scale.set(1, 1, cushionScaleZ);
+    cushionBody.userData.toonSurface = { shading: "smooth", roughness: 0.92 };
+    const pipingMaterial = new THREE.MeshStandardMaterial({
+        color: 0xc9a87a,
+        roughness: 0.86,
+        metalness: 0,
+    });
+    applyCraftSurface(pipingMaterial, { kind: "cord", scale: 1.8, strength: 0.24 });
+    materials.push(pipingMaterial);
+    const cushionPiping = mesh(new THREE.TorusGeometry(cushionRx * 0.995, 0.0075, 10, 48), pipingMaterial, baseCushion);
+    cushionPiping.name = "woodfish-base-cushion-piping";
+    cushionPiping.rotation.x = Math.PI / 2;
+    cushionPiping.position.y = 0.020;
+    cushionPiping.scale.set(1, cushionScaleZ, 1);
+    cushionPiping.castShadow = false;
+    cushionPiping.userData.toonSurface = { outline: false, shading: "smooth" };
     const sceneId = options.sceneId ?? "woodfish";
     const styleScope = renderer.domElement.closest?.(".app-shell") ?? undefined;
     const styleRenderer = createDebugRenderStyle(renderer, scene, camera, {
@@ -693,7 +737,7 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
             camera.position.set(Math.sin(angle) * 6.5, next === "top" ? 6.5 : next === "bottom" ? -6.5 : 2.3, next === "top" || next === "bottom" ? 0.01 : Math.cos(angle) * 6.5);
             camera.lookAt(target);
             mallet.visible = view === "front";
-            floor.visible = contact.visible = view !== "bottom";
+            floor.visible = contact.visible = baseCushion.visible = view !== "bottom";
             requestRender(true);
         },
         dispose() {

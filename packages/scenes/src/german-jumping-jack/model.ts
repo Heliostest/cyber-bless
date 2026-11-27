@@ -1,10 +1,11 @@
 import * as THREE from 'three'
+import { addJumpingJackTree } from './tree-canopy'
 
 export function createJumpingJackModel() {
   const subject=new THREE.Group(),fixed=new THREE.Group();subject.name='jack-subject';fixed.name='jack-fixed';subject.add(fixed)
-  const wood=new THREE.MeshStandardMaterial({color:'#ecc999',roughness:.84,vertexColors:true}),bark=new THREE.MeshStandardMaterial({color:'#a48560',roughness:.95,vertexColors:true})
+  const wood=new THREE.MeshStandardMaterial({color:'#ecc999',roughness:.84,vertexColors:true})
   const coat=new THREE.MeshStandardMaterial({color:'#55a7a0',roughness:.83,vertexColors:true}),trousers=new THREE.MeshStandardMaterial({color:'#537b97',roughness:.86,vertexColors:true}),hatPaint=new THREE.MeshStandardMaterial({color:'#d77d42',roughness:.85,vertexColors:true})
-  const linen=new THREE.MeshStandardMaterial({color:'#e0c99f',roughness:.96}),brass=new THREE.MeshStandardMaterial({color:'#c1a06c',roughness:.42,metalness:.48}),dark=new THREE.MeshStandardMaterial({color:'#4d4a40',roughness:.82}),leaf=new THREE.MeshStandardMaterial({color:'#8dbb6b',roughness:.93})
+  const linen=new THREE.MeshStandardMaterial({color:'#e0c99f',roughness:.96}),brass=new THREE.MeshStandardMaterial({color:'#c1a06c',roughness:.42,metalness:.48}),dark=new THREE.MeshStandardMaterial({color:'#4d4a40',roughness:.82})
   const mesh=(name:string,g:THREE.BufferGeometry,material:THREE.MeshStandardMaterial,parent:THREE.Object3D,x=0,y=0,z=0)=>{
     if(material.vertexColors){const p=g.getAttribute('position'),colors=new Float32Array(p.count*3);for(let i=0;i<p.count;i++){const shade=.94+.04*Math.sin(p.getX(i)*17+p.getY(i)*3+p.getZ(i)*11);colors.set([shade,shade,shade],i*3)}g.setAttribute('color',new THREE.BufferAttribute(colors,3))}
     const item=new THREE.Mesh(g,material);item.name=name;item.position.set(x,y,z);item.castShadow=item.receiveShadow=true;parent.add(item);return item
@@ -20,12 +21,7 @@ export function createJumpingJackModel() {
     return new THREE.ExtrudeGeometry(s,{depth:.07,bevelEnabled:false,curveSegments:8}).translate(0,0,-.035)
   }
   // The branch is the toy's suspension point; there is no added table or display panel.
-  const trunkGeometry=new THREE.CylinderGeometry(.105,.15,1,10,8),tp=trunkGeometry.getAttribute('position');for(let i=0;i<tp.count;i++){const t=tp.getY(i)+.5;tp.setXYZ(i,tp.getX(i)+.12*Math.sin(Math.PI*t)+.08*t,3.42*t,tp.getZ(i)+.07*Math.sin(Math.PI*t))}trunkGeometry.computeVertexNormals()
-  mesh('jack-tree-trunk',trunkGeometry,bark,fixed,-1.42,0,-.35)
-  const branchA=new THREE.Vector3(-1.34,3.39,-.35),branchB=new THREE.Vector3(.02,3.55,-.1),branchLength=branchA.distanceTo(branchB),branchGeometry=new THREE.CylinderGeometry(.04,.075,branchLength,10,6),bp=branchGeometry.getAttribute('position')
-  for(let i=0;i<bp.count;i++){const t=bp.getY(i)/branchLength+.5;bp.setX(i,bp.getX(i)+.16*Math.sin(Math.PI*t))}branchGeometry.computeVertexNormals();const branch=mesh('jack-tree-branch',branchGeometry,bark,fixed);between(branch,branchA,branchB)
-  segment('jack-tree-twig',new THREE.Vector3(-1.1,3.35,-.33),new THREE.Vector3(-.83,3.80,-.35),.035,bark,fixed)
-  for(const [i,[x,y,z]]of[[-1.56,3.63,-.35],[-1.25,3.75,-.36],[-.93,3.85,-.34],[-1.49,3.89,-.35],[-1.15,3.93,-.32]].entries()){const l=mesh('jack-leaf-'+i,new THREE.SphereGeometry(.25,12,8),leaf,fixed,x,y,z);l.scale.set(1.15,.8,.85)}
+  addJumpingJackTree(fixed)
   mesh('jack-coat',prism([[-.30,2.41],[.30,2.41],[.26,1.70],[-.26,1.70]]),coat,fixed,0,0,.03)
   mesh('jack-neck',new THREE.BoxGeometry(.14,.22,.10),wood,fixed,0,2.47,.05)
   const head=mesh('jack-head',new THREE.SphereGeometry(.31,24,16),wood,fixed,0,2.8,.08);head.scale.set(1,1.08,.25)

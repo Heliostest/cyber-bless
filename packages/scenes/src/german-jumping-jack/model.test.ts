@@ -46,4 +46,27 @@ describe('original cord-linked wooden jumping jack',()=>{
   for(let at=0;at<3;at++)for(let k=0;k<=600;k++){m.pose(at,k/600);const p=shapes.map((h,i)=>h.map(v=>v.clone().applyMatrix4(m.limbs[i]!.matrixWorld))),boxes=m.limbs.map(l=>new THREE.Box3().setFromObject(l));for(let a=0;a<4;a++)for(let b=a+1;b<4;b++){const z=Math.min(boxes[a]!.max.z,boxes[b]!.max.z)-Math.max(boxes[a]!.min.z,boxes[b]!.min.z);if(z>1e-7&&overlap(p[a]!,p[b]!)&&collisions.length<12)collisions.push({at,n:k/600,pair:[a,b]})}}
   expect(collisions).toEqual([]);disposeTree(m.subject)
  })
+ it('uses 10-16 staggered scalloped leaf clusters with outline disabled and keeps the exact branch hang point',()=>{
+  const m=createJumpingJackModel(),leaves:THREE.Mesh[]=[],twigs:THREE.Mesh[]=[]
+  m.fixed.traverse(o=>{const mesh=o as THREE.Mesh;if(!mesh.isMesh)return;if(mesh.name.startsWith('jack-leaf-'))leaves.push(mesh);if(mesh.name.startsWith('jack-tree-twig'))twigs.push(mesh)})
+  expect(leaves.length).toBeGreaterThanOrEqual(10);expect(leaves.length).toBeLessThanOrEqual(16);expect(twigs.length).toBeGreaterThanOrEqual(2)
+  const canopyBox=new THREE.Box3()
+  for(const l of leaves){
+   expect(l.userData.toonSurface?.outline).toBe(false)
+   const mat=l.material as THREE.MeshStandardMaterial
+   expect(mat.map).toBeNull();expect(mat.vertexColors).toBe(true);expect(mat.userData.treeClusterNormals).toBe(true)
+   const pos=l.geometry.getAttribute('position');let minR=Infinity,maxR=0
+   for(let i=0;i<pos.count;i++){const r=Math.hypot(pos.getX(i),pos.getY(i),pos.getZ(i));minR=Math.min(minR,r);maxR=Math.max(maxR,r)}
+   expect(maxR/minR,l.name).toBeGreaterThan(1.35)
+   canopyBox.expandByObject(l)
+  }
+  expect(canopyBox.min.x).toBeGreaterThan(-1.95);expect(canopyBox.max.x).toBeLessThan(-0.45);expect(canopyBox.max.y).toBeLessThan(4.25)
+  const suspension=m.fixed.getObjectByName('jack-suspension') as THREE.Mesh,sPos=suspension.geometry.getAttribute('position')
+  let top=new THREE.Vector3(0,-Infinity,0),v=new THREE.Vector3()
+  for(let i=0;i<sPos.count;i++){v.fromBufferAttribute(sPos,i).applyMatrix4(suspension.matrixWorld);if(v.y>top.y)top.copy(v)}
+  expect(top.distanceTo(new THREE.Vector3(0,3.52,-.1))).toBeLessThan(.02)
+  const branchBox=new THREE.Box3().setFromObject(m.fixed.getObjectByName('jack-tree-branch')!)
+  expect(branchBox.containsPoint(new THREE.Vector3(0,3.52,-.1))).toBe(true)
+  disposeTree(m.subject)
+ })
 })

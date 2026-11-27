@@ -67,6 +67,7 @@
     "i18n:verify-layout": "node scripts/verify-i18n-layout.mjs",
     "scene:revisions": "node scripts/scene-testing-revisions.mjs",
     "scene:revisions:check": "node scripts/scene-testing-revisions.mjs --check",
+    "preview:ritual-sheets": "node scripts/capture-ritual-sheets.mjs",
     "updates:setup": "node scripts/configure-internal-updates.mjs",
     "updates:prepare": "node scripts/internal-updates/cli.mjs prepare",
     "updates:import": "node scripts/internal-updates/cli.mjs import",

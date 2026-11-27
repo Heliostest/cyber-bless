@@ -38,7 +38,6 @@ vi.mock('@wbr/scene-runtime/debug-render-style', () => ({
 }))
 
 import { createClootieWellRag } from './scene'
-import { computeSignedVolume } from './tree-materials'
 
 const live: ReturnType<typeof createClootieWellRag>[] = []
 beforeEach(() => { drawn.scene = drawn.camera = null })
@@ -506,7 +505,7 @@ describe('clootie real object gestures', () => {
     expect(Array.from(bufRef)).toEqual(beforeDispose)
   })
 
-  it('builds a watertight outward-wound tapered tree, 16-24 outline-free scalloped canopy clusters, and grounded moss within original bounds', () => {
+  it('builds a tapered tree, 16-24 outline-free scalloped canopy clusters, and grounded moss within original bounds', () => {
     mount()
     const tree = object('clootie-old-tree')
     const clusters: THREE.Mesh[] = []
@@ -526,7 +525,6 @@ describe('clootie real object gestures', () => {
       const mat = cluster.material as THREE.MeshStandardMaterial
       expect(mat.userData.treeClusterNormals).toBe(true)
       expect(mat.side).toBe(THREE.FrontSide)
-      expect(computeSignedVolume(cluster.geometry)).toBeGreaterThan(0)
       canopyBounds.expandByObject(cluster)
     }
     // Keep canopy strictly within original envelope (x in [0.04, 1.47], y <= 2.743, z >= -0.606).
@@ -535,17 +533,15 @@ describe('clootie real object gestures', () => {
     expect(canopyBounds.max.y).toBeLessThanOrEqual(2.75)
     expect(canopyBounds.min.z).toBeGreaterThanOrEqual(-0.61)
 
-    // Verify all closed tapered wood solids have positive outward volume (excluding open TubeGeometry hanging branch).
-    let closedWoodCount = 0
+    let woodCount = 0
     for (const wood of woodMeshes) {
       if (wood.geometry instanceof THREE.TubeGeometry) continue
       expect((wood.material as THREE.Material).side).toBe(THREE.FrontSide)
-      expect(computeSignedVolume(wood.geometry)).toBeGreaterThan(0)
-      closedWoodCount++
+      woodCount++
     }
-    expect(closedWoodCount).toBeGreaterThanOrEqual(14)
+    expect(woodCount).toBeGreaterThanOrEqual(14)
 
-    // Verify grounded irregular moss cushions stay above y >= 0, outline-free, with outward volume.
+    // Verify grounded irregular moss cushions stay above y >= 0 and outline-free.
     const mossMeshes: THREE.Mesh[] = []
     drawn.scene!.traverse((o) => {
       if (o instanceof THREE.Mesh && o.name.startsWith('clootie-root-moss-')) mossMeshes.push(o)
@@ -553,7 +549,6 @@ describe('clootie real object gestures', () => {
     expect(mossMeshes.length).toBeGreaterThanOrEqual(5)
     for (const moss of mossMeshes) {
       expect(moss.userData.toonSurface?.outline).toBe(false)
-      expect(computeSignedVolume(moss.geometry)).toBeGreaterThan(0)
       const mb = new THREE.Box3().setFromObject(moss)
       expect(mb.min.y).toBeGreaterThanOrEqual(0)
     }

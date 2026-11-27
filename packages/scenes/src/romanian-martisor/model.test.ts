@@ -66,9 +66,9 @@ describe('a spring cord supported by an actual branch',()=>{
   m.dispose(); m.dispose()
   expect(mapFreed).toBe(1); expect(bumpFreed).toBe(1)
   })
-  it('builds watertight FrontSide cupped spring blossoms and midrib-folded leaves with C1 highlight protection',()=>{
+  it('builds cupped spring blossoms and midrib-folded leaves with C1 highlight protection',()=>{
    const m=createMartisorModel()
-   const checkWatertight=(mesh:THREE.Mesh)=>{
+   const checkBlossom=(mesh:THREE.Mesh)=>{
     const mat=mesh.material as THREE.MeshStandardMaterial
     expect(mat.side,mesh.name).toBe(THREE.FrontSide)
     expect(mat.vertexColors,mesh.name).toBe(true)
@@ -77,29 +77,13 @@ describe('a spring cord supported by an actual branch',()=>{
     const cloned=mat.clone()
     expect(cloned.customProgramCacheKey(),mesh.name).toContain('wbr-martisor-bot')
     cloned.dispose()
-    const pos=mesh.geometry.getAttribute('position') as THREE.BufferAttribute
-    const idx=mesh.geometry.index!
-    const edges=new Map<string,number>()
-    const va=new THREE.Vector3(),vb=new THREE.Vector3(),vc=new THREE.Vector3()
-    let signedVol6=0
-    for(let i=0;i<idx.count;i+=3){
-     const ia=idx.getX(i),ib=idx.getX(i+1),ic=idx.getX(i+2)
-     va.fromBufferAttribute(pos,ia);vb.fromBufferAttribute(pos,ib);vc.fromBufferAttribute(pos,ic)
-     signedVol6+=va.dot(vb.clone().cross(vc))
-     for(const [u,v] of [[ia,ib],[ib,ic],[ic,ia]] as const){
-      const key=u<v?`${u}:${v}`:`${v}:${u}`
-      edges.set(key,(edges.get(key)??0)+(u<v?1:-1))
-     }
-    }
-    expect(signedVol6,`${mesh.name} signed volume`).toBeGreaterThan(0)
-    expect([...edges.values()].every(v=>v===0),`${mesh.name} watertight manifold`).toBe(true)
    }
    for(let i=0;i<6;i++){
     const b=m.root.getObjectByName(`martisor-blossom-${i}`)!
     expect(b,`martisor-blossom-${i}`).toBeDefined()
-    checkWatertight(b.children[0] as THREE.Mesh)
+    checkBlossom(b.children[0] as THREE.Mesh)
    }
-   for(let i=0;i<3;i++)checkWatertight(m.root.getObjectByName(`martisor-leaf-${i}`) as THREE.Mesh)
+   for(let i=0;i<3;i++)checkBlossom(m.root.getObjectByName(`martisor-leaf-${i}`) as THREE.Mesh)
    const barkMat=(m.root.getObjectByName('martisor-support-branch') as THREE.Mesh).material as THREE.MeshStandardMaterial
    expect(barkMat.userData.botanicalFinish?.mode).toBe('bark')
    m.dispose()

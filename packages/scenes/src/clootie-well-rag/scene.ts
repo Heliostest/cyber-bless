@@ -23,6 +23,8 @@ import {
   createMossClusterGeometry,
   createMossMaterial,
   createOldTreeBarkMaterials,
+  createTaperedBranchGeometry,
+  type TaperedBranchOptions,
 } from './tree-materials'
 
 const COPY = {
@@ -154,6 +156,18 @@ function tube(points: number[][], radius: number, material: THREE.Material, segm
   return mesh
 }
 
+function taperedTube(
+  points: readonly (readonly [number, number, number])[],
+  radiusAt: (t: number) => number,
+  material: THREE.Material,
+  options?: TaperedBranchOptions,
+) {
+  const geometry = createTaperedBranchGeometry(points, radiusAt, options)
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.castShadow = mesh.receiveShadow = true
+  return mesh
+}
+
 /** Source-informed cloth practice: dip, tie, release; the cotton stays visible. */
 export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   const { canvas, overlay, shared } = ctx
@@ -189,7 +203,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   world.name = 'clootie-well-and-tree'
   scene.add(world)
   const { bark, barkHighlight } = createOldTreeBarkMaterials()
-  const { mint, sage } = createCanopyMaterials()
+  const canopyMats = createCanopyMaterials()
   const mossMat = createMossMaterial()
   const stoneColors = [0xc8bfaa, 0xd9cdb6, 0xbabba6, 0xc6c4b2].map((color) => new THREE.MeshStandardMaterial({ color, roughness: 1 }))
 
@@ -252,40 +266,168 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   const tree = new THREE.Group()
   tree.name = 'clootie-old-tree'
   world.add(tree)
-  tree.add(tube([[0.81, 0.13, -0.08], [0.73, 0.48, -0.1], [0.88, 0.92, -0.09], [0.77, 1.42, -0.12], [0.89, 1.97, -0.16], [0.67, 2.3, -0.19]], 0.125, bark))
-  for (const side of [-1, 1]) {
-    tree.add(tube([[0.79, 0.2, -0.09], [0.79 + side * 0.16, 0.095, 0.01], [0.79 + side * 0.34, 0.054, 0.2]], 0.045, bark, 16))
+  // Continuously tapered aged trunk with grounded buttress flare at the base and gradual crown taper.
+  tree.add(taperedTube(
+    [[0.80, 0.014, -0.08], [0.80, 0.16, -0.085], [0.73, 0.48, -0.10], [0.88, 0.92, -0.09], [0.77, 1.42, -0.12], [0.86, 1.88, -0.155], [0.75, 2.18, -0.195], [0.65, 2.34, -0.22]],
+    (t) => {
+      const flare = 0.052 * Math.pow(Math.max(0, 1 - t / 0.16), 2.1)
+      const body = THREE.MathUtils.lerp(0.128, 0.082, Math.pow(Math.min(1, t / 0.72), 1.05))
+      const crownTaper = t > 0.72 ? THREE.MathUtils.lerp(1, 0.34, (t - 0.72) / 0.28) : 1
+      return flare + body * crownTaper
+    },
+    bark,
+    { tubularSegments: 36, radialSegments: 12, rootFlute: 1, minY: 0.005, seed: 3 },
+  ))
+  // Grounded flaring roots tapering naturally into the earth (no chopped tube ends).
+  const rootSpecs: readonly {
+    pts: readonly (readonly [number, number, number])[]
+    r0: number
+    r1: number
+    seed: number
+  }[] = [
+    { pts: [[0.76, 0.25, -0.07], [0.63, 0.11, 0.02], [0.51, 0.036, 0.13], [0.43, 0.015, 0.21]], r0: 0.068, r1: 0.012, seed: 11 },
+    { pts: [[0.84, 0.25, -0.07], [0.97, 0.105, 0.02], [1.09, 0.035, 0.12], [1.18, 0.014, 0.20]], r0: 0.066, r1: 0.012, seed: 19 },
+    { pts: [[0.75, 0.22, -0.11], [0.62, 0.085, -0.18], [0.50, 0.022, -0.24]], r0: 0.056, r1: 0.011, seed: 29 },
+    { pts: [[0.85, 0.21, -0.11], [0.98, 0.08, -0.17], [1.10, 0.02, -0.22]], r0: 0.054, r1: 0.011, seed: 37 },
+    { pts: [[0.80, 0.20, -0.02], [0.80, 0.072, 0.09], [0.78, 0.017, 0.19]], r0: 0.048, r1: 0.011, seed: 43 },
+  ]
+  for (const root of rootSpecs) {
+    tree.add(taperedTube(
+      root.pts,
+      (t) => THREE.MathUtils.lerp(root.r0, root.r1, Math.pow(t, 0.88)),
+      bark,
+      { tubularSegments: 16, radialSegments: 9, minY: 0.005, seed: root.seed },
+    ))
   }
   const branchPts: [number, number, number][] = [[0.77, 1.31, -0.1], [0.52, 1.4, -0.015], [0.24, 1.465, 0.03], [0.04, 1.455, 0.065]]
   tree.add(tube(branchPts, 0.046, bark))
-  tree.add(tube([[0.81, 1.76, -0.13], [1.02, 1.96, -0.1], [1.12, 2.24, -0.09]], 0.045, bark))
-  tree.add(tube([[0.86, 1.9, -0.15], [0.53, 2.13, -0.22], [0.26, 2.28, -0.21]], 0.043, bark))
-  // Sparse bark ridges and a rounded knot mark the tree's age gently.
-  tree.add(tube([[0.83, 0.42, 0.035], [0.89, 0.8, 0.035], [0.85, 1.1, 0.012]], 0.008, barkHighlight))
-  const treeKnotGeo = new THREE.TorusGeometry(0.049, 0.012, 7, 20)
+  // Continuously tapered high boughs cradling the layered crown.
+  tree.add(taperedTube(
+    [[0.82, 1.72, -0.14], [0.98, 1.92, -0.13], [1.10, 2.12, -0.15], [1.18, 2.26, -0.18]],
+    (t) => THREE.MathUtils.lerp(0.064, 0.020, Math.pow(t, 0.9)),
+    bark,
+    { tubularSegments: 20, radialSegments: 9, seed: 51 },
+  ))
+  tree.add(taperedTube(
+    [[0.82, 1.84, -0.15], [0.60, 2.04, -0.20], [0.41, 2.19, -0.22], [0.28, 2.28, -0.22]],
+    (t) => THREE.MathUtils.lerp(0.062, 0.020, Math.pow(t, 0.9)),
+    bark,
+    { tubularSegments: 20, radialSegments: 9, seed: 59 },
+  ))
+  // Six short supporting twigs at the crown join so wood structure visibly cradles the leaf masses.
+  const crownTwigs: readonly {
+    pts: readonly (readonly [number, number, number])[]
+    r0: number
+    r1: number
+    seed: number
+  }[] = [
+    { pts: [[0.56, 2.07, -0.20], [0.44, 2.13, -0.13], [0.35, 2.19, -0.09]], r0: 0.028, r1: 0.010, seed: 67 },
+    { pts: [[0.62, 2.03, -0.20], [0.57, 2.21, -0.24], [0.52, 2.35, -0.26]], r0: 0.029, r1: 0.011, seed: 73 },
+    { pts: [[0.81, 2.02, -0.17], [0.77, 2.19, -0.09], [0.73, 2.32, -0.05]], r0: 0.030, r1: 0.011, seed: 79 },
+    { pts: [[0.76, 2.16, -0.19], [0.83, 2.33, -0.24], [0.87, 2.46, -0.27]], r0: 0.028, r1: 0.010, seed: 83 },
+    { pts: [[0.99, 1.94, -0.13], [0.97, 2.11, -0.23], [0.95, 2.24, -0.30]], r0: 0.027, r1: 0.010, seed: 89 },
+    { pts: [[1.04, 2.03, -0.14], [1.16, 2.11, -0.09], [1.24, 2.19, -0.07]], r0: 0.026, r1: 0.010, seed: 97 },
+  ]
+  for (const twig of crownTwigs) {
+    tree.add(taperedTube(
+      twig.pts,
+      (t) => THREE.MathUtils.lerp(twig.r0, twig.r1, t),
+      bark,
+      { tubularSegments: 12, radialSegments: 7, seed: twig.seed },
+    ))
+  }
+  // Sparse bark ridges and a rounded knot mark the tree's age gently (seated flush along the curved trunk).
+  tree.add(taperedTube(
+    [[0.755, 0.46, 0.004], [0.825, 0.78, 0.012], [0.835, 1.07, -0.002]],
+    (t) => THREE.MathUtils.lerp(0.0075, 0.0042, t),
+    barkHighlight,
+    { tubularSegments: 16, radialSegments: 7, seed: 101 },
+  ))
+  const treeKnotGeo = new THREE.TorusGeometry(0.043, 0.0095, 7, 20)
   applyOldTreeBarkShading(treeKnotGeo)
   const treeKnot = new THREE.Mesh(treeKnotGeo, barkHighlight)
-  treeKnot.position.set(0.83, 0.89, 0.042)
-  treeKnot.scale.set(0.75, 1.28, 1)
+  treeKnot.position.set(0.84, 0.89, 0.012)
+  treeKnot.scale.set(0.72, 1.22, 0.8)
   tree.add(treeKnot)
-  const crownGeo = createCanopyClusterGeometry()
-  for (const [i, [x, y, z, scale]] of [
-    [0.43, 2.3, -0.23, 0.39], [0.82, 2.42, -0.27, 0.42],
-    [1.13, 2.27, -0.19, 0.34], [0.91, 2.08, -0.3, 0.29],
-  ].entries()) {
-    const crown = new THREE.Mesh(crownGeo, i % 2 ? mint : sage)
-    crown.position.set(x, y, z)
-    crown.rotation.y = i * 1.35
-    crown.scale.set(scale, scale * 0.77, scale * 0.8)
-    crown.castShadow = crown.receiveShadow = true
+  // 22 staggered, scalloped leaf-mass clusters arranged in three asymmetric woodland bough tiers
+  // with cohesive whole-crown Komorebi wrap lighting and outline disabled, strictly inside the original envelope.
+  const crownCenter: readonly [number, number, number] = [0.74, 2.25, -0.21]
+  const crownYRange: readonly [number, number] = [1.94, 2.71]
+  const canopyClusters: readonly {
+    pos: readonly [number, number, number]
+    scale: readonly [number, number, number]
+    mat: 'olive' | 'sage' | 'warmCrest'
+    warmth: number
+    lobeCount: number
+  }[] = [
+    // Tier 1: Underside & inner throat shade clusters cradling the high boughs and twigs.
+    { pos: [0.37, 2.13, -0.26], scale: [0.21, 0.135, 0.18], mat: 'sage', warmth: -0.06, lobeCount: 8 },
+    { pos: [0.63, 2.16, -0.32], scale: [0.22, 0.145, 0.19], mat: 'sage', warmth: -0.07, lobeCount: 9 },
+    { pos: [0.87, 2.12, -0.34], scale: [0.23, 0.15, 0.19], mat: 'sage', warmth: -0.07, lobeCount: 9 },
+    { pos: [1.09, 2.09, -0.25], scale: [0.20, 0.13, 0.17], mat: 'sage', warmth: -0.06, lobeCount: 8 },
+    { pos: [0.52, 2.30, -0.38], scale: [0.21, 0.155, 0.17], mat: 'sage', warmth: -0.04, lobeCount: 9 },
+    // Tier 2: Mid-crown asymmetric layered leaf-bough billows (wider sweep left, terraced wing right).
+    { pos: [0.22, 2.27, -0.18], scale: [0.175, 0.125, 0.155], mat: 'olive', warmth: 0.02, lobeCount: 9 },
+    { pos: [0.41, 2.30, -0.10], scale: [0.215, 0.15, 0.175], mat: 'olive', warmth: 0.03, lobeCount: 10 },
+    { pos: [0.52, 2.43, -0.22], scale: [0.225, 0.165, 0.185], mat: 'olive', warmth: 0.03, lobeCount: 10 },
+    { pos: [0.71, 2.35, -0.10], scale: [0.23, 0.165, 0.185], mat: 'olive', warmth: 0.02, lobeCount: 10 },
+    { pos: [0.82, 2.46, -0.24], scale: [0.245, 0.18, 0.20], mat: 'olive', warmth: 0.02, lobeCount: 10 },
+    { pos: [1.04, 2.31, -0.23], scale: [0.215, 0.15, 0.175], mat: 'sage', warmth: -0.01, lobeCount: 9 },
+    { pos: [1.09, 2.22, -0.09], scale: [0.185, 0.135, 0.155], mat: 'olive', warmth: 0.0, lobeCount: 9 },
+    { pos: [1.26, 2.21, -0.16], scale: [0.17, 0.125, 0.145], mat: 'olive', warmth: 0.0, lobeCount: 8 },
+    { pos: [0.97, 2.38, -0.35], scale: [0.195, 0.145, 0.165], mat: 'sage', warmth: -0.03, lobeCount: 9 },
+    // Tier 3: Sunlit top crests & airy peripheral scalloped tufts breaking the dome.
+    { pos: [0.28, 2.15, -0.08], scale: [0.125, 0.09, 0.11], mat: 'olive', warmth: 0.0, lobeCount: 8 },
+    { pos: [0.43, 2.49, -0.15], scale: [0.17, 0.12, 0.14], mat: 'warmCrest', warmth: 0.06, lobeCount: 9 },
+    { pos: [0.62, 2.58, -0.18], scale: [0.185, 0.13, 0.155], mat: 'warmCrest', warmth: 0.07, lobeCount: 9 },
+    { pos: [0.81, 2.60, -0.23], scale: [0.175, 0.12, 0.145], mat: 'warmCrest', warmth: 0.06, lobeCount: 9 },
+    { pos: [1.01, 2.47, -0.19], scale: [0.145, 0.11, 0.13], mat: 'warmCrest', warmth: 0.04, lobeCount: 8 },
+    { pos: [1.29, 2.28, -0.12], scale: [0.12, 0.086, 0.105], mat: 'warmCrest', warmth: 0.03, lobeCount: 8 },
+    { pos: [0.68, 2.22, -0.04], scale: [0.125, 0.085, 0.105], mat: 'olive', warmth: 0.01, lobeCount: 8 },
+    { pos: [0.21, 2.34, -0.15], scale: [0.115, 0.078, 0.10], mat: 'warmCrest', warmth: 0.05, lobeCount: 7 },
+  ]
+  for (const [i, spec] of canopyClusters.entries()) {
+    const clusterGeo = createCanopyClusterGeometry({
+      position: spec.pos,
+      scale: spec.scale,
+      seed: i * 17 + 13,
+      crownCenter,
+      crownYRange,
+      warmth: spec.warmth,
+      lobeCount: spec.lobeCount,
+    })
+    const crown = new THREE.Mesh(clusterGeo, canopyMats[spec.mat])
+    crown.name = `clootie-canopy-cluster-${i}`
+    crown.position.set(spec.pos[0], spec.pos[1], spec.pos[2])
+    crown.castShadow = true
+    crown.receiveShadow = false
+    crown.userData.toonSurface = { outline: false }
     tree.add(crown)
   }
-  const mossGeo = createMossClusterGeometry()
-  for (let i = 0; i < 4; i++) {
+  // Irregular grounded moss cushions nestled tightly into the root flare and hollows (not floating macarons).
+  const mossCushions: readonly {
+    pos: readonly [number, number, number]
+    scale: readonly [number, number, number]
+    rotY: number
+    seed: number
+  }[] = [
+    { pos: [0.66, 0.004, 0.03], scale: [0.115, 0.052, 0.092], rotY: 0.4, seed: 11 },
+    { pos: [0.91, 0.004, 0.02], scale: [0.122, 0.056, 0.090], rotY: 1.9, seed: 23 },
+    { pos: [0.77, 0.004, 0.09], scale: [0.102, 0.042, 0.078], rotY: 2.8, seed: 37 },
+    { pos: [0.59, 0.004, 0.10], scale: [0.085, 0.032, 0.068], rotY: 0.95, seed: 47 },
+    { pos: [1.00, 0.004, 0.10], scale: [0.088, 0.034, 0.070], rotY: 3.6, seed: 61 },
+    { pos: [0.71, 0.004, -0.16], scale: [0.11, 0.046, 0.084], rotY: 4.4, seed: 73 },
+    { pos: [0.92, 0.004, -0.14], scale: [0.10, 0.044, 0.078], rotY: 5.2, seed: 89 },
+  ]
+  for (const [i, spec] of mossCushions.entries()) {
+    const mossGeo = createMossClusterGeometry({ scale: spec.scale, seed: spec.seed })
     const moss = new THREE.Mesh(mossGeo, mossMat)
-    moss.position.set(0.77 + Math.cos(i * 1.7) * 0.23, 0.032, -0.02 + Math.sin(i * 1.7) * 0.17)
-    moss.rotation.y = i * 1.1
-    moss.scale.set(0.12, 0.03, 0.085)
+    moss.name = `clootie-root-moss-${i}`
+    moss.position.set(spec.pos[0], spec.pos[1], spec.pos[2])
+    moss.rotation.y = spec.rotY
+    moss.receiveShadow = true
+    moss.castShadow = false
+    moss.userData.toonSurface = { outline: false }
     world.add(moss)
   }
 

@@ -20,6 +20,17 @@ import {
   setSafeText,
   sizeStage,
 } from '../procedural-kit'
+import {
+  createCalyxCupGeometry,
+  createCornflowerFloretGeometry,
+  createDaisyCenterGeometry,
+  createDaisyPetalGeometry,
+  createGrassyStrandGeometry,
+  createPoppyPetalGeometry,
+  createPoppyPodGeometry,
+  createWreathBotanicalMaterial,
+  createWreathLeafGeometry,
+} from './botanical-craft'
 
 type Step = 'weave' | 'place' | 'drift' | 'done'
 
@@ -172,7 +183,7 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
   world.add(water)
 
   // Reeds along both banks.
-  const reedMat = new THREE.MeshStandardMaterial({ color: 0x7ea156, roughness: 0.9 })
+  const reedMat = createWreathBotanicalMaterial('reed')
   const reedGeo = new THREE.ConeGeometry(0.018, 0.7, 5)
   for (let i = 0; i < 18; i++) {
     const side = i % 2 ? 1 : -1
@@ -226,17 +237,19 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
   fireLight.position.set(0, 0.9, 0.3)
   fire.add(fireLight)
 
-  // The wreath: three woven stem strands, leaves and a mix of wildflowers.
+  // The wreath: three woven grassy stem strands, midrib-folded leaves and cupped wildflowers.
   const wreath = new THREE.Group()
+  wreath.name = 'slavic-wreath'
   wreath.position.copy(HOLD_POS)
   wreath.rotation.x = 0.45
   world.add(wreath)
   const strands: THREE.Mesh[] = []
   ;[0x6f9f4a, 0x86b35a, 0x5d8a3e].forEach((color, i) => {
     const strand = new THREE.Mesh(
-      new THREE.TubeGeometry(new WovenStrand((i / 3) * Math.PI * 2, 9, 0.028), 180, 0.016, 5, true),
-      new THREE.MeshStandardMaterial({ color, roughness: 0.9 }),
+      createGrassyStrandGeometry(new WovenStrand((i / 3) * Math.PI * 2, 9, 0.028), 180, 0.016, 8),
+      createWreathBotanicalMaterial('stem', color),
     )
+    strand.name = `wreath-stem-${i}`
     wreath.add(strand)
     strands.push(strand)
   })
@@ -247,64 +260,113 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
     }
   }
 
-  const leafMat = new THREE.MeshStandardMaterial({
-    color: 0x80b95c,
-    roughness: 0.9,
-    side: THREE.DoubleSide,
-  })
-  const leafGeo = new THREE.CircleGeometry(0.06, 10).scale(1, 0.38, 1)
+  const leafMats = [
+    createWreathBotanicalMaterial('leaf', 0x77b051),
+    createWreathBotanicalMaterial('leaf', 0x629944),
+  ]
+  const leafGeo = createWreathLeafGeometry()
   const blooms: { obj: THREE.Object3D; at: number }[] = []
   for (let i = 0; i < 18; i++) {
     const a = (i / 18) * Math.PI * 2 + 0.1
-    const leaf = new THREE.Mesh(leafGeo, leafMat)
+    const leaf = new THREE.Mesh(leafGeo, leafMats[i % 2])
+    leaf.name = `wreath-leaf-${i}`
     const r = WREATH_R + (i % 2 ? 0.04 : -0.035)
-    leaf.position.set(Math.cos(a) * r, 0.02, Math.sin(a) * r)
-    leaf.rotation.set(-Math.PI / 2 + (i % 3) * 0.3, 0, -a + Math.PI / 2)
+    leaf.position.set(Math.cos(a) * r, 0.022, Math.sin(a) * r)
+    leaf.rotation.set(-Math.PI / 2 + (i % 3) * 0.24 - 0.08, 0, -a + Math.PI / 2 + (i % 2 ? 0.14 : -0.14))
     wreath.add(leaf)
     blooms.push({ obj: leaf, at: 0.35 + (i / 18) * 0.3 })
   }
 
-  const daisyPetalGeo = new THREE.CircleGeometry(0.022, 8).scale(1, 0.4, 1).translate(0.028, 0, 0)
-  const petalWhite = new THREE.MeshStandardMaterial({ color: 0xfbf6ea, roughness: 0.9, side: THREE.DoubleSide })
-  const centerYellow = new THREE.MeshStandardMaterial({ color: 0xf2c14e, roughness: 0.8 })
-  const poppyRed = new THREE.MeshStandardMaterial({ color: 0xe0503c, roughness: 0.85, side: THREE.DoubleSide })
-  const cornflowerBlue = new THREE.MeshStandardMaterial({ color: 0x6f8fe0, roughness: 0.85 })
-  const centerGeo = new THREE.SphereGeometry(0.018, 10, 8)
-  const poppyGeo = new THREE.SphereGeometry(0.045, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2.2)
-  const cornGeo = new THREE.ConeGeometry(0.012, 0.045, 6)
+  const daisyPetalGeo = createDaisyPetalGeometry()
+  const daisyCenterGeo = createDaisyCenterGeometry()
+  const daisyCalyxGeo = createCalyxCupGeometry(0.018, 0.008, 0.011)
+  const poppyOuterGeo = createPoppyPetalGeometry(0.056, 0.068, 0.015, 0.028)
+  const poppyInnerGeo = createPoppyPetalGeometry(0.050, 0.060, 0.017, 0.035)
+  const poppyPodGeo = createPoppyPodGeometry()
+  const poppyAntherGeo = new THREE.SphereGeometry(0.0036, 7, 5)
+  const cornOuterGeo = createCornflowerFloretGeometry(0.040, 0.0175)
+  const cornInnerGeo = createCornflowerFloretGeometry(0.028, 0.013)
+  const cornCalyxGeo = createCalyxCupGeometry(0.016, 0.007, 0.018)
+
+  const petalWhite = createWreathBotanicalMaterial('daisy-petal')
+  const centerYellow = createWreathBotanicalMaterial('daisy-center')
+  const poppyRed = createWreathBotanicalMaterial('poppy-petal')
+  const poppyPodMat = createWreathBotanicalMaterial('poppy-pod')
+  const poppyStamenMat = new THREE.MeshStandardMaterial({ color: 0x352028, roughness: 0.85, side: THREE.FrontSide })
+  const cornflowerBlue = createWreathBotanicalMaterial('cornflower-petal')
+  const calyxMat = createWreathBotanicalMaterial('calyx')
 
   const daisy = () => {
     const g = new THREE.Group()
-    for (let p = 0; p < 9; p++) {
+    g.name = 'wreath-daisy'
+    const calyx = new THREE.Mesh(daisyCalyxGeo, calyxMat)
+    calyx.position.y = -0.008
+    g.add(calyx)
+    const count = 11
+    for (let p = 0; p < count; p++) {
       const petal = new THREE.Mesh(daisyPetalGeo, petalWhite)
-      petal.rotation.set(-Math.PI / 2, 0, (p / 9) * Math.PI * 2)
+      const angle = (p / count) * Math.PI * 2 + (p % 2) * 0.04
+      petal.position.y = 0.002 + (p % 2) * 0.0022
+      petal.rotation.set(-Math.PI / 2 + (p % 2 ? 0.05 : -0.04), 0, angle)
       g.add(petal)
     }
-    const center = new THREE.Mesh(centerGeo, centerYellow)
-    center.scale.y = 0.6
+    const center = new THREE.Mesh(daisyCenterGeo, centerYellow)
+    center.position.y = 0.004
     g.add(center)
     return g
   }
   const poppy = () => {
     const g = new THREE.Group()
-    const cup = new THREE.Mesh(poppyGeo, poppyRed)
-    cup.rotation.x = Math.PI
-    cup.position.y = 0.035
-    g.add(cup)
-    const center = new THREE.Mesh(centerGeo, new THREE.MeshStandardMaterial({ color: 0x3a2a2a }))
-    center.scale.setScalar(0.7)
-    center.position.y = 0.03
-    g.add(center)
+    g.name = 'wreath-poppy'
+    const calyx = new THREE.Mesh(daisyCalyxGeo, calyxMat)
+    calyx.position.y = -0.004
+    g.add(calyx)
+    for (let p = 0; p < 4; p++) {
+      const inner = p % 2 === 1
+      const petal = new THREE.Mesh(inner ? poppyInnerGeo : poppyOuterGeo, poppyRed)
+      const a = (p / 4) * Math.PI * 2 + (inner ? 0.14 : -0.08)
+      const r = inner ? 0.004 : 0.007
+      petal.position.set(Math.sin(a) * r, inner ? 0.010 : 0.005, Math.cos(a) * r)
+      petal.rotation.y = a
+      petal.rotation.x = inner ? -0.14 : 0.02
+      g.add(petal)
+    }
+    const pod = new THREE.Mesh(poppyPodGeo, poppyPodMat)
+    pod.position.y = 0.015
+    g.add(pod)
+    for (let s = 0; s < 10; s++) {
+      const a = (s / 10) * Math.PI * 2
+      const anther = new THREE.Mesh(poppyAntherGeo, poppyStamenMat)
+      anther.position.set(Math.cos(a) * 0.0165, 0.016 + (s % 2) * 0.002, Math.sin(a) * 0.0165)
+      anther.scale.set(0.85, 1.3, 0.85)
+      g.add(anther)
+    }
     return g
   }
   const cornflower = () => {
     const g = new THREE.Group()
-    for (let p = 0; p < 7; p++) {
-      const floret = new THREE.Mesh(cornGeo, cornflowerBlue)
-      const a = (p / 7) * Math.PI * 2
-      floret.position.set(Math.cos(a) * 0.018, 0.02, Math.sin(a) * 0.018)
-      floret.rotation.set(Math.sin(a) * 0.8, 0, -Math.cos(a) * 0.8)
+    g.name = 'wreath-cornflower'
+    const calyx = new THREE.Mesh(cornCalyxGeo, calyxMat)
+    calyx.position.y = -0.003
+    g.add(calyx)
+    // Outer ring of 9 flared trumpet ray florets.
+    for (let p = 0; p < 9; p++) {
+      const floret = new THREE.Mesh(cornOuterGeo, cornflowerBlue)
+      const a = (p / 9) * Math.PI * 2 + (p % 2) * 0.07
+      floret.position.set(Math.sin(a) * 0.009, 0.015 + (p % 2) * 0.002, Math.cos(a) * 0.009)
+      floret.rotation.y = a
+      floret.rotation.x = -0.44 - (p % 3) * 0.07
+      floret.scale.setScalar(0.92 + (p % 3) * 0.08)
       g.add(floret)
+    }
+    // Inner tufted crown of 6 upright florets.
+    for (let p = 0; p < 6; p++) {
+      const tuft = new THREE.Mesh(cornInnerGeo, cornflowerBlue)
+      const a = (p / 6) * Math.PI * 2 + 0.35
+      tuft.position.set(Math.sin(a) * 0.005, 0.019, Math.cos(a) * 0.005)
+      tuft.rotation.y = a
+      tuft.rotation.x = -1.08 - (p % 2) * 0.14
+      g.add(tuft)
     }
     return g
   }
@@ -313,8 +375,11 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
     const flower = make()
     const a = (i / makers.length) * Math.PI * 2 + 0.25
     const r = WREATH_R + ((i * 5) % 3 - 1) * 0.02
-    flower.position.set(Math.cos(a) * r, 0.035, Math.sin(a) * r)
+    flower.position.set(Math.cos(a) * r, 0.032, Math.sin(a) * r)
     flower.rotation.y = i * 1.3
+    // Soft outward meadow-wreath tilt so cupped blooms catch daylight naturally.
+    flower.rotation.x = Math.sin(a) * 0.14
+    flower.rotation.z = -Math.cos(a) * 0.14
     flower.scale.setScalar(0.9 + ((i * 3) % 4) * 0.12)
     flower.userData.size = flower.scale.x
     wreath.add(flower)

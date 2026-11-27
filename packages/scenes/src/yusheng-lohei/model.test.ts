@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import * as THREE from 'three';
+import {getEnvironmentSurfaceY} from '@wbr/scene-runtime';
 import {createYushengModel} from './model';
 import {disposeTree} from '../procedural-kit';
 const cleanup=(m:ReturnType<typeof createYushengModel>)=>{m.dispose();disposeTree(m.root)};
@@ -23,5 +24,13 @@ describe('Communal chopsticks and real fish-salad pieces',()=>{;
   it('keeps the platter fixed and reuses geometry across the whole motion',()=>{
     const m=createYushengModel(),geometries=new Map<string,THREE.BufferGeometry>();m.root.traverse(o=>{if((o as THREE.Mesh).isMesh)geometries.set(o.name,(o as THREE.Mesh).geometry)});const plate=[...m.plate.matrixWorld.elements];
     for(let s=0;s<3;s++)for(let n=0;n<=20;n++){m.pose(s,n/20);expect(m.plate.matrixWorld.elements).toEqual(plate);m.root.traverse(o=>{if((o as THREE.Mesh).isMesh)expect((o as THREE.Mesh).geometry,o.name).toBe(geometries.get(o.name))})}cleanup(m);
+  });
+  it('grounds the turned round low table on garden sand with vertical-grain legs',()=>{
+    const m=createYushengModel(),furniture=m.root.getObjectByName('round-dining-table-furniture')!;
+    expect(new THREE.Box3().setFromObject(furniture,true).min.y).toBeCloseTo(getEnvironmentSurfaceY('yusheng-lohei'),5);
+    const legs:THREE.Mesh[]=[];furniture.traverse(o=>{if((o as THREE.Mesh).isMesh&&o.name.startsWith('round-dining-table-leg'))legs.push(o as THREE.Mesh)});
+    expect(legs.length).toBeGreaterThanOrEqual(4);
+    for(const leg of legs)expect((leg.material as THREE.Material).userData.craftSurface).toMatchObject({kind:'wood',axis:'y'});
+    cleanup(m);
   });
 });

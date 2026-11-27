@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest'
 import * as THREE from 'three'
+import {getEnvironmentSurfaceY} from '@wbr/scene-runtime'
 import {createAlasitaModel} from './model'
 import {disposeTree} from '../procedural-kit'
 
@@ -27,6 +28,19 @@ describe('miniature wish house and real support surfaces',()=>{
    if(house.min.y<bench.max.y-1e-7)expect(house.min.z).toBeGreaterThan(bench.max.z)
    if(house.min.y<pad.max.y-1e-7)throw Error('house entered the pad')
   }disposeTree(m.root)
+ })
+ it('grounds the chamfered stall table and thin fabric pad on the courtyard surface without Z-fighting trim',()=>{
+  const m=createAlasitaModel(),groundY=getEnvironmentSurfaceY('alasita-miniature-house')
+  const stall=new THREE.Box3().setFromObject(m.root.getObjectByName('stall-counter-furniture')!,true)
+  const pad=new THREE.Box3().setFromObject(m.root.getObjectByName('front-felt-pad-cradle')!,true)
+  expect(stall.min.y).toBeCloseTo(groundY,5)
+  expect(pad.min.y).toBeCloseTo(groundY,5)
+  expect(pad.max.y-pad.min.y).toBeLessThan(.06)
+  expect(m.root.getObjectByName('pad-front-binding')).toBeUndefined()
+  const legs:THREE.Mesh[]=[];m.root.traverse(o=>{if((o as THREE.Mesh).isMesh&&o.name.startsWith('stall-counter-leg'))legs.push(o as THREE.Mesh)})
+  expect(legs).toHaveLength(4)
+  for(const leg of legs)expect((leg.material as THREE.Material).userData.craftSurface).toMatchObject({kind:'wood',axis:'y'})
+  disposeTree(m.root)
  })
  it('reuses all geometry buffers throughout the three paths',()=>{
   const m=createAlasitaModel(),buffers=new Map<THREE.Mesh,unknown>();m.root.traverse(o=>{const mesh=o as THREE.Mesh;if(mesh.isMesh)buffers.set(mesh,mesh.geometry.getAttribute('position').array)})

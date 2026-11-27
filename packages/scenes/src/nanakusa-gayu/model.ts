@@ -1,15 +1,16 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import { addOfferingTable } from '../cozy-furniture'
 
 /** Closed original vessels and serving motion; not a traditional utensil specification. */
 export function createNanakusaModel() {
  const root=new THREE.Group();root.name='nanakusa-subject'
  const material=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.78})
  const porridge=createRitualMaterial({color:0xf2ead0,roughness:.42,clearcoat:.38,clearcoatRoughness:.24},{kind:'wet',strength:.35})
- const ceramic=material(0x48695e),cream=material(0xf2ead0),leaf=material(0x547d48),wood=material(0xb47c46),boardMat=material(0xd2b58a),bowlMat=material(0x679c98),light=material(0xd7e0cc)
+ const ceramic=material(0x48695e),cream=material(0xf2ead0),leaf=material(0x547d48),wood=material(0xb47c46),bowlMat=material(0x679c98),light=material(0xd7e0cc)
  applyCraftSurface(wood,{kind:'wood',strength:.35,axis:'y'})
- applyCraftSurface(boardMat,{kind:'wood',strength:.4})
  for(const vessel of[ceramic,bowlMat])applyCraftSurface(vessel,{kind:'ceramic',strength:.45})
  const closed=(source:THREE.BufferGeometry)=>{
   const g=source.index?source.toNonIndexed():source,p=g.getAttribute('position'),values:number[]=[];let volume=0
@@ -21,8 +22,15 @@ export function createNanakusaModel() {
  const box=(name:string,size:[number,number,number],at:[number,number,number],m:THREE.Material,parent:THREE.Object3D=root)=>{const o=mesh(name,new THREE.BoxGeometry(...size),m,parent);o.position.set(...at);return o}
  const lathe=(name:string,points:number[][],m:THREE.Material,parent:THREE.Object3D=root)=>mesh(name,new THREE.LatheGeometry(points.map(p=>new THREE.Vector2(p[0]!,p[1]!)),32),m,parent)
  const tube=(name:string,a:THREE.Vector3,b:THREE.Vector3,r:number,m:THREE.Material,parent:THREE.Object3D)=>{const o=mesh(name,new THREE.CylinderGeometry(r,r,a.distanceTo(b),10),m,parent);o.position.copy(a).add(b).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());return o}
- const board=box('serving-board',[3.35,.07,2.9],[0,.035,.15],boardMat)
- box('board-front-binding',[3.35,.025,.035],[0,.057,1.595],wood)
+ const groundY=getEnvironmentSurfaceY('nanakusa-gayu')
+ const tableBuild=addOfferingTable(root,{
+  name:'serving-board',topName:'serving-board',width:2.84,depth:2.18,surfaceY:.07,thickness:.028,
+  center:[.20,.01],groundY,finish:'birch',color:0xd2b58a,frameColor:0xb47c46,
+  planks:3,breadboardEnds:true,legThickness:.085,legInset:.12,apron:false,stretchers:false,bevel:.010,
+ })
+ const seenBoardNames=new Map<string,number>()
+ tableBuild.root.traverse(o=>{const n=seenBoardNames.get(o.name)??0;seenBoardNames.set(o.name,n+1);if(n>0)o.name=`${o.name}-${n}`})
+ const board=tableBuild.top
  const pot=lathe('porridge-pot',[[0,0],[.50,0],[.68,.10],[.74,.52],[.72,.70],[.65,.70],[.67,.51],[.61,.13],[0,.13]],ceramic);pot.position.set(-.55,.07,-.36)
  for(const sign of[-1,1])box(`pot-handle-${sign}`,[.25,.11,.24],[-.55+sign*.82,.55,-.36],ceramic)
  const potBand=mesh('pot-rim-band',new THREE.TorusGeometry(.69,.012,6,48),light);potBand.rotation.x=Math.PI/2;potBand.position.set(-.55,.771,-.36)
@@ -53,7 +61,24 @@ export function createNanakusaModel() {
  const park=new THREE.Vector3(1.38,0,-.85);ladle.rotation.x=.55;ladle.position.copy(park);root.updateMatrixWorld(true);park.y=.095-new THREE.Box3().setFromObject(head,true).min.y;ladle.position.copy(park);root.updateMatrixWorld(true)
  function lowest(o:THREE.Mesh){const p=o.geometry.getAttribute('position');let best=new THREE.Vector3(0,Infinity,0);for(let i=0;i<p.count;i++){const v=new THREE.Vector3().fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld);if(v.y<best.y)best=v}return best}
  const headPoint=lowest(head),tailPoint=lowest(grip)
- const rest=(name:string,p:THREE.Vector3,width:number)=>box(name,[width,p.y-.07,.18],[p.x,(p.y+.07)/2,p.z],light)
+ const rest=(name:string,p:THREE.Vector3,width:number)=>{
+  const h=p.y-.07,b=Math.min(.004,h*.18),halfW=width/2-b
+  const dip=Math.min(.0045,h*.22),lipX=Math.min(halfW*.58,.062)
+  const shape=new THREE.Shape()
+  shape.moveTo(-halfW,b)
+  shape.lineTo(halfW,b)
+  shape.lineTo(halfW,Math.max(b+.002,h-b-.004))
+  shape.lineTo(lipX,h-b)
+  shape.lineTo(lipX*.72,h-b)
+  shape.quadraticCurveTo(0,h-b-dip,-lipX*.72,h-b)
+  shape.lineTo(-lipX,h-b)
+  shape.lineTo(-halfW,Math.max(b+.002,h-b-.004))
+  shape.closePath()
+  const extrudeDepth=Math.max(.01,.18-b*2)
+  const g=new THREE.ExtrudeGeometry(shape,{depth:extrudeDepth,steps:1,curveSegments:8,bevelEnabled:true,bevelSegments:2,bevelSize:b,bevelThickness:b})
+  g.translate(0,0,-extrudeDepth/2)
+  const o=mesh(name,g,light);o.position.set(p.x,.07,p.z);return o
+ }
  const headRest=rest('ladle-head-rest',headPoint,.24),tailRest=rest('ladle-tail-rest',tailPoint,.20)
  const potHead=new THREE.Vector3(-.55,.52,-.36),ready=new THREE.Vector3(.70,1.04,.62),parkHigh=new THREE.Vector3(park.x,1.12,park.z),v=new THREE.Vector3()
  const clamp=(n:number)=>THREE.MathUtils.clamp(n,0,1),mix=(a:THREE.Vector3,b:THREE.Vector3,t:number)=>ladle.position.copy(a).lerp(b,clamp(t))

@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest'
 import * as THREE from 'three'
+import {getEnvironmentSurfaceY} from '@wbr/scene-runtime'
 import {createAppleHoneyModel} from './model'
 import {disposeTree} from '../procedural-kit'
 const clean=(m:ReturnType<typeof createAppleHoneyModel>)=>{m.dispose();disposeTree(m.root)}
@@ -10,4 +11,5 @@ describe('An apple slice physically dipped in honey',()=>{
  it('submerges real apple vertices in honey while clearing the ceramic floor and walls',()=>{const m=createAppleHoneyModel();m.pose(2,0);const v=vertices(m.flesh),top=new THREE.Box3().setFromObject(m.honey).max.y;expect(v.filter(p=>p.y<top).length).toBeGreaterThan(10);expect(Math.min(...v.map(p=>p.y))).toBeGreaterThan(.208);for(let s=0;s<3;s++)for(let i=0;i<=100;i++){m.pose(s,i/100);for(const p of vertices(m.apple)){const r=Math.hypot(p.x-.72,p.z+.04);if(p.y<.428-1e-6&&r<.62){expect(p.y).toBeGreaterThanOrEqual(.208-1e-6);expect(r).toBeLessThanOrEqual(.42+.14*(p.y-.208)/.22+1e-5)}}}clean(m)})
  it('only reveals the attached honey films after the slice reaches the honey and keeps the fruit intact',()=>{const m=createAppleHoneyModel();for(const s of[0,1]){m.pose(s,.9);expect(m.films.every(o=>!o.visible)).toBe(true)}m.pose(1,1);expect(m.films.every(o=>o.visible)).toBe(true);const before=new Map<string,{g:THREE.BufferGeometry,p:number[]}>();m.apple.traverse(o=>{const g=(o as THREE.Mesh).geometry;if(g)before.set(o.name,{g,p:Array.from(g.getAttribute('position').array)})});for(let s=0;s<4;s++){m.pose(s,.5);m.apple.traverse(o=>{const g=(o as THREE.Mesh).geometry;if(g){expect(g).toBe(before.get(o.name)!.g);expect(Array.from(g.getAttribute('position').array)).toEqual(before.get(o.name)!.p)}})}clean(m)})
  it('keeps the whole apple and dining vessels still while one slice moves',()=>{const m=createAppleHoneyModel();const fixed=[m.whole,m.board,m.plate,m.bowl,m.honey].map(o=>[...o.matrixWorld.elements]);for(let s=0;s<3;s++)for(let i=0;i<=30;i++){m.pose(s,i/30);[m.whole,m.board,m.plate,m.bowl,m.honey].forEach((o,n)=>expect(o.matrixWorld.elements).toEqual(fixed[n]))}expect(new Set(m.roots).size).toBe(1);clean(m)})
+ it('uses a compact chamfered footed oval serving board grounded on garden sand',()=>{const m=createAppleHoneyModel(),furniture=m.root.getObjectByName('serving-board-furniture')!,box=new THREE.Box3().setFromObject(furniture,true),size=box.getSize(new THREE.Vector3());expect(box.min.y).toBeCloseTo(getEnvironmentSurfaceY('rosh-hashanah-apple-honey'),5);expect(size.x).toBeLessThan(2.9);expect(size.z).toBeLessThan(2.05);clean(m)})
 })

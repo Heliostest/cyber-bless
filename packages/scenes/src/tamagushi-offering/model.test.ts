@@ -1,5 +1,6 @@
 import {afterEach,describe,it,expect} from 'vitest'
 import * as THREE from 'three'
+import {getEnvironmentSurfaceY} from '@wbr/scene-runtime'
 import {disposeTree} from '../procedural-kit'
 import {createTamagushiModel} from './model'
 const models:ReturnType<typeof createTamagushiModel>[]=[]
@@ -106,5 +107,15 @@ describe('Held sakaki and shide offering',()=>{
   // The formerly accepted contact-only arrangement really puts the weight beyond its supports.
   m.rails[1]!.position.z=-.35;m.root.updateMatrixWorld(true)
   expect(center.z).toBeGreaterThan(new THREE.Box3().setFromObject(m.rails[1]!).max.z)
+ })
+ it('grounds the chamfered birch offering table with vertical-grain legs and grooved branch cradles while keeping shide sheet optics intact',()=>{
+  const m=create()
+  const stand=m.root.getObjectByName('tamagushi-stand-furniture')!
+  expect(new THREE.Box3().setFromObject(stand,true).min.y).toBeCloseTo(getEnvironmentSurfaceY('tamagushi-offering'),5)
+  const legs:THREE.Mesh[]=[];stand.traverse(o=>{if((o as THREE.Mesh).isMesh&&o.name.startsWith('tamagushi-stand-leg'))legs.push(o as THREE.Mesh)})
+  expect(legs).toHaveLength(4)
+  for(const leg of legs)expect((leg.material as THREE.Material).userData.craftSurface).toMatchObject({kind:'wood',axis:'y'})
+  for(const rail of m.rails)expect(rail.geometry).toBeInstanceOf(THREE.ExtrudeGeometry)
+  for(const shide of m.papers)expect((shide.material as THREE.Material).userData.ritualOptics).toMatchObject({kind:'paper',paper:{layout:'sheet'}})
  })
 })

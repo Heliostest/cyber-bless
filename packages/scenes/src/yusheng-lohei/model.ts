@@ -1,5 +1,7 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { addRoundLowTable } from '../cozy-furniture'
 
 // Authored geometry is deterministic; cache only measured placement heights, never live objects.
 const layoutCache=new Map<string,number[]>()
@@ -9,9 +11,8 @@ export function createYushengModel() {
   const root = new THREE.Group(); root.name = 'yusheng-root'
   const subject = new THREE.Group(); subject.name = 'yusheng-subject'; root.add(subject)
   const material = (color:string, roughness=.72) => new THREE.MeshStandardMaterial({color,roughness,metalness:0})
-  const porcelain=material('#fff1d8',.38), celadon=material('#4f9990',.45), wood=material('#b47d4e'), bamboo=material('#804936'), gold=material('#e8b74e',.4)
+  const porcelain=material('#fff1d8',.38), celadon=material('#4f9990',.45), bamboo=material('#804936'), gold=material('#e8b74e',.4)
   const cuffCloth=porcelain.clone()
-  applyCraftSurface(wood, { kind: 'wood', strength: .4 })
   applyCraftSurface(porcelain, { kind: 'ceramic', strength: .45 })
   applyCraftSurface(celadon, { kind: 'ceramic', strength: .45 })
   applyCraftSurface(bamboo, { kind: 'bamboo', strength: .38, axis: 'y' })
@@ -27,8 +28,14 @@ export function createYushengModel() {
   }
   const mesh=(name:string,geometry:THREE.BufferGeometry,mat:THREE.Material,parent:THREE.Object3D)=>{const m=new THREE.Mesh(finish(geometry),mat);m.name=name;m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
   const lathe=(p:number[][])=>new THREE.LatheGeometry(p.map(v=>new THREE.Vector2(v[0]!,v[1]!)),64)
-  const table=mesh('round-dining-table',new THREE.CylinderGeometry(1.78,1.78,.14,64),wood,root);table.position.y=.09
-  const tableApron=mesh('table-apron',new THREE.CylinderGeometry(1.69,1.69,.15,64),applyCraftSurface(material('#91613f'), { kind: 'wood', strength: .4 }),root);tableApron.position.y=-.045
+  const tableBuild=addRoundLowTable(root,{
+    name:'round-dining-table',topName:'round-dining-table',radius:1.80,surfaceY:.16,thickness:.068,center:[0,0],
+    groundY:getEnvironmentSurfaceY('yusheng-lohei'),finish:'chestnut',color:'#b47d4e',frameColor:'#91613f',
+    legCount:6,legRadius:.068,apron:true,stretchers:false,segments:64,
+  })
+  const seenTableNames=new Map<string,number>()
+  tableBuild.root.traverse(o=>{const n=seenTableNames.get(o.name)??0;seenTableNames.set(o.name,n+1);if(n>0)o.name=`${o.name}-${n}`})
+  const table=tableBuild.top
   const plate=mesh('shared-porcelain-platter',lathe([[0,0],[.98,0],[1.30,.07],[1.36,.12],[1.36,.15],[1.30,.15],[.99,.078],[0,.078]]),porcelain,root);plate.position.y=.16
   const rim=mesh('celadon-platter-band',lathe([[1.30,.146],[1.355,.146],[1.355,.151],[1.30,.151],[1.30,.146]]),celadon,root);rim.position.copy(plate.position)
   // Small plates and seats identify a shared meal; none is a wish board or altar.

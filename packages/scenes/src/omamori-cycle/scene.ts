@@ -15,6 +15,7 @@ import {
 } from '../procedural-kit'
 import { createObjectPointer } from '../object-pointer'
 import { placementHit } from '../placement-hit'
+import { addObjectCradle, addOfferingTable } from '../cozy-furniture'
 import { createTouchTarget } from '../touch-target'
 
 const COPY = {
@@ -540,7 +541,6 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
   const material = (color: number, roughness = 0.9) => new THREE.MeshStandardMaterial({ color, roughness })
   const wood = createCraftMaterial({ color: 0xd4ae7d, roughness: .9 }, { kind: 'wood' })
   const woodEdge = createCraftMaterial({ color: 0xb89164, roughness: 0.85 }, { kind: 'wood', axis: 'x', scale: 0.86, strength: 0.54 })
-  const woodLeg = createCraftMaterial({ color: 0xb89164, roughness: 0.85 }, { kind: 'wood', axis: 'y', scale: 0.92, strength: 0.52 })
   const woodTrim = createCraftMaterial({ color: 0xd4ae7d, roughness: 0.88 }, { kind: 'wood', axis: 'y', scale: 1.0, strength: 0.52 })
   const cream = material(0xf5e8c8), gold = material(0xd0b56e, 0.62)
   const brocadeTex = createBrocadeTextures()
@@ -574,12 +574,46 @@ export function createOmamoriCycle(ctx: SceneContext): SceneInstance {
   // A small office table keeps the three closed bags within reach.
   const floorY = getEnvironmentSurfaceY('omamori-cycle')
   const table = new THREE.Group(); table.name = 'omamori-office-table'; world.add(table)
-  add(new RoundedBoxGeometry(2.78, 0.14, 1.26, 3, 0.065), wood, [0, 0.7, -0.06], table)
-  add(new RoundedBoxGeometry(2.65, 0.07, 1.15, 3, 0.03), woodEdge, [0, 0.625, -0.06], table).name = 'omamori-table-apron'
-  const legH = 0.635 - floorY
-  for (const x of [-1.1, 1.1]) for (const z of [-0.43, 0.32]) add(new RoundedBoxGeometry(0.16, legH, 0.16, 2, 0.026), woodLeg, [x, floorY + legH / 2, z], table).name = 'omamori-table-leg'
-  const tray = add(new RoundedBoxGeometry(1.83, 0.04, 0.48, 3, 0.022), cream, [-0.45, 0.79, 0.33], table)
-  tray.name = 'omamori-display-tray'
+  addOfferingTable(table, {
+    name: 'omamori-table',
+    topName: 'omamori-table-top',
+    width: 2.78,
+    depth: 1.26,
+    surfaceY: 0.77,
+    thickness: 0.14,
+    center: [0, -0.06],
+    groundY: floorY,
+    finish: 'birch',
+    color: 0xd4ae7d,
+    frameColor: 0xb89164,
+    planks: 3,
+    breadboardEnds: true,
+    legThickness: 0.16,
+    legInset: 0.18,
+    apron: true,
+    stretchers: true,
+    bevel: 0.024,
+  })
+  addObjectCradle(table, {
+    name: 'omamori-display-tray',
+    topName: 'omamori-display-tray',
+    width: 1.83,
+    depth: 0.48,
+    surfaceY: 0.81,
+    center: [-0.45, 0.33],
+    groundY: 0.77,
+    style: 'tray',
+    kind: 'wood',
+    finish: 'birch',
+    color: 0xdec093,
+    accentColor: 0xbe996b,
+    insetColor: 0xf5e8c8,
+    insetKind: 'fabric',
+    lipHeight: 0.018,
+    lipThickness: 0.024,
+    bevel: 0.010,
+    footed: false,
+  })
 
   const travelBag = new THREE.Group(); travelBag.name = 'omamori-travel-bag'; travelBag.visible = !returning; world.add(travelBag)
   add(new RoundedBoxGeometry(0.9, 0.87, 0.47, 4, 0.16), bagMat, [0.61, 1.18, -0.08], travelBag)

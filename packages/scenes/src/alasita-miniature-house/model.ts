@@ -1,5 +1,16 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { addObjectCradle, addOfferingTable } from '../cozy-furniture'
+
+function makeUniqueNames(root: THREE.Object3D) {
+  const seen = new Map<string, number>()
+  root.traverse(object => {
+    const count = seen.get(object.name) ?? 0
+    seen.set(object.name, count + 1)
+    if (count > 0) object.name = `${object.name}-${count}`
+  })
+}
 
 /** Original painted miniature and market supports; no copied collection object or ceremonial pattern. */
 export function createAlasitaModel() {
@@ -7,9 +18,7 @@ export function createAlasitaModel() {
   const material = (color: number, roughness = .82, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness })
   const wall = material(0x74b1a9), roof = material(0xb96043), tile = material(0xd47c54), trim = material(0xf2e5c4)
   const glass = material(0x355774, .38), door = material(0x286c73), foundation = material(0xddd2b7), brass = material(0xc9a65c, .45, .3)
-  const wood = material(0x9f7956), edge = material(0x72533e), felt = material(0xd7ba72), alternate = material(0xe4c78a)
-  ;[wood, edge].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: .42 }))
-  applyCraftSurface(felt, { kind: 'fabric', strength: .25 })
+  const alternate = material(0xe4c78a)
   applyCraftSurface(brass, { kind: 'metal', strength: .45 })
   const clean = (source: THREE.BufferGeometry) => {
     const raw = source.index ? source.toNonIndexed() : source, p = raw.getAttribute('position'), values: number[] = []
@@ -59,15 +68,54 @@ export function createAlasitaModel() {
     const attic = mesh(prefix + '-attic-inset', new THREE.CylinderGeometry(.062, .062, .026, 16), glass, house); attic.rotation.x = Math.PI / 2; attic.position.set(0, .925, .548)
     return { house, base }
   }
-  const benchTop = box('stall-counter', [0, .46, -.90], [3.20, .08, 1.50], wood)
-  for (const x of [-1.44, 1.44]) for (const z of [-1.50, -.30]) box(`stall-leg-${x}-${z}`, [x, .21, z], [.13, .42, .13], edge)
-  box('stall-front-edge', [0, .45, -.14], [3.24, .12, .055], edge)
-  const pad = box('front-felt-pad', [.15, .06, .90], [2.20, .12, 2.10], felt)
-  box('pad-front-binding', [.15, .067, 1.93], [2.20, .125, .04], trim)
+  const groundY = getEnvironmentSurfaceY('alasita-miniature-house')
+  const stall = addOfferingTable(root, {
+    name: 'stall-counter',
+    topName: 'stall-counter',
+    width: 3.20,
+    depth: 1.50,
+    surfaceY: .50,
+    thickness: .08,
+    center: [0, -.90],
+    groundY,
+    finish: 'chestnut',
+    color: 0x9f7956,
+    frameColor: 0x72533e,
+    planks: 3,
+    breadboardEnds: true,
+    legThickness: .12,
+    legInset: .14,
+    apron: true,
+    stretchers: true,
+    bevel: .016,
+  })
+  makeUniqueNames(stall.root)
+  const benchTop = stall.top
+  const padSurfaceY = groundY + .038
+  const padBuild = addObjectCradle(root, {
+    name: 'front-felt-pad',
+    topName: 'front-felt-pad',
+    width: 2.20,
+    depth: 2.10,
+    surfaceY: padSurfaceY,
+    center: [.15, .90],
+    groundY,
+    style: 'pad',
+    kind: 'fabric',
+    color: 0xd7ba72,
+    accentColor: 0xc8aa62,
+    insetColor: 0xe4c78a,
+    insetKind: 'fabric',
+    bevel: .012,
+    roughness: .90,
+    surfaceStrength: .25,
+  })
+  makeUniqueNames(padBuild.root)
+  const pad = padBuild.top
   const { house, base } = makeHouse('wish-house', wall)
   const a = makeHouse('display-house-a', alternate).house; a.scale.setScalar(.24); a.position.set(1.05, .50, -1.12)
   const b = makeHouse('display-house-b', wall).house; b.scale.setScalar(.18); b.position.set(.95, .50, -.50)
-  const start = new THREE.Vector3(-.38, .50, -.98), lifted = new THREE.Vector3(-.38, .92, .30), end = new THREE.Vector3(.15, .12, .90)
+  const start = new THREE.Vector3(-.38, .50, -.98), lifted = new THREE.Vector3(-.38, .92, .30), end = new THREE.Vector3(.15, padSurfaceY, .90)
   const interpolate = (from: THREE.Vector3, to: THREE.Vector3, n: number) => from.clone().lerp(to, THREE.MathUtils.clamp(n, 0, 1))
   const pose = (step: number, amount: number) => {
     const t = THREE.MathUtils.clamp(amount, 0, 1); house.rotation.set(0, 0, 0); house.position.copy(start)

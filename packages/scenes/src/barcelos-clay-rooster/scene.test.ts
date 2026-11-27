@@ -258,6 +258,16 @@ describe('physical craft and owned resources', () => {
       }
       const edge = new THREE.Box3().setFromObject(s.scene.getObjectByName('rooster-plinth-edge')!)
       expect(edge.min.y).toBeCloseTo(new THREE.Box3().setFromObject(s.scene.getObjectByName('rooster-table-top')!).max.y, 4)
+      const linenMat = (s.scene.getObjectByName('rooster-linen-rest') as THREE.Mesh).material as THREE.Material
+      const plinthTopMat = (s.scene.getObjectByName('rooster-plinth-top') as THREE.Mesh).material as THREE.Material
+      const eyeMat = (s.scene.getObjectByName('rooster-eye-cream') as THREE.Mesh).material as THREE.Material
+      const brushRest = s.scene.getObjectByName('rooster-brush-rest-groove-block') as THREE.Mesh
+      expect(linenMat.userData.craftSurface).toMatchObject({ kind: 'fabric' })
+      expect(plinthTopMat.userData.craftSurface).toMatchObject({ kind: 'ceramic' })
+      expect(plinthTopMat).not.toBe(eyeMat)
+      expect(eyeMat.userData.craftSurface).toBeUndefined()
+      expect(brushRest.material).not.toBe(eyeMat)
+      expect((brushRest.material as THREE.Material).userData.craftSurface).toBeUndefined()
     }
   })
   it('keeps leaf paint within a thin layer of the curved body and tail paint on the sculpted feathers', () => {

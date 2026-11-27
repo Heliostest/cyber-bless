@@ -1,7 +1,9 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
+import { addOfferingTable } from '../cozy-furniture'
 import { createSakakiLeafGeometry, createSakakiLeafMaterials } from './sakaki-botanical'
 
 const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z)
@@ -301,10 +303,39 @@ export function createTamagushiModel(){
  const cylinder=(parent:THREE.Group,name:string,a:THREE.Vector3,b:THREE.Vector3,r:number,material:THREE.Material)=>{
   const d=b.clone().sub(a),o=mesh(parent,name,new THREE.CylinderGeometry(r,r,d.length(),16),material);o.position.copy(a).add(b).multiplyScalar(.5);o.quaternion.setFromUnitVectors(V(0,1,0),d.normalize());return o
  }
- box(table,'table-top',[2.10,.12,1.80],[0,.95,-.45],wood)
- for(const x of[-.88,.88])for(const z of[-1.14,.24])box(table,`leg-${x}-${z}`,[.12,.89,.12],[x,.445,z],wood)
- // Two small product supports leave space to withdraw the hands after the branch settles.
- const rails=[-.95,.42].map((z,i)=>box(table,'support-'+i,[.24,.15,.06],[0,1.085,z],wood))
+ const stand=addOfferingTable(table,{
+  name:'tamagushi-stand',topName:'tamagushi-table-top-group',width:2.10,depth:1.80,surfaceY:1.01,thickness:.10,
+  center:[0,-.45],groundY:getEnvironmentSurfaceY('tamagushi-offering'),finish:'birch',color:0xd2ad72,frameColor:0xb69059,
+  planks:1,breadboardEnds:false,legThickness:.12,legInset:.16,apron:true,stretchers:true,bevel:.016,
+ })
+ const seenStandNames=new Map<string,number>()
+ stand.root.traverse(o=>{
+  if(o.name==='tamagushi-stand-top-board'){o.name='tamagushi-table-top';return}
+  const n=seenStandNames.get(o.name)??0;seenStandNames.set(o.name,n+1)
+  if(n>0)o.name=`${o.name}-${n}`
+ })
+ // Two small chamfered grooved product supports leave space to withdraw the hands after the branch settles.
+ const createBranchCradleGeometry=()=>{
+  const b=.004
+  const shape=new THREE.Shape()
+  shape.moveTo(-.116,b)
+  shape.lineTo(.116,b)
+  shape.lineTo(.116,.024)
+  shape.lineTo(.086,.132)
+  shape.lineTo(.036,.146)
+  shape.lineTo(.018,.146)
+  shape.quadraticCurveTo(0,.1435,-.018,.146)
+  shape.lineTo(-.036,.146)
+  shape.lineTo(-.086,.132)
+  shape.lineTo(-.116,.024)
+  shape.closePath()
+  const g=new THREE.ExtrudeGeometry(shape,{depth:.052,steps:1,curveSegments:8,bevelEnabled:true,bevelSegments:2,bevelSize:b,bevelThickness:b})
+  g.translate(0,0,-.026);g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere()
+  return g
+ }
+ const rails=[-.95,.42].map((z,i)=>{
+  const o=mesh(table,'support-'+i,createBranchCradleGeometry(),wood);o.position.set(0,1.01,z);return o
+ })
  const stem=cylinder(branch,'stem',V(-.80),V(.80),.025,bark)
  // [x, y, z, w, l, rotY (local +Z points outward to pointed leaf apex), twist]
  const leafSpecs:[number,number,number,number,number,number,number][]=[

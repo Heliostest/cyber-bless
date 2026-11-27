@@ -55,9 +55,11 @@ export function createCroatianLicitarHeart(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'licitar-courtyard-workbench'; scene.add(world)
   const material = (color: number, roughness = .82) => new THREE.MeshStandardMaterial({ color, roughness })
   const red = material(0xce293c, .62), cream = material(0xffedc9), green = material(0x6e9780), blue = material(0x85a7b3)
-  const oak = material(0xc29e6b), walnut = material(0x80613f), linen = material(0xc7d5cd), paleMirror = material(0xc5dae0, .40)
+  const oak = material(0xc29e6b), oakVertical = material(0xc29e6b), walnut = material(0x80613f), linen = material(0xc7d5cd), paleMirror = material(0xc5dae0, .40)
   const ribbonMaterial = applyCraftSurface(cream.clone(), { kind: 'fabric', strength: .22 })
+  const pegCapWood = applyCraftSurface(cream.clone(), { kind: 'wood', axis: 'y', scale: .9, strength: .34 })
   ;[oak, walnut].forEach(mat => applyCraftSurface(mat, { kind: 'wood', strength: .4 }))
+  applyCraftSurface(oakVertical, { kind: 'wood', axis: 'y', strength: .4 })
   applyCraftSurface(linen, { kind: 'fabric', strength: .25 })
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
@@ -79,12 +81,13 @@ export function createCroatianLicitarHeart(ctx: SceneContext): SceneInstance {
 
   const stand = new THREE.Group(); stand.name = 'licitar-display-stand'; world.add(stand)
   box('licitar-stand-base', [.85, .10, .62], [.8, .81, -.15], walnut, stand)
-  box('licitar-stand-upright', [.105, 1.68, .11], [.8, 1.70, -.22], oak, stand)
+  box('licitar-stand-upright', [.105, 1.68, .11], [.8, 1.70, -.22], oakVertical, stand)
   box('licitar-stand-crossbar', [.37, .10, .105], [.8, 2.47, -.22], oak, stand)
   // The inside ceiling of the .022-radius ribbon contacts this .036-radius shaft.
   const pegY = HUNG.y + 1.45 - .022 - .036
   const shaft = add('licitar-stand-peg-shaft', new THREE.CylinderGeometry(.036, .036, .37, 32), oak, [.8, pegY, -.065], stand); shaft.rotation.x = Math.PI / 2
-  const peg = add('licitar-stand-peg-cap', new THREE.CylinderGeometry(.074, .074, .045, 40), cream, [.8, pegY, .1425], stand); peg.rotation.x = Math.PI / 2
+  const pegCapGeo = new THREE.LatheGeometry([[0, -.0225], [.067, -.0225], [.074, -.0155], [.074, .0155], [.067, .0225], [0, .0225]].map(p => new THREE.Vector2(...p as [number, number])), 40)
+  const peg = add('licitar-stand-peg-cap', pegCapGeo, pegCapWood, [.8, pegY, .1425], stand); peg.rotation.x = Math.PI / 2
 
   const heart = new THREE.Group(); heart.name = 'licitar-heart'; world.add(heart)
   const shape = new THREE.Shape()

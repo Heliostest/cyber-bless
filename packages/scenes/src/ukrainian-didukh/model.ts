@@ -1,5 +1,6 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { disposeTree } from '../procedural-kit'
 import {
   createCurvedAwnGeometry,
@@ -45,8 +46,8 @@ export function createDidukhModel() {
     parent.add(mesh)
     return mesh
   }
-  const box = (name: string, w: number, h: number, d: number, material: THREE.Material, x: number, y: number, z: number) =>
-    add(root, name, new THREE.BoxGeometry(w, h, d), material, x, y, z)
+  const box = (name: string, w: number, h: number, d: number, material: THREE.Material, x: number, y: number, z: number, radius = .014) =>
+    add(root, name, new RoundedBoxGeometry(w, h, d, 2, Math.min(radius, w / 3, h / 3, d / 3)), material, x, y, z)
 
   // Horizontal cut faces give every splayed stalk an actual flat contact at y=0.
   // The side indices face outwards, and both ends are capped (unlike TubeGeometry).
@@ -265,13 +266,14 @@ export function createDidukhModel() {
   })
 
   // Domestic lime/clay plaster and honey wood: original room, no sacred text or icons.
-  box('didukh-honeywood-floor', 3.1, .15, 2.3, wood, 0, -.075, .05)
-  box('didukh-lime-plaster-back', 3.1, 2.8, .12, plaster, 0, 1.4, -.91)
-  box('didukh-clay-plaster-side', .12, 2.8, 1.5, clay, -1.49, 1.4, -.19)
-  box('didukh-back-baseboard', 3.1, .105, .055, baseboardWood, 0, .0525, -.8225)
-  box('didukh-side-baseboard', .055, .105, 1.5, baseboardWood, -1.4025, .0525, -.19)
-  box('didukh-work-tray', 1.04, .1, 1.04, trayWood, -.5, .17, .5)
-  for (const [i, x] of [-.86, -.14].entries()) box(`didukh-tray-foot-${i}`, .12, .12, .8, wood, x, .06, .5)
+  box('didukh-honeywood-floor', 3.1, .15, 2.3, wood, 0, -.075, .05, .016)
+  box('didukh-lime-plaster-back', 3.1, 2.8, .12, plaster, 0, 1.4, -.91, .014)
+  box('didukh-clay-plaster-side', .12, 2.8, 1.5, clay, -1.49, 1.4, -.19, .014)
+  box('didukh-back-baseboard', 3.1, .105, .055, baseboardWood, 0, .0525, -.8225, .012)
+  box('didukh-side-baseboard', .055, .105, 1.5, baseboardWood, -1.4025, .0525, -.19, .012)
+  box('didukh-work-tray', 1.04, .1, 1.04, trayWood, -.5, .17, .5, .018)
+  for (const [i, x] of [-.86, -.14].entries()) box(`didukh-tray-foot-${i}`, .12, .124, .82, wood, x, .062, .5, .016)
+  box('didukh-tray-stretcher', .72, .042, .08, wood, -.5, .052, .5, .010)
 
   const smooth = (value: number) => value * value * (3 - 2 * value)
   function pose(step: number, progress: number) {

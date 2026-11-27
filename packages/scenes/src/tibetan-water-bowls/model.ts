@@ -1,12 +1,12 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import { addOfferingTable } from '../cozy-furniture'
 const smooth=(x:number)=>{const t=THREE.MathUtils.clamp(x,0,1);return t*t*(3-2*t)}
 export function createWaterBowlsModel(){
  const root=new THREE.Group();root.name='water-bowls-subject';root.position.y=-.012
  const material=(color:number,metalness=0,roughness=.7)=>new THREE.MeshStandardMaterial({color,metalness,roughness})
- const wood=material(0x945d3e),gold=material(0xd4ac58,.25,.52),copper=material(0xbc7850,.35,.4),robe=material(0xc99c44,.18,.65),hair=material(0x3f5051),jugmat=material(0xeee4cb,.05,.35)
- applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+ const gold=material(0xd4ac58,.25,.52),copper=material(0xbc7850,.35,.4),robe=material(0xc99c44,.18,.65),hair=material(0x3f5051),jugmat=material(0xeee4cb,.05,.35)
  applyCraftSurface(copper, { kind: 'metal', strength: .45 })
  applyCraftSurface(jugmat, { kind: 'ceramic', strength: .45 })
 
@@ -18,11 +18,17 @@ export function createWaterBowlsModel(){
  }
  const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D=root,x=0,y=0,z=0)=>{const o=new THREE.Mesh(finish(g),m);o.name=name;o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
  const ball=(name:string,x:number,y:number,z:number,sx:number,sy:number,sz:number,m:THREE.Material,parent:THREE.Object3D=root)=>{const o=mesh(name,new THREE.SphereGeometry(1,24,16),m,parent,x,y,z);o.scale.set(sx,sy,sz);return o}
- const box=(name:string,x:number,y:number,z:number,sx:number,sy:number,sz:number,m:THREE.Material)=>mesh(name,new THREE.BoxGeometry(sx,sy,sz),m,root,x,y,z)
  const lathe=(profile:number[][])=>new THREE.LatheGeometry(profile.map(([x,y])=>new THREE.Vector2(x!,y!)),48)
- const altar=box('altar-top',0,.94,0,3.7,.12,1.7,wood)
- for(const x of[-1.65,1.65])for(const z of[-.65,.65])box('altar-leg-'+x+'-'+z,x,.44,z,.13,.88,.13,wood)
- const plinth=mesh('buddha-plinth',new THREE.CylinderGeometry(.52,.57,.12,48),gold,root,0,1.06,-.43)
+ // root.position.y is already -0.012 (garden sand surface), so local groundY=0 lands legs flush at world -0.012.
+ const altarBuild=addOfferingTable(root,{
+  name:'altar-table',topName:'altar-top',width:3.7,depth:1.7,surfaceY:1.0,thickness:.11,center:[0,0],groundY:0,
+  finish:'walnut',color:0x945d3e,frameColor:0x74472e,planks:3,breadboardEnds:true,legThickness:.13,legInset:.15,apron:true,stretchers:true,bevel:.016,
+ })
+ const seenAltarNames=new Map<string,number>()
+ altarBuild.root.traverse(o=>{const n=seenAltarNames.get(o.name)??0;seenAltarNames.set(o.name,n+1);if(n>0)o.name=`${o.name}-${n}`})
+ const altar=altarBuild.top
+ const plinthProfile=[[0,0],[.575,0],[.585,.012],[.585,.026],[.558,.038],[.515,.052],[.505,.064],[.528,.082],[.550,.098],[.542,.112],[.520,.12],[0,.12]]
+ const plinth=mesh('buddha-plinth',lathe(plinthProfile),gold,root,0,1,-.43)
  plinth.scale.z=.65
  const buddha=new THREE.Group();buddha.name='seated-buddha';buddha.position.set(0,1.12,-.43);root.add(buddha)
  ball('buddha-crossed-legs',0,.12,.03,.46,.13,.26,robe,buddha)

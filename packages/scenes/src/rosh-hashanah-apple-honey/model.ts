@@ -1,14 +1,15 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import { addRoundLowTable } from '../cozy-furniture'
 
 // A prepared apple slice and honey dish; the return to the plate is product staging.
 export function createAppleHoneyModel() {
   const root=new THREE.Group();root.name='apple-honey-root'
   const subject=new THREE.Group();subject.name='apple-honey-subject';root.add(subject)
   const mat=(color:string,roughness=.7)=>new THREE.MeshStandardMaterial({color,roughness,metalness:0})
-  const cream=mat('#f7e4a8',.85),red=mat('#bd4738',.55),ceramic=mat('#f8edd2',.46),blue=mat('#83aaa0',.65),wood=mat('#b38a56',.85),brown=mat('#69492e'),green=mat('#65834a')
-  applyCraftSurface(wood,{kind:'wood',strength:.4})
+  const cream=mat('#f7e4a8',.85),red=mat('#bd4738',.55),ceramic=mat('#f8edd2',.46),blue=mat('#83aaa0',.65),brown=mat('#69492e'),green=mat('#65834a')
   for(const vessel of[ceramic,blue])applyCraftSurface(vessel,{kind:'ceramic',strength:.45})
   const honeyMaterial=createRitualMaterial({color:'#d79a24',roughness:.24,metalness:0,transmission:.38,attenuationColor:'#d79a24',attenuationDistance:.22},{kind:'honey',thickness:.16,strength:.4})
   const filmMaterial=createRitualMaterial({color:'#d7941d',roughness:.22,metalness:0,transmission:.25,attenuationColor:'#d7941d',attenuationDistance:.22},{kind:'honey',thickness:.006,strength:.25})
@@ -24,7 +25,14 @@ export function createAppleHoneyModel() {
   const shape=(points:THREE.Vector2[])=>{const s=new THREE.Shape(points);s.closePath();return s}
   const extrude=(points:THREE.Vector2[],depth:number,z:number)=>new THREE.ExtrudeGeometry(shape(points),{depth,bevelEnabled:false,curveSegments:16}).translate(0,0,z)
   const lathe=(points:number[][])=>new THREE.LatheGeometry(points.map(p=>new THREE.Vector2(p[0]!,p[1]!)),64)
-  const board=mesh('serving-board',new THREE.CylinderGeometry(1.52,1.49,.16,64).scale(1,1,.72),wood,root);board.position.y=.068
+  const boardBuild=addRoundLowTable(root,{
+    name:'serving-board',topName:'serving-board',radius:1.43,radiusZ:1.01,surfaceY:.148,thickness:.056,
+    center:[-.06,-.06],groundY:getEnvironmentSurfaceY('rosh-hashanah-apple-honey'),
+    finish:'honey',color:'#b38a56',frameColor:'#8c663b',legCount:4,legRadius:.054,apron:true,stretchers:false,segments:64,
+  })
+  const seenBoardNames=new Map<string,number>()
+  boardBuild.root.traverse(o=>{const n=seenBoardNames.get(o.name)??0;seenBoardNames.set(o.name,n+1);if(n>0)o.name=`${o.name}-${n}`})
+  const board=boardBuild.top
   const plate=mesh('apple-plate',lathe([[0,0],[.60,0],[.66,.025],[.66,.055],[.62,.055],[.59,.04],[0,.04]]),ceramic,root);plate.position.set(-.72,.148,.12)
   const bowl=mesh('honey-dish',lathe([[0,0],[.43,0],[.59,.10],[.62,.28],[.56,.28],[.42,.06],[0,.06]]),blue,root);bowl.position.set(.72,.148,-.04)
   const honeyRadius=.42+.14*(.22-.06)/(.28-.06)

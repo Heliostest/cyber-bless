@@ -290,6 +290,11 @@ describe('physical craft and owned resources', () => {
     expect(loopBounds.max.z).toBeGreaterThan(shaftBounds.min.z)
     expect(new THREE.Box3().setFromObject(hung.scene.getObjectByName('licitar-stand-base')!).min.y)
       .toBeCloseTo(new THREE.Box3().setFromObject(hung.scene.getObjectByName('licitar-table-top')!).max.y, 4)
+    const pegCapMat = (hung.scene.getObjectByName('licitar-stand-peg-cap') as THREE.Mesh).material as THREE.Material
+    const icingMat = (hung.scene.getObjectByName('licitar-piped-cream-border') as THREE.Mesh).material as THREE.Material
+    expect(pegCapMat).not.toBe(icingMat)
+    expect(pegCapMat.userData.craftSurface).toMatchObject({ kind: 'wood' })
+    expect(icingMat.userData.craftSurface).toBeUndefined()
   })
   it('keeps every icing petal, piped edge and mirror inset attached to the red front surface', () => {
     const s = mount(1), shell = s.scene.getObjectByName('licitar-heart-body')!, motif = s.scene.getObjectByName('licitar-original-icing')!

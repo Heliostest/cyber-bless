@@ -255,12 +255,23 @@ describe('Seven water bowl offering', () => {
   it.each([284, 350, 1280])('keeps all subject vertices in frame during each three jug paths at width %i', width => {
     for (const at of [0, 1, 4, 7, 8]) {
       const s = mount(at, {}, width), p = s.point(targetName(at), anchor(at)), [dx, dy] = targetDelta(s,at)
+      const vertex = new THREE.Vector3()
+      const meshCache = new Map<THREE.Mesh, { matrix: number[]; version: number; extent: number }>()
       const check = () => {
         s.scene.updateMatrixWorld(true); let extent = 0
         s.scene.getObjectByName('water-bowls-subject')!.traverse(o => {
           const m = o as THREE.Mesh; if (!m.geometry) return
-          const positions = m.geometry.getAttribute('position'), vertex = new THREE.Vector3()
-          for (let i = 0; i < positions.count; i++) { vertex.fromBufferAttribute(positions, i).applyMatrix4(m.matrixWorld).project(s.camera); extent = Math.max(extent, Math.abs(vertex.x), Math.abs(vertex.y)) }
+          const positions = m.geometry.getAttribute('position'), els = m.matrixWorld.elements
+          const version = positions instanceof THREE.BufferAttribute ? positions.version : -1
+          const cached = meshCache.get(m)
+          if (cached && version >= 0 && cached.version === version && cached.matrix.every((v, idx) => v === els[idx])) {
+            extent = Math.max(extent, cached.extent)
+            return
+          }
+          let meshExtent = 0
+          for (let i = 0; i < positions.count; i++) { vertex.fromBufferAttribute(positions, i).applyMatrix4(m.matrixWorld).project(s.camera); meshExtent = Math.max(meshExtent, Math.abs(vertex.x), Math.abs(vertex.y)) }
+          meshCache.set(m, { matrix: [...els], version, extent: meshExtent })
+          extent = Math.max(extent, meshExtent)
         })
         expect(extent).toBeLessThan(.97)
       }

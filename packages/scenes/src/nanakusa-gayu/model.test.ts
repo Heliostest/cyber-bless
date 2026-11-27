@@ -1,5 +1,6 @@
 import {describe,it,expect}from'vitest'
 import * as THREE from'three'
+import {getEnvironmentSurfaceY}from'@wbr/scene-runtime'
 import {createNanakusaModel}from'./model'
 import {disposeTree}from'../procedural-kit'
 describe('porridge, ladle and receiving bowl',()=>{
@@ -44,5 +45,14 @@ describe('porridge, ladle and receiving bowl',()=>{
  it('reuses geometry buffers throughout the full sequence',()=>{
   const m=createNanakusaModel(),buffers=new Map<THREE.Mesh,unknown>();m.root.traverse(o=>{const mesh=o as THREE.Mesh;if(mesh.isMesh)buffers.set(mesh,mesh.geometry.getAttribute('position').array)})
   for(let step=0;step<3;step++)for(let i=0;i<=100;i++){m.pose(step,i/100);for(const[mesh,buffer]of buffers)expect(mesh.geometry.getAttribute('position').array).toBe(buffer)}disposeTree(m.root)
+ })
+ it('uses a compact grounded footed serving table and concave ladle rests preserving the light material boundary',()=>{
+  const m=createNanakusaModel(),furniture=m.root.getObjectByName('serving-board-furniture')!
+  const box=new THREE.Box3().setFromObject(furniture,true),size=box.getSize(new THREE.Vector3())
+  expect(box.min.y).toBeCloseTo(getEnvironmentSurfaceY('nanakusa-gayu'),5)
+  expect(size.x).toBeLessThan(3.0);expect(size.z).toBeLessThan(2.3)
+  expect((m.headRest.material as THREE.Material).userData.craftSurface).toBeUndefined()
+  expect((m.tailRest.material as THREE.Material).userData.craftSurface).toBeUndefined()
+  disposeTree(m.root)
  })
 })

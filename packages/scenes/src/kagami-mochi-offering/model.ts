@@ -1,6 +1,7 @@
-import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import { addOfferingTable } from '../cozy-furniture'
 
 const SHEET_Z_CENTER = 0.15
 const SHEET_HX = 1.26
@@ -212,7 +213,7 @@ export function createKagamiModel() {
  const root=new THREE.Group();root.name='kagami-root'
  const subject=new THREE.Group();subject.name='kagami-subject';root.add(subject)
  const mat=(color:number,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness})
- const rice=mat(0xfff2d6,.96),orange=mat(0xf29a32,.64),green=mat(0x56794b),wood=mat(0xa67951)
+ const rice=mat(0xfff2d6,.96),orange=mat(0xf29a32,.64),green=mat(0x56794b)
  const paper=createRitualMaterial({
   color:0xf7eedb,
   roughness:.96,
@@ -249,9 +250,17 @@ export function createKagamiModel() {
    highlightGuard:1.15,
   },
  })
- applyCraftSurface(wood,{kind:'wood',strength:.4})
  const mesh=(g:THREE.BufferGeometry,m:THREE.Material,p:THREE.Object3D,name:string)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;p.add(o);return o}
- const base=mesh(new THREE.BoxGeometry(2.60,.12,2.78),wood,subject,'kagami-low-wood-base');base.position.set(0,-.06,.15)
+ // Compact chamfered footed low wooden product stand grounded at the courtyard surface (-0.1025)
+ // with its top surface at y = 0 directly beneath the untouched dual-layer offering washi sheets.
+ const standBuild=addOfferingTable(subject,{
+  name:'kagami-low-wood-base',topName:'kagami-low-wood-base',width:2.58,depth:2.76,surfaceY:0,thickness:.026,
+  center:[0,SHEET_Z_CENTER],groundY:getEnvironmentSurfaceY('kagami-mochi-offering'),
+  finish:'honey',color:0xb88c5e,frameColor:0x8e6540,
+  planks:3,breadboardEnds:true,legThickness:.125,legInset:.015,apron:false,stretchers:false,bevel:.010,
+ })
+ const seenStandNames=new Map<string,number>()
+ standBuild.root.traverse(o=>{const n=seenStandNames.get(o.name)??0;seenStandNames.set(o.name,n+1);if(n>0)o.name=`${o.name}-${n}`})
  // Lower folded washi layer resting cleanly on the wooden base beneath the red-bordered upper sheet.
  mesh(createWashiSheetGeometry({
   scaleX:.988,scaleZ:.988,thickness:UNDER_SHEET_T,evalTopY:evalLowerWashiTopY,redBorder:false,baseShade:.94,

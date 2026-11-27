@@ -22,6 +22,7 @@ export const LOCK_COLORS = {
   velvet: { lit: 0x5f2534, base: 0x481b28, shade: 0x2d0f18, sheen: 0x2c121a, line: 0x1b070d },
   wood: { lit: 0x6b4732, base: 0x533627, shade: 0x352219, line: 0x1d120c },
   stand: { lit: 0x73625a, base: 0x5c4d45, shade: 0x3d332e, line: 0x221b17 },
+  mat: { lit: 0x5e493d, base: 0x48372e, shade: 0x2f231d, line: 0x1a130f },
 } as const
 
 /** Layout in world units; the courtyard floor is y = 0. */
@@ -97,6 +98,7 @@ export function createLongevityLockModel(options: LongevityLockModelOptions = {}
     velvet: toon.create('longevity-velvet-toon', 'velvet', C.velvet, { sheen: C.velvet.sheen, bands: [.40, .84] }),
     wood: toon.create('longevity-wood-toon', 'wood', C.wood, { bands: [.40, .86] }),
     stand: toon.create('longevity-stand-toon', 'wood', C.stand, { bands: [.40, .86] }),
+    mat: toon.create('longevity-mat-toon', 'wood', C.mat, { bands: [.40, .86] }),
   }
   const mesh = (parent: THREE.Object3D, name: string, geometry: THREE.BufferGeometry, material: THREE.Material, line?: number, x = 0, y = 0, z = 0, lineWidth?: number) => {
     const m = new THREE.Mesh(geometry, material); m.name = name; m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; parent.add(m)
@@ -120,6 +122,9 @@ export function createLongevityLockModel(options: LongevityLockModelOptions = {}
   const pad = mesh(box, 'longevity-case-inner-pad', profiledSolid(roundedRect(inner[0] - .004, inner[1] - .004, .04),
     [{ d: .004, y: 0 }, { d: 0, y: .004 }, { d: 0, y: cushionHeight - .03 }, { d: .008, y: cushionHeight - .012 }, { d: .02, y: cushionHeight - .002 }, { d: .035, y: cushionHeight }, { s: .6, y: cushionHeight }, { s: .3, y: cushionHeight }]),
   materials.velvet, C.velvet.line, 0, L.case.base, 0)
+
+  // Compact chamfered low wooden presentation mat bridging the stand and gift case cleanly above courtyard paving.
+  const mat = mesh(root, 'longevity-presentation-mat', roundedSlab(3.96, 2.66, .032, .010, .09), materials.mat, C.mat.line, -.045, 0, .115)
 
   // The low preparation stand, dark and plain.
   const stand = mesh(root, 'longevity-preparation-stand', roundedSlab(L.stand.width, L.stand.depth, L.stand.top, .02, .08), materials.stand, C.stand.line, L.stand.x, 0, L.stand.z)
@@ -399,7 +404,7 @@ export function createLongevityLockModel(options: LongevityLockModelOptions = {}
   const lockAnchor: [number, number, number] = [0, face(0, PLATE_Z + LETTER_Z) - .01, PLATE_Z + LETTER_Z]
   const boardAnchor: [number, number, number] = [-.4, L.board.wood * .6, L.board.depth / 2]
   return {
-    root, actor, motion, board, velvet, cord, lock, bail, drops, links, stand, pad, box, walls: caseWalls, pose, materials, sweep: toon.sweep,
+    root, actor, motion, board, velvet, cord, lock, bail, drops, links, mat, stand, pad, box, walls: caseWalls, pose, materials, sweep: toon.sweep,
     targets: [actor, actor, actor], roots: [actor, actor, actor], anchors: [boardAnchor, boardAnchor, lockAnchor] as [number, number, number][],
     /** Height of the plate's face under a point in carrier space (for tests and probes). */
     face, plate: { z: PLATE_Z, letterZ: PLATE_Z + LETTER_Z, stroke: STROKE, boardTop: BOARD_TOP, bailZ },

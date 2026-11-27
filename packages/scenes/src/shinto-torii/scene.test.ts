@@ -88,4 +88,24 @@ describe('shinto-torii lacquered timber finish', () => {
     instance.dispose()
     spies.forEach(spy => expect(spy).toHaveBeenCalledOnce())
   })
+
+  it('grounds the torii plinths and side ema rack and connects all six rack plaques with pegs and cords', () => {
+    const { scene } = mount()
+    scene.updateMatrixWorld(true)
+    for (const name of ['torii-base-left', 'torii-base-right', 'torii-rack-post-left', 'torii-rack-post-right', 'torii-rack-foot-left', 'torii-rack-foot-right']) {
+      expect(new THREE.Box3().setFromObject(scene.getObjectByName(name)!).min.y, name).toBeCloseTo(-0.035, 4)
+    }
+    for (let i = 0; i < 5; i++) {
+      expect(scene.getObjectByName(`torii-rack-ema-peg-${i}`)).toBeInstanceOf(THREE.Mesh)
+      expect(scene.getObjectByName(`torii-rack-ema-cord-${i}`)).toBeInstanceOf(THREE.Mesh)
+    }
+    expect(scene.getObjectByName('torii-own-ema-peg')).toBeInstanceOf(THREE.Mesh)
+    expect(scene.getObjectByName('torii-own-ema-cord')).toBeInstanceOf(THREE.Mesh)
+    // Shared courtyard flagstone path handles the approach without redundant overlapping stepping stones.
+    let approachStones = 0
+    scene.traverse(obj => {
+      if (obj instanceof THREE.Mesh && (obj.material as THREE.Material).userData.craftSurface?.kind === 'stone') approachStones++
+    })
+    expect(approachStones).toBe(0)
+  })
 })

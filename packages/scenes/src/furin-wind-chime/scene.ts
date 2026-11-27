@@ -136,15 +136,76 @@ export function createFurinWindChime(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group()
   scene.add(world)
 
-  // Wooden eave beam the chime hangs from; soft bevel catches a cel highlight.
-  const beam = new THREE.Mesh(
-    new RoundedBoxGeometry(3.6, 0.14, 0.3, 2, 0.025),
-    new THREE.MeshStandardMaterial({ color: 0xb98c60, roughness: 0.95 }),
+  // Wooden eave beam the chime hangs from; extend cleanly with chamfered rafters and
+  // corbel end-brackets so wide-screen aspect ratios never expose raw cut box ends.
+  const beamMat = applyCraftSurface(
+    new THREE.MeshStandardMaterial({ color: 0xb98c60, roughness: 0.92 }),
+    { kind: 'wood', strength: .4, axis: 'x' },
   )
-  applyCraftSurface(beam.material, { kind: 'wood', strength: .4, axis: 'x' })
+  const beam = new THREE.Mesh(
+    new RoundedBoxGeometry(6.8, 0.14, 0.3, 2, 0.025),
+    beamMat,
+  )
   beam.name = 'furin-eave'
   beam.position.set(0, 2.45, -0.1)
   world.add(beam)
+
+  const fasciaMat = applyCraftSurface(
+    new THREE.MeshStandardMaterial({ color: 0xa67a50, roughness: 0.90 }),
+    { kind: 'wood', strength: .38, axis: 'x' },
+  )
+  const fascia = new THREE.Mesh(
+    new RoundedBoxGeometry(7.0, 0.068, 0.42, 2, 0.018),
+    fasciaMat,
+  )
+  fascia.name = 'furin-eave-fascia'
+  fascia.position.set(0, 2.548, -0.13)
+  world.add(fascia)
+
+  const rafterMat = applyCraftSurface(
+    new THREE.MeshStandardMaterial({ color: 0x9c7149, roughness: 0.88 }),
+    { kind: 'wood', strength: .42, axis: 'z' },
+  )
+  for (const [i, x] of [-2.9, -1.55, 1.55, 2.9].entries()) {
+    const rafter = new THREE.Mesh(
+      new RoundedBoxGeometry(0.11, 0.088, 0.56, 2, 0.018),
+      rafterMat,
+    )
+    rafter.name = `furin-eave-rafter-${i}`
+    rafter.position.set(x, 2.51, -0.17)
+    world.add(rafter)
+  }
+
+  const bracketMat = applyCraftSurface(
+    new THREE.MeshStandardMaterial({ color: 0x946a44, roughness: 0.88 }),
+    { kind: 'wood', strength: .44, axis: 'y' },
+  )
+  for (const [sideIdx, side] of ([-1, 1] as const).entries()) {
+    const bracket = new THREE.Mesh(
+      new RoundedBoxGeometry(0.12, 0.24, 0.18, 2, 0.022),
+      bracketMat,
+    )
+    bracket.name = sideIdx === 0 ? 'furin-eave-bracket-left' : 'furin-eave-bracket-right'
+    bracket.position.set(side * 1.55, 2.28, -0.15)
+    world.add(bracket)
+
+    const brace = new THREE.Mesh(
+      new RoundedBoxGeometry(0.24, 0.08, 0.15, 2, 0.018),
+      beamMat,
+    )
+    brace.name = sideIdx === 0 ? 'furin-eave-brace-left' : 'furin-eave-brace-right'
+    brace.position.set(side * 1.44, 2.34, -0.14)
+    brace.rotation.z = side * 0.42
+    world.add(brace)
+
+    const endCap = new THREE.Mesh(
+      new RoundedBoxGeometry(0.12, 0.165, 0.34, 2, 0.024),
+      bracketMat,
+    )
+    endCap.name = sideIdx === 0 ? 'furin-eave-end-left' : 'furin-eave-end-right'
+    endCap.position.set(side * 3.42, 2.455, -0.1)
+    world.add(endCap)
+  }
 
   // Pivot at the hanging point; everything below swings with it.
   const pivot = new THREE.Group()

@@ -122,9 +122,9 @@ export function createLongevityLock(ctx: SceneContext): SceneInstance {
     camera.position.copy(target).add(direction); camera.lookAt(target);camera.updateMatrixWorld(true)
     const inverse=camera.quaternion.clone().invert(),tangent=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),p=new THREE.Vector3();let distance=3.4
     const fit=(box:THREE.Box3)=>{for(const x of[box.min.x,box.max.x])for(const y of[box.min.y,box.max.y])for(const z of[box.min.z,box.max.z]){p.set(x,y,z).sub(target).applyQuaternion(inverse);distance=Math.max(distance,p.z+Math.abs(p.x)/(tangent*aspect*.86),p.z+Math.abs(p.y)/(tangent*.86))}}
-    // Frame the case, the stand and the complete carrier at every placement checkpoint;
+    // Frame the presentation mat, case, stand and the complete carrier at every placement checkpoint;
     // the scripted path is straight between them, so its ends bound it.
-    fit(new THREE.Box3().setFromObject(model.box)); fit(new THREE.Box3().setFromObject(model.stand))
+    fit(new THREE.Box3().setFromObject(model.mat)); fit(new THREE.Box3().setFromObject(model.box)); fit(new THREE.Box3().setFromObject(model.stand))
     const home=model.actor.position.clone(),turn=model.actor.quaternion.clone()
     model.actor.quaternion.identity()
     for(const[step,n]of[[0,0],[0,1],[1,1],[2,1]]as const){model.pose(step,n);fit(new THREE.Box3().setFromObject(model.actor))}

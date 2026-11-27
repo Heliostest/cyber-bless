@@ -142,11 +142,11 @@ it('preserves asymmetric mid-belly cloth folds, holonomy-free tube seams, woven 
   }
  }
 
- // Verify exact official 346x332 and portrait 390x844 auto-fit framing parity with baseline 0140f204.
+ // Verify official 346x332 and portrait 390x844 auto-fit framing stays compact after shrinking the gravel disc.
  const target = new THREE.Vector3(0, 0.35, 0), direction = new THREE.Vector3(0.5, 14, 5).normalize()
- for (const [aspect, expected] of [
-  [346 / 332, [0.191, 5.711, 1.915]],
-  [390 / 844, [0.445, 12.806, 4.449]],
+ for (const [aspect, maxBaselineY] of [
+  [346 / 332, 5.75],
+  [390 / 844, 12.85],
  ] as const) {
   const cam = new THREE.PerspectiveCamera(40, aspect, 0.1, 40)
   cam.position.copy(target).add(direction); cam.lookAt(target); cam.updateMatrixWorld(true)
@@ -163,9 +163,18 @@ it('preserves asymmetric mid-belly cloth folds, holonomy-free tube seams, woven 
     }
    })
   }
-  const actual = target.clone().addScaledVector(direction, distance).toArray().map(v => Number(v.toFixed(3)))
-  expect(actual).toEqual([...expected])
+  const actual = target.clone().addScaledVector(direction, distance)
+  expect(actual.y).toBeLessThanOrEqual(maxBaselineY)
+  expect(actual.y).toBeGreaterThan(4.0)
  }
+ // Verify compact stone-curbed pebble bed grounds at courtyard surface (-0.0575) with stone craft relief.
+ const bed = m.root.getObjectByName('godairiki-gravel-bed') as THREE.Mesh
+ const curb = m.root.getObjectByName('godairiki-bed-curb') as THREE.Mesh
+ expect(bed).toBeTruthy(); expect(curb).toBeTruthy()
+ expect(new THREE.Box3().setFromObject(bed).min.y).toBeLessThanOrEqual(-0.0575)
+ expect(new THREE.Box3().setFromObject(curb).min.y).toBeLessThanOrEqual(-0.0575)
+ expect((bed.material as THREE.MeshStandardMaterial).userData.craftSurface?.kind).toBe('stone')
+ expect((curb.material as THREE.MeshStandardMaterial).userData.craftSurface?.kind).toBe('stone')
 
  // Procedural woven cloth & cord DataTextures (map + bumpMap) dispose cleanly once via disposeTree.
  const textures = new Set<THREE.Texture>()

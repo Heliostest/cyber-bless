@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -382,15 +383,61 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group()
   scene.add(world)
 
-  const plinthMat = new THREE.MeshStandardMaterial({ color: 0xcaa580, roughness: 0.95 })
-  const plinth = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.5, 0.3, 40), plinthMat)
-  plinth.position.y = 0.15
+  const plinthMat = new THREE.MeshStandardMaterial({ color: 0xcaa580, roughness: 0.94, vertexColors: true })
+  const plinthBaseY = Math.min(getEnvironmentSurfaceY('yeondeunghoe'), -0.04)
+  /** Subtle deterministic matte tonal shading on the turned display pedestal without asserting an unverified substrate. */
+  const applyPedestalTone = (geom: THREE.BufferGeometry, minY: number, maxY: number) => {
+    const pos = geom.getAttribute('position')
+    const colors = new Float32Array(pos.count * 3)
+    const span = Math.max(1e-4, maxY - minY)
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i)
+      const t = THREE.MathUtils.clamp((y - minY) / span, 0, 1)
+      const angle = Math.atan2(z, x)
+      const band = Math.sin(t * Math.PI * 5) * 0.018 + Math.cos(angle * 3 + t * 4) * 0.010
+      const shade = THREE.MathUtils.clamp(0.94 + t * 0.065 + band, 0.87, 1.04)
+      colors[i * 3] = shade
+      colors[i * 3 + 1] = shade * (0.992 + t * 0.008)
+      colors[i * 3 + 2] = shade * (0.982 + t * 0.018)
+    }
+    geom.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    return geom
+  }
+  const plinthProfile = [
+    new THREE.Vector2(0, plinthBaseY),
+    new THREE.Vector2(0.505, plinthBaseY),
+    new THREE.Vector2(0.525, plinthBaseY + 0.016),
+    new THREE.Vector2(0.520, plinthBaseY + 0.048),
+    new THREE.Vector2(0.482, plinthBaseY + 0.072),
+    new THREE.Vector2(0.422, plinthBaseY + 0.135),
+    new THREE.Vector2(0.415, plinthBaseY + 0.215),
+    new THREE.Vector2(0.445, 0.258),
+    new THREE.Vector2(0.442, 0.288),
+    new THREE.Vector2(0.422, 0.304),
+    new THREE.Vector2(0.398, 0.308),
+    new THREE.Vector2(0, 0.308),
+  ]
+  const plinth = new THREE.Mesh(applyPedestalTone(new THREE.LatheGeometry(plinthProfile, 48), plinthBaseY, 0.308), plinthMat)
+  plinth.name = 'lantern-pedestal'
   world.add(plinth)
-  // Rounded lip: a lit cel band along the top edge, like a bevel.
-  const plinthLip = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.022, 8, 48), plinthMat)
-  plinthLip.rotation.x = Math.PI / 2
-  plinthLip.position.y = 0.3
-  world.add(plinthLip)
+  // Turned lotus-cradle stem and recessed resting dish supporting the lantern base before it rises.
+  const cradleProfile = [
+    new THREE.Vector2(0, 0.304),
+    new THREE.Vector2(0.132, 0.304),
+    new THREE.Vector2(0.118, 0.320),
+    new THREE.Vector2(0.076, 0.342),
+    new THREE.Vector2(0.054, 0.376),
+    new THREE.Vector2(0.068, 0.410),
+    new THREE.Vector2(0.118, 0.432),
+    new THREE.Vector2(0.125, 0.444),
+    new THREE.Vector2(0.112, 0.448),
+    new THREE.Vector2(0.095, 0.434),
+    new THREE.Vector2(0.056, 0.422),
+    new THREE.Vector2(0, 0.420),
+  ]
+  const cradle = new THREE.Mesh(applyPedestalTone(new THREE.LatheGeometry(cradleProfile, 36), 0.304, 0.448), plinthMat)
+  cradle.name = 'lantern-cradle'
+  world.add(cradle)
 
   const petalEmissiveMap = createHanjiEmissiveMap(128)
   const outerPetalGeo = createLotusPetalGeometry(0.165, 0.255, 0.036, 0.034, 0.95)

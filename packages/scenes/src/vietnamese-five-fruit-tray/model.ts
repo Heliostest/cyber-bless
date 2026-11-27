@@ -1,19 +1,29 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { addObjectCradle, addSteppedPedestal } from '../cozy-furniture'
 
 // Original spread-out preparation layout, not a replica of a stacked altar tray.
 export function createVietnameseFiveFruitTrayModel(){
  const root=new THREE.Group();root.name='vietnamese-five-fruit-tray-root'
  const subject=new THREE.Group();subject.name='vietnamese-five-fruit-tray-subject';root.add(subject)
  const material=(color:number,roughness=.65)=>new THREE.MeshStandardMaterial({color,roughness})
- const orangeMat=material(0xe69331,.55),appleMat=material(0x83aa48,.48),pearMat=material(0xd4b75f,.68),pomeloMat=material(0xb6bf4e,.68),bananaMat=material(0x7fa24c,.72),leafMat=material(0x477642,.85),stemMat=material(0x6f5430,.88),red=material(0x974936,.55),gold=material(0xc6a35b,.4),stone=material(0xc0bca5,.96),ceramic=material(0x77928a,.78)
+ const orangeMat=material(0xe69331,.55),appleMat=material(0x83aa48,.48),pearMat=material(0xd4b75f,.68),pomeloMat=material(0xb6bf4e,.68),bananaMat=material(0x7fa24c,.72),leafMat=material(0x477642,.85),stemMat=material(0x6f5430,.88),red=material(0x974936,.55),gold=material(0xc6a35b,.4)
  applyCraftSurface(red, { kind: 'wood', strength: .35 })
- applyCraftSurface(ceramic, { kind: 'ceramic', strength: .45 })
- applyCraftSurface(stone, { kind: 'stone', strength: .4 })
 
  const mesh=(parent:THREE.Object3D,name:string,g:THREE.BufferGeometry,mat:THREE.Material,x=0,y=0,z=0)=>{const m=new THREE.Mesh(g,mat);m.name=name;m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
- mesh(subject,'fruit-stone-base',new THREE.BoxGeometry(4.6,.12,2.6),stone,0,-.06,0)
- mesh(subject,'fruit-preparation-board',new THREE.BoxGeometry(.72,.05,2.1),ceramic,-1.5,.025,0)
+ // Compact turned stone pedestal beneath the lacquer tray and a footed lipped wooden prep tray with ceramic bed.
+ addSteppedPedestal(subject,{
+  name:'fruit-tray-pedestal',topName:'fruit-tray-pedestal-top',shape:'round',kind:'stone',
+  center:[.65,0],radius:.72,groundY:-.10,surfaceY:0,color:0xc0bca5,trimColor:0xa9a58f,
+  roughness:.94,surfaceStrength:.42,tiers:2,bevel:.014,
+ })
+ const prepTray=addObjectCradle(subject,{
+  name:'fruit-prep-tray',topName:'fruit-preparation-board',style:'tray',footed:true,
+  kind:'wood',finish:'chestnut',width:.84,depth:2.18,center:[-1.50,0],groundY:-.10,surfaceY:.05,
+  lipHeight:.020,lipThickness:.032,insetColor:0x77928a,insetKind:'ceramic',axis:'z',
+ })
+ const seenNames=new Map<string,number>()
+ prepTray.root.traverse(o=>{if(!o.name)return;const n=seenNames.get(o.name)??0;seenNames.set(o.name,n+1);if(n>0)o.name=`${o.name}-${n}`})
  const trayProfile=[[0,0],[.5,0],[.72,.04],[1.10,.065],[1.18,.12],[1.15,.15],[1.10,.10],[0,.10]].map(([r,y])=>new THREE.Vector2(r,y))
  mesh(subject,'fruit-red-tray',new THREE.LatheGeometry(trayProfile,64),red,.65,0,0)
  const rim=mesh(subject,'fruit-tray-rim',new THREE.TorusGeometry(1.165,.012,8,80),gold,.65,.125,0);rim.rotation.x=Math.PI/2

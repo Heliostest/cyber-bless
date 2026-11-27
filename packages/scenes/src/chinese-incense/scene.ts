@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -25,8 +26,8 @@ const COPY = {
   done: '细香已安放，留一刻静赏，向敬香祈安的传统致意。',
 } as const
 const LID_HOME = new THREE.Vector3(.12, 1.44, -.22)
-const LID_REST = new THREE.Vector3(1.035, .635, .36)
-const STICK_HOME = new THREE.Vector3(-1.00, .61, .22)
+const LID_REST = new THREE.Vector3(1.035, .61, .36)
+const STICK_HOME = new THREE.Vector3(-1.00, .595, .22)
 const STICK_REST = new THREE.Vector3(.12, 1.385, -.22)
 type Checkpoint = 0 | 1 | 2 | 3
 type Placement = { step: 0 | 1; time: number; from: THREE.Vector3; paperFrom: THREE.Vector3 }
@@ -723,17 +724,19 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
     mesh.userData.toonSurface = { outline: false }; return mesh
   }
 
+  const floorY = getEnvironmentSurfaceY('chinese-incense')
   const table = new THREE.Group(); table.name = 'incense-table'; world.add(table)
   add(new RoundedBoxGeometry(3.25, .14, 1.8, 4, .085), woodLight, [0, .48, 0], table)
+  const legH = .44 - floorY
   for (const x of [-1.22, 1.22]) for (const z of [-.58, .58]) {
-    const foot = add(new RoundedBoxGeometry(.18, .44, .18, 3, .045), (x < 0) === (z > 0) ? woodLegA : woodLegB, [x, .22, z], table)
+    const foot = add(new RoundedBoxGeometry(.18, legH, .18, 3, .045), (x < 0) === (z > 0) ? woodLegA : woodLegB, [x, floorY + legH / 2, z], table)
     foot.rotation.z = x > 0 ? -.025 : .025
   }
   for (const z of [-.64, .64]) add(new RoundedBoxGeometry(2.64, .16, .08, 3, .025), wood, [0, .38, z], table)
   for (const z of [-.45, -.06, .33]) {
     tube([new THREE.Vector3(-1.40, .553, z), new THREE.Vector3(-.6, .553, z + .023), new THREE.Vector3(.25, .553, z - .012), new THREE.Vector3(1.40, .553, z + .008)], .004, woodGrainInlay, table)
   }
-  const shadow = add(new THREE.PlaneGeometry(3.9, 2.5), new THREE.ShadowMaterial({ opacity: .12 }), [0, .003, 0])
+  const shadow = add(new THREE.PlaneGeometry(3.9, 2.5), new THREE.ShadowMaterial({ opacity: .12 }), [0, floorY + .001, 0])
   shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   const mat = add(new RoundedBoxGeometry(1.51, .025, 1.34, 4, .13), matFabric, [.12, .565, -.22], world, 'incense-woven-mat')
   mat.userData.toonSurface = { outline: false }
@@ -773,15 +776,15 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
     const angle = i / 8 * Math.PI * 2, dot = pebble([Math.cos(angle) * .342, .105, Math.sin(angle) * .342], [.018, .008, .026], jadeDark, lid)
     dot.rotation.y = -angle; dot.userData.toonSurface = { outline: false }
   }
-  const rest = add(new THREE.CylinderGeometry(.58, .54, .06, 56), creamCeramic, [1.035, .605, .36], world, 'incense-lid-rest')
-  ring(.566, .012, [1.035, .63, .36], clay)
+  const rest = add(new THREE.CylinderGeometry(.58, .54, .06, 56), creamCeramic, [1.035, .58, .36], world, 'incense-lid-rest')
+  ring(.566, .012, [1.035, .605, .36], clay)
 
   const paper = new THREE.Group(); paper.name = 'incense-paper-holder'; world.add(paper)
   // Hollow folded paper sleeve cradling the fine incense stick; front lap seam, cream top cuff,
   // and minimalist sprig are printed directly into handmade terracotta paper fiber tooth.
   const grip = add(createIncenseSleeveGeometry(), paperMat, [0, .315, .035], paper, 'incense-paper-grip')
   grip.userData.toonSurface = { shading: 'smooth' }
-  const tray = add(new RoundedBoxGeometry(.70, .045, .56, 4, .10), woodTray, [-1, .5825, .22], world, 'incense-stick-tray')
+  const tray = add(new RoundedBoxGeometry(.70, .045, .56, 4, .10), woodTray, [-1, .5725, .22], world, 'incense-stick-tray')
   tray.userData.toonSurface = { outline: false }
   const stick = new THREE.Group(); stick.name = 'incense-stick'; world.add(stick)
   add(new THREE.CylinderGeometry(.018, .018, .25, 12), bamboo, [0, .125, 0], stick, 'incense-stick-base')
@@ -844,7 +847,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
       if (ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) {
         carried().position.copy(dragPoint).add(offset)
         carried().position.x = THREE.MathUtils.clamp(carried().position.x, -1.25, 1.25)
-        carried().position.y = THREE.MathUtils.clamp(carried().position.y, .61, 1.65)
+        carried().position.y = THREE.MathUtils.clamp(carried().position.y, .595, 1.65)
         if (checkpoint === 1) paper.position.copy(stick.position)
         matrices(); dropFeedback.setReady(placementReady(x, y))
       }
@@ -854,7 +857,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
       if (dragging && checkpoint < 2 && ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) {
         carried().position.copy(dragPoint).add(offset)
         carried().position.x = THREE.MathUtils.clamp(carried().position.x, -1.25, 1.25)
-        carried().position.y = THREE.MathUtils.clamp(carried().position.y, .61, 1.65)
+        carried().position.y = THREE.MathUtils.clamp(carried().position.y, .595, 1.65)
         if (checkpoint === 1) paper.position.copy(stick.position)
       }
       maxTravel = Math.max(maxTravel, Math.hypot(x - down.x, y - down.y)); matrices()

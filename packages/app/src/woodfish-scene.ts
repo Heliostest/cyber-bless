@@ -6,6 +6,7 @@ import type { WoodfishContext, WoodfishController } from "./scene-engines";
 import { animate, createTimeline } from "animejs";
 import { swingPose } from "./woodfish-motion";
 import { parseWoodfishModel } from "./woodfish-model";
+import { applyCraftSurface } from "@wbr/scene-runtime/craft-surfaces";
 import { createDebugRenderStyle } from "@wbr/scene-runtime/debug-render-style";
 import { debugStyles } from "@wbr/scene-runtime/debug-styles";
 import { addInteractionCue } from "@wbr/scenes";
@@ -243,7 +244,7 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
     materials.push(floorMaterial);
     const floor = mesh(new THREE.PlaneGeometry(200, 200), floorMaterial, scene);
     floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -0.94;
+    floor.position.y = -0.945;
     floor.castShadow = false;
     // A soft, local contact shadow, independent of directional shadow resolution.
     const shadowCanvas = document.createElement("canvas");
@@ -266,8 +267,122 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
     materials.push(contactMaterial);
     const contact = mesh(new THREE.PlaneGeometry(3.0, 1.95), contactMaterial, scene);
     contact.rotation.x = -Math.PI / 2;
-    contact.position.set(-0.12, -0.925, 0);
+    contact.position.set(-0.12, -0.944, 0);
     contact.castShadow = false;
+    // Sculpted quilted fabric ring cushion + low chamfered wooden coaster rim (product display staging,
+    // not a liturgical rule) resting flush on the veranda deck (-0.945) and cradling the woodfish belly (-0.91)
+    // without altering WoodfishBody world coordinates, strike raycasts, or swingPose.
+    const baseCushion = new THREE.Group();
+    baseCushion.name = "woodfish-base-cushion";
+    baseCushion.position.set(-0.12, -0.945, 0);
+    model.add(baseCushion);
+    const cushionScaleZ = 0.78;
+    const coasterProfile = [
+        new THREE.Vector2(0, 0),
+        new THREE.Vector2(1.205, 0),
+        new THREE.Vector2(1.232, 0.012),
+        new THREE.Vector2(1.240, 0.030),
+        new THREE.Vector2(1.230, 0.049),
+        new THREE.Vector2(1.208, 0.058),
+        new THREE.Vector2(1.148, 0.058),
+        new THREE.Vector2(1.124, 0.044),
+        new THREE.Vector2(1.105, 0.020),
+        new THREE.Vector2(0, 0.020),
+    ];
+    const coasterMaterial = new THREE.MeshStandardMaterial({
+        color: 0x8b603e,
+        roughness: 0.78,
+        metalness: 0,
+    });
+    applyCraftSurface(coasterMaterial, { kind: "wood", axis: "x", scale: 0.65, strength: 0.36 });
+    materials.push(coasterMaterial);
+    const coasterRim = mesh(new THREE.LatheGeometry(coasterProfile, 64), coasterMaterial, baseCushion);
+    coasterRim.name = "woodfish-coaster-rim";
+    coasterRim.scale.set(1, 1, cushionScaleZ);
+    const cushionProfile: readonly [number, number][] = [
+        [0, 0.020],
+        [1.105, 0.020],
+        [1.138, 0.042],
+        [1.155, 0.068],
+        [1.148, 0.102],
+        [1.115, 0.132],
+        [1.055, 0.144],
+        [0.975, 0.132],
+        [0.875, 0.118],
+        [0.775, 0.114],
+        [0.680, 0.102],
+        [0.595, 0.082],
+        [0.515, 0.060],
+        [0.440, 0.044],
+        [0.375, 0.035],
+        [0, 0.035],
+    ];
+    const cushionGeo = new THREE.LatheGeometry(
+        cushionProfile.map(([r, y]) => new THREE.Vector2(r, y)),
+        72,
+    );
+    const cPos = cushionGeo.getAttribute("position") as THREE.BufferAttribute;
+    const cColors = new Float32Array(cPos.count * 3);
+    const quiltLobes = 12;
+    for (let i = 0; i < cPos.count; i++) {
+        const x = cPos.getX(i);
+        const y = cPos.getY(i);
+        const z = cPos.getZ(i);
+        const r = Math.hypot(x, z);
+        const theta = Math.atan2(z, x);
+        // Sculpt soft 12-lobe quilted bolster pillows around the outer ring while keeping the belly seat flat at y=0.035.
+        const bolsterMask = THREE.MathUtils.smoothstep(r, 0.56, 0.88)
+            * (1 - THREE.MathUtils.smoothstep(r, 1.11, 1.16))
+            * THREE.MathUtils.smoothstep(y, 0.050, 0.095);
+        const wave = Math.cos(quiltLobes * theta);
+        const pillow = 0.5 + 0.5 * wave;
+        const puffY = bolsterMask * (0.011 * (pillow - 0.30));
+        const puffR = 1 + bolsterMask * 0.020 * (pillow - 0.30);
+        cPos.setXYZ(i, x * puffR, y + puffY, z * puffR);
+        // Subtle warm seam shading in the quilted radial valleys and soft shadow inside the belly cradle.
+        const crease = Math.pow(1 - pillow, 1.6);
+        const creaseShade = 1 - bolsterMask * 0.15 * crease;
+        const wellShade = 1 - (1 - THREE.MathUtils.smoothstep(r, 0.38, 0.68)) * 0.10;
+        const s = creaseShade * wellShade;
+        cColors[i * 3] = s;
+        cColors[i * 3 + 1] = s * 0.985;
+        cColors[i * 3 + 2] = s * 0.97;
+    }
+    cushionGeo.setAttribute("color", new THREE.BufferAttribute(cColors, 3));
+    cushionGeo.computeVertexNormals();
+    const cushionMaterial = new THREE.MeshStandardMaterial({
+        color: 0xb26049,
+        roughness: 0.92,
+        metalness: 0,
+        vertexColors: true,
+    });
+    applyCraftSurface(cushionMaterial, { kind: "fabric", scale: 1.45, strength: 0.34 });
+    materials.push(cushionMaterial);
+    const cushionBody = mesh(cushionGeo, cushionMaterial, baseCushion);
+    cushionBody.name = "woodfish-base-cushion-body";
+    cushionBody.scale.set(1, 1, cushionScaleZ);
+    cushionBody.userData.toonSurface = { shading: "smooth", roughness: 0.92 };
+    const pipingMaterial = new THREE.MeshStandardMaterial({
+        color: 0xd6b37e,
+        roughness: 0.84,
+        metalness: 0,
+    });
+    applyCraftSurface(pipingMaterial, { kind: "cord", scale: 1.8, strength: 0.26 });
+    materials.push(pipingMaterial);
+    const cushionPiping = mesh(new THREE.TorusGeometry(1.148, 0.013, 10, 72), pipingMaterial, baseCushion);
+    cushionPiping.name = "woodfish-base-cushion-piping";
+    cushionPiping.rotation.x = Math.PI / 2;
+    cushionPiping.position.y = 0.072;
+    cushionPiping.scale.set(1, cushionScaleZ, 1);
+    cushionPiping.castShadow = false;
+    cushionPiping.userData.toonSurface = { outline: false, shading: "smooth" };
+    const innerPiping = mesh(new THREE.TorusGeometry(0.555, 0.0075, 8, 48), pipingMaterial, baseCushion);
+    innerPiping.name = "woodfish-base-cushion-inner-piping";
+    innerPiping.rotation.x = Math.PI / 2;
+    innerPiping.position.y = 0.071;
+    innerPiping.scale.set(1, cushionScaleZ, 1);
+    innerPiping.castShadow = false;
+    innerPiping.userData.toonSurface = { outline: false, shading: "smooth" };
     const sceneId = options.sceneId ?? "woodfish";
     const styleScope = renderer.domElement.closest?.(".app-shell") ?? undefined;
     const styleRenderer = createDebugRenderStyle(renderer, scene, camera, {
@@ -693,7 +808,7 @@ export function createWoodfishScene(host: HTMLDivElement, options: Options) {
             camera.position.set(Math.sin(angle) * 6.5, next === "top" ? 6.5 : next === "bottom" ? -6.5 : 2.3, next === "top" || next === "bottom" ? 0.01 : Math.cos(angle) * 6.5);
             camera.lookAt(target);
             mallet.visible = view === "front";
-            floor.visible = contact.visible = view !== "bottom";
+            floor.visible = contact.visible = baseCushion.visible = view !== "bottom";
             requestRender(true);
         },
         dispose() {

@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
@@ -7,6 +8,7 @@ import { wrapCanvasText } from '../canvas-text'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
+import { addObjectCradle } from '../cozy-furniture'
 import { createPathSweep } from '../path-sweep'
 import { createTouchTarget } from '../touch-target'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -564,6 +566,27 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group()
   world.name = 'mizuhiki-craft'
   scene.add(world)
+  // Crafted chamfered birch wooden presentation tray with subtle lipped rim and warm linen inset
+  // grounding the folded washi packet (yBot = 0.032) cleanly onto the veranda deck (-0.035).
+  addObjectCradle(world, {
+    name: 'mizuhiki-stand',
+    width: 1.96,
+    depth: 2.52,
+    groundY: getEnvironmentSurfaceY('mizuhiki'),
+    surfaceY: 0.032,
+    style: 'tray',
+    lip: true,
+    lipHeight: 0.024,
+    lipThickness: 0.042,
+    kind: 'wood',
+    finish: 'birch',
+    color: 0xd4ba92,
+    accentColor: 0xb9986d,
+    insetColor: 0xe6dcc8,
+    insetKind: 'fabric',
+    footed: true,
+    bevel: 0.010,
+  })
   const envelope = new THREE.Group()
   envelope.name = 'mizuhiki-envelope'
   world.add(envelope)

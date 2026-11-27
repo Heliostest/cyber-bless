@@ -60,7 +60,7 @@ const LOOSE_STEMS = 0.3
 const WREATH_R = 0.3
 const HOLD_POS = new THREE.Vector3(0, 0.95, 1.1)
 const WATER_POS = new THREE.Vector3(0, 0, 0.35)
-const RIVER_W = 3.4
+const RIVER_W = 5.4
 const RIVER_L = 28
 const RIVER_Z = -10
 
@@ -170,7 +170,7 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
   scene.add(world)
 
   // Keep the authored river and floating wreath on their shared slow swell.
-  const waterGeo = new THREE.PlaneGeometry(RIVER_W, RIVER_L, 18, 56)
+  const waterGeo = new THREE.PlaneGeometry(RIVER_W, RIVER_L, 28, 56)
   waterGeo.rotateX(-Math.PI / 2)
   waterGeo.translate(0, 0, RIVER_Z)
   const waterPos = waterGeo.attributes.position
@@ -192,7 +192,7 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
       const reed = new THREE.Mesh(reedGeo, reedMat)
       const h = 0.7 + ((i * 7 + j * 3) % 5) * 0.08
       reed.scale.y = h / 0.7
-      reed.position.set(side * (RIVER_W / 2 - 0.15 + j * 0.07), (0.35 * h) / 0.7, z + j * 0.09)
+      reed.position.set(side * (2.52 + j * 0.07), (0.35 * h) / 0.7 - 0.02, z + j * 0.09)
       reed.rotation.z = side * (0.08 + j * 0.05)
       world.add(reed)
     }
@@ -200,13 +200,13 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
 
   // Distant bonfire on the far left bank: mood light only, no play mechanic.
   const fire = new THREE.Group()
-  fire.position.set(-2.1, 0, -7.5)
+  fire.position.set(-3.22, 0.012, -7.5)
   world.add(fire)
   const mound = new THREE.Mesh(
-    new THREE.SphereGeometry(0.9, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.SphereGeometry(0.72, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2),
     new THREE.MeshStandardMaterial({ color: 0x9aa865, roughness: 0.95 }),
   )
-  mound.scale.y = 0.25
+  mound.scale.y = 0.32
   fire.add(mound)
   const logMat = new THREE.MeshStandardMaterial({ color: 0x6b4630, roughness: 0.95 })
  applyCraftSurface(logMat, { kind: 'wood', strength: .35, axis: 'y' })

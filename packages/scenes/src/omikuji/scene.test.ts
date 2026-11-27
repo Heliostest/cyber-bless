@@ -370,6 +370,11 @@ describe('omikuji original reflection practice', () => {
     }
     expect(((object('omikuji-stand-top') as THREE.Mesh).material as THREE.MeshStandardMaterial).map).toBeInstanceOf(THREE.DataTexture)
     expect(((object('omikuji-box-body') as THREE.Mesh).material as THREE.MeshStandardMaterial).map).toBeInstanceOf(THREE.DataTexture)
+    const slot = new THREE.Box3().setFromObject(object('omikuji-envelope-slot-cradle'))
+    const env = new THREE.Box3().setFromObject(object('omikuji-envelope-pocket'))
+    expect(slot.max.y).toBeGreaterThan(env.min.y)
+    expect(slot.min.z).toBeLessThan(env.min.z)
+    expect(slot.max.z).toBeGreaterThan(env.max.z)
   })
 
   it('frames the box, stick, slip and envelope large enough to handle on a phone stage', () => {

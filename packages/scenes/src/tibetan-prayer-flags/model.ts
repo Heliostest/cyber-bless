@@ -1,5 +1,6 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import {
   createRapierSoftBodyHost,
@@ -114,25 +115,43 @@ export function createPrayerFlagsModel(options: PrayerFlagsModelOptions = {}) {
   const make = <M extends THREE.Material>(name: string, g: THREE.BufferGeometry, m: M) => {
     const o = new THREE.Mesh(g, m); o.name = 'prayer-flags-' + name; o.castShadow = o.receiveShadow = true; root.add(o); return o
   }
-  const wood = matte(0xb48756), stone = matte(0xd6c9ab), cotton = matte(0xf8efdd)
-  applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+  const postWood = matte(0xb48756), armWood = matte(0xb48756), pegWood = matte(0xa87c4d), stone = matte(0xd6c9ab), cotton = matte(0xf8efdd)
+  applyCraftSurface(postWood, { kind: 'wood', strength: .4, axis: 'y' })
+  applyCraftSurface(armWood, { kind: 'wood', strength: .4, axis: 'x' })
+  applyCraftSurface(pegWood, { kind: 'wood', strength: .38, axis: 'z' })
   applyCraftSurface(cotton, { kind: 'cord', strength: .3 })
   applyCraftSurface(stone, { kind: 'stone', strength: .4 })
 
-  const box = (name: string, size: number[], p: number[], m: THREE.Material) => {
-    const o = make(name, new THREE.BoxGeometry(...size as [number, number, number]), m)
-    o.position.set(...p as [number, number, number]); return o
+  const roundedBox = (name: string, size: [number, number, number], p: [number, number, number], m: THREE.Material, radius = .016) => {
+    const r = Math.min(radius, size[0] / 3, size[1] / 3, size[2] / 3)
+    const o = make(name, new RoundedBoxGeometry(size[0], size[1], size[2], 2, r), m)
+    o.position.set(...p); return o
   }
-  for (const x of [-1.15, 1.15]) { box('post-' + x, [.10, 2.05, .10], [x, 1.025, 0], wood); box('foot-' + x, [.25, .12, .25], [x, .06, 0], stone) }
-  const arm = box('temporary-arm', [.60, .055, .06], [.90, 1.50, 0], wood)
+  for (const x of [-1.15, 1.15]) {
+    roundedBox('post-' + x, [.10, 2.05, .10], [x, 1.025, 0], postWood, .018)
+    roundedBox('post-cap-' + x, [.124, .034, .124], [x, 2.055, 0], postWood, .011)
+    roundedBox('foot-' + x, [.28, .12, .28], [x, .06, 0], stone, .022)
+    roundedBox('foot-collar-' + x, [.19, .038, .19], [x, .128, 0], stone, .012)
+  }
+  const arm = roundedBox('temporary-arm', [.60, .055, .06], [.90, 1.50, 0], armWood, .016)
+  const armTip = make('temporary-arm-tip', new THREE.CapsuleGeometry(.032, .022, 6, 14), armWood)
+  armTip.position.set(.65, 1.50, 0)
   const pegPositions = [[-1.15, 1.50], [-1.15, 1.85], [.65, 1.50], [1.15, 1.50], [1.15, 1.85]]
   const pegs = pegPositions.map(([x, y], i) => {
-    const o = make('peg-' + i, new THREE.CylinderGeometry(.033, .033, .20, 64), wood)
+    const o = make('peg-' + i, new THREE.CylinderGeometry(.033, .033, .20, 64), pegWood)
     o.rotation.x = Math.PI / 2; o.position.set(x!, y!, .06); return o
   })
   const temporarySupport = new THREE.Group(); temporarySupport.name = 'prayer-flags-temporary-support'; temporarySupport.position.set(1.15, 1.50, 0); root.add(temporarySupport)
-  arm.position.sub(temporarySupport.position); pegs[2]!.position.sub(temporarySupport.position); temporarySupport.add(arm, pegs[2]!)
-  const hinge = make('hinge', new THREE.CylinderGeometry(.045, .045, .12, 24), wood); hinge.position.copy(temporarySupport.position)
+  arm.position.sub(temporarySupport.position); armTip.position.sub(temporarySupport.position); pegs[2]!.position.sub(temporarySupport.position); temporarySupport.add(arm, armTip, pegs[2]!)
+  const hingeGeo = new THREE.LatheGeometry([
+    new THREE.Vector2(0, -.066),
+    new THREE.Vector2(.036, -.066),
+    new THREE.Vector2(.048, -.054),
+    new THREE.Vector2(.048, .054),
+    new THREE.Vector2(.036, .066),
+    new THREE.Vector2(0, .066),
+  ], 24)
+  const hinge = make('hinge', hingeGeo, pegWood); hinge.position.copy(temporarySupport.position)
   const loops = [0, 1].map(i => make('loop-' + i, new THREE.TorusGeometry(.060, .012, 8, 64), cotton))
 
   const ropeGeometry = new THREE.BufferGeometry(), ropeIndices: number[] = []

@@ -1,6 +1,7 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 
 const DIAMOND_HALF = 0.48
 const SHEET_T = 0.0028
@@ -287,26 +288,27 @@ export function createChineseFuPaperModel() {
    highlightGuard:.25,
   },
  })
- const wood=mat(0x99734e),frame=mat(0x78563c),brass=mat(0xb19965)
+ const wood=mat(0x99734e),woodX=mat(0x99734e),frame=mat(0x78563c),frameX=mat(0x78563c),brass=mat(0xb19965)
  ;[wood,frame].forEach(material=>applyCraftSurface(material,{kind:'wood',strength:.4,axis:'y'}))
+ ;[woodX,frameX].forEach(material=>applyCraftSurface(material,{kind:'wood',strength:.4,axis:'x'}))
  applyCraftSurface(brass,{kind:'metal',strength:.45})
  let serial=0
  const mesh=(g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D,name?:string)=>{const o=new THREE.Mesh(g,m);o.name=name??`fu-detail-${serial++}`;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
- const box=(name:string,size:[number,number,number],pos:[number,number,number],m:THREE.Material,parent:THREE.Object3D=subject)=>{const o=mesh(new THREE.BoxGeometry(...size),m,parent,name);o.position.set(...pos);return o}
+ const box=(name:string,size:[number,number,number],pos:[number,number,number],m:THREE.Material,parent:THREE.Object3D=subject,bevel=.014)=>{const r=Math.min(bevel,size[0]/3,size[1]/3,size[2]/3);const o=mesh(new RoundedBoxGeometry(size[0],size[1],size[2],2,r),m,parent,name);o.position.set(...pos);return o}
  const door=new THREE.Group();door.name='fu-door-leaf';subject.add(door)
  // Adjacent planks have the same front plane: the completed paper is flush across them.
- for(let i=0;i<5;i++)box(`fu-door-plank-${i}`,[1.28/5-.003,2.10,.16],[-.22+(i+.5)*1.28/5,1.05,-.11],applyCraftSurface(mat([0xa48057,0x9f7951,0xa88259,0x9c764f,0xa27d55][i]!),{kind:'wood',strength:.4,axis:'y'}),door)
- box('fu-frame-left',[.10,2.16,.24],[-.28,1.08,-.05],frame)
- box('fu-frame-right',[.10,2.16,.24],[1.12,1.08,-.05],frame)
- box('fu-frame-top',[1.60,.13,.24],[.42,2.15,-.04],frame)
- box('fu-threshold',[1.60,.08,.30],[.42,-.04,-.03],wood)
+ for(let i=0;i<5;i++)box(`fu-door-plank-${i}`,[1.28/5-.003,2.10,.16],[-.22+(i+.5)*1.28/5,1.05,-.11],applyCraftSurface(mat([0xa48057,0x9f7951,0xa88259,0x9c764f,0xa27d55][i]!),{kind:'wood',strength:.4,axis:'y'}),door,.009)
+ box('fu-frame-left',[.10,2.16,.24],[-.28,1.08,-.05],frame,subject,.016)
+ box('fu-frame-right',[.10,2.16,.24],[1.12,1.08,-.05],frame,subject,.016)
+ box('fu-frame-top',[1.60,.13,.24],[.42,2.15,-.04],frameX,subject,.016)
+ box('fu-threshold',[1.60,.055,.30],[.42,-.0275,-.03],woodX,subject,.013)
  const handle=mesh(new THREE.TorusGeometry(.06,.012,8,32),brass,subject,'fu-door-handle');handle.position.set(.87,.45,.018)
- box('fu-handle-mount',[.035,.055,.033],[.87,.51,-.012],brass)
- // A low display holder supports the diamond tip. Front/back rails leave a real slot.
- box('fu-holder-base',[.38,.115,.29],[-.88,-.0225,.55],wood)
- box('fu-holder-back',[.26,.15,.015],[-.88,.11,.535],wood)
- box('fu-holder-shelf',[.29,.02,.085],[-.88,.15,.565],frame)
- box('fu-holder-front',[.26,.11,.015],[-.88,.215,.58],wood)
+ box('fu-handle-mount',[.035,.055,.033],[.87,.51,-.012],brass,subject,.006)
+ // A low chamfered display holder supports the diamond tip. Front/back rails leave a real slot.
+ box('fu-holder-base',[.38,.09,.29],[-.88,-.01,.55],woodX,subject,.014)
+ box('fu-holder-back',[.26,.15,.015],[-.88,.11,.535],woodX,subject,.004)
+ box('fu-holder-shelf',[.29,.02,.085],[-.88,.15,.565],frameX,subject,.005)
+ box('fu-holder-front',[.26,.11,.015],[-.88,.215,.58],woodX,subject,.004)
  mesh(createFuSheetGeometry(),red,paper,'fu-red-sheet')
  const glyph=new THREE.Group();glyph.name='fu-glyph';paper.add(glyph)
  // Original 15-stroke upright 福 (礻 + 一 / 口 / 田), rendered as conforming matte sumi brush ribbons.
@@ -332,7 +334,7 @@ export function createChineseFuPaperModel() {
  brush('fu-field-middle-horizontal',[[.012,-.142],[.096,-.140],[.180,-.142]],[.014,.013,.015])
  brush('fu-field-middle-vertical',[[.096,-.036],[.096,-.132],[.096,-.226]],[.016,.014,.015])
  // Two restrained stone edges ground this small entry vignette, without a temple reconstruction.
- box('fu-entry-slab',[2.75,.06,1.35],[-.1,-.11,.19],applyCraftSurface(mat(0xc8bba3),{kind:'stone',strength:.45}),root)
+ box('fu-entry-slab',[2.75,.05,1.35],[-.1,-.08,.19],applyCraftSurface(mat(0xc8bba3),{kind:'stone',strength:.45}),root)
  const positions:[number,number,number][]=[[-.88,.64,.55],[-.88,1.06,.55],[.42,1.26,.55],[.42,1.38,-.029]]
  const pose=(step:number,n:number)=>{
   const t=Number.isFinite(n)?THREE.MathUtils.clamp(n,0,1):0,index=THREE.MathUtils.clamp(Math.floor(step),0,3)

@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -11,7 +12,7 @@ import { createPosePlacement } from '../pose-placement'
 import { createTouchTarget } from '../touch-target'
 import { createDropFeedback } from '../drop-feedback'
 import { placementHit } from '../placement-hit'
-import { addCraftTable } from '../cozy-furniture'
+import { addCraftTable, addObjectCradle } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -57,7 +58,9 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
   const red = createCraftMaterial({ color: 0xbd5142, roughness: .56 }, { kind: 'ceramic' })
   const cream = material(0xf0dfae), green = material(0x739481)
   const clay = createCraftMaterial({ color: 0xad7359, roughness: .8 }, { kind: 'ceramic', strength: .8 })
-  const oak = material(0xc4aa85), dark = material(0x8f7153), gold = material(0xcea060), linen = material(0xabc0ad)
+  const oak = material(0xc4aa85), dark = material(0x8f7153), gold = material(0xcea060)
+  const linen = createCraftMaterial({ color: 0xabc0ad, roughness: .88 }, { kind: 'fabric', strength: .28 })
+  const plinthTopMat = createCraftMaterial({ color: 0xf0dfae, roughness: .62 }, { kind: 'ceramic', strength: .24 })
   const add = (name: string, geometry: THREE.BufferGeometry, mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
@@ -68,14 +71,30 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
   const tube = (name: string, points: [number, number, number][], width: number, mat: THREE.Material, parent: THREE.Object3D) =>
     add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 32, width, 10, false), mat, [0, 0, 0], parent)
   addCraftTable(world, { name: 'rooster-table', topName: 'rooster-table-top', width: 3.65, depth: 1.88, surfaceY: .74, thickness: .12, center: [0,0], support: 'arched', finish: 'honey' })
-  const shadow = add('rooster-ground-shadow', new THREE.PlaneGeometry(4.15, 2.65), new THREE.ShadowMaterial({ opacity: .13 }), [0, .003, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
+  const shadow = add('rooster-ground-shadow', new THREE.PlaneGeometry(4.15, 2.65), new THREE.ShadowMaterial({ opacity: .13 }), [0, getEnvironmentSurfaceY('barcelos-clay-rooster') + .001, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box('rooster-linen-rest', [1.18, .04, 1.00], [-.75, .76, -.06], linen)
-  box('rooster-brush-rest', [.89, .04, .25], [-1.05, .76, .63], cream)
+  addObjectCradle(world, {
+    name: 'rooster-brush-rest',
+    topName: 'rooster-brush-rest',
+    width: .89,
+    depth: .25,
+    center: [-1.05, .63],
+    groundY: .74,
+    surfaceY: .768,
+    style: 'groove',
+    grooveAxis: 'x',
+    grooveDepth: .016,
+    grooveWidth: .14,
+    bevel: .006,
+    color: 0xf0dfae,
+    roughness: .80,
+    applySurface: false,
+  })
   lathe('rooster-dye-dish', [[0, 0], [.22, 0], [.25, .03], [.26, .085], [.24, .10], [.21, .06], [0, .06]], clay, [-1.44, .74, -.62])
   add('rooster-dye-pool', new THREE.CylinderGeometry(.208, .208, .008, 40), green, [-1.44, .804, -.62])
   const plinth = new THREE.Group(); plinth.name = 'rooster-display-plinth'; world.add(plinth)
   const plinthEdge = lathe('rooster-plinth-edge', [[0, .74], [.52, .74], [.58, .78], [.58, .88], [.54, .93], [0, .93]], clay, [.77, 0, -.06], plinth)
-  const plinthTop = add('rooster-plinth-top', new THREE.CylinderGeometry(.535, .535, .035, 64), cream, [.77, .9325, -.06], plinth)
+  const plinthTop = lathe('rooster-plinth-top', [[0, .915], [.535, .915], [.535, .942], [.527, .950], [0, .950]], plinthTopMat, [.77, 0, -.06], plinth)
   for (let i = 0; i < 22; i++) {
     const a = i / 22 * Math.PI * 2
     const dash = add('rooster-plinth-brush-dash', new THREE.CapsuleGeometry(.011, .027, 3, 6), green, [.77 + .579 * Math.sin(a), .833, -.06 + .579 * Math.cos(a)], plinth)

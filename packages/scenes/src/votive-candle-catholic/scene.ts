@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
@@ -52,7 +53,9 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   }
   const box = (w: number, h: number, d: number, mat: THREE.Material, xyz: number[]) =>
     add(new RoundedBoxGeometry(w, h, d, 3, Math.min(.04, h / 3)), mat, xyz)
-  box(2.5, .15, 1.6, stone, [0, .075, .1])
+  const baseY = Math.min(getEnvironmentSurfaceY('votive-candle-catholic'), -.04)
+  const baseH = .15 - baseY
+  box(2.5, baseH, 1.6, stone, [0, baseY + baseH / 2, .1])
   // An original stone arcade: no sacred image or replicated holy site.
   const arch = new THREE.Shape()
   arch.moveTo(-1.2, .15); arch.lineTo(1.2, .15); arch.lineTo(1.2, 2.4)
@@ -63,8 +66,14 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   arch.holes.push(opening)
   add(new THREE.ExtrudeGeometry(arch, { depth: .12, bevelEnabled: true, bevelSize: .035, bevelThickness: .035, bevelSegments: 3, steps: 1 }), stoneFace, [0, 0, -.73])
   for (const x of [-1.06, 1.06]) for (let i = 0; i < 6; i++) box(.32, .018, .23, stone, [x, .3 + i * .32, -.62])
-  for (const y of [.37, .76]) box(1.65, .065, .56, steel, [0, y, -.05])
-  for (const x of [-.79, .79]) box(.08, .77, .08, steel, [x, .51, -.08])
+  // Stepped two-tier rack: lower tier stepped forward so its flames rise in open air clear of the upper shelf.
+  box(1.65, .065, .34, steel, [0, .37, .34]).name = 'votive-lower-shelf'
+  box(1.65, .065, .48, steel, [0, .7575, -.06]).name = 'votive-upper-shelf'
+  for (const x of [-.79, .79]) {
+    box(.08, .64, .08, steel, [x, .47, -.06])
+    box(.08, .25, .08, steel, [x, .275, .34])
+    box(.06, .06, .46, steel, [x, .37, .14])
+  }
   // Only the thin rim and shallow wax pool scatter; the candle body and drips stay matte.
   const waxTop = createRitualMaterial({ color: 0xffe9b4, roughness: .92 }, { kind: 'wax', strength: .14, fiber: false })
   const waxPool = createRitualMaterial({ color: 0xddc695, roughness: .92 }, { kind: 'wax', strength: .10, fiber: false })
@@ -95,9 +104,9 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   const background: ReturnType<typeof candle>[] = []
   for (const [i, x] of [-.59, -.33, .34, .59].entries()) {
     const c = candle(world, i % 2 ? .6 : .48, true)
-    c.group.position.set(x, .4, -.05); background.push(c)
+    c.group.position.set(x, .4025, .34); background.push(c)
   }
-  const start = new THREE.Vector3(-.60, .15, .65), placed = new THREE.Vector3(0, .79, .2)
+  const start = new THREE.Vector3(-.60, .15, .65), placed = new THREE.Vector3(0, .79, .01)
   const main = candle(world, 1, step >= 2); main.group.name = 'votive-main-candle'
   main.group.position.copy(step ? placed : start)
   const invisible = new THREE.MeshBasicMaterial({ visible: false })
@@ -105,7 +114,7 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   heldTarget.name = 'votive-held-target'
   const wickTarget = add(new THREE.SphereGeometry(.18, 16, 10), invisible, [0,.99,0], main.group)
   wickTarget.name = 'votive-wick-target'
-  const target = add(new THREE.SphereGeometry(.27, 16, 10), invisible, [.0, .95, .2])
+  const target = add(new THREE.SphereGeometry(.27, 16, 10), invisible, [.0, .95, .01])
   target.name = 'votive-placement-target'
   addInteractionCue(heldTarget, {
     kind: 'drag', label: '拖蜡烛到空位', priority: 2,
@@ -120,9 +129,9 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
     kind: 'tap', label: '轻点蜡烛静看', priority: 2,
     enabled: () => active() && step === 2 && ctx.returning === true,
   })
-  const collar = add(new THREE.TorusGeometry(.15,.018,8,32), steel, [0,.795,.2]); collar.rotation.x = Math.PI/2
+  const collar = add(new THREE.TorusGeometry(.14,.014,8,32), steel, [0,.792,.01]); collar.rotation.x = Math.PI/2
   const glow = new THREE.PointLight(0xffcc83, step >= 2 ? 1.6 : 0, 3, 2)
-  glow.position.set(0, 1.91, .4); world.add(glow)
+  glow.position.set(0, 1.91, .21); world.add(glow)
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: COPY.actions[0] }, safe)
   const wish = document.createElement('div'); wish.className = 'scene-wish-slot'; overlay.append(wish)
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(new THREE.Vector3(0,0,1), -.65), point = new THREE.Vector3()

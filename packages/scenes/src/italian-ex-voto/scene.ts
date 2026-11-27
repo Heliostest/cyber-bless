@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { sceneTemplate } from '../scene-localization'
@@ -10,6 +11,7 @@ import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
 import { placementHit } from '../placement-hit'
 import { createPathSweep } from '../path-sweep'
+import { addOfferingTable } from '../cozy-furniture'
 import { createTouchTarget } from '../touch-target'
 import {
   addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
@@ -60,13 +62,15 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
   lights.key.shadow.bias = -.0007; lights.key.shadow.normalBias = .025
   const world = new THREE.Group(); world.name = 'exvoto-world'; scene.add(world)
   const mat = (color: number, roughness = .84) => new THREE.MeshStandardMaterial({ color, roughness })
-  const oak = mat(0xb98f69), edge = mat(0x9d7556), board = mat(0xd9b991)
+  const oak = mat(0xb98f69), edge = mat(0x9d7556)
+  const oakVertical = mat(0xb98f69), edgeVertical = mat(0x9d7556)
   const ceramic = mat(0xffefd0, .52), glaze = mat(0xf7e4bb, .5), blue = mat(0x7299ac), blueLight = mat(0xb4cbd1)
   const terra = mat(0xba7964), gold = mat(0xe7b365), grass = mat(0x94ac88), leaf = mat(0x729178), bristle = mat(0xa86e40)
   const cream = mat(0xf9eacb), handleMat = mat(0x659399), metal = mat(0xd6cab2, .45), ink = mat(0x657c7c)
   // Painted route and studio cloth must not inherit the table's wooden surface.
-  const routePaint = board.clone(), studioCloth = applyCraftSurface(cream.clone(), { kind: 'fabric', strength: .25 })
-  ;[oak, edge, board].forEach(material => applyCraftSurface(material, { kind: 'wood', strength: .4 }))
+  const routePaint = mat(0xd9b991), studioCloth = applyCraftSurface(cream.clone(), { kind: 'fabric', strength: .25 })
+  ;[oak, edge].forEach(material => applyCraftSurface(material, { kind: 'wood', strength: .4 }))
+  ;[oakVertical, edgeVertical].forEach(material => applyCraftSurface(material, { kind: 'wood', axis: 'y', strength: .4 }))
   ;[ceramic, glaze].forEach(material => applyCraftSurface(material, { kind: 'ceramic', strength: .4 }))
   applyCraftSurface(metal, { kind: 'metal', strength: .45 })
   const add = (geo: THREE.BufferGeometry, material: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) => {
@@ -82,18 +86,37 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
   }
   const rounded = (w: number, h: number, d: number, p: [number, number, number], material: THREE.Material, parent: THREE.Object3D = world, r = .04) =>
     add(new RoundedBoxGeometry(w, h, d, 4, Math.min(r, w / 3, h / 3, d / 3)), material, p, parent)
+  const floorY = getEnvironmentSurfaceY('italian-ex-voto')
   const table = new THREE.Group(); table.name = 'exvoto-table'; world.add(table)
-  rounded(2.78, .14, 1.22, [0, .64, .05], board, table)
-  for (const x of [-1.12, 1.12]) for (const z of [-.4, .48]) rounded(.14, .58, .14, [x, .29, z], oak, table)
-  for (const z of [-.43, .47]) rounded(2.36, .14, .10, [0, .51, z], oak, table)
-  const shadow = add(new THREE.PlaneGeometry(3.5, 2.0), new THREE.ShadowMaterial({ opacity: .13 }), [0, .004, .03])
+  addOfferingTable(table, {
+    name: 'exvoto-table',
+    topName: 'exvoto-table-top',
+    width: 2.78,
+    depth: 1.22,
+    surfaceY: .71,
+    thickness: .12,
+    center: [0, .05],
+    groundY: floorY,
+    finish: 'honey',
+    color: 0xd9b991,
+    frameColor: 0xb98f69,
+    planks: 3,
+    breadboardEnds: true,
+    legThickness: .14,
+    legInset: .16,
+    apron: true,
+    stretchers: true,
+    bevel: .022,
+  })
+  const shadow = add(new THREE.PlaneGeometry(3.5, 2.0), new THREE.ShadowMaterial({ opacity: .13 }), [0, floorY + .001, .03])
   shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   const easel = new THREE.Group(); easel.name = 'exvoto-easel'; world.add(easel)
   for (const x of [-.61, .61]) {
-    const leg = rounded(.105, 2.11, .13, [x, 1.70, -.13], oak, easel); leg.rotation.z = x < 0 ? -.11 : .11
+    const leg = rounded(.105, 2.11, .13, [x, 1.70, -.13], oakVertical, easel); leg.rotation.z = x < 0 ? -.11 : .11
   }
-  rounded(.12, 2.18, .13, [0, 1.74, -.19], edge, easel)
-  const backLeg = rounded(.11, 1.95, .13, [0, 1.60, -.49], edge, easel); backLeg.rotation.x = -.22
+  rounded(.12, 2.18, .13, [0, 1.74, -.19], edgeVertical, easel)
+  const backLeg = rounded(.11, 1.38, .13, [0, 1.368, -.34], edgeVertical, easel); backLeg.name = 'exvoto-easel-back-leg'; backLeg.rotation.x = .22
+  rounded(.16, .10, .14, [0, 2.02, -.215], oak, easel, .018)
   rounded(1.94, .12, .38, [0, .91, -.02], oak, easel)
   rounded(.43, .12, .20, [0, 2.70, -.02], oak, easel)
   const plaque = rounded(1.70, 1.71, .20, [0, 1.80, .025], ceramic, world, .15); plaque.name = 'exvoto-ceramic-plaque'
@@ -149,8 +172,8 @@ export function createItalianExVoto(ctx: SceneContext): SceneInstance {
   stroke([new THREE.Vector3(-.10, .17, 0), new THREE.Vector3(-.20, .34, 0), new THREE.Vector3(-.27, .46, 0)], .03, handleMat, brush)
   oval([-.27, .46, 0], [.029, .035, .029], cream, brush)
   // Small studio cloth and two spare brushes clarify a painting station rather than a votive wall.
-  rounded(.38, .035, .32, [.91, .75, .35], studioCloth)
-  for (let i = 0; i < 2; i++) stroke([new THREE.Vector3(.83 + i * .09, .79, .14), new THREE.Vector3(.94 + i * .07, .80, .57)], .017, i ? terra : handleMat)
+  rounded(.38, .026, .32, [.91, .723, .35], studioCloth, world, .009)
+  for (let i = 0; i < 2; i++) stroke([new THREE.Vector3(.83 + i * .09, .752, .14), new THREE.Vector3(.94 + i * .07, .756, .57)], .017, i ? terra : handleMat)
 
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restorePose = () => {

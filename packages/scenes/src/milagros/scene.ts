@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { bindSceneAttribute, bindSceneText, sceneProductCopy, sceneTemplate } from '../scene-localization'
@@ -79,18 +80,32 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); scene.add(world)
   const material = (color: number, metalness = 0, roughness = 0.9) => new THREE.MeshStandardMaterial({ color, metalness, roughness })
   const wood = material(0xbe9169), paper = material(0xf8e8c9), darkWood = material(0x987355)
-  for(const timber of[wood,darkWood])applyCraftSurface(timber,{kind:'wood',strength:.4})
+  applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+  applyCraftSurface(darkWood, { kind: 'wood', axis: 'y', strength: .4 })
   const add = (geometry: THREE.BufferGeometry, mat: THREE.Material, x: number, y: number, z: number, parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.position.set(x, y, z); parent.add(mesh); return mesh
   }
+  const groundY = getEnvironmentSurfaceY('milagros')
+  const footTop = 0.595
+  const footH = footTop - groundY
+  const trayTop = 0.227
+  const trayH = trayTop - groundY
+  const linerTopY = 0.24 + 0.027 / 2
   add(new RoundedBoxGeometry(2.08, 1.65, 0.17, 3, 0.085), wood, 0, 1.32, -0.1)
   const panel = add(new RoundedBoxGeometry(1.87, 1.43, 0.05, 2, 0.055), paper, 0, 1.32, 0.01)
   panel.userData.toonSurface = { outline: false }
-  for (const x of [-0.71, 0.71]) add(new RoundedBoxGeometry(0.16, 0.47, 0.18, 2, 0.03), darkWood, x, 0.36, -0.07)
-  add(new RoundedBoxGeometry(2.35, 0.13, 0.84, 3, 0.065), wood, 0, 0.16, 0.45)
+  for (const x of [-0.71, 0.71]) {
+    add(new RoundedBoxGeometry(0.16, footH, 0.28, 2, 0.03), darkWood, x, (groundY + footTop) / 2, -0.04).name = 'milagros-board-foot'
+  }
+  add(new RoundedBoxGeometry(2.35, trayH, 0.86, 3, 0.045), wood, 0, (groundY + trayTop) / 2, 0.43).name = 'milagros-tray-base'
   const liner = add(new RoundedBoxGeometry(2.17, 0.027, 0.71, 2, 0.02), paper, 0, 0.24, 0.45)
+  liner.name = 'milagros-tray-liner'
   liner.userData.toonSurface = { outline: false }
   const pinMat = applyCraftSurface(material(0xc49b50, 0.45, 0.42),{kind:'metal',strength:.45})
+  const pinCollar = add(new THREE.CylinderGeometry(0.042, 0.048, 0.018, 16), pinMat, 0, 1.69, 0.038)
+  pinCollar.rotation.x = Math.PI / 2; pinCollar.name = 'milagros-pin-collar'
+  const pinShaft = add(new THREE.CylinderGeometry(0.020, 0.022, 0.135, 14), pinMat, 0, 1.69, 0.0975)
+  pinShaft.rotation.x = Math.PI / 2; pinShaft.name = 'milagros-pin-shaft'
   const pin = add(new THREE.SphereGeometry(0.048, 12, 8), pinMat, 0, 1.69, 0.16)
   pin.name = 'milagros-pin'
   const pinTarget = add(new THREE.SphereGeometry(0.24, 16, 8), new THREE.MeshBasicMaterial({ visible: false }), 0, 1.65, 0.20)
@@ -103,15 +118,18 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   const colors = [0xe8bd75, 0xb7c5c3, 0xdab48a, 0xedcf87]
   for (let i = 0; i < 4; i++) {
     const group = new THREE.Group(); group.name = `milagros-charm-${i}`
-    const start = new THREE.Vector3(-0.81 + i * 0.54, 0.41, 0.72)
+    const charmGeometry = new THREE.ExtrudeGeometry(charmShape(i), {
+      depth: 0.028, bevelEnabled: true, bevelSegments: 2, steps: 1,
+      bevelSize: 0.016, bevelThickness: 0.014, curveSegments: 16,
+    })
+    charmGeometry.computeBoundingBox()
+    const startY = linerTopY - charmGeometry.boundingBox!.min.y * 0.73
+    const start = new THREE.Vector3(-0.81 + i * 0.54, startY, 0.72)
     group.position.copy(start); group.scale.setScalar(0.73)
     const suspension = new THREE.Group(); suspension.name = `milagros-suspension-${i}`; world.add(suspension)
     suspension.add(group); suspensions.push(suspension); charmGroups.push(group); starts.push(start)
     const mat = applyCraftSurface(material(colors[i], 0.55, 0.35), { kind: 'metal', strength: .45 }); charmMaterials.push(mat)
-    const mesh = add(new THREE.ExtrudeGeometry(charmShape(i), {
-      depth: 0.028, bevelEnabled: true, bevelSegments: 2, steps: 1,
-      bevelSize: 0.016, bevelThickness: 0.014, curveSegments: 16,
-    }), mat, 0, 0, 0, group)
+    const mesh = add(charmGeometry, mat, 0, 0, 0, group)
     mesh.name = `milagros-symbol-${i}`; mesh.userData.choice = i
     mesh.userData.toonSurface = { metalness: 0.55, roughness: 0.35 }
     charmMeshes.push(mesh)

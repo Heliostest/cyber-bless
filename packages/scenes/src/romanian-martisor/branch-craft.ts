@@ -318,11 +318,12 @@ export function buildMartisorTreeBranches(
   blossomMat: THREE.Material,
   addMesh: (geometry: THREE.BufferGeometry, mat: THREE.Material, parent: THREE.Object3D, name?: string) => THREE.Mesh,
 ) {
-  // Organic living trunk: gentle root flare anchored at y = -0.01, subtle natural S-bend,
+  // Organic living trunk: gentle root flare anchored into courtyard surface (-0.062), subtle natural S-bend,
   // smooth branch-collar swell around the support-branch junction (y = 1.50), and a closed
   // rounded shoulder that flows seamlessly into the V-fork (no flat sawn stump above it).
   const trunkGeo = createTaperedBranchGeometry({
     points: [
+      [0.550, -0.062, -0.650],
       [0.550, -0.01, -0.650],
       [0.566, 0.36, -0.654],
       [0.540, 0.86, -0.660],

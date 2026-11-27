@@ -138,13 +138,11 @@ export function createKhataModel(options: KhataModelOptions = {}) {
   const root = new THREE.Group(); root.name = 'khata-root'
   const subject = new THREE.Group(); subject.name = 'khata-subject'; root.add(subject)
   const material = (color: number, roughness = .85) => new THREE.MeshStandardMaterial({ color, roughness })
-  const stone = material(0xd3cbb3)
   const cream = new THREE.MeshStandardMaterial({ color: 0xfff4db, roughness: .48, vertexColors: true })
   const edgeCream = createRitualMaterial({ color: 0xfff4db, roughness: .48 }, { kind: 'cloth', strength: .10, fiber: false })
   const hem = createRitualMaterial({ color: 0xe1dbc4, roughness: .6 }, { kind: 'cloth', strength: .14, fiber: false })
   const skin = material(0xd7a17e), hair = material(0x584f43), shoe = material(0x555852)
   applyCraftSurface(cream, { kind: 'fabric', strength: .18 })
-  applyCraftSurface(stone, { kind: 'stone', strength: .4 })
 
   const mesh = (name: string, g: THREE.BufferGeometry, m: THREE.Material | THREE.Material[], parent: THREE.Object3D = subject) => {
     const o = new THREE.Mesh(g, m); o.name = name; o.castShadow = true; o.receiveShadow = true; parent.add(o); return o
@@ -163,8 +161,7 @@ export function createKhataModel(options: KhataModelOptions = {}) {
     }
     return { o, set }
   }
-  const ground = mesh('khata-ground', new THREE.CylinderGeometry(1.37, 1.42, .08, 64), stone)
-  ground.scale.z = .8; ground.position.y = -.04
+  const GROUND_Y = -.072
 
   // The folded cross-section is a continuous thin C: crease at -x, two open
   // edges at +x facing the arriving guest. End caps make one closed cloth solid.
@@ -747,9 +744,9 @@ export function createKhataModel(options: KhataModelOptions = {}) {
     const feet = [-1, 1].map((sign, i) => {
       const upper = rod('khata-' + name + '-thigh-' + i, .075, pants)
       const lower = rod('khata-' + name + '-shin-' + i, .063, pants)
-      upper.set(v(x, .58, sign * .12), v(x, .31, sign * .12))
-      lower.set(v(x, .31, sign * .12), v(x, .075, sign * .12))
-      return ball('khata-' + name + '-shoe-' + i, v(x + dir * .035, .055, sign * .12), [.13, .055, .085], shoe)
+      upper.set(v(x, .58, sign * .12), v(x, .275, sign * .12))
+      lower.set(v(x, .275, sign * .12), v(x, GROUND_Y + .075, sign * .12))
+      return ball('khata-' + name + '-shoe-' + i, v(x + dir * .035, GROUND_Y + .055, sign * .12), [.13, .055, .085], shoe)
     })
     const setHands = (points: THREE.Vector3[]) => arms.forEach((arm, i) => {
       const end = points[i]!.clone()

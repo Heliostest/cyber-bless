@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import {
@@ -45,9 +46,13 @@ function sampleRingSpline(values: Float32Array, u: number): number {
 export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
   const subject = new THREE.Group(); subject.name = 'koinobori-subject'
   const wood = new THREE.MeshStandardMaterial({ color: 0xc89a63, roughness: .82 })
+  const cleatWoodX = new THREE.MeshStandardMaterial({ color: 0xc89a63, roughness: .82 })
+  const cleatWoodZ = new THREE.MeshStandardMaterial({ color: 0xbf915c, roughness: .84 })
   const metal = new THREE.MeshStandardMaterial({ color: 0xb1a175, metalness: .25, roughness: .55 })
   const ropeMat = new THREE.MeshStandardMaterial({ color: 0x796d50, roughness: .96 })
   applyCraftSurface(wood, { kind: 'wood', strength: .4, axis: 'y' })
+  applyCraftSurface(cleatWoodX, { kind: 'wood', strength: .4, axis: 'x' })
+  applyCraftSurface(cleatWoodZ, { kind: 'wood', strength: .4, axis: 'z' })
   applyCraftSurface(metal, { kind: 'metal', strength: .45 })
   applyCraftSurface(ropeMat, { kind: 'cord', strength: .3 })
   const print = createKoinoboriPrint()
@@ -60,14 +65,24 @@ export function createKoinoboriModel(options: KoinoboriModelOptions = {}) {
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: XYZ, parent: THREE.Object3D = subject) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.set(...p); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
-  add('koinobori-foot', new THREE.CylinderGeometry(.28, .36, .12, 32), wood, [-1.05, .02, -.2])
+  const footProfile = [
+    new THREE.Vector2(0, -.06),
+    new THREE.Vector2(.348, -.06),
+    new THREE.Vector2(.360, -.046),
+    new THREE.Vector2(.356, -.018),
+    new THREE.Vector2(.314, .034),
+    new THREE.Vector2(.288, .054),
+    new THREE.Vector2(.266, .06),
+    new THREE.Vector2(0, .06),
+  ]
+  add('koinobori-foot', new THREE.LatheGeometry(footProfile, 36), wood, [-1.05, .02, -.2])
   add('koinobori-pole', new THREE.CylinderGeometry(.048, .068, 3.05, 24), wood, [-1.05, 1.585, -.2])
   add('koinobori-finial', new THREE.SphereGeometry(.08, 20, 12), metal, [-1.05, 3.14, -.2])
   const axle = add('koinobori-pulley-axle', new THREE.CylinderGeometry(.03, .03, .26, 16), metal, [-1.05, 3, -.10]); axle.rotation.x = Math.PI / 2
   const wheel = add('koinobori-pulley', new THREE.CylinderGeometry(.160, .160, .04, 32), wood, [-1.05, 3, 0]); wheel.rotation.x = Math.PI / 2
   for (const z of [-.026, .026]) add('koinobori-pulley-rim-' + z, new THREE.TorusGeometry(.167, .009, 6, 40), metal, [-1.05, 3, z])
-  add('koinobori-cleat-support', new THREE.BoxGeometry(.08, .18, .40), wood, [-1.05, .42, -.025])
-  add('koinobori-cleat', new THREE.BoxGeometry(.30, .08, .30), wood, [-1.05, .42, .13])
+  add('koinobori-cleat-support', new RoundedBoxGeometry(.08, .18, .40, 2, .016), cleatWoodZ, [-1.05, .42, -.025])
+  add('koinobori-cleat', new RoundedBoxGeometry(.30, .08, .30, 2, .016), cleatWoodX, [-1.05, .42, .13])
   for (const x of [-.10, .10]) add('koinobori-cleat-prong-' + x, new THREE.CylinderGeometry(.022, .025, .14, 12), wood, [-1.05 + x, .53, .25])
   const toggle = add('koinobori-toggle', new THREE.CylinderGeometry(.065, .075, .20, 24), wood, [-1.30, 1.75, .12])
   const fish = new THREE.Group(); fish.name = 'koinobori-fish'; subject.add(fish)

@@ -464,4 +464,19 @@ describe('mizuhiki paper-cord craft geometry and continuity', () => {
     expect(s.progress).toEqual([1])
     s.instance.dispose()
   })
+
+  it('grounds the chamfered lipped wooden presentation tray at veranda surface and seats the envelope at y=0.032', () => {
+    const s = mount(0, { isReducedMotion: () => true })
+    const tray = drawn.scene!.getObjectByName('mizuhiki-stand-cradle')!
+    const trayTop = drawn.scene!.getObjectByName('mizuhiki-stand-top')!
+    const envelope = drawn.scene!.getObjectByName('mizuhiki-envelope')!
+    expect(tray).toBeDefined()
+    expect(trayTop).toBeDefined()
+    expect(new THREE.Box3().setFromObject(tray).min.y).toBeCloseTo(-0.035, 4)
+    expect(new THREE.Box3().setFromObject(trayTop).max.y).toBeCloseTo(0.032, 4)
+    expect(new THREE.Box3().setFromObject(envelope).min.y).toBeCloseTo(0.032, 4)
+    expect(tray.getObjectByName('mizuhiki-stand-inset')).toBeDefined()
+    expect(tray.getObjectByName('mizuhiki-stand-lip-rail')).toBeDefined()
+    s.instance.dispose()
+  })
 })

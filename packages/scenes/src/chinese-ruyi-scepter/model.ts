@@ -16,7 +16,7 @@ export const RUYI_COLORS = {
 } as const
 
 const STAND = { x: .62, z: -.24, top: .46 }
-const PREP = { x: -.74, z: .42, floor: -.10, top: .16 }
+const PREP = { x: -.74, z: .42, floor: -.075, top: .16 }
 const CARRY = .90
 
 /** Smooth, welded normals so an inverted hull stays closed around hard edges. */
@@ -56,6 +56,9 @@ export function createChineseRuyiScepterModel(){
  const slab=mesh(subject,'ruyi-stone-base',new RoundedBoxGeometry(1.72,.12,.66,2,.02),stone,STAND.x,-.06,STAND.z)
  slab.userData.toonSurface={outline:true}
  const body=createRuyiBodyGeometry(),[left,right]=body.supports
+ // Matching compact stone base pad beneath the low preparation cradle so it never sits bare on grass.
+ const prepSlab=mesh(subject,'ruyi-prep-stone-base',new RoundedBoxGeometry((right-left)+.50,.045,.46,2,.016),stone,PREP.x+(left+right)/2,-.0975,PREP.z)
+ prepSlab.userData.toonSurface={outline:true}
  // One-piece dark wooden supports: a plank, two round posts, collars and soft pads.
  const support=(kind:'low'|'high',x0:number,floor:number,top:number,z:number)=>{
   const span=right-left,baseH=kind==='high'?.075:.05,width=span+(kind==='high'?.36:.26),depth=kind==='high'?.30:.22

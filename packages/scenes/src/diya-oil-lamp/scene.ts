@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { sceneTemplate } from '../scene-localization'
@@ -28,7 +29,7 @@ const ORBIT_RADIUS = 0.60
 const ORBIT_Y = 0.84
 const ORBIT_START = Math.PI / 2
 const HELD = new THREE.Vector3(0, 0.72, ORBIT_RADIUS)
-const HOMES = [new THREE.Vector3(-0.44, 0.105, -0.29), new THREE.Vector3(0.44, 0.105, -0.29), new THREE.Vector3(0, 0.105, 0.36)]
+const HOMES = [new THREE.Vector3(-0.44, 0.059, -0.29), new THREE.Vector3(0.44, 0.059, -0.29), new THREE.Vector3(0, 0.059, 0.36)]
 const smooth = (t: number) => t * t * (3 - 2 * t)
 type Checkpoint = 0 | 1 | 2 | 3
 type Drag = { kind: 'light'; visited: Set<number> } | { kind: 'spin' } | { kind: 'place' }
@@ -111,7 +112,8 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   const cotton = new THREE.MeshStandardMaterial({ color: 0xf1dec0, roughness: 1 })
   const burnt = new THREE.MeshStandardMaterial({ color: 0x443128, roughness: 1 })
   const amber = createRitualMaterial({ color: 0x98631f, roughness: .22, metalness: 0, clearcoat: .65, clearcoatRoughness: .1, side: THREE.DoubleSide }, { kind: 'wet', strength: .35 })
-  const plateMat = new THREE.MeshStandardMaterial({ color: 0x987b60, roughness: 0.76, metalness: 0.25 })
+  const plateMat = new THREE.MeshStandardMaterial({ color: 0xa48565, roughness: 0.62, metalness: 0.34 })
+  applyCraftSurface(plateMat, { kind: 'metal', scale: 1.35, strength: 0.26 })
   const petalMat = new THREE.MeshStandardMaterial({ color: 0xbe9b70, roughness: 0.86, metalness: 0.12, side: THREE.DoubleSide })
   ;[clay, rimClay].forEach(material => applyCraftSurface(material, { kind: 'ceramic', strength: .45 }))
   applyCraftSurface(cotton, { kind: 'cord', strength: .28 })
@@ -119,13 +121,25 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   const plate = new THREE.Group()
   plate.name = 'diya-plate'
   world.add(plate)
-  const plateBody = new THREE.Mesh(new THREE.CylinderGeometry(1.02, 0.96, 0.07, 64), plateMat)
-  plateBody.position.y = 0.038
+  const floorY = getEnvironmentSurfaceY('diya-oil-lamp')
+  // Turned metal thali tray with stepped foot ring, flat inner lamp well at y = 0.073, and beveled rolled rim.
+  const thaliProfile = [
+    new THREE.Vector2(0, floorY),
+    new THREE.Vector2(0.895, floorY),
+    new THREE.Vector2(0.925, floorY + 0.012),
+    new THREE.Vector2(0.962, 0.022),
+    new THREE.Vector2(1.012, 0.052),
+    new THREE.Vector2(1.044, 0.080),
+    new THREE.Vector2(1.050, 0.098),
+    new THREE.Vector2(1.036, 0.108),
+    new THREE.Vector2(1.015, 0.102),
+    new THREE.Vector2(0.990, 0.082),
+    new THREE.Vector2(0.965, 0.073),
+    new THREE.Vector2(0, 0.073),
+  ]
+  const plateBody = new THREE.Mesh(new THREE.LatheGeometry(thaliProfile, 72), plateMat)
+  plateBody.name = 'diya-plate-body'
   plate.add(plateBody)
-  const plateRim = new THREE.Mesh(new THREE.TorusGeometry(1.00, 0.028, 8, 64), plateMat)
-  plateRim.rotation.x = Math.PI / 2
-  plateRim.position.y = 0.082
-  plate.add(plateRim)
   // A product-original ring of small petals, with no named sacred motif.
   const petalShape = new THREE.Shape()
   petalShape.moveTo(0, 0.075)
@@ -243,7 +257,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   orbitGuide.add(orbitLine)
   const returnGuide = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.013, 8, 48), guideMat)
   returnGuide.name = 'diya-return-guide'
-  returnGuide.position.copy(HOMES[2]).add(new THREE.Vector3(0, 0.008, 0))
+  returnGuide.position.copy(HOMES[2]).add(new THREE.Vector3(0, 0.022, 0))
   returnGuide.rotation.x = -Math.PI / 2
   world.add(returnGuide)
 
@@ -350,7 +364,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
         updateMatrices()
       } else if (ray.aim(x, y).ray.intersectPlane(placePlane, point)) {
         heldLamp.group.position.copy(point).add(placeOffset)
-        heldLamp.group.position.y = Math.max(0.10, heldLamp.group.position.y)
+        heldLamp.group.position.y = Math.max(0.059, heldLamp.group.position.y)
         updateMatrices()
         if ((x!==placeDown.x||y!==placeDown.y) && placementHit(canvas,camera,heldTarget,x,y,(px,py)=>ray.hits(px,py,[plateTarget])) && pointer.finish()) { drag=null; beginMotion('place') }
       }
@@ -370,7 +384,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
       } else {
         if(ray.aim(x,y).ray.intersectPlane(placePlane,point)) {
           heldLamp.group.position.copy(point).add(placeOffset)
-          heldLamp.group.position.y=Math.max(.10,heldLamp.group.position.y)
+          heldLamp.group.position.y=Math.max(.059,heldLamp.group.position.y)
         }
         updateMatrices()
         if ((x!==placeDown.x||y!==placeDown.y) && placementHit(canvas,camera,heldTarget,x,y,(px,py)=>ray.hits(px,py,[plateTarget]))) beginMotion('place')

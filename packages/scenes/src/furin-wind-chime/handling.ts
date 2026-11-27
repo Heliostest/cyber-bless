@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createCloseInspection } from '../close-inspection'
 import { createObjectPointer } from '../object-pointer'
@@ -32,9 +33,14 @@ export function createFurinHandling(options: Options) {
   const offset = new THREE.Vector3(), intersection = new THREE.Vector3()
   const active = () => !disposed && focused && !notifying && options.isActive()
   const hook = new THREE.Group(); hook.name = 'furin-eave-hook'; hook.position.copy(home); world.add(hook)
-  const brass = new THREE.MeshStandardMaterial({ color: 0xcfb071, roughness: .45, metalness: .5 })
+  const brass = applyCraftSurface(
+    new THREE.MeshStandardMaterial({ color: 0xcfb071, roughness: .45, metalness: .5 }),
+    { kind: 'metal', strength: .42 },
+  )
+  const hookMount = new THREE.Mesh(new THREE.CylinderGeometry(.014, .018, .026, 12), brass)
+  hookMount.name = 'furin-eave-hook-mount'; hookMount.position.y = .018; hook.add(hookMount)
   const hookRing = new THREE.Mesh(new THREE.TorusGeometry(.035, .007, 8, 24, Math.PI * 1.7), brass)
-  hookRing.position.y = -.006; hook.add(hookRing)
+  hookRing.name = 'furin-eave-hook-ring'; hookRing.position.y = -.006; hook.add(hookRing)
   const loop = new THREE.Mesh(new THREE.TorusGeometry(.023, .005, 8, 24), brass)
   loop.name = 'furin-hanging-loop'; loop.position.y = -.015; actor.add(loop)
   const targetMat = new THREE.MeshBasicMaterial({ color: 0x80cdb9, transparent: true, opacity: .55, depthTest: false, depthWrite: false })
@@ -45,9 +51,13 @@ export function createFurinHandling(options: Options) {
   const rackBaseWood = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xc8a77a, roughness: 0.80 }), { kind: 'wood', axis: 'x', scale: 1.05, strength: 0.44 })
   const rackPostWood = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xc8a77a, roughness: 0.78 }), { kind: 'wood', axis: 'y', scale: 1.65, strength: 0.48 })
   const rackArmWood = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xc8a77a, roughness: 0.78 }), { kind: 'wood', axis: 'x', scale: 1.55, strength: 0.46 })
+  const groundY = getEnvironmentSurfaceY('furin-wind-chime')
+  const rackBaseTop = 0.08
+  const rackBaseH = rackBaseTop - groundY
+  const rackPostH = loose.y - groundY
   for (const [name, size, position, mat] of [
-    ['furin-rack-base', [.48, .08, .44], [loose.x - .22, .04, loose.z], rackBaseWood],
-    ['furin-rack-post', [.045, loose.y, .045], [loose.x - .35, loose.y / 2, loose.z], rackPostWood],
+    ['furin-rack-base', [.48, rackBaseH, .44], [loose.x - .22, (groundY + rackBaseTop) / 2, loose.z], rackBaseWood],
+    ['furin-rack-post', [.045, rackPostH, .045], [loose.x - .35, (groundY + loose.y) / 2, loose.z], rackPostWood],
     ['furin-rack-arm', [.4, .045, .065], [loose.x - .18, loose.y, loose.z], rackArmWood],
   ] as const) {
     const radius = Math.min(0.011, size[0] / 4, size[1] / 4, size[2] / 4)

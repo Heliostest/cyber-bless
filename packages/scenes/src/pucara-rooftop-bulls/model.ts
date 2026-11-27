@@ -1,5 +1,6 @@
 import { applyCraftSurface, type CraftSurfaceOptions } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 
 function solid(source:THREE.BufferGeometry){
  const input=source.index?source.toNonIndexed():source,p=input.getAttribute('position'),data:number[]=[]
@@ -7,6 +8,19 @@ function solid(source:THREE.BufferGeometry){
  for(let i=0;i<p.count;i+=3){a.fromBufferAttribute(p,i);b.fromBufferAttribute(p,i+1);c.fromBufferAttribute(p,i+2);if(b.clone().sub(a).cross(c.clone().sub(a)).lengthSq()<1e-20)continue;data.push(...a.toArray(),...b.toArray(),...c.toArray());volume+=a.dot(b.clone().cross(c))/6}
  if(volume<0)for(let i=0;i<data.length;i+=9)for(let j=0;j<3;j++){const v=data[i+3+j]!;data[i+3+j]=data[i+6+j]!;data[i+6+j]=v}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(data,3));g.computeVertexNormals();if(input!==source)input.dispose();source.dispose();return g
+}
+
+// Subtle matte plaster/earthen vertex-color relief without asserting wood/ceramic on painted surfaces.
+function addMatteRelief(g:THREE.BufferGeometry,seed:number,amp=.045){
+ const pos=g.getAttribute('position'),colors=new Float32Array(pos.count*3)
+ for(let i=0;i<pos.count;i++){
+  const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i)
+  const n=Math.sin(x*5.7+z*4.1+seed)*.55+Math.cos(y*8.3-x*3.4+seed*1.7)*.45
+  const shade=THREE.MathUtils.clamp(.965+n*amp+Math.min(y,.35)*.06,.86,1.04)
+  colors[i*3]=shade;colors[i*3+1]=shade*.992;colors[i*3+2]=shade*.978
+ }
+ g.setAttribute('color',new THREE.BufferAttribute(colors,3))
+ return g
 }
 
 // One closed, capped solid along a curve; no open TubeGeometry ends.
@@ -18,35 +32,73 @@ function curved(points:[number,number,number][],radius:number,endRadius=radius){
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setIndex(indices);return g
 }
 
-// Extrude a closed Y/Z profile along X, keeping the roof and its pad truly joined.
-function crossSection(profile:[number,number][],width:number){
- const shape=new THREE.Shape(profile.map(([z,y])=>new THREE.Vector2(z,y))),g=new THREE.ExtrudeGeometry(shape,{depth:width,bevelEnabled:false,steps:1});g.rotateY(-Math.PI/2);g.translate(width/2,0,0);return g
+// Extrude a closed Y/Z profile along X with optional end bevels, keeping top ridge aligned cleanly.
+function crossSection(profile:[number,number][],width:number,bevel=0){
+ const shape=new THREE.Shape(profile.map(([z,y])=>new THREE.Vector2(z,y)))
+ const depth=Math.max(.02,width-bevel*2)
+ const g=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:bevel>0,bevelThickness:bevel,bevelSize:bevel*.6,bevelSegments:2,steps:1})
+ g.rotateY(-Math.PI/2);g.translate(depth/2,0,0);return g
+}
+
+// Chamfered-plan battered saddle pad whose bottom vertices lie strictly on y = 1 - .4*|z|/.95 and top at y = 1.10.
+function saddlePadGeometry(width:number,depth:number,topY:number,chamfer=.052,batter=.022){
+ const roofY=(z:number)=>1-.4*Math.abs(z)/.95
+ const ring=(hw:number,hd:number,c:number):[number,number][]=>[
+  [-hw+c,hd],[hw-c,hd],[hw,hd-c],[hw,0],[hw,-hd+c],[hw-c,-hd],[-hw+c,-hd],[-hw,-hd+c],[-hw,0],[-hw,hd-c],
+ ]
+ const botXZ=ring(width/2,depth/2,chamfer),topXZ=ring(width/2-batter,depth/2-batter,chamfer)
+ const verts:number[]=[],indices:number[]=[]
+ const push=(x:number,y:number,z:number)=>{verts.push(x,y,z);return verts.length/3-1}
+ const botIdx=botXZ.map(([x,z])=>push(x,roofY(z),z))
+ const topIdx=topXZ.map(([x,z])=>push(x,topY,z))
+ const topCenter=push(0,topY,0),botRidgeCenter=push(0,1,0)
+ const n=botIdx.length
+ for(let i=0;i<n;i++){
+  const j=(i+1)%n
+  indices.push(botIdx[i]!,botIdx[j]!,topIdx[j]!,botIdx[i]!,topIdx[j]!,topIdx[i]!)
+  indices.push(topCenter,topIdx[i]!,topIdx[j]!)
+ }
+ const frontLoop=[8,9,0,1,2,3],backLoop=[3,4,5,6,7,8]
+ for(let i=0;i<frontLoop.length-1;i++)indices.push(botRidgeCenter,botIdx[frontLoop[i+1]!]!,botIdx[frontLoop[i]!]!)
+ for(let i=0;i<backLoop.length-1;i++)indices.push(botRidgeCenter,botIdx[backLoop[i+1]!]!,botIdx[backLoop[i]!]!)
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setIndex(indices);return g
 }
 
 export function createPucaraModel(){
  const root=new THREE.Group();root.name='pucara-subject'
  const materials=new Map<string,THREE.MeshStandardMaterial>()
- const material=(color:string,surface?:CraftSurfaceOptions)=>{
-  const key=`${color}:${surface?.kind??''}:${surface?.axis??''}`
-  if(!materials.has(key)){const m=new THREE.MeshStandardMaterial({color,roughness:color==='#e6cf9d'?.48:.82});if(surface)applyCraftSurface(m,surface);materials.set(key,m)}
+ const material=(color:string,surface?:CraftSurfaceOptions,matte=false)=>{
+  const key=`${color}:${surface?.kind??''}:${surface?.axis??''}:${matte?1:0}`
+  if(!materials.has(key)){
+   const m=new THREE.MeshStandardMaterial({color,roughness:color==='#e6cf9d'?.48:matte?.92:.82,vertexColors:matte})
+   if(surface)applyCraftSurface(m,surface)
+   materials.set(key,m)
+  }
   return materials.get(key)!
  }
  const surfaceFor=(name:string):CraftSurfaceOptions|undefined=>{
   if(name.startsWith('pucara-bull-left-')||name.startsWith('pucara-bull-right-'))return{kind:'ceramic',strength:.45}
-  if(name==='pucara-carrier-board')return{kind:'wood',strength:.4}
+  if(name==='pucara-carrier-board')return{kind:'wood',axis:'x',strength:.4}
  }
- const mesh=(parent:THREE.Object3D,name:string,source:THREE.BufferGeometry,color:string,p:[number,number,number])=>{const m=new THREE.Mesh(solid(source),material(color,surfaceFor(name)));m.name=name;m.position.set(...p);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
+ const mesh=(parent:THREE.Object3D,name:string,source:THREE.BufferGeometry,color:string,p:[number,number,number],matteSeed?:number)=>{
+  const g=solid(source)
+  if(matteSeed!==undefined)addMatteRelief(g,matteSeed)
+  const m=new THREE.Mesh(g,material(color,surfaceFor(name),matteSeed!==undefined))
+  m.name=name;m.position.set(...p);m.castShadow=m.receiveShadow=true;parent.add(m);return m
+ }
  const house=new THREE.Group();house.name='pucara-house';root.add(house)
- mesh(house,'pucara-walls',new THREE.BoxGeometry(2.65,.65,1.8),'#d8c7a6',[0,.325,0])
- const roof=mesh(house,'pucara-roof',crossSection([[-.95,.60],[0,1],[.95,.60]],2.8),'#ad6d4d',[0,0,0])
- for(const x of[-.88,.88]){mesh(house,`pucara-window-${x}`,new THREE.BoxGeometry(.39,.26,.035),'#5c706d',[x,.36,.915]);mesh(house,`pucara-window-cross-${x}`,new THREE.BoxGeometry(.028,.28,.038),'#8e6844',[x,.36,.937])}
- mesh(house,'pucara-door',new THREE.BoxGeometry(.46,.52,.04),'#866344',[0,.26,.92])
+ mesh(house,'pucara-walls',new RoundedBoxGeometry(2.65,.65,1.8,2,.022),'#d8c7a6',[0,.325,0],1.1)
+ mesh(house,'pucara-wall-plinth',new RoundedBoxGeometry(2.71,.085,1.86,2,.014),'#c7b594',[0,.0425,0],1.9)
+ const roof=mesh(house,'pucara-roof',crossSection([[-.944,.534],[-.944,.594],[0,.994],[.944,.594],[.944,.534],[0,.934]],2.8,.010),'#ad6d4d',[0,0,0],2.7)
+ for(const x of[-.88,.88]){mesh(house,`pucara-window-${x}`,new RoundedBoxGeometry(.39,.26,.035,2,.007),'#5c706d',[x,.36,.915]);mesh(house,`pucara-window-cross-${x}`,new RoundedBoxGeometry(.028,.28,.038,2,.005),'#8e6844',[x,.36,.937])}
+ mesh(house,'pucara-door',new RoundedBoxGeometry(.46,.52,.04,2,.008),'#866344',[0,.26,.92])
  mesh(house,'pucara-door-handle',new THREE.SphereGeometry(.025,8,6),'#d7b67a',[.14,.28,.96])
  // This original saddle-shaped pad fills the space down to the sloping roof.
- const pad=mesh(root,'pucara-ridge-pad',crossSection([[-.45,1-.4*.45/.95],[0,1],[.45,1-.4*.45/.95],[.45,1.10],[-.45,1.10]],2.10),'#98784e',[0,0,0])
- const stand=mesh(root,'pucara-low-stand',new THREE.BoxGeometry(2.10,.20,1.15),'#b5986c',[0,.10,2])
+ const pad=mesh(root,'pucara-ridge-pad',saddlePadGeometry(2.10,.90,1.10),'#98784e',[0,0,0],3.3)
+ const stand=mesh(root,'pucara-low-stand',new RoundedBoxGeometry(2.10,.20,1.15,2,.024),'#b5986c',[0,.10,2],4.1)
+ mesh(root,'pucara-low-stand-plinth',new RoundedBoxGeometry(2.12,.048,1.17,2,.012),'#a4875d',[0,.024,2],4.7)
  const actor=new THREE.Group();actor.name='pucara-carrier';root.add(actor)
- const board=mesh(actor,'pucara-carrier-board',new THREE.BoxGeometry(2,.06,1.05),'#88633f',[0,.03,0])
+ const board=mesh(actor,'pucara-carrier-board',new RoundedBoxGeometry(2,.06,1.05,2,.014),'#88633f',[0,.03,0])
  function bull(name:string,x:number){
   const group=new THREE.Group();group.name=name;group.position.x=x;actor.add(group)
   const clay='#e6cf9d',ochre='#a85d39',dark='#493e32'

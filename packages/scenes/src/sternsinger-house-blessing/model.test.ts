@@ -30,3 +30,10 @@ it('keeps chalk above the threshold, in front of the door and restores all progr
  for(const at of[0,3]){m.pose(at,0);expect(new THREE.Box3().setFromObject(m.chalk,true).min.y).toBeCloseTo(m.floor,5)}
  m.pose(1,.4);m.pose(1,0);expect(m.marks.every(o=>!o.visible)).toBe(true);m.dispose();disposeTree(m.root)
 })
+it('grounds the stone threshold base cleanly into the courtyard while keeping top at m.floor',()=>{
+ const m=createSternsingerModel()
+ const threshold=new THREE.Box3().setFromObject(m.root.getObjectByName('sternsinger-threshold')!,true)
+ expect(threshold.min.y).toBeLessThanOrEqual(-.0475)
+ expect(threshold.max.y).toBeCloseTo(m.floor,6)
+ m.dispose();disposeTree(m.root)
+})

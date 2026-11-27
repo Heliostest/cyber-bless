@@ -1,5 +1,12 @@
 import { bindSceneMotion } from "./scene-motion";
 export { captureSceneImage } from "./scene-capture";
+export {
+  environmentProfiles,
+  getEnvironmentProfile,
+  getEnvironmentSurfaceY,
+  getEnvironmentRiverbedY,
+  type EnvironmentProfile,
+} from "./environment-profiles";
 
 export type SceneSettings = { active: boolean; reducedMotion: boolean };
 export type SceneMountOptions = SceneSettings & {

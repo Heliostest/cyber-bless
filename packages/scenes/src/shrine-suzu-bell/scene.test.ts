@@ -461,4 +461,17 @@ describe('shrine suzu object actions', () => {
     expect(Array.from(strandBuf)).toEqual(redStrand)
     expect(Array.from(tasselBuf)).toEqual(redTassel)
   })
+
+  it('grounds both post bases and bridges the bell suspension ring solidly into the crossbeam', () => {
+    const s = mount()
+    const bases: THREE.Box3[] = []
+    drawn.scene!.traverse(o => { if (o.name === 'suzu-column-base') bases.push(new THREE.Box3().setFromObject(o)) })
+    expect(bases).toHaveLength(2)
+    for (const base of bases) expect(base.min.y).toBeLessThanOrEqual(-0.0225)
+    const lintel = new THREE.Box3().setFromObject(s.object('suzu-lintel'))
+    const arm = new THREE.Box3().setFromObject(s.object('suzu-bracket-arm'))
+    const ring = new THREE.Box3().setFromObject(s.object('suzu-suspension-ring'))
+    expect(arm.min.z).toBeLessThan(lintel.max.z)
+    expect(arm.max.z).toBeGreaterThan(ring.min.z)
+  })
 })

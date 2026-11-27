@@ -1,6 +1,7 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import { addSteppedPedestal } from '../cozy-furniture'
 
 const BAG_BOTTOM_Y = 0.008
 const BAG_TOP_Y = 0.668
@@ -224,7 +225,6 @@ export function createChitoseAmeModel(){
  const root=new THREE.Group();root.name='chitose-root'
  const subject=new THREE.Group();subject.name='chitose-subject';root.add(subject)
  const mat=(color:number,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness})
- const stone=mat(0xcac6ac)
  const frontPrintMap = createBagFrontPrintMap(256, 512)
  const frontPaperMat = createRitualMaterial({
   color: 0xffffff,
@@ -275,7 +275,6 @@ export function createChitoseAmeModel(){
  applyCraftSurface(cord, { kind: 'cord', strength: .3 })
  applyCraftSurface(coat, { kind: 'fabric', strength: .26 })
  applyCraftSurface(pants, { kind: 'fabric', strength: .26 })
- applyCraftSurface(stone, { kind: 'stone', strength: .4 })
 
  const mesh=(g:THREE.BufferGeometry,m:THREE.Material,p:THREE.Object3D,name:string)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;p.add(o);return o}
  const box=(name:string,size:[number,number,number],pos:[number,number,number],m:THREE.Material,p:THREE.Object3D=subject)=>{const o=mesh(new THREE.BoxGeometry(...size),m,p,name);o.position.set(...pos);return o}
@@ -283,8 +282,27 @@ export function createChitoseAmeModel(){
  const rod=(name:string,radius:number,m:THREE.Material,p:THREE.Object3D=subject)=>mesh(new THREE.CylinderGeometry(radius,radius,1,24),m,p,name)
  const place=(o:THREE.Mesh,a:THREE.Vector3,b:THREE.Vector3)=>{const d=b.clone().sub(a);o.position.copy(a).add(b).multiplyScalar(.5);o.scale.y=d.length();o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize())}
  const v=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
- const paving=mesh(new THREE.CylinderGeometry(1.18,1.22,.1,64),stone,subject,'chitose-paving');paving.position.y=-.015
- const rest=box('chitose-gift-rest',[.52,.145,.36],[-.56,.1075,.4],stone)
+ const GROUND_Y=-.0475
+ // Compact stepped stone candy-bag stand grounded directly on courtyard stones (-0.0475)
+ // replaces the redundant round stone floor disc and sharp square block while preserving bag height (0.18).
+ const giftPedestal=addSteppedPedestal(subject,{
+  name:'chitose-gift-rest',
+  topName:'chitose-gift-rest-top',
+  shape:'rect',
+  kind:'stone',
+  color:0xcac6ac,
+  trimColor:0xb5b096,
+  center:[-.56,.4],
+  groundY:GROUND_Y,
+  surfaceY:.18,
+  tiers:[
+   {width:.56,depth:.40,height:.068,color:0xb5b096},
+   {width:.50,depth:.34,height:.115,color:0xc4bfa5},
+   {width:.53,depth:.37,height:.0445,color:0xcac6ac},
+  ],
+ })
+ giftPedestal.root.name='chitose-gift-rest'
+ const rest=giftPedestal.root
  const bag=new THREE.Group();bag.name='chitose-bag-root';subject.add(bag)
 
  // Folded paper gift bag: solid paper bottom (top flush at y = 0.018), thin tapered front & back
@@ -381,8 +399,8 @@ export function createChitoseAmeModel(){
  }
  const child=new THREE.Group();child.name='chitose-child';subject.add(child)
  for(const [i,x]of [.295,.505].entries()){
-  ball('chitose-shoe-'+i,[x,.08,.035],[.083,.045,.14],shoe,child)
-  const leg=rod('chitose-trouser-leg-'+i,.067,pants,child);place(leg,v(x,.12,0),v(x,.64,0))
+  ball('chitose-shoe-'+i,[x,GROUND_Y+.045,.035],[.083,.045,.14],shoe,child)
+  const leg=rod('chitose-trouser-leg-'+i,.067,pants,child);place(leg,v(x,.035,0),v(x,.64,0))
  }
  ball('chitose-hips',[.4,.65,0],[.19,.16,.12],pants,child)
  ball('chitose-coat',[.4,.94,0],[.22,.30,.145],coat,child)

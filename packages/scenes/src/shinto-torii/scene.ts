@@ -1,3 +1,4 @@
+import { getEnvironmentProfile } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { bindSceneAttribute } from '../scene-localization'
@@ -249,13 +250,27 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
     }),
     { kind: 'wood', axis: 'x', strength: 0.18, scale: 0.58 },
   )
-  const baseGeo = new THREE.CylinderGeometry(0.135, 0.14, 0.26, 24)
+  const floorY = getEnvironmentProfile('shinto-torii')?.floor ?? -0.035
+  const baseTop = 0.26
+  const baseH = baseTop - floorY
+  const baseY = (floorY + baseTop) / 2
+  const pillarBottom = -0.015
+  const pillarTop = 2.4
+  const pillarH = pillarTop - pillarBottom
+  const pillarY = (pillarBottom + pillarTop) / 2
+  const baseGeo = new THREE.LatheGeometry([
+    new THREE.Vector2(0, -baseH / 2),
+    new THREE.Vector2(0.145, -baseH / 2),
+    new THREE.Vector2(0.142, baseH / 2 - 0.014),
+    new THREE.Vector2(0.132, baseH / 2),
+    new THREE.Vector2(0, baseH / 2),
+  ], 24)
   for (const side of [-1, 1]) {
     const isLeft = side < 0
     const pillarGeo = projectCylinderWoodUVs(
-      new THREE.CylinderGeometry(0.1, 0.115, 2.4, 24),
+      new THREE.CylinderGeometry(0.1, 0.115, pillarH, 24),
       Math.PI * 2 * 0.108,
-      2.4,
+      pillarH,
       isLeft ? 0.42 : 0.46,
       1.45,
       isLeft ? 0.5 : 0.28,
@@ -263,11 +278,12 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
     )
     const pillar = new THREE.Mesh(pillarGeo, isLeft ? pillarMatLeft : pillarMatRight)
     pillar.name = isLeft ? 'torii-pillar-left' : 'torii-pillar-right'
-    pillar.position.set(side * 0.92, 1.2, 0)
+    pillar.position.set(side * 0.92, pillarY, 0)
     pillar.rotation.z = side * 0.025 // slight inward lean
     torii.add(pillar)
     const base = new THREE.Mesh(baseGeo, ink)
-    base.position.set(side * 0.935, 0.13, 0)
+    base.name = isLeft ? 'torii-base-left' : 'torii-base-right'
+    base.position.set(side * 0.935, baseY, 0)
     torii.add(base)
   }
   const nuki = new THREE.Mesh(projectWoodUVs(new RoundedBoxGeometry(2.5, 0.13, 0.1, 2, 0.02), 'x', 0.38, 1.8, 0.5, 0.5), nukiMat)
@@ -291,17 +307,6 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
   kasagiTop.position.y = 2.5
   torii.add(kasagiTop)
 
-  // A few approach-path stones (参道) mark entrance → path; no hall is modelled.
-  const stoneMat = new THREE.MeshStandardMaterial({ color: 0xcfc5b6, roughness: 0.95 })
-  applyCraftSurface(stoneMat, { kind: 'stone', strength: .4 })
-
-  const stoneGeo = new RoundedBoxGeometry(0.72, 0.05, 0.42, 2, 0.02)
-  for (let i = 0; i < 6; i++) {
-    const stone = new THREE.Mesh(stoneGeo, stoneMat)
-    stone.position.set((i % 2 ? 0.03 : -0.03), 0.025, 3.2 - i * 0.62)
-    world.add(stone)
-  }
-
   // Plain ema rack to the right, past the torii.
   const rack = new THREE.Group()
   rack.position.set(1.95, 0, -1.1)
@@ -323,15 +328,26 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
     seed: 97, rings: 6.4, drift: 0.082, arch: 0.056, contrast: 0.165, wash: 0.044,
   }, 0.27, 0.44)
 
+  const rackPostTop = 1.3
+  const rackPostH = rackPostTop - floorY
+  const rackPostY = (floorY + rackPostTop) / 2
+  const rackFootH = 0.045
   for (const x of [-0.45, 0.45]) {
     const isLeft = x < 0
     const post = new THREE.Mesh(
-      projectWoodUVs(new RoundedBoxGeometry(0.06, 1.3, 0.06, 2, 0.015), 'y', isLeft ? 0.72 : 0.8, 3.2, isLeft ? 0.5 : 0.22, 0.5),
+      projectWoodUVs(new RoundedBoxGeometry(0.06, rackPostH, 0.06, 2, 0.015), 'y', isLeft ? 0.72 : 0.8, 3.2, isLeft ? 0.5 : 0.22, 0.5),
       isLeft ? rackPostLeft : rackPostRight,
     )
     post.name = isLeft ? 'torii-rack-post-left' : 'torii-rack-post-right'
-    post.position.set(x, 0.65, 0)
+    post.position.set(x, rackPostY, 0)
     rack.add(post)
+    const foot = new THREE.Mesh(
+      new RoundedBoxGeometry(0.11, rackFootH, 0.24, 2, 0.012),
+      isLeft ? rackPostLeft : rackPostRight,
+    )
+    foot.name = isLeft ? 'torii-rack-foot-left' : 'torii-rack-foot-right'
+    foot.position.set(x, floorY + rackFootH / 2, 0)
+    rack.add(foot)
   }
   for (const y of [1.2, 0.9]) {
     const isTop = y > 1
@@ -343,6 +359,10 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
     bar.position.set(0, y, 0)
     rack.add(bar)
   }
+  const emaCordMat = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xdccbb0, roughness: 0.92 }), { kind: 'cord', strength: 0.28 })
+  const emaCordGeo = new THREE.TorusGeometry(0.012, 0.0032, 6, 14)
+  const emaPegGeo = new THREE.CylinderGeometry(0.0075, 0.0085, 0.046, 8)
+  const ownEmaPegGeo = new THREE.CylinderGeometry(0.0075, 0.0085, 0.066, 8)
   const emaGeo = emaGeometry()
   // The apex remains on the rack while the lower board stirs in the breeze.
   emaGeo.translate(0, -.09, 0)
@@ -365,13 +385,28 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
       seed, rings: 4.4 + (i % 3) * 0.45, drift: 0.055, arch: 0.04, contrast: 0.11, wash: 0.04,
       knots: i % 2 === 0 ? [{ u: 0.32 + i * 0.12, v: 0.55, rx: 0.068, ry: 0.04, pull: 0.7, depth: 0.68 }] : [],
     }, offU, offV)
+    const barY = y + 0.1
+    const peg = new THREE.Mesh(emaPegGeo, barY > 1 ? rackBarTop : rackBarBottom)
+    peg.name = `torii-rack-ema-peg-${i}`
+    peg.rotation.x = Math.PI / 2
+    peg.position.set(x, barY, 0.023)
+    rack.add(peg)
     const ema = new THREE.Mesh(emaGeo, emaMat)
     ema.name = `torii-rack-ema-${emas.length}`
     ema.position.set(x, y + .09, 0.03)
+    const cord = new THREE.Mesh(emaCordGeo, emaCordMat)
+    cord.name = `torii-rack-ema-cord-${i}`
+    cord.position.set(0, 0.007, 0.007)
+    ema.add(cord)
     rack.add(ema)
     emas.push(ema)
   }
   // The visitor's own board: appears on the rack once written.
+  const ownEmaPeg = new THREE.Mesh(ownEmaPegGeo, rackBarBottom)
+  ownEmaPeg.name = 'torii-own-ema-peg'
+  ownEmaPeg.rotation.x = Math.PI / 2
+  ownEmaPeg.position.set(0.05, 0.9, 0.033)
+  rack.add(ownEmaPeg)
   const ownEmaMat = rawWood('x', 0xe7cba0, 0.76, 0.34, 0.18, {
     seed: 157, rings: 4.6, drift: 0.055, arch: 0.04, contrast: 0.11, wash: 0.038,
     knots: [{ u: 0.72, v: 0.46, rx: 0.064, ry: 0.036, pull: 0.7, depth: 0.68 }],
@@ -380,6 +415,10 @@ export function createShintoTorii(ctx: SceneContext): SceneInstance {
   ownEma.name = 'torii-own-ema'
   ownEma.position.set(0.05, 0.89, 0.05)
   ownEma.visible = false
+  const ownEmaCord = new THREE.Mesh(emaCordGeo, emaCordMat)
+  ownEmaCord.name = 'torii-own-ema-cord'
+  ownEmaCord.position.set(0, 0.007, 0.007)
+  ownEma.add(ownEmaCord)
   rack.add(ownEma)
 
   const toriiZone = new THREE.Mesh(

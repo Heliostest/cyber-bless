@@ -1,9 +1,16 @@
 import {describe,it,expect} from 'vitest'
 import * as THREE from 'three'
+import {getEnvironmentSurfaceY} from '@wbr/scene-runtime'
 import {createEsfandModel} from './model'
 
 const bounds=(o:THREE.Object3D)=>new THREE.Box3().setFromObject(o,true)
 describe('Esfand physical support and heat sequence',()=>{
+ it('grounds the warm hearth table on the courtyard surface and seats the stone pad cleanly',()=>{
+  const m=createEsfandModel(),ground=getEnvironmentSurfaceY('persian-esfand')
+  expect(bounds(m.cabinet).min.y).toBeCloseTo(ground,6)
+  expect(bounds(m.counter).min.y).toBeCloseTo(.665,6)
+  expect(bounds(m.counter).max.y).toBeCloseTo(.72,6)
+ })
  it('rests the actual pan bottom on counter and then on the stove burner',()=>{const m=createEsfandModel();expect(bounds(m.bowl).min.y).toBeCloseTo(bounds(m.counter).max.y,7);m.pose(2,0);expect(bounds(m.bowl).min.y).toBeCloseTo(bounds(m.burner).max.y,7)})
  it('keeps the pan clear of its supports throughout transport',()=>{const m=createEsfandModel();for(const step of[0,1])for(let i=1;i<200;i++){m.pose(step,i/200);const b=bounds(m.bowl);expect(b.min.y).toBeGreaterThan(bounds(m.counter).max.y-1e-7);if(b.intersectsBox(bounds(m.burner)))expect(b.min.y).toBeGreaterThanOrEqual(bounds(m.burner).max.y-1e-7)}})
  it('keeps every seed resting inside the pan without disappearing or crossing its bottom',()=>{const m=createEsfandModel();for(const step of[0,1,2,3]){m.pose(step,.5);for(const seed of m.seeds){const b=bounds(seed);expect(b.min.y).toBeCloseTo(m.pan.position.y+.022,7);expect(Math.hypot(seed.position.x,seed.position.z)+.022).toBeLessThan(.28);expect(seed.visible).toBe(true)}}})

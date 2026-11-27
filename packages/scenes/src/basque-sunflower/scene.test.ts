@@ -236,6 +236,15 @@ describe('Basque original paper and wood sun-thistle ornament', () => {
     const capture = (o: boolean | EventListenerOptions | undefined) => typeof o === 'boolean' ? o : o?.capture ?? false
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), type).toBe(true)
   })
+  it('grounds both workbench and doorway bases onto the courtyard and lowers the contact shadow', () => {
+    const s = mount()
+    expect(new THREE.Box3().setFromObject(s.scene.getObjectByName('sunflower-display-foot')!).min.y).toBeLessThanOrEqual(-0.0225)
+    const workFeet: THREE.Box3[] = []
+    s.scene.traverse(o => { if (o.name === 'sunflower-work-foot') workFeet.push(new THREE.Box3().setFromObject(o)) })
+    expect(workFeet).toHaveLength(2)
+    for (const foot of workFeet) expect(foot.min.y).toBeLessThanOrEqual(-0.0225)
+    expect(s.scene.getObjectByName('sunflower-contact-shadow')!.position.y).toBeLessThanOrEqual(-0.0215)
+  })
 })
 
 // Cancellation happens before arrival; a completed placement already owns its result.

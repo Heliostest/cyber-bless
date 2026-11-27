@@ -1,5 +1,7 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { addOfferingTable } from '../cozy-furniture'
 
 const V=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z),R=.52,H=.24,half=Math.PI/6
 const outline=()=>[new THREE.Vector2(0,0),...Array.from({length:33},(_,i)=>{const a=half-i*2*half/32;return new THREE.Vector2(R*Math.sin(a),R*Math.cos(a))})]
@@ -18,13 +20,15 @@ function plateGeometry(_inner:number,outer:number){return new THREE.LatheGeometr
 /** Precut Vasilopita, a real supported cake server, a side cavity and a removable coin. */
 export function createVasilopitaModel(){
  const root=new THREE.Group();root.name='vasilopita-subject';const subject=root
- const bread=new THREE.MeshStandardMaterial({color:0xe8bd70,roughness:.94}),crust=new THREE.MeshStandardMaterial({color:0xb66c35,roughness:.85}),sugar=new THREE.MeshStandardMaterial({color:0xfff5d9,roughness:.96}),ceramic=new THREE.MeshStandardMaterial({color:0xeee6ce,roughness:.52}),blue=new THREE.MeshStandardMaterial({color:0x3c9292,roughness:.66}),wood=new THREE.MeshStandardMaterial({color:0xa87548,roughness:.91}),metal=new THREE.MeshStandardMaterial({color:0xbdc5c1,metalness:.72,roughness:.3}),gold=new THREE.MeshStandardMaterial({color:0xd7af50,metalness:.66,roughness:.3})
- applyCraftSurface(wood,{kind:'wood',strength:.4})
+ const bread=new THREE.MeshStandardMaterial({color:0xe8bd70,roughness:.94}),crust=new THREE.MeshStandardMaterial({color:0xb66c35,roughness:.85}),sugar=new THREE.MeshStandardMaterial({color:0xfff5d9,roughness:.96}),ceramic=new THREE.MeshStandardMaterial({color:0xeee6ce,roughness:.52}),blue=new THREE.MeshStandardMaterial({color:0x3c9292,roughness:.66}),metal=new THREE.MeshStandardMaterial({color:0xbdc5c1,metalness:.72,roughness:.3}),gold=new THREE.MeshStandardMaterial({color:0xd7af50,metalness:.66,roughness:.3})
  applyCraftSurface(ceramic,{kind:'ceramic',strength:.45})
  ;[metal,gold].forEach(material=>applyCraftSurface(material,{kind:'metal',strength:.45}))
  const make=(name:string,g:THREE.BufferGeometry,m:THREE.Material|THREE.Material[],parent:THREE.Object3D=root)=>{const mesh=new THREE.Mesh(g,m);mesh.name=name;mesh.castShadow=mesh.receiveShadow=true;parent.add(mesh);return mesh}
- const table=make('vasilopita-table',new THREE.BoxGeometry(3,.10,3),wood);table.position.set(0,.45,.4)
- const legs=[[-1.28,-.88],[1.28,-.88],[-1.28,1.68],[1.28,1.68]].map(([x,z],i)=>{const m=make('vasilopita-leg-'+i,new THREE.BoxGeometry(.15,.4,.15),wood);m.position.set(x!,.2,z!);return m})
+ const tableBuild=addOfferingTable(root,{name:'vasilopita-table',topName:'vasilopita-table',width:3,depth:3,surfaceY:.50,thickness:.09,center:[0,.4],groundY:getEnvironmentSurfaceY('greek-vasilopita'),finish:'chestnut',color:0xa87548,frameColor:0x865b37,planks:4,breadboardEnds:true,legThickness:.14,legInset:.16,apron:true,stretchers:true,bevel:.018})
+ const table=tableBuild.top
+ const legs=tableBuild.root.children.filter(c=>c.name==='vasilopita-table-leg') as THREE.Mesh[]
+ const seenTableNames=new Map<string,number>()
+ tableBuild.root.traverse(o=>{const n=seenTableNames.get(o.name)??0;seenTableNames.set(o.name,n+1);if(n>0)o.name=`${o.name}-${n}`})
  const platter=make('vasilopita-platter',plateGeometry(.56,.67),ceramic);platter.position.set(-.58,.50,-.2)
  const familyPlate=make('vasilopita-family-plate',plateGeometry(.49,.59),ceramic);familyPlate.position.set(.65,.50,.2)
  const cake=new THREE.Group();cake.name='vasilopita-cake';cake.position.set(-.58,.528,-.2);root.add(cake)

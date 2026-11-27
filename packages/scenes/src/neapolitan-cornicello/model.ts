@@ -1,6 +1,7 @@
-import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { addObjectCradle } from '../cozy-furniture'
 
 // An original flat-backed relief: a rounded upper section, curved taper and
 // single closed tip. The digital solid does not reproduce hollow manufacture.
@@ -263,7 +264,7 @@ function createFoldedCardGeometry(): {
 export function createNeapolitanCornicelloModel(){
  const root=new THREE.Group();root.name='neapolitan-cornicello-root'
  const subject=new THREE.Group();subject.name='neapolitan-cornicello-subject';root.add(subject)
- const cream=new THREE.MeshStandardMaterial({color:0xe7cba1,roughness:.67}),green=new THREE.MeshStandardMaterial({color:0x55725b,roughness:.95}),wood=new THREE.MeshStandardMaterial({color:0x946744,roughness:.88}),red=new THREE.MeshStandardMaterial({color:0xb52f24,roughness:.32}),gold=new THREE.MeshStandardMaterial({color:0xc49145,metalness:.55,roughness:.34}),stone=new THREE.MeshStandardMaterial({color:0xcebd9e,roughness:.96})
+ const cream=new THREE.MeshStandardMaterial({color:0xe7cba1,roughness:.67}),green=new THREE.MeshStandardMaterial({color:0x55725b,roughness:.95}),red=new THREE.MeshStandardMaterial({color:0xb52f24,roughness:.32}),gold=new THREE.MeshStandardMaterial({color:0xc49145,metalness:.55,roughness:.34})
  const paper=createRitualMaterial({
   color:0xf6e9ce,
   roughness:.96,
@@ -282,19 +283,18 @@ export function createNeapolitanCornicelloModel(){
    highlightGuard:1.05,
   },
  })
- applyCraftSurface(wood,{kind:'wood',strength:.4})
- applyCraftSurface(stone,{kind:'stone',strength:.4})
- const add=(parent:THREE.Object3D,name:string,size:[number,number,number],position:[number,number,number],material:THREE.Material)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(...size),material);m.name=name;m.position.set(...position);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
- add(subject,'cornicello-stone-base',[4.6,.12,3],[0,-.06,.20],stone)
- add(subject,'cornicello-horn-pad',[1.1,.10,1.30],[-1.4,.05,-.30],wood)
- add(subject,'cornicello-card-pad',[1.1,.10,1.30],[1.4,.05,-.30],wood)
+ const add=(parent:THREE.Object3D,name:string,size:[number,number,number],position:[number,number,number],material:THREE.Material,bevel=.014)=>{const b=Math.min(bevel,size[0]/3,size[1]/3,size[2]/3);const m=new THREE.Mesh(new RoundedBoxGeometry(size[0],size[1],size[2],2,b),material);m.name=name;m.position.set(...position);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
+ // Compact chamfered wooden presentation stands grounded on the courtyard replace the old giant stone slab.
+ addObjectCradle(subject,{name:'cornicello-box-stand',topName:'cornicello-box-stand-top',style:'pad',footed:true,kind:'wood',color:0x946744,accentColor:0x714c31,width:1.66,depth:2.58,center:[0,.125],groundY:-.12,surfaceY:0,bevel:.016,axis:'z'})
+ addObjectCradle(subject,{name:'cornicello-horn-stand',topName:'cornicello-horn-pad',style:'pad',footed:true,kind:'wood',color:0x946744,accentColor:0x714c31,width:1.06,depth:1.30,center:[-1.4,-.30],groundY:-.12,surfaceY:.10,bevel:.016,axis:'z'})
+ addObjectCradle(subject,{name:'cornicello-card-stand',topName:'cornicello-card-pad',style:'pad',footed:true,kind:'wood',color:0x946744,accentColor:0x714c31,width:1.06,depth:1.30,center:[1.4,-.30],groundY:-.12,surfaceY:.10,bevel:.016,axis:'z'})
  const giftBox=new THREE.Group();giftBox.name='cornicello-gift-box';subject.add(giftBox)
- add(giftBox,'cornicello-box-base',[1.6,.10,1.6],[0,.05,0],cream)
- add(giftBox,'cornicello-box-left',[.08,.40,1.6],[-.76,.30,0],cream)
- add(giftBox,'cornicello-box-right',[.08,.40,1.6],[.76,.30,0],cream)
- add(giftBox,'cornicello-box-front',[1.44,.40,.08],[0,.30,.76],cream)
- add(giftBox,'cornicello-box-back',[1.44,.40,.08],[0,.30,-.76],cream)
- add(giftBox,'cornicello-box-lining',[1.44,.04,1.44],[0,.12,0],green)
+ add(giftBox,'cornicello-box-base',[1.6,.10,1.6],[0,.05,0],cream,.016)
+ add(giftBox,'cornicello-box-left',[.08,.40,1.6],[-.76,.30,0],cream,.014)
+ add(giftBox,'cornicello-box-right',[.08,.40,1.6],[.76,.30,0],cream,.014)
+ add(giftBox,'cornicello-box-front',[1.44,.40,.08],[0,.30,.76],cream,.014)
+ add(giftBox,'cornicello-box-back',[1.44,.40,.08],[0,.30,-.76],cream,.014)
+ add(giftBox,'cornicello-box-lining',[1.44,.04,1.44],[0,.12,0],green,.008)
  const horn=new THREE.Group();horn.name='cornicello-horn';giftBox.add(horn)
  const body=new THREE.Mesh(hornGeometry(),red);body.name='cornicello-horn-surface';body.castShadow=body.receiveShadow=true;horn.add(body)
  const card=new THREE.Group();card.name='cornicello-card';giftBox.add(card)

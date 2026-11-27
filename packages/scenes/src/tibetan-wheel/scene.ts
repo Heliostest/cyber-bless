@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
@@ -163,6 +164,7 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
   const beamMat = new THREE.MeshStandardMaterial({ color: 0xa3442f, roughness: 0.72 })
   const postMat = new THREE.MeshStandardMaterial({ color: 0xa3442f, roughness: 0.74 })
   const eaveMat = new THREE.MeshStandardMaterial({ color: 0x5b3526, roughness: 0.74 })
+  const footMat = new THREE.MeshStandardMaterial({ color: 0x5b3526, roughness: 0.78 })
   const axleMat = new THREE.MeshStandardMaterial({ color: 0x6d5a45, metalness: 0.3, roughness: 0.6 })
   const goldMat = new THREE.MeshStandardMaterial({ color: 0xe0ac4c, metalness: 0.35, roughness: 0.45 })
   const copperMat = new THREE.MeshStandardMaterial({ color: 0xc97a45, metalness: 0.3, roughness: 0.5 })
@@ -171,17 +173,31 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
   applyCraftSurface(beamMat, { kind: 'wood', axis: 'x', scale: 1.05, strength: 0.36 })
   applyCraftSurface(postMat, { kind: 'wood', axis: 'y', scale: 1.05, strength: 0.36 })
   applyCraftSurface(eaveMat, { kind: 'wood', axis: 'x', scale: 1.25, strength: 0.54 })
+  applyCraftSurface(footMat, { kind: 'wood', axis: 'z', scale: 1.15, strength: 0.44 })
   applyCraftSurface(lacquerMat, { kind: 'wood', axis: 'y', scale: 0.95, strength: 0.36 })
   applyCraftSurface(goldMat, { kind: 'metal', strength: .45 })
   applyCraftSurface(copperMat, { kind: 'metal', strength: .45 })
   applyCraftSurface(bronzeMat, { kind: 'metal', strength: .45 })
   applyCraftSurface(axleMat, { kind: 'metal', strength: .45 })
 
+  const groundY = getEnvironmentSurfaceY('tibetan-wheel')
+  const postTop = 2.325
+  const postH = postTop - groundY
+  const postCenterY = (groundY + postTop) / 2
+  const sillH = 0.11
+  const footH = 0.09
+  const axleBottom = groundY + sillH * 0.5
+  const axleTop = 2.25
+  const axleH = axleTop - axleBottom
+  const axleCenterY = (axleBottom + axleTop) / 2
 
   const beamGeo = new RoundedBoxGeometry(1.1, 0.12, 0.3, 2, 0.03)
-  const postGeo = new RoundedBoxGeometry(0.1, 2.05, 0.1, 2, 0.02)
+  const sillGeo = new RoundedBoxGeometry(1.12, sillH, 0.28, 2, 0.022)
+  const footGeo = new RoundedBoxGeometry(0.2, footH, 0.44, 2, 0.022)
+  const postGeo = new RoundedBoxGeometry(0.1, postH, 0.1, 2, 0.02)
   const eaveGeo = new RoundedBoxGeometry(1.35, 0.07, 0.6, 2, 0.02)
-  const axleGeo = new THREE.CylinderGeometry(0.025, 0.025, 1.9, 10)
+  const axleGeo = new THREE.CylinderGeometry(0.025, 0.025, axleH, 10)
+  const socketGeo = new THREE.CylinderGeometry(0.052, 0.068, 0.075, 16)
   const bandH = 0.14
   const panelH = DRUM_H - bandH * 2
   const panelCount = 16
@@ -206,19 +222,38 @@ export function createTibetanWheel(ctx: SceneContext): SceneInstance {
       beam.position.y = y
       unit.add(beam)
     }
+    const sill = new THREE.Mesh(sillGeo, beamMat)
+    sill.name = 'tibetan-wheel-sill'
+    sill.position.y = groundY + sillH / 2
+    unit.add(sill)
     for (const x of [-0.5, 0.5]) {
       const post = new THREE.Mesh(postGeo, postMat)
       post.name = 'tibetan-wheel-post'
-      post.position.set(x, 1.3, 0)
+      post.position.set(x, postCenterY, 0)
       unit.add(post)
+      const foot = new THREE.Mesh(footGeo, footMat)
+      foot.name = 'tibetan-wheel-foot'
+      foot.position.set(x, groundY + footH / 2, 0)
+      unit.add(foot)
     }
     const eave = new THREE.Mesh(eaveGeo, eaveMat)
     eave.name = 'tibetan-wheel-eave'
     eave.position.set(0, 2.4, 0.05)
     unit.add(eave)
     const axle = new THREE.Mesh(axleGeo, axleMat)
-    axle.position.y = DRUM_Y
+    axle.position.y = axleCenterY
     unit.add(axle)
+    for (const [y, flip] of [
+      [groundY + sillH + 0.024, false],
+      [0.36 + 0.024, false],
+      [2.24 - 0.024, true],
+    ] as const) {
+      const socket = new THREE.Mesh(socketGeo, axleMat)
+      socket.name = 'tibetan-wheel-axle-socket'
+      socket.position.y = y
+      if (flip) socket.rotation.x = Math.PI
+      unit.add(socket)
+    }
 
     const drum = new THREE.Group()
     drum.position.y = DRUM_Y

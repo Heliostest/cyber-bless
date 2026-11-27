@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest'
 import * as THREE from 'three'
+import {getEnvironmentSurfaceY} from '@wbr/scene-runtime'
 import {createVasilopitaModel} from './model'
 import {disposeTree} from '../procedural-kit'
 
@@ -26,6 +27,15 @@ describe('Vasilopita serving geometry',()=>{
  })
  it('keeps the blade below the slice until it has completely withdrawn',()=>{
   const m=createVasilopitaModel();for(const t of [.65,.68,.75,.8,.9]){m.pose(1,t);const slice=bounds(m.sliceBottom),blade=bounds(m.blade);if(blade.intersectsBox(slice))expect(blade.max.y).toBeLessThanOrEqual(slice.min.y+1e-7)}disposeTree(m.root)
+ })
+ it('grounds the chamfered offering table with vertical-grain legs and unique names',()=>{
+  const m=createVasilopitaModel(),names:string[]=[];m.root.traverse(o=>names.push(o.name))
+  expect(new Set(names).size).toBe(names.length)
+  const furniture=m.root.getObjectByName('vasilopita-table-furniture')!
+  expect(new THREE.Box3().setFromObject(furniture,true).min.y).toBeCloseTo(getEnvironmentSurfaceY('greek-vasilopita'),5)
+  expect(m.legs).toHaveLength(4)
+  for(const leg of m.legs)expect((leg.material as THREE.Material).userData.craftSurface).toMatchObject({kind:'wood',axis:'y'})
+  disposeTree(m.root)
  })
  it('restores exact checkpoints without rebuilding geometry or producing nonfinite transforms',()=>{
   const m=createVasilopitaModel(),snap=()=>{const rows:number[][]=[];m.root.traverse(o=>rows.push([...o.matrixWorld.elements,Number(o.visible)]));return rows},geometry:THREE.BufferGeometry[]=[];m.root.traverse(o=>{if((o as THREE.Mesh).isMesh)geometry.push((o as THREE.Mesh).geometry)})

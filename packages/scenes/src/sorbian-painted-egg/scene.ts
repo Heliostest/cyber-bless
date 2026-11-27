@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
@@ -10,7 +11,7 @@ import { createObjectPointer } from '../object-pointer'
 import { createPosePlacement } from '../pose-placement'
 import { createTouchTarget, insideCanvas, projectTouchPoint } from '../touch-target'
 import { createDropFeedback } from '../drop-feedback'
-import { addCraftTable } from '../cozy-furniture'
+import { addCraftTable, addObjectCradle } from '../cozy-furniture'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
 
@@ -70,9 +71,27 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
   const lathe = (name: string, profile: [number, number][], mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) =>
     add(name, new THREE.LatheGeometry(profile.map(v => new THREE.Vector2(...v)), 64), mat, p, parent)
   addCraftTable(world, { name: 'egg-table', topName: 'egg-table-top', width: 3.3, depth: 1.78, surfaceY: .74, thickness: .12, center: [0,0], support: 'joined', finish: 'birch' })
-  const shadow = add('egg-ground-shadow', new THREE.PlaneGeometry(3.9, 2.5), new THREE.ShadowMaterial({ opacity: .13 }), [0, .003, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
+  const shadow = add('egg-ground-shadow', new THREE.PlaneGeometry(3.9, 2.5), new THREE.ShadowMaterial({ opacity: .13 }), [0, getEnvironmentSurfaceY('sorbian-painted-egg') + .001, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box('egg-linen-rest', [1.01, .04, .91], [-.48, .76, .08], linenRest)
-  box('egg-brush-rest', [.85, .036, .24], [-1.02, .758, .56], cream)
+  addObjectCradle(world, {
+    name: 'egg-brush-rest',
+    topName: 'egg-brush-rest',
+    width: .85,
+    depth: .24,
+    center: [-1.02, .56],
+    groundY: .74,
+    surfaceY: .764,
+    style: 'groove',
+    grooveAxis: 'x',
+    grooveDepth: .015,
+    grooveWidth: .13,
+    bevel: .006,
+    kind: 'wood',
+    finish: 'birch',
+    color: 0xede0bc,
+    roughness: .82,
+    surfaceStrength: .24,
+  })
   // The dish has a raised ceramic rim around a shallow painted pool.
   lathe('egg-dye-dish', [[0, 0], [.23, 0], [.28, .035], [.29, .095], [.26, .11], [.235, .07], [0, .06]], clay, [-1.13, .74, -.56])
   add('egg-dye-pool', new THREE.CylinderGeometry(.232, .232, .009, 48), pigment, [-1.13, .807, -.56])

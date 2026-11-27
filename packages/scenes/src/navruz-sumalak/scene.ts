@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { sceneTemplate } from '../scene-localization'
@@ -26,8 +27,9 @@ const COPY = {
 type Checkpoint = 0 | 1 | 2 | 3
 type Motion = { step: 0 | 1 | 2; time: number; from: THREE.Vector3; guided: boolean }
 const POT_X = -.45, POT_Z = -.14, ARC_RADIUS = .62, ARC_Y = 1.09
-const BOWL = new THREE.Vector3(.85, .0045, .59)
-const SHARED = new THREE.Vector3(.79, .061, -.62)
+const SURFACE_Y = getEnvironmentSurfaceY('navruz-sumalak')
+const BOWL = new THREE.Vector3(.85, SURFACE_Y, .59)
+const SHARED = new THREE.Vector3(.79, SURFACE_Y + .0475, -.62)
 const PARKED = new THREE.Vector3(-1.07, 1.09, -.14)
 const arcPoint = (t: number) => new THREE.Vector3(POT_X + Math.cos(Math.PI * (1 - t)) * ARC_RADIUS, ARC_Y, POT_Z + Math.sin(Math.PI * (1 - t)) * ARC_RADIUS)
 const smooth = (t: number) => t * t * (3 - 2 * t)
@@ -61,7 +63,24 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
   lights.key.shadow.bias = -.0008; lights.key.shadow.normalBias = .025
   const world = new THREE.Group(); world.name = 'navruz-courtyard-hearth'; scene.add(world)
   const mat = (color: number, roughness = .9) => new THREE.MeshStandardMaterial({ color, roughness })
-  const clay = mat(0xba8a66), clayLight = mat(0xcfaa83), soot = mat(0x504740), iron = mat(0x6d7973), ironRim = mat(0x85948b)
+  const clay = new THREE.MeshStandardMaterial({ color: 0xba8a66, roughness: .96, vertexColors: true })
+  const clayLight = new THREE.MeshStandardMaterial({ color: 0xcfaa83, roughness: .95, vertexColors: true })
+  const soot = mat(0x504740, .96), iron = mat(0x6d7973), ironRim = mat(0x85948b)
+  /** Subtle deterministic matte mud-brick variation without applying ceramic glaze to raw earthen clay. */
+  const applyEarthenTone = (geom: THREE.BufferGeometry, seed = 0) => {
+    const pos = geom.getAttribute('position')
+    const colors = new Float32Array(pos.count * 3)
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i)
+      const grain = Math.sin(x * 13.7 + z * 11.3 + seed) * 0.032 + Math.cos(y * 19.1 - x * 7.9 + seed * 1.7) * 0.024
+      const baseShade = THREE.MathUtils.clamp(0.95 + y * 0.10 + grain, 0.86, 1.05)
+      colors[i * 3] = baseShade
+      colors[i * 3 + 1] = baseShade * 0.985
+      colors[i * 3 + 2] = baseShade * 0.962
+    }
+    geom.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    return geom
+  }
   const caramel = createRitualMaterial({ color: 0xa76231, roughness: .43, clearcoat: .32, clearcoatRoughness: .28 }, { kind: 'wet', strength: .3 }), swirlMat = createRitualMaterial({ color: 0xc48b48, roughness: .49, clearcoat: .26, clearcoatRoughness: .3 }, { kind: 'wet', strength: .25 }), wood = mat(0xc19057), woodLight = mat(0xd6ab70)
   const glaze = mat(0x78a9a7, .28), cream = mat(0xf1dec2, .4), weave = mat(0xd2ab78), terracotta = mat(0xb27355)
   // Same pigment spans ceramics, textiles and guide beads; keep their surfaces separate.
@@ -77,18 +96,27 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
   function tube(points: THREE.Vector3[], radius: number, material: THREE.Material, parent: THREE.Object3D, name = '', closed = false) {
     return add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, closed), Math.max(20, points.length * 3), radius, 7, closed), material, [0, 0, 0], parent, name)
   }
-  const ground = add(new THREE.CylinderGeometry(1.67, 1.7, .045, 64), mat(0xdcc5a5), [0, -.018, 0], world, 'navruz-courtyard-plinth')
-  ground.scale.z = .84
-  // A low clay hearth supports the broad round kazan. No ceremonial fire.
-  add(new THREE.CylinderGeometry(.69, .76, .42, 40), clay, [POT_X, .23, POT_Z], world, 'navruz-clay-hearth')
+  // A low earthen mud-brick hearth grounded directly on the courtyard supports the broad round kazan. No ceremonial fire.
+  const hearthProfile = [
+    new THREE.Vector2(0, -.04),
+    new THREE.Vector2(.81, -.04),
+    new THREE.Vector2(.82, -.01),
+    new THREE.Vector2(.78, .05),
+    new THREE.Vector2(.75, .18),
+    new THREE.Vector2(.71, .36),
+    new THREE.Vector2(.69, .435),
+    new THREE.Vector2(.67, .44),
+    new THREE.Vector2(0, .44),
+  ]
+  add(applyEarthenTone(new THREE.LatheGeometry(hearthProfile, 44), 1.3), clay, [POT_X, 0, POT_Z], world, 'navruz-clay-hearth')
   for (let i = 0; i < 12; i++) {
     const a = i / 12 * Math.PI * 2
-    const brick = add(new RoundedBoxGeometry(.3, .12, .18, 2, .025), i % 2 ? clayLight : clay, [POT_X + Math.cos(a) * .65, .44, POT_Z + Math.sin(a) * .65])
+    const brick = add(applyEarthenTone(new RoundedBoxGeometry(.3, .12, .18, 2, .025), i * 2.1), i % 2 ? clayLight : clay, [POT_X + Math.cos(a) * .65, .44, POT_Z + Math.sin(a) * .65])
     brick.rotation.y = -a + Math.PI / 2
   }
-  add(new RoundedBoxGeometry(.34, .20, .06, 3, .07), soot, [POT_X, .18, POT_Z + .7], world, 'navruz-hearth-opening')
+  add(new RoundedBoxGeometry(.34, .20, .06, 3, .07), soot, [POT_X, .16, POT_Z + .71], world, 'navruz-hearth-opening')
   for (const x of [-.08, .07]) {
-    const log = add(new THREE.CylinderGeometry(.04, .045, .27, 9), wood, [POT_X + x, .105, POT_Z + .69]); log.rotation.x = Math.PI / 2
+    const log = add(new THREE.CylinderGeometry(.04, .045, .27, 9), wood, [POT_X + x, .085, POT_Z + .70]); log.rotation.x = Math.PI / 2
   }
   const kazan = new THREE.Group(); kazan.name = 'navruz-kazan'; kazan.position.set(POT_X, 0, POT_Z); world.add(kazan)
   const profile = [[0, .39], [.25, .405], [.46, .50], [.60, .69], [.69, .94], [.685, 1.02], [.644, 1.02], [.62, .87], [.5, .7], [.28, .59], [0, .59]].map(([x, y]) => new THREE.Vector2(x, y))
@@ -106,13 +134,13 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
     })
     tube(points, .012, swirlMat, swirls, `navruz-food-swirl-${i}`).userData.toonSurface = { outline: false }
   }
-  const sharingMat = add(new RoundedBoxGeometry(.86, .043, .9, 3, .06), weave, [.79, .035, -.62], world, 'navruz-sharing-mat')
+  const sharingMat = add(new RoundedBoxGeometry(.86, .043, .9, 3, .06), weave, [.79, SURFACE_Y + .0215, -.62], world, 'navruz-sharing-mat')
   sharingMat.userData.toonSurface = { outline: false }
   for (let i = 0; i < 13; i++) {
-    const stripe = add(new THREE.BoxGeometry(.76, .005, .013), i % 3 ? matStripe : terracotta, [.79, .059, -.98 + i * .06])
+    const stripe = add(new THREE.BoxGeometry(.76, .005, .013), i % 3 ? matStripe : terracotta, [.79, SURFACE_Y + .0455, -.98 + i * .06])
     stripe.userData.toonSurface = { outline: false }
   }
-  for (const x of [.46, 1.12]) add(new THREE.BoxGeometry(.025, .006, .75), terracotta, [x, .06, -.62]).userData.toonSurface = { outline: false }
+  for (const x of [.46, 1.12]) add(new THREE.BoxGeometry(.025, .006, .75), terracotta, [x, SURFACE_Y + .0465, -.62]).userData.toonSurface = { outline: false }
   function makeBowl(name: string, position: THREE.Vector3, scale = 1) {
     const bowl = new THREE.Group(); bowl.name = name; bowl.position.copy(position); bowl.scale.setScalar(scale); world.add(bowl)
     const profile = [[0, 0], [.12, 0], [.15, .04], [.23, .09], [.285, .20], [.278, .224], [.25, .215], [.2, .115], [.1, .065], [0, .065]].map(([x, y]) => new THREE.Vector2(x, y))
@@ -132,7 +160,7 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
     const a = i / 24 * Math.PI * 2, r = .025 + i / 24 * .15
     return new THREE.Vector3(Math.cos(a) * r, .194, Math.sin(a) * r)
   }), .008, swirlMat, bowl, 'navruz-serving-swirl')
-  makeBowl('navruz-neighbor-bowl', new THREE.Vector3(.24, .0045, -.93), .64)
+  makeBowl('navruz-neighbor-bowl', new THREE.Vector3(.24, SURFACE_Y, -.93), .64)
   const spoon = new THREE.Group(); spoon.name = 'navruz-wooden-spoon'; world.add(spoon)
   const head = add(new THREE.SphereGeometry(1, 24, 12), wood, [0, 0, 0], spoon, 'navruz-wooden-spoon-bowl'); head.scale.set(.15, .055, .205)
   const hollow = add(new THREE.SphereGeometry(1, 20, 10), woodLight, [0, .04, -.005], spoon); hollow.scale.set(.12, .012, .165)
@@ -215,7 +243,7 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
       else if (ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) {
         carried().position.copy(dragPoint).add(offset)
         carried().position.x = THREE.MathUtils.clamp(carried().position.x, -1.4, 1.4)
-        carried().position.y = THREE.MathUtils.clamp(carried().position.y, .0045, 1.65)
+        carried().position.y = THREE.MathUtils.clamp(carried().position.y, SURFACE_Y, 1.65)
         world.updateMatrixWorld(true)
         if(automaticReady(x,y)&&pointer.finish()){dragging=false;begin(true)}
       }

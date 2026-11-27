@@ -249,6 +249,11 @@ describe('physical craft and owned resources', () => {
     }
     const foot = new THREE.Box3().setFromObject(s.scene.getObjectByName('egg-cup-foot')!)
     expect(foot.min.y).toBeCloseTo(new THREE.Box3().setFromObject(s.scene.getObjectByName('egg-table-top')!).max.y, 4)
+    const brushRestMat = (s.scene.getObjectByName('egg-brush-rest-groove-block') as THREE.Mesh).material as THREE.Material
+    const bristleMat = (s.scene.getObjectByName('egg-brush-tip') as THREE.Mesh).material as THREE.Material
+    expect(brushRestMat).not.toBe(bristleMat)
+    expect(brushRestMat.userData.craftSurface).toMatchObject({ kind: 'wood' })
+    expect(bristleMat.userData.craftSurface).toBeUndefined()
   })
   it('keeps original paint strokes within a paint-thin gap of the curved egg shell', () => {
     const s = mount(1), shell = s.scene.getObjectByName('egg-lathed-shell')!, motif = s.scene.getObjectByName('egg-invented-motif')!

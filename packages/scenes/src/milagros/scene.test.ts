@@ -148,7 +148,9 @@ describe('milagros craft', () => {
     const onVariantChange = vi.fn()
     const s = mount(2, { initialVariant: 'flower', onVariantChange })
     expect(s.scene.getObjectByName('milagros-charm-3')!.localToWorld(new THREE.Vector3(0, .37, .025)).distanceTo(new THREE.Vector3(0, 1.69, .16))).toBeLessThan(1e-8)
-    expect(s.scene.getObjectByName('milagros-charm-0')!.position.y).toBe(0.41)
+    const liner = new THREE.Box3().setFromObject(s.scene.getObjectByName('milagros-tray-liner')!)
+    const restingCharm = new THREE.Box3().setFromObject(s.scene.getObjectByName('milagros-symbol-0')!)
+    expect(restingCharm.min.y).toBeCloseTo(liner.max.y, 4)
     expect(onVariantChange).not.toHaveBeenCalled()
   })
   it('rejects cancellation and a second pointer outside the scene before accepting a valid hang', () => {
@@ -178,5 +180,26 @@ describe('milagros craft', () => {
     pointer(s.hit, 'pointerup', s.point('milagros-pin-target'), 1)
     button.click()
     expect(s.onProgress).toHaveBeenCalledExactlyOnceWith(2)
+  })
+  it('grounds the tray and board feet on the veranda, bridges the Z seam, seats all charms on the liner and connects the pin shaft', () => {
+    const s = mount(0)
+    const tray = new THREE.Box3().setFromObject(s.scene.getObjectByName('milagros-tray-base')!)
+    const liner = new THREE.Box3().setFromObject(s.scene.getObjectByName('milagros-tray-liner')!)
+    const shaft = new THREE.Box3().setFromObject(s.scene.getObjectByName('milagros-pin-shaft')!)
+    const pin = s.scene.getObjectByName('milagros-pin')!.getWorldPosition(new THREE.Vector3())
+    expect(tray.min.y).toBeCloseTo(-0.035, 4)
+    const feet: THREE.Box3[] = []
+    s.scene.traverse(o => { if (o.name === 'milagros-board-foot') feet.push(new THREE.Box3().setFromObject(o)) })
+    expect(feet).toHaveLength(2)
+    for (const foot of feet) {
+      expect(foot.min.y).toBeCloseTo(-0.035, 4)
+      expect(foot.max.z).toBeGreaterThan(tray.min.z)
+    }
+    for (let i = 0; i < 4; i++) {
+      const charm = new THREE.Box3().setFromObject(s.scene.getObjectByName(`milagros-symbol-${i}`)!)
+      expect(charm.min.y).toBeCloseTo(liner.max.y, 4)
+    }
+    expect(shaft.min.z).toBeLessThanOrEqual(0.035)
+    expect(shaft.max.z).toBeGreaterThanOrEqual(pin.z)
   })
 })

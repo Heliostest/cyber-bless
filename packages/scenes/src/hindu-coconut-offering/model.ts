@@ -94,7 +94,8 @@ export function createCoconutOfferingModel() {
   const eye = new THREE.MeshStandardMaterial({ color: '#3d2a21', roughness: 1 })
   const stone = new THREE.MeshStandardMaterial({ color: '#71858b', roughness: .97 })
   applyCraftSurface(stone, { kind: 'stone', strength: .45 })
-  const ringMaterial = new THREE.MeshStandardMaterial({ color: '#817d70', roughness: 1 })
+  const ringMaterial = new THREE.MeshStandardMaterial({ color: '#8a8578', roughness: .95 })
+  applyCraftSurface(ringMaterial, { kind: 'stone', scale: 1.15, strength: .34 })
   const waterMaterial = new THREE.MeshStandardMaterial({ color: '#8ebac1', roughness: .19, transparent: true, opacity: .46, depthWrite: false })
   waterMaterial.userData.waterRendering = true
   const add = (parent: THREE.Object3D, name: string, geometry: THREE.BufferGeometry, material: THREE.Material | THREE.Material[]) => {
@@ -136,11 +137,20 @@ export function createCoconutOfferingModel() {
   })
 
   const ringInner = RX * Math.sin(Math.PI / 8)
-  const preparationRing = add(root, 'coconut-preparation-ring', horizontalSurface([[ringInner, .025], [.34, .025], [.34, .1], [ringInner, .1]], true), ringMaterial)
+  const preparationRing = add(root, 'coconut-preparation-ring', horizontalSurface([
+    [ringInner + .016, .002], [.328, .002], [.34, .014], [.34, .048], [.336, .084], [.326, .096],
+    [.318, .1], [ringInner, .1], [ringInner, .088], [ringInner + .006, .05], [ringInner + .006, .014],
+  ], true), ringMaterial)
   preparationRing.position.set(-1, 0, .4)
-  const basin = add(root, 'coconut-catch-basin', horizontalSurface([[0, .012], [.73, .012], [.91, .065], [.95, .105], [.94, .14], [.89, .16], [.83, .16], [.73, .095], [0, .095]]), stone)
+  const basin = add(root, 'coconut-catch-basin', horizontalSurface([
+    [0, .008], [.72, .008], [.755, .018], [.84, .036], [.905, .064], [.945, .098], [.95, .128],
+    [.935, .15], [.905, .162], [.855, .162], [.822, .148], [.768, .112], [.725, .095], [0, .095],
+  ]), stone)
   basin.position.set(.65, 0, .4); basin.scale.set(1.26, 1, .81)
-  const strikingStone = add(root, 'coconut-striking-stone', horizontalSurface([[0, .14], [.74, .14], [.81, .17], [.8, .30], [.77, STONE_TOP], [0, STONE_TOP]]), stone)
+  const strikingStone = add(root, 'coconut-striking-stone', horizontalSurface([
+    [0, .095], [.74, .095], [.775, .112], [.812, .158], [.816, .215],
+    [.806, .278], [.794, .312], [.782, .33], [.77, STONE_TOP], [0, STONE_TOP],
+  ]), stone)
   strikingStone.position.set(.65, 0, .4); strikingStone.scale.set(1.30, 1, .83)
   const water = add(root, 'coconut-water-spill', new THREE.CylinderGeometry(.43, .43, .005, 64), waterMaterial)
   water.position.set(.65, .342, .4); water.castShadow = false

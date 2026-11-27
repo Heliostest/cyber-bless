@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { placementHit } from '../placement-hit'
@@ -7,6 +8,7 @@ import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
+import { addObjectCradle } from '../cozy-furniture'
 import { createTouchTarget } from '../touch-target'
 import { addStageLights, CEL_STYLE, createPointerRay, createSceneFeedback, createStepOverlay,
   createWarmStage, disposeTree, observeCanvasResize, portraitBoost, setSafeText, sizeStage } from '../procedural-kit'
@@ -148,9 +150,35 @@ export function createOmikuji(ctx: SceneContext): SceneInstance {
     [0.83, -0.22, standLegA, 0.16, 0.32],
     [0.83, 0.47, standLegB, 0.44, 0.48],
   ]
+  const floorY = getEnvironmentSurfaceY('omikuji')
+  const legH = 0.35 - floorY
   for (const [x, z, legMat, offU, offV] of legSpecs) {
-    add(projectWoodUVs(new RoundedBoxGeometry(0.14, 0.33, 0.16, 3, 0.027), 'y', 2.2, 2.6, offU, offV), legMat, 'omikuji-stand-leg', [x, 0.165, z])
+    add(projectWoodUVs(new RoundedBoxGeometry(0.14, legH, 0.16, 3, 0.027), 'y', 2.2, 2.6, offU, offV), legMat, 'omikuji-stand-leg', [x, floorY + legH / 2, z])
   }
+  const stretcherY = floorY + 0.11
+  for (const [idx, x] of ([-0.83, 0.83] as const).entries()) {
+    add(projectWoodUVs(new RoundedBoxGeometry(0.065, 0.055, 0.69, 2, 0.012), 'z', 1.2, 2.0, idx ? 0.62 : 0.28, 0.5), standApron, 'omikuji-stand-side-stretcher', [x, stretcherY, 0.125])
+  }
+  add(projectWoodUVs(new RoundedBoxGeometry(1.66, 0.052, 0.065, 2, 0.012), 'x', 0.55, 1.4, 0.44, 0.5), standApron, 'omikuji-stand-cross-stretcher', [0, stretcherY, 0.125])
+  addObjectCradle(world, {
+    name: 'omikuji-envelope-slot',
+    topName: 'omikuji-envelope-slot',
+    width: 0.76,
+    depth: 0.16,
+    center: [0.67, 0.391],
+    groundY: 0.506,
+    surfaceY: 0.513,
+    style: 'groove',
+    grooveAxis: 'x',
+    grooveDepth: 0.028,
+    grooveWidth: 0.098,
+    bevel: 0.006,
+    kind: 'wood',
+    finish: 'honey',
+    color: 0xb6875a,
+    roughness: 0.80,
+    surfaceStrength: 0.24,
+  })
   for (const [z, bend] of [[-0.24, 0.022], [0.04, -0.016], [0.34, 0.019]] as const) {
     tube([[-0.98, 0.514, z], [-0.24, 0.514, z + bend], [0.32, 0.514, z - bend * 0.6], [0.98, 0.514, z]], 0.0021, grainAccent, world)
   }

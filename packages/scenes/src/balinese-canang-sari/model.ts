@@ -1,5 +1,7 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { addSteppedPedestal } from '../cozy-furniture'
 import { createCanangTrayMaterials } from './canang-material'
 import {
  CANANG_FLOWER_PALETTES,
@@ -18,23 +20,48 @@ export function createCanangModel(){
  const root=new THREE.Group();root.name='canang-subject'
  const mat=(color:number,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness})
  const trayMats=createCanangTrayMaterials()
- const stone=mat(0xbfc2ac),cap=mat(0xd5d4ba),joint=mat(0x999d85),limeMat=mat(0xfff7de),riceMat=mat(0xfff7de),caneRindMat=mat(0x718f4c),cakeMat=mat(0xe3b87c),bananaMat=mat(0xf1d47d),betelNut=mat(0x947057)
+ const joint=mat(0x999d85),limeMat=mat(0xfff7de),riceMat=mat(0xfff7de),caneRindMat=mat(0x718f4c),cakeMat=mat(0xe3b87c),bananaMat=mat(0xf1d47d),betelNut=mat(0x947057)
  const petalMat=createCanangPetalMaterial()
  const calyxMat=createCanangLeafMaterial('leaf-pinnate')
  const pandanMat=createCanangLeafMaterial('leaf-parallel')
  const porosanLeafMat=createCanangLeafMaterial('leaf-pinnate')
- ;[stone,cap,joint].forEach(material=>applyCraftSurface(material,{kind:'stone',strength:.45}))
+ applyCraftSurface(joint,{kind:'stone',strength:.45})
  const make=(name:string,geometry:THREE.BufferGeometry,material:THREE.Material,parent:THREE.Object3D=root)=>{const m=new THREE.Mesh(geometry,material);m.name=name;m.castShadow=m.receiveShadow=true;parent.add(m);return m}
  const box=(name:string,size:[number,number,number],pos:[number,number,number],material:THREE.Material,parent:THREE.Object3D=root)=>{const m=make(name,new THREE.BoxGeometry(...size),material,parent);m.position.set(...pos);return m}
  const solid=(name:string,size:[number,number,number],pos:[number,number,number],material:THREE.Material,parent:THREE.Object3D)=>{const m=make(name,new THREE.IcosahedronGeometry(1,2),material,parent);m.scale.set(...size);m.position.set(...pos);return m}
- box('canang-paving',[3.9,.12,2.9],[0,.06,.15],stone)
- // The offering ledge is supported all the way to the ground; no repeated little table.
- box('canang-shrine-foot',[1.58,.15,1.52],[-.65,.195,-.5],joint)
- box('canang-shrine-plinth',[1.30,.16,1.24],[-.65,.35,-.5],stone)
- box('canang-shrine-body',[1.14,.32,1.08],[-.65,.59,-.5],stone)
- box('canang-shrine-neck',[1.30,.07,1.24],[-.65,.785,-.5],joint)
- box('canang-shrine-ledge',[1.56,.08,1.50],[-.65,.86,-.5],cap)
- for(const side of[-1,1])box('canang-shrine-recess-'+side,[.018,.22,.46],[-.65+side*.574,.59,-.5],joint)
+ // Stepped stone field-shrine plinth and compact stone preparation pads grounded directly on the courtyard.
+ addSteppedPedestal(root,{
+  name:'canang-shrine',topName:'canang-shrine-ledge',shape:'rect',kind:'stone',
+  center:[-.65,-.5],groundY:-.065,surfaceY:.90,color:0xbfc2ac,trimColor:0x999d85,
+  roughness:.96,surfaceStrength:.45,
+  tiers:[
+   {width:1.58,depth:1.52,height:.335,bevel:.022,color:0x999d85},
+   {width:1.30,depth:1.24,height:.16,bevel:.018,color:0xbfc2ac},
+   {width:1.14,depth:1.08,height:.32,bevel:.018,color:0xbfc2ac},
+   {width:1.30,depth:1.24,height:.07,bevel:.014,color:0x999d85},
+   {width:1.56,depth:1.50,height:.08,bevel:.016,color:0xd5d4ba},
+  ],
+ })
+ for(const side of[-1,1]){
+  const recess=make('canang-shrine-recess-'+side,new RoundedBoxGeometry(.022,.22,.46,2,.006),joint)
+  recess.position.set(-.65+side*.572,.59,-.5)
+ }
+ const frontRecess=make('canang-shrine-recess-front',new RoundedBoxGeometry(.46,.22,.022,2,.006),joint)
+ frontRecess.position.set(-.65,.59,-.5+.542)
+ addSteppedPedestal(root,{
+  name:'canang-tray-pad',topName:'canang-tray-pad-top',shape:'rect',kind:'stone',
+  center:[.82,.80],groundY:-.065,surfaceY:.12,color:0xbfc2ac,trimColor:0x999d85,
+  roughness:.96,surfaceStrength:.45,
+  tiers:[
+   {width:1.42,depth:1.42,height:.095,bevel:.018,color:0x999d85},
+   {width:1.34,depth:1.34,height:.09,bevel:.016,color:0xc9cbb5},
+  ],
+ })
+ addSteppedPedestal(root,{
+  name:'canang-flower-pad',topName:'canang-flower-pad-top',shape:'round',kind:'stone',
+  center:[-.75,1.08],radius:.24,groundY:-.065,surfaceY:.12,color:0xbfc2ac,trimColor:0xd5d4ba,
+  roughness:.96,surfaceStrength:.45,tiers:2,bevel:.014,
+ })
  const tray=new THREE.Group();tray.name='canang-tray';root.add(tray)
  box('canang-ceper-floor',[1.25,.06,1.25],[0,.03,0],trayMats.ceperFloor,tray)
  for(const side of[-1,1]){

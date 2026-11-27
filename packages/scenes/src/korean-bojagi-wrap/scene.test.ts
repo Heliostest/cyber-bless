@@ -83,7 +83,7 @@ function worldPoint(s: ReturnType<typeof mount>, p: [number, number, number]): [
 describe('six spatial cloth operations', () => {
   it.each([0, 1, 2, 3])('accepts cloth coverage away from a single destination point at fold %i', stage => {
     const s = mount(stage, { isReducedMotion: () => true }, 1280), { from, to } = points(s)
-    const covered = worldPoint(s, [stage === 3 ? -.20 : .20, .85, stage === 1 ? -.16 : .16])
+    const covered = worldPoint(s, [stage === 3 ? -.20 : .20, .772, stage === 1 ? -.16 : .16])
     expect(Math.hypot(covered[0] - to[0], covered[1] - to[1])).toBeGreaterThan(22)
     move(s, from, covered); expect(s.variants).toEqual([`bojagi-step-${stage + 1}`]); event(s.hit, 'pointerup', covered)
     expect(s.variants).toEqual([`bojagi-step-${stage + 1}`])
@@ -94,12 +94,12 @@ describe('six spatial cloth operations', () => {
     expect(s.variants).toEqual([]); expect(s.haptic).not.toHaveBeenCalled()
   })
   it('accepts an actual band crossing away from the former point target', () => {
-    const s = mount(4, { isReducedMotion: () => true }, 1280), { from } = points(s), crossed = worldPoint(s, [.28, .85, .02])
+    const s = mount(4, { isReducedMotion: () => true }, 1280), { from } = points(s), crossed = worldPoint(s, [.28, .772, .02])
     move(s, from, crossed); event(s.hit, 'pointerup', crossed)
     expect(s.variants).toEqual(['bojagi-step-5'])
   })
   it('rejects a band laid beside the other strip without overlap', () => {
-    const s = mount(4, { isReducedMotion: () => true }), { from } = points(s), beside = worldPoint(s, [.28, .85, .42])
+    const s = mount(4, { isReducedMotion: () => true }), { from } = points(s), beside = worldPoint(s, [.28, .772, .42])
     move(s, from, beside); event(s.hit, 'pointerup', beside)
     expect(s.variants).toEqual([]); expect(s.haptic).not.toHaveBeenCalled()
   })
@@ -119,7 +119,7 @@ describe('six spatial cloth operations', () => {
   })
   it('tightens along an outward pull and accepts the tightened knot away from a fixed endpoint', () => {
     const s = mount(5, { isReducedMotion: () => true }, 1280), { from } = points(s)
-    const loose = positions(s, 'bojagi-band-left'), outward = worldPoint(s, [1.22, .59, -.03])
+    const loose = positions(s, 'bojagi-band-left'), outward = worldPoint(s, [1.22, .512, -.03])
     move(s, from, outward); expect(positions(s, 'bojagi-band-left')).not.toEqual(loose)
     event(s.hit, 'pointerup', outward); expect(s.variants).toEqual(['bojagi-step-6']); expect(s.haptic).toHaveBeenCalledWith('heavy')
   })
@@ -283,7 +283,7 @@ describe('six spatial cloth operations', () => {
         a.fromBufferAttribute(positions, indices.getX(n)); b.fromBufferAttribute(positions, indices.getX(n + 1)); c.fromBufferAttribute(positions, indices.getX(n + 2))
         for (const weights of [[.5, .5, 0], [0, .5, .5], [.5, 0, .5], [1 / 3, 1 / 3, 1 / 3]]) {
           p.copy(a).multiplyScalar(weights[0]!).addScaledVector(b, weights[1]!).addScaledVector(c, weights[2]!)
-          worst = Math.max(worst, Math.min(.485 - Math.abs(p.x), .485 - Math.abs(p.z), p.y - .115, .69 - p.y))
+          worst = Math.max(worst, Math.min(.485 - Math.abs(p.x), .485 - Math.abs(p.z), p.y - .037, .612 - p.y))
         }
       }
       expect(worst).toBeLessThan(.002)
@@ -319,10 +319,19 @@ describe('six spatial cloth operations', () => {
     expect(Array.from(bandBuf)).not.toEqual(beforeBand)
     expect(Array.from(clothBuf).every(Number.isFinite)).toBe(true)
     expect(Array.from(bandBuf).every(Number.isFinite)).toBe(true)
-    // Right ribbon tail drapes under gravity down the parcel side toward the woven mat (well below the old 0.43 float).
+    // Right ribbon tail drapes under gravity down the parcel side toward the woven mat (well below the old float).
     const bandBounds = new THREE.Box3().setFromObject(rightBand)
-    expect(bandBounds.min.y).toBeLessThan(0.32)
-    expect(bandBounds.min.y).toBeGreaterThan(0.06)
+    expect(bandBounds.min.y).toBeLessThan(0.24)
+    expect(bandBounds.min.y).toBeGreaterThan(0.022)
+  })
+
+  it('grounds the woven floor mat onto the veranda deck (-0.035) and seats the parcel onto the mat', () => {
+    const s = mount(0, { isReducedMotion: () => true })
+    const matBounds = new THREE.Box3().setFromObject(s.scene.getObjectByName('bojagi-woven-mat')!)
+    const parcelBounds = new THREE.Box3().setFromObject(s.scene.getObjectByName('bojagi-parcel')!)
+    expect(matBounds.min.y).toBeCloseTo(-0.035, 3)
+    expect(parcelBounds.min.y).toBeGreaterThan(0.025)
+    expect(parcelBounds.min.y).toBeLessThan(0.038)
   })
 
   it('renders a quiet, weighty resting drape in reduced motion without loading WASM and stays bit-identical across calm frames', async () => {
@@ -330,7 +339,7 @@ describe('six spatial cloth operations', () => {
     _resetRapierLoaderForTest()
     expect(isRapierLoaded()).toBe(false)
 
-    // 1. Entry (progress=0): all four overhanging cloth corners rest onto wood floor outside the woven mat.
+    // 1. Entry (progress=0): all four overhanging cloth corners rest onto the wood veranda deck outside the woven mat.
     const open = mount(0, { isReducedMotion: () => true })
     const openCloth = open.scene.getObjectByName('bojagi-cloth') as THREE.Mesh
     const openUv = openCloth.geometry.getAttribute('uv')
@@ -343,8 +352,8 @@ describe('six spatial cloth operations', () => {
           break
         }
       }
-      expect(cornerY, `open corner (${cu},${cv}) drapes onto floor`).toBeLessThan(0.035)
-      expect(cornerY).toBeGreaterThanOrEqual(0.014)
+      expect(cornerY, `open corner (${cu},${cv}) drapes onto veranda deck`).toBeLessThan(-0.005)
+      expect(cornerY).toBeGreaterThanOrEqual(-0.026)
     }
     open.instance.dispose()
 
@@ -362,16 +371,16 @@ describe('six spatial cloth operations', () => {
 
     for (const [band, tip, side] of [[leftBand, leftTip, -1], [rightBand, rightTip, 1]] as const) {
       const bounds = new THREE.Box3().setFromObject(band)
-      expect(bounds.min.y, `${band.name} drapes down to woven mat`).toBeLessThan(0.12)
-      expect(bounds.min.y).toBeGreaterThan(0.06)
-      expect(tip.position.y, `${tip.name} rests near woven mat`).toBeLessThan(0.12)
-      expect(tip.position.y).toBeGreaterThanOrEqual(0.075)
+      expect(bounds.min.y, `${band.name} drapes down to woven mat`).toBeLessThan(0.08)
+      expect(bounds.min.y).toBeGreaterThan(0.024)
+      expect(tip.position.y, `${tip.name} rests near woven mat`).toBeLessThan(0.08)
+      expect(tip.position.y).toBeGreaterThanOrEqual(0.035)
       expect(Math.abs(tip.position.x)).toBeLessThan(1.0)
       // Side-wall ribbon vertices stay strictly outside the wrapped parcel walls (no cloth/box clipping).
       const attr = band.geometry.getAttribute('position')
       for (let i = 0; i < attr.count; i++) {
         const x = attr.getX(i), y = attr.getY(i)
-        if (y > 0.22 && y < 0.62) {
+        if (y > 0.142 && y < 0.542) {
           expect(x * side, `${band.name} clears side wall at y=${y.toFixed(2)}`).toBeGreaterThan(0.62)
         }
       }

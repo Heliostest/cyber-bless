@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
@@ -686,7 +687,7 @@ export function createAlandVotiveShip(ctx: SceneContext): SceneInstance {
     return m as THREE.Mesh<THREE.TubeGeometry>
   }
   addCraftTable(world, { name: 'ship-table', topName: 'ship-table-top', width: 3.45, depth: 1.8, surfaceY: .745, thickness: .13, center: [-.1,0], support: 'trestle', finish: 'honey' })
-  const shadow = add('ship-ground-shadow', new THREE.PlaneGeometry(4, 2.4), new THREE.ShadowMaterial({ opacity: .13 }), [0, .003, 0])
+  const shadow = add('ship-ground-shadow', new THREE.PlaneGeometry(4, 2.4), new THREE.ShadowMaterial({ opacity: .13 }), [0, getEnvironmentSurfaceY('aland-votive-ship') + .001, 0])
   shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
 
   // Both work positions have real support: a soft keel rest and a two-post V cradle.

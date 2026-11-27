@@ -345,4 +345,18 @@ describe('bokjori bamboo scoop practice', () => {
     pointer(s.hit, 'pointerdown', source); pointer(s.hit, 'pointerup', source); button.click(); s.instance.update(5)
     expect(s.progress).toEqual([]); expect(s.overlay.childElementCount).toBe(0); expect(drawn.scene!.children).toHaveLength(0)
   })
+
+  it('grounds the wall sill and stand feet on the veranda, embeds the peg into the wall, and seats the rice tray flush', () => {
+    mount()
+    const wallBox = new THREE.Box3().setFromObject(object('bokjori-timber-wall'))
+    const pegBox = new THREE.Box3().setFromObject(object('bokjori-wall-peg'))
+    const trayBox = new THREE.Box3().setFromObject(object('bokjori-rice-tray'))
+    expect(wallBox.min.y).toBeCloseTo(-0.035, 4)
+    expect(pegBox.min.z).toBeLessThan(-0.4925)
+    expect(trayBox.min.y).toBeCloseTo(0.30, 4)
+    const feet: THREE.Box3[] = []
+    drawn.scene!.traverse(o => { if (o.name === 'bokjori-stand-foot') feet.push(new THREE.Box3().setFromObject(o)) })
+    expect(feet).toHaveLength(2)
+    for (const foot of feet) expect(foot.min.y).toBeCloseTo(-0.035, 4)
+  })
 })

@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { bindSceneAttribute } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -411,8 +412,26 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
     bumpScale: 0.0028,
   })
   const paleGold = new THREE.MeshStandardMaterial({ color: 0xe5c885, roughness: 0.9 })
-  const pedestalMat = new THREE.MeshStandardMaterial({ color: 0xf5dfbf, roughness: 0.94 })
-  const trayMat = new THREE.MeshStandardMaterial({ color: 0xbd956d, roughness: 1 })
+  const pedestalMat = new THREE.MeshStandardMaterial({ color: 0xf5dfbf, roughness: 0.93, vertexColors: true })
+  const trayMat = new THREE.MeshStandardMaterial({ color: 0xbd956d, roughness: 0.96, vertexColors: true })
+  /** Subtle deterministic matte tonal shading on turned display surfaces without implying an unverified substrate. */
+  const applyTurnedMatteTone = (geom: THREE.BufferGeometry, minY: number, maxY: number, contrast = 0.055) => {
+    const pos = geom.getAttribute('position')
+    const colors = new Float32Array(pos.count * 3)
+    const span = Math.max(1e-4, maxY - minY)
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i)
+      const t = THREE.MathUtils.clamp((y - minY) / span, 0, 1)
+      const angle = Math.atan2(z, x)
+      const ring = Math.sin(t * Math.PI * 6) * 0.016 + Math.cos(angle * 3 + t * 5) * 0.010
+      const shade = THREE.MathUtils.clamp((1 - contrast * 0.55) + t * contrast + ring, 0.88, 1.04)
+      colors[i * 3] = shade
+      colors[i * 3 + 1] = shade * (0.996 + t * 0.004)
+      colors[i * 3 + 2] = shade * (0.988 + t * 0.012)
+    }
+    geom.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    return geom
+  }
   // A tapered, closed watertight jasmine bud with subtle spiral petal ridges and
   // calyx base. One shared geometry is instanced for the ring, clusters and tassels.
   const budGeo = createJasmineBudGeometry()
@@ -689,22 +708,105 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   })
 
   // A plain display pedestal keeps this adaptation about social gratitude.
+  const baseY = Math.min(getEnvironmentSurfaceY('phuang-malai'), -0.04)
   const pedestal = new THREE.Group()
-  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.59, 0.16, 40), pedestalMat)
-  foot.position.y = 0.08
-  const top = new THREE.Mesh(new THREE.CylinderGeometry(0.64, 0.63, 0.07, 48), pedestalMat)
+  const footProfile = [
+    new THREE.Vector2(0, baseY),
+    new THREE.Vector2(0.585, baseY),
+    new THREE.Vector2(0.608, baseY + 0.016),
+    new THREE.Vector2(0.606, baseY + 0.046),
+    new THREE.Vector2(0.576, baseY + 0.068),
+    new THREE.Vector2(0.518, baseY + 0.112),
+    new THREE.Vector2(0.506, baseY + 0.156),
+    new THREE.Vector2(0.548, 0.162),
+    new THREE.Vector2(0, 0.162),
+  ]
+  const foot = new THREE.Mesh(applyTurnedMatteTone(new THREE.LatheGeometry(footProfile, 48), baseY, 0.162, 0.065), pedestalMat)
+  const topProfile = [
+    new THREE.Vector2(0, 0.160),
+    new THREE.Vector2(0.545, 0.160),
+    new THREE.Vector2(0.616, 0.172),
+    new THREE.Vector2(0.644, 0.190),
+    new THREE.Vector2(0.644, 0.214),
+    new THREE.Vector2(0.626, 0.226),
+    new THREE.Vector2(0.608, 0.230),
+    new THREE.Vector2(0, 0.230),
+  ]
+  const top = new THREE.Mesh(applyTurnedMatteTone(new THREE.LatheGeometry(topProfile, 56), 0.160, 0.230, 0.045), pedestalMat)
   top.name = 'pedestal-top'
-  top.position.y = 0.195
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.61, 0.014, 6, 48), paleGold)
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.612, 0.011, 8, 56), paleGold)
   rim.rotation.x = Math.PI / 2
-  rim.position.y = 0.233
-  pedestal.add(foot, top, rim)
+  rim.position.y = 0.228
+  // Raised cradle mounted on the pedestal top physically supports the garland at rest, clear of both tassels.
+  const stand = new THREE.Group()
+  stand.name = 'garland-display-stand'
+  const standBaseProfile = [
+    new THREE.Vector2(0, 0.228),
+    new THREE.Vector2(0.112, 0.228),
+    new THREE.Vector2(0.118, 0.238),
+    new THREE.Vector2(0.106, 0.252),
+    new THREE.Vector2(0.062, 0.264),
+    new THREE.Vector2(0.046, 0.272),
+    new THREE.Vector2(0, 0.272),
+  ]
+  const standBase = new THREE.Mesh(applyTurnedMatteTone(new THREE.LatheGeometry(standBaseProfile, 28), 0.228, 0.272, 0.05), pedestalMat)
+  standBase.position.set(0, 0, 0.088)
+  const standStemProfile = [
+    new THREE.Vector2(0, 0.268),
+    new THREE.Vector2(0.044, 0.268),
+    new THREE.Vector2(0.036, 0.340),
+    new THREE.Vector2(0.029, 0.480),
+    new THREE.Vector2(0.035, 0.558),
+    new THREE.Vector2(0.025, 0.602),
+    new THREE.Vector2(0.032, 0.630),
+    new THREE.Vector2(0, 0.630),
+  ]
+  const standStem = new THREE.Mesh(applyTurnedMatteTone(new THREE.LatheGeometry(standStemProfile, 24), 0.268, 0.630, 0.055), pedestalMat)
+  standStem.position.set(0, 0, 0.088)
+  const standCollar = new THREE.Mesh(new THREE.TorusGeometry(0.032, 0.007, 8, 24), paleGold)
+  standCollar.rotation.x = Math.PI / 2
+  standCollar.position.set(0, 0.622, 0.088)
+  const standCradle = new THREE.Mesh(applyTurnedMatteTone(new THREE.TorusGeometry(0.11, 0.015, 12, 32, Math.PI), -0.125, 0.125, 0.04), pedestalMat)
+  standCradle.rotation.z = Math.PI
+  standCradle.position.set(0, 0.735, 0.092)
+  const cradleTips = [-1, 1].map((side) => {
+    const tip = new THREE.Mesh(applyTurnedMatteTone(new THREE.SphereGeometry(0.015, 10, 8), -0.015, 0.015, 0.03), pedestalMat)
+    tip.position.set(side * 0.11, 0.735, 0.092)
+    return tip
+  })
+  stand.add(standBase, standStem, standCollar, standCradle, ...cradleTips)
+  pedestal.add(foot, top, rim, stand)
   world.add(pedestal)
   const tray = new THREE.Group()
-  const trayBase = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.46, 0.045, 32), trayMat)
+  const trayBaseProfile = [
+    new THREE.Vector2(0, 0.246),
+    new THREE.Vector2(0.320, 0.246),
+    new THREE.Vector2(0.455, 0.258),
+    new THREE.Vector2(0.506, 0.282),
+    new THREE.Vector2(0.512, 0.298),
+    new THREE.Vector2(0.496, 0.305),
+    new THREE.Vector2(0.468, 0.294),
+    new THREE.Vector2(0.440, 0.2925),
+    new THREE.Vector2(0, 0.2925),
+  ]
+  const trayBase = new THREE.Mesh(applyTurnedMatteTone(new THREE.LatheGeometry(trayBaseProfile, 40), 0.246, 0.305, 0.055), trayMat)
   trayBase.scale.set(1.25, 1, 0.4)
-  trayBase.position.set(0, 0.27, 0.68)
-  tray.add(trayBase)
+  trayBase.position.set(0, 0, 0.68)
+  const trayStandProfile = [
+    new THREE.Vector2(0, baseY),
+    new THREE.Vector2(0.348, baseY),
+    new THREE.Vector2(0.362, baseY + 0.014),
+    new THREE.Vector2(0.348, baseY + 0.034),
+    new THREE.Vector2(0.285, baseY + 0.052),
+    new THREE.Vector2(0.228, baseY + 0.138),
+    new THREE.Vector2(0.236, 0.210),
+    new THREE.Vector2(0.285, 0.252),
+    new THREE.Vector2(0, 0.252),
+  ]
+  const trayStand = new THREE.Mesh(applyTurnedMatteTone(new THREE.LatheGeometry(trayStandProfile, 36), baseY, 0.252, 0.07), trayMat)
+  trayStand.scale.set(1.2, 1, 0.43)
+  trayStand.position.set(0, 0, 0.68)
+  tray.add(trayBase, trayStand)
   world.add(tray)
 
   const ray = createPointerRay(canvas, camera)
@@ -752,7 +854,7 @@ export function createPhuangMalai(ctx: SceneContext): SceneInstance {
   }
   const onPedestal = (x: number, y: number) => {
     updateMatrices()
-    return touch.hit(x, y, top, { ignore: garland })
+    return touch.hit(x, y, [top, stand], { ignore: garland })
   }
   const nearTie = (x: number, y: number) => {
     updateMatrices()

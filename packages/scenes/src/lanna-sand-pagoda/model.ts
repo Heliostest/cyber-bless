@@ -239,13 +239,110 @@ function createTungPaperGeometry(): {
  return { geometry, update }
 }
 
+/** Deterministic fine sand-grain DataTexture (never misclassified as stone/ceramic). */
+const cachedSandPixels = new Map<string, { color: Uint8Array; bump: Uint8Array; rough: Uint8Array; size: number }>()
+function sandHash(ix: number, iy: number, seed: number): number {
+ let h = (ix * 374761393 + iy * 668265263 + seed * 1442695041) | 0
+ h = Math.imul(h ^ (h >>> 13), 1274126177)
+ return ((h ^ (h >>> 16)) >>> 0) / 4294967295
+}
+function createSandMaterial(baseHex: number, repeat: number, seed: number): THREE.MeshStandardMaterial {
+ const size = 128
+ const key = `lanna-sand-${baseHex.toString(16)}-${seed}`
+ let cached = cachedSandPixels.get(key)
+ if (!cached) {
+  const base = new THREE.Color(baseHex)
+  const br = base.r * 255, bg = base.g * 255, bb = base.b * 255
+  const color = new Uint8Array(size * size * 4)
+  const bump = new Uint8Array(size * size * 4)
+  const rough = new Uint8Array(size * size * 4)
+  for (let y = 0; y < size; y++) {
+   for (let x = 0; x < size; x++) {
+    const fine = sandHash(x, y, seed) - 0.5
+    const med = sandHash(x >> 1, y >> 1, seed + 37) - 0.5
+    const ripple = Math.sin((y / size) * Math.PI * 12 + Math.sin((x / size) * Math.PI * 4) * 0.65) * 0.5
+    const delta = fine * 18 + med * 12 + ripple * 5
+    const idx = (y * size + x) * 4
+    color[idx] = THREE.MathUtils.clamp(Math.round(br + delta * 0.95), 0, 242)
+    color[idx + 1] = THREE.MathUtils.clamp(Math.round(bg + delta * 0.88), 0, 224)
+    color[idx + 2] = THREE.MathUtils.clamp(Math.round(bb + delta * 0.72), 0, 184)
+    color[idx + 3] = 255
+    const h = THREE.MathUtils.clamp(Math.round(128 + fine * 58 + med * 34 + ripple * 16), 36, 224)
+    bump[idx] = bump[idx + 1] = bump[idx + 2] = h
+    bump[idx + 3] = 255
+    const rv = THREE.MathUtils.clamp(Math.round(238 - fine * 18 + med * 12), 214, 255)
+    rough[idx] = rough[idx + 1] = rough[idx + 2] = rv
+    rough[idx + 3] = 255
+   }
+  }
+  cached = { color, bump, rough, size }
+  cachedSandPixels.set(key, cached)
+ }
+ const makeTex = (src: Uint8Array, cs: THREE.ColorSpace) => {
+  const tex = new THREE.DataTexture(new Uint8Array(src), cached!.size, cached!.size)
+  tex.colorSpace = cs
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+  tex.repeat.set(repeat, repeat)
+  tex.magFilter = THREE.LinearFilter
+  tex.minFilter = THREE.LinearMipmapLinearFilter
+  tex.generateMipmaps = true
+  tex.needsUpdate = true
+  return tex
+ }
+ const map = makeTex(cached.color, THREE.SRGBColorSpace)
+ const bumpMap = makeTex(cached.bump, THREE.NoColorSpace)
+ const roughnessMap = makeTex(cached.rough, THREE.NoColorSpace)
+ const material = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  map,
+  bumpMap,
+  bumpScale: 0.0045,
+  roughnessMap,
+  roughness: 0.95,
+  metalness: 0,
+  vertexColors: true,
+ })
+ let freed = false
+ material.addEventListener('dispose', () => {
+  if (freed) return
+  freed = true
+  map.dispose()
+  bumpMap.dispose()
+  roughnessMap.dispose()
+ })
+ return material
+}
+
+function applySandVertexShading(geometry: THREE.BufferGeometry, mode: 'bed' | 'tower') {
+ const pos = geometry.getAttribute('position') as THREE.BufferAttribute
+ const colors = new Float32Array(pos.count * 3)
+ for (let i = 0; i < pos.count; i++) {
+  const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i)
+  const r = Math.hypot(x, z)
+  let shade = 1
+  if (mode === 'bed') {
+   const edgeAO = 1 - 0.065 * THREE.MathUtils.smoothstep(r, 1.16, 1.43)
+   const ripple = 0.022 * Math.sin(r * 14 + Math.atan2(z, x) * 3)
+   shade = THREE.MathUtils.clamp(edgeAO + ripple, 0.88, 1.03)
+  } else {
+   const stepLift = 0.94 + 0.08 * THREE.MathUtils.clamp(y / 1.06, 0, 1)
+   const grain = 0.018 * Math.sin(y * 32 + Math.atan2(z, x) * 5)
+   shade = THREE.MathUtils.clamp(stepLift + grain, 0.90, 1.04)
+  }
+  colors[i * 3] = shade
+  colors[i * 3 + 1] = shade * 0.992
+  colors[i * 3 + 2] = shade * 0.978
+ }
+ geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+}
+
 /** Original sand-pagoda diorama; one prepared paper-and-bamboo tung is planted beside it. */
 export function createLannaSandPagodaModel() {
  const root=new THREE.Group();root.name='lanna-sand-pagoda-root'
  const subject=new THREE.Group();subject.name='lanna-sand-pagoda-subject';root.add(subject)
  const flag=new THREE.Group();flag.name='lanna-flag';subject.add(flag)
  const mat=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.93})
- const sand=mat(0xd7b67d),sandLight=mat(0xe4c995),bamboo=mat(0xa5864e),node=mat(0xc4aa6b),wood=mat(0x90714f)
+ const sand=createSandMaterial(0xd7b67d,4.5,113),sandLight=createSandMaterial(0xe4c995,3.2,241),bamboo=mat(0xa5864e),node=mat(0xc4aa6b),wood=mat(0x90714f),curbStone=mat(0xc2b69c)
  const paper=createRitualMaterial({
   color:0xf0bf83,
   roughness:.94,
@@ -267,16 +364,34 @@ export function createLannaSandPagodaModel() {
  const holeMat=mat(0x4e3b28)
  const binding=mat(0xc4aa6b) // Separate fixing cord from the equally coloured bamboo nodes.
  applyCraftSurface(wood,{kind:'wood',strength:.4,axis:'y'})
+ applyCraftSurface(curbStone,{kind:'stone',strength:.38})
  for(const cane of[bamboo,node])applyCraftSurface(cane,{kind:'bamboo',strength:.35,axis:'y'})
  applyCraftSurface(binding,{kind:'cord',strength:.3})
  let serial=0
  const mesh=(g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D,name?:string)=>{const o=new THREE.Mesh(g,m);o.name=name??`lanna-detail-${serial++}`;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
- const ground=mesh(new THREE.CylinderGeometry(1.13,1.17,.08,64),sand,root,'lanna-sand-bed');ground.position.y=-.04
+ const bedGeo=new THREE.CylinderGeometry(1.38,1.43,.08,64);applySandVertexShading(bedGeo,'bed')
+ const ground=mesh(bedGeo,sand,root,'lanna-sand-bed');ground.position.y=-.04
+ // Low chamfered courtyard stone curb ring frames the widened sand bed cleanly at -0.0625..-0.08.
+ const curbProfile=[
+  new THREE.Vector2(1.37,-.08),
+  new THREE.Vector2(1.49,-.08),
+  new THREE.Vector2(1.49,.006),
+  new THREE.Vector2(1.474,.022),
+  new THREE.Vector2(1.388,.022),
+  new THREE.Vector2(1.372,.006),
+  new THREE.Vector2(1.37,-.08),
+ ]
+ const curbGeo=new THREE.LatheGeometry(curbProfile,64);curbGeo.computeVertexNormals()
+ mesh(curbGeo,curbStone,root,'lanna-sand-curb')
  const tower=new THREE.Group();tower.name='lanna-tower';tower.position.set(-.16,0,-.18);subject.add(tower)
  // A continuous, capped lathe surface with stepped sand mouldings, not stacked floating solids.
  const profile=[[0,0],[.49,0],[.49,.09],[.44,.11],[.44,.17],[.39,.19],[.39,.25],[.34,.27],[.31,.34],[.30,.46],[.27,.57],[.22,.68],[.16,.76],[.12,.78],[.12,.82],[.09,.84],[.065,.91],[.045,.98],[0,1.06]]
- const g=new THREE.LatheGeometry(profile.map(([r,y])=>new THREE.Vector2(r!,y!)),48);g.computeVertexNormals();mesh(g,sandLight,tower,'lanna-sand-tower')
- const base=mesh(new THREE.CylinderGeometry(.13,.15,.035,24),wood,subject,'lanna-holder-base');base.position.set(-1.02,.0175,.58)
+ const g=new THREE.LatheGeometry(profile.map(([r,y])=>new THREE.Vector2(r!,y!)),48);g.computeVertexNormals();applySandVertexShading(g,'tower');mesh(g,sandLight,tower,'lanna-sand-tower')
+ const holderBaseGeo=new THREE.LatheGeometry([
+  new THREE.Vector2(0,0),new THREE.Vector2(.148,0),new THREE.Vector2(.15,.006),
+  new THREE.Vector2(.136,.032),new THREE.Vector2(.126,.04),new THREE.Vector2(0,.04),
+ ],28);holderBaseGeo.computeVertexNormals()
+ const base=mesh(holderBaseGeo,wood,subject,'lanna-holder-base');base.position.set(-1.02,0,.58)
  const holder=mesh(new THREE.TorusGeometry(.055,.018,8,24),wood,subject,'lanna-holder-ring');holder.rotation.x=Math.PI/2;holder.position.set(-1.02,.095,.58)
  for(const dx of[-.055,.055]){const foot=mesh(new THREE.CylinderGeometry(.012,.014,.06,8),wood,subject);foot.position.set(-1.02+dx,.06,.58)}
  const pole=mesh(new THREE.CylinderGeometry(.016,.019,1.52,12),bamboo,flag,'lanna-pole');pole.position.y=.76

@@ -1,5 +1,7 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
+import { addContactShadow } from '../cozy-furniture'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -43,7 +45,7 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   const lights = addStageLights(scene, ctx.stage, { sky: 0xe4e7ec, ground: 0xa8acaa, key: 0xffe4b3, rim: 0xd8e1ee })
   const world = new THREE.Group(); scene.add(world)
   const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: .92 })
-  const stone = material(0xc6b6a0), stoneFace = material(0xe0cdb2), wax = material(0xffe9b4), steel = material(0x666f69)
+  const stone = material(0xc6b6a0), stoneFace = new THREE.MeshStandardMaterial({ color: 0xe0cdb2, roughness: .92, vertexColors: true }), wax = material(0xffe9b4), waxBody = new THREE.MeshStandardMaterial({ color: 0xffe9b4, roughness: .92, vertexColors: true }), steel = material(0x666f69)
   applyCraftSurface(steel, { kind: 'metal', strength: .45 })
   applyCraftSurface(stone, { kind: 'stone', strength: .4 })
   applyCraftSurface(stoneFace, { kind: 'stone', strength: .4 })
@@ -56,6 +58,15 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   const baseY = Math.min(getEnvironmentSurfaceY('votive-candle-catholic'), -.04)
   const baseH = .15 - baseY
   box(2.5, baseH, 1.6, stone, [0, baseY + baseH / 2, .1])
+  addContactShadow(world, {
+    name: 'votive-base-contact-ao',
+    width: 2.74,
+    depth: 1.84,
+    y: baseY + 0.0018,
+    center: [0, 0.1],
+    shape: 'rounded-rect',
+    opacity: 0.28,
+  })
   // An original stone arcade: no sacred image or replicated holy site.
   const arch = new THREE.Shape()
   arch.moveTo(-1.2, .15); arch.lineTo(1.2, .15); arch.lineTo(1.2, 2.4)
@@ -64,7 +75,11 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   opening.moveTo(-.74, .23); opening.lineTo(-.74, 1.63)
   opening.bezierCurveTo(-.74, 2.2, .74, 2.2, .74, 1.63); opening.lineTo(.74, .23); opening.closePath()
   arch.holes.push(opening)
-  add(new THREE.ExtrudeGeometry(arch, { depth: .12, bevelEnabled: true, bevelSize: .035, bevelThickness: .035, bevelSegments: 3, steps: 1 }), stoneFace, [0, 0, -.73])
+  const archGeo = bakeCreviceAO(
+    new THREE.ExtrudeGeometry(arch, { depth: .12, bevelEnabled: true, bevelSize: .035, bevelThickness: .035, bevelSegments: 3, steps: 1 }),
+    { groundY: 0.15, groundRange: 0.36, cavityCenter: [0, 0.06], cavityRadius: 0.80, cavityTopY: 2.15, strength: 0.38, tint: 0x4b3d35 },
+  )
+  add(archGeo, stoneFace, [0, 0, -.73])
   for (const x of [-1.06, 1.06]) for (let i = 0; i < 6; i++) box(.32, .018, .23, stone, [x, .3 + i * .32, -.62])
   // Stepped two-tier rack: lower tier stepped forward so its flames rise in open air clear of the upper shelf.
   box(1.65, .065, .34, steel, [0, .37, .34]).name = 'votive-lower-shelf'
@@ -78,12 +93,20 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
   const waxTop = createRitualMaterial({ color: 0xffe9b4, roughness: .92 }, { kind: 'wax', strength: .14, fiber: false })
   const waxPool = createRitualMaterial({ color: 0xddc695, roughness: .92 }, { kind: 'wax', strength: .10, fiber: false })
   const halos: ReturnType<typeof createLampHalo>[] = []
-  const fireMat = new THREE.MeshBasicMaterial({ color: 0xffbd58, toneMapped: false, transparent: true, opacity: .94, depthWrite: false })
-  const coreMat = new THREE.MeshBasicMaterial({ color: 0xffedb7, toneMapped: false })
+  // HDR flame radiance tuned for AgX + Night Mipmap Bloom (threshold ~0.78).
+  const fireMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.55, 0.82, 0.28), toneMapped: false, transparent: true, opacity: .94, depthWrite: false })
+  const coreMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.85, 1.15), toneMapped: false })
+  const candleBodyGeo = bakeCreviceAO(new THREE.CylinderGeometry(.091, .11, .94, 28), {
+    groundY: -0.47,
+    groundRange: 0.24,
+    strength: 0.34,
+    tint: 0x6b5239,
+  })
   const flameGeo = new THREE.LatheGeometry([new THREE.Vector2(0,0), new THREE.Vector2(.045,.045), new THREE.Vector2(.053,.115), new THREE.Vector2(.02,.22), new THREE.Vector2(0,.29)], 20)
+  const haloBaseOpacity = ctx.stage === 'night' ? .16 : .11
   function candle(parent: THREE.Object3D, scale: number, lit: boolean) {
     const group = new THREE.Group(); group.scale.setScalar(scale); parent.add(group)
-    add(new THREE.CylinderGeometry(.091, .11, .94, 28), wax, [0, .47, 0], group)
+    add(candleBodyGeo, waxBody, [0, .47, 0], group)
     add(new THREE.TorusGeometry(.074, .022, 8, 28), waxTop, [0, .941, 0], group).rotation.x = Math.PI / 2
     add(new THREE.CylinderGeometry(.071, .071, .018, 24), waxPool, [0, .943, 0], group)
     for (let i = 0; i < 7; i++) {
@@ -94,21 +117,40 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
     }
     const wick = add(new THREE.CylinderGeometry(.012, .012, .063, 8), material(0x665746), [0, .973, 0], group)
     const flame = new THREE.Group(); flame.position.y = .982; group.add(flame)
-    add(flameGeo, fireMat, [0, 0, 0], flame)
-    const core = add(flameGeo, coreMat, [0, .015, .005], flame); core.scale.set(.47, .65, .47)
+    const outerFlame = add(flameGeo, fireMat, [0, 0, 0], flame); outerFlame.userData.toonSurface = { outline: false }
+    const core = add(flameGeo, coreMat, [0, .015, .005], flame); core.scale.set(.47, .65, .47); core.userData.toonSurface = { outline: false }
     flame.visible = lit
-    const halo = createLampHalo(0xffc06e, .6); halo.sprite.position.y = 1.12; halo.material.opacity = .14
+    const halo = createLampHalo(0xffb85e, .58); halo.sprite.position.y = 1.12; halo.material.opacity = haloBaseOpacity
     halo.sprite.visible = lit; group.add(halo.sprite); halos.push(halo)
     return { group, flame, wick, halo }
   }
   const background: ReturnType<typeof candle>[] = []
   for (const [i, x] of [-.59, -.33, .34, .59].entries()) {
-    const c = candle(world, i % 2 ? .6 : .48, true)
+    const s = i % 2 ? .6 : .48
+    const c = candle(world, s, true)
     c.group.position.set(x, .4025, .34); background.push(c)
+    addContactShadow(world, {
+      name: `votive-bg-candle-ao-${i}`,
+      width: 0.27 * s,
+      depth: 0.27 * s,
+      y: 0.4025 + 0.0016,
+      center: [x, 0.34],
+      shape: 'ellipse',
+      opacity: 0.28,
+    })
   }
   const start = new THREE.Vector3(-.60, .15, .65), placed = new THREE.Vector3(0, .79, .01)
   const main = candle(world, 1, step >= 2); main.group.name = 'votive-main-candle'
   main.group.position.copy(step ? placed : start)
+  const mainShadow = addContactShadow(world, {
+    name: 'votive-main-candle-ao',
+    width: 0.28,
+    depth: 0.28,
+    y: (step ? placed.y : start.y) + 0.0016,
+    center: [step ? placed.x : start.x, step ? placed.z : start.z],
+    shape: 'ellipse',
+    opacity: 0.30,
+  })
   const invisible = new THREE.MeshBasicMaterial({ visible: false })
   const heldTarget = add(new THREE.SphereGeometry(.21, 16, 10), invisible, [0,.5,0], main.group)
   heldTarget.name = 'votive-held-target'
@@ -130,8 +172,11 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
     enabled: () => active() && step === 2 && ctx.returning === true,
   })
   const collar = add(new THREE.TorusGeometry(.14,.014,8,32), steel, [0,.792,.01]); collar.rotation.x = Math.PI/2
-  const glow = new THREE.PointLight(0xffcc83, step >= 2 ? 1.6 : 0, 3, 2)
+  const glow = new THREE.PointLight(0xffc070, step >= 2 ? 1.8 : 0, 3.6, 1.9)
   glow.position.set(0, 1.91, .21); world.add(glow)
+  // Soft warm candlelight bounce catching the carved stone alcove behind the candle rack.
+  const archBounce = new THREE.PointLight(0xffac52, step >= 2 ? 0.95 : 0.52, 3.4, 1.8)
+  archBounce.position.set(0, 1.18, -.28); world.add(archBounce)
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: COPY.actions[0] }, safe)
   const wish = document.createElement('div'); wish.className = 'scene-wish-slot'; overlay.append(wish)
   const ray = createPointerRay(canvas, camera), plane = new THREE.Plane(new THREE.Vector3(0,0,1), -.65), point = new THREE.Vector3()
@@ -173,13 +218,22 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl,step === 2 && ctx.returning ? COPY.returning : COPY.hints[step],safe)
     setSafeText(ui.actionBtn,COPY.actions[Math.min(step,2)],safe)
     main.flame.visible = main.halo.sprite.visible = step >= 2
-    glow.intensity = step >= 2 ? 1.6 : 0
+    glow.intensity = step >= 2 ? 1.8 : 0
+    archBounce.intensity = step >= 2 ? 0.95 : 0.52
+    mainShadow.visible = !dragging
+    mainShadow.position.set(step ? placed.x : start.x, (step ? placed.y : start.y) + 0.0016, step ? placed.z : start.z)
     ending.sync(step === 2)
   }
   function advance(placedInput=false) {
     if (!active() || (pointer.isBusy() && !placedInput) || step > 1) return
     step++; main.group.position.copy(placed); sync(); ctx.onProgress?.(step)
-    feedback.impact({ freqs: step === 1 ? [392,587] : [523,784], duration: .3, gain: .03 })
+    feedback.impact({
+      freqs: step === 1 ? [392,587] : [523,784],
+      duration: .3,
+      gain: .03,
+      cue: step === 1 ? 'stone' : 'air',
+      cueStrength: step === 1 ? .54 : .58,
+    })
   }
   function finish(text = '') {
     if (!text.trim() && !ending.completing) return
@@ -190,7 +244,7 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
     ctx.onProgress?.(3); if (disposed || !active()) return
     overlay.dispatchEvent(new CustomEvent('scene:complete',{ bubbles:true }))
   }
-  const action = () => { if (step < 2) advance(); else finish() }
+  const action = () => { feedback.prepare(); if (step < 2) advance(); else finish() }
   const resize = () => {
     const aspect = sizeStage(canvas,renderer,style,camera)
     home.z = 4.8 + portraitBoost(aspect,3); camera.position.copy(home); camera.lookAt(look)
@@ -201,13 +255,23 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
     update(dt) {
       if (!started || disposed) return
       if (!active()) { pointer.cancel(); writer.setEnabled(false); return }
+      feedback.update()
       writer.setEnabled(step === 2 && !ctx.returning)
       const reduced = ctx.isReducedMotion?.() ?? false
       if (!reduced) clock += Math.max(0,Math.min(.1,dt))
+      mainShadow.visible = !dragging
       for (const [i,c] of [main,...background].entries()) {
-        c.flame.rotation.z = reduced ? 0 : Math.sin(clock*1.7+i)*.035
-        c.flame.scale.y = reduced ? 1 : 1+Math.sin(clock*2.1+i)*.025
+        const breath = reduced ? 0 : Math.sin(clock * 2.1 + i * 1.3) * 0.032 + Math.sin(clock * 5.2 + i * 1.9) * 0.015
+        const scaleY = 1 + breath
+        const invW = reduced ? 1 : 1 / Math.sqrt(scaleY)
+        c.flame.rotation.z = reduced ? 0 : Math.sin(clock * 1.7 + i * 1.3) * .032 + Math.sin(clock * 4.3 + i * 2.1) * .014
+        c.flame.rotation.x = reduced ? 0 : Math.cos(clock * 2.3 + i * 1.7) * .015
+        c.flame.scale.set(invW, scaleY, invW)
+        c.halo.material.opacity = haloBaseOpacity * (1 + breath * 0.65)
       }
+      const bounceFlicker = reduced ? 1 : 1 + Math.sin(clock * 2.7) * 0.045 + Math.sin(clock * 6.1) * 0.02
+      glow.intensity = (step >= 2 ? 1.8 : 0) * bounceFlicker
+      archBounce.intensity = (step >= 2 ? 0.95 : 0.52) * bounceFlicker
       ending.update(dt)
       if (disposed || !(active())) return
       style.render()
@@ -217,7 +281,7 @@ export function createVotiveCandleCatholic(ctx: SceneContext): SceneInstance {
       ending.dispose()
       disposed = true; pointer.dispose(); stopResize(); writer.dispose(); feedback.dispose()
       ui.actionBtn.removeEventListener('click',action)
-      halos.forEach(h=>h.dispose()); glow.dispose()
+      halos.forEach(h=>h.dispose()); glow.dispose(); archBounce.dispose()
       lights.ambient.dispose(); lights.hemi.dispose(); lights.key.dispose(); lights.rim.dispose()
       style.dispose(); disposeTree(world); scene.clear(); renderer.dispose(); renderer.forceContextLoss()
       overlay.replaceChildren(); overlay.classList.remove('scene-overlay','scene-overlay--stage')

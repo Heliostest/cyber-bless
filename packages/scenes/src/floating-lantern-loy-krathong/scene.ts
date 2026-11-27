@@ -1,4 +1,5 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { createSurfaceRipple } from '@wbr/scene-runtime/soft-plume'
 import { bindSceneAttribute } from '../scene-localization'
 import { graphemeLength } from '@wbr/i18n'
 import { placementHit } from '../placement-hit'
@@ -35,7 +36,10 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   const note = '现实漂放请遵守当地水域与清理要求。'
   ;[TITLE, ...HINTS, ...ACTIONS, returnHint, note].forEach(safe)
   let started = false, disposed = false, focused = true, step = 0, motion: Motion | null = null
-  let dragging = false, maxTravel = 0, inactiveRendered = false, stopResize = () => {}
+  let dragging = false, maxTravel = 0, inactiveRendered = false, clock = 0, stopResize = () => {}
+  const night = ctx.stage === 'night'
+  const haloPeak = night ? .21 : .11
+  const glowPeak = night ? .95 : .68
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
   const reduced = () => ctx.isReducedMotion?.() ?? false
   const feedback = createSceneFeedback(ctx)
@@ -110,12 +114,36 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   const flowerSeat = add('krathong-flower-seat', new THREE.CylinderGeometry(.13,.11,.028,24), amber, SEAT.clone(), boat)
   const candle = add('krathong-candle', new THREE.CylinderGeometry(.045,.052,.45,20), ivory, new THREE.Vector3(.10,.36,-.07), boat)
   const wickSource = add('krathong-wick-source', new THREE.CylinderGeometry(.012,.016,.047,12), mat(0x6d5c49), new THREE.Vector3(.10,.606,-.07), boat)
-  const flameMat = new THREE.MeshBasicMaterial({ color: 0xffcb76, toneMapped: false })
-  const flame = add('krathong-flame', new THREE.SphereGeometry(1,16,12), flameMat, new THREE.Vector3(.10,.685,-.07), boat)
-  flame.scale.set(.032,.078,.032); flame.castShadow = false
-  const halo = createLampHalo(0xffb76b, .32)
-  halo.sprite.name = 'krathong-flame-halo'; halo.sprite.position.copy(flame.position); boat.add(halo.sprite)
-  const glow = new THREE.PointLight(0xffcb82, 0, 2.3); glow.position.set(.10,.71,-.07); boat.add(glow)
+  // Sculpted 2-layer tear-drop candle flame calibrated for Night Mipmap Bloom + AgX river reflection.
+  const flameGeo = new THREE.LatheGeometry([
+    new THREE.Vector2(0, 0),
+    new THREE.Vector2(0.024, 0.014),
+    new THREE.Vector2(0.036, 0.044),
+    new THREE.Vector2(0.028, 0.095),
+    new THREE.Vector2(0.011, 0.145),
+    new THREE.Vector2(0, 0.178),
+  ], 20)
+  const flameMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(1.52, 0.78, 0.25),
+    toneMapped: false,
+    transparent: true,
+    opacity: 0.92,
+    depthWrite: false,
+  })
+  const flameCoreMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(2.2, 1.84, 1.12),
+    toneMapped: false,
+  })
+  const flame = add('krathong-flame', flameGeo, flameMat, new THREE.Vector3(.10,.618,-.07), boat)
+  flame.castShadow = flame.receiveShadow = false
+  flame.userData.toonSurface = { outline: false }
+  const flameCore = add('krathong-flame-core', flameGeo, flameCoreMat, new THREE.Vector3(0,.012,0), flame)
+  flameCore.scale.set(.52, .70, .52)
+  flameCore.castShadow = flameCore.receiveShadow = false
+  flameCore.userData.toonSurface = { outline: false }
+  const halo = createLampHalo(0xffad52, .42)
+  halo.sprite.name = 'krathong-flame-halo'; halo.sprite.position.set(.10,.70,-.07); boat.add(halo.sprite)
+  const glow = new THREE.PointLight(0xffbd68, 0, 2.8, 1.8); glow.position.set(.10,.72,-.07); boat.add(glow)
   // A visible leaf binding offers a stable contact on the near folded face.
   const boatSource = add('krathong-boat-source', new RoundedBoxGeometry(.115,.049,.025,3,.012), leafBindingMat, new THREE.Vector3(0,.20,.52), boat)
   const waterTarget = add('krathong-water-target', new THREE.SphereGeometry(.30,40,12), new THREE.MeshBasicMaterial({color:0xc6e9dc,transparent:true,opacity:.26,depthWrite:false}), WATER.clone().add(new THREE.Vector3(0,.006,0)), world)
@@ -127,6 +155,9 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
     const ring = add('krathong-ripple', new THREE.TorusGeometry(r,.009,6,48), rippleMat, new THREE.Vector3(0,.006,0), ripples)
     ring.rotation.x = -Math.PI/2; ring.castShadow = false; ring.userData.toonSurface = { outline: false }
   }
+  const surfaceRipple = createSurfaceRipple({ radius: 0.52, color: 0xffe4b5, opacity: 0.38, maxRings: 3, duration: 1.9 })
+  surfaceRipple.root.position.set(WATER.x, WATER.y + 0.008, WATER.z)
+  world.add(surfaceRipple.root)
   const ready = () => active() && !motion
   addInteractionCue(flowerSource,{kind:'drag',label:'拖花朵到花座',priority:2,enabled:()=>ready()&&step===0,destination:flowerSeat,targetLabel:'叶舟花座'})
   addInteractionCue(wickSource,{kind:'tap',label:'轻点烛芯',priority:2,enabled:()=>ready()&&step===1})
@@ -140,7 +171,10 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   const resetPose = () => {
     boat.position.copy(step < 3 ? DOCK : WATER); boat.rotation.set(0,0,0)
     flower.position.copy(step === 0 ? FLOWER : boat.localToWorld(SEAT.clone()).add(new THREE.Vector3(0,.017,0)))
-    halo.material.opacity = step >= 2 ? .1 : 0; flame.visible = step >= 2; glow.intensity = step >= 2 ? .65 : 0; ripples.visible = step >= 2; matrices()
+    flame.scale.set(1,1,1); flame.rotation.set(0,0,0)
+    halo.material.opacity = step >= 2 ? haloPeak : 0; flame.visible = step >= 2; glow.intensity = step >= 2 ? glowPeak : 0; ripples.visible = step >= 2
+    surfaceRipple.setContinuous(step >= 3, 0, 0)
+    matrices()
   }
   const sync = () => {
     ui.renderDots(step,3); ui.actionBtn.hidden = step === 3; ui.actionBtn.disabled = !ready() || step === 3
@@ -151,9 +185,13 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   function settled() {
     if (!motion) return
     const {text} = motion; step = motion.step + 1; motion = null; resetPose(); sync()
+    if (step === 3 && !reduced()) surfaceRipple.trigger(0, 0, 1.15)
     // Terminal state precedes host callbacks: quiet and returning paths never submit text.
     if (step === 3 && text && !returning) ctx.saveWish?.(text)
-    ctx.onProgress?.(step); feedback.impact({freqs:step===3?[392,587]:[440,660],duration:.25,gain:.02})
+    ctx.onProgress?.(step)
+    const cue = step === 1 ? 'paper' : step === 2 ? 'air' : 'water'
+    const cueStrength = step === 1 ? 0.52 : step === 2 ? 0.58 : 0.65
+    feedback.impact({ freqs: step === 3 ? [392, 587] : [440, 660], duration: .25, gain: .02, cue, cueStrength })
     if (step === 3) overlay.dispatchEvent(new CustomEvent('scene:complete',{bubbles:true}))
   }
   function begin(text = '', arrived = false) {
@@ -210,14 +248,39 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
       if(!started||disposed)return
       if(!active()) { pointer.cancel(); writer?.setEnabled(false); ui.actionBtn.disabled=true; if(!inactiveRendered){style.render();inactiveRendered=true}return }
       inactiveRendered=false; ui.actionBtn.disabled=!!motion; writer?.setEnabled(step===2&&!motion&&!returning)
-      waterEffect.update(dt, reduced())
+      feedback.update()
+      const isReduced = reduced()
+      const elapsed = Number.isFinite(dt) ? Math.max(0, Math.min(0.1, dt)) : 0
+      if (!isReduced) clock += elapsed
+      waterEffect.update(dt, isReduced)
+      surfaceRipple.setContinuous(step >= 3 || motion?.step === 2, 0, 0)
+      surfaceRipple.update(elapsed, isReduced)
       if(motion) {
-        motion.t=reduced()?1:Math.min(1,motion.t+(Number.isFinite(dt)?Math.max(0,dt):0)/.75)
+        motion.t=isReduced?1:Math.min(1,motion.t+(Number.isFinite(dt)?Math.max(0,dt):0)/.75)
         const t=motion.t,p=t*t*(3-2*t)
         if(motion.step===0) flower.position.lerpVectors(motion.from,boat.localToWorld(SEAT.clone()).add(new THREE.Vector3(0,.017,0)),p)
-        if(motion.step===1) {flame.visible=true;glow.intensity=p*.65;halo.material.opacity=p*.1}
+        if(motion.step===1) {flame.visible=true;glow.intensity=p*glowPeak;halo.material.opacity=p*haloPeak}
         if(motion.step===2) {boat.position.lerpVectors(motion.from,WATER,p);flower.position.copy(boat.localToWorld(SEAT.clone()).add(new THREE.Vector3(0,.017,0)))}
         matrices(); if(t===1)settled()
+      }
+      if (!motion && step >= 2) {
+        const breath = isReduced ? 0 : Math.sin(clock * 2.9) * 0.042 + Math.sin(clock * 6.4) * 0.018
+        const scaleY = 1 + breath
+        const invW = isReduced ? 1 : 1 / Math.sqrt(scaleY)
+        flame.scale.set(invW, scaleY, invW)
+        flame.rotation.set(
+          isReduced ? 0 : Math.cos(clock * 2.3) * 0.022,
+          0,
+          isReduced ? 0 : Math.sin(clock * 3.2) * 0.035 + Math.sin(clock * 6.8) * 0.015,
+        )
+        glow.intensity = glowPeak * (1 + breath * 0.75)
+        halo.material.opacity = haloPeak * (1 + breath * 0.45)
+      }
+      if (!motion && step === 3 && !isReduced) {
+        boat.position.set(WATER.x, WATER.y + Math.sin(clock * 1.45) * 0.0016, WATER.z)
+        boat.rotation.set(Math.sin(clock * 1.15) * 0.0035, Math.sin(clock * 0.55) * 0.026, Math.cos(clock * 1.35) * 0.004)
+        flower.position.copy(boat.localToWorld(SEAT.clone()).add(new THREE.Vector3(0,.017,0)))
+        matrices()
       }
       style.render()
     },
@@ -225,7 +288,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
       if(disposed)return
       disposed=true;pointer.dispose();stopResize();writer?.dispose();feedback.dispose()
       ui.actionBtn.removeEventListener('click',action);window.removeEventListener('blur',blur);window.removeEventListener('focus',focus)
-      style.dispose();waterEffect.dispose();halo.sprite.removeFromParent();halo.dispose();disposeTree(world);Object.values(lights).forEach(l=>l.dispose());glow.dispose()
+      style.dispose();waterEffect.dispose();surfaceRipple.root.removeFromParent();surfaceRipple.dispose();halo.sprite.removeFromParent();halo.dispose();disposeTree(world);Object.values(lights).forEach(l=>l.dispose());glow.dispose()
       renderer.dispose();renderer.forceContextLoss();scene.clear();overlay.replaceChildren();overlay.classList.remove('scene-overlay','scene-overlay--stage')
     },
   }

@@ -1,3 +1,5 @@
+import { applyCraftSurface, createCraftMaterial } from '@wbr/scene-runtime/craft-surfaces'
+import { addContactShadow } from '../cozy-furniture'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -113,8 +115,8 @@ export function createLantern(ctx: SceneContext): SceneInstance {
   // brighter) is the one warm light, catching the frame near it.
   const night = ctx.stage === 'night'
   const litPeak = night
-    ? { glow: 3.2, shade: 0.52, halo: 0.75 }
-    : { glow: 2.2, shade: 0.42, halo: 0 }
+    ? { glow: 3.4, shade: 0.60, halo: 0.50 }
+    : { glow: 2.3, shade: 0.46, halo: 0 }
   const { renderer, scene } = createWarmStage(canvas)
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100)
   const cameraHome = new THREE.Vector3(0.2, 1.3, 4.1)
@@ -138,19 +140,36 @@ export function createLantern(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group()
   scene.add(world)
 
-  // Wooden stand: two posts, a top beam and feet — a product-original frame.
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x9b6a45, roughness: 0.95 })
+  // Wooden stand: two posts, a top beam and feet — a product-original frame with grain aligned per timber.
+  const postWoodMat = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0x9b6a45, roughness: 0.84 }), {
+    kind: 'wood', axis: 'y', scale: 0.90, strength: 0.42,
+  })
+  const footWoodMat = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0x92623f, roughness: 0.86 }), {
+    kind: 'wood', axis: 'z', scale: 1.0, strength: 0.40,
+  })
+  const beamWoodMat = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0x9b6a45, roughness: 0.84 }), {
+    kind: 'wood', axis: 'x', scale: 0.85, strength: 0.42,
+  })
   const postGeo = new RoundedBoxGeometry(0.08, 2.3, 0.08, 2, 0.02)
   const footGeo = new RoundedBoxGeometry(0.12, 0.07, 0.55, 2, 0.02)
-  for (const x of [-0.62, 0.62]) {
-    const post = new THREE.Mesh(postGeo, woodMat)
+  for (const [idx, x] of ([-0.62, 0.62] as const).entries()) {
+    const post = new THREE.Mesh(postGeo, postWoodMat)
     post.position.set(x, 1.15, 0)
     world.add(post)
-    const foot = new THREE.Mesh(footGeo, woodMat)
+    const foot = new THREE.Mesh(footGeo, footWoodMat)
     foot.position.set(x, 0.035, 0)
     world.add(foot)
+    addContactShadow(world, {
+      name: `lantern-foot-contact-ao-${idx}`,
+      width: 0.24,
+      depth: 0.66,
+      y: 0.0018,
+      center: [x, 0],
+      shape: 'rounded-rect',
+      opacity: 0.28,
+    })
   }
-  const beam = new THREE.Mesh(new RoundedBoxGeometry(1.5, 0.09, 0.12, 2, 0.025), woodMat)
+  const beam = new THREE.Mesh(new RoundedBoxGeometry(1.5, 0.09, 0.12, 2, 0.025), beamWoodMat)
   beam.position.set(0, 2.27, 0)
   world.add(beam)
 
@@ -159,7 +178,9 @@ export function createLantern(ctx: SceneContext): SceneInstance {
   pivot.name = 'lantern-suspension'
   pivot.position.set(0, 2.22, 0)
   world.add(pivot)
-  const cordMat = new THREE.MeshStandardMaterial({ color: 0xc8453a, roughness: 0.95 })
+  const cordMat = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xc8453a, roughness: 0.90 }), {
+    kind: 'cord', axis: 'y', scale: 1.8, strength: 0.44,
+  })
   const cordLen = 2.22 - (LANTERN_Y + LANTERN_HALF_H + 0.04)
   const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, cordLen, 6), cordMat)
   cord.position.y = -cordLen / 2
@@ -195,7 +216,9 @@ export function createLantern(ctx: SceneContext): SceneInstance {
   lantern.add(shade)
 
   // Thin bamboo ribs ring the shade, drawn as crisp ink bands.
-  const ribMat = new THREE.MeshStandardMaterial({ color: 0x7c5128, roughness: 0.9 })
+  const ribMat = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0x7c5128, roughness: 0.72 }), {
+    kind: 'bamboo', axis: 'x', scale: 1.8, strength: 0.44,
+  })
   for (let i = 1; i < LANTERN_BAYS; i++) {
     const y = -LANTERN_HALF_H + (i / LANTERN_BAYS) * LANTERN_HALF_H * 2
     const rib = new THREE.Mesh(new THREE.TorusGeometry(shadeRadius(y) + 0.003, 0.005, 6, 40), ribMat)
@@ -204,27 +227,30 @@ export function createLantern(ctx: SceneContext): SceneInstance {
     lantern.add(rib)
   }
   // Dark lacquered top and bottom rims hold the shade.
-  const rimMat = new THREE.MeshStandardMaterial({ color: 0x5a3a26, roughness: 0.85 })
+  const rimMat = createCraftMaterial(
+    { color: 0x5a3a26, roughness: 0.30, clearcoat: 0.78, clearcoatRoughness: 0.16 },
+    { kind: 'lacquer', scale: 1.4, strength: 0.42 },
+  )
   for (const y of [-LANTERN_HALF_H - 0.02, LANTERN_HALF_H + 0.02]) {
     const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.215, 0.215, 0.05, 32), rimMat)
     rim.position.y = y
     lantern.add(rim)
   }
-  const glow = new THREE.PointLight(0xffbe6a, 0, night ? 5 : 4, 2)
+  const glow = new THREE.PointLight(0xffb862, 0, night ? 5.2 : 4.2, 1.9)
   lantern.add(glow)
-  const halo = night ? createLampHalo(0xffb45e, 1.9) : null
+  const halo = night ? createLampHalo(0xffad56, 1.82) : null
   if (halo) lantern.add(halo.sprite)
 
   // Wish plaque: rests at the stand's foot, then hangs under the lantern.
   const plaque = new THREE.Group()
   plaque.name = 'lantern-plaque'
   world.add(plaque)
-  const plaqueMat = new THREE.MeshStandardMaterial({
+  const plaqueMat = applyCraftSurface(new THREE.MeshStandardMaterial({
     color: 0xe8c89a,
     emissive: 0x6a4020,
     emissiveIntensity: 0.12,
-    roughness: 0.9,
-  })
+    roughness: 0.84,
+  }), { kind: 'wood', axis: 'y', scale: 1.5, strength: 0.36 })
   const board = new THREE.Mesh(new RoundedBoxGeometry(0.2, 0.28, 0.025, 2, 0.01), plaqueMat)
   board.position.y = -0.2
   plaque.add(board)
@@ -238,6 +264,15 @@ export function createLantern(ctx: SceneContext): SceneInstance {
   const plaqueHung = new THREE.Vector3(0, LANTERN_Y - LANTERN_HALF_H - 0.05, 0)
   plaque.position.copy(plaqueHome)
   plaque.rotation.z = -0.25
+  const plaqueShadow = addContactShadow(world, {
+    name: 'lantern-plaque-contact-ao',
+    width: 0.26,
+    depth: 0.18,
+    y: 0.0018,
+    center: [plaqueHome.x, plaqueHome.z],
+    shape: 'ellipse',
+    opacity: 0.20,
+  })
 
   const lanternZone = new THREE.Mesh(
     new THREE.BoxGeometry(0.8, 1.0, 0.6),
@@ -307,7 +342,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
     if (!restoring) {
       swingVel += (ctx.isReducedMotion?.() ?? false) ? 0.1 : 0.9
       // Small wooden knock as the plaque meets the lantern.
-      fx.impact({ freqs: [660, 990], duration: 0.3, gain: 0.05, type: 'triangle' })
+      fx.impact({ freqs: [660, 990], duration: 0.3, gain: 0.05, type: 'triangle', cue: 'woodTap', cueStrength: 0.62 })
       ctx.onProgress?.(2)
     } else plaque.position.copy(plaqueHung)
     syncOverlayForStep()
@@ -322,7 +357,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
     if (!restoring) {
       const reduced = ctx.isReducedMotion?.() ?? false
       if (reduced) litT = 1
-      fx.impact({ freqs: [392, 587.33, 784], duration: reduced ? 0.5 : 1.4, gain: 0.07 })
+      fx.impact({ freqs: [392, 587.33, 784], duration: reduced ? 0.5 : 1.4, gain: 0.07, cue: 'paper', cueStrength: 0.52 })
       ctx.onProgress?.(1)
     } else litT = 1
     syncOverlayForStep()
@@ -345,7 +380,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
     fx.prepare()
     downX = x
     downY = y
-    if (step === 'wish') { grabbed = true; carried.begin(0,x,y) }
+    if (step === 'wish') { grabbed = true; carried.begin(0,x,y); fx.sound('woodTap', { duration: 0.14, strength: 0.34 }) }
   }
   const onHitMove = (x: number, y: number) => {
     if (step !== 'wish' || !grabbed) return
@@ -442,6 +477,7 @@ export function createLantern(ctx: SceneContext): SceneInstance {
     update(dt: number) {
       if (disposed || !started) return
       if (!canAct()) objectPointer?.cancel()
+      fx.update()
       dragHandle?.setEnabled(canAct() && gestureOwned && step === 'wish')
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
@@ -450,10 +486,11 @@ export function createLantern(ctx: SceneContext): SceneInstance {
       // Dark → warm: the shade fills with light after the tap.
       if (lit) litT = reduced ? 1 : Math.min(1, litT + dt / LIGHT_SECONDS)
       const e = litT * litT * (3 - 2 * litT)
-      const flicker = reduced ? 0 : Math.sin(t * 7.3) * 0.04 + Math.sin(t * 3.1) * 0.03
-      glow.intensity = e * (litPeak.glow + flicker * 4)
+      const flicker = reduced ? 0 : Math.sin(t * 7.3) * 0.032 + Math.sin(t * 3.1) * 0.024
+      glow.intensity = e * (litPeak.glow + flicker * 3.5)
       shadeMat.emissiveIntensity = 0.04 + e * (litPeak.shade + flicker)
-      if (halo) halo.material.opacity = e * (litPeak.halo + flicker * 2)
+      if (halo) halo.material.opacity = e * (litPeak.halo + flicker * 1.1)
+      plaqueShadow.visible = !hung && !grabbed
 
       // Damped pendulum: breeze sway plus the nudge when the plaque is hung.
       const breeze = reduced ? 0 : Math.sin(t * 0.8) * 0.02

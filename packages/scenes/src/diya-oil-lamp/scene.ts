@@ -1,6 +1,8 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { addContactShadow } from '../cozy-furniture'
 import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -107,15 +109,16 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group()
   world.name = 'diya-world'
   scene.add(world)
-  const clay = new THREE.MeshStandardMaterial({ color: 0xb55f3d, roughness: 0.93, side: THREE.DoubleSide })
-  const rimClay = new THREE.MeshStandardMaterial({ color: 0xcc7850, roughness: 0.93 })
+  const clay = new THREE.MeshStandardMaterial({ color: 0xb55f3d, roughness: 0.91, side: THREE.DoubleSide, vertexColors: true })
+  const rimClay = new THREE.MeshStandardMaterial({ color: 0xcc7850, roughness: 0.91 })
   const cotton = new THREE.MeshStandardMaterial({ color: 0xf1dec0, roughness: 1 })
   const burnt = new THREE.MeshStandardMaterial({ color: 0x443128, roughness: 1 })
   const amber = createRitualMaterial({ color: 0x98631f, roughness: .22, metalness: 0, clearcoat: .65, clearcoatRoughness: .1, side: THREE.DoubleSide }, { kind: 'wet', strength: .35 })
   const plateMat = new THREE.MeshStandardMaterial({ color: 0xa48565, roughness: 0.62, metalness: 0.34 })
   applyCraftSurface(plateMat, { kind: 'metal', scale: 1.35, strength: 0.26 })
   const petalMat = new THREE.MeshStandardMaterial({ color: 0xbe9b70, roughness: 0.86, metalness: 0.12, side: THREE.DoubleSide })
-  ;[clay, rimClay].forEach(material => applyCraftSurface(material, { kind: 'ceramic', strength: .45 }))
+  applyCraftSurface(clay, { kind: 'terracotta', scale: 1.4, strength: 0.48 })
+  applyCraftSurface(rimClay, { kind: 'terracotta', scale: 1.6, strength: 0.48 })
   applyCraftSurface(cotton, { kind: 'cord', strength: .28 })
   const hidden = new THREE.MeshBasicMaterial({ visible: false })
   const plate = new THREE.Group()
@@ -140,6 +143,32 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   const plateBody = new THREE.Mesh(new THREE.LatheGeometry(thaliProfile, 72), plateMat)
   plateBody.name = 'diya-plate-body'
   plate.add(plateBody)
+  // Soft contact AO beneath the brass thali tray and each resting diya lamp.
+  const plateShadow = addContactShadow(plate, {
+    name: 'diya-plate-contact-ao',
+    width: 2.16,
+    depth: 2.16,
+    y: floorY + 0.0018,
+    shape: 'ellipse',
+    opacity: 0.28,
+  })
+  // Clone the shared contact AO texture so scene disposal frees its own GPU handle cleanly.
+  const contactShadowMap = (plateShadow.material as THREE.MeshBasicMaterial).map!.clone()
+  contactShadowMap.needsUpdate = true
+  ;(plateShadow.material as THREE.MeshBasicMaterial).map = contactShadowMap
+  const lampShadows = HOMES.map((home, i) => {
+    const shadow = addContactShadow(plate, {
+      name: `diya-lamp-contact-ao-${i}`,
+      width: 0.66,
+      depth: 0.74,
+      y: 0.073 + 0.0016,
+      center: [home.x, home.z + 0.04],
+      shape: 'ellipse',
+      opacity: 0.22,
+    })
+    ;(shadow.material as THREE.MeshBasicMaterial).map = contactShadowMap
+    return shadow
+  })
   // A product-original ring of small petals, with no named sacred motif.
   const petalShape = new THREE.Shape()
   petalShape.moveTo(0, 0.075)
@@ -154,7 +183,15 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
     plate.add(petal)
   }
 
-  const bowlGeometry = dishGeometry()
+  const bowlGeometry = bakeCreviceAO(dishGeometry(), {
+    groundY: 0.014,
+    groundRange: 0.048,
+    cavityCenter: [0, 0.02],
+    cavityRadius: 0.27,
+    cavityTopY: 0.195,
+    strength: 0.44,
+    tint: 0x4b2d20,
+  })
   const rimCurve = new THREE.CatmullRomCurve3(Array.from({ length: 64 }, (_, i) => {
     const p = outline(i / 64 * Math.PI * 2)
     p.y = 0.195
@@ -170,6 +207,18 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
     new THREE.Vector2(0, 0), new THREE.Vector2(0.027, 0.015), new THREE.Vector2(0.043, 0.055),
     new THREE.Vector2(0.033, 0.12), new THREE.Vector2(0.013, 0.185), new THREE.Vector2(0, 0.23),
   ], 20)
+  // HDR flame pigments calibrated for Night Mipmap Bloom (threshold ~0.78) + AgX golden-peach rolloff.
+  const flameOuterMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(1.45, 0.72, 0.24),
+    toneMapped: false,
+    transparent: true,
+    opacity: 0.92,
+    depthWrite: false,
+  })
+  const flameCoreMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(2.1, 1.75, 1.05),
+    toneMapped: false,
+  })
   const lamps = HOMES.map((home, i) => {
     const group = new THREE.Group()
     group.name = `diya-lamp-${i}`
@@ -195,27 +244,32 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
     target.name = `diya-wick-target-${i}`
     target.position.copy(tip.position)
     group.add(target)
-    const flame = new THREE.Mesh(flameGeometry, new THREE.MeshBasicMaterial({ color: 0xffd58b }))
+    const flame = new THREE.Mesh(flameGeometry, flameOuterMat)
     flame.position.copy(tip.position)
     flame.name = `diya-flame-${i}`
     flame.visible = false
     flame.userData.toonSurface = { outline: false }
     group.add(flame)
-    const core = new THREE.Mesh(flameGeometry, new THREE.MeshBasicMaterial({ color: 0xfff3cc }))
+    const core = new THREE.Mesh(flameGeometry, flameCoreMat)
     core.scale.set(0.55, 0.74, 0.55)
     core.position.y = 0.013
+    core.userData.toonSurface = { outline: false }
     flame.add(core)
-    const glow = new THREE.PointLight(0xffb458, 0, 1.55, 2)
+    const glow = new THREE.PointLight(0xffb354, 0, 2.0, 1.8)
     glow.position.set(0, 0.28, 0.40)
     glow.name = `diya-light-${i}`
     group.add(glow)
-    const halo = createLampHalo(0xffae50, 0.44)
+    const halo = createLampHalo(0xffa846, 0.46)
     halo.sprite.name = `diya-halo-${i}`
     halo.sprite.position.set(0, 0.32, 0.40)
     group.add(halo.sprite)
     return { group, target, wick, tip, flame, glow, halo, lit: false, glowT: 0 }
   })
   const heldLamp = lamps[2]
+  const prevHeldPos = heldLamp.group.position.clone()
+  const flameLag = new THREE.Vector2()
+  const localMotionVel = new THREE.Vector3()
+  const invHeldQuat = new THREE.Quaternion()
   const heldTarget = new THREE.Mesh(new THREE.SphereGeometry(0.30, 16, 10), hidden)
   heldTarget.name = 'diya-held-target'
   heldTarget.position.set(0, 0.12, 0)
@@ -290,6 +344,8 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
     orbitGuide.children.forEach(object => { if ((object as THREE.Mesh).isMesh) ((object as THREE.Mesh).material as THREE.MeshBasicMaterial).color.setHex(0xe7bd73) })
     if (!motion) heldLamp.group.position.copy(checkpoint === 1 || checkpoint === 2 ? HELD : HOMES[2])
     heldLamp.group.rotation.y = 0
+    prevHeldPos.copy(heldLamp.group.position)
+    flameLag.set(0, 0)
     updateMatrices()
   }
   const advance = (next: Checkpoint) => {
@@ -300,7 +356,10 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
     restorePose()
     syncUI()
     ctx.onProgress?.(next)
-    if (next === 3) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    if (next === 3) {
+      feedback.sound('metal', { duration: 0.26, strength: 0.36 })
+      overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
+    }
   }
   const light = (indices: Iterable<number>) => {
     if (!active() || checkpoint !== 0) return
@@ -312,13 +371,19 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
       changed = true
     }
     if (!changed) return
-    feedback.impact({ freqs: [659.25, 987.77], duration: 0.22, gain: 0.024 })
+    feedback.impact({ freqs: [659.25, 987.77], duration: 0.22, gain: 0.024, cue: 'air', cueStrength: 0.55 })
     if (lamps.every((lamp) => lamp.lit)) advance(1)
   }
   const beginMotion = (kind: Motion['kind']) => {
     if (!active() || motion || checkpoint !== (kind === 'spin' ? 1 : 2)) return
     motion = { kind, elapsed: 0, from: heldLamp.group.position.clone() }
-    feedback.impact({ freqs: kind === 'spin' ? [523.25, 784] : [440, 659.25], duration: 0.35, gain: 0.028 })
+    feedback.impact({
+      freqs: kind === 'spin' ? [523.25, 784] : [440, 659.25],
+      duration: 0.35,
+      gain: 0.028,
+      cue: kind === 'spin' ? 'air' : 'ceramic',
+      cueStrength: kind === 'spin' ? 0.38 : 0.55,
+    })
     if (ctx.isReducedMotion?.()) advance(kind === 'spin' ? 2 : 3)
     else syncUI()
   }
@@ -430,6 +495,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
       if (!started || disposed) return
       if (!active()) { suspended = true; pointer.cancel(); syncUI(); styleRenderer.render(); return }
       if (suspended) { suspended = false; syncUI() }
+      feedback.update()
       const reduced = ctx.isReducedMotion?.() ?? false
       const elapsed = Number.isFinite(dt) ? Math.max(0, dt) : 0
       clock += elapsed
@@ -444,12 +510,45 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
         } else heldLamp.group.position.lerpVectors(motion.from, HOMES[2], k)
         if (t === 1) advance(motion.kind === 'spin' ? 2 : 3)
       }
+      // Compute smooth flame aerodynamic tilt lag for the carried/orbiting lamp.
+      if (reduced || elapsed <= 1e-5) {
+        flameLag.set(0, 0)
+      } else {
+        localMotionVel.copy(heldLamp.group.position).sub(prevHeldPos).divideScalar(Math.max(elapsed, 0.016))
+        invHeldQuat.copy(heldLamp.group.quaternion).invert()
+        localMotionVel.applyQuaternion(invHeldQuat)
+        const targetLagZ = THREE.MathUtils.clamp(localMotionVel.x * 0.13, -0.34, 0.34)
+        const targetLagX = THREE.MathUtils.clamp(-localMotionVel.z * 0.13, -0.34, 0.34)
+        const lagBlend = 1 - Math.exp(-elapsed * 9.0)
+        flameLag.x = THREE.MathUtils.lerp(flameLag.x, targetLagX, lagBlend)
+        flameLag.y = THREE.MathUtils.lerp(flameLag.y, targetLagZ, lagBlend)
+      }
+      prevHeldPos.copy(heldLamp.group.position)
+      // Fade the front lamp's resting tray contact AO as it lifts into orbit.
+      const heldLift = THREE.MathUtils.clamp((heldLamp.group.position.y - HOMES[2].y) / 0.32, 0, 1)
+      ;(lampShadows[2]!.material as THREE.MeshBasicMaterial).opacity = 0.22 * (1 - heldLift)
+      const nightStage = ctx.stage === 'night'
       lamps.forEach((lamp, i) => {
         lamp.glowT = reduced ? Number(lamp.lit) : Math.min(Number(lamp.lit), lamp.glowT + elapsed / 0.45)
-        const shimmer = reduced ? 1 : 1 + Math.sin(clock * 2.2 + i) * 0.026
-        lamp.flame.scale.set(1, shimmer, 1)
-        lamp.glow.intensity = 0.34 * lamp.glowT * shimmer
-        lamp.halo.material.opacity = (ctx.stage === 'night' ? 0.26 : 0.12) * lamp.glowT
+        const breath = reduced
+          ? 0
+          : Math.sin(clock * 2.8 + i * 1.9) * 0.045 + Math.sin(clock * 6.3 + i * 2.7) * 0.022
+        const shimmer = 1 + breath
+        const invWidth = reduced ? 1 : 1 / Math.sqrt(shimmer)
+        lamp.flame.scale.set(invWidth, shimmer, invWidth)
+        if (reduced) {
+          lamp.flame.rotation.set(0, 0, 0)
+        } else {
+          const swayZ = Math.sin(clock * 3.1 + i * 2.1) * 0.032 + Math.sin(clock * 6.7 + i * 1.3) * 0.016
+          const swayX = Math.cos(clock * 2.5 + i * 1.7) * 0.022
+          lamp.flame.rotation.set(
+            swayX + (i === 2 ? flameLag.x : 0),
+            0,
+            swayZ + (i === 2 ? flameLag.y : 0),
+          )
+        }
+        lamp.glow.intensity = (nightStage ? 0.50 : 0.34) * lamp.glowT * (1 + breath * 0.85)
+        lamp.halo.material.opacity = (nightStage ? 0.24 : 0.11) * lamp.glowT * (1 + breath * 0.35)
       })
       styleRenderer.render()
     },
@@ -466,8 +565,9 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
       scene.traverse((o) => { if (o instanceof THREE.Light) o.dispose() })
       disposeTree(scene)
       // Tree disposal includes the shared sprite plane and its materials;
-      // textures are separate allocations, so release only each halo map here.
+      // textures are separate allocations, so release halo maps and our cloned contact AO map here.
       lamps.forEach((lamp) => lamp.halo.material.map?.dispose())
+      contactShadowMap.dispose()
       renderer.dispose()
       renderer.forceContextLoss()
       scene.clear()

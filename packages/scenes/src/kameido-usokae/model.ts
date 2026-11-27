@@ -1,13 +1,16 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { addSteppedPedestal } from '../cozy-furniture'
 
 // Kameido's straight wooden bullfinch, not Dazaifu's curled-wing form.
 export function createUsokaeModel() {
   const root=new THREE.Group();root.name='usokae-root'
   const subject=new THREE.Group();subject.name='usokae-subject';root.add(subject)
   const material=(color:string,roughness=.88)=>new THREE.MeshStandardMaterial({color,roughness,metalness:0})
-  const wood=material('#d3a766'),oldWood=material('#ba9464'),grain=material('#ac814d'),ink=material('#393e3e'),red=material('#c65c50'),oldRed=material('#aa6958'),eye=material('#f6e5bd'),stone=material('#b9bba3'),support=material('#98785a')
-  for(const timber of[wood,oldWood,support])applyCraftSurface(timber,{kind:'wood',strength:.35,axis:'y'})
+  const wood=material('#d3a766'),oldWood=material('#ba9464'),grain=material('#ac814d'),ink=material('#393e3e'),red=material('#c65c50'),oldRed=material('#aa6958'),eye=material('#f6e5bd'),support=material('#98785a',.82),trimWood=material('#d3a766',.82),baseWood=material('#cfa261',.80)
+  for(const timber of[wood,oldWood])applyCraftSurface(timber,{kind:'wood',strength:.35,axis:'y'})
+  for(const board of[support,trimWood,baseWood])applyCraftSurface(board,{kind:'wood',strength:.36,axis:'x'})
   const mesh=(name:string,geometry:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D)=>{const o=new THREE.Mesh(geometry,m);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
   // Front of the actual twelve-sided column and tapered crown.
   const skin=(x:number,y:number)=>{const r=y<=.91?.23-.005*y/.91:.225-.325*(y-.91),ax=Math.abs(x);return ax<=r*.5?r-ax*Math.tan(Math.PI/12):ax<=r*Math.sqrt(3)/2?r*(1+Math.sqrt(3))/2-ax:(r-ax)/Math.tan(Math.PI/12)}
@@ -64,10 +67,30 @@ export function createUsokaeModel() {
     return {g,body}
   }
   const old=bird('old-wood-uso',oldWood,oldRed),fresh=bird('new-wood-uso',wood,red)
-  const ledge=mesh('shrine-receiving-ledge',new THREE.BoxGeometry(2.3,.12,.58),support,root);ledge.position.set(0,.76,-.55)
-  const plinth=mesh('ledge-plinth',new THREE.BoxGeometry(2.14,.712,.46),stone,root);plinth.position.set(0,.344,-.59)
-  const lip=mesh('ledge-front-trim',new THREE.BoxGeometry(2.32,.055,.045),wood,root);lip.position.set(0,.77,-.25)
-  const base=mesh('home-display-base',new THREE.CylinderGeometry(.46,.49,.102,48),wood,root);base.position.set(-.25,.039,.65)
+  addSteppedPedestal(root,{
+    name:'ledge-plinth',topName:'ledge-plinth-top',shape:'rect',kind:'stone',
+    center:[0,-.59],groundY:-.012,surfaceY:.70,color:'#b9bba3',trimColor:'#a3a58e',
+    roughness:.92,surfaceStrength:.42,
+    tiers:[
+      {width:2.22,depth:.50,height:.14,bevel:.018,color:'#a3a58e'},
+      {width:2.08,depth:.44,height:.482,bevel:.018,color:'#b9bba3'},
+      {width:2.18,depth:.48,height:.09,bevel:.014,color:'#c4c5ae'},
+    ],
+  })
+  const ledge=mesh('shrine-receiving-ledge',new RoundedBoxGeometry(2.3,.12,.58,2,.018),support,root);ledge.position.set(0,.76,-.55)
+  const lip=mesh('ledge-front-trim',new RoundedBoxGeometry(2.32,.055,.045,2,.012),trimWood,root);lip.position.set(0,.77,-.25)
+  const baseProfile=[
+    new THREE.Vector2(0,0),
+    new THREE.Vector2(.474,0),
+    new THREE.Vector2(.492,.014),
+    new THREE.Vector2(.490,.038),
+    new THREE.Vector2(.452,.056),
+    new THREE.Vector2(.468,.078),
+    new THREE.Vector2(.468,.092),
+    new THREE.Vector2(.454,.102),
+    new THREE.Vector2(0,.102),
+  ]
+  const base=mesh('home-display-base',new THREE.LatheGeometry(baseProfile,48),baseWood,root);base.position.set(-.25,-.012,.65)
   const pose=(step:number,amount:number)=>{
     const t=THREE.MathUtils.clamp(Number.isFinite(amount)?amount:0,0,1)
     old.g.position.set(-.25,.09,.65);fresh.g.position.set(.72,.82,-.55)

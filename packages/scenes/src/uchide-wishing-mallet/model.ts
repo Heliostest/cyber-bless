@@ -2,6 +2,40 @@ import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { applyBoxWoodUVs, applyTurnedShaftUVs, applyTurnedSphereUVs, createStylizedWoodTextures } from './wood-grain'
 
+/** Watertight 45-degree chamfered timber block (96 vertices, exact [-w/2,w/2]x[-h/2,h/2]x[-d/2,d/2] bounds). */
+function chamferedBox(w:number,h:number,d:number,r:number){
+ const hx=w/2,hy=h/2,hz=d/2,b=Math.min(r,hx*.45,hy*.45,hz*.45),ix=hx-b,iy=hy-b,iz=hz-b
+ type V=[number,number,number]
+ const px=(sx:number,sy:number,sz:number):V=>[sx*hx,sy*iy,sz*iz]
+ const py=(sx:number,sy:number,sz:number):V=>[sx*ix,sy*hy,sz*iz]
+ const pz=(sx:number,sy:number,sz:number):V=>[sx*ix,sy*iy,sz*hz]
+ const pos:number[]=[],norm:number[]=[],idx:number[]=[]
+ const va=new THREE.Vector3(),vb=new THREE.Vector3(),vc=new THREE.Vector3(),fn=new THREE.Vector3(),mid=new THREE.Vector3()
+ const poly=(verts:V[])=>{
+  mid.set(0,0,0);for(const v of verts)mid.add(va.set(...v));mid.divideScalar(verts.length)
+  va.set(...verts[0]!);vb.set(...verts[1]!);vc.set(...verts[2]!)
+  fn.copy(vb).sub(va).cross(vc.sub(va)).normalize()
+  const ordered=fn.dot(mid)<0?[...verts].reverse():verts
+  if(fn.dot(mid)<0)fn.negate()
+  const base=pos.length/3
+  for(const v of ordered){pos.push(v[0],v[1],v[2]);norm.push(fn.x,fn.y,fn.z)}
+  for(let i=1;i<ordered.length-1;i++)idx.push(base,base+i,base+i+1)
+ }
+ for(const s of[-1,1]){
+  poly([px(s,-1,-1),px(s,-1,1),px(s,1,1),px(s,1,-1)])
+  poly([py(-1,s,-1),py(1,s,-1),py(1,s,1),py(-1,s,1)])
+  poly([pz(-1,-1,s),pz(1,-1,s),pz(1,1,s),pz(-1,1,s)])
+ }
+ for(const sy of[-1,1])for(const sz of[-1,1])poly([py(-1,sy,sz),py(1,sy,sz),pz(1,sy,sz),pz(-1,sy,sz)])
+ for(const sx of[-1,1])for(const sz of[-1,1])poly([px(sx,-1,sz),px(sx,1,sz),pz(sx,1,sz),pz(sx,-1,sz)])
+ for(const sx of[-1,1])for(const sy of[-1,1])poly([px(sx,sy,-1),px(sx,sy,1),py(sx,sy,1),py(sx,sy,-1)])
+ for(const sx of[-1,1])for(const sy of[-1,1])for(const sz of[-1,1])poly([px(sx,sy,sz),py(sx,sy,sz),pz(sx,sy,sz)])
+ const g=new THREE.BufferGeometry()
+ g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3))
+ g.setAttribute('normal',new THREE.Float32BufferAttribute(norm,3))
+ g.setIndex(idx);g.computeBoundingBox();g.computeBoundingSphere();return g
+}
+
 function solid(source:THREE.BufferGeometry){
  if(!source.getAttribute('normal'))source.computeVertexNormals()
  const input=source.index?source.toNonIndexed():source,p=input.getAttribute('position'),sn=input.getAttribute('normal'),su=input.getAttribute('uv')
@@ -91,11 +125,25 @@ export function createWishingMalletModel(){
  const gripRingMat=new THREE.MeshStandardMaterial({color:'#815b36',roughness:.64})
  const trimMat=new THREE.MeshStandardMaterial({color:'#d9b56b',roughness:.54,metalness:.35})
  const cordMat=applyCraftSurface(new THREE.MeshStandardMaterial({color:'#b74434',roughness:.80}),{kind:'cord',strength:.3})
+ const standBaseMat=applyCraftSurface(new THREE.MeshStandardMaterial({color:'#6e4e35',roughness:.84}),{kind:'wood',strength:.34,scale:.72,axis:'z'})
  const mesh=(parent:THREE.Object3D,name:string,g:THREE.BufferGeometry,mat:THREE.Material,p:[number,number,number])=>{const m=new THREE.Mesh(solid(g),mat);m.name=name;m.position.set(...p);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
- const headRestGeo=new THREE.BoxGeometry(1.55,.20,.65);applyBoxWoodUVs(headRestGeo,[1.55,.20,.65],'x')
- const headRest=mesh(root,'uchide-head-rest',headRestGeo,headRestMat,[-.55,.10,-.45])
- const handleRestGeo=new THREE.BoxGeometry(.30,.46,.30);applyBoxWoodUVs(handleRestGeo,[.30,.46,.30],'y',true)
- const handleRest=mesh(root,'uchide-handle-rest',handleRestGeo,handleRestMat,[-.55,.23,1.15])
+ const standMesh=(parent:THREE.Object3D,name:string,g:THREE.BufferGeometry,mat:THREE.Material,p:[number,number,number])=>{const m=new THREE.Mesh(g,mat);m.name=name;m.position.set(...p);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
+ // Compact chamfered wooden presentation base tying the two grooved/cradled wooden rests cleanly onto the courtyard.
+ standMesh(root,'uchide-stand-base',chamferedBox(1.74,.044,2.22,.014),standBaseMat,[-.55,.022,.28])
+ const headRestGeo=chamferedBox(1.55,.20,.65,.022);applyBoxWoodUVs(headRestGeo,[1.55,.20,.65],'x')
+ const headRest=standMesh(root,'uchide-head-rest',headRestGeo,headRestMat,[-.55,.10,-.45])
+ for(const side of[-1,1]as const){
+  const cheekGeo=chamferedBox(1.40,.085,.08,.016);applyBoxWoodUVs(cheekGeo,[1.40,.085,.08],'x')
+  standMesh(root,`uchide-head-cheek-${side}`,cheekGeo,headRestMat,[-.55,.225,-.45+side*.275])
+ }
+ const handleRestFootGeo=chamferedBox(.38,.06,.38,.014);applyBoxWoodUVs(handleRestFootGeo,[.38,.06,.38],'x')
+ standMesh(root,'uchide-handle-rest-foot',handleRestFootGeo,standBaseMat,[-.55,.03,1.15])
+ const handleRestGeo=chamferedBox(.30,.46,.30,.020);applyBoxWoodUVs(handleRestGeo,[.30,.46,.30],'y',true)
+ const handleRest=standMesh(root,'uchide-handle-rest',handleRestGeo,handleRestMat,[-.55,.23,1.15])
+ for(const side of[-1,1]as const){
+  const pommelCheekGeo=chamferedBox(.055,.075,.25,.012);applyBoxWoodUVs(pommelCheekGeo,[.055,.075,.25],'y')
+  standMesh(root,`uchide-handle-cheek-${side}`,pommelCheekGeo,handleRestMat,[-.55+side*.122,.468,1.15])
+ }
  const actor=new THREE.Group();actor.name='uchide-mallet';root.add(actor)
  // One closed, gently barrel-shaped original mallet head, capped at both ends.
  const profile=[[0,-.68],[.24,-.68],[.29,-.60],[.34,-.40],[.354,-.20],[.36,0],[.354,.20],[.34,.40],[.29,.60],[.24,.68],[0,.68]].map(([r,y])=>new THREE.Vector2(r!,y!))

@@ -1,13 +1,15 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createBambooSieveMaterials, warmBambooTint } from './sieve-material'
 
 /** Original generalized washing station; named practice, authored materials and assistance. */
 export function createCoinWashingModel(){
  const root=new THREE.Group();root.name='wash-subject'
- const stone=new THREE.MeshStandardMaterial({color:'#b9b098',roughness:.95}),ledgeStone=new THREE.MeshStandardMaterial({color:'#d1c4a8',roughness:.96}),wood=new THREE.MeshStandardMaterial({color:'#c59b64',roughness:.8}),sieveMats=createBambooSieveMaterials(),clothMat=new THREE.MeshStandardMaterial({color:'#f4ead6',roughness:1}),metal=new THREE.MeshStandardMaterial({color:'#ba9954',roughness:.4,metalness:.58}),waterMat=createRitualMaterial({color:'#8bd5d6',transparent:true,opacity:.58,roughness:.16,metalness:0,depthWrite:false},{kind:'water',strength:.35})
+ const stone=new THREE.MeshStandardMaterial({color:'#b9b098',roughness:.95}),ledgeStone=new THREE.MeshStandardMaterial({color:'#d1c4a8',roughness:.96}),wood=new THREE.MeshStandardMaterial({color:'#c59b64',roughness:.8}),railWood=new THREE.MeshStandardMaterial({color:'#c0945a',roughness:.78}),sieveMats=createBambooSieveMaterials(),clothMat=new THREE.MeshStandardMaterial({color:'#f4ead6',roughness:1}),metal=new THREE.MeshStandardMaterial({color:'#ba9954',roughness:.4,metalness:.58}),waterMat=createRitualMaterial({color:'#8bd5d6',transparent:true,opacity:.58,roughness:.16,metalness:0,depthWrite:false},{kind:'water',strength:.35})
  applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+ applyCraftSurface(railWood, { kind: 'wood', strength: .42, axis: 'x' })
  applyCraftSurface(clothMat, { kind: 'fabric', strength: .26 })
  applyCraftSurface(metal, { kind: 'metal', strength: .45 })
  applyCraftSurface(stone, { kind: 'stone', strength: .4 })
@@ -18,9 +20,9 @@ export function createCoinWashingModel(){
  const n=48,ring=(r:number,y:number)=>Array.from({length:n},(_,i)=>new THREE.Vector3(r*Math.cos(i*2*Math.PI/n),y,r*Math.sin(i*2*Math.PI/n)))
  const meshData=()=>{const p:number[]=[],ix:number[]=[];const strip=(a:THREE.Vector3[],b:THREE.Vector3[])=>{const start=p.length/3,count=a.length;for(const v of[...a,...b])p.push(v.x,v.y,v.z);for(let i=0;i<count;i++){const j=(i+1)%count;ix.push(start+i,start+count+i,start+count+j,start+i,start+count+j,start+j)}};const cap=(a:THREE.Vector3[],center:THREE.Vector3,up:boolean)=>{const start=p.length/3;p.push(center.x,center.y,center.z);for(const v of a)p.push(v.x,v.y,v.z);for(let i=0;i<a.length;i++){const j=(i+1)%a.length;ix.push(start,start+1+(up?j:i),start+1+(up?i:j))}};const geometry=()=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setIndex(ix);g.computeVertexNormals();return g};return{p,ix,strip,cap,geometry}}
  const vessel=(profile:[number,number][],bottom:number,floor:number)=>{const d=meshData(),loops=profile.map(([r,y])=>ring(r,y));for(let i=0;i<loops.length-1;i++)d.strip(loops[i]!,loops[i+1]!);d.cap(loops[0]!,new THREE.Vector3(0,bottom,0),false);d.cap(loops.at(-1)!,new THREE.Vector3(0,floor,0),true);return d.geometry()}
- const basin=make('wash-basin',vessel([[1.55,0],[1.75,.58],[1.72,.68],[1.50,.68],[1.45,.12]],0,.12),stone)
- const ledge=box('wash-cloth-stone',-2.05,.34,1,.56,.68,.55,ledgeStone)
- const rails=[-.2,.2].map((z,i)=>box('wash-sieve-support-'+i,0,.695,z,3.30,.03,.08,wood))
+ const basin=make('wash-basin',vessel([[1.53,0],[1.58,.035],[1.75,.56],[1.745,.64],[1.71,.68],[1.51,.68],[1.48,.64],[1.45,.12]],0,.12),stone)
+ const ledge=make('wash-cloth-stone',new RoundedBoxGeometry(.56,.68,.55,3,.038),ledgeStone);ledge.position.set(-2.05,.34,1)
+ const rails=[-.2,.2].map((z,i)=>{const o=make('wash-sieve-support-'+i,new RoundedBoxGeometry(3.30,.03,.08,3,.014),railWood);o.position.set(0,.695,z);return o})
  const d=meshData(),sieveUv:number[]=[],sieveCol:number[]=[],seamPairs:[number,number][]=[]
  const loops=[ring(.38,.71),ring(.49,.93),ring(.455,.93),ring(.355,.745)]
  const pushSieveVert=(x:number,y:number,z:number,u:number,v:number,recess:number,drift:number)=>{

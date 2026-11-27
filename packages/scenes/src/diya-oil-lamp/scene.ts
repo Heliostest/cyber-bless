@@ -112,7 +112,8 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   const cotton = new THREE.MeshStandardMaterial({ color: 0xf1dec0, roughness: 1 })
   const burnt = new THREE.MeshStandardMaterial({ color: 0x443128, roughness: 1 })
   const amber = createRitualMaterial({ color: 0x98631f, roughness: .22, metalness: 0, clearcoat: .65, clearcoatRoughness: .1, side: THREE.DoubleSide }, { kind: 'wet', strength: .35 })
-  const plateMat = new THREE.MeshStandardMaterial({ color: 0x987b60, roughness: 0.76, metalness: 0.25 })
+  const plateMat = new THREE.MeshStandardMaterial({ color: 0xa48565, roughness: 0.62, metalness: 0.34 })
+  applyCraftSurface(plateMat, { kind: 'metal', scale: 1.35, strength: 0.26 })
   const petalMat = new THREE.MeshStandardMaterial({ color: 0xbe9b70, roughness: 0.86, metalness: 0.12, side: THREE.DoubleSide })
   ;[clay, rimClay].forEach(material => applyCraftSurface(material, { kind: 'ceramic', strength: .45 }))
   applyCraftSurface(cotton, { kind: 'cord', strength: .28 })
@@ -121,17 +122,24 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   plate.name = 'diya-plate'
   world.add(plate)
   const floorY = getEnvironmentSurfaceY('diya-oil-lamp')
-  const plateFootH = 0.006 - floorY
-  const plateFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.94, 0.90, plateFootH, 64), plateMat)
-  plateFoot.position.y = floorY + plateFootH / 2
-  plate.add(plateFoot)
-  const plateBody = new THREE.Mesh(new THREE.CylinderGeometry(1.02, 0.96, 0.07, 64), plateMat)
-  plateBody.position.y = 0.038
+  // Turned metal thali tray with stepped foot ring, flat inner lamp well at y = 0.073, and beveled rolled rim.
+  const thaliProfile = [
+    new THREE.Vector2(0, floorY),
+    new THREE.Vector2(0.895, floorY),
+    new THREE.Vector2(0.925, floorY + 0.012),
+    new THREE.Vector2(0.962, 0.022),
+    new THREE.Vector2(1.012, 0.052),
+    new THREE.Vector2(1.044, 0.080),
+    new THREE.Vector2(1.050, 0.098),
+    new THREE.Vector2(1.036, 0.108),
+    new THREE.Vector2(1.015, 0.102),
+    new THREE.Vector2(0.990, 0.082),
+    new THREE.Vector2(0.965, 0.073),
+    new THREE.Vector2(0, 0.073),
+  ]
+  const plateBody = new THREE.Mesh(new THREE.LatheGeometry(thaliProfile, 72), plateMat)
+  plateBody.name = 'diya-plate-body'
   plate.add(plateBody)
-  const plateRim = new THREE.Mesh(new THREE.TorusGeometry(1.00, 0.028, 8, 64), plateMat)
-  plateRim.rotation.x = Math.PI / 2
-  plateRim.position.y = 0.082
-  plate.add(plateRim)
   // A product-original ring of small petals, with no named sacred motif.
   const petalShape = new THREE.Shape()
   petalShape.moveTo(0, 0.075)

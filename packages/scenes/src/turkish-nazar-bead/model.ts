@@ -1,6 +1,7 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 
 /** Original prepared nazar display: one closed, pierced glass surface and a rigid metal bail. */
 export function createTurkishNazarBeadModel() {
@@ -8,16 +9,16 @@ export function createTurkishNazarBeadModel() {
  const subject=new THREE.Group();subject.name='turkish-nazar-bead-subject';root.add(subject)
  const charm=new THREE.Group();charm.name='nazar-charm';subject.add(charm)
  const matte=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.88})
- const wood=matte(0x9d7852),ceramic=matte(0xe7d8b9),stone=matte(0xc7bba4)
+ const wood=matte(0x9d7852),woodPost=matte(0x95704c),ceramic=matte(0xe7d8b9)
  const metal=new THREE.MeshPhysicalMaterial({color:0xbda66d,metalness:.68,roughness:.25,clearcoat:.35})
- applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+ applyCraftSurface(wood, { kind: 'wood', strength: .4, axis: 'x' })
+ applyCraftSurface(woodPost, { kind: 'wood', strength: .4, axis: 'y' })
  applyCraftSurface(ceramic, { kind: 'ceramic', strength: .45 })
  applyCraftSurface(metal, { kind: 'metal', strength: .45 })
- applyCraftSurface(stone, { kind: 'stone', strength: .4 })
 
  const glass=[0x16488e,0xf2edda,0x6cbac9,0x152a42].map((color,index)=>index===0?createRitualMaterial({color,roughness:.16,clearcoat:1,clearcoatRoughness:.08,ior:1.5,envMapIntensity:.85,transmission:.1,attenuationColor:color,attenuationDistance:.2},{kind:'glass',thickness:.13,strength:.1}):new THREE.MeshPhysicalMaterial({color,roughness:.16,clearcoat:1,clearcoatRoughness:.08,ior:1.5,envMapIntensity:.85}))
  const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material|THREE.Material[],parent:THREE.Object3D=subject)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
- const box=(name:string,size:[number,number,number],p:[number,number,number],m:THREE.Material,parent:THREE.Object3D=subject)=>{const o=mesh(name,new THREE.BoxGeometry(...size),m,parent);o.position.set(...p);return o}
+ const box=(name:string,size:[number,number,number],p:[number,number,number],m:THREE.Material,bevel=.012,parent:THREE.Object3D=subject)=>{const b=Math.min(bevel,size[0]/3,size[1]/3,size[2]/3);const o=mesh(name,new RoundedBoxGeometry(size[0],size[1],size[2],2,b),m,parent);o.position.set(...p);return o}
  // One indexed closed surface. Coloured regions meet along shared vertices;
  // no opaque glass behind an applied eye and no stacked disks or floating decals.
  const positions:number[]=[],groups:number[][]=[[],[],[],[]],cache=new Map<string,number>()
@@ -69,14 +70,31 @@ export function createTurkishNazarBeadModel() {
  path.add(new Arc(.3355,-.085,.02,Math.PI,Math.PI*1.5))
  path.add(new THREE.LineCurve3(v(.3155,-.085),v(.3155,0)))
  const bail=mesh('nazar-hanger-loop',new THREE.TubeGeometry(path,128,.0095,12,true),metal,charm);bail.userData.toonSurface={outline:false}
- box('nazar-rest-base',[.42,.052,.30],[-.95,.026,.42],ceramic)
- box('nazar-rest-front',[.30,.15,.025],[-.95,.127,.555],ceramic)
- box('nazar-rest-back',[.30,.15,.025],[-.95,.127,.30],ceramic)
- const foot=mesh('nazar-stand-base',new THREE.CylinderGeometry(.19,.205,.07,40),wood);foot.position.set(.93,.035,.42)
- const post=mesh('nazar-stand-post',new THREE.CylinderGeometry(.045,.049,1.87,24),wood);post.position.set(.93,1.005,.42)
+ // Chamfered ceramic bead cradle and turned-foot wooden peg stand grounded directly on the courtyard.
+ box('nazar-rest-plinth',[.50,.045,.38],[-.95,-.0775,.42],ceramic,.012)
+ box('nazar-rest-base',[.46,.152,.34],[-.95,-.024,.42],ceramic,.016)
+ box('nazar-rest-front',[.32,.148,.028],[-.95,.124,.556],ceramic,.008)
+ box('nazar-rest-back',[.32,.148,.028],[-.95,.124,.298],ceramic,.008)
+ const footProfile=[
+  new THREE.Vector2(0,-.10),
+  new THREE.Vector2(.225,-.10),
+  new THREE.Vector2(.240,-.084),
+  new THREE.Vector2(.236,-.042),
+  new THREE.Vector2(.208,-.018),
+  new THREE.Vector2(.196,.032),
+  new THREE.Vector2(.180,.056),
+  new THREE.Vector2(.110,.070),
+  new THREE.Vector2(.072,.092),
+  new THREE.Vector2(.056,.106),
+  new THREE.Vector2(0,.106),
+ ]
+ const foot=mesh('nazar-stand-base',new THREE.LatheGeometry(footProfile,44),wood);foot.position.set(.93,0,.42)
+ const post=mesh('nazar-stand-post',new THREE.CylinderGeometry(.044,.050,1.87,28),woodPost);post.position.set(.93,1.005,.42)
+ const finialProfile=[new THREE.Vector2(0,0),new THREE.Vector2(.045,0),new THREE.Vector2(.054,.012),new THREE.Vector2(.044,.030),new THREE.Vector2(.022,.042),new THREE.Vector2(0,.046)]
+ const finial=mesh('nazar-stand-finial',new THREE.LatheGeometry(finialProfile,28),woodPost);finial.position.set(.93,1.936,.42)
  const peg=mesh('nazar-peg',new THREE.CylinderGeometry(.024,.024,.68,32).rotateZ(-Math.PI/2),wood);peg.position.set(.60,1.7915,.42)
- const pegCap=mesh('nazar-peg-cap',new THREE.CylinderGeometry(.035,.035,.026,32).rotateZ(-Math.PI/2),wood);pegCap.position.set(.26,1.7915,.42)
- box('nazar-stone-base',[2.95,.12,1.35],[-.05,-.06,.35],stone,root)
+ const capProfile=[new THREE.Vector2(0,-.016),new THREE.Vector2(.028,-.016),new THREE.Vector2(.036,-.008),new THREE.Vector2(.036,.008),new THREE.Vector2(.026,.016),new THREE.Vector2(0,.016)]
+ const pegCap=mesh('nazar-peg-cap',new THREE.LatheGeometry(capProfile,32).rotateZ(-Math.PI/2),wood);pegCap.position.set(.26,1.7915,.42)
  const states:[number,number,number][]=[[-.95,.46,.42],[-.95,1.16,.42],[.37,1.16,.42],[.37,1.02,.42]]
  const pose=(step:number,n:number)=>{const t=Number.isFinite(n)?THREE.MathUtils.clamp(n,0,1):0,i=THREE.MathUtils.clamp(Math.floor(step),0,3),a=states[i]!,b=states[Math.min(i+1,3)]!;charm.rotation.set(0,0,0)
   if(t===0||i===3)charm.position.set(...a);else if(t===1)charm.position.set(...b);else charm.position.set(THREE.MathUtils.lerp(a[0],b[0],t),THREE.MathUtils.lerp(a[1],b[1],t),THREE.MathUtils.lerp(a[2],b[2],t))

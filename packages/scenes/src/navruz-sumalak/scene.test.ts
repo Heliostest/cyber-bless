@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext } from '../contract'
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { createInteractionCues, type InteractionCue } from '@wbr/scene-runtime/interaction-cues'
 
 // Only the GPU boundary is replaced: meshes, projection, cues and gestures stay real.
@@ -199,13 +200,16 @@ describe('Navruz shared Sumalak practice', () => {
     active = true; s.run(); expect(s.progress).toEqual([1])
   })
 
-  it('rests empty and filled bowl feet on the real courtyard support', () => {
+  it('rests hearth, sharing mat, and empty and filled bowl feet directly on the courtyard surface without a floor disc', () => {
+    const surfaceY = getEnvironmentSurfaceY('navruz-sumalak')
     for (const initial of [0, 1, 2]) {
       const s = mount(initial)
-      const support = new THREE.Box3().setFromObject(object('navruz-courtyard-plinth'))
+      expect(drawn.scene?.getObjectByName('navruz-courtyard-plinth')).toBeUndefined()
+      expect(new THREE.Box3().setFromObject(object('navruz-clay-hearth')).min.y).toBeLessThanOrEqual(surfaceY + .001)
+      expect(Math.abs(new THREE.Box3().setFromObject(object('navruz-sharing-mat')).min.y - surfaceY)).toBeLessThan(.001)
       for (const name of ['navruz-serving-bowl', 'navruz-neighbor-bowl']) {
         const bounds = new THREE.Box3().setFromObject(object(name))
-        expect(Math.abs(bounds.min.y - support.max.y)).toBeLessThan(.001)
+        expect(Math.abs(bounds.min.y - surfaceY)).toBeLessThan(.001)
       }
       s.instance.dispose()
     }

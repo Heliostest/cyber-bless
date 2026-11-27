@@ -1,8 +1,9 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
-import { addObjectCradle, addOfferingTable } from '../cozy-furniture'
+import { addContactShadow, addObjectCradle, addOfferingTable } from '../cozy-furniture'
 
 let cachedKomoPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
 let cachedRopePixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
@@ -510,18 +511,23 @@ export function createKagamiBirakiModel(){
   kind:'wood',finish:'cedar',color:'#a97b4d',grooveDepth:.018,grooveWidth:.090,bevel:.006,
  })
  deduplicateNames(handleCradleBuild.root)
- const mat=(color:string,roughness=.75)=>new THREE.MeshStandardMaterial({color,roughness,metalness:0})
+ const mat=(color:string,roughness=.75,vertexColors=false)=>new THREE.MeshStandardMaterial({color,roughness,metalness:0,vertexColors})
  const komoTex=createKomoWeaveTextures()
  const ropeTex=createStrawRopeTextures()
  const ribbonTex=createRibbonClothTextures()
- const cedar=mat('#b68a55'),lidWood=mat('#e2bf86'),malletWood=mat('#c3955c')
+ const barrelCedar=mat('#b68a55',.76,true),handleCedar=mat('#b68a55',.66,true),lidWood=mat('#e2bf86',.74,true),malletWood=mat('#c3955c',.64,true)
  const rope=new THREE.MeshStandardMaterial({color:'#b4965c',roughness:.92,metalness:0,map:ropeTex.map,bumpMap:ropeTex.bump,bumpScale:.0044})
  const red=new THREE.MeshStandardMaterial({color:'#bb4841',roughness:.80,metalness:0,map:ribbonTex.map,bumpMap:ribbonTex.bump,bumpScale:.0022})
  const white=new THREE.MeshStandardMaterial({color:'#f8ebd2',roughness:.86,metalness:0,map:ribbonTex.map,bumpMap:ribbonTex.bump,bumpScale:.0022})
- applyCraftSurface(cedar,{kind:'wood',strength:.4,axis:'y'})
- applyCraftSurface(lidWood,{kind:'wood',strength:.4})
- applyCraftSurface(malletWood,{kind:'wood',strength:.4})
- const straw=new THREE.MeshStandardMaterial({color:'#d5ba7e',roughness:.95,metalness:0,map:komoTex.map,bumpMap:komoTex.bump,bumpScale:.0038})
+ applyCraftSurface(barrelCedar,{kind:'wood',strength:.42,axis:'y'})
+ applyCraftSurface(handleCedar,{kind:'wood',strength:.42,axis:'y'})
+ applyCraftSurface(lidWood,{kind:'wood',strength:.42})
+ applyCraftSurface(malletWood,{kind:'wood',strength:.42})
+ applyCraftSurface(rope,{kind:'cord',scale:2.2,strength:.26})
+ applyCraftSurface(red,{kind:'fabric',scale:2.4,strength:.22})
+ applyCraftSurface(white,{kind:'fabric',scale:2.4,strength:.22})
+ const straw=new THREE.MeshStandardMaterial({color:'#d5ba7e',roughness:.95,metalness:0,map:komoTex.map,bumpMap:komoTex.bump,bumpScale:.0038,vertexColors:true})
+ applyCraftSurface(straw,{kind:'straw',pattern:'woven',axis:'y',scale:1.6,strength:.24})
  const finish=(source:THREE.BufferGeometry,preserveSmooth=false)=>{
   if(preserveSmooth && !source.getAttribute('normal'))source.computeVertexNormals()
   const raw=source.index?source.toNonIndexed():source,p=raw.getAttribute('position'),uv=raw.getAttribute('uv'),nrm=preserveSmooth?raw.getAttribute('normal'):undefined,faces:number[]=[],tex:number[]=[],norms:number[]=[]
@@ -531,7 +537,9 @@ export function createKagamiBirakiModel(){
  const mesh=(name:string,geometry:THREE.BufferGeometry,material:THREE.Material,parent:THREE.Object3D,smooth=false)=>{const o=new THREE.Mesh(finish(geometry,smooth),material);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
  const lathe=(points:number[][],segments=64)=>new THREE.LatheGeometry(points.map(p=>new THREE.Vector2(p[0]!,p[1]!)),segments)
  const cask=new THREE.Group();cask.name='prepared-sake-cask';cask.position.set(.35,caskStandH,0);subject.add(cask)
- const barrel=mesh('cedar-barrel',lathe([[0,0],[.55,0],[.62,.06],[.65,.5],[.62,1.08],[.53,1.08],[.55,.5],[.50,.12],[0,.12]]),cedar,cask)
+ addContactShadow(subject,{name:'cask-on-stand-contact-ao',width:1.24,depth:1.24,y:caskStandH+.0018,center:[.35,0],shape:'ellipse',opacity:.28})
+ const barrel=mesh('cedar-barrel',lathe([[0,0],[.55,0],[.62,.06],[.65,.5],[.62,1.08],[.53,1.08],[.55,.5],[.50,.12],[0,.12]]),barrelCedar,cask)
+ bakeCreviceAO(barrel.geometry,{groundY:0,groundRange:.14,cavityCenter:[0,0],cavityRadius:.56,cavityTopY:1.08,strength:.44,tint:0x4f3829})
  const radius=(y:number)=>y<=.5?.62+.03*(y-.06)/.44:.65-.03*(y-.5)/.58
  // Smooth C1-continuous barrel curve matching the cask bulge without a mid-height shading crease at y=0.50.
  const smoothBarrelR=(y:number)=>{
@@ -561,6 +569,7 @@ export function createKagamiBirakiModel(){
  }
  wrapGeo.computeVertexNormals()
  const wrap=mesh('woven-komo-wrap',wrapGeo,straw,cask,true)
+ bakeCreviceAO(wrap.geometry,{groundY:.08,groundRange:.14,strength:.30,tint:0x5d4935})
  // Slender taut straw-edge trim cords finishing the top and bottom komo mat borders.
  for(const [label,yTrim]of[['bottom',.093],['top',.977]] as const){
   const trim=mesh('komo-edge-trim-'+label,buildTwistedHorizontalCoil(komoOuter(yTrim)+.0045,0,.0078,.12,40,96,8),rope,cask,true)
@@ -573,14 +582,16 @@ export function createKagamiBirakiModel(){
   hoop.position.y=y
  }
  const liquidRadius=.55-(.03*(.83-.5)/.58)
- const liquidMaterial=createRitualMaterial({color:'#ead59b',roughness:.18,transparent:true,opacity:.78,metalness:0,depthWrite:false},{kind:'water',strength:.25})
+ const liquidMaterial=createRitualMaterial({color:'#ead59b',roughness:.10,transparent:true,opacity:.80,metalness:0,depthWrite:false},{kind:'wet',strength:.34})
  liquidMaterial.userData.waterRendering=false // Sake keeps its authored liquid appearance.
  const liquid=mesh('sake-volume',lathe([[0,.12],[.50,.12],[.55,.5],[liquidRadius,.83],[0,.83]]),liquidMaterial,cask);liquid.castShadow=false
  // Both prepared halves stay flat on the rim; this opening geometry is an original simplification.
- const lids=[-1,1].map(side=>{const points=Array.from({length:49},(_,i)=>{const angle=-Math.PI/2+Math.PI*i/48;return new THREE.Vector2(side*.61*Math.cos(angle),.61*Math.sin(angle))});if(side===-1)points.reverse();const s=new THREE.Shape(points);s.closePath();const o=mesh('prepared-lid-'+(side===-1?'left':'right'),new THREE.ExtrudeGeometry(s,{depth:.045,bevelEnabled:false,curveSegments:24}),lidWood,cask);o.rotation.x=-Math.PI/2;o.position.y=1.08;return o})
+ const lids=[-1,1].map(side=>{const points=Array.from({length:49},(_,i)=>{const angle=-Math.PI/2+Math.PI*i/48;return new THREE.Vector2(side*.61*Math.cos(angle),.61*Math.sin(angle))});if(side===-1)points.reverse();const s=new THREE.Shape(points);s.closePath();const o=mesh('prepared-lid-'+(side===-1?'left':'right'),new THREE.ExtrudeGeometry(s,{depth:.045,bevelEnabled:false,curveSegments:24}),lidWood,cask);bakeCreviceAO(o.geometry,{strength:.22,tint:0x5d4530});o.rotation.x=-Math.PI/2;o.position.y=1.08;return o})
  const mallet=new THREE.Group();mallet.name='wooden-mallet';subject.add(mallet)
  const head=mesh('mallet-head',new THREE.BoxGeometry(.50,.22,.26),malletWood,mallet)
- const handle=mesh('mallet-handle',new THREE.CylinderGeometry(.035,.035,.82,16),cedar,mallet);handle.rotation.x=Math.PI/2;handle.position.set(0,-.035,.48)
+ bakeCreviceAO(head.geometry,{groundY:-.11,groundRange:.07,strength:.26,tint:0x583f2c})
+ const handle=mesh('mallet-handle',new THREE.CylinderGeometry(.035,.035,.82,16),handleCedar,mallet);handle.rotation.x=Math.PI/2;handle.position.set(0,-.035,.48)
+ bakeCreviceAO(handle.geometry,{strength:.20,tint:0x583f2c})
  // Flush-wrapped red and white cloth binding bands hugging the 0.035 handle tightly with zero gap.
  for(const [i,material]of[red,white].entries()){
   const band=mesh('ribbon-band-'+i,buildHandleClothBandGeometry(.0346,.0404,.0105,36),material,mallet,true)

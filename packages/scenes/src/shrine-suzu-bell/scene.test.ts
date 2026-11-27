@@ -358,7 +358,7 @@ describe('shrine suzu object actions', () => {
       if (mesh.geometry) resources.add(mesh.geometry)
       for (const mat of mesh.material ? Array.isArray(mesh.material) ? mesh.material : [mesh.material] : []) {
         resources.add(mat)
-        const map = (mat as THREE.MeshStandardMaterial).map
+        const map = o.userData?.effect ? null : (mat as THREE.MeshStandardMaterial).map
         if (map) resources.add(map)
       }
       if ((o as THREE.Light).isLight) resources.add(o as THREE.Light)
@@ -473,5 +473,33 @@ describe('shrine suzu object actions', () => {
     const ring = new THREE.Box3().setFromObject(s.object('suzu-suspension-ring'))
     expect(arm.min.z).toBeLessThan(lintel.max.z)
     expect(arm.max.z).toBeGreaterThan(ring.min.z)
+    const metal = (s.object('suzu-bell-body') as THREE.Mesh).material as THREE.MeshStandardMaterial
+    expect(metal.emissiveIntensity).toBeCloseTo(0.08, 4)
+    expect(s.object('suzu-column-base-contact-ao-left').userData.effect).toBe(true)
+    expect(s.object('suzu-column-base-contact-ao-right').userData.effect).toBe(true)
+  })
+
+  it('breathes the 28-strand tassel gently with environmentWind when active and stays still under reduced motion', async () => {
+    const { loadRapier } = await import('@wbr/scene-runtime/rapier-soft-body')
+    const { createEnvironmentWind } = await import('@wbr/scene-runtime/environment-wind')
+    await loadRapier()
+    const wind = createEnvironmentWind({ strength: 0.75 })
+    let isReduced = false
+    const s = mount(0, { isReducedMotion: () => isReduced })
+    drawn.scene!.userData.environmentWind = wind
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    const tassel0 = s.object('suzu-tassel-strand-0') as THREE.Mesh
+    const restTassel = Array.from(tassel0.geometry.getAttribute('position').array)
+    for (let i = 0; i < 30; i++) {
+      wind.update((i + 1) / 60, 1 / 60, false)
+      s.instance.update(1 / 60)
+    }
+    expect(Array.from(tassel0.geometry.getAttribute('position').array)).not.toEqual(restTassel)
+    isReduced = true
+    wind.update(0, 0, true)
+    s.instance.update(1 / 60)
+    const calmTassel = Array.from(tassel0.geometry.getAttribute('position').array)
+    for (let i = 0; i < 12; i++) s.instance.update(1 / 60)
+    expect(Array.from(tassel0.geometry.getAttribute('position').array)).toEqual(calmTassel)
   })
 })

@@ -8,6 +8,7 @@ import { createTouchTarget } from '../touch-target'
 import { completesDirectionalDrag, directionalAxes, updateDirectionalDragHint } from '../directional-drag'
 import { addStageLights, CEL_STYLE, createSceneFeedback, createStepOverlay, createWarmStage, disposeTree, observeCanvasResize, setSafeText, sizeStage } from '../procedural-kit'
 import { createCoinWashingModel } from './model'
+import { createSurfaceRipple } from '@wbr/scene-runtime/soft-plume'
 import { createStylizedWater } from '@wbr/scene-runtime/stylized-water'
 
 type Checkpoint = 0 | 1 | 2 | 3
@@ -26,7 +27,7 @@ export function createZeniaraiCoinWashing(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean; heldPosition?: THREE.Vector3; heldQuaternion?: THREE.Quaternion; sounded?: boolean; flowing?: boolean } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean; heldPosition?: THREE.Vector3; heldQuaternion?: THREE.Quaternion; sounded?: boolean; flowing?: boolean; rippled?: number } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
@@ -48,6 +49,7 @@ export function createZeniaraiCoinWashing(ctx: SceneContext): SceneInstance {
   for(let j=1;j<waterRings;j++)for(let k=0;k<waterSides;k++){const a=1+(j-1)*waterSides+k,b=1+(j-1)*waterSides+(k+1)%waterSides,c=1+j*waterSides+k,d=1+j*waterSides+(k+1)%waterSides;waterIndices.push(a,b,d,a,d,c)}
   const waterGeometry=new THREE.BufferGeometry();waterGeometry.setAttribute('position',new THREE.Float32BufferAttribute(waterPositions,3));waterGeometry.setIndex(waterIndices);waterGeometry.computeVertexNormals()
   const water=createStylizedWater({geometry:waterGeometry,normal:'y',depth:.38,color:0x7bc6c7,bedColor:0xb5b39d,opacity:.48,causticScale:2.8,waveScale:.55});water.surface.position.set(0,.50,0);scene.add(water.surface)
+  const ripple=createSurfaceRipple({radius:.44,maxRings:5,color:0xeaf9f7,opacity:.48,duration:1.45});ripple.root.position.set(0,.503,0);scene.add(ripple.root)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
   const restore = () => pose(at, 0)
@@ -85,16 +87,43 @@ export function createZeniaraiCoinWashing(ctx: SceneContext): SceneInstance {
   function withHostCallbacks(work: () => void) { notifying = true; callbackVersion = lifecycleVersion; sync(); try { work() } finally { notifying = false; if (!disposed) sync() } }
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function soundWater(short = false) {
-    if (!motion || motion.step !== 1) return
-    if ((short || model.stream.visible) && !motion.sounded) {
-      motion.sounded = true
-      withHostCallbacks(() => feedback.sound('water', { duration: short ? .12 : .8, strength: .55 }))
+    if (!motion) return
+    const quiet = ctx.isReducedMotion?.() ?? false
+    if (motion.step === 0) {
+      if ((short || amount >= .12) && !motion.sounded) {
+        motion.sounded = true
+        withHostCallbacks(() => feedback.sound('water', { duration: short ? .12 : .42, strength: .36 }))
+      }
+      if (!short && !quiet) {
+        if (amount >= .10 && (motion.rippled ?? 0) < 1) { motion.rippled = 1; ripple.trigger(.85, 0, .95) }
+        if (amount >= .35 && (motion.rippled ?? 0) < 2) { motion.rippled = 2; ripple.trigger(.85, 0, .55) }
+      }
+      return
     }
-    if (!model.stream.visible && motion.flowing) feedback.stop()
-    motion.flowing = model.stream.visible
+    if (motion.step === 1) {
+      if ((short || model.stream.visible) && !motion.sounded) {
+        motion.sounded = true
+        withHostCallbacks(() => {
+          feedback.sound('water', { duration: short ? .12 : .8, strength: .55 })
+          feedback.sound('metal', { duration: short ? .10 : .34, strength: .18 })
+        })
+      }
+      ripple.setContinuous(!short && !quiet && model.stream.visible, 0, 0)
+      if (!model.stream.visible && motion.flowing) feedback.stop()
+      motion.flowing = model.stream.visible
+      return
+    }
+    if (motion.step === 2 && (short || amount >= .38) && !motion.sounded) {
+      motion.sounded = true
+      withHostCallbacks(() => {
+        feedback.sound('fabric', { duration: short ? .12 : .42, strength: .42 })
+        if (!short) feedback.sound('metal', { duration: .24, strength: .12 })
+      })
+    }
   }
   function settle() {
     if (!inputActive() || !motion) return
+    ripple.setContinuous(false)
     at = (motion.step + 1) as Checkpoint; motion = null; restore()
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
@@ -146,13 +175,13 @@ export function createZeniaraiCoinWashing(ctx: SceneContext): SceneInstance {
           }
         }else{pose(motion.step,motion.from+(1-motion.from)*eased);if(motion.placed)placement.settle(eased)} soundWater(); if (motion.time === 1) settle()
       }
-      if (active()) { water.update(delta,ctx.isReducedMotion?.()??false); matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) { const quiet = ctx.isReducedMotion?.() ?? false; water.update(delta, quiet); ripple.update(delta, quiet); matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); water.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); ripple.dispose(); water.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

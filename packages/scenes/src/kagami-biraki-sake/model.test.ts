@@ -76,6 +76,7 @@ describe('Prepared sake cask and ribboned wooden mallet',()=>{
   expect(p0.rotation.x).toBe(0);expect(p1.rotation.x).toBe(0)
   const textures=new Set<THREE.Texture>()
   m.root.traverse(o=>{
+   if(o.userData?.effect)return
    const mat=(o as THREE.Mesh).material as THREE.MeshStandardMaterial|undefined
    if(mat?.map)textures.add(mat.map)
    if(mat?.bumpMap)textures.add(mat.bumpMap)

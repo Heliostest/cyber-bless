@@ -1,14 +1,15 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
-import { addOfferingTable } from '../cozy-furniture'
+import { addContactShadow, addOfferingTable } from '../cozy-furniture'
 const smooth=(x:number)=>{const t=THREE.MathUtils.clamp(x,0,1);return t*t*(3-2*t)}
 export function createWaterBowlsModel(){
  const root=new THREE.Group();root.name='water-bowls-subject';root.position.y=-.012
- const material=(color:number,metalness=0,roughness=.7)=>new THREE.MeshStandardMaterial({color,metalness,roughness})
- const gold=material(0xd4ac58,.25,.52),copper=material(0xbc7850,.35,.4),robe=material(0xc99c44,.18,.65),hair=material(0x3f5051),jugmat=material(0xeee4cb,.05,.35)
- applyCraftSurface(copper, { kind: 'metal', strength: .45 })
- applyCraftSurface(jugmat, { kind: 'ceramic', strength: .45 })
+ const material=(color:number,metalness=0,roughness=.7,vertexColors=false)=>new THREE.MeshStandardMaterial({color,metalness,roughness,vertexColors})
+ const gold=material(0xd4ac58,.25,.52),copper=material(0xc88454,.62,.32,true),robe=material(0xc99c44,.18,.65),hair=material(0x3f5051),jugmat=material(0xe2cda0,.48,.34,true)
+ applyCraftSurface(copper, { kind: 'metal', scale: 2.8, strength: .54 })
+ applyCraftSurface(jugmat, { kind: 'metal', scale: 2.2, strength: .44 })
 
  const watermat=createRitualMaterial({color:0x75bec8,transparent:true,opacity:.8,roughness:.19,metalness:0,depthWrite:false},{kind:'water',strength:.3})
  const finish=(source:THREE.BufferGeometry)=>{
@@ -47,16 +48,23 @@ export function createWaterBowlsModel(){
  ball('buddha-nose',0,.89,.111,.02,.035,.025,gold,buddha)
  const bowls:THREE.Mesh[]=[],waters:THREE.Mesh[]=[]
  const bowlProfile=[[0,0],[.065,0],[.08,.025],[.095,.04],[.19,.17],[.19,.185],[.176,.185],[.176,.17],[.082,.045],[0,.045]]
+ addContactShadow(root,{name:'buddha-plinth-contact-ao',width:1.22,depth:.80,y:1.0018,center:[0,-.43],shape:'ellipse',opacity:.24})
  for(let i=0;i<7;i++){
-  bowls.push(mesh('offering-bowl-'+i,lathe(bowlProfile),copper,root,(i-3)*.394,1,.2))
+  const bowl=mesh('offering-bowl-'+i,lathe(bowlProfile),copper,root,(i-3)*.394,1,.2)
+  bakeCreviceAO(bowl.geometry,{groundY:0,groundRange:.045,cavityCenter:[0,0],cavityRadius:.178,cavityTopY:.185,strength:.48,tint:0x4b3328})
+  bowls.push(bowl)
+  addContactShadow(root,{name:'offering-bowl-contact-ao-'+i,width:.28,depth:.28,y:1.0018,center:[(i-3)*.394,.2],shape:'ellipse',opacity:.28})
   const w=mesh('offering-water-'+i,new THREE.CylinderGeometry(1,1,1,48),watermat,root,(i-3)*.394,1.06,.2);w.castShadow=false;waters.push(w)
  }
  const jug=new THREE.Group();jug.name='water-jug';root.add(jug)
  const body=mesh('jug-body',lathe([[0,0],[.13,0],[.2,.06],[.22,.28],[.19,.47],[.15,.5],[.13,.5],[.17,.46],[.195,.28],[.17,.07],[0,.035]]),jugmat,jug)
+ bakeCreviceAO(body.geometry,{groundY:0,groundRange:.08,cavityCenter:[0,0],cavityRadius:.18,cavityTopY:.50,strength:.38,tint:0x594230})
  const handle=mesh('jug-handle',new THREE.TorusGeometry(.17,.035,12,32),jugmat,jug,-.23,.28,0);handle.scale.set(.7,1,1)
- // A closed ceramic lip joins the hollow body; its end is the actual stream origin.
+ bakeCreviceAO(handle.geometry,{strength:.24,tint:0x594230})
+ // A closed pouring lip joins the hollow body; its end is the actual stream origin.
  const lipShape=new THREE.Shape();lipShape.moveTo(-.075,-.16);lipShape.lineTo(.075,-.16);lipShape.lineTo(.035,-.27);lipShape.lineTo(-.035,-.27);lipShape.closePath()
  const lip=mesh('jug-pouring-lip',new THREE.ExtrudeGeometry(lipShape,{depth:.022,bevelEnabled:false}),jugmat,jug,0,.49,0);lip.rotation.x=Math.PI/2
+ bakeCreviceAO(lip.geometry,{strength:.22,tint:0x594230})
  const jugWater=mesh('jug-water',new THREE.CylinderGeometry(.1,.1,.1,48),watermat,jug);jugWater.castShadow=false
  // Clip the modeled inner volume by a horizontal world plane; a tilted disk would cross the wall.
  const insideRadius=(y:number)=>y<.07?.17*(y-.035)/.035:y<.28?.17+.025*(y-.07)/.21:y<.46?.195-.025*(y-.28)/.18:.17-.04*(y-.46)/.04
@@ -78,6 +86,7 @@ export function createWaterBowlsModel(){
  const lipWater=mesh('lip-water',channelGeometry,watermat,jug);lipWater.castShadow=false
  const tip=new THREE.Vector3(0,.493,-.285),flowStart=new THREE.Vector3(),flowEnd=new THREE.Vector3(),axis=new THREE.Vector3(0,1,0)
  const rest=new THREE.Vector3(-1.5,1,.64),left=new THREE.Vector3(-1.182,1.6,.72),right=new THREE.Vector3(1.182,1.6,.72)
+ const jugShadow=addContactShadow(root,{name:'water-jug-contact-ao',width:.44,depth:.44,y:1.0018,center:[rest.x,rest.z],shape:'ellipse',opacity:.28})
  const setWater=(i:number,f:number)=>{
   const h=.065+.095*f,r=.082+(h-.045)/.125*.094
   // A tapered water volume remains within the bowl's inner wall at every level.
@@ -99,6 +108,8 @@ export function createWaterBowlsModel(){
    if(q>.82&&i<6)jug.position.x+=.394*smooth((q-.82)/.18)
    stream.visible=q>.12&&q<.7
   }else if(step===2){jug.position.copy(right);if(t<.7)jug.position.lerpVectors(right,new THREE.Vector3(-1.5,1.6,.64),smooth(t/.7));else jug.position.lerpVectors(new THREE.Vector3(-1.5,1.6,.64),rest,smooth((t-.7)/.3))}
+  const jugLift=Math.max(0,jug.position.y-rest.y),jugDrift=Math.hypot(jug.position.x-rest.x,jug.position.z-rest.z)
+  ;(jugShadow.material as THREE.MeshBasicMaterial).opacity=.28*THREE.MathUtils.clamp(1-jugLift*2.2-jugDrift*1.4,0,1)
   for(let i=0;i<7;i++)setWater(i,THREE.MathUtils.clamp(progress*7-i,0,1))
   const exitLevel=.5*Math.cos(jug.rotation.x)+.128*Math.sin(jug.rotation.x)
   jugLiquid(Math.min(THREE.MathUtils.lerp(.32-.15*progress,exitLevel,tilt),exitLevel-1e-8),jug.rotation.x)

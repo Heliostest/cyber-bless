@@ -102,6 +102,43 @@ describe('a spring cord supported by an actual branch',()=>{
    for(let i=0;i<3;i++)checkWatertight(m.root.getObjectByName(`martisor-leaf-${i}`) as THREE.Mesh)
    const barkMat=(m.root.getObjectByName('martisor-support-branch') as THREE.Mesh).material as THREE.MeshStandardMaterial
    expect(barkMat.userData.botanicalFinish?.mode).toBe('bark')
+   for(let i=0;i<3;i++)checkWatertight(m.root.getObjectByName(`martisor-bud-${i}`) as THREE.Mesh)
+   m.dispose()
+  })
+  it('tapers the curved trunk and flowering twigs with closed tips while keeping the support branch intact',()=>{
+   const m=createMartisorModel()
+   const support=m.root.getObjectByName('martisor-support-branch') as THREE.Mesh
+   expect(support.geometry instanceof THREE.CylinderGeometry).toBe(true)
+   const params=(support.geometry as THREE.CylinderGeometry).parameters
+   expect(params.radiusTop).toBeCloseTo(.055,6)
+   expect(params.radiusBottom).toBeCloseTo(.055,6)
+   expect(params.height).toBeCloseTo(1.05,6)
+
+   const trunk=m.root.getObjectByName('martisor-trunk') as THREE.Mesh
+   expect(trunk.geometry instanceof THREE.CylinderGeometry).toBe(false)
+   const trunkVerts=vertices(trunk)
+   const maxTrunkY=Math.max(...trunkVerts.map(p=>p.y))
+   // Closed organic fork shoulder eliminates the blunt y=1.58 sawn stump above the V-fork.
+   expect(maxTrunkY).toBeLessThan(1.565)
+   expect(maxTrunkY).toBeGreaterThan(1.52)
+   // Root flare at the ground base is visibly wider than the upper trunk.
+   const baseRadii=trunkVerts.filter(p=>p.y<.02).map(p=>Math.hypot(p.x-.55,p.z+.65))
+   const midRadii=trunkVerts.filter(p=>p.y>.8&&p.y<1.1).map(p=>Math.hypot(p.x-.55,p.z+.65))
+   expect(Math.max(...baseRadii)).toBeGreaterThan(Math.max(...midRadii)+.018)
+
+   for(const name of ['martisor-trunk','martisor-branch-left','martisor-branch-right','martisor-twig-left','martisor-twig-right']){
+    const branch=m.root.getObjectByName(name) as THREE.Mesh
+    expect(branch,name).toBeDefined()
+    const pos=branch.geometry.getAttribute('position') as THREE.BufferAttribute
+    const idx=branch.geometry.index!
+    const va=new THREE.Vector3(),vb=new THREE.Vector3(),vc=new THREE.Vector3()
+    let signedVol6=0
+    for(let i=0;i<idx.count;i+=3){
+     va.fromBufferAttribute(pos,idx.getX(i));vb.fromBufferAttribute(pos,idx.getX(i+1));vc.fromBufferAttribute(pos,idx.getX(i+2))
+     signedVol6+=va.dot(vb.clone().cross(vc))
+    }
+    expect(signedVol6,`${name} positive closed volume`).toBeGreaterThan(0)
+   }
    m.dispose()
   })
  })

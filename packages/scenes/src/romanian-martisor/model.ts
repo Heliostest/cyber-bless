@@ -8,6 +8,7 @@ import {
   createSpringPollenGeometry,
   createYoungBranchLeafGeometry,
 } from './blossom-detail'
+import { buildMartisorTreeBranches } from './branch-craft'
 
 let cachedYarnPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
 
@@ -375,13 +376,9 @@ export function createMartisorModel() {
     const m = mesh(new THREE.CylinderGeometry(radius,radius,d.length(),12),mat,parent,name); m.position.copy(start).add(end).multiplyScalar(.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize()); return m
   }
   // The contact branch is an actual capped cylinder: free tip z=.40, radius .055.
-  rod([.55,-.01,-.65],[.55,1.58,-.65],.075,bark,subject,'martisor-trunk')
+  buildMartisorTreeBranches(subject, bark, blossomMat, mesh)
   rod([.55,1.5,-.65],[.55,1.5,.40],.055,bark,subject,'martisor-support-branch')
   const tip=mesh(new THREE.CircleGeometry(.055,12),cut,subject,'martisor-branch-tip'); tip.position.set(.55,1.5,.4001)
-  rod([.55,1.35,-.65],[-.38,2.05,-.72],.037)
-  rod([.55,1.52,-.65],[1.12,2.18,-.7],.035)
-  rod([-.16,1.88,-.70],[-.55,2.27,-.65],.022)
-  rod([.88,1.90,-.68],[1.42,2.02,-.75],.023)
   const largeBlushPetal = createSpringBlossomPetalGeometry(true, 'blush')
   const largeCreamPetal = createSpringBlossomPetalGeometry(true, 'cream')
   const smallBlushPetal = createSpringBlossomPetalGeometry(false, 'blush')

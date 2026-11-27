@@ -2,6 +2,7 @@ import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { addSasaBambooFoliage } from './foliage'
 import {
   createHangingPaperRig,
   createPaperStripSurface,
@@ -155,14 +156,6 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     { kind: 'bamboo', strength: 0.36, scale: 0.9, axis: 'y' },
   )
 
-  const leafMat = new THREE.MeshPhysicalMaterial({
-    color: 0x73b052,
-    roughness: 0.74,
-    clearcoat: 0.10,
-    clearcoatRoughness: 0.50,
-    specularIntensity: 0.36,
-    side: THREE.DoubleSide,
-  })
   // Keep CylinderGeometry(0.05, 0.056, 0.5) parameters for hanging-support contract.
   const segGeo = new THREE.CylinderGeometry(0.05, 0.056, 0.5, 24, 8)
   {
@@ -193,8 +186,6 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
   }
   const nodeGeo = new THREE.TorusGeometry(0.0545, 0.0082, 10, 24)
   const nodeBloomGeo = new THREE.TorusGeometry(0.0552, 0.0046, 8, 24)
-  // Slim lens-shaped blade instead of a flat rectangle: cleaner anime silhouette.
-  const leafGeo = new THREE.CircleGeometry(0.17, 12).scale(1, 0.26, 1)
   const stalkXs = [-0.35, 0.05, 0.4]
   stalkXs.forEach((x, s) => {
     const segments = 5 + (s % 2)
@@ -214,15 +205,9 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
       bloom.position.set(x, 0.484 + i * 0.5, -0.2 + s * 0.12)
       bloom.userData.toonSurface = { outline: false }
       bamboo.add(bloom)
-      if (i >= 2) {
-        const leaf = new THREE.Mesh(leafGeo, leafMat)
-        const side = i % 2 === 0 ? 1 : -1
-        leaf.position.set(x + side * 0.18, 0.5 + i * 0.5, -0.2 + s * 0.12)
-        leaf.rotation.set(0.3, side * 0.4, side * -0.5)
-        bamboo.add(leaf)
-      }
     }
   })
+  addSasaBambooFoliage(bamboo)
 
   // Invisible catch zone around the upper bamboo (large, mobile-friendly target).
   const hangZone = new THREE.Mesh(

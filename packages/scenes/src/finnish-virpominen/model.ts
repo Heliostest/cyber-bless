@@ -1,6 +1,14 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import {
+ createPaperCraftPetalGeometry,
+ createPaperFlowerCenterGeometry,
+ createPaperFlowerMaterials,
+ createPaperTieRibbonGeometry,
+ createPussyWillowCatkinGeometry,
+ createPussyWillowCatkinMaterial,
+} from './virpominen-botanical'
+import {
  applyBasketBaseGroupsAndShading,
  applyBasketRingShading,
  applyBasketUprightShading,
@@ -12,11 +20,13 @@ import {
 export function createVirpominenModel(){
  const root=new THREE.Group();root.name='virpominen-subject'
  const material=(color:number,roughness=.85,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness})
- const willow=material(0xe4e2ce),blue=material(0x699b9a),stone=material(0xc8c9b5),inside=material(0xe3dcc1),skin=material(0xe9b18a),yellow=material(0xf2ce78),pink=material(0xea918e),paper=material(0xf1e8bf),foil=material(0xd75e79,.5,.15)
- // Woven willow basket & pussy-willow twigs use stylized DataTexture craft materials; paper flowers, ties and buds keep their original palette.
+ const blue=material(0x699b9a),stone=material(0xc8c9b5),inside=material(0xe3dcc1),skin=material(0xe9b18a),paper=material(0xf1e8bf),foil=material(0xd75e79,.5,.15)
+ // Woven willow basket & pussy-willow twigs use stylized DataTexture craft materials; catkins use silky smooth bud-scale + fuzz material; paper flowers stay paper craft.
  const willowCraft=createVirpominenWillowMaterials()
+ const catkinMat=createPussyWillowCatkinMaterial()
+ const paperFlowers=createPaperFlowerMaterials()
  const doorWood=applyCraftSurface(material(0xb3a27b),{kind:'wood',strength:.4,axis:'y'})
- const yellowCuff=applyCraftSurface(yellow.clone(),{kind:'fabric',strength:.25}),blueCuff=applyCraftSurface(blue.clone(),{kind:'fabric',strength:.25})
+ const yellowCuff=applyCraftSurface(material(0xf2ce78),{kind:'fabric',strength:.25}),blueCuff=applyCraftSurface(blue.clone(),{kind:'fabric',strength:.25})
  applyCraftSurface(foil,{kind:'metal',strength:.4})
  applyCraftSurface(stone,{kind:'stone',strength:.45})
  const clean=(source:THREE.BufferGeometry)=>{const raw=source.index?source.toNonIndexed():source,p=raw.getAttribute('position'),uvAttr=raw.getAttribute('uv'),v:number[]=[],uvs:number[]=[];for(let i=0;i<p.count;i+=3){const a=new THREE.Vector3().fromBufferAttribute(p,i),b=new THREE.Vector3().fromBufferAttribute(p,i+1),c=new THREE.Vector3().fromBufferAttribute(p,i+2);if(new THREE.Triangle(a,b,c).getArea()>1e-12){v.push(...a.toArray(),...b.toArray(),...c.toArray());if(uvAttr)uvs.push(uvAttr.getX(i),uvAttr.getY(i),uvAttr.getX(i+1),uvAttr.getY(i+1),uvAttr.getX(i+2),uvAttr.getY(i+2))}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));if(uvAttr)g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.computeVertexNormals();if(raw!==source)raw.dispose();source.dispose();return g}
@@ -38,16 +48,17 @@ export function createVirpominenModel(){
 
  const branch=new THREE.Group();branch.name='decorated-willow';root.add(branch)
  const stem=mesh('willow-stem',new THREE.CylinderGeometry(.012,.018,1.10,12),willowCraft.barkStem,branch);stem.position.y=.30;applyWillowTwigShading(stem.geometry,'stem')
+ const smoothMesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  for(const [i,side,height]of[[0,-1,.40],[1,1,.49],[2,-1,.64]]){
   const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(0,height,0),new THREE.Vector3(side*.11,height+.12,.01),new THREE.Vector3(side*.21,height+.30,.02)])
   const fork=tube('willow-fork-'+i,curve,.008,willowCraft.barkFork,branch,14);applyWillowTwigShading(fork.geometry,'fork',i)
-  for(let n=0;n<3;n++){const q=curve.getPoint(.40+n*.27);const bud=ball(`pussy-willow-${i}-${n}`,[q.x+side*.014,q.y,q.z+.014],[.025,.042,.022],willow,branch);bud.rotation.z=-side*.35}
+  for(let n=0;n<3;n++){const q=curve.getPoint(.40+n*.27);const bud=smoothMesh(`pussy-willow-${i}-${n}`,createPussyWillowCatkinGeometry(),catkinMat,branch);bud.position.set(q.x+side*.014,q.y,q.z+.014);bud.scale.set(.026,.044,.024);bud.rotation.z=-side*.35}
  }
  for(const [i,y]of[[0,.46],[1,.79]]){
   const x=i===0?-.13:.10,flower=new THREE.Group();flower.name='paper-flower-'+i;flower.position.set(x,y,.04);branch.add(flower)
-  for(let petal=0;petal<5;petal++){const a=petal/5*Math.PI*2,o=ball(`paper-petal-${i}-${petal}`,[Math.cos(a)*.054,Math.sin(a)*.054,0],[.045,.026,.010],i?pink:yellow,flower);o.rotation.z=a}
-  ball('paper-flower-centre-'+i,[0,0,.013],[.025,.025,.012],paper,flower)
-  const tie=mesh('paper-tie-'+i,new THREE.BoxGeometry(.025,.13,.009),i?yellow:pink,branch);tie.position.set(x,y-.09,.035);tie.rotation.z=i?.25:-.25
+  for(let petal=0;petal<5;petal++){const a=petal/5*Math.PI*2,o=smoothMesh(`paper-petal-${i}-${petal}`,createPaperCraftPetalGeometry(),i?paperFlowers.pink:paperFlowers.yellow,flower);o.position.set(Math.cos(a)*.052,Math.sin(a)*.052,0);o.rotation.z=a}
+  const centre=smoothMesh('paper-flower-centre-'+i,createPaperFlowerCenterGeometry(),paperFlowers.centre,flower);centre.position.set(0,0,.012)
+  const tie=smoothMesh('paper-tie-'+i,createPaperTieRibbonGeometry(),i?paperFlowers.yellow:paperFlowers.pink,branch);tie.position.set(x,y-.09,.035);tie.rotation.z=i?.25:-.25
  }
  const makeHand=(name:string,kind:'stem'|'egg',cloth:THREE.Material)=>{
   const hand=new THREE.Group();hand.name=name;root.add(hand)

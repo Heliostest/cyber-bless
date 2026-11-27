@@ -1,10 +1,11 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { createHollyLeafMaterial, createSpinyHollyLeafGeometry } from './holly-botanical'
 const smooth=(x:number)=>{const t=THREE.MathUtils.clamp(x,0,1);return t*t*(3-2*t)}
 export function createHiiragiModel(){
  const root=new THREE.Group();root.name='hiiragi-subject';root.position.y=-.012
  const material=(color:number,roughness=.75,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness})
- const wood=material(0x966746),bark=material(0x776044),leafmat=material(0x426e42,.6),veinmat=material(0x77925b),stone=material(0xc6c6af),roast=material(0x928b75,.64,.18),dark=material(0x4c493e),eye=material(0x323e3a,.35),rim=material(0xc8b98c)
+ const wood=material(0x966746),bark=material(0x776044),leafmat=createHollyLeafMaterial(),stone=material(0xc6c6af),roast=material(0x928b75,.64,.18),dark=material(0x4c493e),eye=material(0x323e3a,.35),rim=material(0xc8b98c)
  applyCraftSurface(wood,{kind:'wood',strength:.4,axis:'y'})
  applyCraftSurface(stone,{kind:'stone',strength:.45})
  const finish=(source:THREE.BufferGeometry)=>{
@@ -29,14 +30,12 @@ export function createHiiragiModel(){
  const stem=mesh('holly-stem',new THREE.CylinderGeometry(.014,.025,1.08,16),bark,twig,0,.54,0)
  const collar=mesh('branch-head-bearing',new THREE.CylinderGeometry(.033,.027,.025,16),bark,twig,0,.8875,0)
  const leaves:THREE.Mesh[]=[]
- const leafShape=new THREE.Shape()
- ;[[.035,0],[.12,-.035],[.18,-.11],[.21,-.07],[.30,-.085],[.285,-.025],[.38,.02],[.29,.06],[.32,.11],[.235,.10],[.20,.16],[.15,.105],[.07,.065]].forEach(([x,y],i)=>i?leafShape.lineTo(x!,y!):leafShape.moveTo(x!,y!))
- leafShape.closePath()
  for(const [pair,y]of [[0,.40],[1,.65]]){
-  for(const sign of[-1,1]){
-   const leaf=mesh('holly-leaf-'+pair+'-'+sign,new THREE.ExtrudeGeometry(leafShape,{depth:.022,bevelEnabled:false}),leafmat,twig,0,y,sign>0?-.011:.011);if(sign<0)leaf.rotation.y=Math.PI;leaves.push(leaf)
-   const petiole=mesh('leaf-stalk-'+pair+'-'+sign,new THREE.CylinderGeometry(.009,.009,.12,10),bark,twig,sign*.045,y!+.016,0);petiole.rotation.z=-sign*1.22
-   const vein=mesh('leaf-vein-'+pair+'-'+sign,new THREE.CylinderGeometry(.004,.004,.27,8),veinmat,twig,sign*.18,y!+.026,sign>0?.012:-.012);vein.rotation.z=-sign*1.49
+  for(const sign of[-1,1] as const){
+   const leaf=new THREE.Mesh(createSpinyHollyLeafGeometry(sign),leafmat)
+   leaf.name='holly-leaf-'+pair+'-'+sign;leaf.position.set(0,y!,0);if(sign<0)leaf.rotation.y=Math.PI
+   leaf.castShadow=true;leaf.receiveShadow=true;twig.add(leaf);leaves.push(leaf)
+   const petiole=mesh('leaf-stalk-'+pair+'-'+sign,new THREE.CylinderGeometry(.0065,.0065,.068,10),bark,twig,sign*.028,y!+.004,0);petiole.rotation.z=-sign*1.42
   }
  }
  const head=new THREE.Group();head.name='sardine-head';root.add(head)

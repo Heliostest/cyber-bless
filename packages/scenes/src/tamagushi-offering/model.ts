@@ -2,6 +2,7 @@ import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
+import { createSakakiLeafGeometry, createSakakiLeafMaterials } from './sakaki-botanical'
 
 const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z)
 const mix = THREE.MathUtils.lerp
@@ -291,9 +292,10 @@ export function createTamagushiModel(){
   paper: { layout: 'sheet', aspect: .072 / .92, grainScale: 5.2, grain: .72, fibers: .60, edge: .36, highlightGuard: .82 },
  })
  applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+ applyCraftSurface(bark, { kind: 'wood', strength: .28, scale: 1.4, axis: 'y' })
  applyCraftSurface(sleeve, { kind: 'fabric', strength: .26 })
 
- const green=[0x608c49,0x78a455,0x4c7945].map(color=>createRitualMaterial({color,roughness:.77}, { kind: 'leaf', strength: .12, fiber: false }))
+ const green=createSakakiLeafMaterials()
  const mesh=(parent:THREE.Group,name:string,geometry:THREE.BufferGeometry,material:THREE.Material)=>{const o=new THREE.Mesh(geometry,material);o.name='tamagushi-'+name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  const box=(parent:THREE.Group,name:string,size:number[],p:number[],material:THREE.Material)=>{const o=mesh(parent,name,new THREE.BoxGeometry(...size as [number,number,number]),material);o.position.set(...p as [number,number,number]);return o}
  const cylinder=(parent:THREE.Group,name:string,a:THREE.Vector3,b:THREE.Vector3,r:number,material:THREE.Material)=>{
@@ -304,10 +306,21 @@ export function createTamagushiModel(){
  // Two small product supports leave space to withdraw the hands after the branch settles.
  const rails=[-.95,.42].map((z,i)=>box(table,'support-'+i,[.24,.15,.06],[0,1.085,z],wood))
  const stem=cylinder(branch,'stem',V(-.80),V(.80),.025,bark)
- const leafSpecs=[[-.22,.042,.30,.15,.23,-.40],[-.40,.035,-.25,.12,.20,.45],[-.62,.035,.17,.11,.18,-.80],[-.06,.040,-.29,.12,.20,.15],[-1.02,.032,-.025,.10,.20,Math.PI/2]]
- const leaves=leafSpecs.map(([x,y,z,w,l,angle],i)=>{
-  const g=new THREE.SphereGeometry(1,12,6);g.scale(w!,.012,l!);const o=mesh(branch,'leaf-'+i,g,green[i%3]!);o.position.set(x!,y!,z!);o.rotation.y=angle!;
-  const start=V(Math.max(-.70,Math.min(.08,x!+.16)),.012,0),end=V(x!,y!,z!);cylinder(branch,'twig-'+i,start,end,.010,bark);return o
+ // [x, y, z, w, l, rotY (local +Z points outward to pointed leaf apex), twist]
+ const leafSpecs:[number,number,number,number,number,number,number][]=[
+  [-.22,.042,.30,.15,.23,-.40,.004],
+  [-.40,.035,-.25,.12,.20,.45+Math.PI,-.004],
+  [-.62,.035,.17,.11,.18,-.80,.003],
+  [-.06,.040,-.29,.12,.20,.15+Math.PI,-.003],
+  [-1.02,.032,-.025,.10,.20,-Math.PI/2,.002],
+ ]
+ const leaves=leafSpecs.map(([x,y,z,w,l,rotY,twist],i)=>{
+  const g=createSakakiLeafGeometry(w,l,{twist,arch:.012,fold:.011})
+  const o=mesh(branch,'leaf-'+i,g,green[i%3]!);o.position.set(x,y,z);o.rotation.y=rotY
+  const start=V(i===4?-.74:Math.max(-.70,Math.min(.08,x+.16)),.012,0)
+  // Tuck petiole cleanly into the tapered leaf base (-Z in leaf-local coordinates) without piercing the blade.
+  const end=V(x-Math.sin(rotY)*l*.88,y-.004,z-Math.cos(rotY)*l*.88)
+  cylinder(branch,'twig-'+i,start,end,.0085,bark);return o
  })
  const papers=[1,-1].map((side,i)=>{
   const x=i===0?-.55:-.70;

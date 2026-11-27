@@ -23,7 +23,7 @@ import { createKomorebiBackdrop, type BackdropRole } from './komorebi-backdrop';
 import { applyCraftSurface } from './craft-surfaces';
 
 import { assetUrl } from './asset-urls';
-import { environmentProfiles } from './environment-profiles';
+import { getEnvironmentProfile, getEnvironmentSurfaceY } from './environment-profiles';
 
 type Part = { positions: number[]; normals: number[]; indices: number[]; color: number[] };
 type NatureModel = { parts: Part[] };
@@ -102,21 +102,26 @@ export function createCozyEnvironment(
     camera?: THREE.Camera;
   },
 ) {
-  const profile = environmentProfiles[id];
+  const profile = getEnvironmentProfile(id);
   if (!profile) return null;
   const { kind, floor, night = false, warmLight = false, coastal = false } = profile;
+  const surfaceY = getEnvironmentSurfaceY(id);
   const previous = {
     background: scene.background, fog: scene.fog, environment: scene.environment,
     intensity: scene.backgroundIntensity, blur: scene.backgroundBlurriness,
     environmentIntensity: scene.environmentIntensity,
     backgroundRotation: scene.backgroundRotation.clone(), environmentRotation: scene.environmentRotation.clone(),
     environmentNight: scene.userData.environmentNight,
+    environmentId: scene.userData.environmentId,
+    environmentSurfaceY: scene.userData.environmentSurfaceY,
   };
   const root = new THREE.Group();
   root.name = "cozy-environment";
   root.userData.environment = kind;
   scene.add(root);
   scene.userData.environmentNight = night;
+  scene.userData.environmentId = id;
+  scene.userData.environmentSurfaceY = surfaceY;
   const toneSurfaces = createEnvironmentTone(root, night);
   const calibrated = createKomorebiBackdrop(root);
   let tone: EnvironmentTone = 'original', toneDirty = false;
@@ -486,6 +491,7 @@ export function createCozyEnvironment(
   const lights = new WeakSet<THREE.Light>();
   const hemiDirections = new Map<THREE.HemisphereLight,THREE.Vector3>();
   const meshes = new WeakSet<THREE.Mesh>();
+  const shadowPlanes = new Map<THREE.Mesh, boolean>();
   const previewShadows = new Map<THREE.DirectionalLight, { intensity: number; radius: number }>();
   function restorePreviewShadows() {
     previewShadows.forEach((original, light) => { light.shadow.intensity = original.intensity; light.shadow.radius = original.radius; });
@@ -588,12 +594,22 @@ export function createCozyEnvironment(
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = !softTrees && (night || paintedDay || delivery) ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
       scene.traverse(object => {
-        if (object instanceof THREE.Mesh && !meshes.has(object)) {
-          meshes.add(object);
+        if (object instanceof THREE.Mesh) {
           const surfaces = Array.isArray(object.material) ? object.material : [object.material];
-          if (surfaces.some(material => material instanceof THREE.MeshStandardMaterial && !material.transparent)) {
-            object.castShadow = !object.userData.komorebiGrass && !object.userData.stonePath;
-            object.receiveShadow = !object.userData.importedTreeFoliage;
+          if (
+            object.userData.keepInOutdoorEnvironment !== true &&
+            surfaces.length > 0 &&
+            surfaces.every(material => material instanceof THREE.ShadowMaterial)
+          ) {
+            if (!shadowPlanes.has(object)) shadowPlanes.set(object, object.visible);
+            object.visible = false;
+          }
+          if (!meshes.has(object)) {
+            meshes.add(object);
+            if (surfaces.some(material => material instanceof THREE.MeshStandardMaterial && !material.transparent)) {
+              object.castShadow = !object.userData.komorebiGrass && !object.userData.stonePath;
+              object.receiveShadow = !object.userData.importedTreeFoliage;
+            }
           }
         }
         if (!(object instanceof THREE.Light)) return;
@@ -650,6 +666,8 @@ export function createCozyEnvironment(
       if (disposed) return;
       disposed = true;
       restorePreviewShadows();
+      shadowPlanes.forEach((visible, mesh) => { mesh.visible = visible; });
+      shadowPlanes.clear();
       hemiDirections.forEach((position,light)=>light.position.copy(position)); hemiDirections.clear();
       root.removeFromParent();
       calibrated.dispose();
@@ -675,6 +693,10 @@ export function createCozyEnvironment(
       scene.environmentRotation.copy(previous.environmentRotation);
       if (previous.environmentNight === undefined) delete scene.userData.environmentNight;
       else scene.userData.environmentNight = previous.environmentNight;
+      if (previous.environmentId === undefined) delete scene.userData.environmentId;
+      else scene.userData.environmentId = previous.environmentId;
+      if (previous.environmentSurfaceY === undefined) delete scene.userData.environmentSurfaceY;
+      else scene.userData.environmentSurfaceY = previous.environmentSurfaceY;
     },
   };
 }

@@ -1,4 +1,5 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
+import { addContactShadow } from '../cozy-furniture'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -36,15 +37,16 @@ const COPY = {
 const RISE_SECONDS = 3.2
 const LOW_Y = 0.45
 const HIGH_Y = 2.3
-/** The lanterns' paper glow; on the night stage they glow brighter. */
+/** The lanterns' paper glow; on the night stage they glow warmly without washing out hanji veins. */
 const SHELL_GLOW = 0.42
-const SHELL_GLOW_NIGHT = 0.72
+const SHELL_GLOW_NIGHT = 0.68
 
 type Lantern = {
   group: THREE.Group
   light: THREE.PointLight
   shellMat: THREE.MeshStandardMaterial
   tipMat: THREE.MeshStandardMaterial
+  coreMat: THREE.MeshStandardMaterial
   /** Night stage only: the warm glow round the lantern. */
   halo: ReturnType<typeof createLampHalo> | null
 }
@@ -282,26 +284,26 @@ function buildLantern(
   ribRing.position.y = 0.062
   group.add(ribRing)
 
-  const core = new THREE.Mesh(
-    coreGeo,
-    new THREE.MeshStandardMaterial({
-      color: 0xfff1c8,
-      emissive: 0xffc070,
-      emissiveIntensity: 1.05,
-      roughness: 0.4,
-    }),
-  )
+  // HDR-tuned warm amber candle heart driving Night Mipmap Bloom + AgX outward through hanji petals.
+  const coreMat = new THREE.MeshStandardMaterial({
+    color: 0xfff3cf,
+    emissive: 0xffb858,
+    emissiveIntensity: night ? 1.80 : 1.12,
+    roughness: 0.35,
+  })
+  const core = new THREE.Mesh(coreGeo, coreMat)
   core.position.y = 0.13
+  core.userData.toonSurface = { outline: false }
   group.add(core)
-  const light = new THREE.PointLight(0xffb070, lightIntensity, 3.5, 2)
+  const light = new THREE.PointLight(0xffae62, lightIntensity, 3.8, 1.9)
   light.position.y = 0.16
   group.add(light)
-  const halo = night ? createLampHalo(0xffa860, 1.25) : null
+  const halo = night ? createLampHalo(0xffa458, 1.18) : null
   if (halo) {
     halo.sprite.position.y = 0.14
     group.add(halo.sprite)
   }
-  return { group, light, shellMat, tipMat, halo }
+  return { group, light, shellMat, tipMat, coreMat, halo }
 }
 
 export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
@@ -420,6 +422,14 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
   const plinth = new THREE.Mesh(applyPedestalTone(new THREE.LatheGeometry(plinthProfile, 48), plinthBaseY, 0.308), plinthMat)
   plinth.name = 'lantern-pedestal'
   world.add(plinth)
+  addContactShadow(world, {
+    name: 'yeondeunghoe-pedestal-contact-ao',
+    width: 1.24,
+    depth: 1.24,
+    y: plinthBaseY + 0.0018,
+    shape: 'ellipse',
+    opacity: 0.28,
+  })
   // Turned lotus-cradle stem and recessed resting dish supporting the lantern base before it rises.
   const cradleProfile = [
     new THREE.Vector2(0, 0.304),
@@ -438,6 +448,14 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
   const cradle = new THREE.Mesh(applyPedestalTone(new THREE.LatheGeometry(cradleProfile, 36), 0.304, 0.448), plinthMat)
   cradle.name = 'lantern-cradle'
   world.add(cradle)
+  const cradleShadow = addContactShadow(world, {
+    name: 'yeondeunghoe-cradle-contact-ao',
+    width: 0.22,
+    depth: 0.22,
+    y: 0.422,
+    shape: 'ellipse',
+    opacity: 0.20,
+  })
 
   const petalEmissiveMap = createHanjiEmissiveMap(128)
   const outerPetalGeo = createLotusPetalGeometry(0.165, 0.255, 0.036, 0.034, 0.95)
@@ -521,7 +539,11 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
     if (!canAct() || step === 'done') return
     step = 'done'
     pushHandle?.setEnabled(false)
-    if (!restoring) { ctx.onProgress?.(3); if (disposed || !(canAct())) return }
+    if (!restoring) {
+      fx.sound('chime', { duration: 0.85, strength: 0.42 })
+      ctx.onProgress?.(3)
+      if (disposed || !(canAct())) return
+    }
     syncOverlayForStep()
     if (!restoring) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
@@ -530,7 +552,10 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
     if (!canAct() || step !== 'rise') return
     step = 'rest'
     riseT = 1
-    if (!restoring) ctx.onProgress?.(2)
+    if (!restoring) {
+      fx.sound('chime', { duration: 0.72, strength: 0.34 })
+      ctx.onProgress?.(2)
+    }
     syncOverlayForStep()
   }
 
@@ -540,12 +565,14 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
     riseT = 0
     pushHandle?.setEnabled(false)
     if (!restoring) {
-      // Soft warm lantern tone: low, round partials with a slow fade.
+      // Soft warm lantern tone + delicate hanji paper rustle as the lantern rises.
       const reduced = ctx.isReducedMotion?.() ?? false
       fx.impact({
         freqs: [523.25, 784, 1046.5],
         duration: reduced ? 0.5 : 1.4,
         gain: reduced ? 0.05 : 0.08,
+        cue: 'paper',
+        cueStrength: 0.48,
       })
       ctx.onProgress?.(1)
     }
@@ -638,6 +665,7 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
     update(dt: number) {
       if (disposed || !started) return
       if (!canAct()) objectPointer?.cancel()
+      fx.update()
       pushHandle?.setEnabled(canAct() && gestureOwned && step === 'ready')
       for (const h of handles) h.update(dt)
       const reduced = ctx.isReducedMotion?.() ?? false
@@ -651,20 +679,25 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
       const eased = riseT * riseT * (3 - 2 * riseT)
       const baseY = step === 'ready' ? LOW_Y : THREE.MathUtils.lerp(LOW_Y, HIGH_Y, eased)
       setLanternY(baseY + Math.sin(t * 1.2) * (step === 'ready' ? 0.02 : 0.05))
+      ;(cradleShadow.material as THREE.MeshBasicMaterial).opacity = 0.20 * (1 - eased)
       main.group.rotation.y += visualDt * 0.25
       main.group.position.x = step === 'ready' ? 0 : Math.sin(t * 0.6) * 0.08 * eased
 
-      // Warm bloom grows as the lantern rises; pulses once resting.
-      const glowBase = step === 'ready' ? 0.6 : 0.6 + eased * 1.4
-      const pulse = step === 'rest' || step === 'done' ? Math.sin(t * 2.2) * 0.35 : 0
+      // Warm bloom grows as the lantern rises; calibrated for AgX + Night Mipmap Bloom without washing out petal veins.
+      const glowBase = step === 'ready' ? 0.65 : 0.65 + eased * 1.35
+      const pulse = step === 'rest' || step === 'done' ? Math.sin(t * 2.2) * 0.28 : 0
+      const breath = reduced ? 0 : Math.sin(t * 3.1) * 0.06
       main.light.intensity = (glowBase + pulse) * glowScale
-      const shellEmissive = (night ? SHELL_GLOW_NIGHT : SHELL_GLOW) + eased * 0.24 + pulse * 0.12
+      main.coreMat.emissiveIntensity = (night ? 1.80 : 1.12) + eased * (night ? 0.55 : 0.24) + pulse * 0.22 + breath
+      const shellEmissive = (night ? SHELL_GLOW_NIGHT : SHELL_GLOW) + eased * 0.20 + pulse * 0.08
       main.shellMat.emissiveIntensity = shellEmissive
-      main.tipMat.emissiveIntensity = shellEmissive * 0.86
-      if (main.halo) main.halo.material.opacity = 0.35 + eased * 0.45 + pulse * 0.15
+      main.tipMat.emissiveIntensity = shellEmissive * 0.84
+      if (main.halo) main.halo.material.opacity = 0.18 + eased * 0.40 + pulse * 0.08
 
       companions.forEach((l, i) => {
-        if (l.halo) l.halo.material.opacity = 0.4 + Math.sin(t * 1.3 + i * 1.7) * 0.06
+        const cPulse = reduced ? 0 : Math.sin(t * 1.3 + i * 1.7)
+        l.coreMat.emissiveIntensity = (night ? 1.65 : 1.05) + cPulse * 0.10
+        if (l.halo) l.halo.material.opacity = 0.26 + cPulse * 0.04
         const [x, y, z] = companionSpots[i]!
         l.group.position.set(x + Math.sin(t * 0.3 + i) * 0.1, y + Math.sin(t * 0.8 + i * 2) * 0.08, z)
         l.group.rotation.y += visualDt * 0.15

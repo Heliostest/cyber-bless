@@ -2,6 +2,7 @@ import { createCloseInspection } from '../close-inspection'
 import { addKeyboardPlacementInspection, setPlacementHint } from '../placement-inspection'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { createSoftPlume } from '@wbr/scene-runtime/soft-plume'
 import { addInteractionCue, sceneJoin } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createFreePlacementPointer } from '../free-placement-pointer'
@@ -37,6 +38,20 @@ export function createScottishFirstFooting(ctx: SceneContext): SceneInstance {
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
   const model = createFirstFootingModel(); scene.add(model.root)
+  const hearthPlume = createSoftPlume({
+    kind: 'hearth',
+    warmColor: 0xffcfa0,
+    color: 0xddd4cc,
+    height: 0.54,
+    width: 0.28,
+    opacity: 0.34,
+    wisps: 10,
+    seed: 31,
+  })
+  hearthPlume.root.position.set(-0.75, 0.30, -0.68)
+  hearthPlume.setIntensity(0.55)
+  scene.add(hearthPlume.root)
+  let hearthWarmth = 0, hearthClock = 0
   const placement = createFirstFootingCarry(canvas,camera,model,scene)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restore = () => { model.pose(at,0); placement.reset(at); matrices() }
@@ -56,14 +71,14 @@ export function createScottishFirstFooting(ctx: SceneContext): SceneInstance {
   const pointer = createFreePlacementPointer(ui.hitLayer, canvas, {
     isActive: () => inputActive() && !!inspection?.canPlace(),
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); const hit = nearest(x, y); const target = model.roots[at]!; return !!hit && (hit.object === target || target.getObjectById(hit.object.id) === hit.object) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; invalid = false; if (!placement.begin(at,x,y)) pointer.cancel() },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; invalid = false; if (!placement.begin(at,x,y)) pointer.cancel(); else feedback.sound('stone', { duration: 0.16, strength: 0.45 }) },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
       if (!invalid && placement.move(x,y) && pointer.finish()) { placement.capture(); advance(true) }
     },
     onRelease(x, y) {
       const valid = !invalid && placement.move(x,y)
-      if (valid) { placement.capture(); advance(true) } else if (!invalid && insideCanvas(canvas,x,y)) placement.release(); else reset()
+      if (valid) { placement.capture(); advance(true) } else if (!invalid && insideCanvas(canvas,x,y)) { placement.release(); feedback.sound('woodTap', { duration: 0.14, strength: 0.34 }) } else reset()
     }, onCancel: reset,
     onRotate: inspectRotate,
     onRebase(x,y) { placement.rebase(x,y) },
@@ -85,7 +100,7 @@ export function createScottishFirstFooting(ctx: SceneContext): SceneInstance {
     at = 3; motion = null; restore()
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
-      feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
+      feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine', cue: 'stone', cueStrength: .56 })
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
@@ -108,6 +123,9 @@ export function createScottishFirstFooting(ctx: SceneContext): SceneInstance {
     start() {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
+      hearthWarmth = at === 3 ? 1 : 0
+      model.setHearthWarmth(hearthWarmth, 0)
+      hearthPlume.setIntensity(0.55 + hearthWarmth * 0.40)
       restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) { pointer.cancel(); if (!motion) reset(); resize() } })
       ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
@@ -116,21 +134,32 @@ export function createScottishFirstFooting(ctx: SceneContext): SceneInstance {
       if (!active()) { lifecycleVersion++; inspection?.cancel(); pointer.cancel(); if (!motion) reset(); if (!suspended) { suspended = true; sync() }; return }
       if (notifying) return
       if (suspended) { suspended = false; sync() }
+      feedback.update()
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
+      const reduced = !!ctx.isReducedMotion?.()
       inspection?.update(delta)
       if (motion) {
-        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.arrived ? .32 : 1.6))
+        motion.time = reduced ? 1 : Math.min(1, motion.time + delta / (motion.arrived ? .32 : 1.6))
         const eased=ease(motion.time)
         if (motion.arrived) placement.settle(eased); else placement.animateAssisted(eased)
         if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); lights.key.shadow.normalBias = .008; style.render() }
+      if (active()) {
+        const targetWarmth = at === 3 ? 1 : 0
+        hearthWarmth = reduced ? targetWarmth : THREE.MathUtils.lerp(hearthWarmth, targetWarmth, 1 - Math.exp(-delta * 3.8))
+        if (!reduced) hearthClock += delta
+        const emberBreath = reduced ? 0 : Math.sin(hearthClock * 2.6) * 0.06 + Math.sin(hearthClock * 5.9) * 0.025
+        model.setHearthWarmth(hearthWarmth, emberBreath)
+        hearthPlume.setIntensity(0.55 + hearthWarmth * 0.40)
+        hearthPlume.update(delta, camera, { reducedMotion: reduced, scene })
+        matrices(); lights.key.shadow.normalBias = .008; style.render()
+      }
     },
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++; inspection?.dispose(); pointer.dispose(); stopInspection(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); model.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); hearthPlume.dispose(); model.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

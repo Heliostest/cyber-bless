@@ -1,5 +1,7 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { addObjectCradle, addOfferingTable, addSteppedPedestal } from '../cozy-furniture'
 
 // Original static 11:55 dial, neither a clock-tower replica nor a timer.
 const clockPixels=(()=>{
@@ -18,17 +20,36 @@ const clockPixels=(()=>{
 export function createSpanishTwelveGrapesModel(){
  const root=new THREE.Group();root.name='spanish-twelve-grapes-root'
  const subject=new THREE.Group();subject.name='spanish-twelve-grapes-subject';root.add(subject)
- const stone=new THREE.MeshStandardMaterial({color:0xcab99e,roughness:.95}),wood=new THREE.MeshStandardMaterial({color:0x936542,roughness:.85}),ceramic=new THREE.MeshStandardMaterial({color:0xffe9bf,roughness:.42}),platform=new THREE.MeshStandardMaterial({color:0xbba180,roughness:.85}),green=new THREE.MeshStandardMaterial({color:0x9cab49,roughness:.4})
+ const wood=new THREE.MeshStandardMaterial({color:0x936542,roughness:.85}),ceramic=new THREE.MeshStandardMaterial({color:0xffe9bf,roughness:.42}),green=new THREE.MeshStandardMaterial({color:0x9cab49,roughness:.4})
  applyCraftSurface(wood, { kind: 'wood', strength: .4 })
  applyCraftSurface(ceramic, { kind: 'ceramic', strength: .45 })
- applyCraftSurface(stone, { kind: 'stone', strength: .4 })
 
+ const dedupe=(tree:THREE.Object3D)=>{const seen=new Map<string,number>();tree.traverse(o=>{if(!o.name)return;const n=seen.get(o.name)??0;seen.set(o.name,n+1);if(n>0)o.name=`${o.name}-${n}`})}
  const add=(parent:THREE.Object3D,name:string,size:[number,number,number],position:[number,number,number],material:THREE.Material|THREE.Material[])=>{const m=new THREE.Mesh(new THREE.BoxGeometry(...size),material);m.name=name;m.position.set(...position);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
- add(subject,'grapes-stone-base',[4.6,.12,3.4],[0,-.06,.20],stone)
- add(subject,'grapes-serving-platform',[2.75,.14,.96],[.45,.07,.65],platform)
+ // Footed wooden serving table, preparation stands, and stepped clock plinth grounded directly on the courtyard.
+ const serving=addOfferingTable(subject,{
+  name:'grapes-serving-stand',topName:'grapes-serving-platform',
+  width:2.75,depth:.96,center:[.45,.65],groundY:-.12,surfaceY:.14,
+  thickness:.072,finish:'chestnut',color:0xbba180,frameColor:0x8a6544,
+  planks:2,breadboardEnds:true,legThickness:.085,apron:true,stretchers:false,bevel:.014,
+ })
+ dedupe(serving.root)
  const initial=[new THREE.Vector3(-1.45,.10,-.65),new THREE.Vector3(-1.45,.10,.15),new THREE.Vector3(-1.45,.10,.95)],goal=[new THREE.Vector3(-.45,.14,.65),new THREE.Vector3(.45,.14,.65),new THREE.Vector3(1.35,.14,.65)]
- for(let i=0;i<3;i++)add(subject,'grapes-preparation-pad-'+i,[.85,.10,.74],[-1.45,.05,initial[i]!.z],wood)
- add(subject,'grapes-clock-foot',[1.15,.20,.40],[.65,.10,-.85],wood)
+ for(let i=0;i<3;i++){
+  addObjectCradle(subject,{
+   name:'grapes-prep-stand-'+i,topName:'grapes-preparation-pad-'+i,
+   style:'pad',footed:true,kind:'wood',color:0x9c6e49,accentColor:0x764f33,
+   width:.85,depth:.74,center:[-1.45,initial[i]!.z],groundY:-.12,surfaceY:.10,bevel:.015,axis:'x',
+  })
+ }
+ addSteppedPedestal(subject,{
+  name:'grapes-clock-plinth',topName:'grapes-clock-foot',shape:'rect',kind:'wood',
+  finish:'walnut',color:0x936542,trimColor:0x714b30,center:[.65,-.85],groundY:-.12,surfaceY:.20,
+  tiers:[
+   {width:1.24,depth:.46,height:.10,bevel:.016,color:0x714b30},
+   {width:1.15,depth:.40,height:.22,bevel:.016,color:0x936542},
+  ],
+ })
  const dial=new THREE.DataTexture(clockPixels.slice(),128,128);dial.colorSpace=THREE.SRGBColorSpace;dial.needsUpdate=true
  const face=new THREE.MeshStandardMaterial({map:dial,roughness:.85})
  add(subject,'grapes-clock',[1,1,.08],[.65,.70,-.85],[wood,wood,wood,wood,face,wood])
@@ -36,10 +57,11 @@ export function createSpanishTwelveGrapesModel(){
  // A broad closed flat foot is a digital support simplification.
  for(let i=0;i<position.count;i++)position.setY(i,Math.max(position.getY(i),-.115)+.115)
  grapeGeometry.computeVertexNormals()
+ const plateGeometry=new RoundedBoxGeometry(.74,.06,.70,2,.014)
  const portions:THREE.Group[]=[],grapes:THREE.Mesh[]=[]
  for(let i=0;i<3;i++){
   const portion=new THREE.Group();portion.name='grapes-portion-'+i;subject.add(portion);portions.push(portion)
-  add(portion,'grapes-plate-'+i,[.74,.06,.70],[0,.03,0],ceramic)
+  const plate=new THREE.Mesh(plateGeometry,ceramic);plate.name='grapes-plate-'+i;plate.position.set(0,.03,0);plate.castShadow=plate.receiveShadow=true;portion.add(plate)
   for(const x of[-.18,.18])for(const z of[-.16,.16]){const grape=new THREE.Mesh(grapeGeometry,green);grape.name='grapes-fruit-'+grapes.length;grape.position.set(x,.06,z);grape.castShadow=grape.receiveShadow=true;portion.add(grape);grapes.push(grape)}
  }
  const roots=portions,anchors:[number,number,number][]=[[0,.06,0],[0,.06,0],[0,.06,0]]

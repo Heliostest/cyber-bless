@@ -1,29 +1,34 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 
 // Original display geometry; no shrine insignia or replica measurements.
 export function createJapaneseHamayaModel(){
  const root=new THREE.Group();root.name='japanese-hamaya-root'
  const subject=new THREE.Group();subject.name='japanese-hamaya-subject';root.add(subject)
  const arrow=new THREE.Group();arrow.name='hamaya-arrow';subject.add(arrow)
- const wood=new THREE.MeshStandardMaterial({color:0xcfae71,roughness:.64}),dark=new THREE.MeshStandardMaterial({color:0x806340,roughness:.74}),stand=new THREE.MeshStandardMaterial({color:0xa87946,roughness:.7}),cream=new THREE.MeshStandardMaterial({color:0xfff7df,roughness:.84}),rib=new THREE.MeshStandardMaterial({color:0xc8b991,roughness:.75}),red=new THREE.MeshStandardMaterial({color:0x9f3e37,roughness:.82}),gold=new THREE.MeshStandardMaterial({color:0xc89c43,metalness:.75,roughness:.3}),stone=new THREE.MeshStandardMaterial({color:0xb9b9a5,roughness:.96})
+ const wood=new THREE.MeshStandardMaterial({color:0xcfae71,roughness:.64}),dark=new THREE.MeshStandardMaterial({color:0x806340,roughness:.74}),standY=new THREE.MeshStandardMaterial({color:0xa87946,roughness:.7}),standX=new THREE.MeshStandardMaterial({color:0xb1834f,roughness:.72}),standZ=new THREE.MeshStandardMaterial({color:0x996d3f,roughness:.74}),cream=new THREE.MeshStandardMaterial({color:0xfff7df,roughness:.84}),rib=new THREE.MeshStandardMaterial({color:0xc8b991,roughness:.75}),red=new THREE.MeshStandardMaterial({color:0x9f3e37,roughness:.82}),gold=new THREE.MeshStandardMaterial({color:0xc89c43,metalness:.75,roughness:.3})
  const bluntWood=applyCraftSurface(dark.clone(),{kind:'wood',strength:.4,axis:'y'})
  const bellClapper=applyCraftSurface(dark.clone(),{kind:'metal',strength:.45})
- ;[wood,stand].forEach(material=>applyCraftSurface(material,{kind:'wood',strength:.4,axis:'y'}))
+ applyCraftSurface(wood,{kind:'wood',strength:.4,axis:'y'})
+ applyCraftSurface(standY,{kind:'wood',strength:.42,axis:'y'})
+ applyCraftSurface(standX,{kind:'wood',strength:.42,axis:'x'})
+ applyCraftSurface(standZ,{kind:'wood',strength:.42,axis:'z'})
  applyCraftSurface(gold,{kind:'metal',strength:.45})
  applyCraftSurface(red,{kind:'cord',strength:.28})
- applyCraftSurface(stone,{kind:'stone',strength:.45})
  const mesh=(parent:THREE.Object3D,name:string,g:THREE.BufferGeometry,mat:THREE.Material,x=0,y=0,z=0)=>{const m=new THREE.Mesh(g,mat);m.name=name;m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
- const box=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat=stand)=>mesh(subject,name,new THREE.BoxGeometry(w,h,d),mat,x,y,z)
- mesh(subject,'hamaya-stone-base',new THREE.BoxGeometry(4.4,.12,1.65),stone,0,-.06,.30)
- // Each U cradle has an actual horizontal bearing, two separated side lips and a grounded foot.
+ const box=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat:THREE.Material=standY,bevel=.010)=>mesh(subject,name,new RoundedBoxGeometry(w,h,d,2,Math.min(bevel,w/3,h/3,d/3)),mat,x,y,z)
+ // Twin chamfered wooden U-cradle stands grounded directly on the courtyard with joined lower stretchers.
  const cradle=(kind:string,i:number,x:number,top:number,z:number)=>{
-  box('hamaya-'+kind+'-foot-'+i,.30,.08,.34,x,.04,z)
-  box('hamaya-'+kind+'-post-'+i,.085,top-.12,.085,x,(top-.12)/2+.08,z)
-  box('hamaya-'+kind+'-seat-'+i,.12,.04,.24,x,top-.02,z)
-  for(const side of[-1,1])box('hamaya-'+kind+'-lip-'+i+'-'+side,.12,.09,.045,x,top+.045,z+side*.0975)
+  box('hamaya-'+kind+'-shoe-'+i,.34,.055,.40,x,-.0725,z,standZ,.012)
+  box('hamaya-'+kind+'-foot-'+i,.30,.18,.34,x,-.01,z,standZ,.014)
+  box('hamaya-'+kind+'-post-'+i,.085,top-.12,.085,x,(top-.12)/2+.08,z,standY,.012)
+  box('hamaya-'+kind+'-seat-'+i,.12,.04,.24,x,top-.02,z,standX,.008)
+  for(const side of[-1,1])box('hamaya-'+kind+'-lip-'+i+'-'+side,.12,.09,.045,x,top+.045,z+side*.0975,standY,.008)
  }
  for(const[i,x]of[-.65,.05].entries()){cradle('low',i,-.65+x,.45,.70);cradle('high',i,.65+x,.98,0)}
+ box('hamaya-low-rail',.70,.055,.065,-.95,.14,.70,standX,.010)
+ box('hamaya-high-rail',.70,.065,.065,.35,.26,0,standX,.010)
  const shaft=mesh(arrow,'hamaya-shaft',new THREE.CylinderGeometry(.04,.04,2.4,32),wood);shaft.rotation.z=-Math.PI/2
  const cap=mesh(arrow,'hamaya-blunt-end',new THREE.CylinderGeometry(.049,.049,.10,32),bluntWood,-1.25);cap.rotation.z=-Math.PI/2
  const end=mesh(arrow,'hamaya-tail-cap',new THREE.SphereGeometry(.042,16,12),wood,1.2);end.scale.x=.5

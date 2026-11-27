@@ -1,15 +1,15 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { addSteppedPedestal } from '../cozy-furniture'
 
 /** An original stone recumbent ox: no museum object's dimensions or surface art are copied. */
 export function createNadeushiModel() {
   const root = new THREE.Group(); root.name = 'nadeushi-subject'; root.position.y = -.012
   const stone = new THREE.MeshStandardMaterial({ color: 0x6c8182, roughness: .88 })
-  const cutStone = new THREE.MeshStandardMaterial({ color: 0xb6bfae, roughness: .95 })
   const dark = new THREE.MeshStandardMaterial({ color: 0x384f54, roughness: .82 })
   const skin = new THREE.MeshStandardMaterial({ color: 0xf0bc91, roughness: .82 })
   const cuff = new THREE.MeshStandardMaterial({ color: 0xd5ede3, roughness: .91 })
-  for(const carving of[stone,cutStone])applyCraftSurface(carving,{kind:'stone',strength:.45})
+  applyCraftSurface(stone,{kind:'stone',strength:.45})
   applyCraftSurface(cuff,{kind:'fabric',strength:.25})
   // Remove the degenerate pole triangles from sphere/lathe primitives before rendering.
   const clean = (source: THREE.BufferGeometry) => {
@@ -27,11 +27,24 @@ export function createNadeushiModel() {
   const ellipsoid = (name:string,p:number[],s:number[],mat=stone,parent:THREE.Object3D=root) => {
     const m=mesh(name,new THREE.SphereGeometry(1,32,20),mat,parent); m.position.set(p[0]!,p[1]!,p[2]!); m.scale.set(s[0]!,s[1]!,s[2]!); return m
   }
-  const block = (name:string,p:number[],s:number[],mat:THREE.Material) => {
-    const m=mesh(name,new THREE.BoxGeometry(...s as [number,number,number]),mat);m.position.set(...p as [number,number,number]);return m
-  }
-  const pedestal=block('stone-plinth',[0,.14,0],[2.95,.28,1.43],cutStone)
-  block('plinth-cap',[0,.32,0],[2.78,.08,1.3],cutStone)
+  // Stepped stone plinth grounded at world y = -0.004 (local 0.008) with cap raised +5 mm to seat ox hooves flush at local 0.365.
+  const pedestal = addSteppedPedestal(root, {
+    name: 'stone-plinth',
+    topName: 'plinth-cap',
+    shape: 'rect',
+    kind: 'stone',
+    groundY: .008,
+    surfaceY: .365,
+    color: 0xb6bfae,
+    trimColor: 0xa4ae9d,
+    roughness: .95,
+    surfaceStrength: .45,
+    tiers: [
+      { width: 2.98, depth: 1.46, height: .117, bevel: .014, color: 0xa4ae9d },
+      { width: 2.86, depth: 1.36, height: .155, bevel: .018, color: 0xb6bfae },
+      { width: 2.78, depth: 1.30, height: .085, bevel: .016, color: 0xc0c8b8 },
+    ],
+  }).root
   const ox=new THREE.Group();ox.name='recumbent-ox';root.add(ox)
   ellipsoid('ox-body',[.22,.75,0],[.86,.40,.44],stone,ox)
   ellipsoid('ox-haunch',[.82,.69,-.015],[.38,.31,.4],stone,ox)

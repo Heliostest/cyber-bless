@@ -273,4 +273,24 @@ describe('炉前一炷: an open household incense tribute', () => {
     const capture = (o: boolean | EventListenerOptions | undefined) => typeof o === 'boolean' ? o : o?.capture ?? false
     for (const [type, listener, opts] of registrations) expect(removed.mock.calls.some(([t, l, o]) => t === type && l === listener && capture(o) === capture(opts)), `owned ${type} listener`).toBe(true)
   })
+
+  it('mounts living incense and tea plumes, baked crevice AO on vessels, glowing ember, and contact shadows', () => {
+    const s = mount(2)
+    s.run(.4)
+    const smoke = s.scene.getObjectByName('incense-smoke')!
+    expect(smoke.getObjectByName('soft-plume-incense')).toBeTruthy()
+    expect(smoke.getObjectByName('incense-smoke-thread-0')).toBeUndefined()
+    expect(s.scene.getObjectByName('soft-plume-steam')).toBeTruthy()
+    const censerBody = s.scene.getObjectByName('incense-censer-body') as THREE.Mesh
+    const teacupBody = s.scene.getObjectByName('incense-teacup-body') as THREE.Mesh
+    expect(censerBody.geometry.getAttribute('color')).toBeTruthy()
+    expect((censerBody.material as THREE.MeshStandardMaterial).vertexColors).toBe(true)
+    expect(teacupBody.geometry.getAttribute('color')).toBeTruthy()
+    expect((teacupBody.material as THREE.MeshStandardMaterial).vertexColors).toBe(true)
+    const ember = s.scene.getObjectByName('incense-ember') as THREE.Mesh
+    expect((ember.material as THREE.MeshStandardMaterial).emissiveIntensity).toBeGreaterThan(1)
+    for (const shadow of ['incense-table-contact-ao', 'incense-censer-contact-ao', 'incense-lid-rest-contact-ao', 'incense-tea-saucer-contact-ao', 'incense-stick-tray-contact-ao']) {
+      expect(s.scene.getObjectByName(shadow), shadow).toBeTruthy()
+    }
+  })
 })

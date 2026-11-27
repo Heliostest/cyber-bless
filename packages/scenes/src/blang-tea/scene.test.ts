@@ -222,4 +222,28 @@ describe('a contemporary tea break inspired by Blang tea ecology',()=>{
       expect(removed.mock.calls.some(([t,l,o],i)=>removed.mock.contexts[i]===target&&t===type&&l===listener&&capture(o)===capture(opts)),type).toBe(true)
     }
   })
+
+  it('equips terracotta/ceramic craft surfaces, crevice AO, botanical tea leaves, curved stream, ripples, steam, and contact shadows', () => {
+    const s = mount(2)
+    s.run(.4)
+    const potBody = s.scene.getObjectByName('tea-pot-body') as THREE.Mesh
+    const cupBody = s.scene.getObjectByName('tea-cup-body') as THREE.Mesh
+    expect((potBody.material as THREE.MeshStandardMaterial).userData.craftSurface?.kind).toBe('terracotta')
+    expect((potBody.material as THREE.MeshStandardMaterial).vertexColors).toBe(true)
+    expect(potBody.geometry.getAttribute('color')).toBeTruthy()
+    expect((cupBody.material as THREE.MeshStandardMaterial).userData.craftSurface?.kind).toBe('ceramic')
+    expect((cupBody.material as THREE.MeshStandardMaterial).vertexColors).toBe(true)
+    expect(cupBody.geometry.getAttribute('color')).toBeTruthy()
+    const potLeaf = s.scene.getObjectByName('tea-leaves-in-pot')!.children[0] as THREE.Mesh
+    expect((potLeaf.material as THREE.MeshStandardMaterial).userData.botanicalSurface).toMatchObject({ kind: 'leaf', venation: 'pinnate' })
+    const streamMesh = s.scene.getObjectByName('tea-stream-mesh') as THREE.Mesh
+    expect(streamMesh.geometry.userData.curvedStream).toBeTruthy()
+    expect(s.scene.getObjectByName('surface-ripple')).toBeTruthy()
+    let steamCount = 0
+    s.scene.traverse(o => { if (o.name === 'soft-plume-steam') steamCount++ })
+    expect(steamCount).toBe(2)
+    for (const shadow of ['tea-pot-contact-ao', 'tea-cup-saucer-contact-ao', 'tea-lid-coaster-contact-ao', 'tea-scoop-rest-contact-ao']) {
+      expect(s.scene.getObjectByName(shadow), shadow).toBeTruthy()
+    }
+  })
 })

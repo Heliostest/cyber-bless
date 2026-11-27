@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import { createSoftPlume } from '@wbr/scene-runtime/soft-plume'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
@@ -21,7 +22,7 @@ export function createNanakusaGayu(ctx: SceneContext): SceneInstance {
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
   let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean } | null = null
-  let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
+  let amount = 0, moved = false, invalid = false, pourSoundPlayed = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
@@ -35,10 +36,20 @@ export function createNanakusaGayu(ctx: SceneContext): SceneInstance {
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
   const model = createNanakusaModel(); scene.add(model.root)
+  const potSteam = createSoftPlume({ kind: 'steam', warmColor: 0xffe8c8, height: .54, width: .30, opacity: .34, seed: 29 })
+  potSteam.root.position.set(-.55, .60, -.36); scene.add(potSteam.root)
+  const bowlSteam = createSoftPlume({ kind: 'steam', warmColor: 0xffe8c8, height: .34, width: .18, opacity: .30, strands: 2, wisps: 7, seed: 61 })
+  bowlSteam.root.position.set(.70, .28, .62); scene.add(bowlSteam.root)
+  const syncSteam = () => {
+    potSteam.setIntensity(1)
+    const activeBowl = at >= 2 || model.served.visible
+    const bowlLevel = at >= 3 ? 1 : model.served.visible ? Math.max(.55, THREE.MathUtils.clamp((amount - .34) / .36, 0, 1)) : at === 2 ? .48 : 0
+    bowlSteam.setIntensity(activeBowl ? bowlLevel : 0)
+  }
   const placement = createPosePlacement(canvas, camera, model, scene), spatialSteps = new Set([0,1])
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
-  const restore = () => pose(at, 0)
+  const pose = (step: number, n: number) => { amount = n; model.pose(step,n); syncSteam(); matrices() }
+  const restore = () => { pourSoundPlayed = false; pose(at, 0) }
   const directions: [number, number][] = [[-1,0],[0,-1],[0,1]]
   const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(spatialSteps.has(i) ? { destination: () => placement.destination(i), targetLabel: '挪到这里' } : { direction: directions[i] }), label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
@@ -82,11 +93,12 @@ export function createNanakusaGayu(ctx: SceneContext): SceneInstance {
     placement.settle(1); placement.cancel(); at = (motion.step + 1) as Checkpoint; motion = null; restore()
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
-      feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
+      const cue = at === 1 ? 'woodTap' : at === 2 ? 'water' : 'ceramic'
+      feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine', cue, cueStrength: .56 })
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; motion = { step: at, time: 0, from: amount, placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(placed = false) { if (!inputActive() || (pointer.isBusy() && !placed) || motion || at === 3) return; pourSoundPlayed = false; motion = { step: at, time: 0, from: amount, placed }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
@@ -111,18 +123,29 @@ export function createNanakusaGayu(ctx: SceneContext): SceneInstance {
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
+      feedback.update()
       if (motion) {
         motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.placed ? .28 : 2.5))
         const eased=ease(motion.time)
-        pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); matrices(); if (motion.time === 1) settle()
+        pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); matrices()
+        if (motion.step === 2 && model.stream.visible && !pourSoundPlayed) {
+          pourSoundPlayed = true
+          feedback.sound('water', { duration: .62, strength: .48 })
+        }
+        if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) {
+        const reduced = ctx.isReducedMotion?.() ?? false
+        potSteam.update(delta, camera, { reducedMotion: reduced, scene })
+        bowlSteam.update(delta, camera, { reducedMotion: reduced, scene })
+        matrices(); lights.key.shadow.normalBias = .03; style.render()
+      }
     },
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); model.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); potSteam.dispose(); bowlSteam.dispose(); model.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

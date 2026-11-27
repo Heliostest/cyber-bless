@@ -335,3 +335,20 @@ it('accepts a nearby release after covering the entire stir path',()=>{
  for(let i=1;i<=8;i++)pointer(s.hit,'pointermove',project(s,object(`navruz-stir-bead-${i}`)))
  const end=project(s,object('navruz-stir-bead-8'));pointer(s.hit,'pointerup',[end[0],end[1]-18]);expect(s.progress).toEqual([1])
 })
+
+it('applies terracotta hearth surface, baked crevice AO, contact shadows, simmering steam plumes, and recessed hearth warmth',()=>{
+ const s=mount(2);s.run(.4)
+ const hearth=object('navruz-clay-hearth') as THREE.Mesh
+ expect((hearth.material as THREE.MeshStandardMaterial).userData.craftSurface?.kind).toBe('terracotta')
+ expect(hearth.geometry.getAttribute('color')).toBeTruthy()
+ const kazanBody=object('navruz-round-cauldron-body') as THREE.Mesh
+ expect(kazanBody.geometry.getAttribute('color')).toBeTruthy()
+ expect((kazanBody.material as THREE.MeshStandardMaterial).vertexColors).toBe(true)
+ expect(object('navruz-hearth-warmth')).toBeTruthy()
+ let steamCount=0
+ drawn.scene!.traverse(o=>{if(o.name==='soft-plume-steam')steamCount++})
+ expect(steamCount).toBe(2)
+ for(const shadow of ['navruz-hearth-contact-ao','navruz-sharing-mat-contact-ao','navruz-neighbor-bowl-contact-ao','navruz-serving-bowl-contact-ao']){
+  expect(drawn.scene!.getObjectByName(shadow),shadow).toBeTruthy()
+ }
+})

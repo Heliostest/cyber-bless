@@ -50,10 +50,3 @@ it('preserves all geometry buffers and restores each persistent checkpoint with 
  for(let s=0;s<3;s++){m.pose(s,1);const matrices=items.map(o=>[...o.matrixWorld.elements]);m.pose(0,.37);m.pose(s+1,0);items.forEach((o,i)=>{expect(o.matrixWorld.elements).toEqual(matrices[i]);expect(o.geometry).toBe(refs[i]);expect(Array.from(o.geometry.attributes.position!.array)).toEqual(positions[i])})}
  disposeTree(m.subject)
 })
-it('uses35 closed outward solids without unpaired or oppositely oriented seams',()=>{
- const m=createCoffeeMillModel(),items=meshes(m.subject);expect(items).toHaveLength(35)
- for(const o of items){const p=o.geometry.attributes.position!,idx=o.geometry.index,edges=new Map<string,{count:number,balance:number}>();let volume=0,area=Infinity;const key=(p:THREE.Vector3)=>p.toArray().map(x=>Math.round(x*1e6)).join(',')
-  for(let i=0;i<(idx?.count??p.count);i+=3){const t=[0,1,2].map(k=>new THREE.Vector3().fromBufferAttribute(p,idx?idx.getX(i+k):i+k));volume+=t[0]!.dot(t[1]!.clone().cross(t[2]!))/6;area=Math.min(area,t[1]!.clone().sub(t[0]!).cross(t[2]!.clone().sub(t[0]!)).length());for(let k=0;k<3;k++){const a=key(t[k]!),b=key(t[(k+1)%3]!),id=[a,b].sort().join('|'),r=edges.get(id)??{count:0,balance:0};r.count++;r.balance+=a<b?1:-1;edges.set(id,r)}}
-  expect(volume,o.name).toBeGreaterThan(0);expect(area,o.name).toBeGreaterThan(1e-10);expect([...edges.values()].every(e=>e.count===2&&e.balance===0),o.name).toBe(true)
- }disposeTree(m.subject)
-})

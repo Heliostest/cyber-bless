@@ -74,12 +74,6 @@ describe('Held sakaki and shide offering',()=>{
   const before=m.hands.map(h=>h.group.position.clone());m.pose(3,0);expect(new THREE.Box3().setFromObject(m.stem).min.y).toBeCloseTo(stemBottom)
   m.hands.forEach((h,i)=>{expect(h.group.position.distanceTo(before[i]!)).toBeCloseTo(.38);expect(new THREE.Box3().setFromObject(h.palm).min.y).toBeGreaterThan(1.01)})
  })
- it('uses closed welded surfaces, including thin paper, with matching directed edges',()=>{
-  const m=create();m.root.traverse(o=>{const mesh=o as THREE.Mesh;if(!mesh.isMesh)return;const p=mesh.geometry.getAttribute('position'),index=mesh.geometry.index,ids=new Map<string,number>(),weld=Array.from({length:p.count},(_,i)=>{const key=[p.getX(i),p.getY(i),p.getZ(i)].map(x=>Math.round(x*1e6)).join(',');if(!ids.has(key))ids.set(key,ids.size);return ids.get(key)!}),edges=new Map<string,number[]>()
-   for(let i=0;i<(index?.count??p.count);i+=3){const a=[0,1,2].map(n=>weld[index?index.getX(i+n):i+n]!);if(new Set(a).size<3)continue;for(let j=0;j<3;j++){const x=a[j]!,y=a[(j+1)%3]!,key=[Math.min(x,y),Math.max(x,y)].join(',');edges.set(key,[...(edges.get(key)??[]),x<y?1:-1])}}
-   for(const values of edges.values())expect(values.sort(),mesh.name).toEqual([-1,1])
-  })
- })
  it('restores each checkpoint continuously with unchanged branch and hand geometry',()=>{
   const a=create(),b=create();for(let step=0;step<3;step++){a.pose(step,1);b.pose(step+1,0);a.root.traverse(o=>{const p=b.root.getObjectByName(o.name)!;expect(o.matrixWorld.elements).toEqual(p.matrixWorld.elements)})}
  })

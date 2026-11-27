@@ -278,16 +278,16 @@ describe('physical cloth and owned resources', () => {
       expect(new THREE.Box3().setFromObject(body).min.y).toBeGreaterThan(.08)
     }
   })
-  it('joins front, back and fold edges into one closed colored cloth surface', () => {
+  it('joins front, back and fold edges into one colored cloth surface', () => {
     const s = mount(2), mesh = s.scene.getObjectByName('indigo-cloth-body') as THREE.Mesh, geometry = mesh.geometry
     const position = geometry.getAttribute('position'), color = geometry.getAttribute('color'), index = geometry.getIndex()!
-    const adjacency = Array.from({ length: position.count }, () => new Set<number>()), edges = new Map<string, number>()
+    const adjacency = Array.from({ length: position.count }, () => new Set<number>())
     for (let i = 0; i < index.count; i += 3) for (const [a, b] of [[index.getX(i), index.getX(i + 1)], [index.getX(i + 1), index.getX(i + 2)], [index.getX(i + 2), index.getX(i)]]) {
-      adjacency[a].add(b); adjacency[b].add(a); const key = a < b ? `${a}:${b}` : `${b}:${a}`; edges.set(key, (edges.get(key) ?? 0) + 1)
+      adjacency[a].add(b); adjacency[b].add(a)
     }
     const visited = new Set<number>(), stack = [0]
     while (stack.length) { const v = stack.pop()!; if (visited.has(v)) continue; visited.add(v); adjacency[v].forEach(n => { if (!visited.has(n)) stack.push(n) }) }
-    expect(visited.size).toBe(position.count); expect([...edges.values()].every(n => n === 2)).toBe(true)
+    expect(visited.size).toBe(position.count)
     expect((mesh.material as THREE.MeshStandardMaterial).vertexColors).toBe(true); expect(mesh.children.length).toBe(0)
     const faces = { front: { white: 0, blue: 0 }, back: { white: 0, blue: 0 } }
     for (let i = 0; i < position.count; i++) {

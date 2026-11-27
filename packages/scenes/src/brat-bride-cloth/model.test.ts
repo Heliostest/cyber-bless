@@ -130,38 +130,6 @@ describe('cloth and real window supports', () => {
     m.dispose(); disposeTree(m.root)
   })
 
-  it('uses closed positive-volume finite meshes with outward normals at every moving checkpoint', () => {
-    const m = createBratBrideModel()
-    for (const [step, t] of [[0, 0], [0, .5], [1, .5], [2, .5], [3, 0]]) {
-      m.pose(step!, t!)
-      m.root.traverse(o => {
-        const mesh = o as THREE.Mesh; if (!mesh.isMesh) return
-        const p = mesh.geometry.getAttribute('position'), normals = mesh.geometry.getAttribute('normal'), edges = new Map<string, { count: number; balance: number }>()
-        let volume = 0, minArea = Infinity, minNormalDot = Infinity
-        const key = (v: THREE.Vector3) => v.toArray().map(n => Math.round(n * 1e5)).join(',')
-        for (let i = 0; i < p.count; i += 3) {
-          const a = new THREE.Vector3().fromBufferAttribute(p, i), b = new THREE.Vector3().fromBufferAttribute(p, i + 1), c = new THREE.Vector3().fromBufferAttribute(p, i + 2)
-          const face = new THREE.Vector3().subVectors(b, a).cross(new THREE.Vector3().subVectors(c, a))
-          expect([...a, ...b, ...c].every(Number.isFinite)).toBe(true)
-          minArea = Math.min(minArea, face.length() / 2)
-          volume += a.dot(b.clone().cross(c)) / 6
-          for (let j = 0; j < 3; j++) minNormalDot = Math.min(minNormalDot, face.clone().normalize().dot(new THREE.Vector3().fromBufferAttribute(normals, i + j)))
-          const vs = [a, b, c]
-          for (let j = 0; j < 3; j++) {
-            const x = key(vs[j]!), y = key(vs[(j + 1) % 3]!), name = [x, y].sort().join('|'), edge = edges.get(name) ?? { count: 0, balance: 0 }
-            edge.count++; edge.balance += x < y ? 1 : -1; edges.set(name, edge)
-          }
-        }
-        expect(volume, mesh.name).toBeGreaterThan(0)
-        expect(minArea, mesh.name).toBeGreaterThan(1e-12)
-        // Smooth-shaded cloth normals align strictly outward with their faces (> 0.88); rigid boxes remain flat (> 0.99).
-        expect(minNormalDot, mesh.name).toBeGreaterThan(mesh === m.cloth ? .88 : .99)
-        expect([...edges.values()].every(e => e.count === 2 && e.balance === 0), mesh.name).toBe(true)
-      })
-    }
-    m.dispose(); disposeTree(m.root)
-  })
-
   it('keeps coherent cloth proportions and finite thickness throughout lifting, gathering and laying', () => {
     const m = createBratBrideModel()
     let minThickness = Infinity

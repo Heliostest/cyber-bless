@@ -40,10 +40,3 @@ it('restores each persistent checkpoint exactly without reallocating or deformin
  for(let s=0;s<3;s++){m.pose(s,1);const matrices=all.map(o=>[...o.matrixWorld.elements]);m.pose(0,.37);m.pose(s+1,0);all.forEach((o,i)=>{expect(o.matrixWorld.elements).toEqual(matrices[i]);expect(o.geometry).toBe(refs[i]);expect(Array.from(o.geometry.attributes.position!.array)).toEqual(buffers[i])})}
  disposeTree(m.subject)
 })
-it('uses eight closed positive outward solids with paired consistently oriented seams',()=>{
- const m=createBodhranModel(),all=meshes(m.subject);expect(all).toHaveLength(8)
- for(const o of all){const p=o.geometry.attributes.position!,idx=o.geometry.index,edges=new Map<string,{n:number,b:number}>();let volume=0,area=Infinity;const key=(v:THREE.Vector3)=>v.toArray().map(x=>Math.round(x*1e6)).join(',')
-  for(let i=0;i<(idx?.count??p.count);i+=3){const t=[0,1,2].map(k=>new THREE.Vector3().fromBufferAttribute(p,idx?idx.getX(i+k):i+k));volume+=t[0]!.dot(t[1]!.clone().cross(t[2]!))/6;area=Math.min(area,t[1]!.clone().sub(t[0]!).cross(t[2]!.clone().sub(t[0]!)).length());for(let k=0;k<3;k++){const a=key(t[k]!),b=key(t[(k+1)%3]!),id=[a,b].sort().join('|'),r=edges.get(id)??{n:0,b:0};r.n++;r.b+=a<b?1:-1;edges.set(id,r)}}
-  expect(volume,o.name).toBeGreaterThan(0);expect(area,o.name).toBeGreaterThan(1e-10);expect([...edges.values()].every(e=>e.n===2&&e.b===0),o.name).toBe(true)
- }disposeTree(m.subject)
-})

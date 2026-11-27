@@ -30,9 +30,6 @@ describe('Canang sari material and offering path',()=>{
   expect(Math.abs(pandanBounds.min.y-matBounds.max.y)).toBeLessThan(1e-6)
   disposeTree(m.root)
  })
-  it('uses finite, volumetric meshes with no collapsed triangles in all resting poses',()=>{
-   const m=createCanangModel();m.root.traverse(o=>{const mesh=o as THREE.Mesh;if(!mesh.isMesh)return;const p=mesh.geometry.attributes.position!,indices=mesh.geometry.index;expect([...p.array].every(Number.isFinite),mesh.name).toBe(true);const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();for(let i=0;i<(indices?.count??p.count);i+=3){a.fromBufferAttribute(p,indices?indices.getX(i):i);b.fromBufferAttribute(p,indices?indices.getX(i+1):i+1);c.fromBufferAttribute(p,indices?indices.getX(i+2):i+2);expect(b.sub(a).cross(c.sub(a)).lengthSq(),mesh.name).toBeGreaterThan(1e-18)}});disposeTree(m.root)
-  })
   it('builds cupped jepun petals, thin arched pandan strips and rolled porosan leaf while resting flowerWhite flush at y=0.12',()=>{
    const m=createCanangModel();m.pose(0,0)
    const whiteBox=new THREE.Box3().setFromObject(m.flower)

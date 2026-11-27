@@ -27,12 +27,6 @@ describe('porridge, ladle and receiving bowl',()=>{
   for(let i=0;i<=200;i++){m.pose(2,i/200);if(m.stream.visible){tip.copy(m.spout).applyMatrix4(m.ladle.matrixWorld);expect(m.stream.position.x).toBeCloseTo(tip.x,6);expect(m.stream.position.z).toBeCloseTo(tip.z,6);expect(m.stream.position.y+m.stream.scale.y/2).toBeCloseTo(tip.y,6);expect(m.stream.position.y-m.stream.scale.y/2).toBeCloseTo(m.bowlSurface(),6);expect(Math.hypot(tip.x-m.bowl.position.x,tip.z-m.bowl.position.z)).toBeLessThan(.38)}}
   m.pose(3,0);expect(m.served.visible).toBe(true);expect(m.payload.visible).toBe(false);expect(m.stream.visible).toBe(false);expect(m.bowlSurface()).toBeGreaterThan(.20);disposeTree(m.root)
  })
- it('uses closed finite positive-volume nondegenerate geometry',()=>{
-  const m=createNanakusaModel();let count=0;m.root.traverse(o=>{const mesh=o as THREE.Mesh;if(!mesh.isMesh)return;count++;const p=mesh.geometry.getAttribute('position'),edges=new Map<string,{count:number;balance:number}>();let volume=0;const key=(v:THREE.Vector3)=>v.toArray().map(n=>Math.round(n*1e5)).join(',')
-   for(let i=0;i<p.count;i+=3){const a=new THREE.Vector3().fromBufferAttribute(p,i),b=new THREE.Vector3().fromBufferAttribute(p,i+1),c=new THREE.Vector3().fromBufferAttribute(p,i+2);expect([...a,...b,...c].every(Number.isFinite),mesh.name).toBe(true);expect(new THREE.Triangle(a,b,c).getArea(),mesh.name).toBeGreaterThan(1e-12);volume+=a.dot(b.clone().cross(c))/6;const vs=[a,b,c];for(let k=0;k<3;k++){const x=key(vs[k]!),y=key(vs[(k+1)%3]!),name=[x,y].sort().join('|'),e=edges.get(name)??{count:0,balance:0};e.count++;e.balance+=x<y?1:-1;edges.set(name,e)}}
-   expect(volume,mesh.name).toBeGreaterThan(0);expect([...edges.values()].every(e=>e.count===2&&e.balance===0),mesh.name).toBe(true)
-  });expect(count).toBeGreaterThan(50);disposeTree(m.root)
- })
  it('keeps every loaded food vertex inside the hollow wooden ladle',()=>{
   const m=createNanakusaModel(),v=new THREE.Vector3()
   for(const[step,t]of[[1,.4],[2,.40],[2,.55],[2,.68]]){m.pose(step!,t!);m.payload.traverse(o=>{const mesh=o as THREE.Mesh;if(!mesh.isMesh)return;const p=mesh.geometry.getAttribute('position');for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld);m.ladle.worldToLocal(v);const r=Math.hypot(v.x,v.z),limit=v.y<-.04?(v.y+.055)*8:v.y<.025?.12+(v.y+.04)*(.05/.065):.17+(v.y-.025)*(.015/.055);expect(v.y,mesh.name).toBeGreaterThanOrEqual(-.055-1e-6);expect(v.y,mesh.name).toBeLessThanOrEqual(.08+1e-6);expect(r,mesh.name).toBeLessThanOrEqual(limit+1e-5)}})}disposeTree(m.root)

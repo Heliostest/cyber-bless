@@ -1,5 +1,6 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { addObjectCradle } from '../cozy-furniture'
 import {
   createLivingBarkMaterial,
   createSpringBlossomMaterial,
@@ -405,7 +406,39 @@ export function createMartisorModel() {
     const m=mesh(youngLeafGeo,leafMat,subject,`martisor-leaf-${i}`)
     m.position.set(x,y,z); m.rotation.set(.14,angle>0?.18:-.18,angle)
   }
-  const ground=mesh(new THREE.CylinderGeometry(1.42,1.38,.075,64),material(0xd5dfab),root,'martisor-ground'); ground.position.set(.15,-.0375,.10)
+  // Compact tapered earth root-collar grounded directly at courtyard surface (-0.0575..-0.075)
+  // replaces the redundant 2.84m green disc while keeping the trunk root flare anchored.
+  const rootMoundProfile = [
+    new THREE.Vector2(0, -.075),
+    new THREE.Vector2(.31, -.075),
+    new THREE.Vector2(.29, -.056),
+    new THREE.Vector2(.24, -.030),
+    new THREE.Vector2(.18, -.013),
+    new THREE.Vector2(0, -.010),
+  ]
+  const ground = mesh(new THREE.LatheGeometry(rootMoundProfile, 36), material(0x76654d, .95), root, 'martisor-ground')
+  ground.position.set(.55, 0, -.65)
+  // Compact chamfered wooden prep rest seated at -0.0575 holds the initial mărțișor cord cleanly at y = 0.
+  const prepRest = addObjectCradle(root, {
+    name: 'martisor-prep-rest',
+    topName: 'martisor-prep-rest-top',
+    style: 'pad',
+    kind: 'wood',
+    finish: 'birch',
+    width: .62,
+    depth: 1.08,
+    center: [-.65, .43],
+    groundY: -.0575,
+    surfaceY: 0,
+    footed: true,
+  })
+  const restNames = new Map<string, number>()
+  prepRest.root.traverse(o => {
+    if (!o.name) return
+    const n = restNames.get(o.name) ?? 0
+    restNames.set(o.name, n + 1)
+    if (n > 0) o.name = `${o.name}-${n}`
+  })
 
   // Two tightly plied radial/z yarn tubes twist snugly around the open loop (helixR=0.0094, tubeR=0.0120,
   // R0=0.2294 -> zero hollow gap between strands, exact measurable inner support radius 0.2080,

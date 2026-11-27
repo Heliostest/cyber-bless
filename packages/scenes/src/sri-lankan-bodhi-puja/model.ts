@@ -1,5 +1,6 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { addSteppedPedestal } from '../cozy-furniture'
 import { disposeTree } from '../procedural-kit'
 import {
   applyBodhiBarkShading,
@@ -7,6 +8,7 @@ import {
   createBodhiBarkMaterials,
   createBodhiLeafGeometry,
   createBodhiLeafMaterials,
+  createBodhiSoilMaterial,
 } from './bodhi-materials'
 
 /** Generic temple tree and original pitcher/staging, not a particular sacred-tree monument. */
@@ -21,7 +23,7 @@ export function createBodhiPujaModel() {
   const petioleMaterial = new THREE.MeshStandardMaterial({ color: 0xaab484, roughness: .88 })
   const stone = new THREE.MeshStandardMaterial({ color: 0xc4baa1, roughness: .98 })
   const stoneShade = new THREE.MeshStandardMaterial({ color: 0xa89e87, roughness: .98 })
-  const soil = new THREE.MeshStandardMaterial({ color: 0x93724f, roughness: 1 })
+  const soil = createBodhiSoilMaterial()
   const wetSoil = new THREE.MeshStandardMaterial({ color: 0x58432e, roughness: .92 })
   const clay = new THREE.MeshStandardMaterial({ color: 0xb76e47, roughness: .68 })
   const band = new THREE.MeshStandardMaterial({ color: 0xe1cfaa, roughness: .51 })
@@ -98,25 +100,77 @@ export function createBodhiPujaModel() {
     if (shadeKind) applyBodhiBarkShading(geometry, shadeKind)
     return geometry
   }
+  const GROUND_Y = -.132
   function brick(start: number, end: number) {
-    const points = [[.79, start], [.95, start], [.95, end], [.79, end]].map(([radius, angle]) => [
-      .28 + radius! * Math.cos(angle!), -.25 + radius! * Math.sin(angle!),
-    ])
+    // Chamfered closed masonry curb stone extending cleanly down to garden surface (-0.132).
+    const layers: readonly [number, number, number, number][] = [
+      [GROUND_Y, .802, .938, .012],
+      [GROUND_Y + .016, .79, .95, 0],
+      [.264, .79, .95, 0],
+      [.28, .804, .936, .014],
+    ]
     const positions: number[] = [], indices: number[] = []
-    for (const y of [0, .28]) for (const [x, z] of points) positions.push(x!, y, z!)
-    indices.push(0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6)
-    for (let i = 0; i < 4; i++) {
-      const next = (i + 1) % 4
-      indices.push(i, i + 4, next, next, i + 4, next + 4)
+    for (const [y, rIn, rOut, inset] of layers) {
+      const a0 = start + inset, a1 = end - inset
+      const ring = [[rIn, a0], [rOut, a0], [rOut, a1], [rIn, a1]] as const
+      for (const [radius, angle] of ring) {
+        positions.push(.28 + radius * Math.cos(angle), y, -.25 + radius * Math.sin(angle))
+      }
+    }
+    // Bottom & top caps.
+    indices.push(0, 1, 2, 0, 2, 3)
+    const top = (layers.length - 1) * 4
+    indices.push(top, top + 2, top + 1, top, top + 3, top + 2)
+    // Side walls between successive beveled rings.
+    for (let ring = 0; ring < layers.length - 1; ring++) {
+      const a = ring * 4, b = (ring + 1) * 4
+      for (let i = 0; i < 4; i++) {
+        const next = (i + 1) % 4
+        indices.push(a + i, b + i, a + next, a + next, b + i, b + next)
+      }
     }
     return solid(positions, indices)
   }
 
-  // All masonry and both pitcher perches actually meet this paving slab at y=0.
-  add(root, 'bodhi-flagstone-slab', new THREE.BoxGeometry(3.3, .14, 2.4), stoneShade, 0, -.07, 0)
-  add(root, 'bodhi-initial-perch', new THREE.BoxGeometry(.65, .12, .66), stone, -1.12, .06, .18)
-  add(root, 'bodhi-destination-perch', new THREE.BoxGeometry(.65, .12, .64), stone, -.88, .06, .87)
-  add(root, 'bodhi-exposed-root-soil', new THREE.CylinderGeometry(.79, .79, .17, 48), soil, .28, .085, -.25)
+  // Ground both stepped stone pitcher perches and the chamfered tree-well curb directly on garden sand (-0.132).
+  const initialPerch = addSteppedPedestal(root, {
+    name: 'bodhi-initial-perch',
+    topName: 'bodhi-initial-perch-top',
+    shape: 'rect',
+    kind: 'stone',
+    color: 0xc4baa1,
+    trimColor: 0xa89e87,
+    center: [-1.12, .18],
+    groundY: GROUND_Y,
+    surfaceY: .12,
+    tiers: [
+      { width: .65, depth: .66, height: .086, color: 0xa89e87 },
+      { width: .59, depth: .60, height: .114, color: 0xbeb399 },
+      { width: .62, depth: .63, height: .052, color: 0xc4baa1 },
+    ],
+  })
+  initialPerch.root.name = 'bodhi-initial-perch'
+
+  const destPerch = addSteppedPedestal(root, {
+    name: 'bodhi-destination-perch',
+    topName: 'bodhi-destination-perch-top',
+    shape: 'rect',
+    kind: 'stone',
+    color: 0xc4baa1,
+    trimColor: 0xa89e87,
+    center: [-.88, .87],
+    groundY: GROUND_Y,
+    surfaceY: .12,
+    tiers: [
+      { width: .65, depth: .64, height: .086, color: 0xa89e87 },
+      { width: .59, depth: .58, height: .114, color: 0xbeb399 },
+      { width: .62, depth: .61, height: .052, color: 0xc4baa1 },
+    ],
+  })
+  destPerch.root.name = 'bodhi-destination-perch'
+
+  const soilHeight = .17 - GROUND_Y
+  add(root, 'bodhi-exposed-root-soil', new THREE.CylinderGeometry(.79, .79, soilHeight, 48), soil, .28, GROUND_Y + soilHeight / 2, -.25)
   for (let i = 0; i < 8; i++) {
     const angle = i * Math.PI / 4
     add(root, `bodhi-enclosure-stone-${i}`, brick(angle + .007, angle + Math.PI / 4 - .007), i % 2 ? stone : stoneShade)

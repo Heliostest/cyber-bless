@@ -1,5 +1,6 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createStylizedWater } from '@wbr/scene-runtime/stylized-water'
 import {
   createNotchedPeachPetalGeometry,
@@ -58,8 +59,19 @@ export function createNagashibinaModel() {
   for(const [i,x,y,z,ry,rx] of [[0,.26,.106,.20,2.25,-.24],[1,.36,.108,.12,-0.65,-.20]] as const){
     const leaf=mesh('peach-leaf-'+i,peachLeafGeo,peachLeafMat,tray);leaf.position.set(x,y,z);leaf.rotation.set(rx,ry,0)
   }
-  const shore=mesh('riverbank',new THREE.BoxGeometry(2.0,.352,4.5),bank,root);shore.position.set(-1.31,-.116,0)
-  const shoreLip=mesh('bank-stone-edge',new THREE.BoxGeometry(.15,.358,4.52),applyCraftSurface(mat('#c9c6a5'),{kind:'stone',strength:.4}),root);shoreLip.position.set(-.237,-.113,0)
+  // Beveled stream bank and low stone/earthen channel rim grounded at garden surface (-0.282..-0.292)
+  // so water rests inside a bounded natural channel with clean height separation (no Z-fighting).
+  const shoreStone=applyCraftSurface(mat('#c9c6a5'),{kind:'stone',strength:.4})
+  const channelBed=applyCraftSurface(mat('#a7b398',.94),{kind:'stone',strength:.32})
+  const shore=mesh('riverbank',new RoundedBoxGeometry(2.0,.352,4.5,3,.042),bank,root);shore.position.set(-1.31,-.116,0)
+  const shoreLip=mesh('bank-stone-edge',new RoundedBoxGeometry(.16,.358,4.52,3,.028),shoreStone,root);shoreLip.position.set(-.237,-.113,0)
+  for(const [name,z] of [['channel-curb-back',-2.25],['channel-curb-front',2.25]] as const){
+    const curb=mesh(name,new RoundedBoxGeometry(4.46,.348,.24,3,.036),shoreStone,root);curb.position.set(2.04,-.118,z)
+    const berm=mesh(`${name}-berm`,new RoundedBoxGeometry(4.62,.316,.26,3,.042),bank,root);berm.position.set(2.08,-.134,z+Math.sign(z)*.16)
+  }
+  const rightCurb=mesh('channel-curb-right',new RoundedBoxGeometry(.28,.348,4.74,3,.036),shoreStone,root);rightCurb.position.set(4.18,-.118,0)
+  const rightBerm=mesh('channel-curb-right-berm',new RoundedBoxGeometry(.30,.316,5.08,3,.042),bank,root);rightBerm.position.set(4.36,-.134,0)
+  const bedFloor=mesh('channel-bed-floor',new THREE.BoxGeometry(4.40,.04,4.50),channelBed,root);bedFloor.position.set(1.95,-.272,0);bedFloor.castShadow=false
   const water=createStylizedWater({geometry:new THREE.PlaneGeometry(5.0,4.5).rotateX(-Math.PI/2),normal:'y',depth:.22,color:'#7fc6bb',bedColor:'#afc4a2',opacity:.56,waveScale:3.5,causticScale:3})
   water.surface.position.set(1.65,0,0);root.add(water.surface)
   const pose=(step:number,amount:number)=>{

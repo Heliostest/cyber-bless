@@ -25,7 +25,20 @@ export function createUndamaModel(){
   return new THREE.Vector3(x,y,z)
  })
  const rock=make('undama-rock',closed([0,1,2,3,4].map(loop),new THREE.Vector3(cx,-.30,cz),new THREE.Vector3(cx,floor,cz)),material)
- const ledgeLoops=[-.30,.5].map((y,k)=>Array.from({length:n},(_,i)=>{const t=i*2*Math.PI/n,r=1+.035*Math.sin(5*t);return new THREE.Vector3(-1.08+(k?.63:.76)*Math.cos(t)*r,y,1.02+(k?.49:.60)*Math.sin(t)*r)}))
+ // Multi-bevel coastal rock shelf anchored below seabed (-0.30) with a flat weathered pickup crown at y = 0.50.
+ const ledgeTiers:readonly [number,number,number,number,number][]=[
+  [-.30,.78,.61,.040,0],
+  [-.02,.74,.58,.038,.010],
+  [.22,.70,.54,.036,.014],
+  [.39,.65,.50,.032,.012],
+  [.468,.605,.465,.024,.007],
+  [.50,.52,.40,.014,0],
+ ]
+ const ledgeLoops=ledgeTiers.map(([y,rx,rz,wAmp,yAmp],k)=>Array.from({length:n},(_,i)=>{
+  const t=i*2*Math.PI/n,r=1+wAmp*Math.sin(5*t+k*.35)+wAmp*.42*Math.cos(3*t-k*.25)
+  const dy=yAmp?yAmp*Math.sin(2*t+k*.7):0
+  return new THREE.Vector3(-1.08+rx*Math.cos(t)*r,y+dy,1.02+rz*Math.sin(t)*r)
+ }))
  const ledge=make('undama-ledge',closed(ledgeLoops,new THREE.Vector3(-1.08,-.30,1.02),new THREE.Vector3(-1.08,.5,1.02)),ledgeMaterial)
  const width=256,height=128,data=new Uint8Array(width*height*4)
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){const i=(y*width+x)*4;const gx=x-48,gy=109-y,ink=gx>=0&&gx<32&&gy>=0&&gy<32&&STAMP_ROWS[gy]![gx]==='1';data[i]=ink?139:205;data[i+1]=ink?80:145;data[i+2]=ink?49:94;data[i+3]=255}

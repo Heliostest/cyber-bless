@@ -204,8 +204,22 @@ export function createBaciModel() {
     const m = mesh(name, new THREE.SphereGeometry(1, 24, 16), material); m.position.fromArray(position); m.scale.fromArray(scale); return m
   }
   const wrist = new THREE.Vector3(.25, .47, 0)
-  // Seat the oval woven mat flush onto the courtyard flagstones (-0.0375) with weft crest at +0.008.
-  const ground = mesh('baci-woven-mat', new THREE.CylinderGeometry(1.45, 1.49, .043, 64), baciMat.matMaterials); ground.scale.z = .77; ground.position.y = -.0175
+  // Seat the oval woven mat flush onto the courtyard flagstones (-0.0375) with weft crest at +0.008,
+  // and soften its sharp cylinder edge with a chamfered bound reed border ring.
+  const ground = mesh('baci-woven-mat', new THREE.CylinderGeometry(1.44, 1.47, .0415, 64), baciMat.matMaterials); ground.scale.z = .77; ground.position.y = -.01725
+  const borderProfile = [
+    new THREE.Vector2(1.41, -.0385),
+    new THREE.Vector2(1.474, -.0385),
+    new THREE.Vector2(1.494, -.028),
+    new THREE.Vector2(1.498, -.010),
+    new THREE.Vector2(1.484, .005),
+    new THREE.Vector2(1.458, .0105),
+    new THREE.Vector2(1.428, .0065),
+    new THREE.Vector2(1.41, .003),
+    new THREE.Vector2(1.41, -.0385),
+  ]
+  const borderGeo = new THREE.LatheGeometry(borderProfile, 64); borderGeo.computeVertexNormals()
+  const border = mesh('baci-mat-border', borderGeo, baciMat.matMaterials[0]); border.scale.z = .77
   // Recessed parallel strands give the mat a modest woven surface without a table.
   for (let i = -10; i <= 10; i++) {
     const z = i * .09, length = 2.72 * Math.sqrt(Math.max(0, 1 - z * z / 1.12 ** 2))

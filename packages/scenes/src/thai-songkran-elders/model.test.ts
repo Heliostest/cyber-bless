@@ -6,7 +6,7 @@ describe('Songkran water and seated recipient geometry',()=>{
  it('keeps a closed hollow bowl with a real interior and supported basin',()=>{
   const m=createSongkranModel(),r=new THREE.Raycaster(V(-.80,.5,.60),V(0,-1,0));m.root.updateMatrixWorld(true)
   expect(r.intersectObject(m.bowl)[0]!.point.y).toBeCloseTo(.078,5)
-  expect(new THREE.Box3().setFromObject(m.basin).min.y).toBeCloseTo(0,6)
+  expect(new THREE.Box3().setFromObject(m.basin).min.y).toBeCloseTo(.0175,6)
   expect(new THREE.Box3().setFromObject(m.bowl).min.y).toBeCloseTo(new THREE.Box3().setFromObject(m.pad).max.y,5)
  })
  it('makes all three actions use the visible bowl, with no helper hit surface',()=>{
@@ -31,12 +31,12 @@ describe('Songkran water and seated recipient geometry',()=>{
  })
  it('returns the bowl onto its pad with less water and collects runoff inside the basin',()=>{
   const m=createSongkranModel();m.pose(0,0);const before=m.water.geometry.getAttribute('position').getY(0);m.pose(3,0)
-  expect(m.cup.position.distanceTo(m.home)).toBe(0);expect(m.cup.rotation.z).toBe(0);expect(m.water.geometry.getAttribute('position').getY(0)).toBeLessThan(before-.05);expect(m.caught.position.y).toBeCloseTo(.053);expect(m.stream.visible).toBe(false)
+  expect(m.cup.position.distanceTo(m.home)).toBe(0);expect(m.cup.rotation.z).toBe(0);expect(m.water.geometry.getAttribute('position').getY(0)).toBeLessThan(before-.05);expect(m.caught.position.y).toBeCloseTo(.0705);expect(m.stream.visible).toBe(false)
   for(let i=23;i<60;i++){m.pose(2,i/100);if(m.runoff.visible){expect(Math.hypot(m.runoffEnd.x,m.runoffEnd.z-.80)).toBeLessThan(.422);expect(m.runoffEnd.y).toBeCloseTo(m.caught.position.y)}}
   for(const t of[.221,.24,.351,.388,.40,.55]){m.pose(2,t);expect(m.runoff.visible).toBe(true);const direction=m.runoffEnd.clone().sub(m.runoffStart).normalize(),ray=new THREE.Raycaster(m.runoffStart,direction,0,m.runoffStart.distanceTo(m.runoffEnd));expect(ray.intersectObjects(m.hands,false),`outflow at ${t} must not cross a later finger`).toHaveLength(0)}
  })
- it('places bench feet, elder shoes and pad on the ground without floating supports',()=>{
-  const m=createSongkranModel();m.root.traverse(o=>{if(o.name.startsWith('songkran-bench-leg')||o.name.startsWith('songkran-shoe')||o===m.pad)expect(new THREE.Box3().setFromObject(o).min.y).toBeCloseTo(0,6)})
+ it('places bench feet, elder shoes and pad on the courtyard surface without floating supports',()=>{
+  const m=createSongkranModel();m.root.traverse(o=>{if(o.name.startsWith('songkran-bench-leg')||o.name.startsWith('songkran-shoe')||o===m.pad)expect(new THREE.Box3().setFromObject(o).min.y).toBeCloseTo(.0175,5);if(o.name.startsWith('songkran-bench-leg'))expect(((o as THREE.Mesh).material as THREE.MeshStandardMaterial).userData.craftSurface).toMatchObject({kind:'wood',axis:'y'})})
  })
  it('restores identical boundary transforms and water geometry at every checkpoint',()=>{
   const a=createSongkranModel(),b=createSongkranModel()

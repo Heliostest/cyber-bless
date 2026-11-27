@@ -52,7 +52,8 @@ describe('Khata supported transfer', () => {
       const pos = g.getAttribute('position')
       for (const v of pos.array) expect(Number.isFinite(v)).toBe(true)
     })
-    expect(count).toBe(54)
+    expect(count).toBe(53)
+    expect(m.root.getObjectByName('khata-ground')).toBeUndefined()
     // Verify non-degenerate cloth triangles and preserved 2-material open-edge grouping.
     const pos = m.cloth.geometry.getAttribute('position')
     const ix = m.cloth.geometry.index!
@@ -95,7 +96,7 @@ describe('Khata supported transfer', () => {
       for (const t of [0, .1, .22, .3, .5, .8, 1]) {
         m.pose(n, t)
         for (const person of m.people) {
-          for (const foot of person.feet) expect(foot.position.y - foot.scale.y).toBeCloseTo(0, 8)
+          for (const foot of person.feet) expect(foot.position.y - foot.scale.y).toBeCloseTo(-.072, 8)
         }
       }
     }

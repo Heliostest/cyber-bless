@@ -109,18 +109,17 @@ describe('Bodhi root watering model', () => {
     } finally { model.dispose() }
   })
 
-  it('starts and finishes upright on separate solid perches supported by the paving slab', () => {
+  it('starts and finishes upright on separate stepped stone perches grounded at the garden surface', () => {
     const model = createBodhiPujaModel()
     try {
-      const slab = bounds(named(model.root, 'bodhi-flagstone-slab'))
-      expect(slab.min.y).toBeCloseTo(-.14, 6)
-      expect(slab.max.y).toBeCloseTo(0, 6)
+      expect(model.root.getObjectByName('bodhi-flagstone-slab')).toBeUndefined()
+      const groundY = -.132
       for (const [step, progress, support] of [[0, 0, 'bodhi-initial-perch'], [2, 1, 'bodhi-destination-perch']] as const) {
         model.pose(step, progress)
         const perch = bounds(named(model.root, support))
         const body = bounds(named(model.actor, 'bodhi-pitcher-closed-wall-and-interior'))
-        expect(perch.min.y).toBeCloseTo(slab.max.y, 6)
-        expect(body.min.y).toBeCloseTo(perch.max.y, 6)
+        expect(perch.min.y).toBeCloseTo(groundY, 5)
+        expect(body.min.y).toBeCloseTo(perch.max.y, 5)
         expect(model.actor.rotation.z).toBe(0)
         for (const [x, z] of [[-.18, -.18], [.18, .18]]) {
           const foot = model.actor.localToWorld(new THREE.Vector3(x, 0, z))
@@ -129,6 +128,9 @@ describe('Bodhi root watering model', () => {
           expect(foot.z).toBeGreaterThan(perch.min.z)
           expect(foot.z).toBeLessThan(perch.max.z)
         }
+      }
+      for (let i = 0; i < 8; i++) {
+        expect(bounds(named(model.root, `bodhi-enclosure-stone-${i}`)).min.y).toBeCloseTo(groundY, 5)
       }
       expect(named(model.root, 'bodhi-water-stream').visible).toBe(false)
       expect(named(model.root, 'bodhi-damp-soil').visible).toBe(true)

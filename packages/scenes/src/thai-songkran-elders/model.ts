@@ -1,6 +1,7 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 
 const V=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
 const smooth=(x:number)=>{const t=THREE.MathUtils.clamp(x,0,1);return t*t*(3-2*t)}
@@ -11,19 +12,31 @@ export function createSongkranModel(){
  const root=new THREE.Group();root.name='songkran-subject'
  const make=(name:string,g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D=root)=>{const o=new THREE.Mesh(g,m);o.name='songkran-'+name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  const matte=(color:number,roughness=.9)=>new THREE.MeshStandardMaterial({color,roughness})
- const skin=matte(0xd49a73),shirt=matte(0xf5e7bb),pants=matte(0x468b8a),wood=matte(0x9c6c43),hair=matte(0xe1e0d3),dark=matte(0x55595a),stone=matte(0xdacfc0),metal=new THREE.MeshStandardMaterial({color:0x9dc2c3,metalness:.35,roughness:.42})
- applyCraftSurface(wood, { kind: 'wood', strength: .4 })
+ const skin=matte(0xd49a73),shirt=matte(0xf5e7bb),pants=matte(0x468b8a),wood=matte(0x9c6c43),legWood=matte(0x885c37),sideWood=matte(0x8e613b),hair=matte(0xe1e0d3),dark=matte(0x55595a),stone=matte(0xdacfc0),metal=new THREE.MeshStandardMaterial({color:0x9dc2c3,metalness:.35,roughness:.42})
+ applyCraftSurface(wood, { kind: 'wood', strength: .4, axis: 'x' })
+ applyCraftSurface(legWood, { kind: 'wood', strength: .42, axis: 'y' })
+ applyCraftSurface(sideWood, { kind: 'wood', strength: .40, axis: 'z' })
  applyCraftSurface(shirt, { kind: 'fabric', strength: .26 })
  applyCraftSurface(pants, { kind: 'fabric', strength: .26 })
  applyCraftSurface(metal, { kind: 'metal', strength: .45 })
  applyCraftSurface(stone, { kind: 'stone', strength: .4 })
 
- const box=(name:string,size:number[],p:number[],m:THREE.Material,parent:THREE.Object3D=root)=>{const o=make(name,new THREE.BoxGeometry(...size as [number,number,number]),m,parent);o.position.set(...p as [number,number,number]);return o}
+ const GROUND_Y=.0175
+ const roundedBox=(name:string,size:number[],p:number[],m:THREE.Material,parent:THREE.Object3D=root,radius=.014)=>{const r=Math.min(radius,size[0]!/3,size[1]!/3,size[2]!/3);const o=make(name,new RoundedBoxGeometry(size[0]!,size[1]!,size[2]!,2,r),m,parent);o.position.set(...p as [number,number,number]);return o}
  const sphere=(name:string,p:number[],scale:number[],m:THREE.Material,parent:THREE.Object3D=root)=>{const o=make(name,new THREE.SphereGeometry(1,20,12),m,parent);o.position.set(...p as [number,number,number]);o.scale.set(...scale as [number,number,number]);return o}
  const link=(name:string,a:THREE.Vector3,b:THREE.Vector3,r:number,m:THREE.Material,parent:THREE.Object3D)=>{const o=make(name,new THREE.CapsuleGeometry(r,a.distanceTo(b),4,12),m,parent);o.position.copy(a).add(b).multiplyScalar(.5);o.quaternion.setFromUnitVectors(V(0,1,0),b.clone().sub(a).normalize());return o}
  const bench=new THREE.Group();bench.name='songkran-bench';root.add(bench)
- box('bench-seat',[1.04,.08,.64],[0,.56,-.46],wood,bench)
- for(const x of[-.40,.40])for(const z of[-.68,-.24])box('bench-leg-'+x+'-'+z,[.09,.52,.09],[x,.26,z],wood,bench)
+ // Chamfered elder stool with vertical-grain legs, aprons, and lower stretchers grounded cleanly on +0.0175.
+ roundedBox('bench-seat',[1.04,.08,.64],[0,.56,-.46],wood,bench,.016)
+ const legH=.53-GROUND_Y
+ for(const x of[-.40,.40])for(const z of[-.68,-.24])roundedBox('bench-leg-'+x+'-'+z,[.09,legH,.09],[x,GROUND_Y+legH/2,z],legWood,bench,.014)
+ roundedBox('bench-apron-front',[.76,.07,.045],[0,.485,-.24],wood,bench,.010)
+ roundedBox('bench-apron-back',[.76,.07,.045],[0,.485,-.68],wood,bench,.010)
+ roundedBox('bench-side-apron-left',[.045,.07,.40],[-.40,.485,-.46],sideWood,bench,.010)
+ roundedBox('bench-side-apron-right',[.045,.07,.40],[.40,.485,-.46],sideWood,bench,.010)
+ roundedBox('bench-side-stretcher-left',[.048,.046,.42],[-.40,.175,-.46],sideWood,bench,.010)
+ roundedBox('bench-side-stretcher-right',[.048,.046,.42],[.40,.175,-.46],sideWood,bench,.010)
+ roundedBox('bench-stretcher',[.80,.044,.048],[0,.175,-.46],wood,bench,.010)
  const elder=new THREE.Group();elder.name='songkran-elder';root.add(elder)
  sphere('torso',[0,.95,-.46],[.34,.35,.22],shirt,elder)
  sphere('hips',[0,.68,-.43],[.30,.08,.20],pants,elder)
@@ -31,7 +44,7 @@ export function createSongkranModel(){
   const x=side*.19
   link('thigh-'+side,V(x,.70,-.42),V(x,.70,.04),.10,pants,elder)
   link('shin-'+side,V(x,.60,.04),V(x,.16,.04),.09,pants,elder)
-  sphere('shoe-'+side,[x,.065,.10],[.105,.065,.17],dark,elder)
+  sphere('shoe-'+side,[x,GROUND_Y+.065,.10],[.105,.065,.17],dark,elder)
   link('sleeve-'+side,V(side*.26,1.07,-.42),V(side*.38,.88,-.13),.105,shirt,elder)
   link('forearm-'+side,V(side*.38,.88,-.12),V(side*.105,.91,.31),.055,skin,elder)
  }
@@ -51,15 +64,18 @@ export function createSongkranModel(){
   for(let i=0;i<4;i++){const fx=x+(i-1.5)*.042;hands.push(link('finger-'+side+'-'+i,V(fx,.926,.51),V(fx,.926,.60+(i===1||i===2?.025:0)),.020,skin,elder))}
   hands.push(link('thumb-'+side,V(x+side*.07,.919,.37),V(x+side*.13,.922,.46),.025,skin,elder))
  }
- const basin=make('basin',vessel([[0,0],[.40,0],[.46,.025],[.50,.18],[.474,.18],[.438,.035],[.39,.024],[0,.024]]),metal);basin.position.set(0,0,.80)
- const pad=make('pad',new THREE.CylinderGeometry(.30,.32,.06,40),stone);pad.position.set(-.80,.03,.60)
+ // Seat the catch basin and chamfered stone water-bowl pedestal cleanly onto the courtyard flagstones (+0.0175).
+ const basin=make('basin',vessel([[0,0],[.40,0],[.46,.025],[.50,.18],[.474,.18],[.438,.035],[.39,.024],[0,.024]]),metal);basin.position.set(0,GROUND_Y,.80)
+ const padProfile=[[0,GROUND_Y],[.308,GROUND_Y],[.322,GROUND_Y+.0065],[.322,GROUND_Y+.014],[.304,GROUND_Y+.021],[.308,.052],[.294,.060],[0,.060]]
+ const padGeo=new THREE.LatheGeometry(padProfile.map(([r,y])=>new THREE.Vector2(r!,y!)),48);padGeo.computeVertexNormals()
+ const pad=make('pad',padGeo,stone);pad.position.set(-.80,0,.60)
  const cup=new THREE.Group();cup.name='songkran-cup-root';root.add(cup)
  const bowl=make('bowl',vessel([[0,0],[.12,0],[.155,.018],[.26,.18],[.244,.18],[.138,.026],[.115,.018],[0,.018]]),metal,cup)
  const home=V(-.80,.06,.60),lifted=V(-.80,.74,.60),ready=V(-.38,1.15,.425)
  const waterMaterial=createRitualMaterial({color:0x93d8e6,transparent:true,opacity:.62,roughness:.15,metalness:0,side:THREE.DoubleSide,depthWrite:false},{kind:'water',strength:.3})
  const waterGeometry=new THREE.BufferGeometry();waterGeometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(256*9),3));waterGeometry.setDrawRange(0,0)
  const water=make('water-surface',waterGeometry,waterMaterial);water.userData.effect=true;water.castShadow=false
- const caught=make('caught-water',new THREE.CircleGeometry(.422,48),waterMaterial);caught.rotation.x=-Math.PI/2;caught.position.set(0,.027,.80);caught.userData.effect=true;caught.castShadow=false
+ const caught=make('caught-water',new THREE.CircleGeometry(.422,48),waterMaterial);caught.rotation.x=-Math.PI/2;caught.position.set(0,GROUND_Y+.027,.80);caught.userData.effect=true;caught.castShadow=false
  const stream=make('pour-stream',new THREE.CylinderGeometry(.005,.005,1,12),waterMaterial);stream.userData.effect=true;stream.castShadow=false
  const runoff=make('runoff',new THREE.CylinderGeometry(.003,.003,1,12),waterMaterial);runoff.userData.effect=true;runoff.castShadow=false
  const lipGeometry=new THREE.BufferGeometry();lipGeometry.setAttribute('position',new THREE.Float32BufferAttribute([.244,.1801,-.005,.28,.1801,-.005,.28,.1801,.005,.244,.1801,-.005,.28,.1801,.005,.244,.1801,.005],3));lipGeometry.computeVertexNormals()
@@ -97,7 +113,7 @@ export function createSongkranModel(){
    stream.visible=runoff.visible=t>.22&&t<.60&&cup.rotation.z<-.55
   }
   root.updateMatrixWorld(true);if(!effects)return
-  liquid(fill);caught.position.y=.027+fill*.026
+  liquid(fill);caught.position.y=GROUND_Y+.027+fill*.026
   if(stream.visible){
    // Water crosses the low lip on a thin surface sheet before falling outside the wall.
    lipFlow.visible=true;streamStart.copy(V(.28,.1801,0).applyMatrix4(cup.matrixWorld));

@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -41,10 +42,11 @@ const COPY = {
 
 type Checkpoint = 0 | 1 | 2 | 3
 type Motion = { step: 0 | 1 | 2; time: number; from: THREE.Vector3 }
+const GROUND_Y = getEnvironmentSurfaceY('clootie-well-rag')
 const DRY = new THREE.Vector3(0.53, 0.76, 0.66)
 const DIPPED = new THREE.Vector3(-0.62, 0.83, 0.06)
 const WET = new THREE.Vector3(-0.45, 1.19, 0.28)
-const TIED = new THREE.Vector3(0.12, 1.46, 0.15)
+const TIED = new THREE.Vector3(0.12, 1.46, 0.110)
 const COLS = 16, ROWS = 30
 const SIM_NU = 9, SIM_NV = 15 // 135 particles
 const CLOTH_W = 0.48, CLOTH_H = 0.74
@@ -209,11 +211,11 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
 
   stoneColors.forEach(material => applyCraftSurface(material, { kind: 'stone', strength: .45 }))
 
-  // A low, open stone well. Separate beveled wedges preserve the dark opening
-  // and the visible water surface instead of closing it with a cylinder cap.
+  // A low, open stone well grounded onto the garden sand surface. Separate beveled wedges
+  // preserve the dark opening and visible water surface instead of closing it with a cap.
   const well = new THREE.Group()
   well.name = 'clootie-stone-well'
-  well.position.set(-0.62, 0, 0.06)
+  well.position.set(-0.62, GROUND_Y - 0.012, 0.06)
   world.add(well)
   for (let row = 0; row < 2; row++) for (let i = 0; i < 10; i++) {
     const angle = (i + row * 0.5) * Math.PI * 2 / 10
@@ -258,7 +260,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   for (let i = 0; i < 5; i++) {
     const pebble = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), stoneColors[i % 4])
     pebble.scale.set(0.08 + (i % 2) * 0.025, 0.028, 0.055)
-    pebble.position.set(-1.02 + i * 0.21, 0.031, 0.65 + Math.sin(i) * 0.06)
+    pebble.position.set(-1.02 + i * 0.21, GROUND_Y + 0.018, 0.65 + Math.sin(i) * 0.06)
     pebble.castShadow = pebble.receiveShadow = true
     world.add(pebble)
   }
@@ -268,7 +270,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   world.add(tree)
   // Continuously tapered aged trunk with grounded buttress flare at the base and gradual crown taper.
   tree.add(taperedTube(
-    [[0.80, 0.014, -0.08], [0.80, 0.16, -0.085], [0.73, 0.48, -0.10], [0.88, 0.92, -0.09], [0.77, 1.42, -0.12], [0.86, 1.88, -0.155], [0.75, 2.18, -0.195], [0.65, 2.34, -0.22]],
+    [[0.80, GROUND_Y - 0.004, -0.08], [0.80, 0.16, -0.085], [0.73, 0.48, -0.10], [0.88, 0.92, -0.09], [0.77, 1.42, -0.12], [0.86, 1.88, -0.155], [0.75, 2.18, -0.195], [0.65, 2.34, -0.22]],
     (t) => {
       const flare = 0.052 * Math.pow(Math.max(0, 1 - t / 0.16), 2.1)
       const body = THREE.MathUtils.lerp(0.128, 0.082, Math.pow(Math.min(1, t / 0.72), 1.05))
@@ -276,7 +278,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
       return flare + body * crownTaper
     },
     bark,
-    { tubularSegments: 36, radialSegments: 12, rootFlute: 1, minY: 0.005, seed: 3 },
+    { tubularSegments: 36, radialSegments: 12, rootFlute: 1, minY: GROUND_Y - 0.004, seed: 3 },
   ))
   // Grounded flaring roots tapering naturally into the earth (no chopped tube ends).
   const rootSpecs: readonly {
@@ -285,18 +287,18 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
     r1: number
     seed: number
   }[] = [
-    { pts: [[0.76, 0.25, -0.07], [0.63, 0.11, 0.02], [0.51, 0.036, 0.13], [0.43, 0.015, 0.21]], r0: 0.068, r1: 0.012, seed: 11 },
-    { pts: [[0.84, 0.25, -0.07], [0.97, 0.105, 0.02], [1.09, 0.035, 0.12], [1.18, 0.014, 0.20]], r0: 0.066, r1: 0.012, seed: 19 },
-    { pts: [[0.75, 0.22, -0.11], [0.62, 0.085, -0.18], [0.50, 0.022, -0.24]], r0: 0.056, r1: 0.011, seed: 29 },
-    { pts: [[0.85, 0.21, -0.11], [0.98, 0.08, -0.17], [1.10, 0.02, -0.22]], r0: 0.054, r1: 0.011, seed: 37 },
-    { pts: [[0.80, 0.20, -0.02], [0.80, 0.072, 0.09], [0.78, 0.017, 0.19]], r0: 0.048, r1: 0.011, seed: 43 },
+    { pts: [[0.76, 0.25, -0.07], [0.63, 0.082, 0.02], [0.51, 0.002, 0.13], [0.43, GROUND_Y + 0.006, 0.21]], r0: 0.068, r1: 0.012, seed: 11 },
+    { pts: [[0.84, 0.25, -0.07], [0.97, 0.078, 0.02], [1.09, 0.001, 0.12], [1.18, GROUND_Y + 0.005, 0.20]], r0: 0.066, r1: 0.012, seed: 19 },
+    { pts: [[0.75, 0.22, -0.11], [0.62, 0.058, -0.18], [0.50, GROUND_Y + 0.008, -0.24]], r0: 0.056, r1: 0.011, seed: 29 },
+    { pts: [[0.85, 0.21, -0.11], [0.98, 0.054, -0.17], [1.10, GROUND_Y + 0.007, -0.22]], r0: 0.054, r1: 0.011, seed: 37 },
+    { pts: [[0.80, 0.20, -0.02], [0.80, 0.048, 0.09], [0.78, GROUND_Y + 0.006, 0.19]], r0: 0.048, r1: 0.011, seed: 43 },
   ]
   for (const root of rootSpecs) {
     tree.add(taperedTube(
       root.pts,
       (t) => THREE.MathUtils.lerp(root.r0, root.r1, Math.pow(t, 0.88)),
       bark,
-      { tubularSegments: 16, radialSegments: 9, minY: 0.005, seed: root.seed },
+      { tubularSegments: 16, radialSegments: 9, minY: GROUND_Y - 0.004, seed: root.seed },
     ))
   }
   const branchPts: [number, number, number][] = [[0.77, 1.31, -0.1], [0.52, 1.4, -0.015], [0.24, 1.465, 0.03], [0.04, 1.455, 0.065]]
@@ -411,13 +413,13 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
     rotY: number
     seed: number
   }[] = [
-    { pos: [0.66, 0.004, 0.03], scale: [0.115, 0.052, 0.092], rotY: 0.4, seed: 11 },
-    { pos: [0.91, 0.004, 0.02], scale: [0.122, 0.056, 0.090], rotY: 1.9, seed: 23 },
-    { pos: [0.77, 0.004, 0.09], scale: [0.102, 0.042, 0.078], rotY: 2.8, seed: 37 },
-    { pos: [0.59, 0.004, 0.10], scale: [0.085, 0.032, 0.068], rotY: 0.95, seed: 47 },
-    { pos: [1.00, 0.004, 0.10], scale: [0.088, 0.034, 0.070], rotY: 3.6, seed: 61 },
-    { pos: [0.71, 0.004, -0.16], scale: [0.11, 0.046, 0.084], rotY: 4.4, seed: 73 },
-    { pos: [0.92, 0.004, -0.14], scale: [0.10, 0.044, 0.078], rotY: 5.2, seed: 89 },
+    { pos: [0.66, GROUND_Y - 0.002, 0.03], scale: [0.115, 0.052, 0.092], rotY: 0.4, seed: 11 },
+    { pos: [0.91, GROUND_Y - 0.002, 0.02], scale: [0.122, 0.056, 0.090], rotY: 1.9, seed: 23 },
+    { pos: [0.77, GROUND_Y - 0.002, 0.09], scale: [0.102, 0.042, 0.078], rotY: 2.8, seed: 37 },
+    { pos: [0.59, GROUND_Y - 0.002, 0.10], scale: [0.085, 0.032, 0.068], rotY: 0.95, seed: 47 },
+    { pos: [1.00, GROUND_Y - 0.002, 0.10], scale: [0.088, 0.034, 0.070], rotY: 3.6, seed: 61 },
+    { pos: [0.71, GROUND_Y - 0.002, -0.16], scale: [0.11, 0.046, 0.084], rotY: 4.4, seed: 73 },
+    { pos: [0.92, GROUND_Y - 0.002, -0.14], scale: [0.10, 0.044, 0.078], rotY: 5.2, seed: 89 },
   ]
   for (const [i, spec] of mossCushions.entries()) {
     const mossGeo = createMossClusterGeometry({ scale: spec.scale, seed: spec.seed })
@@ -477,10 +479,18 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   })
   const knot = new THREE.Group()
   knot.name = 'clootie-cotton-knot'
+  const wrapGeo = new THREE.TorusGeometry(0.053, 0.013, 10, 28)
+  const wrapBand = new THREE.Mesh(wrapGeo, cotton)
+  wrapBand.name = 'clootie-branch-wrap'
+  // Encircle the low overhanging branch centerline (z ≈ 0.051 at x = 0.12) snugly.
+  wrapBand.position.set(0, 0, -0.059)
+  wrapBand.rotation.y = Math.PI / 2 - 0.17
+  wrapBand.scale.set(1.05, 1.05, 1.0)
+  knot.add(wrapBand)
   const knotGeo = new THREE.TorusGeometry(0.043, 0.015, 7, 24)
   for (const side of [-1, 1]) {
     const loop = new THREE.Mesh(knotGeo, cotton)
-    loop.position.set(side * 0.027, -0.025, 0.008)
+    loop.position.set(side * 0.027, -0.020, -0.013)
     loop.rotation.y = side * 0.46
     loop.scale.set(0.72, 0.5, 1)
     knot.add(loop)
@@ -492,7 +502,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   const shadow = new THREE.Mesh(new THREE.PlaneGeometry(2.55, 1.55), shadowMat)
   shadow.name = 'clootie-contact-shadow'
   shadow.rotation.x = -Math.PI / 2
-  shadow.position.set(0.04, 0.005, 0.14)
+  shadow.position.set(0.04, GROUND_Y + 0.001, 0.14)
   world.add(shadow)
 
   // Lazy-loaded Rapier cloth host (135 particles, tensionOnly, real branch/trunk/well/ground colliders).
@@ -511,7 +521,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
     // into lush, volumetric vertical drapery folds instead of collapsing into a narrow strip.
     const topWidth = THREE.MathUtils.lerp(0.42, 0.145, tied)
     const archDrop = Math.pow(Math.abs(u - 0.5) * 2, 1.8) * THREE.MathUtils.lerp(0.024, 0.028, tied)
-    const zPleat = tied * (0.028 * Math.cos((u - 0.5) * Math.PI * 5) - 0.006) + (1 - tied) * 0.016 * Math.sin((u - 0.5) * Math.PI * 3)
+    const zPleat = tied * (0.028 * Math.cos((u - 0.5) * Math.PI * 5) + 0.006) + (1 - tied) * 0.016 * Math.sin((u - 0.5) * Math.PI * 3)
     return out.set(
       rag.position.x + (u - 0.5) * topWidth,
       rag.position.y - archDrop,
@@ -556,8 +566,8 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
         addSegmentCapsule(session, branchPts[i]!, branchPts[i + 1]!, 0.052)
       }
       addSegmentCapsule(session, [0.80, 0.14, -0.10], [0.79, 2.05, -0.15], 0.135)
-      session.addFixedCylinder({ x: -0.62, y: 0.22, z: 0.06 }, 0.54, 0.44, { friction: 0.7, restitution: 0.02 })
-      session.addFixedBox({ x: 0, y: -0.05, z: 0 }, { x: 5.0, y: 0.10, z: 5.0 }, { friction: 0.8, restitution: 0.02 })
+      session.addFixedCylinder({ x: -0.62, y: 0.22 + (GROUND_Y - 0.012), z: 0.06 }, 0.54, 0.44, { friction: 0.7, restitution: 0.02 })
+      session.addFixedBox({ x: 0, y: GROUND_Y - 0.05, z: 0 }, { x: 5.0, y: 0.10, z: 5.0 }, { friction: 0.8, restitution: 0.02 })
 
       // Keep weft compression resistance (`tensionOnly: false`) with soft bending so the gathered
       // top knot naturally buckles into 3 deep, volumetric woven-cotton drapery flutes below the knot.

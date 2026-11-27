@@ -23,8 +23,8 @@ const TITLE = '叶舟寄意'
 const HINTS = ['把花朵拖到折叶灯的花座。', '轻点烛芯，让叶舟亮起一点光。',
   '带着此刻的心意，把叶舟拖到水面涟漪。', '叶舟安静地漂在水面，心意留在这一刻。']
 const ACTIONS = ['安放花朵', '点亮烛芯', '轻推叶舟']
-const DOCK = new THREE.Vector3(-.31, .365, .62), WATER = new THREE.Vector3(.69, -.0425, -.42)
-const FLOWER = new THREE.Vector3(-1.02, .39, .58), SEAT = new THREE.Vector3(-.19, .20, .16)
+const DOCK = new THREE.Vector3(-.31, .3475, .62), WATER = new THREE.Vector3(.69, -.0425, -.42)
+const FLOWER = new THREE.Vector3(-1.02, .330, .58), SEAT = new THREE.Vector3(-.19, .20, .16)
 type Motion = { step: number; t: number; from: THREE.Vector3; text: string }
 
 /** Original folded banana-leaf float; the Thai festival branch only. */
@@ -49,7 +49,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   Object.assign(lights.key.shadow.camera, { left: -2, right: 2, top: 3, bottom: -2, near: .1, far: 12 })
   lights.key.shadow.normalBias = .02
   const world = new THREE.Group(); world.name = 'krathong-waterfront'; scene.add(world)
-  const riverGeometry = new THREE.PlaneGeometry(5, 46, 1, 1)
+  const riverGeometry = new THREE.PlaneGeometry(5.4, 46, 1, 1)
   riverGeometry.rotateX(-Math.PI / 2)
   const waterEffect = createStylizedWater({
     geometry: riverGeometry, normal: 'y', depth: .24,
@@ -58,7 +58,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   waterEffect.surface.position.set(0, -.045, -13)
   world.add(waterEffect.surface)
   const mat = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: .92 })
-  const wood = mat(0xb39471), endgrain = mat(0xd4b992)
+  const wood = mat(0xb39471), endgrain = mat(0xd4b992), postWood = mat(0xa88765)
   const leafFolds = [
     createBananaLeafMaterial('fold-0'),
     createBananaLeafMaterial('fold-1'),
@@ -68,13 +68,14 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   const leafLinerMat = createBananaLeafMaterial('liner')
   const leafBindingMat = createBananaLeafMaterial('binding')
   ;[wood, endgrain].forEach(material => applyCraftSurface(material, { kind: 'wood', strength: .4 }))
+  applyCraftSurface(postWood, { kind: 'wood', strength: .4, axis: 'y' })
   const add = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, p: THREE.Vector3, parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.position.copy(p)
     mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
-  // A short, supported landing joins the river environment; no floating display plinth.
-  for (let i = 0; i < 6; i++) add('krathong-dock-board', new RoundedBoxGeometry(1.91, .12, .205, 3, .025), i % 2 ? wood : endgrain, new THREE.Vector3(-.45, .29, .28 + i * .213))
-  for (const x of [-1.21, .30]) for (const z of [.36, 1.23]) add('krathong-dock-post', new THREE.CylinderGeometry(.066, .084, .42, 12), wood, new THREE.Vector3(x, .14, z))
+  // A short, supported landing joins the river environment bank cleanly; pilings reach into the riverbed.
+  for (let i = 0; i < 6; i++) add('krathong-dock-board', new RoundedBoxGeometry(3.16, .12, .205, 3, .025), i % 2 ? wood : endgrain, new THREE.Vector3(-1.075, .29, .28 + i * .213))
+  for (const x of [-2.35, -1.21, .30]) for (const z of [.36, 1.23]) add('krathong-dock-post', new THREE.CylinderGeometry(.066, .084, .72, 12), postWood, new THREE.Vector3(x, -.02, z))
   const boat = new THREE.Group(); boat.name = 'krathong-boat'; world.add(boat)
   add('krathong-banana-base', new THREE.CylinderGeometry(.40, .36, .105, 48), leafBaseMat, new THREE.Vector3(0, .055, 0), boat)
   // Each folded Bai Tong corner is a watertight thin shell with a supple central midrib ridge.

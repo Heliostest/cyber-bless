@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { createBojagiMatMaterials } from './mat-material'
@@ -108,12 +109,13 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     mesh.castShadow = mesh.receiveShadow = true; world.add(mesh); return mesh
   }
   const box = (name: string, size: XYZ, p: XYZ, material: THREE.Material) => add(name, new RoundedBoxGeometry(...size, 3, Math.min(.04, ...size.map(n => n / 3))), material, p)
-  // Only a low woven floor mat supports the cloth and little rounded parcel.
-  const floorMat = box('bojagi-woven-mat', [2.05, .055, 2.35], [0, .028, .1], matSuite.base)
+  // Ground the low woven floor mat onto the veranda deck (-0.035) and seat the cloth + parcel cleanly atop it.
+  const floorY = getEnvironmentSurfaceY('korean-bojagi-wrap')
+  const floorMat = box('bojagi-woven-mat', [2.05, .055, 2.35], [0, floorY + .0275, .1], matSuite.base)
   floorMat.userData.toonSurface = { outline: false }
   for (let n = 0; n < 19; n++) {
-    const weft = box(`bojagi-weft-${n}`, [1.96, .006, .010], [0, .058, -1.02 + n * .125], matSuite.weft)
-    const warp = box(`bojagi-warp-${n}`, [.008, .005, 2.24], [-.97 + n * .108, .057, .1], matSuite.warp)
+    const weft = box(`bojagi-weft-${n}`, [1.96, .006, .010], [0, floorY + .057, -1.02 + n * .125], matSuite.weft)
+    const warp = box(`bojagi-warp-${n}`, [.008, .005, 2.24], [-.97 + n * .108, floorY + .0565, .1], matSuite.warp)
     for (const strand of [weft, warp]) {
       strand.castShadow = false
       // Hidden outline edges would otherwise project the mat grid through
@@ -121,8 +123,8 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
       strand.userData.toonSurface = { outline: false }
     }
   }
-  const parcel = box('bojagi-parcel', [1, .58, 1], [0, .4, 0], cream)
-  const parcelLid = box('bojagi-parcel-lid', [1.015, .055, 1.015], [0, .672, 0], cream)
+  const parcel = box('bojagi-parcel', [1, .58, 1], [0, .322, 0], cream)
+  const parcelLid = box('bojagi-parcel-lid', [1.015, .055, 1.015], [0, .594, 0], cream)
   parcel.userData.toonSurface = { roughness: 0.85 }
   parcelLid.userData.toonSurface = { roughness: 0.85 }
 
@@ -161,11 +163,11 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
 
   const clothPoint = (u: number, v: number) => {
     const x = (u - v) * 1.05, z = (u + v) * 1.05, radius = Math.max(Math.abs(x), Math.abs(z))
-    if (radius <= .58) return new THREE.Vector3(x, .105, z)
+    if (radius <= .58) return new THREE.Vector3(x, .027, z)
     const length = (radius - .58) * 1.38, topLength = Math.max(0, length - .68)
     const shoulder = THREE.MathUtils.clamp((length - .46) / .22, 0, 1) * Math.PI / 2
     const finalRadius = Math.max(.11, .59 - .07 * (1 - Math.cos(shoulder)) - topLength * .70)
-    const finalHeight = .105 + Math.min(length, .46) + .14 * Math.sin(shoulder) + topLength * .055
+    const finalHeight = .027 + Math.min(length, .46) + .14 * Math.sin(shoulder) + topLength * .055
     // Every corner starts open. Angular weights share vertices across four
     // flaps, so folding one corner cannot split the connected square sheet.
     const weights = [z, -z, -x, x].map(n => THREE.MathUtils.smoothstep(n / radius, .28, .95))
@@ -173,7 +175,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     const fold = weights.reduce((sum, n, i) => sum + n * amounts[i]!, 0) / Math.max(total, .001)
     const openRadius = .58 + (radius - .58) * .65
     const r = THREE.MathUtils.lerp(openRadius, finalRadius, fold)
-    const openHeight = .105 - .09 * THREE.MathUtils.smoothstep(z / radius * openRadius, 1.26, 1.55)
+    const openHeight = .027 - .052 * THREE.MathUtils.smoothstep(z / radius * openRadius, 1.26, 1.55)
     let y = THREE.MathUtils.lerp(openHeight, finalHeight, fold) + Math.sin(fold * Math.PI) * Math.min(.84, length * .64)
     // Lift over the lid before moving inward. This is an authored cloth path,
     // with clearance against the complete rounded parcel rather than a clip.
@@ -184,10 +186,10 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     y += pleat + .009 * Math.sin(u * 17) * Math.sin(v * 19) * (1 - fold)
     // Include a wider shoulder margin: triangles between safe vertices must
     // also clear the rounded lid, including its curved outer lip.
-    if (Math.max(Math.abs(px), Math.abs(pz)) < .54) y = Math.max(y, .727)
+    if (Math.max(Math.abs(px), Math.abs(pz)) < .54) y = Math.max(y, .649)
     const p = new THREE.Vector3(px, y, pz)
     if (at < 4 && heldOffset.lengthSq()) p.addScaledVector(heldOffset, weights[at]! * THREE.MathUtils.smoothstep(radius, .65, 1.8))
-    if (Math.max(Math.abs(p.x), Math.abs(p.z)) < .54 && p.y > .11) p.y = Math.max(p.y, .727)
+    if (Math.max(Math.abs(p.x), Math.abs(p.z)) < .54 && p.y > .032) p.y = Math.max(p.y, .649)
     return p
   }
 
@@ -230,15 +232,15 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     const f = fOverride ?? amounts[n]!
     const lAmt = looseOverride ?? looseAmount
     const tAmt = tieOverride ?? tieAmount
-    const side = name === 'right' ? 1 : -1, height = .79 + (1 - tAmt) * .09, radius = .09 + (1 - tAmt) * .12
+    const side = name === 'right' ? 1 : -1, height = .712 + (1 - tAmt) * .09, radius = .09 + (1 - tAmt) * .12
     const direction = new THREE.Vector3(name === 'left' ? -1 : name === 'right' ? 1 : 0, 0, name === 'near' ? 1 : name === 'far' ? -1 : 0)
     const opened = [start, start.clone().addScaledVector(direction, .10).add(new THREE.Vector3(0, .018, 0)), start.clone().addScaledVector(direction, .23)]
     let closed: THREE.Vector3[]
-    if (name === 'near') closed = [start, new THREE.Vector3(-.08, .82, .14), new THREE.Vector3(-.16, .75, .39)]
-    else if (name === 'far') closed = [start, new THREE.Vector3(.02, .84, -.04), new THREE.Vector3(.11, .82, .23), new THREE.Vector3(.18, .75, .43)]
+    if (name === 'near') closed = [start, new THREE.Vector3(-.08, .742, .14), new THREE.Vector3(-.16, .672, .39)]
+    else if (name === 'far') closed = [start, new THREE.Vector3(.02, .762, -.04), new THREE.Vector3(.11, .742, .23), new THREE.Vector3(.18, .672, .43)]
     else {
-      const flat = [start, new THREE.Vector3(side * .34, .82, .05), new THREE.Vector3(side * .59, .75, .11), new THREE.Vector3(side * .78, .59, .17)]
-      const knotted = [start, new THREE.Vector3(side * .17, height, -.03), new THREE.Vector3(side * radius, height + .06, -.13), new THREE.Vector3(-side * radius * .6, height + .08, -.02), new THREE.Vector3(-side * radius * .5, height + .025, .13), new THREE.Vector3(side * .22, height, .13), new THREE.Vector3(side * .57, .735, .15), new THREE.Vector3(side * (.70 + tAmt * .19), .57 - tAmt * .14, .17)]
+      const flat = [start, new THREE.Vector3(side * .34, .742, .05), new THREE.Vector3(side * .59, .672, .11), new THREE.Vector3(side * .78, .512, .17)]
+      const knotted = [start, new THREE.Vector3(side * .17, height, -.03), new THREE.Vector3(side * radius, height + .06, -.13), new THREE.Vector3(-side * radius * .6, height + .08, -.02), new THREE.Vector3(-side * radius * .5, height + .025, .13), new THREE.Vector3(side * .22, height, .13), new THREE.Vector3(side * .57, .657, .15), new THREE.Vector3(side * (.70 + tAmt * .19), .492 - tAmt * .14, .17)]
       const a = new THREE.CatmullRomCurve3(flat), b = new THREE.CatmullRomCurve3(knotted)
       closed = Array.from({ length: 9 }, (_, i) => a.getPoint(i / 8).lerp(b.getPoint(i / 8), lAmt))
     }
@@ -287,14 +289,14 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
 
   function clampClothOutsideParcelAndFloor(p: THREE.Vector3): THREE.Vector3 {
     const inMat = Math.abs(p.x) <= 1.03 && p.z >= -1.08 && p.z <= 1.28
-    const floorY = inMat ? 0.068 : 0.014
-    if (p.y < floorY) p.y = floorY
+    const minY = inMat ? 0.028 : -0.026
+    if (p.y < minY) p.y = minY
     // Keep cloth triangles strictly outside the rounded cream parcel & lid.
-    if (p.y > 0.112) {
+    if (p.y > 0.034) {
       const ax = Math.abs(p.x), az = Math.abs(p.z)
       if (ax < 0.535 && az < 0.535) {
-        if (p.y >= 0.62) {
-          p.y = Math.max(p.y, 0.728)
+        if (p.y >= 0.542) {
+          p.y = Math.max(p.y, 0.650)
         } else if (ax >= az) {
           p.x = (p.x >= 0 ? 1 : -1) * 0.535
         } else {
@@ -312,14 +314,14 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     const fold = clothFoldWeight(u, v)
 
     // Quiet gravity rest for open sheet: settles onto woven straw mat and drapes all four
-    // overhanging corners cleanly over the raised mat rim onto the wood floor.
+    // overhanging corners cleanly over the raised mat rim onto the wood veranda deck.
     const openW = (1 - fold) * THREE.MathUtils.smoothstep(radius, 0.58, 0.78)
     if (openW > 1e-4) {
       const overX = THREE.MathUtils.smoothstep(Math.abs(p.x), 1.01, 1.20)
       const overZPos = THREE.MathUtils.smoothstep(p.z, 1.26, 1.46)
       const overZNeg = THREE.MathUtils.smoothstep(-p.z, 1.06, 1.26)
       const overMat = Math.max(overX, overZPos, overZNeg)
-      const targetOpenY = THREE.MathUtils.lerp(0.074, 0.022, overMat)
+      const targetOpenY = THREE.MathUtils.lerp(0.032, -0.018, overMat)
         + 0.004 * Math.sin(u * 9 + v * 7) * (1 - overMat * 0.5)
       const liftFade = heldOffset.lengthSq() > 1e-6
         ? 1 - THREE.MathUtils.clamp(heldOffset.y / 0.25, 0, 1)
@@ -331,8 +333,8 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     // on parcel sides/shoulders while strictly preserving parcel clearance.
     if (fold > 0.05) {
       const length = (radius - 0.58) * 1.38
-      const sideBand = THREE.MathUtils.smoothstep(p.y, 0.14, 0.28) * (1 - THREE.MathUtils.smoothstep(p.y, 0.62, 0.72))
-      const shoulderBand = THREE.MathUtils.smoothstep(p.y, 0.58, 0.70) * (1 - THREE.MathUtils.smoothstep(length, 0.78, 1.05))
+      const sideBand = THREE.MathUtils.smoothstep(p.y, 0.062, 0.202) * (1 - THREE.MathUtils.smoothstep(p.y, 0.542, 0.642))
+      const shoulderBand = THREE.MathUtils.smoothstep(p.y, 0.502, 0.622) * (1 - THREE.MathUtils.smoothstep(length, 0.78, 1.05))
       const angle = Math.atan2(z, x)
       p.y -= fold * (0.011 * sideBand + 0.005 * shoulderBand)
       const broadFold = 0.005 * Math.sin(angle * 4 + length * 3.2) * sideBand * fold
@@ -356,7 +358,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
       const end = startPt.clone().addScaledVector(direction, 0.23)
       const clampOpen = (pt: THREE.Vector3, bump: number) => {
         const inMat = Math.abs(pt.x) <= 1.03 && pt.z >= -1.08 && pt.z <= 1.28
-        pt.y = Math.max(inMat ? 0.072 : 0.020, Math.min(pt.y, (inMat ? 0.078 : 0.026) + bump))
+        pt.y = Math.max(inMat ? 0.031 : -0.021, Math.min(pt.y, (inMat ? 0.037 : -0.015) + bump))
         return pt
       }
       return new THREE.CatmullRomCurve3([startPt.clone(), clampOpen(mid, 0.005), clampOpen(end, 0)])
@@ -369,8 +371,8 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
         startPt.clone().addScaledVector(direction, 0.23),
       ]
       const closed = name === 'near'
-        ? [startPt.clone(), new THREE.Vector3(-0.08, 0.812, 0.14), new THREE.Vector3(-0.135, 0.764, 0.295), new THREE.Vector3(-0.175, 0.736, 0.425)]
-        : [startPt.clone(), new THREE.Vector3(0.02, 0.832, -0.04), new THREE.Vector3(0.11, 0.812, 0.21), new THREE.Vector3(0.158, 0.762, 0.345), new THREE.Vector3(0.192, 0.736, 0.455)]
+        ? [startPt.clone(), new THREE.Vector3(-0.08, 0.734, 0.14), new THREE.Vector3(-0.135, 0.686, 0.295), new THREE.Vector3(-0.175, 0.658, 0.425)]
+        : [startPt.clone(), new THREE.Vector3(0.02, 0.754, -0.04), new THREE.Vector3(0.11, 0.734, 0.21), new THREE.Vector3(0.158, 0.684, 0.345), new THREE.Vector3(0.192, 0.658, 0.455)]
       const a = new THREE.CatmullRomCurve3(opened), b = new THREE.CatmullRomCurve3(closed)
       return new THREE.CatmullRomCurve3(Array.from({ length: 15 }, (_, i) => a.getPoint(i / 14).lerp(b.getPoint(i / 14), f)))
     }
@@ -385,7 +387,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     if (drapeWeight < 1e-4) return base
 
     const side = name === 'right' ? 1 : -1
-    const height = 0.79 + (1 - tieAmount) * 0.09
+    const height = 0.712 + (1 - tieAmount) * 0.09
     const radius = 0.09 + (1 - tieAmount) * 0.12
     const knotLoop = new THREE.CatmullRomCurve3([
       startPt.clone(),
@@ -397,13 +399,13 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     ], false, 'centripetal')
     const tailDrop = new THREE.CatmullRomCurve3([
       new THREE.Vector3(side * 0.22, height, 0.13),
-      new THREE.Vector3(side * 0.49, 0.780, 0.145),
-      new THREE.Vector3(side * 0.635, 0.715, 0.160),
-      new THREE.Vector3(side * 0.658, 0.545, 0.174),
-      new THREE.Vector3(side * 0.662, 0.355, 0.184),
-      new THREE.Vector3(side * 0.668, 0.165, 0.192),
-      new THREE.Vector3(side * 0.718, 0.088, 0.197),
-      new THREE.Vector3(side * 0.758, 0.080, 0.199),
+      new THREE.Vector3(side * 0.49, 0.702, 0.145),
+      new THREE.Vector3(side * 0.635, 0.637, 0.160),
+      new THREE.Vector3(side * 0.658, 0.467, 0.174),
+      new THREE.Vector3(side * 0.662, 0.277, 0.184),
+      new THREE.Vector3(side * 0.668, 0.095, 0.192),
+      new THREE.Vector3(side * 0.718, 0.042, 0.197),
+      new THREE.Vector3(side * 0.758, 0.034, 0.199),
     ], false, 'centripetal')
     const drapedPts: THREE.Vector3[] = []
     for (let i = 0; i <= 11; i++) drapedPts.push(knotLoop.getPoint(i / 11))
@@ -486,14 +488,14 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     isReducedMotion: reduced,
     onReady(session) {
       if (disposed) return
-      // Fixed rigid colliders: wrapped cream parcel + lid, woven straw floor mat, and wooden floor.
-      session.addFixedBox({ x: 0, y: 0.405, z: 0 }, { x: 1.05, y: 0.64, z: 1.05 }, { friction: 0.72, restitution: 0.02 })
-      session.addFixedBox({ x: 0, y: 0.032, z: 0.10 }, { x: 2.05, y: 0.064, z: 2.35 }, { friction: 0.82, restitution: 0.02 })
-      session.addFixedBox({ x: 0, y: -0.04, z: 0 }, { x: 6.0, y: 0.08, z: 6.0 }, { friction: 0.85, restitution: 0.02 })
+      // Fixed rigid colliders: wrapped cream parcel + lid, woven straw floor mat, and wooden veranda deck.
+      session.addFixedBox({ x: 0, y: 0.327, z: 0 }, { x: 1.05, y: 0.64, z: 1.05 }, { friction: 0.72, restitution: 0.02 })
+      session.addFixedBox({ x: 0, y: floorY + 0.030, z: 0.10 }, { x: 2.05, y: 0.060, z: 2.35 }, { friction: 0.82, restitution: 0.02 })
+      session.addFixedBox({ x: 0, y: floorY - 0.04, z: 0 }, { x: 6.0, y: 0.08, z: 6.0 }, { friction: 0.85, restitution: 0.02 })
 
       // Coarse 13x13 diamond cloth aligned with bojagi's rotated (u-v, u+v) axes.
       clothBody = session.createCloth({
-        origin: { x: 0, y: 0.105, z: -2.1 },
+        origin: { x: 0, y: 0.027, z: -2.1 },
         du: { x: 2.1 / (SIM_N - 1), y: 0, z: 2.1 / (SIM_N - 1) },
         dv: { x: -2.1 / (SIM_N - 1), y: 0, z: 2.1 / (SIM_N - 1) },
         nu: SIM_N,
@@ -645,7 +647,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
           const kTailXZ = freeWeight * THREE.MathUtils.lerp(7.5, 2.2, (s - 0.56) / 0.44)
           const cDamp = THREE.MathUtils.lerp(19, 4.2, freeWeight)
           const sideSign = b === 3 ? 1 : -1
-          const shoulderPushX = freeWeight * (py > 0.60 ? sideSign * 2.2 : 0)
+          const shoulderPushX = freeWeight * (py > 0.522 ? sideSign * 2.2 : 0)
           const gravCancel = 9.81 * (1 - freeWeight)
           body.addParticleForce(j, {
             x: m * ((kKnot + kTailXZ) * (t.x - px) + shoulderPushX - cDamp * vx),
@@ -693,7 +695,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
   function surfaceNormalForRibbonPoint(p: THREE.Vector3, out: THREE.Vector3): THREE.Vector3 {
     // Smoothly align ribbon flatness with the parcel's vertical side walls when draping downward,
     // and horizontally flat when resting on top of the parcel or on the woven floor mat.
-    const onWall = THREE.MathUtils.smoothstep(p.y, 0.14, 0.24) * (1 - THREE.MathUtils.smoothstep(p.y, 0.64, 0.75))
+    const onWall = THREE.MathUtils.smoothstep(p.y, 0.062, 0.162) * (1 - THREE.MathUtils.smoothstep(p.y, 0.562, 0.672))
     const absX = Math.abs(p.x), absZ = Math.abs(p.z)
     if (onWall > 0.01 && (absX > 0.46 || absZ > 0.46)) {
       if (absX >= absZ) out.set(Math.sign(p.x) * onWall, 1 - onWall * 0.85, 0.12 * onWall)
@@ -745,10 +747,10 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
         for (let j = 1; j < BAND_SIM_PARTICLES; j++) {
           let x = pos[j * 3]!, y = pos[j * 3 + 1]!, z = pos[j * 3 + 2]!
           const inMat = Math.abs(x) <= 1.04 && z >= -1.08 && z <= 1.28
-          y = Math.max(y, inMat ? 0.072 : 0.018)
+          y = Math.max(y, inMat ? 0.031 : -0.022)
           // Keep ribbon strictly outside the wrapped parcel box so it rests cleanly on top/sides.
-          if (y > 0.10 && y < 0.732 && Math.abs(x) < 0.545 && Math.abs(z) < 0.545) {
-            if (y > 0.64) y = 0.736
+          if (y > 0.022 && y < 0.654 && Math.abs(x) < 0.545 && Math.abs(z) < 0.545) {
+            if (y > 0.562) y = 0.658
             else if (Math.abs(x) >= Math.abs(z)) x = (x >= 0 ? 1 : -1) * 0.548
             else z = (z >= 0 ? 1 : -1) * 0.548
           }
@@ -782,7 +784,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
         const up = new THREE.Vector3().crossVectors(tmpAcross, tangent).normalize()
         bandTip.position.copy(endPt).addScaledVector(tangent, .105).addScaledVector(up, .008)
         const inMat = Math.abs(bandTip.position.x) <= 1.04 && bandTip.position.z >= -1.08 && bandTip.position.z <= 1.28
-        bandTip.position.y = Math.max(bandTip.position.y, inMat ? 0.078 : 0.022)
+        bandTip.position.y = Math.max(bandTip.position.y, inMat ? 0.037 : -0.018)
         tmpBasisM.makeBasis(tangent, up, tmpAcross)
         bandTip.quaternion.setFromRotationMatrix(tmpBasisM)
       }
@@ -825,7 +827,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
   }
 
   const targets = [...corners.map(c => c.mesh), ...tips]
-  const dropPositions: XYZ[] = [[0, .85, .10], [0, .85, -.10], [-.10, .85, 0], [.10, .85, 0], [.38, .85, .08], [1.08, .51, .17]]
+  const dropPositions: XYZ[] = [[0, .772, .10], [0, .772, -.10], [-.10, .772, 0], [.10, .772, 0], [.38, .772, .08], [1.08, .432, .17]]
   const coverageSizes = [[.82, .60], [.82, .60], [.60, .82], [.60, .82]] as const
   const coverageOutlines: THREE.LineLoop<THREE.BufferGeometry, THREE.LineBasicMaterial>[] = []
   const drops = dropPositions.map((p, n) => {
@@ -857,7 +859,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     // Count the real reinforced patch, not the pointer or a screen-space radius.
     for (let i = 0; i < corner.position.count; i++) {
       const p = corner.mesh.localToWorld(new THREE.Vector3().fromBufferAttribute(corner.position, i))
-      if (Math.abs(p.x - center.x) <= width / 2 && Math.abs(p.z - center.z) <= depth / 2 && p.y >= .73 && p.y <= 1.02) covered++
+      if (Math.abs(p.x - center.x) <= width / 2 && Math.abs(p.z - center.z) <= depth / 2 && p.y >= .652 && p.y <= .942) covered++
     }
     return covered / corner.position.count >= .6
   }
@@ -867,7 +869,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
     const right = Array.from({ length: bandSegments + 1 }, (_, i) => bandPoint(3, i))
     for (let i = 3; i <= bandSegments; i++) {
       const p = bandPoint(2, i)
-      if (p.x < .045 || p.x > .48 || Math.abs(p.z) > .45 || p.y < .735 || p.y > 1.04) continue
+      if (p.x < .045 || p.x > .48 || Math.abs(p.z) > .45 || p.y < .657 || p.y > .962) continue
       if (right.some(q => Math.hypot(p.x - q.x, p.z - q.z) < .085 && Math.abs(p.y - q.y) < .12)) return true
     }
     return false
@@ -928,7 +930,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
       down.set(x, y); dragging = true; moved = invalid = false
       const source = targets[at]!.localToWorld(new THREE.Vector3(...GRIP))
       from.copy(project(source)); to.copy(project(drops[at]!.getWorldPosition(new THREE.Vector3())))
-      if (at < 5) plane.set(new THREE.Vector3(0, 1, 0), -.85)
+      if (at < 5) plane.set(new THREE.Vector3(0, 1, 0), -.772)
       else {
         plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), source)
         oppositeTail.copy(tips[0]!.localToWorld(new THREE.Vector3(...GRIP))); restSpan = source.distanceTo(oppositeTail)
@@ -998,7 +1000,7 @@ export function createKoreanBojagiWrap(ctx: SceneContext): SceneInstance {
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 7 || !prepareInput()) return; if (at < 6) begin(); else finish() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
-    const aspect = sizeStage(canvas, renderer, style, camera), targetPoint = new THREE.Vector3(0, .48, .25), direction = new THREE.Vector3(.16, 2.6, 1.2).normalize()
+    const aspect = sizeStage(canvas, renderer, style, camera), targetPoint = new THREE.Vector3(0, .402, .25), direction = new THREE.Vector3(.16, 2.6, 1.2).normalize()
     camera.position.copy(targetPoint).add(direction); camera.lookAt(targetPoint); camera.updateMatrixWorld(true)
     const inverseView = camera.quaternion.clone().invert(), tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), p = new THREE.Vector3()
     const saved = { step: at, amounts: [...amounts], looseAmount, tieAmount, heldOffset: heldOffset.clone() }

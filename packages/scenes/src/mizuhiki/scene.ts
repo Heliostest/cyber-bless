@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
@@ -7,6 +8,7 @@ import { wrapCanvasText } from '../canvas-text'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
+import { addObjectCradle } from '../cozy-furniture'
 import { createPathSweep } from '../path-sweep'
 import { createTouchTarget } from '../touch-target'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -564,6 +566,18 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group()
   world.name = 'mizuhiki-craft'
   scene.add(world)
+  // Low wooden presentation base grounding the folded washi packet (yBot = 0.032) onto the veranda deck (-0.035).
+  addObjectCradle(world, {
+    name: 'mizuhiki-stand',
+    width: 1.82,
+    depth: 2.38,
+    groundY: getEnvironmentSurfaceY('mizuhiki'),
+    surfaceY: 0.032,
+    style: 'pad',
+    kind: 'wood',
+    finish: 'birch',
+    footed: true,
+  })
   const envelope = new THREE.Group()
   envelope.name = 'mizuhiki-envelope'
   world.add(envelope)

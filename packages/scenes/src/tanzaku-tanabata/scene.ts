@@ -1,4 +1,7 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { addObjectCradle, addSteppedPedestal } from '../cozy-furniture'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -184,10 +187,40 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     }
     segGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
   }
+  const groundY = getEnvironmentSurfaceY('tanzaku-tanabata')
+  // Grounded oval wooden garden planter cradling the three bamboo stalks down to garden-path (-0.032).
+  addSteppedPedestal(world, {
+    name: 'tanzaku-bamboo-planter',
+    shape: 'oval',
+    radius: 0.66,
+    radiusZ: 0.38,
+    center: [0.025, -0.08],
+    groundY,
+    surfaceY: 0.118,
+    kind: 'wood',
+    finish: 'chestnut',
+    tiers: 2,
+  })
+  const soilMat = new THREE.MeshStandardMaterial({ color: 0x6f5b43, roughness: 0.96 })
+  const soilBed = new THREE.Mesh(new THREE.CylinderGeometry(0.57, 0.58, 0.014, 32), soilMat)
+  soilBed.name = 'tanzaku-bamboo-soil'
+  soilBed.scale.set(1, 1, 0.38 / 0.66)
+  soilBed.position.set(0.025, 0.114, -0.08)
+  soilBed.receiveShadow = true
+  soilBed.userData.toonSurface = { outline: false }
+  world.add(soilBed)
+
   const nodeGeo = new THREE.TorusGeometry(0.0545, 0.0082, 10, 24)
   const nodeBloomGeo = new THREE.TorusGeometry(0.0552, 0.0046, 8, 24)
+  // Distinct lower root stub parameters (radiusTop 0.056, height 0.064) keep hanging-supports.test.ts
+  // CylinderGeometry(0.05, 0.056, 0.5) lookup exact while grounding the stalks below y = -0.032.
+  const rootStubGeo = new THREE.CylinderGeometry(0.056, 0.064, 0.064, 24)
   const stalkXs = [-0.35, 0.05, 0.4]
   stalkXs.forEach((x, s) => {
+    const rootStub = new THREE.Mesh(rootStubGeo, nodeMat)
+    rootStub.name = `tanzaku-bamboo-root-${s}`
+    rootStub.position.set(x, -0.010, -0.2 + s * 0.12)
+    bamboo.add(rootStub)
     const segments = 5 + (s % 2)
     for (let i = 0; i < segments; i++) {
       const seg = new THREE.Mesh(segGeo, stalkMats[(s * 3 + i) % stalkMats.length]!)
@@ -425,6 +458,31 @@ export function createTanzakuTanabata(ctx: SceneContext): SceneInstance {
     breezeStrength: 1.0,
   })
   stripVisuals.forEach(syncHoleAnchor)
+  // Low grounded wooden tray beneath the initial unhung paper strip so it rests on a stand
+  // rather than hovering above the garden sand (without moving looseHome or paper-sheet vertices).
+  const stripTray = addObjectCradle(world, {
+    name: 'tanzaku-strip-tray',
+    width: 0.42,
+    depth: 0.26,
+    center: [1.27, 1.02],
+    groundY,
+    surfaceY: 0.058,
+    style: 'tray',
+    kind: 'wood',
+    finish: 'birch',
+    lipHeight: 0.014,
+    footed: true,
+  })
+  const restBarMat = applyCraftSurface(
+    new THREE.MeshStandardMaterial({ color: 0x997d58, roughness: 0.82 }),
+    { kind: 'wood', axis: 'x', scale: 0.85, strength: 0.36 },
+  )
+  const restBar = new THREE.Mesh(new RoundedBoxGeometry(0.18, 0.072, 0.026, 2, 0.006), restBarMat)
+  restBar.name = 'tanzaku-strip-tray-backrest'
+  restBar.position.set(-0.06, 0.058 - groundY + 0.034, -0.055)
+  restBar.castShadow = restBar.receiveShadow = true
+  stripTray.root.add(restBar)
+
   // Generous pick target around the loose strip.
   const pickZone = new THREE.Mesh(
     new THREE.SphereGeometry(0.45, 12, 8),

@@ -500,3 +500,81 @@ export function applyBodhiBarkShading(
   }
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
 }
+
+function buildBodhiSoilPixels(): PixelBuffers {
+  const key = 'bodhi-soil-loam-v1'
+  const existing = cachedPixels.get(key)
+  if (existing) return existing
+
+  const size = 256
+  const color = new Uint8Array(size * size * 4)
+  const bump = new Uint8Array(size * size * 4)
+  const roughness = new Uint8Array(size * size * 4)
+  // Anchored to original warm loam 0x93724f (147, 114, 79) with organic granular variation.
+  const dark = [108, 82, 54] as const
+  const mid = [147, 114, 79] as const
+  const light = [176, 141, 102] as const
+
+  for (let y = 0; y < size; y++) {
+    const v = y / size
+    for (let x = 0; x < size; x++) {
+      const u = x / size
+      const broad = periodicNoise(u * 4, v * 4, 4, 4, 701)
+      const crumb = periodicNoise(u * 14, v * 14, 14, 14, 733)
+      const grain = periodicNoise(u * 32, v * 32, 32, 32, 769)
+      const speck = hash2(x, y, 797) - 0.5
+
+      const t = THREE.MathUtils.clamp(broad * 0.44 + crumb * 0.36 + grain * 0.20 + speck * 0.14, 0, 1)
+      let r: number, g: number, b: number
+      if (t < 0.5) {
+        const k = t * 2
+        r = THREE.MathUtils.lerp(dark[0], mid[0], k)
+        g = THREE.MathUtils.lerp(dark[1], mid[1], k)
+        b = THREE.MathUtils.lerp(dark[2], mid[2], k)
+      } else {
+        const k = (t - 0.5) * 2
+        r = THREE.MathUtils.lerp(mid[0], light[0], k)
+        g = THREE.MathUtils.lerp(mid[1], light[1], k)
+        b = THREE.MathUtils.lerp(mid[2], light[2], k)
+      }
+
+      const idx = (y * size + x) * 4
+      color[idx] = THREE.MathUtils.clamp(Math.round(r), 0, 198)
+      color[idx + 1] = THREE.MathUtils.clamp(Math.round(g), 0, 168)
+      color[idx + 2] = THREE.MathUtils.clamp(Math.round(b), 0, 128)
+      color[idx + 3] = 255
+
+      const h = THREE.MathUtils.clamp(Math.round(128 + (crumb - 0.5) * 56 + (grain - 0.5) * 38 + speck * 22), 42, 224)
+      bump[idx] = bump[idx + 1] = bump[idx + 2] = h
+      bump[idx + 3] = 255
+
+      const rv = THREE.MathUtils.clamp(Math.round(244 - (grain - 0.5) * 16), 226, 255)
+      roughness[idx] = roughness[idx + 1] = roughness[idx + 2] = rv
+      roughness[idx + 3] = 255
+    }
+  }
+
+  const buffers = { color, bump, roughness, size }
+  cachedPixels.set(key, buffers)
+  return buffers
+}
+
+/** Deterministic matte root-bed loam material (stays earthy soil, never stone/ceramic). */
+export function createBodhiSoilMaterial(): THREE.MeshStandardMaterial {
+  const pixels = buildBodhiSoilPixels()
+  const map = makeTexture(pixels.color, pixels.size, THREE.SRGBColorSpace, THREE.RepeatWrapping, THREE.RepeatWrapping, [2, 2])
+  const bump = makeTexture(pixels.bump, pixels.size, THREE.NoColorSpace, THREE.RepeatWrapping, THREE.RepeatWrapping, [2, 2])
+  const rough = makeTexture(pixels.roughness, pixels.size, THREE.NoColorSpace, THREE.RepeatWrapping, THREE.RepeatWrapping, [2, 2])
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    map,
+    bumpMap: bump,
+    bumpScale: 0.008,
+    roughnessMap: rough,
+    roughness: 0.98,
+    metalness: 0,
+    envMapIntensity: 0.25,
+  })
+  bindTextureDisposal(mat, [map, bump, rough])
+  return mat
+}

@@ -1,6 +1,7 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
+import { addObjectCradle, addSteppedPedestal } from '../cozy-furniture'
 import {
  createMoldedLimbGeometry,
  createReplicaBarkMaterial,
@@ -307,7 +308,7 @@ export function createLamTsuenModel() {
  const root=new THREE.Group();root.name='lamtsuen-root'
  const subject=new THREE.Group();subject.name='lamtsuen-subject';root.add(subject)
  const mat=(color:number,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness})
- const bark=createReplicaBarkMaterial(),stone=mat(0xd8c7a1),orange=mat(0xf79831,.4),cordMat=mat(0xc54230),green=mat(0x557b49)
+ const bark=createReplicaBarkMaterial(),orange=mat(0xf79831,.4),cordMat=mat(0xc54230),green=mat(0x557b49)
  const {deepLeaf,midLeaf,sunLeaf}=createReplicaCanopyMaterials()
  // Traditional crimson-red xuan/wishing paper with fine UV-anchored pulp tooth,
  // restrained fibers (fine dyed xuan paper, not coarse raw-bark flecks), and highlight guard.
@@ -325,10 +326,46 @@ export function createLamTsuenModel() {
  })
  const holeMat=new THREE.MeshStandardMaterial({color:0x4a211d,roughness:.95})
  applyCraftSurface(cordMat,{kind:'cord',strength:.3})
- applyCraftSurface(stone,{kind:'stone',strength:.4})
  const mesh=(g:THREE.BufferGeometry,m:THREE.Material,p:THREE.Object3D,name:string)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;p.add(o);return o}
  const v=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
- const paving=mesh(new THREE.BoxGeometry(2.4,.1,2.5),stone,subject,'lamtsuen-paving');paving.position.set(0,-.015,.20)
+ // Compact chamfered stone tree-planter curb & wooden prep tray grounded on courtyard stones (-0.0475)
+ // replace the legacy 2.4x2.5m paving slab while preserving exact trunk & prop resting height (y = 0.035).
+ addSteppedPedestal(subject,{
+  name:'lamtsuen-planter-curb',
+  topName:'lamtsuen-planter-curb-top',
+  shape:'round',
+  kind:'stone',
+  radius:.42,
+  center:[-.76,-.82],
+  groundY:-.0475,
+  surfaceY:.035,
+  color:0xd8c7a1,
+  trimColor:0xc5b38c,
+  tiers:2,
+  moulding:true,
+ })
+ const prepTray=addObjectCradle(subject,{
+  name:'lamtsuen-prep-tray',
+  topName:'lamtsuen-prep-tray-top',
+  style:'tray',
+  kind:'wood',
+  finish:'cedar',
+  width:1.54,
+  depth:1.20,
+  center:[-.08,.80],
+  groundY:-.0475,
+  surfaceY:.035,
+  lipHeight:.018,
+  lipThickness:.028,
+  footed:true,
+ })
+ const trayNames=new Map<string,number>()
+ prepTray.root.traverse(o=>{
+  if(!o.name)return
+  const n=trayNames.get(o.name)??0
+  trayNames.set(o.name,n+1)
+  if(n>0)o.name=`${o.name}-${n}`
+ })
 
  // Modern conservation molded-fiberglass replica wishing tree skeleton:
  // gently curved tapering limbs with root-buttress base, cast fork collars,

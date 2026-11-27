@@ -370,7 +370,28 @@ export function createGodairikiModel() {
  applyCraftSurface(stoneMat, { kind: 'stone', strength: .4 })
 
  const make=(name:string,g:THREE.BufferGeometry,mat:THREE.Material,parent:THREE.Object3D=subject)=>{const mesh=new THREE.Mesh(g,mat);mesh.name=name;mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh}
- const ground=make('godairiki-gravel-bed',new THREE.CylinderGeometry(1.85,1.9,.07,64),new THREE.MeshStandardMaterial({color:0xd6cdb4,roughness:1}));ground.position.set(-.08,-.035,0);ground.geometry.scale(1,1,.72)
+ // Compact chamfered stone-curbed pebble bed grounded at courtyard flagstone surface (-0.0575..-0.064)
+ // replaces the oversized 3.8x2.74m plain gravel disc and brings stone relief to the bed and cobbles.
+ const roundedRect=(cx:number,hw:number,hd:number,r:number)=>{
+  const s=new THREE.Shape()
+  const x0=cx-hw,x1=cx+hw,y0=-hd,y1=hd
+  s.moveTo(x0+r,y0);s.lineTo(x1-r,y0);s.quadraticCurveTo(x1,y0,x1,y0+r)
+  s.lineTo(x1,y1-r);s.quadraticCurveTo(x1,y1,x1-r,y1)
+  s.lineTo(x0+r,y1);s.quadraticCurveTo(x0,y1,x0,y1-r)
+  s.lineTo(x0,y0+r);s.quadraticCurveTo(x0,y0,x0+r,y0)
+  return s
+ }
+ const bedMat=applyCraftSurface(new THREE.MeshStandardMaterial({color:0xd6cdb4,roughness:.96}),{kind:'stone',scale:1.5,strength:.42})
+ const curbMat=applyCraftSurface(new THREE.MeshStandardMaterial({color:0xbeb5a0,roughness:.92}),{kind:'stone',scale:1.0,strength:.40})
+ const bedGeo=new THREE.ExtrudeGeometry(roundedRect(.21,1.62,.85,.42),{depth:.064,steps:1,curveSegments:12,bevelEnabled:false})
+ bedGeo.rotateX(-Math.PI/2);bedGeo.translate(0,-.064,0);bedGeo.computeVertexNormals()
+ make('godairiki-gravel-bed',bedGeo,bedMat)
+ const curbShape=roundedRect(.21,1.70,.93,.48)
+ const curbHole=roundedRect(.21,1.60,.83,.40)
+ curbShape.holes.push(curbHole)
+ const curbGeo=new THREE.ExtrudeGeometry(curbShape,{depth:.068,steps:1,curveSegments:12,bevelEnabled:true,bevelSegments:2,bevelSize:.012,bevelThickness:.012})
+ curbGeo.rotateX(-Math.PI/2);curbGeo.translate(0,-.052,0);curbGeo.computeVertexNormals()
+ make('godairiki-bed-curb',curbGeo,curbMat)
 
  // Closed hollow kinchaku cloth pouch profile (24 rings): denser across mid-belly and sewn casing channel
  // so asymmetric gathered pleats and gravity-settle folds curve crisply with watertight pole closure.
@@ -684,9 +705,10 @@ export function createGodairikiModel() {
   rightCordTube.updateFromCurve(rightPts, cordRadiusFn)
  }
 
- // Individually spaced ordinary pebbles provide context without a shrine replica or tray.
- for(const [i,x,z,r] of [[0,-1.4,-.45,.11],[1,-1.42,.25,.10],[2,-.48,-.8,.12],[3,-.42,.68,.11],[4,-.36,.02,.09],[5,-1.25,.95,.1],[6,-.67,1.03,.08],[7,-.72,-1.05,.09],[8,-1.46,-.04,.07]]){
-  const g=new THREE.SphereGeometry(r,16,10);g.scale(1,.52,.85);const m=make(`godairiki-gravel-${i}`,g,new THREE.MeshStandardMaterial({color:[0xbac0ba,0xc3baa6,0xeee6ce][i!%3],roughness:1}));m.position.set(x!,r!*.52,z!)
+ // Individually spaced ordinary pebbles provide context inside the compact curbed bed without a shrine replica.
+ const cobbleMats=[0xbac0ba,0xc3baa6,0xeee6ce].map(color=>applyCraftSurface(new THREE.MeshStandardMaterial({color,roughness:.95}),{kind:'stone',scale:1.3,strength:.42}))
+ for(const [i,x,z,r] of [[0,-1.28,-.36,.095],[1,-1.29,.32,.09],[2,-.52,-.68,.105],[3,-.48,.62,.10],[4,-.38,.02,.085],[5,-1.18,.72,.08],[6,-.66,.74,.075],[7,-.74,-.74,.085],[8,-1.32,-.04,.068]]){
+  const g=new THREE.SphereGeometry(r,16,10);g.scale(1,.52,.85);const m=make(`godairiki-gravel-${i}`,g,cobbleMats[i!%3]!);m.position.set(x!,r!*.52,z!)
  }
  const roots:THREE.Group[]=[],targets:THREE.Mesh[]=[]
  // Characters are original stroke layouts on the upper stone surface, not copied artwork.

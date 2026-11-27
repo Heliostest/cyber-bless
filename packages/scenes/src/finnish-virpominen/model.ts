@@ -1,5 +1,6 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import {
  createPaperCraftPetalGeometry,
  createPaperFlowerCenterGeometry,
@@ -26,25 +27,34 @@ export function createVirpominenModel(){
  const catkinMat=createPussyWillowCatkinMaterial()
  const paperFlowers=createPaperFlowerMaterials()
  const doorWood=applyCraftSurface(material(0xb3a27b),{kind:'wood',strength:.4,axis:'y'})
+ const doorFloorWood=applyCraftSurface(material(0xb3a27b),{kind:'wood',strength:.4,axis:'x'})
+ const jambBlue=applyCraftSurface(blue.clone(),{kind:'wood',strength:.22,axis:'y'})
+ const lintelBlue=applyCraftSurface(blue.clone(),{kind:'wood',strength:.22,axis:'x'})
  const yellowCuff=applyCraftSurface(material(0xf2ce78),{kind:'fabric',strength:.25}),blueCuff=applyCraftSurface(blue.clone(),{kind:'fabric',strength:.25})
  applyCraftSurface(foil,{kind:'metal',strength:.4})
  applyCraftSurface(stone,{kind:'stone',strength:.45})
  const clean=(source:THREE.BufferGeometry)=>{const raw=source.index?source.toNonIndexed():source,p=raw.getAttribute('position'),uvAttr=raw.getAttribute('uv'),v:number[]=[],uvs:number[]=[];for(let i=0;i<p.count;i+=3){const a=new THREE.Vector3().fromBufferAttribute(p,i),b=new THREE.Vector3().fromBufferAttribute(p,i+1),c=new THREE.Vector3().fromBufferAttribute(p,i+2);if(new THREE.Triangle(a,b,c).getArea()>1e-12){v.push(...a.toArray(),...b.toArray(),...c.toArray());if(uvAttr)uvs.push(uvAttr.getX(i),uvAttr.getY(i),uvAttr.getX(i+1),uvAttr.getY(i+1),uvAttr.getX(i+2),uvAttr.getY(i+2))}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));if(uvAttr)g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.computeVertexNormals();if(raw!==source)raw.dispose();source.dispose();return g}
  const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material|THREE.Material[],parent:THREE.Object3D=root)=>{const o=new THREE.Mesh(clean(g),m);o.name=name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
  const ball=(name:string,p:number[],s:number[],mat:THREE.Material,parent:THREE.Object3D=root)=>{const o=mesh(name,new THREE.SphereGeometry(1,20,12),mat,parent);o.position.set(...p as [number,number,number]);o.scale.set(...s as [number,number,number]);return o}
- const box=(name:string,p:number[],s:number[],mat:THREE.Material)=>{const o=mesh(name,new THREE.BoxGeometry(...s as [number,number,number]),mat);o.position.set(...p as [number,number,number]);return o}
+ const roundedBox=(name:string,p:number[],s:number[],mat:THREE.Material,radius=.016)=>{const r=Math.min(radius,s[0]!/3,s[1]!/3,s[2]!/3);const o=mesh(name,new RoundedBoxGeometry(s[0]!,s[1]!,s[2]!,2,r),mat);o.position.set(...p as [number,number,number]);return o}
  const tube=(name:string,curve:THREE.Curve<THREE.Vector3>,radius:number,mat:THREE.Material,parent:THREE.Object3D=root,segments=24)=>{
   const radial=10,source=new THREE.TubeGeometry(curve,segments,radius,radial,false),positions=source.getAttribute('position'),raw=source.toNonIndexed(),values=Array.from(raw.getAttribute('position').array),uvs=Array.from(raw.getAttribute('uv').array)
   const face=(a:THREE.Vector3,b:THREE.Vector3,c:THREE.Vector3,ua:number,va:number,ub:number,vb:number,uc:number,vc:number)=>{values.push(...a.toArray(),...b.toArray(),...c.toArray());uvs.push(ua,va,ub,vb,uc,vc)}
   for(let j=0;j<radial;j++){face(curve.getPoint(0),new THREE.Vector3().fromBufferAttribute(positions,j),new THREE.Vector3().fromBufferAttribute(positions,j+1),0,.5,0,j/radial,0,(j+1)/radial);face(curve.getPoint(1),new THREE.Vector3().fromBufferAttribute(positions,segments*(radial+1)+j+1),new THREE.Vector3().fromBufferAttribute(positions,segments*(radial+1)+j),1,.5,1,(j+1)/radial,1,j/radial)}
   source.dispose();raw.dispose();const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(values,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));return mesh(name,g,mat,parent)
  }
- const threshold=box('stone-doorstep',[.40,.07,-.31],[2.12,.14,1.12],stone)
- for(const x of[-.46,1.26])box('painted-door-jamb-'+x,[x,1.14,-.59],[.13,2.0,.17],blue)
- box('painted-lintel',[.40,2.17,-.59],[1.85,.12,.17],blue)
- box('interior-wall',[.40,1.12,-.86],[1.6,1.96,.1],inside)
- box('door-inner-floor',[.40,.17,-.62],[1.6,.06,.40],doorWood)
- for(const x of[-.33,1.13])box('door-inset-shadow-'+x,[x,1.12,-.75],[.045,1.9,.10],doorWood)
+ // Chamfered stone doorstep seated cleanly onto the courtyard surface (+0.0175) and chamfered timber doorway frame.
+ roundedBox('stone-doorstep-base',[.40,.036,-.30],[2.16,.052,1.16],stone,.014)
+ const threshold=roundedBox('stone-doorstep',[.40,.076,-.31],[2.12,.128,1.12],stone,.022)
+ for(const x of[-.46,1.26]){
+  roundedBox('painted-door-jamb-'+x,[x,1.14,-.59],[.13,2.0,.17],jambBlue,.018)
+  roundedBox('painted-jamb-base-'+x,[x,.21,-.59],[.155,.14,.195],jambBlue,.014)
+ }
+ roundedBox('painted-lintel',[.40,2.17,-.59],[1.85,.12,.17],lintelBlue,.018)
+ roundedBox('painted-lintel-cap',[.40,2.24,-.58],[1.94,.048,.21],lintelBlue,.012)
+ roundedBox('interior-wall',[.40,1.12,-.86],[1.6,1.96,.1],inside,.014)
+ roundedBox('door-inner-floor',[.40,.17,-.62],[1.6,.06,.40],doorFloorWood,.012)
+ for(const x of[-.33,1.13])roundedBox('door-inset-shadow-'+x,[x,1.12,-.75],[.045,1.9,.10],doorWood,.010)
 
  const branch=new THREE.Group();branch.name='decorated-willow';root.add(branch)
  const stem=mesh('willow-stem',new THREE.CylinderGeometry(.012,.018,1.10,12),willowCraft.barkStem,branch);stem.position.y=.30;applyWillowTwigShading(stem.geometry,'stem')

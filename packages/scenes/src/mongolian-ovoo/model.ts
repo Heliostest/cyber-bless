@@ -20,9 +20,35 @@ export function createOvooModel() {
     set(a,b);return {o,set}
   }
   const v=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
-  const ground=mesh('ovoo-ground',new THREE.CylinderGeometry(2.24,2.3,.09,64),sand);ground.position.y=-.045
-  // Overlapping stones form a supported cairn instead of floating decorative layers.
-  const cairn=mesh('ovoo-cairn-core',new THREE.CylinderGeometry(.20,.75,.84,14),grey[0]!);cairn.position.y=.42
+  const GROUND_Y=-.082
+  // Natural tapered earthen cairn skirt & grounded peripheral stones at garden-path surface (-0.082)
+  // replace the redundant 4.6m flat sand disc.
+  const skirtProfile=[
+    new THREE.Vector2(0,-.090),
+    new THREE.Vector2(1.18,-.090),
+    new THREE.Vector2(1.12,-.072),
+    new THREE.Vector2(.98,-.042),
+    new THREE.Vector2(.84,-.008),
+    new THREE.Vector2(.76,.020),
+    new THREE.Vector2(0,.020),
+  ]
+  const skirtGeo=new THREE.LatheGeometry(skirtProfile,48)
+  const skirtPos=skirtGeo.getAttribute('position') as THREE.BufferAttribute
+  for(let i=0;i<skirtPos.count;i++){
+    const x=skirtPos.getX(i),z=skirtPos.getZ(i),r=Math.hypot(x,z)
+    if(r>.05){
+      const a=Math.atan2(z,x),wave=1+.042*Math.sin(5*a+.4)+.024*Math.cos(3*a-.7)
+      skirtPos.setX(i,x*wave);skirtPos.setZ(i,z*wave)
+    }
+  }
+  skirtGeo.computeVertexNormals()
+  mesh('ovoo-cairn-skirt',skirtGeo,sand)
+  // Overlapping stones form a supported cairn rooted down into the garden ground.
+  const cairn=mesh('ovoo-cairn-core',new THREE.CylinderGeometry(.20,.82,.93,16),grey[0]!);cairn.position.y=.375
+  for(let i=0;i<14;i++){
+    const a=i/14*Math.PI*2+.18,rr=.82+.08*Math.sin(i*2.3)
+    ball('ovoo-skirt-stone-'+i,[Math.sin(a)*rr,-.042,Math.cos(a)*rr],[.19,.088,.16],grey[i%4]!)
+  }
   for(let level=0;level<4;level++){
     const radius=.60-level*.14,count=12-level*2,y=.12+level*.20
     for(let i=0;i<count;i++){const a=i/count*Math.PI*2+level*.31;ball('ovoo-stone-'+level+'-'+i,[Math.sin(a)*radius,y,Math.cos(a)*radius],[.21-level*.024,.135,.18-level*.018],grey[(i+level)%4]!)}
@@ -55,11 +81,23 @@ export function createOvooModel() {
   }))
   const angle0=Math.atan2(-.8,1.65),radius=Math.hypot(-.8,1.65)
   const right=v(-Math.sin(angle0),0,-Math.cos(angle0)),forward=v(-Math.cos(angle0),0,Math.sin(angle0))
+  const stoneBedCenter=v(-.8,0,1.65).addScaledVector(right,.60)
+  // Low natural flat stone-and-earth rock bed grounded at -0.090 supports the 3 waiting offering stones at y = 0.
+  const bedProfile=[
+    new THREE.Vector2(0,-.090),
+    new THREE.Vector2(.46,-.090),
+    new THREE.Vector2(.44,-.062),
+    new THREE.Vector2(.40,-.016),
+    new THREE.Vector2(.36,0),
+    new THREE.Vector2(0,0),
+  ]
+  const stoneBed=mesh('ovoo-offering-bed',new THREE.LatheGeometry(bedProfile,28),grey[3]!)
+  stoneBed.position.copy(stoneBedCenter);stoneBed.rotation.y=angle0;stoneBed.scale.set(1.08,1,.68)
   const stones=Array.from({length:3},(_,i)=>{const p=v(-.8,.10,1.65).addScaledVector(right,.60).addScaledVector(forward,(i-1)*.25);return ball('ovoo-offering-'+i,p.toArray() as [number,number,number],[.085,.10,.075],grey[2]!)})
   const initial=stones.map(o=>o.position.clone())
   // All new stones come to rest on the broad crown; their underside is at crown height.
   const land=[v(-.14,.98,.07),v(.12,.98,.08),v(0,.98,.22)]
-  const carry=(theta:number)=>v(Math.sin(theta)*(radius-.44)-Math.cos(theta)*.23,.71,Math.cos(theta)*(radius-.44)+Math.sin(theta)*.23)
+  const carry=(theta:number)=>v(Math.sin(theta)*(radius-.44)-Math.cos(theta)*.23,.64,Math.cos(theta)*(radius-.44)+Math.sin(theta)*.23)
   const setArms=(hand:THREE.Vector3)=>{
     visitor.updateMatrixWorld(true);body.updateMatrixWorld(true)
     arms.forEach((arm,i)=>{
@@ -74,7 +112,7 @@ export function createOvooModel() {
     // Negative polar angle is clockwise viewed from above (north is -z).
     const walk=n<3?THREE.MathUtils.clamp((t-.15)/.63,0,1):0,theta=angle0-walk*Math.PI*2
     const ready=n===3?0:t<.15?1-t/.15:t>.92&&n<2?(t-.92)/.08:0
-    visitor.position.set(Math.sin(theta)*radius,0,Math.cos(theta)*radius);visitor.rotation.y=theta+Math.PI/2
+    visitor.position.set(Math.sin(theta)*radius,GROUND_Y,Math.cos(theta)*radius);visitor.rotation.y=theta+Math.PI/2
     const gait=walk>0&&walk<1?Math.sin(walk*Math.PI*16):0
     legs.forEach((leg,i)=>{const x=i?.10:-.10,z=gait*(i?-.10:.10),lift=Math.max(0,gait*(i?-1:1))*.045;leg.foot.position.set(x,.055+lift,z-.04);leg.thigh.set(v(x,.48,0),v(x,.28,z*.5));leg.shin.set(v(x,.28,z*.5),v(x,.07+lift,z))})
     body.rotation.z=-.42*ready

@@ -241,7 +241,7 @@ export function createTibetanKhataGreeting(ctx: SceneContext): SceneInstance {
     camera.position.copy(target).add(direction); camera.lookAt(target); camera.updateMatrixWorld(true)
     const inverse = camera.quaternion.clone().invert(), tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); let distance = 3.4
     // Frame both people and the complete scarf, including its hanging fringes.
-    for (const x of [-1.45, 1.45]) for (const y of [0, 1.52]) for (const z of [-1.16, 1.16]) { const p = new THREE.Vector3(x, y, z).sub(target).applyQuaternion(inverse); distance = Math.max(distance, p.z + Math.abs(p.x) / (tangent * aspect * .86), p.z + Math.abs(p.y) / (tangent * .86)) }
+    for (const x of [-1.45, 1.45]) for (const y of [-.08, 1.52]) for (const z of [-1.16, 1.16]) { const p = new THREE.Vector3(x, y, z).sub(target).applyQuaternion(inverse); distance = Math.max(distance, p.z + Math.abs(p.x) / (tangent * aspect * .86), p.z + Math.abs(p.y) / (tangent * .86)) }
     camera.position.copy(target).addScaledVector(direction, distance); camera.lookAt(target); matrices(); markDirty()
   }
   const stopInspection = addKeyboardPlacementInspection(ui.actionBtn, canvas, camera, model, placement, { isActive: () => inputActive() && !motion && carrying() && !pointer.isBusy(), step: () => carryStep(), prepare: prepareInput, reset, rotate: (yaw, pitch) => inspectRotate(yaw / .012, pitch / .012) })

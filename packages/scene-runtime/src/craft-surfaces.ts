@@ -1,6 +1,17 @@
 import * as THREE from 'three';
+import { getProceduralNoiseAtlas, NOISE_ATLAS_PARS } from './procedural-noise-atlas';
 
-export type CraftSurfaceKind = 'wood' | 'ceramic' | 'metal' | 'fabric' | 'cord' | 'bamboo' | 'straw' | 'stone';
+export type CraftSurfaceKind =
+  | 'wood'
+  | 'ceramic'
+  | 'metal'
+  | 'fabric'
+  | 'cord'
+  | 'bamboo'
+  | 'straw'
+  | 'stone'
+  | 'lacquer'
+  | 'terracotta';
 export type CraftStrawPattern = 'stalk' | 'woven' | 'reed';
 export type CraftSurfaceOptions = {
   kind: CraftSurfaceKind;
@@ -28,6 +39,21 @@ function bounded(value: number | undefined, fallback: number, min: number, max: 
 function strawPattern(value: CraftStrawPattern | undefined): CraftStrawPattern {
   return value === 'woven' || value === 'reed' ? value : 'stalk';
 }
+
+function usesNoiseAtlas(kind: CraftSurfaceKind): boolean {
+  return (
+    kind === 'ceramic' ||
+    kind === 'metal' ||
+    kind === 'stone' ||
+    kind === 'fabric' ||
+    kind === 'cord' ||
+    kind === 'lacquer' ||
+    kind === 'terracotta'
+  );
+}
+
+const ATLAS_HEADER = `uniform sampler2D craftNoiseAtlas;
+${NOISE_ATLAS_PARS}`;
 
 // Original art-directed patterns. No external textures, UV requirements,
 // additional render targets or animation clock. Attenuate subpixel oscillations
@@ -373,30 +399,198 @@ function pattern(surface: Surface, filtered = true) {
       return craftRawStrawStalkField(p, nNorm, craftStrawSeed, ${ribFreq}, ${nodeFreq}, ${nodeWeight});
     }`;
   }
-  const body: Record<Exclude<CraftSurfaceKind, 'wood' | 'straw'>, string> = {
-    ceramic: `return ${noise}(p * 95.0) * 0.60 + (craftNoise(p * 9.0) - 0.5) * 0.22;`,
-    metal: `return ${noise}(p * 72.0) * 0.35 + (craftNoise(p * 15.0) - 0.5) * 0.45;`,
-    bamboo: `
+  if (surface.kind === 'ceramic') {
+    const core = `
+      vec3 nNorm = normalize(${normal});
+      vec4 nzMacro = wbrAtlasTriplanar(craftNoiseAtlas, p * 0.44 + vec3(0.17, 0.31, 0.11), nNorm);
+      vec3 arw = abs(nNorm);
+      vec3 rw = arw * arw;
+      rw *= rw;
+      rw /= max(rw.x + rw.y + rw.z, 1e-4);
+      float capR = sqrt(dot(p.yz, p.yz) + 1e-4);
+      float lathe = texture2D(craftNoiseAtlas, vec2(p.x * 1.45, p.z * 0.32)).a * rw.y
+                  + texture2D(craftNoiseAtlas, vec2(p.x * 1.45, p.y * 0.32)).a * rw.z
+                  + texture2D(craftNoiseAtlas, vec2(capR * 1.65, (p.y - p.z) * 0.24)).a * rw.x;
+    `;
+    if (filtered) {
+      return `float craftCeramicPattern(out float craftGlazePool, out float craftKilnSpeck) {
+      vec3 p = ${coordinate} * craftScale;
+      ${core}
+      vec4 nzFine = wbrAtlasTriplanar(craftNoiseAtlas, p * 2.80 + vec3(0.41, 0.19, 0.63), nNorm);
+      craftGlazePool = smoothstep(0.18, 0.82, nzMacro.b * 0.64 + nzMacro.r * 0.36);
+      craftKilnSpeck = smoothstep(0.76, 0.94, nzFine.g);
+      return (lathe - 0.5) * 0.54 + (nzMacro.r - 0.5) * 0.50 + (nzMacro.b - 0.5) * 0.34 - craftKilnSpeck * 0.18;
+    }
+    float craftPattern() { float g = 0.0, s = 0.0; return craftCeramicPattern(g, s); }`;
+    }
+    return `float craftHeightPattern() {
+      vec3 p = ${coordinate} * craftScale;
+      ${core}
+      return (lathe - 0.5) * 0.52 + (nzMacro.r - 0.5) * 0.42 + (nzMacro.b - 0.5) * 0.24;
+    }`;
+  }
+  if (surface.kind === 'metal') {
+    const core = `
+      vec3 nNorm = normalize(${normal});
+      vec4 nzFacet = wbrAtlasTriplanar(craftNoiseAtlas, p * 1.45, nNorm);
+      vec4 nzMacro = wbrAtlasTriplanar(craftNoiseAtlas, p * 0.38 + vec3(0.41, 0.13, 0.29), nNorm);
+      vec3 arw = abs(nNorm);
+      vec3 rw = arw * arw;
+      rw *= rw;
+      rw /= max(rw.x + rw.y + rw.z, 1e-4);
+      float capR = sqrt(dot(p.yz, p.yz) + 1e-4);
+      float brush = texture2D(craftNoiseAtlas, vec2(p.x * 2.10, p.z * 0.45)).a * rw.y
+                  + texture2D(craftNoiseAtlas, vec2(p.x * 2.10, p.y * 0.45)).a * rw.z
+                  + texture2D(craftNoiseAtlas, vec2(capR * 2.35, (p.y - p.z) * 0.35)).a * rw.x;
+      float facet = smoothstep(0.08, 0.72, nzFacet.b) - 0.5;
+    `;
+    if (filtered) {
+      return `float craftMetalPattern(out float craftMetalPatina, out float craftMetalBrush) {
+      vec3 p = ${coordinate} * craftScale;
+      ${core}
+      craftMetalBrush = brush - 0.5;
+      craftMetalPatina = clamp(0.46 - (nzFacet.b * 0.58 + nzMacro.r * 0.42), 0.0, 0.46) / 0.46;
+      return craftMetalBrush * 0.52 + facet * 0.48 + (nzMacro.r - 0.5) * 0.30;
+    }
+    float craftPattern() { float pa = 0.0, br = 0.0; return craftMetalPattern(pa, br); }`;
+    }
+    return `float craftHeightPattern() {
+      vec3 p = ${coordinate} * craftScale;
+      ${core}
+      return (brush - 0.5) * 0.48 + facet * 0.54 + (nzMacro.r - 0.5) * 0.25;
+    }`;
+  }
+  if (surface.kind === 'stone') {
+    const core = `
+      vec3 nNorm = normalize(${normal});
+      vec4 nzMid = wbrAtlasTriplanar(craftNoiseAtlas, p * 0.95, nNorm);
+      vec4 nzFine = wbrAtlasTriplanar(craftNoiseAtlas, p * 3.40 + vec3(0.23, 0.57, 0.19), nNorm);
+      vec4 nzMacro = wbrAtlasTriplanar(craftNoiseAtlas, p * 0.28 + vec3(0.11, 0.43, 0.71), nNorm);
+    `;
+    if (filtered) {
+      return `float craftStonePattern(out float craftStoneFlecks, out float craftStoneWarmth) {
+      vec3 p = ${coordinate} * craftScale;
+      ${core}
+      float crystal = smoothstep(0.66, 0.92, nzFine.b);
+      float seamDark = 1.0 - smoothstep(0.03, 0.22, nzMid.b);
+      craftStoneFlecks = crystal * 0.65 - seamDark * 0.55;
+      craftStoneWarmth = (nzMacro.r - 0.5) * 1.40;
+      float pit = (nzFine.g - 0.5) * 0.70 + (nzMid.g - 0.5) * 0.35;
+      return (nzMacro.r - 0.5) * 0.48 + (nzMid.b - 0.5) * 0.38 + pit * 0.52;
+    }
+    float craftPattern() { float fl = 0.0, wa = 0.0; return craftStonePattern(fl, wa); }`;
+    }
+    return `float craftHeightPattern() {
+      vec3 p = ${coordinate} * craftScale;
+      ${core}
+      return (nzMacro.r - 0.5) * 0.48 + smoothstep(0.02, 0.28, nzMid.b) * 0.45 + (nzFine.g - 0.5) * 0.44;
+    }`;
+  }
+  if (surface.kind === 'lacquer') {
+    const core = `
+      vec3 nNorm = normalize(${normal});
+      vec4 nzMacro = wbrAtlasTriplanar(craftNoiseAtlas, p * 0.42 + vec3(0.09, 0.27, 0.51), nNorm);
+      vec4 nzBrush = wbrAtlasTriplanar(craftNoiseAtlas, p * vec3(0.85, 2.10, 2.10), nNorm);
+    `;
+    if (filtered) {
+      return `float craftLacquerPattern(out float craftLacquerDepth) {
+      vec3 p = ${coordinate} * craftScale;
+      ${core}
+      craftLacquerDepth = smoothstep(0.18, 0.84, nzMacro.r * 0.72 + nzMacro.b * 0.28);
+      return (nzBrush.a - 0.5) * 0.44 + (nzMacro.r - 0.5) * 0.46;
+    }
+    float craftPattern() { float d = 0.0; return craftLacquerPattern(d); }`;
+    }
+    return `float craftHeightPattern() {
+      vec3 p = ${coordinate} * craftScale;
+      ${core}
+      return (nzBrush.a - 0.5) * 0.42 + (nzMacro.r - 0.5) * 0.34;
+    }`;
+  }
+  if (surface.kind === 'terracotta') {
+    const core = `
+      vec3 nNorm = normalize(${normal});
+      vec4 nzMacro = wbrAtlasTriplanar(craftNoiseAtlas, p * 0.46 + vec3(0.33, 0.17, 0.61), nNorm);
+      vec4 nzPore = wbrAtlasTriplanar(craftNoiseAtlas, p * 2.95, nNorm);
+      vec4 nzGrog = wbrAtlasTriplanar(craftNoiseAtlas, p * 1.55 + vec3(0.51, 0.23, 0.07), nNorm);
+    `;
+    if (filtered) {
+      return `float craftTerracottaPattern(out float craftTerraToast, out float craftTerraSpeck) {
+      vec3 p = ${coordinate} * craftScale;
+      ${core}
+      craftTerraToast = (nzMacro.r - 0.5) * 1.45;
+      float darkSpeck = smoothstep(0.72, 0.93, nzPore.g);
+      float mineralGrain = smoothstep(0.68, 0.90, nzGrog.b);
+      craftTerraSpeck = darkSpeck * 0.65 + (1.0 - mineralGrain) * 0.28;
+      return (nzPore.g - 0.5) * 0.62 + (nzGrog.b - 0.5) * 0.36 + (nzMacro.r - 0.5) * 0.42;
+    }
+    float craftPattern() { float t = 0.0, s = 0.0; return craftTerracottaPattern(t, s); }`;
+    }
+    return `float craftHeightPattern() {
+      vec3 p = ${coordinate} * craftScale;
+      ${core}
+      return (nzPore.g - 0.5) * 0.62 + (nzGrog.b - 0.5) * 0.38 + (nzMacro.r - 0.5) * 0.36;
+    }`;
+  }
+  if (surface.kind === 'fabric') {
+    if (filtered) {
+      return `float craftFabricPattern(out float craftSlubWarmth) {
+      vec3 p = ${coordinate} * craftScale;
+      vec3 nNorm = normalize(${normal});
+      vec3 weights = pow(abs(normalize(craftLocalNormal)), vec3(4.0));
+      weights /= max(dot(weights, vec3(1.0)), 0.001);
+      float woven = dot(vec3(${weave}(p.yz), ${weave}(p.xz), ${weave}(p.xy)), weights);
+      vec4 nzMacro = wbrAtlasTriplanar(craftNoiseAtlas, p * 0.55 + vec3(0.21, 0.37, 0.13), nNorm);
+      vec4 nzSlub = wbrAtlasTriplanar(craftNoiseAtlas, p * 2.20, nNorm);
+      craftSlubWarmth = (nzMacro.r - 0.5) * 1.25;
+      return woven * 0.78 + (nzMacro.r - 0.5) * 0.32 + (nzSlub.a - 0.5) * 0.20;
+    }
+    float craftPattern() { float sl = 0.0; return craftFabricPattern(sl); }`;
+    }
+    return `float craftHeightPattern() {
+      vec3 p = ${coordinate} * craftScale;
+      vec3 nNorm = normalize(${normal});
+      vec3 weights = pow(abs(normalize(craftLocalNormal)), vec3(4.0));
+      weights /= max(dot(weights, vec3(1.0)), 0.001);
+      float woven = dot(vec3(${weave}(p.yz), ${weave}(p.xz), ${weave}(p.xy)), weights);
+      vec4 nzSlub = wbrAtlasTriplanar(craftNoiseAtlas, p * 2.20, nNorm);
+      return woven * 0.80 + (nzSlub.a - 0.5) * 0.22;
+    }`;
+  }
+  if (surface.kind === 'cord') {
+    if (filtered) {
+      return `float craftCordPattern(out float craftSlubWarmth) {
+      vec3 p = ${coordinate} * craftScale;
+      vec3 nNorm = normalize(${normal});
+      vec3 weights = pow(abs(normalize(craftLocalNormal)), vec3(4.0));
+      weights /= max(dot(weights, vec3(1.0)), 0.001);
+      float ply = dot(vec3(${wave}((p.y + p.z) * 235.0), ${wave}((p.x + p.z) * 235.0),
+        ${wave}((p.x + p.y) * 235.0)), weights) * 0.55;
+      vec4 nzMacro = wbrAtlasTriplanar(craftNoiseAtlas, p * 0.65 + vec3(0.14, 0.49, 0.27), nNorm);
+      craftSlubWarmth = (nzMacro.r - 0.5) * 1.20;
+      return ply + (nzMacro.r - 0.5) * 0.26 + (nzMacro.a - 0.5) * 0.16;
+    }
+    float craftPattern() { float sl = 0.0; return craftCordPattern(sl); }`;
+    }
+    return `float craftHeightPattern() {
+      vec3 p = ${coordinate} * craftScale;
+      vec3 nNorm = normalize(${normal});
+      vec3 weights = pow(abs(normalize(craftLocalNormal)), vec3(4.0));
+      weights /= max(dot(weights, vec3(1.0)), 0.001);
+      float ply = dot(vec3(${wave}((p.y + p.z) * 235.0), ${wave}((p.x + p.z) * 235.0),
+        ${wave}((p.x + p.y) * 235.0)), weights) * 0.55;
+      vec4 nzMacro = wbrAtlasTriplanar(craftNoiseAtlas, p * 0.65 + vec3(0.14, 0.49, 0.27), nNorm);
+      return ply + (nzMacro.a - 0.5) * 0.16;
+    }`;
+  }
+  const bambooBody = `
       float fibers = ${filtered ? 'craftBambooStriation' : 'craftRawBambooStriation'}(p);
       float microFiber = ${noise}(p * vec3(2.4, 130.0, 130.0));
       float bundle = craftNoise(p * vec3(1.5, 58.0, 58.0)) - 0.5;
       float internode = sin(p.x * 6.283 + 0.35) * 0.32 + (craftNoise(p * vec3(2.4, 7.0, 7.0)) - 0.5) * 0.38;
       return fibers * 0.56 + microFiber * 0.48 + bundle * 0.48 + internode;
-    `,
-    stone: `return ${noise}(p * 80.0) * 0.24 + (craftNoise(p * 12.0) - 0.5) * 0.42;`,
-    fabric: `
-      vec3 weights = pow(abs(normalize(craftLocalNormal)), vec3(4.0));
-      weights /= max(dot(weights, vec3(1.0)), 0.001);
-      return dot(vec3(${weave}(p.yz), ${weave}(p.xz), ${weave}(p.xy)), weights);
-    `,
-    cord: `
-      vec3 weights = pow(abs(normalize(craftLocalNormal)), vec3(4.0));
-      weights /= max(dot(weights, vec3(1.0)), 0.001);
-      return dot(vec3(${wave}((p.y + p.z) * 235.0), ${wave}((p.x + p.z) * 235.0),
-        ${wave}((p.x + p.y) * 235.0)), weights) * 0.55;
-    `,
-  };
-  return `float ${filtered ? 'craftPattern' : 'craftHeightPattern'}() { vec3 p = ${coordinate} * craftScale; ${body[surface.kind]} }`;
+    `;
+  return `float ${filtered ? 'craftPattern' : 'craftHeightPattern'}() { vec3 p = ${coordinate} * craftScale; ${bambooBody} }`;
 }
 
 function attach(material: THREE.Material, surface: Surface) {
@@ -409,6 +603,10 @@ function attach(material: THREE.Material, surface: Surface) {
     if (shader.fragmentShader.includes('#define WBR_CRAFT_SURFACE')) return;
     shader.uniforms.craftScale = { value: surface.scale };
     shader.uniforms.craftStrength = { value: surface.strength };
+    const atlasEnabled = usesNoiseAtlas(surface.kind);
+    if (atlasEnabled) {
+      shader.uniforms.craftNoiseAtlas = { value: getProceduralNoiseAtlas() };
+    }
     const isWood = surface.kind === 'wood';
     const isStraw = surface.kind === 'straw';
     const strawMode = isStraw ? strawPattern(surface.pattern) : undefined;
@@ -449,12 +647,12 @@ function attach(material: THREE.Material, surface: Surface) {
       craftLocalNormal = normal;
       ${seedVertex}
     `);
-    shader.fragmentShader = '#define WBR_CRAFT_SURFACE\n' + varying + HEADER + pattern(surface) + '\n' + pattern(surface, false) + '\n' + shader.fragmentShader;
-    const pigment = surface.kind === 'wood' ? .22 : surface.kind === 'bamboo' ? .22 : surface.kind === 'straw' ? .22 : surface.kind === 'fabric' || surface.kind === 'cord' ? .17 : .08;
-    const relief = surface.kind === 'wood' ? .00080 : surface.kind === 'bamboo' ? .00062 : surface.kind === 'straw' ? (strawMode === 'woven' ? .00078 : .00072) : surface.kind === 'fabric' || surface.kind === 'cord' ? .00065 : .0005;
+    shader.fragmentShader = '#define WBR_CRAFT_SURFACE\n' + varying + (atlasEnabled ? ATLAS_HEADER : '') + HEADER + pattern(surface) + '\n' + pattern(surface, false) + '\n' + shader.fragmentShader;
+    const pigment = surface.kind === 'wood' ? .22 : surface.kind === 'bamboo' ? .22 : surface.kind === 'straw' ? .22 : surface.kind === 'fabric' || surface.kind === 'cord' ? .18 : surface.kind === 'lacquer' ? .10 : .14;
+    const relief = surface.kind === 'wood' ? .00080 : surface.kind === 'bamboo' ? .00062 : surface.kind === 'straw' ? (strawMode === 'woven' ? .00078 : .00072) : surface.kind === 'fabric' || surface.kind === 'cord' ? .00065 : surface.kind === 'lacquer' ? .00024 : surface.kind === 'terracotta' ? .00072 : surface.kind === 'stone' ? .00064 : surface.kind === 'metal' ? .00046 : .00038;
     const frequency = surface.kind === 'straw'
       ? (strawMode === 'woven' ? 96 : strawMode === 'reed' ? 164 : 136)
-      : { wood: 74, ceramic: 95, metal: 72, fabric: 310, cord: 235, bamboo: 240, stone: 80 }[surface.kind];
+      : { wood: 74, ceramic: 88, metal: 76, fabric: 310, cord: 235, bamboo: 240, stone: 84, lacquer: 52, terracotta: 92 }[surface.kind];
     const colorPatch = surface.kind === 'wood' ? `
       float craftWoodAmp = mix(craftStrength, sqrt(max(craftStrength, 0.0)), 0.42);
       float craftKnotAmber = 0.0;
@@ -487,17 +685,66 @@ function attach(material: THREE.Material, surface: Surface) {
       vec3 craftStrawTint = mix(vec3(0.96, 1.00, 0.88), vec3(1.08, 1.01, 0.83), clamp(craftStrawHue * 0.5 + 0.5, 0.0, 1.0));
       diffuseColor.rgb *= mix(vec3(1.0), craftStrawTint, clamp(craftStrawAmp * 0.72, 0.0, 0.68));
       diffuseColor.rgb *= 1.0 + craftStrawSeed.z * 0.042 * craftStrawAmp;
+    ` : surface.kind === 'ceramic' ? `
+      float craftGlazePool = 0.0;
+      float craftKilnSpeck = 0.0;
+      float craftGrain = craftCeramicPattern(craftGlazePool, craftKilnSpeck) * craftStrength;
+      vec3 craftGlazeTint = mix(vec3(1.035, 1.015, 0.975), vec3(0.915, 0.965, 1.015), craftGlazePool);
+      diffuseColor.rgb *= (1.0 + craftGrain * ${pigment}) * mix(vec3(1.0), craftGlazeTint, clamp(craftStrength * 0.85, 0.0, 0.85));
+      diffuseColor.rgb *= mix(1.0, 0.80, craftKilnSpeck * 0.32 * craftStrength);
+    ` : surface.kind === 'metal' ? `
+      float craftMetalPatina = 0.0;
+      float craftMetalBrush = 0.0;
+      float craftGrain = craftMetalPattern(craftMetalPatina, craftMetalBrush) * craftStrength;
+      diffuseColor.rgb *= 1.0 + craftGrain * 0.16;
+      diffuseColor.rgb *= mix(vec3(1.0), vec3(0.68, 0.58, 0.45), clamp(craftMetalPatina * craftStrength, 0.0, 1.0) * 0.58);
+    ` : surface.kind === 'stone' ? `
+      float craftStoneFlecks = 0.0;
+      float craftStoneWarmth = 0.0;
+      float craftGrain = craftStonePattern(craftStoneFlecks, craftStoneWarmth) * craftStrength;
+      vec3 craftStoneTint = mix(vec3(0.93, 0.95, 0.98), vec3(1.08, 1.01, 0.91), clamp(craftStoneWarmth * 0.5 + 0.5, 0.0, 1.0));
+      diffuseColor.rgb *= (1.0 + craftGrain * ${pigment} + craftStoneFlecks * 0.09 * craftStrength) * mix(vec3(1.0), craftStoneTint, clamp(craftStrength * 0.75, 0.0, 0.75));
+    ` : surface.kind === 'lacquer' ? `
+      float craftLacquerDepth = 0.0;
+      float craftGrain = craftLacquerPattern(craftLacquerDepth) * craftStrength;
+      vec3 craftUrushiTint = mix(vec3(0.93, 0.87, 0.84), vec3(1.07, 0.99, 0.91), craftLacquerDepth);
+      diffuseColor.rgb *= (1.0 + craftGrain * ${pigment}) * mix(vec3(1.0), craftUrushiTint, clamp(craftStrength * 0.72, 0.0, 0.72));
+    ` : surface.kind === 'terracotta' ? `
+      float craftTerraToast = 0.0;
+      float craftTerraSpeck = 0.0;
+      float craftGrain = craftTerracottaPattern(craftTerraToast, craftTerraSpeck) * craftStrength;
+      vec3 craftTerraTint = mix(vec3(0.92, 0.88, 0.84), vec3(1.09, 0.99, 0.89), clamp(craftTerraToast * 0.5 + 0.5, 0.0, 1.0));
+      diffuseColor.rgb *= (1.0 + craftGrain * ${pigment}) * mix(vec3(1.0), craftTerraTint, clamp(craftStrength * 0.78, 0.0, 0.78));
+      diffuseColor.rgb *= mix(1.0, 0.76, clamp(craftTerraSpeck * 0.42 * craftStrength, 0.0, 0.42));
     ` : `
-      float craftGrain = craftPattern() * craftStrength;
-      diffuseColor.rgb *= 1.0 + craftGrain * ${pigment};
+      float craftSlubWarmth = 0.0;
+      float craftGrain = ${surface.kind === 'fabric' ? 'craftFabricPattern' : 'craftCordPattern'}(craftSlubWarmth) * craftStrength;
+      vec3 craftClothTint = mix(vec3(0.96, 0.97, 0.99), vec3(1.05, 1.01, 0.95), clamp(craftSlubWarmth * 0.5 + 0.5, 0.0, 1.0));
+      diffuseColor.rgb *= (1.0 + craftGrain * ${pigment}) * mix(vec3(1.0), craftClothTint, clamp(craftStrength * 0.65, 0.0, 0.65));
     `;
-    const roughnessDelta = surface.kind === 'wood' ? 'craftGrain * 0.14' : surface.kind === 'bamboo' ? '-craftGrain * 0.14' : surface.kind === 'straw' ? '(-craftGrain * 0.20 + craftStrawAccent * craftStrawAmp * 0.20)' : 'craftGrain * 0.12';
+    const roughnessPatch = surface.kind === 'wood'
+      ? 'roughnessFactor = clamp(roughnessFactor + craftGrain * 0.14, 0.16, 1.0);'
+      : surface.kind === 'bamboo'
+        ? 'roughnessFactor = clamp(roughnessFactor - craftGrain * 0.14, 0.16, 1.0);'
+        : surface.kind === 'straw'
+          ? 'roughnessFactor = clamp(roughnessFactor + (-craftGrain * 0.20 + craftStrawAccent * craftStrawAmp * 0.20), 0.16, 1.0);'
+          : surface.kind === 'ceramic'
+            ? 'roughnessFactor = clamp(roughnessFactor + (-(craftGlazePool - 0.45) * 0.18 + craftKilnSpeck * 0.08 - craftGrain * 0.06) * craftStrength, 0.12, 0.98);'
+            : surface.kind === 'metal'
+              ? 'roughnessFactor = clamp(roughnessFactor + (-craftMetalBrush * 0.16 + craftMetalPatina * 0.24 - craftGrain * 0.08) * craftStrength, 0.18, 0.68);'
+              : surface.kind === 'stone'
+                ? 'roughnessFactor = clamp(roughnessFactor + (-craftStoneFlecks * 0.08 - craftGrain * 0.10) * craftStrength, 0.48, 1.0);'
+                : surface.kind === 'lacquer'
+                  ? 'roughnessFactor = clamp(roughnessFactor + ((0.5 - craftLacquerDepth) * 0.09 - craftGrain * 0.05) * craftStrength, 0.12, 0.90);'
+                  : surface.kind === 'terracotta'
+                    ? 'roughnessFactor = clamp(roughnessFactor + (0.06 + craftTerraSpeck * 0.08 - craftGrain * 0.08) * craftStrength, 0.72, 1.0);'
+                    : 'roughnessFactor = clamp(roughnessFactor + craftGrain * 0.12, 0.16, 1.0);';
     shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
       #include <color_fragment>
       ${colorPatch}
     `).replace('#include <roughnessmap_fragment>', `
       #include <roughnessmap_fragment>
-      roughnessFactor = clamp(roughnessFactor + ${roughnessDelta}, 0.16, 1.0);
+      ${roughnessPatch}
     `).replace('#include <normal_fragment_maps>', `
       #include <normal_fragment_maps>
       // Differentiate an unfiltered height, then attenuate its gradient. Taking
@@ -507,14 +754,29 @@ function attach(material: THREE.Material, surface: Surface) {
       float craftVisibility = exp(-0.5 * craftFootprint * craftFootprint);
       normal = craftReliefNormal(normal, -vViewPosition, craftHeight, craftVisibility);
     `);
-    if (surface.kind === 'wood' || surface.kind === 'bamboo' || surface.kind === 'straw') {
-      const knee = surface.kind === 'wood' ? '0.72' : surface.kind === 'bamboo' ? '0.78' : '0.70';
-      const headroom = surface.kind === 'wood' ? '0.25' : surface.kind === 'bamboo' ? '0.20' : '0.26';
+    if (surface.kind === 'fabric' || surface.kind === 'cord') {
+      shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
+        float craftClothSheen = pow(max(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), 1e-4), 2.6) * 0.14 * craftStrength;
+        outgoingLight += max(outgoingLight - totalEmissiveRadiance, vec3(0.0)) * vec3(1.06, 1.03, 0.98) * craftClothSheen;
+        #include <opaque_fragment>
+      `);
+    }
+    const highlightGuard: Partial<Record<CraftSurfaceKind, [string, string]>> = {
+      wood: ['0.72', '0.25'],
+      bamboo: ['0.78', '0.20'],
+      straw: ['0.70', '0.26'],
+      ceramic: ['0.80', '0.18'],
+      lacquer: ['0.78', '0.20'],
+      terracotta: ['0.76', '0.22'],
+    };
+    const guard = highlightGuard[surface.kind];
+    if (guard) {
+      const [knee, headroom] = guard;
       shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
         vec3 craftLit = max(outgoingLight - totalEmissiveRadiance, vec3(0.0));
         float craftPeak = max(craftLit.r, max(craftLit.g, craftLit.b));
         // Komorebi daylight skips ACES and clips linear > ~1.03; a C1 asymptotic
-        // shoulder protects sunlit pale wood, waxy bamboo and pale dry straw without greying midtones.
+        // shoulder protects sunlit craft surfaces without greying midtones.
         if (craftPeak > ${knee}) {
           float craftExcess = craftPeak - ${knee};
           float craftTarget = ${knee} + ${headroom} * (craftExcess / (craftExcess + ${headroom}));
@@ -525,14 +787,42 @@ function attach(material: THREE.Material, surface: Surface) {
     }
   };
   const patternKey = surface.kind === 'straw' ? `:${strawPattern(surface.pattern)}` : '';
-  material.customProgramCacheKey = () => `${baseKey}|wbr-craft-v4:${surface.kind}:${surface.axis}${patternKey}`;
+  material.customProgramCacheKey = () => `${baseKey}|wbr-craft-v5:${surface.kind}:${surface.axis}${patternKey}`;
   material.needsUpdate = true;
 }
 
 /** Explicitly authored surface; pigment, maps and disposal stay with its scene. */
-export function createCraftMaterial(parameters: THREE.MeshStandardMaterialParameters, options: CraftSurfaceOptions): THREE.MeshStandardMaterial {
-  const material = new THREE.MeshStandardMaterial({ roughness: options.kind === 'metal' ? .42 : options.kind === 'ceramic' ? .55 : options.kind === 'bamboo' ? .50 : options.kind === 'straw' ? .72 : .9,
-    metalness: options.kind === 'metal' ? .72 : 0, ...parameters });
+export function createCraftMaterial(
+  parameters: THREE.MeshStandardMaterialParameters & Partial<THREE.MeshPhysicalMaterialParameters>,
+  options: CraftSurfaceOptions,
+): THREE.MeshStandardMaterial {
+  if (options.kind === 'lacquer') {
+    const material = new THREE.MeshPhysicalMaterial({
+      roughness: 0.32,
+      metalness: 0.0,
+      clearcoat: 0.76,
+      clearcoatRoughness: 0.16,
+      ...parameters,
+    });
+    return applyCraftSurface(material, options);
+  }
+  const defaultRoughness =
+    options.kind === 'metal'
+      ? 0.42
+      : options.kind === 'ceramic'
+        ? 0.48
+        : options.kind === 'bamboo'
+          ? 0.50
+          : options.kind === 'straw'
+            ? 0.72
+            : options.kind === 'terracotta'
+              ? 0.88
+              : 0.9;
+  const material = new THREE.MeshStandardMaterial({
+    roughness: defaultRoughness,
+    metalness: options.kind === 'metal' ? 0.72 : 0,
+    ...parameters,
+  });
   return applyCraftSurface(material, options);
 }
 
@@ -550,8 +840,8 @@ export function applyCraftSurface<T extends THREE.MeshStandardMaterial>(material
 }
 
 export function hasCraftFinish(material: THREE.Material): boolean {
-  const kind = surfaces.get(material)?.kind;
-  return kind === 'ceramic' || kind === 'metal';
+  const kind = surfaces.get(material)?.kind ?? material.userData?.craftSurface?.kind;
+  return kind === 'ceramic' || kind === 'metal' || kind === 'lacquer';
 }
 
 /** Material.clone omits shader hooks; reconstruct the patch on styled materials. */

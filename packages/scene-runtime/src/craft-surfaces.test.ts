@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
-import { createCraftMaterial, copyCraftSurface, applyCraftSurface } from './craft-surfaces';
+import { createCraftMaterial, copyCraftSurface, applyCraftSurface, hasCraftFinish } from './craft-surfaces';
+import { getProceduralNoiseAtlas } from './procedural-noise-atlas';
 import { createRitualMaterial } from './ritual-optics';
 import { createToonSurfaces } from './toon-surfaces';
 import { createGallerySurfaces } from './gallery-surfaces';
@@ -37,11 +38,13 @@ describe('craft material style compatibility', () => {
     }
     source.dispose(); mesh.geometry.dispose();
   });
-  it.each(['wood', 'ceramic', 'metal', 'fabric', 'cord', 'bamboo', 'straw', 'stone'] as const)('keeps the %s height field free of derivatives before evaluating its gradient', kind => {
+  it.each(['wood', 'ceramic', 'metal', 'fabric', 'cord', 'bamboo', 'straw', 'stone', 'lacquer', 'terracotta'] as const)('keeps the %s height field free of derivatives before evaluating its gradient', kind => {
     const material = createCraftMaterial({}, { kind }), shader = compile(material);
     const visited = new Set<string>();
     const executable = shader.fragmentShader.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
     expect(executable).not.toMatch(/\b(?:undefined|NaN|Infinity)\b/);
+    expect(shader.vertexShader.split('\n').filter(line => /\S.*#/.test(line))).toEqual([]);
+    expect(shader.fragmentShader.split('\n').filter(line => /\S.*#/.test(line))).toEqual([]);
     function check(name: string) {
       if (visited.has(name)) return;
       visited.add(name);
@@ -211,5 +214,61 @@ describe('craft material style compatibility', () => {
     expect(compile(copied).fragmentShader).toContain('craftStrawWovenField');
 
     [stalk, woven, reed, copied].forEach(material => material.dispose());
+  });
+
+  it('binds the shared noise atlas on ceramic, metal, stone, fabric, cord, lacquer, and terracotta with craft-specific shading and finish guards', () => {
+    const atlas = getProceduralNoiseAtlas();
+    const ceramic = createCraftMaterial({ color: 0xb8ccb8 }, { kind: 'ceramic', axis: 'y' });
+    const metal = createCraftMaterial({ color: 0xc9a054 }, { kind: 'metal', axis: 'y' });
+    const stone = createCraftMaterial({ color: 0x99988f }, { kind: 'stone' });
+    const fabric = createCraftMaterial({ color: 0xd8cdb8 }, { kind: 'fabric' });
+    const cord = createCraftMaterial({ color: 0xc95a4b }, { kind: 'cord' });
+    const lacquer = createCraftMaterial({ color: 0x7a1c16 }, { kind: 'lacquer' });
+    const terracotta = createCraftMaterial({ color: 0xb86b49 }, { kind: 'terracotta' });
+
+    expect(lacquer).toBeInstanceOf(THREE.MeshPhysicalMaterial);
+    expect((lacquer as THREE.MeshPhysicalMaterial).clearcoat).toBeCloseTo(0.76, 5);
+    expect((lacquer as THREE.MeshPhysicalMaterial).clearcoatRoughness).toBeCloseTo(0.16, 5);
+    expect(lacquer.roughness).toBeCloseTo(0.32, 5);
+    expect(lacquer.metalness).toBe(0);
+    expect(terracotta.roughness).toBeCloseTo(0.88, 5);
+
+    expect(hasCraftFinish(ceramic)).toBe(true);
+    expect(hasCraftFinish(metal)).toBe(true);
+    expect(hasCraftFinish(lacquer)).toBe(true);
+    expect(hasCraftFinish(terracotta)).toBe(false);
+    expect(hasCraftFinish(stone)).toBe(false);
+
+    for (const mat of [ceramic, metal, stone, fabric, cord, lacquer, terracotta]) {
+      const shader = compile(mat);
+      expect(shader.uniforms.craftNoiseAtlas?.value).toBe(atlas);
+      expect(shader.fragmentShader).toContain('wbrAtlasTriplanar');
+    }
+
+    const ceramicShader = compile(ceramic);
+    expect(ceramicShader.fragmentShader).toContain('craftCeramicPattern');
+    expect(ceramicShader.fragmentShader).toContain('craftGlazePool');
+    expect(ceramicShader.fragmentShader).toContain('craftPeak > 0.80');
+    expect(ceramicShader.fragmentShader).toContain('0.18');
+
+    const metalShader = compile(metal);
+    expect(metalShader.fragmentShader).toContain('craftMetalPattern');
+    expect(metalShader.fragmentShader).toContain('craftMetalPatina');
+    expect(metalShader.fragmentShader).toContain('0.18, 0.68');
+
+    const fabricShader = compile(fabric);
+    const cordShader = compile(cord);
+    expect(fabricShader.fragmentShader).toContain('craftClothSheen');
+    expect(cordShader.fragmentShader).toContain('craftClothSheen');
+
+    const lacquerShader = compile(lacquer);
+    expect(lacquerShader.fragmentShader).toContain('craftLacquerPattern');
+    expect(lacquerShader.fragmentShader).toContain('craftPeak > 0.78');
+
+    const terracottaShader = compile(terracotta);
+    expect(terracottaShader.fragmentShader).toContain('craftTerracottaPattern');
+    expect(terracottaShader.fragmentShader).toContain('craftPeak > 0.76');
+
+    [ceramic, metal, stone, fabric, cord, lacquer, terracotta].forEach(material => material.dispose());
   });
 });

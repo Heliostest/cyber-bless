@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -68,7 +69,7 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
   const tube = (name: string, points: [number, number, number][], width: number, mat: THREE.Material, parent: THREE.Object3D) =>
     add(name, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 32, width, 10, false), mat, [0, 0, 0], parent)
   addCraftTable(world, { name: 'rooster-table', topName: 'rooster-table-top', width: 3.65, depth: 1.88, surfaceY: .74, thickness: .12, center: [0,0], support: 'arched', finish: 'honey' })
-  const shadow = add('rooster-ground-shadow', new THREE.PlaneGeometry(4.15, 2.65), new THREE.ShadowMaterial({ opacity: .13 }), [0, .003, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
+  const shadow = add('rooster-ground-shadow', new THREE.PlaneGeometry(4.15, 2.65), new THREE.ShadowMaterial({ opacity: .13 }), [0, getEnvironmentSurfaceY('barcelos-clay-rooster') + .001, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box('rooster-linen-rest', [1.18, .04, 1.00], [-.75, .76, -.06], linen)
   box('rooster-brush-rest', [.89, .04, .25], [-1.05, .76, .63], cream)
   lathe('rooster-dye-dish', [[0, 0], [.22, 0], [.25, .03], [.26, .085], [.24, .10], [.21, .06], [0, .06]], clay, [-1.44, .74, -.62])

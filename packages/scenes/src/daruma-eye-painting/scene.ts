@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -169,9 +170,11 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
   stand.name = 'daruma-stand'
   stand.position.y = 0.065
   world.add(stand)
+  const floorY = getEnvironmentSurfaceY('daruma-eye-painting')
+  const footH = 0.045 - floorY
   for (const x of [-0.59, 0.59]) {
-    const foot = new THREE.Mesh(new RoundedBoxGeometry(0.18, 0.06, 0.64, 2, 0.02), darkWood)
-    foot.position.set(x, 0.015, 0)
+    const foot = new THREE.Mesh(new RoundedBoxGeometry(0.18, footH, 0.64, 2, 0.02), darkWood)
+    foot.position.set(x, floorY + footH / 2, 0)
     world.add(foot)
   }
   // Sparse, shallow wood-grain lines remain legible on small screens.
@@ -185,7 +188,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     map: shadowMap, color: 0x49362a, opacity: 0.25, transparent: true, depthWrite: false,
   }))
   groundShadow.rotation.x = -Math.PI / 2
-  groundShadow.position.y = 0.002
+  groundShadow.position.y = floorY + 0.001
   world.add(groundShadow)
   const contactShadow = new THREE.Mesh(new THREE.PlaneGeometry(1.24, 0.91), new THREE.MeshBasicMaterial({
     map: shadowMap, color: 0x362820, opacity: 0.37, transparent: true, depthWrite: false,
@@ -291,11 +294,11 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
   // phone-width frame, its inked tip already pointing toward the face.
   const rest = new THREE.Mesh(new RoundedBoxGeometry(0.13, 0.081, 0.13, 2, 0.022), darkWood)
   rest.name = 'daruma-brush-rest'
-  rest.position.set(0.66, 0.1705, 0.5)
+  rest.position.set(0.66, 0.1705, 0.455)
   world.add(rest)
   const brush = new THREE.Group()
   brush.name = 'daruma-brush'
-  const brushHome = new THREE.Vector3(0.6, 0.2645, 0.5)
+  const brushHome = new THREE.Vector3(0.6, 0.2645, 0.455)
   brush.position.copy(brushHome)
   brush.rotation.z = BRUSH_REST_TILT
   world.add(brush)

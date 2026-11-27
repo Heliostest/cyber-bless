@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext } from '../contract'
@@ -299,6 +300,15 @@ describe('diya shape and lifecycle', () => {
       expect(object(`diya-rim-${i}`).visible).toBe(true)
     }
     route(s).forEach(([x, y]) => { expect(x).toBeGreaterThan(0); expect(x).toBeLessThan(width); expect(y).toBeGreaterThan(0); expect(y).toBeLessThan(520) })
+  })
+  it('grounds the brass plate on the courtyard surface and seats resting dishes flush on the plate interior', () => {
+    mount(0)
+    const plateBox = new THREE.Box3().setFromObject(object('diya-plate'))
+    expect(plateBox.min.y).toBeLessThanOrEqual(getEnvironmentSurfaceY('diya-oil-lamp') + 0.002)
+    for (let i = 0; i < 3; i++) {
+      const dishBox = new THREE.Box3().setFromObject(object(`diya-dish-${i}`))
+      expect(dishBox.min.y).toBeCloseTo(0.073, 2)
+    }
   })
   it('releases every geometry, material, halo texture and light and detaches input', () => {
     const s = mount(), resources = new Set<{ dispose(): void }>()

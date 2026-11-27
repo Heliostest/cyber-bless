@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
@@ -68,7 +69,7 @@ export function createCroatianLicitarHeart(ctx: SceneContext): SceneInstance {
     mesh.userData.toonSurface = { outline: false }; return mesh
   }
   addCraftTable(world, { name: 'licitar-table', topName: 'licitar-table-top', width: 3.24, depth: 1.66, surfaceY: .76, thickness: .12, center: [0,.04], support: 'joined', finish: 'birch' })
-  const ground = add('licitar-contact-shadow', new THREE.PlaneGeometry(3.8, 2.1), new THREE.ShadowMaterial({ opacity: .13 }), [0, .002, .1]); ground.rotation.x = -Math.PI / 2; ground.castShadow = false
+  const ground = add('licitar-contact-shadow', new THREE.PlaneGeometry(3.8, 2.1), new THREE.ShadowMaterial({ opacity: .13 }), [0, getEnvironmentSurfaceY('croatian-licitar-heart') + .001, .1]); ground.rotation.x = -Math.PI / 2; ground.castShadow = false
   box('licitar-heart-rest', [1.26, .05, .42], [-.66, .785, .01], linen)
   box('licitar-heart-back-rest', [.32, .38, .065], [-.66, .98, -.19], walnut)
   box('licitar-cone-rest', [.91, .035, .37], [-.94, .7775, .58], linen)

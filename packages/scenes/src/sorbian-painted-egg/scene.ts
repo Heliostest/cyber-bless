@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
@@ -70,7 +71,7 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
   const lathe = (name: string, profile: [number, number][], mat: THREE.Material, p: [number, number, number], parent: THREE.Object3D = world) =>
     add(name, new THREE.LatheGeometry(profile.map(v => new THREE.Vector2(...v)), 64), mat, p, parent)
   addCraftTable(world, { name: 'egg-table', topName: 'egg-table-top', width: 3.3, depth: 1.78, surfaceY: .74, thickness: .12, center: [0,0], support: 'joined', finish: 'birch' })
-  const shadow = add('egg-ground-shadow', new THREE.PlaneGeometry(3.9, 2.5), new THREE.ShadowMaterial({ opacity: .13 }), [0, .003, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
+  const shadow = add('egg-ground-shadow', new THREE.PlaneGeometry(3.9, 2.5), new THREE.ShadowMaterial({ opacity: .13 }), [0, getEnvironmentSurfaceY('sorbian-painted-egg') + .001, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   box('egg-linen-rest', [1.01, .04, .91], [-.48, .76, .08], linenRest)
   box('egg-brush-rest', [.85, .036, .24], [-1.02, .758, .56], cream)
   // The dish has a raised ceramic rim around a shallow painted pool.

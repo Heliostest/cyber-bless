@@ -27,9 +27,9 @@ export function createCanangModel(){
  const make=(name:string,geometry:THREE.BufferGeometry,material:THREE.Material,parent:THREE.Object3D=root)=>{const m=new THREE.Mesh(geometry,material);m.name=name;m.castShadow=m.receiveShadow=true;parent.add(m);return m}
  const box=(name:string,size:[number,number,number],pos:[number,number,number],material:THREE.Material,parent:THREE.Object3D=root)=>{const m=make(name,new THREE.BoxGeometry(...size),material,parent);m.position.set(...pos);return m}
  const solid=(name:string,size:[number,number,number],pos:[number,number,number],material:THREE.Material,parent:THREE.Object3D)=>{const m=make(name,new THREE.IcosahedronGeometry(1,2),material,parent);m.scale.set(...size);m.position.set(...pos);return m}
- box('canang-paving',[3.9,.12,2.9],[0,.06,.15],stone)
+ box('canang-paving',[3.9,.185,2.9],[0,.0275,.15],stone)
  // The offering ledge is supported all the way to the ground; no repeated little table.
- box('canang-shrine-foot',[1.58,.15,1.52],[-.65,.195,-.5],joint)
+ box('canang-shrine-foot',[1.58,.335,1.52],[-.65,.1025,-.5],joint)
  box('canang-shrine-plinth',[1.30,.16,1.24],[-.65,.35,-.5],stone)
  box('canang-shrine-body',[1.14,.32,1.08],[-.65,.59,-.5],stone)
  box('canang-shrine-neck',[1.30,.07,1.24],[-.65,.785,-.5],joint)

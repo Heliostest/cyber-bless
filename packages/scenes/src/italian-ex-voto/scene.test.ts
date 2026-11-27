@@ -7,6 +7,7 @@ vi.mock('../quiet-ending', () => ({ createQuietEnding: () => ({
 }) }))
 
 import * as THREE from 'three'
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import * as Gestures from '@wbr/gestures'
 import * as Shared from '@wbr/shared'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -221,6 +222,16 @@ describe('Italian ex voto original ceramic painting', () => {
     }
     const s = mount(0, { isReducedMotion: () => true }, width, width === 1280 ? 600 : 560)
     drag(s, 'exvoto-brush-tip', 'exvoto-route-origin'); trace(s); tap(s); expect(s.progress).toEqual([1, 2, 3])
+  })
+  it('grounds the table on the veranda and braces the easel rear leg backward onto the tabletop', () => {
+    const s = mount(0)
+    const tableBox = new THREE.Box3().setFromObject(s.scene.getObjectByName('exvoto-table')!)
+    const backLeg = s.scene.getObjectByName('exvoto-easel-back-leg')!
+    const backLegBox = new THREE.Box3().setFromObject(backLeg)
+    expect(tableBox.min.y).toBeLessThanOrEqual(getEnvironmentSurfaceY('italian-ex-voto') + 0.002)
+    expect(backLeg.rotation.x).toBeGreaterThan(0)
+    expect(backLegBox.min.y).toBeLessThanOrEqual(tableBox.max.y + 0.002)
+    expect(backLegBox.min.z).toBeGreaterThanOrEqual(tableBox.min.z)
   })
   it('disposes geometry, materials, shadow maps, renderer, DOM and all listeners once', () => {
     const added = vi.spyOn(window, 'addEventListener'), removed = vi.spyOn(window, 'removeEventListener'), s = mount()

@@ -265,7 +265,7 @@ export function createDidukhModel() {
   })
 
   // Domestic lime/clay plaster and honey wood: original room, no sacred text or icons.
-  box('didukh-honeywood-floor', 3.1, .12, 2.3, wood, 0, -.06, .05)
+  box('didukh-honeywood-floor', 3.1, .15, 2.3, wood, 0, -.075, .05)
   box('didukh-lime-plaster-back', 3.1, 2.8, .12, plaster, 0, 1.4, -.91)
   box('didukh-clay-plaster-side', .12, 2.8, 1.5, clay, -1.49, 1.4, -.19)
   box('didukh-back-baseboard', 3.1, .105, .055, baseboardWood, 0, .0525, -.8225)

@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -383,14 +384,27 @@ export function createYeondeunghoe(ctx: SceneContext): SceneInstance {
   scene.add(world)
 
   const plinthMat = new THREE.MeshStandardMaterial({ color: 0xcaa580, roughness: 0.95 })
-  const plinth = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.5, 0.3, 40), plinthMat)
-  plinth.position.y = 0.15
+  const plinthBaseY = Math.min(getEnvironmentSurfaceY('yeondeunghoe'), -0.04)
+  const plinthH = 0.3 - plinthBaseY
+  const plinth = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.5, plinthH, 40), plinthMat)
+  plinth.position.y = plinthBaseY + plinthH / 2
   world.add(plinth)
   // Rounded lip: a lit cel band along the top edge, like a bevel.
   const plinthLip = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.022, 8, 48), plinthMat)
   plinthLip.rotation.x = Math.PI / 2
   plinthLip.position.y = 0.3
   world.add(plinthLip)
+  // Recessed resting cradle supporting the lotus lantern base at rest before it rises.
+  const cradleStem = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.095, 0.132, 24), plinthMat)
+  cradleStem.position.y = 0.366
+  world.add(cradleStem)
+  const cradleCup = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.068, 0.024, 28), plinthMat)
+  cradleCup.position.y = 0.432
+  world.add(cradleCup)
+  const cradleRim = new THREE.Mesh(new THREE.TorusGeometry(0.112, 0.011, 8, 32), plinthMat)
+  cradleRim.rotation.x = Math.PI / 2
+  cradleRim.position.y = 0.444
+  world.add(cradleRim)
 
   const petalEmissiveMap = createHanjiEmissiveMap(128)
   const outerPetalGeo = createLotusPetalGeometry(0.165, 0.255, 0.036, 0.034, 0.95)

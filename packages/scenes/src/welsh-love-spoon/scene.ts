@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import { createQuietEnding } from '../quiet-ending'
@@ -112,7 +113,7 @@ export function createWelshLoveSpoon(ctx: SceneContext): SceneInstance {
     mesh.userData.toonSurface = { outline: false }; return mesh
   }
   addCraftTable(world, { name: 'spoon-table', topName: 'spoon-table-top', width: 3.12, depth: 1.62, surfaceY: .76, thickness: .12, center: [0,.04], support: 'trestle', finish: 'honey' })
-  const ground = add('spoon-contact-shadow', new THREE.PlaneGeometry(3.8, 2.1), new THREE.ShadowMaterial({ opacity: .13 }), [0, .002, .1]); ground.rotation.x = -Math.PI / 2; ground.castShadow = false
+  const ground = add('spoon-contact-shadow', new THREE.PlaneGeometry(3.8, 2.1), new THREE.ShadowMaterial({ opacity: .13 }), [0, getEnvironmentSurfaceY('welsh-love-spoon') + .001, .1]); ground.rotation.x = -Math.PI / 2; ground.castShadow = false
   box('spoon-home-pad', [.9, .04, .5], [-.72, .78, .02], linen)
   const homePeg = box('spoon-home-back-rest', [.22, .44, .08], [-.72, 1.02, -.13], walnutPeg)
   applyStandBoxWoodUVs(homePeg.geometry, [.22, .44, .08], 'y', { flipX: true, uShift: -.08 })

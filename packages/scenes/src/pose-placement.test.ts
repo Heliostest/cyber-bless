@@ -134,7 +134,7 @@ describe('physical pose placement', () => {
     expect(s.source()[0]).toBeCloseTo(a[0], 5)
     expect(s.source()[1]).toBeCloseTo(a[1], 5)
   })
-  it('applies cushioned spring overshoot, subtle Y arc lift, and tactile scale cushion during settle while preserving exact endpoints', () => {
+  it('applies cushioned spring overshoot and subtle Y arc lift during settle while keeping rigid scale and exact endpoints', () => {
     const s = mount()
     const fromPos = s.root.position.clone()
     const fromQuat = s.root.quaternion.clone()
@@ -154,13 +154,13 @@ describe('physical pose placement', () => {
     s.placement.settle(0.5)
     const linearMidY = THREE.MathUtils.lerp(fromPos.y, endPos.y, 0.5)
     expect(s.root.position.y).toBeGreaterThan(linearMidY + 0.01)
+    expect(s.root.scale.distanceTo(fromScale)).toBeLessThan(1e-8)
 
-    // Cushioned spring overshoot around t = 0.72 and micro-cushion on scale after t = 0.65
+    // Cushioned spring overshoot around t = 0.72 while rigid carrier scale stays invariant
     s.placement.settle(0.72)
     expect(s.root.position.x).toBeGreaterThan(endPos.x + 0.02)
     expect(s.root.position.x).toBeLessThan(endPos.x + 0.12)
-    expect(Math.abs(s.root.scale.x - 1)).toBeGreaterThan(1e-4)
-    expect(Math.abs(s.root.scale.x - 1)).toBeLessThan(0.015)
+    expect(s.root.scale.distanceTo(fromScale)).toBeLessThan(1e-8)
 
     // Exact canonical end at t = 1 and settling clears
     s.placement.settle(1)

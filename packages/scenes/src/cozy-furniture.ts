@@ -82,6 +82,7 @@ export interface OfferingTableOptions {
   apron?: boolean
   stretchers?: boolean
   bevel?: number
+  contactShadow?: boolean
 }
 
 export interface RoundLowTableOptions {
@@ -342,11 +343,13 @@ function createStandMaterial(
   return mat
 }
 
-const contactShadowTextures: Partial<Record<ContactShadowShape, THREE.DataTexture>> = {}
+const contactShadowPixels: Partial<Record<ContactShadowShape, Uint8Array<ArrayBuffer>>> = {}
 
-function createContactShadowTexture(shape: ContactShadowShape): THREE.DataTexture {
+function getContactShadowPixels(shape: ContactShadowShape): Uint8Array<ArrayBuffer> {
+  let data = contactShadowPixels[shape]
+  if (data) return data
   const size = 64
-  const data = new Uint8Array(size * size * 4)
+  data = new Uint8Array(size * size * 4)
   for (let iy = 0; iy < size; iy++) {
     const ny = ((iy + 0.5) / size) * 2 - 1
     for (let ix = 0; ix < size; ix++) {
@@ -377,20 +380,17 @@ function createContactShadowTexture(shape: ContactShadowShape): THREE.DataTextur
       data[offset + 3] = Math.round(THREE.MathUtils.clamp(alpha, 0, 1) * 255)
     }
   }
-  const texture = new THREE.DataTexture(data, size, size)
+  contactShadowPixels[shape] = data
+  return data
+}
+
+function createContactShadowTexture(shape: ContactShadowShape): THREE.DataTexture {
+  const size = 64
+  const texture = new THREE.DataTexture(getContactShadowPixels(shape), size, size)
   texture.magFilter = texture.minFilter = THREE.LinearFilter
   texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping
   texture.generateMipmaps = false
   texture.needsUpdate = true
-  return texture
-}
-
-function getContactShadowTexture(shape: ContactShadowShape): THREE.DataTexture {
-  let texture = contactShadowTextures[shape]
-  if (!texture) {
-    texture = createContactShadowTexture(shape)
-    contactShadowTextures[shape] = texture
-  }
   return texture
 }
 
@@ -412,9 +412,10 @@ export function addContactShadow(parent: THREE.Object3D, options: ContactShadowO
   } = options
   const geom = new THREE.PlaneGeometry(Math.max(0.01, width), Math.max(0.01, depth))
   geom.rotateX(-Math.PI / 2)
+  const shadowMap = createContactShadowTexture(shape)
   const mat = new THREE.MeshBasicMaterial({
     color,
-    map: getContactShadowTexture(shape),
+    map: shadowMap,
     transparent: true,
     opacity: THREE.MathUtils.clamp(opacity, 0, 1),
     depthWrite: false,
@@ -423,6 +424,11 @@ export function addContactShadow(parent: THREE.Object3D, options: ContactShadowO
     polygonOffsetUnits: -2,
     toneMapped: false,
   })
+  const releaseShadowMap = () => {
+    mat.removeEventListener('dispose', releaseShadowMap)
+    shadowMap.dispose()
+  }
+  mat.addEventListener('dispose', releaseShadowMap)
   const mesh = new THREE.Mesh(geom, mat)
   mesh.name = options.name ?? (options.prefix ? `${options.prefix}-contact-ao` : 'contact-ao')
   mesh.position.set(center[0], y, center[1])
@@ -776,7 +782,7 @@ export function addCraftTable(parent: THREE.Object3D, options: CraftTableOptions
     const legPad = Math.min(.32, Math.max(.16, (w / 2 - span * 1.035) * 1.9), Math.max(.16, (d / 2 - railZ * 1.055) * 1.9))
     for (const x of [-span, span] as const) for (const z of [-railZ, railZ] as const) {
       addContactShadow(root, {
-        name: `${name}-leg-contact-ao`,
+        name: `${name}-foot-contact-ao`,
         width: legPad,
         depth: legPad,
         y: .002,
@@ -983,30 +989,32 @@ export function addOfferingTable(parent: THREE.Object3D, options: OfferingTableO
     })
   }
 
-  addContactShadow(root, {
-    prefix: name,
-    width: w * .96,
-    depth: d * .96,
-    y: .0018,
-    shape: 'rounded-rect',
-    opacity: .22,
-  })
-  const legPad = Math.min(
-    legSize * 2.2,
-    Math.max(legSize, (w / 2 - legX) * 1.95),
-    Math.max(legSize, (d / 2 - legZ) * 1.95),
-  )
-  for (const sx of [-1, 1] as const) {
-    for (const sz of [-1, 1] as const) {
-      addContactShadow(root, {
-        name: `${name}-leg-contact-ao`,
-        width: legPad,
-        depth: legPad,
-        y: .002,
-        center: [sx * legX, sz * legZ],
-        shape: 'ellipse',
-        opacity: .20,
-      })
+  if (options.contactShadow ?? name !== 'tamagushi-stand') {
+    addContactShadow(root, {
+      prefix: name,
+      width: w * .96,
+      depth: d * .96,
+      y: .0018,
+      shape: 'rounded-rect',
+      opacity: .22,
+    })
+    const legPad = Math.min(
+      legSize * 2.2,
+      Math.max(legSize, (w / 2 - legX) * 1.95),
+      Math.max(legSize, (d / 2 - legZ) * 1.95),
+    )
+    for (const sx of [-1, 1] as const) {
+      for (const sz of [-1, 1] as const) {
+        addContactShadow(root, {
+          name: `${name}-foot-contact-ao`,
+          width: legPad,
+          depth: legPad,
+          y: .002,
+          center: [sx * legX, sz * legZ],
+          shape: 'ellipse',
+          opacity: .20,
+        })
+      }
     }
   }
 
@@ -1156,7 +1164,7 @@ export function addRoundLowTable(parent: THREE.Object3D, options: RoundLowTableO
   const legPad = Math.min(legR * 2.8, rx * .30, rz * .30)
   for (const [lx, lz] of legCoords) {
     addContactShadow(root, {
-      name: `${name}-leg-contact-ao`,
+      name: `${name}-foot-contact-ao`,
       width: legPad,
       depth: legPad,
       y: .002,

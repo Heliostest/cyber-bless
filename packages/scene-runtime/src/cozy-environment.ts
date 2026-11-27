@@ -242,109 +242,140 @@ type RidgeLayerSpec = {
   readonly baseTint: RGBTuple;
 };
 
+type RidgeTemplate = {
+  readonly positions: Float32Array;
+  readonly normals: Float32Array;
+  readonly colors: Float32Array;
+  readonly indices: Uint16Array;
+  readonly boundingBox: THREE.Box3;
+  readonly boundingSphere: THREE.Sphere;
+};
+const RIDGE_TEMPLATE_CACHE = new Map<string, RidgeTemplate>();
+
 /**
  * Procedural low-poly rolling foothill / mountain ridge silhouette with warm sunlit crest
  * highlights and soft aerial-perspective misty blue-sage base vertex colors.
  * Generic organic terrain only — no region- or culture-specific landmarks.
  */
 function createMountainRidgeGeometry(spec: RidgeLayerSpec, riverValley: boolean) {
-  const cols = spec.columns;
-  const rows = 4;
-  const vertCount = (cols + 1) * (rows + 1);
-  const positions = new Float32Array(vertCount * 3);
-  const colors = new Float32Array(vertCount * 3);
-  const indices: number[] = [];
-  const baseY = -0.7;
+  const cacheKey = `${spec.name}:${riverValley ? 1 : 0}`;
+  let tpl = RIDGE_TEMPLATE_CACHE.get(cacheKey);
+  if (!tpl) {
+    const cols = spec.columns;
+    const rows = 4;
+    const vertCount = (cols + 1) * (rows + 1);
+    const positions = new Float32Array(vertCount * 3);
+    const colors = new Float32Array(vertCount * 3);
+    const indexList: number[] = [];
+    const baseY = -0.7;
 
-  const ridgeHeights = new Float32Array(cols + 1);
-  for (let i = 0; i <= cols; i++) {
-    const u = i / cols;
-    const s = u * 2 - 1; // -1..1
-    const edgeFade = 1 - THREE.MathUtils.smoothstep(Math.abs(s), 0.76, 1.0);
-    const harmonic =
-      0.46 +
-      0.24 * Math.sin(s * 3.1 + spec.phaseA) +
-      0.16 * Math.sin(s * 6.3 + spec.phaseB) +
-      0.09 * Math.cos(s * 11.4 + spec.phaseC) +
-      0.05 * Math.sin(s * 17.5 - spec.phaseA * 1.4);
-    // Keep a gentle saddle/opening near center so focal ritual subjects stay framed clearly.
-    const valleyWidth = riverValley ? 0.34 : 0.24;
-    const valleyStrength = riverValley ? Math.min(0.68, spec.valleyDip + 0.22) : spec.valleyDip;
-    const valley = 1 - valleyStrength * Math.exp(-(s * s) / (valleyWidth * valleyWidth));
-    ridgeHeights[i] = Math.max(0.18, spec.peakHeight * Math.max(0.12, harmonic) * valley * edgeFade);
-  }
-
-  for (let r = 0; r <= rows; r++) {
-    const v = r / rows; // 0 = base, 1 = crest
-    const yProfile = Math.pow(v, 0.85);
+    const ridgeHeights = new Float32Array(cols + 1);
     for (let i = 0; i <= cols; i++) {
       const u = i / cols;
-      const s = u * 2 - 1;
-      const x = s * (spec.spanX * 0.5);
-      const crestY = ridgeHeights[i]!;
-      const y = baseY + (crestY - baseY) * yProfile;
-      // Gentle panoramic curve plus organic spur/gully folds that catch directional sun.
-      const spur = Math.sin(s * 7.8 + spec.phaseB * 0.7) * 0.45 * (1 - v * 0.55) * (1 - s * s * 0.5);
-      const z = spec.baseZ + spec.curveZ * (s * s) + (1 - v) * spec.slopeDepth + spur;
-      const idx = (r * (cols + 1) + i) * 3;
-      positions[idx] = x;
-      positions[idx + 1] = y;
-      positions[idx + 2] = z;
+      const s = u * 2 - 1; // -1..1
+      const edgeFade = 1 - THREE.MathUtils.smoothstep(Math.abs(s), 0.76, 1.0);
+      const harmonic =
+        0.46 +
+        0.24 * Math.sin(s * 3.1 + spec.phaseA) +
+        0.16 * Math.sin(s * 6.3 + spec.phaseB) +
+        0.09 * Math.cos(s * 11.4 + spec.phaseC) +
+        0.05 * Math.sin(s * 17.5 - spec.phaseA * 1.4);
+      // Keep a gentle saddle/opening near center so focal ritual subjects stay framed clearly.
+      const valleyWidth = riverValley ? 0.34 : 0.24;
+      const valleyStrength = riverValley ? Math.min(0.68, spec.valleyDip + 0.22) : spec.valleyDip;
+      const valley = 1 - valleyStrength * Math.exp(-(s * s) / (valleyWidth * valleyWidth));
+      ridgeHeights[i] = Math.max(0.18, spec.peakHeight * Math.max(0.12, harmonic) * valley * edgeFade);
     }
-  }
 
-  for (let r = 0; r < rows; r++) {
-    for (let i = 0; i < cols; i++) {
-      const a = r * (cols + 1) + i;
-      const b = a + 1;
-      const c = a + (cols + 1);
-      const d = c + 1;
-      // Winding faces +Z (toward the camera).
-      indices.push(a, b, c, b, d, c);
+    for (let r = 0; r <= rows; r++) {
+      const v = r / rows; // 0 = base, 1 = crest
+      const yProfile = Math.pow(v, 0.85);
+      for (let i = 0; i <= cols; i++) {
+        const u = i / cols;
+        const s = u * 2 - 1;
+        const x = s * (spec.spanX * 0.5);
+        const crestY = ridgeHeights[i]!;
+        const y = baseY + (crestY - baseY) * yProfile;
+        // Gentle panoramic curve plus organic spur/gully folds that catch directional sun.
+        const spur = Math.sin(s * 7.8 + spec.phaseB * 0.7) * 0.45 * (1 - v * 0.55) * (1 - s * s * 0.5);
+        const z = spec.baseZ + spec.curveZ * (s * s) + (1 - v) * spec.slopeDepth + spur;
+        const idx = (r * (cols + 1) + i) * 3;
+        positions[idx] = x;
+        positions[idx + 1] = y;
+        positions[idx + 2] = z;
+      }
     }
+
+    for (let r = 0; r < rows; r++) {
+      for (let i = 0; i < cols; i++) {
+        const a = r * (cols + 1) + i;
+        const b = a + 1;
+        const c = a + (cols + 1);
+        const d = c + 1;
+        // Winding faces +Z (toward the camera).
+        indexList.push(a, b, c, b, d, c);
+      }
+    }
+
+    const tempGeo = new THREE.BufferGeometry();
+    tempGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    tempGeo.setIndex(indexList);
+    tempGeo.computeVertexNormals();
+
+    const normalsAttr = tempGeo.getAttribute('normal') as THREE.BufferAttribute;
+    for (let r = 0; r <= rows; r++) {
+      const v = r / rows;
+      const elevT = THREE.MathUtils.smoothstep(v, 0.08, 0.96);
+      for (let i = 0; i <= cols; i++) {
+        const vert = r * (cols + 1) + i;
+        // Softly lift normals upward so distant slopes feel painterly rather than harsh low-poly facets.
+        const nx = normalsAttr.getX(vert) * 0.72;
+        const ny = normalsAttr.getY(vert) * 0.72 + 0.42;
+        const nz = normalsAttr.getZ(vert) * 0.72 + 0.34;
+        const nLen = Math.hypot(nx, ny, nz) || 1;
+        const unx = nx / nLen;
+        const uny = ny / nLen;
+        const unz = nz / nLen;
+        normalsAttr.setXYZ(vert, unx, uny, unz);
+
+        const sunDot = THREE.MathUtils.clamp(
+          unx * DAY_SUN_DIR.x + uny * DAY_SUN_DIR.y + unz * DAY_SUN_DIR.z,
+          0,
+          1,
+        );
+        const warmLift = (sunDot - 0.5) * 0.14 * (0.35 + 0.65 * elevT);
+        const cr = spec.baseTint[0] + (spec.crestTint[0] - spec.baseTint[0]) * elevT + warmLift * 1.1;
+        const cg = spec.baseTint[1] + (spec.crestTint[1] - spec.baseTint[1]) * elevT + warmLift * 0.85;
+        const cb = spec.baseTint[2] + (spec.crestTint[2] - spec.baseTint[2]) * elevT - warmLift * 0.55;
+        const cIdx = vert * 3;
+        colors[cIdx] = THREE.MathUtils.clamp(cr, 0.55, 1.2);
+        colors[cIdx + 1] = THREE.MathUtils.clamp(cg, 0.55, 1.2);
+        colors[cIdx + 2] = THREE.MathUtils.clamp(cb, 0.55, 1.2);
+      }
+    }
+
+    tempGeo.computeBoundingBox();
+    tempGeo.computeBoundingSphere();
+    tpl = {
+      positions,
+      normals: Float32Array.from(normalsAttr.array as Float32Array),
+      colors,
+      indices: Uint16Array.from(indexList),
+      boundingBox: tempGeo.boundingBox!.clone(),
+      boundingSphere: tempGeo.boundingSphere!.clone(),
+    };
+    tempGeo.dispose();
+    RIDGE_TEMPLATE_CACHE.set(cacheKey, tpl);
   }
 
   const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-
-  const normals = geometry.getAttribute('normal') as THREE.BufferAttribute;
-  for (let r = 0; r <= rows; r++) {
-    const v = r / rows;
-    const elevT = THREE.MathUtils.smoothstep(v, 0.08, 0.96);
-    for (let i = 0; i <= cols; i++) {
-      const vert = r * (cols + 1) + i;
-      // Softly lift normals upward so distant slopes feel painterly rather than harsh low-poly facets.
-      const nx = normals.getX(vert) * 0.72;
-      const ny = normals.getY(vert) * 0.72 + 0.42;
-      const nz = normals.getZ(vert) * 0.72 + 0.34;
-      const nLen = Math.hypot(nx, ny, nz) || 1;
-      const unx = nx / nLen;
-      const uny = ny / nLen;
-      const unz = nz / nLen;
-      normals.setXYZ(vert, unx, uny, unz);
-
-      const sunDot = THREE.MathUtils.clamp(
-        unx * DAY_SUN_DIR.x + uny * DAY_SUN_DIR.y + unz * DAY_SUN_DIR.z,
-        0,
-        1,
-      );
-      const warmLift = (sunDot - 0.5) * 0.14 * (0.35 + 0.65 * elevT);
-      const cr = spec.baseTint[0] + (spec.crestTint[0] - spec.baseTint[0]) * elevT + warmLift * 1.1;
-      const cg = spec.baseTint[1] + (spec.crestTint[1] - spec.baseTint[1]) * elevT + warmLift * 0.85;
-      const cb = spec.baseTint[2] + (spec.crestTint[2] - spec.baseTint[2]) * elevT - warmLift * 0.55;
-      const cIdx = vert * 3;
-      colors[cIdx] = THREE.MathUtils.clamp(cr, 0.55, 1.2);
-      colors[cIdx + 1] = THREE.MathUtils.clamp(cg, 0.55, 1.2);
-      colors[cIdx + 2] = THREE.MathUtils.clamp(cb, 0.55, 1.2);
-    }
-  }
-
-  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  geometry.computeBoundingBox();
-  geometry.computeBoundingSphere();
-  return { geometry, baseColors: Float32Array.from(colors) };
+  geometry.setAttribute('position', new THREE.BufferAttribute(tpl.positions.slice(), 3));
+  geometry.setAttribute('normal', new THREE.BufferAttribute(tpl.normals.slice(), 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(tpl.colors.slice(), 3));
+  geometry.setIndex(new THREE.BufferAttribute(tpl.indices.slice(), 1));
+  geometry.boundingBox = tpl.boundingBox.clone();
+  geometry.boundingSphere = tpl.boundingSphere.clone();
+  return { geometry, baseColors: tpl.colors.slice() };
 }
 
 let cachedSoftRadial32: Uint8Array<ArrayBuffer> | undefined;

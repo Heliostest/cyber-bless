@@ -478,9 +478,10 @@ describe('warm purple-umber contact AO grounding', () => {
     expect(matA.depthWrite).toBe(false)
     expect(matA.polygonOffset).toBe(true)
     expect(matA.toneMapped).toBe(false)
-    // Shared immutable DataTexture singletons per shape
-    expect(matA.map).toBe(matC.map)
-    expect(matA.map).not.toBe(matB.map)
+    // Shared immutable pixel buffers per shape, wrapped in per-material disposable DataTextures
+    expect(matA.map).not.toBe(matC.map)
+    expect((matA.map as THREE.DataTexture).image.data).toBe((matC.map as THREE.DataTexture).image.data)
+    expect((matA.map as THREE.DataTexture).image.data).not.toBe((matB.map as THREE.DataTexture).image.data)
 
     for (const shadow of [a, b]) {
       expect(shadow.userData.effect).toBe(true)

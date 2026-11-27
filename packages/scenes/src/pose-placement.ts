@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { dampedRing, springSettleEase } from './procedural-kit'
+import { springSettleEase } from './procedural-kit'
 import { insideCanvas } from './touch-target'
 
 type Anchor = [number, number, number]
@@ -210,12 +210,11 @@ export function createPosePlacement(canvas: HTMLCanvasElement, camera: THREE.Cam
       const eased = springSettleEase(t, 0.032)
       const travelDist = from.position.distanceTo(end.position)
       const arcLift = Math.sin(Math.PI * t) * Math.min(0.035, travelDist * 0.08)
+      const minFloorY = Math.min(from.position.y, end.position.y)
       root.position.lerpVectors(from.position, end.position, eased)
-      root.position.y += arcLift
+      root.position.y = Math.max(minFloorY, root.position.y + arcLift)
       root.quaternion.slerpQuaternions(from.quaternion, end.quaternion, eased).normalize()
       root.scale.lerpVectors(from.scale, end.scale, t)
-      const cushion = 1 - 0.012 * dampedRing(Math.max(0, t - 0.65) / 0.35, 1.5, 4.5) * (1 - t)
-      root.scale.multiplyScalar(cushion)
       root.updateWorldMatrix(true, true)
     },
     /** Call after model.pose(checkpoint,0): some authored poses only update y or

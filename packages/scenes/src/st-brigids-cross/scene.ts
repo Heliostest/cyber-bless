@@ -1,3 +1,4 @@
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
 import {
@@ -25,7 +26,7 @@ const HELD = new THREE.Vector3(-0.32, 1.04, 0.52)
 const CROSS_SCALE = 0.78
 const HUNG = new THREE.Vector3(0, 1.98 - 0.98 * CROSS_SCALE, 0.25)
 const HANG_ANCHOR = new THREE.Vector3(0, .98, .02).multiplyScalar(CROSS_SCALE)
-const LOOSE = new THREE.Vector3(0.75, 0.57, 0.83)
+const LOOSE = new THREE.Vector3(0.75, 0.435, 0.83)
 const FOLDS: [number,number,number][] = [[-.08,-.15,.11],[.15,-.08,.11],[.08,.15,.11],[-.15,.08,.11]]
 
 /** Four simplified rush placements, followed by hanging and a quiet viewing. */
@@ -63,18 +64,29 @@ export function createBrigidsCross(ctx: SceneContext): SceneInstance {
     mesh.userData.toonSurface={outline:false}; return mesh
   }
   // A small working table in front of an original cottage lintel.
+  const groundY = getEnvironmentSurfaceY('st-brigids-cross')
+  const postTop = 2.2
+  const postH = postTop - groundY
+  const footTop = 0.05
+  const footH = footTop - groundY
+  const tableLegTop = 0.215
+  const tableLegH = tableLegTop - groundY
   add(new RoundedBoxGeometry(2.58,.14,1.3,3,.05),timber,[0,.27,.3])
   add(new RoundedBoxGeometry(2.4,.022,1.14,2,.015),cream,[0,.35,.32]).userData.toonSurface={outline:false}
   for(const x of [-1.05,1.05]) {
-    add(new RoundedBoxGeometry(.17,2.2,.2,3,.04),postTimber,[x,1.1,-.18])
-    add(new RoundedBoxGeometry(.28,.07,.52,2,.02),edge,[x,.035,-.1])
-    add(new RoundedBoxGeometry(.14,.27,.14,2,.035),postEdge,[x,.13,.25])
+    add(new RoundedBoxGeometry(.17,postH,.2,3,.04),postTimber,[x,(groundY+postTop)/2,-.18]).name='brigid-door-post'
+    add(new RoundedBoxGeometry(.28,footH,.52,2,.02),edge,[x,(groundY+footTop)/2,-.1]).name='brigid-door-foot'
+    for(const z of [.06,.78]) {
+      add(new RoundedBoxGeometry(.14,tableLegH,.14,2,.03),postEdge,[x,(groundY+tableLegTop)/2,z]).name='brigid-table-leg'
+    }
   }
   add(new RoundedBoxGeometry(2.35,.2,.25,3,.045),timber,[0,2.07,-.13])
-  const peg=add(new THREE.CylinderGeometry(.025,.028,.15,12),edge,[0,1.98,.065]); peg.rotation.x=Math.PI/2
+  add(new RoundedBoxGeometry(.11,.12,.08,2,.018),edge,[0,1.965,-.01]).name='brigid-peg-bracket'
+  const peg=add(new THREE.CylinderGeometry(.020,.025,.285,14),edge,[0,1.951,.1575]); peg.rotation.x=Math.PI/2; peg.name='brigid-lintel-peg'
+  const pegTip=add(new THREE.SphereGeometry(.028,12,8),edge,[0,1.958,.302]); pegTip.scale.z=.65; pegTip.name='brigid-peg-tip'
   const invisible=new THREE.MeshBasicMaterial({visible:false})
-  const hangTarget=add(new THREE.SphereGeometry(.21,16,12),invisible,[0,1.98,.17]); hangTarget.name='brigid-hang-target'
-  const hookRing=add(new THREE.TorusGeometry(.1,.012,6,24),cord,[0,1.96,.08])
+  const hangTarget=add(new THREE.SphereGeometry(.21,16,12),invisible,[0,1.98,.24]); hangTarget.name='brigid-hang-target'
+  const hookRing=add(new THREE.TorusGeometry(.1,.012,6,24),cord,[0,1.96,.2656])
 
   const suspension=new THREE.Group(); suspension.name='brigid-suspension'; world.add(suspension)
   const cross=new THREE.Group(); cross.name='brigid-cross'; cross.scale.setScalar(CROSS_SCALE); suspension.add(cross)

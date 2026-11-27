@@ -137,4 +137,9 @@ describe('handle, hang and listen', () => {
     expect(((s.object('furin-bell') as THREE.Mesh).material as THREE.Material).userData.ritualOptics?.kind).toBe('glass')
     expect(((s.object('furin-ribbon-strip') as THREE.Mesh).material as THREE.Material).userData.ritualOptics?.kind).toBe('paper')
   })
+  it('grounds the temporary preparation stand base and post on the veranda deck', () => {
+    const s = mount(0)
+    expect(new THREE.Box3().setFromObject(s.object('furin-rack-base')).min.y).toBeCloseTo(-0.035, 4)
+    expect(new THREE.Box3().setFromObject(s.object('furin-rack-post')).min.y).toBeCloseTo(-0.035, 4)
+  })
 })

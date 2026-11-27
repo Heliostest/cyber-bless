@@ -299,11 +299,11 @@ export function createChineseFuPaperModel() {
  box('fu-frame-left',[.10,2.16,.24],[-.28,1.08,-.05],frame)
  box('fu-frame-right',[.10,2.16,.24],[1.12,1.08,-.05],frame)
  box('fu-frame-top',[1.60,.13,.24],[.42,2.15,-.04],frame)
- box('fu-threshold',[1.60,.08,.30],[.42,-.04,-.03],wood)
+ box('fu-threshold',[1.60,.055,.30],[.42,-.0275,-.03],wood)
  const handle=mesh(new THREE.TorusGeometry(.06,.012,8,32),brass,subject,'fu-door-handle');handle.position.set(.87,.45,.018)
  box('fu-handle-mount',[.035,.055,.033],[.87,.51,-.012],brass)
  // A low display holder supports the diamond tip. Front/back rails leave a real slot.
- box('fu-holder-base',[.38,.115,.29],[-.88,-.0225,.55],wood)
+ box('fu-holder-base',[.38,.09,.29],[-.88,-.01,.55],wood)
  box('fu-holder-back',[.26,.15,.015],[-.88,.11,.535],wood)
  box('fu-holder-shelf',[.29,.02,.085],[-.88,.15,.565],frame)
  box('fu-holder-front',[.26,.11,.015],[-.88,.215,.58],wood)
@@ -332,7 +332,7 @@ export function createChineseFuPaperModel() {
  brush('fu-field-middle-horizontal',[[.012,-.142],[.096,-.140],[.180,-.142]],[.014,.013,.015])
  brush('fu-field-middle-vertical',[[.096,-.036],[.096,-.132],[.096,-.226]],[.016,.014,.015])
  // Two restrained stone edges ground this small entry vignette, without a temple reconstruction.
- box('fu-entry-slab',[2.75,.06,1.35],[-.1,-.11,.19],applyCraftSurface(mat(0xc8bba3),{kind:'stone',strength:.45}),root)
+ box('fu-entry-slab',[2.75,.05,1.35],[-.1,-.08,.19],applyCraftSurface(mat(0xc8bba3),{kind:'stone',strength:.45}),root)
  const positions:[number,number,number][]=[[-.88,.64,.55],[-.88,1.06,.55],[.42,1.26,.55],[.42,1.38,-.029]]
  const pose=(step:number,n:number)=>{
   const t=Number.isFinite(n)?THREE.MathUtils.clamp(n,0,1):0,index=THREE.MathUtils.clamp(Math.floor(step),0,3)

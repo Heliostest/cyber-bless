@@ -147,4 +147,15 @@ describe('A prepared closed mezuzah case carried to the entrance right doorpost'
     expect(releases.size).toBe(before.size)
     expect([...releases.values()].every(count => count === 1)).toBe(true)
   })
+
+  it('grounds a threshold sill and clears the swinging door bottom above both sill and courtyard flagstones', () => {
+    const model = createMezuzahModel()
+    try {
+      const sill = bounds(model.root.getObjectByName('mezuzah-threshold-sill')!)
+      const panel = bounds(model.root.getObjectByName('mezuzah-door-panel')!)
+      expect(sill.min.y).toBeCloseTo(0, 6)
+      expect(sill.max.y).toBeGreaterThan(0.025)
+      expect(panel.min.y).toBeGreaterThan(sill.max.y)
+    } finally { model.dispose() }
+  })
 })

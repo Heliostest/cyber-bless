@@ -292,6 +292,15 @@ describe('ema plaque', () => {
     s.instance.dispose(); s.instance.dispose()
     expect(freed).toEqual([1, 1])
   })
+
+  it('grounds the ema rack feet on the veranda while preserving the hanging target', () => {
+    const s = mount()
+    const feet: THREE.Box3[] = []
+    s.scene.traverse(o => { if (o.name === 'ema-rack-foot') feet.push(new THREE.Box3().setFromObject(o)) })
+    expect(feet).toHaveLength(2)
+    for (const foot of feet) expect(foot.min.y).toBeCloseTo(-0.035, 4)
+    expect(s.scene.getObjectByName('ema-hang-target')!.getWorldPosition(new THREE.Vector3()).toArray()).toEqual([0, 1.84, 0.09])
+  })
 })
 
 // Cancellation happens before arrival; a completed placement already owns its result.

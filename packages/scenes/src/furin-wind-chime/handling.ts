@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createCloseInspection } from '../close-inspection'
 import { createObjectPointer } from '../object-pointer'
@@ -45,9 +46,13 @@ export function createFurinHandling(options: Options) {
   const rackBaseWood = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xc8a77a, roughness: 0.80 }), { kind: 'wood', axis: 'x', scale: 1.05, strength: 0.44 })
   const rackPostWood = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xc8a77a, roughness: 0.78 }), { kind: 'wood', axis: 'y', scale: 1.65, strength: 0.48 })
   const rackArmWood = applyCraftSurface(new THREE.MeshStandardMaterial({ color: 0xc8a77a, roughness: 0.78 }), { kind: 'wood', axis: 'x', scale: 1.55, strength: 0.46 })
+  const groundY = getEnvironmentSurfaceY('furin-wind-chime')
+  const rackBaseTop = 0.08
+  const rackBaseH = rackBaseTop - groundY
+  const rackPostH = loose.y - groundY
   for (const [name, size, position, mat] of [
-    ['furin-rack-base', [.48, .08, .44], [loose.x - .22, .04, loose.z], rackBaseWood],
-    ['furin-rack-post', [.045, loose.y, .045], [loose.x - .35, loose.y / 2, loose.z], rackPostWood],
+    ['furin-rack-base', [.48, rackBaseH, .44], [loose.x - .22, (groundY + rackBaseTop) / 2, loose.z], rackBaseWood],
+    ['furin-rack-post', [.045, rackPostH, .045], [loose.x - .35, (groundY + loose.y) / 2, loose.z], rackPostWood],
     ['furin-rack-arm', [.4, .045, .065], [loose.x - .18, loose.y, loose.z], rackArmWood],
   ] as const) {
     const radius = Math.min(0.011, size[0] / 4, size[1] / 4, size[2] / 4)

@@ -27,19 +27,22 @@ describe('Komorebi daylight backdrop calibration', () => {
     return shader;
   };
 
-  it('calibrates tagged backdrop roles with flower-only bounce lift, preserves stonePath meshes, restores PBR, and disposes cleanly', () => {
+  it('calibrates tagged backdrop roles with flower bounce lift, distance solar atmosphere, vertexColors preservation, stonePath guard, and clean disposal', () => {
     const root = new THREE.Group();
-    const roles: BackdropRole[] = ['sand', 'stone', 'foliage', 'flower', 'bloom', 'blossomHeart', 'hill', 'distantHill'];
+    const roles: BackdropRole[] = ['sand', 'stone', 'foliage', 'flower', 'bloom', 'blossomHeart', 'hill', 'distantHill', 'farRidge'];
     const flowerRoles = new Set<BackdropRole>(['flower', 'bloom', 'blossomHeart']);
+    const atmosphereRoles = new Set<BackdropRole>(['stone', 'foliage', 'hill', 'distantHill', 'farRidge']);
     expect(KOMOREBI_BACKDROP_PIGMENTS.sand).toBe(0xc8b48c);
+    expect(KOMOREBI_BACKDROP_PIGMENTS.farRidge).toBe(0x9eb8bc);
     const detailMap = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
     const tagged = roles.map(role => {
-      const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+      const ridgeRole = role === 'hill' || role === 'distantHill' || role === 'farRidge';
+      const material = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: ridgeRole });
       material.userData.backdropRole = role;
       if (role === 'sand') material.userData.komorebiDetailMap = detailMap;
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(), material);
       root.add(mesh);
-      return { role, material, mesh };
+      return { role, material, mesh, ridgeRole };
     });
 
     const untaggedMat = new THREE.MeshStandardMaterial({ color: 0xaa8866 });
@@ -68,13 +71,15 @@ describe('Komorebi daylight backdrop calibration', () => {
     expect(backdrop.enabled).toBe(true);
     const expected = new THREE.Color();
     const swappedSurfaces: THREE.Material[] = [];
-    for (const { role, material, mesh } of tagged) {
+    const atmosphereStrengths = new Map<BackdropRole, number>();
+    for (const { role, material, mesh, ridgeRole } of tagged) {
       expect(mesh.material).not.toBe(material);
       expect(mesh.material).toBeInstanceOf(THREE.MeshPhongMaterial);
       const surface = mesh.material as THREE.MeshPhongMaterial;
       expect(surface.name).toBe(`Komorebi backdrop ${role}`);
       expect(surface.userData.komorebiSurface).toBe(true);
       expect(surface.userData.komorebiPigment).toBe(true);
+      expect(surface.vertexColors).toBe(ridgeRole);
       expected.setHex(KOMOREBI_BACKDROP_PIGMENTS[role], THREE.LinearSRGBColorSpace);
       expect(surface.color.equals(expected)).toBe(true);
       if (role === 'sand') expect(surface.map).toBe(detailMap);
@@ -88,16 +93,40 @@ describe('Komorebi daylight backdrop calibration', () => {
         expect(compiled.fragmentShader).toContain(
           'vec3 outgoingLight=mix(vec3(.38,.44,.48),vec3(1.0),clamp(reflectedLight.directDiffuse+reflectedLight.indirectDiffuse,0.0,1.0))*kmPigment',
         );
+      } else if (atmosphereRoles.has(role)) {
+        expect(surface.customProgramCacheKey()).toBe('komorebi-backdrop-atmosphere-v1');
+        expect(compiled.vertexShader).toContain('vKmWorldPos');
+        expect(compiled.vertexShader).not.toContain('abs(objectNormal.y)');
+        expect(compiled.fragmentShader).not.toContain('mix(vec3(.38,.44,.48)');
+        expect(compiled.fragmentShader).toContain(
+          'vec3 outgoingLight=clamp(reflectedLight.directDiffuse+reflectedLight.indirectDiffuse,0.0,1.0)*kmPigment',
+        );
+        expect(compiled.fragmentShader).toContain('kmPigment*=vColor.rgb');
+        expect(compiled.fragmentShader).toContain('uKmSunDir');
+        expect(compiled.fragmentShader).toContain('uKmWarmMist');
+        expect(compiled.uniforms.uKmSunDir?.value).toBeInstanceOf(THREE.Vector3);
+        const range = compiled.uniforms.uKmAtmosRange?.value as THREE.Vector2;
+        expect(range).toBeInstanceOf(THREE.Vector2);
+        expect(range.x).toBeGreaterThanOrEqual(10);
+        expect(range.y).toBeGreaterThan(range.x);
+        const strength = compiled.uniforms.uKmAtmosStrength?.value as number;
+        expect(strength).toBeGreaterThan(0);
+        atmosphereStrengths.set(role, strength);
       } else {
         expect(surface.customProgramCacheKey()).toBe('komorebi-source-diffuse-v1');
         expect(compiled.vertexShader).not.toContain('abs(objectNormal.y)');
         expect(compiled.fragmentShader).not.toContain('mix(vec3(.38,.44,.48)');
+        expect(compiled.fragmentShader).not.toContain('uKmWarmMist');
         expect(compiled.fragmentShader).toContain(
           'vec3 outgoingLight=clamp(reflectedLight.directDiffuse+reflectedLight.indirectDiffuse,0.0,1.0)*kmPigment',
         );
       }
       swappedSurfaces.push(surface);
     }
+    // Atmospheric aerial mist deepens monotonically across near -> mid -> far mountain layers.
+    expect(atmosphereStrengths.get('hill')!).toBeGreaterThan(atmosphereStrengths.get('stone')!);
+    expect(atmosphereStrengths.get('distantHill')!).toBeGreaterThan(atmosphereStrengths.get('hill')!);
+    expect(atmosphereStrengths.get('farRidge')!).toBeGreaterThan(atmosphereStrengths.get('distantHill')!);
     expect(untagged.material).toBe(untaggedMat);
     expect(pigmentOwned.material).toBe(pigmentOwnedMat);
     expect(stonePath.material).toBe(stonePathMat);
@@ -174,7 +203,7 @@ describe('Komorebi daylight backdrop calibration', () => {
         expect(mat.name).toMatch(/^Komorebi backdrop /);
       });
       flowerMaterials.forEach(mat => expect(mat.customProgramCacheKey()).toBe('komorebi-backdrop-flower-v1'));
-      nonFlowerMaterials.forEach(mat => expect(mat.customProgramCacheKey()).toBe('komorebi-source-diffuse-v1'));
+      nonFlowerMaterials.forEach(mat => expect(mat.customProgramCacheKey()).toBe('komorebi-backdrop-atmosphere-v1'));
 
       // Leaving Komorebi restores PBR backdrop props and disables cloud shade without altering stone-path vertex colors.
       const roadColors = Array.from(road!.geometry.attributes.color!.array);
@@ -235,7 +264,7 @@ describe('Komorebi daylight backdrop calibration', () => {
       const expectedSand = new THREE.Color().setHex(0xc8b48c, THREE.LinearSRGBColorSpace);
       expect(padSurface.color.equals(expectedSand)).toBe(true);
 
-      // Spring-ring rocks and planting stones stay on the base Komorebi surface without bounce lift.
+      // Spring-ring rocks and planting stones use distance-gated aerial atmosphere without flower bounce lift.
       const root = scene.getObjectByName('cozy-environment')!;
       const stoneSurfaces: THREE.MeshPhongMaterial[] = [];
       root.traverse(object => {
@@ -244,7 +273,7 @@ describe('Komorebi daylight backdrop calibration', () => {
         }
       });
       expect(stoneSurfaces.length).toBeGreaterThanOrEqual(14);
-      stoneSurfaces.forEach(mat => expect(mat.customProgramCacheKey()).toBe('komorebi-source-diffuse-v1'));
+      stoneSurfaces.forEach(mat => expect(mat.customProgramCacheKey()).toBe('komorebi-backdrop-atmosphere-v1'));
 
       world.setTone('original');
       expect(pad.material).toBeInstanceOf(THREE.MeshStandardMaterial);

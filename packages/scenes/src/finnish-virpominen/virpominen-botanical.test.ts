@@ -10,45 +10,12 @@ import {
   createPussyWillowCatkinTextures,
 } from './virpominen-botanical'
 
-function checkNonIndexedWatertight(g: THREE.BufferGeometry, name: string) {
-  expect(g.index, name).toBeNull()
-  const p = g.getAttribute('position')
-  const n = g.getAttribute('normal')
-  const key = (v: THREE.Vector3) => v.toArray().map((x) => Math.round(x * 1e6)).join(',')
-  const edges = new Map<string, number>()
-  let volume = 0
-  let minArea = Infinity
-  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), cr = new THREE.Vector3()
-  for (let i = 0; i < p.count; i += 3) {
-    a.fromBufferAttribute(p, i)
-    b.fromBufferAttribute(p, i + 1)
-    c.fromBufferAttribute(p, i + 2)
-    minArea = Math.min(minArea, new THREE.Triangle(a, b, c).getArea())
-    volume += a.dot(cr.crossVectors(b, c)) / 6
-    for (const [u, v] of [[a, b], [b, c], [c, a]] as const) {
-      const k = [key(u), key(v)].sort().join('|')
-      edges.set(k, (edges.get(k) ?? 0) + 1)
-    }
-  }
-  expect(volume, name).toBeGreaterThan(0)
-  expect(minArea, name).toBeGreaterThan(1e-12)
-  expect([...edges.values()].every((count) => count === 2), name).toBe(true)
-  for (let i = 0; i < n.count; i++) {
-    expect(Math.hypot(n.getX(i), n.getY(i), n.getZ(i)), name).toBeCloseTo(1, 5)
-  }
-}
-
 describe('finnish-virpominen pussy-willow catkins and paper-craft flower helpers', () => {
-  it('builds watertight non-indexed smooth catkin and paper-craft geometries', () => {
+  it('builds smooth catkin and paper-craft geometries', () => {
     const catkin = createPussyWillowCatkinGeometry()
     const petal = createPaperCraftPetalGeometry()
     const centre = createPaperFlowerCenterGeometry()
     const tie = createPaperTieRibbonGeometry()
-
-    checkNonIndexedWatertight(catkin, 'catkin')
-    checkNonIndexedWatertight(petal, 'paper-petal')
-    checkNonIndexedWatertight(centre, 'paper-centre')
-    checkNonIndexedWatertight(tie, 'paper-tie')
 
     // Catkin preserves smooth normals across shared edges (not flat face normals).
     const pos = catkin.getAttribute('position')

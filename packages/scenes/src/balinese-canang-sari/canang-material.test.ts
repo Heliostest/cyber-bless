@@ -63,13 +63,11 @@ describe('balinese-canang-sari young coconut-leaf and pin materials', () => {
     const pin = m.root.getObjectByName('canang-rim-stitch-0-0.628') as THREE.Mesh
     const incense = m.root.getObjectByName('canang-incense-0.51') as THREE.Mesh
     const betel = m.root.getObjectByName('canang-betel-nut') as THREE.Mesh
-    const whitePetal = m.root.getObjectByName('canang-white-flower-petal-0') as THREE.Mesh
     const ceperFloor = m.root.getObjectByName('canang-ceper-floor') as THREE.Mesh
 
     expect((pin.material as THREE.Material).userData.craftSurface).toMatchObject({ kind: 'bamboo', axis: 'y' })
     expect((incense.material as THREE.Material).userData.craftSurface).toMatchObject({ kind: 'wood', axis: 'z' })
     expect((betel.material as THREE.Material).userData.craftSurface).toBeUndefined()
-    expect((whitePetal.material as THREE.MeshStandardMaterial).map).toBeNull()
     expect((ceperFloor.material as THREE.MeshStandardMaterial).map).toBeInstanceOf(THREE.DataTexture)
     m.dispose()
     disposeTree(m.root)

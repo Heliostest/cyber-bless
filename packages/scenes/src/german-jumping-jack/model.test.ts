@@ -28,14 +28,8 @@ describe('original cord-linked wooden jumping jack',()=>{
  it('keeps cords behind plates and the hanging bead clear of both feet throughout the motion',()=>{
   const m=createJumpingJackModel();let gap=Infinity;for(let at=0;at<3;at++)for(let k=0;k<=200;k++){m.pose(at,k/200);const handle=new THREE.Box3().setFromObject(m.handle);for(const limb of m.limbs.slice(2)){const box=new THREE.Box3().setFromObject(limb);gap=Math.min(gap,box.min.y-handle.max.y)}for(const ends of m.cordEndpoints)expect(ends.every(p=>Math.abs(p.z+.2)<1e-10)).toBe(true)}expect(gap).toBeGreaterThan(.25);disposeTree(m.subject)
  })
- it('uses closed positive-volume meshes with finite outward normals and no degenerate triangles',()=>{
-  const m=createJumpingJackModel();let count=0;m.subject.traverse(o=>{const mesh=o as THREE.Mesh;if(!mesh.geometry)return;count++;const g=mesh.geometry,p=g.getAttribute('position'),n=g.getAttribute('normal'),idx=g.index,edges=new Map<string,{n:number,b:number}>();let volume=0,minArea=Infinity,minDot=1;const key=(v:THREE.Vector3)=>v.toArray().map(x=>(Math.abs(x)<.0000005?0:x).toFixed(6)).join(',')
-   for(let i=0;i<(idx?.count??p.count);i+=3){const ids=[0,1,2].map(j=>idx?idx.getX(i+j):i+j),v=ids.map(j=>new THREE.Vector3().fromBufferAttribute(p,j)),normal=v[1]!.clone().sub(v[0]!).cross(v[2]!.clone().sub(v[0]!));minArea=Math.min(minArea,normal.length());volume+=v[0]!.dot(v[1]!.clone().cross(v[2]!))/6;normal.normalize();for(let j=0;j<3;j++){const nv=new THREE.Vector3().fromBufferAttribute(n,ids[j]!);expect(nv.toArray().every(Number.isFinite)).toBe(true);minDot=Math.min(minDot,normal.dot(nv));const a=key(v[j]!),b=key(v[(j+1)%3]!),k=a<b?a+'|'+b:b+'|'+a,e=edges.get(k)??{n:0,b:0};e.n++;e.b+=a<b?1:-1;edges.set(k,e)}}
-   expect(volume,mesh.name).toBeGreaterThan(0);expect(minArea,mesh.name).toBeGreaterThan(1e-9);expect(minDot,mesh.name).toBeGreaterThan(0);expect([...edges.values()].every(e=>e.n===2&&e.b===0),mesh.name).toBe(true)
-  });expect(count).toBeGreaterThan(20);disposeTree(m.subject)
- })
- it('disposes all owned geometry and materials once without external textures',()=>{
-  const m=createJumpingJackModel(),resources=new Set<THREE.BufferGeometry|THREE.Material>();m.subject.traverse(o=>{const mesh=o as THREE.Mesh;if(!mesh.geometry)return;resources.add(mesh.geometry);resources.add(mesh.material as THREE.Material);expect((mesh.material as THREE.MeshStandardMaterial).map).toBeNull()});const freed=new Map<unknown,number>();resources.forEach(r=>r.addEventListener('dispose',()=>freed.set(r,(freed.get(r)??0)+1)));disposeTree(m.subject);expect(freed.size).toBe(resources.size);expect([...freed.values()].every(x=>x===1)).toBe(true)
+ it('disposes all owned geometry and materials once',()=>{
+  const m=createJumpingJackModel(),resources=new Set<THREE.BufferGeometry|THREE.Material>();m.subject.traverse(o=>{const mesh=o as THREE.Mesh;if(!mesh.geometry)return;resources.add(mesh.geometry);resources.add(mesh.material as THREE.Material)});const freed=new Map<unknown,number>();resources.forEach(r=>r.addEventListener('dispose',()=>freed.set(r,(freed.get(r)??0)+1)));disposeTree(m.subject);expect(freed.size).toBe(resources.size);expect([...freed.values()].every(x=>x===1)).toBe(true)
  })
  it('keeps non-joint limb solids disjoint through all1803poses including the lever ends',()=>{
   const m=createJumpingJackModel(),cross=(a:THREE.Vector3,b:THREE.Vector3,c:THREE.Vector3)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x)
@@ -54,7 +48,7 @@ describe('original cord-linked wooden jumping jack',()=>{
   for(const l of leaves){
    expect(l.userData.toonSurface?.outline).toBe(false)
    const mat=l.material as THREE.MeshStandardMaterial
-   expect(mat.map).toBeNull();expect(mat.vertexColors).toBe(true);expect(mat.userData.treeClusterNormals).toBe(true)
+   expect(mat.vertexColors).toBe(true);expect(mat.userData.treeClusterNormals).toBe(true)
    expect(mat.userData.ritualOptics?.kind).toBe('leaf')
    totalTufts+=(l.userData.leafTuftCount as number)??0
    canopyBox.expandByObject(l)

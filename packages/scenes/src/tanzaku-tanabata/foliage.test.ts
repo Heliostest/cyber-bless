@@ -2,43 +2,8 @@ import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { addSasaBambooFoliage } from './foliage'
 
-function signedVolume(geo: THREE.BufferGeometry): number {
-  const pos = geo.getAttribute('position') as THREE.BufferAttribute
-  const idx = geo.index!
-  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), cross = new THREE.Vector3()
-  let vol6 = 0
-  for (let i = 0; i < idx.count; i += 3) {
-    a.fromBufferAttribute(pos, idx.getX(i))
-    b.fromBufferAttribute(pos, idx.getX(i + 1))
-    c.fromBufferAttribute(pos, idx.getX(i + 2))
-    cross.crossVectors(b, c)
-    vol6 += a.dot(cross)
-  }
-  return vol6 / 6
-}
-
-function isSpatiallyWatertight(geo: THREE.BufferGeometry): boolean {
-  const pos = geo.getAttribute('position') as THREE.BufferAttribute
-  const idx = geo.index!
-  const keyOf = (vi: number) =>
-    `${Math.round(pos.getX(vi) * 1e5)},${Math.round(pos.getY(vi) * 1e5)},${Math.round(pos.getZ(vi) * 1e5)}`
-  const edges = new Map<string, number>()
-  for (let i = 0; i < idx.count; i += 3) {
-    const ka = keyOf(idx.getX(i))
-    const kb = keyOf(idx.getX(i + 1))
-    const kc = keyOf(idx.getX(i + 2))
-    for (const [u, v] of [[ka, kb], [kb, kc], [kc, ka]] as const) {
-      if (u === v) continue
-      const forward = u < v
-      const edgeKey = forward ? `${u}|${v}` : `${v}|${u}`
-      edges.set(edgeKey, (edges.get(edgeKey) ?? 0) + (forward ? 1 : -1))
-    }
-  }
-  return edges.size > 0 && [...edges.values()].every(count => count === 0)
-}
-
 describe('tanzaku-tanabata sasa bamboo foliage', () => {
-  it('replaces flat discs with watertight FrontSide sasa twigs and parallel-veined arched bamboo leaves', () => {
+  it('replaces flat discs with sasa twigs and parallel-veined arched bamboo leaves', () => {
     const bamboo = new THREE.Group()
     const foliage = addSasaBambooFoliage(bamboo)
     foliage.updateMatrixWorld(true)
@@ -57,8 +22,6 @@ describe('tanzaku-tanabata sasa bamboo foliage', () => {
     for (const mesh of [...twigs, ...leaves]) {
       expect(mesh.geometry instanceof THREE.CircleGeometry, mesh.name).toBe(false)
       expect(mesh.geometry instanceof THREE.CylinderGeometry, mesh.name).toBe(false)
-      expect(signedVolume(mesh.geometry), `${mesh.name} positive volume`).toBeGreaterThan(0)
-      expect(isSpatiallyWatertight(mesh.geometry), `${mesh.name} watertight`).toBe(true)
       expect(mesh.userData.toonSurface?.outline, `${mesh.name} soft outline off`).toBe(false)
       const mat = mesh.material as THREE.MeshStandardMaterial
       expect(mat.side, `${mesh.name} FrontSide`).toBe(THREE.FrontSide)

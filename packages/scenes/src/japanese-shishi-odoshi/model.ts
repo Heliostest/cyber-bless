@@ -1,6 +1,27 @@
 import {applyCraftSurface} from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
 import {createStylizedWater} from '@wbr/scene-runtime/stylized-water'
+import {createLivingPourStream} from '@wbr/scene-runtime/vessel-liquid'
+
+function buildPolarDiscXY(radius:number,rings:number,sides:number){
+ const pos:number[]=[0,0,0],uv:number[]=[.5,.5],idx:number[]=[]
+ for(let j=1;j<=rings;j++){
+  const r=radius*(j/rings)
+  for(let k=0;k<sides;k++){
+   const a=(k/sides)*Math.PI*2,cs=Math.cos(a),sn=Math.sin(a)
+   pos.push(r*cs,r*sn,0);uv.push(.5+.5*(j/rings)*cs,.5+.5*(j/rings)*sn)
+  }
+ }
+ for(let k=0;k<sides;k++)idx.push(0,1+k,1+(k+1)%sides)
+ for(let j=1;j<rings;j++)for(let k=0;k<sides;k++){
+  const a=1+(j-1)*sides+k,b=1+(j-1)*sides+(k+1)%sides,c=1+j*sides+k,d=1+j*sides+(k+1)%sides
+  idx.push(a,c,d,a,d,b)
+ }
+ const g=new THREE.BufferGeometry()
+ g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3))
+ g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2))
+ g.setIndex(idx);g.computeVertexNormals();return g
+}
 
 export function createShishiOdoshiModel(){
  const subject=new THREE.Group(),fixed=new THREE.Group(),pivot=new THREE.Group(),feed=new THREE.Group()
@@ -64,12 +85,17 @@ export function createShishiOdoshiModel(){
  const strike=mesh('sozu-strike-stone',new THREE.SphereGeometry(1,32,24),stone,fixed,strikePoint.x,strikePoint.y/2,0);strike.scale.set(.38,strikePoint.y/2,.32)
  const basinProfile=[[1.16,.02],[1.18,.30],[1.43,.32],[1.50,0],[1.16,0],[1.16,.02]].map(([x,y])=>new THREE.Vector2(x,y))
  mesh('sozu-pool-rim',new THREE.LatheGeometry(basinProfile.reverse(),64),stone,fixed,1.0,0,0)
- const pool=createStylizedWater({geometry:new THREE.CircleGeometry(1.17,64),depth:.16,color:'#67c5c2',bedColor:'#bcc6a2',opacity:.48,radius:1.17,causticScale:4.2});pool.surface.name='sozu-pool-water';pool.bed.name='sozu-pool-bed';pool.surface.rotation.x=-Math.PI/2;pool.surface.position.set(1.0,.18,0);fixed.add(pool.surface)
+ const pool=createStylizedWater({geometry:buildPolarDiscXY(1.17,16,64),depth:.16,color:'#63c4c0',shallowColor:'#a2e5da',deepColor:'#2c6e75',bedColor:'#bcc6a2',foamColor:'#f5f4e6',opacity:.50,radius:1.17,waveScale:1.15,waveAmplitude:.0065,causticScale:4.2,flowDirection:[.88,-.47],flowSpeed:.24,rippleSpeed:.86,rippleWavelength:.22});pool.surface.name='sozu-pool-water';pool.bed.name='sozu-pool-bed';pool.surface.rotation.x=-Math.PI/2;pool.surface.position.set(1.0,.18,0);fixed.add(pool.surface)
  const liquid=mesh('sozu-contained-water',new THREE.PlaneGeometry(1,1,32,1),waterMat,subject);liquid.castShadow=false;liquid.renderOrder=2;liquid.userData.toonSurface={outline:false}
- const inlet=mesh('sozu-inlet-water',new THREE.CylinderGeometry(.018,.018,1,12),waterMat,subject),outlet=mesh('sozu-outlet-water',new THREE.CylinderGeometry(.022,.022,1,12),waterMat,subject)
- for(const m of[inlet,outlet]){m.castShadow=false;m.userData.toonSurface={outline:false}}
+ const inletStream=createLivingPourStream({preset:'clear-water',topRadius:.0165,bottomRadius:.0105,segments:12,radialSegments:10,arcForward:0,showSplashCrown:false,color:'#70c9c5',opacity:.70,roughness:.16,name:'sozu-inlet-water',waterRendering:true})
+ const outletStream=createLivingPourStream({preset:'clear-water',topRadius:.0205,bottomRadius:.0125,segments:16,radialSegments:10,arcForward:0,showSplashCrown:true,splashRadius:.056,color:'#70c9c5',opacity:.70,roughness:.16,name:'sozu-outlet-water',waterRendering:true})
+ const inlet=inletStream.mesh,outlet=outletStream.mesh
+ subject.add(inlet,outlet)
+ outletStream.splashCrown.position.set(1.0,.184,0)
+ fixed.add(outletStream.splashCrown)
  const spillGeometry=new THREE.BufferGeometry();spillGeometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(36),3));const spill=mesh('sozu-spill-film',spillGeometry,waterMat,subject);spill.castShadow=false;spill.userData.toonSurface={outline:false}
- const stream=(m:THREE.Mesh,a:THREE.Vector3,b:THREE.Vector3)=>{m.position.copy(a).add(b).multiplyScalar(.5);m.scale.set(1,a.distanceTo(b),1);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize())}
+ const lastInletA=new THREE.Vector3(),lastInletB=new THREE.Vector3(),lastOutletA=new THREE.Vector3(),lastOutletB=new THREE.Vector3()
+ let waterClock=0,outletRippleTimer=.12
  const liquidPose=(theta:number,height:number,show:boolean)=>{
   const c=Math.cos(theta),s=Math.sin(theta),r=.12425
   let lo=-.0799,hi=(1.2-.6*(height-1.15)/c)/(1-.6*s/c)
@@ -87,17 +113,46 @@ export function createShishiOdoshiModel(){
   const initialHeight=1.16,lip=1.15+1.275*Math.sin(theta)-.125*Math.cos(theta)
   const height=step===0?1.013+(initialHeight-1.013)*Math.max(0,(t-.5)/.5):step===1?Math.min(initialHeight,lip-.003)-.10*t:0
   liquidPose(theta,height,(step===0&&t>.5)||(step===1&&t<1))
-  inlet.visible=step===0&&t>.5&&t<1;outlet.visible=step===1&&t>.12&&t<.82
-  stream(inlet,new THREE.Vector3(1.17+feed.position.x,1.56,0),new THREE.Vector3(1.17+feed.position.x,1.15+(1.17+feed.position.x)*Math.tan(.2)-.125/Math.cos(.2)+.008,0))
+  const inletOn=step===0&&t>.5&&t<1,outletOn=step===1&&t>.12&&t<.82
+  lastInletA.set(1.17+feed.position.x,1.56,0)
+  lastInletB.set(1.17+feed.position.x,1.15+(1.17+feed.position.x)*Math.tan(.2)-.125/Math.cos(.2)+.008,0)
+  inletStream.updateArc(lastInletA,lastInletB,1,0,true)
+  inlet.visible=inletOn
   const axis=new THREE.Vector3(0,0,1),normal=new THREE.Vector3(1,.6,0).normalize().applyAxisAngle(axis,theta)
   const innerLip=new THREE.Vector3(1.275,-.125,0).applyAxisAngle(axis,theta).add(pivot.position),outerLip=new THREE.Vector3(1.296,-.16,0).applyAxisAngle(axis,theta).add(pivot.position)
   const path=[innerLip.addScaledVector(normal,.002),outerLip.clone().addScaledVector(normal,.002),outerLip.clone().add(new THREE.Vector3(.035,0,0))]
   const sheet:number[]=[];for(let i=0;i<2;i++){const a=path[i]!,b=path[i+1]!,ap=a.clone().add(new THREE.Vector3(0,0,.013)),am=a.clone().add(new THREE.Vector3(0,0,-.013)),bp=b.clone().add(new THREE.Vector3(0,0,.013)),bm=b.clone().add(new THREE.Vector3(0,0,-.013));sheet.push(...ap.toArray(),...am.toArray(),...bm.toArray(),...ap.toArray(),...bm.toArray(),...bp.toArray())}
-  ;(spill.geometry.attributes.position as THREE.BufferAttribute).array.set(sheet);spill.geometry.attributes.position!.needsUpdate=true;spill.geometry.computeVertexNormals();spill.geometry.computeBoundingSphere();spill.visible=outlet.visible
-  stream(outlet,path[2]!,new THREE.Vector3(path[2]!.x,.182,path[2]!.z));subject.updateMatrixWorld(true)
+  ;(spill.geometry.attributes.position as THREE.BufferAttribute).array.set(sheet);spill.geometry.attributes.position!.needsUpdate=true;spill.geometry.computeVertexNormals();spill.geometry.computeBoundingSphere();spill.visible=outletOn
+  lastOutletA.copy(path[2]!);lastOutletB.set(path[2]!.x,.182,path[2]!.z)
+  outletStream.updateArc(lastOutletA,lastOutletB,1,0,true)
+  outlet.visible=outletOn
+  if(!outletOn){outletStream.splashCrown.visible=false;outletStream.splashCrown.position.set(1.0,.184,0);outletStream.splashCrown.scale.set(1,1,1);outletStream.splashCrown.rotation.set(0,0,0)}
+  subject.updateMatrixWorld(true)
 
  }
  const tailContact=()=>{subject.updateMatrixWorld(true);return pivot.localToWorld(new THREE.Vector3(-.9,-.16,0))}
+ const updateWater=(dt:number,reduced:boolean)=>{
+  pool.update(dt,reduced)
+  if(reduced||!Number.isFinite(dt)||dt<=0)return
+  const stepDt=Math.min(dt,.05)
+  waterClock+=stepDt
+  if(inlet.visible)inletStream.updateArc(lastInletA,lastInletB,1,waterClock,false)
+  if(outlet.visible){
+   outletStream.updateArc(lastOutletA,lastOutletB,1,waterClock,false)
+   outletRippleTimer+=stepDt
+   if(outletRippleTimer>=.11){
+    outletRippleTimer=0
+    pool.triggerRipple(lastOutletB.x,lastOutletB.z,.95,1.12)
+   }
+  }else{
+   outletRippleTimer=.12
+  }
+ }
+ const triggerStrikeRipple=()=>{
+  pool.triggerRipple(.52,0,.78,1.15)
+  pool.triggerRipple(1.0,0,.44,1.08)
+ }
+ const disposeWater=()=>{pool.dispose();inletStream.dispose();outletStream.dispose()}
  pose(0,0)
- return{subject,fixed,pivot,tube,feed,sleeve,axle,strike,strikePoint,tailContact,liquid,inlet,outlet,spill,pool,pose,targets:[sleeve,tube,tube],roots:[sleeve,tube,tube],anchors:[[-.12,0,.09],[.75,0,.16],[-.75,0,.16]] as[number,number,number][],updateWater:(dt:number,reduced:boolean)=>pool.update(dt,reduced),disposeWater:()=>pool.dispose()}
+ return{subject,fixed,pivot,tube,feed,sleeve,axle,strike,strikePoint,tailContact,liquid,inlet,outlet,spill,pool,pose,targets:[sleeve,tube,tube],roots:[sleeve,tube,tube],anchors:[[-.12,0,.09],[.75,0,.16],[-.75,0,.16]] as[number,number,number][],updateWater,triggerStrikeRipple,disposeWater}
 }

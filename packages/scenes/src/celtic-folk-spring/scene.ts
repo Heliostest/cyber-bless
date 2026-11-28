@@ -149,12 +149,28 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
 
   const waterEffect = createStylizedWater({
     geometry: new THREE.CircleGeometry(1.35, 48),
-    radius: 1.35, depth: 0.20, color: 0x63c8c1, bedColor: 0xa9b78c,
+    radius: 1.35,
+    depth: 0.20,
+    color: 0x5bc4bd,
+    shallowColor: 0x9ce7d9,
+    deepColor: 0x245d67,
+    bedColor: 0xa5b68a,
+    foamColor: 0xf6f2e2,
+    opacity: 0.50,
+    waveScale: 1.25,
+    waveAmplitude: 0.008,
+    causticScale: 4.0,
+    flowDirection: [0.32, 0.95],
+    flowSpeed: 0.28,
+    rippleSpeed: 0.85,
+    rippleWavelength: 0.22,
   })
   const water = waterEffect.surface
   water.rotation.x = -Math.PI / 2
   water.position.y = 0.02
   scene.add(water)
+  let springPulseClock = 0.9
+  let dragRippleClock = 0
 
   const bank = new THREE.Mesh(
     new THREE.RingGeometry(1.35, 2.1, 48),
@@ -296,6 +312,9 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
     gyroHandle?.setEnabled(false)
     bowBtn.hidden = true
     dragHandle?.setEnabled(true)
+    if (!restoring && !(ctx.isReducedMotion?.() ?? false)) {
+      waterEffect.triggerRipple(0, 0.72, 0.58, 1.32)
+    }
     if (!restoring) ctx.onProgress?.(1)
     syncOverlayForStep()
   }
@@ -308,6 +327,11 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
     grabbed = false
     dragTarget.set(0, 0.15, 0)
     token.position.copy(dragTarget)
+    if (!restoring && !(ctx.isReducedMotion?.() ?? false)) {
+      waterEffect.triggerRipple(0, 0, 1.22, 1.35)
+      waterEffect.triggerRipple(0.08, -0.06, 0.52, 1.15)
+      springPulseClock = 0
+    }
     wishHandle?.setEnabled(true)
     if (!restoring) ctx.onProgress?.(2)
     syncOverlayForStep()
@@ -468,6 +492,28 @@ export function createCelticFolkSpring(ctx: SceneContext): SceneInstance {
       const t = reduced ? 0 : performance.now() * 0.001
       const visualDt = reduced ? 0 : dt
       waterEffect.update(dt, reduced)
+      if (!reduced && visualDt > 0) {
+        springPulseClock += visualDt
+        if (springPulseClock >= 2.35) {
+          springPulseClock = 0
+          const wellX = Math.sin(t * 0.7) * 0.14
+          const wellZ = Math.cos(t * 0.5) * 0.14
+          const wellStrength = step === 'wishWrite' || step === 'done' ? 0.42 : 0.34
+          waterEffect.triggerRipple(wellX, wellZ, wellStrength, 1.25)
+        }
+        if (step === 'drag' && grabbed) {
+          const distToCenter = Math.hypot(token.position.x, token.position.z)
+          if (distToCenter < 1.32 && token.position.y < 0.78) {
+            dragRippleClock += visualDt
+            if (dragRippleClock >= 0.22) {
+              dragRippleClock = 0
+              waterEffect.triggerRipple(token.position.x, token.position.z, 0.45, 0.95)
+            }
+          }
+        } else {
+          dragRippleClock = 0.22
+        }
+      }
       motes.rotation.y += visualDt * 0.02
 
       const followRate = 1 - Math.exp(-dt * 14)

@@ -72,11 +72,12 @@ export function createNagashibinaModel() {
   const rightCurb=mesh('channel-curb-right',new RoundedBoxGeometry(.28,.348,4.74,3,.036),shoreStone,root);rightCurb.position.set(4.18,-.118,0)
   const rightBerm=mesh('channel-curb-right-berm',new RoundedBoxGeometry(.30,.316,5.08,3,.042),bank,root);rightBerm.position.set(4.36,-.134,0)
   const bedFloor=mesh('channel-bed-floor',new THREE.BoxGeometry(4.40,.04,4.50),channelBed,root);bedFloor.position.set(1.95,-.272,0);bedFloor.castShadow=false
-  const water=createStylizedWater({geometry:new THREE.PlaneGeometry(5.0,4.5).rotateX(-Math.PI/2),normal:'y',depth:.22,color:'#7fc6bb',bedColor:'#afc4a2',opacity:.56,waveScale:3.5,causticScale:3})
+  const water=createStylizedWater({geometry:new THREE.PlaneGeometry(5.0,4.5,24,24).rotateX(-Math.PI/2),normal:'y',depth:.22,color:'#7ac6bc',shallowColor:'#a7e2d5',deepColor:'#48908a',bedColor:'#afc4a2',foamColor:'#f6f2e2',opacity:.54,waveScale:2.3,waveAmplitude:.0055,causticScale:3.1,flowDirection:[.82,-.57],flowSpeed:.44,rippleSpeed:.86,rippleWavelength:.24})
   water.surface.position.set(1.65,0,0);root.add(water.surface)
   const pose=(step:number,amount:number)=>{
     const t=THREE.MathUtils.clamp(Number.isFinite(amount)?amount:0,0,1)
     tray.position.set(-.9,.06,0)
+    tray.rotation.set(0,0,0)
     if(step===0)tray.position.y=THREE.MathUtils.lerp(.06,.60,t)
     else if(step===1)tray.position.set(THREE.MathUtils.lerp(-.9,.48,t),.60,0)
     else if(step===2){const lower=Math.min(1,t/.6),drift=Math.max(0,(t-.6)/.4);tray.position.set(.48+.57*drift,THREE.MathUtils.lerp(.60,-.012,lower),-.40*drift)}
@@ -84,5 +85,5 @@ export function createNagashibinaModel() {
     root.updateMatrixWorld(true)
   }
   pose(0,0)
-  return {root,subject,tray,base,figures,water,targets:[tray,tray,tray],roots:[tray,tray,tray],anchors:[[0,.075,.37],[0,.075,.37],[0,.075,.37]] as [number,number,number][],pose,update:(dt:number,reduced=false)=>water.update(dt,reduced),dispose:()=>water.dispose()}
+  return {root,subject,tray,base,figures,water,targets:[tray,tray,tray],roots:[tray,tray,tray],anchors:[[0,.075,.37],[0,.075,.37],[0,.075,.37]] as [number,number,number][],pose,triggerRipple:(x:number,z:number,strength?:number,radius?:number)=>water.triggerRipple(x,z,strength,radius),update:(dt:number,reduced=false)=>water.update(dt,reduced),dispose:()=>water.dispose()}
 }

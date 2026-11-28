@@ -53,14 +53,30 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   Object.assign(lights.key.shadow.camera, { left: -2, right: 2, top: 3, bottom: -2, near: .1, far: 12 })
   lights.key.shadow.normalBias = .02
   const world = new THREE.Group(); world.name = 'krathong-waterfront'; scene.add(world)
-  const riverGeometry = new THREE.PlaneGeometry(5.4, 46, 1, 1)
+  const riverGeometry = new THREE.PlaneGeometry(5.4, 46, 20, 48)
   riverGeometry.rotateX(-Math.PI / 2)
   const waterEffect = createStylizedWater({
-    geometry: riverGeometry, normal: 'y', depth: .24,
-    color: 0x78c7c1, bedColor: 0xabb68f, opacity: .44, causticScale: 3.3,
+    geometry: riverGeometry,
+    normal: 'y',
+    depth: .24,
+    color: 0x72c5bf,
+    shallowColor: 0xa4ded2,
+    deepColor: night ? 0x163848 : 0x3b7f86,
+    bedColor: 0xabb68f,
+    foamColor: night ? 0xffe4b8 : 0xf7f1e1,
+    opacity: .46,
+    waveScale: 1.05,
+    waveAmplitude: 0.008,
+    causticScale: 3.3,
+    flowDirection: [0.12, -0.99],
+    flowSpeed: 0.40,
+    rippleSpeed: 0.92,
+    rippleWavelength: 0.24,
   })
   waterEffect.surface.position.set(0, -.045, -13)
   world.add(waterEffect.surface)
+  let wakeTimer = 0
+  let floatRippleTimer = 0
   const mat = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: .92 })
   const wood = mat(0xb39471), endgrain = mat(0xd4b992), postWood = mat(0xa88765)
   const leafFolds = [
@@ -174,6 +190,7 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
     flame.scale.set(1,1,1); flame.rotation.set(0,0,0)
     halo.material.opacity = step >= 2 ? haloPeak : 0; flame.visible = step >= 2; glow.intensity = step >= 2 ? glowPeak : 0; ripples.visible = step >= 2
     surfaceRipple.setContinuous(step >= 3, 0, 0)
+    if (step < 3) { wakeTimer = 0; floatRippleTimer = 0 }
     matrices()
   }
   const sync = () => {
@@ -185,7 +202,11 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
   function settled() {
     if (!motion) return
     const {text} = motion; step = motion.step + 1; motion = null; resetPose(); sync()
-    if (step === 3 && !reduced()) surfaceRipple.trigger(0, 0, 1.15)
+    if (step === 3 && !reduced()) {
+      surfaceRipple.trigger(0, 0, 1.15)
+      waterEffect.triggerRipple(WATER.x, WATER.z, 1.35, 1.85)
+      floatRippleTimer = 0
+    }
     // Terminal state precedes host callbacks: quiet and returning paths never submit text.
     if (step === 3 && text && !returning) ctx.saveWish?.(text)
     ctx.onProgress?.(step)
@@ -260,7 +281,17 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
         const t=motion.t,p=t*t*(3-2*t)
         if(motion.step===0) flower.position.lerpVectors(motion.from,boat.localToWorld(SEAT.clone()).add(new THREE.Vector3(0,.017,0)),p)
         if(motion.step===1) {flame.visible=true;glow.intensity=p*glowPeak;halo.material.opacity=p*haloPeak}
-        if(motion.step===2) {boat.position.lerpVectors(motion.from,WATER,p);flower.position.copy(boat.localToWorld(SEAT.clone()).add(new THREE.Vector3(0,.017,0)))}
+        if(motion.step===2) {
+          boat.position.lerpVectors(motion.from,WATER,p)
+          flower.position.copy(boat.localToWorld(SEAT.clone()).add(new THREE.Vector3(0,.017,0)))
+          if (!isReduced && t > 0.32) {
+            wakeTimer += elapsed
+            if (wakeTimer >= 0.16) {
+              wakeTimer = 0
+              waterEffect.triggerRipple(boat.position.x, boat.position.z, 0.52 + t * 0.48, 1.45)
+            }
+          }
+        }
         matrices(); if(t===1)settled()
       }
       if (!motion && step >= 2) {
@@ -273,12 +304,24 @@ export function createFloatingLantern(ctx: SceneContext): SceneInstance {
           0,
           isReduced ? 0 : Math.sin(clock * 3.2) * 0.035 + Math.sin(clock * 6.8) * 0.015,
         )
-        glow.intensity = glowPeak * (1 + breath * 0.75)
-        halo.material.opacity = haloPeak * (1 + breath * 0.45)
+        const waveGlint = !isReduced && step === 3
+          ? Math.min(0.16, Math.hypot(waterEffect.sampleSurface(WATER.x, WATER.z).slopeX, waterEffect.sampleSurface(WATER.x, WATER.z).slopeZ) * 0.22)
+          : 0
+        glow.intensity = glowPeak * (1 + breath * 0.75 + waveGlint)
+        halo.material.opacity = haloPeak * (1 + breath * 0.45 + waveGlint * 0.5)
       }
       if (!motion && step === 3 && !isReduced) {
-        boat.position.set(WATER.x, WATER.y + Math.sin(clock * 1.45) * 0.0016, WATER.z)
-        boat.rotation.set(Math.sin(clock * 1.15) * 0.0035, Math.sin(clock * 0.55) * 0.026, Math.cos(clock * 1.35) * 0.004)
+        floatRippleTimer += elapsed
+        if (floatRippleTimer >= 1.8) {
+          floatRippleTimer = 0
+          waterEffect.triggerRipple(WATER.x, WATER.z, 0.36, 1.35)
+        }
+        const surf = waterEffect.sampleSurface(WATER.x, WATER.z)
+        const bobY = THREE.MathUtils.clamp(surf.height * 0.25 + Math.sin(clock * 1.45) * 0.0012, -0.0014, 0.0022)
+        const pitchX = THREE.MathUtils.clamp(surf.slopeZ * 0.06 + Math.sin(clock * 1.15) * 0.003, -0.0052, 0.0052)
+        const rollZ = THREE.MathUtils.clamp(-surf.slopeX * 0.06 + Math.cos(clock * 1.35) * 0.0035, -0.0052, 0.0052)
+        boat.position.set(WATER.x, WATER.y + bobY, WATER.z)
+        boat.rotation.set(pitchX, Math.sin(clock * 0.55) * 0.026, rollZ)
         flower.position.copy(boat.localToWorld(SEAT.clone()).add(new THREE.Vector3(0,.017,0)))
         matrices()
       }

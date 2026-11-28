@@ -40,6 +40,75 @@ describe('shallow stylized water', () => {
     effect.dispose()
   })
 
+  it('manages an interactive multi-source ripple ring buffer, flow direction, and CPU surface sampling', () => {
+    const geometry = new THREE.PlaneGeometry(4, 4, 8, 8).rotateX(-Math.PI / 2)
+    const positions = Array.from(geometry.attributes.position.array)
+    const effect = createStylizedWater({
+      geometry,
+      normal: 'y',
+      waveAmplitude: 0.012,
+      rippleSpeed: 1.0,
+      rippleDamping: 1.2,
+      rippleWavelength: 0.25,
+    })
+
+    expect(effect.activeRippleCount).toBe(0)
+    effect.setFlowDirection(0, -1, 0.65)
+    effect.triggerRipple(0, 0, 1.4, 1.5)
+    expect(effect.activeRippleCount).toBe(1)
+
+    // Advance 0.3s -> wavefront is around r = 0.30 m; surface height and normal respond cleanly.
+    for (let i = 0; i < 6; i++) effect.update(0.05)
+    const sampleAtFront = effect.sampleSurface(0.3, 0)
+    expect(Number.isFinite(sampleAtFront.height)).toBe(true)
+    expect(sampleAtFront.normal.length()).toBeCloseTo(1, 5)
+    expect(Math.abs(sampleAtFront.height)).toBeGreaterThan(0.002)
+
+    // Overflowing past 8 ripples wraps cleanly inside the 8-slot ring buffer.
+    for (let i = 0; i < 12; i++) effect.triggerRipple(i * 0.1, -i * 0.05, 0.9, 1.2)
+    expect(effect.activeRippleCount).toBe(8)
+
+    // Non-finite ripple coordinates are safely ignored.
+    effect.triggerRipple(NaN, 0)
+    expect(effect.activeRippleCount).toBe(8)
+
+    // Reduced motion calms sampled wave displacement to zero.
+    effect.update(0.05, true)
+    const calm = effect.sampleSurface(0.3, 0)
+    expect(calm.height).toBe(0)
+    expect(calm.normal.y).toBeCloseTo(1, 6)
+
+    // Resume and let ripples naturally decay and expire.
+    for (let i = 0; i < 90; i++) effect.update(0.1, false)
+    expect(effect.activeRippleCount).toBe(0)
+
+    // Reset restores deterministic initial state; authored geometry buffer stays untouched.
+    effect.triggerRipple(0.2, 0.1, 1.2, 1.0)
+    effect.reset()
+    expect(effect.time).toBe(0)
+    expect(effect.activeRippleCount).toBe(0)
+    expect(Array.from(geometry.attributes.position.array)).toEqual(positions)
+    effect.dispose()
+  })
+
+  it('produces identical deterministic surface samples for two independent instances', () => {
+    const a = createStylizedWater({ geometry: new THREE.PlaneGeometry(3, 3), normal: 'y', seed: 901 })
+    const b = createStylizedWater({ geometry: new THREE.PlaneGeometry(3, 3), normal: 'y', seed: 901 })
+    a.triggerRipple(0.2, -0.3, 1.1, 1.4)
+    b.triggerRipple(0.2, -0.3, 1.1, 1.4)
+    for (let i = 0; i < 10; i++) {
+      a.update(0.04)
+      b.update(0.04)
+    }
+    const sa = a.sampleSurface(0.45, -0.1)
+    const sb = b.sampleSurface(0.45, -0.1)
+    expect(sa.height).toBe(sb.height)
+    expect(sa.slopeX).toBe(sb.slopeX)
+    expect(sa.slopeZ).toBe(sb.slopeZ)
+    a.dispose()
+    b.dispose()
+  })
+
   it('releases both layers exactly once and stops updates after the scene leaves', () => {
     const parent = new THREE.Group()
     const effect = createStylizedWater({ geometry: new THREE.CircleGeometry(1) })

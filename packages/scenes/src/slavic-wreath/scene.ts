@@ -64,10 +64,6 @@ const RIVER_W = 5.4
 const RIVER_L = 28
 const RIVER_Z = -10
 
-/** Gentle layered swell; shared by the water mesh and the floating wreath. */
-const waveHeight = (x: number, z: number, t: number) =>
-  Math.sin(x * 1.7 + t * 0.9) * 0.018 + Math.sin(z * 1.3 - t * 1.2) * 0.022
-
 /** Strand that winds around the wreath ring `turns` times: reads as woven stems. */
 class WovenStrand extends THREE.Curve<THREE.Vector3> {
   private phase: number
@@ -103,6 +99,8 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
   let drift = 0
   let ripple = 0
   let grabbed = false
+  let entryRippled = false
+  let wakeTimer = 0
 
   const handles: GestureHandle[] = []
   let dragHandle: GestureHandle | null = null
@@ -169,15 +167,27 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group()
   scene.add(world)
 
-  // Keep the authored river and floating wreath on their shared slow swell.
+  // Subdivided river mesh: GPU vertex waves + dispersive ripples run without mutating CPU buffers.
   const waterGeo = new THREE.PlaneGeometry(RIVER_W, RIVER_L, 28, 56)
   waterGeo.rotateX(-Math.PI / 2)
   waterGeo.translate(0, 0, RIVER_Z)
-  const waterPos = waterGeo.attributes.position
-  const waterBase = Float32Array.from(waterPos.array as ArrayLike<number>)
   const waterEffect = createStylizedWater({
-    geometry: waterGeo, normal: 'y', depth: 0.24,
-    color: 0x76c8c2, bedColor: 0xa5b48a, opacity: 0.46, causticScale: 3.3,
+    geometry: waterGeo,
+    normal: 'y',
+    depth: 0.24,
+    color: 0x67beb9,
+    shallowColor: 0x99d9cc,
+    deepColor: 0x265a63,
+    bedColor: 0xa5b48a,
+    foamColor: 0xffe4bd,
+    opacity: 0.48,
+    waveScale: 1.15,
+    waveAmplitude: 0.016,
+    causticScale: 3.3,
+    flowDirection: [0.06, -0.998],
+    flowSpeed: 0.44,
+    rippleSpeed: 0.92,
+    rippleWavelength: 0.26,
   })
   const water = waterEffect.surface
   world.add(water)
@@ -388,7 +398,7 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
   for (const b of blooms) if (b.obj.userData.size === undefined) b.obj.userData.size = 1
 
   // Expanding ripple rings when the wreath touches the water.
-  const rippleMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })
+  const rippleMat = new THREE.MeshBasicMaterial({ color: 0xffebd0, transparent: true, opacity: 0, depthWrite: false })
   const ripples = [0, 1, 2].map(() => {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(1, 0.012, 6, 48), rippleMat)
     ring.rotation.x = Math.PI / 2
@@ -462,8 +472,13 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
     dragHandle?.setEnabled(false)
     wishHandle?.setEnabled(true)
     placeT = restoring || (ctx.isReducedMotion?.() ?? false) ? 1 : 0
+    entryRippled = false
+    wakeTimer = 0
     if (!restoring) {
       ripple = 1
+      if (!(ctx.isReducedMotion?.() ?? false)) {
+        waterEffect.triggerRipple(WATER_POS.x, WATER_POS.z, 1.32, 2.2)
+      }
       // Soft water touch: low round tones with a slow fade.
       fx.impact({ freqs: [349.23, 523.25, 698.46], duration: 1.2, gain: 0.06 })
       ctx.onProgress?.(2)
@@ -605,14 +620,6 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
       const t = reduced ? 0 : performance.now() * 0.001
       waterEffect.update(dt, reduced || !canAct())
 
-      // Water swell (skipped entirely with reduced motion after the first frame).
-      if (!reduced || dt === 0) {
-        for (let i = 0; i < waterPos.count; i++) {
-          waterPos.setY(i, waterBase[i * 3 + 1] + waveHeight(waterBase[i * 3], waterBase[i * 3 + 2], t))
-        }
-        waterPos.needsUpdate = true
-      }
-
       // Weave: strands wind in, then leaves and flowers open one by one.
       if (weaving) {
         weaveT = Math.min(1, weaveT + dt / WEAVE_SECONDS)
@@ -631,23 +638,40 @@ export function createSlavicWreath(ctx: SceneContext): SceneInstance {
         wreath.rotation.y += reduced ? 0 : dt * (weaving ? 0.9 : 0.15)
       } else if (step === 'place') {
         wreath.position.lerp(grabbed ? dragTarget : HOLD_POS, follow)
+        wreath.rotation.z = 0
       } else {
-        // Settle onto the water, then drift slowly downstream on the swell.
+        // Settle onto the water, then drift slowly downstream riding the live river swell.
         placeT = Math.min(1, placeT + dt / 1.1)
         const e = placeT * placeT * (3 - 2 * placeT)
         drift += reduced ? 0 : dt * 0.22 * e
         const z = WATER_POS.z - drift
         const x = WATER_POS.x + Math.sin(drift * 0.6) * 0.25
-        const floatY = waveHeight(x, z, t) + 0.02
+        const surf = waterEffect.sampleSurface(x, z)
+        const floatY = surf.height + 0.022
         wreath.position.set(
           THREE.MathUtils.lerp(placeFrom.x, x, e),
           THREE.MathUtils.lerp(placeFrom.y, floatY, e),
           THREE.MathUtils.lerp(placeFrom.z, z, e),
         )
-        wreath.rotation.x = THREE.MathUtils.lerp(0.45, Math.sin(t * 1.2) * 0.05, e)
+        const pitchTarget = reduced ? 0 : THREE.MathUtils.clamp(surf.slopeZ * 0.36 + Math.sin(t * 1.2) * 0.026, -0.14, 0.14)
+        const rollTarget = reduced ? 0 : THREE.MathUtils.clamp(-surf.slopeX * 0.36 + Math.cos(t * 1.05) * 0.022, -0.12, 0.12)
+        wreath.rotation.x = THREE.MathUtils.lerp(0.45, pitchTarget, e)
+        wreath.rotation.z = THREE.MathUtils.lerp(0, rollTarget, e)
         wreath.rotation.y += reduced ? 0 : dt * 0.12
         // Well downstream: gently fade out of view by shrinking.
         wreath.scale.setScalar(THREE.MathUtils.clamp(1 - (drift - 9) / 4, 0.001, 1))
+        if (!reduced && placeT >= 0.85 && wreath.scale.x > 0.12) {
+          if (!entryRippled) {
+            entryRippled = true
+            waterEffect.triggerRipple(x, z, 0.85, 1.8)
+          } else {
+            wakeTimer += dt
+            if (wakeTimer >= 0.38) {
+              wakeTimer = 0
+              waterEffect.triggerRipple(x, z, 0.46, 1.45)
+            }
+          }
+        }
       }
       wreathZone.position.copy(wreath.position)
 

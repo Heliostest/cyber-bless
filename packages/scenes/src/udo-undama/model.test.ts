@@ -10,3 +10,25 @@ it('restores exact endpoint transforms and keeps buffers and materials stable',(
 it('leaves the ball in front during held windup and lands on the recess floor only after the throw',()=>{const m=createUndamaModel();m.pose(2,.25);expect(m.ball.position.z).toBeGreaterThan(.9);m.pose(2,1);const p=new THREE.Vector3();m.ball.geometry.computeBoundingBox();expect(m.ball.position.x).toBe(.65);expect(m.ball.position.z).toBe(-.45);expect(m.ball.position.y+m.ball.geometry.boundingBox!.min.y).toBeCloseTo(.25,9);disposeTree(m.root)})
 it('keeps the clay sphere outside actual rock triangles through the whole assisted throw',()=>{const m=createUndamaModel(),g=m.rock.geometry,a=g.attributes.position!,idx=g.index!,triangles=[];for(let i=0;i<idx.count;i+=3)triangles.push(new THREE.Triangle(...[0,1,2].map(j=>new THREE.Vector3().fromBufferAttribute(a,idx.getX(i+j)).applyMatrix4(m.rock.matrixWorld)) as [THREE.Vector3,THREE.Vector3,THREE.Vector3]));const q=new THREE.Vector3();for(let k=0;k<=600;k++){m.pose(2,k/600);let distance=Infinity;for(const t of triangles)distance=Math.min(distance,t.closestPointToPoint(m.ball.position,q).distanceTo(m.ball.position));expect(distance,'throw sample'+k).toBeGreaterThanOrEqual(m.radius-1e-6)}disposeTree(m.root)})
 it('normalizes nonfinite amounts without changing materials or producing invalid positions',()=>{const m=createUndamaModel();for(const n of [NaN,Infinity,-Infinity,-2,2]){m.pose(2,n);expect(m.ball.position.toArray().every(Number.isFinite)).toBe(true)}disposeTree(m.root)})
+it('renders an anti-aliased 256x256 Yuji Syuku 運 stamp texture with clay grain and mipmaps',()=>{
+ const m=createUndamaModel()
+ expect(m.stamp).toBeInstanceOf(THREE.DataTexture)
+ expect(m.stamp.image.width).toBe(256)
+ expect(m.stamp.image.height).toBe(256)
+ expect(m.stamp.minFilter).toBe(THREE.LinearMipmapLinearFilter)
+ expect(m.stamp.magFilter).toBe(THREE.LinearFilter)
+ expect(m.stamp.generateMipmaps).toBe(true)
+ const data=m.stamp.image.data as Uint8Array
+ let inkPixels=0,softEdgePixels=0,clayPixels=0
+ for(let i=0;i<data.length;i+=4){
+  const r=data[i]!
+  if(r<158)inkPixels++
+  else if(r<186)softEdgePixels++
+  else clayPixels++
+ }
+ expect(inkPixels).toBeGreaterThan(250)
+ expect(softEdgePixels).toBeGreaterThan(60)
+ expect(clayPixels).toBeGreaterThan(40000)
+ m.stamp.dispose()
+ disposeTree(m.root)
+})

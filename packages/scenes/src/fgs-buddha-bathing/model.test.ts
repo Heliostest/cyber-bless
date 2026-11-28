@@ -53,4 +53,21 @@ describe('actual Buddha bathing geometry',()=>{
     expect(lotusMat.userData.botanicalFinish).toBeUndefined()
     disposeTree(m.root)
   })
+  it('sculpts a Loop-subdivided stylized infant statue and live vessel-liquid basin/ladle water',()=>{
+    const m=createBuddhaBathingModel()
+    const head=m.root.getObjectByName('bathing-head') as THREE.Mesh
+    const robe=m.root.getObjectByName('bathing-robe') as THREE.Mesh
+    expect(head.geometry.getAttribute('color')).toBeDefined()
+    expect(robe.geometry.getAttribute('color')).toBeDefined()
+    expect(head.userData.toonSurface?.outline).toBe(false)
+    m.pose(0,.70)
+    m.updateLiquid(.03,false)
+    expect(m.basinLiquid.state.activeRipples).toBeGreaterThan(0)
+    expect(m.livingStream.mesh.visible).toBe(true)
+    expect(m.livingStream.splashCrown.visible).toBe(true)
+    m.updateLiquid(.03,true)
+    expect(m.livingStream.splashCrown.visible).toBe(false)
+    m.disposeLiquid()
+    disposeTree(m.root)
+  })
 })

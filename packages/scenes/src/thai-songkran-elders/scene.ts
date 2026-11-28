@@ -146,13 +146,13 @@ export function createSongkran(ctx: SceneContext): SceneInstance {
         const eased=ease(motion.time)
         pose(motion.step, motion.from+(1-motion.from)*eased); if(motion.placed && isPlacementStep(motion.step)){placement.settle(eased);model.refreshHeldWater()} soundWater(); if (motion.time === 1) settle()
       }
-      if (active()) { if (!ctx.isReducedMotion?.()) model.tick(delta); matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) { model.updateLiquid(delta, ctx.isReducedMotion?.() ?? false); matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++; pointer.dispose(); stopInspection(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); model.disposeLiquid(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

@@ -28,8 +28,9 @@ export function createUdoUndama(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING, CARRY_HINT].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number; arrived?: boolean } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; arrived?: boolean; launchRippled?: boolean; landRippled?: boolean } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
+  let coastalBreathTimer = 0.8, coastalBreathPhase = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
@@ -43,7 +44,35 @@ export function createUdoUndama(ctx: SceneContext): SceneInstance {
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
   const model = createUndamaModel(); scene.add(model.root)
-  const water=createStylizedWater({geometry:new THREE.PlaneGeometry(60,60).rotateX(-Math.PI/2),normal:'y',depth:.24,color:0x69b6c6,bedColor:0x9ab8ad,opacity:.55,causticScale:2.4,waveScale:.8});water.surface.position.set(0,-.04,-12);scene.add(water.surface)
+  const water=createStylizedWater({
+    geometry:new THREE.PlaneGeometry(60,60,48,48).rotateX(-Math.PI/2),
+    normal:'y',
+    depth:.24,
+    color:0x69b6c6,
+    shallowColor:0xaadce0,
+    deepColor:0x3b7d94,
+    foamColor:0xf7f3e6,
+    bedColor:0x9ab8ad,
+    opacity:.56,
+    causticScale:2.4,
+    waveScale:.85,
+    waveAmplitude:.014,
+    flowDirection:[0.42,0.91],
+    flowSpeed:.48,
+    rippleSpeed:1.05,
+    rippleDamping:1.05,
+    rippleWavelength:.28,
+    rippleStrength:1.25,
+  })
+  water.surface.position.set(0,-.04,-12)
+  water.surface.userData.waterEffect = water
+  scene.add(water.surface)
+  const triggerLandingRipples = () => {
+    if (ctx.isReducedMotion?.()) return
+    water.triggerRipple(model.landed.x, model.landed.z, 1.65, 3.8)
+    water.triggerRipple(0.05, 0.22, 1.05, 2.8)
+    water.triggerRipple(1.28, -0.82, 0.95, 2.6)
+  }
   const placement = createPosePlacement(canvas,camera,model,scene)
   const freePlacementStep = () => at < 2
   const placementStep = (): 1 | 2 => at < 2 ? 1 : 2
@@ -93,8 +122,11 @@ export function createUdoUndama(ctx: SceneContext): SceneInstance {
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
+    const finishedStep = motion.step
+    const needsLandRipple = finishedStep === 2 && !motion.landRippled
     placement.settle(1)
-    at = (motion.step + 1) as Checkpoint; motion = null; restore()
+    at = (finishedStep + 1) as Checkpoint; motion = null; restore()
+    if (needsLandRipple) triggerLandingRipples()
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
@@ -136,9 +168,41 @@ export function createUdoUndama(ctx: SceneContext): SceneInstance {
       if (motion) {
         motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.arrived?.32:.85))
         const eased=ease(motion.time)
-        pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); if (motion.time === 1) settle()
+        const progress = motion.from+(1-motion.from)*eased
+        pose(motion.step, progress); placement.settle(eased)
+        if (motion.step === 2 && !(ctx.isReducedMotion?.())) {
+          if (!motion.launchRippled && progress >= 0.45) {
+            motion.launchRippled = true
+            water.triggerRipple(-0.12, 0.34, 0.65, 2.5)
+          }
+          if (!motion.landRippled && progress >= 0.92) {
+            motion.landRippled = true
+            triggerLandingRipples()
+          }
+        }
+        if (motion.time === 1) settle()
       }
-      if (active()) { water.update(delta,ctx.isReducedMotion?.()??false); matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) {
+        const quiet = ctx.isReducedMotion?.() ?? false
+        if (quiet) {
+          water.clearRipples()
+        } else if (delta > 0) {
+          coastalBreathTimer -= delta
+          if (coastalBreathTimer <= 0) {
+            coastalBreathTimer = 2.6
+            const reefSpots: readonly [number, number, number][] = [
+              [1.52, -0.58, 2.4],
+              [-0.42, 0.25, 2.2],
+              [0.35, -1.25, 2.6],
+              [-1.48, 0.48, 2.1],
+            ]
+            const [rx, rz, rr] = reefSpots[coastalBreathPhase % reefSpots.length]!
+            coastalBreathPhase++
+            water.triggerRipple(rx, rz, 0.42, rr)
+          }
+        }
+        water.update(delta, quiet); matrices(); lights.key.shadow.normalBias = .03; style.render()
+      }
     },
     dispose() {
       if (disposed) return

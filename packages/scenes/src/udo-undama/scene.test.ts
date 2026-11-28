@@ -378,3 +378,19 @@ it.each([0,1])('keeps a nonterminal carry on release and can regrab it from lega
  expect(ball.position.distanceTo(home)).toBeGreaterThan(.1);expect(s.progress).toEqual([])
  step(s,at);expect(s.progress).toEqual([2]);expect(s.complete).not.toHaveBeenCalled()
 })
+
+it('triggers interactive coastal sea ripples when throwing the undama and suppresses them in reduced motion',()=>{
+ const s=mount(2)
+ const waterSurface=s.scene.getObjectByName('stylized-water-surface')!
+ const waterEffect=waterSurface.userData.waterEffect as { readonly activeRippleCount: number }
+ expect(waterEffect).toBeDefined()
+ step(s,2,false)
+ let peakRipples=0
+ for(let i=0;i<48;i++){s.instance.update(.025);peakRipples=Math.max(peakRipples,waterEffect.activeRippleCount)}
+ expect(peakRipples).toBeGreaterThan(0)
+ const quiet=mount(2,{isReducedMotion:()=>true})
+ const quietWater=quiet.scene.getObjectByName('stylized-water-surface')!.userData.waterEffect as { readonly activeRippleCount: number }
+ step(quiet,2)
+ quiet.instance.update(.025)
+ expect(quietWater.activeRippleCount).toBe(0)
+})

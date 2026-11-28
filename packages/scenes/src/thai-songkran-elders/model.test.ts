@@ -57,4 +57,20 @@ describe('Songkran water and seated recipient geometry',()=>{
    for(const key of['water','handFlow'] as const){expect(Array.from(reused[key].geometry.getAttribute('position').array)).toEqual(Array.from(fresh[key].geometry.getAttribute('position').array));expect(reused[key].geometry.drawRange).toEqual(fresh[key].geometry.drawRange)}
   }
  })
+ it('sculpts a Loop-subdivided elder figure and triggers live catch-basin ripples while pouring',()=>{
+  const m=createSongkranModel()
+  const palm=m.root.getObjectByName('songkran-palm--1') as THREE.Mesh
+  const torso=m.root.getObjectByName('songkran-torso') as THREE.Mesh
+  expect(palm.geometry.getAttribute('color')).toBeDefined()
+  expect(torso.geometry.getAttribute('color')).toBeDefined()
+  expect(m.head.userData.toonSurface?.outline).toBe(false)
+  m.pose(2,.36)
+  m.updateLiquid(.04,false)
+  expect(m.caughtLiquid.state.activeRipples).toBeGreaterThan(0)
+  expect(m.pourStream.mesh.visible).toBe(true)
+  expect(m.runoffStream.splashCrown.visible).toBe(true)
+  m.updateLiquid(.04,true)
+  expect(m.runoffStream.splashCrown.visible).toBe(false)
+  m.disposeLiquid()
+ })
 })

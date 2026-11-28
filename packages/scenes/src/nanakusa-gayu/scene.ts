@@ -21,7 +21,7 @@ export function createNanakusaGayu(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean; rippleTimer?: number; lifted?: boolean } | null = null
   let amount = 0, moved = false, invalid = false, pourSoundPlayed = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
@@ -49,7 +49,7 @@ export function createNanakusaGayu(ctx: SceneContext): SceneInstance {
   const placement = createPosePlacement(canvas, camera, model, scene), spatialSteps = new Set([0,1])
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); syncSteam(); matrices() }
-  const restore = () => { pourSoundPlayed = false; pose(at, 0) }
+  const restore = (resetFluid = true) => { pourSoundPlayed = false; if (resetFluid) model.resetLiquid(); pose(at, 0) }
   const directions: [number, number][] = [[-1,0],[0,-1],[0,1]]
   const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(spatialSteps.has(i) ? { destination: () => placement.destination(i), targetLabel: '挪到这里' } : { direction: directions[i] }), label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
@@ -90,7 +90,7 @@ export function createNanakusaGayu(ctx: SceneContext): SceneInstance {
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
-    placement.settle(1); placement.cancel(); at = (motion.step + 1) as Checkpoint; motion = null; restore()
+    placement.settle(1); placement.cancel(); at = (motion.step + 1) as Checkpoint; motion = null; restore(false)
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
       const cue = at === 1 ? 'woodTap' : at === 2 ? 'water' : 'ceramic'
@@ -125,10 +125,35 @@ export function createNanakusaGayu(ctx: SceneContext): SceneInstance {
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       feedback.update()
       if (motion) {
-        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.placed ? .28 : 2.5))
+        const reducedNow = ctx.isReducedMotion?.() ?? false
+        motion.time = reducedNow ? 1 : Math.min(1, motion.time + delta / (motion.placed ? .28 : 2.5))
         const eased=ease(motion.time)
-        pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); matrices()
-        if (motion.step === 2 && model.stream.visible && !pourSoundPlayed) {
+        const nextAmt = motion.from+(1-motion.from)*eased
+        pose(motion.step, nextAmt); placement.settle(eased); matrices()
+        if (!reducedNow) {
+          motion.rippleTimer = (motion.rippleTimer ?? .14) + delta
+          if (motion.step === 0 && nextAmt >= .82 && motion.rippleTimer >= .12) {
+            motion.rippleTimer = 0
+            model.disturbPot(model.ladle.position.x + .55, model.ladle.position.z + .36, 1.35, .75)
+          } else if (motion.step === 1 && nextAmt >= .12 && !motion.lifted) {
+            motion.lifted = true
+            model.disturbPot(0, 0, -.75, .95)
+            model.disturbLadle(1.3, -.8, .72)
+          } else if (motion.step === 2 && model.stream.visible) {
+            if (!pourSoundPlayed) {
+              pourSoundPlayed = true
+              feedback.sound('water', { duration: .62, strength: .48 })
+              model.disturbLadle(1.8, 0, .82)
+              model.disturbBowl(0, 0, .98)
+            }
+            if (motion.rippleTimer >= .14) {
+              motion.rippleTimer = 0
+              const rx = THREE.MathUtils.clamp(model.stream.position.x - .70, -.22, .22)
+              const rz = THREE.MathUtils.clamp(model.stream.position.z - .62, -.22, .22)
+              model.disturbBowl(rx, rz, .68)
+            }
+          }
+        } else if (motion.step === 2 && model.stream.visible && !pourSoundPlayed) {
           pourSoundPlayed = true
           feedback.sound('water', { duration: .62, strength: .48 })
         }
@@ -136,6 +161,7 @@ export function createNanakusaGayu(ctx: SceneContext): SceneInstance {
       }
       if (active()) {
         const reduced = ctx.isReducedMotion?.() ?? false
+        model.updateLiquid(delta, reduced)
         potSteam.update(delta, camera, { reducedMotion: reduced, scene })
         bowlSteam.update(delta, camera, { reducedMotion: reduced, scene })
         matrices(); lights.key.shadow.normalBias = .03; style.render()

@@ -24,8 +24,8 @@ export function createMexicanMolinillo(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number } | null = null
-  let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
+  let motion: { step: 0 | 1 | 2; time: number; from: number; immersed?: boolean; prevAmt?: number } | null = null
+  let amount = 0, moved = false, invalid = false, dragImmersed = false, dragPrevAmt = 0, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
@@ -41,7 +41,7 @@ export function createMexicanMolinillo(ctx: SceneContext): SceneInstance {
   const model = createMolinilloModel(); scene.add(model.subject)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
-  const restore = () => pose(at, 0)
+  const restore = (resetFluid = true) => { dragImmersed = false; dragPrevAmt = 0; if (resetFluid) model.resetLiquid(); pose(at, 0) }
   const isSpatialStep=(step:number)=>step === 0
   const limitPoints=model.targets.map((target,i)=>{model.pose(i,1);return target!.localToWorld(new THREE.Vector3(...model.anchors[i]!))})
   model.pose(0,0)
@@ -53,6 +53,7 @@ export function createMexicanMolinillo(ctx: SceneContext): SceneInstance {
     if(!insideCanvas(canvas,x,y))return false
     const n=THREE.MathUtils.clamp(new THREE.Vector2(x,y).sub(railStart).dot(railPath)/Math.max(railPath.lengthSq(),1e-9),0,1)
     pose(at,n)
+    if(!(ctx.isReducedMotion?.()??false)&&at===0&&!dragImmersed&&n>=.48){dragImmersed=true;model.immerseCocoa()}
     const contact=screenPoint(model.targets[at]!.localToWorld(new THREE.Vector3(...model.anchors[at]!))),goal=screenPoint(limitPoints[at]!.clone())
     return n>0 && contact.distanceTo(goal)<=railRadius && !touch.occluded(x,y,model.targets[at]!,{ignore:model.subject})
   }
@@ -67,14 +68,20 @@ export function createMexicanMolinillo(ctx: SceneContext): SceneInstance {
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); return touch.hit(x, y, model.targets[at]!) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if(isSpatialStep(at))prepareRail(x,y) },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = dragImmersed = false; dragPrevAmt = 0; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if(isSpatialStep(at))prepareRail(x,y) },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
       if(isSpatialStep(at)){if(!invalid && moveRail(x,y) && pointer.finish())advance(true);return}
       pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
       const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
       maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
-      pose(at, THREE.MathUtils.clamp(along / 60, 0, 1))
+      const nextAmt = THREE.MathUtils.clamp(along / 60, 0, 1)
+      pose(at, nextAmt)
+      if (!(ctx.isReducedMotion?.() ?? false) && (at === 1 || at === 2)) {
+        const dir = at === 1 ? 1 : -1
+        model.stirCocoa(dir * (nextAmt - dragPrevAmt))
+      }
+      dragPrevAmt = nextAmt
     },
     onRelease(x, y) {
       if(isSpatialStep(at)){if(!invalid && moveRail(x,y))advance();else reset();return}
@@ -93,14 +100,14 @@ export function createMexicanMolinillo(ctx: SceneContext): SceneInstance {
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
-    at = (motion.step + 1) as Checkpoint; motion = null; restore()
+    at = (motion.step + 1) as Checkpoint; motion = null; restore(false)
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [523.25], duration: .09, gain: .003, type: 'sine' })
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance(accepted=false) { if (!inputActive() || (pointer.isBusy() && !accepted) || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance(accepted=false) { if (!inputActive() || (pointer.isBusy() && !accepted) || motion || at === 3) return; motion = { step: at, time: 0, from: amount, immersed: dragImmersed, prevAmt: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
@@ -130,14 +137,30 @@ export function createMexicanMolinillo(ctx: SceneContext): SceneInstance {
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
-      if (motion) { motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .85); pose(motion.step, THREE.MathUtils.lerp(motion.from, 1, ease(motion.time))); if (motion.time === 1) settle() }
-      if (active()) { matrices(); style.render() }
+      const reducedNow = ctx.isReducedMotion?.() ?? false
+      if (motion) {
+        motion.time = reducedNow ? 1 : Math.min(1, motion.time + delta / .85)
+        const nextAmt = THREE.MathUtils.lerp(motion.from, 1, ease(motion.time))
+        pose(motion.step, nextAmt)
+        if (!reducedNow) {
+          if (motion.step === 0 && !motion.immersed && nextAmt >= .48) {
+            motion.immersed = true
+            model.immerseCocoa()
+          } else if (motion.step === 1 || motion.step === 2) {
+            const dir = motion.step === 1 ? 1 : -1
+            model.stirCocoa(dir * (nextAmt - (motion.prevAmt ?? motion.from)))
+          }
+        }
+        motion.prevAmt = nextAmt
+        if (motion.time === 1) settle()
+      }
+      if (active()) { model.updateLiquid(delta, reducedNow); matrices(); style.render() }
     },
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.subject); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); model.dispose(); disposeTree(model.subject); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

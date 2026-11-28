@@ -95,3 +95,7 @@ GPU rendering alone is mocked in jsdom; scene geometry, raycasting, projected cu
 ## 2026-11-28 视觉材质与视听微动润色
 
 将 `incense-smoke` 内的两条静态管状烟丝升级为程序化丝缕轻烟（`createSoftPlume`），为香烬补充温和呼吸发光、茶面补充淡雅温茶热气，对香炉炉身与茶杯内腔烘焙静态缝隙环境光遮蔽（`bakeCreviceAO`），并在矮桌、香炉、盖托、茶托与香托下补充接触阴影（`addContactShadow`）；同步接入轻柔的器物触碰材质反馈音（陶声、木触、纸声）。中空折纸套（`createIncenseSleeveGeometry` 与薄纸光学）、器物造型、三步交互、界面文案、妈祖敬香来源边界（`chinese-incense`）、技术 ID 与存档兼容性均保持不变；新增烟气、光影与材质声响纯属产品物理视听表现，不新增祥瑞烟形、占象或传统礼乐主张，沿用本 README 既有核查记录，外链未重读。
+
+## 2026-11-28 伴席茶盏器皿流体液面升级
+
+将香席旁 `incense-teacup` 内的琥珀茶汤液面升级为 `@wbr/scene-runtime/vessel-liquid`（`'amber-tea'` 预设，基于 `simplex-noise` 与弹簧阻尼器皿流体模型），呈现贴壁毛细弯月面、温润呼吸微澜与落盖、置香及轻点时的细微涟漪反馈，并在销毁时完整释放；香灰、香炉、折纸套与轻烟核心契约保持不变。上述液面弯月面、晃动与互动涟漪属产品美术与物理交互优化，不新增茶道仪规、宗教礼法或功效主张；来源身份（`chinese-incense`）、文案、步骤、技术 ID、引擎版本与存档兼容性不变，沿用本 README 既有核查记录，外链未重读。

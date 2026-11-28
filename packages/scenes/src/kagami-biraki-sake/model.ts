@@ -2,6 +2,7 @@ import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import * as THREE from 'three'
 import { addContactShadow, addObjectCradle, addOfferingTable } from '../cozy-furniture'
 
@@ -582,9 +583,15 @@ export function createKagamiBirakiModel(){
   hoop.position.y=y
  }
  const liquidRadius=.55-(.03*(.83-.5)/.58)
- const liquidMaterial=createRitualMaterial({color:'#ead59b',roughness:.10,transparent:true,opacity:.80,metalness:0,depthWrite:false},{kind:'wet',strength:.34})
+ const liquidMaterial=createRitualMaterial({color:'#ead59b',roughness:.10,transparent:true,opacity:.68,metalness:0,depthWrite:false},{kind:'wet',strength:.34})
  liquidMaterial.userData.waterRendering=false // Sake keeps its authored liquid appearance.
- const liquid=mesh('sake-volume',lathe([[0,.12],[.50,.12],[.55,.5],[liquidRadius,.83],[0,.83]]),liquidMaterial,cask);liquid.castShadow=false
+ const liquid=mesh('sake-volume',lathe([[0,.12],[.50,.12],[.55,.5],[liquidRadius,.824],[0,.824]]),liquidMaterial,cask);liquid.castShadow=false
+ const sakeSurface=createVesselLiquid({
+  preset:'sake',radius:liquidRadius-.002,radialSegments:16,angularSegments:48,deformMode:'gpu',
+  color:0xf1e6c2,edgeColor:0xfffbec,deepColor:0xcab985,foamColor:0xfffdf5,foamStrength:.08,
+  opacity:.72,roughness:.09,meniscusHeight:.020,maxAmplitude:.036,seed:6017,name:'sake-surface',
+ })
+ sakeSurface.mesh.position.set(0,.83,0);cask.add(sakeSurface.mesh)
  // Both prepared halves stay flat on the rim; this opening geometry is an original simplification.
  const lids=[-1,1].map(side=>{const points=Array.from({length:49},(_,i)=>{const angle=-Math.PI/2+Math.PI*i/48;return new THREE.Vector2(side*.61*Math.cos(angle),.61*Math.sin(angle))});if(side===-1)points.reverse();const s=new THREE.Shape(points);s.closePath();const o=mesh('prepared-lid-'+(side===-1?'left':'right'),new THREE.ExtrudeGeometry(s,{depth:.045,bevelEnabled:false,curveSegments:24}),lidWood,cask);bakeCreviceAO(o.geometry,{strength:.22,tint:0x5d4530});o.rotation.x=-Math.PI/2;o.position.y=1.08;return o})
  const mallet=new THREE.Group();mallet.name='wooden-mallet';subject.add(mallet)
@@ -643,14 +650,33 @@ export function createKagamiBirakiModel(){
   root.updateMatrixWorld(true)
  }
  pose(0,0)
- let disposed=false
+ let liquidClock=0,disposed=false
+ const updateLiquid=(dt:number,reduced:boolean)=>{
+  const stepDt=Number.isFinite(dt)&&dt>0?Math.min(dt,.05):0
+  if(!reduced)liquidClock+=stepDt
+  sakeSurface.update(stepDt,liquidClock,reduced)
+ }
+ const strikeSake=(strength=1,echo=false)=>{
+  if(echo){
+   sakeSurface.triggerRipple(0,0,1.08*strength)
+   sakeSurface.addTiltImpulse(-1.4*strength,1.8*strength)
+   return
+  }
+  sakeSurface.triggerRipple(0,.14,1.55*strength)
+  sakeSurface.triggerRipple(-.18,-.08,.90*strength)
+  sakeSurface.triggerRipple(.18,-.08,.90*strength)
+  sakeSurface.addTiltImpulse(2.4*strength,-3.2*strength)
+  sakeSurface.addSwirlImpulse(1.2*strength)
+ }
+ const resetLiquid=()=>{liquidClock=0;sakeSurface.reset()}
  return {
-  root,subject,cask,caskStand:caskStandBuild.root,malletTray:malletTrayBuild.root,handleCradle:handleCradleBuild.root,barrel,wrap,liquid,lids,mallet,head,handle,
+  root,subject,cask,caskStand:caskStandBuild.root,malletTray:malletTrayBuild.root,handleCradle:handleCradleBuild.root,barrel,wrap,liquid,sakeSurface:sakeSurface.mesh,lids,mallet,head,handle,
   targets:[mallet,mallet,mallet],roots:[mallet,mallet,mallet],anchors:[[0,.11,.04],[0,.11,.04],[0,.11,.04]] as [number,number,number][],
-  pose,
+  pose,updateLiquid,strikeSake,resetLiquid,
   dispose:()=>{
    if(!disposed){
     disposed=true
+    sakeSurface.dispose()
     komoTex.map.dispose();komoTex.bump.dispose()
     ropeTex.map.dispose();ropeTex.bump.dispose()
     ribbonTex.map.dispose();ribbonTex.bump.dispose()

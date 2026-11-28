@@ -2,9 +2,9 @@ import { createQuietEnding } from '../quiet-ending'
 import { createBladeLeafGeometry } from '@wbr/scene-runtime/botanical-kit'
 import { applyBotanicalSurface } from '@wbr/scene-runtime/botanical-surfaces'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
-import { bakeCreviceAO, createCurvedStreamGeometry, updateCurvedStream } from '@wbr/scene-runtime/prop-geometry'
-import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
 import { createSoftPlume, createSurfaceRipple } from '@wbr/scene-runtime/soft-plume'
+import { createLivingPourStream, createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -68,7 +68,6 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
   const creamCup = applyCraftSurface(material(0xeee2bd, .58), { kind: 'ceramic', strength: .44 }); creamCup.vertexColors = true
   const leafMat = applyBotanicalSurface(material(0x5a774b, .72), { kind: 'leaf', venation: 'pinnate', strength: .48, veinColor: 0x9ab078, baseColor: 0x3f5735 })
   const wetLeafMat = applyBotanicalSurface(material(0x49663e, .44), { kind: 'leaf', venation: 'pinnate', strength: .44, veinColor: 0x7d9960, baseColor: 0x334b2c })
-  const teaMat = createRitualMaterial({ color: 0xc39442, roughness: .22, transmission: .32, attenuationColor: 0xc39442, attenuationDistance: .26 }, { kind: 'tea', thickness: .12, strength: .35 })
   const add = (geo: THREE.BufferGeometry, mat: THREE.Material, p: [number,number,number], name = '', parent: THREE.Object3D = world) => {
     const m = new THREE.Mesh(geo, mat); m.position.set(...p); m.name = name; m.castShadow = m.receiveShadow = true; parent.add(m); return m
   }
@@ -107,10 +106,16 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
   const cup = new THREE.Group();cup.name='tea-cup';cup.position.set(.99,.89,.20);world.add(cup)
   const cupBody = lathe([[0,0],[.14,0],[.185,.025],[.235,.17],[.235,.235],[.214,.242],[.207,.215],[.16,.065],[0,.065]],creamCup,[0,0,0],'tea-cup-body',cup)
   bakeCreviceAO(cupBody.geometry, { groundY: 0, groundRange: .06, cavityCenter: [0, 0], cavityRadius: .21, cavityTopY: .242, strength: .36 })
-  const cupInterior=add(new THREE.CylinderGeometry(.201,.201,.014,36),cream,[0,.177,0],'tea-cup-interior',cup)
-  const liquid=add(new THREE.CylinderGeometry(.202,.202,.012,40),teaMat,[0,.185,0],'tea-liquid',cup);liquid.castShadow=false
+  const cupInterior=add(new THREE.CylinderGeometry(.182,.182,.014,36),cream,[0,.140,0],'tea-cup-interior',cup)
+  const cupLiquid = createVesselLiquid({
+    preset: 'amber-tea', radius: .199, radialSegments: 14, angularSegments: 40, deformMode: 'gpu',
+    color: 0xc27a26, edgeColor: 0xf1c579, deepColor: 0x6b320d, foamColor: 0xf7e1be, foamStrength: .18,
+    opacity: .84, roughness: .14, meniscusHeight: .008, maxAmplitude: .018,
+    heightRange: [.148, .192], seed: 3011, name: 'tea-liquid',
+  })
+  const liquid = cupLiquid.mesh; cup.add(liquid); cupLiquid.trackContainer(cup)
   const cupRipple = createSurfaceRipple({ radius: .19, maxRings: 3, color: 0xffecc8, opacity: .46, duration: 1.25 })
-  cupRipple.root.position.set(0, .193, 0); cup.add(cupRipple.root)
+  cupRipple.root.position.set(0, .196, 0); cup.add(cupRipple.root)
   // The rounded clay thumb rest is part of the cup wall, not a hidden hit proxy.
   const touch=add(new THREE.SphereGeometry(1,24,16),clay,[0,.135,.221],'tea-cup-touch',cup);touch.scale.set(.102,.065,.026)
   add(new THREE.CylinderGeometry(.29,.30,.035,36),saucerMat,[.99,.881,.20],'tea-cup-saucer')
@@ -142,20 +147,31 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
   addContactShadow(world, { prefix: 'tea-scoop-rest', width: .58, depth: .30, y: .876, center: [-1.04, .62], shape: 'rounded-rect', opacity: .20 })
 
   const stream = new THREE.Group(); stream.name = 'tea-stream'; stream.userData.toonSurface = { outline: false }; world.add(stream)
-  const streamGeo = createCurvedStreamGeometry(12, 20)
-  const streamMesh = new THREE.Mesh(streamGeo, teaMat); streamMesh.name = 'tea-stream-mesh'; streamMesh.castShadow = false; streamMesh.receiveShadow = false
-  streamMesh.userData.toonSurface = { outline: false }; streamMesh.matrixAutoUpdate = false; streamMesh.matrix.identity(); stream.add(streamMesh)
-  const streamStart=new THREE.Vector3(),streamEnd=new THREE.Vector3(.99,1.081,.20),direction=new THREE.Vector3(),up=new THREE.Vector3(0,1,0)
+  const pourStream = createLivingPourStream({
+    preset: 'amber-tea', topRadius: .0155, bottomRadius: .0085, segments: 18, radialSegments: 10,
+    arcForward: .28, showSplashCrown: true, splashRadius: .044, color: 0xc27b28, opacity: .80, roughness: .13,
+    seed: 3023, name: 'tea-stream-mesh',
+  })
+  pourStream.mesh.geometry.userData.curvedStream = true
+  pourStream.root.matrixAutoUpdate = false; pourStream.root.matrix.identity()
+  stream.add(pourStream.root)
+  const streamStart=new THREE.Vector3(),streamEnd=new THREE.Vector3(.99,1.081,.20),liveStreamEnd=new THREE.Vector3(.99,1.081,.20),direction=new THREE.Vector3(),up=new THREE.Vector3(0,1,0)
+  let pourRippleTimer = .12, pourRippleIndex = 0
   const syncPotShadow = () => {
     const lift = Math.hypot(pot.position.x - POT_HOME.x, pot.position.y - POT_HOME.y, pot.position.z - POT_HOME.z)
     ;(potShadow.material as THREE.MeshBasicMaterial).opacity = .24 * THREE.MathUtils.clamp(1 - lift * 1.4, 0, 1)
   }
   const matrices=()=>{scene.updateMatrixWorld(true);camera.updateMatrixWorld(true)}
-  const restorePose=()=>{
+  const restorePose=(resetFluid=true)=>{
     scoop.position.copy(SCOOP_HOME);scoop.rotation.z=0;pot.position.copy(POT_HOME);pot.rotation.z=0
-    scoopLeaves.visible=checkpoint===0;potLeaves.visible=checkpoint>=1;liquid.visible=checkpoint>=2;liquid.scale.set(1,1,1)
-    stream.visible=false;stream.position.set(0,0,0);stream.quaternion.identity();stream.scale.set(1,1,1);stream.updateMatrix();streamMesh.matrix.identity()
-    pourSoundPlayed=false;cupRipple.setContinuous(false)
+    scoopLeaves.visible=checkpoint===0;potLeaves.visible=checkpoint>=1
+    const filled=checkpoint>=2
+    cupLiquid.setFillLevel(filled?1:0, filled?.199:.184)
+    liquid.visible=filled
+    cupRipple.root.position.y=liquid.position.y+.005
+    if(resetFluid)cupLiquid.reset()
+    stream.visible=false;stream.position.set(0,0,0);stream.quaternion.identity();stream.scale.set(1,1,1);stream.updateMatrix();pourStream.root.matrix.identity();pourStream.reset()
+    pourSoundPlayed=false;pourRippleTimer=.12;cupRipple.setContinuous(false)
     potSteam.setIntensity(checkpoint>=1?1:0);cupSteam.setIntensity(checkpoint>=2?1:0)
     syncPotShadow();matrices()
   }
@@ -203,14 +219,22 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
   }
   function settled(){
     if(!active()||!transition)return
-    checkpoint=(transition.step+1) as Checkpoint;transition=null;restorePose();sync();ctx.onProgress?.(checkpoint)
+    checkpoint=(transition.step+1) as Checkpoint;transition=null;restorePose(false);sync();ctx.onProgress?.(checkpoint)
     feedback.impact({ freqs: [392, 523.25], duration: .17, gain: .012, cue: checkpoint === 1 ? 'woodTap' : 'ceramic', cueStrength: .60 })
-    if (checkpoint === 2 && !reduced()) cupRipple.trigger(0, 0, .65)
+    if (checkpoint === 2 && !reduced()) {
+      cupRipple.trigger(0, 0, .65)
+      cupLiquid.triggerRipple(0, 0, .72)
+      cupLiquid.addTiltImpulse(.52, -.38)
+    }
   }
   function advance(placed=false){
     if (checkpoint === 2 && !ending.completing) return
     if(!active()||(pointer.isBusy()&&!placed)||transition||checkpoint===3)return
-    if(checkpoint===2){checkpoint=3;restorePose();sync();ctx.onProgress?.(3);if(!active())return;feedback.impact({freqs:[392,587.33],duration:.2,gain:.012,cue:'ceramic',cueStrength:.55});if(active())overlay.dispatchEvent(new CustomEvent('scene:complete',{bubbles:true}));return}
+    if(checkpoint===2){
+      checkpoint=3;restorePose(false);sync();ctx.onProgress?.(3);if(!active())return
+      if(!reduced()){cupLiquid.triggerRipple(0,0,.46);cupLiquid.addTiltImpulse(.35,-.28)}
+      feedback.impact({freqs:[392,587.33],duration:.2,gain:.012,cue:'ceramic',cueStrength:.55});if(active())overlay.dispatchEvent(new CustomEvent('scene:complete',{bubbles:true}));return
+    }
     pourSoundPlayed=false;transition={step:checkpoint,time:0,from:(checkpoint===0?scoop:pot).position.clone()};sync();if(reduced())settled()
   }
   const action=()=>{if(!active()||pointer.isBusy()||transition||checkpoint===3)return;feedback.prepare();advance()}
@@ -240,15 +264,46 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
           previewPour(amount);if(t<.22)pot.position.lerpVectors(transition.from,POT_HOME.clone().add(new THREE.Vector3(.718,.50,.43)),smooth(t/.22));syncPotShadow();matrices()
           const pouring=t>=.22&&t<.78
           const pourU=THREE.MathUtils.clamp((t-.22)/.56,0,1)
-          stream.visible=pouring;liquid.visible=t>=.22;liquid.scale.y=Math.max(.15,smooth(pourU))
+          const fill=Math.max(.06,smooth(pourU))
+          stream.visible=pouring
+          if(t>=.22){
+            cupLiquid.setFillLevel(fill,THREE.MathUtils.lerp(.184,.199,fill))
+            liquid.visible=true
+            cupRipple.root.position.y=liquid.position.y+.005
+          }else{
+            liquid.visible=false
+          }
           streamStart.set(1.24,.37,0).applyMatrix4(pot.matrixWorld);direction.copy(streamStart).sub(streamEnd)
           const streamLen=Math.max(direction.length(),1e-4)
           stream.position.copy(streamStart).add(streamEnd).multiplyScalar(.5);stream.scale.set(1,streamLen,1);stream.quaternion.setFromUnitVectors(up,direction.normalize());stream.updateMatrix()
-          streamMesh.matrix.copy(stream.matrix).invert()
+          pourStream.root.matrix.copy(stream.matrix).invert()
           if(pouring){
-            if(!pourSoundPlayed){pourSoundPlayed=true;feedback.sound('water',{duration:.72,strength:.56});if(!reduced())cupRipple.trigger(0,0,.9)}
             const streamFlow=Math.min(1,Math.sin(Math.PI*pourU)*2.4+.15)
-            updateCurvedStream(streamGeo,streamStart,streamEnd,{startRadius:.015,endRadius:.0085,sag:.035,time:elapsed,flow:streamFlow})
+            liveStreamEnd.set(.99,.89+liquid.position.y+.003,.20)
+            pourStream.updateArc(streamStart,liveStreamEnd,streamFlow,elapsed,reduced())
+            if(!pourSoundPlayed){
+              pourSoundPlayed=true
+              feedback.sound('water',{duration:.72,strength:.56})
+              if(!reduced()){
+                cupRipple.trigger(0,0,.9)
+                cupLiquid.triggerRipple(0,0,1.05)
+                cupLiquid.addTiltImpulse(.95,-.65)
+                cupLiquid.addSwirlImpulse(1.8)
+              }
+            }
+            if(!reduced()&&delta>0){
+              pourRippleTimer+=delta
+              if(pourRippleTimer>=.11){
+                pourRippleTimer=0
+                const offsets=[[0,0],[.025,-.02],[-.025,.018],[.016,.024]] as const
+                const [ox,oz]=offsets[pourRippleIndex%offsets.length]!
+                pourRippleIndex++
+                cupLiquid.triggerRipple(ox,oz,.72)
+                cupLiquid.addSwirlImpulse(.55)
+              }
+            }
+          }else{
+            pourStream.reset()
           }
           cupRipple.setContinuous(pouring,0,0)
           cupSteam.setIntensity(t>=.22?smooth(pourU):0)
@@ -256,6 +311,7 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
         if(t===1)settled()
       }
       if (!active()) return
+      cupLiquid.update(delta,elapsed,reduced())
       potSteam.update(delta,camera,{reducedMotion:reduced(),scene})
       cupSteam.update(delta,camera,{reducedMotion:reduced(),scene})
       cupRipple.update(delta,reduced())
@@ -263,6 +319,6 @@ export function createBlangTea(ctx: SceneContext): SceneInstance {
       if (!active()) return
       scene.updateMatrixWorld(true); camera.updateMatrixWorld(true); style.render()
     },
-    dispose(){if(disposed)return;ending.dispose(); disposed=true;pointer.dispose();stopResize();feedback.dispose();ui.actionBtn.removeEventListener('click',action);window.removeEventListener('blur',blur);window.removeEventListener('focus',focus);style.dispose();potSteam.dispose();cupSteam.dispose();cupRipple.dispose();disposeTree(world);Object.values(lights).forEach(l=>l.dispose());scene.clear();renderer.dispose();renderer.forceContextLoss();overlay.replaceChildren();overlay.classList.remove('scene-overlay','scene-overlay--stage')},
+    dispose(){if(disposed)return;ending.dispose(); disposed=true;pointer.dispose();stopResize();feedback.dispose();ui.actionBtn.removeEventListener('click',action);window.removeEventListener('blur',blur);window.removeEventListener('focus',focus);style.dispose();potSteam.dispose();cupSteam.dispose();cupRipple.dispose();cupLiquid.dispose();pourStream.dispose();disposeTree(world);Object.values(lights).forEach(l=>l.dispose());scene.clear();renderer.dispose();renderer.forceContextLoss();overlay.replaceChildren();overlay.classList.remove('scene-overlay','scene-overlay--stage')},
   }
 }

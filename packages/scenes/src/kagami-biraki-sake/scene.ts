@@ -43,7 +43,7 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
   const placement = createPosePlacement(canvas, camera, model, scene)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
-  const restore = () => pose(at, 0)
+  const restore = (resetFluid = true) => { if (resetFluid) model.resetLiquid(); pose(at, 0) }
   const directions: [number, number][] = [[0,-1],[0,1],[-1,0]]
   const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(placementSteps.has(i) ? { destination: () => placement.destination(i), targetLabel: '当前安放位置' } : { direction: directions[i] }), label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
@@ -91,7 +91,7 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
     const quiet = ctx.isReducedMotion?.() ?? false
     if (!motion.sounded && (short || amount >= .4)) {
       motion.sounded = true
-      if (!short && !quiet) ripple.trigger(0, .14, 1)
+      if (!short && !quiet) { ripple.trigger(0, .14, 1); model.strikeSake(1, false) }
       withHostCallbacks(() => {
         feedback.sound('woodTap', { duration: short ? .10 : .18, strength: .55 })
         feedback.sound('hollow', { duration: short ? .12 : .28, strength: .42 })
@@ -101,11 +101,12 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
     if (!short && !quiet && motion.sounded && !motion.echoRipple && amount >= .56) {
       motion.echoRipple = true
       ripple.trigger(0, 0, .62)
+      model.strikeSake(.78, true)
     }
   }
   function settle() {
     if (!inputActive() || !motion) return
-    at = (motion.step + 1) as Checkpoint; motion = null; restore()
+    at = (motion.step + 1) as Checkpoint; motion = null; restore(false)
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
@@ -143,7 +144,12 @@ export function createKagamiBirakiSake(ctx: SceneContext): SceneInstance {
         const eased=ease(motion.time)
         pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); soundMallet(); if (motion.time === 1) settle()
       }
-      if (active()) { ripple.update(delta, ctx.isReducedMotion?.() ?? false); matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) {
+        const reducedNow = ctx.isReducedMotion?.() ?? false
+        model.updateLiquid(delta, reducedNow)
+        ripple.update(delta, reducedNow)
+        matrices(); lights.key.shadow.normalBias = .03; style.render()
+      }
     },
     dispose() {
       if (disposed) return

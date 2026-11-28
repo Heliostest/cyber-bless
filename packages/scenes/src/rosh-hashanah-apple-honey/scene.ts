@@ -19,8 +19,8 @@ export function createRoshHashanahAppleHoney(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean } | null = null
-  let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
+  let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean; dipped?: boolean; lifted?: boolean } | null = null
+  let amount = 0, moved = false, invalid = false, dragDipped = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
   const feedback = createSceneFeedback({ ...ctx, isSoundEnabled: () => callbackActive() && (ctx.isSoundEnabled?.() ?? true) })
@@ -37,7 +37,7 @@ export function createRoshHashanahAppleHoney(ctx: SceneContext): SceneInstance {
   const placement = createPosePlacement(canvas, camera, model, scene), spatialSteps = new Set([0,1,2])
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
-  const restore = () => pose(at, 0)
+  const restore = (resetFluid = true) => { dragDipped = false; if (resetFluid) model.resetLiquid(); pose(at, 0) }
   const directions: [number, number][] = [[1,0],[0,1],[-1,0]]
   const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', ...(spatialSteps.has(i) ? { destination: () => placement.destination(i), targetLabel: '挪到这里' } : { direction: directions[i] }), label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const ray = createPointerRay(canvas, camera), down = new THREE.Vector2(), previous = new THREE.Vector2()
@@ -54,10 +54,18 @@ export function createRoshHashanahAppleHoney(ctx: SceneContext): SceneInstance {
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: inputActive,
     canStart(x, y) { if (motion || at === 3 || !Number.isFinite(x) || !Number.isFinite(y)) return false; matrices(); const hit = nearest(x, y); const target = model.roots[at]!; return !!hit && (hit.object === target || target.getObjectById(hit.object.id) === hit.object) },
-    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (spatialSteps.has(at) && !placement.begin(at, x, y)) pointer.cancel() },
+    onStart(x, y) { if (!prepareInput()) { pointer.cancel(); return }; down.set(x, y); previous.copy(down); moved = invalid = dragDipped = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (spatialSteps.has(at) && !placement.begin(at, x, y)) pointer.cancel() },
     onMove(x, y) {
       if (!Number.isFinite(x) || !Number.isFinite(y)) { invalid = true; return }
-      if (spatialSteps.has(at)) { if (!invalid && placement.move(x, y) && pointer.finish()) { placement.capture(); advance(true) }; return }
+      if (spatialSteps.has(at)) {
+        const arrived = !invalid && placement.move(x, y)
+        if (!invalid && !(ctx.isReducedMotion?.() ?? false) && at === 1 && !dragDipped && model.apple.position.y < .72) {
+          dragDipped = true
+          model.dipHoney(.020, THREE.MathUtils.clamp(model.apple.position.x - .72, -.24, .24), THREE.MathUtils.clamp(model.apple.position.z + .04, -.24, .24))
+        }
+        if (arrived && pointer.finish()) { placement.capture(); advance(true) }
+        return
+      }
       pathTravel += Math.hypot(x - previous.x, y - previous.y); previous.set(x, y)
       const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
       maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
@@ -83,7 +91,7 @@ export function createRoshHashanahAppleHoney(ctx: SceneContext): SceneInstance {
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
-    placement.settle(1); placement.cancel(); at = (motion.step + 1) as Checkpoint; motion = null; restore()
+    placement.settle(1); placement.cancel(); at = (motion.step + 1) as Checkpoint; motion = null; restore(false)
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
@@ -116,11 +124,23 @@ export function createRoshHashanahAppleHoney(ctx: SceneContext): SceneInstance {
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       if (motion) {
-        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / (motion.placed ? .28 : 2.5))
+        const reducedNow = ctx.isReducedMotion?.() ?? false
+        motion.time = reducedNow ? 1 : Math.min(1, motion.time + delta / (motion.placed ? .28 : 2.5))
         const eased=ease(motion.time)
-        pose(motion.step, motion.from+(1-motion.from)*eased); placement.settle(eased); matrices(); if (motion.time === 1) settle()
+        const nextAmt = motion.from+(1-motion.from)*eased
+        pose(motion.step, nextAmt); placement.settle(eased); matrices()
+        if (!reducedNow) {
+          if (motion.step === 1 && !motion.dipped && (nextAmt >= .56 || model.apple.position.y <= .72)) {
+            motion.dipped = true
+            model.dipHoney(.028)
+          } else if (motion.step === 2 && !motion.lifted && nextAmt >= .08) {
+            motion.lifted = true
+            model.dipHoney(-.026)
+          }
+        }
+        if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) { model.updateLiquid(delta, ctx.isReducedMotion?.() ?? false); matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },
     dispose() {
       if (disposed) return

@@ -1,4 +1,5 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { createProgressivePolygonsSlices, layoutTextPolygons } from '@wbr/scene-runtime/glyph-kit'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 import { addObjectCradle, addSteppedPedestal } from '../cozy-furniture'
@@ -18,33 +19,12 @@ const SEG_X = 12
 const SEG_Y = 18
 const GRID_COUNT = (SEG_X + 1) * (SEG_Y + 1)
 
-type BrushStrokeSpec = {
- points: readonly [number, number][]
- widthStart: number
- widthMid: number
- widthEnd: number
-}
-
 // The two fixed characters ("平安") are this scene's example wish, not a prescribed formula.
-// Fourteen strokes preserve the authored progressive writing count while rendering
-// tapered calligraphic brush marks flush on the curving red paper surface.
-const BRUSH_STROKES: readonly BrushStrokeSpec[] = [
- // 「平」 (5 strokes)
- { points: [[-.145, .286], [-.02, .294], [.145, .298]], widthStart: .015, widthMid: .012, widthEnd: .016 },
- { points: [[-.175, .170], [0, .178], [.175, .186]], widthStart: .016, widthMid: .013, widthEnd: .018 },
- { points: [[0, .312], [.002, .16], [0, -.022]], widthStart: .017, widthMid: .013, widthEnd: .006 },
- { points: [[-.112, .258], [-.085, .232], [-.058, .206]], widthStart: .010, widthMid: .015, widthEnd: .012 },
- { points: [[.114, .262], [.088, .232], [.056, .202]], widthStart: .015, widthMid: .012, widthEnd: .006 },
- // 「安」 (9 strokes)
- { points: [[-.028, -.092], [.004, -.116], [.028, -.138]], widthStart: .010, widthMid: .016, widthEnd: .012 },
- { points: [[-.152, -.170], [0, -.164], [.154, -.162]], widthStart: .014, widthMid: .012, widthEnd: .017 },
- { points: [[-.144, -.166], [-.154, -.196], [-.162, -.226]], widthStart: .012, widthMid: .014, widthEnd: .008 },
- { points: [[.152, -.164], [.146, -.192], [.126, -.218]], widthStart: .015, widthMid: .012, widthEnd: .006 },
- { points: [[-.158, -.260], [0, -.254], [.158, -.250]], widthStart: .015, widthMid: .012, widthEnd: .017 },
- { points: [[-.022, -.192], [-.064, -.265], [-.098, -.328]], widthStart: .015, widthMid: .012, widthEnd: .010 },
- { points: [[-.098, -.328], [.010, -.350], [.122, -.382]], widthStart: .011, widthMid: .014, widthEnd: .016 },
- { points: [[.084, -.224], [.060, -.276], [.024, -.322]], widthStart: .015, widthMid: .012, widthEnd: .010 },
- { points: [[.024, -.322], [-.044, -.356], [-.128, -.384]], widthStart: .012, widthMid: .010, widthEnd: .005 },
+// Typeset with LXGW ZhenKai GB (SIL OFL 1.1) and sliced into 14 progressive conforming
+// ink bands (7 per character, top to bottom) that wrap smoothly onto the bending paper.
+const CALLIGRAPHY_CHARS: readonly { char: string; centerY: number; slices: number }[] = [
+ { char: '平', centerY: 0.145, slices: 7 },
+ { char: '安', centerY: -0.205, slices: 7 },
 ]
 
 /**
@@ -226,81 +206,85 @@ function createWishingPaperGeometry(): {
  return { geometry, update }
 }
 
+let cachedLamTsuenInkTemplates: { paperXY: Float32Array; uvs: Float32Array; indices: Uint32Array }[] | null = null
+
 /**
- * Creates a tapered calligraphic brush-stroke ribbon mesh whose vertices conform
- * flush to the curving red wishing paper on every pose update.
+ * Creates 14 progressive conforming Kai calligraphy ink pieces ("平安" via LXGW ZhenKai GB,
+ * SIL OFL 1.1) whose subdivided vertices deform in-place onto the curving wishing paper.
  */
-function createCalligraphicStroke(spec: BrushStrokeSpec, material: THREE.Material, name: string) {
- const samples = 8
- const curve = new THREE.CatmullRomCurve3(spec.points.map(([x, y]) => new THREE.Vector3(x, y, 0)))
- const uv2: [number, number][] = []
- const centers: [number, number][] = []
- const tangents: [number, number][] = []
- const halfWidths: number[] = []
-
- for (let i = 0; i <= samples; i++) {
-  const t = i / samples
-  const pt = curve.getPoint(t)
-  const tg = curve.getTangent(t)
-  const len = Math.hypot(tg.x, tg.y) || 1
-  centers.push([pt.x, pt.y])
-  tangents.push([tg.x / len, tg.y / len])
-  // Smooth quadratic calligraphic pressure taper from start -> waist -> tip.
-  const w = (1 - t) * (1 - t) * spec.widthStart + 2 * (1 - t) * t * spec.widthMid + t * t * spec.widthEnd
-  halfWidths.push(w * 0.5)
- }
-
- // Rounded brush start cap + ribbon segments + tapered tip.
- const positions = new Float32Array((samples + 1) * 2 * 3)
- const uvs = new Float32Array((samples + 1) * 2 * 2)
- const indices: number[] = []
- for (let i = 0; i <= samples; i++) {
-  const [cx, cy] = centers[i]!
-  const [tx, ty] = tangents[i]!
-  const hw = halfWidths[i]!
-  const lx = cx - ty * hw, ly = cy + tx * hw
-  const rx = cx + ty * hw, ry = cy - tx * hw
-  uv2.push([lx, ly], [rx, ry])
-  uvs[i * 4] = lx / PAPER_W + 0.5
-  uvs[i * 4 + 1] = ly / PAPER_H + 0.5
-  uvs[i * 4 + 2] = rx / PAPER_W + 0.5
-  uvs[i * 4 + 3] = ry / PAPER_H + 0.5
-  if (i < samples) {
-   const a = i * 2
-   indices.push(a, a + 1, a + 3, a, a + 3, a + 2)
+function createWishingCalligraphyPieces(material: THREE.Material) {
+ if (!cachedLamTsuenInkTemplates) {
+  const templates: { paperXY: Float32Array; uvs: Float32Array; indices: Uint32Array }[] = []
+  for (const spec of CALLIGRAPHY_CHARS) {
+   const layout = layoutTextPolygons('lxgwZhenKai', spec.char, {
+    center: true,
+    fitBox: [0.33, 0.305],
+    flatness: 0.005,
+   })
+   const sliced = createProgressivePolygonsSlices(layout.polygons, spec.slices, {
+    direction: 'y-desc',
+    maxEdgeLength: 0.048,
+   })
+   for (const slice of sliced) {
+    const coords = slice.coords2D
+    const count = coords.length / 2
+    const paperXY = new Float32Array(coords.length)
+    const uvs = new Float32Array(coords.length)
+    for (let i = 0; i < count; i++) {
+     const px = coords[i * 2]!
+     const py = coords[i * 2 + 1]! + spec.centerY
+     paperXY[i * 2] = px
+     paperXY[i * 2 + 1] = py
+     uvs[i * 2] = px / PAPER_W + 0.5
+     uvs[i * 2 + 1] = py / PAPER_H + 0.5
+    }
+    const ix = slice.geometry.getIndex()!
+    templates.push({ paperXY, uvs, indices: Uint32Array.from(ix.array) })
+    slice.geometry.dispose()
+   }
   }
+  cachedLamTsuenInkTemplates = templates
  }
 
- const geometry = new THREE.BufferGeometry()
- geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
- geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2))
- geometry.setIndex(indices)
-
- const mesh = new THREE.Mesh(geometry, material)
- mesh.name = name
- mesh.castShadow = false
- mesh.receiveShadow = true
- mesh.userData.toonSurface = { outline: false }
-
- const pAttr = geometry.getAttribute('position') as THREE.BufferAttribute
  const tmpP = new THREE.Vector3()
  const tmpN = new THREE.Vector3()
  const surfaceOffset = HALF_T + 0.0007
+ return cachedLamTsuenInkTemplates.map((tpl, pieceIdx) => {
+  const count = tpl.paperXY.length / 2
+  const geometry = new THREE.BufferGeometry()
+  const positions = new Float32Array(count * 3)
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+  geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(tpl.uvs), 2))
+  geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(tpl.indices), 1))
 
- const update = (flight: number) => {
-  for (let i = 0; i < uv2.length; i++) {
-   const [px, py] = uv2[i]!
-   evalWishingPaper(px, py, flight, tmpP, tmpN)
-   pAttr.setXYZ(i, tmpP.x + tmpN.x * surfaceOffset, tmpP.y + tmpN.y * surfaceOffset, tmpP.z + tmpN.z * surfaceOffset)
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.name = `lamtsuen-ink-${pieceIdx}`
+  mesh.castShadow = false
+  mesh.receiveShadow = true
+  mesh.userData.toonSurface = { outline: false }
+
+  const pAttr = geometry.getAttribute('position') as THREE.BufferAttribute
+  const paperXY = tpl.paperXY
+  const update = (flight: number) => {
+   for (let i = 0; i < count; i++) {
+    const px = paperXY[i * 2]!
+    const py = paperXY[i * 2 + 1]!
+    evalWishingPaper(px, py, flight, tmpP, tmpN)
+    pAttr.setXYZ(
+     i,
+     tmpP.x + tmpN.x * surfaceOffset,
+     tmpP.y + tmpN.y * surfaceOffset,
+     tmpP.z + tmpN.z * surfaceOffset,
+    )
+   }
+   pAttr.needsUpdate = true
+   geometry.computeVertexNormals()
+   geometry.computeBoundingBox()
+   geometry.computeBoundingSphere()
   }
-  pAttr.needsUpdate = true
-  geometry.computeVertexNormals()
-  geometry.computeBoundingBox()
-  geometry.computeBoundingSphere()
- }
-
- update(0)
- return { mesh, update }
+  update(0)
+  return { mesh, update }
+ })
 }
 
 /** A modern replica wishing tree, a paper wish and its plastic orange weight. */
@@ -578,11 +562,9 @@ export function createLamTsuenModel() {
  const holeFront=new THREE.Mesh(holeGeo,holeMat);holeFront.name='lamtsuen-paper-hole-front';holeFront.userData.toonSurface={outline:false};paperRoot.add(holeFront)
  const holeBack=new THREE.Mesh(holeGeo,holeMat);holeBack.name='lamtsuen-paper-hole-back';holeBack.rotation.y=Math.PI;holeBack.userData.toonSurface={outline:false};paperRoot.add(holeBack)
  const paperKnot=mesh(new THREE.SphereGeometry(.014,16,12),cordMat,paperRoot,'lamtsuen-paper-knot');paperKnot.position.set(0,.418,.009)
- const strokes=BRUSH_STROKES.map((spec,i)=>{
-  const stroke=createCalligraphicStroke(spec,inkMat,`lamtsuen-ink-${i}`)
-  paperRoot.add(stroke.mesh)
-  return stroke
- })
+ const calligraphyGroup=new THREE.Group();calligraphyGroup.name='lamtsuen-calligraphy-group';paperRoot.add(calligraphyGroup)
+ const strokes=createWishingCalligraphyPieces(inkMat)
+ strokes.forEach(s=>calligraphyGroup.add(s.mesh))
  const orangeRoot=new THREE.Group();orangeRoot.name='lamtsuen-orange-root';subject.add(orangeRoot)
  const fruit=mesh(new THREE.SphereGeometry(.21,32,20),orange,orangeRoot,'lamtsuen-orange')
  const seam=mesh(new THREE.TorusGeometry(.209,.0015,6,48),orange,orangeRoot,'lamtsuen-plastic-seam');seam.rotation.x=Math.PI/2

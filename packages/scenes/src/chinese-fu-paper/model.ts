@@ -1,4 +1,5 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { createProgressivePolygonsSlices, layoutTextPolygons } from '@wbr/scene-runtime/glyph-kit'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -148,103 +149,61 @@ function createFuSheetGeometry(): THREE.BufferGeometry {
  return geometry
 }
 
+let cachedFuPieceBuffers: { positions: Float32Array; normals: Float32Array; uvs: Float32Array; indices: Uint32Array }[] | null = null
+
 /**
- * Builds one tapered original brush-ink stroke conforming flush onto the curving red
- * xuan-paper front surface (`zFront + 0.00042`), preserving the scene's original upright
- * 15-stroke 福 structure without borrowing any historical calligrapher's hand.
+ * Builds conforming brush-calligraphy 「福」 meshes from the bundled Ma Shan Zheng
+ * (SIL OFL 1.1) subset, projected flush onto the curving red xuan-paper front surface
+ * (`zFront + 0.00042`) with matching 45-degree sheet UVs for seamless paper tooth.
  */
-function createConformingBrushStroke(
- spine: readonly [number, number][],
- halfWidths: readonly number[],
-): THREE.BufferGeometry {
- // Densify polyline smoothly for conforming curvature and clean tapered ends.
- const pts: [number, number, number][] = []
- const subPerSeg = 4
- for (let s = 0; s < spine.length - 1; s++) {
-  const [x0, y0] = spine[s]!
-  const [x1, y1] = spine[s + 1]!
-  const w0 = halfWidths[s]!
-  const w1 = halfWidths[s + 1]!
-  const start = s === 0 ? 0 : 1
-  for (let j = start; j <= subPerSeg; j++) {
-   const t = j / subPerSeg
-   pts.push([THREE.MathUtils.lerp(x0, x1, t), THREE.MathUtils.lerp(y0, y1, t), THREE.MathUtils.lerp(w0, w1, t)])
-  }
+function createFuCalligraphyPieces(): THREE.BufferGeometry[] {
+ if (!cachedFuPieceBuffers) {
+  const layout = layoutTextPolygons('mashanZheng', '福', {
+   center: true,
+   fitBox: [0.43, 0.445],
+   flatness: 0.004,
+  })
+  const pieces = createProgressivePolygonsSlices(layout.polygons, 12, {
+   direction: 'y-desc',
+   maxEdgeLength: 0.042,
+   deformVertex(x, y, out) {
+    const py = y + 0.006
+    out.set(x, py, evalFuSheetBackZ(x, py) + SHEET_T + 0.00042)
+   },
+  })
+  cachedFuPieceBuffers = pieces.map((piece) => {
+   const uvAttr = piece.geometry.getAttribute('uv') as THREE.BufferAttribute
+   for (let i = 0; i < uvAttr.count; i++) {
+    const x = piece.coords2D[i * 2]!
+    const y = piece.coords2D[i * 2 + 1]! + 0.006
+    uvAttr.setXY(i, (x + y) / 0.96 + 0.5, (y - x) / 0.96 + 0.5)
+   }
+   const p = piece.geometry.getAttribute('position') as THREE.BufferAttribute
+   const n = piece.geometry.getAttribute('normal') as THREE.BufferAttribute
+   const ix = piece.geometry.getIndex()!
+   const buf = {
+    positions: new Float32Array(p.array as Float32Array),
+    normals: new Float32Array(n.array as Float32Array),
+    uvs: new Float32Array(uvAttr.array as Float32Array),
+    indices: Uint32Array.from(ix.array),
+   }
+   piece.geometry.dispose()
+   return buf
+  })
  }
-
- const positions: number[] = []
- const uvs: number[] = []
- const indices: number[] = []
- const leftPts: [number, number][] = []
- const rightPts: [number, number][] = []
-
- for (let i = 0; i < pts.length; i++) {
-  const prev = pts[Math.max(0, i - 1)]!
-  const next = pts[Math.min(pts.length - 1, i + 1)]!
-  let tx = next[0] - prev[0]
-  let ty = next[1] - prev[1]
-  const len = Math.hypot(tx, ty) || 1
-  tx /= len; ty /= len
-  const nx = -ty, ny = tx
-  const [px, py, hw] = pts[i]!
-  leftPts.push([px + nx * hw, py + ny * hw])
-  rightPts.push([px - nx * hw, py - ny * hw])
- }
-
- const pushPt = (x: number, y: number) => {
-  const z = evalFuSheetBackZ(x, y) + SHEET_T + 0.00042
-  positions.push(x, y, z)
-  const u = (x + y) / 0.96 + 0.5
-  const v = (y - x) / 0.96 + 0.5
-  uvs.push(u, v)
- }
-
- // Rounded brush entry cap.
- const startPt = pts[0]!
- const startNext = pts[1]!
- const sLen = Math.hypot(startNext[0] - startPt[0], startNext[1] - startPt[1]) || 1
- const sTx = (startNext[0] - startPt[0]) / sLen
- const sTy = (startNext[1] - startPt[1]) / sLen
- pushPt(startPt[0] - sTx * startPt[2] * 0.65, startPt[1] - sTy * startPt[2] * 0.65) // idx 0
-
- for (let i = 0; i < pts.length; i++) {
-  pushPt(leftPts[i]![0], leftPts[i]![1])
-  pushPt(rightPts[i]![0], rightPts[i]![1])
- }
-
- // Rounded brush exit cap.
- const endPt = pts[pts.length - 1]!
- const endPrev = pts[pts.length - 2]!
- const eLen = Math.hypot(endPt[0] - endPrev[0], endPt[1] - endPrev[1]) || 1
- const eTx = (endPt[0] - endPrev[0]) / eLen
- const eTy = (endPt[1] - endPrev[1]) / eLen
- const endCapIdx = 1 + pts.length * 2
- pushPt(endPt[0] + eTx * endPt[2] * 0.68, endPt[1] + eTy * endPt[2] * 0.68)
-
- // Entry triangle (+Z CCW: cap -> right0 -> left0).
- indices.push(0, 2, 1)
- for (let i = 0; i < pts.length - 1; i++) {
-  const l0 = 1 + i * 2
-  const r0 = l0 + 1
-  const l1 = l0 + 2
-  const r1 = l0 + 3
-  indices.push(r0, r1, l1, r0, l1, l0)
- }
- const lastL = 1 + (pts.length - 1) * 2
- const lastR = lastL + 1
- indices.push(lastR, endCapIdx, lastL)
-
- const geometry = new THREE.BufferGeometry()
- geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
- geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
- geometry.setIndex(indices)
- geometry.computeVertexNormals()
- geometry.computeBoundingBox()
- geometry.computeBoundingSphere()
- return geometry
+ return cachedFuPieceBuffers.map((buf) => {
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(buf.positions), 3))
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(new Float32Array(buf.normals), 3))
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(buf.uvs), 2))
+  geo.setIndex(new THREE.BufferAttribute(new Uint32Array(buf.indices), 1))
+  geo.computeBoundingBox()
+  geo.computeBoundingSphere()
+  return geo
+ })
 }
 
-/** Prepared red Fu paper, original brush-tapered glyph and a product-designed household doorway. */
+/** Prepared red Fu paper, Ma Shan Zheng (SIL OFL 1.1) brush glyph and a product-designed household doorway. */
 export function createChineseFuPaperModel() {
  const root=new THREE.Group();root.name='chinese-fu-paper-root'
  const subject=new THREE.Group();subject.name='chinese-fu-paper-subject';root.add(subject)
@@ -311,28 +270,15 @@ export function createChineseFuPaperModel() {
  box('fu-holder-front',[.26,.11,.015],[-.88,.215,.58],woodX,subject,.004)
  mesh(createFuSheetGeometry(),red,paper,'fu-red-sheet')
  const glyph=new THREE.Group();glyph.name='fu-glyph';paper.add(glyph)
- // Original 15-stroke upright 福 (礻 + 一 / 口 / 田), rendered as conforming matte sumi brush ribbons.
- const brush=(name:string,spine:[number,number][],widths:number[])=>{
-  const o=new THREE.Mesh(createConformingBrushStroke(spine,widths),ink)
-  o.name=name;o.castShadow=false;o.receiveShadow=true
-  o.userData.toonSurface={outline:false}
-  glyph.add(o);return o
- }
- brush('fu-left-dot',[[-.214,.228],[-.184,.214],[-.156,.194]],[.014,.022,.017])
- brush('fu-left-turn',[[-.260,.137],[-.180,.141],[-.096,.142],[-.132,.092],[-.178,.034]],[.018,.015,.022,.017,.011])
- brush('fu-left-stem',[[-.178,.082],[-.178,-.076],[-.178,-.230]],[.020,.017,.015])
- brush('fu-left-little-dot',[[-.144,.002],[-.114,-.026],[-.086,-.056]],[.013,.019,.015])
- brush('fu-right-one',[[-.010,.248],[.088,.252],[.184,.254]],[.018,.014,.019])
- brush('fu-mouth-top',[[-.008,.165],[.094,.168],[.196,.165]],[.017,.014,.019])
- brush('fu-mouth-left',[[.000,.164],[.003,.104],[.005,.044]],[.017,.015,.016])
- brush('fu-mouth-right',[[.190,.164],[.186,.104],[.182,.044]],[.019,.016,.017])
- brush('fu-mouth-bottom',[[.000,.044],[.092,.046],[.184,.044]],[.016,.014,.017])
- brush('fu-field-top',[[-.018,-.036],[.096,-.032],[.208,-.036]],[.018,.014,.019])
- brush('fu-field-left',[[-.010,-.036],[-.007,-.134],[-.005,-.228]],[.018,.015,.017])
- brush('fu-field-right',[[.202,-.036],[.198,-.134],[.192,-.228]],[.019,.016,.017])
- brush('fu-field-bottom',[[-.010,-.228],[.092,-.225],[.194,-.228]],[.017,.015,.018])
- brush('fu-field-middle-horizontal',[[.012,-.142],[.096,-.140],[.180,-.142]],[.014,.013,.015])
- brush('fu-field-middle-vertical',[[.096,-.036],[.096,-.132],[.096,-.226]],[.016,.014,.015])
+ // Upright brush-calligraphy 「福」 from Ma Shan Zheng (SIL OFL 1.1), conformed flush to the red xuan-paper sheet.
+ createFuCalligraphyPieces().forEach((geo, i) => {
+  const o = new THREE.Mesh(geo, ink)
+  o.name = `fu-ink-${i}`
+  o.castShadow = false
+  o.receiveShadow = true
+  o.userData.toonSurface = { outline: false }
+  glyph.add(o)
+ })
  // Two restrained stone edges ground this small entry vignette, without a temple reconstruction.
  box('fu-entry-slab',[2.75,.05,1.35],[-.1,-.08,.19],applyCraftSurface(mat(0xc8bba3),{kind:'stone',strength:.45}),root)
  const positions:[number,number,number][]=[[-.88,.64,.55],[-.88,1.06,.55],[.42,1.26,.55],[.42,1.38,-.029]]

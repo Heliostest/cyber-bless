@@ -1,5 +1,9 @@
 # 水引结愿
 
+## 2026-11-28 礼封留言字迹接入开源手写楷体与墨色排版优化
+
+祝仪袋纸面留言贴图接入内置开源可商用字体 **Klee One SemiBold（SIL Open Font License 1.1，许可原文见 `packages/scene-runtime/licenses/fonts/KleeOne-OFL.txt`）** 子集的 `@font-face` 注册与中日文楷书/明朝体回退字体栈，优化墨色层次、居中留白与淡墨细界线，并在无 Canvas2D 环境下平滑回退至内置字体光栅器（支持 Klee One SemiBold / LXGW ZhenKai GB 子集字符）。本轮仅为产品视觉呈现改进，不新增传统礼法规制、宗教主张或功效承诺；用户留言隐私分享隐藏、和纸叠折、五股水引结绳、来源 `mizuhiki`、技术 ID、引擎与存档均保持不变，外链未重读。
+
 
 ## 2026-11-06 Komorebi 默认画风
 

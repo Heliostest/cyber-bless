@@ -61,3 +61,7 @@
 本次产品显示范围：`wood` 的木面（供案、腿和产品承托轨）；`sleeve` 的布面（袖口和衣袖）。保留：paper、leaf 透光与纤维设置；paper-tie 纸、皮肤与树皮。
 
 程序纹理是产品美术表达，沿用本 README 的既有来源核查；本轮未重读外部链接，不新增木种、釉种、合金、纤维种类、传统技法或功效主张。保持原材质类型、贴图、反射参数和相关光学效果；器形、动作、文案、来源身份、技术 ID 与存档不变。[逐场映射、保留边界与验证记录](../../../../docs/research/2026-11-05-craft-material-rollout.md)。
+
+## 2026-11-28 风格化手部与衣袖细分曲面升级
+
+接入共享 `@wbr/scene-runtime/stylized-human` 组件，使用 `three-subdivide` Loop 细分曲面升级奉纳双手（`tamagushi-hand-0/1` 下 `palm`、`finger`、`thumb`、`forearm`、`sleeve`）造型与暖调 Komorebi 肤质及和风素雅翻边袖口材质（闭合 2-manifold 网格，全姿态与榊枝、纸垂、供案承托轨零穿插）。玉串榊叶、和纸纸垂、木供案、三步动作、文案、来源身份（`tamagushi-offering`）、引擎版本与存档兼容性不变；仅属产品美术表现优化，不新增传统礼俗规制或文化主张，沿用本 README 既有核查记录，外链未重读。

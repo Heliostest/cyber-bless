@@ -1,5 +1,19 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import {
+  applyStylizedHumanSurfaceHint,
+  createStylizedForearmGeometry,
+  createStylizedGarmentMaterial,
+  createStylizedHairGeometry,
+  createStylizedHeadGeometry,
+  createStylizedLimbGeometry,
+  createStylizedPalmGeometry,
+  createStylizedShoeGeometry,
+  createStylizedSkinMaterial,
+  createStylizedSleeveCuffGeometry,
+  createStylizedTorsoGeometry,
+  subdivideClosedCage,
+} from '@wbr/scene-runtime/stylized-human'
 import * as THREE from 'three'
 import { addSteppedPedestal } from '../cozy-furniture'
 
@@ -271,10 +285,17 @@ export function createChitoseAmeModel(){
   fiber: 'paper',
   paper: { layout: 'sheet', aspect: 1.4, grainScale: 3.0, grain: 0.88, fibers: 0.12, edge: 0.30, highlightGuard: 0.90 },
  })
- const coral=mat(0xd77b76),skin=mat(0xdba47a),coat=mat(0xd8ac57),pants=mat(0x5f7e78),hair=mat(0x715244),dark=mat(0x443c35),shoe=mat(0x876657),cord=mat(0xc95855),redCandy=mat(0xe48b8b,.34),whiteCandy=mat(0xffefce,.34)
+ const coral=mat(0xd77b76)
+ const skin=createStylizedSkinMaterial({color:0xe8b992,roughness:.85,scatterStrength:.13,name:'chitose-skin'})
+ const coat=createStylizedGarmentMaterial({color:0xd8ac57,roughness:.92,fabricStrength:.26,name:'chitose-coat'})
+ const collarCloth=createStylizedGarmentMaterial({color:0xf7ecd2,roughness:.93,fabricStrength:.20,name:'chitose-collar'})
+ const obiCloth=createStylizedGarmentMaterial({color:0xc9665f,roughness:.91,fabricStrength:.28,name:'chitose-obi'})
+ const pants=createStylizedGarmentMaterial({color:0x5f7e78,roughness:.92,fabricStrength:.26,name:'chitose-pants'})
+ const hair=new THREE.MeshStandardMaterial({color:0x66493c,roughness:.85,vertexColors:true})
+ const dark=mat(0x3f332c,.65)
+ const shoe=new THREE.MeshStandardMaterial({color:0x876657,roughness:.88,vertexColors:true})
+ const cord=mat(0xc95855),redCandy=mat(0xe48b8b,.34),whiteCandy=mat(0xffefce,.34)
  applyCraftSurface(cord, { kind: 'cord', strength: .3 })
- applyCraftSurface(coat, { kind: 'fabric', strength: .26 })
- applyCraftSurface(pants, { kind: 'fabric', strength: .26 })
 
  const mesh=(g:THREE.BufferGeometry,m:THREE.Material,p:THREE.Object3D,name:string)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;p.add(o);return o}
  const box=(name:string,size:[number,number,number],pos:[number,number,number],m:THREE.Material,p:THREE.Object3D=subject)=>{const o=mesh(new THREE.BoxGeometry(...size),m,p,name);o.position.set(...pos);return o}
@@ -398,24 +419,258 @@ export function createChitoseAmeModel(){
   for(let j=0;j<3;j++)box('chitose-wrapper-crimp-'+i+'-'+j,[.003,.027,.002],[x+(j-1)*.012,.769,.008],coral,bag)
  }
  const child=new THREE.Group();child.name='chitose-child';subject.add(child)
- for(const [i,x]of [.295,.505].entries()){
-  ball('chitose-shoe-'+i,[x,GROUND_Y+.045,.035],[.083,.045,.14],shoe,child)
-  const leg=rod('chitose-trouser-leg-'+i,.067,pants,child);place(leg,v(x,.035,0),v(x,.64,0))
+ const makeNormalizedLimb=(
+  topRadius:number,
+  bottomRadius:number,
+  bend:number,
+  foldDepth:number,
+  radialSegments=8,
+ )=>{
+  const g=createStylizedLimbGeometry({length:1,topRadius,bottomRadius,bend,foldDepth,radialSegments,iterations:1})
+  g.computeBoundingBox()
+  const bb=g.boundingBox!
+  const spanY=Math.max(bb.max.y-bb.min.y,1e-4)
+  g.translate(0,-(bb.min.y+bb.max.y)*.5,0)
+  g.scale(1,1/spanY,1)
+  g.computeVertexNormals()
+  g.computeBoundingBox()
+  g.computeBoundingSphere()
+  return g
  }
- ball('chitose-hips',[.4,.65,0],[.19,.16,.12],pants,child)
- ball('chitose-coat',[.4,.94,0],[.22,.30,.145],coat,child)
- const neck=rod('chitose-neck',.062,skin,child);place(neck,v(.4,1.16,0),v(.4,1.30,0))
- ball('chitose-head',[.4,1.43,0],[.17,.20,.15],skin,child)
- ball('chitose-hair',[.4,1.572,-.025],[.159,.075,.138],hair,child)
- for(const [i,x]of [.225,.575].entries())ball('chitose-ear-'+i,[x,1.43,0],[.026,.047,.033],skin,child)
- ball('chitose-nose',[.4,1.408,.150],[.024,.030,.023],skin,child)
- for(const [i,x]of [.34,.46].entries())ball('chitose-eye-'+i,[x,1.46,.1425],[.009,.013,.005],dark,child)
- const smile=rod('chitose-smile',.005,dark,child);place(smile,v(.375,1.35,.139),v(.425,1.35,.139))
+ // Warm storybook dressed child grounded directly on courtyard stones (GROUND_Y = -0.0475).
+ for(const [i,x]of [.295,.505].entries()){
+  const shoeGeo=createStylizedShoeGeometry({length:.23,width:.13,height:.094,toeLift:.010,radialSegments:8,iterations:1})
+  const shoeMesh=mesh(shoeGeo,shoe,child,'chitose-shoe-'+i)
+  shoeMesh.position.set(x,GROUND_Y,.02)
+  applyStylizedHumanSurfaceHint(shoeMesh,'garment')
+
+  // Softly draped hakama/trouser leg (proximal hip at +0.5, ankle at -0.5 -> place(leg, ankle, hip)).
+  const legGeo=makeNormalizedLimb(.076,.058,.03,.005,8)
+  const leg=mesh(legGeo,pants,child,'chitose-trouser-leg-'+i)
+  place(leg,v(x,.04,0),v(x,.65,0))
+  applyStylizedHumanSurfaceHint(leg,'garment')
+ }
+
+ // Draped lower hakama/hip skirt & festive crossed-collar coat (haori feel) with waist obi and cream inner collar.
+ const hipsGeo=createStylizedTorsoGeometry({
+  shoulderWidth:.34,
+  waistWidth:.37,
+  hemWidth:.41,
+  depth:.23,
+  height:.26,
+  collarStyle:'round',
+  foldDepth:.009,
+  radialSegments:10,
+  iterations:1,
+ })
+ const hipsMesh=mesh(hipsGeo,pants,child,'chitose-hips')
+ hipsMesh.position.set(.4,.51,0)
+ applyStylizedHumanSurfaceHint(hipsMesh,'garment')
+
+ const coatGeo=createStylizedTorsoGeometry({
+  shoulderWidth:.44,
+  waistWidth:.34,
+  hemWidth:.41,
+  depth:.255,
+  height:.55,
+  collarStyle:'crossed',
+  foldDepth:.011,
+  radialSegments:10,
+  iterations:1,
+ })
+ const coatMesh=mesh(coatGeo,coat,child,'chitose-coat')
+ coatMesh.position.set(.4,.65,0)
+ applyStylizedHumanSurfaceHint(coatMesh,'garment')
+
+ const obiGeo=createStylizedTorsoGeometry({
+  shoulderWidth:.375,
+  waistWidth:.38,
+  hemWidth:.385,
+  depth:.255,
+  height:.105,
+  collarStyle:'round',
+  foldDepth:.004,
+  radialSegments:10,
+  iterations:1,
+ })
+ const obiMesh=mesh(obiGeo,obiCloth,child,'chitose-obi')
+ obiMesh.position.set(.4,.73,0)
+ applyStylizedHumanSurfaceHint(obiMesh,'garment')
+
+ const collarGeo=createStylizedTorsoGeometry({
+  shoulderWidth:.25,
+  waistWidth:.23,
+  hemWidth:.24,
+  depth:.195,
+  height:.095,
+  collarStyle:'crossed',
+  foldDepth:.003,
+  radialSegments:10,
+  iterations:1,
+ })
+ const collarMesh=mesh(collarGeo,collarCloth,child,'chitose-collar')
+ collarMesh.position.set(.4,1.125,.006)
+ applyStylizedHumanSurfaceHint(collarMesh,'garment')
+
+ const neckGeo=makeNormalizedLimb(.052,.060,0,.001,8)
+ const neck=mesh(neckGeo,skin,child,'chitose-neck')
+ place(neck,v(.4,1.15,0),v(.4,1.31,0))
+ applyStylizedHumanSurfaceHint(neck,'skin')
+
+ // Adorable storybook child head with plump rosy cheeks & soft bob hair.
+ const headGeo=createStylizedHeadGeometry({
+  width:.32,
+  height:.365,
+  depth:.295,
+  cheekFullness:.22,
+  noseProminence:.34,
+  chinTaper:.14,
+  radialSegments:10,
+  iterations:1,
+ })
+ const headMesh=mesh(headGeo,skin,child,'chitose-head')
+ headMesh.position.set(.4,1.435,0)
+ applyStylizedHumanSurfaceHint(headMesh,'skin')
+
+ const hairGeo=createStylizedHairGeometry({
+  style:'bob',
+  headWidth:.32,
+  headHeight:.365,
+  headDepth:.295,
+  volume:.027,
+  radialSegments:10,
+  iterations:1,
+ })
+ const hairMesh=mesh(hairGeo,hair,child,'chitose-hair')
+ hairMesh.position.set(.4,1.445,-.006)
+ applyStylizedHumanSurfaceHint(hairMesh,'hair')
+
+ const earCage=new THREE.IcosahedronGeometry(1,0)
+ const earGeo=subdivideClosedCage(earCage,{iterations:1})
+ earCage.dispose()
+ earGeo.scale(.024,.044,.030)
+ for(const [i,x]of [.236,.564].entries()){
+  const ear=mesh(i===0?earGeo:earGeo.clone(),skin,child,'chitose-ear-'+i)
+  ear.position.set(x,1.43,-.004)
+  applyStylizedHumanSurfaceHint(ear,'skin')
+ }
+ const noseCage=new THREE.IcosahedronGeometry(1,0)
+ const noseGeo=subdivideClosedCage(noseCage,{iterations:1})
+ noseCage.dispose()
+ noseGeo.scale(.018,.020,.018)
+ const noseMesh=mesh(noseGeo,skin,child,'chitose-nose')
+ noseMesh.position.set(.4,1.416,.149)
+ applyStylizedHumanSurfaceHint(noseMesh,'skin')
+
+ for(const [i,x]of [.344,.456].entries()){
+  const eye=ball('chitose-eye-'+i,[x,1.458,.143],[.010,.0135,.006],dark,child)
+  applyStylizedHumanSurfaceHint(eye,'hair')
+ }
+ const smileCurve=new THREE.CatmullRomCurve3([
+  v(.374,1.366,.138),
+  v(.400,1.356,.143),
+  v(.426,1.366,.138),
+ ])
+ const smile=mesh(new THREE.TubeGeometry(smileCurve,14,.0045,8,false),dark,child,'chitose-smile')
+ applyStylizedHumanSurfaceHint(smile,'hair')
+
+ // Festive flared haori upper sleeves with recessed cuff mouths, slender stylized forearms, and softly cupped child hands.
  const elbows=[v(.14,1.20,.13),v(.66,1.20,.13)]
- const upperArms=[rod('chitose-sleeve-0',.069,coat,child),rod('chitose-sleeve-1',.069,coat,child)]
- const forearms=[rod('chitose-forearm-0',.022,skin,child),rod('chitose-forearm-1',.022,skin,child)]
- const palms=[ball('chitose-palm-0',[0,0,0],[.035,.035,.035],skin,child),ball('chitose-palm-1',[0,0,0],[.035,.035,.035],skin,child)]
- for(let i=0;i<2;i++){place(upperArms[i]!,v(i===0?.18:.62,1.10,0),elbows[i]!);ball('chitose-elbow-'+i,elbows[i]!.toArray() as [number,number,number],[.043,.043,.043],skin,child)}
+ const shoulders=[v(.19,1.11,.01),v(.61,1.11,.01)]
+ for(let i=0;i<2;i++){
+  const sLen=shoulders[i]!.distanceTo(elbows[i]!)
+  const sleeveGeo=createStylizedSleeveCuffGeometry({
+   length:sLen,
+   cuffRadiusX:.072,
+   cuffRadiusY:.076,
+   sleeveRadiusX:.084,
+   sleeveRadiusY:.086,
+   wallThickness:.010,
+   rolledLip:.007,
+   foldDepth:.005,
+   radialSegments:10,
+   iterations:1,
+  })
+  const sleeve=mesh(sleeveGeo,coat,child,'chitose-sleeve-'+i)
+  sleeve.position.copy(elbows[i]!)
+  sleeve.quaternion.setFromUnitVectors(v(0,0,1),shoulders[i]!.clone().sub(elbows[i]!).normalize())
+  applyStylizedHumanSurfaceHint(sleeve,'garment')
+
+  const elbowCage=new THREE.IcosahedronGeometry(1,0)
+  const elbowGeo=subdivideClosedCage(elbowCage,{iterations:1})
+  elbowCage.dispose()
+  elbowGeo.scale(.034,.034,.034)
+  const elbowMesh=mesh(elbowGeo,skin,child,'chitose-elbow-'+i)
+  elbowMesh.position.copy(elbows[i]!)
+  applyStylizedHumanSurfaceHint(elbowMesh,'skin')
+ }
+
+ // Forearm geometry normalized strictly to y in [-0.5, +0.5] and radial extent <= 0.021 so it never crosses
+ // wrapper seals or the handle cord during the reaching handoff.
+ const makeChildForearmGeo=()=>{
+  const g=createStylizedForearmGeometry({
+   length:1,
+   wristRadiusX:.017,
+   wristRadiusY:.0165,
+   elbowRadiusX:.021,
+   elbowRadiusY:.0205,
+   fullness:.05,
+   radialSegments:8,
+   iterations:1,
+  })
+  // Forearm goes wrist (z=0) -> elbow (z=+1); rotate +90° around X so elbow sits at -Y and wrist at +Y.
+  g.rotateX(Math.PI/2)
+  g.computeBoundingBox()
+  const bb=g.boundingBox!
+  const spanY=Math.max(bb.max.y-bb.min.y,1e-4)
+  g.translate(0,-(bb.min.y+bb.max.y)*.5,0)
+  g.scale(1,1/spanY,1)
+  g.computeVertexNormals()
+  g.computeBoundingBox()
+  g.computeBoundingSphere()
+  return g
+ }
+ const forearms=[
+  applyStylizedHumanSurfaceHint(mesh(makeChildForearmGeo(),skin,child,'chitose-forearm-0'),'skin'),
+  applyStylizedHumanSurfaceHint(mesh(makeChildForearmGeo(),skin,child,'chitose-forearm-1'),'skin'),
+ ]
+
+ // Sculpted cupped child palms strictly bounded inside sphere r <= 0.0338 so distance to the cord (0.035)
+ // and wrapper seals (0.0379) has guaranteed zero crossing triangles throughout the handoff.
+ const makeChildHandGeo=(handedness:'left'|'right')=>{
+  const g=createStylizedPalmGeometry({
+   width:.056,
+   thickness:.036,
+   length:.064,
+   handedness,
+   palmUp:true,
+   arch:.006,
+   radialSegments:8,
+   iterations:1,
+  })
+  // Rotate so wrist is at -Z and cupped fingertips face +Z (forward into the handle opening).
+  g.rotateY(Math.PI)
+  const pos=g.getAttribute('position') as THREE.BufferAttribute
+  const maxR=.0336
+  for(let k=0;k<pos.count;k++){
+   const px=pos.getX(k),py=pos.getY(k),pz=pos.getZ(k)
+   // Gently round the front fingertip cup upward (+Y) while keeping every vertex strictly inside maxR.
+   const tipCurl=pz>0?.0055*(pz/.034)*(pz/.034):0
+   let nx=px,ny=py+tipCurl,nz=pz
+   const r=Math.hypot(nx,ny,nz)
+   if(r>maxR){const s=maxR/r;nx*=s;ny*=s;nz*=s}
+   pos.setXYZ(k,nx,ny,nz)
+  }
+  pos.needsUpdate=true
+  g.computeVertexNormals()
+  g.computeBoundingBox()
+  g.computeBoundingSphere()
+  return g
+ }
+ const palms=[
+  applyStylizedHumanSurfaceHint(mesh(makeChildHandGeo('right'),skin,child,'chitose-palm-0'),'skin'),
+  applyStylizedHumanSurfaceHint(mesh(makeChildHandGeo('left'),skin,child,'chitose-palm-1'),'skin'),
+ ]
  const angles=[2*Math.PI/3,Math.PI/3],contacts=angles.map(a=>v(Math.cos(a)*.13,Math.sin(a)*.13,0))
  const finalHands=angles.map(a=>v(.4+Math.cos(a)*.083,.42+.75+Math.sin(a)*.083,.4+.102))
  const waiting=[v(.24,1.25,.17),v(.56,1.25,.17)]
@@ -432,6 +687,8 @@ export function createChitoseAmeModel(){
    palms[i]!.position.copy(waiting[i]!).lerp(aligned,Math.min(reach*2,1))
    if(reach>.5)palms[i]!.position.lerp(finalHands[i]!,reach*2-1)
    place(forearms[i]!,elbows[i]!,palms[i]!.position)
+   const aim=palms[i]!.position.clone().sub(elbows[i]!).normalize()
+   palms[i]!.quaternion.setFromUnitVectors(v(0,0,1),aim)
   }
   root.updateMatrixWorld(true)
  }

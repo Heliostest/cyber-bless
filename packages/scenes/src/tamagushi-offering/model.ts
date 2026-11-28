@@ -1,8 +1,17 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import {
+ applyStylizedHumanSurfaceHint,
+ createStylizedFingerGeometry,
+ createStylizedForearmGeometry,
+ createStylizedGarmentMaterial,
+ createStylizedPalmGeometry,
+ createStylizedSkinMaterial,
+ createStylizedSleeveCuffGeometry,
+ createStylizedThumbGeometry,
+} from '@wbr/scene-runtime/stylized-human'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
-import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { addOfferingTable } from '../cozy-furniture'
 import { createSakakiLeafGeometry, createSakakiLeafMaterials } from './sakaki-botanical'
 
@@ -286,7 +295,9 @@ export function createTamagushiModel(){
  const table=new THREE.Group();table.name='tamagushi-table';root.add(table)
  const branch=new THREE.Group();branch.name='tamagushi-branch';root.add(branch)
  const matte=(color:number,roughness=.92)=>new THREE.MeshStandardMaterial({color,roughness})
- const wood=matte(0xd2ad72),bark=matte(0x6d6242),skin=matte(0xd9a47d),sleeve=matte(0xe9e6da)
+ const wood=matte(0xd2ad72),bark=matte(0x6d6242)
+ const skin=createStylizedSkinMaterial({color:0xd9a47d,tone:'honey-ochre',roughness:.86,scatterStrength:.11,name:'tamagushi-hand-skin'})
+ const sleeve=createStylizedGarmentMaterial({color:0xe9e6da,roughness:.92,fabricStrength:.26,axis:'z',name:'tamagushi-sleeve-cloth'})
  // Warm natural hosho-like washi white with UV-anchored fibers and strong
  // highlight guard so overhead daylight shows folded facets instead of #FFFFFF clipping.
  const paper=createRitualMaterial({color:0xfaf3e4,roughness:.95,vertexColors:true}, {
@@ -295,7 +306,6 @@ export function createTamagushiModel(){
  })
  applyCraftSurface(wood, { kind: 'wood', strength: .4 })
  applyCraftSurface(bark, { kind: 'wood', strength: .28, scale: 1.4, axis: 'y' })
- applyCraftSurface(sleeve, { kind: 'fabric', strength: .26 })
 
  const green=createSakakiLeafMaterials()
  const mesh=(parent:THREE.Group,name:string,geometry:THREE.BufferGeometry,material:THREE.Material)=>{const o=new THREE.Mesh(geometry,material);o.name='tamagushi-'+name;o.castShadow=o.receiveShadow=true;parent.add(o);return o}
@@ -362,15 +372,59 @@ export function createTamagushiModel(){
  })
  const hands=[-1,1].map((side,i)=>{
   const group=new THREE.Group();group.name='tamagushi-hand-'+i;root.add(group)
-  const palm=mesh(group,'palm-'+i,new RoundedBoxGeometry(.28,.07,.22,2,.012),skin)
+  const handedness=side<0?'left':'right'
+  // Sculpted palm cradled beneath the sakaki stem (top stays <= +0.034 so stem sits cleanly on top without penetration).
+  const palmGeo=createStylizedPalmGeometry({
+   width:.274,thickness:.068,length:.212,handedness,palmUp:true,arch:.007,iterations:1,
+  })
+  const palm=mesh(group,'palm-'+i,palmGeo,skin)
+  applyStylizedHumanSurfaceHint(palm,'skin')
+
+  // Four gently cupped offering fingers extending softly forward (-Z) under the branch.
+  const fingerLengths=side<0?[.112,.128,.134,.122]:[.122,.134,.128,.112]
   for(let f=0;f<4;f++){
-   const g=new THREE.CapsuleGeometry(.020,.10,4,8);g.rotateX(Math.PI/2);const o=mesh(group,`finger-${i}-${f}`,g,skin);o.position.set(-.075+f*.05,-.009,-.145)
+   const x=-.076+f*.051
+   const fGeo=createStylizedFingerGeometry({
+    length:fingerLengths[f]!,radiusX:.020,radiusY:.019,curl:.16,curlUp:true,splay:(f-1.5)*.03,iterations:1,
+   })
+   const o=mesh(group,`finger-${i}-${f}`,fGeo,skin)
+   o.position.set(x,-.009,-.088)
+   applyStylizedHumanSurfaceHint(o,'skin')
   }
-  const thumb=mesh(group,'thumb-'+i,new THREE.CapsuleGeometry(.027,.09,4,8),skin);thumb.rotation.z=side*.75;thumb.position.set(-side*.115,-.042,-.005)
+
+  // Sculpted thumb aligned along the same angled opposition axis, clearing both stem and table top.
+  const thumbGeo=createStylizedThumbGeometry({
+   length:.134,radiusX:.028,radiusY:.028,curl:.12,curlUp:false,opposition:0,iterations:1,
+  })
+  thumbGeo.rotateX(Math.PI/2)
+  thumbGeo.translate(0,-.062,0)
+  thumbGeo.computeBoundingBox();thumbGeo.computeBoundingSphere()
+  const thumb=mesh(group,'thumb-'+i,thumbGeo,skin)
+  thumb.rotation.z=side*.75
+  thumb.position.set(-side*.115,-.042,-.005)
+  applyStylizedHumanSurfaceHint(thumb,'skin')
+
   const direction=V(side*.60,0,1).normalize(),wrist=V(side*.025,0,.085)
   const armJoint=new THREE.Group();armJoint.name='tamagushi-wrist-'+i;armJoint.position.copy(wrist);group.add(armJoint)
-  const arm=cylinder(armJoint,'forearm-'+i,V(),direction.clone().multiplyScalar(.80),.055,skin)
-  const cuff=cylinder(armJoint,'sleeve-'+i,direction.clone().multiplyScalar(.65),direction.clone().multiplyScalar(3.2),.080,sleeve)
+  const armQuat=new THREE.Quaternion().setFromUnitVectors(V(0,0,1),direction)
+
+  const armGeo=createStylizedForearmGeometry({
+   length:.80,wristRadiusX:.050,wristRadiusY:.043,elbowRadiusX:.056,elbowRadiusY:.051,fullness:.05,iterations:1,
+  })
+  const arm=mesh(armJoint,'forearm-'+i,armGeo,skin)
+  arm.quaternion.copy(armQuat)
+  applyStylizedHumanSurfaceHint(arm,'skin')
+
+  // Soft formal Japanese wide cuff & sleeve with thick rolled opening and warm interior cavity shading.
+  const cuffGeo=createStylizedSleeveCuffGeometry({
+   length:2.55,cuffRadiusX:.079,cuffRadiusY:.074,sleeveRadiusX:.106,sleeveRadiusY:.096,
+   wallThickness:.013,rolledLip:.008,foldDepth:.006,cavityDepthRatio:.20,iterations:1,
+  })
+  const cuff=mesh(armJoint,'sleeve-'+i,cuffGeo,sleeve)
+  cuff.position.copy(direction.clone().multiplyScalar(.65))
+  cuff.quaternion.copy(armQuat)
+  applyStylizedHumanSurfaceHint(cuff,'garment')
+
   arm.userData.intentionalCrop=cuff.userData.intentionalCrop=true
   return{group,palm,side,armJoint,wrist}
  })

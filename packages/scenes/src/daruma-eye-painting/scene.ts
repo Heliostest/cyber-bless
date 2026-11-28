@@ -2,6 +2,7 @@ import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -222,12 +223,38 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
   inkstone.name = 'daruma-inkstone'
   inkstone.position.set(-0.62, 0.148, 0.34)
   world.add(inkstone)
-  const inkPool = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.064, 0.004, 24), wetInkMat)
-  inkPool.name = 'daruma-ink-pool'
-  inkPool.scale.set(1, 1, 1.18)
-  inkPool.position.set(-0.62, 0.165, 0.36)
-  inkPool.userData.toonSurface = { outline: false }
+  const inkPoolLiquid = createVesselLiquid({
+    preset: 'sumi-ink',
+    radius: 0.069,
+    radiusZ: 0.081,
+    radialSegments: 12,
+    angularSegments: 32,
+    deformMode: 'cpu',
+    color: 0x181a1f,
+    edgeColor: 0x525c6b,
+    deepColor: 0x090b0f,
+    foamColor: 0x737d8c,
+    foamStrength: 0.07,
+    opacity: 1.0,
+    roughness: 0.08,
+    meniscusHeight: 0.0032,
+    maxAmplitude: 0.007,
+    seed: 6011,
+    name: 'daruma-ink-pool',
+    receiveShadow: true,
+    renderOrder: 0,
+  })
+  inkPoolLiquid.material.userData.ritualOptics = { kind: 'wet', strength: 0.45 }
+  const inkPool = inkPoolLiquid.mesh
+  inkPool.position.set(-0.62, 0.1665, 0.36)
   world.add(inkPool)
+  let inkDipCooldown = 0
+  const triggerInkDip = (lx = 0, lz = 0, strength = 0.95) => {
+    if (reduced()) return
+    inkPoolLiquid.addDipDepression(lx, lz, 0.0042 * Math.min(1.2, strength), 0.028)
+    inkPoolLiquid.triggerRipple(lx, lz, strength)
+    inkPoolLiquid.addTiltImpulse(lx * 24 + 0.35, lz * 24 - 0.25)
+  }
   makeShadowPlane('daruma-inkstone-shadow', 0.30, 0.36, 0.1318, 0.24, -0.62, 0.34)
   makeShadowPlane('daruma-brush-rest-shadow', 0.20, 0.20, 0.1318, 0.22, 0.66, 0.455)
 
@@ -477,6 +504,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     brush.visible = false
     cancelDrag()
     wobbleVelocity = reduced() ? 0 : 0.42
+    triggerInkDip(-0.008, 0.006, 1.05)
     fx.sound('fabric', { duration: reduced() ? 0.12 : 0.28, strength: 0.45 })
     fx.impact({ freqs: [523.25, 783.99], duration: 0.23, gain: 0.025, type: 'triangle' })
     ctx.onProgress?.(1)
@@ -502,6 +530,10 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     wobble = wobbleVelocity = 0
     doll.position.set(0,REST_Y,0)
     doll.rotation.z = 0
+    if (!reduced()) {
+      inkPoolLiquid.addTiltImpulse(-0.5, 0.35)
+      inkPoolLiquid.triggerRipple(0, 0, 0.42)
+    }
     ctx.onProgress?.(3)
     fx.sound('woodTap', { duration: reduced() ? 0.10 : 0.16, strength: 0.44 })
     fx.impact({ freqs: [392, 587.33], duration: 0.3, gain: 0.025 })
@@ -553,6 +585,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
     if (!onObject(e.clientX, e.clientY)) return
     dragId = e.pointerId
     brushHeld = step === 0 && onBrush(e.clientX, e.clientY)
+    if (brushHeld) triggerInkDip(0, 0, 0.85)
     downY = e.clientY
     if(step===2 && !placement.begin(0,e.clientX,e.clientY)){cancelDrag();return}
     fx.prepare()
@@ -567,6 +600,10 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
         brushTarget.copy(hitPoint).sub(tipFor(BRUSH_HELD_TILT))
         brushTarget.x = THREE.MathUtils.clamp(brushTarget.x, -1, 1.15)
         brushTarget.y = THREE.MathUtils.clamp(brushTarget.y, 0.2, 1.7)
+        if (brushHeld && !reduced() && inkDipCooldown <= 0 && hitPoint.distanceTo(inkPool.position) < 0.36) {
+          triggerInkDip(0.01, -0.008, 0.88)
+          inkDipCooldown = 0.26
+        }
       }
       // Like other placements, a carried brush settles as soon as its tip reaches
       // the blank eye; the finger does not have to find the exact release spot.
@@ -625,6 +662,8 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
       pupils[1].visible = returning && step >= 1
       brush.visible = step === 0
       doll.position.y = step === 2 ? HELD_Y : REST_Y
+      inkDipCooldown = 0
+      inkPoolLiquid.reset()
       resize()
       stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
       if (!returning) {
@@ -664,6 +703,8 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
       const delta = Math.min(Math.max(dt, 0), 0.05)
       elapsed += delta
       const quiet = reduced()
+      if (!quiet && inkDipCooldown > 0) inkDipCooldown = Math.max(0, inkDipCooldown - delta)
+      inkPoolLiquid.update(delta, elapsed, quiet)
       if (quiet) wobble = wobbleVelocity = 0
       else {
         const target = step === 3 ? 0 : dragLean + Math.sin(elapsed * 0.9) * 0.009
@@ -719,6 +760,7 @@ export function createDarumaEyePainting(ctx: SceneContext): SceneInstance {
       wishHandle = null
       fx.dispose()
       styleRenderer.dispose()
+      inkPoolLiquid.dispose()
       disposeTree(world)
       shadowMap.dispose()
       scene.clear()

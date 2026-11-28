@@ -1,4 +1,5 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { createLivingPourStream, createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import * as THREE from 'three'
 import { addSteppedPedestal } from '../cozy-furniture'
 import { disposeTree } from '../procedural-kit'
@@ -24,7 +25,13 @@ export function createBodhiPujaModel() {
   const stone = new THREE.MeshStandardMaterial({ color: 0xc4baa1, roughness: .98 })
   const stoneShade = new THREE.MeshStandardMaterial({ color: 0xa89e87, roughness: .98 })
   const soil = createBodhiSoilMaterial()
-  const wetSoil = new THREE.MeshStandardMaterial({ color: 0x58432e, roughness: .92 })
+  const wetSoil = new THREE.MeshPhysicalMaterial({
+    color: 0x4f3b27,
+    roughness: 0.42,
+    metalness: 0,
+    clearcoat: 0.36,
+    clearcoatRoughness: 0.28,
+  })
   const clay = new THREE.MeshStandardMaterial({ color: 0xb76e47, roughness: .68 })
   const band = new THREE.MeshStandardMaterial({ color: 0xe1cfaa, roughness: .51 })
   applyCraftSurface(clay, { kind: 'ceramic', strength: .45 })
@@ -32,8 +39,6 @@ export function createBodhiPujaModel() {
   applyCraftSurface(stone, { kind: 'stone', strength: .4 })
   applyCraftSurface(stoneShade, { kind: 'stone', strength: .4 })
 
-  const water = new THREE.MeshStandardMaterial({ color: 0x9bcbd0, roughness: .2, metalness: .03, transparent: true, opacity: .8 })
-  water.userData.waterRendering = true
   const leaves = createBodhiLeafMaterials()
 
   function add(parent: THREE.Object3D, name: string, geometry: THREE.BufferGeometry, material: THREE.Material, x = 0, y = 0, z = 0) {
@@ -280,34 +285,109 @@ export function createBodhiPujaModel() {
   spout.name = 'bodhi-pitcher-pour-lip-origin'
   spout.position.set(.255, .65, 0)
   actor.add(spout)
-  const liquid = add(actor, 'bodhi-pitcher-water-level', new THREE.CylinderGeometry(.118, .118, .008, 32), water)
-  liquid.castShadow = false
+  // Living capillary-meniscus water inside the ceramic pitcher (GPU vertex deform keeps
+  // checkpoint vertices bit-identical while rendering live slosh, ripples & caustic shimmer).
+  const pitcherLiquid = createVesselLiquid({
+    preset: 'clear-water',
+    radius: .114,
+    radialSegments: 10,
+    angularSegments: 32,
+    deformMode: 'gpu',
+    color: 0x8cc9cf,
+    edgeColor: 0xdcf7f5,
+    deepColor: 0x458e98,
+    foamColor: 0xf7fbf8,
+    foamStrength: .10,
+    opacity: .80,
+    roughness: .13,
+    meniscusHeight: .004,
+    maxAmplitude: .012,
+    seed: 1103,
+    name: 'bodhi-pitcher-water-level',
+    waterRendering: true,
+    receiveShadow: true,
+    renderOrder: 1,
+  })
+  const liquid = pitcherLiquid.mesh
+  actor.add(liquid)
 
   const impact = new THREE.Object3D()
   impact.name = 'bodhi-soil-water-impact'
   impact.position.set(.07, .176, .26)
   root.add(impact)
+  // Glistening shallow water sheen spreading across the watered root soil with expanding impact ripples.
+  const impactPuddle = createVesselLiquid({
+    preset: 'clear-water',
+    radius: .165,
+    radiusZ: .118,
+    radialSegments: 12,
+    angularSegments: 36,
+    deformMode: 'gpu',
+    color: 0x76b7be,
+    edgeColor: 0xd9f2f0,
+    deepColor: 0x48695e,
+    foamColor: 0xf3f8f4,
+    foamStrength: .14,
+    opacity: .56,
+    roughness: .11,
+    meniscusHeight: .0016,
+    maxAmplitude: .006,
+    seed: 1129,
+    name: 'bodhi-water-impact-puddle',
+    waterRendering: true,
+    receiveShadow: true,
+    renderOrder: 2,
+  })
+  impactPuddle.mesh.position.set(.07, .1764, .26)
+  impactPuddle.mesh.visible = false
+  root.add(impactPuddle.mesh)
+
   const stream = new THREE.Group()
   stream.name = 'bodhi-water-stream'
   root.add(stream)
-  const streamGeometry = new THREE.CylinderGeometry(1, 1, 1, 8)
-  const segments = Array.from({ length: 16 }, (_, i) => {
-    const mesh = add(stream, `bodhi-water-stream-segment-${i}`, streamGeometry, water)
-    mesh.castShadow = false
-    return mesh
+  const pourStream = createLivingPourStream({
+    preset: 'clear-water',
+    topRadius: .0155,
+    bottomRadius: .0085,
+    segments: 20,
+    radialSegments: 12,
+    arcForward: .34,
+    showSplashCrown: true,
+    splashRadius: .052,
+    pulseAmplitude: .15,
+    color: 0x90ccd3,
+    opacity: .78,
+    roughness: .13,
+    seed: 1151,
+    name: 'bodhi-water-living-stream',
+    waterRendering: true,
   })
-  const splashGeometry = new THREE.SphereGeometry(1, 8, 6)
-  const splashes = Array.from({ length: 6 }, (_, i) => {
-    const angle = i * Math.PI * 2 / 6
-    const mesh = add(stream, `bodhi-water-contact-${i}`, splashGeometry, water, .07 + Math.cos(angle) * .035, .182, .26 + Math.sin(angle) * .024)
-    mesh.scale.set(.025, .006, .012)
-    mesh.castShadow = false
-    return mesh
+  pourStream.splashCrown.name = 'bodhi-water-splash-crown'
+  stream.add(pourStream.mesh, pourStream.splashCrown)
+  // Preserve exact named arc-sample anchors along the live ballistic stream path for test contracts.
+  const segments = Array.from({ length: 16 }, (_, i) => {
+    const marker = new THREE.Object3D()
+    marker.name = `bodhi-water-stream-segment-${i}`
+    stream.add(marker)
+    return marker
   })
   const smooth = (t: number) => t * t * (3 - 2 * t)
   const phase = (t: number, start: number, end: number) => smooth(THREE.MathUtils.clamp((t - start) / (end - start), 0, 1))
   const from = new THREE.Vector3(), to = new THREE.Vector3(), a = new THREE.Vector3(), b = new THREE.Vector3(), direction = new THREE.Vector3()
-  const waterPoint = (t: number, output: THREE.Vector3) => { output.copy(from).lerp(to, t); output.x += .08 * Math.sin(t * Math.PI); return output }
+  const ARC_FORWARD = .34
+  const waterPoint = (t: number, output: THREE.Vector3) => {
+    const hT = 1 - Math.pow(1 - t, 1 + ARC_FORWARD * .72)
+    const yT = Math.pow(t, 1 + ARC_FORWARD * .85)
+    return output.set(
+      from.x + (to.x - from.x) * hT,
+      from.y + (to.y - from.y) * yT,
+      from.z + (to.z - from.z) * hT,
+    )
+  }
+  let liquidClock = 0
+  let rippleTimer = .14
+  let rippleIndex = 0
+  let lastPourActive = false
   function pose(step: number, progress: number) {
     const index = THREE.MathUtils.clamp(Number.isFinite(step) ? Math.floor(step) : 0, 0, 3)
     const t = THREE.MathUtils.clamp(Number.isFinite(progress) ? progress : 0, 0, 1)
@@ -326,34 +406,97 @@ export function createBodhiPujaModel() {
     liquid.userData.remainingFraction = 1 - .68 * drained
     damp.visible = drained > 0
     damp.scale.set(.25 + .75 * drained, 1, (.25 + .75 * drained) * .72)
+    wetSoil.roughness = THREE.MathUtils.lerp(.72, .34, drained)
+    wetSoil.clearcoat = THREE.MathUtils.lerp(.12, .44, drained)
+    impactPuddle.mesh.visible = drained > 0
+    const puddleScale = .24 + .76 * drained
+    impactPuddle.mesh.scale.set(puddleScale, 1, puddleScale)
     const flow = tilt > .88 && pour > .23 && pour < .62
     stream.visible = flow
     root.updateMatrixWorld(true)
     spout.getWorldPosition(from)
     impact.getWorldPosition(to)
+    // Always sync deterministic rest arc geometry so static checkpoints & frame bounds stay exact.
+    pourStream.updateArc(from, to, 1, 0, true)
+    pourStream.mesh.visible = flow
+    pourStream.splashCrown.visible = flow
     for (let i = 0; i < segments.length; i++) {
       waterPoint(i / segments.length, a)
       waterPoint((i + 1) / segments.length, b)
       direction.copy(b).sub(a)
-      const mesh = segments[i]!
-      mesh.position.copy(a).add(b).multiplyScalar(.5)
+      const marker = segments[i]!
+      marker.position.copy(a).add(b).multiplyScalar(.5)
       const length = direction.length()
-      mesh.quaternion.setFromUnitVectors(up, direction.normalize())
-      mesh.scale.set(.013 - .003 * i / segments.length, length, .013 - .003 * i / segments.length)
+      marker.quaternion.setFromUnitVectors(up, direction.normalize())
+      marker.scale.set(.013 - .003 * i / segments.length, length, .013 - .003 * i / segments.length)
     }
-    for (const mesh of splashes) mesh.visible = flow
+    if (flow && !lastPourActive) {
+      pitcherLiquid.addTiltImpulse(2.4, -.5)
+      pitcherLiquid.triggerRipple(.03, 0, 1.0)
+      impactPuddle.triggerRipple(0, 0, 1.35)
+      impactPuddle.addDipDepression(0, 0, .0035, .048)
+      rippleTimer = 0
+    }
+    lastPourActive = flow
     root.updateMatrixWorld(true)
+  }
+  function updateLiquid(dt: number, reduced: boolean) {
+    if (disposed) return
+    const stepDt = Number.isFinite(dt) && dt > 0 ? Math.min(dt, .05) : 0
+    if (!reduced) liquidClock += stepDt
+    pitcherLiquid.update(stepDt, liquidClock, reduced)
+    impactPuddle.update(stepDt, liquidClock, reduced)
+    if (stream.visible) {
+      pourStream.updateArc(from, to, 1, liquidClock, reduced)
+      pourStream.mesh.visible = true
+      pourStream.splashCrown.visible = !reduced
+      if (!reduced && stepDt > 0) {
+        rippleTimer += stepDt
+        if (rippleTimer >= .14) {
+          rippleTimer = 0
+          const offsets = [[0, 0], [.026, -.018], [-.024, .016], [.018, .022], [-.020, -.020]] as const
+          const [ox, oz] = offsets[rippleIndex % offsets.length]!
+          rippleIndex++
+          impactPuddle.triggerRipple(ox, oz, 1.1)
+          pitcherLiquid.triggerRipple(.028, oz * .4, .45)
+        }
+      }
+    } else {
+      pourStream.mesh.visible = false
+      pourStream.splashCrown.visible = false
+      rippleTimer = .14
+    }
+  }
+  function triggerSlosh(ax: number, az: number, rippleStrength = .75) {
+    if (disposed) return
+    pitcherLiquid.addTiltImpulse(ax, az)
+    if (rippleStrength > 0) pitcherLiquid.triggerRipple(0, 0, rippleStrength)
+  }
+  function resetLiquid() {
+    if (disposed) return
+    liquidClock = 0
+    rippleTimer = .14
+    rippleIndex = 0
+    lastPourActive = false
+    pitcherLiquid.reset()
+    impactPuddle.reset()
+    pourStream.updateArc(from, to, 1, 0, true)
+    pourStream.mesh.visible = stream.visible
+    pourStream.splashCrown.visible = stream.visible
   }
   let disposed = false
   function dispose() {
     if (disposed) return
     disposed = true
+    pitcherLiquid.dispose()
+    impactPuddle.dispose()
+    pourStream.dispose()
     root.traverse(object => { if (object instanceof THREE.InstancedMesh) object.dispose() })
     disposeTree(root)
   }
   pose(0, 0)
   return {
-    root, actor, pose, dispose,
+    root, actor, pose, updateLiquid, triggerSlosh, resetLiquid, dispose,
     targets: [actor, actor, actor],
     roots: [actor, actor, actor],
     anchors: [[0, .30, .30], [0, .30, .30], [0, .30, .30]] as [number, number, number][],

@@ -33,3 +33,7 @@
 本次产品显示范围：`wood,table-apron` 的木面（餐桌与独立桌裙材质）；`porcelain,celadon` 的陶面（共享大盘、边碟和釉色盘沿）；`bamboo` 的竹面（筷子，局部轴 y）；`sleeves,cuffCloth` 的布面（衣袖及从 porcelain 拆出的独立袖口）。保留：金色筷箍；食物、皮肤与手部。
 
 程序纹理是产品美术表达，沿用本 README 的既有来源核查；本轮未重读外部链接，不新增木种、釉种、合金、纤维种类、传统技法或功效主张。保持原材质类型、贴图、反射参数和相关光学效果；器形、动作、文案、来源身份、技术 ID 与存档不变。[逐场映射、保留边界与验证记录](../../../../docs/research/2026-11-05-craft-material-rollout.md)。
+
+## 2026-11-28 风格化手部与衣袖细分曲面升级
+
+接入共享 `@wbr/scene-runtime/stylized-human` 组件，使用 `three-subdivide` Loop 细分曲面升级围桌三位食客执筷手部与节庆衣袖（`diner-palm-*`、`diner-finger-*`、`diner-thumb-*`、`diner-wrist-*`、`diner-cuff-*`、`diner-sleeve-*`）造型与暖调 Komorebi 肤质/织物材质，呈现自然轻握长筷的弯曲手指、虎口与翻边袖口。共享大盘、食材、竹筷、圆桌、三步动作、文案、来源身份（`yusheng-lohei`）、引擎版本与存档兼容性不变；仅属产品美术表现优化，不新增传统礼俗规制或文化主张，沿用本 README 既有核查记录，外链未重读。

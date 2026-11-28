@@ -3,6 +3,7 @@ import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { createSoftPlume } from '@wbr/scene-runtime/soft-plume'
+import { createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -86,7 +87,7 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
     geom.setAttribute('color', new THREE.BufferAttribute(colors, 3))
     return geom
   }
-  const caramel = createRitualMaterial({ color: 0xa76231, roughness: .43, clearcoat: .32, clearcoatRoughness: .28 }, { kind: 'wet', strength: .3 }), swirlMat = createRitualMaterial({ color: 0xc48b48, roughness: .49, clearcoat: .26, clearcoatRoughness: .3 }, { kind: 'wet', strength: .25 }), wood = mat(0xc19057), woodLight = mat(0xd6ab70)
+  const caramel = createRitualMaterial({ color: 0xa76231, roughness: .43, clearcoat: .32, clearcoatRoughness: .28 }, { kind: 'wet', strength: .3 }), wood = mat(0xc19057), woodLight = mat(0xd6ab70)
   const glaze = mat(0x78a9a7, .28), cream = mat(0xf1dec2, .4), weave = mat(0xd2ab78), terracotta = mat(0xb27355)
   glaze.vertexColors = true
   // Same pigment spans ceramics, textiles and guide beads; keep their surfaces separate.
@@ -135,15 +136,12 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
   for (const side of [-1, 1]) {
     tube([new THREE.Vector3(side * .62, .89, -.14), new THREE.Vector3(side * .86, .94, -.15), new THREE.Vector3(side * .9, 1.02, 0), new THREE.Vector3(side * .86, .94, .15), new THREE.Vector3(side * .62, .89, .14)], .04, ironRim, kazan, `navruz-kazan-handle-${side < 0 ? 'left' : 'right'}`)
   }
-  add(new THREE.CylinderGeometry(.632, .622, .025, 56), caramel, [0, .975, 0], kazan, 'navruz-cauldron-food')
-  const swirls = new THREE.Group(); swirls.name = 'navruz-caramel-swirls'; swirls.position.y = .995; kazan.add(swirls)
-  for (let i = 0; i < 3; i++) {
-    const points = Array.from({ length: 38 }, (_, j) => {
-      const a = j / 37 * Math.PI * 1.42 + i * 2.05, r = .09 + j / 37 * .45
-      return new THREE.Vector3(Math.cos(a) * r, .004, Math.sin(a) * r)
-    })
-    tube(points, .012, swirlMat, swirls, `navruz-food-swirl-${i}`).userData.toonSurface = { outline: false }
-  }
+  const cauldronLiquid = createVesselLiquid({
+    preset: 'sumalak', radius: .630, radialSegments: 16, angularSegments: 48, deformMode: 'gpu',
+    color: 0x9b6226, edgeColor: 0xcf9550, deepColor: 0x5c3510, foamColor: 0xe6bb7e, foamStrength: .34,
+    opacity: 1, roughness: .26, meniscusHeight: .026, maxAmplitude: .036, seed: 2021, name: 'navruz-cauldron-food',
+  })
+  cauldronLiquid.mesh.position.set(0, .976, 0); kazan.add(cauldronLiquid.mesh)
   const sharingMat = add(new RoundedBoxGeometry(.86, .043, .9, 3, .06), weave, [.79, SURFACE_Y + .0215, -.62], world, 'navruz-sharing-mat')
   sharingMat.userData.toonSurface = { outline: false }
   for (let i = 0; i < 13; i++) {
@@ -166,11 +164,12 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
     return { bowl, basin }
   }
   const { bowl, basin } = makeBowl('navruz-serving-bowl', BOWL); basin.name = 'navruz-empty-bowl-basin'
-  const food = add(new THREE.CylinderGeometry(.247, .21, .022, 36), caramel, [0, .18, 0], bowl, 'navruz-serving-food')
-  const bowlSwirl = tube(Array.from({ length: 25 }, (_, i) => {
-    const a = i / 24 * Math.PI * 2, r = .025 + i / 24 * .15
-    return new THREE.Vector3(Math.cos(a) * r, .194, Math.sin(a) * r)
-  }), .008, swirlMat, bowl, 'navruz-serving-swirl')
+  const bowlLiquid = createVesselLiquid({
+    preset: 'sumalak', radius: .246, radialSegments: 12, angularSegments: 36, deformMode: 'gpu',
+    color: 0x9b6226, edgeColor: 0xcf9550, deepColor: 0x5c3510, foamColor: 0xe6bb7e, foamStrength: .34,
+    opacity: 1, roughness: .26, meniscusHeight: .012, maxAmplitude: .018, seed: 2029, name: 'navruz-serving-food',
+  })
+  const food = bowlLiquid.mesh; food.position.set(0, .184, 0); bowl.add(food); bowlLiquid.trackContainer(bowl)
   makeBowl('navruz-neighbor-bowl', new THREE.Vector3(.24, SURFACE_Y, -.93), .64)
   addContactShadow(world, { prefix: 'navruz-hearth', width: 1.78, depth: 1.78, y: SURFACE_Y + .002, center: [POT_X, POT_Z], shape: 'ellipse', opacity: .28 })
   addContactShadow(world, { prefix: 'navruz-sharing-mat', width: .98, depth: 1.02, y: SURFACE_Y + .002, center: [.79, -.62], shape: 'rounded-rect', opacity: .22 })
@@ -216,16 +215,37 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
     const contact=projectTouchPoint(canvas,camera,checkpoint===1?head:bowl)
     return !!contact && !touch.occluded(x,y,checkpoint===1?basin:sharingMat,{ignore:carried()}) && touch.hit(contact.x,contact.y,checkpoint===1?basin:sharingMat,{ignore:carried()})
   }
-  function pose() {
+  let lastStirPos = new THREE.Vector2(PARKED.x, PARKED.z), stirWakeAccum = 0, serveFilled = false
+  function injectStirWake(worldX: number, worldZ: number, boost = 1) {
+    if (reduced()) return
+    const lx = THREE.MathUtils.clamp(worldX - POT_X, -.55, .55)
+    const lz = THREE.MathUtils.clamp(worldZ - POT_Z, -.55, .55)
+    const dx = worldX - lastStirPos.x, dz = worldZ - lastStirPos.y
+    const dist = Math.hypot(dx, dz)
+    if (dist > 1e-4) {
+      const rSq = Math.max(.08, lx * lx + lz * lz)
+      const cross = (lx * dz - lz * dx) / rSq
+      cauldronLiquid.addSwirlImpulse(THREE.MathUtils.clamp(cross * 16 * boost, -5.5, 5.5))
+      cauldronLiquid.addTiltImpulse(THREE.MathUtils.clamp(dx * 5.2, -1.8, 1.8), THREE.MathUtils.clamp(dz * 5.2, -1.8, 1.8))
+      stirWakeAccum += dist
+      if (stirWakeAccum >= .075) {
+        stirWakeAccum = 0
+        cauldronLiquid.triggerRipple(lx, lz, THREE.MathUtils.clamp(.58 + dist * 3.5, .58, 1.05))
+      }
+      lastStirPos.set(worldX, worldZ)
+    }
+  }
+  function pose(resetFluid = true) {
     stirPath.reset(); nextBead = 1
     beads.forEach(bead => (bead.material as THREE.MeshStandardMaterial).color.setHex(0xf1dec2))
     spoon.position.copy(checkpoint === 0 ? arcPoint(0) : checkpoint === 1 ? arcPoint(1) : PARKED)
     spoon.rotation.set(0, 0, checkpoint >= 2 ? -.2 : 0)
     spoonFood.visible = checkpoint === 1
     bowl.position.copy(checkpoint === 3 ? SHARED : BOWL)
-    food.visible = bowlSwirl.visible = checkpoint >= 2
+    food.visible = checkpoint >= 2
     guides.visible = checkpoint === 0
-    swirls.rotation.y = checkpoint >= 1 ? .3 : 0
+    lastStirPos.set(spoon.position.x, spoon.position.z); stirWakeAccum = 0; serveFilled = false
+    if (resetFluid) { cauldronLiquid.reset(); bowlLiquid.reset() }
     syncAtmosphere()
     world.updateMatrixWorld(true)
   }
@@ -237,14 +257,20 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
   }
   function finish() {
     if (!motion) return
-    checkpoint = (motion.step + 1) as Checkpoint; motion = null; nextBead = 1; pose(); sync()
+    const finishedStep = motion.step
+    checkpoint = (finishedStep + 1) as Checkpoint; motion = null; nextBead = 1; pose(false); sync()
+    if (!reduced() && finishedStep === 2) {
+      bowlLiquid.triggerRipple(0, 0, .62)
+      bowlLiquid.addTiltImpulse(.55, -.45)
+    }
     ctx.onProgress?.(checkpoint)
     feedback.impact({ freqs: [264, 396], duration: .22, gain: .025, cue: checkpoint === 1 ? 'woodTap' : 'ceramic', cueStrength: .60 })
     if (checkpoint === 3 && !completed) { completed = true; overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true })) }
   }
   function begin(guided = false) {
     if (!active() || motion || checkpoint === 3) return
-    motion = { step: checkpoint, time: 0, from: carried().position.clone(), guided }; dragging = false
+    motion = { step: checkpoint, time: 0, from: carried().position.clone(), guided }; dragging = false; serveFilled = false
+    lastStirPos.set(spoon.position.x, spoon.position.z); stirWakeAccum = .08
     if (!reduced() && checkpoint === 0) feedback.sound('woodTap', { duration: .14, strength: .36 })
     if (reduced()) finish(); else sync()
   }
@@ -252,6 +278,7 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
     if (!ray.aim(x, y).ray.intersectPlane(plane, dragPoint)) return
     stirPath.sample([dragPoint.x, dragPoint.z]); nextBead = stirPath.next
     spoon.position.copy(dragPoint)
+    injectStirWake(dragPoint.x, dragPoint.z, 1.15)
     beads.forEach((bead, i) => (bead.material as THREE.MeshStandardMaterial).color.setHex(i < nextBead - 1 ? 0x79ac82 : 0xf1dec2))
     ui.hintEl.dataset.progress = 'true'
     setSafeText(ui.hintEl, stirReady(x, y) ? '弧线已搅完，松手即可。' : stirPath.progress === 1 ? '弧线已搅完，回到最后一处圆点附近松手。' : sceneTemplate("已沿弧线前进 {p0}%，继续经过下一处浅色圆点。", { p0: Math.round(stirPath.progress * 100) }), shared.assertSafeCopy)
@@ -319,15 +346,26 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
         if (motion.step === 0) {
           if (motion.guided) spoon.position.lerpVectors(motion.from, arcPoint(1), p)
           else spoon.position.copy(arcPoint(p))
-          swirls.rotation.y = p * .3
+          injectStirWake(spoon.position.x, spoon.position.z, 1.35)
         } else if (motion.step === 1) {
           const serve = BOWL.clone().add(new THREE.Vector3(0, .23, 0))
           if (t < .5) spoon.position.lerpVectors(motion.from, serve, smooth(t * 2))
           else spoon.position.lerpVectors(serve, PARKED, smooth((t - .5) * 2))
-          spoon.rotation.z = -.2 * p; food.visible = bowlSwirl.visible = t >= .5; spoonFood.visible = t < .5
+          spoon.rotation.z = -.2 * p; food.visible = t >= .5; spoonFood.visible = t < .5
+          if (t >= .5 && !serveFilled) {
+            serveFilled = true
+            if (!reduced()) {
+              bowlLiquid.triggerRipple(0, 0, 1.05)
+              bowlLiquid.addSwirlImpulse(2.6)
+              bowlLiquid.addTiltImpulse(.85, -.55)
+              cauldronLiquid.triggerRipple(.42, 0, .55)
+            }
+          }
         } else { bowl.position.lerpVectors(motion.from, SHARED, p); bowl.position.y += Math.sin(t * Math.PI) * .12 }
         syncAtmosphere(); world.updateMatrixWorld(true); if (t === 1) finish()
       }
+      cauldronLiquid.update(stepDelta, elapsed, reduced())
+      bowlLiquid.update(stepDelta, elapsed, reduced())
       hearthGlowMat.emissiveIntensity = reduced() ? .88 : .88 + .16 * Math.sin(elapsed * 2.1)
       kazanSteam.setIntensity(motion?.step === 0 ? 1.12 : 1)
       kazanSteam.update(stepDelta, camera, { reducedMotion: reduced(), scene })
@@ -338,7 +376,7 @@ export function createNavruzSumalak(ctx: SceneContext): SceneInstance {
       if (disposed) return
       disposed = true; pointer.dispose(); stopResize(); ui.actionBtn.removeEventListener('click', action); feedback.dispose()
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
-      style.dispose(); kazanSteam.dispose(); bowlSteam.dispose(); disposeTree(scene); Object.values(lights).forEach(light => light.dispose())
+      style.dispose(); kazanSteam.dispose(); bowlSteam.dispose(); cauldronLiquid.dispose(); bowlLiquid.dispose(); disposeTree(scene); Object.values(lights).forEach(light => light.dispose())
       renderer.dispose(); renderer.forceContextLoss(); scene.clear(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }

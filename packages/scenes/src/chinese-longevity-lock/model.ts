@@ -10,10 +10,10 @@ import { SEAL_GLYPHS } from './seal-glyphs'
 import { createLockToonFactory, createOutlineShell } from './toon'
 
 // Product-original lock necklace and display furniture, not a museum replica.
-// The curved plate outline, its rim and dome, the raised small-seal "長命"
-// metal relief (offline contours from Kaiyuan Small Seal Font, SIL OFL 1.1,
-// product art choice rather than a museum inscription replica), the five-petal
-// drops, the cord layout, the board, the case and the stand are product art.
+// The curved plate outline, its rim and dome, the raised Kai calligraphy "长命"
+// metal relief (LXGW ZhenKai GB subset, SIL OFL 1.1, product art choice rather
+// than a museum inscription replica), the five-petal drops, the cord layout,
+// the board, the case and the stand are product art.
 // Colours are art parameters, not material or craft claims.
 export const LOCK_COLORS = {
   silver: { lit: 0xeaf1f6, base: 0xccd7e1, shade: 0x8b9db0, horizon: 0x9fb0c2, line: 0x4a5968, smallLine: 0x5f6f80 },
@@ -48,10 +48,10 @@ const PLATE_RINGS: ProfileRing[] = [
 /** Right half of the plate outline from the top tab, mirrored; +y points to the cord. */
 const PLATE_RIGHT: [number, number][] = [[0, .40], [.08, .39], [.13, .345], [.22, .315], [.36, .33], [.48, .37], [.585, .372], [.645, .31], [.635, .215], [.575, .13], [.555, .03], [.585, -.07], [.585, -.18], [.53, -.28], [.43, -.345], [.31, -.37], [.20, -.395], [.10, -.425]]
 const PLATE_BOTTOM = -.44
-// Raised 3D small-seal "長命" relief (Kaiyuan Small Seal U+3EB4E / U+3D3B9, SIL OFL 1.1),
-// baked offline as compact 2D contours and extruded onto the curved lock face.
-const SEAL_LETTERS: readonly (readonly ['long' | 'ming', number])[] = [['long', -.230], ['ming', .220]]
-const LETTER_Z = .042, LETTER_SIZE = .465, RELIEF_HEIGHT = .029, RELIEF_SINK = .014, STROKE = .02
+// Raised 3D Kai calligraphy "长命" relief (LXGW ZhenKai GB subset, SIL OFL 1.1),
+// extruded onto the curved lock dome as closed watertight 2-manifold solids.
+const SEAL_LETTERS: readonly (readonly ['long' | 'ming', number])[] = [['long', -.265], ['ming', .265]]
+const LETTER_Z = .042, LETTER_SIZE = .365, RELIEF_HEIGHT = .029, RELIEF_SINK = .014, STROKE = .02
 const DROPS = [-.40, 0, .40], FLOWER = .105, NOTCH = .74, LINK = .014, LINK_GAP = .055
 const CORD = .03, BAIL = .044
 
@@ -81,6 +81,8 @@ const FLOWER_RINGS: ProfileRing[] = [
   // A small raised centre.
   { s: .26, y: .060 }, { s: .14, y: .063 },
 ]
+
+let cachedReliefBuffers: Map<'long' | 'ming', { positions: Float32Array; normals: Float32Array }> | null = null
 
 export interface LongevityLockModelOptions {
   isActive?: () => boolean
@@ -150,8 +152,23 @@ export function createLongevityLockModel(options: LongevityLockModelOptions = {}
     if (!hit) throw Error('point lies off the lock face')
     return motion.worldToLocal(hit.point.clone()).y
   }
-  for (const [name, cx] of SEAL_LETTERS) {
-    const geometry = domeReliefSolid(SEAL_GLYPHS[name], cx, PLATE_Z + LETTER_Z, LETTER_SIZE, RELIEF_HEIGHT, RELIEF_SINK, face)
+  if (!cachedReliefBuffers) {
+    cachedReliefBuffers = new Map()
+    for (const [name, cx] of SEAL_LETTERS) {
+      const built = domeReliefSolid(SEAL_GLYPHS[name], cx, PLATE_Z + LETTER_Z, LETTER_SIZE, RELIEF_HEIGHT, RELIEF_SINK, face, { maxEdge: 0.055 })
+      cachedReliefBuffers.set(name, {
+        positions: new Float32Array((built.getAttribute('position') as THREE.BufferAttribute).array as Float32Array),
+        normals: new Float32Array((built.getAttribute('normal') as THREE.BufferAttribute).array as Float32Array),
+      })
+      built.dispose()
+    }
+  }
+  for (const [name] of SEAL_LETTERS) {
+    const cached = cachedReliefBuffers.get(name)!
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(cached.positions), 3))
+    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(new Float32Array(cached.normals), 3))
+    geometry.computeBoundingBox(); geometry.computeBoundingSphere()
     small(mesh(motion, `longevity-letter-${name}`, geometry, materials.relief))
   }
 

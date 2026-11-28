@@ -1,4 +1,5 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { createGlyphFlatGeometry } from '@wbr/scene-runtime/glyph-kit'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 
@@ -40,6 +41,7 @@ function threadHash(n: number): number {
 
 let cachedClothPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
 let cachedCordPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
+let cachedGodairikiGlyphs: { positions: Float32Array; normals: Float32Array; uvs: Float32Array; indices: Uint32Array }[] | null = null
 
 /**
  * Deterministic fine handwoven slubbed cotton-linen cloth texture (512x512, tileable horizontally,
@@ -335,7 +337,7 @@ export function createGodairikiModel() {
  const root=new THREE.Group();root.name='godairiki-root'
  const subject=new THREE.Group();subject.name='godairiki-subject';root.add(subject)
  const stoneMat=new THREE.MeshStandardMaterial({color:0xe6dfc6,roughness:.92})
- const ink=new THREE.MeshStandardMaterial({color:0x3f4446,roughness:1})
+ const ink=new THREE.MeshStandardMaterial({color:0x2b2d2f,roughness:1,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1})
  const clothTex = createPouchClothTextures()
  const cordTex = createDrawstringCordTextures()
  const cloth = createRitualMaterial(
@@ -711,24 +713,56 @@ export function createGodairikiModel() {
   const g=new THREE.SphereGeometry(r,16,10);g.scale(1,.52,.85);const m=make(`godairiki-gravel-${i}`,g,cobbleMats[i!%3]!);m.position.set(x!,r!*.52,z!)
  }
  const roots:THREE.Group[]=[],targets:THREE.Mesh[]=[]
- // Characters are original stroke layouts on the upper stone surface, not copied artwork.
- const glyphs:number[][][][]=[
-  [[[-.09,-.09],[.09,-.09]],[[.015,-.09],[-.025,.09]],[[-.075,-.015],[.065,-.015],[.05,.09]],[[-.10,.09],[.10,.09]]],
-  [[[-.10,-.025],[.10,-.025]],[[.01,-.10],[0,-.015],[-.04,.055],[-.10,.10]],[[0,-.015],[.045,.05],[.10,.10]]],
-  [[[-.10,-.03],[.08,-.03],[.07,.08],[.025,.10]],[[0,-.10],[-.015,.02],[-.06,.08],[-.10,.10]]],
- ]
+ // Characters ("五", "大", "力") rendered with Yuji Syuku (SIL OFL 1.1) brush calligraphy
+ // and projected conformally onto the upper ellipsoid curvature of each pebble.
+ const stoneChars=['五','大','力'] as const
+ const stoneRx=.24,stoneRy=.12,stoneRz=.20,inkOffset=.0026
+ if(!cachedGodairikiGlyphs){
+  cachedGodairikiGlyphs=stoneChars.map((ch)=>{
+   const {geometry:built}=createGlyphFlatGeometry('yujiSyuku',ch,{
+    center:true,
+    fitBox:[.215,.185],
+    flatness:.0055,
+    maxEdgeLength:.036,
+    plane:'xz',
+    deformVertex(x,y,out){
+     const z=-y
+     const u=x/stoneRx,w=z/stoneRz
+     const y0=stoneRy*Math.sqrt(Math.max(.01,1-u*u-w*w))
+     const nx=x/(stoneRx*stoneRx),ny=y0/(stoneRy*stoneRy),nz=z/(stoneRz*stoneRz)
+     const invLen=1/(Math.hypot(nx,ny,nz)||1)
+     out.set(x+nx*invLen*inkOffset,y0+ny*invLen*inkOffset,z+nz*invLen*inkOffset)
+    },
+   })
+   const p=built.getAttribute('position') as THREE.BufferAttribute
+   const n=built.getAttribute('normal') as THREE.BufferAttribute
+   const uv=built.getAttribute('uv') as THREE.BufferAttribute
+   const ix=built.getIndex()!
+   const buf={
+    positions:new Float32Array(p.array as Float32Array),
+    normals:new Float32Array(n.array as Float32Array),
+    uvs:new Float32Array(uv.array as Float32Array),
+    indices:Uint32Array.from(ix.array),
+   }
+   built.dispose()
+   return buf
+  })
+ }
  for(let i=0;i<3;i++){
   const group=new THREE.Group();group.name=`godairiki-stone-root-${i}`;subject.add(group);roots.push(group)
-  const geometry=new THREE.SphereGeometry(1,32,20);geometry.scale(.24,.12,.20)
+  const geometry=new THREE.SphereGeometry(1,32,20);geometry.scale(stoneRx,stoneRy,stoneRz)
   const stone=make(`godairiki-stone-${i}`,geometry,stoneMat,group);targets.push(stone)
-  glyphs[i]!.forEach((stroke,j)=>{
-   const points:THREE.Vector3[]=[]
-   for(let k=0;k<stroke.length-1;k++)for(let n=k===0?0:1;n<=8;n++){const t=n/8,x=THREE.MathUtils.lerp(stroke[k]![0]!,stroke[k+1]![0]!,t),z=THREE.MathUtils.lerp(stroke[k]![1]!,stroke[k+1]![1]!,t);points.push(new THREE.Vector3(x,.12*Math.sqrt(1-(x/.24)**2-(z/.20)**2)+.002,z))}
-   // Ink uses a thin ribbon lying on the pebble surface, with no floating caption.
-   const p:number[]=[],ix:number[]=[]
-   for(let n=0;n<points.length;n++){const v=points[n]!,next=points[Math.min(n+1,points.length-1)]!,prev=points[Math.max(n-1,0)]!,dx=next.x-prev.x,dz=next.z-prev.z,len=Math.hypot(dx,dz)||1;for(const sign of[-1,1]){const x=v.x+sign*(-dz/len)*.009,z=v.z+sign*(dx/len)*.009;p.push(x,.12*Math.sqrt(1-(x/.24)**2-(z/.20)**2)+.003,z)}if(n<points.length-1){const at=n*2;ix.push(at,at+1,at+2,at+1,at+3,at+2)}}
-   const mark=new THREE.BufferGeometry();mark.setAttribute('position',new THREE.Float32BufferAttribute(p,3));mark.setIndex(ix);mark.computeVertexNormals();make(`godairiki-ink-${i}-${j}`,mark,ink,group)
-  })
+  const glyphGroup=new THREE.Group();glyphGroup.name=`godairiki-glyph-${i}`;group.add(glyphGroup)
+  const buf=cachedGodairikiGlyphs[i]!
+  const mark=new THREE.BufferGeometry()
+  mark.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(buf.positions),3))
+  mark.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(buf.normals),3))
+  mark.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(buf.uvs),2))
+  mark.setIndex(new THREE.BufferAttribute(new Uint32Array(buf.indices),1))
+  mark.computeBoundingBox();mark.computeBoundingSphere()
+  const inkMesh=make(`godairiki-ink-${i}`,mark,ink,glyphGroup)
+  inkMesh.castShadow=false
+  inkMesh.userData.toonSurface={outline:false}
  }
  function pose(step:number,amount:number){
   const n=Number.isFinite(step)?THREE.MathUtils.clamp(Math.floor(step),0,3):0

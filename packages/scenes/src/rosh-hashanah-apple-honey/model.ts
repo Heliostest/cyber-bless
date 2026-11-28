@@ -1,6 +1,7 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import * as THREE from 'three'
 import { addRoundLowTable } from '../cozy-furniture'
 
@@ -37,6 +38,12 @@ export function createAppleHoneyModel() {
   const bowl=mesh('honey-dish',lathe([[0,0],[.43,0],[.59,.10],[.62,.28],[.56,.28],[.42,.06],[0,.06]]),blue,root);bowl.position.set(.72,.148,-.04)
   const honeyRadius=.42+.14*(.22-.06)/(.28-.06)
   const honey=mesh('honey-volume',lathe([[0,.06],[.42,.06],[honeyRadius,.22],[0,.22]]),honeyMaterial,root);honey.position.copy(bowl.position);honey.castShadow=false
+  const honeySurface=createVesselLiquid({
+    preset:'viscous-honey',radius:honeyRadius-.002,radialSegments:16,angularSegments:48,deformMode:'gpu',
+    color:0xd8901c,edgeColor:0xf9d268,deepColor:0x824408,foamColor:0xfce49a,foamStrength:.14,
+    opacity:.88,roughness:.09,meniscusHeight:.024,maxAmplitude:.036,seed:7027,name:'honey-surface',
+  })
+  honeySurface.mesh.position.set(bowl.position.x,bowl.position.y+.221,bowl.position.z);root.add(honeySurface.mesh)
   const apple=new THREE.Group();apple.name='apple-slice';subject.add(apple)
   const arc=(radius:number)=>Array.from({length:49},(_,i)=>{const angle=Math.PI+Math.PI*i/48;return new THREE.Vector2(radius*Math.cos(angle),.08+radius*Math.sin(angle))})
   const outer=arc(.44),inner=arc(.416)
@@ -86,5 +93,22 @@ export function createAppleHoneyModel() {
     root.updateMatrixWorld(true)
   }
   pose(0,0)
-  return {root,subject,apple,flesh,peel,films,whole,wholeBody,board,plate,bowl,honey,targets:[apple,apple,apple],roots:[apple,apple,apple],anchors:[[0,-.13,.06],[0,-.13,.06],[0,-.13,.06]] as [number,number,number][],pose,dispose:()=>{}}
+  let liquidClock=0,disposed=false
+  const updateLiquid=(dt:number,reduced:boolean)=>{
+    const stepDt=Number.isFinite(dt)&&dt>0?Math.min(dt,.05):0
+    if(!reduced)liquidClock+=stepDt
+    honeySurface.update(stepDt,liquidClock,reduced)
+  }
+  const dipHoney=(depth:number,localX=0,localZ=0)=>{
+    honeySurface.addDipDepression(localX,localZ,depth,honeyRadius*.48)
+    honeySurface.addTiltImpulse(depth>0?.48:-.42,depth>0?-.32:.36)
+    if(depth<0)honeySurface.triggerRipple(localX,localZ,.76)
+  }
+  const resetLiquid=()=>{liquidClock=0;honeySurface.reset()}
+  return {
+    root,subject,apple,flesh,peel,films,whole,wholeBody,board,plate,bowl,honey,honeySurface:honeySurface.mesh,
+    targets:[apple,apple,apple],roots:[apple,apple,apple],anchors:[[0,-.13,.06],[0,-.13,.06],[0,-.13,.06]] as [number,number,number][],
+    pose,updateLiquid,dipHoney,resetLiquid,
+    dispose:()=>{if(disposed)return;disposed=true;honeySurface.dispose()},
+  }
 }

@@ -83,3 +83,7 @@ The focused suite uses actual Three.js geometry, raycasting, interaction cues an
 ## 2026-11-04 共享日景远景云
 
 共享白天环境接入 Toon Cloud 远景云带；只在镜头露出的天空中显示，俯视时由地面和主体自然遮挡。云为产品布景，器物、材料、动作、信仰/节庆语境、完成条件、文案及来源沿用本 README 既有核查，不增加天气规则、传统云纹或功效主张。[本轮范围、署名许可与验证](../../../../docs/research/2026-11-04-toon-cloud-daylight-expansion.md)。
+
+## 2026-11-28 调色釉碟弯月面与蘸彩釉水涟漪升级
+
+将陶土调色釉碟内的彩釉液面（`rooster-dye-pool`）升级为 `createVesselLiquid` `'pigment-dye'` 液面，带碟壁毛细弯月面与温润青绿釉泽；画笔拿起蘸取、添纹与台面摆放时釉池泛起柔和阻尼涟漪与微晃，减少动态下保持静止。上述液面与波纹反馈属产品美术与实时交互反馈优化，不新增传统工艺配方、宗教规制或功效承诺；既有 `barcelos-clay-rooster` 来源核查、文案、动作、技术 ID、引擎版本与存档兼容性保持不变，外链未重读。

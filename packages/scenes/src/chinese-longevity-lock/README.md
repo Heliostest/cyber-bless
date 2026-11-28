@@ -1,6 +1,11 @@
 # 银锁寄安 / chinese-longevity-lock
 
-## 2026-11-20 锁面「長命」改为《开元小篆》三维金属浮雕（当前文字造型）
+## 2026-11-28 锁面「长命」升级为霞鹜臻楷三维流形金属浮雕（当前文字造型）
+
+- **楷书浮雕**：锁面两字由原先小尺寸下笔画易碎的离线简化《开元小篆》轮廓，升级为基于开源可商用字体 **LXGW ZhenKai GB（霞鹜臻楷 GB，SIL Open Font License 1.1，完整许可原文见 `packages/scene-runtime/licenses/fonts/LXGWZhenKaiGB-OFL.txt`）** 子集实时提取的闭合轮廓（`seal-glyphs.ts`），并经 `domeReliefSolid()`（`geometry.ts`）采用共形细分与半边边界匹配生成严格闭合的 2-manifold 三维银锁鼓面浮雕（`longevity-letter-long` 与 `longevity-letter-ming`），在小屏与近看下笔画清晰饱满且留足锁面安全区。
+- **文化与许可合规**：字体替换仅为产品视觉可读性与美术呈现改进，不声称某件馆藏长命锁实物采用该字体或铭文，不新增传统规制或功效承诺；延续 SIL OFL 1.1 合规要求（不单独售卖字体，不使用保留字体名命名衍生字体文件，历史 `kaiyuan-small-seal-OFL.txt` 仍保留留档）。其余器物造型、三渲二深银材质、603 姿态净空、来源 `chinese-longevity-lock`、技术 ID、引擎 `@1` 与存档均保持不变，外链未重读。
+
+## 2026-11-20 锁面「長命」改为《开元小篆》三维金属浮雕（历史文字造型）
 
 - **小篆浮雕**：锁面两字由原先的原创几何胶囊笔画，改为基于《开元小篆》（`frankslin/kaiyuan-small-seal-font`，SIL Open Font License 1.1，公版《说文解字》字形）U+3EB4E「長」与 U+3D3B9「命」离线提取并简化的闭合 2D 轮廓（`seal-glyphs.ts`，约 5.6 KB，零运行时字体加载，未将整套字库打入 `assets/fonts/` 或 Web/Expo 包体）。运行时由 `domeReliefSolid()`（`geometry.ts`）同步贴合锁片鼓面 `face(x, z)` 挤出成实心闭合流形浮雕网格（底面嵌入锁片，顶面高出银面约 0.029 世界单位），保留小篆结构并充分利用锁面安全区，不触及凸边、锁环与项绳。
 - **材质与对比**：沿用 `LOCK_COLORS.relief` 深银色板（`#8A9DAE / #55697B / #33414F`）与 `longevity-letter-toon` 独立着色器，将 `uBands` 上阈调至 `0.89` 并启用侧壁压暗（`uSide = 0.50`），使平顶小篆呈现深银顶面与更暗的铸字侧壁；不给细笔画叠加反壳描线以免糊字。

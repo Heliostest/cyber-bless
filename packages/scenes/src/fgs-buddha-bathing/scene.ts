@@ -25,7 +25,7 @@ export function createFgsBuddhaBathing(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean; heldPosition?: THREE.Vector3; heldQuaternion?: THREE.Quaternion } | null = null
+  let motion: { step: 0 | 1 | 2; time: number; from: number; placed?: boolean; heldPosition?: THREE.Vector3; heldQuaternion?: THREE.Quaternion; scoopRippled?: boolean; returnRippled?: boolean } | null = null
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
   const callbackActive = () => active() && callbackVersion === lifecycleVersion
@@ -126,15 +126,26 @@ export function createFgsBuddhaBathing(ctx: SceneContext): SceneInstance {
             root.position.lerpVectors(motion.heldPosition!,goal,t);root.quaternion.slerpQuaternions(motion.heldQuaternion!,rotation,t);root.updateWorldMatrix(true,true)
             model.stream.visible=false
           }
-        }else{pose(motion.step,motion.from+(1-motion.from)*eased);if(motion.placed)placement.settle(eased)} if (motion.time === 1) settle()
+        }else{pose(motion.step,motion.from+(1-motion.from)*eased);if(motion.placed)placement.settle(eased)}
+        if (!(ctx.isReducedMotion?.())) {
+          if (!motion.scoopRippled && amount >= 0.08 && amount < 0.45) {
+            motion.scoopRippled = true
+            model.triggerLadleSplash(0.9)
+          }
+          if (!motion.returnRippled && amount >= 0.93) {
+            motion.returnRippled = true
+            model.triggerLadleSplash(0.7)
+          }
+        }
+        if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) { model.updateLiquid(delta, ctx.isReducedMotion?.() ?? false); matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); model.disposeLiquid(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

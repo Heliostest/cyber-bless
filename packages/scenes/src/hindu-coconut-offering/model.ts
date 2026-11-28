@@ -1,4 +1,5 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { createLivingPourStream, createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import * as THREE from 'three'
 import { disposeTree } from '../procedural-kit'
 
@@ -96,8 +97,6 @@ export function createCoconutOfferingModel() {
   applyCraftSurface(stone, { kind: 'stone', strength: .45 })
   const ringMaterial = new THREE.MeshStandardMaterial({ color: '#8a8578', roughness: .95 })
   applyCraftSurface(ringMaterial, { kind: 'stone', scale: 1.15, strength: .34 })
-  const waterMaterial = new THREE.MeshStandardMaterial({ color: '#8ebac1', roughness: .19, transparent: true, opacity: .46, depthWrite: false })
-  waterMaterial.userData.waterRendering = true
   const add = (parent: THREE.Object3D, name: string, geometry: THREE.BufferGeometry, material: THREE.Material | THREE.Material[]) => {
     const mesh = new THREE.Mesh(geometry, material)
     mesh.name = name; mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh)
@@ -152,8 +151,85 @@ export function createCoconutOfferingModel() {
     [.806, .278], [.794, .312], [.782, .33], [.77, STONE_TOP], [0, STONE_TOP],
   ]), stone)
   strikingStone.position.set(.65, 0, .4); strikingStone.scale.set(1.30, 1, .83)
-  const water = add(root, 'coconut-water-spill', new THREE.CylinderGeometry(.43, .43, .005, 64), waterMaterial)
-  water.position.set(.65, .342, .4); water.castShadow = false
+  // Translucent faintly opalescent coconut water pooling on the striking stone with capillary meniscus.
+  const spillLiquid = createVesselLiquid({
+    preset: 'clear-water',
+    radius: .43,
+    radialSegments: 14,
+    angularSegments: 48,
+    deformMode: 'gpu',
+    color: 0xd9eeeb,
+    edgeColor: 0xf8fcfb,
+    deepColor: 0x9ac3c7,
+    foamColor: 0xffffff,
+    foamStrength: .24,
+    opacity: .68,
+    roughness: .11,
+    meniscusHeight: .0055,
+    maxAmplitude: .015,
+    seed: 2017,
+    name: 'coconut-water-spill',
+    waterRendering: true,
+    receiveShadow: true,
+    renderOrder: 2,
+  })
+  const water = spillLiquid.mesh
+  water.position.set(.65, .341, .4)
+  water.visible = false
+  root.add(water)
+
+  // Catchment basin coconut-water collar hugging the inner rim of coconut-catch-basin around the stone.
+  const basinLiquid = createVesselLiquid({
+    preset: 'clear-water',
+    radius: 1.08,
+    radiusZ: .695,
+    radialSegments: 10,
+    angularSegments: 48,
+    deformMode: 'gpu',
+    color: 0xd4eae7,
+    edgeColor: 0xf6fbfa,
+    deepColor: 0x90bbc0,
+    foamColor: 0xffffff,
+    foamStrength: .20,
+    opacity: .62,
+    roughness: .12,
+    meniscusHeight: .004,
+    maxAmplitude: .012,
+    seed: 2029,
+    name: 'coconut-basin-water',
+    waterRendering: true,
+    receiveShadow: true,
+    renderOrder: 1,
+  })
+  basinLiquid.mesh.position.set(.65, .142, .4)
+  basinLiquid.mesh.visible = false
+  root.add(basinLiquid.mesh)
+
+  // Brief luminous splash arc & splash crown as the cracked halves release fresh coconut water.
+  const splashStream = createLivingPourStream({
+    preset: 'clear-water',
+    topRadius: .0145,
+    bottomRadius: .0085,
+    segments: 14,
+    radialSegments: 10,
+    arcForward: .18,
+    showSplashCrown: true,
+    splashRadius: .066,
+    pulseAmplitude: .18,
+    color: 0xddf2ef,
+    opacity: .72,
+    roughness: .11,
+    seed: 2053,
+    name: 'coconut-water-splash-stream',
+    waterRendering: true,
+  })
+  splashStream.splashCrown.name = 'coconut-water-splash-crown'
+  root.add(splashStream.mesh, splashStream.splashCrown)
+  const splashStart = new THREE.Vector3(.65, .52, .4)
+  const splashEnd = new THREE.Vector3(.65, .342, .4)
+  let liquidClock = 0
+  let splashFlow = 0
+  let crackStage = 0
 
   const identity = new THREE.Quaternion()
   const finalRotations = [
@@ -202,15 +278,92 @@ export function createCoconutOfferingModel() {
     })
     water.visible = opening > 0
     water.scale.set(.15 + .85 * opening, 1, (.15 + .85 * opening) * .67)
+    const basinFill = THREE.MathUtils.clamp((opening - .06) / .94, 0, 1)
+    basinLiquid.mesh.visible = basinFill > 0
+    basinLiquid.mesh.position.y = THREE.MathUtils.lerp(.118, .144, basinFill)
+
+    const splashing = step === 2 && contacted && opening > .02 && opening < .72
+    splashFlow = splashing ? Math.sin(THREE.MathUtils.clamp((opening - .02) / .70, 0, 1) * Math.PI) : 0
+    splashStart.set(.65, .34 + .24 * (1 - opening * .5), .4)
+    splashStream.updateArc(splashStart, splashEnd, splashing ? Math.max(.18, splashFlow) : 1, 0, true)
+    splashStream.mesh.visible = splashing
+    splashStream.splashCrown.visible = splashing
+
+    if (opening <= 0) {
+      crackStage = 0
+    } else if (step === 2 && t < 1) {
+      if (crackStage < 1 && opening >= .04) {
+        crackStage = 1
+        spillLiquid.addDipDepression(0, 0, .012, .12)
+        spillLiquid.triggerRipple(0, 0, 1.55)
+        spillLiquid.addTiltImpulse(2.2, -1.5)
+        spillLiquid.addSwirlImpulse(2.4)
+        basinLiquid.addTiltImpulse(1.6, -1.1)
+        basinLiquid.triggerRipple(.45, .15, 1.1)
+      } else if (crackStage < 2 && opening >= .26) {
+        crackStage = 2
+        spillLiquid.triggerRipple(-.09, .05, 1.15)
+        spillLiquid.triggerRipple(.09, -.04, 1.05)
+        spillLiquid.addTiltImpulse(-1.5, 1.1)
+        basinLiquid.triggerRipple(-.50, -.12, .95)
+        basinLiquid.addTiltImpulse(-1.1, .85)
+      } else if (crackStage < 3 && opening >= .58) {
+        crackStage = 3
+        spillLiquid.triggerRipple(.04, .07, .82)
+        basinLiquid.triggerRipple(.32, -.28, .75)
+        basinLiquid.addTiltImpulse(.75, -.55)
+      }
+    }
     root.updateMatrixWorld(true)
+  }
+  function updateLiquid(dt: number, reduced: boolean) {
+    if (disposed) return
+    const stepDt = Number.isFinite(dt) && dt > 0 ? Math.min(dt, .05) : 0
+    if (!reduced) liquidClock += stepDt
+    spillLiquid.update(stepDt, liquidClock, reduced)
+    basinLiquid.update(stepDt, liquidClock, reduced)
+    if (splashStream.mesh.visible && splashFlow > .02) {
+      splashStream.updateArc(splashStart, splashEnd, Math.max(.18, splashFlow), liquidClock, reduced)
+      splashStream.mesh.visible = true
+      splashStream.splashCrown.visible = !reduced
+    } else {
+      splashStream.mesh.visible = false
+      splashStream.splashCrown.visible = false
+    }
+  }
+  function triggerAfterwave(strength = .9) {
+    if (disposed) return
+    spillLiquid.triggerRipple(0, 0, strength)
+    spillLiquid.addTiltImpulse(strength * 1.1, -strength * .75)
+    basinLiquid.addTiltImpulse(-strength * .9, strength * .65)
+    basinLiquid.triggerRipple(.42, .10, strength * .75)
+  }
+  function resetLiquid() {
+    if (disposed) return
+    liquidClock = 0
+    crackStage = 0
+    splashFlow = 0
+    spillLiquid.reset()
+    basinLiquid.reset()
+    splashStream.updateArc(splashStart, splashEnd, 1, 0, true)
+    splashStream.mesh.visible = false
+    splashStream.splashCrown.visible = false
   }
   pose(0, 0)
   let disposed = false
   return {
-    root, actor, pose,
+    root, actor, pose, updateLiquid, triggerAfterwave, resetLiquid,
     targets: [actor, actor, actor],
     roots: [actor, actor, actor],
     anchors: [[0, 0, .43], [0, 0, .43], [0, 0, .43]] as [number, number, number][],
-    dispose() { if (!disposed) { disposed = true; disposeTree(root) } },
+    dispose() {
+      if (!disposed) {
+        disposed = true
+        spillLiquid.dispose()
+        basinLiquid.dispose()
+        splashStream.dispose()
+        disposeTree(root)
+      }
+    },
   }
 }

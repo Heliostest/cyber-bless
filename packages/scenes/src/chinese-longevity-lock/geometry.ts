@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { triangulatePolygons2D, type PolygonWithHoles } from '@wbr/scene-runtime/glyph-kit'
 import { mergeVertices, toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 // Closed, outward, non-indexed solids with smooth (or creased) normals for the
@@ -193,23 +194,6 @@ function signedArea2D(ring: readonly (readonly [number, number])[]) {
   return sum * 0.5
 }
 
-function subdivideLoop(ring: readonly (readonly [number, number])[], maxStep: number): [number, number][] {
-  const out: [number, number][] = []
-  for (let i = 0; i < ring.length; i++) {
-    const a = ring[i]!, b = ring[(i + 1) % ring.length]!
-    out.push([a[0], a[1]])
-    const d = Math.hypot(b[0] - a[0], b[1] - a[1])
-    if (d > maxStep) {
-      const steps = Math.ceil(d / maxStep)
-      for (let s = 1; s < steps; s++) {
-        const t = s / steps
-        out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t])
-      }
-    }
-  }
-  return out
-}
-
 /** Extrudes closed 2D glyph contours (+y up, +x right) into a watertight, outward,
  * creased-normal 3D metal relief solid conformed to the curved plate `face(x, z)`. */
 export function domeReliefSolid(
@@ -228,35 +212,40 @@ export function domeReliefSolid(
   const pushTri = (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3) => {
     positions.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z)
   }
-  for (const shape of shapes) {
+  const normalized: PolygonWithHoles[] = shapes.map(shape => {
     const outerRaw = signedArea2D(shape.outer) < 0 ? [...shape.outer].reverse() : shape.outer
-    const outer = subdivideLoop(outerRaw, maxStep)
-    const holes = shape.holes.map(h => subdivideLoop(signedArea2D(h) > 0 ? [...h].reverse() : h, maxStep))
-    const outerV2 = outer.map(([x, y]) => new THREE.Vector2(x, y))
-    const holesV2 = holes.map(h => h.map(([x, y]) => new THREE.Vector2(x, y)))
-    const faces = THREE.ShapeUtils.triangulateShape(outerV2, holesV2)
-    const all: [number, number][] = [...outer]
-    for (const h of holes) all.push(...h)
-    const topV: THREE.Vector3[] = [], botV: THREE.Vector3[] = []
-    for (const [gx, gy] of all) {
-      const x = cx + gx * size, z = cz - gy * size, fy = face(x, z)
-      topV.push(new THREE.Vector3(x, fy + height, z))
-      botV.push(new THREE.Vector3(x, fy - sink, z))
+    const holesRaw = shape.holes.map(h => (signedArea2D(h) > 0 ? [...h].reverse() : h))
+    return {
+      outer: outerRaw.map(([x, y]) => [x, y] as [number, number]),
+      holes: holesRaw.map(h => h.map(([x, y]) => [x, y] as [number, number])),
     }
-    for (const [i0, i1, i2] of faces) {
-      pushTri(topV[i0!]!, topV[i1!]!, topV[i2!]!)
-      pushTri(botV[i0!]!, botV[i2!]!, botV[i1!]!)
+  })
+  const { verts, indices } = triangulatePolygons2D(normalized, maxStep)
+  const topV: THREE.Vector3[] = []
+  const botV: THREE.Vector3[] = []
+  for (const [gx, gy] of verts) {
+    const x = cx + gx * size, z = cz - gy * size, fy = face(x, z)
+    topV.push(new THREE.Vector3(x, fy + height, z))
+    botV.push(new THREE.Vector3(x, fy - sink, z))
+  }
+  // Collect directed cap half-edges so perimeter walls match the refined cap triangulation 1:1.
+  const halfEdges = new Set<string>()
+  const edgeList: [number, number][] = []
+  for (let i = 0; i < indices.length; i += 3) {
+    const i0 = indices[i]!, i1 = indices[i + 1]!, i2 = indices[i + 2]!
+    pushTri(topV[i0]!, topV[i1]!, topV[i2]!)
+    pushTri(botV[i0]!, botV[i2]!, botV[i1]!)
+    const triEdges: [number, number][] = [[i0, i1], [i1, i2], [i2, i0]]
+    for (const [u, v] of triEdges) {
+      halfEdges.add(`${u}_${v}`)
+      edgeList.push([u, v])
     }
-    const walls = (offset: number, count: number) => {
-      for (let i = 0; i < count; i++) {
-        const a = offset + i, b = offset + ((i + 1) % count)
-        pushTri(topV[a]!, botV[a]!, botV[b]!)
-        pushTri(topV[a]!, botV[b]!, topV[b]!)
-      }
+  }
+  for (const [a, b] of edgeList) {
+    if (!halfEdges.has(`${b}_${a}`)) {
+      pushTri(topV[a]!, botV[a]!, botV[b]!)
+      pushTri(topV[a]!, botV[b]!, topV[b]!)
     }
-    walls(0, outer.length)
-    let offset = outer.length
-    for (const h of holes) { walls(offset, h.length); offset += h.length }
   }
   const raw = new THREE.BufferGeometry()
   raw.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))

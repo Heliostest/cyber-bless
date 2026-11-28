@@ -1,4 +1,5 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { rasterizeFontTextMask } from '@wbr/scene-runtime/glyph-kit'
 import {
   createRapierSoftBodyHost,
   type RapierSoftBodySession,
@@ -61,17 +62,51 @@ function path(levels: number[]) {
   return { points, ranges, wrapRange: [wrapBegin, wrapEnd] as [number, number], tailBegin }
 }
 
+let cachedBonfimPixels: Uint8Array | null = null
+
 function clothTexture() {
-  const width = 256, height = 32, pixels = new Uint8Array(width * height * 4)
-  // Original woven surface and a simple original Latin label, not copied sacred art.
-  const letters = ['110101110101110', '111101101101111', '101111111111101', '111100110100100', '111010010010111', '101111111101101']
-  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
-    const at = (y * width + x) * 4, fiber = (x % 3 === 0 ? 4 : 0) + (y % 3 === 0 ? -3 : 0)
-    const row = Math.floor((y - 8) / 3), col = Math.floor(x / 3) % 24, letter = letters[Math.floor(col / 4)]!
-    const ink = row >= 0 && row < 5 && col % 4 < 3 && letter[row * 3 + col % 4] === '1'
-    pixels[at] = ink ? 139 : 242 + fiber; pixels[at + 1] = ink ? 101 : 205 + fiber; pixels[at + 2] = ink ? 49 : 111 + fiber; pixels[at + 3] = 255
+  const width = 256, height = 32, tileW = 64
+  if (!cachedBonfimPixels) {
+    const pixels = new Uint8Array(width * height * 4)
+    // Original woven surface and anti-aliased Cinzel Bold (SIL OFL 1.1) Latin label,
+    // tiled seamlessly 4x across 256px (not copied sacred art).
+    const mask = rasterizeFontTextMask('cinzelBold', 'BONFIM', {
+      width: tileW,
+      height,
+      fontSize: 14.0,
+      letterSpacing: 0.01,
+      align: 'left',
+      verticalAlign: 'top',
+      padding: [0, 0],
+      region: { x: 0.2, y: 8.2, width: tileW, height: height - 8.2 },
+      supersample: 8,
+    })
+    for (let y = 0; y < height; y++) {
+      const selvedge = (y === 2 || y === height - 3) ? 0.16 : 0
+      for (let x = 0; x < width; x++) {
+        const at = (y * width + x) * 4
+        const weave = (x % 3 === 0 ? 4 : 0) + (y % 3 === 0 ? -3 : 0)
+        const cov = mask.data[y * tileW + (x % tileW)]!
+        // Subtle woven thread modulation in printed ink and golden ribbon ground.
+        const ink = Math.min(1, Math.max(cov, selvedge))
+        const bgR = 242 + weave, bgG = 205 + weave, bgB = 111 + weave
+        const inkR = 132 + weave * 0.35, inkG = 94 + weave * 0.3, inkB = 44 + weave * 0.25
+        pixels[at] = Math.round(bgR + (inkR - bgR) * ink)
+        pixels[at + 1] = Math.round(bgG + (inkG - bgG) * ink)
+        pixels[at + 2] = Math.round(bgB + (inkB - bgB) * ink)
+        pixels[at + 3] = 255
+      }
+    }
+    cachedBonfimPixels = pixels
   }
-  const map = new THREE.DataTexture(pixels, width, height); map.colorSpace = THREE.SRGBColorSpace; map.wrapS = map.wrapT = THREE.RepeatWrapping; map.needsUpdate = true; return map
+  const map = new THREE.DataTexture(new Uint8Array(cachedBonfimPixels), width, height)
+  map.colorSpace = THREE.SRGBColorSpace
+  map.wrapS = map.wrapT = THREE.RepeatWrapping
+  map.magFilter = THREE.LinearFilter
+  map.minFilter = THREE.LinearMipmapLinearFilter
+  map.generateMipmaps = true
+  map.needsUpdate = true
+  return map
 }
 
 /** Original continuous thick cloth, already wound and loosely knotted before entry,

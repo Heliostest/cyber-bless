@@ -1,6 +1,15 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
-import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import {
+  applyStylizedHumanSurfaceHint,
+  createStylizedFingerGeometry,
+  createStylizedForearmGeometry,
+  createStylizedGarmentMaterial,
+  createStylizedPalmGeometry,
+  createStylizedSkinMaterial,
+  createStylizedSleeveCuffGeometry,
+  createStylizedThumbGeometry,
+} from '@wbr/scene-runtime/stylized-human'
 import { createBaciMatMaterials } from './mat-material'
 
 let cachedCottonPixels: { color: Uint8Array; bump: Uint8Array; size: number } | null = null
@@ -184,8 +193,11 @@ function buildCottonTipGeometry(radius = 0.0114, length = 0.013): THREE.BufferGe
 export function createBaciModel() {
   const root = new THREE.Group(); root.name = 'baci-root'
   const subject = new THREE.Group(); subject.name = 'baci-subject'; root.add(subject)
-  const mat = (color: number, roughness = .85) => new THREE.MeshStandardMaterial({ color, roughness })
-  const skin = mat(0xc78d68), handSkin = createRitualMaterial({ color: 0xc78d68, roughness: .85 }, { kind: 'skin', strength: .10, fiber: false }), nail = mat(0xe1b899), cloth = mat(0x57938b), hem = mat(0xe4b976)
+  const skin = createStylizedSkinMaterial({ color: 0xc78d68, tone: 'warm-caramel', roughness: .86, scatterStrength: 0, name: 'baci-forearm-skin' })
+  const handSkin = createStylizedSkinMaterial({ color: 0xc78d68, tone: 'warm-caramel', roughness: .85, scatterStrength: .12, name: 'baci-hand-skin' })
+  const nail = new THREE.MeshStandardMaterial({ color: 0xe3baa0, roughness: .56, metalness: 0 })
+  const cloth = createStylizedGarmentMaterial({ color: 0x57938b, roughness: .91, fabricStrength: .25, axis: 'z', name: 'baci-sleeve-cloth' })
+  const hem = createStylizedGarmentMaterial({ color: 0xe4b976, roughness: .90, fabricStrength: .25, axis: 'z', name: 'baci-cuff-hem' })
   const baciMat = createBaciMatMaterials()
   const cottonTex = createSpunCottonTextures()
   const cotton = new THREE.MeshStandardMaterial({
@@ -196,12 +208,8 @@ export function createBaciModel() {
     roughness: 0.92,
   })
   applyCraftSurface(cotton, { kind: 'cord', strength: .15 })
-  for (const sleeve of [cloth, hem]) applyCraftSurface(sleeve, { kind: 'fabric', strength: .25 })
   const mesh = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material | THREE.Material[], parent: THREE.Object3D = subject) => {
     const m = new THREE.Mesh(geometry, material); m.name = name; m.castShadow = true; m.receiveShadow = true; parent.add(m); return m
-  }
-  const ball = (name: string, position: number[], scale: number[], material: THREE.Material) => {
-    const m = mesh(name, new THREE.SphereGeometry(1, 24, 16), material); m.position.fromArray(position); m.scale.fromArray(scale); return m
   }
   const wrist = new THREE.Vector3(.25, .47, 0)
   // Seat the oval woven mat flush onto the courtyard flagstones (-0.0375) with weft crest at +0.008,
@@ -226,17 +234,132 @@ export function createBaciModel() {
     const line = mesh('baci-mat-weft-' + i, new THREE.CylinderGeometry(.0035, .0035, length, 6), i % 2 ? baciMat.weftWarm : baciMat.weftPale)
     line.rotation.z = Math.PI / 2; line.position.set(0, .0045, z)
   }
-  ball('baci-sleeve', [-.88, .47, 0], [.47, .24, .29], cloth)
-  const cuff = mesh('baci-cuff', new THREE.CylinderGeometry(.245, .245, .085, 32), hem); cuff.rotation.z = Math.PI / 2; cuff.scale.z = 1.16; cuff.position.set(-.53, .47, 0)
-  ball('baci-forearm', [-.13, .47, 0], [.59, .15, .185], skin)
-  ball('baci-palm', [.65, .47, 0], [.31, .115, .235], handSkin)
-  // Palm faces up; unequal fingers and a separate thumb preserve a hand silhouette.
-  for (const [i, z] of [-.16, -.055, .055, .16].entries()) {
-    const length = [.25, .32, .30, .23][i]!
-    ball('baci-finger-' + i, [.90 + length * .38, .475, z], [length, .065, .047], handSkin)
-    ball('baci-nail-' + i, [.99 + length * .4, .526, z], [.058, .009, .032], nail)
+  // Warm Komorebi stylized forearm, cupped palm-up hand, and rolled fabric cuff (Loop-subdivided closed 2-manifolds).
+  const sleeveGeo = createStylizedSleeveCuffGeometry({
+    length: .74,
+    cuffRadiusX: .258,
+    cuffRadiusY: .218,
+    sleeveRadiusX: .305,
+    sleeveRadiusY: .252,
+    wallThickness: .024,
+    rolledLip: .012,
+    foldDepth: .010,
+    cavityDepthRatio: .38,
+    iterations: 1,
+  })
+  const sleeveMesh = mesh('baci-sleeve', sleeveGeo, cloth)
+  sleeveMesh.position.set(-.55, .47, 0)
+  sleeveMesh.rotation.y = -Math.PI / 2
+  applyStylizedHumanSurfaceHint(sleeveMesh, 'garment')
+
+  const cuffGeo = createStylizedSleeveCuffGeometry({
+    length: .135,
+    cuffRadiusX: .268,
+    cuffRadiusY: .228,
+    sleeveRadiusX: .276,
+    sleeveRadiusY: .236,
+    wallThickness: .024,
+    rolledLip: .014,
+    foldDepth: .005,
+    cavityDepthRatio: .56,
+    iterations: 1,
+  })
+  const cuff = mesh('baci-cuff', cuffGeo, hem)
+  cuff.position.set(-.475, .47, 0)
+  cuff.rotation.y = -Math.PI / 2
+  applyStylizedHumanSurfaceHint(cuff, 'garment')
+
+  // Preserve exact forearm transform [-.13, .47, 0] / scale [.59, .15, .185] for wrist cotton clearance invariants,
+  // while sculpting a natural anatomical wrist-to-forearm silhouette seated snugly inside the tied cotton loop.
+  const forearmGeo = createStylizedForearmGeometry({
+    length: 1.78,
+    wristRadiusX: .86,
+    wristRadiusY: .85,
+    elbowRadiusX: 1.06,
+    elbowRadiusY: 1.04,
+    fullness: .06,
+    iterations: 1,
+  })
+  forearmGeo.rotateY(-Math.PI / 2)
+  forearmGeo.translate(.87, 0, 0)
+  forearmGeo.computeBoundingBox()
+  forearmGeo.computeBoundingSphere()
+  const forearm = mesh('baci-forearm', forearmGeo, skin)
+  forearm.position.set(-.13, .47, 0)
+  forearm.scale.set(.59, .15, .185)
+  applyStylizedHumanSurfaceHint(forearm, 'skin')
+
+  // Palm faces up (+Y) with gentle thenar fullness toward the thumb (+Z) and soft dorsal arch beneath.
+  const palmGeo = createStylizedPalmGeometry({
+    width: .45,
+    thickness: .192,
+    length: .54,
+    handedness: 'right',
+    palmUp: true,
+    arch: .020,
+    iterations: 1,
+  })
+  palmGeo.rotateY(-Math.PI / 2)
+  palmGeo.computeBoundingBox()
+  palmGeo.computeBoundingSphere()
+  const palm = mesh('baci-palm', palmGeo, handSkin)
+  palm.position.set(.635, .468, 0)
+  applyStylizedHumanSurfaceHint(palm, 'skin')
+
+  // Four gently cupped upward-facing fingers (pinky -> index along -Z..+Z) with tapered plump finger pads.
+  const fingerSpecs: { z: number; length: number; rx: number; ry: number; curl: number; splay: number; baseX: number }[] = [
+    { z: -.152, length: .34, rx: .045, ry: .047, curl: .26, splay: -.055, baseX: .855 },
+    { z: -.052, length: .43, rx: .049, ry: .051, curl: .21, splay: -.015, baseX: .882 },
+    { z: .050,  length: .45, rx: .050, ry: .052, curl: .19, splay: .015,  baseX: .888 },
+    { z: .148,  length: .39, rx: .049, ry: .050, curl: .22, splay: .050,  baseX: .868 },
+  ]
+  for (const [i, spec] of fingerSpecs.entries()) {
+    const fGeo = createStylizedFingerGeometry({
+      length: spec.length,
+      radiusX: spec.rx,
+      radiusY: spec.ry,
+      curl: spec.curl,
+      curlUp: true,
+      splay: spec.splay,
+      iterations: 1,
+    })
+    fGeo.rotateY(-Math.PI / 2)
+    fGeo.computeBoundingBox()
+    fGeo.computeBoundingSphere()
+    const finger = mesh('baci-finger-' + i, fGeo, handSkin)
+    finger.position.set(spec.baseX, .465, spec.z)
+    applyStylizedHumanSurfaceHint(finger, 'skin')
+
+    // Subtle smooth rounded nail crescent tucked along the gently upturned dorsal fingertip.
+    const nailGeo = new THREE.SphereGeometry(1, 14, 10)
+    nailGeo.scale(.046, .009, .029)
+    const nailMesh = mesh('baci-nail-' + i, nailGeo, nail)
+    const tipX = spec.baseX + spec.length * .88
+    const tipY = .465 + spec.length * (0.28 * spec.curl) - spec.ry * .42
+    nailMesh.position.set(tipX, tipY, spec.z + spec.splay * spec.length * .88)
+    nailMesh.rotation.z = spec.curl * .55
+    applyStylizedHumanSurfaceHint(nailMesh, 'skin')
   }
-  const thumb = ball('baci-thumb', [.63, .47, .30], [.20, .08, .08], handSkin); thumb.rotation.y = -.55
+
+  // Preserve exact thumb transform [.63, .47, .30] / scale [.20, .08, .08] / rotY -.55 for cotton-wrap clearance invariant.
+  const thumbGeo = createStylizedThumbGeometry({
+    length: 1.82,
+    radiusX: .92,
+    radiusY: .94,
+    curl: .22,
+    curlUp: true,
+    opposition: -.12,
+    iterations: 1,
+  })
+  thumbGeo.rotateY(-Math.PI / 2)
+  thumbGeo.translate(-.88, 0, 0)
+  thumbGeo.computeBoundingBox()
+  thumbGeo.computeBoundingSphere()
+  const thumb = mesh('baci-thumb', thumbGeo, handSkin)
+  thumb.position.set(.63, .47, .30)
+  thumb.scale.set(.20, .08, .08)
+  thumb.rotation.y = -.55
+  applyStylizedHumanSurfaceHint(thumb, 'skin')
   const thread = new THREE.Group(); thread.name = 'baci-thread'; subject.add(thread)
   const yarn = mesh('baci-cotton-strand', new THREE.BufferGeometry(), cotton, thread)
   const caps = [0, 1].map(i => {

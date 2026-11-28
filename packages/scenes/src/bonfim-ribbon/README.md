@@ -1,5 +1,9 @@
 # 栏前结愿 / bonfim-ribbon
 
+## 2026-11-28 丝带 BONFIM 字样升级为开源衬线体抗锯齿贴图
+
+丝带织面上的 `BONFIM` 字样由原先 3×5 点阵像素块升级为基于开源可商用字体 **Cinzel Bold（SIL Open Font License 1.1，许可原文见 `packages/scene-runtime/licenses/fonts/Cinzel-OFL.txt`）** 子集，经纯 CPU 超采样抗锯齿软件光栅器生成的无缝循环织带 `DataTexture`（搭配线性/多级渐远过滤与织纹调制）。本轮仅为产品视觉呈现改进，不新增传统印字规范、颜色寓意或功效承诺；预绕三结、软体物理、金属栏杆、来源 `bonfim-ribbon`、技术 ID、引擎与存档均保持不变，外链未重读。
+
 
 ## 2026-11-06 Komorebi 默认画风
 

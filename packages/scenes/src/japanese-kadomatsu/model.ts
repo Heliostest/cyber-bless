@@ -1,7 +1,70 @@
 import { applyCraftSurface, type CraftSurfaceOptions } from '@wbr/scene-runtime/craft-surfaces'
+import { createNoise2D } from 'simplex-noise'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { buildKadomatsuPineNeedlesGeometry, createKadomatsuPineMaterial } from './pine-botanical'
+
+function buildKadomatsuPavingGeometry(){
+ let seed=0x51a7c3d9>>>0
+ const rand=()=>{seed=(seed+0x6d2b79f5)>>>0;let t=Math.imul(seed^(seed>>>15),1|seed);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296}
+ const noise=createNoise2D(rand)
+ const segs=64,hx=1.66,hz=.66,corner=.11,ix=hx-corner,iz=hz-corner
+ const outerPts:[number,number][]=[]
+ for(let i=0;i<segs;i++){
+  const a=(i/segs)*Math.PI*2,ca=Math.cos(a),sa=Math.sin(a)
+  // Rounded-rectangle perimeter ray intersection, then subtle hand-chiseled stone edge undulation.
+  const tx=Math.abs(ca)>1e-6?hx/Math.abs(ca):1e9,tz=Math.abs(sa)>1e-6?hz/Math.abs(sa):1e9
+  let rx=ca*Math.min(tx,tz),rz=sa*Math.min(tx,tz)
+  if(Math.abs(rx)>ix&&Math.abs(rz)>iz){
+   const cx=Math.sign(rx)*ix,cz=Math.sign(rz)*iz,dx=rx-cx,dz=rz-cz,d=Math.hypot(dx,dz)||1
+   rx=cx+(dx/d)*corner;rz=cz+(dz/d)*corner
+  }
+  const isBack=rz<-.48
+  const amp=isBack?.016:.034
+  const n=noise(rx*1.45+3.1,rz*1.45-2.7)*.68+noise(rx*3.4-5.2,rz*3.4+4.1)*.32
+  const bias=isBack?.004:.008
+  const len=Math.hypot(rx,rz)||1,push=THREE.MathUtils.clamp(bias+n*amp,-.018,.042)
+  outerPts.push([rx+(rx/len)*push,rz+(rz/len)*push])
+ }
+ const pos:number[]=[],idx:number[]=[]
+ const push=(x:number,y:number,z:number)=>{pos.push(x,y,z);return pos.length/3-1}
+ // 4 vertical contour rings strictly within local y ∈ [-0.04, +0.04] -> world y ∈ [0, 0.08].
+ const rings:{y:number;inset:number;chisel:number}[]=[
+  {y:.04,inset:.036,chisel:.003},
+  {y:.024,inset:.012,chisel:.008},
+  {y:-.024,inset:0,chisel:.007},
+  {y:-.04,inset:.022,chisel:.002},
+ ]
+ const ringIdx:number[][]=[]
+ for(let r=0;r<rings.length;r++){
+  const{y,inset,chisel}=rings[r]!,row:number[]=[]
+  for(let i=0;i<segs;i++){
+   const[ox,oz]=outerPts[i]!,len=Math.hypot(ox,oz)||1
+   const micro=noise(ox*4.2+r*3.7,oz*4.2-r*2.3)*chisel
+   const shrink=Math.max(.5,(len-inset+micro)/len)
+   row.push(push(ox*shrink,y,oz*shrink))
+  }
+  ringIdx.push(row)
+ }
+ const topC=push(0,.04,0),botC=push(0,-.04,0)
+ // Top flat load-bearing face (y = +0.04 -> world y = 0.08).
+ for(let i=0;i<segs;i++){const next=(i+1)%segs;idx.push(topC,ringIdx[0]![next]!,ringIdx[0]![i]!)}
+ // Hand-chiseled beveled side bands.
+ for(let r=0;r<rings.length-1;r++){
+  const upper=ringIdx[r]!,lower=ringIdx[r+1]!
+  for(let i=0;i<segs;i++){
+   const next=(i+1)%segs
+   idx.push(upper[i]!,upper[next]!,lower[i]!,upper[next]!,lower[next]!,lower[i]!)
+  }
+ }
+ // Bottom flat base (y = -0.04 -> world y = 0.00).
+ for(let i=0;i<segs;i++){const next=(i+1)%segs;idx.push(botC,ringIdx[rings.length-1]![i]!,ringIdx[rings.length-1]![next]!)}
+ const g=new THREE.BufferGeometry()
+ g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3))
+ g.setIndex(idx)
+ g.computeVertexNormals()
+ return g
+}
 
 function solid(source:THREE.BufferGeometry,smooth=false){
  if(smooth&&!source.getAttribute('normal'))source.computeVertexNormals()
@@ -53,8 +116,8 @@ export function createKadomatsuModel(){
  }
  const finishFor=(name:string):'matte'|'wood-satin'|'bamboo-node'=>/^kadomatsu-(left|right)-bamboo-.*-node-/.test(name)?'bamboo-node':/^kadomatsu-(jamb-|door-slat-|lintel|threshold|preparation-tray|tray-)/.test(name)?'wood-satin':'matte'
  const mesh=(parent:THREE.Object3D,name:string,source:THREE.BufferGeometry,color:string,p:[number,number,number],smooth=false)=>{const m=new THREE.Mesh(solid(source,smooth),material(color,surfaceFor(name),finishFor(name)));m.name=name;m.position.set(...p);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
- // Compact chamfered entrance threshold step grounded on the courtyard (replaces the 3.8×2.9 m giant slab).
- const paving=mesh(root,'kadomatsu-paving',new RoundedBoxGeometry(3.32,.08,1.32,2,.018),'#c8bca3',[0,.04,-.24],true)
+ // Hand-dressed entrance threshold step grounded on the courtyard (world y strictly in [0, 0.08]).
+ const paving=mesh(root,'kadomatsu-paving',buildKadomatsuPavingGeometry(),'#c8bca3',[0,.04,-.24],true)
  const door=new THREE.Group();door.name='kadomatsu-door';root.add(door)
  mesh(door,'kadomatsu-wall',new RoundedBoxGeometry(2.3,2.25,.12,2,.016),'#d6c7a6',[0,1.205,-.80],true)
  // Warm stylized plank-toned cedar door panel behind the vertical battens.

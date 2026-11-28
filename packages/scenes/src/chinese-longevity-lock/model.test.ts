@@ -69,18 +69,31 @@ describe('silver lock necklace and supported gift presentation',()=>{
    expect(Math.max(...gap),name).toBeGreaterThan(P.stroke*1.2);expect(Math.min(...gap),name).toBeLessThan(0)
    const b=box(letter);expect(b.min.z,name).toBeGreaterThan(bail.max.z+.05);expect(b.min.z,name).toBeGreaterThan(cord.max.z+.05)
    expect(b.max.z,name).toBeLessThan(plate.max.z-.12);expect(b.min.x,name).toBeGreaterThan(plate.min.x+.15);expect(b.max.x,name).toBeLessThan(plate.max.x-.15)}
-  // Left "長" and right "命" stay clear of each other and keep upright small-seal proportions.
+  // Left "长" and right "命" stay clear of each other, keep upright Kai proportions, and form closed 2-manifolds.
   const longMesh=m.motion.getObjectByName('longevity-letter-long') as THREE.Mesh,mingMesh=m.motion.getObjectByName('longevity-letter-ming') as THREE.Mesh
   const longBox=box(longMesh),mingBox=box(mingMesh),plateCenterX=(plate.min.x+plate.max.x)/2
   expect(longBox.max.x-plateCenterX).toBeLessThan(-.05);expect(mingBox.min.x-plateCenterX).toBeGreaterThan(.05)
+  for(const letterMesh of [longMesh,mingMesh]){
+   const lp=letterMesh.geometry.getAttribute('position'),edgeCounts=new Map<string,number>()
+   const vKey=(i:number)=>`${Math.round(lp.getX(i)*1e5)},${Math.round(lp.getY(i)*1e5)},${Math.round(lp.getZ(i)*1e5)}`
+   for(let i=0;i<lp.count;i+=3){
+    const ks=[vKey(i),vKey(i+1),vKey(i+2)]
+    for(let e=0;e<3;e++){
+     const a=ks[e]!,b=ks[(e+1)%3]!,ek=a<b?`${a}|${b}`:`${b}|${a}`
+     edgeCounts.set(ek,(edgeCounts.get(ek)??0)+1)
+    }
+   }
+   expect(edgeCounts.size,letterMesh.name).toBeGreaterThan(200)
+   for(const [ek,cnt] of edgeCounts)expect(cnt,`${letterMesh.name} manifold edge ${ek}`).toBe(2)
+  }
   const mingPos=mingMesh.geometry.getAttribute('position')
   let mingMinZ=Infinity,mingMaxZ=-Infinity
   for(let i=0;i<mingPos.count;i++){const z=mingPos.getZ(i);mingMinZ=Math.min(mingMinZ,z);mingMaxZ=Math.max(mingMaxZ,z)}
   let topMinX=Infinity,topMaxX=-Infinity,botMinX=Infinity,botMaxX=-Infinity
   const mingMidZ=(mingMinZ+mingMaxZ)/2
   for(let i=0;i<mingPos.count;i++){const x=mingPos.getX(i),z=mingPos.getZ(i);if(z<mingMidZ){topMinX=Math.min(topMinX,x);topMaxX=Math.max(topMaxX,x)}else if(z>mingMaxZ-.08){botMinX=Math.min(botMinX,x);botMaxX=Math.max(botMaxX,x)}}
-  // Small-seal "命" has its wide roof toward -z (cord side) and narrow stem at +z (drop side).
-  expect(topMaxX-topMinX).toBeGreaterThan((botMaxX-botMinX)*2.5)
+  // Kai "命" has its wide "人" roof toward -z (cord side) and narrower lower vertical leg at +z (drop side).
+  expect(topMaxX-topMinX).toBeGreaterThan((botMaxX-botMinX)*1.25)
   const relief=longMesh.material as THREE.ShaderMaterial;expect(relief.userData.longevityToon).toBe('relief')
   expect((relief.uniforms.uBands!.value as THREE.Vector2).y).toBeGreaterThan(.85);expect(relief.uniforms.uSide!.value).toBeGreaterThan(.3)
   const silver=m.lock.material as THREE.ShaderMaterial;expect(silver.userData.longevityToon).toBe('silver');expect(silver.uniforms.uLit).toBeDefined()})

@@ -1,7 +1,7 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
-import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import { addContactShadow } from '../cozy-furniture'
 import { sceneTemplate } from '../scene-localization'
 import * as THREE from 'three'
@@ -73,17 +73,49 @@ function dishGeometry() {
   return geometry
 }
 
-function horizontalShape(scale: number, material: THREE.Material) {
-  const shape = new THREE.Shape()
-  for (let i = 0; i <= 64; i++) {
-    const p = outline(i / 64 * Math.PI * 2, scale)
-    if (i === 0) shape.moveTo(p.x, -p.z)
-    else shape.lineTo(p.x, -p.z)
+function createDiyaOil(index: number) {
+  const radialSegments = 12
+  const angularSegments = 48
+  const liquid = createVesselLiquid({
+    preset: 'lamp-oil',
+    radius: 0.212,
+    radiusZ: 0.220,
+    radialSegments,
+    angularSegments,
+    deformMode: 'gpu',
+    color: 0xbd7d24,
+    edgeColor: 0xf7d67e,
+    deepColor: 0x6f3f0c,
+    foamColor: 0xfcf1c2,
+    foamStrength: 0.10,
+    opacity: 0.88,
+    roughness: 0.09,
+    meniscusHeight: 0.011,
+    maxAmplitude: 0.016,
+    seed: 10007 + index * 31,
+    name: `diya-oil-${index}`,
+  })
+  // Conformally map the polar meniscus grid onto the spouted diya inner basin outline.
+  const pos = liquid.geometry.getAttribute('position') as THREE.BufferAttribute
+  let vi = 1
+  for (let j = 1; j <= radialSegments; j++) {
+    const u = j / radialSegments
+    const rho = 1 - Math.pow(1 - u, 1.22)
+    for (let k = 0; k < angularSegments; k++) {
+      const x = pos.getX(vi)
+      const z = pos.getZ(vi)
+      const rimPt = outline(Math.atan2(x, z), 0.755)
+      pos.setX(vi, rimPt.x * rho)
+      pos.setZ(vi, rimPt.z * rho)
+      vi++
+    }
   }
-  shape.closePath()
-  const mesh = new THREE.Mesh(new THREE.ShapeGeometry(shape), material)
-  mesh.rotation.x = -Math.PI / 2
-  return mesh
+  pos.needsUpdate = true
+  liquid.geometry.computeVertexNormals()
+  liquid.geometry.computeBoundingSphere()
+  liquid.material.emissive.setHex(0xd97318)
+  liquid.material.emissiveIntensity = 0
+  return liquid
 }
 
 export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
@@ -113,7 +145,6 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   const rimClay = new THREE.MeshStandardMaterial({ color: 0xcc7850, roughness: 0.91 })
   const cotton = new THREE.MeshStandardMaterial({ color: 0xf1dec0, roughness: 1 })
   const burnt = new THREE.MeshStandardMaterial({ color: 0x443128, roughness: 1 })
-  const amber = createRitualMaterial({ color: 0x98631f, roughness: .22, metalness: 0, clearcoat: .65, clearcoatRoughness: .1, side: THREE.DoubleSide }, { kind: 'wet', strength: .35 })
   const plateMat = new THREE.MeshStandardMaterial({ color: 0xa48565, roughness: 0.62, metalness: 0.34 })
   applyCraftSurface(plateMat, { kind: 'metal', scale: 1.35, strength: 0.26 })
   const petalMat = new THREE.MeshStandardMaterial({ color: 0xbe9b70, roughness: 0.86, metalness: 0.12, side: THREE.DoubleSide })
@@ -230,10 +261,11 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
     const rim = new THREE.Mesh(rimGeometry, rimClay)
     rim.name = `diya-rim-${i}`
     group.add(rim)
-    const oil = horizontalShape(0.76, amber)
+    const oilLiquid = createDiyaOil(i)
+    const oil = oilLiquid.mesh
     oil.position.y = 0.11
-    oil.name = `diya-oil-${i}`
     group.add(oil)
+    if (i === 2) oilLiquid.trackContainer(group)
     const wick = new THREE.Mesh(wickGeometry, cotton)
     wick.name = `diya-wick-${i}`
     group.add(wick)
@@ -263,7 +295,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
     halo.sprite.name = `diya-halo-${i}`
     halo.sprite.position.set(0, 0.32, 0.40)
     group.add(halo.sprite)
-    return { group, target, wick, tip, flame, glow, halo, lit: false, glowT: 0 }
+    return { group, target, wick, tip, flame, glow, halo, oilLiquid, lit: false, glowT: 0 }
   })
   const heldLamp = lamps[2]
   const prevHeldPos = heldLamp.group.position.clone()
@@ -339,13 +371,14 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
     hitLayer.style.pointerEvents = active() && checkpoint < 3 ? 'auto' : 'none'
     updateMatrices()
   }
-  const restorePose = () => {
+  const restorePose = (resetFluid = true) => {
     orbitSweeps.forEach(path => path.reset())
     orbitGuide.children.forEach(object => { if ((object as THREE.Mesh).isMesh) ((object as THREE.Mesh).material as THREE.MeshBasicMaterial).color.setHex(0xe7bd73) })
     if (!motion) heldLamp.group.position.copy(checkpoint === 1 || checkpoint === 2 ? HELD : HOMES[2])
     heldLamp.group.rotation.y = 0
     prevHeldPos.copy(heldLamp.group.position)
     flameLag.set(0, 0)
+    if (resetFluid) lamps.forEach(lamp => lamp.oilLiquid.reset())
     updateMatrices()
   }
   const advance = (next: Checkpoint) => {
@@ -353,7 +386,11 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
     checkpoint = next
     motion = null
     drag = null
-    restorePose()
+    restorePose(false)
+    if (!(ctx.isReducedMotion?.() ?? false) && next === 3) {
+      heldLamp.oilLiquid.triggerRipple(0, 0, 0.72)
+      heldLamp.oilLiquid.addTiltImpulse(0.45, -0.35)
+    }
     syncUI()
     ctx.onProgress?.(next)
     if (next === 3) {
@@ -364,10 +401,12 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
   const light = (indices: Iterable<number>) => {
     if (!active() || checkpoint !== 0) return
     let changed = false
+    const reducedNow = ctx.isReducedMotion?.() ?? false
     for (const i of indices) if (i >= 0 && !lamps[i].lit) {
       const lamp = lamps[i]
       lamp.lit = lamp.flame.visible = true
-      if (ctx.isReducedMotion?.()) lamp.glowT = 1
+      if (reducedNow) lamp.glowT = 1
+      else lamp.oilLiquid.triggerRipple(0, 0.14, 0.58)
       changed = true
     }
     if (!changed) return
@@ -549,6 +588,8 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
         }
         lamp.glow.intensity = (nightStage ? 0.50 : 0.34) * lamp.glowT * (1 + breath * 0.85)
         lamp.halo.material.opacity = (nightStage ? 0.24 : 0.11) * lamp.glowT * (1 + breath * 0.35)
+        lamp.oilLiquid.material.emissiveIntensity = (nightStage ? 0.36 : 0.20) * lamp.glowT * (1 + breath * 1.65)
+        lamp.oilLiquid.update(Math.min(elapsed, 0.05), clock, reduced)
       })
       styleRenderer.render()
     },
@@ -562,6 +603,7 @@ export function createDiyaOilLamp(ctx: SceneContext): SceneInstance {
       window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
       feedback.dispose()
       styleRenderer.dispose()
+      lamps.forEach((lamp) => lamp.oilLiquid.dispose())
       scene.traverse((o) => { if (o instanceof THREE.Light) o.dispose() })
       disposeTree(scene)
       // Tree disposal includes the shared sprite plane and its materials;

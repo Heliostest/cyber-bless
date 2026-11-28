@@ -1,5 +1,5 @@
 import { createQuietEnding } from '../quiet-ending'
-import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import {
   createRapierSoftBodyHost,
   type RapierSoftBodySession,
@@ -193,6 +193,7 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
     startSwayX: number
     startSwayZ: number
     unfoldSpawned?: boolean
+    rinseStage?: number
   } | null = null
   // Product choreography state: basin wet-unfold, pinched air carry, over-rod wrap & optional smoothing.
   let rodWrapBlend = 1
@@ -243,10 +244,36 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
   const profile = [[0, -.04], [.30, -.04], [.30, 0], [.47, .49], [.46, .53], [.41, .52], [.26, .08], [0, .08]]
   const basin = add('indigo-rinse-basin', new THREE.LatheGeometry(profile.map(p => new THREE.Vector2(p[0], p[1])), 64), ceramic, [-.78, .04, -.10])
   basin.userData.toonSurface = { outline: false }
-  const water = add('indigo-rinse-water', new THREE.CylinderGeometry(.384, .384, .012, 56), createRitualMaterial({ color: 0x749da3, roughness: .24, transparent: true, opacity: .72, depthWrite: false }, { kind: 'water', strength: .3 }), [-.78, .44, -.10]); water.castShadow = false
-  const rippleMat = new THREE.MeshStandardMaterial({ color: 0xdaf0f2, roughness: .25, transparent: true, opacity: .38, depthWrite: false, side: THREE.DoubleSide })
-  const waterRipple = add('indigo-rinse-ripple', new THREE.RingGeometry(.09, .14, 40), rippleMat, [-.78, .451, -.10])
-  waterRipple.rotation.x = -Math.PI / 2; waterRipple.castShadow = false; waterRipple.receiveShadow = false; waterRipple.visible = false
+  const rinseClearTint = new THREE.Color(0x5b91a2)
+  const rinseIndigoTint = new THREE.Color(0x315f82)
+  const rinseWater = createVesselLiquid({
+    preset: 'pigment-dye',
+    radius: .378,
+    radialSegments: 16,
+    angularSegments: 48,
+    deformMode: 'cpu',
+    color: rinseClearTint,
+    edgeColor: 0xb2dce6,
+    deepColor: 0x1b405f,
+    foamColor: 0x8ec0d6,
+    foamStrength: .34,
+    opacity: .80,
+    roughness: .14,
+    meniscusHeight: .015,
+    maxAmplitude: .028,
+    seed: 2107,
+    name: 'indigo-rinse-water',
+    receiveShadow: true,
+    renderOrder: 1,
+  })
+  const water = rinseWater.mesh
+  water.position.set(-.78, .44, -.10)
+  world.add(water)
+  let liquidClock = 0
+  let dragWaterCooldown = 0
+  const setRinseDyeMix = (mix01: number) => {
+    rinseWater.material.color.copy(rinseClearTint).lerp(rinseIndigoTint, THREE.MathUtils.clamp(mix01, 0, 1))
+  }
   rod('indigo-rinse-rest', .07, 1.42, [RINSED.x, RINSED.y, RINSED.z])
   for (const x of [-1.45, -.11]) {
     box('indigo-rinse-rest-foot', [.16, .07, .40], [x, .035, .49], walnut)
@@ -976,12 +1003,17 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
     smoothingPointer = false
     hasSmoothLast = false
     bundle.scale.set(1, 1, 1)
-    waterRipple.visible = false
   }
   const restore = (reseedPhysics = true, seatedSmoothness = 1) => {
     clearHandlingState(seatedSmoothness)
     bundle.position.copy(BUNDLE_HOME); bundle.visible = at === 0
     cloth.visible = at >= 1; cloth.position.copy(at >= 2 ? HUNG : RINSED)
+    setRinseDyeMix(at >= 1 ? 1 : 0)
+    if (at === 0 || reduced()) {
+      liquidClock = 0
+      dragWaterCooldown = 0
+      rinseWater.reset()
+    }
     prevClothPos.copy(cloth.position); prevClothVel.set(0, 0, 0); inertialAccel.set(0, 0, 0)
     lastDragPos.copy(cloth.position)
     if (at >= 1) {
@@ -1111,6 +1143,15 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
       }
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
       moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .22, 2.4)
+      if (at === 0 && !reduced()) {
+        const dxB = bundle.position.x - BASIN_CENTER.x
+        const dzB = bundle.position.z - BASIN_CENTER.z
+        if (Math.hypot(dxB, dzB) < .42 && bundle.position.y < .78 && dragWaterCooldown <= 0) {
+          rinseWater.triggerRipple(THREE.MathUtils.clamp(dxB * .5, -.18, .18), THREE.MathUtils.clamp(dzB * .5, -.18, .18), .42)
+          rinseWater.addTiltImpulse(dxB * 1.4, dzB * 1.4)
+          dragWaterCooldown = .22
+        }
+      }
       if (at === 1) {
         const dx = cloth.position.x - lastDragPos.x
         const dz = cloth.position.z - lastDragPos.z
@@ -1220,12 +1261,17 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
       writer?.setEnabled(at === 2 && !returning && !motion); writer?.update(dt)
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       const isReduced = reduced()
+      if (!isReduced) {
+        liquidClock += delta
+        if (dragWaterCooldown > 0) dragWaterCooldown = Math.max(0, dragWaterCooldown - delta)
+      }
       if (isReduced !== wasReduced) {
         wasReduced = isReduced
         if (isReduced) {
           physicsStepped = false
           clearHandlingState(1)
           writeAuthoredCloth(true)
+          rinseWater.update(0, 0, true)
         } else if (at >= 1) {
           ensureRapierStarted()
           if (rapierReady) {
@@ -1251,11 +1297,18 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
             bundle.position.y += Math.sin(Math.PI * p) * 0.28
             const dip = smoothstep01((u - 0.16) / 0.14)
             bundle.scale.set(1 + 0.14 * dip, 1 - 0.26 * dip, 1 + 0.14 * dip)
-            if (dip > 0.05) {
-              waterRipple.visible = true
-              const rScale = 0.65 + 1.55 * dip
-              waterRipple.scale.set(rScale, rScale, 1)
-              rippleMat.opacity = 0.42 * (1 - 0.3 * dip)
+            setRinseDyeMix(dip * .55)
+            if (!isReduced && dip > 0.05 && (motion.rinseStage ?? 0) < 1) {
+              motion.rinseStage = 1
+              rinseWater.addDipDepression(0, 0, .024, .14)
+              rinseWater.triggerRipple(0, 0, 1.45)
+              rinseWater.addTiltImpulse(2.1, -1.4)
+              rinseWater.addSwirlImpulse(3.4)
+            } else if (!isReduced && u >= 0.25 && (motion.rinseStage ?? 0) < 2) {
+              motion.rinseStage = 2
+              rinseWater.triggerRipple(.06, -.05, 1.15)
+              rinseWater.addTiltImpulse(-1.6, 1.2)
+              rinseWater.addSwirlImpulse(-2.1)
             }
           } else {
             const bundleFade = 1 - smoothstep01((u - 0.30) / 0.12)
@@ -1267,12 +1320,21 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
               bundle.visible = false
               bundle.scale.set(1, 1, 1)
             }
-            const rippleFade = 1 - smoothstep01((u - 0.30) / 0.24)
-            waterRipple.visible = rippleFade > 0.02
-            if (waterRipple.visible) {
-              const rScale = 2.2 + 0.9 * (1 - rippleFade)
-              waterRipple.scale.set(rScale, rScale, 1)
-              rippleMat.opacity = 0.30 * rippleFade
+            setRinseDyeMix(.55 + .45 * smoothstep01((u - 0.30) / 0.18))
+            if (!isReduced) {
+              if ((motion.rinseStage ?? 0) < 3 && u >= 0.34) {
+                motion.rinseStage = 3
+                rinseWater.addDipDepression(0, 0, -.014, .13)
+                rinseWater.triggerRipple(-.05, .06, 1.15)
+                rinseWater.addTiltImpulse(-1.5, 1.1)
+                rinseWater.addSwirlImpulse(2.4)
+              } else if ((motion.rinseStage ?? 0) < 4 && u >= 0.48) {
+                motion.rinseStage = 4
+                rinseWater.triggerRipple(.09, .04, .72)
+              } else if ((motion.rinseStage ?? 0) < 5 && u >= 0.62) {
+                motion.rinseStage = 5
+                rinseWater.triggerRipple(-.07, -.05, .52)
+              }
             }
 
             cloth.visible = true
@@ -1351,6 +1413,7 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
       }
       ending.update(dt)
       if (disposed || !active()) return
+      rinseWater.update(delta, liquidClock, isReduced)
       const clothCanSimulate = at >= 1 || (motion?.step === 0 && motion.time >= 0.80)
       if (!isReduced && clothCanSimulate) {
         ensureRapierStarted()
@@ -1394,7 +1457,7 @@ export function createBaiIndigoCloth(ctx: SceneContext): SceneInstance {
       ending.dispose(); disposed = true
       frontBody = null; backBody = null; rodCollider = null; basinCollider = null; floorCollider = null; rapierReady = false; physicsStepped = false
       host.dispose()
-      pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage'); delete overlay.dataset.indigoPhase
+      pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); writer = null; feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); rinseWater.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage'); delete overlay.dataset.indigoPhase
     },
   }
 }

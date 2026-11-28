@@ -1,6 +1,6 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import * as THREE from 'three'
-import {STAMP_ROWS} from './stamp'
+import { createUndamaStampTexture } from './stamp'
 
 /** Original coastal close view; one visitor throw with authored assistance. */
 export function createUndamaModel(){
@@ -40,9 +40,7 @@ export function createUndamaModel(){
   return new THREE.Vector3(-1.08+rx*Math.cos(t)*r,y+dy,1.02+rz*Math.sin(t)*r)
  }))
  const ledge=make('undama-ledge',closed(ledgeLoops,new THREE.Vector3(-1.08,-.30,1.02),new THREE.Vector3(-1.08,.5,1.02)),ledgeMaterial)
- const width=256,height=128,data=new Uint8Array(width*height*4)
- for(let y=0;y<height;y++)for(let x=0;x<width;x++){const i=(y*width+x)*4;const gx=x-48,gy=109-y,ink=gx>=0&&gx<32&&gy>=0&&gy<32&&STAMP_ROWS[gy]![gx]==='1';data[i]=ink?139:205;data[i+1]=ink?80:145;data[i+2]=ink?49:94;data[i+3]=255}
- const stamp=new THREE.DataTexture(data,width,height,THREE.RGBAFormat);stamp.colorSpace=THREE.SRGBColorSpace;stamp.needsUpdate=true
+ const stamp=createUndamaStampTexture()
  const ball=make('undama-ball',new THREE.SphereGeometry(radius,32,20),applyCraftSurface(new THREE.MeshStandardMaterial({color:'#ffffff',map:stamp,roughness:.94}), { kind: 'ceramic', strength: .45 }))
  ball.geometry.computeBoundingBox();const endY=floor-ball.geometry.boundingBox!.min.y
  const initial=new THREE.Vector3(-1.05,.5-ball.geometry.boundingBox!.min.y,1),raised=new THREE.Vector3(-1.05,1.08,1),aimed=new THREE.Vector3(-.75,1.08,1),release=new THREE.Vector3(-.83,1.14,1.14),landed=new THREE.Vector3(cx,endY,cz)

@@ -105,7 +105,7 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
       w.geometry.computeBoundingBox()
       const box = w.geometry.boundingBox!
       const topY = w.position.y + box.max.y + model.root.position.y + .002
-      const waterRadius = Math.max(.07, (box.max.x - box.min.x) * .5)
+      const waterRadius = Math.max(.07, (box.max.x - box.min.x) * .5 * w.scale.x)
       ripple.root.position.set((idx - 3) * .394, topY, .2)
       ripple.root.scale.setScalar(THREE.MathUtils.clamp((waterRadius - .006) / .12, .72, 1.32))
       ripple.setContinuous(true, 0, 0)
@@ -163,7 +163,7 @@ export function createTibetanWaterBowls(ctx: SceneContext): SceneInstance {
       } else {
         ripple.setContinuous(false)
       }
-      if (active()) { ripple.update(delta, ctx.isReducedMotion?.() ?? false); matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) { const quiet = ctx.isReducedMotion?.() ?? false; model.updateLiquid(delta, quiet); ripple.update(delta, quiet); matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },
     dispose() {
       if (disposed) return

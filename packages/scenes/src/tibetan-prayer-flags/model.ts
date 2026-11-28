@@ -1,4 +1,5 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { createFontDataTexture } from '@wbr/scene-runtime/glyph-kit'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
@@ -59,30 +60,79 @@ function sampleClothGrid(
   return out.set(sampleAxis(0), sampleAxis(1), sampleAxis(2))
 }
 
-const glyphs: Record<string, string[]> = {
-  O: ['01110', '10001', '10001', '10001', '10001', '10001', '01110'],
-  M: ['10001', '11011', '10101', '10101', '10001', '10001', '10001'],
-  A: ['01110', '10001', '10001', '11111', '10001', '10001', '10001'],
-  N: ['10001', '11001', '11001', '10101', '10011', '10011', '10001'],
-  I: ['11111', '00100', '00100', '00100', '00100', '00100', '11111'],
-  P: ['11110', '10001', '10001', '11110', '10000', '10000', '10000'],
-  D: ['11110', '10001', '10001', '10001', '10001', '10001', '11110'],
-  E: ['11111', '10000', '10000', '11110', '10000', '10000', '11111'],
-  H: ['10001', '10001', '10001', '11111', '10001', '10001', '10001'],
-  U: ['10001', '10001', '10001', '10001', '10001', '10001', '01110'],
-}
+const cachedPrayerFlagPixels = new Map<string, Uint8Array>()
 
-// Original Latin typesetting of the documented mantra; not a facsimile of a nunnery print.
+// Original Latin typesetting of the documented mantra using Cinzel Bold (SIL OFL 1.1)
+// with supersampled anti-aliased woodblock ink texture and simple geometric framing;
+// not a facsimile of a nunnery print and introduces no unverified Tibetan iconography.
 function print(lines: string[]) {
-  const size = 128, data = new Uint8Array(size * size * 4); data.fill(255)
-  const ink = (x: number, y: number) => { const i = (y * size + x) * 4; data[i] = 35; data[i + 1] = 38; data[i + 2] = 39 }
-  for (let l = 0; l < lines.length; l++) {
-    const text = lines[l]!, scale = 4, x0 = Math.floor((size - (text.length * 6 - 1) * scale) / 2), y0 = Math.floor((size - lines.length * 36) / 2) + l * 36
-    ;[...text].forEach((c, k) => glyphs[c]!.forEach((row, y) => [...row].forEach((bit, x) => {
-      if (bit === '1') for (let a = 0; a < scale; a++) for (let b = 0; b < scale; b++) ink(x0 + (k * 6 + x) * scale + a, y0 + y * scale + b)
-    })))
+  const size = 256
+  const key = lines.join('\n')
+  let pixels = cachedPrayerFlagPixels.get(key)
+  if (!pixels) {
+    const outerIn = 14, outerOut = 18
+    const innerIn = 23, innerOut = 25
+    const cornerEnd = 36
+    const built = createFontDataTexture('cinzelBold', key, {
+      width: size,
+      height: size,
+      letterSpacing: 0.08,
+      padding: [36, 44],
+      lineHeight: 1.28,
+      supersample: 8,
+      inkColor: [34, 36, 40],
+      backgroundColor: [255, 255, 255],
+      flipY: true,
+      minFilter: THREE.LinearMipmapLinearFilter,
+      magFilter: THREE.LinearFilter,
+      generateMipmaps: true,
+      shadePixel(x, y, cov, rgba, offset) {
+        const dx = Math.min(x, size - 1 - x)
+        const dy = Math.min(y, size - 1 - y)
+        const edge = Math.min(dx, dy)
+        let frameInk = 0
+        if (edge >= outerIn && edge <= outerOut) {
+          frameInk = edge === outerIn || edge === outerOut ? 0.58 : 0.92
+        } else if (edge >= innerIn && edge <= innerOut && dx >= innerIn && dy >= innerIn) {
+          frameInk = 0.62
+        } else if (
+          dx >= innerIn && dx <= cornerEnd && dy >= innerIn && dy <= cornerEnd &&
+          (dx === cornerEnd || dy === cornerEnd || dx === cornerEnd - 1 || dy === cornerEnd - 1)
+        ) {
+          frameInk = 0.52
+        }
+        // Subtle woven cotton woodblock press texture so printed ink sits organically on linen cloth.
+        const weave =
+          Math.sin(x * 0.78 + Math.sin(y * 0.24) * 0.8) * 0.5 +
+          Math.cos(y * 0.78 + Math.cos(x * 0.21) * 0.8) * 0.5
+        const inkWeight = Math.min(1, Math.max(cov, frameInk))
+        if (inkWeight > 0.01) {
+          const press = 0.90 + 0.10 * (0.5 + 0.5 * weave)
+          const a = Math.min(1, inkWeight * press)
+          rgba[offset] = Math.round(255 + (34 - 255) * a)
+          rgba[offset + 1] = Math.round(255 + (36 - 255) * a)
+          rgba[offset + 2] = Math.round(255 + (40 - 255) * a)
+        } else {
+          const clothTone = Math.round(253 + weave * 2)
+          rgba[offset] = clothTone
+          rgba[offset + 1] = clothTone
+          rgba[offset + 2] = Math.max(248, clothTone - 1)
+        }
+        rgba[offset + 3] = 255
+      },
+    })
+    pixels = new Uint8Array((built.image as { data: Uint8Array }).data)
+    cachedPrayerFlagPixels.set(key, pixels)
+    built.dispose()
   }
-  const texture = new THREE.DataTexture(data, size, size); texture.flipY = true; texture.colorSpace = THREE.SRGBColorSpace; texture.magFilter = THREE.NearestFilter; texture.needsUpdate = true; return texture
+  const texture = new THREE.DataTexture(new Uint8Array(pixels), size, size)
+  texture.flipY = true
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.magFilter = THREE.LinearFilter
+  texture.minFilter = THREE.LinearMipmapLinearFilter
+  texture.generateMipmaps = true
+  texture.needsUpdate = true
+  return texture
 }
 
 function clothGeometry() {

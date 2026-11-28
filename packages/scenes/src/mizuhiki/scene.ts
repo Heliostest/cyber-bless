@@ -1,5 +1,6 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { ensureRitualFontFace, hasRitualFontGlyphs, rasterizeFontTextMask } from '@wbr/scene-runtime/glyph-kit'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
 import { getLocale, subscribeLocale } from '@wbr/i18n'
@@ -794,7 +795,17 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   wishCanvas.width = 768
   wishCanvas.height = 256
   const wishInk = wishCanvas.getContext('2d')
-  const wishMap = new THREE.CanvasTexture(wishCanvas)
+  const wishFallbackData = new Uint8Array(256 * 88 * 4)
+  const wishMap: THREE.Texture = wishInk
+    ? new THREE.CanvasTexture(wishCanvas)
+    : (() => {
+        const dt = new THREE.DataTexture(wishFallbackData, 256, 88)
+        dt.colorSpace = THREE.SRGBColorSpace
+        dt.flipY = true
+        dt.magFilter = THREE.LinearFilter
+        dt.minFilter = THREE.LinearFilter
+        return dt
+      })()
   wishMap.colorSpace = THREE.SRGBColorSpace
   const wishMark = new THREE.Mesh(
     new THREE.PlaneGeometry(1.08, 0.32),
@@ -811,27 +822,63 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   bindSceneText(readingLabel, '查看纸面文字'); reading.append(readingLabel, readingText); overlay.append(reading)
   let writtenText = '赠礼心意', productDefault = true
   const redrawWish = () => {
-    if (!wishInk) return
     const text = productDefault ? sceneCopy(writtenText) : writtenText
+    // The complete original remains readable in DOM even when the paper's physical space is small.
+    readingText.textContent = text; reading.hidden = productDefault
+    if (!wishInk) {
+      // Headless / no-Canvas2D graceful fallback using bundled Klee One SemiBold / LXGW ZhenKai GB subsets.
+      wishFallbackData.fill(0)
+      const fallbackFont = hasRitualFontGlyphs('kleeOneSemiBold', text)
+        ? 'kleeOneSemiBold'
+        : hasRitualFontGlyphs('lxgwZhenKai', text)
+          ? 'lxgwZhenKai'
+          : null
+      if (fallbackFont) {
+        const mask = rasterizeFontTextMask(fallbackFont, text, { width: 256, height: 88, padding: [18, 14], letterSpacing: 0.08, supersample: 4 })
+        for (let i = 0; i < mask.data.length; i++) {
+          const a = mask.data[i]!
+          if (a <= 0.005) continue
+          const o = i * 4
+          wishFallbackData[o] = 78
+          wishFallbackData[o + 1] = 54
+          wishFallbackData[o + 2] = 32
+          wishFallbackData[o + 3] = Math.round(a * 238)
+        }
+      }
+      wishMap.needsUpdate = true
+      return
+    }
     wishInk.clearRect(0, 0, 768, 256)
-    wishInk.fillStyle = '#684c30'
+    // Delicate ink framing rules accenting the tanzaku slip margins without altering ceremonial layout.
+    wishInk.fillStyle = 'rgba(122, 92, 58, 0.24)'
+    wishInk.fillRect(108, 26, 552, 2)
+    wishInk.fillRect(108, 228, 552, 2)
     wishInk.textAlign = 'center'
     wishInk.textBaseline = 'middle'
     const locale = getLocale()
-    const family = locale === 'ja' ? '"Hiragino Mincho ProN", "Yu Mincho", serif'
-      : locale === 'ko' ? '"Apple SD Gothic Neo", "Malgun Gothic", sans-serif'
-      : locale === 'zh-Hant' ? '"Songti TC", "Noto Serif TC", serif'
-      : locale === 'zh-Hans' ? '"Songti SC", "Noto Serif SC", serif' : 'Georgia, serif'
-    let size = 40, lines: string[] = []
+    const family = locale === 'ko'
+      ? '"WBR Ritual Klee", "Klee One", "Apple SD Gothic Neo", "Malgun Gothic", serif'
+      : locale === 'zh-Hant'
+        ? '"WBR Ritual Klee", "Klee One", "LXGW WenKai", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif TC", "Songti TC", serif'
+        : locale === 'ja' || locale === 'zh-Hans'
+          ? '"WBR Ritual Klee", "Klee One", "LXGW WenKai", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif CJK SC", "Songti SC", serif'
+          : '"WBR Ritual Klee", "Klee One", "LXGW WenKai", Georgia, "Noto Serif CJK SC", serif'
+    let size = 44, lines: string[] = []
     do {
-      wishInk.font = `${size}px ${family}`
-      lines = wrapCanvasText(text, 680, value => wishInk.measureText(value).width, locale)
-      if (lines.length * size * 1.3 <= 212 || size <= 14) break
+      wishInk.font = `600 ${size}px ${family}`
+      lines = wrapCanvasText(text, 616, value => wishInk.measureText(value).width, locale)
+      if (lines.length * size * 1.36 <= 176 || size <= 16) break
       size -= 2
-    } while (size >= 14)
-    lines.forEach((line, i) => wishInk.fillText(line, 384, 128 + (i - (lines.length - 1) / 2) * size * 1.3))
-    // The complete original remains readable in DOM even when the paper's physical space is small.
-    readingText.textContent = text; reading.hidden = productDefault
+    } while (size >= 16)
+    const lineStep = size * 1.36
+    // Soft sumi-sepia ink absorption halo followed by crisp calligraphy ink stroke.
+    lines.forEach((line, i) => {
+      const y = 128 + (i - (lines.length - 1) / 2) * lineStep
+      wishInk.fillStyle = 'rgba(92, 66, 40, 0.24)'
+      wishInk.fillText(line, 384.8, y + 0.8)
+      wishInk.fillStyle = '#4e3620'
+      wishInk.fillText(line, 384, y)
+    })
     wishMap.needsUpdate = true
   }
   const paintWish = (text: string, isProductDefault = false) => {
@@ -842,6 +889,7 @@ export function createMizuhiki(ctx: SceneContext): SceneInstance {
   }
   paintWish('赠礼心意', true)
   const stopWishLocale = subscribeLocale(redrawWish)
+  void ensureRitualFontFace('kleeOneSemiBold', 'WBR Ritual Klee').then((loaded) => { if (loaded && !disposed) redrawWish() })
   void document.fonts?.ready.then(() => { if (!disposed) redrawWish() })
 
   const knot = new THREE.Group()

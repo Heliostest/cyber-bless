@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
+import { isClosedTwoManifold } from '@wbr/scene-runtime/stylized-human'
 import { createBaciModel } from './model'
 
 describe('Baci white cotton wrist blessing', () => {
@@ -127,5 +128,27 @@ describe('Baci white cotton wrist blessing', () => {
       const source=fs.readFileSync(path.join(dir,file),'utf8')
       expect(source).not.toMatch(/rapier|@dimforge|\.wasm/i)
     }
+  })
+  it('uses closed 2-manifold stylized hand/sleeve parts and keeps actual forearm vertices inside the tied wrist loop',()=>{
+    const m=createBaciModel();m.pose(2,1)
+    for(const name of ['baci-sleeve','baci-cuff','baci-forearm','baci-palm','baci-thumb','baci-finger-0','baci-finger-1','baci-finger-2','baci-finger-3']){
+      const part=m.root.getObjectByName(name) as THREE.Mesh
+      expect(part,name).toBeTruthy()
+      expect(isClosedTwoManifold(part.geometry),name).toBe(true)
+    }
+    const forearm=m.root.getObjectByName('baci-forearm') as THREE.Mesh
+    const pos=forearm.geometry.getAttribute('position'),v=new THREE.Vector3()
+    let maxNormalizedWristRadius=0
+    for(let i=0;i<pos.count;i++){
+      v.fromBufferAttribute(pos,i).applyMatrix4(forearm.matrixWorld)
+      if(Math.abs(v.x-m.wrist.x)<=.06){
+        const ell=Math.hypot((v.y-m.wrist.y)/.139, v.z/.173)
+        maxNormalizedWristRadius=Math.max(maxNormalizedWristRadius,ell)
+      }
+    }
+    // Actual wrist vertices stay snug beneath the cotton inner wall (0.139 / 0.173) without piercing or floating.
+    expect(maxNormalizedWristRadius).toBeGreaterThan(.72)
+    expect(maxNormalizedWristRadius).toBeLessThan(.99)
+    m.dispose()
   })
 })

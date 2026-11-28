@@ -2,6 +2,7 @@ import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
 import { createSoftPlume } from '@wbr/scene-runtime/soft-plume'
+import { createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import { createQuietEnding } from '../quiet-ending'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import * as THREE from 'three'
@@ -702,7 +703,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   }
   paperMat.addEventListener('dispose', releaseSleeveMap)
   const stickMat = material(0x88624c), bamboo = material(0xcbab73)
-  const ash = material(0xd4c9b3), dark = material(0x625f50), teaMat = createRitualMaterial({ color: 0x8f713e, roughness: .3, transmission: .18, attenuationColor: 0x8f713e, attenuationDistance: .15 }, { kind: 'tea', thickness: .012, strength: .22 })
+  const ash = material(0xd4c9b3), dark = material(0x625f50)
   const emberMat = new THREE.MeshStandardMaterial({ color: 0xd96b38, emissive: 0xff5a1f, emissiveIntensity: 1.35, roughness: .9 })
   // Cream/clay also appear in ash, paper printing and the woven pad.
   const matFabric = applyCraftSurface(cream.clone(), { kind: 'fabric', strength: .25 })
@@ -810,7 +811,12 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   const cupBody = lathe([[0, 0], [.11, 0], [.14, .03], [.184, .13], [.191, .20], [.177, .21], [.167, .18], [.14, .065], [.09, .035], [0, .035]], creamCupBody, cup, 'incense-teacup-body')
   bakeCreviceAO(cupBody.geometry, { groundY: 0, groundRange: .06, cavityCenter: [0, 0], cavityRadius: .172, cavityTopY: .21, strength: .36 })
   ring(.181, .009, [0, .202, 0], clay, cup)
-  add(new THREE.CylinderGeometry(.164, .151, .012, 40), teaMat, [0, .174, 0], cup, 'incense-tea-surface')
+  const cupTea = createVesselLiquid({
+    preset: 'amber-tea', radius: .165, radialSegments: 12, angularSegments: 36, deformMode: 'gpu',
+    color: 0xa46c2b, edgeColor: 0xe3b874, deepColor: 0x572f0e, foamColor: 0xf4dcb4, foamStrength: .14,
+    opacity: .84, roughness: .14, meniscusHeight: .007, maxAmplitude: .012, seed: 4019, name: 'incense-tea-surface',
+  })
+  cupTea.mesh.position.set(0, .176, 0); cup.add(cupTea.mesh)
   const teaPlume = createSoftPlume({ kind: 'steam', height: .22, width: .09, opacity: .22, strands: 2, wisps: 5, seed: 31 })
   teaPlume.root.position.set(-.04, .775, .565); world.add(teaPlume.root)
 
@@ -821,13 +827,14 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   addContactShadow(world, { prefix: 'incense-stick-tray', width: .78, depth: .64, y: .552, center: [-1, .22], shape: 'rounded-rect', opacity: .22 })
 
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  function pose() {
+  function pose(resetFluid = true) {
     lid.position.copy(checkpoint >= 1 ? LID_REST : LID_HOME)
     stick.position.copy(checkpoint >= 2 ? STICK_REST : STICK_HOME)
     paper.position.copy(STICK_HOME); paper.rotation.set(0, 0, checkpoint >= 2 ? -.15 : 0)
     ember.visible = smoke.visible = checkpoint >= 2
     incensePlume.setIntensity(checkpoint >= 2 ? 1 : 0)
     emberMat.emissiveIntensity = checkpoint >= 2 ? 1.35 : 0
+    if (resetFluid) cupTea.reset()
     matrices()
   }
   const source = () => checkpoint === 0 ? knob : checkpoint === 1 ? grip : saucer
@@ -897,7 +904,11 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   }
   function placed() {
     if (!active() || !placement) return
-    checkpoint = (placement.step + 1) as Checkpoint; placement = null; pose(); sync(); ctx.onProgress?.(checkpoint)
+    checkpoint = (placement.step + 1) as Checkpoint; placement = null; pose(false); sync(); ctx.onProgress?.(checkpoint)
+    if (!reduced()) {
+      cupTea.triggerRipple(0, 0, .28)
+      cupTea.addTiltImpulse(.18, -.14)
+    }
     feedback.impact({
       freqs: checkpoint === 1 ? [330, 495] : [392, 587.33],
       duration: .20,
@@ -917,7 +928,11 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
   function finish() {
     if (!active() || pointer.isBusy() || placement || checkpoint !== 2) return
     if (!ending.completing) return
-    checkpoint = 3; pose(); sync(); if (disposed) return; ctx.onProgress?.(3)
+    checkpoint = 3; pose(false); sync(); if (disposed) return; ctx.onProgress?.(3)
+    if (!reduced()) {
+      cupTea.triggerRipple(0, 0, .38)
+      cupTea.addTiltImpulse(.24, -.18)
+    }
     feedback.impact({ freqs: [330, 495], duration: .28, gain: .012, cue: 'ceramic', cueStrength: .50 })
     if (!active()) return; overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
   }
@@ -965,6 +980,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
       } else {
         incensePlume.setIntensity(0)
       }
+      cupTea.update(delta, elapsed, reduced())
       teaPlume.update(delta, camera, { reducedMotion: reduced(), scene })
       ending.update(dt)
       if (disposed || !active()) return
@@ -975,7 +991,7 @@ export function createChineseIncense(ctx: SceneContext): SceneInstance {
       ending.dispose()
       disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); feedback.dispose()
       ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus)
-      style.dispose(); incensePlume.dispose(); teaPlume.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose())
+      style.dispose(); incensePlume.dispose(); teaPlume.dispose(); cupTea.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose())
       scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }

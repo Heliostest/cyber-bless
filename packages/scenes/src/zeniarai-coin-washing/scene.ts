@@ -41,15 +41,17 @@ export function createZeniaraiCoinWashing(ctx: SceneContext): SceneInstance {
   const lights = addStageLights(scene, ctx.stage, { sky: 0xeaf4ed, ground: 0xa39c74, key: 0xffedca, rim: 0xd6f3ff, keyPosition: [-3, 5, 4], keyIntensity: 2.0, rimIntensity: .8 })
   lights.key.castShadow = true; lights.key.shadow.mapSize.set(1024, 1024); lights.key.shadow.bias = -.0004; lights.key.shadow.normalBias = .008
   Object.assign(lights.key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .1, far: 15 })
-  const model = createCoinWashingModel(); scene.add(model.root)
+  const model = createCoinWashingModel(); scene.add(model.root); scene.add(model.splashCrown)
   // A dense polar grid supports smooth vertex waves without a coarse radial fan.
   const waterPositions=[0,0,0],waterIndices:number[]=[],waterRings=24,waterSides=64
   for(let j=1;j<=waterRings;j++)for(let k=0;k<waterSides;k++){const a=k*2*Math.PI/waterSides,r=1.475*j/waterRings;waterPositions.push(r*Math.cos(a),0,r*Math.sin(a))}
   for(let k=0;k<waterSides;k++)waterIndices.push(0,1+(k+1)%waterSides,1+k)
   for(let j=1;j<waterRings;j++)for(let k=0;k<waterSides;k++){const a=1+(j-1)*waterSides+k,b=1+(j-1)*waterSides+(k+1)%waterSides,c=1+j*waterSides+k,d=1+j*waterSides+(k+1)%waterSides;waterIndices.push(a,b,d,a,d,c)}
   const waterGeometry=new THREE.BufferGeometry();waterGeometry.setAttribute('position',new THREE.Float32BufferAttribute(waterPositions,3));waterGeometry.setIndex(waterIndices);waterGeometry.computeVertexNormals()
-  const water=createStylizedWater({geometry:waterGeometry,normal:'y',depth:.38,color:0x7bc6c7,bedColor:0xb5b39d,opacity:.48,causticScale:2.8,waveScale:.55});water.surface.position.set(0,.50,0);scene.add(water.surface)
+  const water=createStylizedWater({geometry:waterGeometry,normal:'y',depth:.38,radius:1.475,color:0x76c5c6,shallowColor:0xa8e7df,deepColor:0x367982,bedColor:0xb5b39d,foamColor:0xf5f8ee,opacity:.50,causticScale:2.9,waveScale:.65,waveAmplitude:.006,flowDirection:[.28,-.96],flowSpeed:.22,rippleSpeed:.86,rippleWavelength:.24});water.surface.position.set(0,.50,0);scene.add(water.surface)
   const ripple=createSurfaceRipple({radius:.44,maxRings:5,color:0xeaf9f7,opacity:.48,duration:1.45});ripple.root.position.set(0,.503,0);scene.add(ripple.root)
+  let sieveDripTimer = 0.14
+  let sieveDripIndex = 0
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
   const restore = () => pose(at, 0)
@@ -95,14 +97,28 @@ export function createZeniaraiCoinWashing(ctx: SceneContext): SceneInstance {
         withHostCallbacks(() => feedback.sound('water', { duration: short ? .12 : .42, strength: .36 }))
       }
       if (!short && !quiet) {
-        if (amount >= .10 && (motion.rippled ?? 0) < 1) { motion.rippled = 1; ripple.trigger(.85, 0, .95) }
-        if (amount >= .35 && (motion.rippled ?? 0) < 2) { motion.rippled = 2; ripple.trigger(.85, 0, .55) }
+        if (amount >= .10 && (motion.rippled ?? 0) < 1) {
+          motion.rippled = 1
+          ripple.trigger(.85, 0, .95)
+          water.triggerRipple(.85, 0, 1.15, 1.42)
+          model.triggerCupSlosh(2.2, -.9, 1.0)
+        }
+        if (amount >= .35 && (motion.rippled ?? 0) < 2) {
+          motion.rippled = 2
+          ripple.trigger(.85, 0, .55)
+          water.triggerRipple(.85, 0, .68, 1.25)
+          model.triggerCupSlosh(-1.4, .6, .65)
+        }
       }
       return
     }
     if (motion.step === 1) {
       if ((short || model.stream.visible) && !motion.sounded) {
         motion.sounded = true
+        if (!short && !quiet) {
+          water.triggerRipple(0, 0, 1.05, 1.42)
+          model.triggerCupSlosh(2.6, 0, .9)
+        }
         withHostCallbacks(() => {
           feedback.sound('water', { duration: short ? .12 : .8, strength: .55 })
           feedback.sound('metal', { duration: short ? .10 : .34, strength: .18 })
@@ -113,12 +129,18 @@ export function createZeniaraiCoinWashing(ctx: SceneContext): SceneInstance {
       motion.flowing = model.stream.visible
       return
     }
-    if (motion.step === 2 && (short || amount >= .38) && !motion.sounded) {
-      motion.sounded = true
-      withHostCallbacks(() => {
-        feedback.sound('fabric', { duration: short ? .12 : .42, strength: .42 })
-        if (!short) feedback.sound('metal', { duration: .24, strength: .12 })
-      })
+    if (motion.step === 2) {
+      if (!short && !quiet && amount >= .82 && (motion.rippled ?? 0) < 1) {
+        motion.rippled = 1
+        water.triggerRipple(.85, 0, .62, 1.22)
+      }
+      if ((short || amount >= .38) && !motion.sounded) {
+        motion.sounded = true
+        withHostCallbacks(() => {
+          feedback.sound('fabric', { duration: short ? .12 : .42, strength: .42 })
+          if (!short) feedback.sound('metal', { duration: .24, strength: .12 })
+        })
+      }
     }
   }
   function settle() {
@@ -175,13 +197,33 @@ export function createZeniaraiCoinWashing(ctx: SceneContext): SceneInstance {
           }
         }else{pose(motion.step,motion.from+(1-motion.from)*eased);if(motion.placed)placement.settle(eased)} soundWater(); if (motion.time === 1) settle()
       }
-      if (active()) { const quiet = ctx.isReducedMotion?.() ?? false; water.update(delta, quiet); ripple.update(delta, quiet); matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) {
+        const quiet = ctx.isReducedMotion?.() ?? false
+        if (!quiet && model.stream.visible && delta > 0) {
+          sieveDripTimer += delta
+          if (sieveDripTimer >= 0.13) {
+            sieveDripTimer = 0
+            const offsets = [[0, 0], [.14, -.12], [-.14, .10], [.10, .14], [-.12, -.12]] as const
+            const [ox, oz] = offsets[sieveDripIndex % offsets.length]!
+            sieveDripIndex++
+            water.triggerRipple(ox, oz, 0.72, 1.38)
+          }
+        } else {
+          sieveDripTimer = 0.14
+        }
+        model.updateLiquid(delta, quiet)
+        water.update(delta, quiet)
+        ripple.update(delta, quiet)
+        matrices()
+        lights.key.shadow.normalBias = .03
+        style.render()
+      }
     },
     dispose() {
       if (disposed) return
       disposed = true; lifecycleVersion++; pointer.dispose(); stopResize(); feedback.dispose(); removeCues.forEach(remove => remove()); ui.actionBtn.removeEventListener('click', action)
       guardedEvents.forEach(type => { window.removeEventListener(type, guardCallbackInput, true); ui.hitLayer.removeEventListener(type, guardCallbackInput, true) })
-      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); ripple.dispose(); water.dispose(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
+      window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); ripple.dispose(); water.dispose(); model.disposeLiquid(); disposeTree(model.root); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage')
     },
   }
 }

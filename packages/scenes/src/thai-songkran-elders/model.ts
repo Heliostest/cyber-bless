@@ -146,7 +146,7 @@ uniform float wbrSongReduced;
       vec3 edgeTint = vec3(0.84, 0.97, 0.95);
       vec3 deepTint = vec3(0.29, 0.60, 0.68);
       vec3 viewDir = normalize(vViewPosition);
-      float fres = pow(clamp(1.0 - abs(dot(normal, viewDir)), 0.0, 1.0), 2.6);
+      float fres = pow(clamp(1.0 - abs(dot(normalize(vNormal), viewDir)), 0.0, 1.0), 2.6);
       diffuseColor.rgb = mix(deepTint, diffuseColor.rgb, 0.62 + caust * 0.28);
       diffuseColor.rgb = mix(diffuseColor.rgb, edgeTint, clamp(fres * 0.36 + caust * 0.16 + sloshEnergy * 0.22, 0.0, 0.68));
       diffuseColor.a = clamp(diffuseColor.a + fres * 0.14 + sloshEnergy * 0.08, 0.0, 0.94);

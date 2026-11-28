@@ -738,18 +738,24 @@ export function createVesselLiquid(options: VesselLiquidOptions): VesselLiquidHa
     depthWrite: isOpaque,
   })
   material.userData.waterRendering = options.waterRendering ?? false
-  material.customProgramCacheKey = () => `wbr-vessel-liquid-v1:${preset}:${deformMode}:${isOpaque ? 'op' : 'tr'}`
+  material.customProgramCacheKey = () => `wbr-vessel-liquid-v2:${preset}:${deformMode}:${isOpaque ? 'op' : 'tr'}`
   material.onBeforeCompile = shader => {
     Object.assign(shader.uniforms, uniforms)
     shader.vertexShader = `
 varying vec3 wbrVLocal;
 varying float wbrVRho;
 varying float wbrVCrest;
+varying vec3 wbrVAxisX;
+varying vec3 wbrVAxisY;
+varying vec3 wbrVAxisZ;
 ${deformMode === 'gpu' ? VESSEL_SHADER_SHARED : 'uniform vec2 wbrVRadii;'}
 ` + shader.vertexShader.replace('#include <begin_vertex>', `
       #include <begin_vertex>
       wbrVLocal = position;
       wbrVRho = length(vec2(position.x / max(wbrVRadii.x, 0.001), position.z / max(wbrVRadii.y, 0.001)));
+      wbrVAxisX = normalize((modelViewMatrix * vec4(1.0, 0.0, 0.0, 0.0)).xyz);
+      wbrVAxisY = normalize((modelViewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+      wbrVAxisZ = normalize((modelViewMatrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz);
       ${deformMode === 'gpu'
         ? `vec4 wbrVGpuF = wbrVesselField(position.xz);
            transformed.y += wbrVGpuF.z;
@@ -761,6 +767,9 @@ ${deformMode === 'gpu' ? VESSEL_SHADER_SHARED : 'uniform vec2 wbrVRadii;'}
 varying vec3 wbrVLocal;
 varying float wbrVRho;
 varying float wbrVCrest;
+varying vec3 wbrVAxisX;
+varying vec3 wbrVAxisY;
+varying vec3 wbrVAxisZ;
 uniform vec3 wbrVEdgeColor;
 uniform vec3 wbrVDeepColor;
 uniform vec3 wbrVFoamColor;
@@ -770,11 +779,9 @@ ${VESSEL_SHADER_SHARED}
 ` + shader.fragmentShader
       .replace('#include <normal_fragment_maps>', `
         #include <normal_fragment_maps>
-        vec4 wbrVFragField = wbrVesselField(wbrVLocal.xz);
         // Subtle animated surface-normal shimmer for crisp liquid reflections even in CPU mode.
         vec2 wbrVSlope = wbrVFragField.xy * ${deformMode === 'gpu' ? '1.35' : '0.45'};
-        vec3 wbrVLocalN = normalize(vec3(-wbrVSlope.x, 1.0, -wbrVSlope.y));
-        vec3 wbrVViewN = normalize((viewMatrix * modelMatrix * vec4(wbrVLocalN, 0.0)).xyz);
+        vec3 wbrVViewN = normalize(-wbrVSlope.x * wbrVAxisX + wbrVAxisY - wbrVSlope.y * wbrVAxisZ);
         normal = normalize(mix(normal, wbrVViewN, ${deformMode === 'gpu' ? '0.82' : '0.42'}));
       `)
       .replace('#include <clearcoat_normal_fragment_maps>', `
@@ -785,6 +792,7 @@ ${VESSEL_SHADER_SHARED}
       `)
       .replace('#include <color_fragment>', `
         #include <color_fragment>
+        vec4 wbrVFragField = wbrVesselField(wbrVLocal.xz);
         float rho = clamp(wbrVRho, 0.0, 1.0);
         float ang = atan(wbrVLocal.z, wbrVLocal.x);
 
@@ -817,7 +825,8 @@ ${VESSEL_SHADER_SHARED}
 
         // Wet inner-wall capillary meniscus sheen + ripple crest highlight + warm Fresnel.
         vec3 wbrVViewDir = normalize(vViewPosition);
-        float wbrVFresnel = pow(clamp(1.0 - abs(dot(normal, wbrVViewDir)), 0.0, 1.0), 3.0);
+        vec3 wbrVColorN = normalize(-wbrVFragField.x * wbrVAxisX + wbrVAxisY - wbrVFragField.y * wbrVAxisZ);
+        float wbrVFresnel = pow(clamp(1.0 - abs(dot(wbrVColorN, wbrVViewDir)), 0.0, 1.0), 3.0);
         float wbrVCrestRaw = max(wbrVCrest, wbrVFragField.w);
         float wbrVCrestSoft = wbrVCrestRaw / (wbrVCrestRaw + 0.90);
         float wetRim = smoothstep(0.87, 0.995, rho) * 0.24;
@@ -1423,7 +1432,7 @@ uniform float wbrStreamSpeed;
       float bandB = 0.5 + 0.5 * sin(wbrStreamUv.y * 37.0 - st * (wbrStreamSpeed * 1.35) - wbrStreamUv.x * 6.283);
       float streak = pow(bandA * 0.62 + bandB * 0.38, 2.2);
       vec3 wbrSView = normalize(vViewPosition);
-      float wbrSFresnel = pow(clamp(1.0 - abs(dot(normal, wbrSView)), 0.0, 1.0), 2.2);
+      float wbrSFresnel = pow(clamp(1.0 - abs(dot(normalize(vNormal), wbrSView)), 0.0, 1.0), 2.2);
       float shimmer = clamp(streak * 0.44 + wbrSFresnel * 0.36, 0.0, 0.72);
       diffuseColor.rgb = mix(diffuseColor.rgb, wbrStreamHighlight, shimmer);
       float tipFade = smoothstep(0.0, 0.06, wbrStreamUv.y) * (1.0 - smoothstep(0.95, 1.0, wbrStreamUv.y) * 0.25);

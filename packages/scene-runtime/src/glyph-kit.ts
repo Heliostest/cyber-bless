@@ -1,5 +1,6 @@
 import earcut from "earcut";
-import opentype from "opentype.js";
+import * as opentypeNS from "opentype.js";
+import type { Font as OpenTypeFont, Path as OpenTypePath } from "opentype.js";
 import * as THREE from "three";
 import {
   RITUAL_FONT_SUBSETS_B64,
@@ -175,11 +176,16 @@ export interface SlicedFlatPiece {
   uEnd: number;
 }
 
-const fontCache = new Map<RitualFontId, opentype.Font>();
+const fontCache = new Map<RitualFontId, OpenTypeFont>();
 const registeredFontFaces = new Map<string, Promise<boolean>>();
 const layoutCache = new Map<string, TextLayoutResult>();
 const maskCache = new Map<string, RasterizedMask>();
 const MAX_CACHE_ENTRIES = 96;
+
+const parseOpenType: (buffer: ArrayBuffer) => OpenTypeFont =
+  typeof opentypeNS.parse === "function"
+    ? opentypeNS.parse
+    : (opentypeNS as unknown as { default: { parse: (b: ArrayBuffer) => OpenTypeFont } }).default.parse;
 
 function setBoundedCache<V>(cache: Map<string, V>, key: string, value: V) {
   if (cache.size >= MAX_CACHE_ENTRIES) {
@@ -190,10 +196,10 @@ function setBoundedCache<V>(cache: Map<string, V>, key: string, value: V) {
 }
 
 /** Parses and caches a bundled SIL OFL 1.1 ritual font subset synchronously. */
-export function getRitualFont(fontId: RitualFontId): opentype.Font {
+export function getRitualFont(fontId: RitualFontId): OpenTypeFont {
   let font = fontCache.get(fontId);
   if (!font) {
-    font = opentype.parse(decodeFontSubsetBuffer(fontId));
+    font = parseOpenType(decodeFontSubsetBuffer(fontId));
     fontCache.set(fontId, font);
   }
   return font;
@@ -375,7 +381,7 @@ function cleanRing(raw: Ring2D, eps: number, minArea: number): Ring2D | null {
  * Handles implicit contour closure for TrueType fonts (where `Z` commands may be omitted).
  */
 function flattenOpenTypePath(
-  path: opentype.Path,
+  path: OpenTypePath,
   flatness: number,
   maxCurveSegments: number,
   minArea: number,

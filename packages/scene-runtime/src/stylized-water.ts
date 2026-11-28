@@ -446,7 +446,8 @@ export function createStylizedWater<G extends THREE.BufferGeometry>(options: Sty
           diffuseColor.rgb = mix(wbrBody, wbrShallowColor, shallow * 0.52);
           // Warm Komorebi sky Fresnel + soft-knee crest shimmer (never harsh clipped white).
           vec3 wbrViewDir = normalize(vViewPosition);
-          float wbrFresnel = pow(clamp(1.0 - abs(dot(normal, wbrViewDir)), 0.0, 1.0), 3.0);
+          vec3 wbrWaveViewN = normalize((viewMatrix * vec4(normalize(vec3(-wbrColorField.x, 1.0, -wbrColorField.y)), 0.0)).xyz);
+          float wbrFresnel = pow(clamp(1.0 - abs(dot(wbrWaveViewN, wbrViewDir)), 0.0, 1.0), 3.0);
           diffuseColor.rgb = mix(diffuseColor.rgb, mix(wbrShallowColor, wbrFoamColor, 0.65), wbrFresnel * 0.24);
           float rawCrest = max(wbrColorField.w, wbrWaterCrestV);
           float softCrest = rawCrest / (rawCrest + 0.85);

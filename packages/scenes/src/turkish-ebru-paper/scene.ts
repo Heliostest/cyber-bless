@@ -163,7 +163,7 @@ uniform vec3 wbrEbruFoamColor;
         float tLive = wbrEbruTime * (1.0 - wbrEbruReduced);
         float gumSheen = 0.5 + 0.5 * sin(wbrEbruLocal.x * 5.2 - tLive * 1.15 + sin(wbrEbruLocal.z * 4.4 + tLive * 0.72));
         vec3 viewDir = normalize(vViewPosition);
-        float fresnel = pow(clamp(1.0 - abs(dot(normal, viewDir)), 0.0, 1.0), 2.8);
+        float fresnel = pow(clamp(1.0 - abs(dot(normalize(vNormal), viewDir)), 0.0, 1.0), 2.8);
         diffuseColor.rgb = mix(bathBody, wbrEbruEdgeColor, meniscusRim * 0.58 + fresnel * 0.20);
         diffuseColor.rgb = mix(diffuseColor.rgb, wbrEbruFoamColor, clamp(gumSheen * (0.08 + wbrEbruEnergy * 0.16) + smoothstep(0.90, 0.995, wallEdge) * 0.24, 0.0, 0.48));
         diffuseColor.a = clamp(diffuseColor.a + meniscusRim * 0.12 + fresnel * 0.10, 0.0, 0.95);

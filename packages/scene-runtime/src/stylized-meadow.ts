@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import type { GardenKind } from "./garden-layout";
 import type { EnvironmentTone } from './debug-environment-tone';
-import { courtyardPathCenterX, courtyardPathHalfWidth, courtyardPathT } from './courtyard-stone-path';
+import { isInsideCourtyardStonePath } from './courtyard-stone-path';
+import { isInsideGardenPaving } from './garden-courtyard-paving';
 
 // Wind bending and root-to-tip lighting adapted from boona13's MIT-licensed
 // threejs-grass-water-shaders. See assets/environments/meadow/ for provenance.
@@ -122,11 +123,8 @@ export function canMeadowGrow(kind: GardenKind, x: number, z: number) {
   if (kind === "river") return Math.abs(x) > 2.68 && Math.abs(x) < 7.25;
   if (kind === "veranda" && Math.abs(x) < 6.2 && z > -2.8) return false;
   if (kind === "table" && Math.abs(x) < 3.2 && z > -1.6) return false;
-  if (kind === "garden" && (x / 3.2) ** 2 + (z / 2.5) ** 2 < 1) return false;
-  if (kind === "courtyard") {
-    const t = courtyardPathT(z), center = courtyardPathCenterX(t);
-    if (Math.abs(x - center) < courtyardPathHalfWidth(t) + .18) return false;
-  }
+  if (kind === "garden" && isInsideGardenPaving(x, z, 0.16)) return false;
+  if (kind === "courtyard" && isInsideCourtyardStonePath(x, z, 0.11)) return false;
   return true;
 }
 

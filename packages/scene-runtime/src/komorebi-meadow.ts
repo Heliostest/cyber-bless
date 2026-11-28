@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { GardenKind } from './garden-layout';
 import type { EnvironmentTone } from './debug-environment-tone';
 import { canMeadowGrow } from './stylized-meadow';
+import { isInsideCourtyardStonePath } from './courtyard-stone-path';
 import { createMeadowGrass, meadowInstanceTint, meadowSurfaceTint } from './komorebi/meadow-grass';
 import { sampleMeadowField } from './komorebi/meadow-field';
 import { environmentHash as hash } from './komorebi/meadow-layout';
@@ -104,9 +105,19 @@ export function createKomorebiMeadow({ kind, floor, id }: { kind: GardenKind; fl
       if (Math.floor(hash(x,z,seed) * 3) !== variant) continue;
       const px = x + hash(x,z,seed+1) * .35, pz = z + hash(x,z,seed+2) * .35;
       const field = sampleMeadowField(px,pz,seed);
-      // Check the entire .34m tuft plus the maximum wind excursion against hard surfaces.
-      const margin = .43;
-      if ([-margin,0,margin].some(dx => [-margin,0,margin].some(dz => !canMeadowGrow(kind,px+dx,pz+dz))) || hash(x,z,seed+3) > .44 + field.density * .53) continue;
+      // Check the entire .34m tuft plus wind excursion against hard surfaces, while hugging
+      // organic courtyard stone-path coves cleanly without piercing protruding shoulder stones.
+      const workbenchMargin = .43;
+      const blockedByWorkbench = [-workbenchMargin,0,workbenchMargin].some(dx =>
+        [-workbenchMargin,0,workbenchMargin].some(dz => Math.abs(px+dx) < 2.2 && pz+dz > -2.2 && pz+dz < 3.2));
+      if (blockedByWorkbench) continue;
+      if (kind === 'courtyard') {
+        const pathMargin = .22;
+        if ([-pathMargin,0,pathMargin].some(dx => [-pathMargin,0,pathMargin].some(dz => isInsideCourtyardStonePath(px+dx,pz+dz,.06))) || hash(x,z,seed+3) > .44 + field.density * .53) continue;
+      } else {
+        const margin = .43;
+        if ([-margin,0,margin].some(dx => [-margin,0,margin].some(dz => !canMeadowGrow(kind,px+dx,pz+dz))) || hash(x,z,seed+3) > .44 + field.density * .53) continue;
+      }
       // About half as many tufts at the workbench edge, thinning out to the full field by 1.5 m.
       if (hash(x,z,seed+11) < meadowCalm(px,pz) * .5) continue;
       points.push([px,pz]);

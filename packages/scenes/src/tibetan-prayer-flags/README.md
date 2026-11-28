@@ -1,5 +1,9 @@
 # 经幡迎风
 
+## 2026-11-28 经幡拉丁转写咒语升级为开源衬线体高清抗锯齿贴图
+
+五面经幡上的拉丁转写咒语（`OM / MA / NI / PAD ME / HUM`）由原先 5×7 `NearestFilter` 马赛克像素字升级为基于开源可商用字体 **Cinzel Bold（SIL Open Font License 1.1，许可原文见 `packages/scene-runtime/licenses/fonts/Cinzel-OFL.txt`）** 子集生成的 256×256 超采样抗锯齿木版印墨 `DataTexture`（搭配多级渐远过滤、布纹压印肌理与克制纯几何双线边框，不擅自添加未核查藏文经咒或风马复合图样）。本轮仅为产品视觉呈现改进，不新增传统印制规制、宗教主张或加持功效承诺；五色顺序、固定绳长、布面风动物理、来源 `tibetan-prayer-flags`、技术 ID、引擎与存档均保持不变，外链未重读。
+
 
 ## 2026-11-06 Komorebi 默认画风
 

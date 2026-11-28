@@ -1,5 +1,9 @@
 # 贴福迎春
 
+## 2026-11-28 开源毛笔字体「福」字升级
+
+`fu-glyph` 由原先 15 笔手拼几何笔带升级为基于开源可商用字体 **Ma Shan Zheng（马善政毛笔楷书，SIL Open Font License 1.1，许可原文见 `packages/scene-runtime/licenses/fonts/MaShanZheng-OFL.txt`）** 子集生成的贴面细分墨字薄层，保留正向「福」字与贴合红斗方曲面的微浮雕及纸齿 UV。本轮仅为产品视觉呈现改进，不新增传统书体、朝向规制或功效承诺；既有红纸光学、折痕、木门、托架、交互流程、来源 `chinese-fu-paper`、技术 ID、引擎与存档均保持不变，外链未重读。
+
 
 ## 2026-11-06 Komorebi 默认画风
 

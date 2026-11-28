@@ -1,19 +1,9 @@
 import { getEnvironmentProfile } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { createProgressivePolygonsSlices, layoutTextPolygons } from '@wbr/scene-runtime/glyph-kit'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 
-type Point = [number, number]
-const glyphs: Record<string, Point[][]> = {
- '2': [[[0,.8],[.12,.97],[.45,1],[.65,.87],[.65,.67],[0,0],[.7,0]]],
- '0': [[[.32,1],[.1,.93],[0,.7],[0,.26],[.12,.05],[.36,0],[.59,.1],[.67,.34],[.67,.76],[.52,.96],[.32,1]]],
- '*': [[[.35,.2],[.35,.83]],[[.07,.35],[.63,.68]],[[.07,.68],[.63,.35]]],
- 'C': [[[.68,.88],[.48,1],[.18,.94],[0,.73],[0,.25],[.19,.04],[.48,0],[.68,.12]]],
- '+': [[[.05,.48],[.65,.48]],[[.35,.18],[.35,.78]]],
- 'M': [[[0,0],[0,1],[.38,.42],[.76,1],[.76,0]]],
- 'B': [[[0,0],[0,1],[.45,1],[.65,.86],[.64,.68],[.45,.53],[0,.53]],[[.45,.53],[.7,.38],[.67,.16],[.46,0],[0,0]]],
- '6': [[[.62,.92],[.43,1],[.18,.9],[0,.59],[0,.2],[.18,0],[.47,0],[.65,.18],[.62,.44],[.43,.58],[.18,.56],[0,.37]]],
-}
 const V=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z)
 const lerp=(a:THREE.Vector3,b:THREE.Vector3,t:number)=>a.clone().lerp(b,t)
 function chalkGeometry(){
@@ -63,17 +53,39 @@ export function createSternsingerModel(){
  // Bevelled tip contacts the surface; the barrel stays wholly in front of it.
  const chalkBody=make('sternsinger-chalk-body',chalkGeometry(),chalkMaterial,chalk)
  const surfaceZ=.231,inscription='20*C+M+B+26',marks:THREE.Mesh[]=[],routes:{a:THREE.Vector3;b:THREE.Vector3;start:number;end:number;mark?:THREE.Mesh}[]=[]
- const lineMaterial=material(0xfffae8),unitLine=new THREE.PlaneGeometry(1,.013),startX=-1.11,baseline=2.235,cell=.205,glyphHeight=.24
+ // Classical Roman serif chalk lettering (Cinzel Bold, SIL OFL 1.1) sliced cleanly left-to-right
+ // with subtle powdery chalk vertex modulation so each glyph reveals directly beneath the chalk tip.
+ const lineMaterial=new THREE.MeshStandardMaterial({color:0xfffae8,roughness:1,vertexColors:true,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1})
+ const lintelCenterY=2.36
+ const layout=layoutTextPolygons('cinzelBold',inscription,{center:true,fitBox:[2.24,.245],letterSpacing:.075,flatness:.004})
+ const chalkDust=(x:number,y:number,out:THREE.Color)=>{
+  const grain=0.90+0.10*(0.5+0.5*Math.sin(x*165+Math.cos(y*195)*2.3)*Math.cos((x-y)*110))
+  out.setRGB(grain,grain*0.992,grain*0.97)
+ }
  let duration=0,last:THREE.Vector3|undefined
- for(let g=0;g<inscription.length;g++)for(const stroke of glyphs[inscription[g]!]!){
-  const points=stroke.map(([x,y])=>V(startX+g*cell+x*.20,baseline+y*glyphHeight,surfaceZ))
-  if(last){const length=Math.max(.045,last.distanceTo(points[0]!)*.65);routes.push({a:last,b:points[0]!,start:duration,end:duration+length});duration+=length}
-  for(let i=1;i<points.length;i++){
-   const a=points[i-1]!,b=points[i]!,length=a.distanceTo(b),mark=make('sternsinger-mark-'+marks.length,unitLine,lineMaterial)
-   mark.castShadow=false;mark.receiveShadow=false;mark.userData.surfaceDeposit=true;marks.push(mark)
-   routes.push({a,b,start:duration,end:duration+length,mark});duration+=length
+ for(const glyphItem of layout.glyphs){
+  if(glyphItem.polygons.length===0)continue
+  const sliceCount=glyphItem.char==='*'||glyphItem.char==='+'?3:4
+  const pieces=createProgressivePolygonsSlices(glyphItem.polygons,sliceCount,{direction:'x',maxEdgeLength:.045,plane:'xy',zOffset:0,vertexColor:chalkDust})
+  for(let pIdx=0;pIdx<pieces.length;pIdx++){
+   const piece=pieces[pIdx]!
+   const x0=piece.bounds.minX,x1=piece.bounds.maxX,midY=(piece.bounds.minY+piece.bounds.maxY)*0.5
+   const spanX=Math.max(1e-4,x1-x0)
+   piece.geometry.translate(-x0,-midY,0)
+   piece.geometry.computeBoundingBox();piece.geometry.computeBoundingSphere()
+   const a=V(x0,lintelCenterY+midY,surfaceZ),b=V(x1,lintelCenterY+midY,surfaceZ)
+   if(pIdx===0&&last){
+    const liftLen=Math.max(.065,last.distanceTo(a)*.85)
+    routes.push({a:last,b:a,start:duration,end:duration+liftLen});duration+=liftLen
+   }
+   const mark=make('sternsinger-mark-'+marks.length,piece.geometry,lineMaterial)
+   mark.position.copy(a)
+   mark.castShadow=false;mark.receiveShadow=false;mark.userData.surfaceDeposit=true;mark.userData.toonSurface={outline:false}
+   marks.push(mark)
+   const writeLen=Math.max(.035,spanX*1.35)
+   routes.push({a,b,start:duration,end:duration+writeLen,mark});duration+=writeLen
+   last=b
   }
-  last=points.at(-1)!
  }
  const restRotation=new THREE.Quaternion().setFromUnitVectors(V(0,1,0),V(.9,0,.435889894).normalize()),writingRotation=new THREE.Quaternion().setFromUnitVectors(V(0,1,0),V(.35,-.35,.869).normalize())
  // Derive floor contact from actual chalk vertices, rather than a bounding-sphere guess.
@@ -83,7 +95,7 @@ export function createSternsingerModel(){
  let writing: {end:THREE.Vector3;mark:THREE.Mesh}|null=null
  function inscriptionPose(n:number){
   writing=null;const time=n*duration
-  for(const r of routes){if(!r.mark)continue;const amount=THREE.MathUtils.clamp((time-r.start)/(r.end-r.start),0,1);r.mark.visible=amount>0;r.mark.scale.set(r.a.distanceTo(r.b)*amount,1,1);r.mark.position.copy(r.a).lerp(r.b,amount/2);r.mark.rotation.z=Math.atan2(r.b.y-r.a.y,r.b.x-r.a.x)}
+  for(const r of routes){if(!r.mark)continue;const amount=THREE.MathUtils.clamp((time-r.start)/(r.end-r.start),0,1);r.mark.visible=amount>0;r.mark.scale.set(amount,1,1)}
   const route=routes.find(r=>time<r.end)??routes.at(-1)!,amount=THREE.MathUtils.clamp((time-route.start)/(route.end-route.start),0,1)
   chalk.position.copy(route.a).lerp(route.b,amount)
   if(route.mark)writing={end:chalk.position.clone(),mark:route.mark};else chalk.position.z+=Math.sin(Math.PI*amount)*.095

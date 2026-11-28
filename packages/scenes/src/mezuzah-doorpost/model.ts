@@ -1,9 +1,12 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { createGlyphExtrudeGeometry } from '@wbr/scene-runtime/glyph-kit'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { addObjectCradle } from '../cozy-furniture'
 import { disposeTree } from '../procedural-kit'
+
+let cachedShinBuffers: { positions: Float32Array; normals: Float32Array; uvs: Float32Array } | null = null
 
 /** Original closed case and residential doorway; the scroll is already prepared inside. */
 export function createMezuzahModel() {
@@ -63,13 +66,34 @@ export function createMezuzahModel() {
     add(actor, `mezuzah-brass-cap-step-${i}`, roundedPrism(.228, .014, .188, .006), brass, 0, sign * .354, 0)
     box(actor, `mezuzah-brass-edge-${i}`, .008, .59, .008, brass, sign * .104, 0, .09)
   }
-  // A small continuous geometric shin (three upright strokes on a joined baseline).
-  const shin = new THREE.Shape()
-  shin.moveTo(-.055, .06)
-  for (const [x, y] of [[-.035, .06], [-.027, -.023], [-.011, -.032], [-.011, .06], [.009, .06], [.009, -.033], [.025, -.032], [.034, -.024], [.039, .06], [.059, .06], [.05, -.035], [.034, -.054], [-.018, -.054], [-.043, -.035]]) shin.lineTo(x!, y!)
-  shin.closePath()
-  const shinGeometry = new THREE.ExtrudeGeometry(shin, { depth: .006, bevelEnabled: false, steps: 1 })
-  add(actor, 'mezuzah-shin', shinGeometry, brass, -.002, .19, .09)
+  // Traditional serifed Hebrew Shin (ש) rendered from Frank Ruhl Libre Bold (SIL OFL 1.1)
+  // as a beveled 3D brass relief mounted flush on the front face of the closed case.
+  if (!cachedShinBuffers) {
+    const built = createGlyphExtrudeGeometry('frankRuhlBold', 'ש', {
+      center: true,
+      fitBox: [.112, .112],
+      flatness: .0035,
+      depth: .0065,
+      bevelEnabled: true,
+      bevelThickness: .0012,
+      bevelSize: .0009,
+      bevelSegments: 2,
+      curveSegments: 8,
+      alignBackToZero: true,
+    })
+    cachedShinBuffers = {
+      positions: new Float32Array((built.getAttribute('position') as THREE.BufferAttribute).array as Float32Array),
+      normals: new Float32Array((built.getAttribute('normal') as THREE.BufferAttribute).array as Float32Array),
+      uvs: new Float32Array((built.getAttribute('uv') as THREE.BufferAttribute).array as Float32Array),
+    }
+    built.dispose()
+  }
+  const shinGeometry = new THREE.BufferGeometry()
+  shinGeometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(cachedShinBuffers.positions), 3))
+  shinGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(new Float32Array(cachedShinBuffers.normals), 3))
+  shinGeometry.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(cachedShinBuffers.uvs), 2))
+  shinGeometry.computeBoundingBox(); shinGeometry.computeBoundingSphere()
+  add(actor, 'mezuzah-shin', shinGeometry, brass, 0, .185, .09)
   // Permanent, already prepared mounting tape; its rear face is the contact surface.
   box(actor, 'mezuzah-adhesive-backing', .17, .59, .02, adhesive, 0, 0, -.10)
 

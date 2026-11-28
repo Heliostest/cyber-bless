@@ -1,5 +1,9 @@
 # 门柱祈安 / mezuzah-doorpost
 
+## 2026-11-28 经盒正面希伯来字母 ש 升级为开源衬线字体浮雕
+
+护盒正面铜色希伯来字母 `ש`（`mezuzah-shin`）由原先手拼几何折线块升级为基于开源可商用字体 **Frank Ruhl Libre Bold（SIL Open Font License 1.1，许可原文见 `packages/scene-runtime/licenses/fonts/FrankRuhlLibre-OFL.txt`）** 子集生成的三维微倒角黄铜浮雕，端正镶嵌于闭合护盒正面。本轮仅为产品视觉呈现改进，护盒仍保持闭合且不展示虚构经文，不新增传统规制、宗教主张或功效承诺；右门柱上段倾角位置、安装胶、来源 `mezuzah-doorpost`、技术 ID、引擎与存档均保持不变，外链未重读。
+
 
 ## 2026-11-06 Komorebi 默认画风
 

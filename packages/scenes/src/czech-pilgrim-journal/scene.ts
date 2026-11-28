@@ -1,5 +1,5 @@
 import { createQuietEnding } from '../quiet-ending'
-import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
@@ -31,7 +31,7 @@ export function createCzechPilgrimJournal(ctx: SceneContext): SceneInstance {
   Object.values(COPY).forEach(safe)
   let started = false, disposed = false, focused = true, checkpoint: Checkpoint = 0, inactiveRendered = false
   let transition: { step: 0 | 1; time: number; angle: number; from: THREE.Vector3; ribbonAngle: number } | null = null
-  let stopResize = () => {}, dragging = false, maxTravel = 0
+  let stopResize = () => {}, dragging = false, maxTravel = 0, elapsed = 0
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true)
   const feedback = createSceneFeedback(ctx)
   const ui = createStepOverlay(overlay, { title: COPY.title, stepsAria: '步骤', action: '向左翻开手记' }, safe)
@@ -91,10 +91,15 @@ export function createCzechPilgrimJournal(ctx: SceneContext): SceneInstance {
   box(.18,.035,.60,oak,[-1.25,.827,-.49],'journal-pencil-rest')
   const pencil=add(new THREE.CylinderGeometry(.023,.023,.58,8),pencilWood,[-1.25,.862,-.49]);pencil.rotation.x=Math.PI/2
   add(new THREE.LatheGeometry([[0,0],[.1,0],[.14,.035],[.17,.20],[.15,.215],[.13,.19],[.10,.05],[0,.05]].map(([x,y])=>new THREE.Vector2(x,y)),28),leather,[1.33,.805,-.59],'journal-travel-cup')
-  const tea=add(new THREE.CylinderGeometry(.127,.127,.008,24),createRitualMaterial({color:0xc79b70,roughness:.26,transmission:.18,attenuationColor:0xc79b70,attenuationDistance:.16},{kind:'tea',thickness:.008,strength:.2}),[1.33,.973,-.59]);tea.castShadow=false
+  const travelTea = createVesselLiquid({
+    preset: 'amber-tea', radius: .125, radialSegments: 10, angularSegments: 32, deformMode: 'gpu',
+    color: 0xb7742e, edgeColor: 0xeac17e, deepColor: 0x62310e, foamColor: 0xf6dfba, foamStrength: .14,
+    opacity: .84, roughness: .14, meniscusHeight: .0055, maxAmplitude: .010, seed: 5023, name: 'journal-travel-tea',
+  })
+  travelTea.mesh.position.set(1.33, .973, -.59); world.add(travelTea.mesh)
   const syncInsideLeaf = () => { insideCover.scale.y = THREE.MathUtils.lerp(.28, 1, THREE.MathUtils.smoothstep(hinge.rotation.z, .25, Math.PI * .85)) }
   const matrices=()=>{scene.updateMatrixWorld(true);camera.updateMatrixWorld(true)}
-  const restorePose=()=>{hinge.rotation.z=checkpoint>=1?Math.PI:0;syncInsideLeaf();ribbon.position.copy(checkpoint>=2?RIBBON_REST:RIBBON_HOME);ribbon.rotation.y=checkpoint>=2?0:Math.PI/2;matrices()}
+  const restorePose=(resetFluid=true)=>{hinge.rotation.z=checkpoint>=1?Math.PI:0;syncInsideLeaf();ribbon.position.copy(checkpoint>=2?RIBBON_REST:RIBBON_HOME);ribbon.rotation.y=checkpoint>=2?0:Math.PI/2;if(resetFluid)travelTea.reset();matrices()}
   const enabled=(at:number)=>()=>active()&&!transition&&checkpoint===at
   addInteractionCue(corner,{kind:'drag',label:'向左翻开书角',priority:3,enabled:enabled(0),destination:coverRest,targetLabel:'翻到左侧'})
   addInteractionCue(grip,{kind:'drag',label:'放入布书签',priority:3,enabled:enabled(1),destination:slot,targetLabel:'页边夹口'})
@@ -137,11 +142,16 @@ export function createCzechPilgrimJournal(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl,transition?transition.step===0?COPY.opening:COPY.placing:checkpoint===0?COPY.open:checkpoint===1?COPY.ribbon:checkpoint===2?COPY.rest:COPY.done,safe)
     ending.sync(checkpoint === 2 && !transition)
   }
-  function settled(){if(!active()||!transition)return;checkpoint=(transition.step+1) as Checkpoint;transition=null;restorePose();sync();ctx.onProgress?.(checkpoint);feedback.impact({freqs:[392,523.25],duration:.18,gain:.014})}
+  function settled(){
+    if(!active()||!transition)return
+    checkpoint=(transition.step+1) as Checkpoint;transition=null;restorePose(false);sync();ctx.onProgress?.(checkpoint)
+    if(!(ctx.isReducedMotion?.()??false)){travelTea.triggerRipple(0,0,.24);travelTea.addTiltImpulse(.16,-.12)}
+    feedback.impact({freqs:[392,523.25],duration:.18,gain:.014})
+  }
   function advance(placed=false){
     if (checkpoint === 2 && !ending.completing) return
     if(!active()||(pointer.isBusy()&&!placed)||transition||checkpoint===3)return
-    if(checkpoint===2){checkpoint=3;restorePose();sync();ctx.onProgress?.(3);if(!active())return;feedback.impact({freqs:[392,587.33],duration:.23,gain:.014});if(active())overlay.dispatchEvent(new CustomEvent('scene:complete',{bubbles:true}));return}
+    if(checkpoint===2){checkpoint=3;restorePose(false);sync();ctx.onProgress?.(3);if(!active())return;feedback.impact({freqs:[392,587.33],duration:.23,gain:.014});if(active())overlay.dispatchEvent(new CustomEvent('scene:complete',{bubbles:true}));return}
     transition={step:checkpoint,time:0,angle:hinge.rotation.z,from:ribbon.position.clone(),ribbonAngle:ribbon.rotation.y};sync();if(ctx.isReducedMotion?.())settled()
   }
   const action=()=>{if(!active()||pointer.isBusy()||transition||checkpoint===3)return;feedback.prepare();advance()}
@@ -154,16 +164,20 @@ export function createCzechPilgrimJournal(ctx: SceneContext): SceneInstance {
       if(!started||disposed)return
       if(!active()){pointer.cancel();ui.actionBtn.disabled=true;ui.actionBtn.setAttribute('aria-disabled','true');if(!inactiveRendered){style.render();inactiveRendered=true}return}
       if(inactiveRendered){inactiveRendered=false;sync()}
-      if(transition){const delta=Number.isFinite(dt)?THREE.MathUtils.clamp(dt,0,.05):0;transition.time=ctx.isReducedMotion?.()?1:Math.min(1,transition.time+delta/.7);const t=smooth(transition.time)
+      const delta=Number.isFinite(dt)?THREE.MathUtils.clamp(dt,0,.05):0
+      const reducedNow=ctx.isReducedMotion?.()??false
+      if(!reducedNow)elapsed+=delta
+      if(transition){transition.time=reducedNow?1:Math.min(1,transition.time+delta/.7);const t=smooth(transition.time)
         if(transition.step===0){hinge.rotation.z=THREE.MathUtils.lerp(transition.angle,Math.PI,t);syncInsideLeaf()}
-        else {ribbon.position.lerpVectors(transition.from,RIBBON_REST,t);ribbon.rotation.y=THREE.MathUtils.lerp(transition.ribbonAngle,0,t);if(!ctx.isReducedMotion?.())ribbon.position.y+=Math.sin(t*Math.PI)*.2}
+        else {ribbon.position.lerpVectors(transition.from,RIBBON_REST,t);ribbon.rotation.y=THREE.MathUtils.lerp(transition.ribbonAngle,0,t);if(!reducedNow)ribbon.position.y+=Math.sin(t*Math.PI)*.2}
         if(transition.time===1)settled()
       }
       if (!active()) return
+      travelTea.update(delta,elapsed,reducedNow)
       ending.update(dt)
       if (!active()) return
       scene.updateMatrixWorld(true); camera.updateMatrixWorld(true); style.render()
     },
-    dispose(){if(disposed)return;ending.dispose(); disposed=true;pointer.dispose();stopResize();feedback.dispose();ui.actionBtn.removeEventListener('click',action);window.removeEventListener('blur',blur);window.removeEventListener('focus',focus);style.dispose();disposeTree(world);Object.values(lights).forEach(l=>l.dispose());scene.clear();renderer.dispose();renderer.forceContextLoss();overlay.replaceChildren();overlay.classList.remove('scene-overlay','scene-overlay--stage')},
+    dispose(){if(disposed)return;ending.dispose(); disposed=true;pointer.dispose();stopResize();feedback.dispose();ui.actionBtn.removeEventListener('click',action);window.removeEventListener('blur',blur);window.removeEventListener('focus',focus);style.dispose();travelTea.dispose();disposeTree(world);Object.values(lights).forEach(l=>l.dispose());scene.clear();renderer.dispose();renderer.forceContextLoss();overlay.replaceChildren();overlay.classList.remove('scene-overlay','scene-overlay--stage')},
   }
 }

@@ -76,3 +76,7 @@ Moebius 与卡通描边也支持实时调参：前者可调粗细、亮度色阶
 ## 2026-11-28 视觉材质与视听微动润色
 
 为陶壶接入暖陶质感（`terracotta`）与内腔缝隙遮蔽（`bakeCreviceAO`），为茶杯、杯托与盖托接入釉陶质感（`ceramic`）与内腔遮蔽，为木茶盘与茶匙补充木纹表面（`wood`）；将茶匙与壶内茶叶升级为带羽状叶脉的折叶几何（`createBladeLeafGeometry` + `applyBotanicalSurface`）；将 `tea-stream` 倒茶柱升级为连续收束流柱（`createCurvedStreamGeometry` / `updateCurvedStream`），补充杯面细纹涟漪（`createSurfaceRipple`）、敞口壶与茶杯热气（`createSoftPlume`）及茶盘上四件器物的接触阴影（`addContactShadow`）；同步接入添叶木触、倾茶水声与落稳陶声等程序化材质反馈。以上改动均为产品物理表现与材质美术润色，器物定位、三步操作、文案、布朗茶山生态欣赏边界（`jingmai-tea-forest`）、技术 ID 与存档兼容性均保持不变，沿用既有核查记录，外链未重读。
+
+## 2026-11-28 茶汤器皿流体与脉动倾茶水流升级
+
+将倒茶流柱 `tea-stream-mesh` 升级为 `@wbr/scene-runtime/vessel-liquid` 的 `createLivingPourStream`（`'amber-tea'` 预设，含表面张力缩颈、脉动微光与落杯花冠），并将 `tea-cup` 内茶汤液面升级为 `createVesselLiquid`（`'amber-tea'` 预设，基于 `simplex-noise` 与弹簧阻尼器皿流体模型），随注茶水位平滑抬升，呈现贴杯壁弯月面、茶流冲击同心涟漪与落稳微晃；减少动态与检查点恢复保持确定性。上述液面弯月面、晃动与互动涟漪属产品美术与物理交互优化，不新增饮茶礼法、制茶配方或功效主张；来源身份（`jingmai-tea-forest`）、文案、步骤、技术 ID、引擎版本与存档兼容性不变，沿用本 README 既有核查记录，外链未重读。

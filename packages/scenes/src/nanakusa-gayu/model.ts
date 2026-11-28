@@ -2,6 +2,7 @@ import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { createLivingPourStream, createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import * as THREE from 'three'
 import { addContactShadow, addOfferingTable } from '../cozy-furniture'
 
@@ -9,8 +10,25 @@ import { addContactShadow, addOfferingTable } from '../cozy-furniture'
 export function createNanakusaModel() {
  const root=new THREE.Group();root.name='nanakusa-subject'
  const material=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.78})
+ const makeFloatingLeaf=(key:string)=>{
+  const mat=new THREE.MeshStandardMaterial({color:0x547d48,roughness:.78})
+  const uniforms={uLeafTime:{value:0},uLeafAmp:{value:0}}
+  mat.customProgramCacheKey=()=>`nanakusa-floating-leaf-v1:${key}`
+  mat.onBeforeCompile=shader=>{
+   Object.assign(shader.uniforms,uniforms)
+   shader.vertexShader=`uniform float uLeafTime;\nuniform float uLeafAmp;\n`+shader.vertexShader.replace('#include <begin_vertex>',`
+    #include <begin_vertex>
+    vec4 wbrLeafWorld = modelMatrix * vec4(transformed, 1.0);
+    float wbrLeafWave = sin(wbrLeafWorld.x * 15.0 + uLeafTime * 1.9) * cos(wbrLeafWorld.z * 13.0 - uLeafTime * 1.55);
+    float wbrLeafRoll = cos(wbrLeafWorld.x * 11.0 - wbrLeafWorld.z * 12.0 + uLeafTime * 2.3);
+    transformed.y += (wbrLeafWave * 0.65 + wbrLeafRoll * 0.35) * uLeafAmp;
+   `)
+  }
+  return{mat,uniforms}
+ }
+ const potLeaf=makeFloatingLeaf('pot'),loadedLeaf=makeFloatingLeaf('loaded'),servedLeaf=makeFloatingLeaf('served')
  const porridge=createRitualMaterial({color:0xf2ead0,roughness:.42,clearcoat:.38,clearcoatRoughness:.24},{kind:'wet',strength:.35})
- const ceramic=material(0x48695e),potCeramic=material(0x48695e),cream=material(0xf2ead0),leaf=material(0x547d48),wood=material(0xb47c46),ladleHeadWood=material(0xb47c46),bowlMat=material(0x679c98),light=material(0xd7e0cc)
+ const ceramic=material(0x48695e),potCeramic=material(0x48695e),cream=material(0xf2ead0),wood=material(0xb47c46),ladleHeadWood=material(0xb47c46),bowlMat=material(0x679c98),light=material(0xd7e0cc)
  potCeramic.vertexColors=true;bowlMat.vertexColors=true;ladleHeadWood.vertexColors=true
  for(const timber of[wood,ladleHeadWood])applyCraftSurface(timber,{kind:'wood',strength:.35,axis:'y'})
  for(const vessel of[ceramic,potCeramic,bowlMat])applyCraftSurface(vessel,{kind:'ceramic',strength:.45})
@@ -41,19 +59,31 @@ export function createNanakusaModel() {
  bakeCreviceAO(bowl.geometry,{groundY:0,groundRange:.08,cavityCenter:[0,0],cavityRadius:.46,cavityTopY:.37,strength:.36})
  const bowlBand=mesh('bowl-rim-band',new THREE.TorusGeometry(.48,.012,6,40),light);bowlBand.rotation.x=Math.PI/2;bowlBand.position.set(.70,.441,.62)
  const stock=mesh('pot-porridge',new THREE.CylinderGeometry(.61,.61,1,32),porridge);stock.position.set(-.55,.39,-.36)
+ const potLiquid=createVesselLiquid({
+  preset:'herbal-porridge',radius:.608,radialSegments:14,angularSegments:44,deformMode:'gpu',
+  color:0xece3c8,edgeColor:0xf7f1df,deepColor:0xcab993,foamColor:0xfbf7ea,foamStrength:.30,
+  opacity:1,roughness:.32,meniscusHeight:.022,maxAmplitude:.032,seed:1013,name:'pot-porridge-surface',
+ })
+ potLiquid.mesh.position.set(-.55,.58,-.36);root.add(potLiquid.mesh)
  const potGarnish=new THREE.Group();potGarnish.name='pot-rice-and-greens';root.add(potGarnish);potGarnish.position.set(-.55,.58,-.36)
- function garnish(parent:THREE.Object3D,prefix:string,radius:number,riceCount:number,greenCount:number,height=0){
-  for(let i=0;i<riceCount+greenCount;i++){const a=i*2.3999632297,r=radius*Math.sqrt((i+.5)/(riceCount+greenCount)),green=i>=riceCount,o=mesh(`${prefix}-${green?'green':'rice'}-${i}`,new THREE.SphereGeometry(1,6,4),green?leaf:cream,parent);o.position.set(Math.cos(a)*r,height+(green?.004:.008),Math.sin(a)*r);o.scale.set(green?.038:.017,green?.006:.009,green?.019:.035);o.rotation.y=a}
+ function garnish(parent:THREE.Object3D,prefix:string,radius:number,riceCount:number,greenCount:number,leafMat:THREE.Material,height=0){
+  for(let i=0;i<riceCount+greenCount;i++){const a=i*2.3999632297,r=radius*Math.sqrt((i+.5)/(riceCount+greenCount)),green=i>=riceCount,o=mesh(`${prefix}-${green?'green':'rice'}-${i}`,new THREE.SphereGeometry(1,6,4),green?leafMat:cream,parent);o.position.set(Math.cos(a)*r,height+(green?.004:.008),Math.sin(a)*r);o.scale.set(green?.038:.017,green?.006:.009,green?.019:.035);o.rotation.y=a}
  }
- garnish(potGarnish,'pot',.565,44,23)
+ garnish(potGarnish,'pot',.565,44,23,potLeaf.mat)
  const ladle=new THREE.Group();ladle.name='serving-ladle';root.add(ladle)
  const head=lathe('ladle-head',[[0,-.09],[.10,-.09],[.17,-.05],[.21,.025],[.22,.08],[.185,.08],[.17,.025],[.12,-.04],[0,-.055]],ladleHeadWood,ladle)
  bakeCreviceAO(head.geometry,{groundY:-.09,groundRange:.045,cavityCenter:[0,0],cavityRadius:.185,cavityTopY:.08,strength:.34})
  const handle=tube('ladle-handle',new THREE.Vector3(0,.02,.16),new THREE.Vector3(0,.60,.98),.035,wood,ladle)
  const grip=mesh('ladle-grip',new THREE.SphereGeometry(1,8,6),wood,ladle);grip.position.set(0,.60,.98);grip.scale.set(.050,.045,.075);grip.quaternion.copy(handle.quaternion)
  const payload=new THREE.Group();payload.name='ladle-porridge';ladle.add(payload)
- lathe('ladle-loaded-porridge',[[0,-.052],[.09,-.034],[.145,0],[.16,.027],[0,.027]],porridge,payload)
- garnish(payload,'loaded',.105,9,6,.022)
+ lathe('ladle-loaded-porridge',[[0,-.052],[.09,-.034],[.145,0],[.158,.024],[0,.024]],porridge,payload)
+ const ladleLiquid=createVesselLiquid({
+  preset:'herbal-porridge',radius:.157,radialSegments:10,angularSegments:32,deformMode:'gpu',
+  color:0xece3c8,edgeColor:0xf7f1df,deepColor:0xcab993,foamColor:0xfbf7ea,foamStrength:.26,
+  opacity:1,roughness:.32,meniscusHeight:.005,maxAmplitude:.012,seed:1021,name:'ladle-porridge-surface',
+ })
+ ladleLiquid.mesh.position.set(0,.0255,0);payload.add(ladleLiquid.mesh);ladleLiquid.trackContainer(ladle)
+ garnish(payload,'loaded',.105,9,6,loadedLeaf.mat,.022)
  const spout=new THREE.Vector3(.23,.115,0),bend=new THREE.Vector3(.18,.115,0)
  const bridge=new THREE.Group();bridge.name='porridge-over-lip';ladle.add(bridge)
  const throat=mesh('porridge-throat',new THREE.CylinderGeometry(.025,.025,1,10),porridge,bridge)
@@ -61,8 +91,20 @@ export function createNanakusaModel() {
  const bendFood=mesh('porridge-bend',new THREE.SphereGeometry(.025,8,6),porridge,bridge);bendFood.position.copy(bend)
  const served=new THREE.Group();served.name='served-porridge';served.position.set(.70,.17,.62);root.add(served)
  const bowlSoup=mesh('bowl-porridge',new THREE.CylinderGeometry(.35,.31,1,32),porridge,served)
- const bowlGarnish=new THREE.Group();bowlGarnish.name='served-rice-and-greens';served.add(bowlGarnish);garnish(bowlGarnish,'served',.31,16,11)
- const stream=mesh('pouring-porridge',new THREE.CylinderGeometry(.026,.035,1,10),porridge)
+ const bowlLiquid=createVesselLiquid({
+  preset:'herbal-porridge',radius:.350,radialSegments:14,angularSegments:40,deformMode:'gpu',
+  color:0xece3c8,edgeColor:0xf7f1df,deepColor:0xcab993,foamColor:0xfbf7ea,foamStrength:.30,
+  opacity:1,roughness:.32,meniscusHeight:.014,maxAmplitude:.022,seed:1031,name:'bowl-porridge-surface',
+ })
+ served.add(bowlLiquid.mesh)
+ const bowlGarnish=new THREE.Group();bowlGarnish.name='served-rice-and-greens';served.add(bowlGarnish);garnish(bowlGarnish,'served',.31,16,11,servedLeaf.mat)
+ const stream=mesh('pouring-porridge',new THREE.CylinderGeometry(.014,.019,1,10),porridge)
+ const pourStream=createLivingPourStream({
+  preset:'herbal-porridge',topRadius:.027,bottomRadius:.018,segments:16,radialSegments:10,
+  arcForward:.14,showSplashCrown:true,splashRadius:.066,color:0xede4c9,opacity:.96,roughness:.26,
+  seed:1039,name:'pouring-porridge-stream',
+ })
+ root.add(pourStream.root)
  const park=new THREE.Vector3(1.38,0,-.85);ladle.rotation.x=.55;ladle.position.copy(park);root.updateMatrixWorld(true);park.y=.095-new THREE.Box3().setFromObject(head,true).min.y;ladle.position.copy(park);root.updateMatrixWorld(true)
  function lowest(o:THREE.Mesh){const p=o.geometry.getAttribute('position');let best=new THREE.Vector3(0,Infinity,0);for(let i=0;i<p.count;i++){const v=new THREE.Vector3().fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld);if(v.y<best.y)best=v}return best}
  const headPoint=lowest(head),tailPoint=lowest(grip)
@@ -90,6 +132,9 @@ export function createNanakusaModel() {
  addContactShadow(root,{name:'ladle-head-rest-contact-ao',width:.30,depth:.24,y:.0718,center:[headPoint.x,headPoint.z],shape:'rounded-rect',opacity:.18})
  addContactShadow(root,{name:'ladle-tail-rest-contact-ao',width:.26,depth:.24,y:.0718,center:[tailPoint.x,tailPoint.z],shape:'rounded-rect',opacity:.18})
  const potHead=new THREE.Vector3(-.55,.52,-.36),ready=new THREE.Vector3(.70,1.04,.62),parkHigh=new THREE.Vector3(park.x,1.12,park.z),v=new THREE.Vector3()
+ const restPourStart=new THREE.Vector3(.70,.65,.62),restPourEnd=new THREE.Vector3(.70,.27,.62)
+ const livePourStart=new THREE.Vector3().copy(restPourStart),livePourEnd=new THREE.Vector3().copy(restPourEnd)
+ let livePourFlow=0,liquidClock=0,disposed=false
  const clamp=(n:number)=>THREE.MathUtils.clamp(n,0,1),mix=(a:THREE.Vector3,b:THREE.Vector3,t:number)=>ladle.position.copy(a).lerp(b,clamp(t))
  let received=0
  const bowlSurface=()=>.17+.10*received
@@ -109,17 +154,79 @@ export function createNanakusaModel() {
    else if(t>=.82&&t<.92){const q=(t-.82)/.10;mix(new THREE.Vector3(ready.x,parkHigh.y,ready.z),parkHigh,q);ladle.rotation.set(.55*q,0,0)}
    else if(t>=.92){mix(parkHigh,park,(t-.92)/.08);ladle.rotation.set(.55,0,0)}
   }else if(step>=3){taken=received=1}
-  const level=.58-.025*taken;stock.position.y=(.20+level)/2;stock.scale.y=level-.20;potGarnish.position.y=level
+  const level=.58-.025*taken;stock.position.y=(.20+level-.002)/2;stock.scale.y=level-.202;potLiquid.mesh.position.y=level;potGarnish.position.y=level
   payload.visible=taken-received>1e-8;const portion=Math.cbrt(Math.max(1e-18,taken-received));payload.scale.setScalar(portion)
-  served.visible=received>1e-8;const servingWidth=.90+.10*received;bowlSoup.scale.set(servingWidth,Math.max(1e-6,.10*received),servingWidth);bowlSoup.position.y=.05*received;bowlGarnish.position.y=.10*received;bowlGarnish.scale.set(servingWidth,received,servingWidth)
+  served.visible=received>1e-8;const servingWidth=.90+.10*received;bowlSoup.scale.set(servingWidth,Math.max(1e-6,.098*received),servingWidth);bowlSoup.position.y=.049*received;bowlLiquid.mesh.position.y=.10*received;bowlLiquid.mesh.scale.set(servingWidth,Math.max(.01,received),servingWidth);bowlGarnish.position.y=.10*received;bowlGarnish.scale.set(servingWidth,received,servingWidth)
   stream.visible=step===2&&t>.34&&t<.70;bridge.visible=stream.visible
   const mouth=new THREE.Vector3(.10*portion,.025*portion,0),flow=stream.visible?Math.sqrt(Math.max(0,Math.sin(Math.PI*received))):0
   throat.position.copy(mouth).add(bend).multiplyScalar(.5);throat.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),bend.clone().sub(mouth).normalize());throat.scale.set(flow,mouth.distanceTo(bend),flow)
   outlet.scale.x=outlet.scale.z=flow;bendFood.scale.setScalar(flow)
   root.updateMatrixWorld(true)
-  if(stream.visible){const top=spout.clone().applyMatrix4(ladle.matrixWorld),bottom=bowlSurface();stream.position.set(top.x,(top.y+bottom)/2,top.z);stream.scale.set(flow,top.y-bottom,flow)}else{stream.position.set(0,.10,0);stream.scale.set(1,1e-6,1)}
+  livePourFlow=flow
+  if(stream.visible){
+   const top=spout.clone().applyMatrix4(ladle.matrixWorld),bottom=bowlSurface()
+   stream.position.set(top.x,(top.y+bottom)/2,top.z);stream.scale.set(flow,top.y-bottom,flow)
+   livePourStart.copy(top);livePourEnd.set(top.x,bottom,top.z)
+   pourStream.updateArc(livePourStart,livePourEnd,Math.max(.08,flow),0,true)
+   pourStream.splashCrown.visible=false
+  }else{
+   stream.position.set(0,.10,0);stream.scale.set(1,1e-6,1)
+   pourStream.updateArc(restPourStart,restPourEnd,1,0,true)
+   pourStream.mesh.visible=false;pourStream.splashCrown.visible=false
+  }
   root.updateMatrixWorld(true)
  }
+ function updateLiquid(dt:number,reduced:boolean){
+  const stepDt=Number.isFinite(dt)&&dt>0?Math.min(dt,.05):0
+  if(!reduced)liquidClock+=stepDt
+  potLiquid.update(stepDt,liquidClock,reduced)
+  ladleLiquid.update(stepDt,liquidClock,reduced)
+  bowlLiquid.update(stepDt,liquidClock,reduced)
+  if(stream.visible){
+   pourStream.updateArc(livePourStart,livePourEnd,Math.max(.08,livePourFlow),liquidClock,reduced)
+   if(reduced)pourStream.splashCrown.visible=false
+  }else{
+   pourStream.mesh.visible=false;pourStream.splashCrown.visible=false
+  }
+  const potE=Math.hypot(potLiquid.state.sloshX,potLiquid.state.sloshZ)+potLiquid.state.activeRipples*.25+Math.abs(potLiquid.state.swirlVelocity)*.08
+  const ladleE=Math.hypot(ladleLiquid.state.sloshX,ladleLiquid.state.sloshZ)+ladleLiquid.state.activeRipples*.22
+  const bowlE=Math.hypot(bowlLiquid.state.sloshX,bowlLiquid.state.sloshZ)+bowlLiquid.state.activeRipples*.25
+  potLeaf.uniforms.uLeafTime.value=reduced?0:liquidClock
+  potLeaf.uniforms.uLeafAmp.value=reduced?0:THREE.MathUtils.clamp(.0028+potE*.0042,.0028,.0095)
+  loadedLeaf.uniforms.uLeafTime.value=reduced?0:liquidClock
+  loadedLeaf.uniforms.uLeafAmp.value=reduced?0:THREE.MathUtils.clamp(.0012+ladleE*.0026,.0012,.0045)
+  servedLeaf.uniforms.uLeafTime.value=reduced?0:liquidClock
+  servedLeaf.uniforms.uLeafAmp.value=reduced?0:THREE.MathUtils.clamp(.0022+bowlE*.0038,.0022,.0075)
+ }
+ function disturbPot(localX:number,localZ:number,swirl=0,ripple=.72){
+  if(swirl)potLiquid.addSwirlImpulse(swirl)
+  potLiquid.triggerRipple(localX,localZ,ripple)
+  potLiquid.addTiltImpulse(localX*1.6,localZ*1.6)
+ }
+ function disturbLadle(ax:number,az:number,ripple=.65){
+  ladleLiquid.addTiltImpulse(ax,az)
+  ladleLiquid.triggerRipple(0,0,ripple)
+ }
+ function disturbBowl(localX:number,localZ:number,ripple=.82){
+  bowlLiquid.triggerRipple(localX,localZ,ripple)
+  bowlLiquid.addTiltImpulse(localX*2.4+.35,localZ*2.4-.28)
+ }
+ function resetLiquid(){
+  liquidClock=0
+  potLiquid.reset();ladleLiquid.reset();bowlLiquid.reset()
+  potLeaf.uniforms.uLeafTime.value=0;potLeaf.uniforms.uLeafAmp.value=0
+  loadedLeaf.uniforms.uLeafTime.value=0;loadedLeaf.uniforms.uLeafAmp.value=0
+  servedLeaf.uniforms.uLeafTime.value=0;servedLeaf.uniforms.uLeafAmp.value=0
+ }
  pose(0,0)
- return{root,board,pot,bowl,ladle,head,handle,headRest,tailRest,park,payload,stock,served,stream,spout,pose,bowlSurface,targets:[ladle,ladle,ladle],roots:[ladle,ladle,ladle],anchors:[[0,.42,.72],[0,.42,.72],[0,.42,.72]] as [number,number,number][],dispose(){}}
+ return{
+  root,board,pot,bowl,ladle,head,handle,headRest,tailRest,park,payload,stock,served,stream,spout,pose,bowlSurface,
+  updateLiquid,disturbPot,disturbLadle,disturbBowl,resetLiquid,
+  targets:[ladle,ladle,ladle],roots:[ladle,ladle,ladle],anchors:[[0,.42,.72],[0,.42,.72],[0,.42,.72]] as [number,number,number][],
+  dispose(){
+   if(disposed)return
+   disposed=true
+   potLiquid.dispose();ladleLiquid.dispose();bowlLiquid.dispose();pourStream.dispose()
+  },
+ }
 }

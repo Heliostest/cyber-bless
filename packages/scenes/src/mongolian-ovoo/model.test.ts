@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest'
 import * as THREE from 'three'
+import {isClosedTwoManifold} from '@wbr/scene-runtime/stylized-human'
 import {createOvooModel} from './model'
 import {disposeTree} from '../procedural-kit'
 describe('Ovoo physical path',()=>{
@@ -29,6 +30,11 @@ describe('Ovoo physical path',()=>{
  })
  it('uses a sash that contacts the pole',()=>{
   const m=createOvooModel()
-  const sash=m.root.getObjectByName('ovoo-sash') as THREE.Mesh<THREE.TorusGeometry>;expect(sash.geometry.parameters.radius-sash.geometry.parameters.tube).toBeLessThanOrEqual(.022);disposeTree(m.root)
+  const sash=m.root.getObjectByName('ovoo-sash') as THREE.Mesh<THREE.TorusGeometry>;expect(sash.geometry.parameters.radius-sash.geometry.parameters.tube).toBeLessThanOrEqual(.022)
+  for(const i of [0,1])expect(new THREE.Box3().setFromObject(m.root.getObjectByName('ovoo-shoe-'+i)!,true).min.y).toBeCloseTo(-.082,6)
+  for(const name of ['ovoo-jacket','ovoo-head','ovoo-hair','ovoo-neck','ovoo-hand-0','ovoo-hand-1','ovoo-forearm-0','ovoo-forearm-1','ovoo-shoe-0','ovoo-shoe-1']){
+   expect(isClosedTwoManifold((m.root.getObjectByName(name) as THREE.Mesh).geometry),name).toBe(true)
+  }
+  disposeTree(m.root)
  })
 })

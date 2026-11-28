@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest'
 import * as THREE from 'three'
+import {isClosedTwoManifold} from '@wbr/scene-runtime/stylized-human'
 import {createChitoseAmeModel} from './model'
 import {disposeTree} from '../procedural-kit'
 
@@ -54,6 +55,11 @@ describe('Chitose Ame gift geometry',()=>{
   const m=createChitoseAmeModel(),snapshot=()=>{const rows:number[][]=[];m.subject.traverse(o=>rows.push([...o.matrixWorld.elements,Number(o.visible)]));return rows},geometries:THREE.BufferGeometry[]=[]
   m.subject.traverse(o=>{if((o as THREE.Mesh).isMesh)geometries.push((o as THREE.Mesh).geometry)})
   for(let step=0;step<3;step++){for(let i=0;i<=100;i++){m.pose(step,i/100);m.subject.traverse(o=>expect(o.matrixWorld.elements.every(Number.isFinite),o.name).toBe(true))}const end=snapshot();m.pose(step+1,0);expect(snapshot()).toEqual(end)}
-  const after:THREE.BufferGeometry[]=[];m.subject.traverse(o=>{if((o as THREE.Mesh).isMesh)after.push((o as THREE.Mesh).geometry)});expect(after).toEqual(geometries);disposeTree(m.root)
+  const after:THREE.BufferGeometry[]=[];m.subject.traverse(o=>{if((o as THREE.Mesh).isMesh)after.push((o as THREE.Mesh).geometry)});expect(after).toEqual(geometries)
+  for(const i of [0,1])expect(new THREE.Box3().setFromObject(m.root.getObjectByName('chitose-shoe-'+i)!,true).min.y).toBeCloseTo(-.0475,6)
+  for(const name of ['chitose-head','chitose-hair','chitose-coat','chitose-hips','chitose-palm-0','chitose-palm-1','chitose-forearm-0','chitose-forearm-1','chitose-sleeve-0','chitose-sleeve-1','chitose-shoe-0','chitose-shoe-1']){
+   expect(isClosedTwoManifold((m.root.getObjectByName(name) as THREE.Mesh).geometry),name).toBe(true)
+  }
+  disposeTree(m.root)
  })
 })

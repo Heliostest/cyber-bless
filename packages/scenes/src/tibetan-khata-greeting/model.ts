@@ -3,6 +3,19 @@ import {
   createRapierSoftBodyHost,
   type RapierSoftBodySession,
 } from '@wbr/scene-runtime/rapier-soft-body'
+import {
+  applyStylizedHumanSurfaceHint,
+  createStylizedGarmentMaterial,
+  createStylizedHairGeometry,
+  createStylizedHeadGeometry,
+  createStylizedLimbGeometry,
+  createStylizedPalmGeometry,
+  createStylizedShoeGeometry,
+  createStylizedSkinMaterial,
+  createStylizedSleeveCuffGeometry,
+  createStylizedTorsoGeometry,
+  subdivideClosedCage,
+} from '@wbr/scene-runtime/stylized-human'
 import * as THREE from 'three'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 
@@ -137,22 +150,58 @@ function createFringeTube(segments: number, radial: number, material: THREE.Mate
 export function createKhataModel(options: KhataModelOptions = {}) {
   const root = new THREE.Group(); root.name = 'khata-root'
   const subject = new THREE.Group(); subject.name = 'khata-subject'; root.add(subject)
-  const material = (color: number, roughness = .85) => new THREE.MeshStandardMaterial({ color, roughness })
   const cream = new THREE.MeshStandardMaterial({ color: 0xfff4db, roughness: .48, vertexColors: true })
   const edgeCream = createRitualMaterial({ color: 0xfff4db, roughness: .48 }, { kind: 'cloth', strength: .10, fiber: false })
   const hem = createRitualMaterial({ color: 0xe1dbc4, roughness: .6 }, { kind: 'cloth', strength: .14, fiber: false })
-  const skin = material(0xd7a17e), hair = material(0x584f43), shoe = material(0x555852)
+  const skin = createStylizedSkinMaterial({ color: 0xe2b18b, roughness: .86, scatterStrength: .12, name: 'khata-skin' })
+  const hair = new THREE.MeshStandardMaterial({ color: 0x584f43, roughness: .85, vertexColors: true })
+  const shoe = new THREE.MeshStandardMaterial({ color: 0x555852, roughness: .88, vertexColors: true })
   applyCraftSurface(cream, { kind: 'fabric', strength: .18 })
 
   const mesh = (name: string, g: THREE.BufferGeometry, m: THREE.Material | THREE.Material[], parent: THREE.Object3D = subject) => {
     const o = new THREE.Mesh(g, m); o.name = name; o.castShadow = true; o.receiveShadow = true; parent.add(o); return o
   }
   const v = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z)
-  const ball = (name: string, p: THREE.Vector3, s: [number, number, number], m: THREE.Material) => {
-    const o = mesh(name, new THREE.SphereGeometry(1, 20, 12), m); o.position.copy(p); o.scale.set(...s); return o
+  const makeNormalizedLimb = (topRadius: number, bottomRadius: number, bend: number, foldDepth: number, radialSegments = 8) => {
+    const g = createStylizedLimbGeometry({ length: 1, topRadius, bottomRadius, bend, foldDepth, radialSegments, iterations: 1 })
+    g.computeBoundingBox()
+    const bb = g.boundingBox!
+    const spanY = Math.max(bb.max.y - bb.min.y, 1e-4)
+    g.translate(0, -(bb.min.y + bb.max.y) * .5, 0)
+    g.scale(1, 1 / spanY, 1)
+    g.computeVertexNormals()
+    g.computeBoundingBox()
+    g.computeBoundingSphere()
+    return g
   }
-  const rod = (name: string, r: number, m: THREE.Material, parent: THREE.Object3D = subject) => {
-    const o = mesh(name, new THREE.CylinderGeometry(r, r, 1, 12), m, parent)
+  const makeNormalizedSleeveCuff = (cuffR: number, sleeveR: number) => {
+    const g = createStylizedSleeveCuffGeometry({
+      length: 1,
+      cuffRadiusX: cuffR,
+      cuffRadiusY: cuffR * .94,
+      sleeveRadiusX: sleeveR,
+      sleeveRadiusY: sleeveR * .94,
+      wallThickness: .009,
+      rolledLip: .006,
+      foldDepth: .004,
+      radialSegments: 10,
+      iterations: 1,
+    })
+    // Sleeve cuff mouth is at z = 0, proximal sleeve extends along +Z; rotate +90° around X
+    // so proximal sleeve sits at -Y (elbow) and open cuff lip sits at +Y (wrist).
+    g.rotateX(Math.PI / 2)
+    g.computeBoundingBox()
+    const bb = g.boundingBox!
+    const spanY = Math.max(bb.max.y - bb.min.y, 1e-4)
+    g.translate(0, -(bb.min.y + bb.max.y) * .5, 0)
+    g.scale(1, 1 / spanY, 1)
+    g.computeVertexNormals()
+    g.computeBoundingBox()
+    g.computeBoundingSphere()
+    return g
+  }
+  const limb = (name: string, g: THREE.BufferGeometry, m: THREE.Material, role: 'garment' | 'skin' = 'garment') => {
+    const o = applyStylizedHumanSurfaceHint(mesh(name, g, m), role)
     const set = (a: THREE.Vector3, b: THREE.Vector3) => {
       const d = b.clone().sub(a)
       o.position.copy(a).add(b).multiplyScalar(.5)
@@ -722,35 +771,189 @@ export function createKhataModel(options: KhataModelOptions = {}) {
     writeClothAndFringes(simCurrPts, effSpan, simClock, true)
   }
 
+  // Helper: sculpted palm-up offering/receiving hand strictly enclosed within the [0.069, 0.047, 0.055]
+  // ellipsoidal clearance envelope so the folded white silk rests flush on top with zero clipping.
+  const makeOfferingHandGeo = (dir: number, handedness: 'left' | 'right') => {
+    const g = createStylizedPalmGeometry({
+      width: .096,
+      thickness: .044,
+      length: .124,
+      handedness,
+      palmUp: true,
+      arch: .006,
+      radialSegments: 8,
+      iterations: 1,
+    })
+    // Local palm points fingers toward -Z; rotate so giver (dir=+1) points +X and guest (dir=-1) points -X.
+    g.rotateY(dir > 0 ? -Math.PI / 2 : Math.PI / 2)
+    const pos = g.getAttribute('position') as THREE.BufferAttribute
+    const rx = .0665, ry = .0445, rz = .0525
+    for (let k = 0; k < pos.count; k++) {
+      let px = pos.getX(k), py = pos.getY(k), pz = pos.getZ(k)
+      // Subtle upward fingertip cup toward the facing direction (dir * px > 0).
+      const fwd = Math.max(0, (dir * px) / rx)
+      py += .0075 * fwd * fwd
+      const d = Math.hypot(px / rx, py / ry, pz / rz)
+      if (d > .96) {
+        const s = .96 / d
+        px *= s; py *= s; pz *= s
+      }
+      pos.setXYZ(k, px, py, pz)
+    }
+    pos.needsUpdate = true
+    g.computeVertexNormals()
+    g.computeBoundingBox()
+    g.computeBoundingSphere()
+    return g
+  }
+
+  // Helper: upturned-toe stylized boot normalized vertically to [-1, +1] so mesh.scale.y = 0.055 seats the
+  // sole flush on GROUND_Y (-0.072) while satisfying foot.position.y - foot.scale.y === -0.072 exactly.
+  const makeNormalizedBootGeo = () => {
+    const g = createStylizedShoeGeometry({
+      length: .255,
+      width: .158,
+      height: .110,
+      toeLift: .015,
+      radialSegments: 8,
+      iterations: 1,
+    })
+    const normAttr = g.getAttribute('normal') as THREE.BufferAttribute
+    const posAttr = g.getAttribute('position') as THREE.BufferAttribute
+    const invH = 1 / .055
+    for (let i = 0; i < posAttr.count; i++) {
+      posAttr.setY(i, (posAttr.getY(i) - .055) * invH)
+      const nx = normAttr.getX(i), ny = normAttr.getY(i) * .055, nz = normAttr.getZ(i)
+      const len = Math.hypot(nx, ny, nz) || 1
+      normAttr.setXYZ(i, nx / len, ny / len, nz / len)
+    }
+    posAttr.needsUpdate = true
+    normAttr.needsUpdate = true
+    g.computeBoundingBox()
+    g.computeBoundingSphere()
+    return g
+  }
+
+  // Keep exact 17 indexed closed 2-manifold meshes per person (53 total meshes in root).
   const people = [
     { name: 'giver', x: -.83, dir: 1, color: 0xc18b56 },
     { name: 'guest', x: .83, dir: -1, color: 0x6b9a91 },
   ].map(({ name, x, dir, color }, personIdx) => {
-    const coat = material(color), pants = material(name === 'giver' ? 0x667c85 : 0x828371)
-    applyCraftSurface(coat, { kind: 'fabric', strength: .26 })
-    applyCraftSurface(pants, { kind: 'fabric', strength: .26 })
+    const coat = createStylizedGarmentMaterial({ color, roughness: .91, fabricStrength: .26, name: `khata-${name}-coat` })
+    const pants = createStylizedGarmentMaterial({ color: name === 'giver' ? 0x667c85 : 0x828371, roughness: .92, fabricStrength: .26, name: `khata-${name}-pants` })
+    const faceYaw = dir > 0 ? Math.PI / 2 : -Math.PI / 2
 
-    const body = ball('khata-' + name + '-jacket', v(x, .84, 0), [.17, .30, .22], coat)
-    const neck = rod('khata-' + name + '-neck', .068, skin); neck.set(v(x, 1.04, 0), v(x, 1.19, 0))
-    const head = ball('khata-' + name + '-head', v(x, 1.31, 0), [.13, .17, .14], skin)
-    const hairMesh = ball('khata-' + name + '-hair', v(x - dir * .025, 1.37, 0), [.13, .12, .143], hair)
-    const nose = ball('khata-' + name + '-nose', v(x + dir * .13, 1.30, 0), [.04, .035, .035], skin)
-    const arms = [-1, 1].map((sign, i) => ({
-      shoulder: v(x, 1.02, sign * .20),
-      upper: rod('khata-' + name + '-upper-' + i, .061, coat),
-      lower: rod('khata-' + name + '-lower-' + i, .035, coat),
-      hand: ball('khata-' + name + '-hand-' + i, v(0, 0, 0), [.069, .047, .055], skin),
-    }))
+    // Warm everyday Tibetan-inspired crossed-collar chuba robe with gentle cinched waist sash shading.
+    const bodyGeo = createStylizedTorsoGeometry({
+      shoulderWidth: .43,
+      waistWidth: .33,
+      hemWidth: .44,
+      depth: .33,
+      height: .62,
+      collarStyle: 'crossed',
+      foldDepth: .012,
+      radialSegments: 12,
+      iterations: 1,
+    })
+    bodyGeo.rotateY(faceYaw)
+    {
+      const pos = bodyGeo.getAttribute('position') as THREE.BufferAttribute
+      const col = bodyGeo.getAttribute('color') as THREE.BufferAttribute
+      bodyGeo.computeBoundingBox()
+      const bb = bodyGeo.boundingBox!
+      const hSpan = Math.max(bb.max.y - bb.min.y, 1e-4)
+      for (let i = 0; i < pos.count; i++) {
+        const py = pos.getY(i)
+        const px = pos.getX(i)
+        const yNorm = (py - bb.min.y) / hSpan
+        // Subtle woven waist-sash band & warm crossed-collar lapel contrast baked cleanly into vertex colors.
+        const sashBand = Math.exp(-Math.pow((yNorm - .36) / .065, 2))
+        const collarTrim = THREE.MathUtils.smoothstep(yNorm, .82, .96) * THREE.MathUtils.smoothstep(dir * px, .02, .12)
+        if (sashBand > .05) {
+          const r = col.getX(i), g = col.getY(i), b = col.getZ(i)
+          col.setXYZ(
+            i,
+            THREE.MathUtils.lerp(r, r * .76, sashBand * .65),
+            THREE.MathUtils.lerp(g, g * .74, sashBand * .65),
+            THREE.MathUtils.lerp(b, b * .78, sashBand * .65),
+          )
+        }
+        if (collarTrim > .05) {
+          const r = col.getX(i), g = col.getY(i), b = col.getZ(i)
+          col.setXYZ(
+            i,
+            Math.min(1.04, THREE.MathUtils.lerp(r, 1.04, collarTrim * .55)),
+            Math.min(1.02, THREE.MathUtils.lerp(g, 1.00, collarTrim * .55)),
+            Math.min(0.98, THREE.MathUtils.lerp(b, .92, collarTrim * .55)),
+          )
+        }
+      }
+      col.needsUpdate = true
+    }
+    const body = applyStylizedHumanSurfaceHint(mesh('khata-' + name + '-jacket', bodyGeo, coat), 'garment')
+    body.position.set(x, .52, 0)
+
+    const neck = limb('khata-' + name + '-neck', makeNormalizedLimb(.058, .066, 0, .001, 8), skin, 'skin')
+    neck.set(v(x, 1.07, 0), v(x, 1.21, 0))
+
+    const headGeo = createStylizedHeadGeometry({
+      width: .26,
+      height: .305,
+      depth: .25,
+      cheekFullness: .16,
+      noseProminence: .40,
+      chinTaper: .16,
+      radialSegments: 10,
+      iterations: 1,
+    })
+    const head = applyStylizedHumanSurfaceHint(mesh('khata-' + name + '-head', headGeo, skin), 'skin')
+    head.position.set(x, 1.31, 0)
+    head.rotation.y = faceYaw
+
+    const hairGeo = createStylizedHairGeometry({
+      style: name === 'giver' ? 'bun' : 'short',
+      headWidth: .26,
+      headHeight: name === 'giver' ? .29 : .305,
+      headDepth: .25,
+      volume: .022,
+      radialSegments: 10,
+      iterations: 1,
+    })
+    const hairMesh = applyStylizedHumanSurfaceHint(mesh('khata-' + name + '-hair', hairGeo, hair), 'hair')
+    hairMesh.position.set(x, name === 'giver' ? 1.305 : 1.315, 0)
+    hairMesh.rotation.y = faceYaw
+
+    const noseCage = new THREE.IcosahedronGeometry(1, 0)
+    const noseGeo = subdivideClosedCage(noseCage, { iterations: 1 })
+    noseCage.dispose()
+    noseGeo.scale(.022, .026, .022)
+    const nose = applyStylizedHumanSurfaceHint(mesh('khata-' + name + '-nose', noseGeo, skin), 'skin')
+    nose.position.set(x + dir * .126, 1.304, 0)
+
+    const arms = [-1, 1].map((sign, i) => {
+      // Facing +X (giver): +Z (i=1) is right hand, -Z (i=0) is left hand. Facing -X (guest): reversed.
+      const handedness: 'left' | 'right' = (dir > 0 ? i === 1 : i === 0) ? 'right' : 'left'
+      return {
+        shoulder: v(x, 1.02, sign * .20),
+        upper: limb('khata-' + name + '-upper-' + i, makeNormalizedLimb(.064, .054, .04, .005, 8), coat, 'garment'),
+        lower: limb('khata-' + name + '-lower-' + i, makeNormalizedSleeveCuff(.044, .054), coat, 'garment'),
+        hand: applyStylizedHumanSurfaceHint(mesh('khata-' + name + '-hand-' + i, makeOfferingHandGeo(dir, handedness), skin), 'skin'),
+      }
+    })
     const feet = [-1, 1].map((sign, i) => {
-      const upper = rod('khata-' + name + '-thigh-' + i, .075, pants)
-      const lower = rod('khata-' + name + '-shin-' + i, .063, pants)
-      upper.set(v(x, .58, sign * .12), v(x, .275, sign * .12))
-      lower.set(v(x, .275, sign * .12), v(x, GROUND_Y + .075, sign * .12))
-      return ball('khata-' + name + '-shoe-' + i, v(x + dir * .035, GROUND_Y + .055, sign * .12), [.13, .055, .085], shoe)
+      const upper = limb('khata-' + name + '-thigh-' + i, makeNormalizedLimb(.078, .066, .03, .005, 8), pants, 'garment')
+      const lower = limb('khata-' + name + '-shin-' + i, makeNormalizedLimb(.065, .052, .03, .004, 8), pants, 'garment')
+      upper.set(v(x, .275, sign * .12), v(x, .58, sign * .12))
+      lower.set(v(x, GROUND_Y + .075, sign * .12), v(x, .275, sign * .12))
+      const foot = applyStylizedHumanSurfaceHint(mesh('khata-' + name + '-shoe-' + i, makeNormalizedBootGeo(), shoe), 'garment')
+      foot.position.set(x + dir * .035, GROUND_Y + .055, sign * .12)
+      foot.scale.set(1, .055, 1)
+      foot.rotation.y = faceYaw
+      return foot
     })
     const setHands = (points: THREE.Vector3[]) => arms.forEach((arm, i) => {
       const end = points[i]!.clone()
-      // Cap physical reach so large drags never elongate the cylindrical arms unrealistically.
+      // Cap physical reach so large drags never elongate the arms unrealistically.
       const toEnd = end.clone().sub(arm.shoulder)
       const reach = toEnd.length()
       if (reach > MAX_ARM_LEN) {
@@ -761,7 +964,9 @@ export function createKhataModel(options: KhataModelOptions = {}) {
       const elbow = arm.shoulder.clone().lerp(end, .48)
       elbow.y -= THREE.MathUtils.lerp(.12, .055, ext * ext)
       elbow.z += (i ? 1 : -1) * THREE.MathUtils.lerp(.07, .042, ext * ext)
-      arm.upper.set(arm.shoulder, elbow)
+      // Upper arm: proximal shoulder at +Y, distal elbow at -Y -> set(elbow, shoulder).
+      arm.upper.set(elbow, arm.shoulder)
+      // Lower sleeve cuff: elbow at -Y, open cuff lip at +Y -> set(elbow, end).
       arm.lower.set(elbow, end)
       arm.hand.position.copy(end)
       trackedHandRootPos[personIdx * 2 + i]!.copy(end)

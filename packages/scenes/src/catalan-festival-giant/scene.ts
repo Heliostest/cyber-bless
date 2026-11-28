@@ -2,6 +2,18 @@ import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
+import {
+  applyStylizedHumanSurfaceHint,
+  buildStylizedHandRig,
+  createStylizedGarmentMaterial,
+  createStylizedHairGeometry,
+  createStylizedHeadGeometry,
+  createStylizedLimbGeometry,
+  createStylizedSkinMaterial,
+  createStylizedSleeveCuffGeometry,
+  createStylizedTorsoGeometry,
+  subdivideClosedCage,
+} from '@wbr/scene-runtime/stylized-human'
 import { addInteractionCue } from '../scene-localization'
 import type { SceneContext, SceneInstance } from '../contract'
 import { createObjectPointer } from '../object-pointer'
@@ -40,69 +52,310 @@ export function createCatalanFestivalGiant(ctx: SceneContext): SceneInstance {
   lights.key.shadow.bias = -.0007; lights.key.shadow.normalBias = .022
   const world = new THREE.Group(); world.name = 'giant-workbench'; scene.add(world)
   const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: .85 })
-  const clay = material(0xbc7057), ochre = material(0xd6ac60), oak = material(0xb9976a), walnut = material(0x785740), cream = material(0xf0dfb3), sage = material(0x608e89), skin = material(0xe3b895), hair = material(0x855840), ink = material(0x4b392b)
+  const clay = createStylizedGarmentMaterial({ color: 0xbc7057, roughness: .91, fabricStrength: .30, name: 'giant-skirt-cloth' })
+  const ochre = createStylizedGarmentMaterial({ color: 0xd6ac60, roughness: .90, fabricStrength: .26, name: 'giant-ochre-cloth' })
+  const oak = material(0xb9976a), walnut = material(0x785740)
+  const cream = createStylizedGarmentMaterial({ color: 0xf0dfb3, roughness: .92, fabricStrength: .20, name: 'giant-cream-cloth' })
+  const sage = createStylizedGarmentMaterial({ color: 0x608e89, roughness: .91, fabricStrength: .28, name: 'giant-bodice-cloth' })
+  const skin = createStylizedSkinMaterial({ color: 0xe7bd99, roughness: .84, scatterStrength: .11, name: 'giant-papier-mache-skin' })
+  const hair = new THREE.MeshStandardMaterial({ color: 0x855840, roughness: .84, vertexColors: true })
+  const hatFelt = createStylizedGarmentMaterial({ color: 0xd6ac60, roughness: .90, fabricStrength: .22, name: 'giant-hat-felt' })
+  const ink = material(0x4b392b)
+  const rosetteCream = material(0xf0dfb3), rosetteOchre = material(0xd6ac60), rosetteClay = material(0xbc7057)
+  const padSage = material(0x608e89)
   const add = (geometry: THREE.BufferGeometry, mat: THREE.Material, xyz: [number, number, number], name = '', parent: THREE.Object3D = world) => {
     const mesh = new THREE.Mesh(geometry, mat); mesh.position.set(...xyz); mesh.name = name; mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh
   }
   const box = (w: number, h: number, d: number, mat: THREE.Material, xyz: [number, number, number], name = '', parent: THREE.Object3D = world) => add(new RoundedBoxGeometry(w, h, d, 3, Math.min(.025, h / 3, d / 3)), mat, xyz, name, parent)
   const ball = (r: number, xyz: [number, number, number], mat: THREE.Material, parent: THREE.Object3D, name = '') => add(new THREE.SphereGeometry(r, 24, 18), mat, xyz, name, parent)
-  const stem = (a: THREE.Vector3, b: THREE.Vector3, r: number, mat: THREE.Material, parent: THREE.Object3D) => {
-    const mesh = add(new THREE.CylinderGeometry(r, r, a.distanceTo(b), 16), mat, [0, 0, 0], '', parent)
-    mesh.position.copy(a).add(b).multiplyScalar(.5); mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); return mesh
-  }
   const disc = (r: number, h: number, xyz: [number, number, number], mat: THREE.Material, name = '', parent: THREE.Object3D = world) => add(new THREE.CylinderGeometry(r, r, h, 48), mat, xyz, name, parent)
   addCraftTable(world, { name: 'giant-table', topName: 'giant-table', width: 3.5, depth: 1.85, surfaceY: .72, thickness: .12, center: [0,0], support: 'trestle', finish: 'honey' })
   const shadow = add(new THREE.PlaneGeometry(4, 2.6), new THREE.ShadowMaterial({ opacity: .12 }), [0, .004, 0]); shadow.rotation.x = -Math.PI / 2; shadow.castShadow = false
   disc(.59, .12, [.79, .78, 0], walnut, 'giant-plinth')
-  const peg = disc(.53, .02, [.79, .85, 0], cream, 'giant-display-seat')
+  const peg = disc(.53, .02, [.79, .85, 0], rosetteCream, 'giant-display-seat')
   const figure = new THREE.Group(); figure.name = 'giant-figure'; world.add(figure)
   disc(.49, .12, [0, .06, 0], oak, 'giant-base', figure)
   const lift = box(.28, .115, .09, walnut, [0, .074, .485], 'giant-base-grip', figure)
-  // A fluted textile skirt conceals the miniature timber carrier frame.
-  const vertices: number[] = [], indices: number[] = []
-  const radial = 64, rows = 18
-  for (let j = 0; j <= rows; j++) for (let i = 0; i <= radial; i++) {
-    const t = j / rows, angle = i / radial * Math.PI * 2
-    const radius = .45 * (1 - t) + .205 * t + .018 * Math.cos(angle * 12) * (1 - t)
-    vertices.push(Math.sin(angle) * radius, .125 + t * 1.015, Math.cos(angle) * radius)
+
+  // Closed 2-manifold Loop-subdivided fluted textile skirt concealing the miniature timber carrier frame.
+  const buildLoftedClosedCage = (rings: THREE.Vector3[][], startPole: THREE.Vector3, endPole: THREE.Vector3) => {
+    const segs = rings[0]!.length, positions: number[] = [], indices: number[] = []
+    for (const ring of rings) for (const p of ring) positions.push(p.x, p.y, p.z)
+    for (let r = 0; r < rings.length - 1; r++) {
+      const row0 = r * segs, row1 = (r + 1) * segs
+      for (let s = 0; s < segs; s++) {
+        const sNext = (s + 1) % segs
+        indices.push(row0 + s, row0 + sNext, row1 + sNext, row0 + s, row1 + sNext, row1 + s)
+      }
+    }
+    const startIdx = positions.length / 3
+    positions.push(startPole.x, startPole.y, startPole.z)
+    for (let s = 0; s < segs; s++) indices.push(startIdx, (s + 1) % segs, s)
+    const endIdx = positions.length / 3
+    positions.push(endPole.x, endPole.y, endPole.z)
+    const lastRow = (rings.length - 1) * segs
+    for (let s = 0; s < segs; s++) indices.push(endIdx, lastRow + s, lastRow + ((s + 1) % segs))
+    const cage = new THREE.BufferGeometry()
+    cage.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+    cage.setIndex(indices)
+    return cage
   }
-  for (let j = 0; j < rows; j++) for (let i = 0; i < radial; i++) { const a = j * (radial + 1) + i, b = a + radial + 1; indices.push(a, a + 1, b, a + 1, b + 1, b) }
-  const skirtGeo = new THREE.BufferGeometry(); skirtGeo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3)); skirtGeo.setIndex(indices); skirtGeo.computeVertexNormals()
-  add(skirtGeo, clay, [0, 0, 0], 'giant-fluted-skirt', figure)
+
+  const skirtRadiusAt = (t: number, angle: number) =>
+    (.455 * (1 - t) + .208 * t + .018 * Math.sin(t * Math.PI) * (1 - t * .4)) +
+    (.022 * Math.cos(angle * 12) + .005 * Math.cos(angle * 6)) * (1 - t * .82)
+  const skirtRings: THREE.Vector3[][] = []
+  const skirtLevels = [0, .14, .36, .62, .84, 1]
+  const skirtSegs = 24
+  for (const t of skirtLevels) {
+    const ring: THREE.Vector3[] = []
+    const y = .125 + t * 1.015
+    for (let s = 0; s < skirtSegs; s++) {
+      const a = (s / skirtSegs) * Math.PI * 2
+      const r = skirtRadiusAt(t, a)
+      ring.push(new THREE.Vector3(Math.sin(a) * r, y, Math.cos(a) * r))
+    }
+    skirtRings.push(ring)
+  }
+  const skirtCage = buildLoftedClosedCage(skirtRings, new THREE.Vector3(0, .12, 0), new THREE.Vector3(0, 1.15, 0))
+  const skirtGeo = subdivideClosedCage(skirtCage, {
+    iterations: 1,
+    colorGenerator: (p, _n, box) => {
+      const yNorm = THREE.MathUtils.clamp((p.y - box.min.y) / Math.max(box.max.y - box.min.y, 1e-4), 0, 1)
+      const angle = Math.atan2(p.x, p.z)
+      const valley = (1 - Math.cos(angle * 12)) * .5 * (1 - yNorm * .75) * .15
+      const hemShade = (1 - THREE.MathUtils.smoothstep(yNorm, 0, .16)) * .12
+      const waistShade = THREE.MathUtils.smoothstep(yNorm, .86, 1) * .12
+      const s = THREE.MathUtils.clamp(1 - valley - hemShade - waistShade, .72, 1.02)
+      return [s * 1.01, s * .985, s * .95]
+    },
+  })
+  skirtCage.dispose()
+  applyStylizedHumanSurfaceHint(add(skirtGeo, clay, [0, 0, 0], 'giant-fluted-skirt', figure), 'garment')
+
   const hemPoints = Array.from({ length: 128 }, (_, i) => {
     const angle = i / 128 * Math.PI * 2, t = (.21 - .125) / 1.015
-    const r = .45 * (1 - t) + .205 * t + .018 * Math.cos(angle * 12) * (1 - t) + .005
+    const r = skirtRadiusAt(t, angle) + .013
     return new THREE.Vector3(Math.sin(angle) * r, .21, Math.cos(angle) * r)
   })
-  add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(hemPoints, true), 256, .012, 8, true), cream, [0, 0, 0], 'giant-hem', figure)
-  add(new THREE.CylinderGeometry(.275, .205, .40, 40), sage, [0, 1.32, 0], 'giant-bodice', figure)
-  disc(.225, .075, [0, 1.135, 0], ochre, 'giant-waistband', figure)
-  for (const x of [-1, 1]) {
-    stem(new THREE.Vector3(x * .235, 1.40, 0), new THREE.Vector3(x * .40, 1.04, .10), .104, sage, figure)
-    ball(.105, [x * .40, 1.035, .10], cream, figure).scale.y = .45
-    ball(.087, [x * .40, .947, .12], skin, figure).scale.y = 1.25
+  applyStylizedHumanSurfaceHint(
+    add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(hemPoints, true), 192, .0135, 8, true), rosetteCream, [0, 0, 0], 'giant-hem', figure),
+    'garment',
+  )
+
+  // Sculpted Loop-subdivided laced bodice & gathered festival sash waistband.
+  const bodiceGeo = createStylizedTorsoGeometry({
+    shoulderWidth: .53,
+    waistWidth: .40,
+    hemWidth: .43,
+    depth: .43,
+    height: .43,
+    collarStyle: 'crossed',
+    foldDepth: .009,
+    radialSegments: 12,
+    iterations: 1,
+  })
+  applyStylizedHumanSurfaceHint(add(bodiceGeo, sage, [0, 1.12, 0], 'giant-bodice', figure), 'garment')
+
+  const sashGeo = createStylizedTorsoGeometry({
+    shoulderWidth: .44,
+    waistWidth: .45,
+    hemWidth: .46,
+    depth: .44,
+    height: .092,
+    collarStyle: 'round',
+    foldDepth: .008,
+    radialSegments: 12,
+    iterations: 1,
+  })
+  applyStylizedHumanSurfaceHint(add(sashGeo, ochre, [0, 1.092, 0], 'giant-waistband', figure), 'garment')
+
+  // Draped festival sleeves, ruffled thick-walled cuffs, and sculpted welcoming hands.
+  for (const [idx, x] of ([-1, 1] as const).entries()) {
+    const shoulder = new THREE.Vector3(x * .24, 1.41, 0)
+    const wrist = new THREE.Vector3(x * .395, 1.045, .105)
+    const dir = shoulder.clone().sub(wrist)
+    const sleeveLen = dir.length()
+    const sleeveGeo = createStylizedLimbGeometry({
+      length: sleeveLen,
+      topRadius: .102,
+      bottomRadius: .076,
+      bend: .06,
+      foldDepth: .007,
+      radialSegments: 10,
+      iterations: 1,
+    })
+    sleeveGeo.translate(0, sleeveLen * .5, 0)
+    const sleeveMesh = add(sleeveGeo, sage, [0, 0, 0], `giant-sleeve-${idx}`, figure)
+    sleeveMesh.position.copy(shoulder).add(wrist).multiplyScalar(.5)
+    sleeveMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize())
+    applyStylizedHumanSurfaceHint(sleeveMesh, 'garment')
+
+    const cuffGeo = createStylizedSleeveCuffGeometry({
+      length: .105,
+      cuffRadiusX: .086,
+      cuffRadiusY: .082,
+      sleeveRadiusX: .078,
+      sleeveRadiusY: .076,
+      wallThickness: .011,
+      rolledLip: .013,
+      foldDepth: .008,
+      radialSegments: 10,
+      iterations: 1,
+    })
+    const cuffMesh = add(cuffGeo, cream, [wrist.x, wrist.y, wrist.z], `giant-cuff-${idx}`, figure)
+    cuffMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), shoulder.clone().sub(wrist).normalize())
+    applyStylizedHumanSurfaceHint(cuffMesh, 'garment')
+
+    // Facing +Z: right hand is on -X (x = -1), left hand is on +X (x = +1).
+    const handRig = buildStylizedHandRig({
+      namePrefix: `giant-hand-${idx}`,
+      handedness: x < 0 ? 'right' : 'left',
+      scale: .42,
+      palmUp: false,
+      pose: 'gentle-rest',
+      skinMaterial: skin,
+      includeForearm: false,
+      includeSleeve: false,
+      includeCuff: false,
+      iterations: 1,
+    })
+    handRig.root.position.set(x * .408, .962, .124)
+    // Angle fingers gently downward and forward in a warm welcoming festival stance.
+    handRig.root.rotation.set(Math.PI * .62, x * .22, x * -.14)
+    figure.add(handRig.root)
   }
-  disc(.105, .20, [0, 1.55, 0], skin, '', figure)
-  const head = ball(.255, [0, 1.82, 0], skin, figure, 'giant-face'); head.scale.set(.88, 1.10, .85)
-  const hairCap = add(new THREE.SphereGeometry(.261, 32, 20, 0, Math.PI * 2, 0, 1.15), hair, [0, 1.82, 0], 'giant-hair', figure); hairCap.scale.set(.92, 1.10, .90)
-  for (const x of [-1, 1]) { const lock = ball(.086, [x * .21, 1.76, -.02], hair, figure); lock.scale.set(.7, 1.5, .95); ball(.036, [x * .087, 1.86, .205], cream, figure); ball(.018, [x * .087, 1.86, .235], ink, figure) }
-  ball(.045, [0, 1.79, .23], skin, figure).scale.set(.65, 1.15, .8)
-  const smile = add(new THREE.TorusGeometry(.063, .009, 8, 20, Math.PI * .75), walnut, [0, 1.754, .216], '', figure); smile.rotation.z = Math.PI * 1.13
-  disc(.32, .037, [0, 2.061, 0], ochre, 'giant-hat-brim', figure)
-  add(new THREE.CylinderGeometry(.185, .24, .14, 40), ochre, [0, 2.142, 0], 'giant-hat', figure)
-  disc(.244, .035, [0, 2.092, 0], sage, '', figure)
-  const join = ball(.075, [-.14, 1.29, .284], cream, figure, 'giant-lapel')
-  for (const y of [1.22, 1.36, 1.46]) ball(.018, [.07, y, .27], ochre, figure)
+
+  // Handcrafted papier-mâché / painted-wood neck, head, rosy cheeks, warm smile, wavy hair, and festive hat.
+  const neckGeo = createStylizedLimbGeometry({ length: .19, topRadius: .086, bottomRadius: .104, bend: 0, foldDepth: .001, radialSegments: 10, iterations: 1 })
+  applyStylizedHumanSurfaceHint(add(neckGeo, skin, [0, 1.66, 0], 'giant-neck', figure), 'skin')
+
+  const headGeo = createStylizedHeadGeometry({
+    width: .45,
+    height: .56,
+    depth: .43,
+    cheekFullness: .22,
+    noseProminence: .58,
+    chinTaper: .16,
+    radialSegments: 12,
+    iterations: 2,
+  })
+  applyStylizedHumanSurfaceHint(add(headGeo, skin, [0, 1.82, 0], 'giant-face', figure), 'skin')
+
+  // Sculpted hair mass framing the cheeks and crown while keeping the center forehead at y = 1.90 cleanly exposed.
+  const hairGeo = createStylizedHairGeometry({
+    style: 'bob',
+    headWidth: .46,
+    headHeight: .55,
+    headDepth: .44,
+    volume: .034,
+    radialSegments: 12,
+    iterations: 1,
+  })
+  {
+    const pos = hairGeo.getAttribute('position') as THREE.BufferAttribute
+    for (let i = 0; i < pos.count; i++) {
+      const px = pos.getX(i), py = pos.getY(i), pz = pos.getZ(i)
+      // Lift the front brow hairline smoothly above local y = +0.11 (world y >= 1.945) so giant-face forehead is clear.
+      if (pz > .04) {
+        const frontW = THREE.MathUtils.smoothstep(pz, .04, .18) * Math.exp(-Math.pow(px / .16, 2))
+        const targetMinY = .125
+        if (py < targetMinY) {
+          pos.setY(i, THREE.MathUtils.lerp(py, targetMinY, frontW))
+        }
+      }
+    }
+    pos.needsUpdate = true
+    hairGeo.computeVertexNormals()
+    hairGeo.computeBoundingBox()
+    hairGeo.computeBoundingSphere()
+  }
+  applyStylizedHumanSurfaceHint(add(hairGeo, hair, [0, 1.84, -.016], 'giant-hair', figure), 'hair')
+
+  const earCage = new THREE.IcosahedronGeometry(1, 0)
+  const earGeo = subdivideClosedCage(earCage, { iterations: 1 })
+  earCage.dispose()
+  earGeo.scale(.036, .062, .042)
+  const curlCage = new THREE.IcosahedronGeometry(1, 0)
+  const curlGeo = subdivideClosedCage(curlCage, { iterations: 1 })
+  curlCage.dispose()
+  curlGeo.scale(.066, .125, .078)
+
+  for (const [idx, x] of ([-1, 1] as const).entries()) {
+    applyStylizedHumanSurfaceHint(add(idx === 0 ? earGeo : earGeo.clone(), skin, [x * .224, 1.815, -.008], `giant-ear-${idx}`, figure), 'skin')
+    applyStylizedHumanSurfaceHint(add(idx === 0 ? curlGeo : curlGeo.clone(), hair, [x * .222, 1.745, -.028], `giant-hair-curl-${idx}`, figure), 'hair')
+    // Warm storybook painted-wood oval eyes & gentle cheerful brows (no bulging white eyeballs).
+    const eye = ball(.020, [x * .086, 1.848, .204], ink, figure, `giant-eye-${idx}`)
+    eye.scale.set(.95, 1.25, .45)
+    applyStylizedHumanSurfaceHint(eye, 'hair')
+    const browCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(x * .052, 1.894, .204),
+      new THREE.Vector3(x * .086, 1.907, .205),
+      new THREE.Vector3(x * .120, 1.895, .192),
+    ])
+    applyStylizedHumanSurfaceHint(add(new THREE.TubeGeometry(browCurve, 10, .0068, 6, false), hair, [0, 0, 0], `giant-brow-${idx}`, figure), 'hair')
+  }
+  const smileCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-.056, 1.748, .196),
+    new THREE.Vector3(-.024, 1.732, .208),
+    new THREE.Vector3(0, 1.728, .211),
+    new THREE.Vector3(.024, 1.732, .208),
+    new THREE.Vector3(.056, 1.748, .196),
+  ])
+  applyStylizedHumanSurfaceHint(add(new THREE.TubeGeometry(smileCurve, 18, .0075, 8, false), walnut, [0, 0, 0], 'giant-smile', figure), 'hair')
+
+  // Sculpted softly waving festival hat brim, domed crown, and sage ribbon band.
+  const brimRings: THREE.Vector3[][] = []
+  const brimStations = [
+    { r: .19, y: -.018 },
+    { r: .315, y: -.012 },
+    { r: .335, y: .004 },
+    { r: .315, y: .018 },
+    { r: .19, y: .022 },
+  ]
+  for (const st of brimStations) {
+    const ring: THREE.Vector3[] = []
+    for (let s = 0; s < 16; s++) {
+      const a = (s / 16) * Math.PI * 2
+      const wave = .012 * Math.cos(a * 2) * ((st.r - .18) / .16)
+      ring.push(new THREE.Vector3(Math.sin(a) * st.r, st.y + wave, Math.cos(a) * st.r))
+    }
+    brimRings.push(ring)
+  }
+  const brimCage = buildLoftedClosedCage(brimRings, new THREE.Vector3(0, -.016, 0), new THREE.Vector3(0, .024, 0))
+  const brimGeo = subdivideClosedCage(brimCage, { iterations: 1 })
+  brimCage.dispose()
+  applyStylizedHumanSurfaceHint(add(brimGeo, hatFelt, [0, 2.068, -.005], 'giant-hat-brim', figure), 'garment')
+
+  const hatRings: THREE.Vector3[][] = [
+    { y: 0, r: .242 },
+    { y: .05, r: .228 },
+    { y: .11, r: .202 },
+    { y: .148, r: .145 },
+  ].map((st) =>
+    Array.from({ length: 14 }, (_, s) => {
+      const a = (s / 14) * Math.PI * 2
+      return new THREE.Vector3(Math.sin(a) * st.r, st.y, Math.cos(a) * st.r)
+    }),
+  )
+  const hatCage = buildLoftedClosedCage(hatRings, new THREE.Vector3(0, -.005, 0), new THREE.Vector3(0, .162, 0))
+  const hatGeo = subdivideClosedCage(hatCage, { iterations: 1 })
+  hatCage.dispose()
+  applyStylizedHumanSurfaceHint(add(hatGeo, hatFelt, [0, 2.075, -.005], 'giant-hat', figure), 'garment')
+  disc(.236, .034, [0, 2.098, -.005], padSage, 'giant-hat-band', figure)
+
+  const join = ball(.075, [-.14, 1.29, .284], rosetteCream, figure, 'giant-lapel')
+  for (const [idx, y] of [1.22, 1.36, 1.46].entries()) ball(.018, [.07, y, .232], rosetteOchre, figure, `giant-button-${idx}`)
   const rosette = new THREE.Group(); rosette.name = 'giant-rosette'; world.add(rosette)
   for (let i = 0; i < 10; i++) {
-    const a = i / 10 * Math.PI * 2, p = ball(.044, [Math.sin(a) * .078, Math.cos(a) * .078, 0], i % 2 ? cream : ochre, rosette)
+    const a = i / 10 * Math.PI * 2, p = ball(.044, [Math.sin(a) * .078, Math.cos(a) * .078, 0], i % 2 ? rosetteCream : rosetteOchre, rosette)
     p.scale.set(.65, 1.05, .45); p.rotation.z = -a
   }
-  const grip = disc(.064, .046, [0, 0, .018], clay, 'giant-rosette-grip', rosette); grip.rotation.x = Math.PI / 2
-  const pad = box(.46, .03, .43, sage, [-1.27, .735, .65], 'giant-rosette-pad')
+  const grip = disc(.064, .046, [0, 0, .018], rosetteClay, 'giant-rosette-grip', rosette); grip.rotation.x = Math.PI / 2
+  const pad = box(.46, .03, .43, padSage, [-1.27, .735, .65], 'giant-rosette-pad')
   // A few actual workshop supplies support the context without competing for taps.
-  disc(.115, .09, [.12, .765, .57], cream)
-  box(.24, .008, .18, clay, [.24, .725, .25])
+  disc(.115, .09, [.12, .765, .57], rosetteCream)
+  box(.24, .008, .18, rosetteClay, [.24, .725, .25])
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const restore = () => {
     figure.position.copy(checkpoint >= 2 ? REST : HOME); figure.rotation.set(0, 0, 0)

@@ -201,5 +201,15 @@ describe('milagros craft', () => {
     }
     expect(shaft.min.z).toBeLessThanOrEqual(0.035)
     expect(shaft.max.z).toBeGreaterThanOrEqual(pin.z)
+    // Verify sculpted hand milagro (variant 1) stays finite, seats cleanly at the hanging ring top, and spans a natural palm.
+    const handMesh = s.scene.getObjectByName('milagros-symbol-1') as THREE.Mesh
+    handMesh.geometry.computeBoundingBox()
+    const hb = handMesh.geometry.boundingBox!
+    expect(hb.max.y).toBeGreaterThan(0.325)
+    expect(hb.max.y).toBeLessThan(0.37)
+    expect(hb.min.x).toBeLessThan(-0.22)
+    expect(hb.max.x).toBeGreaterThan(0.18)
+    const handPos = handMesh.geometry.getAttribute('position')
+    for (const v of handPos.array) expect(Number.isFinite(v)).toBe(true)
   })
 })

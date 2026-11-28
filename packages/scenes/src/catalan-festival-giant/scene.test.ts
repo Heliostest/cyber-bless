@@ -14,6 +14,7 @@ import * as THREE from 'three'
 import * as Shared from '@wbr/shared'
 import * as Gestures from '@wbr/gestures'
 import type { InteractionCue } from '@wbr/scene-runtime/interaction-cues'
+import { isClosedTwoManifold } from '@wbr/scene-runtime/stylized-human'
 import type { SceneContext, SceneInstance } from '../contract'
 import * as mod from './index'
 
@@ -200,6 +201,11 @@ describe('an original miniature festive giant prepared by hand', () => {
     const hitAt = (y: number) => new THREE.Raycaster(figure.localToWorld(new THREE.Vector3(0, y, 2)), new THREE.Vector3(0, 0, -1)).intersectObjects(visible, false)[0]?.object.name
     expect(hitAt(.21)).toBe('giant-hem')
     expect(hitAt(1.90)).toBe('giant-face')
+    for (const name of ['giant-fluted-skirt', 'giant-bodice', 'giant-waistband', 'giant-face', 'giant-hair', 'giant-hat-brim', 'giant-hat', 'giant-hand-0-palm', 'giant-hand-1-palm']) {
+      const mesh = figure.getObjectByName(name) as THREE.Mesh
+      expect(mesh, name).toBeTruthy()
+      expect(isClosedTwoManifold(mesh.geometry), name).toBe(true)
+    }
   })
   it('disposes all mesh resources and owned window listeners once', () => {
     const added = vi.spyOn(window, 'addEventListener'), removed = vi.spyOn(window, 'removeEventListener'), s = mount()

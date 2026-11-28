@@ -1,6 +1,7 @@
 import {describe,expect,it} from 'vitest'
 import * as THREE from 'three'
 import {getEnvironmentSurfaceY} from '@wbr/scene-runtime'
+import {isClosedTwoManifold} from '@wbr/scene-runtime/stylized-human'
 import {createSurvakaneModel} from './model'
 import {disposeTree} from '../procedural-kit'
 
@@ -76,6 +77,11 @@ describe('Survakane physical contact and support',()=>{
       for(let i=0;i<positions.count;i++){p.fromBufferAttribute(positions,i).applyMatrix4(mesh.matrixWorld).applyMatrix4(inv);minimum=Math.min(minimum,p.lengthSq())}
     })
     expect(minimum).toBeGreaterThanOrEqual(1-1e-6)
+    for(const name of ['surva-relative-back','surva-hips','surva-head','surva-hair','surva-neck','surva-hand-0','surva-hand-1','surva-forearm-0','surva-forearm-1','surva-shoe-0','surva-shoe-1']){
+      const part=m.root.getObjectByName(name) as THREE.Mesh
+      expect(part,name).toBeTruthy()
+      expect(isClosedTwoManifold(part.geometry),name).toBe(true)
+    }
     disposeTree(m.root)
   })
 })

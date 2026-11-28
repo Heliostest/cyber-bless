@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest'
 import * as THREE from 'three'
+import {isClosedTwoManifold} from '@wbr/scene-runtime/stylized-human'
 import {createVirpominenModel} from './model'
 import {disposeTree} from '../procedural-kit'
 describe('decorated willow handover and basket gift',()=>{
@@ -62,6 +63,9 @@ describe('decorated willow handover and basket gift',()=>{
   })
   expect(triangles).toBeGreaterThan(1000);expect(minArea).toBeGreaterThan(1e-12)
   for(let step=0;step<3;step++)for(let i=0;i<=100;i++){m.pose(step,i/100);for(const [mesh,array]of buffers)expect(mesh.geometry.getAttribute('position').array).toBe(array)}
+  for(const hand of [m.visitor,m.receiver,m.giver]){
+   hand.root.traverse(o=>{if((o as THREE.Mesh).isMesh)expect(isClosedTwoManifold((o as THREE.Mesh).geometry),o.name).toBe(true)})
+  }
   disposeTree(m.root)
  })
 })

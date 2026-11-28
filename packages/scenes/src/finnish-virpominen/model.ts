@@ -1,4 +1,14 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import {
+ applyStylizedHumanSurfaceHint,
+ createStylizedFingerGeometry,
+ createStylizedForearmGeometry,
+ createStylizedGarmentMaterial,
+ createStylizedPalmGeometry,
+ createStylizedSkinMaterial,
+ createStylizedSleeveCuffGeometry,
+ createStylizedThumbGeometry,
+} from '@wbr/scene-runtime/stylized-human'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import {
@@ -21,7 +31,8 @@ import {
 export function createVirpominenModel(){
  const root=new THREE.Group();root.name='virpominen-subject'
  const material=(color:number,roughness=.85,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness})
- const blue=material(0x699b9a),stone=material(0xc8c9b5),inside=material(0xe3dcc1),skin=material(0xe9b18a),paper=material(0xf1e8bf),foil=material(0xd75e79,.5,.15)
+ const blue=material(0x699b9a),stone=material(0xc8c9b5),inside=material(0xe3dcc1),paper=material(0xf1e8bf),foil=material(0xd75e79,.5,.15)
+ const skin=createStylizedSkinMaterial({color:0xe9b18a,tone:'warm-apricot',roughness:.85,scatterStrength:.12,name:'virpominen-hand-skin'})
  // Woven willow basket & pussy-willow twigs use stylized DataTexture craft materials; catkins use silky smooth bud-scale + fuzz material; paper flowers stay paper craft.
  const willowCraft=createVirpominenWillowMaterials()
  const catkinMat=createPussyWillowCatkinMaterial()
@@ -30,7 +41,8 @@ export function createVirpominenModel(){
  const doorFloorWood=applyCraftSurface(material(0xb3a27b),{kind:'wood',strength:.4,axis:'x'})
  const jambBlue=applyCraftSurface(blue.clone(),{kind:'wood',strength:.22,axis:'y'})
  const lintelBlue=applyCraftSurface(blue.clone(),{kind:'wood',strength:.22,axis:'x'})
- const yellowCuff=applyCraftSurface(material(0xf2ce78),{kind:'fabric',strength:.25}),blueCuff=applyCraftSurface(blue.clone(),{kind:'fabric',strength:.25})
+ const yellowCuff=createStylizedGarmentMaterial({color:0xf2ce78,roughness:.91,fabricStrength:.26,axis:'z',name:'virpominen-yellow-cuff'})
+ const blueCuff=createStylizedGarmentMaterial({color:0x699b9a,roughness:.91,fabricStrength:.26,axis:'z',name:'virpominen-blue-cuff'})
  applyCraftSurface(foil,{kind:'metal',strength:.4})
  applyCraftSurface(stone,{kind:'stone',strength:.45})
  const clean=(source:THREE.BufferGeometry)=>{const raw=source.index?source.toNonIndexed():source,p=raw.getAttribute('position'),uvAttr=raw.getAttribute('uv'),v:number[]=[],uvs:number[]=[];for(let i=0;i<p.count;i+=3){const a=new THREE.Vector3().fromBufferAttribute(p,i),b=new THREE.Vector3().fromBufferAttribute(p,i+1),c=new THREE.Vector3().fromBufferAttribute(p,i+2);if(new THREE.Triangle(a,b,c).getArea()>1e-12){v.push(...a.toArray(),...b.toArray(),...c.toArray());if(uvAttr)uvs.push(uvAttr.getX(i),uvAttr.getY(i),uvAttr.getX(i+1),uvAttr.getY(i+1),uvAttr.getX(i+2),uvAttr.getY(i+2))}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));if(uvAttr)g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.computeVertexNormals();if(raw!==source)raw.dispose();source.dispose();return g}
@@ -73,13 +85,85 @@ export function createVirpominenModel(){
  const makeHand=(name:string,kind:'stem'|'egg',cloth:THREE.Material)=>{
   const hand=new THREE.Group();hand.name=name;root.add(hand)
   const fingers=new THREE.Group();fingers.name=name+'-fingers';hand.add(fingers)
-  const back=kind==='stem'?.07:.145,palm=ball(name+'-palm',[0,0,-back],[kind==='stem'?.09:.11,.13,.04],skin,hand),cuff=ball(name+'-cuff',[.12,-.06,-back],[.075,.07,.055],cloth,hand)
-  for(let i=0;i<4;i++){
-   const y=-.075+i*.05,r=kind==='stem'?.033:.09*Math.sqrt(1-(y/.13)**2)+.015
-   const points=Array.from({length:19},(_,j)=>{const a=.75*Math.PI+j/18*1.5*Math.PI;return new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r)})
-   tube(name+'-finger-'+i,new THREE.CatmullRomCurve3(points),.014,skin,fingers,24)
+  const addPart=(partName:string,g:THREE.BufferGeometry,mat:THREE.Material,parent:THREE.Object3D,role:'skin'|'garment')=>{
+   const o=new THREE.Mesh(g,mat);o.name=partName;o.castShadow=o.receiveShadow=true;applyStylizedHumanSurfaceHint(o,role);parent.add(o);return o
   }
-  const open=(n:number)=>{fingers.scale.set(1+.5*n,1,1+.5*n);palm.position.z=-back-.04*n;cuff.position.z=palm.position.z}
+  const isStem=kind==='stem'
+  const back=isStem?.066:.146
+  // Sculpted closed 2-manifold palm cradling the back (-Z) of the willow stem or chocolate egg.
+  const palmGeo=createStylizedPalmGeometry({
+   width:isStem?.162:.204,thickness:isStem?.062:.070,length:isStem?.205:.226,
+   handedness:'right',palmUp:true,arch:.008,iterations:1,indexed:false,
+  })
+  // Rotate so palm face points toward +Z (toward held object) and palm length spans Y.
+  palmGeo.rotateX(Math.PI/2)
+  palmGeo.computeBoundingBox();palmGeo.computeBoundingSphere()
+  const palm=addPart(name+'-palm',palmGeo,skin,hand,'skin')
+  palm.position.set(isStem?.016:.014,-.004,-back)
+
+  // Wrist connecting the palm smoothly into the rolled thick-walled sleeve cuff.
+  const wristGeo=createStylizedForearmGeometry({
+   length:isStem?.115:.125,wristRadiusX:isStem?.042:.048,wristRadiusY:isStem?.036:.042,
+   elbowRadiusX:isStem?.048:.054,elbowRadiusY:isStem?.042:.048,fullness:.04,iterations:1,indexed:false,
+  })
+  wristGeo.rotateY(Math.PI/2)
+  wristGeo.rotateZ(-.34)
+  wristGeo.computeBoundingBox();wristGeo.computeBoundingSphere()
+  const wrist=addPart(name+'-wrist',wristGeo,skin,hand,'skin')
+  wrist.position.set(isStem?.068:.076,-.036,-back-.004)
+
+  const cuffGeo=createStylizedSleeveCuffGeometry({
+   length:isStem?.155:.165,cuffRadiusX:isStem?.062:.068,cuffRadiusY:isStem?.056:.062,
+   sleeveRadiusX:isStem?.076:.084,sleeveRadiusY:isStem?.068:.076,wallThickness:.011,rolledLip:.007,foldDepth:.004,
+   cavityDepthRatio:.48,iterations:1,indexed:false,
+  })
+  cuffGeo.rotateY(Math.PI/2)
+  cuffGeo.rotateZ(-.34)
+  cuffGeo.computeBoundingBox();cuffGeo.computeBoundingSphere()
+  const cuff=addPart(name+'-cuff',cuffGeo,cloth,hand,'garment')
+  cuff.position.set(isStem?.132:.142,-.064,-back-.006)
+
+  // Four gently curved gripping fingers wrapping around +X from the palm back (-Z) while keeping
+  // the +Z release channel wide clear for handover withdrawal without stem or egg penetration.
+  const fingerYs=[-.066,-.022,.022,.066]
+  const fingerRadii=[.0125,.0135,.0135,.013]
+  for(let i=0;i<4;i++){
+   const y=fingerYs[i]!
+   const r=isStem?.039:.09*Math.sqrt(Math.max(0,1-(y/.13)**2))+.022
+   const fr=fingerRadii[i]!
+   // Wrap smoothly from palm back (-0.56*PI) around +X (0) toward front-right (+0.16*PI).
+   const arcPts=Array.from({length:6},(_,j)=>{
+    const u=j/5
+    const a=-.56*Math.PI+u*(.72*Math.PI)
+    const yDroop=u*.006*(i-1.5)
+    return new THREE.Vector3(Math.cos(a)*r,y+yDroop,Math.sin(a)*r)
+   })
+   const fGeo=createStylizedFingerGeometry({
+    curve:new THREE.CatmullRomCurve3(arcPts,false,'centripetal'),
+    radiusX:fr,radiusY:fr*.96,lengthSegments:4,radialSegments:6,iterations:1,indexed:false,
+   })
+   addPart(name+'-finger-'+i,fGeo,skin,fingers,'skin')
+  }
+
+  // Opposing thumb cradling the opposite (-X) side of the willow stem or wrapped egg.
+  const thumbR=isStem?.042:.108
+  const thumbPts=Array.from({length:5},(_,j)=>{
+   const u=j/4
+   const a=-.62*Math.PI-u*(.52*Math.PI)
+   return new THREE.Vector3(Math.cos(a)*thumbR,.048+u*.032,Math.sin(a)*thumbR)
+  })
+  const thumbGeo=createStylizedThumbGeometry({
+   curve:new THREE.CatmullRomCurve3(thumbPts,false,'centripetal'),
+   radiusX:.0155,radiusY:.0145,lengthSegments:3,radialSegments:6,iterations:1,indexed:false,
+  })
+  addPart(name+'-thumb',thumbGeo,skin,fingers,'skin')
+
+  const open=(n:number)=>{
+   fingers.scale.set(1+.5*n,1,1+.5*n)
+   palm.position.z=-back-.04*n
+   wrist.position.z=palm.position.z-.004
+   cuff.position.z=palm.position.z-.006
+  }
   open(0);return{root:hand,open}
  }
  const visitor=makeHand('visitor-hand','stem',yellowCuff),receiver=makeHand('receiving-hand','stem',blueCuff),giver=makeHand('gift-hand','egg',blueCuff)

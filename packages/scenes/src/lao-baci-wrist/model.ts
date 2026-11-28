@@ -193,7 +193,7 @@ function buildCottonTipGeometry(radius = 0.0114, length = 0.013): THREE.BufferGe
 export function createBaciModel() {
   const root = new THREE.Group(); root.name = 'baci-root'
   const subject = new THREE.Group(); subject.name = 'baci-subject'; root.add(subject)
-  const skin = createStylizedSkinMaterial({ color: 0xc78d68, tone: 'warm-caramel', roughness: .86, scatterStrength: .10, name: 'baci-forearm-skin' })
+  const skin = createStylizedSkinMaterial({ color: 0xc78d68, tone: 'warm-caramel', roughness: .86, scatterStrength: 0, name: 'baci-forearm-skin' })
   const handSkin = createStylizedSkinMaterial({ color: 0xc78d68, tone: 'warm-caramel', roughness: .85, scatterStrength: .12, name: 'baci-hand-skin' })
   const nail = new THREE.MeshStandardMaterial({ color: 0xe3baa0, roughness: .56, metalness: 0 })
   const cloth = createStylizedGarmentMaterial({ color: 0x57938b, roughness: .91, fabricStrength: .25, axis: 'z', name: 'baci-sleeve-cloth' })

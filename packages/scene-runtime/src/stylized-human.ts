@@ -905,19 +905,28 @@ export function createStylizedSkinMaterial(
       ? options.color
       : SKIN_TONE_PRESETS[options.tone ?? 'warm-apricot'];
   const roughness = clamp(options.roughness ?? 0.86, 0.74, 0.96);
-  const mat = createRitualMaterial(
-    {
-      color: baseColor,
-      roughness,
-      metalness: 0,
-      vertexColors: options.vertexColors ?? true,
-    },
-    {
-      kind: 'skin',
-      strength: clamp(options.scatterStrength ?? 0.12, 0.04, 0.24),
-      fiber: false,
-    },
-  );
+  const scatter = options.scatterStrength ?? 0.12;
+  const mat =
+    scatter <= 0
+      ? new THREE.MeshStandardMaterial({
+          color: baseColor,
+          roughness,
+          metalness: 0,
+          vertexColors: options.vertexColors ?? true,
+        })
+      : createRitualMaterial(
+          {
+            color: baseColor,
+            roughness,
+            metalness: 0,
+            vertexColors: options.vertexColors ?? true,
+          },
+          {
+            kind: 'skin',
+            strength: clamp(scatter, 0.04, 0.24),
+            fiber: false,
+          },
+        );
   mat.name = options.name ?? 'stylized-human-skin';
   mat.userData.stylizedHuman = {
     role: 'skin' as StylizedSurfaceRole,

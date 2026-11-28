@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import * as THREE from 'three'
 import { isRapierLoaded, _resetRapierLoaderForTest } from '@wbr/scene-runtime/rapier-soft-body'
+import { isClosedTwoManifold } from '@wbr/scene-runtime/stylized-human'
 import { createKhataModel } from './model'
 import { disposeTree } from '../procedural-kit'
 
@@ -67,6 +68,13 @@ describe('Khata supported transfer', () => {
     }
     expect(minArea).toBeGreaterThan(1e-9)
     expect(m.cloth.geometry.groups).toHaveLength(2)
+    for (const who of ['giver', 'guest']) {
+      for (const part of ['jacket', 'neck', 'head', 'hair', 'hand-0', 'hand-1', 'lower-0', 'lower-1', 'shoe-0', 'shoe-1']) {
+        const mesh = m.root.getObjectByName(`khata-${who}-${part}`) as THREE.Mesh
+        expect(mesh, `khata-${who}-${part}`).toBeTruthy()
+        expect(isClosedTwoManifold(mesh.geometry), `khata-${who}-${part}`).toBe(true)
+      }
+    }
     m.dispose()
     disposeTree(m.root)
   })

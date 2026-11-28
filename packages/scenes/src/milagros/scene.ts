@@ -27,27 +27,65 @@ const COPY = {
 function charmShape(kind: number) {
   const shape = new THREE.Shape()
   if (kind === 0) {
+    // Soft hand-forged heart ex-voto silhouette.
     shape.moveTo(0, -0.27)
-    shape.bezierCurveTo(-0.09, -0.15, -0.32, 0.02, -0.25, 0.18)
-    shape.bezierCurveTo(-0.18, 0.34, -0.04, 0.29, 0, 0.17)
-    shape.bezierCurveTo(0.04, 0.29, 0.18, 0.34, 0.25, 0.18)
-    shape.bezierCurveTo(0.32, 0.02, 0.09, -0.15, 0, -0.27)
+    shape.bezierCurveTo(-0.095, -0.155, -0.315, 0.015, -0.252, 0.182)
+    shape.bezierCurveTo(-0.185, 0.342, -0.042, 0.295, 0, 0.174)
+    shape.bezierCurveTo(0.042, 0.295, 0.185, 0.342, 0.252, 0.182)
+    shape.bezierCurveTo(0.315, 0.015, 0.095, -0.155, 0, -0.27)
   } else if (kind === 1) {
-    // Five distinct fingers and a small rounded palm; an original silhouette.
-    shape.moveTo(-0.13, -0.26)
-    shape.lineTo(-0.23, -0.02); shape.quadraticCurveTo(-0.29, 0.09, -0.23, 0.1)
-    shape.lineTo(-0.14, 0.02); shape.lineTo(-0.14, 0.25)
-    shape.quadraticCurveTo(-0.13, 0.32, -0.09, 0.28); shape.lineTo(-0.075, 0.1)
-    shape.lineTo(-0.055, 0.32); shape.quadraticCurveTo(-0.02, 0.37, 0.01, 0.32)
-    shape.lineTo(0.02, 0.11); shape.lineTo(0.05, 0.29)
-    shape.quadraticCurveTo(0.09, 0.33, 0.11, 0.27); shape.lineTo(0.115, 0.09)
-    shape.lineTo(0.15, 0.22); shape.quadraticCurveTo(0.2, 0.26, 0.21, 0.19)
-    shape.lineTo(0.19, -0.06); shape.quadraticCurveTo(0.18, -0.23, 0.12, -0.26)
-    shape.lineTo(-0.13, -0.26)
+    // Hand-forged repoussé silver ex-voto hand: smooth cubic Bézier palm, natural opposable thumb,
+    // softly rounded U-webs and graceful five-finger proportions meeting the top bail cleanly at (0, 0.338).
+    shape.moveTo(0, -0.254)
+    // Soft flared wrist cuff -> rounded outer hypothenar palm edge
+    shape.bezierCurveTo(0.068, -0.254, 0.114, -0.236, 0.132, -0.194)
+    shape.bezierCurveTo(0.152, -0.140, 0.172, -0.052, 0.178, 0.036)
+    // Little finger (pinky): dainty gentle splay & rounded fingertip
+    shape.bezierCurveTo(0.190, 0.108, 0.206, 0.174, 0.196, 0.204)
+    shape.bezierCurveTo(0.188, 0.228, 0.156, 0.228, 0.148, 0.200)
+    shape.bezierCurveTo(0.140, 0.170, 0.132, 0.120, 0.126, 0.084)
+    // Smooth interdigital U-web (pinky -> ring)
+    shape.bezierCurveTo(0.122, 0.066, 0.106, 0.066, 0.102, 0.088)
+    // Ring finger
+    shape.bezierCurveTo(0.108, 0.166, 0.116, 0.244, 0.110, 0.282)
+    shape.bezierCurveTo(0.104, 0.310, 0.072, 0.312, 0.064, 0.282)
+    shape.bezierCurveTo(0.056, 0.244, 0.050, 0.166, 0.046, 0.108)
+    // Smooth interdigital U-web (ring -> middle)
+    shape.bezierCurveTo(0.044, 0.090, 0.030, 0.090, 0.028, 0.112)
+    // Middle finger: tallest, centered at x = 0 reaching y = 0.338 cleanly into the hanging ring
+    shape.bezierCurveTo(0.028, 0.190, 0.028, 0.278, 0.023, 0.318)
+    shape.bezierCurveTo(0.018, 0.344, -0.018, 0.344, -0.023, 0.318)
+    shape.bezierCurveTo(-0.028, 0.278, -0.030, 0.188, -0.034, 0.110)
+    // Smooth interdigital U-web (middle -> index)
+    shape.bezierCurveTo(-0.036, 0.090, -0.052, 0.090, -0.056, 0.108)
+    // Index finger
+    shape.bezierCurveTo(-0.064, 0.170, -0.070, 0.242, -0.078, 0.276)
+    shape.bezierCurveTo(-0.086, 0.304, -0.118, 0.300, -0.124, 0.270)
+    shape.bezierCurveTo(-0.132, 0.230, -0.134, 0.144, -0.136, 0.064)
+    // Graceful thumb saddle (purlicue)
+    shape.bezierCurveTo(-0.138, 0.026, -0.152, 0.012, -0.170, 0.032)
+    // Natural opposable thumb with warm rounded pad
+    shape.bezierCurveTo(-0.190, 0.056, -0.212, 0.088, -0.228, 0.102)
+    shape.bezierCurveTo(-0.252, 0.118, -0.272, 0.094, -0.258, 0.064)
+    shape.bezierCurveTo(-0.242, 0.024, -0.210, -0.026, -0.186, -0.074)
+    // Plump thenar heel returning smoothly to the rounded wrist base
+    shape.bezierCurveTo(-0.164, -0.124, -0.146, -0.188, -0.124, -0.222)
+    shape.bezierCurveTo(-0.100, -0.248, -0.062, -0.254, 0, -0.254)
   } else if (kind === 2) {
-    shape.moveTo(-0.23, -0.24); shape.lineTo(0.23, -0.24); shape.lineTo(0.23, 0.08)
-    shape.lineTo(0.29, 0.08); shape.lineTo(0, 0.34); shape.lineTo(-0.29, 0.08)
-    shape.lineTo(-0.23, 0.08); shape.closePath()
+    // Cozy cottage silhouette with gently chamfered eaves and pitched roof.
+    shape.moveTo(-0.226, -0.24)
+    shape.lineTo(0.226, -0.24)
+    shape.quadraticCurveTo(0.234, -0.24, 0.234, -0.232)
+    shape.lineTo(0.234, 0.076)
+    shape.lineTo(0.284, 0.076)
+    shape.quadraticCurveTo(0.296, 0.076, 0.286, 0.088)
+    shape.lineTo(0.012, 0.334)
+    shape.quadraticCurveTo(0, 0.344, -0.012, 0.334)
+    shape.lineTo(-0.286, 0.088)
+    shape.quadraticCurveTo(-0.296, 0.076, -0.284, 0.076)
+    shape.lineTo(-0.234, 0.076)
+    shape.lineTo(-0.234, -0.232)
+    shape.quadraticCurveTo(-0.234, -0.24, -0.226, -0.24)
   } else {
     for (let i = 0; i <= 80; i++) {
       const angle = i / 80 * Math.PI * 2, radius = 0.21 + Math.cos(angle * 5) * 0.06
@@ -56,6 +94,35 @@ function charmShape(kind: number) {
     }
   }
   return shape
+}
+
+/**
+ * Adds gentle hand-forged repoussé dome relief to the silver hand milagro geometry:
+ * softly pillows the palm center, thenar/hypothenar pads, and individual finger ridges
+ * while keeping the perimeter edges crisp and the base strictly finite.
+ */
+function applyHandRepousseRelief(geometry: THREE.BufferGeometry) {
+  const pos = geometry.getAttribute('position') as THREE.BufferAttribute
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i)
+    if (z <= 0.014) continue
+    // Front face pillow: soft palm dome + warm thenar pad + subtle finger/thumb ridge fullness.
+    const palmDome = Math.exp(-(Math.pow(x / 0.145, 2) + Math.pow((y + 0.045) / 0.145, 2))) * 0.0145
+    const thenarPad = Math.exp(-(Math.pow((x + 0.095) / 0.075, 2) + Math.pow((y + 0.10) / 0.095, 2))) * 0.0085
+    const hypoPad = Math.exp(-(Math.pow((x - 0.092) / 0.070, 2) + Math.pow((y + 0.09) / 0.10, 2))) * 0.0065
+    const fingerRidge = y > 0.06
+      ? Math.exp(-Math.pow((y - 0.19) / 0.13, 2)) * 0.0055 * (0.55 + 0.45 * Math.cos(x * 36))
+      : 0
+    // Gentle embossed palm lifeline crease to catch soft specular highlights.
+    const creaseDist = Math.abs((y + 0.01) - 0.55 * (x + 0.04) * (x + 0.04) * 4.5 + 0.03)
+    const creaseMask = Math.exp(-Math.pow(x / 0.095, 2)) * Math.exp(-Math.pow(creaseDist / 0.018, 2))
+    const frontFactor = THREE.MathUtils.smoothstep(z, 0.014, 0.034)
+    pos.setZ(i, z + frontFactor * (palmDome + thenarPad + hypoPad + fingerRidge - creaseMask * 0.0045))
+  }
+  pos.needsUpdate = true
+  geometry.computeVertexNormals()
+  geometry.computeBoundingBox()
+  geometry.computeBoundingSphere()
 }
 
 export function createMilagros(ctx: SceneContext): SceneInstance {
@@ -118,10 +185,18 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
   const colors = [0xe8bd75, 0xb7c5c3, 0xdab48a, 0xedcf87]
   for (let i = 0; i < 4; i++) {
     const group = new THREE.Group(); group.name = `milagros-charm-${i}`
+    const isHand = i === 1
     const charmGeometry = new THREE.ExtrudeGeometry(charmShape(i), {
-      depth: 0.028, bevelEnabled: true, bevelSegments: 2, steps: 1,
-      bevelSize: 0.016, bevelThickness: 0.014, curveSegments: 16,
+      depth: 0.028,
+      bevelEnabled: true,
+      bevelSegments: isHand ? 4 : 3,
+      steps: 1,
+      // Hand interdigital webs stay crisp and non-overlapping with a forged 0.007 bevel.
+      bevelSize: isHand ? 0.007 : 0.015,
+      bevelThickness: isHand ? 0.012 : 0.014,
+      curveSegments: 24,
     })
+    if (isHand) applyHandRepousseRelief(charmGeometry)
     charmGeometry.computeBoundingBox()
     const startY = linerTopY - charmGeometry.boundingBox!.min.y * 0.73
     const start = new THREE.Vector3(-0.81 + i * 0.54, startY, 0.72)
@@ -135,14 +210,32 @@ export function createMilagros(ctx: SceneContext): SceneInstance {
     charmMeshes.push(mesh)
     const ring = add(new THREE.TorusGeometry(0.047, 0.010, 8, 24), mat, 0, 0.37, 0.025, group)
     ring.userData.toonSurface = { metalness: 0.55, roughness: 0.35 }
-    // Two tiny pressed marks catch light and give the metal a handmade face.
-    for (const x of [-0.07, 0.07]) add(new THREE.SphereGeometry(0.017, 8, 6), mat, x, 0.02, 0.055, group).scale.z = 0.25
+    if (isHand) {
+      // Subtle forged wrist cuff band & center palm repoussé dimple catch warm metallic highlights.
+      const cuffBar = add(new RoundedBoxGeometry(0.185, 0.024, 0.014, 2, 0.006), mat, 0, -0.212, 0.036, group)
+      cuffBar.userData.toonSurface = { metalness: 0.55, roughness: 0.35 }
+      const palmBoss = add(new THREE.SphereGeometry(0.024, 12, 8), mat, -0.005, -0.035, 0.046, group)
+      palmBoss.scale.set(1.1, 1.0, 0.28)
+      palmBoss.userData.toonSurface = { metalness: 0.55, roughness: 0.35 }
+    } else {
+      // Two tiny pressed marks catch light and give the metal a handmade face.
+      for (const x of [-0.07, 0.07]) add(new THREE.SphereGeometry(0.017, 8, 6), mat, x, 0.02, 0.055, group).scale.z = 0.25
+    }
   }
   // Small original ornaments suggest accumulated thanks without copying a sacred site.
   const decorativeCharmMaterial=applyCraftSurface(material(0xcbb48f,0.35,0.6),{kind:'metal',strength:.45})
   for (let i = 0; i < 3; i++) {
-    const mesh = add(new THREE.ExtrudeGeometry(charmShape(i), { depth: 0.025, bevelEnabled: true, bevelSize: 0.012, bevelThickness: 0.01, bevelSegments: 2 }),
-      decorativeCharmMaterial, i === 1 ? 0.65 : -0.64, i === 2 ? 0.89 : 1.42, 0.065)
+    const isHand = i === 1
+    const decoGeo = new THREE.ExtrudeGeometry(charmShape(i), {
+      depth: 0.025,
+      bevelEnabled: true,
+      bevelSize: isHand ? 0.006 : 0.012,
+      bevelThickness: 0.01,
+      bevelSegments: isHand ? 3 : 2,
+      curveSegments: 20,
+    })
+    if (isHand) applyHandRepousseRelief(decoGeo)
+    const mesh = add(decoGeo, decorativeCharmMaterial, i === 1 ? 0.65 : -0.64, i === 2 ? 0.89 : 1.42, 0.065)
     mesh.scale.setScalar(0.34); mesh.rotation.z = i === 1 ? 0.1 : -0.12
   }
   const held = new THREE.Vector3(0.62, 1.04, 0.62)

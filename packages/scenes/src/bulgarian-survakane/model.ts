@@ -1,5 +1,20 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import {
+  applyStylizedHumanSurfaceHint,
+  createStylizedFingerGeometry,
+  createStylizedGarmentMaterial,
+  createStylizedHairGeometry,
+  createStylizedHeadGeometry,
+  createStylizedLimbGeometry,
+  createStylizedPalmGeometry,
+  createStylizedShoeGeometry,
+  createStylizedSkinMaterial,
+  createStylizedSleeveCuffGeometry,
+  createStylizedThumbGeometry,
+  createStylizedTorsoGeometry,
+  subdivideClosedCage,
+} from '@wbr/scene-runtime/stylized-human'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { addSteppedPedestal } from '../cozy-furniture'
@@ -24,13 +39,18 @@ export function createSurvakaneModel() {
   const subject=new THREE.Group();subject.name='surva-subject';root.add(subject)
   const GROUND_Y=getEnvironmentSurfaceY('bulgarian-survakane')
   const mat=(color:number,roughness=.85)=>new THREE.MeshStandardMaterial({color,roughness})
-  const bark=mat(0x936038),wood=mat(0xba8652),legWood=mat(0x9e6d40),sideWood=mat(0xa87647),standWood=mat(0xb27e4c),coat=mat(0x4e8791),cloth=mat(0x385b6a),skin=mat(0xd4a075),hair=mat(0xdbd5be),shoe=mat(0x625344)
+  const bark=mat(0x936038),wood=mat(0xba8652),legWood=mat(0x9e6d40),sideWood=mat(0xa87647),standWood=mat(0xb27e4c)
+  const coat=createStylizedGarmentMaterial({color:0x4e8791,roughness:.92,fabricStrength:.30,name:'surva-coat'})
+  const vestTrim=createStylizedGarmentMaterial({color:0xa95149,roughness:.92,fabricStrength:.32,name:'surva-vest-trim'})
+  const cloth=createStylizedGarmentMaterial({color:0x385b6a,roughness:.93,fabricStrength:.28,name:'surva-trousers'})
+  const skin=createStylizedSkinMaterial({color:0xe2b38a,roughness:.86,scatterStrength:.12,name:'surva-skin'})
+  const hair=new THREE.MeshStandardMaterial({color:0xe3dcc8,roughness:.85,vertexColors:true})
+  const shoe=new THREE.MeshStandardMaterial({color:0x625344,roughness:.88,vertexColors:true})
   const red=mat(0xc65e55),gold=mat(0xe7ba64),cream=mat(0xf2e5bc),green=mat(0x648b62),thread=mat(0xbfa97b)
   applyCraftSurface(wood,{kind:'wood',strength:.4,axis:'x'})
   applyCraftSurface(legWood,{kind:'wood',strength:.42,axis:'y'})
   applyCraftSurface(sideWood,{kind:'wood',strength:.40,axis:'z'})
   applyCraftSurface(standWood,{kind:'wood',strength:.40,axis:'x'})
-  ;[coat,cloth].forEach(material=>applyCraftSurface(material,{kind:'fabric',strength:.28}))
   ;[red,gold,green,thread].forEach(material=>applyCraftSurface(material,{kind:'cord',strength:.3}))
   const mesh=(g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D,name:string)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
   const roundedBox=(name:string,size:[number,number,number],p:[number,number,number],m:THREE.Material,parent:THREE.Object3D=subject,bevel=.012)=>{
@@ -94,23 +114,247 @@ export function createSurvakaneModel() {
   roundedBox('surva-branch-rest-arm-right',[.024,.036,.070],[.036,.16-GROUND_Y+.25,-.006],sideWood,stand,.007)
   dedupeNames(stand)
 
-  for(const [i,x] of [.33,.67].entries()){
-    rod('surva-thigh-'+i,[x,.80,-.02],[x,.77,-.56],.11,cloth)
-    rod('surva-lower-leg-'+i,[x,.77,-.56],[x,GROUND_Y+.11,-.58],.085,cloth)
-    ball('surva-shoe-'+i,[x,GROUND_Y+.075,-.64],[.12,.075,.22],shoe)
+  // Helper: place a sculpted stylized limb from proximal joint `a` to distal joint `b`.
+  const stylizedLimb=(
+    name:string,
+    a:[number,number,number],
+    b:[number,number,number],
+    topRadius:number,
+    bottomRadius:number,
+    m:THREE.Material,
+    role:'garment'|'skin'='garment',
+    bend=.05,
+  )=>{
+    const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b)
+    const dir=start.clone().sub(end)
+    const len=dir.length()
+    const g=createStylizedLimbGeometry({length:len,topRadius,bottomRadius,bend,foldDepth:role==='garment'?.005:.001,radialSegments:8,iterations:1})
+    g.translate(0,len*.5,0)
+    const o=mesh(g,m,subject,name)
+    o.position.copy(start).add(end).multiplyScalar(.5)
+    o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize())
+    return applyStylizedHumanSurfaceHint(o,role)
   }
-  ball('surva-hips',[.50,.83,-.04],[.31,.18,.24],coat)
-  const back=ball('surva-relative-back',[.50,1.13,-.04],[.32,.40,.26],coat)
-  rod('surva-neck',[.50,1.46,-.04],[.50,1.60,-.04],.085,skin)
-  const head=ball('surva-head',[.50,1.73,-.04],[.19,.23,.185],skin)
-  // Close-fitting hair leaves face and ears visible from the side, without a floating cap.
-  ball('surva-hair',[.50,1.80,-.005],[.196,.175,.182],hair)
-  for(const [i,x] of [.305,.695].entries())ball('surva-ear-'+i,[x,1.72,-.05],[.035,.055,.035],skin)
-  ball('surva-nose',[.50,1.71,-.235],[.045,.055,.07],skin)
-  for(const [i,x] of [.17,.83].entries()){
-    rod('surva-sleeve-'+i,[x,1.34,-.04],[x,1.00,-.19],.095,coat)
-    rod('surva-forearm-'+i,[x,1.00,-.19],[x,.84,-.43],.075,coat)
-    ball('surva-hand-'+i,[x,.82,-.47],[.08,.065,.10],skin)
+
+  // Warm stylized seated relative facing -Z, grounded in rounded winter boots on the courtyard stones.
+  for(const [i,x] of [.33,.67].entries()){
+    stylizedLimb('surva-thigh-'+i,[x,.80,-.03],[x,.76,-.55],.114,.090,cloth,'garment',.03)
+    stylizedLimb('surva-lower-leg-'+i,[x,.76,-.55],[x,GROUND_Y+.09,-.57],.088,.066,cloth,'garment',.04)
+    const bootGeo=createStylizedShoeGeometry({length:.33,width:.18,height:.142,toeLift:.013,radialSegments:8,iterations:1})
+    const boot=mesh(bootGeo,shoe,subject,'surva-shoe-'+i)
+    boot.position.set(x,GROUND_Y,-.60)
+    boot.rotation.y=Math.PI
+    applyStylizedHumanSurfaceHint(boot,'garment')
+  }
+
+  // Seated winter-coat skirt / hips resting flush at seat.max.y (0.65), clear of the branch back plane.
+  const hipsGeo=createStylizedTorsoGeometry({
+    shoulderWidth:.56,
+    waistWidth:.58,
+    hemWidth:.62,
+    depth:.42,
+    height:.30,
+    collarStyle:'round',
+    foldDepth:.009,
+    radialSegments:10,
+    iterations:1,
+  })
+  hipsGeo.rotateY(Math.PI)
+  hipsGeo.computeBoundingBox()
+  hipsGeo.translate(0,-hipsGeo.boundingBox!.min.y,0)
+  const hips=mesh(hipsGeo,coat,subject,'surva-hips')
+  hips.position.set(.50,.65,-.05)
+  applyStylizedHumanSurfaceHint(hips,'garment')
+
+  // Sculpted winter wool tunic torso in normalized unit-ellipsoid space (position (.50, 1.13, -.04),
+  // scale (.32, .40, .26)) so the enclosing smooth ellipsoid stays exact and the +Z back surface kisses z = 0.22.
+  const backGeo=createStylizedTorsoGeometry({
+    shoulderWidth:2.04,
+    waistWidth:1.74,
+    hemWidth:1.96,
+    depth:1.92,
+    height:1.96,
+    collarStyle:'crossed',
+    foldDepth:.034,
+    radialSegments:12,
+    iterations:1,
+  })
+  backGeo.rotateY(Math.PI)
+  backGeo.computeBoundingBox()
+  const backCenter=backGeo.boundingBox!.getCenter(new THREE.Vector3())
+  backGeo.translate(-backCenter.x,-backCenter.y,-backCenter.z)
+  // Gently shape the +Z back contour so (0, 0) is the smooth peak and calibrate exact ray hit to local z = 1.0.
+  {
+    const pos=backGeo.getAttribute('position') as THREE.BufferAttribute
+    for(let i=0;i<pos.count;i++){
+      const vx=pos.getX(i),vy=pos.getY(i),vz=pos.getZ(i)
+      if(vz>0){
+        const r2=vx*vx+vy*vy
+        const dome=1/(1+.14*r2)
+        pos.setZ(i,vz*dome)
+      }
+    }
+    pos.needsUpdate=true
+    backGeo.computeVertexNormals()
+    const probe=new THREE.Mesh(backGeo)
+    const hit=new THREE.Raycaster(new THREE.Vector3(0,0,5),new THREE.Vector3(0,0,-1)).intersectObject(probe)[0]
+    if(hit&&hit.point.z>1e-4){
+      const zScale=1/hit.point.z
+      for(let i=0;i<pos.count;i++){
+        const vz=pos.getZ(i)
+        if(vz>0)pos.setZ(i,vz*zScale)
+      }
+      pos.needsUpdate=true
+      backGeo.computeVertexNormals()
+      backGeo.computeBoundingBox()
+      backGeo.computeBoundingSphere()
+    }
+  }
+  const back=mesh(backGeo,coat,subject,'surva-relative-back')
+  back.position.set(.50,1.13,-.04)
+  back.scale.set(.32,.40,.26)
+  applyStylizedHumanSurfaceHint(back,'garment')
+
+  // Warm woven folk wool vest collar accent hugging the upper neckline (strictly behind z = 0.16, clear of branch).
+  const collarGeo=createStylizedTorsoGeometry({
+    shoulderWidth:.42,
+    waistWidth:.36,
+    hemWidth:.38,
+    depth:.28,
+    height:.15,
+    collarStyle:'crossed',
+    foldDepth:.005,
+    radialSegments:10,
+    iterations:1,
+  })
+  collarGeo.rotateY(Math.PI)
+  const collar=mesh(collarGeo,vestTrim,subject,'surva-vest-collar')
+  collar.position.set(.50,1.375,-.045)
+  applyStylizedHumanSurfaceHint(collar,'garment')
+
+  stylizedLimb('surva-neck',[.50,1.61,-.04],[.50,1.45,-.04],.074,.082,skin,'skin',0)
+
+  const headGeo=createStylizedHeadGeometry({
+    width:.36,
+    height:.43,
+    depth:.36,
+    cheekFullness:.18,
+    noseProminence:.42,
+    chinTaper:.16,
+    radialSegments:10,
+    iterations:1,
+  })
+  const head=mesh(headGeo,skin,subject,'surva-head')
+  head.position.set(.50,1.73,-.04)
+  head.rotation.y=Math.PI
+  applyStylizedHumanSurfaceHint(head,'skin')
+
+  // Soft silver-cream gathered elder bun framing the face cleanly and staying clear of the branch plane.
+  const hairGeo=createStylizedHairGeometry({
+    style:'bun',
+    headWidth:.36,
+    headHeight:.43,
+    headDepth:.36,
+    volume:.028,
+    radialSegments:10,
+    iterations:1,
+  })
+  const hairMesh=mesh(hairGeo,hair,subject,'surva-hair')
+  hairMesh.position.set(.50,1.74,-.045)
+  hairMesh.rotation.y=Math.PI
+  applyStylizedHumanSurfaceHint(hairMesh,'hair')
+
+  // Soft sculpted ears & subtle nose bridge accent keeping all original node names.
+  const earCage=new THREE.IcosahedronGeometry(1,0)
+  const earGeo=subdivideClosedCage(earCage,{iterations:1})
+  earCage.dispose()
+  earGeo.scale(.030,.052,.034)
+  for(const [i,x] of [.322,.678].entries()){
+    const ear=mesh(i===0?earGeo:earGeo.clone(),skin,subject,'surva-ear-'+i)
+    ear.position.set(x,1.72,-.045)
+    applyStylizedHumanSurfaceHint(ear,'skin')
+  }
+  const noseCage=new THREE.IcosahedronGeometry(1,0)
+  const noseGeo=subdivideClosedCage(noseCage,{iterations:1})
+  noseCage.dispose()
+  noseGeo.scale(.026,.034,.032)
+  const nose=mesh(noseGeo,skin,subject,'surva-nose')
+  nose.position.set(.50,1.715,-.224)
+  applyStylizedHumanSurfaceHint(nose,'skin')
+
+  // Warm draped wool sleeves with rolled cuffs and soft resting hands on knees.
+  for(const [i,x] of [.185,.815].entries()){
+    const elbow=new THREE.Vector3(x,1.00,-.19)
+    const wrist=new THREE.Vector3(x,.85,-.42)
+    stylizedLimb('surva-sleeve-'+i,[x,1.35,-.04],[x,1.00,-.19],.096,.082,coat,'garment',.05)
+
+    // Thick-walled forearm sleeve with rolled cuff opening toward wrist.
+    const foreLen=elbow.distanceTo(wrist)
+    const cuffGeo=createStylizedSleeveCuffGeometry({
+      length:foreLen,
+      cuffRadiusX:.074,
+      cuffRadiusY:.068,
+      sleeveRadiusX:.084,
+      sleeveRadiusY:.078,
+      wallThickness:.011,
+      rolledLip:.008,
+      foldDepth:.004,
+      radialSegments:10,
+      iterations:1,
+    })
+    const forearm=mesh(cuffGeo,coat,subject,'surva-forearm-'+i)
+    forearm.position.copy(wrist)
+    forearm.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),elbow.clone().sub(wrist).normalize())
+    applyStylizedHumanSurfaceHint(forearm,'garment')
+
+    // Facing -Z: left side is x = 0.185 (i=0), right side is x = 0.815 (i=1).
+    const handedness:'left'|'right'=i===0?'left':'right'
+    const thumbSign=handedness==='right'?-1:1
+    const palmGeo=createStylizedPalmGeometry({
+      width:.108,
+      thickness:.044,
+      length:.115,
+      handedness,
+      palmUp:false,
+      radialSegments:8,
+      iterations:1,
+    })
+    const hand=mesh(palmGeo,skin,subject,'surva-hand-'+i)
+    hand.position.set(x,.835,-.47)
+    hand.rotation.set(-.12,i===0?-.14:.14,0)
+    applyStylizedHumanSurfaceHint(hand,'skin')
+
+    const fingerRatios=[.72,.82,.76,.60]
+    for(let f=0;f<4;f++){
+      const slot=1.5-f
+      const fGeo=createStylizedFingerGeometry({
+        length:.115*fingerRatios[f]!,
+        radiusX:.0135,
+        radiusY:.0128,
+        curl:.34+f*.04,
+        curlUp:false,
+        splay:thumbSign*slot*.03,
+        radialSegments:6,
+        iterations:1,
+      })
+      const finger=mesh(fGeo,skin,hand,`surva-hand-${i}-finger-${f}`)
+      finger.position.set(thumbSign*slot*.025,-.003,-.050)
+      applyStylizedHumanSurfaceHint(finger,'skin')
+    }
+    const thumbGeo=createStylizedThumbGeometry({
+      length:.068,
+      radiusX:.016,
+      radiusY:.0145,
+      curl:.28,
+      curlUp:false,
+      opposition:-thumbSign*.012,
+      radialSegments:6,
+      iterations:1,
+    })
+    const thumb=mesh(thumbGeo,skin,hand,`surva-hand-${i}-thumb`)
+    thumb.position.set(thumbSign*.048,-.004,.008)
+    thumb.rotation.y=thumbSign*.46
+    applyStylizedHumanSurfaceHint(thumb,'skin')
   }
   const branch=new THREE.Group();branch.name='surva-branch-root';subject.add(branch)
   rod('surva-stem',[0,0,0],[0,1.31,0],.018,bark,branch)

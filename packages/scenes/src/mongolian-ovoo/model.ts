@@ -1,4 +1,17 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import {
+  applyStylizedHumanSurfaceHint,
+  createStylizedGarmentMaterial,
+  createStylizedHairGeometry,
+  createStylizedHeadGeometry,
+  createStylizedLimbGeometry,
+  createStylizedPalmGeometry,
+  createStylizedShoeGeometry,
+  createStylizedSkinMaterial,
+  createStylizedSleeveCuffGeometry,
+  createStylizedTorsoGeometry,
+  subdivideClosedCage,
+} from '@wbr/scene-runtime/stylized-human'
 import * as THREE from 'three'
 
 /** An illustrative stone ovoo and visitor. Three clockwise circuits are source-supported;
@@ -8,10 +21,14 @@ export function createOvooModel() {
   const subject=new THREE.Group();subject.name='ovoo-subject';root.add(subject)
   const mat=(color:number)=>new THREE.MeshStandardMaterial({color,roughness:.88})
   const grey=[mat(0xa6afa9),mat(0x8c9b99),mat(0xb9b6a4),mat(0x758b8e)],sand=mat(0xd8c8a4),blue=mat(0x74a4ba),bark=mat(0x837158)
-  const coat=mat(0xc8874f),pants=mat(0x496d75),skin=mat(0xdbab85),hair=mat(0x504b40),shoe=mat(0x5d5b50)
+  const coat=createStylizedGarmentMaterial({color:0xc8874f,roughness:.91,fabricStrength:.28,name:'ovoo-deel'})
+  const pants=createStylizedGarmentMaterial({color:0x496d75,roughness:.92,fabricStrength:.26,name:'ovoo-trousers'})
+  const skin=createStylizedSkinMaterial({color:0xe3b48c,roughness:.86,scatterStrength:.12,name:'ovoo-skin'})
+  const hair=new THREE.MeshStandardMaterial({color:0x504b40,roughness:.85,vertexColors:true})
+  const shoe=new THREE.MeshStandardMaterial({color:0x5d5b50,roughness:.88,vertexColors:true})
   grey.forEach(stone=>applyCraftSurface(stone,{kind:'stone',strength:.45}))
   applyCraftSurface(bark,{kind:'wood',strength:.35,axis:'y'})
-  for(const textile of[blue,coat,pants])applyCraftSurface(textile,{kind:'fabric',strength:.25})
+  applyCraftSurface(blue,{kind:'fabric',strength:.25})
   const mesh=(name:string,g:THREE.BufferGeometry,m:THREE.Material,parent:THREE.Object3D=subject)=>{const o=new THREE.Mesh(g,m);o.name=name;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
   const ball=(name:string,p:[number,number,number],s:[number,number,number],m:THREE.Material,parent:THREE.Object3D=subject)=>{const o=mesh(name,new THREE.SphereGeometry(1,20,12),m,parent);o.position.set(...p);o.scale.set(...s);return o}
   const rod=(name:string,a:THREE.Vector3,b:THREE.Vector3,r:number,m:THREE.Material,parent:THREE.Object3D=subject)=>{
@@ -60,24 +77,157 @@ export function createOvooModel() {
   for(const [i,x]of[-.023,.023].entries()){
     const tail=mesh('ovoo-sash-tail-'+i,new THREE.BoxGeometry(.05,.20,.015),blue);tail.position.set(x,1.08,-.04);tail.rotation.z=i?-.11:.1
   }
+  const makeNormalizedLimb=(topRadius:number,bottomRadius:number,bend:number,foldDepth:number,radialSegments=8)=>{
+    const g=createStylizedLimbGeometry({length:1,topRadius,bottomRadius,bend,foldDepth,radialSegments,iterations:1})
+    g.computeBoundingBox()
+    const bb=g.boundingBox!
+    const spanY=Math.max(bb.max.y-bb.min.y,1e-4)
+    g.translate(0,-(bb.min.y+bb.max.y)*.5,0)
+    g.scale(1,1/spanY,1)
+    g.computeVertexNormals()
+    g.computeBoundingBox()
+    g.computeBoundingSphere()
+    return g
+  }
+  const makeNormalizedCuff=(cuffR:number,sleeveR:number)=>{
+    const g=createStylizedSleeveCuffGeometry({
+      length:1,
+      cuffRadiusX:cuffR,
+      cuffRadiusY:cuffR*.94,
+      sleeveRadiusX:sleeveR,
+      sleeveRadiusY:sleeveR*.94,
+      wallThickness:.008,
+      rolledLip:.006,
+      foldDepth:.004,
+      radialSegments:10,
+      iterations:1,
+    })
+    g.rotateX(Math.PI/2)
+    g.computeBoundingBox()
+    const bb=g.boundingBox!
+    const spanY=Math.max(bb.max.y-bb.min.y,1e-4)
+    g.translate(0,-(bb.min.y+bb.max.y)*.5,0)
+    g.scale(1,1/spanY,1)
+    g.computeVertexNormals()
+    g.computeBoundingBox()
+    g.computeBoundingSphere()
+    return g
+  }
+  const limb=(name:string,g:THREE.BufferGeometry,a:THREE.Vector3,b:THREE.Vector3,m:THREE.Material,parent:THREE.Object3D=subject,role:'garment'|'skin'='garment')=>{
+    const o=applyStylizedHumanSurfaceHint(mesh(name,g,m,parent),role)
+    const set=(p0:THREE.Vector3,p1:THREE.Vector3)=>{const d=p1.clone().sub(p0);o.position.copy(p0).add(p1).multiplyScalar(.5);o.scale.y=d.length();o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize())}
+    set(a,b);return {o,set}
+  }
   const visitor=new THREE.Group();visitor.name='ovoo-visitor';subject.add(visitor)
   const body=new THREE.Group();body.name='ovoo-visitor-body';visitor.add(body)
-  ball('ovoo-jacket',[0,.71,0],[.19,.29,.14],coat,body)
-  ball('ovoo-head',[0,1.13,0],[.135,.17,.13],skin,body)
-  rod('ovoo-neck',v(0,.91,0),v(0,1.02,0),.065,skin,body)
-  ball('ovoo-hair',[0,1.19,.015],[.139,.12,.132],hair,body)
-  ball('ovoo-nose',[0,1.12,-.13],[.032,.035,.04],skin,body)
-  ball('ovoo-pack',[0,.74,.145],[.15,.20,.075],pants,body)
+
+  // Warm stylized Mongolian deel-inspired coat with crossed front lapel (facing -Z) and cinched sash waist.
+  const jacketGeo=createStylizedTorsoGeometry({
+    shoulderWidth:.37,
+    waistWidth:.285,
+    hemWidth:.42,
+    depth:.255,
+    height:.55,
+    collarStyle:'crossed',
+    foldDepth:.011,
+    radialSegments:10,
+    iterations:1,
+  })
+  jacketGeo.rotateY(Math.PI)
+  const jacketMesh=applyStylizedHumanSurfaceHint(mesh('ovoo-jacket',jacketGeo,coat,body),'garment')
+  jacketMesh.position.set(0,.44,0)
+
+  const sashBeltGeo=createStylizedTorsoGeometry({
+    shoulderWidth:.31,
+    waistWidth:.315,
+    hemWidth:.32,
+    depth:.25,
+    height:.082,
+    collarStyle:'round',
+    foldDepth:.004,
+    radialSegments:10,
+    iterations:1,
+  })
+  const sashBeltMesh=applyStylizedHumanSurfaceHint(mesh('ovoo-deel-sash',sashBeltGeo,pants,body),'garment')
+  sashBeltMesh.position.set(0,.62,0)
+
+  limb('ovoo-neck',makeNormalizedLimb(.054,.062,0,.001,8),v(0,.93,0),v(0,1.06,0),skin,body,'skin')
+
+  const headGeo=createStylizedHeadGeometry({
+    width:.255,
+    height:.295,
+    depth:.245,
+    cheekFullness:.18,
+    noseProminence:.42,
+    chinTaper:.16,
+    radialSegments:10,
+    iterations:1,
+  })
+  const headMesh=applyStylizedHumanSurfaceHint(mesh('ovoo-head',headGeo,skin,body),'skin')
+  headMesh.position.set(0,1.135,0)
+  headMesh.rotation.y=Math.PI
+
+  const hairGeo=createStylizedHairGeometry({
+    style:'short',
+    headWidth:.255,
+    headHeight:.295,
+    headDepth:.245,
+    volume:.024,
+    radialSegments:10,
+    iterations:1,
+  })
+  const hairMesh=applyStylizedHumanSurfaceHint(mesh('ovoo-hair',hairGeo,hair,body),'hair')
+  hairMesh.position.set(0,1.145,0)
+  hairMesh.rotation.y=Math.PI
+
+  const noseCage=new THREE.IcosahedronGeometry(1,0)
+  const noseGeo=subdivideClosedCage(noseCage,{iterations:1})
+  noseCage.dispose()
+  noseGeo.scale(.022,.026,.024)
+  const noseMesh=applyStylizedHumanSurfaceHint(mesh('ovoo-nose',noseGeo,skin,body),'skin')
+  noseMesh.position.set(0,1.125,-.126)
+
+  const packCage=new THREE.BoxGeometry(.25,.32,.13,2,2,2)
+  const packGeo=subdivideClosedCage(packCage,{iterations:1})
+  packCage.dispose()
+  const packMesh=applyStylizedHumanSurfaceHint(mesh('ovoo-pack',packGeo,pants,body),'garment')
+  packMesh.position.set(0,.74,.152)
+
   body.position.y=.48;for(const child of body.children)child.position.y-=.48
-  const legs=[-.10,.10].map((x,i)=>({
-    thigh:rod('ovoo-thigh-'+i,v(x,.48,0),v(x,.28,0),.07,pants,visitor),
-    shin:rod('ovoo-shin-'+i,v(x,.28,0),v(x,.07,0),.06,pants,visitor),
-    foot:ball('ovoo-shoe-'+i,[x,.055,-.04],[.075,.055,.13],shoe,visitor),
-  }))
+  const legs=[-.10,.10].map((x,i)=>{
+    const bootGeo=createStylizedShoeGeometry({length:.24,width:.132,height:.102,toeLift:.017,radialSegments:8,iterations:1})
+    const foot=applyStylizedHumanSurfaceHint(mesh('ovoo-shoe-'+i,bootGeo,shoe,visitor),'garment')
+    foot.position.set(x,0,-.02)
+    foot.rotation.y=Math.PI
+    return {
+      thigh:limb('ovoo-thigh-'+i,makeNormalizedLimb(.074,.062,.04,.005,8),v(x,.28,0),v(x,.48,0),pants,visitor,'garment'),
+      shin:limb('ovoo-shin-'+i,makeNormalizedLimb(.062,.050,.03,.004,8),v(x,.07,0),v(x,.28,0),pants,visitor,'garment'),
+      foot,
+    }
+  })
+  const makeVisitorHandGeo=(handedness:'left'|'right')=>{
+    const g=createStylizedPalmGeometry({
+      width:.084,
+      thickness:.042,
+      length:.108,
+      handedness,
+      palmUp:false,
+      arch:.006,
+      radialSegments:8,
+      iterations:1,
+    })
+    // Local palm extends from wrist (+Z) to fingers (-Z); rotate +90° around X so wrist is at -Y and fingers at +Y.
+    g.rotateX(Math.PI/2)
+    g.computeVertexNormals()
+    g.computeBoundingBox()
+    g.computeBoundingSphere()
+    return g
+  }
+  // Facing -Z: left side is -X (i=0), right side is +X (i=1, stone-carrying hand).
   const arms=[-1,1].map((sign,i)=>({
-    upper:rod('ovoo-upper-arm-'+i,v(sign*.18,.86,0),v(sign*.25,.64,-.09),.058,coat),
-    lower:rod('ovoo-forearm-'+i,v(sign*.25,.64,-.09),v(sign*.23,.51,-.2),.048,coat),
-    hand:ball('ovoo-hand-'+i,[0,0,0],[.061,.045,.075],skin),
+    upper:limb('ovoo-upper-arm-'+i,makeNormalizedLimb(.060,.052,.04,.004,8),v(sign*.25,.64,-.09),v(sign*.18,.86,0),coat,subject,'garment'),
+    lower:limb('ovoo-forearm-'+i,makeNormalizedCuff(.044,.052),v(sign*.25,.64,-.09),v(sign*.23,.51,-.2),coat,subject,'garment'),
+    hand:applyStylizedHumanSurfaceHint(mesh('ovoo-hand-'+i,makeVisitorHandGeo(i===0?'left':'right'),skin,subject),'skin'),
   }))
   const angle0=Math.atan2(-.8,1.65),radius=Math.hypot(-.8,1.65)
   const right=v(-Math.sin(angle0),0,-Math.cos(angle0)),forward=v(-Math.cos(angle0),0,Math.sin(angle0))
@@ -104,7 +254,9 @@ export function createOvooModel() {
       const sign=i?1:-1,shoulder=body.localToWorld(v(sign*.18,.38,0))
       const end=i===1?hand.clone():visitor.localToWorld(v(-.24,.51,-.12))
       const mid=shoulder.clone().lerp(end,.5);mid.add(visitor.localToWorld(v(sign*.11,0,.09)).sub(visitor.position))
-      arm.upper.set(shoulder,mid);arm.lower.set(mid,end);arm.hand.position.copy(end)
+      arm.upper.set(mid,shoulder);arm.lower.set(mid,end);arm.hand.position.copy(end)
+      const aim=end.clone().sub(mid)
+      if(aim.lengthSq()>1e-8)arm.hand.quaternion.setFromUnitVectors(v(0,1,0),aim.normalize())
     })
   }
   const pose=(step:number,amount:number)=>{
@@ -114,7 +266,7 @@ export function createOvooModel() {
     const ready=n===3?0:t<.15?1-t/.15:t>.92&&n<2?(t-.92)/.08:0
     visitor.position.set(Math.sin(theta)*radius,GROUND_Y,Math.cos(theta)*radius);visitor.rotation.y=theta+Math.PI/2
     const gait=walk>0&&walk<1?Math.sin(walk*Math.PI*16):0
-    legs.forEach((leg,i)=>{const x=i?.10:-.10,z=gait*(i?-.10:.10),lift=Math.max(0,gait*(i?-1:1))*.045;leg.foot.position.set(x,.055+lift,z-.04);leg.thigh.set(v(x,.48,0),v(x,.28,z*.5));leg.shin.set(v(x,.28,z*.5),v(x,.07+lift,z))})
+    legs.forEach((leg,i)=>{const x=i?.10:-.10,z=gait*(i?-.10:.10),lift=Math.max(0,gait*(i?-1:1))*.045;leg.foot.position.set(x,lift,z-.02);leg.thigh.set(v(x,.28,z*.5),v(x,.48,0));leg.shin.set(v(x,.07+lift,z),v(x,.28,z*.5))})
     body.rotation.z=-.42*ready
     for(let i=0;i<3;i++)stones[i]!.position.copy(i<n?land[i]!:initial[i]!)
     const grip=v(-Math.sin(theta)*.07,-.04,-Math.cos(theta)*.07)

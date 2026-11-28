@@ -1,7 +1,7 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { createQuietEnding } from '../quiet-ending'
-import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import {
   createRapierSoftBodyHost,
   type RapierSoftBodySession,
@@ -234,10 +234,27 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
     stone.castShadow = stone.receiveShadow = true
     well.add(stone)
   }
-  const waterMat = createRitualMaterial({ color: 0x88beb4, roughness: .23, metalness: 0, transparent: true, opacity: .84 }, { kind: 'water', strength: .25 })
-  const waterSurface = new THREE.Mesh(new THREE.CircleGeometry(0.354, 48), waterMat)
-  waterSurface.name = 'clootie-well-water'
-  waterSurface.rotation.x = -Math.PI / 2
+  const wellLiquid = createVesselLiquid({
+    preset: 'clear-water',
+    radius: 0.356,
+    radialSegments: 16,
+    angularSegments: 48,
+    deformMode: 'cpu',
+    color: 0x6db5ab,
+    edgeColor: 0xd8f4ea,
+    deepColor: 0x26544e,
+    foamColor: 0xebf8f1,
+    foamStrength: 0.11,
+    opacity: 0.84,
+    roughness: 0.11,
+    meniscusHeight: 0.014,
+    maxAmplitude: 0.022,
+    seed: 3109,
+    name: 'clootie-well-water',
+    receiveShadow: true,
+    renderOrder: 1,
+  })
+  const waterSurface = wellLiquid.mesh
   waterSurface.position.y = 0.335
   well.add(waterSurface)
   // A small volume within the well makes a drop at the water's exact centre
@@ -249,14 +266,10 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
   const wellDark = new THREE.Mesh(new THREE.CylinderGeometry(0.348, 0.348, 0.09, 40), new THREE.MeshStandardMaterial({ color: 0x526e64, roughness: 1 }))
   wellDark.position.y = 0.245
   well.add(wellDark)
-  const rippleMat = new THREE.MeshBasicMaterial({ color: 0xdaeee1, transparent: true, opacity: 0.55 })
-  const ripples = [0.13, 0.24].map((radius) => {
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, 0.0045, 5, 40), rippleMat)
-    ring.rotation.x = -Math.PI / 2
-    ring.position.set(0, 0.338, 0)
-    well.add(ring)
-    return ring
-  })
+  let dipRippleStage = 0
+  let ambientRippleTimer = 1.1
+  let ambientRippleIndex = 0
+  let dragWellRippleCooldown = 0
   for (let i = 0; i < 5; i++) {
     const pebble = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), stoneColors[i % 4])
     pebble.scale.set(0.08 + (i % 2) * 0.025, 0.028, 0.055)
@@ -759,6 +772,10 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
     unfold = checkpoint === 0 ? 0 : 1
     tied = checkpoint >= 2 ? 1 : 0
     dragBend = 0
+    dipRippleStage = 0
+    if (checkpoint === 0 || reduced()) {
+      wellLiquid.reset()
+    }
     if (reseedPhysics && rapierReady && !reduced()) {
       resetRagBodyToCurrentPose()
       host.settle(24, applyRagForces)
@@ -786,6 +803,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
     if (checkpoint === 2 && !ending.completing) return
     if (!active() || motion || checkpoint === 3) return
     motion = { step: checkpoint, time: 0, from: rag.position.clone() }
+    dipRippleStage = 0
     dragging = false
     if (reduced()) finish()
     else syncUI()
@@ -811,6 +829,14 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
         rag.position.x = THREE.MathUtils.clamp(rag.position.x, -1.12, 1.15)
         rag.position.y = THREE.MathUtils.clamp(rag.position.y, checkpoint === 0 ? 0.31 : 0.79, 2)
         dragBend = THREE.MathUtils.clamp(rag.position.x - dragOrigin.x, -0.8, 0.8)
+        if (checkpoint === 0 && !reduced() && dragWellRippleCooldown <= 0) {
+          const dxW = rag.position.x - well.position.x
+          const dzW = rag.position.z - well.position.z
+          if (Math.hypot(dxW, dzW) < 0.42 && rag.position.y < 1.05) {
+            wellLiquid.triggerRipple(THREE.MathUtils.clamp(dxW * 0.45, -0.18, 0.18), THREE.MathUtils.clamp(dzW * 0.45, -0.18, 0.18), 0.42)
+            dragWellRippleCooldown = 0.26
+          }
+        }
         poseCloth()
       }
       if (dragging && placementReady(x, y) && pointer.finish()) { dragging = false; begin(true) }
@@ -880,6 +906,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
       }
       const delta = Number.isFinite(dt) ? Math.max(0, dt) : 0
       clock += delta
+      if (!isReduced && dragWellRippleCooldown > 0) dragWellRippleCooldown = Math.max(0, dragWellRippleCooldown - delta)
       if (motion) {
         const duration = motion.step === 0 ? 1.15 : motion.step === 1 ? 0.95 : 0.65
         motion.time = isReduced ? 1 : Math.min(1, motion.time + delta / duration)
@@ -888,8 +915,29 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
           if (motion.time < 0.56) rag.position.lerpVectors(motion.from, DIPPED, smooth(motion.time / 0.56))
           else rag.position.lerpVectors(DIPPED, WET, smooth((motion.time - 0.56) / 0.44))
           unfold = smooth(Math.min(1, motion.time / 0.42))
-          const ripple = Math.sin(Math.min(1, motion.time / 0.8) * Math.PI)
-          ripples.forEach((ring, i) => ring.scale.setScalar(1 + ripple * (0.2 + i * 0.1)))
+          if (!isReduced) {
+            if (dipRippleStage < 1 && motion.time >= 0.22) {
+              dipRippleStage = 1
+              wellLiquid.addDipDepression(0, 0, 0.016, 0.11)
+              wellLiquid.triggerRipple(0, 0, 1.35)
+              wellLiquid.addTiltImpulse(1.1, -0.75)
+            } else if (dipRippleStage < 2 && motion.time >= 0.42) {
+              dipRippleStage = 2
+              wellLiquid.triggerRipple(0.04, -0.03, 1.05)
+              wellLiquid.addSwirlImpulse(1.6)
+            } else if (dipRippleStage < 3 && motion.time >= 0.58) {
+              dipRippleStage = 3
+              wellLiquid.addDipDepression(0, 0, -0.010, 0.10)
+              wellLiquid.triggerRipple(-0.03, 0.05, 0.95)
+              wellLiquid.addTiltImpulse(-0.85, 0.65)
+            } else if (dipRippleStage < 4 && motion.time >= 0.76) {
+              dipRippleStage = 4
+              wellLiquid.triggerRipple(0.06, 0.04, 0.58)
+            } else if (dipRippleStage < 5 && motion.time >= 0.88) {
+              dipRippleStage = 5
+              wellLiquid.triggerRipple(-0.05, -0.04, 0.42)
+            }
+          }
         } else if (motion.step === 1) {
           rag.position.lerpVectors(motion.from, TIED, p)
           tied = p
@@ -919,6 +967,17 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
       } else {
         poseCloth()
       }
+      if (!isReduced && !motion && delta > 0) {
+        ambientRippleTimer -= delta
+        if (ambientRippleTimer <= 0) {
+          ambientRippleTimer = 2.6
+          const calmPoints = [[0.06, -0.05], [-0.08, 0.04], [0.03, 0.09], [-0.05, -0.07]] as const
+          const [ax, az] = calmPoints[ambientRippleIndex % calmPoints.length]!
+          ambientRippleIndex++
+          wellLiquid.triggerRipple(ax, az, 0.22)
+        }
+      }
+      wellLiquid.update(delta, clock, isReduced)
       guideMat.opacity = isReduced ? 0.84 : 0.73 + Math.sin(clock * 2) * 0.11
       ending.update(dt)
       if (disposed || !(active())) return
@@ -938,6 +997,7 @@ export function createClootieWellRag(ctx: SceneContext): SceneInstance {
       actionBtn.removeEventListener('click', onAction)
       feedback.dispose()
       styleRenderer.dispose()
+      wellLiquid.dispose()
       disposeTree(scene)
       cottonMap.dispose()
       shadowMap.dispose()

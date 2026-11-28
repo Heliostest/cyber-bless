@@ -64,3 +64,7 @@ Android 与 iOS 均完成全新的 production `export:embed` 与 `validateMobile
 本次产品显示范围：`clay,band` 的陶面（壶身、把手及原创釉带）；`stone,stoneShade` 的石面（石板、壶座及树围石）。保留：活树皮、枝、根、叶、叶脉和叶柄；水、土及湿土。
 
 程序纹理是产品美术表达，沿用本 README 的既有来源核查；本轮未重读外部链接，不新增木种、釉种、合金、纤维种类、传统技法或功效主张。保持原材质类型、贴图、反射参数和相关光学效果；器形、动作、文案、来源身份、技术 ID 与存档不变。[逐场映射、保留边界与验证记录](../../../../docs/research/2026-11-05-craft-material-rollout.md)。
+
+## 2026-11-28 陶罐净水弯月面、脉动水柱与根土水纹升级
+
+将陶罐口部可见液面（`bodhi-pitcher-water-level`）升级为 `createVesselLiquid` 清透净水液面，在提起、搬运与倾斜供水过程中呈现毛细弯月面与阻尼晃动；倾倒水流（`bodhi-water-stream`）改由 `createLivingPourStream` 脉动缩颈抛物线水柱与落水花冠表现，并在树根泥土受水处（`bodhi-soil-water-impact`）叠加湿润水泽与同心扩散水纹（保留原节点名称、避碰包络及静态检查点确定性，减少动态下保持静止）。上述水液、水流与湿土反馈属产品美术与实时交互反馈优化，不新增传统工艺配方、宗教规制或功效承诺；既有 `sri-lankan-bodhi-puja` 来源核查、文案、动作、技术 ID、引擎版本与存档兼容性保持不变，外链未重读。

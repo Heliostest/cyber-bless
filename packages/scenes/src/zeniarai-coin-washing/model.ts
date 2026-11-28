@@ -1,6 +1,7 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
 import { bakeCreviceAO } from '@wbr/scene-runtime/prop-geometry'
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { createLivingPourStream, createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { addContactShadow } from '../cozy-furniture'
@@ -92,23 +93,49 @@ export function createCoinWashingModel(){
  const cupGeo=bakeCreviceAO(vessel([[.10,0],[.14,.18],[.12,.18],[.08,.035]],0,.035),{groundY:0,groundRange:.05,cavityCenter:[0,0],cavityRadius:.12,cavityTopY:.18,strength:.36,tint:0x5c4632})
  const cup=make('wash-cup',cupGeo,ladleCupMat,ladle)
  const handle=box('wash-handle',0,.31,.44,.055,.055,.72,ladleHandleMat,ladle);handle.geometry.rotateX(-.55);bakeCreviceAO(handle.geometry,{strength:.20,tint:0x5c4632})
- const fill=make('wash-cup-water',new THREE.CylinderGeometry(.11,.11,.008,32),waterMat,ladle);fill.position.y=.13
+ const cupLiquid=createVesselLiquid({preset:'clear-water',radius:.112,radialSegments:10,angularSegments:32,deformMode:'gpu',color:'#86d6d6',edgeColor:'#c4f4ef',deepColor:'#4a9ea5',opacity:.64,roughness:.14,meniscusHeight:.0045,maxAmplitude:.022,name:'wash-cup-water'})
+ const fill=cupLiquid.mesh;fill.position.y=.13;ladle.add(fill);cupLiquid.trackContainer(ladle)
  const cloth=box('wash-cloth',-2.05,.695,1,.28,.03,.28,clothMat);bakeCreviceAO(cloth.geometry,{groundY:-.015,groundRange:.014,strength:.22,tint:0x6c5a4b})
- const stream=make('wash-pour',new THREE.CylinderGeometry(.012,.018,1,12),waterMat);stream.castShadow=stream.receiveShadow=false
+ const pourStream=createLivingPourStream({preset:'clear-water',topRadius:.015,bottomRadius:.009,segments:16,radialSegments:10,arcForward:.22,showSplashCrown:true,splashRadius:.042,color:'#8bd5d6',opacity:.62,roughness:.14,name:'wash-pour'})
+ const stream=pourStream.mesh;root.add(stream)
+ const splashCrown=pourStream.splashCrown;splashCrown.userData.effect=true
  const droplets=[[-.065,.035],[.06,.04],[0,-.065]].map(([x,z],i)=>{const o=make('wash-droplet-'+i,new THREE.SphereGeometry(.025,12,8),waterMat);o.position.set(x!, .797,z!);return o})
  const home=new THREE.Vector3(.85,.28,0),raised=new THREE.Vector3(0,1.30,0),pouring=new THREE.Vector3(0,1.18,-.205),parked=new THREE.Vector3(.85,1.30,0),clothHome=new THREE.Vector3(-2.05,.695,1)
+ const pourStart=new THREE.Vector3(),pourEnd=new THREE.Vector3(0,.79,0)
+ let liquidClock=0
  const mix=(a:number,b:number,t:number)=>t<=0?a:t>=1?b:a+(b-a)*t,lerp=(o:THREE.Object3D,a:THREE.Vector3,b:THREE.Vector3,t:number)=>o.position.set(mix(a.x,b.x,t),mix(a.y,b.y,t),mix(a.z,b.z,t))
- function pose(step:number,amount:number){const t=THREE.MathUtils.clamp(Number.isFinite(amount)?amount:0,0,1);ladle.rotation.set(0,Math.PI/2,0);cloth.position.copy(clothHome);fill.visible=false;stream.visible=false;droplets.forEach(o=>o.visible=step===2)
+ function pose(step:number,amount:number){const t=THREE.MathUtils.clamp(Number.isFinite(amount)?amount:0,0,1);ladle.rotation.set(0,Math.PI/2,0);cloth.position.copy(clothHome);fill.visible=false;let pouringNow=false;droplets.forEach(o=>o.visible=step===2)
   if(step===0){if(t<.6)lerp(ladle,home,parked,t/.6);else lerp(ladle,parked,raised,(t-.6)/.4);fill.visible=t>.1}
-  else if(step===1){if(t<.25){lerp(ladle,raised,pouring,t/.25);ladle.rotation.z=1.05*t/.25;fill.visible=true}else if(t<=.75){ladle.position.copy(pouring);ladle.rotation.z=1.05;stream.visible=true;droplets.forEach(o=>o.visible=true)}else{const q=(t-.75)/.25;lerp(ladle,pouring,parked,q);ladle.rotation.z=1.05*(1-q);droplets.forEach(o=>o.visible=true)}}
+  else if(step===1){if(t<.25){lerp(ladle,raised,pouring,t/.25);ladle.rotation.z=1.05*t/.25;fill.visible=true}else if(t<=.75){ladle.position.copy(pouring);ladle.rotation.z=1.05;pouringNow=true;droplets.forEach(o=>o.visible=true)}else{const q=(t-.75)/.25;lerp(ladle,pouring,parked,q);ladle.rotation.z=1.05*(1-q);droplets.forEach(o=>o.visible=true)}}
   else if(step===2){lerp(ladle,parked,home,t);if(t<.3){const q=t/.3;cloth.position.set(mix(clothHome.x,-.07,q),mix(clothHome.y,1.20,q),mix(clothHome.z,0,q))}else if(t<.4){cloth.position.set(-.07,mix(1.20,.795,(t-.3)/.1),0)}else if(t<=.7){cloth.position.set(-.07+.14*((t-.4)/.3),.795,0)}else if(t<.8){cloth.position.set(.07,mix(.795,1.20,(t-.7)/.1),0)}else{const q=(t-.8)/.2;cloth.position.set(mix(.07,clothHome.x,q),mix(1.20,clothHome.y,q),mix(0,clothHome.z,q))}if(t>.7)droplets.forEach(o=>o.visible=false)}
   else ladle.position.copy(home)
   if(step===2&&t===1)cloth.position.copy(clothHome)
   const clothLift=Math.max(0,cloth.position.y-clothHome.y),clothDrift=Math.hypot(cloth.position.x-clothHome.x,cloth.position.z-clothHome.z)
   ;(clothShadow.material as THREE.MeshBasicMaterial).opacity=.22*THREE.MathUtils.clamp(1-clothLift*3.2-clothDrift*2.0,0,1)
   root.updateMatrixWorld(true)
-  const start=ladle.localToWorld(new THREE.Vector3(-.13,.16,0)),end=new THREE.Vector3(0,.79,0),direction=end.clone().sub(start),length=direction.length();stream.position.copy(start).add(end).multiplyScalar(.5);stream.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize());stream.scale.set(1,Math.max(.01,length),1);root.updateMatrixWorld(true)
+  pourStart.set(-.13,.16,0);ladle.localToWorld(pourStart)
+  pourStream.updateArc(pourStart,pourEnd,1,0,true)
+  stream.visible=pouringNow
+  splashCrown.visible=false
+  if(!pouringNow&&t===0)cupLiquid.reset()
+  root.updateMatrixWorld(true)
  }
+ function updateLiquid(dt:number,reduced:boolean){
+  const stepDt=Number.isFinite(dt)&&dt>0?Math.min(dt,.05):0
+  if(!reduced)liquidClock+=stepDt
+  cupLiquid.update(stepDt,liquidClock,reduced)
+  if(stream.visible){
+   pourStream.updateArc(pourStart,pourEnd,1,liquidClock,reduced)
+   if(reduced)splashCrown.visible=false
+  }else{
+   splashCrown.visible=false
+  }
+ }
+ function triggerCupSlosh(ax:number,az:number,rippleStrength=.8){
+  cupLiquid.addTiltImpulse(ax,az)
+  cupLiquid.triggerRipple(0,0,rippleStrength)
+ }
+ function disposeLiquid(){cupLiquid.dispose();pourStream.dispose()}
  pose(0,0)
- return{root,subject:root,basin,ledge,rails,sieve,coin,ladle,cup,handle,cloth,fill,stream,droplets,pose,targets:[handle,handle,cloth],roots:[ladle,ladle,cloth],anchors:[[0,.115,.188],[0,.115,.188],[0,.01,0]] as [number,number,number][]}
+ return{root,subject:root,basin,ledge,rails,sieve,coin,ladle,cup,handle,cloth,fill,stream,splashCrown,droplets,pose,updateLiquid,triggerCupSlosh,disposeLiquid,targets:[handle,handle,cloth],roots:[ladle,ladle,cloth],anchors:[[0,.115,.188],[0,.115,.188],[0,.01,0]] as [number,number,number][]}
 }

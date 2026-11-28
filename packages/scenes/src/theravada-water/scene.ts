@@ -1,9 +1,9 @@
-import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
 import { bindSceneAttribute, bindSceneText } from '../scene-localization'
 import * as THREE from 'three'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { addInteractionCue } from '../scene-localization'
 import { createStylizedWater } from '@wbr/scene-runtime/stylized-water'
+import { createLivingPourStream } from '@wbr/scene-runtime/vessel-liquid'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
 import { claimObjectTouches } from '../procedural-kit'
@@ -158,8 +158,21 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
 
   const waterEffect = createStylizedWater({
     geometry: new THREE.CircleGeometry(1.1, 48),
-    radius: 1.1, depth: 0.16, color: 0x7acbc8, bedColor: 0xb9b18b,
-    opacity: 0.40, waveScale: 1.15, causticScale: 4.2,
+    radius: 1.1,
+    depth: 0.16,
+    color: 0x72cac6,
+    shallowColor: 0xa6e5dd,
+    deepColor: 0x326f78,
+    bedColor: 0xb9b18b,
+    foamColor: 0xfff0d4,
+    opacity: 0.44,
+    waveScale: 1.15,
+    waveAmplitude: 0.007,
+    causticScale: 4.3,
+    flowDirection: [0.65, 0.76],
+    flowSpeed: 0.22,
+    rippleSpeed: 0.82,
+    rippleWavelength: 0.20,
   })
   const water = waterEffect.surface
   water.rotation.x = -Math.PI / 2
@@ -194,24 +207,28 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
   spout.position.set(0.35, 0.15, 0)
   pitcherGroup.add(spout)
 
-  // Stream (stretches from the spout tip down to the water surface while pouring)
-  const streamBaseHeight = 0.9
-  const streamMat = createRitualMaterial({
+  // Living gravity-tapered pour stream with splash crown from spout tip into basin.
+  const pourStream = createLivingPourStream({
+    preset: 'clear-water',
+    topRadius: 0.022,
+    bottomRadius: 0.011,
+    segments: 18,
+    radialSegments: 10,
+    arcForward: 0.38,
+    showSplashCrown: true,
+    splashRadius: 0.068,
     color: 0x8ad0e8,
-    emissive: 0x3a90b0,
-    emissiveIntensity: 0.08,
-    roughness: .16,
-    metalness: 0,
-    depthWrite: false,
-    transparent: true,
-    opacity: 0,
-  }, { kind: 'water', strength: .3 })
-  const stream = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.025, 0.045, streamBaseHeight, 8),
-    streamMat,
-  )
-  scene.add(stream)
+    opacity: 0.68,
+    roughness: 0.14,
+    name: 'theravada-pour-stream',
+  })
+  scene.add(pourStream.root)
   const spoutWorldPos = new THREE.Vector3()
+  const streamImpactPos = new THREE.Vector3()
+  let pourFlow = 0
+  let pourTail = 0
+  let pourRippleTimer = 0.16
+  let dragRippleTimer = 0.22
 
   // Petal token to drag
   const petal = new THREE.Mesh(
@@ -347,6 +364,9 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
     step = 'done'
     tiltHandle?.setEnabled(false)
     dragHandle?.setEnabled(false)
+    if (!restoring && !(ctx.isReducedMotion?.() ?? false)) {
+      waterEffect.triggerRipple(0, 0, 0.72, 1.08)
+    }
     if (!restoring) ctx.onProgress?.(3)
     syncOverlayForStep()
     overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
@@ -359,7 +379,14 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
     tilting = false
     tiltHandle?.setEnabled(false)
     pourProgress = 1
-    streamMat.opacity = 0
+    pourFlow = 0
+    if (!restoring && !(ctx.isReducedMotion?.() ?? false)) {
+      pourTail = 0.48
+      waterEffect.triggerRipple(-0.56, 0.28, 1.08, 1.08)
+    } else {
+      pourTail = 0
+      pourStream.reset()
+    }
     petal.visible = true
     dragHandle?.setEnabled(true)
     if (!restoring) ctx.onProgress?.(1)
@@ -374,6 +401,9 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
     grabbed = false
     dragTarget.set(0, 0.28, 0)
     petal.position.copy(dragTarget)
+    if (!restoring && !(ctx.isReducedMotion?.() ?? false)) {
+      waterEffect.triggerRipple(0, 0, 0.88, 1.06)
+    }
     if (!restoring) ctx.onProgress?.(2)
     syncOverlayForStep()
   }
@@ -392,8 +422,10 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
   const resetUnfinishedPour = () => {
     if (step !== 'tilt') return
     pourProgress = 0
+    pourFlow = 0
+    pourTail = 0
     pitcherGroup.rotation.z = 0
-    streamMat.opacity = 0
+    pourStream.reset()
     setHint(COPY.hintTilt)
   }
   const onHitDown = (e: PointerEvent) => {
@@ -460,7 +492,7 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
         const t = Math.min(1, Math.abs(deg) / 40)
         pourProgress = t
         pitcherGroup.rotation.z = THREE.MathUtils.degToRad(Math.min(Math.abs(deg), 70) * Math.sign(deg || 1) * -0.7)
-        streamMat.opacity = t > 0.5 ? (t - 0.5) * 1.2 : 0
+        pourFlow = t > 0.45 ? THREE.MathUtils.clamp((t - 0.45) / 0.55, 0, 1) : 0
         if (t > 0.6) setHint(COPY.hintPouring)
       },
       onPour: () => {
@@ -535,23 +567,44 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
         )
       }
       pitcherGroup.updateMatrixWorld(true)
-      spout.getWorldPosition(spoutWorldPos)
-      if (streamMat.opacity > 0) {
-        const waterY = water.position.y
-        const dropHeight = Math.max(spoutWorldPos.y - waterY, 0.05)
-        stream.position.set(
-          spoutWorldPos.x,
-          (spoutWorldPos.y + waterY) / 2,
-          spoutWorldPos.z,
-        )
-        const radial = THREE.MathUtils.clamp(pourProgress, 0.2, 1)
-        stream.scale.set(radial, dropHeight / streamBaseHeight, radial)
+      spout.localToWorld(spoutWorldPos.set(0, -0.11, 0))
+      if (pourTail > 0) {
+        pourTail = reduced ? 0 : Math.max(0, pourTail - visualDt * 1.4)
+      }
+      const activeFlow = step === 'tilt' ? pourFlow : Math.min(1, pourTail * 2.2)
+      const waterY = water.position.y
+      const impactX = THREE.MathUtils.clamp(spoutWorldPos.x + 0.36, -0.82, 0.82)
+      const impactZ = THREE.MathUtils.clamp(spoutWorldPos.z * 0.72, -0.78, 0.78)
+      streamImpactPos.set(impactX, waterY, impactZ)
+      pourStream.updateArc(spoutWorldPos, streamImpactPos, activeFlow, t, reduced)
+      if (activeFlow > 0.05 && !reduced) {
+        pourRippleTimer += visualDt
+        if (pourRippleTimer >= 0.14) {
+          pourRippleTimer = 0
+          waterEffect.triggerRipple(impactX, impactZ, 0.48 + activeFlow * 0.48, 1.06)
+        }
+      } else {
+        pourRippleTimer = 0.14
       }
 
       const followRate = 1 - Math.exp(-dt * 14)
       if (step === 'drag') {
         petal.position.lerp(dragTarget, followRate)
         petal.rotation.y += visualDt * 0.6
+        if (grabbed && !reduced && Math.hypot(petal.position.x, petal.position.z) < 1.05 && petal.position.y < 0.72) {
+          dragRippleTimer += visualDt
+          if (dragRippleTimer >= 0.24) {
+            dragRippleTimer = 0
+            waterEffect.triggerRipple(petal.position.x, petal.position.z, 0.38, 0.88)
+          }
+        } else {
+          dragRippleTimer = 0.24
+        }
+      } else if ((step === 'anjali' || step === 'done') && !reduced) {
+        const surf = waterEffect.sampleSurface(petal.position.x, petal.position.z)
+        petal.position.y = 0.275 + THREE.MathUtils.clamp(surf.height * 0.65, -0.010, 0.010)
+        petal.rotation.x = THREE.MathUtils.clamp(surf.slopeZ * 0.24, -0.10, 0.10)
+        petal.rotation.z = THREE.MathUtils.clamp(-surf.slopeX * 0.24, -0.10, 0.10)
       }
       const scaleTarget = grabbed ? 1.25 : 1
       petalScale = THREE.MathUtils.lerp(petalScale, scaleTarget, 1 - Math.exp(-dt * 12))
@@ -596,8 +649,7 @@ export function createTheravadaWater(ctx: SceneContext): SceneInstance {
       ;(pitcher.material as THREE.Material).dispose()
       spout.geometry.dispose()
       ;(spout.material as THREE.Material).dispose()
-      stream.geometry.dispose()
-      streamMat.dispose()
+      pourStream.dispose()
       petal.geometry.dispose()
       ;(petal.material as THREE.Material).dispose()
       moteGeometry.dispose()

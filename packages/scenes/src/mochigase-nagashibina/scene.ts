@@ -22,7 +22,8 @@ export function createMochigaseNagashibina(ctx: SceneContext): SceneInstance {
   ;[...ACTIONS, ...HINTS, ...MOVING].forEach(safe)
   let started = false, disposed = false, focused = true, suspended = false, notifying = false, at: Checkpoint = 0
   let lifecycleVersion = 0, callbackVersion = 0, stopResize = () => {}
-  let motion: { step: 2; time: number; from: number; arrived: boolean } | null = null
+  let motion: { step: 2; time: number; from: number; arrived: boolean; enteredWater?: boolean; wakeTimer?: number } | null = null
+  let restRippleTimer = 0
   let amount = 0, moved = false, invalid = false, pathTravel = 0, maxCross = 0, maxAlong = 0, minAlong = 0, backtrack = 0, along = 0
   let inspection: ReturnType<typeof createCloseInspection> | undefined
   const active = () => started && !disposed && focused && (ctx.isActive?.() ?? true), inputActive = () => active() && !notifying
@@ -139,8 +140,9 @@ export function createMochigaseNagashibina(ctx: SceneContext): SceneInstance {
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
       inspection?.update(delta)
+      const quiet = ctx.isReducedMotion?.() ?? false
       if (motion) {
-        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / .42)
+        motion.time = quiet ? 1 : Math.min(1, motion.time + delta / .42)
         const eased=ease(motion.time)
         pose(motion.step, motion.from+(1-motion.from)*eased)
         if (eased < .6) {
@@ -149,10 +151,33 @@ export function createMochigaseNagashibina(ctx: SceneContext): SceneInstance {
           placement.settle(landing)
           model.tray.position.addScaledVector(new THREE.Vector3(-.57, 0, .40), landing)
           matrices()
+        } else if (!quiet) {
+          if (!motion.enteredWater) {
+            motion.enteredWater = true
+            motion.wakeTimer = 0
+            model.triggerRipple(model.tray.position.x, model.tray.position.z, 1.18, 1.55)
+          } else {
+            motion.wakeTimer = (motion.wakeTimer ?? 0) + delta
+            if (motion.wakeTimer >= 0.11) {
+              motion.wakeTimer = 0
+              model.triggerRipple(model.tray.position.x, model.tray.position.z, 0.54, 1.15)
+            }
+          }
+          // Subtle buoyancy micro-tilt during active downstream drift; vanishes cleanly at endpoints.
+          const driftU = THREE.MathUtils.clamp((eased - .6) / .4, 0, 1)
+          const rock = Math.sin(driftU * Math.PI)
+          model.tray.rotation.set(Math.sin(driftU * Math.PI * 2) * 0.020 * rock, 0, -0.022 * rock)
+          matrices()
         }
         if (motion.time === 1) settle()
+      } else if (at === 3 && !quiet && delta > 0) {
+        restRippleTimer += delta
+        if (restRippleTimer >= 2.2) {
+          restRippleTimer = 0
+          model.triggerRipple(1.05, -.40, 0.36, 1.25)
+        }
       }
-      if (active()) { model.update(delta, ctx.isReducedMotion?.() ?? false); matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) { model.update(delta, quiet); matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },
     dispose() {
       if (disposed) return

@@ -84,6 +84,7 @@ export function createJapaneseShishiOdoshi(ctx: SceneContext): SceneInstance {
   function settle() {
     if (!inputActive() || !motion) return
     placement.settle(1); placement.cancel(); at = (motion.step + 1) as Checkpoint; motion = null; restore()
+    if (at === 3 && !(ctx.isReducedMotion?.() ?? false)) model.triggerStrikeRipple()
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })

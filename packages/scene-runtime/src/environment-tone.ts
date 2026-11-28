@@ -83,7 +83,7 @@ export function createEnvironmentTone(root: THREE.Group, night = false) {
       // palette. Shared remapping would recolor it a second time after captures
       // or palette changes, making the result depend on selection order.
       // Simple Tree vertex colors hold AO only and must not be hue-remapped.
-      if (object.userData.komorebiGrass || object.userData.stonePath || object.userData.simpleTree) return;
+      if (object.userData.komorebiGrass || object.userData.stonePath || object.userData.courtyardSkin || object.userData.simpleTree) return;
       const attribute = object.geometry.getAttribute('color');
       if (!(attribute instanceof THREE.BufferAttribute) || seenAttributes.has(attribute)) return;
       seenAttributes.add(attribute);

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { CourtyardSkinId } from './courtyard-skins';
 import type { EnvironmentTone } from './debug-environment-tone';
 import { createKomorebiSurface } from './komorebi-surface';
 
@@ -45,21 +46,42 @@ function scaleRgb(c: RGB, factor: number): RGB {
 }
 
 /**
- * Curated warm sandstone / limestone pigments (raw-gamma space for Komorebi day).
- * Under createKomorebiSurface + createKomorebiGrade these land in screen L* ~68–76,
- * avoiding both the blown-out sand ribbon (L* ~92) and cool blue-grey stone.
+ * Curated regional stone-road slab & mortar palettes (raw-gamma space for Komorebi day).
+ * All palettes share the exact same road geometry and vertex count while harmonizing
+ * courtyard stone paths with each regional skin's architecture.
  */
-const SLAB_PALETTE: readonly RGB[] = [
-  '#c7baa2', // warm oat sandstone
-  '#c4b59a', // sunlit warm buff
-  '#bfb39e', // soft limestone grey-beige
-  '#bdab91', // muted warm biscuit stone
-  '#b7ab97', // calm warm greige
-  '#b2a692', // grounded warm taupe stone
-].map(parseHex);
+interface RoadPalette {
+  slabs: readonly RGB[];
+  mortarCenter: RGB;
+  mortarEdge: RGB;
+}
 
-const MORTAR_CENTER: RGB = parseHex('#7c7260');
-const MORTAR_EDGE: RGB = parseHex('#717954');
+const ROAD_PALETTES: Record<CourtyardSkinId, RoadPalette> = {
+  none: {
+    slabs: ['#c7baa2', '#c4b59a', '#bfb39e', '#bdab91', '#b7ab97', '#b2a692'].map(parseHex),
+    mortarCenter: parseHex('#7c7260'),
+    mortarEdge: parseHex('#717954'),
+  },
+  'japanese-karesansui': {
+    // Refined Kyoto weathered granite / warm silver-grey temple flagstones.
+    slabs: ['#bbb6ab', '#b3afa5', '#c3beb2', '#aba79e', '#b9b4a8', '#a4a097'].map(parseHex),
+    mortarCenter: parseHex('#78756b'),
+    mortarEdge: parseHex('#63734e'),
+  },
+  'chinese-jiangnan': {
+    // Suzhou bluestone flagstones (青石板) with mossy slate-earth seams.
+    slabs: ['#a6aeae', '#9da6a8', '#b0b5b2', '#959fa1', '#a2abac', '#8f989a'].map(parseHex),
+    mortarCenter: parseHex('#6d726f'),
+    mortarEdge: parseHex('#5f7054'),
+  },
+  'warm-terracotta-arch': {
+    // Sun-warmed Andalusian terracotta-sandstone patio pavers with sandy lime seams.
+    slabs: ['#cca180', '#c49674', '#d1aa89', '#bd8e6c', '#c89e7c', '#b78968'].map(parseHex),
+    mortarCenter: parseHex('#8a7b66'),
+    mortarEdge: parseHex('#7d7c5b'),
+  },
+};
+
 const MOSS_ROOT: RGB = parseHex('#496f37');
 const MOSS_TIP: RGB = parseHex('#8eb256');
 
@@ -100,7 +122,12 @@ function mapPathPoint(t: number, lateral: number): [number, number] {
  *  - Quadrant (1,1): soft warm earth/mortar wash for the recessed bed.
  * Luminance is centered near 1.0 so per-slab vertex colors control calibrated L*.
  */
-function createStoneAtlasBytes(size = 256): Uint8Array {
+let cachedStoneAtlasBytes: Uint8Array<ArrayBuffer> | undefined;
+
+function createStoneAtlasBytes(size = 256): Uint8Array<ArrayBuffer> {
+  if (cachedStoneAtlasBytes && cachedStoneAtlasBytes.length === size * size * 4) {
+    return cachedStoneAtlasBytes;
+  }
   const bytes = new Uint8Array(size * size * 4);
   const half = size / 2;
   const smoothstep = (edge0: number, edge1: number, x: number) => {
@@ -173,10 +200,11 @@ function createStoneAtlasBytes(size = 256): Uint8Array {
       bytes[idx + 3] = 255;
     }
   }
+  cachedStoneAtlasBytes = bytes;
   return bytes;
 }
 
-function makeAtlasTexture(bytes: Uint8Array, size: number, colorSpace: THREE.ColorSpace): THREE.DataTexture {
+function makeAtlasTexture(bytes: Uint8Array<ArrayBuffer>, size: number, colorSpace: THREE.ColorSpace): THREE.DataTexture {
   const texture = new THREE.DataTexture(bytes.slice(), size, size);
   texture.colorSpace = colorSpace;
   texture.wrapS = THREE.ClampToEdgeWrapping;
@@ -221,10 +249,11 @@ function pushVertex(
   return index;
 }
 
-function buildCourtyardRoadGeometry(floor: number): {
+function buildCourtyardRoadGeometry(floor: number, skin: CourtyardSkinId = 'none'): {
   roadGeometry: THREE.BufferGeometry;
   mossPositions: [number, number, number][];
 } {
+  const palette = ROAD_PALETTES[skin];
   const b = createBuilder();
   const mossPositions: [number, number, number][] = [];
 
@@ -247,7 +276,7 @@ function buildCourtyardRoadGeometry(floor: number): {
       const wz = frame.z + lat * frame.rz;
       const edgeWeight = Math.abs(frac) > 0.8 ? 1 : Math.abs(frac) > 0.5 ? 0.35 : 0;
       const variation = 0.94 + hash2(i * 1.7, c * 3.1) * 0.12;
-      const color = scaleRgb(mixRgb(MORTAR_CENTER, MORTAR_EDGE, edgeWeight), variation);
+      const color = scaleRgb(mixRgb(palette.mortarCenter, palette.mortarEdge, edgeWeight), variation);
       const uBed = 0.54 + ((frac + 1) * 0.5) * 0.42;
       pushVertex(b, wx, bedY, wz, 0, 1, 0, uBed, vBed, color);
     }
@@ -335,11 +364,11 @@ function buildCourtyardRoadGeometry(floor: number): {
       const slabL = (t1 - t0) * COURTYARD_PATH_LENGTH;
       if (slabW < 0.16 || slabL < 0.16) continue;
 
-      // Pick a warm sandstone tone different from the previous slab in the row.
-      let palIdx = Math.floor(hash2(row * 13 + col * 5, 53) * SLAB_PALETTE.length);
-      if (palIdx === prevPaletteIdx) palIdx = (palIdx + 1 + (row % 2)) % SLAB_PALETTE.length;
+      // Pick a regional slab tone different from the previous slab in the row.
+      let palIdx = Math.floor(hash2(row * 13 + col * 5, 53) * palette.slabs.length);
+      if (palIdx === prevPaletteIdx) palIdx = (palIdx + 1 + (row % 2)) % palette.slabs.length;
       prevPaletteIdx = palIdx;
-      const slabColor = scaleRgb(SLAB_PALETTE[palIdx]!, 0.975 + hash2(row, col * 17 + 7) * 0.05);
+      const slabColor = scaleRgb(palette.slabs[palIdx]!, 0.975 + hash2(row, col * 17 + 7) * 0.05);
 
       // Keep top well within [floor + 0.0155, floor + 0.0195] so Didukh (< floor + 0.03)
       // and shinto-torii authored steps (at y = 0 with floor = -0.035) stay cleanly separated.
@@ -548,8 +577,16 @@ function buildEdgeMossGeometry(spots: [number, number, number][]): THREE.BufferG
   return geometry;
 }
 
-export function createCourtyardStonePath({ floor, night }: { floor: number; night: boolean }) {
-  const { roadGeometry, mossPositions } = buildCourtyardRoadGeometry(floor);
+export function createCourtyardStonePath({
+  floor,
+  night,
+  skin = 'none',
+}: {
+  floor: number;
+  night: boolean;
+  skin?: CourtyardSkinId;
+}) {
+  const { roadGeometry, mossPositions } = buildCourtyardRoadGeometry(floor, skin);
   const atlasBytes = createStoneAtlasBytes(256);
 
   // Komorebi daylight surface: limited-diffuse clamped lighting (NoColorSpace raw pigment multipliers).

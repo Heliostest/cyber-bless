@@ -169,7 +169,7 @@ export function createKomorebiBackdrop(root: THREE.Object3D) {
   function attach() {
     root.traverse(object => {
       if (!(object instanceof THREE.Mesh) || Array.isArray(object.material) || swapped.has(object)) return;
-      if (object.userData.stonePath) return;
+      if (object.userData.stonePath || object.userData.courtyardSkin) return;
       const source = object.material, role = source.userData.backdropRole;
       if (!(source instanceof THREE.MeshStandardMaterial) || source.userData.komorebiPigment || !isBackdropRole(role)) return;
       swapped.set(object, source);

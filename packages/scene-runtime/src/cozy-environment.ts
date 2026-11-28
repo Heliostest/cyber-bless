@@ -19,6 +19,9 @@ import { createKomorebiMeadow, decorateMeadowGround } from './komorebi-meadow';
 import type { GrassRenderMethod } from './debug-grass';
 import { createKomorebiSurface } from './komorebi-surface';
 import { createCourtyardStonePath } from './courtyard-stone-path';
+import { getCourtyardSkin } from './courtyard-skins';
+import { createGardenCourtyardPad } from './garden-courtyard-paving';
+import { createRegionalCourtyard } from './regional-courtyard';
 import { createKomorebiBackdrop, type BackdropRole } from './komorebi-backdrop';
 import { applyCraftSurface } from './craft-surfaces';
 import { createEnvironmentWind, type EnvironmentWindController } from './environment-wind';
@@ -657,6 +660,8 @@ export function createCozyEnvironment(
   const root = new THREE.Group();
   root.name = "cozy-environment";
   root.userData.environment = kind;
+  const courtyardSkin = getCourtyardSkin(id);
+  root.userData.courtyardSkin = courtyardSkin;
   scene.add(root);
   const environmentWind = createEnvironmentWind({ strength: night ? 0.28 : coastal ? 0.58 : 0.52 });
   scene.userData.environmentNight = night;
@@ -685,6 +690,8 @@ export function createCozyEnvironment(
   let meadow: ReturnType<typeof createStylizedMeadow> | undefined;
   let komorebiMeadow: ReturnType<typeof createKomorebiMeadow> | undefined;
   let stonePath: ReturnType<typeof createCourtyardStonePath> | undefined;
+  let gardenPad: ReturnType<typeof createGardenCourtyardPad> | undefined;
+  let regionalCourtyard: ReturnType<typeof createRegionalCourtyard> | undefined;
   let grassMethod: GrassRenderMethod = 'original';
   let treePlacements: readonly TreePlacement[] = [];
   const clouds = !coastal && isSceneVisibleInApp({ id }) ? createToonCloudBackdrop(night ? "night" : "day") : undefined;
@@ -710,8 +717,6 @@ export function createCozyEnvironment(
   };
   const grass = makeMaterial(night ? 0x718e82 : 0x90c65b, 'grass');
   let komorebiGround: THREE.MeshPhongMaterial | undefined;
-  const sand = makeMaterial(night ? 0x9e9b83 : 0xecdfbd, 'sand');
-  sand.userData.backdropRole = 'sand';
   const addMesh = (geometry: THREE.BufferGeometry, material: THREE.Material, x: number, y: number, z: number) => {
     geometries.add(geometry);
     const mesh = new THREE.Mesh(geometry, material);
@@ -936,7 +941,7 @@ export function createCozyEnvironment(
   }
 
   if (kind === "courtyard") {
-    stonePath = createCourtyardStonePath({ floor, night });
+    stonePath = createCourtyardStonePath({ floor, night, skin: courtyardSkin });
     root.add(stonePath.mesh);
     if (stonePath.mossMesh) root.add(stonePath.mossMesh);
   } else if (kind === "veranda") {
@@ -1005,17 +1010,21 @@ export function createCozyEnvironment(
     ground.material = makeMaterial(coastal ? 0x9ab8ad : 0xb3c39b);
     for (const x of coastal ? [] : [-5, 5]) box(5, 0.10, 46, grass, x, floor + 0.025, -13);
   } else {
-    let pathGeometry: THREE.BufferGeometry = new THREE.CircleGeometry(2.55, 48);
-    if (spring) {
-      pathGeometry.dispose();
-      const shape = new THREE.Shape(); shape.absellipse(0, 0, 2.55 * 1.15, 2.55 * .86, 0, Math.PI * 2, false, 0);
-      const hole = new THREE.Path(); hole.absarc(0, 0, 1.36, 0, Math.PI * 2, true); shape.holes.push(hole);
-      pathGeometry = new THREE.ShapeGeometry(shape, 48);
-    }
-    const path = addMesh(pathGeometry, sand, 0, floor + 0.008, 0);
-    path.name = "garden-path";
-    path.rotation.x = -Math.PI / 2;
-    if (!spring) path.scale.set(1.15, 0.86, 1);
+    gardenPad = createGardenCourtyardPad({ floor, night, skin: courtyardSkin, spring });
+    root.add(gardenPad.mesh);
+    if (gardenPad.borderMesh) root.add(gardenPad.borderMesh);
+    if (gardenPad.mossMesh) root.add(gardenPad.mossMesh);
+  }
+
+  if (!coastal && kind !== "river" && courtyardSkin !== "none") {
+    regionalCourtyard = createRegionalCourtyard({
+      skin: courtyardSkin,
+      kind,
+      id,
+      groundY,
+      night,
+    });
+    root.add(regionalCourtyard.root);
   }
 
   const propParts = (name: string) => {
@@ -1160,6 +1169,8 @@ export function createCozyEnvironment(
     if (disposed || next === tone) return;
     tone = next;
     stonePath?.setTone(next);
+    gardenPad?.setTone(next);
+    regionalCourtyard?.setTone(next);
     // Restore PBR sources first, so the shared palette remap also visits them.
     calibrated.setEnabled(false);
     toneSurfaces.setTone(next); syncRidgePalette(); meadow?.setTone(next); komorebiMeadow?.setTone(next);
@@ -1281,8 +1292,8 @@ export function createCozyEnvironment(
           if (!meshes.has(object)) {
             meshes.add(object);
             if (surfaces.some(material => material instanceof THREE.MeshStandardMaterial && !material.transparent)) {
-              object.castShadow = !object.userData.komorebiGrass && !object.userData.stonePath && !object.userData.distantRidge;
-              object.receiveShadow = !object.userData.importedTreeFoliage && !object.userData.distantRidge;
+              object.castShadow = !object.userData.komorebiGrass && !object.userData.stonePath && !object.userData.courtyardSkin && !object.userData.distantRidge;
+              object.receiveShadow = !object.userData.importedTreeFoliage && !object.userData.distantRidge && !object.userData.courtyardGlow;
             }
           }
         }
@@ -1420,6 +1431,8 @@ export function createCozyEnvironment(
       meadow?.dispose();
       komorebiMeadow?.dispose();
       stonePath?.dispose();
+      gardenPad?.dispose();
+      regionalCourtyard?.dispose();
       treeRendering.dispose();
       clouds?.dispose();
       instances.forEach(mesh => mesh.dispose());

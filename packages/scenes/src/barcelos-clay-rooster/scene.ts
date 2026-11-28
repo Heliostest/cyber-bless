@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { createDebugRenderStyle } from '@wbr/scene-runtime/debug-render-style'
 import { createCraftMaterial } from '@wbr/scene-runtime/craft-surfaces'
+import { createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import { addInteractionCue } from '../scene-localization'
 import type { GestureHandle } from '@wbr/gestures'
 import type { SceneContext, SceneInstance } from '../contract'
@@ -91,7 +92,39 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
     applySurface: false,
   })
   lathe('rooster-dye-dish', [[0, 0], [.22, 0], [.25, .03], [.26, .085], [.24, .10], [.21, .06], [0, .06]], clay, [-1.44, .74, -.62])
-  add('rooster-dye-pool', new THREE.CylinderGeometry(.208, .208, .008, 40), green, [-1.44, .804, -.62])
+  const dyePoolLiquid = createVesselLiquid({
+    preset: 'pigment-dye',
+    radius: .214,
+    radialSegments: 14,
+    angularSegments: 40,
+    deformMode: 'cpu',
+    color: 0x628c77,
+    edgeColor: 0xa9ceb8,
+    deepColor: 0x355848,
+    foamColor: 0xcfe4d6,
+    foamStrength: .18,
+    opacity: .96,
+    roughness: .13,
+    meniscusHeight: .009,
+    maxAmplitude: .016,
+    seed: 7103,
+    name: 'rooster-dye-pool',
+    receiveShadow: true,
+    renderOrder: 1,
+  })
+  const dyePool = dyePoolLiquid.mesh
+  dyePool.position.set(-1.44, .808, -.62)
+  world.add(dyePool)
+  let liquidClock = 0
+  let dipCooldown = 0
+  let motionDipEchoed = false
+  const triggerGlazeDip = (lx = .02, lz = .01, strength = 1.05) => {
+    if (reduced()) return
+    dyePoolLiquid.addDipDepression(lx, lz, .011 * Math.min(1.2, strength), .072)
+    dyePoolLiquid.triggerRipple(lx, lz, strength)
+    dyePoolLiquid.addSwirlImpulse(2.1 * Math.min(1.2, strength))
+    dyePoolLiquid.addTiltImpulse(.85, -.55)
+  }
   const plinth = new THREE.Group(); plinth.name = 'rooster-display-plinth'; world.add(plinth)
   const plinthEdge = lathe('rooster-plinth-edge', [[0, .74], [.52, .74], [.58, .78], [.58, .88], [.54, .93], [0, .93]], clay, [.77, 0, -.06], plinth)
   const plinthTop = lathe('rooster-plinth-top', [[0, .915], [.535, .915], [.535, .942], [.527, .950], [0, .950]], plinthTopMat, [.77, 0, -.06], plinth)
@@ -180,7 +213,7 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
   const ferrule = add('rooster-brush-ferrule', new THREE.CylinderGeometry(.045, .045, .13, 16), gold, [.245, 0, 0], brush); ferrule.rotation.z = Math.PI / 2
   const tip = add('rooster-brush-tip', new THREE.ConeGeometry(.045, .17, 16), green, [.385, 0, 0], brush); tip.rotation.z = -Math.PI / 2
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const restore = () => { rooster.position.copy(at >= 2 ? SEATED : HOME); brush.position.copy(BRUSH_HOME); motif.visible = at >= 1; matrices() }
+  const restore = (resetFluid = false) => { rooster.position.copy(at >= 2 ? SEATED : HOME); brush.position.copy(BRUSH_HOME); motif.visible = at >= 1; if (resetFluid || reduced()) { liquidClock = 0; dipCooldown = 0; dyePoolLiquid.reset() }; matrices() }
   const carry=createPosePlacement(canvas,camera,{pose(_step,n){rooster.position.lerpVectors(HOME,SEATED,n);matrices()},roots:[rooster],targets:[paintSurface]},scene)
   const enabled = (step: number) => () => active() && !motion && at === step
   addInteractionCue(grip, { kind: 'drag', label: '握住画笔木柄', priority: 3, enabled: enabled(0), destination: paintSurface, targetLabel: '陶鸡胸前' })
@@ -194,16 +227,20 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
   const placementReady = (x: number, y: number) => at === 1 ? carry.move(x,y) : at < 2
     && !touch.occluded(x, y, at === 0 ? rooster : [plinthTop, plinthEdge], { ignore: moving() })
     && placementHit(canvas, camera, at === 0 ? tip : paintSurface, x, y, (px, py) => visibleHit(px, py, at === 0 ? roosterTargets : [plinthTop, plinthEdge], moving()))
-  const reset = () => { carry.cancel(); dropFeedback.clear(); dragging = false; travel = 0; if (!motion) restore() }
+  const reset = () => { carry.cancel(); dropFeedback.clear(); dragging = false; travel = 0; if (!motion) restore(true) }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (motion || at === 3) return false; matrices(); return visibleHit(x, y, at === 0 ? [grip] : roosterTargets) },
-    onStart(x, y) { feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; if(at===1)carry.begin(0,x,y); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (at===0?grip:paintSurface).getWorldPosition(new THREE.Vector3())); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
+    onStart(x, y) { feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; if (at === 0) triggerGlazeDip(.02, .01, .95); if(at===1)carry.begin(0,x,y); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (at===0?grip:paintSurface).getWorldPosition(new THREE.Vector3())); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
     onMove(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if(at===1&&dragging){ if(carry.move(x,y)&&pointer.finish()){carry.capture();dragging=false;begin(true)};return }
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
       moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .78, 2.0); matrices(); dropFeedback.setReady(placementReady(x, y))
+      if (at === 0 && !reduced() && dipCooldown <= 0 && brush.position.distanceTo(dyePool.position) < .65) {
+        triggerGlazeDip(.03, -.02, .72)
+        dipCooldown = .26
+      }
       if (at < 2 && placementReady(x,y) && pointer.finish()) { dragging = false; dropFeedback.clear(); begin(true) }
     },
     onRelease(x, y) {
@@ -229,8 +266,23 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.painting : COPY.placing : at === 0 ? COPY.paint : at === 1 ? COPY.place : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
     ending.sync(at === 2 && !motion)
   }
-  function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); feedback.impact({ freqs: [440, 554.37], duration: .19, gain: .012, type: 'triangle' }) }
-  function begin(placed = false) { if (!active() || (pointer.isBusy() && !placed) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
+  function settle() {
+    if (!active() || !motion) return
+    const finishedStep = motion.step
+    at = (finishedStep + 1) as Checkpoint; motion = null; restore(reduced())
+    if (finishedStep === 1 && !reduced()) {
+      dyePoolLiquid.addTiltImpulse(.55, .35)
+      dyePoolLiquid.triggerRipple(0, 0, .40)
+    }
+    sync(); ctx.onProgress?.(at); feedback.impact({ freqs: [440, 554.37], duration: .19, gain: .012, type: 'triangle' })
+  }
+  function begin(placed = false) {
+    if (!active() || (pointer.isBusy() && !placed) || motion || at >= 2) return
+    motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }
+    motionDipEchoed = false
+    if (at === 0) triggerGlazeDip(-.018, .016, 1.15)
+    sync(); if (reduced()) settle()
+  }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || at !== 2) return
     if (!text.trim() && !ending.completing) return
@@ -248,7 +300,7 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
     start() {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
-      restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
+      restore(true); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
       if (!returning) { writer = gestures.createWishWrite({ maxLen: 40, saves: ctx.saveWish !== undefined,
         onSubmit: text => { if (!active() || pointer.isBusy() || motion || at !== 2 || !text.trim()) return; feedback.prepare(); finish(text) } }); writer.mount(wishSlot, {}) }
       ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
@@ -258,20 +310,31 @@ export function createBarcelosClayRooster(ctx: SceneContext): SceneInstance {
       if (!active()) { pointer.cancel(); writer?.setEnabled(false); ui.actionBtn.disabled = true; ui.actionBtn.setAttribute('aria-disabled', 'true'); if (!inactiveRendered) { style.render(); inactiveRendered = true }; return }
       if (inactiveRendered) { inactiveRendered = false; sync() }
       writer?.setEnabled(at === 2 && !returning && !motion); writer?.update(dt)
+      const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
+      const quiet = reduced()
+      if (!quiet) {
+        liquidClock += delta
+        if (dipCooldown > 0) dipCooldown = Math.max(0, dipCooldown - delta)
+      }
       if (motion) {
-        const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0; motion.time = reduced() ? 1 : Math.min(1, motion.time + delta / .8); const t = ease(motion.time)
+        motion.time = quiet ? 1 : Math.min(1, motion.time + delta / .8); const t = ease(motion.time)
         if (motion.step === 0) {
           const target = paintSurface.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(-.37, 0, .055))
           if (t < .64) { brush.position.lerpVectors(motion.from, target, Math.min(1, t / .3)); brush.position.y += Math.sin(t / .64 * Math.PI * 2) * .05 }
           else brush.position.lerpVectors(target, BRUSH_HOME, (t - .64) / .36)
           motif.visible = t > .36
-        } else { rooster.position.lerpVectors(motion.from, SEATED, t); if (!reduced()) rooster.position.y += .20 * Math.sin(Math.PI * t) }
+          if (!quiet && !motionDipEchoed && t > .36) {
+            motionDipEchoed = true
+            dyePoolLiquid.triggerRipple(.028, -.024, .62)
+          }
+        } else { rooster.position.lerpVectors(motion.from, SEATED, t); if (!quiet) rooster.position.y += .20 * Math.sin(Math.PI * t) }
         if (motion.time === 1) settle()
       }
       ending.update(dt)
       if (disposed || !active()) return
+      dyePoolLiquid.update(delta, liquidClock, quiet)
       matrices(); style.render()
     },
-    dispose() { if (disposed) return; ending.dispose(); disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() { if (disposed) return; ending.dispose(); disposed = true; dropFeedback.dispose(); pointer.dispose(); stopResize(); writer?.dispose(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); dyePoolLiquid.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }
 }

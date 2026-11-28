@@ -1,5 +1,6 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import { createVesselLiquid } from '@wbr/scene-runtime/vessel-liquid'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -55,7 +56,7 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
   const world = new THREE.Group(); world.name = 'egg-spring-workbench'; scene.add(world)
   const material = (color: number, roughness = .83) => new THREE.MeshStandardMaterial({ color, roughness })
   const blue = material(0x427a83, .67), cream = material(0xf0e3bd), sage = material(0x94aaa0), gold = material(0xcaa26c)
-  const oak = material(0xc7b294), dark = material(0x94795c), clay = material(0xb78169), pigment = material(0x456e75, .57)
+  const oak = material(0xc7b294), dark = material(0x94795c), clay = material(0xb78169)
   const linenRest=sage.clone(),brushFerrule=gold.clone(),cupCream=cream.clone()
   applyCraftSurface(clay, { kind: 'ceramic', strength: .45 })
   applyCraftSurface(dark, { kind: 'wood', strength: .4, axis: 'y' })
@@ -92,9 +93,41 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
     roughness: .82,
     surfaceStrength: .24,
   })
-  // The dish has a raised ceramic rim around a shallow painted pool.
+  // The dish has a raised ceramic rim around a warm dye pool with capillary meniscus.
   lathe('egg-dye-dish', [[0, 0], [.23, 0], [.28, .035], [.29, .095], [.26, .11], [.235, .07], [0, .06]], clay, [-1.13, .74, -.56])
-  add('egg-dye-pool', new THREE.CylinderGeometry(.232, .232, .009, 48), pigment, [-1.13, .807, -.56])
+  const dyePoolLiquid = createVesselLiquid({
+    preset: 'pigment-dye',
+    radius: .236,
+    radialSegments: 14,
+    angularSegments: 44,
+    deformMode: 'cpu',
+    color: 0x3b6c75,
+    edgeColor: 0x90c6cb,
+    deepColor: 0x1d3f48,
+    foamColor: 0xc9e2df,
+    foamStrength: .20,
+    opacity: .94,
+    roughness: .13,
+    meniscusHeight: .010,
+    maxAmplitude: .017,
+    seed: 8117,
+    name: 'egg-dye-pool',
+    receiveShadow: true,
+    renderOrder: 1,
+  })
+  const dyePool = dyePoolLiquid.mesh
+  dyePool.position.set(-1.13, .812, -.56)
+  world.add(dyePool)
+  let liquidClock = 0
+  let dipCooldown = 0
+  let motionDipEchoed = false
+  const triggerDyeDip = (lx = .02, lz = .015, strength = 1.05) => {
+    if (reduced()) return
+    dyePoolLiquid.addDipDepression(lx, lz, .012 * Math.min(1.2, strength), .078)
+    dyePoolLiquid.triggerRipple(lx, lz, strength)
+    dyePoolLiquid.addSwirlImpulse(2.0 * Math.min(1.2, strength))
+    dyePoolLiquid.addTiltImpulse(.82, -.54)
+  }
 
   const cup = new THREE.Group(); cup.name = 'egg-display-cup'; cup.position.set(SEATED.x, 0, SEATED.z); world.add(cup)
   lathe('egg-cup-foot', [[0, .74], [.26, .74], [.29, .76], [.26, .79], [.10, .81], [.065, .87], [.11, .93], [0, .94]], clay, [0, 0, 0], cup)
@@ -149,7 +182,7 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
   const ferrule = add('egg-brush-ferrule', new THREE.CylinderGeometry(.043, .043, .13, 16), brushFerrule, [.22, 0, 0], brush); ferrule.rotation.z = Math.PI / 2
   const tip = add('egg-brush-tip', new THREE.ConeGeometry(.042, .17, 16), cream, [.37, 0, 0], brush); tip.rotation.z = -Math.PI / 2
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
-  const restore = () => { egg.position.copy(at >= 2 ? SEATED : HOME); brush.position.copy(BRUSH_HOME); motif.visible = at >= 1; matrices() }
+  const restore = (resetFluid = false) => { egg.position.copy(at >= 2 ? SEATED : HOME); brush.position.copy(BRUSH_HOME); motif.visible = at >= 1; if (resetFluid || reduced()) { liquidClock = 0; dipCooldown = 0; dyePoolLiquid.material.clearcoat = .72; dyePoolLiquid.reset() }; matrices() }
   const carry=createPosePlacement(canvas,camera,{pose(_step,n){egg.position.lerpVectors(HOME,SEATED,n);matrices()},roots:[egg],targets:[paintSurface]},scene)
   const enabled = (step: number) => () => active() && !motion && at === step
   addInteractionCue(grip, { kind: 'drag', label: '握住画笔木柄', priority: 3, enabled: enabled(0), destination: paintSurface, targetLabel: '青蓝蛋壳' })
@@ -166,16 +199,20 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
     const contact = projectTouchPoint(canvas, camera, at === 0 ? tip : egg)
     return !!contact && touch.hit(contact.x, contact.y, targets, { ignore })
   }
-  const reset = () => { carry.cancel(); dragging = false; travel = 0; dropFeedback.clear(); if (!motion) restore() }
+  const reset = () => { carry.cancel(); dragging = false; travel = 0; dropFeedback.clear(); if (!motion) restore(true) }
   const pointer = createObjectPointer(ui.hitLayer, {
     isActive: active,
     canStart(x, y) { if (motion || at === 3) return false; matrices(); return touch.hit(x, y, at === 0 ? brush : egg) },
-    onStart(x, y) { feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; if(at===1)carry.begin(0,x,y); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (at===0?grip:paintSurface).getWorldPosition(new THREE.Vector3())); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
+    onStart(x, y) { feedback.prepare(); down.set(x, y); travel = 0; dragging = at < 2; if (at === 0) triggerDyeDip(.02, .015, .95); if(at===1)carry.begin(0,x,y); plane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), (at===0?grip:paintSurface).getWorldPosition(new THREE.Vector3())); if (ray.aim(x, y).ray.intersectPlane(plane, point)) offset.copy(moving().position).sub(point) },
     onMove(x, y) {
       travel = Math.max(travel, Math.hypot(x - down.x, y - down.y))
       if(at===1&&dragging){ if(carry.move(x,y)&&pointer.finish()){carry.capture();dragging=false;begin(true)};return }
       if (!dragging || !ray.aim(x, y).ray.intersectPlane(plane, point)) return
       moving().position.copy(point).add(offset); moving().position.x = THREE.MathUtils.clamp(moving().position.x, -1.5, 1.5); moving().position.y = THREE.MathUtils.clamp(moving().position.y, .78, 2.0); matrices()
+      if (at === 0 && !reduced() && dipCooldown <= 0 && brush.position.distanceTo(dyePool.position) < .65) {
+        triggerDyeDip(.03, -.025, .72)
+        dipCooldown = .26
+      }
       dropFeedback.setReady(acceptsDrop(x, y))
       if (at < 2 && acceptsDrop(x,y) && pointer.finish()) { dragging = false; dropFeedback.clear(); begin(true) }
     },
@@ -201,8 +238,23 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
     setSafeText(ui.hintEl, motion ? motion.step === 0 ? COPY.painting : COPY.placing : at === 0 ? COPY.paint : at === 1 ? COPY.place : at === 2 ? returning ? COPY.returning : COPY.quiet : COPY.done, safe)
     ending.sync(at === 2 && !motion)
   }
-  function settle() { if (!active() || !motion) return; at = (motion.step + 1) as Checkpoint; motion = null; restore(); sync(); ctx.onProgress?.(at); feedback.impact({ freqs: [440, 554.37], duration: .19, gain: .012, type: 'triangle' }) }
-  function begin(placed = false) { if (!active() || (pointer.isBusy() && !placed) || motion || at >= 2) return; motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }; sync(); if (reduced()) settle() }
+  function settle() {
+    if (!active() || !motion) return
+    const finishedStep = motion.step
+    at = (finishedStep + 1) as Checkpoint; motion = null; restore(reduced())
+    if (finishedStep === 1 && !reduced()) {
+      dyePoolLiquid.addTiltImpulse(.50, .32)
+      dyePoolLiquid.triggerRipple(0, 0, .38)
+    }
+    sync(); ctx.onProgress?.(at); feedback.impact({ freqs: [440, 554.37], duration: .19, gain: .012, type: 'triangle' })
+  }
+  function begin(placed = false) {
+    if (!active() || (pointer.isBusy() && !placed) || motion || at >= 2) return
+    motion = { step: at as 0 | 1, time: 0, from: moving().position.clone() }
+    motionDipEchoed = false
+    if (at === 0) triggerDyeDip(-.02, .018, 1.15)
+    sync(); if (reduced()) settle()
+  }
   function finish(text = '') {
     if (!active() || pointer.isBusy() || motion || at !== 2) return
     if (!text.trim() && !ending.completing) return
@@ -222,7 +274,7 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
     start() {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
-      restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
+      restore(true); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
       if (!returning) { writer = gestures.createWishWrite({ maxLen: 40, saves: ctx.saveWish !== undefined,
         onSubmit: text => { if (!active() || pointer.isBusy() || motion || at !== 2 || !text.trim()) return; feedback.prepare(); finish(text) } }); writer.mount(wishSlot, {}) }
       ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
@@ -232,20 +284,32 @@ export function createSorbianPaintedEgg(ctx: SceneContext): SceneInstance {
       if (!active()) { pointer.cancel(); writer?.setEnabled(false); ui.actionBtn.disabled = true; ui.actionBtn.setAttribute('aria-disabled', 'true'); if (!inactiveRendered) { style.render(); inactiveRendered = true }; return }
       if (inactiveRendered) { inactiveRendered = false; sync() }
       writer?.setEnabled(at === 2 && !returning && !motion); writer?.update(dt)
+      const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
+      const quiet = reduced()
+      if (!quiet) {
+        liquidClock += delta
+        if (dipCooldown > 0) dipCooldown = Math.max(0, dipCooldown - delta)
+      }
       if (motion) {
-        const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0; motion.time = reduced() ? 1 : Math.min(1, motion.time + delta / .8); const t = ease(motion.time)
+        motion.time = quiet ? 1 : Math.min(1, motion.time + delta / .8); const t = ease(motion.time)
         if (motion.step === 0) {
           const target = paintSurface.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(-.37, 0, .055))
           if (t < .64) { brush.position.lerpVectors(motion.from, target, Math.min(1, t / .3)); brush.position.y += Math.sin(t / .64 * Math.PI * 2) * .05 }
           else brush.position.lerpVectors(target, BRUSH_HOME, (t - .64) / .36)
           motif.visible = t > .36
-        } else { egg.position.lerpVectors(motion.from, SEATED, t); if (!reduced()) egg.position.y += .20 * Math.sin(Math.PI * t) }
+          if (!quiet && !motionDipEchoed && t > .36) {
+            motionDipEchoed = true
+            dyePoolLiquid.triggerRipple(.028, -.024, .62)
+          }
+        } else { egg.position.lerpVectors(motion.from, SEATED, t); if (!quiet) egg.position.y += .20 * Math.sin(Math.PI * t) }
         if (motion.time === 1) settle()
       }
       ending.update(dt)
       if (disposed || !active()) return
+      dyePoolLiquid.material.clearcoat = quiet ? .72 : .72 + .12 * Math.sin(liquidClock * 1.45)
+      dyePoolLiquid.update(delta, liquidClock, quiet)
       matrices(); style.render()
     },
-    dispose() { if (disposed) return; ending.dispose(); disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
+    dispose() { if (disposed) return; ending.dispose(); disposed = true; pointer.dispose(); dropFeedback.dispose(); stopResize(); writer?.dispose(); feedback.dispose(); ui.actionBtn.removeEventListener('click', action); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); style.dispose(); dyePoolLiquid.dispose(); disposeTree(world); Object.values(lights).forEach(light => light.dispose()); scene.clear(); renderer.dispose(); renderer.forceContextLoss(); overlay.replaceChildren(); overlay.classList.remove('scene-overlay', 'scene-overlay--stage') },
   }
 }

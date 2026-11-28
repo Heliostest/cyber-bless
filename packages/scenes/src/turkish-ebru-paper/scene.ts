@@ -1,4 +1,6 @@
 import { createRitualMaterial } from '@wbr/scene-runtime/ritual-optics'
+import { LIQUID_PRESETS } from '@wbr/scene-runtime/vessel-liquid'
+import { createNoise2D } from 'simplex-noise'
 import { createQuietEnding } from '../quiet-ending'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
@@ -63,8 +65,153 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
     box(`ebru-rim-end-${side}`, [3.15, .035, .045], [0, .54, side * 1.065], brightCopper)
     for (const x of [-1.36, 1.36]) add(`ebru-rivet-${side}-${x}`, new THREE.SphereGeometry(.023, 8, 6), brightCopper, [x, .415, side * 1.144])
   }
-  const liquid = add('ebru-liquid-meniscus', new THREE.BoxGeometry(3.05, .055, 2.04), createRitualMaterial({ color: 0xc1ddd2, roughness: .22, metalness: 0, transparent: true, opacity: .78, depthWrite: false }, { kind: 'water', strength: .2 }), [0, .413, 0]); liquid.castShadow = false
-  liquid.material.userData.waterRendering = false // Pigment-bearing size is not clear water.
+  // Living rectangular tragacanth-gum marbling bath with 4-wall capillary meniscus,
+  // comb-pin wake ripples, peel-line suction waves, and subtle viscous surface shimmer.
+  const ebruSpec = LIQUID_PRESETS['ebru-bath']
+  const BATH_W = 3.04, BATH_D = 1.98, BATH_NX = 36, BATH_NZ = 24, BATH_BASE_Y = .435, BATH_MENISCUS_H = .011
+  const bathVertCount = (BATH_NX + 1) * (BATH_NZ + 1)
+  const bathRestPos = new Float32Array(bathVertCount * 3)
+  const bathRestNorm = new Float32Array(bathVertCount * 3)
+  const bathPos = new Float32Array(bathVertCount * 3)
+  const bathNorm = new Float32Array(bathVertCount * 3)
+  const bathUv = new Float32Array(bathVertCount * 2)
+  const bathWallT = new Float32Array(bathVertCount)
+  const bathIndices: number[] = []
+  const halfBathW = BATH_W * .5, halfBathD = BATH_D * .5
+  const meniscusLift = (edgeT: number) => {
+    if (edgeT <= .80) return 0
+    const u = THREE.MathUtils.clamp((edgeT - .80) / .20, 0, 1)
+    return BATH_MENISCUS_H * Math.pow(u, 2.15)
+  }
+  for (let iz = 0; iz <= BATH_NZ; iz++) {
+    const vz = iz / BATH_NZ
+    const z = (vz - .5) * BATH_D
+    const az = Math.abs(z) / halfBathD
+    for (let ix = 0; ix <= BATH_NX; ix++) {
+      const ux = ix / BATH_NX
+      const x = (ux - .5) * BATH_W
+      const ax = Math.abs(x) / halfBathW
+      const edgeT = Math.max(ax, az)
+      const vi = iz * (BATH_NX + 1) + ix
+      bathRestPos[vi * 3] = x
+      bathRestPos[vi * 3 + 1] = meniscusLift(edgeT)
+      bathRestPos[vi * 3 + 2] = z
+      bathUv[vi * 2] = ux
+      bathUv[vi * 2 + 1] = vz
+      bathWallT[vi] = edgeT
+    }
+  }
+  for (let iz = 0; iz < BATH_NZ; iz++) for (let ix = 0; ix < BATH_NX; ix++) {
+    const a = iz * (BATH_NX + 1) + ix, b = a + 1, c = a + BATH_NX + 1, d = c + 1
+    bathIndices.push(a, c, b, b, c, d)
+  }
+  bathPos.set(bathRestPos)
+  const bathGeo = new THREE.BufferGeometry()
+  const bathPosAttr = new THREE.BufferAttribute(bathPos, 3)
+  const bathNormAttr = new THREE.BufferAttribute(bathNorm, 3)
+  bathGeo.setAttribute('position', bathPosAttr)
+  bathGeo.setAttribute('normal', bathNormAttr)
+  bathGeo.setAttribute('uv', new THREE.BufferAttribute(bathUv, 2))
+  bathGeo.setIndex(bathIndices)
+  bathGeo.computeVertexNormals()
+  bathRestNorm.set(bathNorm)
+
+  const bathUniforms = {
+    wbrEbruTime: { value: 0 },
+    wbrEbruReduced: { value: 0 },
+    wbrEbruEnergy: { value: 0 },
+    wbrEbruEdgeColor: { value: new THREE.Color(0xedf6f2) },
+    wbrEbruDeepColor: { value: new THREE.Color(0x8baaa2) },
+    wbrEbruFoamColor: { value: new THREE.Color(ebruSpec.foamColor) },
+  }
+  const liquidMat = new THREE.MeshPhysicalMaterial({
+    color: 0xc2ddd4,
+    roughness: ebruSpec.roughness,
+    metalness: 0,
+    ior: ebruSpec.ior,
+    clearcoat: Math.max(ebruSpec.clearcoat, .76),
+    clearcoatRoughness: ebruSpec.clearcoatRoughness,
+    transparent: true,
+    opacity: .84,
+    depthWrite: false,
+  })
+  liquidMat.userData.waterRendering = false // Pigment-bearing size is not clear water.
+  liquidMat.customProgramCacheKey = () => 'wbr-ebru-tragacanth-bath-v1'
+  liquidMat.onBeforeCompile = shader => {
+    Object.assign(shader.uniforms, bathUniforms)
+    shader.vertexShader = `varying vec3 wbrEbruLocal;\n` + shader.vertexShader.replace('#include <begin_vertex>', `
+      #include <begin_vertex>
+      wbrEbruLocal = position;
+    `)
+    shader.fragmentShader = `
+varying vec3 wbrEbruLocal;
+uniform float wbrEbruTime;
+uniform float wbrEbruReduced;
+uniform float wbrEbruEnergy;
+uniform vec3 wbrEbruEdgeColor;
+uniform vec3 wbrEbruDeepColor;
+uniform vec3 wbrEbruFoamColor;
+` + shader.fragmentShader
+      .replace('#include <color_fragment>', `
+        #include <color_fragment>
+        float edgeX = abs(wbrEbruLocal.x) / ${halfBathW.toFixed(4)};
+        float edgeZ = abs(wbrEbruLocal.z) / ${halfBathD.toFixed(4)};
+        float wallEdge = max(edgeX, edgeZ);
+        float centerDepth = 1.0 - smoothstep(0.18, 0.94, wallEdge);
+        vec3 bathBody = mix(diffuseColor.rgb, wbrEbruDeepColor, centerDepth * 0.42);
+        float meniscusRim = smoothstep(0.78, 0.995, wallEdge);
+        float tLive = wbrEbruTime * (1.0 - wbrEbruReduced);
+        float gumSheen = 0.5 + 0.5 * sin(wbrEbruLocal.x * 5.2 - tLive * 1.15 + sin(wbrEbruLocal.z * 4.4 + tLive * 0.72));
+        vec3 viewDir = normalize(vViewPosition);
+        float fresnel = pow(clamp(1.0 - abs(dot(normal, viewDir)), 0.0, 1.0), 2.8);
+        diffuseColor.rgb = mix(bathBody, wbrEbruEdgeColor, meniscusRim * 0.58 + fresnel * 0.20);
+        diffuseColor.rgb = mix(diffuseColor.rgb, wbrEbruFoamColor, clamp(gumSheen * (0.08 + wbrEbruEnergy * 0.16) + smoothstep(0.90, 0.995, wallEdge) * 0.24, 0.0, 0.48));
+        diffuseColor.a = clamp(diffuseColor.a + meniscusRim * 0.12 + fresnel * 0.10, 0.0, 0.95);
+      `)
+      .replace('#include <opaque_fragment>', `
+        float ebruPeak = max(outgoingLight.r, max(outgoingLight.g, outgoingLight.b));
+        if (ebruPeak > 0.80) {
+          float excess = ebruPeak - 0.80;
+          outgoingLight *= (0.80 + 0.22 * (excess / (excess + 0.22))) / ebruPeak;
+        }
+        #include <opaque_fragment>
+      `)
+  }
+  const liquid = add('ebru-liquid-meniscus', bathGeo, liquidMat, [0, BATH_BASE_Y, 0])
+  liquid.castShadow = false
+  liquid.renderOrder = 1
+  liquid.userData.toonSurface = { outline: false, shading: 'smooth' }
+
+  const makeSeededRng = (seed: number) => {
+    let s = seed >>> 0
+    return () => {
+      s = (s + 0x6d2b79f5) >>> 0
+      let t = Math.imul(s ^ (s >>> 15), 1 | s)
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+    }
+  }
+  const bathNoise = createNoise2D(makeSeededRng(5039))
+  const MAX_EBRU_RIPPLES = 8
+  const bathRipples = Array.from({ length: MAX_EBRU_RIPPLES }, () => ({ x: 0, z: 0, birth: -100, strength: 0, active: false }))
+  let bathRippleCursor = 0
+  let bathTime = 0
+  let bathSloshX = 0, bathSloshZ = 0, bathVelX = 0, bathVelZ = 0
+  let lastCombSample = 0, lastContactSample = 0, lastPeelSample = 0
+  let combPinCursor = 0, idleDropTimer = 1.6, idleDropCursor = 0
+  const triggerBathRipple = (x: number, z: number, strength = .9) => {
+    const slot = bathRipples[bathRippleCursor]!
+    bathRippleCursor = (bathRippleCursor + 1) % MAX_EBRU_RIPPLES
+    slot.x = THREE.MathUtils.clamp(x, -halfBathW * .90, halfBathW * .90)
+    slot.z = THREE.MathUtils.clamp(z, -halfBathD * .90, halfBathD * .90)
+    slot.birth = bathTime
+    slot.strength = THREE.MathUtils.clamp(strength, .05, 1.8)
+    slot.active = true
+  }
+  const addBathSlosh = (ax: number, az: number) => {
+    bathVelX = THREE.MathUtils.clamp(bathVelX + ax, -4, 4)
+    bathVelZ = THREE.MathUtils.clamp(bathVelZ + az, -4, 4)
+  }
   // Both surfaces retain exactly the same UVs and original pixel field. The
   // inverse horizontal displacement is the comb's authored flow field.
   const textureWidth = 256, textureHeight = 192, pixels = new Uint8Array(textureWidth * textureHeight * 4)
@@ -90,8 +237,135 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
   const COLS = 32, ROWS = 24
   const plane = () => new THREE.PlaneGeometry(W, D, COLS, ROWS)
   const waterGeometry = plane(); waterGeometry.rotateX(-Math.PI / 2)
-  const waterMaterial = new THREE.MeshStandardMaterial({ map: pigment, roughness: .28, metalness: .03 })
+  const waterPosAttr = waterGeometry.getAttribute('position') as THREE.BufferAttribute
+  const waterRestPos = new Float32Array(waterPosAttr.array.length)
+  waterRestPos.set(waterPosAttr.array)
+  const waterMaterial = new THREE.MeshStandardMaterial({ map: pigment, roughness: .24, metalness: .03 })
   const water = add('ebru-floating-pattern', waterGeometry, waterMaterial, [0, WATER_Y, 0]); water.castShadow = false; water.userData.toonSurface = { outline: false, shading: 'smooth' }
+
+  const evalBathHeight = (x: number, z: number, wallT: number, ampScale = 1) => {
+    const wallFade = 1 - THREE.MathUtils.smoothstep(wallT, .76, 1.0)
+    let h = (x * bathSloshX * .0045 + z * bathSloshZ * .0045) * wallFade
+    const t = bathTime * ebruSpec.convectionSpeed
+    const n1 = bathNoise(x * .85 + t * .42, z * .85 - t * .31)
+    const n2 = bathNoise(x * 1.65 - t * .28 + 2.3, z * 1.65 + t * .37 - 1.4)
+    h += (n1 * .65 + n2 * .35) * .0024 * wallFade
+    const waveLen = .46, k = (Math.PI * 2) / waveLen, speed = .82
+    for (let i = 0; i < MAX_EBRU_RIPPLES; i++) {
+      const rp = bathRipples[i]!
+      if (!rp.active) continue
+      const age = bathTime - rp.birth
+      if (age < 0 || age > 4.2) continue
+      const dist = Math.hypot(x - rp.x, z - rp.z)
+      const dr = dist - age * speed
+      const packetW = .24 + age * .14
+      const env = rp.strength * THREE.MathUtils.smoothstep(age, 0, .06) * Math.exp(-age * ebruSpec.rippleDamping * .62) * Math.exp(-.5 * (dr * dr) / (packetW * packetW)) * wallFade
+      if (env <= .0004) continue
+      h += env * .0062 * Math.cos(k * dr)
+    }
+    return THREE.MathUtils.clamp(h * ampScale, -.009, .009)
+  }
+  const resetBath = () => {
+    bathTime = 0
+    bathSloshX = bathSloshZ = bathVelX = bathVelZ = 0
+    idleDropTimer = 1.6
+    for (let i = 0; i < MAX_EBRU_RIPPLES; i++) {
+      bathRipples[i]!.active = false
+      bathRipples[i]!.strength = 0
+      bathRipples[i]!.birth = -100
+    }
+    bathRippleCursor = 0
+    bathUniforms.wbrEbruTime.value = 0
+    bathUniforms.wbrEbruReduced.value = reduced() ? 1 : 0
+    bathUniforms.wbrEbruEnergy.value = 0
+    bathPos.set(bathRestPos)
+    bathNorm.set(bathRestNorm)
+    bathPosAttr.needsUpdate = true
+    bathNormAttr.needsUpdate = true
+    ;(waterPosAttr.array as Float32Array).set(waterRestPos)
+    waterPosAttr.needsUpdate = true
+    waterGeometry.computeVertexNormals()
+  }
+  const updateBath = (dt: number, isReduced: boolean) => {
+    bathUniforms.wbrEbruReduced.value = isReduced ? 1 : 0
+    if (isReduced) {
+      bathPos.set(bathRestPos)
+      bathNorm.set(bathRestNorm)
+      bathPosAttr.needsUpdate = true
+      bathNormAttr.needsUpdate = true
+      if (water.visible) {
+        ;(waterPosAttr.array as Float32Array).set(waterRestPos)
+        waterPosAttr.needsUpdate = true
+      }
+      bathUniforms.wbrEbruEnergy.value = 0
+      return
+    }
+    const stepDt = Number.isFinite(dt) && dt > 0 ? Math.min(dt, .05) : 0
+    bathTime += stepDt
+    bathUniforms.wbrEbruTime.value = bathTime
+
+    // Viscous tragacanth spring-pendulum slosh decay.
+    if (stepDt > 0) {
+      const w0 = ebruSpec.sloshFreq * .62, kS = w0 * w0, cD = 2 * ebruSpec.sloshDamping * w0
+      bathVelX += (-kS * bathSloshX - cD * bathVelX) * stepDt
+      bathVelZ += (-kS * bathSloshZ - cD * bathVelZ) * stepDt
+      bathSloshX = THREE.MathUtils.clamp(bathSloshX + bathVelX * stepDt, -.9, .9)
+      bathSloshZ = THREE.MathUtils.clamp(bathSloshZ + bathVelZ * stepDt, -.9, .9)
+      if (Math.abs(bathSloshX) < 1e-4 && Math.abs(bathVelX) < 1e-4) bathSloshX = bathVelX = 0
+      if (Math.abs(bathSloshZ) < 1e-4 && Math.abs(bathVelZ) < 1e-4) bathSloshZ = bathVelZ = 0
+
+      if (!motion && at === 0) {
+        idleDropTimer -= stepDt
+        if (idleDropTimer <= 0) {
+          idleDropTimer = 2.4
+          const pts = [[-.55, .28], [.48, -.32], [-.18, -.42], [.62, .25]] as const
+          const [px, pz] = pts[idleDropCursor % pts.length]!
+          idleDropCursor++
+          triggerBathRipple(px, pz, .38)
+        }
+      }
+    }
+
+    let energy = Math.hypot(bathSloshX, bathSloshZ) * .5
+    for (let i = 0; i < MAX_EBRU_RIPPLES; i++) {
+      const rp = bathRipples[i]!
+      if (!rp.active) continue
+      const age = bathTime - rp.birth
+      const decay = Math.exp(-age * ebruSpec.rippleDamping * .62) * rp.strength
+      if (age < 0 || age > 4.2 || decay < .006) {
+        rp.active = false
+        rp.strength = 0
+      } else {
+        energy += decay * .45
+      }
+    }
+    bathUniforms.wbrEbruEnergy.value = Math.min(1, energy)
+
+    // Keep liquid displacement bounded strictly below y = 0.45 when paper lies flat on the bath.
+    const maxLift = contactAmount > .5 && peelAmount < .05 ? .004 : .009
+    for (let i = 0; i < bathVertCount; i++) {
+      const x = bathRestPos[i * 3]!
+      const baseY = bathRestPos[i * 3 + 1]!
+      const z = bathRestPos[i * 3 + 2]!
+      const dy = THREE.MathUtils.clamp(evalBathHeight(x, z, bathWallT[i]!, 1), -maxLift, maxLift)
+      bathPos[i * 3 + 1] = Math.min(.448 - BATH_BASE_Y, baseY + dy)
+    }
+    bathPosAttr.needsUpdate = true
+    bathGeo.computeVertexNormals()
+
+    // Synchronize delicate elastic wave undulations onto the floating pigment layer during combing.
+    if (water.visible) {
+      for (let i = 0; i < waterPosAttr.count; i++) {
+        const x = waterRestPos[i * 3]!
+        const z = waterRestPos[i * 3 + 2]!
+        const wallT = Math.max(Math.abs(x) / (W * .5), Math.abs(z) / (D * .5))
+        const dy = evalBathHeight(x, z, wallT, .55)
+        waterPosAttr.setY(i, dy)
+      }
+      waterPosAttr.needsUpdate = true
+      waterGeometry.computeVertexNormals()
+    }
+  }
   const paperGeometry = plane(), paperPosition = paperGeometry.getAttribute('position'), paperUV = paperGeometry.getAttribute('uv')
   const paperColors = new Float32Array(paperPosition.count * 3)
   for (let i = 0; i < paperPosition.count; i++) {
@@ -249,9 +523,42 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
     // At contact the sheet fully covers the pigment; omit the now-covered
     // coplanar layer. A pale wet bath remains when the transferred sheet lifts.
     water.visible = contactAmount < 1
+    if (!reduced()) {
+      const dComb = combAmount - lastCombSample
+      if (Math.abs(dComb) >= .045) {
+        const combX = -1.12 + combAmount * 2.24
+        const pinZs = [-.62, -.21, .21, .62] as const
+        triggerBathRipple(combX, pinZs[combPinCursor % pinZs.length]!, .88)
+        triggerBathRipple(combX, pinZs[(combPinCursor + 2) % pinZs.length]!, .72)
+        combPinCursor++
+        addBathSlosh(Math.sign(dComb) * 1.1, .22 * Math.sin(combPinCursor))
+        lastCombSample = combAmount
+      }
+      if (contactAmount >= .35 && lastContactSample < .35) {
+        triggerBathRipple(0, .15, .82)
+        addBathSlosh(0, .75)
+      } else if (contactAmount >= .82 && lastContactSample < .82) {
+        triggerBathRipple(-.55, -.25, .65)
+        triggerBathRipple(.55, -.25, .65)
+      }
+      lastContactSample = contactAmount
+      const dPeel = peelAmount - lastPeelSample
+      if (Math.abs(dPeel) >= .055) {
+        const peelZ = D * (.5 - peelAmount)
+        triggerBathRipple(-.42, peelZ, .92)
+        triggerBathRipple(.42, peelZ, .85)
+        addBathSlosh(.18 * Math.sin(peelAmount * 9), -Math.sign(dPeel) * 1.05)
+        lastPeelSample = peelAmount
+      }
+    }
     matrices()
   }
-  const restore = () => { combAmount = at > 0 ? 1 : 0; contactAmount = at > 0 ? 1 : 0; peelAmount = at >= 2 ? 1 : 0; setShape() }
+  const restore = (resetFluid = true) => {
+    combAmount = at > 0 ? 1 : 0; contactAmount = at > 0 ? 1 : 0; peelAmount = at >= 2 ? 1 : 0
+    lastCombSample = combAmount; lastContactSample = contactAmount; lastPeelSample = peelAmount
+    if (resetFluid || reduced()) resetBath()
+    setShape()
+  }
   const enabled = (step: number) => () => inputActive() && !motion && at === step
   const removeCues = [
     addInteractionCue(grip, { kind: 'drag', direction: [1, 0], label: '向右梳开彩纹', anchor: GRIP, priority: 3, enabled: enabled(0) }),
@@ -315,7 +622,15 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
   function prepareInput() { const revision = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && revision === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
-    at = (motion.step + 1) as Checkpoint; motion = null; restore()
+    const finishedStep = motion.step
+    at = (finishedStep + 1) as Checkpoint; motion = null; restore(reduced())
+    if (!reduced()) {
+      if (finishedStep === 0) triggerBathRipple(0, 0, .55)
+      else {
+        triggerBathRipple(0, -.35, .85)
+        addBathSlosh(.25, -.75)
+      }
+    }
     withHostCallbacks(() => { ctx.onProgress?.(at); if (callbackActive()) feedback.impact({ freqs: [392, 523.25], duration: .12, gain: .007, type: 'sine' }) })
   }
   function begin() {
@@ -344,7 +659,9 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
     // Fit all authored extreme and intermediate poses without changing framing
     // during manipulation. This also contains every vertex on portrait canvases.
     for (const pose of [[0, 0, 0], [1, 0, 0], [1, .5, 0], [1, 1, 0], [1, 1, .5], [1, 1, 1]]) {
-      [combAmount, contactAmount, peelAmount] = pose as XYZ; setShape()
+      [combAmount, contactAmount, peelAmount] = pose as XYZ
+      lastCombSample = combAmount; lastContactSample = contactAmount; lastPeelSample = peelAmount
+      setShape()
       world.traverse(o => {
         const mesh = o as THREE.Mesh; if (!mesh.geometry) return
         const vertices = mesh.geometry.getAttribute('position')
@@ -354,7 +671,9 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
         }
       })
     }
-    [combAmount, contactAmount, peelAmount] = saved; setShape()
+    [combAmount, contactAmount, peelAmount] = saved
+    lastCombSample = combAmount; lastContactSample = contactAmount; lastPeelSample = peelAmount
+    setShape()
     camera.position.copy(targetPoint).addScaledVector(direction, distance); camera.lookAt(targetPoint); matrices()
   }
   restore(); sync()
@@ -382,7 +701,7 @@ export function createTurkishEbruPaper(ctx: SceneContext): SceneInstance {
         setShape(); if (motion.time === 1) settle()
       }
       ending.update(dt)
-      if (!disposed && active()) { matrices(); style.render() }
+      if (!disposed && active()) { updateBath(delta, reduced()); matrices(); style.render() }
     },
     dispose() {
       if (disposed) return

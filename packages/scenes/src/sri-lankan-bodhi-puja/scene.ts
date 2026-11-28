@@ -36,12 +36,12 @@ export function createBodhiPuja(ctx: SceneContext): SceneInstance {
   const model = createBodhiPujaModel(); scene.add(model.root)
   const matrices = () => { scene.updateMatrixWorld(true); camera.updateMatrixWorld(true) }
   const pose = (step: number, n: number) => { amount = n; model.pose(step,n); matrices() }
-  const restore = () => pose(at, 0)
+  const restore = (resetFluid = false) => { pose(at, 0); if (resetFluid) model.resetLiquid() }
   const directions: [number, number][] = [[0,-1],[1,0],[0,1]]
   const removeCues = model.targets.map((target, i) => addInteractionCue(target!, { kind: 'drag', direction: directions[i], label: ACTIONS[i]!, anchor: model.anchors[i], priority: 3, enabled: () => inputActive() && !motion && at === i }))
   const touch = createTouchTarget(canvas, camera, scene), down = new THREE.Vector2(), previous = new THREE.Vector2()
   const axes = (dx: number, dy: number) => directionalAxes(directions[at]!, dx, dy)
-  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
+  const reset = () => { moved = invalid = false; pathTravel = maxCross = maxAlong = minAlong = backtrack = along = 0; if (!motion && !disposed) restore(true); updateDirectionalDragHint(ui.hintEl, false, HINTS[at]!, safe) }
   const guardedEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']
   const guardCallbackInput = (event: Event) => { if (notifying) event.stopImmediatePropagation() }
   guardedEvents.forEach(type => { window.addEventListener(type, guardCallbackInput, true); ui.hitLayer.addEventListener(type, guardCallbackInput, true) })
@@ -55,7 +55,13 @@ export function createBodhiPuja(ctx: SceneContext): SceneInstance {
       const [a, cross] = axes(x - down.x, y - down.y); along = a!; moved = true
       maxAlong = Math.max(maxAlong, along); minAlong = Math.min(minAlong, along); backtrack = Math.max(backtrack, maxAlong - along); maxCross = Math.max(maxCross, Math.abs(cross!))
       // Preview the held water pitcher; cancellation restores the committed checkpoint.
-      pose(at, THREE.MathUtils.clamp(along / 60, 0, 1) * .20)
+      const prevAmount = amount
+      const nextAmount = THREE.MathUtils.clamp(along / 60, 0, 1) * .20
+      pose(at, nextAmount)
+      if (!(ctx.isReducedMotion?.() ?? false) && Math.abs(nextAmount - prevAmount) > .005) {
+        const impulse = (nextAmount - prevAmount) * 14
+        model.triggerSlosh(at === 1 ? -impulse : impulse * .5, at === 0 ? -impulse * .5 : impulse * .35, .35)
+      }
       updateDirectionalDragHint(ui.hintEl, !invalid && completesDirectionalDrag({ along, end: along, maxAlong, minAlong, backtrack, maxCross, cross: cross!, travel: pathTravel }), HINTS[at]!, safe)
     },
     onRelease(x, y) {
@@ -75,14 +81,25 @@ export function createBodhiPuja(ctx: SceneContext): SceneInstance {
   function prepareInput() { const version = lifecycleVersion; withHostCallbacks(() => feedback.prepare()); return inputActive() && version === lifecycleVersion }
   function settle() {
     if (!inputActive() || !motion) return
-    at = (motion.step + 1) as Checkpoint; motion = null; restore()
+    const finishedStep = motion.step
+    at = (finishedStep + 1) as Checkpoint; motion = null; restore(ctx.isReducedMotion?.() ?? false)
+    if (!(ctx.isReducedMotion?.() ?? false)) {
+      model.triggerSlosh(finishedStep === 1 ? -1.4 : .9, finishedStep === 2 ? -1.1 : .6, .65)
+    }
     withHostCallbacks(() => {
       ctx.onProgress?.(at); if (!callbackActive()) return
       feedback.impact({ freqs: [[329.63,392,440][at-1] ?? 329.63], duration: .09, gain: .003, type: 'sine' })
       if (at === 3 && callbackActive()) overlay.dispatchEvent(new CustomEvent('scene:complete', { bubbles: true }))
     })
   }
-  function advance() { if (!inputActive() || pointer.isBusy() || motion || at === 3) return; motion = { step: at, time: 0, from: amount }; sync(); if (ctx.isReducedMotion?.()) settle() }
+  function advance() {
+    if (!inputActive() || pointer.isBusy() || motion || at === 3) return
+    motion = { step: at, time: 0, from: amount }
+    if (!(ctx.isReducedMotion?.() ?? false)) {
+      model.triggerSlosh(at === 1 ? 1.8 : at === 2 ? 2.1 : .7, at === 0 ? -1.2 : .7, .85)
+    }
+    sync(); if (ctx.isReducedMotion?.()) settle()
+  }
   const action = () => { if (!inputActive() || pointer.isBusy() || motion || at === 3 || !prepareInput()) return; advance() }
   const blur = () => { focused = false; lifecycleVersion++; pointer.cancel(); sync() }, focus = () => { focused = true; if (!disposed) sync() }
   const resize = () => {
@@ -98,7 +115,7 @@ export function createBodhiPuja(ctx: SceneContext): SceneInstance {
     start() {
       if (started || disposed) return
       started = true; const initial = ctx.initialProgress ?? 0; at = (Number.isFinite(initial) ? THREE.MathUtils.clamp(Math.floor(initial), 0, 3) : 0) as Checkpoint
-      restore(); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
+      restore(true); resize(); stopResize = observeCanvasResize(canvas, () => { if (!disposed) resize() })
       ui.actionBtn.addEventListener('click', action); window.addEventListener('blur', blur); window.addEventListener('focus', focus); sync()
     },
     update(dt) {
@@ -107,12 +124,13 @@ export function createBodhiPuja(ctx: SceneContext): SceneInstance {
       if (notifying) return
       if (suspended) { suspended = false; sync() }
       const delta = Number.isFinite(dt) ? THREE.MathUtils.clamp(dt, 0, .05) : 0
+      const quiet = ctx.isReducedMotion?.() ?? false
       if (motion) {
-        motion.time = ctx.isReducedMotion?.() ? 1 : Math.min(1, motion.time + delta / 2.5)
+        motion.time = quiet ? 1 : Math.min(1, motion.time + delta / 2.5)
         const eased=ease(motion.time)
         pose(motion.step, motion.from+(1-motion.from)*eased); if (motion.time === 1) settle()
       }
-      if (active()) { matrices(); lights.key.shadow.normalBias = .03; style.render() }
+      if (active()) { model.updateLiquid(delta, quiet); matrices(); lights.key.shadow.normalBias = .03; style.render() }
     },
     dispose() {
       if (disposed) return

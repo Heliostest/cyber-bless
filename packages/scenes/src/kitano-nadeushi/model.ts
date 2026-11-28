@@ -1,4 +1,14 @@
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import {
+  applyStylizedHumanSurfaceHint,
+  createStylizedFingerGeometry,
+  createStylizedForearmGeometry,
+  createStylizedGarmentMaterial,
+  createStylizedPalmGeometry,
+  createStylizedSkinMaterial,
+  createStylizedSleeveCuffGeometry,
+  createStylizedThumbGeometry,
+} from '@wbr/scene-runtime/stylized-human'
 import * as THREE from 'three'
 import { addSteppedPedestal } from '../cozy-furniture'
 
@@ -7,10 +17,9 @@ export function createNadeushiModel() {
   const root = new THREE.Group(); root.name = 'nadeushi-subject'; root.position.y = -.012
   const stone = new THREE.MeshStandardMaterial({ color: 0x6c8182, roughness: .88 })
   const dark = new THREE.MeshStandardMaterial({ color: 0x384f54, roughness: .82 })
-  const skin = new THREE.MeshStandardMaterial({ color: 0xf0bc91, roughness: .82 })
-  const cuff = new THREE.MeshStandardMaterial({ color: 0xd5ede3, roughness: .91 })
+  const skin = createStylizedSkinMaterial({ color: 0xf0bc91, tone: 'warm-peach', roughness: .84, scatterStrength: .13, name: 'nadeushi-visitor-skin' })
+  const cuff = createStylizedGarmentMaterial({ color: 0xd5ede3, roughness: .91, fabricStrength: .25, axis: 'z', name: 'nadeushi-visitor-cuff' })
   applyCraftSurface(stone,{kind:'stone',strength:.45})
-  applyCraftSurface(cuff,{kind:'fabric',strength:.25})
   // Remove the degenerate pole triangles from sphere/lathe primitives before rendering.
   const clean = (source: THREE.BufferGeometry) => {
     const raw = source.index ? source.toNonIndexed() : source, p = raw.getAttribute('position'), values: number[] = []
@@ -76,11 +85,38 @@ export function createNadeushiModel() {
   ellipsoid('tail-tip',[1.04,.44,-.22],[.09,.065,.065],stone,ox)
 
   const hand=new THREE.Group();hand.name='visitor-hand';root.add(hand)
-  ellipsoid('palm',[0,0,0],[.115,.044,.14],skin,hand)
-  for(let i=0;i<4;i++)ellipsoid('finger-'+i,[-.078+i*.051,-.006,-.13-(i===1?.025:0)],[.024,.033,.105-(i===3?.025:0)],skin,hand)
-  const thumb=ellipsoid('thumb',[-.13,-.006,-.045],[.034,.035,.087],skin,hand);thumb.rotation.y=-.55
-  ellipsoid('wrist',[0,-.008,.17],[.074,.045,.10],skin,hand)
-  ellipsoid('sleeve-cuff',[0,-.008,.27],[.088,.058,.085],cuff,hand)
+  const addHumanPart=(name:string,g:THREE.BufferGeometry,mat:THREE.Material,role:'skin'|'garment')=>{
+    const m=new THREE.Mesh(g,mat);m.name=name;m.castShadow=m.receiveShadow=true;applyStylizedHumanSurfaceHint(m,role);hand.add(m);return m
+  }
+  addHumanPart('palm',createStylizedPalmGeometry({
+    width:.225,thickness:.078,length:.255,handedness:'right',palmUp:false,arch:.014,iterations:1,
+  }),skin,'skin')
+  const fingerLayout:[number,number,number,number,number,number][]=[
+    // [x, zBase, length, radius, curl, splay] — gentle stroking fingers curving over the ox brow
+    [-.076,-.108,.168,.024,.24,-.055],
+    [-.026,-.120,.186,.025,.26,-.015],
+    [.025,-.115,.172,.024,.28,.025],
+    [.073,-.096,.134,.021,.30,.065],
+  ]
+  for(const [i,[x,zBase,len,r,curl,splay]] of fingerLayout.entries()){
+    const f=addHumanPart('finger-'+i,createStylizedFingerGeometry({
+      length:len,radiusX:r,radiusY:r*.94,curl,curlUp:false,splay,iterations:1,
+    }),skin,'skin')
+    f.position.set(x,-.004,zBase)
+  }
+  const thumb=addHumanPart('thumb',createStylizedThumbGeometry({
+    length:.142,radiusX:.029,radiusY:.027,curl:.20,curlUp:false,opposition:.014,iterations:1,
+  }),skin,'skin')
+  thumb.position.set(-.102,-.007,.015)
+  thumb.rotation.y=.42
+  const wrist=addHumanPart('wrist',createStylizedForearmGeometry({
+    length:.195,wristRadiusX:.070,wristRadiusY:.042,elbowRadiusX:.078,elbowRadiusY:.049,fullness:.04,iterations:1,
+  }),skin,'skin')
+  wrist.position.set(0,-.006,.105)
+  const sleeveCuff=addHumanPart('sleeve-cuff',createStylizedSleeveCuffGeometry({
+    length:.175,cuffRadiusX:.092,cuffRadiusY:.065,sleeveRadiusX:.108,sleeveRadiusY:.078,wallThickness:.014,rolledLip:.009,foldDepth:.005,cavityDepthRatio:.48,iterations:1,
+  }),cuff,'garment')
+  sleeveCuff.position.set(0,-.006,.225)
   const rest=new THREE.Vector3(-.9,.78,.91)
   hand.updateMatrixWorld(true)
   const handVertexMap=new Map<string,THREE.Vector3>(),handInverse=hand.matrixWorld.clone().invert()

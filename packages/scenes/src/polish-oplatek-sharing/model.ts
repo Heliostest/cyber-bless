@@ -1,5 +1,15 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import {
+  applyStylizedHumanSurfaceHint,
+  createStylizedFingerGeometry,
+  createStylizedForearmGeometry,
+  createStylizedGarmentMaterial,
+  createStylizedPalmGeometry,
+  createStylizedSkinMaterial,
+  createStylizedSleeveCuffGeometry,
+  createStylizedThumbGeometry,
+} from '@wbr/scene-runtime/stylized-human'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { addObjectCradle, addOfferingTable } from '../cozy-furniture'
@@ -19,15 +29,6 @@ function dedupeNames(root: THREE.Object3D) {
     seen.set(o.name, n + 1)
     if (n > 0) o.name = `${o.name}-${n}`
   })
-}
-
-function limbGeometry(profile: [number, number][], sx: number, sy: number, segments = 24) {
-  const g = new THREE.LatheGeometry(profile.map(([r, z]) => new THREE.Vector2(r, z)), segments)
-  g.rotateX(Math.PI / 2)
-  g.scale(sx, sy, 1)
-  g.computeVertexNormals()
-  g.computeBoundingBox()
-  return g
 }
 
 export function createOplatekModel() {
@@ -89,11 +90,10 @@ export function createOplatekModel() {
   const pieceCarrier=new THREE.Group();pieceCarrier.name='oplatek-piece-carrier';root.add(pieceCarrier)
   const wafer=new THREE.MeshStandardMaterial({color:0xfff2d5,roughness:.91})
   const relief=new THREE.MeshStandardMaterial({color:0xf4e2bd,roughness:.92})
-  const skinA=new THREE.MeshStandardMaterial({color:0xe7ac7c,roughness:.86})
-  const skinB=new THREE.MeshStandardMaterial({color:0xbb7956,roughness:.86})
-  const clothA=new THREE.MeshStandardMaterial({color:0x6b9496,roughness:.98})
-  const clothB=new THREE.MeshStandardMaterial({color:0xb25e59,roughness:.98})
-  for(const sleeve of[clothA,clothB])applyCraftSurface(sleeve,{kind:'fabric',strength:.25})
+  const skinA=createStylizedSkinMaterial({color:0xe7ac7c,tone:'warm-apricot',roughness:.85,scatterStrength:.12,name:'oplatek-giver-skin'})
+  const skinB=createStylizedSkinMaterial({color:0xbb7956,tone:'terracotta-warm',roughness:.85,scatterStrength:.12,name:'oplatek-receiver-skin'})
+  const clothA=createStylizedGarmentMaterial({color:0x6b9496,roughness:.94,fabricStrength:.28,axis:'z',name:'oplatek-giver-sleeve'})
+  const clothB=createStylizedGarmentMaterial({color:0xb25e59,roughness:.94,fabricStrength:.28,axis:'z',name:'oplatek-receiver-sleeve'})
   function solid(points: [number,number][],depth:number,material:THREE.Material,name:string) {
     const shape=new THREE.Shape();points.forEach(([x,z],i)=>i?shape.lineTo(x,-z):shape.moveTo(x,-z));shape.closePath()
     const geometry=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:false,steps:1});geometry.rotateX(-Math.PI/2);geometry.translate(0,-depth/2,0)
@@ -107,44 +107,60 @@ export function createOplatekModel() {
   function box(parent:THREE.Object3D,name:string,size:[number,number,number],position:[number,number,number],material:THREE.Material,crop=false) {
     const m=new THREE.Mesh(new THREE.BoxGeometry(...size),material);m.name=name;m.position.set(...position);m.castShadow=m.receiveShadow=true;m.userData.intentionalCrop=crop;parent.add(m);return m
   }
-  function rounded(parent:THREE.Object3D,name:string,size:[number,number,number],position:[number,number,number],material:THREE.Material,bevel:number,crop=false) {
-    const r=Math.max(.002,Math.min(bevel,size[0]*.42,size[1]*.42,size[2]*.42))
-    const m=new THREE.Mesh(new RoundedBoxGeometry(size[0],size[1],size[2],3,r),material)
-    m.name=name;m.position.set(...position);m.castShadow=m.receiveShadow=true;m.userData.intentionalCrop=crop;parent.add(m);return m
-  }
-  function part(parent:THREE.Object3D,name:string,geometry:THREE.BufferGeometry,position:[number,number,number],material:THREE.Material,crop=false) {
-    const m=new THREE.Mesh(geometry,material);m.name=name;m.position.set(...position);m.castShadow=m.receiveShadow=true;m.userData.intentionalCrop=crop;parent.add(m);return m
+  function part(parent:THREE.Object3D,name:string,geometry:THREE.BufferGeometry,position:[number,number,number],material:THREE.Material,role:'skin'|'garment',crop=false) {
+    const m=new THREE.Mesh(geometry,material);m.name=name;m.position.set(...position);m.castShadow=m.receiveShadow=true;m.userData.intentionalCrop=crop;applyStylizedHumanSurfaceHint(m,role);parent.add(m);return m
   }
   for(const x of [-.49,.49])box(waferBody,'oplatek-rim-x-'+x,[.012,.006,x<0?1.14:.78],[x,.018,x<0?.06:.24],relief)
   for(const z of [-.64,.64])box(waferBody,'oplatek-rim-z-'+z,[z<0?.56:.98,.006,.012],[z<0?-.21:0,.018,z],relief)
   for(let i=0;i<3;i++)box(waferBody,'oplatek-line-'+i,[.38,.003,.006],[-.08,.0165,.19+i*.055],relief)
   function hand(parent:THREE.Group,label:string,skin:THREE.Material,cloth:THREE.Material,scale:number,yaw:number,center:[number,number,number]) {
     const g=new THREE.Group();g.name='oplatek-'+label+'-hand';g.position.set(...center);g.rotation.y=yaw;parent.add(g)
-    // Smooth rounded palm and fingers meet the wafer underside cleanly at y = -0.015;
-    // wrist, forearm, and sleeve stay strictly below y = -0.015 so they never pierce the wafer.
-    const palmW=.43*scale,palmH=.086,palmD=.34*scale
-    rounded(g,'oplatek-'+label+'-palm',[palmW,palmH,palmD],[0,-.015-palmH/2,0],skin,.024)
-    for(let i=0;i<4;i++){
-      const length=(i===0?.21:i===3?.22:.26)*scale
-      const fingerW=.076*scale,fingerH=.068
-      const finger=rounded(g,'oplatek-'+label+'-finger-'+i,[fingerW,fingerH,length],[(i-1.5)*.095*scale,-.015-fingerH/2,-palmD*.45-length/2],skin,.024)
-      finger.rotation.y=(i-1.5)*.035
+    // Warm Loop-subdivided palm and fingers gently cradle the wafer underside cleanly at y = -0.015;
+    // wrist, forearm, and rolled cloth sleeve stay strictly below y = -0.015 so they never pierce the wafer.
+    const palmW=.46*scale,palmH=.086,palmD=.38*scale
+    const palmGeo=createStylizedPalmGeometry({
+      width:palmW,thickness:palmH,length:palmD,handedness:'left',palmUp:true,arch:.010,flatContactFace:true,iterations:1,
+    })
+    part(g,'oplatek-'+label+'-palm',palmGeo,[0,-.015-palmH/2,0],skin,'skin')
+
+    const fingerH=.068
+    const fingerSpecs=[
+      {len:.25*scale,rx:.047*scale,x:-.148*scale,z:-palmD*.38,splay:-.02},
+      {len:.29*scale,rx:.049*scale,x:-.048*scale,z:-palmD*.40,splay:-.005},
+      {len:.29*scale,rx:.049*scale,x:.052*scale,z:-palmD*.40,splay:.01},
+      {len:.26*scale,rx:.048*scale,x:.155*scale,z:-palmD*.38,splay:.03},
+    ]
+    for(const [i,f] of fingerSpecs.entries()){
+      const fGeo=createStylizedFingerGeometry({
+        length:f.len,radiusX:f.rx,radiusY:.050,curl:.02,curlUp:true,splay:f.splay,flatTopY:fingerH/2,iterations:1,
+      })
+      const finger=part(g,'oplatek-'+label+'-finger-'+i,fGeo,[f.x,-.015-fingerH/2,f.z],skin,'skin')
+      finger.rotation.y=(i-1.5)*.025
     }
+
     const thumbH=.068
-    const thumb=rounded(g,'oplatek-'+label+'-thumb',[.086*scale,thumbH,.30*scale],[-.30*scale,-.015-thumbH/2,.03*scale],skin,.024)
-    thumb.rotation.y=-.70
-    const wristGeo=limbGeometry([
-      [0,0],[.94,0],[1.0,.04*scale],[.90,.16*scale],[.85,.28*scale],[0,.28*scale],
-    ],.132*scale,.043)
-    part(g,'oplatek-'+label+'-wrist',wristGeo,[0,-.060,.10*scale],skin)
-    const forearmGeo=limbGeometry([
-      [0,0],[.84,0],[.86,.05*scale],[.92,.32*scale],[1.0,.62*scale],[0,.62*scale],
-    ],.134*scale,.050)
-    part(g,'oplatek-'+label+'-forearm',forearmGeo,[0,-.067,.28*scale],skin,true)
-    const sleeveGeo=limbGeometry([
-      [0,0],[.86,0],[.93,.025*scale],[.89,.065*scale],[.96,.44*scale],[1.0,.94*scale],[0,.94*scale],
-    ],.176*scale,.068)
-    part(g,'oplatek-'+label+'-sleeve',sleeveGeo,[0,-.085,.80*scale],cloth,true)
+    const thumbGeo=createStylizedThumbGeometry({
+      length:.29*scale,radiusX:.054*scale,radiusY:.050,curl:.02,curlUp:true,opposition:.012*scale,flatTopY:thumbH/2,iterations:1,
+    })
+    const thumb=part(g,'oplatek-'+label+'-thumb',thumbGeo,[-.19*scale,-.015-thumbH/2,.08*scale],skin,'skin')
+    thumb.rotation.y=.64
+
+    // Wrist, forearm, and thick-walled rolled sleeve remain strictly below y = -0.015.
+    const wristGeo=createStylizedForearmGeometry({
+      length:.27*scale,wristRadiusX:.128*scale,wristRadiusY:.042,elbowRadiusX:.118*scale,elbowRadiusY:.044,fullness:.03,iterations:1,
+    })
+    part(g,'oplatek-'+label+'-wrist',wristGeo,[0,-.062,.10*scale],skin,'skin')
+
+    const forearmGeo=createStylizedForearmGeometry({
+      length:.62*scale,wristRadiusX:.118*scale,wristRadiusY:.044,elbowRadiusX:.138*scale,elbowRadiusY:.052,fullness:.06,iterations:1,
+    })
+    part(g,'oplatek-'+label+'-forearm',forearmGeo,[0,-.070,.28*scale],skin,'skin',true)
+
+    const sleeveGeo=createStylizedSleeveCuffGeometry({
+      length:.92*scale,cuffRadiusX:.162*scale,cuffRadiusY:.064,sleeveRadiusX:.184*scale,sleeveRadiusY:.072,
+      wallThickness:.018*scale,rolledLip:.010*scale,foldDepth:.007*scale,cavityDepthRatio:.36,iterations:1,
+    })
+    part(g,'oplatek-'+label+'-sleeve',sleeveGeo,[0,-.092,.78*scale],cloth,'garment',true)
     return g
   }
   const holderHand=hand(holder,'giver',skinA,clothA,1.15,0,[-.15,0,.23])

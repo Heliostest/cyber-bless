@@ -1,5 +1,15 @@
 import { getEnvironmentSurfaceY } from '@wbr/scene-runtime'
 import { applyCraftSurface } from '@wbr/scene-runtime/craft-surfaces'
+import {
+  applyStylizedHumanSurfaceHint,
+  createStylizedFingerGeometry,
+  createStylizedForearmGeometry,
+  createStylizedGarmentMaterial,
+  createStylizedPalmGeometry,
+  createStylizedSkinMaterial,
+  createStylizedSleeveCuffGeometry,
+  createStylizedThumbGeometry,
+} from '@wbr/scene-runtime/stylized-human'
 import * as THREE from 'three'
 import { addRoundLowTable } from '../cozy-furniture'
 
@@ -12,11 +22,10 @@ export function createYushengModel() {
   const subject = new THREE.Group(); subject.name = 'yusheng-subject'; root.add(subject)
   const material = (color:string, roughness=.72) => new THREE.MeshStandardMaterial({color,roughness,metalness:0})
   const porcelain=material('#fff1d8',.38), celadon=material('#4f9990',.45), bamboo=material('#804936'), gold=material('#e8b74e',.4)
-  const cuffCloth=porcelain.clone()
+  const cuffCloth=createStylizedGarmentMaterial({ color: '#fff1d8', roughness: .90, fabricStrength: .26, axis: 'y', name: 'yusheng-cuff-cloth' })
   applyCraftSurface(porcelain, { kind: 'ceramic', strength: .45 })
   applyCraftSurface(celadon, { kind: 'ceramic', strength: .45 })
   applyCraftSurface(bamboo, { kind: 'bamboo', strength: .38, axis: 'y' })
-  applyCraftSurface(cuffCloth, { kind: 'fabric', strength: .26 })
 
   const ingredients=[material('#ef9e3d'),material('#f5edc9'),material('#a4bf66'),material('#d6717b'),material('#deba78')]
   const salmon=material('#ee907b',.48), fishFat=material('#fbe4bc',.48), green=material('#528b56'), sesame=material('#e5c185')
@@ -97,8 +106,19 @@ export function createYushengModel() {
   stack(homes,0,'home-v3');stack(ends,1.6,'end-v3')
   for(let i=0;i<food.length;i++)peaks[i]!.y=homes[i]!.y+(i%4!==0?.73+.32*frac(i*.53):.025)
   const diners:THREE.Group[]=[]
-  const skins=[material('#dba986'),material('#ba8463'),material('#e1ba99')],sleeves=[material('#dc7767'),material('#72aaa0'),material('#82a7bf')]
-  sleeves.forEach(m=>applyCraftSurface(m, { kind: 'fabric', strength: .26 }))
+  const skins=[
+    createStylizedSkinMaterial({ color: '#dba986', tone: 'warm-apricot', roughness: .85, scatterStrength: .12, name: 'yusheng-skin-0' }),
+    createStylizedSkinMaterial({ color: '#ba8463', tone: 'warm-caramel', roughness: .85, scatterStrength: .12, name: 'yusheng-skin-1' }),
+    createStylizedSkinMaterial({ color: '#e1ba99', tone: 'warm-peach', roughness: .85, scatterStrength: .12, name: 'yusheng-skin-2' }),
+  ]
+  const sleeves=[
+    createStylizedGarmentMaterial({ color: '#dc7767', roughness: .92, fabricStrength: .28, axis: 'y', name: 'yusheng-sleeve-0' }),
+    createStylizedGarmentMaterial({ color: '#72aaa0', roughness: .92, fabricStrength: .28, axis: 'y', name: 'yusheng-sleeve-1' }),
+    createStylizedGarmentMaterial({ color: '#82a7bf', roughness: .92, fabricStrength: .28, axis: 'y', name: 'yusheng-sleeve-2' }),
+  ]
+  const addHumanMesh=(name:string,geometry:THREE.BufferGeometry,mat:THREE.Material,parent:THREE.Object3D,role:'skin'|'garment')=>{
+    const m=new THREE.Mesh(geometry,mat);m.name=name;m.castShadow=true;m.receiveShadow=true;applyStylizedHumanSurfaceHint(m,role);parent.add(m);return m
+  }
   const rod=(name:string,a:THREE.Vector3,b:THREE.Vector3,parent:THREE.Object3D,mat:THREE.Material,tip=.026,end=.045)=>{
     const delta=b.clone().sub(a),m=mesh(name,new THREE.CylinderGeometry(end,tip,delta.length(),10),mat,parent);m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());return m
   }
@@ -108,10 +128,75 @@ export function createYushengModel() {
       rod('chopstick-'+i+'-'+side,new THREE.Vector3(side*.045,0,0),new THREE.Vector3(side*.12,1.50,0),group,bamboo)
       const band=mesh('chopstick-gold-band-'+i+'-'+side,new THREE.CylinderGeometry(.046,.046,.055,10),gold,group);band.position.set(side*.111,1.32,0);band.rotation.z=-side*.05
     }
-    const palm=mesh('diner-palm-'+i,new THREE.SphereGeometry(1,16,10).scale(.19,.24,.12),skins[i]!,group);palm.position.set(.02,1.42,-.04)
-    for(let finger=0;finger<3;finger++){const f=mesh('diner-finger-'+i+'-'+finger,new THREE.CapsuleGeometry(.038,.20,4,8),skins[i]!,group);f.position.set(-.04,1.28+finger*.07,.07);f.rotation.z=1.35}
-    const sleeve=mesh('diner-sleeve-'+i,new THREE.CylinderGeometry(.22,.17,.36,16),sleeves[i]!,group);sleeve.position.set(.025,1.72,-.04)
-    const cuff=mesh('diner-cuff-'+i,new THREE.CylinderGeometry(.176,.176,.07,16),cuffCloth,group);cuff.position.set(.025,1.515,-.04)
+    // Sculpted chopstick-holding palm cradling the back (-Z) of the paired bamboo shafts,
+    // with four curved fingers & opposing thumb softly gripping the upper chopstick waist.
+    const palmGeo=createStylizedPalmGeometry({
+      width:.275,thickness:.115,length:.285,handedness:'right',palmUp:true,arch:.014,iterations:1,
+    })
+    palmGeo.rotateX(Math.PI/2)
+    palmGeo.computeBoundingBox();palmGeo.computeBoundingSphere()
+    const palm=addHumanMesh('diner-palm-'+i,palmGeo,skins[i]!,group,'skin')
+    palm.position.set(.018,1.39,-.078)
+    palm.rotation.y=-.16
+
+    // Four natural curved fingers wrapping gently around the front (+Z) of the chopsticks.
+    const fingerCurves:[THREE.Vector3[],number][]=[
+      // Index finger guiding upper-outer chopstick
+      [[new THREE.Vector3(-.105,1.28,-.062),new THREE.Vector3(-.138,1.24,.025),new THREE.Vector3(-.045,1.21,.088),new THREE.Vector3(.078,1.215,.074)], .031],
+      // Middle finger resting softly between/across chopsticks
+      [[new THREE.Vector3(-.108,1.345,-.062),new THREE.Vector3(-.142,1.315,.030),new THREE.Vector3(-.038,1.292,.094),new THREE.Vector3(.086,1.295,.078)], .032],
+      // Ring finger supporting lower chopstick
+      [[new THREE.Vector3(-.100,1.405,-.062),new THREE.Vector3(-.130,1.385,.024),new THREE.Vector3(-.034,1.372,.082),new THREE.Vector3(.068,1.375,.064)], .030],
+      // Little finger curled gracefully beneath
+      [[new THREE.Vector3(-.088,1.458,-.062),new THREE.Vector3(-.112,1.445,.012),new THREE.Vector3(-.028,1.438,.062),new THREE.Vector3(.042,1.442,.048)], .026],
+    ]
+    for(const [finger,[pts,rad]] of fingerCurves.entries()){
+      const fGeo=createStylizedFingerGeometry({
+        curve:new THREE.CatmullRomCurve3(pts,false,'centripetal'),
+        radiusX:rad,radiusY:rad*.94,lengthSegments:3,radialSegments:6,iterations:1,
+      })
+      addHumanMesh('diner-finger-'+i+'-'+finger,fGeo,skins[i]!,group,'skin')
+    }
+
+    // Opposing thumb anchoring the opposite (+X) chopstick waist cleanly in the thumb web.
+    const thumbPts=[
+      new THREE.Vector3(.112,1.41,-.062),
+      new THREE.Vector3(.155,1.355,.006),
+      new THREE.Vector3(.126,1.300,.068),
+      new THREE.Vector3(.045,1.272,.086),
+    ]
+    const thumbGeo=createStylizedThumbGeometry({
+      curve:new THREE.CatmullRomCurve3(thumbPts,false,'centripetal'),
+      radiusX:.036,radiusY:.034,lengthSegments:3,radialSegments:6,iterations:1,
+    })
+    addHumanMesh('diner-thumb-'+i,thumbGeo,skins[i]!,group,'skin')
+
+    // Wrist emerging cleanly out of the darkened festive sleeve cuff cavity.
+    const wristGeo=createStylizedForearmGeometry({
+      length:.18,wristRadiusX:.096,wristRadiusY:.082,elbowRadiusX:.112,elbowRadiusY:.096,fullness:.04,iterations:1,
+    })
+    wristGeo.rotateX(-Math.PI/2)
+    wristGeo.computeBoundingBox();wristGeo.computeBoundingSphere()
+    const wrist=addHumanMesh('diner-wrist-'+i,wristGeo,skins[i]!,group,'skin')
+    wrist.position.set(.022,1.46,-.062)
+
+    const cuffGeo=createStylizedSleeveCuffGeometry({
+      length:.095,cuffRadiusX:.158,cuffRadiusY:.144,sleeveRadiusX:.168,sleeveRadiusY:.154,
+      wallThickness:.018,rolledLip:.012,foldDepth:.005,cavityDepthRatio:.58,iterations:1,
+    })
+    cuffGeo.rotateX(-Math.PI/2)
+    cuffGeo.computeBoundingBox();cuffGeo.computeBoundingSphere()
+    const cuff=addHumanMesh('diner-cuff-'+i,cuffGeo,cuffCloth,group,'garment')
+    cuff.position.set(.022,1.52,-.058)
+
+    const sleeveGeo=createStylizedSleeveCuffGeometry({
+      length:.36,cuffRadiusX:.162,cuffRadiusY:.148,sleeveRadiusX:.215,sleeveRadiusY:.196,
+      wallThickness:.020,rolledLip:.010,foldDepth:.009,cavityDepthRatio:.36,iterations:1,
+    })
+    sleeveGeo.rotateX(-Math.PI/2)
+    sleeveGeo.computeBoundingBox();sleeveGeo.computeBoundingSphere()
+    const sleeve=addHumanMesh('diner-sleeve-'+i,sleeveGeo,sleeves[i]!,group,'garment')
+    sleeve.position.set(.022,1.585,-.058)
   }
   const direction=new THREE.Vector3(),lerp=THREE.MathUtils.lerp,dipCenters:THREE.Vector3[]=[],dipHeights:number[]=[]
   // Pick an actual broad fish surface for each pair, rather than stopping over a gap.
